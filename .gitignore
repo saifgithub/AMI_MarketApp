@@ -1,0 +1,67 @@
+# Flutter
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.idea/
+mobile/.vscode/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework/
+mobile/ios/Flutter/Flutter.podspec
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/captures/
+mobile/android/gradlew.bat
+mobile/android/gradle-wrapper.jar
+mobile/android/key.properties
+mobile/android/app/release/
+mobile/android/app/profile/
+mobile/android/app/debug/
+mobile/android/app/*.jks
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+**/env/
+**/.coverage
+**/htmlcov/
+**/*.egg-info/
+
+# Secrets / env
+.env
+.env.local
+.env.*.local
+*.secret
+**/credentials.json
+**/service-account*.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+infra/**/*.tfstate
+infra/**/*.tfstate.backup
+infra/**/.terraform/
+infra/**/terraform.tfvars
+
+# Build artifacts
+*.log
+*.pid
+
+# Local model caches (TradingAgents)
+.tradingagents/
+~/.tradingagents/

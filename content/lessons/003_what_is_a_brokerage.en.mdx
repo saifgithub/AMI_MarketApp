@@ -1,0 +1,84 @@
+---
+id: "003_what_is_a_brokerage"
+title: "What Is a Brokerage?"
+duration_min: 3
+level: 1
+track: "foundations"
+topic: "market_basics"
+prerequisites: ["002_what_is_a_market"]
+tags: ["foundations", "brokerages"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# What Is a Brokerage?
+
+A brokerage is the company that connects you to the exchange. You can't walk up to the New York Stock Exchange and place a trade — only registered members can. Brokerages are registered members. They take your order and route it to the exchange on your behalf.
+
+Examples: Interactive Brokers, Charles Schwab, Fidelity, E*TRADE, Robinhood, Public.com, Al Rajhi Capital (Saudi), Maybank (Malaysia).
+
+## What brokerages do for you
+
+1. **Account custody.** They hold your shares for you so you don't have to deal with paper certificates.
+2. **Order routing.** They send your orders to the exchange and bring back the confirmations.
+3. **Settlement.** They handle the actual exchange of cash and shares (which legally takes T+1 or T+2 business days).
+4. **Tax reporting.** They send you a 1099 (US) or local equivalent every year for tax season.
+5. **Margin lending.** Some let you borrow against your portfolio to buy more — this is **leverage**, and it's dangerous if you don't know what you're doing.
+
+## How do they make money?
+
+Brokerages have several revenue streams:
+
+- **Spread on bid/ask** (sometimes) — they shave a tiny bit
+- **Payment for order flow (PFOF)** — they sell your order flow to market makers who pay them for the privilege of being on the other side
+- **Interest on uninvested cash** in your account
+- **Margin lending fees** — interest on money you've borrowed against your portfolio
+- **Subscription fees** — Robinhood Gold, Interactive Brokers Pro
+- **Foreign exchange fees** on currency conversion
+- **Trading fees** (rarer now in the US, common elsewhere)
+
+The "free trading" you see at Robinhood is funded by PFOF. The trade isn't actually free — there's a small efficiency loss vs an exchange-direct execution, paid for in fractions of a cent per share. For small retail trades, it doesn't matter. For institutions, it would.
+
+## How AMI Trade is different
+
+**We are not a brokerage.** You cannot send a trade through AMI Trade and have it executed in the real market. Every trade in AMI Trade is **simulation** — paper money, real prices, no actual orders.
+
+This is by design. The educational value is in the *reasoning*, not the execution. If you want to execute real trades, you'll do that through a regulated brokerage in your country. AMI Trade is where you train; the brokerage is where you eventually act.
+
+## Choosing a brokerage (for the future)
+
+When the time comes, three things matter:
+
+1. **Is it regulated** in your country? (SEC for US, FCA for UK, SAMA for Saudi, SC for Malaysia, etc.)
+2. **What are its fees?** (Commission per trade, FX spread, inactivity fee, account minimum)
+3. **What does it offer?** (Local market access, fractional shares, retirement accounts, etc.)
+
+Don't pick a brokerage based on advertising. Pick based on regulator, fees, and feature fit.
+
+## Quiz
+
+<Quiz
+  question="What does PFOF stand for?"
+  options={[
+    "Premium Fee Order Funnel",
+    "Payment For Order Flow",
+    "Public Filing of Open Funds",
+    "Private Funding Order Form"
+  ]}
+  answer={1}
+  explanation="Payment For Order Flow. It's how 'free' brokerages like Robinhood actually generate revenue from your trades."
+/>
+
+<Quiz
+  question="Can you place a real-money trade through AMI Trade?"
+  options={[
+    "Yes, but only US stocks",
+    "Yes, in any market where you have a linked brokerage account",
+    "No — AMI Trade is simulation only",
+    "Only with the Floor Manager tier"
+  ]}
+  answer={2}
+  explanation="AMI Trade is an educational simulation. We never execute real-money trades. To do that, you'd use a regulated brokerage in your jurisdiction."
+/>

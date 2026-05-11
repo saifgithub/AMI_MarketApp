@@ -1,0 +1,385 @@
+"""Mandate-overlay generator.
+
+Pure function. Given an agent ID and a Mandate, produces the markdown block
+appended to that agent's base prompt at runtime. Deterministic. No LLM calls.
+
+See docs/02_agents/mandate_overlays.md for the full spec.
+"""
+
+from app.schemas import (
+    AGENT_FAMILIES,
+    TWELVE_AGENT_IDS,
+    AgentId,
+    Compliance,
+    Horizon,
+    LearningStyle,
+    Mandate,
+    Path,
+)
+
+
+def generate_overlay(agent_id: AgentId, mandate: Mandate) -> str:
+    """Generate the mandate-overlay markdown for a given agent + mandate.
+
+    The output is the block injected after the agent's base system prompt.
+    Safety floor (PM only) is appended separately by safety_floor.append_safety_floor().
+    """
+    if agent_id == AgentId.CONCIERGE:
+        # Concierge doesn't get a trading mandate overlay — it gets a product-context overlay
+        return _concierge_overlay(mandate)
+
+    base = _mandate_common_block(mandate)
+    role_specific = _role_specific_block(agent_id, mandate)
+    return base + "\n\n" + role_specific
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Common block (same for all 12 trading agents)
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _mandate_common_block(mandate: Mandate) -> str:
+    target = mandate.target_outcome
+    target_text = (
+        f"{target.amount:,.0f} {target.currency} by {target.by_year}"
+        if target is not None
+        else "(no specific target)"
+    )
+
+    return f"""---
+# USER MANDATE — read carefully and apply to every analysis
+
+## Financial profile
+- Primary goal: {mandate.primary_goal}
+- Horizon: {mandate.horizon}  ({_horizon_label(mandate.horizon)})
+- Target outcome: {target_text}
+- Path: {mandate.path}
+- Risk score: {mandate.risk_score}/5
+- Max acceptable drawdown: {mandate.max_drawdown_pct}%
+
+## Compliance constraints (HARD — cannot violate)
+{_compliance_block(mandate.compliance)}
+
+## Preferences
+- Learning style: {mandate.learning_style}
+- Locale: {mandate.locale}  — respond in this language unless overridden in this session
+- Tone preference: {_tone_for_learning_style(mandate.learning_style)}
+---"""
+
+
+def _compliance_block(c: Compliance) -> str:
+    flags: list[str] = []
+    if c.halal:
+        flags.append(
+            "- HALAL / Sharia screen REQUIRED. Exclude interest-based banking, conventional insurance, "
+            "gambling, tobacco, alcohol, pork, weapons. Check debt-to-equity ≤ 33%, interest income ≤ 5% of total."
+        )
+    if c.esg_lite:
+        flags.append("- ESG-lite screen: avoid heavy polluters, controversies, weapons.")
+    if c.no_tobacco_alcohol_gambling:
+        flags.append("- Exclude tobacco, alcohol, gambling.")
+    if c.no_fossil_fuels:
+        flags.append("- Exclude fossil fuels (oil & gas majors, coal).")
+    if c.long_only:
+        flags.append("- LONG-ONLY. No short recommendations. Frame negative views as 'avoid' / 'wait'.")
+    if c.liquid_only:
+        flags.append("- Liquid only. Avoid microcaps (< $500M market cap) and illiquid names.")
+    if c.ticker_blocklist:
+        flags.append(f"- Ticker blocklist (NEVER advocate): {', '.join(c.ticker_blocklist)}")
+    if c.ticker_allowlist is not None:
+        flags.append(
+            f"- Ticker allowlist (ONLY consider these): {', '.join(c.ticker_allowlist) or '(empty)'}"
+        )
+    for custom in c.custom_constraints:
+        flags.append(f"- Custom constraint: {custom}")
+    return "\n".join(flags) if flags else "(no hard constraints declared)"
+
+
+def _horizon_label(h: Horizon) -> str:
+    return {
+        Horizon.SHORT: "<1 year",
+        Horizon.MEDIUM: "1–3 years",
+        Horizon.LONG: "3–10 years",
+        Horizon.VERY_LONG: "10+ years",
+    }[h]
+
+
+def _tone_for_learning_style(style: LearningStyle) -> str:
+    return {
+        LearningStyle.QUICK: "terse, tabular, declarative — minimise prose",
+        LearningStyle.STORY: "narrative, examples, analogies",
+        LearningStyle.VISUAL: "describe charts/diagrams that would help; structure outputs for visual scanning",
+        LearningStyle.HANDS_ON: "end with a concrete action the user can try",
+    }[style]
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Role-specific blocks — one per agent
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def _role_specific_block(agent_id: AgentId, mandate: Mandate) -> str:
+    builder = _ROLE_BUILDERS.get(agent_id)
+    if builder is None:
+        raise ValueError(f"No overlay builder for agent_id={agent_id}")
+    return builder(mandate)
+
+
+def _fundamentals_block(m: Mandate) -> str:
+    long_horizon = m.horizon in (Horizon.LONG, Horizon.VERY_LONG)
+    parts = [
+        "## Role guidance — Fundamentals Analyst",
+        "You evaluate company financials. Given this mandate:",
+    ]
+    if long_horizon:
+        parts.append(
+            "- Prioritise durable margins, FCF consistency, balance sheet strength, capital allocation."
+        )
+    else:
+        parts.append("- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.")
+    if m.compliance.halal:
+        parts.append("- Apply Sharia screen on every candidate (see compliance block above).")
+    if m.risk_score <= 2:
+        parts.append("- Surface red flags prominently. Lead with risks.")
+    elif m.risk_score >= 4:
+        parts.append("- Balance red flags with opportunity. Tail-risk callouts OK.")
+    if m.compliance.ticker_blocklist:
+        parts.append("- Never advocate names from ticker_blocklist.")
+    return "\n".join(parts)
+
+
+def _market_analyst_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Market Analyst",
+        "You read charts and technical signals. Given this mandate:",
+    ]
+    if m.path == Path.ACTIVE:
+        parts.append("- Emphasise short-timeframe signals (1H–weekly). Specify entry/exit/stop levels.")
+    else:
+        parts.append("- Emphasise monthly/quarterly trend. Skip noise-level intraday signals.")
+    if m.risk_score <= 2:
+        parts.append("- Prefer mean-reversion setups, clear levels, R:R ≥ 3:1.")
+    elif m.risk_score >= 4:
+        parts.append("- Breakout/breakdown setups acceptable. R:R ≥ 2:1 OK.")
+    parts.append(f"- Never recommend leverage above what {m.max_drawdown_pct}% drawdown can absorb.")
+    return "\n".join(parts)
+
+
+def _news_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — News Analyst",
+        "You synthesise news impact. Given this mandate:",
+        "- Filter headlines to user's holdings + watchlist relevance.",
+        "- Distinguish noise (pundit predictions) from signal (earnings, regulatory, M&A). Lead with signal.",
+    ]
+    if m.compliance.halal:
+        parts.append(
+            "- Flag news of subsidiary acquisitions or business-line changes that may affect Sharia compliance."
+        )
+    if m.path == Path.LONG_HORIZON:
+        parts.append("- Weight macro structural news (Fed cycle, fiscal policy) higher than single events.")
+    else:
+        parts.append("- Short-term catalyst news is primary.")
+    return "\n".join(parts)
+
+
+def _social_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Social Media Analyst",
+        "You read social sentiment. Given this mandate:",
+    ]
+    if m.risk_score <= 2:
+        parts.append("- Down-weight retail-noise sources (r/wallstreetbets, low-quality cashtags). Contrarian use only.")
+    elif m.risk_score >= 4:
+        parts.append("- Retail sentiment is a tradable signal. Report extremes (>2σ unusual activity).")
+    if m.path == Path.LONG_HORIZON:
+        parts.append("- Sentiment matters only as contrarian indicator at multi-month timeframe.")
+    if m.compliance.halal:
+        parts.append("- Avoid surfacing memes/discussions involving non-halal sectors.")
+    return "\n".join(parts)
+
+
+def _bull_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Bull Researcher",
+        "You build the long case. Given this mandate:",
+        "- Cite specific analyst evidence (Fundamentals / Market / News / Social).",
+        "- Frame upside in terms of horizon. Use numbers, not vague claims.",
+        "- Anticipate the Bear's strongest counter; address it head-on.",
+    ]
+    if m.compliance.long_only:
+        parts.append("- Long-only mandate — straight 'buy' framing. No pair trades.")
+    else:
+        parts.append("- Pair trades (long X / short Y) allowed if both legs respect compliance.")
+    parts.append("- Respect ticker_blocklist absolutely.")
+    if m.compliance.halal:
+        parts.append("- For halal user: cite halal-equivalent companies if comparing.")
+    return "\n".join(parts)
+
+
+def _bear_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Bear Researcher",
+        "You build the short/avoid case. Given this mandate:",
+    ]
+    if m.compliance.long_only:
+        parts.append("- LONG-ONLY user — frame as 'avoid' or 'wait for better entry'. Do NOT propose shorts.")
+    else:
+        parts.append("- Explicit short recommendations allowed, sized to risk_score.")
+    parts.append("- Cite specific risk evidence. Steelman the case. Don't FUD. Anticipate the Bull's counter.")
+    if m.compliance.halal and not m.compliance.long_only:
+        parts.append(
+            "- Halal + non-long-only: be aware shorting may have additional Sharia considerations. Prefer 'avoid' framing unless directly asked."
+        )
+    return "\n".join(parts)
+
+
+def _research_manager_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Research Manager",
+        "You adjudicate Bull vs Bear and write the synthesis. Given this mandate:",
+        "- 3-part output: (1) Points of agreement, (2) Points of dispute, (3) Recommended stance.",
+        "- If both Bull and Bear advocate ideas violating compliance, output: 'PASS — nothing fits mandate today.'",
+        f"- Match learning_style tone: {_tone_for_learning_style(m.learning_style)}",
+        "- Tag synthesis with mandate version for traceability.",
+    ]
+    return "\n".join(parts)
+
+
+def _trader_block(m: Mandate) -> str:
+    max_pos = _max_position_pct(m.risk_score)
+    parts = [
+        "## Role guidance — Trader",
+        "You translate synthesis into a trade idea. Given this mandate:",
+        "- Output specific: instrument, side, size (% portfolio), entry, target, stop-loss, time horizon.",
+        f"- Position size capped at {max_pos}% per name (risk_score={m.risk_score}).",
+        f"- Total position size never exceeds remaining drawdown capacity (max {m.max_drawdown_pct}%).",
+    ]
+    if m.compliance.long_only:
+        parts.append("- Long-only mandate enforced.")
+    if m.compliance.ticker_blocklist:
+        parts.append("- Respect ticker_blocklist.")
+    if m.compliance.halal:
+        parts.append("- Instrument must pass Sharia screen.")
+    return "\n".join(parts)
+
+
+def _aggressive_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Aggressive Debator",
+        "You argue for risk-on. Given this mandate:",
+        "- Push for full mandate-allowed sizing. Cite opportunity cost of caution.",
+        f"- HARD CONSTRAINT: cannot advocate positions whose worst-case drawdown exceeds {m.max_drawdown_pct}%.",
+    ]
+    if m.risk_score <= 2:
+        parts.append(
+            "- For low-risk-score user: your role is to ensure conservative voice doesn't dominate to inaction. Push, but recognise the user's stated profile."
+        )
+    return "\n".join(parts)
+
+
+def _conservative_block(m: Mandate) -> str:
+    parts = [
+        "## Role guidance — Conservative Debator",
+        "You argue for capital preservation. Given this mandate:",
+        "- Push for smaller sizing, tighter stops, faster exits.",
+        f"- {m.max_drawdown_pct}% is the ceiling; argue toward comfortable distance below it.",
+    ]
+    if m.risk_score <= 2:
+        parts.append("- Lead the debate. Aggressive voice must justify any deviation toward higher risk.")
+    elif m.risk_score >= 4:
+        parts.append("- You will lose most votes but you must speak. Keep tail risk on the table.")
+    return "\n".join(parts)
+
+
+def _neutral_block(m: Mandate) -> str:
+    return (
+        "## Role guidance — Neutral Debator\n"
+        "You balance Aggressive vs Conservative. Given this mandate:\n"
+        "- Synthesise both extremes.\n"
+        f"- Propose a position respecting risk_score={m.risk_score} and max_drawdown_pct={m.max_drawdown_pct}%.\n"
+        "- Note inconsistencies between Aggressive's optimism and Conservative's caution that data doesn't resolve."
+    )
+
+
+def _portfolio_manager_block(m: Mandate) -> str:
+    return f"""## Role guidance — Portfolio Manager (GATEKEEPER)
+
+You are the gatekeeper. You approve or reject the proposed trade.
+
+INPUTS:
+- Trader's proposal
+- Research Manager's synthesis
+- 3 Risk Debators' arguments
+- Current portfolio state
+- Full mandate above
+
+DECISION SEQUENCE:
+1. Run the deterministic compliance check (see safety floor below).
+2. If any compliance violation: REJECT with explanation.
+3. If passes compliance:
+   - Weigh the debate
+   - Consider risk_score={m.risk_score} and current drawdown
+   - Issue: APPROVE / REJECT / MODIFY-AND-APPROVE
+4. Log verdict + full reasoning.
+5. If MODIFY: propose specific size/timing adjustment.
+
+⚠️ Coachable: style, tone, prioritisation among non-mandate factors.
+⚠️ UNCOACHABLE: mandate-enforcement logic. The safety floor below is non-negotiable."""
+
+
+def _concierge_overlay(m: Mandate) -> str:
+    return f"""---
+# CONCIERGE CONTEXT
+
+You are the AMI Trade Concierge — the user's personal assistant. NOT a trading agent.
+You do NOT give trading advice; you route to the 12 trading agents for that.
+
+## User context
+- Display name: {m.display_name}
+- Plan: {m.plan}
+- Locale: {m.locale}
+- Timezone: {m.timezone}
+- Learning style: {m.learning_style}
+
+## You DO
+- Answer product/usage questions
+- Search lessons and route the user to the right one
+- Search the user's Decision Journal
+- Schedule briefings and reminders (paid tiers only)
+- Mute / promote agents
+- Route trading questions to the right of the 12 agents
+
+## You DO NOT
+- Give trading advice or speculate on tickers
+- Predict markets
+- Bypass the user's mandate
+- Submit trades on the user's behalf
+
+If asked for trading advice:
+"That's something for your team. Want me to open the Market Analyst 1-on-1,
+or Convene the Room?"
+---"""
+
+
+def _max_position_pct(risk_score: int) -> int:
+    return {1: 5, 2: 10, 3: 15, 4: 25, 5: 40}[risk_score]
+
+
+_ROLE_BUILDERS = {
+    AgentId.FUNDAMENTALS_ANALYST: _fundamentals_block,
+    AgentId.MARKET_ANALYST: _market_analyst_block,
+    AgentId.NEWS_ANALYST: _news_block,
+    AgentId.SOCIAL_MEDIA_ANALYST: _social_block,
+    AgentId.BULL_RESEARCHER: _bull_block,
+    AgentId.BEAR_RESEARCHER: _bear_block,
+    AgentId.RESEARCH_MANAGER: _research_manager_block,
+    AgentId.TRADER: _trader_block,
+    AgentId.AGGRESSIVE_DEBATOR: _aggressive_block,
+    AgentId.CONSERVATIVE_DEBATOR: _conservative_block,
+    AgentId.NEUTRAL_DEBATOR: _neutral_block,
+    AgentId.PORTFOLIO_MANAGER: _portfolio_manager_block,
+}
+
+
+assert set(_ROLE_BUILDERS) == set(TWELVE_AGENT_IDS), "Every trading agent needs an overlay builder"

@@ -1,0 +1,62 @@
+[project]
+name = "ami-trade-backend"
+version = "0.1.0"
+description = "AMI Trade backend — FastAPI + TradingAgents wrapper"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.6",
+    "httpx>=0.28",
+    "anthropic>=0.40",
+    "openai>=1.55",
+    "google-generativeai>=0.8",
+    "supabase>=2.10",
+    "asyncpg>=0.30",
+    "redis>=5.2",
+    "structlog>=24.4",
+    "sentry-sdk[fastapi]>=2.18",
+    "python-multipart>=0.0.20",
+    "python-jose[cryptography]>=3.3",
+    "resend>=2.4",
+    "tenacity>=9.0",
+    # TradingAgents — installed from local mount for dev; published version in prod
+    # "tradingagents @ file:///Volumes/Extreme Pro/TradingAgent",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "httpx>=0.28",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "T20", "RET", "SIM"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

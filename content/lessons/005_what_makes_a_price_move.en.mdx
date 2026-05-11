@@ -1,0 +1,115 @@
+---
+id: "005_what_makes_a_price_move"
+title: "What Makes a Price Move?"
+duration_min: 4
+level: 1
+track: "foundations"
+topic: "market_basics"
+prerequisites: ["002_what_is_a_market"]
+tags: ["foundations", "price_action", "supply_demand"]
+agent_callouts: ["market_analyst", "fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# What Makes a Price Move?
+
+A stock's price moves when buyers and sellers disagree at the current price. Specifically:
+
+- If there's a buyer willing to pay *more* than the lowest seller is asking, a trade happens at the higher price → **price moves up**.
+- If there's a seller willing to take *less* than the highest buyer is bidding, a trade happens at the lower price → **price moves down**.
+
+That's the whole mechanism. Every price change you've ever seen is one of those two events. The interesting question is: **why are buyers or sellers willing to pay or accept different prices?**
+
+## The 4 forces
+
+There are roughly four categories of force that move prices.
+
+### 1. New information
+
+Earnings reports, regulatory news, macroeconomic data, court decisions, leadership changes. When new information arrives, every participant updates their estimate of future cash flows. If the news is positive, more people want to own. Buyers raise their bids. Price moves up. If negative, the reverse.
+
+Your **News Analyst** specializes in interpreting this.
+
+### 2. New sentiment
+
+People aren't perfect. Collective mood swings — greed, fear, FOMO, panic — move prices even when no new information has arrived. A meme-stock rally is pure sentiment. A flash crash on no news is panic. Sentiment cycles tend to overshoot in both directions: prices go higher than fundamentals justify on the way up, and lower on the way down.
+
+Your **Social Media Analyst** tracks this.
+
+### 3. Forced flows
+
+Some buying and selling happens for reasons that have nothing to do with what anyone thinks of the company:
+
+- **Index rebalances.** When the S&P 500 adds or removes a name, every index fund must buy or sell.
+- **Tax-loss harvesting.** In December, US investors sell losers to offset gains.
+- **Margin calls.** When prices drop, leveraged investors are forced to sell.
+- **Fund redemptions.** When investors pull money out of a mutual fund, the fund sells stocks.
+
+These flows create short-term mispricings — opportunities for those paying attention.
+
+### 4. Random noise
+
+Lots of small unrelated trades. Someone needed cash for a wedding. Someone got their bonus. Someone is dollar-cost-averaging. None of it carries information. But it adds up to a constant low-grade buzz in the price.
+
+The hardest skill in markets is separating **signal** (categories 1, 2, 3) from **noise** (category 4). Most retail traders react to noise. Most institutions ignore it.
+
+## Time-scale matters
+
+Different forces dominate at different time horizons:
+
+| Horizon | Dominant force |
+|---|---|
+| Seconds–minutes | Random noise + algorithm flows |
+| Hours–days | Sentiment + news |
+| Weeks–months | Forced flows + fundamentals |
+| Years | Fundamentals |
+
+Warren Buffett's famous line: *"In the short run, the market is a voting machine. In the long run, it's a weighing machine."* Voting = sentiment. Weighing = fundamentals.
+
+Your mandate's **horizon** field tells your team which forces to weight most heavily. Long-horizon mandates de-emphasize daily sentiment. Active mandates pay attention to it.
+
+## Why this matters for you
+
+When you see your sim portfolio move 2% in a day, ask yourself: **which of the 4 forces is responsible?**
+
+If it's noise, you should probably do nothing — the price will revert.
+If it's a sentiment swing, you might fade it (sell when others are euphoric, buy when others are panicked).
+If it's new information, you need to re-evaluate your thesis.
+If it's a forced flow, that's often opportunity.
+
+Your team's job is to figure out which it is. Your job is to listen to your team.
+
+## Quiz
+
+<Quiz
+  question="A stock falls 5% in 10 minutes with no news, then recovers in 30 minutes. This is most likely:"
+  options={[
+    "A response to new information",
+    "A response to changed fundamentals",
+    "A short-term sentiment or forced-flow event — noise",
+    "A signal that you should sell immediately"
+  ]}
+  answer={2}
+  explanation="No news + quick recovery is the signature of a short-term flow event (a fund liquidating, a fat-finger trade, panic selling). The signal-to-noise ratio is low. Long-horizon investors typically ignore these moves entirely."
+/>
+
+<Quiz
+  question="Which agent on your team would help you understand a price move driven by an earnings beat?"
+  options={[
+    "Social Media Analyst",
+    "News Analyst — or Fundamentals Analyst",
+    "Conservative Debator",
+    "Trader"
+  ]}
+  answer={1}
+  explanation="Earnings news has both News (the announcement, market reaction) and Fundamentals (what the actual numbers mean for intrinsic value) dimensions. Either or both agents would help."
+/>
+
+## Want to go deeper?
+
+Two agents help with price movement: the **Market Analyst** reads the chart's response to forces; the **Fundamentals Analyst** evaluates whether the move makes sense given the underlying business.
+
+<ChatWith agent="market_analyst" />
+<ChatWith agent="fundamentals_analyst" />

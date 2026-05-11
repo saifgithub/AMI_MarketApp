@@ -1,0 +1,87 @@
+---
+id: "002_what_is_a_market"
+title: "What Is a Market?"
+duration_min: 3
+level: 1
+track: "foundations"
+topic: "market_basics"
+prerequisites: ["001_what_is_a_stock"]
+tags: ["foundations", "exchanges", "basics"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# What Is a Market?
+
+A market is a place where buyers and sellers agree on a price. That's it. The "stock market" is the same as a fish market, just at a different scale and with electronic systems doing the matching.
+
+When you tap "Buy 10 shares of NVDA" in your sim, here's what happens in a real-money equivalent:
+
+1. Your broker sends the order to an **exchange** (the New York Stock Exchange, NASDAQ, etc.).
+2. The exchange looks at the current order book — every other buyer and seller currently offering NVDA.
+3. The exchange matches you with a seller at the agreed-upon price.
+4. Cash flows from you to the seller. Shares flow from the seller to you.
+
+This all happens in **milliseconds**. The exchange's only job is to make matching fair and fast.
+
+## The two sides
+
+Every trade has two sides:
+
+- A **bid** — what buyers are willing to pay
+- An **ask** (or "offer") — what sellers are willing to accept
+
+When bid meets ask, a trade happens. The "stock price" you see quoted everywhere is just the last price at which a trade was completed.
+
+If you want to buy NVDA right now at the market price, you're agreeing to pay whatever the current lowest ask is. That's a **market order** — fast, but no price guarantee.
+
+If you want to set a price and wait, you place a **limit order**. You'd say "I'll buy NVDA at $150 but not a penny more." Your order sits there until someone is willing to sell at that price (or until you cancel).
+
+## Why do prices move?
+
+This is the question that occupies your entire 12-agent team. Prices move because:
+
+- **New information**: earnings, news, macro events
+- **New sentiment**: collective mood shifts (greed, fear)
+- **Forced flows**: index rebalancing, fund redemptions, tax-loss harvesting
+- **Pure random noise**: lots of small unrelated trades adding up
+
+Your team's job is to filter signal from noise. The Fundamentals Analyst reads earnings. The Market Analyst reads charts. The News Analyst reads headlines. The Social Media Analyst reads crowd mood. Each of them is sorting noise from signal in their domain.
+
+## Two types of "market" you'll hear about
+
+| Term | What it means |
+|---|---|
+| **The market** | Usually shorthand for "the S&P 500" or a similar broad index — the average behavior of US large-cap stocks |
+| **A market** | A specific exchange or trading venue (e.g., "the Tokyo market") |
+
+When someone says "the market is up 1% today," they usually mean the S&P 500. When someone says "I trade the US market," they mean US stock exchanges generally.
+
+## Quiz
+
+<Quiz
+  question="What is a market order?"
+  options={[
+    "An order to buy at a specific price",
+    "An order to buy or sell at whatever price is currently available",
+    "An order that only fills at the end of the trading day",
+    "An order that's automatically cancelled if it doesn't fill in 1 minute"
+  ]}
+  answer={1}
+  explanation="A market order takes the best available price right now. It guarantees execution but not price. A limit order does the opposite — guarantees price but not execution."
+/>
+
+<Quiz
+  question="True or false: The 'stock price' you see is the average of all bids and asks."
+  options={["True", "False"]}
+  answer={1}
+  explanation="False. The quoted stock price is the price of the most recent completed trade. Bid and ask are usually a bit different from each other (the gap is the 'spread') and the last trade happened at one of them, not their average."
+/>
+
+## Want to go deeper?
+
+Your **Market Analyst** can walk you through how to read a chart — the language of price and volume.
+
+<ChatWith agent="market_analyst" />

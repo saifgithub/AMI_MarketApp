@@ -1,0 +1,102 @@
+name: ami-trade-local
+
+# Local development stack — runs on melehost (or any Docker host).
+# Mirrors the production stack as closely as possible:
+#   - Postgres + Supabase = Supabase Cloud later
+#   - Redis = managed Redis later
+#   - FastAPI backend = Cloud Run later
+#
+# Bring up: docker compose up -d
+# Tear down: docker compose down
+# Logs: docker compose logs -f backend
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ami_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ami_trade
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/local/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ami_trade"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: ami_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ami_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      ENV: local
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ami_trade
+      REDIS_URL: redis://redis:6379/0
+      # LLM keys — copy from .env file (don't bake into image)
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_AI_API_KEY: ${GOOGLE_AI_API_KEY:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+      CORS_ORIGINS: '["https://api-dev.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/tests:/app/tests:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Cloudflare Tunnel — exposes the backend at https://api-dev.agenticmarketintel.ai
+  # Requires a CF_TUNNEL_TOKEN env var; set up the tunnel once at:
+  #   https://one.dash.cloudflare.com/ → Networks → Tunnels → Create
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: ami_tunnel
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
+    depends_on:
+      - backend
+    restart: unless-stopped
+    profiles:
+      # Enable with: docker compose --profile tunnel up -d
+      # Skip when developing locally without external HTTPS
+      - tunnel
+
+volumes:
+  postgres_data:
+  redis_data:

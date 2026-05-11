@@ -1,0 +1,75 @@
+---
+id: "001_what_is_a_stock"
+title: "What Is a Stock?"
+duration_min: 3
+level: 1
+track: "foundations"
+topic: "market_basics"
+prerequisites: []
+tags: ["foundations", "stocks", "basics"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# What Is a Stock?
+
+A stock is a piece of a company. When you own a share of Apple, you own a slice of Apple — fractional, but real. Today there are roughly 15 billion Apple shares outstanding, so if you hold one, you own a 1 / 15-billionth slice of the entire business.
+
+That tiny slice gives you two things:
+
+1. **A claim on future profits.** If Apple makes money, some of it can be paid out to shareholders as dividends. Most companies retain most of their profits to grow, but the *legal claim* is yours.
+2. **A vote.** Shareholders get to vote on company decisions — who sits on the board, major acquisitions, etc. One share, one vote. (In practice retail shareholders rarely vote. Big institutional holders do.)
+
+## Why do companies sell stock?
+
+Companies sell stock to **raise money** without taking on debt. They IPO ("initial public offering"), and instead of borrowing $1B from a bank, they sell $1B worth of new shares to the public. The cash funds factories, R&D, acquisitions, hiring.
+
+In exchange, the founders give up some control — every new share dilutes the existing ownership pool. Going public is a trade: capital now, in exchange for a permanent piece of the company.
+
+## Why do *you* buy stock?
+
+Two paths:
+
+- **Capital appreciation.** You buy at $100, the business grows, the stock goes to $150. You sell, you profit. The most common reason individual investors buy.
+- **Income.** Some companies pay regular dividends. If you hold $100,000 of a 3% dividend stock, that's $3,000/year in your pocket, regardless of price movement. This is the path of most retirees and income-focused investors.
+
+## The catch
+
+A stock's price isn't tied to the *current* value of the business. It's tied to what investors **think** the future will look like. If the market collectively thinks Apple's next 10 years will be worse than expected, the stock falls — even if today's Apple is doing fine.
+
+That gap between current reality and future expectations is where every trade lives. Your Fundamentals Analyst's whole job is to answer one question: **what's actually likely to happen?**
+
+## In your sim
+
+You can't lose real money in AMI Trade. Every position you take is paper. But the prices you see are real. When you buy NVDA at $152 in your sim, that's the actual market price. When NVDA goes up tomorrow, your sim gains the same percentage a real-money position would have gained.
+
+This matters because **good thinking transfers**. The reasoning that produces a good sim trade is the same reasoning that produces a good real trade. We're not teaching you how to push buttons. We're teaching you how to think.
+
+## Quiz
+
+<Quiz
+  question="If you own 100 shares of a company with 1 million shares outstanding, what percentage of the company do you own?"
+  options={["0.01%", "0.1%", "1%", "10%"]}
+  answer={0}
+  explanation="100 ÷ 1,000,000 = 0.0001 = 0.01%. Stock ownership at the retail level is almost always a very small slice of a very big pie."
+/>
+
+<Quiz
+  question="Which is NOT a reason a company sells stock to the public?"
+  options={[
+    "To raise money for growth",
+    "To pay off bank loans without taking on more debt",
+    "To borrow money from shareholders that must be repaid in 5 years",
+    "To give founders and early investors a way to cash out"
+  ]}
+  answer={2}
+  explanation="Stock is not a loan. There is no repayment schedule. Shareholders own a piece of the company; they're not creditors. (This is the key difference between equity and debt.)"
+/>
+
+## Want to go deeper?
+
+Your **Fundamentals Analyst** can walk you through how to evaluate whether a stock is "expensive" or "cheap" — the most important question you'll ask before any buy.
+
+<ChatWith agent="fundamentals_analyst" />

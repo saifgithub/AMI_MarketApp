@@ -1,0 +1,112 @@
+---
+id: "004_market_order_vs_limit"
+title: "Market Orders vs Limit Orders"
+duration_min: 3
+level: 1
+track: "foundations"
+topic: "orders"
+prerequisites: ["002_what_is_a_market"]
+tags: ["foundations", "orders", "execution"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# Market Orders vs Limit Orders
+
+Two basic ways to ask an exchange to fill your trade. Each has a tradeoff.
+
+## Market order
+
+> *"Just get me filled. I don't care about the exact price."*
+
+A market order says: take the best available price right now. You get filled almost instantly. You don't get to argue about the price.
+
+**Pros:**
+- Instant execution
+- Useful when you absolutely need to be in or out of a position
+
+**Cons:**
+- No price control
+- In fast-moving markets, you can get a *much worse* fill than you expected
+- "Slippage" — the difference between your intended price and your actual fill — can be painful
+
+**Use it when:** the trade thesis matters more than a few cents per share. Or when liquidity is high and slippage is negligible.
+
+## Limit order
+
+> *"I'll buy if you can get me $150 or better. Otherwise wait."*
+
+A limit order sets a specific price ceiling (for buys) or floor (for sells). The exchange only fills you if it can do so at that price or better.
+
+**Pros:**
+- Price control
+- Can pick off temporary dips by setting a buy below market price
+- Disciplined — forces you to commit to a number
+
+**Cons:**
+- May not fill at all
+- May only fill partially
+- In fast-moving markets, the price moves past your limit and you miss the trade
+
+**Use it when:** the price matters. Or when liquidity is thin and slippage from a market order would be costly. Or when you want to be patient.
+
+## A worked example
+
+NVDA is currently trading at $152. You think it's a buy at $150.
+
+| Action | What happens |
+|---|---|
+| **Market order to buy 10 NVDA** | Fills almost instantly at $152 (or $152.05, depending on the ask). |
+| **Limit order to buy 10 NVDA at $150** | Sits in the order book. If NVDA dips to $150 today, you get filled. If it goes to $155 instead, your order sits unfilled. |
+| **Limit order to buy 10 NVDA at $155** | Fills immediately at $152 — the limit is a *worst-case ceiling*, and $152 is better than $155. |
+
+That last case is a common surprise: a limit order at a price *worse* than current market is equivalent to a market order, because the exchange just gives you the better available price.
+
+## Time in force
+
+A limit order needs a duration. Common choices:
+
+- **Day** — expires at market close today
+- **GTC (Good Till Cancelled)** — stays open until you cancel it (most brokers expire after 60–90 days as a safety)
+- **IOC (Immediate or Cancel)** — fills what it can right now, cancels the rest
+- **FOK (Fill or Kill)** — fill the whole order right now or cancel it entirely
+
+For most beginner trades, Day or GTC is enough.
+
+## In your sim
+
+When you submit a trade in AMI Trade's sim, you'll pick **market** or **limit**:
+
+- **Market** fills at the current (15-min delayed) price immediately.
+- **Limit** sits in the journal as "pending" until the price hits your level.
+
+Either way, your PM still runs a compliance check before the trade is recorded. Even simulations enforce your mandate.
+
+## Quiz
+
+<Quiz
+  question="If you set a limit order to BUY at $155 when the stock is at $152, what happens?"
+  options={[
+    "Nothing — your limit is above the current price",
+    "Your order fills immediately at $152",
+    "Your order fills at $155",
+    "Your order is rejected"
+  ]}
+  answer={1}
+  explanation="A limit price is a worst-case ceiling for buys. $152 is better than $155, so the exchange fills you at $152 immediately. Limit orders only sit pending if the limit is *worse* than the current market."
+/>
+
+<Quiz
+  question="Which order guarantees execution but not price?"
+  options={["Limit order", "Market order", "GTC order", "Both have the same guarantees"]}
+  answer={1}
+  explanation="Market orders guarantee execution but not the exact price (slippage possible). Limit orders guarantee price but not execution (may not fill)."
+/>
+
+## Want to go deeper?
+
+Your **Trader** agent is the one who actually proposes the order details after the team has discussed the trade. They'll pick market vs limit, the limit price, the size, and the time horizon.
+
+<ChatWith agent="trader" />
