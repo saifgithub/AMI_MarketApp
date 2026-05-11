@@ -15,9 +15,11 @@ import 'dart:io' show Platform;
 import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
+import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/models/sim.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -545,5 +547,97 @@ class ApiClient {
     return (r.data ?? const [])
         .map((e) => RoomRunSnapshot.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  // ── Sim Trading ─────────────────────────────────────────────────
+
+  Future<SimPortfolio> simPortfolio(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/portfolio/$userId');
+    return SimPortfolio.fromJson(r.data!);
+  }
+
+  Future<SimPortfolio> simResetPortfolio(String userId) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/portfolio/$userId/reset',
+    );
+    return SimPortfolio.fromJson(r.data!);
+  }
+
+  Future<SimSubmitResult> simSubmit({
+    required String userId,
+    required String ticker,
+    required String side, // 'buy' | 'sell'
+    required double quantity,
+    String orderType = 'market',
+    double? limitPrice,
+    double? stop,
+    double? target,
+    int? horizonDays,
+    String? verdictRef,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/submit',
+      data: {
+        'user_id': userId,
+        'ticker': ticker,
+        'side': side,
+        'quantity': quantity,
+        'order_type': orderType,
+        if (limitPrice != null) 'limit_price': limitPrice,
+        if (stop != null) 'stop': stop,
+        if (target != null) 'target': target,
+        if (horizonDays != null) 'horizon_days': horizonDays,
+        if (verdictRef != null) 'verdict_ref': verdictRef,
+      },
+    );
+    return SimSubmitResult.fromJson(r.data!);
+  }
+
+  Future<List<SimTrade>> simListTrades(String userId, {String? statusFilter}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/sim/trades/$userId',
+      queryParameters: {
+        if (statusFilter != null) 'status_filter': statusFilter,
+      },
+    );
+    final list = ((r.data?['trades'] as List?) ?? const []);
+    return list
+        .map((t) => SimTrade.fromJson(t as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> simEvaluate(String userId) async {
+    await _dio.post<Map<String, dynamic>>('/v1/sim/trades/$userId/evaluate');
+  }
+
+  Future<SimTrade> simCloseTrade(String userId, String tradeId) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/sim/trades/$userId/close',
+      data: {'trade_id': tradeId},
+    );
+    return SimTrade.fromJson(r.data!['trade'] as Map<String, dynamic>);
+  }
+
+  Future<double> simQuote(String ticker) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/quote/$ticker');
+    return (r.data!['price'] as num).toDouble();
+  }
+
+  // ── Mandate ─────────────────────────────────────────────────────
+
+  Future<UserMandate> getMandate(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/mandate/$userId');
+    return UserMandate.fromJson(r.data!);
+  }
+
+  Future<UserMandate> patchMandate({
+    required String userId,
+    required Map<String, dynamic> updates,
+  }) async {
+    final r = await _dio.patch<Map<String, dynamic>>(
+      '/v1/mandate/$userId',
+      data: updates,
+    );
+    return UserMandate.fromJson(r.data!);
   }
 }

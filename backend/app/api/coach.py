@@ -42,6 +42,7 @@ from app.services.coach_engine import (
     hydrate_coach_mandate,
 )
 from app.services.journal_store import get_journal_store
+from app.services.mandate_store import resolve_mandate
 from app.services.overlay_store import (
     LIFETIME_EDIT_CAP_BY_PLAN,
     OverlayStore,
@@ -57,8 +58,7 @@ async def coach_start(
     req: CoachStartRequest,
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> CoachStartResponse:
-    mandate = hydrate_coach_mandate(req.mandate_override)
-    mandate = mandate.model_copy(update={"locale": req.locale, "user_id": req.user_id})
+    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
     session, current, opener = engine.open_session(
         user_id=req.user_id,
         agent_id=req.agent_id,

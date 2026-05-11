@@ -1,9 +1,13 @@
-/// Post-onboarding home — bottom nav with Floor / Journal / Lessons.
+/// Post-onboarding home — bottom nav with Floor / Portfolio / Journal /
+/// Lessons / Settings. Five tabs is the alpha home; v1.0 can collapse some
+/// behind a drawer if it gets crowded.
 library;
 
 import 'package:ami_trade/screens/floor/floor_placeholder_screen.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
+import 'package:ami_trade/screens/settings/settings_screen.dart';
+import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,8 +24,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   static const _tabs = <Widget>[
     FloorPlaceholderScreen(),
+    PortfolioScreen(),
     JournalScreen(),
     LessonsScreen(),
+    SettingsScreen(),
   ];
 
   @override
@@ -44,12 +50,16 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             type: BottomNavigationBarType.fixed,
             selectedItemColor: AmiColors.hexBlue,
             unselectedItemColor: AmiColors.textLow,
-            selectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 10),
-            unselectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 10),
+            selectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
+            unselectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.grid_view_rounded),
                 label: 'FLOOR',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.account_balance_wallet_outlined),
+                label: 'PORTFOLIO',
               ),
               BottomNavigationBarItem(
                 icon: Icon(Icons.menu_book_outlined),
@@ -58,6 +68,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               BottomNavigationBarItem(
                 icon: Icon(Icons.school_outlined),
                 label: 'LESSONS',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                label: 'SETTINGS',
               ),
             ],
           ),

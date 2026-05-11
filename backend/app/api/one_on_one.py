@@ -16,6 +16,7 @@ from app.schemas.one_on_one import (
 from app.services.agent_runner import AgentRunner, get_agent_runner, hydrate_mandate
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
+from app.services.mandate_store import resolve_mandate
 
 router = APIRouter(prefix="/v1/agents", tags=["agents"])
 
@@ -29,11 +30,15 @@ async def start_one_on_one(
     req: OneOnOneStartRequest,
     runner: AgentRunner = Depends(get_agent_runner),
 ) -> OneOnOneSession:
-    mandate = hydrate_mandate(req.mandate_override)
-    # Ensure the locale on the mandate matches the request
-    mandate = mandate.model_copy(update={"locale": req.locale})
-    if req.user_id is not None:
-        mandate = mandate.model_copy(update={"user_id": req.user_id})
+    # Prefer the user's stored mandate over the inline override
+    mandate = resolve_mandate(
+        req.user_id, req.mandate_override, locale=req.locale,
+    )
+    # If we fell through to defaults (no store + no override) keep using
+    # hydrate_mandate's broader set of defaults to stay backward-compatible.
+    if req.user_id is None and req.mandate_override is None:
+        mandate = hydrate_mandate(None)
+        mandate = mandate.model_copy(update={"locale": req.locale})
 
     # Gate: Floor Pass users must earn agents. Paid tiers (trader / floor
     # manager / trial_trader) skip-path everything. Concierge is always free.

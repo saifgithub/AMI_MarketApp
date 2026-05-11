@@ -38,8 +38,8 @@ from pydantic import BaseModel, ConfigDict
 
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.room import RoomRun, Verdict
-from app.services.coach_engine import hydrate_coach_mandate
 from app.services.journal_store import get_journal_store
+from app.services.mandate_store import resolve_mandate
 from app.services.room_runner import RoomRunner, get_room_runner
 
 
@@ -65,11 +65,7 @@ async def stream_room(
     """Run a Room session and stream events. Final 'done' event includes the
     run_id; clients then GET /v1/room/{id} for the persisted snapshot."""
 
-    mandate = hydrate_coach_mandate(req.mandate_override)
-    mandate = mandate.model_copy(update={
-        "locale": req.locale,
-        "user_id": req.user_id,
-    })
+    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
     ticker = req.ticker.upper().strip()
     if not ticker:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "ticker required")

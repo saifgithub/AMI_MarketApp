@@ -8,6 +8,7 @@ library;
 
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
@@ -75,7 +76,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       ),
                     if (state.verdict != null) ...[
                       const SizedBox(height: AmiSpacing.l),
-                      _VerdictCard(verdict: state.verdict!, ticker: widget.ticker),
+                      _VerdictCard(
+                        verdict: state.verdict!,
+                        ticker: widget.ticker,
+                        runId: state.runId,
+                      ),
                     ],
                     if (state.done && state.verdict == null)
                       const Padding(
@@ -251,9 +256,14 @@ class _ErrorBanner extends StatelessWidget {
 
 
 class _VerdictCard extends StatelessWidget {
-  const _VerdictCard({required this.verdict, required this.ticker});
+  const _VerdictCard({
+    required this.verdict,
+    required this.ticker,
+    this.runId,
+  });
   final RoomVerdict verdict;
   final String ticker;
+  final String? runId;
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +358,33 @@ class _VerdictCard extends StatelessWidget {
             ),
             child: Text(verdict.reason, style: AmiTypography.body),
           ),
+          if (isApprove) ...[
+            const SizedBox(height: AmiSpacing.m),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AmiColors.hexCyan,
+                  foregroundColor: AmiColors.slate900,
+                  padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                ),
+                icon: const Icon(Icons.add_circle_outline),
+                label: const Text('OPEN TRADE TICKET'),
+                onPressed: () => TradeTicketSheet.show(
+                  context,
+                  prefill: verdict,
+                  verdictRef: runId,
+                  tickerPrefill: ticker,
+                ),
+              ),
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              'Submits with the verdict\'s size / stop / target. PM safety floor reruns.',
+              style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ],
       ),
     );
