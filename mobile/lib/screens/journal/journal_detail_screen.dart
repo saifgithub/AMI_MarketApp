@@ -197,6 +197,40 @@ class _PayloadBlock extends StatelessWidget {
         children.add(const SizedBox(height: AmiSpacing.s));
       }
       if (overlay != null) children.add(_Block(label: 'OVERLAY', body: overlay));
+    } else if (entryType == JournalEntryType.roomRun) {
+      final v = (payload['verdict'] as Map?)?.cast<String, dynamic>();
+      if (v != null) {
+        final action = v['action'] as String? ?? '—';
+        children.add(Text('VERDICT: $action',
+            style: AmiTypography.labelMono.copyWith(
+              color: action == 'APPROVE' ? AmiColors.hexGreen : AmiColors.hexAmber,
+            )));
+        final reason = v['reason'] as String? ?? '';
+        if (reason.isNotEmpty) {
+          children.add(const SizedBox(height: 4));
+          children.add(Text(reason, style: AmiTypography.body));
+        }
+        children.add(const SizedBox(height: AmiSpacing.s));
+      }
+      final transcript = (payload['transcript'] as List?) ?? const [];
+      for (final m in transcript) {
+        final mm = (m as Map).cast<String, dynamic>();
+        final agentId = (mm['agent_id'] as String?) ?? '';
+        final content = (mm['content'] as String?) ?? '';
+        final a = agentById(agentId);
+        children.add(Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(a.abbreviation,
+                  style: AmiTypography.labelMono.copyWith(color: a.color, fontSize: 11)),
+              const SizedBox(height: 2),
+              Text(content, style: AmiTypography.body),
+            ],
+          ),
+        ));
+      }
     } else {
       payload.forEach((k, v) {
         children.add(_Block(label: k.toUpperCase(), body: '$v'));

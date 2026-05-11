@@ -1,0 +1,100 @@
+---
+id: "008_news_that_moves_markets"
+title: "News That Moves Markets"
+duration_min: 3
+level: 1
+track: "news_macro"
+topic: "news_basics"
+prerequisites: ["005_what_makes_a_price_move"]
+tags: ["news", "macro", "basics"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# News That Moves Markets
+
+Most headlines don't move stocks. A small set genuinely does. Knowing which is which separates a useful news analyst from a noise machine.
+
+## The four headline categories that matter
+
+### 1. Earnings + guidance
+
+Quarterly results vs analyst expectations. The market doesn't react to *good* or *bad* numbers — it reacts to *surprises versus expectations*. A company beating estimates by 1% in a high-expectations environment can fall 8% on results day. A company missing estimates by 5% can rally if the guidance for next quarter is strong.
+
+The News Analyst's job on earnings day is filtering the press release for:
+- EPS vs consensus
+- Revenue vs consensus
+- Forward guidance
+- Margin commentary
+- Buyback / dividend changes
+- Any one-time items hiding the real number
+
+### 2. Central-bank decisions
+
+Fed rate decisions, ECB statements, BOJ policy shifts. These move every equity index, not just one stock. A 25-basis-point surprise hike can take 1–2% off the S&P in an hour.
+
+What matters isn't just the decision — it's the **dot plot** and the **press conference language**. "Restrictive for longer" is a different message from "data-dependent."
+
+### 3. Major macro data
+
+CPI (inflation), payrolls, retail sales, ISM manufacturing. Each release window has a known reaction radius. CPI matters most right now because inflation is the Fed's focus.
+
+A 0.1% CPI surprise can move yields 5–10 bps, which then moves growth stocks. The Market Analyst will see it in the chart; the News Analyst will see it in the headline.
+
+### 4. Company-specific catalysts
+
+| Catalyst | Why it moves the stock |
+|---|---|
+| FDA approval / rejection (pharma) | Binary outcome on a multi-billion-dollar product |
+| Court rulings (any sector) | Antitrust, patent, settlement — concrete cash effects |
+| Major contract wins / losses | Often re-rates revenue forecasts |
+| C-suite changes | New CEO = new strategy = re-evaluation |
+| Activist investor stake disclosure | Forces a corporate response |
+| M&A announcements | Premium on target, often hit to acquirer |
+
+## What doesn't move markets (most of the time)
+
+- Vague analyst rating changes from third-tier shops
+- "Stock is up X% in the past Y days" headlines (those are *describing* the move, not *causing* it)
+- General "AI is hot" / "EVs are dead" think-pieces
+- Political news that doesn't change policy
+
+The News Analyst filters all of this out by default. They flag the signal; they ignore the chatter.
+
+## The signal vs the spin
+
+A real News Analyst doesn't just summarize a press release. They tell you what the company is **not** saying:
+
+> *"Earnings beat by 4%, but they pulled the FY2026 revenue range. They didn't replace it with a new one. That's the headline."*
+
+Pulling guidance is rarely accidental. Reading the omissions is the craft.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company beats earnings estimates by 2% but its stock falls 6% on the day. What's the most likely cause?"
+  options={[
+    "The estimates were wrong",
+    "Forward guidance disappointed expectations",
+    "Beating estimates is generally bearish",
+    "Earnings reports rarely move stocks"
+  ]}
+  answer={1}
+  explanation="A small EPS beat is often already priced in. The forward guidance is what tells the market what next quarter looks like — disappointing guidance overrides the beat."
+/>
+
+<Quiz
+  question="Which of these would the News Analyst weigh most heavily on Fed decision day?"
+  options={[
+    "The exact rate decision",
+    "The dot plot and the press conference language",
+    "Whether stocks rallied beforehand",
+    "Analyst forecasts published before the decision"
+  ]}
+  answer={1}
+  explanation="The decision is usually priced in by markets. The dot plot (where Fed members see rates going) and the language (e.g. 'restrictive for longer') is where the new information lives."
+/>

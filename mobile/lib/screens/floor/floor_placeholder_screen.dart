@@ -7,6 +7,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
+import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
@@ -179,6 +180,28 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                           : _showLockedSheet(context, ref, agent),
                     ),
                 ],
+              ),
+
+              const SizedBox(height: AmiSpacing.xl),
+
+              // ── Convene the Room CTA ──
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AmiColors.hexGreen,
+                    foregroundColor: AmiColors.slate900,
+                    padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
+                  ),
+                  icon: const Icon(Icons.bolt),
+                  label: const Text('CONVENE THE ROOM'),
+                  onPressed: () => ConveneSheet.show(context),
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                'Run a full multi-agent debate on a ticker.',
+                style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
               ),
 
               const SizedBox(height: AmiSpacing.xl),

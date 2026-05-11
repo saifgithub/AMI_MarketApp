@@ -1,0 +1,93 @@
+---
+id: "010_bull_vs_bear_thinking"
+title: "Bull vs Bear Thinking"
+duration_min: 4
+level: 2
+track: "edge_process"
+topic: "frameworks"
+prerequisites: ["006_reading_a_pe_ratio"]
+tags: ["frameworks", "bull", "bear", "research"]
+agent_callouts: ["bull_researcher", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# Bull vs Bear Thinking
+
+Every stock has at least two coherent stories: a bull case and a bear case. A good investor can articulate **both** before forming a view. Knowing this discipline is what separates research from rationalisation.
+
+## Why two stories, not one
+
+When you only know the case for buying, you don't actually know whether you should buy. You know what the *bullish* observer sees. You need the bearish observer too — what would have to be true for you to be wrong?
+
+This is why AMI Trade ships a **Bull Researcher** *and* a **Bear Researcher** as separate agents. They're not optional perspectives. They're the structural debate.
+
+## What a good bull case looks like
+
+A serious bull case isn't "I think the stock will go up." It's specific:
+
+1. **Thesis in one sentence.** "Hyperscaler AI capex will drive 30%+ revenue growth for NVDA through 2027."
+2. **Evidence backing the thesis.** Capex commentary from the Big 4 hyperscalers. Order backlogs. Margin trends.
+3. **What the market is missing.** Why is the bull case mispriced right now? "Consensus models AI capex tapering in 2026; the bull case is it accelerates."
+4. **Sizing implication.** Given the thesis and risks, how much should you commit?
+5. **Where you'd be wrong.** What evidence would invalidate the thesis? "Hyperscaler capex cut by 20%+ in any single guide."
+
+The last point is non-negotiable. **A bull case without falsifiability is a religion.**
+
+## What a good bear case looks like
+
+The bear isn't a doom-monger. The bear is a precision tool:
+
+1. **Risk in one sentence.** "Multiple compression risk if AI capex disappoints — NVDA at 38x can re-rate to 20x in a quarter."
+2. **Quantification.** Don't say "the stock could fall." Say "20-point multiple compression = ~50% downside."
+3. **Catalysts to watch.** What specifically would trigger the de-rating? Earnings, hyperscaler guidance cuts, China demand drop.
+4. **Position-sizing impact.** A 50% drawdown risk in a 10% position is a 5% portfolio hit. Is that OK?
+5. **What would invalidate the bear case.** "If TSMC raises AI-capacity guide again next quarter, the supply-side bear case is dead."
+
+A real Bear Researcher doesn't argue the company is doomed. They argue the *current price* doesn't reflect the *full risk*. That's a much harder, sharper position.
+
+## The Research Manager's job
+
+When the Bull and Bear have both built their cases, the Research Manager synthesises:
+
+- Which case is stronger today, *at the current price*?
+- What are the asymmetries? (A 30% upside vs 50% downside is bad asymmetry even if you think the bull case is right.)
+- How does the user's mandate constrain sizing?
+- What's the *position* — not just the view?
+
+This is the moment a "buy" becomes a "buy 3% with a stop at $148" — opinion turning into action.
+
+<ChatWith agent="research_manager" />
+
+## A trap: the asymmetric-strawman bear case
+
+Beware the Bear Researcher who knocks down a strawman — "what if AI is overhyped" — and then declares victory. A real bear case has to engage with the strongest version of the bull case, not its weakest version.
+
+If your Bear Researcher isn't *steel-manning* the bull case before refuting it, push back. (You can coach them to do that — see Coach Your Agent.)
+
+## Quiz
+
+<Quiz
+  question="A Bull Researcher pitches: 'AI is going to be huge, NVDA will benefit, BUY.' What's missing from this bull case?"
+  options={[
+    "Falsifiability — what would invalidate the thesis?",
+    "Optimism",
+    "A specific price target",
+    "Mention of competitors"
+  ]}
+  answer={0}
+  explanation="A serious bull case must say what evidence would prove it wrong. 'AI is huge' is not testable. 'Hyperscaler capex grows 30%+ in 2026' is testable."
+/>
+
+<Quiz
+  question="A Bear Researcher argues that NVDA at 38x P/E has 50% downside if multiples compress to 20x. The Bull rebuts: 'Yes but growth could re-accelerate.' What's the Research Manager's job here?"
+  options={[
+    "Pick the side they personally agree with",
+    "Weigh the asymmetry — magnitude of downside vs upside, and probability of each",
+    "Ignore the disagreement",
+    "Let the user decide alone"
+  ]}
+  answer={1}
+  explanation="The RM's role is synthesis: what's the actual asymmetry? A 30% upside with 50% downside is bad even if you lean bullish. The RM translates the debate into a sized position with stops."
+/>

@@ -1,0 +1,93 @@
+---
+id: "011_position_sizing_basics"
+title: "Position Sizing Basics"
+duration_min: 4
+level: 2
+track: "risk_portfolio"
+topic: "sizing"
+prerequisites: ["004_market_order_vs_limit"]
+tags: ["risk", "sizing", "portfolio"]
+agent_callouts: ["aggressive_debator", "conservative_debator", "neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# Position Sizing Basics
+
+How much should you put on this trade? The answer separates careers. Most beginner blow-ups aren't from bad picks — they're from being right too small and wrong too big.
+
+## The two questions sizing answers
+
+1. **How much can I afford to lose on this single trade?**
+2. **How much do I gain if I'm right?**
+
+Sizing is the ratio between those two answers, scaled to your portfolio.
+
+## A simple sizing rule (1R framework)
+
+Define **1R** as the amount you're willing to lose if the trade goes against you.
+
+```
+If you have $10,000 and risk 1% per trade:
+  1R = $100
+
+If you buy at $50 with a stop at $48:
+  You're risking $2 per share.
+
+So you can buy 50 shares ($100 ÷ $2 = 50).
+That's $2,500 of stock — 25% of your portfolio.
+```
+
+The 50 shares is determined *by the stop distance*, not by your gut. Stop closer (smaller risk per share) → bigger position. Stop further → smaller position.
+
+## Why this works
+
+This rule makes sure every losing trade costs *the same*. You don't get a 10% drawdown from one trade — your portfolio's max single-trade loss is fixed at 1R.
+
+A 20% drawdown from this approach requires 20 losing trades in a row (assuming no wins). Statistically, even bad traders rarely string together 20 straight losses.
+
+## The three Risk Debators
+
+AMI Trade gives you three Risk Debators who each push back on sizing differently:
+
+| Debator | Argues for | When their view wins |
+|---|---|---|
+| **Aggressive** | Bigger size, full conviction | High-asymmetry setups, smaller account |
+| **Conservative** | Smaller size, capital preservation | Drawdown already large, mandate tight |
+| **Neutral** | Statistical middle | Most days, most trades |
+
+The PM doesn't pick one — they listen to all three and weigh them against your mandate. If your `risk_score` is 1 (very conservative), the Conservative Debator's voice carries more weight. If 5, the Aggressive's case gets a boost.
+
+## Sizing caps you can't override
+
+Even if every Debator agrees on 80%, the PM's safety floor enforces:
+
+- **Single-name cap: 50% of portfolio.** Regardless of conviction.
+- **Mandate drawdown cap.** If your portfolio is already at the drawdown limit, no new long-only buy.
+- **Compliance flags.** Halal, ESG-lite, blocklist, allowlist — these don't bend for sizing.
+
+You'll see the safety floor in action whenever you Convene the Room. Watch for the PM's "mandate check" line.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You have $20,000 and risk 1% per trade. You buy at $40 with a stop at $36. How many shares can you buy?"
+  options={["10", "20", "50", "100"]}
+  answer={2}
+  explanation="1R = $20,000 × 1% = $200. Stop distance = $40 − $36 = $4. Shares = $200 ÷ $4 = 50. (You'd buy $2,000 of stock — 10% of the portfolio.)"
+/>
+
+<Quiz
+  question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Debator wants to size up. What's the PM's most likely response?"
+  options={[
+    "Size up — Aggressive is correct",
+    "Refuse — bad asymmetry, downside >> upside",
+    "Defer to the user's mandate alone",
+    "Approve at any size"
+  ]}
+  answer={1}
+  explanation="An asymmetric R:R of roughly 0.5:1 (you risk $2 to make $1) is a bad bet over enough samples. The PM will likely overrule the Aggressive case here regardless of conviction."
+/>

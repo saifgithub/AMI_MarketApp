@@ -1,0 +1,97 @@
+---
+id: "009_sentiment_and_the_crowd"
+title: "Sentiment and the Crowd"
+duration_min: 3
+level: 1
+track: "sentiment_behaviour"
+topic: "sentiment_basics"
+prerequisites: ["005_what_makes_a_price_move"]
+tags: ["sentiment", "behaviour", "basics"]
+agent_callouts: ["social_media_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# Sentiment and the Crowd
+
+Price reflects what people *think*. Sentiment is the measurement of that thinking — what the crowd believes, with what intensity, with what conviction.
+
+## Why sentiment matters
+
+Markets oscillate between two emotional poles:
+
+- **Greed.** Everyone is bullish. Cash on the sidelines is small. The next dollar in pushes prices up less. Risk of disappointment is high.
+- **Fear.** Everyone is bearish. Cash on the sidelines is huge. Any good news has lots of dry powder to reward it.
+
+These aren't permanent states. The crowd alternates between them. The historical pattern is that **extreme sentiment is contrarian**: peak greed often marks a top; peak fear often marks a bottom.
+
+This doesn't mean sentiment *causes* turning points. It means by the time everyone agrees on the direction, most of the move is already done.
+
+## The Social Media Analyst's data sources
+
+| Source | What it tells you |
+|---|---|
+| Reddit /r/investing, /r/wallstreetbets | Retail interest and conviction |
+| Stocktwits | Active-trader sentiment, per-ticker |
+| X (Twitter) finance accounts | Influencer narratives forming |
+| YouTube finance views + sub growth | Mass-retail attention |
+| Google Trends for tickers | When unsophisticated money is searching |
+| Put/call ratio | Options-market positioning (lagging this list) |
+
+The Social Media Analyst doesn't just count mentions — they measure **intensity** and **direction**.
+
+## Useful sentiment patterns
+
+### 1. Mention-spike without news
+
+A ticker suddenly trending on Reddit with no underlying news catalyst is usually a momentum chase. It can keep going for days, but the unwind is fast and brutal.
+
+### 2. Sentiment vs price divergence
+
+- **Bullish divergence:** price keeps falling, but sentiment is no longer getting worse. The bottom may be in.
+- **Bearish divergence:** price keeps rising, but bullish sentiment is plateauing. Energy is leaving the move.
+
+### 3. The "this time it's different" headline
+
+Whenever a major financial outlet runs that exact phrase on a sector or asset, it's a high-probability top signal. Empirically, every cycle has its own version. The crowd's conviction is most fragile right when it expresses certainty.
+
+### 4. The crash sentiment floor
+
+When even bullish CNBC guests turn bearish — when permabull X-account influencers start posting "this is bad" — that's usually within weeks of a tradable bottom.
+
+## What sentiment is *not*
+
+- It's not a predictive model. Extreme sentiment can stay extreme for a while.
+- It's not a substitute for fundamentals. A meme stock can sentiment-spike *and* be a bad business.
+- It's not the same as price action. Sentiment leads, lags, or diverges from price — that relationship is the actual signal.
+
+Used right, sentiment is a *secondary* input. Your Bear and Bull researchers may already weigh fundamentals heavily; the Social Media Analyst tells them whether the market is currently emotionally aligned with the case they're building.
+
+<ChatWith agent="social_media_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A ticker is up 80% in a month. Reddit mentions have grown 10×. Bullish sentiment on Stocktwits is at an all-time high. The Social Media Analyst notes 'sentiment intensity has plateaued for 4 days while price keeps climbing.' What's this pattern called?"
+  options={[
+    "Sentiment confirmation",
+    "Bullish divergence",
+    "Bearish divergence",
+    "Crowd capitulation"
+  ]}
+  answer={2}
+  explanation="Price keeps going up but sentiment intensity isn't increasing — energy is leaving the move. Classic late-stage exhaustion pattern."
+/>
+
+<Quiz
+  question="A normally-bullish financial outlet runs a 'this time it's different' cover story about AI stocks. Empirically, what does this often signal?"
+  options={[
+    "A new structural bull market",
+    "Sentiment euphoria, often within weeks of a top",
+    "Nothing — magazine covers are noise",
+    "A coming earnings beat"
+  ]}
+  answer={1}
+  explanation="The 'this time it's different' headline tends to appear when retail enthusiasm peaks. It's one of the most reliable contrarian signals in modern market history."
+/>

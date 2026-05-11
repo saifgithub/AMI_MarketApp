@@ -1,0 +1,84 @@
+---
+id: "006_reading_a_pe_ratio"
+title: "Reading a P/E Ratio"
+duration_min: 4
+level: 1
+track: "fundamentals_analysis"
+topic: "ratios"
+prerequisites: ["001_what_is_a_stock"]
+tags: ["fundamentals", "valuation", "ratios"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# Reading a P/E Ratio
+
+The price-to-earnings ratio is the single most quoted number in stocks. Knowing what it actually says — and what it doesn't — is the first real tool in your fundamentals kit.
+
+## The formula
+
+```
+P/E = Price per share ÷ Earnings per share (EPS, trailing 12 months)
+```
+
+That's it. NVDA at $152 with $4 of trailing earnings per share has a P/E of 38.
+
+## What it actually means
+
+A P/E of 38 means the market is currently paying $38 for every $1 of *this year's* profit. If earnings stayed flat forever and the company paid 100% of profits out as dividends, you'd recoup your investment in 38 years.
+
+Nobody actually thinks earnings stay flat. The P/E is the market's way of pricing in **expected growth** — a high P/E says "I think this company will earn a lot more in the future." A low P/E says "I think growth has slowed or the business is risky."
+
+## Reference points (US large-caps, 2026 vintage)
+
+| P/E range | What the market is saying |
+|---|---|
+| Under 10 | Deep cyclical, declining business, or out-of-favour sector |
+| 10–15 | Mature, stable, mid-growth |
+| 15–25 | Roughly the long-run S&P average |
+| 25–40 | Growth premium — earnings expected to compound fast |
+| Over 40 | Hyper-growth or speculative — high expectations baked in |
+
+These aren't absolute. A 40 P/E on a 30%-growth software name is reasonable. A 40 P/E on a stagnant utility is reckless.
+
+## The trap: forward vs trailing P/E
+
+You'll see both:
+
+- **Trailing P/E** uses the last 12 months of *reported* earnings. Real numbers, but backward-looking.
+- **Forward P/E** uses analyst *estimates* for the next 12 months. Forward-looking, but only as good as the consensus.
+
+In a slowing economy, forward P/E often looks lower than trailing P/E because analysts haven't cut estimates fast enough yet. Beware: a "cheap" forward P/E based on stale estimates can be a value trap.
+
+## Why your Fundamentals Analyst quotes it
+
+When the Fundamentals Analyst opens a discussion of a name, they typically lead with the P/E vs the sector median:
+
+> *"NVDA trades at 38x trailing, 32x forward. Semiconductor sector median is 22x. So you're paying a 60% growth premium relative to peers."*
+
+That sentence is the P/E doing its job — anchoring the conversation. Whether 60% is too much or fair depends on growth, margins, and the Bull / Bear cases. The P/E doesn't tell you that — it just frames the question.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock trades at $80 with trailing EPS of $4. What's its P/E?"
+  options={["10", "20", "32", "40"]}
+  answer={1}
+  explanation="P/E = price ÷ EPS = $80 ÷ $4 = 20."
+/>
+
+<Quiz
+  question="Two software companies have the same forward P/E of 30. Company A grows earnings 5%/yr; Company B grows 25%/yr. What's the most reasonable read?"
+  options={[
+    "Both are equally priced",
+    "Company B is more expensive",
+    "Company A is more expensive given its slower growth",
+    "P/E tells us nothing useful here"
+  ]}
+  answer={2}
+  explanation="A higher P/E demands faster growth to justify it. Company A's P/E of 30 with only 5% growth looks rich; Company B's same P/E with 25% growth looks reasonable."
+/>

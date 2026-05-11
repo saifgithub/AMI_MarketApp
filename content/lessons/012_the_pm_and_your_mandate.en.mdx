@@ -1,0 +1,120 @@
+---
+id: "012_the_pm_and_your_mandate"
+title: "The PM and Your Mandate"
+duration_min: 4
+level: 2
+track: "risk_portfolio"
+topic: "governance"
+prerequisites: ["011_position_sizing_basics"]
+tags: ["pm", "mandate", "governance", "safety"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# The PM and Your Mandate
+
+The Portfolio Manager is the final voice in every Convene the Room. They are not just the loudest opinion — they are the gatekeeper that enforces *your own rules* on yourself.
+
+## What your mandate is (recap)
+
+Your mandate is the configuration you set up during onboarding:
+
+| Field | Examples |
+|---|---|
+| Primary goal | Retirement / long-term wealth / income / specific goal |
+| Horizon | Short / medium / long / very long |
+| Risk score | 1–5 |
+| Max drawdown | 10% / 20% / 30% / 50% / 100% |
+| Compliance flags | Halal, ESG-lite, no tobacco/alcohol/gambling, no fossil fuels, long-only, liquid-only |
+| Blocklist / allowlist | Specific tickers you won't / will trade |
+| Path | Active / long-horizon / both |
+| Learning style | Quick / story / visual / hands-on |
+
+Every agent gets a slice of this. The PM gets all of it, plus a **safety floor** that is uncoachable.
+
+## What the PM does at the end of a Room
+
+After the Trader proposes a trade and the Risk Debators argue sizing, the PM runs through three layers:
+
+### Layer 1: LLM judgement
+
+The PM's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Trader, the three Risk Debators — and forms an opinion. They write a verdict in plain language:
+
+> *"The setup is clean. Bull's growth thesis is well-defended; Bear's compression case is real but priced in. Trader's 3% size is consistent with your risk_score=3 mandate."*
+
+This is the PM as senior partner. Style varies — terse, verbose, hedged, decisive — and you can coach it.
+
+### Layer 2: Mandate compliance check (deterministic)
+
+Before the verdict is published, a **deterministic function** runs every check against the proposed trade:
+
+- Ticker on your blocklist? → Reject.
+- Ticker fails halal screen, and you're halal-flagged? → Reject.
+- Position size > 50% of portfolio? → Reject.
+- Drawdown projection > your `max_drawdown_pct`? → Reject.
+- Short proposed while you're long-only? → Reject.
+
+This isn't an LLM call. It's a pure function. The LLM can be coached, jailbroken, or hallucinate — but the function can't.
+
+### Layer 3: Final verdict assembly
+
+If everything passes: the verdict ships with the Trader's parameters (size, entry, stop, target, horizon).
+
+If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Trader, and the LLM PM all agreed on the trade.
+
+## Why the safety floor exists
+
+Without the safety floor, Coach Your Agent would be dangerous — a user could coach their PM into "always approve" mode and bypass their own protection. The floor is there to make sure your coaching shapes *style* and *priority*, not *compliance*.
+
+You can coach the PM to be more or less verbose, more or less cautious on borderline cases, more or less narrative in their reasoning. You cannot coach the PM to skip the compliance check. The path to looser limits is **editing your mandate** — which is honest, visible, and intentional.
+
+## The PM's three-line verdict format
+
+After enough Room runs you'll recognise the PM's house style:
+
+```
+[VERDICT] APPROVE — BUY NVDA 3% AT $152 STOP $148 TARGET $172
+[RATIONALE] Growth thesis defended; compression risk priced in.
+[MANDATE CHECK] PASS — halal ✓, drawdown 24% < 30%, single-name 3% < 50%
+```
+
+Or, when the floor catches a violation:
+
+```
+[VERDICT] REJECT — single-name cap violation
+[RATIONALE] Trader proposed 60%; your mandate caps 50%.
+[MANDATE CHECK] FAIL — concentration
+[OVERRIDDEN_FROM_LLM] yes
+```
+
+That last line — `overridden_from_llm: yes` — is the safety floor at work. The LLM said approve. The function said no. You're protected by both.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You coach the PM: 'Always approve trades that the Trader suggests.' Next Room run, the Trader proposes a 60% position. What happens?"
+  options={[
+    "PM approves at 60% — your coaching wins",
+    "PM rejects at the LLM level for poor sizing",
+    "PM rejects via the deterministic safety floor (single-name cap)",
+    "PM crashes — no policy for this case"
+  ]}
+  answer={2}
+  explanation="The deterministic function checks position size regardless of LLM output. Even if your coaching pushes the LLM to approve, the function flips the verdict to REJECT. You'd see overridden_from_llm: yes."
+/>
+
+<Quiz
+  question="What's the right way to allow PYPL trades if you're currently halal-flagged?"
+  options={[
+    "Coach the PM to ignore halal screening",
+    "Coach the Trader to push PYPL harder",
+    "Edit your mandate in Settings → My Mandate to remove the halal flag",
+    "There's no way — PYPL is permanently blocked"
+  ]}
+  answer={2}
+  explanation="The safety floor is uncoachable, but your mandate is yours to change. Editing the mandate is the honest, visible, intentional path. Coaching the PM to skip checks isn't possible by design."
+/>

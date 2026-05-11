@@ -17,6 +17,7 @@ import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
+import 'package:ami_trade/models/room.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -429,5 +430,120 @@ class ApiClient {
       data: {'user_id': userId, 'agent_id': agentId, 'method': method},
     );
     return AgentActivationRecord.fromJson(r.data!);
+  }
+
+  // ── Convene the Room ───────────────────────────────────────────
+
+  /// Stream a full Room run for [ticker]. Yields typed events.
+  ///
+  /// Event kinds:
+  ///   {'kind':'phase','label': ...}
+  ///   {'kind':'agent_token','agent_id': ..., 'text': ...}
+  ///   {'kind':'agent_done','agent_id': ...}
+  ///   {'kind':'verdict','verdict': RoomVerdict}
+  ///   {'kind':'done','run_id': ...}
+  ///   {'kind':'error','message': ...}
+  Stream<Map<String, dynamic>> streamRoom({
+    required String userId,
+    required String ticker,
+    String locale = 'en',
+    Map<String, dynamic>? mandateOverride,
+    double portfolioValue = 100000.0,
+    double currentDrawdownPct = 0.0,
+  }) async* {
+    final uri = Uri.parse('$baseUrl/v1/room/stream');
+    final body = jsonEncode({
+      'user_id': userId,
+      'ticker': ticker,
+      'locale': locale,
+      if (mandateOverride != null) 'mandate_override': mandateOverride,
+      'portfolio_value': portfolioValue,
+      'current_drawdown_pct': currentDrawdownPct,
+    });
+    final client = http.Client();
+    try {
+      final request = http.Request('POST', uri)
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Accept'] = 'text/event-stream'
+        ..body = body;
+      final response = await client.send(request);
+      if (response.statusCode != 200) {
+        throw Exception('HTTP ${response.statusCode} from room stream');
+      }
+      String buffer = '';
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        while (buffer.contains('\n\n')) {
+          final idx = buffer.indexOf('\n\n');
+          final event = buffer.substring(0, idx);
+          buffer = buffer.substring(idx + 2);
+
+          String? eventType;
+          final dataLines = <String>[];
+          for (final line in event.split('\n')) {
+            if (line.startsWith('event: ')) {
+              eventType = line.substring(7).trim();
+            } else if (line.startsWith('data: ')) {
+              dataLines.add(line.substring(6));
+            }
+          }
+          final data = dataLines.join('\n');
+          if (eventType == null) continue;
+          try {
+            switch (eventType) {
+              case 'phase':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {'kind': 'phase', 'label': j['label']};
+                break;
+              case 'agent_token':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                final text = (j['text'] as String? ?? '')
+                    .replaceAll(r'\n', '\n')
+                    .replaceAll(r'\\', r'\');
+                yield {
+                  'kind': 'agent_token',
+                  'agent_id': j['agent_id'],
+                  'text': text,
+                };
+                break;
+              case 'agent_done':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {'kind': 'agent_done', 'agent_id': j['agent_id']};
+                break;
+              case 'verdict':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {'kind': 'verdict', 'verdict': RoomVerdict.fromJson(j)};
+                break;
+              case 'done':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {'kind': 'done', 'run_id': j['run_id']};
+                return;
+              case 'error':
+                yield {'kind': 'error', 'message': data};
+                return;
+            }
+          } catch (e) {
+            // skip malformed event
+          }
+        }
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<RoomRunSnapshot> getRoom(String runId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/room/$runId');
+    return RoomRunSnapshot.fromJson(r.data!);
+  }
+
+  Future<List<RoomRunSnapshot>> listUserRooms(String userId, {int limit = 50}) async {
+    final r = await _dio.get<List<dynamic>>(
+      '/v1/room/user/$userId',
+      queryParameters: {'limit': limit},
+    );
+    return (r.data ?? const [])
+        .map((e) => RoomRunSnapshot.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }
