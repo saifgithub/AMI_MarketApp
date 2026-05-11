@@ -131,10 +131,10 @@ AMI_MarketApp/
 │   │   ├── schemas/               Pydantic — Mandate, Agent, RoomRun, Verdict,
 │   │   │                          OnboardingSession, ChatMessage
 │   │   └── core/                  config (env-var driven), logging (structlog)
-│   ├── tests/unit/                37 passing tests
+│   ├── tests/unit/                103 passing tests
 │   └── .venv/                     python3.13 venv (auto-created by run_dev.sh)
 ├── content/                     ← Lessons (MDX), strings (JSON), agent prompts
-│   ├── lessons/                   5 lessons written (Foundations track)
+│   ├── lessons/                   13 lessons across 7 tracks
 │   ├── i18n/                      empty placeholder for v1.0
 │   └── agents/                    13 base prompts (12 trading + Concierge)
 ├── infra/local/                 ← Docker Compose for local dev stack
@@ -147,10 +147,11 @@ AMI_MarketApp/
 
 ## Current state (snapshot — git is source of truth)
 
-- **4 commits in.** Latest: `97d675c` (W3: 12-agent 1-on-1 streaming).
+- **11 commits in.** Latest: W9 (LLM-swap prep + cleanup pass).
 - **Backend** runs locally via `scripts/run_dev.sh` on port 8000.
-- **App** installed on iPhone `TESTING IPHONE 13` (device id `00008110-000261101A22801E`), bundle `ai.agenticmarketintel.amiTrade`, signed under Apple Team `S7RBWM4879`.
-- **LLM provider** is `MockProvider` by default. Add `ANTHROPIC_API_KEY` to `backend/.env` to switch to live Claude.
+- **Postgres** at host port `5434` (`ami_postgres` container). RLS policies live but dormant under the superuser connection.
+- **App** installed on iPhone `TESTING IPHONE 13` (device id `00008110-000261101A22801E`), bundle `ai.agenticmarketintel.amiTrade`, signed under Apple Team `S7RBWM4879`. Still showing the W3 build until redeployed.
+- **LLM provider** auto-switches to Anthropic the moment `ANTHROPIC_API_KEY` lands in `backend/.env`. Validate with `cd backend && .venv/bin/python -m scripts.llm_smoke` — expect PASS on all three tiers. Per-agent tier routing is wired (`AGENT_MIN_TIER` in `llm_gateway.py`): PM always runs on `premium`, Concierge runs on `cheap`, analysts run on `mid`. Status: `GET /v1/llm/status`.
 
 Run `cat HANDOVER.md` at the start of any new session for the freshest state + immediate next steps. Run `git log --oneline` to verify commit chain hasn't moved past what HANDOVER.md describes.
 

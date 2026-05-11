@@ -1,10 +1,10 @@
 """Onboarding API endpoints — anonymous-first conversation."""
 
-from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.time import now_utc
 from app.schemas.onboarding import (
     AnswerRequest,
     AnswerResponse,
@@ -80,7 +80,7 @@ async def submit_answer(
             author=Author.USER,
             content=req.answer,
             step=req.step,
-            timestamp=datetime.utcnow(),
+            timestamp=now_utc(),
         )
     )
 

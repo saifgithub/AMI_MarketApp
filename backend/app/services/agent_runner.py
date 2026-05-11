@@ -10,10 +10,10 @@ The runner is the only place that knows about both the prompt composition
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
-from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.core.time import now_utc
 from app.schemas import AgentId, Mandate
 from app.schemas.mandate import (
     Compliance,
@@ -27,7 +27,7 @@ from app.schemas.mandate import (
 )
 from app.schemas.one_on_one import ChatMsg, OneOnOneSession
 from app.services.agent_prompts import build_agent_prompt
-from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier
+from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier, resolve_tier
 
 
 # ── Plan → model tier mapping ────────────────────────────────────────────
@@ -60,7 +60,7 @@ class AgentRunner:
         session = OneOnOneSession(
             id=uuid4(),
             agent_id=agent_id,
-            started_at=datetime.utcnow(),
+            started_at=now_utc(),
             mandate_used=mandate.model_dump(mode="json"),
             locale=mandate.locale,
             user_id=user_id,
@@ -83,7 +83,8 @@ class AgentRunner:
         agent_id = AgentId(session.agent_id) if isinstance(session.agent_id, str) else session.agent_id
         system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
 
-        tier = PLAN_TO_TIER.get(Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan, "cheap")
+        plan_tier = PLAN_TO_TIER.get(Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan, "cheap")
+        tier = resolve_tier(plan_tier, agent_id.value)
 
         # Build the conversation: history + the new user message
         messages: list[ChatMessage] = [
@@ -124,7 +125,7 @@ def hydrate_mandate(overrides: dict[str, Any] | None) -> Mandate:
     test 1-on-1 without first completing onboarding.
     """
     o = overrides or {}
-    now = datetime.utcnow()
+    now = now_utc()
     return Mandate(
         user_id=uuid4(),
         version=1,

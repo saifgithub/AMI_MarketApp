@@ -14,6 +14,8 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.time import now_utc
+
 
 class ConversationStep(str, Enum):
     """The 8 ordered steps of the Express path."""
@@ -42,7 +44,7 @@ class Message(BaseModel):
     author: Author
     content: str
     step: ConversationStep
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=now_utc)
     chips: list[str] = Field(default_factory=list)
 
 
@@ -52,8 +54,8 @@ class OnboardingSession(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
     id: UUID = Field(default_factory=uuid4)
-    started_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=now_utc)
+    updated_at: datetime = Field(default_factory=now_utc)
 
     locale: str = "en"
     timezone: str = "UTC"

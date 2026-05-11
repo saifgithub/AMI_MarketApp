@@ -1,0 +1,115 @@
+---
+id: "013_research_manager_synthesis"
+title: "The Research Manager: synthesis, not opinion"
+duration_min: 5
+level: 3
+track: "edge_process"
+topic: "frameworks"
+prerequisites: ["010_bull_vs_bear_thinking"]
+tags: ["research", "synthesis", "asymmetry", "framework"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+
+# The Research Manager: synthesis, not opinion
+
+When the Bull and the Bear have both built honest cases, somebody has to **decide**. That somebody is the Research Manager. Their job is not to pick a side — it is to convert a debate into a position.
+
+## What the RM does NOT do
+
+- Cast a tie-breaking vote.
+- Average the bull and bear cases into a wishy-washy "mildly positive."
+- Defer to whoever spoke last.
+- Add their own personal opinion to the pile.
+
+If the RM is just a third opinion in the room, they have failed. There are already four Analysts upstream. A fifth opinion is noise.
+
+## What the RM actually does
+
+The RM does **four** things that no other agent does:
+
+1. **Score the asymmetry.** A 30% upside vs a 50% downside is bad asymmetry, even if you lean bullish. The RM is the only agent whose job is to *measure both sides on the same axis*.
+2. **Translate view into size.** "We're cautiously bullish" is not a position. "Buy 3% with a stop at $148, target $192, horizon 6 months" is a position. The RM is the bridge from opinion to action.
+3. **Reconcile the mandate.** The user's mandate sets risk_score, max_drawdown, single-name cap, halal screen. The RM is the first place those constraints touch the trade. (The PM enforces them at the gate; the RM internalises them upstream.)
+4. **Flag debate quality.** If the Bear is strawmanning, the RM calls it. If the Bull's evidence is just narrative, the RM calls it. The RM is the room's quality bar.
+
+## Asymmetry, in numbers
+
+Think of every trade as a bet with four numbers:
+
+- **Probability of bull case** — what the Bull thinks; usually 50-70%.
+- **Magnitude of upside** — typically 20-40% over the horizon.
+- **Probability of bear case** — what the Bear thinks; usually 30-50%.
+- **Magnitude of downside** — typically 15-35%.
+
+Multiply: `EV = p_up × upside − p_down × downside`. If EV is positive *and* the downside fits the mandate, it's a trade. If EV is positive but the downside exceeds your single-name cap × max_drawdown budget, it isn't.
+
+The RM is the agent who actually runs that arithmetic. The Bull and Bear argue qualitatively. The RM is *quantitative*.
+
+<ChatWith agent="research_manager" />
+
+## A worked example
+
+Bull on NVDA: 60% chance of +30% in 9 months (hyperscaler capex re-accelerates).
+Bear on NVDA: 40% chance of -25% in 9 months (multiple compression on any capex guide cut).
+
+EV = 0.6 × 30 − 0.4 × 25 = 18 − 10 = **+8% expected return**.
+
+That sounds tradeable. But check the downside against the mandate:
+
+- User max_drawdown is 20%. A 25% drawdown in a 10% position = 2.5% portfolio hit. OK.
+- User single-name cap is 8%. So the RM caps position at 8%, not 10%.
+- Stop is set 1 ATR below the bear's invalidation level — say $148.
+
+The output: **BUY 8% NVDA, stop $148, target $192, horizon 9 months.** The Bull and Bear didn't say that. The RM did.
+
+## When the RM should refuse
+
+A real Research Manager will sometimes return "no trade." Specifically:
+
+- EV is negative or barely positive — the asymmetry doesn't justify the cost.
+- Downside fits no rational stop — the bear case is "if AI bubble pops, -60%" with no clean invalidation level.
+- Mandate conflicts — the user is long-only and the only edge is on the short side.
+- Debate quality was poor — neither side built a falsifiable case.
+
+"No trade" is a real answer. The PM downstream will respect it. (And if the RM is forced into a trade they don't believe in, the PM's safety floor will catch it anyway — that's the redundancy.)
+
+## Quiz
+
+<Quiz
+  question="The Bull thinks 60% chance of +30% upside; the Bear thinks 40% chance of -25% downside. What expected return does the RM compute?"
+  options={[
+    "+5%",
+    "+8%",
+    "+13%",
+    "-1%"
+  ]}
+  answer={1}
+  explanation="EV = 0.6 × 30 − 0.4 × 25 = 18 − 10 = +8%. The RM's job is to run this calculation explicitly, not to vibe-check the debate."
+/>
+
+<Quiz
+  question="Which of these is NOT something the Research Manager does?"
+  options={[
+    "Score upside vs downside asymmetry on the same axis",
+    "Translate a 'view' into a sized position with a stop",
+    "Cast a tie-breaking vote between Bull and Bear",
+    "Apply the user's mandate constraints to position size"
+  ]}
+  answer={2}
+  explanation="The RM is not a third opinion. They synthesise. If the RM is just voting, they've failed — there are already four Analysts upstream."
+/>
+
+<Quiz
+  question="The Bull case has no falsification condition and the Bear case is just a strawman of 'AI is overhyped.' What should the Research Manager do?"
+  options={[
+    "Pick whichever side has more conviction",
+    "Average the two and recommend a small position",
+    "Flag the debate quality and return 'no trade'",
+    "Escalate directly to the Portfolio Manager"
+  ]}
+  answer={2}
+  explanation="The RM is the room's quality bar. If neither side built an honest case, there's no real signal. 'No trade' is a legitimate output — and the PM will respect it downstream."
+/>

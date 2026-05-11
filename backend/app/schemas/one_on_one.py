@@ -6,13 +6,14 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.time import now_utc
 from app.schemas.agents import AgentId
 
 
 class ChatMsg(BaseModel):
     role: Literal["user", "assistant"]
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=now_utc)
 
 
 class OneOnOneStartRequest(BaseModel):

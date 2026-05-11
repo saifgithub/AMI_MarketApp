@@ -16,9 +16,9 @@ The state machine is the same; only the message-generation layer changes.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
+from app.core.time import now_utc
 from app.schemas.mandate import (
     Compliance,
     DailyBriefing,
@@ -189,7 +189,7 @@ def process_answer(
 
     next_step = _NEXT_STEP.get(step, ConversationStep.COMPLETE)
     session.current_step = next_step
-    session.updated_at = datetime.utcnow()
+    session.updated_at = now_utc()
 
     if next_step == ConversationStep.READBACK:
         summary = _build_readback_summary(session)
@@ -509,7 +509,7 @@ def session_to_mandate_dict(session: OnboardingSession, user_id: Any) -> dict[st
     """Build the dict suitable for constructing a Mandate from a completed session."""
     summary = _build_readback_summary(session)
     rc = session.risk_components_partial
-    now = datetime.utcnow()
+    now = now_utc()
     return {
         "user_id": user_id,
         "version": 1,

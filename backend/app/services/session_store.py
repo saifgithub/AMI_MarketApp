@@ -10,9 +10,10 @@ The store is intentionally simple — onboarding sessions are short-lived (≤ 2
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 from uuid import UUID
 
+from app.core.time import now_utc
 from app.schemas.onboarding import OnboardingSession
 
 
@@ -32,7 +33,7 @@ class InMemorySessionStore:
 
     async def save(self, session: OnboardingSession) -> OnboardingSession:
         async with self._lock:
-            session.updated_at = datetime.utcnow()
+            session.updated_at = now_utc()
             self._sessions[session.id] = session
         return session
 
@@ -42,7 +43,7 @@ class InMemorySessionStore:
 
     async def cleanup_expired(self, max_age: timedelta = timedelta(hours=24)) -> int:
         """Remove sessions older than max_age. Returns count removed."""
-        cutoff = datetime.utcnow() - max_age
+        cutoff = now_utc() - max_age
         async with self._lock:
             stale = [sid for sid, s in self._sessions.items() if s.updated_at < cutoff]
             for sid in stale:

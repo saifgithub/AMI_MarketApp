@@ -34,13 +34,52 @@ ModelTier = Literal["cheap", "mid", "premium"]
 
 
 # ── Model selection per tier (configurable) ──────────────────────────────
-
+#
+# Model IDs are the dated aliases supported by Anthropic's Messages API.
+# When Anthropic rotates a snapshot, only this map needs to change.
 
 TIER_TO_MODEL: dict[ModelTier, str] = {
     "cheap": "claude-haiku-4-5",
     "mid": "claude-sonnet-4-6",
     "premium": "claude-opus-4-7",
 }
+
+
+# Per-agent tier routing. Lets a Floor-Pass user still get Opus when the
+# Portfolio Manager rules on a trade, while routing chatter to Haiku.
+# The plan-tier remains the base; per-agent rules can BUMP UP (not down)
+# so the safety floor never gets a cheaper brain than the team.
+AGENT_MIN_TIER: dict[str, ModelTier] = {
+    "concierge": "cheap",
+    "fundamentals_analyst": "mid",
+    "market_analyst": "mid",
+    "news_analyst": "cheap",
+    "social_media_analyst": "cheap",
+    "bull_researcher": "mid",
+    "bear_researcher": "mid",
+    "research_manager": "mid",
+    "trader": "mid",
+    "aggressive_debator": "mid",
+    "conservative_debator": "mid",
+    "neutral_debator": "mid",
+    "portfolio_manager": "premium",  # safety-floor enforcer, always premium
+}
+
+
+_TIER_RANK: dict[ModelTier, int] = {"cheap": 0, "mid": 1, "premium": 2}
+
+
+def resolve_tier(plan_tier: ModelTier, agent_id: str | None) -> ModelTier:
+    """Take the higher of (plan tier, per-agent min tier).
+
+    Floor-Pass user 1-on-1 with Concierge → cheap.
+    Floor-Pass user 1-on-1 with Portfolio Manager → premium.
+    Floor-Manager Room run with any agent → premium.
+    """
+    if agent_id is None:
+        return plan_tier
+    min_tier = AGENT_MIN_TIER.get(agent_id, plan_tier)
+    return plan_tier if _TIER_RANK[plan_tier] >= _TIER_RANK[min_tier] else min_tier
 
 
 # ── Message + result types ───────────────────────────────────────────────
@@ -251,6 +290,20 @@ class LLMGateway:
 
     def has_real_provider(self) -> bool:
         return any(name != "mock" for name in self._providers)
+
+    def status(self) -> dict[str, object]:
+        """Snapshot of what the gateway will actually do at call time.
+
+        Surfaced by /v1/llm/status so Saiful can curl-check whether the live
+        flip happened without grepping env vars. Does NOT call any provider.
+        """
+        return {
+            "providers_registered": sorted(self._providers.keys()),
+            "active_provider": "anthropic" if "anthropic" in self._providers else "mock",
+            "has_real_provider": self.has_real_provider(),
+            "tier_to_model": dict(TIER_TO_MODEL),
+            "agent_min_tier": dict(AGENT_MIN_TIER),
+        }
 
     def _pick_provider(self, locale: str, model_tier: ModelTier) -> LLMProvider:
         """Routing logic. V0: prefer Anthropic if present, else mock.

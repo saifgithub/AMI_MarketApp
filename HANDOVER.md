@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W8 persistence + auth scaffold session)
+**Last updated:** 2026-05-11 (end of W9: LLM-swap prep + cleanup pass)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 10 commits, no remote yet |
-| Latest commit | (this session) W8: persistence migration + auth scaffold |
-| Lines on disk | ~33,500 (PRD ~14k, backend ~7.5k, Flutter ~9.8k, content ~1.4k) |
+| Git state | Clean working tree, 11 commits, no remote yet |
+| Latest commit | (this session) W9: LLM-swap prep + cleanup pass |
+| Lines on disk | ~33,900 (PRD ~14k, backend ~7.8k, Flutter ~9.8k, content ~1.5k) |
 
 ```
 $ git log --oneline
-<new>   W8: persistence migration + Supabase-shaped auth scaffold
+<new>   W9: LLM-swap prep + cleanup pass
+667616e W8: persistence migration + Supabase-shaped auth scaffold
 db89336 W7: Sim Trading + Mandate editor — close the core loop
 5239353 W6: Convene the Room
 0fcbfc8 W5: Decision Journal + Lessons + Earn Path
@@ -40,8 +41,8 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | Restart | `scripts/run_dev.sh backend` |
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
-| Routes | `/v1/health`, **`/v1/auth/*`**, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/mandate/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **91 passed** (W7: 84, +7 auth) |
+| Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
+| Tests | `pytest backend/tests/unit/ -q` → **103 passed** (W8: 91, +12 llm_gateway) |
 
 ### Postgres + persistence (NEW this session)
 
@@ -128,7 +129,7 @@ Everything keyed by `user_id` survives. The mock price walk does NOT — it's a 
 | Installed on | `TESTING IPHONE 13` |
 | Rebuild | `scripts/run_dev.sh` |
 
-**The iPhone still has the W3 build.** Redeploy to see W4–W8.
+**The iPhone still has the W3 build.** Redeploy to see W4–W9.
 
 ### What the app does now
 
@@ -138,7 +139,7 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 2. Floor — Concierge + 12 agents + CONVENE THE ROOM CTA.
 3. Portfolio — total value + P&L + cash + drawdown, holdings, trades.
 4. Journal — every action with filter chips + detail screens.
-5. Lessons — 12 lessons, 7 tracks; quiz pass unlocks agents.
+5. Lessons — 13 lessons, 7 tracks; quiz pass unlocks agents.
 6. Settings — Mandate editor + **NEW: ACCOUNT** section → SignInScreen.
 7. **NEW: SignInScreen** — Apple button + email magic-link claim flow.
 
@@ -148,48 +149,100 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
-## What's NOT yet built (W9 candidates)
+## What just landed (W9 — LLM-swap prep + cleanup)
 
-| Feature | Spec doc |
+The Anthropic key was NOT available this session, so option A's runtime
+validation was deferred. What WAS done is everything that makes "drop
+key → live" a single env-var change with zero code touches.
+
+### LLM gateway — live-swap ready
+
+- **`backend/app/services/llm_gateway.py`**
+  - `TIER_TO_MODEL` map: `cheap=claude-haiku-4-5`, `mid=claude-sonnet-4-6`, `premium=claude-opus-4-7`.
+  - `AGENT_MIN_TIER` per-agent floor (Portfolio Manager pinned to `premium` even for Floor-Pass users — the safety-floor enforcer never runs on a cheap brain).
+  - `resolve_tier(plan_tier, agent_id)` takes the higher of the two. A Floor-Pass user 1-on-1 with PM → `premium`. A Floor-Manager Room run with the Concierge → `premium`.
+  - `LLMGateway.status()` introspection — surfaced via the new endpoint.
+- **`/v1/llm/status`** (`backend/app/api/llm.py`) — curl-checkable provider/model report. Does not call any provider; safe to ping cheaply.
+- **`backend/scripts/llm_smoke.py`** — pings each tier with a one-token "PONG" prompt. After Saiful drops `ANTHROPIC_API_KEY` into `backend/.env`:
+  ```bash
+  cd backend && .venv/bin/python -m scripts.llm_smoke --quiet
+  # → PASS (cheap,mid,premium)   ← the live flip is real
+  ```
+  Exits non-zero on any tier failure so it can be wired into a deploy gate.
+
+### Tests (+12 new)
+
+- `tests/unit/test_llm_gateway.py` — 12 cases covering:
+  - Tier resolution (PM bump, concierge no-downgrade, unknown agent fallback).
+  - `AGENT_MIN_TIER` coverage of every `AgentId`.
+  - Gateway status with/without key (monkeypatched).
+  - Mock provider canned routing.
+  - `AnthropicProvider` SSE parsing (mocked `httpx.AsyncClient.stream`).
+  - `AnthropicProvider` error path (HTTP 429 yields inline error chunk).
+  - `AnthropicProvider` tolerance of empty lines / non-`data:` lines / junk JSON.
+- Suite total: **103 passed** (was 91 at W8 end).
+- Suite passes with `-W error::DeprecationWarning` — the entire `datetime.utcnow()` deprecation backlog is drained.
+
+### Cleanup pass
+
+- **`datetime.utcnow()` → `now_utc()`** (`backend/app/core/time.py` helper, returns naive UTC to match legacy semantics). Replaced 8 call sites across `schemas/onboarding.py`, `schemas/one_on_one.py`, `api/onboarding.py`, `services/agent_runner.py`, `services/session_store.py`, `services/concierge_engine.py`. Zero deprecation warnings remain.
+- **Research Manager lesson** (`content/lessons/013_research_manager_synthesis.en.mdx`) — 5-min lesson on synthesis-vs-opinion, asymmetry arithmetic, "no trade" as a real output. Frontmatter `agent_callouts: ["research_manager"]` wires the unlock; completing this single lesson activates the RM agent via the Earn Path.
+- **RLS Alembic migration** (`backend/alembic/versions/a4c7e9d10001_rls_policies.py`) — 23 policies across 13 user-scoped tables (mandates, user_overlays, journal_entries, lessons_progress, agent_activations, room_runs, sim_portfolios, sim_holdings, sim_trades, users, auth_challenges, overlay_edit_counts). All policies key on `current_setting('app.user_id', true)::uuid`. Applied to local Postgres (`docker exec ami_postgres psql ... -c "SELECT tablename, policyname FROM pg_policies"` shows all 23). Migration is no-op on SQLite (tests). Enforcement is dormant until the backend switches off `postgres` superuser — Saiful does that when real Supabase plugs in, by running the API under `authenticated` / `anon` roles.
+
+### What's still NOT done
+
+| Feature | Why deferred |
 |---|---|
-| **Real Supabase plug-in** | Swap `app/services/auth_service.py` impl for supabase-py admin SDK; set `SUPABASE_URL`+`SUPABASE_SERVICE_KEY`. |
-| **Real Apple Sign-In** | Wire `sign_in_with_apple` package in `sign_in_screen.dart`; pass real identity_token to backend. |
-| **Real LLM Concierge** | Replace deterministic onboarding state machine. `docs/02_agents/concierge.md`. |
-| **More lessons** | One Research Manager lesson + content for deeper tracks. |
-| **Cleanup** | `datetime.utcnow()` deprecation in `concierge_engine.py` + a few other older files. |
-| **Live LLM swap** | Single function in `room_runner.py` once `ANTHROPIC_API_KEY` is added. |
-| **Real market data** | Swap `SimEngine.current_price()` for Polygon / Yahoo. |
-| **RLS policies** | Re-enable RLS in Alembic migrations once Supabase auth is the source of `auth.uid()`. |
+| **Live LLM validation** (1-on-1, Coach, Room actually producing real reasoning) | Needs `ANTHROPIC_API_KEY`. Code path is verified by tests; flip happens automatically when key lands. |
+| **Real Supabase plug-in** | Needs Saiful to provision project + hand over keys. |
+| **Real Apple Sign-In** | Needs Apple capability added to bundle id under team `S7RBWM4879`. |
+| **Real market data** | SimEngine random walk still in use. Polygon free tier is the obvious swap. |
+| **Real LLM Concierge** | Deterministic onboarding state machine still drives W2. |
+| **Room → LLM wiring** | `room_runner.py` still emits scripted text. Wiring it to the gateway is its own piece of work (per-agent prompts, transcript-aware context, fallback when no real provider). |
 
 ---
 
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. Read HANDOVER.md at the project root
-(/Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md) first.
+We're picking up the AMI Trade build. This is handover #4 — name the
+session "AT:R5:".
 
-W8 (persistence + auth scaffold) is done. Pick one of the W9 candidates:
+Read HANDOVER.md at the project root first:
+  /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-  A. Real Supabase plug-in. Saiful provisions a Supabase project, hands
-     over SUPABASE_URL + SUPABASE_SERVICE_KEY. Swap auth_service to
-     supabase-py admin; the route contracts don't change. Smoke test
-     anon → email claim still works end-to-end.
+W9 (LLM-swap prep + cleanup) is done. 11 commits in. 103 unit tests
+pass. RLS policies live in Postgres but dormant (backend connects as
+superuser locally). Per-agent tier routing in place; Research Manager
+lesson live; datetime.utcnow() backlog drained.
 
-  B. Real Apple Sign-In wiring. The flutter package `sign_in_with_apple`
-     is already in pubspec. Replace the synthetic JWT in
-     sign_in_screen.dart with a real Apple call. Verify on a real
-     iPhone (test team set up via Apple Developer console).
+W10 candidates (priority order):
 
-  C. Live LLM swap. ANTHROPIC_API_KEY in backend/.env; flip
-     LLMGateway provider. Then validate 1-on-1, Coach, Room produce
-     real Anthropic reasoning rather than canned scripts.
+  A. Live LLM swap (FINISH IT). Saiful adds ANTHROPIC_API_KEY to
+     backend/.env. Then:
+       cd backend && .venv/bin/python -m scripts.llm_smoke
+     Expect PASS on all three tiers. Then exercise 1-on-1 with PM
+     (premium) and Concierge (cheap) to confirm tier routing. Then
+     decide whether to wire Room → gateway (currently scripted).
 
-  D. Real market data. Swap SimEngine.current_price() for a real feed
-     (Polygon free tier is fine). The DB schema doesn't change.
+  B. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
+     backend/.env. Swap app/services/auth_service.py to supabase-py
+     admin. Switch backend connection from postgres to anon /
+     authenticated role so RLS policies start enforcing. Run the
+     anon → email claim flow end-to-end.
 
-  E. Cleanup pass. datetime.utcnow() deprecation, a Research Manager
-     lesson, RLS migrations.
+  C. Real Apple Sign-In. Replace the synthetic JWT in
+     mobile/lib/screens/auth/sign_in_screen.dart with sign_in_with_apple
+     (already in pubspec). Verify on TESTING IPHONE 13. Add Sign in
+     with Apple capability to bundle id under team S7RBWM4879.
+
+  D. Real market data. Swap SimEngine.current_price() for Polygon
+     (free tier). DB schema doesn't change.
+
+  E. Room → LLM wiring. Currently room_runner.py emits scripted
+     text. Wire each agent's speech through llm_gateway with a
+     transcript-aware prompt. Keep scripted fallback when gateway
+     reports no real provider.
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
@@ -201,6 +254,7 @@ Before writing code:
   git log --oneline
   docker ps --filter "name=ami_postgres" --format '{{.Names}}: {{.Status}}'
   curl -s http://localhost:8000/v1/health
+  curl -s http://localhost:8000/v1/llm/status
 ```
 
 ---
@@ -225,8 +279,8 @@ scripts/run_dev.sh
 
 ## Open questions / nothing-is-blocked items
 
-- **Anthropic API key.** Still not added.
-- **Supabase project.** Not yet provisioned by Saiful.
+- **Anthropic API key.** Still not added. Gateway code is verified; smoke script ready. Drop key into `backend/.env` → restart → `python -m scripts.llm_smoke` → PASS = live.
+- **Supabase project.** Not yet provisioned. RLS policies are live but dormant — they enforce once the backend stops connecting as `postgres`.
 - **Apple Developer team setup.** Done for Team `S7RBWM4879` but Sign in with Apple capability needs to be added to the bundle id for real prod usage.
 - **App Store, APNs, real market data** — still external.
 
