@@ -253,4 +253,8 @@ async def quote(
     ticker: str,
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
-    return {"ticker": ticker.upper(), "price": sim.current_price(ticker)}
+    return {
+        "ticker": ticker.upper(),
+        "price": sim.current_price(ticker),
+        "source": sim.price_source,
+    }

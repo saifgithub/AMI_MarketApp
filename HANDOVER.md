@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W9: LLM-swap prep + cleanup pass)
+**Last updated:** 2026-05-11 (end of W10: real market data via Yahoo)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 11 commits, no remote yet |
-| Latest commit | (this session) W9: LLM-swap prep + cleanup pass |
-| Lines on disk | ~33,900 (PRD ~14k, backend ~7.8k, Flutter ~9.8k, content ~1.5k) |
+| Git state | Clean working tree, 12 commits, no remote yet |
+| Latest commit | (this session) W10: real market data via Yahoo |
+| Lines on disk | ~34,200 (PRD ~14k, backend ~8.1k, Flutter ~9.8k, content ~1.5k) |
 
 ```
 $ git log --oneline
-<new>   W9: LLM-swap prep + cleanup pass
+<new>   W10: real market data via Yahoo
+259d53d W9: LLM-swap prep + cleanup pass
 667616e W8: persistence migration + Supabase-shaped auth scaffold
 db89336 W7: Sim Trading + Mandate editor — close the core loop
 5239353 W6: Convene the Room
@@ -42,7 +43,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **103 passed** (W8: 91, +12 llm_gateway) |
+| Tests | `pytest backend/tests/unit/ -q` → **118 passed** (W9: 103, +15 market_data) |
 
 ### Postgres + persistence (NEW this session)
 
@@ -149,6 +150,69 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
+## What just landed (W10 — real market data via Yahoo)
+
+The Sim Trading engine no longer lies — when `USE_REAL_MARKET_DATA=true`
+quotes come from Yahoo's keyless public chart endpoint, with the legacy
+random walk as fallback for unknown tickers and network errors.
+
+### Market data — pluggable provider stack
+
+- **`backend/app/services/market_data.py`** — new module owning all pricing.
+  - `MarketDataProvider` protocol — `get_price(ticker) -> float | None`.
+  - `MockWalkProvider` — the old deterministic random walk (now lives here, not on `SimEngine`).
+  - `YahooQuoteProvider` — calls `https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1m&range=1d` via the already-vendored `httpx`. Browser User-Agent header (Yahoo blocks the default httpx UA). Catches every error — `ConnectError`, non-200, malformed JSON, missing fields — and returns `None`.
+  - `CachingProvider(inner, ttl_seconds=60)` — per-ticker TTL cache. Doesn't cache `None` (so a transient failure doesn't pin a missing price for 60s).
+  - `FallbackProvider(primary, secondary)` — tries primary; falls through to secondary on `None`.
+  - `get_market_data_provider()` returns the configured stack:
+    - `USE_REAL_MARKET_DATA=true` → `FallbackProvider(CachingProvider(YahooQuoteProvider), MockWalkProvider)`
+    - default → bare `MockWalkProvider`
+  - `set_market_data_provider(p)` test hook.
+
+### SimEngine refactor
+
+- **`backend/app/services/sim_engine.py`** — no longer owns pricing logic. Takes a `MarketDataProvider` (defaults to `get_market_data_provider()`). New `sim.price_source` exposes the active provider name; `/v1/sim/quote/{ticker}` now returns `{"ticker", "price", "source"}` so the iPhone client can show "live" vs "mock".
+- **`backend/tests/conftest.py`** — autouse fixture pins a fresh `MockWalkProvider` for every test so the suite stays deterministic regardless of `USE_REAL_MARKET_DATA`.
+
+### Live verification
+
+Hit Yahoo with the actual stack (env-gated, from the venv):
+
+```
+USE_REAL_MARKET_DATA=true python -c "from app.services.market_data import get_market_data_provider; ..."
+stack: fallback(cache(yahoo)->mock_walk)
+  AAPL: 190.09
+  NVDA: 270.97
+  BRK-B: 239.19
+  NOTREAL: 200.44   ← fell through to mock as designed
+```
+
+### Tests (+15 → 118 total)
+
+- `tests/unit/test_market_data.py` — 15 cases:
+  - `MockWalkProvider`: stable + independent walks per ticker.
+  - `CachingProvider`: hit, miss-on-different-ticker, never-cache-None, targeted invalidate.
+  - `FallbackProvider`: primary hit, secondary fallback, both-fail.
+  - `YahooQuoteProvider` (mocked httpx): success parse, non-200, network error, empty result, missing price field.
+  - Full real-stack assembly: Yahoo 500 → cache pass-through → mock fires.
+- All `test_sim_engine.py` tests still pass (one minor test update: the internal walk lives on the provider now, not on `SimEngine`).
+
+### How to flip it on
+
+```bash
+# in backend/.env
+USE_REAL_MARKET_DATA=true
+
+# restart backend
+scripts/run_dev.sh backend
+
+# verify
+curl -s http://localhost:8000/v1/sim/quote/AAPL
+# → {"ticker":"AAPL","price":190.09,"source":"fallback(cache(yahoo)->mock_walk)"}
+```
+
+---
+
 ## What just landed (W9 — LLM-swap prep + cleanup)
 
 The Anthropic key was NOT available this session, so option A's runtime
@@ -196,53 +260,56 @@ key → live" a single env-var change with zero code touches.
 | **Live LLM validation** (1-on-1, Coach, Room actually producing real reasoning) | Needs `ANTHROPIC_API_KEY`. Code path is verified by tests; flip happens automatically when key lands. |
 | **Real Supabase plug-in** | Needs Saiful to provision project + hand over keys. |
 | **Real Apple Sign-In** | Needs Apple capability added to bundle id under team `S7RBWM4879`. |
-| **Real market data** | SimEngine random walk still in use. Polygon free tier is the obvious swap. |
 | **Real LLM Concierge** | Deterministic onboarding state machine still drives W2. |
 | **Room → LLM wiring** | `room_runner.py` still emits scripted text. Wiring it to the gateway is its own piece of work (per-agent prompts, transcript-aware context, fallback when no real provider). |
+| **Flutter quote-source surfacing** | Backend now returns `source` on `/v1/sim/quote`; the Portfolio screen still doesn't show it. Tiny UI touch when real prices land in the running backend. |
 
 ---
 
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #4 — name the
-session "AT:R5:".
+We're picking up the AMI Trade build. This is handover #5 — name the
+session "AT:R6:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-W9 (LLM-swap prep + cleanup) is done. 11 commits in. 103 unit tests
-pass. RLS policies live in Postgres but dormant (backend connects as
-superuser locally). Per-agent tier routing in place; Research Manager
-lesson live; datetime.utcnow() backlog drained.
+W10 (real market data) is done. 12 commits in. 118 unit tests pass.
+SimEngine quotes via a pluggable provider stack — flip
+USE_REAL_MARKET_DATA=true in backend/.env and restart to get live
+Yahoo prices, with mock-walk fallback for network errors / unknown
+tickers. /v1/sim/quote returns {"ticker","price","source"} now.
 
-W10 candidates (priority order):
+W11 candidates (priority order):
 
   A. Live LLM swap (FINISH IT). Saiful adds ANTHROPIC_API_KEY to
      backend/.env. Then:
        cd backend && .venv/bin/python -m scripts.llm_smoke
      Expect PASS on all three tiers. Then exercise 1-on-1 with PM
-     (premium) and Concierge (cheap) to confirm tier routing. Then
-     decide whether to wire Room → gateway (currently scripted).
+     (premium) and Concierge (cheap) to confirm tier routing.
 
-  B. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
+  B. Room → LLM wiring. room_runner.py still emits scripted agent
+     speech. Wire each phase through llm_gateway with a
+     transcript-aware prompt per agent. Keep scripted fallback when
+     gateway.has_real_provider() is False. This is the single largest
+     "feels live" unlock once a key is set.
+
+  C. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
      backend/.env. Swap app/services/auth_service.py to supabase-py
      admin. Switch backend connection from postgres to anon /
      authenticated role so RLS policies start enforcing. Run the
      anon → email claim flow end-to-end.
 
-  C. Real Apple Sign-In. Replace the synthetic JWT in
+  D. Real Apple Sign-In. Replace the synthetic JWT in
      mobile/lib/screens/auth/sign_in_screen.dart with sign_in_with_apple
      (already in pubspec). Verify on TESTING IPHONE 13. Add Sign in
      with Apple capability to bundle id under team S7RBWM4879.
 
-  D. Real market data. Swap SimEngine.current_price() for Polygon
-     (free tier). DB schema doesn't change.
-
-  E. Room → LLM wiring. Currently room_runner.py emits scripted
-     text. Wire each agent's speech through llm_gateway with a
-     transcript-aware prompt. Keep scripted fallback when gateway
-     reports no real provider.
+  E. Flutter side of W10. Portfolio + Trade-ticket screens still don't
+     surface the new `source` field. Add a small "LIVE" / "MOCK"
+     indicator pill next to each price. Re-deploy to TESTING IPHONE 13
+     (still on the W3 build — long overdue redeploy).
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
@@ -255,6 +322,7 @@ Before writing code:
   docker ps --filter "name=ami_postgres" --format '{{.Names}}: {{.Status}}'
   curl -s http://localhost:8000/v1/health
   curl -s http://localhost:8000/v1/llm/status
+  curl -s http://localhost:8000/v1/sim/quote/AAPL
 ```
 
 ---
@@ -282,6 +350,6 @@ scripts/run_dev.sh
 - **Anthropic API key.** Still not added. Gateway code is verified; smoke script ready. Drop key into `backend/.env` → restart → `python -m scripts.llm_smoke` → PASS = live.
 - **Supabase project.** Not yet provisioned. RLS policies are live but dormant — they enforce once the backend stops connecting as `postgres`.
 - **Apple Developer team setup.** Done for Team `S7RBWM4879` but Sign in with Apple capability needs to be added to the bundle id for real prod usage.
-- **App Store, APNs, real market data** — still external.
+- **App Store, APNs** — still external. Market data is now real Yahoo when `USE_REAL_MARKET_DATA=true`.
 
 Nothing is blocking the next chunk.

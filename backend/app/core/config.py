@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     sentry_dsn: str = ""
     posthog_api_key: str = ""
 
+    # Market data
+    # When true, SimEngine quotes real Yahoo prices with mock-walk fallback.
+    # When false (default), the legacy deterministic random walk runs.
+    use_real_market_data: bool = False
+
     # CORS
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 

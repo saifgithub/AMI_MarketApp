@@ -1,22 +1,23 @@
-"""Sim Trading — Postgres-backed portfolio + in-memory mock price engine.
+"""Sim Trading — Postgres-backed portfolio + pluggable market data provider.
 
 The user's "team" can issue verdicts via Convene the Room, but those
 verdicts are only valuable if the user can act on them. This module turns a
 Verdict (or a manually entered ticket) into a real position in a paper-
-trade portfolio, runs a deterministic-per-ticker mock price feed, computes
+trade portfolio, prices it via a swappable market data provider, computes
 P&L, and flags stop/target hits.
 
 Persistence:
   - sim_portfolios + sim_holdings + sim_trades survive backend restarts.
     A user's open positions are still open after a reboot.
-  - The mock price walk stays in memory — it's a deterministic simulator
-    seeded by ticker, NOT data we want to keep. Restart = fresh walk.
+  - Prices come from `app.services.market_data` — see that module for the
+    real-Yahoo / mock-walk provider stack. SimEngine itself owns no
+    pricing logic.
 
 Architecture overview:
 
   SimEngine
     ├── ensure_portfolio(user_id) → Portfolio (lazy-created, $10k start)
-    ├── current_price(ticker) → deterministic-but-volatile mark
+    ├── current_price(ticker) → delegates to MarketDataProvider
     ├── submit(user_id, ticker, side, qty, ...) →
     │       1. Construct ProposedTrade
     │       2. Run check_mandate_compliance() — same safety floor as PM
@@ -27,16 +28,15 @@ Architecture overview:
     └── evaluate_outcomes() → for each open trade with a stop/target,
             flip outcome to WIN / LOSS when hit.
 
-A real market data feed (Polygon, Yahoo, etc.) is a swap for
-`current_price()`. The DB schema does not change.
+Setting `USE_REAL_MARKET_DATA=true` in env flips quotes from the
+deterministic mock walk to live Yahoo prices (with mock fallback on
+network errors). DB schema does not change either way.
 """
 
 from __future__ import annotations
 
 import math
-import random
-import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from threading import RLock
 from typing import Literal
@@ -57,47 +57,17 @@ from app.schemas.trade import (
     ProposedTrade,
     Side,
 )
+from app.services.market_data import (
+    MarketDataProvider,
+    MockWalkProvider,
+    get_market_data_provider,
+)
 
 
 # ── Mock price engine ──────────────────────────────────────────────────────
 
 
 DEFAULT_HALAL_UNIVERSE = {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
-
-
-@dataclass
-class _PriceWalk:
-    """Per-ticker random walk state — pure in-memory, deterministic per seed."""
-    base: float
-    drift_per_sec: float
-    volatility: float
-    started_at: float = field(default_factory=time.time)
-    rng_seed: int = 0
-
-    def price_at(self, now_ts: float | None = None) -> float:
-        now_ts = now_ts or time.time()
-        elapsed = max(0.0, now_ts - self.started_at)
-        steps = int(elapsed)
-        rng = random.Random(self.rng_seed)
-        v = self.base
-        for _ in range(steps):
-            shock = rng.gauss(0, self.volatility)
-            v = v * (1 + self.drift_per_sec + shock)
-        return max(0.01, round(v, 2))
-
-
-def _walk_for(ticker: str) -> _PriceWalk:
-    seed = hash(ticker.upper())
-    rng = random.Random(seed)
-    base = 50 + rng.uniform(0, 400)
-    drift = rng.uniform(-0.0002, 0.0004)
-    vol = rng.uniform(0.002, 0.008)
-    return _PriceWalk(
-        base=round(base, 2),
-        drift_per_sec=drift,
-        volatility=vol,
-        rng_seed=seed,
-    )
 
 
 # ── Sim trade record (in-Python dataclass that mirrors SimTradeRow) ────────
@@ -214,21 +184,30 @@ def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
 
 
 class SimEngine:
-    def __init__(self) -> None:
+    def __init__(self, provider: MarketDataProvider | None = None) -> None:
         init_schema()
-        self._walks: dict[str, _PriceWalk] = {}
+        self._provider: MarketDataProvider = provider or get_market_data_provider()
+        # Mock fallback used only if the configured provider mysteriously
+        # returns None (the production stack already has a mock at the end
+        # of its chain, so this is purely defensive — a price we can always
+        # quote beats a 500 to the iPhone client).
+        self._fallback = MockWalkProvider()
         self._lock = RLock()
 
     # ── Pricing ────────────────────────────────────────────────────────
 
+    @property
+    def price_source(self) -> str:
+        """Name of the active provider — surfaced by /v1/sim/quote for clients."""
+        return getattr(self._provider, "name", "unknown")
+
     def current_price(self, ticker: str) -> float:
-        t = ticker.upper().strip()
-        with self._lock:
-            walk = self._walks.get(t)
-            if walk is None:
-                walk = _walk_for(t)
-                self._walks[t] = walk
-        return walk.price_at()
+        price = self._provider.get_price(ticker)
+        if price is None:
+            logger.warn("market_data_fallback", ticker=ticker, provider=self.price_source)
+            fallback = self._fallback.get_price(ticker)
+            return fallback if fallback is not None else 0.01
+        return price
 
     def current_marks(self, tickers: list[str]) -> dict[str, float]:
         return {t.upper(): self.current_price(t) for t in tickers}

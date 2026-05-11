@@ -12,6 +12,7 @@ from uuid import uuid4
 
 from app.schemas.trade import OrderType, Side
 from app.services.coach_engine import hydrate_coach_mandate
+from app.services.market_data import MockWalkProvider, get_market_data_provider
 from app.services.sim_engine import SimEngine
 
 
@@ -135,7 +136,9 @@ def test_target_hit_flips_outcome_to_won():
     )
     assert result.accepted
     # Force the walk a few ticks forward by adjusting started_at backwards
-    walk = sim._walks["AAPL"]
+    provider = get_market_data_provider()
+    assert isinstance(provider, MockWalkProvider)
+    walk = provider._walks["AAPL"]
     walk.started_at = time.time() - 60  # 60s of drift
     # Direct outcome eval
     updates = sim.evaluate_outcomes(user_id)

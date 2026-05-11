@@ -50,12 +50,15 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import lessons_service as _ls
     from app.services import sim_engine as _sim
     from app.services import room_runner as _rr
+    from app.services import market_data as _md
     _ms._store = None
     _os._store = None
     _js._store = None
     _ls._service = None
     _sim._engine = None
     _rr._runner = None
+    # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
+    _md.set_market_data_provider(_md.MockWalkProvider())
 
 
 @pytest.fixture
