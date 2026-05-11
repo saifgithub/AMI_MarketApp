@@ -55,6 +55,7 @@ class AgentRunner:
         *,
         agent_id: AgentId,
         mandate: Mandate,
+        user_id: UUID | None = None,
     ) -> OneOnOneSession:
         session = OneOnOneSession(
             id=uuid4(),
@@ -62,6 +63,7 @@ class AgentRunner:
             started_at=datetime.utcnow(),
             mandate_used=mandate.model_dump(mode="json"),
             locale=mandate.locale,
+            user_id=user_id,
         )
         self._sessions[session.id] = session
         return session
@@ -79,7 +81,7 @@ class AgentRunner:
         """Build the prompt, stream the LLM response."""
         mandate = Mandate.model_validate(session.mandate_used)
         agent_id = AgentId(session.agent_id) if isinstance(session.agent_id, str) else session.agent_id
-        system_prompt = build_agent_prompt(agent_id, mandate)
+        system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
 
         tier = PLAN_TO_TIER.get(Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan, "cheap")
 

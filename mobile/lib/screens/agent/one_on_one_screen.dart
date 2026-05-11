@@ -2,6 +2,7 @@
 library;
 
 import 'package:ami_trade/models/agent.dart';
+import 'package:ami_trade/screens/agent/coach_screen.dart';
 import 'package:ami_trade/state/one_on_one_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
@@ -129,6 +130,8 @@ class _Header extends StatelessWidget {
   const _Header({required this.agent});
   final Agent agent;
 
+  bool get _coachable => agent.family != AgentFamily.concierge;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -164,6 +167,14 @@ class _Header extends StatelessWidget {
               ],
             ),
           ),
+          if (_coachable)
+            IconButton(
+              icon: Icon(Icons.tune, color: agent.color),
+              tooltip: 'Coach this agent',
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => CoachScreen(agent: agent),
+              )),
+            ),
         ],
       ),
     );

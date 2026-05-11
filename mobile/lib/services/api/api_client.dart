@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:dio/dio.dart';
@@ -99,12 +100,154 @@ class ApiClient {
   Future<OneOnOneSession> startOneOnOne({
     required String agentId,
     String locale = 'en',
+    String? userId,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/agents/one_on_one/start',
-      data: {'agent_id': agentId, 'locale': locale},
+      data: {
+        'agent_id': agentId,
+        'locale': locale,
+        if (userId != null) 'user_id': userId,
+      },
     );
     return OneOnOneSession.fromJson(r.data!);
+  }
+
+  // ── Coach Your Agent ────────────────────────────────────────────
+
+  Future<CoachStartResponse> startCoach({
+    required String agentId,
+    required String userId,
+    String mode = 'from_scratch',
+    String locale = 'en',
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/coach/start',
+      data: {
+        'agent_id': agentId,
+        'user_id': userId,
+        'mode': mode,
+        'locale': locale,
+      },
+    );
+    return CoachStartResponse.fromJson(r.data!);
+  }
+
+  Stream<String> streamCoachMessage({
+    required String sessionId,
+    required String userMessage,
+    required List<ChatMessage> history,
+  }) async* {
+    final uri = Uri.parse('$baseUrl/v1/coach/message');
+    final body = jsonEncode({
+      'session_id': sessionId,
+      'user_message': userMessage,
+      'history': history.map((m) => m.toJson()).toList(),
+    });
+    final client = http.Client();
+    try {
+      final request = http.Request('POST', uri)
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Accept'] = 'text/event-stream'
+        ..body = body;
+      final response = await client.send(request);
+      if (response.statusCode != 200) {
+        throw Exception('HTTP ${response.statusCode} from coach stream');
+      }
+      String buffer = '';
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        while (buffer.contains('\n\n')) {
+          final idx = buffer.indexOf('\n\n');
+          final event = buffer.substring(0, idx);
+          buffer = buffer.substring(idx + 2);
+
+          String? eventType;
+          final dataLines = <String>[];
+          for (final line in event.split('\n')) {
+            if (line.startsWith('event: ')) {
+              eventType = line.substring(7).trim();
+            } else if (line.startsWith('data: ')) {
+              dataLines.add(line.substring(6));
+            }
+          }
+          final data = dataLines.join('\n');
+          if (eventType == 'token') {
+            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
+          } else if (eventType == 'done') {
+            return;
+          } else if (eventType == 'error') {
+            throw Exception('Server error: $data');
+          }
+        }
+      }
+    } finally {
+      client.close();
+    }
+  }
+
+  Future<CoachProposal> proposeCoachChange({
+    required String sessionId,
+    required List<ChatMessage> history,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/coach/propose',
+      data: {
+        'session_id': sessionId,
+        'history': history.map((m) => m.toJson()).toList(),
+      },
+    );
+    return CoachProposal.fromJson(r.data!);
+  }
+
+  /// Returns the new overlay if accepted, or a map with `refusal` if blocked.
+  Future<Map<String, dynamic>> acceptCoachProposal({
+    required String sessionId,
+    required String proposalId,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/coach/accept',
+      data: {'session_id': sessionId, 'proposal_id': proposalId},
+    );
+    return r.data!;
+  }
+
+  Future<void> rejectCoachProposal({
+    required String sessionId,
+    required String proposalId,
+  }) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/v1/coach/reject',
+      data: {'session_id': sessionId, 'proposal_id': proposalId},
+    );
+  }
+
+  Future<UserOverlay> rollbackCoach({
+    required String userId,
+    required String agentId,
+    required int toVersion,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/coach/rollback',
+      data: {
+        'user_id': userId,
+        'agent_id': agentId,
+        'to_version': toVersion,
+      },
+    );
+    return UserOverlay.fromJson(r.data!);
+  }
+
+  Future<CoachHistory> coachHistory({
+    required String userId,
+    required String agentId,
+    String plan = 'trial_trader',
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/coach/history/$userId/$agentId',
+      queryParameters: {'plan': plan},
+    );
+    return CoachHistory.fromJson(r.data!);
   }
 
   /// Send a message and yield string chunks as they arrive (SSE).

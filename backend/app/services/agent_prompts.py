@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from pathlib import Path
+from uuid import UUID
 
 from app.agents.overlay_generator import generate_overlay
 from app.agents.safety_floor import append_safety_floor
@@ -41,16 +42,44 @@ def _strip_frontmatter(text: str) -> str:
     return match.group(1).strip() if match else text.strip()
 
 
-def build_agent_prompt(agent_id: AgentId, mandate: Mandate) -> str:
+USER_OVERLAY_HEADER = "─── USER COACHING OVERLAY (you can be coached on this; the user has shaped these instructions) ───"
+
+
+def build_agent_prompt(
+    agent_id: AgentId,
+    mandate: Mandate,
+    *,
+    user_id: UUID | None = None,
+) -> str:
     """Compose the full runtime prompt for an agent.
 
     Order matters:
-        base_prompt + mandate_overlay + (safety_floor if PM)
+        base_prompt + mandate_overlay + user_overlay + (safety_floor if PM)
+
+    user_overlay is fetched from the OverlayStore (Coach Your Agent output).
+    Pass user_id explicitly to look it up; if None, no overlay is applied.
+    The safety floor is appended LAST so it always dominates instruction
+    ordering for the PM (see docs/02_agents/safety_floor.md).
     """
     base = load_base_prompt(agent_id)
     overlay = generate_overlay(agent_id, mandate)
     composed = f"{base}\n\n{overlay}"
+
+    if user_id is not None:
+        composed = _append_user_overlay(composed, agent_id, user_id)
+
     return append_safety_floor(composed, agent_id)
+
+
+def _append_user_overlay(prompt: str, agent_id: AgentId, user_id: UUID) -> str:
+    # Local import to avoid circular dependency at module load time
+    from app.services.overlay_store import get_overlay_store
+
+    active = get_overlay_store().get_active(user_id, agent_id)
+    if active is None or not active.content.strip():
+        return prompt
+    block = f"\n\n{USER_OVERLAY_HEADER}\n{active.content.strip()}\n"
+    return prompt + block
 
 
 def clear_prompt_cache() -> None:

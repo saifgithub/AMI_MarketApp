@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W3 build session, after `97d675c`)
+**Last updated:** 2026-05-11 (end of W4 Coach Your Agent build session)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,12 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 4 commits, no remote yet |
-| Latest commit | `97d675c` W3: 12-agent 1-on-1 streaming |
-| Lines on disk | ~16,500 (PRD ~14k, backend ~2k, Flutter ~1.5k, content ~900) |
+| Git state | Clean working tree, 6 commits, no remote yet |
+| Latest commit | (this session) W4: Coach Your Agent — backend + Flutter, full diff-card / history flow |
+| Lines on disk | ~19,000 (PRD ~14k, backend ~3.2k, Flutter ~3k, content ~900) |
 
 ```
 $ git log --oneline
+<new>   W4: Coach Your Agent — backend + Flutter
+665135f Handover docs: HANDOVER.md + CLAUDE.md update with current state + 45%-context swap rule
 97d675c W3: 1-on-1 chat with 12 agents — backend + Flutter, end-to-end streaming
 13349bf W2 onboarding flow: Concierge conversation, end-to-end iPhone-ready
 96fbeaf Bootstrap Flutter project — iOS + Android scaffolding, fonts, lint clean
@@ -35,8 +37,20 @@ $ git log --oneline
 | Restart | `scripts/run_dev.sh backend` |
 | LAN address | `http://192.168.20.9:8000` (iPhone-reachable) |
 | Health check | `curl http://localhost:8000/v1/health` → `{"status":"ok","version":"0.1.0","env":"local"}` |
-| Routes | `/v1/health`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*` |
-| Tests | `pytest backend/tests/unit/ -q` → 37 passed |
+| Routes | `/v1/health`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, **`/v1/coach/*`** |
+| Tests | `pytest backend/tests/unit/ -q` → **54 passed** |
+
+### Coach Your Agent routes (new)
+
+| Route | What it does |
+|---|---|
+| `POST /v1/coach/start` | Opens a Coach session for a (user, agent). Returns session, current overlay, opener. |
+| `POST /v1/coach/message` (SSE) | Streams a coach-mode chat response. |
+| `POST /v1/coach/propose` | Crystallises the conversation into a structured `CoachProposal` (plain English + overlay markdown). Refuses if it touches the PM safety floor or mandate. |
+| `POST /v1/coach/accept` | Persists the proposal as a new `UserOverlay` version. Returns `{ok:true,overlay}` or `{ok:false,refusal}` (e.g. edit limit hit). |
+| `POST /v1/coach/reject` | Discards the pending proposal. |
+| `POST /v1/coach/rollback` | Rolls back to a specific version. |
+| `GET  /v1/coach/history/{user_id}/{agent_id}` | All versions + active marker + edits remaining. |
 
 ### Mobile app
 
@@ -49,51 +63,65 @@ $ git log --oneline
 | Launch | Tap "AMI Trade" icon on TESTING IPHONE 13 home screen |
 | Rebuild | `scripts/run_dev.sh` (one-shot: backend + Flutter dev with --dart-define) |
 
+**Important note:** The iPhone currently has the W3 build installed. To exercise Coach Your Agent on the device, you need to redeploy via `scripts/run_dev.sh` (or `flutter run -d <ipad-id> --release --dart-define=AMI_API_URL=http://192.168.20.9:8000`).
+
 ### LLM provider
 
-`MockProvider` is active by default. Each of the 13 agents has a distinct canned response, streamed char-by-char so the UX feels real. To enable live Claude:
-
-```bash
-echo "ANTHROPIC_API_KEY=sk-ant-..." >> "/Volumes/Extreme Pro/AMI_MarketApp/backend/.env"
-lsof -ti:8000 | xargs kill -9
-cd "/Volumes/Extreme Pro/AMI_MarketApp" && ./scripts/run_dev.sh backend
-```
-
-The gateway will detect the key, register `AnthropicProvider`, and route by mandate tier:
-- Floor Pass → Haiku 4.5
-- Trader / Trial Trader → Sonnet 4.6
-- Floor Manager → Opus 4.7
+`MockProvider` is active by default. The mock path also drives Coach: `propose` returns a deterministic canned proposal that summarises the user's last message as a coaching note. Add `ANTHROPIC_API_KEY` to `backend/.env` for live LLM-driven proposals.
 
 ---
 
 ## What lands when Saiful taps the app
 
-Full flow currently works:
-
 1. Splash → loading spinner
 2. **Concierge conversation** (8 steps, ~3 min)
 3. **Mandate readback** with confirm CTA
 4. **Floor placeholder** showing all 12 agents + Concierge as tappable hexes
-5. **1-on-1 chat** with any agent — SSE streaming, role-coloured bubbles, mock or live LLM
+5. **1-on-1 chat** with any agent — SSE streaming, role-coloured bubbles
+6. **Coach Your Agent** *(NEW)* — tap the tune icon (top-right) in any agent's 1-on-1 to enter coach mode. Chat to negotiate a change → tap "PROPOSE CHANGE" → diff card with Accept/Refine/Reject. Accepted overlays persist across sessions via a device-stable `user_id` (shared_preferences).
+7. **Coach history** *(NEW)* — tap the history icon in the Coach header to see all saved versions with active marker, plain-English summary, and one-tap rollback.
 
-Onboarding answers populate a structured `Mandate` object. The mandate is currently in-memory only (Phase: anonymous session). At Auth-implementation time (W5+), the session-id → user-id claim will persist mandates to Postgres.
+### Safety floor: visible + locked
+
+When the user tries to propose something that would touch PM mandate enforcement, weaken compliance flags (halal/ESG/etc), or enable shorts under `long_only` — the backend refuses both at the LLM level (in the PROPOSE_SYSTEM_PROMPT) and at a defence-in-depth heuristic layer. The UI surfaces refusals as an amber banner with the "edit your Mandate" suggestion. Spec: `docs/02_agents/safety_floor.md`.
+
+### Edit caps
+
+Floor Pass: 3 lifetime edits per agent. Trader / Trial Trader / Floor Manager: unlimited. Hit the cap and `accept` returns a `CoachRefusal` with reason `edit_limit_reached`.
+
+### Retention
+
+Floor Pass keeps 5 versions per agent; Trader 20; Floor Manager unlimited. Oldest non-active versions are dropped on save.
+
+### Prompt composition (now wired)
+
+```
+agent.final_prompt = base_prompt
+                   + mandate_overlay
+                   + user_overlay         ← from OverlayStore (Coach output)
+                   + safety_floor         ← PM only, appended LAST
+```
+
+The composition is gated by `user_id`: pass it to `build_agent_prompt(agent_id, mandate, user_id=...)` to fold in the active overlay. 1-on-1 sessions now plumb `user_id` from the device through to the prompt, so changes coached in one session show up in the next chat with that agent.
 
 ---
 
-## What's NOT yet built (W4 candidates)
+## What's NOT yet built (W5 candidates)
 
 Pick one for the next session. All are well-specced in `docs/`.
 
 | Feature | Roughly | Spec doc |
 |---|---|---|
-| **Real LLM Concierge** | Replace deterministic onboarding state machine with LLM intent classification + adaptive follow-ups. Tone shifts on hesitation. Same 8-step flow, but Concierge feels actually intelligent. | `docs/03_onboarding/mandate_conversation.md`, `docs/02_agents/concierge.md` |
-| **Coach Your Agent** | The flagship differentiator. User chats with any agent to edit its prompt. Diff card with Accept/Refine/Reject. Versioned overlays. Safety floor on PM stays locked. | `docs/02_agents/coach_your_agent.md`, `docs/02_agents/safety_floor.md` |
-| **Decision Journal** | Capture every 1-on-1, future Room session, sim trade, mandate edit. Searchable, filterable, replayable. Floor Pass: 30-day cap; paid: unlimited. | `docs/01_product/core_loop_and_features.md` (Sim & Decision Journal section), `docs/08_tech/data_model.md` (`journal_entries` table) |
-| **Convene the Room** | The showpiece — multi-agent debate visualizer. All 12 agents run on a ticker, Matrix Console streams reasoning, verdict card at end. Wraps TradingAgents framework. | `docs/02_agents/convene_the_room.md`, `docs/08_tech/tradingagent_integration.md` |
-| **Anonymous → claim auth** | Supabase Auth integration. Apple Sign-In + Email magic-link. Persist mandate beyond session. 7-day Trader trial activates on claim. | `docs/03_onboarding/flow.md`, `docs/08_tech/auth.md` |
-| **Cleanup: `datetime.utcnow()` deprecation** | 89 deprecation warnings in pytest output across 6 files. Replace with `datetime.now(timezone.utc)`. Low-risk housekeeping. | — |
+| **Real LLM Concierge** | Replace deterministic onboarding state machine with LLM intent classification + adaptive follow-ups. | `docs/03_onboarding/mandate_conversation.md`, `docs/02_agents/concierge.md` |
+| **Decision Journal** | Capture every 1-on-1, Coach session, future Room session, sim trade. Searchable, filterable, replayable. | `docs/01_product/core_loop_and_features.md`, `docs/08_tech/data_model.md` (`journal_entries`) |
+| **Convene the Room** | The showpiece — multi-agent debate visualizer. Wraps TradingAgents framework. | `docs/02_agents/convene_the_room.md`, `docs/08_tech/tradingagent_integration.md` |
+| **Anonymous → claim auth** | Supabase Auth + Apple Sign-In + Email magic-link. Persist mandate + overlays beyond device. | `docs/03_onboarding/flow.md`, `docs/08_tech/auth.md` |
+| **Coach: from-past-calls mode** | Currently we ship "from-scratch" mode only. Past-calls mode requires the Decision Journal to exist first (it surfaces the last 5 agent contributions for thumb-up/down feedback). | `docs/02_agents/coach_your_agent.md#the-coach-from-past-calls-mode` |
+| **Coach: Raw Mode (Floor Manager)** | Direct markdown editor for the overlay block. Plumbing exists; UI is not built. | `docs/02_agents/coach_your_agent.md#raw-mode-floor-manager-v10` |
+| **Persist Coach across processes** | OverlayStore is in-memory; restart loses overlays. Postgres-back at W5+ alongside auth. | `docs/08_tech/data_model.md` |
+| **Cleanup: `datetime.utcnow()` deprecation** | 89→100 deprecation warnings in pytest. New Coach code uses `datetime.now(timezone.utc)`; older code still uses `utcnow()`. | — |
 
-My recommendation: **Coach Your Agent** next. It's the single most differentiating feature, the design is fully specced, and the 1-on-1 infrastructure we just built is exactly the foundation it needs.
+**My recommendation:** **Anonymous → claim auth + persistent storage (Supabase)** next. Coach Your Agent now creates real user state (overlay versions per device) that vanishes on backend restart. Putting Postgres behind both `mandates` and `user_overlays` is the obvious next move, and it pairs naturally with Supabase Auth so the overlays survive across devices.
 
 ---
 
@@ -107,13 +135,13 @@ the section we're working on. Then:
 
 [ pick ONE of these, or say "you decide" ]
 
-  1. Build Coach Your Agent — the flagship feature. Conversational prompt
-     editing for any agent, with a diff card, accept/refine/reject, version
-     history, safety-floor locking on PM. Spec: docs/02_agents/coach_your_agent.md.
+  1. Anonymous → claim auth (Supabase Auth + Apple Sign-In + magic-link)
+     + Postgres-back the mandate, overlay store, and journal.
+     Spec: docs/03_onboarding/flow.md + docs/08_tech/auth.md.
 
-  2. Build the Decision Journal — capture + replay every interaction.
-     Postgres-backed, polymorphic entry types. Spec: docs/01_product/core_loop_and_features.md
-     plus docs/08_tech/data_model.md.
+  2. Build the Decision Journal — capture + replay every interaction
+     (Coach proposals included). Postgres-backed, polymorphic entry types.
+     Spec: docs/01_product/core_loop_and_features.md + docs/08_tech/data_model.md.
 
   3. Build Convene the Room — the multi-agent debate visualizer.
      Wraps TradingAgents framework. Spec: docs/02_agents/convene_the_room.md.
@@ -121,14 +149,14 @@ the section we're working on. Then:
   4. Replace the deterministic Concierge state machine with a real LLM-driven
      conversation. Spec: docs/02_agents/concierge.md.
 
-  5. Anonymous → claim auth (Supabase Auth + Apple Sign-In + magic-link).
-     Spec: docs/03_onboarding/flow.md + docs/08_tech/auth.md.
+  5. Coach: from-past-calls mode + Raw Mode for Floor Manager.
+     Spec: docs/02_agents/coach_your_agent.md.
 
-  6. Housekeeping: fix the 89 datetime.utcnow() deprecation warnings in
+  6. Housekeeping: fix the datetime.utcnow() deprecation warnings in
      pytest output. Quick win.
 
-Default if no preference: option 1 (Coach Your Agent) — biggest differentiator,
-foundation already in place from the 1-on-1 work.
+Default if no preference: option 1 — Coach overlays + mandates currently die
+on backend restart; persistence is the obvious blocker for further work.
 
 Before you start writing code, run:
   cd "/Volumes/Extreme Pro/AMI_MarketApp"
@@ -142,10 +170,11 @@ Before you start writing code, run:
 
 ## Open questions / nothing-is-blocked items
 
-- **Anthropic API key.** Saiful has not yet added one. Mock provider keeps the UX working in the meantime. Whenever he adds it, no code change is needed.
-- **GCP migration.** Scheduled for W9 per timeline. Currently local-only on Mac.
-- **Supabase.** Not yet provisioned. Used at W5+ for auth + persistent mandate.
-- **Translation (AR + MS).** v1.0 work. i18n string structure ready but no content yet.
-- **App icon.** Default Flutter icon still. Replace with AMI hex when we get to polish.
+- **Anthropic API key.** Saiful has not yet added one. Mock provider keeps the full UX working (Coach included — proposals are seeded from the user's last message).
+- **GCP migration.** Scheduled for W9.
+- **Supabase.** Not yet provisioned. Used at W5+ for auth + persistent mandate + overlay store.
+- **Translation (AR + MS).** v1.0 work.
+- **App icon.** Default Flutter icon still.
+- **Device user_id.** Stored in `shared_preferences` under `ami.device_user_id`. When auth lands, migrate this to the real user_id (one-time migration on first claim).
 
 Nothing is blocking the next chunk of work. Just pick a direction.

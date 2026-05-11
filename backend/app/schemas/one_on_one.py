@@ -26,6 +26,9 @@ class OneOnOneStartRequest(BaseModel):
     # a real auth/mandate-store yet. V1 reads from the user's stored mandate.
     mandate_override: dict | None = None
     locale: str = "en"
+    # Device-stable user_id from the Flutter client so Coach overlays
+    # accumulated across sessions are applied. Optional for backward compat.
+    user_id: UUID | None = None
 
 
 class OneOnOneMessageRequest(BaseModel):
@@ -46,3 +49,4 @@ class OneOnOneSession(BaseModel):
     started_at: datetime
     mandate_used: dict  # snapshot of the mandate at session start
     locale: str = "en"
+    user_id: UUID | None = None

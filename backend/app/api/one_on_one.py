@@ -27,7 +27,11 @@ async def start_one_on_one(
     mandate = hydrate_mandate(req.mandate_override)
     # Ensure the locale on the mandate matches the request
     mandate = mandate.model_copy(update={"locale": req.locale})
-    return runner.open_one_on_one(agent_id=req.agent_id, mandate=mandate)
+    if req.user_id is not None:
+        mandate = mandate.model_copy(update={"user_id": req.user_id})
+    return runner.open_one_on_one(
+        agent_id=req.agent_id, mandate=mandate, user_id=req.user_id
+    )
 
 
 @router.post("/one_on_one/message")

@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.coach import router as coach_router
 from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
 from app.core.config import settings
@@ -39,6 +40,7 @@ app.add_middleware(
 # Routers
 app.include_router(onboarding_router)
 app.include_router(one_on_one_router)
+app.include_router(coach_router)
 
 
 @app.get("/v1/health")

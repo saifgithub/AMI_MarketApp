@@ -8,6 +8,14 @@ from app.schemas.agents import (
     AgentMessage,
     TWELVE_AGENT_IDS,
 )
+from app.schemas.coach import (
+    CoachHistoryResponse,
+    CoachMode,
+    CoachProposal,
+    CoachRefusal,
+    CoachSession,
+    UserOverlay,
+)
 from app.schemas.mandate import (
     Compliance,
     DailyBriefing,
@@ -30,6 +38,11 @@ __all__ = [
     "AgentActivation",
     "AgentId",
     "AgentMessage",
+    "CoachHistoryResponse",
+    "CoachMode",
+    "CoachProposal",
+    "CoachRefusal",
+    "CoachSession",
     "Compliance",
     "DailyBriefing",
     "Horizon",
@@ -43,6 +56,7 @@ __all__ = [
     "RoomStatus",
     "TargetOutcome",
     "User",
+    "UserOverlay",
     "Verdict",
     "VerdictAction",
 ]
