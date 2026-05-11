@@ -1,0 +1,113 @@
+"""Engine + session lifecycle.
+
+We expose a process-singleton engine and sessionmaker, lazy-initialised the
+first time `get_engine()` or `get_session()` is called. Tests reset this via
+`reset_for_tests(url=...)` to point at a fresh sqlite DB and recreate the
+schema.
+
+`get_session()` is a contextmanager so callers do `with get_session() as s:` —
+this matches the existing sync ergonomics of the in-memory stores.
+"""
+
+from __future__ import annotations
+
+import os
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Iterator
+
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.core.config import settings
+from app.db.base import Base
+
+
+_engine: Engine | None = None
+_SessionLocal: sessionmaker[Session] | None = None
+
+
+def _resolve_url() -> str:
+    """Pick a DB URL. Test fixture wins; then env; then sqlite fallback."""
+    test_url = os.environ.get("AMI_TEST_DATABASE_URL")
+    if test_url:
+        return test_url
+    url = settings.database_url or ""
+    # The .env.example shipped an async asyncpg URL while we lived in
+    # in-memory mode. Convert to a sync driver so old configs still work.
+    if url.startswith("postgresql+asyncpg://"):
+        url = url.replace("postgresql+asyncpg://", "postgresql+psycopg2://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+    if not url or url == "postgresql+psycopg2://postgres:postgres@localhost:5432/ami_trade":
+        # No real DB configured — solo-dev sqlite next to the backend pkg
+        local = Path(__file__).resolve().parent.parent.parent / ".local.db"
+        return f"sqlite:///{local}"
+    return url
+
+
+def get_engine() -> Engine:
+    global _engine, _SessionLocal
+    if _engine is None:
+        url = _resolve_url()
+        connect_args: dict = {}
+        if url.startswith("sqlite"):
+            # Multiple Sessions across threads (FastAPI uses a threadpool for
+            # sync deps) — sqlite needs this opt-in.
+            connect_args["check_same_thread"] = False
+        _engine = create_engine(url, future=True, connect_args=connect_args)
+        _SessionLocal = sessionmaker(
+            bind=_engine, autoflush=False, autocommit=False, expire_on_commit=False,
+        )
+    return _engine
+
+
+def get_sessionmaker() -> sessionmaker[Session]:
+    get_engine()
+    assert _SessionLocal is not None
+    return _SessionLocal
+
+
+@contextmanager
+def get_session() -> Iterator[Session]:
+    """Open a session, commit on clean exit, rollback on error, always close."""
+    SessionLocal = get_sessionmaker()
+    session = SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def init_schema() -> None:
+    """Create all tables in the configured DB. Idempotent.
+
+    Production deploys use Alembic migrations instead — see backend/alembic/.
+    For solo-dev + tests we just create_all().
+    """
+    # Importing models registers them on Base.metadata as a side-effect.
+    from app.db import models as _models  # noqa: F401
+    engine = get_engine()
+    Base.metadata.create_all(engine)
+
+
+def reset_for_tests(url: str | None = None) -> None:
+    """Tear down the singleton engine, swap URL, recreate schema.
+
+    Pass an explicit `url` (typically `sqlite:///:memory:` or a tempfile) and
+    the next `get_session()` will use it.
+    """
+    global _engine, _SessionLocal
+    if _engine is not None:
+        _engine.dispose()
+    _engine = None
+    _SessionLocal = None
+    if url is not None:
+        os.environ["AMI_TEST_DATABASE_URL"] = url
+    elif "AMI_TEST_DATABASE_URL" in os.environ:
+        del os.environ["AMI_TEST_DATABASE_URL"]
+    init_schema()

@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W7 Sim Trading + Mandate editor session)
+**Last updated:** 2026-05-11 (end of W8 persistence + auth scaffold session)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,14 +13,15 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 9 commits, no remote yet |
-| Latest commit | (this session) W7: Sim Trading + Settings/Mandate editor |
-| Lines on disk | ~31,500 (PRD ~14k, backend ~6.7k, Flutter ~9.4k, content ~1.4k) |
+| Git state | Clean working tree, 10 commits, no remote yet |
+| Latest commit | (this session) W8: persistence migration + auth scaffold |
+| Lines on disk | ~33,500 (PRD ~14k, backend ~7.5k, Flutter ~9.8k, content ~1.4k) |
 
 ```
 $ git log --oneline
-<new>   W7: Sim Trading + Mandate editor — close the core loop
-5239353 W6: Convene the Room — 12-agent streaming debate + 7 more lessons
+<new>   W8: persistence migration + Supabase-shaped auth scaffold
+db89336 W7: Sim Trading + Mandate editor — close the core loop
+5239353 W6: Convene the Room
 0fcbfc8 W5: Decision Journal + Lessons + Earn Path
 9da7f69 W4: Coach Your Agent
 665135f Handover docs
@@ -39,55 +40,85 @@ $ git log --oneline
 | Restart | `scripts/run_dev.sh backend` |
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
-| Routes | `/v1/health`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, `/v1/room/*`, **`/v1/sim/*`**, **`/v1/mandate/*`** |
-| Tests | `pytest backend/tests/unit/ -q` → **84 passed** (W6: 72, +12) |
+| Routes | `/v1/health`, **`/v1/auth/*`**, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/mandate/*` |
+| Tests | `pytest backend/tests/unit/ -q` → **91 passed** (W7: 84, +7 auth) |
 
-### Sim Trading routes (new this session)
+### Postgres + persistence (NEW this session)
+
+| | |
+|---|---|
+| Container | `ami_postgres` (postgres:15-alpine) via `docker compose up -d postgres` |
+| Host port | **5434** (5432/5433 were already taken on dev box) |
+| DB | `ami_trade` (user `postgres`, pw `postgres`) |
+| Connect | `docker exec -it ami_postgres psql -U postgres -d ami_trade` |
+| Backend → DB | `DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade` |
+| Default (unset) | Sqlite file at `backend/.local.db` — fine for solo dev / first-launch sanity |
+| Tests | Per-test sqlite tempfile (autouse fixture in `tests/conftest.py`) |
+
+13 tables created by Alembic on first run:
+
+```
+agent_activations    auth_challenges     journal_entries
+lessons_progress     mandates            overlay_edit_counts
+room_runs            sim_holdings        sim_portfolios
+sim_trades           user_overlays       users
+alembic_version
+```
+
+Migrations live in `backend/alembic/versions/`. To run:
+
+```bash
+cd backend
+source .venv/bin/activate
+DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
+  alembic upgrade head
+```
+
+Day-to-day, `init_schema()` in `app/db/session.py` runs `Base.metadata.create_all()` on the first DB-touch in solo dev + tests, so you don't have to remember Alembic during normal feature work.
+
+### Auth scaffold (NEW this session)
+
+Anonymous-first; Supabase-shaped so the swap-over is mostly mechanical.
 
 | Route | What it does |
 |---|---|
-| `GET  /v1/sim/portfolio/{user_id}` | Snapshot: cash + holdings (with marks + unrealised P&L) + total value + drawdown |
-| `POST /v1/sim/portfolio/{user_id}/reset` | Wipe and restart with $10k |
-| `POST /v1/sim/submit` | Submit a trade — **PM safety floor runs server-side** (compliance, drawdown, single-name cap, halal, etc.) |
-| `GET  /v1/sim/trades/{user_id}` | List trades (filter by status) |
-| `POST /v1/sim/trades/{user_id}/evaluate` | Sweep open trades — flip won/lost on stop/target hit |
-| `POST /v1/sim/trades/{user_id}/close` | Manual close |
-| `GET  /v1/sim/quote/{ticker}` | Current mock mark |
+| `POST /v1/auth/anon` | Bootstrap or reuse anonymous session keyed by `device_user_id` from shared_preferences. Returns `scaffold:<hex>` token. |
+| `POST /v1/auth/magic_link/start` | Send 6-digit code via email (in dev env the code is returned in the response for copy-paste). |
+| `POST /v1/auth/magic_link/verify` | Consume the code, claim the user row (sets email, `claimed_at`). |
+| `POST /v1/auth/apple` | Decode Apple identity JWT body (scaffold — no signature check), claim row with `apple_id=sub`. |
+| `GET  /v1/auth/me` | Read current user from `Authorization: Bearer scaffold:<hex>` or `?token=`. |
 
-### Mandate routes (new this session)
+Critical property: **the user_id never changes when an anonymous account claims**. Mandate, journal, and portfolio survive the claim because they're all keyed by `user_id`.
 
-| Route | What it does |
-|---|---|
-| `GET   /v1/mandate/{user_id}` | Read current mandate (default-hydrated if none stored) |
-| `PATCH /v1/mandate/{user_id}` | Shallow-merge updates; bumps version; writes `mandate_edit` journal entry |
+When real Supabase plugs in, swap the implementation of `app/services/auth_service.py` to call supabase-py admin functions. The route shapes don't change.
 
-### One unified mandate resolver
+### Flutter side
 
-Every session endpoint (1-on-1, Coach, Room, Sim) now goes through `mandate_store.resolve_mandate(user_id, override, locale=...)`:
-1. Stored mandate for `user_id` (set via Settings) takes priority.
-2. Override dict (used by demo / tests) is next.
-3. Hydrated defaults.
+- `lib/models/auth.dart` — AuthUser, AnonSession, MagicLink, AppleSignIn
+- `lib/state/auth_providers.dart` — `authNotifierProvider` (auto-bootstraps anon on app launch)
+- `lib/screens/auth/sign_in_screen.dart` — full claim UI: Apple button + email magic-link with debug-code surfacing in dev
+- Settings → **ACCOUNT** section opens it (`MANAGE ACCOUNT` if claimed, `SIGN IN` if guest)
 
-So flipping a compliance flag in Settings instantly changes how every agent reasons + how every trade is checked. No restart, no plumbing per endpoint.
+The Apple button currently uses a synthetic JWT to exercise the backend flow end-to-end. To wire real Apple Sign-In: replace `_signInWithAppleScaffold` in `sign_in_screen.dart` with a call to `package:sign_in_with_apple` (already in pubspec) and pass the real `identityToken` to `authNotifier.signInWithApple()`.
 
-### Mock price engine
+### What survives a backend restart now
 
-`backend/app/services/sim_engine.py` runs a deterministic-per-ticker random walk (hash-seeded base price, per-second drift + volatility). Same ticker → same trajectory across the session, so the alpha demo feels coherent. Each refresh evaluates open trades against their stop/target and flips outcomes to `won` / `lost` with realised P&L computed.
+Verified end-to-end against Postgres (W8 smoke test):
 
-A real market data feed (Polygon, Yahoo, IEX) is a swap for `SimEngine.current_price()` at W8+.
+```
+PATCH /v1/mandate/<u>  { compliance: {halal: true}, risk_score: 4 }
+→ kill backend
+→ relaunch
+GET   /v1/mandate/<u>  → still halal:true, risk_score:4
 
-### Capture loops
+POST  /v1/sim/submit   { ticker: AAPL, qty: 2 }
+→ kill backend
+→ relaunch
+GET   /v1/sim/portfolio/<u>  → holding still there
+GET   /v1/sim/trades/<u>      → trade still there
+```
 
-Every action keeps writing to the Decision Journal automatically:
-- **1-on-1** → `one_on_one`
-- **Coach accept** → `agent_coach`
-- **Lesson quiz pass** → `lesson_complete` + `agent_unlock`
-- **Room run** → `room_run` (full transcript + verdict, outcome=pending)
-- **Sim trade open** → `sim_trade` (outcome=pending)
-- **Sim trade stop/target/manual close** → `sim_trade` (outcome=win/loss)
-- **Mandate edit** → `mandate_edit` (with before/after diff)
-
-The Journal detail screen renders all of these natively now — Room runs show the full 12-agent transcript, mandate edits show the diff.
+Everything keyed by `user_id` survives. The mock price walk does NOT — it's a deterministic in-memory simulator, reseeds from scratch on boot. Real market data feed is a future swap.
 
 ### Mobile app
 
@@ -97,39 +128,38 @@ The Journal detail screen renders all of these natively now — Room runs show t
 | Installed on | `TESTING IPHONE 13` |
 | Rebuild | `scripts/run_dev.sh` |
 
-**The iPhone still has the W3 build.** Redeploy to see W4–W7.
+**The iPhone still has the W3 build.** Redeploy to see W4–W8.
 
 ### What the app does now
 
-**Bottom nav: Floor / Portfolio / Journal / Lessons / Settings** (5 tabs).
+Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 
 1. Onboarding → Mandate readback.
-2. **Floor** — Concierge + 12 agents (locked dimmed with lock overlay + "How to unlock" sheet) + CONVENE THE ROOM CTA.
-3. **Portfolio (NEW)** — total value + P&L + cash + drawdown card, holdings cards with unrealised P&L, trade list with status pills + manual close. Add-trade button opens the ticket sheet.
-4. **Journal** — every action with full filter chips + detail screens for every entry type.
-5. **Lessons** — 12 lessons, 7 tracks; quiz pass unlocks agents; "next recommended" surfaces.
-6. **Settings (NEW)** — Mandate editor: Risk score slider (1–5), max drawdown picker (10/20/30/50/100), compliance toggles (halal / ESG-lite / no T/A/G / no fossil / long-only / liquid-only), read-only profile fields. Save bumps mandate version and refreshes everywhere.
-7. **Convene the Room** — Matrix-style console, verdict card with **"OPEN TRADE TICKET"** button that pre-fills the trade ticket with size/entry/stop/target/horizon from the verdict. Safety floor reruns on submit.
-8. **1-on-1** + **Coach** unchanged (Coach tune-icon in 1-on-1 header).
+2. Floor — Concierge + 12 agents + CONVENE THE ROOM CTA.
+3. Portfolio — total value + P&L + cash + drawdown, holdings, trades.
+4. Journal — every action with filter chips + detail screens.
+5. Lessons — 12 lessons, 7 tracks; quiz pass unlocks agents.
+6. Settings — Mandate editor + **NEW: ACCOUNT** section → SignInScreen.
+7. **NEW: SignInScreen** — Apple button + email magic-link claim flow.
 
-### The core loop is now closed
+### The core loop is now closed AND durable
 
-Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → As price walks, stop/target evaluation flips outcomes → Journal records every step (Room run + sim trade open + sim trade close + outcome).
+Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
 
 ---
 
-## What's NOT yet built (W8 candidates — final MVP push)
+## What's NOT yet built (W9 candidates)
 
 | Feature | Spec doc |
 |---|---|
-| **Persistence migration** | docker-compose Postgres locally, migrate every in-memory store. `docs/08_tech/data_model.md` covers the schemas. |
-| **Supabase auth scaffold** | Anonymous → Apple Sign-In / magic-link claim. `docs/08_tech/auth.md`. Migrate device_user_id → real user_id on claim. |
+| **Real Supabase plug-in** | Swap `app/services/auth_service.py` impl for supabase-py admin SDK; set `SUPABASE_URL`+`SUPABASE_SERVICE_KEY`. |
+| **Real Apple Sign-In** | Wire `sign_in_with_apple` package in `sign_in_screen.dart`; pass real identity_token to backend. |
 | **Real LLM Concierge** | Replace deterministic onboarding state machine. `docs/02_agents/concierge.md`. |
 | **More lessons** | One Research Manager lesson + content for deeper tracks. |
-| **Cleanup** | `datetime.utcnow()` deprecation in older code. |
+| **Cleanup** | `datetime.utcnow()` deprecation in `concierge_engine.py` + a few other older files. |
 | **Live LLM swap** | Single function in `room_runner.py` once `ANTHROPIC_API_KEY` is added. |
-
-**W8 is MVP.** Persistence + Supabase scaffolding turn this from a demo that resets on backend restart into something a real user can actually use across days. After W8, adding the Anthropic key is a config change and everything flips to live reasoning.
+| **Real market data** | Swap `SimEngine.current_price()` for Polygon / Yahoo. |
+| **RLS policies** | Re-enable RLS in Alembic migrations once Supabase auth is the source of `auth.uid()`. |
 
 ---
 
@@ -139,33 +169,27 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 We're picking up the AMI Trade build. Read HANDOVER.md at the project root
 (/Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md) first.
 
-Default for W8 — the MVP push:
-  Persistence migration + Supabase auth scaffold.
+W8 (persistence + auth scaffold) is done. Pick one of the W9 candidates:
 
-Persistence
-  • docker-compose up the local Postgres from infra/local/.
-  • Use SQLAlchemy (async) + Alembic. Stack already has these
-    available via pip — add if missing.
-  • Migrate stores in this order (small → large blast radius):
-    1. MandateStore   → mandates table
-    2. OverlayStore   → user_overlays table
-    3. JournalStore   → journal_entries table
-    4. LessonsService → lessons_progress + agent_activations tables
-    5. SimEngine      → sim_portfolios + sim_holdings + sim_trades
-    6. RoomRunner     → room_runs table (+ jsonb transcript)
-  • Each store keeps the same public API; only the storage backend
-    changes. Tests stay valid.
+  A. Real Supabase plug-in. Saiful provisions a Supabase project, hands
+     over SUPABASE_URL + SUPABASE_SERVICE_KEY. Swap auth_service to
+     supabase-py admin; the route contracts don't change. Smoke test
+     anon → email claim still works end-to-end.
 
-Supabase auth scaffold
-  • Just the wiring — don't require Saiful to provision Supabase yet.
-    Use a local Postgres with a `users` table that mimics Supabase's
-    `auth.users` schema. Real Supabase plugs in via env var swap later.
-  • Anonymous flow: device_user_id from shared_preferences becomes the
-    user_id; a 'claimed_at' column flips when the user signs in with
-    Apple / email magic-link.
-  • Apple Sign-In + email magic-link UI scaffolds. Real Supabase calls
-    can be stubs that just store credentials locally — wire the real
-    SDK when Saiful adds his Supabase project.
+  B. Real Apple Sign-In wiring. The flutter package `sign_in_with_apple`
+     is already in pubspec. Replace the synthetic JWT in
+     sign_in_screen.dart with a real Apple call. Verify on a real
+     iPhone (test team set up via Apple Developer console).
+
+  C. Live LLM swap. ANTHROPIC_API_KEY in backend/.env; flip
+     LLMGateway provider. Then validate 1-on-1, Coach, Room produce
+     real Anthropic reasoning rather than canned scripts.
+
+  D. Real market data. Swap SimEngine.current_price() for a real feed
+     (Polygon free tier is fine). The DB schema doesn't change.
+
+  E. Cleanup pass. datetime.utcnow() deprecation, a Research Manager
+     lesson, RLS migrations.
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
@@ -175,16 +199,35 @@ Before writing code:
   cd "/Volumes/Extreme Pro/AMI_MarketApp"
   git status
   git log --oneline
+  docker ps --filter "name=ami_postgres" --format '{{.Names}}: {{.Status}}'
   curl -s http://localhost:8000/v1/health
+```
+
+---
+
+## How to run the W8 stack locally
+
+```bash
+# 1. Postgres
+cd "/Volumes/Extreme Pro/AMI_MarketApp"
+docker compose up -d postgres            # host port 5434
+
+# 2. Backend (sqlite fallback works too — just unset DATABASE_URL)
+cd backend && source .venv/bin/activate
+DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
+  uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+# 3. App (separate terminal)
+scripts/run_dev.sh
 ```
 
 ---
 
 ## Open questions / nothing-is-blocked items
 
-- **Anthropic API key.** Still not added. The whole product runs on mocks.
-- **Persistence.** Everything in memory. Restart = wipe. W8 fixes it.
-- **Mock price engine.** Random walk seeded per ticker; deterministic for the demo. Real feed at W8+.
+- **Anthropic API key.** Still not added.
+- **Supabase project.** Not yet provisioned by Saiful.
+- **Apple Developer team setup.** Done for Team `S7RBWM4879` but Sign in with Apple capability needs to be added to the bundle id for real prod usage.
 - **App Store, APNs, real market data** — still external.
 
 Nothing is blocking the next chunk.

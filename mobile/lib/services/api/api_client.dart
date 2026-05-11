@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -639,5 +640,77 @@ class ApiClient {
       data: updates,
     );
     return UserMandate.fromJson(r.data!);
+  }
+
+  // ── Auth (anonymous-first; Apple + magic-link claim) ────────────
+
+  Future<AnonSessionResponse> bootstrapAnon({
+    String? deviceUserId,
+    String locale = 'en',
+    String timezone = 'UTC',
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/anon',
+      data: {
+        if (deviceUserId != null) 'device_user_id': deviceUserId,
+        'locale': locale,
+        'timezone': timezone,
+      },
+    );
+    return AnonSessionResponse.fromJson(r.data!);
+  }
+
+  Future<MagicLinkStartResponse> startMagicLink({
+    required String email,
+    String? userId,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/magic_link/start',
+      data: {
+        'email': email,
+        if (userId != null) 'user_id': userId,
+      },
+    );
+    return MagicLinkStartResponse.fromJson(r.data!);
+  }
+
+  Future<AuthVerifyResponse> verifyMagicLink({
+    required String email,
+    required String code,
+    String? userId,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/magic_link/verify',
+      data: {
+        'email': email,
+        'code': code,
+        if (userId != null) 'user_id': userId,
+      },
+    );
+    return AuthVerifyResponse.fromJson(r.data!);
+  }
+
+  Future<AuthVerifyResponse> signInWithApple({
+    required String identityToken,
+    String? userId,
+    String? fullName,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/apple',
+      data: {
+        'identity_token': identityToken,
+        if (userId != null) 'user_id': userId,
+        if (fullName != null) 'full_name': fullName,
+      },
+    );
+    return AuthVerifyResponse.fromJson(r.data!);
+  }
+
+  Future<AuthUser> me({required String token}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/auth/me',
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+    return AuthUser.fromJson(r.data!);
   }
 }

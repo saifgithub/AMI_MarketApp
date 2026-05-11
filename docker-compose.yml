@@ -19,7 +19,9 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ami_trade
     ports:
-      - "5432:5432"
+      # Host port 5434 to avoid clashing with other Postgres instances on the
+      # dev machine (5432, 5433 are commonly taken). Container port stays 5432.
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/local/postgres-init:/docker-entrypoint-initdb.d:ro
@@ -56,7 +58,8 @@ services:
         condition: service_healthy
     environment:
       ENV: local
-      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/ami_trade
+      # Container-to-container connection still uses 5432 (internal port).
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0
       # LLM keys — copy from .env file (don't bake into image)
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}

@@ -35,9 +35,9 @@ def test_floor_pass_30_day_retention():
     user_id = uuid4()
     # Append + manually backdate one entry to 31 days ago
     e_old = store.append(_draft(user_id, title="old"))
-    # mutate created_at directly (store is in-memory)
-    store._entries[user_id][0] = e_old.model_copy(
-        update={"created_at": datetime.now(timezone.utc) - timedelta(days=31)}
+    # Shift created_at back 31 days via the test-only DB helper.
+    store._backdate_for_test(
+        user_id, e_old.id, datetime.now(timezone.utc) - timedelta(days=31),
     )
     store.append(_draft(user_id, title="new"))
     entries, total, retention = store.list_for_user(user_id, plan=Plan.FLOOR_PASS)

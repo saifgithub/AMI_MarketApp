@@ -1,37 +1,34 @@
-"""Sim Trading — in-memory portfolio + mock price engine.
+"""Sim Trading — Postgres-backed portfolio + in-memory mock price engine.
 
 The user's "team" can issue verdicts via Convene the Room, but those
-verdicts are only valuable if the user can actually act on them. This
-module turns a Verdict into a real position in a paper-trade portfolio,
-runs a deterministic-per-ticker mock price feed, computes P&L, and flags
-stop/target hits.
+verdicts are only valuable if the user can act on them. This module turns a
+Verdict (or a manually entered ticket) into a real position in a paper-
+trade portfolio, runs a deterministic-per-ticker mock price feed, computes
+P&L, and flags stop/target hits.
+
+Persistence:
+  - sim_portfolios + sim_holdings + sim_trades survive backend restarts.
+    A user's open positions are still open after a reboot.
+  - The mock price walk stays in memory — it's a deterministic simulator
+    seeded by ticker, NOT data we want to keep. Restart = fresh walk.
 
 Architecture overview:
 
   SimEngine
-    ├── ensure_portfolio(user_id) → SimPortfolio (lazy-created, $10k start)
+    ├── ensure_portfolio(user_id) → Portfolio (lazy-created, $10k start)
     ├── current_price(ticker) → deterministic-but-volatile mark
     ├── submit(user_id, ticker, side, qty, ...) →
     │       1. Construct ProposedTrade
     │       2. Run check_mandate_compliance() — same safety floor as PM
     │       3. If passed: execute fill, update holdings/cash, emit a
-    │          SimTrade record with verdict_ref optionally linked.
+    │          SimTrade row with verdict_ref optionally linked.
     │       4. If failed: return ComplianceResult with violations.
     ├── tick_marks() → refresh every ticker's mark
     └── evaluate_outcomes() → for each open trade with a stop/target,
-            flip outcome to WIN / LOSS when hit (pure function so the
-            API layer can attach this to the Journal entry).
-
-Mock price engine: deterministic hash-seeded random walk per ticker.
-Same ticker → same trajectory across the session. We *do* let the walk
-drift over time so trades that just opened can hit stops/targets within
-the alpha demo timeframe (a few minutes of real time).
+            flip outcome to WIN / LOSS when hit.
 
 A real market data feed (Polygon, Yahoo, etc.) is a swap for
-`current_price()` at W8+.
-
-Spec: docs/01_product/core_loop_and_features.md (Sim & Decision Journal),
-      docs/08_tech/data_model.md (sim_portfolios / sim_holdings / sim_trades).
+`current_price()`. The DB schema does not change.
 """
 
 from __future__ import annotations
@@ -39,15 +36,18 @@ from __future__ import annotations
 import math
 import random
 import time
-from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from threading import RLock
 from typing import Literal
 from uuid import UUID, uuid4
 
+from sqlalchemy import delete, select
+
 from app.agents.safety_floor import check_mandate_compliance
 from app.core.logging import logger
+from app.db import get_session, init_schema
+from app.db.models import SimHoldingRow, SimPortfolioRow, SimTradeRow
 from app.schemas import Mandate
 from app.schemas.trade import (
     ComplianceResult,
@@ -62,13 +62,12 @@ from app.schemas.trade import (
 # ── Mock price engine ──────────────────────────────────────────────────────
 
 
-# Demo-only halal universe. Mirrors room_runner.
 DEFAULT_HALAL_UNIVERSE = {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
 
 
 @dataclass
 class _PriceWalk:
-    """Per-ticker random walk state."""
+    """Per-ticker random walk state — pure in-memory, deterministic per seed."""
     base: float
     drift_per_sec: float
     volatility: float
@@ -76,10 +75,8 @@ class _PriceWalk:
     rng_seed: int = 0
 
     def price_at(self, now_ts: float | None = None) -> float:
-        """Compute current price given the seeded random walk."""
         now_ts = now_ts or time.time()
         elapsed = max(0.0, now_ts - self.started_at)
-        # Geometric brownian-ish: drift + noise. Each second is one step.
         steps = int(elapsed)
         rng = random.Random(self.rng_seed)
         v = self.base
@@ -93,7 +90,7 @@ def _walk_for(ticker: str) -> _PriceWalk:
     seed = hash(ticker.upper())
     rng = random.Random(seed)
     base = 50 + rng.uniform(0, 400)
-    drift = rng.uniform(-0.0002, 0.0004)  # small per-second drift
+    drift = rng.uniform(-0.0002, 0.0004)
     vol = rng.uniform(0.002, 0.008)
     return _PriceWalk(
         base=round(base, 2),
@@ -103,7 +100,7 @@ def _walk_for(ticker: str) -> _PriceWalk:
     )
 
 
-# ── Sim trade record ───────────────────────────────────────────────────────
+# ── Sim trade record (in-Python dataclass that mirrors SimTradeRow) ────────
 
 
 TradeStatus = Literal["open", "won", "lost", "closed"]
@@ -125,8 +122,30 @@ class SimTrade:
     closed_at: datetime | None = None
     closed_price: float | None = None
     status: TradeStatus = "open"
-    verdict_ref: UUID | None = None  # link to RoomRun.id if from a Room
+    verdict_ref: UUID | None = None
     realised_pnl: float = 0.0
+
+    @classmethod
+    def from_row(cls, row: SimTradeRow) -> "SimTrade":
+        side_val = row.side
+        return cls(
+            id=row.id,
+            user_id=row.user_id,
+            portfolio_id=row.portfolio_id,
+            ticker=row.ticker,
+            side=Side(side_val) if not isinstance(side_val, Side) else side_val,
+            quantity=float(row.quantity),
+            entry_price=float(row.entry_price),
+            stop=float(row.stop) if row.stop is not None else None,
+            target=float(row.target) if row.target is not None else None,
+            horizon_days=row.horizon_days,
+            opened_at=row.opened_at,
+            closed_at=row.closed_at,
+            closed_price=float(row.closed_price) if row.closed_price is not None else None,
+            status=row.status,  # type: ignore[assignment]
+            verdict_ref=row.verdict_ref,
+            realised_pnl=float(row.realised_pnl or 0),
+        )
 
     def to_json(self) -> dict:
         return {
@@ -174,10 +193,29 @@ class OutcomeUpdate:
 _STARTING_CAPITAL = 10_000.0
 
 
+def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
+    return Portfolio(
+        id=row.id,
+        user_id=row.user_id,
+        name=row.name,
+        starting_capital=float(row.starting_capital),
+        current_cash=float(row.current_cash),
+        holdings=[
+            Holding(
+                ticker=h.ticker,
+                quantity=float(h.quantity),
+                avg_cost=float(h.avg_cost),
+                opened_at=h.opened_at,
+            )
+            for h in row.holdings
+        ],
+        created_at=row.created_at,
+    )
+
+
 class SimEngine:
     def __init__(self) -> None:
-        self._portfolios: dict[UUID, Portfolio] = {}
-        self._trades: dict[UUID, list[SimTrade]] = defaultdict(list)  # user_id → trades
+        init_schema()
         self._walks: dict[str, _PriceWalk] = {}
         self._lock = RLock()
 
@@ -197,27 +235,36 @@ class SimEngine:
 
     # ── Portfolio ──────────────────────────────────────────────────────
 
+    def _load_portfolio_row(self, s, user_id: UUID) -> SimPortfolioRow | None:
+        return s.execute(
+            select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
+        ).scalar_one_or_none()
+
     def ensure_portfolio(self, user_id: UUID) -> Portfolio:
-        with self._lock:
-            p = self._portfolios.get(user_id)
-            if p is not None:
-                return p
-            p = Portfolio(
-                id=uuid4(),
-                user_id=user_id,
-                name="Main",
-                starting_capital=_STARTING_CAPITAL,
-                current_cash=_STARTING_CAPITAL,
-                holdings=[],
-                created_at=datetime.now(timezone.utc),
-            )
-            self._portfolios[user_id] = p
-            return p
+        with get_session() as s:
+            row = self._load_portfolio_row(s, user_id)
+            if row is None:
+                row = SimPortfolioRow(
+                    id=uuid4(),
+                    user_id=user_id,
+                    name="Main",
+                    starting_capital=_STARTING_CAPITAL,
+                    current_cash=_STARTING_CAPITAL,
+                    created_at=datetime.now(timezone.utc),
+                )
+                s.add(row)
+                s.flush()
+            return _portfolio_from_row(row)
 
     def reset_portfolio(self, user_id: UUID) -> Portfolio:
-        with self._lock:
-            self._portfolios.pop(user_id, None)
-            self._trades.pop(user_id, None)
+        with get_session() as s:
+            existing = self._load_portfolio_row(s, user_id)
+            if existing is not None:
+                s.execute(
+                    delete(SimTradeRow).where(SimTradeRow.portfolio_id == existing.id)
+                )
+                s.delete(existing)
+                s.flush()
         return self.ensure_portfolio(user_id)
 
     def total_value(self, user_id: UUID) -> float:
@@ -231,12 +278,13 @@ class SimEngine:
         return p.total_drawdown_pct(marks)
 
     def list_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> list[SimTrade]:
-        with self._lock:
-            trades = list(self._trades.get(user_id, []))
-        if status is not None:
-            trades = [t for t in trades if t.status == status]
-        trades.sort(key=lambda t: t.opened_at, reverse=True)
-        return trades
+        with get_session() as s:
+            stmt = select(SimTradeRow).where(SimTradeRow.user_id == user_id)
+            if status is not None:
+                stmt = stmt.where(SimTradeRow.status == status)
+            stmt = stmt.order_by(SimTradeRow.opened_at.desc())
+            rows = s.execute(stmt).scalars().all()
+            return [SimTrade.from_row(r) for r in rows]
 
     # ── Trading ────────────────────────────────────────────────────────
 
@@ -269,7 +317,6 @@ class SimEngine:
             limit_price=limit_price,
         )
 
-        # Safety floor — same as 1-on-1 + Room
         compliance = check_mandate_compliance(
             proposed,
             portfolio_value=self.total_value(user_id),
@@ -291,11 +338,9 @@ class SimEngine:
                 compliance=compliance, portfolio_snapshot=portfolio,
             )
 
-        # Execute the fill
         notional = fill_price * quantity
         if side == Side.BUY:
             if notional > portfolio.current_cash + 1e-6:
-                # Not enough cash — convert to a compliance-like failure
                 fail = ComplianceResult(
                     passed=False,
                     violations=[
@@ -308,8 +353,7 @@ class SimEngine:
                     accepted=False, trade=None,
                     compliance=fail, portfolio_snapshot=portfolio,
                 )
-            portfolio = self._apply_buy(portfolio, ticker, quantity, fill_price)
-        else:  # SELL — close some/all of an existing long holding
+        else:
             held = next((h for h in portfolio.holdings if h.ticker == ticker), None)
             if held is None or held.quantity < quantity - 1e-6:
                 fail = ComplianceResult(
@@ -323,27 +367,49 @@ class SimEngine:
                     accepted=False, trade=None,
                     compliance=fail, portfolio_snapshot=portfolio,
                 )
-            portfolio = self._apply_sell(portfolio, ticker, quantity, fill_price)
 
-        with self._lock:
-            self._portfolios[user_id] = portfolio
-
-        trade = SimTrade(
-            id=uuid4(),
-            user_id=user_id,
-            portfolio_id=portfolio.id,
-            ticker=ticker,
-            side=side,
-            quantity=quantity,
-            entry_price=fill_price,
-            stop=stop,
-            target=target,
-            horizon_days=horizon_days,
-            opened_at=datetime.now(timezone.utc),
-            verdict_ref=verdict_ref,
-        )
-        with self._lock:
-            self._trades[user_id].append(trade)
+        # Persist fill + trade in one transaction.
+        trade_id = uuid4()
+        opened_at = datetime.now(timezone.utc)
+        with get_session() as s:
+            p_row = self._load_portfolio_row(s, user_id)
+            assert p_row is not None  # ensure_portfolio ran above
+            if side == Side.BUY:
+                self._apply_buy_row(s, p_row, ticker, quantity, fill_price, opened_at)
+            else:
+                self._apply_sell_row(s, p_row, ticker, quantity, fill_price)
+            s.add(SimTradeRow(
+                id=trade_id,
+                user_id=user_id,
+                portfolio_id=p_row.id,
+                ticker=ticker,
+                side=side.value if hasattr(side, "value") else str(side),
+                quantity=quantity,
+                entry_price=fill_price,
+                stop=stop,
+                target=target,
+                horizon_days=horizon_days,
+                opened_at=opened_at,
+                status="open",
+                verdict_ref=verdict_ref,
+                realised_pnl=0,
+            ))
+            s.flush()
+            portfolio = _portfolio_from_row(p_row)
+            trade = SimTrade(
+                id=trade_id,
+                user_id=user_id,
+                portfolio_id=p_row.id,
+                ticker=ticker,
+                side=side,
+                quantity=quantity,
+                entry_price=fill_price,
+                stop=stop,
+                target=target,
+                horizon_days=horizon_days,
+                opened_at=opened_at,
+                verdict_ref=verdict_ref,
+            )
 
         logger.info(
             "sim_trade_filled",
@@ -358,106 +424,112 @@ class SimEngine:
             compliance=compliance, portfolio_snapshot=portfolio,
         )
 
-    def _apply_buy(
-        self, p: Portfolio, ticker: str, qty: float, fill: float
-    ) -> Portfolio:
+    def _apply_buy_row(
+        self, s, p_row: SimPortfolioRow, ticker: str,
+        qty: float, fill: float, opened_at: datetime,
+    ) -> None:
         notional = fill * qty
-        existing = next((h for h in p.holdings if h.ticker == ticker), None)
-        if existing is None:
-            holdings = [*p.holdings, Holding(
-                ticker=ticker, quantity=qty, avg_cost=fill,
-                opened_at=datetime.now(timezone.utc),
-            )]
+        existing_holding = next(
+            (h for h in p_row.holdings if h.ticker == ticker), None,
+        )
+        if existing_holding is None:
+            s.add(SimHoldingRow(
+                portfolio_id=p_row.id,
+                ticker=ticker,
+                quantity=qty,
+                avg_cost=fill,
+                opened_at=opened_at,
+            ))
         else:
-            new_qty = existing.quantity + qty
-            new_avg = (existing.quantity * existing.avg_cost + qty * fill) / new_qty
-            holdings = [
-                h if h.ticker != ticker else Holding(
-                    ticker=ticker, quantity=new_qty, avg_cost=new_avg,
-                    opened_at=existing.opened_at,
-                )
-                for h in p.holdings
-            ]
-        return p.model_copy(update={
-            "holdings": holdings,
-            "current_cash": round(p.current_cash - notional, 2),
-        })
+            new_qty = float(existing_holding.quantity) + qty
+            new_avg = (
+                float(existing_holding.quantity) * float(existing_holding.avg_cost)
+                + qty * fill
+            ) / new_qty
+            existing_holding.quantity = new_qty
+            existing_holding.avg_cost = new_avg
+        p_row.current_cash = round(float(p_row.current_cash) - notional, 2)
 
-    def _apply_sell(
-        self, p: Portfolio, ticker: str, qty: float, fill: float
-    ) -> Portfolio:
+    def _apply_sell_row(
+        self, s, p_row: SimPortfolioRow, ticker: str, qty: float, fill: float,
+    ) -> None:
         proceeds = fill * qty
-        new_holdings: list[Holding] = []
-        for h in p.holdings:
+        for h in list(p_row.holdings):
             if h.ticker != ticker:
-                new_holdings.append(h)
                 continue
-            remaining = h.quantity - qty
+            remaining = float(h.quantity) - qty
             if remaining > 1e-6:
-                new_holdings.append(Holding(
-                    ticker=ticker, quantity=remaining,
-                    avg_cost=h.avg_cost,  # unchanged
-                    opened_at=h.opened_at,
-                ))
-            # else: fully closed — drop
-        return p.model_copy(update={
-            "holdings": new_holdings,
-            "current_cash": round(p.current_cash + proceeds, 2),
-        })
+                h.quantity = remaining
+            else:
+                s.delete(h)
+            break
+        p_row.current_cash = round(float(p_row.current_cash) + proceeds, 2)
 
     # ── Outcomes ───────────────────────────────────────────────────────
 
     def evaluate_outcomes(self, user_id: UUID) -> list[OutcomeUpdate]:
         """Check open trades against stop/target and flip status if hit."""
         updates: list[OutcomeUpdate] = []
-        with self._lock:
-            trades = list(self._trades.get(user_id, []))
-        for t in trades:
-            if t.status != "open":
-                continue
-            price = self.current_price(t.ticker)
-            new_status: TradeStatus | None = None
-            if t.side == Side.BUY:
-                if t.stop is not None and price <= t.stop:
-                    new_status = "lost"
-                elif t.target is not None and price >= t.target:
-                    new_status = "won"
-            else:  # short — ignore for alpha (long_only mandate default)
-                pass
-            if new_status is None:
-                continue
-            t.status = new_status
-            t.closed_at = datetime.now(timezone.utc)
-            t.closed_price = price
-            t.realised_pnl = round((price - t.entry_price) * t.quantity, 2)
-            updates.append(OutcomeUpdate(
-                trade_id=t.id, new_status=new_status,
-                closed_price=price, realised_pnl=t.realised_pnl,
-            ))
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow).where(
+                    SimTradeRow.user_id == user_id,
+                    SimTradeRow.status == "open",
+                )
+            ).scalars().all()
+            for t in rows:
+                price = self.current_price(t.ticker)
+                new_status: TradeStatus | None = None
+                side = t.side
+                side_enum = Side(side) if not isinstance(side, Side) else side
+                if side_enum == Side.BUY:
+                    if t.stop is not None and price <= float(t.stop):
+                        new_status = "lost"
+                    elif t.target is not None and price >= float(t.target):
+                        new_status = "won"
+                if new_status is None:
+                    continue
+                t.status = new_status
+                t.closed_at = datetime.now(timezone.utc)
+                t.closed_price = price
+                t.realised_pnl = round((price - float(t.entry_price)) * float(t.quantity), 2)
+                updates.append(OutcomeUpdate(
+                    trade_id=t.id, new_status=new_status,
+                    closed_price=price, realised_pnl=float(t.realised_pnl),
+                ))
         return updates
 
     def manual_close(self, user_id: UUID, trade_id: UUID) -> SimTrade | None:
-        with self._lock:
-            trades = list(self._trades.get(user_id, []))
-        for t in trades:
-            if t.id == trade_id and t.status == "open":
-                price = self.current_price(t.ticker)
-                t.status = "closed"
-                t.closed_at = datetime.now(timezone.utc)
-                t.closed_price = price
-                t.realised_pnl = round((price - t.entry_price) * t.quantity, 2)
-                # close the sim holding by simulating a sell
-                p = self.ensure_portfolio(user_id)
-                p = self._apply_sell(p, t.ticker, t.quantity, price)
-                with self._lock:
-                    self._portfolios[user_id] = p
-                return t
-        return None
+        with get_session() as s:
+            row = s.execute(
+                select(SimTradeRow).where(
+                    SimTradeRow.user_id == user_id,
+                    SimTradeRow.id == trade_id,
+                    SimTradeRow.status == "open",
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            price = self.current_price(row.ticker)
+            row.status = "closed"
+            row.closed_at = datetime.now(timezone.utc)
+            row.closed_price = price
+            row.realised_pnl = round(
+                (price - float(row.entry_price)) * float(row.quantity), 2,
+            )
+            p_row = self._load_portfolio_row(s, user_id)
+            if p_row is not None:
+                self._apply_sell_row(s, p_row, row.ticker, float(row.quantity), price)
+            s.flush()
+            return SimTrade.from_row(row)
 
     def clear(self) -> None:
+        with get_session() as s:
+            s.execute(delete(SimTradeRow))
+            s.execute(delete(SimHoldingRow))
+            s.execute(delete(SimPortfolioRow))
         with self._lock:
-            self._portfolios.clear()
-            self._trades.clear()
+            self._walks.clear()
 
 
 _engine: SimEngine | None = None
@@ -470,6 +542,5 @@ def get_sim_engine() -> SimEngine:
     return _engine
 
 
-# Test helper — round helper so engine output is comparable in fixtures
 def round2(x: float) -> float:
     return math.floor(x * 100 + 0.5) / 100

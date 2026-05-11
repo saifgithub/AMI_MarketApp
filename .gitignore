@@ -62,6 +62,10 @@ infra/**/terraform.tfvars
 *.log
 *.pid
 
+# Local SQLite (solo-dev fallback + alembic placeholder)
+backend/.local.db
+backend/.alembic-placeholder.db
+
 # Local model caches (TradingAgents)
 .tradingagents/
 ~/.tradingagents/

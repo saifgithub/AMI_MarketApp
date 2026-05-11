@@ -1,63 +1,97 @@
-"""User Mandate store — pre-auth, in-memory, keyed by device user_id.
+"""User Mandate store — Postgres-backed, versioned.
 
 The onboarding flow produces a Mandate at the end of the Concierge
-conversation; today that mandate lives only inside the in-flight onboarding
-session, then disappears. This store gives the rest of the app a way to
-read and update a user's current mandate beyond onboarding (Settings →
-My Mandate editor, mandate_edit journal entries, agent prompt composition
-re-reads on each request).
+conversation; this store persists it beyond onboarding so:
 
-W8 swap: replace dict with Postgres (`mandates` table per data_model.md)
-and pull from Supabase Auth-provided user_id.
+  - Settings → My Mandate can edit a single user's mandate across sessions
+  - Every agent (1-on-1, Coach, Room, Sim) reads the same mandate via
+    `resolve_mandate()`
+  - Mandate edits are versioned — old rows are kept for journal replay
+
+Each edit writes a new `mandates` row with the same `user_id` and an
+incremented `version`. `is_current=True` is moved to the new row; old rows
+keep history. Reads always go through `is_current=True`.
+
+The public sync API matches the previous in-memory store byte-for-byte so
+existing callers and tests don't change.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from threading import RLock
 from typing import Any
 from uuid import UUID
 
+from sqlalchemy import select, update
+
+from app.db import get_session, init_schema
+from app.db.models import MandateRow
 from app.schemas import Compliance, Mandate
 from app.services.coach_engine import hydrate_coach_mandate
 
 
 class MandateStore:
+    """Thin facade over the `mandates` table. Sync API; opens its own session."""
+
     def __init__(self) -> None:
-        self._mandates: dict[UUID, Mandate] = {}
-        self._lock = RLock()
+        init_schema()
 
     def get(self, user_id: UUID) -> Mandate | None:
-        with self._lock:
-            return self._mandates.get(user_id)
+        with get_session() as s:
+            row = s.execute(
+                select(MandateRow).where(
+                    MandateRow.user_id == user_id,
+                    MandateRow.is_current.is_(True),
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            return Mandate.model_validate(row.snapshot)
 
     def get_or_default(self, user_id: UUID) -> Mandate:
-        """Return the stored mandate or a hydrated default."""
         m = self.get(user_id)
         if m is not None:
             return m
         default = hydrate_coach_mandate({"user_id": str(user_id)})
-        default = default.model_copy(update={"user_id": user_id})
-        return default
+        return default.model_copy(update={"user_id": user_id})
 
     def upsert(self, user_id: UUID, mandate: Mandate) -> Mandate:
-        with self._lock:
+        with get_session() as s:
+            existing = s.execute(
+                select(MandateRow).where(
+                    MandateRow.user_id == user_id,
+                    MandateRow.is_current.is_(True),
+                )
+            ).scalar_one_or_none()
             now = datetime.now(timezone.utc)
-            existing = self._mandates.get(user_id)
             new_version = (existing.version + 1) if existing else 1
+            created_at = existing.created_at if existing else now
             updated = mandate.model_copy(update={
                 "user_id": user_id,
                 "version": new_version,
                 "updated_at": now,
-                "created_at": existing.created_at if existing else now,
+                "created_at": created_at,
             })
-            self._mandates[user_id] = updated
+            # Demote prior current row(s), then insert the new one.
+            s.execute(
+                update(MandateRow)
+                .where(MandateRow.user_id == user_id, MandateRow.is_current.is_(True))
+                .values(is_current=False)
+            )
+            s.add(MandateRow(
+                user_id=user_id,
+                version=new_version,
+                is_current=True,
+                snapshot=updated.model_dump(mode="json"),
+                created_at=created_at,
+                updated_at=now,
+            ))
             return updated
 
     def patch(self, user_id: UUID, updates: dict[str, Any]) -> Mandate:
-        """Shallow-merge updates into the current mandate, increment version.
+        """Shallow-merge updates into the current mandate, bump version.
 
-        `compliance` is merged by key, then re-coerced into a Compliance
+        `compliance` is merged by key and re-coerced into a Compliance
         instance so downstream code (.compliance.halal etc) keeps working.
         """
         current = self.get_or_default(user_id)
@@ -69,8 +103,8 @@ class MandateStore:
         return self.upsert(user_id, new)
 
     def clear(self) -> None:
-        with self._lock:
-            self._mandates.clear()
+        with get_session() as s:
+            s.query(MandateRow).delete()
 
 
 _store: MandateStore | None = None

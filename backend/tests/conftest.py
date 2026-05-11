@@ -1,6 +1,16 @@
-"""Shared pytest fixtures."""
+"""Shared pytest fixtures.
 
+The `_isolated_db` autouse fixture gives every test a fresh sqlite database
+(file under /tmp, wiped between tests). It also clears all the in-memory
+store/service singletons so a store doesn't accidentally carry rows or
+caches across test cases. Tests that exercise persistence get clean tables;
+tests that don't touch persistence pay almost no cost.
+"""
+
+import os
+import tempfile
 from datetime import datetime
+from pathlib import Path as _Path
 from uuid import uuid4
 
 import pytest
@@ -18,6 +28,34 @@ from app.schemas import (
     RiskComponents,
 )
 from app.schemas.trade import OrderType, ProposedTrade, Side
+
+
+@pytest.fixture(autouse=True)
+def _isolated_db(tmp_path: _Path) -> None:
+    """Per-test sqlite database + singleton reset for every store/service.
+
+    Runs autouse so every existing test gets a clean slate without changes.
+    """
+    db_file = tmp_path / "ami_trade_test.db"
+    url = f"sqlite:///{db_file}"
+    os.environ["AMI_TEST_DATABASE_URL"] = url
+
+    from app.db import reset_for_tests
+    reset_for_tests(url)
+
+    # Reset module-level singletons so cached pre-DB instances don't leak.
+    from app.services import mandate_store as _ms
+    from app.services import overlay_store as _os
+    from app.services import journal_store as _js
+    from app.services import lessons_service as _ls
+    from app.services import sim_engine as _sim
+    from app.services import room_runner as _rr
+    _ms._store = None
+    _os._store = None
+    _js._store = None
+    _ls._service = None
+    _sim._engine = None
+    _rr._runner = None
 
 
 @pytest.fixture

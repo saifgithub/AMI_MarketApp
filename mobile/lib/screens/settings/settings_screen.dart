@@ -7,6 +7,8 @@
 library;
 
 import 'package:ami_trade/models/mandate.dart';
+import 'package:ami_trade/screens/auth/sign_in_screen.dart';
+import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -115,6 +117,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _ReadOnlyRow(label: 'Primary goal', value: m.primaryGoal),
                     _ReadOnlyRow(label: 'Credits', value: '${m.creditBalance}'),
                   ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _AccountSection(),
                   const SizedBox(height: AmiSpacing.xxl),
                 ],
               ),
@@ -357,6 +361,48 @@ class _ReadOnlyRow extends StatelessWidget {
               style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
         ],
       ),
+    );
+  }
+}
+
+
+/// "ACCOUNT" — surfaces the current auth state and routes to SignInScreen.
+class _AccountSection extends ConsumerWidget {
+  const _AccountSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authNotifierProvider).user;
+    final claimed = user != null && !user.isAnonymous;
+    return _Section(
+      title: 'ACCOUNT',
+      children: [
+        _ReadOnlyRow(
+          label: 'Status',
+          value: claimed ? 'Signed in' : 'Guest (anonymous)',
+        ),
+        if (claimed)
+          _ReadOnlyRow(label: 'Handle', value: user.displayHandle),
+        const SizedBox(height: AmiSpacing.s),
+        if (!claimed)
+          const Text(
+            'Mandate, journal, and portfolio stay on this device until you '
+            'sign in.',
+            style: AmiTypography.caption,
+          ),
+        const SizedBox(height: AmiSpacing.s),
+        SizedBox(
+          height: 40,
+          child: OutlinedButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const SignInScreen(),
+              ));
+            },
+            child: Text(claimed ? 'MANAGE ACCOUNT' : 'SIGN IN'),
+          ),
+        ),
+      ],
     );
   }
 }

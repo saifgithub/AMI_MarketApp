@@ -1,24 +1,30 @@
-"""Decision Journal store. In-memory; Postgres at W7.
+"""Decision Journal store — Postgres-backed.
 
-Floor Pass retention: 30 days, enforced on read (we keep all entries in
-memory so a tier upgrade restores history).
+Floor Pass tier sees 30-day retention enforced on read; paid tiers see all
+history. We keep older rows in the DB so a tier upgrade restores history.
 
 Entries are appended by capture hooks across the codebase:
-  - one_on_one.send_message — appends an entry on conversation end
-  - coach.accept — appends an entry on overlay save
-  - lesson_complete — appends on quiz pass
-  - mandate_edit — appends on Settings → My Mandate save
-  - sim_trade — appended in W6
-  - room_run — appended in W6
+  - one_on_one.send_message     → ONE_ON_ONE on conversation end
+  - coach.accept                → AGENT_COACH on overlay save
+  - lessons.submit_quiz         → LESSON_COMPLETE / AGENT_UNLOCK on pass
+  - mandate.patch               → MANDATE_EDIT
+  - sim_trade open/close        → SIM_TRADE
+  - room.run                    → ROOM_RUN
+
+Reads return Pydantic JournalEntry objects so callers don't see SQLAlchemy
+rows. The public sync API matches the previous in-memory store.
 """
 
 from __future__ import annotations
 
-from collections import defaultdict
 from datetime import datetime, timedelta, timezone
-from threading import RLock
+from typing import Any
 from uuid import UUID
 
+from sqlalchemy import delete, select
+
+from app.db import get_session, init_schema
+from app.db.models import JournalEntryRow
 from app.schemas import Plan
 from app.schemas.journal import (
     EntryType,
@@ -39,32 +45,64 @@ def _retention_days_for_plan(plan: Plan | str) -> int | None:
     return None
 
 
+def _row_to_entry(row: JournalEntryRow) -> JournalEntry:
+    return JournalEntry(
+        id=row.id,
+        user_id=row.user_id,
+        entry_type=EntryType(row.entry_type),
+        reference_id=row.reference_id,
+        title=row.title,
+        summary=row.summary,
+        ticker=row.ticker,
+        agents_involved=list(row.agents_involved or []),
+        mandate_version=row.mandate_version,
+        tags=list(row.tags or []),
+        user_note=row.user_note,
+        outcome=Outcome(row.outcome) if row.outcome else None,
+        payload=dict(row.payload or {}),
+        created_at=row.created_at,
+    )
+
+
 class JournalStore:
     def __init__(self) -> None:
-        # user_id → list[JournalEntry] (newest at the end)
-        self._entries: dict[UUID, list[JournalEntry]] = defaultdict(list)
-        self._lock = RLock()
+        init_schema()
 
     def append(self, draft: JournalEntryCreate) -> JournalEntry:
-        with self._lock:
-            entry = JournalEntry(
-                user_id=draft.user_id,
-                entry_type=EntryType(draft.entry_type)
-                if isinstance(draft.entry_type, str)
-                else draft.entry_type,
-                reference_id=draft.reference_id,
-                title=draft.title,
-                summary=draft.summary,
-                ticker=draft.ticker,
-                agents_involved=draft.agents_involved,
-                mandate_version=draft.mandate_version,
-                tags=draft.tags,
-                user_note=draft.user_note,
-                outcome=draft.outcome,
-                payload=draft.payload,
-            )
-            self._entries[draft.user_id].append(entry)
-            return entry
+        entry = JournalEntry(
+            user_id=draft.user_id,
+            entry_type=EntryType(draft.entry_type)
+            if isinstance(draft.entry_type, str)
+            else draft.entry_type,
+            reference_id=draft.reference_id,
+            title=draft.title,
+            summary=draft.summary,
+            ticker=draft.ticker,
+            agents_involved=draft.agents_involved,
+            mandate_version=draft.mandate_version,
+            tags=draft.tags,
+            user_note=draft.user_note,
+            outcome=draft.outcome,
+            payload=draft.payload,
+        )
+        with get_session() as s:
+            s.add(JournalEntryRow(
+                id=entry.id,
+                user_id=entry.user_id,
+                entry_type=entry.entry_type,
+                reference_id=entry.reference_id,
+                title=entry.title,
+                summary=entry.summary,
+                ticker=entry.ticker,
+                agents_involved=list(entry.agents_involved),
+                mandate_version=entry.mandate_version,
+                tags=list(entry.tags),
+                user_note=entry.user_note,
+                outcome=entry.outcome,
+                payload=dict(entry.payload),
+                created_at=entry.created_at,
+            ))
+        return entry
 
     def list_for_user(
         self,
@@ -75,32 +113,32 @@ class JournalStore:
         ticker: str | None = None,
         limit: int = 100,
     ) -> tuple[list[JournalEntry], int, int | None]:
-        with self._lock:
-            entries = list(self._entries.get(user_id, []))
-
         retention = _retention_days_for_plan(plan)
-        if retention is not None:
-            cutoff = datetime.now(timezone.utc) - timedelta(days=retention)
-            entries = [e for e in entries if e.created_at >= cutoff]
-
-        if entry_type is not None:
-            et = entry_type if isinstance(entry_type, EntryType) else EntryType(entry_type)
-            entries = [e for e in entries if e.entry_type == et.value]
-
-        if ticker is not None:
-            t = ticker.upper().strip()
-            entries = [e for e in entries if (e.ticker or "").upper() == t]
-
-        entries.sort(key=lambda e: e.created_at, reverse=True)
-        total = len(entries)
-        return entries[:limit], total, retention
+        with get_session() as s:
+            stmt = select(JournalEntryRow).where(JournalEntryRow.user_id == user_id)
+            if retention is not None:
+                cutoff = datetime.now(timezone.utc) - timedelta(days=retention)
+                stmt = stmt.where(JournalEntryRow.created_at >= cutoff)
+            if entry_type is not None:
+                et = entry_type if isinstance(entry_type, EntryType) else EntryType(entry_type)
+                stmt = stmt.where(JournalEntryRow.entry_type == et.value)
+            if ticker is not None:
+                t = ticker.upper().strip()
+                stmt = stmt.where(JournalEntryRow.ticker == t)
+            stmt = stmt.order_by(JournalEntryRow.created_at.desc())
+            rows = s.execute(stmt).scalars().all()
+            entries = [_row_to_entry(r) for r in rows]
+            return entries[:limit], len(entries), retention
 
     def get(self, user_id: UUID, entry_id: UUID) -> JournalEntry | None:
-        with self._lock:
-            for e in self._entries.get(user_id, []):
-                if e.id == entry_id:
-                    return e
-        return None
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.id == entry_id,
+                )
+            ).scalar_one_or_none()
+            return _row_to_entry(row) if row else None
 
     def annotate(
         self,
@@ -111,28 +149,43 @@ class JournalStore:
         tags: list[str] | None = None,
         outcome: Outcome | str | None = None,
     ) -> JournalEntry | None:
-        with self._lock:
-            entries = self._entries.get(user_id, [])
-            for i, e in enumerate(entries):
-                if e.id == entry_id:
-                    updated = e.model_copy(
-                        update={
-                            "user_note": note if note is not None else e.user_note,
-                            "tags": tags if tags is not None else e.tags,
-                            "outcome": (
-                                Outcome(outcome) if isinstance(outcome, str) and outcome
-                                else outcome if outcome is not None
-                                else e.outcome
-                            ),
-                        }
-                    )
-                    entries[i] = updated
-                    return updated
-        return None
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.id == entry_id,
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            if note is not None:
+                row.user_note = note
+            if tags is not None:
+                row.tags = list(tags)
+            if outcome is not None:
+                row.outcome = outcome.value if isinstance(outcome, Outcome) else outcome
+            s.flush()
+            return _row_to_entry(row)
+
+    def _backdate_for_test(self, user_id: UUID, entry_id: UUID, created_at: datetime) -> None:
+        """Test-only — shift an entry's created_at to exercise retention rules.
+
+        Lives here (not in tests) so we don't depend on a SQLAlchemy session
+        in the test module. Production code never calls this.
+        """
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.id == entry_id,
+                )
+            ).scalar_one_or_none()
+            if row is not None:
+                row.created_at = created_at
 
     def clear(self) -> None:
-        with self._lock:
-            self._entries.clear()
+        with get_session() as s:
+            s.execute(delete(JournalEntryRow))
 
 
 _store: JournalStore | None = None

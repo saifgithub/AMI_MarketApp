@@ -9,6 +9,10 @@ Activation rule (MVP): an agent is earned when the user has passed the
 quiz on EVERY lesson in the catalogue that lists that agent in
 `agent_callouts`. (At v1.0 this becomes the full 4-part Agent Academy
 module — see docs/04_education/agent_academy.md.)
+
+Persistence: lesson content is loaded from disk into memory (immutable,
+small). Per-user progress + activations live in Postgres so a user's
+streak survives backend restarts.
 """
 
 from __future__ import annotations
@@ -22,8 +26,11 @@ from typing import Any
 from uuid import UUID
 
 import yaml
+from sqlalchemy import delete, select
 
 from app.core.logging import logger
+from app.db import get_session, init_schema
+from app.db.models import AgentActivationRow, LessonProgressRow
 from app.schemas.lessons import (
     AgentActivationRecord,
     Lesson,
@@ -206,11 +213,8 @@ class LessonsService:
         self._content_dir = content_dir
         self._lessons: dict[str, Lesson] = {}
         self._lock = RLock()
-        # progress[(user_id, lesson_id)] = LessonStatus
-        self._progress: dict[tuple[UUID, str], LessonStatus] = {}
-        # activations[user_id] = {agent_id: AgentActivationRecord}
-        self._activations: dict[UUID, dict[str, AgentActivationRecord]] = defaultdict(dict)
         self._reload()
+        init_schema()
 
     def _reload(self) -> None:
         with self._lock:
@@ -254,25 +258,54 @@ class LessonsService:
 
     # ── progress ──────────────────────────────────────────────────────
 
+    def _row_to_status(self, row: LessonProgressRow) -> LessonStatus:
+        return LessonStatus(
+            user_id=row.user_id,
+            lesson_id=row.lesson_id,
+            started_at=row.started_at,
+            completed_at=row.completed_at,
+            quiz_attempts=row.quiz_attempts,
+            quiz_passed=row.quiz_passed,
+            last_quiz_score=row.last_quiz_score,
+        )
+
     def get_status(self, user_id: UUID, lesson_id: str) -> LessonStatus | None:
-        with self._lock:
-            return self._progress.get((user_id, lesson_id))
+        with get_session() as s:
+            row = s.execute(
+                select(LessonProgressRow).where(
+                    LessonProgressRow.user_id == user_id,
+                    LessonProgressRow.lesson_id == lesson_id,
+                )
+            ).scalar_one_or_none()
+            return self._row_to_status(row) if row else None
 
     def list_status(self, user_id: UUID) -> list[LessonStatus]:
-        with self._lock:
-            return [s for (uid, _), s in self._progress.items() if uid == user_id]
+        with get_session() as s:
+            rows = s.execute(
+                select(LessonProgressRow).where(LessonProgressRow.user_id == user_id)
+            ).scalars().all()
+            return [self._row_to_status(r) for r in rows]
 
     def mark_started(self, user_id: UUID, lesson_id: str) -> LessonStatus:
-        with self._lock:
-            key = (user_id, lesson_id)
-            existing = self._progress.get(key)
-            if existing is not None and existing.started_at is not None:
-                return existing
-            status = existing or LessonStatus(user_id=user_id, lesson_id=lesson_id)
-            self._progress[key] = status.model_copy(update={
-                "started_at": status.started_at or datetime.now(timezone.utc),
-            })
-            return self._progress[key]
+        with get_session() as s:
+            row = s.execute(
+                select(LessonProgressRow).where(
+                    LessonProgressRow.user_id == user_id,
+                    LessonProgressRow.lesson_id == lesson_id,
+                )
+            ).scalar_one_or_none()
+            if row is not None and row.started_at is not None:
+                return self._row_to_status(row)
+            now = datetime.now(timezone.utc)
+            if row is None:
+                row = LessonProgressRow(
+                    user_id=user_id, lesson_id=lesson_id, started_at=now,
+                )
+                s.add(row)
+            else:
+                row.started_at = row.started_at or now
+            s.flush()
+            return self._row_to_status(row)
 
     def submit_quiz(self, req: QuizSubmitRequest) -> QuizSubmitResponse:
         lesson = self.get(req.lesson_id)
@@ -299,22 +332,33 @@ class LessonsService:
         score = correct / total if total > 0 else 1.0
         passed = score >= QUIZ_PASS_THRESHOLD
 
-        with self._lock:
-            key = (req.user_id, req.lesson_id)
-            prev = self._progress.get(key) or LessonStatus(
-                user_id=req.user_id, lesson_id=req.lesson_id
-            )
-            updated = prev.model_copy(update={
-                "quiz_attempts": prev.quiz_attempts + 1,
-                "quiz_passed": prev.quiz_passed or passed,
-                "last_quiz_score": score,
-                "completed_at": (
-                    prev.completed_at
-                    or (datetime.now(timezone.utc) if passed else None)
-                ),
-                "started_at": prev.started_at or datetime.now(timezone.utc),
-            })
-            self._progress[key] = updated
+        with get_session() as s:
+            row = s.execute(
+                select(LessonProgressRow).where(
+                    LessonProgressRow.user_id == req.user_id,
+                    LessonProgressRow.lesson_id == req.lesson_id,
+                )
+            ).scalar_one_or_none()
+            now = datetime.now(timezone.utc)
+            if row is None:
+                row = LessonProgressRow(
+                    user_id=req.user_id,
+                    lesson_id=req.lesson_id,
+                    started_at=now,
+                    quiz_attempts=1,
+                    quiz_passed=passed,
+                    last_quiz_score=score,
+                    completed_at=now if passed else None,
+                )
+                s.add(row)
+            else:
+                row.started_at = row.started_at or now
+                row.quiz_attempts = row.quiz_attempts + 1
+                row.quiz_passed = row.quiz_passed or passed
+                row.last_quiz_score = score
+                if passed and row.completed_at is None:
+                    row.completed_at = now
+            s.flush()
 
         unlocked: list[str] = []
         if passed:
@@ -339,28 +383,37 @@ class LessonsService:
         the activation and return the agent ids.
         """
         newly_unlocked: list[str] = []
-        for agent_id in just_completed.meta.agent_callouts:
-            if agent_id in self._activations[user_id]:
-                continue
-            required = [
-                l.meta.id
-                for l in self._lessons.values()
-                if agent_id in l.meta.agent_callouts
-            ]
-            done = [
-                lid for lid in required
-                if (self._progress.get((user_id, lid)) or LessonStatus(
-                    user_id=user_id, lesson_id=lid
-                )).quiz_passed
-            ]
-            if len(done) >= len(required) and required:
-                rec = AgentActivationRecord(
+        with get_session() as s:
+            existing_ids = set(s.execute(
+                select(AgentActivationRow.agent_id).where(
+                    AgentActivationRow.user_id == user_id,
+                )
+            ).scalars().all())
+            for agent_id in just_completed.meta.agent_callouts:
+                if agent_id in existing_ids:
+                    continue
+                required = [
+                    l.meta.id
+                    for l in self._lessons.values()
+                    if agent_id in l.meta.agent_callouts
+                ]
+                if not required:
+                    continue
+                passed_rows = s.execute(
+                    select(LessonProgressRow.lesson_id).where(
+                        LessonProgressRow.user_id == user_id,
+                        LessonProgressRow.lesson_id.in_(required),
+                        LessonProgressRow.quiz_passed.is_(True),
+                    )
+                ).scalars().all()
+                if len(set(passed_rows)) < len(set(required)):
+                    continue
+                s.add(AgentActivationRow(
                     user_id=user_id,
                     agent_id=agent_id,
                     activation_method="earn_path",
                     triggering_lesson_id=just_completed.meta.id,
-                )
-                self._activations[user_id][agent_id] = rec
+                ))
                 newly_unlocked.append(agent_id)
                 logger.info(
                     "agent_unlocked_via_earn_path",
@@ -368,11 +421,25 @@ class LessonsService:
                     agent_id=agent_id,
                     lessons_required=len(required),
                 )
+            s.flush()
         return newly_unlocked
 
     def list_activations(self, user_id: UUID) -> list[AgentActivationRecord]:
-        with self._lock:
-            return list(self._activations.get(user_id, {}).values())
+        with get_session() as s:
+            rows = s.execute(
+                select(AgentActivationRow).where(AgentActivationRow.user_id == user_id)
+            ).scalars().all()
+            return [
+                AgentActivationRecord(
+                    id=r.id,
+                    user_id=r.user_id,
+                    agent_id=r.agent_id,
+                    activation_method=r.activation_method,  # type: ignore[arg-type]
+                    activated_at=r.activated_at,
+                    triggering_lesson_id=r.triggering_lesson_id,
+                )
+                for r in rows
+            ]
 
     def grant_activation(
         self,
@@ -380,14 +447,37 @@ class LessonsService:
         agent_id: str,
         method: str = "founder_grant",
     ) -> AgentActivationRecord:
-        with self._lock:
-            rec = AgentActivationRecord(
+        with get_session() as s:
+            existing = s.execute(
+                select(AgentActivationRow).where(
+                    AgentActivationRow.user_id == user_id,
+                    AgentActivationRow.agent_id == agent_id,
+                )
+            ).scalar_one_or_none()
+            if existing is not None:
+                return AgentActivationRecord(
+                    id=existing.id,
+                    user_id=existing.user_id,
+                    agent_id=existing.agent_id,
+                    activation_method=existing.activation_method,  # type: ignore[arg-type]
+                    activated_at=existing.activated_at,
+                    triggering_lesson_id=existing.triggering_lesson_id,
+                )
+            row = AgentActivationRow(
                 user_id=user_id,
                 agent_id=agent_id,
-                activation_method=method,  # type: ignore[arg-type]
+                activation_method=method,
             )
-            self._activations[user_id][agent_id] = rec
-            return rec
+            s.add(row)
+            s.flush()
+            return AgentActivationRecord(
+                id=row.id,
+                user_id=row.user_id,
+                agent_id=row.agent_id,
+                activation_method=row.activation_method,  # type: ignore[arg-type]
+                activated_at=row.activated_at,
+                triggering_lesson_id=row.triggering_lesson_id,
+            )
 
     # ── progress summary ──────────────────────────────────────────────
 
@@ -427,9 +517,9 @@ class LessonsService:
 
     # Test helper
     def clear(self) -> None:
-        with self._lock:
-            self._progress.clear()
-            self._activations.clear()
+        with get_session() as s:
+            s.execute(delete(LessonProgressRow))
+            s.execute(delete(AgentActivationRow))
 
 
 _service: LessonsService | None = None

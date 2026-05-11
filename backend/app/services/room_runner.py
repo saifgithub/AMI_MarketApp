@@ -12,13 +12,14 @@ on a ticker. The phases:
 
 The runner produces an async iterator of `AgentMessage`s (streamed live)
 followed by a final `Verdict`. The full RoomRun is captured at the end
-and stored in memory (move to Postgres at W8).
+and persisted to Postgres so the Decision Journal can replay the
+transcript verbatim.
 
 MVP scaling tradeoff: instead of fanning out 12 real LLM calls (cost +
 latency), the alpha runner uses **deterministic per-agent scripts**
 parameterised by ticker. Each phase yields one or more `AgentMessage`s
 with realistic-shaped reasoning. Live LLM swap-in is a single-function
-change at W7+.
+change.
 
 The PM's verdict goes through the same deterministic safety floor function
 used in 1-on-1 — see app/agents/safety_floor.py. A user with `halal=True`
@@ -38,8 +39,12 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
+from sqlalchemy import select
+
 from app.agents.safety_floor import check_mandate_compliance, SINGLE_NAME_CAP_PCT
 from app.core.logging import logger
+from app.db import get_session, init_schema
+from app.db.models import RoomRunRow
 from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
@@ -307,19 +312,91 @@ PLAN_TO_TIER: dict[Plan, str] = {
 }
 
 
+def _row_to_room_run(row: RoomRunRow) -> RoomRun:
+    transcript = [AgentMessage.model_validate(m) for m in (row.transcript or [])]
+    verdict = Verdict.model_validate(row.verdict) if row.verdict else None
+    return RoomRun(
+        id=row.id,
+        user_id=row.user_id,
+        ticker=row.ticker,
+        triggered_at=row.triggered_at,
+        started_at=row.started_at,
+        finished_at=row.finished_at,
+        mandate_version=row.mandate_version,
+        model_tier=row.model_tier,  # type: ignore[arg-type]
+        rounds=row.rounds,
+        transcript=transcript,
+        verdict=verdict,
+        credit_cost=row.credit_cost,
+        status=RoomStatus(row.status),
+        error_message=row.error_message,
+        duration_ms=row.duration_ms,
+    )
+
+
+def _persist_run(run: RoomRun) -> None:
+    """Upsert a RoomRun into the DB. Last-write-wins on (id)."""
+    with get_session() as s:
+        row = s.execute(
+            select(RoomRunRow).where(RoomRunRow.id == run.id)
+        ).scalar_one_or_none()
+        transcript_json = [m.model_dump(mode="json") for m in run.transcript]
+        verdict_json = run.verdict.model_dump(mode="json") if run.verdict else None
+        if row is None:
+            s.add(RoomRunRow(
+                id=run.id,
+                user_id=run.user_id,
+                ticker=run.ticker,
+                triggered_at=run.triggered_at,
+                started_at=run.started_at,
+                finished_at=run.finished_at,
+                mandate_version=run.mandate_version,
+                model_tier=run.model_tier,
+                rounds=run.rounds,
+                transcript=transcript_json,
+                verdict=verdict_json,
+                credit_cost=run.credit_cost,
+                status=run.status if isinstance(run.status, str) else run.status.value,
+                error_message=run.error_message,
+                duration_ms=run.duration_ms,
+            ))
+        else:
+            row.ticker = run.ticker
+            row.started_at = run.started_at
+            row.finished_at = run.finished_at
+            row.mandate_version = run.mandate_version
+            row.model_tier = run.model_tier
+            row.rounds = run.rounds
+            row.transcript = transcript_json
+            row.verdict = verdict_json
+            row.credit_cost = run.credit_cost
+            row.status = run.status if isinstance(run.status, str) else run.status.value
+            row.error_message = run.error_message
+            row.duration_ms = run.duration_ms
+
+
 class RoomRunner:
-    """Orchestrates a Convene the Room session and streams events."""
+    """Orchestrates a Convene the Room session, streams events, persists runs."""
 
     def __init__(self) -> None:
-        self._runs: dict[UUID, RoomRun] = {}
+        init_schema()
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
-        return self._runs.get(run_id)
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow).where(RoomRunRow.id == run_id)
+            ).scalar_one_or_none()
+            return _row_to_room_run(row) if row else None
 
     def list_runs_for_user(self, user_id: UUID, limit: int = 50) -> list[RoomRun]:
-        runs = [r for r in self._runs.values() if r.user_id == user_id]
-        runs.sort(key=lambda r: r.triggered_at, reverse=True)
-        return runs[:limit]
+        with get_session() as s:
+            rows = s.execute(
+                select(RoomRunRow)
+                .where(RoomRunRow.user_id == user_id)
+                .order_by(RoomRunRow.triggered_at.desc())
+                .limit(limit)
+            ).scalars().all()
+            return [_row_to_room_run(r) for r in rows]
 
     async def run(
         self,
@@ -360,7 +437,7 @@ class RoomRunner:
             credit_cost=credit_cost,
             status=RoomStatus.RUNNING,
         )
-        self._runs[run_id] = run
+        _persist_run(run)
         logger.info("room_started", run_id=str(run_id), ticker=ticker, tier=tier)
 
         # Halal universe: tiny demo set. Real screen ships at W8+.
@@ -474,6 +551,7 @@ class RoomRunner:
             run.duration_ms = int(
                 (run.finished_at - (run.started_at or run.finished_at)).total_seconds() * 1000
             )
+            _persist_run(run)
             logger.info(
                 "room_completed",
                 run_id=str(run_id),
@@ -483,11 +561,14 @@ class RoomRunner:
         except Exception as e:  # pragma: no cover
             run.status = RoomStatus.FAILED
             run.error_message = str(e)[:500]
+            _persist_run(run)
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
 
     def clear(self) -> None:
-        self._runs.clear()
+        from sqlalchemy import delete as _delete
+        with get_session() as s:
+            s.execute(_delete(RoomRunRow))
 
 
 async def _typewriter(
