@@ -8,10 +8,14 @@
 ///      - macOS / web → http://localhost:8000
 library;
 
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 
 const String _apiUrlFromEnv = String.fromEnvironment(
   'AMI_API_URL',
@@ -20,12 +24,7 @@ const String _apiUrlFromEnv = String.fromEnvironment(
 
 String _resolveBaseUrl() {
   if (_apiUrlFromEnv.isNotEmpty) return _apiUrlFromEnv;
-  // Default — assume Mac host is reachable at localhost (Simulator)
-  // or at the developer's LAN IP (physical device). For the alpha demo
-  // we hard-code one; production resolves via DNS.
   if (Platform.isIOS || Platform.isAndroid) {
-    // ASSUMPTION: backend runs on Saiful's Mac at host LAN IP.
-    // Set --dart-define=AMI_API_URL=http://192.168.x.y:8000 to override.
     return 'http://localhost:8000';
   }
   return 'http://localhost:8000';
@@ -92,6 +91,80 @@ class ApiClient {
       return r.data?['status'] == 'ok';
     } catch (_) {
       return false;
+    }
+  }
+
+  // ── 1-on-1 ──────────────────────────────────────────────────────
+
+  Future<OneOnOneSession> startOneOnOne({
+    required String agentId,
+    String locale = 'en',
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/agents/one_on_one/start',
+      data: {'agent_id': agentId, 'locale': locale},
+    );
+    return OneOnOneSession.fromJson(r.data!);
+  }
+
+  /// Send a message and yield string chunks as they arrive (SSE).
+  /// Uses `package:http` directly because Dio's streaming SSE handling is
+  /// awkward — http exposes the underlying stream cleanly.
+  Stream<String> streamOneOnOneMessage({
+    required String sessionId,
+    required String userMessage,
+    required List<ChatMessage> history,
+  }) async* {
+    final uri = Uri.parse('$baseUrl/v1/agents/one_on_one/message');
+    final body = jsonEncode({
+      'session_id': sessionId,
+      'user_message': userMessage,
+      'history': history.map((m) => m.toJson()).toList(),
+    });
+
+    final client = http.Client();
+    try {
+      final request = http.Request('POST', uri)
+        ..headers['Content-Type'] = 'application/json'
+        ..headers['Accept'] = 'text/event-stream'
+        ..body = body;
+
+      final response = await client.send(request);
+      if (response.statusCode != 200) {
+        throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
+      }
+
+      // SSE parser: each event is "event: <type>\ndata: <payload>\n\n"
+      String buffer = '';
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
+        while (buffer.contains('\n\n')) {
+          final idx = buffer.indexOf('\n\n');
+          final event = buffer.substring(0, idx);
+          buffer = buffer.substring(idx + 2);
+
+          String? eventType;
+          final dataLines = <String>[];
+          for (final line in event.split('\n')) {
+            if (line.startsWith('event: ')) {
+              eventType = line.substring(7).trim();
+            } else if (line.startsWith('data: ')) {
+              dataLines.add(line.substring(6));
+            }
+          }
+          final data = dataLines.join('\n');
+          if (eventType == 'token') {
+            // Backend escapes newlines as "\\n"; un-escape for display.
+            yield data.replaceAll(r'\n', '\n').replaceAll(r'\\', r'\');
+          } else if (eventType == 'done') {
+            return;
+          } else if (eventType == 'error') {
+            throw Exception('Server error: $data');
+          }
+        }
+      }
+    } finally {
+      client.close();
     }
   }
 }

@@ -2,7 +2,7 @@
 name = "ami-trade-backend"
 version = "0.1.0"
 description = "AMI Trade backend — FastAPI + TradingAgents wrapper"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<4"
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",

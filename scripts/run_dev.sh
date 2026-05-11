@@ -33,12 +33,23 @@ echo ""
 start_backend() {
   cd "${BACKEND_DIR}"
 
+  # Pick a Python — prefer 3.13, fall back to system python3
+  if command -v python3.13 &>/dev/null; then
+    PYTHON_BIN="python3.13"
+  elif [[ -x "/opt/homebrew/opt/python@3.13/bin/python3.13" ]]; then
+    PYTHON_BIN="/opt/homebrew/opt/python@3.13/bin/python3.13"
+  else
+    PYTHON_BIN="python3"
+  fi
+  echo "▶ Using Python: $($PYTHON_BIN --version)"
+
   # Set up venv on first run
   if [[ ! -d ".venv" ]]; then
     echo "▶ Creating Python venv (first run)…"
-    python3.13 -m venv .venv
+    "$PYTHON_BIN" -m venv .venv
     # shellcheck disable=SC1091
     source .venv/bin/activate
+    pip install --quiet --upgrade pip
     pip install -e ".[dev]" --quiet
   else
     # shellcheck disable=SC1091
