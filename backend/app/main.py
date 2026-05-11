@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.onboarding import router as onboarding_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 
@@ -32,6 +33,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Routers
+app.include_router(onboarding_router)
 
 
 @app.get("/v1/health")
