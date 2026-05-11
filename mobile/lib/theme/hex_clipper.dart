@@ -7,8 +7,6 @@
 ///     agent avatars in the honeycomb home).
 library;
 
-import 'dart:math' show sqrt;
-
 import 'package:flutter/material.dart';
 
 /// Cut-corner octagon — what the design system spec calls a "hex clip-path".
