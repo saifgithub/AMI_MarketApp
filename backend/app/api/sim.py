@@ -50,6 +50,10 @@ class PortfolioSnapshot(BaseModel):
     holdings: list[dict]
     total_value: float
     drawdown_pct: float
+    # Active market-data provider — surfaced so the iPhone can show a
+    # LIVE / MOCK pill next to the marks. Values: "mock_walk",
+    # "fallback(cache(yahoo)->mock_walk)", or any future provider name.
+    price_source: str = "mock_walk"
 
 
 class TradeListResponse(BaseModel):
@@ -84,6 +88,7 @@ async def get_portfolio(
         ],
         total_value=sim.total_value(user_id),
         drawdown_pct=sim.current_drawdown_pct(user_id),
+        price_source=sim.price_source,
     )
 
 

@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W10: real market data via Yahoo)
+**Last updated:** 2026-05-11 (end of W11: Flutter LIVE/MOCK pill)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 12 commits, no remote yet |
-| Latest commit | (this session) W10: real market data via Yahoo |
-| Lines on disk | ~34,200 (PRD ~14k, backend ~8.1k, Flutter ~9.8k, content ~1.5k) |
+| Git state | Clean working tree, 13 commits, no remote yet |
+| Latest commit | (this session) W11: Flutter LIVE/MOCK quote-source pill |
+| Lines on disk | ~34,300 (PRD ~14k, backend ~8.1k, Flutter ~9.9k, content ~1.5k) |
 
 ```
 $ git log --oneline
-<new>   W10: real market data via Yahoo
+<new>   W11: Flutter LIVE/MOCK quote-source pill
+04ff5ea W10: real market data via Yahoo
 259d53d W9: LLM-swap prep + cleanup pass
 667616e W8: persistence migration + Supabase-shaped auth scaffold
 db89336 W7: Sim Trading + Mandate editor — close the core loop
@@ -150,6 +151,22 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
+## What just landed (W11 — Flutter LIVE/MOCK quote-source pill)
+
+W10's `price_source` field now reaches the iPhone. The Portfolio screen
+header pulls a small green-dot "LIVE" pill when Yahoo quotes are active,
+amber-dot "MOCK" when on the deterministic walk — so the demo speaks
+honestly about what it's pricing.
+
+- **Backend**: `PortfolioSnapshot` (`backend/app/api/sim.py`) gains a `price_source: str` field surfaced from `sim.price_source`. Default `"mock_walk"` keeps the response shape backward-compatible.
+- **Flutter model**: `SimPortfolio` (`mobile/lib/models/sim.dart`) parses `price_source`, exposes `isLivePrice` (true when the source name contains `yahoo`).
+- **Flutter UI**: `_QuoteSourcePill` widget in `mobile/lib/screens/sim/portfolio_screen.dart` — colored dot + monospace label next to TOTAL VALUE.
+- 118 unit tests still pass; `flutter analyze` clean on the touched files.
+
+This closes the W10 loop end-to-end: real prices in the backend, an honest indicator in the app. **Saiful: the iPhone still has the W3 build — needs a redeploy to see W4–W11.**
+
+---
+
 ## What just landed (W10 — real market data via Yahoo)
 
 The Sim Trading engine no longer lies — when `USE_REAL_MARKET_DATA=true`
@@ -262,26 +279,24 @@ key → live" a single env-var change with zero code touches.
 | **Real Apple Sign-In** | Needs Apple capability added to bundle id under team `S7RBWM4879`. |
 | **Real LLM Concierge** | Deterministic onboarding state machine still drives W2. |
 | **Room → LLM wiring** | `room_runner.py` still emits scripted text. Wiring it to the gateway is its own piece of work (per-agent prompts, transcript-aware context, fallback when no real provider). |
-| **Flutter quote-source surfacing** | Backend now returns `source` on `/v1/sim/quote`; the Portfolio screen still doesn't show it. Tiny UI touch when real prices land in the running backend. |
 
 ---
 
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #5 — name the
-session "AT:R6:".
+We're picking up the AMI Trade build. This is handover #6 — name the
+session "AT:R7:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-W10 (real market data) is done. 12 commits in. 118 unit tests pass.
-SimEngine quotes via a pluggable provider stack — flip
-USE_REAL_MARKET_DATA=true in backend/.env and restart to get live
-Yahoo prices, with mock-walk fallback for network errors / unknown
-tickers. /v1/sim/quote returns {"ticker","price","source"} now.
+W10 (real market data) + W11 (Flutter source pill) are done. 13 commits
+in. 118 unit tests pass. SimEngine quotes via a pluggable provider stack;
+flip USE_REAL_MARKET_DATA=true in backend/.env to get live Yahoo prices.
+Portfolio screen shows a green LIVE / amber MOCK pill next to TOTAL VALUE.
 
-W11 candidates (priority order):
+W12 candidates (priority order):
 
   A. Live LLM swap (FINISH IT). Saiful adds ANTHROPIC_API_KEY to
      backend/.env. Then:
@@ -306,10 +321,10 @@ W11 candidates (priority order):
      (already in pubspec). Verify on TESTING IPHONE 13. Add Sign in
      with Apple capability to bundle id under team S7RBWM4879.
 
-  E. Flutter side of W10. Portfolio + Trade-ticket screens still don't
-     surface the new `source` field. Add a small "LIVE" / "MOCK"
-     indicator pill next to each price. Re-deploy to TESTING IPHONE 13
-     (still on the W3 build — long overdue redeploy).
+  E. Redeploy the iPhone build. TESTING IPHONE 13 still has W3.
+     scripts/run_dev.sh or `flutter run -d <device_id>` to flash
+     W4-W11 onto the device. After that, Saiful can actually see
+     the LIVE pill, the Settings mandate editor, the new lesson, etc.
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment

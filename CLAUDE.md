@@ -147,7 +147,7 @@ AMI_MarketApp/
 
 ## Current state (snapshot — git is source of truth)
 
-- **12 commits in.** Latest: W10 (real market data via Yahoo).
+- **13 commits in.** Latest: W11 (Flutter LIVE/MOCK quote-source pill).
 - **Backend** runs locally via `scripts/run_dev.sh` on port 8000.
 - **Postgres** at host port `5434` (`ami_postgres` container). RLS policies live but dormant under the superuser connection.
 - **App** installed on iPhone `TESTING IPHONE 13` (device id `00008110-000261101A22801E`), bundle `ai.agenticmarketintel.amiTrade`, signed under Apple Team `S7RBWM4879`. Still showing the W3 build until redeployed.

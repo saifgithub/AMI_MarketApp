@@ -43,6 +43,7 @@ class SimPortfolio {
     required this.holdings,
     required this.totalValue,
     required this.drawdownPct,
+    this.priceSource = 'mock_walk',
   });
 
   final String userId;
@@ -52,10 +53,16 @@ class SimPortfolio {
   final List<SimHolding> holdings;
   final double totalValue;
   final double drawdownPct;
+  // Active market-data provider name from the backend. "mock_walk" =
+  // deterministic random walk; anything containing "yahoo" = live quotes.
+  final String priceSource;
 
   double get totalPnl => totalValue - startingCapital;
   double get pnlPct =>
       startingCapital == 0 ? 0 : (totalPnl / startingCapital) * 100;
+
+  /// True when the backend is quoting real prices (vs the mock walk).
+  bool get isLivePrice => priceSource.contains('yahoo');
 
   factory SimPortfolio.fromJson(Map<String, dynamic> j) {
     return SimPortfolio(
@@ -68,6 +75,7 @@ class SimPortfolio {
           .toList(),
       totalValue: (j['total_value'] as num).toDouble(),
       drawdownPct: (j['drawdown_pct'] as num).toDouble(),
+      priceSource: (j['price_source'] as String?) ?? 'mock_walk',
     );
   }
 }

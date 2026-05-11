@@ -134,8 +134,14 @@ class _ValueCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('TOTAL VALUE',
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+          Row(
+            children: [
+              Text('TOTAL VALUE',
+                  style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+              const Spacer(),
+              _QuoteSourcePill(portfolio: portfolio),
+            ],
+          ),
           const SizedBox(height: AmiSpacing.xs),
           Text('\$${fmt.format(portfolio.totalValue)}',
               style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
@@ -345,6 +351,49 @@ class _TradeRow extends StatelessWidget {
               '${trade.realisedPnl >= 0 ? '+' : ''}\$${fmt.format(trade.realisedPnl)}',
               style: AmiTypography.labelMono.copyWith(color: _accent),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Tiny indicator next to TOTAL VALUE that tells the user whether marks
+/// are real Yahoo quotes or the deterministic mock walk. Green dot = LIVE,
+/// amber dot = MOCK. Lets the demo speak honestly about what it's pricing.
+class _QuoteSourcePill extends StatelessWidget {
+  const _QuoteSourcePill({required this.portfolio});
+  final SimPortfolio portfolio;
+
+  @override
+  Widget build(BuildContext context) {
+    final live = portfolio.isLivePrice;
+    final color = live ? AmiColors.hexGreen : AmiColors.hexAmber;
+    final label = live ? 'LIVE' : 'MOCK';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: AmiTypography.labelMono.copyWith(
+              color: color,
+              fontSize: 10,
+              letterSpacing: 1.2,
+            ),
+          ),
         ],
       ),
     );
