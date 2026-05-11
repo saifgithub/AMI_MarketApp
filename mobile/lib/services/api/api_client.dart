@@ -13,6 +13,8 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:ami_trade/models/coach.dart';
+import 'package:ami_trade/models/journal.dart';
+import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:dio/dio.dart';
@@ -309,5 +311,123 @@ class ApiClient {
     } finally {
       client.close();
     }
+  }
+
+  // ── Decision Journal ────────────────────────────────────────────
+
+  Future<JournalListResponse> listJournal({
+    required String userId,
+    String plan = 'trial_trader',
+    String? entryType,
+    String? ticker,
+    int limit = 100,
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/journal/$userId',
+      queryParameters: {
+        'plan': plan,
+        if (entryType != null) 'entry_type': entryType,
+        if (ticker != null) 'ticker': ticker,
+        'limit': limit,
+      },
+    );
+    return JournalListResponse.fromJson(r.data!);
+  }
+
+  Future<JournalEntry> getJournalEntry({
+    required String userId,
+    required String entryId,
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/journal/$userId/entry/$entryId',
+    );
+    return JournalEntry.fromJson(r.data!);
+  }
+
+  Future<JournalEntry> annotateJournalEntry({
+    required String userId,
+    required String entryId,
+    String? note,
+    List<String>? tags,
+    String? outcome,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/journal/$userId/entry/$entryId/note',
+      data: {
+        if (note != null) 'note': note,
+        if (tags != null) 'tags': tags,
+        if (outcome != null) 'outcome': outcome,
+      },
+    );
+    return JournalEntry.fromJson(r.data!);
+  }
+
+  // ── Lessons ─────────────────────────────────────────────────────
+
+  Future<LessonCatalogue> lessonCatalogue({String locale = 'en'}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/lessons',
+      queryParameters: {'locale': locale},
+    );
+    return LessonCatalogue.fromJson(r.data!);
+  }
+
+  Future<Lesson> getLesson(String lessonId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/lessons/$lessonId');
+    return Lesson.fromJson(r.data!);
+  }
+
+  Future<void> startLesson({
+    required String userId,
+    required String lessonId,
+  }) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/v1/lessons/start',
+      data: {'user_id': userId, 'lesson_id': lessonId},
+    );
+  }
+
+  Future<QuizResult> submitQuiz({
+    required String userId,
+    required String lessonId,
+    required List<int> answers,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/lessons/quiz',
+      data: {
+        'user_id': userId,
+        'lesson_id': lessonId,
+        'answers': answers,
+      },
+    );
+    return QuizResult.fromJson(r.data!);
+  }
+
+  Future<ProgressSummary> lessonsProgress(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/lessons/progress/$userId',
+    );
+    return ProgressSummary.fromJson(r.data!);
+  }
+
+  Future<List<AgentActivationRecord>> agentActivations(String userId) async {
+    final r = await _dio.get<List<dynamic>>(
+      '/v1/lessons/activations/$userId',
+    );
+    return (r.data ?? const [])
+        .map((e) => AgentActivationRecord.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<AgentActivationRecord> grantActivation({
+    required String userId,
+    required String agentId,
+    String method = 'founder_grant',
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/lessons/activations/grant',
+      data: {'user_id': userId, 'agent_id': agentId, 'method': method},
+    );
+    return AgentActivationRecord.fromJson(r.data!);
   }
 }

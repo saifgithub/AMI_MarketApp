@@ -5,12 +5,17 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 
+from app.schemas import AgentId
+from app.schemas.journal import EntryType, JournalEntryCreate
+from app.schemas.mandate import Plan
 from app.schemas.one_on_one import (
     OneOnOneMessageRequest,
     OneOnOneSession,
     OneOnOneStartRequest,
 )
 from app.services.agent_runner import AgentRunner, get_agent_runner, hydrate_mandate
+from app.services.journal_store import get_journal_store
+from app.services.lessons_service import get_lessons_service
 
 router = APIRouter(prefix="/v1/agents", tags=["agents"])
 
@@ -29,6 +34,29 @@ async def start_one_on_one(
     mandate = mandate.model_copy(update={"locale": req.locale})
     if req.user_id is not None:
         mandate = mandate.model_copy(update={"user_id": req.user_id})
+
+    # Gate: Floor Pass users must earn agents. Paid tiers (trader / floor
+    # manager / trial_trader) skip-path everything. Concierge is always free.
+    plan = (
+        mandate.plan if isinstance(mandate.plan, Plan)
+        else Plan(mandate.plan)
+    )
+    if (
+        req.user_id is not None
+        and plan == Plan.FLOOR_PASS
+        and req.agent_id != AgentId.CONCIERGE
+    ):
+        unlocked = {a.agent_id for a in get_lessons_service().list_activations(req.user_id)}
+        if req.agent_id.value not in unlocked:
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail={
+                    "reason": "agent_locked",
+                    "message": "This agent is locked. Earn it by completing the related lessons, or upgrade to skip.",
+                    "agent_id": req.agent_id.value,
+                },
+            )
+
     return runner.open_one_on_one(
         agent_id=req.agent_id, mandate=mandate, user_id=req.user_id
     )
@@ -50,6 +78,7 @@ async def send_message(
 
     async def event_stream():
         total_chars = 0
+        buffer: list[str] = []
         try:
             async for chunk in runner.stream_one_on_one_message(
                 session=session,
@@ -57,6 +86,7 @@ async def send_message(
                 user_message=req.user_message,
             ):
                 total_chars += len(chunk)
+                buffer.append(chunk)
                 # SSE event format
                 # Escape backslashes + newlines so the line stays valid
                 safe = chunk.replace("\\", "\\\\").replace("\n", "\\n")
@@ -64,6 +94,30 @@ async def send_message(
         except Exception as e:
             yield f"event: error\ndata: {str(e)[:300]}\n\n"
         finally:
+            # Capture to Decision Journal — best-effort, never fail the stream
+            try:
+                if session.user_id is not None:
+                    reply = "".join(buffer)
+                    summary = reply[:240].rstrip() + ("…" if len(reply) > 240 else "")
+                    agent_id_str = (
+                        session.agent_id.value
+                        if isinstance(session.agent_id, AgentId)
+                        else str(session.agent_id)
+                    )
+                    get_journal_store().append(JournalEntryCreate(
+                        user_id=session.user_id,
+                        entry_type=EntryType.ONE_ON_ONE,
+                        reference_id=session.id,
+                        title=f"1-on-1 — {agent_id_str.replace('_', ' ').title()}",
+                        summary=summary or req.user_message[:240],
+                        agents_involved=[agent_id_str],
+                        payload={
+                            "user_message": req.user_message,
+                            "assistant_reply": reply,
+                        },
+                    ))
+            except Exception:  # pragma: no cover
+                pass
             yield f"event: done\ndata: {{\"chars\": {total_chars}}}\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

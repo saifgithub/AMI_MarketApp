@@ -1,5 +1,5 @@
 import 'package:ami_trade/screens/dev_preview_screen.dart';
-import 'package:ami_trade/screens/floor/floor_placeholder_screen.dart';
+import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +17,7 @@ class AmiTradeApp extends ConsumerWidget {
       initialRoute: '/onboarding',
       routes: {
         '/onboarding': (_) => const OnboardingScreen(),
-        '/floor': (_) => const FloorPlaceholderScreen(),
+        '/floor': (_) => const HomeShell(),
         '/dev-preview': (_) => const DevPreviewScreen(),
       },
     );

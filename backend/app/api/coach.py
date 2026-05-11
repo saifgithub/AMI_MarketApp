@@ -34,17 +34,19 @@ from app.schemas.coach import (
     CoachStartRequest,
     CoachStartResponse,
 )
+from app.schemas.journal import EntryType, JournalEntryCreate
+from app.schemas.mandate import Plan
 from app.services.coach_engine import (
     CoachEngine,
     get_coach_engine,
     hydrate_coach_mandate,
 )
+from app.services.journal_store import get_journal_store
 from app.services.overlay_store import (
     LIFETIME_EDIT_CAP_BY_PLAN,
     OverlayStore,
     get_overlay_store,
 )
-from app.schemas.mandate import Plan
 
 
 router = APIRouter(prefix="/v1/coach", tags=["coach"])
@@ -121,6 +123,26 @@ async def coach_accept(
     if isinstance(result, CoachRefusal):
         return {"ok": False, "refusal": result.model_dump(mode="json")}
     assert isinstance(result, UserOverlay)
+    # Capture to Decision Journal — best-effort
+    try:
+        agent_id_str = (
+            result.agent_id.value if hasattr(result.agent_id, "value")
+            else str(result.agent_id)
+        )
+        get_journal_store().append(JournalEntryCreate(
+            user_id=session.user_id,
+            entry_type=EntryType.AGENT_COACH,
+            reference_id=result.id,
+            title=f"Coached {agent_id_str.replace('_', ' ').title()} → v{result.version}",
+            summary=result.plain_english,
+            agents_involved=[agent_id_str],
+            payload={
+                "version": result.version,
+                "overlay": result.content,
+            },
+        ))
+    except Exception:  # pragma: no cover
+        pass
     return {"ok": True, "overlay": result.model_dump(mode="json")}
 
 

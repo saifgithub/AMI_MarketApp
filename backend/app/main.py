@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.coach import router as coach_router
+from app.api.journal import router as journal_router
+from app.api.lessons import router as lessons_router
 from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
 from app.core.config import settings
@@ -41,6 +43,8 @@ app.add_middleware(
 app.include_router(onboarding_router)
 app.include_router(one_on_one_router)
 app.include_router(coach_router)
+app.include_router(journal_router)
+app.include_router(lessons_router)
 
 
 @app.get("/v1/health")
