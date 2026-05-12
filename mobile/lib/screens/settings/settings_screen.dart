@@ -9,7 +9,9 @@ library;
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
+import 'package:ami_trade/services/api/backend_modes.dart';
 import 'package:ami_trade/state/auth_providers.dart';
+import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -122,6 +124,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const _LanguageSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
+                  if (kAllowBackendSwitch) ...[
+                    const SizedBox(height: AmiSpacing.l),
+                    const _DeveloperSection(),
+                  ],
                   const SizedBox(height: AmiSpacing.xxl),
                 ],
               ),
@@ -483,6 +489,107 @@ class _LanguageRow extends StatelessWidget {
                 '· ${option.englishName}',
                 style: AmiTypography.caption,
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// ── Developer — active backend (Alpha / Beta / Prod) ────────────────────
+//
+// Rendered only when ALLOW_BACKEND_SWITCH=true was set at build time
+// (see docs/08_tech/backend_modes.md). The whole subtree is gated by
+// `if (kAllowBackendSwitch)` at the call site so prod builds compile
+// the section out entirely under tree-shaking.
+
+
+class _DeveloperSection extends ConsumerWidget {
+  const _DeveloperSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final active = ref.watch(backendModeProvider);
+    final activeUrl = ref.watch(activeBackendUrlProvider);
+    final available = BackendUrls.availableModes;
+    return _Section(
+      title: 'DEVELOPER',
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+          child: Text(
+            'Active backend',
+            style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+          ),
+        ),
+        for (final m in BackendMode.values)
+          _BackendModeRow(
+            mode: m,
+            selected: m == active,
+            disabled: !available.contains(m),
+            onTap: () => ref.read(backendModeProvider.notifier).setMode(m),
+          ),
+        const SizedBox(height: AmiSpacing.s),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.xs),
+          child: Text(
+            activeUrl ?? '(no URL baked into this build)',
+            style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+            maxLines: 2, overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(height: AmiSpacing.xs),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.xs),
+          child: Text(
+            'This section is compiled out of MVP / App Store builds. '
+            'Only PROD will be reachable then.',
+            style: AmiTypography.caption,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+
+class _BackendModeRow extends StatelessWidget {
+  const _BackendModeRow({
+    required this.mode,
+    required this.selected,
+    required this.disabled,
+    required this.onTap,
+  });
+  final BackendMode mode;
+  final bool selected;
+  final bool disabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = disabled
+        ? AmiColors.textLow
+        : (selected ? AmiColors.hexBlue : AmiColors.textHigh);
+    return InkWell(
+      onTap: disabled ? null : onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 20,
+              color: disabled ? AmiColors.textLow : color,
+            ),
+            const SizedBox(width: AmiSpacing.s),
+            Text(backendModeLabel(mode),
+                style: AmiTypography.labelMono.copyWith(color: color)),
+            if (disabled) ...[
+              const SizedBox(width: AmiSpacing.s),
+              Text('· not in this build',
+                  style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+            ],
           ],
         ),
       ),

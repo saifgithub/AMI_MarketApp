@@ -5,11 +5,19 @@
 library;
 
 import 'package:ami_trade/services/api/api_client.dart';
+import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient());
+/// API client keyed on the active backend mode (Alpha / Beta / Prod —
+/// see docs/08_tech/backend_modes.md). When the user flips the toggle
+/// in Settings → Developer, this provider rebuilds with the new base
+/// URL and every dependent provider picks up the change on next read.
+final apiClientProvider = Provider<ApiClient>((ref) {
+  final url = ref.watch(activeBackendUrlProvider);
+  return ApiClient(baseUrl: url);
+});
 
 class ChatLine {
   const ChatLine({
