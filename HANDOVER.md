@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of A2: Concierge → AMI wired on the Floor)
+**Last updated:** 2026-05-12 (end of AT:R10 — A2, A20, A19, A21, A18, A8, A9, A10, A11 all landed)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,21 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 22 commits, no remote yet |
-| Latest commit | (this session) A2: Concierge → AMI (post-onboarding, Floor tab) |
-| Lines on disk | ~36,200 (PRD ~14.5k, backend ~9.4k, Flutter ~9.9k, content/docs ~2.4k) |
+| Git state | Clean working tree, 29 commits, no remote yet |
+| Latest commit | (this session) A11: i18n scaffold |
+| Lines on disk | ~38,500 (PRD ~14.5k, backend ~9.9k, Flutter ~10.7k, content/docs ~2.4k, infra ~0.7k, content/lessons untracked ~180 new files) |
 
 ```
-$ git log --oneline | head -12
-<new>   A2: Concierge → AMI wiring (post-onboarding, Floor tab)
+$ git log --oneline | head -15
+54b0936 A11: i18n scaffold — l10n config + en/ar/ms ARB + locale switcher
+89183aa A10: Sentry SDK — backend + Flutter
+d69045e A8 + A9: systemd unit, env file, log rotation, pg backups + restore drill
+433f38f A18: user watchlist — backend + Flutter
+29a1aa8 A21: Animation MDX component + AnimationRegistry + AmiHexPlaceholder
+3c97ee0 A19: Lesson UX — Skip to quiz
+a1dcf90 A20: lesson loader reads module + difficulty frontmatter
+4dfbec0 QA fix: AI Coach Q&A batches — lesson IDs, sentence counts, content violations
+68475ce A2: Concierge → AMI wiring (post-onboarding, Floor tab)
 eaed813 Handover #9 — A1 landed, ready to pick up A2
 08ab7d9 A1: Convene the Room → AMI wiring
 4933b18 W18b: animations selective, tickers user-driven, quiz mandatory, watchlist + skip-to-quiz in Alpha
@@ -57,8 +65,8 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | Restart | `scripts/run_dev.sh backend` |
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
-| Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **140 passed, 2 pre-existing failures** in `test_lessons_service` (W17/W18 added trader-callout lessons; the unlock tests' "only 004 has trader" assumption is now stale — spawned cleanup task). A1 + A2 total: +12 new tests, all passing. |
+| Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, **`/v1/watchlist/*`** (new this session) |
+| Tests | `pytest backend/tests/unit/ -q` → **152 passed, 0 failed**. A1 + A2 + A20 + A21 + A18 add 19 new tests; A20 also fixed 2 pre-existing failures in `test_lessons_service` that the spawned cleanup task was going to handle. |
 
 ### Postgres + persistence (NEW this session)
 
@@ -162,6 +170,33 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (this session — A2, A20, A19, A21, A18, A8, A9, A10, A11)
+
+Saiful granted full autonomy through MVP — "build it all part by part". Eight Alpha items shipped across Streams 1, 2, 3, 4 of the project plan. The full Stream-4 product polish lane is done; Stream 2 hardening is done modulo the Saiful-blocked items (A3 / A6 / A7); Stream 3 lands its first chunk (A11 scaffold). 152 unit tests passing, flutter analyze clean on every touched file.
+
+### Stream 1 — finish the AMI surface
+- **A2** (`68475ce`) — Concierge → AMI wired on the Floor tab. Live path uses a new `concierge_prompts.py` that enriches the base prompt with the user's recent Journal entries, unlocked agents, lesson catalogue, and mandate snapshot — so the LLM names real lesson IDs and routes to real agents instead of speculating. Scripted fallback (when `has_real_provider()` is False) uses a keyword classifier rather than MockProvider's canned text. Deterministic onboarding state machine in `concierge_engine.py` stays untouched.
+- 9 new tests in `test_concierge_live.py`.
+
+### Stream 4 — product polish
+- **A20** (`a1dcf90`) — Lesson loader reads `module` + `difficulty` frontmatter (W18 fields). Legacy lessons default `module=0` and `difficulty=level`. Backend + Flutter `LessonMeta` both gain the fields. **Also fixed** the 2 pre-existing `test_lessons_service` failures (W17/W18 added trader callouts to lessons 014/015/016; tests now isolate via a helper).
+- **A19** (`3c97ee0`) — Lesson UX skip-to-quiz. Each lesson tile shows two buttons — **READ** (green) and **QUIZ ONLY** (amber). Quiz-only mode hides markdown + chat_with blocks and counts toward agent unlocks identically. Wrong-answer explanations are the teaching surface for skippers.
+- **A21** (`29a1aa8`) — `<Animation name="..." />` MDX component. Backend parses it; Flutter `AnimationRegistry` resolves names to Lottie assets (empty map for now — none bundled). Missing names render `AmiHexPlaceholder` so lessons referencing not-yet-bundled animations still ship. Lottie playback deferred until the first asset lands.
+- **A18** (`433f38f`) — User watchlist (the "see *their* tickers" loop). New `sim_watchlists` table with Alembic migration. Backend routes `GET / POST / DELETE /v1/watchlist/{user_id}`. Tickers are free-form (anything market_data can quote), idempotent on add, upper-cased, ordered by added_at DESC. Flutter portfolio screen has a new **WATCHLIST** section above HOLDINGS — each row shows ticker + notes + live quote, tap opens a sheet with **Open Trade Ticket / Ask the Market Analyst / Convene the Room / Remove**. Pull-to-refresh now refreshes both the portfolio and the watchlist. 7 new tests.
+
+### Stream 2 — on-prem hardening
+- **A8 + A9** (`d69045e`) — Production launch + Postgres backups. Files under `infra/systemd/` (unit, env file template, logrotate, README) and `infra/backups/` (pg-backup.sh, service, timer, README). Replaces the dev-only `nohup uvicorn &` pattern. Restart-on-failure with 30s graceful shutdown for in-flight SSE. Nightly pg_dump at 02:30 UTC, 14-day retention, optional offsite rsync/rclone, **restore drill** documented (the only thing that matters — run on install and quarterly).
+- **A10** (`89183aa`) — Sentry SDK on both sides. Backend `app/core/observability.py` reads `SENTRY_DSN`; idempotent; no DSN → fully offline. Flutter `main.dart` wraps `runApp` in `SentryFlutter.init` when `--dart-define=SENTRY_DSN=...` is passed. Both scrub Authorization / Cookie / x-api-key headers in `beforeSend`. `traces_sample_rate=0.1` in prod, 0 elsewhere.
+
+### Stream 3 — i18n
+- **A11** (`54b0936`) — i18n scaffold. `mobile/l10n.yaml` (gen-l10n config), ARB files for `en` (populated for the surfaces touched recently — tab labels, A18 watchlist, A19 buttons, A11 language picker), `ar` and `ms` (placeholders; missing keys fall back to English). `lib/i18n/locale_provider.dart` persists the override via SharedPreferences; null = follow system. `lib/app.dart` wires `localizationsDelegates` + `supportedLocales`. Settings → **LANGUAGE** section gives the user a radio picker. RTL kicks in automatically for `ar`. The full string-extraction sweep across every screen is deliberately out of scope — Saiful's plan calls i18n "structural plumbing now, full sweep later" and partial translation is fine for Alpha.
+
+### Pre-existing W17/W18 content not yet committed
+
+`content/lessons/014_..` through `162_..` and `100_..` through `170_..` were generated by the W18 authoring prompt but never committed (still untracked on disk). They DO get loaded by the running lessons service (count=82+ on this branch's disk state), which is why A20's frontmatter parsing matters now and why the earn-path tests needed the isolation helper. Decide whether to commit them in a future content-only pass; A20 is forward-compatible either way.
 
 ---
 
@@ -518,8 +553,8 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #10 — name the
-session "AT:R11:".
+We're picking up the AMI Trade build. This is handover #11 — name the
+session "AT:R12:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
@@ -527,70 +562,48 @@ Read HANDOVER.md at the project root first:
 Then read docs/10_delivery/project_plan.md — your task is almost
 always one of the A1-A28 items in there.
 
-State: 22 commits in. 140 unit tests pass + 2 pre-existing failures
-in test_lessons_service (W17/W18 added trader-callout lessons; the
-"only 004 has trader" assumption is stale — separate spawned task
-handles it). A1 + A2 both landed — every user-visible AMI surface
-(Convene the Room, 1-on-1 with all 13 agents including Concierge on
-the Floor) now streams from vLLM Gemma 4 with deterministic fallbacks
-intact. The deterministic onboarding state machine is untouched and
-stays scripted on purpose.
+State: 29 commits in. 152 unit tests pass, 0 failed. The previous
+session knocked out a long autonomous run — A2 + A20 + A19 + A21 +
+A18 + A8 + A9 + A10 + A11 all landed. Every user-visible AMI surface
+streams from vLLM Gemma 4 with deterministic fallbacks; the
+post-onboarding Concierge routes against real journal/lesson/agent
+context; the sim Portfolio has a watchlist with one-tap "Ask the
+Market Analyst / Convene the Room / Open Trade Ticket" sheet; lesson
+tiles expose READ + QUIZ ONLY paths; backend has systemd unit + pg
+backups + Sentry SDK; Flutter ships an i18n scaffold ready for AR/MS
+ARBs to drop in.
 
-Alpha-stream pick-up (priority order — top is highest leverage):
+What's left in Alpha — almost everything is blocked on Saiful's
+external setup. The remaining engineering items only unblock once
+Saiful provisions:
 
-  A18. User watchlist. NEW sim_watchlists table (user_id, ticker,
-       added_at, notes); GET/POST/DELETE /v1/watchlist/{user_id}.
-       Flutter section on Portfolio screen above HOLDINGS — each row
-       shows ticker + live quote + day-change %; tap opens a sheet
-       with quote + buttons (Add Trade, Ask Market Analyst, Convene).
-       Tickers are free-form (any string Yahoo can quote). This is
-       the "see THEIR stocks" loop Saiful wants for sim play. ~1
-       session.
+  A3.  Resend account + DKIM/SPF DNS    → unblocks A4 + A5
+  A6.  Apple Sign-In capability        → unblocks the A6 code swap
+  A7.  Cloudflare Tunnel + Access      → unblocks A22-A28 path
+  A12. AR + MS translators             → drop-in, non-blocking
+  A13. TTS provider account + key      → unblocks A14
+  A14. TTS integration (depends A13)
+  A15. OneSignal + Dev APNs cert       → unblocks A16
+  A16. Push notifications (depends A15)
+  A17. Daily briefing (depends A14 + A16)
+  A22-A28. App Store Connect, Transporter, signing, TestFlight uploads
 
-  A11. i18n structure. Extract every user-facing string in mobile/lib
-       to ARB files via flutter_localizations + intl. Locale switcher
-       in Settings. RTL pass for AR (Directionality, padding-inline).
-       English content ships; AR/MS empty placeholders. ~0.5 session.
+If Saiful has unblocked any of those, pick them up. Otherwise the
+unblocked items left are:
+  • Commit the W17/W18 generated lesson files (~180 untracked .mdx
+    under content/lessons/). They're already being loaded by the
+    service — committing them is a content-only pass with no code
+    change. ~0.25 session.
+  • Sweep i18n string extraction across the existing screens —
+    A11 landed the scaffold; this is the grunt-work pass that wraps
+    every user-visible Text(...) in AppLocalizations.of(context). The
+    framework falls back to English, so it's not blocking Alpha
+    launch. ~1 session.
+  • Animation production — bundle the first Lottie asset(s) under
+    assets/animations/ and register them in AnimationRegistry. The
+    A21 widget already handles it. ~depends on art availability.
 
-  A19. Lesson UX — Skip to quiz. Lessons screen lists each lesson with
-       READ + QUIZ ONLY buttons. Quiz-only path renders just the
-       <Quiz> blocks + miss-explanations and counts toward
-       agent-unlock identically. ~0.5 session.
-
-  A20. Lesson loader: parse new frontmatter fields (module,
-       difficulty). Default to module:0, difficulty:level for legacy
-       lessons. Unblocks generation runs from the lesson authoring
-       prompt at content/_authoring/lesson_authoring_prompt.md.
-       ~0.25 session.
-
-  A8. Backend production launch — systemd unit, env file in
-      /etc/ami-trade.env, log rotation, restart-on-fail. No more
-      `nohup uvicorn`. ~0.5 session.
-
-  A9. Postgres backups — pg_dump cron + offsite copy + restore drill.
-      ~0.25 session.
-
-  A10. Sentry SDK in backend + Flutter. ~0.5 session.
-
-  A21. Animation MDX component — Flutter AnimationRegistry maps
-       name → Lottie asset path; missing names render
-       AmiHexPlaceholder. ~0.5 session.
-
-Blocked on Saiful's external steps (unblock when ready):
-  A3. Resend account + DKIM/SPF DNS — unblocks A4/A5 (email
-      confirmation flow).
-  A6. Sign in with Apple capability on bundle id under team
-      S7RBWM4879 — unblocks A6 code.
-  A7. Cloudflare Tunnel + named hostname + Access policy — unblocks
-      A25 (iPhone leaves the LAN).
-  A13. TTS provider account + key (Azure or ElevenLabs) — unblocks
-       A14 (TTS integration).
-  A15. OneSignal account + Dev APNs cert from Apple Dev — unblocks
-       A16 (push notifications).
-  A19. App Store Connect app record (bundle id
-       ai.agenticmarketintel.amiTrade, SKU AMITRADE, English primary)
-       + install Transporter from Mac App Store — unblocks
-       A25/A26 (TestFlight upload).
+If something else is on Saiful's mind, default to that.
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
