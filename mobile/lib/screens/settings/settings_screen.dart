@@ -6,6 +6,7 @@
 /// agent prompt is composed (1-on-1, Coach, Room, Sim).
 library;
 
+import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/state/auth_providers.dart';
@@ -117,6 +118,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _ReadOnlyRow(label: 'Primary goal', value: m.primaryGoal),
                     _ReadOnlyRow(label: 'Credits', value: '${m.creditBalance}'),
                   ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _LanguageSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
                   const SizedBox(height: AmiSpacing.xxl),
@@ -403,6 +406,86 @@ class _AccountSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+
+// ── Language picker (A11) ───────────────────────────────────────────────
+
+
+class _LanguageSection extends ConsumerWidget {
+  const _LanguageSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(localeNotifierProvider);
+    return _Section(
+      title: 'LANGUAGE',
+      children: [
+        for (final opt in localeOptions)
+          _LanguageRow(
+            option: opt,
+            selected: _matches(opt.locale, current),
+            onTap: () => ref
+                .read(localeNotifierProvider.notifier)
+                .setLocale(opt.locale),
+          ),
+        const SizedBox(height: AmiSpacing.xs),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.s),
+          child: Text(
+            'AR + MS ship as placeholders today — missing keys fall back to English. '
+            'Translators drop in proper ARBs and the locale lights up.',
+            style: AmiTypography.caption,
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _matches(Locale? a, Locale? b) {
+    if (a == null && b == null) return true;
+    if (a == null || b == null) return false;
+    return a.languageCode == b.languageCode;
+  }
+}
+
+
+class _LanguageRow extends StatelessWidget {
+  const _LanguageRow({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+  final LocaleOption option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? AmiColors.hexBlue : AmiColors.textLow,
+              size: 20,
+            ),
+            const SizedBox(width: AmiSpacing.s),
+            Text(option.nativeName, style: AmiTypography.body),
+            const SizedBox(width: AmiSpacing.s),
+            if (option.nativeName != option.englishName)
+              Text(
+                '· ${option.englishName}',
+                style: AmiTypography.caption,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

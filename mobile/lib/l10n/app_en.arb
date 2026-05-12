@@ -1,0 +1,61 @@
+{
+    "@@locale": "en",
+    "@@author": "AMI Trade",
+
+    "appTitle": "AMI Trade",
+    "@appTitle": {
+        "description": "Application title. Used in MaterialApp and system places. Keep as 'AMI Trade' across all locales — it's a product name, not translatable."
+    },
+
+    "tabFloor": "Floor",
+    "@tabFloor": {
+        "description": "Bottom-nav label for the Floor tab (Concierge + 12 agents + Convene the Room CTA)."
+    },
+    "tabPortfolio": "Portfolio",
+    "@tabPortfolio": {
+        "description": "Bottom-nav label for the Sim Portfolio tab (cash, holdings, trades, watchlist)."
+    },
+    "tabJournal": "Journal",
+    "@tabJournal": {
+        "description": "Bottom-nav label for the Decision Journal tab."
+    },
+    "tabLessons": "Lessons",
+    "@tabLessons": {
+        "description": "Bottom-nav label for the Lessons tab."
+    },
+    "tabSettings": "Settings",
+    "@tabSettings": {
+        "description": "Bottom-nav label for the Settings tab (mandate editor + account)."
+    },
+
+    "settingsLanguage": "Language",
+    "@settingsLanguage": {
+        "description": "Settings section label for the locale switcher."
+    },
+    "settingsLanguageEnglish": "English",
+    "settingsLanguageArabic": "العربية",
+    "@settingsLanguageArabic": {
+        "description": "Native name of Arabic — stays Arabic across all locales."
+    },
+    "settingsLanguageMalay": "Bahasa Melayu",
+    "@settingsLanguageMalay": {
+        "description": "Native name of Malay — stays Malay across all locales."
+    },
+
+    "actionRead": "READ",
+    "@actionRead": {
+        "description": "Lesson card button — opens the full read flow."
+    },
+    "actionQuizOnly": "QUIZ ONLY",
+    "@actionQuizOnly": {
+        "description": "Lesson card button — opens the reader with quiz blocks only (A19 skip-to-quiz)."
+    },
+
+    "watchlistHeading": "WATCHLIST",
+    "watchlistAdd": "ADD",
+    "watchlistEmpty": "Add tickers you want to watch. Tap a row for quick actions: Ask the Market Analyst, Convene the Room, or open a trade.",
+    "watchlistOpenTradeTicket": "OPEN TRADE TICKET",
+    "watchlistAskMarketAnalyst": "ASK THE MARKET ANALYST",
+    "watchlistConveneRoom": "CONVENE THE ROOM",
+    "watchlistRemove": "REMOVE FROM WATCHLIST"
+}

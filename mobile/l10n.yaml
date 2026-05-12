@@ -1,0 +1,26 @@
+# A11 — Flutter localization codegen config.
+#
+# `flutter pub get` runs the gen-l10n step automatically (because
+# pubspec.yaml has `flutter: generate: true`) and emits
+# lib/generated/l10n/app_localizations*.dart from the ARB files in
+# `lib/l10n/`.
+#
+# Adding a new locale:
+#   1. Drop a new lib/l10n/app_<code>.arb file (same keys as app_en.arb;
+#      a key missing from the new file falls back to English).
+#   2. Add the locale to `supportedLocales` in lib/i18n/locales.dart.
+#   3. flutter pub get
+#
+# Adding a new string:
+#   1. Add the key + @key metadata in app_en.arb.
+#   2. Mirror it in app_ar.arb / app_ms.arb (or leave them out — falls
+#      back to English).
+#   3. flutter pub get
+#   4. Use it: `AppLocalizations.of(context)!.<key>`.
+
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-dir: lib/generated/l10n
+synthetic-package: false
+nullable-getter: false
