@@ -52,19 +52,28 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 | **A16** | Push notifications. OneSignal SDK in Flutter, server-side `POST /notifications` endpoint, deep-link routing (open the specific Journal entry / Room verdict / lesson on tap). | Claude | 0.5 session | |
 | **A17** | Daily briefing flow. Background job (`apscheduler` on-prem; Cloud Scheduler at Beta) assembles a 60-second audio brief per user — pulls mandate + recent journal + open positions; renders via TTS; sends push with audio attachment URL. Delivered at user's chosen local time from their mandate. | Claude | 1 session | Depends on A14 + A16. |
 
-#### Stream 4 — Ship to offsite testers + observe
+#### Stream 4 — Product polish (watchlist, lessons UX, animations)
 
 | # | Item | Who | Est | Notes |
 |---|---|---|---|---|
-| **A18** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | App Store needs this anyway. |
-| **A19** | App Store Connect — create the app record (bundle id `ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`, English primary). One-time, 5-min web form. | Saiful | external | Blocks A21. |
-| **A20** | Install Transporter (Apple's free Mac upload tool) from the Mac App Store. | Saiful | external | Blocks A22. |
-| **A21** | Switch Flutter build to Distribution signing + App Store export. `flutter build ipa --release --export-method app-store --dart-define=AMI_API_URL=<cloudflare-hostname>`. Xcode auto-manages the Distribution cert + App Store provisioning profile once the app exists in App Store Connect. Produces `build/ios/ipa/Runner.ipa`. | Claude | 0.5 session | |
-| **A22** | Upload to App Store Connect via Transporter (drag the .ipa, click upload). | Saiful | external | ~5 min. |
-| **A23** | Add testers in TestFlight. Internal (≤100, Apple Dev team members, instant) or External (≤10k, anyone via email, first build needs a one-time Beta App Review ~24h). | Saiful | external | |
-| **A24** | Tester onboarding — invite copy, feedback channel (private Slack/Discord/email), bug-report template. | Saiful | external | |
+| **A18** | User watchlist. New `sim_watchlists` table (user_id, ticker, added_at, notes). `GET/POST/DELETE /v1/watchlist/{user_id}`. Flutter section on Portfolio screen above HOLDINGS: each watchlist row shows ticker, live quote, day change %, and a tap-target opening a sheet with quote + buttons (Add Trade, Ask Market Analyst, Convene the Room). Tickers free-form — any string Yahoo can quote. | Claude | 1 session | The "I want to see *my* stocks" loop. Curriculum lessons cite tickers illustratively; the user populates their own watchlist for daily use. |
+| **A19** | Lesson UX — "Skip to quiz". Lessons screen lists each lesson with a "READ" button + a "QUIZ ONLY" button. Quiz-only path renders just the `<Quiz>` blocks, the explanations on miss, and counts toward the agent-unlock the same as a full read+pass. Wrong-answer explanations are the teaching surface for skippers. | Claude | 0.5 session | |
+| **A20** | Lesson loader: parse new frontmatter fields (`module`, `difficulty`). Default to `module: 0, difficulty: <level>` for legacy lessons. | Claude | 0.25 session | Unblocks generation runs from the lesson authoring prompt. |
+| **A21** | Animation MDX component — Flutter `AnimationRegistry` maps name → Lottie asset path; missing names render `AmiHexPlaceholder`. Bundle whatever animations exist; lessons referencing missing names still display. | Claude | 0.5 session | Decouples content delivery from animation production. |
 
-**Claude effort:** ~7.5 sessions of dev. **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, App Store Connect app record, Transporter, tester invites. Mostly parallel to Claude.
+#### Stream 5 — Ship to offsite testers + observe
+
+| # | Item | Who | Est | Notes |
+|---|---|---|---|---|
+| **A22** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | App Store needs this anyway. |
+| **A23** | App Store Connect — create the app record (bundle id `ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`, English primary). One-time, 5-min web form. | Saiful | external | Blocks A25. |
+| **A24** | Install Transporter (Apple's free Mac upload tool) from the Mac App Store. | Saiful | external | Blocks A26. |
+| **A25** | Switch Flutter build to Distribution signing + App Store export. `flutter build ipa --release --export-method app-store --dart-define=AMI_API_URL=<cloudflare-hostname>`. Xcode auto-manages the Distribution cert + App Store provisioning profile once the app exists in App Store Connect. Produces `build/ios/ipa/Runner.ipa`. | Claude | 0.5 session | |
+| **A26** | Upload to App Store Connect via Transporter (drag the .ipa, click upload). | Saiful | external | ~5 min. |
+| **A27** | Add testers in TestFlight. Internal (≤100, Apple Dev team members, instant) or External (≤10k, anyone via email, first build needs a one-time Beta App Review ~24h). | Saiful | external | |
+| **A28** | Tester onboarding — invite copy, feedback channel (private Slack/Discord/email), bug-report template. | Saiful | external | |
+
+**Claude effort:** ~9.75 sessions of dev (7.5 from streams 1–3 + 2.25 from new Stream 4: watchlist + skip-to-quiz + frontmatter fields + animation registry). **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, App Store Connect app record, Transporter, tester invites. Mostly parallel to Claude.
 
 **Explicit non-goals for Alpha (everything else is in scope):**
 - No GCP. No Cloud Run. No Cloud SQL.
@@ -153,10 +162,10 @@ These rules hold across every phase:
 
 | Phase | Claude sessions | Saiful external effort | Calendar |
 |---|---|---|---|
-| Alpha | ~7.5 | Resend, Cloudflare, Apple cap, Dev APNs cert, Azure/ElevenLabs, OneSignal, App Store Connect, Transporter, translators, legal stub, testers | 2–3 weeks |
+| Alpha | ~9.75 | Resend, Cloudflare, Apple cap, Dev APNs cert, Azure/ElevenLabs, OneSignal, App Store Connect, Transporter, translators, legal stub, testers | 3–4 weeks |
 | Beta | ~5 | GCP, Supabase, cloud LLM provider, DNS | 2–3 weeks |
 | MVP | ~3 | App Store / Play / translators drop-in / legal / marketing / analytics | 3–6 weeks |
-| **Total** | **~15.5 sessions** | (mostly parallel to Claude) | **7–12 weeks** |
+| **Total** | **~17.75 sessions** | (mostly parallel to Claude) | **8–13 weeks** |
 
 A "session" here is a single coherent Claude work-chunk that lands one or two commits — typically 0.5–2 hours of Saiful-time.
 

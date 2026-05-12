@@ -207,21 +207,23 @@ Audience: ready to think about AMI itself — what it is and isn't.
 
 ---
 
-## Totals
+## Totals (approximate)
 
-| Level | Module | Lessons |
+| Level | Module | Lessons planned |
 |---|---|---|
-| 1 | 1, 2, 3 | 6 + 6 + 7 = 19 |
-| 2 | 4, 5 | 6 + 6 = 12 |
-| 3 | 6, 7 | 7 + 6 = 13 |
-| 4 | 8 | 7 |
-| 5 | 9 | 7 |
-| 6 | 10 | 6 |
-| 7 | 11 | 7 |
-| 8 | 12 | 6 |
-| **Total** | **12 modules** | **77 lessons** |
+| 1 | 1, 2, 3 | ~19 |
+| 2 | 4, 5 | ~12 |
+| 3 | 6, 7 | ~13 |
+| 4 | 8 | ~7 |
+| 5 | 9 | ~7 |
+| 6 | 10 | ~6 |
+| 7 | 11 | ~7 |
+| 8 | 12 | ~6 |
+| **Total** | **12 modules** | **~77 lessons** |
 
-77 lessons is **Alpha-tight** — narrower than the original 150-lesson alpha target but pedagogically complete. The remaining ~70 lessons toward the v1.0 target of 300 are filled in by depth lessons per topic during MVP and beyond.
+These counts are the **shape** of the curriculum, not a hard target. The actual number that ships in Alpha is whatever the AI-tool-generated batches produce at acceptable quality. If a batch comes back tight at 5 lessons for a module that was scoped for 7, ship 5 and add the missing two later when the topic earns the depth.
+
+The ID sequence is reserved (001–077) so even if a lesson is skipped or merged, the IDs stay stable for prerequisites + agent_callouts references.
 
 ---
 
@@ -249,30 +251,43 @@ The re-mapping is **not urgent** — the existing files keep working as-is. Rena
 
 ---
 
-## Animations
+## Animations (optional, selective)
 
-Every lesson should include at least one **`<Animation name="..." />`** MDX component reference. Animations are short (2–6 second) Lottie or Flutter-rendered loops that visualize the concept. They live in `content/animations/` keyed by name and ship with the app bundle.
+**Most lessons don't need an animation.** Static markdown + a real-ticker numeric example + a clean quiz is plenty for the concept-explainer lessons (probably ~70% of the curriculum). Animations are reserved for concepts that genuinely benefit from motion — things you'd struggle to teach with prose alone.
 
-The MDX side just references a name — the Flutter side resolves it to an animation widget. If the name doesn't resolve, the component renders a placeholder so missing animations don't break the lesson.
+The MDX component is optional. When present, it just references a name; the Flutter side resolves to a Lottie file or a Flutter-rendered widget. If the name doesn't resolve, a placeholder renders so the lesson still works.
 
-Catalog (names to be created by Saiful's designer or via Lottie marketplace):
+### Where animation pays off
 
-| Module | Animation names |
-|---|---|
-| 1 (What Is the Stock Market?) | `stock_ownership_pie`, `order_book_fill`, `exchange_floor`, `volatility_waveform` |
-| 2 (Investing vs Trading) | `compounding_curve`, `time_horizon_scale`, `win_loss_distribution` |
-| 3 (Risk Management) | `position_size_calc`, `stop_loss_trigger`, `drawdown_recovery`, `risk_reward_scale` |
-| 4 (Reading Charts) | `candlestick_anatomy`, `trendline_draw`, `support_resistance_test`, `breakout_pattern`, `pullback_pattern` |
-| 5 (Indicators) | `moving_average_lag`, `rsi_oscillator`, `macd_crossover`, `volume_bars` |
-| 6 (Understanding Companies) | `revenue_waterfall`, `profit_margin_breakdown`, `debt_vs_equity`, `free_cash_flow_waterfall` |
-| 7 (Financial Ratios) | `pe_ratio_visual`, `roe_breakdown`, `debt_to_equity_bar`, `dividend_yield_pie` |
-| 8 (Emotional Discipline) | `fomo_curve`, `revenge_position_escalation`, `discipline_meter` |
-| 9 (Trading Strategies) | `trendfollow_entry_exit`, `breakout_confirm`, `mean_reversion_bounce` |
-| 10 (Market Regime) | `bull_bear_states`, `sector_rotation_wheel`, `breadth_heatmap` |
-| 11 (Scam Protection) | `red_flag_checklist`, `fake_vs_real_broker`, `pump_dump_curve` |
-| 12 (AI + Modern Trading) | `ami_constellation`, `hallucination_demo`, `decision_support_arrow` |
+Good candidates (~15–20 across the curriculum). These are the ones we'd actually invest design effort in:
 
-~50 unique animations across the curriculum. Build incrementally — a placeholder is acceptable for Alpha-launch as long as the MDX reference is in place.
+| Module | Lesson ID | Animation name | Why motion helps |
+|---|---|---|---|
+| 2 | 010 | `compounding_curve` | Time + compounding is hard to grok statically — the curve sweeping over decades is the lesson. |
+| 3 | 014 | `position_size_calc` | The risk%-of-account-to-share-count math wants a slider feel. |
+| 3 | 015 | `stop_loss_trigger` | A price tagging the stop and exiting feels visceral in motion. |
+| 3 | 018 | `drawdown_recovery` | The asymmetric "50% loss needs 100% gain" curve lands much harder when animated. |
+| 3 | 016 | `risk_reward_scale` | Two bars sliding into different proportions communicates ratio at a glance. |
+| 4 | 020 | `candlestick_anatomy` | Open/high/low/close as a single bar drawing itself — flagship animation. |
+| 4 | 023 | `support_resistance_test` | Price approaching a level and bouncing/breaking is the whole concept. |
+| 4 | 024 | `breakout_pattern` | A consolidation tightening and resolving up. |
+| 5 | 026 | `moving_average_lag` | Price and MA moving together, MA lagging — best shown in motion. |
+| 5 | 027 | `rsi_oscillator` | Needle sweeping 0–100, crossing 30/70 thresholds. |
+| 8 | 048 | `fomo_curve` | Price accelerating into a peak; the user-entry marker landing late. |
+| 8 | 047 | `revenge_position_escalation` | Position size growing trade-by-trade after consecutive losses. |
+| 10 | 059 | `bull_bear_states` | Market regime as a state machine flipping between modes. |
+| 11 | 066 | `pump_dump_curve` | Telegram-pump price curve — explosion then collapse. |
+| 12 | 072 | `ami_constellation` | The 12 agents as nodes lighting up in sequence — branded hero animation. |
+
+That's the priority list. Anything else, ship the lesson without an animation and add one later if usage data says the concept is sticking poorly.
+
+### What lives where
+
+- **MDX**: lessons reference animations by name only — `<Animation name="candlestick_anatomy" />`.
+- **Flutter**: an `AnimationRegistry` maps names → asset paths. Missing names render an `AmiHexPlaceholder` widget (just a styled hex tile saying "Animation pending").
+- **Asset path**: `content/animations/<name>.json` (Lottie) or a Dart-defined widget in `mobile/lib/animations/<name>.dart`.
+
+Production is decoupled from content. Lessons can ship today with animation references; designers fill in the assets at their own pace.
 
 ---
 

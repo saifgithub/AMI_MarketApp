@@ -34,9 +34,16 @@ their role name (the Bear Researcher, the PM, the Market Analyst).
 - "Coach Your Agent" lets users shape style/priority of any single
   agent via natural language. Cannot bypass the safety floor.
 - Markets covered: US equities primary, Bursa Malaysia secondary at
-  v1.0, GCC/Tadawul later. Reference real tickers from those exchanges
-  (AAPL, NVDA, MSFT, GOOGL, TSLA for US; MAYBANK, PETRONAS, GENTING,
-  TENAGA, SIME, CIMB, PUBLIC, IHH, TOPGLOV for Bursa).
+  v1.0, GCC/Tadawul later. Reference **real tickers** in examples —
+  any well-known ticker from those exchanges is fine. Examples for
+  inspiration (NOT an exclusive list — use whichever ticker best
+  illustrates the concept):
+    US: AAPL, NVDA, MSFT, GOOGL, TSLA, AMZN, META, BRK-B, JPM, XOM
+    Bursa: MAYBANK, PETRONAS, GENTING, TENAGA, SIME, CIMB, PUBLIC,
+           IHH, TOPGLOV, AIRASIA, MRDIY, KLCC
+  The app will let users add their own watchlist tickers; lessons
+  should feel illustrative, not prescriptive. Avoid implying "these
+  are the right stocks to trade".
 
 ## The 12 agents + Concierge
 
@@ -124,8 +131,13 @@ Lead with a one-paragraph thesis. State what the reader will be able to
 do or understand after this lesson. No "in this lesson we will...".
 End with a single-sentence hook into the rest of the lesson.
 
-Embed an animation right after this paragraph:
-  <Animation name="<from the catalog>" />
+**OPTIONAL — only on lessons flagged for animation in curriculum_map.md
+(roughly 15-20 out of ~77 lessons).** Embed an animation right after this
+paragraph:
+  <Animation name="<exact name from curriculum_map.md>" />
+
+If the lesson is not on the animation list, just write the paragraph and
+move on — no Animation tag.
 
 ### 2. Real-world example (150-250 words, heading: "## Example" or
 "## How this plays out in real markets")
@@ -150,8 +162,19 @@ this lesson:
 
   <ChatWith agent="<agent_id>" />
 
-### 5. Quiz (heading: "## Quiz", 1-3 quizzes; the last must require
-synthesis, not recall)
+### 5. Quiz (heading: "## Quiz", REQUIRED for every lesson)
+
+**Every lesson MUST end with at least one multiple-choice quiz.** Users
+can also jump straight to the quiz without reading the lesson body —
+the quiz is the assessment surface. So:
+
+- Each lesson has at least 1 multi-choice quiz. Ideally 2-3 for longer
+  lessons.
+- The LAST quiz must require synthesis, not recall — it should test
+  whether the reader understood the body, not just whether they skimmed.
+- Quizzes can also work as a standalone learning tool — the
+  `explanation` field is what teaches when a "skip-to-quiz" user gets
+  it wrong.
 
   <Quiz
     question="A precise, testable question. Use numbers when possible."
@@ -232,13 +255,14 @@ opening a trade ticket.
 2. Uses at least one specific numeric example with a real ticker.
 3. Includes at least one falsification condition for any claim. If you
    say "X is bullish", you must also say "X would invalidate if Y".
-4. Quiz requires synthesis, not recall. The right answer should require
-   having understood the body, not just having skimmed it.
-5. Includes an Animation reference matching the curriculum map's
-   per-module catalog.
-6. Includes a ChatWith for the most-relevant agent.
-7. Includes an Action task tied to a real screen in the app.
-8. Ends with a portable Takeaway.
+4. **Has at least one multi-choice quiz. Last quiz requires synthesis,
+   not recall** — users who skip the body and jump to the quiz must
+   not pass by guessing.
+5. Includes a ChatWith for the most-relevant agent.
+6. Includes an Action task tied to a real screen in the app.
+7. Ends with a portable Takeaway.
+8. Animation is OPTIONAL — include only if the lesson is on the
+   curriculum_map.md animation list.
 9. Avoids: "as we'll see", "stay tuned", "in the next lesson". Each
    lesson stands alone.
 10. AMI naming. Never "the AI", "the model", "the LLM".
