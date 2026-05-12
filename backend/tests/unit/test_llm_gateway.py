@@ -86,7 +86,10 @@ async def test_mock_provider_returns_canned_text():
     ):
         chunks.append(c)
     text = "".join(chunks)
-    assert "Mock PM" in text or "Portfolio Manager" in text or "mock mode" in text.lower()
+    # Mock copy carries the AMI brand + fallback signal regardless of which
+    # agent matched.
+    assert "AMI" in text
+    assert "fallback" in text.lower() or "offline" in text.lower()
 
 
 # ── anthropic provider SSE parser ─────────────────────────────────────────
@@ -177,7 +180,7 @@ async def test_anthropic_provider_error_yields_inline_error():
 
     full = "".join(chunks)
     assert "429" in full
-    assert "AI error" in full
+    assert "AMI error" in full
     assert "upstream provider" in full
 
 
@@ -256,7 +259,7 @@ async def test_vllm_provider_error_yields_inline_error():
 
     full = "".join(chunks)
     assert "503" in full
-    assert "AI error" in full
+    assert "AMI error" in full
     assert "on-prem" in full
 
 

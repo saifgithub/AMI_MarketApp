@@ -82,21 +82,23 @@ Full decision log: [`docs/11_decisions/decision_log.md`](docs/11_decisions/decis
 - Database tables: `snake_case`, plural (`users`, `mandates`, `agent_runs`).
 - Agent IDs: `fundamentals_analyst`, `market_analyst`, ..., `portfolio_manager`. Lowercase snake.
 
-### "LLM" vs "AI" — internal vs user-facing
+### "LLM" → engineers; "AMI" → users
+
+The AI is named **AMI**. Users never see "LLM" or even "the AI" — they see AMI by name. Engineers writing code can use LLM internally.
 
 | Where | Word |
 |---|---|
 | Code identifiers (`LLMGateway`, `LLMProvider`, `llm_gateway.py`, `llm_smoke.py`) | **LLM** |
 | API routes (`/v1/llm/status`) and log keys (`llm_call_start`) | **LLM** |
-| Internal docs (HANDOVER.md technical sections, code docstrings explaining architecture) | **LLM** |
-| Tests and tech comments | **LLM** |
-| Lesson content (`content/lessons/*.mdx`) | **AI** |
-| Agent prompts / mock responses surfaced to users | **AI** |
-| Error sentinels streamed back to the iPhone (`[AI error: ...]`) | **AI** |
-| App copy (Flutter strings, settings labels, marketing material) | **AI** |
-| README + any external-facing repo doc | **AI** in product framing, **LLM** in technical specifics |
+| Tests, tech comments, code docstrings explaining architecture | **LLM** |
+| HANDOVER.md technical sections | **LLM** |
+| Lesson content (`content/lessons/*.mdx`) | **AMI** |
+| Agent prompts / mock responses surfaced to users | **AMI** |
+| Error sentinels streamed back to the iPhone (`[AMI error: ...]`) | **AMI** |
+| App copy (Flutter strings, settings labels, marketing material) | **AMI** |
+| External-facing docs / README product framing | **AMI** in product framing, **LLM** in technical specifics |
 
-Rule of thumb: if a human user might read it, say AI. If a developer is reading code or a route name, LLM is fine.
+Rule of thumb: if a human user might read it, say AMI. If a developer is reading code or a route name, LLM is fine. We don't say "the AI" anywhere user-visible — say AMI by name.
 
 ### Comments
 

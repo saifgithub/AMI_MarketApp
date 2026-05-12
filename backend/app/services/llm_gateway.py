@@ -89,55 +89,56 @@ class MockProvider(LLMProvider):
 
     _CANNED = {
         "fundamentals_analyst": (
-            "Mock Fundamentals Analyst here. Without live financial data I can't run a "
-            "real evaluation, but the framework is:\n\n"
+            "AMI's Fundamentals Analyst here, but I'm offline right now. Without a live "
+            "connection I can't run a real evaluation; the framework would be:\n\n"
             "• Pull last 4 quarters of income statement, balance sheet, cash flow\n"
             "• Compute trailing P/E, EV/EBITDA, FCF yield vs sector median\n"
             "• Check debt-to-equity and interest coverage\n"
             "• Compare against the 3 nearest peers\n\n"
-            "Once the AI provider is configured, I'll do the actual numbers. For now "
-            "you're seeing this canned text."
+            "Once AMI is back online, I'll do the actual numbers."
         ),
         "market_analyst": (
-            "Mock Market Analyst. The chart would show me trend, momentum, key levels. "
-            "When live, I'd give you specific entries, targets, stops.\n\n"
-            "Configure the AI provider to swap me from canned to real."
+            "AMI's Market Analyst, currently offline. The chart would show me trend, "
+            "momentum, and key levels. When live, I'd give you specific entries, "
+            "targets, and stops.\n\n"
+            "AMI is in fallback mode — check back in a moment."
         ),
         "bear_researcher": (
-            "Mock Bear here. My real job is to find what's wrong with the thesis. The "
-            "structure of a good bear case: identify the 2-3 risks that materially matter, "
-            "quantify them, address how the Bull would respond.\n\n"
-            "Configure the AI provider for live analysis."
+            "AMI's Bear here, but I'm offline. My real job is to find what's wrong with "
+            "the thesis: identify the 2-3 risks that materially matter, quantify them, "
+            "and address how the Bull would respond.\n\n"
+            "AMI is in fallback mode."
         ),
         "bull_researcher": (
-            "Mock Bull here. My real job is to steelman the long case. Structure: "
-            "thesis in one sentence, cite the Analysts' evidence, anticipate the Bear's "
-            "counter, propose sizing.\n\n"
-            "Configure the AI provider for live analysis."
+            "AMI's Bull here, offline at the moment. My real job is to steelman the long "
+            "case: thesis in one sentence, cite the Analysts' evidence, anticipate the "
+            "Bear's counter, propose sizing.\n\n"
+            "AMI is in fallback mode."
         ),
         "trader": (
-            "Mock Trader. Once we have live data I'll give you: instrument, side, size, "
-            "entry, target, stop, time horizon. All sized to your mandate.\n\n"
-            "Configure the AI provider to go live."
+            "AMI's Trader, currently offline. Once we have live data I'll give you: "
+            "instrument, side, size, entry, target, stop, time horizon — all sized to "
+            "your mandate.\n\n"
+            "AMI is in fallback mode."
         ),
         "portfolio_manager": (
-            "Mock PM here. My role is to gatekeep — every trade goes through compliance "
-            "check (deterministic) and judgment review (AI, once configured).\n\n"
-            "Configure the AI provider for real verdicts."
+            "AMI's PM here, offline. My role is to gatekeep — every trade goes through "
+            "a compliance check (deterministic) and a judgment review (AMI, once "
+            "online).\n\n"
+            "AMI is in fallback mode for the judgment side; the compliance check still "
+            "runs."
         ),
         "concierge": (
-            "Mock Concierge here! I'd normally route you to the right lesson, search your "
-            "journal, or schedule briefings. Once the AI provider is configured in the "
-            "backend, I'll be fully live.\n\n"
-            "For now: the onboarding flow works fully (no AI needed), and you can browse "
-            "lessons. Want me to find one for you?"
+            "AMI's Concierge here! I'm in fallback mode right now — I'd normally route "
+            "you to the right lesson, search your journal, or schedule briefings.\n\n"
+            "Onboarding works fully (no AI needed), and you can browse lessons. Want me "
+            "to find one for you?"
         ),
     }
 
     _DEFAULT = (
-        "I'm running in mock mode — no AI provider configured yet. Once the backend is "
-        "pointed at an AI provider (on-prem vLLM or a managed API), I'll come fully "
-        "online and respond properly to your question."
+        "AMI is in fallback mode — the backend isn't connected to a live model right "
+        "now. Once AMI is back online, I'll respond properly to your question."
     )
 
     async def stream_chat(
@@ -208,7 +209,7 @@ class AnthropicProvider(LLMProvider):
                     body=err_body.decode()[:500],
                 )
                 yield (
-                    f"\n\n[AI error: HTTP {resp.status_code} from the upstream provider. "
+                    f"\n\n[AMI error: HTTP {resp.status_code} from the upstream provider. "
                     "Falling back. Check backend logs.]"
                 )
                 return
@@ -306,7 +307,7 @@ class VLLMProvider(LLMProvider):
                     body=err_body.decode()[:500],
                 )
                 yield (
-                    f"\n\n[AI error: HTTP {resp.status_code} from the on-prem AI server. "
+                    f"\n\n[AMI error: HTTP {resp.status_code} from the on-prem AMI server. "
                     "Check backend logs.]"
                 )
                 return
