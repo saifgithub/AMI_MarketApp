@@ -58,8 +58,13 @@ class LessonsScreen extends ConsumerWidget {
             _TrackSection(
               track: t,
               state: state,
-              onTap: (lessonId) => Navigator.of(context).push(MaterialPageRoute<void>(
+              onRead: (lessonId) => Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => LessonReaderScreen(lessonId: lessonId),
+              )),
+              onQuizOnly: (lessonId) => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => LessonReaderScreen(
+                  lessonId: lessonId, quizOnly: true,
+                ),
               )),
             ),
         ],
@@ -232,12 +237,14 @@ class _TrackSection extends StatelessWidget {
   const _TrackSection({
     required this.track,
     required this.state,
-    required this.onTap,
+    required this.onRead,
+    required this.onQuizOnly,
   });
 
   final TrackCatalogue track;
   final LessonsState state;
-  final void Function(String lessonId) onTap;
+  final void Function(String lessonId) onRead;
+  final void Function(String lessonId) onQuizOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -257,7 +264,11 @@ class _TrackSection extends StatelessWidget {
           for (final l in track.lessons)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: _LessonTile(meta: l, onTap: () => onTap(l.id)),
+              child: _LessonTile(
+                meta: l,
+                onRead: () => onRead(l.id),
+                onQuizOnly: () => onQuizOnly(l.id),
+              ),
             ),
         ],
       ),
@@ -267,68 +278,104 @@ class _TrackSection extends StatelessWidget {
 
 
 class _LessonTile extends StatelessWidget {
-  const _LessonTile({required this.meta, required this.onTap});
+  const _LessonTile({
+    required this.meta,
+    required this.onRead,
+    required this.onQuizOnly,
+  });
   final LessonMeta meta;
-  final VoidCallback onTap;
+  final VoidCallback onRead;
+  final VoidCallback onQuizOnly;
 
   @override
   Widget build(BuildContext context) {
     final callouts = meta.agentCallouts;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AmiRadii.card),
-      child: Container(
-        padding: const EdgeInsets.all(AmiSpacing.m),
-        decoration: BoxDecoration(
-          color: AmiColors.slate800,
-          borderRadius: BorderRadius.circular(AmiRadii.card),
-          border: Border.all(color: AmiColors.slate700),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AmiColors.slate900,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: AmiColors.slate700),
-              ),
-              child: Text('L${meta.level}',
-                  style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-            ),
-            const SizedBox(width: AmiSpacing.s),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(meta.title, style: AmiTypography.h4),
-                  const SizedBox(height: 2),
-                  Row(
+    return Container(
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: onRead,
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AmiColors.slate900,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AmiColors.slate700),
+                  ),
+                  child: Text('L${meta.level}',
+                      style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                ),
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('${meta.durationMin} min',
-                          style: AmiTypography.caption),
-                      if (callouts.isNotEmpty) ...[
-                        const SizedBox(width: AmiSpacing.s),
-                        for (final id in callouts)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: HexAvatar(
-                              label: agentById(id).abbreviation,
-                              color: agentById(id).color,
-                              size: 20,
-                            ),
-                          ),
-                      ],
+                      Text(meta.title, style: AmiTypography.h4),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text('${meta.durationMin} min',
+                              style: AmiTypography.caption),
+                          if (callouts.isNotEmpty) ...[
+                            const SizedBox(width: AmiSpacing.s),
+                            for (final id in callouts)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4),
+                                child: HexAvatar(
+                                  label: agentById(id).abbreviation,
+                                  color: agentById(id).color,
+                                  size: 20,
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right, color: AmiColors.textLow),
-          ],
-        ),
+          ),
+          const SizedBox(height: AmiSpacing.s),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onRead,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AmiColors.hexGreen,
+                    side: const BorderSide(color: AmiColors.hexGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: Text('READ', style: AmiTypography.labelMono),
+                ),
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onQuizOnly,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AmiColors.hexAmber,
+                    side: const BorderSide(color: AmiColors.hexAmber),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: Text('QUIZ ONLY', style: AmiTypography.labelMono),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

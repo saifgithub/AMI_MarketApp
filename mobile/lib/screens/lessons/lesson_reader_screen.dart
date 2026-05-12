@@ -20,9 +20,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LessonReaderScreen extends ConsumerWidget {
-  const LessonReaderScreen({super.key, required this.lessonId});
+  const LessonReaderScreen({
+    super.key,
+    required this.lessonId,
+    this.quizOnly = false,
+  });
 
   final String lessonId;
+
+  /// A19 — When true, the reader hides every markdown / chat_with block and
+  /// jumps straight to the quizzes. Wrong-answer explanations still surface
+  /// on submit (they're the teaching surface for skippers). A pass in this
+  /// mode counts toward agent unlocks identically to a full read+pass.
+  final bool quizOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,7 +42,10 @@ class LessonReaderScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(title: state.lesson?.meta.title ?? 'Loading…'),
+            _Header(
+              title: state.lesson?.meta.title ?? 'Loading…',
+              suffix: quizOnly ? 'QUIZ ONLY' : null,
+            ),
             Expanded(child: _body(context, ref, state)),
           ],
         ),
@@ -53,12 +66,20 @@ class LessonReaderScreen extends ConsumerWidget {
     final lesson = state.lesson;
     if (lesson == null) return const SizedBox.shrink();
 
+    final visibleBlocks = quizOnly
+        ? lesson.blocks.where((b) => b.kind == LessonBlockKind.quiz).toList()
+        : lesson.blocks;
+
     return ListView(
       padding: const EdgeInsets.all(AmiSpacing.m),
       children: [
         _LessonMetaBar(meta: lesson.meta),
+        if (quizOnly) ...[
+          const SizedBox(height: AmiSpacing.m),
+          _QuizOnlyBanner(quizCount: visibleBlocks.length),
+        ],
         const SizedBox(height: AmiSpacing.l),
-        for (final block in lesson.blocks) ...[
+        for (final block in visibleBlocks) ...[
           _BlockView(
             block: block,
             state: state,
@@ -95,8 +116,9 @@ class LessonReaderScreen extends ConsumerWidget {
 
 
 class _Header extends StatelessWidget {
-  const _Header({required this.title});
+  const _Header({required this.title, this.suffix});
   final String title;
+  final String? suffix;
 
   @override
   Widget build(BuildContext context) {
@@ -117,6 +139,58 @@ class _Header extends StatelessWidget {
             child: Text(title,
                 style: AmiTypography.h4,
                 maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          if (suffix != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AmiColors.slate800,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AmiColors.hexAmber),
+              ),
+              child: Text(
+                suffix!,
+                style: AmiTypography.labelMono.copyWith(
+                  color: AmiColors.hexAmber, fontSize: 11,
+                ),
+              ),
+            ),
+          const SizedBox(width: AmiSpacing.s),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _QuizOnlyBanner extends StatelessWidget {
+  const _QuizOnlyBanner({required this.quizCount});
+  final int quizCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bolt, color: AmiColors.hexAmber),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(
+            child: Text(
+              quizCount == 1
+                  ? 'Skipping straight to the 1 quiz. Pass it and the lesson '
+                      'still counts toward agent unlocks. Wrong answers will '
+                      'show the explanation — that\'s your teaching surface.'
+                  : 'Skipping straight to the $quizCount quizzes. Pass them '
+                      'all and the lesson still counts toward agent unlocks. '
+                      'Wrong answers will show the explanation.',
+              style: AmiTypography.caption,
+            ),
           ),
         ],
       ),
