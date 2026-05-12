@@ -10,12 +10,14 @@ from app.schemas.lessons import QuizSubmitRequest
 from app.services.lessons_service import LessonsService, get_lessons_service
 
 
-# Stable handle for the pre-W18 "Market Orders vs Limit Orders" lesson.
-# W17/W18's curriculum_map renumbered every original lesson into the 280-292
-# range to free up 001-079 for new modules. The CONTENT (quiz + chat_with
-# blocks) is unchanged — tests that exercise parsing / quiz submit pin to
-# this lesson because we control its shape.
-LEGACY_MARKET_ORDER_LESSON = "283_market_order_vs_limit"
+# Stable handle for the "Market Orders vs Limit Orders" lesson — content
+# unchanged, used by parsing / quiz / earn-path tests because we control
+# its shape. Note: lesson FILES under content/lessons/ are now named with
+# the 280-292 prefix (curriculum_map renumbering), but the canonical
+# in-app ID is still the frontmatter `id` field — which preserves the
+# original `00Y_*` form. LessonsService keys by frontmatter id, so tests
+# must too.
+LEGACY_MARKET_ORDER_LESSON = "004_market_order_vs_limit"
 
 
 @pytest.fixture
