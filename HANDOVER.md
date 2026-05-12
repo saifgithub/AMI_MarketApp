@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R13 — truthful price_source + first-real-run promotion + playbook bug fixes)
+**Last updated:** 2026-05-13 (end of AT:R13 — truthful price_source + first-real-run promotion + playbook bug fixes + Mac-canonical per-env files + magical-edison-18bf91 content drop merged)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -15,11 +15,11 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **50 commits**, no remote yet |
-| Latest commit | (this session) `f46c901` — fix(promote-to-alpha): exclude .env from rsync; ship alembic into image |
+| Git state | Clean working tree, **53 commits**, no remote yet |
+| Latest commit | (this session) `ab71957` — content: new surfaces — daily challenges, AI Coach Q&A, glossary |
 | Alpha tags | `alpha-2026-05-13-1`, `alpha-2026-05-13-2` (first real exercises of /promote-to-alpha) |
-| Backend tests | **162 passed, 0 failed**, 1 skipped (was 155 + 7 lesson-id rot — AT:R13 fixed the rot) |
-| Lines on disk | ~38,800 (PRD ~14.5k, backend ~10.0k, Flutter ~10.7k, content/docs ~2.4k, infra ~0.7k, lessons 13 tracked) |
+| Backend tests | **163 passed, 0 failed** (was 155 + 7 lesson-id rot — AT:R13 fixed the rot; +1 enabled by larger lesson corpus) |
+| Lines on disk | ~38,800 backend/docs/infra + **270 lessons tracked** (was 13; +257 from the magical-edison-18bf91 content pass), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges |
 
 ```
 $ git log --oneline | head -15
@@ -228,6 +228,44 @@ Yahoo's 429-ing is per-ticker (or stochastic) — AAPL came back live mid-sessio
 - The init_schema + alembic boot-order collision (followup task spawned this session).
 - Backend `Dockerfile` CMD uses `--reload` — dev flag, should be `--workers N` for the alpha host. Touched in the followup task.
 
+### Mac-canonical per-env files (`513d851`)
+
+Followup to the `.env` wipe incident. Mac now holds the source of truth at `infra/<env>.env` (gitignored); promotion `scp`s it to the target host's `~/ami_trade/.env`. The host's `.env` is treated as derivative — never edited in-place.
+
+- `infra/alpha.env` (gitignored) — seeded from melehost; canonical for alpha.
+- `infra/{alpha,beta,prod}.env.example` (committed) — shape, no values.
+- `infra/README.md` — model + recovery + rotation.
+- `/promote-to-alpha` step 4 now does `scp infra/alpha.env melehost:~/ami_trade/.env` with an abort-if-missing guard and post-`scp` grep verification of the four critical keys.
+- `/promote-to-beta` + `/promote-to-prod` design docs updated to inherit the pattern (the .env file feeds GCP Secret Manager at B8, separate projects so prod ≠ beta).
+
+End-to-end smoke-tested today — scp lands, keys verify, container healthy, `active_provider=vllm`.
+
+### magical-edison-18bf91 content drop merged (`03c55f4` + `ab71957`)
+
+Imported the parallel content pass from worktree `claude/magical-edison-18bf91`. **No code change.** 285 file changes, all under `content/` + `docs/`. Two thematic commits.
+
+- **Lessons corpus: 13 → 270.** New 001-077 (M1-M12 foundations), 100-279 (Expansion / deep-dive companions), and the original 13 reparented to 280-292 ("Legacy bonus", still on `track: foundations`). Frontmatter ids now match filenames again — `LEGACY_MARKET_ORDER_LESSON` updated to `"283_market_order_vs_limit"` in the test (was `"004_*"` post-AT:R13 fix; the content pass realigned them).
+- **Regulatory reframe is now load-bearing across the corpus.** AMI is a training simulator, not a licensed advisor. CLAUDE.md decision-pointer was already aligned; this pass threads the framing through every M12 lesson (072-077, 268-279) and scrubs `ai_meta.json`'s 50 entries. Linguistic substitutions are consistent corpus-wide ("AMI recommends X" → "AMI's training output suggests X"; "act on the Verdict in your real brokerage" → "use the training scenario to practice evaluating multi-agent analyst output").
+- **New content surfaces** (static JSON files, no service yet):
+  - `content/daily_challenges/2026_06..2026_11.json` — 183 entries, six monthly batches.
+  - `content/ai_coach/{ai_meta,platform,psychology,scam}.json` — 4 new files, 280 entries total across 6 categories.
+  - `content/glossary/terms.en.json` — 188 entries, 13 categories. i18n design: `terms.<locale>.json`, id stable across locales.
+- **342 inline `<Term id="..."/>` references** across 258 lessons. The MDX parser passes them through unchanged today (only Quiz / ChatWith / Animation get extracted). Flutter renders them as raw text until the `<Term>` component lands. First-mention-only per lesson per term.
+- **Verification:** 163 unit tests pass (was 162 + 1 skipped; the skip flipped to pass with the bigger lesson corpus). `lessons_loaded count=270` on boot. Catalogue: 7 tracks (foundations 16, fundamentals_analysis 66, technical_analysis 45, news_macro 19, sentiment_behaviour 10, risk_portfolio 16, edge_process 98).
+
+### Follow-up engineering work flagged by the content drop
+
+Three tasks spawned (chips in the UI):
+
+1. **Backend `GlossaryService`** — load `content/glossary/terms.*.json`, expose `/v1/glossary/{locale}` + `/v1/glossary/{locale}/{id}`. Mirror `LessonsService` shape. Locale fallback en → 404.
+2. **`<Term>` MDX component** — backend `_TERM_RE` extractor + Flutter `TermRegistry` analogous to `AnimationRegistry`. Tap-to-show-definition. Bundled-asset fallback until the backend route lands.
+3. **`<Animation>` extractor finish** — the `_ANIMATION_RE` regex exists in `lessons_service.py` but isn't actually emitted as a block in the body walker (only Quiz + ChatWith get fully extracted). Finish the wiring so the Flutter `AnimationRegistry` (already built at A21) starts receiving data.
+
+Also still on the deck:
+
+- LessonMeta surfacing `module` + `difficulty` fields end-to-end. A20 reads them; check whether they make it into the API response shape and the Flutter `LessonMeta` model.
+- Daily-challenge + AI-Coach ingestion services — Alpha A17 / Beta work; content is sitting on disk.
+
 ---
 
 ## What just landed (AT:R11 — Alpha live + promotion protocol + Mac pure editor)
@@ -349,7 +387,7 @@ Saiful granted full autonomy through MVP — "build it all part by part". Eight 
 
 ### Pre-existing W17/W18 content not yet committed
 
-> **HISTORICAL — no longer true at AT:R13.** As of 2026-05-13 the only lessons on disk are the 13 tracked files under `content/lessons/` (renumbered 280-292; canonical IDs in frontmatter are still `00Y_*`). The previously-generated `014_..` through `162_..` and `100_..` through `170_..` are gone — either never committed and discarded, or absorbed into the renumbering. Left here for AT:R11-era context.
+> **ABSORBED — this generation pass landed in the magical-edison-18bf91 content drop at AT:R13 end.** As of commit `03c55f4` the corpus is 270 lessons, IDs aligned with filenames again, including a fully-built `014_position_sizing_basics` etc. The "pre-existing untracked" framing below is from before that drop.
 
 `content/lessons/014_..` through `162_..` and `100_..` through `170_..` were generated by the W18 authoring prompt but never committed (still untracked on disk). They DO get loaded by the running lessons service (count=82+ on this branch's disk state), which is why A20's frontmatter parsing matters now and why the earn-path tests needed the isolation helper. Decide whether to commit them in a future content-only pass; A20 is forward-compatible either way.
 
@@ -733,48 +771,57 @@ Then read docs/10_delivery/project_plan.md for the A1-A28 backlog,
 and docs/10_delivery/promotion_protocol.md for how code actually
 moves from Mac → Alpha → Beta → Prod.
 
-State: 50 commits in. 162 backend unit tests pass, 0 failed.
+State: 53 commits in. 163 backend unit tests pass, 0 failed.
 Two alpha tags exist: alpha-2026-05-13-1, alpha-2026-05-13-2.
+Content corpus: 270 lessons + 280 AI Coach Q&A + 188 glossary
+terms + 183 daily challenges (all on disk; some surfaces don't
+have backend services yet).
 
 What changed in AT:R13 vs the previous handover:
-  • `/v1/sim/quote/{ticker}` and `/v1/sim/portfolio` now report
-    truthful per-call price source. Each provider has `quote() ->
-    Quote(price, source)`; FallbackProvider forwards the leg that
-    actually served. Before today, the source was the stack name
-    `fallback(cache(yahoo)->mock_walk)` which always contains
-    "yahoo" — so the Flutter LIVE/MOCK pill substring-matched on
-    "yahoo" and showed LIVE even when Yahoo was 429-ing for hours
-    and every quote was actually mock_walk. The pill now flips
-    correctly. See commit 83d32a7.
-  • `/promote-to-alpha` got exercised end-to-end for the first time
-    and surfaced two real playbook bugs: (a) rsync was overwriting
-    melehost's `.env` (lost vLLM keys, alpha dropped to mock LLM
-    for ~3 min); (b) `alembic upgrade head` failed because the
-    Dockerfile didn't ship `alembic.ini` or the `alembic/` dir into
-    the image. Both fixed in commit f46c901. Future promotions
-    should be clean modulo one carry-over (see below).
-  • Seven lesson-service tests had been silently failing on main
-    due to lesson-ID rot; one-character fix in af4d054 restored
-    the suite to 162 green.
+  • Truthful price_source — `/v1/sim/quote/{ticker}` and
+    `/v1/sim/portfolio` now report the LEAF that actually served
+    each price (commit 83d32a7). Was reporting the stack name
+    which always contained "yahoo" — so the Flutter LIVE/MOCK pill
+    lied. Now flips correctly per-ticker.
+  • /promote-to-alpha got exercised end-to-end for the first time
+    and surfaced two playbook bugs (commit f46c901): rsync
+    overwriting melehost's .env, and alembic.ini missing from the
+    Docker image. Both fixed.
+  • Lesson-id rot: 7 test_lessons_service tests had been silently
+    failing on main; fixed at AT:R13 then ALIGNED again by the
+    magical-edison-18bf91 content drop. Constant is now
+    "283_market_order_vs_limit".
+  • Mac-canonical per-env files (commit 513d851). The .env wipe
+    incident motivated a structural fix: `infra/<env>.env`
+    (gitignored) is now the single source of truth on the Mac.
+    /promote-to-alpha step 4 scp's it to melehost. Beta + Prod
+    designed to inherit the same pattern (with GCP Secret Manager
+    as the Beta-era target via B8).
+  • magical-edison-18bf91 content drop merged (commits 03c55f4,
+    ab71957). 285 file changes, content + docs only. Lessons
+    13 → 270 with regulatory reframe woven through M12 lessons +
+    ai_meta Q&A. Three new content surfaces (daily_challenges,
+    additional ai_coach categories, glossary) sit as static files
+    waiting for backend loaders.
 
-Carry-overs flagged by AT:R13:
-  • init_schema() + alembic boot collision. `init_schema()` does
-    `create_all()` at container boot. A fresh DB has every table
-    but no alembic_version row → `alembic upgrade head` errors
-    with DuplicateTable. Worked around manually today via
-    `alembic stamp head`. Spawned-task chip is waiting; option 2
-    (self-stamp from init_schema) is probably the right answer.
-    The /promote-to-alpha step 5 will keep tripping on this until
-    fixed.
-  • Backend Dockerfile uses `--reload` (dev flag) — should be
-    `--workers N` for the alpha host. Bundle with the init_schema
-    fix.
-  • yfinance migration. Today's fix is honesty about Yahoo's
-    failures; it doesn't make Yahoo more reliable. Migrating from
-    the keyless chart endpoint to the `yfinance` Python lib (which
-    has anti-rate-limit logic) is its own session. Until then,
-    most tickers will show MOCK most of the time — honest, but not
-    impressive for the demo.
+Carry-overs flagged for next session:
+  • init_schema() + alembic boot collision. /promote-to-alpha
+    step 6 errors with DuplicateTable on fresh DB. Worked around
+    manually with `alembic stamp head`. Followup chip spawned.
+  • Backend Dockerfile uses --reload (dev flag) — bundle with the
+    init_schema fix.
+  • yfinance migration — keyless Yahoo endpoint stays 429ing.
+    Today's fix is honesty about it, not reliability.
+  • Backend GlossaryService — load content/glossary/terms.*.json,
+    expose /v1/glossary/{locale}. Followup chip spawned.
+  • `<Term>` MDX component — 342 inline references across 258
+    lessons render as raw text today. Backend extractor + Flutter
+    TermRegistry. Followup chip spawned.
+  • `<Animation>` extractor — regex exists in lessons_service.py
+    but the body walker doesn't actually emit blocks. ~16 lessons
+    affected. Followup chip spawned.
+  • LessonMeta `module` + `difficulty` end-to-end check — A20
+    parses them; verify they make it to the API + Flutter model.
 
 What's still left in Alpha — most blocked on Saiful's external setup:
 
@@ -785,21 +832,18 @@ What's still left in Alpha — most blocked on Saiful's external setup:
   A14. TTS integration (depends A13)
   A15. OneSignal + Dev APNs cert       → unblocks A16
   A16. Push notifications (depends A15)
-  A17. Daily briefing (depends A14 + A16)
+  A17. Daily briefing (depends A14 + A16) — daily_challenges content
+       now on disk, just needs ingestion service.
   A22-A28. App Store Connect, Transporter, signing, TestFlight
            uploads.
 
 If Saiful has unblocked any of those, pick them up. Otherwise the
-unblocked engineering items left are:
-  • Fix init_schema + alembic boot order (carry-over above; small).
-  • yfinance migration (carry-over above; ~0.5 session).
-  • Sweep i18n string extraction across existing screens — A11
-    landed the scaffold; this is the wrap-Text-in-AppLocalizations
-    pass. Framework falls back to English; not blocking Alpha
-    launch. ~1 session.
-  • Animation production — bundle the first Lottie asset(s) under
-    assets/animations/, register in AnimationRegistry. The A21
-    widget already handles it. ~depends on art availability.
+unblocked engineering items are:
+  • The follow-up chips listed above (init_schema/alembic,
+    GlossaryService, Term, Animation).
+  • yfinance migration (~0.5 session).
+  • i18n string extraction sweep — A11 scaffold landed; ~1 session.
+  • Animation production — depends on art availability.
 
 If something else is on Saiful's mind, default to that.
 
