@@ -1,0 +1,827 @@
+[
+  {
+    "id": "qa_beg_what_is_a_stock",
+    "category": "beginner",
+    "question": "What is a stock?",
+    "short_answer": "A stock is a small piece of ownership in a public company. If you own one share of Apple, you own a tiny fraction of Apple.",
+    "long_answer": "Companies issue shares to raise money. When you buy a share on an exchange, you become a part-owner with a claim on a sliver of the company's future profits and assets. Your share's price moves as the market updates its view of what the company is worth. Owning shares does not give you control of the business unless you hold a very large stake.",
+    "related_lessons": [
+      "013",
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "stocks",
+      "ownership"
+    ]
+  },
+  {
+    "id": "qa_beg_why_companies_issue_shares",
+    "category": "beginner",
+    "question": "Why do companies sell shares to the public?",
+    "short_answer": "To raise cash without taking on debt. They sell pieces of ownership and use the money to grow the business.",
+    "long_answer": "Going public lets a company tap a much larger pool of investors than private fundraising can. The cash typically funds expansion, R&D, acquisitions, or paying off earlier investors. In exchange, the company accepts public reporting requirements and the discipline of having its valuation set by the market every day.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "ipo",
+      "funding"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_exchange",
+    "category": "beginner",
+    "question": "What is a stock exchange?",
+    "short_answer": "A marketplace where buyers and sellers trade shares of public companies under a set of rules. NYSE and Nasdaq are the two big US examples.",
+    "long_answer": "An exchange matches orders, publishes prices, and enforces listing standards so investors can transact with confidence. Most modern exchanges are electronic order books, not the trading-floor scene from old movies. AMI Trade simulates US-listed names at MVP, so think NYSE and Nasdaq for now.",
+    "related_lessons": [
+      "015",
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "exchange"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_brokerage",
+    "category": "beginner",
+    "question": "What is a brokerage account?",
+    "short_answer": "A regulated account at a broker that lets you buy and sell securities. AMI Trade is simulation-only, so you never need one to use the app.",
+    "long_answer": "In the real world a brokerage holds your cash and the shares you buy on your behalf, and it routes your orders to an exchange. AMI Trade does not place real orders and does not connect to brokerages. Every position you take here is a simulated trade for learning, journaling, and feedback from the agent team.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "vocabulary",
+      "brokerage",
+      "simulation"
+    ]
+  },
+  {
+    "id": "qa_beg_market_cap",
+    "category": "beginner",
+    "question": "What does market cap mean?",
+    "short_answer": "Market cap is share price multiplied by the number of shares outstanding \u2014 the market's price tag on the whole company.",
+    "long_answer": "Market cap groups companies by size: roughly under 2B is small-cap, 2B to 10B is mid-cap, above 10B is large-cap, and the trillion-dollar names are mega-cap. Size affects volatility, liquidity, and how much news moves the stock. A 100 dollar share price tells you nothing about size by itself \u2014 you need the share count too.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "market_cap"
+    ]
+  },
+  {
+    "id": "qa_beg_what_moves_prices",
+    "category": "beginner",
+    "question": "Why does a stock price go up or down every day?",
+    "short_answer": "Price moves when buyers and sellers disagree on what the company is worth. Earnings, news, macro data, and crowd mood all shift that balance minute by minute.",
+    "long_answer": "Each tick is the most recent agreed-on price between someone willing to sell and someone willing to buy. New information \u2014 an earnings beat, a downgrade, a Fed comment, a competitor's product launch \u2014 changes opinions, and the order book rebalances. Short-term moves can look random; the longer-term path tends to track the underlying business.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "market_analyst",
+      "news_analyst"
+    ],
+    "tags": [
+      "general",
+      "ami_trade"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_volatility",
+    "category": "beginner",
+    "question": "What is volatility?",
+    "short_answer": "Volatility is how much a price swings around. High volatility means big daily moves; low volatility means quieter price action.",
+    "long_answer": "Volatility is not direction \u2014 it is the size of the wiggle in either direction. Traders often measure it with the standard deviation of returns or with indicators like ATR. Higher volatility means a wider range of possible outcomes per unit of time, which is why position sizing usually shrinks as volatility grows.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "volatility",
+      "risk"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_dividend",
+    "category": "beginner",
+    "question": "What is a dividend?",
+    "short_answer": "A dividend is a cash payment a company sends to its shareholders, usually quarterly, out of its profits.",
+    "long_answer": "Not every company pays dividends. Mature, cash-generating businesses often do; high-growth firms tend to reinvest instead. The dividend yield is the annual dividend divided by the share price. A high yield can be attractive, but it can also signal that the price has fallen because investors expect trouble.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "dividend",
+      "income"
+    ]
+  },
+  {
+    "id": "qa_beg_how_to_read_a_quote",
+    "category": "beginner",
+    "question": "How do I read a stock quote?",
+    "short_answer": "A quote shows the last traded price, the bid (highest a buyer will pay), the ask (lowest a seller will take), the day's range, and volume.",
+    "long_answer": "The gap between bid and ask is the spread \u2014 wider spreads usually mean less liquid stocks. Volume tells you how active the name is today. The percentage change is measured against the previous session's close, not the open. Always check whether the quote is real-time or delayed; many free feeds run 15 minutes behind.",
+    "related_lessons": [],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "quotes",
+      "bid_ask"
+    ]
+  },
+  {
+    "id": "qa_beg_share_price_size",
+    "category": "beginner",
+    "question": "Why are some stocks 5 dollars and others 5000?",
+    "short_answer": "Share price alone says nothing about size or quality \u2014 it just depends on how many shares the company has issued.",
+    "long_answer": "Two companies worth the same amount can have very different share prices depending on how they split their ownership. A 5000 dollar stock is not automatically better than a 5 dollar one; what matters is market cap, revenue, profitability, and growth. Berkshire Hathaway never split its A shares, which is why one share costs more than a car.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "share_price"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_index",
+    "category": "beginner",
+    "question": "What is the S&P 500?",
+    "short_answer": "The S&P 500 is an index that tracks roughly 500 of the largest US public companies. It is the standard benchmark for the US stock market.",
+    "long_answer": "The index is weighted by market cap, so the biggest names move it the most. When people say the market was up or down today, they usually mean the S&P 500 or the Dow. You cannot buy the index itself; you buy ETFs like SPY or VOO that track it. Beating the S&P 500 over long stretches is hard \u2014 that fact alone is a useful baseline for any active strategy.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "index",
+      "sp500"
+    ]
+  },
+  {
+    "id": "qa_beg_bull_vs_bear",
+    "category": "beginner",
+    "question": "What is a bull market and a bear market?",
+    "short_answer": "A bull market is a sustained uptrend, often defined as a 20 percent rise from a recent low. A bear market is a 20 percent decline from a recent high.",
+    "long_answer": "These are descriptions of crowd behaviour as much as price levels. Bulls expect prices to keep rising; bears expect them to fall. AMI's Bull and Bear researchers exist for exactly this reason \u2014 most stocks have a credible case in both directions, and forcing the debate is healthier than ignoring one side.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "bull_researcher",
+      "bear_researcher"
+    ],
+    "tags": [
+      "vocabulary",
+      "trend",
+      "sentiment"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_candlestick",
+    "category": "beginner",
+    "question": "What is a candlestick on a chart?",
+    "short_answer": "A candlestick is one bar that summarises a time period's open, high, low, and close in a single shape.",
+    "long_answer": "The body shows where price opened and closed; the thin wicks show the high and low during the period. Green or hollow usually means close above open; red or filled means close below open. Candles are dense information per pixel, which is why most chartists prefer them over line charts.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "candlestick",
+      "charts"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_etf",
+    "category": "beginner",
+    "question": "What is an ETF?",
+    "short_answer": "An ETF is a basket of securities that trades on an exchange like a single stock. Buying one share gives you exposure to all the holdings inside.",
+    "long_answer": "ETFs are popular because they offer instant diversification at low cost. An S&P 500 ETF gives you a slice of 500 companies in one trade. There are sector ETFs, country ETFs, bond ETFs, and increasingly exotic ones. They are not magic \u2014 a leveraged or thematic ETF can be riskier than a single quality stock.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "etf",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_us_vs_bursa",
+    "category": "beginner",
+    "question": "What's the difference between US markets and Bursa Malaysia?",
+    "short_answer": "Different exchanges, different listed companies, different trading hours and currency. The mechanics of buying a share are similar; the universe of stocks is not.",
+    "long_answer": "AMI Trade simulates US-listed names at MVP because that is the deepest, most-covered market in the world. GCC and Bursa Malaysia coverage is on the roadmap. If you are based in Asia, US hours run overnight for you, which changes how you would actually trade real positions later.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "exchange",
+      "markets"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_stop_loss",
+    "category": "beginner",
+    "question": "What is a stop-loss?",
+    "short_answer": "A stop-loss is a pre-set exit price that closes a losing trade automatically, so a small loss does not become a large one.",
+    "long_answer": "You decide your stop before entering, based on where your idea is proven wrong, not on how much you feel like losing. Once the price hits it, you exit without re-debating it. Beginners often skip stops and then average down on losers \u2014 one of the fastest ways to wreck an account.",
+    "related_lessons": [
+      "015"
+    ],
+    "related_agents": [
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "stop_loss"
+    ]
+  },
+  {
+    "id": "qa_beg_position_sizing",
+    "category": "beginner",
+    "question": "How much of my portfolio should I put in one trade?",
+    "short_answer": "Most beginners risk no more than 1 to 2 percent of total capital on any single trade. Position sizing comes from your risk per trade and your stop distance, not from a fixed dollar amount.",
+    "long_answer": "If your account is 10,000 and you risk 1 percent, you can lose at most 100 on the trade. If your stop is 5 percent below entry, your position size is 100 divided by 5 percent, or 2,000 worth of shares. The Portfolio Manager enforces a sizing ceiling as part of your Mandate, and that floor is uncoachable.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "position_sizing"
+    ]
+  },
+  {
+    "id": "qa_beg_risk_reward",
+    "category": "beginner",
+    "question": "What is risk-reward ratio?",
+    "short_answer": "Risk-reward compares how much you stand to lose to how much you stand to gain. A 1:3 trade risks 1 dollar to make 3.",
+    "long_answer": "Higher ratios let you be wrong more often and still come out ahead. A trader who is right only 40 percent of the time can still profit at 1:3. Beginners often take 1:1 or worse trades and wonder why they bleed slowly. The Trader agent will usually flag a setup if the reward does not justify the risk.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "risk_reward"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_drawdown",
+    "category": "beginner",
+    "question": "What is a drawdown?",
+    "short_answer": "Drawdown is the peak-to-trough drop in your account value, usually shown as a percentage.",
+    "long_answer": "A 20 percent drawdown means your account fell from a high-water mark to a low 20 percent below it. Recovering hurts more than the loss suggests \u2014 a 50 percent drawdown needs a 100 percent gain to get back to even. Tracking drawdown teaches you what your strategy actually feels like in bad weeks, not just the average.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "drawdown"
+    ]
+  },
+  {
+    "id": "qa_beg_why_risk_first",
+    "category": "beginner",
+    "question": "Why does AMI talk about risk before profit?",
+    "short_answer": "Because losses compound against you. If you blow up the account, no edge or strategy matters anymore \u2014 there is nothing left to compound.",
+    "long_answer": "Survival is the prerequisite for everything else in trading. Pros think in terms of risk first, position size second, entry third. The Portfolio Manager's mandate enforcement exists to keep you in the game on a bad day, even when you would override it emotionally if you could.",
+    "related_lessons": [
+      "013",
+      "019"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "mindset"
+    ]
+  },
+  {
+    "id": "qa_beg_correlation",
+    "category": "beginner",
+    "question": "Why does AMI care if my stocks are correlated?",
+    "short_answer": "Highly correlated positions move together. Holding five tech stocks is closer to one big tech bet than to five independent ideas.",
+    "long_answer": "Real diversification needs positions that respond to different drivers. If oil drops and your energy basket all sells off at once, your portfolio risk is much higher than the individual sizes suggest. The Portfolio Manager watches your exposure across sectors and themes, not just per-ticker position size.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "correlation",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_survival_mindset",
+    "category": "beginner",
+    "question": "What is a survival mindset?",
+    "short_answer": "Treat staying solvent as the main job. Profits are a side effect of not blowing up.",
+    "long_answer": "A survival mindset prioritises avoiding ruin over chasing the biggest possible gain. It shows up in small per-trade risk, hard stops, calm sizing, and a willingness to do nothing when conditions are unclear. It is the boring habit that lets compounding happen.",
+    "related_lessons": [
+      "019"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mindset",
+      "risk"
+    ]
+  },
+  {
+    "id": "qa_beg_max_loss_per_day",
+    "category": "beginner",
+    "question": "Should I have a max loss per day?",
+    "short_answer": "Yes.. A daily loss limit stops a bad morning from becoming a worst week ever.",
+    "long_answer": "Once you hit your daily limit you stop placing new trades and review what happened. The number can be small at first \u2014 1 to 3 percent of account \u2014 and it forces a cooling-off period before the next session. The Portfolio Manager treats the daily limit as a hard floor.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "daily_loss",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_leverage",
+    "category": "beginner",
+    "question": "What is leverage and is it safe for beginners?",
+    "short_answer": "Leverage is borrowing money to take a position larger than your cash. It magnifies both gains and losses and is rarely a good idea for new traders.",
+    "long_answer": "With 2x leverage, a 10 percent move against you wipes out 20 percent of your capital. Margin calls force exits at the worst moments. AMI Trade does not promote leverage at the beginner level. If a strategy needs leverage to be interesting, it is usually not a strategy worth trading.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "leverage"
+    ]
+  },
+  {
+    "id": "qa_beg_diversification",
+    "category": "beginner",
+    "question": "Is diversification really important?",
+    "short_answer": "Yes, especially while you are still learning. Spreading risk across uncorrelated names protects you from being wrong about a single stock or sector.",
+    "long_answer": "Concentrated bets can pay off spectacularly but also blow up spectacularly. For a beginner, diversification is less about maximising returns and more about not getting knocked out by a single mistake. Once your edge is proven across many trades, you can think about concentrating in higher-conviction ideas.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_investing_vs_trading",
+    "category": "beginner",
+    "question": "What is the difference between investing and trading?",
+    "short_answer": "Investing is owning a business for years and letting compounding work. Trading is taking shorter positions to profit from price moves.",
+    "long_answer": "Investors focus on business quality, valuation, and long horizons. Traders focus on setups, timing, and risk per trade. Both can work; both can lose money. AMI Trade supports both styles via your Mandate \u2014 you tell the agents whether to weight long-term value or shorter-term technicals.",
+    "related_lessons": [
+      "019",
+      "020"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading"
+    ]
+  },
+  {
+    "id": "qa_beg_time_horizon",
+    "category": "beginner",
+    "question": "What is a time horizon and why does it matter?",
+    "short_answer": "Your time horizon is how long you plan to hold a position. It dictates which signals matter and which to ignore.",
+    "long_answer": "A 10-year investor barely cares about a bad week; a swing trader cares about every daily candle. Mismatched horizon is one of the most common beginner mistakes \u2014 entering a long-term thesis and then panicking out on a 3 percent dip. Pin your horizon in your Mandate before you put on the trade.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "horizon"
+    ]
+  },
+  {
+    "id": "qa_beg_risk_profile",
+    "category": "beginner",
+    "question": "What is a risk profile?",
+    "short_answer": "It is a description of how much loss and volatility you can stomach without acting irrationally. Conservative, moderate, or aggressive are the usual buckets.",
+    "long_answer": "Your risk profile is partly financial \u2014 how much you can afford to lose \u2014 and partly psychological \u2014 how you behave when red. The Concierge will ask about both during onboarding because the Mandate has to match the human, not the spreadsheet.",
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "investing_vs_trading",
+      "risk_profile"
+    ]
+  },
+  {
+    "id": "qa_beg_compounding",
+    "category": "beginner",
+    "question": "What does compounding mean for investors?",
+    "short_answer": "Compounding is earning returns on past returns. The longer you stay invested, the more dramatic the curve becomes.",
+    "long_answer": "10 percent a year compounded for 30 years turns 10,000 into roughly 175,000 without adding a cent. Compounding rewards time and consistency, which is why pulling money out at every wobble is so costly. Most great investing outcomes come from sitting through stretches you wanted to sell.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "compounding"
+    ]
+  },
+  {
+    "id": "qa_beg_long_term_wealth",
+    "category": "beginner",
+    "question": "Can I get rich just buying and holding?",
+    "short_answer": "Long-term, diversified buy-and-hold is the most reliably documented way ordinary investors build wealth in markets. It is slow and unglamorous, which is why most people abandon it.",
+    "long_answer": "Index investing over decades has historically beaten the majority of active traders, especially after fees. It does not promise outcomes \u2014 past returns are not future returns. But the strategy's track record is why AMI Trade does not treat trading as the only legitimate path. Some users learn here and then size their real money mostly into long-term holdings.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "long_term"
+    ]
+  },
+  {
+    "id": "qa_beg_why_traders_fail",
+    "category": "beginner",
+    "question": "Why do most traders lose money?",
+    "short_answer": "Oversizing, no stops, no journal, no edge, and emotional decisions. The mechanics are simple; the discipline is not.",
+    "long_answer": "Industry studies routinely show 70 to 90 percent of active retail traders lose money over multi-year windows. The losers are not usually the dumbest people \u2014 they are the ones who skip risk management and treat every trade as conviction. AMI Trade is built around the parts beginners most commonly skip: mandate, journal, post-trade review.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "edge"
+    ]
+  },
+  {
+    "id": "qa_beg_active_vs_passive",
+    "category": "beginner",
+    "question": "Should I trade actively or just buy index funds?",
+    "short_answer": "Most people are better served by a diversified, long-term core plus a small learning sleeve where they trade actively. AMI Trade is for that learning sleeve, not your retirement.",
+    "long_answer": "Active trading needs time, discipline, and emotional capital. Index investing needs almost none of those. There is nothing wrong with deciding the active part is not for you after spending time here \u2014 that is a legitimate, valuable conclusion. AMI Trade can only ever be advisory and simulation-only.",
+    "related_lessons": [
+      "022",
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_ami",
+    "category": "beginner",
+    "question": "What is AMI exactly?",
+    "short_answer": "AMI is the brand and AMI behind the app. Inside AMI Trade you are CEO of a 12-agent analyst team that researches, debates, and proposes trades for you to approve or reject.",
+    "long_answer": "AMI Trade is simulation-only and advisory-only \u2014 no real orders are ever placed. Each agent plays a specific role: market analyst, news analyst, bull researcher, bear researcher, trader, portfolio manager, and so on. You set the Mandate; they work within it. You always make the final call.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "meta",
+      "agents"
+    ]
+  },
+  {
+    "id": "qa_beg_what_agents_do",
+    "category": "beginner",
+    "question": "What do the 12 agents actually do?",
+    "short_answer": "Each agent is specialised. Some research the company, some watch the chart, some debate the bull and bear cases, and the Portfolio Manager enforces your risk rules.",
+    "long_answer": "Roughly: fundamentals analyst reads the business, market analyst reads the chart, news and social analysts read the noise, three researchers debate bull vs bear vs neutral, the trader sizes the idea, and the portfolio manager applies your Mandate as the final check. You can run a single agent for a quick read or convene the whole room for a debate.",
+    "related_lessons": [],
+    "related_agents": [
+      "fundamentals_analyst",
+      "market_analyst",
+      "news_analyst",
+      "bull_researcher",
+      "bear_researcher",
+      "trader",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "agents"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_mandate",
+    "category": "beginner",
+    "question": "What is the Mandate?",
+    "short_answer": "Your Mandate is the rulebook the agents follow. It defines your risk per trade, max drawdown, allowed sectors, time horizon, and style preferences.",
+    "long_answer": "Think of it as the contract between you (the CEO) and the agent team. You can edit most of it, but the Portfolio Manager's safety floor \u2014 basic position sizing and daily loss limits \u2014 is uncoachable. That is intentional. The Mandate is also how you express what kind of investor or trader you actually want to be.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_uncoachable_floor",
+    "category": "beginner",
+    "question": "Why can't I change the Portfolio Manager's safety rules?",
+    "short_answer": "Because beginners often try to override the only thing keeping them in the game on a bad day. The PM safety floor is a deliberately uncoachable guardrail.",
+    "long_answer": "You can coach every other agent \u2014 tone, focus, weight on technicals, how aggressive the Trader is. The Portfolio Manager's basic risk floor stays fixed. It is the part of the system that protects you from yourself when emotions run hot. If it ever blocks a trade, that is the feature working.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "safety_floor",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_is_ami_real_money",
+    "category": "beginner",
+    "question": "Am I trading real money in AMI Trade?",
+    "short_answer": "No.. AMI Trade is simulation-only and advisory-only.",
+    "long_answer": "The app exists to teach process: research, debate, decide, journal, review. You build skill and a track record without losing money along the way. Some users eventually trade real accounts based on what they learn; that is their decision and their broker, not AMI.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "simulation",
+      "safety"
+    ]
+  },
+  {
+    "id": "qa_beg_can_ami_predict",
+    "category": "beginner",
+    "question": "Can AMI predict where a stock will go?",
+    "short_answer": "No.. No system can.",
+    "long_answer": "Anyone selling certainty in markets is selling a story. The agents produce reasoning, not crystal balls. A well-reasoned trade can still lose; a sloppy one can still win. Over many trades, the quality of the process is what shows up in your equity curve.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "meta",
+      "expectations"
+    ]
+  },
+  {
+    "id": "qa_beg_who_decides",
+    "category": "beginner",
+    "question": "If the agents disagree, who decides?",
+    "short_answer": "You do.. The agents argue, surface evidence, and propose a verdict.",
+    "long_answer": "Disagreement among agents is a feature, not a bug. If the Bull and Bear cases are both strong, that itself is information \u2014 usually a sign to size smaller, wait, or pass. The Decision Journal captures your call and the agents' positions so you can review later.",
+    "related_lessons": [],
+    "related_agents": [
+      "bull_researcher",
+      "bear_researcher",
+      "research_manager"
+    ],
+    "tags": [
+      "app",
+      "decision"
+    ]
+  },
+  {
+    "id": "qa_beg_pick_first_stock",
+    "category": "beginner",
+    "question": "Can you just tell me a good first stock to buy?",
+    "short_answer": "No.. AMI does not give stock picks.",
+    "long_answer": "If you got a tip from AMI today, you would still not know what to do tomorrow when the tip stops working. Bring a name you already follow \u2014 a brand you use, a company you find interesting \u2014 and run it through a 1-on-1 with the Fundamentals Analyst. Lesson 001 and 005 are good starting points.",
+    "related_lessons": [
+      "013",
+      "017"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "no_picks",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_beg_decision_journal",
+    "category": "beginner",
+    "question": "What is the Decision Journal for?",
+    "short_answer": "It logs every trade decision you make, the agents' positions, and your reasoning. Later you review what worked and what did not.",
+    "long_answer": "A journal turns scattered trades into a dataset you can actually learn from. Patterns emerge \u2014 the conditions where you do well, the setups where you bleed. Without one, every trade is a new experiment with no memory.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "journal"
+    ]
+  },
+  {
+    "id": "qa_beg_one_on_one_vs_room",
+    "category": "beginner",
+    "question": "When should I use a 1-on-1 vs. Convene the Room?",
+    "short_answer": "Use 1-on-1 for a quick angle from a single agent. Convene the Room when you want the full debate before a decision.",
+    "long_answer": "1-on-1 is fast and cheap on credits. Convene the Room runs all 12 agents through research, debate, and verdict \u2014 heavier but much richer. Beginners are usually best served by spending most of their interactions in 1-on-1s and reserving the Room for genuine decision moments.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "agents",
+      "credits"
+    ]
+  },
+  {
+    "id": "qa_beg_how_much_money_start",
+    "category": "beginner",
+    "question": "How much money do I need to start using AMI Trade?",
+    "short_answer": "Zero.. AMI Trade is simulation-only.",
+    "long_answer": "If you eventually go to a real broker, the right starting amount depends on you, not on a universal rule. Most beginners are better off learning the process here for months before risking real money. The simulated portfolio you build in AMI Trade has no minimum.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "money",
+      "starting",
+      "free"
+    ]
+  },
+  {
+    "id": "qa_beg_fees_in_app",
+    "category": "beginner",
+    "question": "Does AMI Trade charge fees per trade?",
+    "short_answer": "No per-trade fees.. The pricing is subscription tiers plus optional credit packs for heavy agent usage.",
+    "long_answer": "Floor Pass is free with ads. Trader at 14.99 and Floor Manager at 34.99 unlock more agents, deeper analysis, and faster credits. Credit packs are for users who run lots of full Room debates. Nothing happens in real markets, so nothing is charged in real brokerage fees.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "pricing"
+    ]
+  },
+  {
+    "id": "qa_beg_add_cash",
+    "category": "beginner",
+    "question": "How do I add cash to my simulated portfolio?",
+    "short_answer": "Your starting simulated cash is set during onboarding. You can adjust it in settings, but there is no real deposit because no real money is involved.",
+    "long_answer": "Treat the simulated balance as a learning tool. Setting it close to what you would actually trade with later makes position sizing feel realistic. Inflating it to a million dollars makes losses painless and the lessons less sticky.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "simulation"
+    ]
+  },
+  {
+    "id": "qa_beg_stocks_vs_crypto_risk",
+    "category": "beginner",
+    "question": "Are stocks safer than crypto?",
+    "short_answer": "On average, broad stock indices are less volatile than most crypto. Individual stocks can still go to zero, and AMI Trade simulates equities only.",
+    "long_answer": "Volatility is not the only definition of risk. Stocks come with regulation, audited financials, and centuries of price history. Crypto offers neither. That does not make stocks safe \u2014 single names can wipe out \u2014 it just makes the risk easier to study. AMI Trade does not cover crypto.",
+    "related_lessons": [
+      "018",
+      "021"
+    ],
+    "related_agents": [],
+    "tags": [
+      "risk",
+      "asset_classes"
+    ]
+  },
+  {
+    "id": "qa_beg_company_bankrupt",
+    "category": "beginner",
+    "question": "What happens to my shares if a company goes bankrupt?",
+    "short_answer": "Common shareholders are usually last in line and often recover nothing. Bondholders and other creditors get paid first.",
+    "long_answer": "Bankruptcy does not always mean instant zero \u2014 sometimes the company restructures and re-emerges. But for the common stock you bought, value tends to evaporate as the equity gets wiped out in restructuring. This is exactly why position sizing matters: no single name should be able to bury your account.",
+    "related_lessons": [
+      "014",
+      "017"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "bankruptcy"
+    ]
+  },
+  {
+    "id": "qa_beg_taxes",
+    "category": "beginner",
+    "question": "Do I pay taxes on AMI Trade?",
+    "short_answer": "No.. There are no real positions and no real gains, so there is nothing to tax.",
+    "long_answer": "When you eventually move to real markets, taxes depend on your jurisdiction, holding period, and broker reports \u2014 short-term and long-term capital gains, dividend treatment, foreign withholding for US stocks if you are abroad, and so on. That is a question for a local accountant, not AMI.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "taxes"
+    ]
+  },
+  {
+    "id": "qa_beg_credits",
+    "category": "beginner",
+    "question": "What are credits and how do I get them?",
+    "short_answer": "Credits power agent runs.. Your subscription includes a monthly allowance; heavy users can buy packs.",
+    "long_answer": "A 1-on-1 with one agent costs a small number of credits. Convene the Room costs more because all 12 agents work. The Earn Path attaches credit rewards to learning behaviour \u2014 completing lessons, hitting streaks, journalling decisions \u2014 so the more you grow, the more agent capacity you unlock.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "credits",
+      "earn_path"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_liquidity",
+    "category": "beginner",
+    "question": "What is liquidity and why does it matter?",
+    "short_answer": "Liquidity is how easily you can buy or sell a stock without moving its price. High-volume large-caps are liquid; tiny micro-caps are not.",
+    "long_answer": "Illiquid names have wider spreads, harder fills, and bigger slippage on stops \u2014 your real exit price can be worse than the level you set. Beginners are usually safer in liquid names where the order book is deep enough that your trade is a rounding error. The Trader and Market Analyst will flag liquidity when a setup looks risky for size reasons.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "market_analyst",
+      "trader"
+    ],
+    "tags": [
+      "vocabulary",
+      "liquidity"
+    ]
+  }
+]

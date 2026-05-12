@@ -1,0 +1,921 @@
+[
+  {
+    "id": "qa_int_candle_body_vs_wick",
+    "category": "intermediate",
+    "question": "What's the difference between a candle's body and its wick?",
+    "short_answer": "The body is the open-to-close range; the wick is the high and low extremes the price touched but didn't close at.",
+    "long_answer": "A long body says one side won the session decisively. Long wicks say price was rejected at those extremes \u2014 buyers pushed up but couldn't hold, or sellers drove down but couldn't close it there. A candle with a tiny body and long wicks (a doji or pin bar) is an indecision or reversal signal, not a continuation signal. Treat the close as the conviction print; treat the wicks as where conviction failed.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "candlesticks",
+      "price-action",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_doji_meaning",
+    "category": "intermediate",
+    "question": "What does a doji candle mean?",
+    "short_answer": "A doji is a candle where open and close are nearly identical \u2014 it signals indecision, not a direction.",
+    "long_answer": "A doji on its own is not a trade signal. Its meaning depends on context \u2014 a doji after an extended uptrend at resistance is a different story than a doji mid-range. The Market Analyst will read it against trend, volume, and structure. It becomes actionable only when the next candle confirms by breaking the doji's range. Invalidation: if price keeps drifting sideways, the doji was just noise.",
+    "related_lessons": [
+      "020",
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "candlesticks",
+      "doji",
+      "indecision"
+    ]
+  },
+  {
+    "id": "qa_int_which_timeframe",
+    "category": "intermediate",
+    "question": "Which timeframe should I use to read a chart?",
+    "short_answer": "Use at least two: a higher one for trend context and a lower one for entry timing. A swing trader typically pairs daily with 4-hour or 1-hour.",
+    "long_answer": "Single-timeframe reading is a common mistake \u2014 the 5-minute chart looks like a breakout while the daily shows you're inside a multi-month range. The Market Analyst aligns timeframes top-down: weekly for regime, daily for trend, intraday for trigger. If your higher timeframe disagrees with your lower one, the lower one is noise.",
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "timeframes",
+      "multi-timeframe",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_trend_definition",
+    "category": "intermediate",
+    "question": "How do I actually define a trend on a chart?",
+    "short_answer": "An uptrend is a sequence of higher highs and higher lows; a downtrend is lower highs and lower lows. Anything else is a range.",
+    "long_answer": "Trend is structural, not emotional. The Market Analyst marks swing points and asks: is each pivot higher than the last? The trend is intact until that pattern breaks \u2014 a lower low in an uptrend is the first warning, a confirmed lower high follows. A 200-day moving average rising or falling is a useful overlay but the structure of swings is the primary read.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "trend",
+      "structure",
+      "swings"
+    ]
+  },
+  {
+    "id": "qa_int_support_vs_supply_zone",
+    "category": "intermediate",
+    "question": "What's the difference between support/resistance and supply/demand zones?",
+    "short_answer": "Support and resistance are lines drawn at prior reaction prices. Supply and demand zones are bands around the origin of a strong move, not single prices.",
+    "long_answer": "S/R is reactive \u2014 it marks where price has previously stopped. Supply/demand zones are causal \u2014 they mark where institutional orders likely sit because price exploded away from that area. Both fail in the same way: a level is only meaningful until it isn't. Mark zones with rectangles, not hairline-precise lines, because real orderflow doesn't respect single prices.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "support-resistance",
+      "supply-demand",
+      "levels"
+    ]
+  },
+  {
+    "id": "qa_int_valid_breakout",
+    "category": "intermediate",
+    "question": "How do I know if a breakout is valid?",
+    "short_answer": "A valid breakout closes beyond the level on above-average volume and holds on the next candle. A wick through the level is not a breakout.",
+    "long_answer": "The Market Analyst checks three things: a close beyond the level (not just an intrabar poke), expansion in volume relative to the prior 20 candles, and a follow-through candle that doesn't immediately reclaim the level. Invalidation: if price closes back inside the prior range within 1\u20132 candles, treat it as a failed breakout \u2014 those often reverse harder than they broke out.",
+    "related_lessons": [
+      "024",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "breakout",
+      "volume",
+      "invalidation"
+    ]
+  },
+  {
+    "id": "qa_int_false_breakout",
+    "category": "intermediate",
+    "question": "What is a false breakout and how do I avoid getting trapped?",
+    "short_answer": "A false breakout pierces a level then reverses back inside the range. Wait for a close beyond the level and a holding candle before treating it as real.",
+    "long_answer": "False breakouts are common at obvious levels because stops cluster just beyond them. The Market Analyst calls a breakout only after a confirmed close plus retest hold. If you're chasing the first candle through the line, you're trading the bait. Invalidation rule: any reclaim of the prior range within two candles flips the read \u2014 the failed breakout becomes the new signal.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "false-breakout",
+      "stop-hunt",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_pullback_vs_reversal",
+    "category": "intermediate",
+    "question": "How do I tell a pullback from the start of a real reversal?",
+    "short_answer": "A pullback respects the prior trend's higher-low structure; a reversal breaks it. Watch the swing low.",
+    "long_answer": "In an uptrend, a healthy pullback retraces to a prior support or moving average, then prints a higher low. A reversal violates the most recent swing low and follows up with a lower high. The Market Analyst tracks structure first, indicators second. RSI dropping back to 50 in an uptrend is normal; structure breaking is not.",
+    "related_lessons": [
+      "022",
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "pullback",
+      "reversal",
+      "structure"
+    ]
+  },
+  {
+    "id": "qa_int_pullback_entry",
+    "category": "intermediate",
+    "question": "Where should I enter on a pullback?",
+    "short_answer": "Wait for price to reach a defined level \u2014 prior support, a moving average, or a Fibonacci zone \u2014 and confirm with a reversal candle before entering.",
+    "long_answer": "Entering mid-pullback with no level is just guessing. The Market Analyst marks the level first, then waits for price to react there with a bullish reaction candle in an uptrend (or bearish in a downtrend). Invalidation: a close through the level by more than your noise tolerance kills the setup. The stop sits just beyond the level, not below it by a hopeful margin.",
+    "related_lessons": [
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "pullback",
+      "entry",
+      "stop-placement"
+    ]
+  },
+  {
+    "id": "qa_int_volume_climax",
+    "category": "intermediate",
+    "question": "What does a volume spike at the top of a move tell me?",
+    "short_answer": "It can signal a climax \u2014 the last buyers piling in \u2014 which often precedes exhaustion. It is not a sell signal by itself.",
+    "long_answer": "Extreme volume after an extended uptrend pairs with wide-range candles and often a long upper wick. The Market Analyst treats this as a warning to tighten risk, not a flip-short signal. Invalidation: if the next several sessions hold the high on declining volume, the climax was actually continuation. Volume gives you context for what price did, never a standalone trade.",
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "volume",
+      "climax",
+      "exhaustion"
+    ]
+  },
+  {
+    "id": "qa_int_gap_types",
+    "category": "intermediate",
+    "question": "What's the difference between a breakaway gap and an exhaustion gap?",
+    "short_answer": "Breakaway gaps start moves out of consolidation on heavy volume. Exhaustion gaps appear late in a trend and tend to get filled.",
+    "long_answer": "A breakaway gap leaves a base behind and rarely fills quickly. An exhaustion gap is the crowd's final lurch \u2014 it often gets retraced within days. The Market Analyst categorizes by where the gap occurs in the trend and the volume signature. Invalidation: an 'exhaustion' gap that holds and extends on follow-through volume is reclassified as continuation.",
+    "related_lessons": [
+      "024",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "gaps",
+      "chart-reading",
+      "exhaustion"
+    ]
+  },
+  {
+    "id": "qa_int_horizontal_vs_trendline",
+    "category": "intermediate",
+    "question": "Should I use horizontal levels or trendlines?",
+    "short_answer": "Horizontal levels are more reliable because more participants see the same price. Trendlines are useful for slope but bend easily to fit bias.",
+    "long_answer": "A horizontal level marks a price every chart shows. A trendline depends on which two swings you anchored it to and how you scaled the chart. The Market Analyst uses both, but treats horizontal levels as primary structure and trendlines as secondary slope guides. If you find yourself redrawing a trendline to keep it intact, the trendline isn't telling you anything anymore.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "trendlines",
+      "support-resistance",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_range_bound",
+    "category": "intermediate",
+    "question": "How do I trade a stock that's been range-bound for weeks?",
+    "short_answer": "Either fade the edges with tight stops, or wait for a confirmed breakout. Don't trade the middle.",
+    "long_answer": "Mid-range is low information \u2014 you're equidistant from both decision points. The Market Analyst flags ranges and treats them as 'no trade' until price approaches the boundary. Invalidation for a range-fade is a closing break of the boundary on volume. Invalidation for a breakout play is an immediate return into the range. Pick the side, define the line, and respect it.",
+    "related_lessons": [
+      "023",
+      "024"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "range",
+      "consolidation",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_chart_pattern_skepticism",
+    "category": "intermediate",
+    "question": "Are chart patterns like head-and-shoulders actually reliable?",
+    "short_answer": "Patterns are descriptive, not predictive. They work better when the structure aligns with trend, volume, and a clear invalidation level.",
+    "long_answer": "A head-and-shoulders is a pattern name for a specific lower-high structure with a measurable neckline. It carries weight when volume contracts into the right shoulder and expands on the neckline break. Without those, you've drawn a pattern on noise. The Market Analyst uses pattern names as shorthand for structure, not as standalone signals.",
+    "related_lessons": [
+      "022",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "patterns",
+      "head-and-shoulders",
+      "skepticism"
+    ]
+  },
+  {
+    "id": "qa_int_higher_low_meaning",
+    "category": "intermediate",
+    "question": "Why do traders care so much about higher lows?",
+    "short_answer": "Each higher low confirms that buyers are stepping in earlier \u2014 that's the mechanical definition of an uptrend continuing.",
+    "long_answer": "The first lower low in an uptrend is the leading edge of a possible regime change. Until that happens, structure is intact. The Market Analyst uses the most recent swing low as the line in the sand \u2014 close below it and the trend read flips to neutral or down. Invalidation is built into the structure itself, which is why structure beats indicators for trend bias.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "higher-low",
+      "structure",
+      "trend"
+    ]
+  },
+  {
+    "id": "qa_int_which_moving_average",
+    "category": "intermediate",
+    "question": "Which moving average should I use \u2014 50, 100, 200?",
+    "short_answer": "Use the 200 for long-term trend, 50 for intermediate trend, and 20 for short-term momentum. There's no magic number \u2014 pick a set and stay consistent.",
+    "long_answer": "Moving averages smooth price; they don't predict it. The Market Analyst typically watches 20/50/200 on the daily because most participants do \u2014 which makes them self-fulfilling reaction points. Switching MA periods to fit each chart is a form of bias. Invalidation: a clean break and hold beyond a major MA changes regime; a single wick through it does not.",
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "moving-average",
+      "trend",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_death_cross",
+    "category": "intermediate",
+    "question": "What does a death cross actually mean?",
+    "short_answer": "A death cross is when the 50-day moving average crosses below the 200-day. It's a lagging trend signal, not a precise sell trigger.",
+    "long_answer": "By the time a death cross prints, the trend has already weakened \u2014 moving averages confirm what price already did. The Market Analyst uses it as one input on regime, not a standalone signal. The mirror \u2014 a golden cross \u2014 has the same lag. Invalidation: crosses can whipsaw in choppy markets, which is why they pair with structure rather than replacing it.",
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "death-cross",
+      "moving-average",
+      "regime"
+    ]
+  },
+  {
+    "id": "qa_int_rsi_oversold",
+    "category": "intermediate",
+    "question": "If RSI is below 30, is that automatically a buy signal?",
+    "short_answer": "No.. RSI below 30 means momentum is stretched, not that price will reverse.",
+    "long_answer": "Oversold is a description of momentum, not a forecast. The Market Analyst pairs RSI with structure \u2014 oversold at a known support level with a reversal candle is a setup; oversold mid-downtrend is just continuation. Invalidation: if price keeps making lower lows while RSI sits under 30, the indicator is confirming weakness, not predicting strength.",
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "rsi",
+      "oversold",
+      "momentum"
+    ]
+  },
+  {
+    "id": "qa_int_rsi_divergence",
+    "category": "intermediate",
+    "question": "How do I read RSI divergence?",
+    "short_answer": "Bearish divergence is price making a higher high while RSI makes a lower high.. Bullish is the inverse.",
+    "long_answer": "Divergence is a warning, not a trigger. The Market Analyst waits for price confirmation \u2014 a swing structure break \u2014 before acting on it. Divergences can persist for many bars in a strong trend; that's why standalone divergence trades fail often. Invalidation: when price prints a new high without a corresponding RSI low, the divergence is resolved and no longer a signal.",
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "rsi",
+      "divergence",
+      "momentum"
+    ]
+  },
+  {
+    "id": "qa_int_macd_basics",
+    "category": "intermediate",
+    "question": "What is MACD telling me?",
+    "short_answer": "MACD shows the relationship between two exponential moving averages. A rising MACD above zero says momentum is up; the histogram shows acceleration.",
+    "long_answer": "MACD has three components: the MACD line, the signal line, and the histogram. The Market Analyst watches zero-line crosses for regime and signal-line crosses for short-term momentum shifts. The histogram peaking and contracting often precedes a slowdown. Invalidation: MACD lags \u2014 by the time it confirms, the move is underway, so it shouldn't be your only input on a fresh entry.",
+    "related_lessons": [
+      "028"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "macd",
+      "momentum",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_macd_vs_rsi",
+    "category": "intermediate",
+    "question": "What's the difference between MACD and RSI?",
+    "short_answer": "RSI measures the speed of recent gains vs losses; MACD measures the gap between two moving averages. RSI is bounded 0\u2013100; MACD is unbounded.",
+    "long_answer": "RSI is best for spotting stretched momentum and divergences. MACD is best for trend changes and acceleration. Using both is fine \u2014 they answer different questions. Invalidation principle: if RSI says overbought and MACD says strong-trending up, the trend is winning; don't fade strength on a single indicator. Indicators should agree with structure before they earn weight.",
+    "related_lessons": [
+      "027",
+      "028",
+      "030"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "macd",
+      "rsi",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_volume_confirmation",
+    "category": "intermediate",
+    "question": "Why does volume confirm or reject a move?",
+    "short_answer": "A move on rising volume reflects broad participation. A move on shrinking volume often lacks conviction and reverses.",
+    "long_answer": "Volume is the receipt that real flow is behind a candle. The Market Analyst expects breakouts on expanding volume and pullbacks on contracting volume. Invalidation for a breakout: if volume comes in below average, treat it as suspect until follow-through arrives. Volume is context for price; it never overrides price.",
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "volume",
+      "confirmation",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_indicator_overload",
+    "category": "intermediate",
+    "question": "How many indicators should I have on my chart?",
+    "short_answer": "Two or three at most, each answering a different question \u2014 trend, momentum, volume. More indicators add noise, not edge.",
+    "long_answer": "Stacking five momentum oscillators tells you the same thing five times. The Market Analyst uses one trend tool (moving average), one momentum tool (RSI or MACD), and volume. If the indicators disagree, structure breaks the tie. Indicators are filters on price, never replacements for it.",
+    "related_lessons": [
+      "030",
+      "031"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "indicators",
+      "minimalism",
+      "chart-setup"
+    ]
+  },
+  {
+    "id": "qa_int_indicator_lag",
+    "category": "intermediate",
+    "question": "Why do my indicators always seem to be late?",
+    "short_answer": "Most indicators are mathematical transformations of past prices \u2014 they describe what already happened. That's a feature, not a bug.",
+    "long_answer": "Moving averages, MACD, and RSI all lag because they smooth or compare prior data. The Market Analyst uses them to confirm what structure is already showing, not to predict the future. A 'leading' indicator is usually just a noisier one. Invalidation rule: if your indicator is firing while structure says the opposite, the structure call wins.",
+    "related_lessons": [
+      "031"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "indicators",
+      "lag",
+      "limitations"
+    ]
+  },
+  {
+    "id": "qa_int_revenue_vs_earnings",
+    "category": "intermediate",
+    "question": "What's the difference between revenue and earnings?",
+    "short_answer": "Revenue is total sales \u2014 the top line. Earnings (net income) is what's left after all costs, taxes, and interest \u2014 the bottom line.",
+    "long_answer": "A company can grow revenue while losing money if costs scale faster than sales. The Fundamentals Analyst reads both \u2014 strong revenue growth with declining earnings is a margin story; both growing together is operational leverage. Earnings without revenue growth often means cost cuts, which has a ceiling. Always look at both lines and the gap between them.",
+    "related_lessons": [
+      "032",
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "revenue",
+      "earnings",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_gross_vs_operating_margin",
+    "category": "intermediate",
+    "question": "What's the difference between gross margin and operating margin?",
+    "short_answer": "Gross margin is revenue minus cost of goods sold. Operating margin also subtracts operating expenses like R&D, sales, and admin.",
+    "long_answer": "Gross margin tells you the profitability of the core product. Operating margin tells you how efficient the whole business is at turning that product into profit. The Fundamentals Analyst tracks both because a high gross margin with collapsing operating margin signals bloated overhead. Compare to sector peers \u2014 software gross margins routinely exceed 70%; retail rarely clears 40%.",
+    "related_lessons": [
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "margins",
+      "profitability",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_debt_red_flag",
+    "category": "intermediate",
+    "question": "When is debt actually a red flag?",
+    "short_answer": "When interest payments consume a meaningful share of operating income, or when debt is growing faster than revenue with no capex story.",
+    "long_answer": "Debt by itself is not bad \u2014 companies borrow to expand, buy back stock, or smooth cash needs. The Fundamentals Analyst checks the interest coverage ratio (operating income \u00f7 interest expense) and the trend of debt-to-equity. Red flags: coverage under 3x, rising leverage with falling margins, or short-term debt rolling at meaningfully higher rates.",
+    "related_lessons": [
+      "034",
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "debt",
+      "balance-sheet",
+      "red-flags"
+    ]
+  },
+  {
+    "id": "qa_int_balance_sheet_priority",
+    "category": "intermediate",
+    "question": "What do I look at first on a balance sheet?",
+    "short_answer": "Cash and equivalents, total debt, and shareholders' equity. Those three tell you the company's financial flexibility in 30 seconds.",
+    "long_answer": "The Fundamentals Analyst starts with the cash-versus-debt picture \u2014 net debt (debt minus cash) shows whether the company is a net borrower or has a war chest. Then equity trend over multiple quarters: rising equity means retained earnings are accumulating; falling equity could mean buybacks or losses. Inventories and receivables matter for goods businesses; intangibles and goodwill matter for acquirers.",
+    "related_lessons": [
+      "034"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "balance-sheet",
+      "fundamentals",
+      "analysis"
+    ]
+  },
+  {
+    "id": "qa_int_fcf_vs_earnings",
+    "category": "intermediate",
+    "question": "What's the difference between free cash flow and earnings?",
+    "short_answer": "Earnings is an accounting figure that includes non-cash items. Free cash flow is the actual cash left after running and reinvesting in the business.",
+    "long_answer": "Earnings can be shaped by depreciation schedules, stock-based comp, and accruals. Free cash flow (operating cash flow minus capex) is harder to manipulate. The Fundamentals Analyst compares the two \u2014 when earnings consistently exceed FCF, something is being capitalized or accrued generously. When FCF exceeds earnings sustainably, the business is more cash-generative than the income statement suggests.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "free-cash-flow",
+      "earnings",
+      "cash-flow"
+    ]
+  },
+  {
+    "id": "qa_int_real_moat",
+    "category": "intermediate",
+    "question": "How do I know if a company's moat is real?",
+    "short_answer": "A real moat shows up in numbers: pricing power, durable high margins, retention rates, or market share that doesn't erode under competition.",
+    "long_answer": "Marketing teams call everything a moat. The Bull Researcher and Fundamentals Analyst test the claim by looking for evidence: gross margins that hold or expand over 5+ years, low customer churn, switching costs that show up in renewal data, or network effects visible in usage. Invalidation: if a competitor with a smaller budget can replicate the offering within 18 months, the moat is shallower than the narrative.",
+    "related_lessons": [
+      "036"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "moat",
+      "competitive-advantage",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_moat_types",
+    "category": "intermediate",
+    "question": "What types of moats exist?",
+    "short_answer": "The common ones are network effects, switching costs, scale advantages, brand, and regulatory protection.",
+    "long_answer": "Network effects make the product more valuable as more users join. Switching costs lock customers in (data, integrations, certifications). Scale economics lower per-unit cost below what new entrants can match. Brand earns premium pricing. Regulation creates legal barriers. The Fundamentals Analyst maps which apply, then asks whether each is durable \u2014 networks can flip, brands can fade, regulation can change.",
+    "related_lessons": [
+      "036"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "moat",
+      "competitive-advantage",
+      "categorization"
+    ]
+  },
+  {
+    "id": "qa_int_valuation_meaning",
+    "category": "intermediate",
+    "question": "What does it mean for a stock to be 'overvalued'?",
+    "short_answer": "It means the current price implies growth or margins the business is unlikely to deliver. Overvalued is always relative to assumptions.",
+    "long_answer": "There is no absolute 'fair' price. The Fundamentals Analyst builds a valuation range using comps, multiples, and cash-flow models, then compares price to that range. Overvalued = price requires aggressive assumptions to justify. Invalidation: if the company actually delivers above-consensus growth, the valuation re-anchors. Don't short on 'expensive' alone \u2014 expensive stocks can stay expensive for years.",
+    "related_lessons": [
+      "037"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "overvalued",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_comps_analysis",
+    "category": "intermediate",
+    "question": "How do I do a comparable-companies analysis?",
+    "short_answer": "Pick 4\u20136 peers with similar business models and size, then compare key multiples (P/E, EV/EBITDA, P/S) and growth rates side by side.",
+    "long_answer": "The Fundamentals Analyst defines 'peer' tightly \u2014 same sector, similar revenue scale, comparable growth profile. Cross-industry comps are misleading. Multiples are only useful when growth and margins are similar; a 30 P/E for 30% growth differs from 30 P/E for 5% growth. Use the median peer multiple as a baseline, then ask why this company should trade above or below it.",
+    "related_lessons": [
+      "038"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "comps",
+      "valuation",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_top_line_vs_bottom_line",
+    "category": "intermediate",
+    "question": "Is top-line or bottom-line growth more important?",
+    "short_answer": "Top-line growth shows the business is winning customers; bottom-line shows it's profitable doing so. Both matter and the right priority depends on stage.",
+    "long_answer": "Early-stage growth companies are often valued on revenue growth because profitability is intentionally deferred. Mature companies are valued on earnings and cash flow. The Fundamentals Analyst flags the inflection \u2014 when a high-growth company stops being valued on revenue and the market starts demanding margins, multiples often compress sharply.",
+    "related_lessons": [
+      "032",
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "revenue",
+      "earnings",
+      "growth"
+    ]
+  },
+  {
+    "id": "qa_int_share_buyback_meaning",
+    "category": "intermediate",
+    "question": "What does a stock buyback actually do for me as a shareholder?",
+    "short_answer": "It reduces shares outstanding, which mechanically increases your ownership percentage and earnings per share.",
+    "long_answer": "Buybacks are a return of capital \u2014 instead of a dividend, the company shrinks the share count. The Fundamentals Analyst checks whether buybacks are funded by free cash flow (healthy) or debt (riskier), and whether they happen at sensible prices. Buying back stock at a peak destroys value; buying back at depressed valuations creates it. A buyback announcement is not the same as a completed buyback.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "buybacks",
+      "capital-allocation",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_capex_meaning",
+    "category": "intermediate",
+    "question": "Why do analysts care about capex?",
+    "short_answer": "Capex tells you how much cash a business must reinvest to stay competitive. High-capex businesses convert less of their earnings into free cash.",
+    "long_answer": "The Fundamentals Analyst separates maintenance capex (keeping the lights on) from growth capex (expanding capacity). Asset-light businesses (software, brands) generate more free cash per dollar of revenue. Asset-heavy businesses (manufacturers, utilities) need constant reinvestment. Comparing capex-to-revenue across years shows whether a company is becoming more or less capital-efficient.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "capex",
+      "capital-intensity",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_dilution_meaning",
+    "category": "intermediate",
+    "question": "What is share dilution and should I worry about it?",
+    "short_answer": "Dilution is the increase in shares outstanding \u2014 from stock-based compensation, secondary offerings, or convertibles. It reduces each existing share's claim on earnings.",
+    "long_answer": "Some dilution is normal \u2014 most companies grant equity to employees. The Fundamentals Analyst tracks the share-count trend: rising 1\u20132% a year is usually absorbed by growth, 5\u201310% is a meaningful drag. Watch for chronic SBC at high-growth tech names; the 'non-GAAP' earnings often add back dilution that has real economic cost.",
+    "related_lessons": [
+      "032"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "dilution",
+      "sbc",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_earnings_quality",
+    "category": "intermediate",
+    "question": "What does 'earnings quality' mean?",
+    "short_answer": "Earnings quality measures how closely reported earnings match actual cash generated. High quality = earnings backed by cash; low quality = earnings inflated by accruals.",
+    "long_answer": "The Fundamentals Analyst compares net income to operating cash flow over multiple quarters. When cash flow consistently trails earnings, accruals are doing the lifting \u2014 that's a yellow flag. When cash flow exceeds earnings due to favorable working-capital dynamics, that's neutral to positive. One-time gains and aggressive revenue recognition both lower quality.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "earnings-quality",
+      "accruals",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_inventory_signal",
+    "category": "intermediate",
+    "question": "Why are growing inventories sometimes a warning sign?",
+    "short_answer": "If inventories grow faster than revenue, the company may be producing more than it can sell. That often precedes markdowns.",
+    "long_answer": "The Fundamentals Analyst compares the days-inventory-outstanding trend. A retailer or hardware maker seeing inventories balloon ahead of revenue often discounts to clear, which compresses gross margin in the next quarter or two. Exceptions: pre-launch stockpiles or anticipated demand surges \u2014 context matters. The signal is the divergence, not the absolute level.",
+    "related_lessons": [
+      "033",
+      "034"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "inventory",
+      "balance-sheet",
+      "warning-signs"
+    ]
+  },
+  {
+    "id": "qa_int_pe_definition",
+    "category": "intermediate",
+    "question": "What does the P/E ratio actually measure?",
+    "short_answer": "P/E is the price you pay per dollar of trailing earnings. A P/E of 25 means you're paying $25 for $1 of last year's profit.",
+    "long_answer": "P/E compresses valuation into one number, which is its strength and its weakness. The Fundamentals Analyst never reads P/E in isolation \u2014 it has to be compared to growth rate, sector norms, and the stability of earnings. P/E is undefined when earnings are negative, and meaningless when earnings are cyclical. A low P/E can be a value signal or a warning that earnings are about to collapse.",
+    "related_lessons": [
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "valuation",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_pe_vs_forward_pe",
+    "category": "intermediate",
+    "question": "What's the difference between P/E and forward P/E?",
+    "short_answer": "P/E uses last 12 months of earnings. Forward P/E uses the next 12 months of estimated earnings.",
+    "long_answer": "Forward P/E reflects expectations; trailing P/E reflects what already happened. The Fundamentals Analyst uses both \u2014 a wide gap between them signals strong expected growth (forward lower than trailing) or a coming earnings drop (forward higher than trailing). Estimates are wrong on average, so forward P/E is less reliable when analyst dispersion is high.",
+    "related_lessons": [
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "forward-pe",
+      "valuation"
+    ]
+  },
+  {
+    "id": "qa_int_why_pe_differs",
+    "category": "intermediate",
+    "question": "Why does MSFT trade at a much higher P/E than JPM?",
+    "short_answer": "Different sectors have different P/E norms. Software businesses earn higher and more durable margins than banks, so the market pays more per dollar of earnings.",
+    "long_answer": "Comparing P/E across sectors is misleading. Banks trade on book value and net interest margin; software trades on growth and recurring revenue. The Fundamentals Analyst always anchors P/E to sector peers, not the broad market. A 'high' P/E in one industry is normal in another. Earnings durability and growth rate explain most of the gap.",
+    "related_lessons": [
+      "038",
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "sector-context",
+      "comparables"
+    ]
+  },
+  {
+    "id": "qa_int_fair_pe_tech",
+    "category": "intermediate",
+    "question": "What's a fair P/E for a tech stock?",
+    "short_answer": "There is no single fair number \u2014 it depends on growth rate, margin profile, and durability. Fundamentals Analyst compares against peer median and growth, not against an absolute target.",
+    "long_answer": "A 25% grower with 30% operating margins reasonably trades at a higher P/E than a 5% grower with 15% margins. The PEG ratio (P/E divided by growth rate) is one heuristic \u2014 a PEG near 1 is often called reasonable, though it ignores margin quality and risk. The right question isn't 'what's fair P/E' but 'what does this P/E require the business to do?'",
+    "related_lessons": [
+      "039",
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "tech",
+      "valuation"
+    ]
+  },
+  {
+    "id": "qa_int_pb_when_useful",
+    "category": "intermediate",
+    "question": "When is the price-to-book ratio actually useful?",
+    "short_answer": "P/B is most useful for asset-heavy businesses with tangible book value \u2014 banks, insurers, REITs. It's nearly meaningless for software and brand-driven companies.",
+    "long_answer": "Banks are valued on P/B because book equity backs their loans; a P/B under 1 can signal distress or hidden bad assets. For tech companies, most value sits in intangibles not on the balance sheet, so P/B understates economic reality. The Fundamentals Analyst applies the right tool to the right business \u2014 multiples are not interchangeable across sectors.",
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "price-to-book",
+      "valuation",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_good_roe",
+    "category": "intermediate",
+    "question": "What counts as a 'good' ROE?",
+    "short_answer": "Sustainable ROE above 15% is generally strong. But ROE alone can be inflated by leverage, so check the debt level alongside it.",
+    "long_answer": "ROE = net income \u00f7 shareholders' equity. A company can boost ROE by adding debt (less equity in the denominator) without actually becoming more efficient. The Fundamentals Analyst breaks ROE into the DuPont components \u2014 net margin \u00d7 asset turnover \u00d7 leverage \u2014 to see which lever is driving the number. ROE that holds up across cycles is more valuable than a high spike in one good year.",
+    "related_lessons": [
+      "041",
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "roe",
+      "profitability",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_high_de_meaning",
+    "category": "intermediate",
+    "question": "Is a high debt-to-equity ratio always bad?",
+    "short_answer": "No.. Capital-intensive industries (utilities, telecom, banks) routinely run high D/E.",
+    "long_answer": "A D/E of 2.0 is reckless for a software company and normal for a regulated utility. The Fundamentals Analyst pairs D/E with interest coverage and the maturity schedule of the debt. High D/E with low coverage and near-term maturities is the red combination. Compare D/E to sector peers; one number out of context tells you nothing.",
+    "related_lessons": [
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "debt-to-equity",
+      "leverage",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_dividend_yield_growth",
+    "category": "intermediate",
+    "question": "Does dividend yield matter for growth stocks?",
+    "short_answer": "Usually not. Growth stocks reinvest earnings into expansion rather than paying dividends \u2014 a low or zero yield is expected and often preferable.",
+    "long_answer": "Paying out cash means foregoing reinvestment opportunities. The Fundamentals Analyst evaluates dividends in the context of where the company is in its lifecycle \u2014 a mature, slow-growth business should pay dividends; a high-growth one usually shouldn't. A high yield on a growth name often signals the price has fallen sharply, not that the company is generous.",
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "dividend-yield",
+      "growth-stocks",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_payout_ratio_safe",
+    "category": "intermediate",
+    "question": "What payout ratio is safe?",
+    "short_answer": "Most stable businesses can sustain payouts under 60% of earnings. Above 80% leaves little buffer for a bad quarter.",
+    "long_answer": "Payout ratio = dividends \u00f7 earnings. The Fundamentals Analyst prefers payout as a percentage of free cash flow rather than earnings, since accounting earnings can hide cash strain. REITs and utilities sustainably run higher payouts because their cash flows are stable and regulated. A payout above 100% means dividends are being funded by debt or asset sales \u2014 that's unsustainable.",
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "payout-ratio",
+      "dividends",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_earnings_growth_quality",
+    "category": "intermediate",
+    "question": "Is fast earnings growth always a good thing?",
+    "short_answer": "Only if it's driven by revenue and margin expansion, not by buybacks, cost cuts, or one-time items. Source matters more than magnitude.",
+    "long_answer": "EPS can grow 20% while underlying business grows 5% \u2014 buybacks shrink the share count and inflate per-share figures. The Fundamentals Analyst decomposes EPS growth into revenue growth, margin change, and share-count change. Sustainable growth comes from the top two; share-count-driven growth has a ceiling. Also check whether growth is organic or acquisition-driven; acquired growth often comes with integration risk and goodwill.",
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "earnings-growth",
+      "eps",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_position_size_confidence",
+    "category": "intermediate",
+    "question": "How should I size a position if I'm only 70% confident in it?",
+    "short_answer": "Size to the loss you can take, not the confidence you have. Confidence is qualitative; position size should be a function of stop distance and risk per trade.",
+    "long_answer": "Confidence is a feeling that miscalibrates with outcomes. The Portfolio Manager sizes positions so a stop-out loses a fixed percent of equity (commonly 0.5\u20131%). If you genuinely believe one setup is better than another, the mandate-approved way to express that is a tighter stop or a higher-conviction signal score \u2014 not doubling the size. Confidence is what kills accounts; rules are what preserve them.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "position-sizing",
+      "confidence",
+      "risk"
+    ]
+  }
+]
