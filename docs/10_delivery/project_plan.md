@@ -52,56 +52,62 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 | **A16** | Push notifications. OneSignal SDK in Flutter, server-side `POST /notifications` endpoint, deep-link routing (open the specific Journal entry / Room verdict / lesson on tap). | Claude | 0.5 session | |
 | **A17** | Daily briefing flow. Background job (`apscheduler` on-prem; Cloud Scheduler at Beta) assembles a 60-second audio brief per user — pulls mandate + recent journal + open positions; renders via TTS; sends push with audio attachment URL. Delivered at user's chosen local time from their mandate. | Claude | 1 session | Depends on A14 + A16. |
 
-#### Stream 4 — Ship + observe
+#### Stream 4 — Ship to offsite testers + observe
 
 | # | Item | Who | Est | Notes |
 |---|---|---|---|---|
 | **A18** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | App Store needs this anyway. |
-| **A19** | Re-deploy iPhone release build pointing at the Cloudflare hostname (not the LAN IP). | Claude | 0.25 session | Final step. |
-| **A20** | Tester onboarding — invite copy, alpha access list (10–50 emails), feedback channel. | Saiful | external | |
+| **A19** | App Store Connect — create the app record (bundle id `ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`, English primary). One-time, 5-min web form. | Saiful | external | Blocks A21. |
+| **A20** | Install Transporter (Apple's free Mac upload tool) from the Mac App Store. | Saiful | external | Blocks A22. |
+| **A21** | Switch Flutter build to Distribution signing + App Store export. `flutter build ipa --release --export-method app-store --dart-define=AMI_API_URL=<cloudflare-hostname>`. Xcode auto-manages the Distribution cert + App Store provisioning profile once the app exists in App Store Connect. Produces `build/ios/ipa/Runner.ipa`. | Claude | 0.5 session | |
+| **A22** | Upload to App Store Connect via Transporter (drag the .ipa, click upload). | Saiful | external | ~5 min. |
+| **A23** | Add testers in TestFlight. Internal (≤100, Apple Dev team members, instant) or External (≤10k, anyone via email, first build needs a one-time Beta App Review ~24h). | Saiful | external | |
+| **A24** | Tester onboarding — invite copy, feedback channel (private Slack/Discord/email), bug-report template. | Saiful | external | |
 
-**Claude effort:** ~7 sessions of dev. **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, testers. Mostly parallel to Claude.
+**Claude effort:** ~7.5 sessions of dev. **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, App Store Connect app record, Transporter, tester invites. Mostly parallel to Claude.
 
 **Explicit non-goals for Alpha (everything else is in scope):**
-- No GCP. No Supabase. No Cloud SQL.
+- No GCP. No Cloud Run. No Cloud SQL.
+- No Supabase yet — local Postgres + the W8 auth scaffold serves Alpha. Supabase swap is the headline Beta item.
 - No payments. No RevenueCat. Floor Pass for everyone during alpha.
-- No App Store. TestFlight comes in Beta.
-- No Android. iOS only.
+- Cloud LLM stays Beta. On-prem vLLM Gemma 4 keeps serving Alpha.
+- No Android. iOS only via TestFlight.
+- No App Store production release (that's MVP).
 - No marketing / public launch.
 
 ---
 
-## Phase 2 — Beta (GCP migration)
+## Phase 2 — Beta (cloud migration, infra only)
 
-**Exit criterion:** Backend lives on Cloud Run. Postgres on Cloud SQL. LLM still on-prem (reached via Cloudflare Tunnel back to the LAN box, or migrated to Vertex if costs/latency dictate). TestFlight build distributes to ~100–500 closed testers. Staging environment exists. CI/CD pipeline pushes to production.
+**Exit criterion:** Backend runs on Cloud Run. Postgres + Auth on Supabase. LLM served from a cloud provider (Vertex AI Gemini, Anthropic, or both). On-prem hardware no longer in the request path. Same feature surface as Alpha — *nothing new ships*. Same testers, same app build (just pointed at the new backend hostname).
 
-**Why migrate now and not later:** as soon as testers exceed the LAN box's capacity or Saiful needs to be away from his hardware, the on-prem setup becomes a single point of failure. Beta is the moment to move.
+**Why this phase exists:** Saiful's LAN box is a single point of failure. The moment we need 24/7 uptime, hardware redundancy, or to scale beyond ~50 concurrent streams, the on-prem stack stops being good enough. Beta is the boring-but-essential infra cutover. Nothing user-visible changes.
 
 ### Work items
 
 | # | Item | Who | Est | Notes |
 |---|---|---|---|---|
-| **B1** | Dockerize backend. Multi-stage build, slim runtime image, healthcheck endpoint. | Claude | 0.5 session | |
-| **B2** | GCP project setup — billing, IAM, service accounts, gcloud CLI auth. | Saiful | external | |
-| **B3** | Cloud SQL Postgres provision. Alembic migrations run against it. `pg_dump` from on-prem → restore script. | Claude | 1 session | Test the migration on a copy first. |
-| **B4** | Cloud Run deploy. Cloud Build trigger from the GitHub repo (push to `main` → deploy). | Claude | 0.5 session | |
-| **B5** | Secret Manager — every API key (Resend, Sentry, etc.) moves out of `.env` into Secret Manager; Cloud Run mounts as env vars. | Claude | 0.25 session | |
-| **B6** | LLM connectivity decision. Option A: keep vLLM on-prem, reach it from Cloud Run via the existing Cloudflare Tunnel. Option B: move to Vertex Gemini. Pick based on latency + cost. | Saiful + Claude (decision) | decision call | |
-| **B7** | Cloud Logging + Monitoring dashboards. Alert rules: 5xx rate, 99p latency, LLM error rate. | Claude | 0.5 session | |
-| **B8** | CI/CD via GitHub Actions or Cloud Build. Run tests on PR; deploy on merge to main. | Claude | 0.5 session | |
-| **B9** | Staging environment — separate Cloud Run service + Cloud SQL instance + DNS. | Claude | 0.5 session | |
-| **B10** | TestFlight build. App Store Connect setup. Internal testing group → external testers. | Saiful + Claude | 0.5 session + external | First time the app goes through Apple's pipeline; iterate on metadata. |
-| **B11** | Load test 1-on-1 streaming endpoint. k6 or locust script; baseline p95 latency at 10/50/100 concurrent streams. | Claude | 0.5 session | |
-| **B12** | Sentry → cloud project; production alert rules. | Claude | 0.25 session | |
-| **B13** | Promote a few Alpha testers into Beta; cut off direct LAN access. | Saiful | external | |
+| **B1** | GCP project setup — billing, IAM, service accounts, gcloud CLI auth. | Saiful | external | |
+| **B2** | Dockerize backend. Multi-stage build, slim runtime image, healthcheck endpoint. | Claude | 0.5 session | |
+| **B3** | Cloud Run deploy. Cloud Build trigger from the GitHub repo (push to `main` → deploy). | Claude | 0.5 session | |
+| **B4** | Supabase project provision. | Saiful | external | Blocks B5/B6. |
+| **B5** | Supabase Auth swap. Replace `app/services/auth_service.py` impl with `supabase-py` admin SDK. Route contracts unchanged. Migrate the email-confirmation flow to Supabase's hosted version (drop our Resend integration here — Supabase handles confirmation emails). | Claude | 1 session | |
+| **B6** | Postgres → Supabase migration. `pg_dump` from on-prem → restore into Supabase Postgres. Switch backend connection from `postgres` superuser to `authenticated`/`anon` roles → RLS policies start enforcing. | Claude | 1 session | Test the migration on a copy first. |
+| **B7** | Cloud LLM cutover. Pick a provider for production:<br>• **Vertex Gemini** — same Google ecosystem, lowest latency to Cloud Run, comparable quality to on-prem Gemma 4.<br>• **Anthropic Claude** — strongest quality tier, higher cost.<br>• **Both** — Anthropic primary, Gemini fallback (or vice-versa) via `LLMGateway._PREFERENCE`.<br>Update `tier_to_model` for the new provider's model IDs. On-prem vLLM stays available as a dev fallback. | Saiful + Claude | decision + 0.5 session | |
+| **B8** | Secret Manager — every API key (Resend / Supabase / LLM provider / Sentry / etc.) moves out of `.env` into GCP Secret Manager; Cloud Run mounts as env vars. | Claude | 0.25 session | |
+| **B9** | Cloud Logging + Monitoring dashboards. Alert rules: 5xx rate, p99 latency, LLM error rate, Supabase auth failure rate. | Claude | 0.5 session | |
+| **B10** | CI/CD via GitHub Actions or Cloud Build. Run tests on PR; deploy on merge to main. | Claude | 0.5 session | |
+| **B11** | Staging environment — separate Cloud Run service + separate Supabase project (or schema) + DNS. | Claude | 0.5 session | |
+| **B12** | Load test 1-on-1 streaming endpoint. k6 or locust script; baseline p95 latency at 10/50/100 concurrent streams against the cloud stack. | Claude | 0.5 session | |
+| **B13** | DNS cutover. Point the Alpha Cloudflare hostname (or a new `api.<domain>`) at the Cloud Run service. The same Alpha iPhone TestFlight build now talks to GCP. | Saiful + Claude | 0.25 session + DNS | |
+| **B14** | Decommission on-prem. Keep the LAN box as a hot dev fallback, but offsite testers no longer reach it. | Saiful | external | |
 
-**Claude effort:** ~5 sessions of dev. **Saiful effort:** GCP setup, App Store Connect, TestFlight distribution, decisions.
+**Claude effort:** ~5 sessions of dev. **Saiful effort:** GCP project, Supabase project, cloud LLM provider account, decisions, DNS.
 
 **Explicit non-goals for Beta:**
-- Still no payments.
-- Still no Android.
-- Still no i18n.
-- Still no TTS / push / daily briefing.
+- No new features. Anything that wasn't in Alpha stays out of Beta. *Nothing user-visible changes.*
+- No payments. No App Store production. No Play Store.
+- TestFlight build is the same iOS app; just rebuild it once at the end of Beta with the new hostname baked in.
 
 ---
 
@@ -147,28 +153,29 @@ These rules hold across every phase:
 
 | Phase | Claude sessions | Saiful external effort | Calendar |
 |---|---|---|---|
-| Alpha | ~7 | Resend, Cloudflare, Apple cap, Dev APNs cert, Azure/ElevenLabs, OneSignal, translators, legal stub, testers | 2–3 weeks |
-| Beta | ~5 | GCP, App Store Connect, TestFlight | 2–3 weeks |
+| Alpha | ~7.5 | Resend, Cloudflare, Apple cap, Dev APNs cert, Azure/ElevenLabs, OneSignal, App Store Connect, Transporter, translators, legal stub, testers | 2–3 weeks |
+| Beta | ~5 | GCP, Supabase, cloud LLM provider, DNS | 2–3 weeks |
 | MVP | ~3 | App Store / Play / translators drop-in / legal / marketing / analytics | 3–6 weeks |
-| **Total** | **~15 sessions** | (mostly parallel to Claude) | **7–12 weeks** |
+| **Total** | **~15.5 sessions** | (mostly parallel to Claude) | **7–12 weeks** |
 
 A "session" here is a single coherent Claude work-chunk that lands one or two commits — typically 0.5–2 hours of Saiful-time.
 
-The shift from the previous draft: 3 sessions of feature work moved from MVP into Alpha (i18n structure, TTS, push, daily briefing) so Saiful can shake every feature out with the 10–50 friendly testers before the public push.
+What changed from the previous draft: TestFlight distribution moved to Alpha (it's distribution, not infra — backend can stay on-prem behind Cloudflare Tunnel while testers install via TestFlight). Beta is now strictly **GCP + Supabase + cloud LLM**, no new product surface. Nothing user-visible changes between Alpha and Beta.
 
 ---
 
 ## Phase-1 first move
 
-The first item Claude can pick up autonomously: **A1 — Convene the Room → AMI wiring**. It's the largest user-visible unlock and unblocked by external dependencies.
+The first item Claude can pick up autonomously: **A1 — Convene the Room → AMI wiring**. Largest user-visible unlock; unblocked by external dependencies.
 
-In parallel, Saiful's external setup queue (do these in this order — each unblocks specific work items):
+In parallel, Saiful's external setup queue (do in this order — each unblocks specific work items):
 
 1. **Resend account + DKIM/SPF DNS records** → unblocks A4/A5 (email confirmation).
-2. **Sign in with Apple capability on bundle id under team S7RBWM4879** → unblocks A6.
-3. **Cloudflare Tunnel + named hostname + Access policy** → unblocks A19 (re-deploy iPhone).
+2. **Sign in with Apple capability** on bundle id under team `S7RBWM4879` → unblocks A6.
+3. **Cloudflare Tunnel + named hostname + Access policy** → unblocks A22 (TestFlight build needs the cloud-reachable URL baked in).
 4. **TTS provider (Azure or ElevenLabs) account + API key** → unblocks A14.
-5. **OneSignal account + Dev APNs cert from Apple Dev** → unblocks A16.
-6. **Tester list (10–50 emails) + feedback channel** → ready when Alpha is.
-7. **Translators for AR + MS** — non-blocking; drop in any time.
-8. **Privacy policy + ToS draft (lawyer review)** — non-blocking; needed before Beta TestFlight anyway.
+5. **OneSignal account + Dev APNs cert** from Apple Dev → unblocks A16.
+6. **App Store Connect app record** (`ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`) + install **Transporter** from Mac App Store → unblocks A21/A22.
+7. **Tester list** (10–50 emails) + feedback channel → ready when Alpha is.
+8. **Translators for AR + MS** — non-blocking; drop in any time.
+9. **Privacy policy + ToS draft (lawyer review)** — non-blocking; needed for the Beta App Review submission anyway.
