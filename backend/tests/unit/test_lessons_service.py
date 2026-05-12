@@ -10,6 +10,14 @@ from app.schemas.lessons import QuizSubmitRequest
 from app.services.lessons_service import LessonsService, get_lessons_service
 
 
+# Stable handle for the pre-W18 "Market Orders vs Limit Orders" lesson.
+# W17/W18's curriculum_map renumbered every original lesson into the 280-292
+# range to free up 001-079 for new modules. The CONTENT (quiz + chat_with
+# blocks) is unchanged — tests that exercise parsing / quiz submit pin to
+# this lesson because we control its shape.
+LEGACY_MARKET_ORDER_LESSON = "283_market_order_vs_limit"
+
+
 @pytest.fixture
 def svc() -> LessonsService:
     s = get_lessons_service()
@@ -18,35 +26,56 @@ def svc() -> LessonsService:
 
 
 def test_catalogue_lists_foundations_track(svc: LessonsService):
+    """Foundations track exists and carries enough lessons for the UI."""
     cat = svc.catalogue()
     assert cat.total_lessons >= 5
     tracks = {t.track for t in cat.tracks}
     assert "foundations" in tracks
     foundations = next(t for t in cat.tracks if t.track == "foundations")
-    assert {l.id for l in foundations.lessons} >= {
-        "001_what_is_a_stock",
-        "002_what_is_a_market",
-        "003_what_is_a_brokerage",
-        "004_market_order_vs_limit",
-        "005_what_makes_a_price_move",
-    }
+    assert len(foundations.lessons) >= 5
+    # The renumbered pre-W18 lessons stay reachable so the parsing tests
+    # below still resolve.
+    assert LEGACY_MARKET_ORDER_LESSON in {l.id for l in foundations.lessons}
 
 
-def test_lesson_meta_defaults_module_zero_and_difficulty_to_level(svc: LessonsService):
+def test_lesson_meta_defaults_module_zero_and_difficulty_to_level(tmp_path):
     """A20 — Legacy lessons (pre-W18 curriculum_map) omit module + difficulty.
-    The loader must hydrate sensible defaults so the UI can keep sorting.
+    The loader hydrates module=0 and difficulty=level so the UI can sort
+    consistently. We test against a temp MDX with the legacy frontmatter
+    shape rather than a committed lesson — the committed legacy lessons
+    have been renumbered, and the W18 set declares module explicitly.
     """
-    legacy = svc.get("001_what_is_a_stock")
-    assert legacy is not None
-    assert legacy.meta.module == 0
-    assert legacy.meta.difficulty == legacy.meta.level
+    from app.services.lessons_service import parse_mdx
+
+    mdx = tmp_path / "999_legacy_test.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "999_legacy_test"\n'
+        'title: "Legacy frontmatter"\n'
+        'duration_min: 3\n'
+        'level: 2\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'Body.\n',
+        encoding="utf-8",
+    )
+    lesson = parse_mdx(mdx)
+    assert lesson.meta.module == 0
+    assert lesson.meta.difficulty == lesson.meta.level == 2
 
 
 def test_lesson_meta_reads_module_and_difficulty_when_present(svc: LessonsService):
     """W18+ lessons declare module + difficulty explicitly."""
-    lesson = svc.get("014_position_sizing_basics")
-    if lesson is None:
+    # Find any lesson the loader returns with module > 0 — the W18 set
+    # populates module on every new lesson. If none exist (only the
+    # renumbered legacy lessons committed), skip — A20's defaulting is
+    # covered by the test above.
+    candidates = [m for m in svc.all_meta() if m.module > 0]
+    if not candidates:
         pytest.skip("W17/W18 lesson set not committed in this branch state")
+    lesson = svc.get(candidates[0].id)
+    assert lesson is not None
     assert lesson.meta.module > 0
     assert lesson.meta.difficulty > 0
 
@@ -81,7 +110,7 @@ def test_lesson_parses_animation_mdx_block(tmp_path):
 
 
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
-    lesson = svc.get("004_market_order_vs_limit")
+    lesson = svc.get(LEGACY_MARKET_ORDER_LESSON)
     assert lesson is not None
     assert len(lesson.quizzes) == 2
     assert lesson.quizzes[0].options[1] == "Your order fills immediately at $152"
@@ -96,14 +125,14 @@ def test_quiz_submit_correct_passes(svc: LessonsService):
     user_id = uuid4()
     result = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
-        lesson_id="004_market_order_vs_limit",
+        lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=[1, 1],
     ))
     assert result.correct == 2
     assert result.total == 2
     assert result.passed
     assert result.score == 1.0
-    status = svc.get_status(user_id, "004_market_order_vs_limit")
+    status = svc.get_status(user_id, LEGACY_MARKET_ORDER_LESSON)
     assert status is not None
     assert status.quiz_passed
     assert status.completed_at is not None
@@ -113,7 +142,7 @@ def test_quiz_submit_wrong_does_not_pass(svc: LessonsService):
     user_id = uuid4()
     result = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
-        lesson_id="004_market_order_vs_limit",
+        lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=[0, 0],
     ))
     assert not result.passed
@@ -144,11 +173,11 @@ def _isolate_trader_callouts(svc: LessonsService, *keep_ids: str) -> None:
 
 def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     """With 004 as the sole trader-callout lesson, passing it unlocks Trader."""
-    _isolate_trader_callouts(svc, "004_market_order_vs_limit")
+    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
     user_id = uuid4()
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
-        lesson_id="004_market_order_vs_limit",
+        lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=[1, 1],
     ))
     assert "trader" in res.unlocked_agents
@@ -157,7 +186,7 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     # Doesn't unlock twice on a re-pass
     res2 = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
-        lesson_id="004_market_order_vs_limit",
+        lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=[1, 1],
     ))
     assert res2.unlocked_agents == []
@@ -168,17 +197,17 @@ def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsS
     not enough — the activation only fires after every required lesson
     is passed.
     """
-    _isolate_trader_callouts(svc, "004_market_order_vs_limit")
+    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
     user_id = uuid4()
     # Inject a second required trader-callout lesson alongside 004
-    fake = svc.get("004_market_order_vs_limit").model_copy(deep=True)
+    fake = svc.get(LEGACY_MARKET_ORDER_LESSON).model_copy(deep=True)
     fake.meta.id = "999_fake_trader_lesson"
     fake.meta.agent_callouts = ["trader"]
     svc._lessons["999_fake_trader_lesson"] = fake
 
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
-        lesson_id="004_market_order_vs_limit",
+        lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=[1, 1],
     ))
     assert res.unlocked_agents == []  # second lesson not done
@@ -195,10 +224,10 @@ def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsS
 def test_progress_summary_tracks_completion(svc: LessonsService):
     user_id = uuid4()
     svc.submit_quiz(QuizSubmitRequest(
-        user_id=user_id, lesson_id="001_what_is_a_stock", answers=[0],
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
     ))
     summary = svc.progress_summary(user_id)
-    assert summary.lessons_completed >= 0  # 001 has a quiz, may or may not pass
+    assert summary.lessons_completed >= 1
     assert summary.lessons_total >= 5
     assert "foundations" in summary.by_track
 
