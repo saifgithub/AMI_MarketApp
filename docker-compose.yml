@@ -103,6 +103,18 @@ services:
       # because Compose evaluates interpolation even for profile-gated
       # services, which would block plain `docker compose config`.
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
+    # On plain Docker Engine for Linux (e.g. Ubuntu / melehost),
+    # `host.docker.internal` is NOT provided automatically — only
+    # Docker Desktop on Mac / Windows ships it. We add it explicitly
+    # via the `host-gateway` keyword so the same dashboard ingress
+    # rule (`http://host.docker.internal:8000`) works whether the
+    # cloudflared container runs on Docker Desktop or Docker Engine.
+    # When the backend is also brought up under this compose stack as
+    # the `api-alpha` service, the CF dashboard URL should be flipped
+    # to `http://api-alpha:8000` and this extra_hosts entry becomes
+    # an unused leftover.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       api-alpha:
         condition: service_healthy

@@ -34,9 +34,10 @@ Fill it in like this:
 
 | If the tunnel runs as… | Service URL | Why |
 |---|---|---|
-| **Docker compose** (`docker compose --profile tunnel up -d`) | `http://api-alpha:8000` | The `cloudflared` container and the backend container share the Compose network; `api-alpha` is the service name in `docker-compose.yml` (chosen to match the public hostname). |
-| **Systemd on melehost** (backend also on host, A8 path) | `http://localhost:8000` | Both processes on the same host; backend binds `0.0.0.0:8000`. |
-| **Mixed — backend in Docker, tunnel via systemd** | `http://localhost:8000` | The compose port-map (`8000:8000`) publishes the container port to the host, where systemd's cloudflared can reach it. |
+| **Compose tunnel + Compose backend** (`docker compose --profile tunnel up -d` — full stack) | `http://api-alpha:8000` | Both containers share the Compose network; `api-alpha` is the backend service name in `docker-compose.yml` (chosen to match the public hostname). The cleanest long-term shape. |
+| **Compose tunnel + host backend** (cloudflared container, backend running on the host as systemd / uvicorn / etc.) | `http://host.docker.internal:8000` | The compose file's cloudflared service declares `extra_hosts: host.docker.internal:host-gateway`, so this name resolves to the host on plain Docker Engine (Linux) as well as Docker Desktop (Mac/Windows). |
+| **Systemd tunnel + host backend** (production launch on melehost via the systemd units in this directory) | `http://localhost:8000` | Both processes on the same host; backend binds `0.0.0.0:8000`. No Docker, no DNS magic. |
+| **Systemd tunnel + Compose backend** | `http://localhost:8000` | Backend container publishes `8000:8000` to the host, where systemd's cloudflared can reach it. |
 
 Use **`http://`**, not `https://`. TLS terminates at the Cloudflare
 edge; the tunnel-to-backend hop is plain HTTP over the encrypted
