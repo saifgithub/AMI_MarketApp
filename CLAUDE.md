@@ -76,9 +76,10 @@ Other essentials:
 
 1. Read this file (already loaded).
 2. Read [`HANDOVER.md`](HANDOVER.md) for the freshest state + immediate next steps.
-3. `git log --oneline` to verify the commit chain.
-4. Find the topic-specific doc(s) in `docs/` for your task.
-5. Ask Saiful what he wants to work on if it's not obvious. He decides priorities.
+3. Skim [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
+4. `git log --oneline` to verify the commit chain.
+5. Find the topic-specific doc(s) in `docs/` for your task.
+6. Ask Saiful what he wants to work on if it's not obvious. He decides priorities.
 
 ---
 
