@@ -69,6 +69,7 @@ flutter:
     - assets/icons/
     - assets/hex_mesh.svg
     - assets/logo_hex.svg
+    - assets/glossary/terms.en.json
 
   fonts:
     - family: Inter

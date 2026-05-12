@@ -1,0 +1,1745 @@
+[
+  {
+    "id": "ami",
+    "term": "AMI",
+    "definition": "AMI is the brand name of the AI in AMI Trade — a training simulator built on a 12-agent analyst team that the user runs as CEO. AMI is not a registered investment advisor and does not provide investment advice; every output it produces is a training artifact for the user to evaluate. The brand is always 'AMI', never 'the AI' or 'the chatbot'.",
+    "category": "platform",
+    "see_also": ["ami_verdict", "ami_mandate", "ami_pm_safety_floor", "ami_training_verdict", "ami_convene_the_room"],
+    "related_lessons": ["072", "073", "076", "279"],
+    "related_agents": ["concierge"],
+    "tags": ["brand", "definition", "ami_internal", "training_simulator"]
+  },
+  {
+    "id": "training_simulator",
+    "term": "Training simulator",
+    "definition": "An educational software environment that simulates a real-world domain so users can practice the underlying skills without operational consequences. AMI is a training simulator for the skill of evaluating output from a multi-agent analyst team — not an advice service and not a brokerage.",
+    "category": "platform",
+    "see_also": ["ami", "ami_training_verdict", "training_artifact"],
+    "related_lessons": ["072", "076", "279"],
+    "related_agents": ["concierge"],
+    "tags": ["regulatory_framing", "training_simulator", "ami_internal"]
+  },
+  {
+    "id": "training_artifact",
+    "term": "Training artifact",
+    "definition": "Any output AMI produces — a Verdict, an entry price, a stop, a target, a debate transcript — framed as practice material for the user's evaluation skill rather than as actionable trading guidance. The user's job is to evaluate the artifact; the artifact's job is to give the user practice.",
+    "category": "platform",
+    "see_also": ["ami", "ami_verdict", "ami_training_verdict", "training_simulator"],
+    "related_lessons": ["072", "076", "279"],
+    "related_agents": ["concierge"],
+    "tags": ["regulatory_framing", "training_artifact", "ami_internal"]
+  },
+  {
+    "id": "twelve_agent_team",
+    "term": "12-agent analyst team",
+    "definition": "The structure of AMI: twelve specialist agents organised as Analysts (Fundamentals, Market, News, Social Media), Researchers (Bull, Bear, Research Manager), Risk Debators (Aggressive, Conservative, Neutral), the Trader, and the Portfolio Manager. The user is the thirteenth seat — the CEO who evaluates the team's output. Twelve agents exist to surface cognitive diversity, not because more agents are always better.",
+    "category": "platform",
+    "see_also": ["ami", "ami_convene_the_room", "ami_verdict"],
+    "related_lessons": ["072", "268", "269"],
+    "related_agents": ["concierge", "research_manager"],
+    "tags": ["architecture", "ami_internal", "12_agents"]
+  },
+  {
+    "id": "concierge_agent",
+    "term": "The Concierge",
+    "definition": "AMI's onboarding and routing agent. The Concierge runs the conversational interview that sets up a user's Mandate, surfaces glossary definitions on demand, and routes specific questions to the relevant trading-team agent. The Concierge is not part of the trading-team debate.",
+    "category": "platform",
+    "see_also": ["ami", "ami_mandate", "twelve_agent_team"],
+    "related_lessons": ["072"],
+    "related_agents": ["concierge"],
+    "tags": ["agents", "concierge", "ami_internal", "onboarding"]
+  },
+  {
+    "id": "ceo_framing",
+    "term": "CEO framing (CEO of evaluation)",
+    "definition": "AMI's organising metaphor: the user is the CEO of a 12-agent analyst team. The metaphor is structural, not decorative — the user actually sets the Mandate, chooses whether to convene the Room, evaluates the Verdict, and accepts/modifies/rejects it. AMI is teaching the skill of being the CEO of evaluation, not of execution.",
+    "category": "platform",
+    "see_also": ["ami", "ami_mandate", "ami_verdict", "training_simulator"],
+    "related_lessons": ["076", "279"],
+    "related_agents": ["concierge"],
+    "tags": ["framing", "ami_internal", "ceo"]
+  },
+  {
+    "id": "multi_agent_system",
+    "term": "Multi-agent system",
+    "definition": "A software architecture in which multiple specialised AI agents work together on a problem, each with a distinct role, prompt, and output surface. AMI is a multi-agent system organised around twelve trading-team roles plus the Concierge.",
+    "category": "advanced",
+    "see_also": ["ami", "twelve_agent_team"],
+    "related_lessons": ["072", "268"],
+    "related_agents": [],
+    "tags": ["architecture", "ai_systems"]
+  },
+  {
+    "id": "simulated_trade",
+    "term": "Simulated trade",
+    "definition": "A trade that exists only inside AMI's training simulator — no broker, no order, no real money moves. Simulated trades have entry, stop, target, and outcome math identical to real trades, but the purpose is to train the user's evaluation skill, not to execute a position.",
+    "category": "platform",
+    "see_also": ["ami", "training_simulator", "ami_verdict", "training_artifact"],
+    "related_lessons": ["072", "076"],
+    "related_agents": [],
+    "tags": ["simulation", "ami_internal", "training"]
+  },
+  {
+    "id": "stock",
+    "term": "Stock",
+    "definition": "A unit of ownership in a publicly traded company. Owning a stock represents a fractional claim on the company's assets and earnings.",
+    "category": "basics",
+    "see_also": ["share", "equity", "common_stock", "preferred_stock"],
+    "related_lessons": ["001", "002"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "share",
+    "term": "Share",
+    "definition": "A single unit of a company's stock. The total number of shares outstanding multiplied by share price equals market capitalization.",
+    "category": "basics",
+    "see_also": ["stock", "share_price", "market_cap"],
+    "related_lessons": ["001"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "equity",
+    "term": "Equity",
+    "definition": "An ownership interest in a company. In accounting, equity equals assets minus liabilities; in markets, equity refers to publicly traded shares.",
+    "category": "basics",
+    "see_also": ["stock", "share", "book_value"],
+    "related_lessons": ["001", "040"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "market",
+    "term": "Market",
+    "definition": "Any venue where buyers and sellers transact securities. In equity context, refers to the aggregate of exchanges where shares are traded.",
+    "category": "basics",
+    "see_also": ["exchange", "order_book"],
+    "related_lessons": ["003"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "exchange",
+    "term": "Exchange",
+    "definition": "A regulated marketplace where securities are listed and traded, such as NYSE or NASDAQ. Exchanges match buyers with sellers via the order book.",
+    "category": "basics",
+    "see_also": ["market", "order_book", "ticker"],
+    "related_lessons": ["003"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "brokerage",
+    "term": "Brokerage",
+    "definition": "A licensed firm that executes buy and sell orders on behalf of clients. Brokerages route orders to exchanges and custody client assets.",
+    "category": "basics",
+    "see_also": ["unregistered_broker", "clone_broker"],
+    "related_lessons": ["004"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "ticker",
+    "term": "Ticker",
+    "definition": "The short alphabetic symbol that identifies a listed security on an exchange. AAPL is the ticker for Apple Inc.",
+    "category": "basics",
+    "see_also": ["exchange", "stock"],
+    "related_lessons": ["003"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "market_cap",
+    "term": "Market capitalization",
+    "definition": "The total dollar value of a company's outstanding shares, calculated as share price multiplied by shares outstanding. Used to categorize companies as large-cap, mid-cap, or small-cap.",
+    "category": "basics",
+    "see_also": ["share", "share_price"],
+    "related_lessons": ["005"],
+    "tags": ["beginner", "vocabulary", "sizing"]
+  },
+  {
+    "id": "ipo",
+    "term": "IPO (initial public offering)",
+    "definition": "The first sale of a company's shares to the public on a stock exchange. After the IPO, shares trade freely in the secondary market.",
+    "category": "basics",
+    "see_also": ["exchange", "share"],
+    "related_lessons": ["006"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "dividend",
+    "term": "Dividend",
+    "definition": "A cash or stock payment distributed by a company to its shareholders out of profits. Paid on a per-share basis, typically quarterly in the US.",
+    "category": "basics",
+    "see_also": ["dividend_yield", "common_stock", "preferred_stock"],
+    "related_lessons": ["007"],
+    "tags": ["beginner", "vocabulary", "income"]
+  },
+  {
+    "id": "share_price",
+    "term": "Share price",
+    "definition": "The price at which a single share trades in the market at a given moment. Determined continuously by the highest bid and lowest ask in the order book.",
+    "category": "basics",
+    "see_also": ["bid", "ask", "spread"],
+    "related_lessons": ["003"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "bid",
+    "term": "Bid",
+    "definition": "The highest price a buyer is currently willing to pay for a security. The bid sits below the ask in the order book.",
+    "category": "basics",
+    "see_also": ["ask", "spread", "order_book"],
+    "related_lessons": ["008"],
+    "tags": ["beginner", "vocabulary", "microstructure"]
+  },
+  {
+    "id": "ask",
+    "term": "Ask",
+    "definition": "The lowest price a seller is currently willing to accept for a security. Also called the offer.",
+    "category": "basics",
+    "see_also": ["bid", "spread", "order_book"],
+    "related_lessons": ["008"],
+    "tags": ["beginner", "vocabulary", "microstructure"]
+  },
+  {
+    "id": "spread",
+    "term": "Bid-ask spread",
+    "definition": "The difference between the best bid and best ask price for a security. Narrow spreads typically indicate higher liquidity.",
+    "category": "basics",
+    "see_also": ["bid", "ask", "order_book"],
+    "related_lessons": ["008"],
+    "tags": ["beginner", "vocabulary", "microstructure", "liquidity"]
+  },
+  {
+    "id": "share_class",
+    "term": "Share class",
+    "definition": "A distinct category of shares issued by the same company, often differing in voting rights or dividend entitlement. Class A and Class B shares are common examples.",
+    "category": "basics",
+    "see_also": ["common_stock", "preferred_stock"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "common_stock",
+    "term": "Common stock",
+    "definition": "The standard share class representing ownership with voting rights and a residual claim on assets after debts and preferred dividends are paid. Most publicly traded shares are common stock.",
+    "category": "basics",
+    "see_also": ["preferred_stock", "share_class", "equity"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "preferred_stock",
+    "term": "Preferred stock",
+    "definition": "A share class with priority over common stock for dividend payments and asset claims in liquidation, usually without voting rights. Often carries a fixed dividend.",
+    "category": "basics",
+    "see_also": ["common_stock", "share_class", "dividend"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "etf",
+    "term": "ETF (exchange-traded fund)",
+    "definition": "A pooled investment vehicle that trades on an exchange like a stock and holds a basket of underlying assets such as stocks, bonds, or commodities. Most ETFs track an index.",
+    "category": "basics",
+    "see_also": ["mutual_fund", "index", "index_fund"],
+    "related_lessons": ["010"],
+    "tags": ["beginner", "vocabulary", "fund"]
+  },
+  {
+    "id": "mutual_fund",
+    "term": "Mutual fund",
+    "definition": "A pooled investment vehicle that holds a basket of securities and prices once per day after the close. Unlike ETFs, mutual funds do not trade intraday.",
+    "category": "basics",
+    "see_also": ["etf", "index_fund"],
+    "related_lessons": ["010"],
+    "tags": ["beginner", "vocabulary", "fund"]
+  },
+  {
+    "id": "index",
+    "term": "Index",
+    "definition": "A measured basket of securities used as a benchmark for a market or segment. The S&P 500 tracks 500 large US companies; the Nasdaq Composite tracks listed Nasdaq stocks.",
+    "category": "basics",
+    "see_also": ["index_fund", "etf", "market_breadth"],
+    "related_lessons": ["011"],
+    "tags": ["beginner", "vocabulary", "benchmark"]
+  },
+  {
+    "id": "index_fund",
+    "term": "Index fund",
+    "definition": "A fund designed to replicate the performance of a specific index by holding the same constituents in the same weights. Available as mutual funds or ETFs.",
+    "category": "basics",
+    "see_also": ["index", "etf", "mutual_fund"],
+    "related_lessons": ["011"],
+    "tags": ["beginner", "vocabulary", "fund", "passive"]
+  },
+  {
+    "id": "watchlist",
+    "term": "Watchlist",
+    "definition": "A curated list of securities a trader monitors for potential analysis or future trades. In AMI Trade, the watchlist drives which tickers the agent room may research.",
+    "category": "basics",
+    "see_also": ["ami_watchlist"],
+    "tags": ["beginner", "vocabulary", "workflow"]
+  },
+  {
+    "id": "portfolio",
+    "term": "Portfolio",
+    "definition": "The complete set of positions held by an investor or simulated account, including cash. Portfolio composition determines aggregate risk and return.",
+    "category": "basics",
+    "see_also": ["position", "return", "drawdown_recovery_math"],
+    "related_lessons": ["012"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "position",
+    "term": "Position",
+    "definition": "A holding in a specific security, expressed as a number of shares and their current value. A long position profits when price rises; a short position profits when price falls.",
+    "category": "basics",
+    "see_also": ["portfolio", "atr_based_sizing"],
+    "related_lessons": ["012", "014"],
+    "tags": ["beginner", "vocabulary"]
+  },
+  {
+    "id": "return",
+    "term": "Return",
+    "definition": "The percentage change in value of an investment over a period, including price change plus dividends. May be reported as total return, annualized return, or risk-adjusted return.",
+    "category": "basics",
+    "see_also": ["portfolio", "drawdown_recovery_math"],
+    "related_lessons": ["013"],
+    "tags": ["beginner", "vocabulary", "performance"]
+  },
+
+  {
+    "id": "market_order",
+    "term": "Market order",
+    "definition": "An instruction to buy or sell immediately at the best available price. Execution is prioritized over price, so the fill price may differ from the last quote.",
+    "category": "order_types",
+    "see_also": ["limit_order", "stop_order", "spread"],
+    "related_lessons": ["015"],
+    "tags": ["order", "execution"]
+  },
+  {
+    "id": "limit_order",
+    "term": "Limit order",
+    "definition": "An instruction to buy at no more than, or sell at no less than, a specified price. Price is guaranteed but execution is not.",
+    "category": "order_types",
+    "see_also": ["market_order", "stop_limit", "order_book"],
+    "related_lessons": ["015"],
+    "tags": ["order", "execution"]
+  },
+  {
+    "id": "stop_order",
+    "term": "Stop order",
+    "definition": "A resting order that becomes a market order once a specified stop price is touched. Used to trigger entries or exits at a chosen trigger level.",
+    "category": "order_types",
+    "see_also": ["stop_limit", "trailing_stop", "market_order"],
+    "related_lessons": ["016"],
+    "tags": ["order", "execution", "risk"]
+  },
+  {
+    "id": "stop_limit",
+    "term": "Stop-limit order",
+    "definition": "A two-part order that activates a limit order once the stop price is touched. Combines the trigger of a stop with the price control of a limit.",
+    "category": "order_types",
+    "see_also": ["stop_order", "limit_order"],
+    "related_lessons": ["016"],
+    "tags": ["order", "execution"]
+  },
+  {
+    "id": "gtc",
+    "term": "GTC (good 'til canceled)",
+    "definition": "An order duration that remains active until the trader cancels it or it executes. Many brokerages cap GTC orders at 60 to 90 days.",
+    "category": "order_types",
+    "see_also": ["gtt", "day_order"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "gtt",
+    "term": "GTT (good 'til triggered)",
+    "definition": "An order that remains active until a specified trigger condition is met. Common in retail platforms for stop entries with extended validity.",
+    "category": "order_types",
+    "see_also": ["gtc", "stop_order"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "ioc",
+    "term": "IOC (immediate-or-cancel)",
+    "definition": "An order that must execute immediately on entry; any unfilled portion is canceled. Allows partial fills.",
+    "category": "order_types",
+    "see_also": ["fok", "market_order"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "fok",
+    "term": "FOK (fill-or-kill)",
+    "definition": "An order that must execute in full immediately or be canceled in full. Partial fills are not permitted.",
+    "category": "order_types",
+    "see_also": ["ioc", "all_or_none"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "day_order",
+    "term": "Day order",
+    "definition": "An order that automatically expires at the end of the trading session if not executed. The default duration on most platforms.",
+    "category": "order_types",
+    "see_also": ["gtc", "market_order"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "all_or_none",
+    "term": "All-or-none (AON)",
+    "definition": "An order condition requiring full execution or no execution. Differs from FOK in that AON orders may rest in the book waiting for full liquidity.",
+    "category": "order_types",
+    "see_also": ["fok", "ioc"],
+    "tags": ["order", "duration"]
+  },
+  {
+    "id": "trailing_stop",
+    "term": "Trailing stop",
+    "definition": "A stop order whose trigger price moves with the security's price by a fixed amount or percentage in the favorable direction, and stays put when the price moves against. Locks in unrealized gains as the trend extends.",
+    "category": "order_types",
+    "see_also": ["stop_order", "atr_based_sizing"],
+    "related_lessons": ["017"],
+    "tags": ["order", "execution", "risk"]
+  },
+  {
+    "id": "order_book",
+    "term": "Order book",
+    "definition": "The real-time list of unexecuted buy and sell limit orders for a security, organized by price level. Reveals available liquidity above and below the current quote.",
+    "category": "order_types",
+    "see_also": ["bid", "ask", "spread", "market_order"],
+    "tags": ["microstructure", "liquidity"]
+  },
+
+  {
+    "id": "candlestick",
+    "term": "Candlestick",
+    "definition": "A price chart format showing open, high, low, and close for a given period. The body spans open-to-close; wicks extend to the period's high and low.",
+    "category": "technical",
+    "see_also": ["doji", "hammer", "shooting_star", "engulfing"],
+    "related_lessons": ["020"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "chart", "pattern"]
+  },
+  {
+    "id": "doji",
+    "term": "Doji",
+    "definition": "A candlestick where the open and close are at or near the same price, producing a very small or absent body. Indicates equilibrium between buyers and sellers for that period.",
+    "category": "technical",
+    "see_also": ["candlestick", "hammer", "shooting_star"],
+    "related_lessons": ["020"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "candlestick", "pattern"]
+  },
+  {
+    "id": "hammer",
+    "term": "Hammer",
+    "definition": "A candlestick with a small body near the top of the range and a long lower wick at least twice the body's length, typically appearing after a downtrend. Reflects intra-period rejection of lower prices.",
+    "category": "technical",
+    "see_also": ["candlestick", "shooting_star", "engulfing"],
+    "related_lessons": ["020"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "candlestick", "pattern", "reversal"]
+  },
+  {
+    "id": "shooting_star",
+    "term": "Shooting star",
+    "definition": "A candlestick with a small body near the bottom of the range and a long upper wick at least twice the body's length, typically appearing after an uptrend. Reflects intra-period rejection of higher prices.",
+    "category": "technical",
+    "see_also": ["candlestick", "hammer", "doji"],
+    "related_lessons": ["020"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "candlestick", "pattern", "reversal"]
+  },
+  {
+    "id": "engulfing",
+    "term": "Engulfing pattern",
+    "definition": "A two-candle pattern where the second candle's body completely covers the first candle's body and closes in the opposite direction. Bullish engulfing follows a downtrend; bearish engulfing follows an uptrend.",
+    "category": "technical",
+    "see_also": ["candlestick", "hammer", "doji"],
+    "related_lessons": ["020"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "candlestick", "pattern", "reversal"]
+  },
+  {
+    "id": "trend",
+    "term": "Trend",
+    "definition": "The persistent directional bias of price over a chosen timeframe, classified as uptrend, downtrend, or sideways. Trend is timeframe-dependent: an asset can be in an uptrend on the daily chart and a downtrend intraday.",
+    "category": "technical",
+    "see_also": ["uptrend", "downtrend", "sideways", "trend_following"],
+    "related_lessons": ["021"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "trend"]
+  },
+  {
+    "id": "uptrend",
+    "term": "Uptrend",
+    "definition": "A sequence of higher highs and higher lows over a chosen timeframe. Indicates net demand exceeds net supply within that window.",
+    "category": "technical",
+    "see_also": ["trend", "downtrend", "sideways"],
+    "related_lessons": ["021"],
+    "tags": ["technical", "trend"]
+  },
+  {
+    "id": "downtrend",
+    "term": "Downtrend",
+    "definition": "A sequence of lower highs and lower lows over a chosen timeframe. Indicates net supply exceeds net demand within that window.",
+    "category": "technical",
+    "see_also": ["trend", "uptrend", "sideways"],
+    "related_lessons": ["021"],
+    "tags": ["technical", "trend"]
+  },
+  {
+    "id": "sideways",
+    "term": "Sideways market",
+    "definition": "Price oscillating within a horizontal range with no clear directional bias, also called range-bound. Highs and lows cluster around similar levels.",
+    "category": "technical",
+    "see_also": ["trend", "range_bound", "support", "resistance"],
+    "related_lessons": ["021"],
+    "tags": ["technical", "trend", "regime"]
+  },
+  {
+    "id": "support",
+    "term": "Support",
+    "definition": "A price level where buying interest has historically been sufficient to halt declines. Identified from prior swing lows or technical reference points.",
+    "category": "technical",
+    "see_also": ["resistance", "breakout", "pullback"],
+    "related_lessons": ["022"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "level"]
+  },
+  {
+    "id": "resistance",
+    "term": "Resistance",
+    "definition": "A price level where selling interest has historically been sufficient to halt advances. Identified from prior swing highs or technical reference points.",
+    "category": "technical",
+    "see_also": ["support", "breakout", "retest"],
+    "related_lessons": ["022"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "level"]
+  },
+  {
+    "id": "breakout",
+    "term": "Breakout",
+    "definition": "Price closing decisively beyond a defined support or resistance level. Often accompanied by elevated volume.",
+    "category": "technical",
+    "see_also": ["pullback", "retest", "breakout_strategy", "volume"],
+    "related_lessons": ["023"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "pattern"]
+  },
+  {
+    "id": "pullback",
+    "term": "Pullback",
+    "definition": "A short-term counter-trend move within a larger prevailing trend. In an uptrend, prices retrace lower before resuming higher.",
+    "category": "technical",
+    "see_also": ["retest", "trend", "pullback_strategy"],
+    "related_lessons": ["024"],
+    "tags": ["technical", "pattern"]
+  },
+  {
+    "id": "retest",
+    "term": "Retest",
+    "definition": "A return to a previously broken level after a breakout, where former resistance may act as support, or former support may act as resistance.",
+    "category": "technical",
+    "see_also": ["breakout", "support", "resistance"],
+    "related_lessons": ["023"],
+    "tags": ["technical", "pattern"]
+  },
+  {
+    "id": "moving_average",
+    "term": "Moving average",
+    "definition": "A technical indicator that averages closing prices over a chosen lookback window, plotted as a line that updates each period. Smooths short-term fluctuations to expose the underlying trend.",
+    "category": "technical",
+    "see_also": ["sma", "ema", "trend"],
+    "related_lessons": ["025"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "indicator", "trend"]
+  },
+  {
+    "id": "sma",
+    "term": "SMA (simple moving average)",
+    "definition": "A moving average where each closing price in the lookback window has equal weight. SMA(20) is the unweighted average of the last 20 closes.",
+    "category": "technical",
+    "see_also": ["moving_average", "ema"],
+    "related_lessons": ["025"],
+    "tags": ["technical", "indicator", "trend"]
+  },
+  {
+    "id": "ema",
+    "term": "EMA (exponential moving average)",
+    "definition": "A moving average that applies exponentially decaying weights, giving more emphasis to recent closes. Responds to price changes faster than an SMA of the same length.",
+    "category": "technical",
+    "see_also": ["moving_average", "sma", "macd"],
+    "related_lessons": ["025"],
+    "tags": ["technical", "indicator", "trend"]
+  },
+  {
+    "id": "rsi",
+    "term": "RSI (relative strength index)",
+    "definition": "A momentum oscillator developed by J. Welles Wilder that measures the ratio of average gains to average losses over a lookback period, scaled 0 to 100. Readings above 70 are conventionally labeled overbought; below 30, oversold.",
+    "category": "technical",
+    "see_also": ["macd", "momentum", "bollinger_band"],
+    "related_lessons": ["026"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "indicator", "momentum", "oscillator"]
+  },
+  {
+    "id": "macd",
+    "term": "MACD (moving average convergence divergence)",
+    "definition": "A momentum indicator computed as the difference between a fast EMA (typically 12) and slow EMA (typically 26), plotted with a 9-period signal line and histogram. Used to track shifts in trend momentum.",
+    "category": "technical",
+    "see_also": ["ema", "rsi", "momentum"],
+    "related_lessons": ["027"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "indicator", "momentum"]
+  },
+  {
+    "id": "bollinger_band",
+    "term": "Bollinger Band",
+    "definition": "A volatility envelope plotted as a moving average flanked by upper and lower bands at a chosen number of standard deviations, typically 2. Band width expands and contracts with realized volatility.",
+    "category": "technical",
+    "see_also": ["moving_average", "atr", "volatility_regime"],
+    "related_lessons": ["028"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "indicator", "volatility"]
+  },
+  {
+    "id": "atr",
+    "term": "ATR (average true range)",
+    "definition": "A volatility measure developed by J. Welles Wilder that averages the true range over a lookback window, where true range is the largest of high-minus-low, high-minus-prior-close, or prior-close-minus-low. Expressed in price units.",
+    "category": "technical",
+    "see_also": ["bollinger_band", "atr_based_sizing", "volatility_regime"],
+    "related_lessons": ["029"],
+    "related_agents": ["market_analyst"],
+    "tags": ["technical", "indicator", "volatility"]
+  },
+  {
+    "id": "volume",
+    "term": "Volume",
+    "definition": "The total number of shares traded in a security during a given period. Often plotted as bars beneath the price chart.",
+    "category": "technical",
+    "see_also": ["breakout", "market_breadth"],
+    "related_lessons": ["030"],
+    "tags": ["technical", "liquidity"]
+  },
+
+  {
+    "id": "revenue",
+    "term": "Revenue",
+    "definition": "The total income a company generates from sales of goods or services before any costs are deducted, also called top-line. Reported on the income statement.",
+    "category": "fundamental",
+    "see_also": ["gross_profit", "operating_income", "income_statement"],
+    "related_lessons": ["040"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "income_statement"]
+  },
+  {
+    "id": "gross_profit",
+    "term": "Gross profit",
+    "definition": "Revenue minus the direct cost of goods sold. The remainder available to cover operating expenses, taxes, and net income.",
+    "category": "fundamental",
+    "see_also": ["revenue", "gross_margin", "operating_income"],
+    "related_lessons": ["040"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "income_statement"]
+  },
+  {
+    "id": "operating_income",
+    "term": "Operating income",
+    "definition": "Gross profit minus operating expenses such as research, sales, and general administration. Reflects profit from core operations before interest and taxes.",
+    "category": "fundamental",
+    "see_also": ["gross_profit", "net_income", "operating_margin"],
+    "related_lessons": ["041"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "income_statement"]
+  },
+  {
+    "id": "net_income",
+    "term": "Net income",
+    "definition": "The bottom-line profit remaining after all expenses, interest, and taxes are deducted from revenue. The basis for earnings per share.",
+    "category": "fundamental",
+    "see_also": ["operating_income", "eps", "income_statement"],
+    "related_lessons": ["041"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "income_statement"]
+  },
+  {
+    "id": "ebitda",
+    "term": "EBITDA",
+    "definition": "Earnings before interest, taxes, depreciation, and amortization. A non-GAAP profitability measure often used to compare operating performance across companies with different capital structures.",
+    "category": "fundamental",
+    "see_also": ["operating_income", "ev_ebitda", "net_income"],
+    "related_lessons": ["042"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "non_gaap"]
+  },
+  {
+    "id": "fcf",
+    "term": "FCF (free cash flow)",
+    "definition": "Cash from operations minus capital expenditures. Measures the cash a company generates after funding maintenance and growth investment in physical assets.",
+    "category": "fundamental",
+    "see_also": ["capex", "cash_flow_statement", "operating_income"],
+    "related_lessons": ["043"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "cash_flow"]
+  },
+  {
+    "id": "capex",
+    "term": "Capex (capital expenditure)",
+    "definition": "Cash spent to acquire or upgrade physical assets such as property, plants, and equipment. Reported under investing activities on the cash flow statement.",
+    "category": "fundamental",
+    "see_also": ["fcf", "opex", "cash_flow_statement"],
+    "related_lessons": ["043"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "cash_flow"]
+  },
+  {
+    "id": "opex",
+    "term": "Opex (operating expenses)",
+    "definition": "Day-to-day costs of running a business, including salaries, rent, marketing, and R&D. Distinct from capex, which funds long-lived assets.",
+    "category": "fundamental",
+    "see_also": ["capex", "operating_income"],
+    "related_lessons": ["043"],
+    "tags": ["fundamental", "income_statement"]
+  },
+  {
+    "id": "balance_sheet",
+    "term": "Balance sheet",
+    "definition": "A financial statement summarizing a company's assets, liabilities, and shareholders' equity at a single point in time. The accounting identity assets = liabilities + equity must hold.",
+    "category": "fundamental",
+    "see_also": ["income_statement", "cash_flow_statement", "book_value", "debt"],
+    "related_lessons": ["044"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "financial_statement"]
+  },
+  {
+    "id": "income_statement",
+    "term": "Income statement",
+    "definition": "A financial statement reporting revenue, expenses, and net income over a defined period. Also called the profit and loss statement.",
+    "category": "fundamental",
+    "see_also": ["balance_sheet", "cash_flow_statement", "revenue", "net_income"],
+    "related_lessons": ["044"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "financial_statement"]
+  },
+  {
+    "id": "cash_flow_statement",
+    "term": "Cash flow statement",
+    "definition": "A financial statement reconciling net income to actual cash movements, broken into operating, investing, and financing activities. Reveals how a company generates and uses cash.",
+    "category": "fundamental",
+    "see_also": ["balance_sheet", "income_statement", "fcf", "capex"],
+    "related_lessons": ["044"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "financial_statement", "cash_flow"]
+  },
+  {
+    "id": "eps",
+    "term": "EPS (earnings per share)",
+    "definition": "Net income divided by the weighted-average shares outstanding, reported as basic or diluted. The denominator in the price-to-earnings ratio.",
+    "category": "fundamental",
+    "see_also": ["net_income", "pe_ratio", "forward_pe"],
+    "related_lessons": ["045"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "per_share"]
+  },
+  {
+    "id": "book_value",
+    "term": "Book value",
+    "definition": "Shareholders' equity from the balance sheet, representing accounting net worth. On a per-share basis it's book value divided by shares outstanding.",
+    "category": "fundamental",
+    "see_also": ["tangible_book_value", "pb_ratio", "balance_sheet"],
+    "related_lessons": ["046"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "balance_sheet"]
+  },
+  {
+    "id": "tangible_book_value",
+    "term": "Tangible book value",
+    "definition": "Book value minus intangible assets such as goodwill and patents. Used to assess hard-asset backing of equity.",
+    "category": "fundamental",
+    "see_also": ["book_value", "pb_ratio"],
+    "related_lessons": ["046"],
+    "tags": ["fundamental", "balance_sheet"]
+  },
+  {
+    "id": "moat",
+    "term": "Moat",
+    "definition": "A durable competitive advantage that protects a company's profitability from competitors, popularized by Warren Buffett. Sources include network effects, switching costs, scale, brand, and patents.",
+    "category": "fundamental",
+    "see_also": ["roe", "roic"],
+    "related_lessons": ["047"],
+    "related_agents": ["fundamentals_analyst", "bull_researcher"],
+    "tags": ["fundamental", "qualitative"]
+  },
+  {
+    "id": "roe",
+    "term": "ROE (return on equity)",
+    "definition": "Net income divided by average shareholders' equity, expressed as a percentage. Measures how efficiently a company converts equity capital into profit.",
+    "category": "fundamental",
+    "see_also": ["roic", "net_income", "book_value"],
+    "related_lessons": ["048"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "profitability"]
+  },
+  {
+    "id": "roic",
+    "term": "ROIC (return on invested capital)",
+    "definition": "Net operating profit after tax divided by invested capital (debt plus equity). Measures returns generated per dollar of total capital deployed, regardless of financing mix.",
+    "category": "fundamental",
+    "see_also": ["roe", "moat"],
+    "related_lessons": ["048"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "profitability"]
+  },
+  {
+    "id": "debt",
+    "term": "Debt",
+    "definition": "Borrowed capital a company must repay, typically classified as short-term (due within a year) or long-term. Reported on the liabilities side of the balance sheet.",
+    "category": "fundamental",
+    "see_also": ["de_ratio", "balance_sheet", "current_ratio"],
+    "related_lessons": ["049"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["fundamental", "balance_sheet", "leverage"]
+  },
+
+  {
+    "id": "pe_ratio",
+    "term": "P/E ratio (price-to-earnings)",
+    "definition": "Share price divided by earnings per share, also called the trailing P/E when using the last 12 months of EPS. A widely used valuation multiple.",
+    "category": "ratios",
+    "see_also": ["forward_pe", "peg", "eps"],
+    "related_lessons": ["050"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio"]
+  },
+  {
+    "id": "forward_pe",
+    "term": "Forward P/E",
+    "definition": "Share price divided by consensus estimated earnings per share for the next 12 months or next fiscal year. Reflects expected rather than realized earnings.",
+    "category": "ratios",
+    "see_also": ["pe_ratio", "eps", "peg"],
+    "related_lessons": ["050"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio"]
+  },
+  {
+    "id": "peg",
+    "term": "PEG ratio",
+    "definition": "P/E ratio divided by the expected earnings growth rate. Originally popularized by Peter Lynch as a way to contextualize P/E against growth.",
+    "category": "ratios",
+    "see_also": ["pe_ratio", "forward_pe"],
+    "related_lessons": ["050"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio", "growth"]
+  },
+  {
+    "id": "pb_ratio",
+    "term": "P/B ratio (price-to-book)",
+    "definition": "Share price divided by book value per share. A valuation ratio commonly applied to asset-heavy businesses such as banks and insurers.",
+    "category": "ratios",
+    "see_also": ["book_value", "tangible_book_value"],
+    "related_lessons": ["051"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio"]
+  },
+  {
+    "id": "ps_ratio",
+    "term": "P/S ratio (price-to-sales)",
+    "definition": "Market capitalization divided by trailing-12-month revenue. Often used to value companies with negative or volatile earnings.",
+    "category": "ratios",
+    "see_also": ["pe_ratio", "revenue"],
+    "related_lessons": ["051"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio"]
+  },
+  {
+    "id": "ev_ebitda",
+    "term": "EV/EBITDA",
+    "definition": "Enterprise value (market cap plus net debt) divided by EBITDA. A capital-structure-neutral valuation multiple favored for cross-company comparisons.",
+    "category": "ratios",
+    "see_also": ["ebitda", "pe_ratio"],
+    "related_lessons": ["051"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["valuation", "ratio"]
+  },
+  {
+    "id": "de_ratio",
+    "term": "D/E ratio (debt-to-equity)",
+    "definition": "Total debt divided by total shareholders' equity. Measures financial leverage and the relative weight of debt financing.",
+    "category": "ratios",
+    "see_also": ["debt", "balance_sheet"],
+    "related_lessons": ["052"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["leverage", "ratio"]
+  },
+  {
+    "id": "current_ratio",
+    "term": "Current ratio",
+    "definition": "Current assets divided by current liabilities. A short-term liquidity metric indicating coverage of obligations due within a year.",
+    "category": "ratios",
+    "see_also": ["quick_ratio", "balance_sheet"],
+    "related_lessons": ["052"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["liquidity", "ratio"]
+  },
+  {
+    "id": "quick_ratio",
+    "term": "Quick ratio",
+    "definition": "Current assets minus inventory, divided by current liabilities. A stricter liquidity measure that excludes inventory from coverage.",
+    "category": "ratios",
+    "see_also": ["current_ratio", "balance_sheet"],
+    "related_lessons": ["052"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["liquidity", "ratio"]
+  },
+  {
+    "id": "gross_margin",
+    "term": "Gross margin",
+    "definition": "Gross profit divided by revenue, expressed as a percentage. Indicates the share of revenue retained after direct production costs.",
+    "category": "ratios",
+    "see_also": ["gross_profit", "operating_margin"],
+    "related_lessons": ["053"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["profitability", "ratio"]
+  },
+  {
+    "id": "operating_margin",
+    "term": "Operating margin",
+    "definition": "Operating income divided by revenue, expressed as a percentage. Reflects core-operations profitability before interest and taxes.",
+    "category": "ratios",
+    "see_also": ["operating_income", "gross_margin"],
+    "related_lessons": ["053"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["profitability", "ratio"]
+  },
+  {
+    "id": "dividend_yield",
+    "term": "Dividend yield",
+    "definition": "Annual dividends per share divided by share price, expressed as a percentage. Represents the cash return component independent of price appreciation.",
+    "category": "ratios",
+    "see_also": ["dividend", "share_price"],
+    "related_lessons": ["054"],
+    "tags": ["income", "ratio"]
+  },
+
+  {
+    "id": "fomo",
+    "term": "FOMO (fear of missing out)",
+    "definition": "An emotional state in which a trader feels compelled to enter a position because others appear to be profiting. A documented behavioral bias that often coincides with late-stage moves.",
+    "category": "psychology",
+    "see_also": ["herd_behaviour", "greed", "revenge_trading"],
+    "related_lessons": ["060"],
+    "tags": ["psychology", "bias"]
+  },
+  {
+    "id": "fear_of_missing_out",
+    "term": "Fear of missing out",
+    "definition": "The behavioral pull to act on a trade because peers or media report gains in it. Equivalent to FOMO; the long form is sometimes used in formal contexts.",
+    "category": "psychology",
+    "see_also": ["fomo", "herd_behaviour"],
+    "related_lessons": ["060"],
+    "tags": ["psychology", "bias"]
+  },
+  {
+    "id": "revenge_trading",
+    "term": "Revenge trading",
+    "definition": "Taking impulsive trades immediately after a loss to recover the loss, typically with elevated size and reduced analysis. A behavioral pattern associated with degraded outcomes.",
+    "category": "psychology",
+    "see_also": ["discipline", "fomo", "greed"],
+    "related_lessons": ["061"],
+    "tags": ["psychology", "bias"]
+  },
+  {
+    "id": "overconfidence",
+    "term": "Overconfidence",
+    "definition": "A cognitive bias in which a person overestimates the accuracy of their forecasts or skill. Documented across professional traders and amateurs alike.",
+    "category": "psychology",
+    "see_also": ["confirmation_bias", "hindsight_bias"],
+    "related_lessons": ["062"],
+    "tags": ["psychology", "bias"]
+  },
+  {
+    "id": "boredom_trading",
+    "term": "Boredom trading",
+    "definition": "Entering trades primarily because no compelling setup is present and the trader wants activity. A behavioral pattern characterized by low-conviction entries.",
+    "category": "psychology",
+    "see_also": ["discipline", "revenge_trading"],
+    "related_lessons": ["061"],
+    "tags": ["psychology", "bias"]
+  },
+  {
+    "id": "greed",
+    "term": "Greed",
+    "definition": "An emotional state pushing for incremental gains beyond a pre-defined plan, often through oversized positions or holding past targets. One of the two emotions tracked in market sentiment indices alongside fear.",
+    "category": "psychology",
+    "see_also": ["fear", "fomo", "discipline"],
+    "related_lessons": ["060"],
+    "tags": ["psychology", "emotion"]
+  },
+  {
+    "id": "fear",
+    "term": "Fear",
+    "definition": "An emotional state driving risk-averse actions such as early exits, position cuts, or avoidance of entries. Paired with greed in common sentiment frameworks.",
+    "category": "psychology",
+    "see_also": ["greed", "capitulation"],
+    "related_lessons": ["060"],
+    "tags": ["psychology", "emotion"]
+  },
+  {
+    "id": "capitulation",
+    "term": "Capitulation",
+    "definition": "Mass exit by holders during a sharp decline, often marked by high volume and steep price drops. Reflects collective surrender of conviction in the position.",
+    "category": "psychology",
+    "see_also": ["fear", "bear_market", "crash"],
+    "related_lessons": ["063"],
+    "tags": ["psychology", "regime"]
+  },
+  {
+    "id": "anchoring",
+    "term": "Anchoring",
+    "definition": "A cognitive bias where decisions are tethered to a salient reference value, such as a purchase price, rather than current information. Documented by Tversky and Kahneman.",
+    "category": "psychology",
+    "see_also": ["recency_bias", "sunk_cost_fallacy"],
+    "related_lessons": ["062"],
+    "tags": ["psychology", "bias", "cognitive"]
+  },
+  {
+    "id": "recency_bias",
+    "term": "Recency bias",
+    "definition": "A cognitive bias that overweights recent observations relative to longer-term base rates. Manifests as projecting recent returns indefinitely into the future.",
+    "category": "psychology",
+    "see_also": ["anchoring", "confirmation_bias"],
+    "related_lessons": ["062"],
+    "tags": ["psychology", "bias", "cognitive"]
+  },
+  {
+    "id": "confirmation_bias",
+    "term": "Confirmation bias",
+    "definition": "The tendency to seek and recall information consistent with an existing belief and discount contradicting evidence. Common when researching a thesis already held.",
+    "category": "psychology",
+    "see_also": ["overconfidence", "recency_bias"],
+    "related_lessons": ["062"],
+    "related_agents": ["bear_researcher", "bull_researcher"],
+    "tags": ["psychology", "bias", "cognitive"]
+  },
+  {
+    "id": "hindsight_bias",
+    "term": "Hindsight bias",
+    "definition": "The tendency, after an event, to remember predictions as having been more accurate than they were. Distorts evaluation of past decisions.",
+    "category": "psychology",
+    "see_also": ["overconfidence", "ami_decision_journal"],
+    "related_lessons": ["062"],
+    "tags": ["psychology", "bias", "cognitive"]
+  },
+  {
+    "id": "sunk_cost_fallacy",
+    "term": "Sunk-cost fallacy",
+    "definition": "Persisting with a losing position because of money or time already committed, rather than evaluating prospective expected value. Documented in behavioral economics.",
+    "category": "psychology",
+    "see_also": ["anchoring", "discipline"],
+    "related_lessons": ["062"],
+    "tags": ["psychology", "bias", "cognitive"]
+  },
+  {
+    "id": "herd_behaviour",
+    "term": "Herd behaviour",
+    "definition": "Coordinated action by market participants driven by what others are doing rather than independent analysis. Associated with momentum extremes and bubble dynamics.",
+    "category": "psychology",
+    "see_also": ["fomo", "bull_market", "crash"],
+    "related_lessons": ["063"],
+    "tags": ["psychology", "behavioral"]
+  },
+  {
+    "id": "discipline",
+    "term": "Discipline",
+    "definition": "Adherence to a pre-defined trading plan, including entries, exits, sizing, and risk limits, regardless of in-the-moment emotion. Tracked in journals as a behavioral metric.",
+    "category": "psychology",
+    "see_also": ["ami_decision_journal", "revenge_trading"],
+    "related_lessons": ["061", "065"],
+    "tags": ["psychology", "process"]
+  },
+
+  {
+    "id": "trend_following",
+    "term": "Trend-following",
+    "definition": "A strategy class that enters in the direction of an established trend and exits when the trend weakens. Returns historically show positive skew with frequent small losses and occasional large gains.",
+    "category": "strategy",
+    "see_also": ["mean_reversion", "momentum", "trend"],
+    "related_lessons": ["070"],
+    "tags": ["strategy", "trend"]
+  },
+  {
+    "id": "mean_reversion",
+    "term": "Mean reversion",
+    "definition": "A strategy class that enters against extreme moves on the expectation that price will revert toward a statistical average. Returns historically show negative skew with frequent small gains and occasional large losses.",
+    "category": "strategy",
+    "see_also": ["trend_following", "bollinger_band", "rsi"],
+    "related_lessons": ["071"],
+    "tags": ["strategy"]
+  },
+  {
+    "id": "breakout_strategy",
+    "term": "Breakout strategy",
+    "definition": "A strategy that enters when price closes beyond a defined level such as a range high or moving average. Typically uses a stop below the broken level.",
+    "category": "strategy",
+    "see_also": ["breakout", "retest", "trend_following"],
+    "related_lessons": ["072"],
+    "tags": ["strategy", "trend"]
+  },
+  {
+    "id": "pullback_strategy",
+    "term": "Pullback strategy",
+    "definition": "A strategy that enters in the direction of an established trend after a counter-trend retracement to a chosen reference level. Often uses moving averages or prior swing points as triggers.",
+    "category": "strategy",
+    "see_also": ["pullback", "trend_following", "moving_average"],
+    "related_lessons": ["072"],
+    "tags": ["strategy", "trend"]
+  },
+  {
+    "id": "momentum",
+    "term": "Momentum",
+    "definition": "The tendency of recent winners to continue outperforming over short to intermediate horizons, formalized in the academic literature by Jegadeesh and Titman (1993). Also describes a family of strategies and indicators.",
+    "category": "strategy",
+    "see_also": ["rsi", "macd", "trend_following"],
+    "related_lessons": ["073"],
+    "tags": ["strategy", "factor"]
+  },
+  {
+    "id": "swing_trading",
+    "term": "Swing trading",
+    "definition": "A trading style that holds positions from several days to several weeks, targeting medium-term moves. Sits between day trading and position trading on the horizon spectrum.",
+    "category": "strategy",
+    "see_also": ["day_trading", "position_trading", "scalping"],
+    "related_lessons": ["074"],
+    "tags": ["strategy", "horizon"]
+  },
+  {
+    "id": "day_trading",
+    "term": "Day trading",
+    "definition": "A trading style that opens and closes all positions within a single session, holding no overnight exposure. Subject to specific regulatory rules in the US such as the pattern day trader rule.",
+    "category": "strategy",
+    "see_also": ["swing_trading", "scalping"],
+    "related_lessons": ["074"],
+    "tags": ["strategy", "horizon"]
+  },
+  {
+    "id": "position_trading",
+    "term": "Position trading",
+    "definition": "A trading style that holds positions for weeks to months, prioritizing larger-timeframe trends and fundamentals. Lowest turnover among active styles.",
+    "category": "strategy",
+    "see_also": ["swing_trading", "day_trading"],
+    "related_lessons": ["074"],
+    "tags": ["strategy", "horizon"]
+  },
+  {
+    "id": "scalping",
+    "term": "Scalping",
+    "definition": "A high-frequency trading style targeting small price changes over seconds to minutes per trade. Depends heavily on execution speed and transaction-cost efficiency.",
+    "category": "strategy",
+    "see_also": ["day_trading", "transaction_cost_modeling"],
+    "related_lessons": ["074"],
+    "tags": ["strategy", "horizon"]
+  },
+  {
+    "id": "backtesting",
+    "term": "Backtesting",
+    "definition": "Simulating a trading strategy on historical data to estimate how it would have performed. Subject to lookahead bias and overfitting if not carefully designed.",
+    "category": "strategy",
+    "see_also": ["walk_forward", "overfitting", "regime_segmented_backtest"],
+    "related_lessons": ["075"],
+    "tags": ["strategy", "research"]
+  },
+  {
+    "id": "walk_forward",
+    "term": "Walk-forward analysis",
+    "definition": "A backtesting methodology that fits parameters on a training window, evaluates on the following out-of-sample window, then rolls forward. Aims to reduce overfitting compared to a single in-sample fit.",
+    "category": "strategy",
+    "see_also": ["backtesting", "overfitting", "walk_forward_analysis"],
+    "related_lessons": ["076"],
+    "tags": ["strategy", "research"]
+  },
+  {
+    "id": "overfitting",
+    "term": "Overfitting",
+    "definition": "Tuning a model or strategy to fit historical noise rather than persistent signal, producing strong in-sample results that fail out-of-sample. A central risk in quantitative research.",
+    "category": "strategy",
+    "see_also": ["backtesting", "walk_forward"],
+    "related_lessons": ["076"],
+    "tags": ["strategy", "research", "risk"]
+  },
+  {
+    "id": "paper_trading",
+    "term": "Paper trading",
+    "definition": "Simulating trades with real-time market data and no actual capital at risk. AMI Trade's Verdicts and simulated portfolio are forms of paper trading.",
+    "category": "strategy",
+    "see_also": ["ami_verdict", "backtesting"],
+    "related_lessons": ["077"],
+    "tags": ["strategy", "simulation"]
+  },
+
+  {
+    "id": "bull_market",
+    "term": "Bull market",
+    "definition": "An extended period of rising prices in a market or asset, conventionally defined as a gain of 20% or more from a recent low. Typically associated with broad participation and improving fundamentals.",
+    "category": "regime",
+    "see_also": ["bear_market", "correction", "sector_rotation"],
+    "related_lessons": ["080"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "bear_market",
+    "term": "Bear market",
+    "definition": "An extended period of declining prices, conventionally defined as a fall of 20% or more from a recent high. Often coincides with deteriorating fundamentals or recession.",
+    "category": "regime",
+    "see_also": ["bull_market", "correction", "crash", "capitulation"],
+    "related_lessons": ["080"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "sideways_market",
+    "term": "Sideways market",
+    "definition": "A regime where prices oscillate within a horizontal range with no sustained directional trend. Typically associated with reduced realized volatility and indecisive macro signals.",
+    "category": "regime",
+    "see_also": ["sideways", "range_bound", "volatility_regime"],
+    "related_lessons": ["080"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "range_bound",
+    "term": "Range-bound",
+    "definition": "Describes a market or security trading repeatedly between identifiable support and resistance levels without breaking out. Synonymous with sideways behavior.",
+    "category": "regime",
+    "see_also": ["sideways_market", "support", "resistance"],
+    "related_lessons": ["080"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "correction",
+    "term": "Correction",
+    "definition": "A decline of 10% to 20% from a recent high, less severe than a bear market. Treated as a routine feature of bull markets in standard finance taxonomy.",
+    "category": "regime",
+    "see_also": ["bull_market", "bear_market", "crash"],
+    "related_lessons": ["081"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "crash",
+    "term": "Crash",
+    "definition": "A rapid, severe decline in prices over a short period, typically with elevated volume and volatility. Examples include October 1987 and March 2020.",
+    "category": "regime",
+    "see_also": ["correction", "bear_market", "capitulation"],
+    "related_lessons": ["081"],
+    "tags": ["regime", "tail_event"]
+  },
+  {
+    "id": "recovery",
+    "term": "Recovery",
+    "definition": "The phase following a correction or bear market in which prices and economic activity return toward prior levels. Often defined retrospectively once a new high is established.",
+    "category": "regime",
+    "see_also": ["bear_market", "recession"],
+    "related_lessons": ["081"],
+    "tags": ["regime"]
+  },
+  {
+    "id": "volatility_regime",
+    "term": "Volatility regime",
+    "definition": "A characterization of the prevailing level of realized or implied volatility, e.g., low-vol, mid-vol, or high-vol. Regimes tend to cluster, producing serial autocorrelation in volatility.",
+    "category": "regime",
+    "see_also": ["atr", "vix", "bollinger_band"],
+    "related_lessons": ["082"],
+    "tags": ["regime", "volatility"]
+  },
+  {
+    "id": "sector_rotation",
+    "term": "Sector rotation",
+    "definition": "The shifting of capital between equity sectors at different points in the economic cycle, e.g., from defensives to cyclicals in early expansion. A pattern documented across decades of US data.",
+    "category": "regime",
+    "see_also": ["bull_market", "recession", "market_breadth"],
+    "related_lessons": ["083"],
+    "tags": ["regime", "macro"]
+  },
+  {
+    "id": "market_breadth",
+    "term": "Market breadth",
+    "definition": "The proportion of stocks participating in a market move, measured by indicators such as advance-decline lines, new highs minus new lows, or the percentage of stocks above their 200-day moving average.",
+    "category": "regime",
+    "see_also": ["index", "bull_market", "bear_market"],
+    "related_lessons": ["084"],
+    "tags": ["regime", "internals"]
+  },
+
+  {
+    "id": "federal_reserve",
+    "term": "Federal Reserve (the Fed)",
+    "definition": "The central bank of the United States, established in 1913. Sets the federal funds rate target and conducts monetary policy via the Federal Open Market Committee.",
+    "category": "macro",
+    "see_also": ["fed_funds_rate", "rate_hike", "rate_cut"],
+    "related_lessons": ["090"],
+    "related_agents": ["news_analyst"],
+    "tags": ["macro", "central_bank"]
+  },
+  {
+    "id": "fed_funds_rate",
+    "term": "Fed funds rate",
+    "definition": "The overnight interest rate at which US depository institutions lend reserves to each other, targeted by the Federal Reserve. The anchor for short-term US interest rates.",
+    "category": "macro",
+    "see_also": ["federal_reserve", "rate_hike", "rate_cut", "yield_curve"],
+    "related_lessons": ["090"],
+    "tags": ["macro", "rates"]
+  },
+  {
+    "id": "rate_hike",
+    "term": "Rate hike",
+    "definition": "An increase in the central bank's policy interest rate. Tightens financial conditions and typically aims to slow inflation.",
+    "category": "macro",
+    "see_also": ["fed_funds_rate", "rate_cut", "inflation"],
+    "related_lessons": ["090"],
+    "tags": ["macro", "rates"]
+  },
+  {
+    "id": "rate_cut",
+    "term": "Rate cut",
+    "definition": "A decrease in the central bank's policy interest rate. Eases financial conditions and typically aims to support growth or employment.",
+    "category": "macro",
+    "see_also": ["fed_funds_rate", "rate_hike", "recession"],
+    "related_lessons": ["090"],
+    "tags": ["macro", "rates"]
+  },
+  {
+    "id": "inflation",
+    "term": "Inflation",
+    "definition": "A sustained rise in the general price level of goods and services, measured by indices such as CPI or PCE. Erodes purchasing power of cash and fixed-income coupons.",
+    "category": "macro",
+    "see_also": ["cpi", "deflation", "rate_hike"],
+    "related_lessons": ["091"],
+    "related_agents": ["news_analyst"],
+    "tags": ["macro", "prices"]
+  },
+  {
+    "id": "deflation",
+    "term": "Deflation",
+    "definition": "A sustained decline in the general price level. Historically associated with weak demand, falling wages, and tightening real debt burdens.",
+    "category": "macro",
+    "see_also": ["inflation", "recession"],
+    "related_lessons": ["091"],
+    "tags": ["macro", "prices"]
+  },
+  {
+    "id": "recession",
+    "term": "Recession",
+    "definition": "A significant decline in economic activity across the economy lasting more than a few months. In the US, dating is determined by the NBER Business Cycle Dating Committee.",
+    "category": "macro",
+    "see_also": ["gdp", "yield_curve", "bear_market"],
+    "related_lessons": ["092"],
+    "related_agents": ["news_analyst"],
+    "tags": ["macro", "cycle"]
+  },
+  {
+    "id": "yield_curve",
+    "term": "Yield curve",
+    "definition": "A plot of yields on government bonds across maturities, typically Treasuries from 1-month to 30-year. An inverted yield curve, where short rates exceed long rates, has historically preceded US recessions.",
+    "category": "macro",
+    "see_also": ["fed_funds_rate", "recession"],
+    "related_lessons": ["092"],
+    "tags": ["macro", "rates"]
+  },
+  {
+    "id": "cpi",
+    "term": "CPI (consumer price index)",
+    "definition": "A monthly index published by the US Bureau of Labor Statistics measuring the average price change for a basket of consumer goods and services. The headline US inflation gauge.",
+    "category": "macro",
+    "see_also": ["inflation", "gdp"],
+    "related_lessons": ["091"],
+    "tags": ["macro", "data_release"]
+  },
+  {
+    "id": "gdp",
+    "term": "GDP (gross domestic product)",
+    "definition": "The total monetary value of all goods and services produced within a country's borders over a defined period. Published quarterly in the US by the Bureau of Economic Analysis.",
+    "category": "macro",
+    "see_also": ["recession", "cpi"],
+    "related_lessons": ["092"],
+    "tags": ["macro", "data_release"]
+  },
+  {
+    "id": "dxy",
+    "term": "Dollar index (DXY)",
+    "definition": "A weighted average of the US dollar against a basket of six major currencies dominated by the euro. Used as a broad gauge of dollar strength.",
+    "category": "macro",
+    "see_also": ["risk_on_risk_off"],
+    "related_lessons": ["093"],
+    "tags": ["macro", "fx"]
+  },
+  {
+    "id": "risk_on_risk_off",
+    "term": "Risk-on / risk-off",
+    "definition": "Shorthand for prevailing investor appetite, where risk-on favors equities and high-yield credit and risk-off favors Treasuries, dollar, and gold. Used in macro commentary to describe cross-asset flows.",
+    "category": "macro",
+    "see_also": ["volatility_regime", "vix", "sector_rotation"],
+    "related_lessons": ["093"],
+    "tags": ["macro", "sentiment"]
+  },
+
+  {
+    "id": "call_option",
+    "term": "Call option",
+    "definition": "A contract granting the holder the right, but not the obligation, to buy 100 shares of an underlying at a specified strike price on or before expiry. The seller is obliged to deliver if exercised.",
+    "category": "options_derivatives",
+    "see_also": ["put_option", "strike_price", "expiry", "implied_volatility"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "put_option",
+    "term": "Put option",
+    "definition": "A contract granting the holder the right, but not the obligation, to sell 100 shares of an underlying at a specified strike price on or before expiry. The seller is obliged to take delivery if exercised.",
+    "category": "options_derivatives",
+    "see_also": ["call_option", "strike_price", "expiry", "implied_volatility"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "strike_price",
+    "term": "Strike price",
+    "definition": "The fixed price at which an option's underlying can be bought (call) or sold (put) if exercised. Set at contract creation.",
+    "category": "options_derivatives",
+    "see_also": ["call_option", "put_option", "in_the_money", "out_of_the_money"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "expiry",
+    "term": "Expiry",
+    "definition": "The date on which an option contract ceases to exist; after expiry, an unexercised option is worthless. US listed equity options conventionally expire on Fridays.",
+    "category": "options_derivatives",
+    "see_also": ["call_option", "put_option"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "in_the_money",
+    "term": "In-the-money (ITM)",
+    "definition": "An option whose strike is favorable versus the underlying's current price: a call is ITM when underlying is above the strike; a put is ITM when underlying is below the strike. Carries intrinsic value.",
+    "category": "options_derivatives",
+    "see_also": ["out_of_the_money", "strike_price"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "out_of_the_money",
+    "term": "Out-of-the-money (OTM)",
+    "definition": "An option whose strike is unfavorable versus the underlying's current price: a call is OTM when underlying is below the strike; a put is OTM when underlying is above the strike. Has no intrinsic value.",
+    "category": "options_derivatives",
+    "see_also": ["in_the_money", "strike_price"],
+    "related_lessons": ["100"],
+    "tags": ["derivatives", "options"]
+  },
+  {
+    "id": "implied_volatility",
+    "term": "Implied volatility (IV)",
+    "definition": "The market's expectation of an underlying's future volatility, backed out of option prices using a pricing model. Quoted as an annualized standard deviation.",
+    "category": "options_derivatives",
+    "see_also": ["vix", "volatility_regime", "call_option", "put_option"],
+    "related_lessons": ["101"],
+    "tags": ["derivatives", "options", "volatility"]
+  },
+  {
+    "id": "vix",
+    "term": "VIX",
+    "definition": "The Cboe Volatility Index, computed from S&P 500 option prices to reflect 30-day implied volatility on the index. Often referred to as the market's fear gauge.",
+    "category": "options_derivatives",
+    "see_also": ["implied_volatility", "volatility_regime", "risk_on_risk_off"],
+    "related_lessons": ["101"],
+    "tags": ["derivatives", "volatility", "index"]
+  },
+
+  {
+    "id": "ponzi_scheme",
+    "term": "Ponzi scheme",
+    "definition": "A fraud paying returns to earlier participants from contributions of newer participants rather than from genuine investment activity. Named after Charles Ponzi; the Madoff case (2008) is a modern example.",
+    "category": "scam",
+    "see_also": ["pyramid_scheme", "guaranteed_return_scam", "affinity_fraud"],
+    "related_lessons": ["110"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "pyramid_scheme",
+    "term": "Pyramid scheme",
+    "definition": "A fraud where revenue derives primarily from recruiting new members rather than from selling a real product. Mathematically unsustainable once recruitment slows.",
+    "category": "scam",
+    "see_also": ["ponzi_scheme", "affinity_fraud"],
+    "related_lessons": ["110"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "pump_and_dump",
+    "term": "Pump and dump",
+    "definition": "A market manipulation in which promoters inflate the price of a thinly-traded security through misleading promotion, then sell their positions into the demand they created. Common in micro-cap and crypto contexts.",
+    "category": "scam",
+    "see_also": ["signal_selling_fraud", "ai_bot_scam"],
+    "related_lessons": ["110"],
+    "related_agents": ["social_media_analyst", "news_analyst"],
+    "tags": ["scam_pattern", "regulatory", "manipulation"]
+  },
+  {
+    "id": "clone_broker",
+    "term": "Clone broker",
+    "definition": "A fraudulent operation impersonating a legitimate, regulated brokerage by copying its name, branding, or website. Funds deposited are typically unrecoverable.",
+    "category": "scam",
+    "see_also": ["fake_broker", "unregistered_broker", "brokerage"],
+    "related_lessons": ["111"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "fake_broker",
+    "term": "Fake broker",
+    "definition": "An operation marketing itself as a brokerage that is not actually licensed to handle client funds in the claimed jurisdictions. Often coupled with fabricated dashboards showing fictional gains.",
+    "category": "scam",
+    "see_also": ["clone_broker", "unregistered_broker"],
+    "related_lessons": ["111"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "guaranteed_return_scam",
+    "term": "Guaranteed return scam",
+    "definition": "A fraud promising fixed or guaranteed returns above prevailing risk-free rates. Genuine market returns cannot be guaranteed; this promise is a hallmark of fraud documented by US and global regulators.",
+    "category": "scam",
+    "see_also": ["ponzi_scheme", "ai_bot_scam"],
+    "related_lessons": ["112"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "ai_bot_scam",
+    "term": "AI bot scam",
+    "definition": "A fraud marketing an AI or algorithmic trading bot that purportedly delivers consistent high returns in exchange for fees or deposits. Funded performance dashboards are typically fabricated.",
+    "category": "scam",
+    "see_also": ["guaranteed_return_scam", "signal_selling_fraud"],
+    "related_lessons": ["112"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "pig_butchering",
+    "term": "Pig-butchering",
+    "definition": "A long-form romance and investment fraud in which the target is groomed over weeks via messaging apps, then directed to deposit funds into a fake trading platform. Named for the practice of fattening the victim before the take.",
+    "category": "scam",
+    "see_also": ["fake_broker", "recovery_scam"],
+    "related_lessons": ["113"],
+    "tags": ["scam_pattern", "regulatory", "fraud", "social_engineering"]
+  },
+  {
+    "id": "affinity_fraud",
+    "term": "Affinity fraud",
+    "definition": "A fraud targeting members of an identifiable group, such as a religious community, ethnic group, or profession, leveraging shared identity for trust. Frequently used to seed Ponzi and pyramid structures.",
+    "category": "scam",
+    "see_also": ["ponzi_scheme", "pyramid_scheme"],
+    "related_lessons": ["110"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "recovery_scam",
+    "term": "Recovery scam",
+    "definition": "A secondary fraud that targets prior fraud victims by offering, for an upfront fee, to recover their lost funds. Itself a fraud; legitimate fund recovery does not require advance fees.",
+    "category": "scam",
+    "see_also": ["pig_butchering", "fake_broker"],
+    "related_lessons": ["113"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "signal_selling_fraud",
+    "term": "Signal-selling fraud",
+    "definition": "Operations selling trading signals or alerts with fabricated track records, often combined with pump-and-dump activity in the promoted tickers. Regulators have brought enforcement against such operators.",
+    "category": "scam",
+    "see_also": ["pump_and_dump", "ai_bot_scam"],
+    "related_lessons": ["112"],
+    "tags": ["scam_pattern", "regulatory", "fraud"]
+  },
+  {
+    "id": "unregistered_broker",
+    "term": "Unregistered broker",
+    "definition": "An entity offering brokerage services without being registered with the relevant regulator (e.g., SEC and FINRA in the US). Operating outside the regulatory perimeter removes investor protections.",
+    "category": "scam",
+    "see_also": ["clone_broker", "fake_broker", "brokerage"],
+    "related_lessons": ["111"],
+    "tags": ["scam_pattern", "regulatory"]
+  },
+
+  {
+    "id": "ami_mandate",
+    "term": "Mandate",
+    "definition": "The user-set contract with the simulator that encodes risk tolerance, maximum simulated drawdown, position-size caps, and compliance flags. The Portfolio Manager agent enforces it on every simulated trade and cannot bypass it.",
+    "category": "platform",
+    "see_also": ["ami_pm_safety_floor", "ami_verdict", "ami_coach_your_agent"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["ami_internal", "platform", "safety"]
+  },
+  {
+    "id": "ami_verdict",
+    "term": "Verdict",
+    "definition": "The simulated output of Convene the Room: a BUY, SELL, or HOLD recommendation with size, entry, stop, target, horizon, confidence, and the full agent debate transcript. A training artifact for the user to evaluate, never financial advice.",
+    "category": "platform",
+    "see_also": ["ami_convene_the_room", "ami_decision_journal", "ami_training_verdict"],
+    "related_agents": ["portfolio_manager", "trader"],
+    "tags": ["ami_internal", "platform", "output"]
+  },
+  {
+    "id": "ami_convene_the_room",
+    "term": "Convene the Room",
+    "definition": "The simulator workflow that runs the 12-agent debate on a chosen ticker, ending with a Portfolio Manager Verdict. Streams agent reasoning live during the run.",
+    "category": "platform",
+    "see_also": ["ami_verdict", "ami_one_on_one", "ami_mandate"],
+    "related_agents": ["portfolio_manager", "trader", "research_manager", "aggressive_debator", "conservative_debator", "neutral_debator"],
+    "tags": ["ami_internal", "platform", "workflow"]
+  },
+  {
+    "id": "ami_coach_your_agent",
+    "term": "Coach Your Agent",
+    "definition": "A simulator feature that lets the user shape an individual agent's style or analytical priorities through natural-language guidance. Coaching modifies the agent's reasoning surface; it cannot bypass the Portfolio Manager safety floor.",
+    "category": "platform",
+    "see_also": ["ami_pm_safety_floor", "ami_mandate"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["ami_internal", "platform", "personalization"]
+  },
+  {
+    "id": "ami_decision_journal",
+    "term": "Decision Journal",
+    "definition": "A simulator log of every Verdict, the user's recorded reasoning at the time, and the eventual outcome. Used by the simulator to surface patterns and feed the Lessons engine.",
+    "category": "platform",
+    "see_also": ["ami_verdict", "ami_earn_path", "discipline"],
+    "tags": ["ami_internal", "platform", "reflection"]
+  },
+  {
+    "id": "ami_pm_safety_floor",
+    "term": "PM safety floor",
+    "definition": "A hard, uncoachable enforcement layer in the Portfolio Manager prompt and a deterministic compliance check function. Blocks any agent output that violates the user's Mandate or simulator-wide constraints.",
+    "category": "platform",
+    "see_also": ["ami_mandate", "ami_coach_your_agent"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["ami_internal", "platform", "safety"]
+  },
+  {
+    "id": "ami_earn_path",
+    "term": "Earn Path",
+    "definition": "The simulator's progression system that grants in-app credits and unlocks for completing lessons, journaling decisions, and reaching curriculum milestones. Tracks user growth across the training curriculum.",
+    "category": "platform",
+    "see_also": ["ami_decision_journal"],
+    "tags": ["ami_internal", "platform", "progression"]
+  },
+  {
+    "id": "ami_one_on_one",
+    "term": "1-on-1 chat",
+    "definition": "A simulator mode that lets the user converse directly with a single agent for clarification or deep-dive analysis. Output is informational; it is not a Verdict and does not constitute financial advice.",
+    "category": "platform",
+    "see_also": ["ami_convene_the_room", "concierge"],
+    "related_agents": ["fundamentals_analyst", "market_analyst", "news_analyst", "social_media_analyst"],
+    "tags": ["ami_internal", "platform", "workflow"]
+  },
+  {
+    "id": "concierge",
+    "term": "Concierge",
+    "definition": "An AMI Trade onboarding agent that conducts a conversational interview to gather user context, draft an initial Mandate, and orient the user to the simulator. Not part of the 12 trading agents.",
+    "category": "platform",
+    "see_also": ["ami_mandate", "ami_one_on_one"],
+    "related_agents": ["concierge"],
+    "tags": ["ami_internal", "platform", "onboarding"]
+  },
+  {
+    "id": "ami_watchlist",
+    "term": "AMI watchlist",
+    "definition": "The user's curated list of tickers in AMI Trade. Convene the Room and 1-on-1 chat draw their universe from this list.",
+    "category": "platform",
+    "see_also": ["watchlist", "ami_convene_the_room"],
+    "tags": ["ami_internal", "platform", "workflow"]
+  },
+  {
+    "id": "ami_training_verdict",
+    "term": "Training Verdict",
+    "definition": "An explicit framing applied to every Verdict reminding the user that the output is a simulated training artifact, not investment advice. Reflects AMI Trade's simulation-only, advisory-only-never positioning.",
+    "category": "platform",
+    "see_also": ["ami_verdict", "ami_pm_safety_floor"],
+    "tags": ["ami_internal", "platform", "safety", "disclosure"]
+  },
+
+  {
+    "id": "kelly_criterion",
+    "term": "Kelly criterion",
+    "definition": "A position-sizing formula derived by John Kelly (1956) that maximizes the expected logarithm of wealth, expressed as f* = (bp - q) / b for a binary outcome with win probability p, loss probability q, and payoff ratio b. Many practitioners apply a fractional Kelly to reduce variance.",
+    "category": "advanced",
+    "see_also": ["atr_based_sizing", "asymmetric_rr", "gamblers_ruin"],
+    "related_lessons": ["150"],
+    "tags": ["advanced", "sizing", "math"]
+  },
+  {
+    "id": "atr_based_sizing",
+    "term": "ATR-based sizing",
+    "definition": "A position-sizing approach that scales share count so that a stop placed at a multiple of ATR away from entry equals a fixed dollar or percentage risk per trade. Normalizes risk across instruments with different volatilities.",
+    "category": "advanced",
+    "see_also": ["atr", "kelly_criterion", "asymmetric_rr"],
+    "related_lessons": ["014", "150"],
+    "tags": ["advanced", "sizing", "risk"]
+  },
+  {
+    "id": "regime_segmented_backtest",
+    "term": "Regime-segmented backtest",
+    "definition": "A backtest that partitions historical data by regime, e.g., bull, bear, high-vol, low-vol, and reports performance per segment. Exposes strategy dependence on regime that aggregate metrics can mask.",
+    "category": "advanced",
+    "see_also": ["backtesting", "walk_forward", "volatility_regime", "bull_market", "bear_market"],
+    "related_lessons": ["151"],
+    "tags": ["advanced", "research"]
+  },
+  {
+    "id": "walk_forward_analysis",
+    "term": "Walk-forward analysis (detailed)",
+    "definition": "A research protocol that repeatedly refits strategy parameters on a rolling training window and evaluates on the next out-of-sample window. Produces a chained out-of-sample equity curve that better approximates live deployment than a single fit.",
+    "category": "advanced",
+    "see_also": ["walk_forward", "backtesting", "overfitting"],
+    "related_lessons": ["076", "151"],
+    "tags": ["advanced", "research"]
+  },
+  {
+    "id": "transaction_cost_modeling",
+    "term": "Transaction cost modeling",
+    "definition": "The practice of modeling commissions, exchange fees, bid-ask spread, and price impact when backtesting or sizing live trades. Strategies with frequent turnover can flip from positive to negative expected value once costs are included.",
+    "category": "advanced",
+    "see_also": ["spread", "scalping", "backtesting"],
+    "related_lessons": ["152"],
+    "tags": ["advanced", "execution", "cost"]
+  },
+  {
+    "id": "strategy_correlation",
+    "term": "Strategy correlation",
+    "definition": "The pairwise correlation of returns between two trading strategies. Combining low- or negatively-correlated strategies reduces aggregate portfolio variance compared to either strategy in isolation.",
+    "category": "advanced",
+    "see_also": ["risk_parity", "portfolio"],
+    "related_lessons": ["153"],
+    "tags": ["advanced", "portfolio_construction"]
+  },
+  {
+    "id": "risk_parity",
+    "term": "Risk parity",
+    "definition": "A portfolio-construction approach that allocates capital so each holding contributes an equal share of total portfolio risk, typically measured as volatility. Popularized by Ray Dalio's Bridgewater All Weather framework.",
+    "category": "advanced",
+    "see_also": ["strategy_correlation", "portfolio", "atr_based_sizing"],
+    "related_lessons": ["153"],
+    "tags": ["advanced", "portfolio_construction"]
+  },
+  {
+    "id": "drawdown_recovery_math",
+    "term": "Drawdown recovery math",
+    "definition": "The arithmetic that a drawdown of X% requires a gain of X / (1 - X) to recover, e.g., a 50% drawdown requires a 100% gain to return to the prior peak. Underpins the asymmetry between losses and required recovery returns.",
+    "category": "advanced",
+    "see_also": ["return", "kelly_criterion", "gamblers_ruin"],
+    "related_lessons": ["154"],
+    "tags": ["advanced", "risk", "math"]
+  },
+  {
+    "id": "gamblers_ruin",
+    "term": "Gambler's ruin",
+    "definition": "A probability result showing that a player making repeated bets against an opponent with a larger bankroll will eventually be ruined, even with a small positive edge, if bet sizing is too aggressive. Underlies the rationale for fractional Kelly and conservative risk caps.",
+    "category": "advanced",
+    "see_also": ["kelly_criterion", "drawdown_recovery_math"],
+    "related_lessons": ["154"],
+    "tags": ["advanced", "risk", "math"]
+  },
+  {
+    "id": "asymmetric_rr",
+    "term": "Asymmetric R:R (reward-to-risk)",
+    "definition": "A trade structure where the distance from entry to target exceeds the distance from entry to stop, producing a reward-to-risk ratio greater than 1:1. The break-even win rate is 1 / (1 + R), e.g., 33% at 2:1.",
+    "category": "advanced",
+    "see_also": ["kelly_criterion", "atr_based_sizing"],
+    "related_lessons": ["155"],
+    "tags": ["advanced", "risk", "math"]
+  }
+]

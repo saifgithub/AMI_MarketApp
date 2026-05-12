@@ -17,10 +17,12 @@ import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/lessons/animation_block.dart';
+import 'package:ami_trade/widgets/lessons/term_block.dart';
+import 'package:ami_trade/widgets/lessons/term_registry.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LessonReaderScreen extends ConsumerWidget {
+class LessonReaderScreen extends ConsumerStatefulWidget {
   const LessonReaderScreen({
     super.key,
     required this.lessonId,
@@ -36,8 +38,25 @@ class LessonReaderScreen extends ConsumerWidget {
   final bool quizOnly;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(lessonReaderProvider(lessonId));
+  ConsumerState<LessonReaderScreen> createState() =>
+      _LessonReaderScreenState();
+}
+
+
+class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Kick off the glossary asset load so `<Term/>` chips have data by the
+    // time the lesson body finishes streaming in. Idempotent + cached.
+    TermRegistry.instance.load().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(lessonReaderProvider(widget.lessonId));
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
@@ -45,7 +64,7 @@ class LessonReaderScreen extends ConsumerWidget {
           children: [
             _Header(
               title: state.lesson?.meta.title ?? 'Loading…',
-              suffix: quizOnly ? 'QUIZ ONLY' : null,
+              suffix: widget.quizOnly ? 'QUIZ ONLY' : null,
             ),
             Expanded(child: _body(context, ref, state)),
           ],
@@ -67,7 +86,7 @@ class LessonReaderScreen extends ConsumerWidget {
     final lesson = state.lesson;
     if (lesson == null) return const SizedBox.shrink();
 
-    final visibleBlocks = quizOnly
+    final visibleBlocks = widget.quizOnly
         ? lesson.blocks.where((b) => b.kind == LessonBlockKind.quiz).toList()
         : lesson.blocks;
 
@@ -75,7 +94,7 @@ class LessonReaderScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(AmiSpacing.m),
       children: [
         _LessonMetaBar(meta: lesson.meta),
-        if (quizOnly) ...[
+        if (widget.quizOnly) ...[
           const SizedBox(height: AmiSpacing.m),
           _QuizOnlyBanner(quizCount: visibleBlocks.length),
         ],
@@ -85,7 +104,7 @@ class LessonReaderScreen extends ConsumerWidget {
             block: block,
             state: state,
             onSelect: (questionId, idx) => ref
-                .read(lessonReaderProvider(lessonId).notifier)
+                .read(lessonReaderProvider(widget.lessonId).notifier)
                 .selectAnswer(questionId, idx),
           ),
           const SizedBox(height: AmiSpacing.m),
@@ -98,15 +117,21 @@ class LessonReaderScreen extends ConsumerWidget {
               foregroundColor: AmiColors.slate900,
               padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
             ),
-            onPressed: ref.read(lessonReaderProvider(lessonId).notifier).allAnswered
-                ? () => ref.read(lessonReaderProvider(lessonId).notifier).submit()
+            onPressed: ref
+                    .read(lessonReaderProvider(widget.lessonId).notifier)
+                    .allAnswered
+                ? () => ref
+                    .read(lessonReaderProvider(widget.lessonId).notifier)
+                    .submit()
                 : null,
             child: Text(state.submitting ? 'CHECKING…' : 'SUBMIT QUIZ'),
           )
         else
           _ResultPanel(
             result: state.result!,
-            onRetry: () => ref.read(lessonReaderProvider(lessonId).notifier).retry(),
+            onRetry: () => ref
+                .read(lessonReaderProvider(widget.lessonId).notifier)
+                .retry(),
             onDone: () => Navigator.of(context).pop(),
           ),
         const SizedBox(height: AmiSpacing.xxl),
@@ -263,6 +288,14 @@ class _BlockView extends StatelessWidget {
         );
       case LessonBlockKind.animation:
         return AnimationBlock(name: block.animationName ?? 'unknown');
+      case LessonBlockKind.term:
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: TermBlock(termId: block.termId ?? ''),
+          ),
+        );
       case LessonBlockKind.chatWith:
         final id = block.chatWithAgent ?? 'concierge';
         final a = agentById(id);

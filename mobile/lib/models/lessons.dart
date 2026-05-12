@@ -28,7 +28,7 @@ class QuizQuestion {
   }
 }
 
-enum LessonBlockKind { markdown, quiz, chatWith, animation }
+enum LessonBlockKind { markdown, quiz, chatWith, animation, term }
 
 class LessonBlock {
   const LessonBlock({
@@ -37,6 +37,7 @@ class LessonBlock {
     this.quiz,
     this.chatWithAgent,
     this.animationName,
+    this.termId,
   });
 
   final LessonBlockKind kind;
@@ -44,6 +45,7 @@ class LessonBlock {
   final QuizQuestion? quiz;
   final String? chatWithAgent;
   final String? animationName;
+  final String? termId;
 
   factory LessonBlock.fromJson(Map<String, dynamic> j) {
     final kindStr = j['kind'] as String;
@@ -61,6 +63,9 @@ class LessonBlock {
       case 'animation':
         kind = LessonBlockKind.animation;
         break;
+      case 'term':
+        kind = LessonBlockKind.term;
+        break;
       default:
         kind = LessonBlockKind.markdown;
     }
@@ -72,6 +77,7 @@ class LessonBlock {
           : QuizQuestion.fromJson(j['quiz'] as Map<String, dynamic>),
       chatWithAgent: j['chat_with_agent'] as String?,
       animationName: j['animation_name'] as String?,
+      termId: j['term_id'] as String?,
     );
   }
 }
