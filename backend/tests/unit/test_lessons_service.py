@@ -111,6 +111,34 @@ def test_lesson_parses_animation_mdx_block(tmp_path):
     assert anim.animation_name == "risk_pyramid"
 
 
+def test_lesson_parses_term_mdx_block(tmp_path):
+    """`<Term id="…"/>` parses to a block of kind=term with `term_id`
+    populated. The client resolves the id through its bundled
+    TermRegistry; unknown ids fall back to plain bold text on the
+    client side so a typo never crashes the reader.
+    """
+    from app.services.lessons_service import parse_mdx
+
+    mdx = tmp_path / "098_term_test.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "098_term_test"\n'
+        'title: "Term parse test"\n'
+        'duration_min: 2\n'
+        'level: 1\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'Open your <Term id="ami_watchlist" /> and pick a name.\n',
+        encoding="utf-8",
+    )
+    lesson = parse_mdx(mdx)
+    kinds = [b.kind for b in lesson.blocks]
+    assert "term" in kinds
+    term = next(b for b in lesson.blocks if b.kind == "term")
+    assert term.term_id == "ami_watchlist"
+
+
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
     lesson = svc.get(LEGACY_MARKET_ORDER_LESSON)
     assert lesson is not None

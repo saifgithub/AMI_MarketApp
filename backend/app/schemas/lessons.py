@@ -37,19 +37,24 @@ class QuizQuestion(BaseModel):
 
 
 class LessonBlock(BaseModel):
-    """A single block of rendered content — prose, quiz, ChatWith, or Animation.
+    """A single block of rendered content — prose, quiz, ChatWith, Animation, or Term.
 
     `animation_name` is the registry key the client uses to look up a Lottie
     asset. Missing names render the AmiHexPlaceholder so lessons referencing
     not-yet-bundled animations still display (A21 decouples content delivery
     from animation production).
+
+    `term_id` is the glossary id from `<Term id="…"/>`. The client resolves
+    it through its bundled TermRegistry; unknown ids fall back to plain
+    bold text so a typo never crashes the reader.
     """
 
-    kind: Literal["markdown", "quiz", "chat_with", "animation"]
+    kind: Literal["markdown", "quiz", "chat_with", "animation", "term"]
     markdown: str | None = None  # for kind == markdown
     quiz: QuizQuestion | None = None  # for kind == quiz
     chat_with_agent: str | None = None  # for kind == chat_with
     animation_name: str | None = None  # for kind == animation
+    term_id: str | None = None  # for kind == term
 
 
 class LessonMeta(BaseModel):

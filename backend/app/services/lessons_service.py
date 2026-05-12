@@ -84,6 +84,11 @@ _CHATWITH_RE = re.compile(r'<ChatWith\s+agent\s*=\s*"(?P<agent>[^"]+)"\s*/>')
 # referencing a not-yet-bundled animation still ships.
 _ANIMATION_RE = re.compile(r'<Animation\s+name\s*=\s*"(?P<name>[^"]+)"\s*/>')
 
+# <Term id="glossary_id" /> — inline glossary reference. The client looks
+# the id up in its bundled TermRegistry and renders a tappable definition
+# sheet; unknown ids fall back to plain text so a typo never crashes.
+_TERM_RE = re.compile(r'<Term\s+id\s*=\s*"(?P<id>[^"]+)"\s*/>')
+
 
 def _parse_jsx_attrs(text: str) -> dict[str, Any]:
     """Tolerant parser for the small subset of JSX attribute syntax we use.
@@ -198,6 +203,8 @@ def parse_mdx(path: Path) -> Lesson:
         components.append((match.start(), match.end(), "chat_with", match.group("agent")))
     for match in _ANIMATION_RE.finditer(body):
         components.append((match.start(), match.end(), "animation", match.group("name")))
+    for match in _TERM_RE.finditer(body):
+        components.append((match.start(), match.end(), "term", match.group("id")))
     components.sort(key=lambda t: t[0])
 
     for start, end, kind, payload in components:
@@ -211,6 +218,8 @@ def parse_mdx(path: Path) -> Lesson:
             blocks.append(LessonBlock(kind="chat_with", chat_with_agent=payload))
         elif kind == "animation":
             blocks.append(LessonBlock(kind="animation", animation_name=payload))
+        elif kind == "term":
+            blocks.append(LessonBlock(kind="term", term_id=payload))
         cursor = end
     if cursor < len(body):
         tail = body[cursor:].strip()
