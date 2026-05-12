@@ -14,6 +14,13 @@ RUN uv pip install --system -e ".[dev]"
 
 COPY app ./app
 COPY tests ./tests
+# Alembic config + migrations — needed for `alembic upgrade head` during
+# the /promote-to-alpha step 5. Without these, alembic can't find its
+# script_location and the migration step fails with "No 'script_location'
+# key found in configuration". `init_schema()` covers the schema on
+# first DB touch, but Alembic is the formal migration record.
+COPY alembic.ini ./alembic.ini
+COPY alembic ./alembic
 
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1

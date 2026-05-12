@@ -74,6 +74,7 @@ or similar.
 
 ```bash
 rsync -az --delete \
+  --exclude='.env' \
   --exclude='.venv' \
   --exclude='__pycache__' \
   --exclude='.dart_tool' \
@@ -85,20 +86,30 @@ rsync -az --delete \
   --exclude='.git' \
   --exclude='.idea' \
   --exclude='.vscode' \
+  --exclude='Silent_Scout/' \
   ./ \
   melehost:~/ami_trade/
 ```
 
-`.env` is excluded by the default rsync filter (it's a dotfile in the
-root that the exclude list above doesn't cover, but rsync skips it
-unless explicitly included). If `.env` has been edited recently on the
-Mac and the change needs to flow to melehost, `scp` it separately:
+**`.env` MUST be excluded.** rsync has no default dotfile exclusion —
+the working values live ONLY on melehost (vLLM URL, model, market-data
+flag, CF tunnel token). Without `--exclude='.env'`, the Mac's nearly
+empty `.env` overwrites them and the alpha drops to mock LLM + the
+tunnel dies on next restart. First-run check: after rsync, before
+recreating the container, verify the keys survived:
+
+```bash
+ssh melehost "grep -E '^(VLLM_BASE_URL|VLLM_MODEL|USE_REAL_MARKET_DATA|CF_TUNNEL_TOKEN)' ~/ami_trade/.env"
+```
+
+If something needs to flow Mac → melehost (rare — usually a new flag
+landing in `.env.example`), `scp` it explicitly:
 
 ```bash
 scp /Volumes/Extreme\ Pro/AMI_MarketApp/.env melehost:~/ami_trade/.env
 ```
 
-The user should confirm whether `.env` needs syncing — usually no.
+The user should confirm whether `.env` needs syncing — almost always no.
 
 ### 4. Recreate the backend container on melehost
 
