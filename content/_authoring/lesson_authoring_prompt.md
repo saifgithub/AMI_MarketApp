@@ -1,42 +1,53 @@
 # Lesson + Q&A authoring prompt
 
-Self-contained prompt for any AI tool (ChatGPT, Claude.ai, Gemini, etc.) to generate AMI Trade lessons + daily-challenge data that drop straight into this repo.
+Self-contained prompt for any AI tool (ChatGPT, Claude.ai, Gemini, etc.) to generate AMI Trade lessons + daily-challenge data + AI Coach Q&A entries that drop straight into this repo.
 
-Saiful: paste the **PROMPT** block below into your tool of choice. Adjust the "What you should write today" section at the bottom to scope each generation run (e.g. "5 lessons from the Risk track").
+Saiful: paste one of the three **PROMPT** blocks below into your tool of choice. Adjust the "What you should write today" section at the bottom of each prompt to scope the generation run.
+
+The canonical curriculum sequence (Levels 1–8, Modules 1–12, lesson IDs) lives at [`docs/04_education/curriculum_map.md`](../../docs/04_education/curriculum_map.md). The prompt below references it — keep both in sync.
 
 ---
 
-## PROMPT
+## PROMPT 1 — Lesson MDX generator
 
 ```
 You are writing educational content for AMI Trade — a mobile-first,
 simulation-only AI trading-education iOS app. The user is the CEO of a
 12-agent analyst team named AMI. AMI is the brand name of the AI; the
-agents are members of AMI. Never write "the AI" or "the LLM" — say AMI.
+agents are members of AMI.
+
+NAMING RULE (non-negotiable): never write "the AI", "the LLM", "the
+model", or "ChatGPT". Say AMI. Individual agents are referred to by
+their role name (the Bear Researcher, the PM, the Market Analyst).
 
 ## What AMI Trade is
 
 - Simulation-only, advisory-only, forever. No brokerage integration ever.
-- The user defines a Mandate (risk tolerance, max drawdown, compliance
-  flags like halal/ESG/long-only). Every agent works within the mandate.
-- The Portfolio Manager (PM) has a non-coachable safety floor: a
-  deterministic compliance check that runs on every trade regardless of
-  what AMI says.
-- "Convene the Room" runs all 12 agents in a debate that produces a
-  Verdict (BUY/SELL/HOLD with size, entry, stop, target, horizon).
-- Coach Your Agent lets users shape style/priority of any single agent
-  via natural language. Cannot bypass the safety floor.
+- The user defines a Mandate: risk tolerance, max drawdown, compliance
+  flags (halal / ESG-lite / no T/A/G / no fossil / long-only). Every
+  agent operates within the mandate.
+- The Portfolio Manager (PM) enforces a non-coachable safety floor —
+  a deterministic compliance check that runs on every trade regardless
+  of what AMI says.
+- "Convene the Room" runs all 12 agents in a debate producing a Verdict
+  (BUY/SELL/HOLD with size, entry, stop, target, horizon).
+- "Coach Your Agent" lets users shape style/priority of any single
+  agent via natural language. Cannot bypass the safety floor.
+- Markets covered: US equities primary, Bursa Malaysia secondary at
+  v1.0, GCC/Tadawul later. Reference real tickers from those exchanges
+  (AAPL, NVDA, MSFT, GOOGL, TSLA for US; MAYBANK, PETRONAS, GENTING,
+  TENAGA, SIME, CIMB, PUBLIC, IHH, TOPGLOV for Bursa).
 
-## The 12 agents (+ Concierge)
+## The 12 agents + Concierge
 
 Analysts (4): Fundamentals, Market (technical), News, Social Media.
 Researchers (3): Bull, Bear, Research Manager (synthesises the debate).
 Execution (1): Trader.
 Risk Debators (3): Aggressive, Conservative, Neutral.
-Governance (1): Portfolio Manager (the safety floor enforcer).
-Plus: Concierge (the 13th — onboarding + routing, not part of the trading team).
+Governance (1): Portfolio Manager (the safety-floor enforcer).
+Plus Concierge — onboarding + routing, not part of the trading team.
 
-Agent IDs (use these verbatim in agent_callouts):
+Agent IDs (use verbatim in agent_callouts):
 fundamentals_analyst, market_analyst, news_analyst,
 social_media_analyst, bull_researcher, bear_researcher,
 research_manager, trader, aggressive_debator, conservative_debator,
@@ -51,25 +62,51 @@ neutral_debator, portfolio_manager, concierge
 - Confident without hyperbole. State things; don't sell them.
 - Falsifiability is sacred — every claim should be checkable.
 - Stories work, but only with specifics. Generic case studies are dead.
-- AMI sometimes refers to itself in first person ("AMI's Bear here…").
-  The agents speak for themselves: "the Bear Researcher", "the PM".
+- Direct address. "You" not "investors".
+- Multi-locale awareness: US-only readers shouldn't trip on RM/MYR
+  amounts. When using a non-USD example, prefix with country context
+  ("On Bursa Malaysia: ...").
+
+## Curriculum structure: 8 Levels, 12 Modules
+
+| Level | Module | Theme |
+|-------|--------|-------|
+| 1 — Beginner Foundation | 1 | What Is the Stock Market? |
+| 1 — Beginner Foundation | 2 | Investing vs Trading |
+| 1 — Beginner Foundation | 3 | Risk Management (MOST IMPORTANT) |
+| 2 — Technical Analysis | 4 | Reading Charts |
+| 2 — Technical Analysis | 5 | Indicators |
+| 3 — Fundamental Analysis | 6 | Understanding Companies |
+| 3 — Fundamental Analysis | 7 | Financial Ratios |
+| 4 — Trading Psychology | 8 | Emotional Discipline |
+| 5 — Strategy Building | 9 | Trading Strategies |
+| 6 — Market Regime | 10 | Understanding Market Conditions |
+| 7 — Scam Protection | 11 | Investment Scam Awareness |
+| 8 — AI + Modern Trading | 12 | AI-Assisted Trading |
+
+For the exact lesson ID, title, difficulty, track, and agent_callouts
+for each lesson in each module, see the canonical curriculum map at
+docs/04_education/curriculum_map.md. The "What you should write today"
+section at the bottom of this prompt will point you to specific IDs.
 
 ## Lesson file format
 
-Every lesson is a single MDX file at `content/lessons/<id>.en.mdx`.
+Each lesson is a single MDX file at `content/lessons/<id>.en.mdx`.
 
 Structure:
 
 ---
 id: "<NNN>_<snake_case_slug>"
 title: "Human-readable title"
-duration_min: <integer, typically 3–6>
-level: <1|2|3|4|5>
+duration_min: <integer, typically 3-6>
+level: <1-8>                    # Saiful's pedagogical Level
+module: <1-12>                  # the module within the level
+difficulty: <1-5>               # how hard the content itself is
 track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process>"
-topic: "<short slug, e.g. 'ratios', 'frameworks', 'sizing'>"
-prerequisites: ["<lesson_id>", ...]   # snake-case ids; can be []
+topic: "<short slug>"
+prerequisites: ["<lesson_id>", ...]
 tags: ["<short tags>", ...]
-agent_callouts: ["<agent_id>", ...]    # which agents this lesson teaches; controls unlocks
+agent_callouts: ["<agent_id>", ...]
 locale_versions: ["en"]
 created_at: "YYYY-MM-DD"
 updated_at: "YYYY-MM-DD"
@@ -77,116 +114,148 @@ updated_at: "YYYY-MM-DD"
 
 # <Lesson title>
 
-<Lesson body — markdown, 300–800 words. Use ##/### subheadings.
-Numbered lists for procedures. Bold for key terms on first mention.
-Inline numeric examples ("NVDA at $152, TTM EPS $4, P/E = 38").
-Optionally include 1–2 `<ChatWith agent="agent_id" />` callouts mid-body
-where it makes pedagogical sense to invite the reader to ask AMI's
-agent directly.>
+<Body follows the 7-part lesson template below.>
 
-## Quiz
+## The 7-part lesson template (every lesson MUST follow this shape)
 
-<Quiz
-  question="A precise, testable question. Numbers when possible."
-  options={[
-    "Plausible distractor that catches a common misconception",
-    "Correct answer",
-    "Another plausible distractor",
-    "Edge-case-looking distractor"
-  ]}
-  answer={1}                    # zero-indexed; in this example the right answer is options[1]
-  explanation="Why the right answer is right AND why the most tempting wrong answer fails. Reference numbers from the lesson body."
-/>
+### 1. Short explanation (50-120 words, no heading)
 
-<Quiz ... />   # 1–3 quizzes per lesson; the last is usually the most synthesising
+Lead with a one-paragraph thesis. State what the reader will be able to
+do or understand after this lesson. No "in this lesson we will...".
+End with a single-sentence hook into the rest of the lesson.
 
-## Frontmatter rules
+Embed an animation right after this paragraph:
+  <Animation name="<from the catalog>" />
 
-- `id`: zero-padded 3-digit prefix, snake_case slug. Match the filename
-  before `.en.mdx`. Example: `057_atr_based_stops.en.mdx` → id `057_atr_based_stops`.
-- `track` MUST be one of the 7 enum values listed above. No new tracks.
-- `topic` is free-form but reuse existing values where possible (look at
-  the lessons you already see).
-- `level`: 1 = anyone literate; 3 = someone who has done the prerequisites;
-  5 = expert nuance / advanced framework.
-- `agent_callouts` controls the Earn Path. To unlock an agent, the user
-  must complete every lesson that lists that agent in `agent_callouts`.
-  Tag the agent you're explicitly teaching about. Don't tag every agent
-  loosely mentioned — only the ones the lesson is genuinely about.
-- `prerequisites`: real lesson ids only. Don't invent ids that don't exist.
-- Dates: use today's date in YYYY-MM-DD for both.
+### 2. Real-world example (150-250 words, heading: "## Example" or
+"## How this plays out in real markets")
+
+A specific scenario with real tickers and real numbers. US OR Bursa
+Malaysia example. Show the concept happening to a concrete instrument.
+Cite numbers — entry, exit, percentages, ratios. Don't say "imagine
+a stock"; say "Look at NVDA in Q1 2026".
+
+### 3. Common beginner mistake (80-150 words, heading: "## The trap")
+
+Name the specific wrong move a beginner makes here and why it feels
+right at the time. Then explain what the correct mental model looks
+like instead. This is the lesson's most important paragraph — most
+people get this part wrong.
+
+### 4. Ask AMI (one line, no heading)
+
+A `<ChatWith>` callout that invites the reader to ask AMI's relevant
+agent about this concept directly. Pick the most-relevant agent for
+this lesson:
+
+  <ChatWith agent="<agent_id>" />
+
+### 5. Quiz (heading: "## Quiz", 1-3 quizzes; the last must require
+synthesis, not recall)
+
+  <Quiz
+    question="A precise, testable question. Use numbers when possible."
+    options={[
+      "Plausible distractor that catches a common misconception",
+      "Correct answer",
+      "Another plausible distractor",
+      "Edge-case-looking distractor"
+    ]}
+    answer={1}                 # zero-indexed; in this example the right answer is options[1]
+    explanation="Why the right answer is right AND why the most
+                 tempting wrong answer fails. Reference numbers from
+                 the lesson body."
+  />
+
+For numeric free-response:
+  <Quiz
+    question="If your account is RM5,000 and your max risk per trade
+              is 1%, how much can you lose per trade?"
+    answer={50}
+    tolerance={0}
+    explanation="1% of 5,000 = 50."
+  />
+
+### 6. Action task (40-100 words, heading: "## Try it")
+
+One concrete thing the reader does inside the AMI Trade app right now.
+Examples:
+- "Open Settings → Mandate, set max_drawdown_pct to 20, and see how
+  the PM's safety floor message changes when you submit a 30% position."
+- "In 1-on-1 with the Market Analyst, paste the ticker NVDA and ask
+  'What's the current setup?'"
+- "Open the Decision Journal and find an old trade. Ask yourself: would
+  the lesson you just read have changed how you sized it?"
+
+### 7. Key takeaway (1-2 sentences, heading: "## Takeaway")
+
+The one thing the reader should remember when they close the app. Make
+it portable — something they could say out loud to themselves before
+opening a trade ticket.
 
 ## MDX components available
 
+- `<Animation name="<catalog_name>" />`
+  Renders the named animation. Catalog lives at
+  content/animations/. If the name doesn't resolve, a placeholder
+  renders so the lesson still works. See curriculum_map.md for the
+  per-module animation catalog.
+
 - `<Quiz question="..." options={[...]} answer={N} explanation="..." />`
   Multiple-choice. `answer` is a zero-indexed integer.
-- `<Quiz question="..." answer={N} tolerance={0.5} />`
+
+- `<Quiz question="..." answer={N} tolerance={X} explanation="..." />`
   Numeric free-response. `tolerance` is absolute. No `options` array.
+
 - `<ChatWith agent="<agent_id>" />`
-  Renders a button: "Ask <agent_name> about this". Used to invite 1-on-1
-  with a specific agent. Limit 1–2 per lesson.
+  Button: "Ask <agent_name> about this". Limit 1 per lesson (part 4
+  of the template). Pick the most-relevant agent.
 
-## Curriculum scope
+## Frontmatter rules
 
-7 tracks × ~18 topics → 300 lessons total. Alpha target: 150.
+- `id`: zero-padded 3-digit prefix matches curriculum_map.md.
+  Filename = `<id>.en.mdx`.
+- `level` = Saiful's pedagogical Level (1-8).
+- `module` = the cohesive group within the level (1-12).
+- `difficulty` = how hard the content is (1-5), independent of level.
+- `track` MUST be one of the 7 enum values. Determined by the
+  curriculum map. Drives agent-unlock routing.
+- `agent_callouts` MUST match the curriculum map for that lesson ID.
+  Tag only the agent(s) this lesson teaches about — not every agent
+  loosely mentioned.
+- `prerequisites`: real lesson IDs only.
+- Dates: use today's date in YYYY-MM-DD for both.
 
-| Track id                  | Target lessons | What lives here                          |
-|---------------------------|----------------|------------------------------------------|
-| foundations               | 30             | What is a stock / market / order / etc.  |
-| fundamentals_analysis     | 50             | Financials, ratios, valuation, comps     |
-| technical_analysis        | 50             | Charts, indicators, patterns, volume     |
-| news_macro                | 30             | Macro indicators, Fed cycles, sectors    |
-| sentiment_behaviour       | 20             | Crowd psych, sentiment, social signals   |
-| risk_portfolio            | 50             | Sizing, diversification, drawdown        |
-| edge_process              | 70             | Journaling, post-mortems, mental models  |
+## Quality bar (per lesson)
 
-## Existing lessons (DO NOT duplicate)
-
-001_what_is_a_stock — Foundations
-002_what_is_a_market — Foundations
-003_what_is_a_brokerage — Foundations
-004_market_order_vs_limit — Foundations
-005_what_makes_a_price_move — Foundations
-006_reading_a_pe_ratio — Fundamentals analysis
-007_what_is_a_chart — Technical analysis
-008_news_that_moves_markets — News & macro
-009_sentiment_and_the_crowd — Sentiment & behaviour
-010_bull_vs_bear_thinking — Edge & process
-011_position_sizing_basics — Risk & portfolio
-012_the_pm_and_your_mandate — Edge & process
-013_research_manager_synthesis — Edge & process
-
-## Quality bar
-
-Each lesson must:
-1. Open with a one-paragraph thesis that says what the reader will be
-   able to do after reading. No "in this lesson we will...".
-2. Use at least one specific numeric example with a real ticker (AAPL,
-   NVDA, MSFT, etc.). Made-up tickers are forbidden.
-3. Include at least one falsification condition for any claim. If you
+1. Opens with a thesis paragraph — what the reader will be able to do.
+2. Uses at least one specific numeric example with a real ticker.
+3. Includes at least one falsification condition for any claim. If you
    say "X is bullish", you must also say "X would invalidate if Y".
-4. End with a quiz that requires synthesis, not recall. The right
-   answer should require having understood the body, not just having
-   skimmed it.
-5. If it teaches about a specific agent, include a `<ChatWith>` callout
-   for that agent.
-6. Avoid: "as we'll see", "stay tuned", "in the next lesson". Each
+4. Quiz requires synthesis, not recall. The right answer should require
+   having understood the body, not just having skimmed it.
+5. Includes an Animation reference matching the curriculum map's
+   per-module catalog.
+6. Includes a ChatWith for the most-relevant agent.
+7. Includes an Action task tied to a real screen in the app.
+8. Ends with a portable Takeaway.
+9. Avoids: "as we'll see", "stay tuned", "in the next lesson". Each
    lesson stands alone.
-7. Use AMI naming. Never "the AI", "the model", "the LLM".
+10. AMI naming. Never "the AI", "the model", "the LLM".
 
 ## Output format
 
-For each lesson, output a fenced code block with the MDX content. Use
-the filename as the code-block language tag:
+For each lesson, output a fenced code block with the MDX content.
+Use the filename as the code-block language tag:
 
-```mdx filename=content/lessons/014_orders_and_slippage.en.mdx
+```mdx filename=content/lessons/014_position_sizing_basics.en.mdx
 ---
-id: "014_orders_and_slippage"
-title: "Orders and Slippage"
+id: "014_position_sizing_basics"
+title: "Position sizing basics"
 ...
 ---
 
-# Orders and Slippage
+# Position sizing basics
 
 ...
 ```
@@ -198,35 +267,35 @@ fenced block each.
 
 ## What you should write today
 
-[Saiful: edit this section per generation run. Examples:]
+[Saiful: edit this section per generation run. The examples below show
+the typical scope of one run — 5 to 12 lessons keeps quality tight.]
 
-Write 10 lessons from the **risk_portfolio** track, levels 2–3, that
-follow on from 011_position_sizing_basics. Cover ATR-based stops,
-the Kelly criterion (with warnings), correlation-aware sizing,
-single-name caps, sector caps, drawdown discipline, and rebalancing.
+Examples:
 
-Make 2 of them tag `portfolio_manager` in agent_callouts (so they
-contribute to unlocking the PM). Make 1 tag `aggressive_debator`,
-`conservative_debator`, `neutral_debator` (so it contributes to
-unlocking the Risk Debators).
+- "Write all 7 lessons in Module 3 (Risk Management): IDs 013-019.
+   Reference curriculum_map.md for titles, difficulty, track, and
+   agent_callouts. Use today's date."
 
-Use today's date for created_at and updated_at.
+- "Write Module 8 (Emotional Discipline): IDs 045-051. Module 8 has
+   no real numeric examples in the way other modules do — use
+   real-trader anecdotes ('an experienced trader on Bursa once...')
+   instead. Tag bear_researcher and conservative_debator where
+   appropriate per curriculum_map.md."
+
+- "Write the first 6 lessons of Module 1 (What Is the Stock Market?):
+   IDs 001-006. Lesson 004 (US markets vs Bursa Malaysia) requires
+   one paragraph each on NYSE/NASDAQ session times + currencies and
+   Bursa session times + currency. Be specific about KLCI."
 ```
 
 ---
 
-## Daily-challenge bank prompt (separate artefact)
-
-After the lessons land, generate daily-challenge data the same way.
-Format is JSON, one file per batch. The challenge engine picks one
-challenge per day per locale.
-
-### PROMPT
+## PROMPT 2 — Daily-challenge bank generator
 
 ```
 You are writing daily challenges for AMI Trade. Same context as the
-lesson prompt above (AMI is the brand of the AI, 12 agents, mandate-
-driven simulation app).
+lesson prompt (AMI is the brand of the AI, 12 agents, mandate-driven
+simulation app, US + Bursa Malaysia markets).
 
 Each challenge is a JSON object. Output a single JSON array per batch.
 
@@ -243,17 +312,17 @@ Schema:
   "options": ["<distractor>", "<correct>", "<distractor>", "<distractor>"],
   "answer": <zero-indexed integer pointing to the correct option>,
   "explanation": "<why the right answer is right, and why the most
-                  tempting wrong answer fails. Reference the scenario
+                  tempting wrong answer fails. Reference scenario
                   numbers explicitly.>",
-  "related_lesson": "<lesson id if applicable, else null>",
+  "related_lesson": "<lesson id from curriculum_map.md if applicable, else null>",
   "related_agent": "<agent_id if applicable, else null>",
   "tags": ["<short tags>"]
 }
 
 Challenge-type guide:
 
-- predict_the_call: scenario shows facts on a ticker; user picks what a
-  specific agent would say. Tag related_agent.
+- predict_the_call: scenario shows facts on a ticker; user picks what
+  a specific agent would say. Tag related_agent.
 - read_the_chart: scenario describes a chart pattern in words (no
   images); user picks the technical setup. Tag market_analyst.
 - spot_the_violation: scenario shows a trade ticket + the user's
@@ -261,27 +330,102 @@ Challenge-type guide:
   portfolio_manager.
 - match_the_agent: scenario shows a quote/statement; user picks which
   of the 12 agents would have said it.
-- whats_missing: scenario shows a Room verdict; user picks which agent's
-  input is conspicuously absent.
+- whats_missing: scenario shows a Room verdict; user picks which
+  agent's input is conspicuously absent.
 
 Quality bar (same as lessons):
-- Real tickers only. No "Company X".
+- Real tickers only. No "Company X". US + Bursa Malaysia.
 - Numbers > adjectives in scenarios.
-- Distractors must be plausible to someone who half-read the relevant
-  lesson — not absurd.
-- Explanations must include why the *attractive* wrong answer fails,
-  not just why the right one wins.
+- Distractors plausible to someone who half-read the relevant lesson.
+- Explanations must address why the *attractive* wrong answer fails.
 - One challenge per day per locale; aim for ~30 challenges per batch
-  (one month's worth).
+  (one month).
 
 ## What you should write today
 
-[Saiful: edit per run. Example:]
+Examples:
 
-Write 30 daily challenges, mix of all 5 types (~6 each), difficulty
-1–3, locale "en". Use ids dc_2026_06_01 through dc_2026_06_30.
-At least 5 challenges must reference the safety-floor mandate
-compliance check (spot_the_violation type).
+- "Write 30 daily challenges for June 2026 (dc_2026_06_01 through
+   dc_2026_06_30), mix of all 5 types (~6 each), difficulty 1-3,
+   locale en. At least 5 must be spot_the_violation referencing the
+   safety floor."
+
+- "Write 15 challenges tied specifically to Module 11 (Scam
+   Protection). Mix of types but all difficulty 1-2 — the goal is
+   that even brand-new users can engage with these and learn to
+   recognise red flags. Use IDs dc_2026_07_<n>."
+
+Output a single JSON array.
+```
+
+---
+
+## PROMPT 3 — AI Coach Q&A Library generator
+
+The AI Coach Q&A Library is a searchable knowledge base of questions
+users typically ask AMI. The Concierge agent draws from this for fast
+responses and routing decisions. Daily-challenge text and lesson Q&A
+can be sourced from here too.
+
+Each entry is a JSON object. Output a single JSON array per batch.
+
+```
+You are writing entries for AMI Trade's AI Coach Q&A Library — a
+searchable knowledge base of common user questions and AMI's canonical
+answer. Same AMI Trade context as the lesson prompt.
+
+Schema:
+
+{
+  "id": "qa_<slug>",                  // unique
+  "category": "beginner" | "intermediate" | "psychology" | "scam" | "ai_meta" | "platform",
+  "question": "<as a user would phrase it>",
+  "short_answer": "<1-2 sentence canonical answer. No fluff.>",
+  "long_answer": "<3-6 sentence elaboration. Optional — only if the
+                   short answer needs more context.>",
+  "related_lessons": ["<lesson_id>", ...],   // from curriculum_map.md
+  "related_agents": ["<agent_id>", ...],
+  "tags": ["<short tags>"]
+}
+
+Tone:
+- Direct address. The user is asking; AMI answers.
+- Short answer is what AMI says first in a chat.
+- Long answer expands only if the short answer would feel curt.
+- Reference curriculum lessons when the user should go deeper.
+
+Categories explained:
+
+- beginner: "What is a stock?", "What is a stop-loss?"
+- intermediate: "Is this breakout setup valid?", "What could go wrong?"
+- psychology: "Am I revenge trading?", "Should I stop trading today?"
+- scam: "Is this Telegram group legit?", "Is X broker registered?"
+- ai_meta: "Can AMI predict the market?", "Why didn't AMI say what I
+  expected?"
+- platform: "How do I edit my mandate?", "Where is the Decision Journal?"
+
+Quality bar:
+- Each entry answers a question users actually ask, not a question
+  the curriculum wants them to ask.
+- Short answers must be factually conservative — no claims, no
+  predictions, no promises. AMI describes process, not outcomes.
+- Psychology entries must not give medical advice. They surface
+  patterns + suggest the user pause or review their journal.
+
+## What you should write today
+
+Examples:
+
+- "Write 50 beginner Q&A entries covering the questions a Module 1-3
+   reader would naturally ask. Tag related_lessons from curriculum_map.md."
+
+- "Write 30 psychology Q&A entries for users who have just taken a
+   loss. All entries should suggest cooling-off behaviour rather than
+   doubling down. Reference Module 8 lessons."
+
+- "Write 20 ai_meta entries — questions users ask about what AMI is,
+   what it can/can't do, why it gave a particular verdict. These feed
+   the Concierge directly."
 
 Output a single JSON array.
 ```
@@ -290,16 +434,53 @@ Output a single JSON array.
 
 ## How to land the generated content in the repo
 
-Once you have the MDX files from the AI tool:
+### Lessons
 
-1. Save each fenced block to its filename under `content/lessons/`.
-2. Run `pytest backend/tests/unit/ -q` — the lesson loader auto-discovers
-   new MDX files. If frontmatter is malformed the test for
-   `LessonsService` will fail with a clear error.
-3. The lesson appears in `GET /v1/lessons` automatically; no other code
-   change required.
+1. Save each fenced MDX block to its filename under `content/lessons/`.
+2. Run `pytest backend/tests/unit/ -q`. The lesson loader auto-discovers
+   new MDX files; if frontmatter is malformed, `test_lessons_service`
+   fails with a clear error.
+3. The lesson appears in `GET /v1/lessons` automatically.
+4. Verify the animation names referenced in each lesson exist in
+   `content/animations/` (or stub them with a placeholder for now —
+   the `<Animation>` component renders a placeholder when the name
+   doesn't resolve).
 
-For daily challenges:
+### Daily challenges
+
 1. Save the JSON array to `content/daily_challenges/<batch>.json`.
-2. The challenge ingestion service (not yet built — see Alpha A17
-   "Daily briefing flow" precursor) will pick them up.
+2. The challenge ingestion service (Alpha A17 precursor — not yet
+   built) will pick them up.
+
+### AI Coach Q&A Library
+
+1. Save the JSON array to `content/ai_coach/<batch>.json`.
+2. The Concierge embedding pipeline (not yet built — likely Beta) will
+   ingest these into a vector store for retrieval.
+
+---
+
+## Animation catalog reference
+
+Animations live at `content/animations/<name>.json` (Lottie) or as
+Flutter-rendered widgets keyed by name. Catalog per module is listed in
+`docs/04_education/curriculum_map.md`. Missing animations render a
+placeholder; lessons still work without them.
+
+---
+
+## Iteration tips for Saiful
+
+- Run in batches of 5–12 lessons per AI-tool conversation. Context drift
+  kills voice consistency past ~10 long lessons in one session.
+- Always reference curriculum_map.md for the specific lesson IDs you
+  want — the LLM will otherwise invent IDs.
+- After each batch, do a `git diff content/lessons/` and spot-check 2–3
+  lessons. Common issues: distractors that are obviously wrong, quizzes
+  that test recall instead of synthesis, animation names that diverge
+  from the catalog.
+- For the daily-challenge bank, generate the whole month at once — the
+  ID sequence is deterministic so a single batch is easier to audit.
+- AI Coach Q&A entries are the highest-leverage content because every
+  user hits them via the Concierge. Bias toward more entries per batch
+  (50+) but with shorter answers.
