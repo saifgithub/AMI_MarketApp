@@ -97,6 +97,13 @@ services:
     volumes:
       - ./backend/app:/app/app:ro
       - ./backend/tests:/app/tests:ro
+      # Lessons + glossary + ai_coach + daily_challenges all live under
+      # /content and are read at boot by LessonsService (and the soon-to-
+      # exist GlossaryService etc). lessons_service.py resolves the path
+      # via parent.parent.parent.parent → /content/lessons, so the mount
+      # point in-container is /content (NOT /app/content). Without this
+      # mount the container loads zero lessons.
+      - ./content:/content:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
       interval: 30s
