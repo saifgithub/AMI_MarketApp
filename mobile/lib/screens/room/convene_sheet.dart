@@ -5,6 +5,7 @@
 /// GOOGL, META, TSLA, AMZN) so the user can convene with one tap.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ class _ConveneSheetState extends State<ConveneSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
@@ -63,13 +65,13 @@ class _ConveneSheetState extends State<ConveneSheet> {
             children: [
               const Icon(Icons.bolt, color: AmiColors.hexGreen, size: 20),
               const SizedBox(width: AmiSpacing.s),
-              Text('CONVENE THE ROOM',
+              Text(l.conveneHeading,
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
             ],
           ),
           const SizedBox(height: AmiSpacing.s),
           Text(
-            'Pick a ticker. Your full team runs the debate.',
+            l.convenePickTicker,
             style: AmiTypography.body,
           ),
           const SizedBox(height: AmiSpacing.l),
@@ -80,7 +82,7 @@ class _ConveneSheetState extends State<ConveneSheet> {
             style: AmiTypography.statMid,
             onSubmitted: _go,
             decoration: InputDecoration(
-              hintText: 'e.g. NVDA',
+              hintText: l.conveneTickerHint,
               hintStyle: AmiTypography.statMid.copyWith(color: AmiColors.textLow),
               filled: true,
               fillColor: AmiColors.slate900,
@@ -95,7 +97,7 @@ class _ConveneSheetState extends State<ConveneSheet> {
             ),
           ),
           const SizedBox(height: AmiSpacing.m),
-          Text('OR PICK ONE',
+          Text(l.conveneOrPickOne,
               style: AmiTypography.labelMono.copyWith(fontSize: 11)),
           const SizedBox(height: AmiSpacing.s),
           Wrap(
@@ -123,7 +125,7 @@ class _ConveneSheetState extends State<ConveneSheet> {
                 padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
               ),
               icon: const Icon(Icons.bolt),
-              label: const Text('CONVENE'),
+              label: Text(l.conveneCta),
               onPressed: () => _go(_ctrl.text),
             ),
           ),

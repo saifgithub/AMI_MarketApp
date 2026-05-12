@@ -1,6 +1,7 @@
 /// 1-on-1 chat with a single agent.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/coach_screen.dart';
 import 'package:ami_trade/state/one_on_one_providers.dart';
@@ -170,7 +171,7 @@ class _Header extends StatelessWidget {
           if (_coachable)
             IconButton(
               icon: Icon(Icons.tune, color: agent.color),
-              tooltip: 'Coach this agent',
+              tooltip: AppLocalizations.of(context).oneOnOneCoachTooltip,
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => CoachScreen(agent: agent),
               )),
@@ -209,7 +210,7 @@ class _EmptyState extends StatelessWidget {
                 textAlign: TextAlign.center),
             const SizedBox(height: AmiSpacing.l),
             Text(
-              'Ask me anything in my domain.\nType below to start.',
+              AppLocalizations.of(context).oneOnOneAskAnything,
               style: AmiTypography.caption,
               textAlign: TextAlign.center,
             ),
@@ -256,7 +257,9 @@ class _InputBar extends StatelessWidget {
               enabled: !disabled,
               onSubmitted: (_) => onSend(),
               decoration: InputDecoration(
-                hintText: disabled ? 'Streaming…' : 'Ask anything…',
+                hintText: disabled
+                    ? AppLocalizations.of(context).oneOnOneStreaming
+                    : AppLocalizations.of(context).oneOnOneHint,
                 hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
                 filled: true,
                 fillColor: AmiColors.slate800,

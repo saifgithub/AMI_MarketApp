@@ -1,3 +1,4 @@
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -58,7 +59,7 @@ class ChatBubble extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: AmiSpacing.xs),
                       child: Text(
-                        _labelText(),
+                        _labelText(context),
                         style: AmiTypography.labelMono.copyWith(
                           color: _accentColor,
                           fontSize: 11,
@@ -85,8 +86,10 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
-  String _labelText() {
-    if (author == ChatAuthor.concierge) return 'CONCIERGE';
+  String _labelText(BuildContext context) {
+    if (author == ChatAuthor.concierge) {
+      return AppLocalizations.of(context).chatBubbleConcierge;
+    }
     if (author == ChatAuthor.agent) return (agentLabel ?? 'AGENT').toUpperCase();
     return '';
   }

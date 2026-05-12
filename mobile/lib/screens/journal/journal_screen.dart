@@ -4,6 +4,7 @@
 /// agent unlock). Filter chips for entry type. Tap → detail screen.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
@@ -16,13 +17,18 @@ import 'package:intl/intl.dart';
 class JournalScreen extends ConsumerWidget {
   const JournalScreen({super.key});
 
-  static const List<({JournalEntryType? type, String label})> _filters = [
-    (type: null, label: 'ALL'),
-    (type: JournalEntryType.oneOnOne, label: '1-ON-1'),
-    (type: JournalEntryType.agentCoach, label: 'COACH'),
-    (type: JournalEntryType.lessonComplete, label: 'LESSONS'),
-    (type: JournalEntryType.agentUnlock, label: 'UNLOCKS'),
-  ];
+  /// Filter chip definitions. Labels are resolved at render time via
+  /// AppLocalizations so the row reacts to locale switches.
+  static List<({JournalEntryType? type, String label})> filtersFor(
+      AppLocalizations l) {
+    return [
+      (type: null, label: l.journalFilterAll),
+      (type: JournalEntryType.oneOnOne, label: l.journalFilterOneOnOne),
+      (type: JournalEntryType.agentCoach, label: l.journalFilterCoach),
+      (type: JournalEntryType.lessonComplete, label: l.journalFilterLessons),
+      (type: JournalEntryType.agentUnlock, label: l.journalFilterUnlocks),
+    ];
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,7 +46,8 @@ class JournalScreen extends ConsumerWidget {
                   horizontal: AmiSpacing.m, vertical: AmiSpacing.xs,
                 ),
                 child: Text(
-                  'Floor Pass: last ${state.retentionDays} days only. Upgrade to keep everything.',
+                  AppLocalizations.of(context)
+                      .journalRetentionWarning(state.retentionDays!),
                   style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
                 ),
               ),
@@ -104,7 +111,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('DECISION JOURNAL',
+          Text(AppLocalizations.of(context).journalHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
           const Spacer(),
         ],
@@ -120,12 +127,13 @@ class _FilterRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m, vertical: AmiSpacing.s),
       child: Row(
         children: [
-          for (final f in JournalScreen._filters)
+          for (final f in JournalScreen.filtersFor(l))
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
@@ -152,6 +160,7 @@ class _FilterRow extends ConsumerWidget {
 class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.xl),
       child: Center(
@@ -160,11 +169,10 @@ class _EmptyState extends StatelessWidget {
           children: [
             const Icon(Icons.menu_book_outlined, color: AmiColors.textLow, size: 48),
             const SizedBox(height: AmiSpacing.m),
-            const Text('No entries yet.', style: AmiTypography.h4),
+            Text(l.journalEmptyTitle, style: AmiTypography.h4),
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              'Talk to an agent, coach one, or complete a lesson — '
-              'every action lands here automatically.',
+              l.journalEmptyBody,
               textAlign: TextAlign.center,
               style: AmiTypography.body.copyWith(color: AmiColors.textLow),
             ),
@@ -202,24 +210,24 @@ class _EntryCard extends StatelessWidget {
     }
   }
 
-  String get _label {
+  String _label(AppLocalizations l) {
     switch (entry.entryType) {
       case JournalEntryType.oneOnOne:
-        return '1-ON-1';
+        return l.journalEntryTypeOneOnOne;
       case JournalEntryType.agentCoach:
-        return 'COACH';
+        return l.journalEntryTypeCoach;
       case JournalEntryType.lessonComplete:
-        return 'LESSON';
+        return l.journalEntryTypeLesson;
       case JournalEntryType.agentUnlock:
-        return 'UNLOCK';
+        return l.journalEntryTypeUnlock;
       case JournalEntryType.simTrade:
-        return 'TRADE';
+        return l.journalEntryTypeTrade;
       case JournalEntryType.mandateEdit:
-        return 'MANDATE';
+        return l.journalEntryTypeMandate;
       case JournalEntryType.driftAlert:
-        return 'DRIFT';
+        return l.journalEntryTypeDrift;
       case JournalEntryType.roomRun:
-        return 'ROOM';
+        return l.journalEntryTypeRoom;
     }
   }
 
@@ -250,7 +258,7 @@ class _EntryCard extends StatelessWidget {
                     color: _accent.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(_label,
+                  child: Text(_label(AppLocalizations.of(context)),
                       style: AmiTypography.labelMono.copyWith(
                           color: _accent, fontSize: 10)),
                 ),

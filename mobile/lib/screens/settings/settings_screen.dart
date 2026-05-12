@@ -6,6 +6,7 @@
 /// agent prompt is composed (1-on-1, Coach, Room, Sim).
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
@@ -55,7 +56,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() => _dirty = false);
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Mandate updated.')),
+      SnackBar(content: Text(AppLocalizations.of(context).settingsMandateUpdated)),
     );
     // Sim portfolio's compliance evaluation depends on the mandate —
     // refresh so any newly-rejectable holdings show up correctly.
@@ -73,6 +74,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       );
     }
     _initFrom(m);
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
@@ -83,7 +85,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(AmiSpacing.m),
                 children: [
-                  _Section(title: 'MY MANDATE', children: [
+                  _Section(title: l.settingsSectionMandate, children: [
                     _RiskSlider(
                       value: _localRiskScore ?? m.riskScore,
                       onChanged: (v) => setState(() {
@@ -101,7 +103,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  _Section(title: 'COMPLIANCE', children: [
+                  _Section(title: l.settingsSectionCompliance, children: [
                     _ComplianceToggles(
                       value: _localCompliance ?? m.compliance,
                       onChanged: (next) => setState(() {
@@ -111,14 +113,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
-                  _Section(title: 'PROFILE', children: [
-                    _ReadOnlyRow(label: 'Plan', value: m.plan),
-                    _ReadOnlyRow(label: 'Locale', value: m.locale),
-                    _ReadOnlyRow(label: 'Timezone', value: m.timezone),
-                    _ReadOnlyRow(label: 'Path', value: m.path),
-                    _ReadOnlyRow(label: 'Horizon', value: m.horizon),
-                    _ReadOnlyRow(label: 'Primary goal', value: m.primaryGoal),
-                    _ReadOnlyRow(label: 'Credits', value: '${m.creditBalance}'),
+                  _Section(title: l.settingsSectionProfile, children: [
+                    _ReadOnlyRow(label: l.settingsProfilePlan, value: m.plan),
+                    _ReadOnlyRow(label: l.settingsProfileLocale, value: m.locale),
+                    _ReadOnlyRow(label: l.settingsProfileTimezone, value: m.timezone),
+                    _ReadOnlyRow(label: l.settingsProfilePath, value: m.path),
+                    _ReadOnlyRow(label: l.settingsProfileHorizon, value: m.horizon),
+                    _ReadOnlyRow(label: l.settingsProfilePrimaryGoal, value: m.primaryGoal),
+                    _ReadOnlyRow(label: l.settingsProfileCredits, value: '${m.creditBalance}'),
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   const _LanguageSection(),
@@ -155,6 +157,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
@@ -164,15 +167,15 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('SETTINGS',
+          Text(l.settingsHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
           const SizedBox(width: AmiSpacing.s),
-          Text('mandate v$version', style: AmiTypography.caption),
+          Text(l.settingsMandateVersion(version), style: AmiTypography.caption),
           const Spacer(),
           if (dirty)
             TextButton(
               onPressed: saving ? null : onSave,
-              child: Text(saving ? 'SAVING…' : 'SAVE',
+              child: Text(saving ? l.settingsSaving : l.settingsSave,
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
             ),
         ],
@@ -216,14 +219,15 @@ class _RiskSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Text('Risk score', style: AmiTypography.body),
+            Text(l.settingsRiskScore, style: AmiTypography.body),
             const Spacer(),
-            Text('$value / 5',
+            Text(l.settingsRiskScoreValue(value),
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           ],
         ),
@@ -238,25 +242,25 @@ class _RiskSlider extends StatelessWidget {
           onChanged: (v) => onChanged(v.round()),
         ),
         Text(
-          _riskLabel(value),
+          _riskLabel(l, value),
           style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
         ),
       ],
     );
   }
 
-  String _riskLabel(int v) {
+  String _riskLabel(AppLocalizations l, int v) {
     switch (v) {
       case 1:
-        return 'Capital preservation. Small sizes, tight stops.';
+        return l.settingsRiskLabel1;
       case 2:
-        return 'Cautious. Below-average position sizing.';
+        return l.settingsRiskLabel2;
       case 3:
-        return 'Balanced. Standard 3-5% positions.';
+        return l.settingsRiskLabel3;
       case 4:
-        return 'Aggressive. Larger sizes on high-conviction setups.';
+        return l.settingsRiskLabel4;
       case 5:
-        return 'Highest risk tolerance. Concentrated bets allowed.';
+        return l.settingsRiskLabel5;
       default:
         return '';
     }
@@ -273,12 +277,13 @@ class _DrawdownPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            const Text('Max drawdown', style: AmiTypography.body),
+            Text(l.settingsMaxDrawdown, style: AmiTypography.body),
             const Spacer(),
             Text('$value%',
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
@@ -304,7 +309,7 @@ class _DrawdownPicker extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Your PM refuses trades that would push the portfolio past this.',
+          l.settingsMaxDrawdownExplain,
           style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
         ),
       ],
@@ -320,16 +325,20 @@ class _ComplianceToggles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Column(
       children: [
-        _row('Halal screen', value.halal, (v) => onChanged(value.copyWith(halal: v))),
-        _row('ESG-lite', value.esgLite, (v) => onChanged(value.copyWith(esgLite: v))),
-        _row('No tobacco / alcohol / gambling', value.noTobaccoAlcoholGambling,
+        _row(l.settingsComplianceHalal, value.halal,
+            (v) => onChanged(value.copyWith(halal: v))),
+        _row(l.settingsComplianceEsgLite, value.esgLite,
+            (v) => onChanged(value.copyWith(esgLite: v))),
+        _row(l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
             (v) => onChanged(value.copyWith(noTobaccoAlcoholGambling: v))),
-        _row('No fossil fuels', value.noFossilFuels,
+        _row(l.settingsComplianceFossil, value.noFossilFuels,
             (v) => onChanged(value.copyWith(noFossilFuels: v))),
-        _row('Long-only', value.longOnly, (v) => onChanged(value.copyWith(longOnly: v))),
-        _row('Liquid-only', value.liquidOnly,
+        _row(l.settingsComplianceLongOnly, value.longOnly,
+            (v) => onChanged(value.copyWith(longOnly: v))),
+        _row(l.settingsComplianceLiquidOnly, value.liquidOnly,
             (v) => onChanged(value.copyWith(liquidOnly: v))),
       ],
     );
@@ -383,20 +392,20 @@ class _AccountSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authNotifierProvider).user;
     final claimed = user != null && !user.isAnonymous;
+    final l = AppLocalizations.of(context);
     return _Section(
-      title: 'ACCOUNT',
+      title: l.settingsSectionAccount,
       children: [
         _ReadOnlyRow(
-          label: 'Status',
-          value: claimed ? 'Signed in' : 'Guest (anonymous)',
+          label: l.settingsAccountStatus,
+          value: claimed ? l.settingsAccountSignedIn : l.settingsAccountGuest,
         ),
         if (claimed)
-          _ReadOnlyRow(label: 'Handle', value: user.displayHandle),
+          _ReadOnlyRow(label: l.settingsAccountHandle, value: user.displayHandle),
         const SizedBox(height: AmiSpacing.s),
         if (!claimed)
-          const Text(
-            'Mandate, journal, and portfolio stay on this device until you '
-            'sign in.',
+          Text(
+            l.settingsAccountGuestNote,
             style: AmiTypography.caption,
           ),
         const SizedBox(height: AmiSpacing.s),
@@ -408,7 +417,7 @@ class _AccountSection extends ConsumerWidget {
                 builder: (_) => const SignInScreen(),
               ));
             },
-            child: Text(claimed ? 'MANAGE ACCOUNT' : 'SIGN IN'),
+            child: Text(claimed ? l.settingsManageAccount : l.settingsSignIn),
           ),
         ),
       ],
@@ -426,8 +435,9 @@ class _LanguageSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(localeNotifierProvider);
+    final l = AppLocalizations.of(context);
     return _Section(
-      title: 'LANGUAGE',
+      title: l.settingsSectionLanguageUpper,
       children: [
         for (final opt in localeOptions)
           _LanguageRow(
@@ -438,11 +448,10 @@ class _LanguageSection extends ConsumerWidget {
                 .setLocale(opt.locale),
           ),
         const SizedBox(height: AmiSpacing.xs),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.s),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.s),
           child: Text(
-            'AR + MS ship as placeholders today — missing keys fall back to English. '
-            'Translators drop in proper ARBs and the locale lights up.',
+            l.settingsLanguagePlaceholderNote,
             style: AmiTypography.caption,
           ),
         ),
@@ -513,13 +522,14 @@ class _DeveloperSection extends ConsumerWidget {
     final active = ref.watch(backendModeProvider);
     final activeUrl = ref.watch(activeBackendUrlProvider);
     final available = BackendUrls.availableModes;
+    final l = AppLocalizations.of(context);
     return _Section(
-      title: 'DEVELOPER',
+      title: l.settingsSectionDeveloper,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: AmiSpacing.s),
           child: Text(
-            'Active backend',
+            l.settingsDeveloperActive,
             style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
           ),
         ),
@@ -534,17 +544,16 @@ class _DeveloperSection extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.xs),
           child: Text(
-            activeUrl ?? '(no URL baked into this build)',
+            activeUrl ?? l.settingsDeveloperNoUrl,
             style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
             maxLines: 2, overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(height: AmiSpacing.xs),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.xs),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.xs),
           child: Text(
-            'This section is compiled out of MVP / App Store builds. '
-            'Only PROD will be reachable then.',
+            l.settingsDeveloperFootnote,
             style: AmiTypography.caption,
           ),
         ),
@@ -587,7 +596,7 @@ class _BackendModeRow extends StatelessWidget {
                 style: AmiTypography.labelMono.copyWith(color: color)),
             if (disabled) ...[
               const SizedBox(width: AmiSpacing.s),
-              Text('· not in this build',
+              Text(AppLocalizations.of(context).settingsDeveloperNotInBuild,
                   style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
             ],
           ],

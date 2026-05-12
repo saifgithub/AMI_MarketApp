@@ -3,6 +3,7 @@
 /// The Concierge is always unlocked.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
@@ -30,6 +31,7 @@ class FloorPlaceholderScreen extends ConsumerWidget {
             .where((l) => l.agentCallouts.contains(agent.id))
             .toList() ??
         const <LessonMeta>[];
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AmiColors.slate800,
@@ -61,29 +63,27 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AmiSpacing.l),
-              const Text('HOW TO UNLOCK', style: AmiTypography.labelMono),
+              Text(l.floorLockedHowTo, style: AmiTypography.labelMono),
               const SizedBox(height: AmiSpacing.s),
               if (requiredLessons.isEmpty)
                 Text(
-                  'This agent unlocks automatically once the Earn-Path lessons '
-                  'for them ship. For now you can preview them via 1-on-1 if your '
-                  'plan allows.',
+                  l.floorLockedNoLessons,
                   style: AmiTypography.body,
                 )
               else ...[
                 Text(
-                  'Earn this agent free by passing every lesson that involves them:',
+                  l.floorLockedEarnByLessons,
                   style: AmiTypography.body,
                 ),
                 const SizedBox(height: AmiSpacing.s),
-                for (final l in requiredLessons)
+                for (final lesson in requiredLessons)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
                         const Icon(Icons.school, size: 14, color: AmiColors.hexGreen),
                         const SizedBox(width: 6),
-                        Expanded(child: Text(l.title, style: AmiTypography.body)),
+                        Expanded(child: Text(lesson.title, style: AmiTypography.body)),
                       ],
                     ),
                   ),
@@ -102,7 +102,7 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                       builder: (_) => const LessonsScreen(),
                     ));
                   },
-                  child: const Text('GO TO LESSONS'),
+                  child: Text(l.floorLockedGoToLessons),
                 ),
               ),
               const SizedBox(height: AmiSpacing.s),
@@ -114,7 +114,7 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                     side: const BorderSide(color: AmiColors.hexBlue),
                   ),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('UPGRADE TO SKIP — coming soon'),
+                  child: Text(l.floorLockedUpgradeSoon),
                 ),
               ),
             ],
@@ -130,6 +130,7 @@ class FloorPlaceholderScreen extends ConsumerWidget {
     final unlocked = state.unlockedAgentIds;
     final concierge = kAllAgents.last;
     final tradingAgents = kAllAgents.sublist(0, 12);
+    final l = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -150,19 +151,19 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AmiSpacing.s),
-              const Text('AMI CONCIERGE', style: AmiTypography.labelMono),
+              Text(l.floorConciergeHeading, style: AmiTypography.labelMono),
               const SizedBox(height: AmiSpacing.xs),
               Text(
-                'Your personal assistant — tap to chat',
+                l.floorConciergeTagline,
                 style: AmiTypography.caption.copyWith(color: AmiColors.hexPink),
               ),
               const SizedBox(height: AmiSpacing.xl),
 
               // ── 12 trading agents grid ──
-              const Text('YOUR TEAM', style: AmiTypography.labelMono),
+              Text(l.floorTeamHeading, style: AmiTypography.labelMono),
               const SizedBox(height: AmiSpacing.s),
               Text(
-                '${unlocked.length} of 12 unlocked. Tap a locked hex to see how.',
+                l.floorUnlockedSummary(unlocked.length),
                 style: AmiTypography.caption,
               ),
               const SizedBox(height: AmiSpacing.m),
@@ -194,13 +195,13 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                   ),
                   icon: const Icon(Icons.bolt),
-                  label: const Text('CONVENE THE ROOM'),
+                  label: Text(l.floorConveneCta),
                   onPressed: () => ConveneSheet.show(context),
                 ),
               ),
               const SizedBox(height: AmiSpacing.xs),
               Text(
-                'Run a full multi-agent debate on a ticker.',
+                l.floorConveneCaption,
                 style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
               ),
 
@@ -211,13 +212,13 @@ class FloorPlaceholderScreen extends ConsumerWidget {
                 onPressed: () =>
                     Navigator.of(context).pushReplacementNamed('/onboarding'),
                 child: Text(
-                  'restart onboarding',
+                  l.floorRestartOnboarding,
                   style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
                 ),
               ),
               const SizedBox(height: AmiSpacing.m),
-              const Text(
-                '⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE',
+              Text(
+                l.floorFooter,
                 style: AmiTypography.caption,
               ),
               const SizedBox(height: AmiSpacing.l),

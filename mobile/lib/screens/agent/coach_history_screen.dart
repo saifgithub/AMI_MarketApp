@@ -5,6 +5,7 @@
 /// Manager unlimited (enforced server-side).
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/state/coach_providers.dart';
@@ -50,8 +51,10 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
                 color: AmiColors.glassChrome,
                 child: Text(
                   history.editsRemaining == null
-                      ? '${history.editCount} edits made • unlimited at your tier'
-                      : '${history.editCount} edits made • ${history.editsRemaining} remaining',
+                      ? AppLocalizations.of(context)
+                          .coachHistoryEditsUnlimited(history.editCount)
+                      : AppLocalizations.of(context).coachHistoryEditsRemaining(
+                          history.editCount, history.editsRemaining!),
                   style: AmiTypography.caption,
                 ),
               ),
@@ -77,7 +80,7 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
             const Icon(Icons.history, color: AmiColors.textLow, size: 48),
             const SizedBox(height: AmiSpacing.m),
             Text(
-              'No coaching history yet.\nGo back and propose your first change.',
+              AppLocalizations.of(context).coachHistoryEmpty,
               textAlign: TextAlign.center,
               style: AmiTypography.body,
             ),
@@ -101,20 +104,21 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
           onRollback: isActive
               ? null
               : () async {
+                  final l = AppLocalizations.of(context);
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (_) => AlertDialog(
                       backgroundColor: AmiColors.slate800,
-                      title: Text('Rollback to v${v.version}?',
+                      title: Text(l.coachHistoryRollbackTitle(v.version),
                           style: AmiTypography.h4),
                       content: Text(
-                        'Your agent will start using v${v.version} immediately. The newer versions stay in history.',
+                        l.coachHistoryRollbackBody(v.version),
                         style: AmiTypography.body,
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(false),
-                          child: const Text('CANCEL'),
+                          child: Text(l.actionCancel),
                         ),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
@@ -122,7 +126,7 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
                             foregroundColor: AmiColors.slate900,
                           ),
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: const Text('ROLLBACK'),
+                          child: Text(l.coachHistoryRollback),
                         ),
                       ],
                     ),
@@ -166,9 +170,10 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('${agent.displayName.toUpperCase()} HISTORY',
+                Text(AppLocalizations.of(context)
+                        .coachHistoryHeading(agent.displayName.toUpperCase()),
                     style: AmiTypography.labelMono.copyWith(color: agent.color)),
-                Text('All saved coaching versions',
+                Text(AppLocalizations.of(context).coachHistorySubtitle,
                     style: AmiTypography.caption),
               ],
             ),
@@ -222,7 +227,7 @@ class _VersionCard extends StatelessWidget {
                     color: agent.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('ACTIVE',
+                  child: Text(AppLocalizations.of(context).coachHistoryActiveBadge,
                       style: AmiTypography.labelMono.copyWith(
                           color: agent.color, fontSize: 10)),
                 ),
@@ -249,7 +254,7 @@ class _VersionCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: const Icon(Icons.restore, size: 16),
-                label: const Text('ROLLBACK TO THIS'),
+                label: Text(AppLocalizations.of(context).coachHistoryRollbackToThis),
                 style: TextButton.styleFrom(foregroundColor: agent.color),
                 onPressed: onRollback,
               ),

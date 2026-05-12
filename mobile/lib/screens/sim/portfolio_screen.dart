@@ -8,6 +8,7 @@
 /// so trades that hit while the user is on this screen show as won/lost.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
@@ -78,19 +79,22 @@ class PortfolioScreen extends ConsumerWidget {
           else ...[
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-              child: Text('HOLDINGS', style: AmiTypography.labelMono),
+              child: Text(AppLocalizations.of(context).portfolioHoldings,
+                  style: AmiTypography.labelMono),
             ),
             for (final h in p.holdings) _HoldingCard(holding: h),
           ],
           const SizedBox(height: AmiSpacing.l),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-            child: Text('TRADES', style: AmiTypography.labelMono),
+            child: Text(AppLocalizations.of(context).portfolioTrades,
+                style: AmiTypography.labelMono),
           ),
           if (state.trades.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(AmiSpacing.s),
-              child: Text('No trades yet.', style: AmiTypography.caption),
+            Padding(
+              padding: const EdgeInsets.all(AmiSpacing.s),
+              child: Text(AppLocalizations.of(context).portfolioNoTrades,
+                  style: AmiTypography.caption),
             )
           else
             for (final t in state.trades) _TradeRow(trade: t, ref: ref),
@@ -117,12 +121,12 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('PORTFOLIO',
+          Text(AppLocalizations.of(context).portfolioHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           const Spacer(),
           IconButton(
             icon: const Icon(Icons.add_circle_outline, color: AmiColors.hexCyan),
-            tooltip: 'New trade',
+            tooltip: AppLocalizations.of(context).portfolioNewTradeTooltip,
             onPressed: onTradeTicket,
           ),
         ],
@@ -154,7 +158,7 @@ class _ValueCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text('TOTAL VALUE',
+              Text(AppLocalizations.of(context).portfolioTotalValue,
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
               const Spacer(),
               _QuoteSourcePill(portfolio: portfolio),
@@ -178,7 +182,8 @@ class _ValueCard extends StatelessWidget {
                 style: AmiTypography.statSmall.copyWith(color: accent),
               ),
               const Spacer(),
-              Text('CASH', style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+              Text(AppLocalizations.of(context).portfolioCash,
+                  style: AmiTypography.labelMono.copyWith(fontSize: 10)),
               const SizedBox(width: 6),
               Text('\$${fmt.format(portfolio.currentCash)}',
                   style: AmiTypography.statSmall),
@@ -187,7 +192,9 @@ class _ValueCard extends StatelessWidget {
           if (portfolio.drawdownPct > 0) ...[
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              'Drawdown: ${portfolio.drawdownPct.toStringAsFixed(1)}%',
+              AppLocalizations.of(context).portfolioDrawdown(
+                portfolio.drawdownPct.toStringAsFixed(1),
+              ),
               style: AmiTypography.caption.copyWith(
                 color: portfolio.drawdownPct > 20 ? AmiColors.hexAmber : AmiColors.textLow,
               ),
@@ -206,6 +213,7 @@ class _NewTraderHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.l),
       decoration: BoxDecoration(
@@ -217,12 +225,10 @@ class _NewTraderHint extends StatelessWidget {
         children: [
           const Icon(Icons.lightbulb_outline, color: AmiColors.hexCyan, size: 32),
           const SizedBox(height: AmiSpacing.s),
-          const Text('Start sim trading', style: AmiTypography.h4),
+          Text(l.portfolioStartSimTrading, style: AmiTypography.h4),
           const SizedBox(height: AmiSpacing.xs),
           Text(
-            'Convene the Room to get a verdict, then open a trade — or '
-            'place one directly from here. Your PM\'s safety floor runs '
-            'on every submit.',
+            l.portfolioStartSimTradingBody,
             textAlign: TextAlign.center,
             style: AmiTypography.body.copyWith(color: AmiColors.textLow),
           ),
@@ -233,7 +239,7 @@ class _NewTraderHint extends StatelessWidget {
               foregroundColor: AmiColors.slate900,
             ),
             icon: const Icon(Icons.add),
-            label: const Text('NEW TRADE'),
+            label: Text(l.portfolioNewTrade),
             onPressed: onTradeTicket,
           ),
         ],
@@ -360,7 +366,7 @@ class _TradeRow extends StatelessWidget {
           if (trade.isOpen)
             IconButton(
               icon: const Icon(Icons.close, size: 16, color: AmiColors.textLow),
-              tooltip: 'Close',
+              tooltip: AppLocalizations.of(context).portfolioCloseTooltip,
               onPressed: () =>
                   ref.read(simNotifierProvider.notifier).closeTrade(trade.id),
             )
@@ -387,7 +393,8 @@ class _QuoteSourcePill extends StatelessWidget {
   Widget build(BuildContext context) {
     final live = portfolio.isLivePrice;
     final color = live ? AmiColors.hexGreen : AmiColors.hexAmber;
-    final label = live ? 'LIVE' : 'MOCK';
+    final l = AppLocalizations.of(context);
+    final label = live ? l.portfolioLive : l.portfolioMock;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
@@ -428,29 +435,29 @@ class _WatchlistSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Text('WATCHLIST', style: AmiTypography.labelMono),
+            Text(l.watchlistHeading, style: AmiTypography.labelMono),
             const Spacer(),
             TextButton.icon(
               onPressed: () => _showAddDialog(context, ref),
               icon: const Icon(Icons.add, color: AmiColors.hexCyan, size: 16),
               label: Text(
-                'ADD',
+                l.watchlistAdd,
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan),
               ),
             ),
           ],
         ),
         if (state.items.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: AmiSpacing.s),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
             child: Text(
-              'Add tickers you want to watch. Tap a row for quick actions: '
-                  'Ask the Market Analyst, Convene the Room, or open a trade.',
+              l.watchlistEmpty,
               style: AmiTypography.caption,
             ),
           )
@@ -462,19 +469,20 @@ class _WatchlistSection extends ConsumerWidget {
 
   Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
     final ctrl = TextEditingController();
+    final l = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: AmiColors.slate800,
-          title: Text('ADD TO WATCHLIST',
+          title: Text(l.portfolioAddDialogTitle,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           content: TextField(
             controller: ctrl,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Ticker (e.g. NVDA)',
-              hintStyle: TextStyle(color: AmiColors.textLow),
+            decoration: InputDecoration(
+              hintText: l.portfolioAddDialogHint,
+              hintStyle: const TextStyle(color: AmiColors.textLow),
             ),
             style: AmiTypography.body,
             textCapitalization: TextCapitalization.characters,
@@ -483,11 +491,11 @@ class _WatchlistSection extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('CANCEL'),
+              child: Text(l.actionCancel),
             ),
             TextButton(
               onPressed: () => _commit(ctx, ref, ctrl.text),
-              child: const Text('ADD'),
+              child: Text(l.actionAdd),
             ),
           ],
         );
@@ -553,6 +561,7 @@ class _WatchlistRow extends ConsumerWidget {
   }
 
   void _showRowSheet(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AmiColors.slate800,
@@ -585,7 +594,7 @@ class _WatchlistRow extends ConsumerWidget {
               const SizedBox(height: AmiSpacing.l),
               _SheetAction(
                 icon: Icons.shopping_cart_outlined,
-                label: 'OPEN TRADE TICKET',
+                label: l.watchlistOpenTradeTicket,
                 color: AmiColors.hexGreen,
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
@@ -594,7 +603,7 @@ class _WatchlistRow extends ConsumerWidget {
               ),
               _SheetAction(
                 icon: Icons.chat_bubble_outline,
-                label: 'ASK THE MARKET ANALYST',
+                label: l.watchlistAskMarketAnalyst,
                 color: AmiColors.hexCyan,
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
@@ -605,7 +614,7 @@ class _WatchlistRow extends ConsumerWidget {
               ),
               _SheetAction(
                 icon: Icons.groups_outlined,
-                label: 'CONVENE THE ROOM',
+                label: l.watchlistConveneRoom,
                 color: AmiColors.hexPurple,
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
@@ -614,7 +623,7 @@ class _WatchlistRow extends ConsumerWidget {
               ),
               _SheetAction(
                 icon: Icons.delete_outline,
-                label: 'REMOVE FROM WATCHLIST',
+                label: l.watchlistRemove,
                 color: AmiColors.hexRed,
                 onTap: () {
                   Navigator.of(sheetCtx).pop();

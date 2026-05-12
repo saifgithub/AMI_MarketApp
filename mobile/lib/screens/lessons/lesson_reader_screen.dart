@@ -10,6 +10,7 @@
 /// question + any newly unlocked agents.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
@@ -38,14 +39,15 @@ class LessonReaderScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(lessonReaderProvider(lessonId));
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
           children: [
             _Header(
-              title: state.lesson?.meta.title ?? 'Loading…',
-              suffix: quizOnly ? 'QUIZ ONLY' : null,
+              title: state.lesson?.meta.title ?? l.lessonReaderLoading,
+              suffix: quizOnly ? l.lessonReaderQuizOnlyBadge : null,
             ),
             Expanded(child: _body(context, ref, state)),
           ],
@@ -101,7 +103,9 @@ class LessonReaderScreen extends ConsumerWidget {
             onPressed: ref.read(lessonReaderProvider(lessonId).notifier).allAnswered
                 ? () => ref.read(lessonReaderProvider(lessonId).notifier).submit()
                 : null,
-            child: Text(state.submitting ? 'CHECKING…' : 'SUBMIT QUIZ'),
+            child: Text(state.submitting
+                ? AppLocalizations.of(context).lessonReaderChecking
+                : AppLocalizations.of(context).lessonReaderSubmitQuiz),
           )
         else
           _ResultPanel(
@@ -170,6 +174,7 @@ class _QuizOnlyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -184,12 +189,8 @@ class _QuizOnlyBanner extends StatelessWidget {
           Expanded(
             child: Text(
               quizCount == 1
-                  ? 'Skipping straight to the 1 quiz. Pass it and the lesson '
-                      'still counts toward agent unlocks. Wrong answers will '
-                      'show the explanation — that\'s your teaching surface.'
-                  : 'Skipping straight to the $quizCount quizzes. Pass them '
-                      'all and the lesson still counts toward agent unlocks. '
-                      'Wrong answers will show the explanation.',
+                  ? l.lessonReaderQuizOnlyBannerOne
+                  : l.lessonReaderQuizOnlyBannerMany(quizCount),
               style: AmiTypography.caption,
             ),
           ),
@@ -219,8 +220,11 @@ class _LessonMetaBar extends StatelessWidget {
               style: AmiTypography.labelMono.copyWith(fontSize: 11)),
         ),
         const SizedBox(width: AmiSpacing.s),
-        Text('${meta.durationMin} min · ${meta.track}',
-            style: AmiTypography.caption),
+        Text(
+          AppLocalizations.of(context)
+              .lessonReaderMetaDurationTrack(meta.durationMin, meta.track),
+          style: AmiTypography.caption,
+        ),
         const Spacer(),
         for (final id in meta.agentCallouts)
           Padding(
@@ -285,7 +289,9 @@ class _BlockView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('CHAT WITH ${a.displayName.toUpperCase()}',
+                      Text(
+                          AppLocalizations.of(context)
+                              .lessonReaderChatWith(a.displayName.toUpperCase()),
                           style: AmiTypography.labelMono.copyWith(color: a.color)),
                       const SizedBox(height: 2),
                       Text(a.tagline, style: AmiTypography.caption),
@@ -527,7 +533,7 @@ class _QuizCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('QUIZ',
+          Text(AppLocalizations.of(context).lessonReaderQuiz,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
           const SizedBox(height: AmiSpacing.s),
           Text(question.question, style: AmiTypography.body),
@@ -620,6 +626,7 @@ class _ResultPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final passed = result.passed;
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -641,17 +648,17 @@ class _ResultPanel extends StatelessWidget {
                 size: 28,
               ),
               const SizedBox(width: AmiSpacing.s),
-              Text(passed ? 'PASSED' : 'NOT QUITE',
+              Text(passed ? l.lessonReaderPassed : l.lessonReaderNotQuite,
                   style: AmiTypography.labelMono.copyWith(
                       color: passed ? AmiColors.hexGreen : AmiColors.hexAmber)),
             ],
           ),
           const SizedBox(height: AmiSpacing.s),
-          Text('${result.correct} / ${result.total} correct',
+          Text(l.lessonReaderCorrectOf(result.correct, result.total),
               style: AmiTypography.statMid),
           if (result.unlockedAgents.isNotEmpty) ...[
             const SizedBox(height: AmiSpacing.m),
-            Text('AGENT UNLOCKED',
+            Text(l.lessonReaderAgentUnlocked,
                 style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
             const SizedBox(height: AmiSpacing.s),
             Wrap(
@@ -686,7 +693,7 @@ class _ResultPanel extends StatelessWidget {
                       side: const BorderSide(color: AmiColors.hexAmber),
                     ),
                     onPressed: onRetry,
-                    child: const Text('TRY AGAIN'),
+                    child: Text(l.lessonReaderTryAgain),
                   ),
                 ),
               if (!passed) const SizedBox(width: AmiSpacing.s),
@@ -697,7 +704,7 @@ class _ResultPanel extends StatelessWidget {
                     foregroundColor: AmiColors.slate900,
                   ),
                   onPressed: onDone,
-                  child: Text(passed ? 'DONE' : 'BACK TO LESSONS'),
+                  child: Text(passed ? l.lessonReaderDone : l.lessonReaderBackToLessons),
                 ),
               ),
             ],
