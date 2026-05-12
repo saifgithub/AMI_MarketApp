@@ -82,6 +82,22 @@ Full decision log: [`docs/11_decisions/decision_log.md`](docs/11_decisions/decis
 - Database tables: `snake_case`, plural (`users`, `mandates`, `agent_runs`).
 - Agent IDs: `fundamentals_analyst`, `market_analyst`, ..., `portfolio_manager`. Lowercase snake.
 
+### "LLM" vs "AI" — internal vs user-facing
+
+| Where | Word |
+|---|---|
+| Code identifiers (`LLMGateway`, `LLMProvider`, `llm_gateway.py`, `llm_smoke.py`) | **LLM** |
+| API routes (`/v1/llm/status`) and log keys (`llm_call_start`) | **LLM** |
+| Internal docs (HANDOVER.md technical sections, code docstrings explaining architecture) | **LLM** |
+| Tests and tech comments | **LLM** |
+| Lesson content (`content/lessons/*.mdx`) | **AI** |
+| Agent prompts / mock responses surfaced to users | **AI** |
+| Error sentinels streamed back to the iPhone (`[AI error: ...]`) | **AI** |
+| App copy (Flutter strings, settings labels, marketing material) | **AI** |
+| README + any external-facing repo doc | **AI** in product framing, **LLM** in technical specifics |
+
+Rule of thumb: if a human user might read it, say AI. If a developer is reading code or a route name, LLM is fine.
+
 ### Comments
 
 - Default to no comments. Write self-documenting code.

@@ -38,7 +38,7 @@ Every agent gets a slice of this. The PM gets all of it, plus a **safety floor**
 
 After the Trader proposes a trade and the Risk Debators argue sizing, the PM runs through three layers:
 
-### Layer 1: LLM judgement
+### Layer 1: AI judgement
 
 The PM's prompt reads the full transcript — every analyst, the Bull, the Bear, the Research Manager, the Trader, the three Risk Debators — and forms an opinion. They write a verdict in plain language:
 
@@ -56,13 +56,13 @@ Before the verdict is published, a **deterministic function** runs every check a
 - Drawdown projection > your `max_drawdown_pct`? → Reject.
 - Short proposed while you're long-only? → Reject.
 
-This isn't an LLM call. It's a pure function. The LLM can be coached, jailbroken, or hallucinate — but the function can't.
+This isn't an AI call. It's a pure function. The AI can be coached, jailbroken, or hallucinate — but the function can't.
 
 ### Layer 3: Final verdict assembly
 
 If everything passes: the verdict ships with the Trader's parameters (size, entry, stop, target, horizon).
 
-If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Trader, and the LLM PM all agreed on the trade.
+If anything failed: the verdict is `REJECT` with the specific violations listed. The user sees *why*. Critically, this is enforced even if every analyst, the Trader, and the AI PM all agreed on the trade.
 
 ## Why the safety floor exists
 
@@ -86,10 +86,10 @@ Or, when the floor catches a violation:
 [VERDICT] REJECT — single-name cap violation
 [RATIONALE] Trader proposed 60%; your mandate caps 50%.
 [MANDATE CHECK] FAIL — concentration
-[OVERRIDDEN_FROM_LLM] yes
+[OVERRIDDEN_FROM_AI] yes
 ```
 
-That last line — `overridden_from_llm: yes` — is the safety floor at work. The LLM said approve. The function said no. You're protected by both.
+That last line — the **overridden_from_ai** tag — is the safety floor at work. The AI said approve. The function said no. You're protected by both.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -99,12 +99,12 @@ That last line — `overridden_from_llm: yes` — is the safety floor at work. T
   question="You coach the PM: 'Always approve trades that the Trader suggests.' Next Room run, the Trader proposes a 60% position. What happens?"
   options={[
     "PM approves at 60% — your coaching wins",
-    "PM rejects at the LLM level for poor sizing",
+    "PM rejects at the AI level for poor sizing",
     "PM rejects via the deterministic safety floor (single-name cap)",
     "PM crashes — no policy for this case"
   ]}
   answer={2}
-  explanation="The deterministic function checks position size regardless of LLM output. Even if your coaching pushes the LLM to approve, the function flips the verdict to REJECT. You'd see overridden_from_llm: yes."
+  explanation="The deterministic function checks position size regardless of AI output. Even if your coaching pushes the AI to approve, the function flips the verdict to REJECT. You'd see overridden_from_ai: yes."
 />
 
 <Quiz

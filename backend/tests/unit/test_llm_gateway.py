@@ -177,7 +177,8 @@ async def test_anthropic_provider_error_yields_inline_error():
 
     full = "".join(chunks)
     assert "429" in full
-    assert "Anthropic" in full
+    assert "AI error" in full
+    assert "upstream provider" in full
 
 
 @pytest.mark.asyncio
@@ -255,7 +256,8 @@ async def test_vllm_provider_error_yields_inline_error():
 
     full = "".join(chunks)
     assert "503" in full
-    assert "vLLM" in full
+    assert "AI error" in full
+    assert "on-prem" in full
 
 
 @pytest.mark.asyncio

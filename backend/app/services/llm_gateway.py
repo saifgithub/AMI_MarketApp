@@ -95,49 +95,49 @@ class MockProvider(LLMProvider):
             "• Compute trailing P/E, EV/EBITDA, FCF yield vs sector median\n"
             "• Check debt-to-equity and interest coverage\n"
             "• Compare against the 3 nearest peers\n\n"
-            "Once Saiful configures an LLM API key (Anthropic / OpenRouter), I'll do the "
-            "actual numbers. For now you're seeing this canned text."
+            "Once the AI provider is configured, I'll do the actual numbers. For now "
+            "you're seeing this canned text."
         ),
         "market_analyst": (
             "Mock Market Analyst. The chart would show me trend, momentum, key levels. "
             "When live, I'd give you specific entries, targets, stops.\n\n"
-            "Configure an LLM API key to swap me from canned to real."
+            "Configure the AI provider to swap me from canned to real."
         ),
         "bear_researcher": (
             "Mock Bear here. My real job is to find what's wrong with the thesis. The "
             "structure of a good bear case: identify the 2-3 risks that materially matter, "
             "quantify them, address how the Bull would respond.\n\n"
-            "Configure an LLM API key for live analysis."
+            "Configure the AI provider for live analysis."
         ),
         "bull_researcher": (
             "Mock Bull here. My real job is to steelman the long case. Structure: "
             "thesis in one sentence, cite the Analysts' evidence, anticipate the Bear's "
             "counter, propose sizing.\n\n"
-            "Configure an LLM API key for live analysis."
+            "Configure the AI provider for live analysis."
         ),
         "trader": (
             "Mock Trader. Once we have live data I'll give you: instrument, side, size, "
             "entry, target, stop, time horizon. All sized to your mandate.\n\n"
-            "Configure an LLM API key to go live."
+            "Configure the AI provider to go live."
         ),
         "portfolio_manager": (
             "Mock PM here. My role is to gatekeep — every trade goes through compliance "
-            "check (deterministic) and judgment review (LLM, once configured).\n\n"
-            "Configure an LLM API key for real verdicts."
+            "check (deterministic) and judgment review (AI, once configured).\n\n"
+            "Configure the AI provider for real verdicts."
         ),
         "concierge": (
             "Mock Concierge here! I'd normally route you to the right lesson, search your "
-            "journal, or schedule briefings. Once Saiful configures an LLM API key in the "
+            "journal, or schedule briefings. Once the AI provider is configured in the "
             "backend, I'll be fully live.\n\n"
-            "For now: the onboarding flow works fully (no LLM needed), and you can browse "
+            "For now: the onboarding flow works fully (no AI needed), and you can browse "
             "lessons. Want me to find one for you?"
         ),
     }
 
     _DEFAULT = (
-        "I'm running in mock mode — no LLM API key configured yet. Once Saiful adds an "
-        "Anthropic or OpenRouter key to the backend's .env file, I'll come fully online "
-        "and respond properly to your question."
+        "I'm running in mock mode — no AI provider configured yet. Once the backend is "
+        "pointed at an AI provider (on-prem vLLM or a managed API), I'll come fully "
+        "online and respond properly to your question."
     )
 
     async def stream_chat(
@@ -208,7 +208,7 @@ class AnthropicProvider(LLMProvider):
                     body=err_body.decode()[:500],
                 )
                 yield (
-                    f"\n\n[LLM error: HTTP {resp.status_code} from Anthropic. "
+                    f"\n\n[AI error: HTTP {resp.status_code} from the upstream provider. "
                     "Falling back. Check backend logs.]"
                 )
                 return
@@ -306,7 +306,7 @@ class VLLMProvider(LLMProvider):
                     body=err_body.decode()[:500],
                 )
                 yield (
-                    f"\n\n[LLM error: HTTP {resp.status_code} from vLLM. "
+                    f"\n\n[AI error: HTTP {resp.status_code} from the on-prem AI server. "
                     "Check backend logs.]"
                 )
                 return
