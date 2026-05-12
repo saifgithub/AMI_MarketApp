@@ -18,8 +18,13 @@ from app.api.sim import router as sim_router
 from app.api.watchlist import router as watchlist_router
 from app.core.config import settings
 from app.core.logging import configure_logging
+from app.core.observability import init_sentry
 
 configure_logging()
+# Sentry must initialise BEFORE the FastAPI app is constructed so the
+# auto-enabling integrations can wrap Starlette / FastAPI. No-op when
+# SENTRY_DSN is unset (dev).
+init_sentry()
 
 
 @asynccontextmanager
