@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of W13: on-prem vLLM Gemma 4 — app is live)
+**Last updated:** 2026-05-12 (end of A1: Convene the Room → AMI wired)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,23 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 15 commits, no remote yet |
-| Latest commit | (this session) W13: on-prem vLLM Gemma 4 — app is live |
-| Lines on disk | ~34,500 (PRD ~14k, backend ~8.3k, Flutter ~9.9k, content ~1.5k) |
+| Git state | Clean working tree, 20 commits, no remote yet |
+| Latest commit | (this session) A1: Convene the Room → AMI wiring |
+| Lines on disk | ~35,800 (PRD ~14.5k, backend ~9.0k, Flutter ~9.9k, content/docs ~2.4k) |
 
 ```
-$ git log --oneline
-<new>   W13: on-prem vLLM Gemma 4 — app is live
+$ git log --oneline | head -10
+08ab7d9 A1: Convene the Room → AMI wiring
+4933b18 W18b: animations selective, tickers user-driven, quiz mandatory, watchlist + skip-to-quiz in Alpha
+08c953f W18: curriculum map (Levels 1-8) + merged authoring prompt
+9e9a6bf W17: authoring prompt for lessons + daily-challenge bank
+b7a092c W16c: Beta = infra-only; TestFlight + everything else in Alpha
+dce4954 W16b: pull i18n/TTS/push/daily briefing into Alpha
+40929a9 W16: project plan — Alpha → Beta → MVP
+496abff W15: slim CLAUDE.md — move conventions detail to docs/
+5ad3182 W14b: the AI has a name — AMI
+b13b752 W14a: "LLM" is internal-only; users see "AI"
+a951499 W13: on-prem vLLM Gemma 4 — app is live
 d332860 W12: tier_policy refactor — single source of truth for (plan, agent) → tier
 d3acddc W11: Flutter LIVE/MOCK quote-source pill
 04ff5ea W10: real market data via Yahoo
@@ -46,7 +56,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **130 passed** (W12: 123, +7 vLLM tests) |
+| Tests | `pytest backend/tests/unit/ -q` → **133 passed** (W13: 130, +3 A1 Room-live tests) |
 
 ### Postgres + persistence (NEW this session)
 
@@ -150,6 +160,62 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (A1 — Convene the Room → AMI wiring)
+
+The marquee flow stops being scripted. Every agent in a Room run now speaks via the LLM gateway when a real provider is registered (today: on-prem vLLM Gemma 4). The deterministic safety floor is untouched — it still produces the verdict ACTION (APPROVE/REJECT); the LLM only writes the prose rationale around that fixed result.
+
+### How it's wired
+
+- **New `backend/app/services/room_prompts.py`** — composes the per-agent system prompt for a Room turn. Combines the agent's base prompt (already includes mandate overlay + safety floor where applicable) with a CONVENE THE ROOM addition: phase label, compact ticker fact-sheet (price/P/E/growth/RSI/range/catalysts/macro/sentiment) sourced from the existing `_profile_for_ticker()`, the running transcript so each agent builds on the debate, a per-agent length budget, and a "speak directly, no preamble" instruction.
+- **Rewritten `room_runner.py::run()`** — flips between live and scripted via `gateway.has_real_provider()`. Each non-PM agent's tokens stream out as SSE `agent_token` events at the LLM's own pacing.
+- **PM is special** — `_assemble_verdict()` runs the deterministic safety floor FIRST. Then `_stream_pm_narration` asks the LLM for prose with `pm_predetermined_action="APPROVE"` / `REJECT (violations)` in the system prompt and an explicit "do NOT contradict this action" instruction. The buffered PM text is restreamed at typewriter cadence so the UI pacing stays uniform.
+- **Every LLM path catches all exceptions** and falls back to the scripted `_TEMPLATES`. The demo never breaks if vLLM is unreachable.
+- **Per-agent tier via `pick_tier(plan, agent_id)`**. vLLM collapses all tiers to `gemma-4-31b-it-nvfp4` today; routing is correct for the future cloud-LLM cutover (Beta).
+
+### Tests (+3, 133 total)
+
+- `test_room_uses_gateway_for_every_agent_when_live` — fake gateway records 12 calls (one per agent), transcript grows by 12, verdict still APPROVE (deterministic).
+- `test_room_safety_floor_still_fires_under_live_gateway` — liberal "APPROVE everything" LLM reply does NOT override the floor; halal user on a non-halal ticker still gets REJECT with `overridden_from_llm=True`.
+- `test_room_transcript_grows_for_subsequent_agents` — first agent sees `(You are first to speak.)` marker; PM sees every prior agent's contribution in its prompt.
+
+### Live verification (against on-prem vLLM Gemma 4 31B)
+
+`POST /v1/room/stream` on NVDA with `risk_score=3` streams real per-agent analysis. Fundamentals Analyst opened with:
+
+> *"NVDA maintains an exceptional quality-of-earnings profile, though valuation now demands flawless execution of the Blackwell ramp to justify a 50.7 P/E. Balance Sheet: Net cash of $38.9B provides significant optionality for R&D or buybacks, though capital expenditures are scaling to support next-gen architecture. Profitability: FCF margins of 22% are robust..."*
+
+Real Blackwell architecture reference, real cash position, real FCF margin. The scripted demo is gone from the marquee flow.
+
+---
+
+## What just landed (W17 / W18 / W18b — project plan + curriculum + authoring)
+
+Multiple planning artefacts landed this session before A1.
+
+- **`docs/10_delivery/project_plan.md`** — three-phase plan (Alpha → Beta → MVP). Saiful's framing: Alpha = everything on-prem (full feature shakedown including i18n/TTS/push/daily briefing + TestFlight distribution). Beta = ONLY GCP + Supabase + cloud LLM migration; same feature surface, nothing user-visible changes. MVP = App Store + Play Store + payments + marketing.
+- **`docs/04_education/curriculum_map.md`** — canonical Level 1–8 / Module 1–12 / ~77 lesson IDs. Each lesson tagged with `level`, `module`, `difficulty`, `track` (for agent-unlock routing), and `agent_callouts`. Existing 13 lessons re-mapped lazily. Animations are OPTIONAL — only ~15 specific lessons are flagged as "good animation candidates".
+- **`content/_authoring/lesson_authoring_prompt.md`** — three self-contained prompts for any AI tool: (1) lesson MDX generator with the 7-part lesson template (short explanation → real-world example → "the trap" → ChatWith → quiz → action task → takeaway), (2) daily-challenge bank (one month per batch, 5 challenge types from `docs/04_education/daily_and_streaks.md`), (3) AI Coach Q&A Library (categorised knowledge base for the Concierge to retrieve from). Tickers are illustrative not exclusive (user watchlists are how the product actually serves the "their tickers" need). Every lesson MUST have a multi-choice quiz; users can skip the lesson body and jump to the quiz.
+
+### Plan summary (current)
+
+| Phase | Claude effort | Saiful external |
+|---|---|---|
+| **Alpha** (on-prem + TestFlight) | ~9.75 sessions | Resend, Cloudflare Tunnel, Apple cap × 2, Azure/ElevenLabs, OneSignal, App Store Connect, translators, legal stub |
+| **Beta** (GCP + Supabase + cloud LLM) | ~5 sessions | GCP, Supabase, cloud LLM provider, DNS |
+| **MVP** (public launch) | ~3 sessions | App Store / Play / RevenueCat / legal / marketing / analytics |
+
+Alpha picked up A1 this session. Remaining Alpha items split into 5 streams (full table in `docs/10_delivery/project_plan.md`):
+
+| Stream | Items | Status |
+|---|---|---|
+| 1 — Finish the AMI surface | A1, A2 | A1 ✓, A2 pending |
+| 2 — Real auth + on-prem hardening | A3–A10 | unstarted (A3/A7 blocked on Saiful) |
+| 3 — i18n / TTS / push / daily briefing | A11–A17 | unstarted |
+| 4 — Product polish (watchlist, skip-to-quiz, lesson loader, animation registry) | A18–A21 | unstarted |
+| 5 — Ship to offsite testers | A22–A28 | unstarted (App Store Connect blocked on Saiful) |
 
 ---
 
@@ -411,58 +477,109 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #8 — name the
-session "AT:R9:".
+We're picking up the AMI Trade build. This is handover #9 — name the
+session "AT:R10:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-W13 (on-prem vLLM Gemma 4) is live. 15 commits in. 130 unit tests pass.
-Backend is talking to gemma-4-31b-it-nvfp4 at 192.168.20.74:8000;
-iPhone is on the W11 release build pointed at the LAN backend. The
-mock text everywhere is gone — every agent now responds in real time.
+Then read docs/10_delivery/project_plan.md — your task is almost
+always one of the A1-A28 items in there.
 
-W14 candidates (priority order):
+State: 20 commits in. 133 unit tests pass. Backend serves W13+ code
+via vLLM Gemma 4. iPhone has the W11 release build (overdue redeploy
+will come with A19/A25 in Stream 5). A1 just landed — Convene the Room
+now talks to vLLM with the deterministic safety floor intact. Every
+user-visible surface in the app now hits AMI/Gemma 4.
 
-  A. Room → LLM wiring. room_runner.py STILL emits scripted agent
-     speech — the only place in the app that doesn't yet hit vLLM.
-     Wire each Room phase through llm_gateway with a transcript-aware
-     prompt per agent. Keep scripted fallback when
-     gateway.has_real_provider() is False. This is the single largest
-     "feels live" unlock now that the gateway is humming.
+Alpha-stream pick-up (priority order — top is highest leverage):
 
-  B. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
-     backend/.env. Swap app/services/auth_service.py to supabase-py
-     admin. Switch backend connection from postgres to anon /
-     authenticated role so RLS policies start enforcing. Run the
-     anon → email claim flow end-to-end.
+  A2. Concierge → AMI for post-onboarding. The onboarding state
+      machine stays deterministic; this wires the *post*-onboarding
+      Concierge (the 13th agent on the Floor) through agent_runner so
+      it actually answers user questions and routes them to lessons /
+      journal / 1-on-1s. Mirror what A1 did for the Room: drop into
+      llm_gateway when has_real_provider() is True, keep scripted
+      responses as fallback. ~0.5 session.
 
-  C. Real Apple Sign-In. Replace the synthetic JWT in
-     mobile/lib/screens/auth/sign_in_screen.dart with sign_in_with_apple
-     (already in pubspec). Verify on TESTING IPHONE 13. Add Sign in
-     with Apple capability to bundle id under team S7RBWM4879.
+  A18. User watchlist. NEW sim_watchlists table (user_id, ticker,
+       added_at, notes); GET/POST/DELETE /v1/watchlist/{user_id}.
+       Flutter section on Portfolio screen above HOLDINGS — each row
+       shows ticker + live quote + day-change %; tap opens a sheet
+       with quote + buttons (Add Trade, Ask Market Analyst, Convene).
+       Tickers are free-form (any string Yahoo can quote). This is
+       the "see THEIR stocks" loop Saiful wants for sim play. ~1
+       session.
 
-  D. Concierge → LLM. Onboarding is still a deterministic state
-     machine. With vLLM live, the post-onboarding Concierge can be
-     wired through agent_runner so it actually answers questions and
-     routes the user.
+  A11. i18n structure. Extract every user-facing string in mobile/lib
+       to ARB files via flutter_localizations + intl. Locale switcher
+       in Settings. RTL pass for AR (Directionality, padding-inline).
+       English content ships; AR/MS empty placeholders. ~0.5 session.
 
-  E. Multiple-model vLLM. If the on-prem box ever serves >1 model,
-     swap VLLMProvider.model_name for a tier-keyed map so cheap/mid/
-     premium can pick different sizes.
+  A19. Lesson UX — Skip to quiz. Lessons screen lists each lesson with
+       READ + QUIZ ONLY buttons. Quiz-only path renders just the
+       <Quiz> blocks + miss-explanations and counts toward
+       agent-unlock identically. ~0.5 session.
+
+  A20. Lesson loader: parse new frontmatter fields (module,
+       difficulty). Default to module:0, difficulty:level for legacy
+       lessons. Unblocks generation runs from the lesson authoring
+       prompt at content/_authoring/lesson_authoring_prompt.md.
+       ~0.25 session.
+
+  A8. Backend production launch — systemd unit, env file in
+      /etc/ami-trade.env, log rotation, restart-on-fail. No more
+      `nohup uvicorn`. ~0.5 session.
+
+  A9. Postgres backups — pg_dump cron + offsite copy + restore drill.
+      ~0.25 session.
+
+  A10. Sentry SDK in backend + Flutter. ~0.5 session.
+
+  A21. Animation MDX component — Flutter AnimationRegistry maps
+       name → Lottie asset path; missing names render
+       AmiHexPlaceholder. ~0.5 session.
+
+Blocked on Saiful's external steps (unblock when ready):
+  A3. Resend account + DKIM/SPF DNS — unblocks A4/A5 (email
+      confirmation flow).
+  A6. Sign in with Apple capability on bundle id under team
+      S7RBWM4879 — unblocks A6 code.
+  A7. Cloudflare Tunnel + named hostname + Access policy — unblocks
+      A25 (iPhone leaves the LAN).
+  A13. TTS provider account + key (Azure or ElevenLabs) — unblocks
+       A14 (TTS integration).
+  A15. OneSignal account + Dev APNs cert from Apple Dev — unblocks
+       A16 (push notifications).
+  A19. App Store Connect app record (bundle id
+       ai.agenticmarketintel.amiTrade, SKU AMITRADE, English primary)
+       + install Transporter from Mac App Store — unblocks
+       A25/A26 (TestFlight upload).
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
 that explains what it is and why.
+Naming: code/internals → LLM is fine; user-visible copy → AMI by name
+(never "the AI"). See docs/08_tech/coding_conventions.md.
 
 Before writing code:
   cd "/Volumes/Extreme Pro/AMI_MarketApp"
   git status
-  git log --oneline
+  git log --oneline | head -10
   docker ps --filter "name=ami_postgres" --format '{{.Names}}: {{.Status}}'
   curl -s http://localhost:8000/v1/health
   curl -s http://localhost:8000/v1/llm/status
   curl -s http://localhost:8000/v1/sim/quote/AAPL
+
+Backend may be on PID found via:
+  pgrep -lf "uvicorn app.main"
+If down, restart from this worktree:
+  cd "/Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/magical-edison-18bf91/backend"
+  DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
+  USE_REAL_MARKET_DATA=true \
+  VLLM_BASE_URL=http://192.168.20.74:8000 \
+  VLLM_MODEL=gemma-4-31b-it-nvfp4 \
+  nohup /Volumes/Extreme\ Pro/AMI_MarketApp/.claude/worktrees/strange-meninsky-06db6d/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 >/tmp/ami-backend.log 2>&1 &
 ```
 
 ---
