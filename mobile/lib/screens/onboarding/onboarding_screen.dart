@@ -1,3 +1,13 @@
+/// Onboarding chat — anonymous-first interview with the AMI Concierge.
+///
+/// Drives the post-install flow: a guided question/answer session, a
+/// "readback" confirmation step where the user confirms their inferred
+/// mandate, then a hand-off to the Floor. Locale + timezone hint the
+/// Concierge for opening greetings; the actual UI strings here are
+/// localised via AppLocalizations.
+library;
+
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
@@ -85,7 +95,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _body(OnboardingState state) {
     if (state.phase == OnboardingPhase.error) {
       return _ErrorView(
-        message: state.errorMessage ?? 'Unknown error',
+        message: state.errorMessage ??
+            AppLocalizations.of(context).onboardingErrorUnknown,
         onRetry: () => ref.read(onboardingNotifierProvider.notifier).start(
               locale: 'en',
               timezone: DateTime.now().timeZoneName,
@@ -152,7 +163,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     maxLines: 4,
                     onSubmitted: _handleSubmit,
                     decoration: InputDecoration(
-                      hintText: state.submitting ? 'Sending...' : 'Type your answer…',
+                      hintText: state.submitting
+                          ? AppLocalizations.of(context).onboardingHintSending
+                          : AppLocalizations.of(context).onboardingHintAnswer,
                       hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
                       filled: true,
                       fillColor: AmiColors.slate800,
@@ -194,7 +207,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.m),
       child: HexButton(
-        label: 'LOOKS RIGHT — CONTINUE',
+        label: AppLocalizations.of(context).onboardingReadbackContinue,
         color: AmiColors.hexBlue,
         onPressed: () =>
             ref.read(onboardingNotifierProvider.notifier).confirmReadback(),
@@ -206,7 +219,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.m),
       child: HexButton(
-        label: 'MEET YOUR TEAM',
+        label: AppLocalizations.of(context).onboardingMeetYourTeam,
         color: AmiColors.hexPink,
         onPressed: () => Navigator.of(context).pushReplacementNamed('/floor'),
       ),
@@ -232,11 +245,12 @@ class _HeaderBar extends StatelessWidget {
         children: [
           const Text('⬢', style: TextStyle(fontSize: 22, color: AmiColors.hexBlue)),
           const SizedBox(width: AmiSpacing.s),
-          const Text('AMI TRADE', style: AmiTypography.labelMono),
+          Text(AppLocalizations.of(context).onboardingHeader,
+              style: AmiTypography.labelMono),
           const Spacer(),
           if (state.sessionId != null)
             Text(
-              'SETUP',
+              AppLocalizations.of(context).onboardingHeaderSetup,
               style: AmiTypography.labelMono.copyWith(
                 color: AmiColors.hexPink,
                 fontSize: 11,
@@ -256,6 +270,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.l),
       child: Column(
@@ -264,12 +279,12 @@ class _ErrorView extends StatelessWidget {
         children: [
           const Icon(Icons.cloud_off, size: 56, color: AmiColors.hexAmber),
           const SizedBox(height: AmiSpacing.m),
-          const Text('CAN\'T REACH THE BACKEND',
+          Text(l.onboardingErrorTitle,
               style: AmiTypography.labelMono, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.s),
           Text(message, style: AmiTypography.body, textAlign: TextAlign.center),
           const SizedBox(height: AmiSpacing.l),
-          HexButton(label: 'TRY AGAIN', onPressed: onRetry),
+          HexButton(label: l.onboardingTryAgain, onPressed: onRetry),
         ],
       ),
     );

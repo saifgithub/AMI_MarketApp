@@ -10,6 +10,7 @@
 /// a banner with the "edit your Mandate" suggestion.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/screens/agent/coach_history_screen.dart';
@@ -85,7 +86,8 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
         if (saved != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Saved as v${saved.version} — ${saved.plainEnglish}'),
+              content: Text(AppLocalizations.of(context)
+                  .coachProposalSavedSnack(saved.version, saved.plainEnglish)),
               backgroundColor: AmiColors.slate800,
               behavior: SnackBarBehavior.floating,
             ),
@@ -187,6 +189,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final version = state.currentOverlay?.version ?? 0;
     final editsLeft = state.history?.editsRemaining;
+    final l = AppLocalizations.of(context);
     return Container(
       height: 88,
       padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.s),
@@ -208,15 +211,15 @@ class _Header extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'COACH ${agent.displayName.toUpperCase()}',
+                  l.coachHeading(agent.displayName.toUpperCase()),
                   style: AmiTypography.labelMono.copyWith(color: agent.color),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   version == 0
-                      ? 'No overlay yet — factory defaults'
-                      : 'Overlay v$version active',
+                      ? l.coachNoOverlayYet
+                      : l.coachOverlayActive(version),
                   style: AmiTypography.caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -224,8 +227,8 @@ class _Header extends StatelessWidget {
                 if (editsLeft != null && editsLeft <= 1)
                   Text(
                     editsLeft == 0
-                        ? '⚠️ No edits left — upgrade to keep coaching'
-                        : '⚠️ $editsLeft edit left at your tier',
+                        ? l.coachNoEditsLeft
+                        : l.coachOneEditLeft(editsLeft),
                     style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
                   ),
               ],
@@ -233,7 +236,7 @@ class _Header extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.history, color: AmiColors.textMed),
-            tooltip: 'Version history',
+            tooltip: l.coachVersionHistoryTooltip,
             onPressed: onHistory,
           ),
         ],
@@ -262,7 +265,7 @@ class _CurrentOverlayBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'CURRENT OVERLAY — v${overlay.version}',
+            AppLocalizations.of(context).coachCurrentOverlayLabel(overlay.version),
             style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue),
           ),
           const SizedBox(height: AmiSpacing.xs),
@@ -281,6 +284,7 @@ class _RefusalBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(AmiSpacing.m, AmiSpacing.s, AmiSpacing.m, 0),
@@ -301,12 +305,12 @@ class _RefusalBanner extends StatelessWidget {
               children: [
                 Text(
                   refusal.reason == 'safety_floor'
-                      ? 'PROTECTED — safety floor'
+                      ? l.coachProtectedSafetyFloor
                       : refusal.reason == 'mandate_compliance'
-                          ? 'PROTECTED — mandate rule'
+                          ? l.coachProtectedMandate
                           : refusal.reason == 'edit_limit_reached'
-                              ? 'EDIT LIMIT REACHED'
-                              : 'COACH REFUSED',
+                              ? l.coachEditLimitReached
+                              : l.coachRefused,
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
                 ),
                 const SizedBox(height: 2),
@@ -349,6 +353,8 @@ class _DiffCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRefused = proposal.refused;
+    final l = AppLocalizations.of(context);
+    final agentUpper = agent.displayName.toUpperCase();
     return Container(
       margin: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -366,19 +372,19 @@ class _DiffCard extends StatelessWidget {
         children: [
           Text(
             isRefused
-                ? '${agent.displayName.toUpperCase()} REFUSED'
-                : '${agent.displayName.toUpperCase()} — PROPOSAL',
+                ? l.coachAgentRefused(agentUpper)
+                : l.coachAgentProposal(agentUpper),
             style: AmiTypography.labelMono.copyWith(
               color: isRefused ? AmiColors.hexAmber : agent.color,
             ),
           ),
           const SizedBox(height: AmiSpacing.s),
-          Text('Plain English:', style: AmiTypography.caption),
+          Text(l.coachPlainEnglish, style: AmiTypography.caption),
           const SizedBox(height: 2),
           Text(proposal.plainEnglish, style: AmiTypography.body),
           if (!isRefused) ...[
             const SizedBox(height: AmiSpacing.m),
-            Text('Overlay addition:', style: AmiTypography.caption),
+            Text(l.coachOverlayAddition, style: AmiTypography.caption),
             const SizedBox(height: 2),
             Container(
               width: double.infinity,
@@ -405,7 +411,7 @@ class _DiffCard extends StatelessWidget {
                       foregroundColor: AmiColors.slate900,
                     ),
                     onPressed: onAccept,
-                    child: const Text('ACCEPT'),
+                    child: Text(l.coachAccept),
                   ),
                 ),
               if (!isRefused) const SizedBox(width: AmiSpacing.s),
@@ -416,7 +422,7 @@ class _DiffCard extends StatelessWidget {
                     side: const BorderSide(color: AmiColors.slate700),
                   ),
                   onPressed: onRefine,
-                  child: Text(isRefused ? 'DISMISS' : 'REFINE'),
+                  child: Text(isRefused ? l.coachDismiss : l.coachRefine),
                 ),
               ),
               if (!isRefused) const SizedBox(width: AmiSpacing.s),
@@ -425,7 +431,7 @@ class _DiffCard extends StatelessWidget {
                   child: TextButton(
                     style: TextButton.styleFrom(foregroundColor: AmiColors.textLow),
                     onPressed: onReject,
-                    child: const Text('REJECT'),
+                    child: Text(l.coachReject),
                   ),
                 ),
             ],
@@ -456,6 +462,7 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       decoration: const BoxDecoration(
         color: AmiColors.slate900,
@@ -489,7 +496,7 @@ class _InputBar extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.fact_check_outlined, size: 18),
-                  label: Text(proposing ? 'DRAFTING…' : 'PROPOSE CHANGE'),
+                  label: Text(proposing ? l.coachDrafting : l.coachProposeChange),
                   onPressed: proposing ? null : onPropose,
                 ),
               ),
@@ -505,7 +512,7 @@ class _InputBar extends StatelessWidget {
                   enabled: !disabled,
                   onSubmitted: (_) => onSend(),
                   decoration: InputDecoration(
-                    hintText: disabled ? 'Streaming…' : 'Tell me what to change…',
+                    hintText: disabled ? l.oneOnOneStreaming : l.coachInputHint,
                     hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
                     filled: true,
                     fillColor: AmiColors.slate800,

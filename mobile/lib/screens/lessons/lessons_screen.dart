@@ -5,6 +5,7 @@
 /// progress + unlocked agents.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
@@ -88,7 +89,7 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('LESSONS',
+          Text(AppLocalizations.of(context).lessonsHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
         ],
       ),
@@ -108,6 +109,7 @@ class _ProgressCard extends StatelessWidget {
     final pct = (p == null || p.lessonsTotal == 0)
         ? 0.0
         : p.lessonsCompleted / p.lessonsTotal;
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -125,11 +127,14 @@ class _ProgressCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('YOUR PROGRESS',
+                    Text(l.lessonsYourProgress,
                         style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
                     const SizedBox(height: 4),
                     Text(
-                      '${p?.lessonsCompleted ?? 0} / ${p?.lessonsTotal ?? 0} lessons',
+                      l.lessonsCount(
+                        p?.lessonsCompleted ?? 0,
+                        p?.lessonsTotal ?? 0,
+                      ),
                       style: AmiTypography.statMid,
                     ),
                   ],
@@ -138,8 +143,10 @@ class _ProgressCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('AGENTS', style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-                  Text('${unlocked.length} / 12', style: AmiTypography.statMid),
+                  Text(l.lessonsAgents,
+                      style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+                  Text(l.lessonsAgentsCount(unlocked.length),
+                      style: AmiTypography.statMid),
                 ],
               ),
             ],
@@ -167,7 +174,8 @@ class _ProgressCard extends StatelessWidget {
           ],
           if (p?.nextRecommendedLesson != null) ...[
             const SizedBox(height: AmiSpacing.m),
-            Text('NEXT UP', style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+            Text(l.lessonsNextUp,
+                style: AmiTypography.labelMono.copyWith(fontSize: 10)),
             const SizedBox(height: 2),
             Text(
               state.catalogue
@@ -325,7 +333,9 @@ class _LessonTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text('${meta.durationMin} min',
+                          Text(
+                              AppLocalizations.of(context)
+                                  .lessonsDurationMin(meta.durationMin),
                               style: AmiTypography.caption),
                           if (callouts.isNotEmpty) ...[
                             const SizedBox(width: AmiSpacing.s),
@@ -358,7 +368,8 @@ class _LessonTile extends StatelessWidget {
                     side: const BorderSide(color: AmiColors.hexGreen),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  child: Text('READ', style: AmiTypography.labelMono),
+                  child: Text(AppLocalizations.of(context).actionRead,
+                      style: AmiTypography.labelMono),
                 ),
               ),
               const SizedBox(width: AmiSpacing.s),
@@ -370,7 +381,8 @@ class _LessonTile extends StatelessWidget {
                     side: const BorderSide(color: AmiColors.hexAmber),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  child: Text('QUIZ ONLY', style: AmiTypography.labelMono),
+                  child: Text(AppLocalizations.of(context).actionQuizOnly,
+                      style: AmiTypography.labelMono),
                 ),
               ),
             ],

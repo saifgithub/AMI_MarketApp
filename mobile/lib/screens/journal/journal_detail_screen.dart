@@ -4,6 +4,7 @@
 /// and lets the user attach a note + tags + outcome.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/state/journal_providers.dart';
@@ -47,7 +48,7 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Note saved')),
+        SnackBar(content: Text(AppLocalizations.of(context).journalNoteSaved)),
       );
     }
   }
@@ -55,13 +56,14 @@ class _JournalDetailScreenState extends ConsumerState<JournalDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(journalNotifierProvider);
+    final l = AppLocalizations.of(context);
     final entry =
         state.entries.firstWhere((e) => e.id == widget.entryId, orElse: () =>
             JournalEntry(
               id: widget.entryId,
               userId: '',
               entryType: JournalEntryType.oneOnOne,
-              title: 'Loading…',
+              title: l.journalDetailLoading,
               createdAt: DateTime.now(),
               agentsInvolved: const [],
               tags: const [],
@@ -145,7 +147,7 @@ class _Header extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: AmiColors.textHigh),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          Text('ENTRY DETAIL',
+          Text(AppLocalizations.of(context).journalDetailHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
         ],
       ),
@@ -182,26 +184,28 @@ class _PayloadBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final children = <Widget>[];
     if (entryType == JournalEntryType.oneOnOne) {
       final user = payload['user_message'] as String?;
       final reply = payload['assistant_reply'] as String?;
-      if (user != null) children.add(_Block(label: 'YOU', body: user));
-      if (reply != null) children.add(_Block(label: 'AGENT', body: reply));
+      if (user != null) children.add(_Block(label: l.journalDetailBlockYou, body: user));
+      if (reply != null) children.add(_Block(label: l.journalDetailBlockAgent, body: reply));
     } else if (entryType == JournalEntryType.agentCoach) {
       final v = payload['version'];
       final overlay = payload['overlay'] as String?;
       if (v != null) {
-        children.add(Text('Saved as v$v',
+        final version = v is int ? v : int.tryParse('$v') ?? 0;
+        children.add(Text(l.journalDetailSavedAsVersion(version),
             style: AmiTypography.labelMono.copyWith(color: AmiColors.hexPurple)));
         children.add(const SizedBox(height: AmiSpacing.s));
       }
-      if (overlay != null) children.add(_Block(label: 'OVERLAY', body: overlay));
+      if (overlay != null) children.add(_Block(label: l.journalDetailBlockOverlay, body: overlay));
     } else if (entryType == JournalEntryType.roomRun) {
       final v = (payload['verdict'] as Map?)?.cast<String, dynamic>();
       if (v != null) {
         final action = v['action'] as String? ?? '—';
-        children.add(Text('VERDICT: $action',
+        children.add(Text(l.journalDetailVerdictLine(action),
             style: AmiTypography.labelMono.copyWith(
               color: action == 'APPROVE' ? AmiColors.hexGreen : AmiColors.hexAmber,
             )));
@@ -287,6 +291,12 @@ class _NoteEditor extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final outcomeOptions = <(String, String, Color)>[
+      ('win', l.journalNoteOutcomeWin, AmiColors.hexGreen),
+      ('loss', l.journalNoteOutcomeLoss, AmiColors.hexRed),
+      ('pending', l.journalNoteOutcomePending, AmiColors.hexAmber),
+    ];
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -297,7 +307,7 @@ class _NoteEditor extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('YOUR NOTE',
+          Text(l.journalNoteHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
           const SizedBox(height: AmiSpacing.s),
           TextField(
@@ -305,7 +315,7 @@ class _NoteEditor extends StatelessWidget {
             maxLines: 4,
             style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
             decoration: InputDecoration(
-              hintText: 'Why this mattered. What you learned. What you\'d do differently.',
+              hintText: l.journalNoteHint,
               hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
               filled: true,
               fillColor: AmiColors.slate900,
@@ -318,13 +328,10 @@ class _NoteEditor extends StatelessWidget {
           const SizedBox(height: AmiSpacing.m),
           Row(
             children: [
-              Text('OUTCOME', style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+              Text(l.journalNoteOutcome,
+                  style: AmiTypography.labelMono.copyWith(fontSize: 11)),
               const SizedBox(width: AmiSpacing.m),
-              for (final v in const [
-                ('win', 'WIN', AmiColors.hexGreen),
-                ('loss', 'LOSS', AmiColors.hexRed),
-                ('pending', 'PENDING', AmiColors.hexAmber),
-              ])
+              for (final v in outcomeOptions)
                 Padding(
                   padding: const EdgeInsets.only(right: 6),
                   child: ChoiceChip(
@@ -350,7 +357,7 @@ class _NoteEditor extends StatelessWidget {
                 foregroundColor: AmiColors.slate900,
               ),
               onPressed: onSave,
-              child: const Text('SAVE NOTE'),
+              child: Text(l.journalNoteSave),
             ),
           ),
         ],

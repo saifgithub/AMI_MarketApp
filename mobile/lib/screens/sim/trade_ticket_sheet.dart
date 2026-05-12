@@ -6,6 +6,7 @@
 /// rejection is surfaced as an amber banner with the specific violations.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -110,8 +111,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Filled: ${result.trade!.side.toUpperCase()} ${result.trade!.quantity.toStringAsFixed(0)} '
-            '${result.trade!.ticker} @ \$${result.trade!.entryPrice.toStringAsFixed(2)}',
+            AppLocalizations.of(context).tradeTicketFilled(
+              result.trade!.side.toUpperCase(),
+              result.trade!.quantity.toStringAsFixed(0),
+              result.trade!.ticker,
+              result.trade!.entryPrice.toStringAsFixed(2),
+            ),
           ),
           backgroundColor: AmiColors.slate800,
         ),
@@ -123,6 +128,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   Widget build(BuildContext context) {
     final state = ref.watch(simNotifierProvider);
     final refusal = state.lastSubmit != null && !state.lastSubmit!.ok;
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
@@ -137,7 +143,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               children: [
                 const Icon(Icons.bolt, color: AmiColors.hexCyan, size: 20),
                 const SizedBox(width: AmiSpacing.s),
-                Text('NEW TRADE',
+                Text(l.tradeTicketHeading,
                     style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
               ],
             ),
@@ -158,7 +164,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                       children: [
                         const Icon(Icons.lock, color: AmiColors.hexAmber, size: 16),
                         const SizedBox(width: 4),
-                        Text('SAFETY FLOOR — TRADE BLOCKED',
+                        Text(l.tradeTicketSafetyFloorBlocked,
                             style: AmiTypography.labelMono.copyWith(
                                 color: AmiColors.hexAmber, fontSize: 11)),
                       ],
@@ -171,7 +177,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                       ),
                     const SizedBox(height: 4),
                     Text(
-                      'Change what is enforced via Settings → My Mandate.',
+                      l.tradeTicketChangeMandate,
                       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
                     ),
                   ],
@@ -187,7 +193,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     autofocus: true,
                     textCapitalization: TextCapitalization.characters,
                     style: AmiTypography.statMid,
-                    decoration: _decoration(label: 'TICKER', hint: 'NVDA'),
+                    decoration: _decoration(
+                        label: l.tradeTicketLabelTicker,
+                        hint: l.tradeTicketHintTicker),
                   ),
                 ),
                 const SizedBox(width: AmiSpacing.s),
@@ -205,7 +213,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
               ],
               style: AmiTypography.body,
-              decoration: _decoration(label: 'QUANTITY', hint: '10'),
+              decoration: _decoration(
+                  label: l.tradeTicketLabelQuantity, hint: l.tradeTicketHintQty),
             ),
             const SizedBox(height: AmiSpacing.m),
             Row(
@@ -215,7 +224,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     controller: _stop,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     style: AmiTypography.body,
-                    decoration: _decoration(label: 'STOP', hint: 'optional'),
+                    decoration: _decoration(
+                        label: l.tradeTicketLabelStop,
+                        hint: l.tradeTicketHintOptional),
                   ),
                 ),
                 const SizedBox(width: AmiSpacing.s),
@@ -224,7 +235,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     controller: _target,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     style: AmiTypography.body,
-                    decoration: _decoration(label: 'TARGET', hint: 'optional'),
+                    decoration: _decoration(
+                        label: l.tradeTicketLabelTarget,
+                        hint: l.tradeTicketHintOptional),
                   ),
                 ),
               ],
@@ -234,7 +247,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               controller: _horizon,
               keyboardType: TextInputType.number,
               style: AmiTypography.body,
-              decoration: _decoration(label: 'HORIZON (DAYS)', hint: 'optional'),
+              decoration: _decoration(
+                  label: l.tradeTicketLabelHorizon, hint: l.tradeTicketHintOptional),
             ),
             const SizedBox(height: AmiSpacing.l),
             SizedBox(
@@ -246,13 +260,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                   padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
                 ),
                 icon: Icon(_side == 'buy' ? Icons.add : Icons.remove),
-                label: Text(state.submitting ? 'SUBMITTING…' : 'SUBMIT TRADE'),
+                label: Text(state.submitting
+                    ? l.tradeTicketSubmitting
+                    : l.tradeTicketSubmit),
                 onPressed: state.submitting ? null : _submit,
               ),
             ),
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              'PM safety floor runs on submit — compliance flags + drawdown + single-name cap.',
+              l.tradeTicketFooterNote,
               style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
             ),
           ],
@@ -289,6 +305,7 @@ class _SideToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       decoration: BoxDecoration(
         color: AmiColors.slate900,
@@ -297,8 +314,10 @@ class _SideToggle extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _pill('BUY', AmiColors.hexGreen, value == 'buy', () => onChange('buy')),
-          _pill('SELL', AmiColors.hexRed, value == 'sell', () => onChange('sell')),
+          _pill(l.tradeTicketSideBuy, AmiColors.hexGreen, value == 'buy',
+              () => onChange('buy')),
+          _pill(l.tradeTicketSideSell, AmiColors.hexRed, value == 'sell',
+              () => onChange('sell')),
         ],
       ),
     );

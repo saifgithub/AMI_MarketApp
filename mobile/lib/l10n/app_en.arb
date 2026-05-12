@@ -57,5 +57,390 @@
     "watchlistOpenTradeTicket": "OPEN TRADE TICKET",
     "watchlistAskMarketAnalyst": "ASK THE MARKET ANALYST",
     "watchlistConveneRoom": "CONVENE THE ROOM",
-    "watchlistRemove": "REMOVE FROM WATCHLIST"
+    "watchlistRemove": "REMOVE FROM WATCHLIST",
+
+    "floorTabUpper": "FLOOR",
+    "portfolioTabUpper": "PORTFOLIO",
+    "journalTabUpper": "JOURNAL",
+    "lessonsTabUpper": "LESSONS",
+    "settingsTabUpper": "SETTINGS",
+
+    "floorConciergeHeading": "AMI CONCIERGE",
+    "floorConciergeTagline": "Your personal assistant — tap to chat",
+    "floorTeamHeading": "YOUR TEAM",
+    "floorUnlockedSummary": "{count} of 12 unlocked. Tap a locked hex to see how.",
+    "@floorUnlockedSummary": {
+        "description": "Header summary above the 12-agent grid. {count} is the number of unlocked agents.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "floorConveneCta": "CONVENE THE ROOM",
+    "floorConveneCaption": "Run a full multi-agent debate on a ticker.",
+    "floorRestartOnboarding": "restart onboarding",
+    "floorFooter": "⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE",
+    "floorLockedHowTo": "HOW TO UNLOCK",
+    "floorLockedNoLessons": "This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.",
+    "floorLockedEarnByLessons": "Earn this agent free by passing every lesson that involves them:",
+    "floorLockedGoToLessons": "GO TO LESSONS",
+    "floorLockedUpgradeSoon": "UPGRADE TO SKIP — coming soon",
+
+    "portfolioHeading": "PORTFOLIO",
+    "portfolioNewTradeTooltip": "New trade",
+    "portfolioTotalValue": "TOTAL VALUE",
+    "portfolioCash": "CASH",
+    "portfolioDrawdown": "Drawdown: {pct}%",
+    "@portfolioDrawdown": {
+        "description": "Drawdown line under total value. {pct} is the formatted percentage (one decimal).",
+        "placeholders": {"pct": {"type": "String"}}
+    },
+    "portfolioLive": "LIVE",
+    "portfolioMock": "MOCK",
+    "portfolioStartSimTrading": "Start sim trading",
+    "portfolioStartSimTradingBody": "Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM''s safety floor runs on every submit.",
+    "portfolioNewTrade": "NEW TRADE",
+    "portfolioHoldings": "HOLDINGS",
+    "portfolioTrades": "TRADES",
+    "portfolioNoTrades": "No trades yet.",
+    "portfolioCloseTooltip": "Close",
+    "portfolioAddDialogTitle": "ADD TO WATCHLIST",
+    "portfolioAddDialogHint": "Ticker (e.g. NVDA)",
+    "actionCancel": "CANCEL",
+    "@actionCancel": {
+        "description": "Generic cancel button in dialogs and sheets."
+    },
+    "actionAdd": "ADD",
+    "@actionAdd": {
+        "description": "Generic add button used in watchlist add dialog."
+    },
+
+    "journalHeading": "DECISION JOURNAL",
+    "journalFilterAll": "ALL",
+    "journalFilterOneOnOne": "1-ON-1",
+    "journalFilterCoach": "COACH",
+    "journalFilterLessons": "LESSONS",
+    "journalFilterUnlocks": "UNLOCKS",
+    "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to keep everything.",
+    "@journalRetentionWarning": {
+        "description": "Amber notice on Journal when the user is on Floor Pass. {days} is the retention window.",
+        "placeholders": {"days": {"type": "int"}}
+    },
+    "journalEmptyTitle": "No entries yet.",
+    "journalEmptyBody": "Talk to an agent, coach one, or complete a lesson — every action lands here automatically.",
+    "journalEntryTypeOneOnOne": "1-ON-1",
+    "journalEntryTypeCoach": "COACH",
+    "journalEntryTypeLesson": "LESSON",
+    "journalEntryTypeUnlock": "UNLOCK",
+    "journalEntryTypeTrade": "TRADE",
+    "journalEntryTypeMandate": "MANDATE",
+    "journalEntryTypeDrift": "DRIFT",
+    "journalEntryTypeRoom": "ROOM",
+    "journalDetailHeading": "ENTRY DETAIL",
+    "journalDetailLoading": "Loading…",
+    "journalDetailBlockYou": "YOU",
+    "journalDetailBlockAgent": "AGENT",
+    "journalDetailBlockOverlay": "OVERLAY",
+    "journalDetailSavedAsVersion": "Saved as v{version}",
+    "@journalDetailSavedAsVersion": {
+        "description": "Coach proposal detail — shows which overlay version was saved. {version} is the integer version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "journalDetailVerdictLine": "VERDICT: {action}",
+    "@journalDetailVerdictLine": {
+        "description": "Room run verdict line in the journal detail. {action} is the verdict action (e.g. APPROVE).",
+        "placeholders": {"action": {"type": "String"}}
+    },
+    "journalNoteHeading": "YOUR NOTE",
+    "journalNoteHint": "Why this mattered. What you learned. What you''d do differently.",
+    "journalNoteOutcome": "OUTCOME",
+    "journalNoteOutcomeWin": "WIN",
+    "journalNoteOutcomeLoss": "LOSS",
+    "journalNoteOutcomePending": "PENDING",
+    "journalNoteSave": "SAVE NOTE",
+    "journalNoteSaved": "Note saved",
+
+    "lessonsHeading": "LESSONS",
+    "lessonsYourProgress": "YOUR PROGRESS",
+    "lessonsCount": "{done} / {total} lessons",
+    "@lessonsCount": {
+        "description": "Progress card body — {done} lessons completed of {total}.",
+        "placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}
+    },
+    "lessonsAgents": "AGENTS",
+    "lessonsAgentsCount": "{unlocked} / 12",
+    "@lessonsAgentsCount": {
+        "description": "Progress card — {unlocked} of 12 agents unlocked.",
+        "placeholders": {"unlocked": {"type": "int"}}
+    },
+    "lessonsNextUp": "NEXT UP",
+    "lessonsDurationMin": "{min} min",
+    "@lessonsDurationMin": {
+        "description": "Lesson card duration label. {min} is the integer duration in minutes.",
+        "placeholders": {"min": {"type": "int"}}
+    },
+    "lessonReaderLoading": "Loading…",
+    "lessonReaderQuizOnlyBadge": "QUIZ ONLY",
+    "lessonReaderQuizOnlyBannerOne": "Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that''s your teaching surface.",
+    "lessonReaderQuizOnlyBannerMany": "Skipping straight to the {count} quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.",
+    "@lessonReaderQuizOnlyBannerMany": {
+        "description": "Banner shown when the user enters quiz-only mode and there are 2+ quizzes. {count} is the integer number of quiz blocks.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "lessonReaderMetaDurationTrack": "{min} min · {track}",
+    "@lessonReaderMetaDurationTrack": {
+        "description": "Lesson meta bar — duration in minutes + track name.",
+        "placeholders": {"min": {"type": "int"}, "track": {"type": "String"}}
+    },
+    "lessonReaderQuiz": "QUIZ",
+    "lessonReaderChatWith": "CHAT WITH {agent}",
+    "@lessonReaderChatWith": {
+        "description": "Chat-with block label inside a lesson. {agent} is the agent display name (upper-cased before insertion is fine).",
+        "placeholders": {"agent": {"type": "String"}}
+    },
+    "lessonReaderSubmitQuiz": "SUBMIT QUIZ",
+    "lessonReaderChecking": "CHECKING…",
+    "lessonReaderPassed": "PASSED",
+    "lessonReaderNotQuite": "NOT QUITE",
+    "lessonReaderCorrectOf": "{correct} / {total} correct",
+    "@lessonReaderCorrectOf": {
+        "description": "Quiz result — {correct} of {total} questions correct.",
+        "placeholders": {"correct": {"type": "int"}, "total": {"type": "int"}}
+    },
+    "lessonReaderAgentUnlocked": "AGENT UNLOCKED",
+    "lessonReaderTryAgain": "TRY AGAIN",
+    "lessonReaderDone": "DONE",
+    "lessonReaderBackToLessons": "BACK TO LESSONS",
+
+    "settingsHeading": "SETTINGS",
+    "settingsMandateVersion": "mandate v{version}",
+    "@settingsMandateVersion": {
+        "description": "Header label showing the active mandate version. {version} is the integer version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "settingsSaving": "SAVING…",
+    "settingsSave": "SAVE",
+    "settingsMandateUpdated": "Mandate updated.",
+    "settingsSectionMandate": "MY MANDATE",
+    "settingsSectionCompliance": "COMPLIANCE",
+    "settingsSectionProfile": "PROFILE",
+    "settingsSectionLanguageUpper": "LANGUAGE",
+    "settingsSectionAccount": "ACCOUNT",
+    "settingsSectionDeveloper": "DEVELOPER",
+    "settingsRiskScore": "Risk score",
+    "settingsRiskScoreValue": "{value} / 5",
+    "@settingsRiskScoreValue": {
+        "description": "Risk slider value caption — current score out of 5.",
+        "placeholders": {"value": {"type": "int"}}
+    },
+    "settingsRiskLabel1": "Capital preservation. Small sizes, tight stops.",
+    "settingsRiskLabel2": "Cautious. Below-average position sizing.",
+    "settingsRiskLabel3": "Balanced. Standard 3-5% positions.",
+    "settingsRiskLabel4": "Aggressive. Larger sizes on high-conviction setups.",
+    "settingsRiskLabel5": "Highest risk tolerance. Concentrated bets allowed.",
+    "settingsMaxDrawdown": "Max drawdown",
+    "settingsMaxDrawdownExplain": "Your PM refuses trades that would push the portfolio past this.",
+    "settingsComplianceHalal": "Halal screen",
+    "settingsComplianceEsgLite": "ESG-lite",
+    "settingsComplianceTAG": "No tobacco / alcohol / gambling",
+    "settingsComplianceFossil": "No fossil fuels",
+    "settingsComplianceLongOnly": "Long-only",
+    "settingsComplianceLiquidOnly": "Liquid-only",
+    "settingsProfilePlan": "Plan",
+    "settingsProfileLocale": "Locale",
+    "settingsProfileTimezone": "Timezone",
+    "settingsProfilePath": "Path",
+    "settingsProfileHorizon": "Horizon",
+    "settingsProfilePrimaryGoal": "Primary goal",
+    "settingsProfileCredits": "Credits",
+    "settingsAccountStatus": "Status",
+    "settingsAccountSignedIn": "Signed in",
+    "settingsAccountGuest": "Guest (anonymous)",
+    "settingsAccountHandle": "Handle",
+    "settingsAccountGuestNote": "Mandate, journal, and portfolio stay on this device until you sign in.",
+    "settingsManageAccount": "MANAGE ACCOUNT",
+    "settingsSignIn": "SIGN IN",
+    "settingsLanguagePlaceholderNote": "AR + MS ship as placeholders today — missing keys fall back to English. Translators drop in proper ARBs and the locale lights up.",
+    "settingsDeveloperActive": "Active backend",
+    "settingsDeveloperNoUrl": "(no URL baked into this build)",
+    "settingsDeveloperNotInBuild": "· not in this build",
+    "settingsDeveloperFootnote": "This section is compiled out of MVP / App Store builds. Only PROD will be reachable then.",
+
+    "onboardingHeader": "AMI TRADE",
+    "onboardingHeaderSetup": "SETUP",
+    "onboardingHintSending": "Sending...",
+    "onboardingHintAnswer": "Type your answer…",
+    "onboardingReadbackContinue": "LOOKS RIGHT — CONTINUE",
+    "onboardingMeetYourTeam": "MEET YOUR TEAM",
+    "onboardingErrorTitle": "CAN''T REACH THE BACKEND",
+    "onboardingErrorUnknown": "Unknown error",
+    "onboardingTryAgain": "TRY AGAIN",
+
+    "signInHeading": "SIGN IN",
+    "signInIntro": "Sign in to keep your mandate, journal, and portfolio across devices. Until then, everything you build stays on this device.",
+    "signInWithApple": "Sign in with Apple",
+    "signInWithEmail": "OR CONTINUE WITH EMAIL",
+    "signInEmailHint": "you@example.com",
+    "signInSendCode": "SEND CODE",
+    "signInResendCode": "RESEND CODE",
+    "signInCodeHint": "6-digit code",
+    "signInVerify": "VERIFY & CLAIM",
+    "signInDevCode": "DEV mode — code: {code}",
+    "@signInDevCode": {
+        "description": "Dev-mode debug code echo in the sign-in screen. {code} is the literal 6-digit code returned by the backend.",
+        "placeholders": {"code": {"type": "String"}}
+    },
+    "signInCodeSent": "Code sent. Check your email.",
+    "signInCodeFailed": "Code did not verify. Try again.",
+    "signInAppleFailed": "Apple sign-in failed.",
+    "signInSignedInAs": "Signed in as {handle}",
+    "@signInSignedInAs": {
+        "description": "Confirmation card on the sign-in screen for already-claimed users. {handle} is the display handle.",
+        "placeholders": {"handle": {"type": "String"}}
+    },
+    "signInLegalFootnote": "AMI Trade is simulation-only. Nothing here is investment advice and no real trades are executed.",
+
+    "oneOnOneAskAnything": "Ask me anything in my domain.\nType below to start.",
+    "oneOnOneStreaming": "Streaming…",
+    "oneOnOneHint": "Ask anything…",
+    "oneOnOneCoachTooltip": "Coach this agent",
+
+    "coachHeading": "COACH {agent}",
+    "@coachHeading": {
+        "description": "Coach Your Agent screen header. {agent} is the agent's display name in upper case.",
+        "placeholders": {"agent": {"type": "String"}}
+    },
+    "coachNoOverlayYet": "No overlay yet — factory defaults",
+    "coachOverlayActive": "Overlay v{version} active",
+    "@coachOverlayActive": {
+        "description": "Header subtitle when an overlay is active. {version} is the integer version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "coachNoEditsLeft": "⚠️ No edits left — upgrade to keep coaching",
+    "coachOneEditLeft": "⚠️ {count} edit left at your tier",
+    "@coachOneEditLeft": {
+        "description": "Amber notice when only 1 edit is left. {count} is the number remaining (typically 1).",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "coachVersionHistoryTooltip": "Version history",
+    "coachCurrentOverlayLabel": "CURRENT OVERLAY — v{version}",
+    "@coachCurrentOverlayLabel": {
+        "description": "Banner label above the active overlay summary. {version} is the integer version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "coachProtectedSafetyFloor": "PROTECTED — safety floor",
+    "coachProtectedMandate": "PROTECTED — mandate rule",
+    "coachEditLimitReached": "EDIT LIMIT REACHED",
+    "coachRefused": "COACH REFUSED",
+    "coachProposalSavedSnack": "Saved as v{version} — {summary}",
+    "@coachProposalSavedSnack": {
+        "description": "Snackbar after a coach proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.",
+        "placeholders": {"version": {"type": "int"}, "summary": {"type": "String"}}
+    },
+    "coachAgentRefused": "{agent} REFUSED",
+    "@coachAgentRefused": {
+        "description": "Diff card title when an agent refuses a proposal. {agent} is the agent display name in upper case.",
+        "placeholders": {"agent": {"type": "String"}}
+    },
+    "coachAgentProposal": "{agent} — PROPOSAL",
+    "@coachAgentProposal": {
+        "description": "Diff card title when an agent has drafted a proposal. {agent} is the agent display name in upper case.",
+        "placeholders": {"agent": {"type": "String"}}
+    },
+    "coachPlainEnglish": "Plain English:",
+    "coachOverlayAddition": "Overlay addition:",
+    "coachAccept": "ACCEPT",
+    "coachRefine": "REFINE",
+    "coachReject": "REJECT",
+    "coachDismiss": "DISMISS",
+    "coachInputHint": "Tell me what to change…",
+    "coachDrafting": "DRAFTING…",
+    "coachProposeChange": "PROPOSE CHANGE",
+    "coachHistoryHeading": "{agent} HISTORY",
+    "@coachHistoryHeading": {
+        "description": "Coach history screen title. {agent} is the agent's display name in upper case.",
+        "placeholders": {"agent": {"type": "String"}}
+    },
+    "coachHistorySubtitle": "All saved coaching versions",
+    "coachHistoryEditsUnlimited": "{count} edits made • unlimited at your tier",
+    "@coachHistoryEditsUnlimited": {
+        "description": "Footer summary for unlimited-tier users. {count} is the edit count.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "coachHistoryEditsRemaining": "{count} edits made • {remaining} remaining",
+    "@coachHistoryEditsRemaining": {
+        "description": "Footer summary showing remaining edits. {count} edits made, {remaining} edits left.",
+        "placeholders": {"count": {"type": "int"}, "remaining": {"type": "int"}}
+    },
+    "coachHistoryEmpty": "No coaching history yet.\nGo back and propose your first change.",
+    "coachHistoryActiveBadge": "ACTIVE",
+    "coachHistoryRollbackTitle": "Rollback to v{version}?",
+    "@coachHistoryRollbackTitle": {
+        "description": "Confirm dialog title. {version} is the target version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "coachHistoryRollbackBody": "Your agent will start using v{version} immediately. The newer versions stay in history.",
+    "@coachHistoryRollbackBody": {
+        "description": "Confirm dialog body. {version} is the target version.",
+        "placeholders": {"version": {"type": "int"}}
+    },
+    "coachHistoryRollback": "ROLLBACK",
+    "coachHistoryRollbackToThis": "ROLLBACK TO THIS",
+
+    "conveneHeading": "CONVENE THE ROOM",
+    "convenePickTicker": "Pick a ticker. Your full team runs the debate.",
+    "conveneTickerHint": "e.g. NVDA",
+    "conveneOrPickOne": "OR PICK ONE",
+    "conveneCta": "CONVENE",
+
+    "roomHeadingPrefix": "CONVENE ›",
+    "roomStandingBy": "standing by",
+    "roomDeliberating": "Team deliberating…",
+    "roomEndedNoVerdict": "Room ended without a verdict.",
+    "roomSavedToJournal": "Saved to Journal",
+    "roomClose": "CLOSE",
+    "roomSafetyFloorPill": "SAFETY FLOOR",
+    "roomVerdictHeading": "VERDICT — {action}",
+    "@roomVerdictHeading": {
+        "description": "Verdict card title. {action} is the action string (e.g. APPROVE, REJECT).",
+        "placeholders": {"action": {"type": "String"}}
+    },
+    "roomMetricTicker": "TICKER",
+    "roomMetricSize": "SIZE",
+    "roomMetricEntry": "ENTRY",
+    "roomMetricStop": "STOP",
+    "roomMetricTarget": "TARGET",
+    "roomMetricHorizon": "HORIZON",
+    "roomHorizonDays": "{days} days",
+    "@roomHorizonDays": {
+        "description": "Horizon metric in days. {days} is the integer day count.",
+        "placeholders": {"days": {"type": "int"}}
+    },
+    "roomViolations": "VIOLATIONS",
+    "roomOpenTradeTicket": "OPEN TRADE TICKET",
+    "roomTradeTicketCaption": "Submits with the verdict''s size / stop / target. PM safety floor reruns.",
+
+    "tradeTicketHeading": "NEW TRADE",
+    "tradeTicketSafetyFloorBlocked": "SAFETY FLOOR — TRADE BLOCKED",
+    "tradeTicketChangeMandate": "Change what is enforced via Settings → My Mandate.",
+    "tradeTicketLabelTicker": "TICKER",
+    "tradeTicketLabelQuantity": "QUANTITY",
+    "tradeTicketLabelStop": "STOP",
+    "tradeTicketLabelTarget": "TARGET",
+    "tradeTicketLabelHorizon": "HORIZON (DAYS)",
+    "tradeTicketHintTicker": "NVDA",
+    "tradeTicketHintQty": "10",
+    "tradeTicketHintOptional": "optional",
+    "tradeTicketSubmitting": "SUBMITTING…",
+    "tradeTicketSubmit": "SUBMIT TRADE",
+    "tradeTicketFooterNote": "PM safety floor runs on submit — compliance flags + drawdown + single-name cap.",
+    "tradeTicketSideBuy": "BUY",
+    "tradeTicketSideSell": "SELL",
+    "tradeTicketFilled": "Filled: {side} {qty} {ticker} @ \\${price}",
+    "@tradeTicketFilled": {
+        "description": "Snackbar after a trade fills. {side}=BUY/SELL, {qty}=quantity, {ticker}=symbol, {price}=entry price formatted to 2dp.",
+        "placeholders": {"side": {"type": "String"}, "qty": {"type": "String"}, "ticker": {"type": "String"}, "price": {"type": "String"}}
+    },
+
+    "chatBubbleConcierge": "CONCIERGE",
+    "@chatBubbleConcierge": {
+        "description": "Label above a Concierge chat bubble in the conversation surfaces (Onboarding, 1-on-1)."
+    }
 }

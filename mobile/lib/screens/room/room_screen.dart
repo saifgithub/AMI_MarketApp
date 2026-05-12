@@ -6,6 +6,7 @@
 /// abbreviation. The final Verdict card lands at the bottom.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
@@ -83,9 +84,10 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       ),
                     ],
                     if (state.done && state.verdict == null)
-                      const Padding(
-                        padding: EdgeInsets.all(AmiSpacing.l),
-                        child: Text('Room ended without a verdict.',
+                      Padding(
+                        padding: const EdgeInsets.all(AmiSpacing.l),
+                        child: Text(
+                            AppLocalizations.of(context).roomEndedNoVerdict,
                             style: AmiTypography.body),
                       ),
                     const SizedBox(height: AmiSpacing.xxl),
@@ -109,6 +111,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       height: 88,
       padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.s),
@@ -129,7 +132,7 @@ class _Header extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text('CONVENE ›',
+                    Text(l.roomHeadingPrefix,
                         style: AmiTypography.labelMono
                             .copyWith(color: AmiColors.hexBlue)),
                     const SizedBox(width: 6),
@@ -146,7 +149,7 @@ class _Header extends StatelessWidget {
                         color: phase == null ? AmiColors.textLow : AmiColors.hexGreen),
                     const SizedBox(width: 4),
                     Text(
-                      phase ?? 'standing by',
+                      phase ?? l.roomStandingBy,
                       style: AmiTypography.caption.copyWith(
                         color: phase == null ? AmiColors.textLow : AmiColors.hexGreen,
                       ),
@@ -269,6 +272,7 @@ class _VerdictCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isApprove = verdict.isApprove;
     final accent = isApprove ? AmiColors.hexGreen : AmiColors.hexAmber;
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -287,7 +291,7 @@ class _VerdictCard extends StatelessWidget {
                 size: 28,
               ),
               const SizedBox(width: AmiSpacing.s),
-              Text('VERDICT — ${verdict.action}',
+              Text(l.roomVerdictHeading(verdict.action),
                   style: AmiTypography.labelMono.copyWith(color: accent)),
               const Spacer(),
               if (verdict.overriddenFromLlm)
@@ -297,7 +301,7 @@ class _VerdictCard extends StatelessWidget {
                     color: AmiColors.hexAmber.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text('SAFETY FLOOR',
+                  child: Text(l.roomSafetyFloorPill,
                       style: AmiTypography.labelMono.copyWith(
                           color: AmiColors.hexAmber, fontSize: 9)),
                 ),
@@ -305,40 +309,40 @@ class _VerdictCard extends StatelessWidget {
           ),
           const SizedBox(height: AmiSpacing.m),
           if (isApprove) ...[
-            _MetricRow(label: 'TICKER', value: ticker, accent: accent),
+            _MetricRow(label: l.roomMetricTicker, value: ticker, accent: accent),
             _MetricRow(
-              label: 'SIZE',
+              label: l.roomMetricSize,
               value: verdict.sizePct == null
                   ? '—'
                   : '${verdict.sizePct!.toStringAsFixed(1)}%',
               accent: accent,
             ),
             _MetricRow(
-              label: 'ENTRY',
+              label: l.roomMetricEntry,
               value: verdict.entry == null ? '—' : '\$${verdict.entry!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
-              label: 'STOP',
+              label: l.roomMetricStop,
               value: verdict.stop == null ? '—' : '\$${verdict.stop!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
-              label: 'TARGET',
+              label: l.roomMetricTarget,
               value: verdict.target == null ? '—' : '\$${verdict.target!.toStringAsFixed(2)}',
               accent: accent,
             ),
             _MetricRow(
-              label: 'HORIZON',
+              label: l.roomMetricHorizon,
               value: verdict.timeHorizonDays == null
                   ? '—'
-                  : '${verdict.timeHorizonDays} days',
+                  : l.roomHorizonDays(verdict.timeHorizonDays!),
               accent: accent,
             ),
             const SizedBox(height: AmiSpacing.s),
           ],
           if (verdict.violations.isNotEmpty) ...[
-            Text('VIOLATIONS',
+            Text(l.roomViolations,
                 style: AmiTypography.labelMono.copyWith(
                     fontSize: 11, color: AmiColors.hexAmber)),
             const SizedBox(height: 4),
@@ -369,7 +373,7 @@ class _VerdictCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
                 ),
                 icon: const Icon(Icons.add_circle_outline),
-                label: const Text('OPEN TRADE TICKET'),
+                label: Text(l.roomOpenTradeTicket),
                 onPressed: () => TradeTicketSheet.show(
                   context,
                   prefill: verdict,
@@ -380,7 +384,7 @@ class _VerdictCard extends StatelessWidget {
             ),
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              'Submits with the verdict\'s size / stop / target. PM safety floor reruns.',
+              l.roomTradeTicketCaption,
               style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
               textAlign: TextAlign.center,
             ),
@@ -448,7 +452,8 @@ class _Footer extends StatelessWidget {
             ),
             const SizedBox(width: AmiSpacing.s),
             Text(
-              'Team deliberating… ${state.phase ?? ""}'.trim(),
+              '${AppLocalizations.of(context).roomDeliberating} ${state.phase ?? ""}'
+                  .trim(),
               style: AmiTypography.caption,
             ),
           ],
@@ -466,11 +471,12 @@ class _Footer extends StatelessWidget {
           children: [
             const Icon(Icons.check, color: AmiColors.hexGreen, size: 16),
             const SizedBox(width: AmiSpacing.s),
-            const Text('Saved to Journal', style: AmiTypography.caption),
+            Text(AppLocalizations.of(context).roomSavedToJournal,
+                style: AmiTypography.caption),
             const Spacer(),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('CLOSE'),
+              child: Text(AppLocalizations.of(context).roomClose),
             ),
           ],
         ),

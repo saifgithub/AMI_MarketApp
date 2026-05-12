@@ -13,6 +13,7 @@
 /// plugs in).
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     if (ok) {
       setState(() => _codeRequested = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code sent. Check your email.')),
+        SnackBar(content: Text(AppLocalizations.of(context).signInCodeSent)),
       );
     }
   }
@@ -64,7 +65,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code did not verify. Try again.')),
+        SnackBar(content: Text(AppLocalizations.of(context).signInCodeFailed)),
       );
     }
   }
@@ -85,7 +86,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Apple sign-in failed.')),
+        SnackBar(content: Text(AppLocalizations.of(context).signInAppleFailed)),
       );
     }
   }
@@ -94,11 +95,12 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authNotifierProvider);
     final user = auth.user;
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       appBar: AppBar(
         backgroundColor: AmiColors.glassChrome,
-        title: Text('SIGN IN',
+        title: Text(l.signInHeading,
             style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
         iconTheme: const IconThemeData(color: AmiColors.textHigh),
         elevation: 0,
@@ -111,9 +113,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               _SignedInCard(user: user),
               const SizedBox(height: AmiSpacing.l),
             ] else ...[
-              const Text(
-                'Sign in to keep your mandate, journal, and portfolio across '
-                'devices. Until then, everything you build stays on this device.',
+              Text(
+                l.signInIntro,
                 style: AmiTypography.body,
               ),
               const SizedBox(height: AmiSpacing.l),
@@ -168,7 +169,7 @@ class _SignedInCard extends StatelessWidget {
           const SizedBox(width: AmiSpacing.s),
           Expanded(
             child: Text(
-              'Signed in as ${user.displayHandle}',
+              AppLocalizations.of(context).signInSignedInAs(user.displayHandle),
               style: AmiTypography.body,
             ),
           ),
@@ -189,7 +190,7 @@ class _AppleButton extends StatelessWidget {
       child: FilledButton.icon(
         onPressed: onPressed,
         icon: const Icon(Icons.apple, size: 22, color: Colors.black),
-        label: const Text('Sign in with Apple'),
+        label: Text(AppLocalizations.of(context).signInWithApple),
         style: FilledButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
@@ -223,6 +224,7 @@ class _EmailClaimCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -233,7 +235,7 @@ class _EmailClaimCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('OR CONTINUE WITH EMAIL',
+          Text(l.signInWithEmail,
               style: AmiTypography.labelMono
                   .copyWith(color: AmiColors.hexBlue)),
           const SizedBox(height: AmiSpacing.m),
@@ -243,10 +245,10 @@ class _EmailClaimCard extends StatelessWidget {
             autocorrect: false,
             enableSuggestions: false,
             style: AmiTypography.body,
-            decoration: const InputDecoration(
-              hintText: 'you@example.com',
-              hintStyle: TextStyle(color: AmiColors.textLow),
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l.signInEmailHint,
+              hintStyle: const TextStyle(color: AmiColors.textLow),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: AmiSpacing.s),
@@ -255,7 +257,7 @@ class _EmailClaimCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: loading ? null : onRequestCode,
-                  child: Text(codeRequested ? 'RESEND CODE' : 'SEND CODE'),
+                  child: Text(codeRequested ? l.signInResendCode : l.signInSendCode),
                 ),
               ),
             ],
@@ -266,10 +268,10 @@ class _EmailClaimCard extends StatelessWidget {
               controller: codeCtrl,
               keyboardType: TextInputType.number,
               style: AmiTypography.body,
-              decoration: const InputDecoration(
-                hintText: '6-digit code',
-                hintStyle: TextStyle(color: AmiColors.textLow),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText: l.signInCodeHint,
+                hintStyle: const TextStyle(color: AmiColors.textLow),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: AmiSpacing.s),
@@ -277,13 +279,13 @@ class _EmailClaimCard extends StatelessWidget {
               height: 44,
               child: FilledButton(
                 onPressed: loading ? null : onVerifyCode,
-                child: const Text('VERIFY & CLAIM'),
+                child: Text(l.signInVerify),
               ),
             ),
             if (debugCode != null) ...[
               const SizedBox(height: AmiSpacing.s),
               Text(
-                'DEV mode — code: $debugCode',
+                l.signInDevCode(debugCode!),
                 style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
               ),
             ],
@@ -299,8 +301,7 @@ class _LegalFootnote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'AMI Trade is simulation-only. Nothing here is investment advice and no '
-      'real trades are executed.',
+      AppLocalizations.of(context).signInLegalFootnote,
       style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
     );
   }

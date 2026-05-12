@@ -3,6 +3,7 @@
 /// behind a drawer if it gets crowded.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/floor/floor_placeholder_screen.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
@@ -32,6 +33,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: IndexedStack(index: _tab, children: _tabs),
@@ -52,26 +54,26 @@ class _HomeShellState extends ConsumerState<HomeShell> {
             unselectedItemColor: AmiColors.textLow,
             selectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
             unselectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
-            items: const [
+            items: [
               BottomNavigationBarItem(
-                icon: Icon(Icons.grid_view_rounded),
-                label: 'FLOOR',
+                icon: const Icon(Icons.grid_view_rounded),
+                label: l.floorTabUpper,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.account_balance_wallet_outlined),
-                label: 'PORTFOLIO',
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+                label: l.portfolioTabUpper,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.menu_book_outlined),
-                label: 'JOURNAL',
+                icon: const Icon(Icons.menu_book_outlined),
+                label: l.journalTabUpper,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.school_outlined),
-                label: 'LESSONS',
+                icon: const Icon(Icons.school_outlined),
+                label: l.lessonsTabUpper,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                label: 'SETTINGS',
+                icon: const Icon(Icons.settings_outlined),
+                label: l.settingsTabUpper,
               ),
             ],
           ),
