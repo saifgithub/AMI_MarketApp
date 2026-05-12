@@ -1,0 +1,572 @@
+[
+  {
+    "id": "dc_2026_06_01_aapl_pe_call",
+    "type": "predict_the_call",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "AAPL trades at $192.40. Trailing twelve-month EPS is $6.42, giving a P/E of 29.9. The S&P 500's average P/E is 21.5. Apple's five-year revenue growth has slowed from 11% annualised to 2.8% in the last four quarters. Gross margin is steady at 45.1%. The Fundamentals Analyst has been asked: 'is AAPL cheap, fair, or expensive on earnings?'",
+    "question": "What is the Fundamentals Analyst most likely to say?",
+    "options": [
+      "Cheap — Apple's 45.1% gross margin justifies any multiple",
+      "Expensive on earnings — P/E of 29.9 is 39% above the SPX average of 21.5 while growth has decelerated to 2.8%",
+      "Fair — Apple is a quality name so the premium doesn't matter",
+      "Cheap — the stock is below $200"
+    ],
+    "answer": 1,
+    "explanation": "A P/E of 29.9 vs an SPX average of 21.5 is a 39% premium. Premiums are normally paid for growth, but Apple's revenue growth has dropped from 11% to 2.8%. That combination — premium multiple + decelerating top line — is the textbook 'expensive on earnings' setup the Fundamentals Analyst flags. The tempting wrong answer ('Fair, quality name') is what a casual investor says; the agent's job is to read the numbers, and 29.9 vs 21.5 with slowing growth is not fair.",
+    "related_lesson": "039",
+    "related_agent": "fundamentals_analyst",
+    "tags": ["valuation", "pe_ratio", "module_7"]
+  },
+  {
+    "id": "dc_2026_06_02_nvda_breakout_setup",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "NVDA has traded in a tight range between $118 and $124 for the last 14 sessions. Average daily volume during the range has been 320M shares. Today NVDA closes at $126.80 on volume of 612M shares — nearly double the range average. The 50-day moving average sits at $115 and is sloping up. There is no overhead resistance until $138.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "A bearish double top — price has failed at resistance twice",
+      "A volume-confirmed breakout above the $124 ceiling with the 50-day MA sloping up underneath",
+      "A pullback to the 50-day moving average",
+      "A bull flag still inside the range"
+    ],
+    "answer": 1,
+    "explanation": "Three boxes are ticked: price closed above the $124 ceiling at $126.80, volume was ~1.9x the range average (612M vs 320M), and the rising 50-day MA at $115 confirms the underlying uptrend. That is a textbook volume-confirmed breakout. The tempting wrong answer 'bull flag still inside the range' fails because price has closed outside the range on heavy volume — the flag has resolved, it hasn't continued.",
+    "related_lesson": "024",
+    "related_agent": "market_analyst",
+    "tags": ["breakout", "volume", "module_4"]
+  },
+  {
+    "id": "dc_2026_06_03_sizing_violation_tsla",
+    "type": "spot_the_violation",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "User's mandate: max single-position size 5%, no single-stock concentration above 8%, no leverage. Account NAV is $50,000. The user submits a buy ticket for TSLA: 100 shares at $245 (notional $24,500, or 49% of NAV). The user already holds 30 shares of TSLA worth $7,350 (14.7% of NAV). The ticket would push TSLA exposure to $31,850, or 63.7% of NAV.",
+    "question": "Which mandate rule does the Portfolio Manager flag as violated?",
+    "options": [
+      "Leverage rule — the user is borrowing money to buy TSLA",
+      "Position-size cap — the new ticket alone is 49% of NAV, far above the 5% max single-position limit",
+      "Stop-loss rule — no stop is attached to the order",
+      "Sector concentration rule — TSLA is in too many sectors"
+    ],
+    "answer": 1,
+    "explanation": "The single-position cap is 5% of NAV ($2,500 on a $50k account). The ticket alone is $24,500, or 49% — almost 10x over the cap. The Portfolio Manager blocks this on sizing alone before any other check. The tempting wrong answer 'sector concentration' fails because the mandate listed didn't even mention sectors — and TSLA is a single ticker, not a sector. Read the rules before guessing which one is breached.",
+    "related_lesson": "014",
+    "related_agent": "portfolio_manager",
+    "tags": ["mandate", "position_sizing", "safety_floor", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_04_match_news_fed",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "During a Room debate on XLF (financials sector ETF), an agent says: 'Fed minutes released this morning revised the dot plot to two cuts in 2026 from three. Two-year yields jumped 14bps. Bank net interest margin guidance is at risk if the curve stays flat — that is a headline-level shift that will hit XLF before the technicals catch up.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Market Analyst",
+      "News Analyst",
+      "Fundamentals Analyst",
+      "Social Media Analyst"
+    ],
+    "answer": 1,
+    "explanation": "The quote is built entirely around a macro news event (Fed dot plot revision) and its second-order rate-driven impact on the sector. That is the News Analyst's lane — reading headlines and translating macro shifts into sector-level consequences. The tempting wrong answer 'Fundamentals Analyst' fails because no company-specific financials (revenue, margins, ROE) are cited — net interest margin is mentioned as a sector consequence of the rate move, not as a single-company analysis.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": ["agents", "news", "module_10"]
+  },
+  {
+    "id": "dc_2026_06_05_missing_pm_verdict",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "Room verdict on AMZN: 'Fundamentals Analyst — revenue +11%, AWS margins expanding. Market Analyst — clean breakout above $185. News Analyst — Prime Day pull-forward priced in. Bull Researcher — 18% upside to $218. Bear Researcher — regulatory tail risk. Research Manager — moderate BUY conviction 0.62. Trader — entry $186 stop $179 target $210. Verdict: BUY 8% of NAV.'",
+    "question": "Whose input is conspicuously absent from this verdict?",
+    "options": [
+      "Aggressive Debator",
+      "Portfolio Manager — no mandate-compliance check appears in the verdict",
+      "Social Media Analyst",
+      "Neutral Debator"
+    ],
+    "answer": 1,
+    "explanation": "The Portfolio Manager is the safety-floor gate — every verdict must pass a mandate-compliance check before it ships to the user. The verdict above proposes BUY 8% of NAV without any sign that sizing, concentration, or stop placement were validated against the user's mandate. The tempting wrong answer 'Social Media Analyst' fails because that input is helpful but not load-bearing; the PM is structurally required, not optional.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": ["room", "safety_floor", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_06_msft_revenue_call",
+    "type": "predict_the_call",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "MSFT just reported Q3: revenue $64.7B (+17% YoY, beat by $1.2B), Azure growth 31% (vs 28% guided), operating margin 45.3%. Free cash flow $21.0B, up 18% YoY. Capex stepped up to $14B to fund AI buildout. The Fundamentals Analyst is asked: 'is the business strengthening, steady, or weakening?'",
+    "question": "What is the Fundamentals Analyst most likely to say?",
+    "options": [
+      "Weakening — capex up 40% YoY means margins will collapse next year",
+      "Strengthening — revenue +17%, Azure 31% (3pp above guide), op margin 45.3%, FCF +18% all point the same direction",
+      "Steady — beat the quarter but nothing has actually changed",
+      "Weakening — the stock didn't move on the print"
+    ],
+    "answer": 1,
+    "explanation": "Four independent metrics — revenue growth, Azure growth above guide, op margin, and FCF growth — all moved up. That is the definition of 'strengthening' from a fundamentals lens. The tempting wrong answer 'weakening because capex up' is the classic half-read take: capex stepping up to fund AI is an investment in future growth, not margin compression today (op margin is still 45.3%). Price action ('the stock didn't move') is not a fundamentals signal.",
+    "related_lesson": "032",
+    "related_agent": "fundamentals_analyst",
+    "tags": ["fundamentals", "revenue", "module_6"]
+  },
+  {
+    "id": "dc_2026_06_07_spx_support_test",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "SPX has rallied from 5,100 to 5,420 over six weeks. It then sells off to 5,205 on rising volume, holds for three sessions in a 5,200–5,225 band, and bounces with two strong green candles back to 5,290. The 5,200 level was the prior breakout zone from April and the rising 50-day moving average sits at 5,198.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "A failed breakout — the rally is dead",
+      "A successful test of support at 5,200, confirmed by both prior structure and the 50-day MA",
+      "A bearish head-and-shoulders top",
+      "An RSI overbought reversal"
+    ],
+    "answer": 1,
+    "explanation": "Two independent reasons mark 5,200 as support: it was the April breakout zone (prior resistance becomes support) and the rising 50-day MA is right on top of it at 5,198. Price held the level for three sessions then rallied — a textbook successful test. The tempting wrong answer 'failed breakout' fails because the breakout was confirmed by holding above 5,200, not failing; a failed breakout would have closed back below the level for multiple sessions.",
+    "related_lesson": "023",
+    "related_agent": "market_analyst",
+    "tags": ["support_resistance", "module_4"]
+  },
+  {
+    "id": "dc_2026_06_08_stop_violation_meta",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "User's mandate: every position must have a stop-loss set at no worse than -8% from entry; max position 6% of NAV; max 5 open positions. Account NAV $80,000. User opens a new META position: 30 shares at $498 (notional $14,940 = 18.7% of NAV). The ticket specifies stop at $440 (-11.6% from entry). The user has 4 other open positions.",
+    "question": "Which TWO mandate rules are violated? (Pick the answer that lists them.)",
+    "options": [
+      "Max-position-count violation only — 5 positions is the cap and this is the 5th",
+      "Position size 18.7% of NAV exceeds the 6% cap AND stop at -11.6% is wider than the -8% rule",
+      "Stop placement only — sizing is fine because META is a large cap",
+      "Leverage violation — the user is on margin"
+    ],
+    "answer": 1,
+    "explanation": "Two clean breaches: $14,940 / $80,000 = 18.7%, which is 3x the 6% size cap; and a stop at $440 from a $498 entry is -11.6%, wider than the -8% floor. The tempting wrong answer 'max-position-count only' fails because this is the 5th position, which IS allowed (cap is 5, not 4). Large-cap status doesn't exempt a ticker from the size cap.",
+    "related_lesson": "015",
+    "related_agent": "portfolio_manager",
+    "tags": ["mandate", "stop_loss", "safety_floor", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_09_match_sentiment_fomo",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "During a Room debate on a small-cap that has run 340% in 11 sessions, an agent says: 'Stocktwits message volume is up 18x week-over-week. Reddit /r/wallstreetbets mentions hit 4,200 in the last 24 hours vs a 30-day median of 90. The replies are 87% bullish with rocket emojis dominating. Retail crowd is fully one-sided — historically a contrarian signal.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "News Analyst",
+      "Social Media Analyst",
+      "Bull Researcher",
+      "Market Analyst"
+    ],
+    "answer": 1,
+    "explanation": "The entire quote is built from social-platform signals: Stocktwits volume, Reddit mention counts, sentiment ratio, emoji patterns. That is the Social Media Analyst's exact lane. The tempting wrong answer 'News Analyst' fails because no news headlines, earnings, or macro events are referenced — only retail crowd chatter, which is sentiment, not news.",
+    "related_lesson": "048",
+    "related_agent": "social_media_analyst",
+    "tags": ["agents", "sentiment", "fomo", "module_8"]
+  },
+  {
+    "id": "dc_2026_06_10_missing_news_xom",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "Room verdict on XOM: 'Fundamentals Analyst — FCF yield 7.8%, balance sheet healthy. Market Analyst — sideways range $105-$118. Social Media Analyst — retail neutral. Bull Researcher — buyback yield 5%. Bear Researcher — long-cycle capex risk. Research Manager — low conviction 0.41. Trader — wait for breakout. Portfolio Manager — sizing OK if entered. Verdict: HOLD, no action.'",
+    "question": "Whose input is conspicuously absent from this verdict?",
+    "options": [
+      "Trader",
+      "News Analyst — there is no read on OPEC, oil prices, or geopolitical headlines on an energy major",
+      "Aggressive Debator",
+      "Bear Researcher"
+    ],
+    "answer": 1,
+    "explanation": "XOM is an energy major; any verdict on it without a News Analyst read on OPEC supply, oil price, or geopolitical headlines is missing the single biggest exogenous driver. The verdict has full participation from every other listed agent. The tempting wrong answer 'Aggressive Debator' fails because debators are not always invoked on a HOLD verdict — but the News Analyst on a commodity-sensitive name is structurally important.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": ["room", "news", "energy", "module_10"]
+  },
+  {
+    "id": "dc_2026_06_11_jpm_rate_call",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "JPM trades at $198. The 10-year Treasury yield has dropped from 4.55% to 3.85% over six weeks on weaker CPI prints. JPM's net interest income (NII) is ~50% of revenue; management guides NII down ~$1.5B for every 50bp fall in long rates. Loan growth is 2.1% YoY. Credit-card delinquencies ticked up to 3.4% from 3.1% last quarter. The Bear Researcher is asked for the strongest bear case.",
+    "question": "What is the Bear Researcher most likely to lead with?",
+    "options": [
+      "JPM is going bankrupt — credit card delinquencies are spiking",
+      "Falling long rates compress NII by an estimated $2B+ while credit costs are rising (delinquencies 3.1% → 3.4%) — the earnings setup is weakening on both sides",
+      "JPM is too big to fail so the bear case is irrelevant",
+      "Loan growth at 2.1% is the only thing that matters"
+    ],
+    "answer": 1,
+    "explanation": "The Bear Researcher leads with the strongest *quantified* bear narrative: a ~70bp drop in long rates implies $2B+ NII compression by management's own guidance, AND credit costs are rising (delinquencies up 30bp). Two negative levers moving together is the textbook bear thesis. The tempting wrong answer 'JPM is going bankrupt' fails because it is unsupported by the numbers — a 3.4% delinquency rate is elevated, not catastrophic. Bears must be sharp, not hysterical.",
+    "related_lesson": "060",
+    "related_agent": "bear_researcher",
+    "tags": ["bear_case", "banks", "rates", "module_10"]
+  },
+  {
+    "id": "dc_2026_06_12_klci_rsi_overbought",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "KLCI has rallied for 11 straight sessions from 1,540 to 1,712 (+11.2%). Daily RSI has climbed from 52 to 81. Volume on the last three up-days has been lighter than the volume during the first four days of the rally. The 20-day moving average is at 1,608 and trailing the index by 6.5%. No news catalyst is driving the move.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "Bullish continuation — RSI above 70 is a strong-trend signal so keep buying",
+      "Stretched / overbought — RSI 81, fading volume on the up-leg, and price 6.5% above the 20-day MA suggest mean-reversion risk",
+      "A breakout above 1,712 is forming",
+      "A bearish engulfing pattern just printed"
+    ],
+    "answer": 1,
+    "explanation": "Three independent stretch signals stack: RSI at 81 (well above the 70 overbought line), thinning volume on rallies (distribution-style behaviour), and a 6.5% gap above the 20-day MA. The Market Analyst calls this stretched and flags mean-reversion risk. The tempting wrong answer 'bullish continuation because RSI > 70' fails because while RSI can stay high in a strong trend, the *combination* with fading volume reverses that read — RSI alone is not a buy signal.",
+    "related_lesson": "027",
+    "related_agent": "market_analyst",
+    "tags": ["rsi", "overbought", "module_5"]
+  },
+  {
+    "id": "dc_2026_06_13_maybank_correlation_violation",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "User's mandate: max sector concentration 25% of NAV; max single-position 7%. Account NAV RM 200,000. Current holdings: MAYBANK 6% (RM 12,000), CIMB 6% (RM 12,000), PUBLIC 6% (RM 12,000). Total banks = 18% of NAV. User submits a buy ticket for another Malaysian bank, RHB, sized at 7% (RM 14,000). The ticket is technically within the single-position cap.",
+    "question": "Which mandate rule does the Portfolio Manager flag?",
+    "options": [
+      "No violation — every position is within the 7% single-position cap",
+      "Sector concentration — banks would go from 18% to 25% of NAV, hitting the 25% sector cap exactly; one more bank position breaches it",
+      "Stop-loss is missing",
+      "Leverage rule"
+    ],
+    "answer": 1,
+    "explanation": "The single-position cap is fine on each holding, but the *sector* cap is the load-bearing rule here. 18% + 7% = 25%, which hits the cap. Any further bank exposure breaches it — and the PM's job is to surface that aggregation risk even when each individual position looks compliant. The tempting wrong answer 'no violation' is what the user feels because they checked the single-position rule and stopped. The PM never stops there.",
+    "related_lesson": "017",
+    "related_agent": "portfolio_manager",
+    "tags": ["mandate", "sector_concentration", "safety_floor", "bursa", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_14_match_aggressive_debator",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "During a Room debate on NVDA, an agent says: 'Conviction is 0.74. Setup is technically clean, fundamentals support it, news flow is constructive. We're sitting in cash on a name we believe in because we're scared of a 4% drawdown — that is a bigger long-term mistake than the drawdown itself. Size at the upper end of the band: 7% of NAV, not 4%.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Conservative Debator",
+      "Aggressive Debator",
+      "Portfolio Manager",
+      "Research Manager"
+    ],
+    "answer": 1,
+    "explanation": "The agent is pushing the team to act on conviction and size *up* within the allowed band, framing inaction as the bigger error. That is the Aggressive Debator's voice. The tempting wrong answer 'Portfolio Manager' fails because the PM never recommends sizing up — the PM enforces the mandate ceiling. Recommending 7% within the band is advocacy, which is what debators do.",
+    "related_lesson": "052",
+    "related_agent": "aggressive_debator",
+    "tags": ["agents", "debators", "module_9"]
+  },
+  {
+    "id": "dc_2026_06_15_missing_bear_amzn",
+    "type": "whats_missing",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "Room verdict on AMZN: 'Fundamentals Analyst — AWS revenue +21%, op margin expanding. Market Analyst — uptrend intact above $185. News Analyst — positive Prime Day commentary. Social Media Analyst — retail bullish. Bull Researcher — 25% upside to $235. Aggressive Debator — size at top of band. Research Manager — HIGH conviction 0.81. Trader — entry $188, stop $176. PM — within mandate. Verdict: BUY 9% of NAV.'",
+    "question": "Whose input is conspicuously absent from this verdict?",
+    "options": [
+      "Trader",
+      "Bear Researcher — there is no counter-thesis to a high-conviction 9% sizing call",
+      "Portfolio Manager",
+      "Market Analyst"
+    ],
+    "answer": 1,
+    "explanation": "Every voice in the verdict is constructive. A 9% sizing call without a Bear Researcher counter-thesis is structurally one-sided — the Room is supposed to debate, not cheerlead. The tempting wrong answer 'Portfolio Manager' fails because the PM IS present ('within mandate'). Bear research is the missing voice; an absent counter-thesis is a verdict-quality red flag.",
+    "related_lesson": "060",
+    "related_agent": "bear_researcher",
+    "tags": ["room", "bear_case", "module_10"]
+  },
+  {
+    "id": "dc_2026_06_16_googl_bull_call",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "GOOGL: Q1 search revenue +14% YoY, Cloud +28% (now operating-profit positive), YouTube +12%. Free cash flow $24B in the quarter. Buybacks $15B. Forward P/E 21.5 vs the SPX average 21.0. Antitrust ruling on search distribution expected within 6 months — outcome uncertain. The Bull Researcher is asked for the bull case.",
+    "question": "What is the Bull Researcher most likely to lead with?",
+    "options": [
+      "The antitrust risk is small so just buy",
+      "Three independent revenue engines compounding (search +14%, cloud +28% & now profitable, YouTube +12%) trading at a market-multiple P/E of 21.5 with $24B/quarter FCF — that's a quality-at-fair-price setup",
+      "GOOGL is going to $300 because Google is great",
+      "Forward P/E of 21.5 is too high to justify a bull case"
+    ],
+    "answer": 1,
+    "explanation": "The Bull Researcher's job is to build a *quantified* upside case. The three-engine growth picture + market-multiple valuation + strong FCF is the structured bull thesis here. The tempting wrong answer ('antitrust risk is small') fails because dismissing risks is what the Aggressive Debator does — the Bull Researcher acknowledges them by leaving the bear room space and instead emphasises the positive economics.",
+    "related_lesson": "036",
+    "related_agent": "bull_researcher",
+    "tags": ["bull_case", "module_6"]
+  },
+  {
+    "id": "dc_2026_06_17_petronas_pullback",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "PETRONAS Chemicals trades on Bursa. It rallied from RM 5.80 to RM 7.20 over eight weeks (+24%). Over the last seven sessions it has drifted back to RM 6.55, a 9% pullback, on declining volume. The 20-day moving average is at RM 6.50 and rising. RSI has reset from 78 to 52. Today's session closes RM 6.62 with a hammer candle on volume 1.4x average.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "A trend reversal — the rally is over and a downtrend has begun",
+      "A pullback to a rising 20-day MA with RSI reset to neutral and a volume hammer at the level — classic continuation buy zone",
+      "A double top",
+      "An RSI overbought signal triggered today"
+    ],
+    "answer": 1,
+    "explanation": "The pieces add up cleanly: prior strong uptrend, controlled pullback on lighter volume, price arriving exactly at a rising 20-day MA, RSI normalised from overbought to neutral, and a hammer with above-average volume signalling demand at the level. That is the pullback-continuation setup the Market Analyst flags. The tempting wrong answer 'trend reversal' fails because pullbacks on *declining* volume are a feature of healthy uptrends — reversals usually print on rising volume and a break of the 20-day MA, neither of which happened.",
+    "related_lesson": "025",
+    "related_agent": "market_analyst",
+    "tags": ["pullback", "bursa", "module_4"]
+  },
+  {
+    "id": "dc_2026_06_18_revenge_violation",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "User's mandate: max 3 trades per day; cooling-off rule — after two consecutive losses, no new entries for 24 hours. Today the user lost on TSLA (-1.8%) at 10:15am and lost on NVDA (-2.1%) at 11:40am. At 1:50pm the user submits a buy ticket for SPY worth 4% of NAV with a tight 1% stop, captioned 'making it back today.'",
+    "question": "Which mandate rule does the Portfolio Manager flag?",
+    "options": [
+      "Position-size violation — 4% is too large",
+      "Cooling-off violation — two consecutive losses trigger a 24-hour no-new-entries window; the SPY ticket is within that window",
+      "Leverage violation",
+      "Max-trades-per-day — this would be the 4th trade"
+    ],
+    "answer": 1,
+    "explanation": "Two consecutive losses (TSLA then NVDA) triggered the cooling-off rule at 11:40am; the SPY ticket at 1:50pm is well within the 24-hour window and the caption ('making it back today') is the classic revenge-trade tell. The tempting wrong answer 'max-trades-per-day' fails because this would only be the 3rd trade, which is still within the cap of 3. The breach is the cooling-off rule, not the daily count.",
+    "related_lesson": "047",
+    "related_agent": "portfolio_manager",
+    "tags": ["mandate", "revenge_trading", "safety_floor", "module_8"]
+  },
+  {
+    "id": "dc_2026_06_19_match_research_manager",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "After a Room debate on XLK, an agent summarises: 'Bull Researcher's strongest argument is the 22% earnings growth across the top five names. Bear Researcher's strongest point is multiple expansion 18% YoY while breadth is narrowing. Weighing both, the bull case has more numerical support but the bear case is structurally important. Net conviction 0.58 — moderate BUY, half size.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Bull Researcher",
+      "Research Manager",
+      "Portfolio Manager",
+      "Neutral Debator"
+    ],
+    "answer": 1,
+    "explanation": "The agent isn't taking a side — they are weighing both sides, scoring a conviction number, and translating that into a sizing recommendation. That synthesis role is the Research Manager's job. The tempting wrong answer 'Neutral Debator' fails because the neutral debator argues a middle-ground position, while the Research Manager *adjudicates* the bull-vs-bear debate and produces a calibrated conviction score (here, 0.58).",
+    "related_lesson": "057",
+    "related_agent": "research_manager",
+    "tags": ["agents", "synthesis", "module_9"]
+  },
+  {
+    "id": "dc_2026_06_20_missing_market_analyst",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on TSLA: 'Fundamentals Analyst — auto margins compressing to 17.4%, energy storage +89% YoY. News Analyst — robotaxi event next month. Social Media Analyst — retail euphoric. Bull Researcher — energy is the new compute. Bear Researcher — auto deceleration. Research Manager — conviction 0.55. PM — within mandate at 5%. Verdict: BUY 5% of NAV at market, no stop specified.'",
+    "question": "Whose input is conspicuously absent from this verdict?",
+    "options": [
+      "Bull Researcher",
+      "Market Analyst — there is no read on price level, trend, or where stops/targets should sit",
+      "PM",
+      "Bear Researcher"
+    ],
+    "answer": 1,
+    "explanation": "The verdict has fundamentals, news, sentiment, and synthesis covered — but no technical read on price, trend, or stop placement. That's why the verdict says 'at market, no stop specified' — the Market Analyst's input would normally provide a stop level and target. The tempting wrong answer 'PM' fails because the PM IS present and signed off on sizing. The missing voice is the technical one.",
+    "related_lesson": "022",
+    "related_agent": "market_analyst",
+    "tags": ["room", "technicals", "module_4"]
+  },
+  {
+    "id": "dc_2026_06_21_brkb_neutral_call",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "BRK-B trades at $420. Book value per share is $370 (price-to-book 1.13x, in line with its 5-year median 1.15x). Insurance float is at a record $185B. Cash balance is $315B and rising. Forward earnings growth modelled at ~6% — steady, not exciting. No major capital deployment in 8 quarters. The Neutral Debator is asked to weigh in.",
+    "question": "What is the Neutral Debator most likely to say?",
+    "options": [
+      "STRONG BUY — Berkshire never goes down",
+      "Hold the line at neutral — price near long-run P/B median, growth modest at 6%, capital not yet deployed; neither bull nor bear has a sharper edge than the other right now",
+      "STRONG SELL — too much cash drag",
+      "BUY because Buffett"
+    ],
+    "answer": 1,
+    "explanation": "The Neutral Debator's job is to defend the middle when neither bull nor bear has a quantifiable edge. Price-to-book is at the 5-year median, growth is steady, and the giant cash pile hasn't been deployed yet — so there's no asymmetry to lean on. 'Hold the line at neutral' is the calibrated read. The tempting wrong answers ('STRONG BUY' / 'STRONG SELL') are emotional binaries; the Neutral Debator specifically resists that pull and asks for stronger evidence first.",
+    "related_lesson": "061",
+    "related_agent": "neutral_debator",
+    "tags": ["neutral", "debators", "module_10"]
+  },
+  {
+    "id": "dc_2026_06_22_macd_crossover",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "META has been in a six-week downtrend from $580 to $498 (-14%). For the last 9 sessions it has built a base between $498 and $510. Today the MACD line crossed above the signal line for the first time since the downtrend began. Histogram flipped from -2.4 to +0.6. Volume on the cross was 1.8x the 20-day average. The 50-day MA at $542 is still sloping down.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "Confirmed trend reversal — back into the uptrend",
+      "Early MACD bullish cross with volume confirmation — a base attempt, but with the 50-day still sloping down, this is a 'turn-watch' not yet a confirmed reversal",
+      "Bearish continuation — ignore MACD",
+      "Breakout above the 50-day"
+    ],
+    "answer": 1,
+    "explanation": "MACD crossing up with histogram flipping positive and a 1.8x volume spike is the early-reversal signal. But the broader trend filter — 50-day MA still sloping down — means the reversal is not yet confirmed. The Market Analyst calls this a 'turn-watch' rather than a confirmed reversal. The tempting wrong answer 'confirmed trend reversal' fails because one MACD cross without trend-filter confirmation is exactly the false-signal trap; experienced analysts wait for the 50-day to flatten or turn.",
+    "related_lesson": "028",
+    "related_agent": "market_analyst",
+    "tags": ["macd", "reversal", "module_5"]
+  },
+  {
+    "id": "dc_2026_06_23_news_chase_violation",
+    "type": "spot_the_violation",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "User's mandate: no entries within 30 minutes of a major earnings release on the same ticker; max 5% per single position. NVDA reports earnings at 4:00pm and gaps +14% in after-hours. At 4:18pm the user submits a buy ticket for NVDA, 4% of NAV, at the after-hours price of $146.",
+    "question": "Which mandate rule does the Portfolio Manager flag?",
+    "options": [
+      "Position-size violation — 4% is too large",
+      "Earnings cooling-off violation — the ticket is at 4:18pm, inside the 30-minute window after the 4:00pm release",
+      "Leverage rule",
+      "Stop-loss missing"
+    ],
+    "answer": 1,
+    "explanation": "The 4:18pm ticket is 18 minutes after the 4:00pm release, well inside the mandate's 30-minute earnings cooling-off window. The intent of the rule is precisely to stop chasing post-earnings gaps before the dust settles. The tempting wrong answer 'position-size violation' fails because 4% is *under* the 5% cap. Reading the right rule matters.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": ["mandate", "earnings", "safety_floor", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_24_match_concierge_scam",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "A user types: 'A WhatsApp group is offering 30% monthly returns trading forex with their AI bot. They want me to wire RM 5,000 to a personal account today before the slot closes. Should I do it?' An agent responds: 'No. 30% monthly returns are not real — that's 2,229% annualised, which no legitimate trading product offers. Wire transfers to personal accounts, time pressure, and AI-bot promises are three classic red flags stacked. Walk away.'",
+    "question": "Which agent is responding?",
+    "options": [
+      "Portfolio Manager",
+      "Concierge",
+      "News Analyst",
+      "Aggressive Debator"
+    ],
+    "answer": 1,
+    "explanation": "Onboarding, education, and scam-protection conversations live with the Concierge. The user isn't asking for a market call — they're asking for guidance on a red-flag situation, which is the Concierge's lane. The tempting wrong answer 'Portfolio Manager' fails because the PM enforces *mandate* rules on existing trades inside AMI; they don't field external scam questions. The Concierge does.",
+    "related_lesson": "065",
+    "related_agent": "concierge",
+    "tags": ["agents", "scams", "concierge", "module_11"]
+  },
+  {
+    "id": "dc_2026_06_25_missing_social_media",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on a meme-adjacent micro-cap that has run +180% in 3 weeks: 'Fundamentals Analyst — no revenue change. Market Analyst — parabolic. News Analyst — no fundamental catalyst found. Bull Researcher — momentum is the case. Bear Researcher — pure flow trade. Research Manager — low conviction 0.32. Trader — would not touch. PM — would be at sector cap. Verdict: NO ACTION.'",
+    "question": "Whose input is conspicuously absent from this verdict — and would have been the most useful?",
+    "options": [
+      "Trader",
+      "Social Media Analyst — a 180%-in-3-weeks move on no fundamentals or news is by definition a crowd-driven flow event; the social read is the missing signal",
+      "Fundamentals Analyst",
+      "PM"
+    ],
+    "answer": 1,
+    "explanation": "The only thing that *is* moving the stock — given no fundamentals change and no news catalyst — is crowd flow. Social Media Analyst is the agent who quantifies that (mention volume, sentiment ratio, platform spread). Without that input the Room is debating a flow trade with no flow data. The tempting wrong answer 'Trader' fails because the Trader IS present ('would not touch'). The structural gap is the sentiment read.",
+    "related_lesson": "048",
+    "related_agent": "social_media_analyst",
+    "tags": ["room", "sentiment", "meme", "module_8"]
+  },
+  {
+    "id": "dc_2026_06_26_trader_execution_call",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room has agreed BUY on AAPL, sizing 5% of NAV ($5,000 on a $100k account). Current price $192.40. Market Analyst flagged support at $188 (recent base) and resistance at $205 (prior swing high). PM mandate allows max -8% stop. The Trader is asked to specify entry, stop, and target.",
+    "question": "What is the Trader most likely to specify?",
+    "options": [
+      "Entry $192.40, stop $177 (-8% from entry), target $250",
+      "Entry $192.40, stop $187.50 (just under $188 support, -2.5% from entry), target $205 (resistance) — risk/reward ~5.2x",
+      "Entry $192.40, no stop, target 'whenever it feels right'",
+      "Entry $205 (buy the breakout above resistance), stop $200, target $192"
+    ],
+    "answer": 1,
+    "explanation": "The Trader sizes the stop to *technical structure*, not to the maximum-allowed loss. Support is at $188, so a stop just below it ($187.50) puts ~$4.90 of risk on the table against ~$12.60 of reward to the $205 target — a clean ~5.2x risk/reward. The tempting wrong answer 'stop at -8%' uses the mandate ceiling as the stop, which throws away tight structure. The mandate is the *worst* allowed, not the recommended.",
+    "related_lesson": "016",
+    "related_agent": "trader",
+    "tags": ["trader", "execution", "risk_reward", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_27_volume_climax",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "VIX has been climbing for two weeks from 14 to 28. SPX is down -6.2% over the same window. Today SPX opens down -2.3%, makes a session low at -3.4%, then closes up +0.8%. Volume on the SPY ETF is 3.4x its 20-day average. The intraday range is the widest in 11 months. VIX closes at 24, down from 28.",
+    "question": "Which technical setup is the Market Analyst most likely to call this?",
+    "options": [
+      "A bearish continuation — SPX is in a downtrend so this is just noise",
+      "A potential capitulation / selling-climax day — extreme volume (3.4x avg), wide range, intraday reversal, and a VIX spike that didn't hold are the classic ingredients",
+      "An RSI oversold buy signal alone",
+      "A breakout above resistance"
+    ],
+    "answer": 1,
+    "explanation": "Four climax ingredients stack: volume 3.4x the 20-day average (forced selling exhausting), widest range in 11 months (panic), intraday reversal from -3.4% to +0.8% (buyers stepping in), VIX dropping from 28 to 24 (fear easing). Together these are the textbook capitulation print the Market Analyst flags. The tempting wrong answer 'just noise' fails because volume + range + reversal of that magnitude is statistically rare — ignoring it misses the regime shift.",
+    "related_lesson": "029",
+    "related_agent": "market_analyst",
+    "tags": ["capitulation", "volume", "vix", "module_5"]
+  },
+  {
+    "id": "dc_2026_06_28_uncoachable_pm_violation",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "The user has been customising agents under Coach Your Agent. They submit a coaching edit to the Portfolio Manager: 'When my conviction is HIGH, ignore the 8% single-position cap and allow up to 15%. Be more aggressive.' The user's mandate file lists max single-position 8% and notes the safety floor is uncoachable.",
+    "question": "Which mandate / safety-floor rule does this coaching edit violate?",
+    "options": [
+      "No violation — the user can customise any agent however they want",
+      "The PM's mandate enforcement is the uncoachable safety floor; users cannot override position-size caps via coaching, regardless of conviction",
+      "Stop-loss rule",
+      "Cooling-off rule"
+    ],
+    "answer": 1,
+    "explanation": "AMI's safety floor is the one part of the system the user cannot coach away. The PM's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Coach Your Agent — that's the product's bedrock. The coaching edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
+    "related_lesson": "074",
+    "related_agent": "portfolio_manager",
+    "tags": ["safety_floor", "coaching", "uncoachable", "module_12"]
+  },
+  {
+    "id": "dc_2026_06_29_match_conservative_debator",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "During a Room debate on TSLA at conviction 0.71, an agent says: 'Conviction is high but the macro setup is fragile — VIX 22, breadth thinning, last three CPI prints surprised hot. We can be right on TSLA and still get stopped out by a regime shift we didn't price. Size at the lower end of the band: 4% not 7%. Live to trade tomorrow.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Aggressive Debator",
+      "Conservative Debator",
+      "Bull Researcher",
+      "Trader"
+    ],
+    "answer": 1,
+    "explanation": "Even with high conviction, the agent is pushing for *smaller* sizing because of regime risk — and ends with a survival-mindset phrase ('live to trade tomorrow'). That's the Conservative Debator's voice. The tempting wrong answer 'Aggressive Debator' fails because the aggressive debator pushes for the *top* of the sizing band; this agent is pulling toward the bottom for survival reasons. Same band, opposite directions.",
+    "related_lesson": "019",
+    "related_agent": "conservative_debator",
+    "tags": ["agents", "debators", "survival", "module_3"]
+  },
+  {
+    "id": "dc_2026_06_30_missing_fundamentals_kraft",
+    "type": "whats_missing",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "Room verdict on XLP (consumer staples ETF): 'Market Analyst — sideways range, 50-day flat. News Analyst — no macro catalyst. Social Media Analyst — sentiment neutral. Bull Researcher — defensive flows into staples on VIX 22. Bear Researcher — no growth. Research Manager — conviction 0.48. Trader — wait for range break. PM — sizing fine. Verdict: HOLD.'",
+    "question": "Whose input is conspicuously absent from this verdict?",
+    "options": [
+      "Bull Researcher",
+      "Fundamentals Analyst — no read on the underlying earnings, margins, or yield of the staples basket",
+      "PM",
+      "Market Analyst"
+    ],
+    "answer": 1,
+    "explanation": "Even on a sector ETF, the Fundamentals Analyst should weigh in on aggregate earnings growth, margin trends, or the basket's dividend yield — especially when 'no growth' is being asserted by the bear case without supporting numbers. The tempting wrong answer 'Bull Researcher' fails because they ARE in the verdict ('defensive flows'). The structural gap is the fundamentals read.",
+    "related_lesson": "032",
+    "related_agent": "fundamentals_analyst",
+    "tags": ["room", "fundamentals", "etf", "module_6"]
+  }
+]

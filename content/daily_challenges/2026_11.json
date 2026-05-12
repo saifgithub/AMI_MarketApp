@@ -1,0 +1,572 @@
+[
+  {
+    "id": "dc_2026_11_01_nvda_trend_following",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "NVDA trades at $148.20, up 38% over the last six months. The 50-day MA ($138) is above the 200-day MA ($121), both sloping up. Higher highs and higher lows for nine consecutive weeks. Today's close prints a fresh 52-week high on volume 22% above the 20-day average. The Aggressive Debator is asked whether this is an entry.",
+    "question": "What is the Aggressive Debator most likely to say?",
+    "options": [
+      "Skip — NVDA is up 38% so the move is over",
+      "Enter long — every trend-following box is ticked: 50>200 MA both rising, nine-week sequence of HH/HL, 52-week high on above-average volume",
+      "Short it — extended moves always mean-revert",
+      "Wait for a 20% pullback before entering"
+    ],
+    "answer": 1,
+    "explanation": "Trend-following demands three things: a defined trend (50-day above 200-day, both rising), price structure confirming it (nine weeks of higher highs and higher lows), and a trigger (fresh 52-week high on above-average volume). NVDA prints all three. The Aggressive Debator's job is to push for the entry when the conditions align. The tempting wrong answer ('it's up 38% so the move is over') is the classic mean-reversion bias applied to a trending stock — trend-following explicitly buys strength, it doesn't fade it.",
+    "related_lesson": "052",
+    "related_agent": "aggressive_debator",
+    "tags": ["trend_following", "strategy", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_02_klci_sideways_chart",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "KLCI has oscillated between 1,540 and 1,605 for the last 11 weeks. The 50-day MA sits at 1,572 and is flat. Realised 30-day volatility is 8.4% annualised, near a two-year low. Daily volume is running 18% below the 90-day average. No single sector has led for more than a week. Breadth (% of index members above 50-day MA) sits at 51%.",
+    "question": "What regime call is the Market Analyst most likely to make?",
+    "options": [
+      "Bull market — flat MA and low volatility mean buyers are in control",
+      "Sideways / range-bound regime — flat 50-day MA, contained 65-point range, low vol, no sector leadership, breadth at neutral 51%",
+      "Bear market — low volume means distribution is happening",
+      "High-volatility regime — 11 weeks of indecision is volatile"
+    ],
+    "answer": 1,
+    "explanation": "Five signals all say range-bound: a flat 50-day MA, 11 weeks inside a defined band (1,540–1,605), realised vol near two-year lows, sub-average volume, and breadth at the 50% neutral line with no sector leadership. That is the textbook sideways regime. The tempting wrong answer 'bull market' fails because a bull regime requires a rising MA and breadth above 60% — flat and 51% is the opposite signal. Low vol is not high vol; 'indecision' is the definition of sideways, not volatility.",
+    "related_lesson": "061",
+    "related_agent": "market_analyst",
+    "tags": ["regime", "sideways", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_03_mean_reversion_in_downtrend",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "User's mandate allows mean-reversion entries only in stocks where the 200-day MA is flat or rising. The user submits a buy ticket for XOM at $98.40 because RSI(2) is 4 and the stock is 12% below its 20-day MA. But XOM's 200-day MA at $112 is sloping down. Price has made six lower lows in the last three months. The 50-day MA crossed below the 200-day MA 28 days ago.",
+    "question": "Which rule does the Portfolio Manager flag?",
+    "options": [
+      "Stop-loss rule — no stop attached",
+      "Strategy-regime mismatch — mean reversion is only mandated when the 200-day MA is flat or rising; XOM's 200-day is sloping down with a death cross 28 days ago",
+      "Position-size cap — ticket is too large",
+      "Leverage rule — user is using margin"
+    ],
+    "answer": 1,
+    "explanation": "Mean reversion assumes price oscillates around a stable mean. In a confirmed downtrend (200-day sloping down, death cross, six lower lows) the 'mean' is itself falling — every oversold bounce is a sell, not a buy. The user's own mandate codifies this: mean reversion only when the 200-day is flat or rising. XOM fails that test. The tempting wrong answer 'no stop attached' fails because nothing in the scenario claims the order is unprotected — the violation is upstream: the strategy doesn't belong in this regime at all.",
+    "related_lesson": "055",
+    "related_agent": "portfolio_manager",
+    "tags": ["strategy_regime_mismatch", "mean_reversion", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_04_match_sector_rotation",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "In a Room debate on portfolio positioning an agent says: 'XLE outperformed SPX by 9.2% over the last six weeks while XLK lagged by 4.1%. That coincided with the 10-year yield rising 62bps and a renewed Middle East supply premium. Energy is taking the leadership baton from tech. We should expect financials (XLF) to follow if the curve keeps steepening — that is the late-cycle rotation playbook.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Market Analyst",
+      "News Analyst",
+      "Bull Researcher",
+      "Trader"
+    ],
+    "answer": 1,
+    "explanation": "Sector rotation calls live with the News Analyst — the role reads macro flows (yields, geopolitics, commodity supply) and translates them into sector leadership changes. The quote chains macro inputs (yield move, supply premium) to ETF performance (XLE vs XLK) to a forward prediction (XLF next). The tempting wrong answer 'Market Analyst' fails because the reasoning is not technical; the Market Analyst would describe relative-strength patterns on a chart, not yield-and-geopolitics causality. Sector rotation is lesson 063 — the News Analyst's lane.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": ["sector_rotation", "agents", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_05_missing_regime_check",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on TSLA: 'Fundamentals Analyst — Q3 revenue +6%, margin compression. Bull Researcher — 22% upside on robotaxi narrative. Bear Researcher — demand softening in China. News Analyst — Musk political distraction. Trader — entry $232 stop $218 target $278. Portfolio Manager — 4% NAV size, within mandate. Verdict: BUY 4% of NAV. Context line: VIX at 31, SPX 9% off ATH, breadth at 34%.'",
+    "question": "Whose input is conspicuously absent given the context line?",
+    "options": [
+      "Social Media Analyst",
+      "Market Analyst — no regime read on VIX 31 + breadth 34%; the macro tape suggests high-vol / risk-off and that should gate any new long",
+      "Aggressive Debator",
+      "Research Manager"
+    ],
+    "answer": 1,
+    "explanation": "VIX at 31 is the 80th-percentile vol regime; SPX 9% off ATH with breadth at 34% is a deteriorating tape. The Market Analyst owns the volatility-regime and breadth read (lessons 062 + 064). Adding a new 4% long without a regime gate is the textbook missing input. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment is colour, not a structural gate; the Market Analyst's regime call is load-bearing — if the regime is hostile, sizing should shrink or the trade should wait.",
+    "related_lesson": "062",
+    "related_agent": "market_analyst",
+    "tags": ["regime", "volatility", "breadth", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_06_breakout_aapl",
+    "type": "predict_the_call",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "AAPL has consolidated between $218 and $226 for 19 sessions. Today it closes at $229.10 on 78M shares vs a 20-day average of 52M (1.5x). The 50-day MA at $221 is rising. The next overhead resistance is $241. No earnings or macro event today. The Trader is sizing the breakout.",
+    "question": "What is the Trader most likely to propose, following the breakout strategy playbook?",
+    "options": [
+      "Wait two weeks to confirm — breakouts always need a retest",
+      "Enter long $229–230, stop just under the $218 floor of the range, first target $241 — the break above $226 on 1.5x volume with a rising 50-day MA is the textbook trigger",
+      "Short the breakout — extended moves above the range fail",
+      "Buy half here, half on a pullback to $215"
+    ],
+    "answer": 1,
+    "explanation": "Breakout entries (lesson 053) require three boxes: a defined range ($218–$226 for 19 sessions), a close outside the range ($229.10), and volume confirmation (1.5x average). All three print. The Trader sets entry at the breakout level, stop under the prior range, and target at the next resistance. The tempting wrong answer 'buy half on a pullback to $215' fails because $215 is below the range floor — if price returns there the breakout is invalidated, you don't add to a failed trade.",
+    "related_lesson": "053",
+    "related_agent": "trader",
+    "tags": ["breakout", "strategy", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_07_vix_high_vol_chart",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "VIX spot is 34.8, up from 14.2 four weeks ago. The VIX 20-day average is 26. SPX 30-day realised vol has risen from 11% to 23%. Daily SPX moves have averaged 1.6% absolute over the last 10 sessions vs a year-to-date average of 0.7%. Put/call ratio is at a 12-month high of 1.42.",
+    "question": "What regime call is the Market Analyst most likely to make?",
+    "options": [
+      "Bull market — high VIX is contrarian bullish",
+      "High-volatility / risk-off regime — VIX above 30 and 30% above its 20-day, realised vol doubled, daily ranges 2.3x normal, put/call at 12-month extreme",
+      "Sideways regime — daily moves are big but no trend",
+      "Low-volatility regime — VIX always overstates risk"
+    ],
+    "answer": 1,
+    "explanation": "Four signals align: VIX above 30 (lesson 062 vol-regime threshold), realised vol doubled, daily ranges 2.3x normal, and put/call at an extreme. That is the textbook high-vol regime — position sizes should shrink, stops widen, and momentum strategies often outperform mean-reversion. The tempting wrong answer 'bull market — VIX is contrarian' is dangerous half-knowledge: VIX spikes can mark bottoms, but only after they peak and roll over. Calling the regime bullish while it is still climbing is front-running mean reversion in the wrong tape.",
+    "related_lesson": "062",
+    "related_agent": "market_analyst",
+    "tags": ["regime", "volatility", "vix", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_08_momentum_in_low_vol",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "User's mandate: momentum strategy only when 30-day realised vol is above 12% AND breadth (% S&P names above 50-day MA) is above 55%. User submits a buy ticket for MRDIY at MYR 1.84, citing a 12-month relative-strength rank of 92. But KLCI realised vol is 7.1%, breadth is at 48%, and the index has chopped sideways for 11 weeks.",
+    "question": "Which rule does the Portfolio Manager flag?",
+    "options": [
+      "Single-position cap — MRDIY is too small a stock",
+      "Strategy-regime mismatch — momentum is gated to high-vol AND breadth >55%; current regime is low-vol (7.1%) and weak breadth (48%), so the mandate disallows momentum entries",
+      "Currency exposure rule — MYR is not allowed",
+      "Stop-loss rule — no stop attached"
+    ],
+    "answer": 1,
+    "explanation": "Momentum (lesson 056) works because winning stocks keep winning when participation is wide and vol is alive. In a low-vol, narrow-breadth tape, momentum entries decay — mean reversion is the regime-appropriate edge. The user's mandate explicitly codifies that. MRDIY's 92 RS rank is real but irrelevant when the regime gate fails. The tempting wrong answer 'single-position cap' fails because the scenario gives no size; the violation is the strategy itself, not its dosage.",
+    "related_lesson": "056",
+    "related_agent": "portfolio_manager",
+    "tags": ["strategy_regime_mismatch", "momentum", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_09_match_breadth_quote",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "Mid-Room an agent says: 'SPX is back within 1% of its all-time high but only 38% of constituents are above their 50-day MA, down from 71% two months ago. The advance-decline line has diverged for six weeks. Equal-weight SPX is lagging cap-weight by 4.8%. This is a narrowing rally — the index is being carried by a handful of names. Internals say sell into strength.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "News Analyst",
+      "Market Analyst",
+      "Fundamentals Analyst",
+      "Aggressive Debator"
+    ],
+    "answer": 1,
+    "explanation": "Breadth analysis (lesson 064) — % above 50-day MA, advance-decline divergence, equal-weight vs cap-weight — is the Market Analyst's domain. The quote is a textbook breadth-divergence read translated into a tactical view. The tempting wrong answer 'News Analyst' fails because no news event, sector flow, or macro catalyst is referenced — every input is a market-internals statistic, not a headline. Sector rotation belongs to the News Analyst; breadth belongs to the Market Analyst.",
+    "related_lesson": "064",
+    "related_agent": "market_analyst",
+    "tags": ["breadth", "agents", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_10_pullback_msft",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "MSFT is in a clear uptrend: 50-day MA ($412) above 200-day MA ($376), both rising. Price ran from $390 to $448 over six weeks, then pulled back to $415 in nine sessions on declining volume. RSI(14) cooled from 78 to 52. The 50-day MA at $412 has just been tested and held. No fundamental catalyst broke during the pullback.",
+    "question": "What is the Market Analyst most likely to call this setup?",
+    "options": [
+      "A trend reversal — the pullback proves the up-move is finished",
+      "A pullback entry in an intact uptrend — held the 50-day MA, RSI reset from 78 to 52, declining volume on the pullback all confirm a healthy pause, not a top",
+      "A bear flag",
+      "A range — wait for a break of $448 to act"
+    ],
+    "answer": 1,
+    "explanation": "Pullback strategy (lesson 054) trades the dip inside an established uptrend. Three confirmation signals: the 50-day MA held as support, RSI reset from overbought to neutral (78 to 52), and volume declined into the pullback (no distribution). That is a textbook pullback entry. The tempting wrong answer 'trend reversal' fails because every reversal signal is missing — no MA cross, no lower low below the prior swing low at $390, no volume expansion on the way down. Distinguishing pullback from reversal is the whole skill.",
+    "related_lesson": "054",
+    "related_agent": "market_analyst",
+    "tags": ["pullback", "strategy", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_11_klci_bull_regime",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "KLCI sits at 1,742, up 18.4% YTD. The 50-day MA (1,710) is above the 200-day MA (1,632), both rising. Breadth: 71% of index names above their 50-day MA. Advance-decline line at a new 52-week high. Realised 30-day vol is 9.3%. Sector leadership: financials and consumer leading, with broad participation across nine of ten sectors.",
+    "question": "What regime is the Market Analyst most likely calling?",
+    "options": [
+      "Late-stage bear market",
+      "Bull market — both MAs sloping up with 50>200, breadth at 71%, A/D at a new high, wide sector participation",
+      "Volatility regime — 18% YTD return is high vol",
+      "Sideways regime — no individual stock is up 50%"
+    ],
+    "answer": 1,
+    "explanation": "Bull regime (lesson 059) requires confirming structure (rising MAs with 50>200), confirming breadth (>55% above 50-day, A/D at new highs), and broad sector participation. KLCI prints all three. The tempting wrong answer 'volatility regime' confuses return magnitude with realised vol — 18% YTD with 9.3% realised vol is the textbook orderly bull, not a vol regime. High return ≠ high volatility.",
+    "related_lesson": "059",
+    "related_agent": "bull_researcher",
+    "tags": ["regime", "bull_market", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_12_violation_trend_in_bear",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "User mandate: trend-following entries only when the asset's 200-day MA is rising AND the broad index (SPX) 200-day MA is rising. User submits a buy ticket for QQQ at $412, citing 'QQQ broke above its 20-day high'. But SPX's 200-day MA has been sloping down for 41 sessions, breadth is at 28%, and QQQ's own 200-day MA is flat to down.",
+    "question": "Which rule does the Portfolio Manager flag?",
+    "options": [
+      "Position-size cap",
+      "Strategy-regime mismatch — trend-following is mandated only in a confirmed up-trend regime; SPX 200-day rolling over and breadth at 28% mean the macro tape is bearish, regardless of any short-term 20-day breakout",
+      "Leverage rule",
+      "Sector concentration"
+    ],
+    "answer": 1,
+    "explanation": "A 20-day breakout inside a primary downtrend is a counter-trend signal at best, not a trend entry. The user is applying a trend-following strategy in a bear regime — exactly the strategy-failure mode lesson 058 warns about. The mandate gates trend entries to a rising primary MA, which doesn't hold here. The tempting wrong answer 'position-size cap' fails because no size is given. The structural violation is upstream: wrong strategy for the regime.",
+    "related_lesson": "058",
+    "related_agent": "portfolio_manager",
+    "tags": ["strategy_regime_mismatch", "trend_following", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_13_match_research_manager_synth",
+    "type": "match_the_agent",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "An agent closes the Room debate: 'Bull and Bear made strong cases. Fundamentals are a 6/10. Technicals confirm an uptrend. News is mixed — rate cuts supportive, geopolitics negative. Social is euphoric — a contrarian caution. Net conviction 0.58 BUY, but reduced from 0.72 because breadth is narrowing and the Aggressive Debator's high-vol entry plan is regime-inappropriate. We size at 3% NAV instead of 5%.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Trader",
+      "Research Manager",
+      "Portfolio Manager",
+      "Neutral Debator"
+    ],
+    "answer": 1,
+    "explanation": "Research Manager synthesises Bull/Bear/Fundamentals/Technicals/News/Social into a conviction number and adjusts for regime context. The quote names every analyst, scores them, integrates them, and outputs a moderated conviction with a size implication. That is the Research Manager job description. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the mandate floor (sizing limits, stop checks) — it does not score Bull vs Bear conviction. Synthesis is the Research Manager; compliance is the PM.",
+    "related_lesson": "057",
+    "related_agent": "research_manager",
+    "tags": ["agents", "synthesis", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_14_missing_regime_xle",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "Room verdict on XLE: 'Fundamentals Analyst — energy free cash flow yields at 9%. Bull Researcher — 14% upside. Bear Researcher — demand destruction risk. Market Analyst — XLE breaking above 18-month range. Trader — entry $96 stop $91 target $108. Research Manager — conviction 0.65. Portfolio Manager — 5% NAV within mandate. Verdict: BUY 5% NAV.'",
+    "question": "Whose input is conspicuously absent — given the trade is a sector ETF?",
+    "options": [
+      "Social Media Analyst",
+      "News Analyst — no read on macro / commodity / geopolitics, which drives sector rotation into XLE",
+      "Neutral Debator",
+      "Aggressive Debator"
+    ],
+    "answer": 1,
+    "explanation": "An energy-sector trade hinges on oil prices, OPEC posture, geopolitical premium, and rotation flows — all News Analyst territory (sector rotation, lesson 063). A verdict on XLE without a News Analyst input is missing the regime catalyst that would either confirm or kill the technical breakout. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment doesn't drive energy fundamentals; macro and geopolitics do.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": ["sector_rotation", "energy", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_15_conservative_debator_meanrev",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "JPM trades at $198, down 7.4% in three sessions on a sector-wide bank sell-off. The 200-day MA at $182 is rising. The 50-day MA at $194 was just tested and held intraday. RSI(2) prints 6 — deeply oversold. No company-specific bad news. SPX is up 0.4% on the day. Bank sector ETF XLF is down 3.1% over the three sessions.",
+    "question": "What is the Conservative Debator most likely to say?",
+    "options": [
+      "Short JPM — banks always keep falling",
+      "Mean-reversion long — uptrend intact (rising 200-day, 50-day held), oversold RSI(2)=6, sector noise not company-specific, sized small with stop under 50-day",
+      "Buy a 10% position — banks always bounce",
+      "Wait six months"
+    ],
+    "answer": 1,
+    "explanation": "Mean reversion (lesson 055) needs a stable up-mean (rising 200-day), an oversold trigger (RSI(2) of 6), and an absence of structural bad news (sector noise, not a JPM-specific scandal). All three are present. The Conservative Debator favours small size + close stop under the 50-day MA. The tempting wrong answer 'buy a 10% position — banks always bounce' is right idea, wrong dose — conservative means small and well-stopped, not a bet-the-farm size on a 3-day move.",
+    "related_lesson": "055",
+    "related_agent": "conservative_debator",
+    "tags": ["mean_reversion", "strategy", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_16_spx_bear_regime",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "SPX is at 4,420, down 18% from its peak six months ago. The 50-day MA (4,560) is below the 200-day MA (4,710); both are sloping down. Breadth: 22% of names above their 50-day MA. Advance-decline line at a 52-week low. VIX at 28. Defensive sectors (XLP, XLU) outperforming cyclicals by 6% over the quarter.",
+    "question": "What regime is the Bear Researcher most likely calling?",
+    "options": [
+      "Sideways regime — no new low today",
+      "Bear market — 18% from peak, 50<200 both sloping down, breadth at 22%, A/D at 52-week low, defensives leading; every bear-regime signal present",
+      "High-vol regime only — VIX is only at 28",
+      "Bull-market correction — corrections never exceed 20%"
+    ],
+    "answer": 1,
+    "explanation": "Bear regime (lesson 060) requires falling primary trend (50<200, both down), confirmed weak breadth (22% above 50-day, A/D at lows), and defensive leadership rotation (XLP/XLU outperforming). All four print. The tempting wrong answer 'bull-market correction' is the denial trap — by the textbook definition a 20% drawdown is the threshold, but the structural signals (breadth collapse, defensive leadership, MA inversion) confirm regime change before the 20% line is crossed. Waiting for -20.01% to admit it is hindsight, not analysis.",
+    "related_lesson": "060",
+    "related_agent": "bear_researcher",
+    "tags": ["regime", "bear_market", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_17_missing_volume_check",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "Room verdict on MAYBANK at MYR 9.78: 'Fundamentals Analyst — net interest margin stable. Bull Researcher — 11% upside. Bear Researcher — credit cycle risk. Market Analyst — close above the 11-week range high of MYR 9.72. Trader — entry MYR 9.78, stop MYR 9.40, target MYR 10.80. Research Manager — 0.62 conviction labelled as a breakout entry. Portfolio Manager — 4% NAV, within mandate. Verdict: BUY 4% NAV.'",
+    "question": "What's structurally missing from this breakout-labelled verdict?",
+    "options": [
+      "A Social Media Analyst input",
+      "A volume-confirmation read — the Market Analyst confirmed the price break above MYR 9.72 but did not report today's volume vs the 20-day average; breakouts without volume confirmation are the most common false-break failure mode",
+      "An Aggressive Debator vote",
+      "A second technical opinion"
+    ],
+    "answer": 1,
+    "explanation": "Lessons 053 and 058 are explicit: a breakout requires both price AND volume confirmation. The verdict labels itself a 'breakout entry' but the Market Analyst only confirmed the price half. Without volume, the user has no way to evaluate the breakout's conviction, which is exactly the false-break setup. The tempting wrong answer 'Aggressive Debator vote' fails because directional cheerleading is colour; the structural miss is the missing volume datum the strategy label itself requires.",
+    "related_lesson": "053",
+    "related_agent": "market_analyst",
+    "tags": ["breakout", "volume", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_18_match_bear_researcher",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "An agent in the Room argues: 'GOOGL's 25% rally in eight weeks is fragile. The 200-day MA is still flat. Breadth in mega-cap tech is just five names. Search query growth slowed to 4% YoY from 11%. Cloud margin guidance was cut at the last call. The chart looks strong but the underlying business is decelerating and the macro tape is narrowing. I'd be a seller, not a buyer.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Aggressive Debator",
+      "Bear Researcher",
+      "News Analyst",
+      "Trader"
+    ],
+    "answer": 1,
+    "explanation": "The quote synthesises chart fragility, breadth narrowness, business deceleration, and macro caution into a sell thesis — that is the Bear Researcher's role in the Room: build the case against. The tempting wrong answer 'Aggressive Debator' fails because the Aggressive Debator argues for action regardless of direction and tends to lean long — here the agent is methodically tearing apart a long thesis with multi-layer evidence, the Bear Researcher signature.",
+    "related_lesson": "060",
+    "related_agent": "bear_researcher",
+    "tags": ["agents", "bear", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_19_missing_strategy_label",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on PETRONAS: 'Bull Researcher — 11% upside on crude tailwind. Bear Researcher — demand risk. Market Analyst — broke above MYR 18.50 range. News Analyst — OPEC+ supply discipline. Trader — entry MYR 18.85, stop MYR 18.10, target MYR 21.20. Research Manager — 0.60 conviction. Portfolio Manager — 4% NAV. Verdict: BUY 4% NAV.'",
+    "question": "What's structurally missing from this verdict that the user needs to evaluate the trade later?",
+    "options": [
+      "Aggressive Debator's vote",
+      "An explicit strategy label — is this a breakout trade, a pullback, a trend continuation, or a mean-reversion? Without naming the strategy, the user can't evaluate whether it held its own rules at exit",
+      "Social Media Analyst input",
+      "Fundamentals Analyst commentary"
+    ],
+    "answer": 1,
+    "explanation": "Lessons 052–058 all turn on the same discipline: a trade must declare which strategy it is, because each strategy has different exit rules. A breakout is exited differently than a pullback or a mean-reversion. Without a label, the decision journal can't grade whether the trade was managed per its own playbook. The tempting wrong answer 'Aggressive Debator's vote' is colour, not structural. Strategy identity is the load-bearing missing element.",
+    "related_lesson": "057",
+    "related_agent": "research_manager",
+    "tags": ["strategy_discipline", "journaling", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_20_neutral_debator_range",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "IWM (small-cap ETF) has oscillated between $198 and $212 for 14 weeks. 50-day MA at $205 is flat. Breadth in IWM constituents is 49%. Realised vol is 14%, near a one-year low. Today IWM trades at $211.20, near the top of the range, with no volume expansion and no macro catalyst this week.",
+    "question": "What is the Neutral Debator most likely to say?",
+    "options": [
+      "Buy aggressively — IWM is breaking out",
+      "Range play — sell into the top of the band, cover near the bottom; until volume confirms an exit from the range, neither bull nor bear has the proof",
+      "Short to zero — small caps always underperform",
+      "Hold cash for six months"
+    ],
+    "answer": 1,
+    "explanation": "Sideways regime (lesson 061) is the Neutral Debator's natural home — the strategy is fade-the-edges until proof emerges. Selling into $211 (range top) with cover near $200 (range bottom) is range trading. The tempting wrong answer 'buy aggressively — IWM is breaking out' fails because volume hasn't expanded and price hasn't closed outside the range; tagging the top is not breaking out. Until the breakout rules of lesson 053 are satisfied, this is still a range.",
+    "related_lesson": "061",
+    "related_agent": "neutral_debator",
+    "tags": ["sideways", "regime", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_21_qqq_breakout_chart",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "QQQ traded between $478 and $498 for 22 sessions. Volume during the range averaged 41M shares. Today QQQ closes at $504.20 on 73M shares (1.78x average). The 50-day MA at $488 is rising. Cup-and-handle pattern visible with the handle low at $483. No FOMC or major earnings this week. VIX dropped from 18 to 14 over the consolidation.",
+    "question": "What setup is the Market Analyst most likely to call?",
+    "options": [
+      "A late-stage double top",
+      "A volume-confirmed cup-and-handle breakout above $498 — handle base at $483 held, volume 1.78x, rising 50-day MA underneath, and VIX compressed into the move",
+      "A pullback that hasn't completed",
+      "A bear flag"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 053's classic setup: a defined accumulation pattern (cup-and-handle), a clean range break ($504 above $498), volume confirmation (1.78x), and a confirming primary trend (rising 50-day). The compressed VIX during the handle is bonus — energy was stored, then released. The tempting wrong answer 'pullback that hasn't completed' fails because price has already broken the range high on volume — a pullback would mean trading back to the 50-day MA, not extending above resistance.",
+    "related_lesson": "053",
+    "related_agent": "market_analyst",
+    "tags": ["breakout", "cup_and_handle", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_22_violation_pullback_no_trend",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "User mandate: pullback entries only when 50-day MA is above 200-day MA AND both are rising. User submits ticket for META at $498, claiming 'price has pulled back to support'. But META's 50-day ($512) is below its 200-day ($528), both rolling over. Price has dropped from $610 to $498 over 14 weeks. RSI is at 38 — not even oversold.",
+    "question": "Which rule does the Portfolio Manager flag?",
+    "options": [
+      "Stop-loss rule",
+      "Strategy-regime mismatch — pullback strategy requires an established uptrend; META's MA structure is inverted and rolling over, so this isn't a pullback, it's a downtrend continuation entry mislabelled",
+      "Position-size cap",
+      "Currency exposure"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 054's iron rule: pullbacks are a bull-regime tactic. Without an uptrend, there is no 'pull' back to anything — price is simply going down. Mislabelling a downtrend continuation as a 'pullback to support' is one of the most common strategy failure modes (lesson 058). RSI of 38 confirms the move isn't even oversold yet. The tempting wrong answer 'stop-loss rule' fails because the structural error is choosing the strategy at all in this regime, not how the stop is placed.",
+    "related_lesson": "054",
+    "related_agent": "portfolio_manager",
+    "tags": ["strategy_regime_mismatch", "pullback", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_23_match_aggressive_debator",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "en",
+    "scenario": "In a Room debate on TSLA an agent says: 'I don't care about the multiple. Trend is up, breakout was clean, volume confirmed, and momentum is strongest in years. Waiting for a pullback is a losing game in this regime — buyers don't give you the dip when relative strength is this hot. Size in, manage with a trailing stop, let it run.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Conservative Debator",
+      "Aggressive Debator",
+      "Fundamentals Analyst",
+      "Portfolio Manager"
+    ],
+    "answer": 1,
+    "explanation": "Lessons 052 (trend-following) and 056 (momentum) both call out the Aggressive Debator — the quote is pure aggressive-debator language: dismisses valuation, prioritises trend and momentum, rejects waiting for pullbacks, advocates entry now with trailing-stop management. The tempting wrong answer 'Fundamentals Analyst' fails because the agent explicitly dismisses the multiple — the Fundamentals Analyst would never say 'I don't care about the multiple'.",
+    "related_lesson": "056",
+    "related_agent": "aggressive_debator",
+    "tags": ["momentum", "agents", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_24_missing_breadth_in_bull",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on SPY: 'Fundamentals Analyst — earnings growth +9%. Bull Researcher — 12% upside, new ATH momentum. News Analyst — Fed accommodative. Market Analyst — clean breakout above prior ATH. Trader — entry $612 stop $592 target $660. Research Manager — 0.71 conviction. Portfolio Manager — 6% NAV. Verdict: BUY 6% NAV. Context: SPY has made new highs led by 4 mega-cap names.'",
+    "question": "What is conspicuously absent given the context that 4 names lead the move?",
+    "options": [
+      "Aggressive Debator's input",
+      "An explicit breadth check — the Market Analyst noted the new ATH but did not test breadth (% above 50-day MA, A/D line, equal-weight vs cap-weight); a 4-name rally is the classic narrow-breadth setup that turns bull regimes fragile",
+      "Social Media Analyst",
+      "Neutral Debator"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 064 makes breadth the bull-regime stress test. New highs led by 4 names is the textbook narrowing-rally warning. The verdict ignored it. Without the breadth read, the verdict is overconfident — 0.71 conviction on a narrow-led tape is high. The tempting wrong answer 'Aggressive Debator's input' fails because the verdict already leans aggressive; what's missing is the dissenting structural data, which lives in breadth analysis.",
+    "related_lesson": "064",
+    "related_agent": "market_analyst",
+    "tags": ["breadth", "narrow_rally", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_25_match_bull_researcher",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "In a Room debate an agent argues: 'SPX up 14% YTD with 67% of names above their 50-day MA. Earnings growth +8% YoY. Fed signalling two cuts. Defensives (XLU, XLP) lagging cyclicals (XLY, XLK) by 9% over the quarter. Every confirmation of a primary up-cycle is intact. This is the regime to scale longs, not trim them. Do not let recency bias tell you 14% YTD is somehow too much when the regime structure is this clean.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Bear Researcher",
+      "Bull Researcher",
+      "Conservative Debator",
+      "Portfolio Manager"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 059's bull-regime checklist — rising index + wide breadth + cyclical leadership + supportive macro — is the Bull Researcher's structural argument. The quote chains all four confirmations into a 'scale longs' conclusion, and explicitly pushes back on the recency-bias temptation to trim. That is the Bull Researcher signature. The tempting wrong answer 'Portfolio Manager' fails because the PM doesn't argue directional theses; the PM checks the trade against the mandate. Bull-thesis construction is the Bull Researcher's lane.",
+    "related_lesson": "059",
+    "related_agent": "bull_researcher",
+    "tags": ["bull_market", "agents", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_26_missing_rotation_read",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Room verdict on XLK at $228: 'Fundamentals Analyst — software earnings +12%. Bull Researcher — 9% upside. Bear Researcher — multiples stretched. Market Analyst — XLK still above 50-day MA. Trader — entry $228 stop $218 target $250. Research Manager — 0.58 conviction. Portfolio Manager — 4% NAV. Verdict: BUY 4% NAV. Context: over the last 8 weeks XLK -4.2%, XLY -2.1%; meanwhile XLF +5.4%, XLE +7.8%, XLV +3.2%, equal-weight SPX outperforming cap-weight, 10-year yield up 48bps.'",
+    "question": "Whose input is conspicuously absent given the context?",
+    "options": [
+      "Aggressive Debator",
+      "News Analyst — no sector-rotation read; the context line shows a classic growth-to-value rotation tied to the 48bps yield move, which is the macro headwind for the XLK long thesis",
+      "Social Media Analyst",
+      "Neutral Debator"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 063 puts sector rotation squarely in the News Analyst's lane. The context line is a textbook value-rotation tape — growth sectors lagging, cyclicals/defensives leading, equal-weight beating cap-weight, yields rising — and the verdict is taking a long in the lagging sector (XLK) without a News Analyst flagging the macro headwind. The tempting wrong answer 'Aggressive Debator' fails because directional cheerleading isn't load-bearing; the structural miss is the rotation diagnostic itself.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": ["sector_rotation", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_27_violation_size_in_vol",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "User mandate: in volatility regimes (VIX > 25) standard 5% position caps are halved to 2.5% per ticker. VIX is currently 32. User submits a buy ticket for NVDA at 4.8% of NAV, citing 'still within the 5% cap'.",
+    "question": "Which rule does the Portfolio Manager flag?",
+    "options": [
+      "Stop-loss rule",
+      "Volatility-regime sizing rule — VIX above 25 triggers the mandate's halved cap (2.5%); the 4.8% ticket violates the regime-conditional limit even though it sits under the standard 5% cap",
+      "Sector concentration",
+      "Leverage"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 062 codifies why size compresses in vol regimes: realised swings are 2–3x normal, so a 5% position behaves like a 10–15% position in a calm tape. The user's mandate explicitly halves the cap, and the user ignored the conditional. The tempting wrong answer 'still within the 5% cap' is exactly the half-read mistake — caps in a mandate can be regime-conditional, and ignoring the conditional is a violation, not a loophole.",
+    "related_lesson": "062",
+    "related_agent": "portfolio_manager",
+    "tags": ["volatility", "sizing", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_28_match_neutral_debator",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "An agent says: 'Both the Bull and the Bear made decent points. The Bull's breakout argument is real but volume only printed 1.05x — not strong enough. The Bear's overhead-supply case ignores that earnings revisions are positive. I'd rather wait one more candle for confirmation in either direction. Net: neither side has earned the conviction yet.'",
+    "question": "Which of the 12 agents is most likely speaking?",
+    "options": [
+      "Research Manager",
+      "Neutral Debator",
+      "Conservative Debator",
+      "Market Analyst"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 061 (sideways markets) calls out the Neutral Debator — its role is to refuse conviction when the evidence is split, not to synthesise. The quote acknowledges both sides and explicitly declines to take a side until more data arrives. The tempting wrong answer 'Research Manager' fails because the Research Manager produces a conviction number even when input is mixed; the Neutral Debator's value is the principled refusal to fake conviction.",
+    "related_lesson": "061",
+    "related_agent": "neutral_debator",
+    "tags": ["neutral", "agents", "module_10"]
+  },
+  {
+    "id": "dc_2026_11_29_missing_backtest",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "Saiful coaches an agent with a new rule: 'enter long any S&P stock that closes 8% below its 20-day MA when RSI(2) is under 5'. He activates the rule live the next day. The Coach Your Agent flow validates the rule passes the mandate safety floor (size, stops, no leverage). The user submits the first ticket the following session.",
+    "question": "What's structurally missing from this rule before live activation?",
+    "options": [
+      "An ESG screen",
+      "A backtest — the rule has never been validated against historical data across different regimes, so its expectancy, drawdown, regime-sensitivity and overfitting risk are all unknown",
+      "A second agent's approval",
+      "A press release"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 057 is explicit: every strategy rule needs a backtest before live deployment. The mandate floor only checks that the rule won't blow up the account on a single trade — it cannot tell you whether the rule has positive expectancy or whether it works in bear regimes. The tempting wrong answer 'a second agent's approval' fails because the Research Manager already does Room synthesis; the missing artefact is the historical-data validation, not another vote.",
+    "related_lesson": "057",
+    "related_agent": "research_manager",
+    "tags": ["backtest", "strategy_discipline", "module_9"]
+  },
+  {
+    "id": "dc_2026_11_30_predict_strategy_failure",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "User runs a trend-following system that worked great in 2023–2025. In 2026 H1 the system has had 11 trades, 9 of them stopped out at the same -3% loss, all 9 inside the same 14-week SPX range between 4,200 and 4,380. KLCI is similarly range-bound. VIX averaged 13 over the period. The user asks the Conservative Debator to diagnose the drawdown.",
+    "question": "What is the Conservative Debator most likely to say?",
+    "options": [
+      "The system is broken — abandon trend-following forever",
+      "Strategy failure mode — trend-following is regime-dependent and the current SPX/KLCI regime is sideways with low vol; the system isn't broken, it's running in the wrong regime, and should be paused or switched to a range/mean-reversion variant",
+      "Add more leverage to recover faster",
+      "Override the stops next time"
+    ],
+    "answer": 1,
+    "explanation": "Lesson 058 names this exactly: every strategy has a regime where it underperforms, and trend-following's failure regime is sideways/low-vol. The 9-for-11 stop-out pattern, all inside a defined SPX range, is the diagnostic fingerprint. The Conservative Debator's call is to recognise the regime, pause the system, and switch to a regime-appropriate tactic — not to abandon the edge. The tempting wrong answer 'abandon trend-following forever' is the emotional response to drawdown; the analyst response is to identify the regime mismatch and adapt.",
+    "related_lesson": "058",
+    "related_agent": "conservative_debator",
+    "tags": ["strategy_failure", "regime", "module_9"]
+  }
+]

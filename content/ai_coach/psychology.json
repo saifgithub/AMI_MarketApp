@@ -1,0 +1,502 @@
+[
+  {
+    "id": "qa_psy_just_took_loss_reenter",
+    "category": "psychology",
+    "question": "I just took a loss on TSLA. Should I re-enter now to make it back?",
+    "short_answer": "Re-entering within minutes of a loss to recover it is the revenge-trading pattern. Pause and log the loss in your Decision Journal before any new entry.",
+    "long_answer": "The urge to immediately recover a loss is not a signal — it's the loss itself driving the decision. Open the Decision Journal entry for the TSLA trade and write what triggered the exit. If your Mandate has a cooldown setting, the Portfolio Manager has likely already blocked further entries for the rest of the session. If not, consider tightening that cooldown in the Mandate editor. Bring the next idea to the Conservative Debator in 1-on-1 before you act on it.",
+    "related_lessons": ["047", "017"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["loss", "revenge", "cooldown"]
+  },
+  {
+    "id": "qa_psy_was_that_revenge",
+    "category": "psychology",
+    "question": "Was my last trade a real signal or revenge?",
+    "short_answer": "Check the timestamp gap. If the entry was within 60 minutes of a losing exit and the thesis is thin, the pattern fits revenge trading.",
+    "long_answer": "Pull the two adjacent entries in the Decision Journal and read them side by side. A revenge trade usually has a shorter thesis, fewer agent inputs cited, and a tighter time gap. Convene the Room on the same setup as a clean test — if the verdict diverges from your live decision, that's data. The Conservative Debator can also walk through your reasoning in 1-on-1.",
+    "related_lessons": ["047"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["revenge", "journal", "pattern"]
+  },
+  {
+    "id": "qa_psy_angry_at_market",
+    "category": "psychology",
+    "question": "I'm furious at the market right now. How do I stop being angry?",
+    "short_answer": "Anger at the market usually means the next trade will be sized on emotion. Step away from the order screen and let the Mandate cooldown do its job.",
+    "long_answer": "Markets are indifferent — the anger is about the gap between what you expected and what happened. Don't trade through it. Open the Decision Journal, write the expectation you had going in, and contrast it with what actually printed. That gap is your edge audit, not your enemy. If the urge to re-engage is strong, bring the setup to the Conservative Debator before any action.",
+    "related_lessons": ["047", "046"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["anger", "loss", "pause"]
+  },
+  {
+    "id": "qa_psy_loss_double_size",
+    "category": "psychology",
+    "question": "Should I double my next position size to make back what I lost?",
+    "short_answer": "No. Sizing up after a loss is how a single bad trade becomes a drawdown spiral. The Portfolio Manager will enforce your Mandate's per-trade cap regardless.",
+    "long_answer": "The Mandate's per-trade risk limit is a hard floor — it doesn't move because your P&L moved. Doubling size to recover a loss is the classic martingale trap. Review the loss in the Decision Journal, identify what went wrong in the thesis or execution, and the next trade should be the same size as the prior one, not larger. The Conservative Debator can pressure-test the next idea.",
+    "related_lessons": ["047", "017", "018"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["sizing", "loss", "mandate"]
+  },
+  {
+    "id": "qa_psy_lost_three_in_row",
+    "category": "psychology",
+    "question": "I lost three trades in a row. Am I broken?",
+    "short_answer": "Three losses in a row is statistically normal for almost every edge — what matters is whether your process held. Review each entry in the Decision Journal.",
+    "long_answer": "A losing streak of three is well inside the variance of any honest strategy. The question to ask is not 'am I broken' but 'did I follow my own rules each time?' Pull the three Journal entries and check the thesis, entry, and exit against your Mandate. If all three were process-clean, the streak is variance. If one or more skipped the process, that's the actual signal. Convene the Room on the next setup before acting.",
+    "related_lessons": ["046", "017"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["streak", "loss", "process"]
+  },
+  {
+    "id": "qa_psy_close_account_after_loss",
+    "category": "psychology",
+    "question": "I want to delete the app after this loss. Should I?",
+    "short_answer": "That impulse is the loss talking, not the data. Step away from the screen for the day and let the Mandate cooldown carry you to tomorrow.",
+    "long_answer": "Simulation losses sting because they reveal a gap between your story and reality — that gap is the entire point of the practice. Don't make a permanent decision in an emotional state. Close the app, open the Decision Journal in 24 hours, and read the loss with fresh eyes. The Conservative Debator can walk you through what the trade actually told you about your process.",
+    "related_lessons": ["046", "047"],
+    "related_agents": ["conservative_debator", "concierge"],
+    "tags": ["capitulation", "loss", "pause"]
+  },
+  {
+    "id": "qa_psy_blame_agent",
+    "category": "psychology",
+    "question": "The Bull Researcher told me to buy and I lost. Is it the agent's fault?",
+    "short_answer": "Agents give inputs, not orders — the CEO call was yours. Pull the Room verdict and check whether the dissent was on the record.",
+    "long_answer": "The Bull Researcher's job is to argue the bull case; that's not a recommendation, it's one voice in a debate. Open the Convene the Room transcript for that trade — if the Bear Researcher or Conservative Debator flagged risks you ignored, that's the lesson. If the debate was lopsided and the floor still cracked, that's a data point about edge, not blame. Log both in the Decision Journal.",
+    "related_lessons": ["047", "017"],
+    "related_agents": ["bear_researcher", "conservative_debator"],
+    "tags": ["blame", "loss", "journal"]
+  },
+  {
+    "id": "qa_psy_after_loss_stop_for_day",
+    "category": "psychology",
+    "question": "Should I stop trading for the day after a loss?",
+    "short_answer": "If the loss is still loud in your head, yes. A daily-loss cooldown in your Mandate makes that decision automatic.",
+    "long_answer": "Most stable practitioners run a daily-loss circuit breaker — a level of red below which the session is over. Open the Mandate editor and set a daily-drawdown cap if you don't have one. The Portfolio Manager will enforce it without negotiation. Spend the rest of the day reviewing the Decision Journal entry for the loss instead.",
+    "related_lessons": ["047", "017"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["cooldown", "mandate", "loss"]
+  },
+  {
+    "id": "qa_psy_winning_streak_size_up",
+    "category": "psychology",
+    "question": "I've won five trades in a row. Should I size up?",
+    "short_answer": "Five wins in a row doesn't change your edge — it changes how confident you feel about it. Size stays inside the Mandate.",
+    "long_answer": "Win streaks compress the felt distance between you and the next loss. The Mandate's per-trade cap exists precisely so that streaks don't translate into oversized positions right before reversion. The Portfolio Manager will block sizing above your cap. If you genuinely think the edge has improved, write the evidence in the Decision Journal across at least 20 trades — not 5.",
+    "related_lessons": ["049", "017"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["overconfidence", "streak", "sizing"]
+  },
+  {
+    "id": "qa_psy_mandate_flagged_streak",
+    "category": "psychology",
+    "question": "Why does AMI keep flagging my Mandate when I'm on a winning streak?",
+    "short_answer": "The Mandate doesn't read your P&L — it reads your proposed trade. If it's flagging, the position size or risk profile drifted from what you set.",
+    "long_answer": "The Portfolio Manager's compliance check is deterministic — it compares the proposed trade against the Mandate you wrote, not against your recent results. A winning streak often makes traders quietly increase size or loosen stops, which is exactly what the flag is catching. Review the flagged trade against the Mandate side by side. If you want to allow more size, edit the Mandate explicitly and own the change.",
+    "related_lessons": ["049", "051"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["mandate", "overconfidence", "streak"]
+  },
+  {
+    "id": "qa_psy_too_confident",
+    "category": "psychology",
+    "question": "Am I getting too confident? Everything feels easy right now.",
+    "short_answer": "When trading feels easy, the next loss is usually closer than it feels. That's not a prediction — it's the structure of variance.",
+    "long_answer": "Overconfidence shows up as widening stops, oversized positions, and skipping the Convene the Room step. Pull your last five Decision Journal entries — count how many included a Bear Researcher counter-thesis. If that number is dropping, the pattern is there. Bring the next setup to the Conservative Debator in 1-on-1 specifically to surface what could go wrong.",
+    "related_lessons": ["049", "051"],
+    "related_agents": ["conservative_debator", "bear_researcher"],
+    "tags": ["overconfidence", "streak", "process"]
+  },
+  {
+    "id": "qa_psy_streak_increase_frequency",
+    "category": "psychology",
+    "question": "I'm winning, so should I take more trades?",
+    "short_answer": "Trade frequency belongs to your edge, not your mood. If your Mandate sets a max-trades-per-week, the Portfolio Manager will hold that line.",
+    "long_answer": "Increasing frequency on a streak is how setup quality silently drops — the bar lowers because the recent feedback was positive. If you genuinely believe more opportunities exist, document them in the Decision Journal as missed signals and review at week-end. Edit the Mandate only with that evidence in hand, not on momentum.",
+    "related_lessons": ["049", "051"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["overconfidence", "frequency", "mandate"]
+  },
+  {
+    "id": "qa_psy_streak_skip_debate",
+    "category": "psychology",
+    "question": "I've been right five times. Do I still need to Convene the Room?",
+    "short_answer": "Skipping the debate on a streak is the exact moment you most need it. The Room is a check on your own narrative, not a formality.",
+    "long_answer": "When recent results validate your read, the temptation is to act faster and skip dissent. That's where the next blowup setup hides. Convene the Room on the next idea and pay specific attention to the Bear Researcher and Conservative Debator. If the verdict still aligns with your read after honest dissent, fine — but make the dissent show up on the record.",
+    "related_lessons": ["049"],
+    "related_agents": ["bear_researcher", "conservative_debator"],
+    "tags": ["overconfidence", "debate", "process"]
+  },
+  {
+    "id": "qa_psy_feel_like_genius",
+    "category": "psychology",
+    "question": "I feel like a genius after this run. Is that bad?",
+    "short_answer": "The feeling isn't bad — acting on it is. Your edge didn't change in two weeks; your sample size did.",
+    "long_answer": "A short hot streak is well inside the variance of even a mediocre process. The Decision Journal is where you check whether the wins came from process or luck — if the theses were thin and worked anyway, the wins were variance. Bring your next idea to the Conservative Debator before sizing up.",
+    "related_lessons": ["049", "051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["overconfidence", "narrative", "process"]
+  },
+  {
+    "id": "qa_psy_streak_friends_imitate",
+    "category": "psychology",
+    "question": "My friends want me to share my picks now that I'm winning. Should I?",
+    "short_answer": "Sharing picks during a streak pressures you to keep posting wins, which warps how you trade. Keep the floor private.",
+    "long_answer": "Once people watch your picks, you trade for the audience instead of the thesis — and that's a known psychology trap. The Decision Journal is for your process, not a feed. If you want to teach, share the lessons you've logged after a full quarter, not the live trades. The Conservative Debator can also walk you through how external pressure changes risk-taking.",
+    "related_lessons": ["049", "048"],
+    "related_agents": ["conservative_debator", "social_media_analyst"],
+    "tags": ["overconfidence", "social", "audience"]
+  },
+  {
+    "id": "qa_psy_fomo_nvda",
+    "category": "psychology",
+    "question": "Everyone's talking about NVDA on X. Am I missing out?",
+    "short_answer": "Crowd attention is a sentiment signal, not an entry. Run NVDA through Convene the Room before you decide anything.",
+    "long_answer": "FOMO peaks when the story is loudest and the price has already moved. The Social Media Analyst will tell you what the crowd thinks; the Bear Researcher will tell you what could break the thesis; the Conservative Debator will tell you whether the entry still has favorable reward-to-risk. If three of those line up against entry, the trade isn't yours to take — it's the crowd's.",
+    "related_lessons": ["048"],
+    "related_agents": ["social_media_analyst", "bear_researcher", "conservative_debator"],
+    "tags": ["fomo", "crowd", "sentiment"]
+  },
+  {
+    "id": "qa_psy_fomo_vs_real_signal",
+    "category": "psychology",
+    "question": "How do I tell FOMO from a real signal?",
+    "short_answer": "A real signal survives Convene the Room with the Bear Researcher dissenting. FOMO usually doesn't.",
+    "long_answer": "FOMO has a tell — the urgency is about missing the move, not about the setup itself. If you can't articulate the entry, stop, and target without referencing what others are doing, it's FOMO. Convene the Room and read the Bear Researcher carefully. The Decision Journal entry should hold together if you reread it 24 hours later with the chart hidden.",
+    "related_lessons": ["048"],
+    "related_agents": ["social_media_analyst", "bear_researcher", "conservative_debator"],
+    "tags": ["fomo", "signal", "process"]
+  },
+  {
+    "id": "qa_psy_fomo_after_chase",
+    "category": "psychology",
+    "question": "I chased a runner and got stopped out. What now?",
+    "short_answer": "Chasing late entries is the FOMO pattern. Log the trade and add a 'no entries after X% extension' rule to your Mandate.",
+    "long_answer": "Late chases share a structure — entry well past the breakout, no clean invalidation level, stop too far away. Open the Decision Journal entry and identify which of those applied. Then encode the lesson in the Mandate so the Portfolio Manager catches the next one before you click. The Conservative Debator can also pre-screen extended setups in 1-on-1.",
+    "related_lessons": ["048", "047"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["fomo", "chase", "mandate"]
+  },
+  {
+    "id": "qa_psy_fomo_missed_move",
+    "category": "psychology",
+    "question": "I missed a 20% move. How do I get over it?",
+    "short_answer": "You didn't miss it — it wasn't yours unless your process picked it up. The next setup is the one that matters.",
+    "long_answer": "Trades you didn't take by your own rules aren't losses; they're someone else's wins. The trap is letting one missed move loosen the bar on the next one. Log the missed setup in the Decision Journal — note whether your process actually had a way to catch it. If yes, refine the screen. If no, accept it as outside your edge and move on.",
+    "related_lessons": ["048", "051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["fomo", "regret", "process"]
+  },
+  {
+    "id": "qa_psy_fomo_crypto_friend",
+    "category": "psychology",
+    "question": "My friend just made 10x on a meme coin. Should I jump in?",
+    "short_answer": "AMI Trade is US equities and a simulation-only practice. Someone else's outcome is not your edge.",
+    "long_answer": "Outcome envy is a known FOMO pattern — one anecdotal win warps your sense of probability. The Social Media Analyst can show you how often the crowd narrative around any asset diverges from the underlying. Stay in the process you've built here; the Decision Journal is the only feedback loop that actually reflects your edge.",
+    "related_lessons": ["048", "049"],
+    "related_agents": ["social_media_analyst", "conservative_debator"],
+    "tags": ["fomo", "envy", "social"]
+  },
+  {
+    "id": "qa_psy_fomo_oversize_to_catch_up",
+    "category": "psychology",
+    "question": "Should I oversize this trade to catch up to the move?",
+    "short_answer": "No. Oversizing to compensate for a missed move is FOMO sizing. The Mandate cap holds regardless.",
+    "long_answer": "The 'catch up' framing means the size is set by regret, not the trade. The Portfolio Manager's compliance check will reject anything above your Mandate cap automatically. Take the trade at your normal size or skip it; there's no rational middle. Log the urge in the Decision Journal so the pattern is visible next time.",
+    "related_lessons": ["048", "017"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["fomo", "sizing", "mandate"]
+  },
+  {
+    "id": "qa_psy_greed_when_take_profit",
+    "category": "psychology",
+    "question": "I'm up 8% on this trade. When should I take profit?",
+    "short_answer": "Take profit where your plan said to — not where it feels good. If you didn't set a target, that's the lesson, not the exit.",
+    "long_answer": "Without a pre-defined exit, every level becomes a negotiation with greed. Open the Decision Journal entry for this trade and check what target you wrote at entry. If there was none, scale out at a rule-based level — partial at 1R, trail the rest — and log the decision rule for next time. The Conservative Debator will repeat the same point: process beats feel.",
+    "related_lessons": ["045", "051"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["greed", "exit", "profit"]
+  },
+  {
+    "id": "qa_psy_greed_let_winners_run",
+    "category": "psychology",
+    "question": "Why does the Conservative Debator keep saying scale out?",
+    "short_answer": "Because partial profits convert paper gains into realized ones and reduce the chance of giving the whole move back. It's a process rule, not a market call.",
+    "long_answer": "Scaling out — taking some off at the first target, trailing the rest — is the Conservative Debator's structural answer to greed. It doesn't predict the next tick; it just locks the trade into 'can't be a loser from here.' If you want to override and let it all run, that's a Mandate edit, not a one-off impulse. Log both choices in the Decision Journal and review which ruleset worked better across 20+ trades.",
+    "related_lessons": ["045", "051"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["greed", "scale-out", "exit"]
+  },
+  {
+    "id": "qa_psy_greed_paper_gains",
+    "category": "psychology",
+    "question": "I keep watching paper gains turn into losses. What's going on?",
+    "short_answer": "That's the greed pattern in shape — moving the target up while the trade is open. A pre-set exit removes the negotiation.",
+    "long_answer": "If you find yourself adjusting the target upward as price approaches the original, that's where the round trip starts. The Decision Journal should show the original target written at entry — if you can't find one, that's the gap. Fix it at entry next time, not mid-trade. The Conservative Debator can pressure-test your target before you click.",
+    "related_lessons": ["045", "051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["greed", "target", "exit"]
+  },
+  {
+    "id": "qa_psy_greed_one_more_trade",
+    "category": "psychology",
+    "question": "I had a great day. Should I take one more trade to push it?",
+    "short_answer": "The 'one more' trade after a green day is where green days die. Close the platform and log the day.",
+    "long_answer": "End-of-day greed trades have a recognizable shape — thin thesis, oversized relative to the day's risk budget, taken because the screen is still open. The Mandate can set a max-trades-per-day or a stop-when-green rule; the Portfolio Manager will enforce it. Lock the day in the Decision Journal instead.",
+    "related_lessons": ["045", "050"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["greed", "overtrading", "discipline"]
+  },
+  {
+    "id": "qa_psy_greed_add_to_winner",
+    "category": "psychology",
+    "question": "Should I add to a winning position?",
+    "short_answer": "Adding to winners is a strategy decision that belongs in the Mandate, not a heat-of-the-moment call. If it isn't written there, don't.",
+    "long_answer": "Pyramiding can be a sound strategy when it's pre-defined — entry trigger, additional size, adjusted stop. Done on impulse, it's greed by another name. Open the Mandate; if 'add to winners' isn't written with rules, the answer is no for this trade. Edit the Mandate explicitly if you want it as a future rule, then live by it.",
+    "related_lessons": ["045", "051"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["greed", "pyramid", "mandate"]
+  },
+  {
+    "id": "qa_psy_greed_round_number",
+    "category": "psychology",
+    "question": "I want to hold for the round number ($100, $500). Bad idea?",
+    "short_answer": "Round-number targets are usually anchoring, not analysis. If your structural target is below the round number, take it there.",
+    "long_answer": "Holding past a structural exit for a round-number psychological level is how trades round-trip. The market doesn't know your aesthetic preferences. Document the structural exit in the Decision Journal, take partial there, and trail the rest only if your Mandate allows. The Conservative Debator will reinforce the same logic.",
+    "related_lessons": ["045"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["greed", "anchoring", "target"]
+  },
+  {
+    "id": "qa_psy_fear_sell_everything",
+    "category": "psychology",
+    "question": "I want to sell everything. Is that fear talking?",
+    "short_answer": "If nothing changed in the theses, yes. Don't liquidate on emotion — open each position's Decision Journal entry first.",
+    "long_answer": "Wholesale exits during volatility usually trade against the original plan rather than with it. Go position by position. For each, ask whether the original thesis is broken or the price is just uncomfortable. If the thesis still holds and the stop hasn't been hit, exit is just fear. The Conservative Debator can walk through each name in 1-on-1.",
+    "related_lessons": ["046"],
+    "related_agents": ["conservative_debator", "bear_researcher"],
+    "tags": ["fear", "capitulation", "exit"]
+  },
+  {
+    "id": "qa_psy_fear_market_scares_me",
+    "category": "psychology",
+    "question": "The market scares me right now. Should I trade anyway?",
+    "short_answer": "If the market scares you, your size is too big — not the market too dangerous. Cut size or sit out until clarity returns.",
+    "long_answer": "Fear at current size means a smaller size would feel manageable. Open the Mandate, reduce the per-trade risk percentage temporarily, and the Portfolio Manager will enforce the smaller cap. Sitting out is also a valid trade — log it. The Conservative Debator can walk through whether any setup is worth taking at current vol.",
+    "related_lessons": ["046", "017"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["fear", "sizing", "volatility"]
+  },
+  {
+    "id": "qa_psy_fear_freeze_at_entry",
+    "category": "psychology",
+    "question": "I keep freezing at the entry button. What's wrong?",
+    "short_answer": "Freezing usually means the position size feels larger than the setup deserves. Drop size and the freeze tends to clear.",
+    "long_answer": "If you've done the work — Convene the Room, clear thesis, defined stop — and still can't click, the body is telling you the size is wrong. Edit the Mandate to a smaller per-trade cap and try again. Log the freeze in the Decision Journal so the pattern is visible. The Conservative Debator can also pressure-test whether the setup is genuinely yours.",
+    "related_lessons": ["046", "017"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["fear", "freeze", "sizing"]
+  },
+  {
+    "id": "qa_psy_fear_after_news",
+    "category": "psychology",
+    "question": "There's bad news everywhere. Should I close my longs?",
+    "short_answer": "News-driven exits are usually crowd-driven exits. Check whether your specific theses changed before touching anything.",
+    "long_answer": "Macro fear narratives spread fast and don't always hit your specific positions' theses. The Social Media Analyst can show you the sentiment shape; the Bear Researcher can tell you what would actually break each name. Run that filter on each position before doing anything. If theses hold and stops haven't been hit, the news is noise to your book.",
+    "related_lessons": ["046"],
+    "related_agents": ["social_media_analyst", "bear_researcher", "conservative_debator"],
+    "tags": ["fear", "news", "capitulation"]
+  },
+  {
+    "id": "qa_psy_fear_drawdown_panic",
+    "category": "psychology",
+    "question": "I'm down 15% on the portfolio. I want to go to cash.",
+    "short_answer": "A 15% drawdown is uncomfortable but inside normal variance. Don't capitulate at the bottom — review whether each thesis still holds.",
+    "long_answer": "Capitulation is the technical term for selling because the drawdown got too loud, not because the theses broke. Open the Decision Journal for each position and ask whether the original thesis still holds. If your Mandate has a drawdown cooldown, the Portfolio Manager has already restricted further size. The Conservative Debator can walk through the book name by name.",
+    "related_lessons": ["046", "017", "018"],
+    "related_agents": ["conservative_debator", "portfolio_manager", "bear_researcher"],
+    "tags": ["fear", "drawdown", "capitulation"]
+  },
+  {
+    "id": "qa_psy_fear_news_volatility",
+    "category": "psychology",
+    "question": "The VIX is spiking. Should I stop trading?",
+    "short_answer": "Higher vol doesn't mean stop trading; it means smaller size and wider stops. The Mandate should adjust to match.",
+    "long_answer": "Volatility regimes change how much room a trade needs. If your Mandate doesn't have a vol-adjusted sizing rule, this is the moment to add one — smaller per-trade risk when realized vol is above a threshold. The Portfolio Manager will enforce it. The Bear Researcher and Conservative Debator can both stress-test entries in higher-vol regimes.",
+    "related_lessons": ["046", "017"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["fear", "volatility", "mandate"]
+  },
+  {
+    "id": "qa_psy_discipline_break_rules",
+    "category": "psychology",
+    "question": "I broke my own rules and won. Does that matter?",
+    "short_answer": "Yes. A win on a broken rule is the most dangerous outcome — it teaches the wrong lesson and makes the next break easier.",
+    "long_answer": "Process and outcome are different axes. A rule-break that wins is a 'bad good' trade; it reinforces breaking the rule next time, when it probably won't work. Log it in the Decision Journal explicitly as rule-broken-but-won. Across 20+ trades the pattern will show its true win rate. The Conservative Debator can walk through which rule and why it exists.",
+    "related_lessons": ["051", "049"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["discipline", "rules", "process"]
+  },
+  {
+    "id": "qa_psy_discipline_why_break_rules",
+    "category": "psychology",
+    "question": "Why do I keep breaking my own rules?",
+    "short_answer": "Rules that get broken are usually rules that aren't enforced. Move the rule from your head into the Mandate so the Portfolio Manager enforces it.",
+    "long_answer": "If a rule lives only in your intent, it competes with every emotion in real time and usually loses. Translate it into a Mandate clause — max position size, max trades per day, no entries after a loss for X minutes — and the Portfolio Manager will block violations deterministically. Review the Decision Journal to find which rules you break most often and harden those first.",
+    "related_lessons": ["051", "047"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["discipline", "mandate", "rules"]
+  },
+  {
+    "id": "qa_psy_discipline_stick_to_plan",
+    "category": "psychology",
+    "question": "How do I actually stick to my plan?",
+    "short_answer": "Make the plan small enough to fit on one card and put the rules into the Mandate so they're enforced, not remembered.",
+    "long_answer": "Plans you can't recall under pressure aren't plans, they're aspirations. The Mandate is the operational form — entry rules, sizing, exits, daily limits — and the Portfolio Manager runs the compliance check on every trade. Write the Decision Journal entry against the plan, not against the outcome. Over weeks the gap between intent and execution shrinks.",
+    "related_lessons": ["051", "017"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["discipline", "plan", "mandate"]
+  },
+  {
+    "id": "qa_psy_discipline_consistency",
+    "category": "psychology",
+    "question": "How do I get consistent?",
+    "short_answer": "Consistency is downstream of doing the same process every trade. Same checklist, same journal entry shape, same compliance check.",
+    "long_answer": "Inconsistent results almost always trace back to inconsistent process. The Mandate is the spec; Convene the Room is the check; the Decision Journal is the audit. If every trade has the same three artifacts, results will tighten over time. The Conservative Debator can review your last ten Journal entries for shape consistency.",
+    "related_lessons": ["051"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["discipline", "consistency", "process"]
+  },
+  {
+    "id": "qa_psy_discipline_skip_journal",
+    "category": "psychology",
+    "question": "Do I really need to journal every trade?",
+    "short_answer": "Yes. The Decision Journal is the only loop that lets you see your own patterns — without it you're guessing.",
+    "long_answer": "An untracked trader can't tell variance from skill. The Journal turns the noise of individual outcomes into structured data: entry reason, agent verdicts cited, exit logic, post-mortem. After 20+ entries the patterns that matter — revenge, FOMO, oversizing, freezes — surface visibly. Skipping it is skipping the feedback loop the whole product is built around.",
+    "related_lessons": ["051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["discipline", "journal", "process"]
+  },
+  {
+    "id": "qa_psy_discipline_distraction",
+    "category": "psychology",
+    "question": "I keep getting distracted mid-trade. Help?",
+    "short_answer": "Distraction during a live trade usually means the plan wasn't fully written before entry. Pre-define exit and target so the trade can manage itself.",
+    "long_answer": "If entry, stop, and target are written before the click, distraction matters less — the trade doesn't need real-time decisions. Use the Mandate to enforce pre-defined exits; the Portfolio Manager will surface trades that don't have them. Log distraction events in the Decision Journal so the pattern is measurable.",
+    "related_lessons": ["051", "050"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["discipline", "focus", "process"]
+  },
+  {
+    "id": "qa_psy_boredom_no_trades_week",
+    "category": "psychology",
+    "question": "I haven't traded in a week. Should I just take any trade?",
+    "short_answer": "Taking a trade because you haven't traded is the boredom pattern. No-trade days are a valid output of a real process.",
+    "long_answer": "A week without setups means your screen didn't find any — that's the process working, not failing. Forcing a trade now lowers the bar and seeds a low-quality entry. Use the time to review the Decision Journal for the last 20 trades and refine the screen. The Conservative Debator can walk through whether your filters are too tight or just appropriately quiet for the regime.",
+    "related_lessons": ["050", "051"],
+    "related_agents": ["conservative_debator", "portfolio_manager"],
+    "tags": ["boredom", "no-trade", "process"]
+  },
+  {
+    "id": "qa_psy_boredom_market_quiet",
+    "category": "psychology",
+    "question": "The market is dead today. Should I trade lower-quality setups?",
+    "short_answer": "No. Lower bars in quiet markets are the boredom pattern. Use quiet days for journal review and lesson progress.",
+    "long_answer": "Range-bound days are when boredom trades take the most damage — the moves aren't big enough to forgive a thin thesis. Open the Decision Journal, read your last five entries, and rate the thesis quality. Or finish a Module 8 lesson. The Conservative Debator will not soften the standard on a quiet day.",
+    "related_lessons": ["050"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["boredom", "quiet", "process"]
+  },
+  {
+    "id": "qa_psy_boredom_overtrade",
+    "category": "psychology",
+    "question": "I took 8 trades today. Was that too many?",
+    "short_answer": "If your usual count is 1-3, eight is likely overtrading. Check the Mandate's daily-trade cap and let the Portfolio Manager hold it.",
+    "long_answer": "High trade count days often blend a couple of A-setups with several boredom or revenge fills. Open the Decision Journal and tag each — A, B, C — and see how many were actually within your edge. Set a daily-trade ceiling in the Mandate; the Portfolio Manager will block the extras automatically.",
+    "related_lessons": ["050", "051"],
+    "related_agents": ["portfolio_manager", "conservative_debator"],
+    "tags": ["boredom", "overtrading", "mandate"]
+  },
+  {
+    "id": "qa_psy_boredom_just_to_feel_something",
+    "category": "psychology",
+    "question": "I just want to feel something. Bad reason to trade?",
+    "short_answer": "Yes — that's the textbook definition of a boredom trade. Step away from the order screen and open a lesson instead.",
+    "long_answer": "Trades taken for stimulation, not edge, are pure cost. The Decision Journal will eventually expose them as a separate cluster — short holds, thin theses, scattered entries. Channel the impulse into something with positive expectancy: a Module 8 lesson, a 1-on-1 with the Conservative Debator, or a deep review of a past trade.",
+    "related_lessons": ["050"],
+    "related_agents": ["conservative_debator", "concierge"],
+    "tags": ["boredom", "stimulation", "process"]
+  },
+  {
+    "id": "qa_psy_boredom_force_setups",
+    "category": "psychology",
+    "question": "Am I forcing setups that aren't really there?",
+    "short_answer": "If you're scrolling charts looking for one, yes. Real setups come from your screen, not a chart browse.",
+    "long_answer": "Forced setups have a tell — discovered by eye instead of triggered by your screen, with a thesis built backward from the chart. Compare your last five trades against your written setup criteria. If three or more were chart-browse origin, you're force-trading. The Conservative Debator will not validate a backward-constructed thesis.",
+    "related_lessons": ["050", "051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["boredom", "forcing", "screen"]
+  },
+  {
+    "id": "qa_psy_self_talk_am_i_cut_out",
+    "category": "psychology",
+    "question": "Am I even cut out for this?",
+    "short_answer": "Trading isn't about being cut out — it's about following a written process consistently. Your Decision Journal is the only honest answer to that question.",
+    "long_answer": "The 'cut out' framing makes trading sound like a talent test. It isn't. It's a discipline problem with a measurable feedback loop. The Mandate is your spec, the Journal is your audit, and Convene the Room is your check. After 50+ logged trades the data tells you something useful; before that, the question is premature.",
+    "related_lessons": ["051", "049"],
+    "related_agents": ["conservative_debator", "concierge"],
+    "tags": ["self-talk", "identity", "process"]
+  },
+  {
+    "id": "qa_psy_self_talk_everyone_better",
+    "category": "psychology",
+    "question": "Everyone on X is doing better than me. Why am I bad at this?",
+    "short_answer": "Public trading feeds are a survivorship bias machine — you see wins, not the losses. Compare against your own Journal, not strangers.",
+    "long_answer": "The Social Media Analyst exists partly to surface how warped public sentiment about performance is — most accounts only post winners. Your only honest benchmark is your own Decision Journal across enough trades to mean something. The Conservative Debator can walk through what consistent process looks like versus what posts look like.",
+    "related_lessons": ["048", "051"],
+    "related_agents": ["social_media_analyst", "conservative_debator"],
+    "tags": ["self-talk", "comparison", "social"]
+  },
+  {
+    "id": "qa_psy_self_talk_keep_losing",
+    "category": "psychology",
+    "question": "I keep losing. Maybe I should quit.",
+    "short_answer": "Quitting from a losing stretch with no process review skips the lesson the losses were teaching. Read the last 10 Journal entries before deciding.",
+    "long_answer": "Losing stretches inside a written process tell you which rule failed or which assumption was wrong — that's the entire feedback. Without reading the Journal end-to-end, quitting is reacting to the felt sense, not the data. The Conservative Debator can read the last ten entries with you in 1-on-1 and surface the pattern.",
+    "related_lessons": ["046", "051"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["self-talk", "loss", "process"]
+  },
+  {
+    "id": "qa_psy_self_talk_imposter",
+    "category": "psychology",
+    "question": "I feel like a fraud calling myself a trader.",
+    "short_answer": "The label isn't the practice. AMI Trade is a simulation — what matters is whether you're following your own process, not what you call yourself.",
+    "long_answer": "The 'real trader' framing is mostly identity, not method. The method is observable: do you have a Mandate, do you Convene the Room before sizing decisions, do you Journal every trade. Those three artifacts are the entire signal. Run the practice; the label question fades or doesn't, and either way is fine.",
+    "related_lessons": ["051"],
+    "related_agents": ["conservative_debator", "concierge"],
+    "tags": ["self-talk", "identity", "process"]
+  },
+  {
+    "id": "qa_psy_self_talk_too_old_too_late",
+    "category": "psychology",
+    "question": "Am I too late to learn this?",
+    "short_answer": "Learning a written process has no clock attached to it. AMI is a simulation — the only cost of practice is time, and time spent in the loop is the loop.",
+    "long_answer": "The 'too late' question usually means a comparison is running against people whose timelines you don't actually know. The practice is the same regardless of age: Mandate, Room, Journal, review. The Conservative Debator and Concierge can both walk you through a starter loop if you want a smaller scope to begin with.",
+    "related_lessons": ["051"],
+    "related_agents": ["concierge", "conservative_debator"],
+    "tags": ["self-talk", "timeline", "process"]
+  },
+  {
+    "id": "qa_psy_self_talk_no_intuition",
+    "category": "psychology",
+    "question": "Other traders have intuition. I don't. Is that a problem?",
+    "short_answer": "Intuition in trading is mostly compressed pattern recognition from many logged trades. It's an output of the Journal, not a prerequisite.",
+    "long_answer": "People who appear to trade on feel almost always have hundreds or thousands of reviewed trades behind them — the feel is the compressed form of that work. Your Decision Journal is the engine that builds that pattern library. The Conservative Debator can show you how to structure entries so the patterns surface faster.",
+    "related_lessons": ["051", "049"],
+    "related_agents": ["conservative_debator"],
+    "tags": ["self-talk", "intuition", "journal"]
+  }
+]

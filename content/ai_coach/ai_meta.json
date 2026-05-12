@@ -1,0 +1,502 @@
+[
+  {
+    "id": "qa_aim_what_is_ami",
+    "category": "ai_meta",
+    "question": "What is AMI?",
+    "short_answer": "AMI is a training simulator that gives you practice running a 12-agent analyst team as CEO. It researches, debates, and produces a mandate-checked Verdict for you to evaluate — the simulated decision is yours.",
+    "long_answer": "AMI is a simulation-only trading-education app organised around twelve specialist agents: analysts (fundamentals, market, news, social), researchers (bull, bear), a Research Manager, three Risk Debators (aggressive, conservative, neutral), a Trader, and the Portfolio Manager. You set your Mandate; the agents do the legwork; you use the resulting Verdict to practice the skill of evaluating multi-agent analyst output. Nothing AMI produces is investment advice — it's training material for the skill of evaluating advice. AMI never executes trades and never connects to a brokerage.",
+    "related_lessons": ["072", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["definition", "overview", "ceo_framing"]
+  },
+  {
+    "id": "qa_aim_is_ami_an_ai",
+    "category": "ai_meta",
+    "question": "Is AMI an AI?",
+    "short_answer": "Yes — AMI is an AI-based training simulator that gives you practice running a multi-agent analyst team, packaged as twelve role-specific agents you run as CEO. The architecture detail (what powers each agent) is in the long answer.",
+    "long_answer": "Each agent has a distinct role, prompt, and surface. The Concierge greets and routes; the analysts pull data; the researchers debate; the PM enforces your Mandate. They are powered by the underlying language models, but you should think of them as roles on a simulated analyst desk, not as one chatbot wearing twelve hats. The whole stack is a training environment — nothing it produces is investment advice.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge"],
+    "tags": ["llm", "agents", "architecture"]
+  },
+  {
+    "id": "qa_aim_is_this_real_trading",
+    "category": "ai_meta",
+    "question": "Is this real trading?",
+    "short_answer": "No. AMI is simulation-only. No real money moves through the app — by design, forever.",
+    "long_answer": "Verdicts, position sizes, entries, stops, and targets are all simulated training artifacts, not investment advice. There is no brokerage hook and there never will be. Use the scenario to practice your own evaluation skill — the simulated drawdown is the training ground. Nothing AMI produces is investment advice; any real-money decision is yours and lives off-app.",
+    "related_lessons": ["072", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["simulation_only", "advisory_only"]
+  },
+  {
+    "id": "qa_aim_why_simulation_only",
+    "category": "ai_meta",
+    "question": "Why is AMI simulation-only?",
+    "short_answer": "Because AMI is a training simulator, not a licensed adviser. Staying simulation-only is what lets it speak freely about positions, sizes, and Verdicts as training artifacts without crossing into regulated investment advice.",
+    "long_answer": "AMI is not licensed to provide investment advice; it is licensed-free precisely because it is a training tool. Connecting to a brokerage would make it a different product with different obligations. The simulation-only design is a permanent decision, not a temporary limit. It is also the structural safeguard against overreliance: every Verdict is a training artifact, you stay in the CEO chair, and the agents stay in the simulated analyst chairs.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["concierge", "portfolio_manager"],
+    "tags": ["simulation_only", "design_decision", "advisory_only"]
+  },
+  {
+    "id": "qa_aim_will_ami_ever_execute_trades",
+    "category": "ai_meta",
+    "question": "Will AMI ever connect to my brokerage to execute trades?",
+    "short_answer": "No, ever — because AMI is a training simulator, not an advice-plus-execution product. Brokerage integration is not on the roadmap and never will be.",
+    "long_answer": "This is the one feature you should never expect to ship. The product is education, not advice with an execution gap. The lack of a broker hook is what defines AMI's category — a training simulator for the skill of evaluating analyst output, not an auto-execution platform. Coaching changes, premium tiers, and future modules will not move this line.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["no_brokerage", "advisory_only", "roadmap"]
+  },
+  {
+    "id": "qa_aim_what_can_ami_do",
+    "category": "ai_meta",
+    "question": "What can AMI do?",
+    "short_answer": "AMI simulates a research desk: it pulls fundamentals, reads charts, summarises news and sentiment, runs a 12-agent bull/bear debate, stress-tests against your Mandate, and produces a structured Verdict for you to practice evaluating.",
+    "long_answer": "Think of it as a simulated research desk you can convene on any ticker. The output is a Verdict with entry, stop, target, horizon, confidence, the full debate transcript, and the PM's compliance check. The Verdict is a training artifact, not a tip and not investment advice — its value is in giving you practice walking the reasoning chain, not in the headline BUY/HOLD/SELL.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge", "research_manager"],
+    "tags": ["capabilities", "verdict", "convene_the_room"]
+  },
+  {
+    "id": "qa_aim_can_ami_analyze_stocks",
+    "category": "ai_meta",
+    "question": "Can AMI analyse stocks?",
+    "short_answer": "Yes — as a training exercise. AMI's simulated analysts cover fundamentals, technicals, news, and sentiment, and the researchers synthesise that into a bull/bear case for you to evaluate.",
+    "long_answer": "Convene the Room on a ticker and the Fundamentals Analyst pulls financials, the Market Analyst reads price action, the News Analyst summarises headlines, and the Social Media Analyst checks sentiment. The Bull and Bear Researchers then debate, the Research Manager weighs the result, and the Trader proposes a setup. You get the full chain, not just the conclusion — and the chain is training material for the skill of evaluating analyst output, not investment advice.",
+    "related_lessons": ["072"],
+    "related_agents": ["research_manager"],
+    "tags": ["analysis", "capabilities"]
+  },
+  {
+    "id": "qa_aim_can_ami_explain_a_chart",
+    "category": "ai_meta",
+    "question": "Can AMI explain a chart?",
+    "short_answer": "Yes. The Market Analyst describes the current setup — trend, key levels, indicators, what would invalidate the read — without claiming to predict the next bar.",
+    "long_answer": "Ask the Market Analyst in 1-on-1 about any ticker and you will get a description of where price sits relative to moving averages, what RSI or volume is doing, where support and resistance live, and what move would break the current structure. What you will not get is a forecast of where the price closes on a fixed future date — AMI describes setup, not future prints. The description is a training artifact for the skill of reading charts, not investment advice.",
+    "related_lessons": ["072", "077"],
+    "related_agents": ["research_manager"],
+    "tags": ["technical_analysis", "market_analyst"]
+  },
+  {
+    "id": "qa_aim_bursa_stocks",
+    "category": "ai_meta",
+    "question": "Can I ask AMI about Bursa Malaysia stocks?",
+    "short_answer": "At alpha, AMI covers US equities only. Bursa Malaysia and GCC/Tadawul markets are planned for a later release.",
+    "long_answer": "The launch market for the training simulation is US equities. Bursa Malaysia and GCC markets are on the roadmap once the US loop is solid and locale-aware data feeds are wired in. If you ask about a Bursa ticker today, the Concierge will tell you it is out of scope and route you back to a US name on your watchlist.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge"],
+    "tags": ["markets", "coverage", "bursa"]
+  },
+  {
+    "id": "qa_aim_does_ami_know_news",
+    "category": "ai_meta",
+    "question": "Does AMI know about news?",
+    "short_answer": "Yes — the News Analyst summarises recent headlines for the ticker you convene the Room on, and the Social Media Analyst flags sentiment skew.",
+    "long_answer": "Coverage is bounded by AMI's data feeds and a recency window. Treat the News Analyst's summary as a training input for the scenario, not a live wire — for breaking events or earnings releases inside the same trading day, confirm against your own news source as part of the evaluation exercise. The summary is training material, not investment advice.",
+    "related_lessons": ["072"],
+    "related_agents": [],
+    "tags": ["news", "data_freshness"]
+  },
+  {
+    "id": "qa_aim_one_on_one_chat",
+    "category": "ai_meta",
+    "question": "Can I talk to a single agent directly?",
+    "short_answer": "Yes. 1-on-1 lets you ask any of the 12 agents a focused question without convening the full Room.",
+    "long_answer": "Use 1-on-1 when you want depth on one angle — e.g. ask the Bear Researcher to pressure-test a long thesis, or the Fundamentals Analyst to walk through a balance sheet line. Use Convene the Room when you want the full debate and a mandate-checked Verdict. Either way, the conversation is a training exercise in working with an analyst desk — nothing the agents say is investment advice.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge"],
+    "tags": ["one_on_one", "agents", "workflow"]
+  },
+  {
+    "id": "qa_aim_does_ami_track_portfolio",
+    "category": "ai_meta",
+    "question": "Does AMI track my real portfolio?",
+    "short_answer": "No. AMI has no view into your real brokerage. It tracks your simulated book and your Decision Journal entries — that is all.",
+    "long_answer": "If you want AMI to reason about a position as part of a training scenario, log it in the simulated book or describe it in 1-on-1. AMI cannot read your real balances, P&L, or holdings, and there is no path for it to do so — the whole stack is a training simulator, not a portfolio service.",
+    "related_lessons": ["073"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["no_brokerage", "simulation", "privacy"]
+  },
+  {
+    "id": "qa_aim_can_ami_predict_price",
+    "category": "ai_meta",
+    "question": "Can AMI predict the price?",
+    "short_answer": "No. AMI doesn't predict — AMI gives you training in evaluating probabilistic scenarios. It describes setups and probabilities, not point prices on future dates.",
+    "long_answer": "Ask 'where will MSFT close on Friday?' and you will get a probabilistic expected range from realised volatility, a description of the current setup, and what would invalidate the read — not a single number. AMI is a training simulator for the skill of reasoning under uncertainty, not a prediction system, and the absence of point forecasts is deliberate. Nothing produced is investment advice.",
+    "related_lessons": ["073", "077"],
+    "related_agents": ["research_manager"],
+    "tags": ["no_prediction", "probabilities"]
+  },
+  {
+    "id": "qa_aim_can_ami_place_a_trade",
+    "category": "ai_meta",
+    "question": "Can AMI place a trade for me?",
+    "short_answer": "No. AMI never executes trades. There is no broker connection, no auto-execute switch, and no plan to add either.",
+    "long_answer": "Every Verdict is a training artifact, not investment advice. Use the scenario to practice your own evaluation skill — the Accept Verdict button records your simulated decision in the Decision Journal and does not place an order anywhere. AMI is a training simulator, not a broker.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["no_execution", "advisory_only"]
+  },
+  {
+    "id": "qa_aim_manage_my_money",
+    "category": "ai_meta",
+    "question": "Will AMI manage my money?",
+    "short_answer": "No. AMI is not a portfolio manager, an investment adviser, or a fund. It is a training simulator that gives you practice running a 12-agent analyst team as CEO.",
+    "long_answer": "There is no custody, no rebalancing, no discretionary mandate, and no licence to give investment advice. The Portfolio Manager agent enforces your stated Mandate on simulated Verdicts inside the training environment — it does not manage any real assets or accounts. Nothing AMI produces is investment advice.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["no_management", "advisory_only"]
+  },
+  {
+    "id": "qa_aim_why_wont_ami_tell_me_what_to_buy",
+    "category": "ai_meta",
+    "question": "Why won't AMI just tell me what to buy?",
+    "short_answer": "Because AMI is a training simulator, not a licensed adviser. It produces a debated Verdict as a training artifact; the skill being trained is your evaluation, not blind obedience to a headline.",
+    "long_answer": "AMI will absolutely produce a simulated BUY, HOLD, or SELL Verdict with size, entry, stop, and target. That output is a training artifact — the result of a process you ran — not a tip and not investment advice. Skipping the debate transcript and treating the headline as a directive throws away the entire skill the simulator is teaching. Read the dissent, read the PM's compliance line, then practice making the call.",
+    "related_lessons": ["072", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["advisory_only", "verdict", "framing"]
+  },
+  {
+    "id": "qa_aim_can_ami_pick_stocks",
+    "category": "ai_meta",
+    "question": "Can AMI pick stocks for me?",
+    "short_answer": "No — AMI gives you practice evaluating tickers you put on your watchlist; it does not push a daily pick or signal list. AMI is a training simulator, not a pick service.",
+    "long_answer": "AMI works on tickers you choose to convene the Room on. There is no signal-of-the-day feed, no '10-bagger pick', and no auto-rotation — because none of that would be training in evaluation, it would be a tip service AMI is not licensed to run. If you want a simulated read on a name, add it to your watchlist and run the Room as a training exercise.",
+    "related_lessons": ["072", "075"],
+    "related_agents": ["concierge"],
+    "tags": ["no_signals", "watchlist"]
+  },
+  {
+    "id": "qa_aim_guarantee_returns",
+    "category": "ai_meta",
+    "question": "Will AMI make me money?",
+    "short_answer": "AMI is a training simulator; it doesn't give tips or promise outcomes because it isn't licensed to give advice. It runs research and a 12-agent debate as practice material.",
+    "long_answer": "There is no track record claim, no win-rate promise, and no guarantee. AMI describes process — pulling data, debating cases, enforcing your Mandate — as training material, not results. Anyone (or any product) that guarantees returns on equities is selling something AMI does not sell. AMI sells practice in evaluating analyst output, not profits.",
+    "related_lessons": ["075", "077"],
+    "related_agents": ["concierge"],
+    "tags": ["no_promises", "no_outcomes"]
+  },
+  {
+    "id": "qa_aim_predict_market_crash",
+    "category": "ai_meta",
+    "question": "Can AMI predict the next market crash?",
+    "short_answer": "No. AMI doesn't predict — it gives you training in evaluating probabilistic scenarios. It does not forecast market direction, timing, or crashes.",
+    "long_answer": "What AMI can do is describe current macro and sentiment context, name the risks the Bear Researcher is highlighting, and stress-test a simulated position against your Mandate's drawdown floor — all as a training exercise. None of that is a prediction or investment advice. If you want a crash timing call, AMI is not the product; if you want practice reasoning about tail risk, it is.",
+    "related_lessons": ["073", "077"],
+    "related_agents": ["research_manager"],
+    "tags": ["no_prediction", "macro"]
+  },
+  {
+    "id": "qa_aim_tell_me_when_to_sell",
+    "category": "ai_meta",
+    "question": "Can AMI tell me when to sell?",
+    "short_answer": "AMI can describe whether the conditions behind the original simulated Verdict still hold and what would invalidate the thesis — as training material. The sell decision is yours, and AMI is not licensed to advise on it.",
+    "long_answer": "Convene the Room on a name you already hold and the Verdict will reflect the current setup — which may differ from the day you opened the position. The Trader can describe stop, target, and time horizon; the Research Manager can re-run the bull/bear balance. None of that is an instruction to sell or investment advice — it is training material for the skill of evaluating an exit decision you make.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["research_manager", "portfolio_manager"],
+    "tags": ["sell_decision", "advisory_only"]
+  },
+  {
+    "id": "qa_aim_hot_tip",
+    "category": "ai_meta",
+    "question": "Give me a hot tip — what's going up next week?",
+    "short_answer": "AMI is a training simulator; it doesn't give tips because it isn't licensed to give advice. It does not forecast next week's moves and it does not push signals.",
+    "long_answer": "If you want depth on a specific name, add it to your watchlist and convene the Room as a training exercise. You will get a structured Verdict with entry, stop, target, and confidence — none of which is a guarantee, a tip, or investment advice. The headline is the tip of a 12-agent debate; the point of the simulator is to read the debate, not chase the headline.",
+    "related_lessons": ["072", "077"],
+    "related_agents": ["concierge"],
+    "tags": ["no_tips", "no_prediction"]
+  },
+  {
+    "id": "qa_aim_options_or_crypto",
+    "category": "ai_meta",
+    "question": "Does AMI cover options or crypto?",
+    "short_answer": "At alpha, the training simulation covers US equities. Options, futures, and crypto are not in scope.",
+    "long_answer": "The launch market for the training environment is US equities only. Asking AMI for options chains, derivatives pricing, or crypto analysis at alpha will not return useful results — the simulated agents and data feeds are wired for cash equities. Expansion to other asset classes is not on the near-term roadmap.",
+    "related_lessons": ["073"],
+    "related_agents": ["concierge"],
+    "tags": ["scope", "coverage", "no_options", "no_crypto"]
+  },
+  {
+    "id": "qa_aim_is_ami_a_financial_adviser",
+    "category": "ai_meta",
+    "question": "Is AMI a financial adviser?",
+    "short_answer": "No. AMI is a training simulator for the skill of evaluating multi-agent analyst output, not a registered investment adviser. Nothing it says is personalised investment advice.",
+    "long_answer": "AMI does not know your full financial picture, does not take fiduciary responsibility, and is not licensed or regulated as an investment adviser in any jurisdiction. For real-money decisions affecting your income, taxes, or retirement, talk to a licensed professional. Use AMI as training material to sharpen your reasoning — not to replace that conversation.",
+    "related_lessons": ["073", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["not_adviser", "regulatory"]
+  },
+  {
+    "id": "qa_aim_should_i_invest_my_savings",
+    "category": "ai_meta",
+    "question": "Should I invest my savings in stocks?",
+    "short_answer": "That is not AMI's call — AMI is a training simulator, not a licensed adviser. It can give you practice analysing simulated positions; it cannot tell you what fraction of your savings belongs in equities.",
+    "long_answer": "The right equity allocation depends on facts AMI does not have: your income stability, time horizon, dependants, debt, and how a drawdown would affect your sleep. AMI's Mandate captures position-sizing and drawdown floors inside the training simulation — it does not set your real-world allocation, and AMI is not licensed to. That decision lives with you, ideally with a licensed adviser.",
+    "related_lessons": ["075", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["allocation", "personal_finance", "not_adviser"]
+  },
+  {
+    "id": "qa_aim_can_ami_open_account",
+    "category": "ai_meta",
+    "question": "Can AMI open a brokerage account for me?",
+    "short_answer": "No. AMI does not connect to any brokerage and does not open accounts.",
+    "long_answer": "Opening a real brokerage account is something you do directly with a regulated broker in your jurisdiction. AMI lives entirely inside the training simulation and does not act on real accounts in any way.",
+    "related_lessons": ["073"],
+    "related_agents": [],
+    "tags": ["no_brokerage", "scope"]
+  },
+  {
+    "id": "qa_aim_tax_advice",
+    "category": "ai_meta",
+    "question": "Can AMI give me tax advice?",
+    "short_answer": "No. AMI is not a tax adviser. Tax treatment of trades depends on your jurisdiction and personal situation — talk to a professional.",
+    "long_answer": "AMI may surface general concepts inside lessons (e.g. how holding period affects taxation in some jurisdictions) as training material, but it does not provide personalised tax guidance and is not licensed to. Do not use a Verdict or 1-on-1 chat as the basis for filing decisions.",
+    "related_lessons": ["073"],
+    "related_agents": ["concierge"],
+    "tags": ["no_tax", "regulatory"]
+  },
+  {
+    "id": "qa_aim_why_hold_not_buy",
+    "category": "ai_meta",
+    "question": "Why did AMI say HOLD when I wanted BUY?",
+    "short_answer": "AMI didn't say HOLD in the sense of advising you to hold — it produced a simulated Verdict of HOLD for you to evaluate. The 12-agent debate ended with the bull/bear balance and your Mandate constraints pointing that way; the training artifact reflects the work, not your preference.",
+    "long_answer": "Open the debate transcript. The Bear Researcher likely flagged something the Bull case did not fully answer; the Research Manager weighted the result; the PM may have noted a mandate constraint. The simulated HOLD does not mean 'don't ever buy this' and it is not investment advice — it means the current setup, conditional on your Mandate, did not clear the bar inside the training exercise. The point is to practice evaluating the call yourself; AMI just refuses to manufacture a BUY to match your prior.",
+    "related_lessons": ["072", "075"],
+    "related_agents": ["research_manager", "portfolio_manager"],
+    "tags": ["verdict", "hold", "explanation"]
+  },
+  {
+    "id": "qa_aim_why_pm_blocked_trade",
+    "category": "ai_meta",
+    "question": "Why did the PM block my trade?",
+    "short_answer": "Because the proposed simulated trade failed your Mandate's compliance check — most commonly position size, drawdown floor, or an exclusion (halal, no_fossil, long_only, region).",
+    "long_answer": "The PM runs a deterministic check against the Mandate you set inside the training simulation. If the Trader proposes 7% size when your max_position_pct is 5, the function blocks regardless of how confident any agent sounds. Open the PM's compliance line in the Verdict footer — it names the exact clause that triggered the block. To change the outcome inside the scenario, either reduce the proposed size, modify your Mandate (your call, not the PM's), or reject the simulated trade. The block is training feedback, not investment advice.",
+    "related_lessons": ["074", "013"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["pm_block", "mandate", "compliance"]
+  },
+  {
+    "id": "qa_aim_what_does_pass_mean",
+    "category": "ai_meta",
+    "question": "What does PASS mean in a Verdict?",
+    "short_answer": "PASS means the proposed simulated trade fits inside your Mandate's hard floors — it is not a recommendation, not investment advice, and not a guarantee of outcome.",
+    "long_answer": "PASS is a compliance signal inside the training simulation: size within max_position_pct, drawdown within max_drawdown_pct, no exclusions triggered. It says nothing about whether the trade would be profitable. You can reject a PASS Verdict. You can accept it at smaller size. The simulated decision is always yours; PASS only certifies portfolio shape inside the training exercise, not trade outcome.",
+    "related_lessons": ["076", "013"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["pass", "verdict", "compliance"]
+  },
+  {
+    "id": "qa_aim_why_agents_arguing",
+    "category": "ai_meta",
+    "question": "Why are the agents arguing with each other?",
+    "short_answer": "Because the debate is the training material. The Bull and Bear Researchers — and the three Risk Debators — are meant to disagree so the simulated Verdict reflects pressure-tested reasoning you can practice evaluating, not consensus theatre.",
+    "long_answer": "If every agent agreed instantly, the Verdict would be a single perspective dressed up as twelve and the simulator would be teaching you nothing. The argument is where weaknesses in the thesis surface — and reading them is the skill being trained. The Research Manager synthesises into a position and the PM compliance-checks the Trader's proposal, but the disagreement above that is feature, not bug. Read the dissent before you read the headline.",
+    "related_lessons": ["072"],
+    "related_agents": ["research_manager"],
+    "tags": ["debate", "agents", "design"]
+  },
+  {
+    "id": "qa_aim_confidence_score",
+    "category": "ai_meta",
+    "question": "What does the confidence number on a Verdict mean?",
+    "short_answer": "It is the Room's weighted lean toward the verdict — not a calibrated probability of being right.",
+    "long_answer": "A confidence of 0.62 means the bull/bear balance and Risk Debators leaned that way after the simulated debate, not that the trade has a 62% chance of profit. Read it as 'lean, not lock'. Two Verdicts with the same confidence can have very different risk profiles — the number is a training-exercise summary, not investment advice. Always read the transcript and the PM's compliance line alongside the headline number.",
+    "related_lessons": ["077"],
+    "related_agents": ["research_manager"],
+    "tags": ["confidence", "verdict", "probability"]
+  },
+  {
+    "id": "qa_aim_target_is_prediction",
+    "category": "ai_meta",
+    "question": "Is the price target a prediction?",
+    "short_answer": "No. The target is the level where the simulated Trader would lock in profit if the thesis plays out — a training-exercise input, not a forecast that price will reach it.",
+    "long_answer": "Targets, stops, and entries are conditional commitments inside a simulated trade plan: 'if you took this entry, here is your defined downside and the level the trade is meant to express toward'. None of those numbers is a price forecast or investment advice. AMI deliberately ships no point-price predictions — the simulator trains the skill of reasoning under uncertainty, not the illusion of certainty.",
+    "related_lessons": ["077"],
+    "related_agents": ["research_manager"],
+    "tags": ["target", "no_prediction", "trade_plan"]
+  },
+  {
+    "id": "qa_aim_verdict_disagrees_with_me",
+    "category": "ai_meta",
+    "question": "AMI's verdict disagrees with my view — who's right?",
+    "short_answer": "Both views are training inputs. AMI is a simulated structured second opinion; you are the CEO practising the call. Read the dissent, weigh it against your view, and practice deciding.",
+    "long_answer": "Disagreement is exactly the moment the simulator is most useful — that is the skill being trained. If the Bear case the Room raised does not actually weaken your thesis when you read it carefully, fine — proceed inside the scenario. If it does, reconsider. The Verdict is not an authority and not investment advice; it is a simulated 12-agent analyst note for you to evaluate. Override it whenever the underlying reasoning argues for it.",
+    "related_lessons": ["075", "076"],
+    "related_agents": ["concierge"],
+    "tags": ["disagreement", "override", "judgment"]
+  },
+  {
+    "id": "qa_aim_why_three_risk_debators",
+    "category": "ai_meta",
+    "question": "Why are there three Risk Debators?",
+    "short_answer": "Because risk is best stress-tested from multiple angles. Aggressive, Conservative, and Neutral push the proposed position size in different directions before the Trader finalises.",
+    "long_answer": "The Aggressive Debator argues for larger positions when the setup is strong; the Conservative Debator pushes for smaller sizing or skipping; the Neutral Debator arbitrates. The simulated debate ends in a sizing output the Trader then proposes — and the PM checks against your Mandate. Three voices keep the sizing question honest as a training exercise.",
+    "related_lessons": ["072", "014"],
+    "related_agents": [],
+    "tags": ["risk_debators", "sizing", "agents"]
+  },
+  {
+    "id": "qa_aim_who_are_12_agents",
+    "category": "ai_meta",
+    "question": "Who are the 12 agents?",
+    "short_answer": "Four Analysts (Fundamentals, Market, News, Social), two Researchers (Bull, Bear), the Research Manager, three Risk Debators (Aggressive, Conservative, Neutral), the Trader, and the Portfolio Manager.",
+    "long_answer": "The Concierge sits outside the Room — it greets, routes, and handles onboarding. Inside the simulated Room, the four Analysts gather inputs, the two Researchers debate the case, the Research Manager synthesises, the three Risk Debators stress-test sizing, the Trader assembles a trade plan, and the PM enforces your Mandate. That is the full team — a training simulator that gives you practice working with an analyst desk.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge", "research_manager", "portfolio_manager"],
+    "tags": ["agents", "roster"]
+  },
+  {
+    "id": "qa_aim_what_does_pm_do",
+    "category": "ai_meta",
+    "question": "What does the Portfolio Manager do?",
+    "short_answer": "The PM enforces your Mandate. It compliance-checks every Verdict against your stated rules — size, drawdown, exclusions — and blocks anything that breaches them.",
+    "long_answer": "The PM is your safety floor inside the training simulation. Its check is a deterministic function reading the Mandate fields you set, not a prompt that can be talked around. PASS means the simulated trade fits your floors; BLOCK names the exact clause that failed. The PM does not fact-check the analysts and does not predict outcomes — its job is mandate compliance inside the training exercise, full stop.",
+    "related_lessons": ["074", "076", "013"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["pm", "mandate", "safety_floor"]
+  },
+  {
+    "id": "qa_aim_research_manager_role",
+    "category": "ai_meta",
+    "question": "What does the Research Manager do?",
+    "short_answer": "The Research Manager synthesises the Bull vs Bear debate into a position — a weighted conclusion that the Trader and Risk Debators then work from.",
+    "long_answer": "Without synthesis you would have two opposing essays. The Research Manager weighs each side, flags any hallucinated numbers against the Analysts' pulled data, and produces a balanced read with a bull-probability lean and named invalidation conditions. It is the synthesis brain of the simulated Room — a training artifact for you to evaluate, not investment advice.",
+    "related_lessons": ["072", "077"],
+    "related_agents": ["research_manager"],
+    "tags": ["research_manager", "synthesis", "debate"]
+  },
+  {
+    "id": "qa_aim_bull_vs_bear_difference",
+    "category": "ai_meta",
+    "question": "What's the difference between the Bull and Bear Researchers?",
+    "short_answer": "The Bull Researcher builds the long case; the Bear Researcher builds the short case. They are meant to disagree — the debate between them is where the thesis gets pressure-tested.",
+    "long_answer": "Both work from the same Analyst data. The Bull frames catalysts, the Bear frames risks; neither is allowed to ignore the other side. The Research Manager then weighs the result. The exchange is training material for the skill of reading two-sided cases — if you only read the side that agrees with your prior, you missed the point.",
+    "related_lessons": ["072"],
+    "related_agents": [],
+    "tags": ["bull", "bear", "researchers", "debate"]
+  },
+  {
+    "id": "qa_aim_aggressive_vs_conservative_debator",
+    "category": "ai_meta",
+    "question": "What's the difference between the Aggressive and Conservative Debators?",
+    "short_answer": "The Aggressive Debator pushes for larger position sizing when the setup is strong; the Conservative Debator pushes for smaller sizing or skipping. The Neutral Debator arbitrates.",
+    "long_answer": "They both work on the same proposed simulated trade after the Research Manager's synthesis. Their job is to argue position size and risk allocation — not whether the thesis is right, but how much capital the simulated position deserves. The Trader assembles their argument into a concrete proposal which the PM then compliance-checks against your Mandate, all as part of the training exercise.",
+    "related_lessons": ["072", "014"],
+    "related_agents": [],
+    "tags": ["risk_debators", "sizing"]
+  },
+  {
+    "id": "qa_aim_trader_role",
+    "category": "ai_meta",
+    "question": "What does the Trader agent do?",
+    "short_answer": "The Trader assembles the trade plan — entry, stop, target, horizon, size — from the Research Manager's synthesis and the Risk Debators' sizing argument.",
+    "long_answer": "The Trader is the last step before the PM. It takes the weighted thesis and the sizing debate and produces a concrete simulated proposal. That proposal is then compliance-checked by the PM. The Trader does not execute anything — there is no execution surface — and it cannot be coached to auto-execute. The trade-plan output is a training artifact, not investment advice, like the rest of AMI.",
+    "related_lessons": ["072", "073"],
+    "related_agents": [],
+    "tags": ["trader", "trade_plan"]
+  },
+  {
+    "id": "qa_aim_concierge_role",
+    "category": "ai_meta",
+    "question": "What does the Concierge do?",
+    "short_answer": "The Concierge greets you, runs the conversational onboarding, answers AI-meta and platform questions, and routes you to the right agent or feature.",
+    "long_answer": "The Concierge sits outside the 12 simulated trading agents — think of it as the front desk of the training simulator. It draws on a curated Q&A library for fast answers and hands you off to a specialist agent (e.g. the Bear Researcher in 1-on-1) when the question needs depth. It never replaces the Room.",
+    "related_lessons": ["072"],
+    "related_agents": ["concierge"],
+    "tags": ["concierge", "onboarding", "routing"]
+  },
+  {
+    "id": "qa_aim_does_ami_hallucinate",
+    "category": "ai_meta",
+    "question": "Does AMI hallucinate?",
+    "short_answer": "Yes — AMI is built on large language models, and any LLM-based system can produce plausible-but-wrong text. The structural defence is the PM's mandate compliance check.",
+    "long_answer": "An agent might cite a stale P/E, mis-describe a chart pattern, or paraphrase a headline incorrectly. The defence is not 'prompt the model harder'. The defence is that the PM's compliance check is a deterministic function reading your Mandate fields directly — it never passes through the model layer, so it cannot be hallucinated around. The mandate-sensitive parts of a Verdict (size, drawdown, exclusions) are guarded. Other facts in the transcript are part of your CEO training: practising the skill of cross-checking analyst output is exactly what the simulator is for.",
+    "related_lessons": ["074"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["hallucinations", "safety_floor", "llm"]
+  },
+  {
+    "id": "qa_aim_can_ami_be_wrong",
+    "category": "ai_meta",
+    "question": "Can AMI be wrong?",
+    "short_answer": "Yes. Individual agents can be wrong on facts, the debate can lean the wrong way, and a passing Verdict can still lose money in the simulated book. AMI is a training simulator, not omniscience and not investment advice.",
+    "long_answer": "Treat every Verdict as a training artifact — a structured opinion to evaluate, not a directive. The PM compliance check protects against mandate violations inside the simulation; it does not guarantee any trade would be profitable. Read the transcript, cross-check the load-bearing numbers, and use the Decision Journal to track where AMI's simulated read held up and where it did not. Being able to be wrong is what makes the training honest.",
+    "related_lessons": ["074", "075"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["fallibility", "honest", "judgment"]
+  },
+  {
+    "id": "qa_aim_bad_info_what_now",
+    "category": "ai_meta",
+    "question": "What if AMI gives me bad info?",
+    "short_answer": "The PM's mandate compliance check is the structural safeguard. Beyond that, cross-check load-bearing facts yourself and flag errors so the prompts and data feeds can improve.",
+    "long_answer": "AMI is built on the underlying language models, so individual factual slips happen. The PM blocks mandate-violating simulated trades regardless of any agent's confidence. For non-mandate facts — a cited P/E, a paraphrased headline — read the transcript and verify the numbers the case actually hinges on; that verification is the skill the training simulator is teaching. If you find a clear error, report it; that feedback shapes the next iteration. Nothing AMI says is investment advice.",
+    "related_lessons": ["074", "075"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["error_handling", "safety_floor", "cross_check"]
+  },
+  {
+    "id": "qa_aim_safety_floor_explained",
+    "category": "ai_meta",
+    "question": "What is AMI's safety floor?",
+    "short_answer": "The safety floor is a deterministic function the PM runs against your Mandate — it blocks any Verdict that breaches your stated size, drawdown, or exclusion rules, regardless of what any agent says.",
+    "long_answer": "Your Mandate fields (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, etc.) are stored as your data, not the model's parameters. The PM's compliance function reads that data directly inside the training simulation. It is not a prompt that can be softened by Coach Your Agent, nor a guideline an agent can argue around. Change your Mandate and the floor moves; until then, the floor is the floor.",
+    "related_lessons": ["074", "013"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["safety_floor", "deterministic", "mandate"]
+  },
+  {
+    "id": "qa_aim_can_i_change_agents",
+    "category": "ai_meta",
+    "question": "Can I change what the agents say?",
+    "short_answer": "Coach Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the PM's safety floor.",
+    "long_answer": "You can coach the Bull Researcher to weight long-term catalysts more, the Market Analyst to focus on weekly timeframes, or the Trader to prefer tighter stops. Those coaching changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the PM's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
+    "related_lessons": ["074", "075"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["coach", "coaching", "limits"]
+  },
+  {
+    "id": "qa_aim_coach_pm_less_strict",
+    "category": "ai_meta",
+    "question": "Can I make the PM less strict?",
+    "short_answer": "No. The PM's mandate enforcement is uncoachable by design. The only way to change what the PM blocks is to change your Mandate yourself.",
+    "long_answer": "Coaching changes apply to coachable surfaces — tone, weighting, skepticism. The PM's compliance check is a deterministic function reading your Mandate data inside the training simulation, not a prompt to be softened. If you want more headroom in the scenario, edit the Mandate (e.g. raise max_position_pct from 5 to 7); the PM will then enforce the new floor. The safety floor moves with your Mandate, not with coaching.",
+    "related_lessons": ["074", "075"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["pm_uncoachable", "safety_floor", "mandate"]
+  },
+  {
+    "id": "qa_aim_coach_auto_execute",
+    "category": "ai_meta",
+    "question": "Can I coach an agent to auto-execute trades?",
+    "short_answer": "No. There is no execution surface in AMI — nothing to auto-execute, nothing to coach into. The request will be refused.",
+    "long_answer": "Auto-execution is not a coachable parameter because the underlying capability does not exist. AMI is a training simulator, not an execution platform — no brokerage hook, no order placement layer, and no plan to add either. Coaching can shape how the simulated Trader thinks; it cannot create execution out of thin air.",
+    "related_lessons": ["073", "074"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["no_execution", "coach_limits"]
+  },
+  {
+    "id": "qa_aim_mandate_explained",
+    "category": "ai_meta",
+    "question": "What is the Mandate?",
+    "short_answer": "The Mandate is your contract with the simulator. You set the rules — position size cap, drawdown floor, exclusions, region — and the PM enforces them on every simulated Verdict inside the training environment.",
+    "long_answer": "Typical fields: max_position_pct (e.g. 5), max_drawdown_pct (e.g. 20), halal (true/false), no_fossil (true/false), long_only (true/false), region (e.g. us_equities). The Mandate is yours to edit; the PM treats it as ground truth inside the training scenario. Change a field and the next Verdict's compliance ceiling moves with it. This is also why coaching cannot soften the floor — the floor is your data, not the model's. The Mandate scopes the training exercise, not real-world investment policy.",
+    "related_lessons": ["074", "013", "076"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["mandate", "contract", "ceo"]
+  },
+  {
+    "id": "qa_aim_why_12_agents",
+    "category": "ai_meta",
+    "question": "Why 12 agents and not just one?",
+    "short_answer": "Because a single voice hides its own blind spots, and the simulator is teaching the skill of seeing those blind spots. Twelve role-specific agents argue from different angles, which is how the weaknesses in any thesis surface in the training exercise.",
+    "long_answer": "One agent answering 'walk me through NVDA' would produce something coherent and confident — and you would have no way to tell where it skipped a question. Splitting the work across Analysts, Researchers, Risk Debators, the Trader, and the PM forces the simulated case to clear multiple bars: data, debate, sizing, compliance. The dissent is the audit trail. The Verdict is the synthesis. You practice reading both — that's the training, not investment advice.",
+    "related_lessons": ["072", "076"],
+    "related_agents": ["research_manager"],
+    "tags": ["agents", "design", "debate"]
+  }
+]

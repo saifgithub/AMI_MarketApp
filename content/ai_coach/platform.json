@@ -1,0 +1,402 @@
+[
+  {
+    "id": "qa_plt_edit_mandate",
+    "category": "platform",
+    "question": "How do I edit my mandate?",
+    "short_answer": "Open Settings -> Mandate. You can adjust every field there and save to push it live to the agents.",
+    "long_answer": "Your Mandate is the contract between you and the 12 agents. To edit it, tap your profile icon -> Settings -> Mandate. From there you can change risk tolerance, max drawdown, position-size caps, compliance flags, and instrument preferences. When you save, the Portfolio Manager re-reads the mandate on the next Convene the Room run, so changes apply to your next decision, not retroactively.",
+    "related_lessons": ["012"],
+    "related_agents": ["concierge", "portfolio_manager"],
+    "tags": ["mandate", "settings", "how-to"]
+  },
+  {
+    "id": "qa_plt_mandate_fields",
+    "category": "platform",
+    "question": "What's actually in my mandate?",
+    "short_answer": "Risk tolerance, max drawdown, max position size, allowed markets, holding horizon, and compliance flags like halal, ESG-lite, long-only, or no T-A-G.",
+    "long_answer": "The Mandate has five sections: Risk (tolerance band + max drawdown %), Sizing (max % per position, max concurrent positions), Markets (US equities at alpha; Bursa + GCC at v1.0), Horizon (intraday, swing, position, long-term), and Compliance (halal, ESG-lite, no fossil fuels, no tobacco-alcohol-gambling, long-only). Open Settings -> Mandate to see your current values.",
+    "related_lessons": ["012", "013"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["mandate", "settings", "fields"]
+  },
+  {
+    "id": "qa_plt_halal_flag",
+    "category": "platform",
+    "question": "Is there a halal filter?",
+    "short_answer": "Yes. Turn on the Halal flag in Settings -> Mandate -> Compliance. The PM will reject any verdict that violates standard AAOIFI screens.",
+    "long_answer": "The halal flag blocks names that fail interest-income, debt-ratio, and prohibited-business screens (alcohol, conventional finance, gambling, adult entertainment, tobacco, pork, weapons). The Portfolio Manager applies the screen as a hard floor, so even if every other agent loves a name, a haram ticker gets filtered out before you see the verdict. Note: screens are based on public filings and refresh quarterly, so always confirm with your own scholar for high-stakes decisions.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["mandate", "halal", "compliance"]
+  },
+  {
+    "id": "qa_plt_drawdown_cap",
+    "category": "platform",
+    "question": "How does the max drawdown cap work?",
+    "short_answer": "It's a hard floor in your mandate. When your sim portfolio hits the cap, the PM will only return HOLD or risk-reduction verdicts until you reset or widen it.",
+    "long_answer": "Max drawdown is the worst peak-to-trough loss you're willing to tolerate, set in Settings -> Mandate -> Risk. If your simulated portfolio breaches it, the Portfolio Manager flips into defensive mode: no new BUY verdicts, sizing is capped, and stop-loss tightening is encouraged. You can widen the cap in Settings, but the system will flag the change in your Decision Journal so you can audit it later.",
+    "related_lessons": ["018"],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["mandate", "drawdown", "risk"]
+  },
+  {
+    "id": "qa_plt_max_position_size",
+    "category": "platform",
+    "question": "How do I set a max position size?",
+    "short_answer": "Settings -> Mandate -> Sizing. Set a percentage of portfolio per position; the PM clips every verdict to that ceiling.",
+    "long_answer": "Position size is set as a percentage of your simulated portfolio, not a dollar amount. The default is 5% per position with a 20% max sector concentration. The PM applies this as a hard cap: if conviction is high, the verdict might recommend the full cap; if conviction is low, it'll suggest less. You can't override the cap upward at verdict time, only in Settings -> Mandate.",
+    "related_lessons": ["011", "014"],
+    "related_agents": ["portfolio_manager", "trader"],
+    "tags": ["mandate", "sizing", "position-size"]
+  },
+  {
+    "id": "qa_plt_reset_mandate",
+    "category": "platform",
+    "question": "Can I reset my mandate to defaults?",
+    "short_answer": "Yes. Settings -> Mandate -> Reset to Default. You'll get the conservative starter mandate the Concierge gave you on day one.",
+    "long_answer": "Reset wipes any custom values and restores the conservative defaults: 5% per position, 10% max drawdown, swing horizon, long-only, no compliance flags. Your Decision Journal is untouched. If you want to start over more thoroughly, use Settings -> Mandate -> Re-run Concierge Interview to have AMI ask you the onboarding questions fresh.",
+    "related_lessons": [],
+    "related_agents": ["concierge", "portfolio_manager"],
+    "tags": ["mandate", "reset", "settings"]
+  },
+  {
+    "id": "qa_plt_where_journal",
+    "category": "platform",
+    "question": "Where is the Decision Journal?",
+    "short_answer": "Bottom tab bar -> Journal. Every verdict you accept or decline lands there with the full reasoning trail.",
+    "long_answer": "The Decision Journal is one of the four main tabs at the bottom of the app (Home, Convene, Journal, Earn). It logs every Convene the Room verdict, your accept/decline decision, the price at the time, the agents' arguments, and any post-decision notes you add. It also tracks how each call played out over time so you can see your hit rate by setup type.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["journal", "navigation"]
+  },
+  {
+    "id": "qa_plt_journal_captures",
+    "category": "platform",
+    "question": "What does the Decision Journal actually capture?",
+    "short_answer": "Verdict (BUY/SELL/HOLD with size, entry, stop, target, horizon), your decision, all 12 agents' arguments, price at decision, and post-trade outcome.",
+    "long_answer": "Every Convene the Room session creates a Journal entry containing: the ticker and timestamp, the PM's verdict (action, size, entry, stop, target, horizon, conviction), each of the 12 agents' positions in the debate, your accept/decline + any notes, the price at decision time, and a tracking line that updates as the trade plays out in simulation. You can add reflection notes any time after the fact.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["journal", "verdict"]
+  },
+  {
+    "id": "qa_plt_export_journal",
+    "category": "platform",
+    "question": "Can I export my Decision Journal?",
+    "short_answer": "Not at alpha. CSV + PDF export is on the roadmap for v1.0.",
+    "long_answer": "Export to CSV (for spreadsheet review) and PDF (for sharing with a mentor or coach) is planned for v1.0 alongside Android-GMS launch. At alpha you can view your full Journal in-app, filter by ticker/action/outcome, and screenshot specific entries. If you need bulk data sooner, ping support and we'll pull it manually.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["journal", "export", "roadmap"]
+  },
+  {
+    "id": "qa_plt_journal_empty",
+    "category": "platform",
+    "question": "Why is my Decision Journal empty?",
+    "short_answer": "Because you haven't run Convene the Room or made a decision yet. Start a Convene on any ticker; once you accept or decline the verdict, the entry lands in the Journal.",
+    "long_answer": "The Journal only logs decisions you've actually made. Browsing a chart, chatting with a single agent, or running a quick 1-on-1 doesn't create an entry. To populate it: open Home or Watchlist, pick a ticker, tap Convene the Room, wait for the verdict, then accept or decline. Your first entry will appear immediately after.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["journal", "first-use"]
+  },
+  {
+    "id": "qa_plt_trigger_convene",
+    "category": "platform",
+    "question": "How do I run Convene the Room?",
+    "short_answer": "From any ticker page, tap the Convene the Room button. The 12 agents will debate in real time and the PM delivers a verdict in 30-60 seconds.",
+    "long_answer": "Convene the Room is the full-stack analysis: fundamentals, news, sentiment, technical (4 sub-agents), bull/bear researchers, research manager synthesis, trader, risk team, and the Portfolio Manager. Trigger it from any ticker's detail page or from Home -> Quick Convene. You'll see each agent's reasoning stream in as they speak, then the verdict (BUY/SELL/HOLD with size, entry, stop, target, horizon) at the end.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager", "research_manager"],
+    "tags": ["convene", "how-to"]
+  },
+  {
+    "id": "qa_plt_what_is_verdict",
+    "category": "platform",
+    "question": "What's a Verdict?",
+    "short_answer": "The Portfolio Manager's final decision after the room debates. It includes action, size, entry, stop, target, horizon, and conviction.",
+    "long_answer": "A Verdict is structured, not a paragraph. It always contains: Action (BUY / SELL / HOLD / PASS), Size (% of portfolio, capped by your mandate), Entry (price band), Stop (price), Target (price), Horizon (days/weeks/months), and Conviction (1-5). It also includes a one-line rationale and lists which agents dissented. Every verdict is logged to your Decision Journal whether you accept it or not.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["convene", "verdict"]
+  },
+  {
+    "id": "qa_plt_pass_verdict",
+    "category": "platform",
+    "question": "What does a PASS verdict mean?",
+    "short_answer": "The setup isn't good enough to trade. The PM has decided the best move is to stand aside, not BUY, SELL, or even HOLD an existing position.",
+    "long_answer": "PASS is distinct from HOLD. HOLD says 'you own this, keep holding.' PASS says 'this isn't worth a position right now — go look elsewhere.' The PM returns PASS when the room is split, when risk/reward is poor, when your mandate would reject the trade, or when liquidity/setup quality fails the floor checks. PASS is one of the most valuable verdicts; it saves you from forced trades.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["verdict", "pass"]
+  },
+  {
+    "id": "qa_plt_agents_disagreed",
+    "category": "platform",
+    "question": "Why did the agents disagree so much?",
+    "short_answer": "By design. The 12-agent room is built for adversarial debate; disagreement is signal that the setup is contested and your conviction should reflect that.",
+    "long_answer": "AMI's room intentionally pits bull vs bear researchers, fast vs slow technical timeframes, and risky vs safe sub-personas in the risk team. When agents agree, the PM returns higher conviction. When they disagree sharply, conviction drops and sizing shrinks — sometimes to PASS. Read the dissent panel under the verdict: it tells you what the other side sees, which is exactly the information confirmation bias would hide from you.",
+    "related_lessons": [],
+    "related_agents": ["bull_researcher", "bear_researcher", "research_manager"],
+    "tags": ["convene", "debate", "disagreement"]
+  },
+  {
+    "id": "qa_plt_start_1on1",
+    "category": "platform",
+    "question": "How do I chat with a single agent?",
+    "short_answer": "Home -> 1-on-1, pick an agent from the roster, then ask your question. Each agent stays in role.",
+    "long_answer": "1-on-1 is for narrow questions where you don't need the whole room. Tap 1-on-1 from Home or a ticker page, then choose the agent best suited to your question (Fundamentals for valuation, News for catalysts, Sentiment for crowd reads, Technical for chart questions, Risk for position sizing, PM for portfolio-level calls). Conversations are stored per-agent and persist across sessions.",
+    "related_lessons": [],
+    "related_agents": ["concierge"],
+    "tags": ["1on1", "chat", "how-to"]
+  },
+  {
+    "id": "qa_plt_save_1on1",
+    "category": "platform",
+    "question": "Can I save a 1-on-1 conversation?",
+    "short_answer": "Yes — every 1-on-1 chat is saved automatically per agent. Find them under 1-on-1 -> History.",
+    "long_answer": "There's nothing to save manually; conversations persist by default. Open 1-on-1 -> History to see every chat grouped by agent and date. You can star important threads, search by ticker, and pin one to the top of an agent's profile. If you delete a thread it's gone permanently — there's no recovery at alpha.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["1on1", "history"]
+  },
+  {
+    "id": "qa_plt_share_1on1",
+    "category": "platform",
+    "question": "Can I share a 1-on-1 chat with a friend?",
+    "short_answer": "Not at alpha. Share-as-link is on the roadmap for v1.0; for now you can screenshot.",
+    "long_answer": "Sharing chats and verdicts as deep links is a planned v1.0 feature once we add account claim + social primitives. At alpha, screenshot the conversation or copy text manually. We deliberately delayed sharing to avoid the 'finfluencer screenshot' loop AMI is built to counter — when it ships, shared verdicts will carry a 'this is simulation-only, not advice' watermark.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["1on1", "share", "roadmap"]
+  },
+  {
+    "id": "qa_plt_which_agent",
+    "category": "platform",
+    "question": "Which agent should I ask?",
+    "short_answer": "Depends on the question. Fundamentals for valuation, News for catalysts, Sentiment for crowd mood, Technical for charts, Risk for sizing, PM for the final call.",
+    "long_answer": "A rough map: 'Is this company healthy?' -> Fundamentals Analyst. 'Why did it move today?' -> News Analyst. 'What's the crowd thinking?' -> Sentiment Analyst. 'Is this a valid breakout?' -> Technical Analyst (or one of the 4 sub-timeframes). 'How big should my position be?' -> Risky/Neutral/Safe debate or Trader. 'Should I take this trade?' -> Convene the Room, not 1-on-1. The Concierge can route you if you're unsure.",
+    "related_lessons": [],
+    "related_agents": ["concierge", "fundamentals_analyst", "news_analyst", "sentiment_analyst", "technical_analyst"],
+    "tags": ["1on1", "routing"]
+  },
+  {
+    "id": "qa_plt_coach_what_is",
+    "category": "platform",
+    "question": "What is Coach Your Agent?",
+    "short_answer": "A way to shape each agent's style — more verbose, more skeptical, more focused on certain data — without changing the safety rules.",
+    "long_answer": "Coach Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Coaching is a diff card that you review and approve. Find it under any agent's profile -> Coach.",
+    "related_lessons": [],
+    "related_agents": ["concierge"],
+    "tags": ["coach", "customization"]
+  },
+  {
+    "id": "qa_plt_coach_what_customize",
+    "category": "platform",
+    "question": "What can I actually customize in Coach Your Agent?",
+    "short_answer": "Style, emphasis, data sources to favor or ignore, verbosity, language register. Anything that doesn't touch the safety floor.",
+    "long_answer": "Customizable: tone (formal/casual), depth (one-liner vs essay), emphasis (e.g., 'always lead with the bear case'), data weighting (e.g., 'favor SEC filings over analyst notes'), language register (technical vs plain English), and named heuristics you want them to use. Each change becomes a diff card you approve before it goes live; history is preserved so you can revert.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["coach", "customization"]
+  },
+  {
+    "id": "qa_plt_coach_cant_customize",
+    "category": "platform",
+    "question": "What CAN'T I customize with Coach Your Agent?",
+    "short_answer": "The Portfolio Manager's mandate enforcement. Position caps, drawdown limits, compliance flags, and refusal floors are uncoachable.",
+    "long_answer": "The PM is the safety floor and it doesn't take coaching. You cannot tell the PM to ignore your max drawdown, exceed position caps, override your halal flag, or skip the compliance check. You also can't coach any agent to recommend live trading, give specific dollar advice, or claim predictive certainty. These floors are deterministic and hard-coded — they exist so coaching can't turn AMI into a yes-man.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["coach", "safety-floor"]
+  },
+  {
+    "id": "qa_plt_coach_reset",
+    "category": "platform",
+    "question": "How do I reset an agent's coaching?",
+    "short_answer": "Open the agent's profile -> Coach -> History -> Reset to Default. The agent reverts to its base prompt immediately.",
+    "long_answer": "Each agent's Coach History shows every diff card you've approved, with timestamps. You can revert one change at a time or use Reset to Default to wipe all coaching and start fresh. Resetting doesn't delete your 1-on-1 chat history or Decision Journal entries — only the active prompt configuration.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["coach", "reset"]
+  },
+  {
+    "id": "qa_plt_tiers_compared",
+    "category": "platform",
+    "question": "What's the difference between Floor Pass, Trader, and Floor Manager?",
+    "short_answer": "Floor Pass is free with ads and limited Convenes. Trader removes ads and unlocks unlimited Convene + coaching. Floor Manager adds advanced tooling and credit-pack bundling.",
+    "long_answer": "Floor Pass (free, ad-supported) gives you the Concierge, 1-on-1 chat, lessons, and a capped number of Convene the Room runs per day. Trader ($14.99/mo) removes ads, unlocks unlimited Convenes, full Coach Your Agent, and full Decision Journal analytics. Floor Manager ($34.99/mo) adds advanced portfolio tools, priority agent compute, and a monthly credit-pack allowance for heavy room runs. See Settings -> Plans for the current full feature matrix.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["pricing", "tiers"]
+  },
+  {
+    "id": "qa_plt_credit_pack",
+    "category": "platform",
+    "question": "What's a credit pack?",
+    "short_answer": "Top-up credits for extra Convene the Room runs and deep-dive agent calls beyond your plan's monthly quota.",
+    "long_answer": "Each Convene run consumes credits because it spins up all 12 agents. Trader and Floor Manager plans include a monthly credit allowance; if you burn through it, you can buy credit packs as one-off top-ups. Floor Pass users can also buy packs instead of subscribing if they only need occasional room runs. Open Settings -> Plans -> Credits to see balance and pack pricing.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["pricing", "credits"]
+  },
+  {
+    "id": "qa_plt_upgrade",
+    "category": "platform",
+    "question": "How do I upgrade my plan?",
+    "short_answer": "Settings -> Plans -> pick your tier -> confirm in the App Store sheet. Active immediately; mid-cycle pricing is prorated by Apple.",
+    "long_answer": "All billing is handled by the App Store at alpha (Google Play at v1.0). Open Settings -> Plans, choose Trader or Floor Manager, confirm the system purchase sheet, and the upgrade is live within a few seconds. Receipts come from Apple, not AMI. To change tiers later, repeat the flow — Apple handles the proration math.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["pricing", "upgrade", "how-to"]
+  },
+  {
+    "id": "qa_plt_cancel",
+    "category": "platform",
+    "question": "How do I cancel my subscription?",
+    "short_answer": "Cancel through the App Store, not inside AMI. iOS: Settings -> [your name] -> Subscriptions -> AMI Trade -> Cancel.",
+    "long_answer": "Subscriptions are managed by Apple at alpha. To cancel: iOS Settings (the system Settings app, not AMI's) -> tap your Apple ID at the top -> Subscriptions -> AMI Trade -> Cancel Subscription. You keep paid access until the end of your billing period, then drop to Floor Pass. Your Decision Journal, mandate, and agent coaching all stay intact.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["pricing", "cancel"]
+  },
+  {
+    "id": "qa_plt_free_includes",
+    "category": "platform",
+    "question": "What's included in the free Floor Pass plan?",
+    "short_answer": "Concierge, 1-on-1 agent chat, the full lessons library, a daily Convene quota, and the Decision Journal — all with ads.",
+    "long_answer": "Floor Pass is fully usable for learning. You get the Concierge interview, unlimited 1-on-1 chats with any of the 12 agents, every lesson in the curriculum, your full Decision Journal, the Earn Path and daily challenge, and a limited number of Convene the Room runs per day. Trade-off is in-app ads and the Convene cap. Paid tiers remove those and add coaching + analytics depth.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["pricing", "free", "floor-pass"]
+  },
+  {
+    "id": "qa_plt_arabic",
+    "category": "platform",
+    "question": "Is Arabic supported?",
+    "short_answer": "Not at alpha. Arabic ships at v1.0 alongside Malay; the app is already RTL-aware in the build.",
+    "long_answer": "Alpha is English only. The Flutter codebase is RTL-aware from day one — padding, alignment, and the hex shapes all mirror correctly — and the translation strings will land at v1.0. Agent prompts, lessons, and UI copy will all be available in Arabic and Malay alongside the existing English. If you want to be notified when Arabic ships, opt in under Settings -> Notifications -> Language Updates.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["languages", "arabic", "roadmap"]
+  },
+  {
+    "id": "qa_plt_malay",
+    "category": "platform",
+    "question": "Is Bahasa Malaysia supported?",
+    "short_answer": "Not at alpha. Malay ships at v1.0 alongside Arabic.",
+    "long_answer": "Alpha is English only. Bahasa Malaysia is one of two priority v1.0 languages — the other is Arabic — chosen because they map to AMI Trade's primary launch markets (GCC + Malaysia). Agent prompts and lesson content will be translated, not just the UI strings. Watch the Plans screen and Settings -> Notifications for the v1.0 release.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["languages", "malay", "roadmap"]
+  },
+  {
+    "id": "qa_plt_what_markets",
+    "category": "platform",
+    "question": "What markets does AMI cover?",
+    "short_answer": "US equities at alpha (NYSE + Nasdaq). Bursa Malaysia and GCC/Tadawul names ship at v1.0.",
+    "long_answer": "Alpha is US-only — every name listed on NYSE or Nasdaq is fair game for Convene the Room and 1-on-1 chat. At v1.0 we add Bursa Malaysia (KLCI constituents and beyond) and Saudi Tadawul. Other GCC exchanges and broader emerging markets are post-MVP. ETFs, ADRs, and select OTC names follow the same alpha/v1.0 timing as their underlying exchange.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["markets", "coverage"]
+  },
+  {
+    "id": "qa_plt_add_ticker",
+    "category": "platform",
+    "question": "Can I add a specific ticker to my watchlist?",
+    "short_answer": "If it's a US-listed name at alpha, yes — tap the star icon on any ticker page, or search and add from Home -> Watchlist -> +.",
+    "long_answer": "Watchlist supports any ticker AMI covers (US equities at alpha; Bursa + Tadawul at v1.0). Search by symbol or company name, tap the star to add. The watchlist syncs across devices once you've claimed your account. If a ticker doesn't appear in search, it's not covered yet — file a request via Settings -> Feedback and the coverage team prioritises by demand.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["watchlist", "tickers", "how-to"]
+  },
+  {
+    "id": "qa_plt_anonymous_mode",
+    "category": "platform",
+    "question": "Do I have to create an account to use AMI?",
+    "short_answer": "No. AMI is anonymous-first — the Concierge runs onboarding without an email, and you only claim an account when you want sync or backup.",
+    "long_answer": "First launch goes straight into the Concierge interview. You set your mandate, run Convenes, chat with agents, and keep a Decision Journal — all anonymously, all tied to your device. When you're ready to back up your work or move to a second device, tap Settings -> Account -> Claim Account and add an email + password (or Sign in with Apple). Your existing data migrates automatically.",
+    "related_lessons": [],
+    "related_agents": ["concierge"],
+    "tags": ["account", "anonymous", "onboarding"]
+  },
+  {
+    "id": "qa_plt_claim_account",
+    "category": "platform",
+    "question": "How do I claim my account?",
+    "short_answer": "Settings -> Account -> Claim Account. Add an email + password or use Sign in with Apple. Your anonymous data migrates instantly.",
+    "long_answer": "Claiming converts your anonymous device-bound profile into a cloud-synced account. Settings -> Account -> Claim Account walks you through email/password or Sign in with Apple. Nothing changes in the app — your mandate, Journal, chats, and coaching all carry over — but now you can install on another device and pick up where you left off. Claim is one-time and irreversible (you can't go back to anonymous from the same data).",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["account", "claim"]
+  },
+  {
+    "id": "qa_plt_lose_data",
+    "category": "platform",
+    "question": "Will I lose my data if I switch phones?",
+    "short_answer": "Only if you never claimed your account. Anonymous data is device-bound; claim your account before switching and everything migrates.",
+    "long_answer": "If you're still anonymous, your Decision Journal, mandate, agent coaching, and chats live only on the current device. Before you switch: Settings -> Account -> Claim Account, add credentials, then sign in on the new device to pull everything down. If you've already moved without claiming, support may be able to help if you still have the old device — but there's no recovery from a wiped anonymous install.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["account", "data", "migration"]
+  },
+  {
+    "id": "qa_plt_change_email",
+    "category": "platform",
+    "question": "How do I change my email?",
+    "short_answer": "Settings -> Account -> Email -> Edit. You'll need to verify the new address before the change takes effect.",
+    "long_answer": "Once claimed, you can update your email under Settings -> Account. AMI sends a verification link to the new address; click it within 24 hours to confirm the swap. Your password and all data are unchanged. If you used Sign in with Apple, email changes happen on the Apple ID side — Apple's Hide My Email aliases are supported and you can rotate them anytime.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["account", "email"]
+  },
+  {
+    "id": "qa_plt_daily_challenge",
+    "category": "platform",
+    "question": "What's the daily challenge?",
+    "short_answer": "A short prompt — a lesson question, market scenario, or Journal review — on the Earn tab each day. Completing it builds your streak.",
+    "long_answer": "The daily challenge appears on the Earn tab and rotates between three formats: a curriculum-question quiz, a market-scenario judgment call, or a review-your-own-Journal reflection. Each takes 1-3 minutes. Completing it adds to your streak and earns credits toward unlocking advanced lessons or a small Convene credit bump. Miss a day and your streak resets to zero.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["earn", "daily-challenge", "streak"]
+  },
+  {
+    "id": "qa_plt_streak",
+    "category": "platform",
+    "question": "What does my streak do?",
+    "short_answer": "Tracks consecutive days you've completed a daily challenge or finished a lesson. Higher streaks unlock more Earn rewards.",
+    "long_answer": "Streaks count consecutive days of meaningful activity — daily challenge completion, finishing a lesson, or logging a thoughtful Journal reflection. Milestones (7, 30, 100 days) unlock specific rewards: extra Convene credits, lesson-track access, and cosmetic badges on your CEO profile. A missed day resets to zero; there's no streak freeze at alpha.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["earn", "streak"]
+  },
+  {
+    "id": "qa_plt_weekly_recap",
+    "category": "platform",
+    "question": "What's the weekly recap?",
+    "short_answer": "A Sunday digest of your week — verdicts logged, lessons completed, hit rate, and what to focus on next. Push notification opens it.",
+    "long_answer": "Every Sunday morning AMI sends a weekly recap: count of Convenes run, accept/decline rate, lessons finished, streak status, and a short PM-written summary of where your decisions trended (e.g., 'mostly chasing breakouts; consider Module 4 lessons on patience'). The recap lands in-app under Earn -> Recaps and as a push notification if you've enabled it.",
+    "related_lessons": [],
+    "related_agents": ["portfolio_manager"],
+    "tags": ["notifications", "earn", "recap"]
+  },
+  {
+    "id": "qa_plt_cant_login",
+    "category": "platform",
+    "question": "I can't log in. What do I do?",
+    "short_answer": "First try Settings -> Account -> Reset Password. If that fails, email support@amitrade.app with your registered email — we'll unblock the account.",
+    "long_answer": "Most login issues are either a forgotten password (use Reset Password — a link goes to your registered email) or a Sign in with Apple hiccup (sign out of iCloud and back in, then retry). If you're still locked out, email support@amitrade.app with the email you registered with and a brief description; we respond within one business day at alpha. Don't create a duplicate account — your Journal won't merge automatically.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["support", "login", "trouble"]
+  },
+  {
+    "id": "qa_plt_app_crashed",
+    "category": "platform",
+    "question": "The app crashed. What now?",
+    "short_answer": "Reopen the app — your work is auto-saved every few seconds. If it crashes repeatedly, Settings -> Feedback -> Report a Bug, or email support@amitrade.app with the crash details.",
+    "long_answer": "Mandate edits, Journal entries, and Convene results are auto-saved continuously, so a crash mid-session won't lose much. Force-quit and reopen first. If it crashes on the same screen twice, file a bug via Settings -> Feedback -> Report a Bug — it captures the device, OS, and a log snippet automatically. For urgent issues email support@amitrade.app with what you were doing when it crashed. We're in alpha, so reports are read by a human and triaged daily.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": ["support", "crash", "trouble"]
+  }
+]

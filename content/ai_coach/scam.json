@@ -1,0 +1,402 @@
+[
+  {
+    "id": "qa_scam_guaranteed_5_percent_monthly",
+    "category": "scam",
+    "question": "Someone is offering 5% per month guaranteed. Is that real?",
+    "short_answer": "No. A guaranteed equity-style return is the signature red flag of a Ponzi structure — real investments cannot promise a fixed monthly payout.",
+    "long_answer": "5% per month compounds to roughly 80% per year, which no regulated fund or broker on earth promises with a guarantee attached. Real licensed funds publish a prospectus and monthly NAVs that move up and down. The early payouts in these schemes are real but funded by the next investor's deposit, not by economic activity. Verify the operator on the relevant regulator's register — SC Malaysia and BNM Financial Consumer Alert in MY, FCA Warning List in the UK, SEC IAPD or EDGAR in the US. Ask the Concierge in a 1-on-1 to walk you through the lookup. If the entity is not on the register, file a report with that regulator before considering anything further.",
+    "related_lessons": ["065"],
+    "related_agents": ["concierge"],
+    "tags": ["guaranteed_return", "ponzi", "red_flag"]
+  },
+  {
+    "id": "qa_scam_ponzi_vs_pyramid",
+    "category": "scam",
+    "question": "Is a Ponzi the same as a pyramid scheme?",
+    "short_answer": "They overlap but are not identical. A Ponzi pays earlier investors with later deposits and centres on a single operator; a pyramid pays recruiters for bringing in more recruiters.",
+    "long_answer": "A Ponzi is usually framed as an investment product with a smooth promised return, while a pyramid is framed as a business or affiliate opportunity where the income depends on the people below you. The structures often combine — many guaranteed-return schemes also pay referral commissions. Both collapse for the same reason: payouts depend on perpetual new money. The verification path is the same regardless of label: check whether the entity is licensed by the relevant regulator (SC Malaysia, SEC, FCA, ASIC, MAS) and whether the promised cash flows come from real economic activity. Ask the Concierge to help unpack a specific pitch.",
+    "related_lessons": ["065"],
+    "related_agents": ["concierge"],
+    "tags": ["ponzi", "pyramid", "structure"]
+  },
+  {
+    "id": "qa_scam_capital_protected_high_return",
+    "category": "scam",
+    "question": "They say my capital is 100% protected but I still get 20% a year. Is that legitimate?",
+    "short_answer": "No. Capital protection at bank-deposit-level safety and equity-style returns cannot coexist in a real product — that pairing is the standard Ponzi pitch.",
+    "long_answer": "Real capital-protected products exist (government bonds, insured bank deposits up to a local protection limit) but their returns are low and bounded by what a sovereign or insured bank can pay. Anything offering equity-style upside with deposit-style downside protection is either lying about the protection, lying about the return, or both. Check the operator on the relevant regulator's register — BNM Financial Consumer Alert for Malaysian deposit-style claims, SEC IAPD for US advisers, FCA Register for UK firms. If the entity is absent or appears on a warning list, do not transfer funds and file a report through that regulator's complaints channel.",
+    "related_lessons": ["065"],
+    "related_agents": ["concierge"],
+    "tags": ["capital_protected", "guaranteed_return", "ponzi"]
+  },
+  {
+    "id": "qa_scam_smooth_monthly_returns",
+    "category": "scam",
+    "question": "The fund posts smooth monthly returns with no losing months. Why is that a problem?",
+    "short_answer": "Smoothness without losing months is statistically near-impossible for a market-exposed strategy and is a signature of a fabricated equity curve.",
+    "long_answer": "Real strategies — even very good ones — have losing months. A historical equity curve with zero red months across years is the hallmark of either an extreme alternative product (in which case it would be heavily regulated and registered) or a falsified statement. Ask for trade-level execution records, signed audited financials with named auditors, and the registration number on the relevant regulator's register. If the operator refuses any of those, treat the smooth curve as the product itself, not as evidence of one. Bring the pitch to the Concierge in a 1-on-1 for a structured five-check walkthrough.",
+    "related_lessons": ["065", "069", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["equity_curve", "smoothness", "fabrication"]
+  },
+  {
+    "id": "qa_scam_friends_paid_proof",
+    "category": "scam",
+    "question": "My cousin got paid for three months from this scheme. Doesn't that prove it works?",
+    "short_answer": "No. Early payouts are the bait stage of a Ponzi — three months of payments only prove the operator is still solvent enough to recruit you.",
+    "long_answer": "Ponzi structures pay everyone until they cannot pay anyone, then collapse in days. The early withdrawals are funded by new deposits, not by economic activity, and serve as social-proof material the operator can use to recruit more participants. The only test that matters is where the return comes from — a real ticker, a real property with a deed, a regulated bank. Run the relevant regulator's register lookup (SC Malaysia, BNM, SEC IAPD, FCA Register, ASIC Connect, MAS Directory) and verify the operator is licensed for the activity they claim. The Concierge can guide the lookup step by step.",
+    "related_lessons": ["065"],
+    "related_agents": ["concierge"],
+    "tags": ["social_proof", "ponzi", "bait_stage"]
+  },
+  {
+    "id": "qa_scam_telegram_20k_members",
+    "category": "scam",
+    "question": "This Telegram channel has 20,000 members and only posts winning trades. Should I trust it?",
+    "short_answer": "No. Only-winning trade feeds are survivorship bias by design — the losing calls are deleted or run in parallel channels you never see.",
+    "long_answer": "Pump-group operators run many simultaneous calls and only screenshot the winners. The 20K-member count and pinned win streak tell you nothing about the actual hit rate. The target stocks are typically low-float, low-volume, and low-price so coordinated retail buying can spike the chart — and the same buying becomes the exit liquidity for the organisers. Cross-check the named tickers against SEC enforcement releases (sec.gov/litigation) and SC Malaysia's enforcement page for prior market-manipulation actions. Ask the Concierge to run the channel name through the pump-group red-flag checklist.",
+    "related_lessons": ["066"],
+    "related_agents": ["concierge"],
+    "tags": ["pump_dump", "telegram", "survivorship_bias"]
+  },
+  {
+    "id": "qa_scam_what_is_pump_and_dump",
+    "category": "scam",
+    "question": "What's a pump and dump?",
+    "short_answer": "A coordinated buying scheme in a thinly-traded stock where insiders accumulate first, retail is steered to buy in, then insiders sell into the manufactured demand.",
+    "long_answer": "Organisers pick a low-float, low-volume, low-price name they can move with limited capital. They post the ticker to a chat group or paid signal feed, often with a synchronised buy time. Volume spikes, the price runs, the organisers exit, the price collapses on the next session. The SEC, FCA, ASIC, and SC Malaysia all publish near-identical advisories on the structure. If a channel asks you to buy a specific ticker at a specific minute, you are likely the exit liquidity. The Concierge can pull historical examples from the relevant regulator's enforcement page for any tickers you've been pitched.",
+    "related_lessons": ["066"],
+    "related_agents": ["concierge"],
+    "tags": ["pump_dump", "definition", "market_manipulation"]
+  },
+  {
+    "id": "qa_scam_vip_signals_paywall",
+    "category": "scam",
+    "question": "They want me to pay $300 a month for VIP signals with earlier calls. Worth it?",
+    "short_answer": "Paid 'VIP' or 'inner circle' tiers are a standard pump-group monetisation layer — the early access usually means you become the manufactured demand the organisers sell into.",
+    "long_answer": "Legitimate research subscriptions exist (sell-side reports, regulated newsletters with disclosure of any positions held), but they don't claim near-perfect hit rates or synchronised entries on illiquid small-caps. A paid signals tier that promises 'earlier calls' on penny names is the pump structure dressed as a subscription. Check the operator on the relevant regulator's register and look for any prior enforcement actions under their name or aliases. The Concierge can run the operator name through SEC litigation releases, FCA Warning List, ASIC investor alerts, and SC Malaysia's enforcement page.",
+    "related_lessons": ["066"],
+    "related_agents": ["concierge"],
+    "tags": ["paid_signals", "pump_dump", "vip"]
+  },
+  {
+    "id": "qa_scam_synchronised_buy_time",
+    "category": "scam",
+    "question": "The group tells everyone to buy XYZ at exactly 9:35. Is that normal?",
+    "short_answer": "No. A synchronised buy time on a small-cap is the mechanism of the dump — your coordinated buying is the liquidity the organisers sell into.",
+    "long_answer": "Real research firms publish theses that hold over days to months and do not require members to enter to the minute. A 09:35 buy command is engineered to compress demand into a window the organisers can pre-position against. The chart pattern is consistent: a volume spike of 30–100x, a 2–3x price run in hours, then a gap-down the next session. Avoid the trade and check whether the operator appears on SEC enforcement releases or your local regulator's warning list (SC Malaysia, FCA, ASIC). Bring the call to the Concierge for a red-flag breakdown.",
+    "related_lessons": ["066"],
+    "related_agents": ["concierge"],
+    "tags": ["pump_dump", "synchronised_entry", "execution"]
+  },
+  {
+    "id": "qa_scam_whatsapp_signal_group_friend",
+    "category": "scam",
+    "question": "A friend added me to a WhatsApp trading group with screenshots of huge wins. Should I join the trades?",
+    "short_answer": "Be very cautious. Screenshots are trivially edited or selectively posted, and friend-of-friend recruitment is the standard distribution pattern for pump and Ponzi schemes.",
+    "long_answer": "The fact that a friend is in the group is not evidence the group is legitimate — it is the recruitment mechanism. Ask the friend three questions: who runs the group, what is the legal entity behind it, and is that entity on the relevant regulator's register. If any of those return blanks, treat the screenshots as marketing material rather than track record. The Concierge can walk you through a five-check verification — entity on register, contact details match, bank account in firm's name, independent callback, written terms — before you place any capital.",
+    "related_lessons": ["066", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["whatsapp", "pump_dump", "social_recruitment"]
+  },
+  {
+    "id": "qa_scam_low_float_target",
+    "category": "scam",
+    "question": "Why do pump groups always target tiny, illiquid stocks?",
+    "short_answer": "Because thin liquidity is what makes the dump mechanically possible — a low-float, low-volume name moves several multiples on modest coordinated buying.",
+    "long_answer": "Mega-caps and liquid ETFs absorb the flow without budging. To produce a 200% spike, the organisers need a name where a few hundred thousand dollars of coordinated demand can move price several times over. That filter narrows the universe to penny names, low-volume ACE-market stocks in Malaysia, and obscure OTC tickers in the US. If the pitched ticker has under, say, 500,000 shares of average daily volume, you are looking at a name selected for manipulability, not for fundamentals. The Concierge can pull volume statistics on any specific ticker you've been pitched.",
+    "related_lessons": ["066"],
+    "related_agents": ["concierge"],
+    "tags": ["pump_dump", "liquidity", "small_cap"]
+  },
+  {
+    "id": "qa_scam_broker_registered_check",
+    "category": "scam",
+    "question": "How do I check whether a broker is actually registered?",
+    "short_answer": "Look up the firm's legal name on the appropriate regulator's public register — not the website or marketing materials supplied by the firm itself.",
+    "long_answer": "For US brokers and registered representatives use FINRA BrokerCheck (brokercheck.finra.org); for US investment advisers use SEC IAPD (adviserinfo.sec.gov); for UK firms use the FCA Register (register.fca.org.uk) plus the FCA Warning List; for Australia use ASIC Connect (asic.gov.au); for Malaysia use SC Malaysia's public register at sc.com.my plus BNM Financial Consumer Alert at bnm.gov.my; for Singapore use the MAS Financial Institutions Directory (mas.gov.sg). Match not just the name but the phone number, email domain, and office address listed by the regulator. The Concierge can guide a step-by-step lookup in a 1-on-1.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["broker_verification", "regulator", "register"]
+  },
+  {
+    "id": "qa_scam_clone_firm_one_letter_off",
+    "category": "scam",
+    "question": "The domain is one letter different from a real bank. Why does that matter?",
+    "short_answer": "Domain typos and hyphen variants are the signature of a clone-firm scam — the operator borrows a real licensed firm's brand to legitimise a fake one.",
+    "long_answer": "Clone operators copy a regulated firm's name, About page, and staff bios, then publish a domain off by one letter, a hyphen, or a different TLD. The phone, email, and bank-account details route to the scammer. The fix is to never use any contact detail supplied by whoever contacted you. Look up the firm independently on the relevant regulator's register (FCA Warning List specifically maintains clone-firm alerts at fca.org.uk/scamsmart; SC Malaysia and ASIC publish similar lists). Call the number listed on the register, not the one in the email, and confirm the named representative actually works there.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["clone_firm", "domain", "verification"]
+  },
+  {
+    "id": "qa_scam_real_vs_clone_broker",
+    "category": "scam",
+    "question": "How do I tell a real broker from a clone of the same name?",
+    "short_answer": "Match the phone, email domain, office address, and bank-account name against the regulator's listing for that firm — not against details supplied by the firm itself.",
+    "long_answer": "A clone copies the brand but cannot copy the regulator's published contact record. Pull the entity's listing from FINRA BrokerCheck, SEC IAPD, FCA Register, ASIC Connect, SC Malaysia, or the MAS Directory and compare every field. If any contact detail differs from what you've been given, you are likely talking to a clone. The bank-account name is the most diagnostic single field — real licensed firms hold client money in a trust account in the firm's name, never in an individual's personal account. Ask the Concierge to run the cross-check side by side.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["clone_firm", "verification", "contact_match"]
+  },
+  {
+    "id": "qa_scam_dealer_personal_account",
+    "category": "scam",
+    "question": "An 'onboarding dealer' wants me to deposit into a person's personal Maybank account. Is that ever normal?",
+    "short_answer": "No. Licensed firms must segregate client money in a trust account in the firm's name — a personal account destination is a guaranteed sign you are not dealing with a real licensed firm.",
+    "long_answer": "Every relevant regulator — SC Malaysia, BNM, SEC, FCA, ASIC, MAS — requires segregated client-money accounts in the firm's name. A request to wire into any individual's personal account is, by itself, sufficient to stop. Do not send a 'test' deposit; small deposits often clear precisely to bait larger ones. File a report with the appropriate regulator (BNM TELELINK or SC Malaysia's complaints portal for Malaysia, ASIC reportascam for Australia, SEC at sec.gov/tcr for US, FCA at fca.org.uk for UK). The Concierge can format the report fields for you.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["clone_firm", "personal_account", "trust_account"]
+  },
+  {
+    "id": "qa_scam_offshore_license_meaning",
+    "category": "scam",
+    "question": "What does it mean if a broker is 'licensed' in Saint Vincent or Vanuatu?",
+    "short_answer": "Offshore licences from jurisdictions that do not enforce client-money rules are effectively decoration — they offer no meaningful recourse if the operator refuses to return your funds.",
+    "long_answer": "Licences exist on a spectrum from heavily enforced (FCA, SEC, ASIC, MAS, SC Malaysia, BNM) to nominally registered with little supervisory capacity (Saint Vincent, Vanuatu, Marshall Islands, some Comoros and Mwali variants). An offshore licence does not mean the operator is fraudulent, but it does mean you have no realistic legal pathway if things go wrong. If you are based in a jurisdiction with retail-FX or retail-derivatives rules, prefer a firm regulated where you live. The Concierge can pull the licensing-strength comparison for any specific entity.",
+    "related_lessons": ["067", "068"],
+    "related_agents": ["concierge"],
+    "tags": ["offshore_license", "regulator", "client_money"]
+  },
+  {
+    "id": "qa_scam_clone_official_email",
+    "category": "scam",
+    "question": "The 'dealer' uses a Gmail address but claims to work at a major bank. Red flag?",
+    "short_answer": "Yes. Real bank and broker employees correspond from the firm's own email domain — personal Gmail or WhatsApp-only contact is a standard clone-firm pattern.",
+    "long_answer": "A major bank's representatives use the firm's official email domain for client correspondence. A 'private wealth advisor' or 'dealer' using Gmail, Yahoo, or a free webmail provider is a strong signal that the person is not who they claim to be. Look up the firm on the regulator's register, call the main number listed there (not any number in the email signature), and ask whether the named representative works at the firm. File a report with the relevant regulator if the firm does not recognise the person. The Concierge can pre-draft the verification call script.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["clone_firm", "email_domain", "impersonation"]
+  },
+  {
+    "id": "qa_scam_managed_fx_30_percent",
+    "category": "scam",
+    "question": "A managed FX account is offering 30% per month. Could that be real?",
+    "short_answer": "No. Real licensed FX brokers earn a spread on each trade and never promise a return — a managed FX account with a fixed monthly return number attached is a Ponzi in costume.",
+    "long_answer": "Retail FX is a real market in jurisdictions where it is permitted (CFTC-regulated US, ASIC-licensed Australia, MAS Singapore, FCA UK) but legitimate brokers do not run discretionary managed-return programs for retail clients. The 'managed FX' wrapper is the most common Ponzi disguise, with offshore licences and withdrawal-blocking demands following a few months in. Check the operator on the relevant regulator's warning list — BNM Financial Consumer Alert in Malaysia, CFTC RED List in the US, FCA Warning List in the UK. Ask the Concierge to walk through the BNM and CFTC lookups in a 1-on-1.",
+    "related_lessons": ["068"],
+    "related_agents": ["concierge"],
+    "tags": ["managed_fx", "forex_scam", "ponzi"]
+  },
+  {
+    "id": "qa_scam_retail_fx_legal_malaysia",
+    "category": "scam",
+    "question": "Is retail forex trading legal in Malaysia?",
+    "short_answer": "BNM has stated repeatedly that retail FX trading by individuals through unlicensed entities is not permitted in Malaysia — most of the offshore FX brokers marketed locally are on BNM's Financial Consumer Alert list.",
+    "long_answer": "The relevant authority is Bank Negara Malaysia (BNM). BNM publishes a Financial Consumer Alert at bnm.gov.my that is dominated by unauthorised FX platforms. Whether a specific platform is permitted depends on its licensing — pull the operator's exact legal name and check it against the BNM list and SC Malaysia's Investor Alert List. If the entity appears on either, do not transfer funds and consider filing a report through BNM TELELINK. The Concierge can help format the search query and the report. This is not legal advice — for legal questions, consult a licensed professional.",
+    "related_lessons": ["068"],
+    "related_agents": ["concierge"],
+    "tags": ["retail_fx", "malaysia", "bnm"]
+  },
+  {
+    "id": "qa_scam_withdrawal_blocked_fee",
+    "category": "scam",
+    "question": "The platform wants me to pay a 5% tax to release my withdrawal. Is that real?",
+    "short_answer": "No. The pay-to-withdraw demand is the diagnostic exit move of an FX or crypto Ponzi — no legitimate broker requires you to pay to access funds you have already deposited.",
+    "long_answer": "Withdrawal-blocking via escalating fees — variously labelled 'audit deposit', 'regulatory fee', 'anti-money-laundering certificate', or 'tax pre-payment' — is documented by BNM, CFTC, FCA, and SEC across hundreds of cases. Once the demand appears, additional deposits will not unlock the original funds; they will trigger further demands. Do not send more money. File a report with the relevant regulator (BNM TELELINK, SC Malaysia complaints, SEC tips at sec.gov/tcr, FCA ScamSmart, ASIC reportascam) and the local police. The Concierge can help organise the timeline and evidence for the report.",
+    "related_lessons": ["068", "069"],
+    "related_agents": ["concierge"],
+    "tags": ["withdrawal_block", "forex_scam", "ponzi"]
+  },
+  {
+    "id": "qa_scam_leverage_500x",
+    "category": "scam",
+    "question": "This broker offers 500x leverage. Real brokers don't, do they?",
+    "short_answer": "Regulated retail-FX brokers in major jurisdictions cap leverage well below 500x — ASIC, FCA, MAS, and the CFTC all set hard limits, so anything offering 500x is operating outside those regimes.",
+    "long_answer": "ESMA (EU) caps retail FX leverage at 30:1 on major pairs and lower for other instruments; ASIC mirrors that range; the CFTC limits US retail FX to 50:1 majors / 20:1 minors; FCA aligns with ESMA; MAS sets comparable limits. An advertised 500x figure means the operator is not subject to those regimes. That alone does not prove fraud, but combined with any other red flag (managed-return promise, withdrawal blocking, offshore licence) it is enough to walk. Check the operator on the relevant regulator's warning list. The Concierge can compare advertised terms against your jurisdiction's regulator-set limits.",
+    "related_lessons": ["068"],
+    "related_agents": ["concierge"],
+    "tags": ["leverage", "forex", "regulator_limits"]
+  },
+  {
+    "id": "qa_scam_fx_expert_trader_pitch",
+    "category": "scam",
+    "question": "An 'expert trader' will trade my FX account for me and split profits 50/50. Sound legitimate?",
+    "short_answer": "Profit-sharing managed accounts run by individuals not licensed under your local discretionary-management rules are a long-standing FX-scam template.",
+    "long_answer": "Discretionary management of client money is a regulated activity. In the US it requires an investment adviser registration (SEC IAPD or state register) and often CFTC commodity-trading-advisor registration for FX; in the UK an FCA permission; in Australia an AFS licence; in Malaysia an SC capital-markets services licence. An individual offering to trade your account without producing a registration number, signed limited-power-of-attorney terms, and a segregated client-trust account is operating outside those rules. Check the named individual on FINRA BrokerCheck or the appropriate adviser register. The Concierge can run the lookup.",
+    "related_lessons": ["068"],
+    "related_agents": ["concierge"],
+    "tags": ["managed_fx", "profit_sharing", "unlicensed"]
+  },
+  {
+    "id": "qa_scam_recovery_telegram_dm",
+    "category": "scam",
+    "question": "I got a Telegram DM from someone saying they helped others recover money from the same platform that scammed me. Should I respond?",
+    "short_answer": "No. Targeted DMs to known victims promising recovery are a textbook secondary scam — operators harvest victim lists and re-approach with a 'fix' that becomes the second loss.",
+    "long_answer": "After the original report, your name often surfaces on lists scraped from social posts, complaints forums, or leaked databases. Recovery-scam operators reach out claiming inside knowledge, a 'frozen wallet', or a regulator contact who can release funds — for an upfront fee. The real recovery path is the relevant regulator (SEC tips at sec.gov/tcr, FCA at fca.org.uk, ASIC reportascam, SC Malaysia complaints, BNM TELELINK) plus local police and your bank's fraud team. Do not respond to the DM. The Concierge can help you organise your case file for the proper authorities.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["recovery_scam", "telegram_dm", "victim_targeting"]
+  },
+  {
+    "id": "qa_scam_ai_bot_95_percent_win",
+    "category": "scam",
+    "question": "This AI trading bot claims 95% win rate. Real or scam?",
+    "short_answer": "Treat any AI-bot pitch with a headline win rate but no externally verifiable audit trail as a marketing claim, not a track record.",
+    "long_answer": "A real algorithmic strategy leaves three kinds of evidence: trade-by-trade fills on a regulated exchange, broker statements (or on-chain settlement for crypto), and a verifiable track record on a recognised platform. Operators that show only an internal dashboard are asking you to trust a number they themselves set. Ask for exchange fills or on-chain transaction hashes; if the operator refuses, the trades may not exist. Check the legal entity on the relevant regulator's register and warning lists (SEC litigation releases, FCA Warning List, SC Malaysia Investor Alert). The Concierge can list the four audit items a legitimate operator could produce.",
+    "related_lessons": ["069"],
+    "related_agents": ["concierge"],
+    "tags": ["ai_bot", "win_rate", "audit_trail"]
+  },
+  {
+    "id": "qa_scam_why_ami_no_guaranteed_returns",
+    "category": "scam",
+    "question": "Why doesn't AMI promise specific returns like other apps do?",
+    "short_answer": "Because no honest operator can. The market is a probability distribution, not a payroll — any product promising a specific return is either lying or running a Ponzi structure.",
+    "long_answer": "AMI is a simulation-only education product. The 12-agent team produces theses, risk frames, and decision support — not return guarantees. Apps or platforms that quote specific monthly or annual returns to retail are violating basic securities-marketing rules in every major jurisdiction (SEC, FCA, ASIC, MAS, SC Malaysia all prohibit it for retail-facing communications). If you see such claims elsewhere, that is itself a red flag worth reporting to the relevant regulator. Ask the Concierge to walk through how AMI's outputs differ from a return promise.",
+    "related_lessons": ["065", "069"],
+    "related_agents": ["concierge", "portfolio_manager"],
+    "tags": ["ami_meta", "guaranteed_return", "education_only"]
+  },
+  {
+    "id": "qa_scam_ai_jargon_proof",
+    "category": "scam",
+    "question": "They keep using terms like 'transformer model' and 'reinforcement learning'. Doesn't that mean it's real?",
+    "short_answer": "Technical jargon is not evidence — fabricated platforms borrow real ML terminology to imply sophistication without producing any audit trail.",
+    "long_answer": "Real machine-learning trading firms publish model architectures, parameter counts, training-data descriptions, audited backtests, and trade-level execution records. Operators that name-drop transformers, neural networks, or GPU clusters without any of those artefacts are using the words as marketing. The decisive test is whether anyone outside the operator can verify the trades happened — exchange fills, broker statements, on-chain hashes. The Concierge can list what a legitimate algo-trading firm would be willing to share, and which items the platform you've been pitched is missing.",
+    "related_lessons": ["069"],
+    "related_agents": ["concierge"],
+    "tags": ["ai_bot", "jargon", "audit_trail"]
+  },
+  {
+    "id": "qa_scam_crypto_bot_usdt_deposit",
+    "category": "scam",
+    "question": "The bot only accepts USDT deposits to a wallet address. Is that a red flag?",
+    "short_answer": "Crypto-only deposits to a wallet — bypassing the regulated banking layer — are a common pattern in AI-bot and FX-Ponzi schemes because they avoid bank-level AML scrutiny and complicate recovery.",
+    "long_answer": "Crypto rails are not inherently fraudulent, but a platform that refuses fiat deposits and accepts only stablecoin to an unhosted wallet is choosing the rail with the weakest reversibility. Combined with an internal-dashboard-only PnL display and no exchange or on-chain trade evidence, it is the standard AI-bot Ponzi architecture documented by SEC enforcement releases since 2023. Verify the operator's legal entity on the relevant regulator's register and warning lists. The Concierge can compile the audit-trail asks (exchange fills, on-chain hashes, broker statements, third-party verified track record) into a single message you can send the operator.",
+    "related_lessons": ["069"],
+    "related_agents": ["concierge"],
+    "tags": ["ai_bot", "crypto", "usdt", "deposit_rail"]
+  },
+  {
+    "id": "qa_scam_bot_backtest_screenshot",
+    "category": "scam",
+    "question": "They sent me a backtest with a beautiful equity curve. Doesn't that prove the strategy works?",
+    "short_answer": "Backtests are trivially curve-fit and screenshots are trivially edited — only forward, externally verifiable track records carry weight, and even then they should be on a recognised platform with timestamped fills.",
+    "long_answer": "Any researcher can build a backtest that looks great in-sample; the test that matters is out-of-sample, forward-traded, and verified by a party other than the operator. Look for trade-level fills on a regulated exchange, broker-statement PDFs you can validate against the broker directly, or on-chain transaction hashes. The Concierge can list what a real verified track record looks like and flag what the operator is missing. Without external verification, treat the equity curve as marketing.",
+    "related_lessons": ["069"],
+    "related_agents": ["concierge"],
+    "tags": ["ai_bot", "backtest", "verification"]
+  },
+  {
+    "id": "qa_scam_pressure_24h_wire",
+    "category": "scam",
+    "question": "They want me to wire USD 10,000 in the next 24 hours or I lose my spot. Should I?",
+    "short_answer": "No. A real investment opportunity does not expire in hours — the engineered deadline exists specifically to prevent you from verifying.",
+    "long_answer": "Urgency plus scarcity is the universal cross-scam tactic in FBI IC3, SEC, FCA, ASIC, and SC Malaysia reports. The countdown is a piece of software the operator controls; the 'last few slots' line is a string in a database. Insist on a 72-hour pause to verify, and treat refusal to grant the pause as a red flag in itself. Real institutional offerings work on weeks and months. Run the relevant regulator's register and warning-list lookup before any transfer. The Concierge can pre-draft a polite reply requesting written terms on letterhead and a verification window.",
+    "related_lessons": ["070", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["pressure", "urgency", "deadline"]
+  },
+  {
+    "id": "qa_scam_only_5_slots_left",
+    "category": "scam",
+    "question": "They say only 5 slots are left in the syndicate. Should I jump in?",
+    "short_answer": "Engineered scarcity is a script — the slot count is a marketing string, not a real capacity constraint, and is designed to trigger loss-aversion before you can think.",
+    "long_answer": "Real institutional allocations are documented in writing with a named issuer, registration number, and signatories. A verbal 'only 5 slots' pitch over chat with no letterhead is the urgency-plus-scarcity template. Ask for the offering documents in writing, with the entity's registration number printed on them, and look that number up on the relevant regulator's register (SEC EDGAR for US issuers, SC Malaysia for Malaysian issuers, FCA Register for UK firms). If the documents do not arrive or do not match, do not transfer. The Concierge can pull the right register for any claimed jurisdiction.",
+    "related_lessons": ["070", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["pressure", "scarcity", "written_terms"]
+  },
+  {
+    "id": "qa_scam_pre_ipo_allocation_whatsapp",
+    "category": "scam",
+    "question": "A 'private wealth advisor' on WhatsApp is offering me a pre-IPO allocation. Worth considering?",
+    "short_answer": "Retail pre-IPO allocations via WhatsApp from an unverified advisor are a high-probability scam pattern — real institutional pre-IPO offers are documented in writing through licensed intermediaries.",
+    "long_answer": "Genuine pre-IPO access for retail is rare and always paper-trailed: signed subscription agreements, named issuer, registered selling agent, prospectus or private-placement memorandum. A WhatsApp-only pitch with a verbal deadline fails the basic documentation test. Look the issuer up on SEC EDGAR if claimed US, and the named advisor on FINRA BrokerCheck or SEC IAPD. If neither produces a match, treat the pitch as a scam and report to SEC tips at sec.gov/tcr. The Concierge can draft the written-terms request and the regulator report.",
+    "related_lessons": ["070", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["pre_ipo", "whatsapp", "private_placement"]
+  },
+  {
+    "id": "qa_scam_refuse_written_terms",
+    "category": "scam",
+    "question": "They refuse to put the offer in writing on letterhead. Is that a deal-breaker?",
+    "short_answer": "Yes. Refusal to provide written terms on letterhead is the decisive test — written documents can be cross-referenced against a real entity, verbal terms cannot.",
+    "long_answer": "Every legitimate investment offering produces signed terms with the entity's legal name, registration number, signatories, and jurisdiction. A verbal-only offering exists precisely to leave no paper trail. Demand a signed term sheet on letterhead with the registration number printed on it, then cross-check that number on the relevant regulator's register (SC Malaysia, SEC IAPD, FCA Register, ASIC Connect, MAS Directory). If the operator refuses or the number does not match, do not transfer and file a report with the regulator. The Concierge can pre-draft the request.",
+    "related_lessons": ["070", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["written_terms", "pressure", "documentation"]
+  },
+  {
+    "id": "qa_scam_what_is_brokercheck",
+    "category": "scam",
+    "question": "What is BrokerCheck?",
+    "short_answer": "BrokerCheck is FINRA's free public register of US broker-dealers and their registered representatives — it lists licences, employment history, and any disclosed regulatory or customer-complaint events.",
+    "long_answer": "Available at brokercheck.finra.org, BrokerCheck lets you look up any US broker or firm and see their registration status, the firms they've worked for, and any disciplinary disclosures. For US investment advisers — a different category — use SEC IAPD at adviserinfo.sec.gov. If a person claims to be a US broker and BrokerCheck shows no record, they are not a registered representative and you should not transact through them. The Concierge can run a BrokerCheck lookup and explain what the disclosures mean.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["brokercheck", "finra", "us_regulator"]
+  },
+  {
+    "id": "qa_scam_check_sc_malaysia",
+    "category": "scam",
+    "question": "How do I check whether an operator is on SC Malaysia's alert list?",
+    "short_answer": "Go to sc.com.my and search the Investor Alert List for the entity's exact legal name and any aliases — also check BNM's Financial Consumer Alert at bnm.gov.my for banking and FX entities.",
+    "long_answer": "SC Malaysia maintains a public register of licensed capital-markets entities at sc.com.my and a separate Investor Alert List of unauthorised operators. BNM publishes a complementary Financial Consumer Alert for banking, insurance, and FX operators at bnm.gov.my. Cross-reference both. If the entity appears on either alert list, do not transfer funds. To file a complaint, use SC Malaysia's complaints portal or BNM TELELINK. The Concierge can guide the searches and pre-draft the complaint fields.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["sc_malaysia", "bnm", "investor_alert"]
+  },
+  {
+    "id": "qa_scam_check_fca_warning",
+    "category": "scam",
+    "question": "Where do I check the FCA Warning List for UK firms?",
+    "short_answer": "The FCA's ScamSmart Warning List is at fca.org.uk/scamsmart — also use the FCA Register at register.fca.org.uk to confirm a firm's authorised status.",
+    "long_answer": "The FCA Register lists authorised firms and individuals; the Warning List specifically flags entities the FCA has identified as operating without authorisation or impersonating regulated firms. Check both — a clone scam will often appear in neither because the cloned firm is on the Register but the clone itself is the imposter. Match contact details, not just names. If you have been pitched, report through fca.org.uk. The Concierge can run the cross-check and help format the report.",
+    "related_lessons": ["067", "071"],
+    "related_agents": ["concierge"],
+    "tags": ["fca", "uk_regulator", "warning_list"]
+  },
+  {
+    "id": "qa_scam_check_asic_australia",
+    "category": "scam",
+    "question": "How do I check an Australian broker or adviser?",
+    "short_answer": "Use ASIC Connect at asic.gov.au to look up professional registers and AFS licence holders, and check the ASIC investor-alert list for unauthorised entities.",
+    "long_answer": "ASIC Connect covers Australian Financial Services (AFS) licensees, credit licensees, and authorised representatives. ASIC also runs an imposter-alert list updated near-weekly and the MoneySmart consumer site. To report a suspected scam use asic.gov.au/reportascam. Match the contact details from the regulator's listing against what the operator gave you. The Concierge can walk through the search step by step.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["asic", "australia", "afs_licence"]
+  },
+  {
+    "id": "qa_scam_recovery_agent_message",
+    "category": "scam",
+    "question": "Someone messaged offering to recover my lost crypto for a fee. Is that real?",
+    "short_answer": "No. Unsolicited 'recovery' offers — especially those asking for upfront fees — are a secondary scam that targets prior victims, documented by IC3, the FCA, and ASIC.",
+    "long_answer": "Recovery-scam operators harvest names from prior scam reports, social-media posts, and leaked databases, then approach victims claiming to be hackers, lawyers, blockchain analysts, or government agents. The upfront 'retainer' or 'gas fee' is the new loss. Legitimate recovery routes are: file a report with the relevant regulator (SEC tips, FCA ScamSmart, ASIC reportascam, SC Malaysia complaints, BNM TELELINK), report to local police, and contact your bank or exchange for any chargeback or freeze options. Do not pay anyone who contacts you unsolicited. The Concierge can help compile the report packet.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["recovery_scam", "secondary_scam", "victim_targeting"]
+  },
+  {
+    "id": "qa_scam_hacker_recover_funds",
+    "category": "scam",
+    "question": "A 'certified ethical hacker' on Instagram says they can recover my stolen funds. Legitimate?",
+    "short_answer": "No. 'Ethical hacker' recovery services advertised on social media are a near-universal recovery-scam pattern — there is no legitimate hacker route to reverse a Ponzi or crypto theft.",
+    "long_answer": "Asset recovery from a fraud is a legal and regulatory process, not a hacking one. The legitimate routes are the regulator complaints channels (SEC, FCA, ASIC, SC Malaysia, BNM), local police cybercrime units, your bank's fraud team, and a licensed lawyer in the relevant jurisdiction. Anyone promising guaranteed recovery for an upfront fee is running a secondary scam. Do not transfer any payment to the contact. The Concierge can help you list every regulator and authority you should be reporting to instead.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["recovery_scam", "ethical_hacker", "social_media"]
+  },
+  {
+    "id": "qa_scam_lawyer_class_action_fee",
+    "category": "scam",
+    "question": "A 'lawyer' contacted me about a class action against the scammer and wants a retainer. Real?",
+    "short_answer": "Unsolicited cold-contact lawyers asking for retainers to join a class action are a documented recovery-scam variant — verify any lawyer through the local bar register before paying anything.",
+    "long_answer": "Real lawyers acting in a class action contact existing clients or advertise publicly through regulated channels; they do not cold-message individual prior fraud victims demanding upfront retainers. Verify the named lawyer through the relevant bar association or law-society register (state bar in the US, the Bar Council Malaysia, the Law Society of England and Wales, the Law Society of NSW for Australia). If the lawyer or firm cannot be matched, do not pay. Report the contact to the same regulator handling your original complaint. The Concierge can help format the bar-register lookup.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["recovery_scam", "fake_lawyer", "retainer"]
+  },
+  {
+    "id": "qa_scam_five_check_procedure",
+    "category": "scam",
+    "question": "What's the verification checklist I should run before I wire money anywhere?",
+    "short_answer": "Five checks, all must pass: entity on the regulator's register, contact details match the register, bank account in the firm's name, independent callback to the firm, written terms on letterhead with a verifiable registration number.",
+    "long_answer": "The procedure is a complete set, not a majority vote — any single failure stops the transfer. Use FINRA BrokerCheck and SEC IAPD for US, FCA Register and ScamSmart for UK, ASIC Connect for Australia, SC Malaysia and BNM Financial Consumer Alert for Malaysia, MAS Directory for Singapore. Take the regulator's listed contact details, not the operator's, and use those for the callback. Demand letterhead documents with the registration number printed on them. If any check fails, do not wire and file a report with the relevant regulator. The Concierge can run the full five-check procedure on any specific pitch you bring.",
+    "related_lessons": ["071"],
+    "related_agents": ["concierge"],
+    "tags": ["verification", "checklist", "due_diligence"]
+  }
+]
