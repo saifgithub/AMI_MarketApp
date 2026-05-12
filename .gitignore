@@ -72,6 +72,3 @@ backend/.alembic-placeholder.db
 
 # Claude Code sibling worktrees (each agent session can spawn its own)
 .claude/worktrees/
-
-# Bleed-in from neighbouring projects on the Extreme Pro drive
-Silent_Scout/

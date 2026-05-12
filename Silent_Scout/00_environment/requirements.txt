@@ -1,0 +1,52 @@
+# Silent_Scout — pinned Python deps for GB10 venv (Python 3.11)
+# Last verified: 2026-05-13
+#
+# Install order matters on ARM64. Install torch FIRST from the cu130 index,
+# then everything else.
+#
+#   python3.11 -m venv ~/silent_scout_venv
+#   source ~/silent_scout_venv/bin/activate
+#   pip install -U pip setuptools wheel
+#   pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu130
+#   pip install -r requirements.txt
+#
+# If a wheel is missing for ARM64, check the NVIDIA DGX Spark playbook:
+#   https://github.com/NVIDIA/dgx-spark-playbooks
+
+# --- core ---
+transformers>=4.46
+peft>=0.13
+trl>=0.12
+accelerate>=1.0
+datasets>=3.0
+huggingface_hub>=0.26
+safetensors>=0.4
+
+# --- fine-tuning framework ---
+# LLaMA-Factory is installed separately from source:
+#   git clone --depth 1 --branch v0.9.4 https://github.com/hiyouga/LLaMA-Factory.git
+#   cd LLaMA-Factory && pip install -e ".[torch,metrics]"
+
+# --- serving ---
+# vLLM: build from source on ARM64 (see gb10_bringup.md §5)
+
+# --- eval ---
+lm-eval>=0.4.5      # EleutherAI lm-evaluation-harness CLI
+sentence-transformers>=3.0  # for persona-stability embedding probes
+scikit-learn>=1.5
+
+# --- data utils ---
+pandas>=2.2
+pyarrow>=17
+jsonlines>=4.0
+tqdm>=4.66
+
+# --- synthetic data (deferred — pin for later) ---
+# distilabel>=1.5
+# anthropic>=0.40
+
+# --- our own backend schemas (read-only import path) ---
+# Silent_Scout imports from ../backend/app/agents/safety_floor.py + overlay_generator.py
+# via sys.path manipulation in eval scripts. No install needed.
+pydantic>=2.9
+structlog>=24.4

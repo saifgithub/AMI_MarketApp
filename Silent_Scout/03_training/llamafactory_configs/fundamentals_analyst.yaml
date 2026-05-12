@@ -1,0 +1,56 @@
+# LLaMA-Factory v0.9.4+ config — fundamentals_analyst LoRA (Qwen3.6-35B-A3B)
+#
+# Run from inside the LLaMA-Factory checkout:
+#   llamafactory-cli train Silent_Scout/03_training/llamafactory_configs/fundamentals_analyst.yaml
+
+### model
+model_name_or_path: /raid/silent_scout/models/Qwen3.6-35B-A3B
+trust_remote_code: true
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_target: all
+lora_rank: 32
+lora_alpha: 64
+lora_dropout: 0.05
+
+### dataset
+dataset: fundamentals_analyst_sft
+dataset_dir: /raid/silent_scout/datasets/processed/fundamentals_analyst
+template: qwen
+cutoff_len: 8192              # finance Q&A includes long table+notes context
+max_samples: 20000
+overwrite_cache: false
+preprocessing_num_workers: 16
+
+### output
+output_dir: /raid/silent_scout/adapters/fundamentals_analyst
+logging_steps: 25
+save_steps: 500
+plot_loss: true
+overwrite_output_dir: true
+
+### training
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 16
+learning_rate: 2.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.03
+bf16: true
+flash_attn: auto
+optim: adamw_torch
+weight_decay: 0.01
+max_grad_norm: 1.0
+
+### eval
+val_size: 0.01
+per_device_eval_batch_size: 1
+eval_strategy: steps
+eval_steps: 500
+
+### misc
+report_to: none
+seed: 42
