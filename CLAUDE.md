@@ -37,11 +37,37 @@ Read-only — integrate against them, don't modify.
 
 ---
 
+## Runtime state (read before assuming anything)
+
+The system is **live** and serving today. Read this before assuming
+the backend is on the Mac or that the LLM is mocked.
+
+| Component | Where | Notes |
+|---|---|---|
+| **Mac** (this workstation) | Pure editor. **NO backend, NO database, NO Docker stack.** | Backend unit tests via `pytest backend/tests/unit/ -q` still work (sqlite tempfile fixture). Anything else goes through `/promote-to-alpha`. Don't start uvicorn or `docker compose up` on the Mac. |
+| **Alpha backend** | `melehost` — Ubuntu Linux server, LAN `192.168.20.9`, SSH alias `melehost` | Stack: `ami_postgres` + `ami_redis` + `ami_api_alpha` + `ami_tunnel`, all in `~/ami_trade/` via Docker Compose. Code rsync'd from Mac via the promotion script. |
+| **Public hostname** | `https://api-alpha.agenticmarketintel.ai` | Cloudflare Tunnel (token-mode connector running on melehost). TLS terminates at CF edge; backend doesn't open inbound ports. |
+| **LLM provider** | **On-prem vLLM** at `http://192.168.20.74:8000` — separate Ubuntu host on the LAN | Serving `gemma-4-31b-it-nvfp4` (Gemma 4 31B, NVFP4 quantized, 262k context). Gateway prefers `vllm > anthropic > mock`. Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`. **Not Anthropic, not OpenAI, not mock — real LLM.** |
+| **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |
+| **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | No GitHub remote yet. Mac → melehost only path. |
+
+Detail in [`docs/08_tech/hosting.md`](docs/08_tech/hosting.md) (melehost spec), [`docs/10_delivery/promotion_protocol.md`](docs/10_delivery/promotion_protocol.md) (how code ships), [`docs/08_tech/backend_modes.md`](docs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER.md`](HANDOVER.md).
+
+If a check fails (curl returns 502 / connect refused), debug from melehost — don't fall back to "let me start a backend on the Mac":
+
+```bash
+curl -s https://api-alpha.agenticmarketintel.ai/v1/health
+ssh melehost "docker ps --filter 'name=ami_'"
+ssh melehost "docker logs ami_api_alpha --tail 50"
+```
+
+---
+
 ## Decision pointers
 
 | Topic | Locked decision |
 |---|---|
-| Endpoint of the journey | **Simulation-only, advisory-only, forever.** No brokerage integration. |
+| Endpoint of the journey | **Training simulator, simulation-only, forever.** AMI is not licensed to give investment advice; no brokerage integration ever. |
 | Markets | **US equities at MVP.** GCC/Tadawul + Bursa later. |
 | Languages | **EN at alpha, AR + MS at v1.0.** Pluggable i18n. |
 | Platforms | **iOS at alpha, Android-GMS at v1.0, Huawei AppGallery at v1.1.** |
