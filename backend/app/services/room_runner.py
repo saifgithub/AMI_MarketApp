@@ -49,6 +49,8 @@ from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.services.llm_gateway import LLMGateway, get_llm_gateway
+from app.services.room_prompts import build_room_messages
 from app.services.tier_policy import pick_tier
 
 
@@ -379,8 +381,11 @@ def _persist_run(run: RoomRun) -> None:
 class RoomRunner:
     """Orchestrates a Convene the Room session, streams events, persists runs."""
 
-    def __init__(self) -> None:
+    def __init__(self, llm: LLMGateway | None = None) -> None:
         init_schema()
+        # Late-bound so tests can pass a fake gateway via constructor.
+        # In production, get_room_runner() wires get_llm_gateway() once.
+        self._llm: LLMGateway | None = llm
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
         with get_session() as s:
@@ -490,55 +495,78 @@ class RoomRunner:
             "synth_size": f"{ctx.trader_size_pct:.1f}",
         })
 
+        gateway = self._llm or get_llm_gateway()
+        live = gateway.has_real_provider()
+
         try:
             for phase in PHASES:
                 yield RoomEvent(kind="phase", phase=phase.label, run_id=run_id)
                 if phase.label != "VERDICT":
                     for agent_id in phase.agents:
-                        tpl = _TEMPLATES[agent_id][0]
-                        text = tpl.format(**formatter)
-                        run.transcript.append(AgentMessage(
+                        async for ev in _speak_one_agent(
                             agent_id=agent_id,
-                            role="agent",
-                            content=text,
-                            timestamp=datetime.now(timezone.utc),
-                        ))
-                        async for ev in _typewriter(
-                            run_id, agent_id, text, char_delay_min, char_delay_max
+                            run_id=run_id,
+                            ctx=ctx,
+                            profile=profile,
+                            formatter=formatter,
+                            run=run,
+                            gateway=gateway,
+                            live=live,
+                            char_delay_min=char_delay_min,
+                            char_delay_max=char_delay_max,
                         ):
                             yield ev
-                        yield RoomEvent(
-                            kind="agent_done", run_id=run_id, agent_id=agent_id,
-                        )
                 else:
-                    # Phase 6 — PM: assemble verdict, then narrate.
+                    # Phase 6 — PM: deterministic safety-floor first; LLM
+                    # narrates the rationale around that fixed action.
                     verdict = _assemble_verdict(ctx, profile)
                     if verdict.action == VerdictAction.APPROVE:
                         mandate_check = "PASS"
-                        verdict_rationale = (
+                        verdict_rationale_fallback = (
                             f"Synthesis defended; sizing {ctx.trader_size_pct:.1f}% "
                             f"consistent with risk_score {mandate.risk_score}."
                         )
+                        predetermined = "APPROVE"
                     else:
                         mandate_check = f"FAIL — {', '.join(verdict.violations)}"
-                        verdict_rationale = verdict.reason
-                    pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
-                        **formatter,
-                        verdict_action=verdict.action,
-                        verdict_rationale=verdict_rationale,
-                        mandate_check=mandate_check,
-                    )
+                        verdict_rationale_fallback = verdict.reason
+                        predetermined = f"REJECT ({'; '.join(verdict.violations)})"
+
+                    if live:
+                        pm_text = await _stream_pm_narration(
+                            run_id=run_id,
+                            ctx=ctx,
+                            profile=profile,
+                            formatter=formatter,
+                            run=run,
+                            gateway=gateway,
+                            predetermined=predetermined,
+                            mandate_check=mandate_check,
+                        )
+                        async for ev in _restream_for_ui(
+                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+                            char_delay_min, char_delay_max,
+                        ):
+                            yield ev
+                    else:
+                        pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
+                            **formatter,
+                            verdict_action=verdict.action,
+                            verdict_rationale=verdict_rationale_fallback,
+                            mandate_check=mandate_check,
+                        )
+                        async for ev in _typewriter(
+                            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+                            char_delay_min, char_delay_max,
+                        ):
+                            yield ev
+
                     run.transcript.append(AgentMessage(
                         agent_id=AgentId.PORTFOLIO_MANAGER,
                         role="agent",
                         content=pm_text,
                         timestamp=datetime.now(timezone.utc),
                     ))
-                    async for ev in _typewriter(
-                        run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
-                        char_delay_min, char_delay_max,
-                    ):
-                        yield ev
                     yield RoomEvent(
                         kind="agent_done", run_id=run_id,
                         agent_id=AgentId.PORTFOLIO_MANAGER,
@@ -588,6 +616,171 @@ async def _typewriter(
             text=ch,
         )
         await asyncio.sleep(random.uniform(delay_min, delay_max))
+
+
+async def _speak_one_agent(
+    *,
+    agent_id: AgentId,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    run: RoomRun,
+    gateway: LLMGateway,
+    live: bool,
+    char_delay_min: float,
+    char_delay_max: float,
+) -> AsyncIterator[RoomEvent]:
+    """Stream one agent's contribution; LLM when live, scripted otherwise.
+
+    Appends the final text to `run.transcript` before yielding `agent_done`
+    so the next agent sees this contribution in its prompt.
+    """
+    plan = ctx.mandate.plan if isinstance(ctx.mandate.plan, Plan) else Plan(ctx.mandate.plan)
+    tier = pick_tier(plan, agent_id)
+
+    text: str
+    if live:
+        system_prompt, messages = build_room_messages(
+            agent_id=agent_id,
+            mandate=ctx.mandate,
+            user_id=None,
+            ticker=ctx.ticker,
+            profile=profile,
+            transcript=run.transcript,
+        )
+        buf: list[str] = []
+        try:
+            async for chunk in gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,  # type: ignore[arg-type]
+                locale=ctx.mandate.locale,
+                max_tokens=400,
+            ):
+                buf.append(chunk)
+                yield RoomEvent(
+                    kind="agent_token",
+                    run_id=run_id,
+                    agent_id=agent_id,
+                    text=chunk,
+                )
+            text = "".join(buf).strip()
+            if not text:
+                # Defensive: an empty LLM response shouldn't blank the
+                # transcript. Drop to the scripted template.
+                text = _scripted_for(agent_id, formatter)
+                async for ev in _typewriter(
+                    run_id, agent_id, text, char_delay_min, char_delay_max,
+                ):
+                    yield ev
+        except Exception as exc:  # pragma: no cover — defensive
+            logger.warn(
+                "room_agent_llm_failed",
+                agent_id=agent_id.value,
+                error=str(exc)[:200],
+            )
+            text = _scripted_for(agent_id, formatter)
+            async for ev in _typewriter(
+                run_id, agent_id, text, char_delay_min, char_delay_max,
+            ):
+                yield ev
+    else:
+        text = _scripted_for(agent_id, formatter)
+        async for ev in _typewriter(
+            run_id, agent_id, text, char_delay_min, char_delay_max,
+        ):
+            yield ev
+
+    run.transcript.append(AgentMessage(
+        agent_id=agent_id,
+        role="agent",
+        content=text,
+        timestamp=datetime.now(timezone.utc),
+    ))
+    yield RoomEvent(kind="agent_done", run_id=run_id, agent_id=agent_id)
+
+
+async def _stream_pm_narration(
+    *,
+    run_id: UUID,
+    ctx: _RoomContext,
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    run: RoomRun,
+    gateway: LLMGateway,
+    predetermined: str,
+    mandate_check: str,
+) -> str:
+    """Buffer the PM's LLM rationale, then return the full text.
+
+    Buffered (not streamed inline as we go) because the caller restreams
+    it through the UI typewriter so the rendering keeps a steady pace
+    regardless of upstream LLM chunk cadence. Tests don't care about
+    pacing; production keeps a uniform feel.
+    """
+    plan = ctx.mandate.plan if isinstance(ctx.mandate.plan, Plan) else Plan(ctx.mandate.plan)
+    tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
+    system_prompt, messages = build_room_messages(
+        agent_id=AgentId.PORTFOLIO_MANAGER,
+        mandate=ctx.mandate,
+        user_id=None,
+        ticker=ctx.ticker,
+        profile=profile,
+        transcript=run.transcript,
+        pm_predetermined_action=predetermined,
+    )
+    buf: list[str] = []
+    try:
+        async for chunk in gateway.stream_chat(
+            system_prompt=system_prompt,
+            messages=messages,
+            model_tier=tier,  # type: ignore[arg-type]
+            locale=ctx.mandate.locale,
+            max_tokens=500,
+        ):
+            buf.append(chunk)
+        text = "".join(buf).strip()
+    except Exception as exc:  # pragma: no cover — defensive
+        logger.warn("room_pm_llm_failed", error=str(exc)[:200])
+        text = ""
+
+    if not text:
+        # Fall back to the scripted PM template.
+        text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
+            **formatter,
+            verdict_action=predetermined.split(" ", 1)[0],
+            verdict_rationale="Synthesis defended; sizing consistent with mandate.",
+            mandate_check=mandate_check,
+        )
+
+    return text
+
+
+async def _restream_for_ui(
+    run_id: UUID,
+    agent_id: AgentId,
+    text: str,
+    delay_min: float,
+    delay_max: float,
+) -> AsyncIterator[RoomEvent]:
+    """Alias for `_typewriter` used when restreaming buffered LLM text.
+
+    Kept separate so the call sites read clearly — "this text was already
+    buffered from the LLM; replay it at typewriter cadence for the UI".
+    """
+    async for ev in _typewriter(run_id, agent_id, text, delay_min, delay_max):
+        yield ev
+
+
+def _scripted_for(agent_id: AgentId, formatter: dict[str, Any]) -> str:
+    """Render the legacy scripted text for an agent. Used as fallback when
+    the LLM gateway has no real provider or when a live call fails.
+    """
+    tpl = _TEMPLATES[agent_id][0]
+    # Some PM-only keys aren't in the formatter unless we pass them; for
+    # the non-PM agents the template only references shared keys.
+    return tpl.format(**formatter)
 
 
 _runner: RoomRunner | None = None

@@ -132,3 +132,130 @@ def test_risk_score_5_sizes_up_aggressively_vs_risk_1():
     v_small = next(e.verdict for e in events_small if e.kind == "verdict")
     assert v_big.size_pct is not None and v_small.size_pct is not None
     assert v_big.size_pct > v_small.size_pct
+
+
+# ── Live LLM-path tests (via a fake gateway) ─────────────────────────────
+
+
+class _FakeGateway:
+    """Stand-in for LLMGateway. Records every call and returns a programmed
+    per-agent line so we can assert transcript growth + prompt routing.
+    """
+
+    def __init__(self, replies: dict[str, str] | None = None):
+        self._replies = replies or {}
+        self.calls: list[dict] = []
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024):
+        # Pick a reply based on agent_id sniffed from the system prompt.
+        agent_key = "default"
+        for k in self._replies:
+            if f"agent_id: {k}" in system_prompt.lower() or k.replace("_", " ") in system_prompt.lower():
+                agent_key = k
+                break
+        text = self._replies.get(agent_key, "AMI agent live reply.")
+        self.calls.append({
+            "system_prompt_len": len(system_prompt),
+            "tier": model_tier,
+            "matched_agent": agent_key,
+        })
+        # Yield in two chunks to exercise the streaming path
+        mid = len(text) // 2
+        yield text[:mid]
+        yield text[mid:]
+
+
+def test_room_uses_gateway_for_every_agent_when_live():
+    """With a fake live gateway, every non-PM agent emits LLM text into the
+    transcript; PM also calls the gateway (for rationale) but the verdict
+    action still comes from the deterministic safety floor.
+    """
+    fake = _FakeGateway(replies={
+        "fundamentals_analyst": "FA: P/E reasonable, growth steady.",
+        "market_analyst": "MA: trend up, RSI 58.",
+        "news_analyst": "NA: Fed dovish, sector tailwinds.",
+        "social_media_analyst": "SMA: bullish chatter.",
+        "bull_researcher": "Bull: thesis defended, 4% size.",
+        "bear_researcher": "Bear: multiple-compression risk capped at 2%.",
+        "research_manager": "RM: lean constructive, 3% start.",
+        "trader": "Trader: BUY 3% at $150, stop $141, target $172.",
+        "aggressive_debator": "Push to 4.5%.",
+        "conservative_debator": "Cap at 2%.",
+        "neutral_debator": "Hold at 3%.",
+        "portfolio_manager": "PM: APPROVE; synthesis defended; mandate clears.",
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+
+    # Gateway invoked once per agent (12 total).
+    assert len(fake.calls) == 12
+
+    # Transcript contains 12 agent messages, all from the fake replies.
+    spoke = {e.agent_id for e in events if e.kind == "agent_done"}
+    assert len(spoke) == 12
+
+    # Verdict still APPROVE (deterministic, AAPL is in the demo halal universe).
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.APPROVE.value
+
+
+def test_room_safety_floor_still_fires_under_live_gateway():
+    """LLM might say APPROVE; deterministic safety floor flips to REJECT for
+    a halal user on a non-halal ticker. overridden_from_llm gets set.
+    """
+    # Liberal LLM reply — would APPROVE everything if it could.
+    fake = _FakeGateway(replies={
+        "portfolio_manager": "PM: APPROVE; all good.",
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({
+        "plan": "trader",
+        "risk_score": 3,
+        "compliance": {"halal": True, "no_tobacco_alcohol_gambling": True},
+    })
+    # FAKE_TICKER is not in the demo halal universe → must be rejected.
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="FAKE_TICKER", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.REJECT.value
+    assert v.overridden_from_llm is True
+
+
+def test_room_transcript_grows_for_subsequent_agents():
+    """Later agents must see earlier agents' contributions in their prompt
+    so they can build on the debate, not just speak in isolation.
+    """
+    captured_prompts: list[str] = []
+
+    class _CaptureGateway:
+        def has_real_provider(self) -> bool:
+            return True
+
+        async def stream_chat(self, *, system_prompt, messages, model_tier,
+                              locale="en", max_tokens=1024):
+            captured_prompts.append(system_prompt)
+            yield "AMI reply."
+
+    runner = RoomRunner(llm=_CaptureGateway())  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+
+    # First agent (Fundamentals) sees an empty transcript marker.
+    assert "(You are first to speak.)" in captured_prompts[0]
+    # Last agent (PM) sees every earlier agent's contribution in the
+    # transcript section — at least the Trader's line should be present.
+    assert "trader" in captured_prompts[-1].lower()
+    assert "AMI reply." in captured_prompts[-1]
