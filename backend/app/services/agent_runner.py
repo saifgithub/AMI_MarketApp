@@ -1,10 +1,21 @@
-"""Agent runner — composes the prompt and calls the LLM.
+"""Agent runner — composes the prompt and calls the LLM for 1-on-1 chat.
 
-V0: single-agent runs (1-on-1, Coach session, Concierge).
-V1: orchestrated multi-agent runs (Convene the Room) via TradingAgents wrapper.
+Each of the 13 agents (12 trading + Concierge) shares the same outer
+streaming path:
+    prompt = build_agent_prompt(agent, mandate, user_id)
+    stream = gateway.stream_chat(prompt, history+user_msg, tier, locale)
 
-The runner is the only place that knows about both the prompt composition
-(base + mandate + safety floor) and the LLM gateway.
+Concierge is special. When the user opens the Floor-tab Concierge, the
+LLM needs context the bare base prompt can't carry — recent Journal
+entries, unlocked agents, the lesson catalogue — so it can route the
+user to a specific lesson / agent / Room run rather than speak in
+abstractions. A2 introduces that enriched prompt via
+`concierge_prompts.build_concierge_messages` + a deterministic scripted
+fallback when `gateway.has_real_provider()` is False (same pattern A1
+landed for Convene the Room). The onboarding interview lives in a
+different module (`concierge_engine.py`) and stays scripted — that's
+the welcome / mandate-readback flow, not the post-onboarding Floor
+Concierge.
 """
 
 from __future__ import annotations
@@ -13,6 +24,7 @@ from collections.abc import AsyncIterator
 from typing import Any
 from uuid import UUID, uuid4
 
+from app.core.logging import logger
 from app.core.time import now_utc
 from app.schemas import AgentId, Mandate
 from app.schemas.mandate import (
@@ -27,6 +39,11 @@ from app.schemas.mandate import (
 )
 from app.schemas.one_on_one import ChatMsg, OneOnOneSession
 from app.services.agent_prompts import build_agent_prompt
+from app.services.concierge_prompts import (
+    build_concierge_messages,
+    load_concierge_context,
+    scripted_reply as concierge_scripted_reply,
+)
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.tier_policy import pick_tier
 
@@ -68,11 +85,31 @@ class AgentRunner:
         history: list[ChatMsg],
         user_message: str,
     ) -> AsyncIterator[str]:
-        """Build the prompt, stream the LLM response."""
+        """Build the prompt, stream the LLM response.
+
+        Concierge (the 13th agent, post-onboarding Floor surface) takes
+        a different path: prompt is enriched with the user's journal /
+        unlocked agents / lesson catalogue so the LLM can route the
+        user concretely. When no real provider is registered, we emit a
+        deterministic scripted reply instead of routing through
+        MockProvider — same pattern A1 introduced for Convene the Room.
+        Onboarding (the welcome interview) is a different surface and
+        stays deterministic via `concierge_engine.py`.
+        """
         mandate = Mandate.model_validate(session.mandate_used)
         agent_id = AgentId(session.agent_id) if isinstance(session.agent_id, str) else session.agent_id
-        system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
 
+        if agent_id == AgentId.CONCIERGE:
+            async for chunk in self._stream_concierge(
+                mandate=mandate,
+                user_id=session.user_id,
+                history=history,
+                user_message=user_message,
+            ):
+                yield chunk
+            return
+
+        system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
         plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
         tier = pick_tier(plan, agent_id)
 
@@ -89,6 +126,70 @@ class AgentRunner:
             locale=mandate.locale,
         ):
             yield chunk
+
+    async def _stream_concierge(
+        self,
+        *,
+        mandate: Mandate,
+        user_id: UUID | None,
+        history: list[ChatMsg],
+        user_message: str,
+    ) -> AsyncIterator[str]:
+        plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
+        journal, unlocked, lessons = load_concierge_context(user_id=user_id, plan=plan)
+
+        if not self._llm.has_real_provider():
+            text = concierge_scripted_reply(
+                user_message=user_message,
+                mandate=mandate,
+                recent_journal=journal,
+                unlocked_agents=unlocked,
+                available_lessons=lessons,
+            )
+            yield text
+            return
+
+        system_prompt, messages = build_concierge_messages(
+            mandate=mandate,
+            user_id=user_id,
+            user_message=user_message,
+            history=[ChatMessage(role=h.role, content=h.content) for h in history],
+            recent_journal=journal,
+            unlocked_agents=unlocked,
+            available_lessons=lessons,
+        )
+        tier = pick_tier(plan, AgentId.CONCIERGE)
+
+        buf: list[str] = []
+        try:
+            async for chunk in self._llm.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,
+                locale=mandate.locale,
+            ):
+                buf.append(chunk)
+                yield chunk
+        except Exception as exc:  # pragma: no cover — defensive
+            logger.warn("concierge_llm_failed", error=str(exc)[:200])
+            if not buf:
+                yield concierge_scripted_reply(
+                    user_message=user_message,
+                    mandate=mandate,
+                    recent_journal=journal,
+                    unlocked_agents=unlocked,
+                    available_lessons=lessons,
+                )
+            return
+
+        if not "".join(buf).strip():
+            yield concierge_scripted_reply(
+                user_message=user_message,
+                mandate=mandate,
+                recent_journal=journal,
+                unlocked_agents=unlocked,
+                available_lessons=lessons,
+            )
 
 
 _runner: AgentRunner | None = None

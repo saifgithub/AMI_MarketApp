@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of A1: Convene the Room → AMI wired)
+**Last updated:** 2026-05-12 (end of A2: Concierge → AMI wired on the Floor)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,12 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 20 commits, no remote yet |
-| Latest commit | (this session) A1: Convene the Room → AMI wiring |
-| Lines on disk | ~35,800 (PRD ~14.5k, backend ~9.0k, Flutter ~9.9k, content/docs ~2.4k) |
+| Git state | Clean working tree, 22 commits, no remote yet |
+| Latest commit | (this session) A2: Concierge → AMI (post-onboarding, Floor tab) |
+| Lines on disk | ~36,200 (PRD ~14.5k, backend ~9.4k, Flutter ~9.9k, content/docs ~2.4k) |
 
 ```
-$ git log --oneline | head -10
+$ git log --oneline | head -12
+<new>   A2: Concierge → AMI wiring (post-onboarding, Floor tab)
+eaed813 Handover #9 — A1 landed, ready to pick up A2
 08ab7d9 A1: Convene the Room → AMI wiring
 4933b18 W18b: animations selective, tickers user-driven, quiz mandatory, watchlist + skip-to-quiz in Alpha
 08c953f W18: curriculum map (Levels 1-8) + merged authoring prompt
@@ -56,7 +58,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **133 passed** (W13: 130, +3 A1 Room-live tests) |
+| Tests | `pytest backend/tests/unit/ -q` → **140 passed, 2 pre-existing failures** in `test_lessons_service` (W17/W18 added trader-callout lessons; the unlock tests' "only 004 has trader" assumption is now stale — spawned cleanup task). A1 + A2 total: +12 new tests, all passing. |
 
 ### Postgres + persistence (NEW this session)
 
@@ -160,6 +162,45 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (A2 — Concierge → AMI, post-onboarding Floor tab)
+
+The 13th agent stops being canned. When the user opens the Concierge from the Floor tab (1-on-1 chat), the LLM now answers and routes against a real picture of the user's situation — recent Journal entries, currently unlocked agents, the lesson catalogue, mandate snapshot. When no real provider is registered, a deterministic scripted reply takes over (it does NOT fall back to MockProvider's "I'm offline" line) and routes the user to the right tab/agent/lesson based on keyword intent.
+
+The deterministic onboarding state machine in `concierge_engine.py` is untouched — the welcome interview / mandate readback stays scripted for reproducibility. A2 is strictly the post-onboarding Concierge on the Floor.
+
+### How it's wired
+
+- **New `backend/app/services/concierge_prompts.py`**:
+  - `build_concierge_messages()` — composes the live system prompt. Starts from `build_agent_prompt(CONCIERGE, mandate, user_id)` (base + mandate overlay + user-coaching overlay + safety floor), then appends a "FLOOR CONCIERGE CONTEXT" block listing the mandate one-liner, the user's last ~6 Journal entries, the set of unlocked agents, the lesson catalogue (ID + title + track + level), and a "be specific — name the lesson ID, name the agent, do not invent" instruction.
+  - `scripted_reply()` — keyword-intent classifier with five buckets (lesson / journal / mandate / Convene-the-Room / trading-advice). Names a real lesson ID, a real agent, or a real journal title from the supplied context so the fallback still feels useful instead of generic.
+  - `load_concierge_context()` — best-effort puller for journal + activations + lesson catalogue; swallows DB exceptions so a data-layer hiccup never kills the chat stream.
+- **`agent_runner.py` Concierge branch** — `stream_one_on_one_message` detects `agent_id == CONCIERGE` and dispatches to `_stream_concierge`, which:
+  1. Loads the context via `load_concierge_context`.
+  2. If `gateway.has_real_provider()` is False, yields the `scripted_reply` text in one chunk and returns. The LLM gateway is **not** called — same pattern A1 introduced for the Room.
+  3. Otherwise, builds the enriched prompt and streams the LLM response. Any exception or empty response falls back to the scripted reply so the Floor never hangs.
+- **Tier policy unchanged.** Concierge tier is picked via `pick_tier(plan, AgentId.CONCIERGE)` — Floor Manager drops to `mid` per W12's per-(plan, agent) override; everyone else gets the default for their plan.
+- **Onboarding API untouched.** `/v1/onboarding/*` still routes through the deterministic `concierge_engine` state machine.
+
+### Tests (+9, 142 total — see test-suite note above)
+
+`backend/tests/unit/test_concierge_live.py`:
+
+- `test_concierge_routes_to_gateway_when_real_provider_present` — fake live gateway records exactly one call; system prompt contains "FLOOR CONCIERGE CONTEXT" and the mandate snapshot.
+- `test_concierge_prompt_carries_lesson_catalogue` — at least one real lesson appears under the "Available lessons" block.
+- `test_concierge_prompt_lists_unlocked_agents_for_real_user` — grants the Market Analyst via `lessons_service.grant_activation`, asserts "Market Analyst" appears in the system prompt.
+- `test_concierge_uses_scripted_fallback_when_no_real_provider` — fake gateway with `has_real_provider() = False` is **never called**; output contains the mandate snapshot from `scripted_reply`.
+- `test_scripted_reply_routes_lesson_intent` — "teach me about risk" → names a real lesson ID.
+- `test_scripted_reply_routes_to_unlocked_agent` — "can I talk to the market analyst?" → names Market Analyst.
+- `test_scripted_reply_refuses_trading_advice` — "should I buy NVDA?" → routes to Market Analyst / Convene the Room without echoing or speculating.
+- `test_scripted_reply_summarises_journal` — recent entries surface ticker tags in the reply.
+- `test_build_concierge_messages_includes_all_context_blocks` — direct unit on the prompt builder: journal, unlocked agents, lesson catalogue, mandate, and base Concierge role all land in the system prompt; user message is the last `messages` entry.
+
+### Live verification path (on-prem vLLM Gemma 4 31B)
+
+`POST /v1/agents/one_on_one/start` with `agent_id=concierge` then `POST /v1/agents/one_on_one/message` streams real Concierge prose that references actual lesson IDs and the user's actual journal. Mock fallback exercised by running with `VLLM_BASE_URL` unset — Concierge still routes the user usefully (mandate-aware, lesson-aware) without ever calling the gateway.
 
 ---
 
@@ -477,8 +518,8 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #9 — name the
-session "AT:R10:".
+We're picking up the AMI Trade build. This is handover #10 — name the
+session "AT:R11:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
@@ -486,21 +527,16 @@ Read HANDOVER.md at the project root first:
 Then read docs/10_delivery/project_plan.md — your task is almost
 always one of the A1-A28 items in there.
 
-State: 20 commits in. 133 unit tests pass. Backend serves W13+ code
-via vLLM Gemma 4. iPhone has the W11 release build (overdue redeploy
-will come with A19/A25 in Stream 5). A1 just landed — Convene the Room
-now talks to vLLM with the deterministic safety floor intact. Every
-user-visible surface in the app now hits AMI/Gemma 4.
+State: 22 commits in. 140 unit tests pass + 2 pre-existing failures
+in test_lessons_service (W17/W18 added trader-callout lessons; the
+"only 004 has trader" assumption is stale — separate spawned task
+handles it). A1 + A2 both landed — every user-visible AMI surface
+(Convene the Room, 1-on-1 with all 13 agents including Concierge on
+the Floor) now streams from vLLM Gemma 4 with deterministic fallbacks
+intact. The deterministic onboarding state machine is untouched and
+stays scripted on purpose.
 
 Alpha-stream pick-up (priority order — top is highest leverage):
-
-  A2. Concierge → AMI for post-onboarding. The onboarding state
-      machine stays deterministic; this wires the *post*-onboarding
-      Concierge (the 13th agent on the Floor) through agent_runner so
-      it actually answers user questions and routes them to lessons /
-      journal / 1-on-1s. Mirror what A1 did for the Room: drop into
-      llm_gateway when has_real_provider() is True, keep scripted
-      responses as fallback. ~0.5 session.
 
   A18. User watchlist. NEW sim_watchlists table (user_id, ticker,
        added_at, notes); GET/POST/DELETE /v1/watchlist/{user_id}.
