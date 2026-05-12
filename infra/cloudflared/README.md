@@ -6,6 +6,15 @@ at the public hostname, runs Access checks (email allowlist for Alpha
 testers), and forwards to `localhost:8000` inside `melehost`. The
 backend itself never opens an inbound port on the WAN.
 
+**Host context:** `melehost` is the **Ubuntu Linux** server on
+Saiful's LAN at `192.168.20.9` — see
+[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
+full spec. Everything below assumes Ubuntu + Docker Engine + systemd
+in production. Docker Desktop on the dev Mac works too; the compose
+file's `extra_hosts` line bridges the Docker Engine vs Docker
+Desktop difference so the same dashboard ingress rule works on
+either host.
+
 This is a **token-mode** (a.k.a. "connector token") tunnel. Ingress
 rules, hostname binding, and Access policies are all configured in
 the Cloudflare dashboard — `cloudflared` only needs the connector

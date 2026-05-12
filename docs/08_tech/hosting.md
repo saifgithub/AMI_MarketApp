@@ -1,10 +1,54 @@
 # Hosting
 
-GCP services, regions, cost expectations. Local-first during dev (W1–W8), GCP from W9 onward.
+GCP services, regions, cost expectations. Local-first during Alpha
+(everything on melehost), GCP from Beta onward.
 
-## Development pattern: local-first → GCP migration at W9
+## melehost — the Alpha host
 
-Weeks 1–8 of the alpha build run on **Saiful's server** via Docker Compose. Weeks 9–10 migrate to GCP. Weeks 11+ are GCP only.
+The Alpha phase backend runs on a single dedicated machine on Saiful's
+home LAN. Documenting it once here so the rest of the docs / infra
+runbooks can reference it without restating.
+
+| | |
+|---|---|
+| Name | `melehost` |
+| OS | **Ubuntu Linux** (server, not desktop) |
+| LAN IP | `192.168.20.9` |
+| SSH | `ssh melehost` (configured in Saiful's `~/.ssh/config`) |
+| Specs | 4 CPU · 14 GB RAM · 4 GB swap · 80 GB free disk |
+| Docker | Engine 29.4.2 · Compose v5.1.3 |
+| Role | Hosts Postgres + the FastAPI backend + (optionally) cloudflared + the on-prem dev stack. Reachable from the public internet via Cloudflare Tunnel at `https://api-alpha.agenticmarketintel.ai`. |
+| Not-melehost | The on-prem **vLLM Gemma 4 31B** server lives at `192.168.20.74:8000` — a separate machine on the same LAN. Backend reaches it as `VLLM_BASE_URL` over the LAN; never exposed publicly. |
+
+Implications for the rest of the docs / infra:
+
+- **Plain Docker Engine, not Docker Desktop.** `host.docker.internal`
+  is not provided for free on Linux — the compose file's cloudflared
+  service explicitly declares
+  `extra_hosts: ["host.docker.internal:host-gateway"]` so the same
+  ingress rule works whether the connector runs on melehost or on
+  Saiful's Mac during dev.
+- **systemd is the production launcher.** `infra/systemd/` ships
+  unit files for the backend (`ami-trade-backend.service`), the
+  cloudflared connector (`ami-trade-tunnel.service`), and the
+  nightly pg_dump backup (`ami-trade-pg-backup.timer`). Install
+  runbooks in each subdirectory's README assume Ubuntu / `apt` /
+  `dpkg`.
+- **Docker Compose is the dev path.** Same images and same service
+  shape as production, but operators bring the stack up with
+  `docker compose up -d` instead of `systemctl`. Useful on Saiful's
+  Mac when iterating without an SSH round-trip — Docker Desktop
+  reaches `host.docker.internal` for free, melehost gets it via the
+  `extra_hosts` line above.
+- **Beta retirement.** When the Cloud Run cutover lands (B2 / B3),
+  melehost becomes a hot dev fallback only. The public Alpha
+  hostname retargets to Cloud Run via a DNS swap — see
+  `infra/cloudflared/README.md` → "Decommission at Beta".
+
+## Development pattern: local-first → GCP migration at Beta
+
+Alpha runs on melehost via Docker Compose / systemd. Beta migrates
+to GCP. MVP / production is GCP only.
 
 ```
 Local development (W1–W8)

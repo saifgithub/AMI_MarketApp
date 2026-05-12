@@ -1,6 +1,17 @@
 # Local dev infrastructure
 
-Configuration for the local Docker Compose stack running on melehost (or any Docker host).
+Docker Compose stack for the AMI Trade backend. Same image and service
+shape whether it runs on:
+
+- **Saiful's Mac** (Docker Desktop) — day-to-day iteration without an
+  SSH round-trip. `host.docker.internal` is provided for free.
+- **`melehost`** (Ubuntu Linux server on the LAN, `192.168.20.9`) —
+  the Alpha-phase production host. Plain Docker Engine; the compose
+  file's `extra_hosts` line bridges the `host.docker.internal` gap.
+
+See [`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for
+the full melehost spec and the systemd-based production launch
+covered in [`infra/systemd/`](../systemd/).
 
 ## Quick start (from project root)
 
@@ -28,34 +39,37 @@ docker compose down -v
 |---|---|---|
 | `postgres` | 5432 | App database (`ami_trade`) |
 | `redis` | 6379 | Cache, rate limits, session state |
-| `backend` | 8000 | FastAPI (mounts `./backend/app` for hot-reload) |
-| `cloudflared` | — | (optional) Cloudflare Tunnel for HTTPS access |
+| `api-alpha` | 8000 | FastAPI backend (mounts `./backend/app` for hot-reload). Service name matches the public hostname `api-alpha.agenticmarketintel.ai`. |
+| `cloudflared` | — | (optional, `--profile tunnel`) Cloudflare Tunnel connector. |
 
 ## Cloudflare Tunnel (for HTTPS dev URL)
 
-When you need HTTPS — for Apple/Google OAuth callbacks, TestFlight, webhook testing — start the tunnel profile:
+When you need HTTPS — for Apple Sign-In callbacks, TestFlight,
+webhook testing, or simply for offsite testers — start the tunnel
+profile:
 
 ```bash
+# CF_TUNNEL_TOKEN must be in .env (gitignored).
 docker compose --profile tunnel up -d
 ```
 
-You need to set `CF_TUNNEL_TOKEN` in your `.env` first. Get it by:
-
-1. Sign in to https://one.dash.cloudflare.com/
-2. Networks → Tunnels → Create a tunnel
-3. Choose "Cloudflared" connector
-4. Copy the tunnel token (begins with `eyJ...`)
-5. Add Public Hostname route: `api-dev.agenticmarketintel.ai` → `http://backend:8000`
-6. Save
-
-Your local stack is now reachable at `https://api-dev.agenticmarketintel.ai` over real HTTPS. No port forwarding needed.
+Full setup, dashboard config, deployment-shape table, and Beta
+retirement runbook live in
+[`infra/cloudflared/README.md`](../cloudflared/README.md). The
+short version: paste the **connector token** (long base64 starting
+with `eyJ...`, NOT the tunnel UUID) into `.env`, then bring the
+profile up. The CF dashboard tells the connector what hostname to
+serve and what to proxy.
 
 ## Running on melehost
 
-If running on melehost (192.168.20.59) rather than your Mac:
+melehost is the Ubuntu Linux server on Saiful's LAN at
+`192.168.20.9` — see
+[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
+full spec.
 
 ```bash
-# From your Mac, push the project
+# From the Mac, push the project
 rsync -avz --delete \
   --exclude='.git' --exclude='**/__pycache__' --exclude='**/.dart_tool' \
   "/Volumes/Extreme Pro/AMI_MarketApp/" \
@@ -67,7 +81,15 @@ cd ~/ami_trade
 docker compose up -d
 ```
 
-For day-to-day dev, simpler: run the stack on your Mac (Docker Desktop) and only sync to melehost for longer-running tests.
+For day-to-day dev, simpler: run the stack on the Mac (Docker
+Desktop) and only sync to melehost for longer-running tests or
+when validating the production launch path.
+
+For the **production** launch on melehost (systemd-managed backend
++ cloudflared, pg backup timer, etc.) see
+[`infra/systemd/`](../systemd/) and
+[`infra/backups/`](../backups/) — those install runbooks assume the
+Ubuntu / `apt` / `dpkg` / `systemctl` toolchain.
 
 ## Hot reload
 

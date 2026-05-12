@@ -4,6 +4,11 @@ The on-prem Alpha backend runs as a systemd service under a dedicated
 user, with env vars in `/etc/ami-trade.env`. This replaces the dev-only
 `nohup uvicorn ... &` pattern that's been carrying us through W7–W18.
 
+**Host:** all commands below run on `melehost` — the **Ubuntu Linux**
+server on Saiful's LAN at `192.168.20.9`. Specs + role in
+[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md). The
+`apt` / `dpkg` / `systemctl` toolchain is assumed throughout.
+
 ## Files
 
 | File | Installs to | Notes |
