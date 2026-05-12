@@ -68,10 +68,21 @@ services:
       redis:
         condition: service_healthy
     environment:
-      ENV: local
+      ENV: ${AMI_ENV:-local}
       # Container-to-container connection still uses 5432 (internal port).
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0
+      # On-prem vLLM (Gemma 4 on the LAN). Empty defaults so the
+      # container falls back to mock when not configured. On melehost,
+      # set VLLM_BASE_URL=http://192.168.20.74:8000 in .env so the
+      # compose backend reaches the on-prem LLM server.
+      VLLM_BASE_URL: ${VLLM_BASE_URL:-}
+      VLLM_MODEL: ${VLLM_MODEL:-gemma-4-31b-it-nvfp4}
+      VLLM_API_KEY: ${VLLM_API_KEY:-}
+      # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
+      # .env to flip on real prices (with a mock-walk fallback). The
+      # Yahoo provider works from melehost and the dev Mac.
+      USE_REAL_MARKET_DATA: ${USE_REAL_MARKET_DATA:-false}
       # LLM keys — copy from .env file (don't bake into image)
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
@@ -80,7 +91,7 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
-      CORS_ORIGINS: '["https://api-dev.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
+      CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
     ports:
       - "8000:8000"
     volumes:
