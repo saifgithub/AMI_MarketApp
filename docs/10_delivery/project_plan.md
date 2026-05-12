@@ -12,37 +12,62 @@ Where we are right now (as of W15, 2026-05-12):
 
 ## Phase 1 — Alpha (on-prem)
 
-**Exit criterion:** 10–50 friendly testers can register with email + Apple, sign in, and use every feature of the app from outside the LAN via Cloudflare Tunnel. Backend, Postgres, and vLLM all stay on Saiful's hardware. Failure of any single piece must produce a graceful AMI fallback message rather than a 500.
+**Exit criterion:** 10–50 friendly testers can register with email + Apple, sign in, and use **every feature** of the app from outside the LAN via Cloudflare Tunnel. Backend, Postgres, and vLLM all stay on Saiful's hardware. i18n / TTS / push / daily briefing all work end-to-end — Saiful wants a full shakedown before scaling. Failure of any single piece must produce a graceful AMI fallback rather than a 500.
 
-**Why on-prem first:** burn rate is zero, latency is LAN-tight, the LLM is already humming there, and we discover real bugs before paying for managed services.
+**Why on-prem first:** burn rate is zero, latency is LAN-tight, the LLM is already humming there, and we discover real bugs in every feature before paying for managed services. Better to find integration issues with the friendly group than at MVP launch.
 
 ### Work items
+
+Grouped by stream. Engineering items (Claude) are sized in sessions; external items (Saiful) are mostly parallel.
+
+#### Stream 1 — Finish the AMI surface
 
 | # | Item | Who | Est | Notes |
 |---|---|---|---|---|
 | **A1** | Convene the Room → AMI wiring. Each phase calls llm_gateway with a transcript-aware prompt; keep scripted fallback when `gateway.has_real_provider()` is False. | Claude | 1 session | Largest user-visible unlock. The Room is the marquee flow. |
 | **A2** | Concierge (post-onboarding) → AMI. Wire through agent_runner so it actually answers questions and routes the user. Onboarding state machine stays deterministic. | Claude | 0.5 session | |
-| **A3** | Email provider — Resend account + DKIM/SPF DNS records for the sending domain. | Saiful | external | Resend free tier covers alpha volume comfortably. |
-| **A4** | Email-confirmation flow. New `/v1/auth/register` (email+password) → signed token → confirmation email → `/v1/auth/confirm`. Reuses W8 auth scaffold's session + claim flow. | Claude | 0.5 session | |
-| **A5** | Flutter Register screen — email+password+confirm, "check your inbox" state, deep-link handler for the confirm URL. | Claude | 0.5 session | |
-| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` package (already in pubspec). Verify on TESTING IPHONE 13. | Saiful (cap) + Claude (code) | 0.5 session + 5 min in Apple Dev | |
-| **A7** | Cloudflare Tunnel — named tunnel, hostname (`api-alpha.<your-domain>`), Cloudflare Access policy (email list) for an extra gating layer. | Saiful | external | One-time setup; `cloudflared` runs as a service on the LAN box. |
-| **A8** | Backend production launch on-prem — systemd unit, env file in `/etc/ami-trade.env`, log rotation, restart-on-fail. No more `nohup uvicorn`. | Claude | 0.5 session | |
-| **A9** | Postgres backups — `pg_dump` cron, offsite copy (S3-compatible or Saiful's NAS), restore drill. | Claude | 0.25 session | |
-| **A10** | Sentry SDK in backend (Python) + Flutter (Dart). Use `SENTRY_DSN` already in config. | Claude | 0.5 session | |
-| **A11** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | Required for App Store later anyway. |
-| **A12** | Re-deploy iPhone release build pointing at the Cloudflare hostname (not the LAN IP). | Claude | 0.25 session | iPhone leaves the house. |
-| **A13** | Tester onboarding — invite copy, alpha access list (10–50 emails), feedback channel (private Slack/Discord/email). | Saiful | external | |
 
-**Claude effort:** ~4 sessions of dev. **Saiful effort:** Resend, Cloudflare, Apple capability, legal stub, testers. Mostly parallel.
+#### Stream 2 — Real auth + on-prem hardening
 
-**Explicit non-goals for Alpha:**
+| # | Item | Who | Est | Notes |
+|---|---|---|---|---|
+| **A3** | Email provider — Resend account + DKIM/SPF DNS records. | Saiful | external | Resend free tier covers alpha. Blocks A4/A5. |
+| **A4** | Email-confirmation flow. `/v1/auth/register` (email+password) → signed token → confirmation email → `/v1/auth/confirm`. Reuses W8 auth scaffold. | Claude | 0.5 session | |
+| **A5** | Flutter Register screen — email+password, "check your inbox" state, deep-link handler for the confirm URL. | Claude | 0.5 session | |
+| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec). | Saiful (cap) + Claude (code) | 0.5 session + 5 min Apple Dev | |
+| **A7** | Cloudflare Tunnel — named tunnel, hostname (`api-alpha.<your-domain>`), Cloudflare Access policy (email allowlist). | Saiful | external | Blocks A12. |
+| **A8** | Backend production launch — systemd unit, env file in `/etc/ami-trade.env`, log rotation, restart-on-fail. | Claude | 0.5 session | |
+| **A9** | Postgres backups — `pg_dump` cron, offsite copy, restore drill. | Claude | 0.25 session | |
+| **A10** | Sentry SDK in backend + Flutter. | Claude | 0.5 session | |
+
+#### Stream 3 — i18n + voice + push + daily briefing (Saiful's full-shakedown ask)
+
+| # | Item | Who | Est | Notes |
+|---|---|---|---|---|
+| **A11** | i18n structure. Extract every user-facing string in `mobile/lib/` to ARB files via `flutter_localizations` + `intl`. Locale switcher in Settings. RTL pass for AR (`Directionality`, padding-inline already in conventions). English content ships; AR/MS files start as empty placeholders. | Claude | 0.5 session | |
+| **A12** | AR + MS translations. Saiful arranges external translators with the ARB files + context comments. Drop-in when ready. | Saiful | external | Doesn't block Alpha launch — partial/empty translations are fine; falls back to English. |
+| **A13** | TTS provider — Azure Speech account + key OR ElevenLabs account + key. Decide based on Arabic voice quality (Azure stronger for AR; ElevenLabs stronger for English emotion). | Saiful | external | Blocks A14. |
+| **A14** | TTS integration. `app/services/tts_gateway.py` (mirrors `llm_gateway` shape) with `AzureSpeechProvider` or `ElevenLabsProvider`. Voice per agent family (analyst / researcher / risk / manager / concierge). Tap-to-listen on agent messages — not auto-play (keeps cost sane). Server-side caching by message hash. | Claude | 1 session | |
+| **A15** | OneSignal account + Dev APNs certificate from Apple Dev console. | Saiful | external | Blocks A16. |
+| **A16** | Push notifications. OneSignal SDK in Flutter, server-side `POST /notifications` endpoint, deep-link routing (open the specific Journal entry / Room verdict / lesson on tap). | Claude | 0.5 session | |
+| **A17** | Daily briefing flow. Background job (`apscheduler` on-prem; Cloud Scheduler at Beta) assembles a 60-second audio brief per user — pulls mandate + recent journal + open positions; renders via TTS; sends push with audio attachment URL. Delivered at user's chosen local time from their mandate. | Claude | 1 session | Depends on A14 + A16. |
+
+#### Stream 4 — Ship + observe
+
+| # | Item | Who | Est | Notes |
+|---|---|---|---|---|
+| **A18** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | App Store needs this anyway. |
+| **A19** | Re-deploy iPhone release build pointing at the Cloudflare hostname (not the LAN IP). | Claude | 0.25 session | Final step. |
+| **A20** | Tester onboarding — invite copy, alpha access list (10–50 emails), feedback channel. | Saiful | external | |
+
+**Claude effort:** ~7 sessions of dev. **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, testers. Mostly parallel to Claude.
+
+**Explicit non-goals for Alpha (everything else is in scope):**
 - No GCP. No Supabase. No Cloud SQL.
 - No payments. No RevenueCat. Floor Pass for everyone during alpha.
 - No App Store. TestFlight comes in Beta.
-- No i18n. English only.
-- No TTS / push / daily briefing.
 - No Android. iOS only.
+- No marketing / public launch.
 
 ---
 
@@ -82,9 +107,9 @@ Where we are right now (as of W15, 2026-05-12):
 
 ## Phase 3 — MVP (public launch)
 
-**Exit criterion:** App Store live (iOS). Play Store live (Android-GMS). Payments work. Pricing tiers (Floor Pass free / Trader $14.99 / Floor Manager $34.99). i18n shipped for AR + MS. Daily briefing flow ships. Customer-support inbox exists. Marketing landing page is up. Ready to start paid acquisition.
+**Exit criterion:** App Store live (iOS). Play Store live (Android-GMS). Payments work. Pricing tiers (Floor Pass free / Trader $14.99 / Floor Manager $34.99). AR + MS translations dropped in (i18n plumbing landed in Alpha). Customer-support inbox exists. Marketing landing page is up. Ready to start paid acquisition.
 
-**Why these gates:** anything less than this isn't a product — it's a beta with a price tag.
+**Why these gates:** anything less than this isn't a product — it's a beta with a price tag. Most of the *features* shipped in Alpha; MVP is "make it sellable + make it shippable + make it discoverable."
 
 ### Work items
 
@@ -94,18 +119,16 @@ Where we are right now (as of W15, 2026-05-12):
 | **M2** | App Store metadata — screenshots, app preview video, description copy, privacy nutrition labels, age rating. | Saiful (+ Claude drafts copy) | external | |
 | **M3** | App Store submission + review iteration. Be ready for the simulation/educational positioning to take 1–3 review rounds. | Saiful | external | |
 | **M4** | Android (GMS) release. Flutter build, Play Console setup, signing, closed beta → open beta → production. | Claude + Saiful | 1 session + external | |
-| **M5** | i18n. AR + MS string files with context comments. Translator handoff. RTL pass for AR. | Claude (structure) + Saiful (external translators) | 0.5 session + external | |
-| **M6** | TTS. Azure Speech or ElevenLabs. Voice picker per agent (or one per family). | Claude + Saiful | 1 session + provider account | |
-| **M7** | Push notifications (OneSignal). | Claude + Saiful | 0.5 session + OneSignal config | |
-| **M8** | Daily briefing flow. Background job assembles a 60-second audio brief tied to user's mandate + journal; delivered via push at user's chosen local time. | Claude | 1 session | |
-| **M9** | PostHog analytics. Funnel events, cohort tracking, feature flags. | Claude + Saiful | 0.5 session + PostHog account | |
-| **M10** | Marketing landing page. trade.agenticmarketintel.ai (or chosen domain). | Saiful or Claude | TBD | |
-| **M11** | Customer support inbox + first-line response playbook. | Saiful | external | |
-| **M12** | Compliance — regulatory copy review, jurisdiction-specific disclaimers (US, GCC, SEA at minimum). | Saiful + lawyer | external | |
-| **M13** | DAU/MAU + cohort dashboards. Saiful's morning view: signups, activation, retention by cohort. | Claude | 0.5 session | |
-| **M14** | Initial user-acquisition push. HN, Twitter, founder network, paid test ($500–2000). | Saiful | external | |
+| **M5** | Drop in AR + MS translations from the translators (i18n structure already shipped in Alpha A11). | Saiful | external | |
+| **M6** | Production APNs certificate from Apple Dev (Dev cert was used in Alpha). Push notifications cut over to production. | Saiful + Claude | 0.25 session + Apple Dev | |
+| **M7** | PostHog analytics. Funnel events, cohort tracking, feature flags. | Claude + Saiful | 0.5 session + PostHog account | |
+| **M8** | Marketing landing page. trade.agenticmarketintel.ai (or chosen domain). | Saiful or Claude | TBD | |
+| **M9** | Customer support inbox + first-line response playbook. | Saiful | external | |
+| **M10** | Compliance — regulatory copy review, jurisdiction-specific disclaimers (US, GCC, SEA at minimum). | Saiful + lawyer | external | |
+| **M11** | DAU/MAU + cohort dashboards. Saiful's morning view: signups, activation, retention by cohort. | Claude | 0.5 session | |
+| **M12** | Initial user-acquisition push. HN, Twitter, founder network, paid test ($500–2000). | Saiful | external | |
 
-**Claude effort:** ~6 sessions of dev. **Saiful effort:** substantial — App Store reviews, translators, legal, marketing.
+**Claude effort:** ~3 sessions of dev. **Saiful effort:** substantial — App Store reviews, translators (drop-in), legal, marketing, analytics setup.
 
 ---
 
@@ -124,12 +147,14 @@ These rules hold across every phase:
 
 | Phase | Claude sessions | Saiful external effort | Calendar |
 |---|---|---|---|
-| Alpha | ~4 | Resend, Cloudflare, Apple cap, legal stub, testers | 1–2 weeks |
+| Alpha | ~7 | Resend, Cloudflare, Apple cap, Dev APNs cert, Azure/ElevenLabs, OneSignal, translators, legal stub, testers | 2–3 weeks |
 | Beta | ~5 | GCP, App Store Connect, TestFlight | 2–3 weeks |
-| MVP | ~6 | App Store / Play / legal / translators / marketing | 4–8 weeks |
-| **Total** | **~15 sessions** | (mostly parallel to Claude) | **7–13 weeks** |
+| MVP | ~3 | App Store / Play / translators drop-in / legal / marketing / analytics | 3–6 weeks |
+| **Total** | **~15 sessions** | (mostly parallel to Claude) | **7–12 weeks** |
 
 A "session" here is a single coherent Claude work-chunk that lands one or two commits — typically 0.5–2 hours of Saiful-time.
+
+The shift from the previous draft: 3 sessions of feature work moved from MVP into Alpha (i18n structure, TTS, push, daily briefing) so Saiful can shake every feature out with the 10–50 friendly testers before the public push.
 
 ---
 
@@ -137,4 +162,13 @@ A "session" here is a single coherent Claude work-chunk that lands one or two co
 
 The first item Claude can pick up autonomously: **A1 — Convene the Room → AMI wiring**. It's the largest user-visible unlock and unblocked by external dependencies.
 
-In parallel, Saiful's first external task: **A3 — Resend account + DNS records**. Email confirmation can't ship until DKIM/SPF resolve.
+In parallel, Saiful's external setup queue (do these in this order — each unblocks specific work items):
+
+1. **Resend account + DKIM/SPF DNS records** → unblocks A4/A5 (email confirmation).
+2. **Sign in with Apple capability on bundle id under team S7RBWM4879** → unblocks A6.
+3. **Cloudflare Tunnel + named hostname + Access policy** → unblocks A19 (re-deploy iPhone).
+4. **TTS provider (Azure or ElevenLabs) account + API key** → unblocks A14.
+5. **OneSignal account + Dev APNs cert from Apple Dev** → unblocks A16.
+6. **Tester list (10–50 emails) + feedback channel** → ready when Alpha is.
+7. **Translators for AR + MS** — non-blocking; drop in any time.
+8. **Privacy policy + ToS draft (lawyer review)** — non-blocking; needed before Beta TestFlight anyway.
