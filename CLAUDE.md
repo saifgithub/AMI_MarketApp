@@ -37,6 +37,22 @@ Read-only — integrate against them, don't modify.
 
 ---
 
+## In-repo sub-project: `Silent_Scout/` — aware, not engaged
+
+`Silent_Scout/` is part of this repo but on a **different roadmap**: it's the research-only workspace for fine-tuning the 13 AMI Trade agents (Concierge first). Its README opens with *"Does not import from the production app. Does not ship."* — see `Silent_Scout/README.md`.
+
+**Rule:** be aware it exists; **do not pay attention to it unless you're specifically assigned to it.** A session working on AMI Trade backend / Flutter / docs / promotion / infra should treat `Silent_Scout/` as out of scope:
+
+- Don't include it in greps or scans for AMI Trade work (e.g., use `git grep -- ':!Silent_Scout/'` if a global grep would otherwise pick it up).
+- Don't treat its code as authoritative for production — the production app doesn't import from it and isn't supposed to.
+- Don't refactor across the boundary. The cross-references go one way only (Silent_Scout reads from `backend/app/services/llm_gateway.py` and `backend/app/agents/overlay_generator.py` to mirror their shapes — never the other direction).
+
+If Saiful explicitly says *"work on Silent_Scout"* or names a Silent_Scout file, then go. Otherwise stay in the production tree.
+
+The boundary protects two things: production stays trained on the live LLM through the gateway (not on local weights), and the research workspace can iterate freely without breaking running Alpha testers.
+
+---
+
 ## Runtime state (read before assuming anything)
 
 The system is **live** and serving today. Read this before assuming
