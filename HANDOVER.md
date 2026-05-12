@@ -1,10 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R11 wrap + main fast-forwarded + handover-conflict cleanup)
+**Last updated:** 2026-05-13 (end of AT:R13 — truthful price_source + first-real-run promotion + playbook bug fixes)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
-> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R11 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
+> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R13 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
 
 ---
 
@@ -15,9 +15,11 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **40 commits**, no remote yet |
-| Latest commit | (this session) `f4ade4e` — chore: stop running services on the Mac |
-| Lines on disk | ~38,500 (PRD ~14.5k, backend ~9.9k, Flutter ~10.7k, content/docs ~2.4k, infra ~0.7k, content/lessons untracked ~180 new files) |
+| Git state | Clean working tree, **50 commits**, no remote yet |
+| Latest commit | (this session) `f46c901` — fix(promote-to-alpha): exclude .env from rsync; ship alembic into image |
+| Alpha tags | `alpha-2026-05-13-1`, `alpha-2026-05-13-2` (first real exercises of /promote-to-alpha) |
+| Backend tests | **162 passed, 0 failed**, 1 skipped (was 155 + 7 lesson-id rot — AT:R13 fixed the rot) |
+| Lines on disk | ~38,800 (PRD ~14.5k, backend ~10.0k, Flutter ~10.7k, content/docs ~2.4k, infra ~0.7k, lessons 13 tracked) |
 
 ```
 $ git log --oneline | head -15
@@ -166,6 +168,72 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
+## What just landed (this session — AT:R13)
+
+Four commits. The LIVE / MOCK pill was lying to users (Yahoo's been
+429-ing for at least 28 hours but the API reported the stack name
+`fallback(cache(yahoo)->mock_walk)` which contains "yahoo" — Flutter's
+`isLivePrice` substring-matched and showed LIVE). Fixed structurally:
+each provider now returns `Quote(price, source)` with the leaf name,
+and the snapshot aggregates honestly. **Plus** /promote-to-alpha was
+exercised for the first time end-to-end and surfaced two real playbook
+bugs.
+
+### Truthful `price_source` — `83d32a7`
+
+- New `Quote = NamedTuple("Quote", [price, source])` in `app/services/market_data.py`.
+- Each provider exposes `quote(ticker) -> Quote | None`. Mock returns `source="mock_walk"`, Yahoo returns `source="yahoo"`, `CachingProvider` preserves the inner's source on hit, `FallbackProvider` forwards the leg that actually served.
+- `SimEngine.current_quote()` + `SimEngine.aggregate_source(tickers)` — snapshot reports "yahoo" only when 100% of marks came from Yahoo; any fall-through to mock downgrades to "mock_walk".
+- `/v1/sim/quote/{ticker}` reports the per-call leaf source. `/v1/sim/portfolio` reports the aggregate.
+- Flutter: zero changes. `SimPortfolio.isLivePrice` already substring-matches "yahoo"; with the backend honest the pill flips correctly.
+- Tests: +7 (Quote source per provider, cache hit preservation, fallback leg forwarding, aggregate downgrade on mixed marks, sim_engine wiring).
+
+### Lesson-id rot — `af4d054`
+
+Seven `test_lessons_service.py` tests had been failing silently on `main` since some renumbering pass: `LEGACY_MARKET_ORDER_LESSON = "283_market_order_vs_limit"` pointed at the FILENAME slug, but `LessonsService` keys by frontmatter `id` (still `"004_market_order_vs_limit"`). One-character fix unblocks the promotion playbook (which aborts on any pytest red). Test suite: 155 → 162 passed.
+
+### First real /promote-to-alpha — surfaced two playbook bugs — `f46c901`
+
+- **rsync wiped melehost's `.env`.** Playbook claimed it was "excluded by default rsync filter" — that's not how rsync works. Mac side had a near-empty `.env` (only `CF_TUNNEL_TOKEN` on the canonical root); rsync overwrote melehost's populated one and alpha dropped to `active_provider=mock` for ~3 minutes until I restored `VLLM_BASE_URL` / `VLLM_MODEL` / `USE_REAL_MARKET_DATA` from the documented values in CLAUDE.md. Added explicit `--exclude='.env'` + a post-rsync grep check + `--exclude='Silent_Scout/'`.
+- **`alembic upgrade head` failed with "No 'script_location' key".** `backend/Dockerfile` only COPYs `app/` and `tests/` — not `alembic.ini` or the `alembic/` directory. Fixed by adding both COPYs.
+- Both bugs were dormant: every prior deploy was direct rsync without using the slash command, so the playbook gaps never bit anyone until today.
+- After the Dockerfile fix, alembic itself works but `init_schema()` runs `create_all()` at boot, so a fresh DB has every table but no `alembic_version` row → `upgrade head` errors with `DuplicateTable`. Worked around today with `alembic stamp head` once. Followup task spawned to reconcile the boot order (option 2 — self-stamp from `init_schema()` — is probably the right answer).
+
+### Alpha tags
+
+- `alpha-2026-05-13-1` — the truthful-source deploy (before playbook fixes; `.env` got wiped here)
+- `alpha-2026-05-13-2` — re-deploy on the fixed playbook (`.env` survives; alembic in image)
+
+Public smoke (post-deploy):
+
+```
+GET /v1/llm/status        → active_provider=vllm, has_real_provider=true
+GET /v1/sim/quote/AAPL    → {"price": 294.8,  "source": "yahoo"}     ← LIVE for real
+GET /v1/sim/quote/NVDA    → {"price": 348.28, "source": "mock_walk"} ← honestly MOCK
+GET /v1/sim/quote/MSFT    → {"price": 113.58, "source": "mock_walk"} ← honestly MOCK
+```
+
+Yahoo's 429-ing is per-ticker (or stochastic) — AAPL came back live mid-session but NVDA/MSFT didn't. The fix means the iPhone pill now reports each ticker's honest source rather than a blanket lie. Aggregate logic ensures the portfolio-level pill stays MOCK whenever any holding falls through.
+
+### What this means for next time
+
+- `/promote-to-alpha` is now battle-tested. Future runs should be smooth modulo the alembic boot-order followup.
+- The promotion's edge case of "the canonical Mac `.env` overwrites melehost's" can't happen again — explicit `--exclude='.env'` plus the verification grep are baked in.
+
+### What's still NOT done (carry-overs)
+
+- yfinance migration. Today's fix is honesty about Yahoo's failures; it doesn't make Yahoo more reliable. Migrating from the keyless `query1.finance.yahoo.com/v8/finance/chart/...` to `yfinance` (which has anti-rate-limit logic) is a separate session. Without it, alpha will show mostly MOCK most of the time — honest but not impressive.
+- i18n string-extraction sweep (A11 scaffold landed; ~1 session of grinding through every `Text(...)` call).
+- Animation production — `AnimationRegistry` is empty; pending art.
+- The init_schema + alembic boot-order collision (followup task spawned this session).
+- Backend `Dockerfile` CMD uses `--reload` — dev flag, should be `--workers N` for the alpha host. Touched in the followup task.
+
+---
+
+## What just landed (AT:R11 — Alpha live + promotion protocol + Mac pure editor)
+
+(Previously the lead section — moved down now that AT:R13 has landed.)
+
 ## What just landed (A7 — Cloudflare Tunnel wiring)
 
 Saiful provisioned the named tunnel + Access policy in the Cloudflare
@@ -280,6 +348,8 @@ Saiful granted full autonomy through MVP — "build it all part by part". Eight 
 - **A11** (`54b0936`) — i18n scaffold. `mobile/l10n.yaml` (gen-l10n config), ARB files for `en` (populated for the surfaces touched recently — tab labels, A18 watchlist, A19 buttons, A11 language picker), `ar` and `ms` (placeholders; missing keys fall back to English). `lib/i18n/locale_provider.dart` persists the override via SharedPreferences; null = follow system. `lib/app.dart` wires `localizationsDelegates` + `supportedLocales`. Settings → **LANGUAGE** section gives the user a radio picker. RTL kicks in automatically for `ar`. The full string-extraction sweep across every screen is deliberately out of scope — Saiful's plan calls i18n "structural plumbing now, full sweep later" and partial translation is fine for Alpha.
 
 ### Pre-existing W17/W18 content not yet committed
+
+> **HISTORICAL — no longer true at AT:R13.** As of 2026-05-13 the only lessons on disk are the 13 tracked files under `content/lessons/` (renumbered 280-292; canonical IDs in frontmatter are still `00Y_*`). The previously-generated `014_..` through `162_..` and `100_..` through `170_..` are gone — either never committed and discarded, or absorbed into the renumbering. Left here for AT:R11-era context.
 
 `content/lessons/014_..` through `162_..` and `100_..` through `170_..` were generated by the W18 authoring prompt but never committed (still untracked on disk). They DO get loaded by the running lessons service (count=82+ on this branch's disk state), which is why A20's frontmatter parsing matters now and why the earn-path tests needed the isolation helper. Decide whether to commit them in a future content-only pass; A20 is forward-compatible either way.
 
@@ -586,6 +656,8 @@ ssh melehost "cd ~/ami_trade && \
 # Verify through the public tunnel
 curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
 # → {"ticker":"AAPL","price":..., "source":"fallback(cache(yahoo)->mock_walk)"}
+# NB: AT:R13 (commit 83d32a7) switched `source` to the leaf provider
+# name — "yahoo" or "mock_walk", not the stack name above.
 ```
 
 The original W10 dev path was `scripts/run_dev.sh backend` on the
@@ -651,8 +723,8 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #12 — name
-the session "AT:R13:".
+We're picking up the AMI Trade build. This is handover #13 — name
+the session "AT:R14:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
@@ -661,34 +733,48 @@ Then read docs/10_delivery/project_plan.md for the A1-A28 backlog,
 and docs/10_delivery/promotion_protocol.md for how code actually
 moves from Mac → Alpha → Beta → Prod.
 
-State: 40 commits in. 152 backend unit tests pass, 0 failed.
+State: 50 commits in. 162 backend unit tests pass, 0 failed.
+Two alpha tags exist: alpha-2026-05-13-1, alpha-2026-05-13-2.
 
-What changed in AT:R11 vs the previous handover:
-  • Alpha is LIVE on melehost at https://api-alpha.agenticmarketintel.ai
-    — Cloudflare Tunnel + vLLM Gemma 4 + Yahoo prices, all serving.
-    The connector container `ami_tunnel` on melehost runs alongside
-    `ami_api_alpha`, `ami_postgres`, `ami_redis`. See
-    infra/cloudflared/README.md.
-  • Mac runs zero services. Backend / DB / docker stack all on
-    melehost. Every code change ships via /promote-to-alpha. Backend
-    tests on Mac still work (sqlite tempfile).
-  • The Flutter app supports three backend modes (alpha / beta /
-    prod) at compile time; the Settings → Developer toggle lets
-    TestFlight builds flip live. App Store builds bake only PROD.
-    See docs/08_tech/backend_modes.md.
-  • Promotion protocol is documented + the slash commands exist:
-    /promote-to-alpha + /rollback-alpha work today; beta + prod ones
-    are stubs that print "not yet implemented" until GCP lands.
+What changed in AT:R13 vs the previous handover:
+  • `/v1/sim/quote/{ticker}` and `/v1/sim/portfolio` now report
+    truthful per-call price source. Each provider has `quote() ->
+    Quote(price, source)`; FallbackProvider forwards the leg that
+    actually served. Before today, the source was the stack name
+    `fallback(cache(yahoo)->mock_walk)` which always contains
+    "yahoo" — so the Flutter LIVE/MOCK pill substring-matched on
+    "yahoo" and showed LIVE even when Yahoo was 429-ing for hours
+    and every quote was actually mock_walk. The pill now flips
+    correctly. See commit 83d32a7.
+  • `/promote-to-alpha` got exercised end-to-end for the first time
+    and surfaced two real playbook bugs: (a) rsync was overwriting
+    melehost's `.env` (lost vLLM keys, alpha dropped to mock LLM
+    for ~3 min); (b) `alembic upgrade head` failed because the
+    Dockerfile didn't ship `alembic.ini` or the `alembic/` dir into
+    the image. Both fixed in commit f46c901. Future promotions
+    should be clean modulo one carry-over (see below).
+  • Seven lesson-service tests had been silently failing on main
+    due to lesson-ID rot; one-character fix in af4d054 restored
+    the suite to 162 green.
 
-Dev workflow:
-  • Edit code on Mac → /promote-to-alpha → see it on iPhone hitting
-    api-alpha.agenticmarketintel.ai.
-  • iPhone app: scripts/run_dev.sh (pure flutter run, points at
-    Alpha by default; toggle to beta/prod URLs in Settings →
-    Developer).
-  • Backend tests: pytest backend/tests/unit/ -q from the worktree.
-  • DON'T start uvicorn or docker compose on the Mac. The Mac is a
-    pure editor (memory: feedback_mac_is_pure_editor.md).
+Carry-overs flagged by AT:R13:
+  • init_schema() + alembic boot collision. `init_schema()` does
+    `create_all()` at container boot. A fresh DB has every table
+    but no alembic_version row → `alembic upgrade head` errors
+    with DuplicateTable. Worked around manually today via
+    `alembic stamp head`. Spawned-task chip is waiting; option 2
+    (self-stamp from init_schema) is probably the right answer.
+    The /promote-to-alpha step 5 will keep tripping on this until
+    fixed.
+  • Backend Dockerfile uses `--reload` (dev flag) — should be
+    `--workers N` for the alpha host. Bundle with the init_schema
+    fix.
+  • yfinance migration. Today's fix is honesty about Yahoo's
+    failures; it doesn't make Yahoo more reliable. Migrating from
+    the keyless chart endpoint to the `yfinance` Python lib (which
+    has anti-rate-limit logic) is its own session. Until then,
+    most tickers will show MOCK most of the time — honest, but not
+    impressive for the demo.
 
 What's still left in Alpha — most blocked on Saiful's external setup:
 
@@ -701,14 +787,12 @@ What's still left in Alpha — most blocked on Saiful's external setup:
   A16. Push notifications (depends A15)
   A17. Daily briefing (depends A14 + A16)
   A22-A28. App Store Connect, Transporter, signing, TestFlight
-           uploads. A7 landed so the public hostname is ready for
-           --dart-define=AMI_API_URL_ALPHA on TestFlight builds.
+           uploads.
 
 If Saiful has unblocked any of those, pick them up. Otherwise the
 unblocked engineering items left are:
-  • Commit the W17/W18 generated lesson files (~180 untracked .mdx
-    under content/lessons/). Service already loads them on disk;
-    committing is a content-only pass. ~0.25 session.
+  • Fix init_schema + alembic boot order (carry-over above; small).
+  • yfinance migration (carry-over above; ~0.5 session).
   • Sweep i18n string extraction across existing screens — A11
     landed the scaffold; this is the wrap-Text-in-AppLocalizations
     pass. Framework falls back to English; not blocking Alpha
@@ -716,11 +800,18 @@ unblocked engineering items left are:
   • Animation production — bundle the first Lottie asset(s) under
     assets/animations/, register in AnimationRegistry. The A21
     widget already handles it. ~depends on art availability.
-  • Try the actual /promote-to-alpha command if it hasn't been
-    exercised yet — first run will surface any edge cases in the
-    playbook.
 
 If something else is on Saiful's mind, default to that.
+
+Dev workflow:
+  • Edit code on Mac → /promote-to-alpha → see it on iPhone hitting
+    api-alpha.agenticmarketintel.ai.
+  • iPhone app: scripts/run_dev.sh (pure flutter run, points at
+    Alpha by default; toggle to beta/prod URLs in Settings →
+    Developer).
+  • Backend tests: backend/.venv/bin/python -m pytest backend/tests/unit/ -q
+  • DON'T start uvicorn or docker compose on the Mac. The Mac is a
+    pure editor (memory: feedback_mac_is_pure_editor.md).
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment

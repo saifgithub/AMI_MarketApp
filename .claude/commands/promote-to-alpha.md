@@ -160,7 +160,11 @@ curl -fsS https://api-alpha.agenticmarketintel.ai/v1/health
 # LLM provider — should be vllm with has_real_provider=true
 curl -fsS https://api-alpha.agenticmarketintel.ai/v1/llm/status
 
-# Real market data — should report fallback(cache(yahoo)->mock_walk)
+# Real market data — source is the LEAF that actually served the price:
+#   "yahoo"     when Yahoo's keyless endpoint came back
+#   "mock_walk" when Yahoo was 429ing / errored and we fell through
+# (Not the stack name — see commit 83d32a7. The Flutter LIVE/MOCK pill
+# substring-matches "yahoo", so leaf reporting is what keeps it honest.)
 curl -fsS https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
 ```
 
