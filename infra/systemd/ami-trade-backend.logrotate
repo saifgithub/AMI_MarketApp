@@ -1,0 +1,32 @@
+# AMI Trade backend — logrotate policy (A8).
+#
+# systemd already captures stdout/stderr into the journal, so the primary
+# log destination doesn't need rotation. This file covers the auxiliary
+# /var/log/ami-trade/*.log files (write your own, or pipe with `tee`) so
+# we don't blow up the disk if something starts logging to a file.
+#
+# Install:
+#   sudo install -m 0644 infra/systemd/ami-trade-backend.logrotate /etc/logrotate.d/ami-trade
+#
+# Verify:
+#   sudo logrotate -d /etc/logrotate.d/ami-trade   # dry run
+#
+# To inspect journal size + cap it (recommended):
+#   journalctl --disk-usage
+#   sudo journalctl --vacuum-time=14d
+#   sudo journalctl --vacuum-size=500M
+# Or set SystemMaxUse=500M in /etc/systemd/journald.conf.
+
+/var/log/ami-trade/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 ami ami
+    sharedscripts
+    postrotate
+        systemctl reload-or-restart ami-trade-backend > /dev/null 2>&1 || true
+    endscript
+}

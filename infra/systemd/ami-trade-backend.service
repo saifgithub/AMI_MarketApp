@@ -1,0 +1,54 @@
+# AMI Trade backend — systemd unit (A8).
+#
+# Install:
+#   sudo install -m 0644 infra/systemd/ami-trade-backend.service /etc/systemd/system/ami-trade-backend.service
+#   sudo install -m 0640 -o root -g root infra/systemd/ami-trade.env.example /etc/ami-trade.env
+#   sudo chmod 640 /etc/ami-trade.env
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ami-trade-backend
+#
+# Verify:
+#   systemctl status ami-trade-backend
+#   journalctl -u ami-trade-backend -f
+#
+# Update after a `git pull`:
+#   sudo systemctl restart ami-trade-backend
+#
+# This unit replaces the dev-only `nohup uvicorn ... &` pattern. Crashes
+# restart automatically. Env vars live in /etc/ami-trade.env (root-owned,
+# mode 0640) — never check production secrets into git.
+
+[Unit]
+Description=AMI Trade backend (FastAPI + uvicorn)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ami
+Group=ami
+WorkingDirectory=/opt/ami-trade/backend
+EnvironmentFile=/etc/ami-trade.env
+ExecStart=/opt/ami-trade/backend/.venv/bin/uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --proxy-headers \
+    --forwarded-allow-ips=*
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ami-trade-backend
+
+# Hardening — minimal, doesn't break the app
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+LimitNOFILE=8192
+
+# Wait at most 30s for graceful shutdown before SIGKILL
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

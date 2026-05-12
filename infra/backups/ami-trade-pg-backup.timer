@@ -1,0 +1,15 @@
+# A9 — Run the Postgres backup nightly at 02:30 UTC + 5 min after boot to
+# catch any missed nightly. Persistent=true so a missed timer (laptop
+# closed overnight) fires on next boot.
+
+[Unit]
+Description=Nightly AMI Trade Postgres backup
+
+[Timer]
+OnBootSec=5min
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+Unit=ami-trade-pg-backup.service
+
+[Install]
+WantedBy=timers.target
