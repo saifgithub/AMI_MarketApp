@@ -86,13 +86,49 @@ def get_session() -> Iterator[Session]:
 def init_schema() -> None:
     """Create all tables in the configured DB. Idempotent.
 
-    Production deploys use Alembic migrations instead — see backend/alembic/.
-    For solo-dev + tests we just create_all().
+    On a fresh DB, runs `Base.metadata.create_all()` AND stamps Alembic
+    to `head` so subsequent `alembic upgrade head` is a no-op rather
+    than a DuplicateTable error. If `alembic_version` already exists,
+    we trust whatever's there and don't re-stamp — that preserves any
+    in-progress upgrade state from a prior alembic run.
+
+    Why both: solo-dev + tests use `create_all()` for speed (no
+    per-migration step on a fresh sqlite tempfile); the production
+    deploys want Alembic to be the formal record. Self-stamping
+    bridges them — a fresh container can finish boot in milliseconds
+    AND a /promote-to-alpha step 6 can run `alembic upgrade head`
+    cleanly afterward.
     """
-    # Importing models registers them on Base.metadata as a side-effect.
     from app.db import models as _models  # noqa: F401
     engine = get_engine()
     Base.metadata.create_all(engine)
+
+    # Self-stamp Alembic so the schema we just produced is recognized
+    # as up-to-date. Best-effort: if alembic isn't installed (older
+    # dev environments, the slim test image) or the alembic.ini can't
+    # be located, swallow the exception — the schema is correct, only
+    # the migration-tracking is unset.
+    try:
+        from alembic import command as alembic_command
+        from alembic.config import Config as AlembicConfig
+        from sqlalchemy import inspect
+
+        inspector = inspect(engine)
+        if "alembic_version" in inspector.get_table_names():
+            return  # Already stamped (or upgraded) — don't disturb.
+
+        # alembic.ini lives at the backend package root, two parents up
+        # from this file (db/session.py → db → app → backend).
+        alembic_ini = Path(__file__).resolve().parent.parent.parent / "alembic.ini"
+        if not alembic_ini.exists():
+            return  # Test environments may not ship alembic.ini.
+        cfg = AlembicConfig(str(alembic_ini))
+        cfg.set_main_option("sqlalchemy.url", str(engine.url))
+        alembic_command.stamp(cfg, "head")
+    except Exception:
+        # Schema is in place; Alembic stamp is a courtesy. Never let
+        # this branch break boot.
+        pass
 
 
 def reset_for_tests(url: str | None = None) -> None:

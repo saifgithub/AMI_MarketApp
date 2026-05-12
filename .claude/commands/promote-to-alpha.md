@@ -168,13 +168,10 @@ schema changes Alembic-via-promotion is the formal record. A failed
 migration is **not auto-rolled-back** — surface the error and ask
 the user whether to roll back or fix forward.
 
-**Known carry-over (AT:R13):** on a fresh DB, `init_schema()` creates
-every table via `create_all()` but doesn't stamp an `alembic_version`
-row, so `alembic upgrade head` then errors with
-`DuplicateTable: relation "agent_activations" already exists`. One-time
-fix per fresh DB: `docker compose exec -T api-alpha alembic stamp head`,
-then re-run upgrade head (now a no-op). The proper fix (self-stamping
-`init_schema`) is a spawned follow-up task.
+**Fresh-DB boot:** `init_schema()` self-stamps Alembic to `head`
+after `create_all()`, so `alembic upgrade head` here is a clean
+no-op on a fresh container. (Was a real DuplicateTable footgun
+through AT:R13 — fixed post-R13.)
 
 ### 7. Smoke check the public hostname
 
