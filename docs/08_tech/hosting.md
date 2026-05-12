@@ -34,12 +34,13 @@ Implications for the rest of the docs / infra:
   nightly pg_dump backup (`ami-trade-pg-backup.timer`). Install
   runbooks in each subdirectory's README assume Ubuntu / `apt` /
   `dpkg`.
-- **Docker Compose is the dev path.** Same images and same service
-  shape as production, but operators bring the stack up with
-  `docker compose up -d` instead of `systemctl`. Useful on Saiful's
-  Mac when iterating without an SSH round-trip — Docker Desktop
-  reaches `host.docker.internal` for free, melehost gets it via the
-  `extra_hosts` line above.
+- **Docker Compose is the melehost dev path.** Same images and same
+  service shape as production, but operators bring the stack up with
+  `docker compose up -d` instead of `systemctl`. The Mac does **not**
+  run the compose stack — Mac is pure editor (no backend, no DB; see
+  `promotion_protocol.md`). Compose lives on melehost; running it on
+  the Mac was an earlier dev pattern we retired once
+  `/promote-to-alpha` became the testing path.
 - **Beta retirement.** When the Cloud Run cutover lands (B2 / B3),
   melehost becomes a hot dev fallback only. The public Alpha
   hostname retargets to Cloud Run via a DNS swap — see

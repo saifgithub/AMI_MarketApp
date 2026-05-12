@@ -1,36 +1,47 @@
-# Local dev infrastructure
+# Alpha-host infrastructure (Docker Compose)
 
-Docker Compose stack for the AMI Trade backend. Same image and service
-shape whether it runs on:
+Docker Compose stack for the AMI Trade backend on **melehost** (Ubuntu
+Linux server on Saiful's LAN, `192.168.20.9`). See
+[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
+full melehost spec, and
+[`docs/10_delivery/promotion_protocol.md`](../../docs/10_delivery/promotion_protocol.md)
+for how code reaches it.
 
-- **Saiful's Mac** (Docker Desktop) — day-to-day iteration without an
-  SSH round-trip. `host.docker.internal` is provided for free.
-- **`melehost`** (Ubuntu Linux server on the LAN, `192.168.20.9`) —
-  the Alpha-phase production host. Plain Docker Engine; the compose
-  file's `extra_hosts` line bridges the `host.docker.internal` gap.
+**The Mac is not a deployment target.** Mac is pure editor — no
+backend, no DB, no compose stack. Every change ships to melehost
+via [`/promote-to-alpha`](../../.claude/commands/promote-to-alpha.md)
+to be exercised. Backend unit tests on the Mac use the sqlite
+tempfile fixture in `backend/tests/conftest.py` — no Postgres
+needed for them.
 
-See [`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for
-the full melehost spec and the systemd-based production launch
-covered in [`infra/systemd/`](../systemd/).
+The compose file's `extra_hosts: ["host.docker.internal:host-gateway"]`
+line on the cloudflared service is what lets the same dashboard
+ingress rule work on plain Docker Engine (melehost) — Docker Desktop
+provides that hostname for free, Docker Engine does not.
 
-## Quick start (from project root)
+## Quick start (on melehost)
 
 ```bash
-# 1. Copy environment template
-cp .env.example .env
-# Edit .env and fill in at least OPENROUTER_API_KEY and ANTHROPIC_API_KEY
+# 0. Code reaches melehost via /promote-to-alpha, which rsyncs the Mac
+#    worktree to ~/ami_trade/. The .env file lives at ~/ami_trade/.env
+#    on melehost (gitignored on the Mac, scp'd over by the promotion).
+ssh melehost
+cd ~/ami_trade
 
-# 2. Bring up the stack
-docker compose up -d
+# 1. Bring up the stack (with the public-tunnel profile)
+docker compose --profile tunnel up -d
 
-# 3. Verify backend is healthy
+# 2. Verify health from inside the LAN
 curl http://localhost:8000/v1/health
 
-# 4. Tear down when done
-docker compose down
+# 3. Verify health from outside (through the tunnel)
+curl https://api-alpha.agenticmarketintel.ai/v1/health
+
+# 4. Tear down when done (state persists in named volumes)
+docker compose --profile tunnel down
 
 # To wipe data and start fresh:
-docker compose down -v
+docker compose --profile tunnel down -v
 ```
 
 ## Components
@@ -61,29 +72,12 @@ with `eyJ...`, NOT the tunnel UUID) into `.env`, then bring the
 profile up. The CF dashboard tells the connector what hostname to
 serve and what to proxy.
 
-## Running on melehost
+## How code reaches melehost
 
-melehost is the Ubuntu Linux server on Saiful's LAN at
-`192.168.20.9` — see
-[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
-full spec.
-
-```bash
-# From the Mac, push the project
-rsync -avz --delete \
-  --exclude='.git' --exclude='**/__pycache__' --exclude='**/.dart_tool' \
-  "/Volumes/Extreme Pro/AMI_MarketApp/" \
-  melehost:~/ami_trade/
-
-# SSH into melehost and run the stack
-ssh melehost
-cd ~/ami_trade
-docker compose up -d
-```
-
-For day-to-day dev, simpler: run the stack on the Mac (Docker
-Desktop) and only sync to melehost for longer-running tests or
-when validating the production launch path.
+Use [`/promote-to-alpha`](../../.claude/commands/promote-to-alpha.md).
+That handles the rsync + recreate + smoke-check end to end. Manual
+rsync is reserved for emergencies — see
+[`docs/10_delivery/promotion_protocol.md`](../../docs/10_delivery/promotion_protocol.md).
 
 For the **production** launch on melehost (systemd-managed backend
 + cloudflared, pg backup timer, etc.) see
@@ -93,18 +87,18 @@ Ubuntu / `apt` / `dpkg` / `systemctl` toolchain.
 
 ## Hot reload
 
-The backend Docker service mounts `./backend/app` read-only. Changes to Python files trigger uvicorn auto-reload. No rebuild needed for most code changes.
+The `api-alpha` service mounts `./backend/app` and `./backend/tests`
+read-only. Changes to Python files trigger uvicorn auto-reload — but
+only for code that was rsync'd over via the promotion script. Mac
+edits don't reach the container until you `/promote-to-alpha`.
 
-When you change `pyproject.toml` or `Dockerfile`, rebuild:
-
-```bash
-docker compose up -d --build backend
-```
+When `pyproject.toml` or `Dockerfile` changes, the image needs to
+rebuild — the promotion script does this with `--build api-alpha`.
 
 ## Database access
 
 ```bash
-# Connect to postgres
+# Connect to postgres (from inside melehost)
 docker compose exec postgres psql -U postgres -d ami_trade
 
 # Run a one-off script
