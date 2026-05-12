@@ -236,14 +236,137 @@ class AnthropicProvider(LLMProvider):
         await self._client.aclose()
 
 
+# ── vLLM provider (on-prem, OpenAI-compatible) ───────────────────────────
+
+
+class VLLMProvider(LLMProvider):
+    """Streams completions from an on-prem vLLM server.
+
+    vLLM exposes the OpenAI `/v1/chat/completions` schema, so the only
+    bespoke logic here is the SSE parser (`choices[0].delta.content`
+    instead of Anthropic's `content_block_delta`) and the system-prompt
+    placement (vLLM/OpenAI puts `system` inside `messages`, not as a
+    sibling field).
+
+    Tier mapping: vLLM serves a single model at a time, so all tiers
+    resolve to the same `model_name`. The per-(plan, agent) tier policy
+    in `tier_policy.py` still picks a tier — vLLM just ignores the
+    distinction. When the day comes that we host multiple sizes side by
+    side, swap `model_name` for a `tier_to_model` map.
+    """
+
+    name = "vllm"
+
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        model_name: str,
+        api_key: str | None = None,
+        timeout_seconds: float = 60.0,
+    ) -> None:
+        self._model_name = model_name
+        headers = {"Content-Type": "application/json"}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        self._client = httpx.AsyncClient(
+            base_url=base_url.rstrip("/"),
+            headers=headers,
+            timeout=timeout_seconds,
+        )
+
+    async def stream_chat(
+        self,
+        *,
+        system_prompt: str,
+        messages: list[ChatMessage],
+        model_tier: ModelTier = "cheap",
+        max_tokens: int = 1024,
+    ) -> AsyncIterator[str]:
+        # OpenAI / vLLM put the system message as the first entry of `messages`.
+        openai_messages: list[dict[str, str]] = [
+            {"role": "system", "content": system_prompt}
+        ]
+        for m in messages:
+            openai_messages.append({"role": m.role, "content": m.content})
+
+        body = {
+            "model": self._model_name,
+            "messages": openai_messages,
+            "max_tokens": max_tokens,
+            "stream": True,
+        }
+
+        async with self._client.stream("POST", "/v1/chat/completions", json=body) as resp:
+            if resp.status_code != 200:
+                err_body = await resp.aread()
+                logger.error(
+                    "vllm_error",
+                    status=resp.status_code,
+                    body=err_body.decode()[:500],
+                )
+                yield (
+                    f"\n\n[LLM error: HTTP {resp.status_code} from vLLM. "
+                    "Check backend logs.]"
+                )
+                return
+
+            async for line in resp.aiter_lines():
+                if not line or not line.startswith("data: "):
+                    continue
+                data = line[len("data: ") :].strip()
+                if data == "[DONE]":
+                    return
+                try:
+                    import json
+
+                    obj = json.loads(data)
+                    choices = obj.get("choices") or []
+                    if not choices:
+                        continue
+                    delta = choices[0].get("delta") or {}
+                    content = delta.get("content")
+                    if content:
+                        yield content
+                except Exception as e:
+                    logger.warn("vllm_chunk_parse_failed", error=str(e), line=line[:200])
+
+    async def aclose(self) -> None:
+        await self._client.aclose()
+
+
 # ── Gateway: picks the right provider based on what's available ──────────
 
 
 class LLMGateway:
     """Single entry point for LLM calls. Picks provider based on config + tier."""
 
+    # Preference order: on-prem vLLM first (free + private + fast LAN),
+    # Anthropic second (managed fallback), mock last.
+    _PREFERENCE: tuple[str, ...] = ("vllm", "anthropic", "mock")
+
     def __init__(self) -> None:
         self._providers: dict[str, LLMProvider] = {"mock": MockProvider()}
+
+        if settings.vllm_base_url:
+            self._providers["vllm"] = VLLMProvider(
+                base_url=settings.vllm_base_url,
+                model_name=settings.vllm_model,
+                api_key=settings.vllm_api_key or None,
+            )
+            logger.info(
+                "llm_gateway_provider_registered",
+                provider="vllm",
+                base_url=settings.vllm_base_url,
+                model=settings.vllm_model,
+            )
+        else:
+            logger.info(
+                "llm_gateway_provider_skipped",
+                provider="vllm",
+                reason="no VLLM_BASE_URL in env",
+            )
+
         if settings.anthropic_api_key:
             self._providers["anthropic"] = AnthropicProvider(settings.anthropic_api_key)
             logger.info("llm_gateway_provider_registered", provider="anthropic")
@@ -257,6 +380,12 @@ class LLMGateway:
     def has_real_provider(self) -> bool:
         return any(name != "mock" for name in self._providers)
 
+    def _active_provider_name(self) -> str:
+        for name in self._PREFERENCE:
+            if name in self._providers:
+                return name
+        return "mock"
+
     def status(self) -> dict[str, object]:
         """Snapshot of what the gateway will actually do at call time.
 
@@ -265,19 +394,24 @@ class LLMGateway:
         Per-(plan, agent) routing decisions live in
         `app.services.tier_policy.pick_tier`, not in the gateway.
         """
+        active = self._active_provider_name()
+        # When vLLM is active, every tier resolves to the single hosted model.
+        if active == "vllm":
+            tier_to_model: dict[str, str] = {t: settings.vllm_model for t in TIER_TO_MODEL}
+        else:
+            tier_to_model = dict(TIER_TO_MODEL)
         return {
             "providers_registered": sorted(self._providers.keys()),
-            "active_provider": "anthropic" if "anthropic" in self._providers else "mock",
+            "active_provider": active,
             "has_real_provider": self.has_real_provider(),
-            "tier_to_model": dict(TIER_TO_MODEL),
+            "tier_to_model": tier_to_model,
         }
 
     def _pick_provider(self, locale: str, model_tier: ModelTier) -> LLMProvider:
-        """Routing logic. V0: prefer Anthropic if present, else mock.
-        V1 will add OpenRouter as primary and route Arabic → Gemini.
-        """
-        if "anthropic" in self._providers:
-            return self._providers["anthropic"]
+        """Pick a provider in preference order (vllm > anthropic > mock)."""
+        for name in self._PREFERENCE:
+            if name in self._providers:
+                return self._providers[name]
         return self._providers["mock"]
 
     async def stream_chat(

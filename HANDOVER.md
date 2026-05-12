@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of W12: tier_policy refactor)
+**Last updated:** 2026-05-12 (end of W13: on-prem vLLM Gemma 4 — app is live)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 14 commits, no remote yet |
-| Latest commit | (this session) W12: tier_policy refactor |
-| Lines on disk | ~34,300 (PRD ~14k, backend ~8.1k, Flutter ~9.9k, content ~1.5k) |
+| Git state | Clean working tree, 15 commits, no remote yet |
+| Latest commit | (this session) W13: on-prem vLLM Gemma 4 — app is live |
+| Lines on disk | ~34,500 (PRD ~14k, backend ~8.3k, Flutter ~9.9k, content ~1.5k) |
 
 ```
 $ git log --oneline
-<new>   W12: tier_policy refactor — single source of truth for (plan, agent) → tier
+<new>   W13: on-prem vLLM Gemma 4 — app is live
+d332860 W12: tier_policy refactor — single source of truth for (plan, agent) → tier
 d3acddc W11: Flutter LIVE/MOCK quote-source pill
 04ff5ea W10: real market data via Yahoo
 259d53d W9: LLM-swap prep + cleanup pass
@@ -45,7 +46,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **123 passed** (W11: 118, +11 tier_policy, −6 obsolete tier tests in test_llm_gateway) |
+| Tests | `pytest backend/tests/unit/ -q` → **130 passed** (W12: 123, +7 vLLM tests) |
 
 ### Postgres + persistence (NEW this session)
 
@@ -149,6 +150,91 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (W13 — on-prem vLLM Gemma 4 — app is live)
+
+Saiful pointed at his LAN-hosted vLLM box at `192.168.20.74:8000`
+serving `gemma-4-31b-it-nvfp4` (Gemma 4 31B, NVFP4 quantized, 262k
+context). Wired it through the existing gateway abstraction; the iPhone
+build from W11 is now talking to a real LLM end-to-end.
+
+### New `VLLMProvider` in `llm_gateway.py`
+
+OpenAI-compatible streaming client (`/v1/chat/completions`, SSE with
+`choices[0].delta.content` deltas). Same `LLMProvider` interface as the
+Anthropic + Mock providers — drop-in. Optional bearer auth via
+`VLLM_API_KEY` for hardened deployments; LAN-private servers leave it
+unset.
+
+### Gateway selection: vllm > anthropic > mock
+
+`LLMGateway._PREFERENCE = ("vllm", "anthropic", "mock")`. Whichever is
+registered first wins. Set `VLLM_BASE_URL` → vLLM serves every call.
+Unset it → Anthropic if `ANTHROPIC_API_KEY` is set, otherwise mock.
+`/v1/llm/status` now reports `active_provider: "vllm"` and every tier
+in `tier_to_model` resolves to the single hosted model (vLLM hosts one
+model at a time; the tier dimension collapses).
+
+### Config additions
+
+```ini
+VLLM_BASE_URL=http://192.168.20.74:8000
+VLLM_MODEL=gemma-4-31b-it-nvfp4
+VLLM_API_KEY=          # optional
+USE_REAL_MARKET_DATA=true
+```
+
+Lives in `app/core/config.py` + documented in `.env.example`.
+
+### Verified end-to-end
+
+Backend restarted under W13 worktree code with env vars set:
+
+```
+$ curl localhost:8000/v1/llm/status
+{"providers_registered":["mock","vllm"],"active_provider":"vllm",
+ "has_real_provider":true,
+ "tier_to_model":{"cheap":"gemma-4-31b-it-nvfp4",
+                  "mid":"gemma-4-31b-it-nvfp4",
+                  "premium":"gemma-4-31b-it-nvfp4"}}
+```
+
+Then a 1-on-1 stream against `market_analyst`:
+
+> "Daily/Weekly timeframe: Bullish trend continuation following a
+>  successful retest of the 50-day SMA.
+>  Setup: Long on dip to $115 (support), target $140, stop-loss $105
+>  (approx 2.5:1 R:R)."
+
+Structured analyst response, streamed token-by-token from the iPhone's
+backend through tier_policy → vLLM → Gemma 4 → SSE back to the client.
+Mock text is gone.
+
+### Tests (+7 → 130 total)
+
+- `test_vllm_provider_parses_openai_deltas` — happy path; verifies the system prompt is placed inside `messages` and the model name + max_tokens + stream flag land in the body.
+- `test_vllm_provider_error_yields_inline_error` — HTTP 503 yields a sentinel error chunk.
+- `test_vllm_provider_tolerates_empty_delta_chunks` — empty `delta` between content tokens doesn't crash.
+- `test_vllm_provider_sends_bearer_when_api_key_set` / `test_vllm_provider_omits_bearer_without_api_key` — Authorization header behavior.
+- `test_gateway_prefers_vllm_when_both_keys_set` — preference order is vllm > anthropic > mock.
+- `test_gateway_status_with_only_vllm` — status surface when only vLLM is configured.
+
+### Running stack (this terminal)
+
+| Component | Where | How |
+|---|---|---|
+| Backend | PID 67193 | `uvicorn app.main:app --host 0.0.0.0 --port 8000` from the W13 worktree, env: `DATABASE_URL`, `USE_REAL_MARKET_DATA=true`, `VLLM_BASE_URL`, `VLLM_MODEL` |
+| Postgres | docker `ami_postgres` | host port 5434 |
+| vLLM | `192.168.20.74:8000` | on-prem, gemma-4-31b-it-nvfp4 |
+| iPhone | TESTING IPHONE 13 | release build of W11 code, pointed at `http://192.168.20.9:8000` |
+
+### Logs
+
+```
+tail -f /tmp/ami-backend.log
+```
 
 ---
 
@@ -325,46 +411,45 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #7 — name the
-session "AT:R8:".
+We're picking up the AMI Trade build. This is handover #8 — name the
+session "AT:R9:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-W12 (tier_policy refactor) just landed. 14 commits in. 123 unit tests
-pass. tier_policy.pick_tier(plan, agent_id) is now the single source of
-truth — used by agent_runner, coach_engine, room_runner. Floor-Pass PM
-runs on mid (not premium), Floor-Manager Concierge on mid (not premium).
+W13 (on-prem vLLM Gemma 4) is live. 15 commits in. 130 unit tests pass.
+Backend is talking to gemma-4-31b-it-nvfp4 at 192.168.20.74:8000;
+iPhone is on the W11 release build pointed at the LAN backend. The
+mock text everywhere is gone — every agent now responds in real time.
 
-W13 candidates (priority order):
+W14 candidates (priority order):
 
-  A. Live LLM swap (FINISH IT). Saiful adds ANTHROPIC_API_KEY to
-     backend/.env. Then:
-       cd backend && .venv/bin/python -m scripts.llm_smoke
-     Expect PASS on all three tiers. Then exercise 1-on-1 with PM
-     (premium) and Concierge (cheap) to confirm tier routing.
-
-  B. Room → LLM wiring. room_runner.py still emits scripted agent
-     speech. Wire each phase through llm_gateway with a
-     transcript-aware prompt per agent. Keep scripted fallback when
+  A. Room → LLM wiring. room_runner.py STILL emits scripted agent
+     speech — the only place in the app that doesn't yet hit vLLM.
+     Wire each Room phase through llm_gateway with a transcript-aware
+     prompt per agent. Keep scripted fallback when
      gateway.has_real_provider() is False. This is the single largest
-     "feels live" unlock once a key is set.
+     "feels live" unlock now that the gateway is humming.
 
-  C. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
+  B. Real Supabase plug-in. SUPABASE_URL + SUPABASE_SERVICE_KEY in
      backend/.env. Swap app/services/auth_service.py to supabase-py
      admin. Switch backend connection from postgres to anon /
      authenticated role so RLS policies start enforcing. Run the
      anon → email claim flow end-to-end.
 
-  D. Real Apple Sign-In. Replace the synthetic JWT in
+  C. Real Apple Sign-In. Replace the synthetic JWT in
      mobile/lib/screens/auth/sign_in_screen.dart with sign_in_with_apple
      (already in pubspec). Verify on TESTING IPHONE 13. Add Sign in
      with Apple capability to bundle id under team S7RBWM4879.
 
-  E. Redeploy the iPhone build. TESTING IPHONE 13 still has W3.
-     scripts/run_dev.sh or `flutter run -d <device_id>` to flash
-     W4-W11 onto the device. After that, Saiful can actually see
-     the LIVE pill, the Settings mandate editor, the new lesson, etc.
+  D. Concierge → LLM. Onboarding is still a deterministic state
+     machine. With vLLM live, the post-onboarding Concierge can be
+     wired through agent_runner so it actually answers questions and
+     routes the user.
+
+  E. Multiple-model vLLM. If the on-prem box ever serves >1 model,
+     swap VLLMProvider.model_name for a tier-keyed map so cheap/mid/
+     premium can pick different sizes.
 
 Saiful has granted full autonomy through MVP — execute, don't ask.
 File-header rule: every new file gets a docstring/library comment
@@ -402,7 +487,7 @@ scripts/run_dev.sh
 
 ## Open questions / nothing-is-blocked items
 
-- **Anthropic API key.** Still not added. Gateway code is verified; smoke script ready. Drop key into `backend/.env` → restart → `python -m scripts.llm_smoke` → PASS = live.
+- **Anthropic API key.** Still not added — and no longer needed: the on-prem vLLM at `192.168.20.74:8000` serves Gemma 4 31B for every agent today. Anthropic remains a hot-swappable fallback if `VLLM_BASE_URL` is unset.
 - **Supabase project.** Not yet provisioned. RLS policies are live but dormant — they enforce once the backend stops connecting as `postgres`.
 - **Apple Developer team setup.** Done for Team `S7RBWM4879` but Sign in with Apple capability needs to be added to the bundle id for real prod usage.
 - **App Store, APNs** — still external. Market data is now real Yahoo when `USE_REAL_MARKET_DATA=true`.
