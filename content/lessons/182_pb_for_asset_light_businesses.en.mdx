@@ -1,0 +1,72 @@
+---
+id: "182_pb_for_asset_light_businesses"
+title: "P/B for asset-light businesses — why the ratio doesn't work"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "price_to_book"
+prerequisites: ["040_price_to_book", "036_competitive_advantage_moat"]
+tags: ["price_to_book", "asset_light", "software", "intangibles", "valuation", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# P/B for asset-light businesses — why the ratio doesn't work
+
+Lesson 040 flagged that P/B is "near-useless for software and platforms." This lesson explains *why* — and what to use instead. The mechanical reason: GAAP expenses R&D, brand-building, and customer acquisition as they happen, never capitalising them on the balance sheet. The economic reason: in an asset-light business, the productive capital is people, code, and trust — none of which appear at fair value in book. By the end you should be able to recognise an asset-light business at a glance, name the specific ratios that *do* work for it, and resist the strongest mistake a former value investor makes when moving into modern markets.
+
+## How this plays out in real markets
+
+MSFT mid-2026: stock $480, book value per share ~$42, P/B ≈ 11x. The book records the historical cost of buildings, servers, and net working capital. It does not record the value of: Windows, Office, Azure, the GitHub network, the LinkedIn graph, or twenty-five years of accumulated developer relationships. All of those were expensed in the years they were built. Microsoft's economic worth is roughly nothing like its book; the 11x P/B is meaningless on its own.
+
+META: stock $580, book per share ~$78, P/B ≈ 7.4x. The Facebook + Instagram + WhatsApp user graph (3.5B+ MAU across the family), the ad-targeting models, the brand — none of it sits on the balance sheet. NFLX: stock $700, book per share ~$45, P/B ≈ 15.5x. The 270M+ subscribers, the recommendation engine, the original-content library (partially capitalised but at cost) — also mostly off-book. CRM: stock $260, book per share ~$60, P/B ≈ 4.3x. Even this "modest" P/B is dominated by goodwill from acquisitions, not productive working capital.
+
+The right tools for these businesses: EV/Sales (especially for high-growth software), EV/EBITDA, Rule of 40 (revenue growth + free-cash-flow margin), net dollar retention (for SaaS), and DCF. P/B doesn't fail because it's wrong — it fails because the denominator captures the wrong thing for the business model.
+
+On Bursa: a tech-services name like Vitrox or a brand-heavy consumer like MRDIY will show P/B that looks expensive (3x–8x) against banks at 1.3x. That gap is structural, not a comparison: MRDIY's brand and store-density advantage doesn't show up in book value, so P/B reads high in a way that has no information.
+
+Falsifiable claim: P/B is uninformative as a stand-alone valuation metric for any business where intangible assets (brand, IP, network, customer relationships) make up most of the productive capital. Operationally: if R&D plus sales-and-marketing spend is more than 25% of revenue over the last three years, that's an asset-light fingerprint, and P/B should be treated as a *consistency check* on capital structure at most — not a valuation signal.
+
+## The trap
+
+The trap is the migrating-value-investor trap: an investor trained on banks, REITs, and industrials moves into tech, screens on low P/B, finds nothing, and concludes the market is "absurdly overvalued." The right read isn't that the market is absurd — it's that the metric doesn't fit. The correct mental model: match the valuation tool to the asset structure. Asset-heavy financials and industrials → P/B with ROE. Cyclical commodity producers → mid-cycle P/E and asset replacement value. Asset-light platforms → EV/Sales, EV/EBITDA, DCF, plus business-quality ratios (gross margin, net retention, Rule of 40). What invalidates the signal: a software business that *is* genuinely capital-intensive — Snowflake's data warehouse infrastructure, Cloudflare's edge POPs — has more on-book asset weight than pure SaaS, and P/tangible-book can carry some information at the margin. But even there, the dominant value driver is the intangible stack, and P/B is at best a sanity check.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An investor screens for 'cheap' stocks at P/B < 2.0x. The screener returns banks, REITs, materials, and one large software name (heavily distorted by a recent acquisition). The investor concludes the software name is undervalued because it 'screens cheap.' What's the cleanest critique?"
+  options={[
+    "The investor is correct — P/B below 2.0x is universally cheap",
+    "The software name's low P/B is likely the result of a recent acquisition that inflated book value with goodwill, not a sign of operational value. P/B is the wrong metric for software regardless — the productive capital (code, brand, customer relationships) is expensed not capitalised, so book is a structurally bad denominator. The right tools are EV/Sales, EV/EBITDA, Rule of 40, and net retention. The 'cheap' signal is a screener artifact",
+    "All software companies are overvalued so the investor should buy banks instead",
+    "The investor should switch to P/E and stop using P/B entirely"
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the universal-rule shortcut every screener-driven investor falls for. The right read recognises two layers of distortion: book value can be inflated by goodwill from acquisitions (lesson 180), and book value is structurally too small for asset-light businesses (this lesson). Option 2 makes a sweeping claim about the whole sector; option 3 over-corrects — P/B is fine for banks and REITs, just not universally."
+/>
+
+<Quiz
+  question="A reader is asked to synthesise three years of lessons (040, 180, 182) and choose the right valuation toolkit for two businesses. Business A: a regional bank, R&D + S&M = 4% of revenue, goodwill 8% of equity, capital-light service model on top of a loan book. Business B: a B2B SaaS company, R&D + S&M = 65% of revenue, goodwill 90% of equity (heavy acquisition activity), gross margin 78%, net retention 130%. Which toolkit pairing is correct?"
+  options={[
+    "Both businesses: P/B + ROE",
+    "Both businesses: EV/Sales + Rule of 40",
+    "Business A: P/B + ROE + CET1 ratio (the lesson 040/041/181 toolkit). Business B: EV/Sales + Rule of 40 + net dollar retention, with P/tangible-book ignored entirely because goodwill dominates and the productive capital is off-book. Trying to compare A and B on a single ratio fails because the businesses sit on opposite sides of the asset-intensity spectrum — the synthesis is matching the tool to the asset structure",
+    "Business A: DCF only. Business B: P/B only"
+  ]}
+  answer={2}
+  explanation="The synthesis spans three lessons: P/B works conditionally (040), is distorted by goodwill (180), and is structurally meaningless for asset-light businesses (this lesson). The tempting wrong answer is option 0 — applying one toolkit universally is exactly the failure mode the lessons warn against. Option 1 makes the reverse mistake. Option 3 inverts the right pairing. The right answer requires matching tool to business — that's the operating principle."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste an asset-light ticker (MSFT, META, NFLX, CRM, or Bursa: MRDIY) and ask: "Compute P/B and explain why it's the wrong primary tool. Then give me the right toolkit: EV/Sales, EV/EBITDA, Rule of 40, and (if SaaS) net dollar retention." Save the alternative-toolkit numbers in your <Term id="ami_decision_journal" /> next to the ticker. Stop quoting the P/B on these names.
+
+## Takeaway
+
+For asset-light businesses, P/B is a consistency check at best — never a valuation. Match the tool to the asset structure: P/B + ROE for asset-heavy; EV/Sales + Rule of 40 for asset-light.

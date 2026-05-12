@@ -1,0 +1,74 @@
+---
+id: "116_top_down_multi_timeframe_workflow"
+title: "Top-down multi-timeframe workflow"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "timeframes"
+prerequisites: ["021_timeframes_and_what_they_tell_you", "022_trend_direction"]
+tags: ["multi_timeframe", "workflow", "alignment", "chart_reading", "process"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Top-down multi-timeframe workflow
+
+This assumes you've completed 021 (timeframes). Here we go deeper on the actual workflow: how to walk a chart from highest timeframe to lowest in a fixed sequence so you stop flipping between views and second-guessing yourself. The top-down workflow has three passes — context, setup, trigger — each on a fixed timeframe, and each producing one deliverable before you move to the next. By the end of this lesson you should be able to execute the three-pass workflow on any ticker, know what to do when the timeframes disagree, and produce a written plan whose entry, stop, and invalidation each live on a specific timeframe.
+
+## Example
+
+Walk MSFT in late April 2026 through the workflow.
+
+**Pass 1 — Weekly (context).** MSFT weekly chart shows higher weekly highs since November 2025: $362 → $419 → $445 → $462. Weekly trend is up. The most recent higher-low sits at $419 (a weekly close above $419 has held). Deliverable: *Bigger trend is up; trend invalidation = weekly close below $419.*
+
+**Pass 2 — Daily (setup).** MSFT daily chart shows price at $458 after pulling back from $462 over four sessions. The pullback found support at the daily 20-period moving average near $452 and held. A higher-low at $451.40 printed two days ago. Deliverable: *Pullback complete at $451.40 daily higher-low; setup invalidation = daily close below $451.40.*
+
+**Pass 3 — Hourly (trigger).** MSFT hourly chart shows three consecutive higher hourly lows over the past 14 hours, breaking a downward-sloping intraday channel from yesterday's high. Deliverable: *Long trigger fires on hourly close above $458.20 (yesterday's hourly swing high).*
+
+Plan: enter on the hourly trigger at ~$458.50, stop at $450.80 (below the daily higher-low), target the prior weekly high at $462 for a first take, $470 for a stretch. Risk ~$7.70, reward $3.50 to $11.50. Three timeframes, three deliverables, one trade.
+
+The plan invalidates on a daily close below $451.40 (setup gone) or a weekly close below $419 (the whole context is gone — exit any remaining size immediately, no questions).
+
+## The trap
+
+The trap is doing the workflow in the wrong order, usually bottom-up. A beginner spots an exciting hourly pattern, then *retroactively* checks the daily and weekly looking for justifications. By the time they get to the weekly they've already decided to take the trade, so any evidence that fits gets weighted, any evidence that doesn't gets dismissed. The correct mental model: top-down is non-negotiable. The weekly pass must finish before the daily pass starts, the daily pass before the hourly. If pass 1 fails (weekly trend doesn't support the direction you want to trade), you stop — there is no pass 2. This is what stops you trading against the dominant trend on the strength of a five-minute squiggle.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You're planning a long swing trade on AAPL. You scan the weekly chart and find a clean downtrend with lower highs and lower lows. The hourly chart looks like it's setting up a bounce off intraday support. What does the top-down workflow say to do?"
+  options={[
+    "Take the long trade — hourly support is enough to time an entry inside any larger trend",
+    "Stop at pass 1 — the weekly is against the direction you wanted to trade, so passes 2 and 3 don't start; if you want a long swing trade, find a ticker whose weekly trend supports it",
+    "Take the long trade with a tight stop because the weekly downtrend means more upside potential",
+    "Skip the weekly pass — it's too slow to matter for active traders"
+  ]}
+  answer={1}
+  explanation="The workflow is sequential and gated. A weekly downtrend disqualifies a long swing thesis, full stop. Option 0 violates the workflow by letting the lowest timeframe override the highest — exactly the failure mode the lesson names. Option 2 invents a mean-reversion rule that confuses 'oversold' with 'tradable long', and conflates downtrends with discounts. Option 3 dismisses the slowest, highest-information timeframe in the name of being 'active' — which is precisely how active traders end up fighting trends."
+/>
+
+<Quiz
+  question="On NVDA you complete pass 1 (weekly trend up, invalidation = weekly close below $128) and pass 2 (daily pullback to higher-low at $134, invalidation = daily close below $134). On the hourly chart you can't find a clean trigger — price is choppy with no clear higher hourly low yet. A friend says 'just enter at market, the setup is good'. Which response best applies the workflow, and what's the most tempting alternative?"
+  options={[
+    "Enter at market — passes 1 and 2 are enough, the trigger is a bonus",
+    "Wait — passes 1 and 2 are necessary but not sufficient; the trigger pass converts a valid setup into an entry. Trading without it means accepting random intraday adverse moves you have no plan for. Most tempting wrong move: treating a great setup as permission to skip the trigger",
+    "Cancel the trade — if the hourly is choppy the daily setup must be wrong too",
+    "Drop to the 5-minute chart and find a trigger there instead"
+  ]}
+  answer={1}
+  explanation="Each pass produces a deliverable; entry is the deliverable of pass 3. Without a trigger, you have a setup but no entry — and 'enter at market' inside a choppy hourly is how a 1R risk plan turns into a 3R drawdown before the setup has a chance to play out. Option 0 collapses the workflow's three-step structure. Option 2 over-corrects and lets pass 3 invalidate passes 1 and 2 — they don't, they're independent. Option 3 is timeframe-skipping in the other direction — dropping to 5-minute for a swing trade plan reintroduces all the noise the higher timeframes were designed to filter. The synthesis test is recognising that the three passes are coupled but each has its own job."
+/>
+
+## Try it
+
+Pick one ticker on your <Term id="ami_watchlist" />. In your <Term id="ami_decision_journal" />, write three lines labelled "Weekly:", "Daily:", "Hourly:" and fill in the deliverable for each pass — bigger trend + invalidation; setup + invalidation; trigger + invalidation. If any pass fails, stop and don't trade. Then ask the Market Analyst in <Term id="ami_one_on_one" />: "Confirm or correct my three-pass plan on [ticker]." Adjust before placing any trade.
+
+## Takeaway
+
+Top-down workflow is sequential — weekly for context, daily for setup, hourly for trigger — and any pass that fails kills the trade before the next pass even starts.

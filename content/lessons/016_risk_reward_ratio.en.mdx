@@ -1,0 +1,63 @@
+---
+id: "016_risk_reward_ratio"
+title: "Risk/reward ratio"
+duration_min: 4
+level: 1
+module: 3
+difficulty: 2
+track: "risk_portfolio"
+topic: "risk_reward"
+prerequisites: ["015_stop_loss_basics"]
+tags: ["risk", "reward", "expectancy", "math"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Risk/reward ratio
+
+The risk/reward ratio is the distance from your entry to your target divided by the distance from your entry to your stop. A 1:2 R:R means you stand to make $2 for every $1 you risk if both levels resolve. R:R is not a prediction — it is a filter. With a 1:2 setup you can be wrong on half your trades and still grind out a profit; with a 1:0.8 setup you have to be right almost two-thirds of the time just to break even. This lesson teaches how to compute it, what minimum to demand, and how it ties to win rate.
+
+<Animation name="risk_reward_scale" />
+
+## Example
+
+Look at MSFT in a hypothetical setup at $415. The Market Analyst marks support at $408 (where a chart-based stop belongs, just below at $407) and resistance at $440 (the next clean target zone). Per-share risk = $415 − $407 = $8. Per-share reward = $440 − $415 = $25. R:R = 25 ÷ 8 = 3.1. That is a setup worth taking even if you only hit the target 4 times in 10 — the math: 4 wins × $25 − 6 losses × $8 = $100 − $48 = $52 net per share over ten trades.
+
+Now flip it. Same entry $415, same stop $407, but the target is only $422 because that is the next minor resistance. Reward = $7, risk = $8, R:R = 0.88. You are now risking more than you stand to make. You would need to win 54% of the time just to break even (8 ÷ (7+8)). On Bursa Malaysia the same logic on PETRONAS: entry RM6.40, stop RM6.20 (risk RM0.20), target RM7.00 (reward RM0.60), R:R = 3.0. Falsification is built in: if the chart's natural target is closer than 1.5× the stop distance, the setup fails the filter before you even price it.
+
+## The trap
+
+The trap is moving the target to make the R:R look acceptable. A beginner sees R:R = 0.8 on a setup they want to take, so they "extend the target" to $432 to force R:R up to 2.1, then take the trade. The target is now a number on the ticket, not a level on the chart — there is no reason MSFT should stop at $432, so the trade will either get stopped out at $407 or drift sideways for weeks while the trader stares at unrealised gains they never take. The correct mental model: the chart picks the target the same way it picks the stop. If the math doesn't pass, the trade doesn't take — you skip it and wait for one that does.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You buy AMZN at $185 with stop $180 and target $200. What is the risk/reward ratio?"
+  answer={3}
+  tolerance={0.1}
+  explanation="Risk = $185 − $180 = $5. Reward = $200 − $185 = $15. R:R = 15 ÷ 5 = 3.0."
+/>
+
+<Quiz
+  question="Trader A takes only 1:3 setups and wins 35% of the time. Trader B takes only 1:1 setups and wins 55% of the time. Both risk $100 per trade. Over 100 trades, who makes more money?"
+  options={[
+    "Trader B — a higher win rate is the strongest edge.",
+    "Trader A — 35 wins × $300 = $10,500, minus 65 losses × $100 = $6,500, net +$4,000. Trader B: 55 × $100 − 45 × $100 = +$1,000. Trader A nets four times as much.",
+    "They are roughly equal because expected value is the same.",
+    "Trader B — losing 65 times in a row would blow up Trader A before the wins arrive."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is Trader B — a 55% win rate feels obviously better than 35%. But R:R changes the math entirely: Trader A is paid 3× per win, so even at a 35% hit rate the expectancy is +$40 per trade vs. Trader B's +$10. The 'blowup' distractor is a red herring — risk per trade is fixed at 1%, so 65 losses cannot wipe out an account that loses 1% at a time. R:R lets you be wrong more often and still win."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and set `min_risk_reward_ratio` to 1.5. Then open a <Term id="ami_one_on_one" /> with the Trader and ask it to draft a ticket for any ticker on your <Term id="ami_watchlist" />. If the Trader's target is closer than 1.5× the stop distance, the <Term id="ami_pm_safety_floor" /> will refuse the ticket — watch how the rejection message reads.
+
+## Takeaway
+
+Win rate without R:R is a coin flip; R:R without entry discipline is a wish. You need both, and the chart picks both levels — not your feelings.

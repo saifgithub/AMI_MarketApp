@@ -1,0 +1,83 @@
+---
+id: "246_range_bound_asset_rotation"
+title: "Range-bound regimes: rotation under a flat index"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+topic: "range_regime"
+prerequisites: ["061_sideways_range_markets", "063_sector_rotation", "055_mean_reversion"]
+tags: ["regime", "range", "rotation", "sectors", "relative_strength"]
+agent_callouts: ["neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Range-bound regimes: rotation under a flat index
+
+Lesson 061 defined a range regime numerically and prescribed mean-reversion at the band edges. This lesson teaches what most readers miss: a flat index almost never means a flat *market*. Sectors and styles rotate violently inside a range, and the trader who only watches the index sees "boredom" while the trader who watches relative strength sees the next regime forming. After this lesson you will be able to detect inside-range rotation, name two strategies that earn while SPX sleeps, and state what invalidates the range without invalidating the rotation.
+
+## How this plays out in real markets
+
+SPX in 2015 ran a flat year — closed 2015 down 0.7%, with the 200-day SMA sloping under 0.05%/week for 8 of 12 months. The "boring" headline disguised real rotation:
+
+- XLE (energy) fell 23.6% over the year as oil crashed.
+- XLU (utilities) led defensively early-year, then ceded leadership.
+- XLV (healthcare) was the year's leader until a July rotation flipped it.
+- Inside-year max-to-min rotation between top and bottom sectors: ~30 percentage points.
+
+A more recent flat-index window: SPX between mid-March and end-May 2023 (covered in lesson 061 as a range case). Inside that ~3-month range:
+
+- XLK (tech) outperformed SPY by +9.2% (1 March to 31 May 2023).
+- XLF (financials) underperformed SPY by -8.5% on the regional-bank shock.
+- XLE underperformed SPY by -10.4% on falling oil.
+
+The range looked sleepy. The 17.7-point spread between leader and laggard sectors was the actual market story.
+
+Detection rule for inside-range rotation: while the range regime from lesson 061 is in force (flat 200-day, two horizontal levels tested), compute 60-day relative-strength returns across the 11 SPDR sector ETFs. If the spread between the top sector and bottom sector exceeds 15 percentage points and at least 3 sectors have flipped relative-strength sign in the window, inside-range rotation is in force.
+
+On Bursa Malaysia: the same pattern shows up between plantation, banking, and tech stocks across multi-month KLCI ranges — different tickers, identical structure.
+
+## The trap
+
+The range-rotation trap is index-watching. The trader sees SPX going nowhere, concludes "no opportunity", and either sits flat (boredom) or revenge-trades the index itself (overtrading the chop). Meanwhile the actual return is being earned in long-leader, short-laggard pairs that the index hides.
+
+The correct model: under a flat index, the trade is cross-sectional, not directional. Long the relative-strength leader, optionally pair-trade against the laggard inside mandate, target sector mean-reversion or persistence depending on the rotation phase. The index range is the backdrop; sector relative strength is the foreground.
+
+<ChatWith agent="neutral_debator" />
+
+## Quiz
+
+<Quiz
+  question="SPX has been range-bound for 10 weeks (200-day flat, 4,000–4,200). Over the last 60 days: XLK +7% vs SPY, XLP +5% vs SPY, XLF -6% vs SPY, XLE -8% vs SPY. Three sectors have flipped relative-strength sign. The 11-sector top-to-bottom spread is 18 percentage points. What does the inside-range-rotation framework prescribe?"
+  options={[
+    "Sit flat — the index has no signal.",
+    "Inside-range rotation is in force. Trade cross-sectionally: long the confirmed relative-strength leaders (XLK, XLP) at reduced sizes vs mandate maximum, optionally pair against laggards (XLF, XLE) if mandate allows. Range invalidates on a weekly close outside 4,000–4,200; rotation invalidates if the spread compresses under ~5 points.",
+    "Short SPX with leverage — flat means crash imminent.",
+    "Concentrate the entire portfolio in XLK at maximum mandate size."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — index says nothing, sit out. But the index is the average; the 18-point spread says the average hides material rotation. Option 3 ignores diversification mandate. The synthesis: trade the rotation cross-sectionally within mandate caps, with two independent invalidations (range break vs spread collapse)."
+/>
+
+<Quiz
+  question="What event would invalidate the range regime but NOT the rotation thesis?"
+  options={[
+    "A 60-day return spread collapse from 18 points to 4 points across sectors.",
+    "SPX closes above 4,200 on a weekly basis with the 20-week SMA turning up — range broken, but the sector relative-strength rankings are intact and the rotation now plays out under a trending regime.",
+    "VIX falls to 11.",
+    "The Fed cuts rates."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — but that invalidates the rotation, not the range. The synthesis is recognising that range and rotation are two regimes layered together; one can break while the other persists. A breakout above the range with intact sector leadership simply shifts the rotation into a bull regime — same long-leaders trade, larger size now allowed."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Neutral Debator and paste: "Compute the current 60-day relative-strength reading for each of the 11 SPDR sectors vs SPY, the top-to-bottom spread, and the count of sectors that have flipped sign in the last 60 days. Tell me whether inside-range rotation is in force." Then open the <Term id="ami_mandate" /> editor and consider a "rotation regime" preset: position max stays the same, but require positions to be in a sector that's in the top-3 relative-strength rank for entry.
+
+## Takeaway
+
+A flat index hides cross-sectional rotation; trade the leader-laggard spread, not the index, while the range holds. Range and rotation are layered regimes — one can invalidate without the other.

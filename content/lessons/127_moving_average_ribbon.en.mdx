@@ -1,0 +1,72 @@
+---
+id: "127_moving_average_ribbon"
+title: "Moving average ribbon — trend regime at a glance"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "ma_ribbon"
+prerequisites: ["026_moving_averages", "126_ma_slope_analysis"]
+tags: ["indicators", "moving_average", "ribbon", "trend_regime", "fan"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Moving average ribbon — trend regime at a glance
+
+Lesson 026 used one or two moving averages at a time. A ribbon stacks several — typically six to eight EMAs in graduated lengths like 8, 13, 21, 34, 55, 89 — so you see the entire term structure of trend at once. When all the lines fan out cleanly with the shortest on top and the longest on the bottom, every timeframe is in agreement and the trend is strong. When the lines compress into a tight band, the trend has lost differentiation and the market is consolidating. When they cross-weave, the trend has broken down. The ribbon turns "is there a trend?" into a visual three-state answer — fanned, compressed, or tangled.
+
+## How this plays out in real markets
+
+Look at MSFT through September 2025. Through the first three weeks of September, the EMA8 sat around 522, EMA21 at 514, EMA55 at 498, EMA89 at 486 — a clean fan with roughly $36 of spread between the fastest and slowest line. Price held above all six MAs. That's a fully-fanned ribbon, the strongest regime.
+
+On October 15, MSFT broke 510 and the EMA8 cut down through EMA21 and EMA34. The ribbon compressed: the spread between fastest and slowest dropped to $11 by October 22. Compression precedes regime change. By November 5, EMAs were braided together — EMA21 above EMA8, EMA34 above EMA55 in places — a tangled state that lasted nine sessions. MSFT chopped between 478 and 495 the whole time. On November 18, MSFT closed at 470, the ribbon re-fanned in the opposite order (longest on top, shortest on bottom), and the new down-regime ran to 452 by December.
+
+Falsifiable claim: a fully-fanned ribbon with rising slope produces materially fewer false signals than the same trend read from a single MA. Invalidation is mechanical — when the ribbon compresses to less than half its average spread for 10+ sessions, the prevailing regime is at risk of ending; when the ribbon braids (any of the fast/slow ordering reverses), the regime has ended by definition.
+
+On Bursa Malaysia: MAYBANK in 2025 had a textbook fanned ribbon from January through March, compressed through April, then re-fanned in the opposite direction in May as it rolled over from RM10.50 to RM9.80.
+
+## The trap
+
+The trap is reading one MA on a chart and missing the term-structure context. A stock can be above its SMA50 (looks bullish) while the EMA8 is below the EMA21 (short-term momentum has already turned). One MA gives you a yes/no; the ribbon gives you the entire shape. Beginners enter long when one MA looks favourable and ignore that the rest of the term structure is already braiding against them.
+
+The correct mental model: the ribbon is a regime classifier. Fanned and aligned = trade with the trend; compressed = stand aside or position for the breakout; tangled = no trend, no trade unless you're a mean-reversion specialist. The ribbon doesn't tell you what to do — it tells you whether your strategy is in season. Trend-following strategies need a fanned ribbon to work; mean-reversion strategies need a tangled one.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="MSFT's EMA ribbon (8/21/34/55/89) is fully fanned with EMA8 on top, EMA89 on bottom, and roughly $36 spread between them. Two weeks later the spread has compressed to $11 and EMA8 has crossed below EMA21. What's the cleanest read?"
+  options={[
+    "Buy aggressively — the ribbon is still mostly positive",
+    "The ribbon is compressing and the fast lines are beginning to braid — the prevailing up-trend regime is at risk of ending; if the ribbon flips order, the regime is gone",
+    "Ignore the ribbon and trade only on price",
+    "Add a faster EMA to confirm the up-trend"
+  ]}
+  answer={1}
+  explanation="Compression from $36 to $11 of spread, plus the EMA8 dipping below EMA21, is exactly the lesson's regime-at-risk state. The tempting wrong answer ('mostly positive, buy') ignores the term-structure shape — one MA can still look good while three faster ones have already flipped. The ribbon's job is to surface that disagreement before a single-MA read catches up."
+/>
+
+<Quiz
+  question="You run a trend-following strategy. Your scan finds a stock where all six EMA-ribbon lines are tangled — EMA8 below EMA34, EMA21 above EMA55, and the spread between fastest and slowest is less than half its 60-day average. RSI is 52, MACD near zero. Position-size rule is 1% account risk. What does the lesson recommend?"
+  options={[
+    "Take the trade — diversification across strategies justifies it",
+    "Stand aside: a tangled ribbon means no trend, and a trend-following strategy is out of season. Wait for the ribbon to re-fan in a clear direction before entering.",
+    "Switch to mean-reversion and take the trade as a reversal",
+    "Buy half-size to hedge the uncertainty"
+  ]}
+  answer={1}
+  explanation="The ribbon is a regime classifier: tangled = no trend = trend-following strategies do not apply. The tempting wrong answer (option C) is the classic mistake of switching strategy mid-trade to justify entering. If your edge is trend-following, your edge requires a trend. Half-size in the wrong regime is still wrong, just smaller. The lesson is explicit: the ribbon tells you whether your strategy is in season."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker and ask: "Show me the EMA ribbon (8, 21, 34, 55, 89) and tell me whether it's fanned, compressed, or tangled right now — and how that compares to the last 60 sessions." Then open the chart and compare the ribbon's shape against your trade thesis. If your strategy is trend-following and the ribbon is tangled, your edge is offline today.
+
+## Takeaway
+
+A moving-average ribbon turns trend into a three-state regime classifier — fanned to ride, compressed to wait, tangled to stand aside.

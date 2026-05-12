@@ -1,0 +1,72 @@
+---
+id: "131_macd_zero_vs_signal_cross"
+title: "MACD — zero-line cross vs signal-line cross"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "macd_crosses"
+prerequisites: ["028_macd_trend_and_momentum"]
+tags: ["indicators", "macd", "zero_cross", "signal_cross", "momentum", "regime"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# MACD — zero-line cross vs signal-line cross
+
+Lesson 028 introduced MACD's two crosses but ran them together. They are not the same event and they don't have the same weight. The signal-line cross (MACD line crossing its EMA(9) signal line) is a fast, frequent momentum-turn read — it fires roughly every two to four weeks on a typical daily chart, often inside a broader trend that doesn't change. The zero-line cross (MACD line crossing zero) is a slower, structural read — it fires when the underlying 12-EMA crosses the 26-EMA, which is the regime change itself. One is timing; the other is regime. Knowing which is which decides whether you take the cross, scale into it, or wait for confirmation.
+
+## How this plays out in real markets
+
+Look at AAPL through Q3 2025. From mid-July to mid-September, AAPL traded sideways between 218 and 232. In that 50-session window, MACD's signal-line cross fired six times — three bullish, three bearish. None of the six produced a sustained move; each was reversed within 7–10 sessions. Trading every signal-line cross in that range generated 6 small losses averaging -0.7%, total drawdown about 4%.
+
+Then on September 24, AAPL broke 232 and on October 7 the MACD line itself crossed above zero at 235 — the first zero-line cross since June. From that point through November 18, AAPL ran to 256 in a clean trend. The signal-line cross at -0.4 on September 16 had been the earliest entry; the zero-line cross on October 7 was the confirmed-regime entry.
+
+Falsifiable claim: in a typical 12-month sample, signal-line crosses fire roughly 4× more frequently than zero-line crosses and have materially lower follow-through. The zero-line cross identifies a regime change that lasts on average 30–80 sessions; the signal-line cross identifies a momentum turn that may resolve in 5–15 sessions or get reversed entirely. Invalidation is mechanical — a zero-line cross fails if MACD crosses back through zero within 10 sessions; a signal-line cross fails when MACD re-crosses its signal line.
+
+On Bursa Malaysia: TENAGA in 2025 had nine signal-line crosses inside a six-month sideways range with no meaningful follow-through; the one zero-line cross in October — when the regime actually flipped — caught a six-week trend from RM12.50 to RM13.40.
+
+## The trap
+
+The trap is treating the two crosses as interchangeable. A trader sees "MACD bullish cross" in chart commentary and assumes it's the cross that matters — usually it's the signal-line cross, which in a sideways market is a near-coin-flip. The same trader misses the zero-line cross because the chart doesn't shout about it the same way.
+
+The correct mental model: the signal-line cross is timing within a regime; the zero-line cross is the regime itself. Use the signal-line cross to scale in earlier when you already have evidence the trend is forming. Use the zero-line cross as confirmation that the regime has actually changed. In a clear trend, both crosses fire close together and the difference doesn't matter. In a sideways market, the signal-line cross fires repeatedly with no zero-line confirmation — that's the signature of a noise environment.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL is sideways between 218 and 232. MACD's signal-line cross has fired six times in 50 sessions — three bullish, three bearish — each reversed within 7–10 sessions. The MACD line itself has not crossed zero. What does this pattern tell you under the lesson's framework?"
+  options={[
+    "The signal is strengthening; the next signal-line cross will be the real one",
+    "Signal-line crosses without a zero-line cross are momentum chop inside an unchanged regime — the absence of a zero-line cross says the regime hasn't actually changed, and trading the signal crosses in this environment is a noise generator",
+    "MACD is broken for this stock",
+    "Switch to RSI and ignore MACD entirely"
+  ]}
+  answer={1}
+  explanation="Six signal crosses without a zero-line cross is the textbook chop signature — momentum oscillating around zero, regime unchanged. The tempting wrong answer ('next one will be real') is gambler's-fallacy thinking — frequency of past failures doesn't increase the probability of the next success. The lesson is explicit: zero-line confirms regime, signal-line confirms timing inside a regime. Without the first, the second is meaningless."
+/>
+
+<Quiz
+  question="A stock had a bullish MACD signal-line cross 18 sessions ago at MACD = -0.6, and the MACD line just crossed above zero today at +0.1. Price closed above the prior swing high. Account size $40,000, mandate cap 1% risk, stop sits 3% below entry. Which read is best supported?"
+  options={[
+    "Take the trade with full risk-allowance: signal-line cross 18 sessions ago started the momentum turn, today's zero-line cross + price-structure break confirms the regime change",
+    "Skip the trade because the signal-line cross is 18 sessions stale",
+    "Wait for another signal-line cross to confirm",
+    "Short the stock — MACD crossing zero is a sell signal"
+  ]}
+  answer={0}
+  explanation="The sequence matches the lesson's clean setup: signal-line cross for timing, zero-line cross plus structure break for regime confirmation. The tempting wrong answer (option B) misreads the staleness — the signal-line cross dated the start of the turn; the zero-line cross dates the regime confirmation. Both being in agreement, with price-structure break on top, is the high-conviction configuration. Option D inverts the direction; MACD crossing above zero is bullish, not bearish."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, ask: "On my <Term id="ami_watchlist" />, where has MACD's zero-line cross fired in the last 30 sessions — and was there a signal-line cross that preceded it? How wide was the gap?" Then count the signal-line crosses in a sideways stock vs a trending stock over the same period. The difference is the cost of trading without distinguishing the two events.
+
+## Takeaway
+
+MACD has two crosses with very different weights — the signal-line cross is timing within a regime, the zero-line cross is the regime itself; don't trade the first without evidence the second is forming.

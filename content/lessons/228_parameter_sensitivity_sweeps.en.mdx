@@ -1,0 +1,68 @@
+---
+id: "228_parameter_sensitivity_sweeps"
+title: "Parameter sensitivity sweeps — the overfitting microscope"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "058_strategy_failure_modes", "223_rsi_2_mean_reversion_system", "018_drawdown_management"]
+tags: ["backtesting", "overfitting", "robustness", "parameter_sweep"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Parameter sensitivity sweeps — the overfitting microscope
+
+The backtesting foundation (057) named overfitting as the first killer and told you to fix the rule before looking at data. This lesson gives you the diagnostic tool that proves whether a rule is overfit even when you don't trust your own discipline: the parameter sensitivity sweep. Vary every threshold in your rule across a reasonable grid, plot the performance surface, and look at the neighbourhood — not just the peak. A robust rule's performance degrades gracefully as parameters drift; an overfit rule has a single sharp spike surrounded by losing configurations. After this lesson you can run a sensitivity sweep on your own strategy and read it correctly.
+
+## How this plays out in real markets
+
+Take a moving-average crossover on SPY from 2010 to 2024. The standard 50/200 specification produced roughly 8.4% CAGR with a 14% max drawdown over that window. Now sweep the fast MA from 20 to 80 in steps of 10 (7 values) and the slow MA from 100 to 300 in steps of 25 (9 values). You get 63 specifications. The best one — say 30/175 — shows 11.2% CAGR with 11% drawdown. Tempting to deploy 30/175 over the 50/200. Don't.
+
+Plot the heatmap. The 50/200 cell sits in a wide plateau where neighbours (40/200, 50/175, 60/225) all return 7-9% CAGR with similar drawdowns. The 30/175 spike sits next to 30/150 at 4.1% and 40/175 at 6.8%. That neighbourhood collapse is the overfitting signature — the spike is fitting noise around that exact pair. Run the same sweep on out-of-sample 2005-2009 data and the 30/175 spike disappears entirely (returns 2.1%), while the 50/200 plateau holds (returns 7.8%). The plateau is the real edge; the spike is selection bias dressed up as optimisation.
+
+Robust rule = wide plateau in parameter space. Overfit rule = isolated spike. The plateau means the rule's logic captures something real and the exact threshold is approximate; the spike means you found a coincidence.
+
+## The trap
+
+The beginner mistake is celebrating the highest-Sharpe cell in the sweep and deploying it. That is literally what overfitting looks like — the sweep is generating dozens of trials and you're keeping the maximum. The correct mental model: the sweep is NOT for picking the best parameters. It's for confirming that ANY reasonable parameters work. Pick a central, intuitive default (50/200, RSI(2) at <10/>80, ATR(14)) and use the sweep only to check that the neighbours don't collapse. If your "best" cell beats the central default by 30% but the cells next to it lose money, the central default is the honest pick and the spike is the trap. Reporting only the spike is exactly the dishonest backtest 057 warned you about — now you have a tool that proves it.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You sweep an RSI mean-reversion rule across RSI lookback (2,3,5,7,10) and threshold (5,10,15,20,25). The cell at lookback=3, threshold=15 returns 22% CAGR. Its four nearest neighbours return -2%, 4%, 1%, and -3%. What does this pattern mean?"
+  options={[
+    "Deploy lookback=3, threshold=15 — it's clearly the optimal configuration",
+    "The isolated peak surrounded by collapsing neighbours is the textbook overfitting signature. The rule has no robust edge at these parameters.",
+    "Average the five cells and deploy the mean",
+    "The neighbours are losing money so they're outliers — ignore them"
+  ]}
+  answer={1}
+  explanation="A single high cell with collapsing neighbours means the strategy is fitting noise at exactly that parameter pair. There's no structural reason RSI(3,15) should work when RSI(2,15) and RSI(3,10) don't. Option 0 is the most tempting wrong answer because the 22% number is what the spreadsheet rewards. Option 2 (averaging) sounds disciplined but you're still concentrating around a noise spike."
+/>
+
+<Quiz
+  question="Your sweep of a breakout rule shows a wide plateau where 17 adjacent cells return between 6% and 9% CAGR, and one outlier cell returns 15%. Out-of-sample testing isn't available. What's the synthesis-correct deployment choice?"
+  options={[
+    "Deploy the 15% cell — out-of-sample testing is optional",
+    "Deploy the centre of the plateau, accept the 6-9% range as the honest estimate, and size the strategy assuming returns at the lower bound to stay mandate-compliant",
+    "Deploy the 15% cell with extra position size to capitalise on the edge",
+    "Skip the strategy entirely — without out-of-sample data nothing is deployable"
+  ]}
+  answer={1}
+  explanation="Synthesis: the plateau is the robust edge, the outlier is noise. Sizing for the lower bound of the plateau (6%) protects you when the strategy degrades from in-sample to live (foundation 057 said assume degradation to half the backtest). Option 0 chases the spike. Option 2 doubles the bet on a single noisy cell. Option 3 over-corrects — a robust plateau is meaningful evidence even without out-of-sample, you just size conservatively."
+/>
+
+## Try it
+
+Pick one strategy you're considering and run a parameter sensitivity sweep on <Term id="ami" />'s backtester (or in a spreadsheet). Plot the performance heatmap. In <Term id="ami_one_on_one" /> with the Research Manager, paste the heatmap and ask: "Is this a plateau or a spike? What's the honest deployment configuration and what return should I size for?" Log both the heatmap and the Research Manager's read in the <Term id="ami_decision_journal" /> so you can audit your future selves.
+
+## Takeaway
+
+A robust rule lives in a plateau, an overfit rule lives in a spike. Pick the centre of the plateau, not the peak — and size for the bottom of the plateau, not the top.

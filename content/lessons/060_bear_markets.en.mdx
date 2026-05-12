@@ -1,0 +1,70 @@
+---
+id: "060_bear_markets"
+title: "Bear markets"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+topic: "bear_regime"
+prerequisites: ["022_trend_direction", "026_moving_averages", "046_fear_and_capitulation", "059_bull_markets"]
+tags: ["regime", "bear", "downtrend", "macro"]
+agent_callouts: ["bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bear markets
+
+A bear market is the mirror image of a bull regime: price structurally below its long-run average, breadth contracting, rallies sold. The reason it deserves its own lesson is that the playbook flips. Strategies that won money for two years stop working, and strategies you ignored for two years start working. After this lesson you will be able to detect a bear regime numerically, name which strategies fit, name which strategies will hand you back your gains, and state the condition that invalidates the bear call.
+
+## How this plays out in real markets
+
+The 2022 bear market in SPX is the cleanest recent example. SPX closed below its 200-day SMA on 21 February 2022 at 4,304. The 50-day SMA crossed below the 200-day ("death cross") on 14 March 2022. The peak was 4,796 on 3 January 2022; the closing low was 3,577 on 12 October 2022 — a 25.4% peak-to-trough closing drawdown over roughly nine months. Across that span SPX printed five rallies of 6% or more, including a 17.4% summer rally from 16 June to 16 August 2022 that retraced exactly to the 200-day SMA and rolled over.
+
+Detection rule that would have flagged the regime on 14 March 2022: SPX closes below 200-day SMA AND 50-day SMA crosses below 200-day SMA AND NYSE new-52-week-lows exceed new-52-week-highs for 4 of the last 5 weeks. All three true.
+
+XLK (US tech sector ETF) ran a deeper version of the same pattern in 2022: peak 177.21 on 27 December 2021, trough 112.39 on 14 October 2022 — a 36.6% closing drawdown. On Bursa Malaysia: KLCI fell from 1,624 on 5 January 2022 to 1,373 on 11 December 2023 — a slower 15.5% drift, same regime signature.
+
+## The trap
+
+The bear-market trap is "buying the dip" using muscle memory from the prior bull regime. Every 6–8% rally feels like the bottom because every 6–8% dip in the prior bull was a buy. In 2022, four of the five SPX rallies of 6%+ rolled over at or below the 200-day SMA and gave back the gain in weeks. The trader buys the rally, sees price approach the falling 200-day, watches it roll, holds for the next "bounce", and compounds the loss.
+
+The correct model: in a bear regime, the prior flips to "rallies fail until the 200-day SMA is reclaimed on a weekly close". You either sit out, or you fade the rally at the falling 200-day with a tight stop above it.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="SPX is 12% below its 200-day SMA. The 50-day is below the 200-day. Price rallies 7% in 3 weeks. What does the bear-regime framework prescribe?"
+  options={[
+    "Buy aggressively — the bottom is in.",
+    "Add to longs because oversold conditions have eased.",
+    "Treat the rally as suspect until SPX closes above the 200-day SMA on a weekly basis for 2 consecutive weeks; counter-trend shorts at the falling 200-day are mandate-permitted but tight-stopped.",
+    "Switch the whole portfolio to high-beta tech."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 1 — a 7% rally feels like a reversal. But the 2022 bear printed five rallies of 6%+ and every one of them failed below the 200-day SMA. The invalidation condition is structural (2 consecutive weekly closes above the 200-day), not magnitude-based. Until that prints, the prior is 'rallies fail'."
+/>
+
+<Quiz
+  question="You've detected a bear regime. From Module 9, which strategy combo fits and what is the mandate adjustment a Conservative Risk Debator would recommend?"
+  options={[
+    "Trend-following long; raise max position size to 15% to recover faster.",
+    "Cash-heavy + selective short / inverse exposure where mandate allows; tighten max single-position from 10% to 5% and max drawdown from 25% to 15%.",
+    "Buy-the-dip aggressively at every 5% pullback.",
+    "Sell only the losers and double up on winners."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'recover faster' by sizing up — which is exactly the mental error that converts a 20% bear into a 50% personal drawdown. In a bear regime, the conservative response is fewer positions, smaller positions, and a tighter drawdown ceiling. The mandate is the mechanism that enforces it before you can override yourself."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Bear Researcher and ask: "Walk me through the last time SPX printed all three bear-regime conditions simultaneously, with dates and numbers." Then open Settings → <Term id="ami_mandate" /> and rehearse: drop your max position size by half. Watch how the PM's <Term id="ami_pm_safety_floor" /> preview changes. You don't have to keep the change — just feel how the regime should compress sizing.
+
+## Takeaway
+
+In a bear regime, every rally is suspect until the 200-day SMA is reclaimed on a weekly close, and the right mandate response is fewer positions, smaller positions, lower drawdown ceiling.

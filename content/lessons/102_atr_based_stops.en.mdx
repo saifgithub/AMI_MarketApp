@@ -1,0 +1,63 @@
+---
+id: "102_atr_based_stops"
+title: "ATR-based stops"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "atr_stops"
+prerequisites: ["015_stop_loss_basics", "101_volatility_adjusted_sizing"]
+tags: ["risk", "stop_loss", "atr", "volatility"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ATR-based stops
+
+This lesson assumes you've completed lesson 015 (Stop-loss basics); here we go deeper on one specific way to place that stop — using ATR (Average True Range) to anchor it to current volatility instead of a chart pattern alone. A chart level tells you where the thesis dies; ATR tells you how much wiggle room to leave below that level so a normal day of noise doesn't take you out. Pair the two: chart picks the invalidation, ATR picks the buffer. This lesson covers how to compute the buffered stop, when ATR stops outperform pure chart stops, and the failure mode when ATR is read in isolation.
+
+## How this plays out in real markets
+
+NVDA breaks out of a base at $480 on heavy volume. The Market Analyst flags $465 as the prior swing low — clean chart invalidation. 14-day ATR = $14. A pure chart stop sits just below $465 (call it $463). A pure 2× ATR stop sits at $480 − $28 = $452. The buffered approach combines them: take the chart level, then subtract 0.5× ATR as a noise buffer: $465 − $7 = $458. That puts the stop where a close below the level plus a normal noise wick is what kills you, not a single intraday spike.
+
+Three days later NVDA dips intraday to $461 — through the raw chart level — then closes at $474. The $463 chart stop would have triggered intraday; the $458 ATR-buffered stop did not. Trade survives; thesis intact. Two weeks later NVDA gaps down to $455 and closes at $451. The $458 stop trips on the close. You exit at the open the next session — small slippage, but the structural rule held: a close below "chart level minus noise buffer" is the invalidation.
+
+On Bursa Malaysia: GENTING entry RM4.20, prior swing low RM4.00, 14-day ATR = RM0.08. Buffered stop = RM4.00 − RM0.04 = RM3.96. Falsifiable test: if you find yourself getting stopped out intraday on more than 30% of your trades but the thesis later resolves in your direction, your stops are too close to the chart level — add a 0.3 to 0.5 ATR buffer and rerun.
+
+## The trap
+
+The trap is using ATR alone, ignoring the chart. A beginner sets the stop at "2 ATR below entry" with no regard for where the actual invalidation sits, then gets confused when the trade goes the right way but stops them out before the move starts. ATR is a measure of recent volatility, not a level of structural significance — the market does not know where 2 ATR below your entry is and has no reason to respect it. The correct mental model: chart level is the where, ATR is the how-far-past. If the chart level is 5% below entry and 2 ATR is only 3%, your "2 ATR stop" is inside the invalidation zone and the trade will get stopped before the thesis is even tested. Stack them; don't substitute.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="MSFT entry $415, prior swing low $405, 14-day ATR = $6. Using a 0.5 ATR buffer below the chart level, where does the stop sit?"
+  answer={402}
+  tolerance={0.5}
+  explanation="Buffered stop = chart level − 0.5 ATR = $405 − $3 = $402. The $405 is the structural invalidation; the $3 buffer is the noise margin so a single bad intraday print doesn't take you out before the close confirms the break."
+/>
+
+<Quiz
+  question="You're trading two setups. AAPL: entry $200, chart invalidation at $192, 14-day ATR = $3. TSLA: entry $250, chart invalidation at $235, 14-day ATR = $12. You apply a 0.5 ATR buffer to both. Which trade has the structurally tighter buffer, and what does that imply?"
+  options={[
+    "AAPL — the buffer is $1.50, smaller in absolute dollars, so it's the safer stop.",
+    "TSLA — the buffer is $6 (0.5 × $12), much larger in absolute dollars; relative to AAPL's $1.50, TSLA leaves more room for noise because TSLA's noise is structurally larger, so neither stop is 'tighter' in risk terms — both leave the same proportion of normal range.",
+    "AAPL — lower-priced stocks always need wider stops by percentage.",
+    "They're identical — 0.5 ATR is 0.5 ATR."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'AAPL — smaller buffer = tighter stop'. Absolute dollar comparison is the wrong axis. A $1.50 buffer on a stock that moves $3 per day is the same proportion of noise as a $6 buffer on a stock that moves $12 per day. The point of an ATR buffer is to normalise across instruments so the stop-out probability from noise is the same. The 'lower-priced stocks need wider stops' distractor confuses share price with volatility — they're independent."
+/>
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the Trader, pick a ticker you're watching, and ask "What's the current 14-day ATR, the nearest chart support, and a stop using that support minus 0.5 ATR?" Then compare to what you would have set as a pure chart stop. Note the difference in shares allowed at 1% account risk.
+
+## Takeaway
+
+The chart picks where the stop belongs; ATR picks how far below — both together, never one alone.

@@ -1,0 +1,74 @@
+---
+id: "279_you_are_the_ceo"
+title: "You are the CEO — what that means in app workflow"
+duration_min: 6
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "ceo_framing"
+prerequisites: ["072_what_ami_can_do_for_you", "076_human_oversight_is_the_product", "272_the_mandate_is_your_contract", "277_pass_is_not_buy"]
+tags: ["ceo", "workflow", "oversight", "mandate", "decision_journal", "advisory_only"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# You are the CEO — what that means in app workflow
+
+"You are the <Term id="ceo_framing" /> of a <Term id="twelve_agent_team" />" is not a marketing line. It is a literal description of the four authority points the <Term id="ami" /> <Term id="training_simulator" /> gives you and gives to no one else: you write the <Term id="ami_mandate" />, you convene the Room, you accept or reject the simulated <Term id="ami_verdict" />, and you carry the *learning* from each scenario. You are the CEO of *evaluation* — the skill the simulator is built to train — not the CEO of executing trades AMI told you to take. AMI is simulation-only, training-only, forever. No brokerage integration, no execution surface, no investment-advice licence. The CEO seat is the only seat that does anything in the app. By the end of this lesson you will know how the four authority points show up across the app's screens.
+
+## How this plays out in real markets
+
+Walk through a normal session on AAPL.
+
+1. **Authoring the Mandate.** Day one (or the day you decide to renew it), you open Settings → Mandate and write your fields: `max_position_pct: 4, max_drawdown_pct: 18, halal: true, no_fossil: false, long_only: true, region_allowlist: [us]`. This is a CEO-of-evaluation decision. <Term id="concierge_agent" /> can walk you through it but cannot set the values for you. The simulator lives inside whatever you wrote.
+
+2. **Convening the Room.** You decide which tickers warrant a 12-agent training run. You decide today. You decide whether the practice question is *"how does the Room evaluate AAPL?"* or *"how does the Room evaluate trimming AAPL?"*. AMI does not initiate Rooms. The credit cost is yours; the decision to spend it on training is yours.
+
+3. **Accepting, modifying, or rejecting the simulated Verdict.** Verdict comes back: BUY AAPL 3%, PM PASS. You read the Bull case, the Bear case, the Research Manager's lean (0.62), the Risk Debator spread (2%–4%), the Trader's plan (entry $227, stop $215, target $244). You can accept the Verdict in the <Term id="ami_decision_journal" /> — which records your evaluation but does *not* place a trade, anywhere. You can accept at smaller size. You can reject. You can wait. The button labelled *Accept Verdict* moves zero dollars; it moves a journal entry.
+
+4. **Carrying the learning, not a position.** No trade is ever placed by AMI, and nothing in AMI tells you to place one elsewhere — AMI is not licensed to give investment advice. The thing the CEO seat carries out of each scenario is the *evaluation* itself: what the dissent looked like, where you agreed with the Research Manager, where you would have written the Mandate differently. The Decision Journal is built to capture that.
+
+Notice what is *not* on the list. AMI does not raise capital. AMI does not place trades. AMI does not auto-rebalance. AMI does not call you when a stop is hit. The four authority points are the entirety of the CEO-of-evaluation job, and they are the entirety of what the app gives you levers over.
+
+## The trap
+
+The trap is the half-CEO mindset: writing the Mandate, convening the Room, reading the Verdict — and then defaulting to BUY because the Verdict said BUY. That is acting as the *signature surface* of a training simulator that is supposed to be drilling your evaluation muscle. A real CEO rejects analyst reports regularly. A real CEO changes the firm's mandate when conditions change. A real CEO evaluates the work without blaming the analysts. If your Decision Journal shows you accepting every passing Verdict without modification, you are not training the evaluation skill the simulator is built for; you are turning the practice environment into a fake signal service with extra steps. The fix is mechanical: each Verdict, write one sentence in the Journal that is *your* reasoning, not AMI's. If you cannot, you have not made an evaluation; you have transcribed one.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="A user has convened the Room 14 times this month, accepted every BUY Verdict at the proposed size, never rejected, never modified. They tell a friend: 'AMI made me 4% this month.' What's the most accurate critique?"
+  options={[
+    "Nothing — AMI's process worked",
+    "The user is acting as a signature surface, not as a CEO-of-evaluation. AMI is a training simulator, not a financial advisor; accepting every simulated Verdict without modification or reflection is skipping the practice the app exists to deliver. AMI did not 'make' anything — there is no execution inside AMI, and the simulator is not licensed to direct any outside the app",
+    "The user should have used 1-on-1 instead of Convene the Room",
+    "The user should coach the PM to be more conservative"
+  ]}
+  answer={1}
+  explanation="The CEO-of-evaluation frame is broken when every Verdict is rubber-stamped. AMI's role is to run the training scenario; the user's role is to evaluate it — including reject and modify. The most tempting wrong answer is 'nothing — the process worked' — outcome does not validate process; a process that converts you into a signature surface is broken regardless of one month's P&L, and AMI was not the source of the P&L in any case."
+/>
+
+<Quiz
+  question="Which of these is *not* an authority the AMI Trade app gives the user?"
+  options={[
+    "Writing and editing the Mandate at any time",
+    "Deciding which tickers to convene the Room on",
+    "Accepting, modifying, or rejecting any Verdict",
+    "Authorising AMI to place trades in your brokerage when confidence is high"
+  ]}
+  answer={3}
+  explanation="The first three are the CEO-of-evaluation authority points. The fourth describes a feature that does not and will not exist — AMI is a simulation-only training environment, forever; there is no brokerage integration to authorise, and AMI is not licensed to direct execution anywhere. The tempting wrong answer is the fourth one precisely because it sounds like a natural next feature; it is not a roadmap item, it is a design boundary."
+/>
+
+## Try it
+
+Open the **Decision Journal**. Find your most recent Verdict acceptance. Read the entry. Is there a sentence in your own words explaining *why you* judged the scenario the way you did — not what AMI said? If yes, you ran that scenario as a CEO-of-evaluation. If no, edit the entry now and add it. Then, on your next Verdict, write that sentence *before* you accept, modify, or reject.
+
+## Takeaway
+
+Four CEO-of-evaluation authorities — Mandate, Convene, Accept/Modify/Reject, Carry-the-learning. AMI runs the simulated analyst desk; you run the practice. The training is the product. AMI does not, will not, and is not licensed to give investment advice.

@@ -1,0 +1,70 @@
+---
+id: "037_valuation_what_is_a_stock_worth"
+title: "Valuation: what is a stock \"worth\"?"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "valuation"
+prerequisites: ["032_revenue_the_top_line", "033_profit_and_margins", "035_cash_flow_vs_earnings"]
+tags: ["valuation", "intrinsic_value", "dcf", "multiples", "fair_value", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Valuation: what is a stock "worth"?
+
+A stock is "worth" the present value of the cash it will return to shareholders over its life. That's the textbook definition and it's deceptively simple — the entire problem is that nobody knows the future cash, the right discount rate, or how long the company will produce. In practice, valuation is a range of plausible numbers under a set of assumptions, not a single fair-value figure. By the end of this lesson you should know the two main frameworks (discounted cash flow and relative multiples), why both can be right at different times for the same stock, and the falsifiable boundary at which a "cheap" valuation becomes a value trap.
+
+## How this plays out in real markets
+
+Take MSFT in fiscal 2024. MSFT generated ~$74B in free cash flow, trades around a $3T market cap as of mid-2026, and is expected to grow FCF in the low-to-mid teens for the next several years. A simple discounted-cash-flow (DCF) model with FCF growing at 12% for ten years, then 3% terminal growth, discounted at 8.5%, produces an intrinsic-value range somewhere in the $2.8T–$3.4T zone — meaning the market price is reasonable but not a steal. Change the assumptions: discount at 10% instead of 8.5% (higher rates, higher risk premium) and the fair-value range drops to $2.2T–$2.6T — the *same* company looks 25% overvalued. That sensitivity is the point: DCF outputs are only as good as the input assumptions.
+
+The relative-multiples approach asks instead: "What is the market paying for similar companies right now?" MSFT trades around 38x trailing earnings; GOOGL around 25x; AAPL around 32x; META around 27x. If you believe MSFT's growth and moat are between GOOGL's and AAPL's, the implied "fair" multiple sits roughly in the 26–32x band — and at 38x the stock looks rich on relative grounds. DCF said "fair", multiples said "rich". Both can be defensible at the same time because they ask different questions.
+
+Now a value-trap example. Several legacy media companies in 2024 traded at single-digit P/E ratios — "cheap" by every multiple. But FCF was declining year-over-year, debt was high, and the businesses faced structural decline in linear-TV advertising. A low multiple on a declining business is not cheap; it's the market pricing in the decline accurately. The falsifiable claim of this lesson: a stock trading at a P/E significantly below its sector median is only "cheap" if earnings are stable or growing — if earnings are declining for three or more consecutive years, the low multiple is a warning, not a discount.
+
+On Bursa Malaysia: GENTING has historically traded at single-digit P/E ratios. Whether that's "cheap" depends entirely on the trajectory of gaming and leisure cash flow — same low multiple, very different verdicts depending on whether the business is stabilising or eroding.
+
+## The trap
+
+The trap is confusing "low multiple" with "undervalued". A beginner sees a stock at 6x earnings, a sector trading at 18x, and assumes the gap will close — without asking why the gap exists. Markets are not stupid; persistent multiple discounts almost always reflect identifiable problems (declining business, governance issues, debt overhang, regulatory uncertainty, accounting concerns). The correct mental model: a multiple is the market's compressed verdict on growth, risk, and capital efficiency. Before buying anything trading at a discount to its sector, write down the specific reason for the discount and the specific evidence that would prove the market wrong. If you can't, you're not buying a bargain — you're buying somebody else's exit liquidity.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock trades at a P/E of 7 while its sector trades at 18. Earnings have declined in each of the last three years. Which conclusion most accurately reads the situation?"
+  options={[
+    "Strong buy — the stock is 60% cheaper than its sector",
+    "The low multiple reflects the earnings decline, not a market mistake. A P/E discount is only an opportunity if earnings are stable or growing. Three consecutive years of declining earnings makes this a value trap unless you have a specific, testable thesis for why the decline reverses",
+    "Indeterminate — multiples don't matter without a DCF",
+    "Buy half-size and wait for confirmation"
+  ]}
+  answer={1}
+  explanation="The lesson's falsifiable claim is that a sub-sector multiple combined with 3+ years of declining earnings is the textbook value-trap pattern. The most tempting wrong answer is option 0 — the headline 'cheap' is exactly what catches beginners. Markets price in declines; the discount IS the decline. Option 2 over-weights one technique; multiples carry real information. Option 3 invents a 'safe' middle ground that doesn't address the underlying problem — half a position in a deteriorating business is still a position in a deteriorating business."
+/>
+
+<Quiz
+  question="You're valuing two companies. Company K: $50B FCF, expected to grow 4% indefinitely. Company L: $20B FCF, expected to grow 15% for ten years then 3%. Same discount rate of 8.5%. Which read on what the two valuations should look like, and why, is best?"
+  options={[
+    "Company K is worth more because it produces more FCF today",
+    "Company L is worth more because it grows faster",
+    "Without doing the full math, the high-growth profile of Company L compounds: $20B growing at 15% for ten years approaches Company K's current $50B and continues to grow, while Company K stays roughly stable. A DCF will plausibly value L at a higher market cap despite the smaller current cash flow. The deeper synthesis: valuation rewards the path of future cash, not the level of current cash — which is why high-growth companies often trade at multiples that look 'expensive' relative to current earnings but rational relative to projected cash",
+    "They should be valued identically because FCF is FCF"
+  ]}
+  answer={2}
+  explanation="The synthesis is that intrinsic value is the present value of *future* cash, weighted by growth and discount rate. A smaller starting FCF compounded at a high growth rate often outweighs a larger starting FCF that grows slowly — which is precisely why companies like NVDA or MSFT have commanded premium multiples for years that 'look expensive' on trailing earnings but are defensible on forward cash. The most tempting wrong answer is option 0 — current cash 'feels' more real than projected cash. The DCF framework explicitly trades that intuition. Option 1 over-simplifies; growth alone doesn't determine value without duration. Option 3 ignores growth entirely."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and check the valuation-discipline section of your mandate (if you've set one). Then in <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For [ticker], give me a DCF fair-value range under three different growth assumptions, and the current P/E vs. the sector median." Save the three-scenario range in your <Term id="ami_decision_journal" />. The next time you decide whether the price is "good", you'll be comparing to your own work, not someone else's headline.
+
+## Takeaway
+
+A stock is worth a range, not a number — and a low multiple is only a discount when the business behind it is stable or growing, not declining.

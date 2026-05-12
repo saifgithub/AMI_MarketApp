@@ -1,0 +1,61 @@
+---
+id: "104_stops_around_earnings"
+title: "Stops around earnings and event risk"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "event_risk_stops"
+prerequisites: ["015_stop_loss_basics", "014_position_sizing_basics"]
+tags: ["risk", "stop_loss", "earnings", "event_risk", "gaps"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Stops around earnings and event risk
+
+This lesson assumes you've completed lesson 015 (Stop-loss basics); here we go deeper on a specific failure mode — stops do not protect you across a binary event. Earnings, Fed decisions, court rulings, FDA outcomes, and elections can gap a stock past your stop overnight. The next print is the open the morning after, which may be 15% to 25% away from your stop level. Your loss is whatever the open shows, not what you wrote on the ticket. This lesson teaches the three legitimate responses — size down through events, exit before the event, or accept the gap risk explicitly — and the one illegitimate response: pretending the stop will protect you.
+
+## How this plays out in real markets
+
+You're long NVDA at $480 with a stop at $458. NVDA reports earnings after the close. The chart-based stop is structurally sound for normal trading days. Earnings prints: revenue miss, guidance cut. NVDA halts in the after-hours, reopens pre-market at $412 — $46 below your stop. Your stop becomes a market order at the open and you fill near $410. Per-share loss: $70, not the $22 you planned. The trade lost 3.2% of account, not 1%. The stop did not fail mechanically — it filled exactly as designed; the gap simply skipped past it before any liquidity existed at $458.
+
+Contrast: same NVDA setup, same $480 entry. The Trader flags earnings in 4 trading days. You have three options. Option 1: halve the position before the print so the gap risk is 0.5% account, not 1%. Option 2: exit fully before the close on the earnings day and re-enter the next morning once the gap resolves. Option 3: keep full size and accept the gap risk explicitly in the journal. On Bursa Malaysia the same logic on PETRONAS around quarterly results — a typical earnings gap on a Bursa name is 4–8%, smaller than US tech but still capable of skipping a 2% stop. Falsifiable test: pull any 10 large-cap earnings prints from the last quarter — at least 3 of them gapped through any stop placed within 5% of the prior close.
+
+## The trap
+
+The trap is treating the stop as insurance against everything. A beginner takes a $480 NVDA entry the day before earnings, "stop at $458", and goes to bed thinking max loss is 1% of account. The next morning the position is open 14% lower than the stop and the account is down 4%. The stop did not fail — it had nothing to fill against between $458 and $412. The correct mental model: stops protect against continuous price action, not against gaps. Before any binary event, you must explicitly decide one of three things — size down, exit, or accept the gap risk and journal that decision. Doing nothing is the same as accepting full gap risk without admitting it; that is how a 1% mandate gets converted into a 4% loss the trader didn't see coming.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You're long TSLA at $250 with a stop at $238 (1% account risk on a $50,000 account, so $12 per share × 41 shares). TSLA reports tonight. Implied move from options is roughly 8%. If TSLA opens tomorrow at $225 (a 10% gap, within the implied move), what's your realised loss versus the planned 1%?"
+  answer={2.05}
+  tolerance={0.1}
+  explanation="Per-share loss = $250 − $225 = $25 (not $12). Total loss = 41 × $25 = $1,025 ≈ 2.05% of $50,000. The stop filled at the open; there was no $238 print between the close and the open. The 1% mandate became a 2.05% realised loss because the stop can't defend against a gap."
+/>
+
+<Quiz
+  question="Three traders all hold the same 1%-risk NVDA position the day before earnings, where options imply a 7% move. Trader A halves the position before the close. Trader B exits fully and plans to re-enter after the print resolves. Trader C keeps the full position with the stop in place. Which trader has correctly addressed the event risk?"
+  options={[
+    "Only Trader B — the only safe response to earnings is to be flat through the event.",
+    "Trader A and Trader B both correctly address the gap risk (one by reducing exposure, one by removing it); Trader C has not addressed it at all — keeping the stop pretends the gap won't happen, and a 7% implied move gaps through a 4% stop more often than not.",
+    "Only Trader C — holding through earnings is the only way to capture the move; A and B miss the trade entirely.",
+    "All three are equivalent because the stop level is the same in each case."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'only flat is safe' or 'only full-size captures the move'. Both reduce a nuanced risk decision to a single right answer. Reality: A, B, and C represent three legitimate event-risk policies, but only A and B have made a decision; C is doing nothing while believing the stop will hold. The stop cannot fill in a gap, so C's '1% risk' is actually 'whatever the gap delivers'. Picking a policy is the discipline — pretending the stop covers gaps is the mistake."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" />, filter to open positions, and check each ticker's earnings calendar (the Trader can pull it in <Term id="ami_one_on_one" />). For any position with earnings in the next 5 trading days, ask the Trader: "Should I halve, exit, or hold through? What's the typical gap range on this ticker?" Then journal the decision before the event so future-you can see how the choice played out.
+
+## Takeaway
+
+Stops protect against price action, not gaps — before any binary event, pick halve, exit, or accept-the-gap, and journal the choice.

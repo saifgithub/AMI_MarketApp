@@ -1,0 +1,74 @@
+---
+id: "242_late_bull_warning_signs"
+title: "Late-bull warning signs: narrowing breadth and sentiment extremes"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "late_bull_regime"
+prerequisites: ["059_bull_markets", "064_market_breadth", "049_overconfidence", "052_trend_following"]
+tags: ["regime", "bull", "breadth", "sentiment", "topping"]
+agent_callouts: ["bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Late-bull warning signs: narrowing breadth and sentiment extremes
+
+Lesson 059 defined a bull regime numerically: SPX above the 200-day SMA, 20-week rising, breadth expanding. This lesson teaches the next layer — the warning signs that print *before* the regime breaks, so you can compress sizing and shorten invalidation distances while still long. After this lesson you will be able to detect a late-bull state from three breadth divergences and two sentiment extremes, name what each invalidates (and does not), and act inside the regime rather than fighting it.
+
+## How this plays out in real markets
+
+The classic late-bull case is the SPX run into early 2022. SPX printed a closing high of 4,796 on 3 January 2022 — still above the 200-day SMA, technically still a bull regime by the 059 test. Underneath:
+
+- % of NYSE issues above their 200-day SMA had fallen from 78% in May 2021 to 49% by 31 December 2021 — index up, participation down.
+- NYSE new 52-week highs averaged 110 per session in November 2021 but only 65 per session in December 2021 — fewer leaders pulling the average.
+- AAII bull-bear spread hit +30 on 24 November 2021, in the 90th percentile of readings since 2010.
+- CNN Fear & Greed Index closed at 81 ("Extreme Greed") on multiple sessions in late December 2021.
+- Russell 2000 (IWM) peaked on 8 November 2021 at 244.46 and was already 12% off that high while SPX was making fresh highs on 3 January 2022 — small caps had topped two months early.
+
+A trader using these five readings would have started compressing in late December 2021 — six to ten weeks before the 21 February 2022 break of the 200-day SMA, capturing most of the bull while sidestepping the bulk of the 25% drawdown that followed.
+
+## The trap
+
+The late-bull trap is the inverse of the bull-trap: selling early *because* you heard "breadth is narrowing". A reader sells in October 2021 when % above 200-day SMA first drops below 60% — and watches SPX rally another 6% into year-end while their cash earns nothing. The mental error is treating a warning sign as an invalidation. They are different things. A warning sign tightens your mandate (smaller positions, closer stops, cap concentration); an invalidation flips the regime (close below 200-day on weekly basis; death cross).
+
+The correct model: warning signs compound. One reading flashing is noise. Three of five readings in the late-bull cluster is a credible regime-deterioration signal — and the response is to dial down, not to exit.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="SPX is +4% YTD and still 6% above its 200-day SMA. % of NYSE stocks above 200-day SMA: 47%. NYSE new highs averaging 60/session, half the prior quarter's pace. AAII bull-bear spread +28. IWM has been flat while SPX is up. What is the regime-aware response?"
+  options={[
+    "Sell everything — three warning signs means the top is in.",
+    "Late-bull cluster is firing (narrow breadth + sentiment extreme + small-cap divergence) but no 059 invalidation has triggered. Stay long, cap single-position size at 5% instead of mandate-permitted 10%, tighten invalidation to a single weekly close below the 20-week SMA, trim concentrated mega-cap exposure to ~25% of portfolio.",
+    "Buy more — sentiment will get more extreme before the top.",
+    "Switch to 100% short — bull is over."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'the warnings are loud, just exit'. But warning signs are not invalidations. The 059 regime is still in force; the right move is mandate compression while staying with the trend. Option 2 (load up on sentiment) is the textbook late-cycle disaster, and option 3 (flip to short before the regime breaks) confuses warning with confirmation."
+/>
+
+<Quiz
+  question="Which single warning-sign reading, taken in isolation, is the WEAKEST evidence of a late-bull state?"
+  options={[
+    "% of NYSE stocks above 200-day SMA falling from 70% to 45% while SPX makes new highs.",
+    "AAII bull-bear spread at +28 (90th percentile).",
+    "Russell 2000 12% off its high while SPX makes new highs.",
+    "A 1.5% down day on SPX with VIX at 18."
+  ]}
+  answer={3}
+  explanation="The tempting wrong answer is option 1 — sentiment extremes look dramatic, but they have famously poor timing (markets can stay extreme for months). The genuinely weak signal is option 3: a single down day at moderate VIX is normal bull-market noise, not a late-bull tell. Breadth-internals (options 0 and 2) are the strongest of the four because they describe the actual market structure under the index."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Bear Researcher and paste: "Run today's late-bull cluster check for SPX — % above 200-day SMA, NYSE new highs trend over 8 weeks, AAII spread percentile, IWM vs SPX divergence over 50 days. Tell me how many of the five are firing." Then open the <Term id="ami_mandate" /> editor and rehearse a late-bull compression preset: max_position_pct halved, max_drawdown_pct dropped by a third. Don't save it unless the cluster is firing — just feel the dials.
+
+## Takeaway
+
+Warning signs compress the mandate; invalidations flip the regime. Three of five late-bull signals firing means smaller sizes and tighter invalidation, not a market exit.

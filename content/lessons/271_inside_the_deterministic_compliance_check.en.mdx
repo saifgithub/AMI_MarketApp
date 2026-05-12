@@ -1,0 +1,90 @@
+---
+id: "271_inside_the_deterministic_compliance_check"
+title: "Inside the deterministic compliance check"
+duration_min: 6
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+topic: "deterministic_compliance_check"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "270_why_the_pm_is_structurally_separate"]
+tags: ["compliance", "safety_floor", "deterministic", "architecture", "pm"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Inside the deterministic compliance check
+
+The phrase "deterministic compliance check" sounds technical because it has to be. The underlying language models that drive <Term id="ami" />'s <Term id="twelve_agent_team" /> are probabilistic — same question asked twice can land in slightly different places. That kind of variance is fine for analysis and synthesis; it is not fine for "is this trade allowed?". So the part of AMI that answers that question is not a prompt and is not a model call. It is a plain function, written in Python, that reads your <Term id="ami_mandate" /> and the proposed trade and returns PASS or BLOCK. Same inputs, same answer, every time. By the end of this lesson you will understand why that determinism is the whole point.
+
+## How this plays out in real markets
+
+Imagine the simplest version of the check. The proposed trade arrives with fields:
+
+```
+ticker: NVDA
+side: BUY
+proposed_size_pct: 7.0
+estimated_max_loss_pct: 4.5
+sector: technology
+region: us
+is_fossil: false
+is_halal_compliant: true
+```
+
+Your Mandate fields:
+
+```
+max_position_pct: 5
+max_drawdown_pct: 20
+halal: false
+no_fossil: false
+region_allowlist: [us, bursa_malaysia]
+long_only: false
+```
+
+The check runs in order, deterministically. *Is `proposed_size_pct` > `max_position_pct`?* 7.0 > 5 → BLOCK. *Is `region` in `region_allowlist`?* us → ok. *Does `no_fossil` apply?* No. *Does `halal` apply?* No. *Is `long_only` violated?* No. The first failure stops the chain and returns BLOCK with the specific clause. The PM persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same block. Edit your Mandate to `max_position_pct: 8` and run again — you get PASS. The model has not been re-prompted; the function read different data.
+
+Now contrast: if the check were "ask the PM agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A coaching note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see coaching. It sees two structured objects and a list of rules.
+
+## The trap
+
+The trap is thinking the compliance check is sophisticated AI judgment. It is not. It is deliberately *unsophisticated* — basic comparisons, exclusion flags, lookups — because sophistication is exactly what you do not want at the <Term id="ami_pm_safety_floor" />. You want a check that cannot be argued with, cannot be charmed, and cannot drift. The trade-off is real: a deterministic check cannot catch every edge case a smart human reviewer would. It will pass a 5% position in a stock with deteriorating fundamentals because the size is within mandate. That is not a bug; it is the contract. The trading team's debate is where nuance happens. The PM check is where bright lines hold.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Your Mandate has `max_position_pct: 5`. Eleven agents argue for 7% on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the PM compliance check on each run?"
+  options={[
+    "It might pass on the second run because the model's mood varies",
+    "It returns BLOCK identically both times — the check is a deterministic function reading your Mandate field 5 against the proposed 7, not an LLM call",
+    "It passes once the trading team's confidence is high enough",
+    "It returns PASS the second time because the system learns from the first attempt"
+  ]}
+  answer={1}
+  explanation="The compliance check is deterministic — same inputs, same output, every time. Confidence, persuasion, and run number do not enter the function. That is the whole reason the check exists outside the model layer. The tempting wrong answer is 'learning from first attempt' — there is no learning loop on safety-floor rules; that would defeat the purpose."
+/>
+
+<Quiz
+  question="Why is AMI's compliance check intentionally unsophisticated (simple comparisons and exclusion flags) rather than nuanced AI judgment?"
+  options={[
+    "Because Saiful didn't have time to build the smart version",
+    "Sophistication is exactly what you don't want at the safety floor — you want a check that cannot be argued with, cannot drift, and cannot be coached around",
+    "Because nuanced AI judgment is too expensive in credits",
+    "Because the rules are public-domain and don't need AI"
+  ]}
+  answer={1}
+  explanation="The safety floor needs predictability, not cleverness. Deterministic functions are cheap to reason about and impossible to talk into changing their mind. The tempting wrong answer is the cost one — credits are not the constraint; auditability and immovability are."
+/>
+
+## Try it
+
+Open **Settings → Mandate**. Set `max_position_pct` to 5. <Term id="ami_convene_the_room" /> on a US ticker until you see a proposal at 6% or higher get blocked. Now change `max_position_pct` to 10 and re-run the *exact same Verdict*. The block disappears even though the trading team's debate is identical. You just watched the deterministic function read different data.
+
+## Takeaway
+
+The compliance check is a function, not a conversation. Same inputs, same output — that immovability is why the safety floor binds inside the simulator, and why AMI can teach you to read the architecture honestly. AMI is a training simulator; the Verdict is a practice artifact for your evaluation, not investment advice.

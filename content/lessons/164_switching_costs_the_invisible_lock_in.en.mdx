@@ -1,0 +1,72 @@
+---
+id: "164_switching_costs_the_invisible_lock_in"
+title: "Switching costs: the invisible lock-in"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "moat"
+prerequisites: ["036_competitive_advantage_moat", "163_network_effects_when_each_user_makes_the_next_one_stickier"]
+tags: ["moat", "switching_costs", "retention", "saas", "enterprise_software", "fundamentals"]
+agent_callouts: ["bull_researcher", "fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Switching costs: the invisible lock-in
+
+Lesson 036 listed switching costs as one of the five moat categories. Where a network effect lives in *other users*, switching costs live inside the customer's own workflow — the time, money, and operational risk of replacing one product with another. The financial fingerprint is high gross retention, strong net revenue retention (NRR), and the freedom to raise prices without bleeding customers. By the end of this lesson you should be able to identify high-switching-cost businesses from their retention metrics, and the specific NRR threshold that separates a genuine switching-cost moat from a slightly-sticky product.
+
+## How this plays out in real markets
+
+Look at ADBE (Adobe). Once a graphics shop has built its entire creative workflow on Photoshop, Illustrator, and Premiere — with thousands of working files, plugins, employees trained, and downstream production pipelines — switching to a competitor costs months of disruption and retraining. ADBE's gross retention sits above 90% and net revenue retention has consistently been in the 110–120% band, meaning existing customers spend more each year. That NRR is the switching-cost moat in numbers. ADBE has raised subscription prices multiple times across the 2020s with negligible customer loss; competitors with technically comparable products (Affinity, GIMP, Canva at the lighter end) take share at the margins but not the installed base.
+
+CRM (Salesforce) tells a similar story. Once a 5,000-person sales organisation has customised Salesforce with workflows, custom objects, integrations to billing and marketing systems, and years of pipeline data, ripping it out and re-implementing on a competitor (HubSpot, Microsoft Dynamics) takes 12–24 months and tens of millions of dollars. CRM's net revenue retention sat around 107–112% across recent years, and gross retention well above 90%. The switching cost is structural, not emotional.
+
+Now look at switching costs that didn't hold. NFLX has low switching costs at the consumer level — cancelling and resubscribing takes 30 seconds, and most households now run two or three streaming services simultaneously. NFLX retention is excellent but the absence of structural switching cost is why NFLX has to compete on content quality each quarter rather than coast on installed-base economics.
+
+On Bursa Malaysia: MAYBANK enterprise banking relationships carry meaningful switching costs once a large corporate's payroll, working-capital lines, FX hedging, and trade-finance flows run through one bank — the moat is administrative friction, not network density, and the financial signal is fee-income stickiness across cycles.
+
+The falsifiable claim: a genuine switching-cost moat shows net revenue retention above 110% sustained for 3+ years AND gross retention above 90%. If NRR falls below 100% for two consecutive years, the switching cost is no longer compensating for churn — the moat is eroding regardless of the qualitative story.
+
+## The trap
+
+The trap is calling habit a switching cost. A beginner sees that most Apple users stick with Apple and concludes the switching cost is enormous; in fact, the switching cost from iOS to Android at the consumer level is meaningful but not enormous, and AAPL's moat is a blend of brand, switching cost, and ecosystem network — not switching cost alone. The bigger trap is assuming a long contract creates a switching-cost moat. Multi-year contracts can mask the absence of a real moat; when the contract comes up for renewal, customers leave en masse if the underlying product hasn't entrenched in the workflow. The correct mental model: a switching cost exists when the customer would lose work, data, or revenue by switching — not just convenience. Always cross-check the qualitative claim against the NRR number.
+
+<ChatWith agent="bull_researcher" />
+
+## Quiz
+
+<Quiz
+  question="Company Z is a SaaS vendor with a 3-year average contract length. Gross retention is 88%, net revenue retention is 96%, and the sales team highlights that 'most customers renew on the first try.' Which conclusion most accurately applies the lesson?"
+  options={[
+    "Strong switching-cost moat — multi-year contracts lock customers in",
+    "The switching cost is weak. NRR of 96% means existing customers are net shrinking in spend, gross retention of 88% means roughly 12% of customers churn per year despite the multi-year contracts, and the contract length is masking, not creating, the moat. A real switching-cost moat shows NRR above 110% and gross retention above 90% sustained over multiple years",
+    "Strong moat because renewals happen",
+    "Indeterminate — need to see margins"
+  ]}
+  answer={1}
+  explanation="The lesson's falsifiable criteria are NRR above 110% and gross retention above 90%. The scenario shows 96% NRR (customers shrinking on net) and 88% gross retention (meaningful churn) — both below the thresholds. The most tempting wrong answer is option 0 because long contracts feel like lock-in; in reality, the contract structure is doing work that a true switching-cost moat wouldn't need. Option 2 conflates renewal-at-some-price with renewal-at-higher-price. Option 4 ignores the metrics that directly measure the moat."
+/>
+
+<Quiz
+  question="ADBE has NRR of ~115% and gross retention of ~93% over five years, and recently raised Creative Cloud prices by 15% with no observable spike in churn. A new entrant launches a competitor at 60% of ADBE's price with comparable feature parity. Bull and Bear Researchers disagree. Which synthesis is best?"
+  options={[
+    "Bull is wrong — 60% price cut will collapse ADBE retention",
+    "Bear is wrong — switching costs make ADBE untouchable forever",
+    "The switching-cost moat is genuine but not eternal. At ADBE's NRR + gross retention levels, the moat will absorb the entrant's first 2–3 years easily — most existing customers won't switch for a price-only proposition when their workflows, files, and trained staff are committed to ADBE. The disciplined read: watch NRR over the next 8 quarters. If NRR stays above 110%, the moat held; if it slips below 105%, customers are choosing not to expand their ADBE footprint and the entrant is winning new workflows even if existing ones stay. NRR below 100% for two consecutive years would mean the moat is genuinely eroding",
+    "Indeterminate — can't compare without market share data"
+  ]}
+  answer={2}
+  explanation="The synthesis is that switching-cost moats are durable but not permanent, and the NRR trend is the specific measurable signal. A 60%-price competitor will pick off marginal new buyers without displacing entrenched workflows — that shows up as NRR softening before gross retention does. The falsifiable test (NRR trend over 8 quarters) makes the claim checkable. Option 0 over-reacts. Option 1 over-claims. Option 3 is the cop-out — NRR alone is the answer."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a SaaS or enterprise-software ticker and ask: "What are the last 5 years of net revenue retention and gross retention? Show them alongside the industry median." In the <Term id="ami_decision_journal" />, write one sentence: "Switching cost is [strong / weak] because NRR is [number] and gross retention is [number], compared to peer median of [number]." A claim of "high switching cost" with NRR below 105% is a marketing claim, not a moat claim.
+
+## Takeaway
+
+Switching costs live in numbers, not in contracts — NRR above 110% and gross retention above 90% confirm the moat, and the day NRR cracks below 100% is the day the lock-in has quietly ended.

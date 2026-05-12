@@ -1,0 +1,81 @@
+---
+id: "184_dupont_decomposition_deep"
+title: "DuPont decomposition — splitting ROE into three doors"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "return_on_equity"
+prerequisites: ["041_return_on_equity", "033_profit_and_margins"]
+tags: ["roe", "dupont", "margin", "asset_turnover", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# DuPont decomposition — splitting ROE into three doors
+
+Lesson 041 introduced DuPont and said the same headline ROE describes very different businesses. This lesson uses the decomposition to actually rank business *quality* by the source of ROE. Margin × asset turnover × equity multiplier. The three numbers compose into one, and the composition tells you what kind of company you own. By the end you should be able to compute each component from a 10-K, recognise the canonical patterns (luxury, retail, bank, software), and name the falsifiable condition under which "ROE improvement" is actually a quality downgrade.
+
+## How this plays out in real markets
+
+Take four real businesses, all near 20–25% ROE, and look at the doors they walked through:
+
+- **LVMH (luxury)**: ~20% net margin × ~0.6 asset turnover × ~2.0 equity multiplier ≈ 24% ROE. Margin-dominant — pricing power is the engine.
+- **WMT (retail)**: ~3% net margin × ~2.5 asset turnover × ~2.7 equity multiplier ≈ 20% ROE. Turnover-dominant — thin margins moved many times a year.
+- **JPM (bank)**: ~28% net margin × ~6% asset turnover × ~10x equity multiplier ≈ 17% ROE. Leverage-dominant — modest margin on a vast balance sheet.
+- **MSFT (software)**: ~36% net margin × ~0.5 asset turnover × ~2.0 equity multiplier ≈ 36% ROE. Margin × low leverage — the rare combination of pricing power on a clean balance sheet.
+
+Same general range of ROE, four completely different businesses. The composition tells you what would damage the ROE: LVMH suffers if luxury demand falls (margin erosion); WMT suffers if turnover slows (inventory pile-up, store underperformance); JPM suffers in a credit cycle (the leverage multiplier compresses to losses); MSFT suffers only if pricing or volume in software falls — historically rare.
+
+Real DuPont signal in action: WMT in 2014–2018 saw asset turnover drift down from 2.6 to 2.4 as e-commerce mix shifted; ROE compressed from ~20% to ~17% even as margins held flat. The DuPont decomposition flagged the issue early. Anyone watching only the headline ROE missed which lever was bending.
+
+On Bursa: PUBLIC BANK's ROE around 13–14% decomposes to roughly 30% net margin × 4% asset turnover × ~12x equity multiplier. MAYBANK's ~10% ROE: similar margins, similar turnover, similar leverage — the gap is mostly credit-loss provisions and operating efficiency. Identical structure, different operating execution.
+
+Falsifiable claim: a one-year ROE improvement is high-quality only when *margin or asset turnover* improves while equity multiplier holds steady or falls. If leverage rises (equity multiplier up) while margin and turnover are flat, the ROE gain is a balance-sheet decision, not a business decision — and it's reversible at the cost of higher fragility.
+
+## How this plays out in real markets — second example
+
+Watch a retailer reporting "improved ROE" of 17% vs 13% the prior year. DuPont decomposition: net margin steady at 3.5%, asset turnover steady at 2.4, equity multiplier rose from 1.5x to 2.0x. The ROE improvement is entirely a debt-financed share repurchase shrinking equity. Same operating business, more debt, higher leverage-adjusted volatility. The market often discounts these "improvements" by *lowering* the multiple it pays for the ROE — recognising that the new ROE is less robust than the old one.
+
+## The trap
+
+The trap is congratulating a company for "improving" ROE without checking which door the gain came through. Three doors: margin (pricing power, mix shift, cost discipline — high quality), turnover (operating efficiency, working-capital discipline, store productivity — medium-to-high quality), leverage (balance-sheet choice — low-to-fragile quality). A reader who sees 17% → 22% ROE and writes it down as "improvement" without decomposition has missed the most important information in the report. The correct mental model: every ROE change should be followed by the question "which of the three doors moved?" — and only margin-and-turnover gains earn the right to a higher P/B. Leverage-driven gains often come with multiple compression because the market sees the change in risk profile. What invalidates a "high-quality" reading: when leverage rises into a declining-rates environment (cheap debt makes the trade temporarily attractive even when fundamentals don't justify it), the eventual rate cycle exposes the fragility — see how leveraged consumer-finance ROEs collapsed in 2022–2023 as cheap funding disappeared.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A retailer reports ROE rising from 14% to 21% over two years. Net margin held at 4.0%. Asset turnover rose from 1.9 to 2.2. Equity multiplier rose from 1.85 to 2.4. The CEO highlights ROE expansion as evidence of 'improving business quality.' Which DuPont read is most accurate?"
+  options={[
+    "Quality is improving — ROE is up sharply",
+    "Asset turnover alone explains the gain",
+    "Decompose: starting ROE = 4.0% × 1.9 × 1.85 ≈ 14%. Ending ROE = 4.0% × 2.2 × 2.4 ≈ 21%. Of the 7-point gain, turnover contributed ~3 points (operational) and leverage contributed ~4 points (balance sheet). Roughly 60% of the 'improvement' is leverage, not operations. The headline 'improvement' overstates business-quality improvement; some of the new ROE is fragile to rates and credit availability",
+    "ROE always improves when leverage rises so this is meaningless"
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 0 — the headline-improvement reflex that misses the composition. Option 1 partially identifies the gain but misses leverage. The correct decomposition splits the 7-point improvement roughly 60/40 leverage/turnover, downgrading the 'quality' of the change. Option 3 makes a tautological observation that doesn't help the analysis. The synthesis: every ROE delta needs decomposition before it earns a quality verdict."
+/>
+
+<Quiz
+  question="Two companies both improve ROE from 12% to 18% over three years. Company A: margin moved from 8% to 12%; turnover and leverage unchanged. Company B: margin and turnover unchanged; equity multiplier moved from 2.0x to 3.0x. Which is the higher-quality ROE improvement, and what's the right synthesis with the P/B framework?"
+  options={[
+    "Both are equivalent improvements",
+    "Company A's improvement is higher quality — the gain came from margin expansion (pricing power or mix shift), the most durable source of ROE. Justified P/B should rise for Company A as ROE durably improves. Company B's ROE rose via leverage; the market typically does not pay a higher P/B for leverage-driven ROE because the underlying business hasn't changed and the new fragility offsets the headline gain. Combining the lessons: P/B should re-rate for A and stay flat (or compress) for B, even though the headline ROEs are identical",
+    "Company B is better because leverage is cheap",
+    "The right metric is P/E not P/B"
+  ]}
+  answer={1}
+  explanation="The synthesis: the justified-P/B equation depends on the *durability* of ROE, not just the level. The tempting wrong answer is option 0 — same headline number, same conclusion. Option 2 ignores risk entirely. Option 3 abandons the right framework. The correct read connects two lessons: DuPont identifies the source of the improvement, and the P/B framework prices durability — together they say the same headline ROE deserves very different multiples depending on the source."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste two tickers from your <Term id="ami_watchlist" /> — one consumer/retail name, one financial. Ask: "Decompose each company's last-three-year ROE into net margin, asset turnover, and equity multiplier. Tell me which door each company walked through and whether the trend in each component is up, down, or flat." Save the 3×3×N grid in your <Term id="ami_decision_journal" /> as a quality scorecard for revisits.
+
+## Takeaway
+
+ROE has three doors — margin, turnover, leverage. Margin-driven ROE earns a higher multiple; turnover-driven ROE is operational; leverage-driven ROE is fragile and usually doesn't earn the multiple bump it appears to justify.

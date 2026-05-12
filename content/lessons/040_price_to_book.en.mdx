@@ -1,0 +1,70 @@
+---
+id: "040_price_to_book"
+title: "Price-to-book"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "price_to_book"
+prerequisites: ["034_debt_and_the_balance_sheet", "037_valuation_what_is_a_stock_worth", "039_the_pe_ratio"]
+tags: ["price_to_book", "pb_ratio", "book_value", "valuation", "balance_sheet", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Price-to-book
+
+Price-to-book is what you'd pay today for one dollar of a company's accounting net worth. Formula: P/B = market price per share / book value per share, or market cap / shareholders' equity. Book value is total assets minus total liabilities — what the balance sheet says is left for shareholders if you liquidated everything at carrying cost. By the end of this lesson you should know where P/B works (banks, insurers, asset-heavy businesses), where it breaks (software, brands, IP-heavy companies), and the specific condition that turns a "cheap" P/B into a warning.
+
+## How this plays out in real markets
+
+JPMorgan in mid-2026 trades around $220 with book value per share of roughly $115, so P/B ≈ 1.9x. Berkshire Hathaway B-shares trade near $480 with book value around $400, P/B ≈ 1.2x. Both are financials where book value is mostly liquid, mark-to-market-ish assets (loans, securities, cash), and P/B carries real information. Historically, large US banks trade in a 0.8x–1.5x range; a sustained move above 1.5x usually requires ROE meaningfully above the cost of equity. JPM's 1.9x is defensible because it has earned 17%+ ROE — see lesson 041 — well above the ~10% cost of equity, and the market is paying a premium for that excess return.
+
+Now look at MSFT. Stock near $480, book value per share around $42, P/B ≈ 11x. Is MSFT "ten times more expensive" than JPM? No — the comparison is meaningless. Most of MSFT's value is intangible: software IP, Azure infrastructure earnings power, the Office franchise, decades of R&D that GAAP expensed as it happened and never capitalised on the balance sheet. Book value systematically understates the worth of asset-light businesses. P/B for MSFT, GOOGL, META is essentially uninformative.
+
+On Bursa Malaysia: MAYBANK trades around 1.3x book — typical for a large regional bank earning low-to-mid teens ROE. PUBLIC BANK has historically traded at 1.8x–2.0x book because of consistently higher ROE and lower credit-loss volatility. Same sector, similar size — different P/B premiums driven by return quality, not size.
+
+Falsifiable claim: P/B is a useful ranking tool only when (a) the business is asset-heavy (financials, REITs, industrials, miners) AND (b) book value is reasonably representative of liquidation or replacement value. For software, consumer brands, and platforms, a P/B above 5x is the rule, not the exception, and the ratio carries no signal.
+
+## The trap
+
+The trap is screening for "cheap" stocks at P/B below 1.0x and assuming they're undervalued. A bank trading at 0.6x book is almost never a steal — it's the market signalling that loan-book quality is suspect, that credit losses are likely to chew through equity, or that ROE has collapsed below cost of capital. European banks spent the better part of a decade trading at 0.4x–0.7x book; investors who treated each one as a "deep value" buy got slowly hollowed out as book value itself eroded. The correct mental model: P/B and ROE are joined at the hip. A high ROE justifies a high P/B; a low or negative ROE explains and *justifies* a low P/B. What invalidates the signal: large goodwill from acquisitions inflates book value with something that may be impaired tomorrow. Always check tangible book (book value minus goodwill and intangibles) for acquisition-heavy companies before trusting the P/B.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A regional bank trades at P/B = 0.7x. The sector median is 1.2x. ROE has been 4% for the last three years; cost of equity is estimated at 10%. Which read is most accurate?"
+  options={[
+    "The bank is 42% cheaper than its sector — strong buy",
+    "The discount is consistent with ROE running well below cost of equity. A bank earning 4% on equity costing 10% is destroying shareholder value each year, and the market is correctly pricing the equity at less than book. The 0.7x is not a bargain — it's the fair price for a business whose book value is itself slowly eroding",
+    "P/B doesn't apply to banks because banks are leveraged",
+    "Buy on the basis that P/B always mean-reverts"
+  ]}
+  answer={1}
+  explanation="The link between ROE and P/B is the load-bearing idea. Rough rule: justified P/B ≈ (ROE − g) / (cost of equity − g). When ROE < cost of equity, justified P/B drops below 1.0 — and stays there until ROE recovers. The tempting wrong answer is option 0: a beginner sees 'below sector' and buys. Option 2 is the opposite mistake — P/B is most informative for banks. Option 3 invents a mean-reversion law that doesn't exist; multiples revert only when the underlying returns do."
+/>
+
+<Quiz
+  question="MSFT trades at P/B = 11x; JPM trades at P/B = 1.9x. A reader concludes MSFT is 'five times more expensive' than JPM. What's wrong with this conclusion, and what's the better synthesis?"
+  options={[
+    "Nothing is wrong — P/B is a universal valuation tool",
+    "MSFT's book value systematically understates economic worth because GAAP expenses software R&D and brand-building rather than capitalising them, so P/B is essentially uninformative for asset-light businesses. The honest comparison is sector-aware: compare MSFT's P/B to other megacap software (which mostly trades at 10x–15x book), and compare JPM's P/B to other large banks (typically 1.0x–2.0x book). Cross-sector P/B comparisons are meaningless",
+    "JPM is more expensive because banks are riskier",
+    "The two companies should be compared using P/E only"
+  ]}
+  answer={1}
+  explanation="The synthesis required is the recognition that book value is a sector-conditional measure. The tempting wrong answer is option 0 — most beginners apply a single ratio universally. Software, brands, platforms, biotech IP — none of these show up at fair economic value on a GAAP balance sheet, so P/B understates their net worth and the ratio runs structurally high. Banks, REITs, miners, and insurers carry assets close to mark-to-market value, so P/B carries information. Option 2 misuses 'risk' as a valuation adjuster. Option 3 throws out a useful tool for the wrong reason; both ratios have a place, just not by themselves."
+/>
+
+## Try it
+
+Open <Term id="ami_convene_the_room" /> on a financial-sector ticker (JPM, MAYBANK, PUBLIC BANK, BRK-B) and watch the Fundamentals Analyst's contribution. Then in <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For this ticker, give me current P/B, sector median P/B, current ROE, and the five-year ROE trend. Tell me whether the P/B premium or discount is consistent with the ROE." Save the verdict in your <Term id="ami_decision_journal" /> as your sector-aware valuation anchor.
+
+## Takeaway
+
+Price-to-book is a sector-conditional tool: useful for financials and asset-heavy businesses, near-useless for software and platforms. The ratio is only meaningful when paired with ROE — high ROE justifies a high P/B, low ROE explains a low one.

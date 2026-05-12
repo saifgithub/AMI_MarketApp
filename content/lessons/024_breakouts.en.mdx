@@ -1,0 +1,72 @@
+---
+id: "024_breakouts"
+title: "Breakouts"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "breakout"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "023_support_and_resistance"]
+tags: ["breakout", "consolidation", "volume", "chart_reading", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Breakouts
+
+A breakout is what happens when price spends weeks coiled inside a range, then closes decisively beyond the boundary on volume. It is a hand-off: the side that was containing price has lost control, and the side that wins gets a run with no nearby supply or demand to fight. By the end of this lesson you should know what counts as a real breakout versus a fake one, the exact conditions under which a long-side breakout invalidates, and why volume matters more than the magnitude of the breakout candle itself.
+
+<Animation name="breakout_pattern" />
+
+## Example
+
+Look at META on the daily chart from mid-February through early April 2026. Between 18 February and 26 March, META traded in a tight horizontal range — repeated daily highs clustered between $483 and $487, repeated lows clustered between $462 and $466. Roughly five weeks of sideways grind. Average daily volume across that consolidation was around 12 million shares.
+
+On 27 March 2026, META opened at $486.20 and closed at $494.70 — a daily close $7.70 above the prior resistance ceiling of $487. Volume that session was 28.4 million shares, more than 2x the consolidation's average. The very next session opened at $495.10, held above $487 all day, and closed at $499.30. That's a confirmed breakout: a decisive close beyond the level, on expanded volume, followed by a hold session that didn't fall back inside.
+
+By 3 April META was at $511 — roughly a 5% gain in five sessions, with no nearby overhead resistance because the range was the only structure on the chart.
+
+The breakout invalidates the moment META closes a daily candle back inside the prior range — specifically, below $487. If that close had printed, say at $484, the breakout becomes a failed breakout (a "fakeout"), and the long-side thesis is done. That's the falsification rule. You don't argue with it.
+
+## The trap
+
+The trap is buying the breakout candle itself, on the day it prints, on emotion. A beginner sees a green daily candle clearing resistance by 1%, feels the FOMO, buys at the high of the day with a tight stop at the breakout level, and gets stopped out the next session when price retraces to test the level from above (which is normal breakout behaviour). The correct mental model: the breakout candle is the signal, not the entry. Wait for a hold — either a daily close that stays above the level the next session, or a retest where price returns to the broken level and bounces. Volume confirmation matters more than candle size: a small green close on 3x volume is stronger than a huge green close on average volume.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock has traded in a $40–$45 range for six weeks on average volume of 5 million shares per day. Today it closes at $46.20 on 14 million shares. Which is the strongest single-line description of what just happened?"
+  options={[
+    "A fake breakout, because the close is only $1.20 above resistance",
+    "A confirmed breakout candle — close beyond the level on roughly 2.8x average volume — but not yet a confirmed trade entry until a hold session or successful retest",
+    "A normal range day, because the move is less than 5%",
+    "A breakdown, because volume is unusually high"
+  ]}
+  answer={1}
+  explanation="The close cleared the $45 ceiling and volume was nearly 3x average — that's the signal definition of a breakout candle. But per the lesson, the candle is the signal, not the entry. Confirmation comes from the next session holding above $45 or a clean retest. Option 0 treats absolute dollar size as the criterion, which it isn't — volume and close beyond the level matter more than the dollar magnitude. Option 3 confuses high volume with direction: a breakdown is a close below support, not above resistance."
+/>
+
+<Quiz
+  question="You bought TSLA at $278.40 on a confirmed breakout above a $245–$275 range, on 2.5x volume. Three sessions later TSLA closes at $271.80 — a daily close back inside the prior range. The trade is now down 2.4%. Your original stop sat below the range at $241. What does the lesson say is the disciplined call, and why is the most tempting alternative wrong?"
+  options={[
+    "Hold to the original $241 stop — your stop hasn't been hit yet, so the trade is still alive",
+    "Sell now — a daily close back inside the prior range is the explicit invalidation of the breakout thesis, regardless of where the protective stop sits",
+    "Add to the position — the pullback is a discount on the same setup",
+    "Move the stop down to $235 to give the trade more room"
+  ]}
+  answer={1}
+  explanation="The lesson defines the falsification clearly: 'the breakout invalidates the moment price closes back inside the prior range'. A close at $271.80 — below $275 — is that invalidation. The original stop at $241 was a *protective* stop, but the *thesis* has already failed. The tempting wrong answer (option 0) confuses two different concepts: a stop tells you where you'll exit on a hard catastrophic move; the thesis tells you when the reason for the trade is gone. Holding to a far-away stop after the thesis fails is how a 2% loss turns into a 15% one. Options 2 and 3 are textbook averaging-into-a-loser and stop-widening — both expand risk against falsified evidence."
+/>
+
+## Try it
+
+Pick a ticker on your <Term id="ami_watchlist" /> that's been range-bound for at least three weeks. In <Term id="ami_one_on_one" /> with the Market Analyst, ask: "What are the upper and lower boundaries of the current range, what would count as a confirmed breakout, and what daily close would invalidate it?" Save the breakout level and the invalidation level to your <Term id="ami_decision_journal" /> as a pre-committed plan.
+
+## Takeaway
+
+A breakout is a decisive close beyond a range on expanded volume; the candle is the signal, the hold or retest is the entry, and the day price closes back inside the range, the thesis is dead — exit, don't argue.

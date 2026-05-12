@@ -1,0 +1,72 @@
+---
+id: "023_support_and_resistance"
+title: "Support and resistance"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 2
+track: "technical_analysis"
+topic: "support_resistance"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction"]
+tags: ["support", "resistance", "levels", "chart_reading", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Support and resistance
+
+Price doesn't move in a smooth line — it bounces between zones where lots of buyers or sellers gathered before. A support level is a price where buyers historically stepped in; a resistance level is where sellers did. They aren't magic — they're memory. By the end of this lesson you should be able to mark two support levels and two resistance levels on any chart, explain why each one exists, and state the precise condition under which each level would be considered broken.
+
+<Animation name="support_resistance_test" />
+
+## Example
+
+Look at AAPL on the daily chart from late January to early May 2026. After topping near $260 in mid-January, AAPL fell to a low of $202.45 on 8 April 2026, then bounced. That $202 zone became support — buyers showed up there, marked the spot. Price then rallied to $213.80 by 16 April, sold off, came back down to $204.10 on 25 April, and bounced again. Two distinct touches of roughly the same $202–$204 zone — that's now a confirmed support level.
+
+On the resistance side: $213.80 was hit on 16 April and again at $214.20 on 1 May, with the stock failing to close above either time. That's a confirmed resistance.
+
+So as of early May 2026, AAPL is trading in a range roughly $203 support, $214 resistance — about a $11 range, or 5%. A trader sees that and knows: buying near $204 with a stop below $202 risks ~$2 to make ~$10 if price tags the $214 resistance. Selling resistance is the mirror trade.
+
+The support invalidates the moment AAPL closes a daily candle below $202 — say at $200.50 or lower. The resistance invalidates the moment AAPL closes a daily candle above $214 — say at $216.30 or higher. Until one of those closes prints, the range is intact and so are both levels.
+
+## The trap
+
+The trap is treating support and resistance as exact prices instead of zones, and panicking the instant price pokes through by a few cents. A beginner marks AAPL support at exactly $202.45, sets a stop at $202.40, and gets stopped out on a normal wick to $201.90 before the stock closes back at $204 and rallies. Or they see a 30-minute candle close $0.10 above resistance and declare a breakout, only to watch the daily candle close back inside the range. The correct mental model: levels are zones, typically 0.5%–1% wide, and they're confirmed or broken by *closes on your trading timeframe*, not by intraday wicks. Wait for the close. Set stops with breathing room.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock has bounced off the $50.00 level three separate times over two months, each time printing a daily close above $50.40. Today it trades intraday down to $49.80 and closes the day at $50.65. Has the $50 support broken?"
+  options={[
+    "Yes — the $49.80 print is below $50.00, so the level is broken",
+    "No — the intraday wick tested the zone but the daily close at $50.65 is above $50, so structurally the support held",
+    "Yes — three touches mean the support was already weak and this confirms the break",
+    "Cannot tell without checking the weekly chart"
+  ]}
+  answer={1}
+  explanation="Support is broken by a *close* below the zone, not an intraday wick. A 20-cent dip below $50 on a daily candle that closes above $50 is a test, not a break — and a successful one. The tempting wrong answer (option 0) treats the level as a hard line; the lesson explicitly says levels are zones confirmed by closes. The 'more touches = weaker' framing in option 2 is the opposite of how support works — more confirmed touches typically build, not erode, conviction in a level, until the close finally breaks it."
+/>
+
+<Quiz
+  question="NVDA trades in a range with support at $107 and resistance at $122. The stock is currently at $109 with a daily uptrend on the higher timeframe. You want to take a long position. Which entry-and-stop combination best reflects the levels and the falsification rule, and gives a sensible risk/reward?"
+  options={[
+    "Buy at $109 with a stop at $108.50 — tight stops are always best",
+    "Buy at $109 with a stop at $106 (just below the support zone, allowing wick room) and a target near $121, the lower edge of the resistance zone",
+    "Buy at $109 with no stop because the range will hold",
+    "Buy at $121.80 because price is closest to breaking resistance and breakouts always run"
+  ]}
+  answer={1}
+  explanation="Risking ~$3 (from $109 to $106) to make ~$12 (from $109 to $121) is a roughly 1:4 risk-to-reward, with the stop placed beyond the support zone — exactly the 'breathing room' the lesson advises. Option 0's tight stop at $108.50 sits inside the range and will get hit by normal noise. Option 2 ignores the falsification rule entirely — every trade needs an invalidation. Option 3 chases the resistance line with no edge: you're buying expensive and you don't yet have a confirmed close above $122. The right answer requires combining trend context, level placement, wick allowance, and risk/reward — pure recall of any one of those won't get you there."
+/>
+
+## Try it
+
+<Term id="ami_convene_the_room" /> on a ticker you've been watching. In the <Term id="ami_verdict" />, look for where the Market Analyst marked support and resistance. Then in <Term id="ami_one_on_one" /> with the Market Analyst, ask: "What's the precise close that would invalidate each level you marked?" Save both invalidation prices to your <Term id="ami_decision_journal" /> — those are the lines you respect if you take the trade.
+
+## Takeaway
+
+Support and resistance are zones — not lines — confirmed or broken by closes on your timeframe; give them wick room and let the close make the call.

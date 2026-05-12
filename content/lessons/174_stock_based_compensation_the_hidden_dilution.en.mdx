@@ -1,0 +1,79 @@
+---
+id: "174_stock_based_compensation_the_hidden_dilution"
+title: "Stock-based compensation: the hidden dilution"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "earnings_quality"
+prerequisites: ["035_cash_flow_vs_earnings", "153_free_cash_flow_the_only_cash_that_belongs_to_you", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["earnings_quality", "sbc", "stock_based_compensation", "dilution", "non_gaap", "fundamentals"]
+agent_callouts: ["bear_researcher", "fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Stock-based compensation: the hidden dilution
+
+Stock-based compensation (SBC) is one of the largest real costs many software, internet, and biotech companies report — and one of the most-ignored. Companies frequently present "adjusted" earnings or "adjusted" free cash flow with SBC excluded, on the rationale that "it's not a cash cost." That rationale is technically true and economically misleading. SBC dilutes existing shareholders; either the company buys back shares to offset the dilution (in which case the cost is the cash spent on buybacks, which is very real) or it doesn't (in which case existing shareholders own a smaller piece of the company over time). By the end of this lesson you should know how to convert reported metrics into SBC-honest ones, and the specific SBC-to-revenue threshold that materially distorts headline valuations.
+
+## How this plays out in real markets
+
+Take SNOW (Snowflake) in fiscal 2024. SNOW reported "adjusted" free cash flow margin around 27% with $2.8B in revenue, suggesting FCF of ~$760M. SBC for the year was roughly $1.1B — meaning SBC alone exceeded reported FCF. On a GAAP basis (SBC included as a real expense), SNOW had negative operating income.
+
+Two ways to read this:
+
+1. The bullish read: SBC is a one-time grant that retains key engineers; treat it as already-spent and look at "adjusted" metrics for the recurring business economics.
+2. The honest read: SBC issued each year increases the share count, which dilutes every existing holder. If SNOW issues 5% of shares as SBC annually and doesn't buy back any, an investor owning 1% today owns ~0.95% next year, ~0.90% the year after — even if the company does nothing else.
+
+To convert: subtract SBC from "adjusted" FCF or use diluted EPS that incorporates the impact of stock grants. SNOW's SBC-honest free cash flow margin for fiscal 2024 was closer to -12% than +27%. That's a 39-point gap. The "fair multiple" applied to the two numbers produces fair-value estimates more than 2x apart.
+
+Compare to MSFT. MSFT's SBC for fiscal 2024 was roughly $11B against $74B in free cash flow. SBC as a percentage of FCF: ~15%. MSFT also buys back $25B+ in shares annually, more than offsetting the dilution. The SBC issue is real but absorbed by the buyback program — net dilution is zero or negative, and the "adjusted" and "honest" pictures converge.
+
+The threshold matters. When SBC is under 5% of revenue, the distortion to headline metrics is modest. When SBC reaches 15–20%+ of revenue (common in earlier-stage SaaS and clinical-stage biotech), excluding SBC from "adjusted" metrics misleads by enormous magnitudes. META at ~10% of revenue is in between — material but absorbed by buybacks.
+
+On Bursa Malaysia: SBC is far less common at scale on Bursa than in US tech, but a small number of newer technology listings have started using it, and the same adjustments apply.
+
+The falsifiable claim: any "adjusted" metric (adjusted EPS, adjusted EBITDA, adjusted FCF) that excludes SBC overstates the company's economics if SBC is more than 5% of revenue. The honest cross-check is to compute the equivalent GAAP metric, or to subtract SBC from the adjusted figure and re-derive the multiple.
+
+## The trap
+
+The trap is accepting "adjusted" metrics at face value because they're the figures management emphasises and analysts include in consensus estimates. A beginner sees a software company's "adjusted EBITDA margin of 30%" and applies a 20x multiple, getting a fair-value estimate that ignores 15+ points of SBC that are eating shareholder ownership each year. The correct mental model: always compute the metric both ways. If "adjusted EBITDA-minus-SBC" is dramatically lower than reported "adjusted EBITDA," the difference is the real economic gap that the headline hides. The second version of the trap: assuming buybacks offset SBC by name without checking the numbers. A $1B buyback program doesn't offset $2B in SBC — it leaves $1B of net dilution. Always net SBC against actual buyback spend, not announced buyback authorisations.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="Company T reports adjusted operating margin of 28%, revenue of $4B, and SBC of $720M. Which conclusion most cleanly applies the lesson?"
+  options={[
+    "Operating margin 28% — a healthy software business",
+    "SBC is $720M / $4B = 18% of revenue. The 'adjusted' 28% operating margin excludes SBC; on a SBC-honest basis, operating margin is closer to 10% (28% - 18%). A multiple applied to the headline 28% overstates the business's economics by nearly 3x. The correct posture is to use the SBC-adjusted margin for valuation, OR to subtract the present value of expected SBC over the next 5+ years from the equity value as a dilution charge",
+    "Operating margin 28% but with some adjustments",
+    "Indeterminate — need to see buybacks"
+  ]}
+  answer={1}
+  explanation="The synthesis is that SBC at 18% of revenue is well above the 5% threshold and materially distorts headline metrics. The headline 28% is technically reported but economically not what shareholders capture. The most tempting wrong answer is option 0 because it accepts the management-presented number; the lesson explicitly says SBC-excluded metrics overstate economics. Option 2 hedges without doing the math. Option 4 is partially right — buybacks matter, but even fully offsetting buybacks doesn't make the 28% comparable to a 28% margin in a low-SBC company, because the cash spent on the offsetting buyback is a real opportunity cost."
+/>
+
+<Quiz
+  question="A company has SBC of $2B annually and a buyback program that has repurchased $2.2B in shares over the last 12 months. The share count has decreased by 1.5%. Which read most cleanly applies the lesson?"
+  options={[
+    "Net dilution is negative — buybacks more than offset SBC. No adjustment needed",
+    "Net share count is the most useful test, and at -1.5% the buyback is doing its job — but the $2.2B spent on buybacks is real opportunity cost that wasn't available for dividends, M&A, or debt reduction. The honest valuation question is: what would the company's FCF look like if it didn't have SBC and didn't need the offsetting buyback? Probably FCF would be $2B higher (the SBC amount), and that $2B alternative use would create real shareholder value. The 'adjusted FCF' is too generous; the true economic FCF is somewhere between adjusted and adjusted-minus-SBC",
+    "Indeterminate — buybacks are random",
+    "Net dilution -1.5% means stockholders are gaining ownership — buy"
+  ]}
+  answer={1}
+  explanation="The synthesis is that SBC offset by buybacks looks free at the share-count level but isn't — the cash spent on buybacks is opportunity cost. A company without an SBC habit could have spent that $2.2B on growth, debt paydown, or returned it as dividends. The lesson's nuance: net dilution is the cleanest single test, but the underlying cash cost is still real. Option 0 stops too early. Option 2 over-rejects. Option 3 confuses share count with shareholder economics."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a software or biotech stock you follow and ask: "Show me SBC as a percentage of revenue for the last 5 years, alongside actual buybacks executed (not authorised). What's the net dilution rate?" In the <Term id="ami_decision_journal" />, write one sentence: "SBC is X% of revenue, buybacks offset Y%, net dilution is Z% — the SBC-honest operating margin is roughly W%." Compare W to the headline operating margin and use the honest number in any multiple-based valuation.
+
+## Takeaway
+
+SBC is real money — issued as shares instead of cash, it dilutes you or forces buybacks that spend cash. Always cross-check "adjusted" metrics against an SBC-honest version, especially when SBC exceeds 5% of revenue.

@@ -1,0 +1,86 @@
+---
+id: "123_gap_analysis_four_types"
+title: "Gap analysis: four types of gaps"
+duration_min: 6
+level: 2
+module: 4
+difficulty: 4
+track: "technical_analysis"
+topic: "gaps"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "024_breakouts"]
+tags: ["gaps", "common_gap", "breakaway_gap", "exhaustion_gap", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Gap analysis: four types of gaps
+
+This assumes you've completed 020 (anatomy of a bar) and 024 (breakouts). Here we go deeper on what to do when the chart shows a gap — a price discontinuity where one session's open prints clear of the prior session's high or low, leaving a visible empty space between the two candles. Not all gaps mean the same thing. There are four common types — common, breakaway, runaway (continuation), and exhaustion — and reading the wrong one badly can be the difference between catching a 15% trend and getting trapped at the top. By the end of this lesson you should be able to classify a gap by location and volume, know which fill, which don't, and what each implies for position management.
+
+## Example
+
+Walk through real gaps on NVDA in early 2026.
+
+**Common gap.** 22 January 2026: NVDA closed Tuesday at $138.40, opened Wednesday at $137.90 — a $0.50 gap down in the middle of a sideways consolidation, on average volume, with no news catalyst. Filled within two sessions; closed Friday at $138.80. *Where it formed: in a range, low context. What to do: ignore — common gaps fill, they're noise.*
+
+**Breakaway gap.** 6 February 2026: after consolidating in $125–$132 for three weeks, NVDA closed Thursday at $132.10 and opened Friday at $137.40 — a $5.30 gap above the entire consolidation, on 2.4x average volume, on a positive earnings beat. Did not fill. NVDA ran to $148 over the next four weeks. *Where it formed: out of a clean consolidation. What to do: treat like a high-conviction breakout, see lesson 024.*
+
+**Runaway gap (continuation).** 19 February 2026: NVDA had been trending up. Closed Tuesday at $142.10, opened Wednesday at $145.80 — a $3.70 gap mid-trend on 1.8x volume. Continued higher to $148 by week's end. *Where it formed: mid-uptrend. What to do: it's a trend-acceleration signal; existing longs hold, new entries chase carefully.*
+
+**Exhaustion gap.** 4 March 2026 (the day before the doji from lesson 112): after a six-week rally from $108 to $148, NVDA closed Monday at $146.80 and opened Tuesday at $150.20 — a $3.40 gap up on 2.1x volume, but it printed above the prior November high and at the extreme of the move. The gap filled within three sessions and then some — NVDA was at $138 by mid-March. *Where it formed: at the end of an extended trend. What to do: tighten stops; exhaustion gaps often mark the high.*
+
+Falsification rule for each: a common gap is confirmed common once filled — until it fills, you can't be sure it wasn't a breakaway. A breakaway gap invalidates if it fills (daily close back inside the gap range). An exhaustion gap is confirmed exhaustion only after it fills — until it does, it can still be a runaway in disguise. *Type is partly retrospective, which is why context (location, volume) matters so much for the prospective read.*
+
+## The trap
+
+The trap is reflexively shorting any gap up (or buying any gap down) on the premise that "gaps always fill". They don't always fill. Common gaps usually do. Breakaway gaps often don't. Runaway gaps may not fill for months. Exhaustion gaps fill quickly. Trading "the gap will fill" without classifying which kind of gap you're looking at is how short sellers blow up on breakaway gaps that triple-digit-percent without ever filling. The correct mental model: location and volume classify the gap. A gap out of a long consolidation on high volume is probably a breakaway and you do not short it. A gap inside a sideways range on average volume is probably common and the fill thesis is reasonable. A gap at the extreme of a long extended trend on high volume is probably an exhaustion gap and longs should tighten, not chase. Read where the gap is before you decide what to do about it.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock has been ranging $40 to $44 for five weeks. Today it gaps up from a $43.20 close to a $46.10 open on 2.6x average volume after an earnings beat. Which gap type is this and what's the implication?"
+  options={[
+    "Common gap — small gap inside a range, will fill within days; short it",
+    "Breakaway gap — gap clears the entire range on heavy volume after a catalyst; treat as a high-conviction breakout, do not short it, and the gap invalidates if it fills (a daily close back inside $40-$44)",
+    "Exhaustion gap — any gap after a catalyst is exhaustion",
+    "Runaway gap — mid-trend acceleration"
+  ]}
+  answer={1}
+  explanation="Location: gap cleared the entire $40-$44 range. Volume: 2.6x average. Context: post-catalyst, out of consolidation. That's the textbook breakaway. Option 0 ignores location and volume and applies a 'gaps fill' heuristic that doesn't fit this gap's class. Option 2 misuses 'exhaustion' which requires a preceding extended trend, not a range. Option 3 misclassifies — there's no preceding trend to call this a runaway."
+/>
+
+<Quiz
+  question="A stock has rallied from $80 to $148 over four months. Today it gaps up from $148.40 close to $152.80 open on 2.3x volume, then sells off intraday and closes at $147.10 — filling the gap entirely in one session. What gap type just confirmed, and what's the disciplined call for any existing longs?"
+  options={[
+    "Breakaway gap — heavy volume confirms strength; add to the position",
+    "Exhaustion gap — the gap printed at the extreme of an extended trend and filled within the same session; existing longs should tighten stops or trim, because exhaustion gaps frequently mark the high. The same volume that looked bullish at the gap-up open looks distributive in hindsight",
+    "Common gap — gaps that fill the same day are always common",
+    "Runaway gap — any high-volume gap in an uptrend is runaway"
+  ]}
+  answer={1}
+  explanation="Location: extreme of a 4-month rally. Volume: 2.3x. Fill: complete intraday. That's the exhaustion-gap signature. Option 0 ignores location at the trend extreme and same-day fill. Option 2 misreads same-day fill as a common-gap marker — same-day fill at the extreme of an extended trend on high volume is the *exhaustion* signature; common gaps form in ranges, not at trend extremes. Option 3 applies a high-volume = runaway rule that ignores location."
+/>
+
+<Quiz
+  question="You're long AAPL at $186 in a clear uptrend. AAPL gaps up to $189.40 on 1.6x volume mid-trend, holds the gap (no fill), and closes at $190.80. Three sessions later AAPL gaps up again from $192 to $196 on 2.4x volume, printing well above the prior November all-time high, then sells off intraday and closes at $191.40 — filling the second gap. Synthesising the four gap types, what do the two gaps together suggest, and what's the disciplined call?"
+  options={[
+    "Both were breakaway gaps — add aggressively",
+    "First gap was runaway (mid-trend, holds, on volume — a continuation signal). Second gap was exhaustion (at a new all-time high after an extended run, gap filled same session, on heavy volume — distributive). The combined signal is: trend has been strong but the second gap likely marks the top; trim or tighten stops, do not add new longs at the second gap-up. The most tempting wrong move is treating both gaps as the same kind of signal and adding",
+    "Both were common gaps that will fill in time",
+    "First was exhaustion (any gap in an uptrend is exhaustion), second was a normal pullback"
+  ]}
+  answer={1}
+  explanation="This question demands classifying two gaps with different locations and behaviours, then synthesising the message. Runaway: mid-trend, holds, volume — the first gap. Exhaustion: at the extreme, fills same day, volume — the second gap. The combined read is that what looked like a continuing trend got a topping signal at the second gap. The tempting wrong move (option 0) treats both gaps identically and adds to longs right as the trend may be reversing. Option 2 dismisses two clear signals. Option 3 inverts the order entirely and misclassifies the first gap. The synthesis bar is using all four type definitions, location-and-volume classification, and the action implications of each on the same chart."
+/>
+
+## Try it
+
+Find a chart for any stock that's had a notable gap in the past three months. Ask the Market Analyst in <Term id="ami_one_on_one" />: "Classify the gap on [ticker] on [date] — common, breakaway, runaway, or exhaustion. Cite location relative to recent structure and volume relative to the 20-day average. What happened in the following 10 sessions?" Save the answer to your <Term id="ami_decision_journal" /> as a gap-type reference. After three examples logged, you'll start classifying gaps in real time.
+
+## Takeaway
+
+Gaps come in four kinds — common (fills, ignore), breakaway (don't short it), runaway (trend acceleration), exhaustion (likely top, tighten) — and the type is determined by location and volume, not by the gap's size alone.

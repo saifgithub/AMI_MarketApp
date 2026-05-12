@@ -1,0 +1,63 @@
+---
+id: "101_volatility_adjusted_sizing"
+title: "Volatility-adjusted position sizing"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "volatility_sizing"
+prerequisites: ["014_position_sizing_basics"]
+tags: ["risk", "position_sizing", "volatility", "atr"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Volatility-adjusted position sizing
+
+This lesson assumes you've completed lesson 014 (Position sizing basics); here we go deeper on how to keep risk constant across instruments that move very differently. A fixed 1% of account is the right rule, but if you apply the same dollar-stop distance to TSLA and to KO, you've effectively taken a 4× bigger bet on TSLA — same dollar risk, but TSLA's daily range eats the stop in hours while KO's takes weeks. Volatility-adjusted sizing uses the instrument's recent range (typically ATR — Average True Range) to set the stop distance, so a 1% account risk produces the same odds of stop-out across every ticker on your <Term id="ami_watchlist" />.
+
+## Example
+
+Your simulated account is $50,000, max 1% risk per trade = $500 risk budget. TSLA is at $240, 14-day ATR = $9. KO is at $62, 14-day ATR = $0.75. You like both setups long.
+
+For TSLA, set the stop at 1.5 ATR below entry: $240 − $13.50 = $226.50. Per-share risk = $13.50. Shares = $500 ÷ $13.50 = 37 shares. Notional = $8,880 (17.8% of account). For KO, same 1.5 ATR stop: $62 − $1.125 = $60.875. Per-share risk = $1.125. Shares = $500 ÷ $1.125 = 444 shares. Notional = $27,528 (55.1% of account). Different notionals, identical risk, identical odds of getting stopped out on normal noise — because the stop scales to each name's volatility instead of being a flat percentage or dollar amount.
+
+On Bursa Malaysia: AIRASIA at RM2.40 with a 14-day ATR of RM0.08 vs MAYBANK at RM10.20 with a 14-day ATR of RM0.12. Same RM500 risk budget, 1.5 ATR stops. AIRASIA: stop RM2.28, per-share risk RM0.12, 4,166 shares. MAYBANK: stop RM10.02, per-share risk RM0.18, 2,777 shares. Falsifiable test: if you size two trades at the same dollar risk without adjusting for ATR, the higher-volatility name will hit its stop more than twice as often on noise alone within the first five trading days.
+
+## The trap
+
+The trap is using a flat percentage stop (5% below entry, say) across every ticker. On low-volatility names like KO or JPM, a 5% stop is well outside normal noise — fine, but it forces a very small share count, so the position barely contributes to portfolio outcomes. On high-volatility names like TSLA or NVDA, 5% can be inside a normal day's range — you get stopped out by noise that says nothing about the thesis. The correct mental model: dollar risk is constant (the 1% rule), but stop distance scales with the instrument's recent range. ATR is the cleanest measure; 1.5× to 2× ATR is the working range for swing trades. Anything tighter than 1× ATR is asking to be shaken out; anything looser than 3× ATR makes the stop more of a hope than an invalidation.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="Account $40,000, max 1% risk = $400. NVDA at $500, 14-day ATR = $20. You set the stop at 2 ATR below entry. How many shares?"
+  answer={10}
+  tolerance={0}
+  explanation="Stop distance = 2 × $20 = $40 per share. Shares = $400 ÷ $40 = 10. Notional = $5,000 (12.5% of account). The same $400 risk on a low-vol name like KO with $0.75 ATR would buy 266 shares — totally different notional, identical risk."
+/>
+
+<Quiz
+  question="Two traders both risk 1% per trade. Trader A uses a flat 5% stop on every ticker. Trader B uses 1.5× ATR. Over 30 trades across mixed-volatility names (some high-vol like TSLA, some low-vol like KO), why does Trader B usually end with a tighter equity curve?"
+  options={[
+    "Trader A's wider stops on low-vol names let winners run longer, so Trader A compounds faster.",
+    "Trader B's stops scale to each instrument's normal range, so stop-outs come from genuine invalidation rather than noise; Trader A's flat stops are tight relative to high-vol names (noise stop-outs) and loose relative to low-vol names (over-sized losses when the thesis actually fails).",
+    "ATR is a lagging indicator, so Trader B's stops are always wrong by construction.",
+    "They produce identical equity curves — 1% is 1%, the stop method doesn't matter."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the last — 'same dollar risk, same outcome'. Dollar risk is the same per trade, but the probability and reason for getting stopped out are very different. Flat stops mix two errors: noise-driven stop-outs on volatile names (forced losses where the thesis was actually fine) and oversized losses on quiet names when the thesis did fail (the 5% gap is way past the chart's invalidation). ATR-based stops normalise that probability across instruments. The 'lagging indicator' distractor is a misreading — ATR being a 14-day average is the feature, not the bug, since it filters out single-day spikes."
+/>
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the Trader, pick any two tickers from your watchlist with very different volatility (e.g., TSLA and JPM), and ask "What's the 14-day ATR for each, and what would 1.5 ATR stop distances look like at current price?" Then run the position-sizing math at 1% account risk for both — note how different the share counts and notionals are.
+
+## Takeaway
+
+Risk is the constant; stop distance is the variable — let volatility, not a round percentage, decide where the stop sits.

@@ -1,0 +1,66 @@
+---
+id: "220_pullback_to_ma_vs_to_sr"
+title: "Pullback to moving average vs to support/resistance"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "pullback"
+prerequisites: ["054_pullback_strategy", "025_pullbacks", "026_moving_averages", "023_support_and_resistance"]
+tags: ["strategy", "pullback", "moving_average", "support", "resistance"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Pullback to moving average vs to support/resistance
+
+The pullback foundation (054) used the 50-day MA as the support level. But not all pullbacks end at the same kind of level — some terminate at a rising moving average (dynamic support), others at a prior breakout level or horizontal swing low (static S/R), and the two have different risk profiles. Dynamic-MA pullbacks give you a moving target that ratchets with price; static-S/R pullbacks give you a fixed level that's been tested historically. After this lesson you can name which level type the current pullback is heading toward and choose the stop placement that fits.
+
+## How this plays out in real markets
+
+Look at two MSFT pullbacks side by side from 2024. (1) Pullback to a rising MA — early September 2024: MSFT had run from $400 in January to a high of $467 in early July, then pulled back in August toward the rising 50-day MA at $420. On September 6, MSFT closed at $401.70 — tagging just under the 50-day in an intraday spike but closing back near $410, with the 50-day now at $419 acting as dynamic resistance/support. (2) Pullback to a prior breakout level — May 2024: MSFT had broken out from a base near $430 in March, then pulled back through April and tagged $397.58 on April 19 — but the cleaner support level was the prior breakout zone around $410, which had been resistance, became support after the breakout, and held on a daily-close basis for the subsequent retest. The dynamic-MA trade had a stop under the 50-day swing low at $397 (risk ~$13/share from $410 entry). The static-S/R trade had a stop under the prior breakout zone at $405 (risk ~$5/share from $410 entry). Same instrument, same direction, very different position-sizing math.
+
+Entry criteria for MA pullback: established uptrend (50-day sloping up), price pulls back and closes within 1-2% of the rising MA, then closes back ABOVE it with confirmation. Stop: pullback swing low. For static-S/R pullback: prior breakout level (or prior swing high, prior cluster of touches), price pulls back to and respects the level on a daily-close basis, then prints a confirmation candle. Stop: below the static level by the average pullback's noise band (~1.5x daily ATR). Individual-trade invalidation in either case: a daily close significantly below the support level — the support failed, the pullback became a breakdown. The strategies FAIL when the underlying trend is already weakening on the higher timeframe — pullbacks late in a trend frequently break support, especially when broad market breadth has narrowed.
+
+## The trap
+
+The beginner mistake is treating all pullback supports as equivalent and using one default stop distance for all of them. You enter a pullback-to-MA trade with the same 2% stop you'd use on a pullback-to-prior-breakout-zone, and you either get stopped out at the noise (MA support can wick through by 1-3%) or you over-risk (static S/R rarely needs a 2% buffer below it). The correct mental model: stop placement is a function of the support TYPE. Dynamic-MA supports breathe — give them ~1x ATR below the MA. Static S/R levels are fixed — give them ~0.5x ATR below the level. The other trap: stacking the two and thinking the pullback is doubly-supported when MA and prior S/R coincide. That's a real edge, but only if both are confirmed by a close-back candle.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL is in an uptrend. The 50-day MA is rising at $222. The prior breakout level (now potential support) sits at $215. Price pulls back from $235 and today closes at $223 on a green confirmation candle, ATR is $4. Which is the better long entry and stop pairing?"
+  options={[
+    "Enter at $223, stop $215 (use the static S/R as the stop)",
+    "Enter at $223, stop $218 (under the 50-day MA at the dynamic support's noise band)",
+    "Wait for a tag of $215 then enter with a stop at $210",
+    "Skip — too many possible supports means none is binding"
+  ]}
+  answer={1}
+  explanation="The closer support is the 50-day MA at $222; price already closed above it with confirmation. Stop placement = MA - ~1 ATR = $222 - $4 = $218, giving the dynamic support its natural noise band. Option 0 uses the further support and over-risks by $7/share when the closer support has already confirmed. Option 2 waits for a tag of $215 that may never come because the MA held."
+/>
+
+<Quiz
+  question="On Bursa Malaysia: TENAGA in an uptrend. The 50-day MA is at RM14.20; a prior horizontal breakout level sits at RM14.20 — both supports coincide. Price pulls back and closes at RM14.30 with a clean confirmation candle. ATR is RM0.30. Mandate: per-trade risk 1% on RM30,000 account. Synthesis: best entry/stop AND max position size?"
+  options={[
+    "Entry RM14.30, stop RM14.05, size 1,200 shares",
+    "Entry RM14.30, stop RM13.80, size 600 shares",
+    "Entry RM14.30, stop RM14.05, size 600 shares",
+    "Entry RM14.30, stop RM13.50, size 375 shares"
+  ]}
+  answer={0}
+  explanation="When MA and static S/R coincide, the support is stronger so the stop can be tighter — use the smaller noise band ~0.8x ATR below the level: RM14.20 - RM0.15 = RM14.05. Risk per share = 14.30 - 14.05 = RM0.25. Max risk = 1% * 30,000 = RM300. Shares = 300 / 0.25 = 1,200. Option 1 uses a normal MA-only buffer when both supports stack — over-risking. Synthesis: the stop type AND the stop distance both flow from the support type AND its noise band, then the mandate caps size."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker in pullback and ask: "Identify the nearest support — is it a rising MA, a prior breakout level, a horizontal swing low, or a confluence of two? State which type of stop placement applies and what ATR-noise buffer to use." Log the support-type tag in the <Term id="ami_decision_journal" /> alongside entry, stop, and size — so the post-mortem can correlate stop-type to outcome over many trades.
+
+## Takeaway
+
+Pullback supports are not interchangeable. Dynamic MAs breathe and need ~1x ATR below; static S/R is fixed and needs ~0.5x ATR. Stop distance flows from support type, not from a default percentage.

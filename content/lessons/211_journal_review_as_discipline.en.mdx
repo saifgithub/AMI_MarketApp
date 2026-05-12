@@ -1,0 +1,78 @@
+---
+id: "211_journal_review_as_discipline"
+title: "Journal review as a discipline forcing function"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+topic: "journal_review"
+prerequisites: ["050_boredom_trading", "051_discipline_vs_excitement"]
+tags: ["psychology", "discipline", "decision_journal", "process", "review"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Journal review as a discipline forcing function
+
+A <Term id="ami_decision_journal" /> that is only written-to and never read-from is theater, not discipline. The forcing function that actually changes behaviour is the *review* — a scheduled, structured re-reading of your own past trades against your written rules. After this lesson you will be able to design a weekly review cadence that surfaces your specific failure modes, name the three audit lenses every review should run, and configure the journal so the review compounds across months rather than restarting from zero each week. The trader who reviews finishes the year with a different P&L than the trader who only writes — the same trades, different outcomes, because the review changes the next trade.
+
+## How this plays out in real markets
+
+A trader instituted a 30-minute Sunday review starting February 2024. Each week he ran three audit lenses across the prior 5 sessions' trades: (1) per-trade risk drift versus <Term id="ami_mandate" />, (2) checklist compliance versus actual entries, (3) timing of entries relative to closed losses (cooldown audit). The first review (week of Feb 4) surfaced 3 mandate-edge trades, 2 unqualified entries, and 1 entry inside the cooldown window. He documented each, set a Mandate parameter to harden the rule that had been bypassed (changed cooldown enforcement from per-ticker to per-trader), and re-read the prior week's journal entry the following Sunday.
+
+By August, the review had compounded: each Sunday's audit referenced not just the prior week but the prior month's pattern, and each new mandate hardening was logged with a date and the trade that triggered it. By October, his unqualified trade count was down 78% week-over-week from the February baseline. His annualised return through October was approximately 22% higher than his prior 12-month average on the same strategy. He had not added any new strategies. He had only stopped repeating his cheapest mistakes — which the review made visible, week by week.
+
+## The trap
+
+The trap is the belief that the journal is a write-only diary. It is not. A journal that is only written-to is a memory aid — useful but slow. A journal that is *reviewed* is a feedback loop, and feedback loops are the only mechanism by which a trader's behaviour materially changes over time. The correct mental model: the journal entry is the data; the review is the analysis; the mandate update is the action. Most traders complete step one and skip steps two and three. The single highest-leverage 30 minutes in a trader's week is not researching the next trade — it is reading the last 5 trades against the rules they were supposed to follow. The Portfolio Manager's role in this is structural: every review should end with a question to the PM in the form "given what this review surfaced, what mandate parameter should change?" If the answer is "none," the review confirmed the rules are working. If the answer is a specific parameter, the review just earned its 30 minutes.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Which three audit lenses should a weekly Decision Journal review run for the prior 5 sessions to maximise discipline impact?"
+  options={[
+    "P&L by ticker, win rate by sector, average holding period.",
+    "Per-trade risk drift versus mandate, checklist compliance versus actual entries, and timing of entries relative to closed losses (cooldown audit).",
+    "Most profitable setup, most losing setup, and the largest single trade.",
+    "Daily P&L curve, weekly drawdown, and monthly Sharpe ratio."
+  ]}
+  answer={1}
+  explanation="The first option is a performance dashboard — it shows outcomes but not process leaks. The third is reactive — it identifies extremes but does not catch drift. The fourth is descriptive statistics — useful for reporting, not for discipline. The compound audit — risk drift, checklist compliance, cooldown timing — directly addresses the three behavioural failure modes (size creep, unqualified trades, revenge trades) that drive most of a discretionary trader's underperformance. All three lenses are checkable in the journal entries themselves; the review's job is to surface them weekly before they compound."
+/>
+
+<Quiz
+  question="Which is the cleanest objective test for whether a journal review actually functions as a discipline forcing function?"
+  options={[
+    "The journal is written every day.",
+    "Each weekly review produces either (a) a written mandate parameter change with a specific dated trade that triggered it, or (b) an explicit 'no change required, rules held this week' entry — and the next week's review references both.",
+    "The journal contains entries for every trade.",
+    "The trader spends at least 30 minutes per week reviewing."
+  ]}
+  answer={1}
+  explanation="Writing daily is necessary but insufficient. Spending 30 minutes is a time-input, not an output. Entry coverage is bookkeeping. The compound test — explicit weekly conclusion (change or no-change), specific trigger trade, prior-week reference — is the auditable signature of a review that is actually closing the loop. Reviews without conclusions are theater; reviews without references compound nothing across time. Both elements are checkable in the journal itself."
+/>
+
+<Quiz
+  question="Your last 4 weekly reviews have surfaced the same pattern — 2 unqualified trades per week despite your written 'skip unqualified' rule. You have noted the pattern each time but the count has not declined. Synthesis answer?"
+  options={[
+    "Continue reviewing — the awareness will eventually drive behaviour change.",
+    "Stop reviewing — clearly it isn't working.",
+    "The journal review has surfaced the pattern correctly, but the mandate has not been hardened in response. Update the mandate to add a deterministic enforcement (e.g., the PM blocks any entry not flagged as 'checklist-qualified' in the order ticket) and document the change with a date. The review's job is to surface; the mandate's job is to enforce. Awareness alone is not enforcement.",
+    "Reduce per-trade risk to 0.5% to limit the damage from unqualified trades."
+  ]}
+  answer={2}
+  explanation="'Awareness will eventually drive change' is the rationalisation that lets a documented pattern run for another year. 'Stop reviewing' is throwing out the diagnostic because it correctly diagnosed an unresolved problem. 'Reduce risk to compensate' treats the symptom without addressing the cause. The disciplined answer recognises the split of responsibility: the review surfaces the pattern; the mandate enforces the change. If reviewing has surfaced the same pattern 4 weeks in a row, the failure is at the enforcement layer, not the awareness layer. Update the mandate."
+/>
+
+## Try it
+
+Open Settings and schedule a recurring weekly review (Sunday evening or Saturday morning works for most traders). Then open the Decision Journal, filter to the last 5 sessions, and run the three audit lenses: per-trade risk drift versus mandate, checklist compliance versus actual entries, cooldown timing. End the review with one explicit conclusion — either a mandate parameter change with a date and trigger trade, or a "no change required" entry. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask: "Given this week's audit, what mandate parameter should change?" The answer is the review's output, not its input.
+
+## Takeaway
+
+The journal entry is the data; the review is the analysis; the mandate update is the action. The 30 minutes of weekly review compounds across the year more reliably than any single piece of research.

@@ -1,0 +1,74 @@
+---
+id: "136_bollinger_bands_basics"
+title: "Bollinger Bands — basics and parameters"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "bollinger_bands"
+prerequisites: ["026_moving_averages", "031_indicator_limitations"]
+tags: ["indicators", "bollinger_bands", "volatility", "standard_deviation", "envelope"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bollinger Bands — basics and parameters
+
+Lesson 026 framed a moving average as the centre of gravity for price. Bollinger Bands wrap that centre with a volatility envelope: a 20-period SMA in the middle, with an upper band at +2 standard deviations of the last 20 closes and a lower band at -2 standard deviations. The envelope widens when volatility rises and contracts when it falls. The default parameters — 20-period, 2-sigma — were John Bollinger's deliberate choice because they capture roughly 95% of normal-distribution price action; meaning a close outside a band is a statistical outlier, not a routine event. Knowing what the bands measure is half the lesson; the other half is knowing what parameter changes actually mean.
+
+## How this plays out in real markets
+
+Look at AAPL through November 2025. With Bollinger Bands set to the default (20, 2), the bands sat around upper 232, middle 224 (SMA20), lower 216 — an 8-point envelope width. On November 12, AAPL closed at 233.40 — a touch outside the upper band. That's a 2-sigma event: under a normal distribution, only about 2.5% of closes should exceed it.
+
+Within four sessions AAPL was back inside, oscillating between 226 and 230. The envelope had done its job — it flagged the statistical extreme, and mean reversion handled the rest.
+
+Now contrast: change the parameters to (20, 1) — one standard deviation. The new upper band sat at 228. AAPL had spent eight of the prior ten sessions above 228, so the "extreme" signal fired constantly and meant nothing. The tighter sigma turned the bands into a fast-flipping indicator with no edge. Push the other way — (20, 3) — and the bands at 236 / 212 almost never get touched; the rare signal is strong, but you may wait months between trades.
+
+Falsifiable claim: at default (20, 2) parameters, roughly 90–95% of daily closes on a typical liquid US large-cap should sit inside the bands. Invalidation: a six-month sample where less than 80% of closes are contained means either the stock's distribution has fat tails (think a high-beta name like TSLA in a volatile regime) or your parameters need re-examining.
+
+On Bursa Malaysia: GENTING in Q3 2025 had a Bollinger width of around RM0.40 at default settings; closes outside the bands occurred about 3% of the time, consistent with the 2-sigma statistical expectation.
+
+## The trap
+
+The trap is reading a band touch as a reversal signal. "Price hit the upper band — sell." That's a half-truth that fails in trending markets. In a strong up-trend, price can "walk the band" — repeatedly touch or close at the upper band over days or weeks — and trying to fade every touch is a quick way to lose money. The bands describe volatility extremes; they don't mandate mean reversion.
+
+The correct mental model: the bands are a probability envelope, not a reversal indicator. A touch tells you price is statistically extended relative to its recent 20-bar range. Whether that extension reverses or continues depends on regime — which you read from the middle band's slope and other context (covered in lesson 137). Don't fade a band touch in isolation; read the slope first.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL closes at 233.40 with Bollinger Bands set to default (20, 2). The upper band sits at 232. Statistically, what does this close represent?"
+  options={[
+    "A guaranteed reversal — sell signal",
+    "A 2-sigma outlier — under a normal distribution, only about 2.5% of closes should exceed the upper band; it's a statistical extreme, not a directional signal on its own",
+    "A breakout signal — buy aggressively",
+    "Noise that should be ignored"
+  ]}
+  answer={1}
+  explanation="The default 2-sigma bands capture roughly 95% of normal-distribution price action, so a close outside is a statistical extreme. The tempting wrong answer ('guaranteed reversal — sell') is the band-touch-equals-reversal mistake; in a trending stock, walking the band is normal and fading every touch loses. The bands describe volatility, not direction."
+/>
+
+<Quiz
+  question="You're testing parameter choices. Setting Bollinger Bands to (20, 1) on a liquid name produces a tight envelope that price closes outside of in about 32% of sessions; setting (20, 3) produces a wide envelope crossed in roughly 0.3% of sessions. Default (20, 2) keeps about 95% of closes inside. Which parameter set is most useful for filtering for statistical extremes worth acting on?"
+  options={[
+    "(20, 1) — fires more often, so more trade opportunities",
+    "(20, 2) — the default, because a close outside is a genuine 2-sigma outlier; the other settings either fire too often (1-sigma) or so rarely the signal is unusable (3-sigma)",
+    "(20, 3) — the rarer the signal, the better",
+    "It doesn't matter; all parameter sets are equivalent"
+  ]}
+  answer={1}
+  explanation="The default parameters are calibrated to the 2-sigma statistical threshold. The tempting wrong answer ('1-sigma fires more often, more opportunities') is the false-positive trap — when the signal fires constantly, it's not flagging extremes anymore. Faster doesn't mean better. (20, 3) is the opposite failure — so rare you wait months for a trade. Defaults exist for a reason; change them only with a sample-tested rationale."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker from your <Term id="ami_watchlist" /> and ask: "Set Bollinger Bands to (20, 2). How many of the last 60 closes sat outside the bands, and what's the current envelope width as a percentage of price?" Then verify on the chart. The exercise is to internalise that 5%-or-so of closes should be outside if the parameters are calibrated correctly.
+
+## Takeaway
+
+Bollinger Bands wrap a 20-period SMA with a 2-sigma volatility envelope — a close outside the bands is a statistical extreme, but whether to fade it or follow it depends on context, not the touch itself.

@@ -291,6 +291,57 @@ Production is decoupled from content. Lessons can ship today with animation refe
 
 ---
 
+## Expansion lessons (deep-dive companions, IDs 100–279)
+
+The 77 IDs above are the **foundation curriculum** — the trunk every user walks through. Each module also has an **expansion set**: deep-dive sub-topic lessons that sit alongside the foundations and drill into specific angles. Expansion lessons live at IDs 100–279 and are NOT on the foundation animation list (no animations).
+
+Lesson-count multiplier per module (relative to foundation count):
+
+| Module | Foundation | Expansion | Multiplier | IDs |
+|---|---|---|---|---|
+| M3 — Risk Management | 7 | 12 | ~3× | 100–111 |
+| M4 — Reading Charts | 6 | 12 | ~3× | 112–123 |
+| M5 — Indicators (complicated) | 6 | 24 | ~5× | 124–147 |
+| M6 — Understanding Companies (complicated) | 7 | 28 | ~5× | 148–175 |
+| M7 — Financial Ratios (complicated) | 6 | 24 | ~5× | 176–199 |
+| M8 — Emotional Discipline | 7 | 14 | ~3× | 200–213 |
+| M9 — Trading Strategies (complicated) | 7 | 28 | ~5× | 214–241 |
+| M10 — Market Regime | 6 | 12 | ~3× | 242–253 |
+| M11 — Investment Scam Awareness | 7 | 14 | ~3× | 254–267 |
+| M12 — AI-Assisted Trading | 6 | 12 | ~3× | 268–279 |
+| **Total expansion** | — | **180** | — | **100–279** |
+
+Expansion lessons live in `content/lessons/<id>_<slug>.en.mdx` alongside the foundations. The directory listing is the canonical catalog; this map is the structural index.
+
+**Notes on expansion design:**
+- Each expansion lesson opens by stating which foundation it deepens, then teaches ONE specific sub-topic at the same 7-part-template depth as a foundation lesson.
+- "Complicated" modules (M5/M6/M7/M9) get ~5× because the topic genuinely warrants more depth. "Standard" modules get ~3×.
+- **M1 and M2 expansion is not yet generated.** M1/M2 foundations (IDs 001–012) are now in place; expansion lessons for these modules can be added at IDs 293+ when prioritised.
+
+---
+
+## Legacy bonus lessons (IDs 280–292)
+
+The 13 pre-curriculum-map lessons originally at IDs 001–013 were parked at IDs 280–292 when the new M1/M2 foundations were written. They remain in the corpus as "legacy bonus" content — Foundations-track material that doesn't fit the new module structure but still has educational value:
+
+- 280: What is a stock? (legacy version)
+- 281: What is a market? (now a stock-exchange variant)
+- 282: What is a brokerage?
+- 283: Market order vs limit order
+- 284: What makes a price move? (legacy version)
+- 285: Reading a P/E ratio (legacy version; superseded by Module 7)
+- 286: What is a chart? (legacy version; superseded by Module 4)
+- 287: News that moves markets (legacy version; superseded by Module 10)
+- 288: Sentiment and the crowd (legacy version; superseded by Module 8)
+- 289: Bull vs bear thinking (legacy version)
+- 290: Position sizing basics (legacy version; superseded by 014)
+- 291: The PM and your mandate (legacy version; superseded by 013)
+- 292: Research Manager synthesis (legacy version; superseded by 057)
+
+These remain available for users who want alternate explanations of the same concepts, or as "bonus" deep-dives surfaced by the Concierge when a foundation lesson's framing doesn't click.
+
+---
+
 ## See also
 
 - `lessons.md` — the original 7-track classification (kept for the agent-unlock logic).

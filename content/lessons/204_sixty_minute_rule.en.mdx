@@ -1,0 +1,78 @@
+---
+id: "204_sixty_minute_rule"
+title: "The 60-minute rule after a loss"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+topic: "cooldown_rule"
+prerequisites: ["047_revenge_trading", "014_position_sizing_basics"]
+tags: ["psychology", "revenge_trading", "cooldown", "mandate", "process"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The 60-minute rule after a loss
+
+The next trade after a closed loss is, statistically, your worst trade. The 60-minute rule — no new entries in the first 60 minutes after a stop-out — is the simplest <Term id="ami_mandate" /> parameter that materially changes a trader's distribution of outcomes. Building on lesson 047, this lesson explains *why* 60 minutes and not 5 or 240, gives you the falsifiable test for whether your cooldown is real or a suggestion, and shows you how to wire the rule into the mandate so the trigger is pulled out of your hand at the exact moment your hand is least trustworthy.
+
+## How this plays out in real markets
+
+A trader's journal, reviewed across 14 months, showed 184 stop-outs. He grouped them by "next entry timing": entries within 0–60 minutes of the stop, 60–240 minutes, and after the next session open. The win rates were 31%, 47%, and 54% respectively. The average size of the next entry was 1.7x mandate in the 0–60 bucket, 1.1x in the middle bucket, and 1.0x in the next-session bucket. Most striking: the 0–60 bucket was where 78% of his mandate-breach trades lived. The same trader on the same strategy generated genuinely different expected value depending only on *when* he placed the next trade after a loss.
+
+He set `cooldown_after_stop_minutes = 60` in his mandate the following Monday. Six months later, the 0–60 bucket of his next-trade behaviour was empty — not because his urges had stopped, but because the order-entry surface refused them. Mandate-breach trades fell 71%. Realised drawdown distribution narrowed materially. The strategy did not change; the timing of his weakest hour did.
+
+## The trap
+
+The trap is the belief that the cooldown is a punishment. It is not. The cooldown is a circuit breaker — it separates the trader who *was just stopped out* from the trader who is *about to size the next position*. In the first sixty minutes after a loss, three measurable things are different about you: your urge to size up to "make it back" is elevated, your patience for waiting for a real setup is depleted, and your conviction is correlated to the loss rather than to the setup. None of these are character flaws — they are the predictable response of any trader to a recent loss. The 60-minute rule does not require you to be a different kind of trader. It requires you to be the *same* trader an hour from now, and to let the same-trader-an-hour-from-now make the decision instead of the just-stopped-out version.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="Why 60 minutes specifically as the default cooldown, rather than 5 minutes or the entire trading session?"
+  options={[
+    "60 minutes is the regulatory cooling-off window required by most brokers.",
+    "60 minutes is long enough that the loss-driven physiological response (elevated heart rate, narrowed attention, urgency to act) has largely subsided, but short enough that the cooldown does not eliminate a full session's worth of setups — it is a circuit breaker, not a market shutdown.",
+    "60 minutes matches the standard candle resolution most strategies operate on.",
+    "60 minutes is the average time a single news cycle dominates the tape."
+  ]}
+  answer={1}
+  explanation="There is no regulatory requirement (option 1 is fiction in a simulation context). The candle-resolution and news-cycle answers are post-hoc rationalisations. The actual reason is behavioural — the elevated physiological response to a loss subsides materially within roughly an hour, and 60 minutes is the shortest window that meaningfully reduces 'next trade after loss' decisions while preserving the rest of the session for the same strategy. Strategies are not paused; only the worst hour of the trader is."
+/>
+
+<Quiz
+  question="You stopped out at 10:45am for -1.1% of account. You see a new setup at 11:00am that 'looks unrelated.' Your mandate cooldown is 60 minutes. The setup ticks every checklist box. What is the disciplined action?"
+  options={[
+    "Take the trade — the setup is independent, the checklist confirms it, and the cooldown is a guideline.",
+    "Wait until 11:45am. If the setup still ticks every box at that time, take it at normal mandate size; if it does not, you have just been protected from a trade your physiology was rationalising.",
+    "Take the trade at half size — partial cooldown observance.",
+    "Switch to a different sector with the same timing — the cooldown only applies to the original loser's ticker."
+  ]}
+  answer={1}
+  explanation="The cooldown is not a suggestion modulated by setup quality — it is a parameter that exists *precisely* because your assessment of setup quality is degraded in the first 60 minutes after a loss. 'Take at half size' is the same trade with a discount sticker. 'Different sector with same timing' is the sector-rotation revenge variant (see lesson 205). The only disciplined answer is to let the clock run. If the setup is real at 11:45, it will still be real at 11:45; if it is not, you have just saved the trade. The cooldown costs you nothing on real setups and protects you on the rationalised ones."
+/>
+
+<Quiz
+  question="Your mandate has `cooldown_after_stop_minutes = 60`. In the last 30 days, you have placed 7 entries within the cooldown window — 6 of them on different tickers from the original loser. Of the 7, 5 closed at a loss. Synthesis answer?"
+  options={[
+    "Reduce the cooldown to 30 minutes — your behaviour shows 60 was too restrictive.",
+    "Remove the cooldown entirely — you traded through it 7 times, the parameter is clearly not functional.",
+    "Investigate why the cooldown was overrideable in 7 cases. If the app or process let you bypass the rule, harden the mandate so the cooldown is enforced (no order submission accepted during the window). The data confirms the original rule was correct — your override-rate, not the rule, is the problem.",
+    "Switch to a 'session cooldown' instead of a minute cooldown — broader is better."
+  ]}
+  answer={2}
+  explanation="The 5-out-of-7-losing data is exactly the empirical case the 60-minute rule exists to address — the override rate, not the rule, is the failure. Reducing the cooldown to 30 minutes is the textbook 'rewrite the rule to legalise the breach' move. Removing it entirely is the same move taken to completion. Switching to a 'session cooldown' may sound stronger but is the wrong fix for the wrong problem; the issue is enforcement, not duration. Harden the rule, then re-evaluate after another 30 days of clean data."
+/>
+
+## Try it
+
+Open Settings → Mandate and set `cooldown_after_stop_minutes` to 60 (or 90 if you want a stricter floor). Then open the <Term id="ami_decision_journal" />, filter to your last 20 stop-outs, and tag each according to "next entry timing" — within 60 minutes, 60–240 minutes, or next session. Compute the win rate of each bucket. Take the screen to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "What does my own data say my cooldown duration should be?" The empirical answer is almost always longer than you would have guessed.
+
+## Takeaway
+
+The cooldown is not a punishment — it is the rule that lets the same-trader-an-hour-from-now make the decision instead of the just-stopped-out version. Set it once, enforce it absolutely.

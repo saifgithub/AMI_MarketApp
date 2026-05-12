@@ -1,0 +1,78 @@
+---
+id: "210_unqualified_trade_trap"
+title: "The unqualified-trade trap"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+topic: "unqualified_trade"
+prerequisites: ["050_boredom_trading", "057_backtesting_a_strategy"]
+tags: ["psychology", "boredom", "checklist", "discipline", "process"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The unqualified-trade trap
+
+An unqualified trade is one that does not tick every box on your written entry checklist — taken anyway because you "see something" or "have a feel." Building on lesson 050, this lesson teaches you why unqualified trades have a measurably worse expected value than qualified ones, the falsifiable test for "this trade is unqualified," and the rule that converts the gap between checklist and gut into either a documented exception (rare) or a skip (almost always). Your strategy's edge is the *average expected value of qualified trades only*. Unqualified trades drag the strategy's measured edge toward zero, no matter how many of them happen to close green.
+
+## How this plays out in real markets
+
+A trader's audit of 180 closed trades over a year, split by checklist compliance: 122 trades ticked every box on the written entry checklist; 58 trades missed at least one box. Win rate on qualified trades: 61%. Win rate on unqualified trades: 44%. Average expectancy on qualified: +4.9% per trade. Average expectancy on unqualified: -0.8% per trade. The unqualified trades, taken across the same strategy on the same instruments by the same trader, had *negative* expectancy as a group. They were not random noise; they were a structurally losing subset masquerading as part of the strategy.
+
+The most uncomfortable line in the audit: the trader's *gross* P&L was driven entirely by the qualified subset. The 58 unqualified trades produced a small net loss that obscured the qualified subset's actual edge in the headline numbers. If he had simply not taken the 58 unqualified trades, his annual return would have been roughly 28% higher with two-thirds the trade count and meaningfully lower drawdowns. The strategy was good; the bored version of him was the strategy's largest cost.
+
+## The trap
+
+The trap is the belief that "experience" justifies a checklist exception. It might — for a few traders, after a decade, with statistical evidence. For most traders most of the time, "I just feel this one" is the verbal signature of boredom or overconfidence wearing experience's clothes. The correct mental model: the checklist is not a constraint *on* your edge — it is the *definition* of your edge. The strategy's expectancy is computed across qualified trades only, by definition. An unqualified trade is, by construction, not part of the strategy whose performance you are projecting forward. The disciplined response is to either revise the checklist *before* the next session (a deliberate, documented criteria change) or to skip the unqualified trade entirely. There is no third option that survives an audit.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="Your written entry checklist has 5 boxes. A candidate trade ticks 4 of 5 — the missing box is volume confirmation. You feel it 'still looks good.' What is the disciplined action?"
+  options={[
+    "Take the trade — 4 out of 5 is a reasonable approximation of the full setup.",
+    "Take the trade at half size — partial qualification, partial size.",
+    "Skip the trade. Either it qualifies at next session if volume confirms, or it does not — your strategy's edge is defined across the qualified subset, and this trade is not in it.",
+    "Take the trade and tighten the stop to compensate for the missing box."
+  ]}
+  answer={2}
+  explanation="'4 of 5 is reasonable' is the textbook unqualified-trade rationalisation. 'Half size' is the discount sticker; it converts an unqualified trade into a smaller unqualified trade, not a qualified one. 'Tighten the stop' raises the bar on the price action without raising the bar on the entry — worse geometry, same underlying error. The disciplined answer is the one that respects the structure of the strategy: the checklist defines the strategy. Either the trade meets the checklist or it does not; if it does not, it is not part of the strategy whose edge you are sizing against."
+/>
+
+<Quiz
+  question="Which compound test distinguishes a real checklist exception from a boredom-driven unqualified trade?"
+  options={[
+    "You feel strongly about the setup.",
+    "The exception is documented in writing before entry, the rationale references a specific written observation (regime change, structural pattern not captured by current checklist), and you can name the criterion the checklist will be amended to include going forward.",
+    "The chart looks similar to a recent winning setup.",
+    "The trade is in a name you know well."
+  ]}
+  answer={1}
+  explanation="Feeling strongly is unfalsifiable. Chart-similarity is hindsight pattern-matching. Familiarity is comfort, not a process input. The compound test — documented before entry, specific written rationale, checklist-amendment intent — is the auditable signature of a real strategy revision rather than a rationalised one-off. Real exceptions are the seeds of a checklist update; rationalised exceptions are the seeds of a strategy's drift toward zero edge."
+/>
+
+<Quiz
+  question="Your strategy averages 5 qualifying setups per month. This month you have taken 9 trades, 4 of which were unqualified. The 4 unqualified trades are net -1.2% on the account. The 5 qualified trades are net +3.8%. The Conservative Debator flags the unqualified subset. Synthesis answer?"
+  options={[
+    "Continue — your net is positive, the unqualified trades are 'acceptable variance.'",
+    "Revise the checklist to make the unqualified trades qualified retrospectively — the data shows your gut is part of your edge.",
+    "Stop taking unqualified trades going forward. Document the 4 unqualified trades in the Decision Journal as a boredom pattern. If after 30 sessions of pure checklist trades your win rate on the qualified subset improves, you have empirical evidence the checklist alone is the edge.",
+    "Reduce per-trade risk on the unqualified trades by half to limit their drag."
+  ]}
+  answer={2}
+  explanation="'Net is positive, acceptable variance' is the rationalisation that lets unqualified trades persist for years. 'Revise the checklist to legalise the unqualified trades' is the same move that destroys edge by retroactively widening criteria to whatever the trader did. 'Half-size unqualified trades' keeps the unqualified pattern at smaller cost — the discount-sticker rationalisation again. The disciplined answer separates the checklist from gut entries, runs the strategy in pure form for a measurable window, and treats the unqualified subset as a tax to eliminate, not a flavour to dilute."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and tag your last 30 closed trades as "qualified" or "unqualified" against your written entry checklist. Compute the win rate and expectancy of each subset. If the unqualified subset has lower expectancy (it almost always does), the empirical case for skipping them is built. Take the result to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "If I had not taken the unqualified trades, what would my account return look like?" The answer is the cost of the boredom you have not yet stopped paying.
+
+## Takeaway
+
+The checklist is not a constraint on your edge — it is the definition of your edge. Trades that miss the checklist are not part of the strategy you are sizing against.

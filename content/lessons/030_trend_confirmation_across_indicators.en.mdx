@@ -1,0 +1,79 @@
+---
+id: "030_trend_confirmation_across_indicators"
+title: "Trend confirmation across indicators"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "indicator_confluence"
+prerequisites: ["026_moving_averages", "027_rsi_momentum_oscillator", "028_macd_trend_and_momentum", "029_volume_confirmation"]
+tags: ["indicators", "confluence", "trend", "confirmation", "checklist"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Trend confirmation across indicators
+
+A single indicator is a single opinion. Confluence is when independent indicators describing different dimensions of price agree — slope (MA), momentum (RSI or MACD), and participation (volume). When three orthogonal readings line up, the noise cancels and the signal sharpens. The goal isn't to stack indicators until you find one that confirms what you already want to do; the goal is to define a minimum checklist before you act, and to know exactly which reading would break the alignment. Confluence raises your hit rate; honest invalidation criteria keep your losses small when it fails anyway.
+
+## How this plays out in real markets
+
+Look at META through January 2026. On January 8, four readings aligned:
+
+1. Price (632) above a rising SMA50 (598) — slope says up-trend intact.
+2. Daily RSI(14) at 64, no bearish divergence at the recent higher high — momentum agrees.
+3. MACD(12,26,9) line above signal and above zero, histogram positive — trend regime and momentum both bullish.
+4. The previous swing-high break at 625 happened on volume of 32 million vs a 20-day average of 21 million — 1.5× participation.
+
+META ran to 685 over the next five weeks. The trade signal wasn't any single indicator; it was the absence of disagreement among them.
+
+Now contrast: on March 4, META printed a new closing high of 698 but daily RSI(14) topped at 59 against the prior 64 — bearish divergence. The MACD histogram had been shrinking for two weeks. Volume on the new-high bar was 14 million vs a 22 million average — below the baseline. The MA was still rising, so a beginner reading slope alone saw "up-trend." Three of four readings flagged weakness. META closed at 651 within nine sessions.
+
+Falsifiable claim: a long setup with all four readings aligned has materially better follow-through than a setup with two or three. The invalidation: if any one of the four flips against you and price closes through structure, the confluence is broken and the trade thesis is gone — regardless of how good it looked at entry.
+
+On Bursa Malaysia: CIMB in late 2024 had price above SMA50, RSI confirming, MACD above zero, and a breakout on 1.7× volume; the trend ran for two months. When RSI diverged and volume dried up in February 2025, the same checklist flagged exit weeks before the SMA50 broke.
+
+## The trap
+
+The beginner trap is one-sided confluence — only looking for indicators that confirm the trade and ignoring ones that disagree. If MA, MACD, and volume say buy but RSI shows bearish divergence, that is not three-of-four confluence. That is contradiction, and the disagreeing indicator is doing its job. The brain wants to weight agreement and discount disagreement; that's confirmation bias dressed in technical analysis.
+
+The correct mental model: define your checklist before you look at the chart. If your rule is "all four must align," then three-of-four is not enough. The discipline isn't in finding confluence — that's easy. The discipline is in walking away when one reading dissents, even when the other three are screaming agreement. Falsification weighs equal to confirmation, or you're just rationalising.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="META makes a new closing high at 698. SMA50 is still rising. But RSI(14) tops at 59 versus 64 at the prior high, MACD histogram has been shrinking for two weeks, and the new-high bar's volume is 14 million vs a 22-million 20-day average. Three of four readings disagree with the new high. What's the right read under a strict confluence rule?"
+  options={[
+    "Buy — price made a new high and the MA is still rising",
+    "Confluence is broken: momentum diverged, MACD weakened, volume failed to confirm; the setup is invalidated even though one indicator (MA slope) still looks bullish",
+    "Hold whatever you have and add on the next dip",
+    "Ignore RSI, MACD, and volume — only the higher high matters"
+  ]}
+  answer={1}
+  explanation="The lesson defines the invalidation: if any single reading in the checklist flips against the setup, confluence is broken — regardless of how many others still agree. The tempting wrong answer ('MA is rising, buy') is one-sided confluence in action: weighting the indicator that agrees and discounting three that disagree. That's confirmation bias, not analysis. META fell to 651 within nine sessions in the lesson's example for exactly this reason."
+/>
+
+<Quiz
+  question="Account size $20,000. Mandate caps risk at 1% per trade. You have a four-of-four confluence long signal on a $40 stock: price above rising SMA50, RSI 62, MACD bullish above zero, breakout on 1.8× volume. Stop sits 2.5% below your $40 entry. How many shares can you take, and what's the trade thesis's primary invalidation?"
+  options={[
+    "500 shares, because 1% of $20,000 = $200; invalidates when RSI hits 70",
+    "200 shares ($200 risk / $1.00 stop distance); invalidates if any one of the four readings flips and price closes through structure",
+    "1,000 shares; trade until the position doubles",
+    "100 shares; invalidates only when SMA50 breaks"
+  ]}
+  answer={1}
+  explanation="Risk math: 1% of $20,000 = $200 risk allowance; stop is $40 × 2.5% = $1.00 below entry; $200 / $1.00 = 200 shares. The invalidation comes from this lesson's rule — confluence breaks the moment any one reading dissents and price confirms with a structure break. The tempting wrong answer ('500 shares, invalidates at RSI 70') makes two errors: it computes shares ignoring the stop distance (size depends on risk per share, not just account-risk dollars), and it treats RSI 70 as a reversal trigger — exactly the mistake the RSI lesson called out."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker showing a clear trend and ask: "Walk me through MA slope, RSI level and divergence, MACD line and histogram, and breakout volume vs the 20-day average — and tell me if there's any disagreement." Compare the Market Analyst's read against your own checklist score. Note which reading you tend to under-weight.
+
+## Takeaway
+
+Confluence is the absence of disagreement among independent readings — define the checklist before you look at the chart, and treat any single dissent as a hard invalidation, not noise.

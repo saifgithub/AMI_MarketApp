@@ -1,0 +1,74 @@
+---
+id: "128_rsi_hidden_divergence"
+title: "RSI hidden divergence — the continuation signal"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "rsi_hidden_divergence"
+prerequisites: ["027_rsi_momentum_oscillator", "022_trend_direction"]
+tags: ["indicators", "rsi", "divergence", "continuation", "trend"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# RSI hidden divergence — the continuation signal
+
+Lesson 027 taught regular RSI divergence — price makes a new high, RSI makes a lower high, momentum is weakening, expect reversal. Hidden divergence is its mirror image. In an up-trend, hidden bullish divergence is when price makes a higher low but RSI makes a lower low. That sounds bad on the surface — until you see what it means: price pulled back shallowly, but RSI swung deep. The momentum reset was bigger than the price reset, which means the trend has fresh fuel. Hidden divergence is a trend-continuation signal, not a reversal. Recognising the difference between regular and hidden divergence is the difference between fading the trend and riding it.
+
+## How this plays out in real markets
+
+Look at AMZN through Q4 2025. From mid-September to mid-October, AMZN climbed from 178 to 195 with daily RSI(14) peaks at 71, 68, and 72 — a textbook up-trend. The first pullback came October 22: price dipped to 188 (higher than the September swing low at 183), and RSI(14) reached 41 — lower than the September swing low's RSI reading of 47.
+
+That's hidden bullish divergence. Price held its higher-low structure; RSI swung deeper than the prior reset. The deeper RSI reset said momentum was being recharged for the next leg, not exhausted. AMZN bounced to 211 over the next six weeks.
+
+Falsification is mechanical — hidden bullish divergence invalidates if price closes below the higher low that anchored the pattern. If AMZN had closed below 188 within 5–8 sessions, the higher-low structure breaks and the continuation signal cancels.
+
+Contrast that with regular bearish divergence on the same chart later: in February 2026, AMZN printed a new high at 224 but RSI(14) only made 64 (vs 72 at the prior high). Regular divergence at a high = reversal warning. Same indicator, opposite trade.
+
+On Bursa Malaysia: PETRONAS in mid-2024 — price pulled back to a higher low at RM6.80 while RSI reached a deeper low at 38 (vs the prior pullback's RSI of 44). The trend continued to RM7.40 over the next four weeks. Hidden bullish divergence, textbook continuation.
+
+## The trap
+
+The trap is conflating the two divergence types and trading them the wrong way around. Regular divergence (price higher high, RSI lower high) at a market top says reverse. Hidden divergence (price higher low, RSI lower low) inside a trend says continue. They look superficially similar — both involve price and RSI disagreeing — but they signal opposite trades. Beginners see "divergence" and short the trend, exiting strong continuation entries.
+
+The correct mental model: divergence direction depends on what's making the new extreme. If price makes the new extreme and RSI doesn't, that's regular (reversal). If RSI makes the new extreme and price doesn't, that's hidden (continuation). One sentence: "Whichever made the new extreme is the one signalling against the move." That mental shortcut is the entire difference between the two patterns. Use hidden divergence only in confirmed trends — in a sideways market, both readings are noise.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AMZN is in an up-trend. It pulls back to 188 (higher than the prior swing low at 183), while RSI(14) reaches 41 — lower than the prior swing low's RSI of 47. Which divergence type is this, and what does it signal?"
+  options={[
+    "Regular bullish divergence — reverse the down-trend",
+    "Hidden bullish divergence — continuation of the existing up-trend; RSI reset deeper than price, recharging momentum",
+    "Bearish divergence — short the stock",
+    "No divergence — both made new extremes"
+  ]}
+  answer={1}
+  explanation="Price made a higher low (no new extreme); RSI made a lower low (new extreme on the indicator side). Whichever made the new extreme is the one signalling against the move, and here that's RSI saying the pullback is deeper than price. In an up-trend, that's continuation fuel. The tempting wrong answer ('regular bullish, reverse the down-trend') misreads the structure — AMZN is in an up-trend, not a down-trend. Identifying the prevailing trend first is the precondition for reading divergence correctly."
+/>
+
+<Quiz
+  question="You spot what looks like hidden bullish divergence on a stock — but on inspection, the stock has been chopping sideways between 50 and 56 for six weeks with no clear higher highs or higher lows. RSI shows the textbook 'price higher low, RSI lower low' pattern over the chop. What does the lesson's framework say?"
+  options={[
+    "Take the long — hidden divergence is a strong signal regardless of regime",
+    "Hidden divergence only applies inside a confirmed trend; in a sideways range, the pattern is noise. Stand aside or trade the range with a different framework.",
+    "Switch to a higher timeframe and try again",
+    "Short the stock because RSI made a lower low"
+  ]}
+  answer={1}
+  explanation="The lesson is explicit: hidden divergence is a continuation signal — and there's nothing to continue if there's no trend to begin with. The tempting wrong answer (option A) treats divergence as a stand-alone trigger; the lesson frames it as a context-dependent filter. Sideways chop produces RSI/price disagreements all the time; without a prevailing trend, those disagreements are statistical noise, not setups."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a clearly-trending ticker and ask: "Are there any recent pullbacks where price made a higher low (in an uptrend) but RSI made a lower low? Walk me through the structure." Then verify on the chart yourself. The exercise is to train your eye to distinguish hidden from regular divergence at a glance — they look similar and signal opposite trades.
+
+## Takeaway
+
+Hidden RSI divergence (price higher low, RSI lower low) is a continuation signal inside a trend — recognise it as the mirror image of regular divergence, and only act on it when a trend is already in place.

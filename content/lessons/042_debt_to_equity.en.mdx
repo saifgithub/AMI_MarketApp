@@ -1,0 +1,72 @@
+---
+id: "042_debt_to_equity"
+title: "Debt-to-equity"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "debt_to_equity"
+prerequisites: ["034_debt_and_the_balance_sheet", "035_cash_flow_vs_earnings", "041_return_on_equity"]
+tags: ["debt_to_equity", "leverage", "balance_sheet", "solvency", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Debt-to-equity
+
+Debt-to-equity captures how much of a company's financing comes from creditors versus owners. Formula: D/E = total debt / total shareholders' equity. It's a leverage gauge. Higher D/E means more amplification — better returns when things work, faster ruin when they don't. By the end of this lesson you should be able to read D/E in the right sector context, pair it with interest-coverage and free-cash-flow checks, and name the specific debt-structure red flag that turns a "manageable" balance sheet into a crisis.
+
+## How this plays out in real markets
+
+AAPL in fiscal 2024 carried roughly $100B in total debt against ~$65B in shareholders' equity, giving D/E ≈ 1.5x. That number alone screams "highly levered" — but AAPL also generated over $110B in annual free cash flow, meaning the entire debt stack could be retired in under a year if needed. The ratio in isolation lied; coverage made the picture safe. Compare TSLA in fiscal 2024: total debt around $13B, equity around $66B, D/E ≈ 0.2x — much "lower leverage" by the ratio, but TSLA's cash generation is more cyclical and the equity base includes substantial recent capital raises. The headline ratio favours TSLA; the durability of the underlying cash favours AAPL.
+
+Banks live in a different universe. JPM carries D/E above 10x because banks fund loans with deposits and wholesale debt — leverage is the business model, not a flaw. Comparing JPM's D/E to AAPL's is meaningless; banks should be evaluated by capital ratios (CET1, tier-1) rather than corporate D/E.
+
+Now an example of how D/E hides debt structure: a company with D/E of 1.0x where 80% of the debt matures in the next 18 months is in real trouble if credit markets tighten — even though the ratio looks moderate. Two companies with identical D/E can have radically different risk profiles based on (a) maturity ladder, (b) fixed vs. floating rate, (c) currency mismatch with revenue.
+
+On Bursa Malaysia: TENAGA, a regulated utility, carries D/E in the 0.8–1.0x range — high for a non-financial but normal for a capital-intensive regulated business with predictable cash flow. AIRASIA's D/E ballooned to multiples of equity during COVID as losses eroded equity and debt rose; that combination — equity shrinking while debt grows — is the textbook distress signature.
+
+Falsifiable claim: a non-financial company with D/E above 2.0x AND interest-coverage (EBIT / interest expense) below 3.0x is a credit risk that should be flagged regardless of the headline P/E or ROE. Either condition alone might be benign; both together is the pattern that precedes most non-cyclical bankruptcies.
+
+## The trap
+
+The trap is reading D/E as a single safety score and stopping. A beginner sees D/E of 0.5x and concludes "low debt, safe." But 0.5x can hide three landmines: (1) most of the debt comes due within 24 months and refinancing isn't guaranteed, (2) the debt is in a currency the company doesn't earn revenue in (a quiet killer for emerging-market issuers), (3) operating leases and off-balance-sheet obligations were excluded from the ratio under older accounting standards. The correct mental model: D/E is the headline; debt structure is the substance. Always check the maturity ladder (when does it come due?), interest coverage (can current EBIT pay the interest?), and free-cash-flow trend (is the cushion growing or shrinking?). What invalidates the signal: a "low" D/E achieved by *equity issuance* rather than debt paydown means shareholders bought their way to a better ratio — accretive only if the new capital earned a return above the cost of equity.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A non-financial company reports D/E = 2.5x. Interest coverage (EBIT / interest expense) is 2.0x. Free cash flow has declined for three consecutive years. Forty percent of total debt matures within 12 months. Which read is most accurate?"
+  options={[
+    "D/E is the only number that matters — at 2.5x the company is leveraged but not necessarily distressed",
+    "The combination is the textbook pre-distress pattern: D/E above 2.0x with interest coverage below 3.0x signals a fragile capital structure; declining FCF means the cushion is shrinking; near-term maturities mean a refinancing test is imminent. Any single factor is manageable; all four together is a credit risk that should override most equity-side valuation signals",
+    "Interest coverage of 2.0x is comfortable",
+    "Buy the stock because high leverage means amplified upside"
+  ]}
+  answer={1}
+  explanation="The synthesis is recognising that solvency analysis is multi-factor. The tempting wrong answer is option 0 — a beginner anchors on the headline ratio and misses that interest coverage and maturity profile are independent risks. Option 2 misreads the coverage number; below 3.0x is typically the band where rating agencies move toward speculative grade. Option 3 confuses leverage-amplified equity returns with risk-adjusted return; the implicit assumption ignores the asymmetric cost of default."
+/>
+
+<Quiz
+  question="Company X has D/E = 1.5x and ROE of 30%. Company Y has D/E = 0.3x and ROE of 18%. Both are in the same industry (non-financial industrial). Which synthesis with the ROE lesson is most accurate?"
+  options={[
+    "X is the higher-quality business because ROE is higher",
+    "The ROE gap is plausibly driven by the leverage gap — X's equity multiplier is roughly 5x higher than Y's, which alone explains a significant chunk of the ROE differential. The right next step is DuPont decomposition: if X's margin and asset turnover are similar to Y's, the ROE premium is purely leverage-driven and disappears in a downturn. Y's lower ROE on lower leverage may represent the more durable business",
+    "Y is more expensive because of the lower ROE",
+    "Without P/E we can't compare them"
+  ]}
+  answer={1}
+  explanation="The synthesis ties D/E directly to the equity-multiplier term in DuPont (Asset multiplier = total assets / equity = 1 + D/E for a simple capital structure). A higher D/E pushes the multiplier, which mechanically lifts ROE without any underlying operating improvement. The tempting wrong answer is option 0 — ROE as a single quality score, ignoring that leverage is the cheap path to a higher number. Option 2 invents an unrelated causation. Option 3 demands a tool that isn't required to make this specific call."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker and ask: "Give me D/E, interest coverage, free-cash-flow trend over the last five years, and the debt maturity ladder. Flag any concentration of maturities within the next two years." Save the four-number snapshot in your <Term id="ami_decision_journal" />. Next time the Bull Researcher pitches a leveraged turnaround, you'll have the credit-side picture in hand before the room debates.
+
+## Takeaway
+
+Debt-to-equity is the headline; debt structure, interest coverage, and cash flow are the substance. A "low" ratio can hide refinancing risk; a "high" ratio can be safe if the cash flow covers it many times over.

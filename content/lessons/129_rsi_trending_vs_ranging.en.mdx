@@ -1,0 +1,72 @@
+---
+id: "129_rsi_trending_vs_ranging"
+title: "RSI in trending vs ranging markets"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "rsi_regime"
+prerequisites: ["027_rsi_momentum_oscillator", "127_moving_average_ribbon"]
+tags: ["indicators", "rsi", "regime", "trending", "ranging", "thresholds"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# RSI in trending vs ranging markets
+
+Lesson 027 warned that RSI thresholds (70/30) are descriptors of momentum strength, not reversal triggers. The next step is to redefine the thresholds based on regime. In a confirmed up-trend, RSI oscillates roughly between 40 and 90 — pullbacks bottom near 40, not 30, and overbought readings stay pinned at 70+ for weeks. In a confirmed down-trend, RSI lives between 10 and 60 — rallies fail near 60, oversold extremes camp below 30. In a sideways range, RSI behaves like the textbook says: 30 oversold, 70 overbought, mean-revert at extremes. Same indicator, three completely different rule books. Misreading the regime is the biggest single source of RSI losses.
+
+## How this plays out in real markets
+
+Look at TSLA from June through December 2025. From June 12 (when SMA50 turned bullish at 220) through October 8, TSLA traded in a confirmed up-trend from 220 to 285. Across that 80-session stretch, daily RSI(14) hit 75+ on twelve separate occasions and dropped below 35 only once. The trend's RSI floor was around 42, not 30. Buying every RSI > 70 short would have produced 12 stop-outs. Buying RSI pullbacks into the 42–48 zone would have caught seven of the eight tradeable continuation entries.
+
+Then from October 15 through December 5, TSLA went sideways between 268 and 295. RSI behaviour completely changed: every push above 65 reversed within three sessions, every dip below 40 bounced. The same indicator, same setting — now the textbook range mechanics applied.
+
+Falsifiable claim: in a confirmed up-trend (price above rising SMA50, ribbon fanned), the effective RSI(14) floor for tradeable pullbacks shifts upward from 30 to roughly 40–45, and the "overbought" reading is no longer a sell signal. The condition that invalidates the up-trend version of the rule: RSI closes below 40 for three consecutive sessions while price closes below SMA50 — at that point regime has shifted and the range-mode thresholds re-apply.
+
+On Bursa Malaysia: GENTING in 2024 spent four months trending up from RM4.20 to RM5.20 with RSI floors in the 42–46 zone; then six weeks of range-bound action between RM4.95 and RM5.20 where RSI behaved textbook 30/70.
+
+## The trap
+
+The trap is using one threshold rule across all regimes. A beginner short-sells every RSI > 70 and ends up systematically fading strong trends — TSLA was the canonical example, with twelve consecutive overbought-short stops. The same beginner buys every RSI < 30 in a downtrend and gets run over as RSI sits in the 20s for weeks.
+
+The correct mental model: classify the regime first using price + MA + ribbon (lessons 026, 127), then apply the matching RSI rule book. Up-trend: pullbacks to RSI 40–45 are buy zones, RSI > 70 is normal not extreme. Down-trend: rallies to RSI 55–60 are sell zones, RSI < 30 is normal not extreme. Range: classic 30/70 thresholds with reversion at extremes. Three regimes, three rule books — and you must know which regime you're in before you compute the rule.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="TSLA has been in a confirmed up-trend for 12 weeks (price above rising SMA50, ribbon fanned). Daily RSI(14) just hit 76 after a strong week. You have no position. What does the regime-aware RSI framework say?"
+  options={[
+    "RSI > 70 is overbought, short with size",
+    "In an up-trend, RSI > 70 is normal — wait for a pullback toward RSI 40–45 to buy continuation, not for a short at the overbought level",
+    "Buy a long now because RSI 76 means strong momentum",
+    "RSI is unreliable in trends; ignore it"
+  ]}
+  answer={1}
+  explanation="In a confirmed up-trend, RSI thresholds shift — 'overbought' is normal and pullbacks toward 40–45 are the tradeable zone. The tempting wrong answer ('short the overbought') is exactly the mistake that produced 12 stop-outs in the TSLA example. Buying at RSI 76 (option C) is the opposite mistake — chasing strength at an extended level instead of waiting for the pullback. Regime-aware thresholds tell you where to wait, not where to chase."
+/>
+
+<Quiz
+  question="A stock has been trending up cleanly for two months but in the last three sessions: RSI(14) has closed below 40 each day, price has closed below SMA50, and the 8/21 EMAs have crossed bearishly. Account size $30,000, mandate cap 1% risk per trade. You're long the stock at 2% account risk. What does the framework recommend?"
+  options={[
+    "Hold — RSI < 30 hasn't fired yet, so it's not oversold",
+    "The lesson's invalidation has triggered: RSI < 40 for three sessions + close below SMA50 = regime shift; the up-trend RSI rule book no longer applies. Exit or cut position back per your stop discipline.",
+    "Buy more — pullback to RSI 40 is the textbook up-trend entry",
+    "Switch to a 5-minute chart to find a better entry"
+  ]}
+  answer={1}
+  explanation="The lesson defines the regime-shift invalidation precisely: three RSI closes below 40 + price below SMA50 ends the up-trend rule book. The tempting wrong answer (option C) treats the RSI-40 pullback as a buy zone — but that's only valid inside a confirmed up-trend, and the trend has just ended by the lesson's mechanical rule. Holding (option A) and switching timeframes (D) are both ways of avoiding the regime change the indicators already flagged."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker and ask: "Is this stock currently trending or ranging, and what's the effective RSI floor and ceiling over the last 60 sessions in this regime?" Then check the chart and count the RSI extremes against price reactions. Calibrate the regime-specific thresholds for the tickers you actually trade — they vary stock by stock.
+
+## Takeaway
+
+RSI has three rule books — up-trend (40–45 floor, 70+ normal), down-trend (55–60 ceiling, sub-30 normal), and range (textbook 30/70) — classify the regime first, apply the matching thresholds second.

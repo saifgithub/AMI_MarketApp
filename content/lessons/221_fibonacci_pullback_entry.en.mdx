@@ -1,0 +1,66 @@
+---
+id: "221_fibonacci_pullback_entry"
+title: "Fibonacci-zone pullback entries"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "pullback"
+prerequisites: ["054_pullback_strategy", "025_pullbacks", "121_pullback_depth_fibonacci_zones", "023_support_and_resistance"]
+tags: ["strategy", "pullback", "fibonacci", "retracement", "entry"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Fibonacci-zone pullback entries
+
+The pullback foundation (054) used a single support — the 50-day MA. Fibonacci retracement zones give you a probabilistic depth-grid instead: a pullback inside an uptrend most commonly terminates in the 38.2%-to-61.8% retracement zone of the prior leg. That zone is not magic — there's no metaphysics in 0.618 — but the ratios cluster with where institutional algorithms and pattern-trained traders place size, and that clustering is what makes the zone useful. After this lesson you can plot a Fibonacci pullback zone, decide which fib level is the entry trigger versus the invalidation, and size the trade off the zone's edges rather than off a single line.
+
+## How this plays out in real markets
+
+Look at NVDA from April through August 2024. The leg up ran from a swing low of $76.60 on April 22 to a swing high of $140.76 on June 20 — a $64.16 advance. The Fibonacci pullback zone projected: 38.2% = $116.27, 50% = $108.68, 61.8% = $101.10. NVDA pulled back through July and tagged $98.91 on August 5 — a brief overshoot of the 61.8% level on a panic-volatility day — but closed back at $100.45, and within three sessions reclaimed $108 (the 50% level). A Fibonacci pullback entry triggered on the close above $108.68 (the 50% level) with the stop placed below the 61.8% level adjusted for noise — say $98 (just below the overshoot low). Risk per share: $10.68. NVDA ran to $128 by mid-August — first target near the 23.6% retracement at $125.66 satisfied at ~1.6R; a runner held with a trailing stop captured the move to $140+ by late August.
+
+Entry criteria: (1) defined prior swing leg (low to high) with at least 5%+ extension, (2) pullback enters the 38.2%-to-61.8% zone, (3) confirmation candle closes back above the 50% level (or a tighter chosen fib trigger like 38.2%). Stop: a daily close below the 61.8% level adjusted for ATR noise (~0.5x ATR below 61.8%). Targets: 23.6% retracement of the leg, then the prior swing high; or a measured-move projection. Individual-trade invalidation: a daily close below 78.6% retracement — at that point the pullback has consumed too much of the prior leg to qualify as a continuation pullback; the structure has broken. The strategy FAILS in trends with steep retracements (typical of high-beta names in volatility regime changes) — a "normal" 61.8% pullback in a stable trend looks identical to the first leg-down of a new downtrend.
+
+## The trap
+
+The beginner mistake is treating each fib level as a static entry trigger and trying to "place an order at 50%". You set a limit order at 50%, price overshoots to 61.8% and bounces past your fill, and you either chase or miss. Or worse, your order fills at 50% on the way through, you have no confirmation that support held, and you ride it down to a deeper retracement. The correct mental model: the fib ZONE between 38.2% and 61.8% is the area where you wait for a confirmation close, not where you place a passive order. Within the zone, the depth of the actual pullback tells you about strength — shallower (38.2%) suggests stronger continuation; deeper (61.8%) suggests weaker. Adjust size accordingly: half size on a 61.8% touch, full size on a 38.2% hold.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A swing leg ran from $80 (low) to $100 (high). The Fibonacci pullback zone you watch is 38.2% to 61.8%. Price pulls back to $87 (65% retracement) and closes there on a red candle. What does the rule say?"
+  options={[
+    "Enter long now — pullback is in the zone",
+    "No entry — close is below the 61.8% level ($87.64), past the zone's lower edge with no confirmation candle",
+    "Wait for a daily close back above 61.8% ($87.64) as the confirmation trigger",
+    "Short — pullback exceeded the 61.8% level"
+  ]}
+  answer={2}
+  explanation="The pullback overshot the 61.8% by ~$0.64 — within ATR noise of the zone edge. The rule is: wait for a daily close back ABOVE the lowest tested fib level as confirmation, not entry at the touch. Option 1 (no entry, period) is the tempting wrong answer because it follows the letter of 'in the zone' but ignores the standard noise-tolerance margin. Option 0 (enter on red candle inside the zone) buys without confirmation — the most common fib-pullback error."
+/>
+
+<Quiz
+  question="On AMZN: prior leg from $145 to $200 (range $55). Fib zone: 38.2% = $179, 50% = $172.50, 61.8% = $166. Price pulls back and closes today at $169 on a green confirmation candle, ATR is $4. Mandate: 1% per-trade risk on $50,000, drawdown cap 15%, currently 9% drawdown YTD. Synthesis: entry, stop, size, AND first target?"
+  options={[
+    "Entry $169, stop $164, size 100 shares, target $189",
+    "Entry $169, stop $164, size 100 shares, target $200",
+    "Entry $169, stop $160, size 55 shares, target $189",
+    "Skip — drawdown is too high, deep pullback (61.8%) implies weak structure"
+  ]}
+  answer={3}
+  explanation="Synthesis: a 61.8% retracement signals a weaker continuation than a 38.2% hold. With 9% drawdown YTD against a 15% cap, you have 6% of capacity left — taking the lower-confidence variant of a strategy is the wrong moment. The Conservative Debator would call this trade. Option 0 is the most tempting wrong answer because the mechanics all check out and a small position 'feels manageable' — but mandate stress and weaker setup quality stack against you. Skip and wait for a setup that uses the upper half of the fib zone or a healthier drawdown state."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker in pullback and ask: "Define the prior swing leg and project the 38.2%, 50%, and 61.8% Fibonacci levels. State which fib level price is closest to right now and what confirmation candle would trigger entry." Then open the <Term id="ami_decision_journal" /> and pre-log entry trigger, stop, size, and the fib-depth tag (shallow vs deep) — so post-mortems can correlate depth to outcome.
+
+## Takeaway
+
+The fib zone is a depth grid, not a set of magic numbers. Wait for a confirmation close back above the deepest tested level; let depth of pullback adjust your conviction and size.

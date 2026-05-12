@@ -1,0 +1,75 @@
+---
+id: "238_strategy_correlation"
+title: "Strategy correlation — measuring it honestly"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["017_portfolio_exposure_and_correlation", "108_regime_dependent_correlation", "236_combining_strategies_for_diversification", "232_regime_segmented_backtests"]
+tags: ["synthesis", "correlation", "diversification", "regime"]
+agent_callouts: ["research_manager", "neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Strategy correlation — measuring it honestly
+
+The diversification lesson (236) said the benefit comes from low cross-strategy correlation. This lesson is how you actually measure it, because the correlation number you compute is misleading in two specific ways: it averages across regimes (hiding the times when correlations spike to +0.9), and it depends heavily on the time-window length you choose. After this lesson you can compute strategy correlation across multiple rolling windows, identify "stress correlation" (the correlation that emerges in crisis regimes), and size your strategy combination using stress correlation — not average correlation — because that's what determines drawdown in the regime that matters.
+
+## How this plays out in real markets
+
+Take trend-following on SPY and a long-only momentum top-decile strategy on the S&P 500 over 2010-2024.
+
+Average correlation of monthly returns: +0.34. Looks decent — not perfectly diversified but well below +1.0. Now segment.
+
+- **Low-vol regime (VIX < 18)**: correlation +0.21. Diversified.
+- **Mid-vol regime (VIX 18-26)**: correlation +0.41. Still diversified.
+- **High-vol regime (VIX > 26)**: correlation +0.78. Crisis.
+- **Worst 10 months by SPY drawdown**: correlation +0.86. Effectively the same strategy.
+
+In Q1 2020, both strategies lost simultaneously — trend-following was whipsawed by the speed of the drop (the 50/200 didn't have time to flip before the crash), and momentum took a 14% loss as factor leadership rotated. The "average +0.34 correlation" implied a meaningful diversification benefit; the actual experience was correlation near 1 in the regime where the diversification was supposed to matter most.
+
+Honest measurement: compute correlation in three buckets — full sample, bottom-decile of market returns ("stress"), and top-decile of market returns. Use the stress correlation for sizing. A pair of strategies with average correlation +0.3 but stress correlation +0.85 should be sized as if it were a single strategy in your risk model, because that's how it will behave when you most need diversification. The pair with average +0.3 AND stress +0.4 is actually diversified.
+
+## The trap
+
+The beginner mistake is using the full-sample correlation as if it were a constant. Correlations are regime-dependent, and they spike toward +1 in crisis — which is the regime where diversification is supposed to save you. The correct mental model: "stress correlation" is the only correlation that matters for risk management. Average correlation tells you about typical days; stress correlation tells you about the day you'll lose the most. The second trap is computing correlation on the wrong frequency. Daily correlations are noisy and over-state diversification (intraday noise washes out); weekly or monthly correlations are more reliable. The third trap is using a recent short window (e.g., last 12 months) — if the window doesn't contain a stress regime, your stress-correlation estimate is unmeasurable. Use the longest window that includes at least one crisis episode (2008, 2020, 2022 at minimum).
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You have three strategies. Pairwise full-sample correlations are all near +0.3. Pairwise stress correlations (worst-decile market months) are all near +0.85. What does this tell you about diversification benefit during a crisis?"
+  options={[
+    "Diversification is strong — the +0.3 number says so",
+    "Diversification disappears in the regime where it matters most. The three strategies will behave as roughly one strategy in a crisis. Size the combined portfolio as if it were a single concentrated bet, not three independent ones — drawdown estimates should use the +0.85 stress correlation.",
+    "Add a fourth strategy to fix the problem",
+    "Correlation doesn't matter at all"
+  ]}
+  answer={1}
+  explanation="Stress correlation determines crisis drawdown. A combined portfolio with stress correlation +0.85 has roughly the same crisis drawdown as a single strategy at the same total size. Option 0 is exactly the failure mode this lesson exists to fix. Option 2 doesn't help unless the new strategy has low stress correlation (most equity-related strategies do not). Option 4 is denial."
+/>
+
+<Quiz
+  question="You're combining trend-following and mean-reversion. Average correlation +0.18, stress correlation +0.45 (mean-reversion has its known failure regime in trending bears, where trend-following thrives — so they don't fully overlap even in crisis). The Neutral Debator and Research Manager both weigh in. Synthesis-correct interpretation?"
+  options={[
+    "The pair is fully diversified at all times",
+    "The pair is meaningfully diversified BOTH in normal AND crisis regimes — exactly because their failure modes are non-overlapping. Size each strategy independently and combine, using the +0.45 stress correlation for portfolio drawdown estimates, with mandate-compliant total exposure.",
+    "The pair is undiversified because stress correlation is positive",
+    "Combine but allocate 90% to mean-reversion since it has higher backtest CAGR"
+  ]}
+  answer={1}
+  explanation="The synthesis: trend-following and mean-reversion are genuinely diversified because their failure regimes are opposed (chop vs trending bear). The +0.45 stress correlation reflects the residual co-movement (both lose somewhat in extreme vol spikes) without erasing the diversification benefit. Option 0 overstates the diversification. Option 2 sets the bar too high — perfect zero-correlation pairs are rare. Option 3 concentrates in one strategy, defeating the diversification."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, paste the monthly returns of your strategies and ask: "Compute pairwise correlations on three buckets: full sample, worst-decile market months, and best-decile market months. Report a 3x3 correlation matrix for each bucket." Log all three matrices in the <Term id="ami_decision_journal" />. Size your strategy combination using the stress-correlation matrix, not the full-sample one.
+
+## Takeaway
+
+Average correlation flatters; stress correlation reveals. Size your portfolio for the correlation that emerges in the regime where you'll lose the most, not the regime where everything is calm.

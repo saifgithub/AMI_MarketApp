@@ -1,11 +1,11 @@
 ---
-id: "011_position_sizing_basics"
+id: "290_position_sizing_basics"
 title: "Position Sizing Basics"
 duration_min: 4
 level: 2
 track: "risk_portfolio"
 topic: "sizing"
-prerequisites: ["004_market_order_vs_limit"]
+prerequisites: ["283_market_order_vs_limit"]
 tags: ["risk", "sizing", "portfolio"]
 agent_callouts: ["aggressive_debator", "conservative_debator", "neutral_debator"]
 locale_versions: ["en"]
@@ -61,13 +61,13 @@ The PM doesn't pick one — they listen to all three and weigh them against your
 
 ## Sizing caps you can't override
 
-Even if every Debator agrees on 80%, the PM's safety floor enforces:
+Even if every Debator agrees on 80%, the <Term id="ami_pm_safety_floor" /> enforces:
 
 - **Single-name cap: 50% of portfolio.** Regardless of conviction.
-- **Mandate drawdown cap.** If your portfolio is already at the drawdown limit, no new long-only buy.
+- **<Term id="ami_mandate" /> drawdown cap.** If your portfolio is already at the drawdown limit, no new long-only buy.
 - **Compliance flags.** Halal, ESG-lite, blocklist, allowlist — these don't bend for sizing.
 
-You'll see the safety floor in action whenever you Convene the Room. Watch for the PM's "mandate check" line.
+You'll see the safety floor in action whenever you <Term id="ami_convene_the_room" />. Watch for the PM's "mandate check" line.
 
 <ChatWith agent="portfolio_manager" />
 

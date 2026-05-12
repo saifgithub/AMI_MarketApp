@@ -1,0 +1,74 @@
+---
+id: "133_on_balance_volume_obv"
+title: "On-Balance Volume — accumulation vs distribution"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "obv"
+prerequisites: ["029_volume_confirmation"]
+tags: ["indicators", "volume", "obv", "accumulation", "distribution", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# On-Balance Volume — accumulation vs distribution
+
+Lesson 029 framed volume as the participation count behind a price move. On-Balance Volume (OBV) is a cumulative running total of that participation, signed by price direction. The rule is mechanical: on every up-close, add the bar's volume to OBV; on every down-close, subtract it. The level of OBV is meaningless on its own — what matters is its slope and its agreement (or disagreement) with price. When OBV climbs alongside a rising price, accumulation is confirming the trend. When OBV diverges — price makes a new high but OBV does not — buyers are participating less than the price chart suggests. OBV divergence is to volume what RSI divergence is to momentum: a warning that the trend's foundation is weakening before price shows it.
+
+## How this plays out in real markets
+
+Look at NVDA from October 2025 through January 2026. From October 1 (price 138, OBV at an arbitrary baseline 0) through November 30 (price 156), OBV rose from 0 to +480 million — a clean accumulation pattern. Every meaningful up-day printed above-average volume; down-days were lighter. NVDA's trend had volume backing.
+
+Then from December 1 through January 20, NVDA continued to push higher to 162 — but OBV stalled and rolled over to +420 million. Price made a new high; OBV made a lower high. Classic bearish OBV divergence: the up-days had lighter volume than the down-days, so cumulative participation was actually fading even as price extended. By February 5, NVDA was back at 149.
+
+Falsifiable claim: when OBV makes a lower high while price makes a higher high (or vice versa) and the divergence persists for 10+ sessions, the trend is at heightened risk of reversal. The invalidation is mechanical — if OBV makes a new high before price breaks its most recent swing low, the divergence cancels and accumulation is back on track.
+
+The OBV slope by itself is a faster regime read than counting up-volume vs down-volume manually. A flattening OBV with rising price is the textbook distribution-into-strength pattern smart money uses to exit.
+
+On Bursa Malaysia: AIRASIA in early 2025 — price rallied from RM1.85 to RM2.05 over six weeks while OBV's slope visibly flattened and then turned down. Bearish OBV divergence held through three weeks of new highs; the stock then fell to RM1.78 over four weeks.
+
+## The trap
+
+The trap is reading OBV's level instead of its slope. OBV starting value is arbitrary (it's cumulative from whenever you started counting), so a chart showing OBV at +800 million tells you nothing absolute. Beginners look at the number and think it carries meaning; it doesn't. The signal is entirely in the shape — is OBV rising with price, flat, or making lower highs against price's higher highs?
+
+The correct mental model: OBV is a participation tape that runs in parallel with the price tape. Compare the two shapes, not the two levels. Aligned shapes = trend has volume support. Disagreeing shapes = volume foundation is weakening and price is on borrowed time. OBV does not replace a 20-day average volume read; it adds a different dimension — cumulative direction-weighted participation over time, rather than spot participation at a single bar.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="NVDA's price runs from 138 to 156 with OBV rising from 0 to +480 million in tandem. Then price extends to 162 over six more weeks while OBV stalls and rolls over to +420 million. What does this divergence say?"
+  options={[
+    "The trend is strengthening because price is at new highs",
+    "Bearish OBV divergence — cumulative participation is fading even as price extends; up-days now have lighter volume than down-days, which is distribution-into-strength",
+    "OBV is broken if its number is going down",
+    "Switch to MACD because OBV is unreliable"
+  ]}
+  answer={1}
+  explanation="Price higher high + OBV lower high is the textbook accumulation-failure pattern. The tempting wrong answer ('price at new highs = strengthening') reads only the price tape and ignores the volume tape's disagreement. NVDA's example shows what comes next — the divergence resolved with price falling from 162 to 149. OBV doesn't predict, but it surfaces the distribution that's happening underneath a rising chart."
+/>
+
+<Quiz
+  question="You're long a stock that's up 9% with price still making new highs. OBV has been flat for 14 sessions while price kept extending. Position sits at 1.2% account risk above your original allowance because of the unrealized gain. Stop is 3% below current price. What does the lesson's framework recommend?"
+  options={[
+    "Hold — price is still up-trending",
+    "Treat the OBV stall as a warning: take partial profit, tighten the stop, or stop adding. Persistent OBV divergence is the cumulative-participation version of momentum divergence; act on it before price confirms the reversal.",
+    "Add to the position because OBV will catch up",
+    "Sell short on the divergence"
+  ]}
+  answer={1}
+  explanation="OBV flat for 14 sessions against rising price is the lesson's 10+ session persistence threshold for divergence — it crosses from anomaly to signal. The right action mirrors the histogram lesson's framing: treat it as risk management, not trigger. The tempting wrong answer (option A) ignores the warning entirely. Adding on divergence (option C) doubles down against the volume tape. Shorting (D) jumps ahead of price confirmation — divergence flags risk but doesn't trigger entry on its own."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a trending ticker and ask: "Compare the slope of OBV against the slope of price over the last 30 sessions — are they aligned, or is there a divergence?" Then verify on the chart. The exercise is to read OBV's shape, not its number — flatten the OBV line in your mind and check whether it's tilting up or down relative to price.
+
+## Takeaway
+
+OBV is a cumulative participation tape — read its shape against price's shape, not its level; a persistent divergence (10+ sessions) is the volume-side warning that a trend's foundation is failing.

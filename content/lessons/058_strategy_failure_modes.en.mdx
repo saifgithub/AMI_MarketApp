@@ -1,0 +1,72 @@
+---
+id: "058_strategy_failure_modes"
+title: "Strategy failure modes"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "failure_modes"
+prerequisites: ["052_trend_following", "053_breakout_strategy", "054_pullback_strategy", "055_mean_reversion", "056_momentum_trading", "018_drawdown_management"]
+tags: ["failure_modes", "regime", "drawdown", "survival"]
+agent_callouts: ["bear_researcher", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Strategy failure modes
+
+Every strategy in this module has a regime in which it bleeds. There is no universal strategy. Knowing the failure mode of the rule you're running is the difference between "this is a normal drawdown, I keep going" and "the regime flipped, I cut size". The trader who can't articulate where their strategy fails will inevitably size it as if it never does — and then blow up in the exact regime it was always going to lose money. After this lesson you can pair each strategy from 052–056 with its named failure mode and the early-warning signal that the regime is shifting.
+
+## How this plays out in real markets
+
+Pair each strategy with its named failure mode:
+
+- **Trend-following (052)** fails in choppy, range-bound markets. Look at KLCI from mid-2022 to mid-2023 — a 50/200 trend rule whipsawed in and out of Bursa large-caps like MAYBANK and TENAGA, generating six small losses for every modest winner. Early-warning signal: ADX dropping below 20 and the 50-day MA going flat.
+- **Breakout (053)** fails in low-volatility, low-volume drift regimes. Look at US large-caps in the summer of 2023 — repeated breakouts above resistance failed within days as volume dried up. Early warning: 20-day average true range collapsing to multi-month lows.
+- **Pullback (054)** fails at major trend tops, where "the first pullback" is actually the start of a downtrend. Many high-growth names in November 2021 broke their 50-day MA on what looked like a routine pullback and never recovered. Early warning: the 200-day MA flattening or rolling over.
+- **Mean reversion (055)** fails in trending bear markets — RSI(2) prints extreme oversold readings for weeks on names that keep falling. Q1 2020 across the entire US market is a museum-grade example. Early warning: price below 200-day MA AND 200-day MA sloping down.
+- **Momentum (056)** fails in violent factor reversals — momentum crashes. November 9, 2020 (vaccine news) saw high-momentum tech sell off and low-momentum value rally, with momentum portfolios losing 10–15% in a few sessions. Early warning: rising correlation between previously-uncorrelated low-momentum names and a sharp jump in value-vs-growth dispersion.
+
+Each pairing has a falsifiable invalidation. If you're running trend-following and ADX has been below 20 for 30 sessions, the regime says cut size — not "keep going and hope".
+
+## The trap
+
+The beginner mistake is treating drawdowns as proof the strategy is broken. Every strategy has losing months. Cutting a strategy mid-drawdown is the single most common way retail traders convert a normal cycle into a permanent loss — you exit at the worst moment, the strategy mean-reverts, and you're not there for the recovery. The correct mental model: distinguish "normal drawdown within the strategy's expected envelope" from "regime change in which my strategy structurally bleeds". The first you ride out. The second you respect by cutting size. The signal that separates them is the regime indicator named above, not your P&L. Drawdown alone is not information — drawdown PLUS a regime shift is.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="You're running a trend-following rule on US large-caps. Over the last 60 sessions, ADX has been at 14, the 50-day MA has been flat, and you've taken five small losses in a row. What does the regime analysis say?"
+  options={[
+    "Keep trading the rule — five losses is normal variance",
+    "The regime indicators (ADX < 20, flat 50-day) match the failure mode for trend-following. Cut size or pause the rule until the regime resolves.",
+    "Switch to mean reversion immediately",
+    "Add to the next trade to make back the losses"
+  ]}
+  answer={1}
+  explanation="The drawdown by itself doesn't tell you anything; the drawdown plus the regime signature does. Option 0 is the tempting wrong answer because 'trust the process' sounds disciplined — but trusting a process in its known failure regime is how you turn a 5% drawdown into a 20% one. Option 3 is revenge-trading dressed up as conviction."
+/>
+
+<Quiz
+  question="A trader runs a mean-reversion rule on US tech. SPY is in a clear downtrend below its 200-day MA. The rule has lost money for three months. The Bear Researcher and Conservative Debator both flag a regime change. The trader argues 'the rule has 14 years of backtest data'. What's the synthesis?"
+  options={[
+    "The trader is right — 14 years of data trumps three months of losses",
+    "Mean reversion's documented failure mode is exactly 'trending bear market' — the backtest's 14 years includes those periods AS losses. The current losses are the strategy operating as designed in its failure regime. Cut size to mandate-compliant levels and resume when SPY reclaims the 200-day.",
+    "Switch the rule to short-only mean reversion",
+    "Increase position size to recover the drawdown faster"
+  ]}
+  answer={1}
+  explanation="The synthesis: a strategy operating in its known failure regime is doing what the backtest said it would do. The backtest's overall edge doesn't mean every month is profitable — it means the good months outweigh the bad. Option 0 is the most tempting wrong answer because it dresses up willful blindness as long-term thinking. The right move is to respect the failure mode AND the mandate, not abandon the rule."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Bear Researcher, paste the strategy you're currently running and ask: "Name my failure regime, give me the three observable indicators that say I'm in it, and tell me what action my mandate requires when I am." Log the answer in the <Term id="ami_decision_journal" /> as a pre-committed protocol — so when the regime hits, you don't have to decide under stress.
+
+## Takeaway
+
+Every strategy has a regime in which it bleeds — write that regime down before you run the strategy. The trader who can name their failure mode survives it; the trader who can't doesn't.

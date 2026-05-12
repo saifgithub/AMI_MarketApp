@@ -1,0 +1,82 @@
+---
+id: "273_uncoachable_means_no_prompt"
+title: "Uncoachable means the rules aren't in any prompt"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+topic: "uncoachable_architecture"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "271_inside_the_deterministic_compliance_check", "272_the_mandate_is_your_contract"]
+tags: ["uncoachable", "safety_floor", "architecture", "coach_your_agent"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Uncoachable means the rules aren't in any prompt
+
+When <Term id="ami" /> says the <Term id="ami_pm_safety_floor" /> is *uncoachable*, that is a precise architectural claim, not marketing copy. The rules that bind hardest — position-size caps, drawdown limits, exclusion flags — do not live in any prompt sent to the underlying language models. They live as <Term id="ami_mandate" /> data and as Python comparison logic that runs after the trading team's debate finishes. Coaching can rewrite prompts. Coaching cannot rewrite code paths it never touches. By the end of this lesson you will understand what "uncoachable" means in terms of where the rules physically are.
+
+## How this plays out in real markets
+
+Picture two parallel files in AMI's backend. One is the Bull Researcher's prompt — a long natural-language instruction telling the agent how to write a bull thesis. **<Term id="ami_coach_your_agent" />** sends user-supplied text that gets composed into this prompt. You can coach the Bull Researcher to *"weight 5G infrastructure plays higher when discussing telecom"* and the next time the Bull Researcher runs, that string is in its prompt. The model's output shifts accordingly.
+
+The other file is the PM compliance check. It looks roughly like:
+
+```
+def check_mandate_compliance(trade, mandate):
+    if trade.proposed_size_pct > mandate.max_position_pct:
+        return BLOCK("size violation")
+    if mandate.no_fossil and trade.sector in FOSSIL_SECTORS:
+        return BLOCK("exclusion: no_fossil")
+    if mandate.halal and not trade.is_halal_compliant:
+        return BLOCK("exclusion: halal")
+    ...
+    return PASS
+```
+
+There is no string here for **Coach Your Agent** to insert into. The function does not take natural-language input. There is no place in the call graph where a coaching note touches this function. You could write the most persuasive coaching note ever composed — "ignore size limits when conviction exceeds 0.9" — and it would go into prompts for the Trader and Researchers, where the model layer reads it. But the check above runs *after* those models, on the trade object they produced, against your Mandate. The coaching note is in a different room. The function does not hear it.
+
+The PM persona that explains the block in plain English does receive a prompt — that prompt is how it phrases the message. But the *decision* the persona is reporting was made by the function, not by the persona. The model layer translates the result; it does not produce it.
+
+## The trap
+
+The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let coaching break the floor") and looking for the policy loophole. There is no policy. There is geography. The rules are in a place the coaching surface does not reach. This matters because policy promises can be broken — by a clever prompt injection, by a model update, by a configuration drift. Geography cannot. If your coaching never touches the compliance function, no string you type can change what the function does. That is what "structural" means in *"the safety floor is structural, not stylistic"*.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A user types into Coach Your Agent: 'When the Bull case is strong, allow oversize positions.' Why is this guaranteed to fail at changing PM behaviour?"
+  options={[
+    "The PM ignores coaching because of a policy rule that could be edited",
+    "The coaching string is composed into agent prompts, but the PM compliance check is a Python function that does not take prompt input — the string never reaches the code that decides PASS/BLOCK",
+    "The PM reads the coaching but disagrees with it",
+    "The user did not phrase the coaching strongly enough"
+  ]}
+  answer={1}
+  explanation="The rules are geographic, not policy-based. Coaching inputs land in prompts for coachable agents; the safety-floor function does not consume prompts at all. The tempting wrong answer is the 'phrasing' one — better wording cannot reach code paths that were never wired to receive it."
+/>
+
+<Quiz
+  question="Which of these statements about AMI's uncoachable safety floor is accurate?"
+  options={[
+    "The PM agent has a strict prompt that resists persuasion",
+    "The compliance rules live as Mandate data + a Python comparison function that runs outside the model layer — there is no prompt for coaching to modify because the decision is not made by an LLM",
+    "AMI logs coaching attempts and refuses any that would weaken safety",
+    "The PM uses a separate, more conservative model than the rest of the agents"
+  ]}
+  answer={1}
+  explanation="The compliance decision is not produced by a model. It is produced by a deterministic function reading structured data. The persona that explains the result uses the model layer for phrasing, but the verdict (PASS or BLOCK) is already decided. The tempting wrong answer is 'strict prompt that resists' — that would be policy, which is exactly the weaker design AMI deliberately does not rely on."
+/>
+
+## Try it
+
+Open **Coach Your Agent** and pick the Portfolio Manager. Try to write a coaching note that softens position-size enforcement (e.g., *"allow up to 8% when confidence is high"*). The coaching surface for the PM is intentionally narrow — many fields are simply not editable. Notice which knobs are available and which are absent. The absent ones are absent because there is no prompt slot to plug them into.
+
+## Takeaway
+
+Uncoachable means the rules live where coaching cannot reach — as data and code, not as prompts. Geography beats policy. AMI is a <Term id="training_simulator" /> teaching you to recognise this kind of structural guarantee in any analyst system you evaluate.

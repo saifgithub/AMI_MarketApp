@@ -1,0 +1,71 @@
+---
+id: "266_recovery_scams_and_second_victim"
+title: "Recovery scams: the second-victim pattern"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "recovery_scams"
+prerequisites: ["262_withdrawal_block_patterns", "265_pig_butchering_and_affinity_fraud", "070_pressure_tactics_urgency_and_scarcity"]
+tags: ["scams", "recovery_scams", "second_victim", "post_loss", "scam_aftermath"]
+agent_callouts: ["concierge", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Recovery scams: the second-victim pattern
+
+After the initial loss, a second wave arrives. "Asset recovery specialists", "crypto recovery consultants", "blockchain forensic investigators" reach out — often referencing the specific platform that the victim lost on, sometimes with surprisingly detailed knowledge of the victim's case. Most are operated by the same networks that ran the original scam or by adjacent networks who buy victim lists. They charge an upfront retainer to "trace the funds" and disappear with it. This lesson teaches the recovery-scam architecture, why the contact detail is sometimes accurate (you are on a list), and the rule for legitimate post-loss action: regulators and law enforcement do not contact victims by DM and do not require upfront retainers.
+
+## How this plays out in real markets
+
+The FBI's IC3 and FTC have both warned publicly about recovery-scam patterns. The FCA's ScamSmart resources and SC Malaysia have issued parallel warnings. The architecture documented across cases:
+
+- **Victim-list trafficking.** When the original scam collapses, the operator's database of victims — names, deposits, platform identifiers — is sold or shared to other scam operators. New approaches arrive within days to weeks. The contact often references the specific platform, deposit amount, or losses, which manufactures the impression of inside knowledge.
+- **Authority impersonation.** The recovery operator presents as a government agent, regulator, law-enforcement officer, or law firm. Sometimes the impersonated entity is real (a named SEC investigator, a UK police unit). Verification fails the same contact-detail match as in clone-firm scams — the email is from a free service, the phone does not match the published agency line.
+- **Upfront retainer.** A "retainer", "investigation fee", "legal filing fee", or "court-bond payment" is requested in advance. Sums range from USD 500 to USD 50,000. Once paid, the operator either disappears or escalates with further fee requests in the same withdrawal-block escalation pattern.
+- **Quasi-legitimate cover.** Some operators run a hybrid model — they perform genuine but useless surface activity (a basic blockchain trace anyone can do on a public explorer) and present a flashy report to justify the fee. The recovery prospect is zero.
+
+The structural facts that defeat the architecture: regulators (SEC, FCA, ASIC, SC Malaysia, BNM, MAS) do not contact victims by Telegram DM, WhatsApp, or unsolicited email demanding fees. Real law-enforcement investigations do not bill victims for participation. Real lawyers operate under regulated bar associations and can be verified against those bodies' public registers; they may charge fees, but they are accountable through the bar and do not solicit victims by cold DM.
+
+## The trap
+
+The trap is hope amplified by sunk cost. The victim has lost a significant sum, the emotional pain is acute, and a stranger arrives claiming a path to recovery. The mistake is treating the recovery offer with less scepticism than the original scam — when it should be treated with *more*, because the recovery space is structurally more saturated with fraud than the average investment space. The fix is to apply the verification rules from the rest of the module, plus one additional rule specific to post-loss: legitimate routes for recovery are *reported into* (regulator complaints, police reports, court action), they are not solicited *out of* via DM. Anyone who reaches out to you offering recovery — and who you did not formally contact through an institutional channel — should be treated as the second wave.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="Two weeks after losing funds on an offshore platform, a person contacts you on Telegram claiming to be a \"crypto recovery investigator\" with knowledge of your specific deposit amount. They request a USD 3,000 retainer to begin tracing. What is the most accurate interpretation?"
+    options={[
+      "Their knowledge of the deposit confirms they are legitimate insiders with access to recovery channels",
+      "Knowledge of the deposit detail is consistent with victim-list trafficking from the original scam network; combined with the unsolicited DM and the upfront retainer request, this matches the documented recovery-scam architecture and is almost certainly a second-wave attempt",
+      "It is worth paying the retainer to test their capability",
+      "It is a regulator-led recovery action that requires the fee to comply with anti-money-laundering rules"
+    ]}
+    answer={1}
+    explanation="The detailed knowledge feels like proof but is actually expected — your data is on a list traffickers are working through. The unsolicited contact channel (Telegram), the upfront retainer request, and the urgency together are the documented second-wave architecture. Regulators do not contact victims this way and do not charge upfront fees. The most tempting wrong answer is the testing-by-paying option, which is the same sunk-cost reasoning the original scam exploited."
+  />
+
+  <Quiz
+    question="A person identifying himself as a named SEC investigator emails you about your loss at a specific platform. The email is from a Gmail address. He asks for a USD 5,000 court-bond payment to release frozen scam funds back to you. Which check most decisively falsifies the claim?"
+    options={[
+      "The amount of USD 5,000 is too high",
+      "Independently call the SEC's published contact line from sec.gov, ask whether the named individual works there and whether the contact is authentic; combined with the free-email-address sender and the upfront-fee request, the contact-detail match against the agency's published register will fail",
+      "Wait two weeks to see if the email comes again",
+      "Reply asking for more detail"
+    ]}
+    answer={1}
+    explanation="The decisive falsification is the same contact-detail match used against clone firms — applied to the impersonated agency rather than to a broker. SEC investigators are listed under sec.gov-managed contact channels and do not email victims for court-bond payments from Gmail addresses. The fee amount alone is not decisive; the contact-detail and procedural mismatches are. Replying or waiting both keep you engaged with the operator, which is exactly the goal."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with <Term id="concierge_agent" />. If you have already experienced a scam loss, paste any post-loss contacts you have received in the last 60 days. Ask: "Run the recovery-scam architecture check against each — channel, claimed identity, fee request, supporting detail. Identify which to report and which regulators to file with." The Concierge will walk through the lookups. If you have nothing live, drill on: "Telegram DM, claims to be SEC investigator, knows my deposit amount, requests USD 3,000 retainer to start recovery."
+
+## Takeaway
+
+Real regulators and law enforcement do not solicit victims by DM and do not charge upfront retainers. Any unsolicited recovery offer should be treated as the second wave of the same scam network — file it, do not pay it.

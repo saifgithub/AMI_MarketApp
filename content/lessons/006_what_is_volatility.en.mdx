@@ -1,0 +1,82 @@
+---
+id: "006_what_is_volatility"
+title: "What is volatility?"
+duration_min: 4
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+topic: "volatility_basics"
+prerequisites: ["005_what_moves_stock_prices"]
+tags: ["foundations", "volatility", "vix", "risk"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# What is volatility?
+
+Volatility is the size of a stock's typical price swings. A stock that drifts up and down 0.5% a day is low volatility. A stock that routinely swings 5% a day is high volatility. Volatility is not the same as risk of loss — a stock can be highly volatile and still trend up, or quiet and slowly bleed money. But volatility tells you how wide a normal day's move is, which sets your expectations and tells you what size position you can stomach without panicking.
+
+## How this plays out in real markets
+
+Compare two real names on the same day. Berkshire Hathaway Class B (BRK-B) typically moves about 1% on a normal trading day. Tesla (TSLA) typically moves about 3-4% on a normal trading day. On a wild day, BRK-B might move 3% — for TSLA, that's Tuesday. A 5% move in TSLA is normal; the same move in BRK-B would be the biggest day it's had in two years. Same dollar of capital, very different ride.
+
+The S&P 500 has its own gauge: the **VIX index**, often called the "fear index." VIX measures the market's expected volatility over the next 30 days, derived from options prices on the S&P 500. A VIX reading below 15 means the market expects calm — typical daily moves under 1%. Between 15 and 25 is normal. Above 30 means traders are pricing in big swings — often during a crisis or a sharp selloff. In March 2020, as COVID hit, VIX touched 82 — its highest reading ever. In quiet periods like mid-2017, VIX sat near 10.
+
+A simple rule of thumb: a stock's "normal daily move" is roughly its 30-day average daily move. If TSLA has averaged 3.2% daily moves for the past month, then a 3% move tomorrow is unremarkable. A 7% move is a real event worth investigating.
+
+On Bursa Malaysia: AirAsia (CAPITALA) and Top Glove (TOPGLOV) have historically been high-volatility names — 4-6% daily swings during stressed periods. Maybank (MAYBANK) and Public Bank (PUBLIC) are low-volatility — usually under 1% a day. The KLCI as a whole is far less volatile than the S&P 500.
+
+## The trap
+
+The trap is treating volatility and danger as the same thing. They're not. A high-volatility stock is wider, not necessarily worse. If you size your position to its volatility — small position in a wild stock, larger in a quiet one — you can hold either comfortably. The mistake beginners make is buying a high-volatility stock at the same dollar size as a low-volatility one, then panicking the first time it moves 5% against them. That's not the stock being dangerous; that's you mis-sizing for the volatility. The other trap is the opposite — assuming a quiet stock can't hurt you. Low-volatility names can still trend down for months. Volatility tells you about width, not direction.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Stock A has averaged 1% daily moves for the past 30 days. Stock B has averaged 4% daily moves. Tomorrow, Stock A moves 3% and Stock B moves 3%. Which move is more unusual relative to its own history?"
+  options={[
+    "Stock A's 3% move — it's three times its normal daily range",
+    "Stock B's 3% move — it's the bigger absolute swing",
+    "They're equally unusual — same percentage move",
+    "Neither is unusual"
+  ]}
+  answer={0}
+  explanation="The same 3% move is routine for Stock B but a three-standard-deviation event for Stock A. Volatility is measured relative to a stock's own typical range, not in absolute percentage terms. Always compare a move to that specific stock's recent average."
+/>
+
+<Quiz
+  question="VIX is sitting at 14. What does this tell you about the market's near-term expectations?"
+  options={[
+    "The market expects high volatility and a crash within 30 days",
+    "The market expects relatively calm conditions over the next 30 days",
+    "VIX at 14 always means stocks will go up",
+    "VIX is unrelated to stock-market expectations"
+  ]}
+  answer={1}
+  explanation="VIX below 15 indicates the options market is pricing in calm — typical daily S&P 500 moves under 1%. It does not predict direction (up vs down), only width. VIX above 30 indicates expected big swings, usually during stress. Calm VIX has historically been a quieter, but not necessarily up-only, regime."
+/>
+
+<Quiz
+  question="You buy two positions of equal dollar size: one in BRK-B (typical daily move ~1%) and one in TSLA (typical daily move ~3-4%). Three days later, both positions are down. BRK-B is down 1.2% and TSLA is down 4.5%. What's the most reasonable read of the situation?"
+  options={[
+    "TSLA is failing — sell immediately",
+    "Both are equally bad — same percentage decline matters",
+    "Both moves are roughly in line with each stock's typical daily volatility — without other signals, neither move alone justifies action; the real question is whether sizing was appropriate",
+    "BRK-B is more dangerous because slow declines hide problems"
+  ]}
+  answer={2}
+  explanation="Both drops sit within each stock's normal daily-move range — a 1.2% drop in BRK-B and a 4.5% drop in TSLA are both ordinary by their own histories, not signals. If TSLA's normal swing makes you panic, the issue is your position size, not the stock. The right move is to check whether the drivers (earnings, macro, sentiment, flows) have changed — and to size positions in proportion to each stock's volatility so the same dollar P&L noise stays tolerable across both."
+/>
+
+## Try it
+
+In your <Term id="ami_watchlist" />, pick one high-volatility name (TSLA or NVDA) and one low-volatility name (BRK-B or JPM). Open the Market Analyst <Term id="ami_one_on_one" /> and ask: "What's the 30-day average daily move for this stock?" Compare the two numbers. The ratio between them is roughly how much smaller your high-volatility position should be to feel the same as the low-volatility one.
+
+## Takeaway
+
+Volatility is the width of a stock's normal daily swing, not its direction or its riskiness. Size your position to the stock's volatility, and a 5% day in a wild name feels the same as a 1% day in a quiet one.

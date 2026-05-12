@@ -25,10 +25,10 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 
 ## Scope & posture
 
-### D-004 — Simulation-only, advisory-only, forever
-- **Decided**: No brokerage integration ever. Pure educational simulation + advisory.
+### D-004 — Training simulator, simulation-only, forever
+- **Decided**: AMI is a training simulator, not an investment-advice service. No brokerage integration ever. Pure educational simulation; outputs are training artifacts, not investment advice.
 - **Source**: Saiful — "I don't want to get sued"
-- **Rationale**: Regulatory firewall. Avoids licensing complexity entirely. Aligns with educational positioning.
+- **Rationale**: Regulatory firewall. AMI is not licensed to provide investment advice. Avoids licensing complexity entirely. Aligns with educational positioning.
 
 ### D-005 — US equities at MVP
 - **Decided**: US equities only at MVP. GCC/Tadawul + Bursa Malaysia in Phase 2.

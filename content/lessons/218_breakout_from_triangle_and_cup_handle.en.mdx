@@ -1,0 +1,66 @@
+---
+id: "218_breakout_from_triangle_and_cup_handle"
+title: "Breakout from triangles and cup-and-handle"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "024_breakouts", "029_volume_confirmation", "023_support_and_resistance"]
+tags: ["strategy", "breakout", "triangle", "cup_and_handle", "patterns"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Breakout from triangles and cup-and-handle
+
+The breakout foundation (053) used horizontal range resistance; flags (217) used short tight consolidations. Triangles and cup-and-handle are the longer-duration patterns: weeks to months of price coiling into a defined geometric shape that produces an above-average win rate when broken with volume. The patterns matter not because the shapes are magic but because they describe a specific market microstructure — buyers absorbing supply at progressively lower or symmetrical levels — and that microstructure has a measurable resolution probability. After this lesson you can name the three triangle variants and the cup-and-handle, set their entries, stops, and measured-move targets, and recognise the failure modes that fake the pattern.
+
+## How this plays out in real markets
+
+Look at META in late 2023. From August through early November 2023, META basebuilt in a rounded U-shape between $300 and $325 — the "cup". From November 7 to mid-November, price formed a tighter pullback near $310 to $325, retracing roughly 35% of the cup depth — the "handle". On November 20, 2023 META closed at $341.42 on volume of 21 million shares, well above its 20-day average of ~15 million, taking out the handle resistance near $330 and the prior cup-high cluster near $325. Cup depth from low ($300) to high ($325) = $25; measured move from breakout = $325 + $25 = $350. META hit $354 on December 13, 2023 — measured move satisfied within three weeks. Stop on the trade was set inside the handle at $318; risk per share $23, reward per share $25 to first target — a 1.1R trade that paid because of high win probability rather than gigantic R:R.
+
+Entry criteria for cup-and-handle: rounded cup over 7+ weeks, handle that retracts no more than 50% of the cup depth, breakout above the cup high on volume 1.5x the 20-day average. For ascending triangle: flat horizontal resistance plus a rising lower-trendline of higher lows; entry on close above horizontal resistance, target = triangle height projected from breakout. For descending and symmetrical triangles: same shape mechanics, lower win rates — symmetrical triangles in particular break in EITHER direction roughly 50/50, so you cannot prefer one side in advance. Stop: a close back inside the pattern. Individual-trade invalidation: a daily close back below the breakout level. The strategies FAIL when patterns form near major resistance overhead — even a valid pattern that resolves into a wall of supply just retests the supply and rolls over.
+
+## The trap
+
+The beginner mistake is anticipating the breakout — entering on the third or fourth touch of the upper trendline before a close above it. You think you're "getting in early" at a better price; you're actually buying into a pattern that may resolve down and have set yourself a stop that no longer maps to the pattern's invalidation. The correct mental model: pattern breakouts are confirmed by the close ABOVE the boundary on volume. Pre-breakout entries trade a different setup with different statistics — usually worse ones. The other trap: ignoring the volume signature. A breakout from a 3-month triangle on average volume has roughly the same false-breakout rate as no pattern at all; the pattern's edge lives in the volume confirmation.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An ascending triangle in MSFT: flat resistance at $440, rising trendline from $418 to $432 over five weeks. Today price intraday tags $441, but closes at $437.50 on below-average volume. What does the rule say?"
+  options={[
+    "Enter long now — the intraday break confirmed",
+    "No entry — the close is back inside the pattern and volume was below average; both invalidate",
+    "Enter long with a tight stop at $436",
+    "Short the failed breakout at tomorrow's open"
+  ]}
+  answer={1}
+  explanation="Triangle breakouts require a daily close ABOVE resistance ($440) on above-average volume. Closing at $437.50 fails both filters. Option 0 is the tempting wrong answer because intraday triangle breaks feel decisive. Without close + volume confirmation, you're trading a setup with no statistical edge — and you've set a stop ($436) that doesn't map to a real pattern level."
+/>
+
+<Quiz
+  question="On Bursa Malaysia: MAYBANK formed a cup-and-handle. Cup low RM9.20, cup high RM10.10, handle low RM9.85. Today closes at RM10.18 on 1.7x volume. Stop is RM9.85 (handle low). Mandate: per-trade risk 1.5% on RM50,000 account. Synthesis question: position size AND measured-move target?"
+  options={[
+    "2,272 shares, target RM11.00",
+    "227 shares, target RM11.00",
+    "2,272 shares, target RM10.50",
+    "750 shares, target RM11.00"
+  ]}
+  answer={0}
+  explanation="Risk per share = 10.18 - 9.85 = RM0.33. Max risk = 1.5% * 50,000 = RM750. Shares = 750 / 0.33 = 2,272.72, round down to 2,272. Measured move = cup depth (10.10 - 9.20 = 0.90) added to the breakout = 10.10 + 0.90 = RM11.00. Option 3 (750 shares) is the dollar-value-not-stop-distance error. Synthesis: clean pattern + volume confirmation + correct measured-move math + mandate-respecting size — miss any one and the trade is no longer the trade you backtested."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker you suspect is forming a pattern and ask: "Identify the pattern type (cup-and-handle, ascending/descending/symmetrical triangle, or none). State the breakout level, the volume threshold for confirmation, the measured-move target, and the daily-close level that invalidates the pattern." Pre-log all four numbers in the <Term id="ami_decision_journal" /> before the breakout fires.
+
+## Takeaway
+
+Triangles and cup-and-handle have an edge only when the close clears the boundary on above-average volume. Anticipating the break trades a different setup with worse statistics. The pattern decides the entry, the stop, the target, and the invalidation — all four, before you click.

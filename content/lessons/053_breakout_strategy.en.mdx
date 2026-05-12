@@ -1,0 +1,66 @@
+---
+id: "053_breakout_strategy"
+title: "Breakout strategy"
+duration_min: 5
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "breakout"
+prerequisites: ["023_support_and_resistance", "024_breakouts", "029_volume_confirmation", "015_stop_loss_basics"]
+tags: ["strategy", "breakout", "volume", "resistance"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Breakout strategy
+
+A breakout strategy buys when price closes through a defined resistance level on above-average volume, and gets out fast when the breakout fails. The thesis is that resistance is where sellers live; when buyers absorb them, the next leg up has no nearby supply to slow it down. Most breakouts fail — the strategy is profitable only because the small number that work pay several times what the failures cost. After this lesson you can write a breakout rule that names exactly what counts as confirmation and what counts as failure.
+
+## Example
+
+Look at META in early 2024. Price had basebuilt between roughly $475 and $510 from late January through mid-February. On February 2, 2024, after Q4 earnings, META closed at $474.99 the prior day and gapped up to open at $501, closing at $474.99 — wait, the real move: it gapped through the $510 resistance on the Q4 print and closed at $474.99 the day before, then on February 2 it opened at $501.49 and closed at $474.99 on enormous volume — over 90 million shares versus a 20-day average of ~22 million. A clean breakout strategy entered on the daily close above $510 with the stop placed back inside the prior range at $493 (the breakout retest level). Exit target: a measured move equal to the prior range height (~$35) projected from breakout, or roughly $545.
+
+Entry criteria: daily close above the defined resistance, with volume at least 1.5x the 20-day average. Stop: a close back inside the prior range, or a fixed price just under the broken level. Target: measured-move projection OR a trailing stop after the first multiple of risk. Invalidation of an individual trade: price closes back inside the prior range — the breakout failed, no debate, exit. The strategy FAILS in low-volatility, low-volume regimes where every "breakout" is a fakeout — late summer drift in US large-caps is a classic graveyard for breakout traders.
+
+## The trap
+
+The beginner mistake is buying the intraday spike instead of waiting for the daily close. You see price punch through resistance at 10:30 a.m., you chase, you get filled near the high of the day, and price closes back below resistance on profit-taking. You're now long a failed breakout at the worst possible entry. The correct mental model: the close is the only candle that counts. Intraday wicks above resistance are noise; a daily close above resistance with volume confirmation is the signal. If that means you miss the first 2% of the move, that's the price of not paying for fakeouts.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="AAPL has been ranging between $220 and $235 for six weeks. Today price intraday hits $237 on slightly above-average volume, then closes at $233.50. What does the breakout rule say?"
+  options={[
+    "Enter long now — resistance has been broken",
+    "No entry — the close is back inside the range, the breakout failed",
+    "Enter long with a tight stop at $232",
+    "Short the failed breakout immediately"
+  ]}
+  answer={1}
+  explanation="A breakout is defined by the close, not the wick. Closing back inside the range is the textbook failed breakout pattern — that's invalidation, not entry. Option 0 is the tempting wrong answer because chasing the wick felt like 'getting in early'; it's actually how breakout traders get repeatedly stuck at range highs."
+/>
+
+<Quiz
+  question="On Bursa Malaysia: MAYBANK has been basebuilding at RM10.20 resistance. It closes today at RM10.45 on 1.8x average volume. Your mandate caps drawdown at 15% and per-trade risk at 1.5% of a RM40,000 account. Your stop will be RM10.10 (back inside the range). Max position size in shares?"
+  options={[
+    "1,714 shares",
+    "150 shares",
+    "3,809 shares",
+    "600 shares"
+  ]}
+  answer={0}
+  explanation="Risk per share = 10.45 - 10.10 = RM0.35. Max risk = 1.5% of 40,000 = RM600. Shares = 600 / 0.35 = 1,714. The synthesis: a valid breakout with confirming volume is necessary but not sufficient — the mandate still caps your size. Option 2 (3,809) sizes from the wrong stop distance; that's the common error of widening the stop after entry."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker that's been ranging and ask: "Where is the breakout level, what volume threshold confirms it, and what price invalidates the breakout?" Then ask the Trader to convert that into an actual entry/stop/target order in the simulated ticket.
+
+## Takeaway
+
+Breakouts are defined by the daily close on confirming volume; everything else is noise. If price closes back inside the range, the trade is invalid — exit without negotiating.

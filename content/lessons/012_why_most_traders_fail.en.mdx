@@ -1,0 +1,78 @@
+---
+id: "012_why_most_traders_fail"
+title: "Why most traders fail"
+duration_min: 5
+level: 1
+module: 2
+difficulty: 2
+track: "edge_process"
+topic: "failure_patterns"
+prerequisites: ["009_risk_profile_basics"]
+tags: ["edge_process", "failure_modes", "psychology", "mandate", "safety_floor"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Why most traders fail
+
+The uncomfortable truth: the published research on retail day-trading is consistent and brutal. Multiple peer-reviewed studies — Brazilian regulator-led work on equity day-traders, Taiwanese exchange data over multi-year windows, and US discount-broker datasets — converge on the same range: roughly **70% to 90% of retail short-term traders lose money over time**, and the share that are *consistently* profitable after costs over multi-year windows is in the low single digits. This is not a marketing scare line; it is the base rate. Knowing the patterns behind that base rate is the first real edge — because the patterns are knowable, and most of them are structural rather than mysterious.
+
+## How this plays out in real markets
+
+The failure patterns repeat with eerie consistency across markets and decades. Six dominate:
+
+1. **Oversized positions.** A trader with $25,000 puts $10,000 (40% of capital) on a single TSLA swing. TSLA gaps down 18% on an earnings miss. The trader is down $1,800 — 7.2% of total capital — on one trade. Three more like it and the account is functionally finished.
+
+2. **No predefined exit.** Entry feels exciting; exit is an afterthought. The trader buys NVDA at $115 with no stop and no target. Price runs to $130, then back to $108. They didn't sell at $130 ("it's going higher") and won't sell at $108 ("it'll come back"). Eventually they capitulate at $95.
+
+3. **Revenge trading.** After a 5% loss, the trader doubles size on the next setup to "make it back." The next setup is lower quality precisely because they are now selecting for size, not for edge.
+
+4. **Mistaking a bull market for skill.** 2020–2021 produced thousands of "10× traders." The market rose, almost any long worked, and traders attributed broad beta to personal alpha. 2022 corrected the attribution painfully.
+
+5. **Friction blindness.** A trader makes 100 trades a year, claims a 60% win rate, and is somehow flat. The commissions, spreads, and short-term tax drag (the math from Lesson 010) ate the gross gains.
+
+6. **Identity-switching mid-position.** Enter as a trader, become an investor when down 15%, become a trader again when back to break-even, sell at break-even, miss the run, re-enter at the top. Each switch is rational in isolation; the sequence is fatal.
+
+None of these are mysteries. Each is a structural pattern that can be designed against.
+
+## The trap
+
+The trap is reading the failure rate and concluding either "I won't be in that 80%, I'm different" (the overconfidence pattern that produces the 80%) **or** "trading is hopeless, I should give up" (which throws away the parts of the discipline — sizing, exits, journaling — that work even for long-term investors). Both responses miss the point. The patterns above are the curriculum. The 10–30% who *do* survive long-term mostly do it by mechanically refusing to commit the six errors, not by being smarter at picking direction. The edge is in the process, not the prediction.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="Which of the following is the strongest *single* explanation for why most retail short-term traders end up unprofitable over multi-year windows?"
+  options={[
+    "They use the wrong indicators",
+    "They lack access to professional information",
+    "Structural friction (commissions, spreads, short-term taxes) combined with a small number of repeating behavioural errors (oversizing, no exits, revenge trades) compounds against them faster than any positive edge can compound for them",
+    "The market is rigged against retail participants"
+  ]}
+  answer={2}
+  explanation="Studies that survey the failures consistently point to friction + behaviour, not information asymmetry, as the dominant cause. Information edge is small in liquid US equities; friction and behaviour are large. The 'market is rigged' answer feels right but is not supported by the data — the same retail traders who 'lose to the rigged market' would still lose at the same rate trading among themselves."
+/>
+
+<Quiz
+  question="A new trader reads that 70–90% of retail traders lose money and thinks: 'I'll just put 50% of my account into the highest-conviction trade I find, because I need bigger positions to overcome the failure rate.' What is the synthesis here that combines this lesson with everything from Module 2?"
+  options={[
+    "Conviction-weighted sizing is what separates winners from losers — they're correct",
+    "The failure rate is driven by exactly this reasoning: large positions amplify the cost of being wrong, and 'high conviction' is statistically uncorrelated with being right. Survival comes from sized positions, predefined exits, and a mandate that prevents the urge to oversize — which is what AMI's PM safety floor enforces structurally",
+    "They should average down if the position goes against them",
+    "Conviction is irrelevant; only technical analysis matters"
+  ]}
+  answer={1}
+  explanation="The synthesis pulls together lessons 007–011: identity (trader vs investor), horizon, risk profile, compounding math, and the failure patterns. 'High conviction so I should size up' is failure pattern #1 (oversizing) with a confident label on it. The structural answer — sized positions + predefined exits + a mandate floor that cannot be overridden when emotional — is the part of AMI specifically engineered around this exact failure mode."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and set **max_position_pct** to a number that, if you were 100% wrong on the position and lost it entirely, would still leave your portfolio recoverable (a common starting figure is 5%). Then start a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Given my last three <Term id="simulated_trade" />s in the <Term id="ami_decision_journal" />, which of the six failure patterns am I most at risk of?" The honest answer is the lesson — and the PM's <Term id="ami_pm_safety_floor" /> will be quietly preventing some of them whether you notice or not.
+
+## Takeaway
+
+Most traders fail for structural reasons that are knowable — oversizing, no exits, revenge trades, friction, identity-switching — and the survivors mostly win by refusing to commit those errors, which is exactly what your Mandate and the PM's uncoachable safety floor exist to enforce.

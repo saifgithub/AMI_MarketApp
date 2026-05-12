@@ -22,15 +22,33 @@ their role name (the Bear Researcher, the PM, the Market Analyst).
 
 ## What AMI Trade is
 
-- Simulation-only, advisory-only, forever. No brokerage integration ever.
+- AMI Trade is a **training simulator** that teaches users to evaluate
+  output from a multi-agent analyst team. It is NOT a registered
+  investment advisor and does NOT provide investment advice.
+- Everything AMI produces — verdicts, position sizes, entries, stops,
+  targets, agent arguments — is a **training artifact** generated for
+  the user to practice evaluating. Nothing AMI emits is actionable
+  guidance.
+- The product is the **skill of being a discerning CEO** of your own
+  decision-making. AMI's job is to simulate the experience of receiving
+  analyst output; the user's job is to practice the discipline of
+  evaluating, accepting, modifying, or rejecting that simulated output.
+- **Simulation-only, forever** — not as a technical limitation pending
+  a future brokerage integration, but because the **product IS the
+  education**. There will never be a broker hook. Users do not
+  "graduate" from AMI to act on its verdicts elsewhere. The training
+  itself is the deliverable.
 - The user defines a Mandate: risk tolerance, max drawdown, compliance
   flags (halal / ESG-lite / no T/A/G / no fossil / long-only). Every
-  agent operates within the mandate.
+  agent operates within the mandate — this teaches users how a real
+  analyst team would be constrained by an investment policy.
 - The Portfolio Manager (PM) enforces a non-coachable safety floor —
-  a deterministic compliance check that runs on every trade regardless
-  of what AMI says.
-- "Convene the Room" runs all 12 agents in a debate producing a Verdict
-  (BUY/SELL/HOLD with size, entry, stop, target, horizon).
+  a deterministic compliance check that runs on every simulated trade
+  regardless of what AMI says. The floor models how a real compliance
+  function works inside a fund.
+- "Convene the Room" runs all 12 agents in a debate producing a
+  training Verdict (BUY/SELL/HOLD with size, entry, stop, target,
+  horizon) for the user to practice evaluating.
 - "Coach Your Agent" lets users shape style/priority of any single
   agent via natural language. Cannot bypass the safety floor.
 - Markets covered: US equities primary, Bursa Malaysia secondary at
@@ -44,6 +62,29 @@ their role name (the Bear Researcher, the PM, the Market Analyst).
   The app will let users add their own watchlist tickers; lessons
   should feel illustrative, not prescriptive. Avoid implying "these
   are the right stocks to trade".
+
+## Regulatory framing (load-bearing — never compromise on these)
+
+AMI Trade does NOT hold a license to provide investment advice. Every
+lesson must reflect this:
+
+- NEVER write "AMI recommends X" or "AMI advises X". Use: "AMI's
+  training output suggests" / "the simulated Verdict shows" / "the
+  Bull Researcher's argument in this scenario is".
+- NEVER suggest the user "act on" AMI's output in a real brokerage.
+  The closest acceptable framing is: "the user can choose to take this
+  scenario as a thought experiment in their own analysis off-app."
+- Every lesson that touches on AMI's output should reinforce that the
+  output is a TRAINING ARTIFACT, not actionable guidance.
+- "Advisory" is acceptable ONLY in the sense of "AMI generates advisory
+  artifacts as training material." It is NEVER acceptable in the sense
+  of "AMI provides financial advice."
+- Where natural, include a brief reminder phrase like: "Remember: AMI
+  is a training simulator; the verdict above is a practice artifact,
+  not investment advice."
+
+These rules apply to EVERY lesson, EVERY agent prompt, EVERY Q&A entry,
+EVERY daily challenge.
 
 ## The 12 agents + Concierge
 
@@ -62,6 +103,10 @@ neutral_debator, portfolio_manager, concierge
 
 ## Brand voice + tone
 
+- **Training-not-advice framing**: AMI is a training simulator.
+  Verdicts are training artifacts. Never frame AMI as a financial
+  advisor. Users practice evaluation skills; they do not receive
+  investment advice.
 - Analyst-to-analyst. The reader is intelligent. No condescension.
 - Numbers > adjectives. "A 50% drawdown in a 10% position is a 5%
   portfolio hit" beats "a meaningful loss".
@@ -435,6 +480,14 @@ Quality bar:
   predictions, no promises. AMI describes process, not outcomes.
 - Psychology entries must not give medical advice. They surface
   patterns + suggest the user pause or review their journal.
+- AMI is a TRAINING SIMULATOR, not a financial advisor. Q&A answers
+  must never frame AMI as advisory in the regulatory sense. Use
+  "AMI's training simulation shows..." / "The training verdict in
+  that scenario..." / "AMI's role is to give you practice at...".
+  Never: "AMI recommends...", "AMI advises...", "act on AMI's call".
+- ai_meta entries especially: AMI is described as a training
+  environment for evaluating multi-agent analyst output. Users
+  practice; they do not receive advice.
 
 ## What you should write today
 
@@ -452,6 +505,141 @@ Examples:
    the Concierge directly."
 
 Output a single JSON array.
+```
+
+---
+
+## PROMPT 4 — Glossary generator
+
+```
+You are writing entries for AMI Trade's stock-trading Glossary — a searchable
+reference of stock-trading terms with locale-aware definitions. The glossary
+is consumed by the Concierge for definition lookups, by lessons via inline
+term links, and by the Decision Journal for tooltip surfaces.
+
+## File layout (i18n-aware)
+
+The glossary uses LOCALE-SUFFIXED JSON files. The IDs are stable English
+snake_case strings shared across every locale. Each locale file is a JSON
+array of term objects.
+
+- content/glossary/terms.en.json     ← English (alpha)
+- content/glossary/terms.ar.json     ← Arabic (v1.0)
+- content/glossary/terms.ms.json     ← Bahasa Malaysia (v1.0)
+- content/glossary/terms.<locale>.json for future locales
+
+For Saiful's first generation run, only the .en.json file is generated.
+Translation into AR + MS happens externally (per the CLAUDE.md "translation
+is not blocking" rule).
+
+## Schema per entry
+
+{
+  "id": "<snake_case_english_id>",     // STABLE ACROSS LOCALES — never translated
+  "term": "<localized term>",          // displayed text in this locale
+  "definition": "<1-3 sentence definition in this locale>",
+  "category": "basics" | "order_types" | "technical" | "fundamental" | "ratios" | "psychology" | "strategy" | "regime" | "macro" | "options_derivatives" | "scam" | "platform" | "advanced",
+  "see_also": ["<other_term_id>", ...],         // optional, references other glossary IDs
+  "related_lessons": ["<lesson_id>", ...],      // optional, numeric 3-digit IDs
+  "related_agents": ["<agent_id>", ...],        // optional, canonical 13
+  "tags": ["<short tag>", ...]
+}
+
+## Rules
+
+1. **id is stable across locales.** Always English snake_case. Other locale
+   files use the same ids. Never translate the id. Example: { "id": "stock",
+   "term": "سهم" } in the Arabic file; { "id": "stock", "term": "Saham" } in
+   the MS file.
+
+2. **term is localized.** The displayed term in the active locale.
+
+3. **definition is 1-3 sentences in this locale.** Factual, neutral,
+   analyst-to-analyst. Avoid marketing words. Avoid "investment advice"
+   framing — definitions describe what a term means, never what the user
+   should do with it.
+
+4. **Training-frame language (load-bearing — regulatory).** AMI is a training
+   simulator, NOT a financial advisor. Definitions describe concepts; they
+   never recommend, advise, or suggest action. Use neutral terms: "is a
+   technical indicator that measures...", "describes a market state in
+   which...". Never: "you should use X when...".
+
+5. **Categories** (use the enum exactly):
+   - `basics` — vocabulary a beginner needs (stock, share, exchange, dividend,
+     market cap, ticker, brokerage, etc.)
+   - `order_types` — order mechanics (market, limit, stop, GTC, IOC, etc.)
+   - `technical` — chart-reading terms (candlestick, support, resistance,
+     trend, breakout, MA, RSI, MACD, Bollinger Bands, etc.)
+   - `fundamental` — company / financial statement terms (revenue, EBITDA,
+     FCF, ROE, balance sheet, moat, etc.)
+   - `ratios` — specific ratios (P/E, P/B, D/E, dividend yield, etc.)
+   - `psychology` — behavioural finance terms (FOMO, revenge trading,
+     overconfidence, anchoring, etc.)
+   - `strategy` — strategy/system terms (trend-following, mean reversion,
+     momentum, backtesting, etc.)
+   - `regime` — market-state terms (bull market, bear market, sideways, VIX,
+     volatility regime, sector rotation, breadth, etc.)
+   - `macro` — macro / news / cycle terms (Fed, rate hike, inflation,
+     recession, yield curve, etc.)
+   - `options_derivatives` — option/derivative terms (call, put, strike,
+     expiry, IV, etc.) — describe the concept only; do not advocate use
+   - `scam` — scam pattern names (Ponzi, pump-and-dump, clone broker,
+     pig-butchering, etc.)
+   - `platform` — AMI-internal terms (Mandate, Verdict, Convene the Room,
+     Coach Your Agent, Decision Journal, PM safety floor, etc.)
+   - `advanced` — late-curriculum terms (Kelly criterion, walk-forward,
+     correlation under stress, etc.)
+
+6. **see_also** references the IDs of related glossary entries. Optional.
+   Use it to build a small graph (e.g., "support" sees_also "resistance" and
+   "trendline").
+
+7. **related_lessons** references curriculum lesson IDs as zero-padded 3-digit
+   strings. Optional. Use only when there's a clean fit.
+
+8. **related_agents** references canonical agent IDs. Optional. E.g., RSI
+   sees_also "market_analyst"; "Mandate" sees_also "portfolio_manager".
+
+9. **tags** is a non-empty array of short string tags useful for search and
+   filtering (e.g., ["beginner", "vocabulary", "ownership"]).
+
+10. **Coverage target** for the EN v1 batch: ~150-200 entries spanning all 13
+    categories. Bias toward terms a Module 1-3 user would naturally encounter
+    (basics, order_types, basic technical, key fundamental concepts, common
+    ratios), plus all platform terms (so the Concierge can define them).
+
+11. **No outcome promises.** Definitions describe concepts. Never frame
+    indicators or strategies as "winning" or "high accuracy". Falsifiability
+    framing is fine: "a signal that is invalidated when X".
+
+12. **AMI naming rule.** Never "the AI" / "the LLM" / "the model" / "ChatGPT".
+    Use AMI. Agents by role.
+
+## Output format
+
+A single JSON array of term entries. Write it to
+content/glossary/terms.<locale>.json. The Saiful-facing run generates
+content/glossary/terms.en.json first.
+
+## What you should write today
+
+Examples:
+
+- "Write 180 terms for the EN v1 glossary, spanning all 13 categories.
+   At least 25 basics, 20 order_types + technical, 25 fundamental + ratios,
+   15 psychology, 15 strategy, 12 regime, 12 macro, 8 options_derivatives,
+   12 scam (mirror Module 11), 12 platform (AMI-internal terms), 12 advanced.
+   Use today's date if you embed a timestamp in tags."
+
+- "Translate the existing EN glossary to Arabic. Keep ids identical;
+   localize term + definition only. Write to content/glossary/terms.ar.json."
+
+- "Add 30 new platform terms covering Coach Your Agent, the safety floor
+   internals, and Earn Path mechanics. Save to content/glossary/terms.en.json
+   (extend the existing array)."
+
+Output a single JSON array. Validate with `python -m json.tool` before saving.
 ```
 
 ---
@@ -481,6 +669,13 @@ Output a single JSON array.
 1. Save the JSON array to `content/ai_coach/<batch>.json`.
 2. The Concierge embedding pipeline (not yet built — likely Beta) will
    ingest these into a vector store for retrieval.
+
+### Glossary
+
+1. Save the JSON array to `content/glossary/terms.<locale>.json` (start with `terms.en.json`).
+2. The Glossary loader (not yet built — likely Alpha A18) will pick these up by locale, falling back to `en` for any term missing in the active locale's file.
+3. Glossary terms can be linked inline from lessons via `<Term id="<term_id>" />` (component not yet wired — placeholder will render as bold text on miss).
+4. Translation pipeline: same `id` set across locale files; only `term` + `definition` change. Saiful arranges external translation; AI-generated translations for AR/MS happen after the EN base ships and stabilises.
 
 ---
 

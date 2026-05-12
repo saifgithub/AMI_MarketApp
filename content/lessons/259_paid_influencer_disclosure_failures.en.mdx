@@ -1,0 +1,73 @@
+---
+id: "259_paid_influencer_disclosure_failures"
+title: "Paid-influencer disclosure failures"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "influencer_disclosure"
+prerequisites: ["066_telegram_whatsapp_pump_groups", "258_post_pump_dump_and_anonymous_admins"]
+tags: ["scams", "finfluencer", "disclosure", "paid_promotion", "social_media"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Paid-influencer disclosure failures
+
+A finfluencer who is paid to promote a stock or platform must disclose that payment under most major regulators' rules. Most do not — or bury the disclosure where viewers will not see it. This lesson teaches the disclosure obligations under the SEC, FCA, ASIC, and SC Malaysia regimes, and the three structural patterns that signal an undisclosed paid promotion: a sudden ticker pivot, a platform-affiliate funnel, and a "results" video tied to a particular broker referral link. Once you recognise the pattern, you can discount the content.
+
+## How this plays out in real markets
+
+The SEC's anti-touting rule (Section 17(b) of the Securities Act of 1933) requires disclosure of compensation when promoting a security. The SEC has settled multiple cases since 2022 against influencers and celebrities who promoted stocks or tokens without disclosing payments. The FCA's 2024 finfluencer guidance — and parallel guidance from ASIC and SC Malaysia — extends the same disclosure principle to social-media promotion within their jurisdictions.
+
+Patterns that recur in enforcement filings:
+
+- An influencer with a broad market-commentary channel suddenly publishes a video focused on a single small-cap ticker, with bullish framing and a price target. No company-news catalyst justifies the pivot. The video coincides with a pump in the underlying.
+- An influencer who has never mentioned a specific brokerage suddenly produces a "my broker setup" video that funnels viewers to a referral link with a bonus. The bonus typically pays the influencer a percentage of the referred deposit, sometimes a percentage of the deposited losses.
+- A "trade results" video shows a screenshot of profits on a specific platform. The screenshot is from a demo account or a different account than the one being promoted. The platform pays the influencer per signup.
+- Disclosure language exists but is buried at second 47 of a 6-minute video, in 8-point grey-on-grey text, or in a description users do not expand. Regulators treat hidden disclosure as no disclosure.
+
+The SEC's investor.gov page on "celebrity-backed investments" and the FCA's ScamSmart influencer guidance both publish examples and the specific rule citations.
+
+## The trap
+
+The trap is parasocial trust. The viewer has watched the influencer for months, the influencer feels like a friend, and the brain treats their recommendation as a friend's opinion rather than a paid advertisement. The mistake is that parasocial duration is unrelated to content veracity — the influencer can be honest for 100 videos and paid on the 101st, and the viewer has no way to distinguish them without a disclosure. The fix is to assume a single-ticker focus video or a broker referral video carries a payment unless the disclosure is plainly stated, on screen, in the first 30 seconds, and the influencer can show the contract terms on request. Most cannot.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="Under most major regulators (SEC, FCA, ASIC, SC Malaysia), an influencer who is paid to promote a security must:"
+    options={[
+      "Disclose only if asked by a viewer",
+      "Disclose the payment clearly and conspicuously alongside the promotion — buried, partial, or post-hoc disclosure is generally treated as inadequate",
+      "Disclose only if the payment exceeds USD 10,000",
+      "Disclose only on their own website, not in the social-media post"
+    ]}
+    answer={1}
+    explanation="The rule across SEC Section 17(b), FCA financial-promotion rules, ASIC guidance, and SC Malaysia equivalents is clear and conspicuous disclosure — and regulators have publicly stated that 8-point grey text or disclosure buried at the end of a long video does not meet the standard. The most tempting wrong answer is the threshold-based version, but the rules apply regardless of payment size."
+  />
+
+  <Quiz
+    question="A finfluencer who normally posts macro commentary publishes a 12-minute video on a small-cap biotech with a USD 8 price target, includes a referral link to an offshore brokerage offering a 100% deposit bonus, and shows a screenshot of \"my profits this week\" on that platform. No disclosure appears in the first minute. What is the decisive red flag?"
+    options={[
+      "The USD 8 price target is high",
+      "Three independent paid-promotion markers cluster — the sudden single-ticker focus, the affiliate-linked offshore broker, and the screenshot tied to that platform — and the absence of clear disclosure in the first minute is itself a likely regulatory failure",
+      "Twelve minutes is too long for a video",
+      "Biotech is too risky to recommend"
+    ]}
+    answer={1}
+    explanation="Price targets in themselves are not red flags — analysts publish them routinely with proper disclosure. The decisive issue is the cluster: a single-ticker pivot, a referral funnel to an offshore broker with a deposit bonus, and a platform-tied profit screenshot all appear together. This is the documented finfluencer paid-promotion architecture. The absence of clear early disclosure means the viewer cannot weight the content correctly, and regulators may treat the post itself as a violation."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with <Term id="concierge_agent" />. Pick any social-media finance creator whose ticker calls you have considered acting on. Ask: "Help me audit the last 10 posts for paid-promotion markers — single-ticker pivots, broker referral links, platform-tied screenshots — and tell me where their disclosures appear." The Concierge will walk through the checklist. If you have no creator in mind, use this drill: "Macro creator publishes single-ticker biotech video with offshore broker referral link, no first-minute disclosure."
+
+## Takeaway
+
+If a single-ticker video, a broker referral funnel, and a platform-tied profit screenshot cluster together without clear first-minute disclosure, assume a paid promotion. Parasocial trust is not a substitute for the disclosure regulators require.

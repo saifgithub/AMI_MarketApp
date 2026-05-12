@@ -1,0 +1,82 @@
+---
+id: "146_combining_indicators_effectively"
+title: "Combining 2–3 indicators effectively"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 4
+track: "edge_process"
+topic: "indicator_combination"
+prerequisites: ["030_trend_confirmation_across_indicators", "143_adx_trend_strength", "141_atr_as_volatility_gauge"]
+tags: ["indicators", "combination", "confluence", "checklist", "regime"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Combining 2–3 indicators effectively
+
+Lesson 030 framed confluence as the absence of disagreement among independent readings. This lesson is the practical follow-up: how do you actually choose which two or three indicators to combine? The principle is orthogonality — each indicator must measure a different dimension of price. A useful combination covers regime (trend vs range), direction (which way), and confirmation (participation). Adding a fourth indicator that measures something already covered is redundant; adding one that measures a new dimension is upgrade. The right combination depends on what you're trying to do — but two or three orthogonal indicators almost always beat five overlapping ones.
+
+## How this plays out in real markets
+
+A clean swing-trade stack: ADX (regime), price vs SMA50 (direction), volume ratio (participation). Look at META through January 2026:
+
+- Regime: ADX(14) at 28 — confirmed trend regime (above 25).
+- Direction: price 632 above SMA50 (598) and SMA50 rising — long bias.
+- Participation: most recent breakout bar on 1.5× the 20-day average volume — real buying.
+
+Three indicators, three independent dimensions, no overlap. META ran from 632 to 685 over the next five weeks. The setup wasn't ambiguous because no two indicators were measuring the same thing — each carried its own information.
+
+Compare a poorly-chosen stack: MACD line, MACD histogram, MACD signal cross. All three are derived from the same MACD calculation; agreement among them is mechanical, not informational. If MACD line is above signal, the histogram is positive by definition, and the cross has fired. Stacking these three doesn't give three confirmations — it gives one confirmation said three different ways.
+
+Another poor stack: SMA20, EMA20, WMA20. Three moving averages of the same period and same data, differing only in weighting. They all measure trend slope — adding two more to the one you'd use anyway gives no orthogonal information. Lesson 124 covered this.
+
+Falsifiable claim: a two-or-three-indicator setup using orthogonal dimensions (regime + direction + participation) produces better risk-adjusted returns than a five-indicator setup with overlapping measurements. The invalidation: a sample where the five-indicator setup matches the orthogonal three on Sharpe ratio. Empirically the orthogonal stack wins because each indicator pulls its weight; the overlapping stack has indicator redundancy and looks "more confirmed" without actually being so.
+
+The decision framework: before adding any indicator, ask "what dimension does this measure, and is it already measured by something on my chart?" If yes, drop it. If no, it's a candidate.
+
+On Bursa Malaysia: GENTING in mid-2025 — ADX above 25, price above rising SMA50, breakout bar at 1.4× volume. Three indicators, three dimensions, clean signal. The trader using six MA variants saw the same setup buried under redundant lines.
+
+## The trap
+
+The trap is "more indicators = more confirmation." Beginners stack RSI, Stochastic, Williams %R, CCI, and MFI on the same chart and call it "five-indicator confluence." Most of those measure momentum (some with minor adjustments). When they agree, you have one signal repeated five times; when they disagree, you have indicator noise that all measures essentially the same thing.
+
+The correct mental model: confluence requires orthogonality, not quantity. Two orthogonal indicators carry more information than five overlapping ones. Define the dimensions you care about first (regime, direction, momentum, participation, volatility, etc.), pick one indicator per dimension you care about, and stop adding. The signal is stronger and the chart is readable. More is not better when more measures the same thing.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A trader's chart shows: RSI(14), Stochastic, Williams %R, CCI, MFI. All five indicators read overbought at the same swing high. Is this five-indicator confluence?"
+  options={[
+    "Yes — five indicators agreeing is the strongest confluence possible",
+    "No — these all measure momentum (some with minor variations). They're not orthogonal. Five overlapping readings is one signal repeated five times, not five independent confirmations.",
+    "Yes, but only if all five fired on the same bar",
+    "It depends on the timeframe — different timeframes make them orthogonal"
+  ]}
+  answer={1}
+  explanation="The orthogonality test is what separates real confluence from indicator redundancy. The tempting wrong answer (A) is the 'more = more confirmation' trap the lesson identifies. Different timeframes (option D) do not make momentum indicators orthogonal — they're still measuring the same dimension."
+/>
+
+<Quiz
+  question="You're building a swing-trade indicator stack. You want regime (trend vs range), direction, and participation. Account size $40,000. Which three indicators give the cleanest orthogonal coverage of these three dimensions?"
+  options={[
+    "MACD, MACD histogram, MACD signal cross — three views of MACD",
+    "ADX (regime), price vs SMA50 (direction with slope), volume ratio vs 20-day average (participation) — each indicator measures a different dimension, no overlap",
+    "SMA20, EMA20, WMA20 — three moving averages",
+    "RSI, Stochastic, MFI — three momentum oscillators"
+  ]}
+  answer={1}
+  explanation="Option B is the textbook orthogonal stack — regime, direction, and participation are distinct dimensions of price action, and each indicator measures exactly one. The other options each pile multiple measurements of the same dimension. The lesson's META example used precisely this stack. The discipline is one indicator per dimension; the chart stays readable and every line carries its own information."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker and ask: "Read me regime (ADX), direction (price vs SMA50 with slope), and participation (volume ratio vs 20-day average) — and tell me if any one of the three disagrees with the others." Compare against your current indicator stack. If you have more than three indicators on your chart, identify which two measure overlapping dimensions and drop one.
+
+## Takeaway
+
+Confluence requires orthogonality, not quantity. Two or three indicators that measure different dimensions (regime, direction, participation) outperform five that measure the same dimension five times.

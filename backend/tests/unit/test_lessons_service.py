@@ -11,13 +11,13 @@ from app.services.lessons_service import LessonsService, get_lessons_service
 
 
 # Stable handle for the "Market Orders vs Limit Orders" lesson — content
-# unchanged, used by parsing / quiz / earn-path tests because we control
-# its shape. Note: lesson FILES under content/lessons/ are now named with
-# the 280-292 prefix (curriculum_map renumbering), but the canonical
-# in-app ID is still the frontmatter `id` field — which preserves the
-# original `00Y_*` form. LessonsService keys by frontmatter id, so tests
-# must too.
-LEGACY_MARKET_ORDER_LESSON = "004_market_order_vs_limit"
+# (quiz + chat_with blocks) controlled so parsing / quiz / earn-path
+# tests can pin to it. The lesson lives in the "Legacy bonus" track per
+# the magical-edison-18bf91 content pass: frontmatter id matches the
+# filename (`283_*`), and the M1-M12 foundations were regenerated as
+# fresh lessons in the `001_*..077_*` range. LessonsService keys by
+# frontmatter id, so this constant must too.
+LEGACY_MARKET_ORDER_LESSON = "283_market_order_vs_limit"
 
 
 @pytest.fixture

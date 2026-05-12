@@ -1,0 +1,78 @@
+---
+id: "201_round_number_trap"
+title: "The round-number trap"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 3
+track: "sentiment_behaviour"
+topic: "round_number_anchoring"
+prerequisites: ["045_greed", "046_fear_and_capitulation"]
+tags: ["psychology", "greed", "anchoring", "exit_discipline", "round_numbers"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The round-number trap
+
+Round numbers — $100, $500, $1,000 a share, "the trillion-dollar market cap" — are not technical levels. They are psychological anchors that pull both targets and stops toward them, against the math of the chart. After this lesson you will be able to recognise when a round number is silently editing your plan, name the anchoring bias driving it (extending lesson 045 on greed), and replace the anchor with a level the chart actually drew. The cost of trading round numbers is paid in two places: holding a winner past its real exit because "$500 feels like the round target" and selling a loser early because "below $100 feels broken".
+
+## How this plays out in real markets
+
+In November 2024, a trader entered NVDA around $138 with a written target of $172 (the prior measured-move extension) and a stop at $128. As NVDA approached $150 — the first round-number magnet — the trader felt the urge to take "half off at the round number". He didn't write that into the plan; he just felt it. He scaled half at $150. NVDA closed the day at $148.50, ran to $152.40 the next session, then resumed the trend straight to $173 over the following four weeks. The half he scaled at $150 finished at +8.7%. The half he held to $172 finished at +24.6%. The difference between the two halves was not strategy. It was a round number whispering louder than the measured-move math.
+
+A counter-example, same trader, GME 2024: he had bought GME at $22 with a stop at $19.40 (a real structural low). As GME slid to $20.10, the round $20 mark started to feel like "if it breaks 20 it's broken". He moved his stop up to $20.05 — tighter, but on no structural basis. GME printed $19.98 in the next session, knocked him out, and closed back above $21 within forty minutes. His real stop at $19.40 would have held the position; the round-number stop did not.
+
+## The trap
+
+The trap is that round numbers look like levels because crowds congregate at them — there is real order flow at $100 and $500. But the *direction* of that flow is unknowable from the round number alone. Anchoring on round numbers as exits (whether targets or stops) replaces a level the chart drew with a level your brain drew. The correct mental model: round numbers are *zones of expected noise*, not zones of expected reversal. Your target is wherever the measured move, the resistance line, the fibonacci extension, or the volatility band says — and if those happen to coincide with a round number, fine, the math agrees. But the round number itself is never the reason. If you cannot point to a chart-drawn level under the round number, the round number is anchoring, not analysis.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You entered AAPL at $185 with a written target at $208 (a measured-move extension). AAPL is now $199 and approaching $200. You feel the urge to take profits at $200. What is the disciplined response?"
+  options={[
+    "Sell at $200 — round numbers act as resistance, so it's the safer exit.",
+    "Hold to the written $208 target unless a new chart-drawn level has appeared between $199 and $208 to justify a revised exit.",
+    "Scale half at $200, half at $208 — split the difference between feel and plan.",
+    "Raise the target to $250 because momentum is strong through $200."
+  ]}
+  answer={1}
+  explanation="The most seductive wrong answer is 'scale half at $200, half at $208' — it feels like a balanced compromise, but it is the round number editing the plan in real time. The original plan was written when you were calm and the chart-drawn level was $208. The round-number scale is anchoring rebranded as risk management. Either the chart has drawn a new level under $208 (in which case write a new plan), or it hasn't (in which case execute the original). Raising the target to $250 is greed wearing the same hat from the opposite direction."
+/>
+
+<Quiz
+  question="Which is the strongest objective indicator that a round number is driving your exit decision rather than the chart?"
+  options={[
+    "Your target or stop is within $0.50 of a round number.",
+    "Your target or stop is within $0.50 of a round number, AND you cannot point to a chart-drawn level (swing high/low, measured move, MA, fib, volatility band) within $2 of that price that the round number coincides with.",
+    "The stock closed at a round number this week.",
+    "You felt nervous as the price approached a round number."
+  ]}
+  answer={1}
+  explanation="A target near a round number can be perfectly disciplined if the chart-drawn level happens to coincide. The auditable test is the compound one: the price is round AND no chart-drawn level supports it. If both are true, the level is in your head, not on the screen. Closing at a round number is a tape outcome, not a process diagnostic. Feeling nervous is real but unfalsifiable on its own."
+/>
+
+<Quiz
+  question="Your NVDA position is at +18% with a written target of +24%. The Market Analyst flags that the next chart-drawn level is the prior all-time high at $173, your target. The price is consolidating just under $150 (a round number). The Social Media Analyst's feed is full of '$200 next stop' posts. Synthesis answer?"
+  options={[
+    "Take partial profits at $150 — the round number plus the bullish posts confirm resistance is near.",
+    "Hold the full position to the written $173 target; $150 is a round number, not a level the chart drew. Sentiment posts about $200 do not change the chart.",
+    "Sell entirely at $150 to lock the +8.7% and re-enter on a pullback.",
+    "Move the target up to $200 to match the social posts."
+  ]}
+  answer={1}
+  explanation="The first answer fuses two unrelated signals (round number plus crowd posts) and treats them as confirmation of resistance. They are confirmation of *attention*, not of resistance. The fourth answer outsources your target to strangers on the internet. Selling entirely at +8.7% to chase a re-entry is the round-number greed trade dressed as patience. The disciplined answer is to honour the level the chart drew — and the prior all-time high at $173 is the level the chart drew, not the round $150."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and filter to closed trades where your exit price was within $0.50 of a round number. For each, ask: was the round number near a chart-drawn level (measured move, prior high/low, MA, fib)? If less than half of them had a real level within $2 of the round number, you have a documented round-number anchoring pattern. Take one example to a <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Where was the actual chart level for this trade?" The gap between that and where you actually exited is your anchoring cost.
+
+## Takeaway
+
+Round numbers are zones of attention, not zones of reversal. If you cannot point to a level the chart drew, the round number is anchoring — and anchoring is greed and fear wearing the same disguise.

@@ -1,0 +1,70 @@
+---
+id: "035_cash_flow_vs_earnings"
+title: "Cash flow vs earnings"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "cash_flow_earnings"
+prerequisites: ["032_revenue_the_top_line", "033_profit_and_margins"]
+tags: ["cash_flow", "free_cash_flow", "earnings", "fcf", "accounting", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Cash flow vs earnings
+
+Earnings (net income) and cash flow look similar but measure different things. Earnings follow accounting rules — revenue can be recognised before cash arrives, and expenses can be spread across years. Cash flow tracks actual money moving in and out of bank accounts. Over a long enough horizon the two converge, but in any single year they can diverge meaningfully — and the gap is one of the most diagnostic numbers on the entire financial statement. By the end of this lesson you should know what free cash flow is, why it matters more than earnings to a long-term investor, and the exact multi-year pattern that flags accounting earnings as suspect.
+
+## How this plays out in real markets
+
+Look at MSFT in fiscal 2024. MSFT reported net income of roughly $88.1B and operating cash flow of about $118.5B. After ~$44.5B in capital expenditure (data centres, AI infrastructure), free cash flow (FCF) came in around $74B. Three numbers, three slightly different stories: earnings ($88B) showed accounting profit; operating cash flow ($118B) showed how much actual cash the business produced; FCF ($74B) showed what was left after the cost of keeping the business running and growing. The fact that operating cash flow exceeded net income is normal and healthy — depreciation (a non-cash expense) reduces net income but not cash, so cash flow is typically higher.
+
+Now look at the reverse pattern. Several high-growth companies in the 2021–2022 cycle reported positive accounting earnings while burning cash. When a company posts net income of, say, +$300M while FCF runs at –$800M for the same year, the gap is paying for itself in some combination of: receivables (revenue booked but not yet collected), inventory build-up, capitalised software costs (treated as assets, not expenses), or stock-based compensation that flatters the cash line but dilutes shareholders. None of those are crimes on their own; in combination, persistently, they are a warning.
+
+On Bursa Malaysia: SIME Darby Plantation has historically reported earnings that swing with palm-oil price recognition timing, while its cash flow follows the actual harvest and shipment cycle. A trader watching only quarterly EPS misses the underlying cash rhythm of the business.
+
+The falsifiable claim: if FCF stays meaningfully below reported net income for 3+ consecutive years without a clear capex-cycle explanation, the earnings figure is suspect and warrants forensic scrutiny.
+
+## The trap
+
+The trap is treating reported earnings — the EPS headline — as the truth about a business. A beginner sees "Q3 EPS beat by $0.05" and moves on. Earnings are an accounting construct, and several legitimate accounting choices (revenue recognition timing, capitalisation policies, working-capital management) can shift the headline meaningfully without changing the cash reality. The correct mental model: earnings tell you what management's accountants say the business made; cash flow tells you what hit the bank account. When the two move together, life is simple. When they diverge persistently and in the same direction, ask why — and don't let an earnings beat from a non-cash adjustment carry the same weight as one backed by genuine cash conversion.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company P reports net income of $500M, operating cash flow of $720M, and capital expenditure of $200M. Company Q reports net income of $500M, operating cash flow of $150M, and capital expenditure of $400M. Which company has the stronger cash-generation profile, and what is the rough free cash flow for each?"
+  options={[
+    "Company Q — higher capex means more investment in growth",
+    "Company P — FCF ≈ $520M vs Q's FCF ≈ –$250M. P is converting earnings into cash at a healthy rate while Q is reporting accounting profit while burning cash. Earnings tied, cash flow inverted",
+    "Both are equivalent — they reported the same net income",
+    "Company P — but only marginally; both look healthy"
+  ]}
+  answer={1}
+  explanation="FCF = operating cash flow – capex. Company P: 720 – 200 = +$520M. Company Q: 150 – 400 = –$250M. Same earnings headline, opposite cash reality. The most tempting wrong answer is option 0 — high capex 'sounds like investing in the future'. Sometimes it is, but it has to come from real cash earnings to count as growth investment rather than cash burn financed by debt or stock issuance. Option 2 confuses earnings equality with economic equality. Option 3 understates the gap."
+/>
+
+<Quiz
+  question="A company has reported the following over four consecutive fiscal years: net income +$220M, +$260M, +$310M, +$340M. Free cash flow for the same years: –$80M, –$110M, –$140M, –$200M. The stock has rallied on the rising EPS line. Which read best synthesises this lesson?"
+  options={[
+    "Bullish — rising earnings for four years is a clean uptrend in profitability",
+    "Bearish — any negative FCF is a problem regardless of context",
+    "Cautious to bearish — earnings are rising while FCF is deteriorating, and the gap is widening over four years. This is the multi-year configuration the lesson flags as suspect: the accounting profit is increasingly disconnected from cash generation. The next quarter doesn't matter — the trend over four years is the data point. Until you can explain the gap (heavy capex cycle with clear payoff, working-capital build for a known reason), treat the EPS headline as unreliable",
+    "Insufficient data — need the stock price chart to decide"
+  ]}
+  answer={2}
+  explanation="The synthesis is the lesson's falsifiable claim: 3+ years of FCF persistently below net income with a widening gap is the diagnostic signal that earnings quality is degrading. The most tempting wrong answer is option 0 — a four-year EPS uptrend looks textbook bullish. But EPS without cash is paper profit. Option 1 over-applies the rule (heavy growth-capex years can show legitimately negative FCF). Option 3 brings in chart logic that doesn't address the accounting question."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For [ticker], pull the last 5 years of net income and free cash flow side by side. Tell me whether the gap is widening, narrowing, or stable — and if widening, what's driving it." Write the answer in your <Term id="ami_decision_journal" /> with the ticker name. That single comparison will change how you read the next earnings report.
+
+## Takeaway
+
+Earnings tell you what the accountants say; cash flow tells you what the bank account did. When the two disagree for years in a row, trust the bank account.

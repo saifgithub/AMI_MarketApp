@@ -1,0 +1,70 @@
+---
+id: "043_dividend_yield_and_payout_ratio"
+title: "Dividend yield and payout ratio"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 2
+track: "fundamentals_analysis"
+topic: "dividend_yield_payout"
+prerequisites: ["033_profit_and_margins", "035_cash_flow_vs_earnings", "042_debt_to_equity"]
+tags: ["dividend_yield", "payout_ratio", "dividends", "income", "capital_return", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Dividend yield and payout ratio
+
+Dividend yield is the annual cash a company pays per share, divided by the share price. Payout ratio is the share of earnings (or free cash flow) the company hands back as dividends. The two together tell you whether the income stream is generous, sustainable, both, or neither. By the end of this lesson you should be able to compute both, recognise the warning sign of a "yield trap", and state the precise condition under which a high yield is durable rather than a setup for a cut.
+
+## How this plays out in real markets
+
+JPM in mid-2026 pays an annual dividend of roughly $5.20 per share. At a stock price near $220, dividend yield = 5.20 / 220 ≈ 2.4%. JPM's trailing EPS is around $18.50, so payout ratio on earnings = 5.20 / 18.50 ≈ 28%. That's a sustainable payout — only about a quarter of earnings goes out, leaving room for retained capital and buffers against a credit cycle. XOM pays around $3.96 annual dividend, stock near $115, yield ≈ 3.4%, payout on earnings around 45–50% depending on the oil-price cycle — high but consistent with mature-energy norms. MSFT pays around $3.32 annual, stock near $480, yield ≈ 0.7%, payout around 25% — a low-yield, low-payout profile typical of a high-growth business reinvesting most cash.
+
+Now a yield trap. Suppose a regional telco trades at $25 with a $2.40 dividend — yield = 9.6%. The headline "almost 10%" looks irresistible. Check the payout ratio: trailing EPS of $1.80 gives a payout of 2.40 / 1.80 = 133%. The company is paying out more than it earns, funded by either debt or balance-sheet drawdown. That is unsustainable; the dividend will be cut, and the share price typically falls *before* the cut as the market anticipates it. Investors who bought for the 9.6% yield often end up holding a 4% yield on a stock that fell 50% — a worse total-return outcome than ignoring the yield entirely.
+
+On Bursa Malaysia: MAYBANK has long been one of the highest-yielding large caps on KLCI, with a yield in the 5–6% range and payout on earnings typically 60–70%. The dividend is funded by genuine earnings, not balance-sheet erosion, which is why it has been broadly sustained through cycles. KLCC, structured as a REIT, distributes substantially all of its taxable income — its high payout is structurally mandated and shouldn't be read with the same lens as a non-REIT industrial.
+
+Falsifiable claim: a dividend yield above 6% is sustainable only when payout ratio on free cash flow (not earnings) is below 80%, AND the trailing-three-year FCF trend is flat or growing. Either of those conditions failing flips a high yield from "income opportunity" to "pre-cut warning".
+
+## The trap
+
+The trap is yield-chasing — sorting a watchlist by dividend yield and buying the top of the list. The math is seductive: a 10% yield "pays you to wait". But high yield is almost always one of three things: (1) a reflection of capital-light, mature business that genuinely returns cash (acceptable), (2) a stock price that has fallen because the market expects bad news (the yield rose mechanically as the price dropped), or (3) a payout the company can't afford and will cut. Categories 2 and 3 dominate the high-yield screen. The correct mental model: a dividend is a *commitment* the company has chosen to make and chooses to maintain. Sustainability is about whether free cash flow covers the dividend with margin to spare, not about whether the yield is large. What invalidates the signal: a "special" or one-time dividend inflates the trailing yield for one period and shouldn't be annualised. Always separate regular from special dividends before computing yield.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock trades at $20 with a $2.00 annual dividend, giving yield = 10%. Trailing EPS is $1.50. Free cash flow per share is $1.20. Debt has risen for two consecutive years. Which read is most accurate?"
+  options={[
+    "Strong buy — 10% is far higher than the index average",
+    "The dividend is mathematically unsustainable: payout on earnings is 133% and payout on FCF is 167%, meaning the company pays out more cash than it generates. Rising debt suggests the dividend is being funded by borrowing rather than operations. This is the textbook yield-trap pattern — the dividend will likely be cut and the price will fall further as the cut is anticipated",
+    "Earnings will eventually catch up with the dividend",
+    "Yield doesn't matter if you hold long enough"
+  ]}
+  answer={1}
+  explanation="The synthesis is recognising that yield in isolation can't be evaluated. The tempting wrong answer is option 0 — a beginner anchors on the eye-catching 10% and ignores the payout math. The right read computes payout on both earnings and FCF, finds them both above 100%, observes debt rising to fund the gap, and concludes the dividend is being financed rather than earned. Option 2 invents a hopeful future without evidence. Option 3 misuses time horizon to dismiss a math problem — if the dividend is cut, the price falls regardless of holding period."
+/>
+
+<Quiz
+  question="Company A pays a 2% dividend yield with a 25% payout ratio on FCF; Company B pays a 7% yield with a 75% payout ratio on FCF. Both are mature, low-growth businesses in the same sector with similar debt levels. Which synthesis is most accurate?"
+  options={[
+    "B is strictly better because the yield is higher",
+    "A is strictly better because the payout ratio is lower",
+    "B offers materially more current income but with a thinner safety margin; if FCF declines 30%, B's payout ratio approaches 100% and a cut becomes likely, while A's payout would only rise to ~36% — still comfortable. The right framing is income-vs-resilience: B for cash now if FCF is durable, A for retained-cash optionality. Neither is universally 'better' — the choice depends on whether you trust the FCF base of B to hold",
+    "Both are identical from a total-return perspective"
+  ]}
+  answer={2}
+  explanation="The synthesis test: yield and payout ratio together describe a stress profile. The tempting wrong answer is option 0 — yield-chasing logic that ignores resilience. Option 1 is the opposite trap — preferring the conservative payout regardless of context. The right read considers what a moderate FCF decline does to each company's coverage. Option 3 ignores the difference in stress response, which is real and quantifiable."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker that pays a dividend and ask: "Give me the current dividend yield, payout ratio on earnings, payout ratio on free cash flow, and the five-year trend for each. Flag any year where payout on FCF exceeded 90%." Save the snapshot in your <Term id="ami_decision_journal" />. The next time a headline yield catches your eye, you'll know in 30 seconds whether it's an income opportunity or a setup for a cut.
+
+## Takeaway
+
+Dividend yield without payout-ratio context is just a headline number. A sustainable yield is funded by free cash flow with margin to spare; an unsustainable one is funded by debt or balance-sheet erosion and gets cut.

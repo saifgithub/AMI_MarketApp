@@ -1,0 +1,78 @@
+---
+id: "244_bear_market_rallies"
+title: "Bear-market rallies: anatomy and how to fade them"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "bear_regime"
+prerequisites: ["060_bear_markets", "052_trend_following", "055_mean_reversion", "048_fomo"]
+tags: ["regime", "bear", "rally", "fade", "counter_trend"]
+agent_callouts: ["bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bear-market rallies: anatomy and how to fade them
+
+Lesson 060 named the bear-market trap: buying dips with bull-regime muscle memory. This lesson teaches the structural anatomy of bear rallies so you can identify them, name what they share, and either sit out cleanly or fade them with a tight stop. After this lesson you will be able to recognise a bear-rally setup from three structural markers, name the levels where bear rallies typically fail, and state the exact condition that would invalidate the bear regime and end fading.
+
+## How this plays out in real markets
+
+The 2022 SPX bear printed five rallies of 6%+. Anatomy of the largest:
+
+The summer 2022 bear rally: SPX closed at 3,666 on 16 June 2022 and rallied to 4,305 by 16 August 2022 — a 17.4% closing gain over 43 trading days. Structurally:
+
+- It began from a deeply oversold reading (RSI on SPX daily under 30, only ~16% of SPX components above their 50-day SMA).
+- It carried higher on falling volume — NYSE composite volume declined steadily from the 13 June peak through August.
+- It topped at 4,305 on 16 August 2022 — a tick above the falling 200-day SMA (which sat at ~4,290 that day).
+- VIX fell from 34.0 on 16 June 2022 to 19.5 on 16 August 2022 — a collapse, but not below the 15-line that would signal regime calm.
+- It gave the entire 17.4% back by 30 September 2022 when SPX closed at 3,585.
+
+The Nasdaq Composite ran an even cleaner version: 17 June 2022 low at 10,646 → 16 August 2022 high at 13,128 (+23.3%) → back to 10,213 by 30 September (-22.2% in six weeks).
+
+Detection rule for a credible bear-rally fade entry: SPX has rallied 6%+ in 3–6 weeks, approaches the falling 200-day SMA (within 1%), volume is lower than the rally's first week, and VIX has fallen by 30%+ but is still above 18. Stop: tight, ~1.5% above the 200-day SMA on a daily close.
+
+## The trap
+
+The bear-rally trap is the FOMO inversion: a trader who held cash through the first leg watches the 17% rally, panics about missing the bottom, buys aggressively near the falling 200-day SMA, and rides it back to new lows. Every 2022 SPX rally produced this pattern at scale — retail equity inflows spiked in late July 2022, exactly at the rally's most-extended point.
+
+The correct model: in a confirmed bear regime, the prior is "rallies fail at the falling 200-day SMA". The right responses are (a) sit out, or (b) take a small counter-trend short *only when the four anatomical markers cluster*, with a tight invalidation. The bear regime is invalidated — and the fade stops — when SPX closes above the 200-day SMA for 2 consecutive weekly closes AND the 200-day flattens or turns up.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="Bear regime confirmed since 14 March 2022. SPX has rallied 9% in 4 weeks and now sits 0.5% below the falling 200-day SMA. Volume on the rally's second half is 25% below the first half. VIX has fallen from 32 to 21. What does the bear-rally framework prescribe?"
+  options={[
+    "Cover all shorts and buy long — the rally is real.",
+    "All four anatomical markers (6%+ in 3–6 weeks, near falling 200-day, declining volume, VIX collapse but still above 18) are firing. If mandate permits a short, fade with a stop ~1.5% above the 200-day. Otherwise stay in cash. Invalidate only on 2 consecutive weekly closes above the 200-day with the slope flattening.",
+    "Wait for the rally to extend another 10% before deciding.",
+    "Add to longs at full mandate size — bear rallies never reach the 200-day."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the rally feels strong and the moving average is right there. But the four markers describe a classic bear rally topping pattern. The framework prescribes either sitting out or a tight-stopped fade — never flipping fully long without the structural invalidation. Option 3 inverts a true pattern (bear rallies frequently reach but fail at the 200-day)."
+/>
+
+<Quiz
+  question="What single development would force you to abandon the bear-rally-fade thesis and flip the regime call?"
+  options={[
+    "SPX rallies 25% from the low in a single month.",
+    "VIX closes below 18.",
+    "SPX closes above the 200-day SMA on 2 consecutive weekly closes AND the 200-day SMA slope flattens or turns positive.",
+    "AAII bull-bear spread turns positive."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 0 — a 25% rally feels like it must be a regime change, but the 2022 Nasdaq printed a 23.3% rally that fully retraced. Magnitude alone is not an invalidation. The structural invalidation is the 200-day reclaim on weekly basis with slope confirmation — same framework as the original detection rule from lesson 060, applied in reverse."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Bear Researcher and ask: "Walk me through the 2022 SPX summer rally with weekly closes — when did each of the four anatomical markers fire, and on what date did the rally end relative to the 200-day SMA?" Then <Term id="ami_convene_the_room" /> on SPY assuming the current regime is bear. Watch whether the Bull Researcher and Aggressive Debator argue for buying the dip — and whether the Research Manager weights the bear-regime prior heavily enough. If they don't, that's a <Term id="ami_coach_your_agent" /> moment for the Research Manager.
+
+## Takeaway
+
+Bear rallies share an anatomy: 6%+ in 3–6 weeks, declining volume, VIX collapse, top near the falling 200-day SMA. Sit out or fade with a tight stop; invalidate only on a structural reclaim, not a magnitude reading.

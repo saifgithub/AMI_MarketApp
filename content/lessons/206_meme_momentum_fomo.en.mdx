@@ -1,0 +1,78 @@
+---
+id: "206_meme_momentum_fomo"
+title: "Meme-momentum FOMO"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 3
+track: "sentiment_behaviour"
+topic: "meme_fomo"
+prerequisites: ["048_fomo", "045_greed"]
+tags: ["psychology", "fomo", "meme_stocks", "sentiment", "social_media"]
+agent_callouts: ["social_media_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Meme-momentum FOMO
+
+Meme-momentum FOMO is the specific FOMO flavour that happens when crowd attention, not chart structure, is the *only* reason a ticker is moving. The price goes vertical because new buyers arrive because new buyers are arriving. Building on lesson 048, this lesson gives you the diagnostic that separates meme momentum from a legitimate breakout, the falsifiability of "I am late to this," and the rule that converts a meme-FOMO urge into either a documented research note or a skip. The dangerous part is not that meme moves end. It is that they end on a single candle.
+
+## How this plays out in real markets
+
+January 2021, GME: the chart went from $20 to $80 in five sessions, then $80 to $325 in three. February 2021, AMC: $5 to $20 in seven sessions on the same social-media engine. In both cases, the Social Media Analyst's post-volume score was running 8–15x the 90-day median — not 3x, not 5x, but order-of-magnitude. The fundamental analyst reports for both companies in those weeks were unchanged. The chart had no prior structural breakout; the move was, mechanically, short-squeeze-driven and attention-driven. Traders who entered GME in the $250–$325 range — within 10% of the all-time high — saw the position print $54 within two sessions. The trades that closed green were the ones where the trader exited before the crowd did; the trades that closed -60% to -85% were the ones where the trader was the crowd.
+
+A counter-example, same period: NVDA's breakout above $130 in early 2021 had post-volume elevation of roughly 1.4x the 90-day median, a clean prior consolidation, a fundamental catalyst (datacenter revenue ramp), and a multi-week base. That was a legitimate breakout you could enter on a retest. The chart looked similar at a glance to GME. The crowd signature did not.
+
+## The trap
+
+The trap is treating all vertical charts the same. They are not. A legitimate breakout has a chart-drawn base, a measurable catalyst, and a sentiment elevation in the 1.5–3x range. A meme-momentum move has no base, no catalyst, and sentiment elevation often above 5x median. The price action looks identical for the first three days; the underlying participation does not. The correct mental model: if the *only* visible cause of the move is crowd attention, you are not analysing a setup — you are betting on the timing of strangers' exits. That is not a strategy; that is a timing test. And the timing test has no edge for a late entrant, because the people with the lowest cost basis are the ones who get to decide when the move ends.
+
+<ChatWith agent="social_media_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A ticker is up 80% in 6 sessions. The Social Media Analyst's post-volume score is 11x the 90-day median. There is no fundamental catalyst in the news feed, and the chart had no prior multi-week base. You feel the urge to enter. What is the disciplined action?"
+  options={[
+    "Enter a starter position — small size makes the bet acceptable.",
+    "Skip the trade. The compound signature (no base, no catalyst, sentiment >5x median, late chart position) is a meme-momentum move; entering late is a timing bet on strangers' exits, not a setup.",
+    "Enter with a tight 5% stop — risk-managed momentum.",
+    "Buy a put hedge alongside a long position to neutralise the meme risk."
+  ]}
+  answer={1}
+  explanation="'Starter position' is the FOMO disguise — small size does not change the structural problem, which is that there is no setup. 'Tight 5% stop' on a meme-momentum chart is essentially guaranteed to knock you out on intraday noise that is genuinely 5–10% in either direction on these names. 'Put hedge alongside long' is a complex trade most retail traders are not actually structured to execute and is rationalisation for the original entry. The only disciplined answer is to skip — the move is real, the *late entry on it* is not a strategy."
+/>
+
+<Quiz
+  question="Which compound test distinguishes a meme-momentum chart from a legitimate breakout?"
+  options={[
+    "The stock went up more than 30% in five sessions.",
+    "Compare three inputs: (a) presence of a prior chart-drawn base of at least 3 weeks, (b) a documented fundamental or macro catalyst, (c) Social Media Analyst post-volume score. A legitimate breakout has all three with sentiment in the 1.5–3x range; a meme-momentum move has none of (a) or (b) with sentiment typically above 5x median.",
+    "The stock has high short interest.",
+    "Retail trading volume is elevated."
+  ]}
+  answer={1}
+  explanation="Going up 30% in five sessions can be either a legitimate breakout or a meme — by itself it doesn't say which. High short interest is one mechanic of meme squeezes but is not a definitive signature; many legitimately bullish stocks have elevated short interest. Retail volume is an outcome. The compound test — base, catalyst, sentiment magnitude — is the auditable framework. All three are checkable in the same session before you place an entry."
+/>
+
+<Quiz
+  question="Your account is up 8% YTD. A meme-momentum chart is up 140% in two weeks. Your friend entered three days ago and is up 60%. The Social Media Analyst flags post-volume at 13x median, no base, no catalyst. Your mandate is 1% per-trade risk and only watchlist names. Synthesis answer?"
+  options={[
+    "Enter at 0.5% risk — your friend's win confirms the setup.",
+    "Add the ticker to your watchlist immediately and enter on the next 10% pullback.",
+    "Do not enter this session. Log the urge in the Decision Journal with the meme-signature data (post-volume multiple, no base, no catalyst). Open a 1-on-1 with the Social Media Analyst and ask what the historical post-trade outcome distribution looks like for late entries into 5x+ sentiment moves.",
+    "Increase per-trade risk to 2% to 'catch up' to your friend's return."
+  ]}
+  answer={2}
+  explanation="'0.5% risk' is the FOMO discount sticker. 'Add to watchlist and buy the dip' bypasses the research step that the watchlist is supposed to *require*, not be the receipt for. '2% to catch up' is the mandate breach disguised as ambition. The journal-first answer respects both the data (which says late entries to meme moves have a worse expected value than skipped entries) and the mandate (which exists to filter exactly these decisions). The Social Media Analyst's historical distribution for these patterns is the empirical case for skipping; ask it before you act."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and filter to any past trade where the ticker was up more than 50% in the prior two weeks at entry. For each, log the Social Media Analyst's post-volume multiple on the entry day and whether a chart-drawn base existed. Compute the win rate. Then open a <Term id="ami_one_on_one" /> with the Social Media Analyst and ask: "What is the historical post-trade outcome distribution for entries into post-volume above 5x median?" Compare that distribution to your own track record on these trades.
+
+## Takeaway
+
+A meme-momentum chart is a timing bet on strangers' exits, not a setup. If the only visible cause of the move is crowd attention, the late entry has no edge — the lowest cost basis decides when it ends.

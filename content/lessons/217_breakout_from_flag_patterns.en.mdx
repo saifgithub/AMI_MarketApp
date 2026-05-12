@@ -1,0 +1,66 @@
+---
+id: "217_breakout_from_flag_patterns"
+title: "Breakout from flag and pennant patterns"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "024_breakouts", "029_volume_confirmation", "023_support_and_resistance"]
+tags: ["strategy", "breakout", "flag", "pennant", "continuation"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Breakout from flag and pennant patterns
+
+The breakout foundation (053) used horizontal range resistance. Flags and pennants are a tighter, faster variant: after a sharp directional move (the "flagpole"), price consolidates in a narrow, slightly counter-trend channel for 5 to 15 sessions before resuming the original direction. The edge is in the contraction — volatility compresses, volume dries up, then the breakout from the consolidation completes the prior move with a measurable price projection. After this lesson you can name what qualifies as a flag, what disqualifies one, and how to size the position from a measured-move target.
+
+## Example
+
+Look at NVDA in late October 2024. The stock had run from $130 on October 9 to $144.42 on October 21 — a roughly 11% flagpole over nine sessions. From October 22 through October 30, price drifted sideways-down in a tight channel between $138 and $144 on visibly declining volume. The 20-day average daily volume was around 220 million shares; the consolidation days averaged closer to 165 million. On November 1, NVDA closed at $138.42 — but the cleaner trigger came on November 6 when it gapped through $144.42 and closed at $145.61 on 240 million shares (above average), completing the flag breakout. Measured move: $144.42 - $130 = $14.42 added to the breakout level gives a target of $158.84. NVDA reached $152 within four sessions and tagged $148 to $150 repeatedly through November, satisfying most of the measured move.
+
+Entry criteria: (1) prior flagpole of 5%+ in 5 to 15 sessions, (2) consolidation channel that retraces less than 50% of the flagpole, (3) volume contracts during consolidation vs the flagpole, (4) daily close above the consolidation high. Stop: a close back inside the consolidation channel, OR the low of the consolidation, whichever is tighter. Target: measured move = flagpole height added to the breakout level. Individual-trade invalidation: a daily close back inside the consolidation range — the flag failed; exit. The strategy FAILS when the consolidation is too long (over 15 sessions) — at that point it's no longer a flag, it's a base, and the measured-move projection loses its statistical edge. It also FAILS in choppy macro tapes where every "flag" is a distribution top in disguise.
+
+## The trap
+
+The beginner mistake is calling any pullback inside an uptrend a "flag" and projecting a measured move that has no basis. Real flags have three properties: a steep flagpole, a tight counter-trend channel, and visible volume contraction. Miss any of the three and you're not looking at a flag — you're looking at a normal pullback or, worse, distribution. The correct mental model: the measured-move projection is only valid when all three properties hold. If volume didn't contract during the consolidation — if it stayed flat or rose — the flag is suspect and the target math is fantasy. The other trap: chasing the breakout candle's high. Wait for the close.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock ran from $50 to $58 in seven sessions, then drifted sideways between $55 and $58 for four weeks (20 sessions) on flat-to-rising volume. Price now closes above $58 at $58.40. What does the flag-breakout rule say?"
+  options={[
+    "Enter long with measured-move target at $66",
+    "No flag — consolidation duration and volume profile disqualify; this is a 4-week base, not a flag",
+    "Enter long but use a tighter target since the consolidation was long",
+    "Short — the long consolidation means distribution"
+  ]}
+  answer={1}
+  explanation="Flags are short (5-15 sessions) AND have contracting volume. Twenty sessions of flat-to-rising volume is a base, not a flag, and the measured-move projection has no statistical basis. Option 0 is the tempting wrong answer because the price action LOOKS like a flag breakout — but applying the wrong template means trading a setup that doesn't have the studied edge."
+/>
+
+<Quiz
+  question="You spot a textbook flag breakout in AAPL: flagpole from $220 to $235, tight consolidation between $230 and $235, volume contracts cleanly, today closes at $236.50. Stop is set at $229 (back inside consolidation). Mandate: 1% per-trade risk, $80,000 account. The measured move target is $250. What's the position size AND the reward-to-risk?"
+  options={[
+    "106 shares, R:R = 1.8",
+    "320 shares, R:R = 2.0",
+    "53 shares, R:R = 1.8",
+    "106 shares, R:R = 2.7"
+  ]}
+  answer={0}
+  explanation="Risk per share = $236.50 - $229 = $7.50. Max risk = 1% * $80,000 = $800. Shares = $800 / $7.50 = 106.66, round down to 106. Reward per share = $250 - $236.50 = $13.50. R:R = $13.50 / $7.50 = 1.8. Option 1 (320 shares) sizes from dollar value not stop distance. Synthesis: even a clean pattern only earns mandate-respecting size, and a 1.8R is below most edge thresholds — you might pass on this trade despite the clean setup."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker that's just had a sharp run and ask: "Is the current consolidation a valid flag? State the flagpole, consolidation range, volume profile, and measured-move target. If it disqualifies, say why." Then in the <Term id="ami_decision_journal" /> pre-log the entry, stop, target, and the three flag criteria — so the post-mortem can grade you on the criteria, not the outcome.
+
+## Takeaway
+
+A flag is a flagpole, a tight counter-trend channel, AND volume contraction — all three. Without all three, the measured-move target is invented arithmetic.

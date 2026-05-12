@@ -1,0 +1,70 @@
+---
+id: "148_revenue_recognition_red_flags"
+title: "Revenue recognition red flags"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "revenue_quality"
+prerequisites: ["032_revenue_the_top_line", "035_cash_flow_vs_earnings"]
+tags: ["revenue", "revenue_recognition", "accounting", "channel_stuffing", "bill_and_hold", "red_flags"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Revenue recognition red flags
+
+Lesson 032 said revenue tells you the *size* of a business, not its *health* — and the cleanest way to verify the headline is real is to interrogate when and how it was recognised. Accountants book revenue when an obligation is satisfied, not necessarily when cash arrives. That gap is where the games happen: pre-shipping to distributors at quarter-end, booking long-term contracts upfront, recognising bundled deals on the wrong line. By the end of this lesson you should be able to spot three classic recognition red flags from the income statement and balance sheet alone, and know the falsifiable trigger that promotes "watch list" to "do not own".
+
+## How this plays out in real markets
+
+Look at the days-sales-outstanding (DSO) line — average days between a sale and cash collection — calculated as `(Accounts Receivable / Revenue) × 90` for a quarter. A healthy mature business runs a stable DSO; software firms typically 60–90 days, retailers near zero. When DSO drifts up quarter after quarter without a stated reason, the company is either booking revenue it isn't collecting yet or extending unusually generous terms to push deals over the line.
+
+Real example: in fiscal 2024, NVDA reported quarterly revenue around $30B with accounts receivable around $14B — DSO near 42 days. Stable. By contrast, when a hardware peer reports a DSO jumping from 65 to 95 days across two quarters while revenue growth decelerates, the math usually says channel stuffing: more product was pushed to distributors who haven't yet sold it through to end customers. The receivable swelled because real demand didn't.
+
+Two other recognition red flags worth knowing: (1) deferred revenue *falling* faster than revenue at a subscription business — the backlog of future-period bookings is draining, which means the renewal pipeline is weaker than the reported top line; (2) "bill-and-hold" disclosures in the 10-K — a customer is invoiced and revenue is booked but goods haven't shipped. This is occasionally legitimate, but is one of the most over-represented practices in historic restatement cases.
+
+On Bursa Malaysia: TOPGLOV during the 2020–2021 glove cycle saw receivables and revenue both surge as buyers locked in supply. When demand normalised, receivable trends preceded the revenue reversal by a quarter — the cash side told the story first.
+
+## The trap
+
+The trap is asking "is revenue up?" instead of "is the receivable line growing faster than revenue, and why?" A beginner sees a beat-and-raise quarter and stops. The trap thinking: "revenue grew, EPS beat, what else is there?" The correct mental model: every dollar of recognised revenue should leave a coherent trail through receivables, deferred revenue, and operating cash flow. When AR grows materially faster than sales for two consecutive quarters and the company doesn't disclose a customer-mix shift or a one-off contract that explains it, you are looking at either deteriorating collections or aggressive recognition. Either way, the quality of the top line is degrading.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company grows revenue 22% year-over-year. In the same period, accounts receivable grows 48% and operating cash flow falls 10%. Which conclusion best fits the lesson?"
+  options={[
+    "The growth is high-quality — receivables always grow with revenue",
+    "Stock-based compensation is the explanation",
+    "Receivables growing roughly 2x revenue while operating cash flow is contracting points to revenue being booked faster than it is being collected. Until the company explains the AR build-up specifically, treat the top line as suspect",
+    "Net income is the only number that matters here"
+  ]}
+  answer={2}
+  explanation="When AR growth runs ~2x revenue growth and cash flow moves the wrong way, the income statement is recognising revenue the bank account hasn't seen. That is the textbook channel-stuffing or aggressive-recognition pattern. Option 0 confuses 'AR rises with revenue' (yes, proportionally) with 'AR rising at double the rate is fine' (it isn't). Option 1 invents an unrelated mechanism. Option 3 dodges the question — EPS without cash is exactly what this lesson warns against."
+/>
+
+<Quiz
+  question="Combine this lesson with the cash-flow lesson. A SaaS company reports revenue +30%, deferred revenue –12%, operating cash flow flat. The stock has rallied on the headline growth. Which read synthesises best?"
+  options={[
+    "Bullish — 30% revenue growth at a SaaS company is the only number that matters",
+    "Bearish — declining deferred revenue at a SaaS business means the future bookings backlog is shrinking. Combined with flat operating cash flow against a 30% reported top line, the recognised revenue is increasingly coming from the existing backlog rather than new bookings. The headline growth is partly mechanical, not forward-looking",
+    "Neutral — deferred revenue is a balance sheet item and doesn't matter for growth investors",
+    "Bullish — SaaS metrics are not subject to recognition concerns"
+  ]}
+  answer={1}
+  explanation="The synthesis: at a subscription business, deferred revenue (cash collected for services not yet delivered) is the leading indicator of future recognised revenue. When it falls while reported revenue grows, the company is draining its own backlog. Combined with flat operating cash flow, the 'growth' isn't being replenished by new bookings. Option 0 takes the headline at face value — exactly the trap. Option 2 mislabels deferred revenue as ignorable. Option 3 is a category error — SaaS is one of the *most* recognition-sensitive sectors."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For [ticker], give me the last 6 quarters of revenue, accounts receivable, deferred revenue, and operating cash flow. Flag any quarter where AR growth exceeded revenue growth by more than 10 percentage points." Log the flagged quarters in your <Term id="ami_decision_journal" />. The next time the Bear Researcher pushes back on a long thesis, you'll have the receipts.
+
+## Takeaway
+
+Revenue is recognised; cash is collected. When receivables run ahead of revenue and operating cash flow doesn't follow, the top line is borrowing credibility it hasn't earned.

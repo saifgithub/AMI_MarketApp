@@ -1,0 +1,70 @@
+---
+id: "041_return_on_equity"
+title: "Return on equity (ROE)"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "return_on_equity"
+prerequisites: ["033_profit_and_margins", "034_debt_and_the_balance_sheet", "040_price_to_book"]
+tags: ["roe", "return_on_equity", "profitability", "dupont", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Return on equity (ROE)
+
+Return on equity measures how much profit a company generates for each dollar of shareholders' equity left in the business. Formula: ROE = net income / average shareholders' equity. It's the closest single number to "what is this business compounding shareholder capital at?" By the end of this lesson you should be able to compute ROE, decompose it via DuPont into margins, asset turnover, and leverage, and recognise the specific condition under which a high ROE is a warning rather than a strength.
+
+## How this plays out in real markets
+
+AAPL in fiscal 2024 reported net income near $97B on average shareholders' equity around $65B, giving ROE ≈ 150%. That number is absurd at first glance — the company earns 1.5x its book equity every year. The explanation is buybacks: AAPL has spent over $700B repurchasing shares across the last decade, shrinking equity faster than net income falls. Mechanically, when you push equity toward zero, ROE explodes. JPM, by contrast, ran ROE around 17% in 2024 — high for a bank, defensible against a ~10% cost of equity, and the source of its premium P/B. MSFT around 35%. NVDA, during the AI capex boom, posted ROE above 100% as earnings exploded faster than retained equity.
+
+DuPont decomposition makes ROE interpretable: ROE = (Net margin) × (Asset turnover) × (Equity multiplier). Net margin = net income / revenue. Asset turnover = revenue / total assets. Equity multiplier = total assets / equity (a leverage measure). Take JPM at 17%: ~28% net margin × ~6% asset turnover × ~10x equity multiplier ≈ 17%. The same ROE can be reached by very different paths — a high-margin software company with low leverage, or a low-margin bank with high leverage. They are not equivalent businesses.
+
+On Bursa Malaysia: PUBLIC BANK has run ROE in the 13–14% range for years on relatively conservative leverage; MAYBANK closer to 10–11%. The 3-point gap is structural — Public's franchise generates higher loan margins on lower-risk credit — and is the reason the market historically pays a higher P/B for Public.
+
+Falsifiable claim: an ROE above 25% that is *driven primarily by leverage* (equity multiplier above 5x for non-financials, or above 12x for banks) is fragile — the same leverage that amplifies returns in good years amplifies losses in bad ones. Sustainable high ROE comes from margin × turnover, not from a stretched balance sheet.
+
+## The trap
+
+The trap is treating ROE as a one-dimensional "quality" score. A company shows 30% ROE; a beginner files it under "good business" and moves on. But there are three ways to reach 30%: through high margins (a true competitive moat), through fast asset turnover (an efficient operator), or through high leverage (a balance sheet that magnifies both returns and losses). Only the first two are robust. A retailer earning 30% ROE on 12x leverage will give back every cent of those returns in a single bad year — see the unravelling of leveraged consumer-finance and BNPL businesses through cycles. The correct mental model: never accept a single ROE number without decomposing it. Ask: margin? turnover? leverage? Same ROE, different stories. What invalidates the signal: aggressive share buybacks that shrink the denominator can inflate ROE without any underlying improvement in business quality. Check equity trend over five years before celebrating an ROE jump.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Two companies both report 25% ROE. Company A: 20% net margin, 1.0x asset turnover, 1.25x equity multiplier. Company B: 5% net margin, 1.0x asset turnover, 5.0x equity multiplier. Which read on the underlying business quality is most accurate?"
+  options={[
+    "They're equivalent because they have the same ROE",
+    "Company B is better because higher leverage amplifies returns",
+    "Company A's 25% ROE comes from margin (operating quality and likely pricing power); Company B's 25% ROE comes from leverage (a stretched balance sheet). The same headline ROE describes very different businesses — A is robust through a downturn, B's returns compress or invert when revenue dips because fixed financing costs eat the thin margin. DuPont decomposition is the only way to see this from the headline number",
+    "Both should be valued at the same P/B"
+  ]}
+  answer={2}
+  explanation="DuPont is the load-bearing idea. The tempting wrong answer is option 0 — most beginners stop at the headline ROE and conclude equivalence. The right reading separates the *quality* of the 25%. Margin-driven ROE survives a revenue dip; leverage-driven ROE collapses with it because the equity multiplier works both ways. Option 1 reverses the right answer — leverage doesn't 'amplify returns' net of risk; it amplifies the variance of returns. Option 3 assumes equal ROE implies equal P/B, but the justified P/B depends on the *durability* of ROE, not the level alone."
+/>
+
+<Quiz
+  question="A consumer-staples company reports ROE jumping from 18% to 32% over three years. Revenue is flat, net margin is flat, asset turnover is flat. The equity line on the balance sheet has shrunk by 60% over the same period. What is the most likely driver, and what's the right synthesis with the P/B lesson?"
+  options={[
+    "The company has dramatically improved profitability",
+    "Asset turnover must have improved",
+    "ROE has been mechanically inflated by aggressive buybacks shrinking the equity denominator, not by improving business quality. Combined with the P/B framework: as equity shrinks, P/B will mechanically rise even if the underlying business is unchanged. A reader who screens for 'rising ROE and rising P/B' as a quality signal can be fooled by capital structure changes that haven't improved a single operating metric",
+    "ROE always rises over time so this is normal"
+  ]}
+  answer={2}
+  explanation="The synthesis is recognising that ROE and P/B are both ratios with equity in the denominator. Buybacks compress that denominator. If revenue, margin, and turnover are flat, the operating business is unchanged — only the capital structure moved. The tempting wrong answer is option 0 — a rising ROE is the textbook 'quality improvement' signal, and a skim reader stops there. The right read forces the question: did the *operations* improve, or did the *equity base* shrink? Option 1 contradicts the stated facts. Option 3 invents a non-existent trend law."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker and ask: "Decompose this company's last-five-year ROE via DuPont. Show me net margin, asset turnover, and equity multiplier for each year, and tell me whether ROE changes are driven by operations or by capital structure." Save the decomposition table in your <Term id="ami_decision_journal" />. Next time someone tells you a company is "high quality" because of ROE, you'll know which of the three doors that 25% walked through.
+
+## Takeaway
+
+ROE is only as meaningful as its decomposition: margin-driven ROE is durable, turnover-driven ROE is operational, leverage-driven ROE is fragile. Always factor the headline into its three parts before calling a business "high quality".

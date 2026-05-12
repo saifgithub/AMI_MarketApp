@@ -1,0 +1,81 @@
+---
+id: "260_regulated_vs_unregulated_jurisdictions"
+title: "Regulated vs unregulated jurisdictions: what \"offshore licence\" means"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "regulator_jurisdiction"
+prerequisites: ["067_fake_brokers_and_clone_entities", "068_forex_fx_trading_scams"]
+tags: ["scams", "regulators", "offshore", "jurisdiction", "broker_licensing"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Regulated vs unregulated jurisdictions: what "offshore licence" means
+
+A broker can be "licensed" and still be operating in a regulatory regime that gives a client effectively no protection. This lesson teaches the asymmetry between tier-1 jurisdictions — where regulators enforce capital requirements, client-money segregation, and dispute resolution — and the much weaker offshore regimes whose licences are essentially a stamped certificate. The asymmetry is falsifiable and public: tier-1 regulators publish their rules and their enforcement actions; weaker regimes typically do not. Treat the jurisdiction itself as a data point about how recoverable your funds will be when something goes wrong.
+
+## How this plays out in real markets
+
+Tier-1 broker regulators — by reputation built on decades of enforcement records and client-money rules — include:
+
+- **United States:** SEC, FINRA, CFTC. Strict client-money segregation; SIPC insurance to defined limits for failed broker-dealers; public enforcement records on sec.gov/litigation and finra.org.
+- **United Kingdom:** FCA. Client-money rules under CASS; FSCS compensation scheme; published warning list and enforcement notices.
+- **Australia:** ASIC. AFSL licensing regime; published enforcement actions; investor-alert list.
+- **Singapore:** MAS. Capital markets services licence; client-money trust requirements.
+- **Malaysia:** SC (securities) and BNM (banking and FX). Public registers; investor alert lists.
+- **Hong Kong:** SFC. Similar in posture to the UK FCA.
+
+Weaker offshore jurisdictions frequently cited by problematic brokers include Saint Vincent and the Grenadines, Vanuatu, the Marshall Islands, Comoros, and various other regimes where the local "regulator" provides registration without effective ongoing supervision. The FCA, ASIC, and CFTC have all explicitly warned that brokers operating from such jurisdictions typically fall outside any meaningful client-protection regime. Saint Vincent's own financial-services authority has publicly stated that it does not regulate forex trading activities at all — a fact lifted directly from its public statements.
+
+What this means operationally: if a client of a tier-1-licensed broker complains about a withdrawal block, the regulator can demand records, freeze assets, and impose fines. If a client of an offshore-licensed broker complains, there is often no enforcement infrastructure on the other end. The licence exists; the protection does not.
+
+Signature traits to check:
+
+- The licensing regulator's name — is it FCA, SEC, ASIC, MAS, SC, BNM, SFC, or something you've never encountered?
+- The regulator's own public stance — what does its website say about the products it actually supervises?
+- Whether the broker's offering to *your* jurisdiction is permitted at all — many offshore-licensed brokers solicit clients in jurisdictions where their offering is illegal.
+
+## The trap
+
+The trap is treating "licensed" as binary — either the broker has a licence or it doesn't. The actual question is *which regulator* and *what powers it exercises*. A reader sees "FSA-regulated" on a broker site, the brand looks legitimate, and the reader assumes the protection equivalent of an FCA or SEC licence. The fix is to look up the actual regulator's name, find its website, and read what kinds of activity it supervises. A regulator that publicly disclaims supervising forex is not regulating the forex broker carrying its certificate. The licence is a costume, not a guarantee.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="A broker advertises \"FSA-regulated, licence number 12345\" without specifying which FSA. What is the correct first step?"
+    options={[
+      "Trust the licence — FSA is a recognised acronym in finance",
+      "Identify which regulator the acronym refers to (there are FSAs in multiple jurisdictions, including Saint Vincent, the Seychelles, and Japan), then check that regulator's website to see what kinds of activity it supervises and whether the broker's offering is in scope",
+      "Check the broker's Trustpilot rating",
+      "Email the broker for clarification"
+    ]}
+    answer={1}
+    explanation="\"FSA\" is used by multiple national authorities of very different strength. Japan's FSA is a tier-1 regulator with strict client-money rules; the Saint Vincent FSA has publicly stated it does not regulate forex. The decisive step is identifying the specific authority and reading its own scope statement. Emailing the broker delegates verification to the entity you are verifying — exactly the mistake clone-broker scams exploit."
+  />
+
+  <Quiz
+    question="A platform is licensed in Saint Vincent and the Grenadines, offers leverage up to 1:500 on forex, accepts USDT deposits, and is actively soliciting clients in Malaysia and the UK. Which is the most accurate description of the regulatory posture?"
+    options={[
+      "Fully regulated and safe — the licence is real",
+      "The Saint Vincent authority publicly states it does not supervise forex activities, the leverage exceeds what FCA and SC Malaysia permit for retail clients, and active solicitation in those jurisdictions without local licensing is likely a regulatory breach in the client's home jurisdiction",
+      "Regulated to a standard equivalent to the FCA",
+      "Regulated by a tier-1 European authority"
+    ]}
+    answer={1}
+    explanation="The decisive factual issues are stacked: the named offshore authority disclaims supervising forex, the leverage breaches what tier-1 retail regimes allow, and cross-border solicitation without local permission is itself a violation in most tier-1 regimes. The licence existing does not change any of those facts. The most tempting wrong answer is the first — \"licensed\" feels like protection, but here the regulator providing the licence has publicly said it does not supervise the activity in question."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with <Term id="concierge_agent" />. Pick any broker or platform you are considering. Ask: "Identify the named regulator, its tier, and what it publicly supervises. Compare the broker's offering — leverage cap, products, segregation — against what that regulator's rules actually require." The Concierge will walk through the lookup against the regulator's own website. Use this drill if you have nothing live: "Broker licensed in Saint Vincent, advertises 1:500 leverage, accepts UK and Malaysian clients."
+
+## Takeaway
+
+A licence number means nothing without naming the regulator and checking what that regulator actually supervises. Tier-1 regulators publish their rules and enforce them; offshore regulators often publish neither.

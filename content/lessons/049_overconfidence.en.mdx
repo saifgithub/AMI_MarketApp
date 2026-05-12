@@ -1,0 +1,78 @@
+---
+id: "049_overconfidence"
+title: "Overconfidence"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+topic: "overconfidence"
+prerequisites: ["014_position_sizing_basics", "017_portfolio_exposure_and_correlation", "045_greed"]
+tags: ["psychology", "overconfidence", "size_creep", "edge", "process"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Overconfidence
+
+Overconfidence is what a winning streak does to position sizing when nobody is watching. After this lesson you will be able to spot size creep in your own history, distinguish a strategy that is genuinely working from a strategy that is benefiting from a forgiving regime, and put a rule in your mandate that ties size to a quantity other than your mood. Most traders do not blow up on their worst idea. They blow up on the trade right after their best one — the one they sized 3x because the last three "couldn't lose either."
+
+## How this plays out in real markets
+
+A trader was profitable on AAPL for eight straight months in 2023, running 1% per-trade risk with a 60% win rate and a 2:1 reward-to-risk ratio. By the ninth month, the trades were "obvious." He moved to 2% per trade, then 3%, then "I'm only sizing up on the highest-conviction names." A high-conviction long on NVDA in early 2024 was opened at 6% of account risk — six times the written mandate. The trade gapped against him on an earnings miss the next morning, locking in a single-position loss of -11% of the account. He had not had a worse month in his entire trading life — and the *strategy* had not changed. Only the sizing had. The eight months of "edge" became, on review, two months of edge and six months of a favourable regime.
+
+The falsifiable pattern: you are overconfident if your average per-trade risk over the last 20 trades is at least 1.5x your average per-trade risk over the prior 20, and the size escalation correlates with a positive equity curve rather than a documented change in setup quality. Two numbers, both auditable. The chart is not the evidence; the position sizes are.
+
+## The trap
+
+The trap is the belief that confidence is information. It is not. Confidence is a memory of recent outcomes wearing the costume of a forecast. The correct mental model: position size should be a function of *setup quality and account risk*, not of how the last few trades closed. A "high-conviction" trade is not one that *feels* high conviction — it is one whose setup checks more boxes on a pre-written list than the average trade. If you cannot point to the extra checked box, you do not have a high-conviction trade. You have a high-confidence trader, which is a different animal — and a more expensive one. The Conservative Debator's role here is uncomfortable on purpose: it asks you to argue against your own streak.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="You've had 6 winners in a row. Your mandate per-trade risk is 1%. A new setup looks 'as good as any of the last six'. What is the disciplined size?"
+  options={[
+    "2% — the streak is real and conviction is high.",
+    "1.5% — split the difference; respect the streak partially.",
+    "1% — the mandate number is not a function of your streak.",
+    "0.5% — reduce size after a streak because mean reversion is coming."
+  ]}
+  answer={2}
+  explanation="The streak is not evidence of changed setup quality — it is evidence of changed outcomes, which is exactly what mandates exist to ignore. '1.5%' is the answer that feels like a compromise but is just overconfidence with extra decimals. '0.5%' is a different superstition in the opposite direction. The mandate number was set when you were calm; the only valid reason to deviate is a documented change in *your written process*, not in your recent P&L."
+/>
+
+<Quiz
+  question="Which of these is the strongest evidence of overconfidence creeping into your trading?"
+  options={[
+    "You feel certain about your next trade.",
+    "Your average per-trade risk in the last 20 trades is at least 1.5x the prior 20, with no documented change in setup criteria.",
+    "Your account hit a new high last week.",
+    "You took a trade outside your usual sector."
+  ]}
+  answer={1}
+  explanation="Feeling certain is unfalsifiable. Hitting an account high is an outcome, not a process change. Trading a new sector might be exploration or might be size creep — by itself it doesn't say which. The compound test — size escalation across 20 trades, with no documented change in the criteria — is auditable and is the actual fingerprint of overconfidence. It separates 'I am sizing up because my process has improved' (defensible) from 'I am sizing up because I have been winning' (the failure pattern)."
+/>
+
+<Quiz
+  question="You're up 28% YTD against a 20% max-drawdown mandate. The Conservative Debator flags that your last 10 entries averaged 2.4% per-trade risk versus 1.1% across the prior 10. The PM has not breached. Synthesis answer?"
+  options={[
+    "Override the Conservative Debator — your equity curve confirms the new sizing is correct.",
+    "Cut all open positions by half immediately.",
+    "Freeze new entries at the original 1% mandate level, journal the size-creep trend, and review whether the setup criteria actually changed before next session.",
+    "Raise the mandate per-trade risk to 2% to match recent behaviour."
+  ]}
+  answer={2}
+  explanation="The most tempting wrong answer is the last one: 'raise the mandate to match behaviour'. It looks like updating the system based on evidence; it is actually rewriting the rules to legalise the breach. 'Cut everything in half' is panic mirrored. 'Override the Conservative Debator' is exactly the move every overconfident trader makes in the month before the drawdown that ends the streak. The disciplined answer freezes the variable in question (size) and re-examines the input that should drive it (setup criteria) before the next decision. Equity curves are outcomes; criteria are inputs. Only inputs justify rule changes."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and pull your last 20 closed trades. Note the per-trade risk percentage for each. Compute the average for the most recent 10 versus the prior 10. If the ratio is above 1.5x, take that screen to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "What in my written setup criteria has changed to justify this?" If you can't answer in one sentence, set your <Term id="ami_mandate" /> `max_per_trade_risk_pct` back to the original number before the next session opens.
+
+## Takeaway
+
+Position size should be a function of setup quality, not of recent outcomes. A streak is not new information — it is old information in a flattering light.

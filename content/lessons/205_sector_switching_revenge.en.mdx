@@ -1,0 +1,78 @@
+---
+id: "205_sector_switching_revenge"
+title: "Sector-switching revenge — same tilt, different ticker"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "edge_process"
+topic: "sector_revenge"
+prerequisites: ["047_revenge_trading", "017_portfolio_exposure_and_correlation"]
+tags: ["psychology", "revenge_trading", "sector_rotation", "cooldown", "tilt"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sector-switching revenge — same tilt, different ticker
+
+The cleverest form of revenge trading does not return to the ticker that hurt you. It opens a position in a *different* sector — and your brain accepts the move as "diversification" or "fresh perspective" because it is no longer the loser's chart. After this lesson you will be able to recognise this disguise, name the bias underneath (cognitive distancing, lesson 047 extended), and apply the timing test that catches sector-switching revenge regardless of which industry the new trade lives in. The market does not care about your sector mix. Your tilt does not care either.
+
+## How this plays out in real markets
+
+A trader on Bursa Malaysia stopped out of MAYBANK at -RM1,800 at 10:20am on a Tuesday. He felt the urge to "re-enter MAYBANK to make it back" and consciously suppressed it because he had read about revenge trading the week before. At 10:55am he opened a long on TENAGA — a utility, a different sector entirely — sized 1.8x his normal per-trade risk. "Diversifying away from the financials," he told himself. TENAGA stopped out at -RM2,100 at 1:40pm. At 2:15pm he opened GENTING, a consumer/gaming name. "Different sector again, fresh perspective." GENTING closed -3.2% on the day for -RM2,500. Total session loss: RM6,400 on three trades in three different sectors. He had not revenge-traded MAYBANK. He had revenge-traded *himself*, in three different costumes.
+
+The falsifiable sector-switching revenge fingerprint, as a compound test independent of ticker: (1) two or more entries placed within 90 minutes of a closed loss; (2) at least one of those entries in a sector different from the original loss; (3) average size of the post-loss entries is 1.3x or more of the trader's documented per-trade risk; (4) the trades collectively were not on the written <Term id="ami_watchlist" /> at the start of the session. Three of four boxes ticked is a tilt session — the sector mix is camouflage, not diversification.
+
+## The trap
+
+The trap is the belief that the loser ticker (or its sector) is the carrier of the tilt. It is not. The tilt is carried by *you*, and changing the ticker changes only the disguise. Cognitive distancing — putting psychological space between you and the hurt by switching the symbol — is a well-documented coping mechanism that has the side effect of bypassing your own tilt-detection. The correct mental model: the cooldown applies to *the trader*, not to the instrument. If you cannot trade MAYBANK in the next 60 minutes because you just lost on MAYBANK, you also cannot trade TENAGA or GENTING in the next 60 minutes — because the trader entering them is the same trader who just lost on MAYBANK. Your <Term id="ami_mandate" />'s `cooldown_after_stop_minutes` should be enforced across the entire watchlist, not per-ticker. The PM's <Term id="ami_pm_safety_floor" /> should treat any entry in the cooldown window as a mandate event regardless of which row of the watchlist it lives on.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="You stopped out on NVDA at 10:00am for -1.4%. The cooldown window in your mandate is 60 minutes. At 10:20am you see a clean setup on XOM, an energy name (entirely different sector). Your conviction is high. What is the disciplined action?"
+  options={[
+    "Take the XOM trade — the cooldown applies to NVDA, not to unrelated sectors.",
+    "Take the XOM trade at half size as a 'diversification' compromise.",
+    "Wait until 11:00am (cooldown expiry). If the XOM setup still ticks every box at that time, take it; if not, you have been protected from sector-switching revenge.",
+    "Skip XOM today and re-enter NVDA instead since you understand it better."
+  ]}
+  answer={2}
+  explanation="The 'cooldown applies to NVDA only' answer is the textbook sector-switching rationalisation — it treats the cooldown as a per-ticker rule instead of a per-trader rule. 'Half size diversification' is the same trade with a discount sticker. 'Skip XOM and re-enter NVDA' is honest revenge, which is arguably less dangerous than its disguised cousin only because it is at least visible. The disciplined answer enforces the cooldown across the watchlist. The XOM setup, if real, will still be there at 11:00am; if it is not, you have just paid zero for the same protection."
+/>
+
+<Quiz
+  question="Which compound test is the cleanest signature of sector-switching revenge rather than a legitimate fresh setup?"
+  options={[
+    "You traded in a different sector than your loss.",
+    "Two or more entries placed within 90 minutes of a closed loss, at least one in a different sector, average size 1.3x mandate or more, with the trades not on the written watchlist at session start.",
+    "Your total daily loss has grown beyond the first trade.",
+    "You feel the urge to keep trading after a loss."
+  ]}
+  answer={1}
+  explanation="Trading a different sector after a loss may be legitimate or revenge — by itself it doesn't say which. Total daily loss growing is an outcome, not a process diagnostic. The urge to keep trading is real and unfalsifiable. The compound test — count (2+), timing (within 90 min), sector switch, size escalation, off-watchlist — is the auditable signature. Three boxes ticked is a tilt session regardless of whether one trade happens to close green and disguise the rest."
+/>
+
+<Quiz
+  question="Your mandate has a 60-minute cooldown enforced per-ticker (not per-trader). In the last 10 stop-outs, you have placed 6 entries within the cooldown window — all in different sectors from the original loss. 4 of the 6 closed at a loss. Synthesis answer?"
+  options={[
+    "Increase the cooldown duration to 120 minutes — the per-ticker scope is fine, the time was too short.",
+    "Remove the cooldown — your behaviour shows you cannot follow it anyway.",
+    "Change the cooldown enforcement scope from per-ticker to per-trader (any new entry on any ticker is blocked during the cooldown window). The data shows the per-ticker rule is the loophole — the time was correct, the scope was the leak.",
+    "Switch to a 'minimum trade gap' (e.g. no trades within 60 minutes of each other) instead of a loss-specific cooldown."
+  ]}
+  answer={2}
+  explanation="The data isolates the failure exactly: the rule was being followed on the loser-ticker but bypassed via sector switch. The correct fix is to close the loophole — make the cooldown apply to the trader, not the ticker. Increasing the duration on a broken scope keeps the leak. Removing the cooldown is the 'rewrite the rule to legalise behaviour' move. A 'minimum trade gap' applied to all trading (not just post-loss) is a different rule entirely — and weaker, because it does not respond to the moment of loss. The diagnostic test in this lesson exists to catch this exact disguise; the response is to make the rule catch the disguise too."
+/>
+
+## Try it
+
+Open Settings → Mandate and confirm `cooldown_after_stop_minutes` is set with scope = trader (not per-ticker). If your version of the rule is per-ticker, change it. Then open the <Term id="ami_decision_journal" />, filter to your last 20 stop-outs, and tag each follow-up entry by sector relative to the original loss. If you see a cluster of "different sector, within 90 minutes" entries with elevated size, you have a documented sector-switching tilt pattern. Take one example to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Was this trade on my watchlist before the loss?" The answer is the diagnosis.
+
+## Takeaway
+
+The cooldown applies to the trader, not to the ticker. A trade in a different sector immediately after a loss is the same tilt with a fresh costume.

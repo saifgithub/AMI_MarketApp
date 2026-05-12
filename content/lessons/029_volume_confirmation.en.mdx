@@ -1,0 +1,72 @@
+---
+id: "029_volume_confirmation"
+title: "Volume confirmation"
+duration_min: 4
+level: 2
+module: 5
+difficulty: 2
+track: "technical_analysis"
+topic: "volume"
+prerequisites: ["024_breakouts", "026_moving_averages"]
+tags: ["indicators", "volume", "confirmation", "breakouts", "participation"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Volume confirmation
+
+Volume is the number of shares (or contracts) traded in a bar. Price tells you what people did; volume tells you how many people did it. A breakout on light volume is a guess by a few participants; a breakout on heavy volume is a verdict from many. The standard reference is the 20-day average volume — when a bar's volume is 1.5× to 2× that baseline, the move has unusual participation behind it. When a breakout or breakdown happens on volume below the 20-day average, treat it as suspect until it proves itself with follow-through.
+
+## How this plays out in real markets
+
+Look at AMZN on November 4, 2025. The stock had been consolidating between 198 and 207 for five weeks, with the 20-day average volume sitting around 38 million shares. On November 4, AMZN closed at 211.20 — a clean breakout above the 207 ceiling — on volume of 71 million shares, roughly 1.9× the average. Heavy participation, confirmed breakout. Over the next twelve sessions AMZN ran to 224.
+
+Compare that to October 21, when AMZN had briefly poked above 207 to print an intraday high of 208.40 on volume of 29 million — well below the 20-day average. Price closed back at 205.10 the same day and slid to 199 within a week. Same level, two attempts; the difference was who showed up.
+
+The falsifiable claim: a price breakout above a resistance level on volume above 1.5× the 20-day average has materially higher follow-through probability than a breakout on below-average volume. The invalidation is mechanical — if AMZN had closed back below 207 within two sessions of the November 4 breakout, the volume-confirmed signal would have failed and the setup invalidated, regardless of how heavy the breakout bar's volume was.
+
+On Bursa Malaysia: TENAGA broke RM14.00 in mid-2025 on roughly 18 million shares against a 20-day average of 9 million — 2× participation. The breakout held; the move extended to RM14.85 over three weeks.
+
+## The trap
+
+Beginners look at the green candle and ignore the volume bar underneath. A 3% up-day on 40% of average volume looks identical on the price chart to a 3% up-day on 200% of average volume — but they mean very different things. The first is drift; the second is conviction. Treating them the same is how false breakouts cost you.
+
+The correct mental model: volume is the participation count behind a price move. Use it as a confirmation filter, not a standalone signal. No setup that depends on a breakout, breakdown, or trend continuation should be taken without checking whether volume corroborates. If price did one thing and volume did another, trust the volume.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AMZN's 20-day average volume is 38 million shares. It breaks above a 207 ceiling on a day with 71 million shares traded. Two weeks earlier it touched 208.40 on 29 million shares. Which read is best supported?"
+  options={[
+    "Both attempts are equally credible — price is what matters, volume is decoration",
+    "The 71-million-share breakout has materially higher follow-through odds because participation is 1.9× average; the 29-million attempt lacked the buyer base to sustain",
+    "The 29-million attempt was actually stronger because the breakout was tighter",
+    "Volume only matters on weekly charts"
+  ]}
+  answer={1}
+  explanation="The lesson states the falsifiable claim directly: breakouts on 1.5×+ average volume have materially higher follow-through probability than below-average breakouts. The tempting wrong answer treats price and volume as interchangeable — they aren't. A 3% up-day on 40% of average volume is drift; the same move on 200% is conviction."
+/>
+
+<Quiz
+  question="A ticker you watch breaks above a clean resistance level on volume at 1.8× the 20-day average. Your mandate caps position risk at 1% of account. Stop sits 2.5% below entry. Two days later price closes back below resistance and your stop hasn't triggered. What does the framework say?"
+  options={[
+    "Hold and hope; volume was strong, the breakout must work eventually",
+    "Treat the setup as invalidated — price closed back below the level despite the volume confirmation; volume validates entry, but it doesn't override price action",
+    "Add to the position because volume was confirming",
+    "Move the stop lower to give the trade more room"
+  ]}
+  answer={1}
+  explanation="The lesson is explicit: even a volume-confirmed breakout invalidates if price closes back below the level within a couple of sessions. Volume tells you who showed up at the breakout; it doesn't immunize the setup from failure. The most tempting wrong answer ('hold, the volume must work eventually') is sunk-cost reasoning and ignores the pre-defined invalidation. Moving the stop lower (option D) is the classic discipline failure the risk module warned against."
+/>
+
+## Try it
+
+Open the Market Analyst <Term id="ami_one_on_one" /> and ask about a recent breakout on your <Term id="ami_watchlist" />: "Was the 20-day average volume confirmed on the breakout day, and what was the multiple?" Then pull up the chart and verify the volume-bar height against the 20-day average yourself. Calibrate your eye to the ratio.
+
+## Takeaway
+
+Volume is the participation count behind a price move — use it to filter out drift-grade breakouts, and don't let a heavy volume bar override a failed close back through the level.

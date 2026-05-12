@@ -1,0 +1,68 @@
+---
+id: "015_stop_loss_basics"
+title: "Stop-loss basics"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 2
+track: "risk_portfolio"
+topic: "stop_loss"
+prerequisites: ["014_position_sizing_basics"]
+tags: ["risk", "stop_loss", "execution"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Stop-loss basics
+
+A stop-loss is the price at which your trade thesis is wrong. Not "wrong enough to feel bad" — wrong, full stop. Set before entry, written into the ticket, and honoured without renegotiation. The point of a stop is not to minimise losses; it is to convert "I was wrong" from an emotional decision you make in the heat of the drawdown into a structural decision you already made when you were calm. This lesson covers where the stop belongs, why most beginners place it wrong, and what makes a stop falsifiable.
+
+<Animation name="stop_loss_trigger" />
+
+## How this plays out in real markets
+
+TSLA breaks out of a three-week range, closing at $246 on heavy volume. The Market Analyst flags the prior range high at $238 as the new support floor — that level held twice on the way up and any sustained close back below it kills the breakout thesis. The Trader builds a ticket: entry $246, stop $237.50 (just below $238 to leave room for a noise wick), target $268. Per-share risk = $8.50, reward = $22, R:R = 2.6.
+
+Two days later TSLA dips to $239.10 intraday, then closes at $244. The stop is not hit. The next day TSLA gaps down to $235 and closes at $233.80. Stop hit on the close — the thesis is invalidated by definition: price closed below the level that was supposed to hold. You exit. The trade lost $12.20 per share (slippage on the gap), not the planned $8.50, but the structure held: one trade is roughly 1% of your account, and you live to take the next setup. On Bursa Malaysia the equivalent on TENAGA might be entry RM14.20, stop RM13.85 below a held weekly low — same logic, smaller absolute numbers.
+
+## The trap
+
+The trap is placing the stop at "the dollar amount I'm willing to lose" instead of at "the price that proves the thesis wrong." Beginners pick a percentage — "I'll exit if it drops 5%" — and slap it on the ticket regardless of where the chart's actual invalidation level sits. This guarantees one of two failures: either the stop is tighter than the stock's normal noise (you get shaken out and the trade then runs in your direction without you), or it is looser than the chart's invalidation (you stay in long after the setup has died, turning a 1% loss into a 3% one). The correct mental model: the chart picks the stop level, the math picks the share count.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You enter NVDA at $480 with a stop at $470. NVDA dips to $471.20 intraday on news, then closes at $478. What should you do?"
+  options={[
+    "Exit immediately — the intraday move proves volatility is too high.",
+    "Move the stop down to $465 to give the trade more room since it nearly hit.",
+    "Do nothing. The stop is at $470; price closed at $478, so the thesis is intact.",
+    "Take partial profits to lock in something before the next dip."
+  ]}
+  answer={2}
+  explanation="The seductive wrong answer is 'move the stop to $465' — it feels like flexibility. But moving a stop wider after entry is the exact behaviour stops exist to prevent: it converts 'wrong' into 'not yet wrong'. The stop was set at the price that invalidates the thesis. Price did not close below it. The trade is fine; the math holds; do nothing."
+/>
+
+<Quiz
+  question="Two traders both buy AAPL at $200 with $100 of risk per trade. Trader A's chart-based stop is at $195. Trader B sets a flat 2% stop at $196. Same setup, same target $215. Whose stop is structurally sound?"
+  options={[
+    "Trader B — 2% is a standard professional rule.",
+    "Trader A — the stop is placed at the price that invalidates the setup, not at an arbitrary percentage; Trader B will get shaken out by noise that does not violate the thesis.",
+    "Both are equivalent because the dollar risk is the same.",
+    "Neither — both stops are too tight for a $200 stock."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'both equivalent — same $100'. The dollar risk is identical, but the structural meaning is not. Trader A's stop is falsifiable: 'if AAPL closes below $195, my thesis is dead.' Trader B's stop is just a budget — $196 might be well inside normal daily noise, so the trade can be stopped out without the setup ever actually failing. A stop has to mark the price at which the thesis is wrong, not the price at which the wallet hurts."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find any closed trade where you got stopped out. Ask yourself: was the stop placed where the chart's invalidation actually sat, or at a round percentage? Then open a <Term id="ami_one_on_one" /> with the Trader, paste the same ticker, and ask "Where would you have placed the stop and why?" Compare.
+
+## Takeaway
+
+A stop is the price at which your thesis is wrong — set it before you enter, and never widen it after.

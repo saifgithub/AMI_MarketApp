@@ -1,0 +1,76 @@
+---
+id: "076_human_oversight_is_the_product"
+title: "Human oversight is the product"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "human_oversight"
+prerequisites: ["072_what_ami_can_do_for_you", "073_what_ami_cannot_do", "074_ai_hallucinations_and_amis_safety_floor", "075_the_risk_of_overreliance"]
+tags: ["oversight", "ceo", "advisory_only", "mandate", "decision"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Human oversight is the product
+
+The <Term id="ceo_framing" />-of-<Term id="ami" /> framing is not a metaphor. Inside the <Term id="training_simulator" />, you make every call. You set the <Term id="ami_mandate" />. You decide whether to convene the Room. You decide whether to accept the simulated Verdict, modify it, or reject it. The discipline being trained is the *evaluation* — the practice of running an analyst team and judging its work, not the collection of recommendations to take anywhere. AMI does not execute, will not execute, and is not licensed to give investment advice. By the end of this lesson you will see why the human-in-the-loop is not a safety feature bolted on; it is the entire product.
+
+## How this plays out in real markets
+
+You convene the Room on JPM. The <Term id="ami_verdict" /> comes back:
+
+> **BUY JPM · size 4% · entry $218.40 · stop $208 (-4.8%) · target $238 (+9.0%) · horizon 6–8 weeks · confidence 0.66**
+>
+> *PM compliance: PASS. Within max_position_pct 5, within max_drawdown_pct 20, no exclusions triggered.*
+
+Three things happen next, and all three are yours:
+
+1. **Read the dissent.** The Bear Researcher's case might be that rate-cut expectations are already priced in. You weigh that against the Bull case. AMI does not weigh it for you — weighing it *is* the training.
+2. **Decide what the scenario taught you.** "PASS" from the PM means the simulated trade fits your Mandate — not that AMI is advising you to do anything. You can reject a passing Verdict. You can accept it at smaller size. You can wait. The button labelled "Accept Verdict" records your decision in the <Term id="ami_decision_journal" /> so you can study your own judgment later — it does not place a trade anywhere, in this app or any other.
+3. **Carry the lesson, not a position.** No drawdown ever happens in AMI — there is nothing to press, no broker, no order. Nothing leaves the simulator. The training value of the scenario is the question it forces: *did your evaluation hold up under scrutiny?* That is the consequence the simulator is built to deliver, and the only one it can.
+
+Compare to a system that auto-executes: there, "human oversight" is a confirm dialog and a regret form. Here, oversight is the only thing that exists. The 12 agents argue, the PM compliance-checks, and then the system *stops* — and waits for you to evaluate. That pause is the product.
+
+## The trap
+
+The trap is the language of automation seducing you into outsourcing the decision. "AMI's simulated Verdict was BUY", "PM stamped PASS", "the Room's confidence was 0.7" — all true, all training artifacts. None of them mean AMI is recommending you do anything outside the app. AMI is not licensed to give investment advice and does not pretend to. The mental model to keep: AMI is a simulated analyst desk and a simulated compliance officer combined, built to train your judgment; nothing in the app reaches your real account, ever. A real-world CIO reads the analyst report and decides. They don't blame the analyst when a position turns. They evaluated the work and made a call. The training here is precisely that evaluation skill — and the Decision Journal is built to capture *your* reasoning, not AMI's, for exactly this reason.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="The PM's compliance check on a simulated Verdict comes back PASS. What is the PM actually telling you?"
+  options={[
+    "AMI has approved the trade and you should take it",
+    "Inside the training scenario, the proposed trade is within your Mandate's hard floors — nothing more. The point of the simulator is your evaluation of what that means",
+    "The trade has been placed in simulation and is now live",
+    "AMI guarantees the trade will not lose more than max_drawdown_pct"
+  ]}
+  answer={1}
+  explanation="PASS is a 'this fits your stated risk frame within the training scenario' signal, not an instruction and not investment advice. It is also not a loss guarantee — the simulated stop can slip, and the mandate floor protects portfolio shape, not trade outcome. The most tempting wrong answer is the loss-guarantee one — read the PM's words carefully: it says compliance, never outcome."
+/>
+
+<Quiz
+  question="A user says: 'AMI told me to buy NVDA at $142 and now I'm down 6%. Whose call was that?'"
+  options={[
+    "AMI's — the simulated Verdict said BUY",
+    "Shared — the agent debate produced the entry, so the responsibility is split",
+    "The user's — AMI is a training simulator, not a licensed advisor; its Verdicts are practice artifacts for the user to evaluate, never instructions to follow. AMI does not execute and cannot",
+    "The Portfolio Manager's, since it issued the PASS"
+  ]}
+  answer={2}
+  explanation="AMI is a training simulator, not an advisor. Every action the user takes anywhere outside the app is their own decision; AMI's simulated Verdicts, PASS results, and confidence numbers are training artifacts. The most seductive wrong answer is 'shared' because it sounds fair — but shared responsibility requires shared agency, and AMI has no execution agency and is not licensed to direct one."
+/>
+
+## Try it
+
+Open the **Mandate editor** and change one field — say, `max_position_pct` from 5 to 3. Then convene the Room on a ticker you've recently considered. Watch the PM's recommended size move accordingly. Then *reject* the Verdict in the Decision Journal and write one sentence of why. You've just exercised the only authority that actually moves anything in this app — yours.
+
+## Takeaway
+
+There is no execution surface in AMI — no button, no broker, no order. No drawdown ever happens in the simulator. The training value is the discipline of evaluating: did your reading of the Bull case, the Bear case, the Risk Debator spread, and the PM check hold up under scrutiny? AMI is teaching you to evaluate analyst output, not giving you advice to follow.

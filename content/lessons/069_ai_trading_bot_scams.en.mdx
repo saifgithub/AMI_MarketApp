@@ -1,0 +1,74 @@
+---
+id: "069_ai_trading_bot_scams"
+title: "\"AI trading bot\" scams"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "scam_ai_bots"
+prerequisites: ["065_guaranteed_return_scams", "068_forex_fx_trading_scams", "049_overconfidence"]
+tags: ["scams", "ai_bots", "algorithmic_trading", "managed_accounts"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# "AI trading bot" scams
+
+The "AI trading bot" pitch updates the managed-FX Ponzi for the LLM era. The story: a proprietary AI runs trades 24/7, delivers smooth returns of 1–3% per *week*, and is too sophisticated for ordinary traders to understand. The structure underneath is identical to the FX-Ponzi structure from the last lesson — a withdrawal-blocking offshore platform — with one new layer of marketing gloss. This lesson teaches the falsifiable test that strips the costume off: an AI strategy that genuinely produces alpha is auditable in code, in trade history, and in cash flow. If you cannot audit any of the three, you are not buying AI; you are buying a story.
+
+## How this plays out in real markets
+
+Since 2023 the SEC has charged operators of "AI investment platforms" who collected hundreds of millions of dollars from US investors. The pattern, repeated nearly verbatim across cases: a platform that calls its strategy "AI-driven", "machine-learning", or "neural network" without publishing any specifics, audited backtests, or a track record on a recognised platform like a verified trader profile on a regulated execution venue. The SEC's enforcement releases — searchable on sec.gov/litigation — name several such cases per quarter. The FCA's 2024 warning on "AI investment scams" mirrors the language. SC Malaysia's Investor Alert List has added "AI bot" entries since 2024.
+
+A representative scam architecture: a platform claims its AI achieves 1.5% per week (≈100% per year compounded). Members deposit USDT or fiat. A dashboard shows continuous green PnL. Members can withdraw small amounts in the first month — the bait — then withdrawals slow, then require "upgrade fees" or "tax certificates", then stop entirely. The "AI" was a number in a database the operator could set to any value.
+
+Signature traits:
+
+- "AI" or "neural network" used as the explanation for the edge, with no model architecture, no parameter count, no training-data description, no published backtest results.
+- Returns presented per *week*, smooth, never negative.
+- No on-chain or broker-statement proof of trades — only an internal dashboard.
+- Affiliate / referral commissions, often tiered.
+- Deposits in crypto (USDT, mostly) to avoid bank-level scrutiny.
+
+## The trap
+
+The trap is technical-sounding language doing the work of evidence. The reader hears "transformer model", "reinforcement learning", "GPU cluster", and the brain treats the jargon as proof. <Term id="ami" /> itself uses LLMs in its 12-agent stack — so the *category* of "AI in trading" is real. The mistake is letting the existence of a real category vouch for a specific operator. The correct mental model: a real algorithmic strategy producing real alpha leaves a real audit trail — trades hit a real exchange, fills appear on a real broker statement, the strategy code or its statistical fingerprint is reviewable by someone other than the operator. A platform that asks you to trust the dashboard without any external corroboration is asking you to trust a number it makes up.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="A proprietary AI trading platform claims 1.5% weekly returns. They show you a dashboard with 6 months of continuous positive PnL. They will not provide broker statements, on-chain transaction hashes, or any external execution evidence. What test would falsify this claim?"
+    options={[
+      "Check whether the AI is built with transformers or RNNs",
+      "Ask for trade-by-trade execution records from a regulated exchange or on-chain settlement that an outside party can verify",
+      "Ask whether they use GPUs or TPUs",
+      "Ask the platform for more screenshots"
+    ]}
+    answer={1}
+    explanation="No real algorithmic strategy operates without a settlement venue — every trade lands somewhere external (an exchange, an OTC desk, a blockchain). If the operator cannot produce externally verifiable records, the trades may not exist. Technical jargon (transformers, GPUs, RNNs) is the marketing layer, not evidence. The decisive test is whether anyone outside the operator can confirm the trades happened."
+  />
+
+  <Quiz
+    question="\"NeuroAlpha AI\" offers 2% weekly returns, accepts deposits in USDT to a wallet address, shows a slick dashboard with weekly green bars, and has 8,000 Telegram members. A few members confirm small successful withdrawals last month. What is the decisive red flag?"
+    options={[
+      "The 2% weekly return is mathematically too high",
+      "USDT deposit instead of fiat",
+      "The smoothness of weekly green bars — real strategies have losing weeks; smoothness without losses is the diagnostic of a fabricated equity curve",
+      "Only 8,000 Telegram members"
+    ]}
+    answer={2}
+    explanation="The high return is suspicious but not decisive — venture-style returns exist. USDT and Telegram are common but not unique to scams. The decisive, falsifiable test is the *shape* of the equity curve. Every real strategy — even very good ones — has losing weeks. A curve with zero losing weeks across 6 months is statistically near-impossible for a market-exposed strategy and is the unmistakable signature of a fabricated dashboard. The small withdrawals are bait, not proof."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the <Term id="concierge_agent" />. Paste the name of any "AI trading platform" you've seen advertised. Ask: "What audit trail should a real algorithmic strategy be able to produce, and which of those does this platform fail to produce?" The Concierge will list the four (broker statements, exchange records, audited backtests, third-party verified track record) and flag which ones the platform is missing.
+
+## Takeaway
+
+A real algorithmic strategy leaves a real audit trail — exchange fills, broker statements, on-chain settlement. If the only evidence of returns is an internal dashboard, the dashboard is the product.

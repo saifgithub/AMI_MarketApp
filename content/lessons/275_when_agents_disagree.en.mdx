@@ -1,0 +1,72 @@
+---
+id: "275_when_agents_disagree"
+title: "When agents disagree — reading conflict in the verdict"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "agent_disagreement"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "268_why_twelve_agents_not_one"]
+tags: ["disagreement", "verdict", "research_manager", "debate", "conviction"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# When agents disagree — reading conflict in the verdict
+
+A verdict where all <Term id="twelve_agent_team" /> lean the same way is suspicious. A verdict with visible disagreement is honest. <Term id="ami" /> is built on the premise that the Bull and Bear Researchers should be sharply opposed in their drafts, that the Risk Debators should land at different sizes, and that the Research Manager's synthesis should weight which side the data supports more — without erasing the loser. Reading the disagreement is how you separate strong-conviction setups from coin-flips dressed in a structured verdict. By the end of this lesson you will be able to read the conflict layer and use it.
+
+## How this plays out in real markets
+
+<Term id="ami_convene_the_room" /> on META. Two scenarios with the same headline verdict, *BUY 3%*, but very different internals.
+
+**Scenario A — narrow disagreement.** Bull Researcher writes a five-paragraph case (Reels monetisation, ad pricing recovery, Reality Labs cost discipline). Bear Researcher's case is two paragraphs hedged with *"if ad spend re-accelerates"*. Research Manager: Bull lean 0.68. Aggressive Debator 4%, Conservative 2.5%, Neutral 3%. Tight cluster. Trader: entry $612, stop $588, target $660, confidence 0.71. **You read this and see broad agreement with the Bear case essentially failing to land.**
+
+**Scenario B — wide disagreement.** Bull writes the same case. Bear writes a strong counter (Reality Labs burn, regulatory risk in EU, antitrust). Research Manager: Bull lean 0.52 — barely. Aggressive Debator 5%, Conservative 1%, Neutral 3%. Wide cluster. Trader: entry $612, stop $588, target $660, confidence 0.54. **Same headline — *BUY 3%* — completely different conviction.**
+
+The headline is identical. The <Term id="ami_verdict" /> body tells you these are not the same trade. Scenario A is the team broadly aligned on a long-side lean. Scenario B is the team barely on the long side, with the Bear case forceful and the Risk Debators spread wide. A reader who looks only at the headline cannot distinguish them. A reader who reads the disagreement can.
+
+The disagreement signal also surfaces in the confidence number. 0.71 in Scenario A reflects broad alignment; 0.54 in Scenario B reflects a near-coin-flip. Same headline, different conviction — and the confidence is the Room's *weighted lean*, not a calibrated probability.
+
+## The trap
+
+The trap is treating agreement as confirmation. Two human analysts who never disagree are not validating each other; they are confirming each other's biases. The same is true of the underlying language models behind AMI's agents — if they all converge effortlessly on the same view, that may reflect shared training-data tendencies rather than independent confirmation. AMI's role-prompted Bull and Bear Researchers are *designed* to disagree because forced opposition is what surfaces the weak parts of each case. A debate where Bull and Bear visibly disagree is a debate working as intended. A unanimous verdict is the one worth checking twice.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Two BUY 3% verdicts on the same ticker over a month — Verdict A has Bull lean 0.68 and tight Risk Debator cluster; Verdict B has Bull lean 0.52 and Risk Debators ranging 1% to 5%. What does the difference tell you?"
+  options={[
+    "They are the same trade because the headline is identical",
+    "Verdict B reflects much weaker conviction — wide internal disagreement and a near-coin-flip synthesis. Treat the two trades very differently even though the BUY/SIZE line is identical",
+    "Verdict A is more accurate",
+    "Verdict B's spread is a bug"
+  ]}
+  answer={1}
+  explanation="The headline is the tip; the disagreement is the substance. Same BUY 3% can mean broad alignment or barely-leaning consensus. Reading the spread is how you tell. The tempting wrong answer is 'Verdict A is more accurate' — accuracy is not the relevant metric; conviction is. AMI does not predict; it tells you how confident its debate is, and 0.52 vs 0.68 is a different conversation."
+/>
+
+<Quiz
+  question="A verdict comes back with all twelve agents unanimously leaning Bull, Research Manager confidence 0.91, Risk Debators all landing within 0.3% of each other. How should you read this?"
+  options={[
+    "This is the strongest trade you'll see — take it",
+    "Unanimity at this level is rare enough to deserve scrutiny — read the Bear Researcher's section anyway and ask whether the case is genuinely one-sided or whether the agents converged due to shared training-data tendencies; AMI's debate is designed to disagree",
+    "AMI has finally figured out the market",
+    "The Bear Researcher must have been miscoached"
+  ]}
+  answer={1}
+  explanation="Effortless agreement is a signal to investigate, not to celebrate. A debate that does not surface a credible counter-case might be reflecting model-level convergence rather than independent validation. The tempting wrong answer is the first one — high confidence on a unanimous read is exactly the situation where overreliance is most dangerous."
+/>
+
+## Try it
+
+In **Convene the Room** on a recent <Term id="ami_watchlist" /> ticker, open the Verdict and write down three numbers before reading further: Bull/Bear lean from Research Manager, Risk Debator range (max % minus min %), and confidence. Use those three together — not the headline — to decide whether the trade is "high conviction" or "borderline" for you.
+
+## Takeaway
+
+Read the disagreement, not just the headline. Tight cluster + high lean is conviction; wide spread + ~0.5 lean is a coin flip wearing a Verdict's clothes. AMI is teaching you to evaluate analyst output — the disagreement is the practice surface, not a recommendation to follow.

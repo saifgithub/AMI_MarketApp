@@ -1,0 +1,74 @@
+---
+id: "197_revenue_vs_eps_buyback_divergence"
+title: "Revenue vs EPS growth divergence — the buyback effect"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "buyback_effect"
+prerequisites: ["044_earnings_growth", "032_revenue_the_top_line", "190_debt_to_asset_ratio"]
+tags: ["buyback", "eps_growth", "revenue_growth", "share_count", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Revenue vs EPS growth divergence — the buyback effect
+
+Lesson 044 introduced the gap between revenue growth and EPS growth as the signature of financial engineering — buybacks shrinking the denominator while the numerator (net income) grows slowly or not at all. This lesson goes deep on the math, the corporate-finance logic, and the precise condition under which buyback-driven EPS growth is value-additive versus value-destructive. By the end of this lesson you should be able to decompose EPS growth into revenue, margin, and share-count contributions, recognise the leverage involved in financing buybacks with debt, and apply a falsifiable rule for valuing buyback growth.
+
+## How this plays out in real markets
+
+AAPL is the textbook case. Over the trailing decade, revenue has grown roughly 7-8% annually and net income roughly 8-10%. EPS has grown 12-14% annually. The 4-6 percentage point gap is the buyback — the share count fell from over 26B (split-adjusted) to roughly 15B over the period, a reduction of over 40%. AAPL has spent over $700B on buybacks since 2013. A holder of AAPL has compounded EPS faster than the business has compounded, because the same earnings are split across fewer shares. Per-share metrics improved; the business itself grew at a more modest rate.
+
+Compare a company that doesn't buy back: BRK-B (Berkshire Hathaway) — Buffett historically returned cash via reinvestment and selective buybacks only when the stock was below intrinsic value. Revenue and EPS track more closely (when adjusted for unusual items) because share count is roughly stable. The growth you see is the business's growth.
+
+Now an example where buybacks were value-destructive. IBM in the 2010s bought back over $100B of stock at prices ranging from $130 to $215, often funded partially by debt. Revenue was shrinking; EPS was held up by the shrinking share count. The buyback-engineered EPS growth masked a deteriorating business. When the engineering ran out of room, the stock fell anyway. Buybacks at a stretched multiple plus operating decline equalled value destruction — a per-share liquidation of a shrinking business.
+
+The math: if a company has $1B of net income, 100M shares, and an EPS of $10, and it buys back 5M shares at $200 (paying $1B in cash), the new EPS is $1B / 95M = $10.53 — a 5.3% lift on no operating change. That accretion is real to the remaining holders. But if the company funded the $1B buyback with debt at a 5% after-tax rate, interest expense rises $50M, dropping net income to $950M and giving EPS of $10. Net zero. The buyback is only accretive when the inverse of the P/E (the earnings yield) exceeds the after-tax cost of the debt funding it.
+
+On Bursa Malaysia: buyback culture is less developed than in the US, with companies more often returning cash via dividends. PUBLIC Bank has done occasional buybacks; many KLCI names hold cash on the balance sheet rather than retire shares.
+
+Falsifiable claim: a buyback is value-accretive when the company's earnings yield (1 / P/E) exceeds the after-tax cost of the capital used to fund it, AND the management team would not see better opportunities by reinvesting the same cash internally at a higher ROIC. Buybacks that fail either test are mechanical EPS engineering, not capital return.
+
+## The trap
+
+The trap is treating EPS growth as a single quality signal. EPS growth of 15% looks identical whether it came from (a) 15% organic revenue growth at flat margins and stable share count, (b) 5% revenue growth, 5% margin expansion, and 5% share-count reduction, or (c) -5% revenue, flat margins, and 20% share-count reduction. The first is high-quality business growth; the third is liquidation dressed up as growth. The correct mental model: decompose EPS growth into (1 + revenue growth) × (1 + margin change) × (1 + share-count reduction) − 1, approximately, and ask which terms are doing the work. What invalidates the surface read: buybacks funded by debt are leveraged equity returns — they amplify ROE (lesson 041) and EPS mechanically but they also amplify downside. A leverage-engineered EPS growth rate disappears in a recession because the levered balance sheet constrains capital allocation.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports EPS growth of 18% over the past year. Revenue grew 4%. Net margin expanded from 12% to 13% (a relative increase of ~8%). Share count fell 5%. Approximate decomposition?"
+  options={[
+    "All 18% is high-quality operating growth",
+    "EPS growth ≈ (1.04 × 1.083 × 1.053) − 1 ≈ 18.6%. Revenue contributes ~4 points, margin expansion ~8 points, buyback ~5 points. Only ~12 of the 18 points come from organic-operating sources (revenue + margin); 5 of the 18 come from share-count reduction. The business is growing modestly; the per-share metric is being amplified by buyback engineering. A valuation that pays a 25x multiple for 18% growth is over-paying — the underlying business is growing at roughly half that rate",
+    "All 18% is buyback-driven",
+    "EPS growth doesn't depend on these inputs"
+  ]}
+  answer={1}
+  explanation="The synthesis test: the multiplicative decomposition. The tempting wrong answer is option 0 — accepting the EPS headline. The right read computes each factor's contribution and observes that the operating components (revenue + margin) account for the larger but not the whole share. Option 2 reverses the proportions. Option 3 dismisses a basic identity."
+/>
+
+<Quiz
+  question="A company has $5B of net income, 500M shares, P/E of 20x (so price $200, EPS $10). It plans to buy back $1B of stock, funded by issuing debt at an after-tax cost of 4%. Earnings yield = 1/20 = 5%. Which read is most accurate?"
+  options={[
+    "Always accretive because buybacks reduce share count",
+    "Earnings yield (5%) > after-tax cost of debt (4%), so the buyback is accretive to EPS. The 5M shares retired (=$1B/$200) leave 495M outstanding. New interest expense on the $1B at 4% after-tax = $40M; new net income = $4.96B; new EPS = 4.96B / 495M ≈ $10.02. The accretion is ~0.2%, modest because the spread between earnings yield and debt cost is only 100 bp. The buyback is mathematically accretive but the magnitude is small and the company has taken on $1B of debt to capture it",
+    "Always dilutive because debt issuance hurts equity",
+    "Buybacks don't affect EPS"
+  ]}
+  answer={1}
+  explanation="The synthesis test: the accretion / dilution calculation. The tempting wrong answer is option 0 — over-generalising that buybacks always accrete. The right calculation shows the accretion is conditional on the earnings-yield vs after-tax-debt-cost spread, and quantifies the modest magnitude when the spread is narrow. Option 2 reverses the direction. Option 3 dismisses the mechanism."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker known for buybacks (AAPL, MSFT, ORCL, HD) and ask: "Decompose EPS growth for each of the last 5 years into revenue contribution, margin contribution, and share-count contribution. For years with material buybacks, compute the buyback earnings yield against the company's after-tax cost of debt at the time, and flag any year where the buyback was dilutive on that test." Save the table.
+
+## Takeaway
+
+EPS growth is an identity: revenue, margin, and share count. Decompose before paying a growth multiple — only the revenue and margin components reflect the business; share-count reduction reflects capital allocation, and is accretive only when earnings yield beats the cost of funding.

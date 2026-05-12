@@ -1,0 +1,72 @@
+---
+id: "038_comparable_companies"
+title: "Comparable companies"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "comparables"
+prerequisites: ["032_revenue_the_top_line", "033_profit_and_margins", "037_valuation_what_is_a_stock_worth"]
+tags: ["comparables", "comps", "peers", "relative_valuation", "multiples", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Comparable companies
+
+Comparable-company analysis ("comps") prices one business by reference to other similar businesses. The idea is simple — if five peers trade at 22x earnings on average and the company you're studying trades at 14x, you have a starting point for asking why. The discipline lies entirely in choosing the right peer set; with the wrong comps, you can prove almost anything. By the end of this lesson you should know how to assemble a defensible peer group, which multiples are appropriate for which kinds of business, and the specific failure mode that turns comparable analysis into confirmation bias.
+
+## How this plays out in real markets
+
+Take JPM. If you want to value JPM, you don't compare it to MSFT — they're both in the S&P 500, but their business models share almost nothing. The correct peer set is the other large US universal banks: BAC, WFC, C, and Goldman/Morgan Stanley for the capital-markets exposure. On price-to-book (P/B), the multiple banks live and die by, JPM trades around 1.8x book as of mid-2026, against a peer median closer to 1.2x. The 0.6-turn premium reflects JPM's higher and more stable return on equity (~17% vs ~12% for the peer median). Same multiple, very different conclusions depending on the comp set: against tech, JPM looks cheap; against banks, JPM looks expensively-priced for its quality.
+
+For a growth company, P/B is irrelevant — book value doesn't capture the brand or the network. NVDA, AMD, and AVGO are reasonable design-led semiconductor comps; you'd value them on forward P/E or EV/EBITDA. In mid-2026 NVDA's forward P/E sits at a premium to AMD's, reflecting NVDA's higher growth and data-centre dominance. Strip out the data-centre segment and the multiples look closer — which tells you most of NVDA's premium is one segment's pricing power.
+
+A bad comp set example: in 2024, several investors compared TSLA to traditional automakers (F, GM, STLA) and concluded it was wildly overvalued at 60x+ earnings against their 5x–8x. Others compared it to high-growth software companies and concluded it was reasonable. Neither comparison was fully right — TSLA is a hybrid of car company, energy storage business, and software-licence aspirations. The honest comp set has to combine perspectives, and the resulting valuation range is wide.
+
+On Bursa Malaysia: comparing MAYBANK to CIMB and PUBLIC Bank is a defensible peer set (similar size, similar mix of consumer and corporate lending, same regulatory regime). Comparing MAYBANK to a fintech start-up isn't — different business model, different risk profile.
+
+The falsifiable claim: a comparable analysis is only as useful as its peer set. If you can defend each peer choice with a one-sentence "same business model, same customer base, same regulatory environment" reason, the comp is fair. If you can't, the comp is window-dressing.
+
+## The trap
+
+The trap is reverse-engineering the comp set to support a conclusion you've already reached. A beginner who wants to argue a stock is cheap will quietly include high-multiple peers and exclude low-multiple ones; if they want to argue it's expensive, they do the reverse. The correct mental model: define the peer-set rules *before* you look at the multiples — "any company in the same primary industry with revenue between X and Y, the same geography, and a similar mix of products." Then accept whatever the median multiple tells you. The other version of the trap: anchoring on a sector median that itself is distorted (e.g., comparing to peers in the middle of a bubble or a crash). A median multiple is a relative number — it doesn't tell you whether the entire sector is mispriced together.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You're valuing a mid-cap US regional bank. Which peer set is most defensible for a comparable-companies analysis?"
+  options={[
+    "JPM, BAC, WFC — the largest US banks, because they're the most-followed and have the cleanest data",
+    "A set of mid-cap regional banks with similar geographic footprint, loan mix, and asset size — even if individually less famous than the megabanks",
+    "Any S&P 500 financial-sector company, because they all live in the same sector ETF",
+    "A mix of regional banks and fintech lenders, to capture the disruption angle"
+  ]}
+  answer={1}
+  explanation="Comparable analysis requires comparable business models. JPM (option 0) is a global universal bank with capital-markets exposure; a mid-cap regional bank has none of that — the multiples will differ for structural reasons that have nothing to do with whether the target is cheap. Option 2 is too broad — insurers and asset managers earn very different returns on equity. Option 3 mixes business models that price on entirely different bases (book value vs growth multiples). The most tempting wrong answer is option 0 because megabank data is the most accessible; convenience is not the same as comparability."
+/>
+
+<Quiz
+  question="You assemble a peer set of five companies. The forward P/E multiples are: 14, 18, 20, 22, and 65. The target company trades at 19. The mean of the peer set is 27.8. The median is 20. Which conclusion best applies the lesson?"
+  options={[
+    "The target is undervalued — it trades below the peer mean of 27.8",
+    "The target is fairly valued — at 19 it's essentially at the median of 20, and the 65x outlier is dragging the mean upward in a misleading way. The right step is to either drop the outlier (if it doesn't actually fit the comp set) or rely on the median, which is the standard answer when there's a single extreme value distorting the average. Either way the target is not cheap relative to a clean read of its peers",
+    "The target is overvalued — most peers trade below 22",
+    "Can't decide — need more peers"
+  ]}
+  answer={1}
+  explanation="The synthesis is that comparable analysis depends on a clean peer set AND a robust central-tendency measure. A single outlier (the 65x) distorts the mean but not the median — which is exactly why analysts default to median in skewed sets. At 19x against a median of 20x, the target is essentially in line. The most tempting wrong answer is option 0 — the headline 'below the mean' is the kind of number a careless analyst uses to push a 'cheap' narrative. But the 65x is either an outlier that doesn't belong in the set (in which case the mean is fake), or it does belong (in which case the median is the honest summary). Option 2 misreads the median. Option 3 is over-cautious — five peers is a reasonable set."
+/>
+
+## Try it
+
+In <Term id="ami_convene_the_room" />, after the <Term id="ami_verdict" /> prints, look at the Fundamentals Analyst's stated peer set. In the <Term id="ami_decision_journal" />, write down whether you'd add or remove anyone — and why, in one sentence each. If you find yourself wanting to remove a peer because it makes the target look more expensive, pause and ask whether that's analysis or rationalisation. Then ask the Fundamentals Analyst in <Term id="ami_one_on_one" /> to rerun the multiples on your edited peer set.
+
+## Takeaway
+
+Comparables are only as honest as the peer set — define the rules before you look at the numbers, and let the median (not the mean) speak when outliers are in the picture.

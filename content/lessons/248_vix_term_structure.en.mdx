@@ -1,0 +1,79 @@
+---
+id: "248_vix_term_structure"
+title: "VIX term structure: contango vs backwardation"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "volatility_regime"
+prerequisites: ["062_volatility_regimes", "031_indicator_limitations", "018_drawdown_management"]
+tags: ["regime", "volatility", "vix", "term_structure", "contango", "backwardation"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# VIX term structure: contango vs backwardation
+
+Lesson 062 used spot VIX as the headline volatility-regime gauge. This lesson goes one layer deeper: the *term structure* of VIX futures (1-month vs 3-month vs 6-month) often gives a cleaner read on regime state than spot VIX alone. After this lesson you will be able to read the VIX1M/VIX3M ratio, classify the regime as contango (calm) or backwardation (stress), name the strategies that fit each, and state the regime-change threshold.
+
+## How this plays out in real markets
+
+VIX term structure is captured by the relationship between VIX (1-month, also called VIX9D historically for very short tenors, here we use the standard 30-day spot VIX) and VIX3M (the 3-month constant-maturity volatility index, ticker VIX3M).
+
+Contango (calm regime): VIX3M > VIX (the longer tenor trades higher because the market expects mean reversion of vol back toward the long-run average). The VIX1M/VIX3M ratio sits under 0.95 the majority of the time. Through 2024, the ratio averaged ~0.87 — a deeply calm reading consistent with the SPX uptrend.
+
+Backwardation (stress regime): VIX > VIX3M (near-term vol elevated above longer-dated). VIX1M/VIX3M ratio above 1.0. Real cases:
+
+- 5 August 2024 yen-carry unwind: VIX closed at 38.57, VIX3M at 27.85 — ratio 1.385, deep backwardation. SPX 5-day return that week was -3.2%.
+- 13–16 March 2020 COVID crash: VIX1M/VIX3M ratio peaked above 1.4 with VIX intraday at 85.47 (16 March 2020).
+- 2 February 2018 volmageddon week: VIX1M/VIX3M ratio crossed 1.0 on 5 February 2018 — the day SPX fell 4.1%.
+- 24 December 2018 Fed-fear low: VIX1M/VIX3M ratio hit ~1.15; SPX bottomed two trading days later.
+
+Detection rule: VIX1M/VIX3M ratio < 0.95 = contango (calm regime, trend-following permitted at full mandate sizing); 0.95–1.0 = transition (compress sizes by ~25%); > 1.0 = backwardation (stress regime, defensive playbook). A flip from sustained contango to backwardation that holds for 3+ trading sessions is a regime-stress confirmation.
+
+Invalidation: backwardation reverts to contango (ratio falls back under 0.95) for 5 consecutive sessions — the stress event has passed.
+
+## The trap
+
+The VIX term-structure trap is using spot VIX in isolation. A trader reads "VIX is 22, normal range" and adds risk — but if VIX3M is 19, the ratio is 1.16 and the curve is in backwardation despite an unremarkable VIX print. The market structure is telling you something the headline number isn't.
+
+The correct model: in contango, the structure pays you (and pays VIX-short ETPs over time) and trend-following works. In backwardation, the structure punishes you, single-name idiosyncratic risk dominates, and the calendar-style trades that printed in calm get repriced. The ratio is the regime classifier; the absolute VIX level is secondary.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Spot VIX is 23, VIX3M is 20.5. SPX has chopped sideways for two weeks but is still above its 200-day SMA. A trader reads 'VIX 23 is normal' and adds a 10% position. What does the term-structure framework say?"
+  options={[
+    "VIX 23 is moderate — full sizing is fine.",
+    "VIX1M/VIX3M ratio is 1.12 — backwardation regime is active despite a moderate-looking VIX print. Compress new-position sizes (e.g., 5% rather than 10%), tighten stops to the volatility-adjusted regime stop distance, and require backwardation to revert to contango (ratio < 0.95 for 5 consecutive sessions) before restoring full sizing.",
+    "Buy more aggressively — VIX-short ETPs are about to pay.",
+    "Sell everything — backwardation always means a crash next week."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the spot VIX number looks unremarkable, and most traders stop the analysis there. But backwardation can persist at moderate VIX levels and historically marks regime stress that doesn't always announce itself in the headline number. Option 3 over-corrects; option 2 inverts the relationship. The synthesis: read the ratio, not the headline."
+/>
+
+<Quiz
+  question="VIX1M/VIX3M has been under 0.90 for 6 months. SPX is making new highs. A friend recommends a long-VIX hedge 'because vol is too cheap'. What does the framework say about the trade's likely cost?"
+  options={[
+    "It's free money — cheap vol is always worth buying.",
+    "In sustained contango, long-VIX positions incur a structural roll cost (futures roll down the curve as they approach expiry). A 6-month long-VIX hold during 2017's contango regime lost ~50% of value through pure decay. The hedge has a cost; size it as insurance, not opportunity, and respect mandate caps.",
+    "Free, but only if SPX is rising.",
+    "Cost is irrelevant — only protection matters."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'cheap vol' is one of the most repeated and most expensive aphorisms in markets. The contango regime is the structural drag on long-VIX exposure; 2017 is the textbook decay year. Option 3 ignores cost entirely. The synthesis is: long-VIX in contango is insurance with an ongoing premium, and the size must reflect that."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Today's VIX, VIX3M, the VIX1M/VIX3M ratio, and the ratio's 1-year percentile. Classify the current term-structure regime — contango, transition, or backwardation — and tell me when the last regime flip occurred." Then open the <Term id="ami_mandate" /> editor and add to your journal: "Term-structure regime override — if VIX1M/VIX3M > 1.0 for 3+ sessions, compress max_position_pct by half until the curve normalises."
+
+## Takeaway
+
+The VIX term-structure ratio classifies the regime more cleanly than spot VIX. Contango earns full sizing; backwardation compresses it; the flip is the regime-stress signal, not the absolute number.

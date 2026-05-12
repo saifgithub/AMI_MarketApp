@@ -1,0 +1,68 @@
+---
+id: "229_walk_forward_analysis"
+title: "Walk-forward analysis — backtesting without peeking"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "228_parameter_sensitivity_sweeps", "058_strategy_failure_modes"]
+tags: ["backtesting", "walk_forward", "out_of_sample", "robustness"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Walk-forward analysis — backtesting without peeking
+
+The backtest foundation (057) said the only real defence against overfitting is out-of-sample testing. Walk-forward analysis (WFA) is the disciplined version of that defence. You split your history into rolling windows: optimise parameters on an in-sample window, freeze them, test on the next out-of-sample window, roll the windows forward, repeat. The aggregated out-of-sample performance is what you trust — never the in-sample fit. After this lesson you can design a walk-forward test for your own rule, set window sizes that match your strategy's bar frequency, and interpret the in-sample-vs-out-of-sample efficiency ratio that tells you whether the rule is real.
+
+## How this plays out in real markets
+
+Take a momentum rule on the S&P 500: each month, buy the top-decile 12-month return names, equal-weight, rebalance monthly. Backtest naively over 2005-2024 returns 11.8% CAGR with 22% max drawdown. Looks fine, but you optimised the "12-month lookback" knob by trying 6, 9, 12, 15, and 18 months and keeping 12. That's a hidden overfit.
+
+Walk-forward: split 2005-2024 into 4-year in-sample / 1-year out-of-sample windows, rolled annually. In-sample 2005-2008 picks lookback=15 (best on that window); test it on 2009 — returns 28% (factor recovery). Roll: in-sample 2006-2009 picks lookback=9; test on 2010 — returns 14%. Continue through 2024. You get 16 out-of-sample years, each tested on a parameter set chosen WITHOUT seeing that year's data.
+
+The aggregate out-of-sample CAGR comes in at 9.1% with 26% max drawdown — meaningfully below the in-sample 11.8% but still positive. The walk-forward efficiency ratio (OOS CAGR / IS CAGR) is 0.77 — anything above 0.5 is considered robust. Crucially, the rule survived 2008, 2011, 2020, and 2022 drawdowns in the OOS portion, which is the only evidence that matters. The strategies that don't survive WFA usually show efficiency ratios below 0.3 — the in-sample peak was overwhelmingly selection bias.
+
+## The trap
+
+The beginner mistake is running WFA but then "fixing" the rule mid-stream when a window underperforms. Every adjustment you make after seeing OOS results contaminates the next OOS window with hindsight — you're peeking, and the discipline of WFA evaporates. The correct mental model: WFA is a one-shot ritual. You design the parameter grid, the window sizes, and the optimisation criterion BEFORE running it. You run it once. You accept whatever the OOS aggregate says. If the result disappoints, you don't tune — you either deploy the rule at its honest OOS performance level or you discard it and design a different rule from first principles. The second trap: choosing window sizes after seeing the data. The third: using anchored (expanding) windows in regimes that change, which lets ancient data dominate parameter choice — rolling fixed-length windows are more honest in non-stationary markets.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You run a walk-forward analysis on a breakout strategy. In-sample CAGR is 18%; aggregated out-of-sample CAGR is 4%. What does this tell you?"
+  options={[
+    "The strategy is robust — both numbers are positive",
+    "Walk-forward efficiency is 4/18 = 0.22, well below the 0.5 robust threshold. Most of the in-sample performance was overfit; the OOS edge is marginal at best and probably not worth deploying after costs.",
+    "Deploy the in-sample parameters anyway since out-of-sample is 'just one path'",
+    "Re-run the WFA with different windows until OOS improves"
+  ]}
+  answer={1}
+  explanation="An efficiency ratio of 0.22 means roughly 80% of the in-sample edge evaporated when the rule was applied without peeking. That's the textbook overfit signature. Option 0 is the tempting wrong answer because 4% is positive — but a 4% rule probably can't survive transaction costs and any drawdown. Option 3 is the contamination trap: re-running until OOS looks better is just slow-motion overfitting."
+/>
+
+<Quiz
+  question="You design a walk-forward test for an intraday mean-reversion rule on QQQ that trades every day. In-sample window is 4 years, out-of-sample window is 1 year. The Research Manager flags a problem. What is it?"
+  options={[
+    "The windows are too short",
+    "Mean reversion needs anchored windows",
+    "For a high-frequency strategy, 4 years contains thousands of trades — plenty for parameter fitting — but a 1-year OOS window contains hundreds of trades, giving statistical confidence. The structure is fine. The real synthesis-test is whether you've also segmented by regime: does the rule's OOS perform similarly in 2018 (low vol), 2020 (crisis), and 2022 (bear)?",
+    "The OOS window should always equal the IS window"
+  ]}
+  answer={2}
+  explanation="The synthesis: window sizes should be appropriate to bar frequency AND the regimes inside them. A trading rule that aggregates strongly in low-vol years but bleeds in high-vol years can show a positive aggregate OOS while being unusable in real life. Regime-segmented OOS is the deeper test. Option 0 is the tempting wrong answer because 'longer is always better' is a common myth; Option 1 is a fabricated rule; Option 3 is a heuristic, not a requirement."
+/>
+
+## Try it
+
+Pick one strategy currently in your candidate set. Define the parameter grid, in-sample window length, out-of-sample window length, and roll cadence — all BEFORE running the test. Submit the design to the Research Manager in <Term id="ami_one_on_one" /> with: "Is this WFA design honest? What windows would you change?" Then run it once and log the OOS aggregate + efficiency ratio in the <Term id="ami_decision_journal" /> as a pre-deployment artefact.
+
+## Takeaway
+
+Walk-forward analysis is a one-shot ritual: design before, accept after. The efficiency ratio is the rule's honesty score, and anything below 0.5 means the in-sample number was mostly a mirage.

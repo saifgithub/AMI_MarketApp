@@ -1,0 +1,61 @@
+---
+id: "105_hidden_costs_in_risk_reward"
+title: "Hidden costs in risk/reward: spread, slippage, fees"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "transaction_costs"
+prerequisites: ["016_risk_reward_ratio"]
+tags: ["risk", "reward", "spread", "slippage", "fees", "transaction_costs"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Hidden costs in risk/reward: spread, slippage, fees
+
+This lesson assumes you've completed lesson 016 (Risk/reward ratio); here we go deeper on the costs that erode that ratio between when you write the ticket and when you collect the realised gain. The R:R you compute on paper assumes you fill at the entry price, fill at the target price, and pay nothing in between. In real markets, you cross the spread twice, you slip on stops during fast moves, and on live brokers you pay fees per side. On a 1:2 setup with $50 of risk per share, $5 of total friction is 10% of risk eaten before the trade even resolves. This lesson teaches how to subtract those costs before you accept a setup.
+
+## How this plays out in real markets
+
+A <Term id="simulated_trade" /> on AMZN: entry $185, stop $180, target $200. Paper R:R = 15 ÷ 5 = 3.0. Now layer the friction. Bid–ask spread on AMZN intraday: typically $0.02. You pay half the spread on entry, half on exit — say $0.02 round-trip. Slippage on a market stop in a fast move: 0.1% to 0.3% past your stop level on a normal day, more on news — call it $0.30. Commissions in a live broker (not in AMI's simulation): $0.005 per share each side, so $0.01 round-trip. Total friction: $0.33 per share. Net risk = $5.33, net reward (target filled at $199.98) = $14.98. Realised R:R = 14.98 ÷ 5.33 = 2.81 — close to 3.0, friction roughly trims one-third of an R-multiple off the planned outcome.
+
+Now consider a small-cap. AIRASIA on Bursa: entry RM2.40, stop RM2.30 (risk RM0.10), target RM2.60 (reward RM0.20), paper R:R 2.0. Typical spread RM0.005, slippage on a stop RM0.02, brokerage 0.1% of notional ≈ RM0.0024 per share. Round-trip friction: roughly RM0.027 per share — that is 27% of the planned risk eroded by costs alone. Realised R:R drops to about (0.20 − 0.027) ÷ (0.10 + 0.027) = 0.173 ÷ 0.127 = 1.36. Falsifiable test: take any 20 small-cap trades from your journal and compute planned vs realised R:R — small-cap setups with paper R:R under 2.0 routinely realise sub-1.5 once friction is included.
+
+## The trap
+
+The trap is treating a 1.2:1 R:R setup as positive expectancy. The paper math looks fine — you make $1.20 for every $1 risked — but once you bake in spread + slippage + (in live markets) fees, your realised R:R can drop to 0.9 or lower. The setup is then negative expectancy regardless of win rate. The correct mental model: subtract friction from reward and add friction to risk before computing the ratio. A useful minimum is "paper R:R must be at least 1.5× the threshold you'd accept on net" — so if you want a net 1:2, demand a paper 1:3. This is why the Trader inside AMI defaults to a 1.5 minimum even though the math says 1.0 is the break-even line; the buffer absorbs friction.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You set up a trade with entry $100, stop $98, target $103. Paper R:R is 1.5. Estimated total friction (spread + slippage + fees) round-trip is $0.30 per share. What is the realised R:R after friction?"
+  answer={1.17}
+  tolerance={0.05}
+  explanation="Realised risk = $2 + $0.30 = $2.30. Realised reward = $3 − $0.30 = $2.70. Realised R:R = 2.70 ÷ 2.30 = 1.17. The paper 1.5 setup collapses to a much weaker 1.17 once friction is included — and on a 50% win rate that's barely positive expectancy."
+/>
+
+<Quiz
+  question="A small-cap setup shows paper R:R of 2.0 with $0.10 risk and $0.20 reward. Round-trip friction on this name is about $0.04 per share. A blue-chip setup shows paper R:R of 1.8 with $5.00 risk and $9.00 reward; round-trip friction is $0.10 per share. After friction, which trade has the better realised R:R, and what does that imply about minimum thresholds for small-caps?"
+  options={[
+    "Small-cap — higher paper R:R always wins.",
+    "Blue-chip — realised R:R is (9.00 − 0.10) ÷ (5.00 + 0.10) = 1.75 vs small-cap (0.20 − 0.04) ÷ (0.10 + 0.04) = 1.14, so small-caps need a much higher paper R:R hurdle than blue-chips to survive friction.",
+    "They tie — friction is built into the spread and cancels out.",
+    "Small-cap — lower-priced stocks have lower friction because the spread is small in dollar terms."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first or last — 'higher paper R:R wins' or 'small spread = low friction'. The flaw is that absolute spread/friction matters relative to the trade's risk distance, not in dollar terms. $0.04 of friction on $0.10 of risk is 40% of risk; $0.10 of friction on $5.00 of risk is 2% of risk. Small-caps look attractive on paper R:R but their friction-to-risk ratio is structurally higher, so the minimum paper R:R hurdle has to be set higher (often 3:1 or above) to leave a usable net edge."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and filter to closed trades. For each, compute paper R:R (planned target ÷ planned stop distance) vs realised R:R (actual exit price ÷ actual entry price). Then open a <Term id="ami_one_on_one" /> with the Trader and ask "Across my last 20 trades, what's the average gap between paper R:R and realised R:R?" The gap is the friction tax — once you know its size, you set your paper minimum above it.
+
+## Takeaway
+
+Paper R:R is the brochure number; realised R:R is the receipt — subtract friction before you accept the setup, not after the trade closes.

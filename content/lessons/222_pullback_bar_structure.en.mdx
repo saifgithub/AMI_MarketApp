@@ -1,0 +1,66 @@
+---
+id: "222_pullback_bar_structure"
+title: "Pullback bar structure — 3-bar and 5-bar patterns"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "pullback"
+prerequisites: ["054_pullback_strategy", "025_pullbacks", "020_candlesticks_anatomy_of_a_bar", "114_engulfing_patterns"]
+tags: ["strategy", "pullback", "bar_structure", "candle_patterns"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Pullback bar structure — 3-bar and 5-bar patterns
+
+The pullback foundation (054) defined a valid pullback as a dip that closes back above support. The 3-bar and 5-bar pullback patterns refine THAT by counting the down-bars themselves. A 3-bar pullback is the classic: three consecutive down-closes inside an uptrend, followed by a bullish reversal bar. A 5-bar pullback extends to five consecutive lower-highs (the bars don't have to all close red), creating a more meaningful shake-out before the entry. Both have measurable historical edge in trending markets; both fail in regime transitions. After this lesson you can name exactly when bar-count rules apply and how to convert the pattern into a precise entry, stop, and invalidation.
+
+## How this plays out in real markets
+
+Look at AAPL in May 2024. AAPL was in a clear uptrend from a March low of $169 to a May 23 high of $192.59. From May 23 through May 30, AAPL printed five consecutive bars with lower highs: $192.59, $191.06, $189.99, $190.29, $189.99 (close $187.93 on May 30) — a textbook 5-bar pullback with declining momentum and contracting daily ranges. On May 31, AAPL closed at $192.25 — a bullish reversal bar that closed above the highs of the prior two pullback bars AND above the pullback's high of day 1. Entry on the May 31 close at $192.25, stop under the pullback's swing low at $186.69 (low of May 30). Risk per share: $5.56. AAPL ran to $220 by mid-June — over 5R on the trade. The 3-bar variant would have triggered slightly earlier on May 29 or 30, with a worse stop and roughly the same target.
+
+Entry criteria for 3-bar pullback: established uptrend (50-day MA up, price above 200-day MA), three consecutive lower-close bars after a swing high, then a bullish reversal bar that closes above the prior bar's high. Entry: close of the reversal bar. Stop: below the lowest low of the three pullback bars. For 5-bar variant: five consecutive lower-HIGH bars (not necessarily all red), reversal bar closes above the high of the prior two bars. Stop: below the 5-bar pullback's lowest low. Individual-trade invalidation: a daily close below the pullback's swing low — the pattern failed; exit. The strategy FAILS in two regimes: (1) gappy news-driven tapes where bars don't follow micro-structure (a single 8% gap-down on guidance breaks any 3-bar count); (2) sustained downtrends inside larger uptrends, where 3-bar counts repeatedly trigger and stop you out as the deeper pullback completes.
+
+## The trap
+
+The beginner mistake is mechanical bar-counting without the trend filter. You see three red bars in a downtrending stock, you call it a "3-bar pullback", you buy the reversal bar, and you've just bought into a bear-market rally. The correct mental model: bar-count patterns are valid ONLY inside a confirmed uptrend on the same timeframe. Outside that context the pattern means nothing — three down bars in a downtrend are normal continuation, not a setup. The other trap: counting too loosely. A "3-bar" pullback with an inside bar in the middle is not the same setup; tighten the rule to "three consecutive lower closes" and don't fudge the count when one bar nearly qualifies but doesn't.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="MSFT just printed three consecutive lower-close daily bars: $445, $441, $438. Today closes at $443 on a green bar that exceeds the prior bar's high. The 50-day MA is at $432, sloping up. What does the 3-bar pullback rule say?"
+  options={[
+    "Enter long at $443; stop $437 (below pullback low)",
+    "Wait for a fourth red bar to confirm the pattern",
+    "No entry — three down bars is too shallow a pullback",
+    "Short — three down bars means the trend is breaking"
+  ]}
+  answer={0}
+  explanation="Three consecutive lower closes inside an uptrend, followed by a bullish reversal bar that closes above the prior bar's high — that's the canonical 3-bar setup. Stop below the pullback low at $438 (lowest of the three) gives ~$5 risk per share. Option 1 (wait for a fourth bar) waits past the pattern and into a different setup. Option 3 (short) is the textbook way to short rallies in healthy uptrends and lose."
+/>
+
+<Quiz
+  question="On Bursa Malaysia: PETRONAS in an established uptrend prints a 5-bar pullback. Pullback low RM6.20, today's bullish reversal bar closes RM6.45. ATR is RM0.10. Mandate: 1% per-trade risk on RM40,000 account, drawdown cap 20%, currently 4% drawdown. Synthesis: entry, stop, and size?"
+  options={[
+    "Entry RM6.45, stop RM6.15, size 1,333 shares",
+    "Entry RM6.45, stop RM6.10, size 1,142 shares",
+    "Entry RM6.45, stop RM6.00, size 888 shares",
+    "Entry RM6.45, stop RM6.30, size 2,666 shares"
+  ]}
+  answer={1}
+  explanation="Stop = pullback swing low (RM6.20) - ~0.5x ATR noise buffer = RM6.20 - RM0.10 = RM6.10. Risk per share = 6.45 - 6.10 = RM0.35. Max risk = 1% * 40,000 = RM400. Shares = 400 / 0.35 = 1,142.85, round down to 1,142. Option 3 (stop RM6.30) sets a stop ABOVE the pullback low — inside the noise, will get stopped on routine wicks. Option 0 omits the ATR buffer. Synthesis: stop placement always = pullback low MINUS a noise buffer, not the low itself."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a recent pullback in any uptrending ticker and ask: "Count the bars — is this a 3-bar or 5-bar pullback structure? Has the bullish reversal bar printed? State the entry, stop, and invalidation." Then in <Term id="ami_coach_your_agent" />, instruct the Market Analyst: "Only flag 3-bar or 5-bar pullbacks when the higher-timeframe trend is up. Never apply the count to downtrends." Log the coached rule and any trades it triggers in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+3-bar and 5-bar pullbacks only have edge inside confirmed uptrends. Count strictly, enter on the reversal bar, stop below the pullback low minus an ATR noise buffer. No fudging the count.

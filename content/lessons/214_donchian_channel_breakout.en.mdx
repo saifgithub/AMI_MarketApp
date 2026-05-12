@@ -1,0 +1,66 @@
+---
+id: "214_donchian_channel_breakout"
+title: "Donchian channel entry and exit"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "trend_following"
+prerequisites: ["052_trend_following", "022_trend_direction", "023_support_and_resistance", "015_stop_loss_basics"]
+tags: ["strategy", "trend", "donchian", "turtles", "channel_breakout"]
+agent_callouts: ["trader", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Donchian channel entry and exit
+
+The trend-following foundation lesson (052) used a 50/200 moving-average rule. Donchian channels are the older, simpler cousin: you enter when price closes above the highest high of the last N days, and you exit when it closes below the lowest low of the last M days. The original Turtle Traders used 20-in / 10-out and 55-in / 20-out variants. The rule has almost no parameters to fit, which is exactly why it survives out-of-sample tests where prettier strategies fall apart. After this lesson you can specify a Donchian rule with a precise entry, a precise channel exit, and a regime in which the channel chops you to pieces.
+
+## Example
+
+Look at COIN through 2024. A 55-day high / 20-day low Donchian rule entered long on March 1, 2024 when COIN closed at $206.40, taking out its 55-day high of ~$202. Stop was the rolling 20-day low — initially around $156. As the trend extended, the 20-day low rose: by April it was at $215, then $228 by May, then $235 mid-year. The stop trailed the channel mechanically. COIN ran to $343 in late March before chopping, and the 20-day-low exit fired on May 1 around $215 — banking roughly +4% on that segment, with a much larger paper gain that the rule gave back. The rule re-entered on a fresh 55-day high in November at $279 and rode COIN to over $330 by year-end before the next exit signal.
+
+Entry criteria: today's daily close prints a new 55-day high. Exit criteria: today's daily close prints a new 20-day low. Initial stop on entry: the current 20-day low at the time of entry. Individual-trade invalidation: the 20-day-low exit fires — no negotiation, no "let me see one more day". The strategy FAILS in tight, low-volatility ranges where 55-day highs are only marginally above prior highs — you keep entering at the top of a coiled spring and getting stopped at the bottom. The KLCI through much of 2023 was that kind of graveyard.
+
+## The trap
+
+The beginner mistake is optimising the channel length until backtests look gorgeous. You try 55 / 20, then 40 / 10, then 30 / 15, find the best historical curve, and trade it live — straight into a drawdown the optimised parameters never saw. The correct mental model: Donchian works because the parameters are arbitrary-but-fixed. The rule's edge is mechanical execution across regimes, not finding the magic number. Pick a published variant (20/10 or 55/20), trade it for a year, and resist the urge to "tune" it after every losing trade. The other trap is treating Donchian exits like trailing stops you can override; the channel is the stop.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You're running a 55-day high / 20-day low Donchian rule on AAPL. Today AAPL closes at $228.50, which is a new 20-day low. The 55-day high is $245 and your unrealised gain on the trade is +12%. What does the rule say?"
+  options={[
+    "Hold — 12% is too good to give back, wait for a bounce",
+    "Exit at tomorrow's open per the rule",
+    "Tighten the stop to today's low and re-evaluate intraday tomorrow",
+    "Roll the exit channel out to 30 days to give the trade more room"
+  ]}
+  answer={1}
+  explanation="The 20-day-low exit fired. The rule's whole edge is mechanical execution — not 'mostly mechanical, except when I'm up nicely'. Option 0 is the tempting wrong answer because giving back open gains feels worse than taking a loss; that loss-aversion is exactly what Donchian was designed to remove. Option 3 (rolling the exit out) is the more sophisticated version of the same error — moving the goalposts after entry."
+/>
+
+<Quiz
+  question="A Donchian 55/20 rule fires a fresh entry on NVDA at $138 with the current 20-day low at $122. Your mandate caps single-position risk at 1.25% of a $40,000 account. Max position size in shares?"
+  options={[
+    "31 shares",
+    "362 shares",
+    "62 shares",
+    "16 shares"
+  ]}
+  answer={0}
+  explanation="Risk per share = $138 - $122 = $16. Max dollar risk = 1.25% of $40,000 = $500. Shares = $500 / $16 = 31.25, round down to 31. Option 1 (362) sizes the full dollar value into the ticker ignoring the stop — the classic trend-follower blow-up where wide channel stops meet oversized positions. The synthesis: the channel defines the stop and the mandate caps the size; both bind."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Trader, paste a US large-cap ticker and ask: "Give me the current 55-day high and 20-day low. State whether a fresh Donchian entry has fired this week and what the initial stop would be." Then open <Term id="ami_coach_your_agent" /> on the Trader and write a coaching note: "Always exit on 20-day-low close; never override channel exits with discretion." Log both in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Donchian's edge is in its boredom. The channel decides; you execute. Optimising the channel length is how traders unlearn the lesson — pick a published variant and let the regime do the rest.

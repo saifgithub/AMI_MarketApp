@@ -1,0 +1,74 @@
+---
+id: "027_rsi_momentum_oscillator"
+title: "RSI — momentum oscillator"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "rsi"
+prerequisites: ["022_trend_direction", "026_moving_averages"]
+tags: ["indicators", "rsi", "momentum", "oscillator", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# RSI — momentum oscillator
+
+The Relative Strength Index (RSI) measures momentum on a 0–100 scale by comparing average up-closes to average down-closes over a lookback (default 14 bars). Above 70 is conventionally "overbought"; below 30 is "oversold". Those labels are misleading. RSI is a momentum reading, not a top-and-bottom call — a strong up-trend can hold RSI above 70 for weeks. What RSI is good at is showing when momentum disagrees with price: when price makes a new high but RSI does not, the buying pressure is weakening underneath the surface. That divergence — not the threshold — is the signal that earns its keep.
+
+<Animation name="rsi_oscillator" />
+
+## How this plays out in real markets
+
+Look at NVDA from December 2025 into January 2026. Price ran from 138 to 152 across nine trading days, with daily RSI(14) pushing to 78 on the first leg up. Beginners shorted it on "overbought". They were stopped out — NVDA kept climbing for another two weeks while RSI stayed pinned between 65 and 75. Strong trends do that.
+
+The real signal came on January 21: NVDA printed a new closing high of 154.20, but daily RSI(14) topped at 71 — lower than the 78 reading from three weeks earlier. Price made a higher high; momentum made a lower high. That's bearish divergence. Over the next eight sessions, NVDA fell to 141.
+
+The falsification condition: bearish RSI divergence at a price high is invalidated if RSI makes a new high before price breaks the most recent swing low. If NVDA had rallied again with RSI pushing back above 78, the divergence would be cancelled and the up-trend signal restored. You don't trade the divergence alone — you trade it once price confirms by breaking structure.
+
+On Bursa Malaysia: PETRONAS in mid-2025 printed RSI(14) at 82 during a strong up-leg and stayed bid for three more weeks. The threshold by itself was useless; the divergence at the next high was where the edge sat.
+
+## The trap
+
+The classic beginner mistake is shorting "overbought" and buying "oversold" mechanically. RSI > 70 feels like a ceiling. It isn't. In a strong trend, RSI can hold above 70 for 20+ sessions, and every short at the threshold gets stopped out. The same applies on the downside: in a sustained sell-off, RSI parks below 30 and "oversold" buyers get run over.
+
+The correct mental model: RSI thresholds are descriptors of momentum strength, not reversal triggers. The signal you want is divergence — price and RSI disagreeing at a swing high or low — and you wait for price to confirm with a structure break before acting. Threshold alone is noise; divergence with confirmation is a setup.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="NVDA prints daily RSI(14) at 78 during a sharp rally. Six weeks later it makes a new closing high but RSI(14) only reaches 71. Price then breaks its most recent swing low. What's the cleanest read?"
+  options={[
+    "RSI hit 78 weeks ago, so the trend is overbought and will mean-revert soon",
+    "Bearish RSI divergence confirmed by a structure break — momentum failed to support the new high",
+    "Buy the dip; RSI at 71 is still bullish",
+    "Ignore RSI; only price matters in this scenario"
+  ]}
+  answer={1}
+  explanation="The signal is the divergence (price higher, momentum lower) plus the structure break that confirms it. The most tempting wrong answer is the 'overbought = sell' reflex — the lesson explicitly shows NVDA holding RSI > 70 for weeks during a strong trend. Threshold alone is not a signal; divergence with price confirmation is."
+/>
+
+<Quiz
+  question="You have a stock above a rising SMA50, RSI(14) sitting at 74, no divergence visible — price and RSI making higher highs together. Position size is 4% of account, stop is 1.5% below entry. Which call best reflects what you've been taught?"
+  options={[
+    "Cut the position — RSI at 74 means overbought",
+    "Stay in the trade; the indicators agree with each other and the up-trend, the stop defines the invalidation",
+    "Double up — momentum is strong",
+    "Sell half and re-enter when RSI drops below 30"
+  ]}
+  answer={1}
+  explanation="MA slope, price, and RSI are aligned; there is no divergence and the stop is already where the setup invalidates. The tempting wrong answer ('RSI 74 = overbought, exit') is the exact mistake the lesson names — in strong trends RSI can hold above 70 for weeks. Mechanical threshold exits in a confirmed trend leave money on the table and ignore the pre-defined risk."
+/>
+
+## Try it
+
+Open the Market Analyst <Term id="ami_one_on_one" />, paste a ticker that's clearly trending on your <Term id="ami_watchlist" />, and ask: "Is there RSI divergence on the daily timeframe right now?" Then look at the chart and check whether price and RSI swing highs agree. The exercise is calibration — your eye against the Market Analyst's read.
+
+## Takeaway
+
+RSI thresholds describe momentum strength, not reversals — the tradeable signal is divergence between price and RSI, and only after price confirms with a structure break.

@@ -1,0 +1,70 @@
+---
+id: "072_what_ami_can_do_for_you"
+title: "What AMI can do for you"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 2
+track: "edge_process"
+topic: "ami_capabilities"
+prerequisites: ["291_the_pm_and_your_mandate", "057_backtesting_a_strategy"]
+tags: ["ami", "capabilities", "process", "simulation"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# What AMI can do for you
+
+<Term id="ami" /> is a <Term id="training_simulator" />. You sit in the <Term id="ceo_framing" /> chair of a <Term id="twelve_agent_team" /> and practise the skill of evaluating their work. The agents pull fundamentals, scan the chart, summarise news and sentiment, debate bull vs bear, stress-test a hypothetical position against your <Term id="ami_mandate" />, and produce a simulated <Term id="ami_verdict" /> you can accept, reject, or modify — all inside the app, all for training. AMI never moves real money, never connects to a broker, and is not licensed to give investment advice. That isn't a missing feature; it is the entire design. By the end of this lesson you will know exactly which evaluation skills AMI is built to train and which decisions stay with you.
+
+<Animation name="ami_constellation" />
+
+## How this plays out in real markets
+
+Suppose you watchlist NVDA and tap **<Term id="ami_convene_the_room" />**. Within ~30 seconds, 12 agents stream their work. The Fundamentals Analyst pulls the latest 10-Q: revenue $35.1B, gross margin 74%, forward P/E 32. The Market Analyst reads the chart: NVDA trading at $142, 50-day MA at $135, RSI 68. The News Analyst summarises the last 5 trading days' headlines. The Social Media Analyst flags X sentiment skew. The Bull and Bear Researchers debate; the Research Manager synthesises. The Risk Debators (Aggressive / Conservative / Neutral) argue position size. The Trader proposes entry/stop/target. The PM checks it against your Mandate — say `max_position_pct: 5, max_drawdown_pct: 20, halal: false` — and issues a final Verdict:
+
+> **BUY NVDA · size 3% · entry $141.50 · stop $134 (-5.3%) · target $158 (+11.6%) · horizon 4–6 weeks · confidence 0.62**
+
+You see the full debate transcript, every agent's reasoning, and the dissenting Bear case. You can ask any agent a follow-up in <Term id="ami_one_on_one" />. You can journal the decision. Nothing is sent anywhere. No order is placed — not in this app, not anywhere. The Verdict is a <Term id="training_artifact" />: a structured opinion produced for you to evaluate, not investment advice for you to follow.
+
+## The trap
+
+The common misconception is treating AMI like a signal service: "tell me what to buy". AMI will produce a simulated Verdict, but the Verdict is the *output of a training run you initiated*, not a recommendation to take into your real account. If you skim the debate transcript and read only the headline BUY/SELL, you're throwing away 90% of what the simulator was built to train. The value is in seeing why the Bear Researcher disagreed, what the Conservative Debator wanted to cut position size to, and which mandate clause the PM enforced. AMI is a structured second-opinion training environment at 12-agent depth — not a crystal ball with a confidence number stapled on.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="You convene the Room on TSLA. The Verdict comes back BUY at 3% size. You ignore the transcript, take the BUY at face value, and skip the Bear case. What did you lose?"
+  options={[
+    "Nothing — the Verdict is the answer",
+    "The reasoning chain — the dissenting case, mandate enforcement, and per-agent confidence that justify the headline",
+    "Credit cost — you should have used 1-on-1 instead",
+    "Speed — Convene the Room is slower than just asking the Trader"
+  ]}
+  answer={1}
+  explanation="The headline verdict is the tip of a 12-agent debate. Skipping the transcript means you can't audit why AMI said BUY, what the Bear case was, or which mandate clause the PM enforced. You converted a structured second opinion into a signal — which is exactly what AMI is not."
+/>
+
+<Quiz
+  question="Which of these is AMI actually designed to do?"
+  options={[
+    "Place a market order on AAPL when you tap BUY",
+    "Connect to your brokerage and rebalance your portfolio",
+    "Run a 12-agent debate and hand you a Verdict you can accept, reject, or modify",
+    "Send signals to your phone for the next 10-bagger"
+  ]}
+  answer={2}
+  explanation="AMI is simulation-only and is not a licensed advisor. There is no brokerage hook — not now, not ever. The deliverable is a debated, mandate-checked training artifact; the discipline being trained is your evaluation of it."
+/>
+
+## Try it
+
+Open the app, add NVDA to your watchlist, and tap **Convene the Room**. When the Verdict appears, do not read the headline first. Scroll to the Bear Researcher's section and read that. Then read the PM's compliance check. Then go back to the top. Notice how the headline reads differently once you've seen the dissent.
+
+## Takeaway
+
+AMI gives you a 12-agent debate ending in a mandate-checked Verdict — that is the training artifact. Remember: AMI is a training simulator, not a financial advisor. The Verdict is a practice artifact for you to evaluate, not investment advice to follow.

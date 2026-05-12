@@ -1,0 +1,71 @@
+---
+id: "234_mean_reversion_blow_up_patterns"
+title: "Mean-reversion blow-up patterns — when 'oversold' goes to zero"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "failure_modes"
+prerequisites: ["055_mean_reversion", "058_strategy_failure_modes", "223_rsi_2_mean_reversion_system", "224_bollinger_band_mean_reversion"]
+tags: ["failure_modes", "mean_reversion", "drawdown", "regime"]
+agent_callouts: ["bear_researcher", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Mean-reversion blow-up patterns — when "oversold" goes to zero
+
+The failure-modes foundation (058) named trending bear markets as the regime where mean-reversion bleeds. This lesson is the autopsy of the blow-up itself, because the way mean-reversion strategies die is specific and recognisable. The pattern: a normally-reliable RSI(2) or Bollinger signal fires; the trader buys the dip; price keeps falling; the next oversold signal fires lower; the trader doubles down; price keeps falling; the loss compounds. Without a regime filter, the strategy converts what should be a 1.5R loss into a 10R loss because every signal looks valid on the same indicator that ignored the trend. After this lesson you can name the four-stage blow-up pattern, identify it at stage 1 or 2, and exit before stages 3 and 4.
+
+## How this plays out in real markets
+
+The Q1 2020 COVID crash on US large-caps is the museum example. Take any quality name — AAPL, MSFT, JPM. RSI(2) mean-reversion on a quality large-cap had returned ~12% CAGR over 2010-2019 with maximum drawdowns under 8%. Then February 24 to March 23, 2020:
+
+- **Stage 1 (Feb 24-27)**: SPY breaks the 200-day MA decisively. RSI(2) on most large-caps prints below 5 — a "rare" oversold reading historically. Mean-reversion traders enter long.
+- **Stage 2 (Feb 28-Mar 6)**: Names fall another 5-12% from entry. RSI(2) prints below 5 AGAIN — another signal. Traders average down. The Bollinger Band lower-band tag has happened twice. The strategy's normal "average 2 days to mean revert" has already failed once.
+- **Stage 3 (Mar 9-12)**: Circuit breakers trigger. Names down 20-30% from entry. The RSI(2) signal is STILL firing — every day shows extreme oversold. Traders who haven't already capitulated double or triple down. Some hit margin calls.
+- **Stage 4 (Mar 16-23)**: The bottom. Some traders blow up entirely; others sell at the literal worst price. SPY bottoms at 218 — those who survived as cash buyers in late March made historic returns. Those who deployed mean-reversion without regime filters lost 30-50% of strategy capital.
+
+The blow-up is the same shape in 2008 (September-October), in 2022 (January-October on a slower clock), and on individual names that go bankrupt (think any name that delisted). The signature: repeated oversold signals with no mean-revert response, against a 200-day MA falling, with VIX rising. Without a regime overlay that pauses the strategy when SPY is below its 200-day AND VIX is rising, mean-reversion can take you to zero.
+
+## The trap
+
+The beginner mistake is averaging down on each new oversold signal — "the cheaper it gets, the better the deal". That's not edge, that's the strategy's failure mode self-amplifying. The correct mental model: a mean-reversion signal is conditional information — it has predictive value ONLY in regimes where mean reversion is the underlying market behaviour. In a trending bear, the same signal is anti-predictive (oversold gets more oversold). The second trap: refusing to define what "regime change" looks like ahead of time, so when stage 2 starts firing you find reasons to dismiss it ("this is just volatility"). Pre-commit: SPY below 200-day MA AND VIX > 25 AND a single position is showing -2x the strategy's normal stop-loss = exit ALL mean-reversion positions, do not enter new ones, wait until both regime conditions reverse. The third trap: trying to short the bottom — mean-reversion in reverse has its own failure mode (the snapback rally on March 24, 2020 was +9% in a day).
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="You're running an RSI(2) mean-reversion rule on US large-caps. SPY is below its 200-day MA, VIX is at 32, and your last two positions have hit their stops at -2R losses. Today, three new oversold signals are firing. The Aggressive Debator says 'oversold = opportunity'. Bear Researcher says 'the blow-up pattern is at stage 2'. Which is correct?"
+  options={[
+    "Aggressive — three signals = strong probability of mean reversion",
+    "Bear — both regime conditions (below 200-day, high VIX) are firing AND two stops hit in a row, the stage-2 pattern. Exit all positions and stop entering new mean-reversion trades until regime conditions reverse.",
+    "Average down on the existing losing positions",
+    "Add more positions but smaller size"
+  ]}
+  answer={1}
+  explanation="The two-regime confirmation (below 200-day MA + high VIX) combined with consecutive stops is the documented stage-2 signature. Adding more longs at stage 2 is how strategies blow up at stage 3 and 4. Option 0 treats the indicator as unconditional information — but RSI(2) only has edge in mean-reverting regimes. Option 2 averages into the failure mode. Option 3 disguises adding-into-loss as risk management."
+/>
+
+<Quiz
+  question="Mean-reversion strategy is down 12% YTD. SPY just reclaimed its 200-day MA, VIX has fallen from 32 to 19, and the strategy's last three signals each mean-reverted in under 3 days. Mandate cap is 25%. Synthesis: what's the correct action?"
+  options={[
+    "Stay out — the recent drawdown means the strategy is broken",
+    "Both regime conditions have reversed (above 200-day, VIX < 22) AND recent signals are behaving normally. Re-engage at half size per pre-committed protocol, monitor whether the normal behaviour holds for 4-6 more signals, then restore full size if the regime stays favourable.",
+    "Re-engage at full size immediately to recover losses",
+    "Switch to trend-following"
+  ]}
+  answer={1}
+  explanation="The synthesis: regime detection is two-sided. Just as you exit when both regime conditions and recent stops signal stage-2, you re-engage when both regimes reverse AND recent signal behaviour confirms the strategy is working again. Option 0 abandons the strategy at exactly its favourable regime. Option 2 ignores the prudent half-size re-entry rule. Option 3 changes strategies for emotional reasons rather than regime-driven ones."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Bear Researcher, ask: "Define the regime conditions that would put my mean-reversion strategy at stage 2 of the blow-up pattern. Give me observable thresholds for the 200-day MA, VIX, and consecutive stops. Then define the conditions under which I re-engage at half size." Log both protocols in the <Term id="ami_decision_journal" /> as pre-committed rules — written down before stress hits, executed automatically when it does.
+
+## Takeaway
+
+Mean-reversion dies in trending bears with rising vol. Stop new entries at stage 2 of the blow-up; you cannot dollar-cost-average your way out of a failure mode.

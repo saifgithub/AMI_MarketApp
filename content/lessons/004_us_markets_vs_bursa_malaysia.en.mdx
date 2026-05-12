@@ -1,0 +1,66 @@
+---
+id: "004_us_markets_vs_bursa_malaysia"
+title: "US markets vs Bursa Malaysia"
+duration_min: 4
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+topic: "exchanges_compared"
+prerequisites: []
+tags: ["foundations", "exchanges", "nyse", "nasdaq", "bursa", "klci"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# US markets vs Bursa Malaysia
+
+The world has dozens of stock exchanges. The two that matter most for you in this app are the US markets (NYSE and NASDAQ) and Bursa Malaysia. They follow the same basic rules — orders match against an order book, prices are public, companies file financials — but the session times, currency, tick sizes, and the size of the underlying market are very different. Knowing those differences keeps you from making naive comparisons across them.
+
+## How this plays out in real markets
+
+**US markets — NYSE and NASDAQ.** The NYSE lists older, larger industrials and financials (think JPMorgan Chase, ticker JPM, or ExxonMobil, ticker XOM). NASDAQ leans technology (Apple AAPL, Microsoft MSFT, NVIDIA NVDA, Tesla TSLA). Both quote prices in US dollars (USD). Regular trading runs from **9:30 a.m. to 4:00 p.m. Eastern Time, Monday to Friday**, with a pre-market session from 4:00 a.m. ET and after-hours trading until 8:00 p.m. ET. The minimum price increment — the "tick size" — is **$0.01** for stocks priced above $1.00. NVDA at $920.47 means the next price up is $920.48; you cannot bid $920.475. The S&P 500 tracks the 500 largest US-listed companies; total US equity market capitalisation is around $55 trillion.
+
+**Bursa Malaysia.** One exchange, based in Kuala Lumpur. Lists about 1,000 companies, mostly Malaysian — Maybank (MAYBANK), Petronas Chemicals (PCHEM), Tenaga Nasional (TENAGA), Genting (GENTING), Sime Darby (SIME), CIMB Group (CIMB), Public Bank (PUBLIC), IHH Healthcare (IHH), Top Glove (TOPGLOV), AirAsia (CAPITALA), MR D.I.Y. (MRDIY), KLCC Property (KLCC). Prices are in **Malaysian ringgit (MYR / RM)**. Sessions run **9:00 a.m. to 12:30 p.m., then 2:30 p.m. to 5:00 p.m. local time (MYT), Monday to Friday**, with a midday break — different from the continuous US session. Tick sizes are tiered: **half a sen (RM0.005)** for stocks under RM1.00, **one sen (RM0.01)** between RM1 and RM10, and larger increments above. Bursa's headline index is the **FTSE Bursa Malaysia KLCI** ("the KLCI"), tracking the 30 largest companies on the exchange. Total Bursa market cap is roughly RM1.8 trillion — about 2% the size of the US market.
+
+## The trap
+
+The trap here is treating a "cheap-looking" share price as a meaningful comparison across exchanges. A RM5 stock on Bursa is not "cheaper" than a $500 stock on NASDAQ. Price per share is set by how many shares the company has chosen to issue, not by how good the business is. A company with one share outstanding worth $1,000,000 is the same business as the one that splits it into one million shares at $1 each. To compare two companies, look at market capitalisation (price times shares outstanding) and valuation ratios — not the dollar or ringgit price tag on one share.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="It's 11:00 a.m. in Kuala Lumpur on a Wednesday. Which of these markets is open for trading?"
+  options={[
+    "NYSE and NASDAQ — they trade 24 hours",
+    "Bursa Malaysia morning session; the US markets are closed (it's roughly 11:00 p.m. ET the night before)",
+    "Both Bursa and the US markets",
+    "Only the US markets; Bursa is closed for lunch"
+  ]}
+  answer={1}
+  explanation="Bursa's morning session is 9:00 a.m. to 12:30 p.m. MYT, so 11:00 a.m. is squarely inside it. The US is 12 hours behind Malaysia, so when it's 11:00 a.m. Wednesday in KL it's 11:00 p.m. Tuesday on the US East Coast — well after the 4:00 p.m. ET close."
+/>
+
+<Quiz
+  question="Maybank (MAYBANK on Bursa) trades at RM10.20. JPMorgan Chase (JPM on NYSE) trades at $215. Which statement is true?"
+  options={[
+    "JPM is the better business because the share price is much higher",
+    "MAYBANK is cheaper and therefore safer to buy",
+    "Share price alone tells you nothing about the size or value of the business — you need market cap and valuation ratios to compare",
+    "JPM is more volatile because it has a higher number"
+  ]}
+  answer={2}
+  explanation="Share price is just total company value divided by total share count. A company can choose to have lots of cheap shares or fewer expensive ones — they're the same business. To compare, use market cap (price times shares outstanding) and valuation multiples like P/E. The headline price tells you almost nothing on its own."
+/>
+
+## Try it
+
+Add one US ticker (say, NVDA) and one Bursa ticker (say, MAYBANK) to your Watchlist. Look at both at the same moment during your evening in Malaysia. One will be live and moving; the other will be the previous day's close because the market is shut. Notice which is which, and check the session times against the clock. That mismatch is something you'll work around constantly if you trade both markets.
+
+## Takeaway
+
+NYSE and NASDAQ trade 9:30 to 4:00 ET in USD; Bursa Malaysia trades two sessions (9:00–12:30 and 2:30–5:00 MYT) in MYR with the KLCI as its headline index. Same plumbing, different clocks, different currency — never compare share prices across them without converting to market cap.

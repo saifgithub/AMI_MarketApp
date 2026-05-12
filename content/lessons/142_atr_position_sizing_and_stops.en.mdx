@@ -1,0 +1,78 @@
+---
+id: "142_atr_position_sizing_and_stops"
+title: "ATR for position sizing and stop placement"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 4
+track: "edge_process"
+topic: "atr_application"
+prerequisites: ["141_atr_as_volatility_gauge", "101_volatility_adjusted_sizing", "102_atr_based_stops"]
+tags: ["indicators", "atr", "position_sizing", "stops", "risk_management"]
+agent_callouts: ["market_analyst", "portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ATR for position sizing and stop placement
+
+Lesson 141 framed ATR as a volatility gauge. Lessons 101 and 102 covered the position-sizing and stop mechanics. This lesson stitches them together into the single workflow that the Portfolio Manager's <Term id="ami_pm_safety_floor" /> expects: given a ticker, an account size, a mandate risk cap, and an ATR multiple for the stop, the position size is fully determined arithmetic. No discretion. The discipline is mechanical, and that's the point — sizing decisions made in the heat of the moment are where mandates die.
+
+## How this plays out in real markets
+
+Take NVDA on a hypothetical entry: price 140, daily ATR(14) = $5.10. Account size $25,000. Mandate cap: 1% risk per trade.
+
+Step 1 — Risk budget: 1% of $25,000 = $250 dollar risk per trade.
+
+Step 2 — Stop distance: standard ATR-based stop is 1.5× ATR for medium-term swings, 2× ATR for higher-volatility names, 1× ATR for tight day-trade setups. Using 1.5× ATR for a swing: stop distance = $5.10 × 1.5 = $7.65 per share. Stop level = 140 − 7.65 = 132.35.
+
+Step 3 — Share count: $250 / $7.65 = 32.7 shares → round down to 32 shares. Capital deployed: 32 × $140 = $4,480, or 17.9% of the account. Risk on those shares at the stop: 32 × $7.65 = $244.80 — within the $250 cap.
+
+The same arithmetic on AAPL at 230 with ATR(14) = $2.80 and a 1.5× stop: stop distance = $4.20, share count = $250 / $4.20 = 59 shares, capital deployed = $13,570 — 54% of the account. Same $250 risk, vastly different capital deployed because the volatility per share is different. Lower-ATR stocks get more shares and more capital for the same risk; higher-ATR stocks get fewer shares and less capital.
+
+Falsifiable claim: applying ATR-multiple stops with mechanical share-count math holds dollar risk roughly constant across positions of different volatilities. Invalidation: if the actual realised loss on stop-outs varies by more than 1.5× across the position book over a sample of 30+ trades, the math is being overridden or stops are being moved — the discipline has failed.
+
+On Bursa Malaysia: PETRONAS at RM5.40 with daily ATR around RM0.07 = 1.3% of price. RM30,000 account, 1% risk = RM300 budget. 1.5× ATR stop = RM0.105. Share count = RM300 / RM0.105 = 2,857 shares → round to 2,800 shares. Same workflow, different currency.
+
+## The trap
+
+The trap is using a fixed stop distance across all tickers — "I always use $1 stops" or "I always use 2% stops." Fixed-dollar stops mean low-ATR positions get strangled by noise (the stop is inside daily wiggle, so the trade exits prematurely) and high-ATR positions get wildly over-risked (the stop is outside daily range, so the realised loss when it hits is much larger than the dollar risk budget assumed). Fixed-percent stops are slightly better but still ignore the per-name volatility character.
+
+The correct mental model: ATR is the unit of distance in volatility-space, not dollar-space. A 1.5× ATR stop is comparable across tickers because it adjusts for each stock's typical daily range. The position size adjusts in proportion. Dollar risk stays constant. The Portfolio Manager's safety floor verifies this arithmetic on every trade ticket — if the math doesn't tie out, the trade is blocked. That's the floor doing its job.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Account size $20,000, mandate cap 1% per trade. You're sizing a long on a stock at $80 with daily ATR(14) = $2.50. Your rule is a 1.5× ATR stop. How many shares can you take, and what's the capital deployed?"
+  options={[
+    "100 shares; $8,000 capital deployed",
+    "53 shares (or 50 rounded); approximately $4,240 capital deployed. Math: $200 risk budget / ($2.50 × 1.5 stop distance) = 53.3 shares; round down to 53 or 50.",
+    "200 shares; $16,000 capital deployed",
+    "There's not enough information — need to know expected return first"
+  ]}
+  answer={1}
+  explanation="Risk budget = 1% of $20,000 = $200. Stop distance = 1.5 × $2.50 = $3.75. Shares = $200 / $3.75 ≈ 53. Capital = 53 × $80 ≈ $4,240. The tempting wrong answers (100 or 200 shares) ignore stop distance and just deploy a fixed dollar amount — exactly the fixed-stop trap the lesson identifies. Expected return is a separate question; sizing comes from risk math first."
+/>
+
+<Quiz
+  question="You have $250 of risk budget per trade. NVDA at 140 with ATR(14) = $5.10 sizes to 32 shares ($4,480 capital). AAPL at 230 with ATR(14) = $2.80 sizes to 59 shares ($13,570 capital). Why does the AAPL position deploy three times the capital of the NVDA position when both carry the same $250 dollar risk?"
+  options={[
+    "It's a mistake — both positions should deploy equal capital",
+    "Lower-ATR stocks have tighter stops, which fits more shares into the same dollar-risk budget. Capital deployed is the byproduct, not the input — dollar risk is the cap, not capital exposure. The Portfolio Manager's safety floor checks risk math, not gross capital.",
+    "AAPL is a bigger company so it deserves more capital",
+    "The arithmetic only works for one of the two tickers"
+  ]}
+  answer={1}
+  explanation="The whole point of ATR sizing is that capital deployed varies inversely with per-share volatility while dollar risk stays constant. The tempting wrong answer (A) wants equal capital allocation, which sounds intuitive but means dollar risk would swing with volatility — exactly what the framework is designed to prevent. The PM's safety floor enforces risk, not capital symmetry, because risk is what kills accounts."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find your three most recent trades. For each, compute: (1) what was the daily ATR(14) at entry? (2) was the stop distance an ATR multiple, a fixed dollar, or a fixed percent? (3) does the realised or planned loss equal 1% of account at the stop? If any of the three answers reveals fixed-dollar or fixed-percent stops, this lesson is the fix.
+
+## Takeaway
+
+Position size is determined arithmetic: (account risk budget) divided by (ATR multiple × ATR) gives the share count. Capital deployed is a byproduct; risk is the input — and the safety floor checks the math.

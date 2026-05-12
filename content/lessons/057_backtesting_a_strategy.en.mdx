@@ -1,0 +1,78 @@
+---
+id: "057_backtesting_a_strategy"
+title: "Backtesting a strategy"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["052_trend_following", "053_breakout_strategy", "055_mean_reversion", "018_drawdown_management"]
+tags: ["backtesting", "overfitting", "survivorship_bias", "look_ahead"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Backtesting a strategy
+
+Backtesting runs your strategy rule against historical data to estimate how it would have performed. Done honestly, it tells you whether your rule has plausible edge and what its worst drawdown looked like. Done dishonestly — which is the default — it tells you a comforting story that has nothing to do with the future. The three killers are overfitting, look-ahead bias, and survivorship bias. After this lesson you can name each one, recognise when your own backtest has it, and design a test that gives you a result you can actually trust.
+
+## How this plays out in real markets
+
+Suppose you backtest a "buy NVDA when RSI(2) < 10, sell when RSI(2) > 80" rule across 2020–2024. The reported result: 47 trades, 78% win rate, average win 4.2%, max drawdown 6%. It looks like a money printer. Then you check three things. (1) Did you only run it on NVDA because NVDA went up 10x — survivorship bias? If you'd picked the rule blindly across the S&P 500 in 2019 you'd have applied it to dozens of names, many of which got delisted. (2) Did you use closing prices for the signal but assume execution at the same close — look-ahead bias? You can't know the close and trade at it. (3) Did you try 47 different RSI lookback/threshold combinations and keep only the best — overfitting? With 47 trials at the 5% level, several will look great by chance alone.
+
+The honest version: define the rule BEFORE looking at the data, apply it to a universe defined ex-ante (the S&P 500 as of January 2020, including names that later got delisted), execute at the open of the day AFTER the signal, and report results from a single specification — no "I tried 30 and kept this one". When you do that on the NVDA example, the rule's edge survives but the win rate drops to 58% and max drawdown rises to 14% — a much honest answer.
+
+## The trap
+
+The beginner mistake is treating a backtest as proof. A backtest is a sanity check, not a forecast. The most-tempting wrong move is to keep tweaking parameters until the equity curve looks smooth — that's overfitting in slow motion. Every degree of freedom you add (a new indicator, a tighter threshold, a regime filter) is one more dimension on which to fit noise. The correct mental model: assume your backtest overstates real performance by some factor, design out-of-sample tests, and judge a rule by whether its edge is large enough to survive being half as good as the backtest claims. If a rule needs to be exactly as good as the backtest to be profitable, it's a bad rule.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You backtest a strategy and try 22 different parameter combinations. The best one shows a 30% annual return; the worst shows a 4% loss. Which is the most defensible interpretation?"
+  options={[
+    "The 30% return is the right estimate — that's the configuration to deploy",
+    "The average of all 22 combinations is the honest estimate, and even that is optimistic without out-of-sample testing",
+    "Average the top 5 configurations",
+    "Pick the parameters that look most intuitive"
+  ]}
+  answer={1}
+  explanation="Reporting only the best of 22 trials is textbook overfitting — by chance some trial will look great. The honest estimate accounts for selection across all the parameter sets you tried, and out-of-sample testing is the only real defence. Option 0 is the most tempting wrong answer because the 30% number is what the spreadsheet showed."
+/>
+
+<Quiz
+  question="Your backtest of a mean-reversion rule over 2010–2023 shows a 15% annualised return on US large-caps. Your universe is 'the current S&P 500 constituents'. The Research Manager flags this as biased. Which bias did you commit?"
+  options={[
+    "Look-ahead bias",
+    "Overfitting",
+    "Survivorship bias",
+    "Data-snooping bias"
+  ]}
+  answer={2}
+  explanation="Using TODAY's S&P 500 to test a strategy in 2010 means you're only testing names that survived to today — every bankruptcy, delisting, and bad outcome got filtered out before you started. Option 0 (look-ahead) is the tempting wrong answer because it's the most famous bias name, but the actual error here is the universe definition."
+/>
+
+<Quiz
+  question="You've designed a breakout strategy. Your backtest looks strong. Before deploying it (even in AMI's simulated trading), what's the synthesis test that justifies running it forward?"
+  options={[
+    "Confirm the equity curve has no big drawdowns in the backtest",
+    "Pick the parameter set with the highest Sharpe and deploy",
+    "Define the rule ex-ante, test on a survivorship-bias-free universe, execute on next-day open, run out-of-sample on a period you haven't looked at, and accept the rule only if its edge survives degradation to half the in-sample number with mandate-compliant drawdown",
+    "Compare it against buy-and-hold SPY"
+  ]}
+  answer={2}
+  explanation="The synthesis: every concept in this module has to compose with the others — ex-ante rule (no overfitting), survivorship-free universe, no look-ahead execution, out-of-sample validation, AND mandate-compliant drawdown. Option 0 is the tempting wrong answer because a clean equity curve LOOKS like proof — it's actually the easiest thing to manufacture by overfitting."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, sketch your most recent strategy idea and ask: "Walk through this for overfitting, look-ahead bias, and survivorship bias risks. Then propose an out-of-sample test design I can run before deploying." Log the design in the <Term id="ami_decision_journal" /> and check it back in three months against actual simulated results.
+
+## Takeaway
+
+A backtest is a sanity check, not a forecast. If the rule needs to be exactly as good as the backtest to make money, the rule is dead — design for survival under half the in-sample edge.

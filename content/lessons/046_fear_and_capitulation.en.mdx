@@ -1,0 +1,78 @@
+---
+id: "046_fear_and_capitulation"
+title: "Fear and capitulation"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 2
+track: "sentiment_behaviour"
+topic: "fear_capitulation"
+prerequisites: ["015_stop_loss_basics", "018_drawdown_management", "045_greed"]
+tags: ["psychology", "fear", "capitulation", "stop_loss", "sentiment"]
+agent_callouts: ["social_media_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Fear and capitulation
+
+Fear is what makes a trader exit at the worst possible price. Capitulation is the moment fear becomes collective — when everyone who was going to sell, finally does, and the chart marks the low. After this lesson you will be able to tell the difference between a *plan-based exit* and a *fear-based exit*, and you will know how to recognise capitulation in your own behaviour before it shows up on someone else's chart. The signal is rarely on the screen. It is in your stomach.
+
+## How this plays out in real markets
+
+In March 2020, a trader held 400 shares of MSFT bought around $185 with a $170 stop. The drawdown reached $135 in eight sessions. He had no margin call. He had no thesis change. He had a Bear Researcher feed full of "this is 2008 again" headlines and a phone that would not stop vibrating. On March 23, ten minutes before the close, he sold everything at $137 — $18 below his original stop. MSFT closed that day at $137.35. It then printed exactly one red day in the next twenty sessions and finished April above $179. He had not been stopped out at his plan; he had been stopped out *by fear, $33 worse than the plan he wrote when he was calm*.
+
+The falsifiable pattern: a fear exit, distinct from a stop exit, has three fingerprints. (1) Your exit price is worse than your written stop. (2) The decision was made within four hours of consuming bearish headlines or doom-posts. (3) You have no written invalidation that matches the price you exited at. If two of three are true, the trade did not stop you out — your nervous system did.
+
+## The trap
+
+The trap is believing that "I'd rather take the loss now than watch it get worse" is risk management. It is not — it is the absence of a rule, dressed in the costume of one. Real risk management was set when you sized the position and placed the stop. Anything you do *below* that stop because of how the chart feels is invention. The correct mental model: a stop is the only valid sell signal in a drawdown. If you sell above the stop, you are anticipating; if you sell below it, you have moved the stop after the fact. Both are forms of fear. The cure is not to be braver. The cure is to make the decision before the candle prints — and to journal the exit before you place it, so the version of you that is calm has a final say.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="You hold a position with a written stop at -10%. The position is at -7% and falling. Social Media Analyst is showing 80% bearish sentiment and a 'recession imminent' feed. What is the disciplined action?"
+  options={[
+    "Sell now at -7% — better than waiting for -10%.",
+    "Add to the position at -7% — fear is a buy signal.",
+    "Do nothing until either the stop triggers at -10% or the thesis genuinely changes, and journal the urge to sell early.",
+    "Move the stop to -5% to limit further damage."
+  ]}
+  answer={2}
+  explanation="The stop is the contract. Selling at -7% out of fear means you actually had no plan — you had a guess and a stomach. The most tempting wrong answer is moving the stop tighter to -5%; it feels prudent but is exactly the same error compressed into a smaller distance. 'Fear is a buy signal' is the contrarian's slogan but ignores that you had a documented invalidation level — respect it. Sentiment is data; it is not your stop."
+/>
+
+<Quiz
+  question="Which of these is the strongest evidence that an exit was a fear exit rather than a stop exit?"
+  options={[
+    "You sold within the last hour of the trading day.",
+    "The exit price was worse than your written stop, was triggered after consuming bearish headlines, and you cannot articulate the invalidation thesis at the exit price.",
+    "You sold and the stock immediately bounced.",
+    "You felt nauseous when you placed the order."
+  ]}
+  answer={1}
+  explanation="The bounce after a sale is hindsight — every exit looks like fear if the next print is green. Nausea is a symptom, not evidence. The diagnostic that holds up under audit is the three-part fingerprint: exit worse than written stop, decision made under headline saturation, no articulable thesis at the exit price. That combination is what capitulation looks like from the inside."
+/>
+
+<Quiz
+  question="Your account is in a -14% drawdown against a 20% mandate. You held through three losses this week. The Bear Researcher pings with a fresh negative report on your largest holding. The Portfolio Manager has not flagged a mandate breach. What is the synthesis answer?"
+  options={[
+    "Liquidate everything — drawdown is approaching the mandate cap.",
+    "Hold and re-test stops based on the Bear's new report.",
+    "Pause new entries, re-read each open position's written invalidation, and only act if a documented stop is hit or the PM raises a mandate flag.",
+    "Add to the largest holding — the Bear Researcher is usually wrong."
+  ]}
+  answer={2}
+  explanation="You are inside your mandate. The PM has not raised the safety floor. Nothing has actually broken — only your tolerance for watching it. Liquidating at -14% on sentiment is the textbook capitulation move and locks in losses your written rules did not require. Adding because 'the Bear is usually wrong' is greed wearing fear's clothes. The disciplined action separates planned exits (stops, mandate breaches) from unplanned ones (fear), and refuses to dignify the latter."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find a closed losing trade. Compare the exit price to your written stop. If they don't match, write one sentence in the journal: "I exited at X because Y." If "Y" is a feeling rather than a rule, you have just found a capitulation. Then open a <Term id="ami_one_on_one" /> with the Bear Researcher and ask: "On the day I exited, what was the genuinely bearish thesis — and would it have invalidated my original entry?" Most of the time, the answer is no.
+
+## Takeaway
+
+A stop you wrote when you were calm is the only sell signal in a drawdown that you owe respect to. Everything below it is fear with a price tag.

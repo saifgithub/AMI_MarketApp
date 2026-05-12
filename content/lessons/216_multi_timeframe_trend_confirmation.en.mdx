@@ -1,0 +1,66 @@
+---
+id: "216_multi_timeframe_trend_confirmation"
+title: "Multi-timeframe trend confirmation"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "trend_following"
+prerequisites: ["052_trend_following", "022_trend_direction", "021_timeframes_and_what_they_tell_you", "116_top_down_multi_timeframe_workflow"]
+tags: ["strategy", "trend", "multi_timeframe", "top_down"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Multi-timeframe trend confirmation
+
+The trend-following foundation (052) judged trend on one timeframe. The cleanest setups are confirmed on three — a higher timeframe that defines the dominant direction, a trading timeframe that gives entry context, and a lower timeframe that times the trigger. The principle is simple: don't take a daily-chart long when the weekly is rolling over, and don't pick the exact entry candle on the daily when a 60-minute bar would give it to you with half the risk. After this lesson you can write a three-timeframe rule that names what must align before a trend entry is valid, and what disqualifies it instantly.
+
+## Example
+
+Look at AMZN through February to June 2024. On the weekly chart, the 20-week and 40-week MAs both sloped up from mid-2023 — a clear higher-timeframe uptrend. On the daily chart through February, the 20-day MA also sloped up and price held above the 50-day; trading-timeframe alignment. On May 3, after Q1 earnings, AMZN broke out on the daily from a four-week base between $178 and $189 and closed at $186.21. Zooming into the 60-minute chart, price closed above the prior consolidation high of $189 at 10:30 a.m. EST on May 3 on a strong volume bar — that was the lower-timeframe trigger inside the daily-breakout candle. Entry on the 60-minute close near $189, stop under the 60-minute pullback low at $182. Daily target: the prior range high projection near $200, which printed three sessions later. Risk per share: $7. Reward at first target: $11 — a 1.6R win with a much tighter stop than waiting for an end-of-day daily entry would have given.
+
+Entry criteria: (1) weekly trend up — price above rising 40-week MA, (2) daily trend up — price above rising 50-day MA, (3) lower-timeframe trigger fires inside the daily candle (60-minute close above consolidation high, or 4-hour breakout retest). Stop: under the lower-timeframe pullback low. Individual-trade invalidation: a daily close that nullifies the daily-trend leg (close below 50-day) OR the lower-timeframe trigger fails (price closes back below the trigger level on the next 60-minute bar) — exit. The strategy FAILS when the three timeframes disagree (weekly up, daily down, hourly chopping) — that's a regime transition where you're picking entries inside a confused tape. Skip.
+
+## The trap
+
+The beginner mistake is using lower timeframes for confirmation instead of for timing. You start on the daily, see weakness, drop to the 60-minute looking for "a reason to still be bullish", and find one — because at any moment a lower timeframe is somewhere in a micro-trend. That's confirmation bias dressed as analysis. The correct mental model: higher timeframes set direction, lower timeframes only refine entry. If the daily disagrees with the weekly, you don't take the trade. If the 60-minute disagrees with the daily, you don't take the trade. Lower timeframes can never override higher ones; they can only choose where on the daily candle you fire.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="On NVDA: weekly chart is in a clear uptrend, daily chart just closed below the 50-day MA, 60-minute chart is making higher highs and higher lows. What does the multi-timeframe rule say?"
+  options={[
+    "Enter long — two of three timeframes agree (weekly + 60-min)",
+    "No entry — the daily trend leg has broken, regardless of weekly or hourly action",
+    "Enter half-size to respect the conflict",
+    "Short — the daily break is the leading edge of a top"
+  ]}
+  answer={1}
+  explanation="The rule requires alignment, not majority vote. The daily 50-day break disqualifies it. Option 0 is the tempting wrong answer because lower timeframes feel more 'real' to active traders — a strong 60-minute setup looks irresistible. But hourly micro-trends inside a broken daily are exactly how you get long at the start of a multi-week correction. Option 2 (half-size) is the more sophisticated version of the same mistake."
+/>
+
+<Quiz
+  question="You're long TSLA on a confirmed multi-timeframe entry. Weekly up, daily up, entered on a 60-minute trigger at $240 with stop at $232. The next 60-minute bar closes at $231.10 — a clean break of the trigger low. Mandate caps drawdown at 20%, you're at 8% drawdown YTD. What's the right action?"
+  options={[
+    "Hold — the daily and weekly are still up, the 60-minute is just noise",
+    "Exit immediately on the next bar's open — the lower-timeframe invalidation fired even though higher timeframes are intact",
+    "Move the stop down to the prior daily swing low to give it room",
+    "Add to the position because the daily uptrend is still in force"
+  ]}
+  answer={1}
+  explanation="The multi-timeframe rule says: the timeframe you triggered on is the timeframe whose invalidation matters first. Your entry was on the 60-minute; the 60-minute invalidation closed; you exit. Option 0 (hold) is the tempting wrong answer because the broader trend looks fine — but lower-timeframe invalidations exist precisely so you don't ride a daily correction back to the 50-day from a higher entry. Synthesis: respect the timeframe you entered on, especially when drawdown is already at 8%; you can re-enter on a fresh daily signal at a better price."
+/>
+
+## Try it
+
+<Term id="ami_convene_the_room" /> on a ticker you're considering and explicitly ask: "Walk me through the trend state on weekly, daily, and 60-minute timeframes. State which of the three currently disagree, if any." If all three align, ask the Trader to convert the lowest-timeframe trigger into a precise entry, stop, and invalidation. Log the three-timeframe state in the <Term id="ami_decision_journal" /> so the next post-mortem can audit whether your alignment check was honest.
+
+## Takeaway
+
+Higher timeframes set direction; lower timeframes refine entry — never the other way around. Three-timeframe alignment is the price of admission; conflict is the signal to skip.

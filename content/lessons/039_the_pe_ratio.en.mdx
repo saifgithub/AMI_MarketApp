@@ -1,0 +1,68 @@
+---
+id: "039_the_pe_ratio"
+title: "The P/E ratio"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 2
+track: "fundamentals_analysis"
+topic: "pe_ratio"
+prerequisites: ["033_profit_and_margins", "037_valuation_what_is_a_stock_worth", "038_comparable_companies"]
+tags: ["pe_ratio", "valuation", "multiples", "earnings", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The P/E ratio
+
+Price-to-earnings is the single most-quoted number in equity investing — and the single most-misused. The formula is trivial: P/E = price per share divided by earnings per share, or equivalently market cap divided by net income. What's hard is interpretation. By the end of this lesson you should be able to compute a P/E, read it in the right context (sector, growth, debt structure), name the specific condition under which a "high" P/E is justifiable, and recognise the most common way the ratio lies to you.
+
+## How this plays out in real markets
+
+Look at AAPL in mid-2026. Trailing-twelve-month EPS is roughly $7.10, the stock trades near $230, so P/E = 230 / 7.10 ≈ 32x. The S&P 500 trades around 22x. Is AAPL "expensive"? Depends on what you compare it to. Against the broad index, yes — 45% premium. Against megacap tech peers (MSFT ~38x, GOOGL ~25x, META ~27x), it sits mid-pack. Against AAPL's own ten-year history (range roughly 15x–35x), it's at the upper end.
+
+Now NVDA. EPS around $3.20, price ~$135, P/E ≈ 42x. Higher than AAPL, but NVDA's earnings have grown more than 100% year-over-year through the AI capex cycle. A useful framing is the PEG ratio — P/E divided by expected earnings-growth rate. NVDA at 42x with 50%+ forward growth gives a PEG well under 1.0; AAPL at 32x with single-digit growth gives a PEG above 4.0. By PEG, AAPL looks more expensive than NVDA despite the lower headline multiple. That's the point: P/E in isolation tells you nothing about whether you're overpaying.
+
+Falsifiable claim for this lesson: a P/E above 40 is justifiable only if forward earnings growth is expected to exceed roughly 25% annually for at least three years. Below that growth rate, the multiple compresses toward the sector median, and the price has to fall (or earnings have to grow into the multiple) to close the gap. On Bursa Malaysia: TENAGA has historically traded around 12–15x earnings — a utility multiple consistent with stable but low single-digit earnings growth. A sudden re-rate to 25x would require a fundamental change in growth profile, not just sentiment.
+
+## The trap
+
+The trap is comparing P/E across sectors and concluding one is "cheaper" than the other. Banks trade at low P/Es (JPM ~12x, MAYBANK ~10x) because they carry massive leverage and earn returns on equity that depend on credit cycles. Software companies trade at high P/Es because earnings compound on near-zero marginal cost. Comparing JPM's 12x to MSFT's 38x and concluding "JPM is three times cheaper" is meaningless — they're different businesses with different earning quality. The correct mental model: P/E is a *within-sector* ranking tool first, a *vs.-own-history* tool second, and a cross-sector tool almost never. What invalidates the signal: one-off accounting items (a big writedown, a tax-law change, a sale of a division) can compress or inflate trailing EPS for a single year, making the trailing P/E meaningless. Always check forward P/E and normalised earnings before trusting the number.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL trades at a P/E of 32x with expected forward earnings growth of 7%. NVDA trades at 42x with expected forward earnings growth of 45%. Which statement is most accurate?"
+  options={[
+    "AAPL is cheaper because its P/E is lower",
+    "NVDA is cheaper on a growth-adjusted basis (PEG ≈ 0.93) than AAPL (PEG ≈ 4.6), despite the higher headline P/E. A P/E only becomes meaningful once paired with the growth rate, sector, and earnings quality behind it",
+    "Both are equally expensive because both trade above the S&P 500 average",
+    "Neither can be evaluated without a DCF"
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the headline number 'looks' cheaper. PEG (P/E / growth) re-weights the multiple by the rate at which earnings will grow into it. At 42x with 45% growth, NVDA's earnings can roughly double in less than two years, collapsing the forward P/E. AAPL at 32x with 7% growth takes far longer to grow into the same multiple. Option 2 is a flat-rule shortcut that ignores growth entirely. Option 3 over-engineers — PEG and sector comparison are both valid screens before reaching for DCF."
+/>
+
+<Quiz
+  question="A small-cap industrial reports trailing EPS of $0.40 and trades at $20, so trailing P/E = 50x. Last year's results included a one-time $0.60-per-share gain from selling a factory. Adjusted EPS without the sale would have been $1.00. Sector median P/E is 18x. Which read is correct?"
+  options={[
+    "The 50x P/E shows the stock is dangerously expensive",
+    "The 50x trailing P/E is mechanically distorted by the prior-year one-off gain. Stripping the gain, EPS would be $1.00 and the normalised trailing P/E is 20x — close to the sector median of 18x. The right move is to use normalised or forward EPS and ask whether the *underlying* business is growing, declining, or stable",
+    "Forward P/E is irrelevant — only trailing matters",
+    "The stock should be bought because it will revert to the sector median"
+  ]}
+  answer={1}
+  explanation="The synthesis test: a P/E can be made to look anything by one-off items. The most tempting wrong answer is option 0 — the headline 50x screams 'expensive' and a skim reader stops there. The correct read normalises out the one-off gain and discovers a 20x multiple, which is close to the sector. The decision still depends on the underlying business trajectory — option 3 is the symmetric trap of acting on a 'cheap-looking' normalised multiple without checking whether earnings are growing. Option 2 reverses the right answer."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker on your <Term id="ami_watchlist" />, and ask: "Give me the current P/E, the forward P/E, the five-year average P/E, and the sector median P/E. Flag any one-off items in the trailing-twelve-month earnings." Save the four numbers in your <Term id="ami_decision_journal" /> next to the ticker. Next time you debate whether the price is "good", you'll have a within-sector, within-history anchor instead of a single headline number.
+
+## Takeaway
+
+P/E is a within-sector, within-history ranking tool — never a standalone verdict. A high multiple is only justified by growth or earnings quality; a low multiple is only a discount if earnings aren't declining.

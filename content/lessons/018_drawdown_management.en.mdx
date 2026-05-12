@@ -1,0 +1,63 @@
+---
+id: "018_drawdown_management"
+title: "Drawdown management"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "drawdown"
+prerequisites: ["014_position_sizing_basics", "017_portfolio_exposure_and_correlation"]
+tags: ["risk", "drawdown", "recovery", "math"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Drawdown management
+
+A drawdown is the peak-to-trough decline in your account equity. It is also asymmetric in a way most beginners never internalise: a 20% loss needs a 25% gain to recover; a 50% loss needs a 100% gain; a 75% loss needs a 300% gain. The deeper the hole, the more disproportionate the climb out. This lesson teaches the recovery math, the role of a mandated drawdown ceiling, and why "I'll trade my way back" is the most expensive sentence in this industry.
+
+<Animation name="drawdown_recovery" />
+
+## Example
+
+Take a $50,000 simulated account. You hit a rough patch: a concentrated bet on NVDA into earnings, a correlated chip-sector add-on that crashed with it, and a chase trade on TSLA when the first two went south. Account drops to $35,000 — a 30% drawdown. To get back to $50,000 you need $15,000 of gains on a $35,000 base. That is 42.9%, not 30%. If you were grinding out 1% wins per month before the drawdown, you needed roughly 30 months to make 30%; now you need 36 months of identical performance to recover from one bad week.
+
+Compare a mandated 15% drawdown ceiling. Same starting $50,000, hard stop on new trades at $42,500. Drawdown of 15% requires only 17.6% to recover — six to nine months at the same 1%-per-month rate. The asymmetry tells you why the cap matters: every percentage point of drawdown you avoid is worth more than a percentage point of gain you might have made. Falsifiable claim: if your drawdown stays under 20%, you can statistically recover in under a year at typical disciplined returns; cross 35% and the recovery becomes a multi-year problem regardless of skill. On Bursa Malaysia, a RM100,000 account that drops to RM65,000 (35% drawdown) needs RM35,000 on a RM65,000 base — 53.8% to climb out.
+
+## The trap
+
+The trap is increasing size to recover faster. After a 30% drawdown, the account feels broken and slow — 1% wins barely move the equity bar. So the beginner doubles position size: "I need bigger wins to climb out." This is the exact behaviour that converts a 30% drawdown into a 60% drawdown, because the same volatility that produced the first hole is now hitting a doubled exposure. The correct mental model: drawdowns are recovered by reducing size and tightening discipline, not by chasing scale. You shrink when you are bleeding, not when you are winning. The PM enforces this for you — a mandated `pause_at_drawdown_pct` halts new entries once equity crosses the threshold, regardless of how confident you feel.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Your account is $100,000. After a bad month it sits at $60,000. What gain on the $60,000 base is required to recover to $100,000?"
+  answer={66.67}
+  tolerance={0.5}
+  explanation="Recovery = (100,000 − 60,000) ÷ 60,000 = 40,000 ÷ 60,000 = 66.67%. A 40% drawdown requires a 66.67% gain to recover — not 40%."
+/>
+
+<Quiz
+  question="Trader A operates with a hard 15% drawdown ceiling — they pause new entries once down 15% from peak. Trader B has no ceiling and is willing to keep trading through any drawdown. Both have identical strategies that produce 1% average monthly returns when active. Over a five-year simulated stretch with two bad quarters and three good quarters per year, who ends up with more equity?"
+  options={[
+    "Trader B — more trading days at +1% expectancy means more compounded gains.",
+    "Trader A — the ceiling caps the recovery math at a tractable size (a 15% drawdown needs 17.6% to recover); Trader B's deeper drawdowns require disproportionately larger gains, and time spent in recovery is time not compounding upward.",
+    "They tie — the underlying strategy is the same so expectancy converges.",
+    "Trader B — pausing trading is the same as having no edge during the pause."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'Trader B — more trading days = more wins'. It feels right because the underlying expectancy is positive. But the recovery math breaks the symmetry: every drawdown Trader B sits through requires a disproportionately larger gain to recover, and the months spent grinding back to even are months that Trader A's smaller drawdowns and faster recoveries spend compounding upward from a higher base. The 'tie — same strategy' distractor ignores that drawdown depth changes the base equity that future returns compound on."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and set `pause_at_drawdown_pct` to 15. Then open the <Term id="ami_decision_journal" /> and look at your simulated equity curve. Find your largest peak-to-trough decline and compute the recovery percentage required. Open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "What's my current drawdown from peak, and at my recent win rate, how many trades until I recover?"
+
+## Takeaway
+
+A 50% loss needs a 100% gain — the hole always digs faster than the climb fills. Cap your drawdown before the math becomes someone else's problem.

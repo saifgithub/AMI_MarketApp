@@ -1,0 +1,74 @@
+---
+id: "168_ev_ebitda_vs_pe_when_to_use_which"
+title: "EV/EBITDA vs P/E: when to use which"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "039_the_pe_ratio", "034_debt_and_the_balance_sheet", "152_interest_coverage_can_the_company_make_payroll_after_paying_interest"]
+tags: ["valuation", "multiples", "ev_ebitda", "pe_ratio", "capital_structure", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# EV/EBITDA vs P/E: when to use which
+
+Lesson 037 introduced multiples-based valuation; lesson 039 dug into P/E. P/E is the most-quoted multiple but it's also the most-distorted, because it compares prices to earnings *after* interest and taxes — meaning two companies with identical operations but different debt loads or different tax jurisdictions will look very different on P/E even though their underlying businesses are nearly identical. EV/EBITDA solves both problems by valuing the enterprise (equity + debt − cash) against pre-interest, pre-tax cash flow. By the end of this lesson you should know which multiple to reach for in which situation, and the specific structural pattern that makes P/E systematically mislead.
+
+## How this plays out in real markets
+
+Compare AT&T (T) and Verizon (VZ) in 2024. Both are telecom incumbents with similar operating profiles. T trades at roughly 8x trailing P/E; VZ at roughly 10x. The headline difference suggests T is "cheaper." But T carries more debt and a different tax position. On EV/EBITDA the picture changes: T at ~6.5x, VZ at ~6.5x. Essentially identical. The P/E gap was an artifact of capital structure, not operating value — exactly the situation EV/EBITDA exists to solve.
+
+Now compare TSLA at ~80x P/E to F (Ford) at ~7x P/E in 2024. P/E ratio gap is 11x. On EV/EBITDA: TSLA at ~50x, F at ~12x. The gap narrows but TSLA is still much more expensive — because the gap is genuine operating economics (TSLA grows faster, has higher operating margins), not just capital structure. EV/EBITDA didn't make TSLA "cheap"; it stripped out the capital-structure noise and showed the operating gap clearly.
+
+Where P/E genuinely fails: banks, REITs, insurers, capital-intensive businesses with very different depreciation policies. For banks, P/B is the dominant multiple (lesson 040). For REITs, price-to-FFO replaces P/E. For capex-heavy industrials with widely varying depreciation schedules, EV/EBITDA tells a cleaner story than P/E because depreciation choices (straight-line vs accelerated, useful life assumptions) heavily affect reported earnings.
+
+Where EV/EBITDA genuinely fails: companies with high working-capital needs or heavy stock-based compensation. EBITDA ignores both, which is why software companies with 15–20% of revenue going to SBC can look misleadingly cheap on EV/EBITDA (lesson 174 dives deeper). The honest multiple for those is EV/EBITDA-minus-SBC.
+
+On Bursa Malaysia: comparing PETRONAS Chemicals to a smaller petrochemical peer on P/E can mislead if one carries different parent-company debt allocations and the other doesn't. EV/EBITDA neutralises that.
+
+The falsifiable claim: when two operationally-similar companies show a P/E gap of more than 30% AND an EV/EBITDA gap of less than 10%, the P/E gap is capital-structure or tax-driven, not operating-economics-driven, and treating it as a "cheapness" signal is an error.
+
+## The trap
+
+The trap is using P/E to compare across capital structures or across countries. A beginner sees a US company at 18x P/E and a European peer at 12x and concludes the European stock is cheap — without checking that the European company has 60% more debt and pays a 6-point lower effective tax rate, both of which boost EPS for reasons that have nothing to do with operating quality. The correct mental model: P/E is the right multiple for an apples-to-apples comparison among companies with similar leverage and similar tax exposure. The moment those vary materially, switch to EV/EBITDA (or EV/EBIT for companies where depreciation is meaningfully different from real capex). Always cross-check P/E with at least one EV-based multiple before declaring something cheap or expensive across companies.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company A: P/E 9, debt-to-equity 1.8, effective tax rate 14%. Company B: P/E 13, debt-to-equity 0.4, effective tax rate 24%. Both operate in the same industry with similar revenue growth. EV/EBITDA: A is 7.5x, B is 7.3x. Which read most cleanly applies the lesson?"
+  options={[
+    "Company A is cheaper — its P/E is lower by 30%+",
+    "The two companies are essentially identically valued on operating economics. The P/E gap is driven by Company A's higher leverage (boosting return on equity but adding risk) and lower effective tax rate (boosting EPS for tax-jurisdiction reasons that may not be sustainable). EV/EBITDA strips both distortions and shows the cleaner comparison. The headline 'A is 30% cheaper' is a capital-structure mirage",
+    "Company B is cheaper because it's safer with less debt",
+    "Indeterminate without growth rates"
+  ]}
+  answer={1}
+  explanation="The synthesis is that P/E differences driven by leverage and tax rate aren't operating-quality differences. EV/EBITDA at 7.5x vs 7.3x shows the operating economics are nearly identical. The most tempting wrong answer is option 0 — the headline P/E gap is exactly the kind of number a careless analyst uses to call something 'cheap'. Option 2 confuses safety with cheapness. Option 4 over-cautions — the multiples themselves resolve the question."
+/>
+
+<Quiz
+  question="A capital-intensive industrial company has depreciation of $4B per year on $4.5B of capex. Its P/E is 14x. EV/EBITDA is 8x. Free cash flow is roughly equal to net income. Which read best applies the lesson?"
+  options={[
+    "EV/EBITDA understates the cost of running the business — true capex is nearly equal to D&A, so EBITDA overstates real cash generation. For this company, P/E (or EV/EBIT, or EV/FCF) is closer to reality than EV/EBITDA. The trap of EV/EBITDA is that it ignores capex; when capex is roughly equal to D&A, that ignored amount is real money going out the door each year",
+    "EV/EBITDA at 8x is the right answer — always trust EV/EBITDA over P/E",
+    "P/E at 14x is wrong because it includes depreciation",
+    "Indeterminate without growth"
+  ]}
+  answer={0}
+  explanation="The synthesis is that EV/EBITDA's blind spot is capex, and for capital-intensive businesses where capex roughly equals D&A, ignoring depreciation overstates economic earnings. The lesson's nuance is that no single multiple is universally right — match the multiple to the capital structure AND the capital intensity. The most tempting wrong answer is option 1 because the lesson promotes EV/EBITDA in many situations — but the lesson also explicitly says EV/EBITDA fails when capex matches D&A. Option 2 misunderstands depreciation as 'not a cost'. Option 3 dodges with growth as a distraction."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick two companies in the same industry and ask: "Show me P/E and EV/EBITDA side by side, with debt-to-equity and effective tax rate for each." In the <Term id="ami_decision_journal" />, write one sentence: "On P/E, A looks [cheaper/more expensive] by X%. On EV/EBITDA, the gap is Y%. The X−Y difference is the capital-structure noise I would have mistaken for an operating signal." This exercise calibrates your eye for which multiple to default to in which situation.
+
+## Takeaway
+
+P/E is the easiest multiple to quote and the easiest to misread — when leverage or tax jurisdictions vary, EV/EBITDA is the cleaner first read, and when capex matches depreciation, neither is enough on its own.

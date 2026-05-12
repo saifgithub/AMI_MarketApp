@@ -1,0 +1,81 @@
+---
+id: "154_sector_margin_benchmarks"
+title: "Sector-specific margin benchmarks"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "sector_margins"
+prerequisites: ["033_profit_and_margins", "152_three_margins_deep"]
+tags: ["margins", "sector_comparison", "benchmarks", "industry_norms", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sector-specific margin benchmarks
+
+Lesson 033 warned against comparing margins across sectors. This lesson gives you the benchmark ranges so you can compare a company to its *actual* peer set. A "good" gross margin is sector-specific — 30% is excellent in retail, mediocre in software, and structurally impossible in a low-volume distributor. By the end of this lesson you should know the typical gross, operating, and net margin ranges for the major sectors you'll encounter on US and Bursa Malaysia, and the falsifiable claim a margin outside the normal range carries.
+
+## How this plays out in real markets
+
+Approximate sector benchmarks (US large-cap, recent fiscal years):
+
+- **Software / SaaS** — gross margin 70–85%, operating margin 20–40% at scale (negative during high-growth phases is normal). MSFT, ADBE, CRM all sit in this band.
+- **Semiconductors (fabless)** — gross 50–65%, operating 25–40%. NVDA is currently the outlier above the band at ~75% gross / ~62% operating due to AI-cycle pricing.
+- **Pharma (large)** — gross 65–80%, operating 25–35%. The high gross margin reflects patent-protected pricing; operating margin reflects heavy R&D spend.
+- **Consumer staples (food, household)** — gross 30–45%, operating 15–22%. Stable, capital-efficient.
+- **Retail (mass)** — gross 22–28%, operating 3–7%. Razor-thin. WMT and COST live here.
+- **Banks (commercial)** — net interest margin 2–4%, ROE the more relevant metric.
+- **Oil & gas (integrated)** — gross 20–35%, operating 10–20%, extreme volatility with crude prices.
+- **Airlines** — gross 15–25%, operating 5–12% in good years, often negative in bad ones.
+
+So when AAPL reports operating margin around 31% on a $391B revenue base, the right comparison is "consumer electronics / premium hardware peers" — that 31% is exceptional for hardware (~10–15% typical) and reflects AAPL's services mix and brand pricing. When AMZN reports 11% operating margin, the right comparison is "retail at scale" (3–7% typical) — and 11% is excellent for the segment mix.
+
+A real-world misreading: in 2024, commentary occasionally compared TSLA's automotive gross margin (around 17–19%) directly to NVDA's (around 75%) and concluded TSLA was "underperforming on margins". They are not comparable. Automotive gross margins industry-wide run 10–22% — TSLA is in the upper end of car-maker margins. The comparison to NVDA is a category error.
+
+On Bursa Malaysia: MAYBANK runs ROE in the 9–12% range, typical of a large regional commercial bank. Comparing MAYBANK's "net margin of ~25%" to a retailer's "net margin of 4%" without contextualising would conclude the bank is dramatically more profitable per dollar of revenue — which is true, but it ignores that banks have far larger asset bases supporting each dollar of revenue. The relevant ratio is ROE or ROA, not net margin.
+
+The falsifiable claim: when a company reports a margin more than 1.5x its sector median in two consecutive years, either the company has a real durable advantage (moat, scale, mix) or the margin is borrowed from one-time items. The next four quarters will usually clarify which.
+
+## The trap
+
+The trap is using a single mental model of "what good margins look like" across every stock. A beginner internalises "30% net margin = great business" from looking at a software name, then dismisses a 5% net-margin retailer as second-rate without knowing the retailer is at the 95th percentile of its peer group. The mirror trap: praising a 35% gross margin at a pharma company as "high" when the sector median is 70% — the company is structurally underperforming the peer set. The correct mental model: every comparison needs a peer baseline. Before evaluating a margin, ask "what's normal for this industry, and where does this company sit in the distribution?" Above or below the median tells you the relative quality. Trend within the company tells you the direction.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Which of the following correctly pairs a sector with its typical gross margin range?"
+  options={[
+    "Retail mass-market: 60–70%",
+    "Software/SaaS: 25–35%",
+    "Software/SaaS: 70–85%, retail mass-market: 22–28%, semiconductors fabless: 50–65%, pharma large: 65–80%",
+    "All sectors converge toward 40% over the long run"
+  ]}
+  answer={2}
+  explanation="The ranges are: software 70–85%, retail 22–28%, semis fabless 50–65%, pharma 65–80%. Each reflects the cost structure of the industry — software has near-zero marginal cost per user; retail has cost of goods sold close to revenue; pharma has high gross margins protected by patents. Option 0 inverts retail's margin profile. Option 1 confuses software with a mid-margin sector. Option 3 is false — gross margins by sector are persistent over decades."
+/>
+
+<Quiz
+  question="Synthesis: Company X is a fabless semiconductor company with gross margin 78%, operating margin 50%. The sector median is roughly 60% gross / 30% operating. The premium has held for two consecutive years. Which read combines this lesson with the trend lesson?"
+  options={[
+    "Bearish — any margin above sector median is destined to revert",
+    "Bullish — high margins are always sustainable",
+    "Either Company X has a real durable advantage worth investigating (a moat — design lead, pricing power, customer lock-in) or the margin is partly cyclical and will compress as competition or capacity catches up. Two years of sustained premium without compression is evidence in favour of the moat case but doesn't yet confirm it. The next four to six quarters of margin trend will determine which it is. The premium is the question, not the answer",
+    "Insufficient information"
+  ]}
+  answer={2}
+  explanation="The synthesis: sector benchmarks tell you when a company is an outlier; the trend tells you whether the outlier status is durable. A 1.3x premium to sector median (78% vs 60% gross) is large enough to require an explanation. The right answer holds both interpretations open: it could be moat (durable) or cycle (temporary). The decisive evidence is whether the premium compresses, holds, or expands over the next four to six quarters. Option 0 over-applies mean reversion. Option 1 is naive. Option 3 dodges the analytical step."
+/>
+
+## Try it
+
+Pick two companies in different sectors from your <Term id="ami_watchlist" />. In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "Compare [ticker A] and [ticker B] to their respective sector median margins. Tell me where each sits in the distribution — above, near, or below median — and how long they've held that position." Save both placements in your <Term id="ami_decision_journal" /> so you stop accidentally cross-sector comparing later.
+
+## Takeaway
+
+Margins are sector-coded. Compare a company to its peer median, not to a generic ideal — and let the duration of any premium tell you whether the company has a moat or a moment.

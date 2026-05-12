@@ -1,0 +1,81 @@
+---
+id: "193_dividend_safety_scoring"
+title: "A dividend safety scoring framework"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "dividend_safety"
+prerequisites: ["043_dividend_yield_and_payout_ratio", "192_payout_ratio_on_fcf", "189_interest_coverage_ratio"]
+tags: ["dividend_safety", "income", "dividends", "scoring", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# A dividend safety scoring framework
+
+Lesson 043 introduced the concept of a sustainable dividend, and lesson 192 went deep on payout-on-FCF as the headline cash-coverage check. This lesson builds a multi-factor scoring framework — six tests, each binary — that produces a single dividend-safety read. The framework isn't a black box; it's a checklist that forces the reader to look in the places where a dividend gets cut. By the end of this lesson you should be able to apply the six tests to any dividend-paying name, score it, and name the precise factor combination that predicts a cut roughly 12–18 months ahead.
+
+## How this plays out in real markets
+
+The six-test framework:
+
+1. **Payout on FCF below 80%** (over a 3-year average, not just one year).
+2. **FCF trend flat or growing** over 3 years.
+3. **Interest coverage above 3.0x** so the debt-service cushion exists.
+4. **Net debt / EBITDA below 4.0x** (or below 5.0x for utilities/REITs).
+5. **Dividend has been maintained or grown** through the last full economic cycle.
+6. **No material refinancing wall** in the next 24 months that could force a capital allocation choice between bondholders and shareholders.
+
+Apply it to KO in fiscal 2024. Payout-on-FCF roughly 75% (3-year average) → pass. FCF growing slowly → pass. Interest coverage roughly 11x → pass. Net debt / EBITDA roughly 1.7x → pass. Dividend maintained and raised through COVID → pass. No near-term refinancing wall → pass. Six of six: a dividend that is functionally guaranteed barring catastrophe.
+
+Apply it to T (AT&T) circa 2021 — before the cut. Payout-on-FCF over 90% in the trailing year → fail. FCF declining for two consecutive years → fail. Interest coverage roughly 3.0x → marginal. Net debt / EBITDA over 3.0x and rising due to media-segment investment → fail. Dividend maintained for many years → pass. Refinancing wall ahead → fail. Four to five fails of six. T cut the dividend in 2022 — the framework would have flagged this two years earlier.
+
+Apply it to MSFT in 2024. Payout-on-FCF roughly 25% → pass. FCF growing strongly → pass. Interest coverage roughly 38x → pass. Net debt / EBITDA negative (net cash position) → pass. Dividend maintained and raised every year since initiated in 2003 → pass. No refinancing wall → pass. Six of six: ultra-safe.
+
+On Bursa Malaysia: MAYBANK scores roughly five of six — the only marginal factor is payout-on-FCF being elevated in the 65–75% range, common for mature banks. KLCC as a REIT is structurally close to 100% payout by mandate, so the framework reads differently for REITs — the relevant test there is occupancy, rent escalations, and refinancing of the property-level debt, not the corporate-style payout ratio.
+
+Falsifiable claim: a dividend-paying name that fails three or more of the six tests has a forward 12–24-month dividend cut probability materially higher than the base rate (the historical base rate of dividend cuts among S&P 500 dividend payers in any given year is roughly 2–4%). The framework invalidates if there's a structural reason for a "fail" — a one-time refinancing wall the company has already pre-funded, for example — but those need to be verified, not assumed.
+
+## The trap
+
+The trap is treating the scoring framework as a black box and ignoring context. A REIT will fail the payout-on-FCF test by construction, because REITs are mandated to distribute 90%+ of taxable income. A bank will look unusually leveraged on traditional D/E because banks fund loans with deposits. The correct mental model: the framework is a checklist, not a formula. Each fail is a question, not a verdict — "why is this factor failing, and is the reason structural or worrying?" What invalidates the surface reading: management's stated dividend policy matters. A company that has publicly committed to a payout target tied to free cash flow signals different behaviour than one with no policy and a history of cutting when convenient.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A non-REIT, non-financial company posts: payout-on-FCF 95%, FCF declining 3 years in a row, interest coverage 2.5x, net debt / EBITDA 4.5x, dividend held flat for 5 years but no growth, refinancing wall of 35% of debt in the next 18 months. Which read is most accurate?"
+  options={[
+    "Mostly safe — the dividend has been maintained for 5 years",
+    "Five of six framework tests fail: payout-on-FCF above 80%, FCF declining, interest coverage below 3.0x, net debt / EBITDA above 4.0x, and a meaningful near-term refinancing wall. The only pass is dividend maintenance, which is exactly the lagging indicator that the framework is designed to look past. This is the pre-cut pattern. A high-confidence prediction would be a cut announced in the next 12–18 months, likely in conjunction with refinancing negotiations",
+    "Five of six fails — but the maintained dividend overrides the rest",
+    "The framework doesn't apply to this company"
+  ]}
+  answer={1}
+  explanation="The synthesis test: applying the multi-factor framework. The tempting wrong answer is option 0 — anchoring on the history-of-dividend-maintenance signal that the framework explicitly down-weights as a lagging indicator. Option 2 makes the same mistake more explicitly. Option 3 dismisses the framework without justification. The right read counts the fails, names the specific pattern (refinancing wall + tight coverage + high payout + declining FCF), and predicts the typical 12–18-month cut timeline that this configuration has historically produced."
+/>
+
+<Quiz
+  question="A US regulated electric utility posts: payout-on-FCF 110%, FCF flat for 3 years, interest coverage 3.5x, net debt / EBITDA 5.5x, dividend grown 5% annually for 20 years, no refinancing wall (laddered out 15 years). Which synthesis is most accurate?"
+  options={[
+    "Three fails — cut likely",
+    "The headline payout-on-FCF and net debt / EBITDA fails are structurally normal for regulated utilities; the regulated rate base sets the leverage and the rate-of-return formula constrains FCF growth. The relevant sector tests are met: interest coverage above 3.0x, no refinancing wall, 20 years of dividend growth, and the regulatory framework explicitly factors dividend coverage into allowed returns. The cross-industry framework over-flags this; context-adjusted, the dividend is durable",
+    "The framework predicts a cut",
+    "Utilities never cut dividends"
+  ]}
+  answer={1}
+  explanation="The synthesis tests sector-aware application. The tempting wrong answer is option 0 — mechanical scoring without context, the exact trap the lesson warns about. The right read recognises that regulated utilities are a structurally different sector where the absolute thresholds shift. Option 2 repeats the mechanical-scoring mistake. Option 3 over-generalises; utilities have cut dividends (PG&E, for instance), but only when the underlying business or regulatory framework was disrupted — not because of a generic payout-ratio threshold."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a dividend-paying ticker and ask: "Apply the six-test dividend-safety framework. Score each factor as pass / fail / structurally-adjusted-pass, and give me the overall read." Save the scored card in your <Term id="ami_decision_journal" />. Build a <Term id="ami_watchlist" /> of names you score at 5/6 or 6/6 — that's the candidate set for an income-focused <Term id="ami_mandate" />.
+
+## Takeaway
+
+A sustainable dividend is one that passes a checklist, not one that has a long history. The history is the lagging indicator; payout-on-FCF, FCF trend, coverage, and refinancing exposure are the leading ones.

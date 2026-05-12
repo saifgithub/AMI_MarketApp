@@ -1,0 +1,82 @@
+---
+id: "173_adjusting_comps_for_size_leverage_growth"
+title: "Adjusting comps for size, leverage, growth"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "comparables"
+prerequisites: ["038_comparable_companies", "172_peer_selection_criteria_before_you_look_at_the_numbers", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["comparables", "comps", "adjustments", "peg_ratio", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Adjusting comps for size, leverage, growth
+
+Even a well-chosen peer set rarely contains exact replicas. The target might be 40% larger than the median peer, carry 50% more debt, or grow twice as fast — and each of those differences justifies a different multiple, not the same one. Adjusting for size, leverage, and growth is the second layer of comparable analysis: it takes the peer-median multiple and modifies it for the structural differences between the target and its peers. Done crudely (raw peer median, no adjustment), comps over- or under-price most stocks by 10–25%. Done well, comps become a workable cross-check on DCF. By the end of this lesson you should know the three standard adjustments and the specific PEG-ratio trap that most adjustment-bias mistakes hide inside.
+
+## How this plays out in real markets
+
+Take a hypothetical setup. Target: $20B revenue, debt-to-EBITDA 3.0x, revenue growth 8%. Peer median: $18B revenue, debt-to-EBITDA 1.5x, revenue growth 5%. Peer median EV/EBITDA: 10x.
+
+Without adjustment, the comp says the target should also trade at 10x. But three things differ:
+
+1. **Size:** target is ~11% larger than peer median. Generally bigger companies in the same industry trade at small premiums (institutional ownership, index inclusion). Modest upward adjustment to multiple, perhaps +0.2 turns.
+
+2. **Leverage:** target carries 2x the peer's debt. More leverage means more risk to equity, which typically compresses the multiple. EV/EBITDA is supposed to be capital-structure-neutral (that's its whole point), so the leverage adjustment is smaller for EV/EBITDA than for P/E — but the equity multiple should still be lower because the equity is riskier. Modest downward adjustment, perhaps -0.4 turns.
+
+3. **Growth:** target grows 60% faster than peer median (8% vs 5%). This is the biggest adjustment in practice. A common shorthand is to ratio growth rates: if the peer's growth supports a 10x multiple, faster growth supports a higher multiple roughly proportional to the growth rate — perhaps +1.5 to +2.5 turns depending on how durable the higher growth is judged to be.
+
+Net adjustment: +0.2 - 0.4 + 2.0 = +1.8 turns. Adjusted peer multiple for the target: 10x + 1.8 = ~11.8x.
+
+If the target actually trades at 13x, the unadjusted comp said it's a 30% premium to peers (10x vs 13x). The adjusted comp says it's only a 10% premium (11.8x vs 13x) — different action signal.
+
+The PEG ratio (P/E divided by growth rate) is the most-quoted shorthand for the growth adjustment, and it's both useful and dangerous. NVDA at a P/E of 45x with 40% growth has a PEG of ~1.1; a peer at P/E 22x with 12% growth has a PEG of ~1.8. By PEG alone, NVDA looks cheaper than the slower-growth peer. But PEG assumes a linear relationship between P/E and growth, and that relationship breaks at very high growth rates and very long durations — high-growth companies whose growth is short-lived shouldn't get full credit, and PEG doesn't penalise that.
+
+On Bursa Malaysia: comparing a fast-growing technology-services firm on Bursa to slower-growing parents in the same conglomerate is a textbook PEG-adjustment case — but only if the growth differential is durable, not a one-year sugar high.
+
+The falsifiable claim: an adjusted-comps analysis is honest only if each adjustment is justified with a number AND a defended rationale. "Growth-adjusted, the target trades at a 10% premium" is meaningful; "growth-adjusted, the target looks cheap" with no number is rhetoric.
+
+## The trap
+
+The trap is the PEG-ratio shortcut applied without thinking about growth durability. A beginner sees a stock with P/E 40 and forecast growth 35%, computes PEG ~1.1, and concludes it's reasonable — without asking whether 35% growth can hold for five years or just one. The correct mental model: PEG works only when growth is sustainable across a multi-year horizon. For a company growing 35% this year but reverting to 10% next year, the multiple should reflect the blended path, not the peak rate. The other version of the trap is making adjustments without writing down the magnitudes. "Bigger size, lower leverage, higher growth — the target deserves a premium" sounds rigorous; without specific number adjustments it's just bias dressed up. Every adjustment should add or subtract a specific number of turns to the multiple, and you should be able to defend each.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Target P/E is 22x. Peer median P/E is 17x. Target growth is 18%, peer median growth is 10%. PEG ratios: target 1.22, peer 1.7. Which conclusion most cleanly applies the lesson?"
+  options={[
+    "Target is cheaper than peers on PEG basis — buy",
+    "The PEG comparison is suggestive but the disciplined read is to check growth durability. If target growth of 18% is sustainable for 5+ years, the PEG advantage is real and 22x is defensible (perhaps even cheap). If the 18% is a single-year peak that reverts to 10% next year, the 22x multiple loses justification quickly and the target is actually expensive. The lesson's discipline is that PEG only works when growth is durable — compare 5-year forecast growth, not next-year growth, before acting on PEG",
+    "Target is more expensive than peers because 22 > 17",
+    "PEG doesn't matter — only P/E does"
+  ]}
+  answer={1}
+  explanation="The synthesis is that PEG is a shortcut that works only when the growth in the denominator is durable. Single-year growth peaks distort PEG ratios and produce misleading 'cheapness' signals. The most tempting wrong answer is option 0 — PEG <1 (or in this case, lower-PEG-than-peers) is a heuristic many investors use as a buy trigger, but it ignores growth duration. Option 2 ignores growth entirely. Option 3 over-rejects PEG."
+/>
+
+<Quiz
+  question="An analyst writes: 'Adjusting for the target's higher growth, lower size, and higher leverage, the target deserves a multiple roughly in line with the peer median.' No specific numbers are given for each adjustment. Which is the cleanest critique under the lesson?"
+  options={[
+    "Sounds reasonable — adjustments are inherently qualitative",
+    "The adjustments are unwritten and therefore unfalsifiable. The lesson's discipline is that each adjustment needs a number — e.g., '+1.2 turns for growth, -0.3 turns for size, -0.5 turns for leverage, net +0.4 turns'. Without those numbers, the analyst's conclusion ('in line with peer median') is rhetoric. The honest critique: ask for the numbers behind each adjustment before accepting the conclusion. If the analyst can't produce specific magnitudes per adjustment, the framework wasn't applied — bias was",
+    "Reject — comps never work",
+    "Trust the analyst — they have more experience"
+  ]}
+  answer={1}
+  explanation="The synthesis is that adjustments are quantitative or they are nothing. A handwave that produces 'roughly in line' could mean anywhere in a wide range; specific numbers create a defensible position. Option 0 lets qualitative bias slide. Option 2 over-rejects the framework. Option 3 substitutes authority for analysis. The lesson explicitly requires numbered adjustments."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a stock and ask: "Run a comp on [target] against [peer set]. For each peer-vs-target difference in size, leverage, and growth, give me a specific multiple-adjustment number and the rationale." In the <Term id="ami_decision_journal" />, write down the unadjusted peer median multiple, each adjustment with its number and reason, and the final adjusted multiple. Compare to the target's current multiple. The honest action is the difference between current and adjusted, not current and unadjusted.
+
+## Takeaway
+
+Comps without adjustments are wrong by 10–25%; comps with handwave adjustments are wrong by indeterminate amounts. Number each adjustment, defend each rationale, and treat PEG with skepticism unless growth is durable.

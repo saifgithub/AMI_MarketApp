@@ -1,0 +1,70 @@
+---
+id: "118_role_reversal_resistance_becomes_support"
+title: "Role reversal: when resistance becomes support"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "support_resistance"
+prerequisites: ["023_support_and_resistance", "024_breakouts"]
+tags: ["role_reversal", "support", "resistance", "retest", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Role reversal: when resistance becomes support
+
+This assumes you've completed 023 (support and resistance) and 024 (breakouts). Here we go deeper on what happens to a level *after* it breaks. A resistance level that breaks doesn't disappear — it usually flips role and becomes support on a subsequent pullback. The same mechanism works in reverse: broken support becomes resistance. By the end of this lesson you should be able to identify a role-reversal retest, understand the order-flow logic behind it, and write the exact close that confirms the flip versus the close that voids it.
+
+## Example
+
+Look at AMZN on the daily chart in February and March 2026. The $215 level had been resistance for AMZN since November 2025 — three separate failed daily closes attempted that ceiling. On 6 February 2026, AMZN closed at $218.40 — a decisive close above $215 on 1.8x average volume. Breakout confirmed.
+
+Then on 24 February, AMZN pulled back to $215.80 intraday — a precise retest of the prior resistance — and closed at $217.20. Buyers stepped in at the level that used to reject them. That's the role reversal: $215 went from resistance (rejecting buyers) to support (catching buyers).
+
+Three reasons this happens. (1) Traders who shorted near $215 the prior times are now sitting on losses; if price returns to their entry they're inclined to break even, generating buy pressure at the level. (2) Traders who missed the initial breakout view a return to the breakout level as a second-chance entry, generating buy pressure. (3) Traders long from below the breakout view a clean retest as proof their position is right and add or hold, removing sell pressure.
+
+AMZN then ran from $217 to $238 over the next three weeks — a 9.7% follow-through after the successful retest. The role reversal invalidates the moment a subsequent daily candle closes back below the prior resistance level — in this case a close below $215 voids the support flip and re-establishes $215 as resistance again. That close didn't come.
+
+## The trap
+
+The trap is assuming role reversal always happens, and entering at the retest level too aggressively without confirmation. Sometimes the breakout was thin or fake (see lesson 119), and price slices back through the level with no hesitation — the level didn't flip, it just got crossed twice. The correct mental model: a role reversal is *confirmed by a hold, not by the touch*. Wait for either (a) a daily close back above the level after the intraday test, or (b) a clean bounce candle with elevated volume and a wick that didn't close below the level. Touching the level isn't the signal; closing back above it on a tested retest is. The level breaking the other direction immediately means the breakout was fake — not that the role reversal failed but that there was never a role to reverse.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock breaks out above $80 (prior resistance) and closes at $82.40 on heavy volume. Three sessions later it pulls back to $80.20 intraday and closes at $81.10. The next day it pushes to $83.50. Was $80 confirmed as the new support?"
+  options={[
+    "No — the intraday print at $80.20 was technically below $80, so the level was breached",
+    "Yes — the retest tagged the prior resistance, the daily close at $81.10 held above $80, and the follow-through to $83.50 confirms the flip; that's the textbook role reversal",
+    "No — role reversal requires three retests before it counts",
+    "Yes — but only because volume was heavy on the breakout day"
+  ]}
+  answer={1}
+  explanation="The retest sequence is: pullback to the prior level, intraday test that closes back above it, follow-through. All three happened. Option 0 misuses the wick-vs-close rule from lesson 023 — $80.20 was above $80 anyway, and even if it had been below, the close at $81.10 is what counts. Option 2 invents a rule. Option 4 confuses confirming evidence with prerequisite — heavy volume on the breakout strengthens the signal but doesn't determine whether the retest itself confirmed."
+/>
+
+<Quiz
+  question="GOOGL has been trading $158 support / $172 resistance for three months. On 4 March GOOGL closes at $174.80 — a clean break above $172. On 11 March GOOGL pulls back and closes at $169.40 — below the prior resistance. A trader holding long since the breakout asks: 'Is this a normal retest or has the flip failed?' Which response combines the lessons correctly, and what's the tempting wrong read?"
+  options={[
+    "Normal retest — pullbacks to retest levels always happen",
+    "The flip has failed — a daily close at $169.40 is below the prior resistance of $172, which is the explicit invalidation of the role-reversal thesis; what looked like a successful breakout has now become a failed breakout. The tempting wrong read is calling any pullback to the level a 'normal retest' even when the close has already gone through",
+    "Wait one more session before deciding",
+    "Hold and add to the position — the discount is the buying opportunity"
+  ]}
+  answer={1}
+  explanation="A retest tests the level from above. A close *through* the level is a different event — it's the invalidation. The lesson defines it explicitly: a close below the prior resistance voids the support flip. Option 0 lazily labels everything a retest. Option 2 introduces vague delay that doesn't follow from any rule the lesson states. Option 3 averages into a falsified thesis — the classic averaging-down trap reinforced by lessons 024 and 025. The synthesis test is recognising that the same price action that confirms a flip (a touch followed by a close above) is structurally different from action that voids it (a close below)."
+/>
+
+## Try it
+
+Open the chart of any stock that has had a confirmed breakout in the past two months. Find the breakout day, then scroll forward looking for the first pullback that tagged the prior resistance level. Ask the Market Analyst in <Term id="ami_one_on_one" />: "Did the role reversal hold or fail on [date]? What was the exact close that confirmed or voided it?" Save the level and outcome to your <Term id="ami_decision_journal" /> as a learning entry on flip retests.
+
+## Takeaway
+
+Broken resistance becomes support only when the close confirms — touching the level isn't the signal, a daily close back above it is; the moment a close prints below the prior level, the flip is voided and the breakout itself was a fake.

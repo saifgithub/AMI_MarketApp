@@ -1,0 +1,76 @@
+---
+id: "245_panic_vs_capitulation"
+title: "Panic selling vs capitulation: telling them apart"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "bear_regime"
+prerequisites: ["060_bear_markets", "046_fear_and_capitulation", "029_volume_confirmation", "064_market_breadth"]
+tags: ["regime", "bear", "capitulation", "panic", "breadth", "volume"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Panic selling vs capitulation: telling them apart
+
+Lesson 046 introduced capitulation as the emotional state at bear lows. This lesson teaches the numeric difference between *panic* (one bad week mid-trend) and *capitulation* (the terminal sell-off that often marks a regime low). They look identical in real time. They are not identical in their structural signature. After this lesson you will be able to detect a capitulation event using a four-marker checklist, name what distinguishes it from a mid-trend panic, and state the invalidation condition that says "this wasn't it".
+
+## How this plays out in real markets
+
+The 12 October 2022 SPX bottom is a textbook capitulation print. On that day and the surrounding window:
+
+- SPX closing low at 3,577 — a fresh 52-week low.
+- VIX intraday touched 33.6 but did NOT spike to a new high — it had peaked weeks earlier at 34.9 on 16 June 2022. Volatility was elevated but not panicking further. This is a "volatility divergence" — price making new lows while VIX makes lower highs.
+- NYSE down-volume hit ~92% of total volume on 13 October 2022 intraday before reversing — a 90%+ down-volume day inside the cluster.
+- Two days later (14 October), the reverse: a 90%+ up-volume day on heavy turnover. This is the "reversal pair" capitulation signature.
+- AAII bull-bear spread had hit -43 on 22 September 2022 — the 2nd percentile of all readings since 2010, an extreme historically associated with intermediate lows.
+
+Contrast with the mid-trend panic of 13 June 2022: SPX dropped 3.9% in one session to a fresh low, VIX spiked to a fresh higher high at 34.0, but down-volume was 88% (not 90%+) and there was NO 90%+ up-volume reversal pair within 10 trading days. The market made new lows three weeks later.
+
+Detection rule for capitulation cluster: (1) fresh price low, (2) VIX makes a lower high than a prior recent peak (divergence) or fails to expand on the new low, (3) at least one 90%+ down-volume day inside the 10-day window, (4) a 90%+ up-volume day inside 10 trading days of the price low. All four present is the capitulation print. Three of four is suggestive; two or fewer is mid-trend panic.
+
+## The trap
+
+The capitulation trap is calling it on emotion. The trader who sees a 4% red day and reads "blood in the streets" headlines wants to call the bottom. They buy aggressively on the down-volume day, see another -3% session three days later, panic, exit at a worse price, and miss the actual capitulation when it comes a month later.
+
+The correct model: capitulation is a structural cluster, not a feeling. The four markers either print or they don't. A single 90%+ down-volume day without a 90%+ up-volume reversal pair is panic, not capitulation. The patient response is to wait for the reversal pair — if it never comes, you sat out another 8% drawdown; if it does come, the entry is on real evidence, not on feeling brave.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="SPX makes a new 52-week low. VIX prints 31, lower than its 34 reading three weeks ago. NYSE down-volume is 91% that session. Five trading days later, NYSE up-volume hits 94% on rising turnover. AAII spread reads -38. What does the framework prescribe?"
+  options={[
+    "Wait for SPX to rally 20% before believing the bottom.",
+    "All four capitulation markers fired (fresh low + VIX lower-high divergence + 90%+ down-volume day + 90%+ up-volume reversal pair) and the sentiment extreme adds confirmation. Begin scaling into long exposure within mandate sizing — full-conviction sizing only after a structural bear-regime invalidation (200-day reclaim on weekly basis). Invalidation of the capitulation thesis: SPX takes out the recent low without a second reversal pair forming.",
+    "Sell aggressively short — capitulation always means more downside.",
+    "Ignore — capitulation can't be detected in real time."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'wait for confirmation' sounds prudent, but waiting for a 20% rally means buying near the top of the regime change. The framework's strength is that the cluster is detectable on the day. Option 3 is half-right (it's hard) but defeatist. The synthesis: scale in on the cluster, full conviction only after structural regime invalidation, defined invalidation if the low fails."
+/>
+
+<Quiz
+  question="SPX drops 4% in a session, makes a new low, VIX spikes to a fresh high of 36, NYSE down-volume is 88%. No up-volume reversal day prints in the following 10 sessions. What does the framework call this?"
+  options={[
+    "Capitulation — the four markers are essentially present.",
+    "Mid-trend panic, NOT capitulation. VIX made a fresh high (no divergence), down-volume fell short of the 90% threshold, and the up-volume reversal pair never formed. The bear regime prior remains in force; rallies are still suspect until the 200-day SMA is reclaimed.",
+    "Capitulation — high VIX and a new low are sufficient.",
+    "Sideways regime transition."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — emotionally this looks like capitulation, and the trader badly wants it to be. But the structural markers don't print. This is exactly the 13 June 2022 case from the lesson — a real panic, not the regime low. The discipline is to require the cluster, not the feeling."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "For the current regime, run the capitulation checklist on the last major drawdown — fresh price low? VIX lower-high? 90%+ down-volume day inside 10 sessions? 90%+ up-volume reversal pair? Tell me how many fired and on which dates." Then open the <Term id="ami_decision_journal" /> and find a trade where you bought a "looks like capitulation" dip that wasn't. Tag the trade with which markers were and weren't present. That tag will save you the next time.
+
+## Takeaway
+
+Capitulation is a four-marker structural cluster, not an emotional state. Demand the reversal pair before scaling in; without it, you have panic, not a regime low.

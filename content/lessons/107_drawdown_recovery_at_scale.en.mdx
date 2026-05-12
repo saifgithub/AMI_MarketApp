@@ -1,0 +1,65 @@
+---
+id: "107_drawdown_recovery_at_scale"
+title: "Drawdown recovery at different per-trade sizes"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "drawdown_recovery"
+prerequisites: ["018_drawdown_management", "014_position_sizing_basics"]
+tags: ["risk", "drawdown", "recovery", "math", "position_sizing"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Drawdown recovery at different per-trade sizes
+
+This lesson assumes you've completed lesson 018 (Drawdown management); here we go deeper on the specific link between per-trade risk and how many trades it takes to climb out of a drawdown. Lesson 018 showed that a 30% drawdown requires a 42.9% gain. This lesson answers the follow-up: at 1% risk per trade and a 55% win rate with average 1.5R winners, how many trades is that? At 2%? At 5%? The numbers are sobering and they're why the 1% rule earns its place — the recovery path at higher per-trade sizes looks shorter on a single-trade basis but exposes the account to a fresh, deeper drawdown well before the first one is healed.
+
+## Example
+
+You're in a 30% drawdown on a $100,000 simulated account that now sits at $70,000. Target is back to $100,000, requiring 42.9% on the current base. Assume a 55% win rate with average 1.5R winners and average 1R losers — modest, realistic numbers for disciplined trading.
+
+At 1% risk per trade: per-trade expectancy = (0.55 × 1.5R) − (0.45 × 1R) = 0.825R − 0.45R = +0.375R per trade. At 1% per trade, that's roughly +0.375% per trade. Trades needed to compound to +42.9% on the current base: about 96 trades. At one trade per trading day, that's roughly five months of disciplined execution.
+
+At 2% risk per trade: expectancy per trade ≈ +0.75% per trade. Roughly 48 trades to recover. Two and a half months. Looks twice as fast. But: the worst expected drawdown at 2% per trade is also roughly twice as deep — a normal 8-loss streak that costs 8% at 1% sizing costs 16% at 2% sizing. You are climbing out faster only if no further drawdown hits during the recovery. Fresh 16% drawdowns happen.
+
+At 5% risk per trade: expectancy ≈ +1.875% per trade. Roughly 19 trades to recover on paper. But a typical 8-loss streak at 5% per trade is a 40% drawdown — which, layered on the 30% you started in, takes you to about 58% from peak. You no longer have an account to recover with. On Bursa Malaysia the same math works in MYR; the percentages don't care about currency. Falsifiable test: simulate 10,000 sequences of 50 trades each at the same 55% win rate and 1.5R payoff — at 5% per-trade sizing, more than 35% of sequences hit a drawdown deeper than 50% from peak before completing.
+
+## The trap
+
+The trap is "I'm down, I need to size up to recover faster." It is the exact behaviour from lesson 018's trap section, and here is the quantitative version: doubling per-trade size cuts the recovery trade count roughly in half, but it more than doubles the depth of any new drawdown during the recovery — and recovery-on-top-of-recovery compounds the math in the wrong direction. The correct mental model: during a drawdown, halve per-trade size if anything. A 0.5% per-trade sizing during recovery makes the trade count roughly double, but the worst-case fresh drawdown during the recovery period also halves. You trade speed for survival, which is the right side of the trade-off when you're already in the hole.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Account at $80,000 after a 20% drawdown from $100,000 peak. Required recovery on current base = 25%. Assume +0.375% per-trade expectancy at 1% sizing. Roughly how many trades to recover?"
+  answer={67}
+  tolerance={3}
+  explanation="(1.00375)^N = 1.25 → N × ln(1.00375) = ln(1.25) → N ≈ 0.223 ÷ 0.00374 ≈ 60. Using a simple compound estimate, roughly 60–67 trades depending on rounding. The point is the math: even at a positive expectancy, recovery from a 20% drawdown is two to three months of disciplined execution at 1% sizing — not the few weeks it feels like it should be."
+/>
+
+<Quiz
+  question="Two traders both sit at a 30% drawdown. Trader A keeps 1% per-trade sizing and accepts ~5 months to recover. Trader B doubles to 2% per-trade sizing 'to climb out faster' and projects ~2.5 months. Across 1,000 simulated recovery sequences with realistic loss streaks, who recovers more often without hitting a 50% peak-to-trough drawdown?"
+  options={[
+    "Trader B — faster recovery means less time exposed to fresh drawdowns.",
+    "Trader A — recovery sequences include normal loss streaks; at 2% sizing those streaks roughly double the depth of any fresh drawdown during recovery, and the combined depth (original 30% plus a 16% additional) puts Trader B's account past the 50% danger threshold in a meaningful fraction of paths, while Trader A's 8% additional drawdown stays well below it.",
+    "They recover at the same rate because expectancy per trade is unchanged.",
+    "Trader B — the higher per-trade gain compounds faster than streaks can erode it."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first or last — 'faster gain = better outcome'. The math says otherwise: positive expectancy means the average path recovers faster at 2%, but the variance of the path also doubles. The relevant survival question is not the average, it is the fraction of paths that survive without breaching a critical drawdown. At 2% sizing those paths see fresh 16% drawdowns added to the existing 30%, and combined depths past 50% trigger the recovery cliff from lesson 018 where the math becomes a multi-year problem regardless of skill."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find your worst peak-to-trough drawdown to date. Compute the recovery percentage required on the current base. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "At my current win rate and average R, how many trades until I recover? And what would the same recovery look like at half my current per-trade size?" The answer is the trade-off you're making consciously instead of by accident.
+
+## Takeaway
+
+Recovery is measured in trades, not weeks — halving per-trade size during a drawdown doubles the trade count but halves the depth of the next hole you can fall into.

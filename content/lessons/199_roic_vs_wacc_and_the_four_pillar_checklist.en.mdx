@@ -1,0 +1,86 @@
+---
+id: "199_roic_vs_wacc_and_the_four_pillar_checklist"
+title: "ROIC vs WACC and the four-pillar fundamental long checklist"
+duration_min: 7
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "roic_wacc_checklist"
+prerequisites: ["041_return_on_equity", "042_debt_to_equity", "044_earnings_growth", "198_garp_and_peg_math"]
+tags: ["roic", "wacc", "checklist", "fundamental_long", "synthesis", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ROIC vs WACC and the four-pillar fundamental long checklist
+
+Lessons 039–044 introduced P/E, P/B, ROE, D/E, dividend metrics, and growth. Lessons 188–198 went deep on each. This lesson is the synthesis. ROIC (Return on Invested Capital) is the cleanest single measure of business quality — it tells you what the business earns on every dollar of capital deployed, regardless of how that capital was financed. WACC (Weighted Average Cost of Capital) is what that capital costs. ROIC minus WACC is the *economic spread* — the true value-creation rate. Joel Greenblatt's "Magic Formula" combines this quality measure with an earnings-yield value measure. By the end of this lesson you should be able to compute ROIC, compare it to WACC, and apply a four-pillar checklist that integrates everything in M7.
+
+## How this plays out in real markets
+
+ROIC = NOPAT / Invested Capital, where NOPAT = operating income × (1 − tax rate), and Invested Capital = total debt + equity − excess cash. It's better than ROE for cross-company comparison because it strips out capital-structure effects.
+
+MSFT in fiscal 2024 generated operating income ~$109B, tax rate ~18%, giving NOPAT ~$89B. Invested capital (debt + equity − cash) is roughly $200B. ROIC ≈ 45%. MSFT's WACC is in the 7-8% range. Economic spread = 45% − 7.5% = 37.5 percentage points. Every dollar deployed earns 37.5 cents of value creation per year. That is the definition of a high-quality compounder.
+
+AAPL: NOPAT ~$100B, invested capital ~$95B, ROIC ~105%. The number is so high because AAPL operates capital-light (much capex is outsourced manufacturing) and has been returning huge cash to shareholders, shrinking the denominator. WACC ~8%. Spread ~97 percentage points — but the absolute dollar creation is the better measure here because the denominator has been engineered down.
+
+A spread-destroying example: an industrial cyclical at ROIC of 6% with WACC of 9%. The business is destroying value at 3 cents per dollar of capital per year. Even if reported earnings are positive, the business is liquidating in economic terms. Growth at this company *destroys* value — every new dollar reinvested earns less than it cost to raise.
+
+On Bursa Malaysia: MAYBANK and PUBLIC Bank typically run ROIC in the high single digits to low double digits — bank ROIC is structurally lower than industrials because banks deploy enormous balance sheets per dollar of NOPAT. The right comparator is sector-relative, not absolute.
+
+**The four-pillar checklist for picking a fundamental long:**
+
+1. **Quality** — ROIC sustainably above WACC by a meaningful spread (5+ percentage points), demonstrated across at least one full cycle. This is the "is the business economic" pillar.
+
+2. **Growth** — Organic revenue and EPS growth above the inflation + risk-free hurdle, with the growth not dependent on serial acquisitions or buyback engineering. This is the "is the business compounding" pillar.
+
+3. **Capital structure** — Net debt / EBITDA below sector norm or below 4.0x for non-utilities, interest coverage above 3.0x, no material near-term refinancing wall, no currency mismatch. This is the "will the business survive a cycle" pillar.
+
+4. **Price** — PEG below 1.5x using conservative trailing growth, OR P/E below sector median, OR enterprise-value-to-FCF in the lower half of the company's 10-year range. This is the "am I over-paying" pillar.
+
+All four pillars together is the high-conviction fundamental long. Three of four with a clear weakness is a position with reduced size. Two or fewer is a pass.
+
+Falsifiable claim: a name that fails the Quality pillar (ROIC below WACC) cannot be rescued by passing the other three — cheap stagnation is value-trap territory, and growth at negative spread is liquidation. The signal invalidates only when there's a credible catalyst for ROIC to cross WACC within 12-24 months (a turnaround, regulatory change, or capital reallocation) that the market hasn't yet priced.
+
+## The trap
+
+The trap is treating the four pillars as independent and accepting "3 of 4" as good enough without examining which one failed. Failing on Quality is fatal — without economic returns, the rest doesn't matter. Failing on Capital Structure is recoverable through deleveraging but is also potentially catastrophic in a downcycle. Failing on Price is the most recoverable — the price is the one variable that changes daily, and a great business at a fair price waits for a sale. The correct mental model: the four pillars are weighted, not equal, and Quality is the floor. A "3 of 4 because Quality failed" is far weaker than "3 of 4 because Price failed". What invalidates the simple checklist read: management quality, optionality (turnaround potential, AI/regulatory tailwinds), and balance-sheet flexibility for opportunistic deployment aren't captured in the four pillars and matter materially — the checklist is the floor, not the ceiling.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company posts ROIC of 8%, WACC of 10%, revenue growth of 15%, net debt / EBITDA of 2.0x, PEG of 0.9. Which read is most accurate?"
+  options={[
+    "Strong buy — three of four pillars pass and the price is attractive",
+    "Quality pillar fails (ROIC < WACC), which is the unrecoverable failure. The 15% revenue growth is reinvested at a negative economic spread, meaning each new dollar of capital deployed destroys ~2 cents of value per year. Higher growth makes this worse, not better — it accelerates value destruction. The cheap PEG and moderate leverage are mathematically true but irrelevant; this is the deepest version of the value trap. Pass even at the attractive price",
+    "ROIC vs WACC is theoretical and doesn't apply",
+    "Strong buy — the growth alone justifies the position"
+  ]}
+  answer={1}
+  explanation="The synthesis test: weighting the pillars correctly and recognising the Quality floor. The tempting wrong answer is option 0 — counting pillars without weighting them. The right read identifies that growth-at-negative-spread is the worst configuration in fundamental analysis: capital is being destroyed faster the more aggressively it's deployed. Option 2 dismisses the foundational quality measure. Option 3 makes the explicit mistake of equating growth with value, which only holds when ROIC exceeds WACC."
+/>
+
+<Quiz
+  question="Company A: ROIC 22%, WACC 8%, organic revenue growth 12%, net debt / EBITDA 1.5x, payout-on-FCF 35%, interest coverage 15x, PEG 1.3 using trailing growth. Company B: ROIC 26%, WACC 9%, organic revenue growth 18%, net debt / EBITDA 4.5x, payout-on-FCF 20%, interest coverage 2.8x, PEG 0.9 using trailing growth. Both same sector. Which is the higher-conviction fundamental long?"
+  options={[
+    "B because it passes Quality more strongly and is priced more attractively",
+    "A. Both pass Quality (ROIC > WACC by wide margin). Both pass Growth. Both pass on Price (A's 1.3 PEG is acceptable; B's 0.9 PEG is more attractive). The decisive difference is Capital Structure: A is conservatively levered with very strong interest coverage; B has net debt / EBITDA above the 4.0x threshold and coverage below 3.0x. B's marginally better Quality and Price are offset by a balance-sheet fragility that makes the position vulnerable in a downcycle. The four-pillar discipline weights the worst pillar most heavily — and A's worst pillar (Price at 1.3) is far less dangerous than B's worst pillar (Capital Structure)",
+    "B because the lower PEG dominates",
+    "Both are equivalent overall"
+  ]}
+  answer={1}
+  explanation="The capstone synthesis test: integrating Quality, Growth, Capital Structure, and Price across two close calls. The tempting wrong answer is option 0 — leading on the marginally better Quality and Price metrics while under-weighting the Capital Structure fragility. The right read recognises that a 4.5x net debt / EBITDA name with 2.8x interest coverage is one downcycle away from forced refinancing or equity issuance, regardless of the operating profile. Option 2 makes the PEG-as-magic-number mistake. Option 3 over-equivocates between two genuinely different risk profiles. The four-pillar lens is what distinguishes a fundamental long from a leveraged equity bet on quality."
+/>
+
+## Try it
+
+Open <Term id="ami_convene_the_room" /> on any name you're researching and ask the Fundamentals Analyst directly: "Score this stock on the four-pillar fundamental long checklist. For each pillar give me the metric, the threshold, and pass / fail / borderline. Then give me the overall pillar-weighted read with Quality as the floor." Save the score card in your <Term id="ami_decision_journal" />. Over time, your <Term id="ami_watchlist" /> becomes a sorted set of 4-of-4 and 3-of-4 names — and the cases where you bought a 2-of-4 anyway become the case studies you learn from.
+
+## Takeaway
+
+ROIC > WACC is the floor — a business that doesn't earn its cost of capital can't be rescued by growth, dividends, or a cheap multiple. Quality, Growth, Capital Structure, and Price are the four pillars; weight them, don't just count them, and Quality is the one that's non-negotiable.

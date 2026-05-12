@@ -1,0 +1,73 @@
+---
+id: "233_trend_following_crash_signatures"
+title: "Trend-following crash signatures — whipsaw regime detection"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "failure_modes"
+prerequisites: ["052_trend_following", "058_strategy_failure_modes", "215_atr_trailing_stop_for_trends", "216_multi_timeframe_trend_confirmation"]
+tags: ["failure_modes", "trend_following", "whipsaw", "regime"]
+agent_callouts: ["bear_researcher", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Trend-following crash signatures — whipsaw regime detection
+
+The failure-modes foundation (058) named choppy range-bound markets as the regime where trend-following bleeds. This lesson goes deeper: it gives you the three observable signatures that say "you are in a whipsaw regime RIGHT NOW" — not in hindsight after six losses, but at the second or third loss. The signatures are ADX collapse, MA flattening, and ATR contraction. Each is independently observable, each has a calibrated threshold, and the three together are far more reliable than any single one. After this lesson you can name the signatures, set the thresholds, and pre-commit a sizing-down protocol for when they fire.
+
+## How this plays out in real markets
+
+Look at SPY from August 2015 to February 2016 — a textbook whipsaw episode after years of clean uptrend.
+
+- **August 2015**: Surprise China devaluation flash crash. SPY 200-day MA goes flat for the first time in 4 years. ADX (14) falls from 28 in July to 15 by mid-September.
+- **September-November 2015**: SPY makes three rallies to ~210 and three failures back to 195. A 50/200 trend-follower buys on each rally crossover and stops out on each failure. Six small losses in three months.
+- **January-February 2016**: Second downleg, SPY to 182. The strategy is now down ~14% on cumulative whipsaw drag. ADX still at 16, 50-day MA still flat. Both signatures still active.
+- **March 2016**: SPY breaks back above the 200-day MA with rising ADX (above 20) and re-steepening 50-day slope. The whipsaw regime ends.
+
+A trader running a trend-follower without regime detection takes the full 14% drawdown. A trader watching the signatures cuts size to half when ADX falls below 20 AND the 50-day flattens — and absorbs only ~6-7% of the drawdown, preserving capital for the resumed trend.
+
+Bursa equivalent: KLCI from mid-2022 to mid-2023 showed the same signature on a slower clock. ADX on KLCI sat below 18 for ~9 months while names like MAYBANK and TENAGA whipsawed inside a 4% range. The traders who recognised the regime and cut size emerged ready to deploy when the trend resumed in Q4 2023.
+
+## The trap
+
+The beginner mistake is to "trust the system" and keep taking every signal during the whipsaw, on the theory that trend-following is supposed to lose money in chop and gain it back on the next big trend. That logic is half right — trend-following IS supposed to lose in chop — but the magnitude of the drawdown matters enormously. A 20% chop-drag requires a 25% recovery just to break even, and the next trend may take 18 months to deliver that. The correct mental model: respecting the regime signature is not abandoning the strategy, it's running it at a position size proportionate to the regime's confidence. The second trap: cutting size during chop and refusing to re-add as the regime resolves — you cut at the worst moment and aren't there for the trend. Pre-commit the re-engage rule (ADX > 22 AND 50-day slope positive) so the decision is automatic.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="You're running a 50/200 trend rule on SPY. ADX(14) is at 14 (well below 20). 50-day MA slope is flat. You've taken 4 small losses in 6 weeks. Aggressive Debator: 'every trend-follower has whipsaw periods, hold the line'. Bear Researcher and Conservative Debator: 'the regime signature is active, cut size'. Empirically which is correct?"
+  options={[
+    "Aggressive — the strategy must be run at full size always",
+    "Bear and Conservative — both regime signatures (ADX < 20, flat 50-day) are firing simultaneously, the documented whipsaw conditions. Cut size to roughly half until both signatures resolve.",
+    "Switch to mean reversion",
+    "Stop trading entirely"
+  ]}
+  answer={1}
+  explanation="The two-signature confirmation is the documented whipsaw setup — running full size in this regime is statistically going to deliver more losses before the trend resumes. Option 0 dresses up 'trust the system' as discipline; the system itself has a regime overlay built in if you respect the signatures. Option 2 swaps to a strategy that may have its own failure mode in this regime. Option 3 over-corrects — you want to BE there when the trend resumes, just at reduced size."
+/>
+
+<Quiz
+  question="Your trend-following strategy hit its mandate-aware sizing-down trigger 3 weeks ago. ADX has now risen to 23, 50-day MA slope is positive, and SPY has reclaimed prior swing high. You're at half size. Synthesis question: what's the correct action and why?"
+  options={[
+    "Stay at half size — the recent losses are still fresh, wait another month",
+    "Both re-engage signatures (ADX > 22 AND positive 50-day slope) are met. Restore full size per the pre-committed re-engage rule. The whipsaw regime has resolved; staying small means missing the trend you sized down to be ready for.",
+    "Go to 150% size to recover losses faster",
+    "Switch to a different strategy"
+  ]}
+  answer={1}
+  explanation="The synthesis: regime detection is two-sided — you size down when the signature fires and size back up when it resolves, per pre-committed rules. Option 0 is the most tempting wrong answer because losses are recent and emotional — but the regime-aware system has no opinion on your recent P&L, only on the regime indicators. Option 2 is revenge-trading. Option 3 abandons the strategy at exactly the moment its regime is favourable."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Bear Researcher, paste your current trend-following rule and ask: "Compute ADX(14) on my primary instrument's daily chart, and the 50-day MA slope (5-day change). Tell me whether the whipsaw signature is active right now, and what size factor my <Term id="ami_mandate" />-aware rule should apply." Log the signature reading + size factor in the <Term id="ami_decision_journal" /> as a pre-committed protocol — so when the signatures fire later, the decision is automatic.
+
+## Takeaway
+
+Whipsaws have a signature: ADX below 20 plus flat 50-day MA. The trader who reads the signature and cuts size survives; the trader who treats every whipsaw as variance gets ground down.

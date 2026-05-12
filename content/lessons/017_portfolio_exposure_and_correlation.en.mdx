@@ -1,0 +1,66 @@
+---
+id: "017_portfolio_exposure_and_correlation"
+title: "Portfolio exposure and correlation"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "exposure_correlation"
+prerequisites: ["014_position_sizing_basics", "016_risk_reward_ratio"]
+tags: ["risk", "portfolio", "correlation", "exposure"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Portfolio exposure and correlation
+
+Per-trade risk is only half the picture. If you hold five "different" positions that all move together when the market sneezes, your real risk is not 5 × 1% — it is closer to 1 × 5%. Correlation eats diversification when you most need it. This lesson teaches you to think in terms of total open risk, sector clusters, and the difference between holding many tickers and holding many independent bets. The PM tracks this for you in the background and will block trades that push a single factor exposure past your mandate ceiling.
+
+## How this plays out in real markets
+
+Suppose you hold five positions, each sized at 1% account risk: NVDA, AMD, MSFT, GOOGL, META. On paper you have $5,000 of risk on a $100,000 account — 5%. In reality, in a sharp tech sell-off these five names regularly post correlations of 0.7 to 0.9 to each other (they move down together when rates jump, when a chip headline breaks, when the Nasdaq has a bad day). On a single risk-off Tuesday in Q1 2025, the Nasdaq-100 dropped 3.4% intraday and every one of those five names fell between 4% and 7%. Your "diversified" five-position book lost roughly 4.5% in a single session — closer to one big tech bet than five independent ones.
+
+Compare to a book of NVDA + JPM + XOM + KO + IHH on Bursa Malaysia (semiconductor + bank + energy + staples + healthcare). The same Nasdaq-down-3.4% day, JPM closed flat, XOM was up 1.1%, KO down 0.4%, IHH up 0.2%. The cluster of independent factors absorbed the tech shock. Same five 1% positions, very different real-world exposure. Falsifiable test: if your top 3 holdings have moved together (same sign, similar magnitude) on more than 70% of red days in the last quarter, you do not hold three positions — you hold one position three times.
+
+## The trap
+
+The trap is counting positions instead of counting bets. A beginner with NVDA, AMD, and TSM thinks they own three stocks; the PM sees one bet on the semiconductor cycle, sized at 3% account risk plus whatever sector beta amplification kicks in during a sell-off. The correct mental model: ask "if my central thesis on these is wrong, do all of them get hit at once?" If yes, treat the cluster as one position for sizing purposes — meaning if your mandate caps single-trade risk at 1%, the cluster aggregate caps at 1%, not 3%. The other half of the trap is the reverse: avoiding correlated bets so aggressively that you end up holding 15 micro positions you cannot track. Three to seven genuinely independent bets is the working range.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Your mandate sets max single-factor exposure at 5% of account. You already hold NVDA (1.2%), AMD (1.0%), and TSM (1.5%) — all semiconductor names with realised 90-day correlation above 0.8. You want to add MU (memory chips) at 1.5%. What does the PM safety floor say?"
+  options={[
+    "Approved — total open risk is only 5.2%, just over the cap and within rounding.",
+    "Approved — each ticker is under 2% individually.",
+    "Rejected — the four names function as one semiconductor bet at 5.2% aggregate, exceeding the 5% single-factor ceiling; the bet must shrink or one leg must close.",
+    "Rejected — four positions in the same sector violates a minimum diversification rule of five sectors."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is the first: 'total open risk is 5.2%, basically at cap'. Total open risk is the wrong metric here — the PM enforces single-factor exposure. Four names that move together with correlation >0.8 collapse into one factor for risk purposes, and 5.2% of single-factor exposure breaches a 5% ceiling. The 'minimum five sectors' distractor invents a rule that does not exist in the mandate."
+/>
+
+<Quiz
+  question="You're long AAPL, MSFT, and an S&P 500 index ETF. The S&P 500 ETF is roughly 13% AAPL + MSFT by weight. If the market drops 5% and your two single-stock positions drop 6% each, how does this compound your real exposure versus what a position-count view suggests?"
+  options={[
+    "It doesn't compound — the ETF is diversified, so it offsets the single-name moves.",
+    "Holding the ETF alongside AAPL and MSFT means you own those two names twice (directly + via the ETF), so your effective AAPL+MSFT exposure is larger than the position count implies, and a tech-led drawdown hits both layers at once.",
+    "The ETF reduces volatility, so the effective exposure is lower than holding the single names alone.",
+    "Position count is the right metric — three positions, three independent risks."
+  ]}
+  answer={1}
+  explanation="The seductive wrong answer is the third — index ETFs do reduce volatility versus a single concentrated bet, which makes it feel like exposure goes down. But the question is about overlap, not volatility. The ETF is 13% AAPL+MSFT, so you own those names directly and again inside the index. In a tech-led drawdown the two layers compound: the single names fall 6%, and the ETF's tech weight drags it down with them. Exposure is what you own through every wrapper, not just the line items on the ticket."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and set `max_single_factor_exposure_pct` to 5. Then in the <Term id="ami_decision_journal" />, look at your current open positions and ask the Portfolio Manager in <Term id="ami_one_on_one" />: "Across these positions, what is my real single-factor exposure?" If the PM flags a cluster you didn't notice, you've just learned the difference between position count and bet count.
+
+## Takeaway
+
+Count bets, not tickers — if your top holdings all bleed on the same day, you own one position in different costumes.

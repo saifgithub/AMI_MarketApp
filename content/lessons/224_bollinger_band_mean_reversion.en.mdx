@@ -1,0 +1,66 @@
+---
+id: "224_bollinger_band_mean_reversion"
+title: "Bollinger Band mean reversion in range markets"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "mean_reversion"
+prerequisites: ["055_mean_reversion", "061_sideways_range_markets", "062_volatility_regimes", "018_drawdown_management"]
+tags: ["strategy", "mean_reversion", "bollinger_bands", "range", "volatility"]
+agent_callouts: ["conservative_debator", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bollinger Band mean reversion in range markets
+
+The mean-reversion foundation (055) used RSI(2). Bollinger Bands give you a different mean-reversion lens — bands plotted at the 20-day moving average ± 2 standard deviations of daily returns. In range-bound markets price reliably oscillates between the bands and the centre line, and a strategy that fades touches of the outer bands with a target at the mean has real edge. But the strategy collapses entirely when the regime shifts to trending — exactly when "the bands are stretched" becomes "the bands are riding the trend". After this lesson you can specify a Bollinger mean-reversion rule that includes the regime gate that decides whether to trade it at all.
+
+## How this plays out in real markets
+
+Look at KLCC Property on Bursa Malaysia through 2024 — a relatively range-bound REIT that traded between RM7.20 and RM7.70 for most of the year. Bollinger Bands (20, 2) were tight around RM7.45 mid-band. A representative trade: July 3, 2024 — KLCC closed at RM7.21, tagging the lower band. ADX(14) was at 14 — well below the trending threshold of 25 — confirming range regime. Entry on the close at RM7.21 with a stop at RM7.10 (below the prior range low). Target: the 20-day MA mid-band at RM7.45. Within four sessions KLCC closed at RM7.46 — exit at the mid-band. Profit per share: RM0.25 on RM0.11 risk = 2.3R. Across 2024 the rule fired roughly 8 times on KLCC, with a hit rate around 70% and a positive expectancy of ~1.2R per trade. Now compare with what would have happened in 2023 on KLCC's parent index when MAYBANK was trending — Bollinger touches of the upper band were entries TO BE SHORT in a strict mean-reversion rule, and most of them got run over by the continuing trend.
+
+Entry criteria for long: (1) price closes at or below the lower Bollinger Band, (2) ADX(14) < 20 (range regime filter), (3) price above the 200-day MA (broader-trend filter). Entry: close of the band-tag bar. Stop: prior range low or the most recent swing low, whichever is tighter. Target: the 20-day mid-band. Exit: close at or above the mid-band, OR 7 sessions elapsed (time stop). Individual-trade invalidation: a daily close below the stop. The strategy FAILS in trending regimes — ADX above 25 means the bands "ride" the trend and outer-band touches are continuation, not reversion. It also FAILS in expanding-volatility regimes where bands widen quickly and the mid-band itself is moving away from price.
+
+## The trap
+
+The beginner mistake is fading every band-tag without checking ADX or trend context. You see price at the lower band, you buy, and you're trying to mean-revert a stock in a strong downtrend that's been making new lows for weeks — the band is just expanding to accommodate the trend. The correct mental model: Bollinger mean reversion is a REGIME-CONDITIONAL strategy. The bands themselves don't tell you whether to fade them — ADX (or another regime indicator like the slope of the 50-day MA) does. The other trap: trading the strategy across instruments without checking whether each instrument is in a range. Bands work on KLCC in a range year; they fail on NVDA in a trend year. Same indicator, opposite outcome — the regime decides.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="A US large-cap closes at the lower Bollinger Band. The ADX(14) is at 32 and rising; the 50-day MA is sloping down. What does the Bollinger mean-reversion rule say?"
+  options={[
+    "Enter long — outer-band touches are mean-reversion signals",
+    "No entry — ADX > 25 and the 50-day is down; the regime filter disqualifies the trade",
+    "Enter half-size as a hedge against the trend",
+    "Short the lower band — trend continuation"
+  ]}
+  answer={1}
+  explanation="ADX 32 means strong directional trend; that's the exact regime in which Bollinger mean reversion fails. The bands ride the trend, and 'oversold' readings stay oversold for weeks. Option 0 is the tempting wrong answer because the band-touch is mechanically the same — but the regime gate is the whole strategy. Without it, you're catching a falling knife inside the wrong system."
+/>
+
+<Quiz
+  question="On Bursa: KLCC closes at the lower Bollinger Band at RM7.18; ADX is 14, price is above the 200-day MA. Stop at RM7.05, target at mid-band RM7.40. You also have 3 other active mean-reversion positions (correlated REITs). Mandate: per-trade risk 1.5% on RM50,000 account, total mean-reversion basket capped at 4% of account. Currently you've used 3% of the basket cap. Synthesis: how much can you allocate to this trade?"
+  options={[
+    "Full 1.5% per-trade allocation since each setup is individually valid",
+    "Up to 1% of account (the remaining basket capacity), sized down from the full per-trade limit",
+    "Skip — three correlated positions is already enough",
+    "Override the basket cap because the setup is high quality"
+  ]}
+  answer={1}
+  explanation="The basket cap is a portfolio-level limit, not a per-trade limit. You have 1% of remaining capacity (4% cap - 3% used). Size this trade to risk no more than 1%, which on a 13-cent stop (7.18 - 7.05) caps shares at 1% * 50,000 / 0.13 = 3,846 shares. Option 0 ignores the basket cap (the synthesis error — assuming per-trade rules dominate). Option 3 (override) is the catastrophic version — overriding mandate caps because a setup looked good is how strategies blow up across correlated trades."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Conservative Debator, paste 5 <Term id="ami_watchlist" /> tickers and ask: "For each, state whether ADX(14) and the 50-day MA slope qualify as a range regime suitable for Bollinger mean reversion. List which tickers are eligible today and which fail the regime gate." Use <Term id="ami_coach_your_agent" /> on the Conservative Debator to add: "Always check ADX and trend slope before approving any band-touch entry; refuse band-touches in ADX>25 regimes." Log results in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Bollinger mean reversion only works in range regimes — ADX is the gate, not the bands. In trending markets band-touches are continuation, not reversion; the same indicator points the opposite direction.

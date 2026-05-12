@@ -1,0 +1,88 @@
+---
+id: "212_bias_inventory"
+title: "Bias inventory — anchoring, recency, confirmation, hindsight, sunk-cost"
+duration_min: 6
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+topic: "bias_inventory"
+prerequisites: ["045_greed", "046_fear_and_capitulation", "049_overconfidence"]
+tags: ["psychology", "cognitive_bias", "anchoring", "recency", "confirmation", "hindsight", "sunk_cost"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bias inventory — anchoring, recency, confirmation, hindsight, sunk-cost
+
+Most trading mistakes are not new — they are the same five cognitive biases, recombined. After this lesson you will be able to name each bias by its operational signature in trading, identify which one is driving any specific decision through a falsifiable test, and apply a process antidote that does not require you to stop *feeling* the bias — only to stop letting it touch the position size. The biases will not go away. The antidotes are the only thing that can.
+
+## How this plays out in real markets
+
+Five compressed cases, one per bias:
+
+**Anchoring** — A trader bought TSLA at $250 in 2023. The stock fell to $185. He refused to sell because "I'm anchored to my entry; it'll come back." The chart had broken support at $215. Anchoring kept him in a 26% loser for four months past the structural invalidation.
+
+**Recency** — Following a 3-week run where every breakout worked, the same trader sized a JPM breakout at 2x mandate "because breakouts have been working." JPM was the first breakout in five weeks that failed. Recency made the most recent regime feel like the only regime.
+
+**Confirmation** — Long NVDA, he read 11 bullish takes from the Bull Researcher and skipped a Bear Researcher report flagging a margin warning. The margin warning materialised in earnings two weeks later. Confirmation filtered the information set to match the position.
+
+**Hindsight** — After GME pulled back from $325 to $54, he wrote in his journal: "It was obvious it was going to crash." It was not obvious in real time — it was obvious in hindsight, and the journal entry he wrote retrospectively destroyed his ability to learn from his actual real-time decision process.
+
+**Sunk-cost** — He held PETRONAS through a 22% drawdown despite an invalidated thesis because "I've already lost so much, selling now locks it in." The loss was already locked in the moment the thesis invalidated; refusing to sell only converted a defined loss into an open-ended one. PETRONAS fell another 14% before he capitulated.
+
+Each bias has a falsifiable signature, summarised: anchoring — exit reluctance correlated to entry price rather than chart level; recency — sizing or conviction correlated to last 5 trades' outcomes; confirmation — research consumption skewed >70% to bullish/bearish based on existing position; hindsight — journal entries describe past decisions as "obvious"; sunk-cost — hold rationale references prior loss rather than forward thesis.
+
+## The trap
+
+The trap is the belief that knowing about a bias prevents it. It does not. Awareness of confirmation bias does not stop you from reading more bullish takes when you are long. The correct mental model: biases are not bugs to debug — they are constants to engineer around. The antidote for each bias is a process step, not a feeling: for anchoring, require the exit decision to reference the chart-drawn invalidation level, not the entry price; for recency, require sizing to reference the written <Term id="ami_mandate" />, not the rolling 5-trade outcome; for confirmation, require at least one Bear Researcher consultation before any entry over a defined size threshold; for hindsight, require journal entries to be written *before* knowing the outcome; for sunk-cost, require the hold-rationale to be re-articulated weekly without reference to the prior loss. The Conservative Debator's role is to ask the bias-shaped question for each one — what level, what mandate, what bear case, what was the real-time thesis, what is the forward thesis. Process beats awareness every time.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="You are long a position at -19% from entry. Your written stop was at -10% and you ignored it. Your hold rationale is 'I'm already down so much, selling now locks the loss.' Which bias is operating, and what is the disciplined response?"
+  options={[
+    "Confirmation bias — read more bullish research to support the hold.",
+    "Sunk-cost bias — the loss was locked in the moment the thesis invalidated; refusing to sell does not unlock it. Re-articulate the forward thesis without referencing the prior loss; if no forward thesis survives the re-articulation, exit.",
+    "Recency bias — wait for a few green sessions to reset.",
+    "Anchoring bias — set a new entry price as the anchor and average down."
+  ]}
+  answer={1}
+  explanation="The 'hold rationale references prior loss rather than forward thesis' is the textbook sunk-cost signature. Reading more bullish research is the confirmation-bias antidote running backwards. 'Wait for green sessions' is hope dressed as recency. 'Average down' is sunk-cost amplified by anchoring. The disciplined answer requires re-articulating the forward thesis without reference to prior loss; if you cannot do this without using the word 'already' or 'down,' the bias is driving the decision, not the analysis."
+/>
+
+<Quiz
+  question="Which compound test is the cleanest signature of confirmation bias driving an open position?"
+  options={[
+    "You read more bullish takes than bearish takes.",
+    "Over the last 14 days, your research consumption on the position has been at least 70% directionally aligned with your position (bullish takes for longs, bearish for shorts), AND you have skipped or dismissed at least one substantive Bear Researcher report in that window with no written rebuttal.",
+    "You feel more confident than when you opened the position.",
+    "The position is at a new high."
+  ]}
+  answer={1}
+  explanation="Reading more bullish takes than bearish can be normal if the thesis is bullish. Feeling more confident is unfalsifiable. Position at a new high is an outcome. The compound test — research-skew above 70% AND a dismissed substantive bear case without rebuttal — is the auditable signature. The dismissed-bear element is the critical one; confirmation bias's operational mode is not what you read, it is what you refused to read or refused to engage with."
+/>
+
+<Quiz
+  question="You are reviewing the Decision Journal and notice your entries describe past trades as 'obvious,' 'clear setup,' 'I knew it would work.' Your win rate is in fact 52%. The Conservative Debator flags hindsight bias. The journal is being written for trades after they close. Synthesis answer?"
+  options={[
+    "The language is fine — the trades were obvious in hindsight.",
+    "Rewrite the past journal entries to be more humble.",
+    "Restructure the journal so the entry is written at the moment of entry (real-time thesis, expected invalidation, expected horizon, conviction score), not at the moment of exit. Closed-trade reviews should compare the real-time entry note to the outcome — not generate a new retrospective narrative.",
+    "Stop writing journal entries since they are not reliable."
+  ]}
+  answer={2}
+  explanation="'Trades were obvious in hindsight' is the bias itself speaking. 'Rewrite to be more humble' is style fix; it does not change what data the journal captures. 'Stop writing entries' throws out the diagnostic. The disciplined answer restructures the *timing* of the entry — real-time thesis at entry, outcome compared after. This breaks the hindsight loop by capturing data the future-version-of-you cannot retroactively edit. The journal is only useful for learning if its data was generated before the outcome was known."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and audit five recent entries against the bias signatures: anchoring (does the exit reasoning reference entry price?), recency (is sizing correlated to recent outcomes?), confirmation (is the research mix >70% aligned to position?), hindsight (does the entry describe the trade as 'obvious'?), sunk-cost (does the hold rationale reference prior losses?). For each detected signature, write the corresponding process antidote into your mandate or journal template. Then open a <Term id="ami_one_on_one" /> with the Conservative Debator and paste the five entries — ask which biases it can detect from the language alone. The match is usually high.
+
+## Takeaway
+
+Biases are not bugs to debug — they are constants to engineer around. Awareness is not enough; the antidote for each bias is a process step that runs whether you feel the bias or not.

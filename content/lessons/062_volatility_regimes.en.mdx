@@ -1,0 +1,74 @@
+---
+id: "062_volatility_regimes"
+title: "Volatility regimes"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "volatility_regime"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management", "026_moving_averages"]
+tags: ["regime", "volatility", "vix", "atr", "position_sizing"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Volatility regimes
+
+Volatility is a regime distinct from direction. A market can be a bull and calm, a bull and volatile, a bear and calm, or a bear and explosive. The volatility regime is what should set your position sizes and stop distances — not your conviction. After this lesson you will be able to detect a volatility regime using VIX and ATR thresholds, name the strategies that pair with each regime, name the strategies that quietly destroy capital when volatility shifts, and state the invalidation condition for a vol-regime call.
+
+## How this plays out in real markets
+
+Three real volatility regimes inside the same SPX bull from 2023–2024:
+
+Low-vol bull (mid-2023): VIX closed under 15 for 47 of 65 trading days from 19 June to 22 September 2023. SPX 20-day ATR averaged 38 points (≈0.84% of price). A 2%-of-account risk trader could carry an 8–10% position with a 2% chart stop and still be inside mandate.
+
+Vol-shock spike (5 August 2024): VIX closed at 38.57 on 5 August 2024 after the yen-carry unwind — a single-day move from a VIX of 23 the prior session. SPX 20-day ATR jumped from 50 to 88 points (1.0% to 1.6% of price) within five trading days. Same 2% risk-per-trade now forced position size down to under 5%.
+
+Sustained-high-vol (October 2022): VIX held above 25 for 30 consecutive trading days during the bear-market low. SPX 20-day ATR averaged 75 points (~2% of price). Position sizes that worked in mid-2023 would have produced 2x the intended drawdown.
+
+Detection rule: VIX < 15 for 10 of last 15 sessions → low-vol; VIX 15–25 → normal; VIX > 25 for 10 of last 15 sessions → high-vol; intraday spike where VIX rises >40% in a single session → vol-shock. ATR confirms: a low-vol read on VIX with ATR > 1.2% of price flags a divergence that often precedes a shock.
+
+## The trap
+
+The volatility-regime trap is keeping the same dollar position size across regimes because conviction hasn't changed. The number that has to change is share count, not opinion. When VIX moves from 13 to 28, the same 2% chart stop now represents a 4% loss because price moves twice as far between bars. The trader who didn't resize watches a "small" position deliver a "large" loss and concludes they were wrong about the stock — when they were actually wrong about the regime.
+
+The correct model: risk-per-trade is fixed by mandate; position size is the variable that absorbs the volatility change. As ATR doubles, share count halves. Conviction stays the same; the math protects you.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="VIX has been under 14 for 12 of the last 15 sessions. You enter a long with a 2% chart stop at a 10% position size, risking 0.2% of account on the move. Two weeks later VIX spikes to 32 and ATR doubles. Your stop hasn't been hit yet. What is the regime-aware adjustment?"
+  options={[
+    "Do nothing; the stop is the stop.",
+    "Move the stop tighter to lock in profit.",
+    "Cut position size roughly in half to restore the original $-risk under the new ATR; widen the stop in proportion if the chart structure demands it; alternatively close the trade and re-enter at sized-for-regime.",
+    "Double the position size — fear means opportunity."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 0 — 'discipline means don't touch the stop'. But discipline is about $-risk, not stop price. When ATR doubles, the same stop distance represents double the volatility-noise risk, and the position is now effectively oversized for the regime. Resizing is the regime-correct move. Option 3 (double up) is the classic vol-shock disaster."
+/>
+
+<Quiz
+  question="VIX = 11. ATR on SPX = 1.4% of price. Which divergence signal does this fire, and what is the mandate-level response a Conservative Risk Debator would push?"
+  options={[
+    "No divergence; both readings say 'calm'.",
+    "Low-VIX-high-ATR divergence — option-market complacency disagrees with realised volatility. Tighten max position size by ~25% pre-emptively; consider reducing high-beta exposure until divergence resolves.",
+    "Buy more — calm options means free upside.",
+    "Sell everything immediately; this always precedes a crash."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — VIX and ATR look like they should agree, so 'no divergence' feels right. But VIX is forward-looking option-implied vol; ATR is realised. When VIX is unusually low while ATR is unusually high, the divergence is the signal. The conservative response is pre-emptive sizing reduction, not panic exit (option 3) or denial (option 2)."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Show me the current VIX regime — under 15, 15–25, or over 25 for 10 of last 15 sessions — and the current SPX 20-day ATR as a % of price. Flag any divergence." Then open the <Term id="ami_mandate" /> editor and set a "vol-adjusted max position size" rule in your head: at VIX < 15, max 10%; VIX 15–25, max 7%; VIX > 25, max 5%. Save it as a journal note.
+
+## Takeaway
+
+Risk-per-trade is fixed; position size flexes with the volatility regime. When ATR doubles, share count halves — conviction does not change, the math does.

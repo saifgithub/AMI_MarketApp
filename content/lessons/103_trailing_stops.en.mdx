@@ -1,0 +1,61 @@
+---
+id: "103_trailing_stops"
+title: "Trailing stops"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "trailing_stops"
+prerequisites: ["015_stop_loss_basics", "102_atr_based_stops"]
+tags: ["risk", "stop_loss", "trailing", "exit"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Trailing stops
+
+This lesson assumes you've completed lesson 015 (Stop-loss basics); here we go deeper on one specific stop variant — the trailing stop — which only ever moves in your favour. A fixed stop converts "wrong" into a structural exit; a trailing stop converts "right but the move is over" into a structural exit. It is the mechanism that lets a winner run while ensuring you don't give back the entire gain. The discipline is one-way: trailing stops ratchet up on long positions, never down. This lesson covers chandelier-style ATR trailing, swing-low trailing, and the most common mistake — trailing too tightly and getting shaken out of a trend that hasn't actually broken.
+
+## Example
+
+You're long AAPL from $185, stop at $179 (chart-based, below the prior swing). AAPL rallies to $205 over four weeks. Now the original stop is irrelevant — you have $20 of profit per share and a $179 stop means giving all of it back if the trade reverses. Apply a chandelier trail: stop sits at the highest close since entry, minus 3× ATR. 14-day ATR is $4, so the trail is anchored at the running high − $12. After the close at $205, the stop ratchets to $193. AAPL pulls back over the next week to $197 — trail untouched, you stay in. Then AAPL prints two consecutive closes at $192 — trail triggers, you exit at the next open. Realised gain: roughly $7 per share above the chandelier-set price (entry was $185, exit was around $192). The remaining $13 of unrealised peak gain is the price of letting the trade run rather than guessing the top.
+
+On Bursa Malaysia: long MAYBANK from RM10.20. Runs to RM11.20 over three weeks. 14-day ATR RM0.10, 3× ATR trail = RM0.30 below highest close. After RM11.20 print, trail sits at RM10.90 — well above breakeven and locks in roughly RM0.70 per share if hit. Falsifiable test: a chandelier trail with 3× ATR rarely triggers on healthy trends and almost always triggers when a real top has formed — if it triggers more than once per trade in a single trend, your multiple is too tight.
+
+## The trap
+
+The trap is trailing tight to "lock in profit." A beginner moves the stop to breakeven the second the trade is green, then tightens it further every day. Two weeks later they get stopped out at a 2% gain on what turned into a 30% trend, because every normal pullback in a healthy uptrend is wider than their trail. The correct mental model: a trailing stop is an exit on trend failure, not a profit lock. The trend's normal noise has to fit inside the trail, or you are using the trail to exit noise instead of structural reversals. 3× ATR or a stop below the most-recent confirmed swing low are the two clean approaches; "I'll just trail half a percent" is a guarantee you'll exit early on every trade.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You're long GOOGL from $140. Price rises to $160. 14-day ATR is $3.50. Using a 3× ATR chandelier trail anchored to the highest close, where is the trailing stop after the $160 print?"
+  answer={149.5}
+  tolerance={0.25}
+  explanation="Trail = highest close − 3 × ATR = $160 − $10.50 = $149.50. That's above your $140 entry, locking in $9.50 of gain per share if hit, while leaving 3 ATR of room for normal pullbacks in the uptrend."
+/>
+
+<Quiz
+  question="Trader A trails with a 1× ATR stop ('tight to protect profits'). Trader B trails with a 3× ATR stop. Both enter the same uptrend in NVDA that runs from $480 to $620 over six weeks with one 8% mid-trend pullback. Who likely captures more of the move and why?"
+  options={[
+    "Trader A — tighter trails always capture more profit because they exit closer to peaks.",
+    "Trader B — a healthy uptrend's normal pullbacks (often 1.5–2.5× ATR) fit inside a 3× ATR trail but trip a 1× ATR trail; Trader A almost certainly gets stopped on the mid-trend 8% pullback and misses the remainder of the move.",
+    "Both capture roughly the same amount because trailing stops are an exit method, not an entry edge.",
+    "Trader A — trailing stops are not meant for trend trades, so the wider stop is irrelevant."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first — 'tighter trail = closer to peak'. The flaw is that trends don't move in straight lines; the normal pullback inside a healthy uptrend is regularly 1.5–2.5× ATR. A 1× ATR trail is tighter than the trend's own noise, so it exits on every pullback rather than on the eventual reversal. Wider trails (3× ATR or below-the-last-swing-low) match the trend's noise envelope, letting the position survive pullbacks and only exiting on a structural change."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find a closed long trade where you exited near breakeven during a pullback that later resumed up. Open a <Term id="ami_one_on_one" /> with the Trader, paste the ticker and the original trade window, and ask "If I had used a 3× ATR chandelier trail from entry, where would I have exited and by how much?" Compare to your actual exit.
+
+## Takeaway
+
+A trailing stop is an exit on trend failure, not a profit lock — wider than the trend's normal noise, or it's a guarantee you exit early.

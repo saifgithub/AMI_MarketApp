@@ -1,0 +1,74 @@
+---
+id: "237_when_to_retire_a_strategy"
+title: "When to retire a strategy — falsification, not faith"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["057_backtesting_a_strategy", "058_strategy_failure_modes", "229_walk_forward_analysis", "232_regime_segmented_backtests"]
+tags: ["synthesis", "retirement", "falsification", "edge_decay"]
+agent_callouts: ["research_manager", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# When to retire a strategy — falsification, not faith
+
+The backtesting foundation (057) ended with "a backtest is a sanity check, not a forecast". This lesson is the corollary: a live strategy needs a falsification protocol — a pre-committed set of conditions under which you retire it. Without that protocol you'll either retire too early (cutting a strategy in its known failure regime) or too late (riding a structurally decayed edge into ruin). The honest test is whether live performance is still inside the envelope your backtest predicted, AFTER accounting for the regime you're in. After this lesson you can write the falsification protocol for each of your strategies BEFORE deploying them — and execute the retirement when the conditions hit, without ego.
+
+## How this plays out in real markets
+
+Imagine you deployed an RSI(2) mean-reversion rule on US large-caps in 2018. Backtest from 2005-2017 showed: average ~12% CAGR, max drawdown 11% (excluding 2008 which was filtered by the 200-day overlay), Sharpe 1.3, win rate 67%.
+
+Falsification protocol pre-committed at deployment: retire the strategy if ANY of these fire over a rolling 24-month window:
+1. Drawdown exceeds 1.5× the backtest max (i.e., 16.5%) while regime conditions (above 200-day, VIX < 25) are favourable.
+2. Win rate drops below 55% (well below the 67% backtest baseline) for 50+ trades.
+3. Average win / average loss ratio drops below 0.7 (the backtest was 1.1) for 50+ trades.
+4. The walk-forward efficiency ratio computed on rolling 12-month live data falls below 0.4.
+
+Live performance 2018-2024: CAGR 8.4%, max drawdown 9% (Q1 2020, in failure regime — does not fire condition 1 because regime conditions were unfavourable). Win rate 64% (above the 55% threshold), avg win/loss 0.95 (above 0.7). Walk-forward efficiency 0.7. No conditions fired. The strategy is degraded vs backtest but operating within the envelope. Decision: continue running at current size.
+
+Contrast: a 2010-deployed pairs-trading strategy in US large-caps that worked beautifully through 2015 (CAGR 14%, drawdown 8%) but had its edge structurally decayed by ETF flows and quant compression. By 2018, win rate had fallen to 51% (failed condition 2), avg win/loss to 0.6 (failed condition 3), and walk-forward efficiency to 0.25 (failed condition 4). Three of four conditions fired — the strategy was retired in early 2019 and its capital reallocated. By 2024 the strategy would have returned roughly 0% with multiple drawdowns, validating the retirement.
+
+## The trap
+
+The beginner mistake is having no falsification protocol — running a strategy "as long as it works" and discovering after several years that "works" was defined emotionally. The correct mental model: every strategy gets a written retirement protocol the moment it deploys, with pre-committed thresholds keyed to backtest statistics. The second trap is retiring during the strategy's known failure regime ("RSI mean-reversion lost money in Q1 2020 — kill it"). The failure regime is when the strategy is SUPPOSED to lose money; retiring there is converting a regime cycle into a permanent capital reduction. The third trap is the opposite — refusing to retire even when multiple conditions have fired, because of sunk-cost emotion or the conviction that the strategy "will come back". A strategy whose live walk-forward efficiency has been below 0.4 for 24 months is structurally broken, regardless of when its peak was.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A strategy you deployed 18 months ago is at -11% drawdown. Backtest max drawdown was 8%. The current regime is the documented failure regime for the strategy (e.g., mean-reversion in a trending bear). Falsification protocol: retire if drawdown exceeds 1.5× backtest max IN FAVOURABLE regime. Which action is correct?"
+  options={[
+    "Retire — drawdown has exceeded backtest max",
+    "Continue — the protocol explicitly conditions the trigger on regime. The strategy is in its known failure regime; the larger drawdown is expected. Retire only if drawdown grows further once the regime turns favourable.",
+    "Increase size to recover the drawdown",
+    "Switch to a different strategy immediately"
+  ]}
+  answer={1}
+  explanation="The protocol's regime-aware threshold is the entire point — drawdown in the failure regime is not a falsification, it's the strategy operating as designed. Option 0 retires at the moment when the strategy is doing what its backtest predicted. Option 2 amplifies risk during failure regime. Option 3 abandons strategy diversification at exactly the wrong moment."
+/>
+
+<Quiz
+  question="Your strategy has been live for 30 months. Drawdown is 12% (backtest max 11%, regime currently favourable). Win rate is 51% (backtest 67%). Avg win/loss is 0.62 (backtest 1.1). Walk-forward efficiency is 0.32. The Bear Researcher and Research Manager both invoke the retirement protocol. The Aggressive Debator argues 'every strategy has dry periods'. Synthesis-correct decision?"
+  options={[
+    "Aggressive is right — give the strategy more time",
+    "Three of four falsification conditions are firing simultaneously, in favourable regime. The strategy is structurally decayed, not in a temporary dry period. Retire it, reallocate capital to strategies inside their envelope, and run a post-mortem documenting what changed.",
+    "Reduce size and continue",
+    "Re-optimize parameters on recent data"
+  ]}
+  answer={1}
+  explanation="The synthesis: multiple conditions firing simultaneously in favourable regime is the structural-decay signature. Option 0 is sunk-cost reasoning — 'more time' has no defined endpoint and ignores the protocol. Option 2 reduces capital allocation but keeps a broken strategy in the mix, dragging on diversification. Option 4 is exactly the overfitting trap from 057/228 — re-fitting on recent data to recover an evaporated edge. The retirement protocol exists precisely to make this decision automatic."
+/>
+
+## Try it
+
+For each strategy you currently run, write the falsification protocol: drawdown trigger (regime-conditioned), win-rate trigger, win/loss ratio trigger, walk-forward efficiency trigger, and the rolling-window size for each. Submit to the Research Manager in <Term id="ami_one_on_one" />: "Are these thresholds calibrated to my backtest, regime-aware, and statistically meaningful?" Log each protocol in the <Term id="ami_decision_journal" /> with the strategy. When any condition fires, the retirement is automatic — no ego involved.
+
+## Takeaway
+
+Every strategy needs a written retirement protocol the moment it deploys. Falsification, not faith — retire on multiple conditions firing in favourable regime, not on a single bad month.

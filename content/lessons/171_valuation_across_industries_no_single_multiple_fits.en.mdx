@@ -1,0 +1,76 @@
+---
+id: "171_valuation_across_industries_no_single_multiple_fits"
+title: "Valuation across industries: no single multiple fits"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "040_price_to_book", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["valuation", "multiples", "industry_specific", "banks", "reits", "biotech", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Valuation across industries: no single multiple fits
+
+Different industries earn money differently, and no single multiple translates across them cleanly. Banks live on book value and net-interest-margin economics — P/E misleads. REITs live on rental cash flow that depreciation accounting distorts — P/E is meaningless. Biotech pre-revenue companies have no earnings or cash flow — DCF projections are guesses. Capital-intensive industrials have widely varying depreciation policies — EBITDA understates true cost. By the end of this lesson you should know the dominant valuation framework for each major industry and the specific reason why the wrong framework produces a wrong answer.
+
+## How this plays out in real markets
+
+**Banks (JPM, BAC, WFC, C, on Bursa: MAYBANK, CIMB, PUBLIC):** The dominant multiple is price-to-tangible-book (P/TBV), and the second is return-on-tangible-equity (ROTCE) as the multiple driver. JPM trades around 1.8x P/TBV with ROTCE around 17%. A bank with ROTCE of 8% deserves a P/TBV close to 1.0x; one with ROTCE of 20% can earn 2.0x+. Forward P/E for banks is a sanity check, not the primary tool. The reason: bank earnings are heavily provision-driven (credit losses), and provisions move with the cycle in ways that distort point-in-time P/E.
+
+**REITs (PLD, EQIX, AMT, on Bursa: KLCC, IGB-REIT):** The dominant multiple is price-to-FFO (Funds From Operations), not P/E. FFO adds back real-estate depreciation, which is an accounting fiction for income-producing property (buildings don't actually depreciate at the rate accounting says; they're often appreciating). A REIT at 20x FFO is roughly equivalent to a 5% cash yield. Most US equity REITs trade between 15x and 25x FFO depending on growth profile and asset quality.
+
+**Capital-intensive industrials (CAT, DE, GE):** EV/EBIT (not EV/EBITDA) is the cleaner default. EBITDA flatters businesses where capex roughly equals depreciation — adding D&A back into the multiple disguises that the company has to spend that money every year to stay in business. EV/FCF is the cleanest of all but harder to peer-compare in cyclical years.
+
+**Software / SaaS (CRM, SNOW, NOW):** EV/Sales with a "Rule of 40" overlay (growth rate + operating margin should sum to 40 for a healthy SaaS company). A SaaS company growing 30% with 15% operating margin (Rule-of-40 score 45) deserves a much higher EV/Sales multiple than one growing 15% with 5% operating margin (score 20). EV/EBITDA-minus-SBC also works once SaaS companies mature.
+
+**Pre-revenue biotech / clinical-stage companies:** Multiples don't apply — the dominant framework is risk-adjusted NPV of the drug pipeline. A Phase 3 drug with $2B peak sales potential at 60% approval probability and 12% discount rate is worth roughly $X to the company, and you build up the pipeline asset-by-asset. The biotech-specific traps are dilution risk (companies frequently issue equity) and the 50–80% drawdowns common around clinical readouts.
+
+**Oil & gas E&P (XOM, CVX, on Bursa: PETRONAS Chemicals — though that's the downstream):** EV/EBITDA and EV/Proved-Reserves alongside production-cost-per-barrel. Cycle-dependent, with the framework being "what does this company earn at $X oil price."
+
+The falsifiable claim: applying P/E (or any single multiple) uniformly across industries will systematically misprice at least half of the stocks you look at. The right multiple is the one peers in that industry actually use, and the wrong-multiple error is usually 20%+ in either direction.
+
+## The trap
+
+The trap is anchoring on P/E because it's the most-quoted metric, and assuming a low P/E means cheap regardless of industry. A beginner sees a bank at 7x P/E and a software company at 40x P/E and concludes the bank is six times cheaper — without recognising that 7x is a normal bank multiple in a high-rate environment and 40x might be normal for a high-growth software company. The correct mental model: the "right" multiple is industry-specific, and a multiple is only useful relative to that industry's median, not relative to other industries' medians. The deeper trap is over-reliance on industry-median multiples without checking whether the entire industry is in a bubble or a crash. Industry-relative valuation works in normal times; in extreme times, you need an absolute anchor (DCF or replacement value).
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You're comparing four stocks: a US bank at 8x P/E, a US software company at 35x P/E, a US REIT at 16x P/E, and a US industrial at 18x P/E. Which conclusion most cleanly applies the lesson?"
+  options={[
+    "The bank is cheapest at 8x; the software company is most expensive at 35x",
+    "P/E is comparable across industries with material adjustments",
+    "P/E is not the right primary multiple for at least two of these. For the bank, P/TBV against ROTCE is the relevant frame — the 8x P/E is normal and may be cheap or expensive depending on the bank's tangible book value and return on it. For the REIT, price-to-FFO matters, not P/E. For the software company, EV/Sales with a Rule-of-40 overlay is closer to right than P/E. Comparing the four on a single multiple produces a misleading 'cheapness' ranking that doesn't reflect the industries' real valuation grammar",
+    "All four are fairly valued because they're in similar P/E ranges"
+  ]}
+  answer={2}
+  explanation="The synthesis is that the four industries use four different dominant multiples, and forcing them onto one (P/E) loses the information each industry encodes. The most tempting wrong answer is option 0 — comparing P/Es across industries is the default beginner move, and it ranks 'cheap' in a way that has no economic basis. Option 1 is wrong because P/E adjustments across industries don't fix the underlying issue. Option 3 is too generous — without industry-specific multiples there's no basis for any verdict."
+/>
+
+<Quiz
+  question="A REIT trades at 12x P/E, well below the S&P 500 median of 22x. The same REIT trades at 22x FFO, in line with REIT peers averaging 21x. Which read best applies the lesson?"
+  options={[
+    "The REIT is cheap — 12x P/E is way below the market",
+    "The REIT is fairly valued. P/E is the wrong primary lens for REITs because real-estate depreciation depresses earnings without representing real economic decline of the underlying property. Price-to-FFO is the industry-standard multiple, and at 22x FFO vs 21x peers, the REIT is right in line. The 'cheap' impression from the cross-industry P/E comparison is exactly the kind of error the lesson warns about",
+    "Indeterminate — too few data points",
+    "Buy — anything below 15x P/E is cheap"
+  ]}
+  answer={1}
+  explanation="The synthesis is that REIT P/E is structurally depressed by depreciation accounting that doesn't reflect real-property economics — using P/E to compare REITs to non-REITs systematically makes REITs look cheap. FFO corrects this. The most tempting wrong answer is option 0 — the 10-point P/E gap vs the S&P 500 looks like a screaming buy until you realise the multiples aren't comparable. Option 2 dodges with a data-point excuse. Option 3 applies a P/E rule across industries without context."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick three stocks from different industries (one bank, one software, one industrial, or similar variety) and ask: "What's the right primary valuation multiple for each, and where does the current valuation sit against industry medians on that multiple?" In the <Term id="ami_decision_journal" />, write one line per stock: "[Ticker]: industry-correct multiple is [X], current value [Y], peer median [Z]." Save this as your industry-multiple cheat sheet for future analysis.
+
+## Takeaway
+
+No single multiple fits every industry — pick the multiple peers in that industry actually use, compare only within the industry, and treat cross-industry P/E rankings as the apples-to-aircraft-carriers error they usually are.

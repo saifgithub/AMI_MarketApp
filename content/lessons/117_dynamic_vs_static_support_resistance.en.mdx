@@ -1,0 +1,72 @@
+---
+id: "117_dynamic_vs_static_support_resistance"
+title: "Dynamic vs static support and resistance"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "support_resistance"
+prerequisites: ["023_support_and_resistance"]
+tags: ["support", "resistance", "moving_average", "dynamic_levels", "chart_reading"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Dynamic vs static support and resistance
+
+This assumes you've completed 023 (support and resistance). Here we go deeper on a distinction lesson 023 deliberately left flat: support and resistance come in two flavours. *Static* levels are horizontal — fixed prices the market has bounced from or rejected before. *Dynamic* levels are sloped — moving averages, trendlines, channel boundaries that drift as price moves. They behave differently. By the end of this lesson you should be able to mark both kinds on a chart, explain why dynamic levels are usually softer than static ones, and know which to lead with depending on whether the market is trending or ranging.
+
+## Example
+
+Look at NVDA on the daily chart from January through April 2026.
+
+**Static levels.** $148 was a swing high in November 2025 and again the failed-breakout high in March 2026 — a horizontal line that defined the same price as resistance across four months. $108 was a major low on 14 February 2026 and previously support in late October 2025. These don't move. Mark them once, they stay marked.
+
+**Dynamic levels.** The 50-day moving average (50DMA) carved a sloped support floor through the entire uptrend. On 18 February NVDA tested the 50DMA at $114.40 and bounced. On 5 March it tested again at $122.80 and bounced. On 19 March it tested at $130.20 and bounced. Same level — the 50DMA — but at three different prices, because moving averages slope. A trendline drawn from the $108 February low through the $114 February swing low also acts dynamically: it was at $122 in early March and $129 by late March.
+
+So as of late April 2026 a trader's chart of NVDA shows two horizontals ($108 and $148) plus a rising 50DMA currently near $134 plus a rising trendline near $136. Static levels constrain the range; dynamic levels constrain the slope.
+
+A bounce off the static $108 in February invalidates on a daily close below $108. A bounce off the rising 50DMA at $134 invalidates on a daily close below the 50DMA — but because the 50DMA is sloped, the actual invalidation price changes by maybe $0.30 to $0.80 each session. The level moves; the rule stays the same.
+
+## The trap
+
+The trap is treating dynamic levels with the same precision people grant static ones. Static levels are visible to every trader on the chart at exactly the same price — that's why they work, they're a coordination point. Dynamic levels look different on every trader's chart depending on which moving-average length or trendline endpoints they use. A 50DMA bounce on one trader's screen is a 200DMA touch on another's and a "couple of percent above the rising trendline" on a third. The correct mental model: in trending markets, lead with dynamic levels — the trend's own pace is the price-action floor. In ranging markets, lead with static levels — horizontal memory is what coordinates participants when there's no slope. And always treat dynamic invalidations as ranges, not lines: the moving-average is a fuzzy zone roughly 0.5%–1.5% wide, not a precise tick.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock has been chopping sideways between $48 and $54 for two months. The 50DMA sits at $51, roughly in the middle of the range. Where should you focus your support/resistance levels?"
+  options={[
+    "On the 50DMA at $51 — moving averages always take priority",
+    "On the static range boundaries at $48 and $54 — in a ranging market the horizontal memory is what coordinates buyers and sellers; the 50DMA sitting mid-range carries little information",
+    "On a steep trendline drawn from any two recent lows",
+    "Wait until a breakout before marking any levels"
+  ]}
+  answer={1}
+  explanation="In a sideways market the trend has no slope, so dynamic (sloped) levels lose their meaning and a moving-average just lazily traces the middle of the range. The horizontal boundaries are the coordination points. Option 0 inverts the lesson's prescription. Option 2 forces a trendline into a market that isn't trending — drawing through chop produces spurious 'levels' that aren't actually levels. Option 4 is procrastination disguised as caution; the levels are already on the chart whether you mark them or not."
+/>
+
+<Quiz
+  question="MSFT is in a clean six-month daily uptrend. The rising 50DMA currently sits at $448 and has held every test for the past five months. There's a static horizontal at $462 (prior swing high). Today MSFT pulls back from $470 to touch $447.80 intraday and closes at $451.20. A static-only trader sees no support nearby and sells; a dynamic-aware trader sees the 50DMA test holding. Which read better applies the lesson, and what's the most tempting wrong move?"
+  options={[
+    "Sell — without a static level nearby there is no support",
+    "Stay long — in a clean uptrend the 50DMA is the active support; an intraday wick of $0.20 below the dynamic level that closes back above it is a textbook hold. The static-only trader is using the wrong tool for a trending market. The most tempting wrong move is mistaking 'I can't draw a horizontal here' for 'there's no support here'",
+    "Sell — the wick below $448 already invalidated the dynamic level",
+    "Add aggressively — dynamic levels never break"
+  ]}
+  answer={1}
+  explanation="In trending markets the dynamic level is the primary floor; the close at $451.20 is well above the 50DMA, the wick was a normal test that closed back above the level, and the static-only frame misses an active feature of the chart. Option 0 dogmatically ignores dynamic structure. Option 2 mistakes a wick for a close — same rule from lesson 023 applies to dynamic levels: closes matter, wicks don't. Option 4 inverts the lesson's caution that dynamic levels are softer than static ones — they can absolutely break. The synthesis test is leading with dynamic in a trend but still applying the close-not-wick rule from the foundation lesson."
+/>
+
+## Try it
+
+Pick a clearly trending stock and a clearly ranging stock from your <Term id="ami_watchlist" />. On the trending one, add the 50DMA to the chart and mark where it has held over the past three months. On the ranging one, ignore the moving average and mark the horizontal range boundaries. Ask the Market Analyst in <Term id="ami_one_on_one" />: "For [trending ticker] what's the current 50DMA price and the invalidation rule? For [ranging ticker] what are the horizontal boundaries?" Save both pairs to your <Term id="ami_decision_journal" /> so you can compare how the same framework produces different anchors.
+
+## Takeaway
+
+Static levels are horizontal memory and work when the market is ranging; dynamic levels are sloped and work when it's trending — pick the tool that matches the market, and always treat the close as the invalidation, never the wick.

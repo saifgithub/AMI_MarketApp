@@ -1,0 +1,68 @@
+---
+id: "177_pe_in_cyclicals_peak_earnings_trap"
+title: "P/E in cyclicals — when a low P/E means peak earnings"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "pe_ratio"
+prerequisites: ["039_the_pe_ratio", "155_operating_leverage_cyclicals"]
+tags: ["pe_ratio", "cyclicals", "peak_earnings", "commodities", "valuation", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# P/E in cyclicals — when a low P/E means peak earnings
+
+Lesson 039 said a low P/E is only a discount if earnings aren't declining. This lesson nails the most expensive corner of that rule: cyclical businesses. For steel mills, oil majors, semiconductors, autos, homebuilders, shipping, and chemicals, the P/E ratio is *inverted* relative to ordinary intuition — the cheapest-looking multiple appears precisely when the cycle is about to roll over. By the end of this lesson you should be able to recognise a cycle peak, name the specific earnings-quality marker that warns you, and resist the strongest single trap in value investing.
+
+## How this plays out in real markets
+
+Look at X (US Steel) historically near a steel-cycle peak. Hot-rolled coil at $1,500/ton, capacity utilisation in the high 80s, EPS for the trailing twelve months at $10. Stock trades at $40, so trailing P/E ≈ 4x. Sector median trailing P/E is 12x, S&P is 22x. A naive screener flags X as "deep value — 80% discount to market." Now run the cycle forward two years: hot-rolled coil drops to $750/ton, utilisation falls to the low 70s, EPS collapses to $1. The stock at $40 is suddenly trading at 40x earnings. Worse, the stock didn't sit at $40 through this — it dropped to $20. The 4x P/E was real on the print and a lie about the future.
+
+Now contrast with INTC at a cycle trough: stock at $25, trailing EPS at $0.20 (depressed), trailing P/E = 125x — looks brutal. Two years later utilisation recovers, EPS reaches $2.50, and the stock at $40 is at 16x. The high P/E at the trough was the buy signal; the low P/E at the peak was the sell signal. Cyclicals trade exactly backwards from how P/E intuition works for compounders.
+
+Falsifiable claim: for a cyclical, a trailing P/E meaningfully below long-run median (say, below 6x for steel/oil/shipping, or below 10x for chemicals/autos) combined with capacity utilisation in the top quartile of the last decade is a peak-earnings signal, not a value signal. The condition that invalidates the signal: utilisation in the bottom quartile of the cycle (a trough). On Bursa: PETRONAS-related counters often look optically cheap (P/E 6–8x) at $90+ oil; after a cyclical retracement to $55 oil those same names trade at 20x on slashed EPS — the stock had already adjusted before the multiple did.
+
+## The trap
+
+The trap is the deep-value screener trap: ranking the market by trailing P/E ascending, picking the cheapest names, and finding yourself loaded into cyclicals at the top of their cycle. Every name you bought screens cheap because the *denominator* — trailing earnings — is mechanically inflated by a transient cycle peak. The correct mental model: for any cyclical, replace trailing EPS with mid-cycle EPS (an estimate of earnings averaged across a full cycle) before computing P/E. Then ask: at mid-cycle EPS, what's the multiple? A steel name at $40 with mid-cycle EPS of $4 is trading at 10x mid-cycle — fair, not cheap. The trailing 4x was just the cycle handing you a number. What invalidates the signal: a long-term shift in industry structure (consolidation that lifts the floor, regulation that caps supply) can permanently raise mid-cycle EPS and make a low P/E genuinely cheap — but those shifts take years to confirm, not quarters.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A homebuilder reports trailing P/E = 5x. Sector median trailing P/E is 11x. Mortgage rates have dropped 200bps over the last year and housing starts are at a 15-year high. Industry capacity utilisation is in the 90th percentile of the last decade. Which read is most accurate?"
+  options={[
+    "5x vs 11x sector median is a 55% discount — strong value",
+    "Trailing P/E in a cyclical is mechanically depressed when earnings are at a cycle peak. Housing starts at a 15-year high plus 90th-percentile utilisation are textbook peak-cycle markers. The 5x is a peak-earnings multiple — when starts normalise and EPS halves or worse, the realised multiple is 10x+ and the stock will already have re-priced. The cheap headline number is a sell signal, not a buy signal",
+    "P/E shouldn't be used at all for homebuilders",
+    "Buy and wait for the cycle to normalise"
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — every value screener will surface exactly this setup, and a beginner will load up. The right read recognises that the *denominator* of the P/E is itself a cycle artifact. Option 2 throws away a useful framework — P/E is fine for cyclicals if you use mid-cycle earnings. Option 3 is the worst of the four: you buy at the peak and wait for the cycle to take 40–60% out of the stock before earnings stabilise. The cycle does not normalise to you; you have to anticipate it."
+/>
+
+<Quiz
+  question="A shipping company trades at trailing P/E = 3x. The Baltic Dry Index is at a multi-year high. A competitor's earnings released yesterday showed sequential margin compression for the first time in eight quarters. The reader is asked: what is the cleanest synthesis of the cyclical P/E lesson with the falsifiability principle?"
+  options={[
+    "Buy aggressively — 3x is the cheapest multiple on the screen",
+    "Hold and wait for the P/E to compress further",
+    "The 3x is a peak-earnings number — Baltic Dry at multi-year high plus a competitor showing first-time margin compression is the precise condition that invalidates the 'cheap multiple = value' read. The right action is to compute P/E on a mid-cycle EPS estimate (typically 30–50% of peak EPS for shipping); if the stock trades at 8x mid-cycle, it's fairly priced, not cheap. The competitor's margin compression is the leading indicator that the cycle is turning",
+    "P/E doesn't apply because shipping is a commodity"
+  ]}
+  answer={2}
+  explanation="The synthesis: a falsifiability condition exists for 'cheap cyclical multiple' — namely, capacity utilisation or sector pricing at cycle highs combined with a margin-compression signal from peers. The tempting wrong answer is option 0 — every deep-value investor with no cycle context falls for this. Option 1 is incoherent: P/Es don't compress in isolation; they compress when prices fall faster than earnings. Option 3 is the symmetric trap of throwing away an entire ratio category. The mid-cycle adjustment is the only honest way to read a cyclical multiple."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a cyclical ticker (X, INTC, NUE, FCX, or PETRONAS-linked), and ask: "Give me trailing P/E, current capacity utilisation as a percentile of the last decade, and your estimate of mid-cycle EPS. Compute the implied mid-cycle P/E." Save the mid-cycle multiple in your <Term id="ami_decision_journal" /> next to the trailing one. The gap between them tells you where in the cycle you are.
+
+## Takeaway
+
+For cyclicals, trailing P/E inverts: the cheapest-looking number signals the peak. Always recompute the multiple on mid-cycle EPS before treating a low P/E as value.

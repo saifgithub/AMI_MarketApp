@@ -1,0 +1,80 @@
+---
+id: "249_vvix_and_iv_rv_divergence"
+title: "VVIX and the implied-vs-realised volatility divergence"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "volatility_regime"
+prerequisites: ["062_volatility_regimes", "248_vix_term_structure", "031_indicator_limitations"]
+tags: ["regime", "volatility", "vvix", "implied", "realised", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# VVIX and the implied-vs-realised volatility divergence
+
+Lesson 062 introduced ATR as realised volatility and VIX as implied volatility. Lesson 248 added VIX term structure. This lesson teaches two more refined readings: VVIX (the volatility of VIX itself) and the IV-vs-RV spread. Together they flag when option-market participants are positioning for stress that hasn't shown up in the tape yet. After this lesson you will be able to read VVIX in percentile terms, compute and interpret the IV-RV spread, name the strategies that pair with each divergence, and state the invalidation.
+
+## How this plays out in real markets
+
+VVIX is the implied volatility of VIX options — effectively, how much the market is paying for protection on the protection. Long-run average ~95, but VVIX runs from the low-70s in deep calm to >150 in stress.
+
+IV-RV spread: (VIX) − (20-day realised SPX volatility, annualised). The volatility risk premium. Long-run average ~+3 to +4 (implied modestly above realised — option sellers earn the premium on average).
+
+Three documented divergence cases:
+
+July 2024 pre-shock: SPX 20-day realised vol fell to ~7% by mid-July 2024. VIX held at 14, VVIX rose from 75 to 91. IV-RV spread expanded to ~+7 — implied vol pricing in stress while the tape was calm. The 5 August 2024 yen-carry unwind followed: SPX dropped 3.0% intraday, VIX spiked to 38.57.
+
+February 2020 pre-COVID: VIX averaged 14 in January 2020, VVIX averaged ~95 then climbed to 130 by 21 February 2020. SPX 20-day realised vol was ~9%. Option markets were positioning; the tape didn't break until 24 February 2020.
+
+Mid-2021 grind-up: VIX stayed near 15–18, but VVIX hit 130+ in Q3 2021 during otherwise placid tape action. The signal was early — but the late-2021 distribution top + January 2022 break followed the warning.
+
+Detection rule for IV/RV divergence: (a) IV-RV spread above 75th-percentile of trailing 1-year readings AND (b) VVIX above 75th-percentile of trailing 1-year. Both true is a "option-market stress whisper" while the tape is calm — historically a precursor to volatility expansion within 4–8 weeks, though not always.
+
+Note: this signal has false positives. VVIX spiking without an underlying break has happened (e.g., late 2017, where VVIX rose and the regime held until 2018). Treat it as a tighten-the-<Term id="ami_mandate" /> signal, not a confirmation of imminent break.
+
+## The trap
+
+The VVIX trap is using it as a timing tool. A reader sees VVIX hit 130 and shorts SPX expecting an immediate break — sees SPX rally 4% over the next month — covers at a loss — misses the actual break two months later. The mental error is mistaking a positioning signal for a timing signal.
+
+The correct model: VVIX + IV-RV divergence is a regime-quality reading. When the option market pays up for protection while realised vol is calm, the regime's tail-risk has increased even if the trend is intact. The right response is mandate compression, not directional position-taking. Tighten sizes, raise the bar for new entries, demand cleaner setups — without abandoning the active regime call.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="SPX 20-day realised vol is 8%. VIX is 16. VVIX is 128 (87th percentile of trailing year). IV-RV spread is +8 (82nd percentile). SPX is still above its 200-day SMA. What does the framework prescribe?"
+  options={[
+    "Short SPX aggressively — option markets are pricing a crash.",
+    "Option-market-stress-whisper cluster is firing (both VVIX and IV-RV in their upper quartile). The bull regime from lesson 059 is still intact, so the response is mandate compression, not directional flip: cap new positions ~25% smaller, demand 2-of-3 confirmation indicators before adding, accept that the signal has false positives and a 4–8 week window. Invalidate the signal if VVIX falls back under its 50th percentile for 5+ sessions.",
+    "Buy more — option markets are usually wrong.",
+    "Ignore — VVIX is too obscure to matter."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the option-market signal seems strong, why not act on it? But the historical record shows the lag is 4–8 weeks with significant false-positive rate. The right response is mandate-side, not directional. Option 2 dismisses a real signal; option 3 dismisses it equally. The synthesis is calibrated response: tighter mandate, not flipped direction."
+/>
+
+<Quiz
+  question="Two scenarios, same VIX = 15. (A) IV-RV spread = +3, VVIX = 85. (B) IV-RV spread = +8, VVIX = 130. Which scenario carries higher tail risk and what is the right Conservative Risk Debator response?"
+  options={[
+    "Both equal — VIX is the only relevant gauge.",
+    "(B) has materially higher tail risk because the option market is paying up for protection beyond what spot VIX shows. Conservative response: smaller positions, lower drawdown ceiling, prefer setups with tighter stops and faster invalidation. (A) is a normal calm regime; full mandate-permitted sizing.",
+    "(A) is higher risk because low IV-RV means complacency.",
+    "(B) is lower risk because VVIX measures noise, not signal."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — same VIX, same regime, an understandable mistake. But the second-derivative readings differ materially. Option 2 inverts the relationship; option 3 dismisses VVIX. The synthesis is recognising that the same headline can mask very different positioning realities, and the mandate must respond."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Today's VVIX reading and its trailing 1-year percentile. Compute the IV-RV spread (VIX minus SPX 20-day realised vol annualised) and its percentile. Tell me whether the option-market-stress-whisper cluster is firing." Then in the <Term id="ami_decision_journal" />, add a tag column: "VVIX percentile at entry" — start tracking it on new trades. Over 20 trades you'll see whether entries during high-VVIX windows underperform yours during low-VVIX ones.
+
+## Takeaway
+
+VVIX and the IV-RV spread classify regime tail-risk independently of spot VIX. When both are in the upper quartile, compress the mandate — do not flip direction — and let the signal lead by 4–8 weeks.

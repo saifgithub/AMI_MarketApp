@@ -1,0 +1,80 @@
+---
+id: "114_engulfing_patterns"
+title: "Engulfing patterns: bullish and bearish"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "candlestick_patterns"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction"]
+tags: ["engulfing", "candlestick", "reversal", "two_bar_pattern", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Engulfing patterns: bullish and bearish
+
+This assumes you've completed 020 (anatomy of a bar). Here we go deeper on a two-bar reversal pattern: the engulfing. A bullish engulfing is a small red candle followed by a green candle whose body fully covers the prior red body — the green opens at or below the prior close and closes at or above the prior open. The bearish version is the mirror. By the end of this lesson you should be able to spot a strict engulfing, distinguish it from a near-miss, and know exactly what would invalidate the reversal thesis.
+
+## How this plays out in real markets
+
+Look at JPM on the daily chart on 13 and 14 February 2026. JPM had been sliding since 28 January from $278 down to a 14 February low of $254.80 — about 8% in two weeks. On Friday 13 February, JPM printed a red candle: open $258.10, close $255.40, a $2.70 body in a down session. On Monday 14 February (a typical post-weekend session), JPM opened at $254.90 (gapping down below the prior close) and closed at $260.20 — a green body spanning $254.90 to $260.20, a $5.30 body that fully engulfed the prior $2.70 red body, both opening below the prior close and closing above the prior open. Strict bullish engulfing.
+
+Context made it count: the engulfing printed at a level (the $255 zone had been support in November), the prior trend was clearly down for two weeks, and volume on the engulfing day was 1.7x average. The next session held the gains and closed at $262.40. Over the following three weeks JPM ran to $279.
+
+A trader entering near the close of the engulfing day at $260 with a stop below the engulfing low at $253.80 risked $6.20 to a target near $278, a roughly 1:2.9 risk/reward. The pattern invalidates the moment a subsequent daily candle closes below the engulfing low — in this case a close below $253.80 voids the read.
+
+## The trap
+
+The trap is calling near-engulfings "close enough". A green body that covers 80% of the prior red body is not a bullish engulfing — it's a strong reversal candle, but the strict definition matters because the loosened version stops being statistically distinguishable from noise. The correct mental model: the engulfing rule is a binary filter. Either the green opens at-or-below the prior close AND closes at-or-above the prior open, or it doesn't. If it doesn't, you can still read the strength of the day, but don't sell yourself a "bullish engulfing" story when the pattern isn't actually there. Second trap: trading an engulfing in the middle of a sideways chop. Like every candlestick pattern, engulfings need a prior trend to reverse. No trend, no signal.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Day 1: open $42.30, close $41.10 (red body). Day 2: open $41.20, close $42.40 (green body). Is this a strict bullish engulfing?"
+  options={[
+    "Yes — Day 2's body is bigger than Day 1's body, that's all that matters",
+    "No — Day 2's open ($41.20) is above Day 1's close ($41.10), so the open condition fails by 10 cents; this is a near-miss, not a strict engulfing",
+    "Yes — the colours alternate red then green, which is the definition",
+    "No — engulfings require gaps that are at least 1% wide"
+  ]}
+  answer={1}
+  explanation="The strict rule is: Day 2 must open at-or-below Day 1's close AND close at-or-above Day 1's open. Day 1 close = $41.10, Day 2 open = $41.20 — that's 10 cents above, so the open condition fails. The pattern is a near-miss. Option 0 ignores the open/close anchors that define the pattern. Option 2 trivializes it to a colour sequence. Option 4 invents a gap-size rule the pattern doesn't have."
+/>
+
+<Quiz
+  question="META has been in a clean uptrend for eight weeks. On a routine sideways consolidation week, META prints a strict bearish engulfing on the daily chart, but the engulfing is mid-range, well below the most recent swing high and well above the most recent higher-low, on average volume. A trader who memorised candlestick patterns shorts the stock at the engulfing close. Which best describes the trade and the most tempting alternative reading?"
+  options={[
+    "Smart trade — bearish engulfings are always short signals",
+    "Poor trade — the engulfing satisfies the shape rule but lacks context (no extended trend to reverse, no resistance level overhead, no volume expansion); shape alone is not the signal. The most tempting wrong read is letting the strict-engulfing label override the missing context",
+    "Smart trade — uptrends are precisely when shorting engulfings works best",
+    "Poor trade — bearish engulfings only work on Tuesdays"
+  ]}
+  answer={1}
+  explanation="The pattern is structurally clean but contextually empty: mid-range, mid-trend, no level, no volume. The lesson's binary filter (strict definition) keeps you from false positives, but passing the filter is necessary not sufficient — context is the second test. Option 0 treats the binary filter as the whole game. Option 2 inverts cause and effect. Option 4 is absurd by construction; it's the kind of distractor that catches a tired reader who's just confirming the obvious answer is the lesson's point."
+/>
+
+<Quiz
+  question="A trader sees a strict bullish engulfing on AAPL at a confirmed support level after a 9% downmove, on 2x volume. They enter long at the engulfing close of $186.40 with a stop at $182.80 (below the engulfing low of $183.20). Three sessions later AAPL closes at $182.10. What is the disciplined call, and what makes the wrong answer tempting?"
+  options={[
+    "Hold — the pattern was correct, give it time",
+    "Exit — the daily close at $182.10 is below the engulfing low of $183.20, which is the explicit invalidation. The pattern's structural premise has failed regardless of how clean the original setup looked. The most tempting wrong call is anchoring on how well the setup met the rules and ignoring the falsification trigger",
+    "Add to the position because the pullback is a discount",
+    "Move the stop to $180 to give it more room"
+  ]}
+  answer={1}
+  explanation="The setup was excellent ex ante; the falsification still rules ex post. A daily close below the engulfing low is the explicit invalidation stated in the lesson, and 'this was a great setup' doesn't override that. Option 0 confuses setup quality with thesis validity — every setup has a falsification price, and good setups can still fail. Option 2 averages into a losing thesis. Option 3 widens the stop after the thesis broke — classic emotional behaviour the lesson warns against."
+/>
+
+## Try it
+
+Find a daily chart for any ticker that recently bounced off support. Scroll to the bounce day and check whether the prior session's candle and the bounce candle form a strict bullish engulfing. If yes, ask the Market Analyst in <Term id="ami_one_on_one" />: "Confirm the open/close anchors and tell me the invalidation price." Save that invalidation level to your <Term id="ami_decision_journal" /> next to a note: "Stop on a close, not a wick."
+
+## Takeaway
+
+Strict engulfings are binary — open and close anchors must both hold — and even a clean one is only a signal when trend and level provide context; the invalidation is always a close beyond the engulfing's extreme.

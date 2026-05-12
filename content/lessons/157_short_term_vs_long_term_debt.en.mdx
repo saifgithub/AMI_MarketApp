@@ -1,0 +1,74 @@
+---
+id: "157_short_term_vs_long_term_debt"
+title: "Short-term vs long-term debt mix"
+duration_min: 4
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "debt_mix"
+prerequisites: ["034_debt_and_the_balance_sheet", "156_debt_maturity_ladder"]
+tags: ["debt", "short_term", "long_term", "commercial_paper", "liquidity", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Short-term vs long-term debt mix
+
+Lesson 034 introduced debt as a single line on the balance sheet. It is not. Debt has a tenor — short-term (due within 12 months) and long-term (due beyond 12 months) — and the mix of the two is a separate diagnostic. Short-term debt is cheaper, more flexible, and more dangerous: it must be repaid or rolled in the next 12 months, exposing the company to whatever interest-rate or credit environment exists when the roll happens. Long-term debt locks in a coupon and a date. By the end of this lesson you should know how to read the short-term debt line, the ratios that detect over-reliance on short-term funding, and the failure mode this configuration produced in the 2008 and 2023 banking stress episodes.
+
+## How this plays out in real markets
+
+The balance sheet typically separates: (a) "current portion of long-term debt" (long-term debt becoming due within the next 12 months); (b) "short-term borrowings" or "commercial paper" (debt issued with maturity under a year). Both count as current liabilities — the line on the balance sheet that has to be settled within the year.
+
+Real example: AAPL in fiscal 2024 reported about $10B in commercial paper and ~$10B in current portion of long-term debt, against ~$162B in cash and marketable securities. The short-term debt is funded several times over by cash; AAPL uses commercial paper for working-capital convenience, not necessity. The ratio "short-term debt / cash" is roughly 0.1x — trivial.
+
+Compare to a stressed scenario. Silicon Valley Bank in early 2023 held a balance sheet where uninsured deposits (effectively short-term liabilities to depositors) made up a vast majority of the funding base, while assets were locked in long-duration Treasuries that had lost market value in the rate-hike cycle. A duration mismatch — short funding, long assets — became fatal in a single news cycle when depositors moved $42B in a day. The headline solvency ratios looked healthy on a hold-to-maturity basis; the short-term funding structure made those ratios irrelevant under stress.
+
+The diagnostic ratio is the **current ratio** (current assets / current liabilities) and its stricter cousin the **quick ratio** ((current assets – inventory) / current liabilities). A current ratio below 1.0 means the company doesn't have enough liquid assets to cover short-term obligations — it must either generate enough cash from operations within the year or roll the short-term debt forward. A current ratio below 0.7 in a non-financial company is a flashing red light.
+
+On Bursa Malaysia: AIRASIA prior to the 2020 collapse had short-term obligations (working capital, lease payments, fuel hedging losses) that materially exceeded short-term liquid assets. The same balance sheet that had been workable in a steady-state environment became immediately distressed when cash flow vanished.
+
+The falsifiable claim: a non-financial company with short-term debt exceeding 25% of total debt AND a current ratio below 1.0 faces material liquidity risk in any quarter where operating cash flow turns negative. The combination is the stressed configuration.
+
+## The trap
+
+The trap is netting short-term and long-term debt into a single "debt" number. A beginner sees "total debt $4B" and stops. They miss that $2.5B of that is due within 12 months at variable rates, while only $1.5B is long-term fixed. Two companies with identical $4B total debt — one 100% long-term fixed, the other 60% short-term variable — face profoundly different forward interest expense and liquidity risk. The correct mental model: total debt is one number; the *tenor mix* is a second number that must be read separately. Heavy short-term reliance is fine when cash flow is reliable and rates are stable. When either condition breaks, the short-term debt accelerates the stress.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company A has total debt of $3B, of which $400M is short-term, and a current ratio of 2.1. Company B has total debt of $3B, of which $1.8B is short-term, and a current ratio of 0.8. Which is more exposed to a liquidity shock?"
+  options={[
+    "Both equally — same total debt",
+    "Company A — short-term debt is always cheaper but always riskier",
+    "Company B — 60% of debt due within 12 months combined with a current ratio below 1.0 means short-term obligations exceed liquid assets. Any disruption to operating cash flow forces refinancing under whatever conditions prevail. Company A has long-term debt structure and a 2.1x cushion, so the same disruption is absorbable",
+    "Cannot determine without revenue figures"
+  ]}
+  answer={2}
+  explanation="Company B's combination — heavy short-term debt plus current ratio below 1 — is the textbook liquidity-stress configuration. The same total debt at A is benign because it's locked in long-term and there's a 2.1x cushion of current assets. Option 0 ignores tenor entirely. Option 1 inverts the analysis. Option 3 asks for data not needed — the liquidity picture is on the balance sheet alone."
+/>
+
+<Quiz
+  question="Synthesis combining this lesson with lessons 034 and 156: a company has debt-to-EBITDA 2.5x (healthy), interest coverage 4.5x (healthy), 55% of debt is short-term, current ratio 0.9, and operating cash flow has turned negative in the most recent quarter. Which read is most consistent with the lessons?"
+  options={[
+    "Healthy — debt-to-EBITDA and interest coverage are both above the stress thresholds",
+    "Trailing leverage and coverage ratios look healthy, but the combination of >50% short-term debt, current ratio <1, and negative operating cash flow is the acute liquidity setup — the trailing income-statement strength does not protect against a 12-month refinancing requirement when cash flow has just turned the wrong way. The forward picture is far more exposed than the trailing ratios suggest",
+    "Bullish — negative cash flow is a one-quarter event",
+    "Insufficient data without the maturity ladder"
+  ]}
+  answer={1}
+  explanation="The synthesis: the trailing ratios from lesson 034 say the company is healthy. The short-term debt mix from this lesson plus the negative operating cash flow combine to say the next 12 months are the issue. Lessons 034, 156, and 157 together build the picture: leverage level, maturity timing, and tenor mix are three independent axes, and stress can hide on any one of them. Option 0 reads only the first axis. Option 2 dismisses the cash flow turn. Option 3 demands data the question already provides enough of."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "Break down [ticker]'s debt into short-term and long-term components on the latest balance sheet. Compute the current ratio and the quick ratio. Tell me if short-term debt as a % of total debt has changed in the last 4 quarters." Save the percentages in your <Term id="ami_decision_journal" /> — a rising short-term share is itself a warning.
+
+## Takeaway
+
+Total debt is one axis. Tenor is the second. Short-term debt is fine when cash flow is reliable; when cash flow turns, the short-term line is what breaks first.

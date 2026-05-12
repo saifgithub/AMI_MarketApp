@@ -1,0 +1,90 @@
+---
+id: "251_defensive_cyclical_geographic_rotation"
+title: "Defensive vs cyclical playbooks and geographic rotation"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "sector_rotation"
+prerequisites: ["063_sector_rotation", "250_rate_sensitive_sectors_hiking_cutting", "017_portfolio_exposure_and_correlation"]
+tags: ["regime", "sectors", "defensive", "cyclical", "geographic", "em", "bursa"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Defensive vs cyclical playbooks and geographic rotation
+
+Lesson 063 framed sector rotation as a US-equity phenomenon. Lesson 250 layered rate-cycle mechanics on top. This lesson adds two more axes: the defensive-vs-cyclical split (which fires on growth expectations independent of rates), and geographic rotation (US vs EM vs Bursa) that follows dollar strength and global-growth differentials. After this lesson you will be able to classify the current growth-regime, name the defensive-vs-cyclical leadership map, name the geographic rotation map, and state the falsifier for each.
+
+## How this plays out in real markets
+
+Defensive-vs-cyclical:
+
+- Defensives = XLP (staples), XLV (healthcare), XLU (utilities). Lower earnings beta to GDP.
+- Cyclicals = XLY (consumer discretionary), XLI (industrials), XLB (materials), XLE (energy), XLF (financials). Higher GDP sensitivity.
+
+Documented growth-scare rotations:
+
+- August 2024 growth scare: between 11 July 2024 (SPX local high 5,667) and 5 August 2024 low at 5,186, XLP outperformed SPY by +4.7%, XLY underperformed by -3.6%, XLI underperformed by -3.2%. Classic defensive lead.
+- Late 2022 recession-fear window: XLP +0.5% YTD by year-end 2022 vs XLY -37.0% YTD. ~37 percentage points of dispersion.
+
+Detection rule for defensive-leadership regime: 60-day relative-strength of (XLP + XLV + XLU average) vs (XLY + XLI + XLB average) is positive AND rising AND the differential exceeds +5 percentage points. Invalidation: spread compresses to under +1 point for 4 consecutive weeks.
+
+Geographic rotation:
+
+- US (SPY): single-country index, the global beta.
+- EM (EEM): emerging markets, dollar-sensitive, commodity-linked.
+- Bursa Malaysia (EWM ETF or KLCI directly): commodity + ringgit + ASEAN growth.
+
+Documented cases:
+
+- Q1 2025 dollar weakness window: DXY fell from 109.6 on 13 January 2025 to 104.0 by 6 March 2025 (-5.1%). EEM gained 10.4% in that window vs SPY +4.3%. EM led on dollar weakness.
+- 2022 dollar surge: DXY rose from 95.7 on 1 January 2022 to 114.1 on 28 September 2022 (+19.2%). EEM fell 22.0% in the year vs SPY -18.2%. EM underperformed on dollar strength.
+- KLCI vs SPY in 2024: KLCI +12.9% (USD-adjusted: ringgit appreciated 11% in H2 2024 → ~+20% USD), SPY +23.3%. Bursa caught up on ringgit recovery + commodity prices.
+
+Detection rule for geographic rotation: EM-leadership regime when DXY 50-day is falling AND EEM/SPY 60-day relative-strength is positive AND rising. US-dominance regime when both conditions inverted.
+
+## The trap
+
+The defensive-cyclical trap is style-anchoring. A trader who bought "defensive blue chips for the long run" stays in XLP through a confirmed cyclical-leadership regime (e.g., the early 2024 industrial-renaissance window where XLI led by +9% vs XLP). They earn the index minus their drag and call it "conservative" when it's actually drift. The same applies geographically: a US-only investor who never reads EEM relative strength misses both the protection of EM lead during dollar-down phases and the warning of EM lag during dollar-up phases.
+
+The correct model: defensive-cyclical and geographic are independent regime axes that rotate on their own clocks. Use relative-strength readings to set tilts within mandate diversification caps. Don't bet the whole portfolio on one rotation — rotate weight at the margin (e.g., 10–15% of equity exposure shifting between geographies) as the indicators confirm.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="DXY has fallen 6% over 80 days. EEM has outperformed SPY by +8% over 60 days. ISM Manufacturing PMI is rising; consumer-discretionary spending is accelerating; XLY has outperformed XLP by +6% over 60 days. What does the dual-regime framework prescribe?"
+  options={[
+    "Hold a 100% US-defensives portfolio — safe is best.",
+    "Two rotation regimes are firing simultaneously: cyclical-leadership (XLY > XLP) and EM-leadership (EEM > SPY with weak DXY). Tilt within mandate: rotate a portion of defensive weight into cyclicals (XLY/XLI), and a portion of US weight into EM exposure (within geographic diversification cap). Invalidate the cyclical tilt if XLP/XLY spread compresses under +1pt for 4 weeks; invalidate EM tilt if DXY reverses higher and the EEM/SPY spread flips negative.",
+    "Sell everything — too much rotation means a crash.",
+    "Buy USD-denominated bonds at maximum allocation."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — defensives feel safe by name. But staying defensive in a confirmed cyclical-up + EM-up regime is index drag, not safety. The synthesis is dual-regime detection with marginal tilt within mandate, plus explicit per-regime invalidation. Options 2 and 3 are panic-extreme responses."
+/>
+
+<Quiz
+  question="DXY has rallied from 100 to 109 over 4 months. The Fed is in a hiking cycle. EEM has underperformed SPY by -7% over 60 days. KLCI is down 3% in local terms and -8% in USD terms. A reader argues 'Bursa is cheap — load up'. What does the geographic framework say?"
+  options={[
+    "Buy Bursa heavily — cheap is cheap.",
+    "Geographic regime is firmly US-dominance (rising DXY, hiking cycle, EM lagging). Bursa USD-cheapness is real but the regime is pushing capital toward USD-denominated assets, and ringgit weakness compounds the underperformance for USD-denominated holders. Wait for DXY to peak (e.g., a 50-day SMA flattening or rolling over) before adding EM/Bursa exposure beyond a starter; size starter to mandate single-position rules.",
+    "Sell USD assets — the dollar is overextended.",
+    "Geographic rotation is random; ignore it."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'cheap' is the most common rationalisation for catching a falling knife in a regime that doesn't yet support the trade. The synthesis: cheapness without a regime catalyst is just longer pain. The framework requires the geographic regime to flip (DXY rolling over) before sizing the position up."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the News Analyst and paste: "Today's DXY 50-day trend, EEM/SPY 60-day relative strength, KLCI USD-equivalent return vs SPY over 90 days, and the XLP+XLV+XLU average vs XLY+XLI+XLB average 60-day spread. Classify the current defensive-vs-cyclical and geographic regimes." Then open the <Term id="ami_decision_journal" /> and add two tag columns to your last 10 positions: "growth regime (defensive/cyclical)" and "dollar regime (DXY up/down)". The mismatches between your trades and the regime are your style-anchor blind spots.
+
+## Takeaway
+
+Defensive-cyclical and geographic rotations are independent regime axes. Tilt within <Term id="ami_mandate" /> on confirmed relative-strength signals; cheapness alone is not a catalyst, and style anchoring is not safety.

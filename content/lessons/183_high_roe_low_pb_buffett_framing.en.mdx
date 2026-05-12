@@ -1,0 +1,74 @@
+---
+id: "183_high_roe_low_pb_buffett_framing"
+title: "High ROE + low P/B — the rare wonderful business"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "price_to_book"
+prerequisites: ["040_price_to_book", "041_return_on_equity", "036_competitive_advantage_moat"]
+tags: ["price_to_book", "roe", "wonderful_business", "buffett", "compounding", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bull_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# High ROE + low P/B — the rare wonderful business
+
+Lesson 040 set the link: high ROE justifies a high P/B, low ROE justifies a low one. The implication, made famous by Buffett, is that the combination "high ROE *and* low P/B" is almost an arithmetic impossibility in a working market — and when it appears, you should look hard before believing it. By the end of this lesson you should be able to recognise the four real causes of the rare combination, distinguish a genuine opportunity from a trap, and name the specific falsification condition that flips it back to "boringly priced."
+
+## How this plays out in real markets
+
+The link between ROE and justified P/B is a clean piece of finance arithmetic. With cost of equity r and sustainable growth g, justified P/B ≈ (ROE − g) / (r − g). Plug in cost of equity 10%, growth 4%, ROE 20%: justified P/B = (0.20 − 0.04) / (0.10 − 0.04) = 16/6 ≈ 2.7x. So a company sustainably earning 20% on equity *should* trade at ~2.7x book in equilibrium. If you find such a business at 1.0x book, something is creating the dislocation — and you need to know what.
+
+Real examples of when the combination has appeared and what drove it:
+- **Cyclical depression of book sentiment.** WFC in 2020 traded at P/B ≈ 0.7x with normalised ROE around 12% — the dislocation was post-pandemic credit-loss fear and the prior fake-accounts scandal. As fears subsided, P/B re-rated toward 1.3x over 24 months while ROE held.
+- **Misunderstood business.** BRK-B has periodically traded at 1.2x–1.3x book despite ROE on operating businesses well above 12%, because investors mis-measure the look-through earnings of the equity portfolio. Buffett himself has used book-value buybacks below 1.2x as the de facto floor.
+- **Sector contagion.** A high-quality bank caught in a regional-bank-fear episode can trade at 1.0x book with 15% ROE — the discount is correlation, not company-specific weakness.
+- **Outright denial that the ROE is sustainable.** This is the trap. If the market is paying a low P/B for a high reported ROE, the most common explanation is that the market thinks the ROE is about to fall.
+
+On Bursa: PUBLIC BANK has, in rare windows, traded near 1.4x book with 13% ROE during sector-wide concerns — historically a useful entry zone for patient holders. The dislocation eventually resolved upward as ROE proved durable.
+
+Falsifiable claim: a genuine "high-ROE, low-P/B" setup requires (a) ROE durably above cost of equity over a five-year window, (b) the dislocation traceable to a known, time-limited cause (cyclical fear, sector contagion, governance event), and (c) no structural threat to ROE durability (eroding moat, regulatory shift, technology disruption). Absence of any one of these means the market is correctly pricing a soon-to-fall ROE — not undervaluing a robust one.
+
+## The trap
+
+The trap is screening for "high ROE + low P/B" and acting on the screen output without diagnosing why. The market is not stupid in aggregate; persistent dislocations get arbitraged. So when the screen returns a name, the working assumption should be "the market thinks ROE is about to fall" — and you have to do the work to disagree. The four diagnostic questions: (1) Is the high ROE leverage-driven (lesson 041 trap)? (2) Is the high ROE buyback-inflated (lesson 187 territory)? (3) Is the low P/B goodwill-corrupted (lesson 180)? (4) Is there a known disruption or regulatory threat the market is pricing? If any answer is yes, the screen is misleading you. If all four are no and the dislocation has a clear, time-limited cause, you may have a genuine candidate. What invalidates the thesis as you hold: ROE itself starts compressing. The trade isn't "buy and wait for re-rating"; it's "buy because ROE is durable, and re-rating is the byproduct."
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A regional bank screens as 'high ROE + low P/B': ROE = 18%, P/B = 1.0x, sector median P/B = 1.6x. On inspection, the equity multiplier (lesson 041 DuPont) is 14x — well above the 9–10x typical for the sector. Cost of equity ≈ 10%. Which read is most accurate?"
+  options={[
+    "Genuine opportunity — buy aggressively because ROE is well above cost of equity",
+    "The high ROE is leverage-driven (equity multiplier 14x vs sector typical 9–10x). The 'low' P/B is the market pricing the fragility of leveraged ROE: in a credit cycle, a stretched balance sheet means the same 18% becomes deeply negative quickly. The screen output is misleading because the ROE numerator is structurally lower quality than peers. The right action is to check whether the ROE survives a normalised credit-loss scenario before treating the P/B as a discount",
+    "The bank should be valued on P/E only",
+    "Buy and ignore leverage because regulators wouldn't allow excess leverage"
+  ]}
+  answer={1}
+  explanation="The synthesis: the screen 'high ROE + low P/B' has to be diagnosed before acted on. The tempting wrong answer is option 0 — the buy-the-screen-output reflex. The DuPont read shows leverage is doing the work; the market is correctly discounting that source of ROE. Option 3 dismisses regulatory limits — banks can run leverage within regulatory bounds and still be more fragile than peers. Option 2 throws out the right diagnostic tool. The four-question diagnostic catches this one on question 1."
+/>
+
+<Quiz
+  question="A consumer-staples company shows ROE = 22%, P/B = 1.4x, sector median P/B = 4.0x. ROE has been 20%+ for ten years. Equity multiplier ~2x (low leverage). Goodwill is 5% of equity. The company recently lost a key distribution contract that will reduce revenue by ~15% over two years; analysts have cut forward EPS by 35%. Which is the correct synthesis-level read?"
+  options={[
+    "Strong buy — high ROE, clean balance sheet, P/B at a fraction of sector median",
+    "The screen passes the leverage and goodwill diagnostics, but fails the fourth: there is a known structural threat (lost distribution, 15% revenue impact, 35% EPS cut). The market is correctly pricing a near-term ROE compression that the trailing number doesn't yet show. The dislocation is not a known time-limited cause — it's an unfolding structural change. The right action is to wait for the new ROE to stabilise and reprice off that, not to buy the trailing screen output",
+    "Hold cash and wait for the sector to crash",
+    "Buy because P/B 1.4x is mathematically below the justified ratio implied by 22% ROE"
+  ]}
+  answer={1}
+  explanation="The synthesis: the four-question diagnostic isn't satisfied by passing three out of four. The tempting wrong answer is option 0 — three out of four diagnostics clean is enough to seduce a beginner. Option 3 applies the formula mechanically without acknowledging the input (ROE) is about to change. The right read recognises that the market is pricing the *forward* ROE, not the trailing one. The setup looks like a 'wonderful business at low P/B' only on stale data."
+/>
+
+## Try it
+
+Run a <Term id="ami_one_on_one" /> with the Fundamentals Analyst: "Screen my <Term id="ami_watchlist" /> for stocks where trailing ROE > 15% and P/B < 1.5x and sector-median P/B > 2x. For each hit, run the four-question diagnostic (leverage source, buyback impact, goodwill load, known disruption)." Save the diagnostic outcomes in your <Term id="ami_decision_journal" />. Most hits will fail at least one diagnostic — that's the point.
+
+## Takeaway
+
+High ROE + low P/B is almost always a market signal that ROE is about to fall — not a free opportunity. Run the four-question diagnostic before treating the screen output as anything but a starting hypothesis.

@@ -1,0 +1,74 @@
+---
+id: "196_organic_vs_acquired_growth"
+title: "Organic vs M&A-driven growth — separating the engine from the wrapper"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "organic_vs_acquired"
+prerequisites: ["044_earnings_growth", "032_revenue_the_top_line", "175_gaap_vs_non_gaap_and_accruals_quality"]
+tags: ["organic_growth", "m_and_a", "acquisitions", "growth_quality", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Organic vs M&A-driven growth — separating the engine from the wrapper
+
+Lesson 044 introduced earnings growth and flagged that growth driven by acquisitions often masks declining same-store metrics. This lesson goes deep. Reported revenue or earnings growth combines two distinct sources: the existing business doing more (organic), and new businesses bolted on (acquired or inorganic). They have different durability profiles, different return profiles, and very different implications for the multiple the market is willing to pay. By the end of this lesson you should be able to decompose reported growth into organic and acquired components, recognise the "roll-up" pattern where serial acquirers hide a stagnant core, and apply a falsifiable rule for when M&A-driven growth deserves a growth multiple.
+
+## How this plays out in real markets
+
+Look at a serial acquirer. Constellation Software (CSU.TO) has compounded revenue at over 20% annually for two decades — but the organic growth component is consistently in the low-to-mid single digits. The vast majority of the growth is acquired. The market has nonetheless paid a premium multiple because management has demonstrated decades of disciplined capital allocation: they buy small vertical-market software companies at low multiples, integrate cheaply, and earn 25%+ ROIC on the deployed capital. The organic growth is low, but the *capital deployment* is the durable engine.
+
+Contrast that with a classic failed roll-up. Valeant Pharmaceuticals (now Bausch Health) drove revenue growth of 30–80% in the early 2010s primarily through serial acquisitions of off-patent drugs that they then re-priced. Organic growth was flat or negative; the entire reported growth was acquired. When the strategy hit limits in 2015–2016, the multiple collapsed, the debt taken on for acquisitions became unsustainable, and the stock fell over 90%. The growth was real on the income statement but the engine was a financing strategy, not an operating one.
+
+A clean decomposition example: NSRGY (Nestle) in a typical year. Reported revenue growth might be 4–6%, decomposed roughly as: organic growth (volume + price/mix) of 3–4%, M&A net contribution of 1–2%, foreign exchange of -1 to +1%. The organic line is the operating health metric; M&A is the wrapper. Companies in this category disclose the decomposition in the quarterly report — read it.
+
+A roll-up red flag: a company reports revenue growth of 30% with EPS growth of 25%. The press release celebrates "strong organic momentum". The acquisition footnote reveals five small acquisitions completed in the trailing 12 months, with combined acquired revenue equal to 24% of base revenue. Organic growth is 30% − 24% ≈ 6%. The headline is a lie. Companies that do this consistently usually trade at growth multiples until the market catches up, at which point the multiple compresses sharply and the buyer needs new acquisitions to maintain reported growth — a self-reinforcing trap.
+
+On Bursa Malaysia: IHH Healthcare has grown both organically (more hospital beds, higher rates) and via acquisitions (Turkey, India). The disclosed organic same-store revenue growth is what an analyst should anchor on; the acquired growth contribution is mechanical and varies year-to-year with deal flow.
+
+Falsifiable claim: when more than 50% of reported revenue growth comes from M&A in a given year, the reported number is wrapper-driven and should be discounted in valuation work — the multiple paid for that growth should be lower than for organic growth at the same headline rate. The signal invalidates if the acquirer's disclosed acquisition ROIC has consistently exceeded the cost of capital — Constellation Software being the canonical example — in which case the M&A is itself a value-creating activity rather than a growth wrapper.
+
+## The trap
+
+The trap is paying a growth multiple for acquired growth. A company growing 25% organically deserves a higher P/E than a company growing 25% via acquisitions of single-digit-organic-growth targets, because the organic grower's growth is self-funding and self-replicating, while the acquirer's growth requires continual capital deployment, integration risk, and balance-sheet expansion. The correct mental model: ask "where did each percentage point of the growth come from?" before accepting the headline. What invalidates the simple split: some acquisitions reveal latent organic growth (a strategic acquisition that unlocks distribution, for example) where the post-acquisition organic line is higher than the pre-acquisition combined organic lines would have been. Those are rare and usually disclosed by management — if they're not, assume they don't exist.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports 18% revenue growth. The acquisitions footnote discloses two completed deals in the trailing 12 months contributing $400M of revenue. Pre-existing trailing revenue was $2.5B. Which is the organic growth rate?"
+  options={[
+    "18% — the reported growth",
+    "Reported growth = 18% on $2.5B base = $450M of total revenue increase. M&A contributed $400M. Organic increase = $50M, organic growth rate = 50 / 2,500 = 2%. The reported 18% is almost entirely the M&A wrapper; the underlying business is growing at roughly the rate of inflation. Anyone paying a 25x P/E for the 18% growth rate is over-paying for organic growth that doesn't exist",
+    "20% — including the inorganic kicker",
+    "Can't compute without margin data"
+  ]}
+  answer={1}
+  explanation="The synthesis test: decomposing reported growth into organic and acquired pieces. The tempting wrong answer is option 0 — accepting the headline. The right calculation subtracts the disclosed M&A contribution from the total revenue increase and computes the organic rate against the original base. Option 2 adds the kicker instead of subtracting. Option 3 demands data that isn't required for the decomposition."
+/>
+
+<Quiz
+  question="Two serial acquirers report similar headline growth (~20% revenue CAGR over 5 years). Company A discloses average acquisition ROIC of 28% and organic growth of 3-4%. Company B discloses average acquisition ROIC of 7% and organic growth of 0-1%. Both pay similar multiples for targets. Which synthesis is most accurate?"
+  options={[
+    "A and B are equivalent because reported growth matches",
+    "A's M&A is itself a value-creating activity — 28% ROIC against a cost of capital around 8-9% creates substantial spread per acquired dollar. The acquisition program is the engine. B's M&A returns 7%, likely below cost of capital, meaning every acquisition destroys value even if it adds revenue. A deserves a growth multiple because the capital allocator is the moat; B's reported growth is a treadmill that erodes per-share value over time",
+    "B is better because reported growth is acquired",
+    "A is overrated because organic growth is low"
+  ]}
+  answer={1}
+  explanation="The synthesis tests the deeper read on serial acquirers — the relevant question is whether M&A is creating or destroying value, measured by acquired ROIC vs cost of capital. The tempting wrong answer is option 0 — surface-equivalence based on revenue growth. The right read separates the two acquirer types by the spread between deployed ROIC and capital cost. Option 2 confuses growth source with growth quality. Option 3 misses that the capital-allocation engine can itself be the durable moat."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker that has made any acquisitions in the past two years and ask: "Decompose reported revenue and earnings growth into organic, acquired, and FX components for the last three years. For each acquisition, give me the acquired ROIC and the cost of capital at the time of the deal." Save the decomposition. The organic line is the engine; everything else is a wrapper.
+
+## Takeaway
+
+Reported growth is the wrapper; organic growth is the engine. Pay a growth multiple for the engine, not the wrapper — and pay extra only if the capital allocator has a proven record of accretive deployment.

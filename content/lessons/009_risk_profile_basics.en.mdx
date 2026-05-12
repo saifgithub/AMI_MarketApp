@@ -1,0 +1,72 @@
+---
+id: "009_risk_profile_basics"
+title: "Risk profile basics"
+duration_min: 4
+level: 1
+module: 2
+difficulty: 1
+track: "foundations"
+topic: "risk_profile"
+prerequisites: []
+tags: ["foundations", "risk_tolerance", "drawdown", "mandate"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Risk profile basics
+
+Your risk profile is not a personality test — it is two numbers and a behaviour. The numbers are the worst drawdown you can sit through without selling, and the worst single-position loss you can take without breaking your plan. The behaviour is what you actually do when those numbers hit. Most beginners overstate their tolerance in calm markets and discover the true number in a sharp drawdown, when it is too late to use. Getting honest about this **before** you commit capital is what makes every other lesson in this course usable.
+
+## Example
+
+Consider a real episode: the S&P 500 (SPY) drawdown of late 2018. From the September 2018 high near $293 to the December 24th low near $234, SPY lost about 20% in roughly three months. A reader with a $50,000 portfolio fully invested in SPY watched the account fall to around $40,000 — a $10,000 paper loss — in 13 weeks.
+
+Two profiles, same trade.
+
+Profile X — "moderate" tolerance, written as max_drawdown = 25%. X watched the drawdown, did not sell, kept the position. By April 2019 SPY was back to $290. X was approximately flat over six months and on track for a strong 2019 (SPY ended 2019 up roughly 29%).
+
+Profile Y — said "moderate" during onboarding but had never lived through a 20% drop. Y sold at $245 in mid-December, locking a roughly 16% loss on the $50,000 ($8,000 realised). When SPY recovered to $290 by April, Y was still sitting in cash, "waiting for confirmation," and missed the entire recovery. Y's stated tolerance was 25%; Y's revealed tolerance was closer to 15%.
+
+The trade was identical. The risk profile decided the outcome.
+
+## The trap
+
+The trap is treating risk profile as aspiration ("I'm bold, I can handle anything") rather than evidence ("I sold last time at -12%, so my real number is around 12%"). Aspirational risk profiles fail in exactly the moment they are needed. The honest move is to start with a conservative max_drawdown setting — say 15% — and only widen it after you have lived through a real (or thoroughly simulated) drawdown of that size without breaking your plan. Your risk profile is set by your history, not your hopes.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="You set your max_drawdown to 25% during onboarding. Six months in, you're at -14% and you find yourself checking the app every hour, losing sleep, and seriously thinking about going to cash. What is the honest read?"
+  options={[
+    "You're disciplined; you set 25% and you're still under it, so keep going",
+    "Your stated tolerance was 25% but your revealed tolerance is closer to 14%; either tighten your mandate now or risk capitulating later",
+    "The market is the problem; wait for it to recover before deciding",
+    "Increase position size to make back the loss faster"
+  ]}
+  answer={1}
+  explanation="The 25% number is a hypothesis; your behaviour at -14% is the evidence. If you're already breaking down at -14%, you do not have a 25% tolerance — you have a 14% tolerance with a 25% label on it. Revising the mandate down before you panic is the disciplined move."
+/>
+
+<Quiz
+  question="Which is the most defensible way to set a risk profile for a first-time user?"
+  options={[
+    "Pick the highest setting; you can always tighten later",
+    "Pick the middle setting; it's a safe default",
+    "Start conservative and widen the mandate only after surviving a real drawdown of the previous size without changing behaviour",
+    "Match the setting of someone whose returns you admire"
+  ]}
+  answer={2}
+  explanation="The 'evidence-based widening' approach matches the falsifiable structure of risk profile: tolerance is what you actually do under stress, not what you check on a form. Starting low and earning the right to widen is asymmetric — the downside of being too conservative is missed return; the downside of being too aggressive is capitulation at the worst moment."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and set **max_drawdown_pct** to a number you think you can genuinely sit through without selling. Then open the <Term id="ami_decision_journal" /> and write one line: "If my portfolio drops to [starting_value × (1 - max_drawdown_pct)], my plan is to ___." Fill in the blank with a specific action — "do nothing", "rebalance", "reduce position size by 25%". The pre-commitment is half the value of the mandate.
+
+## Takeaway
+
+Your risk tolerance is set by what you did last time the market dropped, not by what you wrote on a form — start low, widen with evidence, and pre-commit to your action before the drawdown hits.

@@ -1,0 +1,66 @@
+---
+id: "215_atr_trailing_stop_for_trends"
+title: "ATR trailing stops for trend trades"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "trend_following"
+prerequisites: ["052_trend_following", "102_atr_based_stops", "103_trailing_stops", "026_moving_averages"]
+tags: ["strategy", "trend", "atr", "trailing_stop", "volatility"]
+agent_callouts: ["trader", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ATR trailing stops for trend trades
+
+Trend-following foundations (052) used a moving-average exit; the trade-off is that MA exits ignore volatility — a 50-day MA stop on a quiet utility is 3% wide, on a high-beta growth name it can be 18% wide, and the position-size math collapses. An ATR-based trailing stop fixes that: you size your stop in multiples of average true range, so every trade has comparable risk regardless of the instrument's volatility. After this lesson you can build a trend rule whose stop adapts to each ticker's natural breathing room, and whose trail follows the highest reached "chandelier" point on the trade.
+
+## Example
+
+Look at NVDA from April through October 2024. On April 22, NVDA closed at $79.20 (post-split) just after a sharp pullback. The 22-day ATR was about $3.10. A 3-ATR chandelier exit trails from the trade's highest close: stop = highest_close - 3 * ATR. On entry near $79, initial stop is $79 - $9.30 = $69.70. By June 18, NVDA closed at $135.58 with ATR around $4.80 — chandelier stop ratchets up to $135.58 - $14.40 = $121.18. The stop only ever moves UP, never down. In late July NVDA pulled back from a ~$140 high to a low near $98 on August 5 — but the 3-ATR chandelier from the $140 high was around $125, which had already triggered on a daily close around $118.50 on July 30. Exit fired mechanically. The trader then re-entered on a fresh trend signal in mid-August and rode NVDA to $148 by November with the chandelier following each new high.
+
+Entry criteria: any defined trend entry (MA cross, Donchian, breakout). Stop on entry: entry price - (N * ATR), where N is 2.5 to 3.5 — pick one and stick with it. Trailing: stop = highest_close_since_entry - (N * ATR), ratcheting up only, never down. Exit/invalidation: daily close below the trailing stop. The strategy FAILS in low-ATR creeping uptrends interrupted by single volatility-expansion days: a normally-quiet name has a one-day ATR spike that retroactively makes the prior trailing stop look tight, then the close-below fires on a wick that recovers next session. You took the loss; the trend continued without you.
+
+## The trap
+
+The beginner mistake is recomputing ATR every day and letting the trailing stop move DOWN when volatility contracts. ATR drops in quiet markets, so your stop appears to "loosen" — except the rule is one-way only. The correct mental model: chandelier stops are monotonically increasing during a long trade. ATR can shrink, price can chop, but the trailing-stop level only ever ratchets higher. The other trap is overreacting to a single volatile day — if today's ATR spikes 50%, that doesn't move your existing trailing level higher unless the new highest_close also rose. Stop math is a function of the peak, not the latest volatility reading.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="You're long MSFT at $410 with a 3-ATR chandelier trailing stop. Highest close since entry is $465. ATR has dropped from $7 at entry to $5 now. Where is your current trailing stop?"
+  options={[
+    "$465 - $15 = $450",
+    "$465 - $21 = $444",
+    "$410 - $21 = $389",
+    "$410 - $15 = $395"
+  ]}
+  answer={0}
+  explanation="The chandelier trails from the highest close ($465) using the CURRENT ATR ($5): $465 - 3 * $5 = $450. Option 1 (using $7 ATR) is the tempting wrong answer because traders often pin ATR at entry and never recompute. The rule is: peak close (one-way ratchet) minus current ATR multiple. Note the stop only moves up vs the previous trailing level; if a freshly-computed level would be lower than yesterday's, you keep yesterday's."
+/>
+
+<Quiz
+  question="GOOGL trend entry at $160, 22-day ATR $3.20, you use 3-ATR. Mandate: per-trade risk 1% of $25,000 account. Max position size?"
+  options={[
+    "156 shares",
+    "26 shares",
+    "78 shares",
+    "52 shares"
+  ]}
+  answer={1}
+  explanation="Risk per share = 3 * $3.20 = $9.60. Max dollar risk = 1% * $25,000 = $250. Shares = $250 / $9.60 = 26.04, round down to 26. Option 0 (156) sizes 1% of the account into the ticker — the classic 'I sized it by feel' error that ignores stop distance entirely. The synthesis: an ATR stop is the size of your sized risk, not a number you add later — it's the input to the sizing formula."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Trader, paste a current trend setup and ask: "Compute the 22-day ATR. State the initial stop at 3-ATR. State the position size given a 1% per-trade <Term id="ami_mandate" /> on a $50,000 account." Then open <Term id="ami_coach_your_agent" /> on the Trader and add: "Always quote ATR-based stops as a one-way ratchet from highest close. Never let the trailing level move down." Log the coached behaviour in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+ATR makes risk comparable across instruments. The chandelier only ratchets up. The peak close, not the latest volatility, decides where your stop lives.

@@ -1,0 +1,113 @@
+---
+id: "253_mandate_adjustments_by_regime"
+title: "Mandate adjustments by regime: the master playbook"
+duration_min: 7
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "regime_synthesis"
+prerequisites: ["059_bull_markets", "060_bear_markets", "061_sideways_range_markets", "062_volatility_regimes", "252_regime_change_realtime_vs_hindsight"]
+tags: ["regime", "mandate", "synthesis", "position_sizing", "playbook"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Mandate adjustments by regime: the master playbook
+
+Every lesson in Module 10 ends with a <Term id="ami_mandate" />-side suggestion. This lesson collects them into a single playbook: for each regime, what the Mandate editor should encode. The mandate is the layer between your regime calls and your real exposure — the place where regime synthesis becomes enforceable risk control. After this lesson you will be able to map each detected regime to a concrete mandate preset, name what the Portfolio Manager's <Term id="ami_pm_safety_floor" /> will enforce regardless, and state what NOT to touch (the uncoachable floor).
+
+## How this plays out in real markets
+
+The master mapping, calibrated against the regimes covered in 059–064 and 242–252:
+
+Confirmed bull, broad breadth (e.g., Q4 2024 SPX +5.9% from 31 October 2024 to 6 December 2024 with breadth expanding):
+- max_single_position_pct: 10% (mandate default)
+- max_drawdown_pct: 25%
+- stop_loss_pct: 8%
+- gross_exposure_pct: 100%
+
+Confirmed bull, narrow breadth / late-bull cluster firing (e.g., late 2021):
+- max_single_position_pct: 5–7%
+- max_drawdown_pct: 18–20%
+- stop_loss_pct: 5%
+- gross_exposure_pct: 80%
+- Add concentration cap: no more than 25% of portfolio in top 3 names.
+
+Range regime (e.g., SPX March–May 2023):
+- max_single_position_pct: 5–7%
+- stop_loss_pct: 3–4% (smaller because targets are smaller — band-middle, not trend continuation)
+- gross_exposure_pct: 60–70%
+- Strategy override: prefer mean-reversion at band edges, defer trend-following.
+
+Confirmed bear regime (e.g., 14 March 2022 to 12 October 2022, SPX -25.4%):
+- max_single_position_pct: 3–5%
+- max_drawdown_pct: 12–15%
+- stop_loss_pct: 4–5%
+- gross_exposure_pct: 30–50%
+- Add: positions only in confirmed relative-strength leaders OR mandate-permitted defensive/short exposure.
+
+High-volatility regime (e.g., October 2022, VIX > 25 sustained):
+- Position sizing scales inversely with ATR: as 20-day ATR doubles, share count halves to keep $-risk constant.
+- max_drawdown_pct: drop by one-third from your baseline.
+
+Backwardation regime (per lesson 248, VIX1M/VIX3M > 1.0 for 3+ sessions):
+- All long positions compressed by ~25% until backwardation reverts.
+
+The Portfolio Manager's safety floor is uncoachable. Regardless of regime preset, the PM will enforce: compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if set), hard maximum on single-position size, hard floor on stop-loss requirement. The PM will block a trade that violates these even if you <Term id="ami_coach_your_agent" /> to ignore the regime. This is by design — the regime adjustments are dials within bounds, not overrides of the bounds.
+
+## The trap
+
+The mandate-adjustment trap is the all-or-nothing flip. A trader detects a bear regime and zeroes out exposure overnight — and gets whipsawed in if the call was a head fake (lesson 252). Or they detect a bull regime and instantly max out every dial — and get caught at full exposure when a vol-shock prints (lesson 062's 5 August 2024 example).
+
+The correct model: mandate adjustments scale with confirmation strength. Two-of-three regime markers firing = halfway to the regime preset. Three-of-three confirmed = full preset. Surviving 4 weeks = stable preset. And when the regime invalidates, you scale back — you don't reverse all at once. Treat the mandate as a continuous dial, not a binary switch.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You detected the bear-regime cluster firing fully on a stock-market index 4 weeks ago, and the regime has survived without invalidation. Your current mandate is set to the bull preset (max_position 10%, max_drawdown 25%, stop 8%, gross 100%). What is the regime-correct mandate update?"
+  options={[
+    "Leave it alone — the bull preset is conservative enough.",
+    "Update to the confirmed-bear preset incrementally: max_single_position_pct down toward 3–5%, max_drawdown_pct down toward 12–15%, stop_loss_pct down toward 4–5%, gross_exposure_pct down toward 30–50%. The PM safety floor (compliance flags, hard caps) does not change — those are uncoachable. If the regime reverses (200-day SMA reclaimed weekly), reverse the mandate adjustment back toward bull preset; don't flip all at once.",
+    "Switch the mandate to 200% short with maximum leverage.",
+    "Zero out all exposure overnight."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 3 — 'just go to cash' feels safe but ignores the synthesis from lesson 252 about head fakes. Option 0 ignores the regime entirely. Option 2 inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
+/>
+
+<Quiz
+  question="Which of these is the Portfolio Manager's UNCOACHABLE safety floor — the rule that does NOT change with regime adjustments?"
+  options={[
+    "max_single_position_pct (changes by regime).",
+    "Compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if you've set them), hard maximum on single-position size, hard floor on stop-loss requirement. These are deterministic compliance checks on every trade and cannot be overridden by Coach Your Agent, regime adjustment, or agent debate.",
+    "max_drawdown_pct (changes by regime).",
+    "stop_loss_pct (changes by regime)."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — max_single_position_pct sounds like a hard rule but is in fact a tunable mandate parameter. The uncoachable floor is the compliance layer plus the deterministic hard caps the PM enforces regardless of any coaching. This is the synthesis of the entire safety design from the AMI Trade architecture: regime adjustments are dials, the safety floor is bedrock."
+/>
+
+<Quiz
+  question="Synthesis. You detect: regime is confirmed bull (lesson 059), breadth is narrow (lesson 064 / 242), volatility regime is normal but VVIX is in the 80th percentile (lesson 249), and 2-of-5 late-bull warning signs are firing (lesson 242). The bull is intact but the warnings stack. Which mandate adjustment is most regime-consistent?"
+  options={[
+    "Full bull preset — the regime is confirmed bull.",
+    "Cash 100% — too many warnings.",
+    "Bull preset compressed roughly to the mid-point between full-bull and late-bull: max_single_position around 6–7%, max_drawdown around 20%, stop_loss around 6%, gross exposure around 85%, concentration cap of 25% on top 3 names. The PM safety floor is untouched. Re-evaluate as more warning signs fire (which moves toward late-bull preset) or as VVIX percentile falls back (which moves toward full-bull preset).",
+    "Switch to bear preset preemptively."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 0 — 'the regime is confirmed, why compress?' But the lesson's whole point is that mandate adjusts on warnings, not just on regime flips. Option 1 over-corrects out of the regime entirely. Option 3 pre-emptively bear-prices a still-bull regime. The synthesis is graduated compression on confirmed bull + accumulating warnings — exactly the framework from 242, 249, and 252 combined."
+/>
+
+## Try it
+
+Open the Mandate editor in the app. Build three named presets in your journal: "Bull-broad", "Bull-narrow / late-bull", and "Bear-confirmed". Write the four numbers for each (max_position, max_drawdown, stop_loss, gross_exposure). Then run a quick simulation: drop max_position_pct from 10% to 3% and try submitting a 7% position — watch the PM safety-floor message reject it. Restore to 10% and submit the same 7% position — watch it pass. You're feeling the dial in action. Finally, <Term id="ami_convene_the_room" /> on any ticker and ask the Portfolio Manager: "Given the current regime and my mandate, which dial would you adjust first?"
+
+## Takeaway
+
+The mandate is the layer that turns regime calls into enforceable risk control. Adjust the dials with the regime cluster; the PM safety floor (compliance, hard caps, stop-loss floor) is bedrock and does not move.

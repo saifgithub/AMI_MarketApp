@@ -1,0 +1,80 @@
+---
+id: "240_risk_parity_for_strategies"
+title: "Risk parity for strategies — equal risk, not equal dollars"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["236_combining_strategies_for_diversification", "238_strategy_correlation", "101_volatility_adjusted_sizing", "109_risk_budgeting_across_positions"]
+tags: ["synthesis", "risk_parity", "volatility", "position_sizing"]
+agent_callouts: ["research_manager", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Risk parity for strategies — equal risk, not equal dollars
+
+The diversification lesson (236) used equal-dollar weighting across strategies. That's a reasonable starting point but it leaks the diversification benefit when the strategies have very different volatilities. A momentum strategy with 18% annualised vol and a mean-reversion strategy with 8% annualised vol at equal dollars means momentum contributes ~70% of portfolio risk — the portfolio is effectively a momentum bet with a small mean-reversion overlay, not a diversified combo. Risk parity equalises the RISK contribution of each strategy by allocating inverse-volatility weights. After this lesson you can compute risk-parity weights, understand when they help, and recognise when risk parity introduces its own trap.
+
+## How this plays out in real markets
+
+Three strategies, annualised vols:
+- Trend-following on SPY: 11%
+- Mean-reversion on US large-caps: 8%
+- Momentum top-decile S&P 500: 18%
+
+Equal-dollar weights (33/33/33): portfolio vol contribution roughly 24% / 17% / 59%. Momentum dominates risk by a large margin even though it's only a third of dollar exposure. Equal-dollar diversification is mostly cosmetic.
+
+Risk-parity weights (proportional to 1/vol):
+- Trend: 1/11 = 0.091
+- Mean-reversion: 1/8 = 0.125
+- Momentum: 1/18 = 0.056
+
+Normalise: trend ~33.5%, mean-reversion ~46%, momentum ~20.5%. Now each strategy contributes roughly 33% of portfolio risk. The portfolio is genuinely diversified across risk, not just across dollars.
+
+Backtested 2010-2024: equal-dollar weights aggregate CAGR 10.4%, vol 12.8%, max drawdown 14%. Risk-parity weights aggregate CAGR 9.3%, vol 9.2%, max drawdown 9%. CAGR is slightly lower (because momentum had the highest individual CAGR and you're now under-weighting it), but vol and drawdown are meaningfully better. Sharpe roughly equal. The Q1 2020 drawdown: equal-dollar -11%, risk-parity -6%. The November 2020 momentum crash: equal-dollar -4%, risk-parity -2%.
+
+Key caveat: vol estimates use a trailing window (e.g., 90 days). When volatility regimes shift, the weights lag the regime. In rising-vol regimes, the weights are too high (computed from prior low vol); in falling-vol regimes, weights are too low. Practical risk-parity uses a smoothed vol estimate (e.g., 90-day blended with 252-day) and rebalances monthly, not daily.
+
+## The trap
+
+The beginner mistake is treating risk parity as a magic formula. Risk parity gives you equal risk contribution from each strategy ASSUMING the volatility estimates are accurate and the correlations don't spike. When stress correlations spike toward +1 (covered in 238), risk parity stops working — every strategy is contributing the same risk because they're effectively the same strategy. The correct mental model: risk parity is one tool, useful when strategies are genuinely diversified and the dominant strategy is much more volatile than the others. It's NOT useful when stress correlation is high or when one strategy's expected return is dramatically higher than another (you're throwing away alpha by under-weighting it). The second trap: using risk parity on too few strategies. With two strategies and high stress correlation, risk parity gives you roughly half-and-half with no diversification benefit — the parity is mathematical, not behavioural. The third trap: rebalancing too frequently. Daily rebalancing of risk-parity weights generates substantial transaction costs that eat any benefit; monthly is the typical cadence.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Two strategies. Strategy A vol 6%, expected CAGR 7%. Strategy B vol 20%, expected CAGR 14%. Equal-dollar weights would give B roughly 92% of portfolio risk. Risk-parity weights are roughly 77/23 in favour of A. What's the key trade-off?"
+  options={[
+    "Risk parity is always better — lower risk wins",
+    "Risk parity dramatically reduces portfolio vol but also reduces expected CAGR (since you under-weight the higher-return strategy). The trade-off is Sharpe vs absolute return. Use risk parity if the lower vol matters for mandate compliance; use equal-dollar or somewhere between if mandate has room and you want the higher CAGR.",
+    "Equal-dollar is always better — higher return wins",
+    "Combine them 50/50 by some other method"
+  ]}
+  answer={1}
+  explanation="Risk parity is a tool, not a panacea. It trades CAGR for lower drawdown. The right choice depends on the mandate. Option 0 ignores the return cost. Option 2 ignores the risk cost. Option 3 is non-specific. The synthesis: the mandate's drawdown cap determines whether the vol reduction is worth the CAGR sacrifice."
+/>
+
+<Quiz
+  question="You apply risk parity to three strategies. In Q1 2020, stress correlation across the three jumps from ~0.3 (average) to ~0.85. Conservative Debator: 'the risk-parity weights are now wrong because correlations changed'. Research Manager: 'the weights are still mathematically valid but the diversification they delivered is gone'. Synthesis: what's the correct action?"
+  options={[
+    "Continue with risk parity weights — they were set ex-ante",
+    "Risk parity equalises individual-strategy risk, not portfolio risk under high correlation. When stress correlation spikes, treat the combined portfolio as a single concentrated bet and cut total gross exposure to respect mandate drawdown — independent of the relative weights between strategies. Restore mandate-compliant gross when stress correlation falls back.",
+    "Re-compute weights with new correlations and add leverage",
+    "Switch to equal-dollar weights"
+  ]}
+  answer={1}
+  explanation="The synthesis: risk parity does not protect against correlation regime shifts. The mandate-aware overlay (cut gross exposure when stress correlation spikes) operates ABOVE the risk-parity weights. Option 0 leaves you exposed to crisis correlation. Option 2 amplifies the problem with leverage. Option 3 switches schemes mid-crisis, which doesn't address the underlying correlation issue. The right action operates at the gross-exposure level, not the relative-weight level."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, paste your strategies' trailing 90-day annualised volatilities and ask: "Compute risk-parity weights and equal-dollar weights. Show the implied risk contributions under both, and also under a stress scenario where pairwise correlations rise to 0.85. Which weighting scheme is <Term id="ami_mandate" />-compliant under stress?" Log the answer in the <Term id="ami_decision_journal" /> as a pre-committed weighting rule.
+
+## Takeaway
+
+Risk parity equalises strategy-level risk contribution, not portfolio-level risk. It helps when strategies are genuinely diversified and one is dominant in vol; it stops helping when stress correlations spike.

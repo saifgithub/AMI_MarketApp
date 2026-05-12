@@ -1,0 +1,68 @@
+---
+id: "003_what_is_a_stock_exchange"
+title: "What is a stock exchange?"
+duration_min: 3
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+topic: "exchanges"
+prerequisites: []
+tags: ["foundations", "exchanges", "order_book", "liquidity"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# What is a stock exchange?
+
+A stock exchange is an organised marketplace where buyers and sellers of shares find each other. Without one, if you wanted to sell shares of Apple, you'd have to personally locate someone willing to buy them at a price you both agreed on. Exchanges solve that problem at industrial scale. They run a central system — an order book — where every buyer's bid and every seller's offer is listed, and trades execute automatically when a bid and an offer cross. Exchanges set the rules, enforce them, and publish the prices everyone sees.
+
+## Example
+
+Look at the order book for Microsoft (MSFT) on the NASDAQ on any normal Tuesday. At any given second, there might be 1,200 traders wanting to buy at $419.50, another 800 willing to buy at $419.45, and on the other side, 950 sellers asking $419.55 and 1,400 asking $419.60. The exchange's matching engine pairs them: the highest bid that meets the lowest offer trades first. When a buyer agrees to pay $419.55, that trade happens, MSFT's "last price" ticks to $419.55, and the order book reshuffles for the next round. This happens millions of times per day on a stock like MSFT.
+
+The exchange itself doesn't take a position. It charges a small fee per trade, broadcasts the prices to every brokerage and data feed worldwide, and enforces rules — for example, halting trading if a stock drops more than 7% in a short window, or delisting a company that stops filing its financials.
+
+On Bursa Malaysia: TENAGA NASIONAL (TENAGA) trades the same way, just in MYR and with different session times. The matching mechanic is identical.
+
+## The trap
+
+Beginners often think the exchange sets the price — that there's some official body deciding what AAPL is "worth" today. It doesn't. The exchange is plumbing. The price is whatever the highest bidder is currently willing to pay that meets a willing seller. If every buyer disappeared at once, the price would fall until someone showed up. If every seller pulled their orders, the price would rise until someone agreed to sell. The exchange just publishes what happens. Believing the exchange "sets" the price leads you to trust the number more than it deserves. Believing the price is just where today's buyers and sellers met tells you exactly how much weight to give it.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="A stock's order book shows the highest bid at $50.00 and the lowest offer (ask) at $50.05. What will happen next on the exchange?"
+  options={[
+    "A trade will execute immediately at $50.025",
+    "No trade happens until a buyer raises their bid to $50.05 or a seller lowers their offer to $50.00",
+    "The exchange picks a fair price and forces a trade",
+    "The stock is halted because there's a gap"
+  ]}
+  answer={1}
+  explanation="Trades only happen when a bid meets an offer. A $0.05 gap (the spread) means no buyer is willing to pay what any seller is asking. The book sits until someone moves — either a buyer pays up to $50.05 or a seller drops to $50.00. The exchange does not invent a midpoint."
+/>
+
+<Quiz
+  question="Why does a stock exchange exist?"
+  options={[
+    "To decide which companies are worth investing in",
+    "To set the official price of every listed company",
+    "To match buyers and sellers efficiently, enforce trading rules, and publish prices",
+    "To guarantee that every investor makes money on their trades"
+  ]}
+  answer={2}
+  explanation="Exchanges are infrastructure. They match orders, enforce listing and trading rules, and broadcast prices. They do not opine on whether a company is a good investment, set prices themselves, or protect anyone from loss."
+/>
+
+## Try it
+
+In your Watchlist, tap any ticker and open the "Depth" view (also called the order book). Watch it for 30 seconds during market hours. See how the bids and offers shift as new orders arrive and trades execute. That live shuffle is the exchange doing its only job: matching whoever wants to buy with whoever wants to sell.
+
+## Takeaway
+
+An exchange is a matching machine, not a price-setter. The price you see is just where the most recent buyer and seller agreed — nothing more, nothing less.

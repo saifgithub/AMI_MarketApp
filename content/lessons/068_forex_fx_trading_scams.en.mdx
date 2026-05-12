@@ -1,0 +1,74 @@
+---
+id: "068_forex_fx_trading_scams"
+title: "Forex / \"FX trading\" scams"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 1
+track: "edge_process"
+topic: "scam_forex"
+prerequisites: ["065_guaranteed_return_scams", "067_fake_brokers_and_clone_entities", "045_greed"]
+tags: ["scams", "forex", "fx", "managed_accounts", "unlicensed_brokers"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Forex / "FX trading" scams
+
+Real FX is a legitimate institutional market. Retail FX scams use the *language* of FX — "spreads", "pips", "leverage", "managed account" — to dress up two unrelated structures: a Ponzi paying fake "monthly FX returns" and an unlicensed offshore broker who will let you deposit but never let you withdraw. In Malaysia specifically, BNM has stated repeatedly that retail FX trading by individuals through unlicensed entities is illegal. This lesson teaches the four checks that separate the small, regulated retail-FX universe from the much larger scam universe wearing its costume.
+
+## How this plays out in real markets
+
+BNM's Financial Consumer Alert list (bnm.gov.my) is dominated by unauthorised FX entities — usually offshore brands with names like "FX Pro Capital", "Global Trade Markets", "Apex FX". The pitch is almost always identical: "Deposit USD 5,000, our expert trader manages the account, you get 10–20% monthly return, withdraw anytime." The "platform" shows beautiful equity-curve charts. Withdrawals work for the first one or two small amounts — to build trust — then are blocked behind escalating "tax", "regulatory fee", or "verification deposit" demands. The total losses across the BNM alert list run into hundreds of millions of ringgit, with regular joint operations between BNM, the police, and the SC.
+
+The CFTC and SEC in the US run the same warning under "Forex Fraud" and "Managed FX Accounts". The FCA in the UK does the same. The structure crosses borders because the operator is usually offshore (Saint Vincent, Vanuatu, Marshall Islands) and the licence — if one exists — is from a regulator that does not enforce client-money rules.
+
+Signature traits:
+
+- "Managed FX account" where you don't trade — the operator trades for you.
+- Returns presented monthly as smooth equity-curve screenshots.
+- The broker is regulated in a jurisdiction whose regulator's website you've never heard of.
+- Withdrawals require additional deposits to "release" funds.
+- Leverage offered far above what regulated brokers in your jurisdiction allow.
+
+## The trap
+
+The trap is that retail FX is technically a real market and a small number of regulated brokers do exist (CFTC-registered in the US, ASIC-licensed in Australia, MAS in Singapore). The reader concludes: "FX is real, this offer is FX, therefore the offer is real." The leap is wrong. Greed (Module 8) drives the next step — "20% per month on USD 10,000 is USD 2,000 per month, life-changing" — and the desire-to-believe overrides the obvious red flag: a real, regulated broker does not promise a monthly return. They earn a spread. The asymmetry between the two business models is itself the test.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="Which of these is consistent with a legitimate, regulated retail FX broker (in jurisdictions where retail FX is permitted)?"
+    options={[
+      "A promised 10% monthly return on a managed account",
+      "A fixed or variable spread per trade, with leverage capped at the regulator's limit and no return promise",
+      "A bonus matching 100% of your deposit, deposited into a Vanuatu-licensed account",
+      "Withdrawal only after paying a 5% \"regulatory fee\""
+    ]}
+    answer={1}
+    explanation="Legitimate FX brokers make money on spreads and commissions per trade — they cannot and do not guarantee a return on client capital, because they don't manage it. Anything that looks like a managed-return product on top of a forex broker is almost always a Ponzi using FX as the costume."
+  />
+
+  <Quiz
+    question="A friend shows you 4 months of withdrawals from an offshore FX platform offering 15% monthly returns. The platform is \"licensed in Saint Vincent\". To withdraw the full balance now, the platform asks for a 3% \"audit deposit\" first. What is the decisive red flag?"
+    options={[
+      "The 15% monthly return is too high",
+      "The Saint Vincent licence is weak",
+      "The platform requires an additional deposit to release a withdrawal — withdrawal-blocking is the diagnostic step of an FX Ponzi",
+      "Four months is not long enough to prove the platform works"
+    ]}
+    answer={2}
+    explanation="The high return and weak licence are red flags but not unique to scams. The decisive, falsifiable test is the withdrawal-blocking-via-extra-deposit pattern: this is the exit-stage move of the Ponzi structure, documented by BNM, CFTC, and FCA. No legitimate broker — regulated anywhere — requires you to pay to access funds you have already deposited. The four months of small withdrawals are the bait."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the <Term id="concierge_agent" />. If you have been approached about an FX or "managed account" opportunity, paste the entity name and ask: "Walk me through the BNM Financial Consumer Alert lookup and the CFTC RED List check." The Concierge will guide you to bnm.gov.my and cftc.gov. For a test case, paste: "Apex Global FX, licensed in Saint Vincent, 12% monthly return."
+
+## Takeaway
+
+Real FX brokers earn a spread; they don't promise a return. If "FX trading" comes with a monthly return number attached, it is not FX — it is a Ponzi in costume.

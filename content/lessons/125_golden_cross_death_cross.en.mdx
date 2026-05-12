@@ -1,0 +1,76 @@
+---
+id: "125_golden_cross_death_cross"
+title: "Golden cross and death cross — anatomy of MA crossovers"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "ma_crossovers"
+prerequisites: ["026_moving_averages", "124_sma_vs_ema_vs_wma"]
+tags: ["indicators", "moving_average", "golden_cross", "death_cross", "crossover", "trend"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Golden cross and death cross — anatomy of MA crossovers
+
+Lesson 026 framed moving averages as descriptive context lines. The golden cross (SMA50 crossing above SMA200) and death cross (SMA50 crossing below SMA200) are the most-cited examples of two MAs interacting. The popular framing is that a golden cross means "bull market begins" and a death cross means "bear market begins." That's the financial-media version. The mechanical version is more useful: when the medium-term average crosses above (or below) the long-term average, the trend regime has changed by definition. Whether that change is tradeable depends on the slope of both MAs at the moment of the cross and what price has done since.
+
+## How this plays out in real markets
+
+Look at SPX through 2022–2023. In March 2022, SMA50 crossed below SMA200 around 4,310 — a textbook death cross. SPX fell to 3,580 over the next nine months, a 17% additional decline. The signal worked.
+
+Now look at SPX in March 2020. SMA50 crossed below SMA200 at 2,720 — death cross — but by then SPX had already bottomed at 2,237 a week earlier. The signal fired three weeks late and 20% below the low. Traders who shorted the cross got run over as SPX rallied to 3,400 by August.
+
+The difference: in 2022 both MAs were declining at the cross; in 2020 SMA50 was declining sharply while SMA200 was still gently rising, and price had already mean-reverted hard. The cross is mechanical; the regime change isn't.
+
+The 2023 golden cross on SPX fired on February 2 at 4,070, with SMA50 rising and SMA200 turning up. SPX traded sideways for six weeks, then rallied to 4,600 by July — a clean signal in a clean setup.
+
+Falsification: a golden cross with both MAs flat or one declining is statistically much weaker than one with both rising or both turning up. Invalidation is mechanical — if price closes back below the SMA50 within 10 sessions of the cross, treat the signal as failed.
+
+On Bursa Malaysia: KLCI in 2017 had a golden cross at roughly 1,665 with both averages rising; the index ran to 1,800 over four months. The 2018 KLCI death cross at 1,750 with both falling led the index to 1,550 by year-end.
+
+## The trap
+
+The trap is treating the cross as a stand-alone trading trigger and ignoring what the MAs looked like before the cross. A cross between two flat MAs that have been weaving across each other for weeks is statistical noise. A cross between two clearly trending MAs — same slope, just one is steeper — is the regime change the textbook talks about. Beginners take every cross with the same conviction. The 2020 SPX death cross was the most famous "wrong" signal of the past decade, and it fooled exactly that audience.
+
+The correct mental model: the cross is the timing; the slope of both MAs is the context. Take crosses where slope and direction agree, ignore crosses where MAs are tangled and flat. The faster MA's slope at the cross — steep, gentle, flat — predicts how durable the new regime is far better than the cross itself.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="SPX prints a death cross in March 2020 at 2,720, with SMA50 dropping steeply and SMA200 still gently rising. Price has already collapsed from 3,390 to a 2,237 low and is rebounding. What does the cross tell you under the lesson's framework?"
+  options={[
+    "Short SPX aggressively — death cross means bear market begins",
+    "The cross has fired late; SMA200 is still rising, price has already mean-reverted hard, and slope-disagreement is the classic failed-cross setup. Treat with caution.",
+    "Buy SPX — death crosses always reverse",
+    "Ignore SPX and trade something else"
+  ]}
+  answer={1}
+  explanation="The signal fired three weeks after the bottom and 20% below the low — exactly because SMA200 hadn't turned and price had already capitulated. The tempting wrong answer ('death cross = sell') is the headline-trading mistake the lesson exposes. The 2020 SPX death cross is the canonical example of a mechanical cross firing in a context where the regime change had already played out. Both MAs need to agree on slope direction for the signal to carry weight."
+/>
+
+<Quiz
+  question="A stock prints a golden cross at $48 with SMA50 sloping up at roughly 0.4% per week and SMA200 just turning from flat to gently rising. Account size $25,000, mandate cap 1% risk per trade, stop sits at $45.60 (5% below entry). Twelve sessions later, price closes at $45.10. What does the lesson's invalidation rule say?"
+  options={[
+    "Hold — golden crosses always work eventually",
+    "The signal has failed: price closed back below SMA50 within 10 sessions of the cross, which is the lesson's mechanical invalidation. The stop should already have triggered at $45.60; if not, exit now.",
+    "Add to the position because $45.10 is a better entry",
+    "Move the stop to $42 to give it room"
+  ]}
+  answer={1}
+  explanation="The lesson states the invalidation explicitly: if price closes back below SMA50 within 10 sessions of the cross, treat the signal as failed. The trader's pre-defined stop at $45.60 should have closed the position. The tempting wrong answers — hold, average down, widen the stop — are the three classic discipline failures from the risk module. The signal is mechanical, the invalidation is mechanical, and 'eventually' is not a plan."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a major index like SPX or QQQ and ask: "When was the last golden cross or death cross, and what were the slopes of SMA50 and SMA200 at the moment of the cross?" Then check whether price followed through within 10 sessions or invalidated. Build a sample of clean vs failed crosses you've seen before you trade one with real risk.
+
+## Takeaway
+
+A golden or death cross is mechanical; whether it's tradeable depends on the slope of both MAs and price's reaction within 10 sessions — a cross between flat MAs is noise dressed as a signal.

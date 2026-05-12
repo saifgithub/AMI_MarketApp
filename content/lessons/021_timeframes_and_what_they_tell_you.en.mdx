@@ -1,0 +1,68 @@
+---
+id: "021_timeframes_and_what_they_tell_you"
+title: "Timeframes and what they tell you"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 2
+track: "technical_analysis"
+topic: "timeframes"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar"]
+tags: ["timeframes", "chart_reading", "multi_timeframe", "context"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Timeframes and what they tell you
+
+A chart is not a chart — it's a series of choices about how much time gets compressed into one candle. A 5-minute chart and a weekly chart of the same stock can disagree completely about what the trend "is", and both can be correct for the question they're answering. By the end of this lesson you should know what each common timeframe tells you, why a trade thesis needs at least two of them to agree, and why borrowing decisions from one timeframe to act on another is the fastest way to take random losses.
+
+## How this plays out in real markets
+
+Look at MSFT through April 2026. On the weekly chart, MSFT had been carving higher weekly highs since the November 2025 low near $362 — a clean uptrend, each weekly candle closing above the prior week's open. Zoom to the daily: same period showed two distinct pullbacks — one from $428 to $401 in late January, another from $445 to $419 in early March — pullbacks invisible on the weekly. Zoom further to the hourly: each daily pullback contained five or six sessions of red candles and small rallies that looked, in the moment, like the end of the uptrend.
+
+A swing trader using the weekly stayed long the entire run from $362 to $445 — about 23%. A daily-chart trader trimmed at each pullback and re-entered, capturing maybe 14%. An hourly trader scalped 1–2% moves and probably got chopped near flat after slippage and emotion. None of them was wrong about what their chart showed. They were answering different questions: "Is the long-term trend intact?" (weekly: yes), "Is there a tradable pullback?" (daily: yes), "Is there an entry trigger right now?" (hourly: maybe).
+
+The thesis falsifies if MSFT closes a full weekly candle below the most recent weekly swing low — that's when the weekly trend itself is broken, and the daily trader's pullback thesis loses its anchor.
+
+## The trap
+
+The trap is making a decision on one timeframe using evidence from a different one. A beginner sees a "perfect" hourly setup and sizes it like a swing trade, holding through normal daily noise that completely invalidates the hourly trigger. Or they read the daily chart, decide the trend is up, then enter on a 5-minute spike and get stopped out by intraday volatility their daily thesis never accounted for. The correct mental model: pick the timeframe that matches your hold period. Then use one higher timeframe for context (is the bigger trend on your side?) and one lower timeframe for entry timing (am I entering in a sensible spot today?). Three timeframes max. Same trade, three angles.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A swing trader plans to hold a position for 1 to 4 weeks. Which timeframe combination is most appropriate for setting context, finding setups, and timing entries?"
+  options={[
+    "5-minute for context, 1-minute for entries, hourly for confirmation",
+    "Weekly for context, daily for setups, hourly for entries",
+    "Daily for everything — one timeframe is cleanest",
+    "Monthly for context, weekly for setups, daily for entries"
+  ]}
+  answer={1}
+  explanation="A 1-to-4 week hold matches the daily chart for setup identification. Weekly gives the larger-trend context; hourly is fine-grained enough to time an entry without trapping you in intraday noise. The monthly/weekly/daily combo (option 3) is for position trades held for months. The 5m/1m combo is day-trading. One-timeframe-only (option 2) leaves you blind to context and entry timing."
+/>
+
+<Quiz
+  question="You're long NVDA based on a daily-chart uptrend. The hourly chart prints three red candles in a row and breaks an hourly support level. The daily candle is still green and the daily uptrend's higher-low is roughly 4% below current price. What is the disciplined response, and why?"
+  options={[
+    "Sell immediately — the hourly break invalidates the trade",
+    "Hold the position; the hourly break does not invalidate the daily thesis, which is anchored on the daily higher-low about 4% below current price",
+    "Add to the position; hourly weakness is always a buying opportunity inside a daily uptrend",
+    "Switch to the hourly timeframe and start managing the trade by hourly signals from now on"
+  ]}
+  answer={1}
+  explanation="The trade thesis was set on the daily, so the daily must invalidate it — specifically, a daily close below the higher-low. The hourly break is normal noise inside a daily uptrend. Option 0 is the trap: using lower-timeframe evidence to override a higher-timeframe thesis. Option 3 (switching timeframes mid-trade) is timeframe-hopping — you change the rules until they say 'sell', which is how disciplined plans turn into emotional exits. Option 2 adds risk on weak evidence."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and pick any ticker on your <Term id="ami_watchlist" />. Ask: "What does the weekly trend look like, what does the daily trend look like, and where do they disagree?" Note any disagreement — that's where most beginner mistakes happen. Save the answer to your <Term id="ami_decision_journal" /> as a context entry before you place any trade on that ticker this week.
+
+## Takeaway
+
+Pick the timeframe that matches your hold period, borrow context from one above and entry timing from one below — and never let a lower timeframe override the thesis a higher one set.

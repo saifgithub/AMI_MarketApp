@@ -1,0 +1,70 @@
+---
+id: "025_pullbacks"
+title: "Pullbacks"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "pullback"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction", "023_support_and_resistance"]
+tags: ["pullback", "trend", "retracement", "entries", "chart_reading"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Pullbacks
+
+A pullback is a temporary move against the prevailing trend — a breather inside a larger advance or decline. In an uptrend, pullbacks are where you get to buy at a discount without chasing; in a downtrend, they're where short opportunities reset. The trick is telling a healthy pullback from a trend reversal in progress. By the end of this lesson you should know what a normal pullback looks like in size, depth, and structure, where a trend-following entry sits inside one, and the exact condition that flips a pullback into something you should stop calling a pullback.
+
+## Example
+
+Look at AMZN through February to April 2026. AMZN broke out above $215 in early February and ran to $238.60 by 21 February — an uptrend with clearly defined higher highs and higher lows. Then between 22 February and 4 March, AMZN pulled back: nine sessions of lower daily closes carrying price down to $224.10 on 4 March. That's a 6.1% retracement from the $238.60 high — well within the typical 3%–10% pullback range for a trending mega-cap. The pullback came to rest at the prior breakout level around $225, with a daily close that printed a long lower wick on 4 March (buyers stepping in at the level).
+
+On 5 March, AMZN closed at $228.40 — a higher low confirming the pullback was complete. By 18 March price had pushed to a new swing high of $244.10. The pullback was a 6% dip inside a trend that ultimately delivered another ~9% leg.
+
+A trader who entered the pullback on the 5 March higher-low confirmation, with a stop just below the $224.10 swing low, risked roughly $4.30 to make $15.70 to the eventual new high — a ~1:3.6 risk/reward.
+
+The pullback thesis invalidates the moment AMZN closes a daily candle *below* the most recent higher-low of the prior uptrend. In this case, that meant a daily close below the $215.70 prior higher-low. If AMZN had closed at, say, $213, the uptrend's structure would have been broken — and what you were calling a pullback would now be the first leg of a possible new downtrend.
+
+## The trap
+
+The trap is calling every dip a pullback and buying it without checking whether the trend that was supposed to be there is still actually there. A beginner sees a stock down 8% from its high, remembers it was an uptrend last week, buys "the dip", and discovers a week later that the most recent higher-low has been taken out — the trend is broken and they're now long a stock in a fresh downtrend. The correct mental model: a pullback is only a pullback while the trend's structural higher-low (uptrend) or lower-high (downtrend) is still intact. The moment a daily close breaks that swing level, what you thought was a pullback becomes a reversal, and trend-following logic no longer applies. Always know the exact price that flips the label.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock in a daily uptrend pulls back 4% from its recent swing high and comes to rest at the prior breakout level. The most recent confirmed higher-low (before this pullback) sits 7% below current price. What's the most accurate description of the situation?"
+  options={[
+    "A trend reversal — any 4% pullback signals the trend is over",
+    "A normal pullback inside an intact uptrend; the trend invalidates only on a daily close below the higher-low 7% below current price",
+    "A breakdown of the prior breakout because price returned to the level",
+    "An undefined state — the trend is neither up nor down until a new high prints"
+  ]}
+  answer={1}
+  explanation="A 4% retracement to a prior breakout level is typical pullback depth and behaviour for a trending stock. The trend's structural floor is the most recent higher-low, 7% below current — that is the line that, if breached on a daily close, would flip the read from pullback to reversal. Option 0 confuses size with significance — pullbacks of 3%–10% are routine. Option 2 misreads a retest as a breakdown; price returning to a prior breakout level often holds as support, not the other way around. Option 3 is over-cautious — the trend is up until structure says otherwise."
+/>
+
+<Quiz
+  question="NVDA is in a clear daily uptrend. Most recent swing high: $148.20. Most recent confirmed higher-low: $128.40. Price has pulled back to $134.80, printed a higher low at $133.10 yesterday, and today is back at $136.20 on rising volume. You're considering a long entry. Which combination of entry, stop, and invalidation rule applies the lesson correctly?"
+  options={[
+    "Enter at $136.20, stop at $135.50 (tight, just below today's open), invalidation = stop hit",
+    "Enter at $136.20, stop at $132.50 (just below the new higher-low at $133.10), invalidation = a daily close below the $128.40 prior higher-low — meaning the structural trend itself has broken",
+    "Enter at $128.40 with a limit order — wait for price to reach the prior higher-low",
+    "Don't enter — pullbacks aren't trade setups, only breakouts are"
+  ]}
+  answer={1}
+  explanation="The disciplined trend-following entry sits on confirmation of a new higher-low ($133.10) inside the pullback, with the stop placed beyond that swing low ($132.50) to give it wick room, and a thesis invalidation tied to the structural higher-low ($128.40). That uses three lessons at once: pullback structure, support/resistance wick allowance, and trend invalidation by close. The most tempting wrong answer (option 0) places a tight stop inside normal noise — it will get hit on a routine fluctuation that doesn't actually invalidate the pullback thesis. Option 2 waits for a price that requires the entire pullback structure to fail first. Option 3 contradicts the lesson outright."
+/>
+
+## Try it
+
+In the <Term id="ami_mandate" /> editor, confirm your per-trade risk percentage is set so a stop placed beyond a pullback's swing low won't exceed it. Then <Term id="ami_convene_the_room" /> on a ticker in an uptrend and read the <Term id="ami_verdict" /> — note where the Market Analyst marked the prior higher-low. Log that level in your <Term id="ami_decision_journal" /> as your pre-committed "pullback becomes reversal" line for that ticker.
+
+## Takeaway
+
+A pullback is only a pullback while the trend's last higher-low (or lower-high) is still intact — know that price, mark it before you enter, and let a daily close through it be what changes your mind, not your mood.

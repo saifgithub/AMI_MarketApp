@@ -1,0 +1,76 @@
+---
+id: "135_money_flow_index_vs_rsi"
+title: "Money Flow Index vs RSI — momentum with volume baked in"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "mfi"
+prerequisites: ["027_rsi_momentum_oscillator", "029_volume_confirmation"]
+tags: ["indicators", "mfi", "money_flow_index", "rsi", "volume", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Money Flow Index vs RSI — momentum with volume baked in
+
+Lesson 027 used RSI to read momentum from price alone. The Money Flow Index (MFI) is structurally similar — a 0–100 oscillator with conventional overbought/oversold thresholds at 80/20 (slightly wider than RSI's 70/30) — but the calculation includes volume. Where RSI averages up-closes vs down-closes, MFI averages up-day dollar volume vs down-day dollar volume. The result is a momentum reading that weights each bar by participation. When MFI and RSI agree, you have momentum confirmed by volume — a stronger read. When they disagree, the volume tape is telling you the price momentum isn't backed by participation. MFI is the volume-conscious sibling of RSI, and most divergences worth trading show up in MFI first.
+
+## How this plays out in real markets
+
+Look at META through Q4 2025. From October through mid-November, META climbed from 580 to 612 with both daily RSI(14) and MFI(14) tracking the up-trend cleanly — RSI peaks at 68 and 72, MFI peaks at 75 and 79, no divergence between them. Strong trend with volume support.
+
+Then on December 4, META printed a new closing high at 618 — but the readings split. RSI(14) reached 65 (lower than the prior 72, so RSI showed bearish divergence). MFI(14) only reached 58 — a much steeper drop from its prior 79, signalling that the new high was being made on materially lighter participation than the prior high. MFI's divergence was deeper than RSI's divergence by about double.
+
+META fell to 569 over the next 14 sessions. The trade signal was the same as RSI divergence — but MFI's deeper drop quantified the volume shortfall that RSI couldn't see directly.
+
+Falsifiable claim: when MFI divergence is meaningfully deeper than RSI divergence at the same swing point (the MFI lower high is at least 10 points lower than the prior MFI peak, while the RSI lower high is only 5–7 points lower), the underlying participation is fading faster than momentum, and the reversal probability is higher than the RSI signal alone would suggest. Invalidation: if MFI prints a new high before price breaks its swing low, the divergence cancels.
+
+The reverse holds at lows — when MFI hits oversold and rebounds before RSI does, on lighter-than-average down-day volume, distribution is exhausting and reversal odds rise.
+
+On Bursa Malaysia: TENAGA in Q3 2024 — RSI showed mild bearish divergence at a swing high (peaks 70 → 64), but MFI showed a much steeper drop (78 → 51). Price fell 8% over the next month — the kind of move the MFI divergence had quantified that RSI alone understated.
+
+## The trap
+
+The trap is using only RSI and missing the volume-weighted picture. A stock can produce a new high with rising RSI but collapsing MFI — meaning the price momentum looks healthy but the volume on up-days has dried up. Beginners look at the RSI chart, see momentum confirmed, and miss that participation is failing. Conversely, a trader using only MFI may discount RSI signals in low-volume stocks where MFI is noisy by definition.
+
+The correct mental model: RSI and MFI measure related but distinct things — RSI is pure price momentum, MFI is volume-weighted momentum. Use them in tandem. Agreement between the two strengthens any divergence call. Disagreement is the signal — the one that's diverging more sharply is exposing the weaker leg of the trend. Don't pick a favourite; read both, and trust the deeper divergence as the higher-conviction read.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="META makes a new closing high at 618. RSI(14) reaches 65 vs 72 at the prior high (a 7-point drop). MFI(14) reaches 58 vs 79 at the prior high (a 21-point drop). Both show bearish divergence; MFI's is materially deeper. What's the lesson's read?"
+  options={[
+    "Both divergences carry equal weight; treat them as one signal",
+    "MFI's deeper drop says volume participation is fading faster than price momentum — the trend's volume foundation is weaker than RSI alone reveals, raising the reversal probability above what RSI's mild divergence would suggest",
+    "MFI is wrong because RSI didn't drop as much",
+    "Ignore divergences smaller than 20 points"
+  ]}
+  answer={1}
+  explanation="MFI bakes volume into the momentum read; its deeper divergence quantifies the participation shortfall RSI can't see. The tempting wrong answer ('treat them as one signal') misses the information in the gap between the two readings — that gap is the volume-vs-price-momentum imbalance, and it's the highest-conviction divergence configuration. META's subsequent 49-point drop validated the deeper MFI reading."
+/>
+
+<Quiz
+  question="A stock has RSI(14) at 78 (overbought by textbook) with no RSI divergence yet, but MFI(14) is at 62 and has been declining for 8 sessions despite price making new highs. The stock is in a confirmed up-trend, above a rising SMA50. Position is 1% account risk, stop at the most recent swing low 4% below entry. What does the framework recommend?"
+  options={[
+    "Exit now — RSI at 78 means overbought",
+    "Treat the MFI divergence as an early warning even though RSI hasn't diverged: tighten the stop or scale out partial position. The volume-weighted momentum is fading before pure price momentum has caught up — that's exactly the signal MFI is designed to surface earlier.",
+    "Ignore MFI; RSI's lack of divergence overrules it",
+    "Add to the position because RSI shows strength"
+  ]}
+  answer={1}
+  explanation="MFI divergence ahead of RSI divergence is the lesson's earliest-warning configuration — volume is leaving the trend before momentum is. The tempting wrong answer (option A) is the overbought-reflex error from Lesson 027 — RSI 78 in a confirmed up-trend is normal, not a sell. Ignoring MFI (option C) discards leading information. Adding (option D) doubles into a participation-failing trend. The right response, exactly like with the MACD histogram lesson, is risk management — tighten or scale out, not full exit."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a trending ticker and ask: "Compare RSI(14) and MFI(14) divergences at the last two swing highs — is one diverging more sharply than the other?" Then verify on the chart. Build a habit of reading both in parallel; the gap between them is often where the highest-conviction signal sits.
+
+## Takeaway
+
+MFI is RSI with volume baked in — when the two agree, momentum is confirmed by participation; when MFI diverges more sharply than RSI, volume is leaving the trend before momentum is, and that earlier warning is worth acting on.

@@ -1,0 +1,72 @@
+---
+id: "120_breakout_retest_entry"
+title: "The breakout retest entry"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "breakout"
+prerequisites: ["024_breakouts", "118_role_reversal_resistance_becomes_support"]
+tags: ["breakout", "retest", "entry", "risk_reward", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The breakout retest entry
+
+This assumes you've completed 024 (breakouts) and 118 (role reversal). Here we go deeper on a specific high-quality breakout entry that lesson 024 mentioned and didn't expand: the retest entry. Instead of buying the breakout candle itself, you wait for price to pull back and tag the prior resistance level — now acting as support — and you enter on confirmation that the level held. The retest entry sacrifices some upside if price never comes back, but it dramatically improves risk/reward and weeds out failed breakouts. By the end of this lesson you should be able to plan a retest entry with entry, stop, and target, and know precisely when to abandon the retest plan entirely.
+
+## Example
+
+Look at JPM on the daily chart in early March 2026. JPM had ranged $258–$272 since mid-January. On 5 March JPM closed at $275.40 — a 1.2% close above $272 on 1.9x average volume. Clean breakout candle. A trader could have bought at $275.40 with a stop at $269 ($3 below the level for wick room), risking $6.40 to whatever target.
+
+Instead, the retest trader waits. On 11 March JPM pulls back from $278 to a low of $272.40, closes the session at $274.20 — a daily close holding above the prior resistance with a wick that tagged the level. That's the retest confirmation candle.
+
+The retest entry is the next-day open: 12 March open at $274.80. Stop placement is below the retest's low at $271.60 (a buffer below the $272.40 wick). Risk: $274.80 minus $271.60 = $3.20. Target the prior swing high projection at $290 — a $15.20 reward. Risk/reward: ~1:4.75.
+
+Compare to the breakout-day entry: $275.40 entry, $269 stop, $290 target. Risk $6.40, reward $14.60, R/R ~1:2.3. Same trade, half the risk on the retest entry.
+
+The retest plan invalidates if (a) price closes below the prior resistance of $272 — flip voided, see lesson 118 — or (b) price runs without ever retesting and you've simply missed the trade. Both are acceptable outcomes; the retest discipline is precisely about declining trades where the math is worse, even if it means watching some runners go without you.
+
+## The trap
+
+The trap is treating "I'll wait for the retest" as licence to buy any pullback as long as it tags the level — including pullbacks that close back through it. A retest entry has two preconditions: (1) the breakout itself was clean (close beyond on expanded volume, lesson 024's standard); (2) the pullback's lowest daily close stays above the prior level. Buying on the intraday touch without waiting for the close is how traders get long right before the breakout fails. The correct mental model: the retest entry is the second confirmation of the same thesis the breakout candle started. The first signal (breakout close) opens the question; the second signal (retest holds on a close) answers it. Two confirmations beat one. Don't trade halfway through the second.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock breaks out above $50 with a close at $51.20 on 2.1x average volume. Six sessions later it pulls back intraday to $49.80, then closes at $50.40. The next session opens at $50.70. Is this a valid retest entry, and what stop does the lesson suggest?"
+  options={[
+    "Yes — enter at $50.70 with a stop at $50.20 (tight, just below the prior day's close); the breakout confirms the trade",
+    "Yes — enter at $50.70 with a stop just below the retest low at $49.80 (give breathing room below the wick that tagged the level); risk is roughly $0.90 per share",
+    "No — the intraday print at $49.80 was below $50, voiding the retest",
+    "No — retest entries require at least three pullbacks before they count"
+  ]}
+  answer={1}
+  explanation="The retest confirmation candle wicked the level then closed above it ($50.40 > $50), the breakout was clean (1.2% beyond, 2.1x volume), and the next-day open at $50.70 is the entry. Stop placement follows the lesson's rule: below the retest's lowest print to give the wick breathing room. Option 0 places the stop inside normal noise — it'll get hit on routine fluctuation. Option 2 misapplies the wick-vs-close rule; the close held above $50, which is the test that matters. Option 4 invents a multi-retest requirement."
+/>
+
+<Quiz
+  question="You planned a retest entry on AAPL: breakout above $192 confirmed at $194.80 on heavy volume. You decided to wait for a pullback. Two sessions after the breakout, AAPL closes at $190.40 — below the prior $192 resistance. Three days after that, AAPL closes at $189.60. Combining this lesson with 024 and 118, what's the disciplined call and the most tempting alternative?"
+  options={[
+    "Wait — the retest you planned hasn't happened yet, so the plan is alive",
+    "Cancel the retest plan and stay out — the daily close at $190.40 below $192 voided both the breakout (lesson 024) and the role reversal (lesson 118), which means there's no retest *to* enter; the thesis you were waiting to confirm has already failed. The tempting wrong move is treating 'no entry yet' as 'no decision needed yet'",
+    "Enter long now because $189.60 is a deeper discount",
+    "Shift the retest level from $192 down to $189 and wait there"
+  ]}
+  answer={1}
+  explanation="The retest plan assumed the breakout was real and the level would hold as support on pullback. A close below the level kills both assumptions. Option 0 treats the absence of action as a neutral position — but you had a plan with preconditions, and those preconditions are now broken; staying alert to the now-falsified plan is a trap because it primes you to grab at the next bounce. Option 2 averages into a failed thesis. Option 3 'walks the level' to fit the new price, which is the textbook way to launder a falsified setup into a new one. The synthesis test is recognising that the absence of an entry trigger is not the same as the absence of an invalidation trigger — both fire, and the invalidation fires first here."
+/>
+
+## Try it
+
+Find a confirmed breakout from the past month on any ticker. Scroll forward to see if and when a retest happened. Ask the Market Analyst in <Term id="ami_one_on_one" />: "Show me [ticker]'s breakout on [date] and any subsequent retest. Was the retest valid by this lesson's two preconditions? What would have been the optimal entry, stop, and target?" Save the entry, stop, and target to your <Term id="ami_decision_journal" /> as a paper trade. Compare it to a breakout-day entry on the same setup.
+
+## Takeaway
+
+The retest entry is the second confirmation of the same thesis the breakout candle started — better risk/reward, but only if the prior level holds on a close; the moment that close prints below the level, there is no retest to enter.

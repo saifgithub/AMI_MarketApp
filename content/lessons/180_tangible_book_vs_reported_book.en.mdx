@@ -1,0 +1,70 @@
+---
+id: "180_tangible_book_vs_reported_book"
+title: "Tangible book vs reported book — the goodwill problem"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "price_to_book"
+prerequisites: ["040_price_to_book", "034_debt_and_the_balance_sheet"]
+tags: ["price_to_book", "tangible_book", "goodwill", "intangibles", "acquisitions", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Tangible book vs reported book — the goodwill problem
+
+Lesson 040 warned that goodwill inflates book value with "something that may be impaired tomorrow." This lesson unpacks the warning. When one company buys another for more than the target's net assets, the difference is parked on the balance sheet as goodwill — an asset whose only test of value is a periodic impairment review. By the end you should be able to compute tangible book (book value minus goodwill and intangibles), recognise the acquisition-driven balance sheets where goodwill is most likely to be impaired, and name the falsifiable condition that flips a 1.0x P/B from cheap to dangerous.
+
+## How this plays out in real markets
+
+Consider a serial acquirer like CRM (Salesforce). Reported shareholders' equity around $60B; goodwill plus other intangibles roughly $80B — that is, the *intangible* portion of the balance sheet is larger than total equity. Tangible book is therefore negative (equity minus goodwill = roughly −$20B). Stock at $260 with 970M shares gives market cap ~$250B; reported P/B ≈ 4.2x looks reasonable for software. P/tangible-book is mathematically undefined (negative denominator). The "book" CRM trades against is essentially the accounting record of what it paid for other people's businesses.
+
+Now contrast with JPM. Reported book per share ~$115, goodwill plus intangibles per share ~$15, so tangible book per share ~$100. Stock at $220 means P/B = 1.9x and P/tangible-book ≈ 2.2x. The gap is modest because JPM's growth has been more organic than acquisitive. For banks especially, regulators and credit-rating analysts look at tangible book first — goodwill doesn't absorb credit losses.
+
+The classic cautionary tale: KHC (Kraft Heinz) went into 2019 with reported book of roughly $51B. Goodwill and brand intangibles from the Kraft-Heinz merger plus prior deals were about $100B. The company then took a $15.4B write-down on those intangibles in a single quarter, reported book collapsed by ~30% overnight, and the stock fell about 27% on the news. The reported P/B before the write-down had looked moderate; the tangible-book P/B had been flashing the risk for years. On Bursa: aggressive acquirers like AXIATA carry meaningful goodwill from cross-border telco deals; watch the gap between reported equity and tangible equity over time as a write-down risk indicator.
+
+Falsifiable claim: when goodwill plus intangibles exceeds 50% of reported shareholders' equity, reported P/B carries materially less information than P/tangible-book. At above 100% (goodwill larger than equity), reported P/B is almost meaningless and the honest valuation runs against tangible book or against an entirely different framework (EV/EBITDA, DCF).
+
+## The trap
+
+The trap is screening for cheap P/B without checking tangible book. A serial acquirer can trade at P/B = 1.3x — looks like a bargain — while running P/tangible-book of 6x or worse. The 1.3x is mostly the price of the goodwill the company itself paid to acquire other companies; you're paying 1.3x for what management paid 1.3x for at acquisition. If integration disappoints and the goodwill gets written down, the "cheap" P/B re-prices upward instantly and the stock falls to match. The correct mental model: for any company with significant M&A history, always compute *both* reported and tangible P/B, and weight tangible more heavily if intangibles are concentrated in goodwill rather than identifiable assets like patents or in-force customer relationships. What invalidates the signal: businesses where intangibles are *the* productive asset (a software company's customer contracts, a pharma's patent portfolio) — for these, intangibles aren't bookkeeping leftovers, they're real productive capital, and tangible book is the wrong lens. The mistake to avoid in the other direction is mechanically stripping all intangibles for a software company and declaring it "expensive."
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A consumer-goods company has reported book value per share of $40 and trades at $50. Reported P/B = 1.25x. Goodwill per share is $35; identifiable intangibles per share is $10. Sector median reported P/B is 2.5x. Which read is most accurate?"
+  options={[
+    "1.25x vs 2.5x sector median is a 50% discount — strong value",
+    "Tangible book per share is $40 − $35 − $10 = −$5; the company has negative tangible equity. The reported P/B of 1.25x is almost entirely the price of goodwill from past acquisitions, not the price of productive net assets. A future goodwill impairment would re-rate reported book down sharply and lift realised P/B above sector median in a single print. The 'discount' is bookkeeping, not value",
+    "Goodwill is always written down to zero so it should be ignored",
+    "Buy because the company has hidden value in intangibles"
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — the headline P/B comparison falls cleanly below sector and screens 'cheap.' The right read interrogates *what is in the book*: when goodwill plus intangibles exceeds equity, tangible book is negative and reported P/B is largely a price on past-deal pricing rather than current productive assets. Option 2 over-generalises — goodwill isn't always written down, but it can be, and the asymmetric risk is downward. Option 3 conflates 'intangibles exist' with 'intangibles are productive'; goodwill in particular is not a productive asset, it's a residual from prior pricing."
+/>
+
+<Quiz
+  question="A bank trades at P/B = 1.0x with goodwill and intangibles at 8% of reported equity. A software platform trades at P/B = 8x with goodwill and intangibles at 110% of reported equity. A reader is asked to identify which P/B is more interpretable and to synthesize with the lesson 040 framework."
+  options={[
+    "The software P/B of 8x is more interpretable because higher P/Bs are always more informative",
+    "Both P/Bs are equally interpretable because both are computed the same way",
+    "The bank's P/B of 1.0x is the more interpretable signal. Tangible book is essentially the reported book (only 8% intangibles), the assets are mark-to-market loans and securities, and lesson 040's framework — pair P/B with ROE relative to cost of equity — applies cleanly. The software P/B of 8x is built on a balance sheet where intangibles exceed equity; reported book is not a meaningful denominator for that business and P/B carries little signal. The right tool for the software company is EV/EBITDA or DCF, not P/B at all",
+    "Both should be valued on P/E only"
+  ]}
+  answer={2}
+  explanation="The synthesis: P/B is interpretable only when the denominator is itself meaningful — that's the conditional layer lesson 040 established, and this lesson sharpens it through the goodwill test. The tempting wrong answer is option 0 — confusing 'higher' with 'more informative.' Option 1 ignores the structural difference between the businesses. Option 3 throws out a useful tool unnecessarily; P/B remains the right tool for the bank, just not for the software company."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker with M&A history (KHC, CRM, MDLZ, or a Malaysian acquirer like AXIATA), and ask: "Give me reported book per share, goodwill per share, identifiable intangibles per share, and tangible book per share. Compute reported P/B and P/tangible-book. Flag any goodwill that has been on the books more than five years without operational integration milestones met." Save both ratios side-by-side in your <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+For acquisitive companies, reported P/B is goodwill-inflated; always check tangible P/B alongside. When goodwill exceeds equity, the reported number is bookkeeping, not valuation.

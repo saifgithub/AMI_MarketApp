@@ -1,0 +1,72 @@
+---
+id: "192_payout_ratio_on_fcf"
+title: "Payout ratio on free cash flow — the real sustainability test"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "payout_ratio_fcf"
+prerequisites: ["043_dividend_yield_and_payout_ratio", "035_cash_flow_vs_earnings", "160_three_cash_flow_statements"]
+tags: ["payout_ratio", "fcf", "dividends", "sustainability", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Payout ratio on free cash flow — the real sustainability test
+
+Lesson 043 introduced the payout ratio on earnings and flagged that the meaningful sustainability check is the payout ratio on free cash flow. This lesson does the deep version. Free cash flow (FCF) = cash from operations minus capex. Payout-on-FCF = total dividends paid / FCF. The reason this matters: a company can report positive earnings while burning cash if capex is high or working capital is consuming cash. Earnings can hide a dividend that isn't actually being earned in cash. By the end of this lesson you should be able to compute payout-on-FCF, distinguish a dividend funded by operations from one funded by financing activity, and name the threshold above which a "high yield" should be reclassified as a cut waiting to happen.
+
+## How this plays out in real markets
+
+JPM in fiscal 2024 paid roughly $14B in common dividends against cash from operations of ~$54B (banks don't have traditional capex, so CFO ≈ FCF for our purposes here). Payout-on-FCF ≈ 26%, comfortable. KO in 2024 paid ~$8B in dividends, FCF was ~$10B, payout-on-FCF ≈ 80% — high but the FCF base is stable. T (AT&T) is the textbook stress case: in some years T paid more in dividends than it generated in FCF, with the gap funded by new debt. That is the precise pattern that preceded T's 2022 dividend cut.
+
+A clean illustration of the earnings-vs-FCF gap: ITW (Illinois Tool Works) in 2024 reported net income near $3.7B and FCF near $3.3B — earnings slightly overstate cash, mostly from working-capital absorption. Dividends were ~$1.7B. Payout on earnings = 46%; payout on FCF = 52%. Both are comfortable, and the gap is small, signalling that earnings are a fair proxy for cash here.
+
+Now an EM example where the gap is wide. A capex-heavy infrastructure-style business might report net income of $400M while FCF is only $50M — depreciation is a non-cash item and the cash actually went into new plant. If the company pays $300M in dividends, payout-on-earnings is a perfectly reasonable 75%, but payout-on-FCF is 600%. The dividend is being funded by debt or balance-sheet drawdown. Earnings hide the problem; cash flow exposes it.
+
+On Bursa Malaysia: MAYBANK's payout-on-FCF runs in the 60–70% range, consistent with a mature bank returning most surplus capital to shareholders. KLCC, a REIT, is structurally near 100% by mandate — REITs have to distribute taxable income, so the FCF metric is interpreted differently. For non-REIT industrials on Bursa, the same 80%-FCF-payout heuristic applies.
+
+Falsifiable claim: payout-on-FCF sustained above 100% for two consecutive years, funded by rising debt or shrinking cash on the balance sheet, predicts a dividend cut within 24 months with high frequency — outside the REIT/MLP structures that are mandated to distribute most cash. The signal invalidates for one-off years where capex spiked due to a specific large project, but only if the company guides to capex normalisation and the guidance proves out.
+
+## The trap
+
+The trap is sticking with payout-on-earnings because it's the number reported in most data feeds. Earnings can be manipulated through depreciation policy, working-capital management, or acquisition accounting; FCF is harder to fake because it's cash that either came in or went out. The correct mental model: earnings = the accounting story; FCF = what actually happened to the bank account. A dividend has to be paid in cash, so the only honest sustainability check is the cash-based ratio. What invalidates the FCF reading: changes in working capital can temporarily lift or depress FCF — strong receivables collection in one year boosts FCF that year while hurting it the next. Always look at the three-year average rather than a single quarter.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports net income of $600M, cash from operations of $500M, and capex of $200M. It paid $400M in dividends. Which read is most accurate?"
+  options={[
+    "Payout = 400/600 = 67%, comfortable",
+    "Payout on earnings = 67% but payout on FCF = 400 / (500 − 200) = 133%. The dividend exceeded free cash flow by $100M, which was either borrowed or drawn from cash reserves. Earnings overstate the cash available to shareholders here. The dividend is unsustainable at this FCF level even though it looks fine on the earnings metric",
+    "FCF doesn't matter because earnings include all relevant items",
+    "Capex is irrelevant to the dividend question"
+  ]}
+  answer={1}
+  explanation="The synthesis ties cash-flow accounting to dividend sustainability. The tempting wrong answer is option 0 — using the earnings-based payout and stopping. The right read computes FCF as CFO minus capex, divides the dividend by that, and observes the ratio above 100%. The gap between the 67% on earnings and the 133% on FCF is exactly the depreciation-and-capex spread that the FCF check is designed to expose. Option 2 collapses the cash-vs-accruals distinction that lesson 035 explicitly addresses. Option 3 ignores that capex is the cash that has already left the business and can't be paid out again."
+/>
+
+<Quiz
+  question="Company A: payout on earnings 60%, payout on FCF 55%, three-year trend stable. Company B: payout on earnings 60%, payout on FCF 95%, three-year trend rising. Both yield 4%. Which synthesis is most accurate?"
+  options={[
+    "Both yields are identical so the dividends are equally safe",
+    "A's dividend is comfortably covered by cash with a wide margin; B's dividend nearly absorbs all FCF and the trend is moving the wrong way. A 10% FCF decline at A leaves payout at ~61%; the same decline at B pushes payout above 100% and forces the cut decision. The earnings ratios are identical but the cash-coverage profiles are very different, and the trend direction matters more than the level",
+    "A is worse because the payout ratio is lower (less income for shareholders)",
+    "B is better because it returns more cash per dollar earned"
+  ]}
+  answer={1}
+  explanation="The synthesis tests trend + level + earnings-vs-cash decomposition. The tempting wrong answer is option 0 — yield-equivalence reasoning. The right read stress-tests each company's FCF cushion and notes that B's rising-payout trend is the pre-cut signature, while A's stable, well-covered ratio is the durable-dividend signature. Option 2 inverts the desirability — a lower payout means more retained for reinvestment, not 'worse'. Option 3 misreads which dividend is actually being earned versus financed."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a high-yielding ticker and ask: "Give me payout on earnings and payout on FCF for the last five years, with FCF defined as CFO minus capex. Flag any year where payout-on-FCF exceeded 90%, and tell me how the gap was funded — debt, cash drawdown, or asset sales." Save the table. The funding source of any payout-above-100% year is the cut-trigger evidence.
+
+## Takeaway
+
+Earnings are the story; cash is the truth. A dividend is paid in cash, so the only honest sustainability check is payout-on-FCF — and a payout above 100% funded by debt is a cut waiting to happen.

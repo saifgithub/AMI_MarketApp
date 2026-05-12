@@ -1,0 +1,74 @@
+---
+id: "109_risk_budgeting_across_positions"
+title: "Risk budgeting across simultaneous positions"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+topic: "risk_budgeting"
+prerequisites: ["014_position_sizing_basics", "017_portfolio_exposure_and_correlation"]
+tags: ["risk", "portfolio", "budgeting", "sector_caps", "concentration"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Risk budgeting across simultaneous positions
+
+This lesson assumes you've completed lesson 014 (Position sizing basics) and lesson 017 (Portfolio exposure and correlation); here we go deeper on the next layer — how to split a total open-risk budget across multiple positions at once. 1% per trade is the per-position rule; total open risk is the portfolio rule. A reasonable working ceiling is 5% total open risk across all positions, which translates differently depending on whether you hold 3 concentrated bets or 10 small ones, and depending on whether they cluster in one sector. This lesson teaches the layered caps — per-trade, per-sector, per-name — that the PM enforces structurally.
+
+## Example
+
+Your simulated account is $100,000. <Term id="ami_mandate" />: per-trade risk 1%, total open risk 5%, single-sector cap 2.5%, single-name cap 1.5% notional concentration. You hold five positions:
+
+- NVDA — 1.0% risk, 17% of notional (semis)
+- AMD — 1.0% risk, 12% of notional (semis)
+- JPM — 1.0% risk, 14% of notional (banks)
+- KO — 0.8% risk, 9% of notional (staples)
+- XOM — 0.7% risk, 10% of notional (energy)
+
+Total open risk: 4.5% — under the 5% ceiling, room for one more 0.5% position. Sector breakdown: semis 2.0% risk (under 2.5% cap), banks 1.0%, staples 0.8%, energy 0.7%. Single-name notional max: NVDA 17%, well under any reasonable 25% concentration cap. The book passes every layer.
+
+Now consider a sixth position: TSM at 1.0% risk. Per-trade: passes (1% ≤ 1%). Total open risk: 5.5% — breaches the 5% ceiling. Sector: semis goes to 3.0% — breaches the 2.5% sector cap. The PM rejects with two reasons stacked. Two corrective options: reduce the TSM size to 0.5% risk (passes total but still breaches sector), or close one of NVDA/AMD before opening TSM (passes both). On Bursa Malaysia: same logic with a MAYBANK + CIMB + PUBLIC stack — three Malaysian banks at 1% each is a 3% banking-sector concentration, well past a 2.5% sector cap. Falsifiable test: any time the PM rejects a trade for a "soft" reason like sector cap, attempting to bypass it via <Term id="ami_coach_your_agent" /> fails by design — sector caps are part of the <Term id="ami_pm_safety_floor" /> for accounts with concentration limits in the mandate.
+
+## The trap
+
+The trap is treating each position as an independent 1% decision. The beginner adds positions one at a time, each passing the per-trade check, and discovers at month-end that they have 9% of total open risk across 8 positions, with 5% of it clustered in semis. Per-trade discipline alone does not produce a sensible portfolio. The correct mental model: every new ticket competes for a finite total-risk budget. Before opening a position, ask three questions — does it fit under per-trade (always), does the new total stay under the ceiling, and does the sector cluster stay under its sector cap? The PM runs these checks automatically; you can ask the Portfolio Manager in <Term id="ami_one_on_one" /> to walk through them before you submit.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Account $50,000. Mandate: per-trade 1%, total open risk 5%, single-sector cap 2.5%. Open positions: NVDA 1.0% (semis), AMD 0.8% (semis), JPM 1.0% (banks), KO 0.7% (staples). You want to add MU at 1.0% risk (memory semis). What does the PM say?"
+  options={[
+    "Approved — total open risk goes to 4.5%, under the 5% ceiling.",
+    "Approved — per-trade is 1.0%, exactly at the per-trade cap.",
+    "Rejected — semis exposure goes from 1.8% to 2.8%, exceeding the 2.5% single-sector cap; total open risk is fine but the sector cluster breaks.",
+    "Rejected — the account is already at 5 positions and a 5-position maximum applies."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is the first — 'total open risk is under the ceiling, so approved'. Total open risk is only one of the layered caps. Adding MU pushes semis from 1.8% (NVDA + AMD) to 2.8%, which breaches the 2.5% sector cap even though total open risk (4.5%) is fine. The '5-position maximum' distractor invents a rule that doesn't exist in the mandate."
+/>
+
+<Quiz
+  question="You have a mandate with 1% per-trade, 5% total open risk, 2.5% single-sector, 20% single-name notional concentration. You currently hold AAPL at 22% of notional (a winner that grew past its entry size) with no other tech exposure. The Trader proposes adding MSFT at 1% risk. Which of these is the PM's correct response, and why?"
+  options={[
+    "Approved — MSFT is a different ticker and tech is broad enough not to cluster.",
+    "Rejected — AAPL is already over its single-name notional concentration cap (22% > 20%), so before adding any new position the existing book has to come back into compliance; the new ticket cannot be opened on top of an out-of-policy book.",
+    "Approved — single-name concentration only applies to the new position, not to existing winners.",
+    "Rejected — AAPL and MSFT together exceed the total open risk ceiling regardless of size."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'concentration only applies to new positions'. Mandate ceilings apply to the running state of the book, not just the moment of entry. AAPL at 22% of notional is already past the 20% single-name concentration cap (a position that grew into the breach via gains). The correct sequence: trim AAPL back to under 20% first, then evaluate the MSFT ticket. The 'tech is broad enough' distractor invents a generous reading of sector caps; the PM enforces the explicit numeric ceilings, not editorial judgments about sector breadth."
+/>
+
+## Try it
+
+Open the Mandate editor and set `total_open_risk_pct` to 5, `max_sector_exposure_pct` to 2.5, `max_single_name_notional_pct` to 20. Then open a 1-on-1 with the Portfolio Manager and ask "Walk through my current book against each cap." If any cap is breached or close, the PM will name it. That's the next trim, not the next entry.
+
+## Takeaway
+
+Per-trade risk is the floor; total open risk, sector caps, and single-name caps are the ceilings — every new ticket competes against all three before the per-trade check matters.

@@ -1,0 +1,66 @@
+---
+id: "225_relative_strength_top_decile_momentum"
+title: "Relative-strength momentum — top decile mechanics"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "momentum"
+prerequisites: ["056_momentum_trading", "022_trend_direction", "029_volume_confirmation", "017_portfolio_exposure_and_correlation"]
+tags: ["strategy", "momentum", "relative_strength", "ranking", "rebalance"]
+agent_callouts: ["aggressive_debator", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Relative-strength momentum — top decile mechanics
+
+The momentum foundation (056) introduced ranking the universe and holding the top decile. This lesson is the operating manual: how relative-strength is actually computed, why the lookback is conventionally 12-month-minus-1-month, how rebalance frequency interacts with turnover and tax, and how to size positions inside the basket. Relative-strength momentum is one of the most-replicated anomalies in finance — Jegadeesh and Titman documented it in 1993; it has survived in samples through 2024 in most equity markets. After this lesson you can specify a relative-strength rule that names the universe, the lookback, the rebalance cadence, and the rules for entries/exits that constitute the actual strategy rather than the academic abstraction.
+
+## How this plays out in real markets
+
+Look at a 2024 implementation across S&P 100 names. The rule: rank every name in the universe by total return from 12 months ago to 1 month ago — the "12-1" lookback (excluding the most recent month avoids short-term reversal noise). At each monthly rebalance, hold the top 10 names equal-weighted. In January 2024, the top decile included NVDA, META, AMD, AVGO, LLY, CRM, ORCL, GE, UBER, and PANW. By April, the basket rotated to drop UBER and PANW and add MU and DELL. By July, NVDA, META, AVGO, LLY remained; new entrants included TSM (where applicable), GOOGL, and INTU. A trader running this rule mechanically owned roughly half the year's biggest winners and rotated systematically without trying to time tops. Annual gross return on the basket exceeded 50% versus ~25% for the S&P 500 — though with materially higher volatility and a ~12% pullback during the July-August rotation episode.
+
+Entry criteria: at monthly rebalance, ticker is in the top decile by 12-1 trailing return AND has minimum dollar-volume liquidity to size within <Term id="ami_mandate" /> caps. Hold: until the next monthly rebalance. Exit/rotation: ticker drops out of the top decile at rebalance — sell, replace with the new entrant. Individual-trade invalidation (the <Term id="ami_pm_safety_floor" />): a hard 25% drawdown stop on any single position regardless of strategy state, to cap damage during a momentum crash. Sizing: equal-weight inside the basket; basket gross exposure capped at mandate-defined max (commonly 60-80% of capital, with the rest in cash or a defensive allocation). The strategy FAILS in two regimes: (1) momentum crashes — short violent reversals (Q1 2009, Q1 2016, November 2020 vaccine-rotation week) where high-momentum names crash and low-momentum names rally; (2) post-bubble unwinds where the most-momentum names ARE the bubble (March 2000 Nasdaq).
+
+## The trap
+
+The beginner mistake is using the wrong lookback — most commonly the latest 3 months or 1 month, which actually shows short-term MEAN REVERSION, not momentum. Buying last month's winners loses money on average; buying the last 12-but-not-the-last-month winners makes money on average. The correct mental model: the 12-1 (or 12-month total return) lookback is empirically validated; shorter lookbacks invert the effect. The other trap: cherry-picking which top-decile name to "skip". You look at the rebalance basket, decide one of them "looks toppy", and exclude it. Over time, the names that look toppy at rebalance dates are disproportionately the biggest forward winners — your discretion bleeds the strategy's return.
+
+<ChatWith agent="aggressive_debator" />
+
+## Quiz
+
+<Quiz
+  question="You're building a relative-strength momentum rule. Which lookback most reliably produces positive forward returns?"
+  options={[
+    "Trailing 1-month total return — rank by recent strength",
+    "Trailing 12-month total return excluding the most recent month (12-1)",
+    "Trailing 3-month total return",
+    "Trailing 1-day total return"
+  ]}
+  answer={1}
+  explanation="The 12-1 lookback is the most-replicated specification in the academic momentum literature; it avoids the short-term reversal effect that dominates 1-month and even 3-month lookbacks. Option 0 is the tempting wrong answer because 'recent strength' feels intuitively like momentum — empirically it's the opposite (winners of the last month tend to underperform next month, the short-term reversal anomaly)."
+/>
+
+<Quiz
+  question="At a monthly rebalance, the top decile of your universe contains 10 names. NVDA is in there for the 13th consecutive month and is up ~250% over the period. You're tempted to exclude NVDA because 'it's overextended' and replace it with the #11 name. Your mandate caps drawdown at 25% and you're at 8%. Aggressive Debator argues 'hold all 10; the system's edge comes from not overriding'. Conservative Debator argues 'cap any single name at 8% of portfolio'. Synthesis: what's the right action?"
+  options={[
+    "Exclude NVDA — it's been in too long; risk of mean reversion is high",
+    "Hold all 10 equal-weight per the rule",
+    "Hold all 10 but cap NVDA's weight at 8% (Conservative Debator's framing) and redistribute the excess",
+    "Sell half of NVDA's position only"
+  ]}
+  answer={2}
+  explanation="Synthesis: the system says hold all 10 names, but a name that's been in the top decile for 13 months can grow to dominate the portfolio if equal-weight isn't re-enforced; a single 25% drawdown on one outsized name can hit the mandate cap. The Conservative Debator's cap respects the mandate without violating the rule's exit logic (NVDA still exits when it drops OUT of the top decile, not before). Option 0 (manual exclusion) is the tempting wrong answer that destroys the strategy's edge through discretion."
+/>
+
+## Try it
+
+<Term id="ami_convene_the_room" /> on your <Term id="ami_watchlist" /> or the S&P 100 and ask the Trader: "Rank these names by 12-month-minus-1-month total return. List the top 10 for the current month. Identify which would be new entrants vs holdovers from last month's basket." Then use <Term id="ami_coach_your_agent" /> on the Aggressive Debator: "Defend any name that's been in the top decile 6+ consecutive months against the urge to take profits — that's where the strategy's biggest winners come from." Log the basket and any coached rules in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Relative-strength momentum lives in the 12-1 lookback; shorter lookbacks invert the effect. Hold the basket the system gives you; cap single-name weight, not single-name inclusion.

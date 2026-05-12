@@ -1,0 +1,80 @@
+---
+id: "241_equal_weight_vs_vol_adjusted_strategy_weights"
+title: "Equal-weight vs vol-adjusted strategy weights — picking the scheme"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["236_combining_strategies_for_diversification", "238_strategy_correlation", "240_risk_parity_for_strategies", "101_volatility_adjusted_sizing"]
+tags: ["synthesis", "weighting", "risk_parity", "portfolio"]
+agent_callouts: ["research_manager", "neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Equal-weight vs vol-adjusted strategy weights — picking the scheme
+
+You now have three weighting schemes for combining strategies: equal-dollar (the default), risk-parity (covered in 240), and regime-rotation (covered in 239). This lesson is the decision framework — when to use each, and how to combine them. The honest answer is that there's no universally best scheme; each has a regime where it dominates and a regime where it underperforms. Equal-dollar wins when strategies have similar vols and expected returns. Risk-parity wins when one strategy is much more volatile than others and mandate cap is tight. Regime-rotation wins when failure-regime indicators are reliably observable. After this lesson you can choose the right scheme for your portfolio AND combine them when sensible (e.g., risk-parity weights within a regime-rotation overlay).
+
+## How this plays out in real markets
+
+Three strategies on US large-caps over 2010-2024:
+- Trend-following (vol 11%, CAGR 9.2%)
+- Mean-reversion (vol 8%, CAGR 11.4%)
+- Momentum (vol 18%, CAGR 10.8%)
+
+Compare four weighting schemes:
+
+| Scheme | CAGR | Vol | Max DD | Sharpe |
+|---|---|---|---|---|
+| Equal-dollar | 10.4% | 12.8% | 14% | 0.81 |
+| Risk-parity | 9.3% | 9.2% | 9% | 1.01 |
+| Regime-rotation (equal-dollar within regime) | 11.2% | 11.1% | 9% | 1.01 |
+| Risk-parity within regime-rotation | 10.6% | 8.4% | 7% | 1.26 |
+
+The last scheme — combining risk-parity for relative weighting with regime-rotation for total exposure — dominates on Sharpe (1.26) and drawdown (7%), trading a small amount of CAGR (10.6% vs 11.2% pure regime-rotation) for substantially lower vol. For a mandate with a tight drawdown cap (e.g., 15% or lower), this is the right choice. For a mandate with a high cap and a CAGR target, pure regime-rotation may be better.
+
+For Bursa-focused traders with fewer strategies and fewer regimes to detect, equal-dollar is often the right starting point — the complexity of risk-parity and regime-rotation overlays needs enough strategy diversity to justify it. With two strategies, the choice is largely between equal-dollar and a simple risk-parity, with regime-rotation likely overfitting on too few strategies.
+
+## The trap
+
+The beginner mistake is picking the scheme that has the highest backtested Sharpe and deploying it without thinking about why. Each scheme has assumptions: equal-dollar assumes similar vol and return profiles, risk-parity assumes stable correlations, regime-rotation assumes the regime indicators are robust and not overfit. The correct mental model: pick the scheme whose assumptions you can defend in your specific situation. The second trap is layering too many overlays — risk-parity within regime-rotation within a volatility-target overlay within a mandate cap. Each overlay adds complexity, transaction costs, and overfitting risk. The third trap: switching schemes when the current one is underperforming. Every scheme has periods where another would have done better; cycling between them is the meta-version of chasing returns and almost always destroys value.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You run two strategies: trend-following (vol 12%, CAGR 9%) and mean-reversion (vol 10%, CAGR 10%). They have similar vols and similar CAGR. What's the most defensible weighting scheme?"
+  options={[
+    "Risk-parity, because lower-vol is always better",
+    "Equal-dollar 50/50 — the strategies have similar vol and similar return profile, the gain from risk-parity is marginal, and the simplicity is honest. Add regime-rotation only if both strategies have well-defined favourable regimes that are observable in real time.",
+    "Regime-rotation, because it has the highest backtest Sharpe",
+    "100% to mean-reversion because it has higher CAGR"
+  ]}
+  answer={1}
+  explanation="When vols are similar, risk-parity gives you something close to equal-dollar anyway, so the added complexity isn't justified. Equal-dollar is the honest baseline. Option 0 over-engineers. Option 2 backtest-chases without considering the data you have for regime indicators. Option 4 abandons diversification."
+/>
+
+<Quiz
+  question="You run four strategies with vols 6%, 10%, 14%, and 22%. Mandate drawdown cap is 12%. Stress correlation across the four is ~0.6 (moderate but not extreme). The Conservative Debator wants risk-parity; the Neutral Debator wants regime-rotation; the Research Manager suggests combining them. Synthesis-correct deployment?"
+  options={[
+    "Pick one scheme arbitrarily — they're roughly equivalent",
+    "Combine: use risk-parity for relative weights (the 22%-vol strategy can't dominate the portfolio at 12% mandate cap), AND use regime-rotation for total exposure (cut gross when failure regimes for the dominant strategies fire). Pre-commit the rules, smooth the regime indicator, and rebalance monthly. Validate via walk-forward.",
+    "Use only equal-dollar weights",
+    "Use only regime-rotation"
+  ]}
+  answer={1}
+  explanation="The synthesis: with one strategy at 22% vol and a 12% mandate cap, risk-parity is necessary to prevent that strategy from dominating drawdown. With four strategies and observable regime indicators, regime-rotation adds value on total exposure. Walk-forward validation (lesson 229) is the discipline that prevents overfitting the combination. Option 0 abandons the design choice. Options 2 and 3 each miss half the problem — neither equal-dollar nor pure regime-rotation handles the vol-disparity issue alone."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, list your strategies with their vols, CAGRs, <Term id="ami_mandate" /> cap, and observable regime indicators. Ask: "Which weighting scheme — equal-dollar, risk-parity, regime-rotation, or a combination — is best justified for my specific portfolio? Walk through the reasoning AND the falsification test that would prove the scheme wrong." Log the chosen scheme + falsification protocol in the <Term id="ami_decision_journal" /> — and don't switch schemes when the current one is underperforming, because every scheme has underperforming regimes.
+
+## Takeaway
+
+There is no universally best weighting scheme — pick the one whose assumptions match your portfolio, validate via walk-forward, and don't switch under stress. Complexity helps only when each layer earns its keep.

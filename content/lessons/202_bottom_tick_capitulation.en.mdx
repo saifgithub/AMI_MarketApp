@@ -1,0 +1,78 @@
+---
+id: "202_bottom_tick_capitulation"
+title: "Bottom-tick capitulation — selling at the absolute low"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+topic: "bottom_tick_capitulation"
+prerequisites: ["046_fear_and_capitulation", "015_stop_loss_basics"]
+tags: ["psychology", "fear", "capitulation", "stop_loss", "sentiment"]
+agent_callouts: ["bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bottom-tick capitulation — selling at the absolute low
+
+The bottom tick is the single worst price of a move — and it is reliably printed by traders who were holding through the entire decline and then, in the final hour, decided they could not hold anymore. Building on lesson 046, this lesson teaches you to recognise *your own* bottom-tick signature before it shows up on the chart. The cruel part is that bottom-tickers do not feel reckless when they sell. They feel finally sensible. That is the symptom.
+
+## How this plays out in real markets
+
+In October 2022, a trader held META from $185 down through $150, $130, $110, and finally $89. He had a written stop at $145 he had ignored at the time because "the level was arbitrary anyway." Each lower price added to the urge to "just be done." On the morning of November 3, with META trading $88.50 and the news feed full of "advertising business is structurally broken" think-pieces, he sold the position in a single market order. The fill: $88.91. META printed $88.09 that afternoon — the low of the entire cycle — and closed November 4 at $98. By February it was $174. By May 2023 it was $234.
+
+The falsifiable bottom-tick fingerprint, as a compound test: (1) the exit price is the worst price of the entire holding period or within 2% of it; (2) the decision was made in the same session as a major bearish news headline or earnings reaction; (3) at the moment of exit, the trader cannot articulate an invalidation thesis distinct from "it is going lower"; (4) the position was held through at least one prior written stop level that was ignored. Three of those four boxes, in one exit, is a bottom-tick signature regardless of what the stock does afterward.
+
+## The trap
+
+The trap is that bottom-tick capitulation feels like *finally* getting risk management right. The trader thinks: "I was holding too long, I see that now, so I am being disciplined by exiting." It is the opposite. Real discipline was breached when the original stop at $145 was ignored. Everything below $145 was already a fear position. Selling at $89 is not discipline rediscovered; it is the same indiscipline reaching its terminal phase. The correct mental model: once you have ignored a written stop, you do not have a position anymore — you have a *prayer*. The only valid exits from a prayer are (a) writing a new stop with a documented invalidation level and waiting for it to trigger, or (b) sizing the position down deliberately while the chart is not in active panic. Selling into the panic itself is the bottom-tickers' tax — you pay it on the way out so that the next holders can collect the recovery.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="You held NVDA from $140 down to $93. Your written stop was $122; you ignored it. Today the news feed has a major China-restrictions headline and NVDA is down 7% intraday at $93. You want to be 'done.' What does discipline look like at this moment?"
+  options={[
+    "Sell at market now — you're already past the stop, cutting losses is the only adult move.",
+    "Do not sell into the active panic. Either wait for the session to close and re-evaluate against a written new invalidation level, or scale out a portion at the close so the decision is not made at the moment of maximum fear.",
+    "Hold and add — fear is a buy signal.",
+    "Move the stop to $90 to limit further downside."
+  ]}
+  answer={1}
+  explanation="The first answer feels like adult risk management and is the textbook bottom-tick move — the discipline was already breached at $122. Selling at $93 into a headline-driven panic is not the discipline returning; it is the same indiscipline reaching its terminal phase. 'Hold and add' is greed wearing fear's costume. Moving the stop to $90 is a re-stop drawn during a panic candle, which has no structural basis. The disciplined answer is the one that removes the *moment of maximum fear* from the decision — wait for the close, write a new invalidation, or scale deliberately. The price action that printed the panic is rarely the price action that will hold once panic clears."
+/>
+
+<Quiz
+  question="Which is the cleanest objective test for 'this exit was a bottom-tick capitulation'?"
+  options={[
+    "The stock recovered after I sold.",
+    "The exit price was within 2% of the worst price of the entire holding period, AND the decision was made in the same session as a major bearish headline, AND I cannot articulate an invalidation thesis at the exit price distinct from 'it is going lower'.",
+    "I felt sick when I placed the order.",
+    "I sold in the last hour of the session."
+  ]}
+  answer={1}
+  explanation="Recovery after a sell is hindsight — most exits look like capitulation if the next print is green. Nausea is a symptom, not evidence. Selling in the last hour is a tape pattern, not a process diagnostic. The compound test — price worst-of-holding, same-session headline, no articulable thesis — is the auditable signature. Three of four boxes ticked is a bottom-tick session regardless of where the stock goes next."
+/>
+
+<Quiz
+  question="Your META position is down 38% from entry against an original stop you ignored. The PM has not flagged a mandate breach (the position is sized small enough that the unrealised loss is 2.1% of account). The Bear Researcher pings with a fresh negative report and the feed is in 'structurally broken' mode. The market is open another 90 minutes. Synthesis answer?"
+  options={[
+    "Liquidate immediately — the trade is broken and the Bear's report confirms it.",
+    "Add to bring your average price down — fear is mispriced.",
+    "Do not act in this session. Write a new invalidation level (or confirm 'no level, position will be reduced over the next 3 sessions on rallies'). Journal the original stop breach as a process failure. Only act at next session open against the written plan.",
+    "Move the stop tight under today's low to lock in the current loss."
+  ]}
+  answer={2}
+  explanation="The original stop breach is the process failure to address; the panic exit is the second process failure waiting to happen. Liquidating into the active panic is exactly what bottom-tickers do. Adding to a position whose stop you already ignored is greed nested inside fear nested inside indiscipline. 'Tight stop under today's low' draws a new stop on a panic candle — no structural basis, guaranteed knockout. The disciplined answer separates the *fact* of a position being broken (real) from the *time* of acting on it (must not be the moment of maximum fear). Write the plan, then execute the plan, in calmer air."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and filter to your three worst closed losers by percentage. For each, plot the gap between your written stop and your actual exit price, and note whether you exited within the same session as a major bearish headline. If two of the three exits were below the written stop AND headline-coincident, you have a documented bottom-tick pattern. Take one example to a <Term id="ami_one_on_one" /> with the Bear Researcher and ask: "What would a structural invalidation actually have looked like for this trade?" Compare that answer to the price at which you actually exited.
+
+## Takeaway
+
+Selling into panic feels like discipline returning. It is usually indiscipline finishing. Never make the exit decision at the moment of maximum fear — write the new invalidation when the tape is calm, or do nothing.

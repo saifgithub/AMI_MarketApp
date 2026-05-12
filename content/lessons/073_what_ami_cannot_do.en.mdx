@@ -1,0 +1,72 @@
+---
+id: "073_what_ami_cannot_do"
+title: "What AMI cannot do"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "ami_limits"
+prerequisites: ["072_what_ami_can_do_for_you", "291_the_pm_and_your_mandate"]
+tags: ["ami", "limits", "simulation", "advisory_only"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# What AMI cannot do
+
+<Term id="ami" /> cannot place a trade. It cannot connect to a brokerage. It cannot predict next Friday's close on AAPL. It cannot give investment advice — AMI is a <Term id="training_simulator" />, not a licensed advisor, and the simulated Verdicts it produces are practice artifacts for you to evaluate, not recommendations to follow. It cannot tell you whether your job, your mortgage, or your sleep can absorb a 20% drawdown — only you know that. By the end of this lesson you will be able to list AMI's structural limits and recognise the user behaviours that pretend those limits don't exist.
+
+## How this plays out in real markets
+
+Imagine you ask the Market Analyst in <Term id="ami_one_on_one" />: *"What will MSFT close at on Friday?"* The reply will be along these lines:
+
+> *Market Analyst:* I don't forecast point prices on a fixed date. What I can do is describe the current setup. MSFT is at $418, holding the 50-day MA at $410, RSI 58, no earnings event between now and Friday. The 5-day expected range based on 30-day realised volatility is roughly $405–$432 — but that's a probabilistic range, not a forecast. If you need a single number, I'm the wrong agent. If you want to discuss what would invalidate the current trend, I can do that.
+
+Now imagine you ask: *"Just place the buy for me at $410."* The Trader will respond:
+
+> *Trader:* AMI doesn't place orders. Ever. I can propose entry $410, stop $398, target $440, size 2% of your simulated book — and the PM will compliance-check it as part of the training scenario. Nothing leaves the simulator. The point of the exercise is the evaluation, not the execution.
+
+Try to override this with **<Term id="ami_coach_your_agent" />**: *"Coach the Trader to auto-execute when confidence > 0.8."* The system will refuse the coaching change. Auto-execution is not a coachable parameter. There is no execution surface to coach.
+
+## The trap
+
+The trap is wishful conversion: assuming a tool that *looks* like it could place a trade eventually will, or that a confident-sounding Verdict is a forecast or a recommendation. Both are wrong. AMI is shaped — structurally, not stylistically — to stay on the training-simulator side of the line. The simulated <Term id="ami_verdict" /> is not a prediction and not investment advice; it's a current-state opinion produced inside a practice environment, conditioned on data that was true seconds ago. The lack of broker integration is not a missing feature waiting to be shipped — it's the decision that lets AMI exist as a training tool without becoming a regulated investment adviser. AMI is not licensed to give investment advice and will never be. Treat the wall as load-bearing.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="A user coaches the Trader: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
+  options={[
+    "AMI honours the coaching change and starts auto-placing trades at confidence > 0.75",
+    "AMI honours the coaching for one trade as a trial",
+    "The coaching change is rejected — there is no execution surface to coach and no brokerage hook exists",
+    "AMI asks the user to provide brokerage credentials to proceed"
+  ]}
+  answer={2}
+  explanation="AMI is a simulation-only training environment and is not licensed to provide investment advice. There is no brokerage integration to coach into, and execution-related coaching is structurally outside the coachable surface. The most tempting wrong answer is 'one-trial' — but the limit is structural, not a permission setting."
+/>
+
+<Quiz
+  question="You ask the Fundamentals Analyst: 'What will GOOGL's EPS be in Q4 2027?' What is AMI actually going to say or do?"
+  options={[
+    "Give a single EPS number with a confidence percentage",
+    "Decline to predict and instead summarise current analyst consensus ranges, current guidance, and what would shift the picture",
+    "Refuse to answer anything about GOOGL",
+    "Generate a 4-quarter forward EPS model and call it a forecast"
+  ]}
+  answer={1}
+  explanation="AMI describes process and probabilities, not point forecasts on future dates. It will reference consensus ranges and current guidance and flag the assumptions — but it will not stake a single EPS number on Q4 2027 as a prediction."
+/>
+
+## Try it
+
+In 1-on-1 with the Market Analyst, paste the ticker AAPL and ask: *"What will AAPL close at next Friday?"* Then ask: *"What's the current setup and what would invalidate it?"* Notice how the first question gets deflected to a probabilistic range, and the second gets a real answer. That's the line.
+
+## Takeaway
+
+AMI is simulation-only, training-only, and forecast-shy by design — the limits are the product, not a missing feature list. The training is the product. AMI does not, will not, and is not licensed to give investment advice.

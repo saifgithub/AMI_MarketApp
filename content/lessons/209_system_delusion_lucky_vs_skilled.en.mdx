@@ -1,0 +1,78 @@
+---
+id: "209_system_delusion_lucky_vs_skilled"
+title: "The 'system' delusion — lucky vs skilled"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 5
+track: "edge_process"
+topic: "lucky_vs_skilled"
+prerequisites: ["049_overconfidence", "057_backtesting_a_strategy"]
+tags: ["psychology", "overconfidence", "edge", "luck", "sample_size"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The 'system' delusion — lucky vs skilled
+
+After a winning streak, every trader believes they have found "a system." Most of the time, they have found a *regime that flattered their behaviour* and given it a name. Building on lesson 049, this lesson teaches you the sample-size math that separates a real edge from a lucky run, the falsifiable test for "is my system actually working", and the rule that prevents you from sizing up against a regime you have not yet seen end. The market gives every trader the same illusion eventually — usually after 15–25 winning trades, which is exactly the streak length at which your conviction is unfalsifiable from random.
+
+## How this plays out in real markets
+
+A trader on US tech-momentum names ran a strategy from January through August 2024: long breakouts on names above their 200-day MA with positive earnings revisions. Across 32 trades, win rate was 66%, average winner +9.1%, average loser -3.4%, expectancy +4.8% per trade. He concluded the system was robust. He wrote a research note titled "tech-momentum-breakout-v1, live edge confirmed" and raised per-trade risk from 1% to 2%. From September 2024 to January 2025 — the same strategy, on the same names, run unchanged — the win rate was 38%, average winner +5.2%, average loser -4.6%, expectancy -1.4% per trade. The strategy had not failed. The *regime* had changed; the 2023–early-2024 tape was a uniformly trending one that flattered any breakout strategy, and the late-2024 tape was choppy. His 32 trades were not enough sample to distinguish "this strategy works" from "this strategy works in this regime." The doubling of per-trade risk converted a regime-correction into an 11% account drawdown.
+
+For statistical context: at a true 50% win rate with no edge, the probability of observing a streak of 20 wins in 32 trades (66% observed) by chance is non-trivial — roughly 6%. A 6% probability is not "I have an edge"; it is "one in 17 random traders would observe this without an edge." Most strategies need 100+ live trades across at least two distinct regimes before a single-trader sample distinguishes skill from a flattering tape.
+
+## The trap
+
+The trap is the certainty that comes from a winning streak. Certainty is not evidence — it is the absence of recently-falsifying data. The correct mental model: a "system" is a hypothesis until it has been falsified by adverse conditions and recovered. A strategy that has never traded through a regime change does not have a known edge; it has an *unmeasured one*. The Conservative Debator's role here is the most uncomfortable in the agent team — it asks you to lower your conviction on a strategy that is currently working. That feels wrong, which is exactly why it is necessary. The disciplined trader treats a winning streak as a regime-conditional sample, sizes for the worst regime the strategy has not yet seen, and raises position size only when sample size and regime diversity together justify it — never when only the equity curve does.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="Your strategy has produced 22 winning trades and 8 losing trades over 5 months — 73% win rate, expectancy +5.1% per trade. You want to raise per-trade risk to capture the edge. What does the disciplined response require?"
+  options={[
+    "Raise per-trade risk immediately — 30 trades is a sufficient sample, and the expectancy is well above zero.",
+    "Wait until at least 100 trades across at least two distinct market regimes (e.g. a trending and a choppy or a bull and a correction phase) before raising per-trade risk. The current sample is consistent with both 'real edge' and 'lucky run in a favourable regime.'",
+    "Raise per-trade risk halfway (e.g. 1.0% to 1.5%) — partial confidence.",
+    "Document the result, do not raise risk, and run a backtest covering 10 years to validate the strategy."
+  ]}
+  answer={1}
+  explanation="30 trades sounds substantial but is statistically insufficient to distinguish skill from luck for most retail strategies — even a 73% observed win rate has a non-trivial probability under a true 50% rate at that sample size. 'Halfway raise' is the seductive compromise — it bakes regime-dependent confidence into a permanent mandate change. The backtest answer is partially right (a backtest does help) but skips the critical condition: the strategy must be observed *live* through at least one regime change before its edge is measured, not just on historical data. The disciplined answer requires both sample size and regime diversity."
+/>
+
+<Quiz
+  question="Which compound test distinguishes a true edge from a lucky run in a flattering regime?"
+  options={[
+    "Win rate above 60%.",
+    "Positive expectancy across at least 100 live trades that span at least two distinct market regimes (e.g. trending and choppy, or bull and correction), with no single regime contributing more than 60% of the trades.",
+    "Five consecutive winners.",
+    "Positive expectancy on a backtest going back 10 years."
+  ]}
+  answer={1}
+  explanation="Win rate alone says nothing about expectancy distribution. Five consecutive winners is consistent with random. A 10-year backtest is useful but not sufficient — strategies overfit to past regimes routinely. The compound test — sample size (100+), regime diversity (2+), regime balance (no single regime >60%) — is the auditable framework that distinguishes edge from luck. All three numbers are checkable in the Decision Journal once the data exists; until it does, the strategy is a hypothesis, not a system."
+/>
+
+<Quiz
+  question="Your strategy has 28 live trades, 64% win rate, expectancy +4.2% per trade. All 28 trades occurred during a clearly trending bull market. You are about to raise per-trade risk to 2% from 1%. The Conservative Debator flags that no regime change has been observed. The PM has not breached. Synthesis answer?"
+  options={[
+    "Override the Conservative Debator — equity curve and expectancy support the size increase.",
+    "Raise per-trade risk to 1.5% as a 'partial' increase.",
+    "Do not raise per-trade risk. Keep the strategy at 1% until at least one regime change has been observed and the strategy has held up across it (i.e., positive expectancy through a choppy or correction phase). Document the constraint in the Decision Journal and the mandate.",
+    "Run a backtest covering 2008 and 2020 — if positive, raise risk."
+  ]}
+  answer={2}
+  explanation="The 'override the Conservative Debator' move is exactly the overconfidence pattern this lesson exists to prevent — and is the most common error a trader makes in month 6 of a winning streak. 'Partial raise to 1.5%' bakes regime-conditional confidence into a permanent mandate change. The backtest answer is supplementary, not substitutive — historical regime survival is informative but a strategy untested live through a regime change is still unproven live. The disciplined answer requires live regime diversity before a size increase, and is willing to leave a real edge under-sized for several more months in exchange for not converting a regime-conditional edge into a permanent mandate breach."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and tag every trade in your current strategy's history with the market regime at the time (trending up, trending down, choppy/range-bound, volatility spike). Compute the strategy's expectancy *within each regime*. If a single regime accounts for more than 60% of the sample, your strategy's measured edge is regime-conditional, not absolute. Take the screen to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Under what regime would this strategy have negative expectancy?" The answer is the regime your sizing must be calibrated for.
+
+## Takeaway
+
+A strategy that has never traded through a regime change does not have a known edge — it has an unmeasured one. Size for the worst regime your sample has not yet seen, not for the streak it has.

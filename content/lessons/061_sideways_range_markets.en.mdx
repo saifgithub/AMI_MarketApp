@@ -1,0 +1,70 @@
+---
+id: "061_sideways_range_markets"
+title: "Sideways / range markets"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+topic: "range_regime"
+prerequisites: ["023_support_and_resistance", "026_moving_averages", "050_boredom_trading"]
+tags: ["regime", "range", "sideways", "consolidation"]
+agent_callouts: ["neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sideways / range markets
+
+A sideways regime is the one most traders bleed money in. Price oscillates inside a band; the 200-day SMA flattens; trend strategies whip-saw; breakouts fail; pullbacks don't reach the moving average because there is no moving average to reach. After this lesson you will be able to detect a range regime in numbers, name the two strategies that fit it, name the trend strategies that will quietly drain you in it, and state the condition that confirms a regime break out of the range.
+
+## How this plays out in real markets
+
+The first half of 2023 in SPX is a clean range case. After bouncing off 3,808 on 13 March 2023, SPX oscillated between roughly 3,950 (support) and 4,200 (resistance) for about three months until breaking above 4,200 on 1 June 2023. The 200-day SMA was nearly flat across that window — slope under 5 points per week. The 20-day Average True Range hovered around 45 points (≈1.1% of price), down from 75+ in the 2022 bear.
+
+Detection rule for a range regime: SPX 200-day SMA slope is between -0.05% and +0.05% per week (essentially flat) AND price has tested each of two horizontal levels at least twice within the last 40 trading days AND the gap between those levels is under 8% of price. All three were true for SPX in March–May 2023.
+
+A cleaner sector range: XLF (financials) traded between 31.50 and 35.00 from October 2023 to early March 2024, four months of oscillation with a flat 200-day, before breaking above 35 on the 4 March 2024 close. On Bursa Malaysia: KLCI ranged between 1,415 and 1,495 for most of the first half of 2023 — almost six months of flat 200-day before a regime change in late 2023.
+
+## The trap
+
+The range-market trap is using trend-following indicators in a range. The moving-average crossover that printed money in 2024 prints 6 false signals in 6 months when the 200-day is flat. Each whipsaw is small (1–2%), but six of them compounds into a 6–10% drawdown on a strategy that "should be working". The trader, anchored to the bull-regime memory, doubles size on the next signal to "make it back" — and the next whipsaw lands harder.
+
+The correct model: in a range regime, the edge is mean-reversion to the band middle, not breakout-following. You fade extremes, take small targets, and accept that the regime ends with the eventual breakout — at which point the playbook flips back to trend.
+
+<ChatWith agent="neutral_debator" />
+
+## Quiz
+
+<Quiz
+  question="SPX 200-day SMA has been flat for 9 weeks. Price has touched 4,000 three times and 4,200 three times in the last 50 trading days. A breakout strategy from Module 9 just generated a long signal at 4,210. What is the regime-aware play?"
+  options={[
+    "Take the breakout at full mandate-permitted size — Module 9 says trade the signal.",
+    "Take the breakout at reduced size (e.g., half mandate-permitted) with a tight stop back inside the range; confirm regime break only on a weekly close above 4,200 with rising 20-week SMA.",
+    "Short at 4,210 — every range breakout fails.",
+    "Ignore the signal; ranges never break."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — execute the breakout as designed. But Module 9 strategies have a regime prior; a breakout signal inside a confirmed range has a higher false-positive rate. The synthesis answer is to take the trade with size reduced for regime uncertainty and let the weekly close confirm or invalidate. Option 2 (always-fade breakouts) is also wrong — many ranges resolve with the breakout, you just don't know in advance which one."
+/>
+
+<Quiz
+  question="Which strategy archetype is best aligned with a confirmed range regime?"
+  options={[
+    "Moving-average crossover trend-following.",
+    "Mean-reversion: fade the band edges with a target near the band midpoint.",
+    "Buy-and-hold with no stops.",
+    "Daily news-driven momentum chasing."
+  ]}
+  answer={1}
+  explanation="Mean-reversion is the regime-aligned strategy: in a range, the edge is the band returning to its centre. MA crossovers will whipsaw because the MA is flat. The most tempting wrong answer is option 0 because it's what worked in 2024 — but it works in trending regimes, not range regimes. Strategy must match regime."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Neutral Debator and paste: "Is SPX currently in a range regime by the three-rule test — flat 200-day, two horizontal levels tested twice in 40 days, band under 8% wide? Show me the numbers." Then open the <Term id="ami_mandate" /> editor and try lowering your "stop_loss_pct" from 8% to 4%. Range regimes call for tighter stops because targets are smaller — feel the math.
+
+## Takeaway
+
+In a flat 200-day, two-sided range, fade the edges and target the middle; the trend strategies that worked last regime will whipsaw you until the band breaks on a weekly close.

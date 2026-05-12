@@ -1,0 +1,73 @@
+---
+id: "274_the_safety_floors_audit_trail"
+title: "The safety floor's audit trail"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "audit_trail"
+prerequisites: ["271_inside_the_deterministic_compliance_check", "272_the_mandate_is_your_contract"]
+tags: ["audit_trail", "pm", "compliance", "decision_journal", "history"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The safety floor's audit trail
+
+A check that runs but does not record itself is a check you cannot trust. Every PM compliance result in <Term id="ami" /> — PASS or BLOCK, with the specific clause that fired — gets written to the <Term id="ami_decision_journal" /> alongside the <Term id="ami_verdict" />. That trail is yours to inspect. You can see which <Term id="ami_mandate" /> clauses bound most often, which trades the PM blocked, what your Mandate values were at the time of each decision, and whether your subsequent edits to the Mandate correlated with different PM behaviour. By the end of this lesson you will know how to read the audit trail and what it can tell you that no single Verdict can.
+
+## How this plays out in real markets
+
+Suppose over six weeks you convene the Room 24 times across AAPL, NVDA, MSFT, AMZN, and JPM. Open the Decision Journal and filter by *PM result*. You see:
+
+- 18 PASS — proposed sizes 2–4%, well inside `max_position_pct: 5`.
+- 4 BLOCK on `max_position_pct` — Trader proposed 6–7% three times on NVDA and once on TSLA. Each block recorded with timestamp, the Mandate value that was active (`max_position_pct: 5`), and the proposed size.
+- 1 BLOCK on `no_fossil` — XOM convened on a day when `no_fossil: true` was active.
+- 1 BLOCK on `long_only` — TOPGLOV short proposal blocked while `long_only: true`.
+
+That trail tells you several things at a glance. Your Mandate's size cap is the binding constraint about 17% of the time — meaningful. NVDA proposals routinely come back oversize relative to your limit, which is either a signal that NVDA's volatility is pulling the Trader toward larger positions or that your `max_position_pct` is tighter than you intend for high-conviction setups. The exclusion blocks tell you whether your ethical/regional constraints are firing, which can confirm they are still wired the way you want.
+
+Critically, the trail records the Mandate values *at the time of the decision*, not the current values. If you edited `max_position_pct` from 3 to 5 three weeks in, an audit two weeks later still shows the 3-era blocks as 3-era blocks. The trail is immutable history — you cannot retroactively re-grade past decisions by editing today's Mandate.
+
+## The trap
+
+The trap is using the audit trail to argue with the PM after the fact. *"It blocked me on XOM but XOM ran 40% — the PM cost me money."* The audit trail is not evidence the PM was wrong. The PM was enforcing your Mandate. If the Mandate's `no_fossil` flag was active and you are now regretting it, the trail tells you that *you* chose that exclusion, and the system honoured it. The right reading: the audit trail is for *you* to inspect your own past judgment, not for litigating the PM's behaviour. The PM did not pick the rules — you did. The trail proves the rules were applied consistently, which is the only thing it can prove.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You scroll your Decision Journal and find five PM blocks on `max_position_pct` over the last month, all on NVDA. What's the most useful inference?"
+  options={[
+    "The PM is being too strict on NVDA specifically",
+    "The Trader keeps proposing oversize positions on NVDA — either NVDA's setups genuinely warrant more size (and you should consider whether your `max_position_pct` matches your risk appetite) or the Trader is over-enthusiastic; either way the audit trail surfaced a pattern worth thinking about",
+    "AMI dislikes NVDA",
+    "The blocks should be ignored because NVDA ran higher anyway"
+  ]}
+  answer={1}
+  explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Trader's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the last one — outcome bias retconning the PM as wrong; the PM enforced your stated rules, and outcome on one trade does not validate ignoring them."
+/>
+
+<Quiz
+  question="You changed `max_position_pct` from 3 to 5 two weeks ago. You audit a PM block from a month ago that fired on a 4% proposal. What does the audit trail show?"
+  options={[
+    "The block has been retroactively converted to PASS because 4% fits the current Mandate",
+    "The block is recorded with `max_position_pct: 3` as the active value at the time of decision — history is immutable; today's Mandate does not retro-grade past trades",
+    "The block has been deleted because the rule changed",
+    "The audit trail shows whichever Mandate value the user picks"
+  ]}
+  answer={1}
+  explanation="The trail records the Mandate state at decision time. That is what makes it an audit trail rather than a current-state dashboard. The tempting wrong answer is the retroactive one — a system that rewrites history every time you change a setting would have no auditable record at all."
+/>
+
+## Try it
+
+Open the **Decision Journal**, filter by *PM result: BLOCK*, and read three. For each, note the clause that fired (size, drawdown, exclusion) and the Mandate value active at the time. Ask yourself whether the same trade today, under your current Mandate, would still block. If three out of three would now pass, your Mandate moved — and the trail just told you so.
+
+## Takeaway
+
+The PM logs every block with the clause and the Mandate value of the moment. Read your trail periodically; it is the only honest record of what rules you were actually training under. AMI is a <Term id="training_simulator" /> — the trail is for evaluating your own past judgment, not litigating advice you were never given.

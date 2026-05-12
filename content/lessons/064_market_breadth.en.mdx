@@ -1,0 +1,74 @@
+---
+id: "064_market_breadth"
+title: "Market breadth"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "breadth"
+prerequisites: ["029_volume_confirmation", "030_trend_confirmation_across_indicators", "059_bull_markets", "060_bear_markets"]
+tags: ["regime", "breadth", "advance_decline", "new_highs_lows", "confirmation"]
+agent_callouts: ["market_analyst", "research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Market breadth
+
+Breadth is the answer to a single question: when the index moves, how many stocks moved with it? A bull regime led by 8 mega-caps is structurally different from a bull regime where 70% of NYSE issues are above their 200-day SMA — and the second one survives shocks the first one doesn't. After this lesson you will be able to detect breadth numerically (advance/decline, new-highs vs new-lows, % of stocks above 200-day SMA), name what breadth tells you about regime durability, name the strategies that fail when breadth diverges, and state the invalidation condition for a breadth-confirmed move.
+
+## How this plays out in real markets
+
+Two contrasting cases inside the same SPX bull:
+
+Narrow-breadth advance (Q1 2024): SPX gained 10.2% from 1 January to 31 March 2024 and closed at 5,254 on 28 March 2024. But only ~38% of NYSE issues were above their 200-day SMA at that high, vs 70%+ in healthy prior bull peaks. The advance was carried by 7 mega-cap tech names. McClellan A/D oscillator readings on SPX were repeatedly *lower* on new index highs — a textbook bearish breadth divergence.
+
+Broad-breadth advance (Q4 2024): from late October to early December 2024, SPX rallied from 5,750 to 6,090 while the % of NYSE issues above their 200-day SMA expanded from 58% to 73%, NYSE new 52-week highs exceeded new 52-week lows by an average of 250+ issues per session for 7 straight weeks, and the Russell 2000 (IWM) outperformed SPX by 4.5%. Small caps participating + advance/decline broad = high-quality regime.
+
+Detection rule: a "broad" bull is in force when % of NYSE stocks above their 200-day SMA > 60% AND new 52-week highs exceed new 52-week lows for 5 of the last 7 weeks AND IWM is keeping pace with or outperforming SPY over 50 days. A "narrow" advance (≥3 weeks of new SPX highs while % of issues above 200-day SMA < 50%) is a breadth-divergence signal — durability concern, not a sell signal in isolation.
+
+On Bursa Malaysia: similar principle on the KLCI Advance/Decline line; when KLCI rises but A/D is flat, the rally is concentrated in heavyweights and is structurally thinner.
+
+## The trap
+
+The breadth trap is reading the headline index number and assuming "the market" is doing whatever it shows. In Q1 2024, an investor seeing SPX hit a new high every other week reasonably assumed strength was broad — and concentrated into the most-extended mega-caps as the "obvious" winners. When the August 2024 vol-shock hit, those mega-caps drew down 12–20% while the average S&P 500 stock dropped only 6%. The trader's "diversified" portfolio of 5 mega-caps drew down like a single sector because that's what it actually was.
+
+The correct model: breadth is a regime-quality scoreboard. Narrow advances are not necessarily fatal — many run for months — but they require smaller position sizes, more diversification, and a closer-watched invalidation. Broad advances earn their mandate-permitted size.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="SPX is at a new all-time high. % of NYSE stocks above their 200-day SMA is 41%. NYSE new 52-week highs have failed to expand for 4 weeks while the index keeps printing new highs. What does the breadth framework prescribe?"
+  options={[
+    "Index is making new highs — increase exposure to track the index.",
+    "Narrow-breadth advance is in force; the regime is bullish but lower-quality. Cap mega-cap concentration tighter than mandate floor; require closer invalidation (e.g., act on a single weekly close below the 20-week SMA rather than waiting for the 200-day break); reduce single-position size by ~25%.",
+    "Sell everything — breadth divergences always precede crashes.",
+    "Ignore breadth — only price matters."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'new highs = increase exposure' is the bull-regime playbook but skips the quality check. Breadth divergence doesn't mandate a sell (option 2), and price-only is what produces the concentrated-mega-cap drawdown described in the lesson (option 3). The synthesis answer adjusts mandate parameters — concentration, invalidation, sizing — without abandoning the regime."
+/>
+
+<Quiz
+  question="Two scenarios. (A) SPX +8% over 60 days, IWM +9%, % above 200-day SMA rises from 55% to 71%, A/D line at new high. (B) SPX +8% over 60 days, IWM +1%, % above 200-day SMA falls from 60% to 47%, A/D line below prior high. Synthesising regime + breadth, which is the higher-conviction long-side environment and what is the mandate consequence?"
+  options={[
+    "Both identical — SPX +8% is SPX +8%.",
+    "(A) is higher-conviction; full mandate-permitted sizing across positions, diversified across sectors. (B) is lower-conviction; reduce sizing, concentrate only in confirmed leaders, plan invalidation at a closer level than (A) would require.",
+    "(B) is higher-conviction because mega-caps are leading.",
+    "Both are sells because volatility is implied."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — same index print, same opportunity. But internals make the difference between a regime that absorbs shocks and one that breaks on the first vol spike. Option 2 inverts the lesson — mega-cap leadership without participation is the weaker setup, not the stronger one. The synthesis is: regime + breadth together set the mandate dials, not the headline alone."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Give me today's breadth dashboard — % of NYSE stocks above 200-day SMA, NYSE new 52-week highs minus lows for the past 7 weeks, and IWM vs SPY 50-day performance." Then <Term id="ami_convene_the_room" /> on any ticker already in your <Term id="ami_watchlist" /> and watch the Research Manager's synthesis — they should explicitly cite breadth context when arguing for or against sizing. If they don't, that's a <Term id="ami_coach_your_agent" /> moment for the Research Manager.
+
+## Takeaway
+
+Breadth is the quality grade on the regime: a broad advance earns full mandate-permitted size, a narrow one earns smaller positions and a closer invalidation — same index print, different prescription.

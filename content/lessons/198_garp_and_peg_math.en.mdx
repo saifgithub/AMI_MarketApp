@@ -1,0 +1,79 @@
+---
+id: "198_garp_and_peg_math"
+title: "GARP and the PEG ratio — growth at a reasonable price"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "garp_peg"
+prerequisites: ["044_earnings_growth", "039_the_pe_ratio", "285_reading_a_pe_ratio"]
+tags: ["garp", "peg", "growth", "valuation", "p_e", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# GARP and the PEG ratio — growth at a reasonable price
+
+Lesson 044 introduced earnings growth and mentioned PEG (P/E divided by growth rate) as the bridge between the multiple and the growth that has to justify it. This lesson goes deep on the Growth-At-a-Reasonable-Price (GARP) framework popularised by Peter Lynch and refined by countless practitioners. It's a discipline that rejects both the deep-value trap (cheap multiple, no growth) and the growth-at-any-price trap (high multiple, growth that won't compound for long enough to matter). By the end of this lesson you should be able to compute PEG, apply the GARP triple-filter, and name the precise failure mode of PEG that requires layering on the rest of the financial-ratio toolkit.
+
+## How this plays out in real markets
+
+The basic math: PEG = (P/E) / (expected earnings growth rate in percent). A PEG of 1.0 is "fairly priced for growth", below 1.0 is "the bet", above 2.0 is "the warning".
+
+Apply it to NVDA at the end of 2024. Forward P/E roughly 35x. Consensus forward 3-year EPS growth roughly 30% annually. PEG = 35 / 30 ≈ 1.17. The math says "moderately expensive but defensible if growth holds". The falsifiability comes from the growth rate — if NVDA delivers 30%, PEG was approximately right; if growth decelerates to 15%, the implied PEG was 2.3 and the market over-paid.
+
+Apply it to META in early 2023, when the stock had collapsed to roughly $90 with a forward P/E near 14x. Consensus growth was being aggressively cut, but META's own EPS growth subsequently exceeded 30% in 2023 and 2024 as the cost-cutting and the AI infrastructure ramp paid off. The PEG at the trough was effectively below 0.5 looking back. That's the GARP buy signal — a P/E that has overshot to the downside relative to the actual growth that the business delivers.
+
+Apply it to a deep-value name. GM trades at a P/E around 5-6x with expected EPS growth in the low single digits. PEG is around 2-3x — high despite the cheap absolute multiple, because the growth simply isn't there. Cheap and stagnant is not GARP; it's value-trap territory. The opposite mistake from over-paying for growth.
+
+The GARP triple-filter as practised by serious investors:
+1. **PEG below 1.5x** (with PEG below 1.0x being the strong-buy zone).
+2. **Earnings growth above the inflation rate + risk-free rate** (a minimum bar — anything growing slower than money in T-bills is liquidating in real terms).
+3. **ROE or ROIC above the cost of capital** so that the growth is value-creating (a 20% growth rate at 5% ROIC destroys value; same growth at 25% ROIC creates it).
+
+On Bursa Malaysia: MAYBANK trades at a P/E around 12x with mid-single-digit growth, PEG around 2-3x — closer to value than to GARP. IHH Healthcare with double-digit growth at a similar multiple often has a more favourable PEG, depending on the cycle.
+
+Falsifiable claim: a stock with PEG below 1.0x AND ROE above 15% AND consensus forward growth above 10% has historically outperformed broad indices on a forward 3-year basis with statistical significance, in studies covering both US and developed-market equities. The signal invalidates when the growth rate is forecast-driven rather than evidence-driven — a company guiding to 25% growth that has never delivered above 8% has a PEG that's fictional.
+
+## The trap
+
+The trap is treating PEG as a magic formula. A PEG of 0.8x looks like a buy until you ask: "where did the growth rate in the denominator come from?" Sell-side consensus growth rates are notorious for being too high in early forecasting and getting cut as deadlines approach. A backward-looking PEG using trailing growth is conservative; a forward PEG using sell-side estimates is often wishful. The correct mental model: PEG is a screen, the growth-rate input is the assumption, and the discipline is to use the lower of (a) trailing 3-year actual growth, (b) consensus forward growth, and (c) management's own guidance, then apply a margin of safety. What invalidates PEG as a standalone metric: GARP fails for companies with one or two years of unusual growth that won't repeat (a post-pandemic snapback, a cyclical commodity year) — always check that the growth rate plugged in is sustainable, not a one-year artefact.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Stock A: P/E 18x, 5-year forward growth consensus 22%, ROE 25%. Stock B: P/E 8x, 5-year forward growth 3%, ROE 10%. Both in the same sector. Which is the GARP-compliant pick?"
+  options={[
+    "B because of the lower P/E",
+    "A: PEG = 18/22 = 0.82 (below 1.0, the GARP strong-buy zone), growth comfortably above the inflation + risk-free hurdle, ROE 25% well above any plausible cost of capital, so the growth is value-creating. B: PEG = 8/3 = 2.67 (above the GARP fail line), growth roughly at the inflation rate (essentially flat in real terms), ROE near cost of capital so no value creation. Cheap absolute multiple but failing all three GARP tests",
+    "A and B are equivalent because the products of multiple and growth net out",
+    "Neither qualifies"
+  ]}
+  answer={1}
+  explanation="The synthesis test: applying the GARP triple-filter rather than reading a single number. The tempting wrong answer is option 0 — the classic value-trap mistake where a beginner reaches for the cheapest absolute multiple and ignores the growth and quality. The right read applies the three filters in sequence and observes that A passes all three while B fails all three despite the cheaper headline. Option 2 invents a product that doesn't have meaning. Option 3 over-dismisses A which clearly passes."
+/>
+
+<Quiz
+  question="A company has trailing P/E of 30x. Sell-side consensus growth for the next 3 years is 35% per year. Trailing 3-year actual growth was 8%. Management guidance is 'mid-teens'. Which growth rate should the conservative GARP investor plug into PEG, and what's the implied PEG?"
+  options={[
+    "Use the consensus 35% — PEG = 30/35 = 0.86, strong buy",
+    "Use the lower of the three observable rates as the conservative input: 8% trailing actual. PEG = 30/8 = 3.75, well above the 1.5 fail line. The forward consensus and management guidance both call for substantial acceleration that hasn't materialised in actual delivery. A GARP buyer should require the growth to start showing up in the trailing data before paying the multiple",
+    "Use management's mid-teens — PEG = 30/15 = 2.0",
+    "Average all three — PEG = 30 / 19 = 1.58"
+  ]}
+  answer={1}
+  explanation="The synthesis test: the discipline of conservative-input PEG. The tempting wrong answer is option 0 — using the rosiest consensus to make the PEG look acceptable, the precise mistake that turns PEG from a screen into wishful thinking. The right read uses trailing actual delivery as the floor and recognises that paying a premium multiple for a growth-rate jump that hasn't appeared is the bet against history. Option 2 splits the difference; option 3 averages without considering reliability. Both are softer versions of the same mistake."
+/>
+
+## Try it
+
+Open <Term id="ami_convene_the_room" /> on any growth name (NVDA, TSLA, or a Bursa name like MRDIY) and watch the Fundamentals Analyst, Bull Researcher, and Bear Researcher debate the growth-rate input. Then in <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "Compute PEG using trailing 3-year actual growth, consensus forward growth, and management guidance. Show me all three PEG values plus the ROE and the cost of capital. Score on the GARP triple-filter." Save the four-line snapshot.
+
+## Takeaway
+
+GARP is the discipline of not over-paying for growth and not under-paying for stagnation. PEG is the screen; trailing-growth input plus the ROE-vs-cost-of-capital quality check is what makes it honest.

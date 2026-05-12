@@ -1,0 +1,72 @@
+---
+id: "026_moving_averages"
+title: "Moving averages"
+duration_min: 4
+level: 2
+module: 5
+difficulty: 2
+track: "technical_analysis"
+topic: "moving_averages"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction"]
+tags: ["indicators", "moving_average", "trend", "sma", "ema"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Moving averages
+
+A moving average (MA) is the average closing price of the last N bars, recalculated every bar. It smooths noise so you can see the trend underneath the wiggles. A 50-day simple moving average (SMA50) takes the last 50 daily closes and divides by 50; tomorrow, the oldest close drops off and today's close joins. The exponential moving average (EMA) weights recent bars more, so it turns faster. MAs do not predict — they describe where the average buyer has been. That single fact decides how you use them.
+
+<Animation name="moving_average_lag" />
+
+## How this plays out in real markets
+
+Look at MSFT through Q3 2025. From July through September, the daily close stayed above the rising SMA50, which climbed from around 445 to 465. Every shallow dip touched the SMA50 and bounced — the average buyer of the last 50 days kept stepping in. On October 9, MSFT closed at 458, sliced through the SMA50 at 463, and the SMA50 itself rolled over and began declining by October 22. Price then spent six weeks below it, oscillating between 440 and 455.
+
+The signal is mechanical: as long as price holds above a rising SMA50, the medium-term trend is up. The falsification condition is equally mechanical — two consecutive daily closes below a flattening or declining SMA50 means the up-trend setup has invalidated. You don't argue with the line; you note what side of it price closed on.
+
+On Bursa Malaysia: MAYBANK held its SMA50 around RM10.20 for most of Q4 2025, every pullback bought; when price closed at RM9.94 on December 18 — below a now-flat SMA50 — the same buyers stopped showing up.
+
+## The trap
+
+Beginners treat moving averages as predictions. "The 50-day is at 463, so MSFT will bounce there." That is not what an MA says. An MA is the average price of the last N bars — it is descriptive, not prescriptive. Price respects it only when participants who bought near that average are still willing to defend their cost. When sentiment shifts, those same buyers sell into rallies back to the MA, and the line becomes resistance instead of support.
+
+The correct mental model: the MA is a context line that tells you which side of "average" the current price is on. Trade with the slope, not the level. A rising MA with price above it is a tailwind. A declining MA with price below is a headwind. That's the whole signal — the rest is noise.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="MSFT closes at 458 after sitting above a rising SMA50 (now at 463) for three months. Two days later it closes at 456 with SMA50 at 462 and turning flat. What does the moving-average framework say?"
+  options={[
+    "The bounce is overdue; SMA50 is support, expect a rally back above 463",
+    "The up-trend setup has invalidated — price has closed below a flattening SMA50 twice",
+    "Ignore the SMA50; only the SMA200 matters for trend",
+    "Switch to EMA20 because SMA50 is too slow to be useful"
+  ]}
+  answer={1}
+  explanation="The lesson defines the invalidation condition explicitly: two consecutive closes below a flattening or declining SMA50 means the up-trend setup has invalidated. The tempting wrong answer treats the MA as a predictive support level — but an MA is descriptive, not prescriptive. When price closes below and the slope flattens, the average buyer of the last 50 days is no longer defending their cost."
+/>
+
+<Quiz
+  question="You see TSLA priced at 245, SMA50 at 232 and rising, SMA200 at 218 and rising. Volume on the latest up-bar is 1.4× the 20-day average. Which conclusion is supported by what you've learned?"
+  options={[
+    "The trend is up across both timeframes and the latest bar has participation behind it",
+    "Price is overextended above SMA50 — short it",
+    "The MAs predict TSLA will reach 260 within two weeks",
+    "The setup is bearish because TSLA is above its average"
+  ]}
+  answer={0}
+  explanation="Price above rising SMA50 and SMA200 describes an aligned up-trend; above-average volume on the up-bar confirms participation. The most tempting wrong answer ('overextended, short it') treats distance from an MA as a prediction — the lesson is explicit that MAs don't predict. Distance alone is not a signal; slope and which side of the line price closes on are."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker from your <Term id="ami_watchlist" /> and ask: "What's the slope of the SMA50 and SMA200, and is price above or below each?" Then check the chart yourself. The point is to confirm your read against the Market Analyst's — when you disagree, dig into why.
+
+## Takeaway
+
+A moving average describes where the average buyer has been; trade with its slope, not its level — and define your invalidation in closes, not feelings.

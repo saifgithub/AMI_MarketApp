@@ -1,0 +1,70 @@
+---
+id: "149_customer_concentration_risk"
+title: "Customer concentration risk"
+duration_min: 4
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "customer_concentration"
+prerequisites: ["032_revenue_the_top_line"]
+tags: ["revenue", "concentration", "customer_risk", "10k_disclosures", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Customer concentration risk
+
+Lesson 032 ended on segment concentration — when one product line carries a company. This lesson narrows further: when one *customer* carries it. A single buyer above 10% of total revenue creates a fragility that doesn't show up in the headline growth rate. Lose them, and the revenue line breaks in a single quarter — not because the business got worse, but because the relationship changed. By the end of this lesson you should know how to find concentration in disclosures, the threshold at which it materially changes the risk profile, and the specific scenario where a "great quarter" is actually a warning.
+
+## How this plays out in real markets
+
+US 10-K filings require disclosure of any customer above 10% of total revenue. Read the "Customers" section in the annual report or the Risk Factors. Apple is the textbook example seen from the *other* side — many of Apple's suppliers depend on it heavily. In fiscal 2024, AAPL was disclosed as a >10% customer for multiple chip and component vendors. When a vendor like Skyworks Solutions reports roughly 65–70% of revenue from "a single large customer" (consistently understood to be Apple), the entire business is one renegotiation away from a revenue cliff. The 2024 transition of certain Apple radio components in-house compressed several suppliers' revenue by 20–40% in a single fiscal year.
+
+For a clearer concentration example, look at semiconductor capital-equipment names. ASML, KLA, and AMAT all disclose customer concentration — TSM and Samsung typically together account for 30–50% of revenue at each. The concentration is structural to the industry: there are only three leading-edge logic foundries on the planet.
+
+On Bursa Malaysia: many electronics manufacturing services (EMS) companies on Bursa derive 40%+ of revenue from one or two anchor customers. When the anchor shifts production or insourcing strategy, the EMS revenue line can drop 25% in a quarter without anything having "gone wrong" at the EMS level.
+
+The falsifiable trigger: when a single customer above 20% of revenue ends or materially renegotiates a contract, expect a one-quarter revenue contraction of 15–35% in the affected segment within two reporting periods. That is the historic base rate, not a guess.
+
+## The trap
+
+The trap is rewarding companies for landing a "marquee customer" without pricing the concentration that follows. A beginner sees "won contract with [big tech name], expected to add $500M revenue" and treats it as an unambiguous win. It is, in the near term. But if that contract pushes the customer to 25% of revenue, the same announcement has just doubled the company's single-point-of-failure risk. The correct mental model: customer concentration is a leverage on the business — it amplifies wins *and* losses. Above 10%, take note. Above 20%, the company is partly a derivative of that customer. Above 40%, you are effectively underwriting the customer's continued willingness to keep buying.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A component supplier discloses that one customer represented 38% of revenue in the most recent fiscal year, up from 22% three years ago. Revenue has been growing 18%/year over that span. Which interpretation best applies the lesson?"
+  options={[
+    "Bullish — concentration is fine as long as growth is high",
+    "Bullish — the customer relationship is clearly strong and getting stronger",
+    "Mixed-to-bearish — the growth has been real but the business has become structurally dependent on one buyer. A renegotiation, in-sourcing decision, or volume cut by that customer would produce a step-change downside far larger than the upside from continued growth at current pace. Concentration risk has been rising faster than the top line",
+    "Neutral — concentration only matters when it exceeds 50%"
+  ]}
+  answer={2}
+  explanation="The growth was real but the *shape* of the business changed underneath it. Rising from 22% to 38% concentration means the company has become more, not less, dependent on a single relationship. The falsifiable risk: if that customer cuts orders 30%, total revenue takes an ~11 percentage point hit (0.38 × 0.30 = 11.4%) — wiping out two-thirds of a year's growth. Option 0 mistakes growth for resilience. Option 1 confuses 'strong relationship' with 'absence of risk'. Option 3 invents a wrong threshold."
+/>
+
+<Quiz
+  question="Synthesis: a supplier with 45% revenue concentration in one customer reports a record quarter — revenue +28%, gross margin expanding 200bps — driven by the anchor customer accelerating orders ahead of a product launch. The stock rallies. Which read is most consistent with this lesson?"
+  options={[
+    "Strong buy — record revenue and margin expansion are the bullish setup",
+    "The quarter is real, but the same dynamic that produced the upside (anchor customer accelerating) will likely produce a downside quarter once orders normalise post-launch. The structure of the revenue base means this is a swing factor, not a trend. Concentration cuts both ways, and a sharp pull-forward is the bull case the bear thesis is built around",
+    "Sell immediately — record quarters always precede crashes",
+    "Hold and ignore concentration — execution outweighs structure"
+  ]}
+  answer={1}
+  explanation="This is the concentration-amplification synthesis. The same single relationship that drove a +28% quarter also creates the downside payback when the launch cycle ends and the customer normalises orders or builds inventory. Option 0 reads the headline without the structure. Option 2 over-claims — record quarters don't always mark tops, only concentration-amplified ones reliably do. Option 4 ignores the central insight."
+/>
+
+## Try it
+
+Pick a small or mid-cap company you've been considering. In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "What is [ticker]'s customer concentration as disclosed in its latest 10-K? Name the top customers if disclosed and give the % of revenue." Write the answer in your <Term id="ami_decision_journal" /> next to the ticker. If concentration is above 20%, ask the Bear Researcher to argue the downside scenario before you size a position.
+
+## Takeaway
+
+A customer above 20% of revenue is a structural lever — they amplify your gains and they will amplify your losses. Find the number before you size the position.

@@ -1,0 +1,72 @@
+---
+id: "190_debt_to_asset_ratio"
+title: "Debt-to-asset — the asset-side leverage view"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "debt_to_asset"
+prerequisites: ["042_debt_to_equity", "034_debt_and_the_balance_sheet"]
+tags: ["debt_to_asset", "leverage", "balance_sheet", "solvency", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Debt-to-asset — the asset-side leverage view
+
+Lesson 042 introduced debt-to-equity, where the denominator is shareholders' equity. Debt-to-asset uses a different denominator: total assets. Formula: D/A = total debt / total assets. It answers the question "what fraction of the company's assets are funded by debt?" — a more stable view than D/E because the asset base doesn't swing wildly with share buybacks, dividends, or one-time write-downs the way equity does. By the end of this lesson you should be able to compute it, explain why D/A is cleaner than D/E for comparing across companies that buy back stock heavily, and recognise the specific scenario where D/A and D/E tell opposite stories.
+
+## How this plays out in real markets
+
+Look at AAPL's balance sheet in fiscal 2024: total assets ~$365B, total debt ~$100B, equity ~$65B. D/A = 100 / 365 ≈ 27%. D/E = 100 / 65 ≈ 1.5x. Now consider what's happening underneath. AAPL has spent over $700B cumulatively on buybacks since 2012, which shrinks the equity base without shrinking the asset base proportionally. The D/E has climbed mechanically over a decade because of buybacks, not because debt has grown out of control. D/A has stayed in a much narrower band — debt has grown modestly, assets have grown along with it.
+
+Compare a company that hasn't bought back stock aggressively. JNJ in 2024: total assets ~$185B, total debt ~$33B, equity ~$70B. D/A = 33 / 185 ≈ 18%. D/E = 33 / 70 ≈ 0.47x. Both ratios tell the same low-leverage story because the equity base hasn't been engineered down.
+
+The scenario where the two ratios diverge: McDonald's (MCD) for years carried negative shareholders' equity — buybacks plus accumulated dividend distributions exceeded the retained-earnings base. D/E in that period was technically negative (or undefined), making it useless. D/A remained computable and gave the honest leverage picture: roughly $35B of debt against $55B of assets, or about 64%. D/A worked when D/E failed.
+
+On Bursa Malaysia: TENAGA has total assets near MYR 175B with total debt around MYR 65B, giving D/A ~37%. The utility's asset base is largely physical plant — D/A is anchored to the regulated asset base, which is also the base on which TENAGA earns its allowed return. Comparing TENAGA's D/A to a software company's would be apples-to-oranges; the physical-asset-heavy sector is structurally different.
+
+Falsifiable claim: for non-financial companies, D/A above 60% is high leverage regardless of D/E, and D/A above 75% is the territory where any modest asset write-down (say, a 10% goodwill impairment) materially compresses the equity base and triggers covenants. The signal invalidates for regulated utilities and infrastructure where high D/A is the regulated normal.
+
+## The trap
+
+The trap is treating D/A and D/E as redundant — picking one and ignoring the other. They measure different things. D/E is the owner-vs-creditor split (governance and equity-multiplier effect on ROE). D/A is the asset-funding split (solvency under asset stress). A company can post a "low" D/E by buying back stock aggressively while its D/A creeps up. A company can post a "high" D/E because of a one-time dividend that doesn't change D/A at all. The correct mental model: D/A is the cleaner cross-company comparator, especially for mature companies that engineer their equity base. What invalidates the headline: companies with material intangible assets (goodwill, software capitalised) have D/A inflated by the asset side — strip out goodwill if a recent acquisition spiked the asset base artificially and recompute.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company X: total debt $4B, total assets $20B, total equity $8B. Company Y: total debt $4B, total assets $20B, total equity $2B (Y has been buying back stock for a decade). Same industry. Which read is most accurate?"
+  options={[
+    "Y is more highly leveraged because D/E is 2.0x vs X's 0.5x",
+    "Both companies have identical asset-funding leverage — D/A = 20% for each. The D/E gap is purely an artefact of Y's buyback history compressing the equity base; total assets and total debt are identical, so the underlying solvency profile against asset stress is the same. Y will show a higher ROE because of the equity-multiplier effect, but neither business carries more credit risk than the other on D/A terms",
+    "X is more leveraged because the asset base is larger",
+    "Without revenue we can't compare"
+  ]}
+  answer={1}
+  explanation="The synthesis test: D/A as the buyback-neutral leverage gauge. The tempting wrong answer is option 0 — reading D/E as if it equalled credit risk and ignoring that the equity base has been engineered. The right read shows that buybacks shift D/E without changing D/A, because they reduce both equity and cash (an asset) by the same dollar amount, leaving net debt and the funded portion of assets roughly unchanged. Option 2 reverses the direction. Option 3 demands a metric that isn't needed for this comparison."
+/>
+
+<Quiz
+  question="A company reports D/A = 35% and D/E = 0.7x. Last quarter it took a $2B goodwill impairment, reducing total assets from $20B to $18B and reducing equity from $7B to $5B. Debt unchanged at $7B. What are the new ratios and which read is most accurate?"
+  options={[
+    "Ratios are unchanged because impairments are non-cash",
+    "New D/A = 7 / 18 ≈ 39%; new D/E = 7 / 5 = 1.4x. The impairment is non-cash but it does compress the asset base and crater the equity base, both of which feed leverage ratios. D/E moved sharply (from 0.7x to 1.4x) while D/A moved modestly (35% to 39%), illustrating that D/E is more sensitive to equity-base shocks than D/A. Both ratios moved against the company; the credit-covenant question is whether the move triggers any contractual threshold",
+    "The impairment improves leverage by writing off bad assets",
+    "Debt would also fall after a write-down"
+  ]}
+  answer={1}
+  explanation="The synthesis ties balance-sheet write-downs to both ratios. The tempting wrong answer is option 0 — confusing 'non-cash' with 'no effect'. The right read computes both new ratios and observes that D/E's sensitivity is higher because the equity denominator is smaller and absorbs the full impairment, while D/A's denominator (total assets) is larger so the percentage move is smaller. Option 2 inverts the relationship — write-downs hurt, not help, the asset side. Option 3 is factually wrong; impairments don't reduce debt."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a name that has bought back stock aggressively (AAPL, ORCL, or HD) and ask: "Give me D/E and D/A for each of the last ten years. Show the buyback dollar amount per year alongside." Save the table. Watching D/E rise while D/A stays flat is the visual signature of buyback-engineered leverage.
+
+## Takeaway
+
+D/A is the asset-side view of leverage and the buyback-neutral comparator. When D/E and D/A move in opposite directions, the equity base is being engineered — read D/A.

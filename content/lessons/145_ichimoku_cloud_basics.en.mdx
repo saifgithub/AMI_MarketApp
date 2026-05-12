@@ -1,0 +1,76 @@
+---
+id: "145_ichimoku_cloud_basics"
+title: "Ichimoku Cloud — kumo basics"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "ichimoku"
+prerequisites: ["026_moving_averages", "023_support_and_resistance", "022_trend_direction"]
+tags: ["indicators", "ichimoku", "kumo", "cloud", "japanese", "support_resistance"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Ichimoku Cloud — kumo basics
+
+The Ichimoku Kinko Hyo system, developed by Japanese journalist Goichi Hosoda, packs five lines and a shaded cloud into one chart. This lesson focuses on the cloud itself — the kumo — because it does the most work and a single-lesson treatment of the full system would be shallow. The kumo is the area between two lines: Senkou Span A (the average of the Tenkan and Kijun, plotted 26 periods forward) and Senkou Span B (the midpoint of the highest high and lowest low of the last 52 periods, also plotted 26 forward). The cloud is the future projection of where consensus support and resistance is forming. Price above the kumo = bullish regime; price below the kumo = bearish regime; price inside the kumo = no regime, transition zone. Cloud colour (green when Span A > Span B, red when Span A < Span B) tells you trend direction inside the cloud framework.
+
+## How this plays out in real markets
+
+Look at GOOGL through Q4 2025 / Q1 2026. From mid-October through late November, GOOGL traded above a rising green kumo — the cloud's top edge climbed from 165 to 174, providing dynamic support that GOOGL touched on November 14 at 174.20 and bounced. The bullish regime was visible at a glance: price above cloud, cloud green and rising.
+
+On December 18, GOOGL closed at 168.50 — below the cloud's top edge for the first time. By December 22, GOOGL had entered the cloud (which by then spanned 167 to 172). For the next three weeks GOOGL chopped inside the kumo between 165 and 173 — a textbook no-regime transition. The cloud was acting exactly as a transition zone, with no clear support or resistance because price was in the middle of consensus.
+
+On January 12, 2026, GOOGL closed at 162 — below the cloud's bottom edge. The cloud had also flipped red (Span A crossed below Span B 26 periods earlier). Bearish regime confirmed: price below cloud, cloud red. GOOGL fell to 154 over the next four weeks; the cloud's bottom edge at 165 then acted as resistance on the one bounce back to 164.
+
+Falsifiable claim: in a confirmed price-above-rising-green-cloud regime, pullbacks to the cloud's top edge produce bounces in materially more than 50% of cases. Invalidation: a 30+ touch sample where bounces fail at-or-below 50%. The mechanism is real — the cloud is a future projection of moving averages, so it acts like dynamic support/resistance with built-in forward bias.
+
+The cloud's thickness is also informative: a thick kumo is strong support/resistance (lots of agreement between the two spans), while a thin kumo is weak (the spans are converging and the regime is uncertain). Price tearing through a thin cloud is much more common than tearing through a thick one.
+
+On Bursa Malaysia: MAYBANK through 2025 — price held above a steadily rising green kumo from May through October, with three pullbacks to the cloud's top edge all bouncing. When price entered the cloud in early November, the bullish regime ended and a sideways phase began. Same mechanics.
+
+## The trap
+
+The trap is treating Ichimoku as exotic or special. Beginners encountering the Japanese terminology assume the indicator is doing something fundamentally different from other technical tools. It isn't — the kumo is a forward-projected pair of moving averages, dressed up. The other trap is using the cloud while ignoring its colour and thickness; reading only "price vs cloud" misses half the signal.
+
+The correct mental model: the cloud is a regime filter, not a precise trade trigger. Above green and rising = trend-following long territory; below red and falling = trend-following short territory; inside the cloud = stand aside, wait for resolution. Don't enter trades against the cloud's regime; the system is designed to keep you on the trend's side. Combine with a trigger indicator (MACD, MA cross) for entries within the cloud-defined regime.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="GOOGL trades above a rising green kumo (cloud top at 174). On a normal pullback, GOOGL touches 174.20 and bounces to 180 over the next two weeks. What's the cleanest read?"
+  options={[
+    "Coincidence — clouds don't act as support",
+    "The cloud's top edge is a forward projection of consensus support, so in a confirmed bullish regime (price above rising green cloud), pullbacks to the cloud's top edge frequently bounce. This is the kumo functioning as dynamic support exactly as the framework predicts.",
+    "GOOGL would have bounced regardless — the cloud is just decoration",
+    "The bounce was the start of a reversal — sell into it"
+  ]}
+  answer={1}
+  explanation="The cloud's mechanics are real — it's a forward-projected pair of MAs, so it acts as dynamic support/resistance. The tempting wrong answers (A and C) dismiss the indicator without engaging with what it actually computes. Option D inverts the regime read."
+/>
+
+<Quiz
+  question="A stock has closed inside the kumo for the last 10 sessions, oscillating between the cloud's top and bottom edges. The cloud has also been transitioning — Span A and Span B crossed two sessions ago, so the cloud is mid-flip from green to red. Account size $25,000, mandate cap 1% per trade, you're flat. What does the framework say?"
+  options={[
+    "Buy at the bottom of the cloud, sell at the top — easy range trade",
+    "Stand aside: price inside the cloud is the no-regime transition zone, and the cloud itself is mid-flip — both signals say the regime is unresolved. Wait for a clear close outside the cloud in either direction, with the cloud's colour also stabilising, before taking any trend-following position.",
+    "Buy aggressively — the cloud will flip green again any day",
+    "Short aggressively — the cloud flip predicts a crash"
+  ]}
+  answer={1}
+  explanation="The cloud's primary function is regime filtering. Price-in-cloud plus cloud-mid-flip is the most ambiguous configuration the system produces — exactly the moment to stand aside, not the moment to be decisive. The tempting wrong answer (A) treats the cloud as a range, but the cloud isn't a stable range — it's a regime in transition. Options C and D act on direction before regime resolves."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker from your <Term id="ami_watchlist" /> and ask: "Where does price sit relative to the Ichimoku cloud, and is the cloud green or red, thick or thin, rising or falling?" Then verify on the chart. The exercise is to categorise the regime in one sentence before any trade decision: above-green-rising, inside-mid-flip, below-red-falling, etc.
+
+## Takeaway
+
+The Ichimoku kumo is a regime filter — price above a rising green cloud is long-only territory, below a falling red cloud is short-only territory, inside is transition. Trade with the regime, not against it.

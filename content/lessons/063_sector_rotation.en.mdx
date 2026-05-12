@@ -1,0 +1,74 @@
+---
+id: "063_sector_rotation"
+title: "Sector rotation"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "sector_rotation"
+prerequisites: ["022_trend_direction", "030_trend_confirmation_across_indicators", "017_portfolio_exposure_and_correlation"]
+tags: ["regime", "sectors", "rotation", "macro", "etfs"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sector rotation
+
+The index is the average; the action is in sectors. In any month, some sectors are leading and others are bleeding, and the leadership map shifts on macro inputs — rates, growth expectations, commodity prices, dollar strength. After this lesson you will be able to detect a sector-rotation regime numerically using relative strength against SPY, name which macro stories typically pair with which leadership maps, name the strategy that fails when you fight a rotation, and state the invalidation for a rotation call.
+
+## How this plays out in real markets
+
+Three documented rotations, all measurable from public ETF data:
+
+Energy → Tech, January 2023: XLE (energy) had outperformed SPY by 50%+ in 2022. In January 2023, XLE/SPY ratio peaked on 27 January 2023 and rolled over; XLK/SPY (tech) bottomed in early January and turned up. From 1 January 2023 to 19 July 2023, XLK gained 41.8% while XLE fell 2.4% — a 44-point spread in six months. The macro story: peak inflation expectations, falling 10-year yield from 4.05% to 3.55%, rate-sensitive growth re-rated.
+
+Tech → Defensive, late summer 2024: XLK peaked at 240.50 on 10 July 2024. XLP (staples) and XLV (healthcare) outperformed SPY through August 2024 while XLK underperformed by 9% over six weeks. Macro story: growth scare around the August VIX shock + first Fed cut on 18 September 2024 priced in.
+
+Detection rule: compute each sector ETF's 20-day return minus SPY's 20-day return. A sector is "leading" when its relative-strength reading is positive AND its 50-day relative-strength SMA is rising. A regime rotation is in force when at least three sectors flip leadership status (positive → negative or vice versa) within a 20-trading-day window.
+
+On Bursa Malaysia: similar rotation between plantation-heavy stocks and tech/financials runs on palm oil price + ringgit; the principle generalises.
+
+## The trap
+
+The rotation trap is anchoring to the prior leader. The trader who made money in XLE through 2022 keeps buying energy dips through 2023 because "energy is the trade". Meanwhile XLK is up 40% in six months and they own none of it. By the time the trader rotates, they're chasing the new leader near its first cluster-of-extension, often catching the first 10% correction in the new sector and giving up on the rotation entirely.
+
+The correct model: rotation is a regime signal, not a single trade. When relative-strength leadership flips for three or more sectors in a 20-day window, the macro backdrop has changed under your feet. Trim the old leader, scale into the new leader, and let relative strength — not narrative — pick the order.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Over the last 20 trading days: XLK 20-day return is +6%, SPY is +2%, XLE is -3%, XLP flipped from underperforming to outperforming. Three months ago, XLE was the leader. What does the rotation framework prescribe?"
+  options={[
+    "Hold XLE — it will come back; mean reversion is law.",
+    "A leadership rotation is in force (multiple sectors flipping inside 20 days). Reduce XLE exposure, scale into XLK/XLP on relative-strength basis, and let position sizes follow relative-strength rank rather than prior conviction.",
+    "Buy more XLE — it's now cheap.",
+    "Sell everything; rotations mean a crash is coming."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 0 — 'XLE will come back'. Mean reversion in a single sector is real over years, not weeks. Within a rotation regime, the signal is the cross-sectional flip, and the right move is to rebalance toward measured leadership. Option 2 (buy more of the loser) compounds the mistake; option 3 (sell everything) confuses sector rotation with index direction — they are independent."
+/>
+
+<Quiz
+  question="The Fed cuts rates 50bp in a 6-week window and the 10-year yield drops 80bp. Historically, which sector-rotation pattern correlates with this macro setup, and what is the right way to express it within mandate?"
+  options={[
+    "Energy + commodities lead; rotate 30% of portfolio into XLE.",
+    "Rate-sensitive growth and small caps (XLK, IWM) and yield-sensitive defensives (XLU, real-estate) outperform energy and financials; scale exposure incrementally on confirmed relative-strength readings, respecting mandate single-position and single-sector caps.",
+    "Financials always lead rate cuts; load up on XLF.",
+    "It doesn't matter — rotations are random."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 2 — 'financials lead rate cuts' is a common heuristic, but in reality a steep rate-cut cycle compresses bank net interest margins and historically the trade is rate-sensitive growth + duration-defensives. The correct synthesis links macro inputs to the sector relative-strength readings and respects the mandate's diversification caps so you don't load 30%+ into one sector (option 0)."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the News Analyst and ask: "Which sectors are leading SPY by 20-day relative strength right now, which sectors have flipped status in the last 20 trading days, and what macro narrative pairs with the current leadership map?" Then open the <Term id="ami_decision_journal" />, look back at your last three trades, and tag the sector. If you're concentrated in one sector, write down whether it's still leading.
+
+## Takeaway
+
+Sector leadership rotates on macro inputs faster than narratives admit; trust 20-day relative strength against SPY over your conviction about last year's winner.

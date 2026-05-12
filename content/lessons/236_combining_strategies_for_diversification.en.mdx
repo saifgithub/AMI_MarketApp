@@ -1,0 +1,74 @@
+---
+id: "236_combining_strategies_for_diversification"
+title: "Combining strategies for diversification — when 1+1 = 1.4"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["052_trend_following", "055_mean_reversion", "056_momentum_trading", "058_strategy_failure_modes", "017_portfolio_exposure_and_correlation"]
+tags: ["synthesis", "diversification", "correlation", "portfolio"]
+agent_callouts: ["research_manager", "neutral_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Combining strategies for diversification — when 1+1 = 1.4
+
+The failure-modes foundation (058) showed every strategy has a regime where it bleeds. The defence isn't picking a better single strategy — it's running multiple strategies whose failure regimes don't overlap. When trend-following bleeds (chop), mean-reversion thrives. When mean-reversion blows up (trending bear), momentum's regime overlay has cut its exposure. A multi-strategy portfolio with low cross-strategy correlation can have meaningfully lower drawdown than any individual strategy while preserving most of the aggregate return. After this lesson you can pair strategies by their failure-regime overlap, compute the rough diversification benefit, and avoid the most common synthesis trap (running three strategies that all bleed in the same regime).
+
+## How this plays out in real markets
+
+Three strategies over 2010-2024 on US large-caps:
+
+- **Trend-following (50/200 MA crossover)**: CAGR 9.2%, max drawdown 18%, worst year -7% (2015, whipsaw)
+- **Mean-reversion (RSI(2) with 200-day filter)**: CAGR 11.4%, max drawdown 14%, worst year -9% (Q1 2020)
+- **Cross-sectional momentum (top-decile 12-month, monthly rebalance)**: CAGR 10.8%, max drawdown 22%, worst year -12% (2020 momentum crash)
+
+Equal-weighted portfolio of all three, monthly rebalanced: CAGR 10.4%, max drawdown 11%, worst year -4%. The aggregate CAGR is barely below the average of the three individuals, but max drawdown drops from 18-22% (any single strategy) to 11% (the combo), and the worst-year experience is meaningfully better. That's diversification working — the strategies have correlations of roughly +0.2 to +0.4 with each other, not +1.0.
+
+Crucially, the failure-regime calendar shows why: trend-following lost in 2015 chop while mean-reversion made money (vol was contained). Mean-reversion lost in Q1 2020 while trend-following had already cut exposure (200-day filter). Momentum lost in November 2020 while mean-reversion was thriving in the rotation. NO regime in the 14-year window hit all three simultaneously.
+
+Counter-example: combining 50/200 trend, breakout (Donchian-20), and momentum gives three strategies that ALL bleed in the same regime (chop / low-vol drift). The combined portfolio's drawdown profile barely improves over any one of them — the correlation across "trend-family" strategies is ~0.7, not 0.2. The portfolio LOOKS diversified but isn't.
+
+## The trap
+
+The beginner mistake is thinking "more strategies = more diversification". Diversification comes from low cross-strategy correlation, which comes from non-overlapping failure regimes — not from sheer count. Three trend-family strategies are basically one strategy with three names; three regime-orthogonal strategies (trend + mean-reversion + momentum) are actually diversified. The correct mental model: pair strategies by failure regime, not by mechanic. The second trap is over-allocating to the highest-historical-CAGR strategy — you're tilting the portfolio toward one strategy's failure mode and undoing the diversification you paid for. Start with equal-weight or volatility-equal-weight (covered in 241). The third trap: cutting the strategy that's currently losing money because "it's not working". Each strategy is supposed to lose money in its failure regime; cutting it converts the regime-loss into permanent capital reduction and removes the diversification benefit when the regime resolves.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You currently run only a trend-following strategy. You want to add a second to diversify. Which addition gives the biggest diversification benefit?"
+  options={[
+    "Donchian-channel breakout (the failure regime overlaps with trend-following — both bleed in chop)",
+    "Mean-reversion with a regime filter (failure regime is trending bear, which is when trend-following thrives)",
+    "Multi-timeframe trend confirmation (variations of trend-following)",
+    "ATR trailing-stop trend (also a trend variant)"
+  ]}
+  answer={1}
+  explanation="Mean-reversion's failure regime (trending bear) is when trend-following actively profits — and vice versa. The two have non-overlapping failure modes, which is exactly what diversification requires. Options 0, 2, and 3 are all variations on trend that bleed in the same regime — adding them gives the illusion of diversification without the substance. Cross-strategy correlation reveals the difference."
+/>
+
+<Quiz
+  question="You're running trend + mean-reversion + momentum, equal-weighted. Mean-reversion is down 8% YTD while the other two are up. Conservative Debator: 'rebalance into the strategies that are working'. Research Manager: 'rebalancing TOWARD recent losers is the actual diversification rule'. Synthesis-correct action?"
+  options={[
+    "Cut the mean-reversion strategy entirely",
+    "Per the rebalancing rule, sell some of the recent winners and buy the loser back to equal weight, accepting that mean-reversion is operating in its failure regime as designed. Verify each strategy is within its own mandate-aware drawdown limits before rebalancing.",
+    "Add only to the winners",
+    "Increase total leverage to recover faster"
+  ]}
+  answer={1}
+  explanation="Rebalancing into the recent loser captures the diversification benefit — and the strategy losing money is doing so in its known failure regime, which the others' winners are funding. Cutting the loser at its drawdown bottom is exactly the move that converts a normal regime-loss into a permanent reduction. Option 0 destroys the diversification. Option 2 amplifies concentration in current regime. Option 3 violates risk management. The synthesis combines failure-regime literacy + rebalancing discipline + mandate compliance."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, list every strategy you're currently running and ask: "Compute the failure-regime overlap for each pair. Which pairs share a failure regime and which are orthogonal? What's the realistic correlation estimate?" Log the correlation matrix in the <Term id="ami_decision_journal" /> — and add a new strategy ONLY if it expands the orthogonality, not the count.
+
+## Takeaway
+
+Diversification is about non-overlapping failure regimes, not strategy count. Three trend-family strategies is one strategy. Trend + mean-reversion + momentum is actually three.

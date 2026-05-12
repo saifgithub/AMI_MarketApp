@@ -1,0 +1,78 @@
+---
+id: "203_portfolio_wide_panic_selling"
+title: "Portfolio-wide panic selling"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+topic: "portfolio_panic"
+prerequisites: ["046_fear_and_capitulation", "017_portfolio_exposure_and_correlation", "018_drawdown_management"]
+tags: ["psychology", "fear", "drawdown", "portfolio_panic", "correlation"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Portfolio-wide panic selling
+
+Selling one position out of fear is a single-position mistake. Liquidating the *book* on the same morning is a structural one — and it is the move most likely to convert a survivable drawdown into a year you cannot recover from inside a calendar. After this lesson you will be able to detect the multi-position fear signature, distinguish a real risk-off rotation from a portfolio-wide panic exit, and use the PM's mandate cap as the only authority for liquidation decisions made under stress. The cost of single-stock fear is a stop-out. The cost of portfolio panic is a calendar year.
+
+## How this plays out in real markets
+
+March 12, 2020. A trader held six US large-caps: AAPL, MSFT, GOOGL, NVDA, AMZN, JPM. Total account drawdown over eight sessions: -23%. His mandate max drawdown was 25%. He had no written rule for "what to do at -23%." That morning, with the futures limit-down and a global lockdown headline, he submitted six market sell orders in roughly four minutes. The fills cleared his book at an aggregate -27% account drawdown — past his mandate cap, executed by his own hand, not by the PM. The S&P 500 bottomed nine sessions later. By June, an unchanged book would have been -3%. By December, +18%. The trader had locked in -27% on a single morning and watched, in cash, a 45-percentage-point recovery he had no plan to participate in.
+
+The falsifiable portfolio-panic fingerprint: (1) you closed three or more positions in a window of under sixty minutes; (2) at least half of those closes were below their *individual* written stops; (3) no PM mandate breach had been flagged at the moment you started selling; (4) the closes were executed during a session with a major risk-off headline (macro, geopolitical, pandemic, banking). Three of four ticked is a panic-liquidation session, regardless of where the index goes the next month.
+
+## The trap
+
+The trap is the belief that "everything is correlated in a crash, so I should sell everything." Correlation does spike in crashes — but the *appropriate response* to higher correlation is sizing down at the portfolio level, not zeroing out the book in the same hour. The correct mental model: your portfolio's stop-loss is not the sum of your individual stops fired in one morning — it is your <Term id="ami_mandate" />'s max-drawdown cap, monitored by the PM, with a deterministic action that is *de-risking, not capitulating*. A 50% de-risk (close half of each position, or close the three with the weakest individual theses) is a structural action you can take at any drawdown. A 100% liquidation should only happen when the mandate breaches and the PM authorises it — never on your own panic timer. The PM's <Term id="ami_pm_safety_floor" /> exists precisely because you, mid-crash, are not the same trader who wrote the mandate.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You have 5 open positions. The index is down 4% intraday on a macro headline. Your account is down 11% against a 20% max-drawdown mandate. The PM has not flagged a breach. You want to 'just be in cash.' What does the disciplined action look like?"
+  options={[
+    "Liquidate everything to cash — the macro headline changes the entire setup.",
+    "Do not liquidate the book. If any individual position has hit its written stop, honour that stop only. If you need to de-risk, scale each position by a fixed fraction (e.g. close 30% of each) — but do not zero the book.",
+    "Hold and add to the weakest position — fear is a buy signal.",
+    "Move all stops to breakeven to lock in current open profits."
+  ]}
+  answer={1}
+  explanation="Liquidating the book is the textbook portfolio-panic move — it converts a drawdown the mandate was built to survive into a realised loss the strategy cannot recover from inside the year. 'Add to the weakest' is fear inviting greed to the same trade. 'All stops to breakeven' draws new stops mid-panic with no structural basis. The disciplined answer is the proportional de-risk: scale every position by a fixed fraction. That preserves participation in any recovery while halving exposure, and it is executable in seconds without making a panic-driven 'all or nothing' choice."
+/>
+
+<Quiz
+  question="Which compound test is the cleanest signature of portfolio-wide panic selling rather than a planned de-risk?"
+  options={[
+    "You sold more than one position today.",
+    "You closed three or more positions in under sixty minutes, at least half were below their written stops, the PM had not flagged a mandate breach, and the session had a major risk-off headline.",
+    "Your account is at a new low.",
+    "You feel anxious about your portfolio."
+  ]}
+  answer={1}
+  explanation="Selling multiple positions in a day can be a structured de-risk. A new account low is an outcome, not a process diagnostic. Anxiety is real but unfalsifiable. The compound test — speed (under 60 minutes), stop violations, no mandate breach, headline coincidence — is the auditable signature of panic rather than process. Three of four boxes ticked is a panic session; the chart does not need to validate the diagnosis."
+/>
+
+<Quiz
+  question="Your account drawdown is -19% against a 20% mandate. You have 6 open positions. The PM has just flagged the mandate. The market is closing in 45 minutes. The feed is full of crisis headlines. Synthesis answer?"
+  options={[
+    "Liquidate everything now to stay inside the mandate.",
+    "Honour the PM's mandate floor by reducing portfolio risk to bring drawdown projection back inside the mandate — typically by closing the weakest-thesis positions first or scaling all positions proportionally — and execute against a written de-risk plan rather than a panic timer.",
+    "Override the PM flag — drawdown will reverse by close.",
+    "Add to your strongest position to 'fight back'."
+  ]}
+  answer={1}
+  explanation="The PM mandate breach is the authority that forces action — but the *type* of action still must be planned, not panicked. 'Liquidate everything now' is the action a panicked trader takes; 'reduce risk proportionally or close weakest-thesis positions' is the action the mandate-respecting trader takes. Overriding the PM is the trade that converts -19% into -32%. Adding to the strongest is the trade that converts -19% into -28%. Only the structured de-risk respects both the PM's floor and the fact that a planned action under stress is the only one the next-month version of you will be able to defend in the journal."
+/>
+
+## Try it
+
+Open Settings → Mandate and review what the PM is configured to do at progressive drawdown levels (e.g. at -10%, at -15%, at -20%). If you do not have a written de-risk action at each tier (typically: at -10% pause new entries; at -15% reduce position sizes by 50%; at -20% PM mandates closure), define them now. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask: "Run my last drawdown event against this tier policy — where would each action have fired?" The gap between what the tiers would have done and what you actually did is the panic-selling tax you have paid.
+
+## Takeaway
+
+A drawdown is what the mandate was built to survive. A panic liquidation is what the mandate was built to prevent. Define de-risk tiers before the headline arrives, and let the PM — not your stomach — pull the lever.

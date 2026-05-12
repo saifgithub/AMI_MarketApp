@@ -1,0 +1,72 @@
+---
+id: "191_fixed_vs_floating_and_currency_mismatch"
+title: "Fixed vs floating rate debt and currency mismatch"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "debt_structure"
+prerequisites: ["042_debt_to_equity", "157_short_term_vs_long_term_debt", "189_interest_coverage_ratio"]
+tags: ["fixed_floating_debt", "currency_mismatch", "debt_structure", "rate_risk", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Fixed vs floating rate debt and currency mismatch
+
+Lesson 042 flagged that two companies with identical D/E can carry radically different risk depending on debt structure. This lesson goes deep on two specific structural dimensions: the fixed-vs-floating rate split, and the currency in which debt is denominated relative to where revenue is earned. Both are quiet killers — they don't show up in headline ratios but they determine whether a healthy-looking balance sheet survives a rate cycle or a currency move. By the end of this lesson you should be able to read the rate-mix and currency-mix from a 10-K footnote, stress-test interest expense under a plausible rate path, and name the precise pattern that has historically taken companies from "fine" to "default" inside 12 months.
+
+## How this plays out in real markets
+
+In 2022–2023 the US policy rate rose from 0.25% to 5.25% over 18 months. Companies with predominantly fixed-rate debt and long maturities — MSFT, JNJ, KO — saw interest expense move only modestly because their weighted-average coupon was locked at pre-hike rates and the maturity wall was years away. Companies with high floating-rate exposure or near-term refinancing — many leveraged-buyout owned names, mid-cap REITs, and certain private-equity-rolled-up healthcare platforms — saw interest expense double or triple as floating tranches repriced and maturing tranches refinanced at 8–10% instead of 3–4%. Several names that looked solvent at year-end 2021 entered restructuring by mid-2024. The macro environment was the same; the debt structure determined survival.
+
+Currency mismatch is the same problem in a different dimension. Turkish corporates that borrowed in US dollars while earning revenue in lira saw their debt-to-revenue ratio double when the lira depreciated 50% against the dollar — even though the dollar debt was unchanged in dollar terms. The mismatch turned a stable-looking balance sheet into an insolvent one. Emerging-market crises (Mexico 1994, Asia 1997, Argentina 2001 and 2018) are largely currency-mismatch stories told at sovereign and corporate scale.
+
+A closer-to-home illustration: an EM-listed industrial reports debt of $1.5B in US dollars and revenue of $2B in local currency. At a stable exchange rate, debt-to-revenue is 0.75x. If the local currency falls 30%, local-currency revenue is unchanged (sold locally), but the local-currency cost of servicing dollar debt rises 30%. The same business now needs 30% more of its revenue to service the same debt; coverage drops accordingly.
+
+On Bursa Malaysia: AIRASIA carried meaningful US-dollar lease and fuel liabilities while earning ringgit revenue. The 2015–2016 ringgit depreciation amplified the operating problem; the 2020 COVID hit, when ringgit weakness coincided with a revenue collapse, was the combination that forced restructuring. Currency mismatch did not cause the crisis but it deepened it materially.
+
+Falsifiable claim: a non-financial EM company with US-dollar debt exceeding 30% of total debt while earning under 20% of revenue in dollars is carrying an asymmetric currency exposure that should be flagged regardless of D/E. The signal invalidates if the company has explicit currency hedges covering the gap, disclosed in the notes — but hedges expire, and most disclose hedge coverage of less than 12 months forward.
+
+## The trap
+
+The trap is treating debt as a homogeneous line item. Beginners look at "total debt: $5B" and stop. The 10-K notes always disaggregate: how much is fixed vs floating, when does each tranche mature, what currency, what covenants, what's the next reset date for the floating portion. Skipping the notes means missing the actual risk profile. The correct mental model: a debt stack is a portfolio of obligations, each with its own rate, maturity, currency, and covenant. The portfolio is only as safe as its weakest tranche under stress. What invalidates the standard headline read: companies often hedge interest-rate risk with swaps, converting floating debt to effectively fixed. Always check the "hedged debt" disclosure in the derivatives footnote before classifying a tranche as floating exposure.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A Malaysian industrial reports total debt of MYR 4B equivalent: 70% in US dollars, 30% in ringgit. Revenue is 95% ringgit, 5% dollar exports. The ringgit falls 20% against the dollar over six months. Holding everything else equal, what happens to debt-to-revenue?"
+  options={[
+    "Debt-to-revenue is unchanged because debt is unchanged in local-currency value",
+    "Dollar-denominated debt becomes 20% more expensive in ringgit terms: 0.7 × 4B × 1.2 = 3.36B in ringgit. Plus 1.2B ringgit debt = 4.56B total ringgit debt, up from 4.0B. Ringgit revenue is unchanged. Debt-to-revenue rises by ~14%. The company became more leveraged without issuing any new debt — the currency move did it. This is currency mismatch in action and is the textbook EM-corporate distress mechanism",
+    "Debt falls because the dollar is now worth more",
+    "The 5% dollar revenue fully hedges the exposure"
+  ]}
+  answer={1}
+  explanation="The synthesis test: currency mismatch as silent leverage. The tempting wrong answer is option 0 — beginner reasoning that 'we didn't borrow more, so debt didn't change'. The right calculation translates the dollar tranche back into the reporting currency at the new rate and recognises that the rise is real to the borrower because revenue is in the unchanged currency. Option 2 reverses the direction of the effect. Option 3 misuses scale — a 5% revenue hedge does not cover a 70% debt exposure."
+/>
+
+<Quiz
+  question="Two US companies report identical 4.0x interest coverage. A has 90% fixed-rate debt with 7-year average maturity. B has 60% floating-rate debt resetting quarterly. The policy rate has just risen 200 basis points. Which synthesis is most accurate?"
+  options={[
+    "Both will see the same coverage compression",
+    "A's coverage will hardly move in the next year because the fixed rate is locked and only the small floating tranche resets immediately. B's coverage will compress materially — 60% of the debt re-prices to 200 bp higher within the next quarter, lifting interest expense roughly in proportion. Same headline coverage ratio, very different one-year-out stress profile. The structural difference dominates the apparent equivalence",
+    "B is safer because floating debt lets it benefit when rates fall",
+    "A is riskier because fixed rates lock in higher cost"
+  ]}
+  answer={1}
+  explanation="The synthesis ties debt structure to rate cycle. The tempting wrong answer is option 0 — same headline number, missed structural divergence. The right read recognises that floating exposure is path-dependent on the policy rate and that the immediate effect of a 200 bp rise compresses B's coverage while leaving A's largely intact. Option 2 is true only if rates fall, which is the symmetric case — the question specifies rates have just risen. Option 3 inverts the relationship; fixed-rate financing is a defensive feature in a rising-rate environment."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker and ask: "From the debt footnote, give me the fixed-vs-floating split, the weighted-average rate, and the currency composition. Stress-test interest expense under a 200 bp policy-rate rise. Flag any currency mismatch greater than 20 percentage points between debt and revenue mix." Save the four-line snapshot in your <Term id="ami_decision_journal" />. This is the structural-risk view that no single ratio captures.
+
+## Takeaway
+
+Debt isn't a number; it's a portfolio of obligations with different rates, maturities, and currencies. Two companies with the same D/E or coverage ratio can have wildly different fates depending on how that portfolio is structured under stress.

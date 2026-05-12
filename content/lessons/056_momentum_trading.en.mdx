@@ -1,0 +1,66 @@
+---
+id: "056_momentum_trading"
+title: "Momentum trading"
+duration_min: 5
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "momentum"
+prerequisites: ["028_macd_trend_and_momentum", "029_volume_confirmation", "022_trend_direction", "015_stop_loss_basics"]
+tags: ["strategy", "momentum", "relative_strength"]
+agent_callouts: ["aggressive_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Momentum trading
+
+Momentum trading buys what has already gone up the most and rotates out when relative strength fades. It is structurally different from trend-following: trend-following waits for an established trend in one name; momentum ranks the entire universe and owns the top decile. The factor has produced one of the most persistent risk premiums in equity research, and it is also responsible for the largest single-day strategy drawdowns on record. After this lesson you can specify a momentum rule that names exactly when you hold and when you rotate, and the regime in which the factor crashes.
+
+## How this plays out in real markets
+
+In 2024 a simple momentum rule was: rank US large-caps by their trailing 6-month return excluding the most recent month, hold the top decile, rebalance monthly. NVDA was in the top decile for nearly the entire year, returning roughly 170% from January through year-end. META, GOOGL, and AMZN cycled in and out at various points. A trader running this rule in early 2024 entered NVDA around $50 (post-split) on the January rebalance and held — never selling on a single down day, only rotating if NVDA dropped out of the top decile at the next monthly rebalance. The rule generated outsized returns precisely because it ignored every "looks expensive" intuition.
+
+Entry criteria: ticker enters the top decile by trailing 6m-1m return at the rebalance date AND volume is liquid enough to size the position within mandate limits. Hold: until the next rebalance. Exit/rotation criteria: ticker drops out of the top decile at rebalance — sell, replace with the new entrant. Individual-trade invalidation: a hard stop at, say, 25% drawdown from cost — this exists not for normal strategy operation but to limit damage during a momentum crash. The strategy FAILS in "momentum crash" regimes — short, violent reversals where high-momentum names get sold and low-momentum names get bought (March 2009, Q1 2016, November 2020 vaccine rotation). On those days a momentum portfolio can lose 15%+ in a week.
+
+## The trap
+
+The beginner mistake is selling momentum winners early because they "feel toppy". You hold NVDA from $50 to $80, it doubles your cost, you take profits, and then watch it run to $140. Or, equally common: you read a critical article on the highest-momentum stock and decide to sell on the qualitative argument. The correct mental model: momentum is a quantitative factor; it runs longer than feels reasonable. The rule sells, not your gut. Discretion at the exit is the single biggest source of underperformance for retail momentum traders. The Aggressive Debator inside <Term id="ami" /> exists precisely to argue against the urge to take profits too early — listen to that argument before you sell.
+
+<ChatWith agent="aggressive_debator" />
+
+## Quiz
+
+<Quiz
+  question="You're running a monthly-rebalanced momentum rule. NVDA has tripled and is up 65% in the last six months. Today is mid-month, between rebalances. NVDA drops 8% on no news. What does the rule say?"
+  options={[
+    "Sell immediately — momentum is breaking",
+    "Hold — rebalance is at month-end, and one bad day doesn't break the rule",
+    "Add to the position because it's on sale",
+    "Sell half and re-evaluate"
+  ]}
+  answer={1}
+  explanation="The rule rebalances monthly, period. Selling between rebalances on intraday moves is exactly the discretionary error that kills momentum returns. Option 0 is the tempting wrong answer because the drop feels like a signal — but the system was designed to ignore intramonth noise."
+/>
+
+<Quiz
+  question="A momentum portfolio has been long top-decile US tech for 8 months. In one week, the portfolio drops 12% as low-momentum value names rally hard — a textbook momentum crash. Your mandate caps drawdown at 25% and you're now at 18%. The Aggressive Debator argues 'add — this is the dip'. The Conservative Debator argues 'cut size — the regime has shifted'. What's the synthesis?"
+  options={[
+    "Add — momentum crashes always recover",
+    "Hold the full position and wait for month-end rebalance",
+    "Cut size to respect the mandate, then let the rule rebalance you back in if momentum re-establishes",
+    "Exit fully and switch to mean reversion"
+  ]}
+  answer={2}
+  explanation="The synthesis: the mandate's drawdown cap is a non-negotiable floor that overrides any single agent's view. You are 7% from the cap. Adding (option 0) is how momentum traders blow up in crashes; full hold (option 1) ignores the mandate; full exit (option 3) abandons the rule. Cut size to protect the floor, let the rebalance rule reauthorise exposure if the factor recovers."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Aggressive Debator, paste your <Term id="ami_watchlist" />'s top 5 best 6-month performers and ask: "Which of these are top-decile by trailing 6m-1m return relative to the S&P 500, and what would invalidate each one staying in the top decile next month?" Use the answer to draft a monthly-rebalance plan in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Momentum runs longer than feels reasonable, and crashes faster than feels possible. The rule rebalances; you don't. The mandate's drawdown floor is the only override.

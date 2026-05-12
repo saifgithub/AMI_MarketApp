@@ -1,0 +1,68 @@
+---
+id: "230_in_sample_vs_out_of_sample"
+title: "In-sample vs out-of-sample — the honest split"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "228_parameter_sensitivity_sweeps", "229_walk_forward_analysis"]
+tags: ["backtesting", "in_sample", "out_of_sample", "data_split"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# In-sample vs out-of-sample — the honest split
+
+The backtesting foundation (057) introduced out-of-sample testing as a defence against overfitting. This lesson is about the data split itself — the single most consequential design choice you make before running a backtest. Get the split right and your test is informative; get it wrong and your "out-of-sample" result is contaminated by hindsight, peeking, or regime overlap. The standard splits are 70/30, 60/20/20 (with a validation set), and walk-forward (covered in 229). After this lesson you can choose a split appropriate to your strategy's holding period and data length, hold yourself to the firewall, and read the efficiency ratio honestly.
+
+## How this plays out in real markets
+
+You have 20 years of SPY daily data (2005-2024) and a swing-trading rule with a 5-day average hold. A reasonable split: in-sample 2005-2018 (14 years, ~3,500 trades possible), out-of-sample 2019-2024 (6 years, ~1,500 trades). You optimise all parameters on the in-sample. The in-sample period saw the 2008 crisis (so the rule was stress-tested), but the OOS includes the COVID crash and 2022 bear — regimes the rule never saw during parameter selection.
+
+In-sample CAGR: 12.3%, max drawdown 18%, win rate 56%. OOS CAGR: 8.7%, max drawdown 22%, win rate 53%. Efficiency ratio 0.71. The OOS includes one regime (COVID crash) the in-sample didn't see well, and the rule's drawdown widened — but the edge survived. This is what an honest result looks like: meaningfully degraded but still positive, with the failure modes appearing in the regimes you'd expect.
+
+Contrast with a different split: 2005-2024 in-sample, 2020-2024 OOS (overlap). The OOS data was already inside the in-sample, so the OOS result is meaningless. Or a split that puts only the bull-market years in-sample and the bear years out-of-sample — that's testing a different question (does the rule survive a regime it never trained on) and you can't compare in-sample numbers honestly. The correct split is contiguous time, no overlap, OOS at the end, and includes at least one bear regime if possible.
+
+## The trap
+
+The beginner mistake is "peeking" — running the rule on the OOS, seeing it disappoint, going back to the in-sample to tune, then re-running the OOS. The moment you tune after seeing OOS results, the OOS becomes in-sample and you have no honest test left. The correct mental model: the OOS is a tripwire you walk through ONCE. If it fails, the rule is dead and you start over with a new hypothesis on different data. The second trap: making the OOS window too short — six months of OOS on a rule that trades monthly is six data points, statistically nothing. The third trap: using random shuffled splits on time-series data. Random splits leak future information into the past because nearby days are correlated; always use contiguous time splits.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You have 10 years of daily data on NVDA. You design a momentum rule. Which split is most defensible?"
+  options={[
+    "Random 70/30 across all days",
+    "Contiguous in-sample 2015-2021 (7 years), contiguous OOS 2022-2024 (3 years), no peeking",
+    "Use all 10 years for in-sample, no OOS needed because the rule is intuitive",
+    "OOS 2015-2017, in-sample 2018-2024"
+  ]}
+  answer={1}
+  explanation="Contiguous time splits with OOS at the end is the only honest choice for time-series data. Option 0 (random shuffle) leaks correlated information across the split. Option 2 abandons OOS entirely. Option 3 puts OOS at the start, which means parameter selection happens with knowledge of the post-OOS regime (you saw 2018-2024 before fitting), violating the firewall."
+/>
+
+<Quiz
+  question="In-sample 2010-2020 shows CAGR 14%, max drawdown 12%. Out-of-sample 2021-2024 shows CAGR 6%, max drawdown 19%. Your mandate caps drawdown at 20%. The Research Manager and Conservative Debator weigh in. What's the synthesis-correct decision?"
+  options={[
+    "Deploy at full mandate size — OOS is positive",
+    "Efficiency ratio is 0.43 (below the 0.5 robustness threshold) AND OOS drawdown nearly hit the mandate cap. Size the strategy at well below mandate maximum (e.g., half size), monitor live drawdown against the OOS max, and retire the rule if live drawdown exceeds OOS by a meaningful margin.",
+    "Retire the strategy — drawdown nearly hit the cap",
+    "Re-run with different parameters until OOS improves"
+  ]}
+  answer={1}
+  explanation="The synthesis: OOS edge is real but marginal, AND drawdown signal is approaching mandate floor. A halved size respects both the weak edge and the drawdown reality. Option 0 ignores the efficiency-ratio warning. Option 2 over-corrects — a 6% OOS CAGR with controlled risk is deployable at reduced size. Option 3 is the contamination trap from foundation 057 — you'd be tuning on OOS data."
+/>
+
+## Try it
+
+For your current candidate strategy, write down the in-sample period, OOS period, parameter grid, and decision rule (what efficiency ratio counts as "pass") BEFORE running anything. Submit this protocol to the Research Manager in <Term id="ami_one_on_one" /> and ask: "Is my firewall airtight? Will this test give me an honest answer?" Log the protocol in the <Term id="ami_decision_journal" /> — it's the evidence that you didn't peek.
+
+## Takeaway
+
+The OOS is a tripwire you walk through once. Tune before, deploy after — and if you tune after, you've contaminated the only honest test you had.

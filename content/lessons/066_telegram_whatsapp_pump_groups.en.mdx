@@ -1,0 +1,78 @@
+---
+id: "066_telegram_whatsapp_pump_groups"
+title: "Telegram / WhatsApp pump groups"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 1
+track: "edge_process"
+topic: "scam_pump_groups"
+prerequisites: ["065_guaranteed_return_scams", "048_fomo", "049_overconfidence"]
+tags: ["scams", "pump_and_dump", "telegram", "whatsapp", "social_media_fraud"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Telegram / WhatsApp pump groups
+
+A pump-and-dump group orchestrates buying pressure in a thinly traded stock so insiders can sell into the demand they manufactured. The group sells the dream of "the next big call" and posts only winning screenshots. The math is simple and brutal: the early organisers buy a low-volume small-cap, the group buys on cue, the price spikes, the organisers exit, the price collapses. Group members hold the bag. This lesson teaches you to recognise the structure before you take the first trade.
+
+<Animation name="pump_dump_curve" />
+
+## How this plays out in real markets
+
+The SEC has charged dozens of pump-and-dump rings since 2020. The FBI's "social media-enabled pump-and-dump" advisory describes the template: a Telegram channel with 15,000–50,000 members, a charismatic "founder" posting trade ideas, only profitable trades shown, paid promoters seeded in chat agreeing with every call. ASIC in Australia, the FCA in the UK, and SC Malaysia have all issued near-identical warnings.
+
+The pattern on a price chart is recognisable. A small-cap stock — daily volume of under 500,000 shares — gets named in the group at, say, $0.40. Members rush in. Over 6–10 hours volume jumps 30–100x, the price runs to $0.90–$1.20. The next session the price gaps down to $0.30 on heavy selling. The group's pinned messages disappear. The "founder" pivots to the next ticker.
+
+On Bursa Malaysia the structure has appeared around penny ACE-market stocks and low-volume warrants. SC Malaysia's enforcement page lists market-manipulation actions where coordinated WhatsApp chatter drove a name from sen levels to a multiple, then back to sen, in days.
+
+Signature traits of a pump group:
+
+- Only winning trades posted; losses never shown.
+- Target tickers are low-float, low-volume, low-price — easy to move.
+- "VIP" or "inner circle" tier you pay to join for "earlier" calls.
+- Synchronised buy time stated in chat ("entry at 09:35 sharp").
+- Pinned testimonials from accounts created in the last 30 days.
+
+## The trap
+
+You read the chat for a week. Every call wins. The chart screenshots are real. You decide the next call is the one you'll take. The mistake is treating *visible* track record as *full* track record — you are only seeing the wins because the losses are deleted, censored, or run in a parallel "test" channel members never see. The same group runs four signals; the three losers are never mentioned, the one winner is screenshotted to oblivion. Survivorship bias is doing the work. The PM in <Term id="ami" /> would refuse this trade on three independent grounds — no thesis, no mandate fit, no edge — and would not budge.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="A pump-group target stock typically has which combination of properties?"
+    options={[
+      "Mega-cap, S&P 500 component, billions in daily volume",
+      "Low float, low daily volume, low share price",
+      "High dividend yield, blue-chip status, stable earnings",
+      "ETF with deep liquidity"
+    ]}
+    answer={1}
+    explanation="Pumps need thin liquidity to work — the dollars the group commits must be enough to move the price several multiples. Mega-caps and ETFs absorb the flow and don't budge. A low-float, low-volume small-cap is the only structure where coordinated retail buying can produce a 200% spike."
+  />
+
+  <Quiz
+    question="A Telegram channel has 22,000 members. The pinned message shows 14 winning trades in 30 days. The founder posts entries 5 minutes before the open. A new call drops: \"Buy XYZ at 9:35\". What is the decisive red flag?"
+    options={[
+      "The channel has too many members to give individual attention",
+      "Only winning trades are visible — the losing trades that almost certainly exist are hidden",
+      "The founder uses Telegram instead of a regulated platform",
+      "The synchronised entry time is unusual"
+    ]}
+    answer={1}
+    explanation="The decisive issue is not the size of the channel, the platform, or the timing — it is that you are looking at a survivorship-biased highlight reel. Pump groups run many calls; only the winners are shown. The 14 visible wins tell you nothing about the 30 or 50 losers that were quietly deleted. The synchronised entry is itself the mechanism of the dump — your buying is the liquidity the organisers sell into."
+  />
+
+## Try it
+
+In a <Term id="ami_one_on_one" /> with the <Term id="concierge_agent" />, paste the name of any "signals group" or "VIP trading channel" you've seen advertised. Ask: "What red flags should I check for? How would I verify this group is not a pump operation?" The Concierge will walk you through SEC and SC Malaysia enforcement-page lookups.
+
+## Takeaway
+
+If a group posts only wins and the target stocks are illiquid, you are not the customer — you are the exit liquidity.

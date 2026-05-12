@@ -1,0 +1,78 @@
+---
+id: "170_scenario_analysis_bear_base_bull_done_honestly"
+title: "Scenario analysis: bear, base, bull, done honestly"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "167_dcf_basics_why_terminal_value_eats_everything"]
+tags: ["valuation", "scenarios", "probability_weighting", "risk", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Scenario analysis: bear, base, bull, done honestly
+
+Scenario analysis takes the sensitivity idea from lesson 167 and structures it: build three coherent stories — bear, base, bull — each with internally consistent assumptions, value the company under each, then assess probability-weighted expected value. Done honestly, it forces you to define what would have to happen for each outcome — and to reject theses where the bear case is catastrophic and the bull case is mild (asymmetric downside). Done badly, it becomes a way to justify a pre-existing view by rigging the probabilities. By the end of this lesson you should know how to build coherent scenarios, and the specific probability-weighting discipline that prevents the rigging.
+
+## How this plays out in real markets
+
+Take TSLA in mid-2026, trading around $260. A clean three-scenario build:
+
+- **Bear** ($100 fair value, -62% from current): EV growth slows materially, competition from Chinese EVs and incumbent automakers compresses margin to <5%, robotaxi commercialisation pushes out to 2030+, FSD revenue stays a small fraction of total. Multiple compresses to a high-end auto-company level.
+- **Base** ($240 fair value, -8%): EV unit growth at 10–15% annually, operating margin recovers to 12–15%, robotaxi launches in limited markets with modest revenue contribution by 2028, FSD attach rate stable. Multiple at ~50x earnings reflecting a moderate-growth premium.
+- **Bull** ($600 fair value, +130%): robotaxi reaches genuine commercial scale by 2028, FSD becomes a high-margin recurring revenue stream, operating margin returns to 17%+, market share in EV holds. Multiple at ~80x reflecting AI-platform optionality.
+
+Now the probability discipline. Assign weights that you'd defend out loud: say 35% bear, 45% base, 20% bull. The probability-weighted value is 0.35×$100 + 0.45×$240 + 0.20×$600 = $35 + $108 + $120 = $263. Roughly fair value.
+
+But change the weights to 20%/50%/30% (a bullish skew) and the expected value becomes $320 — 23% upside. Change to 50%/40%/10% (a bearish skew) and EV becomes $206 — 21% downside. Same scenarios, very different conclusions, all from the probability weighting.
+
+This is why the discipline isn't just to build scenarios but to defend the weights. Why is the bear 35% and not 50%? What evidence would shift it? Forced to answer those questions in writing, most retail investors find their weights are 60–70% bull because they already own the stock or want to.
+
+On Bursa Malaysia: AIRASIA across the 2020–2024 period was a textbook scenario-analysis stock — bear (bankruptcy), base (slow recovery), bull (rapid travel rebound + cost cuts) had wildly different fair values, and probability weighting drove every decision.
+
+The falsifiable claim: a scenario analysis is honest only if you can write down — in advance — the specific observable events that would shift you from base to bear or base to bull. If the only thing that updates your probabilities is the stock price moving, you're not doing scenario analysis, you're doing momentum dressed up as analysis.
+
+## The trap
+
+The trap is using probability weights to confirm a pre-existing view. A beginner who's bullish on a stock builds three scenarios then "instinctively" weights them 15%/35%/50%, and the expected value comes out gloriously above the current price — confirming the bullishness. The correct mental model: write the scenario probabilities BEFORE you calculate the expected value. Better still, write the probabilities by reference to specific historical base rates ("historically, 30% of stocks like this in conditions like this have hit the bear case"). The other version of the trap is making the bull case implausibly bullish ($1,200 TSLA) while keeping the bear case shallow ($200) — that asymmetric framing inflates the expected value because the bull tail does heavy work. A disciplined bear case should be roughly as far from base as the bull case, in percent terms.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="An analyst presents: bear $150 (20% probability), base $300 (50% probability), bull $900 (30% probability). The stock trades at $400. The bear case is -50% from base; the bull case is +200% from base. Which is the cleanest critique under the lesson?"
+  options={[
+    "Expected value is 0.2×$150 + 0.5×$300 + 0.3×$900 = $30+$150+$270 = $450. Buy",
+    "The scenarios are asymmetric in a way that inflates the answer. Bear is -50% from base, bull is +200% from base — that's a 4:1 upside asymmetry that almost no real-world distribution justifies. A disciplined bear case should be roughly as far below base as bull is above, in percent terms. Rebuild with bear at $150 (-50%) and bull at $450 (+50%), the expected value drops to $30+$150+$135 = $315 — close to fair, not 'buy'. The asymmetry was doing the work, not the analysis",
+    "Reject scenario analysis — it's all subjective",
+    "Buy because the bull case is bigger"
+  ]}
+  answer={1}
+  explanation="The synthesis is that asymmetric scenarios — bear shallow, bull deep — inflate expected value mechanically without requiring better information. The lesson's discipline is that the upside and downside should be roughly symmetric in percent terms unless there's a specific structural reason (e.g., bankruptcy is a one-way floor). The most tempting wrong answer is option 0 — the math is technically correct but the inputs are rigged. Option 2 over-rejects — scenario analysis is rigorous when disciplined. Option 3 falls for exactly the rigging the lesson warns about."
+/>
+
+<Quiz
+  question="You've built a bear/base/bull for a stock. The stock falls 15% over two months. Without any change in fundamentals, the analyst raises the bull probability from 20% to 35% because 'the lower price improves the risk-reward.' What's the cleanest critique?"
+  options={[
+    "Correct — lower price always improves risk-reward",
+    "The probability of each scenario shouldn't change because the stock price changed — the probabilities are about what happens to the business, not the stock. The lesson's falsifiable test is that probabilities should update only when observable business events occur. Updating probabilities because price moved is reverse-engineering bullishness from price action. The correct response to a 15% price drop with no fundamental change is to recompute expected value at the new price using unchanged probabilities — if the new price is now below the EV, that's the buy signal, not raising the bull weight",
+    "Correct — momentum should be weighted into scenarios",
+    "Indeterminate — depends on the volume"
+  ]}
+  answer={1}
+  explanation="The synthesis is the lesson's core discipline — scenario probabilities are about the business, the stock price is the input to whether the EV is attractive. Conflating the two creates motivated reasoning. Option 0 confuses price improvement with probability change. Option 2 imports a technical-analysis concept into a fundamental framework where it doesn't belong. Option 3 dodges the methodological error."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a stock and ask: "Build me a bear/base/bull scenario with fair values for each. What specific events would I need to observe to shift between scenarios?" In the <Term id="ami_decision_journal" />, write down your three probability weights — but write them down BEFORE you see the expected-value calculation. Then compute the EV against current price. If your weights heavily favour the bull case, write one sentence answering: "What evidence would make me increase the bear weight by 10 points?"
+
+## Takeaway
+
+Scenarios force you to think; probability weights force you to be honest — write the weights before the math, keep the bear and bull symmetric, and update probabilities only when the business does, not when the price does.

@@ -1,0 +1,72 @@
+---
+id: "059_bull_markets"
+title: "Bull markets"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+topic: "bull_regime"
+prerequisites: ["022_trend_direction", "026_moving_averages", "051_discipline_vs_excitement"]
+tags: ["regime", "bull", "trend", "macro"]
+agent_callouts: ["bull_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bull markets
+
+A bull market is a regime, not a vibe. Numerically it is a state where price is structurally above its long-run average, breadth is expanding, and pullbacks get bought. Once you can define a bull regime in numbers, two things change: you stop being talked into "this is the top" by every red candle, and you stop being talked out of holding winners. After this lesson you will be able to detect a bull regime, name three strategies that fit it, and name the single condition that would invalidate the call.
+
+<Animation name="bull_bear_states" />
+
+## How this plays out in real markets
+
+The 2023–2024 SPX run is the textbook case. SPX bottomed at 3,491 on 12 October 2022. It crossed back above its 200-day SMA on 2 February 2023 near 4,180 and never closed below it for more than a handful of days through 2024. The 50-day crossed above the 200-day ("golden cross") on 2 February 2023. From that signal to the closing high of 6,090 on 6 December 2024, SPX gained 45.7%. Pullbacks were shallow: the deepest intraday drawdown across that window was about 10.3% (July–October 2023), and it ended in a higher low.
+
+Detection rule that would have caught it on 2 February 2023 and held you in: SPX closes above its 200-day SMA AND the 20-week SMA is rising AND new-52-week-highs on the NYSE exceed new-52-week-lows for 4 of the last 5 weeks. All three were true.
+
+On Bursa Malaysia: KLCI ran a smaller bull from a low of 1,373 on 11 December 2023 to 1,684 on 26 August 2024 (+22.6%), with the same 200-day-SMA structure and a rising 20-week line. Different magnitude, identical regime signature.
+
+## The trap
+
+The bull-market trap is selling early because something looks "extended". A reader who sold NVDA after its first 50% run in early 2023 missed the next 500%. The mental error is treating price-distance-from-the-mean as a sell signal in isolation. In a bull regime, distance-from-mean is a feature, not a bug — the mean is rising under price.
+
+The correct model: in a bull regime, momentum is the prior. You exit on a regime *break* (price structure change), not on a feeling of "it's gone too far". The regime break is defined in numbers below. Until those numbers print, an extended chart is the market doing exactly what bull markets do.
+
+<ChatWith agent="bull_researcher" />
+
+## Quiz
+
+<Quiz
+  question="SPX closes 6% above its 200-day SMA, the 20-week SMA has risen for 11 straight weeks, and NYSE new highs have exceeded new lows for 6 of the last 8 weeks. Your friend says 'it's overextended, take everything off'. What does the regime framework say?"
+  options={[
+    "Sell — distance from the 200-day SMA above 5% is historically a top signal.",
+    "Hold trend-following longs. None of the invalidation conditions (close below 200-day SMA for 2 consecutive weeks; 50-day crossing below 200-day) have triggered.",
+    "Switch to short — momentum has to mean-revert.",
+    "Move to 100% cash until the 200-day SMA catches up to price."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first one: 'extended' feels like a sell. But distance from the mean is not an invalidation condition — it is what bull regimes produce. The framework only flips on structural breaks (close below 200-day SMA for 2 consecutive weekly closes, or a death cross). Until those print, the prior is 'trend continues'."
+/>
+
+<Quiz
+  question="You detect a bull regime in SPX. From Module 9, which strategy archetype is best aligned and what is the right mandate adjustment?"
+  options={[
+    "Mean-reversion shorts; tighten max position size to 2%.",
+    "Trend-following + buy-the-dip on the 20-day SMA; allow normal position sizes within mandate.",
+    "Pairs trading market-neutral; raise max drawdown to 40%.",
+    "Hold cash; the regime will end soon."
+  ]}
+  answer={1}
+  explanation="Bull regimes favour trend-following and dip-buying at the rising shorter MA. Mean-reversion shorts (option 1) is the most tempting wrong answer because it sounds 'risk-controlled' — but shorting a confirmed uptrend is a high-loss-rate strategy. The correct alignment is trend-with-mandate, not against-trend with tight stops."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Bull Researcher and paste the question: "Is SPX currently in a bull regime by the three-rule test — close above 200-day SMA, 20-week SMA rising, NYSE new highs > new lows for 4 of last 5 weeks? Cite numbers." Then open the <Term id="ami_decision_journal" />, find your most recent equity trade, and tag the regime that was in force when you entered. If you can't tell, that's the lesson.
+
+## Takeaway
+
+A bull regime is a numeric state — price above 200-day SMA, 20-week SMA rising, breadth expanding — and you hold trend-aligned positions until those numbers break, not until the chart feels extended.

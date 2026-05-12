@@ -1,0 +1,70 @@
+---
+id: "020_candlesticks_anatomy_of_a_bar"
+title: "Candlesticks: anatomy of a bar"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 2
+track: "technical_analysis"
+topic: "candlesticks"
+prerequisites: ["284_what_makes_a_price_move"]
+tags: ["candlestick", "ohlc", "chart_reading", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Candlesticks: anatomy of a bar
+
+A single candlestick compresses four numbers from one chunk of time — open, high, low, close — into a shape you can read at a glance. Once you can decode that shape, you can read months of price history without staring at numeric tables. By the end of this lesson you should be able to point at any candle on a chart and tell someone the four prices it represents, which side won that session, and what the wicks reveal about the fight in between.
+
+<Animation name="candlestick_anatomy" />
+
+## Example
+
+Take NVDA on Friday 28 March 2025. The daily candle opened at $109.67, traded as high as $114.20, dipped as low as $108.52, and closed at $112.40. Because close ($112.40) was above open ($109.67), the body is green (or hollow). The body spans roughly $109.67 to $112.40 — that $2.73 is the visible rectangle. The upper wick reaches up to $114.20, showing buyers pushed price higher intraday before sellers dragged it back about $1.80. The lower wick stretches down to $108.52 — a $1.15 dip below the open that buyers absorbed.
+
+Compare that to the next session, Monday 31 March 2025: NVDA opened at $110.32 and closed at $108.38 — a red candle with a body of $1.94. The upper wick reached $111.42 (failed bounce), lower wick to $107.65 (where buyers stepped in just before the close).
+
+Two candles, eight numbers. You now know: Friday buyers won by ~$2.73 but couldn't hold the highs. Monday sellers won by ~$1.94 but couldn't push to a new low. That's a tug-of-war you can see in two seconds without reading any indicators.
+
+## The trap
+
+The trap is treating the candle's colour as a verdict instead of a fact. Beginners see a green candle and conclude "bullish", a red candle and conclude "bearish", and act on it. But a green candle with a long upper wick (price rejected at the highs) is often more bearish than a small red candle with no upper wick. A red candle with a long lower wick at a known support level can be the most bullish signal on the chart. The correct mental model: colour tells you who won the session; the wicks tell you how hard the other side fought and where the rejection happened. Read the whole bar, not just the body.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A daily candle on AAPL has these values: open $189.20, high $192.80, low $188.00, close $191.50. What colour is the body and what is its size in dollars?"
+  options={[
+    "Red body, $2.30 in size",
+    "Green body, $2.30 in size",
+    "Green body, $4.80 in size",
+    "Red body, $1.20 in size"
+  ]}
+  answer={1}
+  explanation="Close ($191.50) is above open ($189.20), so the body is green. The body size is close minus open: $191.50 - $189.20 = $2.30. The $4.80 distractor is the full range (high minus low) which includes the wicks, not just the body."
+/>
+
+<Quiz
+  question="On a daily chart, TSLA prints a red candle with a small body and a lower wick that is roughly three times longer than the body, finishing right at a price level the stock bounced from twice in the prior two weeks. Which reading is most consistent with what the candle is telling you?"
+  options={[
+    "Sellers were in firm control; expect continuation lower next session",
+    "Sellers initially won the session but buyers absorbed the low at a known level — the long lower wick at support signals that selling was rejected",
+    "The colour is red, so this is a bearish signal regardless of the wick",
+    "Wicks are noise; only the body matters when reading a candle"
+  ]}
+  answer={1}
+  explanation="A long lower wick that ends at a level price has respected before is a rejection of the low — buyers stepped in. The candle closed red, but the shape says the seller advance was reversed inside the session. The tempting wrong answer (option 0) reads only the colour and ignores the wick; that's exactly the mistake the lesson warns against. Wicks are not noise — they are the record of who lost the intraday fight."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Market Analyst and paste a ticker from your <Term id="ami_watchlist" /> — say NVDA or MAYBANK. Ask: "Read me yesterday's daily candle. What were the four prices, what shape is it, and what does the wick configuration suggest?" Compare the answer against a chart and confirm the four numbers match. Repeat with a candle from a known reversal day.
+
+## Takeaway
+
+A candle is four numbers wearing a shape — read the body for who won, the wicks for how hard the other side fought, and never trade colour alone.

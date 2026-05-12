@@ -1,0 +1,66 @@
+---
+id: "268_why_twelve_agents_not_one"
+title: "Why twelve agents and not one"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "cognitive_diversity"
+prerequisites: ["072_what_ami_can_do_for_you", "073_what_ami_cannot_do", "076_human_oversight_is_the_product"]
+tags: ["architecture", "12_agents", "diversity", "bias", "process"]
+agent_callouts: ["research_manager", "bull_researcher", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Why twelve agents and not one
+
+A single confident answer feels like a product. A debate among twelve role-specialised agents feels like research — and like a richer training environment. <Term id="ami" /> is a <Term id="training_simulator" /> built the second way on purpose. One agent answering "should I buy NVDA?" would inherit every blind spot of the underlying language models in one shot — same training data, same tendencies, same omissions — and would also collapse the user's evaluation surface into a tip to accept or reject. Splitting the work into twelve roles forces the question through twelve different frames so you can practise reading the dissent. By the end of this lesson you will be able to explain why cognitive diversity is structural, not decorative.
+
+## How this plays out in real markets
+
+<Term id="ami_convene_the_room" /> on AAPL. <Term id="twelve_agent_team" /> stream in parallel. The Fundamentals Analyst pulls services revenue (+14% YoY), iPhone mix, gross margin 46%. The Market Analyst reads the chart — $228, holding the 50-day MA at $221, RSI 61. The News Analyst flags an EU regulatory ruling from yesterday. The Social Media Analyst notes neutral retail sentiment with a small uptick on r/wallstreetbets. The Bull Researcher writes a case around services flywheel and capital return. The Bear Researcher counters with hardware deceleration and China exposure. The Research Manager weighs the two: Bull lean ~0.58. The Aggressive Debator wants 5% size; Conservative wants 2%; Neutral lands at 3%. The Trader proposes entry $227.50, stop $215, target $244, horizon 6 weeks. The PM compliance-checks against your <Term id="ami_mandate" />.
+
+Now imagine the same question routed through one generalist agent. You would get a confident paragraph that conflates all of that into a single voice — and you would have no way to see *which* frame disagreed. The twelve-agent architecture preserves the dissent. The Bear case is a labelled section in your transcript. The Conservative Debator's smaller-size suggestion is recorded. You can re-open any one of them in <Term id="ami_one_on_one" /> and ask *"why?"*. A one-agent answer collapses twelve perspectives into a sentence; AMI keeps them separable, by design.
+
+## The trap
+
+The trap is wanting one clean answer because twelve voices feel like noise. They are not noise — they are the raw material of an honest second-opinion training run. Users who skim the headline <Term id="ami_verdict" /> and skip the per-agent reasoning are paying the cost of twelve agents and practising the evaluation of one. The right mental model: each agent is a simulated specialist consultant whose job is to be wrong in a different way from the others. The Bull Researcher overstates upside; the Bear Researcher overstates risk; the Research Manager's job is to be honest about which exaggeration the data supports more. You read all three. The disagreement is what the simulator is built to train you to evaluate.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Why does AMI use twelve role-specialised agents instead of a single generalist agent answering 'should I buy this stock?'"
+  options={[
+    "Twelve agents are faster than one",
+    "A single agent inherits every blind spot of the underlying language models in one pass; twelve role-specialised agents force the question through different frames so the dissent stays separable",
+    "Twelve agents are required by US securities regulations",
+    "Twelve agents allow AMI to predict prices more accurately"
+  ]}
+  answer={1}
+  explanation="The architecture is cognitive diversity — splitting the work so different role-prompts probe different angles and the disagreement is preserved in the transcript. The most tempting wrong answer is the speed one — running twelve agents is actually slower than one; the trade-off is depth and auditability, not throughput. Prediction accuracy is not the goal; AMI describes process and probabilities, not point prices."
+/>
+
+<Quiz
+  question="You read a Convene the Room simulated Verdict on TSLA: BUY 2%, confidence 0.61. The Bear Researcher's section flags a 30% drop in EU registrations. You skim past that section and rubber-stamp the headline. What did the twelve-agent design just become for you?"
+  options={[
+    "A more accurate version of a single-agent recommendation",
+    "Cheaper because you didn't read all the agents",
+    "Effectively a one-agent product — you paid for diversity and consumed a headline",
+    "Higher confidence because twelve agents agreed"
+  ]}
+  answer={2}
+  explanation="Twelve agents only give you cognitive diversity if you actually read the dissent. Skipping the Bear case collapses the architecture into a tip-service experience — and AMI is not a tip service, it is a training environment for evaluating analyst output. The tempting wrong answer is 'higher confidence because twelve agents agreed' — but they didn't agree; the Bear case dissented, which is the point you ignored."
+/>
+
+## Try it
+
+In **Convene the Room** on any liquid US ticker, scroll past the headline verdict and find the Bear Researcher's section first. Read it before the Bull case. Then scroll to the Research Manager's synthesis and see how much weight the Bear arguments got. If you can articulate the Bear case in one sentence after, you used the architecture as intended.
+
+## Takeaway
+
+Twelve role-specialised agents exist to preserve disagreement, not to amplify confidence. Read the dissent or you spent the credits on the headline. AMI is teaching you to evaluate analyst output, not handing you a tip to take elsewhere.

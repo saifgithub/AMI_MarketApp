@@ -1,0 +1,68 @@
+---
+id: "033_profit_and_margins"
+title: "Profit and margins"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 2
+track: "fundamentals_analysis"
+topic: "profit_margins"
+prerequisites: ["032_revenue_the_top_line"]
+tags: ["profit", "margins", "gross_margin", "operating_margin", "net_margin", "income_statement"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Profit and margins
+
+Profit is what's left of revenue after costs. Margins are profit expressed as a percentage of revenue — they tell you how much of every dollar of sales the company actually keeps. There are three margins worth knowing: gross (after direct cost of goods), operating (after running the business), and net (after everything including tax and interest). By the end of this lesson you should know what each margin reveals, why the same revenue figure can hide very different businesses, and the precise margin behaviour that flips a "growth story" into a "value trap".
+
+## Example
+
+Look at AAPL and AMZN in fiscal 2024. AAPL reported roughly $391B in revenue with a gross margin around 46%, an operating margin around 31%, and a net margin around 26%. That means for every dollar of iPhone or Mac sold, about 46 cents survived direct manufacturing cost, 31 cents survived running the company, and 26 cents reached shareholders after tax. AMZN reported about $638B in revenue — bigger top line — but with a gross margin around 49%, an operating margin around 11%, and a net margin around 9%. AMZN earns more cents on the dollar at the *gross* line because much of its revenue mix is high-margin AWS and ads, but its retail and logistics costs eat most of that back at the operating line. Same "good company" label; very different shape of profit.
+
+Compare to TSLA in fiscal 2024: revenue around $97.7B, gross margin around 18%, operating margin around 7%. A 1-percentage-point swing in gross margin moves operating profit meaningfully because there isn't much cushion. That's why TSLA's stock reacts so violently to gross-margin headlines — a slip from 18% to 15% is a 17% relative collapse in the gross-profit dollar.
+
+On Bursa Malaysia: PETRONAS Chemicals has historically run gross margins in the 25%–35% range depending on the crude cycle. When oil rallies and feedstock costs rise faster than product prices, margins compress — and the whole business looks worse despite stable revenue. The income statement looks fine at the top; the damage shows up in the middle.
+
+## The trap
+
+The trap is comparing margins across industries as if they were on the same scale. A beginner sees a software company at 30% net margin and a grocer at 2% net margin and concludes the grocer is "bad". They're not — grocers run on inventory turnover; software runs on per-unit licence economics. The two will never converge. The other version of the trap: ignoring margin direction. A company with shrinking gross margins quarter-over-quarter is telling you costs are rising faster than prices, or that customers are pushing back on price. That trend almost always shows up in margins before it shows up in revenue. The correct mental model: compare a company's margins to its own history and to its direct peers, never across sectors. And watch the *direction* — declining margins on rising revenue is one of the most reliable early warnings on the income statement.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company X has gross margin 65%, operating margin 28%, net margin 22%. Company Y has gross margin 22%, operating margin 6%, net margin 4%. Which conclusion is supported by these numbers alone?"
+  options={[
+    "Company X is a better investment — higher margins always win",
+    "Company Y is a worse business — low margins mean poor management",
+    "The two operate in different cost structures. Company X likely sells something with high incremental margin (e.g., software, brands); Company Y likely sells volume-driven physical product (e.g., retail, distribution). The numbers alone don't say which is the better investment — that depends on growth, capital intensity, and valuation",
+    "Company Y will go bankrupt sooner because it earns less per dollar"
+  ]}
+  answer={2}
+  explanation="Margin structure reflects industry economics first. A 4% net margin in a high-turnover distributor can produce excellent returns on invested capital; a 22% net margin in a slow-growth software niche can produce mediocre ones. The tempting wrong answer is option 0 — high margins feel like quality. They often are, but quality is sector-conditional. Option 1 unfairly blames management for the cost structure of an entire industry. Option 3 confuses margin with solvency — many low-margin businesses are financially rock-solid."
+/>
+
+<Quiz
+  question="Over four quarters, a company shows revenue growth of 18%, 16%, 14%, 12% and gross margins of 41%, 39%, 36%, 33%. The stock has held up because the top line keeps growing. Which read best applies the lesson?"
+  options={[
+    "Bullish — revenue growth above 10% is the signal that matters",
+    "Bullish — margins always normalise; revenue is the leading indicator",
+    "Cautious — revenue is decelerating AND margins are compressing 2–3 points per quarter. That combination usually means pricing power is failing or input costs are running ahead of prices. The headline revenue number is masking deterioration the income statement is already showing",
+    "Neutral — without the net margin number you can't conclude anything"
+  ]}
+  answer={2}
+  explanation="This is the classic decelerating-growth + compressing-margin pattern, and it's the falsifiable claim of this lesson: when gross margin contracts steadily for 3+ quarters alongside slowing revenue growth, the income statement is telling you the business model is being challenged before management has to admit it. The most tempting wrong answer is option 0 — 'revenue still growing 12%' sounds healthy in isolation. But the *direction* of both numbers matters more than the level. Option 1 invents a normalisation that the trend doesn't support. Option 4 is over-cautious — gross margin alone is enough to flag the concern."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For the last 8 quarters of [ticker], plot gross margin, operating margin, and net margin side by side. Where is the trend, and which line is moving fastest?" Save the answer to your <Term id="ami_decision_journal" /> as a margin-trend snapshot for that company. You'll want it the next time the Bull and Bear Researchers argue over its earnings.
+
+## Takeaway
+
+Margins tell you what kind of business it is and which way the income statement is leaning — compare to the company's own history and its peers, and let the direction speak louder than the headline.

@@ -1,0 +1,73 @@
+---
+id: "261_clone_firm_contact_match_deep_dive"
+title: "Clone-firm spotting: the contact-detail match in depth"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "clone_firm_contact_match"
+prerequisites: ["067_fake_brokers_and_clone_entities", "260_regulated_vs_unregulated_jurisdictions"]
+tags: ["scams", "clone_firms", "regulator_lookup", "verification"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Clone-firm spotting: the contact-detail match in depth
+
+Lesson 067 introduced clone-firm fraud. This lesson goes deeper on the single technique that defeats almost every clone: the contact-detail match. You take the entity name the operator gives you, look up that name on the relevant regulator's register, and compare every contact data point — domain, phone, address, named representative, listed bank — against what the operator actually sent you. Each individual data point is forgeable; the cluster is not. This is the verification routine the FCA, SC Malaysia, and ASIC tell investors to run before any transfer.
+
+## How this plays out in real markets
+
+The FCA's Warning List at fca.org.uk/scamsmart and SC Malaysia's Investor Alert List both publish ongoing examples. The patterns to compare:
+
+- **Domain.** The legitimate firm's domain is on the regulator's own register page. The clone's domain typically differs by one character, a hyphen, a TLD swap (.org for .com), a subdomain (capital.firmname.com), or a near-homograph (uppercase I substituted for lowercase l). Print both and read character by character.
+- **Phone number.** The phone listed on the regulator's register is the *only* number you should trust for callback. A clone supplies a different number that routes to the operator. A pattern across UK and Malaysian cases: the clone's number is mobile or VoIP, while the real firm's switchboard is a landline at the registered office.
+- **Email domain.** The legitimate firm's email always lives on the firm's primary domain (representative@firmname.com). Clones use a near-domain or — increasingly — a free email service (gmail, outlook). No major regulated firm contacts clients about deposits from a free email.
+- **Office address.** The address on the register matches what appears on the legitimate firm's letterhead. The clone often invents a prestigious-sounding address (a known financial-district tower the clone does not occupy). Cross-reference against the regulator's listing, not the clone's website.
+- **Named representative.** Where the regulator lists individual representatives (FINRA BrokerCheck, FCA register, SEC IAPD), check the name of the person contacting you. If the firm exists but the named individual is not registered as one of its representatives, you have caught the clone.
+- **Bank-account name.** Already covered in lesson 071 — destination must be the firm's name, never an individual's name.
+
+The FCA's published case studies typically show clones failing on three or four of these dimensions simultaneously. The investor who runs the check catches the clone; the investor who skips it does not.
+
+## The trap
+
+The trap is the partial match. The operator gets the firm name right (the easy part — it's in the regulator's register). The reader confirms the registration, sees the legitimate firm's prestigious address quoted, and stops. The remaining checks — phone, email domain, named representative, bank-account name — get skipped because the first two passed. The fix is the discipline of the full cluster: every contact-detail data point the operator provides must match the regulator's listed details. A single mismatch — say, the email domain is on a free service or the named representative is not on the register — is sufficient to refuse. Clones are designed to pass the casual check; the discipline beats the design.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="An operator gives you a firm name, a UK registration number, an office address, a phone number, and an email address. You confirm the firm name and registration number on the FCA register. Three remaining checks must pass before you proceed. Which three?"
+    options={[
+      "Trustpilot rating, social-media follower count, LinkedIn company size",
+      "Domain, phone number, and email domain match the contact details on the FCA's listing for that firm — plus the named individual contacting you is registered as a representative",
+      "The firm has been operating for more than 10 years, employs more than 100 staff, and has a London office",
+      "The website is professional, the office building exists, and the offer matches market rates"
+    ]}
+    answer={1}
+    explanation="Public popularity metrics, age, headcount, and aesthetic polish are all forgeable or unrelated to clone status. The decisive cluster is the contact-detail and individual-representative match against the regulator's own register. A clone routinely passes the firm-name check and fails on at least one of the contact-detail dimensions — that mismatch is the diagnostic. The most tempting wrong answer is the aesthetic one, which is exactly what a well-built clone optimises for."
+  />
+
+  <Quiz
+    question="A person who introduces himself as a senior representative of a major UK bank contacts you via WhatsApp from a Hong Kong number. The firm name is on the FCA register at the registration number he quoted. The office address he gives matches the FCA listing. He asks you to deposit to an account at a Hong Kong bank held in the firm's name. What is the decisive red flag?"
+    options={[
+      "The WhatsApp contact channel",
+      "The Hong Kong phone number does not match the FCA-listed phone for the firm — combined with WhatsApp as the channel for a regulated-firm onboarding, this is the contact-detail mismatch that catches the clone",
+      "The Hong Kong bank account",
+      "The senior representative title"
+    ]}
+    answer={1}
+    explanation="WhatsApp alone is a red flag but not decisive — some regulated firms permit it for non-substantive contact. The Hong Kong bank account in the firm's name passes one of the lesson 071 checks. The decisive falsification is the phone number not matching the FCA register's listed phone for the firm — combined with the informal contact channel, this is the signature contact-detail mismatch of a clone-firm scam. Pass-through checks on the firm name alone are how clones evade casual diligence."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with <Term id="concierge_agent" />. If you have been contacted by any firm in the last 30 days, paste the firm name, phone, email domain, address, and named representative. Ask: "Run the contact-detail match against the regulator's register for this firm. Tell me each data point that matches and each that does not." The Concierge will walk through the lookup. For a drill: "Firm name matches FCA register, phone is a Hong Kong mobile, email is from gmail, named rep not listed on register."
+
+## Takeaway
+
+The contact-detail match is a cluster, not a single check. Domain, phone, email, address, named representative, and bank-account name all must match the regulator's register listing. One mismatch is enough to stop.

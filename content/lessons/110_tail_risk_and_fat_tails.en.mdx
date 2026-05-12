@@ -1,0 +1,66 @@
+---
+id: "110_tail_risk_and_fat_tails"
+title: "Tail risk and fat tails"
+duration_min: 6
+level: 1
+module: 3
+difficulty: 4
+track: "edge_process"
+topic: "tail_risk"
+prerequisites: ["018_drawdown_management", "108_regime_dependent_correlation"]
+tags: ["risk", "tail_risk", "fat_tails", "black_swan", "drawdown"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Tail risk and fat tails
+
+This lesson assumes you've completed lesson 018 (Drawdown management); here we go deeper on a specific reason drawdowns get out of hand — market returns do not follow a normal bell-curve distribution. They have "fat tails" — extreme events occur far more often than a normal distribution predicts. A move that should happen once every 10,000 years under a normal model happens roughly once every 10–15 years in real equity markets. Sizing as if returns are normal is the single biggest reason "this can't happen" portfolios blow up. This lesson teaches what fat tails are, the historical record, and the sizing adjustment that turns tail-aware into a real defence.
+
+## How this plays out in real markets
+
+The S&P 500's daily return distribution from 1928 to 2024 shows about 130 daily moves greater than 5% — up or down. Under a normal distribution fit to the same standard deviation, the predicted count would be roughly 0 across the entire 96-year window. Real moves of that size happened about 130 times more often than the normal model says they should. October 1987: −20.5% in a single session. March 2020: multiple −10%+ days in a single week. August 2024: a 12% intraday swing on a Monday morning. The pattern is consistent — once or twice a decade, a move occurs that a normal-distribution risk model says is statistically impossible.
+
+Single-stock examples are worse. NVDA on a single 2024 session after a guidance shock: −16% in one day. META on a 2022 earnings miss: −26% overnight. On Bursa Malaysia, AIRASIA during the 2020 pandemic shock: limit-down sessions back to back for −40%+ over a week. These are not "outliers to be ignored"; they are recurring features of equity markets. A 1% account risk per trade is built on the assumption that you can be wrong, but the gap risk in lesson 104 plus the tail risk discussed here means a "1%" position can deliver a 3–6% loss when the tail visits. Falsifiable test: look up any 20-year equity index history and count the number of >5% daily moves; the count will be at least 30× what a fitted normal distribution predicts.
+
+## The trap
+
+The trap is sizing positions as if "average" volatility is what defines risk. The beginner reads that NVDA's daily standard deviation is 2.5% and concludes that a 1% account risk position with a 2× standard-deviation stop is "very safe" — 95% of days won't hit it. The flaw: it's the 5% of days that kills portfolios, not the 95%, and the 5% are far more extreme than the 95% would predict. A 5σ event in a normal model should happen once every ~14,000 trading days; in real markets, 5σ moves in single stocks happen multiple times a year. The correct mental model: the relevant question is not "what's my expected loss on a normal day?" but "what's my realised loss in the worst 1% of days, and can the account survive that?" Tail-aware sizing pulls per-trade risk down, increases cash reserves, and uses single-name caps to limit the damage from a single fat-tail event.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="A trader sizes positions assuming returns are normally distributed: a 5% daily move 'shouldn't happen' in any realistic window. They run a 5% per-trade risk size with a 2× standard deviation stop. Over the course of a year, why is the realised drawdown distribution almost certainly much worse than the model predicts?"
+  options={[
+    "The model is right — 5% moves are rare and rarely hit the portfolio.",
+    "Real equity returns have fat tails: 5%+ daily moves happen 30–100× more often than a normal distribution predicts, and the trader's 5% per-trade sizing means each tail event is a 5%+ account hit; combine multiple tail events over a year (likely) and drawdowns compound far past the model's predictions.",
+    "The model overestimates risk because traders are skilled at avoiding tail days.",
+    "Standard deviation is a perfect risk measure; the issue is purely psychological."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first — '5% moves are rare'. They are rare in absolute terms (a few times a year on an index, more on single stocks) but they are not rare in the sense the normal-distribution model implies. The whole point of fat tails is that extreme moves occur orders of magnitude more often than Gaussian models predict. At 5% per-trade sizing, each tail event hits the account hard, and over a year multiple tail events are essentially certain. The 'skilled at avoiding tail days' distractor reverses cause and effect — no one predicts tail days reliably; they're surprises by definition."
+/>
+
+<Quiz
+  question="Trader A sizes at 1% per trade with single-name notional capped at 15% and runs a 10% cash buffer. Trader B sizes at 3% per trade with no single-name cap and runs fully invested. Both have identical underlying strategies. After a year that includes one major tail event (a single −18% move on a held position), what does the math typically look like?"
+  options={[
+    "Trader B — fully invested compounds faster, and one tail event is statistically rare.",
+    "Trader A — the single-name cap limits the tail event's damage to roughly 1.5–3% of account (15% notional × 18%), while Trader B's uncapped exposure can deliver a 6–10% single-day loss on top of any other open positions; over the year Trader A's lower per-event damage compounds into a meaningfully higher ending equity, even with slower upside.",
+    "They produce identical outcomes — strategy is what matters.",
+    "Trader B — tail events are too rare to plan for."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the last — 'tail events are too rare to plan for'. They are rare per stock per year but essentially certain at the portfolio level over a multi-year horizon. Trader A's three structural defences — smaller per-trade risk, single-name cap, cash buffer — each independently shave a chunk off the worst-case loss; combined they keep a tail event survivable. Trader B's strategy is fine on average days but uncapped exposure on a tail day delivers a multi-percentage-point hit that takes months to recover. The math from lesson 107 then runs against B."
+/>
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the Conservative Debator and ask "If my largest current position took an unexpected −20% single-day move tomorrow, what does my account look like the next morning?" Then open the <Term id="ami_mandate" /> editor and check `max_single_name_notional_pct` — if it's blank or above 20, the worst-case from the Conservative Debator's answer is the size of the buffer you've decided to live without.
+
+## Takeaway
+
+Markets visit the tail more often than the bell curve predicts — size for the bad 1% of days, not the average; tail events compound when you're not ready and stay survivable when you are.

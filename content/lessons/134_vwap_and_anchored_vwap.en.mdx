@@ -1,0 +1,76 @@
+---
+id: "134_vwap_and_anchored_vwap"
+title: "VWAP and anchored VWAP — volume-weighted reference lines"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "vwap"
+prerequisites: ["029_volume_confirmation", "126_ma_slope_analysis"]
+tags: ["indicators", "volume", "vwap", "anchored_vwap", "reference_level"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# VWAP and anchored VWAP — volume-weighted reference lines
+
+Lesson 029 used average volume as a confirmation filter. Volume-Weighted Average Price (VWAP) takes that idea further — it computes the average price weighted by volume traded at each price, giving you the level where the average participant actually transacted. Standard VWAP resets at the start of every session, so it's a same-day reference line institutions use as their fill benchmark. Anchored VWAP (AVWAP) is the same calculation but starts from a date you pick — a major earnings release, a regime change, a 52-week high. That anchor turns VWAP into a multi-day or multi-month reference of "average participant cost since this event." Price relative to an anchored VWAP is one of the cleanest reads of whether participants who entered after the anchor are in profit or loss.
+
+## How this plays out in real markets
+
+Look at TSLA after its November 6, 2025 earnings release. TSLA gapped from 268 to 285 on the print, then traded actively for the next eight weeks. Anchoring VWAP to the November 6 open at 285 produced a slowly-rising AVWAP that reached 291 by December 12 — the volume-weighted average cost of every buyer since the earnings event.
+
+On December 18, TSLA closed at 290 — right at the AVWAP. Bounce: TSLA ran to 308 over the next three weeks. The post-earnings buyers were defending their average cost, exactly as the level predicted.
+
+Then on January 22, 2026, TSLA closed at 286 — below the AVWAP for the first time. The post-earnings cohort was now underwater on average. Over the next 12 sessions, TSLA fell to 269 as that cohort capitulated. AVWAP from earnings became resistance instead of support.
+
+Falsifiable claim: anchored VWAP from a major event (earnings, gap, swing high or low) acts as support when price is above it during a confirmed trend and as resistance once price closes below it for 3+ sessions. Invalidation is mechanical — if price re-closes above the AVWAP for 3 consecutive sessions, the role reversal cancels and the AVWAP is acting as support again.
+
+Standard intraday VWAP works the same way at the session-day scale: institutions buying at-or-below the day's VWAP are getting a better-than-average fill, which is why price often respects it during the trading day.
+
+On Bursa Malaysia: MAYBANK after its Q3 2025 earnings release at RM10.60 — AVWAP rose to RM10.85 over six weeks. Price touched and bounced at the AVWAP three separate times, then broke below in mid-December as the cohort flipped underwater. The line went from support to resistance within a week.
+
+## The trap
+
+The trap is anchoring VWAP at random dates and treating the resulting line as predictive. AVWAP only carries meaning when the anchor is itself a significant event — an earnings release where a defined cohort entered, a major gap where one cohort got trapped, the 52-week high where late-cycle longs piled in. An AVWAP anchored on a meaningless Wednesday is just a slow-moving average with extra steps.
+
+The correct mental model: AVWAP is a behavioural reference line — it tells you whether a specific cohort of participants is currently in profit or loss. That information predicts how they're likely to behave. Above their average cost, they defend the line on dips (support). Below their average cost, they sell rallies to break-even (resistance). Pick the anchor that defines the cohort you care about — then the line tells you what that cohort will do.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="TSLA anchored VWAP from the November 6 earnings open at 285 has risen to 291 by mid-December. Price closes at 290 — right at the AVWAP — and bounces, running to 308 over the next three weeks. What's the cleanest explanation under the lesson's framework?"
+  options={[
+    "The AVWAP is a mathematical coincidence; price respects it by chance",
+    "The post-earnings cohort's average cost is 291; while price is above that level, the cohort is in profit and defends pullbacks to their average — which is what makes AVWAP from a significant event act as support",
+    "AVWAP is unreliable and the bounce had nothing to do with it",
+    "Only intraday VWAP matters; multi-day AVWAP is invalid"
+  ]}
+  answer={1}
+  explanation="AVWAP from a significant event represents a defined cohort's average cost. While they're in profit, they defend the level; when they flip underwater, the same level becomes resistance — which is exactly what happened to TSLA in January when it closed below AVWAP. The tempting wrong answer ('coincidence') misses the behavioural mechanism — these are real participants with real average costs reacting predictably to whether they're winning or losing."
+/>
+
+<Quiz
+  question="You anchor VWAP to a stock's last earnings release. AVWAP is at $48.60. Price has closed below AVWAP for the last 4 sessions, currently at $47.20. Account size $30,000, mandate cap 1% risk per trade. You were long from $50.10 with a stop at $48.50 — which got triggered yesterday. The trade is closed. What does the framework say about re-entering long here?"
+  options={[
+    "Re-enter at $47.20 — the dip is a buying opportunity",
+    "Skip the re-entry: 4 consecutive closes below AVWAP satisfies the lesson's role-reversal threshold (3+ sessions). AVWAP at $48.60 is now resistance, the post-earnings cohort is underwater, and rallies are likely to be sold into break-even.",
+    "Average down because the original thesis hasn't changed",
+    "Short the stock with size — every below-AVWAP stock is a short"
+  ]}
+  answer={1}
+  explanation="The lesson's mechanical rule: 3+ consecutive closes below AVWAP flips the level from support to resistance. The cohort that bought above the line is now selling rallies. The tempting wrong answer (option A) — re-entering after a stop-out without acknowledging the role reversal — is the revenge-trading pattern flagged in the psychology module. Averaging down (C) compounds the original loss. Shorting universally (D) ignores trend regime; AVWAP role-reversal is one input, not a complete short setup."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker that recently had earnings and ask: "Plot an anchored VWAP from the last earnings release date — where is price relative to it, and has it crossed in either direction in the last 30 sessions?" Then check the chart yourself. The exercise is to identify the cohort the AVWAP represents and reason about whether they're in profit or loss right now.
+
+## Takeaway
+
+VWAP and anchored VWAP are behavioural reference lines — they tell you whether a specific cohort of participants is currently winning or losing, and that read predicts whether the line acts as support or resistance.

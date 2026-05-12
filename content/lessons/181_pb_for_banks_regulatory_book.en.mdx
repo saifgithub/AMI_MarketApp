@@ -1,0 +1,72 @@
+---
+id: "181_pb_for_banks_regulatory_book"
+title: "P/B for banks — regulatory capital and the leverage layer"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "price_to_book"
+prerequisites: ["040_price_to_book", "041_return_on_equity", "180_tangible_book_vs_reported_book"]
+tags: ["price_to_book", "banks", "regulatory_capital", "cet1", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# P/B for banks — regulatory capital and the leverage layer
+
+Lesson 040 explained why P/B is useful for banks; this lesson adds the layer that separates beginners from operators. A bank's "book value" isn't just an accounting number — it's the cushion regulators require against the loans the bank has made. Common Equity Tier 1 (CET1) and risk-weighted assets dictate how much equity the bank must hold, and that floor changes how P/B should be read. By the end you should be able to read tangible book alongside CET1 ratio, recognise when a low P/B reflects regulatory pressure rather than valuation, and name the condition that turns a "cheap" bank into a value trap.
+
+## How this plays out in real markets
+
+JPM mid-2026: tangible book per share around $100, stock around $220, P/tangible-book ≈ 2.2x. CET1 ratio at roughly 15% — well above the regulatory minimum near 11.5% for a globally-systemically-important bank. That cushion (around 350bps above the floor) means JPM can return capital via dividends and buybacks, absorb a credit-cycle shock, and continue lending without raising equity. The premium P/B of 2.2x is justified by both the high ROE (17%+) and the capital flexibility.
+
+BAC at the same date: tangible book per share around $26, stock around $42, P/tangible-book ≈ 1.6x. ROE roughly 11% — barely above cost of equity. CET1 around 11.8%, only 80–100bps above the regulatory floor. The market is paying a more modest premium because the marginal return is thinner and the capital-return capacity is constrained.
+
+Now a stressed example: a European bank trading at 0.6x tangible book with CET1 at 12.5% (above minimum) but ROE running 3–4% against ~10% cost of equity. The capital ratio looks safe; the *earning* capital is being destroyed each year. Book value itself erodes — every year the bank earns less than cost of capital, retained earnings either shrink or grow more slowly than competitors, and the discount to book persists or deepens. Investors who treat 0.6x as "deep value" find themselves holding a slowly-shrinking business.
+
+On Bursa: PUBLIC BANK has historically run a CET1 around 14–15% with ROE in the 13–14% range, supporting a P/B around 1.8x–2.0x. MAYBANK runs slightly lower ROE (10–11%) at similar capital, supporting a more modest 1.2x–1.4x P/B. Same regulatory environment, same currency, different return profiles — different defensible premiums.
+
+Falsifiable claim: for a bank, the ROE − cost of equity *gap* is the load-bearing valuation driver. A bank with ROE 5 points above cost of equity should trade at meaningful premium to book (typically 1.5x+ tangible); a bank with ROE *below* cost of equity should trade at a discount to book regardless of how strong the CET1 cushion looks, because the earning capital is not productive.
+
+## The trap
+
+The trap is screening banks on P/B alone without reading the regulatory capital and ROE side-by-side. Three distinct profiles all show "low P/B": a well-capitalised bank with depressed earnings cyclically (genuine opportunity); a poorly-capitalised bank that will need to issue equity (dilution risk, often dilutive at the discount); and a structurally sub-cost-of-equity bank (slow value destruction). The correct mental model: never trust a bank P/B without four numbers — tangible book, P/tangible-book, CET1 ratio, and trailing ROE. Then test against the regulatory floor and the cost of equity. A "cheap" bank with CET1 below 12% and ROE below cost of equity is a value trap; a "cheap" bank with CET1 above 14% and a clear earnings recovery is a different animal. What invalidates the signal: a sudden regulatory change (capital requirements raised by 100bps) can re-rate the entire sector down on P/B even without business-quality change. Stress-test scenario releases by central banks are public; read them before buying any bank at a discount.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Two banks. Bank X: P/tangible-book = 0.7x, CET1 ratio = 11.5% (regulatory minimum is 11%), trailing ROE = 4%, cost of equity ~10%. Bank Y: P/tangible-book = 0.7x, CET1 ratio = 16%, trailing ROE = 6% (depressed from a cyclical credit-loss spike), cost of equity ~10%. Both look 'cheap' on P/B. Which is more likely a value trap, and why?"
+  options={[
+    "Both are equivalent — same P/B means same value",
+    "Bank Y is the trap because its ROE is lower",
+    "Bank X is the value trap. CET1 only 50bps above floor means a credit shock forces equity issuance — likely at a discount, diluting current shareholders. ROE persistently below cost of equity destroys book value each year. The 0.7x is the market correctly pricing slow erosion plus dilution risk. Bank Y has a 400bp CET1 cushion and a cyclical ROE depression — a different business profile where 0.7x can be a genuine opportunity if the credit cycle turns. Same P/B, very different setups",
+    "Buy both because both are below 1.0x book"
+  ]}
+  answer={2}
+  explanation="The synthesis: P/B alone never distinguishes the three profiles of 'cheap bank.' The tempting wrong answer is option 0 — beginners screen on a single ratio. Option 1 reverses the right read; cyclical ROE depression with strong capital is a different setup than structural sub-cost-of-equity ROE. Option 3 is the screener-driven beginner trap. The CET1 cushion and the gap between ROE and cost of equity together determine whether 0.7x is value or destruction."
+/>
+
+<Quiz
+  question="A US regional bank reports tangible book per share growing from $20 to $24 over three years — 6.3% CAGR. P/tangible-book has stayed flat at 1.4x; ROE has averaged 12% against cost of equity ~10%. The bank has paid out 35% of earnings as dividends and bought back 5% of shares. A reader is asked to synthesise: what does the P/B steadiness tell them, combined with the ROE gap?"
+  options={[
+    "The bank is stagnant because P/B didn't rise",
+    "The bank should be sold because P/B didn't expand",
+    "Flat P/B with ROE 200bps above cost of equity and tangible book growing 6%+ is a healthy compounding bank. Total shareholder return = book growth + dividend yield + buyback yield ≈ 6% + 2.5% + 3% ≈ 11.5% annualised, even with no multiple expansion. The 1.4x P/B is consistent with the ROE-vs-cost-of-equity gap; the market isn't undervaluing it, it's correctly pricing it. Compounding banks return capital steadily without multiple re-rating, and that's what you buy them for",
+    "P/B should always expand if a bank is performing well"
+  ]}
+  answer={2}
+  explanation="The synthesis: a bank's return to shareholders is the sum of book growth, dividend yield, and buyback yield — not multiple expansion. The tempting wrong answer is option 0 — beginners equate flat multiple with flat return. Option 1 follows the same logic to a worse conclusion. Option 3 assumes multiple expansion is the goal; for a high-quality bank trading at a justified premium, *holding* the multiple while compounding the denominator is exactly the right outcome. The 1.4x P/B is the price the market has settled on for that ROE profile, and that's healthy."
+/>
+
+## Try it
+
+Open <Term id="ami_convene_the_room" /> on a bank ticker (JPM, BAC, MAYBANK, PUBLIC BANK), then in <Term id="ami_one_on_one" /> with the Fundamentals Analyst ask: "Give me tangible book per share, P/tangible-book, CET1 ratio, regulatory minimum CET1, trailing ROE, and estimated cost of equity. Tell me whether the P/B is consistent with the ROE−cost-of-equity gap and how much regulatory cushion exists." Save the six data points in your <Term id="ami_decision_journal" /> as your bank-valuation template.
+
+## Takeaway
+
+A bank's P/B is a four-variable read — pair it with tangible book, CET1 cushion, and the ROE vs cost-of-equity gap. A low P/B is value only when capital is strong and the earnings shortfall is cyclical, not structural.

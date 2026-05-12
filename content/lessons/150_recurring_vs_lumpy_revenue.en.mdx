@@ -1,0 +1,72 @@
+---
+id: "150_recurring_vs_lumpy_revenue"
+title: "Recurring vs lumpy revenue"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "revenue_quality"
+prerequisites: ["032_revenue_the_top_line"]
+tags: ["revenue", "recurring", "subscription", "project_revenue", "revenue_quality", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Recurring vs lumpy revenue
+
+Lesson 032 looked at revenue's headline rate. This one looks at its *shape*. Two companies with identical $1B annual revenue can carry wildly different fundamental risk depending on whether that $1B repeats every year automatically (subscriptions, leases, regulated utilities) or has to be re-won every quarter from project bids, hardware refresh cycles, or one-time licences. Recurring revenue earns a premium multiple for good reason: it is more predictable, cheaper to forecast, and worth more in a discounted cash flow. By the end of this lesson you should know how to estimate recurring share, why "lumpy" doesn't mean "bad", and the trap of treating a one-time spike as a new run-rate.
+
+## How this plays out in real markets
+
+Look at MSFT and a defense contractor like LMT in fiscal 2024. MSFT reported about $245B in revenue, with the Productivity and Business Processes segment (Office 365, LinkedIn, Dynamics) and Intelligent Cloud (Azure) together representing roughly 75% of the total — almost entirely subscription or consumption-based. The remaining ~25% (Personal Computing — Windows OEM, Xbox, Surface, devices) is more transactional but heavily annuitised through Windows licensing. The market values this revenue at a higher P/S multiple (8–12x in recent years) because it shows up next quarter whether or not management does anything.
+
+Now look at LMT. Revenue around $71B in fiscal 2024, almost entirely from long-cycle defense contracts. The contracts are recurring in the sense that programs run for decades, but recognition is lumpy — a milestone in a fighter-jet program books a chunk of revenue when achieved, not on a calendar. Quarter-to-quarter revenue can swing ±10% without anything fundamental having changed. Investors value LMT at a lower P/S (~1.7x) reflecting the lumpiness.
+
+For a pure-lumpy contrast, look at TSLA's energy storage business — revenue grew from $3B in 2022 to $10B in 2024, with individual quarterly results swinging based on megapack delivery timing. A single quarter being "down 30% sequentially" doesn't always mean demand is down — it can mean a deployment slid two weeks.
+
+On Bursa Malaysia: TENAGA's regulated tariff revenue is one of the most recurring on the exchange — set by a Regulatory Period framework, adjusted on a known cadence. By contrast, GAMUDA's construction segment is intensely project-based; quarterly revenue depends on which job is at which milestone.
+
+The falsifiable claim: a company with 70%+ recurring revenue should trade at a higher EV/sales multiple than its sector peer with 30% recurring, all else equal. When the multiples invert, either the market is wrong or the "recurring" classification is overstated.
+
+## The trap
+
+The trap is treating a single big quarter at a lumpy business as a new baseline. A beginner sees a defense contractor or project-services company post +40% revenue and projects that forward into next year. They miss that the +40% was a milestone payment, a delivery cluster, or a contract acceptance — not a step-change in the run rate. The mirror trap exists at subscription businesses: treating a slow quarter as a structural break when it was a billing-timing artifact. The correct mental model: separate every revenue line into "would this repeat next quarter even if management did nothing" versus "did this happen because of a specific event". Build a run-rate forecast from the first bucket and treat the second as upside or noise. When 80% of growth came from the second bucket, the headline rate is borrowed.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A consulting firm reports revenue +35% in Q3, driven by a single $200M project win that was largely recognised in the quarter. Revenue was +6% in Q1 and +8% in Q2. Which read best applies the lesson?"
+  options={[
+    "Bullish — the firm has clearly stepped up its growth rate to 35%",
+    "Bullish — one strong quarter is enough to revise the forecast",
+    "The +35% was a recognition event, not a run-rate change. The underlying business has grown 6–8% — extrapolating Q3 into next year assumes another comparable project lands in the same window. The forward forecast should anchor on the trend rate, with the $200M project treated as a one-time contributor",
+    "Bearish — the firm is over-reliant on big projects"
+  ]}
+  answer={2}
+  explanation="This is the classic lumpy-revenue trap: one quarter does not redefine the trend when the spike is traceable to a single event. The 6–8% underlying trend is the right base for next year, with the $200M project explicitly excluded from the comparison. Option 0 mistakes a spike for a step-change. Option 1 makes a forecasting error common to beginners. Option 3 is too negative — the project win itself is fine; only the extrapolation is wrong."
+/>
+
+<Quiz
+  question="Synthesis: two companies, both at $2B revenue. Company A: 85% subscription, 15% professional services, growing 14%. Company B: 35% subscription, 65% lumpy project revenue, growing 14%. They trade at the same EV/sales multiple of 5x. Which statement best combines this lesson with valuation thinking?"
+  options={[
+    "They should trade at the same multiple — revenue is revenue, and growth is identical",
+    "Company B deserves the higher multiple because of project upside",
+    "Holding all else equal, Company A's revenue is structurally more valuable per dollar because of higher recurring share, lower variance, and easier forecasting. A 5x multiple on both implies the market is either pricing Company B's project pipeline as effectively recurring, mispricing the pair, or anticipating A's growth slowing faster than B's. Without a specific reason for the equal multiple, A is the relatively underpriced one",
+    "The multiple difference doesn't matter at this size"
+  ]}
+  answer={2}
+  explanation="The synthesis: recurring revenue justifies a multiple premium because the same dollar of revenue is worth more when its repetition is contracted rather than re-bid. When two peers grow at the same rate but one has materially more recurring share and the multiples are equal, one of the two is mispriced. Option 0 ignores variance and predictability. Option 1 inverts the relationship. Option 3 dodges the comparison."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask for two companies you're tracking: "Estimate the recurring revenue share for [ticker A] and [ticker B] based on their latest annual filings, and compare their EV/sales multiples." Save both pairs to the <Term id="ami_decision_journal" />. The next time you debate one against the other in <Term id="ami_convene_the_room" />, the recurring-share number will be the cleanest tiebreaker.
+
+## Takeaway
+
+Recurring revenue is worth more than lumpy revenue per dollar — when the multiples don't reflect that, the market is either smarter than you or wronger than you. Find which.

@@ -1,0 +1,74 @@
+---
+id: "141_atr_as_volatility_gauge"
+title: "ATR as a volatility gauge"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "atr"
+prerequisites: ["029_volume_confirmation", "062_volatility_regimes"]
+tags: ["indicators", "atr", "volatility", "average_true_range", "regime"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ATR as a volatility gauge
+
+Average True Range (ATR) measures how much a stock typically moves per session, in dollars. It's the 14-bar (default) average of "true range" — the largest of: today's high minus today's low; today's high minus yesterday's close; or yesterday's close minus today's low. The third term captures overnight gaps that simple high-minus-low ignores. ATR is not a directional indicator — it doesn't say up or down. It says how much. That single number is the volatility input for every position-sizing and stop-placement decision; this lesson teaches reading ATR as a regime gauge before lesson 102 ties it to stops and lesson 101 ties it to sizing.
+
+## How this plays out in real markets
+
+Look at TSLA through 2025. In May 2025, with TSLA around 180, daily ATR(14) was approximately $4.40 — about 2.4% of price. By October 2025, with TSLA around 270 and trending strongly, daily ATR(14) had climbed to $8.20 — 3.0% of price. Then in late January 2026, after a sharp pullback to 230, ATR(14) spiked to $11.50 — 5.0% of price. Same stock, same indicator; the ATR-as-percent-of-price ratio tells you the regime.
+
+Below 2% daily ATR-to-price ratio is low-volatility regime — tight ranges, slow moves, small risk per share but also small reward per share. 2–4% is normal regime for a higher-beta name like TSLA. Above 4% is elevated-volatility regime — wider stops needed, smaller position size required to hold the same dollar risk.
+
+Falsifiable claim: ATR-as-percent-of-price below the stock's trailing 6-month average means the market is unusually quiet for this name and a range-bound mean-reversion bias is appropriate; ATR-as-percent above the 6-month average means the market is unusually agitated and trend-following strategies dominate. Invalidation: a sample where high-ATR regimes produce equal range-bound behaviour to low-ATR regimes — empirically, they don't. High ATR follows high ATR (volatility clusters), and that clustering is what makes ATR predictive of near-term character.
+
+Practical: AAPL with daily ATR(14) of $2.80 at a price of 230 = 1.2% — low-vol regime, expect $3-wide daily ranges. NVDA at the same date with daily ATR(14) of $5.10 at 140 = 3.6% — normal-to-elevated for the name, expect $5-wide daily ranges. Sizing should reflect this difference even with identical dollar account risk per trade.
+
+On Bursa Malaysia: GENTING in mid-2025 had daily ATR around RM0.08 against a price of RM4.20 — about 1.9%. After an unexpected guidance cut, ATR spiked to RM0.18 — 4.3%. The regime change was visible in ATR a full week before price broke its trading range.
+
+## The trap
+
+The trap is treating ATR as a directional or strength indicator. "ATR is rising — the trend is strong." That's wrong. ATR rises in both directions; a stock crashing has elevated ATR just like a stock rallying does. The other trap is ignoring ATR entirely and using a fixed dollar stop on every name — placing $1 stops on AAPL (with $2.80 ATR) and $1 stops on TSLA (with $11.50 ATR) is the same mistake at different magnitudes. The first stop is reasonable; the second is inside daily noise.
+
+The correct mental model: ATR is a calibration parameter for everything else. Stop distance is some multiple of ATR (lesson 102). Position size adjusts inversely with ATR (lesson 101). Volatility regime — quiet vs normal vs elevated — informs which strategy family even fits the current tape. ATR is the dial that makes the rest of your toolkit speak the language of the stock you're actually trading.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL trades at 230 with daily ATR(14) of $2.80. NVDA trades at 140 with daily ATR(14) of $5.10. Computing ATR as a percent of price, what do you learn about the two stocks?"
+  options={[
+    "NVDA is in a stronger trend because its ATR is higher",
+    "AAPL's ATR-to-price ratio is 1.2% (low-vol regime); NVDA's is 3.6% (normal-to-elevated). Same dollar risk on the two requires very different position sizes and stop distances because the typical daily range is roughly 3× different in percentage terms.",
+    "AAPL is more attractive because its ATR is lower",
+    "ATR doesn't matter at the position level — only the dollar amount does"
+  ]}
+  answer={1}
+  explanation="ATR-as-percent-of-price is the regime read. The tempting wrong answer ('higher ATR = stronger trend') is the directional misreading the lesson explicitly calls out — ATR is non-directional. The other mistakes attach moral value (more attractive / less attractive) to volatility itself, when ATR is a calibration input, not a judgement."
+/>
+
+<Quiz
+  question="TSLA's daily ATR(14) jumped from $8.20 (3.0% of price) to $11.50 (5.0% of price) over a four-week window. You've been running a mean-reversion strategy on TSLA with a $4 stop. The strategy's win rate has dropped from 58% to 41% over the same window. Which interpretation is most consistent with the lesson's framework?"
+  options={[
+    "TSLA's trend has changed direction — flip the strategy long-only",
+    "The volatility regime has shifted from normal to elevated. A $4 stop is now well inside daily noise (about 35% of one ATR). Either widen the stop and reduce size proportionally to keep dollar risk constant, or stand aside until ATR normalises — mean-reversion strategies tend to underperform in elevated-volatility regimes.",
+    "Reduce ATR-based stops because they're losing money",
+    "Add to losing positions — high ATR means bigger bounces"
+  ]}
+  answer={1}
+  explanation="The regime change is exactly what the lesson predicts — high ATR clusters, mean-reversion struggles, trend-following dominates. The tempting wrong answer (A) reads volatility as direction. Option C ('reduce ATR-based stops') is backwards — wider ATR demands wider stops. Option D is the revenge-trading anti-pattern flagged in Module 8."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste two tickers from your <Term id="ami_watchlist" /> and ask: "Compute daily ATR(14) as a percentage of price for each, and compare each ratio to its trailing 6-month average." Then check the chart yourself. The exercise is to internalise that ATR-to-price is a regime gauge and that "above 6-month average" and "below 6-month average" predict very different near-term behaviour.
+
+## Takeaway
+
+ATR tells you how much a stock typically moves — not which way. Use it as the calibration parameter for stops, size, and strategy selection; the ATR-to-price ratio reads the volatility regime.

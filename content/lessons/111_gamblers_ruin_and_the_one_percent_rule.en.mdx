@@ -1,0 +1,66 @@
+---
+id: "111_gamblers_ruin_and_the_one_percent_rule"
+title: "Gambler's ruin and why 1% is the answer"
+duration_min: 6
+level: 1
+module: 3
+difficulty: 4
+track: "edge_process"
+topic: "gamblers_ruin"
+prerequisites: ["019_survival_mindset", "014_position_sizing_basics"]
+tags: ["risk", "survival", "math", "gamblers_ruin", "ruin_probability"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Gambler's ruin and why 1% is the answer
+
+This lesson assumes you've completed lesson 019 (Survival mindset); here we go deeper on the formal math that justifies the 1% per-trade rule — the gambler's ruin problem. Given a positive-expectancy edge, the probability of going broke before the edge plays out depends mechanically on per-trade size and starting bankroll. At 5% per-trade sizing on a real edge, ruin probability is substantial. At 1%, it drops to near zero. This is not opinion; it is provable. This lesson teaches the simplified ruin formula, why a "small edge with small sizing" beats "small edge with big sizing" every time, and the falsifiable test for whether your account is in the ruin zone.
+
+## How this plays out in real markets
+
+Imagine an edge you have measured at a 55% win rate, 1R winners, 1R losers (so expected value per trade = +0.10R). Per-trade size = 1% of account, starting balance = $50,000. The simplified ruin probability formula for symmetric payoffs is r = ((1−p)/p)^N, where p is win probability and N is the number of losing trades it takes to wipe the account. At 1% per trade, N = 100 (you can survive 100 consecutive losses before zero). With p = 0.55: r = (0.45/0.55)^100 = (0.818)^100 ≈ 3 × 10⁻¹⁰. Essentially zero. A real edge with disciplined sizing produces a ruin probability indistinguishable from zero.
+
+Now bump per-trade size to 5%. N drops to 20 (20 consecutive losses wipes the account). r = (0.818)^20 ≈ 0.018, or 1.8%. Eighteen accounts in a thousand go broke just from a normal losing streak even with a real edge. Push to 10% per-trade: N = 10, r = (0.818)^10 ≈ 0.13, or 13%. More than one in eight blow-ups. Push to 25%: N = 4, r = (0.818)^4 ≈ 0.45 — nearly half the time you wipe out before the edge resolves. The edge has not changed across these scenarios; only sizing has. On Bursa Malaysia, the math is currency-agnostic — a RM50,000 account on a 55%-edge strategy at 5% per-trade carries the same ~1.8% ruin probability. Falsifiable test: simulate 10,000 sequences of 1,000 trades each at the same edge — accounts at 1% sizing hit ruin in fewer than 0.001% of runs, accounts at 5% sizing hit it in 1–2%, and accounts at 10% sizing hit it in 10–15%.
+
+## The trap
+
+The trap is "I have an edge, so sizing up captures more of it." The math says no. The edge is the expected value per trade; the ruin probability is the chance you stop playing before the law of large numbers catches up. Sizing up multiplies the per-trade payoff but exponentially raises the ruin probability — because each step toward zero is a step closer to the absorbing barrier where no future edge can rescue you. The correct mental model: the 1% rule is not a starting-point compromise that you graduate from; it is the empirically validated sizing that lets a real edge collect across the sample size needed to realise it. Aggressive traders who graduate to 5% are not "advanced"; they have re-introduced ruin probability to a system that had eliminated it. The PM holds 1% as the default because the math holds it as the answer.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="At 1% per-trade sizing, the gambler's ruin probability on a positive-edge strategy is roughly 3 × 10⁻¹⁰ — effectively zero. At 5% per-trade sizing the same edge produces a ruin probability of about 1.8%. Sizing up by 5×, the ruin probability rises by roughly what factor?"
+  options={[
+    "5× — sizing and ruin scale linearly.",
+    "About 25× — ruin scales with the square of sizing.",
+    "Roughly 60 million× — sizing enters the exponent in the ruin formula, so the relationship is exponential, not linear or quadratic; 5× sizing pushes ruin from near-zero to materially non-zero.",
+    "The same — ruin probability is independent of sizing when the edge is positive."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is the first — 'sizing and ruin scale linearly'. The math says exponential, not linear. Sizing per trade enters the formula as the exponent N (steps to zero), so doubling sizing roughly halves N and the ruin probability changes by a power, not a multiple. 'Independent of sizing' is the worst answer — ignoring sizing is exactly the misunderstanding that produces blown accounts. The exact ratio in this scenario is 1.8% / 3 × 10⁻¹⁰ ≈ 6 × 10⁷ — sixty million times higher ruin probability for 5× the sizing on the same edge."
+/>
+
+<Quiz
+  question="Two traders both have a real edge — 55% win rate, 1R/1R payoff. Trader A sizes at 1% per trade and runs for 5 years across roughly 1,200 trades. Trader B sizes at 5% per trade and runs the same strategy across the same 1,200 trades. Across 1,000 simulated runs, who ends with more money, and what's the survival distribution?"
+  options={[
+    "Trader B in every run — 5× the sizing means 5× the realised gains.",
+    "Trader A in every run because Trader B always goes broke.",
+    "Trader B has higher average ending equity but a meaningful fraction of runs hit ruin (roughly 1–2%) before completing; Trader A's runs almost never hit ruin and the median outcome is lower than Trader B's mean — but the survival-conditioned compounding favours Trader A across long horizons because the surviving paths matter, not the averaged paths.",
+    "They tie — both have the same edge, so both compound at the same rate."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is the first — '5× sizing = 5× gains'. The math: Trader B's mean ending equity is higher per surviving run, but the survival rate is not 100% — in 1–2% of runs the account goes broke before 1,200 trades complete. Long-horizon investing math cares about the survival path, not the mean. Trader A's run almost certainly compounds upward across the full 5 years; Trader B's run produces a wider distribution including catastrophic outcomes. The 'always goes broke' distractor overstates the case — Trader B usually does fine, but the small ruin tail is what makes the strategy fail at scale."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and check your `max_risk_per_trade_pct`. If it's above 2, change it to 1. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "At my current win rate and payoff, what's my approximate ruin probability over the next 1,000 trades at the current sizing — and what would it be at 0.5%?" The two numbers are the survival argument the math has been making all along.
+
+## Takeaway
+
+A real edge plus 1% sizing makes ruin essentially impossible; the same edge at 5% sizing puts ruin back on the table — sizing controls survival, edge controls returns, and you need both alive to collect.

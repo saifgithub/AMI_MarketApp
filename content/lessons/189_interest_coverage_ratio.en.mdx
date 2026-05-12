@@ -1,0 +1,72 @@
+---
+id: "189_interest_coverage_ratio"
+title: "Interest coverage — can EBIT pay the rent on the debt?"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "interest_coverage"
+prerequisites: ["042_debt_to_equity", "033_profit_and_margins", "188_net_debt_to_ebitda"]
+tags: ["interest_coverage", "leverage", "credit", "solvency", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Interest coverage — can EBIT pay the rent on the debt?
+
+Lesson 042 flagged interest coverage as one of the two follow-up checks after debt-to-equity. This lesson goes deep. Interest coverage = EBIT / interest expense. It answers a more direct question than net debt / EBITDA: how many times can current operating earnings pay the interest bill before the company misses a payment? A ratio of 1.0x means every dollar of EBIT goes straight to interest; 10.0x means there's a fat cushion. By the end of this lesson you should be able to compute it, name the rating-agency bands, and recognise the precise condition that turns a "comfortable" coverage number into a fragile one.
+
+## How this plays out in real markets
+
+MSFT in fiscal 2024 reported EBIT around $109B against interest expense near $2.9B. Interest coverage = 109 / 2.9 ≈ 38x. That number is functionally infinite — any plausible EBIT decline still leaves a comfortable interest cushion. AAPL: EBIT ~$120B, interest expense ~$3.8B, coverage ~32x. Both are AAA-tier on this metric alone.
+
+Compare a heavily indebted name. Whirlpool (WHR) in 2024 reported EBIT near $1.3B against interest expense near $370M. Coverage = 1.3 / 0.37 ≈ 3.5x. That's the lower end of investment-grade — rating agencies typically call sub-3.0x speculative-grade territory, and Whirlpool's bonds trade at corresponding spreads. The same business in a recession year where EBIT falls 40% would see coverage drop to 0.78 / 0.37 ≈ 2.1x, well into junk territory without any new debt being issued. The denominator was stable; the numerator did the damage.
+
+The classic distress example: a company with coverage of 2.0x and floating-rate debt sees the central-bank policy rate rise 200 basis points. Interest expense rises proportionally on the floating portion; if 50% of debt is floating, the interest line jumps about 25%. Coverage drops from 2.0x to 1.6x without the business changing at all — the macro cycle moved the ratio toward default. That's why interest coverage and rate exposure (lesson 191 on fixed vs floating) are joint-not-separate concerns.
+
+On Bursa Malaysia: TENAGA's interest coverage runs around 3–4x, normal for a regulated utility with high but predictable debt. AIRASIA's coverage went negative during COVID — EBIT was negative while interest expense stayed positive, the textbook pre-default signature. Coverage below 1.0x for more than two consecutive quarters is rarely survivable without capital injection or restructuring.
+
+Falsifiable claim: a non-financial, non-utility company with interest coverage below 3.0x AND floating-rate debt above 30% of total debt is a rate-cycle vulnerability that should override most equity-side bull cases. Either condition alone might be tolerable; both together is the specific pattern that takes companies from healthy to distressed in a tightening cycle.
+
+## The trap
+
+The trap is using net income or EPS as the numerator instead of EBIT. Net income is *after* interest, so it understates the cushion — and worse, in a near-default scenario where interest expense balloons, net income can go negative while EBIT is still positive, making the ratio uncomputable or absurdly negative. EBIT is the right numerator because it's the cash that exists before debt holders take their share. The correct mental model: interest coverage measures pre-debt-service cushion, not after-tax profit. What invalidates the standard reading: companies with material capitalised interest (e.g., long-construction industries like utilities or REITs) report a lower interest expense on the income statement than they're actually paying — always cross-check with cash interest paid from the cash-flow statement.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports EBIT of $400M and interest expense of $200M, giving coverage of 2.0x. EBITDA is $600M (D&A = $200M). Sixty percent of debt is floating-rate, and the policy rate has just risen 150 basis points. The company's weighted-average rate was 5%. Which read most accurately captures the near-term coverage outlook?"
+  options={[
+    "Coverage is 2.0x and will remain so",
+    "Floating-rate debt repricing adds roughly 1.5 percentage points to 60% of the rate base, lifting blended cost from 5% to approximately 5.9%, an 18% rise in interest expense. Holding EBIT constant, new interest is ~$236M and coverage falls from 2.0x to roughly 1.7x. The company moves closer to the 1.5x distress threshold without any operational change",
+    "Floating-rate debt doesn't affect coverage",
+    "Coverage will improve because EBIT grows with rates"
+  ]}
+  answer={1}
+  explanation="The synthesis ties interest coverage to rate exposure. The tempting wrong answer is option 0 — static reading of a dynamic input. The right calculation: 60% of debt × 150 bp = 90 bp blended rise on total debt; on a 5% base that's an 18% interest-expense jump, dropping coverage from 2.0x to ~1.7x. Option 2 ignores the mechanism. Option 3 invents a relationship that doesn't exist — EBIT generally compresses, not expands, with sustained rate hikes."
+/>
+
+<Quiz
+  question="Companies A and B both report 4.0x interest coverage. A has fixed-rate debt with 8-year average maturity; B has 70% floating-rate debt with 80% maturing in the next 24 months. Which synthesis is most accurate?"
+  options={[
+    "A and B are equally safe because coverage is identical",
+    "A's coverage will hold through a rate cycle because the rate is locked and maturities are far out; B's coverage is highly path-dependent — rising rates compress coverage immediately on the 70% floating, and the 80% near-term maturity wall means the entire stack will re-price at whatever rate prevails when refinancing happens. Same headline ratio, very different stress profile",
+    "B is safer because shorter maturity means lower duration risk",
+    "A is riskier because long maturity locks in current rates"
+  ]}
+  answer={1}
+  explanation="The synthesis tests whether interest coverage is read jointly with debt structure. The tempting wrong answer is option 0 — identical headline numbers, missed structural difference. The right read decomposes rate exposure (floating vs fixed) and refinancing exposure (maturity ladder) separately. Option 2 confuses bond duration (price sensitivity) with corporate refinancing risk. Option 3 reverses the direction — long fixed-rate maturity is a safety feature for the borrower, not a risk."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker and ask: "Give me interest coverage (EBIT / interest expense) for the last five years, the proportion of floating-rate debt, and the maturity ladder. Stress-test coverage assuming a 200 bp rate rise on the floating portion." Save the stress number in your <Term id="ami_decision_journal" /> next to the headline ratio. The gap between the two is the rate-cycle vulnerability.
+
+## Takeaway
+
+Interest coverage is the rent-payment check on the debt stack. A 3.0x ratio is the rough investment-grade floor — but the meaningful number is the stressed ratio after a plausible rate or earnings shock, not the calm-day headline.

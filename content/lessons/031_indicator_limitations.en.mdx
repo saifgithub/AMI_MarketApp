@@ -1,0 +1,74 @@
+---
+id: "031_indicator_limitations"
+title: "Indicator limitations"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "edge_process"
+topic: "indicator_limitations"
+prerequisites: ["026_moving_averages", "027_rsi_momentum_oscillator", "028_macd_trend_and_momentum", "029_volume_confirmation", "030_trend_confirmation_across_indicators"]
+tags: ["indicators", "limitations", "lagging", "falsifiability", "edge"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Indicator limitations
+
+Every indicator covered in this module — moving averages, RSI, MACD, volume — is a transformation of past price or past volume. None of them sees the future. They are descriptive summaries of what already happened, computed bar-by-bar. The most important property of a good indicator setup isn't its win rate; it's that the rule has a stated invalidation condition. A signal that cannot fail is not a signal — it is a story. This lesson is the contract: you will use indicators as decision support, and you will define the condition that proves the signal wrong before you act on it.
+
+## How this plays out in real markets
+
+Look at JPM in February–March 2026. On February 18, four readings aligned bullishly: price 248 above SMA50 at 239, RSI(14) at 61 with no divergence, MACD line above signal and above zero, and a breakout above 246 on volume at 1.7× the 20-day average. Textbook confluence. A trader took a long at 248 with a stop at 242 (2.4% below entry, 1% account risk).
+
+On February 26, JPM gapped down to 240 on an unexpected guidance cut from a peer bank — news the chart hadn't priced in, and no indicator could have. The stop hit at 242 on the gap, slippage took the fill to 240.30. The trade lost 3.1% of the position. The setup didn't fail because the indicators were wrong; the setup failed because indicators describe price history, not future news. The trader took the loss, sized correctly, and moved on. The signal had a stated invalidation — close through 242 — and it worked exactly as designed.
+
+Contrast a trader who saw the same setup but had no defined invalidation. They held through the gap, watched JPM fall to 231 over five sessions on continued sector weakness, and took an 6.9% loss instead of 3.1%. Same indicators, same entry — different outcomes because one trader had a falsifiable rule and the other had a hope.
+
+Falsifiable claim: an indicator-based setup with a stated, mechanical invalidation produces materially smaller average losses than the same setup without one, across any sample of trades. The condition that proves this lesson wrong: a backtest showing equivalent or larger losses for the falsifiable-rule cohort. That backtest hasn't been produced because the mechanics are arithmetic — defined stops cap losses, undefined ones don't.
+
+On Bursa Malaysia: SIME in mid-2025 gave a clean MACD-plus-volume long signal at RM2.65. Within a week, an unrelated commodity-price shock dragged the sector down. Traders with stops at RM2.55 lost 3.8%; traders without took 8%+ losses as the slide continued. The indicators didn't fail. The undefined-risk traders did.
+
+## The trap
+
+The seductive mistake is to treat an indicator signal as a prediction. RSI dropped below 30 — "it must bounce." MACD crossed positive — "this will run." Price closed above SMA200 — "now we go up." None of those are predictions. They are descriptions of past momentum, past trend regime, past slope. The future is a probability distribution shaped by news, flows, earnings, macro, and a thousand things no indicator can see.
+
+The correct mental model: indicators are filters that improve your hit rate when used in confluence, and that's all. Every signal must come with the answer to one question: "What price action would prove this signal wrong?" If you can't state that answer in a number before entering, you don't have a setup — you have a hope. The lagging nature of indicators is not a bug to work around; it is the reason you need a stop, a position size, and a willingness to be wrong about exactly the trade that looked the most convincing.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An indicator setup gives a strong long signal on JPM at 248, with all four checklist readings aligned. The trader enters with a stop at 242 (1% account risk). Two days later JPM gaps down on news to 240 and the stop fills at 240.30. What does this lesson say happened?"
+  options={[
+    "The indicators failed — they should have predicted the news",
+    "The setup worked as designed: the signal had a stated invalidation, news invalidated it, and the defined stop capped the loss to roughly its planned size",
+    "The trader should have ignored the stop and held",
+    "The trader should never use indicators again because they don't see news"
+  ]}
+  answer={1}
+  explanation="Indicators describe past price and volume; they cannot see future news. The setup didn't fail when JPM gapped down — the invalidation condition (close through 242) triggered, exactly as the rule defined. The most tempting wrong answer ('indicators failed, should have predicted the news') misunderstands what indicators are. They're not forecasts. They're filters with stated invalidation conditions, and the lesson explicitly frames falsifiability as the point."
+/>
+
+<Quiz
+  question="You see a great-looking RSI divergence on NVDA at a new high. MACD agrees. Volume on the new-high bar was 0.6× the 20-day average. But you can't articulate what would prove the short signal wrong in a specific number. How should you handle this setup under the lesson's framework?"
+  options={[
+    "Take the trade — three indicators agree, that's enough",
+    "Don't take it; without a stated invalidation in a specific price, it's not a setup, it's a hope. Define the level where the divergence cancels, or stand aside.",
+    "Take the trade and decide the stop later",
+    "Buy NVDA instead — the indicators are bullish"
+  ]}
+  answer={1}
+  explanation="The lesson's core rule: a signal without a stated invalidation is not a signal. Strong-looking confluence does not substitute for falsifiability — and 'decide the stop later' (option C) is the unfalsifiable hope-trade pattern the lesson explicitly names. The tempting wrong answer (option A) is treating indicator agreement as sufficient. It isn't. Without an a-priori invalidation level, you have no way to know when the trade is wrong, which means you'll discover it the hard way — by holding through a 6.9% loss instead of taking a 3.1% one."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and pick one open trade you have on. Write down — right now, in the journal entry — the specific price level at which you would conclude this trade is wrong, and which indicator reading would have to flip for the invalidation to count. If you can't write that sentence in one minute, the trade doesn't have a defined risk and the <Term id="ami_pm_safety_floor" /> is the only thing standing between you and an undefined loss.
+
+## Takeaway
+
+Indicators describe past price; they never predict — and a signal without a stated invalidation isn't a signal, it's a hope.

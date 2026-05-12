@@ -1,0 +1,66 @@
+---
+id: "050_boredom_trading"
+title: "Boredom trading"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 2
+track: "edge_process"
+topic: "boredom_trading"
+prerequisites: ["014_position_sizing_basics", "049_overconfidence"]
+tags: ["psychology", "boredom", "patience", "no_trade_days", "process"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Boredom trading
+
+Boredom trading is opening a position because you have not opened one recently — not because the setup arrived. After this lesson you will be able to name the cost of an unscheduled trade, define what a no-trade day is supposed to look like, and put a single counter in your mandate that protects you from the trader who needs to feel like a trader today. Most strategies have an expected number of trades per month. If you took double that, you are not running the strategy — you are running boredom with a chart open.
+
+## How this plays out in real markets
+
+A trader's written strategy generated, on average, 4–6 setups per month on US large-caps — long pullbacks to the 20-day moving average on names with a positive 200-day trend. In a quiet September, the market traded sideways for three weeks and produced exactly one qualifying setup, which he took and which closed flat. By the third week his equity curve had not moved. He took a long on JPM "to be in the market", then a short on XOM "to hedge", then a starter on META "because it looked extended", then a swing on AMZN earnings "for the gamma". None of the four were on his strategy's qualification list. By end of month his account was -2.3% in a flat tape — every single dollar lost to trades the strategy did not ask for.
+
+The falsifiable pattern: you are boredom-trading if your trade count for the period (week, month) is at least 1.5x your strategy's documented baseline, and at least half of the extra trades fail the written entry checklist on later review. Two numbers. If you do not have a documented baseline trade count for your strategy, that is the first problem; the boredom is the second.
+
+## The trap
+
+The trap is the belief that being in cash is wasting time. It is not. Being in cash is collecting optionality — the value of having capital available for the *next* qualifying setup. Every unqualified trade you take is a payment from your future-best-trade to your present-bored-trader. The correct mental model: the strategy's edge lives in the average expected value of qualified trades only. Unqualified trades have an expected value of approximately zero minus fees, slippage, and the opportunity cost of the capital they tie up. A no-trade day is not a failed day; it is the day the strategy is *protecting* you from spending size on something it did not ask for. The Conservative Debator's question to ask yourself is the cleanest one in trading: *"Is this trade on my list, or am I just bored?"*
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="Your strategy averages 5 qualifying setups per month. It is the 22nd and you have taken 1. The market has been quiet. You see a chart that 'looks okay' but doesn't tick all your entry boxes. What is the disciplined action?"
+  options={[
+    "Take a smaller position — the setup is partial, so size down.",
+    "Skip the trade. The qualification checklist is the only valid filter; a quiet month is the strategy doing its job, not failing.",
+    "Take the trade at full size — patience has been rewarded long enough.",
+    "Take the trade and tighten the stop to compensate for the weaker setup."
+  ]}
+  answer={1}
+  explanation="The 'smaller position' answer is the most seductive — it sounds like risk management and is actually a discount sticker on a non-setup. 'Tighten the stop on a weaker setup' has the same flaw with worse geometry: you have lowered the bar on entry but raised the bar on the price action that will validate it. The correct frame is that the strategy's quiet month is not a defect; it is the strategy refusing to buy bad setups. Trading anyway converts a flat month into a -2% month."
+/>
+
+<Quiz
+  question="Which is the strongest objective indicator that today's trades are boredom trades rather than strategy trades?"
+  options={[
+    "You traded more than once today.",
+    "Your trade count for the period is at least 1.5x the strategy's documented baseline and at least half of the extra trades fail the written entry checklist on later review.",
+    "Your P&L is flat for the week.",
+    "You feel restless watching the market."
+  ]}
+  answer={1}
+  explanation="Trading more than once today is normal. A flat week is normal. Restlessness is real but unfalsifiable. The diagnostic that holds up under audit is the compound test — count exceeds baseline, and the extra trades fail the checklist on retrospective review. Both numbers are auditable in the Decision Journal. That is the fingerprint of boredom trades, as opposed to a strategy in an active month."
+/>
+
+## Try it
+
+Open Settings → <Term id="ami_mandate" /> and set `max_trades_per_week` to your strategy's documented baseline (or 5 if you don't have one written yet). Then open the <Term id="ami_decision_journal" />, filter to the last 30 days, and tag each closed trade as either "on checklist" or "off checklist". Take the off-checklist row to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask it to characterise the pattern. Most off-checklist trades cluster in the same week — the boring one.
+
+## Takeaway
+
+Cash is a position. The no-trade day is the strategy doing its job, not failing at it.

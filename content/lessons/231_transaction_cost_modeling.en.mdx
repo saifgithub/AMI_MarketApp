@@ -1,0 +1,68 @@
+---
+id: "231_transaction_cost_modeling"
+title: "Transaction-cost modeling — the gap between paper and live"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "229_walk_forward_analysis", "105_hidden_costs_in_risk_reward", "223_rsi_2_mean_reversion_system"]
+tags: ["backtesting", "transaction_costs", "slippage", "commission", "impact"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Transaction-cost modeling — the gap between paper and live
+
+The backtest foundation (057) named look-ahead bias and overfitting as the killers; this lesson names the third silent killer for high-turnover rules: cost modeling. A backtest that assumes zero costs is fiction. A real backtest must model commissions, bid-ask spread, slippage on market orders, and market-impact for any size beyond tiny. For low-turnover strategies (1-2 trades/year) costs are a rounding error. For high-turnover strategies (RSI(2), intraday, scalping) costs can eat 80% of the gross edge. After this lesson you can apply realistic cost assumptions, identify when a paper-profitable strategy is actually unprofitable live, and choose cost-aware position sizing.
+
+## How this plays out in real markets
+
+Take an RSI(2) mean-reversion rule on SPY: buy when RSI(2) < 5, sell when RSI(2) > 95. Over 2015-2024 the zero-cost backtest shows 18.2% CAGR, 9% max drawdown, 71% win rate, 89 trades/year. Looks like a money printer. Now add costs.
+
+SPY is the most liquid ETF on the planet. Spread is typically $0.01 on a $500 share — 2 basis points round-trip. Commissions on a modern broker are $0 per share. Slippage on a market order is typically 1-3 bps round-trip in normal hours, more around news. Total cost per round-trip: ~3-5 bps. With 89 round-trips per year, total cost drag is roughly 3-4.5% per year. Net CAGR drops from 18.2% to roughly 14%. Still very good — SPY's liquidity is the strategy's friend.
+
+Now try the same rule on a small-cap like a low-volume Bursa name (a thinly-traded name on the Main Market with a 30-50 bps spread and meaningful slippage). Round-trip cost: 70-120 bps. With 89 trades/year, costs eat 60-100% of the paper edge — the strategy is unprofitable live. The same rule, the same parameters, the same edge — but the implementation surface destroys it. The honest backtest assumes the worst-case retail spread for your venue (US large-caps: 3-5 bps round-trip; US small-caps: 20-50 bps; Bursa large-caps like MAYBANK: 10-15 bps; Bursa small-caps: 50-150 bps), commissions per your broker, and a slippage model proportional to (your-order-size / average-daily-volume).
+
+## The trap
+
+The beginner mistake is using one cost number across all strategies. Costs are strategy-dependent, instrument-dependent, and size-dependent. A 5 bps assumption is right for liquid US large-caps at retail size and catastrophically wrong for any small-cap or any size beyond ~0.1% of average daily volume. The correct mental model: model costs per leg, then SCALE them by realistic worst-case (entry at the wrong end of the spread, partial fills on stops, occasional gap slippage). The second trap is ignoring asymmetric costs: stops fired at gap-down opens often execute well below the trigger price — slippage on a stop can be 5-10x normal-hours slippage. The third trap is testing on a venue you can't actually trade. <Term id="ami" /> is a <Term id="training_simulator" />, but the costs in the sim must mirror your real venue or the <Term id="ami_verdict" />s won't translate.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A backtest of an intraday rule on US large-caps shows 15% CAGR with 200 trades per year and zero cost assumption. Realistic retail round-trip cost is 4 bps. What's the net CAGR after costs?"
+  options={[
+    "14.2%",
+    "Roughly 7% — 200 trades × 4 bps = 800 bps = 8% drag",
+    "15% — costs don't matter for liquid names",
+    "Roughly 11% — 200 × 4 bps / 2 = 4% drag"
+  ]}
+  answer={1}
+  explanation="200 round-trips × 4 bps per round-trip = 800 basis points = 8 percentage points of drag. The 15% gross becomes roughly 7% net. Option 0 is the tempting wrong answer for traders who forget that 4 bps is round-trip per trade and 200 trades compounds the drag. Option 3 mistakenly halves the cost (treating it as one-way when 4 bps was already round-trip)."
+/>
+
+<Quiz
+  question="You have two backtested strategies. Strategy A: 12% CAGR, 8 trades/year, on US large-caps. Strategy B: 28% CAGR, 250 trades/year, on Bursa small-caps with average round-trip cost of 80 bps. Conservative Debator and Research Manager flag a synthesis question. Which deploys better?"
+  options={[
+    "Strategy B — higher gross return wins",
+    "Strategy A net: 12% - (8 × 5bps) = 11.6%. Strategy B net: 28% - (250 × 80bps) = 28% - 200% = deeply negative. Strategy A is the only deployable choice — Strategy B's edge cannot survive its implementation surface.",
+    "Both equally — gross returns are similar",
+    "Strategy B with larger size to overcome costs"
+  ]}
+  answer={1}
+  explanation="Synthesis: cost is a function of trade count × per-trade cost, and small-cap spreads are catastrophic for high-turnover strategies. Strategy B's 200% cost drag means it's not just unprofitable — it's a disaster. Option 0 is the most tempting wrong answer because the gross number is what spreadsheets reward. Option 3 makes it worse by adding market-impact costs on top of spread costs."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, paste your current strategy's average trades-per-year, the typical instrument bid-ask spread, your broker commissions, and your expected order size as a percentage of average daily volume. Ask: "Compute realistic round-trip cost and net CAGR after costs. Is this strategy viable on this venue at this size?" Log the net number in the <Term id="ami_decision_journal" /> — it's what you size against, not the gross.
+
+## Takeaway
+
+Gross CAGR is fiction; net CAGR after realistic costs is the only number that matters. High-turnover strategies live or die by the spread.

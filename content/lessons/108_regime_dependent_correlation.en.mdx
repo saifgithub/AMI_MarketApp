@@ -1,0 +1,66 @@
+---
+id: "108_regime_dependent_correlation"
+title: "Regime-dependent correlation: why correlations rise in crashes"
+duration_min: 6
+level: 1
+module: 3
+difficulty: 4
+track: "risk_portfolio"
+topic: "correlation_regimes"
+prerequisites: ["017_portfolio_exposure_and_correlation"]
+tags: ["risk", "correlation", "regimes", "crashes", "portfolio"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Regime-dependent correlation: why correlations rise in crashes
+
+This lesson assumes you've completed lesson 017 (Portfolio exposure and correlation); here we go deeper on a property of correlation that breaks most beginners' diversification math: pairwise correlations are not stable across regimes. In calm markets, NVDA and XOM might trade with a 0.05 correlation — practically independent. In a crash week, the same pair can run at 0.85 because everyone is selling everything to raise cash. Your "diversified" book becomes one big position the day you actually need the diversification. This lesson teaches how correlations spike with volatility, why "average" correlation hides the spike, and how the PM accounts for it.
+
+## How this plays out in real markets
+
+Pull a 90-day rolling correlation between NVDA and XOM on a calm market stretch in late 2024 — call it 0.04. Pull the same pair across a March 2020-style risk-off week and the realised correlation jumps to 0.72. Same two tickers, completely different relationship. The mechanism: in calm markets, each stock trades on its own fundamentals (NVDA on AI demand, XOM on oil supply). In a crash, everyone is selling whatever they own to meet margin calls, fund redemptions, or just stop the bleeding — and the selling pressure overwhelms the fundamental story. Correlations collapse toward 1 for everything liquid that's losing money.
+
+Concrete: take a "diversified" 5-position book — NVDA, JPM, XOM, KO, IHH — each sized at 1% account risk. In calm 2024, the average pairwise correlation was about 0.15. The PM modelled total tail-event exposure at roughly 2.5% (not the naive 5%). In an actual 5-sigma risk-off day, realised pairwise correlations across the same 5 names jumped to 0.65 average. The realised loss was closer to 4.1% — not the 2.5% the calm-state model suggested, and not the 5% if everything moved together perfectly. The diversification did not vanish, but most of it did when it mattered most. On Bursa Malaysia: MAYBANK, PETRONAS, IHH, MRDIY, TENAGA — a sector-diverse book — saw average correlations rise from 0.20 in 2024 calm to about 0.55 in the Q1 2025 sell-off. Falsifiable test: pick any 5 single-stock positions from your <Term id="ami_watchlist" />, compute the rolling 30-day correlations on the 10 worst market days of the last year vs the 10 best — the bad-day correlations will average at least 2× the good-day correlations.
+
+## The trap
+
+The trap is sizing the portfolio off "long-run average" correlations and assuming you've diversified. A beginner reads that NVDA and JPM had 0.12 average correlation over the last 5 years and concludes the two positions are independent for risk purposes. The flaw: the 0.12 average hides the fact that in the worst 5% of days, correlation was 0.6+. Your portfolio's worst-case exposure is governed by the bad-day correlation, not the average. The correct mental model: assume correlations spike to 0.5–0.8 across any equity-heavy book in a real risk-off event, and size for that. The PM models a "stressed correlation" scenario — when you ask it for current portfolio exposure, ask separately for the stressed exposure. That second number is what your account actually has to survive.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You hold 4 positions: NVDA, JPM, XOM, IHH — each sized at 1% account risk. Average pairwise correlation in calm markets is 0.15. In a stressed scenario, correlations across these names typically rise to about 0.7. Roughly what is the realised peak exposure during a stressed day, expressed as a multiple of the naive 4%?"
+  options={[
+    "0.5× — diversification cuts the exposure in half because the book is multi-sector.",
+    "1.0× — the 4% is the right number; correlations don't compound exposure.",
+    "Roughly 1.6×–1.8× of the naive 4% — when correlations approach 0.7 the positions move together enough that the cross-position diversification benefit collapses to a small residual.",
+    "4.0× — correlations of 0.7 mean each position effectively quadruples in stress."
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is '1.0×, 4% is 4%'. That ignores that the 4% naive number bakes in a diversification benefit that only exists when correlations are low. When stressed correlations hit 0.7, most of that benefit evaporates. The realised stressed exposure isn't exactly 4 × 4% (=16%) because correlation 0.7 is not 1.0, but it's substantially larger than 4% — typically 1.5–2× the naive number for a 4-position book. The '4.0×' distractor treats correlation as multiplicative, which is wrong; correlation rescales the diversification factor, not the exposure itself."
+/>
+
+<Quiz
+  question="A trader runs a portfolio of 6 tech names (NVDA, AMD, AAPL, MSFT, GOOGL, META) at 1% each and a portfolio of 6 cross-sector names (NVDA, JPM, XOM, KO, IHH, MRDIY) at 1% each, both seen as 'diversified within their universe'. In a sharp risk-off week, why is the cross-sector book usually meaningfully less damaged even though all six positions are sized identically?"
+  options={[
+    "The tech book benefits from positive momentum so the risk-off hit is offset.",
+    "The cross-sector book starts with much lower calm-state correlations (0.10–0.25 vs 0.6–0.8 for tech), so even when stressed correlations rise across both books, the cross-sector book ends up with average stressed correlations in the 0.5–0.7 range while the tech book hits 0.85+ — closer to a single 6× position.",
+    "Both are equally damaged because risk-off events hit all sectors the same.",
+    "Position count is what matters, not sector mix — six positions in either book is six positions."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the last — 'position count is what matters'. The point of this lesson is that the position count is misleading when correlations rise. Tech names already correlate at 0.6+ in calm markets; in stress they approach 0.85–0.95 and the book becomes effectively a single 6%-sized tech bet. Cross-sector names start near-independent and even when stressed correlation rises, the ceiling is well below 1, so the diversification benefit partially survives. The 'tech has momentum' distractor is wishful thinking; in risk-off events, the strongest names get sold first to raise liquidity."
+/>
+
+## Try it
+
+Open the Portfolio Manager <Term id="ami_one_on_one" /> and ask "Across my current open positions, what is the calm-state average pairwise correlation, and what is the stressed-correlation estimate?" The PM will show both. If the stressed correlation pushes your single-factor exposure above your mandate ceiling, that's the trade you'd want to reduce before the next risk-off event, not during it.
+
+## Takeaway
+
+Diversification works on calm days and partly breaks on bad days — size for the stressed correlation, not the long-run average, or your real exposure shows up on the worst day of the year.

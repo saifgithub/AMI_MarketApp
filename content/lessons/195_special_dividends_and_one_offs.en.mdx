@@ -1,0 +1,74 @@
+---
+id: "195_special_dividends_and_one_offs"
+title: "Special dividends and one-offs — don't annualise what isn't recurring"
+duration_min: 4
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "special_dividends"
+prerequisites: ["043_dividend_yield_and_payout_ratio", "194_the_yield_trap"]
+tags: ["special_dividend", "one_off", "dividends", "income", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Special dividends and one-offs — don't annualise what isn't recurring
+
+Lesson 043 flagged that a "special" or one-time dividend inflates the trailing yield for one period and shouldn't be annualised. This lesson goes deep on why companies pay special dividends, how data feeds misreport the yield when one is in the trailing window, and the precise condition under which a special is a signal of strength versus a signal that the company has run out of better uses for the cash. By the end of this lesson you should be able to identify a special dividend in trailing data, recompute the regular-dividend yield, and read what a special dividend is actually telling you about the business.
+
+## How this plays out in real markets
+
+Costco (COST) is the textbook serial special-dividend payer. The regular quarterly dividend is around $1.16 per share annualised, giving a regular yield near 0.5% at a stock price of ~$900. But Costco has paid five special dividends in the last decade, ranging from $5 to $15 per share. In the trailing 12 months following one of those payments, a naive yield calculation that includes the special would show a yield of 2% or higher — four times the regular yield. Most data feeds disclose the trailing 12-month total dividend; only the more sophisticated screens separate regular from special.
+
+When does Costco pay one? Typically when the balance sheet has built up excess cash beyond what management considers needed for buybacks, capex, and operating flexibility — and when the tax environment is favourable for distributing it (special dividends in late 2012 were timed before an anticipated dividend-tax-rate increase, a classic case).
+
+A different version: Texas Pacific Land (TPL) has paid sporadic special dividends tied to royalty windfalls from underlying oil and gas activity on its acreage. The yield in those years can be enormous (5–10%), but it isn't a recurring rate — it's the company distributing a windfall.
+
+A failure case: a mature European industrial pays an unusually large special dividend in a year when it has just lost a major patent and earnings are expected to decline. The special is funded by drawing down cash reserves built up over years of strong margins. The market initially celebrates the special; over the next 24 months the regular dividend gets cut because the underlying earnings power has fallen and there's no more cash buffer to lean on. The special was a one-time consolation — and a tell that management didn't have a better use for the cash, including buybacks or reinvestment.
+
+On Bursa Malaysia: some property-related names have paid special dividends after divesting non-core land at gain — the special reflects the one-time monetisation, not the going-concern earnings power. Reading the special as recurring would dramatically overstate the underlying yield.
+
+Falsifiable claim: a company that pays a special dividend without a clear non-recurring source (M&A divestiture, regulatory windfall, accumulated excess cash with a stated buyback alternative considered and rejected) is signalling that management doesn't see a sufficiently accretive investment opportunity. That's neutral information at best, mildly negative at worst — it should not be read as a growth signal. The signal invalidates when the special is paid alongside a maintained or growing regular dividend and a healthy reinvestment program — Costco's pattern.
+
+## The trap
+
+The trap is annualising the trailing 12-month dividend including the special. A naive "TTM dividend yield" sorted screen will surface companies that just paid a one-time distribution, and the next 12 months won't repeat. The correct mental model: split the trailing dividend into regular and special; compute yield only on the regular portion. The special is a one-time cash event with no claim on future yield. What invalidates the simple reading: a company that has paid specials in 4 of the last 5 years on a roughly predictable cycle is effectively running a variable-rate regular dividend disguised as specials — and the trailing average is closer to the truth than the "regular only" view.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock trades at $80 with a regular quarterly dividend of $0.40 ($1.60 annualised) and just paid a one-time $4.00 special dividend. The data-feed-reported TTM dividend is $5.60. Which is the correct forward-yield expectation?"
+  options={[
+    "$5.60 / $80 = 7.0% — the headline TTM yield",
+    "The regular-dividend yield is $1.60 / $80 = 2.0%. The $4.00 special is a one-time distribution that won't repeat unless management announces another. The forward expected yield is 2.0%, not 7.0%. Treating the TTM number as forward yield over-states the income stream by 3.5x and would mislead any income-mandate allocation decision",
+    "$5.60 / $80 = 7.0%, but only if the company is profitable",
+    "The special replaces the regular dividend"
+  ]}
+  answer={1}
+  explanation="The synthesis test: separating regular from special. The tempting wrong answer is option 0 — the headline TTM number that most screens report. The right read isolates the regular dividend and computes the recurring yield on that. Option 2 makes a conditional version of the same mistake. Option 3 invents a substitution that almost never happens — companies pay specials alongside regulars, not instead of them."
+/>
+
+<Quiz
+  question="A mature European industrial pays a special dividend equal to 18 months of its regular payout. The cash came from drawing down a cash reserve built over the past five years. The company has guided that earnings will decline next year. Which read is most accurate?"
+  options={[
+    "Bullish — management is returning capital to shareholders",
+    "Slightly negative read: the special is funded by depleting a cash cushion rather than by an investment opportunity not pursued. Combined with declining earnings guidance, this raises the probability that the regular dividend gets cut in 12–24 months because the buffer that supported it is now gone. The special masquerades as a return-of-capital celebration but is closer to a one-time goodbye than a recurring strength signal",
+    "Neutral — specials don't carry information",
+    "Bullish because the yield is high in the trailing year"
+  ]}
+  answer={1}
+  explanation="The synthesis ties special-dividend funding source to forward dividend safety. The tempting wrong answer is option 0 — the headline 'capital return' framing without examining the funding source or the forward earnings path. The right read recognises that a special funded by reserve drawdown alongside declining earnings is a pattern that frequently precedes a regular-dividend cut. Option 2 dismisses information that the lesson explicitly says to extract. Option 3 makes the trailing-yield mistake the lesson is specifically about."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a ticker that has paid any special dividend in the last 3 years and ask: "Split the trailing dividend history into regular and special. For each special, tell me the funding source (operating cash, asset sale, reserve drawdown) and whether the regular dividend was maintained afterward. Compute regular-only yield and TTM-inclusive yield separately." Save both numbers. The regular-only yield is the forward expectation; the TTM-inclusive yield is the screen's lie.
+
+## Takeaway
+
+A special dividend is a one-time event with no claim on future income. Compute yield on the regular dividend only — and read the special itself as information about what management couldn't find to do with the cash.

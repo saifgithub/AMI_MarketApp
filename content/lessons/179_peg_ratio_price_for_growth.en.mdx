@@ -1,0 +1,68 @@
+---
+id: "179_peg_ratio_price_for_growth"
+title: "PEG ratio — paying the right price for growth"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "pe_ratio"
+prerequisites: ["039_the_pe_ratio", "044_earnings_growth", "176_trailing_vs_forward_pe"]
+tags: ["pe_ratio", "peg_ratio", "growth", "valuation", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bull_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# PEG ratio — paying the right price for growth
+
+Lesson 039 introduced PEG — P/E divided by expected earnings-growth rate — as a way to read multiples against the growth they're pricing. This lesson nails down the mechanics: when PEG = 1.0 is genuinely fair, when PEG = 0.5 isn't actually a bargain, and when PEG breaks entirely. By the end you should be able to compute PEG, choose the right growth input (this is where most readers go wrong), and recognise the specific business profile where the ratio is meaningless.
+
+## How this plays out in real markets
+
+NVDA mid-2026: trailing P/E 42x, consensus next-three-year EPS CAGR ~40%. PEG = 42 / 40 ≈ 1.05. Peter Lynch's rough rule of thumb — PEG around 1.0 is fair, below 0.75 is interesting, above 1.5 is rich — would call NVDA fairly priced for its growth. AAPL: P/E 32x, next-three-year EPS CAGR ~7%. PEG = 32 / 7 ≈ 4.6. By PEG, AAPL is paying steep multiples for muted growth — far less attractive than NVDA despite the lower headline P/E.
+
+Now a counterexample. SNOW (Snowflake) trading at forward P/E 80x with expected 30% growth gives PEG = 2.7. By Lynch's rule, expensive. But Snowflake's gross margins are 70%+ and net retention runs above 130% — most of the "growth" is locked-in expansion within existing customers, not customer acquisition. The PEG ratio doesn't weight earnings quality; a dollar of high-net-retention SaaS growth is more valuable than a dollar of one-shot project revenue growth. PEG flags Snowflake as expensive when a more nuanced read might call it fairly priced — the ratio strips out everything except growth rate.
+
+Falsifiable claim: PEG is most reliable when expected earnings growth is (a) between roughly 8% and 30% annually, AND (b) durable for at least three years. Below 8%, the ratio explodes mathematically — a 30x stock with 2% growth gives PEG = 15, which is technically true but uninformative. Above 30%, growth is rarely durable enough for the ratio to be meaningful at face value. On Bursa: TENAGA at P/E 13x with 3% expected EPS growth gives PEG ≈ 4.3 — looks bad, but utilities aren't supposed to grow earnings; the ratio simply doesn't fit the business model.
+
+## The trap
+
+The trap is computing PEG with the wrong growth input. Most readers grab next-year EPS growth from a finance site, divide P/E by that, and call it done. But next-year growth is noisy — a single one-off cost can make next-year growth look 40% when the underlying business compounds at 12%. The correct mental model: use a multi-year CAGR (typically three to five years of expected EPS growth), not single-year. And use *sustainable* growth, not one-shot bounces. A retailer reopening stores post-pandemic might show 60% expected EPS growth next year while the long-run rate is 8%; PEG on the 60% number says "buy", PEG on the 8% says "avoid", and the 8% is the honest signal. What invalidates the ratio entirely: businesses with very low growth (<5%) or those where earnings are not the right metric (banks where ROE matters more, REITs where AFFO matters, early-stage software where revenue growth matters before earnings exist).
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Stock A: P/E 35x, expected EPS growth 40% next year (driven by a one-off cost-cut), 3-year EPS CAGR estimate 12%. Stock B: P/E 30x, expected EPS growth 18% next year, 3-year EPS CAGR estimate 18%. Which PEG read is most honest, and which stock is better priced for its growth?"
+  options={[
+    "Stock A — PEG using next-year growth = 35/40 = 0.88 vs Stock B PEG = 30/18 = 1.67, so A is much cheaper for its growth",
+    "Both stocks have the same PEG",
+    "Stock B is better priced for its growth. Stock A's '40% next year' is a one-off, so the honest PEG uses the 3-year CAGR: 35/12 = 2.92. Stock B's growth is stable, so 30/18 = 1.67 is the honest PEG. B is paying ~1.67x its growth rate (slightly rich but reasonable); A is paying ~2.92x its sustainable growth. The single-year PEG would mislead a reader into picking the more expensive name",
+    "PEG only works for stocks with growth above 50%"
+  ]}
+  answer={2}
+  explanation="The tempting wrong answer is option 0 — it follows a mechanical rule and falls for a one-off boost in next-year growth. The right read insists on multi-year CAGR because PEG only means anything when the growth rate is durable. Option 1 is wrong on the arithmetic. Option 3 inverts the relationship — PEG breaks at *very high* growth and at *very low* growth, not at the middle. The synthesis: the input you choose for growth determines the answer, so choose the durable one."
+/>
+
+<Quiz
+  question="An investor compares two stocks. TENAGA (Malaysian utility): P/E 13x, expected EPS growth 3% per year for the next five years, dividend yield 4.5%. NVDA: P/E 42x, expected EPS growth 40% per year for the next three years. PEG for TENAGA = 4.3, PEG for NVDA = 1.05. The investor concludes NVDA is the better value 'because its PEG is much lower'. What's the synthesis-level critique?"
+  options={[
+    "The investor is correct — PEG below 1.0 is always cheaper than PEG above 4.0",
+    "Both stocks have the same earnings quality",
+    "PEG breaks at very low growth rates and ignores yield. A utility like TENAGA isn't designed to grow earnings — its return is split between modest EPS growth and a 4.5% dividend yield, giving a total expected return of ~7.5% on flat multiples. PEG only ranks the growth-vs-multiple trade-off and is meaningless for stable, dividend-paying businesses. The right comparison uses different lenses: PEG for NVDA, dividend-discount or yield-plus-growth for TENAGA. Apples and oranges via a single ratio is exactly the failure mode the lesson warned about",
+    "NVDA's PEG is a coincidence and should be ignored"
+  ]}
+  answer={2}
+  explanation="The synthesis: PEG is one lens, not the lens. The tempting wrong answer is option 0 — the mechanical 'low PEG good, high PEG bad' shortcut. Utilities and dividend-heavy businesses fail PEG by design because they're not growth businesses. The right comparison uses business-model-appropriate metrics: total-return decomposition for utilities, growth-adjusted multiples for compounders. Option 1 ignores earnings quality entirely. Option 3 dismisses a useful number for the wrong reason."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the Fundamentals Analyst, paste a growth-stock ticker you're watching, and ask: "Compute PEG using forward P/E and the consensus 3-year EPS CAGR. Then tell me how durable that CAGR is — what fraction of growth comes from organic revenue, what fraction from buybacks, and what one-off items are in next year's number." Save PEG plus the durability score in your <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+PEG only works when growth is durable and in the 8–30% range. Use multi-year CAGR, never single-year — and recognise that for dividend-heavy or low-growth businesses, PEG is the wrong tool entirely.

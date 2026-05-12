@@ -1,0 +1,76 @@
+---
+id: "124_sma_vs_ema_vs_wma"
+title: "SMA vs EMA vs WMA — when each matters"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "moving_average_variants"
+prerequisites: ["026_moving_averages", "022_trend_direction"]
+tags: ["indicators", "moving_average", "sma", "ema", "wma", "lag"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# SMA vs EMA vs WMA — when each matters
+
+Lesson 026 introduced the simple moving average and named the EMA in passing. The three common variants — Simple (SMA), Exponential (EMA), and Weighted (WMA) — all compute an average of the last N bars, but they distribute weight differently. SMA gives every bar equal weight. WMA gives the most recent bar the highest linear weight, then steps down. EMA applies an exponential decay so the newest bar dominates and older bars fade smoothly. Same lookback period; three different speeds. Pick the one whose lag matches the timeframe you trade — and know the tradeoff before you switch.
+
+## How this plays out in real markets
+
+Look at QQQ from October 2025 through January 2026. Using a 20-period lookback on the daily chart:
+
+- The SMA20 turned bullish on October 28 at 487 — three full sessions after the local low.
+- The WMA20 turned bullish on October 24 at 484 — one session after the low.
+- The EMA20 turned on October 23 at 483 — coincident with the low bar's close.
+
+EMA caught the turn earliest. Same chart, different lags. But on November 14, when QQQ printed a one-day -2.8% shakeout to 495, all three averages held above price by the next session — except the EMA20, which flipped to declining for two bars before re-flattening. The EMA's responsiveness cuts both ways: faster turns, more whips.
+
+The trade-off is mechanical. EMA(N) gives roughly half the lag of SMA(N) but produces about 30–40% more direction changes across a typical six-month sample, which translates into more whipsaw entries if you trade off the cross. WMA sits between the two on both axes.
+
+On Bursa Malaysia: PUBLIC BANK during 2025 — SMA50 crossed bullish on March 17, EMA50 on March 11. The six-day head start was real, but EMA50 also gave one false flip in mid-April that SMA50 ignored entirely.
+
+## The trap
+
+The trap is assuming "faster is better." Beginners read that EMA reacts quicker and switch every MA on their chart to exponential, then watch their cross signals double in frequency and their win rate collapse. The opposite mistake is just as common — defaulting to SMA on a 5-minute scalping chart where a 30-bar lag is the entire trade.
+
+The correct mental model: match the MA's lag to the holding period of the trade. For multi-week swings off the daily chart, SMA's slower response filters noise you don't care about. For shorter-term momentum entries — daily breakouts you'll exit in a week — EMA's earlier turn is worth the extra whips. WMA is the compromise when you want some recency emphasis without exponential overshoot. The choice is a tuning parameter, not a preference.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="QQQ bottoms on October 23. EMA20 turns bullish that same day at 483, WMA20 turns the next day at 484, SMA20 turns four sessions later at 487. Same chart, same lookback. What does the spread tell you?"
+  options={[
+    "EMA is mathematically more accurate, so always use it",
+    "Each variant trades lag for noise differently — EMA is fastest but flips more often; SMA is slowest but cleaner. Pick the lag that matches your holding period.",
+    "WMA is broken because it landed between the other two",
+    "The chart software is miscalibrated if the values differ"
+  ]}
+  answer={1}
+  explanation="All three are valid; they distribute weight to recent bars differently. EMA's exponential decay makes it the fastest but also the most prone to false flips. The tempting wrong answer ('EMA is always better') ignores the QQQ November 14 example where the EMA gave a wrong directional flip the SMA correctly ignored. Speed costs you in whipsaws; pick by timeframe, not preference."
+/>
+
+<Quiz
+  question="You swing-trade off the daily chart with an average holding period of three weeks. You've been using EMA20 for trend reads and your cross signals are getting whipsawed three or four times a month, each time costing 0.4–0.6% on the stop. Position size is 1% account risk per trade. What's the best adjustment under the lesson's framework?"
+  options={[
+    "Switch to EMA10 — go even faster to catch turns earlier",
+    "Switch to SMA20 (or SMA50) so the MA's lag matches the three-week holding period; the extra delay filters the noise that's eating the account",
+    "Keep EMA20 and double the position size to compensate",
+    "Stop using moving averages entirely"
+  ]}
+  answer={1}
+  explanation="Holding period and MA lag should match. Three-week swings don't need an MA that flips every five days. The tempting wrong answer ('go faster') compounds the problem — faster MA means more flips means more whipsaw losses. The lesson is explicit: faster is not better; lag-to-holding-period fit is. Doubling size on a losing system is the revenge-trading failure mode flagged in the psychology module."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker from your <Term id="ami_watchlist" /> and ask: "Overlay SMA20, EMA20, and WMA20 — where do they currently sit, and how many false flips did each give in the last 60 sessions?" Then check the chart yourself. Pick the variant whose flip count matches the cost you're willing to pay for earlier turns.
+
+## Takeaway
+
+SMA, EMA, and WMA trade lag for whipsaws on a sliding scale — match the variant to your holding period, not to whichever one feels faster.

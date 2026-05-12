@@ -1,0 +1,81 @@
+---
+id: "239_strategy_rotation_by_regime"
+title: "Strategy rotation by regime — the regime overlay above the strategy overlay"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "synthesis"
+prerequisites: ["058_strategy_failure_modes", "232_regime_segmented_backtests", "236_combining_strategies_for_diversification", "238_strategy_correlation", "062_volatility_regimes"]
+tags: ["synthesis", "regime_rotation", "portfolio", "regime"]
+agent_callouts: ["research_manager", "conservative_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Strategy rotation by regime — the regime overlay above the strategy overlay
+
+The diversification lesson (236) said running multiple strategies with non-overlapping failure regimes is the defence. This lesson is the active version: instead of equal-weighting strategies across regimes, you SHIFT weight toward strategies whose favourable regime is current and AWAY from strategies whose failure regime is current. Done crudely, it reintroduces overfitting (you're predicting regimes). Done with deterministic, observable regime indicators and pre-committed weight shifts, it captures the diversification benefit AND a regime-conditional return premium. After this lesson you can design a regime-rotation overlay using a small number of robust indicators, and avoid the trap of over-engineering it into a regime-prediction system.
+
+## How this plays out in real markets
+
+Use two regime indicators:
+1. **Trend regime**: SPY above/below 200-day MA AND 200-day slope positive/negative.
+2. **Volatility regime**: VIX above/below 22.
+
+Four regime combinations:
+
+| Trend | Vol | Favoured strategy | Penalised strategy |
+|---|---|---|---|
+| Bull (above MA, positive slope) | Low (VIX < 22) | Trend, breakout, momentum | Defensive |
+| Bull | High (VIX > 22) | Mean-reversion, defensive | Pure trend |
+| Bear (below MA, negative slope) | Low | Defensive, market-neutral | Long-only momentum |
+| Bear | High | Defensive, cash | Mean-reversion, long-only momentum |
+
+A simple rotation rule: in the favoured regime, the corresponding strategy gets full weight (e.g., 1.0). In a neutral regime, weight is 0.5. In the failure regime, weight is 0.0-0.25 (<Term id="ami_mandate" />-aware minimum). Strategies that aren't either favoured or penalised stay at 0.5.
+
+Backtested over 2005-2024 with three strategies (trend-following, mean-reversion, momentum) and the above rotation overlay vs equal-weight: equal-weight aggregate CAGR 10.4%, max drawdown 14%. Regime-rotation aggregate CAGR 11.2%, max drawdown 9%. The improvement isn't huge in CAGR — it's in drawdown, because the rotation overlay cuts mean-reversion exposure in trending bears (the strategy's failure regime) and trend-following exposure in chop. Q1 2020 drawdown: equal-weight -11%, regime-rotation -6%. November 2020 momentum crash: equal-weight -4%, regime-rotation -2% (momentum had already been cut to 0.5 due to rising VIX in October).
+
+The rotation works because each strategy's failure regime is observable BEFORE the failure compounds — VIX rises before mean-reversion crashes, the 200-day MA flattens before trend-following whipsaws. The lag is days to weeks, which is enough to act on.
+
+## The trap
+
+The beginner mistake is using too many regime indicators and over-fitting the rotation rule. Four observable regimes with two indicators is robust. Sixteen regimes with five indicators is overfit — most of the cells have insufficient sample size and the rule is fitting noise. The correct mental model: keep the rotation rule simple and pre-commit it. Two indicators, four regimes, three weight states (0, 0.5, 1.0). The second trap is acting on regime indicators with high noise — using daily readings produces constant rotation that destroys returns through transaction costs. Use weekly or monthly readings with a smoothing rule (e.g., regime must persist for 4 weeks to trigger a weight change). The third trap is trying to predict regime changes — the rule is reactive (it responds to confirmed regime indicators), not predictive. Predicting a regime change is exactly the kind of forecasting the backtest foundation (057) warned against.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Today: SPY above its 200-day MA with positive slope, VIX at 14. By the regime-rotation rule (trend regime = bull, vol regime = low), what's the correct portfolio weight allocation across trend-following, mean-reversion, and momentum?"
+  options={[
+    "Equal weight 33/33/33 always",
+    "Trend-following 1.0, momentum 1.0, mean-reversion 0.5 — the bull/low-vol regime is favourable for trend and momentum, neutral for mean-reversion. Normalize the sum to mandate-compliant total exposure.",
+    "All weight to mean-reversion because it has highest backtest CAGR",
+    "Cut all exposure because VIX is at multi-year lows"
+  ]}
+  answer={1}
+  explanation="The rule applies pre-committed weights based on observable regime indicators. Bull/low-vol favours trend and momentum; mean-reversion is neutral (its favourable regime is bull/high-vol). Option 0 ignores the rotation rule. Option 2 cherry-picks based on backtest CAGR ignoring regime. Option 3 misreads low VIX as a sell signal (low VIX is neutral for the bull regime, not bearish)."
+/>
+
+<Quiz
+  question="Regime indicators flip: SPY breaks below 200-day MA on a sharp move, VIX spikes from 18 to 31 in one week. The Conservative Debator says 'rotate immediately to the bear/high-vol regime — cut mean-reversion to 0.25, cut momentum to 0.25'. The Research Manager says 'wait for the regime to persist 4 weeks before flipping weights'. Synthesis: which is correct?"
+  options={[
+    "Conservative is right — speed matters in crisis",
+    "Research Manager is right — the pre-committed smoothing rule (4-week persistence) prevents the rotation overlay from being a high-frequency P&L-chase. Mandate-aware drawdown rules cut overall exposure during the wait if mandate cap is approaching, but the rotation weights themselves wait for confirmation.",
+    "Cut all strategies to zero immediately",
+    "Add to mean-reversion because the dip is an opportunity"
+  ]}
+  answer={1}
+  explanation="The synthesis: the smoothing rule is the defence against noise-driven over-rotation. If every VIX spike triggered a weight rebalance, the strategy would underperform from transaction costs alone. AT THE SAME TIME, the mandate-aware drawdown rule (independent of rotation) cuts gross exposure as drawdown approaches the cap. Option 0 lets a single week dictate the rotation. Option 2 over-corrects. Option 4 ignores the regime signal entirely and trades emotion."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, define your two regime indicators (e.g., SPY-200-day status and VIX threshold), the four regime combinations, the strategy-weight matrix per regime, and the smoothing rule (e.g., 4-week persistence). Submit: "Is this rotation overlay robust? What's the simplest test that confirms it's not overfit?" Log the matrix + smoothing rule in the <Term id="ami_decision_journal" /> as a pre-committed protocol — and rebalance only when a regime change has persisted past the smoothing window.
+
+## Takeaway
+
+Strategy rotation works when it's reactive (to confirmed regimes) and simple (two indicators, four regimes, three weights). The moment it becomes predictive or complex, it overfits.

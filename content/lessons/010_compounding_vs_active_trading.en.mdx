@@ -1,0 +1,89 @@
+---
+id: "010_compounding_vs_active_trading"
+title: "Compounding vs active trading"
+duration_min: 5
+level: 1
+module: 2
+difficulty: 2
+track: "foundations"
+topic: "compounding"
+prerequisites: ["009_risk_profile_basics"]
+tags: ["foundations", "compounding", "costs", "friction", "math"]
+agent_callouts: []
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Compounding vs active trading
+
+Compounding is the closest thing to a free lunch the market offers — but only if you let it run. Active trading promises to beat compounding by capturing extra return on top of the baseline, and sometimes it does. The honest comparison is not "trading vs investing" in the abstract; it is the arithmetic of compounded returns over decades against the same baseline minus the friction (commissions, spreads, taxes, mistakes) that trading inevitably adds. Once you can do that arithmetic, the question of which approach suits you becomes much easier to answer.
+
+<Animation name="compounding_curve" />
+
+## Example
+
+Run the numbers. Start with $10,000 invested at an 8% annualised return — roughly the long-term average of broad US equities, dividends reinvested.
+
+- Year 5: $10,000 × 1.08⁵ = **$14,693**
+- Year 10: $10,000 × 1.08¹⁰ = **$21,589**
+- Year 20: $10,000 × 1.08²⁰ = **$46,610**
+- Year 30: $10,000 × 1.08³⁰ = **$100,627**
+
+The investor's account roughly **doubles every 9 years** with no further action. Most of the final balance is interest on interest — at year 30, more than 80% of the $100,627 was generated *after* year 15.
+
+Now an active trader on the same $10,000, same 8% gross annualised "edge", trading 20 times a year. Realistic friction in a US retail account: ~$0.005/share commissions plus ~0.05% effective spread cost per round trip, plus short-term capital gains tax of roughly 25% on realised profits each year. Net annualised return after friction commonly compresses to **5–6%** even when the gross edge is preserved.
+
+- $10,000 at 6% for 20 years = **$32,071**
+- $10,000 at 5% for 20 years = **$26,533**
+
+The trader needed to be just as right as the investor, every year for 20 years, and ended with $14,000–$20,000 *less*. The friction is not the commission — it is the compounding of taxed gains versus untaxed unrealised gains.
+
+The falsifiable rule: active trading beats buy-and-hold **only if your gross annualised alpha exceeds total transaction + tax friction** — typically 2–3% per year for a US retail trader.
+
+## The trap
+
+The trap is treating compounding as boring and trading as productive. Compounding looks flat for the first decade — the curve only bends visibly after year 15 — so beginners abandon it for the dopamine of weekly P&L. They are giving up the exponential phase of the curve to live in the linear phase of a hobby. The mental model that fixes this: compounding is paid for by patience, and patience is the rarest input in markets. If you trade, trade with money that is **on top of** a compounding base, not instead of one.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="$10,000 compounded at 8% per year for 20 years grows to approximately what amount?"
+  answer={46610}
+  tolerance={500}
+  explanation="$10,000 × 1.08²⁰ ≈ $46,610. The doubling time at 8% is about 9 years (Rule of 72: 72 / 8 = 9), so you double roughly twice over 20 years and a bit more — from $10K to ~$46K."
+/>
+
+<Quiz
+  question="A trader claims their strategy generates a gross annualised return of 9%, beating an 8% buy-and-hold benchmark by 1 percentage point. Their estimated annual friction (commissions + spreads + short-term tax drag) is 3%. Which conclusion is sound?"
+  options={[
+    "The trader is winning by 1% per year — over 20 years that's a meaningful edge",
+    "The trader's net return after friction is about 6%, which is lower than the 8% buy-and-hold; the trader is destroying value despite a positive gross alpha",
+    "The trader needs a tighter stop-loss to improve performance",
+    "Friction doesn't compound; only returns compound, so the 3% drag is a one-time cost"
+  ]}
+  answer={1}
+  explanation="Gross 9% minus 3% friction equals 6% net. The benchmark is 8% with near-zero friction (tax deferred until sale, low commissions on a single buy-and-hold trade). At $10K over 20 years: trader ends near $32K, buy-and-hold ends near $46K. The trader had positive gross alpha and still lost. Friction compounds against you exactly as returns compound for you."
+/>
+
+<Quiz
+  question="A reader argues: 'Active trading is better because I can sidestep bear markets that buy-and-hold investors have to ride out.' What is the strongest counter that uses what this lesson taught?"
+  options={[
+    "Bear markets are unpredictable, so this is impossible",
+    "The claim is testable: it requires the trader to be right about when to exit AND when to re-enter, after friction and taxes, more often than not. The default math says they would also need that combined accuracy to add more than 2–3% annualised — which is a much higher bar than 'sidestepping bear markets' makes it sound",
+    "Active trading is psychologically easier than holding through drawdowns",
+    "Bear markets always recover, so sidestepping them is unnecessary"
+  ]}
+  answer={1}
+  explanation="The synthesis: 'beating buy-and-hold' is not one decision (exit) but two (exit + re-entry), repeated, taxed, and commissioned. The lesson's falsification rule — gross alpha must exceed friction — applies here directly. Most market-timing strategies fail not because exiting is hard but because re-entering after the bottom is harder than it looks, and the friction compounds against you while you wait."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and create a "baseline" entry: a simulated $10,000 buy-and-hold of a broad index proxy (SPY or equivalent) entered today. Set a calendar reminder in 12 months. Then, separately, run your active <Term id="simulated_trade" />s through <Term id="ami" /> as usual. At the 12-month mark, compare: did your active book beat the baseline by more than the simulated friction you incurred? That number — repeated over years — is the only honest test of whether you should be trading at all.
+
+## Takeaway
+
+Compounding wins by patience; active trading wins only when your gross edge exceeds your friction — measure both, or you are guessing.

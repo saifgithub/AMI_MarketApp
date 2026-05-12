@@ -1,0 +1,68 @@
+---
+id: "034_debt_and_the_balance_sheet"
+title: "Debt and the balance sheet"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "balance_sheet_debt"
+prerequisites: ["032_revenue_the_top_line", "033_profit_and_margins"]
+tags: ["debt", "balance_sheet", "leverage", "solvency", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Debt and the balance sheet
+
+The balance sheet is the snapshot of what a company owns (assets), owes (liabilities), and what's left for shareholders (equity). Debt sits on the liability side and behaves differently from every other corporate obligation: it has interest, a maturity date, and consequences for missing payments. By the end of this lesson you should know how to read a company's debt load in context, why an absolute debt number is almost meaningless on its own, and the specific configuration of debt and earnings that historically precedes balance-sheet stress.
+
+## How this plays out in real markets
+
+Look at AAPL and XOM as of fiscal 2024. AAPL carried roughly $107B in long-term debt against ~$162B in cash and marketable securities — net cash positive by about $55B. Its debt-to-equity ratio sat around 1.5 on the surface, but on a net-debt basis the company effectively has no debt; it borrows because it's cheap, not because it has to. XOM carried about $37B in long-term debt against ~$23B in cash on a much smaller equity base, with debt-to-equity around 0.2 — a far smaller leverage ratio, but with much higher earnings volatility tied to oil prices. Same word ("debt") in two very different shapes.
+
+Now look at a stressed case. When BBBY (Bed Bath & Beyond) entered 2023 with roughly $1.2B in debt against a market cap that had collapsed below $200M and operating losses running at hundreds of millions a quarter, the absolute debt number ($1.2B) wasn't the problem — it was that interest expense was consuming more cash than the business was generating. The bankruptcy filing came in April 2023. The signal was visible months earlier in the interest-coverage ratio: operating income divided by interest expense. When that ratio drops below 1.5 and the trend is falling, the company is paying lenders faster than it's earning from operations — and the only way to keep going is either to grow earnings fast or to refinance into more debt. Both get harder under stress.
+
+On Bursa Malaysia: AIRASIA carried significant aircraft-lease and borrowing obligations into the 2020 travel collapse. Revenue effectively vanished; debt did not. The same balance sheet that had been workable in a normal demand environment became immediately distressed. Debt is fine until cash flow disappears — then it isn't.
+
+## The trap
+
+The trap is judging debt by its dollar size instead of by its weight relative to earnings and cash. A beginner sees "$107B in debt" at AAPL and panics; meanwhile, they ignore a $1B debt load at a money-losing small-cap because the number "looks smaller". The correct mental model: debt is only dangerous when the company can't comfortably service it. Three ratios do that comparison — debt-to-equity (size of debt vs shareholder capital), debt-to-EBITDA (how many years of cash earnings the debt represents), and interest coverage (how many times operating income covers interest expense). A debt-to-EBITDA above 4x combined with interest coverage below 2x is the classic stress configuration. Below those thresholds, debt is mostly a capital-structure choice. Above them, it's a vulnerability.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company A has $50B in debt and $20B in EBITDA. Company B has $2B in debt and $200M in EBITDA. Which statement most accurately reads the leverage?"
+  options={[
+    "Company A is more leveraged because its absolute debt is higher",
+    "Both are similarly leveraged because debt-to-EBITDA is roughly equal",
+    "Company B is more leveraged — debt-to-EBITDA is 10x vs Company A's 2.5x. Absolute debt size is irrelevant; what matters is how many years of cash earnings the debt represents",
+    "You can't compare them without knowing the industry"
+  ]}
+  answer={2}
+  explanation="Debt-to-EBITDA normalises debt against the cash earnings power of the business. Company A: 50/20 = 2.5x (comfortable for most industries). Company B: 2/0.2 = 10x (severely stretched). The most tempting wrong answer is option 0 — the bigger headline number 'looks scarier'. But $50B in debt against $20B of annual EBITDA is fine; $2B against $200M is a balance-sheet emergency. Option 1 ignores the actual arithmetic. Option 3 over-qualifies — industry context refines the threshold but doesn't reverse a 4x ratio gap."
+/>
+
+<Quiz
+  question="A company reports revenue growth of 12%, gross margin of 38% (stable), debt-to-EBITDA of 5.2x, and interest coverage of 1.4x. The trend on interest coverage is down: 2.1x → 1.7x → 1.4x over three quarters. Which read synthesises the lesson best?"
+  options={[
+    "Healthy — revenue is growing and margins are stable, so the balance sheet trend doesn't matter",
+    "Healthy — debt-to-EBITDA above 4x is normal for large-cap companies",
+    "Stressed — debt-to-EBITDA above 4x combined with interest coverage falling toward 1x is the textbook pre-stress configuration. Income-statement strength does not rescue a balance sheet that's consuming its own earnings to service debt. If the next quarter shows interest coverage near or below 1, refinancing pressure becomes real",
+    "Insufficient information — can't assess without knowing the stock's P/E"
+  ]}
+  answer={2}
+  explanation="The synthesis: a healthy income statement (12% growth, stable margins) is not a buffer against a failing balance sheet when interest expense is approaching operating income. The falsifiable claim of this lesson is exactly this configuration — debt-to-EBITDA > 4x and interest coverage trending toward 1x historically precedes refinancing crises. The most tempting wrong answer is option 0 — 'growth is fine, so we're fine'. But growth doesn't pay interest; cash does. Option 1 is wrong on the threshold. Option 3 invokes a metric (P/E) that doesn't address solvency."
+/>
+
+## Try it
+
+In <Term id="ami_convene_the_room" />, pick a ticker you've been watching and read the Fundamentals Analyst section of the <Term id="ami_verdict" /> closely — specifically the leverage block. If it isn't there, ask the Fundamentals Analyst in <Term id="ami_one_on_one" />: "What is this company's debt-to-EBITDA and interest-coverage ratio, and what's the trend?" Log both numbers in your <Term id="ami_decision_journal" /> entry for that ticker before sizing any position.
+
+## Takeaway
+
+Debt is a number with context — judge it against EBITDA and interest expense, not against itself, and watch interest coverage as the early-warning gauge that absolute debt figures will always hide.

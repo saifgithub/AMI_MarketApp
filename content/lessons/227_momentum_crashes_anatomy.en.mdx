@@ -1,0 +1,66 @@
+---
+id: "227_momentum_crashes_anatomy"
+title: "Momentum crashes — anatomy and survival"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "momentum"
+prerequisites: ["056_momentum_trading", "225_relative_strength_top_decile_momentum", "058_strategy_failure_modes", "110_tail_risk_and_fat_tails"]
+tags: ["strategy", "momentum", "crash", "drawdown", "tail_risk"]
+agent_callouts: ["conservative_debator", "aggressive_debator"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Momentum crashes — anatomy and survival
+
+The momentum foundation (056) named momentum crashes as the strategy's worst failure mode. This lesson dissects them. A momentum crash is a short, violent reversal in which the top-decile relative-strength names (longs) underperform the bottom-decile names (shorts or low-momentum) for a brief, intense window — typically 1 to 6 weeks. The largest crashes (March-April 2009, January 2016, November 9-10 2020) produced single-week long-short momentum losses of 15-30%, the largest equity-factor drawdowns on record. Even a long-only top-decile portfolio can lose 10-20% in days when sector rotation flips. After this lesson you can name the volatility and dispersion signatures that precede crashes, and the position-sizing rules that let a momentum trader survive them.
+
+## How this plays out in real markets
+
+Look at November 9, 2020 — the day Pfizer announced positive Phase 3 vaccine efficacy results. Before that day, the top-decile US momentum names were dominantly stay-at-home and large-cap-tech stocks: ZM, PTON, DOCU, NFLX, AMZN, AAPL, MSFT, and several work-from-home names. The bottom decile was airlines, energy, banks, and cruises — XOM, JPM, BAC, AAL, UAL, CCL, RCL. On Monday November 9, the long-short momentum factor lost roughly 14% in a single day as the top-decile names sold off 4-7% while the bottom-decile names rallied 10-30% (CCL +39.3%, AAL +15.2%, XOM +12.8%). A pure top-decile long-only portfolio lost 5-7% in a day. The follow-through over the next two weeks pushed the cumulative momentum drawdown to over 20%. Survivors had three things: (1) a hard 25% per-name drawdown stop, (2) basket diversification across non-tech momentum names, (3) a regime-aware sizing rule that had reduced exposure as cross-sectional dispersion widened in the prior month.
+
+Anatomy: a crash typically requires (1) extreme cross-sectional dispersion between momentum winners and losers in the months prior — the spread of cumulative returns between top and bottom decile reaches multi-year highs; (2) a fundamental catalyst that flips the regime narrative (vaccine, central bank pivot, geopolitical resolution); (3) high option-market gamma positioning in the momentum-leader names that forces violent unwinds when the catalyst hits. Pre-crash signals: rising dispersion, rising momentum-factor volatility, and rising correlation among the top-decile names (when the longs all move together, they all unwind together). Survival rules: (a) reduce basket gross exposure when 6-month rolling dispersion is in the top quintile of its 5-year range; (b) cap any single name at 8-10% of portfolio; (c) the 25% per-position drawdown stop is not optional. The strategies that DIDN'T survive momentum crashes were the ones where managers said "this time is different" and refused to size down.
+
+## The trap
+
+The beginner mistake is treating momentum crashes as black swans you can't see coming. The truth is more uncomfortable: dispersion and factor-volatility signatures often build for weeks before the catalyst hits, but momentum is making money in those weeks so traders ignore the warnings. The correct mental model: dispersion-wide regimes are MORE dangerous, not less, even when the strategy is currently profitable. The other trap: trying to "trade around" an anticipated crash by lightening longs and adding shorts of the bottom decile. That's almost always a worse strategy than just sizing down — you've doubled the bet that you can time the unwind, and in most pre-crash windows nothing happens and your hedge bleeds you. The third trap: blowing the system up DURING the crash by panic-selling everything mid-rotation. The 25% stop is precisely so you don't have to make that decision in real time.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="A momentum portfolio is up strongly YTD. Cross-sectional dispersion (the gap between top-decile and bottom-decile trailing returns) has risen to its highest level in 4 years. The Aggressive Debator says 'the trend is strong, hold full exposure'. The Conservative Debator says 'reduce gross exposure — wide dispersion precedes crashes'. Which framing is empirically correct?"
+  options={[
+    "Aggressive Debator — current profitability is the signal that matters",
+    "Conservative Debator — wide dispersion is a documented precondition for momentum crashes",
+    "Neither — dispersion is unrelated to crash risk",
+    "Both equally — it's a coin flip"
+  ]}
+  answer={1}
+  explanation="Wide cross-sectional dispersion is the most robust pre-crash signal in the momentum-crash literature (Daniel and Moskowitz, 2016 showed factor volatility and dispersion forecast crash probability). The Aggressive Debator's framing — strength validates exposure — is the exact heuristic that fails before crashes. Option 3 (coin flip) is the tempting wrong answer for traders who haven't studied the factor's distribution; the asymmetry is real and quantified."
+/>
+
+<Quiz
+  question="On a vaccine-style rotation day, your momentum basket is down 8% intraday. Your mandate caps drawdown at 25% and you're now at 17% from a YTD high (so 8% of capacity left). The 25% per-position stop hasn't fired on any single name yet — biggest single-name drawdown is 18%. Aggressive Debator: 'hold; this is the bottom of the unwind'. Conservative Debator: 'cut basket gross by 50%, protect the mandate cap'. Synthesis: what's the right action?"
+  options={[
+    "Hold full basket — single-name stops haven't fired, system says hold",
+    "Cut basket gross by ~50% to respect the mandate cap; let any name that hits 25% drawdown trigger its individual stop on its own",
+    "Exit entire basket immediately — the regime has changed",
+    "Add to the position because momentum names will recover"
+  ]}
+  answer={1}
+  explanation="The synthesis: per-position stops are independent of the mandate's drawdown cap. With 8% of capacity left, another 8-10% basket drawdown puts you AT the mandate floor — at which point you must liquidate everything under safety-floor logic. Pre-emptively cutting basket gross by 50% preserves capacity while keeping the system intact. Option 0 (hold) is the tempting wrong answer because it follows the system at the per-trade level — but mandate-level risk supersedes strategy-level rules when the mandate is approaching its hard floor. Option 2 (exit fully) over-corrects and prevents recovery."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Conservative Debator, ask: "Compute the cross-sectional dispersion of trailing 12-month returns across the top and bottom decile of my universe today. State whether dispersion is in the top quintile of its 5-year range, and what gross-exposure adjustment dual-momentum-aware risk management would recommend." Log the dispersion reading in the <Term id="ami_decision_journal" /> monthly so you have a calibrated baseline before any crash hits. <Term id="ami_convene_the_room" /> when dispersion enters the top quintile and let the debate decide gross-exposure adjustments BEFORE the crash forces the decision.
+
+## Takeaway
+
+Momentum crashes have a signature — wide dispersion, rising factor volatility, crowded positioning. Survival is sizing down before the catalyst, not selling during it. The <Term id="ami_mandate" /> cap is the floor; everything else is system mechanics.

@@ -1,0 +1,76 @@
+---
+id: "175_gaap_vs_non_gaap_and_accruals_quality"
+title: "GAAP vs non-GAAP and accruals quality"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "earnings_quality"
+prerequisites: ["035_cash_flow_vs_earnings", "153_free_cash_flow_the_only_cash_that_belongs_to_you", "174_stock_based_compensation_the_hidden_dilution"]
+tags: ["earnings_quality", "gaap", "non_gaap", "accruals", "one_time_items", "fundamentals"]
+agent_callouts: ["bear_researcher", "fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# GAAP vs non-GAAP and accruals quality
+
+Lesson 035 established that earnings and cash flow can diverge. Lesson 174 zoomed in on SBC as one big source of divergence. This lesson generalises the issue: companies report two sets of earnings — GAAP (the auditor-attested standard) and non-GAAP / "adjusted" (management's preferred framing) — and the gap between them is one of the most reliable signals of earnings quality. Companies whose non-GAAP earnings consistently exceed GAAP earnings by 20%+, and whose accruals (earnings minus cash flow) are persistently positive, tend to underperform over multi-year horizons. By the end of this lesson you should know the specific GAAP-to-non-GAAP gap that flags earnings-quality concerns, and the accruals-quality screen that catches aggressive accounting before it shows up in a write-down.
+
+## How this plays out in real markets
+
+Take a representative software company in 2024 reporting "adjusted EPS" of $2.40 against GAAP EPS of $1.10. The gap is $1.30 per share, or 54% of adjusted earnings. The reconciliation typically includes: SBC, acquisition-related amortisation, restructuring charges, one-time tax items. Each individual exclusion may be defensible; collectively, when they exceed 30–40% of reported non-GAAP earnings every year for multiple years, the "one-time" exclusions become recurring by another name.
+
+Compare to a representative industrial. GAAP EPS $5.20 vs non-GAAP EPS $5.40 — a 4% gap. The reconciliation is small and typically includes one-time restructuring or asset-sale gains. This is the clean profile: GAAP and non-GAAP track closely, and management isn't using "adjusted" as a marketing tool.
+
+Now look at accruals quality. Accruals = net income minus operating cash flow. A company reporting $1B in net income but only $300M in operating cash flow has $700M of accruals — meaning $700M of reported earnings hasn't yet converted to cash. Some accruals are normal (timing differences, receivables growth in a healthy growing business). Persistent large accruals are a warning. Academic research (Sloan 1996 and many follow-ups) has shown that companies with high accruals systematically underperform companies with low accruals by 5–10% annually over the following years.
+
+The "accruals ratio" — accruals divided by total assets — is the common screen. Companies in the highest decile of accruals-to-assets tend to be aggressive accounting candidates. Famous historical cases include Enron, WorldCom, and various pre-collapse retail chains.
+
+Look at TSLA in 2022–2024. Operating cash flow tracked roughly to net income (low accruals), but non-GAAP EBITDA excluded substantial SBC. The GAAP-vs-non-GAAP gap was material; the accruals-quality picture was clean. Different signals telling different parts of the story.
+
+On Bursa Malaysia: SERBA DINAMIK in 2020–2021 showed both signals deteriorating before its formal accounting issues surfaced — accruals as a percentage of assets rose, and disclosed non-GAAP figures increasingly diverged from GAAP. The early warning was visible 4–6 quarters before the auditor flag.
+
+The falsifiable claim: a non-GAAP-to-GAAP gap of more than 25% of GAAP earnings sustained for 3+ years is the threshold where earnings quality becomes a material thesis risk. Combined with accruals exceeding 5% of total assets, the combination warrants a deep dive into specific accounting policies before any valuation work is meaningful.
+
+## The trap
+
+The trap is using non-GAAP earnings for valuation because they're easier and because that's what consensus estimates and headlines use. A beginner applies a 25x multiple to non-GAAP EPS, gets a fair value, and never asks whether GAAP EPS would produce a very different answer. The correct mental model: compute valuation on BOTH bases, and trust the lower of the two when the gap is wide and persistent. The opposite trap is rejecting all non-GAAP adjustments as marketing. Some adjustments are defensible — a genuine one-time legal settlement, a true acquisition-amortisation that has no real economic cost — and using GAAP unadjusted for those would systematically underprice the business. The discipline is to read the reconciliation footnote and decide adjustment-by-adjustment, not metric-by-metric.
+
+<ChatWith agent="bear_researcher" />
+
+## Quiz
+
+<Quiz
+  question="Company R reports adjusted EPS of $5.00 vs GAAP EPS of $1.80 in the most recent year, and the reconciliation table shows similar gaps for each of the prior 4 years. The exclusions are 'SBC, acquisition-related amortisation, restructuring, and litigation charges' — same line items each year. Which read most cleanly applies the lesson?"
+  options={[
+    "Use adjusted EPS for valuation — the exclusions are clearly one-time",
+    "The non-GAAP-to-GAAP gap is 64% of adjusted EPS, sustained for 5 years on the same line items. By definition, items that recur for 5 years are not one-time. The honest valuation uses GAAP EPS — or at minimum a non-GAAP figure with only the genuinely-one-time items added back (not SBC, not recurring acquisition amortisation, not 'recurring' restructuring). The fair value computed on GAAP EPS will be roughly 35–40% of what the headline-adjusted EPS suggests",
+    "Indeterminate — accounting is subjective",
+    "Trust management — they understand the business"
+  ]}
+  answer={1}
+  explanation="The synthesis is that recurring 'one-time' adjustments are recurring expenses, and the 64% gap sustained for 5 years is well above the 25% threshold that flags earnings-quality concerns. The most tempting wrong answer is option 0 because non-GAAP is the figure most analysts and headlines use; the lesson explicitly says relying on it when the gap is wide and persistent leads to systematic overvaluation. Option 2 dodges. Option 3 trades analysis for trust."
+/>
+
+<Quiz
+  question="Company S reports net income of $1.2B and operating cash flow of $400M. Accruals are 8% of total assets. The Bull Researcher says 'growing companies build receivables — high accruals are normal.' The Bear Researcher says 'low cash conversion is a quality warning.' Which synthesis best applies the lesson?"
+  options={[
+    "Bull is right — growth requires working-capital build",
+    "Bear is right — high accruals always mean accounting fraud",
+    "Both have a partial point. Some accruals are normal in growing companies — receivables and inventory build alongside revenue, which is fine if the underlying business is healthy. But the magnitude here ($800M of accruals on $1.2B of net income, plus 8% of total assets) is in the top-decile range that academic research links to systematic underperformance. The disciplined read: this isn't fraud, and it's not necessarily reversible, but the historical base rate says companies with these accruals-quality numbers underperform over the next 2–3 years. Reduce conviction, increase scrutiny, look specifically at receivables-aging and revenue-recognition policies in the next 10-K",
+    "Indeterminate — too many factors"
+  ]}
+  answer={2}
+  explanation="The synthesis is that accruals quality is a probability signal, not a binary fraud signal. Both researchers are partially right — growth can drive accruals (Bull) but the magnitude here is at the level where historical base rates predict underperformance (Bear). The lesson's disciplined posture is to treat the signal probabilistically and look for specific corroborating evidence. Option 0 over-trusts the growth explanation. Option 1 over-claims fraud. Option 3 is the cop-out — the framework gives an actionable read."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a stock you own or are considering and ask: "Show me GAAP EPS, non-GAAP EPS, and the reconciliation line items for each of the last 5 years. Also show me net income vs operating cash flow and the accruals-to-assets ratio." In the <Term id="ami_decision_journal" />, write one sentence for each: "The non-GAAP-to-GAAP gap is X% sustained for Y years. Accruals are Z% of assets. The honest valuation uses [GAAP / adjusted / a middle figure] because [reason]." This exercise calibrates your eye for earnings quality across your portfolio.
+
+## Takeaway
+
+When non-GAAP earnings consistently exceed GAAP by 25%+ on recurring exclusions, the "adjusted" number is marketing — and when accruals exceed 5% of assets, the cash isn't keeping up with the earnings. Use the lower number when the gap is wide and persistent; the historical base rate is on the side of the cash.

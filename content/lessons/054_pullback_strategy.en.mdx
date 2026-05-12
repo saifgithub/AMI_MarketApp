@@ -1,0 +1,66 @@
+---
+id: "054_pullback_strategy"
+title: "Pullback strategy"
+duration_min: 5
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+topic: "pullback"
+prerequisites: ["022_trend_direction", "025_pullbacks", "026_moving_averages", "016_risk_reward_ratio"]
+tags: ["strategy", "pullback", "trend", "entry"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Pullback strategy
+
+A pullback strategy buys an established uptrend on a controlled dip back to a known support — usually a rising moving average or a prior breakout level — and exits if that support fails. The thesis is that trends don't move in straight lines; they breathe. Pullbacks let you enter at a better price than chasing extension, with a tighter, more defensible stop. After this lesson you can specify a pullback entry that names exactly which dip qualifies and which dip is a trend break in disguise.
+
+## How this plays out in real markets
+
+Look at MSFT in mid-2024. The stock had trended from roughly $370 in January to $465 by early July, riding above its 50-day moving average. In early August it pulled back from ~$465 to a low near $395 on August 5 — a sharp tag of the 200-day MA at ~$405 — and then closed back above the 50-day within ten sessions. A pullback strategy entered long on the close back above the 50-day around $415 with a stop just under the August 5 swing low at $390. Target: the prior swing high at $465, or a trailing stop under the rising 50-day. Risk per share: $25. Reward to first target: $50. Reward-to-risk: 2:1.
+
+Entry criteria: established uptrend (50-day MA sloping up, price above 200-day MA) PLUS a pullback that tags but does not close meaningfully below the 50-day MA, PLUS a confirmation candle that closes back above the 50-day. Stop: under the pullback's swing low. Target: prior swing high or trailing stop. Individual-trade invalidation: a daily close below the pullback's swing low — that's no longer a pullback, that's a trend change. The strategy FAILS at major trend tops where the first pullback after a sustained run is actually the start of a downtrend (think the first dip in many growth names in late 2021).
+
+## The trap
+
+The beginner mistake is buying every dip without distinguishing a pullback from a breakdown. Every breakdown started as "just a pullback". The trader gets long on the first red day, watches it go lower, averages down on the second red day, and ends up nursing a 30% loss in what was supposed to be a 5% pullback. The correct mental model: a pullback is a dip that holds support and closes back above it. Until that confirming close prints, you are looking, not buying. The cost of waiting for confirmation is missing the absolute low by a few percent — the cost of not waiting is being long during the only pullback in your career that wasn't a pullback.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="GOOGL is in a clean uptrend above its rising 50-day MA at $175. Price pulls back from $192 over five sessions and closes today at $176.50 — right at the 50-day. What does the pullback rule say?"
+  options={[
+    "Enter long now at $176.50",
+    "Wait for a daily close back above the 50-day with a confirmation candle",
+    "Short — the pullback shows weakness",
+    "Enter half-size and add on weakness"
+  ]}
+  answer={1}
+  explanation="The 50-day is being tested, not confirmed. Entering at the tag (option 0) is the most common pullback mistake — you have no proof the support is holding, and your stop has to be uncomfortably tight or uncomfortably wide. The rule says wait for the close back ABOVE the support with a green confirmation candle."
+/>
+
+<Quiz
+  question="You take a pullback long on AMZN at $185 with a stop at $178 (swing low). Reward-to-risk target is 2:1. Your mandate caps per-trade risk at 1% of a $30,000 account. What's the position size AND the first target price?"
+  options={[
+    "42 shares, target $199",
+    "16 shares, target $192",
+    "42 shares, target $192",
+    "16 shares, target $199"
+  ]}
+  answer={0}
+  explanation="Risk per share = 185 - 178 = $7. Max risk = 1% of $30,000 = $300. Shares = 300 / 7 = 42. Target at 2R = 185 + (2 * 7) = $199. The synthesis: a strategy is only as good as its position-sizing and exit math. Option 3 (16 shares, $199) is what you'd get if you confused the stop math — the tempting wrong answer for traders who size by 'feels small enough'."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and find a recent trade where you bought a dip that turned into a deeper loss. In <Term id="ami_one_on_one" /> with the Market Analyst, paste that ticker and the date and ask: "Did this qualify as a valid pullback at the time of entry, or was it already a breakdown?" Use the answer to refine your pullback rule before the next setup.
+
+## Takeaway
+
+A pullback isn't a pullback until it closes back above support — buying the tag is buying hope. Wait for confirmation; pay the few percent it costs you to be right.

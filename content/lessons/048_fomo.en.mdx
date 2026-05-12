@@ -1,0 +1,68 @@
+---
+id: "048_fomo"
+title: "FOMO"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 2
+track: "sentiment_behaviour"
+topic: "fomo"
+prerequisites: ["014_position_sizing_basics", "045_greed"]
+tags: ["psychology", "fomo", "entry_discipline", "sentiment"]
+agent_callouts: ["social_media_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# FOMO
+
+FOMO — fear of missing out — is the urge to enter a position because everyone else already has. After this lesson you will be able to identify the chart shape that triggers it, recognise the social-media signature that amplifies it, and apply a single delay rule that converts roughly all FOMO trades into either patient trades or skipped ones. The setup that hurts you most is not the one that fails; it is the one that already worked for somebody else and is asking you to pay the bill for their gains.
+
+<Animation name="fomo_curve" />
+
+## How this plays out in real markets
+
+January 2021, GME. The chart went from $20 to $80 in five sessions, then $80 to $325 in three. A trader who had never owned a meme stock saw the Social Media Analyst's feed go vertical: ten thousand posts an hour, screenshots of overnight 5x gains, a friend on a group chat saying "I'm in at $190 still cheap". He entered 80 shares at $315 — the exact wick of the all-time high. Two sessions later GME printed $54. He held to $80 hoping for the bounce, then sold at $48, a -85% drawdown on the position. Total loss: roughly $21,000 on an account that had no business sizing a single trade above $2,000.
+
+The falsifiable pattern: a FOMO entry has a chart fingerprint and a feed fingerprint. Chart — the instrument is up more than 30% in the prior 5 sessions and your entry is within 10% of the period high. Feed — Social Media Analyst's volume score for the ticker is at least 3x its 30-day median. If both are true and your written watchlist did not include this ticker yesterday, the trade is not a setup. It is a transfer of wealth from your account to the accounts of the people who entered three weeks ago.
+
+## The trap
+
+The trap is the belief that being late is better than being absent. It is not. Being late is the worst entry geometry in trading: you are buying after the people with the lowest cost basis have already decided to sell, and your stop is far away from any meaningful technical level. The correct mental model: every chart you see going vertical is a chart someone else is exiting. Your job is not to catch the last 10% of a move — it is to catch the middle 60% of the *next* move, which is on a chart you have not looked at yet because you are looking at this one. FOMO is the cost of attention being captured by what already happened.
+
+<ChatWith agent="social_media_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You see a ticker up 45% in five sessions. The Social Media Analyst shows post volume at 4x median. You did not have the ticker on your watchlist yesterday. The setup feels obvious. What is the disciplined action?"
+  options={[
+    "Enter at market with a tight stop — momentum is confirmed.",
+    "Skip the trade or apply a written 24-hour delay rule before any entry on this ticker; use the wait to either find a real setup or confirm the urge passes.",
+    "Enter with a 'starter position' of half size — risk-managed FOMO.",
+    "Set a buy stop above today's high to enter only on continuation."
+  ]}
+  answer={1}
+  explanation="The 'starter position' answer is the most seductive wrong answer — it dresses FOMO up as risk management. A half-size FOMO trade is still a FOMO trade with a smaller bill. The buy-stop-above-high answer at least adds a condition, but it ignores the diagnostic: the ticker was not on your watchlist yesterday. The cleanest discipline rule is the 24-hour delay; about 70% of FOMO urges do not survive 24 hours, and the ones that do can be evaluated as actual setups instead of as feelings."
+/>
+
+<Quiz
+  question="Your account is up 12% YTD. Your friend just made 80% on a position you don't understand. Your Mandate says max 1% risk per trade and you only trade names from your written watchlist. What is the synthesis answer?"
+  options={[
+    "Take a small position in your friend's name — you can afford the experiment.",
+    "Add the name to your watchlist immediately and enter on the next dip.",
+    "Do nothing on the friend's name today. Open the Decision Journal, write down why this name was not on your watchlist yesterday, and only revisit it after a written research note.",
+    "Increase your per-trade risk to 2% to 'catch up' to your friend's performance."
+  ]}
+  answer={2}
+  explanation="The 2% risk answer is the worst — copying someone else's outcome with your own capital while breaking your written mandate. 'Small experiment' sounds harmless and is exactly how FOMO enters portfolios: one experiment at a time. 'Add and buy the dip' skips the research step that everyone whose performance you envy actually did. The journal-first approach is the only one that respects both the mandate and the fact that the mandate exists to protect you from your friends' returns."
+/>
+
+## Try it
+
+Open the <Term id="ami_decision_journal" /> and make a new entry titled "FOMO watch." For every trade idea that did not originate from your written watchlist in the last two weeks, log: ticker, source of the idea (group chat? feed? screenshot?), and whether you took it. Then ask the Social Media Analyst in a <Term id="ami_one_on_one" />: "What was the post-volume signature for this ticker the day I noticed it?" That number, next to your entry P&L, is the receipts of your FOMO history.
+
+## Takeaway
+
+Every chart going vertical is a chart someone else is selling into. Pay 24 hours of delay between noticing a ticker and entering it — the trades that survive that filter are setups; the ones that don't are FOMO.

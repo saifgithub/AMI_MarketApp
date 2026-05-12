@@ -1,0 +1,75 @@
+---
+id: "232_regime_segmented_backtests"
+title: "Regime-segmented backtests — where does the edge actually live?"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "058_strategy_failure_modes", "229_walk_forward_analysis", "062_volatility_regimes"]
+tags: ["backtesting", "regime", "segmentation", "robustness"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Regime-segmented backtests — where does the edge actually live?
+
+The failure-modes foundation (058) said every strategy has a regime where it bleeds. This lesson is how you find it BEFORE the regime hits. A regime-segmented backtest splits the historical sample by regime — bull/bear/sideways, high-vol/low-vol, rates-up/rates-down — and reports performance per bucket instead of a single aggregate. The aggregate number hides everything that matters. A strategy that returns 12% CAGR overall might earn 35% in bull years and -8% in bears, or 18% in low-vol and -2% in high-vol. The composition is the strategy's true profile. After this lesson you can segment your own backtest by regime, name the regime where your rule bleeds, and pre-commit a sizing rule for that regime.
+
+## How this plays out in real markets
+
+Take a long-only momentum rule on US large-caps over 2005-2024. Aggregate CAGR: 10.4%, max drawdown 28%. Now segment.
+
+By trend regime (SPY above/below 200-day MA, 200-day slope positive/negative):
+- Bull (above 200-day, positive slope, ~63% of months): CAGR 18.2%, drawdown 14%
+- Sideways (above 200-day, flat slope, ~15% of months): CAGR 4.1%, drawdown 11%
+- Bear (below 200-day, negative slope, ~22% of months): CAGR -7.8%, drawdown 28%
+
+By volatility regime (VIX above/below 22):
+- Low vol (VIX < 22, ~70% of months): CAGR 14.6%, drawdown 13%
+- High vol (VIX > 22, ~30% of months): CAGR -1.2%, drawdown 28%
+
+The aggregate 10.4% is real but useless for decision-making. The strategy is two strategies — a strongly profitable bull/low-vol strategy and a money-losing bear/high-vol strategy. The 2008, March 2020, and 2022 drawdowns all came from the bear/high-vol bucket. The synthesis: a regime overlay that reduces gross exposure when SPY is below its 200-day MA AND VIX is above 22 would have cut the max drawdown from 28% to roughly 14% with minimal sacrifice in bull-market upside. The regime segmentation IS the regime overlay — segment first, build the filter from what you find.
+
+## The trap
+
+The beginner mistake is reporting only the aggregate and treating the strategy as a single object. That gives you a misleading expected return (you're averaging incompatible regimes) and hides the regime where you'll blow up. The correct mental model: a strategy is a portfolio of regime-conditional returns, and you can only honestly deploy it by either accepting the bear-bucket drawdown explicitly OR overlaying a regime filter that switches the rule off in its known failure regime. The second trap is over-segmenting — splitting by every conceivable factor until each bucket has 3 trades. The bucket has to contain enough trades to be statistically meaningful (rule of thumb: at least 30 trades per bucket). The third trap is using a regime indicator known only with hindsight ("NBER recession periods") — your regime overlay must use only data observable in real time.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A trend-following strategy shows aggregate CAGR 8% over 2010-2024. Regime-segmented results: bull months CAGR 16%, bear months CAGR -12%. The Research Manager asks: 'Where does the strategy's edge live, and what does that mean for deployment?'"
+  options={[
+    "The edge is uniform across regimes — deploy at full size",
+    "The edge lives entirely in bull-trend regimes. Deploy with a 200-day MA regime filter that reduces or pauses the rule below the MA, accepting that you'll miss bear-rally re-entries until the trend confirms.",
+    "The edge lives in bear markets — deploy with shorts",
+    "The 8% aggregate is what matters; segmentation is noise"
+  ]}
+  answer={1}
+  explanation="A strategy with positive bull and negative bear segments isn't 'an 8% strategy' — it's a bull-conditional strategy. The honest deployment is to add a regime filter that respects where the edge actually lives. Option 0 ignores the segmentation. Option 2 flips the rule incorrectly — being a long-only strategy in bears doesn't suddenly become a short-only strategy. Option 3 is the foundational error this lesson exists to fix."
+/>
+
+<Quiz
+  question="Mean-reversion strategy on US small-caps. Regime segmentation by VIX shows: low-vol CAGR 6%, high-vol CAGR 19%. Win rate is similar across regimes but average win size is much larger in high-vol. Conservative Debator warns: 'high-vol months also had 2x max drawdown'. Mandate caps drawdown at 25%. Synthesis-correct deployment?"
+  options={[
+    "Concentrate exposure in high-vol regimes for the higher CAGR",
+    "The edge is higher in high-vol but so is risk. Deploy with vol-aware position sizing (smaller positions when VIX is high) so the high-vol CAGR is captured without breaching the mandate's drawdown cap. Validate via walk-forward that the vol-adjusted version still has positive OOS edge.",
+    "Trade only in low-vol since the drawdown is lower",
+    "Ignore segmentation and trade aggregate"
+  ]}
+  answer={1}
+  explanation="The synthesis combines regime segmentation (edge profile) with mandate constraints (drawdown cap) and out-of-sample discipline (validate the vol-adjusted version). Option 0 maximises returns but risks breaching the mandate. Option 2 sacrifices most of the strategy's edge. Option 3 ignores the segmentation entirely. The honest path is vol-aware sizing validated walk-forward — three concepts from this module composed correctly."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Research Manager, paste your strategy's backtest and ask: "Segment by SPY-above/below-200-day, by VIX above/below 22, and by 6-month trailing return positive/negative. Show me CAGR, max drawdown, and trade count per bucket. Then propose a regime filter that respects the <Term id="ami_mandate" />'s drawdown cap." Log the segmented table in the <Term id="ami_decision_journal" /> — it's the strategy's real profile, not the aggregate.
+
+## Takeaway
+
+The aggregate CAGR hides the strategy's true profile. Segment by regime, name the bucket where you bleed, and build the regime filter or accept the drawdown — there is no third option.

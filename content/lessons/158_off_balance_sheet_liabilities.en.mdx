@@ -1,0 +1,82 @@
+---
+id: "158_off_balance_sheet_liabilities"
+title: "Off-balance-sheet liabilities"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "hidden_liabilities"
+prerequisites: ["034_debt_and_the_balance_sheet"]
+tags: ["debt", "off_balance_sheet", "leases", "pension", "contingencies", "footnotes", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Off-balance-sheet liabilities
+
+Lesson 034 covered the debt line on the balance sheet. This lesson covers the obligations that are *not* on it but behave like debt anyway. Operating leases used to live almost entirely off the balance sheet until accounting rules changed in 2019; pension obligations, purchase commitments, contingent liabilities, and certain joint-venture guarantees still hide in the footnotes. A company that looks lightly leveraged on the headline balance sheet can carry obligations equal to or larger than its on-balance-sheet debt if you don't read the footnotes. By the end of this lesson you should be able to find these obligations, estimate their debt-equivalent burden, and recompute debt-to-EBITDA on an adjusted basis.
+
+## How this plays out in real markets
+
+The four categories worth knowing:
+
+**1. Operating leases (now mostly on-balance-sheet post-ASC 842 / IFRS 16).** Under current rules, both finance and operating leases appear as right-of-use assets and lease liabilities. But the *current portion* and lease *commitments* schedule still warrants reading. A large retailer or airline can have lease liabilities equal to or larger than its bonded debt.
+
+Real example: WMT in fiscal 2025 had long-term debt of about $44B and operating lease liabilities of about $14B — roughly a 30% addition to the debt picture. UAL similarly carries aircraft lease obligations of tens of billions that an investor focused only on the "long-term debt" line would underweight.
+
+**2. Pension and other post-employment benefit (OPEB) obligations.** A defined-benefit pension plan with a funded status of "underfunded by $X billion" is effectively long-duration debt the company must service. Look at the projected benefit obligation (PBO) less plan assets. Several legacy industrial and auto companies carry pension underfunding of $5–20B that doesn't appear on the headline debt line.
+
+Real example: F (Ford) historically has carried global pension and OPEB obligations of $30B+. The funded status has swung between underfunded and roughly fully funded over the past decade as interest rates have moved. The economic obligation is real even when not labelled "debt".
+
+**3. Purchase commitments and take-or-pay contracts.** Companies sometimes contract to buy a fixed quantity of supplies (commodities, components, capacity) over multiple years. The notes disclose the commitment schedule. These behave like debt when the commitment is firm and the contracted price is above market.
+
+**4. Contingent liabilities — litigation, environmental, tax disputes.** Disclosed in footnotes with management's estimate of probable loss range. Large environmental remediation obligations at integrated oil and chemical companies routinely run into the billions.
+
+The diagnostic: compute "adjusted debt" = reported debt + operating lease liabilities + unfunded pension/OPEB + probable contingent liabilities. Then divide by EBITDAR (EBITDA + rent expense) for lease-heavy industries, or by standard EBITDA otherwise. The adjusted ratio is often 30–80% higher than the reported one.
+
+On Bursa Malaysia: AIRASIA's pre-COVID aircraft lease commitments and PETRONAS Chemicals' long-term feedstock purchase obligations are illustrative — both substantial obligations that don't appear cleanly on the headline debt line but bind the company economically.
+
+The falsifiable claim: when adjusted debt-to-EBITDA exceeds reported debt-to-EBITDA by more than 1.5 turns, the headline ratio materially understates the company's true leverage profile.
+
+## The trap
+
+The trap is computing debt ratios from the balance sheet headline alone. A beginner pulls "total debt" from a financial database, divides by EBITDA, gets a comfortable 2.5x, and moves on. They miss that an airline has $12B of lease obligations or a retailer has $14B of store-lease commitments or a legacy industrial has $8B of pension underfunding. The correct mental model: every obligation that requires future cash payment behaves like debt for the purpose of leverage analysis, regardless of where the accountants put it. Read the contractual obligations table in the 10-K — it consolidates lease commitments, purchase commitments, debt repayments, and pension contributions on a single page in standardised columns out to five years and beyond.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A retailer reports total debt of $3B, EBITDA of $1.5B (debt-to-EBITDA 2.0x). The notes disclose operating lease liabilities of $2.4B and rent expense of $400M. What is the approximate adjusted leverage and which view of the company is more accurate?"
+  options={[
+    "2.0x — the reported number is the right one, leases are not debt",
+    "5.4x — but only if you double-count everything",
+    "Adjusted debt of about $5.4B ($3B + $2.4B). Adjusted EBITDAR of about $1.9B ($1.5B + $400M rent). Adjusted leverage of about 2.8x — meaningfully higher than the reported 2.0x. The retailer is more leveraged than the headline suggests because lease obligations behave like debt for cash-flow purposes regardless of accounting treatment",
+    "The adjustment is irrelevant — the market already prices it"
+  ]}
+  answer={2}
+  explanation="The arithmetic: adjusted debt = 3 + 2.4 = $5.4B; adjusted EBITDAR = 1.5 + 0.4 = $1.9B; ratio ≈ 2.8x vs reported 2.0x. The lease commitment is a contractual cash outflow that has the same economic effect as a debt service payment — investors who ignore it underestimate the company's fixed obligations. Option 0 dismisses leases inappropriately. Option 1 invents double-counting. Option 3 outsources the analysis to 'the market' — sometimes the market gets it wrong, and the only way you'll know is by doing your own adjustment."
+/>
+
+<Quiz
+  question="Synthesis: a legacy industrial reports debt-to-EBITDA of 2.8x, interest coverage 3.2x (both healthy by lesson 034 standards). Footnotes disclose unfunded pension and OPEB obligations of $7B, against EBITDA of $4B. Operating lease liabilities are immaterial. What does the lesson say to do, and how does the picture compare to the reported numbers?"
+  options={[
+    "The reported numbers are accurate — pension obligations are too uncertain to count",
+    "Adjusted debt-to-EBITDA is roughly (existing debt + $7B pension underfunding) / $4B. If reported debt is, say, $11.2B (yielding the 2.8x), adjusted leverage rises to ($11.2B + $7B) / $4B ≈ 4.5x. The company crosses from comfortably-leveraged to within the stress band identified in lesson 034 (>4x). The pension obligation is a real claim on future cash flow even though it doesn't appear in the 'debt' line",
+    "Pension obligations don't count because they aren't 'debt'",
+    "The market always prices pensions correctly so no adjustment is needed"
+  ]}
+  answer={1}
+  explanation="The synthesis: lesson 034's 4x debt-to-EBITDA threshold becomes immediately relevant once pension underfunding is added to the leverage calculation. The reported 2.8x is healthy; the adjusted 4.5x is not. Several legacy industrials with substantial pension underfunding screen as healthy on reported ratios and stressed on adjusted ones. Options 0 and 2 dismiss pension obligations inappropriately. Option 3 outsources the analysis."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "Pull the contractual obligations table from [ticker]'s latest 10-K. Sum total contractual obligations across all categories. Compare to reported total debt. Compute an adjusted debt-to-EBITDA." Save both ratios — reported and adjusted — to your <Term id="ami_decision_journal" />. The gap between them is the size of the hidden leverage at that company.
+
+## Takeaway
+
+If it has to be paid in cash, it behaves like debt — wherever the accountants put it. Read the footnotes and adjust the leverage number before you call a balance sheet clean.

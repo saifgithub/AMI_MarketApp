@@ -1,0 +1,76 @@
+---
+id: "160_three_cash_flow_statements"
+title: "Operating, investing, and financing cash flow"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "cash_flow_decomposition"
+prerequisites: ["035_cash_flow_vs_earnings"]
+tags: ["cash_flow", "operating_cf", "investing_cf", "financing_cf", "decomposition", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Operating, investing, and financing cash flow
+
+Lesson 035 introduced free cash flow as the corrective to earnings. This lesson opens the cash flow statement and reads each of its three sections separately. Cash flow from *operations* (CFO) shows whether the business itself generates cash. Cash flow from *investing* (CFI) shows what the company is spending on long-term assets — capex, acquisitions, divestitures. Cash flow from *financing* (CFF) shows how the capital structure is moving — debt issued or repaid, equity issued or bought back, dividends paid. The *pattern* across the three sections is one of the most diagnostic single screens in fundamental analysis. By the end of this lesson you should be able to read the three-section signature of a healthy mature company, a growing company, and a struggling company at a glance.
+
+## How this plays out in real markets
+
+Look at three patterns side by side:
+
+**1. Healthy mature company — AAPL fiscal 2024.** CFO roughly +$118B. CFI roughly +$2B (modest net investment after offsetting marketable-securities movements). CFF roughly –$122B (debt repaid, dividends paid, and significant buybacks). The signature: strong operating cash inflow, modest net investing, large financing outflow returning cash to shareholders. This is what a cash-generative mature business looks like — the operating section funds everything.
+
+**2. Healthy growing company — let's use a hypothetical software firm at scale.** CFO +$2B. CFI –$1.5B (heavy capex on data centres and a small acquisition). CFF +$0.5B (modest debt issued to fund part of the expansion). Total cash position roughly flat. The signature: operating cash flow positive, investing cash flow significantly negative (the company is reinvesting), financing cash flow modestly positive or near zero. The business is funding most of its own growth.
+
+**3. Struggling company — illustrative.** CFO –$200M (the operating business is burning cash). CFI –$50M (modest investment). CFF +$300M (heavy debt issuance and equity raises to plug the gap). Total cash position roughly flat. The signature: operating cash flow negative, financing cash flow heavily positive to compensate. This is the textbook capital-raise treadmill — the business cannot fund itself, so it issues debt or equity to bridge each period.
+
+The pattern matters more than the levels. A company where CFO funds CFI with surplus left over for CFF (returning capital) is mature and healthy. A company where CFO partially funds CFI and CFF tops up is growing within its means. A company where CFO is negative and CFF is providing all the cash is on the capital-raise treadmill — sustainable only as long as capital markets remain open.
+
+On Bursa Malaysia: MAYBANK's cash flow profile reflects its bank business model (where the cash flow statement is harder to interpret for financials — concentrate on net interest income and capital ratios instead). TENAGA's signature is closer to a utility: strong CFO, large CFI (capex on transmission and generation), and CFF that ranges from positive (debt issuance for capex) to negative (debt repayment and dividends) across the regulatory cycle.
+
+The falsifiable claim: a company with negative CFO and positive CFF in any single year is in a temporary capital-raise mode that the next 2–3 years must reverse. Persistently negative CFO funded by financing for 3+ consecutive years (without a clear cyclical-trough or heavy-growth-capex justification) is the signature that historically precedes equity dilution at distressed multiples or distressed debt restructuring.
+
+## The trap
+
+The trap is looking only at the total change in cash position. A beginner sees "cash balance up $50M" and concludes the company is fine. They miss that the $50M came from $400M of debt issuance offsetting $350M of operating cash burn. The total cash position is a derived number; the *components* are the story. The correct mental model: read CFO first (did the business generate cash?), then CFI (did it spend that cash productively?), then CFF (where did the rest come from or go to?). Three healthy patterns exist — mature returning capital, growing reinvesting, and turnaround paying down debt — and three unhealthy ones (operating cash burn funded by financing, financing-funded capex with no underlying cash generation, asset sales funding shortfalls). The patterns are visible at a glance once you know what to look for.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports the following annual cash flow: CFO +$800M, CFI –$1.2B (heavy capex on a new factory), CFF +$500M (debt issuance), net change in cash +$100M. The CFI is described as a growth investment. Which read best fits the lesson?"
+  options={[
+    "Bearish — capex exceeded operating cash flow",
+    "The signature is consistent with a growing company funding most of its expansion from operations and topping up with debt. CFO is positive and substantial; CFI is larger than CFO only because of a discrete factory build, which is a one-time draw; CFF is modestly positive to bridge the gap. As long as the factory build is a non-recurring spike, the pattern is healthy",
+    "Bullish — cash position increased so all is well",
+    "Bearish — debt issuance is always a warning"
+  ]}
+  answer={1}
+  explanation="The synthesis: a growing company funds most of its growth from operating cash flow and uses debt or equity to bridge discrete heavy-investment periods. CFO of $800M is substantial; CFI of $1.2B is a one-time build, not the normal run rate; CFF of $500M plugs the gap. The pattern is healthy. Option 0 misreads the CFI/CFO relationship — temporary CFI > CFO is normal in build years. Option 2 reads only the bottom line. Option 3 over-applies a warning."
+/>
+
+<Quiz
+  question="Synthesis combining this lesson with lesson 035: a company reports net income +$300M, CFO –$150M, CFI –$200M, CFF +$400M over the past fiscal year. The same pattern (positive earnings, negative CFO, positive CFF) has held for three consecutive years. Which read fits best?"
+  options={[
+    "Healthy — three consecutive years of positive net income is the signal",
+    "Healthy — financing cash flow is offsetting the cash burn so the company is fine",
+    "The pattern is the textbook earnings-vs-cash divergence from lesson 035 combined with the capital-raise-treadmill signature from this lesson. Net income has been positive for three years while operating cash flow has been negative — earnings are increasingly disconnected from cash. The shortfall has been funded by financing (debt or equity issuance), which is sustainable only while capital markets remain open. This is the configuration that historically precedes a forced equity dilution at unfavourable prices or a debt restructuring. The reported EPS understates the deterioration of the underlying business",
+    "Insufficient data without revenue growth"
+  ]}
+  answer={2}
+  explanation="The synthesis: lessons 035 and this one combine to produce the most reliable single fundamental warning — sustained positive earnings combined with sustained negative operating cash flow funded by financing. Three years of the pattern is the falsifiable threshold from lesson 035, and the financing pattern from this lesson confirms the diagnosis. Option 0 reads only the income statement. Option 1 mistakes the capital-raise as a stable structure. Option 3 dodges; the data given is sufficient."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "Show me CFO, CFI, and CFF for [ticker] over the last 5 fiscal years. Identify the pattern — mature returning capital, growing reinvesting, capital-raise treadmill, or turnaround." Save the labelled pattern to your <Term id="ami_decision_journal" /> so the next time you screen the company, the cash-flow shape is the first thing you check.
+
+## Takeaway
+
+Cash flow has three sections, and the pattern across them tells you what kind of company you're looking at. The total change in cash is the derived number; the three components are the diagnosis.

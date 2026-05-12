@@ -1,0 +1,68 @@
+---
+id: "115_harami_and_shooting_star"
+title: "Harami and shooting star"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+topic: "candlestick_patterns"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "114_engulfing_patterns"]
+tags: ["harami", "shooting_star", "candlestick", "reversal", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Harami and shooting star
+
+This assumes you've completed 020 (anatomy of a bar) and 114 (engulfing). Here we go deeper on two more reversal shapes that often pre-empt or confirm an engulfing: the harami and the shooting star. A harami is the inverse of an engulfing — a small candle whose body sits entirely *inside* the prior larger body. A shooting star is the inverted-hammer's name when it prints at the top of an uptrend: small body at the bottom of the range, long upper wick. By the end of this lesson you should be able to identify both, know where each one carries information, and write the exact invalidation candle for each.
+
+## Example
+
+Look at XOM on the daily chart on 18 and 19 March 2026. XOM had rallied from $103.40 in early February to $119.80 on 18 March — about 16% in six weeks. The 18 March candle was a wide green bar: open $116.20, close $119.80, a $3.60 body. The 19 March candle was a small red doji-ish body: open $118.40, close $117.60 — a $0.80 body that sat entirely inside the prior $3.60 body. That's a bearish harami. Context was right: extended uptrend, printing at a prior November high near $120, volume that day was 1.2x average. The next session (20 March) opened at $116.80 and closed at $114.20.
+
+Compare with a shooting star: TSLA on 8 April 2026, after a six-session rally from $254 to $283. The 8 April candle opened at $281.40, traded as high as $289.60, dropped, and closed at $279.10. Body of $2.30 near the bottom of the range, upper wick of $8.20 — wick about 3.5x the body. Printed right into a prior March swing high near $289. The next session opened at $278.20 and closed at $271.40.
+
+The harami invalidates on a daily close above the larger prior bar's high. In the XOM case that meant a close above $119.95 voids the reversal read. The shooting star invalidates on a daily close above the star's high — for TSLA, a close above $289.60 voids the read.
+
+## The trap
+
+The trap is mixing up harami and engulfing because the bar arrangement looks similar at a glance. They're inverses. An engulfing means *the second bar consumes the first* — a transfer of control. A harami means *the second bar shrinks inside the first* — a sudden loss of conviction by the side that just had a strong session. Both can be reversal signals, but they tell slightly different stories. The harami says "the move ran out of fuel"; the engulfing says "the other side just took over". The correct mental model: read the size and position of the second body relative to the first. Inside the prior body = harami. Covering the prior body = engulfing. The shooting star is a one-bar variant — read it like an inverted hammer at resistance and apply the same wick-to-body and level checks from lesson 113.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Day 1 prints a wide green bar: open $94.20, close $99.80. Day 2 prints: open $98.40, close $96.10. Which pattern is this?"
+  options={[
+    "Bullish engulfing — Day 1 is green and Day 2 is red, so the trend continues up",
+    "Bearish harami — Day 2's body ($96.10 to $98.40) sits entirely inside Day 1's body ($94.20 to $99.80), a sudden loss of conviction after a strong up session",
+    "Shooting star — the upper wick on Day 2 makes this a star",
+    "Bearish engulfing — Day 2's red colour covers Day 1's green"
+  ]}
+  answer={1}
+  explanation="Day 2's body spans $96.10 to $98.40 and is fully contained inside Day 1's $94.20 to $99.80 body — the textbook harami definition. Option 0 confuses colour sequence with engulfing structure and inverts the read. Option 3 invents a wick that's not specified in the question. Option 4 is the most tempting wrong answer because the colour flip suggests engulfing — but an engulfing requires Day 2's body to *cover* Day 1's body, which here it doesn't; it sits inside."
+/>
+
+<Quiz
+  question="NVDA has rallied from $108 to $148 in three weeks. Today NVDA prints: open $145.20, close $143.10, high $152.40, low $142.80. Volume is 1.9x the 20-day average. The $152 zone is the same area NVDA failed at six months ago. What is the pattern, and what's the disciplined entry+invalidation pair?"
+  options={[
+    "Hammer — small body near the top, long lower wick; buy at $143 with a stop at $142",
+    "Shooting star at resistance — small body ($2.10) near the bottom of the range, upper wick ($7.20) about 3.4x the body, printed at a prior resistance level on elevated volume after an extended rally. A short entry near the close at $143.10 with a stop just above the star's high at $152.90 ($1+ buffer above $152.40), invalidation = a daily close above $152.40",
+    "Bullish engulfing — wait for confirmation tomorrow",
+    "Doji — body is too small to matter"
+  ]}
+  answer={1}
+  explanation="Body = $143.10 minus $145.20 = $2.10. Upper wick = $152.40 minus $145.20 = $7.20. Wick-to-body ratio 3.4x, body near the bottom of the range, printed at a prior resistance after a 37% three-week rally on elevated volume — every condition for a shooting star is satisfied. Stop placement uses lesson 023's 'breathing room' rule above the star's high. Option 0 confuses hammer (long lower wick) with shooting star (long upper wick). Option 2 invents an engulfing that isn't here. Option 4 ignores the long upper wick that defines this candle. The synthesis check is whether you combined three earlier lessons — anatomy (020), levels (023), and the shape definition here — into one coherent plan."
+/>
+
+## Try it
+
+Open the chart of a ticker that recently rolled over from a high. Look at the candle on the day of the high and the day after. Ask the Market Analyst in <Term id="ami_one_on_one" />: "Was this a shooting star, harami, or neither? What were the precise body and wick measurements?" If the answer is a star or harami, save its invalidation price to your <Term id="ami_decision_journal" /> as a "would-have-been short" entry, even if you didn't trade it.
+
+## Takeaway
+
+Harami is shrinking conviction; engulfing is a takeover; shooting star is rejection at resistance — read body position and wick length against trend and level, and let the next close decide if you were right.

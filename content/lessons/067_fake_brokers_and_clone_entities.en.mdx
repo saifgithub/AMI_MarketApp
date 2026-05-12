@@ -1,0 +1,76 @@
+---
+id: "067_fake_brokers_and_clone_entities"
+title: "Fake brokers and clone entities"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 1
+track: "edge_process"
+topic: "scam_clone_brokers"
+prerequisites: ["065_guaranteed_return_scams", "066_telegram_whatsapp_pump_groups"]
+tags: ["scams", "clone_firms", "fake_brokers", "regulator_lookup"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Fake brokers and clone entities
+
+A clone-broker scam impersonates a legitimately licensed firm — same name, almost-identical logo, a domain one character different. The reader thinks they are wiring money to a regulated brokerage; the money lands in a personal or shell account the operator controls. This lesson trains the simple, falsifiable check that catches almost every clone: verify the entity name, registration number, *and* contact details against the regulator's public register before you transfer a single ringgit or dollar.
+
+## How this plays out in real markets
+
+The UK's FCA maintains a public Warning List specifically for clone firms — fca.org.uk/scamsmart — and adds dozens per month. The typical clone takes a real, licensed UK or US wealth-management firm, lifts its name verbatim or shifts one letter ("Goldnan Sachs", "JP-Morgan-Capital"), copies the legitimate firm's About page wholesale, then publishes a phone number and bank-account details that route to the scammer. Victims who later call the *real* firm's listed phone number discover the firm has never heard of them.
+
+SC Malaysia runs the same model under "Investor Alert List" and BNM under "Financial Consumer Alert". A recurring local variant: a Telegram account claiming to be a "Senior Dealer" at a major Malaysian investment bank, asking for an "onboarding deposit" into a personal Maybank or CIMB account. Real brokers never accept client deposits into individual personal accounts; client money sits in a trust account in the firm's name.
+
+ASIC publishes near-weekly imposter alerts. Many overseas clones target SEA expat communities, mixing English-language pitches with WhatsApp local-language hooks.
+
+Signature traits:
+
+- Domain off by one character, hyphen, or TLD (.org instead of .com).
+- Phone or WhatsApp number doesn't match the legitimate firm's published number.
+- Bank account for transfers is in an individual's name, not the firm's name.
+- "Onboarding manager" who refuses video calls or only video-calls with avatar on.
+- No working entry on the regulator's register when you look up the registration number they gave you.
+
+## The trap
+
+The mistake is checking the *website* and stopping there. A clone site can look indistinguishable from the real one — same colour palette, same About text, same staff bios. The reader confirms "yes, this firm is licensed" without realising the licence belongs to the *real* firm, not the clone they are talking to. The fix is to never use a number, email, or bank detail provided by the firm itself. Look up the firm independently on the regulator's register (FCA, SEC, FINRA, SC Malaysia), call the number listed there, and confirm the person who contacted you actually works at the firm. If the firm exists but the staff member doesn't, you have caught a clone.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="The strongest single check against a clone-broker scam is:"
+    options={[
+      "The firm's website looks professional and matches the brand",
+      "The firm's name appears on a regulator's register",
+      "The firm's registration number matches a regulator entry AND the contact details you were given match the contact details listed on the register",
+      "The firm has a Companies House registration"
+    ]}
+    answer={2}
+    explanation="Step 2 alone is not enough — that is exactly what a clone exploits: the real firm is on the register, the clone borrows its name. The decisive check is matching contact details (phone, address, official email domain) against the regulator's own listing for that entity, not against details supplied by whoever contacted you."
+  />
+
+  <Quiz
+    question="A \"dealer\" from a major bank WhatsApps you with a registration number, a slick website at bank-name-capital.com (the real bank is at bankname.com), and asks for an RM20,000 onboarding deposit into an individual person's Maybank account. The registration number does match a real licensed entity on SC Malaysia. What is the decisive red flag?"
+    options={[
+      "The contact came via WhatsApp",
+      "The website domain differs from the real bank by one hyphen",
+      "Client funds are being requested into a personal bank account rather than a firm trust account",
+      "The dealer asked for RM20,000"
+    ]}
+    answer={2}
+    explanation="The domain difference is suspicious and the WhatsApp channel is informal, but the decisive, falsifiable test is the destination of the funds. Licensed brokers and dealers in Malaysia must segregate client money in a trust account in the firm's name. A request to deposit into an individual's personal account is a guaranteed sign you are not talking to a real licensed dealer — regardless of what the website looks like or which registration number was quoted."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the <Term id="concierge_agent" />. Paste the name and domain of any broker, fund, or "dealer" you've been contacted by in the last 30 days. Ask: "Walk me through the regulator lookup. Where do I check this in SC Malaysia, FCA, or SEC, and what should match?" The Concierge will give you the exact lookup steps. If you have nothing to check, paste a test case: "JP-Morgan-Capital, domain jpmorgan-capital.org, contacted me via Telegram."
+
+## Takeaway
+
+Always look up the firm using a number from the *regulator's* register, never a number the firm gave you. Real brokers never take client deposits into personal bank accounts.

@@ -1,0 +1,72 @@
+---
+id: "270_why_the_pm_is_structurally_separate"
+title: "Why the PM is structurally separate from the trading team"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+topic: "pm_independence"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "076_human_oversight_is_the_product", "269_analysts_gather_researchers_debate"]
+tags: ["pm", "independence", "safety_floor", "governance", "architecture"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Why the PM is structurally separate from the trading team
+
+A trading desk where the same people pitch the trade *and* approve the trade is a trading desk that blows up. <Term id="ami" />'s <Term id="training_simulator" /> models the Portfolio Manager outside the eleven-agent trading team for the same reason real-world risk officers are organisationally separate from traders — independence is what makes the check meaningful, and the simulator is teaching you to recognise that structure. The PM does not read the Bull case to be persuaded. It does not weight confidence scores. It runs a deterministic compliance check against your <Term id="ami_mandate" /> and returns PASS or BLOCK. By the end of this lesson you will be able to explain why this separation is structural, not stylistic.
+
+## How this plays out in real markets
+
+<Term id="ami_convene_the_room" /> on XOM. The Bull Researcher writes a strong oil-cycle case. The Trader, persuaded by the debate, proposes 7% size. Confidence comes back 0.74 — high. Everyone in the trading team agrees this is the best trade of the week.
+
+Your Mandate says `max_position_pct: 5, no_fossil: true`. The PM step runs:
+
+> *Portfolio Manager (compliance check):* Two violations. (1) Proposed size 7% > mandate max_position_pct 5%. (2) Ticker XOM is fossil-fuel sector; mandate `no_fossil: true` triggers exclusion. Trade BLOCKED. No partial adjustment available — exclusion is binary.
+
+The PM never read the Bull case. The PM never asked what confidence was. The PM compared two pieces of data — *the proposed trade* and *your Mandate fields* — using deterministic functions. If the PM had been the thirteenth voice in the debate, persuasion could have moved it. Because it is structurally outside the debate, persuasion has nowhere to land. The eleven-agent team can argue its head off; the PM gate is a different kind of object entirely. It runs after the debate ends, against rules it did not write, on data you control.
+
+The same separation is why coaching the PM to "be more flexible" does not work — there is nothing in the PM's surface that takes natural-language input as a rule modifier. The rules are your Mandate. You change them by editing the Mandate, not by talking.
+
+## The trap
+
+The trap is the assumption that the PM is just another agent with a stricter prompt. It is not. The PM has a deterministic compliance check function that runs outside the model layer for the parts that bind hardest: size limits, drawdown limits, exclusion flags, region locks. Conflating "the PM" the agent persona with the function it gates leads to thinking the persona can be persuaded. It can't. The persona explains the rules; the function enforces them. Independence here means the function does not see the debate transcript at all when it runs the check — it only sees the proposed trade and your Mandate.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Eleven of AMI's agents agree on a high-conviction 8% NVDA position. Your Mandate has `max_position_pct: 5`. Why does the PM still block?"
+  options={[
+    "The PM weighs the eleven-agent consensus and decides 8% is too much",
+    "The PM compliance check is deterministic and runs against your Mandate fields independent of the debate — conviction does not enter the function",
+    "The PM is just being conservative this time",
+    "The PM is waiting for the Trader to lower the size"
+  ]}
+  answer={1}
+  explanation="The check is independent of the debate by design. Even unanimous high conviction does not move a deterministic function reading your `max_position_pct` directly. The tempting wrong answer is 'PM weighs consensus' — that's exactly what a non-independent check would do, and exactly why AMI's PM is not built that way."
+/>
+
+<Quiz
+  question="Which of these is the *structural* reason the PM is separate from the eleven-agent trading team?"
+  options={[
+    "It's faster",
+    "Independence — a check that participates in the debate it is checking cannot remain a check; the function must run outside the persuasion surface",
+    "Regulatory requirement",
+    "It saves credits"
+  ]}
+  answer={1}
+  explanation="The same principle applies in real-world trading desks — risk officers report up a separate chain from traders so the approval cannot be talked into. AMI's PM is the simulator's software version of that org chart, and it teaches you to look for that separation in real-world setups too. The tempting wrong answer is 'regulatory' — AMI is a training simulator and is not licensed to give investment advice, so regulation is not what enforces this. The architecture does."
+/>
+
+## Try it
+
+Open **Settings → Mandate** and toggle `no_fossil: true`. Convene the Room on XOM. Watch the Trader propose a position and the PM block on exclusion. Now toggle `no_fossil: false` and re-run the same ticker. The trading-team debate barely changes; the PM result flips entirely. That is independence in action.
+
+## Takeaway
+
+The PM is separate because a check inside the debate is not a check at all. The trading team argues, the PM gates — and the gate reads your Mandate, not the transcript. The training is the product: AMI is teaching you to evaluate this structure, not handing you a verdict to follow.

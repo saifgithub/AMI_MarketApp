@@ -1,0 +1,73 @@
+---
+id: "186_sustainable_roe_mean_reversion"
+title: "Sustainable ROE — the mean-reversion limit"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "return_on_equity"
+prerequisites: ["041_return_on_equity", "184_dupont_decomposition_deep", "036_competitive_advantage_moat"]
+tags: ["roe", "mean_reversion", "sustainable_roe", "moat", "competitive_advantage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sustainable ROE — the mean-reversion limit
+
+Lesson 041 talked about "sustainable" high ROE driven by margin and turnover; this lesson nails down what sustainability actually means in numbers. Empirically, very high ROEs revert. The cross-sectional distribution of US corporate ROE has a long-run median around 11–13% and a wide tail of "extraordinary" businesses earning 25%+ for many years. But the *base rate* is mean reversion — a company earning 30% ROE today has, on long-run averages, a meaningfully lower probability of earning 30% in ten years than the market often assumes. By the end you should be able to read an ROE in the context of its peer distribution, recognise which moats actually defer reversion, and name the specific signals of reversion that show up before the headline number breaks.
+
+## How this plays out in real markets
+
+The classic study — Bartov, Fama, Nissim and others — shows that the cross-sectional ROE distribution mean-reverts over five-to-ten-year windows. Companies in the top decile of ROE (above ~30%) tend to drift down toward the 18–22% range over a decade; companies in the bottom decile (negative or low single digits) tend to drift up toward the 8–12% range, often through industry consolidation or exit. The persistent outliers — the ones that hold 25%+ ROE for fifteen-plus years — share specific features: brand pricing power, network effects, switching costs, scale advantages, or regulatory moats.
+
+Concrete examples:
+- **AAPL** has run ROE above 40% for over a decade (now ~150% on buyback-shrunk equity, but underlying operating ROIC remained 40%+). The moat: brand, ecosystem lock-in, supply-chain scale. This is the rare durable outlier.
+- **NFLX** ran ROE around 25%+ in 2018–2020, dropped to ~15% in 2022–2023 as streaming competition intensified, recovered as Netflix tightened. The moat exists but isn't as deep as AAPL's; reversion happened partially.
+- **A randomly-picked top-decile ROE name from 2010** had, on average, dropped 8–12 ROE points by 2020 — not zero, but meaningful compression. The single number to internalise: high ROE *reverts unless explicitly defended by a moat*.
+
+The market often prices high ROE as if it will persist forever; the empirical base rate says it will compress. A 30%-ROE business priced at a high multiple has a built-in expectation of moat durability that, statistically, most don't deliver. On Bursa: PUBLIC BANK has held 13–14% ROE for over a decade — at the upper end of sustainable for Asian banks. Names that briefly hit 20%+ ROE on a cycle reverted within 3–5 years to sector medians.
+
+Falsifiable claim: an ROE above 25% in a non-financial business is sustainable for more than ten years only when paired with at least one of: (a) brand pricing power demonstrated through cycle (price increases stick during inflation, price holds during recession), (b) network effects with measurable user-base growth, (c) high switching costs visible in net retention or customer tenure, (d) scale-driven cost advantage at least 20% below the nearest competitor. Absent all four, the base case is reversion toward the sector median over a decade.
+
+## The trap
+
+The trap is the "wide moat" narrative without measurable evidence. A bull writeup says "company X has a wonderful brand and pricing power that will sustain 30% ROE for decades." The honest test is: has the brand survived an inflation episode without volume losses? Has the company raised prices in real terms over the last decade? Does net retention exceed 100%? Have competitors who entered failed? If the answer to any of these is no, the "wonderful moat" is a story, and the base-rate reversion will start showing up in the next 3–7 years. The correct mental model: treat every high-ROE business as reversion-bound by default, and require explicit, measurable moat evidence to override the prior. What invalidates a reversion thesis: when a company's high ROE has *already* survived a major competitive challenge — a deep recession, a new entrant with deep pockets, a regulatory shock — and held, the base-rate prior weakens. AAPL has survived such challenges; many "wonderful businesses" haven't yet been tested.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A consumer-discretionary company reports 32% ROE — top 5% of US public companies. Analyst consensus models 30%+ ROE for the next five years. Brand survived the 2022 inflation episode with full price pass-through; net retention is 115%; no competitor has gained share over the last decade. Cost of equity ~9%. Which is the most defensible long-run ROE assumption?"
+  options={[
+    "Assume 30%+ ROE forever — that's what the analyst consensus says",
+    "Assume immediate mean reversion to sector median of 14%",
+    "The moat evidence (full inflation pass-through, 115% net retention, share-stability over a decade) supports a higher-than-base-rate persistence. A reasonable model assumes ROE drifts modestly — say, 32% today to 22–25% over a decade — rather than full reversion to 14%. The honest range is 'durable but partially reverting': above sector median for years, but typically lower than the trailing peak. Both extremes (option 0 forever; option 1 immediate) are wrong; the right answer is calibrated reversion against measurable moat evidence",
+    "ROE has no statistical tendency to mean-revert"
+  ]}
+  answer={2}
+  explanation="The synthesis: the base rate is reversion; explicit moat evidence shifts the posterior, but rarely all the way to 'no reversion.' The tempting wrong answer is option 0 — the analyst-consensus shortcut that ignores base rates. Option 1 over-applies the base rate without weighing the evidence. Option 3 denies empirical reality. The right read is calibrated — moat evidence buys partial persistence, not permanent."
+/>
+
+<Quiz
+  question="A reader is asked to synthesize the lessons: a small-cap consumer company reports trailing ROE = 28% (driven mostly by margin per lesson 184), trailing P/B = 5x, valuation embeds 5+ years of 28%+ ROE per analyst consensus. The company has been public for 4 years. No competitive challenge has tested the brand. Cost of equity ~10%. Which is the correct read?"
+  options={[
+    "Strong buy — 28% ROE is durable",
+    "Wait for ROE to drop first then buy",
+    "The valuation prices durability the company hasn't yet demonstrated. Base rate says high ROE reverts; explicit moat evidence overrides only when measurable — none of the four signals (price pass-through, net retention, switching costs, scale advantage) have been tested through cycle for this name. Buying at 5x P/B with embedded multi-year durability assumes a moat the company hasn't proven, just claimed. Sensible action: wait for the next cycle stress to test whether the ROE survives, then decide. Pay for proven durability, not anticipated durability",
+    "Short the stock immediately"
+  ]}
+  answer={2}
+  explanation="The synthesis: at high P/B, you're paying for *embedded* future ROE; the empirical base rate is that future ROE reverts unless moat evidence is concrete and tested. The tempting wrong answer is option 0 — the bull-narrative-buy reflex. Option 1 has no clear trigger and is operationally vague. Option 3 over-corrects in the opposite direction. The right answer is to wait for a competitive-stress signal to either confirm or break the durability thesis, then act with information rather than narrative."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a high-ROE name (>25% trailing) on your <Term id="ami_watchlist" /> and ask: "Stress-test ROE sustainability. For each of the four moat dimensions — pricing power through inflation, net retention, switching costs, cost advantage — give me a concrete measurable test and the company's score on it. Then tell me your base-case ROE in five years against the trailing number." Save the four-dimension scorecard and the five-year ROE estimate in your <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+High ROE reverts by default; only measurable moat evidence buys persistence. Pay for the ROE the company has proven through a cycle, not the ROE the bull case extrapolates.

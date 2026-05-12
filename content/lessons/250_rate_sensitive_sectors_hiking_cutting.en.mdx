@@ -1,0 +1,81 @@
+---
+id: "250_rate_sensitive_sectors_hiking_cutting"
+title: "Rate-sensitive sectors in hiking and cutting cycles"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+topic: "sector_rotation"
+prerequisites: ["063_sector_rotation", "287_news_that_moves_markets", "017_portfolio_exposure_and_correlation"]
+tags: ["regime", "sectors", "rates", "macro", "rotation", "fed"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Rate-sensitive sectors in hiking and cutting cycles
+
+Lesson 063 introduced sector rotation as a regime signal. This lesson teaches the specific rotation pattern around interest-rate cycles — the single most reliable macro-driven rotation in US equities. After this lesson you will be able to identify the rate-sensitivity cohort, name the expected leadership map under hiking and cutting cycles, name the common heuristic that is wrong in real cycles, and state the invalidation that says "this cycle is rotating differently".
+
+## How this plays out in real markets
+
+The 2022 hiking cycle: the Fed funds rate moved from 0.25% in March 2022 to 4.50% by December 2022 — the fastest pace since 1980. 10-year yield ran from 1.78% on 31 December 2021 to 4.25% on 24 October 2022. Sector performance from 1 January to 31 December 2022:
+
+- XLE (energy): +57.7% — commodity tailwind, low-duration earnings.
+- XLU (utilities): -0.8% — yield substitute lost relative appeal as bond yields rose.
+- XLK (tech): -28.2% — long-duration cash flows penalised by higher discount rate.
+- XLRE (real estate): -28.0% — directly rate-sensitive cash flows.
+- XLF (financials): -10.5% — net-interest-margin tailwind partly offset by deal-flow contraction.
+
+The 2024 cutting cycle pivot: Fed cut 50bp on 18 September 2024, then 25bp on 7 November 2024 and 25bp on 18 December 2024 — 100bp total. 10-year yield FELL from 4.36% on 1 July 2024 to 3.63% on 16 September 2024 (anticipation), then ROSE back to 4.57% by 31 December 2024 (long-end re-pricing on growth + sticky inflation). Sector performance 1 July to 31 December 2024:
+
+- XLU: +18.4% — bond-substitute rally on falling front-end rates.
+- XLF: +14.8% — strong despite the cut, on yield-curve steepening.
+- XLK: +6.2% — softer than expected because the long-end didn't follow the short-end.
+- XLRE: +9.7% — solid but constrained by long-end stickiness.
+
+Detection rule: under a hiking cycle (Fed funds rising AND 10-year yield rising AND yield-curve flattening), expect XLE / XLF (early) and value-style leadership; XLK / XLRE / XLU lag. Under a cutting cycle, the canonical pattern is XLU / XLRE / XLK rotation in — but this fires *only if the long end falls with the short end*. When the long end doesn't follow (as in late 2024), the rate-sensitive rally is muted and financials with curve-steepening exposure can paradoxically lead.
+
+## The trap
+
+The rate-cycle trap is using a textbook heuristic ("Fed cuts → tech rallies") without checking the actual yield-curve mechanics. A trader pre-positions heavily into XLK in mid-2024 ahead of the September cut, expecting a duration-led tech rally — and watches the long end re-rate higher, neutralising the cut, while XLF and XLU lead instead. The mental error is treating the Fed's policy rate as the only rate that matters.
+
+The correct model: rate-sensitive sector rotation depends on *which* part of the curve moves. Front-end cuts with falling long end = full duration trade (XLK, XLRE, XLU lead). Front-end cuts with rising long end = bear-steepener (XLF, value, defensives lead, growth disappoints). Watch the 10-year yield and the 2s10s curve, not the Fed alone.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The Fed cuts 25bp. 2-year Treasury yield falls 20bp; 10-year Treasury yield RISES 15bp on the same day. 2s10s curve steepens by 35bp. A trader bought XLK ahead of the meeting on the textbook 'cuts help duration' heuristic. What does the framework prescribe?"
+  options={[
+    "Hold XLK at full size — the cut helps tech regardless.",
+    "The bear-steepening pattern (front-end down, long-end up) typically favours XLF, XLU only modestly, and value-style names. XLK's long-duration thesis is being neutralised by the rising long end. Trim XLK to lower exposure, rotate part of the position into XLF (curve-steepener beneficiary) on confirmed relative-strength, and respect mandate sector caps so no single sector exceeds the limit.",
+    "Sell everything — bear steepeners always precede crashes.",
+    "Buy more XLK at maximum mandate — cuts always help tech."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 3 — the textbook heuristic feels safe. But late-2024 was the live counter-example: a cutting cycle with a steepener that disappointed long-duration trades. The framework requires checking the curve, not just the Fed. Option 2 over-corrects; option 0 ignores the data the curve is providing."
+/>
+
+<Quiz
+  question="Which sector cohort historically benefits MOST when the Fed is hiking AND 10-year yields are rising AND the yield curve is flattening?"
+  options={[
+    "XLK (tech) and XLRE (real estate) — long-duration assets.",
+    "XLE (energy) and value-style cyclicals with low-duration earnings + commodity exposure — the 2022 leadership map.",
+    "XLU (utilities) and dividend-payers — yield substitutes shine.",
+    "All sectors equally — the Fed doesn't matter."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is option 2 — high yields seem to favour yield-substitute equities, but in fact rising bond yields DRAIN money from utilities into actual bonds. Option 0 inverts the relationship. The synthesis: hiking + rising 10y + flattening curve = the 2022 playbook, low-duration cyclicals and commodity exposure leading, long-duration growth lagging."
+/>
+
+## Try it
+
+Open <Term id="ami_one_on_one" /> with the News Analyst and ask: "Where are we in the rate cycle today? Give me the Fed funds rate, 10-year Treasury yield, 2s10s curve level, and the 90-day directional change in each. Based on that combination, which sector cohort should lead? Now compare to the actual 60-day relative-strength leadership — are they consistent or divergent?" Then open the <Term id="ami_decision_journal" /> and tag your three most recent sector positions with the rate-cycle phase that was in force. Mismatches between your positioning and the expected leadership map are coaching moments.
+
+## Takeaway
+
+Rate-sensitive rotation depends on which part of the curve moves. Watch the 10-year yield and 2s10s curve, not the Fed alone — same cut, different sector winners depending on the long end.

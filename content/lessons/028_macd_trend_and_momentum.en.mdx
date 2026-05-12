@@ -1,0 +1,72 @@
+---
+id: "028_macd_trend_and_momentum"
+title: "MACD — trend + momentum"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "macd"
+prerequisites: ["026_moving_averages", "027_rsi_momentum_oscillator"]
+tags: ["indicators", "macd", "momentum", "trend", "histogram"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# MACD — trend + momentum
+
+The Moving Average Convergence Divergence (MACD) is two EMAs subtracted from each other, plus a signal line and a histogram. The default settings are 12, 26, 9: MACD line = EMA(12) − EMA(26), signal line = EMA(9) of the MACD line, histogram = MACD − signal. When the MACD line crosses above the signal line and the histogram flips from negative to positive, momentum is turning up. When it crosses below and goes negative, momentum is turning down. The zero line tells you trend regime — above zero means the fast EMA is above the slow EMA, below zero means the opposite. MACD is RSI's slower, sturdier cousin: fewer signals, more weight per signal.
+
+## How this plays out in real markets
+
+Look at AAPL through Q4 2025. On October 14, AAPL closed at 226 with the MACD(12,26,9) line at -1.8, below its signal line, histogram negative. Over the next two weeks, the histogram bars shortened — still negative, but each bar smaller than the last. That's momentum decelerating to the downside. On October 30, AAPL closed at 232, MACD line crossed above signal at -0.4, histogram flipped positive at +0.3. The MACD line itself crossed back above zero on November 7 at 238, confirming the trend regime had flipped.
+
+AAPL then ran to 256 by early December. The trade signal — bullish MACD cross below zero with the histogram already shrinking — was visible on October 30 before the zero-line cross confirmed on November 7. Earlier signal, more risk; later confirmation, less risk.
+
+Falsification: a bullish MACD cross below zero is invalidated if price closes back below the recent swing low while the histogram is still positive but rolling over. If AAPL had cracked 225 after the October 30 cross, the signal would have failed — that's the wrong-way evidence you act on, not the right-way story you wanted.
+
+On Bursa Malaysia: GENTING in 2024 had a textbook bearish MACD cross above zero at RM4.85, histogram turned negative, price fell to RM4.20 over six weeks. Same mechanics, different exchange.
+
+## The trap
+
+Beginners trade every MACD cross. That's noise. In a choppy, sideways market, MACD whips back and forth across its signal line every few days, generating eight to twelve fake signals a month, each one a small loss. The signal-to-noise ratio collapses when the underlying trend is absent.
+
+The correct mental model: MACD is a trend-and-momentum filter, not a standalone setup. Use it to confirm a setup you already see in price — a pullback in an uptrend, a breakout from consolidation, a divergence at a swing high. The cross is the timing, but the context (trend regime + structure) is the edge. If price action doesn't agree with the MACD signal, the signal is junk.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AAPL closes at 232 with MACD line crossing above signal at -0.4, histogram flipping from -0.2 to +0.3. The MACD line is still below zero. What does the indicator say, strictly?"
+  options={[
+    "Trend regime is now bullish — the fast EMA is above the slow EMA",
+    "Momentum is turning up, but trend regime is still bearish until MACD crosses zero",
+    "It's a perfect short setup",
+    "Ignore the cross until price gains 10%"
+  ]}
+  answer={1}
+  explanation="MACD < 0 means the 12-EMA is still below the 26-EMA — bearish regime. The signal-line cross above MACD shows momentum turning up. Both things are true at once. The tempting wrong answer conflates the two crosses; the lesson is explicit that the zero-line cross is the regime confirmation, while the signal-line cross is the momentum turn."
+/>
+
+<Quiz
+  question="You're flat. A stock has been chopping sideways for three weeks with no clear higher highs or lower lows. MACD has crossed its signal line four times in that span. Position-size rule is 1.5% account risk per trade. What's the best read?"
+  options={[
+    "Take every cross; statistically the next one will be the breakout",
+    "MACD signals in a sideways regime are mostly noise — wait for price to break structure before trusting a cross",
+    "Increase position size on the next cross to compensate for the prior losses",
+    "Switch to a 5-minute chart so the signals come faster"
+  ]}
+  answer={1}
+  explanation="The lesson names this directly: MACD is a filter that confirms a setup you already see in price, not a standalone signal. Chopping sideways with no structure break means there's no trend for MACD to confirm; the crosses are whips. The tempting wrong answer ('next one will be the breakout') is gambler's fallacy plus revenge sizing — the lesson and the risk-management track both warn against it."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, ask: "Show me a ticker on my <Term id="ami_watchlist" /> where MACD just had a bullish cross below zero with the histogram already shrinking — and tell me whether price has confirmed by breaking structure." Compare what the Market Analyst surfaces against what you see on the chart yourself.
+
+## Takeaway
+
+MACD describes trend regime (zero line) and momentum turns (signal line); take the cross only when price structure already agrees with it.

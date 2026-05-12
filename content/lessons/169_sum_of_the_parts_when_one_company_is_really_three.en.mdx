@@ -1,0 +1,80 @@
+---
+id: "169_sum_of_the_parts_when_one_company_is_really_three"
+title: "Sum-of-the-parts: when one company is really three"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["valuation", "sum_of_parts", "conglomerate", "segments", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Sum-of-the-parts: when one company is really three
+
+Some companies don't have one business — they have three or four, each with different growth rates, margin profiles, and natural multiples. Applying a single P/E or EV/EBITDA to the whole company averages all of that into a number that under-prices the best segment, over-prices the worst, and misleads on both. Sum-of-the-parts (SOTP) valuation values each segment separately at the multiple appropriate for *that* segment, then adds them up. By the end of this lesson you should know when SOTP is the right framework, how to assemble one cleanly, and the conglomerate-discount pattern that often emerges from the exercise.
+
+## How this plays out in real markets
+
+Take AMZN as of mid-2026. The retail business (online stores + third-party seller services + Prime memberships + physical stores) generates the bulk of revenue but at retail-margin economics. AWS (cloud) generates a smaller revenue share but at software-margin economics. Advertising generates a third revenue stream at very high incremental margins.
+
+A clean SOTP looks roughly like this:
+
+- AWS: ~$110B annual revenue, ~35% operating margin, deserving a software-business multiple (say ~25x operating income).
+- Advertising: ~$60B annual revenue, ~50%+ incremental operating margin, deserving an ad-business multiple comparable to META or GOOGL (~20x operating income).
+- Retail: ~$450B annual revenue, ~5% operating margin, deserving a retail-business multiple (~12x operating income).
+
+Add up the three valuations and you get a SOTP estimate. Applying AMZN's blended P/E of ~45x to the whole thing under-prices AWS and over-prices retail simultaneously. The SOTP shows that AWS alone, valued on standalone software economics, accounts for 50%+ of AMZN's market cap by some analyst frameworks.
+
+Compare to GOOGL. Search + YouTube + ad network is one business with similar margin profiles; Cloud is a separate one; the "Other Bets" (Waymo, etc.) are a third with venture-economics. SOTP is the only way to value GOOGL coherently — applying a single multiple averages high-margin ads with low-margin or money-losing bets, producing a meaningless number.
+
+Now look at where SOTP reveals the conglomerate discount. Many diversified industrials (HON, MMM at various times) trade at a 10–20% discount to the sum of their segment valuations. The market is saying: "I'd rather own the segments separately than the conglomerate." When the discount reaches 25%+, the company often faces activist pressure for a spin-off — DIS, GE, IBM have all gone through versions of this in the last decade.
+
+On Bursa Malaysia: GENTING is a textbook SOTP candidate — gaming, plantation, power, and property are four distinct businesses with different economics. A single P/E on the whole group obscures more than it reveals.
+
+The falsifiable claim: a SOTP is necessary when any single segment contributes less than 50% of total operating income AND the segments have materially different margin profiles (operating margin spread of 15+ percentage points between highest and lowest segments). If the SOTP exceeds the current market cap by more than 20%, a conglomerate discount is in play and a corporate-action catalyst (spin-off, divestiture, activist pressure) may be ahead.
+
+## The trap
+
+The trap is double-counting corporate-level costs and debt. A beginner builds a SOTP, values each segment generously, and forgets to subtract: (a) corporate overhead (the holding company's central costs that don't belong to any segment), (b) net debt at the parent level, and (c) the tax friction of any actual segment separation (spin-offs often have tax costs). The correct mental model: SOTP starts with segment operating income at standalone multiples, subtracts allocated corporate overhead at a fair multiple, subtracts net debt, and ends with equity value. Skipping any of those three adjustments inflates the answer. The other trap is over-confidence in segment multiples — AWS doesn't trade publicly, so any standalone multiple applied to it is an analyst guess. Use a range, not a number, for every segment exactly as in DCF.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Company H has three segments: Segment X at 8% operating margin (revenue $20B), Segment Y at 35% operating margin (revenue $5B), and Segment Z at 12% operating margin (revenue $8B). The company trades at a blended P/E of 14x. Which read most cleanly identifies whether SOTP is appropriate?"
+  options={[
+    "SOTP isn't useful — just use the blended P/E",
+    "SOTP is appropriate here. No single segment dominates total operating income (X contributes ~$1.6B, Y ~$1.75B, Z ~$0.96B — Y is the largest contributor at ~41%, below the 50% threshold), and the margin spread between Y (35%) and X (8%) is 27 percentage points — well above the 15-point threshold that makes a blended multiple misleading. Y likely deserves a much higher multiple than X, and the blended 14x is averaging them in a way that obscures both",
+    "SOTP applies only to companies above $100B market cap",
+    "SOTP is never useful because segment data is unreliable"
+  ]}
+  answer={1}
+  explanation="The synthesis is that the falsifiable trigger for SOTP — no single segment over 50% of operating income AND margin spread above 15 points — is clearly present here. Y is the highest-margin segment but doesn't dominate; X is the largest revenue contributor but has the lowest margins. A blended multiple averages them. The most tempting wrong answer is option 0 because blended P/E is the path of least resistance. Option 2 invents a size threshold the lesson doesn't have. Option 3 over-rejects — segment data has limits but is usually disclosed in the 10-K."
+/>
+
+<Quiz
+  question="An analyst builds a SOTP for a diversified conglomerate. Segment valuations sum to $80B. Net debt is $12B. Corporate overhead is $400M annually but the analyst didn't subtract it. Current market cap is $58B. What's the cleanest critique under the lesson?"
+  options={[
+    "The conglomerate trades at a 26% discount to SOTP — buy aggressively",
+    "Subtract net debt to get $68B equity value from $80B enterprise value. Also capitalise corporate overhead — at a 12x multiple, $400M of annual cost reduces value by $4.8B, leaving $63.2B equity value. The honest discount is $63.2B vs market cap $58B = ~8%, not 26%. The lesson's discipline is that all three adjustments (segment EV, corporate overhead, net debt) must be applied before the discount-to-SOTP claim is meaningful. An 8% discount is normal conglomerate friction and not by itself a catalyst",
+    "Reject the SOTP — too many unknowns",
+    "Buy now — any discount is a discount"
+  ]}
+  answer={1}
+  explanation="The synthesis is that SOTP discipline requires all three adjustments. The analyst's $80B − $58B = 22B 'discount' shrinks dramatically once corporate overhead and net debt are subtracted properly. The lesson's threshold (25%+ discount as a catalyst signal) is not met after the adjustments — the actionable signal isn't there. The most tempting wrong answer is option 0 — the 26% headline discount is the kind of number that drives activist letters and bad investment decisions when the adjustments haven't been made. Option 2 dodges. Option 3 over-acts."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, pick a diversified company you follow and ask: "Build a SOTP. Segment-by-segment, what's the operating income, what multiple would you apply, and what's the equity value after subtracting net debt and capitalised corporate overhead?" In the <Term id="ami_decision_journal" />, write the SOTP, the current market cap, and the implied discount or premium. A discount above 25% is a watch item — write down what catalyst (spin-off, activist, management change) might unlock it.
+
+## Takeaway
+
+When a company is really three businesses, one multiple averages them all into a wrong number — SOTP each segment, subtract overhead and net debt honestly, and the answer is usually narrower than the headline suggests.

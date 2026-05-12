@@ -1,0 +1,68 @@
+---
+id: "075_the_risk_of_overreliance"
+title: "The risk of overreliance"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+topic: "overreliance"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management", "072_what_ami_can_do_for_you", "074_ai_hallucinations_and_amis_safety_floor"]
+tags: ["overreliance", "judgment", "automation_bias", "process"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# The risk of overreliance
+
+The opposite mistake to ignoring <Term id="ami" /> is leaning on it for things only you can decide. AMI is a <Term id="training_simulator" /> for the skill of evaluating multi-agent analyst output — it can show you that a 6% NVDA position breaches your `max_position_pct: 5` mandate inside the simulated scenario. It cannot tell you whether your mandate should be 5 in the first place — that depends on your income, your obligations, your sleep, your timeline. The risk of overreliance is letting a confident-sounding simulated <Term id="ami_verdict" /> substitute for the personal calibration that has to come from you. By the end of this lesson you will be able to spot the moments when "what does AMI say?" is the wrong question.
+
+## How this plays out in real markets
+
+Picture a user who runs <Term id="ami_convene_the_room" /> on AMZN every morning for three weeks. Simulated Verdicts come back: BUY 2%, HOLD, BUY 3%, HOLD, HOLD, BUY 2%. The user treats each one as a green light rather than a training prompt — they stop reading the dissent, stop journaling their own reasoning, and start describing themselves as "following AMI's calls". The simulated drawdown month-to-date is -8%. They convene the Room again and ask the PM: *"Should I be down 8%?"*
+
+> *Portfolio Manager:* That question isn't in my surface. I enforce your <Term id="ami_mandate" />'s `max_drawdown_pct: 20` — you're at -8% in the simulator, well inside the floor. Whether -8% in a month is acceptable for *you* depends on facts I don't have: your income stability, time horizon, other holdings outside this simulation, and how the loss would affect your decisions if it were real. Open the <Term id="ami_decision_journal" /> and review the six trades. The PM's check passed every one. The question this scenario is teaching you to ask is whether your Mandate values are still right for the life you're trading from.
+
+The same user might also fall into a softer overreliance: skipping their own pre-trade thinking ("I'll see what AMI says") and treating the simulated Verdict as a verdict in the legal sense. The Verdict is a verdict in the *opinion-being-trained-on* sense — and 12 agents disagreeing within it is feature, not noise. If you stop reading the dissent because the headline is BUY, you've outsourced the part you were supposed to be practising.
+
+## The trap
+
+Automation bias is the classic name for it: humans systematically over-trust the output of a system that *looks* confident and structured. AMI is both. It produces a structured Verdict with numbers and confidence scores, and the natural pull is to defer. The correct mental model: AMI is a training environment for the skill of running a research analyst team — not a CIO whose decisions you collect. The CIO seat is yours — you set the Mandate, you decide whether the simulated scenario taught you something, you decide what (if anything) to take into your own thinking. AMI is not telling you to do anything outside the app. If you ever catch yourself thinking *"AMI said BUY so I bought"* without remembering why, that's the warning signal. Re-open the transcript. The point of the training is the evaluation, not the headline.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="You've rubber-stamped four simulated BUY Verdicts this month without writing your own reasoning. Three of the simulated trades went against you. You convene the Room on a fifth ticker and the simulated Verdict is BUY 3% with confidence 0.71. What's the *right* next move?"
+  options={[
+    "Take the trade — AMI's process has been consistent",
+    "Skip the trade — three losses in a row means AMI is wrong",
+    "Open the Decision Journal, review what actually went wrong on the three losers, and decide whether your Mandate or your reading of verdicts (not AMI's process) needs adjusting",
+    "Coach the PM to be more conservative"
+  ]}
+  answer={2}
+  explanation="Streaks of losses are not by themselves evidence that the process is broken — but they are a forcing function to audit. The Journal is where you discover whether you were skipping the Bear case, sizing past the Trader's recommendation, or trading in a regime your Mandate doesn't fit. The tempting wrong answer is 'coach the PM' — the PM is your floor, not your strategy."
+/>
+
+<Quiz
+  question="Which of these is a sign you've crossed into overreliance on AMI?"
+  options={[
+    "You read the full debate transcript before deciding",
+    "You journal every trade with your own reasoning alongside the Verdict",
+    "You catch yourself describing trades as 'AMI told me to buy' rather than 'I decided to buy after seeing AMI's case'",
+    "You sometimes reject the Verdict entirely"
+  ]}
+  answer={2}
+  explanation="The language test is real. 'AMI told me' frames the agent as the decision-maker; 'I decided after seeing' keeps you in the CEO seat the simulator is built to train you for. The first three options are healthy CEO behaviour. The fourth one — rejecting verdicts — is also healthy and actively expected; AMI is not in the business of issuing advice you follow."
+/>
+
+## Try it
+
+Open the **Decision Journal** and find your three most recent trades that referenced an AMI Verdict. For each, write one sentence: *what would I have done if AMI hadn't existed?* If the answer is "I have no idea" on more than one, you've found your overreliance edge — and the Journal entry itself is the start of fixing it.
+
+## Takeaway
+
+AMI's job is to train your evaluation; your job is to keep the decision. If you can't say why you took a trade without quoting the simulated Verdict, you outsourced the part you came here to practise. AMI is teaching you to evaluate analyst output, not giving you advice to follow.

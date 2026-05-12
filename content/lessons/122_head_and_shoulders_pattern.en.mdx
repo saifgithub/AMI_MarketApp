@@ -1,0 +1,86 @@
+---
+id: "122_head_and_shoulders_pattern"
+title: "Head and shoulders pattern"
+duration_min: 6
+level: 2
+module: 4
+difficulty: 4
+track: "technical_analysis"
+topic: "chart_patterns"
+prerequisites: ["023_support_and_resistance", "024_breakouts", "022_trend_direction"]
+tags: ["head_and_shoulders", "reversal", "chart_pattern", "neckline", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Head and shoulders pattern
+
+This assumes you've completed 023 (support and resistance) and 024 (breakouts). Here we go deeper on the most-cited multi-bar chart pattern: the head and shoulders. It's a three-peak reversal structure that forms after an uptrend — a left shoulder (a swing high), a higher head (the highest peak), and a right shoulder (a lower high than the head, roughly level with the left shoulder). The lows between the peaks form a "neckline". A daily close below the neckline triggers the pattern. By the end of this lesson you should be able to identify the structure, draw the neckline correctly, compute the measured-move target, and state the exact invalidation rule.
+
+## Example
+
+Look at TSLA on the daily chart from late January to mid-April 2026. TSLA topped at $278.40 on 28 January (left shoulder), pulled back to $254.60 by 12 February (first neckline low), rallied to a higher high of $289.20 on 4 March (head), pulled back to $258.80 by 19 March (second neckline low), then rallied weakly to $277.10 on 1 April (right shoulder — roughly the same level as the left shoulder, distinctly lower than the head).
+
+Neckline: draw a line between the two pullback lows — $254.60 on 12 February and $258.80 on 19 March. That's a slight upward slope; at the time of the right shoulder peak on 1 April, the neckline projects to roughly $262.
+
+On 8 April TSLA closed at $258.40 — a daily close below the projected neckline. Pattern triggered.
+
+**Measured move target.** The height of the pattern from head to neckline = $289.20 minus ~$257 (neckline midpoint) ≈ $32. Subtract that height from the neckline-break price: $258.40 minus $32 ≈ $226. That's the textbook measured-move target.
+
+By 22 April TSLA was at $224.60 — within $1.40 of the textbook target. A trader entering short on the neckline-break close at $258.40, with a stop above the right shoulder at $279, risked $20.60 to a target of $226 — a $32.40 reward, roughly 1:1.6 R/R, plus the option to scale out at $240 for a higher partial-R/R first take.
+
+The pattern invalidates the moment a daily candle closes back above the right shoulder ($277.10 for TSLA). At that close, the structural reversal is voided and any short thesis dies.
+
+## The trap
+
+The trap is calling every "three peaks" structure a head and shoulders. Most aren't. Real head-and-shoulders patterns have (1) a clear prior uptrend to reverse, (2) a head that's *distinctly* higher than both shoulders — typically 3–8% — and (3) shoulders that are roughly level with each other, within about 2% in price terms. A "head" that's only 0.5% above the shoulders isn't a head, it's a range top. Worse trap: shorting on the right-shoulder peak before the neckline breaks. Until the neckline closes through, the pattern is *potential*, not triggered. Many would-be H&S patterns evaporate without ever breaking the neckline. The correct mental model: a head and shoulders has two events — the visual shape (necessary but not sufficient) and the neckline break (the actual trigger). Wait for the close.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock rallies to $80, pulls back to $74, rallies to $86, pulls back to $75, rallies to $80.50, then declines and closes at $73.80. What pattern is this and what does the trigger look like?"
+  options={[
+    "Double top — only two equivalent peaks count",
+    "Head and shoulders — left shoulder $80, head $86 (7.5% above shoulders), right shoulder $80.50, neckline roughly $74.50 (between the two pullback lows); the trigger is the daily close at $73.80, which is below the neckline",
+    "Cup and handle — bullish continuation",
+    "Triangle — converging highs and lows"
+  ]}
+  answer={1}
+  explanation="Three peaks with a distinctly higher middle ($86 is 7.5% above the two ~$80 shoulders), shoulders roughly level (within 0.6%), neckline drawn between the pullback lows of $74 and $75 (so the neckline is around $74.50 mid-pattern), and the close at $73.80 triggers below it. Option 0 ignores the middle peak being distinctly higher — that's what makes this H&S and not double top. Option 2 invents a bullish pattern that doesn't fit a topping structure. Option 3 invents a convergence the data doesn't show."
+/>
+
+<Quiz
+  question="A would-be head-and-shoulders has formed: left shoulder $112, head $116 (3.5% higher), right shoulder $113.80. Neckline projects to $107.40. Today the right shoulder just printed and price is at $111.20 with no neckline break yet. A trader shorts at $111.20 to 'front-run' the break. Which is the strongest read and what's the most tempting wrong reasoning?"
+  options={[
+    "Smart trade — the visual pattern is enough to act",
+    "Premature trade — the lesson explicitly says the pattern has two events (the shape AND the neckline break) and only the second triggers the trade; until a daily close prints below $107.40, the pattern is potential not triggered, and many H&S shapes evaporate without ever breaking the neckline. The tempting wrong reasoning is treating the visible shape as the signal",
+    "Smart trade — a 3.5% head-above-shoulders is exceptionally clean",
+    "Smart trade — the right shoulder is the most reliable short entry point"
+  ]}
+  answer={1}
+  explanation="The trade entry is the neckline-break close, not the right-shoulder peak. The shape is necessary; the break is what triggers. Option 0 collapses the two-event structure. Option 2 fixates on the head size as if it overrides the trigger requirement — the head's prominence matters for *identifying* the pattern but not for *timing* the entry. Option 3 invents an entry rule the lesson doesn't make. Many traders short at the right shoulder, get caught in a continuation rally, and learn this lesson expensively."
+/>
+
+<Quiz
+  question="An H&S triggered on JPM at a neckline-break close of $268.40. The head was at $292.10, neckline midpoint at $260. Right shoulder peak was at $281. Calculate the measured-move target and state the explicit invalidation rule for the short trade."
+  options={[
+    "Target $236.30; invalidation = a daily close above $281 (the right shoulder)",
+    "Target $244.30; invalidation = the protective stop at $290 is hit intraday",
+    "Target $230 (round number guess); invalidation = a close back above the neckline at $260",
+    "Target $260 (the neckline); invalidation = a 5% move against the trade"
+  ]}
+  answer={0}
+  explanation="Measured move: head ($292.10) minus neckline midpoint ($260) = $32.10 height. Subtract from neckline-break price ($268.40): $268.40 minus $32.10 = $236.30 target. Invalidation per the lesson: a daily close above the right shoulder ($281) voids the pattern. Option 1 mis-subtracts and confuses the intraday stop with the thesis invalidation. Option 2 invents a target and uses neckline-reclaim as invalidation — neckline reclaim is a *warning* but the lesson defines the structural invalidation as a close above the right shoulder. Option 3 trivializes both numbers. The synthesis test is computing the measured-move correctly *and* picking the lesson's specific structural invalidation, not a generic stop. This integrates pattern arithmetic with the invalidation discipline from earlier lessons."
+/>
+
+## Try it
+
+Open a chart for any stock that topped out in the past six months. Look for a three-peak structure where the middle peak is distinctly higher. If you find one, ask the Market Analyst in <Term id="ami_one_on_one" />: "Is this a valid head-and-shoulders? Draw the neckline, compute the measured-move target, and state the right-shoulder invalidation price." Save the trigger, target, and invalidation to your <Term id="ami_decision_journal" /> — even if the pattern didn't trigger, document why so you can recognise the shape sooner next time.
+
+## Takeaway
+
+Head and shoulders is a two-event pattern — visible shape plus neckline-break close — with a measured-move target equal to the head-to-neckline height; the structural invalidation is always a close back above the right shoulder.

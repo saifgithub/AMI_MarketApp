@@ -1,0 +1,68 @@
+---
+id: "019_survival_mindset"
+title: "Survival mindset"
+duration_min: 4
+level: 1
+module: 3
+difficulty: 2
+track: "edge_process"
+topic: "survival"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management"]
+tags: ["risk", "psychology", "survival", "process"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Survival mindset
+
+Survival mindset is the disposition that treats "still in the game next month" as a higher-priority objective than "made money this week." Edges in markets are statistical — they pay off across hundreds of trades, not five. Anyone who blows up before the sample size matures never gets to collect on the edge they thought they had. This lesson is not a math lesson; it is the operating principle that makes every other risk lesson in this module worth following. The PM enforces it structurally; you internalise it behaviourally.
+
+## How this plays out in real markets
+
+In Q3 2024, two simulated CEOs ran identical <Term id="ami_mandate" />s except for one field. Both started at $100,000. Both took the same 60 trades over the quarter using the Room's verdicts. Trader A had `max_risk_per_trade_pct: 1` and `pause_at_drawdown_pct: 15`. Trader B left both fields blank and "sized to conviction" — 3% to 5% on trades the Room flagged as high-confidence.
+
+Through the first 30 trades Trader B was up 14%, Trader A up 4%. Trader B's social-media posts about "leverage and conviction" got a lot of engagement. Then a Fed surprise + a TSLA earnings miss hit on the same week. Trader B was overweight three correlated tech names at the time, sized 4% each. The week wiped 31% off the account, and the next two weeks of revenge trading took it to a 47% drawdown. End of quarter: Trader A finished +7% (smaller drawdown, recovered quickly), Trader B finished −44% and effectively out of the game — needing 79% just to get back to even on a base that no longer has the room to take normal-sized trades.
+
+Same setups, same Room, same Trader. The only difference was a Mandate field. Falsifiable claim: across a 60-trade sample, accounts with `max_risk_per_trade_pct ≤ 1` and a drawdown ceiling end the quarter within 80% of peak more than 90% of the time; accounts without either field cross 30% drawdown more than 1 in 4 quarters.
+
+## The trap
+
+The trap is treating risk rules as friction — caps that "slow you down on your best ideas." The beginner who has had three wins in a row genuinely believes the next trade should be bigger, because the edge feels obvious. This is exactly when sizing creeps up, stops widen "to give it room," and the mandate gets renegotiated mid-session. Then one trade goes wrong while sized at 4% instead of 1% and the quarter's gains vanish in an afternoon. The correct mental model: the risk rules exist for the trades you don't see coming. They protect future-you from present-you's confidence. You don't earn the right to relax them by winning a few in a row — winning streaks are when survival mindset is most tested, not least needed.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="You've had four winning trades in a row, each at 1% risk. Your account is up 4.5%. You spot a fifth setup the Room calls a high-confidence buy. You feel hot. What does survival mindset say?"
+  options={[
+    "Increase position size to 3% — recent wins are evidence of edge and you should press it.",
+    "Take the same 1% position you've been taking — the mandate is built for the trade that breaks the streak, not the trades that extend it.",
+    "Skip the trade — four wins in a row means the next one is statistically due to lose.",
+    "Switch to a tighter stop so you can size up at the same dollar risk."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is the first — 'press your edge after wins' is a real maxim, just not at the per-trade sizing level. Win-streak confidence is when sizing creep happens, and the math doesn't care about your last four results. The 'next one is due to lose' distractor is the gambler's fallacy in reverse. The 'tighter stop to size up' distractor is from the position-sizing lesson — it works only when the chart actually supports a tighter stop; doing it because you feel hot is sizing creep wearing a math costume."
+/>
+
+<Quiz
+  question="Two simulated traders run the same Room verdicts for a year. Trader A makes +18% with a worst drawdown of 9%. Trader B makes +24% with a worst drawdown of 38%. By survival-mindset standards, which is the better outcome and why?"
+  options={[
+    "Trader B — higher absolute return is the only thing that matters at year-end.",
+    "Trader A — return-per-unit-of-drawdown is the meaningful metric (18/9 = 2.0 vs 24/38 = 0.63), and Trader B's drawdown means a single bad quarter could have ended the run before the gains arrived.",
+    "Trader B — bigger drawdowns prove the trader is willing to take risk, which is required for outperformance.",
+    "Tie — the year-end equity is what compounds, so the path doesn't matter."
+  ]}
+  answer={1}
+  explanation="The seductive wrong answer is the first or the last — 'only the final number matters'. The final number matters only conditional on staying in the game to collect it. Trader B's 38% drawdown is the path; if a slightly worse sequence had pushed it to 50% or 60%, the survival math from the drawdown lesson kicks in — recovery requires 100%+ gains and the strategy may not have time. Return-per-unit-of-drawdown captures the survival cost of the return; Trader A's higher ratio means more of the return is structurally durable."
+/>
+
+## Try it
+
+Open the Mandate editor right now. If `max_risk_per_trade_pct` is blank or above 2, set it to 1. If `pause_at_drawdown_pct` is blank, set it to 15. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "Given my current mandate, what's the worst single-quarter outcome I could realistically have?" The answer is the floor survival mindset is buying you.
+
+## Takeaway
+
+The trader who finishes the year is the trader who collects the edge — protect tomorrow's seat at the table before chasing today's gain.

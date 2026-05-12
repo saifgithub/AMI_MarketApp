@@ -1,0 +1,74 @@
+---
+id: "138_bollinger_band_walk"
+title: "Band-walks in strong trends"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "bollinger_band_walk"
+prerequisites: ["136_bollinger_bands_basics", "022_trend_direction", "126_ma_slope_analysis"]
+tags: ["indicators", "bollinger_bands", "band_walk", "trend", "fade_trap"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Band-walks in strong trends
+
+Lesson 136 noted that fading every band touch in a trending market loses money. The phenomenon has a name: the band-walk. In a strong trend, price hugs the upper band (or lower band in a downtrend) for multiple consecutive sessions, with the middle band (SMA20) rising or falling sharply beneath. Far from signalling exhaustion, the band-walk is the cleanest visual signature of a powerful trend. Trying to fade a band-walk is one of the most expensive beginner mistakes in technical analysis — the trend ignores the 2-sigma "extreme" and keeps going.
+
+## How this plays out in real markets
+
+Look at NVDA from late January 2026 through mid-February 2026. After the squeeze breakout at 141 (lesson 137's example), NVDA proceeded to close at or above its upper Bollinger Band for nine of the next eleven sessions. Closes: 144, 147, 149, 152, 151 (just inside), 154, 157, 156, 158, 156, 158. The upper band rose with price from 142 to 161 over the same window. The SMA20 climbed from 137 to 149 — a sharply rising middle band confirming trend strength.
+
+A trader fading the first band-touch at 144 would have been short into a 14-point rally. The same trader fading each subsequent touch would have compounded the loss. Meanwhile, a trader trailing a stop below the rising SMA20 — using the middle band as dynamic support — stayed long the entire move.
+
+The falsifiable rule: a band-walk is in effect when price has closed at or above the upper band (or below the lower band in a downtrend) on at least 3 of the last 5 sessions, with the middle band rising at a slope of at least 0.5% per session. While both conditions hold, do not fade the band — trade with the trend or stand aside. Invalidation: the band-walk ends when price closes back below the middle band on a daily bar, or when the SMA20 slope flattens to under 0.2% per session for three consecutive bars.
+
+Counter-example: GOOGL in mid-March 2026 walked the upper band for four sessions, then the SMA20 slope flattened sharply on session five. By session seven, price had closed below the SMA20. That was the legitimate exit — not the band-touches earlier.
+
+On Bursa Malaysia: PETRONAS in Q2 2025 walked the upper band for seven sessions during an oil-price spike; the trend ran 9% before the slope flattened. The same pattern, same exchange.
+
+## The trap
+
+The trap is the textbook reading "upper band = overbought, sell." Beginners learn the 2-sigma framing from lesson 136 and apply it mechanically — every band touch becomes a short. In a band-walk, every short trade is a loser, and the pattern repeats until the trader either runs out of capital or finally accepts the trend. This is the single most common indicator failure mode in trending markets.
+
+The correct mental model: the bands are statistical, but markets are not normally distributed when they trend. Trends have fat tails — long stretches of one-sided behaviour that defy the normal-distribution math the bands assume. The fix is the middle band's slope. A rising SMA20 with steep slope means you're in a fat-tail regime and the bands' "extreme" signal is suspended. Trade the trend, trail with the middle band, and wait for the slope to flatten before treating band touches as reversal signals again.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="NVDA closes at or above its upper Bollinger Band on nine of eleven consecutive sessions while the SMA20 slope rises from 137 to 149. A beginner fades the first touch at 144. What does the framework say about the trade and the principle?"
+  options={[
+    "Good trade — upper band touch is a 2-sigma extreme, mean reversion is statistically required",
+    "Bad trade — when 3-of-5 closes are at-or-above the upper band with the SMA20 slope rising at 0.5%+ per session, a band-walk is in effect and the trend overrides the 2-sigma 'extreme' reading. Fading a band-walk is a structural loser.",
+    "Neutral — the position size determines whether the trade was good or bad",
+    "Good trade — the second touch will reverse, just hold longer"
+  ]}
+  answer={1}
+  explanation="Band-walks invalidate the mean-reversion assumption because trending markets have fat-tailed distributions, not normal ones. The tempting wrong answer ('statistically required reversion') is mechanically applying the 2-sigma framing without checking the slope. The slope is the regime filter. Option D compounds the error by holding through the rally."
+/>
+
+<Quiz
+  question="A stock has walked the upper band for six sessions. On session seven, the SMA20 slope flattens from +0.7% per session to +0.1% per session; on session eight, price closes 0.8% below the SMA20 for the first time. Account size $25,000, long position currently up 9% on $5,000 of capital deployed (1% account risk on entry). What does the framework say?"
+  options={[
+    "Hold — one close below SMA20 is noise",
+    "Exit or trail aggressively: the band-walk's two invalidation conditions both fired — the SMA20 slope flattened below 0.2% AND price closed back below the middle band. The trend regime that suspended mean-reversion logic has ended.",
+    "Add to the position — the pullback is a buying opportunity",
+    "Flip short with size — every band-walk ends in a reversal"
+  ]}
+  answer={1}
+  explanation="The lesson defines exactly these two invalidation conditions; both fired on the same setup. The tempting wrong answer ('one close is noise') was true during the walk but is false once the slope confirms regime change. Adding (C) doubles into a fading trend. Flipping short with size (D) treats a regime exit as a reversal signal — they're different events. Trail or exit and re-evaluate from neutral."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a strongly-trending ticker and ask: "Has price closed at or beyond the upper Bollinger Band on at least 3 of the last 5 sessions, and what's the SMA20 slope as a percentage per session?" If both conditions confirm a band-walk, write down the slope-flattening threshold you'll use as your exit signal — and stick to it.
+
+## Takeaway
+
+Band-walks suspend the 2-sigma "extreme" reading — when the SMA20 slope is steep and price hugs the band, trade with the trend and exit on the slope's flattening, not the band's touch.

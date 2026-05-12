@@ -1,0 +1,70 @@
+---
+id: "044_earnings_growth"
+title: "Earnings growth"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+topic: "earnings_growth"
+prerequisites: ["033_profit_and_margins", "039_the_pe_ratio", "041_return_on_equity"]
+tags: ["earnings_growth", "eps_growth", "peg", "compounding", "guidance", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Earnings growth
+
+Earnings growth is the rate at which a company's net income or earnings per share expands over time. It's the engine that turns a static valuation multiple into a moving target — high growth justifies a high P/E because the earnings line catches up to the price; low or no growth means the multiple has to compress for the stock to be fairly priced. By the end of this lesson you should be able to compute trailing and forward earnings growth, distinguish organic from financial-engineering growth, and name the precise condition under which a triple-digit growth rate becomes a warning rather than a strength.
+
+## How this plays out in real markets
+
+NVDA from 2022 to 2024 grew net income from roughly $4.4B to over $60B — a more-than-13x increase in two years, driven by data-centre GPU demand for AI training. EPS growth across the same window exceeded 1000% cumulatively. That kind of growth justified — at the time — forward P/Es in the 30–50x range, because if earnings keep compounding the multiple compresses fast. The falsifiable question is always: at what point does growth slow, and does the multiple have a soft landing? NVDA's growth rate is already moderating; the market consensus for the next two years has dropped from triple-digit to roughly 30–40%, and the P/E has compressed accordingly.
+
+Compare AAPL. Revenue and earnings have grown in the mid-single-digits over the last three years, with EPS growth aided substantially by buybacks (the share count fell from over 16.5B to roughly 15B). When EPS grows 8% but net income grows only 4%, the buyback is doing half the work — that's financial-engineering growth, not organic. It's real to a per-share holder but doesn't represent business expansion. The distinction matters: organic growth scales the business; buyback growth shrinks the equity base but leaves the operations unchanged.
+
+On Bursa Malaysia: MAYBANK earnings growth has tracked Malaysian credit growth — typically mid-to-high single digits in normal years, dipping during stress and rebounding after. PETRONAS-linked names show earnings growth that is mostly a function of Brent crude prices, not company-specific operational improvement. A 30% earnings surge at an oil-linked company in a year when Brent rose 40% is the commodity, not the management.
+
+Falsifiable claim: a sustained 50%+ annual earnings-growth rate is mathematically incompatible with maturity — at that rate, earnings double in under 18 months. No business of meaningful size has sustained that pace for more than five years. A company guiding to 50%+ growth for five-plus years is either in a temporary capex super-cycle (the right read for NVDA in 2023–2024) or stretching forecasts past plausibility. The correct synthesis combines growth with the P/E (lesson 039): the PEG ratio (P/E divided by growth rate) is roughly 1.0 for fairly priced growth — below 1.0 is the bet, above 2.0 is the warning.
+
+## The trap
+
+The trap is extrapolating recent growth in a straight line. A company grew earnings 40% last year; a beginner models 40% next year, and the year after. But growth is mean-reverting almost everywhere — it slows as the base gets larger (the law of large numbers), as competition arrives, as the addressable market saturates. A 40% rate compounded for ten years implies a 29x increase in earnings; almost no company achieves that. The correct mental model: model growth in phases — a high-growth phase of 2–5 years, a transition phase as growth normalises, and a mature phase at single-digit growth — and discount each phase separately. What invalidates the signal: growth driven by acquisitions (inorganic growth) often shows headline EPS expansion that masks declining same-store or organic metrics. Always check organic revenue growth alongside earnings growth; a gap between the two is a tell that the engine is M&A, not the underlying business.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company reports 25% trailing EPS growth. Share count has fallen 15% over the same period due to buybacks. Revenue grew 5%. Net margin was flat. Which read most accurately describes the source of EPS growth?"
+  options={[
+    "EPS growth of 25% reflects strong business performance",
+    "EPS growth was driven mostly by buybacks shrinking the share count and only modestly by underlying business growth. With revenue up 5% and margin flat, net income grew approximately 5%; the gap between 5% net-income growth and 25% EPS growth is the buyback. The honest growth rate of the business is around 5%, and a P/E that prices in 25% growth is over-paying for financial engineering",
+    "Buybacks are irrelevant to EPS growth",
+    "The stock should be sold because share count is falling"
+  ]}
+  answer={1}
+  explanation="The synthesis test: organic vs. engineered growth. The tempting wrong answer is option 0 — the headline EPS growth gets accepted at face value, which is how most market participants over-pay for financially-engineered growth. The right decomposition checks revenue and margin first, derives the underlying net-income growth (~5%), and treats the gap to EPS growth (~20 points) as buyback-driven. Buybacks are accretive to per-share holders but don't represent business expansion. Option 2 is factually wrong — buybacks mechanically lift EPS by reducing the denominator. Option 3 reverses the direction; buybacks aren't a sell signal in themselves."
+/>
+
+<Quiz
+  question="A company trades at a forward P/E of 45x. Consensus forward earnings growth is 20% per year for the next three years, then expected to normalise to 8%. Sector median P/E is 22x. Which synthesis combines the P/E lesson and the growth framework most accurately?"
+  options={[
+    "The stock is overpriced because 45x P/E is double the sector median",
+    "Use PEG: 45 / 20 = 2.25, which is well above the 1.0 fair-value benchmark. Even granting 20% growth for three years (which would lift earnings ~73%), the forward P/E would only compress to roughly 26x — still above the sector's 22x median — and from year four onward growth is expected to slow to 8%, which can't support a premium multiple. The stock is priced for either a longer high-growth runway than consensus or a perpetual premium that growth alone doesn't justify",
+    "The 45x P/E is justified because growth is high",
+    "PEG is a discredited framework and shouldn't be used"
+  ]}
+  answer={1}
+  explanation="The synthesis tests whether the reader can integrate P/E, growth, and time horizon. The tempting wrong answer is option 2 — a beginner reasons 'high growth justifies high P/E' and stops. The PEG-and-runway check shows the multiple doesn't compress to sector levels even after three years of 20% growth, and the post-runway growth rate of 8% can't sustain the premium. Option 0 is correct in direction but skips the growth analysis that's the whole point. Option 3 throws out a useful screen."
+/>
+
+## Try it
+
+Open <Term id="ami_convene_the_room" /> on a high-multiple growth ticker (NVDA, TSLA, or a Bursa name like MRDIY) and watch the Fundamentals Analyst and Bear Researcher exchange views on growth durability. Then in <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "For this ticker, give me trailing-three-year and forward-three-year EPS growth, organic revenue growth for the same periods, and the buyback contribution to EPS. Flag any gap between net-income growth and EPS growth." Save the decomposition in your <Term id="ami_decision_journal" /> as your durability check.
+
+## Takeaway
+
+Earnings growth is the engine that justifies high multiples — but only the organic, operating-driven part. Always decompose headline EPS growth into revenue, margin, and share-count effects before paying a premium for it.

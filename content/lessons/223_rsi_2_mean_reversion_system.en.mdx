@@ -1,0 +1,66 @@
+---
+id: "223_rsi_2_mean_reversion_system"
+title: "RSI(2) mean-reversion system mechanics"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "mean_reversion"
+prerequisites: ["055_mean_reversion", "027_rsi_momentum_oscillator", "018_drawdown_management", "026_moving_averages"]
+tags: ["strategy", "mean_reversion", "rsi", "rsi_2", "short_term"]
+agent_callouts: ["conservative_debator", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# RSI(2) mean-reversion system mechanics
+
+The mean-reversion foundation (055) used RSI(2) with a regime filter. RSI(2) — the 2-period relative strength index — is the engine. The short look-back makes it whippy and extreme, which is the point: RSI(2) prints sub-5 readings several times a year on healthy uptrending instruments after sharp pullbacks, and a meaningful fraction of those readings precede 1-to-5 day snapbacks. The strategy is one of the most-studied short-term mechanical systems in published research. After this lesson you can specify a full RSI(2) rule with entry threshold, time-based exit, regime filter, and a position-size scheme that survives the inevitable cluster of losing trades.
+
+## How this plays out in real markets
+
+Look at JPM through 2024. The system: enter long when RSI(2) closes below 5 AND price closes above the 200-day MA. Exit on the first daily close above the 5-day MA, OR at 5 sessions elapsed (time stop). JPM triggered six times in 2024. A representative trade: April 16, 2024 — JPM closed at $182.66 on a market wobble, RSI(2) at 3.8, price still above the 200-day MA (~$163). Entry on the close at $182.66 with a stop placed below the prior day's swing low at $179.50. Two sessions later, April 18, JPM closed at $186.79 — above the 5-day MA at $185.10 — and the position exited. Profit per share: $4.13 on $3.16 of risk = 1.3R in two days. Across 2024, JPM's six trades produced a hit rate of around 75% with average win ~1.2R and average loss ~1R — net positive expectancy from a strategy that holds losing trades only a few days at most.
+
+Entry criteria: (1) RSI(2) closes below 5, (2) price closes above the 200-day MA (regime filter), (3) no confirmed negative fundamental catalyst (guidance cut, regulatory action, fraud allegation). Exit criteria: first daily close above the 5-day MA, OR 5 sessions elapsed (time stop) regardless of P&L. Stop on entry: previous day's low or current-day low, whichever is tighter. Individual-trade invalidation: stop hits, or time stop fires with the trade still red. The strategy FAILS in three regimes: (1) confirmed bear markets — RSI(2) prints sub-5 daily and price keeps dropping; (2) low-volatility creeping uptrends where RSI(2) rarely reaches the trigger and the few signals overlap with one-day reversals that complete before next-day entry; (3) high-correlation drawdowns where a portfolio of RSI(2) trades all draw down simultaneously.
+
+## The trap
+
+The beginner mistake is sizing RSI(2) trades by the same per-trade risk as longer-term setups, ignoring the strategy's cluster property. RSI(2) trades cluster — on a bad market week you can have 4-5 simultaneous entries that all go red together. Each individually is "only 1% risk", but together you've put 4-5% at risk in correlated trades. The correct mental model: an RSI(2) system is a PORTFOLIO of mean-reversion trades, not a series of independent ones. Size each entry at HALF of your normal per-trade risk, and cap total simultaneous RSI(2) exposure at 2-3% of account. The other trap: holding past the time stop. The whole edge is short-term mean reversion; if it hasn't reverted in 5 sessions, the statistical edge is gone and you're now running a bag-holding strategy.
+
+<ChatWith agent="conservative_debator" />
+
+## Quiz
+
+<Quiz
+  question="AAPL closed at $220 today with RSI(2) at 4.1. AAPL is above its 200-day MA. There is no known negative catalyst. You entered the trade. Day 3 closes at $221 — still below the 5-day MA at $222.50, no exit trigger. Day 5 closes at $220.50 — still below the 5-day MA. What does the rule say?"
+  options={[
+    "Hold — it's only $0.50 from entry and the bigger reversion is coming",
+    "Exit on Day 6's open per the time stop, even though you're break-even",
+    "Add to the position because the entry is still good",
+    "Hold and switch to a longer-term trend-follow rule"
+  ]}
+  answer={1}
+  explanation="The time stop is non-negotiable. The strategy's edge lives in the first 1-5 sessions; past that, RSI(2) reversion is just an open position with no statistical edge supporting it. Option 0 is the tempting wrong answer — it 'feels' like break-even can hold for a bit longer — but mechanical strategies require mechanical exits or they become discretionary trades with the wrong stop logic. Option 3 (switch strategies) is the more sophisticated version of the same mistake: changing the strategy mid-trade."
+/>
+
+<Quiz
+  question="You run an RSI(2) system. On a turbulent week, RSI(2) below 5 fires on five tickers simultaneously: AAPL, MSFT, GOOGL, AMZN, META. All are above their 200-day MAs. Your mandate caps per-trade risk at 1% and total drawdown at 20% on a $100,000 account, currently at 5% drawdown YTD. Conservative Debator argues 'these are highly correlated; don't take all five'. Synthesis: what's the right action?"
+  options={[
+    "Take all five at 1% each — each meets the entry rules individually",
+    "Take at most 2-3, sized at half-risk (~0.5% each), to cap simultaneous correlated exposure at 1.5% of account",
+    "Take none — the cluster signal means a real regime change is coming",
+    "Take all five but use a wider stop on each to avoid getting shaken out"
+  ]}
+  answer={1}
+  explanation="The synthesis: RSI(2) trades on US large-cap tech are highly correlated, so 5 'independent' 1% trades behave like a single 5% trade in a market-wide selloff. The Conservative Debator's framing is correct. Half-sizing and capping the basket respects both the strategy's cluster property and the mandate's risk budget. Option 0 is the tempting wrong answer because each setup individually checks the rules — but mandate-level risk is portfolio-level, not per-trade-level. Option 3 (wider stops) compounds the error by increasing per-trade loss."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Conservative Debator, paste a <Term id="ami_watchlist" /> that's just sold off and ask: "Which tickers triggered RSI(2) < 5 today with price above the 200-day MA? For each, state the entry, stop, and time-stop date. Identify which trades are correlated and recommend a basket size that caps simultaneous exposure." Then log the basket plan in the <Term id="ami_decision_journal" /> before any entry fires.
+
+## Takeaway
+
+RSI(2) is a portfolio strategy disguised as a per-trade signal. Size for correlation, cap simultaneous exposure, and never hold past the time stop. The edge dies on day 6.

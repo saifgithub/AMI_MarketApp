@@ -1,0 +1,76 @@
+---
+id: "144_adx_di_plus_minus_crosses"
+title: "ADX directional crosses — DI+ and DI−"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "adx_di_crosses"
+prerequisites: ["143_adx_trend_strength", "030_trend_confirmation_across_indicators"]
+tags: ["indicators", "adx", "di_plus", "di_minus", "directional_movement", "cross"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# ADX directional crosses — DI+ and DI−
+
+Lesson 143 covered ADX as the strength gauge. ADX itself is computed from two underlying directional indicators: DI+ (positive directional indicator) and DI− (negative directional indicator). DI+ measures the share of recent price action that was directionally up; DI− measures the share that was directionally down. When DI+ is above DI−, more recent movement is up; when DI− is above DI+, more recent movement is down. The DI+ / DI− cross — when one crosses above the other — is the directional signal that ADX itself cannot give. Together: ADX answers "how strong?", DI+ vs DI− answers "which way?"
+
+## How this plays out in real markets
+
+Look at AMD through Q4 2025 / Q1 2026. On November 18, 2025, with AMD at 121, DI+ crossed above DI− for the first time in three months — DI+ rose from 18 to 24 while DI− dropped from 26 to 19. At the same time, ADX was 22 — just inside the developing-trend zone. Over the next eight weeks AMD ran to 145, with ADX climbing to 31 and DI+ extending to 33 while DI− compressed to 12. A clean uptrend signal: DI+ cross plus ADX rising into trend territory.
+
+Then on January 27, 2026, the cross flipped: DI− crossed above DI+ at AMD 138 with ADX still at 29. AMD fell to 118 over the next five weeks. The DI− cross marked the regime flip from uptrend to downtrend; ADX confirmed the strength persisted on the way down.
+
+Contrast a false cross: on October 6, 2025, AMD's DI+ briefly crossed above DI− at price 116 — but ADX at the time was 17 (below the 20 trend threshold). Within four sessions, DI− was back above DI+, and AMD chopped between 115 and 119 for two weeks. The cross without the ADX gating fired in a no-trend regime and produced no follow-through.
+
+Falsifiable claim: DI+ / DI− crosses occurring with ADX above 20 produce materially better follow-through than crosses occurring with ADX below 20. Invalidation: a sample of 40+ crosses where below-20 crosses match above-20 crosses on forward returns. Empirically, the ADX filter halves the false-cross rate.
+
+The combined signal: DI+ above DI− with ADX above 20 and rising = strong long bias; DI− above DI+ with ADX above 20 and rising = strong short bias; either DI configuration with ADX below 20 = no signal, regardless of which DI is on top.
+
+On Bursa Malaysia: KLCC in Q2 2025 — DI+ crossed above DI− on April 14 with ADX at 21; price ran from RM7.20 to RM7.80 over the next six weeks. The earlier January cross at the same exchange, with ADX at 16, produced no move.
+
+## The trap
+
+The trap is acting on every DI+ / DI− cross regardless of the ADX context. Beginners learn "DI+ above DI− = long signal" and treat it as a standalone rule. In low-ADX regimes, the DI lines cross repeatedly with no follow-through; trading every cross is a whipsaw machine.
+
+The correct mental model: the DI cross gives direction; ADX gives the gate. Without ADX confirmation, a DI cross is the same as any other noisy crossover indicator in a flat market — it fires constantly and means nothing. The discipline is the same as the lesson 139 Stochastic-location filter: the cross is the trigger; the regime is the qualifier. Trade crosses only when ADX puts you in a trend regime.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="AMD's DI+ briefly crosses above DI− while ADX is at 17. Four sessions later the cross reverses and price has chopped 4% in either direction without breaking out. Two months later, DI+ crosses above DI− again, this time with ADX at 22 and rising. Price runs 20% over eight weeks. What rule explains the difference?"
+  options={[
+    "The first cross was wrong; the indicator only works the second time around",
+    "DI+ / DI− crosses produce follow-through when ADX is above 20 (trend regime) and whipsaw when ADX is below 20 (range regime). The ADX gating halves the false-cross rate.",
+    "DI crosses are random — don't use them",
+    "ADX is the wrong filter — should be RSI"
+  ]}
+  answer={1}
+  explanation="ADX as a regime gate is the same pattern as the Stochastic location filter from lesson 139 — same indicator, different regime, completely different signal quality. The tempting wrong answer ('first cross was wrong, second was right') misses the rule that ties the two together. ADX 17 vs 22 is the entire difference."
+/>
+
+<Quiz
+  question="A stock shows DI− crossing above DI+ with ADX at 29 and rising. Price has broken below its SMA50 on the same bar. Account size $40,000, mandate cap 1% per trade, you're long with 100 shares at $50 cost (currently at $48, $200 unrealised loss). What does the framework say?"
+  options={[
+    "Hold the long — the trend will recover, it always does",
+    "The framework flags a regime flip to downtrend: DI− above DI+ on rising ADX above 20, confirmed by price below SMA50. The long position's thesis has been invalidated by the directional cross combined with the trend filter. Exit the long; don't average down. Consider standing aside until a fresh setup forms.",
+    "Add to the long — the cross is the bottom",
+    "Flip short with 4× the current position size to recover the $200 loss faster"
+  ]}
+  answer={1}
+  explanation="Two indicators (DI cross with ADX gate, MA break) agree on the regime flip — a stronger signal than either alone, exactly the confluence framework from lesson 030. The tempting wrong answer (A) is the sunk-cost-plus-hope trap; (C) is reverse martingale; (D) is the revenge-trading anti-pattern flagged in Module 8. Exit on invalidation; size new trades from neutral, not from accumulated losses."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker that just produced a notable price move and ask: "What were the DI+, DI−, and ADX readings on the day of the move, and at the most recent prior DI cross — was that prior cross above or below the 20 ADX threshold?" Then verify on the chart. The point is to internalise the ADX-gating habit before any DI-cross-based action.
+
+## Takeaway
+
+DI+ vs DI− tells you direction; ADX above 20 tells you whether the direction matters. Cross plus regime gate is the signal; cross alone in a flat market is whipsaw.

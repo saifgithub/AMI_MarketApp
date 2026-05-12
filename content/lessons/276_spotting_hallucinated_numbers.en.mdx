@@ -1,0 +1,76 @@
+---
+id: "276_spotting_hallucinated_numbers"
+title: "Spotting hallucinated numbers in a verdict"
+duration_min: 6
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+topic: "hallucination_detection"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "071_how_to_verify_before_you_wire_money", "271_inside_the_deterministic_compliance_check"]
+tags: ["hallucinations", "verification", "verdict", "fundamentals_analyst", "ceo_check"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Spotting hallucinated numbers in a verdict
+
+The PM compliance check protects against <Term id="ami_mandate" /> violations. It does not fact-check every number an agent quotes. That job is yours — and it is a smaller job than it sounds, because most hallucinations show up in the same few places: stale ratios, off-by-quarter financials, made-up technical levels, and wrong dividend yields. By the end of this lesson you will know where to look first when a <Term id="ami_verdict" /> feels off, and how to use <Term id="ami_one_on_one" /> with the Fundamentals Analyst to cross-check a suspicious number in under a minute.
+
+## How this plays out in real markets
+
+Suppose you convene the Room on TENAGA (Bursa Malaysia) and the Bull Researcher's case opens with: *"TENAGA's dividend yield is 8.5%, payout ratio 60%, forward P/E 11."* The yield number jumps out — TENAGA's actual yield has historically been around 3–4%, not 8.5%. An 8.5% yield on a regulated utility would be either a screaming distressed-asset opportunity or a wrong number. Almost always: wrong number.
+
+Open **1-on-1** with the Fundamentals Analyst. Paste the ticker. Ask: *"What is TENAGA's current dividend yield and the source quarter?"* The Analyst will pull the most recent number it has access to and cite the period. If the answer comes back ~3.9%, the Bull Researcher's draft was hallucinated. You now know two things: (1) don't trust this Verdict's headline; (2) the Bear case is probably under-weighted relative to a corrected Bull case.
+
+The flags to watch for:
+
+1. **Round numbers in financial ratios.** An exact 8.5% yield, a perfect P/E of 20, an EPS of $5.00. Real ratios are messy. Round numbers are sometimes correct, often invented.
+2. **Stale ratios.** A P/E quoted as 14 when the stock just had a 30% run — the price moved, the P/E didn't update.
+3. **Off-by-quarter financials.** "Q3 revenue $12B" when the company's most recent print was Q4. Look at the date language in the agent's prose.
+4. **Made-up technical levels.** "Holding the 50-day MA at $135" when the chart actually shows it at $128. The Market Analyst is usually solid here, but cross-check the level against a chart source if it's load-bearing for the thesis.
+5. **Wrong dividend behaviour.** A non-dividend payer (e.g. NVDA at most prior periods) suddenly given a yield. NVDA's yield has been ~0.03% historically; a quoted 1.5% is invented.
+
+Cross-checking is fast. You don't audit every number — you audit the ones the thesis hinges on.
+
+## The trap
+
+The trap is over-trusting <Term id="ami" /> on data because the verdict is structured. Structure feels like rigor; numbers feel like facts. They are neither. The underlying language models can fabricate plausible-looking quantitative claims, and the more confident the prose around the number, the easier it is to skip past. The Fundamentals Analyst is the most likely to be right on financial ratios — it is the agent specialised to pull them — but it is also the agent whose hallucinations cost you most, because downstream agents (Bull, Bear, Research Manager) build their cases on those numbers. Cross-check the *load-bearing* numbers, not every one. If the entire Bull case rests on a single ratio, that ratio is the one to verify before doing anything.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A Bull Researcher's case on AAPL leads with: 'Services revenue grew 30% YoY in Q3, gross margin expanded to 78%, dividend yield 2.4%.' Two of those numbers feel high. What's the right CEO move?"
+  options={[
+    "Trust the verdict — AMI's twelve agents would have caught any errors",
+    "Reject the verdict outright because something feels off",
+    "Open 1-on-1 with the Fundamentals Analyst, cross-check the two numbers that feel wrong against the most recent filing the Analyst can pull, and decide whether the Bull case still stands once corrected",
+    "Coach the Bull Researcher to be more accurate next time"
+  ]}
+  answer={2}
+  explanation="The CEO job is to verify load-bearing numbers, not to trust or reject blindly. Cross-checking is a 60-second 1-on-1. Coaching does not retroactively fix the Verdict you already have. The tempting wrong answer is the first one — 'twelve agents would have caught it' assumes peer-review across agents, which is not how the architecture works; the PM checks Mandate compliance, not factual accuracy."
+/>
+
+<Quiz
+  question="Which of these is the *correct* model of where hallucination protection lives in AMI?"
+  options={[
+    "The PM fact-checks every number in every Verdict",
+    "The Research Manager catches all hallucinations by comparing Bull and Bear claims",
+    "The PM enforces Mandate compliance deterministically. Factual hallucinations on company data are an LLM-layer reality that the user (you, as CEO) is expected to spot-check on load-bearing claims using 1-on-1",
+    "AMI never hallucinates because the agents cross-verify each other"
+  ]}
+  answer={2}
+  explanation="The safety floor and the fact-check are different jobs. The PM binds Mandate compliance (size, drawdown, exclusions); factual accuracy is a CEO responsibility supported by 1-on-1 cross-checks. The tempting wrong answer is 'Research Manager catches all hallucinations' — the synthesiser weights cases, it does not run ground-truth verification across the corpus."
+/>
+
+## Try it
+
+<Term id="ami_convene_the_room" /> on any US ticker. From the Verdict transcript, pick one specific number an agent quoted that the thesis depends on (a P/E, a revenue figure, a moving average level). Open **1-on-1** with the agent most specialised for that number — Fundamentals Analyst for ratios, Market Analyst for technicals — and ask the same question fresh. Compare. You just ran your first <Term id="ceo_framing" /> audit.
+
+## Takeaway
+
+The PM binds Mandate; the CEO binds facts. Cross-check load-bearing numbers in 1-on-1 before the headline drives an evaluation. AMI is a <Term id="training_simulator" /> — spotting hallucinations is the skill it is built to drill, not a step toward executing the Verdict elsewhere.

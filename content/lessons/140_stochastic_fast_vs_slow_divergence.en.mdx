@@ -1,0 +1,76 @@
+---
+id: "140_stochastic_fast_vs_slow_divergence"
+title: "Fast vs slow Stochastic and divergence reads"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+topic: "stochastic_divergence"
+prerequisites: ["139_stochastic_k_d_crosses", "128_rsi_hidden_divergence"]
+tags: ["indicators", "stochastic", "fast_slow", "divergence", "smoothing"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Fast vs slow Stochastic and divergence reads
+
+Lesson 139 used the standard %K (14, 3, 3) Stochastic — a 14-bar lookback with %D as a 3-SMA and an additional 3-bar smoothing on %K itself. That "slow" version dampens the raw oscillator. The "fast" Stochastic (14, 3) skips the extra smoothing on %K, producing a jagged line that flips often. Divergence — the same concept lesson 128 taught for RSI — works on both, but the fast Stochastic gives earlier, noisier divergence calls and the slow Stochastic gives later, cleaner ones. The trade-off mirrors the SMA-vs-EMA choice from lesson 124: speed costs you in whipsaws.
+
+## How this plays out in real markets
+
+Look at MSFT through Q1 2026. On February 14, MSFT printed a new closing high at 438. The slow Stochastic %K reached 84 — barely above the 80 overbought line. At the prior closing high on January 22 at 432, slow %K had topped at 91. So slow Stochastic showed bearish divergence: higher price, lower oscillator high (84 vs 91).
+
+The fast Stochastic told a louder story. At the January 22 high, fast %K printed 96. At the February 14 high, fast %K topped at 79 — a 17-point gap, double the slow Stochastic's 7-point divergence. The fast version had been signalling momentum loss for two weeks before the slow version flagged anything.
+
+MSFT fell to 412 over the next 18 sessions. The slow Stochastic's divergence call was correct; the fast Stochastic's divergence call was the same direction, two weeks earlier, but accompanied by three false divergences in the prior six months that the slow version did not give.
+
+Falsifiable claim: fast Stochastic divergences produce more signals per period but a lower hit rate; slow Stochastic divergences produce fewer signals but a higher hit rate. The optimal use is to read both — fast as an early-warning radar, slow as the confirmation. A divergence visible on both is materially higher conviction than one visible on only the fast.
+
+Invalidation: a fast-only divergence (slow Stochastic still confirming the price high) is not a tradeable signal yet — it's a watchlist trigger. If the slow Stochastic confirms within the next 5 sessions, then the setup is live. If the slow recovers and price keeps trending, the fast divergence was a false alarm.
+
+On Bursa Malaysia: MAYBANK in October 2025 — fast Stochastic divergence at a swing high two weeks before slow Stochastic divergence confirmed; the eventual reversal ran 5.2% lower over the next month. The fast was the radar; the slow was the trigger.
+
+## The trap
+
+The trap is using only one of the two. Beginners pick fast Stochastic for "responsiveness" and end up trading every wiggle, or pick slow Stochastic for "smoothness" and miss the early warning. Either choice on its own discards information.
+
+The correct mental model: read both in parallel. Fast Stochastic identifies divergence candidates; slow Stochastic confirms or rejects them. The fast version is the lookout calling "ship on the horizon"; the slow version is the captain confirming the heading. Trading the lookout's first call is reckless; ignoring the captain's confirmation is wasteful. Use the pair, not either alone.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="MSFT prints a new closing high. Fast Stochastic %K tops at 79 (down sharply from 96 at the prior high — a 17-point divergence). Slow Stochastic %K tops at 84 (down from 91 — a 7-point divergence). What's the lesson's interpretation?"
+  options={[
+    "Fast and slow give equivalent signals; use whichever you prefer",
+    "Both versions show bearish divergence; the fast Stochastic's larger drop suggests momentum is fading more sharply than the smoothed read reveals — confirmation across both versions is the highest-conviction divergence configuration",
+    "Fast Stochastic is the wrong indicator — only the slow version matters",
+    "Slow Stochastic is the wrong indicator — only the fast version matters"
+  ]}
+  answer={1}
+  explanation="Both versions agreeing on the same divergence direction, with the fast showing a deeper drop, is the strongest single-indicator divergence signal. The tempting wrong answers (C and D) discard half the information. The mistake (A) treats the two as redundant when they actually measure the same thing at different smoothings — the gap between them is itself informative."
+/>
+
+<Quiz
+  question="A stock prints a new closing high. Fast Stochastic shows a clear 14-point bearish divergence vs the prior high. Slow Stochastic is still rising — no divergence on the smoothed version. Account size $20,000, you're long with the position 2% in profit. What does the framework recommend?"
+  options={[
+    "Exit immediately — fast Stochastic divergence is a sell signal",
+    "Hold but watch closely: fast-only divergence is a watchlist trigger, not a confirmed signal. If slow Stochastic divergence appears within 5 sessions, the setup is live. If slow recovers and price keeps trending, the fast call was a false alarm.",
+    "Add to the position — only slow Stochastic matters and it's still bullish",
+    "Flip short with full size"
+  ]}
+  answer={1}
+  explanation="The lesson's explicit rule: fast-only divergence is early warning, not a trigger. The tempting wrong answer (A) over-weights the noisier signal and exits a profitable trade prematurely. The opposite mistake (C) ignores the early warning entirely. The correct response is watchlist-and-monitor — let the slower confirmation arrive or watch the signal cancel. MAYBANK's October 2025 example resolved this way, with slow confirming the fast warning two weeks later."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker that's making new highs in a trend and ask: "Compare fast Stochastic (14, 3) and slow Stochastic (14, 3, 3) at the last two swing highs — is there divergence on either, and if so how deep is each?" Then build the habit of checking both whenever you scan for divergence; the pair-read is the edge.
+
+## Takeaway
+
+Fast Stochastic spots divergences earlier and noisier; slow Stochastic confirms them later and cleaner. Use the pair — fast as radar, slow as trigger — and trade only when both agree.

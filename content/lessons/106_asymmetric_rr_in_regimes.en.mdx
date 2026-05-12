@@ -1,0 +1,66 @@
+---
+id: "106_asymmetric_rr_in_regimes"
+title: "Asymmetric R:R across trending and ranging markets"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "edge_process"
+topic: "rr_regimes"
+prerequisites: ["016_risk_reward_ratio"]
+tags: ["risk", "reward", "regimes", "trending", "ranging"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Asymmetric R:R across trending and ranging markets
+
+This lesson assumes you've completed lesson 016 (Risk/reward ratio); here we go deeper on the fact that the R:R you can realistically achieve depends on what kind of market you're in. In a strong trend, targets resolve cleanly and runners can deliver 3:1 or 5:1; in a tight range, the same setup tops out at 1.2:1 because the price can't get past the range high before reversing. Using the same minimum R:R threshold in both regimes is a category error — you over-trade ranges (because most setups fail the threshold but you take them anyway) or under-trade trends (because you take profits too early at the threshold instead of letting runners deliver). This lesson teaches how to calibrate the threshold to the regime.
+
+## How this plays out in real markets
+
+Look at GOOGL across two regimes. In the trending Q2 2024 stretch, GOOGL ran from $148 to $190 with three pullback entries along the way. A typical entry at $155 with a $150 stop and a target at the next round number ($170) showed paper R:R = 3.0. But the trend kept extending — runners trailed with a 2× ATR chandelier rode to $180+ for realised R:R closer to 5:1. The minimum threshold that "made sense" in that regime was 3:1 with a willingness to trail past it.
+
+Compare the ranging Q3 2024 stretch in GOOGL, which oscillated between $160 and $172. The same kind of entry — $163 long, stop $159 (risk $4), target $172 (reward $9) — showed paper R:R = 2.25. Looks good on paper. But the target sits at the range top, where supply re-enters. Price tagged $171.50 and reversed to $164 over two days. Realised R:R = (171.50 − 163) ÷ (163 − 159) = 2.13. Not bad, but no runner — the range high is a ceiling, not a launchpad. Demanding 3:1 in this regime would have rejected every valid setup. On Bursa Malaysia: same logic on MAYBANK in a slow RM10.10–RM10.70 range — a 2:1 setup is the structural ceiling, not the floor. Falsifiable test: if you take 10 trades demanding 3:1 R:R inside a range that's 5% wide, more than half fail at the range top before reaching target.
+
+## The trap
+
+The trap is using a single R:R floor regardless of regime. The beginner sets `min_risk_reward_ratio` to 2.0 and applies it to every trade. In a strong trend they exit at 2R while the move extends to 5R — leaving most of the trade's value on the table. In a tight range they keep waiting for a 2R setup that doesn't exist and either skip the regime entirely or, more often, take a forced 1.4R setup and call it 2R by extending the target outside the range. The correct mental model: regime determines both the achievable R:R and the appropriate threshold. Trending markets — demand 2:1 minimum but trail runners. Ranging markets — accept 1.5:1 to 2:1 fixed-target setups and don't extend targets past the range. The Market Analyst can flag the regime in <Term id="ami_one_on_one" />; use that flag to pick the threshold.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="MSFT is in a confirmed range $410–$430. You spot a long setup at $414 with a chart stop at $408. The natural target is the range top at $429. What R:R does this setup offer, and is it a take or a skip in this regime?"
+  options={[
+    "R:R = 0.4 — skip, the math is upside-down.",
+    "R:R = 2.5 — take, this is a normal in-range setup that uses range top as target without extending past it.",
+    "R:R = 1.5 — skip, doesn't meet the 2:1 minimum that should apply universally.",
+    "R:R = 3.75 — take, but extend the target to $430.50 to clear the range."
+  ]}
+  answer={1}
+  explanation="Risk = 414 − 408 = $6. Reward = 429 − 414 = $15. R:R = 2.5. The tempting wrong answer is 'R:R = 3.75, extend target' — that's exactly the trap of pushing the target past the structural ceiling. The range top is where supply re-enters, so the target belongs just below it. The 'universal 2:1 minimum' distractor would also work here (2.5 ≥ 2) but the lesson is that in a range, 1.5–2.5 is the achievable ceiling and you shouldn't reject it for failing to be 3:1."
+/>
+
+<Quiz
+  question="Two traders run identical entry setups for a year across both trending and ranging regimes. Trader A demands a flat 3:1 paper R:R on every trade. Trader B demands 2:1 in ranges (with fixed targets at the range top) and 2:1 minimum in trends (but trails runners with 2× ATR chandelier). Who likely produces a better realised expectancy across the year?"
+  options={[
+    "Trader A — a higher universal threshold is a stronger filter.",
+    "Trader B — calibrating the threshold to regime keeps the trader active in ranges (where 3:1 is structurally unavailable so A skips most of them) while still capturing 4:1 to 5:1 runners in trends via the trail; A is filtering by paper number not by regime-achievable reward.",
+    "They tie — paper R:R is paper R:R regardless of regime.",
+    "Trader A — universal rules are always better than discretionary ones."
+  ]}
+  answer={1}
+  explanation="The tempting wrong answer is 'higher threshold = better filter'. The flaw is that the threshold has to match what the regime can actually deliver. A 3:1 demand in a 5%-wide range rejects every valid setup, so Trader A skips most of the year's range setups and takes only the few that look 3:1 on paper — often those have inflated targets and underperform. Trader B accepts the regime's natural ceiling in ranges, then captures the trend's natural extension via the trail. The 'ties' distractor ignores that achievable R:R is regime-conditional."
+/>
+
+## Try it
+
+Open a 1-on-1 with the Trader, pick a ticker from your <Term id="ami_watchlist" />, and ask "Is this currently trending or ranging, and what R:R is structurally achievable here?" Then look at your last 10 trades on the same ticker in the <Term id="ami_decision_journal" /> — were you demanding 3:1 in a range, or letting 5:1 runners get cut at 2:1 in a trend? Calibrate accordingly.
+
+## Takeaway
+
+In trends, demand 2:1 but trail runners; in ranges, accept 1.5:1 to 2:1 and take the target at the structural ceiling — never extend a target past the regime.

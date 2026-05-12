@@ -1,0 +1,96 @@
+---
+id: "071_how_to_verify_before_you_wire_money"
+title: "How to verify before you wire money"
+duration_min: 6
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+topic: "verify_before_wiring"
+prerequisites: ["065_guaranteed_return_scams", "066_telegram_whatsapp_pump_groups", "067_fake_brokers_and_clone_entities", "068_forex_fx_trading_scams", "069_ai_trading_bot_scams", "070_pressure_tactics_urgency_and_scarcity", "051_discipline_vs_excitement"]
+tags: ["scams", "verification", "regulator_lookup", "due_diligence", "capstone"]
+agent_callouts: ["concierge"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# How to verify before you wire money
+
+This is the capstone of Module 11. Six lessons have taught the *shapes* of common scams — guaranteed returns, pump groups, clone brokers, FX Ponzis, fake AI bots, pressure tactics. This lesson gives you the single procedure that defeats all six: a verification checklist you run *before* any transfer leaves your account. Five concrete checks, each falsifiable, each backed by a real regulator's public register. Run them every time. If any check fails, you do not wire.
+
+## How this plays out in real markets
+
+The regulator-published verification tools below are public, free, and authoritative. Most fraud victims interviewed by the SEC's Office of Investor Education say in hindsight that one of these checks, run for ten minutes, would have caught the scam.
+
+**1. Entity-level lookup.** Search the operator's exact legal name on the relevant regulator's register:
+- US individuals / brokers: FINRA BrokerCheck — brokercheck.finra.org
+- US investment advisers: SEC IAPD — adviserinfo.sec.gov
+- US public-company filings: SEC EDGAR — sec.gov/edgar
+- UK firms: FCA Register — register.fca.org.uk plus the FCA Warning List at fca.org.uk/scamsmart
+- Australia: ASIC Connect professional registers — asic.gov.au and the ASIC investor-alert list
+- Malaysia: SC Malaysia public register — sc.com.my, plus SC's Investor Alert List
+- Malaysia banking / FX: BNM Financial Consumer Alert — bnm.gov.my
+- Singapore: MAS Financial Institutions Directory — mas.gov.sg
+
+**2. Contact-detail match.** Take the phone number, email domain, and office address listed *on the regulator's register* for that entity. Confirm they match what the operator gave you. A clone fails this test instantly.
+
+**3. Bank-account name match.** The destination account must be in the regulated firm's name (or a clearly named client trust account). Never an individual's personal account, never a third-party shell.
+
+**4. Independent callback.** Call the firm at the number listed on the regulator's site — not the number the operator sent you. Ask whether the named representative actually works there.
+
+**5. Written terms on letterhead.** Demand the offer in writing, signed, on the firm's letterhead, with the registration number printed on it. Cross-reference that registration number on the regulator's register.
+
+Examples in practice: an SEC EDGAR search on a claimed pre-IPO company that returns zero filings (and the company is supposedly months from listing) is itself a falsification. A FINRA BrokerCheck on a US "broker" that returns no record means the person is not a registered representative. An SC Malaysia register lookup that returns "not listed" for a firm claiming SC oversight is dispositive.
+
+## The trap
+
+The trap is running *some* of the checks and trusting the answer. Operators design their pitch to pass the easy ones — the website is professional, the company name is on a regulator register (because they cloned a real one), the email domain looks legitimate. The reader stops at check 1 or 2, feels reassured, and skips checks 3, 4, 5. The procedure works only as a *complete set*. Each individual check is forgeable; the combination is not. The clone broker fails check 2 (phone mismatch). The Ponzi fails check 3 (personal-name bank account). The fake bot fails check 5 (no signed written terms with a real registration number). One failure means stop. There is no override.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+  <Quiz
+    question="An operator gives you a US SEC registration number. You look it up on SEC IAPD and the firm is real and registered. What additional check is mandatory before you wire?"
+    options={[
+      "No further check is needed — IAPD registration is sufficient",
+      "Match the contact phone, email domain, and office address against IAPD's listed details for that firm AND confirm the bank account is in the firm's name",
+      "Check whether the firm has more than 10 years of history",
+      "Check the firm's social media follower count"
+    ]}
+    answer={1}
+    explanation="Clone-firm scams routinely cite real registration numbers belonging to firms they are impersonating. IAPD registration alone does not protect you — it only proves the *named* firm exists. The decisive additional step is matching contact details against the regulator's listing (not the operator's) and verifying the destination bank account is in the firm's name. Skipping either check is how victims of clone scams get caught despite having looked the firm up."
+  />
+
+  <Quiz
+    question="A pitch passes 4 of the 5 checks: the firm is on the SC Malaysia register, the phone matches, the email domain matches, written terms arrive on letterhead with a real registration number. Only the bank account fails — it's in the name of an individual who introduces himself as the \"settlement manager\". The operator says this is normal for fast onboarding. What is the correct action?"
+    options={[
+      "Wire a small test amount to verify the account works, then commit",
+      "Proceed because 4 of 5 is strong enough",
+      "Do not wire — the bank-account-name failure alone is decisive, regardless of how many other checks passed",
+      "Ask for a 5% discount and proceed"
+    ]}
+    answer={2}
+    explanation="The procedure is a complete set, not a majority vote. A licensed firm must hold client money in a trust account in the firm's name — every relevant regulator requires this. A request to wire to an individual's personal account is, by itself, sufficient to refuse. Test deposits do not protect you; they prove only that the account exists, not that your money will come back. The most tempting wrong answer is \"4 of 5 is strong enough\" — it is not. Any single failure stops the procedure."
+  />
+
+  <Quiz
+    question="If a check fails, what is the appropriate next step?"
+    options={[
+      "Confront the operator publicly online",
+      "Travel to the operator's stated office to verify in person",
+      "Do not wire, and file a report with the appropriate regulator — SEC tips at sec.gov/tcr, FCA at fca.org.uk, SC Malaysia complaints portal, ASIC reportascam, BNM TELELINK",
+      "Wire a small amount to test"
+    ]}
+    answer={2}
+    explanation="The correct action is regulatory, not personal. Confronting scammers can expose you to retaliation and rarely recovers funds. Regulators have legal tools — asset freezes, warnings to the public, criminal referral — that individuals do not. Filing a report also adds to the alert lists that protect the next person who searches the same operator's name."
+  />
+
+## Try it
+
+Open a <Term id="ami_one_on_one" /> with the <Term id="concierge_agent" />. Pick any pitch you've received in the last 30 days — or use a test case ("Apex Global FX, claims SC Malaysia licence, contact via Telegram, deposit to personal Maybank account"). Ask: "Run the five-check procedure on this. Tell me which checks pass, which fail, and which regulator I would file a report with if I were to wire and lose the funds." The Concierge will walk you through it step by step.
+
+## Takeaway
+
+Five checks, every time, all must pass: entity on register, contact details match the register, bank account in the firm's name, independent callback to the firm, written terms on letterhead with a verifiable registration number. One failure is enough to stop.

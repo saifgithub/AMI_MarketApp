@@ -1,0 +1,74 @@
+---
+id: "137_bollinger_squeeze_and_breakout"
+title: "Bollinger squeeze and breakout"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+topic: "bollinger_squeeze"
+prerequisites: ["136_bollinger_bands_basics", "024_breakouts"]
+tags: ["indicators", "bollinger_bands", "squeeze", "volatility", "breakout"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Bollinger squeeze and breakout
+
+Lesson 136 framed the bands as a 2-sigma envelope around a 20-period SMA. When the envelope narrows to a multi-month low — bands hugging the middle line — volatility has compressed. That compression is the "squeeze." Markets cycle between low-volatility consolidation and high-volatility expansion; a squeeze marks the end of one phase and signals the next is coming. Crucially, the squeeze tells you *that* an expansion is approaching but not the direction. The breakout from a squeeze is the directional signal — and it has falsification baked in.
+
+## How this plays out in real markets
+
+Look at NVDA through January 2026. From January 8 through January 28, daily Bollinger Band width (upper minus lower) compressed from $14 to $4.20 — a 70% reduction over fifteen sessions. Price oscillated in a narrow range between 132 and 138. The bands were visibly hugging the SMA20 around 135. Volume averaged 0.7× the 60-day mean — participation drying up alongside volatility.
+
+On January 29, NVDA closed at 141.20, breaking decisively above the upper band on volume of 1.9× the 20-day average. The bands themselves immediately began expanding as the new closes raised standard deviation. Over the next eleven sessions NVDA ran to 158 — a 12% move from the breakout close, driven by the volatility expansion the squeeze had set up.
+
+The falsification: a squeeze breakout requires (1) a clear break and close outside the band, (2) confirming volume of at least 1.5× the 20-day average on the break bar, and (3) follow-through — a second close in the breakout direction within three sessions. If price closes back inside the bands within those three sessions, the breakout has failed and the squeeze is still in effect. NVDA met all three conditions; many setups don't.
+
+Counter-example: AMD in mid-October 2025 had a similar squeeze (bandwidth compressed 65%). Breakout candle on October 16 closed above the upper band but on volume of only 0.9× average. Two sessions later, AMD closed back below the upper band. The squeeze breakout failed; a trader who entered on the initial break and ignored the volume filter took a small loss.
+
+On Bursa Malaysia: TENAGA in late August 2025 squeezed for 19 sessions before breaking above its upper band on 1.7× volume; the move ran 6% over four weeks. The same pattern at the same exchange.
+
+## The trap
+
+Beginners trade the squeeze itself, not the breakout. They see compression and try to anticipate which way the expansion will go, often betting on the side the chart has been leaning. That's coin-flip territory; squeezes resolve up or down with no inherent bias. Buying inside the squeeze means you're guessing direction and accepting that you'll be wrong roughly half the time — for a position whose timing is also unknown.
+
+The correct mental model: a squeeze is preparation, not a signal. Wait for the directional break with confirming volume. The cost of waiting is giving up the first portion of the move; the benefit is avoiding the 50% of squeezes that resolve against your assumption. Patience plus a defined entry trigger beats prediction plus a hope.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="NVDA's Bollinger bandwidth has compressed 70% over fifteen sessions and price is now flat between 132 and 138. The chart has been gently rising for two weeks before the squeeze. What does the framework say about taking a long position now, before any breakout?"
+  options={[
+    "Yes — the gentle rise before the squeeze tells you the breakout will be up",
+    "No — a squeeze tells you an expansion is coming but not the direction; pre-positioning is a 50/50 guess. Wait for a close outside the band on confirming volume.",
+    "Yes — squeezes always break in the direction of the prior trend",
+    "Short the stock — squeezes always break the opposite way"
+  ]}
+  answer={1}
+  explanation="A squeeze is directionally agnostic. The tempting wrong answer ('prior gentle rise predicts up-break') is the continuation-bias error — historically, pre-squeeze direction is a coin flip for resolving the squeeze. Pre-positioning bets timing AND direction without confirmation. The defined entry is a close outside the band with volume; that's the falsifiable signal."
+/>
+
+<Quiz
+  question="A stock has been squeezed for three weeks. Today it closes above the upper band, but volume on the break bar is 0.9× the 20-day average. The next session closes back inside the bands. Under the lesson's three-condition rule for a valid breakout, what happened?"
+  options={[
+    "Valid breakout that needs more time to develop — hold the long",
+    "Failed breakout: volume was below the 1.5× threshold AND price closed back inside within three sessions; two of the three confirmation conditions failed. The squeeze is still in effect; exit the long.",
+    "Valid breakout because price closed above the band — volume doesn't matter",
+    "Add to the long because the pullback is a buying opportunity"
+  ]}
+  answer={1}
+  explanation="The lesson's three conditions: close outside band, 1.5×+ volume, follow-through within three sessions. AMD's mid-October failure in the lesson matched this exact pattern — break on weak volume, retreat back inside, small loss. The tempting wrong answer ('hold, needs more time') is the sunk-cost trap; the rule is mechanical and it failed. Adding (option D) compounds an invalidated thesis."
+/>
+
+## Try it
+
+In the Market Analyst <Term id="ami_one_on_one" />, paste a ticker showing a tight range and ask: "Compute Bollinger bandwidth as a percentage of price for the last 60 sessions — is the current width in the bottom 20% of that range?" If yes, you have a squeeze candidate. Set an alert for a close outside either band with 1.5×+ volume rather than entering inside the consolidation.
+
+## Takeaway
+
+A Bollinger squeeze warns an expansion is coming; the breakout — with band exit, 1.5× volume, and follow-through — is the directional signal. Pre-positioning the squeeze is guessing; trading the confirmed break is process.

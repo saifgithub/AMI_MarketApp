@@ -1,0 +1,72 @@
+---
+id: "155_operating_leverage_cyclicals"
+title: "Operating leverage in cyclicals"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+topic: "operating_leverage"
+prerequisites: ["033_profit_and_margins", "152_three_margins_deep"]
+tags: ["margins", "operating_leverage", "cyclicals", "fixed_cost", "amplification", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bull_researcher"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Operating leverage in cyclicals
+
+Lesson 033 explained margins; this lesson explains why margins move so much *more* than revenue in certain businesses. Operating leverage is the relationship between fixed and variable costs: when a high-fixed-cost business adds revenue, most of the incremental dollar drops straight to operating profit. When it loses revenue, the same fixed costs eat profit at a brutal rate. Cyclicals — semiconductors, airlines, miners, automakers, steelmakers, shipping — exhibit the highest operating leverage. By the end of this lesson you should be able to identify operating-leverage exposure, compute the rough amplification factor, and know the specific trap that catches investors at peak-cycle margins.
+
+## How this plays out in real markets
+
+Look at semiconductor capital-equipment maker AMAT (Applied Materials) across cycles. In a downcycle year revenue might drop 15% but operating profit drops 35–45% because the R&D and facility costs don't shrink proportionally. In an upcycle the same lever runs in reverse: revenue up 15% can drive operating profit up 35–45%. The "amplification ratio" — change in operating profit divided by change in revenue — is typically 2–3x at high-operating-leverage businesses, vs ~1x at low-leverage ones (retailers, where COGS scales nearly proportionally).
+
+Real numerical example: in fiscal 2024, INTC reported revenue around $53B and operating income around $0.9B (effectively breakeven at the operating line excluding asset impairments). That same business at fiscal 2021 peak generated roughly $79B revenue and ~$20B operating income. A 33% revenue decline produced a >95% operating-income decline. The fixed-cost base — fabs, R&D, headcount — barely moved. That ratio (~3x operating-profit decline per unit of revenue decline) is the operating-leverage signature of capital-intensive cyclicals.
+
+The reverse lever, when it works: airlines in 2022–2023. UAL revenue rose roughly 80% from 2021 to 2022 as travel recovered; operating margin swung from –7% to +5%. That's not a 7%-to-12% gradual move; it's a 12-percentage-point operating margin swing on a revenue base that was largely the same set of planes, gates, and pilots already paid for.
+
+On Bursa Malaysia: AIRASIA's operating margin pre-COVID, during COVID, and post-COVID swings from mid-single digits positive to deeply negative and back — the underlying cost base (aircraft leases, maintenance, ground operations) barely flexes with passenger volume. The same applies to PETRONAS Chemicals across feedstock cycles.
+
+The falsifiable claim: a business with a fixed-cost ratio (operating expenses that don't scale with revenue) above 60% will exhibit an operating-leverage amplification of 2x or more in both directions. The amplification doesn't dissipate at peak margins — it just runs in reverse when revenue rolls over.
+
+## The trap
+
+The trap is anchoring on peak-cycle margins as the new normal. A beginner sees a cyclical company at peak operating margin (say 30% vs a through-cycle average of 12%) and forecasts forward at the peak rate. They compute a forward P/E that looks cheap because the EPS estimate is based on peak earnings. Then revenue rolls over 15%, operating profit drops 40% via the same leverage that drove it up, and the "cheap" P/E was actually expensive on normalised earnings. The correct mental model: at high operating leverage, margins are amplified, not earned. Always check what the through-cycle average operating margin looks like over a full 5–10 year period — and assume mid-cycle is the right number to use when discounting forward earnings, not the most recent quarter.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A cyclical industrial reports revenue +20% year-over-year and operating income +60% year-over-year. The stock trades at 12x trailing earnings. Which read best applies the lesson?"
+  options={[
+    "Cheap — 12x earnings with 60% earnings growth is a clear buy",
+    "The 3x amplification (60% operating income growth on 20% revenue growth) signals high operating leverage. The same lever runs in reverse on a revenue decline. The trailing 12x P/E is computed off peak earnings; the through-cycle multiple is likely materially higher. The stock may or may not be cheap, but you cannot determine that from peak-cycle numbers — you need a normalised earnings estimate first",
+    "Expensive — 60% earnings growth is unsustainable",
+    "The leverage is bullish because amplification only works upward"
+  ]}
+  answer={1}
+  explanation="A 3x amplification ratio is the signature of high operating leverage at a cyclical. Trailing P/E on peak earnings systematically understates valuation. The right analytical step is to normalise — estimate through-cycle revenue and apply through-cycle margins. Option 0 takes the trailing multiple at face value, exactly the trap. Option 2 is reflexively bearish without diagnosis. Option 3 is wrong — operating leverage works in both directions, and that's the lesson."
+/>
+
+<Quiz
+  question="Synthesis: a semiconductor equipment company has trailing operating margin of 32%, well above its 10-year through-cycle average of 18%. Revenue is +25% YoY. Customer capex disclosures suggest the cycle peaks in the next 1–2 quarters and decelerates. The stock trades at a P/E of 14x trailing. Which read combines operating leverage with the prior trend and benchmark lessons?"
+  options={[
+    "Buy — 14x earnings on 25% growth is unambiguously cheap",
+    "Hold — wait for next quarter to decide",
+    "The 14x P/E is on peak earnings that operating leverage has amplified well above the through-cycle level. If the cycle decelerates and revenue rolls over 10–15%, operating income could decline 30–45% via the same amplification. The normalised P/E (applying through-cycle 18% margin to a normalised revenue base) is likely 22–28x — a very different multiple than the trailing 14x suggests. The trade looks cheap because the denominator is temporarily inflated",
+    "Sell — peak cycle always means crash"
+  ]}
+  answer={2}
+  explanation="The synthesis: trailing earnings at a cyclical near a peak are a misleading denominator. Combining (1) the operating-leverage amplification, (2) the through-cycle benchmark, and (3) the visible customer-capex signal gives you a much higher normalised multiple than the trailing P/E suggests. Option 0 takes trailing P/E at face value. Option 1 punts on analysis. Option 3 is too reflexive — the right answer is that the multiple is misleading, not that a crash is certain."
+/>
+
+## Try it
+
+Pick a cyclical name from your <Term id="ami_watchlist" /> (a semi, automaker, miner, or airline). In <Term id="ami_one_on_one" /> with the Fundamentals Analyst, ask: "What is [ticker]'s 10-year through-cycle average operating margin? Where is the current quarter's margin relative to that average? Estimate the normalised earnings if margins reverted to the through-cycle level." Save the normalised P/E next to the trailing P/E in your <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Operating leverage amplifies revenue moves into much bigger profit moves — in both directions. At peak margins, trailing P/E is the most misleading number on the page. Normalise before you buy.

@@ -1,0 +1,66 @@
+---
+id: "219_breakout_volume_profile"
+title: "Breakout volume profile — what 'volume confirmation' really means"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "029_volume_confirmation", "024_breakouts", "119_failed_breakouts_bull_traps"]
+tags: ["strategy", "breakout", "volume", "volume_profile", "confirmation"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Breakout volume profile — what "volume confirmation" really means
+
+The breakout foundation (053) required "volume at least 1.5x the 20-day average". That's the headline rule, but breakouts and fakeouts have distinct volume FINGERPRINTS over the prior weeks, not just the breakout day. A real breakout typically shows: declining volume during consolidation, a sharp expansion on the breakout candle, and continued above-average volume on follow-through days. A fakeout often shows the breakout-day spike with no consolidation contraction and dwindling follow-through. After this lesson you can read the multi-week volume profile around a breakout candidate and tell the high-probability pattern from the trap.
+
+## How this plays out in real markets
+
+Look at GOOGL in late April 2024. Through February and March, GOOGL consolidated between $150 and $158 — the 20-day average volume dropped from ~28 million shares in February to ~22 million by mid-April as the range tightened. On April 26, 2024, GOOGL reported Q1 earnings, gapped up, and closed at $173.69 on 64 million shares — 2.9x the 20-day average. The next three sessions held above $170 with volume of 32M, 28M, and 27M — well above the consolidation average. That's the clean profile: contraction, expansion, sustained follow-through. Contrast with a fakeout — many small-cap "breakouts" show a single volume spike on the breakout day from a flat-volume base, then volume collapses below the consolidation average within two sessions and price closes back inside the range. The GOOGL trade off the April 26 close entered around $173 with a stop at $165 (back inside the range) and rode to $192 by early July — over 2R on a sustained breakout.
+
+Entry criteria: (1) consolidation volume DECLINING into the breakout level, (2) breakout candle volume ≥ 1.5x 20-day average AND ≥ 2x the recent consolidation-day average, (3) volume on day +1 and day +2 stays above the consolidation average. Stop: a daily close back inside the consolidation range. Individual-trade invalidation: volume on day +1 or +2 collapses to below the consolidation average AND price closes back below the breakout level — the volume signature says it was a one-day buy programme, not a regime change; exit. The strategy FAILS in two regimes: (1) earnings-driven gaps in low-float names where volume mechanics are distorted by short squeezes and option hedging, and (2) index-level breakouts after long bull runs, where breadth has narrowed and "breakouts" are just the few remaining leaders extending into thin air.
+
+## The trap
+
+The beginner mistake is looking only at the breakout DAY's volume. You see 2x average volume, you click, and you never check whether the consolidation actually contracted on declining volume. Without contraction, the spike isn't a release of coiled supply — it's just news-day liquidity. The correct mental model: volume tells a three-act story. Act 1 is the consolidation — volume should DECLINE as price tightens. Act 2 is the breakout candle — volume should EXPAND sharply. Act 3 is follow-through — volume should STAY above the consolidation average for at least two sessions. If any act is missing, treat the breakout as suspect and size at half-conviction or skip.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock has consolidated for six weeks; its consolidation-period volume averaged 18 million shares/day, but rose to 24 million in the last two weeks. Today it closes above resistance on 35 million shares (1.6x 20-day average). What does the multi-act volume rule say?"
+  options={[
+    "Clean breakout — volume on the day is above 1.5x average",
+    "Suspect — consolidation volume was RISING, not contracting; the precondition fails",
+    "Strong breakout — rising consolidation volume means demand was building",
+    "Failed breakout — volume should be 3x average"
+  ]}
+  answer={1}
+  explanation="The headline rule (1.5x on the day) passes, but Act 1 (declining consolidation volume) failed. Rising consolidation volume often means distribution into strength, not absorption — the breakout candle is then just the last buyer rather than the first of many. Option 2 is the tempting wrong answer because 'rising volume = bullish' is a common heuristic that ignores the contraction signal."
+/>
+
+<Quiz
+  question="You take a breakout long in NVDA on Day 0 with confirming volume. Day +1 closes above the breakout level on 60% of the 20-day average volume. Day +2 closes 0.5% below the breakout level on 45% of average volume. Mandate: per-trade risk 1%, drawdown cap 20%, you're at 6% drawdown YTD. What's the right action?"
+  options={[
+    "Hold — Day +2 close is only marginally below; give it more time",
+    "Exit on Day +3's open — both the volume collapse and the price close-below confirm the volume invalidation",
+    "Add to the position because lower volume on a pullback is healthy",
+    "Move the stop wider to the prior daily swing low to avoid getting shaken out"
+  ]}
+  answer={1}
+  explanation="The volume invalidation rule fires when follow-through volume collapses AND price closes back below the breakout. Both conditions met. Option 2 is the tempting wrong answer — 'low volume pullback is healthy' is a real principle for trend pullbacks AFTER a confirmed move, not for the first two sessions after a breakout where the volume signature is still establishing whether the move was real. Synthesis: with 6% drawdown YTD and a clear invalidation, exit and preserve mandate capacity; you can re-enter on a fresh confirmed breakout."
+/>
+
+## Try it
+
+In <Term id="ami_one_on_one" /> with the Market Analyst, paste a recent breakout candidate and ask: "Walk me through the three acts of the volume profile — consolidation trend, breakout-day expansion, and the two days of follow-through. Tell me which acts pass and which fail." Use <Term id="ami_coach_your_agent" /> on the Market Analyst to add: "Always grade breakouts across the full three-act volume profile, not just the breakout-day spike." Log the grading template in the <Term id="ami_decision_journal" />.
+
+## Takeaway
+
+Volume tells a three-act story — contract, expand, sustain. A single breakout-day spike isn't enough; the consolidation must have contracted and follow-through must hold above the consolidation average.

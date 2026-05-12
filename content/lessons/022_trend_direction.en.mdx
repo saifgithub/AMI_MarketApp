@@ -1,0 +1,68 @@
+---
+id: "022_trend_direction"
+title: "Trend direction"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 2
+track: "technical_analysis"
+topic: "trend"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "021_timeframes_and_what_they_tell_you"]
+tags: ["trend", "higher_highs", "higher_lows", "chart_reading", "structure"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+
+# Trend direction
+
+Trend is the single highest-edge piece of information on a chart, and you can read it without a single indicator. An uptrend is a sequence of higher highs and higher lows. A downtrend is the opposite. A sideways market is the absence of either. By the end of this lesson you should be able to mark the most recent two swing highs and two swing lows on any chart, declare the trend, and state the exact price at which that trend would be considered broken.
+
+## Example
+
+On Bursa Malaysia: look at MAYBANK on the daily chart from December 2025 through April 2026. On 8 December 2025, price made a swing low at RM9.62. It rallied to a swing high of RM10.14 on 22 December. Pulled back to RM9.78 on 6 January (higher low — RM9.78 is above the prior RM9.62 low). Rallied to RM10.46 on 24 January (higher high — RM10.46 is above the prior RM10.14 high). Pulled back to RM10.02 on 12 February (higher low again). Rallied to RM10.71 on 4 March (higher high again).
+
+That sequence — RM9.62 low, RM10.14 high, RM9.78 low, RM10.46 high, RM10.02 low, RM10.71 high — is a textbook uptrend. Each low is higher than the previous low; each high is higher than the previous high.
+
+The uptrend invalidates the moment MAYBANK puts in a lower low — specifically, the moment it closes a daily candle below the most recent higher low of RM10.02. Until that happens, the trend is up. The day it happens, the trend is broken, and the prior uptrend logic no longer applies. You don't need to predict that day. You just need to know the price (RM10.02) and the candle that would mark it (a daily close below).
+
+## The trap
+
+The trap is calling a trend reversal on a single red candle, or worse, on a single news headline. A beginner sees one sharp down-day inside an uptrend, declares "the trend has broken", sells the position, and watches the stock make a new higher low two days later and rip to a new high. The correct mental model: trends are defined by structure, not by mood. A higher-low remains a higher-low until price closes below it. Until that close prints, the trend has not broken — it has only been tested. Mark the level, watch the level, and let the chart make the call for you.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A stock prints these consecutive swing points in order: low $80, high $88, low $84, high $92, low $87, high $96. What is the trend?"
+  options={[
+    "Downtrend — there are too many pullbacks",
+    "Uptrend — higher highs ($88, $92, $96) and higher lows ($80, $84, $87)",
+    "Sideways — the moves are not large enough to count",
+    "Cannot be determined without more swing points"
+  ]}
+  answer={1}
+  explanation="Each successive low is higher than the prior low (80 → 84 → 87) and each successive high is higher than the prior high (88 → 92 → 96). That is the literal definition of an uptrend. The pullbacks (option 0) are normal — uptrends are built from them. Three swing highs and three swing lows is enough structure to declare a trend; you don't need 'more swing points' to confirm what the sequence already shows."
+/>
+
+<Quiz
+  question="GOOGL is in a clear daily uptrend with the most recent higher-low at $173.40. Today the stock drops 4% intraday and trades down to $170.10 mid-session, but closes the day at $174.20. A friend asks if the uptrend has broken. What is the correct read, and why?"
+  options={[
+    "Yes — the intraday low of $170.10 was below $173.40, so the trend broke",
+    "No — the intraday low broke the level but the daily close is above $173.40, so structurally the higher-low is still intact; the trend invalidates only on a daily close below $173.40",
+    "Yes — any 4% intraday drop breaks any uptrend",
+    "No — uptrends never break on a single day no matter what"
+  ]}
+  answer={1}
+  explanation="Trend structure is read on closes, not intraday spikes. An intraday wick below a higher-low is a test, not a break — the close is what counts. Option 0 is the most tempting wrong answer because the level was technically touched, but the lesson's rule is explicit: a higher-low remains a higher-low until price *closes* below it. Option 3 is the opposite mistake — trends do break on a single decisive close, and refusing to ever acknowledge that is how traders ride positions into 30% losses."
+/>
+
+## Try it
+
+Open the <Term id="ami_mandate" /> editor and check that your max_drawdown_pct and per-trade risk settings match how you actually plan to behave when a trend breaks. Then in <Term id="ami_one_on_one" /> with the Market Analyst, paste a ticker and ask: "Mark the last two swing highs and two swing lows. What's the trend, and what price level would invalidate it?" Write that invalidation price into your <Term id="ami_decision_journal" /> as the line you will respect.
+
+## Takeaway
+
+Trend is structure, not vibe — higher highs plus higher lows is up, the opposite is down, and the trend only breaks when a candle closes through the most recent swing level.
