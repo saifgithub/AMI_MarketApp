@@ -244,6 +244,51 @@ class CachingProvider:
                 self._cache.pop(ticker.upper().strip(), None)
 
 
+# ── yfinance (preferred over raw Yahoo HTTP) ─────────────────────────────
+
+
+class YfinanceProvider:
+    """Quotes via the `yfinance` Python lib.
+
+    yfinance handles the Yahoo-side dance the keyless HTTP path couldn't:
+    UA rotation, the cookie + crumb session that the chart endpoint
+    started requiring in 2024, and exponential backoff on 429. As a
+    result it actually serves LIVE prices most of the time, where the
+    raw httpx client was getting 429'd persistently.
+
+    Returned Quote.source is `"yfinance"` — distinct from the legacy
+    `"yahoo"` so the LIVE/MOCK pill stays honest about which path
+    fired. The Flutter `isLivePrice` check should accept either as
+    "real" (anything that's not `mock_walk` / `unavailable`).
+
+    Heavy import: yfinance pulls pandas + numpy. We do the import
+    lazily inside __init__ so test environments that mock the
+    provider don't pay the boot cost.
+    """
+
+    name = "yfinance"
+
+    def __init__(self) -> None:
+        import yfinance as yf  # lazy — saves ~0.5s on test/cold imports
+        self._yf = yf
+
+    def quote(self, ticker: str) -> Quote | None:
+        t = ticker.upper().strip()
+        try:
+            info = self._yf.Ticker(t).fast_info
+            price = info.last_price
+        except Exception as exc:
+            logger.warn("yfinance_error", ticker=t, error=str(exc))
+            return None
+        if price is None or price <= 0:
+            return None
+        return Quote(price=float(price), source=self.name)
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q is not None else None
+
+
 # ── Fallback chain ───────────────────────────────────────────────────────
 
 
@@ -285,12 +330,26 @@ def get_market_data_provider() -> MarketDataProvider:
     Honours `settings.use_real_market_data`. Switching env requires a
     backend restart (singleton). Tests can call `set_market_data_provider()`
     to inject a fake.
+
+    Stack: cached yfinance primary → MockWalkProvider secondary.
+    yfinance handles the rate-limit dance Yahoo's keyless chart endpoint
+    couldn't, so the secondary is rarely needed in practice — but it's
+    a guaranteed never-fail floor for the quote-on-demand UX.
     """
     global _provider
     if _provider is None:
         if settings.use_real_market_data:
+            try:
+                primary = YfinanceProvider()
+            except ImportError:
+                # yfinance not installed (slim test image, frozen env).
+                # Fall back to the legacy keyless Yahoo path so the
+                # demo still has SOMETHING beyond mock — even if it's
+                # rate-limit-prone.
+                logger.warn("yfinance_unavailable_falling_back_to_keyless_yahoo")
+                primary = YahooQuoteProvider()  # type: ignore[assignment]
             _provider = FallbackProvider(
-                primary=CachingProvider(YahooQuoteProvider(), ttl_seconds=60.0),
+                primary=CachingProvider(primary, ttl_seconds=60.0),
                 secondary=MockWalkProvider(),
             )
             logger.info("market_data_provider_registered", stack=_provider.name)

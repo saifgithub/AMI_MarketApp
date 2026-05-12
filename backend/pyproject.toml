@@ -24,6 +24,12 @@ dependencies = [
     "python-jose[cryptography]>=3.3",
     "resend>=2.4",
     "tenacity>=9.0",
+    # Market data — yfinance handles Yahoo's rate-limit dance the
+    # keyless chart endpoint couldn't (UA rotation, cookie/crumb
+    # session, exponential backoff). Pulls pandas/numpy (~100MB of
+    # image bloat) — fine for melehost; will matter at Beta cold-start
+    # on Cloud Run where we'll likely cut over to a paid provider.
+    "yfinance>=0.2.50",
     # TradingAgents — installed from local mount for dev; published version in prod
     # "tradingagents @ file:///Volumes/Extreme Pro/TradingAgent",
 ]

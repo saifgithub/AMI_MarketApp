@@ -53,16 +53,22 @@ class SimPortfolio {
   final List<SimHolding> holdings;
   final double totalValue;
   final double drawdownPct;
-  // Active market-data provider name from the backend. "mock_walk" =
-  // deterministic random walk; anything containing "yahoo" = live quotes.
+  // Truthful leaf provider name from the backend — what actually
+  // served the most recent quote, not a stack name. Possible values:
+  // "yfinance" / "yahoo" (live), "mock_walk" (deterministic walk),
+  // "unavailable" (defensive floor when every provider failed).
   final String priceSource;
 
   double get totalPnl => totalValue - startingCapital;
   double get pnlPct =>
       startingCapital == 0 ? 0 : (totalPnl / startingCapital) * 100;
 
-  /// True when the backend is quoting real prices (vs the mock walk).
-  bool get isLivePrice => priceSource.contains('yahoo');
+  /// True when the backend served real prices (vs the mock walk or
+  /// the unavailable floor). Negative check so adding a new live
+  /// provider (e.g. a paid market-data vendor at Beta) doesn't
+  /// require a Flutter rebuild to flip the pill.
+  bool get isLivePrice =>
+      priceSource != 'mock_walk' && priceSource != 'unavailable';
 
   factory SimPortfolio.fromJson(Map<String, dynamic> j) {
     return SimPortfolio(

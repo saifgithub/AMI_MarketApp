@@ -243,6 +243,88 @@ def test_yahoo_quote_reports_yahoo_source():
     assert q.price == 187.45
 
 
+# ── YfinanceProvider ─────────────────────────────────────────────────────
+
+
+class _FakeFastInfo:
+    def __init__(self, price: float | None) -> None:
+        self.last_price = price
+
+
+class _FakeYfTicker:
+    def __init__(self, fast_info_or_exc) -> None:  # noqa: ANN001
+        self._payload = fast_info_or_exc
+
+    @property
+    def fast_info(self):  # noqa: ANN201
+        if isinstance(self._payload, Exception):
+            raise self._payload
+        return self._payload
+
+
+class _FakeYfModule:
+    def __init__(self, ticker_returns) -> None:  # noqa: ANN001
+        self._returns = ticker_returns
+        self.calls: list[str] = []
+
+    def Ticker(self, t: str):  # noqa: ANN201, N802
+        self.calls.append(t)
+        return _FakeYfTicker(self._returns)
+
+
+def _make_yfinance_provider(fake_yf):  # noqa: ANN001, ANN201
+    """YfinanceProvider with the yf module swapped out."""
+    from app.services.market_data import YfinanceProvider
+    p = YfinanceProvider.__new__(YfinanceProvider)
+    p._yf = fake_yf
+    return p
+
+
+def test_yfinance_quote_reports_yfinance_source():
+    fake = _FakeYfModule(_FakeFastInfo(187.45))
+    p = _make_yfinance_provider(fake)
+    q = p.quote("aapl")
+    assert q is not None
+    assert q.source == "yfinance"
+    assert q.price == 187.45
+    assert fake.calls == ["AAPL"]  # upper-cased
+
+
+def test_yfinance_returns_none_on_missing_price():
+    fake = _FakeYfModule(_FakeFastInfo(None))
+    p = _make_yfinance_provider(fake)
+    assert p.quote("AAPL") is None
+
+
+def test_yfinance_returns_none_on_zero_or_negative_price():
+    # yfinance occasionally returns 0.0 for delisted tickers — we treat
+    # that as "no quote" rather than "this stock is free now".
+    fake = _FakeYfModule(_FakeFastInfo(0.0))
+    p = _make_yfinance_provider(fake)
+    assert p.quote("DEAD") is None
+
+
+def test_yfinance_swallows_exceptions_and_returns_none():
+    fake = _FakeYfModule(RuntimeError("rate limited"))
+    p = _make_yfinance_provider(fake)
+    assert p.quote("AAPL") is None  # logger.warn fires; caller falls through
+
+
+def test_yfinance_in_fallback_stack_reports_yfinance_leaf():
+    """The provider stack must forward yfinance's leaf name through the
+    cache + fallback wrappers — the LIVE / MOCK pill keys on this."""
+    fake = _FakeYfModule(_FakeFastInfo(305.5))
+    primary = _make_yfinance_provider(fake)
+    stack = FallbackProvider(
+        primary=CachingProvider(primary, ttl_seconds=10.0),
+        secondary=MockWalkProvider(),
+    )
+    q1 = stack.quote("NVDA")
+    q2 = stack.quote("NVDA")  # cache hit
+    assert q1 is not None and q1.source == "yfinance"
+    assert q2 is not None and q2.source == "yfinance"
+
+
 def test_yahoo_returns_none_on_non_200():
     p = YahooQuoteProvider()
     p._client = _FakeClient(_FakeResponse(429, {}))  # type: ignore[assignment]
