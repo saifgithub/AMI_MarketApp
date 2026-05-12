@@ -52,6 +52,12 @@ class LessonMeta(BaseModel):
     level: int
     track: str
     topic: str
+    # `module` and `difficulty` are introduced by the W18 curriculum_map. Legacy
+    # lessons authored pre-W18 don't declare them; the loader defaults module=0
+    # ("uncategorised / legacy") and difficulty=<level> so the catalogue stays
+    # backward-compatible while new lessons populate both explicitly.
+    module: int = 0
+    difficulty: int = 0
     prerequisites: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
     agent_callouts: list[str] = Field(default_factory=list)

@@ -149,13 +149,19 @@ def parse_mdx(path: Path) -> Lesson:
     fm_raw, body = m.group(1), m.group(2)
     fm = yaml.safe_load(fm_raw) or {}
 
+    level = int(fm.get("level", 1))
     meta = LessonMeta(
         id=fm["id"],
         title=fm["title"],
         duration_min=int(fm.get("duration_min", 3)),
-        level=int(fm.get("level", 1)),
+        level=level,
         track=fm.get("track", "foundations"),
         topic=fm.get("topic", "general"),
+        # Legacy frontmatter omits module/difficulty — default per W18 spec:
+        # module=0 marks uncategorised, difficulty falls back to level so
+        # ordering still works in the curriculum-map view.
+        module=int(fm.get("module", 0)),
+        difficulty=int(fm.get("difficulty", level)),
         prerequisites=list(fm.get("prerequisites") or []),
         tags=list(fm.get("tags") or []),
         agent_callouts=list(fm.get("agent_callouts") or []),

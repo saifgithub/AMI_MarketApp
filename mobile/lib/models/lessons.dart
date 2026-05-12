@@ -81,6 +81,8 @@ class LessonMeta {
     required this.prerequisites,
     required this.tags,
     required this.agentCallouts,
+    this.module = 0,
+    this.difficulty = 0,
   });
 
   final String id;
@@ -92,18 +94,26 @@ class LessonMeta {
   final List<String> prerequisites;
   final List<String> tags;
   final List<String> agentCallouts;
+  // `module` + `difficulty` were introduced by the W18 curriculum_map. Older
+  // lessons authored before W18 omit them; we default module to 0 and
+  // difficulty to the lesson's level so the UI can sort consistently.
+  final int module;
+  final int difficulty;
 
   factory LessonMeta.fromJson(Map<String, dynamic> j) {
+    final level = ((j['level'] as num?) ?? 1).toInt();
     return LessonMeta(
       id: j['id'] as String,
       title: j['title'] as String,
       durationMin: ((j['duration_min'] as num?) ?? 3).toInt(),
-      level: ((j['level'] as num?) ?? 1).toInt(),
+      level: level,
       track: j['track'] as String? ?? 'foundations',
       topic: j['topic'] as String? ?? 'general',
       prerequisites: ((j['prerequisites'] as List?) ?? const []).cast<String>(),
       tags: ((j['tags'] as List?) ?? const []).cast<String>(),
       agentCallouts: ((j['agent_callouts'] as List?) ?? const []).cast<String>(),
+      module: ((j['module'] as num?) ?? 0).toInt(),
+      difficulty: ((j['difficulty'] as num?) ?? level).toInt(),
     );
   }
 }

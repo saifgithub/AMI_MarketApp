@@ -32,6 +32,25 @@ def test_catalogue_lists_foundations_track(svc: LessonsService):
     }
 
 
+def test_lesson_meta_defaults_module_zero_and_difficulty_to_level(svc: LessonsService):
+    """A20 — Legacy lessons (pre-W18 curriculum_map) omit module + difficulty.
+    The loader must hydrate sensible defaults so the UI can keep sorting.
+    """
+    legacy = svc.get("001_what_is_a_stock")
+    assert legacy is not None
+    assert legacy.meta.module == 0
+    assert legacy.meta.difficulty == legacy.meta.level
+
+
+def test_lesson_meta_reads_module_and_difficulty_when_present(svc: LessonsService):
+    """W18+ lessons declare module + difficulty explicitly."""
+    lesson = svc.get("014_position_sizing_basics")
+    if lesson is None:
+        pytest.skip("W17/W18 lesson set not committed in this branch state")
+    assert lesson.meta.module > 0
+    assert lesson.meta.difficulty > 0
+
+
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
     lesson = svc.get("004_market_order_vs_limit")
     assert lesson is not None
@@ -74,10 +93,30 @@ def test_quiz_submit_wrong_does_not_pass(svc: LessonsService):
     assert any(pq.get("explanation") for pq in result.per_question)
 
 
+def _isolate_trader_callouts(svc: LessonsService, *keep_ids: str) -> None:
+    """Strip 'trader' from every lesson's agent_callouts except the kept ones.
+
+    The earn-path tests were authored when only `004_market_order_vs_limit`
+    had `agent_callouts: [trader]`. W17/W18 added more trader-callout lessons
+    (014/015/016/...), which (correctly) means the activation rule now
+    requires passing all of them. To keep the unit tests narrowly scoped to
+    the earn-path mechanics rather than the curriculum churn, we monkey-patch
+    the in-memory cache here.
+    """
+    keep = set(keep_ids)
+    for lid, lesson in svc._lessons.items():
+        if lid in keep:
+            continue
+        if "trader" in lesson.meta.agent_callouts:
+            lesson.meta.agent_callouts = [
+                a for a in lesson.meta.agent_callouts if a != "trader"
+            ]
+
+
 def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
+    """With 004 as the sole trader-callout lesson, passing it unlocks Trader."""
+    _isolate_trader_callouts(svc, "004_market_order_vs_limit")
     user_id = uuid4()
-    # Only 004_market_order_vs_limit has agent_callouts: [trader] in the
-    # current alpha lesson set, so passing it should unlock the Trader.
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id="004_market_order_vs_limit",
@@ -96,11 +135,13 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
 
 
 def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsService):
-    """If we added another lesson with agent_callouts: [trader], the agent
-    should not unlock until both are passed. We simulate this by injecting
-    a fake lesson with the same callout."""
+    """If two lessons both have agent_callouts: [trader], passing one is
+    not enough — the activation only fires after every required lesson
+    is passed.
+    """
+    _isolate_trader_callouts(svc, "004_market_order_vs_limit")
     user_id = uuid4()
-    # Add a fake required lesson manually
+    # Inject a second required trader-callout lesson alongside 004
     fake = svc.get("004_market_order_vs_limit").model_copy(deep=True)
     fake.meta.id = "999_fake_trader_lesson"
     fake.meta.agent_callouts = ["trader"]
