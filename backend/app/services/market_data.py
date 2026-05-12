@@ -15,9 +15,17 @@ composable provider stack:
     the mock walk on network errors / unknown tickers.
   - Otherwise: just the mock walk (legacy behavior).
 
-The provider returns `None` on failure rather than raising, so the caller
-can decide whether to retry, fall back, or surface an error. The fallback
-chain hides that complexity from `SimEngine`.
+Each call returns a `Quote(price, source)` so the caller knows WHICH leaf
+provider actually served the price — not just the stack name. The Flutter
+LIVE / MOCK pill keys on this: substring "yahoo" in the source string
+means we honestly served real prices for that quote. Without per-call
+source the pill silently lied during Yahoo rate-limits — the stack name
+contains "yahoo" even when every fetch fell through to mock.
+
+The legacy `get_price(ticker) -> float | None` API is kept as a thin
+wrapper over `quote()` so callers that don't care about provenance stay
+simple. Returning `None` instead of raising lets the caller decide whether
+to retry, fall back, or surface an error.
 
 Sync, not async — `SimEngine` and the `/v1/sim/*` route are sync. The
 network fetch is fast (~150ms) and behind a 60s cache, so blocking is fine
@@ -31,7 +39,7 @@ import random
 import time
 from dataclasses import dataclass, field
 from threading import RLock
-from typing import Protocol
+from typing import NamedTuple, Protocol
 
 import httpx
 
@@ -42,11 +50,28 @@ from app.core.logging import logger
 # ── Interface ────────────────────────────────────────────────────────────
 
 
+class Quote(NamedTuple):
+    """A priced quote plus the leaf provider that produced it."""
+
+    price: float
+    source: str
+
+
 class MarketDataProvider(Protocol):
     name: str
 
+    def quote(self, ticker: str) -> Quote | None:
+        """Return the current quote for `ticker`, or None on any failure.
+
+        `Quote.source` MUST identify the leaf provider that actually
+        produced the price (e.g. `"yahoo"` or `"mock_walk"`) — not a
+        stack name like `"fallback(...)"`. Wrappers (cache, fallback)
+        forward the inner's source rather than substituting their own.
+        """
+        ...
+
     def get_price(self, ticker: str) -> float | None:
-        """Return the current price for `ticker`, or None on any failure."""
+        """Back-compat shim — returns just the price."""
         ...
 
 
@@ -98,14 +123,18 @@ class MockWalkProvider:
         self._walks: dict[str, _PriceWalk] = {}
         self._lock = RLock()
 
-    def get_price(self, ticker: str) -> float | None:
+    def quote(self, ticker: str) -> Quote | None:
         t = ticker.upper().strip()
         with self._lock:
             walk = self._walks.get(t)
             if walk is None:
                 walk = _walk_for(t)
                 self._walks[t] = walk
-        return walk.price_at()
+        return Quote(price=walk.price_at(), source=self.name)
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q is not None else None
 
 
 # ── Yahoo Finance ────────────────────────────────────────────────────────
@@ -134,7 +163,7 @@ class YahooQuoteProvider:
             headers={"User-Agent": _BROWSER_UA, "Accept": "application/json"},
         )
 
-    def get_price(self, ticker: str) -> float | None:
+    def quote(self, ticker: str) -> Quote | None:
         t = ticker.upper().strip()
         try:
             resp = self._client.get(
@@ -158,10 +187,14 @@ class YahooQuoteProvider:
             price = meta.get("regularMarketPrice")
             if price is None:
                 return None
-            return float(price)
+            return Quote(price=float(price), source=self.name)
         except (ValueError, KeyError, TypeError) as exc:
             logger.warn("yahoo_parse_error", ticker=t, error=str(exc))
             return None
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q is not None else None
 
     def close(self) -> None:
         self._client.close()
@@ -171,16 +204,21 @@ class YahooQuoteProvider:
 
 
 class CachingProvider:
-    """Wrap any provider with a small per-ticker TTL cache."""
+    """Wrap any provider with a small per-ticker TTL cache.
+
+    Caches the FULL Quote (price + source) so callers see the original
+    leaf provider name even on a cache hit — vital for the LIVE / MOCK
+    pill: a cached Yahoo quote is still honestly a Yahoo quote.
+    """
 
     def __init__(self, inner: MarketDataProvider, ttl_seconds: float = 60.0) -> None:
         self._inner = inner
         self._ttl = ttl_seconds
-        self._cache: dict[str, tuple[float, float]] = {}  # ticker → (price, expires_at)
+        self._cache: dict[str, tuple[Quote, float]] = {}  # ticker → (quote, expires_at)
         self._lock = RLock()
         self.name = f"cache({inner.name})"
 
-    def get_price(self, ticker: str) -> float | None:
+    def quote(self, ticker: str) -> Quote | None:
         t = ticker.upper().strip()
         now = time.time()
         with self._lock:
@@ -188,11 +226,15 @@ class CachingProvider:
             if hit is not None and hit[1] > now:
                 return hit[0]
         # Miss — go to inner. Don't hold the lock during a possibly-slow call.
-        price = self._inner.get_price(t)
-        if price is not None:
+        q = self._inner.quote(t)
+        if q is not None:
             with self._lock:
-                self._cache[t] = (price, now + self._ttl)
-        return price
+                self._cache[t] = (q, now + self._ttl)
+        return q
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q is not None else None
 
     def invalidate(self, ticker: str | None = None) -> None:
         with self._lock:
@@ -206,18 +248,29 @@ class CachingProvider:
 
 
 class FallbackProvider:
-    """Try `primary`; if it returns None, fall through to `secondary`."""
+    """Try `primary`; if it returns None, fall through to `secondary`.
+
+    The returned Quote carries the leaf provider that actually served it —
+    NOT this wrapper's name. Otherwise the LIVE / MOCK pill can't tell
+    which leg fired: during sustained Yahoo rate-limits the secondary
+    (mock_walk) serves every call, but the stack name still contains
+    "yahoo", so the pill would lie.
+    """
 
     def __init__(self, primary: MarketDataProvider, secondary: MarketDataProvider) -> None:
         self._primary = primary
         self._secondary = secondary
         self.name = f"fallback({primary.name}->{secondary.name})"
 
+    def quote(self, ticker: str) -> Quote | None:
+        q = self._primary.quote(ticker)
+        if q is not None:
+            return q
+        return self._secondary.quote(ticker)
+
     def get_price(self, ticker: str) -> float | None:
-        price = self._primary.get_price(ticker)
-        if price is not None:
-            return price
-        return self._secondary.get_price(ticker)
+        q = self.quote(ticker)
+        return q.price if q is not None else None
 
 
 # ── Singleton factory ────────────────────────────────────────────────────

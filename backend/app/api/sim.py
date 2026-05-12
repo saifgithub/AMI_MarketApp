@@ -50,9 +50,14 @@ class PortfolioSnapshot(BaseModel):
     holdings: list[dict]
     total_value: float
     drawdown_pct: float
-    # Active market-data provider — surfaced so the iPhone can show a
-    # LIVE / MOCK pill next to the marks. Values: "mock_walk",
-    # "fallback(cache(yahoo)->mock_walk)", or any future provider name.
+    # Truthful aggregate source across the user's holdings — surfaced so
+    # the iPhone can show a LIVE / MOCK pill next to the marks. Reports
+    # the leaf provider that actually served the prices ("yahoo" or
+    # "mock_walk"), NOT the configured stack name. "yahoo" only when
+    # 100% of holdings were priced from Yahoo this snapshot — any
+    # fall-through to mock_walk on any ticker downgrades the snapshot
+    # to "mock_walk" so the LIVE pill never lies. See
+    # `SimEngine.aggregate_source`.
     price_source: str = "mock_walk"
 
 
@@ -66,7 +71,8 @@ async def get_portfolio(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> PortfolioSnapshot:
     p = sim.ensure_portfolio(user_id)
-    marks = sim.current_marks([h.ticker for h in p.holdings])
+    tickers = [h.ticker for h in p.holdings]
+    marks = sim.current_marks(tickers)
     return PortfolioSnapshot(
         user_id=user_id,
         portfolio_id=p.id,
@@ -88,7 +94,7 @@ async def get_portfolio(
         ],
         total_value=sim.total_value(user_id),
         drawdown_pct=sim.current_drawdown_pct(user_id),
-        price_source=sim.price_source,
+        price_source=sim.aggregate_source(tickers),
     )
 
 
@@ -258,8 +264,9 @@ async def quote(
     ticker: str,
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
+    q = sim.current_quote(ticker)
     return {
         "ticker": ticker.upper(),
-        "price": sim.current_price(ticker),
-        "source": sim.price_source,
+        "price": q.price,
+        "source": q.source,
     }

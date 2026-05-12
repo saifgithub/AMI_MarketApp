@@ -60,6 +60,7 @@ from app.schemas.trade import (
 from app.services.market_data import (
     MarketDataProvider,
     MockWalkProvider,
+    Quote,
     get_market_data_provider,
 )
 
@@ -197,20 +198,64 @@ class SimEngine:
     # ── Pricing ────────────────────────────────────────────────────────
 
     @property
-    def price_source(self) -> str:
-        """Name of the active provider — surfaced by /v1/sim/quote for clients."""
+    def provider_name(self) -> str:
+        """Configured-stack name — diagnostic only, not user-visible.
+
+        For the LIVE / MOCK pill use `current_quote()` or the per-snapshot
+        `aggregate_source()` — the stack name contains "yahoo" even when
+        every fetch silently fell through to mock_walk during rate-limits.
+        """
         return getattr(self._provider, "name", "unknown")
 
+    def current_quote(self, ticker: str) -> Quote:
+        """Return a Quote whose `source` is the leaf provider that served it.
+
+        Always returns a non-None Quote — falls back to the defensive
+        mock so callers never see a 500. Logs a warning if the configured
+        provider produced None (the production stack already ends in
+        mock_walk, so this branch is purely defensive).
+        """
+        q = self._provider.quote(ticker)
+        if q is not None:
+            return q
+        logger.warn(
+            "market_data_fallback", ticker=ticker, provider=self.provider_name,
+        )
+        fb = self._fallback.quote(ticker)
+        if fb is not None:
+            return fb
+        return Quote(price=0.01, source="unavailable")
+
     def current_price(self, ticker: str) -> float:
-        price = self._provider.get_price(ticker)
-        if price is None:
-            logger.warn("market_data_fallback", ticker=ticker, provider=self.price_source)
-            fallback = self._fallback.get_price(ticker)
-            return fallback if fallback is not None else 0.01
-        return price
+        return self.current_quote(ticker).price
 
     def current_marks(self, tickers: list[str]) -> dict[str, float]:
-        return {t.upper(): self.current_price(t) for t in tickers}
+        return {t.upper(): q.price for t, q in self._marks_with_quotes(tickers).items()}
+
+    def current_marks_with_source(
+        self, tickers: list[str],
+    ) -> dict[str, Quote]:
+        """Return prices alongside the leaf provider that produced each."""
+        return self._marks_with_quotes(tickers)
+
+    def _marks_with_quotes(self, tickers: list[str]) -> dict[str, Quote]:
+        return {t.upper(): self.current_quote(t) for t in tickers}
+
+    def aggregate_source(self, tickers: list[str]) -> str:
+        """The truthful single-string source for a snapshot.
+
+        Returns the leaf source name iff EVERY ticker resolved through the
+        same leaf — otherwise returns "mock_walk" so the LIVE pill only
+        lights up when 100% of the user's holdings are real. Empty list
+        defaults to "mock_walk" — there's nothing to honestly mark as
+        LIVE until at least one ticker has been served.
+        """
+        if not tickers:
+            return "mock_walk"
+        sources = {q.source for q in self._marks_with_quotes(tickers).values()}
+        if len(sources) == 1:
+            return next(iter(sources))
+        return "mock_walk"
 
     # ── Portfolio ──────────────────────────────────────────────────────
 

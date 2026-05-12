@@ -12,7 +12,12 @@ from uuid import uuid4
 
 from app.schemas.trade import OrderType, Side
 from app.services.coach_engine import hydrate_coach_mandate
-from app.services.market_data import MockWalkProvider, get_market_data_provider
+from app.services.market_data import (
+    FallbackProvider,
+    MockWalkProvider,
+    Quote,
+    get_market_data_provider,
+)
 from app.services.sim_engine import SimEngine
 
 
@@ -145,6 +150,50 @@ def test_target_hit_flips_outcome_to_won():
     # The walk is stochastic; depending on seed, target may or may not trip
     # in 60s. We assert the function ran and either flipped or didn't.
     assert isinstance(updates, list)
+
+
+def test_aggregate_source_reports_leaf_when_all_same():
+    """Snapshot source == leaf when every ticker served by the same provider."""
+    sim = SimEngine(provider=MockWalkProvider())
+    assert sim.aggregate_source(["AAPL", "MSFT", "NVDA"]) == "mock_walk"
+
+
+def test_aggregate_source_empty_holdings_is_mock_walk():
+    sim = SimEngine(provider=MockWalkProvider())
+    assert sim.aggregate_source([]) == "mock_walk"
+
+
+def test_aggregate_source_downgrades_to_mock_when_mixed():
+    """If any ticker fell through to mock_walk, the snapshot lies if it
+    reports anything else. The aggregate must be "mock_walk" so the
+    LIVE pill stays off."""
+
+    class _PartialYahoo:
+        """Returns Yahoo quotes for AAPL only; None for everything else."""
+        name = "yahoo"
+
+        def quote(self, ticker):  # noqa: D401
+            if ticker.upper() == "AAPL":
+                return Quote(price=187.0, source="yahoo")
+            return None
+
+        def get_price(self, ticker):
+            q = self.quote(ticker)
+            return q.price if q else None
+
+    stack = FallbackProvider(primary=_PartialYahoo(), secondary=MockWalkProvider())
+    sim = SimEngine(provider=stack)
+    # AAPL served by yahoo, NVDA falls through to mock_walk → mixed.
+    assert sim.aggregate_source(["AAPL", "NVDA"]) == "mock_walk"
+    # AAPL alone → "yahoo".
+    assert sim.aggregate_source(["AAPL"]) == "yahoo"
+
+
+def test_current_quote_reports_leaf_source():
+    sim = SimEngine(provider=MockWalkProvider())
+    q = sim.current_quote("AAPL")
+    assert q.source == "mock_walk"
+    assert q.price > 0
 
 
 def test_manual_close_realises_pnl_and_returns_cash():

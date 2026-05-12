@@ -4,6 +4,11 @@ The YahooQuoteProvider is exercised against a mocked httpx.Client — we
 verify URL/query construction, success parsing, 4xx/5xx handling, network
 errors, and malformed JSON. Cache + fallback wrappers are tested with a
 fake provider so behavior is deterministic.
+
+Quote provenance is asserted explicitly: a cached Yahoo quote still
+reports `source == "yahoo"`, and a FallbackProvider whose primary returns
+None reports the secondary's leaf name — not the wrapper's stack name.
+That truthfulness is what keeps the iPhone's LIVE / MOCK pill honest.
 """
 
 from __future__ import annotations
@@ -17,6 +22,7 @@ from app.services.market_data import (
     CachingProvider,
     FallbackProvider,
     MockWalkProvider,
+    Quote,
     YahooQuoteProvider,
 )
 
@@ -32,12 +38,19 @@ class _FakeProvider:
         self.name = name
         self.calls: list[str] = []
 
-    def get_price(self, ticker: str) -> float | None:
+    def quote(self, ticker: str) -> Quote | None:
         self.calls.append(ticker.upper().strip())
         try:
-            return next(self._seq)
+            price = next(self._seq)
         except StopIteration:
             return None
+        if price is None:
+            return None
+        return Quote(price=price, source=self.name)
+
+    def get_price(self, ticker: str) -> float | None:
+        q = self.quote(ticker)
+        return q.price if q is not None else None
 
 
 class _FakeResponse:
@@ -85,6 +98,14 @@ def test_mock_walk_provider_independent_walks_per_ticker():
     assert a != n  # different seeds → different bases
 
 
+def test_mock_walk_quote_reports_mock_walk_source():
+    p = MockWalkProvider()
+    q = p.quote("AAPL")
+    assert q is not None
+    assert q.source == "mock_walk"
+    assert q.price > 0
+
+
 # ── CachingProvider ──────────────────────────────────────────────────────
 
 
@@ -120,6 +141,26 @@ def test_caching_provider_invalidate_specific_ticker():
     assert cached.get_price("AAPL") == 110.0
 
 
+def test_caching_provider_preserves_inner_source_on_hit():
+    # A cached Yahoo quote is still a Yahoo quote — the cache must
+    # forward the leaf provider name, not substitute its own. Otherwise
+    # the LIVE pill flips to MOCK on every cache hit.
+    inner = _FakeProvider([187.45], name="yahoo")
+    cached = CachingProvider(inner, ttl_seconds=10.0)
+    first = cached.quote("AAPL")
+    second = cached.quote("AAPL")  # served from cache
+    assert first is not None and second is not None
+    assert first.source == "yahoo"
+    assert second.source == "yahoo"
+    assert inner.calls == ["AAPL"]  # only one inner call
+
+
+def test_caching_provider_quote_returns_none_when_inner_returns_none():
+    inner = _FakeProvider([None], name="yahoo")
+    cached = CachingProvider(inner, ttl_seconds=10.0)
+    assert cached.quote("AAPL") is None
+
+
 # ── FallbackProvider ─────────────────────────────────────────────────────
 
 
@@ -147,6 +188,30 @@ def test_fallback_returns_none_only_when_both_fail():
     assert fb.get_price("AAPL") is None
 
 
+def test_fallback_quote_reports_leg_actually_served():
+    # Regression: the wrapper's `name` ("fallback(yahoo->mock_walk)")
+    # was being surfaced even when mock_walk did all the work — the
+    # LIVE / MOCK pill substring-matches on "yahoo" and would lie.
+    # `quote()` must forward the leaf provider that actually fired.
+    primary = _FakeProvider([100.0], name="yahoo")
+    secondary = _FakeProvider([200.0], name="mock_walk")
+    fb = FallbackProvider(primary, secondary)
+    served = fb.quote("AAPL")
+    assert served is not None
+    assert served.source == "yahoo"
+    assert served.price == 100.0
+
+
+def test_fallback_quote_reports_secondary_source_when_primary_fails():
+    primary = _FakeProvider([None], name="yahoo")
+    secondary = _FakeProvider([42.0], name="mock_walk")
+    fb = FallbackProvider(primary, secondary)
+    served = fb.quote("AAPL")
+    assert served is not None
+    assert served.source == "mock_walk"
+    assert served.price == 42.0
+
+
 # ── YahooQuoteProvider ───────────────────────────────────────────────────
 
 
@@ -167,6 +232,15 @@ def test_yahoo_parses_regular_market_price():
     assert "AAPL" in url
     assert params["interval"] == "1m"
     assert params["range"] == "1d"
+
+
+def test_yahoo_quote_reports_yahoo_source():
+    p = YahooQuoteProvider()
+    p._client = _FakeClient(_FakeResponse(200, _yahoo_ok_body(187.45)))  # type: ignore[assignment]
+    q = p.quote("AAPL")
+    assert q is not None
+    assert q.source == "yahoo"
+    assert q.price == 187.45
 
 
 def test_yahoo_returns_none_on_non_200():
@@ -199,12 +273,34 @@ def test_yahoo_returns_none_on_missing_price():
 
 
 def test_assembled_stack_yahoo_then_cache_then_mock_fallback():
-    """End-to-end: Yahoo fails → cache passes None → mock fallback fires."""
+    """End-to-end: Yahoo fails → cache passes None → mock fallback fires.
+
+    Critical regression assertion: with Yahoo returning 5xx (the
+    production failure mode during sustained rate-limits), the served
+    Quote MUST report `source="mock_walk"` — not "yahoo" or any
+    wrapper name. The LIVE / MOCK pill keys on this.
+    """
     yahoo = YahooQuoteProvider()
     yahoo._client = _FakeClient(_FakeResponse(500, {}))  # type: ignore[assignment]
     stack = FallbackProvider(
         primary=CachingProvider(yahoo, ttl_seconds=10.0),
         secondary=MockWalkProvider(),
     )
-    price = stack.get_price("AAPL")
-    assert price is not None and price > 0  # mock always returns something
+    served = stack.quote("AAPL")
+    assert served is not None
+    assert served.price > 0  # mock always returns something
+    assert served.source == "mock_walk"
+
+
+def test_assembled_stack_yahoo_success_reports_yahoo_source():
+    """When Yahoo serves, every layer above must forward the leaf name."""
+    yahoo = YahooQuoteProvider()
+    yahoo._client = _FakeClient(_FakeResponse(200, _yahoo_ok_body(187.45)))  # type: ignore[assignment]
+    stack = FallbackProvider(
+        primary=CachingProvider(yahoo, ttl_seconds=10.0),
+        secondary=MockWalkProvider(),
+    )
+    first = stack.quote("AAPL")
+    second = stack.quote("AAPL")  # cache hit
+    assert first is not None and first.source == "yahoo"
+    assert second is not None and second.source == "yahoo"
