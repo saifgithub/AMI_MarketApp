@@ -16,6 +16,7 @@ import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
+import 'package:ami_trade/widgets/lessons/animation_block.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -260,6 +261,8 @@ class _BlockView extends StatelessWidget {
           revealResult: state.result != null,
           onSelect: (idx) => onSelect(block.quiz!.id, idx),
         );
+      case LessonBlockKind.animation:
+        return AnimationBlock(name: block.animationName ?? 'unknown');
       case LessonBlockKind.chatWith:
         final id = block.chatWithAgent ?? 'concierge';
         final a = agentById(id);

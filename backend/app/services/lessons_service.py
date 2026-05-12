@@ -79,6 +79,11 @@ _QUIZ_RE = re.compile(
 
 _CHATWITH_RE = re.compile(r'<ChatWith\s+agent\s*=\s*"(?P<agent>[^"]+)"\s*/>')
 
+# A21 — Animation MDX component. The client resolves `name` through
+# `AnimationRegistry`; unknown names render the hex placeholder so a lesson
+# referencing a not-yet-bundled animation still ships.
+_ANIMATION_RE = re.compile(r'<Animation\s+name\s*=\s*"(?P<name>[^"]+)"\s*/>')
+
 
 def _parse_jsx_attrs(text: str) -> dict[str, Any]:
     """Tolerant parser for the small subset of JSX attribute syntax we use.
@@ -191,6 +196,8 @@ def parse_mdx(path: Path) -> Lesson:
         quiz_idx += 1
     for match in _CHATWITH_RE.finditer(body):
         components.append((match.start(), match.end(), "chat_with", match.group("agent")))
+    for match in _ANIMATION_RE.finditer(body):
+        components.append((match.start(), match.end(), "animation", match.group("name")))
     components.sort(key=lambda t: t[0])
 
     for start, end, kind, payload in components:
@@ -202,6 +209,8 @@ def parse_mdx(path: Path) -> Lesson:
             blocks.append(LessonBlock(kind="quiz", quiz=payload))
         elif kind == "chat_with":
             blocks.append(LessonBlock(kind="chat_with", chat_with_agent=payload))
+        elif kind == "animation":
+            blocks.append(LessonBlock(kind="animation", animation_name=payload))
         cursor = end
     if cursor < len(body):
         tail = body[cursor:].strip()

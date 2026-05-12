@@ -37,12 +37,19 @@ class QuizQuestion(BaseModel):
 
 
 class LessonBlock(BaseModel):
-    """A single block of rendered content — either prose markdown or a quiz."""
+    """A single block of rendered content — prose, quiz, ChatWith, or Animation.
 
-    kind: Literal["markdown", "quiz", "chat_with"]
+    `animation_name` is the registry key the client uses to look up a Lottie
+    asset. Missing names render the AmiHexPlaceholder so lessons referencing
+    not-yet-bundled animations still display (A21 decouples content delivery
+    from animation production).
+    """
+
+    kind: Literal["markdown", "quiz", "chat_with", "animation"]
     markdown: str | None = None  # for kind == markdown
     quiz: QuizQuestion | None = None  # for kind == quiz
     chat_with_agent: str | None = None  # for kind == chat_with
+    animation_name: str | None = None  # for kind == animation
 
 
 class LessonMeta(BaseModel):

@@ -51,6 +51,35 @@ def test_lesson_meta_reads_module_and_difficulty_when_present(svc: LessonsServic
     assert lesson.meta.difficulty > 0
 
 
+def test_lesson_parses_animation_mdx_block(tmp_path):
+    """A21 — <Animation name="..." /> parses to a block of kind=animation
+    with `animation_name` populated. Unknown names are still emitted —
+    the client decides whether to render the asset or the placeholder.
+    """
+    from app.services.lessons_service import parse_mdx
+
+    mdx = tmp_path / "099_test.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "099_test"\n'
+        'title: "Animation parse test"\n'
+        'duration_min: 2\n'
+        'level: 1\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'Some prose.\n\n'
+        '<Animation name="risk_pyramid" />\n\n'
+        'More prose.\n',
+        encoding="utf-8",
+    )
+    lesson = parse_mdx(mdx)
+    kinds = [b.kind for b in lesson.blocks]
+    assert "animation" in kinds
+    anim = next(b for b in lesson.blocks if b.kind == "animation")
+    assert anim.animation_name == "risk_pyramid"
+
+
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
     lesson = svc.get("004_market_order_vs_limit")
     assert lesson is not None
