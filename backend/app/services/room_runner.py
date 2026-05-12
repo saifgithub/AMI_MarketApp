@@ -49,6 +49,7 @@ from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.services.tier_policy import pick_tier
 
 
 # ── Phase definition ──────────────────────────────────────────────────────
@@ -420,7 +421,7 @@ class RoomRunner:
         run_id = uuid4()
         now = datetime.now(timezone.utc)
         plan = mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
-        tier = PLAN_TO_TIER.get(plan, "cheap")
+        tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
         credit_cost = 25 if tier == "premium" else 8
 
         run = RoomRun(

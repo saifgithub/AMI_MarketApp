@@ -1,7 +1,9 @@
-"""Unit tests for the LLM gateway: tier routing, status, AnthropicProvider SSE parsing.
+"""Unit tests for the LLM gateway: status surface + AnthropicProvider SSE parsing.
 
 The AnthropicProvider tests mock httpx so they never touch the network — we
 verify the streaming parser, the error path, and the request body shape.
+Per-(plan, agent) tier routing lives in `app.services.tier_policy` and is
+covered by `test_tier_policy.py`.
 """
 
 from __future__ import annotations
@@ -12,48 +14,12 @@ from typing import AsyncIterator
 import pytest
 
 from app.services.llm_gateway import (
-    AGENT_MIN_TIER,
     AnthropicProvider,
     ChatMessage,
     LLMGateway,
     MockProvider,
     TIER_TO_MODEL,
-    resolve_tier,
 )
-
-
-# ── tier routing ──────────────────────────────────────────────────────────
-
-
-def test_resolve_tier_pm_floor_pass_user_still_gets_premium():
-    """The safety floor enforcer must never run on a cheap model."""
-    assert resolve_tier("cheap", "portfolio_manager") == "premium"
-
-
-def test_resolve_tier_does_not_downgrade_premium_plan():
-    """A Floor-Manager plan stays premium even for concierge chatter."""
-    assert resolve_tier("premium", "concierge") == "premium"
-
-
-def test_resolve_tier_no_agent_returns_plan_tier():
-    assert resolve_tier("mid", None) == "mid"
-
-
-def test_resolve_tier_unknown_agent_returns_plan_tier():
-    assert resolve_tier("cheap", "definitely_not_an_agent") == "cheap"
-
-
-def test_every_twelve_agent_plus_concierge_has_min_tier():
-    """Catch new agents added without a routing decision."""
-    from app.schemas.agents import AgentId
-
-    for a in AgentId:
-        assert a.value in AGENT_MIN_TIER, f"{a.value} missing from AGENT_MIN_TIER"
-
-
-def test_pm_min_tier_is_premium():
-    """Lock this in — the safety floor needs the best brain."""
-    assert AGENT_MIN_TIER["portfolio_manager"] == "premium"
 
 
 # ── gateway status ────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-11 (end of W11: Flutter LIVE/MOCK pill)
+**Last updated:** 2026-05-12 (end of W12: tier_policy refactor)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,13 +13,14 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 13 commits, no remote yet |
-| Latest commit | (this session) W11: Flutter LIVE/MOCK quote-source pill |
+| Git state | Clean working tree, 14 commits, no remote yet |
+| Latest commit | (this session) W12: tier_policy refactor |
 | Lines on disk | ~34,300 (PRD ~14k, backend ~8.1k, Flutter ~9.9k, content ~1.5k) |
 
 ```
 $ git log --oneline
-<new>   W11: Flutter LIVE/MOCK quote-source pill
+<new>   W12: tier_policy refactor — single source of truth for (plan, agent) → tier
+d3acddc W11: Flutter LIVE/MOCK quote-source pill
 04ff5ea W10: real market data via Yahoo
 259d53d W9: LLM-swap prep + cleanup pass
 667616e W8: persistence migration + Supabase-shaped auth scaffold
@@ -44,7 +45,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | LAN | `http://192.168.20.9:8000` |
 | Health | `curl http://localhost:8000/v1/health` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*` |
-| Tests | `pytest backend/tests/unit/ -q` → **118 passed** (W9: 103, +15 market_data) |
+| Tests | `pytest backend/tests/unit/ -q` → **123 passed** (W11: 118, +11 tier_policy, −6 obsolete tier tests in test_llm_gateway) |
 
 ### Postgres + persistence (NEW this session)
 
@@ -148,6 +149,45 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (W12 — tier_policy refactor)
+
+W9 shipped a `AGENT_MIN_TIER` map inside `llm_gateway.py` with a
+"never-downgrade-from-plan" rule. Saiful asked for tighter semantics:
+per-(plan, agent) decisions, in a dedicated module, not buried in the
+gateway. Behaviour change: **Floor-Pass PM drops from `premium` → `mid`**,
+**Floor-Manager Concierge drops from `premium` → `mid`**.
+
+### New: `app/services/tier_policy.py`
+
+Single source of truth for which model tier each agent runs at, given the
+user's plan. Used by 1-on-1, Coach, and Room.
+
+```python
+pick_tier(Plan.FLOOR_PASS, AgentId.PORTFOLIO_MANAGER)  # → "mid"
+pick_tier(Plan.TRADER,     AgentId.PORTFOLIO_MANAGER)  # → "premium"
+pick_tier(Plan.FLOOR_MANAGER, AgentId.CONCIERGE)       # → "mid"
+pick_tier(Plan.FLOOR_MANAGER, AgentId.TRADER)          # → "premium"
+pick_tier(Plan.TRIAL_TRADER,  AgentId.BULL_RESEARCHER) # → "mid"  (default)
+```
+
+Special-cased agents: Concierge, Portfolio Manager, Trader. Everyone
+else uses `_DEFAULT_BY_PLAN`.
+
+### Call-site swaps
+
+- **`agent_runner.py`** — local `PLAN_TO_TIER` dict gone; tier comes from `pick_tier(plan, agent_id)` in `stream_one_on_one_message`.
+- **`coach_engine.py`** — local `PLAN_TO_TIER` + `_plan_tier` helper gone; both `stream_chat` paths (live chat and propose-as-JSON) call `pick_tier(_plan_from_mandate(mandate), agent_id)`.
+- **`room_runner.py`** — run-level tier now `pick_tier(plan, AgentId.PORTFOLIO_MANAGER)` so the PM's tier drives credit cost (the PM is the lineup's max-tier agent). `from app.services.tier_policy import pick_tier` is imported for when Room is wired through the gateway later.
+- **`llm_gateway.py`** — `AGENT_MIN_TIER`, `resolve_tier`, and the `_TIER_RANK` helper are gone. The gateway owns the tier→model alias map and provider selection; routing decisions live in `tier_policy.py`. `GET /v1/llm/status` no longer surfaces `agent_min_tier` (it was redundant once routing moved out).
+
+### Tests
+
+- **New `test_tier_policy.py`** — 11 parametrized cases covering Concierge, PM, Trader, default plan paths.
+- **Trimmed `test_llm_gateway.py`** — removed 6 obsolete tier-routing cases. Kept AnthropicProvider SSE parsing + gateway status tests.
+- Suite: **123 passed** (was 118; +11 / −6 net).
 
 ---
 
@@ -285,18 +325,18 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #6 — name the
-session "AT:R7:".
+We're picking up the AMI Trade build. This is handover #7 — name the
+session "AT:R8:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-W10 (real market data) + W11 (Flutter source pill) are done. 13 commits
-in. 118 unit tests pass. SimEngine quotes via a pluggable provider stack;
-flip USE_REAL_MARKET_DATA=true in backend/.env to get live Yahoo prices.
-Portfolio screen shows a green LIVE / amber MOCK pill next to TOTAL VALUE.
+W12 (tier_policy refactor) just landed. 14 commits in. 123 unit tests
+pass. tier_policy.pick_tier(plan, agent_id) is now the single source of
+truth — used by agent_runner, coach_engine, room_runner. Floor-Pass PM
+runs on mid (not premium), Floor-Manager Concierge on mid (not premium).
 
-W12 candidates (priority order):
+W13 candidates (priority order):
 
   A. Live LLM swap (FINISH IT). Saiful adds ANTHROPIC_API_KEY to
      backend/.env. Then:

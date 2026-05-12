@@ -27,18 +27,8 @@ from app.schemas.mandate import (
 )
 from app.schemas.one_on_one import ChatMsg, OneOnOneSession
 from app.services.agent_prompts import build_agent_prompt
-from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier, resolve_tier
-
-
-# ── Plan → model tier mapping ────────────────────────────────────────────
-
-
-PLAN_TO_TIER: dict[Plan, ModelTier] = {
-    Plan.FLOOR_PASS: "cheap",
-    Plan.TRADER: "mid",
-    Plan.TRIAL_TRADER: "mid",
-    Plan.FLOOR_MANAGER: "premium",
-}
+from app.services.llm_gateway import ChatMessage, LLMGateway
+from app.services.tier_policy import pick_tier
 
 
 # ── 1-on-1 runner ────────────────────────────────────────────────────────
@@ -83,8 +73,8 @@ class AgentRunner:
         agent_id = AgentId(session.agent_id) if isinstance(session.agent_id, str) else session.agent_id
         system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
 
-        plan_tier = PLAN_TO_TIER.get(Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan, "cheap")
-        tier = resolve_tier(plan_tier, agent_id.value)
+        plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
+        tier = pick_tier(plan, agent_id)
 
         # Build the conversation: history + the new user message
         messages: list[ChatMessage] = [

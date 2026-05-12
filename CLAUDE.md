@@ -147,11 +147,11 @@ AMI_MarketApp/
 
 ## Current state (snapshot — git is source of truth)
 
-- **13 commits in.** Latest: W11 (Flutter LIVE/MOCK quote-source pill).
+- **14 commits in.** Latest: W12 (tier_policy refactor — single source of truth for (plan, agent) → tier).
 - **Backend** runs locally via `scripts/run_dev.sh` on port 8000.
 - **Postgres** at host port `5434` (`ami_postgres` container). RLS policies live but dormant under the superuser connection.
 - **App** installed on iPhone `TESTING IPHONE 13` (device id `00008110-000261101A22801E`), bundle `ai.agenticmarketintel.amiTrade`, signed under Apple Team `S7RBWM4879`. Still showing the W3 build until redeployed.
-- **LLM provider** auto-switches to Anthropic the moment `ANTHROPIC_API_KEY` lands in `backend/.env`. Validate with `cd backend && .venv/bin/python -m scripts.llm_smoke` — expect PASS on all three tiers. Per-agent tier routing is wired (`AGENT_MIN_TIER` in `llm_gateway.py`): PM always runs on `premium`, Concierge runs on `cheap`, analysts run on `mid`. Status: `GET /v1/llm/status`.
+- **LLM provider** auto-switches to Anthropic the moment `ANTHROPIC_API_KEY` lands in `backend/.env`. Validate with `cd backend && .venv/bin/python -m scripts.llm_smoke` — expect PASS on all three tiers. Per-(plan, agent) tier routing lives in `app/services/tier_policy.py::pick_tier`; the PM/Concierge/Trader are special-cased, everyone else uses the plan default. Status: `GET /v1/llm/status`.
 - **Market data** pluggable. `USE_REAL_MARKET_DATA=true` in `backend/.env` flips quotes from the deterministic mock walk to live Yahoo (with mock fallback for unknown tickers / network errors). `/v1/sim/quote/{ticker}` returns `{"ticker","price","source"}`.
 
 Run `cat HANDOVER.md` at the start of any new session for the freshest state + immediate next steps. Run `git log --oneline` to verify commit chain hasn't moved past what HANDOVER.md describes.

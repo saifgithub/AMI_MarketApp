@@ -52,16 +52,9 @@ from app.schemas.mandate import (
 )
 from app.schemas.one_on_one import ChatMsg
 from app.services.agent_prompts import load_base_prompt
-from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier, resolve_tier
+from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier
 from app.services.overlay_store import OverlayStore, get_overlay_store
-
-
-PLAN_TO_TIER: dict[Plan, ModelTier] = {
-    Plan.FLOOR_PASS: "cheap",
-    Plan.TRADER: "mid",
-    Plan.TRIAL_TRADER: "mid",
-    Plan.FLOOR_MANAGER: "premium",
-}
+from app.services.tier_policy import pick_tier
 
 
 COACH_MODE_PREFIX = """
@@ -257,7 +250,8 @@ class CoachEngine:
         )
         system_prompt = base + active_block + "\n\n" + COACH_MODE_PREFIX
 
-        tier = _plan_tier(mandate, agent_id)
+        plan = _plan_from_mandate(mandate)
+        tier = pick_tier(plan, agent_id)
         messages: list[ChatMessage] = [
             ChatMessage(role=h.role, content=h.content) for h in history
         ]
@@ -307,7 +301,7 @@ class CoachEngine:
         text = await self._stream_to_string(
             system_prompt=PROPOSE_SYSTEM_PROMPT,
             messages=[ChatMessage(role=h.role, content=h.content) for h in history],
-            tier=_plan_tier(mandate, agent_id),
+            tier=pick_tier(_plan_from_mandate(mandate), agent_id),
             locale=mandate.locale,
         )
         parsed = _parse_proposal_json(text)
@@ -484,14 +478,6 @@ def _coerce_agent_id(value: Any) -> AgentId:
 
 def _plan_from_mandate(mandate: Mandate) -> Plan:
     return mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
-
-
-def _plan_tier(mandate: Mandate, agent_id: AgentId | str | None = None) -> ModelTier:
-    base = PLAN_TO_TIER.get(_plan_from_mandate(mandate), "cheap")
-    if agent_id is None:
-        return base
-    key = agent_id.value if isinstance(agent_id, AgentId) else agent_id
-    return resolve_tier(base, key)
 
 
 def _parse_proposal_json(text: str) -> dict | None:
