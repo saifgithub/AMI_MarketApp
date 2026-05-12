@@ -26,20 +26,25 @@ See `docs/10_delivery/project_plan.md` Phase 3 (MVP).
 ## Design (what this will do)
 
 1. **Preflight.** Confirm a `beta-*` tag was specified. Promotions to
-   Prod can only come from Beta. No skipping.
+   Prod can only come from Beta. No skipping. Also confirm
+   `infra/prod.env` exists on the Mac (Mac-canonical env pattern; see
+   `infra/README.md`).
 2. **Re-tag.** Create `prod-YYYY-MM-DD-N` pointing at the same commit
    as the source `beta-*` tag.
 3. **Build Docker image.** Same Dockerfile as Beta; tagged with both
    the `prod-*` tag and an immutable SHA.
-4. **Deploy to the Prod Cloud Run service** (separate from Beta's
-   Cloud Run service).
-5. **Run migrations** against the Prod Supabase project.
-6. **Cutover Cloud Run traffic** — gradual ramp via
+4. **Push secrets to the Prod GCP Secret Manager project** from
+   `infra/prod.env`. Separate project from Beta — Prod keys never
+   touch the Beta GCP env, and Beta keys never touch Prod.
+5. **Deploy to the Prod Cloud Run service** (separate from Beta's
+   Cloud Run service). Secrets mounted from step 4.
+6. **Run migrations** against the Prod Supabase project.
+7. **Cutover Cloud Run traffic** — gradual ramp via
    `gcloud run services update-traffic --to-revisions=<new>=10,<old>=90`,
    then 50/50, then 100/0 after the operator confirms metrics look
    healthy. (Cloud Run supports staged rollout natively.)
-7. **Smoke check** `https://api.agenticmarketintel.ai/v1/health`.
-8. **Report**: tag, image SHA, traffic split.
+8. **Smoke check** `https://api.agenticmarketintel.ai/v1/health`.
+9. **Report**: tag, image SHA, traffic split.
 
 The locked Flutter App Store build is **separate** — Saiful submits
 new builds via App Store Connect on his own schedule (M3 — Apple

@@ -31,7 +31,8 @@ See `docs/10_delivery/project_plan.md` and
 
 1. **Preflight.** Confirm an `alpha-*` tag was specified or pick the
    most recent. Promotions to Beta can only happen for code that's
-   already shipped to Alpha.
+   already shipped to Alpha. Also confirm `infra/beta.env` exists on
+   the Mac (Mac-canonical env pattern; see `infra/README.md`).
 2. **Re-tag.** Create `beta-YYYY-MM-DD-N` pointing at the same commit
    as the source `alpha-*` tag. Per-day sequence in
    `Asia/Kuala_Lumpur`.
@@ -39,11 +40,16 @@ See `docs/10_delivery/project_plan.md` and
    tagged with both the `beta-*` tag and an immutable SHA.
 4. **Push to Artifact Registry** (or Container Registry — pick at B3
    time).
-5. **`gcloud run deploy ami-trade-beta`** with the new image. Region
-   from a config block. Service account from B1.
-6. **Run migrations** via a Cloud Run Job or one-off `alembic upgrade head` against the Supabase Postgres.
-7. **Smoke check** `https://api-beta.agenticmarketintel.ai/v1/health`.
-8. **Report**: tag, image SHA, Cloud Run revision name, smoke status.
+5. **Push secrets to GCP Secret Manager** from `infra/beta.env` (B8).
+   The Mac-canonical env pattern continues here: Mac holds the source
+   of truth, this step pushes to the cloud secret store. Cloud Run
+   mounts those secrets as env vars at deploy.
+6. **`gcloud run deploy ami-trade-beta`** with the new image. Region
+   from a config block. Service account from B1. Secrets mounted from
+   step 5.
+7. **Run migrations** via a Cloud Run Job or one-off `alembic upgrade head` against the Supabase Postgres.
+8. **Smoke check** `https://api-beta.agenticmarketintel.ai/v1/health`.
+9. **Report**: tag, image SHA, Cloud Run revision name, smoke status.
 
 ## Until then, what to tell the operator
 

@@ -42,6 +42,14 @@ mobile/android/app/*.jks
 **/credentials.json
 **/service-account*.json
 
+# Per-environment canonical env files — Mac holds the source of truth,
+# /promote-to-<env> ships the matching file to the target host. Never
+# commit the populated form; only the *.example shape is tracked. See
+# infra/README.md for the model.
+infra/alpha.env
+infra/beta.env
+infra/prod.env
+
 # IDE
 .idea/
 .vscode/

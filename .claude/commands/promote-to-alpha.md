@@ -91,27 +91,44 @@ rsync -az --delete \
   melehost:~/ami_trade/
 ```
 
-**`.env` MUST be excluded.** rsync has no default dotfile exclusion —
-the working values live ONLY on melehost (vLLM URL, model, market-data
-flag, CF tunnel token). Without `--exclude='.env'`, the Mac's nearly
-empty `.env` overwrites them and the alpha drops to mock LLM + the
-tunnel dies on next restart. First-run check: after rsync, before
-recreating the container, verify the keys survived:
+**`.env` MUST be excluded from rsync.** rsync has no default dotfile
+exclusion. Without `--exclude='.env'`, the rsync would overwrite the
+deployed env file — see step 4 for the canonical mechanism that
+replaces this footgun.
+
+### 4. Ship the canonical env file (Mac → melehost)
+
+The Mac holds the canonical Alpha env at `infra/alpha.env` (gitignored,
+populated). `scp` it into place. This is THE mechanism for moving env
+values; rsync step 3 explicitly excludes `.env` so this step is the
+only path.
 
 ```bash
-ssh melehost "grep -E '^(VLLM_BASE_URL|VLLM_MODEL|USE_REAL_MARKET_DATA|CF_TUNNEL_TOKEN)' ~/ami_trade/.env"
+# Abort if the canonical copy isn't present on this Mac.
+if [ ! -f infra/alpha.env ]; then
+  echo "ERROR: infra/alpha.env missing — see infra/README.md to seed it"
+  echo "       (scp melehost:~/ami_trade/.env infra/alpha.env, then re-run)"
+  exit 1
+fi
+
+scp infra/alpha.env melehost:~/ami_trade/.env
 ```
 
-If something needs to flow Mac → melehost (rare — usually a new flag
-landing in `.env.example`), `scp` it explicitly:
+Then verify the critical keys landed on melehost:
 
 ```bash
-scp /Volumes/Extreme\ Pro/AMI_MarketApp/.env melehost:~/ami_trade/.env
+ssh melehost "grep -E '^(VLLM_BASE_URL|VLLM_MODEL|USE_REAL_MARKET_DATA|CF_TUNNEL_TOKEN)' ~/ami_trade/.env | sed 's/=.*/=<set>/'"
 ```
 
-The user should confirm whether `.env` needs syncing — almost always no.
+Expect all four to read `<set>`. Anything missing → stop, fix the
+canonical file on the Mac, re-promote. **Do not edit melehost's `.env`
+in-place** — the next promotion will overwrite it.
 
-### 4. Recreate the backend container on melehost
+If you're rotating a key: edit `infra/alpha.env` on the Mac first, then
+run this command. The rotation flows Mac → melehost as a side-effect of
+promotion.
+
+### 5. Recreate the backend container on melehost
 
 ```bash
 ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d --build api-alpha"
@@ -139,7 +156,7 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 
 …and stop. The user decides whether to investigate or roll back.
 
-### 5. Run pending migrations
+### 6. Run pending migrations
 
 ```bash
 ssh melehost "cd ~/ami_trade && docker compose exec -T api-alpha alembic upgrade head"
@@ -151,7 +168,15 @@ schema changes Alembic-via-promotion is the formal record. A failed
 migration is **not auto-rolled-back** — surface the error and ask
 the user whether to roll back or fix forward.
 
-### 6. Smoke check the public hostname
+**Known carry-over (AT:R13):** on a fresh DB, `init_schema()` creates
+every table via `create_all()` but doesn't stamp an `alembic_version`
+row, so `alembic upgrade head` then errors with
+`DuplicateTable: relation "agent_activations" already exists`. One-time
+fix per fresh DB: `docker compose exec -T api-alpha alembic stamp head`,
+then re-run upgrade head (now a no-op). The proper fix (self-stamping
+`init_schema`) is a spawned follow-up task.
+
+### 7. Smoke check the public hostname
 
 ```bash
 # Health endpoint
@@ -173,16 +198,17 @@ non-200 or shows an unexpected shape (e.g., `active_provider=mock`),
 surface the diff to the user and stop — the deploy is technically
 done but smoke failed; the user decides next step.
 
-### 7. Report the outcome
+### 8. Report the outcome
 
 Print a short summary like:
 
 ```
 Promoted to Alpha — alpha-2026-05-12-3 (a1b2c3d — "fix(compose): pass vLLM env")
-  • rsync: 28s
+  • rsync (code): 28s
+  • scp infra/alpha.env: <1s, 4/4 keys verified
   • build + recreate: 47s
   • migrations: no changes
-  • smoke: /v1/health 200 · /v1/llm/status vllm · /v1/sim/quote AAPL $221.27
+  • smoke: /v1/health 200 · /v1/llm/status vllm · /v1/sim/quote AAPL $221.27 (source=yahoo)
 Total elapsed: 1m 23s
 ```
 
