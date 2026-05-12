@@ -1,8 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of AT:R11 — A7 + backend modes + promotion protocol + Mac-pure-editor cleanup)
+**Last updated:** 2026-05-13 (end of AT:R11 wrap + main fast-forwarded + handover-conflict cleanup)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
+
+> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R11 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
 
 ---
 
@@ -56,50 +58,41 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 7063050 Day 1: PRD + backend foundation
 ```
 
-### Backend
+### Backend (lives on melehost — never the Mac)
 
 | | |
 |---|---|
-| Process | `uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload` |
-| Logs | `tail -f /tmp/ami-backend.log` |
-| Restart | `scripts/run_dev.sh backend` |
-| LAN | `http://192.168.20.9:8000` |
-| Health | `curl http://localhost:8000/v1/health` |
-| Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, **`/v1/llm/status`**, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, **`/v1/watchlist/*`** (new this session) |
-| Tests | `pytest backend/tests/unit/ -q` → **152 passed, 0 failed**. A1 + A2 + A20 + A21 + A18 add 19 new tests; A20 also fixed 2 pre-existing failures in `test_lessons_service` that the spawned cleanup task was going to handle. |
+| Where | `melehost` (Ubuntu Linux, LAN `192.168.20.9`) — Docker Compose stack at `~/ami_trade/` |
+| Container | `ami_api_alpha` (built from `backend/Dockerfile`) — service name `api-alpha` in compose |
+| Public hostname | `https://api-alpha.agenticmarketintel.ai` (Cloudflare Tunnel) |
+| Health from outside the LAN | `curl https://api-alpha.agenticmarketintel.ai/v1/health` |
+| Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
+| Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
+| Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*`, `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*` |
+| Mac-side tests | `pytest backend/tests/unit/ -q` from any worktree — **152 passed, 0 failed**. Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. This is the only backend execution that happens on the Mac. |
+| Push code to it | [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (project-scoped slash command — rsync + recreate + smoke check). No GitHub remote yet. |
 
-### Postgres + persistence (NEW this session)
+### Postgres + persistence
 
 | | |
 |---|---|
-| Container | `ami_postgres` (postgres:15-alpine) via `docker compose up -d postgres` |
-| Host port | **5434** (5432/5433 were already taken on dev box) |
+| Where | `melehost` — container `ami_postgres` in the same compose stack as the backend |
 | DB | `ami_trade` (user `postgres`, pw `postgres`) |
-| Connect | `docker exec -it ami_postgres psql -U postgres -d ami_trade` |
-| Backend → DB | `DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade` |
-| Default (unset) | Sqlite file at `backend/.local.db` — fine for solo dev / first-launch sanity |
-| Tests | Per-test sqlite tempfile (autouse fixture in `tests/conftest.py`) |
+| Connect from melehost | `ssh melehost "docker exec -it ami_postgres psql -U postgres -d ami_trade"` |
+| Backend → DB (inside compose net) | `postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade` — service-DNS, not the host port |
+| Mac dev DB | **None.** Mac runs zero services (memory: `feedback_mac_is_pure_editor.md`). |
+| Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) — run on the Mac, no real DB touched |
+| Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-13 tables created by Alembic on first run:
+13 tables created by Alembic on first run (`agent_activations`, `auth_challenges`, `journal_entries`, `lessons_progress`, `mandates`, `overlay_edit_counts`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `user_overlays`, `users`, `alembic_version`) plus `sim_watchlists` from A18.
 
-```
-agent_activations    auth_challenges     journal_entries
-lessons_progress     mandates            overlay_edit_counts
-room_runs            sim_holdings        sim_portfolios
-sim_trades           user_overlays       users
-alembic_version
-```
-
-Migrations live in `backend/alembic/versions/`. To run:
+Migrations live in `backend/alembic/versions/`. They run automatically inside `/promote-to-alpha` (step 5 of the playbook). To run by hand on melehost:
 
 ```bash
-cd backend
-source .venv/bin/activate
-DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
-  alembic upgrade head
+ssh melehost "cd ~/ami_trade && docker compose exec api-alpha alembic upgrade head"
 ```
 
-Day-to-day, `init_schema()` in `app/db/session.py` runs `Base.metadata.create_all()` on the first DB-touch in solo dev + tests, so you don't have to remember Alembic during normal feature work.
+Day-to-day, `init_schema()` in `app/db/session.py` runs `Base.metadata.create_all()` on the first DB-touch — so on a freshly-recreated container the schema appears without Alembic. Alembic remains the canonical record for migrations between landed schemas.
 
 ### Auth scaffold (NEW this session)
 
@@ -466,8 +459,12 @@ Mock text is gone.
 
 ### Logs
 
-```
-tail -f /tmp/ami-backend.log
+```bash
+# Current path (AT:R11+): live logs from melehost
+ssh melehost "docker logs ami_api_alpha --tail 50 -f"
+
+# At W13 this was `tail -f /tmp/ami-backend.log` on the Mac —
+# retired when Mac stopped running services.
 ```
 
 ---
@@ -576,17 +573,26 @@ stack: fallback(cache(yahoo)->mock_walk)
 
 ### How to flip it on
 
+Already on in Alpha — `USE_REAL_MARKET_DATA=true` is in melehost's
+`~/ami_trade/.env`, set during the AT:R11 wrap. For reference, the
+toggle today is:
+
 ```bash
-# in backend/.env
-USE_REAL_MARKET_DATA=true
+# On melehost — edit env + recreate the api-alpha container
+ssh melehost "cd ~/ami_trade && \
+    grep -q USE_REAL_MARKET_DATA .env || echo 'USE_REAL_MARKET_DATA=true' >> .env && \
+    docker compose --profile tunnel up -d api-alpha"
 
-# restart backend
-scripts/run_dev.sh backend
-
-# verify
-curl -s http://localhost:8000/v1/sim/quote/AAPL
-# → {"ticker":"AAPL","price":190.09,"source":"fallback(cache(yahoo)->mock_walk)"}
+# Verify through the public tunnel
+curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
+# → {"ticker":"AAPL","price":..., "source":"fallback(cache(yahoo)->mock_walk)"}
 ```
+
+The original W10 dev path was `scripts/run_dev.sh backend` on the
+Mac (Mac-local uvicorn talking to Mac-local Postgres on port 5434).
+That dev pattern was retired at AT:R11 when we made the Mac
+pure-editor — see the AT:R11 section near the top of this doc and
+`docs/10_delivery/promotion_protocol.md`.
 
 ---
 
