@@ -8,7 +8,7 @@ name: ami-trade-local
 #
 # Bring up: docker compose up -d
 # Tear down: docker compose down
-# Logs: docker compose logs -f backend
+# Logs:     docker compose logs -f api-alpha
 
 services:
   postgres:
@@ -46,11 +46,15 @@ services:
       retries: 10
     restart: unless-stopped
 
-  backend:
+  # Service name matches the public hostname (api-alpha) so the
+  # Cloudflare Tunnel ingress rule reads `http://api-alpha:8000` —
+  # same name internally and externally is easier to reason about.
+  # Build context stays `./backend` (filesystem layout is unchanged).
+  api-alpha:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ami_backend
+    container_name: ami_api_alpha
     depends_on:
       postgres:
         condition: service_healthy
@@ -100,7 +104,7 @@ services:
       # services, which would block plain `docker compose config`.
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
     depends_on:
-      backend:
+      api-alpha:
         condition: service_healthy
     restart: unless-stopped
     profiles:
