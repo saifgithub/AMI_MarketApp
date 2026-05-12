@@ -83,17 +83,25 @@ services:
       start_period: 10s
     restart: unless-stopped
 
-  # Cloudflare Tunnel — exposes the backend at https://api-dev.agenticmarketintel.ai
-  # Requires a CF_TUNNEL_TOKEN env var; set up the tunnel once at:
-  #   https://one.dash.cloudflare.com/ → Networks → Tunnels → Create
+  # Cloudflare Tunnel (A7) — token-mode connector. Ingress rules,
+  # hostname, and Access policy all live in the CF dashboard:
+  #   https://one.dash.cloudflare.com/ → Networks → Tunnels → ami-trade
+  # Put the real connector token in `.env` (gitignored), NEVER in
+  # `.env.example` (committed). See infra/cloudflared/README.md for the
+  # systemd path used on the prod host.
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: ami_tunnel
     command: tunnel --no-autoupdate run
     environment:
+      # Empty when not set — `cloudflared` itself fails loudly with
+      #   "expected non-empty connector token". Don't use ${VAR:?...} here
+      # because Compose evaluates interpolation even for profile-gated
+      # services, which would block plain `docker compose config`.
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     profiles:
       # Enable with: docker compose --profile tunnel up -d

@@ -1,0 +1,53 @@
+# A7 — Cloudflare Tunnel connector for the AMI Trade backend.
+#
+# Token-mode tunnel: ingress rules (hostname, service, Access policy) are
+# all configured in the Cloudflare dashboard at
+#   https://one.dash.cloudflare.com/ → Networks → Tunnels → ami-trade
+#
+# This unit just runs the `cloudflared` connector with the connector
+# token from /etc/ami-trade-tunnel.env (mode 0600, root-readable only).
+# The backend itself binds to 127.0.0.1:8000 / 0.0.0.0:8000 — the tunnel
+# proxies to that.
+#
+# Install:
+#   curl -L --output cloudflared.deb \
+#       https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+#   sudo dpkg -i cloudflared.deb
+#   sudo install -m 0644 infra/cloudflared/ami-trade-tunnel.service /etc/systemd/system/
+#   sudo install -m 0600 -o root -g root \
+#       infra/cloudflared/ami-trade-tunnel.env.example /etc/ami-trade-tunnel.env
+#   sudo $EDITOR /etc/ami-trade-tunnel.env   # paste the real CF_TUNNEL_TOKEN
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now ami-trade-tunnel
+#
+# Verify:
+#   systemctl status ami-trade-tunnel
+#   journalctl -u ami-trade-tunnel -f       # look for "Registered tunnel connection"
+
+[Unit]
+Description=AMI Trade Cloudflare Tunnel (cloudflared connector)
+Documentation=https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/
+After=network-online.target ami-trade-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cloudflared
+Group=cloudflared
+EnvironmentFile=/etc/ami-trade-tunnel.env
+ExecStart=/usr/local/bin/cloudflared tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ami-trade-tunnel
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+LimitNOFILE=8192
+
+[Install]
+WantedBy=multi-user.target

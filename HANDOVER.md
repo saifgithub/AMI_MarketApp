@@ -173,6 +173,47 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
+## What just landed (A7 — Cloudflare Tunnel wiring)
+
+Saiful provisioned the named tunnel + Access policy in the Cloudflare
+dashboard and surfaced the connector token. This commit wires the
+connector into both delivery paths (docker compose for dev / ad-hoc,
+systemd for the prod host) and bakes the security runbook into the
+repo so the token stays out of git.
+
+- `infra/cloudflared/ami-trade-tunnel.service` — systemd unit. Runs
+  the connector as a dedicated `cloudflared` user, depends on
+  `ami-trade-backend.service`, reads the token from
+  `/etc/ami-trade-tunnel.env` (mode 0600). Restart-on-failure with 5s
+  backoff.
+- `infra/cloudflared/ami-trade-tunnel.env.example` — token slot
+  (empty in git on purpose).
+- `infra/cloudflared/README.md` — install runbook (token-mode tunnel
+  setup, dashboard pointers, Access policy shape, CORS / Flutter
+  build interaction with A25).
+- `docker-compose.yml` — cloudflared service comment now references
+  the systemd path; `depends_on` uses `service_healthy` (the backend
+  has a healthcheck since W8) so the tunnel only starts after the
+  backend is actually answering.
+- `.env.example` (worktree) — the placeholder slot now carries an
+  explicit "never paste real token here, this file is committed" note
+  plus a pointer to the dashboard + rotation runbook.
+- `infra/systemd/ami-trade.env.example` — new `AMI_PUBLIC_API_URL`
+  slot so prod operators have the public hostname consolidated next
+  to `CORS_ORIGINS`.
+
+**Heads-up for Saiful:** the real token is currently in the working
+tree of the root checkout's `.env.example` (uncommitted on `main`).
+It's not in git history yet, so no rotation is required — but move
+it to `.env` (gitignored) before you ever `git commit .env.example`.
+Token belongs in `.env` locally and `/etc/ami-trade-tunnel.env` on
+the prod host; the `.env.example` slot stays empty in git forever.
+
+This unblocks A22-A28 — the public hostname is now the URL that
+goes into `--dart-define=AMI_API_URL=...` on the TestFlight build.
+
+---
+
 ## What just landed (this session — A2, A20, A19, A21, A18, A8, A9, A10, A11)
 
 Saiful granted full autonomy through MVP — "build it all part by part". Eight Alpha items shipped across Streams 1, 2, 3, 4 of the project plan. The full Stream-4 product polish lane is done; Stream 2 hardening is done modulo the Saiful-blocked items (A3 / A6 / A7); Stream 3 lands its first chunk (A11 scaffold). 152 unit tests passing, flutter analyze clean on every touched file.
@@ -579,7 +620,6 @@ Saiful provisions:
 
   A3.  Resend account + DKIM/SPF DNS    → unblocks A4 + A5
   A6.  Apple Sign-In capability        → unblocks the A6 code swap
-  A7.  Cloudflare Tunnel + Access      → unblocks A22-A28 path
   A12. AR + MS translators             → drop-in, non-blocking
   A13. TTS provider account + key      → unblocks A14
   A14. TTS integration (depends A13)
@@ -587,6 +627,8 @@ Saiful provisions:
   A16. Push notifications (depends A15)
   A17. Daily briefing (depends A14 + A16)
   A22-A28. App Store Connect, Transporter, signing, TestFlight uploads
+           — A7 (Cloudflare Tunnel) now landed, so the public
+           hostname for --dart-define=AMI_API_URL is available.
 
 If Saiful has unblocked any of those, pick them up. Otherwise the
 unblocked items left are:
