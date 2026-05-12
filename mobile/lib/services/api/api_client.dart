@@ -21,6 +21,7 @@ import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/watchlist.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -622,6 +623,35 @@ class ApiClient {
   Future<double> simQuote(String ticker) async {
     final r = await _dio.get<Map<String, dynamic>>('/v1/sim/quote/$ticker');
     return (r.data!['price'] as num).toDouble();
+  }
+
+  // ── Watchlist (A18) ─────────────────────────────────────────────
+
+  Future<List<WatchlistEntry>> watchlistList(String userId) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/watchlist/$userId');
+    final items = ((r.data?['items'] as List?) ?? const []);
+    return items
+        .map((j) => WatchlistEntry.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<WatchlistEntry> watchlistAdd(
+    String userId,
+    String ticker, {
+    String? notes,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/watchlist/$userId',
+      data: {
+        'ticker': ticker,
+        if (notes != null) 'notes': notes,
+      },
+    );
+    return WatchlistEntry.fromJson(r.data!);
+  }
+
+  Future<void> watchlistRemove(String userId, String ticker) async {
+    await _dio.delete<void>('/v1/watchlist/$userId/$ticker');
   }
 
   // ── Mandate ─────────────────────────────────────────────────────

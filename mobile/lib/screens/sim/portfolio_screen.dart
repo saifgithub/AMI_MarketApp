@@ -8,9 +8,14 @@
 /// so trades that hit while the user is on this screen show as won/lost.
 library;
 
+import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/sim.dart';
+import 'package:ami_trade/models/watchlist.dart';
+import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,20 +27,26 @@ class PortfolioScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(simNotifierProvider);
+    final watchlist = ref.watch(watchlistNotifierProvider);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
           children: [
             _Header(onTradeTicket: () => TradeTicketSheet.show(context)),
-            Expanded(child: _body(context, ref, state)),
+            Expanded(child: _body(context, ref, state, watchlist)),
           ],
         ),
       ),
     );
   }
 
-  Widget _body(BuildContext context, WidgetRef ref, SimState state) {
+  Widget _body(
+    BuildContext context,
+    WidgetRef ref,
+    SimState state,
+    WatchlistState watchlist,
+  ) {
     if (state.loading && state.portfolio == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -49,11 +60,18 @@ class PortfolioScreen extends ConsumerWidget {
     if (p == null) return const SizedBox.shrink();
     return RefreshIndicator(
       color: AmiColors.hexCyan,
-      onRefresh: () => ref.read(simNotifierProvider.notifier).refresh(),
+      onRefresh: () async {
+        await Future.wait<void>([
+          ref.read(simNotifierProvider.notifier).refresh(),
+          ref.read(watchlistNotifierProvider.notifier).refresh(),
+        ]);
+      },
       child: ListView(
         padding: const EdgeInsets.all(AmiSpacing.m),
         children: [
           _ValueCard(portfolio: p),
+          const SizedBox(height: AmiSpacing.m),
+          _WatchlistSection(state: watchlist),
           const SizedBox(height: AmiSpacing.m),
           if (p.holdings.isEmpty)
             _NewTraderHint(onTradeTicket: () => TradeTicketSheet.show(context))
@@ -395,6 +413,248 @@ class _QuoteSourcePill extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+
+// ── Watchlist (A18) ─────────────────────────────────────────────────────
+
+
+class _WatchlistSection extends ConsumerWidget {
+  const _WatchlistSection({required this.state});
+  final WatchlistState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('WATCHLIST', style: AmiTypography.labelMono),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: () => _showAddDialog(context, ref),
+              icon: const Icon(Icons.add, color: AmiColors.hexCyan, size: 16),
+              label: Text(
+                'ADD',
+                style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan),
+              ),
+            ),
+          ],
+        ),
+        if (state.items.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AmiSpacing.s),
+            child: Text(
+              'Add tickers you want to watch. Tap a row for quick actions: '
+                  'Ask the Market Analyst, Convene the Room, or open a trade.',
+              style: AmiTypography.caption,
+            ),
+          )
+        else
+          for (final w in state.items) _WatchlistRow(entry: w),
+      ],
+    );
+  }
+
+  Future<void> _showAddDialog(BuildContext context, WidgetRef ref) async {
+    final ctrl = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          backgroundColor: AmiColors.slate800,
+          title: Text('ADD TO WATCHLIST',
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
+          content: TextField(
+            controller: ctrl,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Ticker (e.g. NVDA)',
+              hintStyle: TextStyle(color: AmiColors.textLow),
+            ),
+            style: AmiTypography.body,
+            textCapitalization: TextCapitalization.characters,
+            onSubmitted: (_) => _commit(ctx, ref, ctrl.text),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('CANCEL'),
+            ),
+            TextButton(
+              onPressed: () => _commit(ctx, ref, ctrl.text),
+              child: const Text('ADD'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _commit(BuildContext ctx, WidgetRef ref, String raw) {
+    final ticker = raw.trim();
+    if (ticker.isEmpty) return;
+    ref.read(watchlistNotifierProvider.notifier).add(ticker);
+    Navigator.of(ctx).pop();
+  }
+}
+
+
+class _WatchlistRow extends ConsumerWidget {
+  const _WatchlistRow({required this.entry});
+  final WatchlistEntry entry;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final priceText = entry.price == null
+        ? '—'
+        : NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: InkWell(
+        onTap: () => _showRowSheet(context, ref),
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+          ),
+          decoration: BoxDecoration(
+            color: AmiColors.slate800,
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            border: Border.all(color: AmiColors.slate700),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 64,
+                child: Text(entry.ticker,
+                    style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  entry.notes ?? '',
+                  style: AmiTypography.caption,
+                  maxLines: 1, overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(priceText, style: AmiTypography.statMid),
+              const SizedBox(width: AmiSpacing.s),
+              const Icon(Icons.chevron_right, color: AmiColors.textLow),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRowSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AmiColors.slate800,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AmiSpacing.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(entry.ticker,
+                      style: AmiTypography.h2.copyWith(color: AmiColors.hexCyan)),
+                  const SizedBox(width: AmiSpacing.s),
+                  if (entry.price != null)
+                    Text(
+                      NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price),
+                      style: AmiTypography.statMid,
+                    ),
+                ],
+              ),
+              if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                const SizedBox(height: AmiSpacing.s),
+                Text(entry.notes!, style: AmiTypography.body),
+              ],
+              const SizedBox(height: AmiSpacing.l),
+              _SheetAction(
+                icon: Icons.shopping_cart_outlined,
+                label: 'OPEN TRADE TICKET',
+                color: AmiColors.hexGreen,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  TradeTicketSheet.show(context, tickerPrefill: entry.ticker);
+                },
+              ),
+              _SheetAction(
+                icon: Icons.chat_bubble_outline,
+                label: 'ASK THE MARKET ANALYST',
+                color: AmiColors.hexCyan,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  Navigator.of(context).push(MaterialPageRoute<void>(
+                    builder: (_) => OneOnOneScreen(agent: agentById('market_analyst')),
+                  ));
+                },
+              ),
+              _SheetAction(
+                icon: Icons.groups_outlined,
+                label: 'CONVENE THE ROOM',
+                color: AmiColors.hexPurple,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  ConveneSheet.show(context);
+                },
+              ),
+              _SheetAction(
+                icon: Icons.delete_outline,
+                label: 'REMOVE FROM WATCHLIST',
+                color: AmiColors.hexRed,
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  ref.read(watchlistNotifierProvider.notifier).remove(entry.ticker);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _SheetAction extends StatelessWidget {
+  const _SheetAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
+        child: Row(
+          children: [
+            Icon(icon, color: color),
+            const SizedBox(width: AmiSpacing.s),
+            Text(label, style: AmiTypography.labelMono.copyWith(color: color)),
+          ],
+        ),
       ),
     );
   }

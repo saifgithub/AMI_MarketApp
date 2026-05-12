@@ -278,6 +278,25 @@ class RoomRunRow(Base):
     duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
 
+class SimWatchlistRow(Base):
+    """A18 — user-curated watchlist. Free-form ticker strings (anything Yahoo
+    can quote), with optional notes. Unique per (user, ticker).
+    """
+
+    __tablename__ = "sim_watchlists"
+    __table_args__ = (
+        UniqueConstraint("user_id", "ticker", name="uq_watchlist_user_ticker"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    ticker: Mapped[str] = mapped_column(String, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
 class AuthChallengeRow(Base):
     """One-time codes for magic-link + Apple Sign-In exchange.
 
