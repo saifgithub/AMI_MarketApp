@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-12 (end of AT:R10 — A2, A20, A19, A21, A18, A8, A9, A10, A11 all landed)
+**Last updated:** 2026-05-12 (end of AT:R11 — A7 + backend modes + promotion protocol + Mac-pure-editor cleanup)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -13,8 +13,8 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, 29 commits, no remote yet |
-| Latest commit | (this session) A11: i18n scaffold |
+| Git state | Clean working tree, **40 commits**, no remote yet |
+| Latest commit | (this session) `f4ade4e` — chore: stop running services on the Mac |
 | Lines on disk | ~38,500 (PRD ~14.5k, backend ~9.9k, Flutter ~10.7k, content/docs ~2.4k, infra ~0.7k, content/lessons untracked ~180 new files) |
 
 ```
@@ -214,7 +214,58 @@ goes into `--dart-define=AMI_API_URL=...` on the TestFlight build.
 
 ---
 
-## What just landed (this session — A2, A20, A19, A21, A18, A8, A9, A10, A11)
+## What just landed (this session — AT:R11)
+
+Eleven commits on top of the previous handover. The headline: **Alpha is live, public, and serving from melehost**. Promotion protocol + slash commands in place. The Mac stopped running services entirely.
+
+### Alpha is live (A7 — Cloudflare Tunnel)
+
+- **Public hostname**: `https://api-alpha.agenticmarketintel.ai` — backed by token-mode Cloudflare Tunnel, dashboard-managed ingress.
+- **Connector**: cloudflared container on melehost (Connector ID `406f3d06-28a6-44ca-bc2e-4dc065c60149`), 4 healthy connections to jed03 + mrs06 edges. Latency ~220ms cold from outside the LAN.
+- **Stack on melehost**: `ami_postgres` + `ami_redis` + `ami_api_alpha` + `ami_tunnel`. All healthy under `~/ami_trade/` (rsync'd from Mac). vLLM Gemma 4 reachable via LAN at `192.168.20.74:8000`; Yahoo market data active.
+- **Token hygiene**: `CF_TUNNEL_TOKEN` lives in `.env` (gitignored). `.env.example` slot stays empty in git forever. Working-tree-only on the Mac root checkout; no commit history exposure. Move to `/etc/ami-trade-tunnel.env` for the systemd path when that lands.
+- **CF dashboard ingress**: Service URL = `http://api-alpha:8000` (Compose service-DNS, both containers in `ami-trade-local_default` network).
+- **Compose service renamed** `backend` → `api-alpha` (matches public hostname end-to-end). Container = `ami_api_alpha`.
+- **`extra_hosts: host.docker.internal:host-gateway`** added to cloudflared service so the same dashboard ingress works on Docker Engine (melehost) as on Docker Desktop — Engine doesn't provide that name for free.
+
+Detailed runbook + decommission-at-Beta plan in [`infra/cloudflared/README.md`](infra/cloudflared/README.md).
+
+### Mac is pure editor — no Mac backend / DB
+
+Stopped + removed the Mac uvicorn (PID 38964) and `ami_postgres` container. Mac volumes kept (cheap, reversible). New rule: **the Mac runs zero services**. Every change ships to Alpha via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) to be exercised.
+
+- Backend unit tests on the Mac still work (`pytest backend/tests/unit/ -q` uses sqlite tempfile via the conftest fixture).
+- `scripts/run_dev.sh` rewritten — pure `flutter run` pointing at the Alpha hostname, no backend startup. Bakes alpha/beta/prod URLs via dart-define so the Settings → Developer toggle is live.
+- Memory updated ([feedback_mac_is_pure_editor.md](/Users/saiful/.claude/projects/-Volumes-Extreme-Pro-AMI-MarketApp/memory/feedback_mac_is_pure_editor.md)) so future sessions don't quietly resurrect the Mac backend path.
+
+### Three backend modes (Flutter) — Alpha / Beta / Prod
+
+Pre-MVP TestFlight builds bake all three hostnames and expose a Settings → Developer radio. MVP / App Store builds compile that out entirely (`ALLOW_BACKEND_SWITCH=false`); only `AMI_API_URL_PROD` reaches the binary. A tester upgrading from TestFlight to App Store gets force-clamped to prod on first launch and any stored override is wiped from SharedPreferences.
+
+Full design + build commands in [`docs/08_tech/backend_modes.md`](docs/08_tech/backend_modes.md).
+
+### Promotion protocol — Mac → Alpha → Beta → Prod
+
+[`docs/10_delivery/promotion_protocol.md`](docs/10_delivery/promotion_protocol.md) is the design doc. Mac is canonical (commits originate); melehost / GCP Beta / GCP Prod are derivative. Tags walk the chain: `alpha-YYYY-MM-DD-N` → `beta-*` → `prod-*` (Saiful's `Asia/Kuala_Lumpur` timezone). Never skip a layer; tags are permanent; rollback re-deploys the previous tag with the failing tag preserved.
+
+Slash commands under [`.claude/commands/`](.claude/commands/):
+- `/promote-to-alpha`, `/rollback-alpha` — **live today**.
+- `/promote-to-beta`, `/rollback-beta` — stubs; unblock at B1-B8.
+- `/promote-to-prod`, `/rollback-prod` — stubs; unblock at MVP-phase items.
+
+### Docs aligned with the new model
+
+- [`docs/08_tech/hosting.md`](docs/08_tech/hosting.md) — top-of-file "melehost — the Alpha host" section (Ubuntu Linux server, specs, LAN IP, role). Other docs link here instead of restating.
+- [`infra/cloudflared/README.md`](infra/cloudflared/README.md), [`infra/systemd/README.md`](infra/systemd/README.md), [`infra/local/README.md`](infra/local/README.md), [`docker-compose.yml`](docker-compose.yml) — all explicit about Ubuntu + Docker Engine vs Docker Desktop. No more "Saiful's server" hand-wave.
+- The compose backend env now passes `VLLM_BASE_URL` / `VLLM_MODEL` / `USE_REAL_MARKET_DATA` through from `.env` (was missing — fresh-composed backends used to silently fall back to mock provider).
+
+### Test state
+
+Backend: **152 passed, 0 failed**. The two pre-existing `test_lessons_service` failures (stale lesson IDs vs W17/W18 renumbering) got pinned to a stable `LEGACY_MARKET_ORDER_LESSON = "283_market_order_vs_limit"` handle. flutter analyze still clean across touched files.
+
+---
+
+## What just landed (previous session — A2, A20, A19, A21, A18, A8, A9, A10, A11)
 
 Saiful granted full autonomy through MVP — "build it all part by part". Eight Alpha items shipped across Streams 1, 2, 3, 4 of the project plan. The full Stream-4 product polish lane is done; Stream 2 hardening is done modulo the Saiful-blocked items (A3 / A6 / A7); Stream 3 lands its first chunk (A11 scaffold). 152 unit tests passing, flutter analyze clean on every touched file.
 
@@ -594,29 +645,46 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #11 — name the
-session "AT:R12:".
+We're picking up the AMI Trade build. This is handover #12 — name
+the session "AT:R13:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
 
-Then read docs/10_delivery/project_plan.md — your task is almost
-always one of the A1-A28 items in there.
+Then read docs/10_delivery/project_plan.md for the A1-A28 backlog,
+and docs/10_delivery/promotion_protocol.md for how code actually
+moves from Mac → Alpha → Beta → Prod.
 
-State: 29 commits in. 152 unit tests pass, 0 failed. The previous
-session knocked out a long autonomous run — A2 + A20 + A19 + A21 +
-A18 + A8 + A9 + A10 + A11 all landed. Every user-visible AMI surface
-streams from vLLM Gemma 4 with deterministic fallbacks; the
-post-onboarding Concierge routes against real journal/lesson/agent
-context; the sim Portfolio has a watchlist with one-tap "Ask the
-Market Analyst / Convene the Room / Open Trade Ticket" sheet; lesson
-tiles expose READ + QUIZ ONLY paths; backend has systemd unit + pg
-backups + Sentry SDK; Flutter ships an i18n scaffold ready for AR/MS
-ARBs to drop in.
+State: 40 commits in. 152 backend unit tests pass, 0 failed.
 
-What's left in Alpha — almost everything is blocked on Saiful's
-external setup. The remaining engineering items only unblock once
-Saiful provisions:
+What changed in AT:R11 vs the previous handover:
+  • Alpha is LIVE on melehost at https://api-alpha.agenticmarketintel.ai
+    — Cloudflare Tunnel + vLLM Gemma 4 + Yahoo prices, all serving.
+    The connector container `ami_tunnel` on melehost runs alongside
+    `ami_api_alpha`, `ami_postgres`, `ami_redis`. See
+    infra/cloudflared/README.md.
+  • Mac runs zero services. Backend / DB / docker stack all on
+    melehost. Every code change ships via /promote-to-alpha. Backend
+    tests on Mac still work (sqlite tempfile).
+  • The Flutter app supports three backend modes (alpha / beta /
+    prod) at compile time; the Settings → Developer toggle lets
+    TestFlight builds flip live. App Store builds bake only PROD.
+    See docs/08_tech/backend_modes.md.
+  • Promotion protocol is documented + the slash commands exist:
+    /promote-to-alpha + /rollback-alpha work today; beta + prod ones
+    are stubs that print "not yet implemented" until GCP lands.
+
+Dev workflow:
+  • Edit code on Mac → /promote-to-alpha → see it on iPhone hitting
+    api-alpha.agenticmarketintel.ai.
+  • iPhone app: scripts/run_dev.sh (pure flutter run, points at
+    Alpha by default; toggle to beta/prod URLs in Settings →
+    Developer).
+  • Backend tests: pytest backend/tests/unit/ -q from the worktree.
+  • DON'T start uvicorn or docker compose on the Mac. The Mac is a
+    pure editor (memory: feedback_mac_is_pure_editor.md).
+
+What's still left in Alpha — most blocked on Saiful's external setup:
 
   A3.  Resend account + DKIM/SPF DNS    → unblocks A4 + A5
   A6.  Apple Sign-In capability        → unblocks the A6 code swap
@@ -626,24 +694,25 @@ Saiful provisions:
   A15. OneSignal + Dev APNs cert       → unblocks A16
   A16. Push notifications (depends A15)
   A17. Daily briefing (depends A14 + A16)
-  A22-A28. App Store Connect, Transporter, signing, TestFlight uploads
-           — A7 (Cloudflare Tunnel) now landed, so the public
-           hostname for --dart-define=AMI_API_URL is available.
+  A22-A28. App Store Connect, Transporter, signing, TestFlight
+           uploads. A7 landed so the public hostname is ready for
+           --dart-define=AMI_API_URL_ALPHA on TestFlight builds.
 
 If Saiful has unblocked any of those, pick them up. Otherwise the
-unblocked items left are:
+unblocked engineering items left are:
   • Commit the W17/W18 generated lesson files (~180 untracked .mdx
-    under content/lessons/). They're already being loaded by the
-    service — committing them is a content-only pass with no code
-    change. ~0.25 session.
-  • Sweep i18n string extraction across the existing screens —
-    A11 landed the scaffold; this is the grunt-work pass that wraps
-    every user-visible Text(...) in AppLocalizations.of(context). The
-    framework falls back to English, so it's not blocking Alpha
+    under content/lessons/). Service already loads them on disk;
+    committing is a content-only pass. ~0.25 session.
+  • Sweep i18n string extraction across existing screens — A11
+    landed the scaffold; this is the wrap-Text-in-AppLocalizations
+    pass. Framework falls back to English; not blocking Alpha
     launch. ~1 session.
   • Animation production — bundle the first Lottie asset(s) under
-    assets/animations/ and register them in AnimationRegistry. The
-    A21 widget already handles it. ~depends on art availability.
+    assets/animations/, register in AnimationRegistry. The A21
+    widget already handles it. ~depends on art availability.
+  • Try the actual /promote-to-alpha command if it hasn't been
+    exercised yet — first run will surface any edge cases in the
+    playbook.
 
 If something else is on Saiful's mind, default to that.
 
@@ -653,42 +722,44 @@ that explains what it is and why.
 Naming: code/internals → LLM is fine; user-visible copy → AMI by name
 (never "the AI"). See docs/08_tech/coding_conventions.md.
 
-Before writing code:
+Before writing code (Mac-side sanity checks — Mac doesn't run any
+services anymore; these all hit melehost through the public tunnel):
+
   cd "/Volumes/Extreme Pro/AMI_MarketApp"
   git status
   git log --oneline | head -10
-  docker ps --filter "name=ami_postgres" --format '{{.Names}}: {{.Status}}'
-  curl -s http://localhost:8000/v1/health
-  curl -s http://localhost:8000/v1/llm/status
-  curl -s http://localhost:8000/v1/sim/quote/AAPL
+  curl -s https://api-alpha.agenticmarketintel.ai/v1/health
+  curl -s https://api-alpha.agenticmarketintel.ai/v1/llm/status
+  curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
 
-Backend may be on PID found via:
-  pgrep -lf "uvicorn app.main"
-If down, restart from this worktree:
-  cd "/Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/magical-edison-18bf91/backend"
-  DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
-  USE_REAL_MARKET_DATA=true \
-  VLLM_BASE_URL=http://192.168.20.74:8000 \
-  VLLM_MODEL=gemma-4-31b-it-nvfp4 \
-  nohup /Volumes/Extreme\ Pro/AMI_MarketApp/.claude/worktrees/strange-meninsky-06db6d/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 >/tmp/ami-backend.log 2>&1 &
+If Alpha is down, debug from melehost:
+  ssh melehost "docker ps --format 'table {{.Names}}\t{{.Status}}'"
+  ssh melehost "docker logs ami_api_alpha --tail 50"
+  ssh melehost "docker logs ami_tunnel --tail 30"
+
+If the stack is gone, bring it back:
+  ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d"
+
+Don't start uvicorn or docker compose on the Mac. The Mac is a pure
+editor (memory: feedback_mac_is_pure_editor.md). Every change ships
+to Alpha via /promote-to-alpha.
 ```
 
 ---
 
-## How to run the W8 stack locally
+## How to run the stack
 
 ```bash
-# 1. Postgres
-cd "/Volumes/Extreme Pro/AMI_MarketApp"
-docker compose up -d postgres            # host port 5434
+# Backend: lives on melehost (Ubuntu), brought up via Docker Compose.
+# This is normally already running — only re-run if you need to.
+ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d"
 
-# 2. Backend (sqlite fallback works too — just unset DATABASE_URL)
-cd backend && source .venv/bin/activate
-DATABASE_URL='postgresql+psycopg2://postgres:postgres@localhost:5434/ami_trade' \
-  uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# iPhone app: from the Mac, points at Alpha by default.
+scripts/run_dev.sh                # TESTING IPHONE 13 (default)
+scripts/run_dev.sh simulator      # iOS simulator
 
-# 3. App (separate terminal)
-scripts/run_dev.sh
+# Backend unit tests: run on the Mac, sqlite tempfile via conftest.
+pytest backend/tests/unit/ -q
 ```
 
 ---
