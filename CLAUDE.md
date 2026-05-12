@@ -132,9 +132,12 @@ He calls Claude "buddy" sometimes. That's fine.
 ## Autonomy + handover rules
 
 - **Inside this project folder, execute autonomously.** Don't ask "ready to commit?" — just do it. (See `memory/feedback_workflow.md`.)
-- **Watch your context budget.** When usage hits **45%**:
-  1. `git status` and commit any uncommitted work.
-  2. Update `HANDOVER.md` with latest state + a recommended prompt for the next agent.
-  3. Update `memory/project_ami_trade.md` if any decisions/state changed.
-  4. Surface to Saiful: *"Context at 45% — handover docs updated. Recommend starting a fresh session."*
+- **Watch your context budget.** When usage hits **45%**, prepare a handover. The next session must receive a **clean working tree** and a **consistency-scanned doc set** — uncommitted edits are invisible to a fresh session that reads files at HEAD, and stale older text contradicting today's new rule will mislead the next agent. Full protocol in `memory/feedback_handover.md`. Short version:
+  1. `git status` — working tree MUST be clean before handover. Commit everything (real commit messages, not "wip"). Don't leave untracked files behind without a deliberate decision (commit, `.gitignore`, or delete).
+  2. **Fast-forward `main` if your branch is ahead.** Long-running branches that never merge to main create the "new session reads stale main" trap (40 commits of vLLM wiring sitting off-main on 2026-05-13 made the new session think vLLM "wasn't wired"). If your branch is a clean ancestor-extension of `main`, fast-forward.
+  3. **Consistency scan.** New rules landed in this session likely contradict text living elsewhere (HANDOVER tables, READMEs, scripts). Grep for the specific patterns the session retired and update or label-as-historical anything that survives. `git grep -nE "<pattern>"` from the project root.
+  4. Update `HANDOVER.md` with latest state + a recommended prompt for the next agent.
+  5. Update `memory/project_ami_trade.md` if any decisions/state changed.
+  6. Final `git status` — must say "nothing to commit, working tree clean". If not, go back to step 1.
+  7. Surface to Saiful: *"Context at 45% — committed, handover docs updated, consistency-scan clean. Recommend starting a fresh session."*
 - **Never delete files outside the project folder.** Saiful's exact words: *"unless it is something you physically cannot do, just go ahead and do it. just dont go crazy and delete files outside of your project folders!"*
