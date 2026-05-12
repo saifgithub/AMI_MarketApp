@@ -11,6 +11,42 @@ rules, hostname binding, and Access policies are all configured in
 the Cloudflare dashboard — `cloudflared` only needs the connector
 token to authenticate.
 
+## Where to point the tunnel (CF dashboard ingress rule)
+
+Token-mode tunnels are **remotely-managed** — the connector
+authenticates with the token, and the Cloudflare dashboard tells it
+what to proxy where. Nothing in this repo configures the ingress; it
+all lives at:
+
+> [one.dash.cloudflare.com](https://one.dash.cloudflare.com/) → **Networks** → **Tunnels** → `ami-trade` → **Public Hostname** tab → **Add a public hostname**
+
+Fill it in like this:
+
+| Field | Value |
+|---|---|
+| Subdomain | `api-alpha` (or whatever you want) |
+| Domain | your CF-managed domain |
+| Path | leave blank |
+| Service — Type | `HTTP` |
+| Service — URL | depends on deployment shape — see below |
+
+**Service URL by deployment shape:**
+
+| If the tunnel runs as… | Service URL | Why |
+|---|---|---|
+| **Docker compose** (`docker compose --profile tunnel up -d`) | `http://backend:8000` | The `cloudflared` container and the `backend` container share the Compose network; `backend` is the service name (`docker-compose.yml`). |
+| **Systemd on melehost** (backend also on host, A8 path) | `http://localhost:8000` | Both processes on the same host; backend binds `0.0.0.0:8000`. |
+| **Mixed — backend in Docker, tunnel via systemd** | `http://localhost:8000` | The compose port-map (`8000:8000`) publishes the container port to the host, where systemd's cloudflared can reach it. |
+
+Use **`http://`**, not `https://`. TLS terminates at the Cloudflare
+edge; the tunnel-to-backend hop is plain HTTP over the encrypted
+tunnel. The backend doesn't need its own cert.
+
+Under "Additional application settings": defaults are fine.
+The HTTP Host Header should be **blank** (default) — Cloudflare
+forwards the public hostname, which is what FastAPI's
+ProxyHeadersMiddleware uses to build absolute URLs.
+
 ## What's where
 
 | Where | What |
