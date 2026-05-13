@@ -12,15 +12,16 @@ honestly.
 
 ## When to trigger
 
-- **Context budget approaches 45%** (the rule from CLAUDE.md). Don't
-  wait for the user — flag it the moment you notice and offer.
-- **User says** "prepare for a handover", "wrap this session",
-  "let's stop", or similar.
-- **End of a coherent chapter of work** where a fresh session with
-  clean context would be more useful than continuing.
+Only when Saiful explicitly asks — "prepare for a handover", "wrap
+this session", "let's stop", or similar.
 
-Skip when the working tree is mid-flight on a single task — finish
-the task first.
+**Don't auto-trigger** on context-budget heuristics or "end of
+chapter" judgements. Saiful decides when to wrap; until he says so,
+keep working.
+
+If the working tree is mid-flight on a single task when he asks,
+finish that task before running the protocol — the report assumes
+no work-in-progress edits.
 
 ## What to do, in order
 
