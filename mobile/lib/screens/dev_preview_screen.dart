@@ -33,7 +33,7 @@ class DevPreviewScreen extends StatelessWidget {
               Wrap(
                 spacing: AmiSpacing.s,
                 children: const [
-                  HexChip(label: 'FLOOR PASS', color: AmiColors.slate600, filled: false),
+                  HexChip(label: 'FLOOR PASS', color: AmiColors.slate600, variant: HexChipVariant.outlined),
                   HexChip(label: 'TRADER', color: AmiColors.hexBlue),
                   HexChip(label: 'FLOOR MANAGER', color: AmiColors.hexPurple),
                 ],

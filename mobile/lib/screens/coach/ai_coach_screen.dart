@@ -12,6 +12,7 @@ import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
+import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -179,10 +180,14 @@ class _HitTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            hit.qa.category.toUpperCase(),
-            style: AmiTypography.labelMono
-                .copyWith(color: accent, fontSize: 10),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: HexChip(
+              label: hit.qa.category,
+              color: accent,
+              variant: HexChipVariant.tinted,
+              fontSize: 9,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -248,10 +253,13 @@ class _AnswerSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.m),
-                Text(
-                  qa.category.toUpperCase(),
-                  style: AmiTypography.labelMono.copyWith(
-                    color: AmiColors.hexBlue, fontSize: 11,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: HexChip(
+                    label: qa.category,
+                    color: _accentFor(qa.category),
+                    variant: HexChipVariant.tinted,
+                    fontSize: 10,
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.s),

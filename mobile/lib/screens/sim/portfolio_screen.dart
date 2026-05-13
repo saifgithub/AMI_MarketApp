@@ -18,6 +18,7 @@ import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -394,33 +395,12 @@ class _QuoteSourcePill extends StatelessWidget {
     final live = portfolio.isLivePrice;
     final color = live ? AmiColors.hexGreen : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);
-    final label = live ? l.portfolioLive : l.portfolioMock;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: AmiTypography.labelMono.copyWith(
-              color: color,
-              fontSize: 10,
-              letterSpacing: 1.2,
-            ),
-          ),
-        ],
-      ),
+    return HexChip(
+      label: live ? l.portfolioLive : l.portfolioMock,
+      color: color,
+      variant: HexChipVariant.tinted,
+      showDot: true,
+      fontSize: 10,
     );
   }
 }
