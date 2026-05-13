@@ -1,10 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R13 — truthful price_source + first-real-run promotion + playbook bug fixes + Mac-canonical per-env files + magical-edison-18bf91 content drop merged)
+**Last updated:** 2026-05-13 (end of AT:R15 — bug reporter + inline Term + daily-challenge service + AI Coach Q&A retrieval + earn-path gateway cap + design v2 pass: IBM Plex fonts, AccentCard, HexMeshOverlay, HexChip tinted, Convene → HexButton)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
-> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R13 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
+> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R15 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
 
 ---
 
@@ -15,11 +15,11 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **71 commits**, no remote yet |
-| Latest commit | (this session) `aaca100` — merge: i18n sweep + Gemma 4 translation endpoint |
-| Alpha tags | `alpha-2026-05-13-1..5` (five promotions today: content-mount fix, yfinance LIVE prices, glossary+Term, i18n+translation endpoint) |
-| Backend tests | **176 passed, 0 failed** (was 163 → +5 yfinance + +8 glossary) |
-| Lines on disk | ~38,800 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired, 280 AI Coach Q&A, 183 daily challenges, 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
+| Git state | Clean working tree, **85 commits**, no remote yet |
+| Latest commit | (this session) `94e50ea` — design(v2): HexChip tinted variant + A29 (light-mode) docs |
+| Alpha tags | `alpha-2026-05-13-1..7` (seven promotions on 2026-05-13; AT:R15's batch landed as `alpha-2026-05-13-7`: bug reporter + inline Term + daily-challenge + AI Coach + earn-path cap) |
+| Backend tests | **204 passed, 0 failed** (was 176 → +9 feedback + +2 inline-term + +7 daily-challenge + +10 AI-Coach + +1 gateway-cap) |
+| Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired (now rendered INLINE in prose via `{{term:id}}` token substitution), 280 AI Coach Q&A (categorised + retrievable + Concierge fallback), 183 daily challenges (Floor card + full-screen attempt), 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
@@ -168,7 +168,71 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
-## What just landed (this session — AT:R13)
+## What just landed (this session — AT:R15)
+
+Big session. The work order Saiful set covered four product carry-overs from AT:R13, then expanded into a full design-system v2 pass after marketing surfaced gaps in the hex language. 14 new commits, 28 new tests, one alpha tag.
+
+### Carry-over batch (items 2–5)
+
+- **Inline `<Term>` rendering — `a015b82`.** `<Term id="X"/>` MDX tags used to extract as standalone blocks, shredding paragraphs into vertical "prose / term / prose / term" lists. The backend now substitutes them to `{{term:X}}` inline tokens BEFORE block extraction; the Flutter markdown renderer's `_inline()` regex picks them up and emits a `WidgetSpan` with an inline `_InlineTermChip`. Tap still opens the same bottom sheet — refactored `term_block.dart` to expose `showTermSheet(context, termId, {locale})` as the single source of truth for the modal. +2 net tests.
+- **Daily-challenge ingestion service — `37a84fd`.** 183 challenges sitting on disk (`content/daily_challenges/2026_06..2026_11.json`) now serve via `DailyChallengeService` (singleton + RLock + eager-load), with `GET /v1/daily_challenge/{today, by_date/YMD, by_id, all}`. `today()` resolves in `Asia/Kuala_Lumpur`. Flutter side: `DailyChallengeCard` (amber-accented) on the Floor tab; tap opens a full-screen attempt with A–D options + Submit + CORRECT/INCORRECT + explanation + related-lesson/agent links. 404 on `/today` is the expected state right now — corpus starts 2026-06-01; the card hides gracefully. +7 tests.
+- **AI Coach Q&A retrieval — `1bf2136`.** 280 Q&A across 6 categories (ai_meta/beginner/intermediate/platform/psychology/scam) load into `AICoachService` with pre-computed token sets per entry. `GET /v1/ai_coach/{search?q, by_id, by_category, categories}`. The `top_hit(min_score=2)` helper wires into Concierge `scripted_reply` as a last-resort fallback BEFORE the generic "AMI is offline" message — so when the LLM is unreachable, a relevant short_answer surfaces instead. Flutter: `AICoachScreen` (Settings → Help → AI Coach) with debounced search, per-category-tinted hit tiles, bottom-sheet long-answer view with related-lesson/agent pills. +10 tests.
+- **Earn-path gateway cap — `daaffb2`.** Most-referenced agents (market_analyst, fundamentals_analyst) had 71 callout lessons each post-content-drop — unlock was unreachable. New `UNLOCK_REQUIRED_PER_AGENT = 3` constant + `_gateway_lessons_for_agent(agent_id)` helper restricts the unlock requirement to the first N lessons (sorted by id) that callout the agent. Behaviour-identical for agents with ≤3 callouts. Flutter `_showLockedSheet` mirrors the cap so the locked-agent sheet shows the actual 3 gates instead of the full 70+ enrichment set. +1 test.
+
+### Bug reporter (item 7 / AT:R13 carry-over from a parallel worktree)
+
+- **In-app bug reporter — `4ef1a4f`.** Imported the design from worktree `claude/blissful-darwin-419097` (`docs/08_tech/bug_reporting.md`) and shipped Alpha tier end-to-end. `POST /v1/feedback/bug` writes to `bug_reports` (Alembic `c7f2a1d30003`); user_id nullable so anon sessions can file before claim; scaffold token Bearer extraction. Flutter: `BugReportSheet` modal triggered by long-pressing the "AMI Trade v0.1.0+1" chip at the bottom of Settings (shake-gesture trigger held — would need new package). Category chip picker + title + steps + spinner + error state. +9 tests.
+
+### Design v2 pass (after marketing audit)
+
+Saiful fetched the updated AMI AI Design System bundle (the v2 archive at the `api.anthropic.com/v1/design/h/…` share URL). Audit surfaced gaps vs the prior in-repo mount — most important: **we'd been authoring against Inter + JetBrainsMono, which the v2 README explicitly names as fallbacks NOT to author against. Canonical is IBM Plex Sans + IBM Plex Mono.**
+
+- **IBM Plex fonts — `29cdcfb`.** Added `google_fonts: ^6.2.1` to pubspec. `AmiTypography.*` converted from `static const TextStyle` to `static final` built from `GoogleFonts.ibmPlexSans()` / `ibmPlexMono()`. Inter + JetBrainsMono still bundled for cold-paint fallback. Three const-Text call sites in `dev_preview_screen.dart` + theme.dart adjusted accordingly. h1 weight 700 → 800; labelMono letter-spacing 1.3 → 1.8 (~0.15em per spec).
+- **Color tokens to spec — `29cdcfb`.** `slate800` #1E293B → #111827 (`--panel-bg-solid`); `slate700` #334155 → #374151 (`--border-color`); `hexPurple` #A855F7 → #8B5CF6 (`--accent-purple`); `textHigh` white → #F3F4F6; `textMed` → #94A3B8 (`--text-muted`); `textLow` → #64748B (`--text-dim`); added `hexBlue600`, `cardBg`, `cardBgAlt`, `hexGlow`.
+- **New widgets — `29cdcfb`:**
+  - `lib/widgets/hex/accent_card.dart` — glass panel + **2px colored top-stripe** (mobile-spec variant; desktop is 3px). Optional `onTap` with Material InkWell ripple. `ClipRRect` so the stripe sits flush with the rounded corners.
+  - `lib/widgets/hex/hex_mesh_overlay.dart` — 3% opacity SVG (`assets/hex_mesh.svg`, already in pubspec) tiled via `flutter_svg`. `IgnorePointer` so taps fall through.
+- **HexChip tinted variant — `94e50ea`.** `HexChipVariant` enum: `filled` (existing default), `outlined` (existing), `tinted` (new — 14%-alpha accent fill + colored text + no border). New `showDot: bool` for LIVE/MOCK/OFFLINE/WARN status pills. Backwards-compat via `HexChip.legacy(filled: bool)` factory.
+
+### Where the design changes land on screen
+
+| Surface | Change |
+|---|---|
+| **Whole app** | Type system flips to IBM Plex on first launch (after one-time `google_fonts` cache; Inter/JetBrains paints during the wait) |
+| **Floor tab** | `HexMeshOverlay` sits behind the scaffold; Convene the Room CTA swapped from `ElevatedButton.icon` → existing `HexButton(color: hexGreen)` — flat-top hex pill |
+| **Daily-challenge card** | Now `AccentCard(accent: hexAmber)` with 2px top-stripe instead of full 1px border. Submit button on the attempt screen also `HexButton` |
+| **AI Coach (Settings → Help)** | Hit tiles now `AccentCard` per-category tinted (red=scam, pink=psychology, purple=ai_meta, cyan=platform, green=beginner, blue=default). Category labels on tiles + answer sheet are now `HexChip(tinted)` hex-clipped pills |
+| **Portfolio header** | LIVE/MOCK quote-source pill now `HexChip(tinted, showDot)` with the hex silhouette — same green/amber semantic |
+
+### `/promote-to-alpha` auto-source — `e3bc47b`
+
+The promotion playbook used to fail step 4 ("infra/alpha.env missing") when run from a worktree, because the canonical env file is gitignored and lives only in the main worktree. Fixed: when the local file is missing, the playbook now `cp`s it from the main worktree path discovered via `git worktree list --porcelain` (with `cut -d' ' -f2-` so the space in `/Volumes/Extreme Pro/...` doesn't truncate). Behaviour-preserving from the main worktree.
+
+### A29 — light-mode register (documented, not built)
+
+`docs/10_delivery/project_plan.md` gained `A29` in Stream 4 Product polish. Sized 0.5 session. Intent per the spec README: *"bright/outdoor mobile conditions triggered by the ambient light sensor — not as a default visual register."* Held pending marketing's read on the hex bottom-nav swap (a separate v2 item Saiful is discussing with marketing — when that direction is set, the two land together).
+
+### Alpha tag this session
+
+- `alpha-2026-05-13-7` — batch deploy after the 5 carry-overs (bug reporter + Term + daily-challenge + AI Coach + earn-path cap). Cloudflare tunnel needed a manual restart post-rsync (cached the old api-alpha container IP after `docker compose up -d --build`) — surfaced as a 502 on first smoke; resolved by `docker compose restart cloudflared`. Add to the `/promote-to-alpha` playbook as a known recovery if it happens again.
+
+The design v2 commits (`29cdcfb`, `94e50ea`) and the playbook fix (`e3bc47b`) are **NOT yet promoted to Alpha** — they're Flutter / docs / playbook changes; the backend hasn't moved. Both iOS installs on TESTING IPHONE 13 are pointing at the live `alpha-2026-05-13-7` backend.
+
+### iPhone state
+
+Release build with all of this installed on **TESTING IPHONE 13** (UDID `7178EB26-3444-5D6E-BB78-6454EB5D5455`). Bundle ID `ai.agenticmarketintel.amiTrade`. App points at `https://api-alpha.agenticmarketintel.ai`.
+
+### Carry-overs (deferred / blocked)
+
+- **Animation production** — `AnimationRegistry` built, empty. Blocked on Lottie art (Saiful-external).
+- **TestFlight (A22-A28)** — blocked on App Store Connect provisioning (Saiful-external).
+- **A29 light-mode register** — documented; held pending marketing alignment on the hex bottom-nav swap.
+- **Hex bottom-nav swap** — open with marketing. If they want it, that's the v2 mobile UI kit's signature element (5 hex pills, center "Ask AMI" purple→blue with glow). Significant rework — touches every screen because the nav shape changes.
+- **Shake gesture trigger** for bug reporter — current trigger is long-press only. Adding shake would need the `shake` Flutter package; deliberately deferred to keep the dep stack lean. Long-press alone is sufficient for Alpha-tier feedback volumes.
+
+---
+
+## What just landed (AT:R13)
 
 Four commits. The LIVE / MOCK pill was lying to users (Yahoo's been
 429-ing for at least 28 hours but the API reported the stack name
@@ -866,14 +930,20 @@ That's it. The slash command:
 3. Enters plan mode with a state summary + the current carry-over list as options
 4. Waits for Saiful's direction
 
-Session name to use: **AT:R15** (this is handover #14).
+Session name to use: **AT:R16** (this is handover #15).
 
-Definition of done at hand-off (verified by `/handover` at end of AT:R13):
+Definition of done at hand-off (verified by `/handover` at end of AT:R15):
 - `git status`: clean working tree on `main`
-- 76 commits in
-- 176 backend unit tests passing
-- Alpha tags `alpha-2026-05-13-{1..6}` landed
-- iPhone has the AT:R13 release build installed
+- 85 commits in
+- 204 backend unit tests passing
+- Alpha tags `alpha-2026-05-13-{1..7}` landed (latest: `alpha-2026-05-13-7` carries the AT:R15 carry-over batch; design v2 commits are Flutter/docs-only and not yet promoted)
+- iPhone has the AT:R15 release build installed (IBM Plex fonts, hex-mesh overlay on Floor, AccentCard daily-challenge, HexButton Convene CTA, HexChip status pills)
+
+**First decision points for AT:R16:**
+
+1. **Hex bottom-nav swap** — Saiful had a marketing read pending at session end. If marketing greenlights, that's the v2 mobile UI kit's signature element (5 hex pills, center "Ask AMI" purple→blue with glow). Bundle with A29 (light-mode) since both touch every screen.
+2. **A22-A28 TestFlight push** — unblock as soon as App Store Connect provisioning is done. Saiful-external dependencies.
+3. **Animation production** — `AnimationRegistry` is empty; pending Lottie art.
 
 If Alpha is down at session start, `/start-fresh` will surface that
 and tell you the melehost debug commands.
