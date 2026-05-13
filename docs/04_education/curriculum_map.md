@@ -229,6 +229,8 @@ The ID sequence is reserved (001–077) so even if a lesson is skipped or merged
 
 ## Existing 13 lessons — re-mapping
 
+> **EXECUTED at AT:R13** (magical-edison-18bf91 content pass). The originals were reparented to filenames `280_*..292_*` with frontmatter ids matching the filenames, while fresh `001_*..077_*` lessons land the new M1–M12 foundations. As-shipped state lives in the "Expansion" + "Legacy bonus" sections elsewhere in this doc.
+
 The lessons already on disk slot into the new structure. Some need a frontmatter touch-up to add the new `module` field; titles stay the same.
 
 | Existing file | New ID | Level | Module | Notes |

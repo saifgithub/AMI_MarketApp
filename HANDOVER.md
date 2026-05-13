@@ -158,7 +158,7 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 2. Floor — Concierge + 12 agents + CONVENE THE ROOM CTA.
 3. Portfolio — total value + P&L + cash + drawdown, holdings, trades.
 4. Journal — every action with filter chips + detail screens.
-5. Lessons — 13 lessons, 7 tracks; quiz pass unlocks agents.
+5. Lessons — 270 lessons across 7 tracks; quiz pass unlocks agents (Earn Path still keys off the original W3-era subset).
 6. Settings — Mandate editor + **NEW: ACCOUNT** section → SignInScreen.
 7. **NEW: SignInScreen** — Apple button + email magic-link claim flow.
 
