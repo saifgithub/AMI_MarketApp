@@ -22,9 +22,9 @@ class DevPreviewScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('AMI TRADE', style: AmiTypography.labelMono),
+              Text('AMI TRADE', style: AmiTypography.labelMono),
               const SizedBox(height: AmiSpacing.xs),
-              const Text('Design system preview', style: AmiTypography.h2),
+              Text('Design system preview', style: AmiTypography.h2),
               const SizedBox(height: AmiSpacing.l),
 
               // Tier badges
@@ -113,13 +113,13 @@ class DevPreviewScreen extends StatelessWidget {
               // Glass panel sample with role accent
               const _SectionTitle('GLASS PANELS'),
               const SizedBox(height: AmiSpacing.s),
-              const GlassPanel(
+              GlassPanel(
                 accentColor: AmiColors.hexPurple,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('MORNING BRIEFING', style: AmiTypography.labelMono),
-                    SizedBox(height: AmiSpacing.s),
+                    const SizedBox(height: AmiSpacing.s),
                     Text(
                       'NVDA up 3.2% overnight. Your Bear wants to talk about TSLA.',
                       style: AmiTypography.body,
@@ -128,13 +128,13 @@ class DevPreviewScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AmiSpacing.m),
-              const GlassPanel(
+              GlassPanel(
                 accentColor: AmiColors.hexGreen,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('PORTFOLIO VALUE', style: AmiTypography.labelMono),
-                    SizedBox(height: AmiSpacing.xs),
+                    const SizedBox(height: AmiSpacing.xs),
                     Text(r'$10,234.50', style: AmiTypography.statBig),
                     Text('+2.34% today  •  drawdown 4% / 30%', style: AmiTypography.caption),
                   ],
@@ -142,7 +142,7 @@ class DevPreviewScreen extends StatelessWidget {
               ),
               const SizedBox(height: AmiSpacing.xxl),
 
-              const Center(
+              Center(
                 child: Text(
                   '— alpha build • 0.1.0 —',
                   style: AmiTypography.caption,

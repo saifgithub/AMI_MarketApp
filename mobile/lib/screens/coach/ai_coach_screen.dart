@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -144,56 +145,58 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
 }
 
 
+Color _accentFor(String category) {
+  // Per spec: hit-tile top-border tints the category at a glance.
+  switch (category) {
+    case 'scam':
+      return AmiColors.hexRed;
+    case 'psychology':
+      return AmiColors.hexPink;
+    case 'ai_meta':
+      return AmiColors.hexPurple;
+    case 'platform':
+      return AmiColors.hexCyan;
+    case 'beginner':
+      return AmiColors.hexGreen;
+    case 'intermediate':
+    default:
+      return AmiColors.hexBlue;
+  }
+}
+
+
 class _HitTile extends StatelessWidget {
   const _HitTile({required this.hit});
   final CoachSearchHit hit;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    final accent = _accentFor(hit.qa.category);
+    return AccentCard(
+      accent: accent,
       onTap: () => _openSheet(context, hit.qa),
-      borderRadius: BorderRadius.circular(AmiRadii.card),
-      child: Container(
-        padding: const EdgeInsets.all(AmiSpacing.s),
-        decoration: BoxDecoration(
-          color: AmiColors.slate800,
-          borderRadius: BorderRadius.circular(AmiRadii.card),
-          border: Border.all(color: AmiColors.slate700),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AmiColors.slate700,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    hit.qa.category.toUpperCase(),
-                    style: AmiTypography.labelMono
-                        .copyWith(color: AmiColors.hexBlue, fontSize: 10),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              hit.qa.question,
-              style: AmiTypography.body.copyWith(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              hit.qa.shortAnswer,
-              style: AmiTypography.caption,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hit.qa.category.toUpperCase(),
+            style: AmiTypography.labelMono
+                .copyWith(color: accent, fontSize: 10),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            hit.qa.question,
+            style: AmiTypography.body.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hit.qa.shortAnswer,
+            style: AmiTypography.caption,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }

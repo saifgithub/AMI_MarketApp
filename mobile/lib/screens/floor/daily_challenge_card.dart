@@ -8,6 +8,8 @@ library;
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/accent_card.dart';
+import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,33 +24,22 @@ class DailyChallengeCard extends ConsumerWidget {
       error: (e, _) => const SizedBox.shrink(),
       data: (data) {
         if (data == null) return const SizedBox.shrink();
-        return _shell(
-          child: _Body(data: data),
+        return AccentCard(
+          accent: AmiColors.hexAmber,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => DailyChallengeScreen(data: data),
             ),
           ),
+          child: _Body(data: data),
         );
       },
     );
   }
 
-  Widget _shell({required Widget child, VoidCallback? onTap}) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AmiRadii.card),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AmiSpacing.m),
-        decoration: BoxDecoration(
-          color: AmiColors.slate800,
-          borderRadius: BorderRadius.circular(AmiRadii.card),
-          border: Border.all(color: AmiColors.hexAmber),
-        ),
-        child: child,
-      ),
-    );
+  Widget _shell({required Widget child}) {
+    // Loading placeholder — same shape envelope as the loaded card.
+    return AccentCard(accent: AmiColors.hexAmber, child: child);
   }
 
   Widget _loading() => const SizedBox(
@@ -189,19 +180,11 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 ),
               const SizedBox(height: AmiSpacing.l),
               if (!_submitted)
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton(
-                    onPressed: _selected == null
-                        ? null
-                        : () => setState(() => _submitted = true),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AmiColors.hexBlue,
-                      foregroundColor: AmiColors.textHigh,
-                      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-                    ),
-                    child: const Text('Submit'),
-                  ),
+                HexButton(
+                  label: 'SUBMIT',
+                  onPressed: _selected == null
+                      ? null
+                      : () => setState(() => _submitted = true),
                 )
               else ...[
                 Text(

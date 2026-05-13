@@ -2,41 +2,53 @@
 ///
 /// Source of truth: /Volumes/Extreme Pro/AMI AI Design System/colors_and_type.css
 /// Spec doc: docs/05_design/ami_hex_in_flutter.md
+///
+/// Typography uses IBM Plex Sans + IBM Plex Mono via the `google_fonts`
+/// package — they're the canonical AMI typefaces. Inter and JetBrainsMono
+/// are bundled as the explicit fallbacks the spec names; they cover the
+/// first paint before Plex resolves on cold launch.
 library;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Colors
 // ─────────────────────────────────────────────────────────────────────────
 
 abstract final class AmiColors {
-  // Canvas / surfaces
-  static const Color slate900 = Color(0xFF0F172A); // primary canvas
-  static const Color slate800 = Color(0xFF1E293B); // surface
-  static const Color slate700 = Color(0xFF334155); // borders
-  static const Color slate600 = Color(0xFF475569); // muted text
-  static const Color slate500 = Color(0xFF64748B); // captions
+  // Canvas / surfaces (per colors_and_type.css v2)
+  static const Color slate900 = Color(0xFF0F172A); // canvas (--dark-bg)
+  static const Color slate800 = Color(0xFF111827); // opaque panel (--panel-bg-solid)
+  static const Color slate700 = Color(0xFF374151); // border (--border-color)
+  static const Color slate600 = Color(0xFF475569); // muted
+  static const Color slate500 = Color(0xFF64748B); // dim
+  static const Color cardBg = Color(0xFF152845); // --card-bg
+  static const Color cardBgAlt = Color(0xFF121E37); // --card-bg-alt
 
   // Brand
-  static const Color hexBlue = Color(0xFF3B82F6); // primary
+  static const Color hexBlue = Color(0xFF3B82F6); // --hex-blue
+  static const Color hexBlue600 = Color(0xFF2563EB); // hover
 
-  // Role accents (6)
-  static const Color hexCyan = Color(0xFF06B6D4); // analysts
-  static const Color hexAmber = Color(0xFFF59E0B); // risk
-  static const Color hexGreen = Color(0xFF10B981); // trader / positive
-  static const Color hexRed = Color(0xFFEF4444); // negative / violations
-  static const Color hexPurple = Color(0xFFA855F7); // researchers + managers
-  static const Color hexPink = Color(0xFFEC4899); // concierge
+  // Role accents (6) — spec values
+  static const Color hexCyan = Color(0xFF06B6D4); // --accent-cyan
+  static const Color hexAmber = Color(0xFFF59E0B); // --accent-amber
+  static const Color hexGreen = Color(0xFF10B981); // --accent-green
+  static const Color hexRed = Color(0xFFEF4444); // --accent-red
+  static const Color hexPurple = Color(0xFF8B5CF6); // --accent-purple (was #A855F7)
+  static const Color hexPink = Color(0xFFEC4899); // --accent-pink
 
   // Text on dark
-  static const Color textHigh = Colors.white;
-  static const Color textMed = Color(0xFFCBD5E1);
-  static const Color textLow = Color(0xFF94A3B8);
+  static const Color textHigh = Color(0xFFF3F4F6); // --text-main
+  static const Color textMed = Color(0xFF94A3B8); // --text-muted
+  static const Color textLow = Color(0xFF64748B); // --text-dim
 
   // Glass surfaces
   static const Color glass = Color(0xB3111827); // rgba(17,24,39,0.7)
   static const Color glassChrome = Color(0xD90F172A); // rgba(15,23,42,0.85)
+
+  // Brand glow
+  static const Color hexGlow = Color(0x803B82F6); // rgba(59,130,246,0.5)
 }
 
 /// Maps an agent family ("analyst", "risk", "researcher", "manager",
@@ -64,78 +76,75 @@ Color agentFamilyColor(String family) {
 // ─────────────────────────────────────────────────────────────────────────
 
 abstract final class AmiTypography {
+  // Canonical typefaces (per design v2). Inter / JetBrainsMono live on
+  // disk as the spec's named fallbacks for cold-launch paint.
   static const String inter = 'Inter';
   static const String jetBrains = 'JetBrainsMono';
+  static const String plexSans = 'IBM Plex Sans';
+  static const String plexMono = 'IBM Plex Mono';
 
-  // Headers (Inter)
-  static const TextStyle h1 = TextStyle(
-    fontFamily: inter,
+  // Headers (IBM Plex Sans)
+  static final TextStyle h1 = GoogleFonts.ibmPlexSans(
     fontSize: 32,
+    fontWeight: FontWeight.w800,
+    color: AmiColors.textHigh,
+    height: 1.2,
+  );
+  static final TextStyle h2 = GoogleFonts.ibmPlexSans(
+    fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AmiColors.textHigh,
     height: 1.2,
   );
-  static const TextStyle h2 = TextStyle(
-    fontFamily: inter,
-    fontSize: 24,
+  static final TextStyle h3 = GoogleFonts.ibmPlexSans(
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     color: AmiColors.textHigh,
+    height: 1.2,
   );
-  static const TextStyle h3 = TextStyle(
-    fontFamily: inter,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: AmiColors.textHigh,
-  );
-  static const TextStyle h4 = TextStyle(
-    fontFamily: inter,
+  static final TextStyle h4 = GoogleFonts.ibmPlexSans(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AmiColors.textHigh,
+    height: 1.2,
   );
 
-  // Body (Inter)
-  static const TextStyle body = TextStyle(
-    fontFamily: inter,
+  // Body (IBM Plex Sans)
+  static final TextStyle body = GoogleFonts.ibmPlexSans(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AmiColors.textMed,
     height: 1.5,
   );
-  static const TextStyle caption = TextStyle(
-    fontFamily: inter,
-    fontSize: 13,
+  static final TextStyle caption = GoogleFonts.ibmPlexSans(
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
     color: AmiColors.textLow,
   );
 
-  // Mono (JetBrains)
-  static const TextStyle labelMono = TextStyle(
-    fontFamily: jetBrains,
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 1.3, // ~0.1em
+  // Mono (IBM Plex Mono) — labels, stats, log streams.
+  static final TextStyle labelMono = GoogleFonts.ibmPlexMono(
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.8, // ~0.15em per spec
     color: AmiColors.textHigh,
   );
-  static const TextStyle statBig = TextStyle(
-    fontFamily: jetBrains,
+  static final TextStyle statBig = GoogleFonts.ibmPlexMono(
     fontSize: 42,
     fontWeight: FontWeight.w700,
     color: AmiColors.textHigh,
   );
-  static const TextStyle statMid = TextStyle(
-    fontFamily: jetBrains,
+  static final TextStyle statMid = GoogleFonts.ibmPlexMono(
     fontSize: 24,
     fontWeight: FontWeight.w600,
     color: AmiColors.textHigh,
   );
-  static const TextStyle statSmall = TextStyle(
-    fontFamily: jetBrains,
-    fontSize: 16,
+  static final TextStyle statSmall = GoogleFonts.ibmPlexMono(
+    fontSize: 13,
     fontWeight: FontWeight.w500,
     color: AmiColors.textHigh,
   );
-  static const TextStyle stream = TextStyle(
-    fontFamily: jetBrains,
+  static final TextStyle stream = GoogleFonts.ibmPlexMono(
     fontSize: 13,
     fontWeight: FontWeight.w400,
     color: AmiColors.textMed,
@@ -190,7 +199,7 @@ ThemeData amiTheme() {
       onSurface: AmiColors.textMed,
       error: AmiColors.hexRed,
     ),
-    textTheme: const TextTheme(
+    textTheme: TextTheme(
       headlineLarge: AmiTypography.h1,
       headlineMedium: AmiTypography.h2,
       titleLarge: AmiTypography.h3,
@@ -199,11 +208,11 @@ ThemeData amiTheme() {
       bodySmall: AmiTypography.caption,
       labelLarge: AmiTypography.labelMono,
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: AmiColors.glassChrome,
       elevation: 0,
       toolbarHeight: 64,
-      iconTheme: IconThemeData(color: AmiColors.textHigh),
+      iconTheme: const IconThemeData(color: AmiColors.textHigh),
       titleTextStyle: AmiTypography.h4,
     ),
     iconTheme: const IconThemeData(color: AmiColors.textMed),

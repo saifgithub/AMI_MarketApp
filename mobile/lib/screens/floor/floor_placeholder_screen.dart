@@ -13,6 +13,8 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
+import 'package:ami_trade/widgets/hex/hex_button.dart';
+import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -141,7 +143,10 @@ class FloorPlaceholderScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
-      body: SafeArea(
+      body: Stack(
+        children: [
+          const Positioned.fill(child: HexMeshOverlay()),
+          SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AmiSpacing.m),
           child: Column(
@@ -197,18 +202,10 @@ class FloorPlaceholderScreen extends ConsumerWidget {
               const SizedBox(height: AmiSpacing.l),
 
               // ── Convene the Room CTA ──
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AmiColors.hexGreen,
-                    foregroundColor: AmiColors.slate900,
-                    padding: const EdgeInsets.symmetric(vertical: AmiSpacing.m),
-                  ),
-                  icon: const Icon(Icons.bolt),
-                  label: Text(l.floorConveneCta),
-                  onPressed: () => ConveneSheet.show(context),
-                ),
+              HexButton(
+                label: l.floorConveneCta,
+                color: AmiColors.hexGreen,
+                onPressed: () => ConveneSheet.show(context),
               ),
               const SizedBox(height: AmiSpacing.xs),
               Text(
@@ -236,6 +233,8 @@ class FloorPlaceholderScreen extends ConsumerWidget {
             ],
           ),
         ),
+          ),
+        ],
       ),
     );
   }

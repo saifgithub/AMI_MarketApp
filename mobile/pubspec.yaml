@@ -31,6 +31,7 @@ dependencies:
   # UI helpers
   cached_network_image: ^3.4.1
   flutter_svg: ^2.0.16
+  google_fonts: ^6.2.1
   intl: ^0.20.2
 
   # Charts (alpha — simple, dark-themed)
