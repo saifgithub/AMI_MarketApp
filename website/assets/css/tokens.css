@@ -1,0 +1,99 @@
+/* AMI Trade — Design Tokens
+ * Source: AMI AI Design System "Hex-Reinforced Precision"
+ * Self-hosted IBM Plex fonts — no external CDN.
+ */
+@import url("../fonts/fonts.css");
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Brand primary */
+  --hex-blue:       #3b82f6;
+  --hex-blue-600:   #2563eb;
+  --hex-glow:       rgba(59,130,246,0.5);
+
+  /* Backgrounds */
+  --dark-bg:        #0f172a;
+  --panel-bg:       rgba(17,24,39,0.7);
+  --panel-bg-solid: #111827;
+  --card-bg:        #152845;
+  --card-bg-alt:    #121e37;
+
+  /* Borders */
+  --border-color:   #374151;
+  --border-light:   rgba(255,255,255,0.10);
+  --border-subtle:  rgba(255,255,255,0.05);
+
+  /* Text */
+  --text-main:      #f3f4f6;
+  --text-muted:     #94a3b8;
+  --text-dim:       #64748b;
+
+  /* Accents */
+  --accent-cyan:    #06b6d4;
+  --accent-green:   #10b981;
+  --accent-amber:   #f59e0b;
+  --accent-red:     #ef4444;
+  --accent-purple:  #8b5cf6;
+  --accent-pink:    #ec4899;
+
+  /* Typography */
+  --font-ui:   'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Menlo', monospace;
+  --font-ar:   'IBM Plex Sans Arabic', 'IBM Plex Sans', sans-serif;
+
+  /* Type ramp */
+  --fs-h1:    clamp(2.4rem, 5vw, 3.8rem);
+  --fs-h2:    clamp(1.6rem, 3vw, 2.4rem);
+  --fs-h3:    1.15rem;
+  --fs-body:  0.95rem;
+  --fs-sm:    0.83rem;
+  --fs-xs:    0.72rem;
+  --fs-label: 0.72rem;
+
+  /* Spacing */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 24px;  --sp-6: 32px;  --sp-7: 48px;  --sp-8: 64px;
+
+  /* Radius */
+  --r-sm: 4px;  --r-md: 6px;  --r-lg: 8px;  --r-xl: 12px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur-std:  0.20s;
+
+  /* Clip paths */
+  --clip-hex:     polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  --clip-btn:     polygon(15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0 50%);
+  --clip-chip:    polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--dark-bg);
+  color: var(--text-muted);
+  font-size: var(--fs-body);
+  line-height: 1.6;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(59,130,246,0.07), transparent 50%),
+    linear-gradient(rgba(255,255,255,0.013) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.013) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4 { color: var(--text-main); line-height: 1.15; }
+h1 { font-size: var(--fs-h1); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: var(--fs-h2); font-weight: 700; letter-spacing: -0.01em; }
+h3 { font-size: var(--fs-h3); font-weight: 700; }
+p  { color: var(--text-muted); line-height: 1.65; }
+a  { color: var(--hex-blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+:focus-visible { outline: 2px solid var(--hex-blue); outline-offset: 4px; }
