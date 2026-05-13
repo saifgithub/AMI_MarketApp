@@ -182,6 +182,64 @@ The board feels alive without being noisy. (Animation is v1.0; alpha is static.)
 
 For users who prefer larger touch targets, pinch-spread on the honeycomb zooms to 3-per-row instead of 4. Concierge stays centre, agents reflow.
 
+---
+
+## Ticker Tape (below the bottom nav bar)
+
+A slim scrolling strip anchored **below the 5-tab nav bar**, above the system home indicator. Sourced directly from Yahoo Finance — no AMI backend hop.
+
+### Behaviour
+
+| Property | Value |
+|---|---|
+| Height | 28 px content + system bottom inset |
+| Scroll direction | Right-to-left (LTR locales) / Left-to-right (RTL locales — AR, MS) |
+| Scroll speed | ~60 px/s |
+| Refresh rate | 120 s silent background refresh (no shimmer flash between cycles) |
+| Tap | Pauses tape 2 s → opens watchlist action sheet for that ticker |
+| Tabs | Visible on all 5 tabs |
+
+### Content per item (fixed 160 px wide)
+
+```
+AAPL  $192.34  ↑1.2%  ·
+```
+
+- **Symbol** — `labelMono`, `textMed`
+- **Price** — `labelMono`, `textHigh`, 2 dp
+- **Arrow + %** — `↑` `hexGreen` / `↓` `hexRed` / `–` `textLow`, vs previous close, 1 dp
+- **Separator** — `·` `textLow`
+
+### Ticker source
+
+User's watchlist tickers lead; bourse defaults fill the tail to a minimum of 10 symbols. Bourse is `us` at alpha (Tadawul `sa` and Bursa `my` default lists are defined ready for Phase 2).
+
+### Status pill (pinned at leading edge)
+
+| `marketState` | Pill |
+|---|---|
+| `REGULAR` | — (hidden) |
+| `PRE` | amber `PRE-MKT` |
+| `POST` | amber `AFTER-HRS` |
+| `CLOSED` | slate `CLOSED` |
+| network failure | red `STALE` (last known prices kept) |
+
+### Visual
+
+```
+─────────────────────────────────────────────────────── ← slate700 border
+[CLOSED]  AAPL $192.34 ↑1.2% · MSFT $415.20 ↓0.3% · NVDA $875.00 ↑2.1% · ···  ← scrolling
+                                                         ← slate900 bg
+──────── home indicator inset ──────────────────────────
+```
+
+### Implementation
+
+- `mobile/lib/services/yahoo_finance_service.dart` — `YahooFinanceService`, `TickerQuote`, `Bourse` enum
+- `mobile/lib/state/ticker_tape_provider.dart` — `tickerTapeProvider`, `TickerTapeData`, `activeBourseProvider`
+- `mobile/lib/widgets/ticker_tape.dart` — `TickerTape`, `_ScrollingTape`, `_TapeItem`, `_StatusPill`
+- `mobile/lib/screens/home_shell.dart` — tape added below `BottomNavigationBar` inside `Column`
+
 Accessibility: VoiceOver / TalkBack reads each hex as "[Agent name], [status], double-tap to open profile, two-finger-tap for chat."
 
 ## RTL handling

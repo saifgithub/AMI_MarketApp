@@ -10,6 +10,7 @@ import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ticker_tape.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -37,47 +38,56 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: IndexedStack(index: _tab, children: _tabs),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: AmiColors.glassChrome,
-          border: Border(top: BorderSide(color: AmiColors.slate700)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: BottomNavigationBar(
-            currentIndex: _tab,
-            onTap: (i) => setState(() => _tab = i),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: AmiColors.hexBlue,
-            unselectedItemColor: AmiColors.textLow,
-            selectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
-            unselectedLabelStyle: AmiTypography.labelMono.copyWith(fontSize: 9),
-            items: [
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.grid_view_rounded),
-                label: l.floorTabUpper,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              color: AmiColors.glassChrome,
+              border: Border(top: BorderSide(color: AmiColors.slate700)),
+            ),
+            child: SafeArea(
+              top: false,
+              bottom: false, // TickerTape owns the bottom safe-area inset
+              child: BottomNavigationBar(
+                currentIndex: _tab,
+                onTap: (i) => setState(() => _tab = i),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: AmiColors.hexBlue,
+                unselectedItemColor: AmiColors.textLow,
+                selectedLabelStyle:
+                    AmiTypography.labelMono.copyWith(fontSize: 9),
+                unselectedLabelStyle:
+                    AmiTypography.labelMono.copyWith(fontSize: 9),
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.grid_view_rounded),
+                    label: l.floorTabUpper,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.account_balance_wallet_outlined),
+                    label: l.portfolioTabUpper,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.menu_book_outlined),
+                    label: l.journalTabUpper,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.school_outlined),
+                    label: l.lessonsTabUpper,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.settings_outlined),
+                    label: l.settingsTabUpper,
+                  ),
+                ],
               ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.account_balance_wallet_outlined),
-                label: l.portfolioTabUpper,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.menu_book_outlined),
-                label: l.journalTabUpper,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.school_outlined),
-                label: l.lessonsTabUpper,
-              ),
-              BottomNavigationBarItem(
-                icon: const Icon(Icons.settings_outlined),
-                label: l.settingsTabUpper,
-              ),
-            ],
+            ),
           ),
-        ),
+          const TickerTape(),
+        ],
       ),
     );
   }

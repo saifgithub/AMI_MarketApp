@@ -9,16 +9,14 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
-import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
-import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
+import 'package:ami_trade/widgets/watchlist_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -541,110 +539,15 @@ class _WatchlistRow extends ConsumerWidget {
   }
 
   void _showRowSheet(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: AmiColors.slate800,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (sheetCtx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AmiSpacing.l),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(entry.ticker,
-                      style: AmiTypography.h2.copyWith(color: AmiColors.hexCyan)),
-                  const SizedBox(width: AmiSpacing.s),
-                  if (entry.price != null)
-                    Text(
-                      NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price),
-                      style: AmiTypography.statMid,
-                    ),
-                ],
-              ),
-              if (entry.notes != null && entry.notes!.isNotEmpty) ...[
-                const SizedBox(height: AmiSpacing.s),
-                Text(entry.notes!, style: AmiTypography.body),
-              ],
-              const SizedBox(height: AmiSpacing.l),
-              _SheetAction(
-                icon: Icons.shopping_cart_outlined,
-                label: l.watchlistOpenTradeTicket,
-                color: AmiColors.hexGreen,
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  TradeTicketSheet.show(context, tickerPrefill: entry.ticker);
-                },
-              ),
-              _SheetAction(
-                icon: Icons.chat_bubble_outline,
-                label: l.watchlistAskMarketAnalyst,
-                color: AmiColors.hexCyan,
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  Navigator.of(context).push(MaterialPageRoute<void>(
-                    builder: (_) => OneOnOneScreen(agent: agentById('market_analyst')),
-                  ));
-                },
-              ),
-              _SheetAction(
-                icon: Icons.groups_outlined,
-                label: l.watchlistConveneRoom,
-                color: AmiColors.hexPurple,
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  ConveneSheet.show(context);
-                },
-              ),
-              _SheetAction(
-                icon: Icons.delete_outline,
-                label: l.watchlistRemove,
-                color: AmiColors.hexRed,
-                onTap: () {
-                  Navigator.of(sheetCtx).pop();
-                  ref.read(watchlistNotifierProvider.notifier).remove(entry.ticker);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
+    showWatchlistSheet(
+      context,
+      ref,
+      ticker: entry.ticker,
+      price: entry.price,
+      notes: entry.notes,
+      showRemove: true,
     );
   }
 }
 
 
-class _SheetAction extends StatelessWidget {
-  const _SheetAction({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-        child: Row(
-          children: [
-            Icon(icon, color: color),
-            const SizedBox(width: AmiSpacing.s),
-            Text(label, style: AmiTypography.labelMono.copyWith(color: color)),
-          ],
-        ),
-      ),
-    );
-  }
-}
