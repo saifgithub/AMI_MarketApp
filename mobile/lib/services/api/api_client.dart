@@ -13,6 +13,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 
 import 'package:ami_trade/models/auth.dart';
+import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/coach.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/journal.dart';
@@ -743,6 +744,24 @@ class ApiClient {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return AuthUser.fromJson(r.data!);
+  }
+
+  // ── AI Coach Q&A ────────────────────────────────────────────────────
+
+  Future<List<CoachSearchHit>> aiCoachSearch(String query, {int limit = 5}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/ai_coach/search',
+      queryParameters: {'q': query, 'limit': limit},
+    );
+    final hits = (r.data!['hits'] as List)
+        .map((h) => CoachSearchHit.fromJson(h as Map<String, dynamic>))
+        .toList();
+    return hits;
+  }
+
+  Future<List<String>> aiCoachCategories() async {
+    final r = await _dio.get<List<dynamic>>('/v1/ai_coach/categories');
+    return List<String>.from(r.data!);
   }
 
   // ── Daily Challenge ─────────────────────────────────────────────────

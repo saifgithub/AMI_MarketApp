@@ -135,6 +135,19 @@ def scripted_reply(
             "in. AMI is in fallback mode for analysis right now."
         )
 
+    # Last-resort retrieval over the AI Coach Q&A library. A confident
+    # match (>=2 overlapping tokens with the question/tags) surfaces the
+    # short_answer as a useful canned reply. Weak matches drop through to
+    # the generic fallback so a single-keyword query doesn't dredge up
+    # an unrelated FAQ.
+    try:
+        from app.services.ai_coach_service import get_ai_coach_service
+        hit = get_ai_coach_service().top_hit(user_message, min_score=2)
+        if hit is not None:
+            return hit.short_answer
+    except Exception:
+        pass
+
     return (
         "AMI is in fallback mode right now — the on-prem AMI server isn't "
         "answering, so I can't route freely. You can still browse Lessons, "

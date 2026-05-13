@@ -10,6 +10,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
+import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/services/api/backend_modes.dart';
@@ -126,6 +127,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   const _LanguageSection(),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _HelpSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
                   if (kAllowBackendSwitch) ...[
@@ -606,6 +609,39 @@ class _BackendModeRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+class _HelpSection extends StatelessWidget {
+  const _HelpSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'HELP',
+      children: [
+        InkWell(
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const AICoachScreen()),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.help_outline, color: AmiColors.hexBlue, size: 18),
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Text('AI Coach — Q&A library',
+                      style: AmiTypography.body),
+                ),
+                const Icon(Icons.chevron_right, color: AmiColors.textLow),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

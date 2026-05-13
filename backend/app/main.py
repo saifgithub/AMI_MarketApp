@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.ai_coach import router as ai_coach_router
 from app.api.auth import router as auth_router
 from app.api.feedback import router as feedback_router
 from app.api.coach import router as coach_router
@@ -54,6 +55,7 @@ app.add_middleware(
 
 
 # Routers
+app.include_router(ai_coach_router)
 app.include_router(auth_router)
 app.include_router(onboarding_router)
 app.include_router(one_on_one_router)
