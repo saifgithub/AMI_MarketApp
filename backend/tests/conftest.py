@@ -52,6 +52,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import room_runner as _rr
     from app.services import market_data as _md
     from app.services import watchlist_store as _ws
+    from app.services import feedback_store as _fb
     _ms._store = None
     _os._store = None
     _js._store = None
@@ -59,6 +60,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _sim._engine = None
     _rr._runner = None
     _ws._store = None
+    _fb._store = None
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
 

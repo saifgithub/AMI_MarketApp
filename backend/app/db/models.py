@@ -297,6 +297,29 @@ class SimWatchlistRow(Base):
     )
 
 
+class BugReportRow(Base):
+    """In-app bug reports — shake / long-press trigger on the iPhone.
+
+    user_id is nullable: anonymous sessions may file reports before the
+    anon bootstrap completes.
+    """
+
+    __tablename__ = "bug_reports"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), index=True, nullable=True)
+    category: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    steps: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    route: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    app_version: Mapped[str] = mapped_column(String, nullable=False)
+    platform: Mapped[str] = mapped_column(String, nullable=False)
+    status: Mapped[str] = mapped_column(String, default="open", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
 class AuthChallengeRow(Base):
     """One-time codes for magic-link + Apple Sign-In exchange.
 

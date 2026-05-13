@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
+from app.api.feedback import router as feedback_router
 from app.api.coach import router as coach_router
 from app.api.glossary import router as glossary_router
 from app.api.journal import router as journal_router
@@ -63,6 +64,7 @@ app.include_router(llm_router)
 app.include_router(mandate_router)
 app.include_router(room_router)
 app.include_router(sim_router)
+app.include_router(feedback_router)
 app.include_router(watchlist_router)
 
 

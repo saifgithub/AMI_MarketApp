@@ -10,6 +10,8 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
+import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
+import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/services/api/backend_modes.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
@@ -130,6 +132,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: AmiSpacing.l),
                     const _DeveloperSection(),
                   ],
+                  const SizedBox(height: AmiSpacing.l),
+                  _AppVersionChip(onLongPress: () => showBugReportSheet(context, ref)),
                   const SizedBox(height: AmiSpacing.xxl),
                 ],
               ),
@@ -600,6 +604,28 @@ class _BackendModeRow extends StatelessWidget {
                   style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class _AppVersionChip extends StatelessWidget {
+  const _AppVersionChip({required this.onLongPress});
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: GestureDetector(
+        onLongPress: onLongPress,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
+          child: Text(
+            'AMI Trade v$kAppVersion',
+            style: AmiTypography.caption.copyWith(color: AmiColors.slate600),
+          ),
         ),
       ),
     );

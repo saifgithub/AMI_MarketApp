@@ -743,4 +743,32 @@ class ApiClient {
     );
     return AuthUser.fromJson(r.data!);
   }
+
+  // ── Feedback ─────────────────────────────────────────────────────────
+
+  Future<Map<String, dynamic>> submitBugReport({
+    required String category,
+    required String title,
+    String? steps,
+    String? route,
+    required String appVersion,
+    required String platform,
+    String? token,
+  }) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/feedback/bug',
+      data: {
+        'category': category,
+        'title': title,
+        if (steps != null) 'steps': steps,
+        if (route != null) 'route': route,
+        'app_version': appVersion,
+        'platform': platform,
+      },
+      options: token != null
+          ? Options(headers: {'Authorization': 'Bearer $token'})
+          : null,
+    );
+    return r.data!;
+  }
 }
