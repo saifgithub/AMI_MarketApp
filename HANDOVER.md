@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R16 — first TestFlight upload landed (build 0.1.0+2 internal-installed on TESTING IPHONE 13 with no Mac cable in the loop) + comprehensive audit logging across HTTP / LLM / 1-on-1 chats)
+**Last updated:** 2026-05-13 (end of AT:R17 — Lessons tab redesigned: hex-cluster landing replaces flat 270-lesson scroll; ticker tape scrolling quotes added below nav; release build with Alpha URL baked in installed on TESTING IPHONE 13)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -15,14 +15,17 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **88 commits**, no remote yet |
-| Latest commit | (this session) `30fdca1` — A: comprehensive alpha audit logging — every HTTP, every LLM, every chat turn |
-| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1` (nine promotions total; AT:R16's two landed as `alpha-2026-05-13-8` (design v2 / TestFlight build chain) and `alpha-2026-05-14-1` (audit logging — three new Postgres tables live)) |
-| Backend tests | **212 passed, 0 failed** (was 204 → +8 audit tests) |
+| Git state | Clean working tree, **91 commits**, no remote yet |
+| Latest commit | (this session) `e9e7f41` — feat: ticker tape below bottom nav — live Yahoo Finance quotes |
+| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1` (nine promotions total; no new tag this session — Flutter-only changes, backend unchanged) |
+| Backend tests | **212 passed, 0 failed** (unchanged from AT:R16) |
 | Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired (now rendered INLINE in prose via `{{term:id}}` token substitution), 280 AI Coach Q&A (categorised + retrievable + Concierge fallback), 183 daily challenges (Floor card + full-screen attempt), 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
+e9e7f41 feat: ticker tape below bottom nav — live Yahoo Finance quotes
+9555e8d feat(lessons): hex-cluster landing page — 7-hex honeycomb replaces flat list
+a162cfb handover: wrap AT:R16 — 88 commits, 212 tests, alpha-2026-05-14-1
 30fdca1 A: comprehensive alpha audit logging — every HTTP, every LLM, every chat turn
 dbba4a2 A22-A28: first TestFlight upload — Info.plist + build bump
 ae652ac handover: wrap AT:R15 — 85 commits, 204 tests, alpha-2026-05-13-7
@@ -182,6 +185,56 @@ Bottom nav: Floor / Portfolio / Journal / Lessons / Settings (5 tabs).
 ### The core loop is now closed AND durable
 
 Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs again on submit → Portfolio updates → Journal records every step. **All of this now survives a backend restart.**
+
+---
+
+## What just landed (this session — AT:R17)
+
+Two commits, no backend changes, no alpha promotion. Pure Flutter session.
+
+### Lessons tab — hex-cluster landing (`9555e8d`)
+
+The flat 270-lesson scroll is gone. The Lessons tab is now two zones:
+
+- **Zone A — slim progress bar.** Replaced the verbose `_ProgressCard` with a compact two-stat row: `"X / Y lessons"` + `"X / 12"` agents unlocked. "Next up" hint removed — the hex cluster handles discovery.
+- **Zone B — 7-hex honeycomb.** Foundations (centre) + 6 surrounding tracks in a tight flat-top tessellation. Each hex: track label + doughnut progress ring (accent colour, 8dp stroke, slate700 background ring) + 15%-alpha tinted fill. Uses `FlatTopRegularHexagon` clipper — same geometry as the Floor home agent avatars.
+
+New files:
+- `mobile/lib/widgets/hex/track_hex_button.dart` — the tinted hex widget with `_DoughnutPainter` (CustomPainter arc via `dart:math`)
+- `mobile/lib/screens/lessons/track_lessons_screen.dart` — per-track lesson list; lessons in catalogue order (three-tier in-progress → never-started → completed sort needs per-lesson API data, documented in `_sorted()` as a TODO)
+- `mobile/lib/widgets/lessons/lesson_tile.dart` — extracted from `lessons_screen.dart` as a shared public widget so both screens can use it without duplication
+
+Design spec that drove this: `docs/05_design/lessons_landing_redesign.md` (committed by the `exciting-shtern-aad051` worktree team as `ead7038`; that commit is on that branch, not on main).
+
+**Release build gotcha surfaced this session:** `flutter build ios --release` without `--dart-define=AMI_API_URL_ALPHA=...` produces a build with an empty backend URL. The app defaults to prod mode → no traffic to Alpha. Always use:
+```bash
+flutter build ios --release \
+  --dart-define=ALLOW_BACKEND_SWITCH=true \
+  --dart-define=AMI_API_URL_ALPHA=https://api-alpha.agenticmarketintel.ai
+```
+`scripts/run_dev.sh` already does this for `flutter run`; it just wasn't being used for release builds. Permanently fixed: just remember to pass the flags (or add a `build_release.sh` script).
+
+### Ticker tape — `e9e7f41` (from `exciting-shtern-aad051` worktree team)
+
+Live Yahoo Finance scrolling ticker tape now sits below the bottom nav bar. Also fixed a pre-existing compile bug in `ticker_tape.dart`: `import 'dart:ui' show TextDirection` conflicted with `package:flutter/material.dart` in Flutter 3.41.x — on a full Dart kernel rebuild (triggered by dart-define changes), the compiler couldn't resolve `.ltr`/`.rtl` enum members. Fix: remove the `dart:ui` import; `TextDirection` is available via `flutter/material.dart`.
+
+### iPhone state at handover
+
+TESTING IPHONE 13 has **one** AMI Trade install (the old second install was overwritten):
+- Release build with `AMI_API_URL_ALPHA` baked in; hex-cluster Lessons tab + ticker tape visible
+- Points at `https://api-alpha.agenticmarketintel.ai` (`alpha-2026-05-14-1` — audit logging still live)
+
+### Carry-overs for AT:R18
+
+- **`/promote-to-alpha` not run** — Flutter-only session, backend unchanged; Alpha is still on `alpha-2026-05-14-1`
+- **Per-lesson status API** — `TrackLessonsScreen._sorted()` shows lessons in catalogue order; three-tier sort (in-progress → never-started → completed) needs a new endpoint `GET /v1/lessons/progress/{userId}/by_lesson`; flagged with TODO comment
+- **`docs/05_design/lessons_landing_redesign.md` in a worktree** — the spec is in `claude/exciting-shtern-aad051` (`ead7038`), not on main; merge or cherry-pick if the next session needs it
+- **A22 privacy policy + ToS public URL** (legal — Saiful-external)
+- **External TestFlight** — Beta App Description + ~24h Apple Beta App Review; Saiful-external (App Store Connect)
+- **Animation production** — `AnimationRegistry` empty; pending Lottie art (external)
+- **A29 light-mode register** — sized 0.5 session; unblocked
+- **Audit retention trim job** — tables unbounded; add before tester count grows
+- **Sign Xcode into Apple ID + cache Distribution cert** — unblocks CLI `flutter build ipa`
 
 ---
 
@@ -1033,25 +1086,23 @@ That's it. The slash command:
 3. Enters plan mode with a state summary + the current carry-over list as options
 4. Waits for Saiful's direction
 
-Session name to use: **AT:R17** (this is handover #16).
+Session name to use: **AT:R18** (this is handover #17).
 
-Definition of done at hand-off (verified by `/handover` at end of AT:R16):
+Definition of done at hand-off (verified by `/handover` at end of AT:R17):
 - `git status`: clean working tree on `main`
-- 88 commits in
+- 91 commits in
 - 212 backend unit tests passing
-- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-1` landed (latest: `alpha-2026-05-14-1` carries the AT:R16 audit-logging tables; design v2 + TestFlight chain landed at `alpha-2026-05-13-8`)
-- TESTING IPHONE 13 has **two** AMI Trade installs:
-  1. Cabled release build of design v2 (29.4 MB, build 0.1.0+1)
-  2. TestFlight build 0.1.0+2 — installed via Internal Testing invite, no Mac cable in the loop
-- Both installs point at `https://api-alpha.agenticmarketintel.ai`. Audit logging is live: every tap lands rows in `http_audit` + (if it crosses Gemma) `llm_audit` + (if it's a chat) `one_on_one_messages`.
+- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-1` (no new tag this session — Flutter-only)
+- TESTING IPHONE 13: one AMI Trade install — release build with `AMI_API_URL_ALPHA` baked in, hex-cluster Lessons tab + ticker tape, pointing at `https://api-alpha.agenticmarketintel.ai`
+- Audit logging live: every tap lands rows in `http_audit` + `llm_audit` + `one_on_one_messages`
 
-**First decision points for AT:R17:**
+**First decision points for AT:R18:**
 
-1. **A22 — Privacy policy + ToS public URL.** App Store needs this. Saiful-external (legal review) but Claude can draft the copy. Required before External TestFlight + before App Store submission ever.
-2. **External TestFlight unlock.** Fill in Test Information in App Store Connect, submit for Beta App Review (~24h first time). Then generate a public TestFlight link for alpha-tester recruitment without collecting emails. Saiful-external (App Store Connect web form).
-3. **A29 light-mode register.** Unblocked now that the hex bottom-nav swap is decisively OFF (marketing decided to keep standard bottom nav). Sized 0.5 session in the project plan.
-4. **Audit retention trim job.** Tables are unbounded today; add `DELETE WHERE created_at < now() - interval '90 days'` as a nightly systemd timer on melehost before tester count grows past a few dozen.
-5. **Sign Xcode into the Apple ID + cache Apple Distribution cert.** Would unblock pure-CLI `flutter build ipa` for future releases (current workflow still goes through Xcode Organizer GUI because the CLI xcodebuild doesn't see Xcode's account context).
+1. **Per-lesson status API** — `TrackLessonsScreen` shows lessons in catalogue order; three-tier sort (in-progress → never-started → completed) needs `GET /v1/lessons/progress/{userId}/by_lesson`. Backend + Flutter work, ~1 session.
+2. **A22 — Privacy policy + ToS public URL.** Required before External TestFlight. Saiful-external (legal) but Claude can draft copy.
+3. **External TestFlight** — Beta App Description + ~24h Beta App Review. Saiful-external (App Store Connect web form).
+4. **A29 light-mode register.** Unblocked; sized 0.5 session.
+5. **Audit retention trim job.** Tables unbounded; add before tester count grows.
 
 If Alpha is down at session start, `/start-fresh` will surface that
 and tell you the melehost debug commands.
