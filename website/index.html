@@ -287,83 +287,106 @@
     <div class="sec-line" style="background: var(--accent-purple); margin: 14px auto 22px;"></div>
     <p class="sec-lede" style="margin: 0 auto 3rem;">This is the Applied AI system behind AMI Trade. Each agent is a specialist — not a generalist with a label. They have defined roles, defined responsibilities, and prompts you can rewrite to match your investment philosophy. You are the CEO. They report to you.</p>
 
-    <div class="agent-grid" role="list">
+    <!-- Hex honeycomb — desktop -->
+    <div class="honey-grid" aria-label="13 AI agents" role="list">
 
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">📊</span>
-        <span class="agent-name">Fundamentals</span>
-        <span class="agent-role">Earnings, valuation, balance sheet</span>
+      <!-- Row 1 (4): Data analysts -->
+      <div class="honey-row">
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">📊</span>
+          <span class="h-name">Fundamentals</span>
+          <span class="h-role">Earnings &amp; valuation</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">📈</span>
+          <span class="h-name">Market</span>
+          <span class="h-role">Price action &amp; momentum</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">📰</span>
+          <span class="h-name">News</span>
+          <span class="h-role">Filings &amp; events</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">📱</span>
+          <span class="h-name">Social Media</span>
+          <span class="h-role">Retail sentiment</span>
+        </div>
       </div>
 
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">📈</span>
-        <span class="agent-name">Technical</span>
-        <span class="agent-role">Price action, momentum, patterns</span>
+      <!-- Row 2 (5): Research layer + Concierge at centre -->
+      <div class="honey-row">
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">🔬</span>
+          <span class="h-name">Bull</span>
+          <span class="h-role">Case to buy</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">⚠️</span>
+          <span class="h-name">Bear</span>
+          <span class="h-role">Case to pass</span>
+        </div>
+        <div class="honey-hex h-special" role="listitem">
+          <span class="h-icon">💬</span>
+          <span class="h-name">Concierge</span>
+          <span class="h-role">Your Chief of Staff</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">🗂️</span>
+          <span class="h-name">Research Mgr</span>
+          <span class="h-role">Synthesises outputs</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">⚖️</span>
+          <span class="h-name">Portfolio Mgr</span>
+          <span class="h-role">Mandate &amp; sizing</span>
+        </div>
       </div>
 
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">📰</span>
-        <span class="agent-name">News</span>
-        <span class="agent-role">Sentiment, events, filings</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">🌍</span>
-        <span class="agent-name">Macro</span>
-        <span class="agent-role">Rates, sector, macro trends</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">🔬</span>
-        <span class="agent-name">Bull Researcher</span>
-        <span class="agent-role">Builds the case to buy</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">⚠️</span>
-        <span class="agent-name">Bear Researcher</span>
-        <span class="agent-role">Builds the case to pass</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">🛡</span>
-        <span class="agent-name">Risk Analyst</span>
-        <span class="agent-role">Quantifies the downside</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">⚡</span>
-        <span class="agent-name">Risk Debater I</span>
-        <span class="agent-role">Challenges the bull case</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">🔥</span>
-        <span class="agent-name">Risk Debater II</span>
-        <span class="agent-role">Challenges the bear case</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">⚖️</span>
-        <span class="agent-name">Portfolio Mgr</span>
-        <span class="agent-role">Mandate compliance &amp; sizing</span>
-      </div>
-
-      <div class="agent-card" role="listitem">
-        <span class="agent-icon">↕️</span>
-        <span class="agent-name">Trader</span>
-        <span class="agent-role">Executes the sim trade</span>
-      </div>
-
-      <div class="agent-card special" role="listitem">
-        <span class="agent-icon">💬</span>
-        <span class="agent-name">Concierge</span>
-        <span class="agent-role">Your Chief of Staff</span>
+      <!-- Row 3 (4): Risk debaters + execution -->
+      <div class="honey-row">
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">⚡</span>
+          <span class="h-name">Aggressive</span>
+          <span class="h-role">Pushes the risk case</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">🛡</span>
+          <span class="h-name">Conservative</span>
+          <span class="h-role">Defends caution</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">🔥</span>
+          <span class="h-name">Neutral</span>
+          <span class="h-role">Stress-tests both sides</span>
+        </div>
+        <div class="honey-hex" role="listitem">
+          <span class="h-icon">↕️</span>
+          <span class="h-name">Trader</span>
+          <span class="h-role">Executes the sim trade</span>
+        </div>
       </div>
 
     </div>
 
-    <p style="margin-top: 2.5rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em;">
+    <!-- Mobile fallback: simple flex wrap -->
+    <div class="honey-mobile" aria-label="13 AI agents" role="list">
+      <div class="agent-card" role="listitem"><span class="agent-icon">📊</span><span class="agent-name">Fundamentals</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">📈</span><span class="agent-name">Market</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">📰</span><span class="agent-name">News</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">📱</span><span class="agent-name">Social Media</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">🔬</span><span class="agent-name">Bull</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">⚠️</span><span class="agent-name">Bear</span></div>
+      <div class="agent-card special" role="listitem"><span class="agent-icon">💬</span><span class="agent-name">Concierge</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">🗂️</span><span class="agent-name">Research Mgr</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">⚖️</span><span class="agent-name">Portfolio Mgr</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">⚡</span><span class="agent-name">Aggressive</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">🛡</span><span class="agent-name">Conservative</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">🔥</span><span class="agent-name">Neutral</span></div>
+      <div class="agent-card" role="listitem"><span class="agent-icon">↕️</span><span class="agent-name">Trader</span></div>
+    </div>
+
+    <p style="margin-top: 3rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em;">
       Every agent prompt is yours to rewrite &nbsp;·&nbsp; The system adapts to how you think &nbsp;·&nbsp; Applied AI that learns your style
     </p>
   </div>
