@@ -15,11 +15,11 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **53 commits**, no remote yet |
-| Latest commit | (this session) `ab71957` — content: new surfaces — daily challenges, AI Coach Q&A, glossary |
-| Alpha tags | `alpha-2026-05-13-1`, `alpha-2026-05-13-2` (first real exercises of /promote-to-alpha) |
-| Backend tests | **163 passed, 0 failed** (was 155 + 7 lesson-id rot — AT:R13 fixed the rot; +1 enabled by larger lesson corpus) |
-| Lines on disk | ~38,800 backend/docs/infra + **270 lessons tracked** (was 13; +257 from the magical-edison-18bf91 content pass), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges |
+| Git state | Clean working tree, **71 commits**, no remote yet |
+| Latest commit | (this session) `aaca100` — merge: i18n sweep + Gemma 4 translation endpoint |
+| Alpha tags | `alpha-2026-05-13-1..5` (five promotions today: content-mount fix, yfinance LIVE prices, glossary+Term, i18n+translation endpoint) |
+| Backend tests | **176 passed, 0 failed** (was 163 → +5 yfinance + +8 glossary) |
+| Lines on disk | ~38,800 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired, 280 AI Coach Q&A, 183 daily challenges, 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
@@ -265,6 +265,100 @@ Also still on the deck:
 
 - LessonMeta surfacing `module` + `difficulty` fields end-to-end. A20 reads them; check whether they make it into the API response shape and the Flutter `LessonMeta` model.
 - Daily-challenge + AI-Coach ingestion services — Alpha A17 / Beta work; content is sitting on disk.
+
+---
+
+## What just landed (AT:R13 extended pass — iPhone build, content mount, yfinance, Glossary, i18n)
+
+After the content drop merged, the iPhone build round surfaced a real gap and the session kept going through four substantial follow-ups. Final tally: 71 commits, 176 tests, five alpha tags.
+
+### The iPhone build round
+
+- `flutter run` from terminal couldn't trigger the Xcode debug-session attach — known macOS automation-permission issue. Worked around with `xcrun devicectl device install app --device <UDID> mobile/build/ios/iphoneos/Runner.app` after a clean `flutter run --release` build (60.6s Xcode build). The .app on the phone is verifiably release-grade (App.framework is a 7.0M Mach-O native binary — AOT-compiled, not the tiny Dart kernel snapshot debug builds ship).
+- The build pointed at `https://api-alpha.agenticmarketintel.ai` and worked standalone (cable disconnected fine post-install).
+
+### content/ never reached the container (`88aa0da`)
+
+Quiet bug since the api-alpha service first ran on melehost: `LessonsService._reload()` was logging `lessons_loaded count=0` on every boot because the Dockerfile only COPYs `app` + `tests` and `docker-compose.yml` only mounted `./backend/app` + `./backend/tests`. No content/, no lessons. Path resolution from inside the container is `/content/lessons` (NOT `/app/content`), so:
+
+```yaml
+- ./content:/content:ro
+```
+
+Live verification post-deploy: `/v1/lessons` → 270 lessons across 7 tracks. Same fix unblocks the GlossaryService + daily_challenges + ai_coach data automatically — they read from the same mount.
+
+### `init_schema()` self-stamps Alembic (`1f30025`)
+
+Resolves the AT:R13 `DuplicateTable` carry-over. On a fresh DB, `init_schema()` now detects a missing `alembic_version` table and stamps Alembic to `head` after `create_all()`. So `alembic upgrade head` in `/promote-to-alpha` step 6 is a clean no-op rather than an explosion. Best-effort wrapper — never breaks boot if alembic.ini is missing (slim test image).
+
+### YfinanceProvider — LIVE prices flow (`c838082`)
+
+The keyless `query1.finance.yahoo.com/v8/finance/chart/...` path was 429ing persistently. `yfinance` handles the UA rotation + cookie/crumb session Yahoo started requiring in 2024, plus backoff. Drop-in replacement at the head of the stack:
+
+```
+FallbackProvider(
+  primary=CachingProvider(YfinanceProvider, ttl=60s),   # new
+  secondary=MockWalkProvider,
+)
+```
+
+Smoke against alpha post-deploy: AAPL $294.80, NVDA $220.78, MSFT $407.77 — all `source: "yfinance"`. Flutter's `isLivePrice` switched from substring `"yahoo"` to negative check (`!= mock_walk && != unavailable`) so adding a new live provider at Beta won't require a Flutter rebuild to flip the pill.
+
+Tradeoff: pulls pandas + numpy (~100MB image bloat). Irrelevant on melehost; will inform the Beta cold-start cutover where we may swap to a paid provider with a slimmer client.
+
+### GlossaryService + `<Term>` MDX component (`ee80fa7` + `30c6014`)
+
+Built by a subagent in an isolated worktree, merged clean (fast-forward).
+
+- **Backend**: `app/services/glossary_service.py` (singleton, RLock, locale fallback en→404), `app/api/glossary.py` (`GET /v1/glossary/{locale}` + `GET /v1/glossary/{locale}/{id}`), `app/schemas/glossary.py` (GlossaryEntry / Category / Catalogue).
+- **MDX parser** extended in `lessons_service.py` — `<Term id="..."/>` now emits a typed block (kind=term). Same pass added test coverage for the existing `<Animation>` block, which closes another open chip.
+- **Flutter**: `TermRegistry` bundled-asset reader at `mobile/assets/glossary/terms.en.json` (copied at build time from `content/glossary/terms.en.json`). `Term` widget renders an inline chip; tap → bottom sheet with definition + see-also + related lessons. Unknown id falls back to bold plain text.
+- **Discovery**: actual `<Term>` tag count in the corpus is **672 across 270 lessons** (not the 342 quoted in the content-drop handover — the magical-edison-18bf91 report undercounted). 15 unique term ids referenced, all in the `platform` category. Every reference resolves; zero broken refs.
+- **Known cosmetic**: Term blocks render at the same nesting level as markdown paragraphs, so a sentence with two `<Term>` tags renders as 5 separate vertical blocks (prose / term / prose / term / prose). Reads like a list, not inline prose. Followup: inline tokenization in the markdown view via a `{{term:id}}` substitution token — quick fix if it looks bad on device.
+- **8 new backend tests** (load, lookup, unknown, category grouping, locale fallback variants).
+
+### i18n sweep + Gemma 4 auto-translation (`9a7f1c3`, `bea81f3`, `240e524`, merged `aaca100`)
+
+Built by a second subagent in parallel.
+
+- **Pass 1 — string extraction** (`9a7f1c3`): every user-visible literal `Text(...)` / label / tooltip / button across `mobile/lib/screens/**` + `mobile/lib/widgets/**` wrapped in `AppLocalizations.of(context)!.<key>`. `app_en.arb` grew from ~20 keys to **256** translatable keys + ~47 `@key` description blocks. 13+ screens touched. Dev-preview screen, agent-tagline-data, log keys, asset paths, SharedPreferences keys all deliberately skipped.
+- **Pass 2 — Gemma 4 translation pipeline** (`bea81f3`):
+  - `backend/app/api/llm.py` — new `POST /v1/llm/translate` route: thin non-streaming pass-through to the LLM gateway. Inherits the `vllm > anthropic > mock` preference, lands on Gemma 4 31B on Alpha.
+  - `scripts/translate_arb.py` — CLI that batches keys, prompts Gemma to emit a JSON object preserving `{placeholder}` syntax + brand "AMI", validates per-batch, retries once, exits non-zero on unresolved batches. Flags `--locales`, `--batch-size`, `--overwrite`, `--dry-run`. Preserves manually-translated entries.
+  - **Cloudflare Tunnel timeout discovery**: batch=30 → 70s+ per call → 502s. Batch=10 fits comfortably under ~75s timeout. Documented in the script's batch-size flag default.
+- **Pass 3 — docs** (`240e524`): `mobile/lib/l10n/README.md` covers add-a-string workflow, script invocation, RTL notes (Directionality handles flip; ticker symbols stay LTR inside Arabic sentences; `$<digits>` renders LTR mid-RTL — move concat-sensitive substrings into `{placeholder}` slots).
+- **Merge conflict** on `mobile/lib/screens/lessons/lesson_reader_screen.dart` — Agent A had converted it to ConsumerStatefulWidget (for the TermRegistry async load in initState) while Agent B added i18n wraps to its build method. Resolved by keeping Agent A's stateful structure and applying Agent B's `l = AppLocalizations.of(context)` + wrapped literals inside it. flutter analyze clean post-resolution.
+
+### Five alpha tags this session
+
+- `alpha-2026-05-13-1` — truthful price_source (Quote.source = leaf provider)
+- `alpha-2026-05-13-2` — playbook bug fixes (rsync .env exclusion, alembic in Docker image)
+- `alpha-2026-05-13-3` — content/ mounted, 270 lessons + glossary surfaced
+- `alpha-2026-05-13-4` — alembic self-stamp + yfinance LIVE prices
+- `alpha-2026-05-13-5` — Glossary endpoints + Term blocks + /v1/llm/translate + i18n
+
+### What's testable on iPhone right now
+
+| Surface | Behaviour |
+|---|---|
+| Lessons tab | 270 lessons, 7 tracks. `<Term>` taps open a definition sheet for the 15 platform terms referenced (672 inline tags). `<Animation>` placeholders render. |
+| Floor / Concierge | Live Gemma 4 wired (A2). |
+| Portfolio | LIVE/MOCK pill is honest. Watchlist supports any Yahoo-quotable ticker. AAPL/NVDA/MSFT all return LIVE via yfinance. |
+| Settings → Language | Locale picker triggers `app_ar.arb` / `app_ms.arb` (Gemma 4 auto-translated). RTL flips automatically for AR. |
+| Settings → Developer | alpha / beta / prod toggle. Beta + Prod show "not in this build" (URLs unset). |
+| Sign In | Apple-button (synthetic JWT) + email magic-link (dev returns the code in the response). |
+
+### Open follow-ups (revised)
+
+Closed this session: GlossaryService chip, `<Term>` chip, `<Animation>` extractor chip (covered by Agent A's pass), init_schema/alembic carry-over.
+
+Still open:
+- **Inline `<Term>` rendering** — current block-level renders Term tags as vertical-list-style breaks. Tokenize into prose stream for tighter inline reading.
+- **Animation production** — `AnimationRegistry` is built but empty; pending Lottie art.
+- **Daily-challenge ingestion service** — 183 challenges on disk, no backend service or Flutter surface yet.
+- **AI Coach Q&A retrieval** — 280 Q&A on disk; could ship a substring/keyword retriever today for canned answers when LLM unavailable; full embedding pipeline is Beta-era.
+- **TestFlight distribution** (A22-A28) — depends on App Store Connect, Saiful-external.
+- **Earn Path coverage extension** — A2 wires unlock against a smaller subset of "required" lessons; the new 257 lessons aren't routed into agent unlocks yet.
 
 ---
 
@@ -761,8 +855,8 @@ key → live" a single env-var change with zero code touches.
 ## Prompt to paste at the start of the next session
 
 ```
-We're picking up the AMI Trade build. This is handover #13 — name
-the session "AT:R14:".
+We're picking up the AMI Trade build. This is handover #14 — name
+the session "AT:R15:".
 
 Read HANDOVER.md at the project root first:
   /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
@@ -771,79 +865,69 @@ Then read docs/10_delivery/project_plan.md for the A1-A28 backlog,
 and docs/10_delivery/promotion_protocol.md for how code actually
 moves from Mac → Alpha → Beta → Prod.
 
-State: 53 commits in. 163 backend unit tests pass, 0 failed.
-Two alpha tags exist: alpha-2026-05-13-1, alpha-2026-05-13-2.
+State: 71 commits in. 176 backend unit tests pass, 0 failed.
+Five alpha tags this session: alpha-2026-05-13-{1..5}.
 Content corpus: 270 lessons + 280 AI Coach Q&A + 188 glossary
-terms + 183 daily challenges (all on disk; some surfaces don't
-have backend services yet).
+terms + 183 daily challenges. 256 i18n keys in app_en.arb;
+AR + MS auto-translated by Gemma 4.
+iPhone has the latest release build (`xcrun devicectl` path —
+see HANDOVER for why flutter run's debug-attach failed; release
+build is verifiably AOT-compiled).
 
-What changed in AT:R13 vs the previous handover:
-  • Truthful price_source — `/v1/sim/quote/{ticker}` and
-    `/v1/sim/portfolio` now report the LEAF that actually served
-    each price (commit 83d32a7). Was reporting the stack name
-    which always contained "yahoo" — so the Flutter LIVE/MOCK pill
-    lied. Now flips correctly per-ticker.
-  • /promote-to-alpha got exercised end-to-end for the first time
-    and surfaced two playbook bugs (commit f46c901): rsync
-    overwriting melehost's .env, and alembic.ini missing from the
-    Docker image. Both fixed.
-  • Lesson-id rot: 7 test_lessons_service tests had been silently
-    failing on main; fixed at AT:R13 then ALIGNED again by the
-    magical-edison-18bf91 content drop. Constant is now
-    "283_market_order_vs_limit".
-  • Mac-canonical per-env files (commit 513d851). The .env wipe
-    incident motivated a structural fix: `infra/<env>.env`
-    (gitignored) is now the single source of truth on the Mac.
-    /promote-to-alpha step 4 scp's it to melehost. Beta + Prod
-    designed to inherit the same pattern (with GCP Secret Manager
-    as the Beta-era target via B8).
-  • magical-edison-18bf91 content drop merged (commits 03c55f4,
-    ab71957). 285 file changes, content + docs only. Lessons
-    13 → 270 with regulatory reframe woven through M12 lessons +
-    ai_meta Q&A. Three new content surfaces (daily_challenges,
-    additional ai_coach categories, glossary) sit as static files
-    waiting for backend loaders.
+What changed in AT:R13 vs the previous handover (full arc — long
+session, lots happened):
+  • Truthful price_source (commit 83d32a7) — Quote.source is the
+    leaf provider name, not the stack name.
+  • /promote-to-alpha playbook bugs surfaced + fixed (f46c901):
+    rsync no longer wipes melehost .env; alembic.ini ships in image.
+  • Mac-canonical per-env files (513d851): infra/<env>.env is the
+    source of truth; /promote-to-alpha scp's it.
+  • magical-edison-18bf91 content drop merged: 13 → 270 lessons,
+    new glossary + daily_challenges + ai_coach surfaces.
+  • content/ wasn't mounted into the api-alpha container — silent
+    since AT:R11 (`lessons_loaded count=0`). Fixed (88aa0da). Alpha
+    now serves 270 lessons.
+  • iPhone build installed via xcrun devicectl after flutter run's
+    debug-attach failed.
+  • init_schema() self-stamps Alembic (1f30025). DuplicateTable
+    on fresh DB is gone.
+  • yfinance migration (c838082). Real LIVE prices via the lib's
+    rate-limit handling. AAPL/NVDA/MSFT all return `source: yfinance`.
+  • GlossaryService + <Term> component (ee80fa7, 30c6014). Backend
+    routes /v1/glossary/{locale}{/, /id}. Flutter TermRegistry +
+    bottom-sheet definition tap. 672 (not 342) inline Term tags
+    across 270 lessons; all 15 unique ids resolve.
+  • i18n sweep (9a7f1c3, bea81f3, 240e524, merge aaca100). 256 keys
+    extracted across 13+ screens. New /v1/llm/translate endpoint.
+    scripts/translate_arb.py auto-fills AR + MS via Gemma 4 (batch=10
+    fits under the ~75s Cloudflare Tunnel timeout; batch=30 hits 502s).
 
-Carry-overs flagged for next session:
-  • init_schema() + alembic boot collision. /promote-to-alpha
-    step 6 errors with DuplicateTable on fresh DB. Worked around
-    manually with `alembic stamp head`. Followup chip spawned.
-  • Backend Dockerfile uses --reload (dev flag) — bundle with the
-    init_schema fix.
-  • yfinance migration — keyless Yahoo endpoint stays 429ing.
-    Today's fix is honesty about it, not reliability.
-  • Backend GlossaryService — load content/glossary/terms.*.json,
-    expose /v1/glossary/{locale}. Followup chip spawned.
-  • `<Term>` MDX component — 342 inline references across 258
-    lessons render as raw text today. Backend extractor + Flutter
-    TermRegistry. Followup chip spawned.
-  • `<Animation>` extractor — regex exists in lessons_service.py
-    but the body walker doesn't actually emit blocks. ~16 lessons
-    affected. Followup chip spawned.
-  • LessonMeta `module` + `difficulty` end-to-end check — A20
-    parses them; verify they make it to the API + Flutter model.
+Carry-overs for next session:
+  • Inline <Term> rendering — current block-level renders Term tags
+    as vertical-list-style breaks. Tokenize into prose stream for
+    tighter inline reading. Quick fix.
+  • Animation production — AnimationRegistry built, no Lottie art.
+  • Daily-challenge ingestion service — 183 entries on disk, no
+    backend service yet.
+  • AI Coach Q&A retrieval — 280 entries on disk; substring/keyword
+    retriever could ship today; full embedding pipeline is Beta-era.
+  • Earn Path extension — only the W3-era required-lesson set unlocks
+    agents; the new 257 lessons don't route into unlocks yet.
+  • Backend Dockerfile CMD uses --reload (dev flag) — should be
+    --workers N for the alpha host. Small.
+  • Manual translation review — Gemma 4's AR/MS is auto-generated;
+    Saiful's eventual translators (A12) can review + tighten.
 
-What's still left in Alpha — most blocked on Saiful's external setup:
+What's still blocked on Saiful's external setup:
 
-  A3.  Resend account + DKIM/SPF DNS    → unblocks A4 + A5
-  A6.  Apple Sign-In capability        → unblocks the A6 code swap
-  A12. AR + MS translators             → drop-in, non-blocking
-  A13. TTS provider account + key      → unblocks A14
-  A14. TTS integration (depends A13)
-  A15. OneSignal + Dev APNs cert       → unblocks A16
-  A16. Push notifications (depends A15)
-  A17. Daily briefing (depends A14 + A16) — daily_challenges content
-       now on disk, just needs ingestion service.
+  A3.  Resend + DKIM/SPF DNS    → unblocks A4 + A5
+  A6.  Apple Sign-In capability → unblocks the A6 code swap
+  A12. AR + MS human review     → drop-in, non-blocking
+  A13. TTS provider + key       → unblocks A14
+  A15. OneSignal + Dev APNs     → unblocks A16
+  A17. Daily briefing           → depends A14 + A16 (challenge
+                                  content is on disk + ready)
   A22-A28. App Store Connect, Transporter, signing, TestFlight
-           uploads.
-
-If Saiful has unblocked any of those, pick them up. Otherwise the
-unblocked engineering items are:
-  • The follow-up chips listed above (init_schema/alembic,
-    GlossaryService, Term, Animation).
-  • yfinance migration (~0.5 session).
-  • i18n string extraction sweep — A11 scaffold landed; ~1 session.
-  • Animation production — depends on art availability.
 
 If something else is on Saiful's mind, default to that.
 
