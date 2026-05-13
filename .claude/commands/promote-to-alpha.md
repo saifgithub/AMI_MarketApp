@@ -103,8 +103,26 @@ populated). `scp` it into place. This is THE mechanism for moving env
 values; rsync step 3 explicitly excludes `.env` so this step is the
 only path.
 
+`infra/alpha.env` is **gitignored**, so when this command runs from a
+`.claude/worktrees/<name>/` checkout the file won't be present locally —
+only the main worktree carries it. The block below auto-sources from
+the main worktree in that case (`git worktree list` gives us the path),
+so promoting from any worktree just works.
+
 ```bash
-# Abort if the canonical copy isn't present on this Mac.
+# Auto-source from the main worktree if missing locally (gitignored
+# files don't carry across worktrees). `cut -d' ' -f2-` rather than
+# awk so paths with spaces (`/Volumes/Extreme Pro/...`) don't get
+# truncated.
+if [ ! -f infra/alpha.env ]; then
+  MAIN_WORKTREE=$(git worktree list --porcelain | grep '^worktree ' | head -1 | cut -d' ' -f2-)
+  if [ -n "$MAIN_WORKTREE" ] && [ -f "$MAIN_WORKTREE/infra/alpha.env" ] && [ "$MAIN_WORKTREE" != "$(pwd)" ]; then
+    cp "$MAIN_WORKTREE/infra/alpha.env" infra/alpha.env
+    echo "auto-sourced infra/alpha.env from $MAIN_WORKTREE"
+  fi
+fi
+
+# Abort if still missing (no main worktree copy either).
 if [ ! -f infra/alpha.env ]; then
   echo "ERROR: infra/alpha.env missing — see infra/README.md to seed it"
   echo "       (scp melehost:~/ami_trade/.env infra/alpha.env, then re-run)"
