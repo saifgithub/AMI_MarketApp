@@ -503,17 +503,26 @@ class _MarkdownView extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: widgets);
   }
 
-  /// Tokenise **bold** and *italic* inline; everything else is plain text.
+  /// Tokenise **bold**, *italic*, `code`, and `{{term:id}}` inline.
+  /// Term tokens render as a tappable inline chip via WidgetSpan.
   Widget _inline(String src, TextStyle base) {
-    final spans = <TextSpan>[];
-    final pattern = RegExp(r'(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)');
+    final spans = <InlineSpan>[];
+    final pattern = RegExp(
+      r'(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\{\{term:[a-zA-Z0-9_]+\}\})',
+    );
     int cursor = 0;
     for (final m in pattern.allMatches(src)) {
       if (m.start > cursor) {
         spans.add(TextSpan(text: src.substring(cursor, m.start), style: base));
       }
       final tok = m.group(0)!;
-      if (tok.startsWith('**')) {
+      if (tok.startsWith('{{term:')) {
+        final id = tok.substring(7, tok.length - 2);
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: _InlineTermChip(termId: id, baseStyle: base),
+        ));
+      } else if (tok.startsWith('**')) {
         spans.add(TextSpan(
           text: tok.substring(2, tok.length - 2),
           style: base.copyWith(fontWeight: FontWeight.w700),
@@ -534,7 +543,47 @@ class _MarkdownView extends StatelessWidget {
     if (cursor < src.length) {
       spans.add(TextSpan(text: src.substring(cursor), style: base));
     }
-    return RichText(text: TextSpan(children: spans));
+    return Text.rich(TextSpan(children: spans));
+  }
+}
+
+
+/// Compact inline term chip — same tap target as TermBlock but sized to
+/// flow inline with surrounding prose (no padding around the chip itself
+/// so line height stays consistent with the paragraph).
+class _InlineTermChip extends StatelessWidget {
+  const _InlineTermChip({required this.termId, required this.baseStyle});
+  final String termId;
+  final TextStyle baseStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = TermRegistry.instance.get(termId);
+    if (entry == null) {
+      // Unknown id → render the prettified id inline as bold text.
+      return Text(
+        TermBlock.fallbackLabel(termId),
+        style: baseStyle.copyWith(fontWeight: FontWeight.w700),
+      );
+    }
+    return GestureDetector(
+      onTap: () => showTermSheet(context, termId),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AmiColors.hexBlue, width: 1),
+          ),
+        ),
+        child: Text(
+          entry.term,
+          style: baseStyle.copyWith(
+            color: AmiColors.hexBlue,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 }
 

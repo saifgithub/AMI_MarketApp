@@ -96,6 +96,16 @@ void _openSheet(BuildContext context, GlossaryEntry entry, String locale) {
 }
 
 
+/// Open the term-definition bottom sheet by id. Public for inline chips
+/// and any other surface that wants the same sheet UI without rendering
+/// a full TermBlock chip first.
+void showTermSheet(BuildContext context, String termId, {String locale = 'en'}) {
+  final entry = TermRegistry.instance.get(termId, locale: locale);
+  if (entry == null) return;
+  _openSheet(context, entry, locale);
+}
+
+
 class _TermSheet extends StatelessWidget {
   const _TermSheet({required this.entry, required this.locale});
 

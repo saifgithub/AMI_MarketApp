@@ -111,11 +111,11 @@ def test_lesson_parses_animation_mdx_block(tmp_path):
     assert anim.animation_name == "risk_pyramid"
 
 
-def test_lesson_parses_term_mdx_block(tmp_path):
-    """`<Term id="…"/>` parses to a block of kind=term with `term_id`
-    populated. The client resolves the id through its bundled
-    TermRegistry; unknown ids fall back to plain bold text on the
-    client side so a typo never crashes the reader.
+def test_lesson_inlines_term_tokens_into_prose(tmp_path):
+    """`<Term id="…"/>` is substituted to a `{{term:…}}` inline token
+    inside the surrounding markdown block, NOT promoted to a separate
+    block. This lets the client render the term as an inline chip via
+    Text.rich/WidgetSpan within the paragraph flow.
     """
     from app.services.lessons_service import parse_mdx
 
@@ -134,9 +134,40 @@ def test_lesson_parses_term_mdx_block(tmp_path):
     )
     lesson = parse_mdx(mdx)
     kinds = [b.kind for b in lesson.blocks]
-    assert "term" in kinds
-    term = next(b for b in lesson.blocks if b.kind == "term")
-    assert term.term_id == "ami_watchlist"
+    # No term blocks emitted — tokens ride inside prose.
+    assert "term" not in kinds
+    md_blocks = [b for b in lesson.blocks if b.kind == "markdown"]
+    assert any("{{term:ami_watchlist}}" in (b.markdown or "") for b in md_blocks)
+    # Surrounding prose is preserved on either side of the token.
+    joined = " ".join(b.markdown or "" for b in md_blocks)
+    assert "Open your" in joined and "and pick a name" in joined
+
+
+def test_lesson_inlines_multiple_terms_in_one_sentence(tmp_path):
+    """Two `<Term>` tags in the same sentence both become tokens within
+    a single markdown block — no vertical-list breakage."""
+    from app.services.lessons_service import parse_mdx
+
+    mdx = tmp_path / "099_multi_term.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "099_multi_term"\n'
+        'title: "Multi term"\n'
+        'duration_min: 2\n'
+        'level: 1\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'A <Term id="long"/> position uses a <Term id="stop_loss"/> below entry.\n',
+        encoding="utf-8",
+    )
+    lesson = parse_mdx(mdx)
+    md_blocks = [b.markdown or "" for b in lesson.blocks if b.kind == "markdown"]
+    # Exactly one prose block holds both tokens.
+    assert len(md_blocks) == 1
+    body = md_blocks[0]
+    assert "{{term:long}}" in body
+    assert "{{term:stop_loss}}" in body
 
 
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):

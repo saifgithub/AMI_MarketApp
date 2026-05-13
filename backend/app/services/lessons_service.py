@@ -84,10 +84,16 @@ _CHATWITH_RE = re.compile(r'<ChatWith\s+agent\s*=\s*"(?P<agent>[^"]+)"\s*/>')
 # referencing a not-yet-bundled animation still ships.
 _ANIMATION_RE = re.compile(r'<Animation\s+name\s*=\s*"(?P<name>[^"]+)"\s*/>')
 
-# <Term id="glossary_id" /> — inline glossary reference. The client looks
-# the id up in its bundled TermRegistry and renders a tappable definition
-# sheet; unknown ids fall back to plain text so a typo never crashes.
+# <Term id="glossary_id" /> — inline glossary reference. Substituted to a
+# `{{term:id}}` token inside the prose so the client can render it inline
+# within the paragraph flow (Text.rich with WidgetSpan), rather than as a
+# separate block that breaks the surrounding sentence into vertical chunks.
 _TERM_RE = re.compile(r'<Term\s+id\s*=\s*"(?P<id>[^"]+)"\s*/>')
+
+
+def _inline_term_tokens(body: str) -> str:
+    """Replace `<Term id="X"/>` with `{{term:X}}` inline tokens."""
+    return _TERM_RE.sub(lambda m: f"{{{{term:{m.group('id')}}}}}", body)
 
 
 def _parse_jsx_attrs(text: str) -> dict[str, Any]:
@@ -157,6 +163,9 @@ def parse_mdx(path: Path) -> Lesson:
     if not m:
         raise ValueError(f"Missing frontmatter in {path.name}")
     fm_raw, body = m.group(1), m.group(2)
+    # Inline-tokenize <Term/> tags before block extraction so they ride
+    # inside prose blocks rather than getting promoted to standalone blocks.
+    body = _inline_term_tokens(body)
     fm = yaml.safe_load(fm_raw) or {}
 
     level = int(fm.get("level", 1))
@@ -203,8 +212,6 @@ def parse_mdx(path: Path) -> Lesson:
         components.append((match.start(), match.end(), "chat_with", match.group("agent")))
     for match in _ANIMATION_RE.finditer(body):
         components.append((match.start(), match.end(), "animation", match.group("name")))
-    for match in _TERM_RE.finditer(body):
-        components.append((match.start(), match.end(), "term", match.group("id")))
     components.sort(key=lambda t: t[0])
 
     for start, end, kind, payload in components:
@@ -218,8 +225,6 @@ def parse_mdx(path: Path) -> Lesson:
             blocks.append(LessonBlock(kind="chat_with", chat_with_agent=payload))
         elif kind == "animation":
             blocks.append(LessonBlock(kind="animation", animation_name=payload))
-        elif kind == "term":
-            blocks.append(LessonBlock(kind="term", term_id=payload))
         cursor = end
     if cursor < len(body):
         tail = body[cursor:].strip()
