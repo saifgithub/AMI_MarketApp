@@ -14,6 +14,7 @@ import 'dart:io' show Platform;
 
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/coach.dart';
+import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/mandate.dart';
@@ -742,6 +743,18 @@ class ApiClient {
       options: Options(headers: {'Authorization': 'Bearer $token'}),
     );
     return AuthUser.fromJson(r.data!);
+  }
+
+  // ── Daily Challenge ─────────────────────────────────────────────────
+
+  Future<DailyChallengeWithDate?> dailyChallengeToday() async {
+    try {
+      final r = await _dio.get<Map<String, dynamic>>('/v1/daily_challenge/today');
+      return DailyChallengeWithDate.fromJson(r.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────

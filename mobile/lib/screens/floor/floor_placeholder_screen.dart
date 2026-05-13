@@ -7,6 +7,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
@@ -184,6 +185,10 @@ class FloorPlaceholderScreen extends ConsumerWidget {
               ),
 
               const SizedBox(height: AmiSpacing.xl),
+
+              // ── Daily Challenge ──
+              const DailyChallengeCard(),
+              const SizedBox(height: AmiSpacing.l),
 
               // ── Convene the Room CTA ──
               SizedBox(
