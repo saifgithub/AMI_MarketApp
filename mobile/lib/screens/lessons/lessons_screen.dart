@@ -1,19 +1,43 @@
-/// Lessons catalogue + progress overview.
+/// Lessons landing — hex cluster overview.
 ///
-/// Track-grouped lesson list. Each lesson shows duration, agent callouts,
-/// and a complete/incomplete chip. Tap → lesson reader. Top of screen shows
-/// progress + unlocked agents.
+/// Zone A: slim progress bar (lesson count + agents unlocked).
+/// Zone B: 7-hex honeycomb cluster (1 centre + 6 surrounding tracks).
+/// Tapping a hex navigates to [TrackLessonsScreen].
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
-import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
+import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
-import 'package:ami_trade/widgets/hex/hex_avatar.dart';
+import 'package:ami_trade/theme/hex_clipper.dart';
+import 'package:ami_trade/widgets/hex/track_hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// ─── track config ────────────────────────────────────────────────────────────
+
+const _trackColor = {
+  'foundations': AmiColors.hexBlue,
+  'fundamentals_analysis': AmiColors.hexCyan,
+  'technical_analysis': AmiColors.hexPurple,
+  'news_macro': AmiColors.hexAmber,
+  'sentiment_behaviour': AmiColors.hexPink,
+  'risk_portfolio': AmiColors.hexRed,
+  'edge_process': AmiColors.hexGreen,
+};
+
+const _trackLabel = {
+  'foundations': 'FOUNDATIONS',
+  'fundamentals_analysis': 'FUNDAMENTALS',
+  'technical_analysis': 'TECHNICAL',
+  'news_macro': 'NEWS & MACRO',
+  'sentiment_behaviour': 'SENTIMENT',
+  'risk_portfolio': 'RISK',
+  'edge_process': 'EDGE',
+};
+
+// ─── screen ──────────────────────────────────────────────────────────────────
 
 class LessonsScreen extends ConsumerWidget {
   const LessonsScreen({super.key});
@@ -50,30 +74,148 @@ class LessonsScreen extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () => ref.read(lessonsNotifierProvider.notifier).refresh(),
       color: AmiColors.hexBlue,
-      child: ListView(
-        padding: const EdgeInsets.all(AmiSpacing.m),
-        children: [
-          _ProgressCard(state: state),
-          const SizedBox(height: AmiSpacing.l),
-          for (final t in cat.tracks)
-            _TrackSection(
-              track: t,
-              state: state,
-              onRead: (lessonId) => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => LessonReaderScreen(lessonId: lessonId),
-              )),
-              onQuizOnly: (lessonId) => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => LessonReaderScreen(
-                  lessonId: lessonId, quizOnly: true,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Padding(
+          padding: const EdgeInsets.all(AmiSpacing.m),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _SlimProgressBar(state: state),
+              const SizedBox(height: AmiSpacing.xl),
+              _HexCluster(
+                tracks: cat.tracks,
+                progress: state.progress,
+                onTrackTap: (trackId) => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => TrackLessonsScreen(trackId: trackId),
+                  ),
                 ),
-              )),
-            ),
-        ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
+// ─── Zone A — slim progress bar ───────────────────────────────────────────────
+
+class _SlimProgressBar extends StatelessWidget {
+  const _SlimProgressBar({required this.state});
+  final LessonsState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = state.progress;
+    final l = AppLocalizations.of(context);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.lessonsYourProgress,
+                style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+            Text(
+              l.lessonsCount(p?.lessonsCompleted ?? 0, p?.lessonsTotal ?? 0),
+              style: AmiTypography.statMid,
+            ),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(l.lessonsAgents,
+                style: AmiTypography.labelMono.copyWith(fontSize: 10)),
+            Text(l.lessonsAgentsCount(state.activations.length),
+                style: AmiTypography.statMid),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Zone B — hex cluster ────────────────────────────────────────────────────
+
+/// 7-hex honeycomb: foundations (centre) + 6 surrounding tracks.
+///
+/// Flat-top honeycomb neighbor offsets from centre (cx, cy):
+///   left/right:      (±hexW, 0)
+///   upper/lower diag: (±hexW/2, ∓hexH/2)
+///
+/// Grid (3 columns × 2 rows, total container 3W × 2H):
+///
+///   [TA]  [NM]        top-left / top-right of centre
+/// [FA] [FON] [SB]     left / centre / right
+///   [RP]  [EP]        bottom-left / bottom-right of centre
+class _HexCluster extends StatelessWidget {
+  const _HexCluster({
+    required this.tracks,
+    required this.progress,
+    required this.onTrackTap,
+  });
+
+  final List<TrackCatalogue> tracks;
+  final ProgressSummary? progress;
+  final void Function(String trackId) onTrackTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hexW = constraints.maxWidth / 3;
+        final hexH = hexW / flatTopRegularHexagonAspectRatio;
+        final clusterH = 2 * hexH;
+
+        // Cluster top-left origins for each hex widget (Positioned left/top).
+        // Centre of the 3W × 2H container is at (1.5W, 1H).
+        // FON (foundations) = centre; others are neighbour offsets from it.
+        final origins = {
+          'foundations': Offset(hexW, hexH / 2),             // (1.5W - 0.5W, 1H - 0.5H)
+          'fundamentals_analysis': Offset(0, hexH / 2),      // left
+          'technical_analysis': Offset(hexW / 2, 0),         // upper-left
+          'news_macro': Offset(hexW * 1.5, 0),               // upper-right
+          'sentiment_behaviour': Offset(hexW * 2, hexH / 2), // right
+          'risk_portfolio': Offset(hexW / 2, hexH),          // lower-left
+          'edge_process': Offset(hexW * 1.5, hexH),          // lower-right
+        };
+
+        final trackMap = {for (final t in tracks) t.track: t};
+
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: clusterH,
+          child: Stack(
+            children: [
+              for (final entry in origins.entries)
+                if (trackMap.containsKey(entry.key))
+                  Positioned(
+                    left: entry.value.dx,
+                    top: entry.value.dy,
+                    width: hexW,
+                    height: hexH,
+                    child: TrackHexButton(
+                      label:
+                          _trackLabel[entry.key] ?? entry.key.toUpperCase(),
+                      color: _trackColor[entry.key] ?? AmiColors.hexBlue,
+                      completed: progress?.byTrack[entry.key]?['completed'] ?? 0,
+                      total: progress?.byTrack[entry.key]?['total'] ??
+                          trackMap[entry.key]!.lessons.length,
+                      onTap: () => onTrackTap(entry.key),
+                    ),
+                  ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ─── chrome ──────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   const _Header();
@@ -97,298 +239,3 @@ class _Header extends StatelessWidget {
   }
 }
 
-
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({required this.state});
-  final LessonsState state;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = state.progress;
-    final unlocked = state.activations;
-    final pct = (p == null || p.lessonsTotal == 0)
-        ? 0.0
-        : p.lessonsCompleted / p.lessonsTotal;
-    final l = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.slate700),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l.lessonsYourProgress,
-                        style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
-                    const SizedBox(height: 4),
-                    Text(
-                      l.lessonsCount(
-                        p?.lessonsCompleted ?? 0,
-                        p?.lessonsTotal ?? 0,
-                      ),
-                      style: AmiTypography.statMid,
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(l.lessonsAgents,
-                      style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-                  Text(l.lessonsAgentsCount(unlocked.length),
-                      style: AmiTypography.statMid),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: AmiSpacing.s),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(
-              value: pct,
-              minHeight: 6,
-              backgroundColor: AmiColors.slate900,
-              valueColor: const AlwaysStoppedAnimation(AmiColors.hexGreen),
-            ),
-          ),
-          if (unlocked.isNotEmpty) ...[
-            const SizedBox(height: AmiSpacing.m),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final a in unlocked)
-                  _UnlockedPill(agentId: a.agentId, method: a.activationMethod),
-              ],
-            ),
-          ],
-          if (p?.nextRecommendedLesson != null) ...[
-            const SizedBox(height: AmiSpacing.m),
-            Text(l.lessonsNextUp,
-                style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-            const SizedBox(height: 2),
-            Text(
-              state.catalogue
-                      ?.tracks
-                      .expand((t) => t.lessons)
-                      .firstWhere(
-                        (l) => l.id == p!.nextRecommendedLesson,
-                        orElse: () => LessonMeta(
-                          id: p!.nextRecommendedLesson!,
-                          title: p.nextRecommendedLesson!,
-                          durationMin: 3,
-                          level: 1,
-                          track: '',
-                          topic: '',
-                          prerequisites: const [],
-                          tags: const [],
-                          agentCallouts: const [],
-                        ),
-                      )
-                      .title ??
-                  '',
-              style: AmiTypography.body,
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-
-class _UnlockedPill extends StatelessWidget {
-  const _UnlockedPill({required this.agentId, required this.method});
-  final String agentId;
-  final String method;
-
-  @override
-  Widget build(BuildContext context) {
-    final a = agentById(agentId);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: a.color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: a.color),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(a.abbreviation,
-              style: AmiTypography.labelMono.copyWith(
-                  color: a.color, fontSize: 10)),
-          const SizedBox(width: 4),
-          Icon(
-            method == 'earn_path' ? Icons.school : Icons.workspace_premium,
-            size: 11,
-            color: a.color,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-class _TrackSection extends StatelessWidget {
-  const _TrackSection({
-    required this.track,
-    required this.state,
-    required this.onRead,
-    required this.onQuizOnly,
-  });
-
-  final TrackCatalogue track;
-  final LessonsState state;
-  final void Function(String lessonId) onRead;
-  final void Function(String lessonId) onQuizOnly;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AmiSpacing.l),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-            child: Text(
-              track.title.toUpperCase(),
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
-            ),
-          ),
-          const SizedBox(height: AmiSpacing.s),
-          for (final l in track.lessons)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _LessonTile(
-                meta: l,
-                onRead: () => onRead(l.id),
-                onQuizOnly: () => onQuizOnly(l.id),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-
-class _LessonTile extends StatelessWidget {
-  const _LessonTile({
-    required this.meta,
-    required this.onRead,
-    required this.onQuizOnly,
-  });
-  final LessonMeta meta;
-  final VoidCallback onRead;
-  final VoidCallback onQuizOnly;
-
-  @override
-  Widget build(BuildContext context) {
-    final callouts = meta.agentCallouts;
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.slate700),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: onRead,
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: AmiColors.slate900,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AmiColors.slate700),
-                  ),
-                  child: Text('L${meta.level}',
-                      style: AmiTypography.labelMono.copyWith(fontSize: 11)),
-                ),
-                const SizedBox(width: AmiSpacing.s),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(meta.title, style: AmiTypography.h4),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          Text(
-                              AppLocalizations.of(context)
-                                  .lessonsDurationMin(meta.durationMin),
-                              style: AmiTypography.caption),
-                          if (callouts.isNotEmpty) ...[
-                            const SizedBox(width: AmiSpacing.s),
-                            for (final id in callouts)
-                              Padding(
-                                padding: const EdgeInsets.only(right: 4),
-                                child: HexAvatar(
-                                  label: agentById(id).abbreviation,
-                                  color: agentById(id).color,
-                                  size: 20,
-                                ),
-                              ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AmiSpacing.s),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onRead,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AmiColors.hexGreen,
-                    side: const BorderSide(color: AmiColors.hexGreen),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  child: Text(AppLocalizations.of(context).actionRead,
-                      style: AmiTypography.labelMono),
-                ),
-              ),
-              const SizedBox(width: AmiSpacing.s),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onQuizOnly,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AmiColors.hexAmber,
-                    side: const BorderSide(color: AmiColors.hexAmber),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  child: Text(AppLocalizations.of(context).actionQuizOnly,
-                      style: AmiTypography.labelMono),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
