@@ -852,123 +852,35 @@ key → live" a single env-var change with zero code touches.
 
 ---
 
-## Prompt to paste at the start of the next session
+## How to start the next session
+
+In the new session, run:
 
 ```
-We're picking up the AMI Trade build. This is handover #14 — name
-the session "AT:R15:".
-
-Read HANDOVER.md at the project root first:
-  /Volumes/Extreme Pro/AMI_MarketApp/HANDOVER.md
-
-Then read docs/10_delivery/project_plan.md for the A1-A28 backlog,
-and docs/10_delivery/promotion_protocol.md for how code actually
-moves from Mac → Alpha → Beta → Prod.
-
-State: 71 commits in. 176 backend unit tests pass, 0 failed.
-Five alpha tags this session: alpha-2026-05-13-{1..5}.
-Content corpus: 270 lessons + 280 AI Coach Q&A + 188 glossary
-terms + 183 daily challenges. 256 i18n keys in app_en.arb;
-AR + MS auto-translated by Gemma 4.
-iPhone has the latest release build (`xcrun devicectl` path —
-see HANDOVER for why flutter run's debug-attach failed; release
-build is verifiably AOT-compiled).
-
-What changed in AT:R13 vs the previous handover (full arc — long
-session, lots happened):
-  • Truthful price_source (commit 83d32a7) — Quote.source is the
-    leaf provider name, not the stack name.
-  • /promote-to-alpha playbook bugs surfaced + fixed (f46c901):
-    rsync no longer wipes melehost .env; alembic.ini ships in image.
-  • Mac-canonical per-env files (513d851): infra/<env>.env is the
-    source of truth; /promote-to-alpha scp's it.
-  • magical-edison-18bf91 content drop merged: 13 → 270 lessons,
-    new glossary + daily_challenges + ai_coach surfaces.
-  • content/ wasn't mounted into the api-alpha container — silent
-    since AT:R11 (`lessons_loaded count=0`). Fixed (88aa0da). Alpha
-    now serves 270 lessons.
-  • iPhone build installed via xcrun devicectl after flutter run's
-    debug-attach failed.
-  • init_schema() self-stamps Alembic (1f30025). DuplicateTable
-    on fresh DB is gone.
-  • yfinance migration (c838082). Real LIVE prices via the lib's
-    rate-limit handling. AAPL/NVDA/MSFT all return `source: yfinance`.
-  • GlossaryService + <Term> component (ee80fa7, 30c6014). Backend
-    routes /v1/glossary/{locale}{/, /id}. Flutter TermRegistry +
-    bottom-sheet definition tap. 672 (not 342) inline Term tags
-    across 270 lessons; all 15 unique ids resolve.
-  • i18n sweep (9a7f1c3, bea81f3, 240e524, merge aaca100). 256 keys
-    extracted across 13+ screens. New /v1/llm/translate endpoint.
-    scripts/translate_arb.py auto-fills AR + MS via Gemma 4 (batch=10
-    fits under the ~75s Cloudflare Tunnel timeout; batch=30 hits 502s).
-
-Carry-overs for next session:
-  • Inline <Term> rendering — current block-level renders Term tags
-    as vertical-list-style breaks. Tokenize into prose stream for
-    tighter inline reading. Quick fix.
-  • Animation production — AnimationRegistry built, no Lottie art.
-  • Daily-challenge ingestion service — 183 entries on disk, no
-    backend service yet.
-  • AI Coach Q&A retrieval — 280 entries on disk; substring/keyword
-    retriever could ship today; full embedding pipeline is Beta-era.
-  • Earn Path extension — only the W3-era required-lesson set unlocks
-    agents; the new 257 lessons don't route into unlocks yet.
-  • Backend Dockerfile CMD uses --reload (dev flag) — should be
-    --workers N for the alpha host. Small.
-  • Manual translation review — Gemma 4's AR/MS is auto-generated;
-    Saiful's eventual translators (A12) can review + tighten.
-
-What's still blocked on Saiful's external setup:
-
-  A3.  Resend + DKIM/SPF DNS    → unblocks A4 + A5
-  A6.  Apple Sign-In capability → unblocks the A6 code swap
-  A12. AR + MS human review     → drop-in, non-blocking
-  A13. TTS provider + key       → unblocks A14
-  A15. OneSignal + Dev APNs     → unblocks A16
-  A17. Daily briefing           → depends A14 + A16 (challenge
-                                  content is on disk + ready)
-  A22-A28. App Store Connect, Transporter, signing, TestFlight
-
-If something else is on Saiful's mind, default to that.
-
-Dev workflow:
-  • Edit code on Mac → /promote-to-alpha → see it on iPhone hitting
-    api-alpha.agenticmarketintel.ai.
-  • iPhone app: scripts/run_dev.sh (pure flutter run, points at
-    Alpha by default; toggle to beta/prod URLs in Settings →
-    Developer).
-  • Backend tests: backend/.venv/bin/python -m pytest backend/tests/unit/ -q
-  • DON'T start uvicorn or docker compose on the Mac. The Mac is a
-    pure editor (memory: feedback_mac_is_pure_editor.md).
-
-Saiful has granted full autonomy through MVP — execute, don't ask.
-File-header rule: every new file gets a docstring/library comment
-that explains what it is and why.
-Naming: code/internals → LLM is fine; user-visible copy → AMI by name
-(never "the AI"). See docs/08_tech/coding_conventions.md.
-
-Before writing code (Mac-side sanity checks — Mac doesn't run any
-services anymore; these all hit melehost through the public tunnel):
-
-  cd "/Volumes/Extreme Pro/AMI_MarketApp"
-  git status
-  git log --oneline | head -10
-  curl -s https://api-alpha.agenticmarketintel.ai/v1/health
-  curl -s https://api-alpha.agenticmarketintel.ai/v1/llm/status
-  curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
-
-If Alpha is down, debug from melehost:
-  ssh melehost "docker ps --format 'table {{.Names}}\t{{.Status}}'"
-  ssh melehost "docker logs ami_api_alpha --tail 50"
-  ssh melehost "docker logs ami_tunnel --tail 30"
-
-If the stack is gone, bring it back:
-  ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d"
-
-Don't start uvicorn or docker compose on the Mac. The Mac is a pure
-editor (memory: feedback_mac_is_pure_editor.md). Every change ships
-to Alpha via /promote-to-alpha.
+/start-fresh
 ```
+
+That's it. The slash command:
+1. Reads this file + `docs/10_delivery/project_plan.md` + `docs/10_delivery/promotion_protocol.md`
+2. Runs the Mac-side sanity-check curls against the live Alpha host
+3. Enters plan mode with a state summary + the current carry-over list as options
+4. Waits for Saiful's direction
+
+Session name to use: **AT:R15** (this is handover #14).
+
+Definition of done at hand-off (verified by `/handover` at end of AT:R13):
+- `git status`: clean working tree on `main`
+- 76 commits in
+- 176 backend unit tests passing
+- Alpha tags `alpha-2026-05-13-{1..6}` landed
+- iPhone has the AT:R13 release build installed
+
+If Alpha is down at session start, `/start-fresh` will surface that
+and tell you the melehost debug commands.
+
+If Saiful's first message is a specific task ("fix this", "add
+that"), skip `/start-fresh` and just do the task. The slash command
+is for the "let's keep going on this project" opening.
 
 ---
 
