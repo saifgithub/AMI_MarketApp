@@ -27,11 +27,17 @@ class FloorPlaceholderScreen extends ConsumerWidget {
 
   void _showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
     final state = ref.read(lessonsNotifierProvider);
-    final requiredLessons = state.catalogue?.tracks
-            .expand((t) => t.lessons)
-            .where((l) => l.agentCallouts.contains(agent.id))
-            .toList() ??
-        const <LessonMeta>[];
+    // Gateway set = first 3 lessons (by id) that callout this agent. Mirrors
+    // backend lessons_service.UNLOCK_REQUIRED_PER_AGENT so the UI shows the
+    // exact lessons that gate the unlock — not the full 70+ enrichment set.
+    const gatewaySize = 3;
+    final calloutLessons = (state.catalogue?.tracks
+                .expand((t) => t.lessons)
+                .where((l) => l.agentCallouts.contains(agent.id))
+                .toList() ??
+            const <LessonMeta>[])
+      ..sort((a, b) => a.id.compareTo(b.id));
+    final requiredLessons = calloutLessons.take(gatewaySize).toList();
     final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,

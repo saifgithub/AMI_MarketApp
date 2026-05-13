@@ -253,6 +253,52 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     assert res2.unlocked_agents == []
 
 
+def test_earn_path_caps_required_set_at_first_n_lessons(svc: LessonsService):
+    """When more lessons callout an agent than the gateway cap, only the
+    first N (by id, sorted) are required to unlock. The remaining
+    lessons are enrichment — they don't gate the unlock.
+    """
+    from app.services.lessons_service import UNLOCK_REQUIRED_PER_AGENT
+    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
+    user_id = uuid4()
+    # Inject 5 fake trader-callout lessons with ids that sort AFTER 004.
+    fake_ids = [f"99{i}_fake_trader_{i}" for i in range(5)]
+    fake_template = svc.get(LEGACY_MARKET_ORDER_LESSON)
+    for fid in fake_ids:
+        f = fake_template.model_copy(deep=True)
+        f.meta.id = fid
+        f.meta.agent_callouts = ["trader"]
+        svc._lessons[fid] = f
+
+    # Gateway set should be the first N by id — the legacy lesson (004 or
+    # 283 depending on corpus) PLUS the first (N-1) fake lessons.
+    gateway = svc._gateway_lessons_for_agent("trader")
+    assert len(gateway) == UNLOCK_REQUIRED_PER_AGENT
+
+    # Pass JUST the legacy lesson — not enough.
+    res = svc.submit_quiz(QuizSubmitRequest(
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
+    ))
+    assert "trader" not in res.unlocked_agents
+
+    # Pass enough fakes to clear the gateway. Each new pass is checked
+    # against the gateway set.
+    last_res = None
+    for fid in gateway:
+        if fid == LEGACY_MARKET_ORDER_LESSON:
+            continue
+        last_res = svc.submit_quiz(QuizSubmitRequest(
+            user_id=user_id, lesson_id=fid, answers=[1, 1],
+        ))
+
+    assert last_res is not None
+    assert "trader" in last_res.unlocked_agents
+
+    # Cleanup
+    for fid in fake_ids:
+        del svc._lessons[fid]
+
+
 def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsService):
     """If two lessons both have agent_callouts: [trader], passing one is
     not enough — the activation only fires after every required lesson

@@ -51,6 +51,13 @@ CONTENT_LESSONS_DIR = (
 )
 
 
+# Earn-path gateway size — only the first N lessons (sorted by id) that
+# callout an agent count toward the unlock requirement. The remaining
+# lessons that reference the agent are enrichment, not gates. See
+# _check_agent_unlocks() for the rationale.
+UNLOCK_REQUIRED_PER_AGENT = 3
+
+
 TRACK_TITLES = {
     "foundations": "Foundations",
     "fundamentals_analysis": "Fundamentals Analysis",
@@ -405,11 +412,31 @@ class LessonsService:
 
     # ── activation ────────────────────────────────────────────────────
 
+    def _gateway_lessons_for_agent(self, agent_id: str) -> list[str]:
+        """Return the gateway lesson ids for an agent — the first
+        UNLOCK_REQUIRED_PER_AGENT lessons (sorted by lesson id) that
+        callout this agent. If the agent has fewer callouts than the
+        cap, all of them are required (the cap is an upper bound only).
+        """
+        all_lessons = sorted(
+            (l.meta.id for l in self._lessons.values()
+             if agent_id in l.meta.agent_callouts),
+        )
+        return all_lessons[:UNLOCK_REQUIRED_PER_AGENT]
+
     def _check_agent_unlocks(self, user_id: UUID, just_completed: Lesson) -> list[str]:
         """For each agent referenced by the just-completed lesson, check
-        whether the user has now passed EVERY lesson that calls out that
-        agent. If yes — and the agent is not already activated — record
-        the activation and return the agent ids.
+        whether the user has now passed the gateway set for that agent —
+        the first UNLOCK_REQUIRED_PER_AGENT lessons (sorted by id) that
+        call out the agent. If yes — and the agent is not already
+        activated — record the activation and return the agent ids.
+
+        The cap matters because the W18 + magical-edison content drop
+        scaled lesson count from 13 → 270, and the most-referenced
+        agents (market_analyst, fundamentals_analyst) now appear in 70+
+        lessons each. Requiring all of them is unreachable in practice;
+        the gateway-set model keeps unlock cost bounded and predictable
+        while letting the broader corpus reinforce understanding.
         """
         newly_unlocked: list[str] = []
         with get_session() as s:
@@ -421,11 +448,7 @@ class LessonsService:
             for agent_id in just_completed.meta.agent_callouts:
                 if agent_id in existing_ids:
                     continue
-                required = [
-                    l.meta.id
-                    for l in self._lessons.values()
-                    if agent_id in l.meta.agent_callouts
-                ]
+                required = self._gateway_lessons_for_agent(agent_id)
                 if not required:
                     continue
                 passed_rows = s.execute(
