@@ -602,31 +602,25 @@ section { padding: 5rem 0; }
 }
 .footer-legal a:hover { color: var(--text-muted); text-decoration: none; }
 
-/* ── Hex Honeycomb (Agents) ──────────────────────────────── */
+/* ── Hex Honeycomb — 13-agent radial tessellation ────────── */
 /*
- * Tessellation math (flat-top hex, polygon 25%/75%):
- *   W = 140px   H = W × (√3/2) ≈ 121px
- *   Same-row: gap = 0  → cells share the side vertex
- *   Rows: margin-top = -(H/4) = -30px → rows interlock at corners
- *   Row-2 auto-centres wider (5 cells) inside 4-cell rows → W/2 offset
+ * Flat-top hex: W=140px, H=W×(√3/2)=121px, row-spacing=H×¾=91px
+ * Absolute-positioned: Concierge at centre (350,152), 6-ring around it,
+ * 3 hexes further left, 3 hexes further right. Full tessellation.
+ * Container: 700×304px. Each hex: translate(-50%,-50%) at its centre.
  */
-.honey-grid {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.honey-abs {
+  position: relative;
+  width: 700px;
+  height: 304px;
   margin: 0 auto 2rem;
+  overflow: visible;
 }
-.honey-row {
-  display: flex;
-  justify-content: center;
-  gap: 0;                 /* no gap — cells touch at their side vertices */
-  margin-top: -30px;      /* = -(H/4) for tessellation */
-}
-.honey-row:first-child { margin-top: 0; }
-
 .honey-hex {
+  position: absolute;
   width: 140px;
-  height: 121px;          /* 140 × (√3/2) = 121.2 → 121px */
+  height: 121px;
+  transform: translate(-50%, -50%);
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   background: var(--card-bg);
   display: flex;
@@ -635,27 +629,33 @@ section { padding: 5rem 0; }
   justify-content: center;
   gap: 4px;
   padding: 0 12px;
-  flex-shrink: 0;
   cursor: default;
   filter: drop-shadow(0 2px 8px rgba(0,0,0,0.55));
   transition: background var(--dur-std) var(--ease), filter var(--dur-std) var(--ease);
+  z-index: 1;
 }
 .honey-hex:hover {
   background: rgba(59,130,246,0.22);
   filter: drop-shadow(0 0 12px rgba(59,130,246,0.45));
+  z-index: 3;
 }
 .honey-hex.h-special {
   background: rgba(139,92,246,0.24);
-  filter: drop-shadow(0 0 16px rgba(139,92,246,0.55));
+  filter: drop-shadow(0 0 18px rgba(139,92,246,0.6));
+  z-index: 2;
 }
 .honey-hex.h-special:hover {
-  background: rgba(139,92,246,0.35);
-  filter: drop-shadow(0 0 20px rgba(139,92,246,0.65));
+  background: rgba(139,92,246,0.38);
+  filter: drop-shadow(0 0 24px rgba(139,92,246,0.75));
+}
+/* Ring agents (immediate Concierge neighbours) — slightly brighter */
+.honey-hex.h-ring {
+  background: #1a3255;
 }
 .h-icon   { font-size: 1.5rem; line-height: 1; }
 .h-name   {
   font-family: var(--font-mono);
-  font-size: 0.56rem;
+  font-size: 0.54rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -664,16 +664,24 @@ section { padding: 5rem 0; }
   line-height: 1.3;
 }
 .h-role   {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--text-dim);
   text-align: center;
   line-height: 1.2;
 }
 .honey-hex.h-special .h-name { color: var(--accent-purple); }
+.honey-hex.h-ring .h-name    { color: var(--text-main); }
 
-/* Mobile: fall back to simple flex wrap */
-@media (max-width: 640px) {
-  .honey-grid { display: none; }
+/* Scale down for narrower viewports */
+@media (max-width: 780px) {
+  .honey-abs {
+    transform: scale(0.75);
+    transform-origin: top center;
+    margin-bottom: calc((304px * 0.75) - 304px + 2rem);
+  }
+}
+@media (max-width: 560px) {
+  .honey-abs { display: none; }
   .honey-mobile { display: flex !important; }
 }
 .honey-mobile {

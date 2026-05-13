@@ -287,84 +287,91 @@
     <div class="sec-line" style="background: var(--accent-purple); margin: 14px auto 22px;"></div>
     <p class="sec-lede" style="margin: 0 auto 3rem;">This is the Applied AI system behind AMI Trade. Each agent is a specialist — not a generalist with a label. They have defined roles, defined responsibilities, and prompts you can rewrite to match your investment philosophy. You are the CEO. They report to you.</p>
 
-    <!-- Hex honeycomb — desktop -->
-    <div class="honey-grid" aria-label="13 AI agents" role="list">
+    <!-- 13-agent radial tessellation: Concierge centre + 6-ring + 3 left + 3 right -->
+    <div class="honey-abs" aria-label="13 AI agents" role="list">
 
-      <!-- Row 1 (4): Data analysts -->
-      <div class="honey-row">
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">📊</span>
-          <span class="h-name">Fundamentals</span>
-          <span class="h-role">Earnings &amp; valuation</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">📈</span>
-          <span class="h-name">Market</span>
-          <span class="h-role">Price action &amp; momentum</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">📰</span>
-          <span class="h-name">News</span>
-          <span class="h-role">Filings &amp; events</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">📱</span>
-          <span class="h-name">Social Media</span>
-          <span class="h-role">Retail sentiment</span>
-        </div>
+      <!-- ── TOP ROW (y=61) ── -->
+      <!-- Far-top-left -->
+      <div class="honey-hex" role="listitem" style="left:140px;top:61px">
+        <span class="h-icon">📰</span>
+        <span class="h-name">News</span>
+        <span class="h-role">Filings &amp; events</span>
+      </div>
+      <!-- Top-left (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:280px;top:61px">
+        <span class="h-icon">📊</span>
+        <span class="h-name">Fundamentals</span>
+        <span class="h-role">Earnings &amp; valuation</span>
+      </div>
+      <!-- Top-right (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:420px;top:61px">
+        <span class="h-icon">📈</span>
+        <span class="h-name">Market</span>
+        <span class="h-role">Price &amp; momentum</span>
+      </div>
+      <!-- Far-top-right -->
+      <div class="honey-hex" role="listitem" style="left:560px;top:61px">
+        <span class="h-icon">📱</span>
+        <span class="h-name">Social Media</span>
+        <span class="h-role">Retail sentiment</span>
       </div>
 
-      <!-- Row 2 (5): Research layer + Concierge at centre -->
-      <div class="honey-row">
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">🔬</span>
-          <span class="h-name">Bull</span>
-          <span class="h-role">Case to buy</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">⚠️</span>
-          <span class="h-name">Bear</span>
-          <span class="h-role">Case to pass</span>
-        </div>
-        <div class="honey-hex h-special" role="listitem">
-          <span class="h-icon">💬</span>
-          <span class="h-name">Concierge</span>
-          <span class="h-role">Your Chief of Staff</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">🗂️</span>
-          <span class="h-name">Research Mgr</span>
-          <span class="h-role">Synthesises outputs</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">⚖️</span>
-          <span class="h-name">Portfolio Mgr</span>
-          <span class="h-role">Mandate &amp; sizing</span>
-        </div>
+      <!-- ── MIDDLE ROW (y=152) ── -->
+      <!-- Far-left -->
+      <div class="honey-hex" role="listitem" style="left:70px;top:152px">
+        <span class="h-icon">🗂️</span>
+        <span class="h-name">Research Mgr</span>
+        <span class="h-role">Synthesises outputs</span>
+      </div>
+      <!-- Left (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:210px;top:152px">
+        <span class="h-icon">🔬</span>
+        <span class="h-name">Bull</span>
+        <span class="h-role">Case to buy</span>
+      </div>
+      <!-- ★ CONCIERGE — centre -->
+      <div class="honey-hex h-special" role="listitem" style="left:350px;top:152px">
+        <span class="h-icon">💬</span>
+        <span class="h-name">Concierge</span>
+        <span class="h-role">Your Chief of Staff</span>
+      </div>
+      <!-- Right (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:490px;top:152px">
+        <span class="h-icon">⚠️</span>
+        <span class="h-name">Bear</span>
+        <span class="h-role">Case to pass</span>
+      </div>
+      <!-- Far-right -->
+      <div class="honey-hex" role="listitem" style="left:630px;top:152px">
+        <span class="h-icon">🔥</span>
+        <span class="h-name">Neutral</span>
+        <span class="h-role">Stress-tests both</span>
       </div>
 
-      <!-- Row 3 (4): Risk debaters + execution -->
-      <div class="honey-row">
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">⚡</span>
-          <span class="h-name">Aggressive</span>
-          <span class="h-role">Pushes the risk case</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">🛡</span>
-          <span class="h-name">Conservative</span>
-          <span class="h-role">Defends caution</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">🔥</span>
-          <span class="h-name">Neutral</span>
-          <span class="h-role">Stress-tests both sides</span>
-        </div>
-        <div class="honey-hex" role="listitem">
-          <span class="h-icon">↕️</span>
-          <span class="h-name">Trader</span>
-          <span class="h-role">Executes the sim trade</span>
-        </div>
+      <!-- ── BOTTOM ROW (y=243) ── -->
+      <!-- Far-bottom-left -->
+      <div class="honey-hex" role="listitem" style="left:140px;top:243px">
+        <span class="h-icon">⚡</span>
+        <span class="h-name">Aggressive</span>
+        <span class="h-role">Pushes the risk case</span>
+      </div>
+      <!-- Bottom-left (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:280px;top:243px">
+        <span class="h-icon">⚖️</span>
+        <span class="h-name">Portfolio Mgr</span>
+        <span class="h-role">Mandate &amp; sizing</span>
+      </div>
+      <!-- Bottom-right (ring) -->
+      <div class="honey-hex h-ring" role="listitem" style="left:420px;top:243px">
+        <span class="h-icon">↕️</span>
+        <span class="h-name">Trader</span>
+        <span class="h-role">Executes the trade</span>
+      </div>
+      <!-- Far-bottom-right -->
+      <div class="honey-hex" role="listitem" style="left:560px;top:243px">
+        <span class="h-icon">🛡</span>
+        <span class="h-name">Conservative</span>
+        <span class="h-role">Defends caution</span>
       </div>
 
     </div>
