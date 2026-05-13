@@ -40,7 +40,7 @@ class _FakeGateway:
         return self._real
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
-                          locale="en", max_tokens=1024):
+                          locale="en", max_tokens=1024, **_audit):
         self.calls.append({
             "system_prompt": system_prompt,
             "messages": [(m.role, m.content) for m in messages],

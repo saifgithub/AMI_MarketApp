@@ -150,7 +150,7 @@ class _FakeGateway:
         return True
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
-                          locale="en", max_tokens=1024):
+                          locale="en", max_tokens=1024, **_audit):
         # Pick a reply based on agent_id sniffed from the system prompt.
         agent_key = "default"
         for k in self._replies:
@@ -242,7 +242,7 @@ def test_room_transcript_grows_for_subsequent_agents():
             return True
 
         async def stream_chat(self, *, system_prompt, messages, model_tier,
-                              locale="en", max_tokens=1024):
+                              locale="en", max_tokens=1024, **_audit):
             captured_prompts.append(system_prompt)
             yield "AMI reply."
 

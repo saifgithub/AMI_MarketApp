@@ -96,8 +96,23 @@ class AgentRunner:
         Onboarding (the welcome interview) is a different surface and
         stays deterministic via `concierge_engine.py`.
         """
+        from app.services.audit import record_one_on_one_message
+
         mandate = Mandate.model_validate(session.mandate_used)
         agent_id = AgentId(session.agent_id) if isinstance(session.agent_id, str) else session.agent_id
+
+        # Persist the user turn first — even if the LLM call fails, the message
+        # is in the audit trail.
+        if session.user_id is not None:
+            record_one_on_one_message(
+                session_id=session.id,
+                user_id=session.user_id,
+                agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
+                role="user",
+                content=user_message,
+            )
+
+        buf: list[str] = []
 
         if agent_id == AgentId.CONCIERGE:
             async for chunk in self._stream_concierge(
@@ -106,26 +121,37 @@ class AgentRunner:
                 history=history,
                 user_message=user_message,
             ):
+                buf.append(chunk)
                 yield chunk
-            return
+        else:
+            system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
+            plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
+            tier = pick_tier(plan, agent_id)
+            messages: list[ChatMessage] = [
+                ChatMessage(role=h.role, content=h.content) for h in history
+            ]
+            messages.append(ChatMessage(role="user", content=user_message))
+            agent_id_str = str(agent_id.value if hasattr(agent_id, "value") else agent_id)
+            async for chunk in self._llm.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,
+                locale=mandate.locale,
+                audit_user_id=session.user_id,
+                audit_agent_id=agent_id_str,
+                audit_flow="one_on_one",
+            ):
+                buf.append(chunk)
+                yield chunk
 
-        system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
-        plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
-        tier = pick_tier(plan, agent_id)
-
-        # Build the conversation: history + the new user message
-        messages: list[ChatMessage] = [
-            ChatMessage(role=h.role, content=h.content) for h in history
-        ]
-        messages.append(ChatMessage(role="user", content=user_message))
-
-        async for chunk in self._llm.stream_chat(
-            system_prompt=system_prompt,
-            messages=messages,
-            model_tier=tier,
-            locale=mandate.locale,
-        ):
-            yield chunk
+        if session.user_id is not None and buf:
+            record_one_on_one_message(
+                session_id=session.id,
+                user_id=session.user_id,
+                agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
+                role="assistant",
+                content="".join(buf),
+            )
 
     async def _stream_concierge(
         self,
@@ -167,6 +193,9 @@ class AgentRunner:
                 messages=messages,
                 model_tier=tier,
                 locale=mandate.locale,
+                audit_user_id=user_id,
+                audit_agent_id="concierge",
+                audit_flow="concierge_floor",
             ):
                 buf.append(chunk)
                 yield chunk

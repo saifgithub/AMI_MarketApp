@@ -164,6 +164,7 @@ class _RoomContext:
     current_drawdown_pct: float
     halal_universe: set[str]
     locale_allowed_universe: set[str] | None
+    user_id: UUID | None = None
     # Populated as phases progress
     bull_thesis: str = ""
     bear_risk: str = ""
@@ -458,6 +459,7 @@ class RoomRunner:
             current_drawdown_pct=current_drawdown_pct,
             halal_universe=halal,
             locale_allowed_universe=locale_allowed,
+            user_id=user_id,
             profile=_profile_for_ticker(ticker),
         )
 
@@ -657,6 +659,9 @@ async def _speak_one_agent(
                 model_tier=tier,  # type: ignore[arg-type]
                 locale=ctx.mandate.locale,
                 max_tokens=400,
+                audit_user_id=ctx.user_id,
+                audit_agent_id=agent_id.value,
+                audit_flow="room",
             ):
                 buf.append(chunk)
                 yield RoomEvent(
@@ -738,6 +743,9 @@ async def _stream_pm_narration(
             model_tier=tier,  # type: ignore[arg-type]
             locale=ctx.mandate.locale,
             max_tokens=500,
+            audit_user_id=ctx.user_id,
+            audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
+            audit_flow="room_pm",
         ):
             buf.append(chunk)
         text = "".join(buf).strip()

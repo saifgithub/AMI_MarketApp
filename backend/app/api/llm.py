@@ -44,6 +44,7 @@ async def llm_translate(req: TranslateRequest) -> TranslateResponse:
         model_tier="cheap",
         locale="en",
         max_tokens=req.max_tokens,
+        audit_flow="translate",
     ):
         chunks.append(chunk)
     status = gateway.status()

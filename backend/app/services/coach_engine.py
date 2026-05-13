@@ -262,6 +262,9 @@ class CoachEngine:
             messages=messages,
             model_tier=tier,
             locale=mandate.locale,
+            audit_user_id=session.user_id,
+            audit_agent_id=agent_id.value if hasattr(agent_id, "value") else str(agent_id),
+            audit_flow="coach_chat",
         ):
             yield chunk
 
@@ -435,6 +438,9 @@ class CoachEngine:
         messages: list[ChatMessage],
         tier: ModelTier,
         locale: str,
+        audit_user_id: object = None,
+        audit_agent_id: str | None = None,
+        audit_flow: str | None = None,
     ) -> str:
         buf: list[str] = []
         async for chunk in self._llm.stream_chat(
@@ -443,6 +449,9 @@ class CoachEngine:
             model_tier=tier,
             locale=locale,
             max_tokens=800,
+            audit_user_id=audit_user_id,
+            audit_agent_id=audit_agent_id,
+            audit_flow=audit_flow,
         ):
             buf.append(chunk)
         return "".join(buf)

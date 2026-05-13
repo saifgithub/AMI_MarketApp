@@ -340,3 +340,68 @@ class AuthChallengeRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class LLMAuditRow(Base):
+    """Every LLM gateway call. Full prompt + full response captured for alpha
+    triage. Volume is bounded by gateway calls (~10s per active session),
+    not by HTTP requests. Retention is unbounded until tester count grows."""
+
+    __tablename__ = "llm_audit"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False, index=True,
+    )
+    user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), index=True, nullable=True)
+    agent_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    flow: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    tier: Mapped[str] = mapped_column(String, nullable=False)
+    provider: Mapped[str] = mapped_column(String, nullable=False)
+    locale: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    system_prompt: Mapped[str] = mapped_column(String, nullable=False)
+    messages: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    response_text: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    error: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+
+class HTTPAuditRow(Base):
+    """Every inbound HTTP request. Bodies captured (truncated). Auth headers
+    scrubbed at the middleware level — never reach this row."""
+
+    __tablename__ = "http_audit"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False, index=True,
+    )
+    method: Mapped[str] = mapped_column(String, nullable=False)
+    path: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    query: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), index=True, nullable=True)
+    client_ip: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    status_code: Mapped[int] = mapped_column(Integer, nullable=False)
+    request_body: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    response_body: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    response_truncated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_streaming: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    latency_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+
+
+class OneOnOneMessageRow(Base):
+    """Durable record of every 1-on-1 chat turn (Concierge + every agent).
+    The agent_runner streams via SSE and currently keeps no server-side
+    record. This table closes that gap so we can replay any conversation."""
+
+    __tablename__ = "one_on_one_messages"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    session_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    agent_id: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[str] = mapped_column(String, nullable=False)
+    content: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )

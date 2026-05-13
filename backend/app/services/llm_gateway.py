@@ -423,7 +423,13 @@ class LLMGateway:
         model_tier: ModelTier = "cheap",
         locale: str = "en",
         max_tokens: int = 1024,
+        audit_user_id: object = None,
+        audit_agent_id: str | None = None,
+        audit_flow: str | None = None,
     ) -> AsyncIterator[str]:
+        import time
+        from app.services.audit import record_llm_call
+
         provider = self._pick_provider(locale, model_tier)
         logger.info(
             "llm_call_start",
@@ -431,14 +437,39 @@ class LLMGateway:
             tier=model_tier,
             locale=locale,
             messages_count=len(messages),
+            agent_id=audit_agent_id,
+            flow=audit_flow,
         )
-        async for chunk in provider.stream_chat(
-            system_prompt=system_prompt,
-            messages=messages,
-            model_tier=model_tier,
-            max_tokens=max_tokens,
-        ):
-            yield chunk
+        started = time.perf_counter()
+        buf: list[str] = []
+        error_str: str | None = None
+        try:
+            async for chunk in provider.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=model_tier,
+                max_tokens=max_tokens,
+            ):
+                buf.append(chunk)
+                yield chunk
+        except Exception as exc:
+            error_str = f"{type(exc).__name__}: {exc}"
+            raise
+        finally:
+            latency_ms = int((time.perf_counter() - started) * 1000)
+            record_llm_call(
+                user_id=audit_user_id if audit_user_id else None,
+                agent_id=audit_agent_id,
+                flow=audit_flow,
+                tier=model_tier,
+                provider=provider.name,
+                locale=locale,
+                system_prompt=system_prompt,
+                messages=[{"role": m.role, "content": m.content} for m in messages],
+                response_text="".join(buf) if buf else None,
+                latency_ms=latency_ms,
+                error=error_str,
+            )
 
 
 _gateway: LLMGateway | None = None

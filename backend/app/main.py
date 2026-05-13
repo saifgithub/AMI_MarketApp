@@ -23,6 +23,7 @@ from app.api.watchlist import router as watchlist_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
+from app.middleware.http_audit import HTTPAuditMiddleware
 
 configure_logging()
 # Sentry must initialise BEFORE the FastAPI app is constructed so the
@@ -44,6 +45,8 @@ app = FastAPI(
     redoc_url=None,
     lifespan=lifespan,
 )
+
+app.add_middleware(HTTPAuditMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
