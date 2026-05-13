@@ -80,3 +80,6 @@ backend/.alembic-placeholder.db
 
 # Claude Code sibling worktrees (each agent session can spawn its own)
 .claude/worktrees/
+
+# TestFlight upload artifacts (Xcode Organizer export) — local-only
+Apple_Store/

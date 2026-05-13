@@ -1,10 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R15 — bug reporter + inline Term + daily-challenge service + AI Coach Q&A retrieval + earn-path gateway cap + design v2 pass: IBM Plex fonts, AccentCard, HexMeshOverlay, HexChip tinted, Convene → HexButton)
+**Last updated:** 2026-05-13 (end of AT:R16 — first TestFlight upload landed (build 0.1.0+2 internal-installed on TESTING IPHONE 13 with no Mac cable in the loop) + comprehensive audit logging across HTTP / LLM / 1-on-1 chats)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
-> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R15 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
+> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R16 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
 
 ---
 
@@ -15,14 +15,31 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **85 commits**, no remote yet |
-| Latest commit | (this session) `94e50ea` — design(v2): HexChip tinted variant + A29 (light-mode) docs |
-| Alpha tags | `alpha-2026-05-13-1..7` (seven promotions on 2026-05-13; AT:R15's batch landed as `alpha-2026-05-13-7`: bug reporter + inline Term + daily-challenge + AI Coach + earn-path cap) |
-| Backend tests | **204 passed, 0 failed** (was 176 → +9 feedback + +2 inline-term + +7 daily-challenge + +10 AI-Coach + +1 gateway-cap) |
+| Git state | Clean working tree, **88 commits**, no remote yet |
+| Latest commit | (this session) `30fdca1` — A: comprehensive alpha audit logging — every HTTP, every LLM, every chat turn |
+| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1` (nine promotions total; AT:R16's two landed as `alpha-2026-05-13-8` (design v2 / TestFlight build chain) and `alpha-2026-05-14-1` (audit logging — three new Postgres tables live)) |
+| Backend tests | **212 passed, 0 failed** (was 204 → +8 audit tests) |
 | Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired (now rendered INLINE in prose via `{{term:id}}` token substitution), 280 AI Coach Q&A (categorised + retrievable + Concierge fallback), 183 daily challenges (Floor card + full-screen attempt), 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
+30fdca1 A: comprehensive alpha audit logging — every HTTP, every LLM, every chat turn
+dbba4a2 A22-A28: first TestFlight upload — Info.plist + build bump
+ae652ac handover: wrap AT:R15 — 85 commits, 204 tests, alpha-2026-05-13-7
+94e50ea design(v2): HexChip tinted variant + A29 (light-mode) docs
+29cdcfb design(v2): IBM Plex fonts + AccentCard + HexMeshOverlay + Convene hex CTA
+e3bc47b docs(promote-to-alpha): auto-source infra/alpha.env from main worktree
+daaffb2 A: earn-path coverage extension — gateway-set cap unlocks agents predictably
+1bf2136 A: AI Coach Q&A retrieval — Concierge fallback + searchable help screen
+37a84fd A17: daily-challenge service + Floor tab card
+a015b82 A(content): inline <Term> rendering — tokenize into prose stream
+4ef1a4f A(bugfix): in-app bug reporter — shake-or-long-press → POST /v1/feedback/bug
+4520f60 feat: /start-fresh slash command — bootstrap a new session in one command
+a18cfcd handover: drop the auto-trigger heuristics — Saiful invokes /handover when ready
+0578767 feat: /handover slash command — encode the handover protocol uniformly
+201b9fb docs: handover wrap — scrub stale "13 lessons" + label curriculum re-mapping as executed
+... (older history below truncated; the pre-AT:R15 chain stays as it was)
+EARLIER:
 54b0936 A11: i18n scaffold — l10n config + en/ar/ms ARB + locale switcher
 89183aa A10: Sentry SDK — backend + Flutter
 d69045e A8 + A9: systemd unit, env file, log rotation, pg backups + restore drill
@@ -86,7 +103,7 @@ db89336 W7: Sim Trading + Mandate editor — close the core loop
 | Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) — run on the Mac, no real DB touched |
 | Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-13 tables created by Alembic on first run (`agent_activations`, `auth_challenges`, `journal_entries`, `lessons_progress`, `mandates`, `overlay_edit_counts`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `user_overlays`, `users`, `alembic_version`) plus `sim_watchlists` from A18.
+13 tables created by Alembic on first run (`agent_activations`, `auth_challenges`, `journal_entries`, `lessons_progress`, `mandates`, `overlay_edit_counts`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `user_overlays`, `users`, `alembic_version`) plus `sim_watchlists` from A18, `bug_reports` from AT:R15, and (AT:R16) `llm_audit` + `http_audit` + `one_on_one_messages` for full alpha-era audit capture.
 
 Migrations live in `backend/alembic/versions/`. They run automatically inside `/promote-to-alpha` (step 5 of the playbook). To run by hand on melehost:
 
@@ -168,7 +185,93 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
-## What just landed (this session — AT:R15)
+## What just landed (this session — AT:R16)
+
+Three meaty wins in one session: (1) the design-v2 changes from AT:R15 made it onto the iPhone via a release build + Alpha promotion; (2) the full A22-A28 TestFlight chain walked end-to-end for the first time — AMI Trade now installs on a phone with no Mac cable; (3) comprehensive audit logging shipped (HTTP / LLM / 1-on-1 chats persisted to Postgres). 3 new commits, 8 new tests (204 → 212), 2 new alpha tags.
+
+### Design v2 → device + first promotion (`alpha-2026-05-13-8`)
+
+The AT:R15 design v2 commits (`29cdcfb`, `94e50ea`) and the playbook fix (`e3bc47b`) were sitting on disk but not on the iPhone. Built `flutter build ios --release` (53.8s Xcode build), installed via `xcrun devicectl device install app --device 7178EB26-3444-5D6E-BB78-6454EB5D5455`. IBM Plex fonts, HexMeshOverlay on Floor, AccentCard daily-challenge, HexButton Convene CTA, HexChip status pills — all live on TESTING IPHONE 13. Then ran `/promote-to-alpha` end-to-end: 204 tests pass, flutter analyze clean, infra/alpha.env auto-sourced from main worktree (`e3bc47b` fix in action — the worktree-side promotion was the trigger), 4/4 critical env keys verified, container healthy on first poll. Smoke: vllm active, AAPL $295.55 source=yfinance.
+
+### A22-A28 TestFlight chain — first end-to-end install (`dbba4a2`)
+
+Marketing greenlit keeping the standard bottom nav (no hex nav swap). Saiful registered the App Store Connect record with bundle id `ai.agenticmarketintel.amiTrade`, capabilities Sign in with Apple + Push Notifications. First Xcode-Organizer Distribute → Upload surfaced two real blockers we now have permanent fixes for:
+
+- **ITMS-90683: NSMicrophoneUsageDescription missing.** `audio_session.framework` references `requestRecordPermission` (transitive — not actually used by app code, but Apple's static binary scan flags it). Added `NSMicrophoneUsageDescription = "AMI Trade does not use the microphone."` to `mobile/ios/Runner/Info.plist`. Verified across the binary scan that this was the ONLY sensitive API ref in the build — no camera/photos/location/contacts hits.
+- **Export compliance form on every first-time upload.** Added `ITSAppUsesNonExemptEncryption=false` so future uploads skip the form (HTTPS via URLSession + Keychain via flutter_secure_storage are exempt encryption per US export rules).
+
+Build bumped `0.1.0+1 → 0.1.0+2` (Apple rejects duplicate CFBundleVersion). Second Organizer upload succeeded → Apple processing → Internal Testing group `AMI Team` created → Saiful added as tester → invite email → TestFlight app on iPhone → AMI Trade installed. **First time AMI Trade reached the test device without a USB cable.**
+
+CLI `flutter build ipa --release --export-method app-store` still fails on `exportArchive` with `No Accounts` because xcodebuild doesn't see Xcode's signed-in Apple ID context. Workaround for now: build the archive via CLI, distribute via Xcode Organizer GUI. To unblock CLI-only releases, sign Xcode into the Apple ID + cache an `Apple Distribution` cert (one-time GUI action — see the section "If you want CLI builds" in `docs/08_tech/testflight.md` if/when we add it).
+
+A22-A28 carry-overs that remain:
+- **A22** — privacy policy + ToS public URL (legal review external)
+- **A28** — tester onboarding kit (invite copy, feedback channel) — though the in-app bug reporter (AT:R15) already covers part of this
+
+### Comprehensive audit logging — every HTTP, every LLM, every chat (`30fdca1`, `alpha-2026-05-14-1`)
+
+Saiful's directive: *"i want to log everything right now since we are only just starting, we should know every thinng"*. Built three new Postgres tables (Alembic `d8a3e9f40004`) and wired them into every relevant code path:
+
+- **`llm_audit`** — one row per `LLMGateway.stream_chat` call. Full system prompt, full messages JSON, full response_text (truncated at 200k chars), provider, tier, locale, latency_ms, agent_id, flow, user_id. Written in the gateway's `finally` block so errors and partial streams also persist (verified with a test that raises mid-stream — the `partial` response + `RuntimeError` both land).
+- **`http_audit`** — one row per inbound HTTP request. Method, path, query, status, request_body (≤64KB), response_body (≤64KB, skipped for SSE), latency_ms, client_ip (X-Forwarded-For honored), user_id (parsed from path params). `/v1/health` is skipped at the middleware level (CF tunnel healthcheck noise — would otherwise dominate the table). Authorization / Cookie headers never reach the audit service.
+- **`one_on_one_messages`** — durable record of every 1-on-1 chat turn keyed by `session_id + user_id + agent_id`. Closes the gap where `agent_runner.stream_one_on_one_message` streamed via SSE with no server-side record. User message persists BEFORE the LLM call (survives gateway failures), assistant message persists AFTER the stream completes.
+
+Wired into every LLM call site by passing `audit_user_id` + `audit_agent_id` + `audit_flow` kwargs: `agent_runner` (1-on-1 + Concierge), `room_runner` (per-agent + PM narration), `coach_engine` (chat), `api/llm.translate`. Each call site labels its flow (`one_on_one` / `concierge_floor` / `room` / `room_pm` / `coach_chat` / `translate`) so psql queries can filter cleanly. `_RoomContext` gained a `user_id` field so the room flow can attribute audit rows.
+
+All audit writes are best-effort: `record_*` catches every exception and logs via `logger.exception` — they cannot break the request that triggered them.
+
+**Verified live on Alpha** post-`alpha-2026-05-14-1`:
+- Three tables exist in `ami_trade` DB on melehost
+- Two unrelated smoke calls (`/v1/llm/status` + `/v1/sim/quote/AAPL`) landed in `http_audit` with correct method/path/status/latency
+- `POST /v1/llm/translate {"system_prompt": "Translate to French only...", "user_message": "The market is rising."}` returned `"Le marché est à la hausse."` from vllm — corresponding `llm_audit` row captured `provider=vllm, tier=cheap, flow=translate, locale=en, latency_ms=1205, response_text="Le marché est à la hausse."` verbatim.
+
+Test doubles (`_FakeGateway` / `_CaptureGateway` in `test_concierge_live.py` + `test_room_runner.py`) updated to absorb the new `audit_*` kwargs via `**_audit`. Suite: 204 → 212 pass.
+
+**Retention policy:** unbounded for now. Add a nightly trim job (eg. `DELETE WHERE created_at < now() - interval '90 days'`) or monthly partitioning before tester count grows past a few dozen — TODO is in `backend/app/services/audit.py`.
+
+**Useful queries** (drop into a future `docs/08_tech/audit_queries.md` when there's reason):
+```sql
+-- every prompt Gemma received from user X today
+SELECT created_at, agent_id, flow, left(response_text, 100)
+FROM llm_audit WHERE user_id = '<uuid>' AND created_at > now() - interval '1 day'
+ORDER BY created_at DESC;
+
+-- replay a Concierge conversation
+SELECT created_at, role, content FROM one_on_one_messages
+WHERE session_id = '<uuid>' ORDER BY created_at;
+
+-- slowest endpoints in the last hour
+SELECT path, count(*), avg(latency_ms)::int AS avg_ms, max(latency_ms)
+FROM http_audit WHERE created_at > now() - interval '1 hour'
+GROUP BY path ORDER BY avg_ms DESC;
+```
+
+### iPhone state at handover
+
+- **TESTING IPHONE 13** has TWO AMI Trade installs:
+  1. Cabled release build from earlier in the session (29.4 MB, design v2 fully painted)
+  2. TestFlight build 0.1.0+2 (the canonical "ships like a real app" path)
+- Both point at `https://api-alpha.agenticmarketintel.ai` which is now serving `alpha-2026-05-14-1` with audit logging on every request. Every tap on either install lands rows in `http_audit` + `llm_audit` + `one_on_one_messages`.
+
+### Carry-overs for AT:R17
+
+- **A22 privacy policy + ToS public URL** (legal review — Saiful external)
+- **A28 tester onboarding kit** — invite copy, feedback channel, bug-report template; in-app bug reporter covers part of this
+- **External TestFlight** — needs Beta App Description + first ~24h Apple Beta App Review. Internal Testing covers Saiful + small inner circle today.
+- **Animation production** — `AnimationRegistry` empty; pending Lottie art (external)
+- **A29 light-mode register** — unblocked now that hex nav is off the table; sized 0.5 session in the project plan
+- **Sign Xcode into Apple ID + cache Distribution cert** — would unblock pure-CLI `flutter build ipa` for future releases. Current workflow goes through Organizer GUI.
+- **Audit retention trim job** — before tester count grows; today the tables are unbounded
+- **Followups from AT:R13/15 that remain:** hex bottom-nav swap is now decisively OFF the table per marketing; iOS-only Android shelved per project plan; B-phase migration to GCP/Supabase still future.
+
+### Alpha tags this session
+
+- `alpha-2026-05-13-8` — Flutter design v2 / TestFlight build chain (backend unchanged from -7; this tag covers the docs + playbook auto-source fix landing on Alpha)
+- `alpha-2026-05-14-1` — audit logging tables live; smoke-verified `http_audit` + `llm_audit` populated by real traffic
+
+---
+
+## What just landed (AT:R15)
 
 Big session. The work order Saiful set covered four product carry-overs from AT:R13, then expanded into a full design-system v2 pass after marketing surfaced gaps in the hex language. 14 new commits, 28 new tests, one alpha tag.
 
@@ -930,20 +1033,25 @@ That's it. The slash command:
 3. Enters plan mode with a state summary + the current carry-over list as options
 4. Waits for Saiful's direction
 
-Session name to use: **AT:R16** (this is handover #15).
+Session name to use: **AT:R17** (this is handover #16).
 
-Definition of done at hand-off (verified by `/handover` at end of AT:R15):
+Definition of done at hand-off (verified by `/handover` at end of AT:R16):
 - `git status`: clean working tree on `main`
-- 85 commits in
-- 204 backend unit tests passing
-- Alpha tags `alpha-2026-05-13-{1..7}` landed (latest: `alpha-2026-05-13-7` carries the AT:R15 carry-over batch; design v2 commits are Flutter/docs-only and not yet promoted)
-- iPhone has the AT:R15 release build installed (IBM Plex fonts, hex-mesh overlay on Floor, AccentCard daily-challenge, HexButton Convene CTA, HexChip status pills)
+- 88 commits in
+- 212 backend unit tests passing
+- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-1` landed (latest: `alpha-2026-05-14-1` carries the AT:R16 audit-logging tables; design v2 + TestFlight chain landed at `alpha-2026-05-13-8`)
+- TESTING IPHONE 13 has **two** AMI Trade installs:
+  1. Cabled release build of design v2 (29.4 MB, build 0.1.0+1)
+  2. TestFlight build 0.1.0+2 — installed via Internal Testing invite, no Mac cable in the loop
+- Both installs point at `https://api-alpha.agenticmarketintel.ai`. Audit logging is live: every tap lands rows in `http_audit` + (if it crosses Gemma) `llm_audit` + (if it's a chat) `one_on_one_messages`.
 
-**First decision points for AT:R16:**
+**First decision points for AT:R17:**
 
-1. **Hex bottom-nav swap** — Saiful had a marketing read pending at session end. If marketing greenlights, that's the v2 mobile UI kit's signature element (5 hex pills, center "Ask AMI" purple→blue with glow). Bundle with A29 (light-mode) since both touch every screen.
-2. **A22-A28 TestFlight push** — unblock as soon as App Store Connect provisioning is done. Saiful-external dependencies.
-3. **Animation production** — `AnimationRegistry` is empty; pending Lottie art.
+1. **A22 — Privacy policy + ToS public URL.** App Store needs this. Saiful-external (legal review) but Claude can draft the copy. Required before External TestFlight + before App Store submission ever.
+2. **External TestFlight unlock.** Fill in Test Information in App Store Connect, submit for Beta App Review (~24h first time). Then generate a public TestFlight link for alpha-tester recruitment without collecting emails. Saiful-external (App Store Connect web form).
+3. **A29 light-mode register.** Unblocked now that the hex bottom-nav swap is decisively OFF (marketing decided to keep standard bottom nav). Sized 0.5 session in the project plan.
+4. **Audit retention trim job.** Tables are unbounded today; add `DELETE WHERE created_at < now() - interval '90 days'` as a nightly systemd timer on melehost before tester count grows past a few dozen.
+5. **Sign Xcode into the Apple ID + cache Apple Distribution cert.** Would unblock pure-CLI `flutter build ipa` for future releases (current workflow still goes through Xcode Organizer GUI because the CLI xcodebuild doesn't see Xcode's account context).
 
 If Alpha is down at session start, `/start-fresh` will surface that
 and tell you the melehost debug commands.
