@@ -18,19 +18,19 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tabPortfolio => 'Portfolio';
 
   @override
-  String get tabJournal => 'Journal';
+  String get tabJournal => 'Jurnal';
 
   @override
-  String get tabLessons => 'Lessons';
+  String get tabLessons => 'Pengajian';
 
   @override
-  String get tabSettings => 'Settings';
+  String get tabSettings => 'Tetapan';
 
   @override
-  String get settingsLanguage => 'Language';
+  String get settingsLanguage => 'Bahasa';
 
   @override
-  String get settingsLanguageEnglish => 'English';
+  String get settingsLanguageEnglish => 'Inggeris';
 
   @override
   String get settingsLanguageArabic => 'العربية';
@@ -39,104 +39,105 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsLanguageMalay => 'Bahasa Melayu';
 
   @override
-  String get actionRead => 'READ';
+  String get actionRead => 'BACA';
 
   @override
-  String get actionQuizOnly => 'QUIZ ONLY';
+  String get actionQuizOnly => 'KUIZ SAHAJA';
 
   @override
-  String get watchlistHeading => 'WATCHLIST';
+  String get watchlistHeading => 'SENARAI PENGAWAS';
 
   @override
-  String get watchlistAdd => 'ADD';
+  String get watchlistAdd => 'TAMBAH';
 
   @override
   String get watchlistEmpty =>
-      'Add tickers you want to watch. Tap a row for quick actions: Ask the Market Analyst, Convene the Room, or open a trade.';
+      'Tambah ticker yang ingin dipantau. Ketik baris untuk tindakan pantas: Ask the Market Analyst, Convene the Room, atau buka trade.';
 
   @override
-  String get watchlistOpenTradeTicket => 'OPEN TRADE TICKET';
+  String get watchlistOpenTradeTicket => 'BUKA TIKET TRADE';
 
   @override
-  String get watchlistAskMarketAnalyst => 'ASK THE MARKET ANALYST';
+  String get watchlistAskMarketAnalyst => 'TANYA MARKET ANALYST';
 
   @override
-  String get watchlistConveneRoom => 'CONVENE THE ROOM';
+  String get watchlistConveneRoom => 'KUMPULKAN BILIK';
 
   @override
-  String get watchlistRemove => 'REMOVE FROM WATCHLIST';
+  String get watchlistRemove => 'ALIHKAN DARI SENARAI PENGAWAS';
 
   @override
-  String get floorTabUpper => 'FLOOR';
+  String get floorTabUpper => 'LANTAI';
 
   @override
   String get portfolioTabUpper => 'PORTFOLIO';
 
   @override
-  String get journalTabUpper => 'JOURNAL';
+  String get journalTabUpper => 'JURNAL';
 
   @override
-  String get lessonsTabUpper => 'LESSONS';
+  String get lessonsTabUpper => 'PELAJARAN';
 
   @override
-  String get settingsTabUpper => 'SETTINGS';
+  String get settingsTabUpper => 'TETAPAN';
 
   @override
   String get floorConciergeHeading => 'AMI CONCIERGE';
 
   @override
-  String get floorConciergeTagline => 'Your personal assistant — tap to chat';
+  String get floorConciergeTagline =>
+      'Pembantu peribadi anda — ketik untuk sembang';
 
   @override
-  String get floorTeamHeading => 'YOUR TEAM';
+  String get floorTeamHeading => 'PASUKAN ANDA';
 
   @override
   String floorUnlockedSummary(int count) {
-    return '$count of 12 unlocked. Tap a locked hex to see how.';
+    return '$count daripada 12 dibuka. Ketik heksagon terkunci untuk maklumat lanjut.';
   }
 
   @override
-  String get floorConveneCta => 'CONVENE THE ROOM';
+  String get floorConveneCta => 'KUMPULKAN';
 
   @override
   String get floorConveneCaption =>
-      'Run a full multi-agent debate on a ticker.';
+      'Jalankan debat pelbagai ejen sepenuhnya pada ticker.';
 
   @override
-  String get floorRestartOnboarding => 'restart onboarding';
+  String get floorRestartOnboarding => 'mulakan semula orientasi';
 
   @override
   String get floorFooter =>
-      '⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE';
+      '⬢  AMI TRADE • SIMULASI PENDIDIKAN • BUKAN NASIHAT';
 
   @override
-  String get floorLockedHowTo => 'HOW TO UNLOCK';
+  String get floorLockedHowTo => 'CARA UNLOCK';
 
   @override
   String get floorLockedNoLessons =>
-      'This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.';
+      'Ejen ini akan unlock secara automatik sebaik sahaja pelajaran Earn-Path tersedia. Buat masa ini, anda boleh pratonton melalui 1-on-1 jika pelan anda membenarkannya.';
 
   @override
   String get floorLockedEarnByLessons =>
-      'Earn this agent free by passing every lesson that involves them:';
+      'Dapatkan ejen ini secara percuma dengan melengkapkan setiap pelajaran yang melibatkan mereka:';
 
   @override
-  String get floorLockedGoToLessons => 'GO TO LESSONS';
+  String get floorLockedGoToLessons => 'KE PELAJARAN';
 
   @override
-  String get floorLockedUpgradeSoon => 'UPGRADE TO SKIP — coming soon';
+  String get floorLockedUpgradeSoon => 'UPGRADE UNTUK SKIP — akan datang';
 
   @override
   String get portfolioHeading => 'PORTFOLIO';
 
   @override
-  String get portfolioNewTradeTooltip => 'New trade';
+  String get portfolioNewTradeTooltip => 'Dagangan baharu';
 
   @override
-  String get portfolioTotalValue => 'TOTAL VALUE';
+  String get portfolioTotalValue => 'NILAI KESELURUHAN';
 
   @override
-  String get portfolioCash => 'CASH';
+  String get portfolioCash => 'TUNAI';
 
   @override
   String portfolioDrawdown(String pct) {
@@ -150,68 +151,68 @@ class AppLocalizationsMs extends AppLocalizations {
   String get portfolioMock => 'MOCK';
 
   @override
-  String get portfolioStartSimTrading => 'Start sim trading';
+  String get portfolioStartSimTrading => 'Mula dagangan simulasi';
 
   @override
   String get portfolioStartSimTradingBody =>
-      'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'\'s safety floor runs on every submit.';
+      'CONVENE the Room untuk dapatkan keputusan, kemudian buka dagangan — atau letakkan dagangan terus dari sini. Safety floor PM anda berjalan pada setiap hantar.';
 
   @override
-  String get portfolioNewTrade => 'NEW TRADE';
+  String get portfolioNewTrade => 'DAGANGAN BARU';
 
   @override
-  String get portfolioHoldings => 'HOLDINGS';
+  String get portfolioHoldings => 'PEGANGAN';
 
   @override
-  String get portfolioTrades => 'TRADES';
+  String get portfolioTrades => 'DAGANGAN';
 
   @override
-  String get portfolioNoTrades => 'No trades yet.';
+  String get portfolioNoTrades => 'Tiada dagangan lagi.';
 
   @override
-  String get portfolioCloseTooltip => 'Close';
+  String get portfolioCloseTooltip => 'Tutup';
 
   @override
-  String get portfolioAddDialogTitle => 'ADD TO WATCHLIST';
+  String get portfolioAddDialogTitle => 'TAMBAH KE SENARAI PEMANTAUAN';
 
   @override
-  String get portfolioAddDialogHint => 'Ticker (e.g. NVDA)';
+  String get portfolioAddDialogHint => 'Ticker (cth. NVDA)';
 
   @override
-  String get actionCancel => 'CANCEL';
+  String get actionCancel => 'BATAL';
 
   @override
-  String get actionAdd => 'ADD';
+  String get actionAdd => 'TAMBAH';
 
   @override
-  String get journalHeading => 'DECISION JOURNAL';
+  String get journalHeading => 'JURNAL KEPUTUSAN';
 
   @override
-  String get journalFilterAll => 'ALL';
+  String get journalFilterAll => 'SEMUA';
 
   @override
-  String get journalFilterOneOnOne => '1-ON-1';
+  String get journalFilterOneOnOne => '1-LAWAN-1';
 
   @override
   String get journalFilterCoach => 'COACH';
 
   @override
-  String get journalFilterLessons => 'LESSONS';
+  String get journalFilterLessons => 'PELAJARAN';
 
   @override
-  String get journalFilterUnlocks => 'UNLOCKS';
+  String get journalFilterUnlocks => 'NYAHKUNCI';
 
   @override
   String journalRetentionWarning(int days) {
-    return 'Floor Pass: last $days days only. Upgrade to keep everything.';
+    return 'Floor Pass: $days hari terakhir sahaja. Naik taraf untuk simpan semua.';
   }
 
   @override
-  String get journalEmptyTitle => 'No entries yet.';
+  String get journalEmptyTitle => 'Tiada entri lagi.';
 
   @override
   String get journalEmptyBody =>
-      'Talk to an agent, coach one, or complete a lesson — every action lands here automatically.';
+      'Bercakap dengan ejen, bimbing seorang, atau lengkapkan pelajaran — setiap tindakan direkodkan di sini secara automatik.';
 
   @override
   String get journalEntryTypeOneOnOne => '1-ON-1';
@@ -238,68 +239,68 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalEntryTypeRoom => 'ROOM';
 
   @override
-  String get journalDetailHeading => 'ENTRY DETAIL';
+  String get journalDetailHeading => 'BUTIRAN ENTRI';
 
   @override
-  String get journalDetailLoading => 'Loading…';
+  String get journalDetailLoading => 'Memuatkan…';
 
   @override
-  String get journalDetailBlockYou => 'YOU';
+  String get journalDetailBlockYou => 'ANDA';
 
   @override
-  String get journalDetailBlockAgent => 'AGENT';
+  String get journalDetailBlockAgent => 'EJEN';
 
   @override
   String get journalDetailBlockOverlay => 'OVERLAY';
 
   @override
   String journalDetailSavedAsVersion(int version) {
-    return 'Saved as v$version';
+    return 'Disimpan sebagai v$version';
   }
 
   @override
   String journalDetailVerdictLine(String action) {
-    return 'VERDICT: $action';
+    return 'KEPUTUSAN: $action';
   }
 
   @override
-  String get journalNoteHeading => 'YOUR NOTE';
+  String get journalNoteHeading => 'NOTA ANDA';
 
   @override
   String get journalNoteHint =>
-      'Why this mattered. What you learned. What you\'\'d do differently.';
+      'Sebab ia penting. Apa yang dipelajari. Apa yang akan dilakukan secara berbeza.';
 
   @override
-  String get journalNoteOutcome => 'OUTCOME';
+  String get journalNoteOutcome => 'HASIL';
 
   @override
-  String get journalNoteOutcomeWin => 'WIN';
+  String get journalNoteOutcomeWin => 'MENANG';
 
   @override
-  String get journalNoteOutcomeLoss => 'LOSS';
+  String get journalNoteOutcomeLoss => 'RUGI';
 
   @override
-  String get journalNoteOutcomePending => 'PENDING';
+  String get journalNoteOutcomePending => 'MENUNGGU';
 
   @override
-  String get journalNoteSave => 'SAVE NOTE';
+  String get journalNoteSave => 'SIMPAN NOTA';
 
   @override
-  String get journalNoteSaved => 'Note saved';
+  String get journalNoteSaved => 'Nota disimpan';
 
   @override
-  String get lessonsHeading => 'LESSONS';
+  String get lessonsHeading => 'PELAJARAN';
 
   @override
-  String get lessonsYourProgress => 'YOUR PROGRESS';
+  String get lessonsYourProgress => 'KEMAJUAN ANDA';
 
   @override
   String lessonsCount(int done, int total) {
-    return '$done / $total lessons';
+    return '$done / $total pelajaran';
   }
 
   @override
-  String get lessonsAgents => 'AGENTS';
+  String get lessonsAgents => 'EJEN';
 
   @override
   String lessonsAgentsCount(int unlocked) {
@@ -307,7 +308,7 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get lessonsNextUp => 'NEXT UP';
+  String get lessonsNextUp => 'SETERUSNYA';
 
   @override
   String lessonsDurationMin(int min) {
@@ -315,18 +316,18 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get lessonReaderLoading => 'Loading…';
+  String get lessonReaderLoading => 'Memuatkan…';
 
   @override
-  String get lessonReaderQuizOnlyBadge => 'QUIZ ONLY';
+  String get lessonReaderQuizOnlyBadge => 'KUIZ SAHAJA';
 
   @override
   String get lessonReaderQuizOnlyBannerOne =>
-      'Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that\'\'s your teaching surface.';
+      'Terus ke 1 kuiz. Luluskan dan pelajaran tetap dikira untuk pembukaan ejen. Jawapan salah akan memaparkan penjelasan — itulah ruang pembelajaran anda.';
 
   @override
   String lessonReaderQuizOnlyBannerMany(int count) {
-    return 'Skipping straight to the $count quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.';
+    return 'Terus ke $count kuiz. Luluskan semua dan pelajaran tetap dikira untuk pembukaan ejen. Jawapan salah akan memaparkan penjelasan.';
   }
 
   @override
@@ -335,79 +336,79 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
-  String get lessonReaderQuiz => 'QUIZ';
+  String get lessonReaderQuiz => 'KUIZ';
 
   @override
   String lessonReaderChatWith(String agent) {
-    return 'CHAT WITH $agent';
+    return 'Sembang dengan $agent';
   }
 
   @override
-  String get lessonReaderSubmitQuiz => 'SUBMIT QUIZ';
+  String get lessonReaderSubmitQuiz => 'HANTAR KUIZ';
 
   @override
-  String get lessonReaderChecking => 'CHECKING…';
+  String get lessonReaderChecking => 'MENYEMAK…';
 
   @override
-  String get lessonReaderPassed => 'PASSED';
+  String get lessonReaderPassed => 'LULUS';
 
   @override
-  String get lessonReaderNotQuite => 'NOT QUITE';
+  String get lessonReaderNotQuite => 'TIDAK TEPAT';
 
   @override
   String lessonReaderCorrectOf(int correct, int total) {
-    return '$correct / $total correct';
+    return '$correct / $total betul';
   }
 
   @override
-  String get lessonReaderAgentUnlocked => 'AGENT UNLOCKED';
+  String get lessonReaderAgentUnlocked => 'AGEN DIBUKA';
 
   @override
-  String get lessonReaderTryAgain => 'TRY AGAIN';
+  String get lessonReaderTryAgain => 'CUBA LAGI';
 
   @override
-  String get lessonReaderDone => 'DONE';
+  String get lessonReaderDone => 'SELESAI';
 
   @override
-  String get lessonReaderBackToLessons => 'BACK TO LESSONS';
+  String get lessonReaderBackToLessons => 'KEMBALI KE PELAJARAN';
 
   @override
-  String get settingsHeading => 'SETTINGS';
+  String get settingsHeading => 'TETAPAN';
 
   @override
   String settingsMandateVersion(int version) {
-    return 'mandate v$version';
+    return 'mandat v$version';
   }
 
   @override
-  String get settingsSaving => 'SAVING…';
+  String get settingsSaving => 'MENYIMPAN…';
 
   @override
-  String get settingsSave => 'SAVE';
+  String get settingsSave => 'SIMPAN';
 
   @override
-  String get settingsMandateUpdated => 'Mandate updated.';
+  String get settingsMandateUpdated => 'Mandat dikemas kini.';
 
   @override
-  String get settingsSectionMandate => 'MY MANDATE';
+  String get settingsSectionMandate => 'MANDAT SAYA';
 
   @override
-  String get settingsSectionCompliance => 'COMPLIANCE';
+  String get settingsSectionCompliance => 'Kepatuhan';
 
   @override
-  String get settingsSectionProfile => 'PROFILE';
+  String get settingsSectionProfile => 'PROFIL';
 
   @override
-  String get settingsSectionLanguageUpper => 'LANGUAGE';
+  String get settingsSectionLanguageUpper => 'BAHASA';
 
   @override
-  String get settingsSectionAccount => 'ACCOUNT';
+  String get settingsSectionAccount => 'AKAUN';
 
   @override
-  String get settingsSectionDeveloper => 'DEVELOPER';
+  String get settingsSectionDeveloper => 'PEMBANGUN';
 
   @override
-  String get settingsRiskScore => 'Risk score';
+  String get settingsRiskScore => 'Skor risiko';
 
   @override
   String settingsRiskScoreValue(int value) {
@@ -416,40 +417,40 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get settingsRiskLabel1 =>
-      'Capital preservation. Small sizes, tight stops.';
+      'Pemeliharaan modal. Saiz kecil, stop ketat.';
 
   @override
-  String get settingsRiskLabel2 => 'Cautious. Below-average position sizing.';
+  String get settingsRiskLabel2 => 'Berhati-hati. Saiz posisi bawah purata.';
 
   @override
-  String get settingsRiskLabel3 => 'Balanced. Standard 3-5% positions.';
+  String get settingsRiskLabel3 => 'Seimbang. Posisi standard 3-5%.';
 
   @override
   String get settingsRiskLabel4 =>
-      'Aggressive. Larger sizes on high-conviction setups.';
+      'Agresif. Saiz lebih besar untuk setup keyakinan tinggi.';
 
   @override
   String get settingsRiskLabel5 =>
-      'Highest risk tolerance. Concentrated bets allowed.';
+      'Toleransi risiko tertinggi. Pertaruhan tertumpu dibenarkan.';
 
   @override
-  String get settingsMaxDrawdown => 'Max drawdown';
+  String get settingsMaxDrawdown => 'Drawdown maksimum';
 
   @override
   String get settingsMaxDrawdownExplain =>
-      'Your PM refuses trades that would push the portfolio past this.';
+      'PM anda menolak dagangan yang akan menolak PORTFOLIO melebihi had ini.';
 
   @override
-  String get settingsComplianceHalal => 'Halal screen';
+  String get settingsComplianceHalal => 'Saringan Halal';
 
   @override
   String get settingsComplianceEsgLite => 'ESG-lite';
 
   @override
-  String get settingsComplianceTAG => 'No tobacco / alcohol / gambling';
+  String get settingsComplianceTAG => 'Tiada tembakau / alkohol / perjudian';
 
   @override
-  String get settingsComplianceFossil => 'No fossil fuels';
+  String get settingsComplianceFossil => 'Tiada bahan api fosil';
 
   @override
   String get settingsComplianceLongOnly => 'Long-only';
@@ -458,292 +459,293 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsComplianceLiquidOnly => 'Liquid-only';
 
   @override
-  String get settingsProfilePlan => 'Plan';
+  String get settingsProfilePlan => 'Pelan';
 
   @override
-  String get settingsProfileLocale => 'Locale';
+  String get settingsProfileLocale => 'Lokal';
 
   @override
-  String get settingsProfileTimezone => 'Timezone';
+  String get settingsProfileTimezone => 'Zon Masa';
 
   @override
-  String get settingsProfilePath => 'Path';
+  String get settingsProfilePath => 'Laluan';
 
   @override
   String get settingsProfileHorizon => 'Horizon';
 
   @override
-  String get settingsProfilePrimaryGoal => 'Primary goal';
+  String get settingsProfilePrimaryGoal => 'Matlamat utama';
 
   @override
-  String get settingsProfileCredits => 'Credits';
+  String get settingsProfileCredits => 'Kredit';
 
   @override
   String get settingsAccountStatus => 'Status';
 
   @override
-  String get settingsAccountSignedIn => 'Signed in';
+  String get settingsAccountSignedIn => 'Log masuk';
 
   @override
-  String get settingsAccountGuest => 'Guest (anonymous)';
+  String get settingsAccountGuest => 'Tetamu (tanpa nama)';
 
   @override
   String get settingsAccountHandle => 'Handle';
 
   @override
   String get settingsAccountGuestNote =>
-      'Mandate, journal, and portfolio stay on this device until you sign in.';
+      'Mandat, jurnal, dan portfolio kekal pada peranti ini sehingga anda log masuk.';
 
   @override
-  String get settingsManageAccount => 'MANAGE ACCOUNT';
+  String get settingsManageAccount => 'URUS AKAUN';
 
   @override
-  String get settingsSignIn => 'SIGN IN';
+  String get settingsSignIn => 'LOG MASUK';
 
   @override
   String get settingsLanguagePlaceholderNote =>
-      'AR + MS ship as placeholders today — missing keys fall back to English. Translators drop in proper ARBs and the locale lights up.';
+      'AR + MS dihantar sebagai placeholder hari ini — kunci yang hilang akan kembali ke bahasa Inggeris. Penterjemah memasukkan ARB yang betul dan lokaliti akan diaktifkan.';
 
   @override
-  String get settingsDeveloperActive => 'Active backend';
+  String get settingsDeveloperActive => 'Backend aktif';
 
   @override
-  String get settingsDeveloperNoUrl => '(no URL baked into this build)';
+  String get settingsDeveloperNoUrl => '(tiada URL terbina dalam binaan ini)';
 
   @override
-  String get settingsDeveloperNotInBuild => '· not in this build';
+  String get settingsDeveloperNotInBuild => '· tiada dalam binaan ini';
 
   @override
   String get settingsDeveloperFootnote =>
-      'This section is compiled out of MVP / App Store builds. Only PROD will be reachable then.';
+      'Bahagian ini dikeluarkan daripada binaan MVP / App Store. Hanya PROD yang boleh dicapai selepas itu.';
 
   @override
   String get onboardingHeader => 'AMI TRADE';
 
   @override
-  String get onboardingHeaderSetup => 'SETUP';
+  String get onboardingHeaderSetup => 'PENYEDIAAN';
 
   @override
-  String get onboardingHintSending => 'Sending...';
+  String get onboardingHintSending => 'Menghantar...';
 
   @override
-  String get onboardingHintAnswer => 'Type your answer…';
+  String get onboardingHintAnswer => 'Taip jawapan anda…';
 
   @override
-  String get onboardingReadbackContinue => 'LOOKS RIGHT — CONTINUE';
+  String get onboardingReadbackContinue => 'BETUL — TERUSKAN';
 
   @override
-  String get onboardingMeetYourTeam => 'MEET YOUR TEAM';
+  String get onboardingMeetYourTeam => 'KENALI PASUKAN ANDA';
 
   @override
-  String get onboardingErrorTitle => 'CAN\'\'T REACH THE BACKEND';
+  String get onboardingErrorTitle => 'GAGAL MENGHUBUNGI BACKEND';
 
   @override
-  String get onboardingErrorUnknown => 'Unknown error';
+  String get onboardingErrorUnknown => 'Ralat tidak diketahui';
 
   @override
-  String get onboardingTryAgain => 'TRY AGAIN';
+  String get onboardingTryAgain => 'CUBA LAGI';
 
   @override
-  String get signInHeading => 'SIGN IN';
+  String get signInHeading => 'LOG MASUK';
 
   @override
   String get signInIntro =>
-      'Sign in to keep your mandate, journal, and portfolio across devices. Until then, everything you build stays on this device.';
+      'Log masuk untuk mengekalkan mandat, jurnal, dan PORTFOLIO anda merentasi peranti. Sebelum itu, semua yang anda bina kekal pada peranti ini.';
 
   @override
-  String get signInWithApple => 'Sign in with Apple';
+  String get signInWithApple => 'Log masuk dengan Apple';
 
   @override
-  String get signInWithEmail => 'OR CONTINUE WITH EMAIL';
+  String get signInWithEmail => 'ATAU TERUSKAN DENGAN EMEL';
 
   @override
-  String get signInEmailHint => 'you@example.com';
+  String get signInEmailHint => 'anda@contoh.com';
 
   @override
-  String get signInSendCode => 'SEND CODE';
+  String get signInSendCode => 'HANTAR KOD';
 
   @override
-  String get signInResendCode => 'RESEND CODE';
+  String get signInResendCode => 'HANTAR SEMULA KOD';
 
   @override
-  String get signInCodeHint => '6-digit code';
+  String get signInCodeHint => 'Kod 6-digit';
 
   @override
-  String get signInVerify => 'VERIFY & CLAIM';
+  String get signInVerify => 'SAH & TUNTUT';
 
   @override
   String signInDevCode(String code) {
-    return 'DEV mode — code: $code';
+    return 'Mod DEV — kod: $code';
   }
 
   @override
-  String get signInCodeSent => 'Code sent. Check your email.';
+  String get signInCodeSent => 'Kod dihantar. Semak e-mel anda.';
 
   @override
-  String get signInCodeFailed => 'Code did not verify. Try again.';
+  String get signInCodeFailed => 'Kod tidak sah. Cuba lagi.';
 
   @override
-  String get signInAppleFailed => 'Apple sign-in failed.';
+  String get signInAppleFailed => 'Log masuk Apple gagal.';
 
   @override
   String signInSignedInAs(String handle) {
-    return 'Signed in as $handle';
+    return 'Log masuk sebagai $handle';
   }
 
   @override
   String get signInLegalFootnote =>
-      'AMI Trade is simulation-only. Nothing here is investment advice and no real trades are executed.';
+      'AMI Trade adalah simulasi sahaja. Tiada apa-apa di sini merupakan nasihat pelaburan dan tiada dagangan sebenar dilaksanakan.';
 
   @override
   String get oneOnOneAskAnything =>
-      'Ask me anything in my domain.\nType below to start.';
+      'Tanya saya apa sahaja dalam domain saya.\nTaip di bawah untuk bermula.';
 
   @override
-  String get oneOnOneStreaming => 'Streaming…';
+  String get oneOnOneStreaming => 'Menstrim…';
 
   @override
-  String get oneOnOneHint => 'Ask anything…';
+  String get oneOnOneHint => 'Tanya apa sahaja…';
 
   @override
-  String get oneOnOneCoachTooltip => 'Coach this agent';
+  String get oneOnOneCoachTooltip => 'Bimbing ejen ini';
 
   @override
   String coachHeading(String agent) {
-    return 'COACH $agent';
+    return 'BIMBING $agent';
   }
 
   @override
-  String get coachNoOverlayYet => 'No overlay yet — factory defaults';
+  String get coachNoOverlayYet => 'Tiada overlay lagi — tetapan asal kilang';
 
   @override
   String coachOverlayActive(int version) {
-    return 'Overlay v$version active';
+    return 'Overlay v$version aktif';
   }
 
   @override
-  String get coachNoEditsLeft => '⚠️ No edits left — upgrade to keep coaching';
+  String get coachNoEditsLeft =>
+      '⚠️ Tiada suntingan tinggal — naik taraf untuk terus membimbing';
 
   @override
   String coachOneEditLeft(int count) {
-    return '⚠️ $count edit left at your tier';
+    return '⚠️ $count suntingan tinggal untuk tahap anda';
   }
 
   @override
-  String get coachVersionHistoryTooltip => 'Version history';
+  String get coachVersionHistoryTooltip => 'Sejarah versi';
 
   @override
   String coachCurrentOverlayLabel(int version) {
-    return 'CURRENT OVERLAY — v$version';
+    return 'OVERLAY SEMASA — v$version';
   }
 
   @override
-  String get coachProtectedSafetyFloor => 'PROTECTED — safety floor';
+  String get coachProtectedSafetyFloor => 'DILINDUNGI — safety floor';
 
   @override
-  String get coachProtectedMandate => 'PROTECTED — mandate rule';
+  String get coachProtectedMandate => 'DILINDUNGI — peraturan mandat';
 
   @override
-  String get coachEditLimitReached => 'EDIT LIMIT REACHED';
+  String get coachEditLimitReached => 'HAD EDIT DICAPAI';
 
   @override
-  String get coachRefused => 'COACH REFUSED';
+  String get coachRefused => 'COACH MENOLAK';
 
   @override
   String coachProposalSavedSnack(int version, String summary) {
-    return 'Saved as v$version — $summary';
+    return 'Disimpan sebagai v$version — $summary';
   }
 
   @override
   String coachAgentRefused(String agent) {
-    return '$agent REFUSED';
+    return '$agent MENOLAK';
   }
 
   @override
   String coachAgentProposal(String agent) {
-    return '$agent — PROPOSAL';
+    return '$agent — CADANGAN';
   }
 
   @override
-  String get coachPlainEnglish => 'Plain English:';
+  String get coachPlainEnglish => 'Bahasa Mudah:';
 
   @override
-  String get coachOverlayAddition => 'Overlay addition:';
+  String get coachOverlayAddition => 'Penambahan tindanan:';
 
   @override
-  String get coachAccept => 'ACCEPT';
+  String get coachAccept => 'TERIMA';
 
   @override
-  String get coachRefine => 'REFINE';
+  String get coachRefine => 'PERHALUSI';
 
   @override
-  String get coachReject => 'REJECT';
+  String get coachReject => 'TOLAK';
 
   @override
-  String get coachDismiss => 'DISMISS';
+  String get coachDismiss => 'KETEPIKAN';
 
   @override
-  String get coachInputHint => 'Tell me what to change…';
+  String get coachInputHint => 'Beritahu saya apa yang perlu diubah…';
 
   @override
-  String get coachDrafting => 'DRAFTING…';
+  String get coachDrafting => 'MENYEDIAKAN…';
 
   @override
-  String get coachProposeChange => 'PROPOSE CHANGE';
+  String get coachProposeChange => 'CADANG PERUBAHAN';
 
   @override
   String coachHistoryHeading(String agent) {
-    return '$agent HISTORY';
+    return 'SEJARAH $agent';
   }
 
   @override
-  String get coachHistorySubtitle => 'All saved coaching versions';
+  String get coachHistorySubtitle => 'Semua versi bimbingan yang disimpan';
 
   @override
   String coachHistoryEditsUnlimited(int count) {
-    return '$count edits made • unlimited at your tier';
+    return '$count suntingan dibuat • tanpa had untuk tahap anda';
   }
 
   @override
   String coachHistoryEditsRemaining(int count, int remaining) {
-    return '$count edits made • $remaining remaining';
+    return '$count suntingan dibuat • $remaining baki';
   }
 
   @override
   String get coachHistoryEmpty =>
-      'No coaching history yet.\nGo back and propose your first change.';
+      'Tiada sejarah bimbingan lagi.\nKembali dan cadangkan perubahan pertama anda.';
 
   @override
-  String get coachHistoryActiveBadge => 'ACTIVE';
+  String get coachHistoryActiveBadge => 'AKTIF';
 
   @override
   String coachHistoryRollbackTitle(int version) {
-    return 'Rollback to v$version?';
+    return 'Kembalikan ke v$version?';
   }
 
   @override
   String coachHistoryRollbackBody(int version) {
-    return 'Your agent will start using v$version immediately. The newer versions stay in history.';
+    return 'Agen anda akan mula menggunakan v$version serta-merta. Versi yang lebih baharu kekal dalam sejarah.';
   }
 
   @override
-  String get coachHistoryRollback => 'ROLLBACK';
+  String get coachHistoryRollback => 'KEMBALIKAN';
 
   @override
-  String get coachHistoryRollbackToThis => 'ROLLBACK TO THIS';
+  String get coachHistoryRollbackToThis => 'KEMBALIKAN KE SINI';
 
   @override
-  String get conveneHeading => 'CONVENE THE ROOM';
+  String get conveneHeading => 'CONVENE BILIK';
 
   @override
   String get convenePickTicker =>
-      'Pick a ticker. Your full team runs the debate.';
+      'Pilih ticker. Seluruh pasukan anda akan menjalankan perbahasan.';
 
   @override
-  String get conveneTickerHint => 'e.g. NVDA';
+  String get conveneTickerHint => 'cth. NVDA';
 
   @override
-  String get conveneOrPickOne => 'OR PICK ONE';
+  String get conveneOrPickOne => 'ATAU PILIH SATU';
 
   @override
   String get conveneCta => 'CONVENE';
@@ -752,76 +754,76 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomHeadingPrefix => 'CONVENE ›';
 
   @override
-  String get roomStandingBy => 'standing by';
+  String get roomStandingBy => 'bersedia';
 
   @override
-  String get roomDeliberating => 'Team deliberating…';
+  String get roomDeliberating => 'Pasukan sedang berbincang…';
 
   @override
-  String get roomEndedNoVerdict => 'Room ended without a verdict.';
+  String get roomEndedNoVerdict => 'Bilik tamat tanpa keputusan.';
 
   @override
-  String get roomSavedToJournal => 'Saved to Journal';
+  String get roomSavedToJournal => 'Disimpan ke Jurnal';
 
   @override
-  String get roomClose => 'CLOSE';
+  String get roomClose => 'TUTUP';
 
   @override
   String get roomSafetyFloorPill => 'SAFETY FLOOR';
 
   @override
   String roomVerdictHeading(String action) {
-    return 'VERDICT — $action';
+    return 'KEPUTUSAN — $action';
   }
 
   @override
   String get roomMetricTicker => 'TICKER';
 
   @override
-  String get roomMetricSize => 'SIZE';
+  String get roomMetricSize => 'SAIZ';
 
   @override
-  String get roomMetricEntry => 'ENTRY';
+  String get roomMetricEntry => 'KEMASUKAN';
 
   @override
-  String get roomMetricStop => 'STOP';
+  String get roomMetricStop => 'HENTIAN';
 
   @override
-  String get roomMetricTarget => 'TARGET';
+  String get roomMetricTarget => 'SASARAN';
 
   @override
   String get roomMetricHorizon => 'HORIZON';
 
   @override
   String roomHorizonDays(int days) {
-    return '$days days';
+    return '$days hari';
   }
 
   @override
-  String get roomViolations => 'VIOLATIONS';
+  String get roomViolations => 'PELANGGARAN';
 
   @override
-  String get roomOpenTradeTicket => 'OPEN TRADE TICKET';
+  String get roomOpenTradeTicket => 'BUKA TIKET DAGANGAN';
 
   @override
   String get roomTradeTicketCaption =>
-      'Submits with the verdict\'\'s size / stop / target. PM safety floor reruns.';
+      'Hantar dengan saiz / stop / target keputusan. Larian semula safety floor PM.';
 
   @override
-  String get tradeTicketHeading => 'NEW TRADE';
+  String get tradeTicketHeading => 'DAGANGAN BARU';
 
   @override
-  String get tradeTicketSafetyFloorBlocked => 'SAFETY FLOOR — TRADE BLOCKED';
+  String get tradeTicketSafetyFloorBlocked => 'SAFETY FLOOR — DAGANGAN DISEKAT';
 
   @override
   String get tradeTicketChangeMandate =>
-      'Change what is enforced via Settings → My Mandate.';
+      'Ubah apa yang dikuatkuasakan melalui Settings → My Mandate.';
 
   @override
   String get tradeTicketLabelTicker => 'TICKER';
 
   @override
-  String get tradeTicketLabelQuantity => 'QUANTITY';
+  String get tradeTicketLabelQuantity => 'KUANTITI';
 
   @override
   String get tradeTicketLabelStop => 'STOP';
@@ -830,7 +832,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tradeTicketLabelTarget => 'TARGET';
 
   @override
-  String get tradeTicketLabelHorizon => 'HORIZON (DAYS)';
+  String get tradeTicketLabelHorizon => 'HORIZON (HARI)';
 
   @override
   String get tradeTicketHintTicker => 'NVDA';
@@ -839,28 +841,28 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tradeTicketHintQty => '10';
 
   @override
-  String get tradeTicketHintOptional => 'optional';
+  String get tradeTicketHintOptional => 'pilihan';
 
   @override
-  String get tradeTicketSubmitting => 'SUBMITTING…';
+  String get tradeTicketSubmitting => 'MENGHANTAR…';
 
   @override
-  String get tradeTicketSubmit => 'SUBMIT TRADE';
+  String get tradeTicketSubmit => 'HANTAR DAGANGAN';
 
   @override
   String get tradeTicketFooterNote =>
-      'PM safety floor runs on submit — compliance flags + drawdown + single-name cap.';
+      'Had keselamatan PM berjalan semasa hantar — bendera pematuhan + drawdown + had nama tunggal.';
 
   @override
-  String get tradeTicketSideBuy => 'BUY';
+  String get tradeTicketSideBuy => 'BELI';
 
   @override
-  String get tradeTicketSideSell => 'SELL';
+  String get tradeTicketSideSell => 'JUAL';
 
   @override
   String tradeTicketFilled(
       String side, String qty, String ticker, String price) {
-    return 'Filled: $side $qty $ticker @ \\\$$price';
+    return 'Dipenuhi: $side $qty $ticker @ \$$price';
   }
 
   @override
