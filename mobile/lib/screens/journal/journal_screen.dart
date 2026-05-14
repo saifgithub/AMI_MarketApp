@@ -137,8 +137,11 @@ class _FilterRow extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.only(right: 8),
               child: ChoiceChip(
-                label: Text(f.label,
-                    style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                label: Text(f.label),
+                labelStyle: AmiTypography.labelMono.copyWith(
+                  fontSize: 11,
+                  color: f.type == active ? AmiColors.hexBlue : AmiColors.textMed,
+                ),
                 selected: f.type == active,
                 onSelected: (_) => ref
                     .read(journalNotifierProvider.notifier)

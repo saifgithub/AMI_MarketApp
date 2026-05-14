@@ -305,8 +305,11 @@ class _DrawdownPicker extends StatelessWidget {
           children: [
             for (final o in _options)
               ChoiceChip(
-                label: Text('$o%',
-                    style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                label: Text('$o%'),
+                labelStyle: AmiTypography.labelMono.copyWith(
+                  fontSize: 11,
+                  color: o == value ? AmiColors.hexAmber : AmiColors.textMed,
+                ),
                 selected: o == value,
                 onSelected: (_) => onChanged(o),
                 selectedColor: AmiColors.hexAmber.withValues(alpha: 0.2),
