@@ -1,10 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-14 (end of AT:R18 — per-lesson status API + three-tier sort; A29 light-mode; audit trim; ticker tape fixed on device; 7 bug fixes shipped; 103 commits, 214 tests, TESTING IPHONE 13 up to date)
+**Last updated:** 2026-05-14 (end of AT:R19 — journal swipe-to-delete + search + soft-delete + Trash view; SSE middleware fixed (chat + room work again); ticker tape refreshes on watchlist change; trade auto-adds to watchlist; concierge prompt rewrite; room reconnect-on-disconnect; /fix-bugs workflow + scripts; api-website service in compose; **131 commits, 220 tests**, TestFlight `0.1.0+4` uploaded via CLI, TESTING IPHONE 13 has `0.1.0+4` (pre-Trash); a `+5` install + TestFlight push is the first carry-over)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
-> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R16 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
+> **How to read this doc:** the "What's on disk + what's running" tables and the **AT:R19 wrap** section below them are CURRENT truth. Everything further down is a chronological session-by-session narrative (AT:R11 / W7 / W8 / W9 / W10 / W11 / W12 / W13 …) kept for context — those commands describe what was current at THAT POINT IN TIME, not now. Specifically: **the Mac runs zero services today.** Any "Mac uvicorn / Mac postgres / `scripts/run_dev.sh backend` / `tail -f /tmp/ami-backend.log`" pattern in historical sections has been retired — use the melehost equivalent (see [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) + `docs/10_delivery/promotion_protocol.md`).
 
 ---
 
@@ -15,14 +15,28 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **103 commits**, no remote yet |
-| Latest commit | (this session) `c8af8f4` — fix: gap between bottom nav and ticker tape |
-| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1..3` (eleven promotions total; `-2` and `-3` landed this session) |
-| Backend tests | **214 passed, 0 failed** (+2 this session) |
-| Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
+| Git state | Clean working tree, **131 commits**, no remote yet |
+| Latest commit | (this session) `aca28ee` — chore(start-fresh): pull bug list at session start |
+| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1..9` (seventeen promotions total; `-4` through `-9` landed this session) |
+| Backend tests | **220 passed, 0 failed** (+6 this session: journal soft-delete + restore + search + list_deleted, plus a couple from earlier in the diff) |
+| Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 262 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
+aca28ee chore(start-fresh): pull bug list at session start, ask bugs-vs-carry-over
+b94adee feat(website-api): wire api-website service in compose + CORS rename
+5ed72c0 feat(journal): Trash view — 30-day window of soft-deleted entries
+99e6e0d feat(workflow): /fix-bugs slash command + bug_reports.assigned_branch
+c14ce2a feat(scripts): one-command TestFlight upload + iPhone release-install
+dc6477f chore(mobile): bump build 0.1.0+3 → +4 for TestFlight
+dc16910 fix: 5 bugs from the 2026-05-15 01:0x batch
+a13bab9 chore(mobile): bump build number 0.1.0+2 → +3 for TestFlight
+fd85983 fix(ticker tape): refresh immediately when the watchlist changes
+79e1571 fix(middleware): SSE streams crash — drop synthetic request._receive
+421c3ad fix(middleware): SSE streams crash with 'Unexpected message: http.request'
+306ef73 fix(backend): complete WaitlistRow removal — drop route + store + schema
+65fec8e chore(promote-to-alpha): exclude website/ from rsync
+09358d3 feat(journal): swipe-to-delete, search, soft-delete — AT:R19
 c8af8f4 fix: gap between bottom nav and ticker tape
 2224f73 fix: ChoiceChip selected text unreadable — move color to labelStyle on chip
 5776d31 Revert "fix: bug report category chip — unreadable text on selected state"
@@ -197,7 +211,96 @@ Convene → Verdict → Open trade ticket (pre-filled) → PM safety floor runs 
 
 ---
 
-## What just landed (this session — AT:R17)
+## What just landed (this session — AT:R19)
+
+Heavy session: 28 commits, 6 alpha promotions (`alpha-2026-05-14-4` through `-9`), one TestFlight upload (`0.1.0+4`), and a meaningful uplift to the bug-fix workflow.
+
+### Journal — swipe-to-delete, search, soft-delete + Trash view
+
+The journal got a full data-lifecycle treatment.
+
+- **Soft delete + restore** (`09358d3`, `5ed72c0`). New `journal_entries.deleted_at` column (Alembic `f7d9b2e60005`); `JournalStore.soft_delete()`/`restore()`; `DELETE /v1/journal/{u}/entry/{e}` + `POST .../restore`. All reads filter `deleted_at IS NULL`. The entry is never destroyed.
+- **iOS-standard swipe** (`dc16910`): `Dismissible` threshold raised from 0.4 → 0.7 so half-swipes don't auto-fire; `HapticFeedback.mediumImpact` on commit; 4s snackbar with **UNDO** that calls the restore endpoint.
+- **Search** (`09358d3`): `GET /v1/journal/{u}?q=` ILIKE on `title + summary`; Flutter search bar with 400 ms debounce + clear (×) button.
+- **Trash view** (`5ed72c0`): new screen reached via trash icon in the Journal header; `GET /v1/journal/{u}/trash` returns soft-deleted entries from the **last 30 days only** (`TRASH_VISIBLE_DAYS=30` in `journal_store.py`); older soft-deleted rows stay in the DB but never surface in the in-app list. Each card has a green RESTORE button. Footer caption: "Older entries are auto-hidden after 30 days." `journalTrashNotifierProvider` is separate from the main journal so the fetch only happens when you open the screen.
+
+### SSE middleware bug — chat + room re-fixed
+
+The biggest "wait, it never worked" find of the session.
+
+- **Root cause:** `HTTPAuditMiddleware` (added in AT:R16, `30fdca1`) replaced `request._receive` with a synthetic that always returned `http.request`. Starlette's `_CachedRequest.wrapped_receive` polls receive during the streaming response to detect client disconnect, expecting only `http.disconnect`. It got `http.request` and raised `RuntimeError: Unexpected message received: http.request` AFTER status 200 was already sent — every SSE route (1-on-1, room stream, coach) silently broken since AT:R16.
+- **First attempt** (`421c3ad`) — make the synthetic return `http.disconnect` on subsequent calls. Didn't work because FastAPI's body parser uses Starlette's `_body` cache and never actually invokes the synthetic; the `body_replayed` flag stayed False so the first call from `wrapped_receive` still got `http.request`.
+- **Real fix** (`79e1571`) — drop the `request._receive` replacement entirely. `await request.body()` already caches in `_body`; `_CachedRequest.wrapped_receive` reads from that cache to replay the body. The synthetic was actively harmful, not helpful.
+
+### Room run survives sleep / reconnect on wake
+
+- New `started` `RoomEvent` kind, yielded first by `runner.run()`, carries the `run_id` immediately so clients can poll even if disconnected mid-stream.
+- On `(CancelledError | GeneratorExit)` in `event_stream`, spawn `asyncio.create_task(_drain_to_completion(run_id))` — runner finishes server-side and persists journal + verdict even though no one's listening.
+- Flutter: `RoomNotifier` captures `run_id` from `started`, on stream error polls `GET /v1/room/{id}` every 3s up to 90s; when status != `RUNNING` it overlays the final transcript + verdict. New `_ReconnectingBanner` UI ("Connection lost. The room is still running…") + `RoomState.reconnecting` flag.
+- **Caveat (filed as bug `eeeb866f`):** this only covers client disconnect. A container restart still kills the runner. Persisting runner state to Redis/DB between agent steps, or running it in a separate worker process, is the proper fix; deferred until real testers see it.
+
+### Trade auto-adds to ticker tape (`dc16910`)
+
+`sim.submit` now idempotently adds the traded ticker to `sim_watchlists` on success. Flutter's `simSubmit` refreshes the watchlist after a successful trade; the ticker-tape provider listens on a sorted-comma-joined projection of watchlist tickers and silent-refreshes when that key changes. No 120s wait.
+
+### Concierge prompt rewrite (`dc16910`)
+
+`content/agents/concierge.md` used to promise "Want me to open it?" — the app had no mechanism for that. Concierge now gives explicit navigation: *"Try **Lesson 12: Order Types**. You'll find it under **Lessons → Foundations**."* Hard rule baked into the prompt that it can't navigate for the user.
+
+### Light/dark mode — honest fix (`dc16910`)
+
+The toggle was a lie: 37 screens hardcode `AmiColors.slate900`/`slate800` so flipping `themeMode` had no effect. Removed the broken radio group from Settings → APPEARANCE; replaced with a single info row: "Dark theme — Alpha is dark-only. Light + Follow System land in v1.0." Coerces `ThemeMode.dark` on render so a previously-persisted light/system value can't half-theme anything. The full refactor (37 files → theme-aware colors) lives in the "v1.0" backlog.
+
+### Workflow + scripts
+
+- **`/fix-bugs` slash command** (`99e6e0d`) — encodes the bug-fix track protocol: spawn `.claude/worktrees/bug-fix-<ts>`, claim bugs atomically via `bug_reports.assigned_branch + status='in_progress'`, triage tiny/small/medium/large, fix up to 3 per session, commit each as `fix(bug:<short-id>):`, flip to `pending_review` (humans confirm `resolved` on merge). Hands-off file list prevents collisions with feature work: `main.py`, alembic migrations, `pubspec.yaml`, `docker-compose.yml`, anything under `backend/app/services/` outside the bug's domain, `.claude/commands/`.
+- **`bug_reports.assigned_branch`** column (Alembic `a8e3c1b50006`). Status vocabulary extended (plain VARCHAR, no constraint): `open → in_progress → pending_review → resolved` (or `wont_fix`).
+- **`/start-fresh` updated** (`aca28ee`) — now queries `bug_reports` at session start, surfaces open + pending_review counts + 10 latest titles in the plan, asks "bugs first or carry-over first?" with a directive-mapping table. Hard rule: only surfaces bugs; `/fix-bugs` is the entry point for actually working them.
+- **`scripts/build_testflight.sh`** (`c14ce2a`) — auto-bumps pubspec build number, `flutter build ipa --release --export-method=app-store`, uploads via `xcrun altool` with the App Store Connect API key from `~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8`. Flags: `--no-bump`, `--no-upload`, `--no-commit`. Env defaults baked to Saiful's key (`44VJ5WADL2`, issuer `289e6201-...`).
+- **`scripts/install_iphone.sh`** (`c14ce2a`) — release build + install on TESTING IPHONE 13 (or `$1` device). Pre-flight checks the device is connected before burning a build.
+
+### CLI TestFlight is now unblocked
+
+Earlier today, `flutter build ipa --export-method=app-store` failed on "No signing certificate iOS Distribution found / No Accounts" — the AT:R18 carry-over. Saiful signed Xcode into the Apple Developer account, exported one archive manually through the Organizer GUI; the act of doing it once landed the Distribution cert + provisioning profile in keychain (`security find-identity` now shows `Apple Distribution: Saiful Said (S7RBWM4879)`). After that, CLI build IPA worked. App Store Connect API key generation needed a second go (first key was Developer role → 401 on every call including read-only `list-apps`; App Manager key `44VJ5WADL2` works). `0.1.0+4` uploaded via `scripts/build_testflight.sh` — first end-to-end CLI TestFlight push.
+
+### Website backend split
+
+- Waitlist endpoint removed from the trade backend (`306ef73`) — `WaitlistRow` was already gone in my journal commit (accidentally bundled; turned out to be correct because waitlist is moving). Files deleted: `backend/app/api/waitlist.py`, `schemas/waitlist.py`, `services/waitlist_store.py`. `main.py` no longer imports/includes the router.
+- `api-website` service added to `docker-compose.yml` (`b94adee`). Build context `./website_api`, port 8001, separate `ami_website` DB, CORS for `agenticmarketintel.ai` apex + www. `cors_origin` (singular) renamed to `cors_origins` (plural, comma-separated). The trade backend and the marketing-site backend coexist on melehost but share zero code.
+- `promote-to-alpha` excludes `website/` from rsync (`65fec8e`). The site lives at the repo root but doesn't ship to melehost (it's FTP-deployed via `website/deploy_ftp.py`, see `WEBSITE.md`). `website_api/` *is* shipped — that's the api-website service's source.
+
+### Bug-report drift fix (handover scan)
+
+`mobile/lib/state/feedback_providers.dart` had `kAppVersion = '0.1.0+2'` hardcoded. 13 user-filed bug reports tonight got tagged with that stale version while the app was on `+4`. Updated to `'0.1.0+4'`; filed `82cb07c6` to add `package_info_plus` so the drift class can't recur. Caught by the consistency scan in this `/handover` pass.
+
+### Iphone state at handover
+
+TESTING IPHONE 13 still has **`0.1.0+4`** (pre-Trash). The Trash view + everything in `5ed72c0` + `b94adee` + `aca28ee` is on `main` and on melehost but **not on the device yet**. The phone needs `scripts/install_iphone.sh` (after waking it) to pick up the trash view. A `+5` bump for the next TestFlight push goes through `scripts/build_testflight.sh`.
+
+### Bug list at handover (4 open + 1 just-filed)
+
+| short_id | title | bucket |
+|---|---|---|
+| `3ef7ca04` | Entry removed snackbar persists until app backgrounded | small–medium (likely Flutter accessibility-flag interaction) |
+| `278cbad8` | Stale `room_runs` cleanup job — mark long-running rows as aborted | small (extend nightly trim) |
+| `eeeb866f` | Room run survives api-alpha container restart | large (runner state persistence) |
+| (Saiful's) | "convene failed — stream failed. error 502" 03:45 KL | likely transient during my redeploys; mark `resolved → eeeb866f` if it doesn't repro |
+| `82cb07c6` | app_version constant in bug reports drifts from pubspec.yaml | small (add `package_info_plus`) |
+
+### Carry-overs for AT:R20
+
+- **Install `+5` on TESTING IPHONE 13** (`scripts/install_iphone.sh` after waking the device). The Trash view, snackbar UNDO, etc. need on-device validation.
+- **Push next build to TestFlight** (`scripts/build_testflight.sh`) once you've smoke-tested on the iPhone. Will bump to `+5` automatically.
+- **First `/fix-bugs` run** — there are 4-5 open bugs queued. Try the new workflow on small ones first to see how it feels.
+- **Convene-failed 503 bug** — re-test Convene; mark the 03:45 KL one resolved if it doesn't repro.
+- **A22 privacy policy + ToS public URL** (legal — Saiful-external, long-standing).
+- **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build.
+- **Animation production** — `AnimationRegistry` empty; pending Lottie art.
+- **A29 full light-mode refactor** — 37 screens to convert to theme-aware colors. v1.0 work, not v0.
+
+---
+
+## What just landed (previous session — AT:R17)
 
 Two commits, no backend changes, no alpha promotion. Pure Flutter session.
 
@@ -1142,24 +1245,30 @@ That's it. The slash command:
 3. Enters plan mode with a state summary + the current carry-over list as options
 4. Waits for Saiful's direction
 
-Session name to use: **AT:R19** (this is handover #18).
+Session name to use: **AT:R20** (this is handover #19).
 
-Definition of done at hand-off (verified by `/handover` at end of AT:R18):
+Definition of done at hand-off (verified by `/handover` at end of AT:R19):
 - `git status`: clean working tree on `main`
-- 103 commits in
-- 214 backend unit tests passing
-- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1,2,3}`
-- TESTING IPHONE 13: one AMI Trade install — release build `c8af8f4` with Alpha URL baked in; onboarding persisted, all AT:R18 fixes live
-- Backend `alpha-2026-05-14-3`: per-lesson status API, batch quotes endpoint, audit trim, Quote model with `change_pct` + `market_state`
+- **131 commits** in
+- **220 backend unit tests** passing
+- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` (latest `alpha-2026-05-14-9`)
+- TESTING IPHONE 13: release build `0.1.0+4` installed (PRE-Trash; needs a `+5` install to pick up the trash view, snackbar UNDO, and the SSE middleware fix on-device)
+- TestFlight: `0.1.0+4` uploaded via CLI (App Manager API key `44VJ5WADL2`); Apple processing ~15-30 min before it shows in Internal testing
+- Backend `alpha-2026-05-14-9`: journal soft-delete + restore + search + Trash, SSE middleware fix (chat + room work again), room reconnect-on-disconnect, ticker tape refresh on watchlist change, sim_trade auto-adds to watchlist, Concierge prompt rewrite, light/dark toggle replaced with info row, /fix-bugs workflow + `bug_reports.assigned_branch` (migration `a8e3c1b50006`), website-api service in compose
+- CLI TestFlight unblocked: Distribution cert in keychain, API key path established, `scripts/build_testflight.sh` works end-to-end
 
-**Carry-overs for AT:R19:**
+**Carry-overs for AT:R20:**
 
-1. **Watchlist add shortcut from tape** — users can only add tickers via Portfolio → `+`; no shortcut from tape itself
-2. **`docs/05_design/lessons_landing_redesign.md` in worktree** — in `claude/exciting-shtern-aad051` (`ead7038`); merge if needed
-3. **A22 — Privacy policy + ToS public URL** (Saiful-external, legal)
-4. **External TestFlight** — Beta App Description + ~24h Apple review (Saiful-external)
-5. **Animation production** — `AnimationRegistry` empty; pending Lottie art (external)
-6. **Sign Xcode into Apple ID + cache Distribution cert** — unblocks CLI `flutter build ipa`
+1. **Install `+5` on TESTING IPHONE 13** — `scripts/install_iphone.sh` (after waking the device). The Trash view, snackbar UNDO, room reconnect banner, ticker-tape-on-trade need on-device validation.
+2. **Push next build to TestFlight** — `scripts/build_testflight.sh` (auto-bumps to `+5`, builds, uploads via API key).
+3. **First `/fix-bugs` run** — 5 open bugs queued: `3ef7ca04` (snackbar persists, small–medium), `278cbad8` (room_runs cleanup job, small), `eeeb866f` (room survives container restart, large), `82cb07c6` (app_version drift, small), plus possibly `93a8c08c` ("convene failed 502" — likely transient, mark resolved if it doesn't repro).
+4. **Verify Concierge prompt rewrite works** — talk to Concierge, ask about a lesson; should give explicit nav instructions ("Lessons → Foundations → Lesson 12") instead of promising to open it.
+5. **A22 — Privacy policy + ToS public URL** (Saiful-external, legal, long-standing).
+6. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build.
+7. **Animation production** — `AnimationRegistry` empty; pending Lottie art (external).
+8. **A29 full light-mode refactor** — 37 hardcoded `AmiColors.slate900`/`slate800` references across screens need theme-aware replacement. v1.0 work, not v0.
+
+The first thing `/start-fresh` will do in AT:R20 is pull the bug list and ask "bugs first or carry-over first?" — answer with **"install +5 on the iPhone first"** to land the on-device validation, then decide.
 
 If Alpha is down at session start, `/start-fresh` will surface that
 and tell you the melehost debug commands.

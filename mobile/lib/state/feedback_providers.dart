@@ -13,7 +13,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 
-const String kAppVersion = '0.1.0+2';
+// Keep in lockstep with pubspec.yaml `version:`. The proper fix is to
+// read this from package_info_plus at runtime so it can't drift —
+// tracked as a follow-up bug. Manual bump for now.
+const String kAppVersion = '0.1.0+4';
 
 String get kPlatform {
   if (Platform.isIOS) return 'ios';
