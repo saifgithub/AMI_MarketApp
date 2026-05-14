@@ -8,6 +8,7 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/services/yahoo_finance_service.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,10 +67,23 @@ class TickerTapeNotifier extends AsyncNotifier<TickerTapeData> {
         .toList();
     final symbols =
         YahooFinanceService.buildTickerList(watchlistTickers, bourse);
-    final quotes = await _service.fetchQuotes(symbols, bourse);
+
+    // Try direct Yahoo Finance first.
+    var quotes = await _service.fetchQuotes(symbols, bourse);
+
+    // Fall back to AMI backend batch endpoint when direct Yahoo fails.
+    // The backend uses a server-side yfinance call with a proper User-Agent
+    // that works reliably even when the keyless direct call is rate-limited.
+    if (quotes.isEmpty) {
+      try {
+        final api = ref.read(apiClientProvider);
+        quotes = await api.fetchTapeQuotes(symbols);
+      } catch (_) {
+        quotes = [];
+      }
+    }
 
     if (quotes.isEmpty) {
-      // Network/parse failure — serve stale data if we have it.
       if (_lastGood != null) {
         return TickerTapeData(quotes: _lastGood!.quotes, isStale: true);
       }

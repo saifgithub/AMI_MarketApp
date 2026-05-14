@@ -6,11 +6,14 @@ POST /v1/sim/submit                          Submit a trade (PM safety floor run
 GET  /v1/sim/trades/{user_id}                List trades (filterable by status)
 POST /v1/sim/trades/{user_id}/evaluate       Sweep open trades for stop/target hits
 POST /v1/sim/trades/{user_id}/close          Manually close an open trade
-GET  /v1/sim/quote/{ticker}                  Current mock mark
+GET  /v1/sim/quote/{ticker}                  Current quote (price + change_pct + market_state)
+GET  /v1/sim/quotes?symbols=AAPL,MSFT,...    Batch quotes for ticker tape
 """
 
 from __future__ import annotations
 
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -269,4 +272,39 @@ async def quote(
         "ticker": ticker.upper(),
         "price": q.price,
         "source": q.source,
+        "change_pct": q.change_pct,
+        "market_state": q.market_state,
     }
+
+
+@router.get("/quotes")
+async def quotes_batch(
+    symbols: str,
+    sim: SimEngine = Depends(get_sim_engine),
+) -> list[dict]:
+    """Batch quote fetch for the Flutter ticker tape.
+
+    `symbols` is a comma-separated list (e.g. AAPL,MSFT,NVDA).
+    Runs each quote in a thread-pool so network I/O overlaps.
+    Returns an empty list on empty input.
+    """
+    tickers = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+    if not tickers:
+        return []
+
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor(max_workers=min(len(tickers), 10)) as pool:
+        results: list = await asyncio.gather(
+            *[loop.run_in_executor(pool, sim.current_quote, t) for t in tickers]
+        )
+
+    return [
+        {
+            "ticker": ticker,
+            "price": q.price,
+            "source": q.source,
+            "change_pct": q.change_pct,
+            "market_state": q.market_state,
+        }
+        for ticker, q in zip(tickers, results)
+    ]

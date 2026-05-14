@@ -24,6 +24,7 @@ import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
+import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
@@ -415,6 +416,26 @@ class ApiClient {
       '/v1/lessons/progress/$userId',
     );
     return ProgressSummary.fromJson(r.data!);
+  }
+
+  /// Batch quote fetch via backend — used as fallback when direct Yahoo Finance
+  /// fails on device. Returns quotes mapped by symbol (upper-cased).
+  Future<List<TickerQuote>> fetchTapeQuotes(List<String> symbols) async {
+    if (symbols.isEmpty) return [];
+    final r = await _dio.get<List<dynamic>>(
+      '/v1/sim/quotes',
+      queryParameters: {'symbols': symbols.join(',')},
+    );
+    return (r.data ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map((m) => TickerQuote(
+              symbol: (m['ticker'] as String?) ?? '',
+              price: (m['price'] as num?)?.toDouble() ?? 0,
+              changePercent: (m['change_pct'] as num?)?.toDouble() ?? 0,
+              marketState: (m['market_state'] as String?) ?? 'CLOSED',
+            ))
+        .where((q) => q.symbol.isNotEmpty && q.price > 0)
+        .toList();
   }
 
   Future<Map<String, LessonStatus>> lessonStatusByLesson(String userId) async {

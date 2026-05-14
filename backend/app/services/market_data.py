@@ -55,6 +55,8 @@ class Quote(NamedTuple):
 
     price: float
     source: str
+    change_pct: float = 0.0      # vs previous close; 0.0 for mock/degraded
+    market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED
 
 
 class MarketDataProvider(Protocol):
@@ -187,7 +189,14 @@ class YahooQuoteProvider:
             price = meta.get("regularMarketPrice")
             if price is None:
                 return None
-            return Quote(price=float(price), source=self.name)
+            change_pct = float(meta.get("regularMarketChangePercent") or 0.0)
+            market_state = str(meta.get("marketState") or "CLOSED")
+            return Quote(
+                price=float(price),
+                source=self.name,
+                change_pct=change_pct,
+                market_state=market_state,
+            )
         except (ValueError, KeyError, TypeError) as exc:
             logger.warn("yahoo_parse_error", ticker=t, error=str(exc))
             return None

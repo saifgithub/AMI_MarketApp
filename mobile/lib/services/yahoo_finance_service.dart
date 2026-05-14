@@ -29,6 +29,13 @@ class YahooFinanceService {
           BaseOptions(
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 10),
+            // Yahoo Finance blocks requests without a browser User-Agent.
+            headers: {
+              'User-Agent':
+                  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) '
+                  'AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+              'Accept': 'application/json',
+            },
           ),
         );
 
