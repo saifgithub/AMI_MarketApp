@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-13 (end of AT:R17 — Lessons tab redesigned: hex-cluster landing replaces flat 270-lesson scroll; ticker tape scrolling quotes added below nav; release build with Alpha URL baked in installed on TESTING IPHONE 13)
+**Last updated:** 2026-05-14 (end of AT:R18 — per-lesson status API + three-tier sort; A29 light-mode; audit trim; ticker tape fixed on device; 7 bug fixes shipped; 103 commits, 214 tests, TESTING IPHONE 13 up to date)
 
 Read this file **first** in any new session. It captures runtime state, what just landed, and a copy-paste prompt to continue.
 
@@ -15,20 +15,29 @@ Read this file **first** in any new session. It captures runtime state, what jus
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **91 commits**, no remote yet |
-| Latest commit | (this session) `e9e7f41` — feat: ticker tape below bottom nav — live Yahoo Finance quotes |
-| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1` (nine promotions total; no new tag this session — Flutter-only changes, backend unchanged) |
-| Backend tests | **212 passed, 0 failed** (unchanged from AT:R16) |
-| Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms with `<Term>` taps wired (now rendered INLINE in prose via `{{term:id}}` token substitution), 280 AI Coach Q&A (categorised + retrievable + Concierge fallback), 183 daily challenges (Floor card + full-screen attempt), 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
+| Git state | Clean working tree, **103 commits**, no remote yet |
+| Latest commit | (this session) `c8af8f4` — fix: gap between bottom nav and ticker tape |
+| Alpha tags | `alpha-2026-05-13-1..8` + `alpha-2026-05-14-1..3` (eleven promotions total; `-2` and `-3` landed this session) |
+| Backend tests | **214 passed, 0 failed** (+2 this session) |
+| Lines on disk | ~40,400 backend/docs/infra + **270 lessons tracked**, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 256 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
 $ git log --oneline | head -15
+c8af8f4 fix: gap between bottom nav and ticker tape
+2224f73 fix: ChoiceChip selected text unreadable — move color to labelStyle on chip
+5776d31 Revert "fix: bug report category chip — unreadable text on selected state"
+0d1b9be fix: bug report sheet silently fails + version chip stale
+ebd077d fix: onboarding repeats on every launch + restart does nothing
+b028aea fix: lessons screen blank — revert Future.wait to sequential awaits
+2baa3e6 fix: ticker tape blank on device — User-Agent + backend batch fallback
+e9b9dfc feat: nightly audit retention trim — 90-day rolling window on all audit tables
+c228633 feat: per-lesson status API + three-tier sort + A29 light-mode register
+abd4e56 handover: wrap AT:R17 — 91 commits, 212 tests, lessons hex cluster + ticker tape
 e9e7f41 feat: ticker tape below bottom nav — live Yahoo Finance quotes
 9555e8d feat(lessons): hex-cluster landing page — 7-hex honeycomb replaces flat list
 a162cfb handover: wrap AT:R16 — 88 commits, 212 tests, alpha-2026-05-14-1
 30fdca1 A: comprehensive alpha audit logging — every HTTP, every LLM, every chat turn
 dbba4a2 A22-A28: first TestFlight upload — Info.plist + build bump
-ae652ac handover: wrap AT:R15 — 85 commits, 204 tests, alpha-2026-05-13-7
 94e50ea design(v2): HexChip tinted variant + A29 (light-mode) docs
 29cdcfb design(v2): IBM Plex fonts + AccentCard + HexMeshOverlay + Convene hex CTA
 e3bc47b docs(promote-to-alpha): auto-source infra/alpha.env from main worktree
@@ -220,21 +229,68 @@ Live Yahoo Finance scrolling ticker tape now sits below the bottom nav bar. Also
 
 ### iPhone state at handover
 
-TESTING IPHONE 13 has **one** AMI Trade install (the old second install was overwritten):
-- Release build with `AMI_API_URL_ALPHA` baked in; hex-cluster Lessons tab + ticker tape visible
-- Points at `https://api-alpha.agenticmarketintel.ai` (`alpha-2026-05-14-1` — audit logging still live)
+TESTING IPHONE 13 has **one** AMI Trade install:
+- Release build `c8af8f4` with `AMI_API_URL=https://api-alpha.agenticmarketintel.ai` baked in
+- Backend `alpha-2026-05-14-3` live; all AT:R18 fixes installed
+- Onboarding completed + persisted (`ami_onboarding_done=true` in SharedPreferences) — next launch goes straight to Floor
 
-### Carry-overs for AT:R18
+### Carry-overs for AT:R19
 
-- **`/promote-to-alpha` not run** — Flutter-only session, backend unchanged; Alpha is still on `alpha-2026-05-14-1`
-- **Per-lesson status API** — `TrackLessonsScreen._sorted()` shows lessons in catalogue order; three-tier sort (in-progress → never-started → completed) needs a new endpoint `GET /v1/lessons/progress/{userId}/by_lesson`; flagged with TODO comment
-- **`docs/05_design/lessons_landing_redesign.md` in a worktree** — the spec is in `claude/exciting-shtern-aad051` (`ead7038`), not on main; merge or cherry-pick if the next session needs it
+- **`docs/05_design/lessons_landing_redesign.md` in a worktree** — spec is in `claude/exciting-shtern-aad051` (`ead7038`), not on main; merge or cherry-pick if next session needs it
+- **Watchlist add shortcut** — users can only add tickers to the tape via Portfolio → `+` button; no shortcut from the tape itself. Consider long-press tape item → "Watch"
 - **A22 privacy policy + ToS public URL** (legal — Saiful-external)
-- **External TestFlight** — Beta App Description + ~24h Apple Beta App Review; Saiful-external (App Store Connect)
+- **External TestFlight** — Beta App Description + ~24h Apple Beta App Review; Saiful-external
 - **Animation production** — `AnimationRegistry` empty; pending Lottie art (external)
-- **A29 light-mode register** — sized 0.5 session; unblocked
-- **Audit retention trim job** — tables unbounded; add before tester count grows
 - **Sign Xcode into Apple ID + cache Distribution cert** — unblocks CLI `flutter build ipa`
+
+---
+
+## What just landed (this session — AT:R18)
+
+12 commits (`c228633` → `c8af8f4`). Promotions: `alpha-2026-05-14-2` (features) + `alpha-2026-05-14-3` (ticker tape fix). Tests: 212 → 214.
+
+### Per-lesson status API + three-tier sort (`c228633`)
+
+New `GET /v1/lessons/progress/{user_id}/by_lesson` endpoint delegates to the existing `LessonsService.list_status()` (already had the data, just needed the route). Flutter: `LessonStatus` Dart model, `lessonStatusByLesson()` API call, `Map<String,LessonStatus>` added to `LessonsState`, `LessonTile` gains optional status badge (blue in-progress dot, green check + COMPLETED label). `TrackLessonsScreen._sortedWithStatus()` sorts: in-progress → never-started → completed within each track. +1 test (213 total).
+
+**Gotcha:** original implementation used `Future.wait([4 futures])` — Dart erases mixed return types to `Object?`; the `as T` casts throw `TypeError` at runtime, caught silently → lessons screen blank. Fixed in `b028aea` by reverting to sequential `await` calls (typed, no casting).
+
+### A29 light-mode register (`c228633`)
+
+`AmiColorsLight` token set in `ami_theme.dart` (canvas `#F1F5F9`, panel white, AA-safe accent-text variants). `amiLightTheme()` factory. `themeModeProvider` (Riverpod, SharedPreferences-backed, defaults `ThemeMode.system`). `app.dart`: `theme: amiLightTheme(), darkTheme: amiTheme(), themeMode: provider`. Settings → APPEARANCE section with three radio options (Follow System / Always Dark / Always Light).
+
+**Side-effect caught this session:** `ChoiceChip` in Flutter 3.41 M3 ignores color on `label: Text(style:...)` for state-aware rendering; fixed in `2224f73` by moving `color` to `labelStyle` on the chip widget itself (Settings drawdown, Journal filter, Journal outcome chips).
+
+### Nightly audit retention trim (`e9b9dfc`)
+
+`trim_audit_tables(days=90)` in `backend/app/services/audit.py` — batch-deletes rows older than 90 days from `llm_audit`, `http_audit`, `one_on_one_messages`. Wired into `main.py` as an `asyncio` background task (sleeps 24h, runs, logs counts). +1 test (214 total). Closes the unbounded-table TODO from AT:R16.
+
+### Ticker tape fixed on device (`2baa3e6`)
+
+The tape was blank because Flutter's direct Yahoo Finance v7 call had no `User-Agent` — Yahoo blocks it, returns empty, tape collapses. Two-layer fix:
+1. Added iOS browser UA header to `YahooFinanceService` Dio client
+2. `tickerTapeProvider._fetch()` falls back to `/v1/sim/quotes?symbols=...` if direct call returns empty
+3. Backend: `Quote` NamedTuple gains `change_pct: float = 0.0` and `market_state: str = "CLOSED"` (extracted from Yahoo v8 chart API meta). New `GET /v1/sim/quotes` batch endpoint runs quotes in parallel via `ThreadPoolExecutor`.
+
+**How to add tickers to the tape:** Portfolio tab → `+` icon → type symbol → Add. User's watchlist tickers lead the tape; US defaults fill to 10 minimum.
+
+### Bug fixes batch
+
+| Commit | Bug | Fix |
+|---|---|---|
+| `ebd077d` | Onboarding repeats every cold start | `main()` reads `ami_onboarding_done` from SharedPreferences; `AmiTradeApp(startOnFloor:)` sets `initialRoute` conditionally |
+| `ebd077d` | "Restart onboarding" does nothing | `OnboardingNotifier.reset()` clears SharedPreferences flag + resets state to `notStarted`; floor button calls it before navigating |
+| `0d1b9be` | Long-press version chip → nothing | `GoRouterState.of(context)` threw (app uses `MaterialApp` named routes, not GoRouter); replaced with `ModalRoute.of(context)?.settings.name` |
+| `0d1b9be` | Version chip shows "0.1.0+1" | Bumped `kAppVersion` to `0.1.0+2` in `feedback_providers.dart` |
+| `2224f73` | ChoiceChip selected text unreadable | Moved `color` from `label: Text(style:)` to `labelStyle:` on chip; adapts per selection state |
+| `c8af8f4` | Gap between bottom nav and ticker tape | `BottomNavigationBar` internally absorbs `MediaQuery.padding.bottom`; fixed with `MediaQuery.removePadding(removeBottom:true)` |
+
+### Alpha promotions
+
+- `alpha-2026-05-14-2` — per-lesson API + light mode + audit trim (backend + Flutter)
+- `alpha-2026-05-14-3` — ticker tape backend batch endpoint + Quote model
+
+Flutter-only fixes after `-3` (lessons blank, onboarding, bug report, chip text, ticker gap) were installed directly on device (`xcrun devicectl`) — no new backend promotion needed.
 
 ---
 
@@ -1086,23 +1142,24 @@ That's it. The slash command:
 3. Enters plan mode with a state summary + the current carry-over list as options
 4. Waits for Saiful's direction
 
-Session name to use: **AT:R18** (this is handover #17).
+Session name to use: **AT:R19** (this is handover #18).
 
-Definition of done at hand-off (verified by `/handover` at end of AT:R17):
+Definition of done at hand-off (verified by `/handover` at end of AT:R18):
 - `git status`: clean working tree on `main`
-- 91 commits in
-- 212 backend unit tests passing
-- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-1` (no new tag this session — Flutter-only)
-- TESTING IPHONE 13: one AMI Trade install — release build with `AMI_API_URL_ALPHA` baked in, hex-cluster Lessons tab + ticker tape, pointing at `https://api-alpha.agenticmarketintel.ai`
-- Audit logging live: every tap lands rows in `http_audit` + `llm_audit` + `one_on_one_messages`
+- 103 commits in
+- 214 backend unit tests passing
+- Alpha tags `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1,2,3}`
+- TESTING IPHONE 13: one AMI Trade install — release build `c8af8f4` with Alpha URL baked in; onboarding persisted, all AT:R18 fixes live
+- Backend `alpha-2026-05-14-3`: per-lesson status API, batch quotes endpoint, audit trim, Quote model with `change_pct` + `market_state`
 
-**First decision points for AT:R18:**
+**Carry-overs for AT:R19:**
 
-1. **Per-lesson status API** — `TrackLessonsScreen` shows lessons in catalogue order; three-tier sort (in-progress → never-started → completed) needs `GET /v1/lessons/progress/{userId}/by_lesson`. Backend + Flutter work, ~1 session.
-2. **A22 — Privacy policy + ToS public URL.** Required before External TestFlight. Saiful-external (legal) but Claude can draft copy.
-3. **External TestFlight** — Beta App Description + ~24h Beta App Review. Saiful-external (App Store Connect web form).
-4. **A29 light-mode register.** Unblocked; sized 0.5 session.
-5. **Audit retention trim job.** Tables unbounded; add before tester count grows.
+1. **Watchlist add shortcut from tape** — users can only add tickers via Portfolio → `+`; no shortcut from tape itself
+2. **`docs/05_design/lessons_landing_redesign.md` in worktree** — in `claude/exciting-shtern-aad051` (`ead7038`); merge if needed
+3. **A22 — Privacy policy + ToS public URL** (Saiful-external, legal)
+4. **External TestFlight** — Beta App Description + ~24h Apple review (Saiful-external)
+5. **Animation production** — `AnimationRegistry` empty; pending Lottie art (external)
+6. **Sign Xcode into Apple ID + cache Distribution cert** — unblocks CLI `flutter build ipa`
 
 If Alpha is down at session start, `/start-fresh` will surface that
 and tell you the melehost debug commands.
