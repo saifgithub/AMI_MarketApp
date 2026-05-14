@@ -87,6 +87,7 @@ rsync -az --delete \
   --exclude='.idea' \
   --exclude='.vscode' \
   --exclude='Silent_Scout/' \
+  --exclude='website/' \
   ./ \
   melehost:~/ami_trade/
 ```
