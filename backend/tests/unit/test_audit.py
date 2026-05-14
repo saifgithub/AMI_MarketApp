@@ -8,7 +8,7 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow
+from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow, RoomRunRow
 from app.db.session import get_session
 from app.services.audit import (
     record_http,
@@ -309,3 +309,45 @@ def test_trim_audit_tables_deletes_old_rows_keeps_recent():
         assert s.execute(
             select(HTTPAuditRow).where(HTTPAuditRow.user_id == old_uid)
         ).scalar_one_or_none() is None
+
+
+def test_trim_audit_tables_aborts_stale_room_runs():
+    """room_runs stuck in 'running' for > 30 min are marked aborted."""
+    from sqlalchemy import insert, update as sa_update
+
+    stale_ts = datetime.now(timezone.utc) - timedelta(minutes=40)
+    recent_ts = datetime.now(timezone.utc) - timedelta(minutes=10)
+    dummy_uid = uuid4()
+
+    with get_session() as s:
+        stale_id = uuid4()
+        recent_id = uuid4()
+        s.execute(
+            insert(RoomRunRow).values([
+                dict(
+                    id=stale_id, user_id=dummy_uid, ticker="AAPL",
+                    triggered_at=stale_ts, mandate_version=1,
+                    model_tier="cheap", rounds=1, status="running",
+                ),
+                dict(
+                    id=recent_id, user_id=dummy_uid, ticker="AAPL",
+                    triggered_at=recent_ts, mandate_version=1,
+                    model_tier="cheap", rounds=1, status="running",
+                ),
+            ])
+        )
+        s.commit()
+
+    counts = trim_audit_tables()
+
+    assert counts["room_runs_aborted"] >= 1
+
+    with get_session() as s:
+        stale_row = s.execute(
+            select(RoomRunRow).where(RoomRunRow.id == stale_id)
+        ).scalar_one()
+        recent_row = s.execute(
+            select(RoomRunRow).where(RoomRunRow.id == recent_id)
+        ).scalar_one()
+        assert stale_row.status == "aborted"
+        assert recent_row.status == "running"
