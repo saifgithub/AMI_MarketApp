@@ -103,15 +103,22 @@ class JournalScreen extends ConsumerWidget {
             onDismissed: (_) {
               HapticFeedback.mediumImpact();
               final notifier = ref.read(journalNotifierProvider.notifier);
-              notifier.deleteEntry(e.id);
+              // Capture messenger + l10n strings before deleteEntry triggers
+              // a rebuild that deactivates this itemBuilder context. If
+              // ScaffoldMessenger.of is called on a deactivated context it
+              // may return a detached messenger whose auto-dismiss timer
+              // never fires, leaving the snackbar visible until the app
+              // is backgrounded.
               final messenger = ScaffoldMessenger.of(context);
+              final l = AppLocalizations.of(context);
+              notifier.deleteEntry(e.id);
               messenger.hideCurrentSnackBar();
               messenger.showSnackBar(
                 SnackBar(
-                  content: Text(AppLocalizations.of(context).journalEntryDeleted),
+                  content: Text(l.journalEntryDeleted),
                   duration: const Duration(seconds: 4),
                   action: SnackBarAction(
-                    label: AppLocalizations.of(context).journalUndo,
+                    label: l.journalUndo,
                     onPressed: () => notifier.restoreEntry(e.id),
                   ),
                 ),
