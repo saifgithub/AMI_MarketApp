@@ -748,7 +748,8 @@
     status.textContent = '';
 
     try {
-      const res = await fetch('https://api-alpha.agenticmarketintel.ai/v1/waitlist', {
+      // website_api — standalone service, separate from the app backend
+      const res = await fetch('https://api-website.agenticmarketintel.ai/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: 'marketing_site' }),
