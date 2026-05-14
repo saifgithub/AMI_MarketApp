@@ -51,7 +51,10 @@ The honeycomb is a "flower" pattern: central hex + 6 surrounding hexes = 7 cells
                               [⬢ CONVENE]
                 ├────────────────────────────────┤
                 │  Floor | Sim | Convene | Acad | Jrn │
+                ├────────────────────────────────┤
+                │[CLOSED] AAPL $192.34 ↑1.2% · NVDA…│  ← TICKER TAPE (28px, scrolling)
                 └────────────────────────────────┘
+                ════════ home indicator inset ═══════
 ```
 
 ## The Concierge centre
