@@ -1,0 +1,4 @@
+<svg width="30" height="26" viewBox="0 0 30 26" xmlns="http://www.w3.org/2000/svg">
+  <path d="M7.5 0 L22.5 0 L30 13 L22.5 26 L7.5 26 L0 13 Z" fill="rgba(139, 92, 246, 0.1)" stroke="#8b5cf6" stroke-width="1"></path>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12">🤖</text>
+</svg>

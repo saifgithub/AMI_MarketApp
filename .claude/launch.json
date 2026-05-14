@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "website",
+      "runtimeExecutable": "/Volumes/Extreme Pro/AMI_MarketApp/backend/.venv/bin/python",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "website"],
+      "port": 8765
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+/* AMI AI Design System — Colors & Typography
+ * "Hex-Reinforced Precision" — dark, technical, hexagonal geometry.
+ * Source: core_platform/Docs/Design_Idea_1/01_Hex_Reinforced_Design_System.md
+ */
+
+/* Self-hosted IBM Plex (Sans, Mono, Sans Arabic) — see fonts/fonts.css.
+ * No external font CDN: works behind bank firewalls, no Google IP leak,
+ * complies with EU Google-Fonts ruling, ships offline. ~540 KB total. */
+@import url("./fonts/fonts.css");
+
+:root {
+  /* ── Brand primary ─────────────────────────── */
+  --hex-blue:       #3b82f6;   /* primary action / brand */
+  --hex-blue-600:   #2563eb;   /* hover on primary */
+  --hex-glow:       rgba(59,130,246,0.5);
+
+  /* ── Backgrounds ───────────────────────────── */
+  --dark-bg:        #0f172a;   /* canvas (slate-900) */
+  --panel-bg:       rgba(17,24,39,0.7);   /* glass panel */
+  --panel-bg-solid: #111827;   /* opaque panel */
+  --card-bg:        #152845;   /* deck / card fill */
+  --card-bg-alt:    #121e37;   /* alternate card fill */
+
+  /* ── Borders & dividers ────────────────────── */
+  --border-color:   #374151;   /* standard border */
+  --border-light:   rgba(255,255,255,0.10);
+  --border-subtle:  rgba(255,255,255,0.05);
+
+  /* ── Text hierarchy ────────────────────────── */
+  --text-main:      #f3f4f6;   /* primary */
+  --text-muted:     #94a3b8;   /* secondary / body */
+  --text-dim:       #64748b;   /* tertiary / captions */
+
+  /* ── Semantic accents ──────────────────────── */
+  --accent-cyan:    #06b6d4;   /* info / secondary action */
+  --accent-green:   #10b981;   /* positive / online / success */
+  --accent-amber:   #f59e0b;   /* warning / attention */
+  --accent-orange:  #f59e0b;   /* alias */
+  --accent-red:     #ef4444;   /* negative / error / offline */
+  --accent-purple:  #8b5cf6;   /* alternate highlight */
+  --accent-pink:    #ec4899;   /* tertiary accent */
+
+  /* ── Type families ───────────────────────────
+     UI: IBM Plex Sans (Bold Monday for IBM) — modern, institutional, bilingual.
+     Mono: IBM Plex Mono — matched data face, tabular figures.
+     Arabic: IBM Plex Sans Arabic — same foundry, matched proportions. */
+  --font-ui:   'IBM Plex Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'Menlo', 'Monaco', monospace;
+  --font-ar:   'IBM Plex Sans Arabic', 'IBM Plex Sans', 'Noto Naskh Arabic', sans-serif;
+
+  /* ── Type ramp ─────────────────────────────── */
+  --fs-heading-xl: 32px;  /* page title  / 800 */
+  --fs-heading-lg: 24px;  /* section     / 700 */
+  --fs-heading-md: 18px;  /* subsection  / 700 */
+  --fs-heading-sm: 16px;  /* card title  / 600 */
+  --fs-body-lg:    16px;
+  --fs-body-md:    14px;
+  --fs-body-sm:    13px;
+  --fs-body-xs:    11px;
+  --fs-data-xl:    42px;  /* KPI number / 700 mono */
+  --fs-data-lg:    24px;
+  --fs-data-md:    16px;
+  --fs-data-sm:    13px;
+  --fs-label:      12px;  /* uppercase mono 700 */
+
+  /* ── Spacing & radius ──────────────────────── */
+  --sp-0:   0;
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:   12px;
+  --sp-4:   16px;
+  --sp-5:   24px;
+  --sp-6:   32px;
+  --sp-7:   48px;
+  --sp-8:   64px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ── Elevation (filters, not box-shadow — hex clip-paths!) ── */
+  --shadow-card:    0 8px 30px rgba(0,0,0,0.30);
+  --shadow-modal:   0 25px 60px rgba(0,0,0,0.60);
+  --glow-blue:      0 0 20px rgba(59,130,246,0.40);
+  --glow-purple:    0 0 30px rgba(139,92,246,0.40);
+  --drop-hex:       drop-shadow(0 0 1px var(--hex-blue));
+
+  /* ── Motion ────────────────────────────────── */
+  --ease-std: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur-std:  0.20s;
+  --dur-slow: 0.30s;
+
+  /* ── Hex clip-paths (reusable) ─────────────── */
+  --clip-hex-flat:   polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  --clip-hex-btn:    polygon(15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0 50%);
+  --clip-hex-toggle: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+  --clip-hex-chip:   polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+  --clip-angle-panel: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
+}
+
+/* ══════════════ SEMANTIC ELEMENT STYLES ══════════════ */
+html { font-family: var(--font-ui); color: var(--text-main); }
+body {
+  background: var(--dark-bg);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body-md);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 { color: var(--text-main); line-height: 1.2; margin: 0; }
+h1 { font-size: var(--fs-heading-xl); font-weight: 800; }
+h2 { font-size: var(--fs-heading-lg); font-weight: 700; }
+h3 { font-size: var(--fs-heading-md); font-weight: 700; }
+h4 { font-size: var(--fs-heading-sm); font-weight: 600; }
+
+p  { font-size: var(--fs-body-md); color: var(--text-muted); }
+small { font-size: var(--fs-body-xs); color: var(--text-dim); }
+code, pre, kbd { font-family: var(--font-mono); font-size: var(--fs-data-sm); }
+
+.section-label,
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--hex-blue);
+}
+
+.mono    { font-family: var(--font-mono); }
+.kpi     { font-family: var(--font-mono); font-size: var(--fs-data-xl); font-weight: 700; color: var(--text-main); }
+.kpi-sm  { font-family: var(--font-mono); font-size: var(--fs-data-lg); font-weight: 600; color: var(--text-main); }
+
+/* ══════════════ LIGHT MODE ══════════════
+ * Same hex DNA, inverted register.
+ * Apply via [data-theme="light"] on any container (or :root for app-wide).
+ * Brand hex-blue stays the same — it is our identity.
+ * Accent *text* tones are darkened where AA contrast on white demands it
+ * (cyan, green, amber, red, purple).
+ * Accent *fills* stay at original tones, used for chips, badges, top-borders. */
+[data-theme="light"] {
+  /* ── Backgrounds ─────────────────────────── */
+  --dark-bg:        #f1f5f9;   /* canvas (slate-100) — was #0f172a */
+  --panel-bg:       rgba(255,255,255,0.72);   /* glass panel — light tint */
+  --panel-bg-solid: #ffffff;   /* opaque panel */
+  --card-bg:        #f8fafc;   /* card fill (slate-50) */
+  --card-bg-alt:    #eef2f7;   /* alternate card fill */
+
+  /* ── Borders & dividers ──────────────────── */
+  --border-color:   #cbd5e1;   /* slate-300 */
+  --border-light:   rgba(15,23,42,0.10);
+  --border-subtle:  rgba(15,23,42,0.06);
+
+  /* ── Text hierarchy ──────────────────────── */
+  --text-main:      #0f172a;   /* ink (slate-900) */
+  --text-muted:     #475569;   /* slate-600 */
+  --text-dim:       #64748b;   /* slate-500 */
+
+  /* ── Accent *text* tokens — AA-safe on white.
+       Use these when an accent appears as text, links, or thin glyphs.
+       For fills, top-borders, and chips, keep the original --accent-*. */
+  --accent-cyan-text:   #0891b2;
+  --accent-green-text:  #047857;
+  --accent-amber-text:  #b45309;
+  --accent-red-text:    #b91c1c;
+  --accent-purple-text: #6d28d9;
+  --accent-blue-text:   #2563eb;
+
+  /* ── Elevation ───────────────────────────── */
+  --shadow-card:  0 1px 2px rgba(15,23,42,0.06), 0 8px 24px rgba(15,23,42,0.08);
+  --shadow-modal: 0 25px 60px rgba(15,23,42,0.22);
+  --glow-blue:    0 0 16px rgba(59,130,246,0.30);
+}
+
+[data-theme="light"] body,
+body[data-theme="light"] {
+  background: var(--dark-bg);
+  color: var(--text-muted);
+}
+
+/* Light-mode grid background — subtle dark hatching */
+[data-theme="light"] .hex-grid-bg,
+.hex-grid-bg[data-theme="light"] {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(59,130,246,0.05), transparent 50%),
+    linear-gradient(rgba(15,23,42,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,0.025) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+/* Grid background — use on <body> of prototypes */
+.hex-grid-bg {
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(59,130,246,0.08), transparent 50%),
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+  background-attachment: fixed;
+}
+
+:focus-visible { outline: 2px solid var(--hex-blue); outline-offset: 4px; }
