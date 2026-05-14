@@ -1,22 +1,48 @@
-"""Audit-logging write helpers.
+"""Audit-logging write helpers + nightly retention trim.
 
 AT:R16 — comprehensive alpha-era logging. Every write here is best-effort:
 any exception in audit code MUST NOT break the request that triggered it.
 Wrap callers in try/except logging.exception and continue.
 
-Retention policy: unbounded for now. Before scaling testers past a few
-dozen, add a nightly trim job (eg. DELETE WHERE created_at < now() - 90 days)
-or partition the tables monthly. TODO once tester count grows.
+Retention: 90-day rolling window on all three audit tables. The nightly
+`trim_audit_tables()` is called from the lifespan background task in main.py.
 """
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
+
+from sqlalchemy import delete
 
 from app.core.logging import logger
 from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow
 from app.db.session import get_session
+
+AUDIT_RETENTION_DAYS = 90
+
+
+def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
+    """Delete rows older than `days` from all three audit tables.
+
+    Returns a dict of {table: rows_deleted} for logging. Raises on DB errors
+    (caller decides whether to swallow).
+    """
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+    counts: dict[str, int] = {}
+    with get_session() as s:
+        for model, label in (
+            (LLMAuditRow, "llm_audit"),
+            (HTTPAuditRow, "http_audit"),
+            (OneOnOneMessageRow, "one_on_one_messages"),
+        ):
+            result = s.execute(
+                delete(model).where(model.created_at < cutoff)
+            )
+            counts[label] = result.rowcount
+        s.commit()
+    return counts
 
 
 # Body capture limits — bigger than typical, smaller than catastrophic. SSE

@@ -1,5 +1,6 @@
 """FastAPI entry point for the AMI Trade backend."""
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -24,6 +25,7 @@ from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
 from app.middleware.http_audit import HTTPAuditMiddleware
+from app.services.audit import trim_audit_tables
 
 configure_logging()
 # Sentry must initialise BEFORE the FastAPI app is constructed so the
@@ -31,10 +33,31 @@ configure_logging()
 # SENTRY_DSN is unset (dev).
 init_sentry()
 
+_TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
+
+
+async def _nightly_audit_trim() -> None:
+    """Background task: trim audit tables every 24 h."""
+    while True:
+        await asyncio.sleep(_TRIM_INTERVAL_SECONDS)
+        try:
+            counts = trim_audit_tables()
+            logger.info("audit_trim_complete", **counts)
+        except Exception:
+            logger.exception("audit_trim_failed")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    yield
+    task = asyncio.create_task(_nightly_audit_trim())
+    try:
+        yield
+    finally:
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
