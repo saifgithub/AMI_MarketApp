@@ -318,6 +318,11 @@ class BugReportRow(Base):
     app_version: Mapped[str] = mapped_column(String, nullable=False)
     platform: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default="open", nullable=False)
+    # Git branch name a bug-fix agent claimed for this report.
+    # Coordinates parallel work: two /fix-bugs sessions can't both claim
+    # the same `open` bug because the UPDATE that sets status='in_progress'
+    # also writes the branch name in the same statement.
+    assigned_branch: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
