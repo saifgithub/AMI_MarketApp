@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 
-const String kAppVersion = '0.1.0+1';
+const String kAppVersion = '0.1.0+2';
 
 String get kPlatform {
   if (Platform.isIOS) return 'ios';

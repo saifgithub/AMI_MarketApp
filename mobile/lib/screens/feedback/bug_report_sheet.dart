@@ -12,7 +12,6 @@ import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 const _kCategories = [
   ('ui_glitch', 'UI glitch'),
@@ -24,7 +23,7 @@ const _kCategories = [
 
 /// Convenience helper — call from any widget.
 Future<void> showBugReportSheet(BuildContext context, WidgetRef ref) {
-  final route = GoRouterState.of(context).uri.toString();
+  final route = ModalRoute.of(context)?.settings.name ?? 'unknown';
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
