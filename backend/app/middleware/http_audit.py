@@ -55,7 +55,19 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
             captured_request = body_bytes
 
         # Force the cached body onto Starlette so the route handler can re-read.
+        # First call returns the cached body; subsequent calls return
+        # http.disconnect — required for StreamingResponse routes (SSE), where
+        # Starlette polls receive() to detect client disconnects. Without this,
+        # the second poll sees a stale `http.request` and BaseHTTPMiddleware
+        # raises `RuntimeError: Unexpected message received: http.request`,
+        # crashing the stream after headers were sent.
+        body_replayed = False
+
         async def receive() -> dict:
+            nonlocal body_replayed
+            if body_replayed:
+                return {"type": "http.disconnect"}
+            body_replayed = True
             return {"type": "http.request", "body": body_bytes, "more_body": False}
 
         request._receive = receive  # type: ignore[attr-defined]
