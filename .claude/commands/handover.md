@@ -84,7 +84,37 @@ For each `agent-*` worktree:
 Sibling worktrees that pre-date this session (named `claude/<adj>-<noun>-<hex>`)
 are not yours to clean — leave them alone.
 
-### 3. Consistency scan
+### 3. Rotate the prior session out to history.md
+
+(Moved before the consistency scan so the scan doesn't flag text in
+the "what just landed" section that's about to be moved out anyway.)
+
+HANDOVER.md is **rolling**: it carries current truth + ONE session's
+"what just landed" narrative. Before writing this session's narrative,
+the previous session's section must be moved to history.md so the file
+stays bounded.
+
+Find the current `## What just landed (this session — AT:R<N-1>)`
+section in HANDOVER.md (there should be exactly one). Move it to the
+**top** of history.md (newest-on-top), but BELOW the existing intro
+preamble. Rename the heading on the way out:
+
+```
+## What just landed (this session — AT:R<N-1>)
+                                   ↓
+## AT:R<N-1>  (YYYY-MM-DD)
+```
+
+That standardises the historical heading style and drops the
+"this session" qualifier — there's only ever one "this session" and
+it lives in HANDOVER.md.
+
+If HANDOVER.md doesn't have a `## What just landed (this session —`
+heading (first session after the refactor, or because the previous
+session was a pure refactor), skip the rotation — just write the new
+section.
+
+### 4. Consistency scan
 
 New rules / states / counts landed this session likely contradict
 text that survives elsewhere. Grep for the specific patterns this
@@ -112,13 +142,14 @@ git grep -nE 'AT:R[0-9]+' \
   -- ':!Silent_Scout' ':!.claude/worktrees' | head -20
 ```
 
-For HANDOVER.md specifically, the preamble already labels the
-chronological-narrative section as historical. Hits inside that
-section are usually fine; hits in the "What's on disk + what's
-running" table or the "Prompt to paste" block are load-bearing
-and must be current.
+For HANDOVER.md specifically, the rolling structure means the only
+narrative section there is the current AT:R\<N\> one. Hits in the
+"What's on disk + what's running" table or the "How to start the next
+session" block are load-bearing and must be current. history.md hits
+inside session-tagged sections are usually fine — that's where stale
+text is *supposed* to live.
 
-### 4. Update HANDOVER.md
+### 5. Update HANDOVER.md
 
 The doc has a stable shape. Maintain it:
 
@@ -130,14 +161,30 @@ The doc has a stable shape. Maintain it:
   `git rev-list --count HEAD`, `git log -1`, `git tag`, and
   the pytest tail you ran.
 - **New section** `## What just landed (this session — AT:R<N>)`
-  inserted ABOVE the prior session's wrap. Narrative summary of
+  inserted in the position the rotated section used to occupy
+  (just before "How to start the next session"). Narrative summary of
   the substantive commits with hash callouts. Include carry-overs
   and any gotchas the next session will trip on.
-- **"Prompt to paste at the start of the next session"** — update
-  the commit count / test count / carry-over list. **Increment the
-  session-name counter** (e.g. `AT:R14` → `AT:R15`).
+- **"How to start the next session"** — update the commit count /
+  test count / carry-over list. **Increment the session-name counter**
+  (e.g. `AT:R19` → `AT:R20`).
 
-### 5. Update memory/project_ami_trade.md
+### 6. Tick delivered items in `docs/10_delivery/project_plan.md`
+
+The plan has a `Status` column per row. For each item in the plan that
+shipped (or moved buckets) this session, update the cell:
+
+- Newly delivered → change to `✅ done (AT:R<N>)`
+- Newly partial → `⚡ partial (...short note on what's still missing...)`
+- Newly blocked → `⏳ blocked (...what's blocking...)`
+- Superseded by a different approach → `✖ superseded (...what replaced it...)`
+
+Also refresh the "Delivery status — Alpha snapshot" block near the top
+of the plan: re-count the ✅/⚡/⏳/◯ buckets if any bucket changed.
+
+If no plan items moved this session, skip this step.
+
+### 7. Update memory/project_ami_trade.md
 
 This file lives OUTSIDE the repo at
 `~/.claude/projects/-Volumes-Extreme-Pro-AMI-MarketApp/memory/project_ami_trade.md`.
@@ -153,18 +200,18 @@ Update at minimum:
 - "What's 'next'" — replace with current carry-overs from
   HANDOVER.md
 
-### 6. Final verification
+### 8. Final verification
 
 ```bash
 git status   # MUST be "nothing to commit, working tree clean"
 git log --oneline | head -5    # confirm doc commits landed
 ```
 
-If `git status` is dirty after step 5 → that's the doc commits
+If `git status` is dirty after step 7 → that's the doc commits
 not yet staged; finish them and re-check. Don't surface until
 clean.
 
-### 7. Report to the user
+### 9. Report to the user
 
 Use this exact structure so deviations are easy to spot:
 
@@ -176,10 +223,12 @@ Use this exact structure so deviations are easy to spot:
 | 1. Working tree clean | ✅ |
 | 2. On main / fast-forwarded | ✅ |
 | 3. Subagent worktrees cleaned | ✅ (N removed) or N/A |
-| 4. Consistency scan | ✅ (K real stale refs fixed) |
-| 5. HANDOVER.md updated | ✅ |
-| 6. memory file updated | ✅ |
-| 7. Final git status | ✅ |
+| 4. Prior session rotated to history.md | ✅ or N/A |
+| 5. Consistency scan | ✅ (K real stale refs fixed) |
+| 6. HANDOVER.md updated | ✅ |
+| 7. project_plan.md status ticked | ✅ (M items moved) or N/A |
+| 8. memory file updated | ✅ |
+| 9. Final git status | ✅ |
 
 Session totals:
 - N commits in (M new this session)
