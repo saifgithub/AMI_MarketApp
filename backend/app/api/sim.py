@@ -24,6 +24,7 @@ from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
+from app.services.watchlist_store import get_watchlist_store
 
 
 router = APIRouter(prefix="/v1/sim", tags=["sim"])
@@ -146,6 +147,14 @@ async def submit_trade(
 
     trade = result.trade
     assert trade is not None
+
+    # Auto-add the traded ticker to the user's watchlist so it shows up
+    # in the ticker tape. Idempotent on (user_id, ticker), best-effort.
+    try:
+        get_watchlist_store().add(req.user_id, trade.ticker)
+    except Exception:  # pragma: no cover
+        pass
+
     # Journal capture — sim_trade entry
     try:
         side_label = (

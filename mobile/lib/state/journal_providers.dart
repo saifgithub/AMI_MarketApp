@@ -129,6 +129,24 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.copyWith(entries: previous, error: 'Delete failed: $e');
     }
   }
+
+  /// Undo a soft-delete: clears `deleted_at` on the backend and refreshes
+  /// the current list so the entry slots back into its created_at-desc
+  /// position.
+  Future<void> restoreEntry(String entryId) async {
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      await api.restoreJournalEntry(userId: userId, entryId: entryId);
+      // Re-fetch to pick up the un-deleted row in its right place.
+      await refresh(
+        filterType: state.filterType,
+        q: state.searchQuery.isEmpty ? null : state.searchQuery,
+      );
+    } catch (e) {
+      state = state.copyWith(error: 'Undo failed: $e');
+    }
+  }
 }
 
 final journalNotifierProvider =

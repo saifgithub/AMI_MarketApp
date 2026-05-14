@@ -298,6 +298,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalEntryDeleted => 'Entry removed';
 
   @override
+  String get journalUndo => 'UNDO';
+
+  @override
   String get lessonsHeading => 'PELAJARAN';
 
   @override

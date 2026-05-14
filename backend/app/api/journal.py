@@ -109,6 +109,25 @@ async def delete_entry(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
 
 
+@router.post(
+    "/{user_id}/entry/{entry_id}/restore",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def restore_entry(
+    user_id: UUID,
+    entry_id: UUID,
+    store: JournalStore = Depends(get_journal_store),
+) -> None:
+    """Undo a soft-delete — clears deleted_at on the entry.
+
+    Used by the in-app UNDO snackbar after swipe-to-delete. The entry
+    row was never actually destroyed, just hidden by `deleted_at`.
+    """
+    restored = store.restore(user_id, entry_id)
+    if not restored:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
+
+
 @router.post("", response_model=JournalEntry, status_code=status.HTTP_201_CREATED)
 async def append_entry(
     draft: JournalEntryCreate,

@@ -519,7 +519,15 @@ class _LanguageRow extends StatelessWidget {
 }
 
 
-// ── Theme (light / dark / follow system) ────────────────────────────────
+// ── Theme (alpha is dark-only) ────────────────────────────────────────────
+//
+// The full light theme exists at the MaterialApp level (amiLightTheme), but
+// the alpha screens hard-code AmiColors.slate900 / slate800 backgrounds in
+// 37 places — so flipping the system toggle has no visible effect. Rather
+// than ship a broken control, this section is informational only until the
+// screens are migrated to theme-aware colors (tracked as A29 in the plan).
+// Force the persisted mode back to dark so a previously stored "light"
+// setting can't make any subsequent screen look half-themed.
 
 
 class _ThemeSection extends ConsumerWidget {
@@ -528,74 +536,39 @@ class _ThemeSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(themeModeProvider);
+    if (current != ThemeMode.dark) {
+      // Coerce on first render; safe no-op if already dark.
+      Future.microtask(
+        () => ref.read(themeModeProvider.notifier).setMode(ThemeMode.dark),
+      );
+    }
     return _Section(
       title: 'APPEARANCE',
       children: [
-        for (final opt in _themeModeOptions)
-          _ThemeModeRow(
-            option: opt,
-            selected: opt.mode == current,
-            onTap: () =>
-                ref.read(themeModeProvider.notifier).setMode(opt.mode),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.dark_mode, color: AmiColors.hexBlue, size: 20),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Dark theme', style: AmiTypography.body),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Alpha is dark-only. Light + Follow System land in v1.0.',
+                      style: AmiTypography.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-      ],
-    );
-  }
-}
-
-class _ThemeModeOption {
-  const _ThemeModeOption(
-      {required this.mode, required this.label, required this.description});
-  final ThemeMode mode;
-  final String label;
-  final String description;
-}
-
-const _themeModeOptions = <_ThemeModeOption>[
-  _ThemeModeOption(
-      mode: ThemeMode.system,
-      label: 'Follow System',
-      description: 'Matches your device setting'),
-  _ThemeModeOption(
-      mode: ThemeMode.dark,
-      label: 'Always Dark',
-      description: 'AMI default'),
-  _ThemeModeOption(
-      mode: ThemeMode.light,
-      label: 'Always Light',
-      description: 'For bright outdoor conditions'),
-];
-
-class _ThemeModeRow extends StatelessWidget {
-  const _ThemeModeRow({
-    required this.option,
-    required this.selected,
-    required this.onTap,
-  });
-  final _ThemeModeOption option;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: selected ? AmiColors.hexBlue : AmiColors.textLow,
-              size: 20,
-            ),
-            const SizedBox(width: AmiSpacing.s),
-            Text(option.label, style: AmiTypography.body),
-            const SizedBox(width: AmiSpacing.s),
-            Text('· ${option.description}', style: AmiTypography.caption),
-          ],
         ),
-      ),
+      ],
     );
   }
 }

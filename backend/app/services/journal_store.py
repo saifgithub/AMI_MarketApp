@@ -172,6 +172,22 @@ class JournalStore:
             s.flush()
             return True
 
+    def restore(self, user_id: UUID, entry_id: UUID) -> bool:
+        """Clear deleted_at on a soft-deleted entry. Returns True if restored."""
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.id == entry_id,
+                    JournalEntryRow.deleted_at.is_not(None),
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return False
+            row.deleted_at = None
+            s.flush()
+            return True
+
     def annotate(
         self,
         user_id: UUID,

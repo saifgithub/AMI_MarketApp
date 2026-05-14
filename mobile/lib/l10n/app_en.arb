@@ -159,6 +159,7 @@
     "journalSearchHint": "Search entries…",
     "journalSearchEmpty": "No entries match your search.",
     "journalEntryDeleted": "Entry removed",
+    "journalUndo": "UNDO",
 
     "lessonsHeading": "LESSONS",
     "lessonsYourProgress": "YOUR PROGRESS",

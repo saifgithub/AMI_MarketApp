@@ -640,6 +640,12 @@ abstract class AppLocalizations {
   /// **'Entry removed'**
   String get journalEntryDeleted;
 
+  /// No description provided for @journalUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'UNDO'**
+  String get journalUndo;
+
   /// No description provided for @lessonsHeading.
   ///
   /// In en, this message translates to:

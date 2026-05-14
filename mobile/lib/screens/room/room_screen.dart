@@ -69,6 +69,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                   children: [
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
+                    if (state.reconnecting) const _ReconnectingBanner(),
                     for (final agentId in state.order)
                       _AgentLine(
                         agentId: agentId,
@@ -251,6 +252,44 @@ class _ErrorBanner extends StatelessWidget {
           const Icon(Icons.error_outline, color: AmiColors.hexRed, size: 18),
           const SizedBox(width: AmiSpacing.s),
           Expanded(child: Text(message, style: AmiTypography.body)),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _ReconnectingBanner extends StatelessWidget {
+  const _ReconnectingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation(AmiColors.hexAmber),
+            ),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(
+            child: Text(
+              'Connection lost. The room is still running — waiting for the verdict to land.',
+              style: AmiTypography.body,
+            ),
+          ),
         ],
       ),
     );

@@ -300,7 +300,7 @@ class RoomEvent:
 
     The API layer (room.py) translates this into SSE.
     """
-    kind: str  # 'phase' | 'agent_token' | 'agent_done' | 'verdict' | 'error'
+    kind: str  # 'started' | 'phase' | 'agent_token' | 'agent_done' | 'verdict' | 'error'
     phase: str | None = None
     agent_id: AgentId | None = None
     text: str | None = None
@@ -446,6 +446,12 @@ class RoomRunner:
         )
         _persist_run(run)
         logger.info("room_started", run_id=str(run_id), ticker=ticker, tier=tier)
+
+        # Emit `started` first so clients have the run_id immediately —
+        # critical for the "phone went to sleep, come back and see results"
+        # recovery path. Without this, the run_id only landed on the final
+        # `done` event, useless to a disconnected client.
+        yield RoomEvent(kind="started", run_id=run_id)
 
         # Halal universe: tiny demo set. Real screen ships at W8+.
         halal = halal_universe or {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}

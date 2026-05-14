@@ -114,6 +114,30 @@ def test_soft_delete_returns_false_for_unknown():
     assert store.soft_delete(uuid4(), uuid4()) is False
 
 
+def test_restore_brings_entry_back():
+    store = JournalStore()
+    user_id = uuid4()
+    e = store.append(_draft(user_id, title="will be restored"))
+    assert store.soft_delete(user_id, e.id) is True
+    _, total_after_delete, _ = store.list_for_user(user_id, plan=Plan.TRADER)
+    assert total_after_delete == 0
+
+    assert store.restore(user_id, e.id) is True
+    entries, total_after_restore, _ = store.list_for_user(user_id, plan=Plan.TRADER)
+    assert total_after_restore == 1
+    assert entries[0].title == "will be restored"
+
+
+def test_restore_returns_false_for_non_deleted_or_unknown():
+    store = JournalStore()
+    user_id = uuid4()
+    e = store.append(_draft(user_id, title="live entry"))
+    # Live entry (not deleted) — restore is a no-op
+    assert store.restore(user_id, e.id) is False
+    # Truly unknown id
+    assert store.restore(user_id, uuid4()) is False
+
+
 def test_search_filters_by_title_and_summary():
     store = JournalStore()
     user_id = uuid4()

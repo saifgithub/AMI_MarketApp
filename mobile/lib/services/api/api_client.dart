@@ -379,6 +379,13 @@ class ApiClient {
     await _dio.delete<void>('/v1/journal/$userId/entry/$entryId');
   }
 
+  Future<void> restoreJournalEntry({
+    required String userId,
+    required String entryId,
+  }) async {
+    await _dio.post<void>('/v1/journal/$userId/entry/$entryId/restore');
+  }
+
   // ── Lessons ─────────────────────────────────────────────────────
 
   Future<LessonCatalogue> lessonCatalogue({String locale = 'en'}) async {
@@ -538,6 +545,10 @@ class ApiClient {
           if (eventType == null) continue;
           try {
             switch (eventType) {
+              case 'started':
+                final j = jsonDecode(data) as Map<String, dynamic>;
+                yield {'kind': 'started', 'run_id': j['run_id']};
+                break;
               case 'phase':
                 final j = jsonDecode(data) as Map<String, dynamic>;
                 yield {'kind': 'phase', 'label': j['label']};

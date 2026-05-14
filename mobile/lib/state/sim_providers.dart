@@ -5,6 +5,7 @@ import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -95,6 +96,9 @@ class SimNotifier extends StateNotifier<SimState> {
       await refresh();
       // refresh journal too — new sim_trade entry
       await _ref.read(journalNotifierProvider.notifier).refresh();
+      // refresh watchlist — backend auto-added the traded ticker so the
+      // ticker tape (which listens on watchlist contents) picks it up.
+      await _ref.read(watchlistNotifierProvider.notifier).refresh();
       return result;
     } catch (e) {
       state = state.copyWith(submitting: false, error: 'Submit failed: $e');

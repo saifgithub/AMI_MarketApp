@@ -15,6 +15,7 @@ import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -92,13 +93,26 @@ class JournalScreen extends ConsumerWidget {
           return Dismissible(
             key: ValueKey(e.id),
             direction: DismissDirection.endToStart,
+            // iOS-style: half-swipe is not enough. Demand a deliberate
+            // swipe well past the midpoint before the dismiss commits.
+            // (Default 0.4 fired on a casual half-swipe — accidental
+            // data loss, reported as a bug.)
+            dismissThresholds: const {DismissDirection.endToStart: 0.7},
             background: const _DeleteBackground(),
             onDismissed: (_) {
-              ref.read(journalNotifierProvider.notifier).deleteEntry(e.id);
-              ScaffoldMessenger.of(context).showSnackBar(
+              HapticFeedback.mediumImpact();
+              final notifier = ref.read(journalNotifierProvider.notifier);
+              notifier.deleteEntry(e.id);
+              final messenger = ScaffoldMessenger.of(context);
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(AppLocalizations.of(context).journalEntryDeleted),
-                  duration: const Duration(seconds: 2),
+                  duration: const Duration(seconds: 4),
+                  action: SnackBarAction(
+                    label: AppLocalizations.of(context).journalUndo,
+                    onPressed: () => notifier.restoreEntry(e.id),
+                  ),
                 ),
               );
             },
