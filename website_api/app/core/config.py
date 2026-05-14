@@ -8,7 +8,7 @@ class Settings(BaseSettings):
 
     env: str = "local"
     database_url: str = "sqlite:///./website.db"
-    cors_origin: str = "https://www.agenticmarketintel.com"
+    cors_origins: str = "https://www.agenticmarketintel.ai,https://agenticmarketintel.ai"
 
 
 settings = Settings()

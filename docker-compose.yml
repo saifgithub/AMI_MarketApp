@@ -149,6 +149,21 @@ services:
       # Skip when developing locally without external HTTPS
       - tunnel
 
+  api-website:
+    build:
+      context: ./website_api
+    container_name: ami_website_api
+    restart: unless-stopped
+    environment:
+      ENV: prod
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_website
+      CORS_ORIGINS: https://www.agenticmarketintel.ai,https://agenticmarketintel.ai
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:
