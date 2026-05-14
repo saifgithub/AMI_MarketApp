@@ -20,7 +20,6 @@ from app.api.onboarding import router as onboarding_router
 from app.api.one_on_one import router as one_on_one_router
 from app.api.room import router as room_router
 from app.api.sim import router as sim_router
-from app.api.waitlist import router as waitlist_router
 from app.api.watchlist import router as watchlist_router
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -96,7 +95,6 @@ app.include_router(mandate_router)
 app.include_router(room_router)
 app.include_router(sim_router)
 app.include_router(feedback_router)
-app.include_router(waitlist_router)
 app.include_router(watchlist_router)
 
 
