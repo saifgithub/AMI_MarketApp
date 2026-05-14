@@ -405,21 +405,3 @@ class OneOnOneMessageRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
-
-
-class WaitlistRow(Base):
-    """Marketing site waitlist — email captures before public launch.
-
-    Upsert on email so duplicate submissions are idempotent; source records
-    which surface the signup came from (e.g. 'marketing_site').
-    """
-
-    __tablename__ = "waitlist"
-    __table_args__ = (UniqueConstraint("email", name="uq_waitlist_email"),)
-
-    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
-    email: Mapped[str] = mapped_column(String, index=True, nullable=False)
-    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=_utcnow, nullable=False,
-    )
