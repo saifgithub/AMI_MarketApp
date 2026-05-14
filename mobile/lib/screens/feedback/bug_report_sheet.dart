@@ -112,10 +112,8 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
                     selectedColor: AmiColors.hexBlue,
                     backgroundColor: AmiColors.slate700,
                     labelStyle: AmiTypography.caption.copyWith(
-                      // slate900 on hexBlue = ~4.8:1 (passes AA).
-                      // textHigh (near-white) on hexBlue = ~3.6:1 (fails).
                       color: _category == value
-                          ? AmiColors.slate900
+                          ? AmiColors.textHigh
                           : AmiColors.slate500,
                     ),
                     side: BorderSide.none,
