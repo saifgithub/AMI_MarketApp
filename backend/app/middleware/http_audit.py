@@ -54,23 +54,21 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
         else:
             captured_request = body_bytes
 
-        # Force the cached body onto Starlette so the route handler can re-read.
-        # First call returns the cached body; subsequent calls return
-        # http.disconnect — required for StreamingResponse routes (SSE), where
-        # Starlette polls receive() to detect client disconnects. Without this,
-        # the second poll sees a stale `http.request` and BaseHTTPMiddleware
-        # raises `RuntimeError: Unexpected message received: http.request`,
-        # crashing the stream after headers were sent.
-        body_replayed = False
-
-        async def receive() -> dict:
-            nonlocal body_replayed
-            if body_replayed:
-                return {"type": "http.disconnect"}
-            body_replayed = True
-            return {"type": "http.request", "body": body_bytes, "more_body": False}
-
-        request._receive = receive  # type: ignore[attr-defined]
+        # NOTE: we deliberately do NOT replace request._receive.
+        #
+        # Starlette caches request.body() in request._body, so the downstream
+        # handler can re-read the body without ever calling receive() again.
+        # _CachedRequest.wrapped_receive checks for _body first and returns
+        # the cached bytes directly. So nothing more is needed here.
+        #
+        # Earlier versions of this middleware replaced request._receive with a
+        # synthetic that always returned http.request. That broke SSE routes
+        # (1-on-1 chat, room stream, coach chat): once Starlette had wrapped
+        # the response and the streaming body started, _CachedRequest polled
+        # receive() to detect client disconnect, got our http.request back,
+        # and raised `RuntimeError: Unexpected message received: http.request`.
+        # The stream died after status 200 was already sent — the iPhone saw
+        # an empty response.
 
         try:
             response = await call_next(request)
