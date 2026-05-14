@@ -19,6 +19,16 @@ const int kTickerTapeRefreshSeconds = 120;
 /// Wire to the user's mandate field in Phase 2 (Tadawul / Bursa landing).
 final activeBourseProvider = Provider<Bourse>((_) => Bourse.us);
 
+/// Projection of the watchlist down to a stable, content-comparable key.
+/// Sorted + comma-joined so Riverpod's default `==` fires the listener only
+/// when the set of watched tickers actually changes — not on every transient
+/// loading/busy flag flip in the watchlist state.
+final _watchlistTickersKeyProvider = Provider<String>((ref) {
+  final items = ref.watch(watchlistNotifierProvider).items;
+  final tickers = items.map((e) => e.ticker).toList()..sort();
+  return tickers.join(',');
+});
+
 class TickerTapeData {
   const TickerTapeData({required this.quotes, this.isStale = false});
 
@@ -47,6 +57,16 @@ class TickerTapeNotifier extends AsyncNotifier<TickerTapeData> {
     _timer = Timer.periodic(
       Duration(seconds: kTickerTapeRefreshSeconds),
       (_) => _silentRefresh(),
+    );
+    // Re-fetch immediately whenever the watchlist changes (add / remove
+    // ticker), instead of waiting up to 120s for the next timer tick.
+    // ref.listen survives across rebuilds — no loading flash, just a
+    // silent state update once the new quotes land.
+    ref.listen<String>(
+      _watchlistTickersKeyProvider,
+      (prev, next) {
+        if (prev != next) _silentRefresh();
+      },
     );
     return _fetch();
   }
