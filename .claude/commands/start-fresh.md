@@ -63,13 +63,39 @@ If the tree is dirty: STOP and surface to Saiful — the previous
 session didn't clean up; that's a bug, not something to bulldoze
 through.
 
-### 3. Name the session
+### 3. Pull the open bug list
+
+The in-app bug reporter writes to `bug_reports` on melehost. Surface the
+counts + the open titles so Saiful can choose to clear them before
+starting new work.
+
+```bash
+ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \"\
+  SELECT status, COUNT(*) FROM bug_reports \
+  WHERE status IN ('open','in_progress','pending_review') \
+  GROUP BY status ORDER BY status;\""
+```
+
+If `status='open'` count is **> 0**, also pull the titles so the plan in
+step 4 can list them:
+
+```bash
+ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \"\
+  SELECT to_char(created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS at, \
+    LEFT(id::text, 8) AS short_id, category, title \
+  FROM bug_reports WHERE status='open' ORDER BY created_at DESC LIMIT 10;\""
+```
+
+Note any `pending_review` rows too — those are bug-fix commits awaiting
+your merge to main from a previous `/fix-bugs` worktree.
+
+### 4. Name the session
 
 HANDOVER.md's "Prompt to paste" block names the next session
 (e.g. `AT:R15:`). Use it for chapter markers (`mark_chapter`)
 and for any commit-message session-tag references.
 
-### 4. Switch to plan mode
+### 5. Switch to plan mode
 
 Load `EnterPlanMode` via ToolSearch if not already available:
 
@@ -82,13 +108,32 @@ Then call `EnterPlanMode` with a plan that summarizes:
 - One-line state read: commit count, test count, alpha tag, what
   Alpha is serving (LLM provider, lesson count, market data leaf
   source)
+- **Open bug list from step 3** — render as a short table when count
+  > 0. For each: `short_id · category · title`. Note any
+  `pending_review` rows separately ("X bug fix(es) awaiting merge
+  from previous /fix-bugs worktree").
 - The current carry-over list from HANDOVER.md as bulleted
   options Saiful might pick from
-- An open question: "What would you like to work on?"
 
-ExitPlanMode is then up to Saiful — he picks a direction (one of
-the carry-overs, or something else), the plan adjusts, and only
-THEN do any file edits start.
+Then **ask the user explicitly**, e.g. via AskUserQuestion or as the
+final paragraph of the plan: *"Bugs first or carry-over first?"* —
+phrased neutrally so he can also pick a brand new direction.
+
+The expected directive choices Saiful might give:
+
+| He says | Action |
+|---|---|
+| "fix bugs" / "yes, bugs first" | Invoke `/fix-bugs` (which spawns its own worktree, see that command's protocol). |
+| names a specific bug (by short id or title) | Treat as a one-off fix on the current branch — skip the full `/fix-bugs` worktree dance. |
+| names a carry-over / new direction | Start that work. |
+| "ignore bugs for now" | Drop the bug list, proceed with whatever else he picks. |
+
+ExitPlanMode is up to Saiful — he picks a direction, the plan adjusts,
+and only THEN do any file edits start.
+
+If the bug count is **0** for all of `open` / `in_progress` /
+`pending_review`, drop the bug section from the plan entirely — don't
+manufacture noise just to fill a heading.
 
 ## What NOT to do
 
@@ -105,6 +150,14 @@ THEN do any file edits start.
 - **Don't skip the sanity-check curls**. The handful of seconds
   they take is the cheapest way to catch a melehost outage
   before you propose work that assumes a working backend.
+- **Don't skip the bug-list pull**. The user-facing bugs are the
+  most expensive thing to leave unaddressed; surfacing them
+  upfront forces a conscious "yes/no/later" rather than forgetting
+  them.
+- **Don't auto-claim or auto-fix bugs from /start-fresh**. This
+  command only surfaces; `/fix-bugs` is the entry point for
+  actually working through the queue (its own worktree + claim
+  protocol).
 
 ## When to skip this
 
