@@ -67,6 +67,22 @@ async def list_entries(
     return JournalListResponse(entries=entries, total=total, retention_days=retention)
 
 
+@router.get("/{user_id}/trash", response_model=JournalListResponse)
+async def list_trash(
+    user_id: UUID,
+    limit: int = 100,
+    store: JournalStore = Depends(get_journal_store),
+) -> JournalListResponse:
+    """Soft-deleted entries from the last 30 days.
+
+    Rows older than the window stay in the DB (recoverable via the
+    restore endpoint or psql) but never surface here — keeps the
+    in-app Trash view to a bounded fetch.
+    """
+    entries, total = store.list_deleted(user_id, limit=limit)
+    return JournalListResponse(entries=entries, total=total, retention_days=None)
+
+
 @router.get("/{user_id}/entry/{entry_id}", response_model=JournalEntry)
 async def get_entry(
     user_id: UUID,

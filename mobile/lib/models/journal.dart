@@ -72,6 +72,7 @@ class JournalEntry {
     this.outcome,
     this.referenceId,
     this.payload = const {},
+    this.deletedAt,
   });
 
   final String id;
@@ -87,6 +88,9 @@ class JournalEntry {
   final String? outcome;
   final Map<String, dynamic> payload;
   final DateTime createdAt;
+  // Set only for entries returned from /v1/journal/{u}/trash; null on
+  // the regular list since live entries always have deleted_at IS NULL.
+  final DateTime? deletedAt;
 
   factory JournalEntry.fromJson(Map<String, dynamic> j) {
     return JournalEntry(
@@ -105,6 +109,9 @@ class JournalEntry {
       outcome: j['outcome'] as String?,
       payload: (j['payload'] as Map?)?.cast<String, dynamic>() ?? const {},
       createdAt: DateTime.parse(j['created_at'] as String),
+      deletedAt: j['deleted_at'] != null
+          ? DateTime.parse(j['deleted_at'] as String)
+          : null,
     );
   }
 }

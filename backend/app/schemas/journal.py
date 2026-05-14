@@ -58,6 +58,7 @@ class JournalEntry(BaseModel):
     outcome: Outcome | None = None
     payload: dict = Field(default_factory=dict)  # full snapshot for replay
     created_at: datetime = Field(default_factory=_utcnow)
+    deleted_at: datetime | None = None  # set on soft-delete; null on live entries
 
 
 class JournalListResponse(BaseModel):

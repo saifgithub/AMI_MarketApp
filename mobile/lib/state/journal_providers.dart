@@ -155,3 +155,78 @@ final journalNotifierProvider =
   Future.microtask(n.refresh);
   return n;
 });
+
+
+// ── Trash ──────────────────────────────────────────────────────────────────
+
+@immutable
+class JournalTrashState {
+  const JournalTrashState({
+    this.entries = const [],
+    this.loading = false,
+    this.error,
+  });
+
+  final List<JournalEntry> entries;
+  final bool loading;
+  final String? error;
+
+  JournalTrashState copyWith({
+    List<JournalEntry>? entries,
+    bool? loading,
+    String? error,
+    bool clearError = false,
+  }) {
+    return JournalTrashState(
+      entries: entries ?? this.entries,
+      loading: loading ?? this.loading,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
+}
+
+
+/// Separate notifier so the trash list can be fetched only when the
+/// user opens the screen — keeps the main Journal tab's payload small.
+class JournalTrashNotifier extends StateNotifier<JournalTrashState> {
+  JournalTrashNotifier(this._ref) : super(const JournalTrashState());
+
+  final Ref _ref;
+
+  Future<void> refresh() async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      final resp = await api.listJournalTrash(userId: userId);
+      state = state.copyWith(entries: resp.entries, loading: false);
+    } catch (e) {
+      state = state.copyWith(loading: false, error: 'Could not load trash: $e');
+    }
+  }
+
+  /// Restore an entry; on success drop it from the trash list AND refresh
+  /// the main Journal so it re-appears in its original date-desc slot.
+  Future<void> restore(String entryId) async {
+    final previous = state.entries;
+    state = state.copyWith(
+      entries: previous.where((e) => e.id != entryId).toList(growable: false),
+    );
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      await api.restoreJournalEntry(userId: userId, entryId: entryId);
+      await _ref.read(journalNotifierProvider.notifier).refresh(
+            filterType: _ref.read(journalNotifierProvider).filterType,
+          );
+    } catch (e) {
+      state = state.copyWith(entries: previous, error: 'Restore failed: $e');
+    }
+  }
+}
+
+
+final journalTrashNotifierProvider =
+    StateNotifierProvider<JournalTrashNotifier, JournalTrashState>((ref) {
+  return JournalTrashNotifier(ref);
+});

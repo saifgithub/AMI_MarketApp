@@ -386,6 +386,17 @@ class ApiClient {
     await _dio.post<void>('/v1/journal/$userId/entry/$entryId/restore');
   }
 
+  Future<JournalListResponse> listJournalTrash({
+    required String userId,
+    int limit = 100,
+  }) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/journal/$userId/trash',
+      queryParameters: {'limit': limit},
+    );
+    return JournalListResponse.fromJson(r.data!);
+  }
+
   // ── Lessons ─────────────────────────────────────────────────────
 
   Future<LessonCatalogue> lessonCatalogue({String locale = 'en'}) async {

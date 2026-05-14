@@ -138,6 +138,42 @@ def test_restore_returns_false_for_non_deleted_or_unknown():
     assert store.restore(user_id, uuid4()) is False
 
 
+def test_list_deleted_window_30_days():
+    """Trash list returns only entries soft-deleted in the last 30 days."""
+    from sqlalchemy import select
+    from app.db import get_session
+    from app.db.models import JournalEntryRow
+
+    store = JournalStore()
+    user_id = uuid4()
+
+    # 1) live entry (should NOT appear in trash)
+    store.append(_draft(user_id, title="live"))
+
+    # 2) recently deleted (should appear)
+    e_recent = store.append(_draft(user_id, title="recent trash"))
+    store.soft_delete(user_id, e_recent.id)
+
+    # 3) old deletion (>30 days ago — should NOT appear in trash list,
+    #    but the row still exists in the DB)
+    e_old = store.append(_draft(user_id, title="old trash"))
+    store.soft_delete(user_id, e_old.id)
+    # Backdate the deletion to 40 days ago.
+    with get_session() as s:
+        row = s.execute(
+            select(JournalEntryRow).where(JournalEntryRow.id == e_old.id)
+        ).scalar_one()
+        row.deleted_at = datetime.now(timezone.utc) - timedelta(days=40)
+
+    entries, total = store.list_deleted(user_id)
+    assert total == 1
+    assert entries[0].title == "recent trash"
+    assert entries[0].deleted_at is not None
+
+    # Old row still exists in DB and remains restorable
+    assert store.restore(user_id, e_old.id) is True
+
+
 def test_search_filters_by_title_and_summary():
     store = JournalStore()
     user_id = uuid4()

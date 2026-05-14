@@ -646,6 +646,42 @@ abstract class AppLocalizations {
   /// **'UNDO'**
   String get journalUndo;
 
+  /// No description provided for @journalTrashHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'TRASH'**
+  String get journalTrashHeading;
+
+  /// No description provided for @journalTrashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here. Deleted entries appear in this list.'**
+  String get journalTrashEmpty;
+
+  /// No description provided for @journalTrashWindowNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Older entries are auto-hidden after 30 days.'**
+  String get journalTrashWindowNote;
+
+  /// No description provided for @journalRestoreEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'RESTORE'**
+  String get journalRestoreEntry;
+
+  /// No description provided for @journalEntryRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry restored'**
+  String get journalEntryRestored;
+
+  /// Caption under a deleted journal entry in the Trash view. {ago} is a relative time string like '2h ago' or '3d ago'.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted {ago}'**
+  String journalDeletedAgo(String ago);
+
   /// No description provided for @lessonsHeading.
   ///
   /// In en, this message translates to:

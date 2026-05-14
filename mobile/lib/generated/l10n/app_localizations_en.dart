@@ -300,6 +300,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journalUndo => 'UNDO';
 
   @override
+  String get journalTrashHeading => 'TRASH';
+
+  @override
+  String get journalTrashEmpty =>
+      'Nothing here. Deleted entries appear in this list.';
+
+  @override
+  String get journalTrashWindowNote =>
+      'Older entries are auto-hidden after 30 days.';
+
+  @override
+  String get journalRestoreEntry => 'RESTORE';
+
+  @override
+  String get journalEntryRestored => 'Entry restored';
+
+  @override
+  String journalDeletedAgo(String ago) {
+    return 'Deleted $ago';
+  }
+
+  @override
   String get lessonsHeading => 'LESSONS';
 
   @override

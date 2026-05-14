@@ -12,6 +12,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
+import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -137,7 +138,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+      padding: const EdgeInsets.only(left: AmiSpacing.m, right: AmiSpacing.xs),
       decoration: const BoxDecoration(
         color: AmiColors.glassChrome,
         border: Border(bottom: BorderSide(color: AmiColors.slate700)),
@@ -147,6 +148,14 @@ class _Header extends StatelessWidget {
           Text(AppLocalizations.of(context).journalHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue)),
           const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.delete_outline,
+                color: AmiColors.textMed, size: 22),
+            tooltip: AppLocalizations.of(context).journalTrashHeading,
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const JournalTrashScreen(),
+            )),
+          ),
         ],
       ),
     );

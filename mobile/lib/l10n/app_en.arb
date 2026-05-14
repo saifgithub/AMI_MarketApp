@@ -160,6 +160,16 @@
     "journalSearchEmpty": "No entries match your search.",
     "journalEntryDeleted": "Entry removed",
     "journalUndo": "UNDO",
+    "journalTrashHeading": "TRASH",
+    "journalTrashEmpty": "Nothing here. Deleted entries appear in this list.",
+    "journalTrashWindowNote": "Older entries are auto-hidden after 30 days.",
+    "journalRestoreEntry": "RESTORE",
+    "journalEntryRestored": "Entry restored",
+    "journalDeletedAgo": "Deleted {ago}",
+    "@journalDeletedAgo": {
+        "description": "Caption under a deleted journal entry in the Trash view. {ago} is a relative time string like '2h ago' or '3d ago'.",
+        "placeholders": { "ago": { "type": "String" } }
+    },
 
     "lessonsHeading": "LESSONS",
     "lessonsYourProgress": "YOUR PROGRESS",

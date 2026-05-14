@@ -63,7 +63,15 @@ def _row_to_entry(row: JournalEntryRow) -> JournalEntry:
         outcome=Outcome(row.outcome) if row.outcome else None,
         payload=dict(row.payload or {}),
         created_at=row.created_at,
+        deleted_at=row.deleted_at,
     )
+
+
+# Trash retention: how far back the in-app Trash view looks. Soft-deleted
+# rows older than this stay in the DB (recoverable via direct API call or
+# psql) but never appear in `list_deleted` — keeps the Trash list to a
+# bounded fetch regardless of how long the user's been using the app.
+TRASH_VISIBLE_DAYS = 30
 
 
 class JournalStore:
@@ -144,6 +152,32 @@ class JournalStore:
             rows = s.execute(stmt).scalars().all()
             entries = [_row_to_entry(r) for r in rows]
             return entries[:limit], len(entries), retention
+
+    def list_deleted(
+        self,
+        user_id: UUID,
+        *,
+        limit: int = 100,
+    ) -> tuple[list[JournalEntry], int]:
+        """Soft-deleted entries within the trash-visible window.
+
+        Returns entries with `deleted_at IS NOT NULL` AND
+        `deleted_at >= now - TRASH_VISIBLE_DAYS`, ordered by most-recently
+        deleted first. Older rows still exist in the DB but are out of
+        scope for the user-facing trash list.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(days=TRASH_VISIBLE_DAYS)
+        with get_session() as s:
+            stmt = (
+                select(JournalEntryRow)
+                .where(JournalEntryRow.user_id == user_id)
+                .where(JournalEntryRow.deleted_at.is_not(None))
+                .where(JournalEntryRow.deleted_at >= cutoff)
+                .order_by(JournalEntryRow.deleted_at.desc())
+            )
+            rows = s.execute(stmt).scalars().all()
+            entries = [_row_to_entry(r) for r in rows]
+            return entries[:limit], len(entries)
 
     def get(self, user_id: UUID, entry_id: UUID) -> JournalEntry | None:
         with get_session() as s:
