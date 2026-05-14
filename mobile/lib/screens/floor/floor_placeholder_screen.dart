@@ -11,6 +11,7 @@ import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
@@ -217,8 +218,13 @@ class FloorPlaceholderScreen extends ConsumerWidget {
 
               // ── Footer ──
               TextButton(
-                onPressed: () =>
-                    Navigator.of(context).pushReplacementNamed('/onboarding'),
+                onPressed: () async {
+                  await ref
+                      .read(onboardingNotifierProvider.notifier)
+                      .reset();
+                  if (!context.mounted) return;
+                  Navigator.of(context).pushReplacementNamed('/onboarding');
+                },
                 child: Text(
                   l.floorRestartOnboarding,
                   style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),

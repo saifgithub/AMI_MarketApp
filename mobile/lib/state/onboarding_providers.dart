@@ -9,6 +9,9 @@ import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _kOnboardingDoneKey = 'ami_onboarding_done';
 
 /// API client keyed on the active backend mode (Alpha / Beta / Prod —
 /// see docs/08_tech/backend_modes.md). When the user flips the toggle
@@ -106,6 +109,21 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
   int _lineCounter = 0;
 
   String _nextId() => 'line_${_lineCounter++}';
+
+  /// Persist completion so the app skips onboarding on next cold start.
+  static Future<void> markComplete() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kOnboardingDoneKey, true);
+  }
+
+  /// Clear the completion flag and reset state back to [OnboardingPhase.notStarted].
+  /// Called by "Restart Onboarding" in Settings/Floor.
+  Future<void> reset() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kOnboardingDoneKey);
+    _lineCounter = 0;
+    state = const OnboardingState();
+  }
 
   Future<void> start({required String locale, required String timezone}) async {
     if (state.phase != OnboardingPhase.notStarted &&

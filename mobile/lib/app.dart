@@ -18,7 +18,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AmiTradeApp extends ConsumerWidget {
-  const AmiTradeApp({super.key});
+  const AmiTradeApp({super.key, this.startOnFloor = false});
+
+  final bool startOnFloor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +35,7 @@ class AmiTradeApp extends ConsumerWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,
-      initialRoute: '/onboarding',
+      initialRoute: startOnFloor ? '/floor' : '/onboarding',
       routes: {
         '/onboarding': (_) => const OnboardingScreen(),
         '/floor': (_) => const HomeShell(),

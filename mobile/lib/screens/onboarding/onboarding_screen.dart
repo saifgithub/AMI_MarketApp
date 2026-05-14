@@ -221,7 +221,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       child: HexButton(
         label: AppLocalizations.of(context).onboardingMeetYourTeam,
         color: AmiColors.hexPink,
-        onPressed: () => Navigator.of(context).pushReplacementNamed('/floor'),
+        onPressed: () async {
+          await OnboardingNotifier.markComplete();
+          if (!mounted) return;
+          Navigator.of(context).pushReplacementNamed('/floor');
+        },
       ),
     );
   }

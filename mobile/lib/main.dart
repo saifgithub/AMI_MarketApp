@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const _sentryDsn = String.fromEnvironment('SENTRY_DSN');
 const _amiEnv = String.fromEnvironment('AMI_ENV', defaultValue: 'local');
@@ -34,8 +35,11 @@ Future<void> main() async {
     ),
   );
 
+  final prefs = await SharedPreferences.getInstance();
+  final startOnFloor = prefs.getBool('ami_onboarding_done') ?? false;
+
   if (_sentryDsn.isEmpty) {
-    runApp(const ProviderScope(child: AmiTradeApp()));
+    runApp(ProviderScope(child: AmiTradeApp(startOnFloor: startOnFloor)));
     return;
   }
 
@@ -65,6 +69,6 @@ Future<void> main() async {
         return event.copyWith(request: req.copyWith(headers: headers));
       };
     },
-    appRunner: () => runApp(const ProviderScope(child: AmiTradeApp())),
+    appRunner: () => runApp(ProviderScope(child: AmiTradeApp(startOnFloor: startOnFloor))),
   );
 }
