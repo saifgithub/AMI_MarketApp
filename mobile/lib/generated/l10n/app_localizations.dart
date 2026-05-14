@@ -622,6 +622,24 @@ abstract class AppLocalizations {
   /// **'Note saved'**
   String get journalNoteSaved;
 
+  /// No description provided for @journalSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search entries…'**
+  String get journalSearchHint;
+
+  /// No description provided for @journalSearchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No entries match your search.'**
+  String get journalSearchEmpty;
+
+  /// No description provided for @journalEntryDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Entry removed'**
+  String get journalEntryDeleted;
+
   /// No description provided for @lessonsHeading.
   ///
   /// In en, this message translates to:

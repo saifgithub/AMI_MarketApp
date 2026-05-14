@@ -156,6 +156,9 @@
     "journalNoteOutcomePending": "PENDING",
     "journalNoteSave": "SAVE NOTE",
     "journalNoteSaved": "Note saved",
+    "journalSearchHint": "Search entries…",
+    "journalSearchEmpty": "No entries match your search.",
+    "journalEntryDeleted": "Entry removed",
 
     "lessonsHeading": "LESSONS",
     "lessonsYourProgress": "YOUR PROGRESS",

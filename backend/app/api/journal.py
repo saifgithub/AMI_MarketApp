@@ -1,8 +1,9 @@
 """Decision Journal endpoints.
 
-GET    /v1/journal/{user_id}                 list entries (filter + paginate)
+GET    /v1/journal/{user_id}                 list entries (filter + search + paginate)
 GET    /v1/journal/{user_id}/entry/{id}      single entry detail
 POST   /v1/journal/{user_id}/entry/{id}/note attach a user note + tags + outcome
+DELETE /v1/journal/{user_id}/entry/{id}      soft-delete (sets deleted_at; not destroyed)
 POST   /v1/journal                           append (used by internal capture
                                               hooks and free-form notes)
 """
@@ -40,6 +41,7 @@ async def list_entries(
     plan: str = "trial_trader",
     entry_type: str | None = None,
     ticker: str | None = None,
+    q: str | None = None,
     limit: int = 100,
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalListResponse:
@@ -59,6 +61,7 @@ async def list_entries(
         plan=plan_enum,
         entry_type=et,
         ticker=ticker,
+        q=q or None,
         limit=limit,
     )
     return JournalListResponse(entries=entries, total=total, retention_days=retention)
@@ -90,6 +93,20 @@ async def annotate_entry(
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
     return updated
+
+
+@router.delete(
+    "/{user_id}/entry/{entry_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_entry(
+    user_id: UUID,
+    entry_id: UUID,
+    store: JournalStore = Depends(get_journal_store),
+) -> None:
+    found = store.soft_delete(user_id, entry_id)
+    if not found:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
 
 
 @router.post("", response_model=JournalEntry, status_code=status.HTTP_201_CREATED)

@@ -14,6 +14,7 @@ class JournalState {
     this.loading = false,
     this.retentionDays,
     this.filterType,
+    this.searchQuery = '',
     this.error,
   });
 
@@ -21,6 +22,7 @@ class JournalState {
   final bool loading;
   final int? retentionDays;
   final JournalEntryType? filterType;
+  final String searchQuery;
   final String? error;
 
   JournalState copyWith({
@@ -28,6 +30,7 @@ class JournalState {
     bool? loading,
     int? retentionDays,
     JournalEntryType? filterType,
+    String? searchQuery,
     String? error,
     bool clearError = false,
     bool clearFilter = false,
@@ -37,6 +40,7 @@ class JournalState {
       loading: loading ?? this.loading,
       retentionDays: retentionDays ?? this.retentionDays,
       filterType: clearFilter ? null : (filterType ?? this.filterType),
+      searchQuery: searchQuery ?? this.searchQuery,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -47,7 +51,11 @@ class JournalNotifier extends StateNotifier<JournalState> {
 
   final Ref _ref;
 
-  Future<void> refresh({JournalEntryType? filterType, String plan = 'trial_trader'}) async {
+  Future<void> refresh({
+    JournalEntryType? filterType,
+    String plan = 'trial_trader',
+    String? q,
+  }) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -56,6 +64,7 @@ class JournalNotifier extends StateNotifier<JournalState> {
         userId: userId,
         plan: plan,
         entryType: filterType?.wire,
+        q: q,
       );
       state = state.copyWith(
         entries: resp.entries,
@@ -69,7 +78,15 @@ class JournalNotifier extends StateNotifier<JournalState> {
   }
 
   Future<void> setFilter(JournalEntryType? type) async {
-    await refresh(filterType: type);
+    await refresh(filterType: type, q: state.searchQuery.isEmpty ? null : state.searchQuery);
+  }
+
+  Future<void> search(String q) async {
+    state = state.copyWith(searchQuery: q);
+    await refresh(
+      filterType: state.filterType,
+      q: q.isEmpty ? null : q,
+    );
   }
 
   Future<void> annotate({
@@ -94,6 +111,22 @@ class JournalNotifier extends StateNotifier<JournalState> {
       state = state.copyWith(entries: replaced);
     } catch (e) {
       state = state.copyWith(error: 'Note save failed: $e');
+    }
+  }
+
+  Future<void> deleteEntry(String entryId) async {
+    // Optimistic remove
+    final previous = state.entries;
+    state = state.copyWith(
+      entries: previous.where((e) => e.id != entryId).toList(growable: false),
+    );
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      await api.deleteJournalEntry(userId: userId, entryId: entryId);
+    } catch (e) {
+      // Restore on failure
+      state = state.copyWith(entries: previous, error: 'Delete failed: $e');
     }
   }
 }

@@ -288,6 +288,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journalNoteSaved => 'Note saved';
 
   @override
+  String get journalSearchHint => 'Search entries…';
+
+  @override
+  String get journalSearchEmpty => 'No entries match your search.';
+
+  @override
+  String get journalEntryDeleted => 'Entry removed';
+
+  @override
   String get lessonsHeading => 'LESSONS';
 
   @override

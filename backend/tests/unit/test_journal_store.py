@@ -82,3 +82,57 @@ def test_annotate_writes_note_tags_outcome():
 def test_get_returns_none_for_unknown():
     store = JournalStore()
     assert store.get(uuid4(), uuid4()) is None
+
+
+def test_soft_delete_hides_entry_but_preserves_row():
+    from sqlalchemy import select
+    from app.db import get_session
+    from app.db.models import JournalEntryRow
+
+    store = JournalStore()
+    user_id = uuid4()
+    e = store.append(_draft(user_id, title="to delete"))
+
+    assert store.soft_delete(user_id, e.id) is True
+
+    # Entry is gone from all read APIs
+    entries, total, _ = store.list_for_user(user_id, plan=Plan.TRADER)
+    assert total == 0
+    assert store.get(user_id, e.id) is None
+
+    # But the raw row still exists in the DB with deleted_at set
+    with get_session() as s:
+        row = s.execute(
+            select(JournalEntryRow).where(JournalEntryRow.id == e.id)
+        ).scalar_one_or_none()
+    assert row is not None
+    assert row.deleted_at is not None
+
+
+def test_soft_delete_returns_false_for_unknown():
+    store = JournalStore()
+    assert store.soft_delete(uuid4(), uuid4()) is False
+
+
+def test_search_filters_by_title_and_summary():
+    store = JournalStore()
+    user_id = uuid4()
+    store.append(_draft(user_id, title="AAPL analysis", summary="bullish thesis"))
+    store.append(_draft(user_id, title="MSFT earnings", summary="beat expectations"))
+    store.append(_draft(user_id, title="daily recap", summary="quiet session"))
+
+    aapl, total_aapl, _ = store.list_for_user(user_id, plan=Plan.TRADER, q="AAPL")
+    assert total_aapl == 1
+    assert aapl[0].title == "AAPL analysis"
+
+    bullish, total_bullish, _ = store.list_for_user(user_id, plan=Plan.TRADER, q="bullish")
+    assert total_bullish == 1
+
+    # Case-insensitive
+    msft, _, _ = store.list_for_user(user_id, plan=Plan.TRADER, q="msft")
+    assert len(msft) == 1
+    assert msft[0].title == "MSFT earnings"
+
+    # Empty q → all results
+    all_e, total_all, _ = store.list_for_user(user_id, plan=Plan.TRADER, q="")
+    assert total_all == 3

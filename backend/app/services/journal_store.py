@@ -13,6 +13,8 @@ Entries are appended by capture hooks across the codebase:
 
 Reads return Pydantic JournalEntry objects so callers don't see SQLAlchemy
 rows. The public sync API matches the previous in-memory store.
+
+Soft delete: DELETE sets deleted_at; all reads filter deleted_at IS NULL.
 """
 
 from __future__ import annotations
@@ -21,7 +23,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 
 from app.db import get_session, init_schema
 from app.db.models import JournalEntryRow
@@ -111,11 +113,16 @@ class JournalStore:
         plan: Plan | str = Plan.FLOOR_PASS,
         entry_type: EntryType | str | None = None,
         ticker: str | None = None,
+        q: str | None = None,
         limit: int = 100,
     ) -> tuple[list[JournalEntry], int, int | None]:
         retention = _retention_days_for_plan(plan)
         with get_session() as s:
-            stmt = select(JournalEntryRow).where(JournalEntryRow.user_id == user_id)
+            stmt = (
+                select(JournalEntryRow)
+                .where(JournalEntryRow.user_id == user_id)
+                .where(JournalEntryRow.deleted_at.is_(None))
+            )
             if retention is not None:
                 cutoff = datetime.now(timezone.utc) - timedelta(days=retention)
                 stmt = stmt.where(JournalEntryRow.created_at >= cutoff)
@@ -125,6 +132,14 @@ class JournalStore:
             if ticker is not None:
                 t = ticker.upper().strip()
                 stmt = stmt.where(JournalEntryRow.ticker == t)
+            if q:
+                term = f"%{q.strip()}%"
+                stmt = stmt.where(
+                    or_(
+                        JournalEntryRow.title.ilike(term),
+                        JournalEntryRow.summary.ilike(term),
+                    )
+                )
             stmt = stmt.order_by(JournalEntryRow.created_at.desc())
             rows = s.execute(stmt).scalars().all()
             entries = [_row_to_entry(r) for r in rows]
@@ -136,9 +151,26 @@ class JournalStore:
                 select(JournalEntryRow).where(
                     JournalEntryRow.user_id == user_id,
                     JournalEntryRow.id == entry_id,
+                    JournalEntryRow.deleted_at.is_(None),
                 )
             ).scalar_one_or_none()
             return _row_to_entry(row) if row else None
+
+    def soft_delete(self, user_id: UUID, entry_id: UUID) -> bool:
+        """Mark an entry as deleted. Returns True if found and deleted."""
+        with get_session() as s:
+            row = s.execute(
+                select(JournalEntryRow).where(
+                    JournalEntryRow.user_id == user_id,
+                    JournalEntryRow.id == entry_id,
+                    JournalEntryRow.deleted_at.is_(None),
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return False
+            row.deleted_at = datetime.now(timezone.utc)
+            s.flush()
+            return True
 
     def annotate(
         self,
@@ -154,6 +186,7 @@ class JournalStore:
                 select(JournalEntryRow).where(
                     JournalEntryRow.user_id == user_id,
                     JournalEntryRow.id == entry_id,
+                    JournalEntryRow.deleted_at.is_(None),
                 )
             ).scalar_one_or_none()
             if row is None:
@@ -168,11 +201,7 @@ class JournalStore:
             return _row_to_entry(row)
 
     def _backdate_for_test(self, user_id: UUID, entry_id: UUID, created_at: datetime) -> None:
-        """Test-only — shift an entry's created_at to exercise retention rules.
-
-        Lives here (not in tests) so we don't depend on a SQLAlchemy session
-        in the test module. Production code never calls this.
-        """
+        """Test-only — shift an entry's created_at to exercise retention rules."""
         with get_session() as s:
             row = s.execute(
                 select(JournalEntryRow).where(

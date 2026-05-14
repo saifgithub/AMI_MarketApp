@@ -2,7 +2,11 @@
 ///
 /// Shows every captured entry (1-on-1, Coach proposal, lesson completion,
 /// agent unlock). Filter chips for entry type. Tap → detail screen.
+/// Swipe left → delete (soft-delete on backend; data not destroyed).
+/// Search bar above the list fires server-side full-text search.
 library;
+
+import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
@@ -40,6 +44,7 @@ class JournalScreen extends ConsumerWidget {
           children: [
             const _Header(),
             _FilterRow(active: state.filterType),
+            _SearchBar(current: state.searchQuery),
             if (state.retentionDays != null)
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -71,12 +76,12 @@ class JournalScreen extends ConsumerWidget {
       );
     }
     if (state.entries.isEmpty) {
-      return _EmptyState();
+      return _EmptyState(isSearching: state.searchQuery.isNotEmpty);
     }
     return RefreshIndicator(
       onRefresh: () => ref
           .read(journalNotifierProvider.notifier)
-          .refresh(filterType: state.filterType),
+          .refresh(filterType: state.filterType, q: state.searchQuery.isEmpty ? null : state.searchQuery),
       color: AmiColors.hexBlue,
       child: ListView.separated(
         padding: const EdgeInsets.all(AmiSpacing.m),
@@ -84,11 +89,25 @@ class JournalScreen extends ConsumerWidget {
         separatorBuilder: (_, __) => const SizedBox(height: AmiSpacing.s),
         itemBuilder: (context, i) {
           final e = state.entries[i];
-          return _EntryCard(
-            entry: e,
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => JournalDetailScreen(entryId: e.id),
-            )),
+          return Dismissible(
+            key: ValueKey(e.id),
+            direction: DismissDirection.endToStart,
+            background: const _DeleteBackground(),
+            onDismissed: (_) {
+              ref.read(journalNotifierProvider.notifier).deleteEntry(e.id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppLocalizations.of(context).journalEntryDeleted),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+            child: _EntryCard(
+              entry: e,
+              onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+                builder: (_) => JournalDetailScreen(entryId: e.id),
+              )),
+            ),
           );
         },
       ),
@@ -160,7 +179,120 @@ class _FilterRow extends ConsumerWidget {
 }
 
 
+class _SearchBar extends ConsumerStatefulWidget {
+  const _SearchBar({required this.current});
+  final String current;
+
+  @override
+  ConsumerState<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends ConsumerState<_SearchBar> {
+  late final TextEditingController _ctrl;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.current);
+  }
+
+  @override
+  void didUpdateWidget(_SearchBar old) {
+    super.didUpdateWidget(old);
+    // Keep field in sync if external state clears the query (e.g. filter reset)
+    if (widget.current != old.current && widget.current != _ctrl.text) {
+      _ctrl.text = widget.current;
+    }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onChanged(String v) {
+    setState(() {}); // rebuild to show/hide clear button
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () {
+      ref.read(journalNotifierProvider.notifier).search(v);
+    });
+  }
+
+  void _clear() {
+    _ctrl.clear();
+    _debounce?.cancel();
+    ref.read(journalNotifierProvider.notifier).search('');
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AmiSpacing.m, 0, AmiSpacing.m, AmiSpacing.s),
+      child: TextField(
+        controller: _ctrl,
+        onChanged: _onChanged,
+        style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
+        decoration: InputDecoration(
+          hintText: l.journalSearchHint,
+          hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow, fontSize: 13),
+          prefixIcon: const Icon(Icons.search, color: AmiColors.textLow, size: 20),
+          suffixIcon: _ctrl.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close, color: AmiColors.textLow, size: 18),
+                  onPressed: _clear,
+                )
+              : null,
+          filled: true,
+          fillColor: AmiColors.slate800,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            borderSide: const BorderSide(color: AmiColors.slate700),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            borderSide: const BorderSide(color: AmiColors.slate700),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            borderSide: const BorderSide(color: AmiColors.hexBlue),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// Red strip revealed behind a swiped entry card.
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: AmiSpacing.l),
+      decoration: BoxDecoration(
+        color: AmiColors.hexRed,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
+    );
+  }
+}
+
+
 class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.isSearching});
+  final bool isSearching;
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -170,15 +302,24 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.menu_book_outlined, color: AmiColors.textLow, size: 48),
-            const SizedBox(height: AmiSpacing.m),
-            Text(l.journalEmptyTitle, style: AmiTypography.h4),
-            const SizedBox(height: AmiSpacing.xs),
-            Text(
-              l.journalEmptyBody,
-              textAlign: TextAlign.center,
-              style: AmiTypography.body.copyWith(color: AmiColors.textLow),
+            Icon(
+              isSearching ? Icons.search_off : Icons.menu_book_outlined,
+              color: AmiColors.textLow,
+              size: 48,
             ),
+            const SizedBox(height: AmiSpacing.m),
+            Text(
+              isSearching ? l.journalSearchEmpty : l.journalEmptyTitle,
+              style: AmiTypography.h4,
+            ),
+            if (!isSearching) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              Text(
+                l.journalEmptyBody,
+                textAlign: TextAlign.center,
+                style: AmiTypography.body.copyWith(color: AmiColors.textLow),
+              ),
+            ],
           ],
         ),
       ),

@@ -289,6 +289,15 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalNoteSaved => 'Nota disimpan';
 
   @override
+  String get journalSearchHint => 'Search entries…';
+
+  @override
+  String get journalSearchEmpty => 'No entries match your search.';
+
+  @override
+  String get journalEntryDeleted => 'Entry removed';
+
+  @override
   String get lessonsHeading => 'PELAJARAN';
 
   @override

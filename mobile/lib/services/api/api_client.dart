@@ -328,6 +328,7 @@ class ApiClient {
     String plan = 'trial_trader',
     String? entryType,
     String? ticker,
+    String? q,
     int limit = 100,
   }) async {
     final r = await _dio.get<Map<String, dynamic>>(
@@ -336,6 +337,7 @@ class ApiClient {
         'plan': plan,
         if (entryType != null) 'entry_type': entryType,
         if (ticker != null) 'ticker': ticker,
+        if (q != null && q.isNotEmpty) 'q': q,
         'limit': limit,
       },
     );
@@ -368,6 +370,13 @@ class ApiClient {
       },
     );
     return JournalEntry.fromJson(r.data!);
+  }
+
+  Future<void> deleteJournalEntry({
+    required String userId,
+    required String entryId,
+  }) async {
+    await _dio.delete<void>('/v1/journal/$userId/entry/$entryId');
   }
 
   // ── Lessons ─────────────────────────────────────────────────────
