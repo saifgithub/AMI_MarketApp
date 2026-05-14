@@ -1,8 +1,7 @@
 /// Per-track lesson list — navigated to from the lessons hex cluster.
 ///
-/// Shows all lessons for a single track. Sort order (once per-lesson status
-/// is available from the API): in-progress → never-started → completed.
-/// Until then, catalogue order is preserved.
+/// Lessons are sorted in three tiers: in-progress → never-started → completed.
+/// Status comes from GET /v1/lessons/progress/{userId}/by_lesson via LessonsState.
 library;
 
 import 'package:ami_trade/models/lessons.dart';
@@ -68,7 +67,7 @@ class TrackLessonsScreen extends ConsumerWidget {
       );
     }
 
-    final lessons = _sorted(track.lessons);
+    final lessons = _sortedWithStatus(track.lessons, state);
 
     return RefreshIndicator(
       onRefresh: () => ref.read(lessonsNotifierProvider.notifier).refresh(),
@@ -81,6 +80,7 @@ class TrackLessonsScreen extends ConsumerWidget {
           final meta = lessons[i];
           return LessonTile(
             meta: meta,
+            status: state.lessonStatuses[meta.id],
             onRead: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => LessonReaderScreen(lessonId: meta.id),
@@ -98,9 +98,20 @@ class TrackLessonsScreen extends ConsumerWidget {
     );
   }
 
-  /// Catalogue order preserved; extend here when per-lesson status is
-  /// available from GET /v1/lessons/progress/{userId}/by_lesson.
-  List<LessonMeta> _sorted(List<LessonMeta> lessons) => lessons;
+  /// Three-tier sort: in-progress → never-started → completed.
+  /// Within each tier, catalogue order is preserved.
+  List<LessonMeta> _sortedWithStatus(
+      List<LessonMeta> lessons, LessonsState state) {
+    int tier(LessonMeta m) {
+      if (state.isLessonInProgress(m.id)) return 0;
+      if (state.isLessonCompleted(m.id)) return 2;
+      return 1;
+    }
+
+    final copy = List<LessonMeta>.from(lessons);
+    copy.sort((a, b) => tier(a).compareTo(tier(b)));
+    return copy;
+  }
 }
 
 class _Header extends StatelessWidget {

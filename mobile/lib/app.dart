@@ -12,6 +12,7 @@ import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
+import 'package:ami_trade/state/theme_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,10 +23,13 @@ class AmiTradeApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeNotifierProvider);
+    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: 'AMI Trade',
       debugShowCheckedModeBanner: false,
-      theme: amiTheme(),
+      theme: amiLightTheme(),
+      darkTheme: amiTheme(),
+      themeMode: themeMode,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,

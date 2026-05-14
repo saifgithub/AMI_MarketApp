@@ -15,11 +15,13 @@ class LessonTile extends StatelessWidget {
     required this.meta,
     required this.onRead,
     required this.onQuizOnly,
+    this.status,
   });
 
   final LessonMeta meta;
   final VoidCallback onRead;
   final VoidCallback onQuizOnly;
+  final LessonStatus? status;
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +81,20 @@ class LessonTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (status != null)
+                  _StatusBadge(status: status!),
               ],
             ),
           ),
+          if (status?.isCompleted == true)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AmiSpacing.xs),
+              child: Text(
+                'COMPLETED',
+                style: AmiTypography.labelMono.copyWith(
+                    fontSize: 10, color: AmiColors.hexGreen),
+              ),
+            ),
           const SizedBox(height: AmiSpacing.s),
           Row(
             children: [
@@ -113,5 +126,22 @@ class LessonTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+  final LessonStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    if (status.isCompleted) {
+      return const Icon(Icons.check_circle, color: AmiColors.hexGreen, size: 20);
+    }
+    if (status.isInProgress) {
+      return const Icon(Icons.radio_button_checked,
+          color: AmiColors.hexBlue, size: 20);
+    }
+    return const SizedBox.shrink();
   }
 }

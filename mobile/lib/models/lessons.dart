@@ -279,6 +279,45 @@ class AgentActivationRecord {
   }
 }
 
+class LessonStatus {
+  const LessonStatus({
+    required this.userId,
+    required this.lessonId,
+    this.startedAt,
+    this.completedAt,
+    this.quizAttempts = 0,
+    this.quizPassed = false,
+    this.lastQuizScore,
+  });
+
+  final String userId;
+  final String lessonId;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  final int quizAttempts;
+  final bool quizPassed;
+  final double? lastQuizScore;
+
+  bool get isInProgress => startedAt != null && !quizPassed;
+  bool get isCompleted => quizPassed;
+
+  factory LessonStatus.fromJson(Map<String, dynamic> j) {
+    return LessonStatus(
+      userId: j['user_id'] as String,
+      lessonId: j['lesson_id'] as String,
+      startedAt: j['started_at'] != null
+          ? DateTime.parse(j['started_at'] as String)
+          : null,
+      completedAt: j['completed_at'] != null
+          ? DateTime.parse(j['completed_at'] as String)
+          : null,
+      quizAttempts: ((j['quiz_attempts'] as num?) ?? 0).toInt(),
+      quizPassed: (j['quiz_passed'] as bool?) ?? false,
+      lastQuizScore: (j['last_quiz_score'] as num?)?.toDouble(),
+    );
+  }
+}
+
 class ProgressSummary {
   const ProgressSummary({
     required this.userId,

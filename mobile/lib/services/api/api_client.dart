@@ -417,6 +417,17 @@ class ApiClient {
     return ProgressSummary.fromJson(r.data!);
   }
 
+  Future<Map<String, LessonStatus>> lessonStatusByLesson(String userId) async {
+    final r = await _dio.get<List<dynamic>>(
+      '/v1/lessons/progress/$userId/by_lesson',
+    );
+    return {
+      for (final e in (r.data ?? const []))
+        (e as Map<String, dynamic>)['lesson_id'] as String:
+            LessonStatus.fromJson(e),
+    };
+  }
+
   Future<List<AgentActivationRecord>> agentActivations(String userId) async {
     final r = await _dio.get<List<dynamic>>(
       '/v1/lessons/activations/$userId',

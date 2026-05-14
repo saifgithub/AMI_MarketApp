@@ -13,6 +13,7 @@ class LessonsState {
     this.catalogue,
     this.progress,
     this.activations = const [],
+    this.lessonStatuses = const {},
     this.loading = false,
     this.error,
   });
@@ -20,23 +21,25 @@ class LessonsState {
   final LessonCatalogue? catalogue;
   final ProgressSummary? progress;
   final List<AgentActivationRecord> activations;
+  /// Per-lesson status keyed by lessonId. Empty until the first refresh completes.
+  final Map<String, LessonStatus> lessonStatuses;
   final bool loading;
   final String? error;
 
   Set<String> get unlockedAgentIds =>
       {for (final a in activations) a.agentId};
 
-  bool isLessonCompleted(String lessonId) {
-    if (progress == null) return false;
-    // The progress summary doesn't list per-lesson, but the completed count
-    // is what matters in the UI. Per-lesson status surfaces via the reader.
-    return false;
-  }
+  bool isLessonCompleted(String lessonId) =>
+      lessonStatuses[lessonId]?.quizPassed ?? false;
+
+  bool isLessonInProgress(String lessonId) =>
+      lessonStatuses[lessonId]?.isInProgress ?? false;
 
   LessonsState copyWith({
     LessonCatalogue? catalogue,
     ProgressSummary? progress,
     List<AgentActivationRecord>? activations,
+    Map<String, LessonStatus>? lessonStatuses,
     bool? loading,
     String? error,
     bool clearError = false,
@@ -45,6 +48,7 @@ class LessonsState {
       catalogue: catalogue ?? this.catalogue,
       progress: progress ?? this.progress,
       activations: activations ?? this.activations,
+      lessonStatuses: lessonStatuses ?? this.lessonStatuses,
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -61,13 +65,17 @@ class LessonsNotifier extends StateNotifier<LessonsState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final cat = await api.lessonCatalogue();
-      final prog = await api.lessonsProgress(userId);
-      final acts = await api.agentActivations(userId);
+      final results = await Future.wait([
+        api.lessonCatalogue(),
+        api.lessonsProgress(userId),
+        api.agentActivations(userId),
+        api.lessonStatusByLesson(userId),
+      ]);
       state = state.copyWith(
-        catalogue: cat,
-        progress: prog,
-        activations: acts,
+        catalogue: results[0] as LessonCatalogue,
+        progress: results[1] as ProgressSummary,
+        activations: results[2] as List<AgentActivationRecord>,
+        lessonStatuses: results[3] as Map<String, LessonStatus>,
         loading: false,
       );
     } catch (e) {

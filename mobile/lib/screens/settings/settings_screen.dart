@@ -8,6 +8,7 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
+import 'package:ami_trade/state/theme_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
@@ -127,6 +128,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ]),
                   const SizedBox(height: AmiSpacing.l),
                   const _LanguageSection(),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _ThemeSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _HelpSection(),
                   const SizedBox(height: AmiSpacing.l),
@@ -505,6 +508,88 @@ class _LanguageRow extends StatelessWidget {
                 '· ${option.englishName}',
                 style: AmiTypography.caption,
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// ── Theme (light / dark / follow system) ────────────────────────────────
+
+
+class _ThemeSection extends ConsumerWidget {
+  const _ThemeSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(themeModeProvider);
+    return _Section(
+      title: 'APPEARANCE',
+      children: [
+        for (final opt in _themeModeOptions)
+          _ThemeModeRow(
+            option: opt,
+            selected: opt.mode == current,
+            onTap: () =>
+                ref.read(themeModeProvider.notifier).setMode(opt.mode),
+          ),
+      ],
+    );
+  }
+}
+
+class _ThemeModeOption {
+  const _ThemeModeOption(
+      {required this.mode, required this.label, required this.description});
+  final ThemeMode mode;
+  final String label;
+  final String description;
+}
+
+const _themeModeOptions = <_ThemeModeOption>[
+  _ThemeModeOption(
+      mode: ThemeMode.system,
+      label: 'Follow System',
+      description: 'Matches your device setting'),
+  _ThemeModeOption(
+      mode: ThemeMode.dark,
+      label: 'Always Dark',
+      description: 'AMI default'),
+  _ThemeModeOption(
+      mode: ThemeMode.light,
+      label: 'Always Light',
+      description: 'For bright outdoor conditions'),
+];
+
+class _ThemeModeRow extends StatelessWidget {
+  const _ThemeModeRow({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+  final _ThemeModeOption option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? AmiColors.hexBlue : AmiColors.textLow,
+              size: 20,
+            ),
+            const SizedBox(width: AmiSpacing.s),
+            Text(option.label, style: AmiTypography.body),
+            const SizedBox(width: AmiSpacing.s),
+            Text('· ${option.description}', style: AmiTypography.caption),
           ],
         ),
       ),

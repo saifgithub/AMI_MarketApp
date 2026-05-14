@@ -5,6 +5,7 @@ GET   /v1/lessons/{lesson_id}                    full lesson with blocks + quiz
 POST  /v1/lessons/start                          mark started
 POST  /v1/lessons/quiz                           submit answers; returns score + any unlocks
 GET   /v1/lessons/progress/{user_id}             whole-app progress summary
+GET   /v1/lessons/progress/{user_id}/by_lesson   per-lesson status list (for three-tier sort)
 GET   /v1/lessons/activations/{user_id}          unlocked-agent records
 POST  /v1/lessons/activations/grant              founder grant (skip path testing)
 """
@@ -49,6 +50,14 @@ async def progress(
     svc: LessonsService = Depends(get_lessons_service),
 ) -> ProgressSummary:
     return svc.progress_summary(user_id)
+
+
+@router.get("/progress/{user_id}/by_lesson", response_model=list[LessonStatus])
+async def progress_by_lesson(
+    user_id: UUID,
+    svc: LessonsService = Depends(get_lessons_service),
+) -> list[LessonStatus]:
+    return svc.list_status(user_id)
 
 
 @router.get("/activations/{user_id}", response_model=list[AgentActivationRecord])

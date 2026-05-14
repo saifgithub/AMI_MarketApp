@@ -339,6 +339,27 @@ def test_progress_summary_tracks_completion(svc: LessonsService):
     assert "foundations" in summary.by_track
 
 
+def test_list_status_returns_per_lesson_rows(svc: LessonsService):
+    user_id = uuid4()
+    # No rows yet
+    assert svc.list_status(user_id) == []
+    # Start one lesson
+    svc.mark_started(user_id, LEGACY_MARKET_ORDER_LESSON)
+    rows = svc.list_status(user_id)
+    assert len(rows) == 1
+    assert rows[0].lesson_id == LEGACY_MARKET_ORDER_LESSON
+    assert rows[0].started_at is not None
+    assert not rows[0].quiz_passed
+    # Pass the quiz — completed_at and quiz_passed should be set
+    svc.submit_quiz(QuizSubmitRequest(
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
+    ))
+    rows = svc.list_status(user_id)
+    assert len(rows) == 1
+    assert rows[0].quiz_passed
+    assert rows[0].completed_at is not None
+
+
 def test_grant_activation_marks_skip_path(svc: LessonsService):
     user_id = uuid4()
     rec = svc.grant_activation(user_id, "portfolio_manager", method="skip_path")

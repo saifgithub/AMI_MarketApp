@@ -51,6 +51,31 @@ abstract final class AmiColors {
   static const Color hexGlow = Color(0x803B82F6); // rgba(59,130,246,0.5)
 }
 
+/// Light-mode token overrides (per AMI AI Design System DEVELOPER_PROMPT_LIGHT_MODE.md).
+///
+/// These are ONLY used when themeMode resolves to light. Dark is always the
+/// default; light is for bright/outdoor conditions (iOS: system preference or
+/// manual Settings toggle; no ambient sensor on iOS).
+abstract final class AmiColorsLight {
+  static const Color canvas = Color(0xFFF1F5F9);    // slate-100
+  static const Color panel = Color(0xFFFFFFFF);      // white
+  static const Color cardBg = Color(0xFFF8FAFC);
+  static const Color cardBgAlt = Color(0xFFEEF2F7);
+  static const Color border = Color(0xFFCBD5E1);
+  static const Color textHigh = Color(0xFF0F172A);   // slate-900
+  static const Color textMed = Color(0xFF475569);    // slate-600
+  static const Color textLow = Color(0xFF64748B);
+
+  // AA-safe darkened accent-text variants (≥4.5:1 on white canvas)
+  static const Color accentCyan = Color(0xFF0891B2);
+  static const Color accentGreen = Color(0xFF047857);
+  static const Color accentAmber = Color(0xFFB45309);
+  static const Color accentRed = Color(0xFFB91C1C);
+  static const Color accentPurple = Color(0xFF6D28D9);
+  static const Color accentBlue = Color(0xFF1D4ED8);
+  static const Color accentPink = Color(0xFFBE185D);
+}
+
 /// Maps an agent family ("analyst", "risk", "researcher", "manager",
 /// "execution", "concierge") to its accent color.
 Color agentFamilyColor(String family) {
@@ -217,5 +242,40 @@ ThemeData amiTheme() {
     ),
     iconTheme: const IconThemeData(color: AmiColors.textMed),
     dividerColor: AmiColors.slate700,
+  );
+}
+
+ThemeData amiLightTheme() {
+  return ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: AmiColorsLight.canvas,
+    fontFamily: AmiTypography.inter,
+    colorScheme: const ColorScheme.light(
+      primary: AmiColorsLight.accentBlue,
+      secondary: AmiColorsLight.accentCyan,
+      surface: AmiColorsLight.panel,
+      onPrimary: AmiColorsLight.textHigh,
+      onSurface: AmiColorsLight.textMed,
+      error: AmiColorsLight.accentRed,
+    ),
+    textTheme: TextTheme(
+      headlineLarge: AmiTypography.h1.copyWith(color: AmiColorsLight.textHigh),
+      headlineMedium: AmiTypography.h2.copyWith(color: AmiColorsLight.textHigh),
+      titleLarge: AmiTypography.h3.copyWith(color: AmiColorsLight.textHigh),
+      titleMedium: AmiTypography.h4.copyWith(color: AmiColorsLight.textHigh),
+      bodyMedium: AmiTypography.body.copyWith(color: AmiColorsLight.textMed),
+      bodySmall: AmiTypography.caption.copyWith(color: AmiColorsLight.textLow),
+      labelLarge: AmiTypography.labelMono.copyWith(color: AmiColorsLight.textHigh),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: AmiColorsLight.panel,
+      elevation: 0,
+      toolbarHeight: 64,
+      iconTheme: const IconThemeData(color: AmiColorsLight.textHigh),
+      titleTextStyle: AmiTypography.h4.copyWith(color: AmiColorsLight.textHigh),
+    ),
+    iconTheme: const IconThemeData(color: AmiColorsLight.textMed),
+    dividerColor: AmiColorsLight.border,
   );
 }
