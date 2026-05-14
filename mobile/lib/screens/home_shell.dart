@@ -46,9 +46,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               color: AmiColors.glassChrome,
               border: Border(top: BorderSide(color: AmiColors.slate700)),
             ),
-            child: SafeArea(
-              top: false,
-              bottom: false, // TickerTape owns the bottom safe-area inset
+            // Strip the bottom inset from MediaQuery so BottomNavigationBar
+            // doesn't absorb it internally — TickerTape owns that space.
+            child: MediaQuery.removePadding(
+              context: context,
+              removeBottom: true,
               child: BottomNavigationBar(
                 currentIndex: _tab,
                 onTap: (i) => setState(() => _tab = i),
