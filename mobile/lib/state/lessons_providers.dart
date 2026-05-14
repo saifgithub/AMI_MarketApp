@@ -65,17 +65,15 @@ class LessonsNotifier extends StateNotifier<LessonsState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final results = await Future.wait([
-        api.lessonCatalogue(),
-        api.lessonsProgress(userId),
-        api.agentActivations(userId),
-        api.lessonStatusByLesson(userId),
-      ]);
+      final cat = await api.lessonCatalogue();
+      final prog = await api.lessonsProgress(userId);
+      final acts = await api.agentActivations(userId);
+      final statuses = await api.lessonStatusByLesson(userId);
       state = state.copyWith(
-        catalogue: results[0] as LessonCatalogue,
-        progress: results[1] as ProgressSummary,
-        activations: results[2] as List<AgentActivationRecord>,
-        lessonStatuses: results[3] as Map<String, LessonStatus>,
+        catalogue: cat,
+        progress: prog,
+        activations: acts,
+        lessonStatuses: statuses,
         loading: false,
       );
     } catch (e) {
