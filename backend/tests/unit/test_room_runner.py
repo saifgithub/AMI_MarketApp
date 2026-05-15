@@ -259,3 +259,72 @@ def test_room_transcript_grows_for_subsequent_agents():
     # transcript section — at least the Trader's line should be present.
     assert "trader" in captured_prompts[-1].lower()
     assert "AMI reply." in captured_prompts[-1]
+
+
+def test_profile_synthetic_when_real_market_data_disabled(monkeypatch):
+    """Default test config (use_real_market_data=False) → synthetic profile."""
+    from app.core.config import settings
+    from app.services.room_runner import _profile_for_ticker
+
+    monkeypatch.setattr(settings, "use_real_market_data", False)
+    profile = _profile_for_ticker("AAPL")
+    assert profile["data_source"] == "synthetic"
+    assert profile["ticker"] == "AAPL"
+    # Same ticker → same profile (deterministic).
+    assert _profile_for_ticker("AAPL")["pe"] == profile["pe"]
+
+
+def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
+    """When use_real_market_data is on and yfinance returns, numeric fields
+    are overlaid and narrative strings derive from the real numbers."""
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    # Stub the live fetch to return a known shape, no network.
+    monkeypatch.setattr(
+        room_runner, "_fetch_live_fundamentals",
+        lambda t: {
+            "base_price": 250.50,
+            "pe": "35.2",
+            "rev_growth": 8,
+            "fcf_margin": 25,
+            "net_cash": 65_000,
+            "low": 165.0,
+            "high": 260.0,
+        },
+    )
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["data_source"] == "yfinance_live"
+    assert profile["pe"] == "35.2"
+    assert profile["base_price"] == 250.50
+    assert profile["rev_growth"] == 8
+    # Narrative strings should reference the LIVE numbers.
+    assert "8%" in profile["bull_thesis"]
+    assert "25%" in profile["bull_thesis"]
+    assert "35x" in profile["bear_risk"]
+
+
+def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
+    """A yfinance failure (network error, unknown ticker) must not break
+    the runner — it falls through to the deterministic synthetic profile."""
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "_fetch_live_fundamentals", lambda t: None)
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["data_source"] == "synthetic"
+    # All required keys still present.
+    assert "pe" in profile and "bull_thesis" in profile
+
+
+def test_format_profile_labels_data_source():
+    """The profile fact-sheet must declare whether numbers are live."""
+    from app.services.room_prompts import _format_profile
+
+    live_block = _format_profile({"data_source": "yfinance_live", "pe": "35.0"})
+    assert "LIVE" in live_block
+
+    synth_block = _format_profile({"data_source": "synthetic", "pe": "22.0"})
+    assert "alpha simulation scaffolding" in synth_block
