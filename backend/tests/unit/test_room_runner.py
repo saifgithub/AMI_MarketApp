@@ -328,3 +328,113 @@ def test_format_profile_labels_data_source():
 
     synth_block = _format_profile({"data_source": "synthetic", "pe": "22.0"})
     assert "alpha simulation scaffolding" in synth_block
+
+
+# ── Timeout fallback ──────────────────────────────────────────────────────
+
+
+class _HangingGateway:
+    """Gateway whose stream_chat hangs indefinitely — used to test timeout."""
+
+    def has_real_provider(self) -> bool:
+        return True
+
+    async def stream_chat(self, **_):
+        await asyncio.sleep(3600)
+        yield "never reached"  # pragma: no cover
+
+
+def test_room_agent_timeout_falls_back_to_scripted():
+    """If an agent's LLM call exceeds agent_timeout_s, the runner falls back
+    to the scripted template and the run still completes with a verdict."""
+    runner = RoomRunner(llm=_HangingGateway())  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(),
+        ticker="AAPL",
+        mandate=mandate,
+        char_delay_min=0.0,
+        char_delay_max=0.0,
+        agent_timeout_s=0.05,  # 50ms — fast enough for the test suite
+    ))
+
+    # All 12 agents must still appear (scripted fallback fires for each).
+    spoke = {e.agent_id for e in events if e.kind == "agent_done"}
+    assert len(spoke) == 12
+
+    # The run must still produce a verdict.
+    verdicts = [e for e in events if e.kind == "verdict"]
+    assert len(verdicts) == 1
+    assert verdicts[0].verdict is not None
+
+
+# ── Journal entry builder ─────────────────────────────────────────────────
+
+
+def test_build_journal_entry_completed_run():
+    """A run with a verdict gets a title with the action and a full summary."""
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from app.api.room import _build_journal_entry
+    from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
+
+    run = RoomRun(
+        id=uuid4(),
+        user_id=uuid4(),
+        ticker="TSLA",
+        triggered_at=datetime.now(timezone.utc),
+        started_at=datetime.now(timezone.utc),
+        mandate_version=1,
+        model_tier="mid",
+        rounds=1,
+        transcript=[],
+        verdict=Verdict(
+            action=VerdictAction.APPROVE,
+            reason="Synthesis defended.",
+            size_pct=3.0,
+            entry=200.0,
+            target=226.0,
+            stop=188.0,
+            time_horizon_days=42,
+        ),
+        credit_cost=8,
+        status=RoomStatus.COMPLETED,
+    )
+    entry = _build_journal_entry(run, run.user_id)
+    assert "TSLA" in entry.title
+    assert "APPROVE" in entry.title
+    assert "APPROVE" in entry.summary
+    assert "Synthesis" in entry.summary
+
+
+def test_build_journal_entry_failed_run():
+    """A run without a verdict gets a descriptive title and meaningful summary."""
+    from datetime import datetime, timezone
+    from uuid import uuid4
+    from app.api.room import _build_journal_entry
+    from app.schemas.room import RoomRun, RoomStatus
+
+    run = RoomRun(
+        id=uuid4(),
+        user_id=uuid4(),
+        ticker="NVDA",
+        triggered_at=datetime.now(timezone.utc),
+        started_at=datetime.now(timezone.utc),
+        mandate_version=1,
+        model_tier="mid",
+        rounds=1,
+        transcript=[],
+        verdict=None,
+        credit_cost=8,
+        status=RoomStatus.FAILED,
+        error_message="LLM upstream timeout after 90s",
+    )
+    entry = _build_journal_entry(run, run.user_id)
+    assert "NVDA" in entry.title
+    # Title must NOT say "incomplete" — it should reflect the actual status.
+    assert "incomplete" not in entry.title.lower()
+    assert "failed" in entry.title.lower()
+    # Summary must explain what happened, not just say "no verdict".
+    assert "no verdict" not in entry.summary.lower()
+    assert "0 of 12" in entry.summary
+    assert "LLM upstream" in entry.summary

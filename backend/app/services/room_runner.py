@@ -322,6 +322,11 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
 _CHAR_DELAY_MIN = 0.004
 _CHAR_DELAY_MAX = 0.012
 _PHASE_GAP_S = 0.25
+# Maximum seconds to wait for a single agent's LLM response. If the
+# upstream model hangs (network stall, vLLM queue backup), the agent
+# falls back to its scripted template so the room run can still finish
+# and produce a verdict rather than stalling forever.
+_AGENT_LLM_TIMEOUT_S = 90.0
 
 
 @dataclass
@@ -447,6 +452,7 @@ class RoomRunner:
         locale_allowed_universe: set[str] | None = None,
         char_delay_min: float = _CHAR_DELAY_MIN,
         char_delay_max: float = _CHAR_DELAY_MAX,
+        agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
 
@@ -552,6 +558,7 @@ class RoomRunner:
                             live=live,
                             char_delay_min=char_delay_min,
                             char_delay_max=char_delay_max,
+                            agent_timeout_s=agent_timeout_s,
                         ):
                             yield ev
                 else:
@@ -580,6 +587,7 @@ class RoomRunner:
                             gateway=gateway,
                             predetermined=predetermined,
                             mandate_check=mandate_check,
+                            agent_timeout_s=agent_timeout_s,
                         )
                         async for ev in _restream_for_ui(
                             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
@@ -638,6 +646,14 @@ class RoomRunner:
             s.execute(_delete(RoomRunRow))
 
 
+async def _collect_agent_stream(gen) -> list[str]:
+    """Drain an async-generator into a list of string chunks."""
+    buf: list[str] = []
+    async for chunk in gen:
+        buf.append(chunk)
+    return buf
+
+
 async def _typewriter(
     run_id: UUID,
     agent_id: AgentId,
@@ -668,8 +684,14 @@ async def _speak_one_agent(
     live: bool,
     char_delay_min: float,
     char_delay_max: float,
+    agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
 ) -> AsyncIterator[RoomEvent]:
     """Stream one agent's contribution; LLM when live, scripted otherwise.
+
+    The live path buffers the full LLM response (with a per-agent timeout)
+    before restreaming via the typewriter, matching the PM-narration pattern.
+    If the upstream model hangs past `agent_timeout_s`, the agent falls back
+    to its scripted template so the run can still finish.
 
     Appends the final text to `run.transcript` before yielding `agent_done`
     so the next agent sees this contribution in its prompt.
@@ -687,45 +709,37 @@ async def _speak_one_agent(
             profile=profile,
             transcript=run.transcript,
         )
-        buf: list[str] = []
         try:
-            async for chunk in gateway.stream_chat(
-                system_prompt=system_prompt,
-                messages=messages,
-                model_tier=tier,  # type: ignore[arg-type]
-                locale=ctx.mandate.locale,
-                max_tokens=400,
-                audit_user_id=ctx.user_id,
-                audit_agent_id=agent_id.value,
-                audit_flow="room",
-            ):
-                buf.append(chunk)
-                yield RoomEvent(
-                    kind="agent_token",
-                    run_id=run_id,
-                    agent_id=agent_id,
-                    text=chunk,
-                )
-            text = "".join(buf).strip()
-            if not text:
-                # Defensive: an empty LLM response shouldn't blank the
-                # transcript. Drop to the scripted template.
-                text = _scripted_for(agent_id, formatter)
-                async for ev in _typewriter(
-                    run_id, agent_id, text, char_delay_min, char_delay_max,
-                ):
-                    yield ev
-        except Exception as exc:  # pragma: no cover — defensive
-            logger.warn(
+            chunks = await asyncio.wait_for(
+                _collect_agent_stream(gateway.stream_chat(
+                    system_prompt=system_prompt,
+                    messages=messages,
+                    model_tier=tier,  # type: ignore[arg-type]
+                    locale=ctx.mandate.locale,
+                    max_tokens=400,
+                    audit_user_id=ctx.user_id,
+                    audit_agent_id=agent_id.value,
+                    audit_flow="room",
+                )),
+                timeout=agent_timeout_s,
+            )
+            text = "".join(chunks).strip() or _scripted_for(agent_id, formatter)
+        except asyncio.TimeoutError:
+            logger.warning(
+                "room_agent_timeout",
+                agent_id=agent_id.value,
+                timeout_s=agent_timeout_s,
+            )
+            text = _scripted_for(agent_id, formatter)
+        except Exception as exc:
+            logger.warning(
                 "room_agent_llm_failed",
                 agent_id=agent_id.value,
                 error=str(exc)[:200],
             )
             text = _scripted_for(agent_id, formatter)
-            async for ev in _typewriter(
-                run_id, agent_id, text, char_delay_min, char_delay_max,
-            ):
-                yield ev
+        async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
+            yield ev
     else:
         text = _scripted_for(agent_id, formatter)
         async for ev in _typewriter(
@@ -752,6 +766,7 @@ async def _stream_pm_narration(
     gateway: LLMGateway,
     predetermined: str,
     mandate_check: str,
+    agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
 ) -> str:
     """Buffer the PM's LLM rationale, then return the full text.
 
@@ -771,22 +786,26 @@ async def _stream_pm_narration(
         transcript=run.transcript,
         pm_predetermined_action=predetermined,
     )
-    buf: list[str] = []
     try:
-        async for chunk in gateway.stream_chat(
-            system_prompt=system_prompt,
-            messages=messages,
-            model_tier=tier,  # type: ignore[arg-type]
-            locale=ctx.mandate.locale,
-            max_tokens=500,
-            audit_user_id=ctx.user_id,
-            audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
-            audit_flow="room_pm",
-        ):
-            buf.append(chunk)
-        text = "".join(buf).strip()
-    except Exception as exc:  # pragma: no cover — defensive
-        logger.warn("room_pm_llm_failed", error=str(exc)[:200])
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=system_prompt,
+                messages=messages,
+                model_tier=tier,  # type: ignore[arg-type]
+                locale=ctx.mandate.locale,
+                max_tokens=500,
+                audit_user_id=ctx.user_id,
+                audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
+                audit_flow="room_pm",
+            )),
+            timeout=agent_timeout_s,
+        )
+        text = "".join(chunks).strip()
+    except asyncio.TimeoutError:
+        logger.warning("room_pm_timeout", timeout_s=agent_timeout_s)
+        text = ""
+    except Exception as exc:
+        logger.warning("room_pm_llm_failed", error=str(exc)[:200])
         text = ""
 
     if not text:
