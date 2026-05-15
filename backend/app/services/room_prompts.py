@@ -118,7 +118,11 @@ def build_room_messages(
         f"price targets, market cap) from training memory; if a number isn't "
         f"in the block above, qualify your claim or omit it. Build on the "
         f"transcript — do not repeat what's already been said. Do not preface "
-        f"with 'As the X' or 'Speaking as'. Speak directly."
+        f"with 'As the X' or 'Speaking as'. Speak directly.\n"
+        f"\nFormat: lead with a one-sentence thesis, then short bullet "
+        f"points for supporting evidence. Use **bold** for key metrics "
+        f"(numbers, levels, deadlines). Plain text otherwise — no headings, "
+        f"no tables, no code fences. The Markdown is rendered live in the app."
     )
 
     system_prompt = base + room_addition

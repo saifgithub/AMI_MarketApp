@@ -14,6 +14,7 @@ import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class RoomScreen extends ConsumerStatefulWidget {
@@ -216,10 +217,11 @@ class _AgentLine extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  text,
-                  style: AmiTypography.stream.copyWith(
-                    color: active ? AmiColors.textHigh : AmiColors.textMed,
+                MarkdownBody(
+                  data: text,
+                  shrinkWrap: true,
+                  styleSheet: _agentMarkdownStyle(
+                    active ? AmiColors.textHigh : AmiColors.textMed,
                   ),
                 ),
               ],
@@ -229,6 +231,28 @@ class _AgentLine extends StatelessWidget {
       ),
     );
   }
+}
+
+
+/// Markdown styling for agent stream text. Inherits the screen-wide
+/// stream typography so bold / bullets / inline code stay visually
+/// consistent with the surrounding monospace-paced reading flow.
+MarkdownStyleSheet _agentMarkdownStyle(Color color) {
+  final base = AmiTypography.stream.copyWith(color: color);
+  return MarkdownStyleSheet(
+    p: base,
+    listBullet: base,
+    strong: base.copyWith(fontWeight: FontWeight.w700),
+    em: base.copyWith(fontStyle: FontStyle.italic),
+    code: base.copyWith(
+      fontFamily: 'JetBrainsMono',
+      backgroundColor: AmiColors.slate800,
+    ),
+    blockSpacing: 6,
+    h1: base.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
+    h2: base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+    h3: base.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
+  );
 }
 
 
