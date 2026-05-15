@@ -708,19 +708,20 @@ class _HelpSection extends StatelessWidget {
 }
 
 
-class _AppVersionChip extends StatelessWidget {
+class _AppVersionChip extends ConsumerWidget {
   const _AppVersionChip({required this.onLongPress});
   final VoidCallback onLongPress;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final version = ref.watch(appVersionProvider).valueOrNull ?? '…';
     return Center(
       child: GestureDetector(
         onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
           child: Text(
-            'AMI Trade v$kAppVersion',
+            'AMI Trade v$version',
             style: AmiTypography.caption.copyWith(color: AmiColors.slate600),
           ),
         ),

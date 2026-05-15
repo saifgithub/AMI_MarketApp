@@ -14,10 +14,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
 
-from sqlalchemy import delete
+from sqlalchemy import delete, update
 
 from app.core.logging import logger
-from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow
+from app.db.models import HTTPAuditRow, LLMAuditRow, OneOnOneMessageRow, RoomRunRow
 from app.db.session import get_session
 
 AUDIT_RETENTION_DAYS = 90
@@ -41,6 +41,19 @@ def trim_audit_tables(days: int = AUDIT_RETENTION_DAYS) -> dict[str, int]:
                 delete(model).where(model.created_at < cutoff)
             )
             counts[label] = result.rowcount
+
+        # Mark room_runs rows stuck in 'running' for > 30 min as aborted.
+        # These arise when the api-alpha container restarts mid-run; the
+        # runner is killed but the DB row never transitions out of 'running'.
+        stale_room_cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        result = s.execute(
+            update(RoomRunRow)
+            .where(RoomRunRow.status == "running")
+            .where(RoomRunRow.triggered_at < stale_room_cutoff)
+            .values(status="aborted")
+        )
+        counts["room_runs_aborted"] = result.rowcount
+
         s.commit()
     return counts
 

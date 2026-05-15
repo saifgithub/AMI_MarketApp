@@ -9,14 +9,17 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 
-// Keep in lockstep with pubspec.yaml `version:`. The proper fix is to
-// read this from package_info_plus at runtime so it can't drift —
-// tracked as a follow-up bug. Manual bump for now.
-const String kAppVersion = '0.1.0+4';
+/// Reads the real version+build from the binary at runtime so it can
+/// never drift from pubspec.yaml.
+final appVersionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return '${info.version}+${info.buildNumber}';
+});
 
 String get kPlatform {
   if (Platform.isIOS) return 'ios';
@@ -65,12 +68,13 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
     try {
       final api = _ref.read(apiClientProvider);
       final token = _ref.read(authNotifierProvider).token;
+      final appVersion = await _ref.read(appVersionProvider.future);
       await api.submitBugReport(
         category: category,
         title: title,
         steps: steps?.trim().isEmpty ?? true ? null : steps?.trim(),
         route: route,
-        appVersion: kAppVersion,
+        appVersion: appVersion,
         platform: kPlatform,
         token: token,
       );
