@@ -1,6 +1,7 @@
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 enum ChatAuthor { user, concierge, agent }
 
@@ -66,10 +67,15 @@ class ChatBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-                  // Body text
-                  Text(
-                    content,
-                    style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
+                  // Body text — rendered as Markdown so agents can use
+                  // **bold** for key metrics and short bullet lists for
+                  // supporting evidence. User messages rarely contain
+                  // markdown but a stray * doesn't render any worse than
+                  // plain text would.
+                  MarkdownBody(
+                    data: content,
+                    shrinkWrap: true,
+                    styleSheet: _bubbleMarkdownStyle(),
                   ),
                   if (streaming)
                     const Padding(
@@ -136,6 +142,25 @@ class _Bubble extends StatelessWidget {
       child: child,
     );
   }
+}
+
+
+MarkdownStyleSheet _bubbleMarkdownStyle() {
+  final base = AmiTypography.body.copyWith(color: AmiColors.textHigh);
+  return MarkdownStyleSheet(
+    p: base,
+    listBullet: base,
+    strong: base.copyWith(fontWeight: FontWeight.w700),
+    em: base.copyWith(fontStyle: FontStyle.italic),
+    code: base.copyWith(
+      fontFamily: 'JetBrainsMono',
+      backgroundColor: AmiColors.slate800,
+    ),
+    blockSpacing: 6,
+    h1: base.copyWith(fontWeight: FontWeight.w600, fontSize: 17),
+    h2: base.copyWith(fontWeight: FontWeight.w600, fontSize: 16),
+    h3: base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
+  );
 }
 
 

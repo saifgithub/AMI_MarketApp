@@ -113,9 +113,16 @@ def build_room_messages(
         f"Transcript so far:\n{transcript_text}\n"
         f"{pm_note}"
         f"\nYour turn. Speak as the {agent_id.value.replace('_', ' ').title()}. "
-        f"Write {length}. Use specific numbers wherever possible. Build on the "
+        f"Write {length}. Use specific numbers wherever possible — but ONLY "
+        f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
+        f"price targets, market cap) from training memory; if a number isn't "
+        f"in the block above, qualify your claim or omit it. Build on the "
         f"transcript — do not repeat what's already been said. Do not preface "
-        f"with 'As the X' or 'Speaking as'. Speak directly."
+        f"with 'As the X' or 'Speaking as'. Speak directly.\n"
+        f"\nFormat: lead with a one-sentence thesis, then short bullet "
+        f"points for supporting evidence. Use **bold** for key metrics "
+        f"(numbers, levels, deadlines). Plain text otherwise — no headings, "
+        f"no tables, no code fences. The Markdown is rendered live in the app."
     )
 
     system_prompt = base + room_addition
@@ -127,8 +134,30 @@ def build_room_messages(
 
 
 def _format_profile(profile: dict[str, Any]) -> str:
-    """A compact ticker fact-sheet the agent can quote from."""
+    """A compact ticker fact-sheet the agent can quote from.
+
+    The header labels which fields are live data vs alpha-synthetic so
+    the LLM can be honest. Without this the model would quote synthetic
+    P/E numbers as if they were fact, or quote stale training-memory
+    facts when real numbers were available — both of which we've seen
+    in bug reports.
+    """
+    source = profile.get("data_source", "synthetic")
+    if source == "yfinance_live":
+        header = (
+            "Data source: numeric fundamentals (price, P/E, growth, FCF, range) "
+            "are LIVE from Yahoo Finance as of this call. Narrative fields "
+            "(catalysts, sentiment, macro) are alpha simulation scaffolding."
+        )
+    else:
+        header = (
+            "Data source: ALL fields below are alpha simulation scaffolding. "
+            "Do NOT present these as live market data; treat them as a "
+            "deterministic scenario for educational debate."
+        )
     lines = [
+        header,
+        "",
         f"Reference price: ${profile.get('base_price')}",
         f"P/E: {profile.get('pe')} (sector ~{profile.get('sector_pe')})",
         f"TTM revenue growth: {profile.get('rev_growth')}%, FCF margin: {profile.get('fcf_margin')}%",

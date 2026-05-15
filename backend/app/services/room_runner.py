@@ -42,6 +42,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 
 from app.agents.safety_floor import check_mandate_compliance, SINGLE_NAME_CAP_PCT
+from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import RoomRunRow
@@ -180,11 +181,81 @@ class _RoomContext:
     profile: dict[str, Any] = field(default_factory=dict)
 
 
-def _profile_for_ticker(ticker: str) -> dict[str, Any]:
-    """Deterministic-ish ticker-flavoured profile.
+def _fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
+    """Fetch real fundamentals via yfinance. Returns None on any error.
 
-    Same ticker → same profile across runs, so the alpha demo feels
-    consistent. A live data feed replaces this at W8+.
+    Only numeric fields the LLM is likely to misremember from training:
+    P/E, revenue growth, FCF margin, net cash, 52-week range, price.
+    Narrative fields (catalysts, sentiment) stay synthetic — yfinance
+    doesn't have them and pretending it does would replace one lie with
+    another. The prompt labels the data source so the LLM knows what's
+    live vs scaffolded.
+    """
+    try:
+        import yfinance as yf
+        info = yf.Ticker(ticker.upper()).info
+    except Exception:
+        return None
+    if not info:
+        return None
+
+    def _num(key: str) -> float | None:
+        v = info.get(key)
+        if v is None:
+            return None
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return None
+
+    price = _num("currentPrice") or _num("regularMarketPrice")
+    pe = _num("trailingPE")
+    # Anchor the result on real signals — if price + pe are both missing,
+    # the ticker is unknown to yfinance and we should fall through to synthetic.
+    if price is None and pe is None:
+        return None
+
+    out: dict[str, Any] = {}
+    if price is not None:
+        out["base_price"] = round(price, 2)
+        out["low"] = round(price * 0.95, 2)
+        out["high"] = round(price * 1.05, 2)
+        out["support"] = round(price * 0.9, 2)
+        out["breakout"] = round(price * 1.03, 2)
+    fifty_two_low = _num("fiftyTwoWeekLow")
+    fifty_two_high = _num("fiftyTwoWeekHigh")
+    if fifty_two_low is not None and fifty_two_high is not None:
+        out["low"] = round(fifty_two_low, 2)
+        out["high"] = round(fifty_two_high, 2)
+    if pe is not None:
+        out["pe"] = f"{pe:.1f}"
+    rev_growth = _num("revenueGrowth")
+    if rev_growth is not None:
+        # yfinance reports growth as a decimal (0.05 = 5%).
+        out["rev_growth"] = round(rev_growth * 100)
+    profit_margin = _num("profitMargins")
+    if profit_margin is not None:
+        out["fcf_margin"] = round(profit_margin * 100)
+    # totalCash and totalDebt are in dollars; net cash in millions for the prompt
+    total_cash = _num("totalCash")
+    total_debt = _num("totalDebt")
+    if total_cash is not None and total_debt is not None:
+        out["net_cash"] = round((total_cash - total_debt) / 1_000_000)
+    return out
+
+
+def _profile_for_ticker(ticker: str) -> dict[str, Any]:
+    """Ticker-flavoured profile for the Room.
+
+    Builds a deterministic synthetic baseline (so tests stay reproducible
+    and Yahoo outages don't break a run), then — when the backend has
+    real market data enabled — overlays live yfinance fundamentals on top.
+    Narrative fields (catalysts, sentiment, debate framing) remain
+    synthetic; numeric fields the LLM would otherwise hallucinate from
+    training memory (P/E, growth, FCF, range) become live when possible.
+
+    The returned profile carries a `data_source` field so the prompt
+    layer can be honest with the LLM about what's live vs scaffolded.
     """
     rng = random.Random(hash(ticker.upper()))
     base_price = 50 + rng.uniform(0, 400)
@@ -192,8 +263,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     rev_growth = rng.randint(2, 40)
     fcf_margin = rng.randint(8, 35)
     sector_pe = rng.uniform(15, 25)
-    is_growth = pe > 30 and rev_growth > 15
-    return {
+    profile: dict[str, Any] = {
         "ticker": ticker.upper(),
         "base_price": round(base_price, 2),
         "pe": f"{pe:.1f}",
@@ -201,8 +271,6 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         "rev_growth": rev_growth,
         "fcf_margin": fcf_margin,
         "net_cash": rng.randint(-5_000, 80_000),
-        "valuation_tone": "fairly priced relative to growth"
-            if is_growth else "trading at a discount to its peers",
         "trend": "trading" if rng.random() > 0.5 else "consolidating",
         "support": round(base_price * 0.9, 2),
         "rsi": rng.randint(35, 75),
@@ -222,24 +290,48 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         "mention_trend": "up 40% week-over-week",
         "influencer_take": "broadly constructive, no euphoria",
         "pattern": "sentiment confirming price, not yet at exhaustion",
-        "bull_thesis": (
-            f"{ticker.upper()}'s revenue growth ({rev_growth}%) and FCF margin "
-            f"({fcf_margin}%) justify a premium multiple"
-        ),
         "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
         "bull_missing": "supply-chain commentary that suggests upside to FY guide",
         "bull_size": 4,
         "bull_falsifier": "next quarter's guide is reset lower by 10%+",
-        "bear_risk": f"multiple compression if growth decelerates — {pe:.0f}x is sensitive",
-        "bear_quant": f"a 10-point multiple compression = ~{int(pe / (pe + 10) * 100 - 50)}% downside",
         "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
         "bear_size": 2,
         "bear_invalidator": "next two quarters both beat AND raise",
         "upside": 28,
         "downside": 18,
         "synth_lean": "constructive bull",
-        "is_growth": is_growth,
+        "data_source": "synthetic",
     }
+
+    # Overlay real fundamentals when configured + reachable.
+    if settings.use_real_market_data:
+        live = _fetch_live_fundamentals(ticker)
+        if live:
+            profile.update(live)
+            profile["data_source"] = "yfinance_live"
+
+    # Derive narrative strings from whatever numbers ended up in the
+    # profile (real or synthetic) so the prose is consistent with the data.
+    pe_val = float(profile["pe"]) if isinstance(profile["pe"], str) else float(profile["pe"])
+    rev_growth_val = profile["rev_growth"]
+    fcf_margin_val = profile["fcf_margin"]
+    is_growth = pe_val > 30 and rev_growth_val > 15
+    profile["is_growth"] = is_growth
+    profile["valuation_tone"] = (
+        "fairly priced relative to growth" if is_growth
+        else "trading at a discount to its peers"
+    )
+    profile["bull_thesis"] = (
+        f"{ticker.upper()}'s revenue growth ({rev_growth_val}%) and FCF margin "
+        f"({fcf_margin_val}%) justify a premium multiple"
+    )
+    profile["bear_risk"] = (
+        f"multiple compression if growth decelerates — {pe_val:.0f}x is sensitive"
+    )
+    profile["bear_quant"] = (
+        f"a 10-point multiple compression = ~{int(pe_val / (pe_val + 10) * 100 - 50)}% downside"
+    )
+    return profile
 
 
 # ── Verdict assembly ──────────────────────────────────────────────────────
