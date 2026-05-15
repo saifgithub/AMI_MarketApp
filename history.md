@@ -13,6 +13,39 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R20  (2026-05-15)
+
+Bug-fix session that bled into substantial feature work. 18 commits, 3 alpha promotions (`alpha-2026-05-15-{1,2,3}`), one new schema migration (`b1c4e8d70007`), test count 220 → **261**.
+
+### Bug fixes — two `/fix-bugs` worktrees
+
+Saiful had 9 open bugs at the start. Triaged into 2 worktrees + 2 no-code closes:
+
+| short_id | title | resolution |
+|---|---|---|
+| `a606436f` | fund agent report on AAPL (dup) | wont_fix — duplicate of `85469d8e` |
+| `b6e8c505` | convene failed 502 | resolved — filed pre-AT:R19 SSE fix, no longer repros |
+| `3ef7ca04` | Snackbar persists until backgrounded (`f0063d6`) | Capture `ScaffoldMessenger.of(context)` BEFORE `notifier.deleteEntry()` — the deleteEntry triggers a synchronous state rebuild that deactivates the itemBuilder context, so a later messenger lookup returns a detached state whose auto-dismiss timer never fires. |
+| `278cbad8` | Stale `room_runs` cleanup (`49e88b0`) | Added an UPDATE to `trim_audit_tables()` in `app/services/audit.py` — any row stuck in `status='running'` for > 30 min flips to `aborted`. Runs nightly via the existing lifespan task. |
+| `82cb07c6` | `kAppVersion` drifts from pubspec (`918111c`) | Added `package_info_plus ^9.0.1`; replaced the hand-maintained const with `appVersionProvider` (FutureProvider). Three call sites updated. |
+| `85469d8e` | Fundamentals agent uses synthetic P/E (`4c59f61`, extended in `dcf3445`) | Room runner's `_profile_for_ticker` overlays real yfinance fundamentals on the synthetic baseline. Extended to all 12 agents in the 1-on-1 path via `app/services/fundamentals.py`. |
+| `90441819` | Compliance chips need tap-to-explain (`a9b3540`) | Each of the 6 toggles is now an `InkWell`; tap → bottom sheet with plain-English explanation. |
+| `2795baf2` | Agent response formatting (`b389b2f`) | Replaced `Text()` with `MarkdownBody` in room + 1-on-1. `flutter_markdown` → `flutter_markdown_plus`. |
+| `eeeb866f` | Room run survives container restart | **deferred** — large; needs Redis-backed runner state or worker-process split. |
+
+### Photo attachments in the in-app bug reporter (`c3ab51b`)
+
+Alembic `b1c4e8d70007` adds `bug_reports.attachment_path` + `attachment_mime`. New `app/services/bug_attachments.py`. `POST /v1/feedback/bug` rewritten as `multipart/form-data`. Flutter: `image_picker ^1.2.2`, camera/library picker, 56px thumbnail preview. +18 tests.
+
+### Honest follow-ups
+
+- **`uv.lock` tracked** (`984b2a0`).
+- **`scripts/install_iphone.sh` quieted** (`1385f0d`) — switched to `flutter devices --machine`.
+- **`flutter_markdown` swap** (`1385f0d`) — maintained fork `flutter_markdown_plus`.
+- **Legal research** (`6cd685a`) — `docs/09_compliance/legal_samples.md` + `docs/09_compliance/legal_plan_ami_trade.md`. Closes the writing-up half of A22.
+
+---
+
 ## AT:R19  (2026-05-14)
 
 Heavy session: 29 commits, 6 alpha promotions (`alpha-2026-05-14-4` through `-9`), one TestFlight upload (`0.1.0+4`), and a meaningful uplift to the bug-fix workflow.

@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-15 (end of AT:R20 — 6 bugs fixed across two `/fix-bugs` worktrees, live yfinance fundamentals now reach all 12 agents in both Convene + 1-on-1, in-app bug reporter accepts photo attachments, `flutter_markdown` → `flutter_markdown_plus` swap, `install_iphone.sh` quieted, legal-research docs landed under `docs/09_compliance/`. **149 commits, 261 tests**, 3 alpha promotions today (`alpha-2026-05-15-{1,2,3}`), pubspec at `0.1.0+6`, TESTING IPHONE 13 still on `+4` — a `+6` install is the first carry-over so on-device validation can begin.)
+**Last updated:** 2026-05-15 (end of AT:R21 — room-runner LLM timeout fix + journal-entry improvement for failed runs, `ami-llm` model rebrand across all config/tests/docs, alpha-2026-05-15-4 promoted, LLM end-to-end tested with 3 agents. **152 commits, 264 tests**, pubspec `0.1.0+6` in repo, TESTING IPHONE 13 on release `0.1.0+7`.)
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,10 +15,10 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **149 commits**, no remote yet |
-| Latest commit | `6cd685a` — docs(compliance): legal sample research + AMI Trade ToS/Privacy plan |
-| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..3}` (latest `alpha-2026-05-15-3`) |
-| Backend tests | **261 passed, 0 failed** |
+| Git state | Clean working tree, **152 commits**, no remote yet |
+| Latest commit | `e79c598` — chore(llm): rebrand model id gemma-4-31b-it-nvfp4 → ami-llm |
+| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` (latest `alpha-2026-05-15-4`) |
+| Backend tests | **264 passed, 0 failed** |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 262 i18n keys (EN canonical; AR + MS auto-translated by Gemma 4) |
 
 ```
@@ -74,9 +74,9 @@ Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_pr
 | | |
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
-| pubspec version | **`0.1.0+6`** |
-| TESTING IPHONE 13 install | release `0.1.0+4` (PRE-AT:R20; needs a `+6` install via `scripts/install_iphone.sh` to validate all 8 AT:R20 fixes + the photo-attachment bug reporter). |
-| TestFlight | `0.1.0+4` uploaded 2026-05-14 via CLI. `+5` / `+6` not yet pushed. Build via `scripts/build_testflight.sh`. |
+| pubspec version | **`0.1.0+6`** (repo; `+7` build was produced externally and confirmed on-device) |
+| TESTING IPHONE 13 install | release `0.1.0+7` (confirmed by Saiful at AT:R21 start — pre-existing TestFlight build). |
+| TestFlight | `0.1.0+7` on device. Next upload via `scripts/build_testflight.sh` will auto-bump to `+8`. |
 | Build commands | `scripts/install_iphone.sh` (dev sideload — now uses `flutter devices --machine` so it doesn't print iPhone 17 LAN-probe noise), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
@@ -85,63 +85,55 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R20)
+## What just landed (this session — AT:R21)
 
-Bug-fix session that bled into substantial feature work. 18 commits, 3 alpha promotions (`alpha-2026-05-15-{1,2,3}`), one new schema migration (`b1c4e8d70007`), test count 220 → **261**.
+Focused session: 2 data commits + 1 handover, 1 alpha promotion (`alpha-2026-05-15-4`), test count 261 → **264**.
 
-### Bug fixes — two `/fix-bugs` worktrees
+### Room-runner fix: per-agent LLM timeout + better journal entry (`eb1ef3c`)
 
-Saiful had 9 open bugs at the start. Triaged into 2 worktrees + 2 no-code closes:
+Root cause of `698a0fe6` + `f7c4d7e0` (convene report not stored / room stuck waiting):
 
-| short_id | title | resolution |
+- **Timeout**: Added `_AGENT_LLM_TIMEOUT_S = 90.0`. `_speak_one_agent` and `_stream_pm_narration` now buffer via `asyncio.wait_for`; `TimeoutError` falls back to the scripted template so the run still finishes and produces a verdict instead of stalling indefinitely.  Live path now matches the existing PM-narration buffered pattern (all 12 agents: collect full response → restream via typewriter).
+- **Journal**: Extracted `_build_journal_entry()` as a testable module-level function in `room.py`. Failed/aborted runs now write "Room on NVDA — failed · N of 12 agents completed — {error}" instead of "incomplete / no verdict". Replaced the silent `except: pass` with a structured `logger.warning`.
+- +3 tests: hanging-gateway timeout fallback, completed-run journal entry, failed-run journal entry.
+- Bugs `698a0fe6` + `f7c4d7e0` → `pending_review` on `main`. 6 AT:R20 `pending_review` bugs → `resolved`.
+
+### ami-llm model rebrand (`e79c598`)
+
+The on-prem vLLM host now serves under the model name `ami-llm` (same hardware — Gemma 4 31B, NVFP4 quantised). Updated everywhere: `backend/app/core/config.py`, `docker-compose.yml`, `infra/alpha.env`, `.env.example`, `infra/alpha.env.example`, `infra/systemd/ami-trade.env.example`, 8 occurrences in `test_llm_gateway.py`, `CLAUDE.md`, `HANDOVER.md`.
+
+vLLM was already pre-configured to serve `ami-llm` as an alias — no server-side changes needed.
+
+### LLM end-to-end test
+
+Fired realistic user questions through 3 agents (Market Analyst, Fundamentals Analyst, Bear Researcher). All returned structured, numerically-grounded responses citing live yfinance fundamentals (NVDA P/E 48.1x, TSLA P/E 399x, net cash). Confirmed the AT:R20 fundamentals injection is working in production.
+
+**Observation:** NVFP4 quantisation produces space-split tokens ("Consol idation", "NV DA"). Not a regression — it's been there since day one. Not blocking alpha but worth watching user feedback.
+
+### Animations — documented and deferred
+
+15 animation slots are already authored in lesson MDX files (all showing `AmiHexPlaceholder`). Two implementation paths discussed (Lottie files vs. custom Flutter `CustomPainter`). Decision deferred. See `memory/project_animations.md`.
+
+### Bug list at handover
+
+| short_id | title | status |
 |---|---|---|
-| `a606436f` | fund agent report on AAPL (dup) | wont_fix — duplicate of `85469d8e` |
-| `b6e8c505` | convene failed 502 | resolved — filed pre-AT:R19 SSE fix, no longer repros |
-| `3ef7ca04` | Snackbar persists until backgrounded (`f0063d6`) | Capture `ScaffoldMessenger.of(context)` BEFORE `notifier.deleteEntry()` — the deleteEntry triggers a synchronous state rebuild that deactivates the itemBuilder context, so a later messenger lookup returns a detached state whose auto-dismiss timer never fires. |
-| `278cbad8` | Stale `room_runs` cleanup (`49e88b0`) | Added an UPDATE to `trim_audit_tables()` in `app/services/audit.py` — any row stuck in `status='running'` for > 30 min flips to `aborted`. Runs nightly via the existing lifespan task. |
-| `82cb07c6` | `kAppVersion` drifts from pubspec (`918111c`) | Added `package_info_plus ^9.0.1`; replaced the hand-maintained const with `appVersionProvider` (FutureProvider). Three call sites updated. |
-| `85469d8e` | Fundamentals agent uses synthetic P/E (`4c59f61`, extended in `dcf3445`) | Room runner's `_profile_for_ticker` overlays real yfinance fundamentals (`trailingPE`, `revenueGrowth`, `profitMargins`, 52-wk range, `currentPrice`, `totalCash/Debt`) on the synthetic baseline when `settings.use_real_market_data`. Gated for test determinism. Profile carries a `data_source` flag; `_format_profile` labels live vs synthetic. Task framing tells the LLM to ONLY cite numbers from the data block, never training memory. Extended (`dcf3445`) to all 12 agents in the **1-on-1** path too via a new shared module `app/services/fundamentals.py` — `extract_tickers(user_message)` regex + blocklist of common English / acronyms, fetches per-ticker, appends a `LIVE MARKET DATA — <SYM>` block to the system prompt. Falls back to the last 3 turns of history if the current message has no ticker. |
-| `90441819` | Compliance chips need tap-to-explain (`a9b3540`) | Each of the 6 toggles (Halal, ESG-lite, TAG, fossil-free, long-only, liquid-only) is now an `InkWell` with `info_outline` icon; tap → bottom sheet with a plain-English explanation. Toggle hit-target unchanged (right-side switch). |
-| `2795baf2` | Agent response formatting (`b389b2f`) | Added `flutter_markdown ^0.7.7+1` (later swapped to `flutter_markdown_plus ^1.0.3` after upstream marked it discontinued). Replaced `Text()` in `_AgentLine` (room_screen.dart) and `ChatBubble` (chat_bubble.dart) with `MarkdownBody`. Room agent prompt instructed to lead with a one-sentence thesis, use bullets for evidence, **bold** for key metrics. |
-| `eeeb866f` | Room run survives container restart | **deferred** — large; needs Redis-backed runner state or worker-process split. |
+| `698a0fe6` | convene report not stored | pending_review (fix live on alpha-2026-05-15-4) |
+| `f7c4d7e0` | screenshot (extension of 698a0fe6) | pending_review |
+| `eeeb866f` | Room run survives container restart | open — deferred (large) |
 
-### Photo attachments in the in-app bug reporter (`c3ab51b`)
+DB-wide: `open=1 / pending_review=2 / resolved=16 / wont_fix=1`.
 
-End-to-end vertical:
-- Alembic `b1c4e8d70007` adds `bug_reports.attachment_path` + `attachment_mime` (both nullable).
-- New `app/services/bug_attachments.py` — disk-backed storage. MIME allowlist (jpeg/png/heic/heif/webp/gif), 5 MB cap, files written with `O_EXCL` to refuse collisions, named-volume on melehost mounted at `/data/bug_attachments`. No public download endpoint — review via SSH.
-- `POST /v1/feedback/bug` rewritten as `multipart/form-data`. 415 for bad MIME, 413 for oversized, empty file silently treated as no attachment (cancelled picker shouldn't bounce the whole report). DB write proceeds even if disk write fails (text > photo).
-- Flutter: `image_picker ^1.2.2`, "Attach photo" outlined button → camera/library bottom sheet → 56px thumbnail preview with × clear. `api_client.submitBugReport` uses `FormData` with optional `MultipartFile`. iOS Info.plist gets `NSCameraUsageDescription` + `NSPhotoLibraryUsageDescription`.
-- +18 tests across `test_bug_attachments.py` and `test_feedback_api.py` (storage helper + TestClient-based multipart round-trip).
+### Carry-overs for AT:R22
 
-### Honest follow-ups
-
-- **`uv.lock` tracked** (`984b2a0`) — was previously untracked. Lock file should travel with the repo for reproducible dep resolution.
-- **`scripts/install_iphone.sh` quieted** (`1385f0d`) — Flutter's text-mode device listing was probing the LAN for the paired-but-offline iPhone 17 and printing `Browsing on the local area network for Saiful's iPhone 17 … (code -27)`. Script's UDID was always TESTING IPHONE 13 (`00008110-000261101A22801E`). Switched to `flutter devices --machine` (JSON, no probe), resolves the friendly name for an unambiguous "▶ Target device : TESTING IPHONE 13 (UDID)" banner, and filters the known LAN-probe noise from build/install stderr.
-- **`flutter_markdown` swap** (`1385f0d`) — upstream marked it discontinued; swapped to the maintained fork `flutter_markdown_plus`. Drop-in API, two import sites updated.
-- **Legal research** (`6cd685a`) — research agent surveyed 5 peer apps + 2 vendor disclosures (Zoya, Wall Street Survivor/StockTrak, Public.com, Character.AI, OpenAI, RevenueCat, Sentry). Saved `docs/09_compliance/legal_samples.md` (quoted clauses by topic) + `docs/09_compliance/legal_plan_ami_trade.md` (clause-by-clause starter language, lawyer-only callouts, App Store MVP subset). Closes the writing-up half of A22; hosting + lawyer review remains on Saiful.
-
-### Bug list at handover (3 open)
-
-| short_id | title | bucket |
-|---|---|---|
-| `f7c4d7e0` | screenshot | filed during session, unclassified; check raw content |
-| `698a0fe6` | convene report not stored | filed during session, needs triage |
-| `eeeb866f` | Room run survives api-alpha container restart | large — deferred since AT:R19 |
-
-DB-wide: `open=3 / pending_review=6 / resolved=10 / wont_fix=1`. The 6 `pending_review` are this session's fixes — they'll flip to `resolved` automatically once Saiful merges to main and on-device-validates. (They were merged this session; the flip-to-resolved is still manual.)
-
-### Carry-overs for AT:R21
-
-1. **Install `+6` on TESTING IPHONE 13** — `scripts/install_iphone.sh`. Validates all 8 AT:R20 fixes: snackbar auto-dismiss, app-version chip on Settings (should read `0.1.0+6` now), Markdown render in Room + 1-on-1, compliance tap-to-explain bottom sheets, "Attach photo" affordance in bug-report sheet.
-2. **Push `+6` to TestFlight** — `scripts/build_testflight.sh` will auto-bump to `+7` and upload.
-3. **Triage `f7c4d7e0` + `698a0fe6`** — two new open bugs filed mid-session. Run `/fix-bugs` next session.
-4. **Flip the 6 `pending_review` bugs to `resolved`** — they're merged on main and live on alpha; just need the DB UPDATE.
-5. **A22 part 2 — host the legal docs publicly + lawyer review.** Research is in `docs/09_compliance/legal_plan_ami_trade.md`. Needs (a) Saiful to send to a lawyer, (b) the polished output hosted at `agenticmarketintel.ai/legal/{privacy,terms}` before App Store submission.
-6. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build.
-7. **Animation production** — `AnimationRegistry` empty; pending Lottie art (external).
-8. **A29 full light-mode refactor** — 37 hardcoded `AmiColors.slate900`/`slate800` references. v1.0 work.
-9. **Live fundamentals — 1-on-1 ticker extraction robustness** — current regex is `\$?[A-Z]{1,5}\b` + a 47-word blocklist. Watch user-filed bug reports for cases where it misfires (false positives → spurious yfinance call; false negatives → agent quotes training memory). Strengthen as needed.
+1. **T&C + Privacy Policy (A22 part 2)** — didn't start this session. Research is in `docs/09_compliance/legal_plan_ami_trade.md`. Needs (a) hosting at `agenticmarketintel.ai/legal/{privacy,terms}` and (b) lawyer review before App Store submission.
+2. **Flip `698a0fe6` + `f7c4d7e0` → resolved** after on-device validation of the room timeout fix.
+3. **`eeeb866f`** — room run survives container restart — still open/deferred (Redis-backed runner state or separate worker).
+4. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build.
+5. **Animation production** — deferred. See `memory/project_animations.md` for 15-slot design decision.
+6. **A29 light-mode refactor** — 37 hardcoded `AmiColors.slate900`/`slate800` references. v1.0 work.
+7. **Live fundamentals ticker extraction robustness** — watch bug reports for regex misfires in 1-on-1.
+8. **Two sibling worktrees with unmerged docs** — `blissful-darwin-419097` (`docs(feedback): bug reporting pipeline spec + D-057 decision entry`) and `exciting-shtern-aad051` (`design(lessons): spec lessons landing page hex-cluster redesign`) — commits not in main. Need Saiful decision: merge to main or discard.
 
 ---
 
@@ -153,7 +145,7 @@ DB-wide: `open=3 / pending_review=6 / resolved=10 / wont_fix=1`. The 6 `pending_
 
 The slash command reads HANDOVER.md + project plan, runs the Mac-side sanity-check curls, queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R21** (this is handover #20).
+Session name to use: **AT:R22** (this is handover #21).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 

@@ -70,6 +70,9 @@ infra/**/terraform.tfvars
 *.log
 *.pid
 
+# Silent_Scout research subdirs added post-AT:R21
+Silent_Scout/05_agent_alignment/
+
 # Local SQLite (solo-dev fallback + alembic placeholder)
 backend/.local.db
 backend/.alembic-placeholder.db
