@@ -13,8 +13,8 @@ Where we are right now (as of 2026-05-15, end of AT:R19):
 
 Alpha (A1–A29):
 - **✅ Done**: A1, A2, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 15 items.
-- **⚡ Partial**: A6, A17, A21, A28, A29 — 5 items (mechanisms exist; finishing touches blocked on external assets or v1.0 work).
-- **⏳ Blocked on external**: A3, A13, A15, A22 — 4 items (Resend, TTS provider, OneSignal+APNs, legal).
+- **⚡ Partial**: A6, A17, A21, A22, A28, A29 — 6 items (mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
+- **⏳ Blocked on external**: A3, A13, A15 — 3 items (Resend, TTS provider, OneSignal+APNs).
 - **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of blocked externals).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
@@ -80,13 +80,13 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 | # | Item | Who | Est | Status | Notes |
 |---|---|---|---|---|---|
-| **A22** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | ⏳ blocked (legal, Saiful-external) | App Store needs this anyway. |
+| **A22** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | ⚡ partial (AT:R20 — sample research + clause-by-clause plan landed in `docs/09_compliance/{legal_samples,legal_plan_ami_trade}.md`; lawyer review + public hosting at `agenticmarketintel.ai/legal/*` external) | App Store needs this anyway. |
 | **A23** | App Store Connect — create the app record (bundle id `ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`, English primary). One-time, 5-min web form. | Saiful | external | ✅ done (TestFlight uploaded) | Blocks A25. |
 | **A24** | Install Transporter (Apple's free Mac upload tool) from the Mac App Store. | Saiful | external | ✖ superseded (we use CLI `xcrun altool` — `scripts/build_testflight.sh`) | Blocks A26. |
 | **A25** | Switch Flutter build to Distribution signing + App Store export. `flutter build ipa --release --export-method app-store --dart-define=AMI_API_URL=<cloudflare-hostname>`. Xcode auto-manages the Distribution cert + App Store provisioning profile once the app exists in App Store Connect. Produces `build/ios/ipa/Runner.ipa`. | Claude | 0.5 session | ✅ done (AT:R19 — `scripts/build_testflight.sh`) | |
 | **A26** | Upload to App Store Connect via Transporter (drag the .ipa, click upload). | Saiful | external | ✅ done (AT:R19 — first end-to-end CLI upload, `0.1.0+4`) | ~5 min. |
 | **A27** | Add testers in TestFlight. Internal (≤100, Apple Dev team members, instant) or External (≤10k, anyone via email, first build needs a one-time Beta App Review ~24h). | Saiful | external | ✅ done (Internal Testing group `AMI Team`) | |
-| **A28** | Tester onboarding — invite copy, feedback channel (private Slack/Discord/email), bug-report template. | Saiful | external | ⚡ partial (bug-report mechanism live; invite copy / public feedback channel external) | |
+| **A28** | Tester onboarding — invite copy, feedback channel (private Slack/Discord/email), bug-report template. | Saiful | external | ⚡ partial (bug-report mechanism live with photo attachments AT:R20; invite copy / public feedback channel external) | |
 
 **Claude effort:** ~9.75 sessions of dev (7.5 from streams 1–3 + 2.25 from new Stream 4: watchlist + skip-to-quiz + frontmatter fields + animation registry). **Saiful effort:** Resend, Cloudflare, Apple capability (×2 — Sign in with Apple + Dev APNs cert), Azure/ElevenLabs, OneSignal, legal stub, translators, App Store Connect app record, Transporter, tester invites. Mostly parallel to Claude.
 

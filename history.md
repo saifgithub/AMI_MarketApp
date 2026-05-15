@@ -13,6 +13,68 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R19  (2026-05-14)
+
+Heavy session: 29 commits, 6 alpha promotions (`alpha-2026-05-14-4` through `-9`), one TestFlight upload (`0.1.0+4`), and a meaningful uplift to the bug-fix workflow.
+
+### Journal — swipe-to-delete, search, soft-delete + Trash view
+
+The journal got a full data-lifecycle treatment.
+
+- **Soft delete + restore** (`09358d3`, `5ed72c0`). New `journal_entries.deleted_at` column (Alembic `f7d9b2e60005`); `JournalStore.soft_delete()`/`restore()`; `DELETE /v1/journal/{u}/entry/{e}` + `POST .../restore`. All reads filter `deleted_at IS NULL`. Entry is never destroyed.
+- **iOS-standard swipe** (`dc16910`): `Dismissible` threshold raised from 0.4 → 0.7 so half-swipes don't auto-fire; `HapticFeedback.mediumImpact` on commit; 4s snackbar with **UNDO** that calls the restore endpoint.
+- **Search** (`09358d3`): `GET /v1/journal/{u}?q=` ILIKE on `title + summary`; Flutter search bar with 400 ms debounce + clear (×) button.
+- **Trash view** (`5ed72c0`): new screen reached via trash icon in the Journal header; `GET /v1/journal/{u}/trash` returns soft-deleted entries from the **last 30 days only** (`TRASH_VISIBLE_DAYS=30` in `journal_store.py`). Each card has a green RESTORE button. Older soft-deleted rows stay in the DB but never surface in-app. Footer caption: "Older entries are auto-hidden after 30 days."
+
+### SSE middleware bug — chat + room re-fixed
+
+The biggest "wait, it never worked" find of the session.
+
+- **Root cause:** `HTTPAuditMiddleware` (added in AT:R16, `30fdca1`) replaced `request._receive` with a synthetic that always returned `http.request`. Starlette's `_CachedRequest.wrapped_receive` polls receive during the streaming response to detect client disconnect, expecting only `http.disconnect`. It got `http.request` and raised `RuntimeError: Unexpected message received: http.request` AFTER status 200 was already sent — every SSE route (1-on-1, room stream, coach) silently broken since AT:R16.
+- **Fix** (`79e1571`): drop the `request._receive` replacement entirely. `await request.body()` already caches in `_body`; `_CachedRequest.wrapped_receive` reads from that cache. The synthetic was actively harmful, not helpful.
+
+### Room run survives sleep / reconnect on wake
+
+- New `started` `RoomEvent` kind, yielded first by `runner.run()`, carries the `run_id` immediately so clients can poll even if disconnected mid-stream.
+- On `(CancelledError | GeneratorExit)` in `event_stream`, spawn `asyncio.create_task(_drain_to_completion(run_id))` — runner finishes server-side and persists journal + verdict.
+- Flutter `RoomNotifier` captures `run_id` from `started`, on stream error polls `GET /v1/room/{id}` every 3s up to 90s. Amber `_ReconnectingBanner` UI ("Connection lost. The room is still running…") + `RoomState.reconnecting` flag.
+- **Caveat (filed as bug `eeeb866f`):** only covers client disconnect. Container restart still kills the runner. Persisting runner state to Redis between agent steps is the proper fix; deferred until real testers see it.
+
+### Trade auto-adds to ticker tape (`dc16910`)
+
+`sim.submit` idempotently adds the traded ticker to `sim_watchlists` on success. Flutter's `simSubmit` refreshes the watchlist after a successful trade; the ticker-tape provider listens on a sorted-comma-joined projection of watchlist tickers and silent-refreshes when that key changes. No 120s wait.
+
+### Concierge prompt rewrite (`dc16910`)
+
+`content/agents/concierge.md` used to promise "Want me to open it?" — the app had no mechanism. Concierge now gives explicit navigation: *"Try **Lesson 12: Order Types**. You'll find it under **Lessons → Foundations**."* Hard rule baked into the prompt that it can't navigate for the user.
+
+### Light/dark mode — honest fix (`dc16910`)
+
+The toggle was a lie: 37 screens hardcode `AmiColors.slate900`/`slate800`. Removed the broken radio group from Settings → APPEARANCE; replaced with a single info row: "Dark theme — Alpha is dark-only. Light + Follow System land in v1.0." Coerces `ThemeMode.dark` on render. Full refactor (37 files → theme-aware colors) is v1.0 work.
+
+### Workflow + scripts
+
+- **`/fix-bugs`** (`99e6e0d`) — spawn `.claude/worktrees/bug-fix-<ts>`, claim bugs atomically via `bug_reports.assigned_branch + status='in_progress'`, triage tiny/small/medium/large, fix up to 3 per session, commit each as `fix(bug:<short-id>):`, flip to `pending_review` (humans confirm `resolved` on merge). Hands-off file list keeps high-conflict files (main.py, alembic, pubspec, compose) routed through human review.
+- **`bug_reports.assigned_branch`** column (Alembic `a8e3c1b50006`). Status vocabulary: `open → in_progress → pending_review → resolved` (or `wont_fix`).
+- **`/start-fresh` updated** (`aca28ee`) — pulls `bug_reports` at session start, surfaces open + pending_review counts + 10 latest titles in the plan, asks "bugs first or carry-over first?" with a directive-mapping table.
+- **`scripts/build_testflight.sh`** (`c14ce2a`) — auto-bumps pubspec build number, `flutter build ipa --release --export-method=app-store`, uploads via `xcrun altool` with the App Store Connect API key.
+- **`scripts/install_iphone.sh`** (`c14ce2a`) — release build + install on TESTING IPHONE 13 (or `$1` device). Pre-flight checks the device is connected.
+
+### CLI TestFlight unblocked
+
+The AT:R18 carry-over. Saiful signed Xcode into the Apple Developer account; one manual archive export through Organizer landed the Distribution cert + provisioning profile in keychain. After that, CLI build IPA works. App Store Connect API key generation needed a second go (first key was Developer role → 401; App Manager key `44VJ5WADL2` works). `0.1.0+4` uploaded via `scripts/build_testflight.sh` — first end-to-end CLI push.
+
+### Website backend split
+
+- Waitlist endpoint removed from the trade backend (`306ef73`). Files deleted: `backend/app/api/waitlist.py`, `schemas/waitlist.py`, `services/waitlist_store.py`. `WaitlistRow` model removed.
+- `api-website` service added to `docker-compose.yml` (`b94adee`). Port 8001, separate `ami_website` DB, CORS for `agenticmarketintel.ai` + www. `promote-to-alpha` excludes `website/` from rsync (`65fec8e`); `website_api/` is shipped (api-website's source).
+
+### Bug-report drift fix (handover scan)
+
+`mobile/lib/state/feedback_providers.dart` had `kAppVersion = '0.1.0+2'` hardcoded. 13 user-filed bug reports tagged stale. Updated to `'0.1.0+4'`; filed `82cb07c6` for `package_info_plus` proper fix.
+
+---
+
 ## What just landed (previous session — AT:R17)
 
 Two commits, no backend changes, no alpha promotion. Pure Flutter session.
