@@ -50,6 +50,7 @@ from app.schemas import AgentId, AgentMessage, Mandate
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
+from app.services.fundamentals import fetch_live_fundamentals
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
 from app.services.tier_policy import pick_tier
@@ -181,69 +182,6 @@ class _RoomContext:
     profile: dict[str, Any] = field(default_factory=dict)
 
 
-def _fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
-    """Fetch real fundamentals via yfinance. Returns None on any error.
-
-    Only numeric fields the LLM is likely to misremember from training:
-    P/E, revenue growth, FCF margin, net cash, 52-week range, price.
-    Narrative fields (catalysts, sentiment) stay synthetic — yfinance
-    doesn't have them and pretending it does would replace one lie with
-    another. The prompt labels the data source so the LLM knows what's
-    live vs scaffolded.
-    """
-    try:
-        import yfinance as yf
-        info = yf.Ticker(ticker.upper()).info
-    except Exception:
-        return None
-    if not info:
-        return None
-
-    def _num(key: str) -> float | None:
-        v = info.get(key)
-        if v is None:
-            return None
-        try:
-            return float(v)
-        except (TypeError, ValueError):
-            return None
-
-    price = _num("currentPrice") or _num("regularMarketPrice")
-    pe = _num("trailingPE")
-    # Anchor the result on real signals — if price + pe are both missing,
-    # the ticker is unknown to yfinance and we should fall through to synthetic.
-    if price is None and pe is None:
-        return None
-
-    out: dict[str, Any] = {}
-    if price is not None:
-        out["base_price"] = round(price, 2)
-        out["low"] = round(price * 0.95, 2)
-        out["high"] = round(price * 1.05, 2)
-        out["support"] = round(price * 0.9, 2)
-        out["breakout"] = round(price * 1.03, 2)
-    fifty_two_low = _num("fiftyTwoWeekLow")
-    fifty_two_high = _num("fiftyTwoWeekHigh")
-    if fifty_two_low is not None and fifty_two_high is not None:
-        out["low"] = round(fifty_two_low, 2)
-        out["high"] = round(fifty_two_high, 2)
-    if pe is not None:
-        out["pe"] = f"{pe:.1f}"
-    rev_growth = _num("revenueGrowth")
-    if rev_growth is not None:
-        # yfinance reports growth as a decimal (0.05 = 5%).
-        out["rev_growth"] = round(rev_growth * 100)
-    profit_margin = _num("profitMargins")
-    if profit_margin is not None:
-        out["fcf_margin"] = round(profit_margin * 100)
-    # totalCash and totalDebt are in dollars; net cash in millions for the prompt
-    total_cash = _num("totalCash")
-    total_debt = _num("totalDebt")
-    if total_cash is not None and total_debt is not None:
-        out["net_cash"] = round((total_cash - total_debt) / 1_000_000)
-    return out
-
-
 def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     """Ticker-flavoured profile for the Room.
 
@@ -305,7 +243,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
 
     # Overlay real fundamentals when configured + reachable.
     if settings.use_real_market_data:
-        live = _fetch_live_fundamentals(ticker)
+        live = fetch_live_fundamentals(ticker)
         if live:
             profile.update(live)
             profile["data_source"] = "yfinance_live"

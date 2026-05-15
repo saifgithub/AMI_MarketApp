@@ -44,6 +44,7 @@ from app.services.concierge_prompts import (
     load_concierge_context,
     scripted_reply as concierge_scripted_reply,
 )
+from app.services.fundamentals import build_live_data_block, extract_tickers
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.tier_policy import pick_tier
 
@@ -125,6 +126,24 @@ class AgentRunner:
                 yield chunk
         else:
             system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
+
+            # Live ticker context — extract any ticker the user mentioned
+            # (this message, or the last 3 turns of history if this message
+            # has none) and inject a live-data block per ticker so the LLM
+            # quotes today's P/E rather than training-memory facts. Bug
+            # 85469d8e — must cover all 12 agents.
+            tickers = extract_tickers(user_message)
+            if not tickers:
+                for h in reversed(history[-3:]):
+                    if h.role == "user":
+                        tickers = extract_tickers(h.content)
+                        if tickers:
+                            break
+            for t in tickers:
+                block = build_live_data_block(t)
+                if block:
+                    system_prompt = system_prompt + "\n\n" + block
+
             plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
             tier = pick_tier(plan, agent_id)
             messages: list[ChatMessage] = [

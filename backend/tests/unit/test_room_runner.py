@@ -283,7 +283,7 @@ def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
     monkeypatch.setattr(settings, "use_real_market_data", True)
     # Stub the live fetch to return a known shape, no network.
     monkeypatch.setattr(
-        room_runner, "_fetch_live_fundamentals",
+        room_runner, "fetch_live_fundamentals",
         lambda t: {
             "base_price": 250.50,
             "pe": "35.2",
@@ -312,7 +312,7 @@ def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
     from app.services import room_runner
 
     monkeypatch.setattr(settings, "use_real_market_data", True)
-    monkeypatch.setattr(room_runner, "_fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
     profile = room_runner._profile_for_ticker("AAPL")
     assert profile["data_source"] == "synthetic"
     # All required keys still present.
