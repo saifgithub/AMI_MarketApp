@@ -8,6 +8,10 @@
 	<false/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>AMI Trade does not use the microphone.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Attach a photo to your in-app bug report.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Pick a screenshot to attach to your in-app bug report.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

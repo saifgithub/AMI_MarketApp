@@ -36,6 +36,12 @@ class BugReportRequest(BaseModel):
     route: str | None = None
     app_version: str
     platform: str
+    # Optional photo attachment: relative filename inside
+    # settings.bug_attachments_dir + the original Content-Type. Set by
+    # the API layer after a successful multipart upload; clients never
+    # supply these directly.
+    attachment_path: str | None = None
+    attachment_mime: str | None = None
 
     @field_validator("platform")
     @classmethod
@@ -49,3 +55,4 @@ class BugReportResponse(BaseModel):
     id: UUID
     status: BugStatus
     created_at: datetime
+    attachment_path: str | None = None

@@ -8,10 +8,13 @@
 /// fills in: category (chip picker) + title + optional steps.
 library;
 
+import 'dart:io';
+
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 const _kCategories = [
   ('ui_glitch', 'UI glitch'),
@@ -48,12 +51,69 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
   final _titleController = TextEditingController();
   final _stepsController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final _picker = ImagePicker();
+  XFile? _attachment;
 
   @override
   void dispose() {
     _titleController.dispose();
     _stepsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFrom(ImageSource source) async {
+    try {
+      final f = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 2400,
+      );
+      if (f != null && mounted) setState(() => _attachment = f);
+    } catch (_) {
+      // Permission denied or picker dismissed — swallow; the report can
+      // still go without a photo.
+    }
+  }
+
+  Future<void> _showAttachOptions() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AmiColors.slate800,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera_outlined,
+                  color: AmiColors.textHigh),
+              title: Text('Take photo', style: AmiTypography.body),
+              onTap: () => Navigator.of(sheetCtx).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined,
+                  color: AmiColors.textHigh),
+              title: Text('Choose from library', style: AmiTypography.body),
+              onTap: () => Navigator.of(sheetCtx).pop(ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source != null) await _pickFrom(source);
+  }
+
+  String? _mimeFor(XFile f) {
+    final lower = f.path.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+    if (lower.endsWith('.heic')) return 'image/heic';
+    if (lower.endsWith('.heif')) return 'image/heif';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return f.mimeType;
   }
 
   Future<void> _submit() async {
@@ -65,6 +125,8 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               ? null
               : _stepsController.text.trim(),
           route: widget.route,
+          attachmentPath: _attachment?.path,
+          attachmentMime: _attachment == null ? null : _mimeFor(_attachment!),
         );
     if (ok && mounted) Navigator.of(context).pop();
   }
@@ -160,6 +222,12 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
                 counterStyle: AmiTypography.caption.copyWith(color: AmiColors.slate500),
               ),
             ),
+            const SizedBox(height: AmiSpacing.s),
+            _AttachmentRow(
+              attachment: _attachment,
+              onPick: _showAttachOptions,
+              onClear: () => setState(() => _attachment = null),
+            ),
             if (state.error != null) ...[
               const SizedBox(height: AmiSpacing.xs),
               Text(
@@ -191,6 +259,66 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+/// Renders either an "Attach photo" affordance or a 56px thumbnail with a
+/// clear (×) button. Tapping the affordance opens a camera/library picker.
+class _AttachmentRow extends StatelessWidget {
+  const _AttachmentRow({
+    required this.attachment,
+    required this.onPick,
+    required this.onClear,
+  });
+
+  final XFile? attachment;
+  final VoidCallback onPick;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    if (attachment == null) {
+      return OutlinedButton.icon(
+        onPressed: onPick,
+        icon: const Icon(Icons.add_photo_alternate_outlined, size: 18),
+        label: const Text('Attach photo'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AmiColors.textMed,
+          side: const BorderSide(color: AmiColors.slate700),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+    return Row(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.file(
+            File(attachment!.path),
+            width: 56, height: 56, fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(width: AmiSpacing.s),
+        Expanded(
+          child: Text(
+            attachment!.name,
+            style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, size: 18, color: AmiColors.textLow),
+          tooltip: 'Remove',
+          onPressed: onClear,
+        ),
+      ],
     );
   }
 }

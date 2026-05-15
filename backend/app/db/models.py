@@ -323,6 +323,12 @@ class BugReportRow(Base):
     # the same `open` bug because the UPDATE that sets status='in_progress'
     # also writes the branch name in the same statement.
     assigned_branch: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Optional photo/file attached at submit time. attachment_path is a
+    # relative filename under settings.bug_attachments_dir; attachment_mime
+    # is the original Content-Type. Both nullable — the text-only report
+    # path is the common case.
+    attachment_path: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    attachment_mime: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

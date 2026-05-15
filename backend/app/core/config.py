@@ -56,6 +56,15 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # In-app bug-report attachments — written to this directory by the
+    # /v1/feedback/bug endpoint, retrieved by Saiful via SSH (no public
+    # download endpoint in alpha). On melehost a named docker volume
+    # mounts here; for Mac tests a tempfile fixture overrides.
+    bug_attachments_dir: str = "/data/bug_attachments"
+    # Hard cap per upload — generous enough for a phone photo at native
+    # resolution, small enough that an abusive client can't flood the disk.
+    bug_attachment_max_bytes: int = 5 * 1024 * 1024
+
     # CORS
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 

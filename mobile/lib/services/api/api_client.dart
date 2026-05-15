@@ -848,18 +848,29 @@ class ApiClient {
     String? route,
     required String appVersion,
     required String platform,
+    String? attachmentPath,
+    String? attachmentMime,
     String? token,
   }) async {
+    final form = FormData.fromMap({
+      'category': category,
+      'title': title,
+      if (steps != null) 'steps': steps,
+      if (route != null) 'route': route,
+      'app_version': appVersion,
+      'platform': platform,
+      if (attachmentPath != null)
+        'file': await MultipartFile.fromFile(
+          attachmentPath,
+          filename: attachmentPath.split('/').last,
+          contentType: attachmentMime != null
+              ? DioMediaType.parse(attachmentMime)
+              : null,
+        ),
+    });
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/feedback/bug',
-      data: {
-        'category': category,
-        'title': title,
-        if (steps != null) 'steps': steps,
-        if (route != null) 'route': route,
-        'app_version': appVersion,
-        'platform': platform,
-      },
+      data: form,
       options: token != null
           ? Options(headers: {'Authorization': 'Bearer $token'})
           : null,

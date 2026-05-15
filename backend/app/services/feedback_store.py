@@ -36,6 +36,8 @@ class FeedbackStore:
             app_version=req.app_version,
             platform=req.platform,
             status="open",
+            attachment_path=req.attachment_path,
+            attachment_mime=req.attachment_mime,
             created_at=now,
         )
         with get_session() as s:
@@ -45,6 +47,7 @@ class FeedbackStore:
                 id=row.id,
                 status=row.status,  # type: ignore[arg-type]
                 created_at=row.created_at,
+                attachment_path=row.attachment_path,
             )
 
     def clear(self) -> None:

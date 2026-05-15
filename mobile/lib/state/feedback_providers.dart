@@ -63,6 +63,8 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
     required String title,
     String? steps,
     String? route,
+    String? attachmentPath,
+    String? attachmentMime,
   }) async {
     state = state.copyWith(submitting: true, clearError: true);
     try {
@@ -76,6 +78,8 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
         route: route,
         appVersion: appVersion,
         platform: kPlatform,
+        attachmentPath: attachmentPath,
+        attachmentMime: attachmentMime,
         token: token,
       );
       state = state.copyWith(submitting: false, submitted: true);

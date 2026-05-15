@@ -92,6 +92,8 @@ services:
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
       CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
+      # Mount point for the bug_attachments named volume.
+      BUG_ATTACHMENTS_DIR: /data/bug_attachments
     ports:
       - "8000:8000"
     volumes:
@@ -104,6 +106,11 @@ services:
       # point in-container is /content (NOT /app/content). Without this
       # mount the container loads zero lessons.
       - ./content:/content:ro
+      # In-app bug-report attachments — photos uploaded via POST
+      # /v1/feedback/bug land here. Named volume so they survive
+      # container rebuilds. Saiful reviews via:
+      #   ssh melehost "ls -la /var/lib/docker/volumes/ami_trade_bug_attachments/_data/"
+      - bug_attachments:/data/bug_attachments
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/health"]
       interval: 30s
@@ -167,3 +174,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  bug_attachments:
