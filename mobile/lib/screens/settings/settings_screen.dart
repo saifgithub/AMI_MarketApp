@@ -331,6 +331,60 @@ class _DrawdownPicker extends StatelessWidget {
 }
 
 
+/// Plain-English explanations for each compliance flag. Surfaced by
+/// tapping the label in _ComplianceToggles (separate from flipping the
+/// switch). User-filed bug: people wanted to know what "Halal screen"
+/// actually means before turning it on.
+const Map<String, _ComplianceExplanation> _complianceExplanations = {
+  'halal': _ComplianceExplanation(
+    title: 'Halal screen',
+    body: 'Filters out tickers that fail standard Shariah screens: '
+        'conventional financials (interest-based banking, insurance), '
+        'alcohol, pork, tobacco, gambling, adult entertainment, and '
+        'weapons. Also flags companies whose debt-to-equity ratio '
+        'crosses common AAOIFI thresholds.',
+  ),
+  'esgLite': _ComplianceExplanation(
+    title: 'ESG-lite',
+    body: 'A light-touch screen for the most-controversial categories: '
+        'thermal coal, oil sands, controversial weapons, and severe '
+        'governance flags. Not a full ESG rating — just a floor.',
+  ),
+  'tag': _ComplianceExplanation(
+    title: 'No tobacco / alcohol / gambling',
+    body: 'Filters out tickers whose primary revenue comes from '
+        'tobacco, alcohol, or gambling operations. Pure-play exclusions '
+        'only; diversified conglomerates with a small exposure are not '
+        'caught.',
+  ),
+  'fossil': _ComplianceExplanation(
+    title: 'No fossil fuels',
+    body: 'Filters out oil, gas, and coal producers, plus the pipelines '
+        'and services companies whose revenue depends on them. Utilities '
+        'with a transition plan are not auto-excluded.',
+  ),
+  'longOnly': _ComplianceExplanation(
+    title: 'Long-only',
+    body: 'No short selling, no inverse ETFs, no put options used as '
+        'standalone bets. You can still hedge with protective puts '
+        'against a long position you already hold.',
+  ),
+  'liquidOnly': _ComplianceExplanation(
+    title: 'Liquid-only',
+    body: 'Only tickers with sufficient average daily volume to enter '
+        'and exit cleanly. Filters out micro-caps and thinly-traded '
+        'names where a market order can move the price against you.',
+  ),
+};
+
+
+class _ComplianceExplanation {
+  const _ComplianceExplanation({required this.title, required this.body});
+  final String title;
+  final String body;
+}
+
+
 class _ComplianceToggles extends StatelessWidget {
   const _ComplianceToggles({required this.value, required this.onChanged});
   final ComplianceFlags value;
@@ -341,28 +395,48 @@ class _ComplianceToggles extends StatelessWidget {
     final l = AppLocalizations.of(context);
     return Column(
       children: [
-        _row(l.settingsComplianceHalal, value.halal,
+        _row(context, 'halal', l.settingsComplianceHalal, value.halal,
             (v) => onChanged(value.copyWith(halal: v))),
-        _row(l.settingsComplianceEsgLite, value.esgLite,
+        _row(context, 'esgLite', l.settingsComplianceEsgLite, value.esgLite,
             (v) => onChanged(value.copyWith(esgLite: v))),
-        _row(l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
+        _row(context, 'tag', l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
             (v) => onChanged(value.copyWith(noTobaccoAlcoholGambling: v))),
-        _row(l.settingsComplianceFossil, value.noFossilFuels,
+        _row(context, 'fossil', l.settingsComplianceFossil, value.noFossilFuels,
             (v) => onChanged(value.copyWith(noFossilFuels: v))),
-        _row(l.settingsComplianceLongOnly, value.longOnly,
+        _row(context, 'longOnly', l.settingsComplianceLongOnly, value.longOnly,
             (v) => onChanged(value.copyWith(longOnly: v))),
-        _row(l.settingsComplianceLiquidOnly, value.liquidOnly,
+        _row(context, 'liquidOnly', l.settingsComplianceLiquidOnly, value.liquidOnly,
             (v) => onChanged(value.copyWith(liquidOnly: v))),
       ],
     );
   }
 
-  Widget _row(String label, bool v, ValueChanged<bool> onChanged) {
+  Widget _row(BuildContext context, String key, String label, bool v,
+      ValueChanged<bool> onChanged) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: AmiTypography.body)),
+          Expanded(
+            child: InkWell(
+              onTap: () => _showExplanation(context, key),
+              borderRadius: BorderRadius.circular(4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Flexible(child: Text(label, style: AmiTypography.body)),
+                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.info_outline,
+                      size: 14,
+                      color: AmiColors.textLow,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
           Switch(
             value: v,
             onChanged: onChanged,
@@ -371,6 +445,47 @@ class _ComplianceToggles extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showExplanation(BuildContext context, String key) {
+    final explain = _complianceExplanations[key];
+    if (explain == null) return;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AmiColors.slate800,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AmiSpacing.l, AmiSpacing.l, AmiSpacing.l, AmiSpacing.xl,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(
+                    color: AmiColors.slate600,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.m),
+              Text(explain.title, style: AmiTypography.h4),
+              const SizedBox(height: AmiSpacing.s),
+              Text(
+                explain.body,
+                style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
