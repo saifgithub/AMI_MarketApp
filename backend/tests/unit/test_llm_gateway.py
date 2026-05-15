@@ -52,21 +52,21 @@ def test_gateway_prefers_vllm_when_both_keys_set(monkeypatch):
 
     monkeypatch.setattr(cfg.settings, "anthropic_api_key", "sk-ant-fake")
     monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://lan:8000")
-    monkeypatch.setattr(cfg.settings, "vllm_model", "gemma-4-31b-it-nvfp4")
+    monkeypatch.setattr(cfg.settings, "vllm_model", "ami-llm")
     g = LLMGateway()
     s = g.status()
     assert s["active_provider"] == "vllm"
     assert s["providers_registered"] == ["anthropic", "mock", "vllm"]
     # vLLM serves a single model; every tier resolves to it.
-    assert s["tier_to_model"]["cheap"] == "gemma-4-31b-it-nvfp4"
-    assert s["tier_to_model"]["premium"] == "gemma-4-31b-it-nvfp4"
+    assert s["tier_to_model"]["cheap"] == "ami-llm"
+    assert s["tier_to_model"]["premium"] == "ami-llm"
 
 
 def test_gateway_status_with_only_vllm(monkeypatch):
     from app.core import config as cfg
 
     monkeypatch.setattr(cfg.settings, "vllm_base_url", "http://lan:8000")
-    monkeypatch.setattr(cfg.settings, "vllm_model", "gemma-4-31b-it-nvfp4")
+    monkeypatch.setattr(cfg.settings, "vllm_model", "ami-llm")
     g = LLMGateway()
     s = g.status()
     assert s["active_provider"] == "vllm"
@@ -220,7 +220,7 @@ async def test_vllm_provider_parses_openai_deltas():
         _sse('{"choices":[{"index":0,"delta":{"content":"NG"}}]}'),
         "data: [DONE]",
     ]
-    p = VLLMProvider(base_url="http://lan:8000", model_name="gemma-4-31b-it-nvfp4")
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
     p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
 
     chunks: list[str] = []
@@ -233,7 +233,7 @@ async def test_vllm_provider_parses_openai_deltas():
 
     assert "".join(chunks) == "PONG"
     body = captured["json"]
-    assert body["model"] == "gemma-4-31b-it-nvfp4"
+    assert body["model"] == "ami-llm"
     assert body["max_tokens"] == 32
     assert body["stream"] is True
     # OpenAI/vLLM puts the system prompt inside `messages`, not as a sibling.
@@ -244,7 +244,7 @@ async def test_vllm_provider_parses_openai_deltas():
 @pytest.mark.asyncio
 async def test_vllm_provider_error_yields_inline_error():
     captured: dict = {}
-    p = VLLMProvider(base_url="http://lan:8000", model_name="gemma-4-31b-it-nvfp4")
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
     p._client = _FakeClient(  # type: ignore[assignment]
         _FakeSSEResponse(503, [], body=b'{"error":"server overloaded"}'),
         captured,
@@ -273,7 +273,7 @@ async def test_vllm_provider_tolerates_empty_delta_chunks():
         _sse('{"choices":[]}'),
         "data: [DONE]",
     ]
-    p = VLLMProvider(base_url="http://lan:8000", model_name="gemma-4-31b-it-nvfp4")
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
     p._client = _FakeClient(_FakeSSEResponse(200, lines), captured)  # type: ignore[assignment]
 
     chunks: list[str] = []
@@ -292,7 +292,7 @@ async def test_vllm_provider_sends_bearer_when_api_key_set():
     bearer header on every outbound request."""
     p = VLLMProvider(
         base_url="http://lan:8000",
-        model_name="gemma-4-31b-it-nvfp4",
+        model_name="ami-llm",
         api_key="topsecret",
     )
     try:
@@ -304,7 +304,7 @@ async def test_vllm_provider_sends_bearer_when_api_key_set():
 
 @pytest.mark.asyncio
 async def test_vllm_provider_omits_bearer_without_api_key():
-    p = VLLMProvider(base_url="http://lan:8000", model_name="gemma-4-31b-it-nvfp4")
+    p = VLLMProvider(base_url="http://lan:8000", model_name="ami-llm")
     try:
         assert "Authorization" not in p._client.headers
     finally:

@@ -30,9 +30,9 @@ class Settings(BaseSettings):
     # On-prem vLLM (OpenAI-compatible). When `vllm_base_url` is set the
     # gateway routes every call to it instead of Anthropic/mock.
     # Example: VLLM_BASE_URL=http://192.168.20.74:8000
-    #          VLLM_MODEL=gemma-4-31b-it-nvfp4
+    #          VLLM_MODEL=ami-llm
     vllm_base_url: str = ""
-    vllm_model: str = "gemma-4-31b-it-nvfp4"
+    vllm_model: str = "ami-llm"
     vllm_api_key: str = ""  # optional bearer auth — leave empty for unauth LAN servers
 
     # Email / SMS / push

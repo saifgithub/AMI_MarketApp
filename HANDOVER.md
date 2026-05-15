@@ -61,7 +61,7 @@ Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_pr
 
 ### LLM gateway
 
-- **vLLM** at `http://192.168.20.74:8000` serving `gemma-4-31b-it-nvfp4` (Gemma 4 31B, NVFP4 quantized, 262k context). Gateway preference: `vllm > anthropic > mock`.
+- **vLLM** at `http://192.168.20.74:8000` serving `ami-llm` (Gemma 4 31B, NVFP4 quantized, 262k context — rebranded from `gemma-4-31b-it-nvfp4`). Gateway preference: `vllm > anthropic > mock`.
 - Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`.
 
 ### Market data

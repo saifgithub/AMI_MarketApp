@@ -77,7 +77,7 @@ services:
       # set VLLM_BASE_URL=http://192.168.20.74:8000 in .env so the
       # compose backend reaches the on-prem LLM server.
       VLLM_BASE_URL: ${VLLM_BASE_URL:-}
-      VLLM_MODEL: ${VLLM_MODEL:-gemma-4-31b-it-nvfp4}
+      VLLM_MODEL: ${VLLM_MODEL:-ami-llm}
       VLLM_API_KEY: ${VLLM_API_KEY:-}
       # Yahoo quotes vs the mock walk. Set USE_REAL_MARKET_DATA=true in
       # .env to flip on real prices (with a mock-walk fallback). The
