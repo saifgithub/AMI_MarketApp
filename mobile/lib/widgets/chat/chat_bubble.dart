@@ -1,7 +1,7 @@
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 enum ChatAuthor { user, concierge, agent }
 

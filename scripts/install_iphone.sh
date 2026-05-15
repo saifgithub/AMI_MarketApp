@@ -41,33 +41,67 @@ done
 
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
 
-echo "▶ Target device: ${DEVICE_ID}"
-echo "▶ Alpha URL:     ${AMI_API_URL_ALPHA}"
-
 cd "$MOBILE_DIR"
 
-# Confirm the device is actually connected before spending 30s on a build
-# that lands nowhere.
-if ! flutter devices 2>/dev/null | grep -q "${DEVICE_ID}"; then
-  echo "✗ device ${DEVICE_ID} is not connected."
+# Resolve target device via `flutter devices --machine` (JSON) instead of
+# the text-mode listing, which triggers a LAN-wide wireless-discovery
+# probe and prints loud unrelated errors for every paired-but-offline
+# iPhone on the account (e.g. "Browsing on the local area network for
+# Saiful's iPhone 17 … (code -27)"). The JSON variant skips that probe
+# and just lists devices that are reachable right now.
+TARGET_NAME=$(flutter devices --machine 2>/dev/null \
+  | python3 -c "
+import sys, json
+try:
+    devs = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+for d in devs:
+    if d.get('id') == '${DEVICE_ID}':
+        print(d.get('name', ''))
+        break
+")
+
+if [ -z "$TARGET_NAME" ]; then
+  echo "✗ device ${DEVICE_ID} is not connected right now."
   echo ""
-  echo "Connected devices:"
-  flutter devices 2>/dev/null | sed 's/^/  /'
+  echo "Reachable devices:"
+  flutter devices --machine 2>/dev/null \
+    | python3 -c "
+import sys, json
+try:
+    devs = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+for d in devs:
+    print(f\"  {d.get('name', '?'):<28} {d.get('id', '?')}\")
+"
   echo ""
-  echo "If TESTING IPHONE 13 is asleep, wake it; wireless devices need the"
+  echo "If the target device is asleep, wake it; wireless devices need the"
   echo "Mac and iPhone on the same LAN and the phone unlocked at least once."
   exit 1
 fi
 
+echo "▶ Target device : ${TARGET_NAME} (${DEVICE_ID})"
+echo "▶ Alpha URL     : ${AMI_API_URL_ALPHA}"
+
+# Drop the LAN-discovery noise from build + install. We've already
+# resolved the target by UDID; Flutter's complaints about other
+# paired-but-offline devices are not actionable here.
+_quiet() {
+  grep -vE "Browsing on the local area network|opted into Developer Mode to connect wirelessly|\(code -27\)" || true
+}
+
 echo "▶ flutter build ios --release"
 flutter build ios --release \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
-  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}"
+  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  2> >(_quiet >&2)
 
-echo "▶ flutter install -d ${DEVICE_ID}"
-flutter install -d "${DEVICE_ID}"
+echo "▶ flutter install -d ${DEVICE_ID} (${TARGET_NAME})"
+flutter install -d "${DEVICE_ID}" 2> >(_quiet >&2)
 
 echo ""
-echo "✓ installed. Launch the app from the home screen on the device."
+echo "✓ installed on ${TARGET_NAME}. Launch the app from the home screen."
 echo "  (Auto-launch via CLI requires the macOS Automation permission for"
 echo "   Flutter to control Xcode — see notes in HANDOVER.md.)"
