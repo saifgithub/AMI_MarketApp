@@ -368,6 +368,70 @@ def test_room_agent_timeout_falls_back_to_scripted():
     assert verdicts[0].verdict is not None
 
 
+def test_room_cancelled_mid_run_persists_partial_transcript():
+    """Regression for bug 0bd88533: disconnected Convene rooms must show
+    the conversation that happened.
+
+    When the SSE consumer in room.py is cancelled (client backgrounds the
+    app / connection drops), `async for ev in run_iter` tears the iterator
+    down via aclose(), sending GeneratorExit into the runner generator at
+    its current yield point. The runner used to let it propagate uncaught
+    — the generator died before reaching the bottom `_persist_run`, so the
+    DB row stayed at status=running with an empty transcript. The detached
+    drain task in room.py then finalised a useless journal entry from that
+    stale snapshot.
+
+    The fix catches the cancellation, persists the partial transcript with
+    status=CANCELLED, then re-raises. This test simulates the disconnect
+    by calling `gen.aclose()` after a few agents have spoken and verifies
+    the persisted state contains the conversation that actually happened.
+    """
+    runner = RoomRunner()
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    user_id = uuid4()
+
+    async def run_until_two_agents_then_close():
+        gen = runner.run(
+            user_id=user_id,
+            ticker="AAPL",
+            mandate=mandate,
+            char_delay_min=0.0,
+            char_delay_max=0.0,
+        )
+        agents_done = 0
+        try:
+            async for ev in gen:
+                if ev.kind == "agent_done":
+                    agents_done += 1
+                    if agents_done >= 2:
+                        break
+        finally:
+            await gen.aclose()
+        return agents_done
+
+    agents_done = asyncio.run(run_until_two_agents_then_close())
+    assert agents_done == 2  # sanity: we consumed past two agents
+
+    runs = runner.list_runs_for_user(user_id, limit=10)
+    assert len(runs) == 1
+    run = runs[0]
+    assert run.status == RoomStatus.CANCELLED.value
+    assert run.finished_at is not None
+    assert run.duration_ms is not None
+    assert run.error_message and "disconnect" in run.error_message
+    # Partial transcript must be persisted — the agents that spoke before
+    # the disconnect, not an empty list.
+    assert len(run.transcript) >= 2
+    # And the journal entry built from this snapshot now carries the
+    # conversation through to the user.
+    from app.api.room import _build_journal_entry
+    entry = _build_journal_entry(run, run.user_id)
+    assert "AAPL" in entry.title
+    assert "cancelled" in entry.title.lower()
+    assert f"{len(run.transcript)} of 12" in entry.summary
+    assert len(entry.payload["transcript"]) == len(run.transcript)
+
+
 # ── Journal entry builder ─────────────────────────────────────────────────
 
 

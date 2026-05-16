@@ -633,6 +633,29 @@ class RoomRunner:
                 ticker=ticker,
                 action=str(run.verdict.action if run.verdict else "n/a"),
             )
+        except (asyncio.CancelledError, GeneratorExit):
+            # Client disconnect: the SSE consumer's `async for ev in run_iter`
+            # tears the iterator down via aclose(), sending GeneratorExit here.
+            # The previous code let it propagate uncaught — the generator died
+            # before reaching the bottom-of-function `_persist_run`, leaving
+            # the DB row at status=running with an empty transcript. The
+            # detached drain task in room.py would then finalise a journal
+            # entry from that stale snapshot. Catch here, persist whatever
+            # transcript was collected, then re-raise.
+            run.status = RoomStatus.CANCELLED
+            run.error_message = "client disconnected mid-run"
+            run.finished_at = datetime.now(timezone.utc)
+            run.duration_ms = int(
+                (run.finished_at - (run.started_at or run.finished_at)).total_seconds() * 1000
+            )
+            _persist_run(run)
+            logger.info(
+                "room_cancelled",
+                run_id=str(run_id),
+                ticker=ticker,
+                agents_completed=len(run.transcript),
+            )
+            raise
         except Exception as e:  # pragma: no cover
             run.status = RoomStatus.FAILED
             run.error_message = str(e)[:500]
