@@ -109,7 +109,7 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(key: _headerKey),
+            _Header(key: _headerKey, showBack: Navigator.of(context).canPop()),
             Expanded(child: _body(context, state)),
           ],
         ),
@@ -229,19 +229,22 @@ class _HexCluster extends StatelessWidget {
       builder: (context, constraints) {
         final hexW = constraints.maxWidth / 3;
         final hexH = hexW / flatTopRegularHexagonAspectRatio;
-        final clusterH = 2 * hexH;
+        // Three rows: top (y=0), middle (y=hexH), bottom (y=2*hexH).
+        // Diagonal neighbour offset for flat-top hex tiling: (hexW/2, hexH) —
+        // using hexH/2 previously caused bounding-box overlap and visual glitching.
+        final clusterH = 3 * hexH;
 
         // Cluster top-left origins for each hex widget (Positioned left/top).
-        // Centre of the 3W × 2H container is at (1.5W, 1H).
+        // Centre of the 3W × 3H container is at (1.5W, 1.5H).
         // FON (foundations) = centre; others are neighbour offsets from it.
         final origins = {
-          'foundations': Offset(hexW, hexH / 2),             // (1.5W - 0.5W, 1H - 0.5H)
-          'fundamentals_analysis': Offset(0, hexH / 2),      // left
-          'technical_analysis': Offset(hexW / 2, 0),         // upper-left
-          'news_macro': Offset(hexW * 1.5, 0),               // upper-right
-          'sentiment_behaviour': Offset(hexW * 2, hexH / 2), // right
-          'risk_portfolio': Offset(hexW / 2, hexH),          // lower-left
-          'edge_process': Offset(hexW * 1.5, hexH),          // lower-right
+          'foundations': Offset(hexW, hexH),                  // centre row, centre col
+          'fundamentals_analysis': Offset(0, hexH),           // centre row, left
+          'technical_analysis': Offset(hexW / 2, 0),          // top row, left
+          'news_macro': Offset(hexW * 1.5, 0),                // top row, right
+          'sentiment_behaviour': Offset(hexW * 2, hexH),      // centre row, right
+          'risk_portfolio': Offset(hexW / 2, hexH * 2),       // bottom row, left
+          'edge_process': Offset(hexW * 1.5, hexH * 2),       // bottom row, right
         };
 
         final trackMap = {for (final t in tracks) t.track: t};
@@ -279,7 +282,9 @@ class _HexCluster extends StatelessWidget {
 // ─── chrome ──────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header({super.key});
+  const _Header({super.key, this.showBack = false});
+
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -292,6 +297,14 @@ class _Header extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (showBack) ...[
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: const Icon(Icons.arrow_back_ios_new,
+                  size: 18, color: AmiColors.textMed),
+            ),
+            const SizedBox(width: AmiSpacing.m),
+          ],
           Text(AppLocalizations.of(context).lessonsHeading,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexGreen)),
         ],

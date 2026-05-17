@@ -157,8 +157,17 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
                 ),
               ),
             ),
-            const SizedBox(height: AmiSpacing.m),
-            Text('Report a bug', style: AmiTypography.h4),
+            const SizedBox(height: AmiSpacing.s),
+            Row(
+              children: [
+                Expanded(child: Text('Report a bug', style: AmiTypography.h4)),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: const Icon(Icons.close, size: 20,
+                      color: AmiColors.textLow),
+                ),
+              ],
+            ),
             const SizedBox(height: AmiSpacing.xs),
             Text(
               'v${ref.watch(appVersionProvider).valueOrNull ?? '…'} · ${widget.route}',
