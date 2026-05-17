@@ -3,10 +3,22 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://www.agenticmarketintel.com/</loc>
-    <lastmod>2026-05-13</lastmod>
+    <lastmod>2026-05-18</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://www.agenticmarketintel.com/"/>
     <xhtml:link rel="alternate" hreflang="ms" href="https://www.agenticmarketintel.com/ms/"/>
+  </url>
+  <url>
+    <loc>https://www.agenticmarketintel.com/privacy/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.agenticmarketintel.com/terms/</loc>
+    <lastmod>2026-05-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>
