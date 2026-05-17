@@ -141,6 +141,9 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
       padding: EdgeInsets.fromLTRB(AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.m + bottom),
       child: Form(
         key: _formKey,
+        // SingleChildScrollView so the photo + submit buttons stay reachable
+        // when the keyboard is open and pushes the form taller than the sheet.
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,6 +261,7 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );

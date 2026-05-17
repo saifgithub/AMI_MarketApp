@@ -55,7 +55,8 @@ List<TargetFocus> buildLessonsTargets({
       ],
     ),
 
-    // Step 3 — Hex cluster
+    // Step 3 — Hex cluster. Cluster sits in the upper-middle of the screen,
+    // so position the tooltip BELOW it (the area beneath is empty space).
     TargetFocus(
       identify: 'lessons_hex_cluster',
       keyTarget: hexClusterKey,
@@ -64,7 +65,7 @@ List<TargetFocus> buildLessonsTargets({
       paddingFocus: 12,
       contents: [
         TargetContent(
-          align: ContentAlign.top,
+          align: ContentAlign.bottom,
           builder: (ctx, ctrl) => TourCard(
             title: l.tourLessons3Title,
             body: l.tourLessons3Body,

@@ -55,16 +55,19 @@ List<TargetFocus> buildJournalTargets({
       ],
     ),
 
-    // Step 3 — Entry list area
+    // Step 3 — Entry list area. The target fills most of the screen, so
+    // ContentAlign.top would push the tooltip off the top edge. Anchor the
+    // tooltip with custom positioning instead, near the top of the list.
     TargetFocus(
       identify: 'journal_list',
       keyTarget: listKey,
       shape: ShapeLightFocus.RRect,
       radius: 8,
-      paddingFocus: 8,
+      paddingFocus: 4,
       contents: [
         TargetContent(
-          align: ContentAlign.top,
+          align: ContentAlign.custom,
+          customPosition: CustomTargetContentPosition(top: 180),
           builder: (ctx, ctrl) => TourCard(
             title: l.tourJournal3Title,
             body: l.tourJournal3Body,

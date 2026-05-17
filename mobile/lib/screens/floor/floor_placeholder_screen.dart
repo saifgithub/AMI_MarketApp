@@ -92,16 +92,19 @@ class _FloorPlaceholderScreenState
       pulseEnable: false,
       beforeFocus: (target) async {
         // Ensure the target is in view before the spotlight focuses on it.
-        // Floor is a SingleChildScrollView — Convene + DailyChallenge sit
-        // below the initial fold without this.
+        // If the tooltip is positioned ABOVE the target, scroll the target
+        // toward the bottom of the viewport so there's room above for the
+        // tooltip (otherwise the tooltip ends up off-screen).
         final ctx = target.keyTarget?.currentContext;
-        if (ctx != null) {
-          await Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 350),
-            alignment: 0.5,
-          );
-        }
+        if (ctx == null) return;
+        final contents = target.contents ?? const [];
+        final tooltipAbove = contents.isNotEmpty &&
+            contents.first.align == ContentAlign.top;
+        await Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 350),
+          alignment: tooltipAbove ? 0.85 : 0.15,
+        );
       },
       onFinish: () {
         if (!mounted) return;

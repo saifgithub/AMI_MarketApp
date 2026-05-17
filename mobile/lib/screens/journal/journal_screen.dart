@@ -68,13 +68,15 @@ class _JournalScreenState extends ConsumerState<JournalScreen> {
       pulseEnable: false,
       beforeFocus: (target) async {
         final ctx = target.keyTarget?.currentContext;
-        if (ctx != null) {
-          await Scrollable.ensureVisible(
-            ctx,
-            duration: const Duration(milliseconds: 350),
-            alignment: 0.5,
-          );
-        }
+        if (ctx == null) return;
+        final contents = target.contents ?? const [];
+        final tooltipAbove = contents.isNotEmpty &&
+            contents.first.align == ContentAlign.top;
+        await Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 350),
+          alignment: tooltipAbove ? 0.85 : 0.15,
+        );
       },
       onFinish: () {
         if (!mounted) return;
