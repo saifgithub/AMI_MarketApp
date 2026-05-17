@@ -202,15 +202,21 @@ class _SlimProgressBar extends StatelessWidget {
 
 /// 7-hex honeycomb: foundations (centre) + 6 surrounding tracks.
 ///
-/// Flat-top honeycomb neighbor offsets from centre (cx, cy):
-///   left/right:      (±hexW, 0)
-///   upper/lower diag: (±hexW/2, ∓hexH/2)
+/// Flat-top hex tiling has true edge-sharing neighbours at six positions —
+/// N, NE, SE, S, SW, NW (H3-style). Centre-to-neighbour offsets:
+///   N/S:  (0, ∓hexH)            // share full flat top/bottom edge
+///   NE/SE/SW/NW: (±¾hexW, ±½hexH) // share diagonal edges
 ///
-/// Grid (3 columns × 2 rows, total container 3W × 2H):
+/// Clock layout (all 6 surroundings touch FON edge-to-edge):
 ///
-///   [TA]  [NM]        top-left / top-right of centre
-/// [FA] [FON] [SB]     left / centre / right
-///   [RP]  [EP]        bottom-left / bottom-right of centre
+///         [TA]            ← 12 (N)
+///     [FA]    [NM]        ← 10 (NW), 2 (NE)
+///         [FON]           ← centre
+///     [RP]    [SB]        ← 8  (SW), 4 (SE)
+///         [EP]            ← 6  (S)
+///
+/// Cluster bounding box: 2.5*hexW × 3*hexH. To make it fill the available
+/// width, hexW = ⅖ × maxWidth.
 class _HexCluster extends StatelessWidget {
   const _HexCluster({
     super.key,
@@ -227,24 +233,22 @@ class _HexCluster extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final hexW = constraints.maxWidth / 3;
+        // Cluster width = 2.5 * hexW → hexW = maxWidth * 2/5.
+        final hexW = constraints.maxWidth * 2 / 5;
         final hexH = hexW / flatTopRegularHexagonAspectRatio;
-        // Three rows: top (y=0), middle (y=hexH), bottom (y=2*hexH).
-        // Diagonal neighbour offset for flat-top hex tiling: (hexW/2, hexH) —
-        // using hexH/2 previously caused bounding-box overlap and visual glitching.
         final clusterH = 3 * hexH;
 
-        // Cluster top-left origins for each hex widget (Positioned left/top).
-        // Centre of the 3W × 3H container is at (1.5W, 1.5H).
-        // FON (foundations) = centre; others are neighbour offsets from it.
+        // Each Positioned uses (left, top) of the hex bounding box.
+        // Centre FON at (¾hexW, hexH); the cluster's centre point is
+        // (1¼hexW, 1½hexH) inside a 2½hexW × 3hexH container.
         final origins = {
-          'foundations': Offset(hexW, hexH),                  // centre row, centre col
-          'fundamentals_analysis': Offset(0, hexH),           // centre row, left
-          'technical_analysis': Offset(hexW / 2, 0),          // top row, left
-          'news_macro': Offset(hexW * 1.5, 0),                // top row, right
-          'sentiment_behaviour': Offset(hexW * 2, hexH),      // centre row, right
-          'risk_portfolio': Offset(hexW / 2, hexH * 2),       // bottom row, left
-          'edge_process': Offset(hexW * 1.5, hexH * 2),       // bottom row, right
+          'technical_analysis':     Offset(hexW * 0.75, 0),            // N
+          'news_macro':             Offset(hexW * 1.5,  hexH * 0.5),   // NE
+          'sentiment_behaviour':    Offset(hexW * 1.5,  hexH * 1.5),   // SE
+          'edge_process':           Offset(hexW * 0.75, hexH * 2),     // S
+          'risk_portfolio':         Offset(0,           hexH * 1.5),   // SW
+          'fundamentals_analysis':  Offset(0,           hexH * 0.5),   // NW
+          'foundations':            Offset(hexW * 0.75, hexH),         // centre
         };
 
         final trackMap = {for (final t in tracks) t.track: t};
