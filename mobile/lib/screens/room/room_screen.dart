@@ -11,6 +11,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/room_providers.dart';
+import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
@@ -321,7 +322,7 @@ class _ReconnectingBanner extends StatelessWidget {
 }
 
 
-class _VerdictCard extends StatelessWidget {
+class _VerdictCard extends ConsumerWidget {
   const _VerdictCard({
     required this.verdict,
     required this.ticker,
@@ -332,10 +333,20 @@ class _VerdictCard extends StatelessWidget {
   final String? runId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isApprove = verdict.isApprove;
     final accent = isApprove ? AmiColors.hexGreen : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);
+    // Detect a sim trade already placed against this verdict (bug 9b3a6c2f).
+    // Watching sim trades lets the verdict card flip the Buy button into a
+    // "✓ Trade placed" pill the moment the trade lands — eliminates the
+    // "did anything happen?" confusion that drove repeat-tap duplicates.
+    final trades = ref.watch(simNotifierProvider).trades;
+    final existingTrade = runId == null
+        ? null
+        : trades
+            .where((t) => t.verdictRef == runId)
+            .firstOrNull;
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(
@@ -427,27 +438,61 @@ class _VerdictCard extends StatelessWidget {
           ),
           if (isApprove) ...[
             const SizedBox(height: AmiSpacing.m),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AmiColors.hexCyan,
-                  foregroundColor: AmiColors.slate900,
-                  padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+            if (existingTrade != null)
+              // Trade already placed for this verdict — replace the Buy CTA
+              // with a clear confirmation pill so the user doesn't second-
+              // guess whether the trade landed (bug 9b3a6c2f).
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AmiSpacing.s + 4,
+                  horizontal: AmiSpacing.m,
                 ),
-                icon: const Icon(Icons.add_circle_outline),
-                label: Text(l.roomOpenTradeTicket),
-                onPressed: () => TradeTicketSheet.show(
-                  context,
-                  prefill: verdict,
-                  verdictRef: runId,
-                  tickerPrefill: ticker,
+                decoration: BoxDecoration(
+                  color: AmiColors.hexGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  border: Border.all(color: AmiColors.hexGreen, width: 1.5),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.check_circle, color: AmiColors.hexGreen, size: 20),
+                    const SizedBox(width: AmiSpacing.s),
+                    Text(
+                      '${existingTrade.side.toUpperCase()} ${existingTrade.quantity.toStringAsFixed(0)} '
+                      '${existingTrade.ticker} @ \$${existingTrade.entryPrice.toStringAsFixed(2)}',
+                      style: AmiTypography.labelMono.copyWith(
+                        color: AmiColors.hexGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AmiColors.hexCyan,
+                    foregroundColor: AmiColors.slate900,
+                    padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: Text(l.roomOpenTradeTicket),
+                  onPressed: () => TradeTicketSheet.show(
+                    context,
+                    prefill: verdict,
+                    verdictRef: runId,
+                    tickerPrefill: ticker,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(height: AmiSpacing.xs),
             Text(
-              l.roomTradeTicketCaption,
+              existingTrade != null
+                  ? 'Trade placed · view it in the Journal'
+                  : l.roomTradeTicketCaption,
               style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
               textAlign: TextAlign.center,
             ),

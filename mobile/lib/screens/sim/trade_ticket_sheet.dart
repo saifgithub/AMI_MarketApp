@@ -107,18 +107,38 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     );
     if (!mounted) return;
     if (result != null && result.ok) {
+      // Strong success feedback (bug 9b3a6c2f): the previous slate800
+      // snackbar was indistinguishable from the dark theme, leaving users
+      // unsure whether the trade actually placed and tapping Buy again.
+      // Now: haptic tick, green background, large checkmark, longer
+      // duration so the success is unambiguous.
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            AppLocalizations.of(context).tradeTicketFilled(
-              result.trade!.side.toUpperCase(),
-              result.trade!.quantity.toStringAsFixed(0),
-              result.trade!.ticker,
-              result.trade!.entryPrice.toStringAsFixed(2),
-            ),
+          duration: const Duration(seconds: 5),
+          backgroundColor: AmiColors.hexGreen,
+          behavior: SnackBarBehavior.floating,
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: AmiColors.slate900, size: 24),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context).tradeTicketFilled(
+                    result.trade!.side.toUpperCase(),
+                    result.trade!.quantity.toStringAsFixed(0),
+                    result.trade!.ticker,
+                    result.trade!.entryPrice.toStringAsFixed(2),
+                  ),
+                  style: const TextStyle(
+                    color: AmiColors.slate900,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
-          backgroundColor: AmiColors.slate800,
         ),
       );
     }
