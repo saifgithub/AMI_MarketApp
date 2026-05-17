@@ -166,8 +166,11 @@ async def stream_room(
                     await asyncio.sleep(2 ** attempt)  # 1 s, then 2 s
 
     # start_run() pre-allocates run_id, creates the event queue, and kicks
-    # off the background task. Dedup: if this user already has a running run
-    # for this ticker, returns the existing run_id instead.
+    # off the background task. Dedup tiers (in start_run):
+    #   1. attached to in-flight run → events stream from current position
+    #   2. attached to recently completed run → no events to stream; we
+    #      replay the persisted transcript + verdict below so the client
+    #      sees a full state instead of "no verdict" on the empty stream.
     run_id = await runner.start_run(
         user_id=req.user_id,
         ticker=ticker,
@@ -176,40 +179,66 @@ async def stream_room(
         current_drawdown_pct=req.current_drawdown_pct,
         on_complete=_finalise_to_journal,
     )
+    cached = not runner.is_active(run_id)
 
     async def event_stream():
-        async for ev in runner.subscribe(run_id):
-            if ev.kind == "started":
-                payload = json.dumps({"run_id": str(ev.run_id)})
-                yield f"event: started\ndata: {payload}\n\n"
-            elif ev.kind == "phase":
-                payload = json.dumps({"label": ev.phase})
-                yield f"event: phase\ndata: {payload}\n\n"
-            elif ev.kind == "agent_token":
-                safe = (ev.text or "").replace("\\", "\\\\").replace("\n", "\\n")
-                payload = json.dumps({
-                    "agent_id": ev.agent_id.value if ev.agent_id else None,
-                    "text": safe,
-                })
-                yield f"event: agent_token\ndata: {payload}\n\n"
-            elif ev.kind == "agent_done":
-                payload = json.dumps({
-                    "agent_id": ev.agent_id.value if ev.agent_id else None,
-                })
-                yield f"event: agent_done\ndata: {payload}\n\n"
-            elif ev.kind == "verdict":
-                if ev.verdict is not None:
-                    yield f"event: verdict\ndata: {ev.verdict.model_dump_json()}\n\n"
-            elif ev.kind == "error":
-                yield f"event: error\ndata: {ev.text or 'unknown'}\n\n"
+        if cached:
+            # Dedup hit on a completed run — replay the persisted snapshot
+            # as a compressed SSE stream so the client renders the prior
+            # verdict instead of falling through to "Room ended without a
+            # verdict." Each agent's full content lands in one agent_token
+            # event (the client concatenates into transcript[agent_id]).
+            persisted = runner.get_run(run_id)
+            if persisted is not None:
+                yield f"event: started\ndata: {json.dumps({'run_id': str(run_id)})}\n\n"
+                for msg in persisted.transcript:
+                    aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
+                    safe = (msg.content or "").replace("\\", "\\\\").replace("\n", "\\n")
+                    yield f"event: agent_token\ndata: {json.dumps({'agent_id': aid, 'text': safe})}\n\n"
+                    yield f"event: agent_done\ndata: {json.dumps({'agent_id': aid})}\n\n"
+                if persisted.verdict is not None:
+                    yield f"event: phase\ndata: {json.dumps({'label': 'VERDICT'})}\n\n"
+                    yield f"event: verdict\ndata: {persisted.verdict.model_dump_json()}\n\n"
+        else:
+            async for ev in runner.subscribe(run_id):
+                if ev.kind == "started":
+                    payload = json.dumps({"run_id": str(ev.run_id)})
+                    yield f"event: started\ndata: {payload}\n\n"
+                elif ev.kind == "phase":
+                    payload = json.dumps({"label": ev.phase})
+                    yield f"event: phase\ndata: {payload}\n\n"
+                elif ev.kind == "agent_token":
+                    safe = (ev.text or "").replace("\\", "\\\\").replace("\n", "\\n")
+                    payload = json.dumps({
+                        "agent_id": ev.agent_id.value if ev.agent_id else None,
+                        "text": safe,
+                    })
+                    yield f"event: agent_token\ndata: {payload}\n\n"
+                elif ev.kind == "agent_done":
+                    payload = json.dumps({
+                        "agent_id": ev.agent_id.value if ev.agent_id else None,
+                    })
+                    yield f"event: agent_done\ndata: {payload}\n\n"
+                elif ev.kind == "verdict":
+                    if ev.verdict is not None:
+                        yield f"event: verdict\ndata: {ev.verdict.model_dump_json()}\n\n"
+                elif ev.kind == "error":
+                    yield f"event: error\ndata: {ev.text or 'unknown'}\n\n"
         # on_complete callback (journal + push stub) fires from the background
         # task's finally block, not here — so it runs even on disconnect.
+        # For cached replays there's no _pump task, hence no on_complete; the
+        # original journal entry from the first run is the canonical record.
         yield f"event: done\ndata: {json.dumps({'run_id': str(run_id)})}\n\n"
 
+    headers = {"X-Room-Run-Id": str(run_id)}
+    if cached:
+        # Lets the client UI surface "cached analysis from earlier today"
+        # if it wants to differentiate a dedup hit from a fresh run.
+        headers["X-Room-Cached"] = "true"
     return StreamingResponse(
         event_stream(),
         media_type="text/event-stream",
-        headers={"X-Room-Run-Id": str(run_id)},
+        headers=headers,
     )
 
 

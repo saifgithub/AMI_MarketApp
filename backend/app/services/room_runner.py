@@ -644,6 +644,14 @@ class RoomRunner:
         asyncio.create_task(_pump())
         return run_id
 
+    def is_active(self, run_id: UUID) -> bool:
+        """True if the run has an active event queue (fresh run or dedup-of-running).
+        False means the run_id was returned by completed-run dedup (or the run
+        finished between start_run and the check) — the caller should replay
+        the persisted snapshot rather than wait for events on subscribe().
+        """
+        return run_id in self._active_queues
+
     async def subscribe(self, run_id: UUID) -> AsyncIterator[RoomEvent]:
         """Yield events from the queue for an in-progress run.
 

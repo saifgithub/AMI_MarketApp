@@ -664,6 +664,34 @@ def test_start_run_deduplicates_recently_completed_run():
     asyncio.run(_run())
 
 
+def test_is_active_false_after_completed_dedup():
+    """is_active() distinguishes fresh/in-flight from cached-dedup so the
+    API layer can replay the persisted run instead of streaming an empty
+    queue (which would surface as 'Room ended without a verdict' on the client)."""
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = uuid4()
+        run_id_1 = await runner.start_run(
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        async for _ in runner.subscribe(run_id_1):
+            pass
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        assert runner.is_active(run_id_1) is False  # completed, queue cleaned up
+        # Second submit — cached dedup hit
+        run_id_2 = await runner.start_run(
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        assert run_id_2 == run_id_1
+        assert runner.is_active(run_id_2) is False  # no new _pump task
+    asyncio.run(_run())
+
+
 def test_completed_dedup_window_zero_disables_dedup(monkeypatch):
     """Setting room_dedup_completed_hours=0 disables completed-run dedup so a
     second submit starts a fresh run. Lets ops dial the window off entirely."""
