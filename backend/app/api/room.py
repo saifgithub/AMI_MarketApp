@@ -120,118 +120,97 @@ async def stream_room(
     req: RoomStartRequest,
     runner: RoomRunner = Depends(get_room_runner),
 ) -> StreamingResponse:
-    """Run a Room session and stream events. Final 'done' event includes the
-    run_id; clients then GET /v1/room/{id} for the persisted snapshot."""
+    """Run a Room session and stream events via SSE.
 
+    The run executes as a background task independent of the SSE connection —
+    a client disconnect (phone sleep, LTE handoff, Cloudflare timeout) does
+    NOT cancel the run. The run_id is returned in the X-Room-Run-Id response
+    header before any SSE body arrives, so the client can store it and poll
+    GET /v1/room/{run_id} on reconnect.
+
+    Journal write and push notification hook fire via on_complete, which the
+    background task calls on terminal state regardless of SSE connectivity.
+    """
     mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
     ticker = req.ticker.upper().strip()
     if not ticker:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "ticker required")
 
-    # Single async generator from the runner — shared between the SSE
-    # consumer (this request) and the detached completion task (if the
-    # client disconnects mid-stream).
-    run_iter = runner.run(
-        user_id=req.user_id,
-        ticker=ticker,
-        mandate=mandate,
-        portfolio_value=req.portfolio_value,
-        current_drawdown_pct=req.current_drawdown_pct,
-    )
-
     async def _finalise_to_journal(run_id: UUID) -> None:
-        """Append the ROOM_RUN journal entry from the persisted snapshot.
-
-        Called once the runner has terminated — either through normal
-        completion (in event_stream) or after disconnect-recovery (in
-        _drain_to_completion).
-        """
+        """Write the Decision Journal entry. Retries 3× with exponential backoff
+        so a transient DB hiccup doesn't silently drop the entry."""
         if run_id is None:
             return
         run = runner.get_run(run_id)
         if run is None:
             return
-        try:
-            get_journal_store().append(_build_journal_entry(run, req.user_id))
-        except Exception as exc:
-            logger.warning(
-                "room_finalise_journal_failed",
-                run_id=str(run_id),
-                error=str(exc)[:200],
-            )
+        for attempt in range(3):
+            try:
+                get_journal_store().append(_build_journal_entry(run, req.user_id))
+                logger.info(
+                    "room_push_stub",
+                    run_id=str(run_id),
+                    user_id=str(req.user_id),
+                    action=run.verdict.action if run.verdict else "no_verdict",
+                    note="TODO B1: fire APNs push notification here",
+                )
+                return
+            except Exception as exc:
+                if attempt == 2:
+                    logger.error(
+                        "room_journal_all_retries_failed",
+                        run_id=str(run_id),
+                        error=str(exc)[:200],
+                    )
+                else:
+                    await asyncio.sleep(2 ** attempt)  # 1 s, then 2 s
 
-    async def _drain_to_completion(run_id: UUID | None) -> None:
-        """Keep pulling events from the runner so it persists the final
-        state to the room_runs table, even though no client is watching.
-
-        Triggered when the SSE generator is cancelled (client disconnect /
-        phone sleep). The runner's internal _persist_run + verdict
-        assembly happens during its async-generator execution, so we
-        just need someone to keep iterating.
-        """
-        try:
-            async for _ in run_iter:
-                pass  # events go to /dev/null
-        except Exception as e:
-            logger.warning("room_drain_failed", run_id=str(run_id), error=str(e)[:200])
-        else:
-            logger.info("room_drained_after_disconnect", run_id=str(run_id))
-        # Journal capture for the recovered completion.
-        if run_id is not None:
-            await _finalise_to_journal(run_id)
+    # start_run() pre-allocates run_id, creates the event queue, and kicks
+    # off the background task. Dedup: if this user already has a running run
+    # for this ticker, returns the existing run_id instead.
+    run_id = await runner.start_run(
+        user_id=req.user_id,
+        ticker=ticker,
+        mandate=mandate,
+        portfolio_value=req.portfolio_value,
+        current_drawdown_pct=req.current_drawdown_pct,
+        on_complete=_finalise_to_journal,
+    )
 
     async def event_stream():
-        run_id: UUID | None = None
-        disconnect_handed_off = False
-        try:
-            async for ev in run_iter:
-                run_id = ev.run_id or run_id
-                if ev.kind == "started":
-                    payload = json.dumps({"run_id": str(ev.run_id)})
-                    yield f"event: started\ndata: {payload}\n\n"
-                elif ev.kind == "phase":
-                    payload = json.dumps({"label": ev.phase})
-                    yield f"event: phase\ndata: {payload}\n\n"
-                elif ev.kind == "agent_token":
-                    safe = (ev.text or "").replace("\\", "\\\\").replace("\n", "\\n")
-                    payload = json.dumps({
-                        "agent_id": ev.agent_id.value if ev.agent_id else None,
-                        "text": safe,
-                    })
-                    yield f"event: agent_token\ndata: {payload}\n\n"
-                elif ev.kind == "agent_done":
-                    payload = json.dumps({
-                        "agent_id": ev.agent_id.value if ev.agent_id else None,
-                    })
-                    yield f"event: agent_done\ndata: {payload}\n\n"
-                elif ev.kind == "verdict":
-                    if ev.verdict is not None:
-                        yield (
-                            f"event: verdict\n"
-                            f"data: {ev.verdict.model_dump_json()}\n\n"
-                        )
-                elif ev.kind == "error":
-                    yield f"event: error\ndata: {ev.text or 'unknown'}\n\n"
-        except (asyncio.CancelledError, GeneratorExit):
-            # Client gone — hand the generator off to a detached task so
-            # the runner reaches its verdict + persists, and the user can
-            # come back later and fetch GET /v1/room/{run_id}.
-            asyncio.create_task(_drain_to_completion(run_id))
-            disconnect_handed_off = True
-            raise
-        except Exception as e:  # pragma: no cover
-            yield f"event: error\ndata: {str(e)[:300]}\n\n"
-        finally:
-            if not disconnect_handed_off:
-                # Normal completion path: journal + done event.
-                if run_id is not None:
-                    await _finalise_to_journal(run_id)
-                yield (
-                    f"event: done\n"
-                    f"data: {json.dumps({'run_id': str(run_id) if run_id else None})}\n\n"
-                )
+        async for ev in runner.subscribe(run_id):
+            if ev.kind == "started":
+                payload = json.dumps({"run_id": str(ev.run_id)})
+                yield f"event: started\ndata: {payload}\n\n"
+            elif ev.kind == "phase":
+                payload = json.dumps({"label": ev.phase})
+                yield f"event: phase\ndata: {payload}\n\n"
+            elif ev.kind == "agent_token":
+                safe = (ev.text or "").replace("\\", "\\\\").replace("\n", "\\n")
+                payload = json.dumps({
+                    "agent_id": ev.agent_id.value if ev.agent_id else None,
+                    "text": safe,
+                })
+                yield f"event: agent_token\ndata: {payload}\n\n"
+            elif ev.kind == "agent_done":
+                payload = json.dumps({
+                    "agent_id": ev.agent_id.value if ev.agent_id else None,
+                })
+                yield f"event: agent_done\ndata: {payload}\n\n"
+            elif ev.kind == "verdict":
+                if ev.verdict is not None:
+                    yield f"event: verdict\ndata: {ev.verdict.model_dump_json()}\n\n"
+            elif ev.kind == "error":
+                yield f"event: error\ndata: {ev.text or 'unknown'}\n\n"
+        # on_complete callback (journal + push stub) fires from the background
+        # task's finally block, not here — so it runs even on disconnect.
+        yield f"event: done\ndata: {json.dumps({'run_id': str(run_id)})}\n\n"
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream")
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"X-Room-Run-Id": str(run_id)},
+    )
 
 
 @router.get("/{run_id}", response_model=RoomRun)

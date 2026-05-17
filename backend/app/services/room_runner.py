@@ -33,9 +33,9 @@ from __future__ import annotations
 
 import asyncio
 import random
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -414,6 +414,23 @@ def _persist_run(run: RoomRun) -> None:
             row.duration_ms = run.duration_ms
 
 
+def _checkpoint_run(run: RoomRun) -> None:
+    """Incremental transcript snapshot after each agent completes.
+
+    Wrapped in try/except so a transient DB hiccup does not kill the run —
+    the final _persist_run() call at completion is still authoritative.
+    Narrows the data-loss window from "entire run" to "last one agent".
+    """
+    try:
+        _persist_run(run)
+    except Exception as exc:
+        logger.warning(
+            "room_checkpoint_failed",
+            run_id=str(run.id),
+            error=str(exc)[:200],
+        )
+
+
 class RoomRunner:
     """Orchestrates a Convene the Room session, streams events, persists runs."""
 
@@ -422,6 +439,15 @@ class RoomRunner:
         # Late-bound so tests can pass a fake gateway via constructor.
         # In production, get_room_runner() wires get_llm_gateway() once.
         self._llm: LLMGateway | None = llm
+        # Per-run event queues: keyed by run_id, alive while _pump() runs.
+        # SSE consumers read from these; background tasks write to them.
+        self._active_queues: dict[UUID, asyncio.Queue[RoomEvent | None]] = {}
+        # In-memory dedup index: (user_id, ticker) → run_id for runs that
+        # are scheduled or running. Populated before create_task; cleared in
+        # _pump finally. Avoids a race where the DB INSERT hasn't fired yet
+        # but a second request arrives for the same user+ticker.
+        self._active_by_key: dict[tuple[UUID, str], UUID] = {}
+        self._sweep_stuck_runs()
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
         with get_session() as s:
@@ -440,9 +466,155 @@ class RoomRunner:
             ).scalars().all()
             return [_row_to_room_run(r) for r in rows]
 
+    def _sweep_stuck_runs(self) -> None:
+        """On startup, mark room runs that were left RUNNING as FAILED.
+
+        A run left in status=running means the server was restarted (or the
+        process was killed) while the run was in progress. These rows will
+        never progress on their own; mark them failed so the client can
+        distinguish a dead run from an active one and choose to resubmit.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        try:
+            with get_session() as s:
+                rows = s.execute(
+                    select(RoomRunRow)
+                    .where(RoomRunRow.status == "running")
+                    .where(RoomRunRow.started_at < cutoff)
+                ).scalars().all()
+                for row in rows:
+                    row.status = "failed"
+                    row.error_message = "abandoned: server restarted while run was in progress"
+                if rows:
+                    logger.info("room_startup_sweep", abandoned=len(rows))
+        except Exception as exc:
+            logger.warning("room_startup_sweep_failed", error=str(exc)[:200])
+
+    def _find_active_run(self, user_id: UUID, ticker: str) -> UUID | None:
+        """Return the run_id of an in-progress run for this user+ticker (last 30 min).
+
+        Prevents double-billing when a mobile client retries the POST after a
+        connection drop — instead of starting a new run the SSE consumer
+        attaches to the one already in flight.
+        """
+        cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow)
+                .where(RoomRunRow.user_id == user_id)
+                .where(RoomRunRow.ticker == ticker)
+                .where(RoomRunRow.status == "running")
+                .where(RoomRunRow.started_at >= cutoff)
+                .order_by(RoomRunRow.triggered_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return row.id if row else None
+
+    async def start_run(
+        self,
+        *,
+        user_id: UUID,
+        ticker: str,
+        mandate: Mandate,
+        portfolio_value: float = 100_000.0,
+        current_drawdown_pct: float = 0.0,
+        char_delay_min: float = _CHAR_DELAY_MIN,
+        char_delay_max: float = _CHAR_DELAY_MAX,
+        agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+        on_complete: Callable[[UUID], Awaitable[None]] | None = None,
+    ) -> UUID:
+        """Start a room run as a detached background task. Returns run_id immediately.
+
+        The run executes in a background asyncio.Task independent of the SSE
+        connection — a client disconnect does not cancel the run. Events flow
+        into a per-run asyncio.Queue; callers consume them via subscribe().
+
+        Deduplication: if the same user already has a RUNNING run for this
+        ticker (within the last 30 min), attach to it and return its run_id
+        instead of starting a new one. This prevents double-billing on mobile
+        retries after a connection drop.
+
+        on_complete is called once the run reaches a terminal state (completed,
+        failed, or cancelled). It fires even when the SSE consumer is gone, so
+        journal writes and push notification hooks happen regardless of whether
+        the client was still connected.
+        """
+        key = (user_id, ticker.upper())
+
+        # In-memory check first: catches the window between create_task and
+        # the first DB INSERT where _find_active_run would return nothing.
+        existing = self._active_by_key.get(key)
+        if existing is None:
+            # DB fallback: catches reconnects where the in-memory dict was
+            # cleared by a restart but the row is still status=running.
+            existing = self._find_active_run(user_id, ticker)
+        if existing is not None:
+            logger.info(
+                "room_dedup_attached",
+                run_id=str(existing),
+                user_id=str(user_id),
+                ticker=ticker,
+            )
+            return existing
+
+        run_id = uuid4()
+        q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+        self._active_queues[run_id] = q
+        self._active_by_key[key] = run_id  # register before task starts
+
+        async def _pump() -> None:
+            try:
+                async for ev in self.run(
+                    run_id=run_id,
+                    user_id=user_id,
+                    ticker=ticker,
+                    mandate=mandate,
+                    portfolio_value=portfolio_value,
+                    current_drawdown_pct=current_drawdown_pct,
+                    char_delay_min=char_delay_min,
+                    char_delay_max=char_delay_max,
+                    agent_timeout_s=agent_timeout_s,
+                ):
+                    await q.put(ev)
+            except Exception as exc:
+                await q.put(RoomEvent(kind="error", run_id=run_id, text=str(exc)[:300]))
+            finally:
+                await q.put(None)  # sentinel — unblocks any waiting subscribe() call
+                self._active_queues.pop(run_id, None)
+                self._active_by_key.pop(key, None)  # deregister dedup key
+                if on_complete is not None:
+                    try:
+                        await on_complete(run_id)
+                    except Exception as exc:
+                        logger.warning(
+                            "room_on_complete_failed",
+                            run_id=str(run_id),
+                            error=str(exc)[:200],
+                        )
+
+        asyncio.create_task(_pump())
+        return run_id
+
+    async def subscribe(self, run_id: UUID) -> AsyncIterator[RoomEvent]:
+        """Yield events from the queue for an in-progress run.
+
+        Returns immediately if the run is no longer in _active_queues (already
+        completed before the caller subscribed). In that case the caller should
+        GET /v1/room/{run_id} for the persisted snapshot.
+        """
+        q = self._active_queues.get(run_id)
+        if q is None:
+            return
+        while True:
+            ev = await q.get()
+            if ev is None:
+                return  # sentinel — background task finished
+            yield ev
+
     async def run(
         self,
         *,
+        run_id: UUID | None = None,
         user_id: UUID,
         ticker: str,
         mandate: Mandate,
@@ -459,8 +631,12 @@ class RoomRunner:
         The function returns an async generator. Callers consume it; the
         final event is a `verdict` with the assembled Verdict, after which
         the RoomRun is finalised and stored.
+
+        `run_id` is optional — if provided (by start_run), the caller
+        pre-allocated the ID so it can set up the event queue before the
+        generator starts. If omitted, a fresh UUID is generated here.
         """
-        run_id = uuid4()
+        run_id = run_id or uuid4()
         now = datetime.now(timezone.utc)
         plan = mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
@@ -776,6 +952,7 @@ async def _speak_one_agent(
         content=text,
         timestamp=datetime.now(timezone.utc),
     ))
+    _checkpoint_run(run)  # incremental snapshot — narrows data-loss window to ≤1 agent
     yield RoomEvent(kind="agent_done", run_id=run_id, agent_id=agent_id)
 
 

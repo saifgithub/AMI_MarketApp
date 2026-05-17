@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
@@ -502,3 +503,161 @@ def test_build_journal_entry_failed_run():
     assert "no verdict" not in entry.summary.lower()
     assert "0 of 12" in entry.summary
     assert "LLM upstream" in entry.summary
+
+
+# ── Resilience: background task + queue (start_run / subscribe) ───────────
+
+
+def test_start_run_delivers_verdict_via_subscribe():
+    """Happy path: start_run + subscribe yields all 12 agents and a verdict."""
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        run_id = await runner.start_run(
+            user_id=uuid4(),
+            ticker="MSFT",
+            mandate=mandate,
+            char_delay_min=0.0,
+            char_delay_max=0.0,
+        )
+        events = []
+        async for ev in runner.subscribe(run_id):
+            events.append(ev)
+        verdicts = [e for e in events if e.kind == "verdict"]
+        assert len(verdicts) == 1
+        assert verdicts[0].verdict.action == VerdictAction.APPROVE.value
+        # Run must be persisted as COMPLETED
+        run = runner.get_run(run_id)
+        assert run is not None
+        assert run.status == RoomStatus.COMPLETED.value
+    asyncio.run(_run())
+
+
+def test_start_run_completes_after_subscribe_exits():
+    """Phone-sleep simulation: SSE consumer exits after a few events.
+    The background task must continue to COMPLETED — not CANCELLED."""
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = uuid4()
+        run_id = await runner.start_run(
+            user_id=user_id,
+            ticker="AAPL",
+            mandate=mandate,
+            char_delay_min=0.0,
+            char_delay_max=0.0,
+        )
+        # Consume 5 events then abandon (simulates SSE client disconnect)
+        count = 0
+        async for _ in runner.subscribe(run_id):
+            count += 1
+            if count >= 5:
+                break
+        # Drain all background tasks before asserting — asyncio.run() would
+        # cancel pending tasks when the main coro returns, so we must wait
+        # for the _pump task to reach terminal state first.
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        run = runner.get_run(run_id)
+        assert run is not None
+        assert run.status == RoomStatus.COMPLETED.value  # NOT cancelled
+        assert len(run.transcript) == 12
+    asyncio.run(_run())
+
+
+def test_start_run_deduplicates_same_user_same_ticker():
+    """Second POST for same user+ticker while run is in flight returns the same run_id."""
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = uuid4()
+        run_id_1 = await runner.start_run(
+            user_id=user_id, ticker="AAPL", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        # Second submit while first is still running (in-memory dedup —
+        # no await between calls so _pump hasn't started yet).
+        run_id_2 = await runner.start_run(
+            user_id=user_id, ticker="AAPL", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        assert run_id_1 == run_id_2  # attached, not a new run
+        # Drain background tasks before asserting DB state
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        runs = runner.list_runs_for_user(user_id)
+        assert len(runs) == 1  # only one row in DB
+    asyncio.run(_run())
+
+
+def test_startup_sweep_marks_abandoned_run_failed():
+    """Simulates a server restart: a stuck RUNNING row older than 30 min
+    must be marked FAILED when a new RoomRunner is initialised."""
+    from datetime import timedelta
+    from app.db import get_session
+    from app.db.models import RoomRunRow
+
+    user_id = uuid4()
+    stale_at = datetime.now(timezone.utc) - timedelta(hours=2)
+
+    runner = RoomRunner()  # init schema
+    with get_session() as s:
+        s.add(RoomRunRow(
+            id=uuid4(),
+            user_id=user_id,
+            ticker="STUCK",
+            triggered_at=stale_at,
+            started_at=stale_at,
+            mandate_version=1,
+            model_tier="mid",
+            rounds=1,
+            transcript=[],
+            verdict=None,
+            credit_cost=8,
+            status="running",
+        ))
+
+    # New runner instance triggers the sweep
+    runner2 = RoomRunner()
+    runs = runner2.list_runs_for_user(user_id, limit=10)
+    assert len(runs) == 1
+    assert runs[0].status == RoomStatus.FAILED.value
+    assert "abandoned" in (runs[0].error_message or "")
+
+
+def test_incremental_checkpoint_saves_partial_transcript():
+    """After each agent, _checkpoint_run must have written the transcript to DB.
+    Verified by cancelling after 3 agents and checking the DB has ≥3 messages."""
+    runner = RoomRunner()
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    user_id = uuid4()
+
+    async def _partial():
+        gen = runner.run(
+            user_id=user_id,
+            ticker="GOOGL",
+            mandate=mandate,
+            char_delay_min=0.0,
+            char_delay_max=0.0,
+        )
+        run_id = None
+        agents_done = 0
+        try:
+            async for ev in gen:
+                if ev.run_id:
+                    run_id = ev.run_id
+                if ev.kind == "agent_done":
+                    agents_done += 1
+                    if agents_done >= 3:
+                        break
+        finally:
+            await gen.aclose()
+        return run_id
+
+    run_id = asyncio.run(_partial())
+    run = runner.get_run(run_id)
+    assert run is not None
+    # Checkpoint writes happen after each agent_done — at least 3 must be in DB
+    assert len(run.transcript) >= 3
