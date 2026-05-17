@@ -21,6 +21,7 @@ const _kCategories = [
   ('wrong_data', 'Wrong data'),
   ('crash', 'App crashed'),
   ('performance', 'Slow / freeze'),
+  ('feature_request', 'Feature request'),
   ('other', 'Other'),
 ];
 

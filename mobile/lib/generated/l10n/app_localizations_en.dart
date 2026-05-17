@@ -190,6 +190,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journalFilterAll => 'ALL';
 
   @override
+  String get journalFilterRoom => 'ROOM';
+
+  @override
+  String get journalFilterTrade => 'TRADE';
+
+  @override
   String get journalFilterOneOnOne => '1-ON-1';
 
   @override

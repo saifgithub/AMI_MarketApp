@@ -191,6 +191,12 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalFilterAll => 'SEMUA';
 
   @override
+  String get journalFilterRoom => 'BILIK';
+
+  @override
+  String get journalFilterTrade => 'DAGANG';
+
+  @override
   String get journalFilterOneOnOne => '1-LAWAN-1';
 
   @override

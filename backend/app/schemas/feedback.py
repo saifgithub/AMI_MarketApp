@@ -17,6 +17,7 @@ BugCategory = Literal[
     "wrong_data",
     "crash",
     "performance",
+    "feature_request",
     "other",
 ]
 

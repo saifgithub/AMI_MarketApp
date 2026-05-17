@@ -29,6 +29,10 @@ class JournalScreen extends ConsumerWidget {
       AppLocalizations l) {
     return [
       (type: null, label: l.journalFilterAll),
+      // Room + Trade promoted to second/third position so they sit next to
+      // ALL (bug 1e645bca) — these are the entry types users review most.
+      (type: JournalEntryType.roomRun, label: l.journalFilterRoom),
+      (type: JournalEntryType.simTrade, label: l.journalFilterTrade),
       (type: JournalEntryType.oneOnOne, label: l.journalFilterOneOnOne),
       (type: JournalEntryType.agentCoach, label: l.journalFilterCoach),
       (type: JournalEntryType.lessonComplete, label: l.journalFilterLessons),

@@ -442,6 +442,18 @@ abstract class AppLocalizations {
   /// **'ALL'**
   String get journalFilterAll;
 
+  /// No description provided for @journalFilterRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'ROOM'**
+  String get journalFilterRoom;
+
+  /// No description provided for @journalFilterTrade.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADE'**
+  String get journalFilterTrade;
+
   /// No description provided for @journalFilterOneOnOne.
   ///
   /// In en, this message translates to:

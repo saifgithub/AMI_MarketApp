@@ -58,6 +58,8 @@
     "actionAdd": "إضافة",
     "journalHeading": "سجل القرارات",
     "journalFilterAll": "الكل",
+    "journalFilterRoom": "الغرفة",
+    "journalFilterTrade": "صفقة",
     "journalFilterOneOnOne": "1-ON-1",
     "journalFilterCoach": "المدرب",
     "journalFilterLessons": "الدروس",

@@ -190,6 +190,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journalFilterAll => 'الكل';
 
   @override
+  String get journalFilterRoom => 'الغرفة';
+
+  @override
+  String get journalFilterTrade => 'صفقة';
+
+  @override
   String get journalFilterOneOnOne => '1-ON-1';
 
   @override

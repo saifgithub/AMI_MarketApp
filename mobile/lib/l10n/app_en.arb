@@ -114,6 +114,8 @@
 
     "journalHeading": "DECISION JOURNAL",
     "journalFilterAll": "ALL",
+    "journalFilterRoom": "ROOM",
+    "journalFilterTrade": "TRADE",
     "journalFilterOneOnOne": "1-ON-1",
     "journalFilterCoach": "COACH",
     "journalFilterLessons": "LESSONS",
