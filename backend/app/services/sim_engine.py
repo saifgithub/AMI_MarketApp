@@ -264,6 +264,26 @@ class SimEngine:
             select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
         ).scalar_one_or_none()
 
+    def _existing_trade_for_verdict(
+        self, user_id: UUID, verdict_ref: UUID
+    ) -> UUID | None:
+        """Return the trade_id of any prior trade against this verdict (any status).
+
+        Used by submit() to enforce one-purchase-per-verdict. Matches both
+        open and closed trades — once a verdict has been executed, the user
+        should run a fresh Convene the Room for a new opinion rather than
+        re-trade the same verdict.
+        """
+        with get_session() as s:
+            row = s.execute(
+                select(SimTradeRow.id)
+                .where(SimTradeRow.user_id == user_id)
+                .where(SimTradeRow.verdict_ref == verdict_ref)
+                .order_by(SimTradeRow.opened_at.asc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return row
+
     def ensure_portfolio(self, user_id: UUID) -> Portfolio:
         with get_session() as s:
             row = self._load_portfolio_row(s, user_id)
@@ -331,6 +351,34 @@ class SimEngine:
     ) -> SubmitResult:
         portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
+
+        # One purchase per verdict (bug ce7146c8). When the trade is being
+        # placed off a Convene the Room verdict, prevent a duplicate caused
+        # by a double-tap on the "Buy" button or a retry after a transient
+        # network error. We surface the existing trade_id in the violation
+        # text so the client can deep-link the user back to it.
+        if verdict_ref is not None:
+            existing_trade_id = self._existing_trade_for_verdict(user_id, verdict_ref)
+            if existing_trade_id is not None:
+                logger.info(
+                    "sim_trade_duplicate_verdict",
+                    user_id=str(user_id),
+                    verdict_ref=str(verdict_ref),
+                    existing_trade_id=str(existing_trade_id),
+                )
+                fail = ComplianceResult(
+                    passed=False,
+                    violations=[
+                        f"this verdict has already been executed "
+                        f"(trade {str(existing_trade_id)[:8]})"
+                    ],
+                    blocked_by="duplicate_verdict",
+                )
+                return SubmitResult(
+                    accepted=False, trade=None,
+                    compliance=fail, portfolio_snapshot=portfolio,
+                )
+
         mark = self.current_price(ticker)
         fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
         proposed = ProposedTrade(

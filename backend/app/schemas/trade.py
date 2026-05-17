@@ -77,4 +77,4 @@ class ComplianceResult(BaseModel):
 
     passed: bool
     violations: list[str] = Field(default_factory=list)
-    blocked_by: Literal["compliance", "drawdown", "concentration", "long_only", "blocklist", "allowlist", "locale", None] = None
+    blocked_by: Literal["compliance", "drawdown", "concentration", "long_only", "blocklist", "allowlist", "locale", "duplicate_verdict", None] = None

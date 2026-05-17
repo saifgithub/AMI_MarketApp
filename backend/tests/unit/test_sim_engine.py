@@ -51,6 +51,61 @@ def test_buy_fills_and_updates_holdings_and_cash():
     assert p.current_cash < 10_000.0
 
 
+def test_duplicate_verdict_rejects_second_buy():
+    """Regression for bug ce7146c8: a double-tap on the 'Buy' button after
+    a Convene the Room verdict produced two identical trades. submit() now
+    rejects a second trade against the same verdict_ref with a clear violation
+    that surfaces the existing trade_id."""
+    sim = SimEngine()
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    verdict_id = uuid4()
+    price = sim.current_price("AAPL")
+
+    # First buy on this verdict — accepted
+    first = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+        mandate=mandate, order_type=OrderType.MARKET,
+        stop=round(price * 0.94, 2), target=round(price * 1.13, 2),
+        horizon_days=30, verdict_ref=verdict_id,
+    )
+    assert first.accepted
+    assert first.trade is not None
+    first_trade_id = first.trade.id
+
+    # Second buy on the same verdict — rejected, surfaces existing trade
+    second = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+        mandate=mandate, order_type=OrderType.MARKET,
+        stop=round(price * 0.94, 2), target=round(price * 1.13, 2),
+        horizon_days=30, verdict_ref=verdict_id,
+    )
+    assert not second.accepted
+    assert second.compliance.blocked_by == "duplicate_verdict"
+    # The violation message points the client to the existing trade
+    assert str(first_trade_id)[:8] in second.compliance.violations[0]
+
+    # Portfolio still has only one AAPL position
+    p = sim.ensure_portfolio(user_id)
+    assert p.holdings[0].quantity == 1
+
+
+def test_no_verdict_ref_allows_multiple_trades():
+    """Manual trades (no verdict_ref) are not subject to the per-verdict
+    guard — the user can buy AAPL twice from the Floor without a Room run."""
+    sim = SimEngine()
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    for _ in range(2):
+        result = sim.submit(
+            user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+            mandate=mandate, order_type=OrderType.MARKET,
+        )
+        assert result.accepted
+    p = sim.ensure_portfolio(user_id)
+    assert p.holdings[0].quantity == 2
+
+
 def test_blocklist_rejects():
     sim = SimEngine()
     user_id = uuid4()
