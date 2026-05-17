@@ -627,6 +627,77 @@ def test_startup_sweep_marks_abandoned_run_failed():
     assert "abandoned" in (runs[0].error_message or "")
 
 
+def test_start_run_deduplicates_recently_completed_run():
+    """Same user+ticker submitted after a completed run finishes (within the
+    completed-dedup lookback) returns the prior run's ID — no fresh execution.
+    Saves 5+ minutes of LLM time when the underlying market data hasn't moved."""
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = uuid4()
+        # First run — completes to verdict
+        run_id_1 = await runner.start_run(
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        # Drain first run's background task to completion
+        async for _ in runner.subscribe(run_id_1):
+            pass
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        run_1 = runner.get_run(run_id_1)
+        assert run_1 is not None
+        assert run_1.status == RoomStatus.COMPLETED.value
+        # Second submit — same user+ticker, first run already completed.
+        # Should return the SAME run_id (dedup), no new row in DB.
+        run_id_2 = await runner.start_run(
+            user_id=user_id, ticker="MSFT", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        assert run_id_2 == run_id_1  # completed-run dedup
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        runs = runner.list_runs_for_user(user_id)
+        assert len(runs) == 1  # still only one row
+    asyncio.run(_run())
+
+
+def test_completed_dedup_window_zero_disables_dedup(monkeypatch):
+    """Setting room_dedup_completed_hours=0 disables completed-run dedup so a
+    second submit starts a fresh run. Lets ops dial the window off entirely."""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "room_dedup_completed_hours", 0)
+
+    async def _run():
+        runner = RoomRunner()
+        mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+        user_id = uuid4()
+        run_id_1 = await runner.start_run(
+            user_id=user_id, ticker="GOOGL", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        async for _ in runner.subscribe(run_id_1):
+            pass
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        # Second submit with dedup disabled — should be a NEW run
+        run_id_2 = await runner.start_run(
+            user_id=user_id, ticker="GOOGL", mandate=mandate,
+            char_delay_min=0.0, char_delay_max=0.0,
+        )
+        assert run_id_2 != run_id_1  # fresh run
+        pending = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
+        runs = runner.list_runs_for_user(user_id)
+        assert len(runs) == 2  # two distinct rows
+    asyncio.run(_run())
+
+
 def test_incremental_checkpoint_saves_partial_transcript():
     """After each agent, _checkpoint_run must have written the transcript to DB.
     Verified by cancelling after 3 agents and checking the DB has ≥3 messages."""

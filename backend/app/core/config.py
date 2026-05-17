@@ -56,6 +56,22 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # Room dedup windows (see app/services/room_runner.py::start_run).
+    # Same user+ticker submitted while a run is in flight always returns the
+    # in-flight run_id, regardless of these knobs (running_minutes is just an
+    # upper bound on how stale a "running" row can be before it's considered
+    # abandoned). The completed_hours window prevents accidental re-runs of an
+    # analysis whose underlying data hasn't meaningfully changed — a tap of
+    # "Convene the Room" the same day returns yesterday's verdict instead of
+    # burning another 5 minutes of LLM time.
+    #   running_minutes:    30 min  — also the startup-sweep cutoff
+    #   completed_hours:    24 h    — design doc default is 5 days; we start
+    #                                 tighter so re-runs after meaningful
+    #                                 market moves (next-day open) are not
+    #                                 blocked. Raise via env to taste.
+    room_dedup_running_minutes: int = 30
+    room_dedup_completed_hours: int = 24
+
     # In-app bug-report attachments — written to this directory by the
     # /v1/feedback/bug endpoint, retrieved by Saiful via SSH (no public
     # download endpoint in alpha). On melehost a named docker volume

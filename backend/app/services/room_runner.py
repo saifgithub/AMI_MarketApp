@@ -474,7 +474,9 @@ class RoomRunner:
         never progress on their own; mark them failed so the client can
         distinguish a dead run from an active one and choose to resubmit.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            minutes=settings.room_dedup_running_minutes
+        )
         try:
             with get_session() as s:
                 rows = s.execute(
@@ -491,13 +493,15 @@ class RoomRunner:
             logger.warning("room_startup_sweep_failed", error=str(exc)[:200])
 
     def _find_active_run(self, user_id: UUID, ticker: str) -> UUID | None:
-        """Return the run_id of an in-progress run for this user+ticker (last 30 min).
+        """Return run_id of an in-flight run for this user+ticker.
 
-        Prevents double-billing when a mobile client retries the POST after a
-        connection drop — instead of starting a new run the SSE consumer
-        attaches to the one already in flight.
+        Catches the mobile-retry case where a client resubmits because the
+        SSE connection dropped — instead of starting a fresh run, the new
+        SSE consumer attaches to the one already executing.
         """
-        cutoff = datetime.now(timezone.utc) - timedelta(minutes=30)
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            minutes=settings.room_dedup_running_minutes
+        )
         with get_session() as s:
             row = s.execute(
                 select(RoomRunRow)
@@ -506,6 +510,37 @@ class RoomRunner:
                 .where(RoomRunRow.status == "running")
                 .where(RoomRunRow.started_at >= cutoff)
                 .order_by(RoomRunRow.triggered_at.desc())
+                .limit(1)
+            ).scalar_one_or_none()
+            return row.id if row else None
+
+    def _find_recent_completed_run(self, user_id: UUID, ticker: str) -> UUID | None:
+        """Return run_id of a recently COMPLETED run for this user+ticker.
+
+        Implements the design-doc resubmission rule: if the same user already
+        has a successful verdict on this ticker within the configurable lookback
+        window (settings.room_dedup_completed_hours), return that verdict
+        instead of burning another 5 minutes of LLM time on essentially the
+        same analysis. The market hasn't moved enough since this morning to
+        warrant a fresh debate.
+
+        Only matches `status="completed"` runs that produced a verdict — failed
+        and cancelled runs are not deduped (the user should be free to retry).
+        """
+        if settings.room_dedup_completed_hours <= 0:
+            return None  # window disabled
+        cutoff = datetime.now(timezone.utc) - timedelta(
+            hours=settings.room_dedup_completed_hours
+        )
+        with get_session() as s:
+            row = s.execute(
+                select(RoomRunRow)
+                .where(RoomRunRow.user_id == user_id)
+                .where(RoomRunRow.ticker == ticker)
+                .where(RoomRunRow.status == "completed")
+                .where(RoomRunRow.verdict.isnot(None))
+                .where(RoomRunRow.finished_at >= cutoff)
+                .order_by(RoomRunRow.finished_at.desc())
                 .limit(1)
             ).scalar_one_or_none()
             return row.id if row else None
@@ -541,21 +576,35 @@ class RoomRunner:
         """
         key = (user_id, ticker.upper())
 
-        # In-memory check first: catches the window between create_task and
-        # the first DB INSERT where _find_active_run would return nothing.
+        # Dedup tier 1 — in-flight run (in-memory first, DB fallback).
+        # In-memory catches the create_task → first INSERT race; DB fallback
+        # catches the case where the in-memory dict was cleared by a restart
+        # but the row is still status=running.
         existing = self._active_by_key.get(key)
         if existing is None:
-            # DB fallback: catches reconnects where the in-memory dict was
-            # cleared by a restart but the row is still status=running.
             existing = self._find_active_run(user_id, ticker)
         if existing is not None:
             logger.info(
-                "room_dedup_attached",
+                "room_dedup_attached_running",
                 run_id=str(existing),
                 user_id=str(user_id),
                 ticker=ticker,
             )
             return existing
+
+        # Dedup tier 2 — recently completed run with a verdict.
+        # Returns the previous verdict instead of re-analysing the same
+        # ticker before the market has meaningfully moved.
+        completed = self._find_recent_completed_run(user_id, ticker)
+        if completed is not None:
+            logger.info(
+                "room_dedup_attached_completed",
+                run_id=str(completed),
+                user_id=str(user_id),
+                ticker=ticker,
+                window_hours=settings.room_dedup_completed_hours,
+            )
+            return completed
 
         run_id = uuid4()
         q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
