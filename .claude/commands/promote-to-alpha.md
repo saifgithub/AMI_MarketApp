@@ -6,7 +6,7 @@ description: Promote the current Mac canonical state to the Alpha environment (m
 
 Promote the current state of the canonical Mac worktree to the Alpha
 environment running on `melehost` (Ubuntu Linux server at
-`192.168.20.9`, public hostname `https://api-alpha.agenticmarketintel.ai`).
+`192.168.20.59`, public hostname `https://api-alpha.agenticmarketintel.ai`).
 
 **Read the full protocol in `docs/10_delivery/promotion_protocol.md`
 before doing anything destructive.** That doc owns the design;

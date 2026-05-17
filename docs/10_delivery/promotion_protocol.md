@@ -13,7 +13,7 @@ description of `melehost`.
 |---|---|---|---|
 | **Git** | Single source of truth for code. Every commit lands here. | The repo + tags. No remote yet; GitHub plugs in at Beta-time. | Nothing speaks to git directly except the Mac (commits) and `melehost` (pulls). |
 | **Mac** (Saiful's dev workstation) | **Canonical author.** Every commit originates here. Pure editor — **the Mac runs NO backend, NO database, NO services**. All testing happens on Alpha. Every code change must `/promote-to-alpha` to be exercised end-to-end. | `/Volumes/Extreme Pro/AMI_MarketApp/` + worktrees under `.claude/worktrees/`. | Only Saiful (writing code). |
-| **melehost** (Ubuntu, `192.168.20.9`) | **Derivative.** Runs the Alpha copy. State lives here too (Postgres + Redis volumes) but is recoverable from backups. | `~/ami_trade/` (synced from the Mac via rsync). | Alpha testers via `https://api-alpha.agenticmarketintel.ai`. |
+| **melehost** (Ubuntu, `192.168.20.59`) | **Derivative.** Runs the Alpha copy. State lives here too (Postgres + Redis volumes) but is recoverable from backups. | `~/ami_trade/` (synced from the Mac via rsync). | Alpha testers via `https://api-alpha.agenticmarketintel.ai`. |
 | **GCP Cloud Run — Beta project** *(future)* | Derivative. Runs the Beta copy after the cloud cutover. | Cloud Run service from a built Docker image, tied to a specific tag. | Same testers, validating the cloud path before MVP. |
 | **GCP Cloud Run — Prod project** *(future)* | Derivative. Runs the production copy. | Cloud Run service, prod project. | Paying users via the App Store build. |
 

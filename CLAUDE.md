@@ -61,7 +61,7 @@ the backend is on the Mac or that the LLM is mocked.
 | Component | Where | Notes |
 |---|---|---|
 | **Mac** (this workstation) | Pure editor. **NO backend, NO database, NO Docker stack.** | Backend unit tests via `pytest backend/tests/unit/ -q` still work (sqlite tempfile fixture). Anything else goes through `/promote-to-alpha`. Don't start uvicorn or `docker compose up` on the Mac. |
-| **Alpha backend** | `melehost` — Ubuntu Linux server, LAN `192.168.20.9`, SSH alias `melehost` | Stack: `ami_postgres` + `ami_redis` + `ami_api_alpha` + `ami_tunnel`, all in `~/ami_trade/` via Docker Compose. Code rsync'd from Mac via the promotion script. |
+| **Alpha backend** | `melehost` — Ubuntu Linux server, LAN `192.168.20.59`, SSH alias `melehost` | Stack: `ami_postgres` + `ami_redis` + `ami_api_alpha` + `ami_tunnel`, all in `~/ami_trade/` via Docker Compose. Code rsync'd from Mac via the promotion script. |
 | **Public hostname** | `https://api-alpha.agenticmarketintel.ai` | Cloudflare Tunnel (token-mode connector running on melehost). TLS terminates at CF edge; backend doesn't open inbound ports. |
 | **LLM provider** | **On-prem vLLM** at `http://192.168.20.74:8000` — separate Ubuntu host on the LAN | Serving `ami-llm` (Gemma 4 31B, NVFP4 quantized, 262k context — rebranded). Gateway prefers `vllm > anthropic > mock`. Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`. **Not Anthropic, not OpenAI, not mock — real LLM.** |
 | **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |

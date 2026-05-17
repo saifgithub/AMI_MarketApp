@@ -1,7 +1,7 @@
 # Alpha-host infrastructure (Docker Compose)
 
 Docker Compose stack for the AMI Trade backend on **melehost** (Ubuntu
-Linux server on Saiful's LAN, `192.168.20.9`). See
+Linux server on Saiful's LAN, `192.168.20.59`). See
 [`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
 full melehost spec, and
 [`docs/10_delivery/promotion_protocol.md`](../../docs/10_delivery/promotion_protocol.md)

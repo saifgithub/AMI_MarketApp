@@ -34,7 +34,7 @@ c3ab51b feat(feedback): attach a photo to in-app bug reports
 
 | | |
 |---|---|
-| Where | `melehost` (Ubuntu Linux, LAN `192.168.20.9`) — Docker Compose stack at `~/ami_trade/` |
+| Where | `melehost` (Ubuntu Linux, LAN `192.168.20.59`) — Docker Compose stack at `~/ami_trade/` |
 | Container | `ami_api_alpha` (built from `backend/Dockerfile`) — service name `api-alpha` in compose |
 | Public hostname | `https://api-alpha.agenticmarketintel.ai` (Cloudflare Tunnel) |
 | Health from outside the LAN | `curl https://api-alpha.agenticmarketintel.ai/v1/health` |

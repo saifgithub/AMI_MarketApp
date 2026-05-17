@@ -13,7 +13,7 @@ runbooks can reference it without restating.
 |---|---|
 | Name | `melehost` |
 | OS | **Ubuntu Linux** (server, not desktop) |
-| LAN IP | `192.168.20.9` |
+| LAN IP | `192.168.20.59` |
 | SSH | `ssh melehost` (configured in Saiful's `~/.ssh/config`) |
 | Specs | 4 CPU · 14 GB RAM · 4 GB swap · 80 GB free disk |
 | Docker | Engine 29.4.2 · Compose v5.1.3 |
