@@ -295,7 +295,7 @@ class _FloorPlaceholderScreenState
                   ),
                   const SizedBox(height: AmiSpacing.m),
                   Wrap(
-                    spacing: AmiSpacing.s,
+                    spacing: AmiSpacing.m,
                     runSpacing: AmiSpacing.l,
                     alignment: WrapAlignment.center,
                     children: [
@@ -385,9 +385,8 @@ class _AgentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const hex = 96.0;
     return SizedBox(
-      width: 108,
+      width: 88,
       child: Column(
         children: [
           Stack(
@@ -398,20 +397,19 @@ class _AgentTile extends StatelessWidget {
                 child: HexAvatar(
                   label: agent.abbreviation,
                   color: agent.color,
-                  size: hex,
+                  size: 72,
                   solid: false,
                   onTap: onTap,
                 ),
               ),
               if (!unlocked)
                 IgnorePointer(
-                  child: SizedBox(
-                    width: hex,
-                    height: hex,
-                    child: const Center(
-                      child: Icon(Icons.lock_outline,
-                          color: AmiColors.textLow, size: 28),
-                    ),
+                  child: Container(
+                    width: 72,
+                    height: 72,
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.lock_outline,
+                        color: AmiColors.textLow, size: 22),
                   ),
                 ),
             ],
