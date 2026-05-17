@@ -13,6 +13,42 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R22  (2026-05-17)
+
+Dense bug-fix + resilience session. 19 commits, **5 alpha promotions** (`alpha-2026-05-17-{1..5}`), test count 264 → **275**. Six TestFlight builds (`+9..+14`).
+
+### Room resilience overhaul (`8a9f4da`, `b9050b9`, `7fca2c7`)
+
+Three commits closing the resilience gaps the explore agent surfaced. The pipeline used to be SSE-coupled: client disconnect (phone sleep, LTE handoff, Cloudflare timeout) tore down the runner generator, partial transcript was persisted as CANCELLED, no verdict was reached.
+
+- **Background task + queue (`8a9f4da`)** — runner now starts via `RoomRunner.start_run()`, which creates an `asyncio.Queue` keyed by `run_id`, fires `asyncio.create_task(_pump())`, and returns the `run_id` immediately. The SSE consumer reads from the queue via `runner.subscribe(run_id)`. Client disconnect kills the SSE consumer; the `_pump` keeps running to the verdict and the `on_complete` callback (journal write) always fires from the `finally` block. `X-Room-Run-Id` header carries the run_id to the client before any SSE body so a reconnecting client can `GET /v1/room/{run_id}` for the snapshot. Incremental transcript checkpoint after each agent. Dedup tier 1 (same user+ticker while running). Startup sweep marks abandoned `running` rows as `failed`. Journal retry on transient DB error. +5 tests.
+
+- **Completed-run dedup (`b9050b9`)** — design-doc-style configurable lookback. New env knobs `ROOM_DEDUP_RUNNING_MINUTES=30` and `ROOM_DEDUP_COMPLETED_HOURS=24` (design doc default is 5 days; we start at 1 day so re-runs after the next-day open aren't blocked — raise via env to taste, 0 disables). Dedup tier 2 returns the prior verdict's `run_id` without spinning up a `_pump` — saves ~5 minutes of LLM time when the user double-taps "Convene the Room" or hits it again the same day. +2 tests.
+
+- **Cached-run replay (`7fca2c7`)** — first version of tier-2 dedup made the client render "Room ended without a verdict" because `subscribe()` returned immediately on a cached `run_id` and the SSE emitted only the `done` event. Fix: `RoomRunner.is_active(run_id)` exposes whether there's a live queue; the API layer detects cached dedup, replays the persisted transcript as a compressed SSE stream (`started` → one `agent_token` + `agent_done` per agent → `phase: VERDICT` → `verdict`), and sets `X-Room-Cached: true` so a future client UI can show "cached analysis from earlier". +1 test.
+
+### Five bug fixes (worked through one user-test cycle at a time)
+
+| short_id | commit | summary |
+|---|---|---|
+| `698a0fe6` + `f7c4d7e0` | (resolved via the resilience work) | Validated on-device; flipped to resolved after the new background-task pipeline landed. |
+| `6f9b5ebd` | `c9f682f` | Journal entry detail for sim_trade was dumping the raw Python-style dict. Added a typed render of horizon / status / opened-at / closed info / realised P&L / linked verdict_ref. |
+| `ce7146c8` | `59acfe9` | Double-tap on the "Buy" button against the same verdict opened two identical trades. `SimEngine.submit()` now rejects when `(user_id, verdict_ref)` already has a trade (any status). Surfaces existing trade's short_id in the violation. `blocked_by` Literal gained `"duplicate_verdict"`. +2 tests. |
+| `9b3a6c2f` | `1e69052` | Trade success was rendered with a slate800 snackbar — indistinguishable from the dark theme, drove the double-tap behind `ce7146c8`. Replaced with a green floating snackbar with check icon + haptic + 5s duration. Verdict card swaps the cyan "Open Trade Ticket" CTA for a green "✓ BUY 1 TSLA @ \$422.24" pill once a sim_trade exists for that verdict (watches `simNotifierProvider`). |
+| `d5717660` | `a8ffafb` | When the user opens the trade ticket with no convened verdict, show a dismissible blue advisory: "Convene the Room first to get analysis from your 12 agents. Or proceed — this trade will be marked 'without advice'." Two buttons (Convene the Room / Proceed without). Journal detail shows `AI ADVICE: Without — manual trade` when `verdict_ref` is null. |
+
+### Two features (`adc3d11`, `9814e63`)
+
+- **ROOM + TRADE journal filter chips** (bug `1e645bca`) — promoted to positions 2/3 (right next to ALL) because users review those most. EN/AR/MS strings.
+- **`feature_request` bug category** — Saiful's parallel ask. Backend `BugCategory` Literal extended; mobile dropdown picks it up. Retroactively recategorised `1e645bca`.
+- **Live quote anchor in the trade ticket** (`9814e63`) — Saiful's quandary: "if I'm setting TP/SL, what do I base it on?" New `simQuoteDetail()` API method returns price + change% + source + market state. The trade ticket sheet debounces the ticker field (450ms), fetches the quote, renders a chip below the field (`$300.23  +1.20%  LIVE  CLOSED`), and pre-fills empty Stop / Target at -6% / +13% of the live price — same heuristic the Convene the Room Trader uses, so the anchor is consistent across both flows.
+
+### Doc / infra: melehost LAN IP correction (`7c0f278`)
+
+SSH config had `192.168.20.59` (correct) but every doc said `192.168.20.9` (wrong, never matched reality). Fixed across `CLAUDE.md`, `HANDOVER.md`, `infra/{cloudflared,local,systemd}/README.md`, `.claude/commands/promote-to-alpha.md`, `docs/10_delivery/promotion_protocol.md`, `docs/08_tech/hosting.md`. History.md left alone (snapshot of the past).
+
+---
+
 ## AT:R21  (2026-05-15)
 
 Focused session: 2 data commits + 1 handover, 1 alpha promotion (`alpha-2026-05-15-4`), test count 261 → **264**.
