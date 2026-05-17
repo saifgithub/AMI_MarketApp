@@ -50,6 +50,16 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       colorShadow: Colors.black,
       opacityShadow: 0.88,
       pulseEnable: false,
+      beforeFocus: (target) async {
+        final ctx = target.keyTarget?.currentContext;
+        if (ctx != null) {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 350),
+            alignment: 0.5,
+          );
+        }
+      },
       onFinish: () {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

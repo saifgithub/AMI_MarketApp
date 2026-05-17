@@ -90,6 +90,19 @@ class _FloorPlaceholderScreenState
       colorShadow: Colors.black,
       opacityShadow: 0.88,
       pulseEnable: false,
+      beforeFocus: (target) async {
+        // Ensure the target is in view before the spotlight focuses on it.
+        // Floor is a SingleChildScrollView — Convene + DailyChallenge sit
+        // below the initial fold without this.
+        final ctx = target.keyTarget?.currentContext;
+        if (ctx != null) {
+          await Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 350),
+            alignment: 0.5,
+          );
+        }
+      },
       onFinish: () {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
