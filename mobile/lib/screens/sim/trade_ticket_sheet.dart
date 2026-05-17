@@ -6,10 +6,13 @@
 /// rejection is surfaced as an amber banner with the specific violations.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -66,6 +69,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   // with verdict_ref=null, which the journal renders as "Without AI advice".
   bool _advisoryDismissed = false;
 
+  // Live quote for the entered ticker. Fetched on a debounce so the user
+  // has a price anchor when setting TP/SL manually. Source string is the
+  // leaf provider (yfinance | mock_walk) so the user knows what they're
+  // looking at.
+  ({double price, double changePct, String source, String marketState})? _quote;
+  String? _quoteTicker; // ticker that _quote belongs to
+  bool _quoteLoading = false;
+  Timer? _quoteDebounce;
+
   @override
   void initState() {
     super.initState();
@@ -86,16 +98,78 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _qty.text = qty <= 0 ? '1' : '$qty';
       }
     }
+    // If a ticker is prefilled (verdict path), fetch its quote immediately
+    // so the price chip lands without the user having to retype.
+    if (_ticker.text.trim().isNotEmpty) {
+      _scheduleQuoteFetch();
+    }
+    _ticker.addListener(_onTickerChanged);
   }
 
   @override
   void dispose() {
+    _quoteDebounce?.cancel();
+    _ticker.removeListener(_onTickerChanged);
     _ticker.dispose();
     _qty.dispose();
     _stop.dispose();
     _target.dispose();
     _horizon.dispose();
     super.dispose();
+  }
+
+  void _onTickerChanged() {
+    final t = _ticker.text.trim().toUpperCase();
+    // Invalidate the chip if the user is editing — once they pause we'll
+    // refetch. Avoids showing the wrong ticker's price during typing.
+    if (t != _quoteTicker) {
+      setState(() {
+        _quote = null;
+        _quoteTicker = null;
+      });
+    }
+    _scheduleQuoteFetch();
+  }
+
+  void _scheduleQuoteFetch() {
+    _quoteDebounce?.cancel();
+    final t = _ticker.text.trim().toUpperCase();
+    if (t.isEmpty) return;
+    _quoteDebounce = Timer(const Duration(milliseconds: 450), () {
+      _fetchQuote(t);
+    });
+  }
+
+  Future<void> _fetchQuote(String ticker) async {
+    if (!mounted) return;
+    setState(() => _quoteLoading = true);
+    try {
+      final q = await ref.read(apiClientProvider).simQuoteDetail(ticker);
+      if (!mounted) return;
+      // If the user kept typing past us, drop the stale result.
+      if (_ticker.text.trim().toUpperCase() != ticker) return;
+      setState(() {
+        _quote = q;
+        _quoteTicker = ticker;
+        _quoteLoading = false;
+      });
+      // Anchor TP/SL off the live price when the user hasn't set them —
+      // matches the Convene the Room trader template (-6% / +13%) so the
+      // suggestion is consistent across both flows. User can override.
+      if (_stop.text.trim().isEmpty) {
+        _stop.text = (q.price * 0.94).toStringAsFixed(2);
+      }
+      if (_target.text.trim().isEmpty) {
+        _target.text = (q.price * 1.13).toStringAsFixed(2);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _quote = null;
+        _quoteTicker = null;
+        _quoteLoading = false;
+      });
+    }
   }
 
   void _convene() {
@@ -317,6 +391,17 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                 ),
               ],
             ),
+            // Live price anchor for setting TP / SL when no verdict has
+            // been convened. Source pill (LIVE / MOCK) reflects what the
+            // backend actually returned for this ticker — yfinance leaf
+            // shows LIVE, mock_walk fallback shows MOCK.
+            if (_quote != null || _quoteLoading) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              _QuoteChip(
+                quote: _quote,
+                loading: _quoteLoading,
+              ),
+            ],
             const SizedBox(height: AmiSpacing.m),
             TextField(
               controller: _qty,
@@ -449,6 +534,97 @@ class _SideToggle extends StatelessWidget {
             style: AmiTypography.labelMono.copyWith(
               color: active ? color : AmiColors.textLow,
             )),
+      ),
+    );
+  }
+}
+
+/// Inline chip under the ticker field — shows the live price, day-change
+/// %, and a LIVE / MOCK pill so the user has a price anchor when setting
+/// TP / SL on a manual trade.
+class _QuoteChip extends StatelessWidget {
+  const _QuoteChip({required this.quote, required this.loading});
+
+  final ({double price, double changePct, String source, String marketState})?
+      quote;
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    if (quote == null && loading) {
+      return Padding(
+        padding: const EdgeInsets.only(left: 4, top: 4),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.5,
+                color: AmiColors.textLow,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('fetching live price…',
+                style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
+          ],
+        ),
+      );
+    }
+    final q = quote;
+    if (q == null) return const SizedBox.shrink();
+    final isLive = q.source.toLowerCase().contains('yfinance') ||
+        q.source.toLowerCase().contains('yahoo');
+    final changeColor = q.changePct >= 0 ? AmiColors.hexGreen : AmiColors.hexAmber;
+    final changeSign = q.changePct >= 0 ? '+' : '';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AmiColors.slate900,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Row(
+        children: [
+          Text('\$${q.price.toStringAsFixed(2)}',
+              style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
+          if (q.changePct != 0) ...[
+            const SizedBox(width: 8),
+            Text(
+              '$changeSign${q.changePct.toStringAsFixed(2)}%',
+              style: AmiTypography.labelMono.copyWith(
+                color: changeColor,
+                fontSize: 11,
+              ),
+            ),
+          ],
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: (isLive ? AmiColors.hexGreen : AmiColors.hexAmber)
+                  .withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              isLive ? 'LIVE' : 'MOCK',
+              style: AmiTypography.labelMono.copyWith(
+                color: isLive ? AmiColors.hexGreen : AmiColors.hexAmber,
+                fontSize: 9,
+              ),
+            ),
+          ),
+          if (q.marketState.toUpperCase() == 'CLOSED') ...[
+            const SizedBox(width: 4),
+            Text(
+              'CLOSED',
+              style: AmiTypography.labelMono.copyWith(
+                color: AmiColors.textLow,
+                fontSize: 9,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

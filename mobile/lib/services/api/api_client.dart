@@ -690,6 +690,20 @@ class ApiClient {
     return (r.data!['price'] as num).toDouble();
   }
 
+  /// Full quote — price + change% + source + market state. Used by the
+  /// trade ticket sheet to anchor TP/SL when the user trades manually.
+  Future<({double price, double changePct, String source, String marketState})>
+      simQuoteDetail(String ticker) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/quote/$ticker');
+    final d = r.data!;
+    return (
+      price: (d['price'] as num).toDouble(),
+      changePct: (d['change_pct'] as num?)?.toDouble() ?? 0.0,
+      source: d['source'] as String? ?? 'unknown',
+      marketState: d['market_state'] as String? ?? 'UNKNOWN',
+    );
+  }
+
   // ── Watchlist (A18) ─────────────────────────────────────────────
 
   Future<List<WatchlistEntry>> watchlistList(String userId) async {
