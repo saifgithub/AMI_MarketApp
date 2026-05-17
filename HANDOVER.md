@@ -133,14 +133,21 @@ DB-wide: `open=1 / pending_review=0 / resolved=24 / wont_fix=2`. Every bug surfa
 
 ### Carry-overs for AT:R23
 
-1. **T&C + Privacy Policy (A22 part 2)** — research is in `docs/09_compliance/legal_plan_ami_trade.md`. Still needs (a) hosting at `agenticmarketintel.ai/legal/{privacy,terms}` and (b) lawyer review before App Store submission. Did NOT touch this session.
+Counts audited against tree state at end of AT:R22 — no stale figures.
+
+1. **T&C + Privacy Policy (A22 part 2)** — research is in `docs/09_compliance/legal_plan_ami_trade.md`. Still needs (a) hosting at `agenticmarketintel.ai/legal/{privacy,terms}` and (b) lawyer review before App Store submission. Did NOT touch this session. (`A22` is still ⚡ partial in `docs/10_delivery/project_plan.md`.)
 2. **`eeeb866f`** — room run survives container restart — open/deferred. The clean upgrade path (Celery + Redis broker; per-user FIFO) is sketched in `docs/external/async_job_server_design_prompt.md`. Beta-window work.
-3. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. Have not touched.
-4. **Animation production** — 15 lesson MDX slots still placeholders. See `memory/project_animations.md` for the Lottie vs CustomPainter decision.
-5. **A29 light-mode refactor** — 37 hardcoded color refs. v1.0 work.
-6. **Two sibling worktrees with unmerged docs** — `blissful-darwin-419097` (bug-pipeline spec + D-057) and `exciting-shtern-aad051` (lessons-landing hex-cluster redesign) — commits still not in main. **Still pending Saiful decision: merge to main or discard.**
-7. **Room dedup window tuning** — currently 24h; design doc default was 5 days. Watch user feedback; if testers re-run within the day for legitimate reasons, raise `ROOM_DEDUP_COMPLETED_HOURS`.
-8. **NVFP4 quantisation produces space-split tokens** — observed since day one (e.g. "Consol idation", "NV DA"). Not a regression, not blocking. Worth keeping in the corner of an eye.
+3. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. Have not touched. `scripts/build_testflight.sh` uploads to Internal only by default; no External Beta artefact in the repo.
+4. **Animation production** — **15 `<Animation>` MDX tags** in `content/lessons/` (verified by `grep -roh '<Animation [^>]*/>' content/lessons/ | wc -l`). All render `AmiHexPlaceholder` because the `AnimationRegistry` has no assets wired. See `memory/project_animations.md` for the Lottie vs CustomPainter decision.
+5. **A29 light-mode refactor** — **125 hardcoded `AmiColors.slate900`/`slate800` references** across `mobile/lib/` (verified end-of-session). Heaviest concentrations: `screens/agent` (19), `screens/sim` (16), `screens/lessons` (15), `screens/journal` (14), `screens/room` (13). Earlier handovers said "37" — that was the in-`screens/` subset from an earlier audit; the real number is 3× larger. v1.0 work.
+6. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (one commit `f94ad0e` — bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (one commit `ead7038` — lessons-landing hex-cluster redesign). Branches verified to exist; commits verified not in main. **Still pending Saiful decision: merge to main or discard.**
+
+### Watch items (not tasks)
+
+Worth knowing about for AT:R23, but no action item attached. Surfacing them separately so the carry-over list above stays actionable.
+
+- **Room dedup window tuning** — `ROOM_DEDUP_COMPLETED_HOURS=24` in `infra/alpha.env`. Design doc default was 5 days. Raise if testers complain re-runs are blocked the same trading day for legitimate reasons; set to `0` to disable cached-run dedup entirely. The knob is live; no code change needed to retune.
+- **NVFP4 quantisation produces space-split tokens** — observed since day one (e.g. "Consol idation", "NV DA"). Not a regression, not blocking alpha. If users start commenting on it, vLLM-side tuning would be the path.
 
 ---
 
