@@ -1714,6 +1714,264 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CONCIERGE'**
   String get chatBubbleConcierge;
+
+  /// Tour intro bottom sheet headline — shown before the Floor coach marks.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to your trading floor.'**
+  String get tourIntroTitle;
+
+  /// Tour intro bottom sheet body.
+  ///
+  /// In en, this message translates to:
+  /// **'A quick tour shows you how AMI Trade works.'**
+  String get tourIntroSubtitle;
+
+  /// Tour intro primary CTA button.
+  ///
+  /// In en, this message translates to:
+  /// **'Take the tour'**
+  String get tourTakeTheTour;
+
+  /// Tour intro skip link.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get tourSkipForNow;
+
+  /// Coach mark tooltip Next button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Next →'**
+  String get tourNext;
+
+  /// Coach mark tooltip done/last-step button label.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get tourDone;
+
+  /// Coach mark tooltip skip-the-whole-tour link.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip tour'**
+  String get tourSkip;
+
+  /// Convene step tooltip secondary CTA — opens the Convene sheet directly.
+  ///
+  /// In en, this message translates to:
+  /// **'Try it now →'**
+  String get tourConveneTryNow;
+
+  /// Floor tour step 1 — Concierge hex title.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR CONCIERGE'**
+  String get tourFloor1Title;
+
+  /// Floor tour step 1 — Concierge hex body.
+  ///
+  /// In en, this message translates to:
+  /// **'Always available. Ask anything — lessons, your portfolio, what to read next.'**
+  String get tourFloor1Body;
+
+  /// Floor tour step 2 — agent grid title.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR ANALYST TEAM'**
+  String get tourFloor2Title;
+
+  /// Floor tour step 2 — agent grid body.
+  ///
+  /// In en, this message translates to:
+  /// **'12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.'**
+  String get tourFloor2Body;
+
+  /// Floor tour step 3 — locked agent title.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCKED AGENTS'**
+  String get tourFloor3Title;
+
+  /// Floor tour step 3 — locked agent body.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.'**
+  String get tourFloor3Body;
+
+  /// Floor tour step 4 — daily challenge card title.
+  ///
+  /// In en, this message translates to:
+  /// **'DAILY CHALLENGE'**
+  String get tourFloor4Title;
+
+  /// Floor tour step 4 — daily challenge card body.
+  ///
+  /// In en, this message translates to:
+  /// **'One challenge a day sharpens your judgement. Takes under 2 minutes.'**
+  String get tourFloor4Body;
+
+  /// Floor tour step 5 — Convene button title.
+  ///
+  /// In en, this message translates to:
+  /// **'CONVENE THE ROOM'**
+  String get tourFloor5Title;
+
+  /// Floor tour step 5 — Convene button body.
+  ///
+  /// In en, this message translates to:
+  /// **'Your most powerful tool. All 12 agents analyze a stock together — then you decide.'**
+  String get tourFloor5Body;
+
+  /// Snackbar shown after the Floor coach-mark tour completes.
+  ///
+  /// In en, this message translates to:
+  /// **'Go convene your first Room.'**
+  String get tourCompletionFloor;
+
+  /// Portfolio tour step 1 — header title.
+  ///
+  /// In en, this message translates to:
+  /// **'SIMULATION PORTFOLIO'**
+  String get tourPortfolio1Title;
+
+  /// Portfolio tour step 1 — header body.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the + button to open a trade ticket. All trades are paper — no real money.'**
+  String get tourPortfolio1Body;
+
+  /// Portfolio tour step 2 — value card title.
+  ///
+  /// In en, this message translates to:
+  /// **'TOTAL VALUE & P&L'**
+  String get tourPortfolio2Title;
+
+  /// Portfolio tour step 2 — value card body.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your portfolio value and running P&L here. Aim to beat the market.'**
+  String get tourPortfolio2Body;
+
+  /// Portfolio tour step 3 — watchlist title.
+  ///
+  /// In en, this message translates to:
+  /// **'WATCHLIST'**
+  String get tourPortfolio3Title;
+
+  /// Portfolio tour step 3 — watchlist body.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tickers you\'re watching. Tap any row for quick actions: ask an analyst, convene, or open a trade.'**
+  String get tourPortfolio3Body;
+
+  /// Snackbar shown after the Portfolio coach-mark tour completes.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a trade — all simulation, no risk.'**
+  String get tourCompletionPortfolio;
+
+  /// Journal tour step 1 — filter chips title.
+  ///
+  /// In en, this message translates to:
+  /// **'FILTER BY TYPE'**
+  String get tourJournal1Title;
+
+  /// Journal tour step 1 — filter chips body.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.'**
+  String get tourJournal1Body;
+
+  /// Journal tour step 2 — search bar title.
+  ///
+  /// In en, this message translates to:
+  /// **'SEARCH'**
+  String get tourJournal2Title;
+
+  /// Journal tour step 2 — search bar body.
+  ///
+  /// In en, this message translates to:
+  /// **'Find any entry by ticker, agent name, or keyword across your entire history.'**
+  String get tourJournal2Body;
+
+  /// Journal tour step 3 — entry list title.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR HISTORY'**
+  String get tourJournal3Title;
+
+  /// Journal tour step 3 — entry list body.
+  ///
+  /// In en, this message translates to:
+  /// **'Every entry is permanent. Your decisions live here — review them to improve.'**
+  String get tourJournal3Body;
+
+  /// Snackbar shown after the Journal coach-mark tour completes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your history starts with your first Room session.'**
+  String get tourCompletionJournal;
+
+  /// Lessons tour step 1 — header title.
+  ///
+  /// In en, this message translates to:
+  /// **'LESSONS'**
+  String get tourLessons1Title;
+
+  /// Lessons tour step 1 — header body.
+  ///
+  /// In en, this message translates to:
+  /// **'Lessons are your path to unlocking all 12 analysts. Complete tracks to grow your team.'**
+  String get tourLessons1Body;
+
+  /// Lessons tour step 2 — progress bar title.
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR PROGRESS'**
+  String get tourLessons2Title;
+
+  /// Lessons tour step 2 — progress bar body.
+  ///
+  /// In en, this message translates to:
+  /// **'Track lessons completed and agents unlocked. Every lesson adds firepower to your team.'**
+  String get tourLessons2Body;
+
+  /// Lessons tour step 3 — hex cluster title.
+  ///
+  /// In en, this message translates to:
+  /// **'LEARNING TRACKS'**
+  String get tourLessons3Title;
+
+  /// Lessons tour step 3 — hex cluster body.
+  ///
+  /// In en, this message translates to:
+  /// **'Each hex is a learning track. Tap any to explore its lessons and unlock your analysts.'**
+  String get tourLessons3Body;
+
+  /// Snackbar shown after the Lessons coach-mark tour completes.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with Foundations to unlock your first analyst.'**
+  String get tourCompletionLessons;
+
+  /// Settings section title for the tour restart option.
+  ///
+  /// In en, this message translates to:
+  /// **'WALKTHROUGH'**
+  String get tourSettingsSectionTitle;
+
+  /// Settings tile label — resets all four per-section tour flags.
+  ///
+  /// In en, this message translates to:
+  /// **'Restart app tour'**
+  String get tourSettingsRestart;
+
+  /// Snackbar after resetting the tour from Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Tour restarts next time you visit each section.'**
+  String get tourSettingsResetDone;
 }
 
 class _AppLocalizationsDelegate

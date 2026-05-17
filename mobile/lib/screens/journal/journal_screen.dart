@@ -8,6 +8,9 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/tour/journal_tour.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
@@ -19,8 +22,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class JournalScreen extends ConsumerWidget {
+class JournalScreen extends ConsumerStatefulWidget {
   const JournalScreen({super.key});
 
   /// Filter chip definitions. Labels are resolved at render time via
@@ -41,7 +45,50 @@ class JournalScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<JournalScreen> createState() => _JournalScreenState();
+}
+
+class _JournalScreenState extends ConsumerState<JournalScreen> {
+  final _filterRowKey = GlobalKey();
+  final _searchKey = GlobalKey();
+  final _listKey = GlobalKey();
+
+  void _runTour() {
+    final l = AppLocalizations.of(context);
+    TutorialCoachMark(
+      targets: buildJournalTargets(
+        l: l,
+        filterRowKey: _filterRowKey,
+        searchKey: _searchKey,
+        listKey: _listKey,
+      ),
+      hideSkip: true,
+      colorShadow: Colors.black,
+      opacityShadow: 0.88,
+      pulseEnable: false,
+      onFinish: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tourCompletionJournal),
+          backgroundColor: AmiColors.hexBlue,
+          behavior: SnackBarBehavior.floating,
+        ));
+      },
+    ).show(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fire tour when Journal tab (index 2) becomes active for the first time.
+    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
+      if (next != 2) return;
+      final service = ref.read(tourServiceProvider);
+      if (await service.hasSeen(TourSection.journal)) return;
+      await service.markSeen(TourSection.journal);
+      if (!mounted) return;
+      _runTour();
+    });
+
     final state = ref.watch(journalNotifierProvider);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -49,8 +96,8 @@ class JournalScreen extends ConsumerWidget {
         child: Column(
           children: [
             const _Header(),
-            _FilterRow(active: state.filterType),
-            _SearchBar(current: state.searchQuery),
+            _FilterRow(key: _filterRowKey, active: state.filterType),
+            _SearchBar(key: _searchKey, current: state.searchQuery),
             if (state.retentionDays != null)
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -62,14 +109,14 @@ class JournalScreen extends ConsumerWidget {
                   style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
                 ),
               ),
-            Expanded(child: _body(context, ref, state)),
+            Expanded(key: _listKey, child: _body(context, state)),
           ],
         ),
       ),
     );
   }
 
-  Widget _body(BuildContext context, WidgetRef ref, JournalState state) {
+  Widget _body(BuildContext context, JournalState state) {
     if (state.loading && state.entries.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -106,7 +153,7 @@ class JournalScreen extends ConsumerWidget {
             background: const _DeleteBackground(),
             onDismissed: (_) {
               HapticFeedback.mediumImpact();
-              final notifier = ref.read(journalNotifierProvider.notifier);
+              final notifier = ref.read(journalNotifierProvider.notifier); // ref from ConsumerState
               // Capture messenger + l10n strings before deleteEntry triggers
               // a rebuild that deactivates this itemBuilder context. If
               // ScaffoldMessenger.of is called on a deactivated context it
@@ -175,7 +222,7 @@ class _Header extends StatelessWidget {
 
 
 class _FilterRow extends ConsumerWidget {
-  const _FilterRow({this.active});
+  const _FilterRow({super.key, this.active});
   final JournalEntryType? active;
 
   @override
@@ -214,7 +261,7 @@ class _FilterRow extends ConsumerWidget {
 
 
 class _SearchBar extends ConsumerStatefulWidget {
-  const _SearchBar({required this.current});
+  const _SearchBar({super.key, required this.current});
   final String current;
 
   @override

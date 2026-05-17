@@ -6,6 +6,7 @@
 /// agent prompt is composed (1-on-1, Coach, Room, Sim).
 library;
 
+import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/state/theme_provider.dart';
@@ -132,6 +133,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const _ThemeSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _HelpSection(),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _WalkthroughSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
                   if (kAllowBackendSwitch) ...[
@@ -785,6 +788,45 @@ class _BackendModeRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+
+class _WalkthroughSection extends ConsumerWidget {
+  const _WalkthroughSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return _Section(
+      title: l.tourSettingsSectionTitle,
+      children: [
+        InkWell(
+          onTap: () async {
+            await ref.read(tourServiceProvider).resetAll();
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(l.tourSettingsResetDone),
+              behavior: SnackBarBehavior.floating,
+            ));
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Row(
+              children: [
+                const Icon(Icons.explore_outlined,
+                    color: AmiColors.hexCyan, size: 18),
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Text(l.tourSettingsRestart, style: AmiTypography.body),
+                ),
+                const Icon(Icons.refresh, color: AmiColors.textLow, size: 18),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

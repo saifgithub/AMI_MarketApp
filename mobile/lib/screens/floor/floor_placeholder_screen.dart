@@ -3,6 +3,10 @@
 /// The Concierge is always unlocked.
 library;
 
+import 'package:ami_trade/features/tour/floor_tour.dart';
+import 'package:ami_trade/features/tour/tour_intro_sheet.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -18,9 +22,84 @@ import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class FloorPlaceholderScreen extends ConsumerWidget {
+class FloorPlaceholderScreen extends ConsumerStatefulWidget {
   const FloorPlaceholderScreen({super.key});
+
+  @override
+  ConsumerState<FloorPlaceholderScreen> createState() =>
+      _FloorPlaceholderScreenState();
+}
+
+class _FloorPlaceholderScreenState
+    extends ConsumerState<FloorPlaceholderScreen> {
+  // GlobalKeys for coach-mark targets
+  final _conciergeKey = GlobalKey();
+  final _agentKey0 = GlobalKey();
+  final _agentKey4 = GlobalKey();
+  final _challengeKey = GlobalKey();
+  final _conveneKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    // Floor is tab 0 — active from the start. Check immediately after layout.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _maybeShowTour();
+    });
+  }
+
+  Future<void> _maybeShowTour() async {
+    if (!mounted) return;
+    // Only fire when Floor is the active tab (guards against IndexedStack
+    // running initState for all tabs simultaneously on first build).
+    if (ref.read(activeTabIndexProvider) != 0) return;
+    final service = ref.read(tourServiceProvider);
+    if (await service.hasSeen(TourSection.floor)) return;
+    await service.markSeen(TourSection.floor);
+    if (!mounted) return;
+    final ctx = context;
+    final start = await showModalBottomSheet<bool>(
+      context: ctx,
+      backgroundColor: AmiColors.slate800,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const TourIntroSheet(),
+    );
+    if (start != true || !mounted) return;
+    _runFloorTour();
+  }
+
+  void _runFloorTour() {
+    final l = AppLocalizations.of(context);
+    TutorialCoachMark(
+      targets: buildFloorTargets(
+        l: l,
+        conciergeKey: _conciergeKey,
+        agentKey0: _agentKey0,
+        agentKey4: _agentKey4,
+        challengeKey: _challengeKey,
+        conveneKey: _conveneKey,
+        onTryConvene: () {
+          if (mounted) ConveneSheet.show(context);
+        },
+      ),
+      hideSkip: true,
+      colorShadow: Colors.black,
+      opacityShadow: 0.88,
+      pulseEnable: false,
+      onFinish: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tourCompletionFloor),
+          backgroundColor: AmiColors.hexGreen,
+          behavior: SnackBarBehavior.floating,
+        ));
+      },
+    ).show(context: context);
+  }
 
   void _openAgent(BuildContext context, Agent agent) {
     Navigator.of(context).push(MaterialPageRoute(
@@ -30,9 +109,6 @@ class FloorPlaceholderScreen extends ConsumerWidget {
 
   void _showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
     final state = ref.read(lessonsNotifierProvider);
-    // Gateway set = first 3 lessons (by id) that callout this agent. Mirrors
-    // backend lessons_service.UNLOCK_REQUIRED_PER_AGENT so the UI shows the
-    // exact lessons that gate the unlock — not the full 70+ enrichment set.
     const gatewaySize = 3;
     final calloutLessons = (state.catalogue?.tracks
                 .expand((t) => t.lessons)
@@ -135,7 +211,27 @@ class FloorPlaceholderScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    // Listen for Floor becoming the active tab after the user switches away and back.
+    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
+      if (next != 0) return;
+      final service = ref.read(tourServiceProvider);
+      if (await service.hasSeen(TourSection.floor)) return;
+      await service.markSeen(TourSection.floor);
+      if (!mounted) return;
+      final ctx = context;
+      final start = await showModalBottomSheet<bool>(
+        context: ctx,
+        backgroundColor: AmiColors.slate800,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (_) => const TourIntroSheet(),
+      );
+      if (start != true || !mounted) return;
+      _runFloorTour();
+    });
+
     final state = ref.watch(lessonsNotifierProvider);
     final unlocked = state.unlockedAgentIds;
     final concierge = kAllAgents.last;
@@ -148,97 +244,109 @@ class FloorPlaceholderScreen extends ConsumerWidget {
         children: [
           const Positioned.fill(child: HexMeshOverlay()),
           SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AmiSpacing.m),
-          child: Column(
-            children: [
-              const SizedBox(height: AmiSpacing.l),
-              // ── Concierge centerpiece ──
-              GestureDetector(
-                onTap: () => _openAgent(context, concierge),
-                child: HexAvatar(
-                  label: concierge.abbreviation,
-                  color: concierge.color,
-                  size: 110,
-                  status: HexAvatarStatus.recentCall,
-                ),
-              ),
-              const SizedBox(height: AmiSpacing.s),
-              Text(l.floorConciergeHeading, style: AmiTypography.labelMono),
-              const SizedBox(height: AmiSpacing.xs),
-              Text(
-                l.floorConciergeTagline,
-                style: AmiTypography.caption.copyWith(color: AmiColors.hexPink),
-              ),
-              const SizedBox(height: AmiSpacing.xl),
-
-              // ── 12 trading agents grid ──
-              Text(l.floorTeamHeading, style: AmiTypography.labelMono),
-              const SizedBox(height: AmiSpacing.s),
-              Text(
-                l.floorUnlockedSummary(unlocked.length),
-                style: AmiTypography.caption,
-              ),
-              const SizedBox(height: AmiSpacing.m),
-              Wrap(
-                spacing: AmiSpacing.m,
-                runSpacing: AmiSpacing.l,
-                alignment: WrapAlignment.center,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AmiSpacing.m),
+              child: Column(
                 children: [
-                  for (final agent in tradingAgents)
-                    _AgentTile(
-                      agent: agent,
-                      unlocked: unlocked.contains(agent.id),
-                      onTap: () => unlocked.contains(agent.id)
-                          ? _openAgent(context, agent)
-                          : _showLockedSheet(context, ref, agent),
+                  const SizedBox(height: AmiSpacing.l),
+                  // ── Concierge centerpiece ──
+                  GestureDetector(
+                    key: _conciergeKey,
+                    onTap: () => _openAgent(context, concierge),
+                    child: HexAvatar(
+                      label: concierge.abbreviation,
+                      color: concierge.color,
+                      size: 110,
+                      status: HexAvatarStatus.recentCall,
                     ),
+                  ),
+                  const SizedBox(height: AmiSpacing.s),
+                  Text(l.floorConciergeHeading, style: AmiTypography.labelMono),
+                  const SizedBox(height: AmiSpacing.xs),
+                  Text(
+                    l.floorConciergeTagline,
+                    style: AmiTypography.caption.copyWith(color: AmiColors.hexPink),
+                  ),
+                  const SizedBox(height: AmiSpacing.xl),
+
+                  // ── 12 trading agents grid ──
+                  Text(l.floorTeamHeading, style: AmiTypography.labelMono),
+                  const SizedBox(height: AmiSpacing.s),
+                  Text(
+                    l.floorUnlockedSummary(unlocked.length),
+                    style: AmiTypography.caption,
+                  ),
+                  const SizedBox(height: AmiSpacing.m),
+                  Wrap(
+                    spacing: AmiSpacing.m,
+                    runSpacing: AmiSpacing.l,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      for (var i = 0; i < tradingAgents.length; i++)
+                        _AgentTile(
+                          key: i == 0
+                              ? _agentKey0
+                              : i == 4
+                                  ? _agentKey4
+                                  : null,
+                          agent: tradingAgents[i],
+                          unlocked: unlocked.contains(tradingAgents[i].id),
+                          onTap: () => unlocked.contains(tradingAgents[i].id)
+                              ? _openAgent(context, tradingAgents[i])
+                              : _showLockedSheet(context, ref, tradingAgents[i]),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AmiSpacing.xl),
+
+                  // ── Daily Challenge ──
+                  SizedBox(
+                    key: _challengeKey,
+                    child: const DailyChallengeCard(),
+                  ),
+                  const SizedBox(height: AmiSpacing.l),
+
+                  // ── Convene the Room CTA ──
+                  SizedBox(
+                    key: _conveneKey,
+                    child: HexButton(
+                      label: l.floorConveneCta,
+                      color: AmiColors.hexGreen,
+                      onPressed: () => ConveneSheet.show(context),
+                    ),
+                  ),
+                  const SizedBox(height: AmiSpacing.xs),
+                  Text(
+                    l.floorConveneCaption,
+                    style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                  ),
+
+                  const SizedBox(height: AmiSpacing.xl),
+
+                  // ── Footer ──
+                  TextButton(
+                    onPressed: () async {
+                      await ref
+                          .read(onboardingNotifierProvider.notifier)
+                          .reset();
+                      if (!context.mounted) return;
+                      Navigator.of(context).pushReplacementNamed('/onboarding');
+                    },
+                    child: Text(
+                      l.floorRestartOnboarding,
+                      style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
+                    ),
+                  ),
+                  const SizedBox(height: AmiSpacing.m),
+                  Text(
+                    l.floorFooter,
+                    style: AmiTypography.caption,
+                  ),
+                  const SizedBox(height: AmiSpacing.l),
                 ],
               ),
-
-              const SizedBox(height: AmiSpacing.xl),
-
-              // ── Daily Challenge ──
-              const DailyChallengeCard(),
-              const SizedBox(height: AmiSpacing.l),
-
-              // ── Convene the Room CTA ──
-              HexButton(
-                label: l.floorConveneCta,
-                color: AmiColors.hexGreen,
-                onPressed: () => ConveneSheet.show(context),
-              ),
-              const SizedBox(height: AmiSpacing.xs),
-              Text(
-                l.floorConveneCaption,
-                style: AmiTypography.caption.copyWith(color: AmiColors.textLow),
-              ),
-
-              const SizedBox(height: AmiSpacing.xl),
-
-              // ── Footer ──
-              TextButton(
-                onPressed: () async {
-                  await ref
-                      .read(onboardingNotifierProvider.notifier)
-                      .reset();
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushReplacementNamed('/onboarding');
-                },
-                child: Text(
-                  l.floorRestartOnboarding,
-                  style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
-                ),
-              ),
-              const SizedBox(height: AmiSpacing.m),
-              Text(
-                l.floorFooter,
-                style: AmiTypography.caption,
-              ),
-              const SizedBox(height: AmiSpacing.l),
-            ],
-          ),
-        ),
+            ),
           ),
         ],
       ),
@@ -248,7 +356,12 @@ class FloorPlaceholderScreen extends ConsumerWidget {
 
 
 class _AgentTile extends StatelessWidget {
-  const _AgentTile({required this.agent, required this.unlocked, required this.onTap});
+  const _AgentTile({
+    super.key,
+    required this.agent,
+    required this.unlocked,
+    required this.onTap,
+  });
   final Agent agent;
   final bool unlocked;
   final VoidCallback onTap;

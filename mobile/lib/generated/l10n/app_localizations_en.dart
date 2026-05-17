@@ -905,4 +905,151 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chatBubbleConcierge => 'CONCIERGE';
+
+  @override
+  String get tourIntroTitle => 'Welcome to your trading floor.';
+
+  @override
+  String get tourIntroSubtitle => 'A quick tour shows you how AMI Trade works.';
+
+  @override
+  String get tourTakeTheTour => 'Take the tour';
+
+  @override
+  String get tourSkipForNow => 'Skip for now';
+
+  @override
+  String get tourNext => 'Next →';
+
+  @override
+  String get tourDone => 'Got it';
+
+  @override
+  String get tourSkip => 'Skip tour';
+
+  @override
+  String get tourConveneTryNow => 'Try it now →';
+
+  @override
+  String get tourFloor1Title => 'YOUR CONCIERGE';
+
+  @override
+  String get tourFloor1Body =>
+      'Always available. Ask anything — lessons, your portfolio, what to read next.';
+
+  @override
+  String get tourFloor2Title => 'YOUR ANALYST TEAM';
+
+  @override
+  String get tourFloor2Body =>
+      '12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.';
+
+  @override
+  String get tourFloor3Title => 'LOCKED AGENTS';
+
+  @override
+  String get tourFloor3Body =>
+      'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.';
+
+  @override
+  String get tourFloor4Title => 'DAILY CHALLENGE';
+
+  @override
+  String get tourFloor4Body =>
+      'One challenge a day sharpens your judgement. Takes under 2 minutes.';
+
+  @override
+  String get tourFloor5Title => 'CONVENE THE ROOM';
+
+  @override
+  String get tourFloor5Body =>
+      'Your most powerful tool. All 12 agents analyze a stock together — then you decide.';
+
+  @override
+  String get tourCompletionFloor => 'Go convene your first Room.';
+
+  @override
+  String get tourPortfolio1Title => 'SIMULATION PORTFOLIO';
+
+  @override
+  String get tourPortfolio1Body =>
+      'Use the + button to open a trade ticket. All trades are paper — no real money.';
+
+  @override
+  String get tourPortfolio2Title => 'TOTAL VALUE & P&L';
+
+  @override
+  String get tourPortfolio2Body =>
+      'Track your portfolio value and running P&L here. Aim to beat the market.';
+
+  @override
+  String get tourPortfolio3Title => 'WATCHLIST';
+
+  @override
+  String get tourPortfolio3Body =>
+      'Add tickers you\'re watching. Tap any row for quick actions: ask an analyst, convene, or open a trade.';
+
+  @override
+  String get tourCompletionPortfolio =>
+      'Try a trade — all simulation, no risk.';
+
+  @override
+  String get tourJournal1Title => 'FILTER BY TYPE';
+
+  @override
+  String get tourJournal1Body =>
+      'Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.';
+
+  @override
+  String get tourJournal2Title => 'SEARCH';
+
+  @override
+  String get tourJournal2Body =>
+      'Find any entry by ticker, agent name, or keyword across your entire history.';
+
+  @override
+  String get tourJournal3Title => 'YOUR HISTORY';
+
+  @override
+  String get tourJournal3Body =>
+      'Every entry is permanent. Your decisions live here — review them to improve.';
+
+  @override
+  String get tourCompletionJournal =>
+      'Your history starts with your first Room session.';
+
+  @override
+  String get tourLessons1Title => 'LESSONS';
+
+  @override
+  String get tourLessons1Body =>
+      'Lessons are your path to unlocking all 12 analysts. Complete tracks to grow your team.';
+
+  @override
+  String get tourLessons2Title => 'YOUR PROGRESS';
+
+  @override
+  String get tourLessons2Body =>
+      'Track lessons completed and agents unlocked. Every lesson adds firepower to your team.';
+
+  @override
+  String get tourLessons3Title => 'LEARNING TRACKS';
+
+  @override
+  String get tourLessons3Body =>
+      'Each hex is a learning track. Tap any to explore its lessons and unlock your analysts.';
+
+  @override
+  String get tourCompletionLessons =>
+      'Start with Foundations to unlock your first analyst.';
+
+  @override
+  String get tourSettingsSectionTitle => 'WALKTHROUGH';
+
+  @override
+  String get tourSettingsRestart => 'Restart app tour';
+
+  @override
+  String get tourSettingsResetDone =>
+      'Tour restarts next time you visit each section.';
 }

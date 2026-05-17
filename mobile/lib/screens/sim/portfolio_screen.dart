@@ -8,6 +8,9 @@
 /// so trades that hit while the user is on this screen show as won/lost.
 library;
 
+import 'package:ami_trade/features/tour/portfolio_tour.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
@@ -20,12 +23,56 @@ import 'package:ami_trade/widgets/watchlist_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class PortfolioScreen extends ConsumerWidget {
+class PortfolioScreen extends ConsumerStatefulWidget {
   const PortfolioScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PortfolioScreen> createState() => _PortfolioScreenState();
+}
+
+class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
+  final _headerKey = GlobalKey();
+  final _valueCardKey = GlobalKey();
+  final _watchlistKey = GlobalKey();
+
+  void _runTour() {
+    final l = AppLocalizations.of(context);
+    TutorialCoachMark(
+      targets: buildPortfolioTargets(
+        l: l,
+        headerKey: _headerKey,
+        valueCardKey: _valueCardKey,
+        watchlistKey: _watchlistKey,
+      ),
+      hideSkip: true,
+      colorShadow: Colors.black,
+      opacityShadow: 0.88,
+      pulseEnable: false,
+      onFinish: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tourCompletionPortfolio),
+          backgroundColor: AmiColors.hexCyan,
+          behavior: SnackBarBehavior.floating,
+        ));
+      },
+    ).show(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fire tour when Portfolio tab (index 1) becomes active for the first time.
+    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
+      if (next != 1) return;
+      final service = ref.read(tourServiceProvider);
+      if (await service.hasSeen(TourSection.portfolio)) return;
+      await service.markSeen(TourSection.portfolio);
+      if (!mounted) return;
+      _runTour();
+    });
+
     final state = ref.watch(simNotifierProvider);
     final watchlist = ref.watch(watchlistNotifierProvider);
     return Scaffold(
@@ -33,8 +80,8 @@ class PortfolioScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _Header(onTradeTicket: () => TradeTicketSheet.show(context)),
-            Expanded(child: _body(context, ref, state, watchlist)),
+            _Header(key: _headerKey, onTradeTicket: () => TradeTicketSheet.show(context)),
+            Expanded(child: _body(context, state, watchlist)),
           ],
         ),
       ),
@@ -43,7 +90,6 @@ class PortfolioScreen extends ConsumerWidget {
 
   Widget _body(
     BuildContext context,
-    WidgetRef ref,
     SimState state,
     WatchlistState watchlist,
   ) {
@@ -69,9 +115,9 @@ class PortfolioScreen extends ConsumerWidget {
       child: ListView(
         padding: const EdgeInsets.all(AmiSpacing.m),
         children: [
-          _ValueCard(portfolio: p),
+          _ValueCard(key: _valueCardKey, portfolio: p),
           const SizedBox(height: AmiSpacing.m),
-          _WatchlistSection(state: watchlist),
+          _WatchlistSection(key: _watchlistKey, state: watchlist),
           const SizedBox(height: AmiSpacing.m),
           if (p.holdings.isEmpty)
             _NewTraderHint(onTradeTicket: () => TradeTicketSheet.show(context))
@@ -106,7 +152,7 @@ class PortfolioScreen extends ConsumerWidget {
 
 
 class _Header extends StatelessWidget {
-  const _Header({required this.onTradeTicket});
+  const _Header({super.key, required this.onTradeTicket});
   final VoidCallback onTradeTicket;
 
   @override
@@ -136,7 +182,7 @@ class _Header extends StatelessWidget {
 
 
 class _ValueCard extends StatelessWidget {
-  const _ValueCard({required this.portfolio});
+  const _ValueCard({super.key, required this.portfolio});
   final SimPortfolio portfolio;
 
   @override
@@ -408,7 +454,7 @@ class _QuoteSourcePill extends StatelessWidget {
 
 
 class _WatchlistSection extends ConsumerWidget {
-  const _WatchlistSection({required this.state});
+  const _WatchlistSection({super.key, required this.state});
   final WatchlistState state;
 
   @override

@@ -5,6 +5,9 @@
 /// Tapping a hex navigates to [TrackLessonsScreen].
 library;
 
+import 'package:ami_trade/features/tour/lessons_tour.dart';
+import 'package:ami_trade/features/tour/tour_providers.dart';
+import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
@@ -14,6 +17,7 @@ import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/track_hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 // ─── track config ────────────────────────────────────────────────────────────
 
@@ -39,26 +43,69 @@ const _trackLabel = {
 
 // ─── screen ──────────────────────────────────────────────────────────────────
 
-class LessonsScreen extends ConsumerWidget {
+class LessonsScreen extends ConsumerStatefulWidget {
   const LessonsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LessonsScreen> createState() => _LessonsScreenState();
+}
+
+class _LessonsScreenState extends ConsumerState<LessonsScreen> {
+  final _headerKey = GlobalKey();
+  final _progressKey = GlobalKey();
+  final _hexClusterKey = GlobalKey();
+
+  void _runTour() {
+    final l = AppLocalizations.of(context);
+    TutorialCoachMark(
+      targets: buildLessonsTargets(
+        l: l,
+        headerKey: _headerKey,
+        progressKey: _progressKey,
+        hexClusterKey: _hexClusterKey,
+      ),
+      hideSkip: true,
+      colorShadow: Colors.black,
+      opacityShadow: 0.88,
+      pulseEnable: false,
+      onFinish: () {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).tourCompletionLessons),
+          backgroundColor: AmiColors.hexGreen,
+          behavior: SnackBarBehavior.floating,
+        ));
+      },
+    ).show(context: context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fire tour when Lessons tab (index 3) becomes active for the first time.
+    ref.listen<int>(activeTabIndexProvider, (prev, next) async {
+      if (next != 3) return;
+      final service = ref.read(tourServiceProvider);
+      if (await service.hasSeen(TourSection.lessons)) return;
+      await service.markSeen(TourSection.lessons);
+      if (!mounted) return;
+      _runTour();
+    });
+
     final state = ref.watch(lessonsNotifierProvider);
     return Scaffold(
       backgroundColor: AmiColors.slate900,
       body: SafeArea(
         child: Column(
           children: [
-            const _Header(),
-            Expanded(child: _body(context, ref, state)),
+            _Header(key: _headerKey),
+            Expanded(child: _body(context, state)),
           ],
         ),
       ),
     );
   }
 
-  Widget _body(BuildContext context, WidgetRef ref, LessonsState state) {
+  Widget _body(BuildContext context, LessonsState state) {
     if (state.loading && state.catalogue == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -81,9 +128,10 @@ class LessonsScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _SlimProgressBar(state: state),
+              _SlimProgressBar(key: _progressKey, state: state),
               const SizedBox(height: AmiSpacing.xl),
               _HexCluster(
+                key: _hexClusterKey,
                 tracks: cat.tracks,
                 progress: state.progress,
                 onTrackTap: (trackId) => Navigator.of(context).push(
@@ -103,7 +151,7 @@ class LessonsScreen extends ConsumerWidget {
 // ─── Zone A — slim progress bar ───────────────────────────────────────────────
 
 class _SlimProgressBar extends StatelessWidget {
-  const _SlimProgressBar({required this.state});
+  const _SlimProgressBar({super.key, required this.state});
   final LessonsState state;
 
   @override
@@ -153,6 +201,7 @@ class _SlimProgressBar extends StatelessWidget {
 ///   [RP]  [EP]        bottom-left / bottom-right of centre
 class _HexCluster extends StatelessWidget {
   const _HexCluster({
+    super.key,
     required this.tracks,
     required this.progress,
     required this.onTrackTap,
@@ -218,7 +267,7 @@ class _HexCluster extends StatelessWidget {
 // ─── chrome ──────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
-  const _Header();
+  const _Header({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -3,6 +3,7 @@
 /// behind a drawer if it gets crowded.
 library;
 
+import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/floor/floor_placeholder_screen.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
@@ -53,7 +54,10 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               removeBottom: true,
               child: BottomNavigationBar(
                 currentIndex: _tab,
-                onTap: (i) => setState(() => _tab = i),
+                onTap: (i) {
+                  setState(() => _tab = i);
+                  ref.read(activeTabIndexProvider.notifier).state = i;
+                },
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 type: BottomNavigationBarType.fixed,
