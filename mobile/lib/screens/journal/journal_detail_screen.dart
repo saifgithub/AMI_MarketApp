@@ -229,6 +229,11 @@ class _PayloadBlock extends StatelessWidget {
         if (verdictRef != null && verdictRef.isNotEmpty) {
           // First 8 chars match the short_id surfaced in the bug-report UI.
           rows.add(_KV('From verdict', verdictRef.substring(0, 8)));
+        } else {
+          // Bug d5717660: trades placed without a Convene the Room verdict
+          // are surfaced so the user (or future self) can distinguish
+          // AI-backed decisions from gut trades.
+          rows.add(_KV('AI advice', 'Without — manual trade'));
         }
         if (rows.isNotEmpty) {
           children.add(Container(

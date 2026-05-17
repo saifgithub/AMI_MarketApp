@@ -8,6 +8,8 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/screens/room/convene_sheet.dart';
+import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +61,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   late final TextEditingController _target;
   late final TextEditingController _horizon;
   String _side = 'buy';
+  // Bug d5717660: when a trade has no AI verdict, suggest convening first.
+  // The user can dismiss the advisory and proceed — the trade is recorded
+  // with verdict_ref=null, which the journal renders as "Without AI advice".
+  bool _advisoryDismissed = false;
 
   @override
   void initState() {
@@ -90,6 +96,18 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     _target.dispose();
     _horizon.dispose();
     super.dispose();
+  }
+
+  void _convene() {
+    final ticker = _ticker.text.trim().toUpperCase();
+    Navigator.of(context).pop();
+    if (ticker.isNotEmpty) {
+      Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => RoomScreen(ticker: ticker),
+      ));
+    } else {
+      ConveneSheet.show(context);
+    }
   }
 
   Future<void> _submit() async {
@@ -168,6 +186,80 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               ],
             ),
             const SizedBox(height: AmiSpacing.l),
+            // No-verdict advisory (bug d5717660). Non-blocking: the user
+            // can dismiss and submit anyway; the resulting trade has
+            // verdict_ref=null so the journal labels it "Without AI advice".
+            if (widget.verdictRef == null && !_advisoryDismissed) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AmiSpacing.s),
+                decoration: BoxDecoration(
+                  color: AmiColors.hexBlue.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(AmiRadii.card),
+                  border: Border.all(color: AmiColors.hexBlue.withValues(alpha: 0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.lightbulb_outline,
+                            color: AmiColors.hexBlue, size: 16),
+                        const SizedBox(width: 4),
+                        Text('NO AI VERDICT',
+                            style: AmiTypography.labelMono.copyWith(
+                                color: AmiColors.hexBlue, fontSize: 11)),
+                        const Spacer(),
+                        InkWell(
+                          onTap: () => setState(() => _advisoryDismissed = true),
+                          child: const Padding(
+                            padding: EdgeInsets.all(4),
+                            child: Icon(Icons.close,
+                                color: AmiColors.textLow, size: 16),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Convene the Room first to get analysis from your 12 agents. '
+                      'Or proceed — this trade will be marked "without advice".',
+                      style: AmiTypography.body,
+                    ),
+                    const SizedBox(height: AmiSpacing.s),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AmiColors.hexBlue,
+                              side: const BorderSide(color: AmiColors.hexBlue),
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            icon: const Icon(Icons.bolt, size: 16),
+                            label: const Text('Convene the Room'),
+                            onPressed: _convene,
+                          ),
+                        ),
+                        const SizedBox(width: AmiSpacing.s),
+                        Expanded(
+                          child: TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AmiColors.textLow,
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                            ),
+                            onPressed: () =>
+                                setState(() => _advisoryDismissed = true),
+                            child: const Text('Proceed without'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.m),
+            ],
             if (refusal) ...[
               Container(
                 width: double.infinity,
