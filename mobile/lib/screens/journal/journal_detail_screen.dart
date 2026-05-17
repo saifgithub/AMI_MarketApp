@@ -201,6 +201,69 @@ class _PayloadBlock extends StatelessWidget {
         children.add(const SizedBox(height: AmiSpacing.s));
       }
       if (overlay != null) children.add(_Block(label: l.journalDetailBlockOverlay, body: overlay));
+    } else if (entryType == JournalEntryType.simTrade) {
+      final t = (payload['trade'] as Map?)?.cast<String, dynamic>();
+      if (t != null) {
+        // Show fields the title/summary don't already cover: horizon,
+        // status, timestamps, close info, P&L, linked verdict. Skip side,
+        // quantity, ticker, entry/stop/target (already in the header).
+        final horizonDays = t['horizon_days'];
+        final status = (t['status'] as String?)?.toUpperCase();
+        final openedAt = _formatJournalTs(t['opened_at'] as String?);
+        final closedAt = _formatJournalTs(t['closed_at'] as String?);
+        final closedPrice = t['closed_price'];
+        final realisedPnl = t['realised_pnl'];
+        final verdictRef = t['verdict_ref'] as String?;
+        final rows = <_KV>[];
+        if (horizonDays != null) rows.add(_KV('Horizon', '$horizonDays days'));
+        if (status != null) rows.add(_KV('Status', status));
+        if (openedAt != null) rows.add(_KV('Opened at', openedAt));
+        if (closedAt != null) rows.add(_KV('Closed at', closedAt));
+        if (closedPrice is num) {
+          rows.add(_KV('Closed price', '\$${closedPrice.toStringAsFixed(2)}'));
+        }
+        if (realisedPnl is num && realisedPnl != 0) {
+          final sign = realisedPnl >= 0 ? '+' : '';
+          rows.add(_KV('Realised P&L', '$sign\$${realisedPnl.toStringAsFixed(2)}'));
+        }
+        if (verdictRef != null && verdictRef.isNotEmpty) {
+          // First 8 chars match the short_id surfaced in the bug-report UI.
+          rows.add(_KV('From verdict', verdictRef.substring(0, 8)));
+        }
+        if (rows.isNotEmpty) {
+          children.add(Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AmiSpacing.s),
+            decoration: BoxDecoration(
+              color: AmiColors.slate800,
+              borderRadius: BorderRadius.circular(AmiRadii.card),
+              border: Border.all(color: AmiColors.slate700),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final row in rows)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          width: 110,
+                          child: Text(row.label.toUpperCase(),
+                              style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                        ),
+                        Expanded(
+                          child: Text(row.value, style: AmiTypography.body),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ));
+        }
+      }
     } else if (entryType == JournalEntryType.roomRun) {
       final v = (payload['verdict'] as Map?)?.cast<String, dynamic>();
       if (v != null) {
@@ -366,5 +429,24 @@ class _NoteEditor extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _KV {
+  const _KV(this.label, this.value);
+  final String label;
+  final String value;
+}
+
+/// Format an ISO-8601 timestamp (e.g. "2026-05-17T06:40:50.438532+00:00")
+/// into a short human-readable string in the device's local timezone.
+/// Returns null if the input is null or unparseable.
+String? _formatJournalTs(String? iso) {
+  if (iso == null || iso.isEmpty) return null;
+  try {
+    final dt = DateTime.parse(iso).toLocal();
+    return DateFormat('MMM d, h:mm a').format(dt);
+  } catch (_) {
+    return null;
   }
 }
