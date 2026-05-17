@@ -13,6 +13,58 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R21  (2026-05-15)
+
+Focused session: 2 data commits + 1 handover, 1 alpha promotion (`alpha-2026-05-15-4`), test count 261 → **264**.
+
+### Room-runner fix: per-agent LLM timeout + better journal entry (`eb1ef3c`)
+
+Root cause of `698a0fe6` + `f7c4d7e0` (convene report not stored / room stuck waiting):
+
+- **Timeout**: Added `_AGENT_LLM_TIMEOUT_S = 90.0`. `_speak_one_agent` and `_stream_pm_narration` now buffer via `asyncio.wait_for`; `TimeoutError` falls back to the scripted template so the run still finishes and produces a verdict instead of stalling indefinitely.  Live path now matches the existing PM-narration buffered pattern (all 12 agents: collect full response → restream via typewriter).
+- **Journal**: Extracted `_build_journal_entry()` as a testable module-level function in `room.py`. Failed/aborted runs now write "Room on NVDA — failed · N of 12 agents completed — {error}" instead of "incomplete / no verdict". Replaced the silent `except: pass` with a structured `logger.warning`.
+- +3 tests: hanging-gateway timeout fallback, completed-run journal entry, failed-run journal entry.
+- Bugs `698a0fe6` + `f7c4d7e0` → `pending_review` on `main`. 6 AT:R20 `pending_review` bugs → `resolved`.
+
+### ami-llm model rebrand (`e79c598`)
+
+The on-prem vLLM host now serves under the model name `ami-llm` (same hardware — Gemma 4 31B, NVFP4 quantised). Updated everywhere: `backend/app/core/config.py`, `docker-compose.yml`, `infra/alpha.env`, `.env.example`, `infra/alpha.env.example`, `infra/systemd/ami-trade.env.example`, 8 occurrences in `test_llm_gateway.py`, `CLAUDE.md`, `HANDOVER.md`.
+
+vLLM was already pre-configured to serve `ami-llm` as an alias — no server-side changes needed.
+
+### LLM end-to-end test
+
+Fired realistic user questions through 3 agents (Market Analyst, Fundamentals Analyst, Bear Researcher). All returned structured, numerically-grounded responses citing live yfinance fundamentals (NVDA P/E 48.1x, TSLA P/E 399x, net cash). Confirmed the AT:R20 fundamentals injection is working in production.
+
+**Observation:** NVFP4 quantisation produces space-split tokens ("Consol idation", "NV DA"). Not a regression — it's been there since day one. Not blocking alpha but worth watching user feedback.
+
+### Animations — documented and deferred
+
+15 animation slots are already authored in lesson MDX files (all showing `AmiHexPlaceholder`). Two implementation paths discussed (Lottie files vs. custom Flutter `CustomPainter`). Decision deferred. See `memory/project_animations.md`.
+
+### Bug list at handover
+
+| short_id | title | status |
+|---|---|---|
+| `698a0fe6` | convene report not stored | pending_review (fix live on alpha-2026-05-15-4) |
+| `f7c4d7e0` | screenshot (extension of 698a0fe6) | pending_review |
+| `eeeb866f` | Room run survives container restart | open — deferred (large) |
+
+DB-wide: `open=1 / pending_review=2 / resolved=16 / wont_fix=1`.
+
+### Carry-overs for AT:R22
+
+1. **T&C + Privacy Policy (A22 part 2)** — didn't start this session. Research is in `docs/09_compliance/legal_plan_ami_trade.md`. Needs (a) hosting at `agenticmarketintel.ai/legal/{privacy,terms}` and (b) lawyer review before App Store submission.
+2. **Flip `698a0fe6` + `f7c4d7e0` → resolved** after on-device validation of the room timeout fix.
+3. **`eeeb866f`** — room run survives container restart — still open/deferred (Redis-backed runner state or separate worker).
+4. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build.
+5. **Animation production** — deferred. See `memory/project_animations.md` for 15-slot design decision.
+6. **A29 light-mode refactor** — 37 hardcoded `AmiColors.slate900`/`slate800` references. v1.0 work.
+7. **Live fundamentals ticker extraction robustness** — watch bug reports for regex misfires in 1-on-1.
+8. **Two sibling worktrees with unmerged docs** — `blissful-darwin-419097` (`docs(feedback): bug reporting pipeline spec + D-057 decision entry`) and `exciting-shtern-aad051` (`design(lessons): spec lessons landing page hex-cluster redesign`) — commits not in main. Need Saiful decision: merge to main or discard.
+
+---
+
 ## AT:R20  (2026-05-15)
 
 Bug-fix session that bled into substantial feature work. 18 commits, 3 alpha promotions (`alpha-2026-05-15-{1,2,3}`), one new schema migration (`b1c4e8d70007`), test count 220 → **261**.

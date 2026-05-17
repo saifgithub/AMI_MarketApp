@@ -2,12 +2,12 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
-Where we are right now (as of 2026-05-15, end of AT:R19):
-- 131 commits on `main`. 220 backend unit tests pass.
-- Alpha live on melehead (Ubuntu LAN) via Cloudflare Tunnel.
-- TestFlight has build `0.1.0+4`; TESTING IPHONE 13 has `0.1.0+4` installed.
-- vLLM Gemma 4 31B serving every agent including Convene the Room (chat + room SSE fixed in AT:R19).
-- Real Yahoo prices via yfinance. AMI brand throughout user copy. 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 262 i18n keys.
+Where we are right now (as of 2026-05-17, end of AT:R22):
+- 174 commits on `main`. 275 backend unit tests pass.
+- Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
+- TestFlight has build `0.1.0+14`; TESTING IPHONE 13 has `0.1.0+14` installed.
+- vLLM Gemma 4 31B (ami-llm) serving every agent. Room runner decoupled from SSE via background task + queue (AT:R22) — runs continue to verdict on client disconnect, dedup on same user+ticker (running + 24h-completed-cached windows), journal write retries.
+- Real Yahoo prices via yfinance. AMI brand throughout user copy. 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 264 i18n keys.
 
 ## Delivery status — Alpha snapshot
 
