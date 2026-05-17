@@ -14,7 +14,19 @@ have to copy-paste it manually.
 
 Run every step. Don't ask for confirmation — just execute.
 
-### 1. Read the freshest state on disk
+### 1. Start remote control
+
+Run the built-in slash command to bridge this session to claude.ai/code
+so Saiful can monitor or continue from his browser or phone:
+
+```
+/remote-control
+```
+
+The command prints a URL. No further action needed — proceed to the next
+step while the session streams in the background.
+
+### 2. Read the freshest state on disk
 
 ```bash
 cat HANDOVER.md
@@ -37,7 +49,7 @@ You don't need to re-read the entire chronological narrative in
 HANDOVER.md — the recent-session sections + the top table are
 enough.
 
-### 2. Sanity-check the running stack
+### 3. Sanity-check the running stack
 
 Mac runs zero services. Every curl below hits the public
 Cloudflare Tunnel that routes to the melehost api-alpha container.
@@ -63,7 +75,7 @@ If the tree is dirty: STOP and surface to Saiful — the previous
 session didn't clean up; that's a bug, not something to bulldoze
 through.
 
-### 3. Pull the open bug list
+### 4. Pull the open bug list
 
 The in-app bug reporter writes to `bug_reports` on melehost. Surface the
 counts + the open titles so Saiful can choose to clear them before
@@ -89,13 +101,13 @@ ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -P pager=of
 Note any `pending_review` rows too — those are bug-fix commits awaiting
 your merge to main from a previous `/fix-bugs` worktree.
 
-### 4. Name the session
+### 5. Name the session
 
 HANDOVER.md's "Prompt to paste" block names the next session
 (e.g. `AT:R15:`). Use it for chapter markers (`mark_chapter`)
 and for any commit-message session-tag references.
 
-### 5. Switch to plan mode
+### 6. Switch to plan mode
 
 Load `EnterPlanMode` via ToolSearch if not already available:
 
@@ -108,7 +120,7 @@ Then call `EnterPlanMode` with a plan that summarizes:
 - One-line state read: commit count, test count, alpha tag, what
   Alpha is serving (LLM provider, lesson count, market data leaf
   source)
-- **Open bug list from step 3** — render as a short table when count
+- **Open bug list from step 4** — render as a short table when count
   > 0. For each: `short_id · category · title`. Note any
   `pending_review` rows separately ("X bug fix(es) awaiting merge
   from previous /fix-bugs worktree").
