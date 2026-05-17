@@ -129,7 +129,7 @@ SSH config had `192.168.20.59` (correct) but every doc said `192.168.20.9` (wron
 |---|---|---|
 | `eeeb866f` | Room run survives api-alpha container restart | **open — deferred (large)** |
 
-DB-wide: `open=1 / pending_review=0 / resolved=22 / wont_fix=1`. Every bug surfaced this session is resolved. The one open item is the same Redis/worker architecture work that's been deferred since AT:R21 — see Beta upgrade path in the resilience plan.
+DB-wide: `open=1 / pending_review=0 / resolved=24 / wont_fix=2`. Every bug surfaced this session is either resolved or closed (`7a9dd6b6` "journal needs a search facility" was a test feature-request — wont_fix, the search already exists). The one open item is the same Redis/worker architecture work that's been deferred since AT:R21 — see Beta upgrade path in the resilience plan.
 
 ### Carry-overs for AT:R23
 
