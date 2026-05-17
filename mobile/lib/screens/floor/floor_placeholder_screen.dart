@@ -390,15 +390,31 @@ class _AgentTile extends StatelessWidget {
       width: 108,
       child: Column(
         children: [
-          HexAvatar(
-            label: agent.abbreviation,
-            color: agent.color,
-            size: hex,
-            solid: false,
-            status: unlocked
-                ? HexAvatarStatus.idle
-                : HexAvatarStatus.locked,
-            onTap: onTap,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Opacity(
+                opacity: unlocked ? 1.0 : 0.35,
+                child: HexAvatar(
+                  label: agent.abbreviation,
+                  color: agent.color,
+                  size: hex,
+                  solid: false,
+                  onTap: onTap,
+                ),
+              ),
+              if (!unlocked)
+                IgnorePointer(
+                  child: SizedBox(
+                    width: hex,
+                    height: hex,
+                    child: const Center(
+                      child: Icon(Icons.lock_outline,
+                          color: AmiColors.textLow, size: 28),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 6),
           Text(

@@ -68,7 +68,7 @@ class HexAvatar extends StatelessWidget {
 
     // Fill / border / label colour per style. Locked always wins.
     final Color fillColor;
-    final Color? borderColor;
+    final Color borderColor;
     final Color labelColor;
     if (_isLocked) {
       fillColor = AmiColors.slate800;
@@ -79,10 +79,9 @@ class HexAvatar extends StatelessWidget {
       borderColor = effectiveColor;
       labelColor = Colors.white;
     } else {
-      // Translucent — match TrackHexButton on the lessons cluster. No
-      // border there, just the clip path defining the shape.
+      // Translucent — match TrackHexButton on the lessons cluster.
       fillColor = effectiveColor.withValues(alpha: 0.15);
-      borderColor = null;
+      borderColor = effectiveColor.withValues(alpha: 0.45);
       labelColor = effectiveColor;
     }
 
@@ -121,9 +120,7 @@ class HexAvatar extends StatelessWidget {
                 height: hexHeight,
                 decoration: BoxDecoration(
                   color: fillColor,
-                  border: borderColor == null
-                      ? null
-                      : Border.all(color: borderColor, width: 1),
+                  border: Border.all(color: borderColor, width: 1),
                 ),
                 alignment: Alignment.center,
                 child: Padding(
