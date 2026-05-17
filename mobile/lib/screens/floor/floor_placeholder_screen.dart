@@ -17,6 +17,7 @@ import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
@@ -293,25 +294,14 @@ class _FloorPlaceholderScreenState
                     style: AmiTypography.caption,
                   ),
                   const SizedBox(height: AmiSpacing.m),
-                  Wrap(
-                    spacing: AmiSpacing.m,
-                    runSpacing: AmiSpacing.l,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      for (var i = 0; i < tradingAgents.length; i++)
-                        _AgentTile(
-                          key: i == 0
-                              ? _agentKey0
-                              : i == 4
-                                  ? _agentKey4
-                                  : null,
-                          agent: tradingAgents[i],
-                          unlocked: unlocked.contains(tradingAgents[i].id),
-                          onTap: () => unlocked.contains(tradingAgents[i].id)
-                              ? _openAgent(context, tradingAgents[i])
-                              : _showLockedSheet(context, ref, tradingAgents[i]),
-                        ),
-                    ],
+                  _AgentHoneycomb(
+                    agents: tradingAgents,
+                    unlocked: unlocked,
+                    agentKey0: _agentKey0,
+                    agentKey4: _agentKey4,
+                    onTap: (a) => unlocked.contains(a.id)
+                        ? _openAgent(context, a)
+                        : _showLockedSheet(context, ref, a),
                   ),
 
                   const SizedBox(height: AmiSpacing.xl),
@@ -371,60 +361,77 @@ class _FloorPlaceholderScreenState
 }
 
 
-class _AgentTile extends StatelessWidget {
-  const _AgentTile({
-    super.key,
-    required this.agent,
+/// Edge-to-edge flat-top honeycomb for the 12 trading agents.
+///
+/// Same visual language as the lessons hex cluster — every hex shares a full
+/// edge with at least one neighbour, no gaps. 4 columns × 3 rows staggered
+/// honeycomb:
+///
+///   [ 0]     [ 2]     [ 4]     [ 6]      row 0   (cols 0,2 at y=0,
+///        [ 1]     [ 3]     [ 5]     [ 7] row 0   cols 1,3 at y=hexH/2)
+///   [ 8]     [10]                        ... row 1
+///
+/// Indices are row-major: idx → (col = idx % 4, row = idx ~/ 4).
+/// hexW = maxWidth × 4/13 so the cluster fills the available width.
+class _AgentHoneycomb extends StatelessWidget {
+  const _AgentHoneycomb({
+    required this.agents,
     required this.unlocked,
     required this.onTap,
+    required this.agentKey0,
+    required this.agentKey4,
   });
-  final Agent agent;
-  final bool unlocked;
-  final VoidCallback onTap;
+
+  final List<Agent> agents;
+  final Set<String> unlocked;
+  final void Function(Agent agent) onTap;
+  final GlobalKey agentKey0;
+  final GlobalKey agentKey4;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 88,
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.center,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hexW = constraints.maxWidth * 4 / 13;
+        final hexH = hexW / flatTopRegularHexagonAspectRatio;
+        final clusterH = hexH * 7 / 2;
+
+        Offset originFor(int idx) {
+          final col = idx % 4;
+          final row = idx ~/ 4;
+          final x = col * hexW * 3 / 4;
+          final y = row * hexH + (col.isOdd ? hexH / 2 : 0);
+          return Offset(x, y);
+        }
+
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: clusterH,
+          child: Stack(
             children: [
-              Opacity(
-                opacity: unlocked ? 1.0 : 0.35,
-                child: HexAvatar(
-                  label: agent.abbreviation,
-                  color: agent.color,
-                  size: 72,
-                  onTap: onTap,
-                ),
-              ),
-              if (!unlocked)
-                IgnorePointer(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.lock_outline,
-                        color: AmiColors.textLow, size: 22),
+              for (var i = 0; i < agents.length; i++)
+                Positioned(
+                  left: originFor(i).dx,
+                  top: originFor(i).dy,
+                  child: HexAvatar(
+                    key: i == 0
+                        ? agentKey0
+                        : i == 4
+                            ? agentKey4
+                            : null,
+                    label: agents[i].abbreviation,
+                    color: agents[i].color,
+                    size: hexW,
+                    status: unlocked.contains(agents[i].id)
+                        ? HexAvatarStatus.idle
+                        : HexAvatarStatus.locked,
+                    onTap: () => onTap(agents[i]),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            agent.displayName,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: AmiTypography.caption.copyWith(
-              fontSize: 10,
-              color: unlocked ? AmiColors.textMed : AmiColors.textLow,
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
