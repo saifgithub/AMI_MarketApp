@@ -30,7 +30,6 @@ class HexAvatar extends StatelessWidget {
     required this.color,
     this.size = 96,
     this.status = HexAvatarStatus.idle,
-    this.solid = true,
     this.onTap,
     this.onLongPress,
   });
@@ -45,13 +44,6 @@ class HexAvatar extends StatelessWidget {
   final double size;
 
   final HexAvatarStatus status;
-
-  /// `true` (default): solid colour fill, white label — original Floor look.
-  /// `false`: 15%-alpha tinted fill, label rendered in the role colour —
-  /// matches the lessons hex cluster styling. Has no effect when the
-  /// avatar is locked (locked styling always wins).
-  final bool solid;
-
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
 
@@ -65,25 +57,6 @@ class HexAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hexHeight = size / flatTopRegularHexagonAspectRatio;
     final effectiveColor = _isLocked ? AmiColors.slate700 : color;
-
-    // Fill / border / label colour per style. Locked always wins.
-    final Color fillColor;
-    final Color borderColor;
-    final Color labelColor;
-    if (_isLocked) {
-      fillColor = AmiColors.slate800;
-      borderColor = AmiColors.slate600;
-      labelColor = AmiColors.textLow;
-    } else if (solid) {
-      fillColor = effectiveColor;
-      borderColor = effectiveColor;
-      labelColor = Colors.white;
-    } else {
-      // Translucent — match TrackHexButton on the lessons cluster.
-      fillColor = effectiveColor.withValues(alpha: 0.15);
-      borderColor = effectiveColor.withValues(alpha: 0.45);
-      labelColor = effectiveColor;
-    }
 
     return GestureDetector(
       onTap: onTap,
@@ -119,8 +92,11 @@ class HexAvatar extends StatelessWidget {
                 width: size,
                 height: hexHeight,
                 decoration: BoxDecoration(
-                  color: fillColor,
-                  border: Border.all(color: borderColor, width: 1),
+                  color: _isLocked ? AmiColors.slate800 : effectiveColor,
+                  border: Border.all(
+                    color: _isLocked ? AmiColors.slate600 : effectiveColor,
+                    width: 1,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Padding(
@@ -129,7 +105,7 @@ class HexAvatar extends StatelessWidget {
                     label,
                     style: AmiTypography.labelMono.copyWith(
                       fontSize: size * 0.16,
-                      color: labelColor,
+                      color: _isLocked ? AmiColors.textLow : Colors.white,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
