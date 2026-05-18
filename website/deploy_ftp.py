@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""FTP deployment script for agenticmarketintel.com marketing site.
+"""FTP deployment script for agenticmarketintel.ai marketing site.
 
 Usage:
   python3 deploy_ftp.py YOUR_FTP_PASSWORD
@@ -56,7 +56,7 @@ def main():
     upload_dir(ftp, SITE_DIR, target.rstrip("/"))
 
     ftp.quit()
-    print("\nDone. Visit https://www.agenticmarketintel.com to verify.")
+    print("\nDone. Visit https://www.agenticmarketintel.ai to verify.")
 
 if __name__ == "__main__":
     main()

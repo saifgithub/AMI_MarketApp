@@ -4,7 +4,7 @@ All website work lives under two folders:
 
 | Folder | Purpose |
 |---|---|
-| `website/` | Static HTML marketing site — everything that gets deployed to `www.agenticmarketintel.com` |
+| `website/` | Static HTML marketing site — everything that gets deployed to `www.agenticmarketintel.ai` |
 | `website_api/` | Standalone FastAPI micro-service — waitlist endpoint, isolated database |
 
 **Rule:** nothing in either folder touches the main app backend (`backend/`). Zero shared code.
@@ -109,7 +109,7 @@ ami_website_api:
   environment:
     ENV: prod
     DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@ami_postgres:5432/ami_website
-    CORS_ORIGIN: https://www.agenticmarketintel.com
+    CORS_ORIGIN: https://www.agenticmarketintel.ai
   ports:
     - "8001:8000"
   depends_on:
@@ -173,7 +173,7 @@ cd "/Volumes/Extreme Pro/AMI_MarketApp/website_api"
 | Static HTML (no framework) | No build step, SEO-native, fast |
 | `website_api/` is a separate Python project | Zero shared code with app — reduces attack surface |
 | `ami_website` database (not `ami_trade`) | Total separation — website compromise cannot touch app data |
-| CORS locked to `agenticmarketintel.com` | Only the real website can submit to the API |
+| CORS locked to `agenticmarketintel.ai` | Only the real website can submit to the API |
 | Self-hosted IBM Plex fonts | No Google Fonts CDN — works behind firewalls, no IP leak |
 | Formspree removed | Our own DB, our own data — no third-party dependency |
 

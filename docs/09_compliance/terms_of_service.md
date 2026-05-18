@@ -7,7 +7,7 @@
 **Version:** 1.0 (alpha)
 **Effective:** 18 May 2026
 **Contact:** legal@agenticmarketintel.ai
-**Published HTML:** `website/terms/index.html` → `https://www.agenticmarketintel.com/terms/`
+**Published HTML:** `website/terms/index.html` → `https://www.agenticmarketintel.ai/terms/`
 **Publishing process:** see [`VERSIONING.md`](VERSIONING.md)
 
 ---
@@ -169,7 +169,7 @@ For requests relating to your personal data, see the [Privacy Policy](privacy_po
 
 ## Document status
 
-This is a draft prepared from the clause-by-clause plan in [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md). It must be reviewed and signed off by counsel before being published at `agenticmarketintel.com/legal/terms.html` and referenced from the App Store / Play Store listings.
+This is a draft prepared from the clause-by-clause plan in [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md). It must be reviewed and signed off by counsel before being published at `agenticmarketintel.ai/legal/terms.html` and referenced from the App Store / Play Store listings.
 
 ### Lawyer-only checklist
 

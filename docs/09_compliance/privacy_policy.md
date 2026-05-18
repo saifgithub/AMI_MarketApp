@@ -5,7 +5,7 @@
 **Version:** 1.0 (alpha)
 **Effective:** 18 May 2026
 **Contact:** privacy@agenticmarketintel.ai
-**Published HTML:** `website/privacy/index.html` → `https://www.agenticmarketintel.com/privacy/`
+**Published HTML:** `website/privacy/index.html` → `https://www.agenticmarketintel.ai/privacy/`
 **Publishing process:** see [`VERSIONING.md`](VERSIONING.md)
 
 ---
@@ -14,7 +14,7 @@
 
 AMI Trade is a mobile training and education simulator that lets you direct a team of 12 AI analyst agents and one AI Concierge to research markets and run simulated trades. The app is operated by AMI ("we," "us," "our"). This policy explains what personal information we collect about you, how we use it, who we share it with, and the rights you have over it.
 
-This Privacy Policy applies to the AMI Trade mobile app and to the limited account-related interactions on our marketing website at `agenticmarketintel.com`. For the rules of using the service itself, see our [Terms of Service](terms_of_service.md).
+This Privacy Policy applies to the AMI Trade mobile app and to the limited account-related interactions on our marketing website at `agenticmarketintel.ai`. For the rules of using the service itself, see our [Terms of Service](terms_of_service.md).
 
 ---
 
@@ -155,7 +155,7 @@ If you enable Halal/Shariah screening, no-fossil-fuels screening, or other value
 
 The AMI Trade mobile app does **not** use cookies.
 
-Our marketing website at `agenticmarketintel.com` uses essential cookies (required for the site to function) and may use analytics cookies. Where required by law, a cookie banner on the website asks for your consent before analytics cookies are set. See the website's cookie notice for details.
+Our marketing website at `agenticmarketintel.ai` uses essential cookies (required for the site to function) and may use analytics cookies. Where required by law, a cookie banner on the website asks for your consent before analytics cookies are set. See the website's cookie notice for details.
 
 > _Inspired by: [Zoya Privacy Policy](https://zoya.finance/privacy)._
 
@@ -177,4 +177,4 @@ For any question about this Privacy Policy, or to exercise any of the rights des
 
 ## Document status
 
-This is a draft prepared from the clause-by-clause plan in [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md). It must be reviewed and signed off by counsel before being published at `agenticmarketintel.com/legal/privacy.html` and referenced from the App Store / Play Store listings.
+This is a draft prepared from the clause-by-clause plan in [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md). It must be reviewed and signed off by counsel before being published at `agenticmarketintel.ai/legal/privacy.html` and referenced from the App Store / Play Store listings.

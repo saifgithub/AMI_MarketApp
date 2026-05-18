@@ -1,6 +1,6 @@
 # Versioning legal documents — Privacy Policy + ToS
 
-How AMI publishes, archives, and versions its legal documents. Follow this every time `privacy_policy.md` or `terms_of_service.md` changes in a way that affects the published copy at `agenticmarketintel.com/privacy/` or `/terms/`.
+How AMI publishes, archives, and versions its legal documents. Follow this every time `privacy_policy.md` or `terms_of_service.md` changes in a way that affects the published copy at `agenticmarketintel.ai/privacy/` or `/terms/`.
 
 ---
 
@@ -75,7 +75,7 @@ When in doubt, treat as material and notify. The cost of an extra in-app banner 
    python3 deploy_ftp.py YOUR_FTP_PASSWORD
    ```
 9. **For a major bump**, also trigger the 14-day in-app notice path (see "App-side acceptance tracking" below — Beta+ work).
-10. **Smoke-check** the live URL: `curl -s -o /dev/null -w "%{http_code}\n" https://www.agenticmarketintel.com/privacy/` should return `200`. Check the archived URL similarly.
+10. **Smoke-check** the live URL: `curl -s -o /dev/null -w "%{http_code}\n" https://www.agenticmarketintel.ai/privacy/` should return `200`. Check the archived URL similarly.
 
 ---
 
