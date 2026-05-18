@@ -4,8 +4,11 @@
 >
 > **Five clauses below are marked `[LAWYER PLACEHOLDER]` or `[LAWYER REVIEW REQUIRED]`** — these are jurisdiction-sensitive and must not be finalised without counsel: governing law (§13), arbitration (§13.1), limitation-of-liability cap (§11), indemnity (§15), and the securities-regulator framing (§2).
 
-**Last updated:** _to be set on publish_
+**Version:** 1.0 (alpha)
+**Effective:** 18 May 2026
 **Contact:** legal@agenticmarketintel.ai
+**Published HTML:** `website/terms/index.html` → `https://www.agenticmarketintel.com/terms/`
+**Publishing process:** see [`VERSIONING.md`](VERSIONING.md)
 
 ---
 

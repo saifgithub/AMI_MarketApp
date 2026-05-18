@@ -6,8 +6,9 @@ Legal disclaimers, privacy/data-residency, store compliance, ad policy.
 
 | File | What it is |
 |---|---|
-| [`privacy_policy.md`](privacy_policy.md) | **DRAFT** standalone Privacy Policy, ready for lawyer review. Becomes `agenticmarketintel.com/legal/privacy.html`. |
-| [`terms_of_service.md`](terms_of_service.md) | **DRAFT** standalone Terms of Service, ready for lawyer review. Becomes `agenticmarketintel.com/legal/terms.html`. |
+| [`privacy_policy.md`](privacy_policy.md) | **DRAFT** standalone Privacy Policy (canonical source for lawyer review). Published HTML at `website/privacy/index.html` → `agenticmarketintel.com/privacy/`. |
+| [`terms_of_service.md`](terms_of_service.md) | **DRAFT** standalone Terms of Service (canonical source for lawyer review). Published HTML at `website/terms/index.html` → `agenticmarketintel.com/terms/`. |
+| [`VERSIONING.md`](VERSIONING.md) | Publishing playbook — version numbering, material-vs-non-material gate, archive convention, deploy steps. **Read before editing either policy.** |
 | [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md) | Clause-by-clause plan that fed the two drafts — keep for traceability + cited peer sources. |
 | [`legal_samples.md`](legal_samples.md) | Peer-policy excerpts informing the plan. |
 

@@ -2,8 +2,11 @@
 
 > **DRAFT — pending lawyer review.** Not legally binding until reviewed and signed off by counsel. The "Inspired by" footnotes after each clause cite the peer document that informed the starter language; they are not part of the published policy and should be removed before publishing.
 
-**Last updated:** _to be set on publish_
+**Version:** 1.0 (alpha)
+**Effective:** 18 May 2026
 **Contact:** privacy@agenticmarketintel.ai
+**Published HTML:** `website/privacy/index.html` → `https://www.agenticmarketintel.com/privacy/`
+**Publishing process:** see [`VERSIONING.md`](VERSIONING.md)
 
 ---
 
