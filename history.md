@@ -13,6 +13,60 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R23  (2026-05-17)
+
+Single-feature session: 3 commits implementing the first-time user walkthrough. Pure mobile work — backend untouched, no Alpha promotion. Triggered by Saiful's `/grill-me` session: *"the app is selling itself as a gamified 'education' utility. so yes, the trade, the user should have a walkthrough."*
+
+### First-time walkthrough — 4 contextual coach-mark tours (`462dafe`)
+
+Design decisions locked during the grill: per-section auto-pop tours (not one giant tour); `tutorial_coach_mark` package (not custom); 3–5 steps per section; "Try it now" CTA only on the Convene step; intro bottom sheet only for Floor; one global reset in Settings.
+
+**Architecture:**
+
+- **`mobile/lib/features/tour/`** — new package containing the whole feature.
+  - `tour_service.dart` — `TourSection` enum (floor/portfolio/journal/lessons) + `TourService` with `hasSeen` / `markSeen` / `resetAll` backed by SharedPreferences keys `tour_{section}_seen`.
+  - `tour_providers.dart` — `tourServiceProvider` (Riverpod) + `activeTabIndexProvider` (StateProvider<int>).
+  - `tour_card.dart` — shared AMI-styled tooltip widget with title (cyan mono) / body / skip / next buttons. Supports an optional `tryNowLabel + onTryNow` pair for the Convene step.
+  - `tour_intro_sheet.dart` — modal sheet shown before the Floor tour; returns `bool?` via `Navigator.pop`.
+  - `{floor,portfolio,journal,lessons}_tour.dart` — `buildXxxTargets()` functions returning `List<TargetFocus>`.
+
+- **`IndexedStack` gotcha:** `HomeShell` keeps all 5 tab widgets alive via `IndexedStack` so every screen's `initState` fires on app start regardless of which tab is visible. Naive trigger-from-initState would fire all 4 tours simultaneously over the Floor tab. Solved with `activeTabIndexProvider`: HomeShell writes the current tab into it on every `onTap`, and each screen uses `ref.listen(activeTabIndexProvider, ...)` in `build` to fire the tour only when its index becomes active. Floor (tab 0) additionally fires from `initState` since it's the entry tab.
+
+- **GlobalKey wiring:** 4 screens converted from `ConsumerWidget` to `ConsumerStatefulWidget` to hold GlobalKey fields. Private widget constructors (`_Header`, `_ValueCard`, `_WatchlistSection`, `_FilterRow`, `_SearchBar`, `_SlimProgressBar`, `_HexCluster`) gained `super.key` so the key flows down to their RenderBox.
+
+- **Floor tour (5 steps):** Concierge hex → first agent tile → another agent tile (locked) → daily challenge card (conditional — only included if the challenge's RenderObject has non-zero size) → Convene the Room button. Convene's `TourCard` shows the dual-button row "Skip tour / Try it now → / Got it". Tap "Try it now" → tour skipped → `ConveneSheet.show(context)` opens.
+
+- **Portfolio / Journal / Lessons tours (3 steps each):** Portfolio = header / value card / watchlist. Journal = filter chips / search bar / list area. Lessons = header / progress bar / hex cluster.
+
+- **Completion:** Each tour ends with a green/cyan/blue floating SnackBar ("Go convene your first Room.", "Try a trade — all simulation, no risk.", etc.).
+
+- **i18n:** 37 new keys in `app_en.arb` under a `tour*` namespace (intro / 5×Floor / 3×Portfolio / 3×Journal / 3×Lessons / completion x4 / nav buttons / settings). Same set stubbed into `app_{ar,ms}.arb` with English values pending external translation.
+
+- **Settings:** new `_WalkthroughSection` between Help and Account renders one "Restart app tour" tile that calls `tourService.resetAll()` and snackbars "Tour restarts next time you visit each section."
+
+### Fix 1: scroll target into view before focus (`684b180`)
+
+Convene step coach-mark fired against a button below the initial scroll fold — Saiful saw the spotlight halo over empty space. `TutorialCoachMark.beforeFocus` callback now calls `Scrollable.ensureVisible` on each target so the highlighted element is brought into view before the spotlight opens. Same pattern applied to Portfolio (ListView) and Lessons (SingleChildScrollView).
+
+### Fix 2: tour tooltip overflow + bug-report keyboard occlusion (`18ddf71`)
+
+Two observations during on-device verification:
+
+- **Journal step 3** target = the `Expanded` list area, which fills most of the screen. `ContentAlign.top` math (`bottom = haloHeight + (screenHeight − targetCenterY)`) pushed the tooltip's top edge above the screen on tall targets. Switched to `ContentAlign.custom` with a fixed `top: 180` anchor below the search bar.
+- **Lessons step 3** target = the hex cluster, positioned high enough that `ContentAlign.top` landed the tooltip behind the status bar. Switched to `ContentAlign.bottom` since the area below the cluster is empty space.
+- **Bug-report sheet** — when the user tapped a text field, the keyboard pushed the form up but the photo + Send report buttons sat below the viewport. Wrapped the form's Column in `SingleChildScrollView` so the sheet can scroll under the keyboard inset.
+- The `beforeFocus` callback now picks scroll alignment based on tooltip position: `0.85` (target near bottom) if the tooltip is `ContentAlign.top`, else `0.15` (target near top). Dynamic per-step rather than hardcoded.
+
+### Bug list at handover
+
+| short_id | title | status |
+|---|---|---|
+| `eeeb866f` | Room run survives api-alpha container restart | **open — deferred (large)** |
+
+DB-wide unchanged this session: `open=1 / pending_review=0 / resolved=24 / wont_fix=2`. No new bug reports filed against the walkthrough during on-device verification — both surfaced issues (target overflow, keyboard) were fixed inline by Saiful's feedback.
+
+---
+
 ## AT:R22  (2026-05-17)
 
 Dense bug-fix + resilience session. 19 commits, **5 alpha promotions** (`alpha-2026-05-17-{1..5}`), test count 264 → **275**. Six TestFlight builds (`+9..+14`).

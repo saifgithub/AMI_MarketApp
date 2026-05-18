@@ -2,10 +2,11 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
-Where we are right now (as of 2026-05-17, end of AT:R23):
-- 180 commits on `main`. 275 backend unit tests pass.
+Where we are right now (as of 2026-05-18, end of AT:R24):
+- 199 commits on `main`. 275 backend unit tests pass.
 - Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
-- TestFlight has build `0.1.0+14`; TESTING IPHONE 13 runs a sideloaded release of `18ddf71` (walkthrough). Next TestFlight push auto-bumps to `+15`.
+- TestFlight has build `0.1.0+15` on Internal Testing (pushed AT:R24). Ships the AT:R23 walkthrough + three AT:R24 bug fixes (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when reached from agent panel, `e2857081` lessons hex cluster proper edge-to-edge tiling).
+- Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
 - vLLM Gemma 4 31B (ami-llm) serving every agent. Room runner decoupled from SSE via background task + queue (AT:R22) — runs continue to verdict on client disconnect, dedup on same user+ticker (running + 24h-completed-cached windows), journal write retries.
 - First-time user walkthrough (AT:R23) — 4 per-section coach-mark tours fire automatically on first visit to each tab; resettable from Settings → WALKTHROUGH.
 - Real Yahoo prices via yfinance. AMI brand throughout user copy. 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, 312 i18n keys.
@@ -81,7 +82,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 | # | Item | Who | Est | Status | Notes |
 |---|---|---|---|---|---|
-| **A22** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | ⚡ partial (AT:R20 — sample research + clause-by-clause plan landed in `docs/09_compliance/{legal_samples,legal_plan_ami_trade}.md`; lawyer review + public hosting at `agenticmarketintel.ai/legal/*` external) | App Store needs this anyway. |
+| **A22** | Privacy policy + ToS first draft. Simulation-only / educational disclaimer. | Saiful (+ Claude drafts copy) | external review | ⚡ partial (AT:R20 — sample research + clause-by-clause plan in `docs/09_compliance/legal_plan_ami_trade.md`; AT:R24 — standalone drafts `privacy_policy.md` + `terms_of_service.md` assembled, alpha HTML published at `agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning + publishing playbook `VERSIONING.md`. Lawyer review of 5 jurisdiction-sensitive clauses still pending.) | App Store needs this anyway. |
 | **A23** | App Store Connect — create the app record (bundle id `ai.agenticmarketintel.amiTrade`, SKU `AMITRADE`, English primary). One-time, 5-min web form. | Saiful | external | ✅ done (TestFlight uploaded) | Blocks A25. |
 | **A24** | Install Transporter (Apple's free Mac upload tool) from the Mac App Store. | Saiful | external | ✖ superseded (we use CLI `xcrun altool` — `scripts/build_testflight.sh`) | Blocks A26. |
 | **A25** | Switch Flutter build to Distribution signing + App Store export. `flutter build ipa --release --export-method app-store --dart-define=AMI_API_URL=<cloudflare-hostname>`. Xcode auto-manages the Distribution cert + App Store provisioning profile once the app exists in App Store Connect. Produces `build/ios/ipa/Runner.ipa`. | Claude | 0.5 session | ✅ done (AT:R19 — `scripts/build_testflight.sh`) | |

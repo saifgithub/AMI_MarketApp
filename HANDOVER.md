@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-17 (end of AT:R23 — First-time user walkthrough: per-section coach-mark tours (Floor 5 / Portfolio 3 / Journal 3 / Lessons 3) using `tutorial_coach_mark`, intro bottom sheet on first Floor visit, "Try it now" CTA on the Convene step, Settings → Restart app tour. Two follow-up fixes: scroll target into view before focus, switch top-aligned tooltips that overflowed off-screen to custom/bottom positioning. Bug-report sheet: form Column wrapped in `SingleChildScrollView` so photo + submit buttons stay reachable when the keyboard is open. **180 commits, 275 tests**, pubspec `0.1.0+14` in repo (no TestFlight push this session — release build sideloaded to TESTING IPHONE 13 for verification). No Alpha promotion — mobile-only change.)
+**Last updated:** 2026-05-18 (end of AT:R24 — Bug-fix + legal docs + TestFlight `+15`. Three user-surfaced UX bugs fixed (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when pushed from agent panel, `e2857081` lessons hex cluster proper edge-to-edge tiling). One bug attempted + reverted twice: `11fde6f6` floor hex agent style — initial honeycomb refactor + later style-only tweaks all rejected as ugly. Drafted Privacy Policy + Terms of Service (16 + 14 clauses) as canonical markdown in `docs/09_compliance/`, published as HTML at `agenticmarketintel.ai/{privacy,terms}/`, with doc-level versioning (meta tags + visible header + version-history footer) and a publishing playbook at `docs/09_compliance/VERSIONING.md`. Swept `.com` → `.ai` after discovering the live marketing site is on `.ai`. **199 commits, 275 tests**, pubspec `0.1.0+15` shipped to TestFlight Internal. No Alpha promotion — backend untouched.)
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,22 +15,24 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **180 commits**, no remote yet |
-| Latest commit | `18ddf71` — fix: tour tooltip overflow + bug-report keyboard occlusion |
-| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` (latest `alpha-2026-05-17-5` — unchanged this session) |
-| Backend tests | **275 passed, 0 failed** |
-| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; +37 tour keys this session for the walkthrough) |
+| Git state | Clean working tree, **199 commits**, no remote yet |
+| Latest commit | `9c464b7` — chore(mobile): bump build 0.1.0+14 → 0.1.0+15 for TestFlight |
+| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` (latest `alpha-2026-05-17-5` — unchanged this session; backend was untouched) |
+| Backend tests | **275 passed, 0 failed** (unchanged — no backend code touched this session) |
+| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; unchanged this session) |
 
 ```
-$ git log --oneline | head -8
-18ddf71 fix: tour tooltip overflow + bug-report keyboard occlusion
-684b180 fix(tour): scroll target into view before coach mark focuses
-462dafe feat(onboarding): per-section coach-mark walkthrough for first-time users
-8c7777e docs(handover): audit + correct AT:R23 carry-overs
-c397991 docs(handover): correct bug DB counts — 24 resolved / 2 wont_fix
-ea35674 handover: wrap AT:R22 — 174 commits, 275 tests, alpha-2026-05-17-5
-6f78c8c chore(mobile): bump build 0.1.0+13 → 0.1.0+14 for TestFlight
-9814e63 feat(trade-ticket): live price anchor + auto-suggested TP/SL on manual trade
+$ git log --oneline | head -10
+9c464b7 chore(mobile): bump build 0.1.0+14 → 0.1.0+15 for TestFlight
+bf2c83c chore(legal,website): canonical domain is agenticmarketintel.ai, not .com
+764a6ea docs(legal): add doc-level versioning to Privacy + ToS
+5761373 feat(website): publish alpha Privacy Policy + ToS at /privacy and /terms
+9fbfe6a docs(legal): standalone Privacy Policy + ToS drafts (pending lawyer review)
+24d0bc7 Revert "fix(bug:11fde6f6): match floor hex button style to lessons hex"
+b070055 Revert "chore(floor): bump agent hex size 72→96 for more visual weight"
+8fceb32 Revert "fix(floor): un-dim agent hexes — drop translucent border + use locked status"
+902b5ff fix(floor): un-dim agent hexes — drop translucent border + use locked status
+569ad06 chore(floor): bump agent hex size 72→96 for more visual weight
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -78,9 +80,9 @@ Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_pr
 | | |
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
-| pubspec version | **`0.1.0+14`** (repo) — unchanged this session. |
-| TESTING IPHONE 13 install | release build of HEAD (`18ddf71`) sideloaded via `scripts/install_iphone.sh` for tour verification. Version chip still reads `0.1.0+14` because pubspec wasn't bumped. |
-| TestFlight | Latest uploaded build is still `0.1.0+14` from AT:R22. No TestFlight push this session — Saiful chose handover-only on close. Next `scripts/build_testflight.sh` run will auto-bump to `+15` and ship the walkthrough. |
+| pubspec version | **`0.1.0+15`** (repo) — pushed to TestFlight Internal this session. |
+| TESTING IPHONE 13 install | release build of HEAD (`9c464b7`) sideloaded via `scripts/install_iphone.sh` (repeatedly through the session as bugs were fixed). Same code path as the TestFlight build. |
+| TestFlight | **`0.1.0+15` is live on Internal Testing as of 2026-05-18.** Ships the AT:R23 walkthrough + the three AT:R24 bug fixes (`6fd4144d`, `cb81a6d8`, `e2857081`). No External Beta artefact yet — see carry-over. |
 | Build commands | `scripts/install_iphone.sh` (dev sideload — now uses `flutter devices --machine` so it doesn't print iPhone 17 LAN-probe noise), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
@@ -89,75 +91,61 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R23)
+## What just landed (this session — AT:R24)
 
-Single-feature session: 3 commits implementing the first-time user walkthrough. Pure mobile work — backend untouched, no Alpha promotion. Triggered by Saiful's `/grill-me` session: *"the app is selling itself as a gamified 'education' utility. so yes, the trade, the user should have a walkthrough."*
+Three-track session: (a) clear the bug queue from AT:R23's walkthrough release, (b) draft + publish the alpha-stage Privacy Policy and Terms of Service, (c) push `0.1.0+15` to TestFlight Internal. 19 commits. Backend untouched (no `/promote-to-alpha`).
 
-### First-time walkthrough — 4 contextual coach-mark tours (`462dafe`)
+### Track A — Bug queue: 3 fixed, 1 attempted-and-reverted
 
-Design decisions locked during the grill: per-section auto-pop tours (not one giant tour); `tutorial_coach_mark` package (not custom); 3–5 steps per section; "Try it now" CTA only on the Convene step; intro bottom sheet only for Floor; one global reset in Settings.
+Used `/start-fresh` → bug list → `/fix-bugs` worktree (`.claude/worktrees/bug-fix-20260517-225716`, since cleaned up). All claimed atomically against melehost `bug_reports.assigned_branch`. Two of three saw both `pending_review` → `resolved` flips after Saiful verified on-device; the third is still `pending_review`.
 
-**Architecture:**
+**`af01328` — fix(bug:6fd4144d): add explicit close button to bug report sheet.** The sheet had only a swipe-down dismiss; added a `×` icon in the header row next to "Report a bug". File: `mobile/lib/screens/feedback/bug_report_sheet.dart`. **Status: pending_review** (committed + on-device + on TestFlight, awaiting Saiful's flip to resolved).
 
-- **`mobile/lib/features/tour/`** — new package containing the whole feature.
-  - `tour_service.dart` — `TourSection` enum (floor/portfolio/journal/lessons) + `TourService` with `hasSeen` / `markSeen` / `resetAll` backed by SharedPreferences keys `tour_{section}_seen`.
-  - `tour_providers.dart` — `tourServiceProvider` (Riverpod) + `activeTabIndexProvider` (StateProvider<int>).
-  - `tour_card.dart` — shared AMI-styled tooltip widget with title (cyan mono) / body / skip / next buttons. Supports an optional `tryNowLabel + onTryNow` pair for the Convene step.
-  - `tour_intro_sheet.dart` — modal sheet shown before the Floor tour; returns `bool?` via `Navigator.pop`.
-  - `{floor,portfolio,journal,lessons}_tour.dart` — `buildXxxTargets()` functions returning `List<TargetFocus>`.
+**`75ba23a` (amended) — fix(bug:cb81a6d8,e2857081): lessons screen back nav + hex cluster layout.** Two fixes in one file:
 
-- **`IndexedStack` gotcha:** `HomeShell` keeps all 5 tab widgets alive via `IndexedStack` so every screen's `initState` fires on app start regardless of which tab is visible. Naive trigger-from-initState would fire all 4 tours simultaneously over the Floor tab. Solved with `activeTabIndexProvider`: HomeShell writes the current tab into it on every `onTap`, and each screen uses `ref.listen(activeTabIndexProvider, ...)` in `build` to fire the tour only when its index becomes active. Floor (tab 0) additionally fires from `initState` since it's the entry tab.
+- `cb81a6d8` — `LessonsScreen._Header` now accepts a `showBack` parameter and renders an arrow when `Navigator.of(context).canPop()` is true. Fixes the no-exit trap when reached from the locked-agent "Go to Lessons" button (which pushes the screen standalone, outside the HomeShell IndexedStack where the bottom nav lives). **Status: resolved.**
+- `e2857081` — `_HexCluster` geometry rewritten in `a51a75b`: 1+6 clock arrangement (N/NE/SE/S/SW/NW around centre) where every surrounding hex shares a full edge with the centre. Replaces the prior 3-cols × 2-rows grid that had FA/SB as same-row neighbours of FON — and for flat-top hexes, same-row means single-vertex contact only ("points meeting points" per Saiful). `hexW = maxWidth × 2/5` so the cluster fills available width; cluster bounding box is 2.5*hexW × 3*hexH (≈ 358×372 on iPhone 13 vs the prior 358×207 — plus no overlap). **Status: resolved.**
 
-- **GlobalKey wiring:** 4 screens converted from `ConsumerWidget` to `ConsumerStatefulWidget` to hold GlobalKey fields. Private widget constructors (`_Header`, `_ValueCard`, `_WatchlistSection`, `_FilterRow`, `_SearchBar`, `_SlimProgressBar`, `_HexCluster`) gained `super.key` so the key flows down to their RenderBox.
+**`11fde6f6` — floor hex agent style — attempted, reverted, re-attempted, re-reverted.** Pattern worth noting for future sessions: Saiful's bug report said "the design used in 'floor' for the hex agents should be similar to the design used in the lessons hex." First interpretation went big (`497a2a1`: full edge-to-edge 4×3 staggered honeycomb of `HexAvatar`s, captions stripped, lock state moved to `HexAvatarStatus.locked`). Rejected: *"oh no. that was ugly. revert it."* Reverted in `52748ce`. Second interpretation, clarified by Saiful: only the BUTTON COLOUR matched. Added a `solid: false` flag to `HexAvatar` that mirrors `TrackHexButton`'s translucent fill (`color × 0.15` alpha + role-colour label, no border in the variant). Iterated through size bumps and border removal across three commits (`9a1c93d`, `569ad06`, `902b5ff`). All three reverted by user request: *"I am too tired to evaluate right now."* Bug **flipped back to open** for a future session. The `<adj>-<noun>-<hex>` worktree pattern + atomic `bug_reports` claim held throughout — no leaked state.
 
-- **Floor tour (5 steps):** Concierge hex → first agent tile → another agent tile (locked) → daily challenge card (conditional — only included if the challenge's RenderObject has non-zero size) → Convene the Room button. Convene's `TourCard` shows the dual-button row "Skip tour / Try it now → / Got it". Tap "Try it now" → tour skipped → `ConveneSheet.show(context)` opens.
+DB at end of session: `open=2 / pending_review=1 / resolved=26 / wont_fix=2`. The 2 open are `11fde6f6` (re-deferred above) and `eeeb866f` (room-restart, large, Beta-window).
 
-- **Portfolio / Journal / Lessons tours (3 steps each):** Portfolio = header / value card / watchlist. Journal = filter chips / search bar / list area. Lessons = header / progress bar / hex cluster.
+### Track B — Privacy Policy + Terms of Service drafted, published, versioned
 
-- **Completion:** Each tour ends with a green/cyan/blue floating SnackBar ("Go convene your first Room.", "Try a trade — all simulation, no risk.", etc.).
+Picked up A22 part 2 from the carry-over list. Three commits.
 
-- **i18n:** 37 new keys in `app_en.arb` under a `tour*` namespace (intro / 5×Floor / 3×Portfolio / 3×Journal / 3×Lessons / completion x4 / nav buttons / settings). Same set stubbed into `app_{ar,ms}.arb` with English values pending external translation.
+**`9fbfe6a` — `docs/09_compliance/{privacy_policy,terms_of_service}.md`.** Assembled the clause-by-clause starter language from `legal_plan_ami_trade.md` into two standalone DRAFT documents lawyer review can act on (16 Privacy clauses + 14 ToS clauses + 2 placeholder subsections). Each clause keeps its "Inspired by" peer-source footnote inline so the lawyer can spot-check. Five lawyer-only items called out explicitly: ToS §2 (not investment advice), §11 (liability cap), §13 (governing law), §13.1 (arbitration), §15 (indemnity). ToS ends with a "Lawyer-only checklist" table.
 
-- **Settings:** new `_WalkthroughSection` between Help and Account renders one "Restart app tour" tile that calls `tourService.resetAll()` and snackbars "Tour restarts next time you visit each section."
+**`5761373` — alpha HTML published at `/privacy/` and `/terms/`.** `website/privacy/index.html` and `website/terms/index.html`. URL convention chosen as directory layout (`/privacy/index.html`) so Apache serves them at clean URLs matching the existing `index.html` footer's `/privacy` and `/terms` links. Style: imports the existing `assets/css/site.css` tokens, with inline page-specific CSS in each file (one-off rather than a shared `legal.css` since only 2 pages). Alpha-stage adjustments vs the markdown drafts: "Inspired by" footnotes stripped, "DRAFT — pending lawyer review" softened to an amber "Alpha disclosure" callout, ToS §13 filled in with Malaysian law + non-exclusive jurisdiction + mandatory-consumer-rights carve-out (preliminary; lawyer adjusts at incorporation), §13.1 arbitration + §15 indemnity dropped for alpha. `sitemap.xml` updated with both URLs.
 
-### Fix 1: scroll target into view before focus (`684b180`)
+**`764a6ea` — doc-level versioning + publishing playbook (`docs/09_compliance/VERSIONING.md`).** Three layers identified: doc-level (this commit), URL-level (kicks in when v2 ships), app-level acceptance tracking (Beta+ work). Doc-level shipped: `<meta name="document-version">`, `<meta name="document-effective-date">`, `<meta name="document-status">` on each HTML; visible "Alpha · Version 1.0 · Effective 18 May 2026" in header; "Version history" `<section>` at the bottom (one entry now). Markdown sources synced with same Version + Effective + Published-HTML metadata. VERSIONING.md documents semver convention (major = material → 14-day notice; minor = clarification; patch = typos), material-vs-non-material gate (5 questions), step-by-step publish checklist (edit MD → mirror HTML → archive previous → bump meta → update sitemap → commit → FTP deploy → smoke-check), URL convention (canonical = self for archived versions, canonical = `/privacy/` for current), and a "What NEVER happens" footer.
 
-Convene step coach-mark fired against a button below the initial scroll fold — Saiful saw the spotlight halo over empty space. `TutorialCoachMark.beforeFocus` callback now calls `Scrollable.ensureVisible` on each target so the highlighted element is brought into view before the spotlight opens. Same pattern applied to Portfolio (ListView) and Lessons (SingleChildScrollView).
+**`bf2c83c` — sweep `.com` → `.ai`.** Saiful uploaded the HTMLs, then I curl-checked and discovered `agenticmarketintel.com` doesn't resolve — the live marketing site is on `.ai`. Saiful confirmed via AskUserQuestion: "`.ai` is canonical". Perl-replaced URL refs across 10 files (`docs/09_compliance/*`, `website/{WEBSITE.md, deploy_ftp.py, sitemap.xml, index.html, privacy/index.html, terms/index.html}`). Preserved untouched: the two `hello@agenticmarketintel.com` email refs in `index.html` (lines 701, 767) — email hosting is a separate concern. Saiful re-uploaded; URLs verified live at `https://www.agenticmarketintel.ai/{privacy,terms}/`.
 
-### Fix 2: tour tooltip overflow + bug-report keyboard occlusion (`18ddf71`)
+### Track C — TestFlight `+15`
 
-Two observations during on-device verification:
+**`9c464b7` — pubspec bump 0.1.0+14 → +15.** `scripts/build_testflight.sh` ran cleanly: release build, signed with the same Distribution cert, uploaded via `altool`. Saiful confirms `+15` is live on TestFlight Internal. Ships the AT:R23 walkthrough (`+14` had it) + the three AT:R24 bug fixes above. No External Beta artefact yet (still a carry-over). App Store Connect → App Information → Privacy Policy URL should be set to `https://www.agenticmarketintel.ai/privacy/` per Saiful's confirmed canonical-domain answer.
 
-- **Journal step 3** target = the `Expanded` list area, which fills most of the screen. `ContentAlign.top` math (`bottom = haloHeight + (screenHeight − targetCenterY)`) pushed the tooltip's top edge above the screen on tall targets. Switched to `ContentAlign.custom` with a fixed `top: 180` anchor below the search bar.
-- **Lessons step 3** target = the hex cluster, positioned high enough that `ContentAlign.top` landed the tooltip behind the status bar. Switched to `ContentAlign.bottom` since the area below the cluster is empty space.
-- **Bug-report sheet** — when the user tapped a text field, the keyboard pushed the form up but the photo + Send report buttons sat below the viewport. Wrapped the form's Column in `SingleChildScrollView` so the sheet can scroll under the keyboard inset.
-- The `beforeFocus` callback now picks scroll alignment based on tooltip position: `0.85` (target near bottom) if the tooltip is `ContentAlign.top`, else `0.15` (target near top). Dynamic per-step rather than hardcoded.
+### Carry-overs for AT:R25
 
-### Bug list at handover
+Counts audited against tree state at end of AT:R24.
 
-| short_id | title | status |
-|---|---|---|
-| `eeeb866f` | Room run survives api-alpha container restart | **open — deferred (large)** |
-
-DB-wide unchanged this session: `open=1 / pending_review=0 / resolved=24 / wont_fix=2`. No new bug reports filed against the walkthrough during on-device verification — both surfaced issues (target overflow, keyboard) were fixed inline by Saiful's feedback.
-
-### Carry-overs for AT:R24
-
-Counts audited against tree state at end of AT:R23 — no stale figures.
-
-1. **TestFlight push the walkthrough** — pubspec is still `0.1.0+14`; next `scripts/build_testflight.sh` run auto-bumps to `+15` and ships the walkthrough to Internal testers. Saiful explicitly chose handover-only on close this session.
-2. **T&C + Privacy Policy (A22 part 2)** — research in `docs/09_compliance/legal_plan_ami_trade.md`. Still needs (a) hosting at `agenticmarketintel.ai/legal/{privacy,terms}` and (b) lawyer review before App Store submission. Not touched this session.
-3. **`eeeb866f`** — room run survives container restart — open/deferred. Clean upgrade path (Celery + Redis broker; per-user FIFO) sketched in `docs/external/async_job_server_design_prompt.md`. Beta-window work.
-4. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. `scripts/build_testflight.sh` uploads to Internal only by default; no External Beta artefact in the repo yet.
-5. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/` (verified by `grep -roh '<Animation [^>]*/>' content/lessons/ | wc -l`). All render `AmiHexPlaceholder`. See `memory/project_animations.md` for the Lottie vs CustomPainter decision.
-6. **A29 light-mode refactor** — 125 hardcoded `AmiColors.slate900`/`slate800` references across `mobile/lib/`. Note that the walkthrough's `TourCard` adds 1 more (slate800 background) — recount before estimating effort. v1.0 work.
-7. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (one commit `f94ad0e` — bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (one commit `ead7038` — lessons-landing hex-cluster redesign). Still pending Saiful decision: merge to main or discard.
+1. **`11fde6f6` floor hex agent style — re-open.** All this-session attempts reverted. Saiful's note before stopping: clarified that it was only the BUTTON COLOUR style he wanted to match (the lessons hex's translucent fill + colored text, not the cluster layout). Next session should try a fresh approach with that constraint clearer — possibly involving a `solid: false` variant of `HexAvatar` similar to what `902b5ff` shipped, but only after a design-only review (no commit-and-rebuild loops). All commit history is on main (in the revert pairs) if helpful.
+2. **`eeeb866f` — room run survives container restart — still open/deferred (large).** Clean upgrade path (Celery + Redis broker; per-user FIFO) sketched in `docs/external/async_job_server_design_prompt.md`. Beta-window work.
+3. **`6fd4144d` bug-report close button — `pending_review`.** Committed in `af01328`, on iPhone, on TestFlight. Saiful to flip to `resolved` once verified.
+4. **Lawyer review of Privacy + ToS.** The published HTML at `agenticmarketintel.ai/{privacy,terms}/` is the alpha-stage version (clearly disclosed in amber banner). The canonical markdown at `docs/09_compliance/{privacy_policy,terms_of_service}.md` keeps the lawyer-only placeholders and "Inspired by" footnotes for review. Five clauses are jurisdiction-sensitive — see ToS' "Lawyer-only checklist" table at the bottom.
+5. **App-side acceptance tracking** (the "version 14-day notice + re-accept" Beta+ work). Spec in `docs/09_compliance/VERSIONING.md` under "App-side acceptance tracking (Beta+ work)". Needs a `policy_acceptances` table + backend comparison logic + Flutter banner. Beta scope.
+6. **App Store Connect Privacy Policy URL** — confirm in App Store Connect that it's set to `https://www.agenticmarketintel.ai/privacy/`. Critical before External Beta submission. Probably already correct from prior sessions but worth a glance.
+7. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. `scripts/build_testflight.sh` uploads to Internal only by default; no External Beta artefact in the repo yet.
+8. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/`. All render `AmiHexPlaceholder`. See `memory/project_animations.md` for the Lottie vs CustomPainter decision.
+9. **A29 light-mode refactor** — 125+ hardcoded `AmiColors.slate900`/`slate800` references across `mobile/lib/`. v1.0 work.
+10. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (one commit `f94ad0e` — bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (one commit `ead7038` — lessons-landing hex-cluster redesign). Still pending Saiful decision: merge to main or discard. The hex-cluster redesign is especially worth a look now that `a51a75b` has changed how the lessons cluster is laid out — they may conflict or one may obsolete the other.
 
 ### Watch items (not tasks)
 
-- **Walkthrough field testing.** The 4 tours haven't been tested by anyone other than Saiful. Internal testers on `+15` will be the first to hit the auto-pop flow with their own state (e.g. some agents already unlocked from prior sessions). If a tester reports the target widget is invisible (e.g. challenge card hidden because there's no daily challenge that day) the conditional-step pattern in `buildFloorTargets` (`challengeKey.currentContext?.findRenderObject() != null` check) is the precedent to extend.
-- **Room dedup window tuning** — `ROOM_DEDUP_COMPLETED_HOURS=24` in `infra/alpha.env`. Design doc default was 5 days; raise via env if testers complain about same-day re-runs being blocked. The knob is live; no code change needed.
-- **NVFP4 quantisation produces space-split tokens** — observed since day one (e.g. "Consol idation", "NV DA"). Not a regression, not blocking alpha. vLLM-side tuning is the path if user-visible.
+- **Domain mismatch hygiene.** The `.com` references in `index.html` for emails (`hello@agenticmarketintel.com` on lines 701 + 767) were deliberately preserved — email hosting is independent of web hosting. If Saiful's actual support email is on `.ai` now (the new legal docs use `privacy@.ai` and `legal@.ai`), those `hello@.com` refs become stale. Worth confirming his email setup and unifying.
+- **Testers on `+15`** are the first to see the bug-fix release. Three things to watch for in new bug reports: (a) anyone failing to find the new `×` close on the bug-report sheet (unlikely but possible if iconography reads wrong at smaller screen sizes); (b) the back arrow on `LessonsScreen` showing in unexpected contexts (it triggers on `canPop()` — fine on the agent-panel push, but verify it doesn't appear inside the main HomeShell where it'd just close the tab); (c) the new lessons hex cluster size (3*hexH tall) crowding any tour overlay positioning that AT:R23 set up for the smaller 2*hexH cluster.
+- **NVFP4 quantisation produces space-split tokens** — observed since day one. Not blocking alpha.
 
 ---
 
@@ -169,7 +157,7 @@ Counts audited against tree state at end of AT:R23 — no stale figures.
 
 The slash command reads HANDOVER.md + project plan, runs the Mac-side sanity-check curls, queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R24** (this is handover #23).
+Session name to use: **AT:R25** (this is handover #24).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
