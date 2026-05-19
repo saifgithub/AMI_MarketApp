@@ -168,20 +168,35 @@ Logs `smtp_not_configured_skip_email` and returns when `settings.smtp_host` is e
 
 - **Bug `6fd4144d`** (bug-report close button) — fix `af01328` was already in main from a prior session (the bug-fix worktree `claude/bug-fix-20260517-225716` was confirmed during AT:R26 to have no commits ahead of main). DB status still `pending_review`; verify on TestFlight `+17` and flip to resolved.
 - **Bug `a84361f6`** — DB status flipped to `pending_review` mid-session by `/fix-bugs`. Same verify-on-`+17`-then-flip-to-resolved pattern.
-- **SMTP DNS** — `mail.agenticmarketintel.ai` was still NXDOMAIN at session end. Saiful added the A record (Cloudflare gray cloud → `69.57.162.213`) but it never surfaced on Cloudflare's authoritative NS during the session. Watch this on the next session: if DNS resolves, no code change is needed — `send_magic_link()` will just start working. If it stays NXDOMAIN, Saiful may need to delete + re-add the record, or switch to a different SMTP host (Gmail SMTP is the simplest fallback — `smtp.gmail.com:587` + an App Password).
+- **SMTP DNS — UNRESOLVED at session end. Resume here on AT:R27.**
+
+  **State of evidence at end of session:**
+  - Cloudflare DNS dashboard for `agenticmarketintel.ai` shows: `Type=A, Name=mail, Content=69.57.162.213, Proxy=DNS only (gray cloud), TTL=Auto`. Warning triangle next to the row is benign — just the standard "exposes origin IP" notice for gray-cloud A records.
+  - But `dig +short mail.agenticmarketintel.ai @rihana.ns.cloudflare.com` AND `@lou.ns.cloudflare.com` (the two authoritative NS for the zone) both returned EMPTY. 1.1.1.1 and 8.8.8.8 returned NXDOMAIN. melehost's resolver returned SERVFAIL. **Authoritative NS empty means it's not a propagation delay — Cloudflare's nameservers genuinely don't see the record.**
+  - The IP itself IS a real Namecheap-owned mail server: from Mac, `nc -G 5 -zv 69.57.162.213` connects on ports 465, 587, 993. From melehost, port 465 timed out (separate question — possible ISP block on outbound 465; check 587 next).
+  - SMTP creds in `infra/alpha.env`: `SMTP_HOST=mail.agenticmarketintel.ai`, `SMTP_PORT=465`, `SMTP_USER=ami.ai@agenticmarketintel.ai`, `SMTP_PASSWORD=;hMo@u]n^{77`, `SMTP_FROM=noreply@agenticmarketintel.ai`. All 5 verified live on melehost via the promote step-4 `grep` (counted as `<set>`).
+  - Backend code is wired + tested + promoted (`alpha-2026-05-19-3`). `email_service.send_magic_link()` is a no-op when `smtp_host=""` and never raises on send failure — so the rest of the app is safe.
+
+  **What to try on AT:R27** (in order, escalating):
+  1. **Re-query DNS first thing** — it might just have propagated overnight. `dig +short mail.agenticmarketintel.ai` from Mac. If non-empty, immediately re-run the SMTP smoke test from earlier in AT:R26 (use the IP directly to bypass DNS if needed — `openssl s_client -connect 69.57.162.213:465 -servername mail.agenticmarketintel.ai`).
+  2. **If still NXDOMAIN**, ask Saiful to delete + re-add the Cloudflare record. Sometimes a saved-but-not-actually-persisted state happens — re-creating the row forces a clean propagation.
+  3. **Check Namecheap's mail-server hostname** — the IP belongs to Namecheap; their Private Email service typically documents the SMTP hostname as e.g. `mail.privateemail.com`, NOT a custom-domain CNAME. Saiful might need to set `SMTP_HOST` to whatever Namecheap's mail dashboard documents (and the TLS cert will be issued for THAT hostname, not the custom domain).
+  4. **Test outbound port 465 from melehost** — `ssh melehost "timeout 8 nc -zv mail.privateemail.com 465"` once DNS works. If the connection times out, try 587. If both time out, melehost's ISP may be blocking outbound SMTP; the workaround is to route through a different SMTP provider that listens on a non-standard port, or relay through Mailgun/Postmark.
+  5. **Fallback**: Gmail SMTP. `smtp.gmail.com:587` + App Password from any Gmail account Saiful has 2FA enabled on. Drop-in — just update the 5 `SMTP_*` keys in `infra/alpha.env` and re-promote.
+
+  **Until SMTP works, magic-link sign-in is broken for any external user.** Alpha testers don't see it because on `env=staging` the debug code is NOT returned in the API response (Phase 1.5 A1 lockdown) — so a tester who taps "Send Code" gets stuck at the "enter the code" step with nothing to type. **This is a real blocker for External TestFlight launch.**
 - **L-1 residual** (from AT:R25 audit) still NOT closed: `OneOnOneStartRequest.user_id: UUID | None` lets a null body bypass `_own_body`. Limited blast radius (resulting session has `user_id=None`, `_own_session` rejects on subsequent calls) but worth tightening if 1-on-1 abuse becomes a real signal.
-- **Worktree pattern this session:** the session lived in `claude/agitated-lichterman-ac97d6` but every file edit + commit went to the main checkout via absolute paths (same pattern as AT:R25). The bug-fix track DID use a proper worktree (`claude/bug-fix-20260519-140401`, removed post-merge). Consider committing to this hybrid as the canonical pattern going forward.
 - **TestFlight `+17` is the same code as +16 plus the AT:R26 changes** — testers on +16 will still work against the new backend (no breaking API change; only the new `DELETE /v1/auth/session` route was added). Apple sign-in attempt on +16 still produces the old generic error; only +17 has the friendly snackbar + caption.
 
 ### Carry-overs for AT:R27
 
 Counts audited against tree state at end of AT:R26.
 
-1. **`6fd4144d` bug-report close button — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
-2. **`a84361f6` Apple-sign-in 503 glitch — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
-3. **`11fde6f6` floor hex agent style — re-open from AT:R24/R25.** No movement again this session (deferred per Saiful).
-4. **`eeeb866f` — room run survives container restart — open, deferred-pre-beta.** Note + estimate still in `bug_reports.steps`.
-5. **SMTP DNS** — `mail.agenticmarketintel.ai` needs to actually resolve before magic-link email goes out. Code is wired and tested; only DNS blocks delivery.
+1. **🚧 SMTP DNS — magic-link email is the External Beta blocker.** `mail.agenticmarketintel.ai` was NXDOMAIN at Cloudflare's authoritative NS at session-end despite the gray-cloud A record being visible in the dashboard. Backend code is wired + tested + promoted; only DNS surfacing blocks real email. **Full debug trail + escalation steps are in "Operational footnotes worth surfacing" above** — start by re-querying DNS on session resume; if still NXDOMAIN, try delete+re-add in Cloudflare, then Namecheap's documented mail hostname, then Gmail SMTP fallback.
+2. **`6fd4144d` bug-report close button — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
+3. **`a84361f6` Apple-sign-in 503 glitch — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
+4. **`11fde6f6` floor hex agent style — re-open from AT:R24/R25.** No movement again this session (deferred per Saiful).
+5. **`eeeb866f` — room run survives container restart — open, deferred-pre-beta.** Note + estimate still in `bug_reports.steps`.
 6. **Apple sign-in Phase 3** — Saiful enabled "Sign in with Apple" capability in the Apple Developer portal at the bundle ID this session. Backend still returns 503 outside `env=local` — replace `auth_service.py::_decode_apple_sub` with real PyJWT + Apple JWKS verification. ~1 day.
 7. **Google sign-in Phase 3** — explicit decision this session: **defer until Android v1.0**. Don't start the Flutter `google_sign_in` package wiring yet.
 8. **B-tier adversarial-audit findings remaining** (deferred to pre-External-Beta): rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter + per-IP throttle; feedback upload size enforced at the proxy + streaming read. (B4 token-scrubbing closed this session.)
