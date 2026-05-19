@@ -30,6 +30,19 @@ from app.services.audit import MAX_BODY_BYTES, record_http
 
 SKIP_PATHS = {"/v1/health"}
 
+# Auth routes that issue or accept credentials (bearer tokens, magic-link
+# codes, Apple JWTs). Bodies are replaced with [REDACTED] before being
+# written to http_audit rows — the token stays out of the audit log.
+# Method / path / status / latency / IP are still recorded.
+# Adversarial audit (2026-05-18) finding B4.
+SCRUB_PATHS = {
+    "/v1/auth/anon",
+    "/v1/auth/magic_link/start",
+    "/v1/auth/magic_link/verify",
+    "/v1/auth/apple",
+    "/v1/auth/session",
+}
+
 
 class HTTPAuditMiddleware(BaseHTTPMiddleware):
     async def dispatch(
@@ -45,11 +58,15 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
 
         # Capture request body — Starlette body() caches so downstream handlers
         # still see it. For huge bodies (file upload), truncate.
+        scrub = path in SCRUB_PATHS
+
         try:
             body_bytes = await request.body()
         except Exception:
             body_bytes = b""
-        if len(body_bytes) > MAX_BODY_BYTES:
+        if scrub:
+            captured_request = b"[REDACTED]"
+        elif len(body_bytes) > MAX_BODY_BYTES:
             captured_request = body_bytes[:MAX_BODY_BYTES]
         else:
             captured_request = body_bytes
@@ -96,7 +113,9 @@ class HTTPAuditMiddleware(BaseHTTPMiddleware):
         captured_response: Optional[bytes] = None
         response_truncated = False
 
-        if not is_streaming:
+        if scrub:
+            captured_response = b"[REDACTED]"
+        elif not is_streaming:
             # Consume the underlying body iterator, buffer it, return a fresh
             # Response with the same bytes. Starlette's Response.body_iterator
             # is the canonical hook.

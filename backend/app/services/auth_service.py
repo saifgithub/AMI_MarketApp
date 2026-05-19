@@ -39,6 +39,7 @@ from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import AuthChallengeRow, User
 from app.schemas.auth import AuthUser
+from app.services.email_service import send_magic_link as _send_magic_link_email
 
 
 MAGIC_LINK_TTL_MIN = 15
@@ -211,6 +212,7 @@ class AuthService:
                 expires_at=datetime.now(timezone.utc) + timedelta(minutes=MAGIC_LINK_TTL_MIN),
             ))
         logger.info("magic_link_started", email=email, user_id=str(user_id))
+        _send_magic_link_email(email, code)
         return code
 
     def verify_magic_link(

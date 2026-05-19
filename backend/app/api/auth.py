@@ -136,6 +136,17 @@ def sign_in_with_apple(
     return AuthVerifyResponse(user=user, token=token, claimed=True)
 
 
+@router.delete("/session", status_code=status.HTTP_200_OK)
+def sign_out(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, bool]:
+    # Scaffold tokens are stateless HMAC — there is no server-side session
+    # to invalidate. The client clears its token + re-bootstraps an anon
+    # session. This endpoint exists as a clean HTTP contract for a future
+    # token blocklist (Phase 5+).
+    return {"signed_out": True}
+
+
 @router.get("/me", response_model=AuthUser)
 def whoami(
     authorization: str | None = Header(default=None),

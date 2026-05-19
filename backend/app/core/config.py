@@ -92,6 +92,14 @@ class Settings(BaseSettings):
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
 
+    # SMTP (magic-link email delivery). When smtp_host is empty the backend
+    # falls back to debug-code-only mode (code shown in UI for alpha testers).
+    smtp_host: str = ""
+    smtp_port: int = 465
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+
     # CORS
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 
