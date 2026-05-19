@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-18 (end of AT:R24 — Bug-fix + legal docs + TestFlight `+15`. Three user-surfaced UX bugs fixed (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when pushed from agent panel, `e2857081` lessons hex cluster proper edge-to-edge tiling). One bug attempted + reverted twice: `11fde6f6` floor hex agent style — initial honeycomb refactor + later style-only tweaks all rejected as ugly. Drafted Privacy Policy + Terms of Service (16 + 14 clauses) as canonical markdown in `docs/09_compliance/`, published as HTML at `agenticmarketintel.ai/{privacy,terms}/`, with doc-level versioning (meta tags + visible header + version-history footer) and a publishing playbook at `docs/09_compliance/VERSIONING.md`. Swept `.com` → `.ai` after discovering the live marketing site is on `.ai`. **199 commits, 275 tests**, pubspec `0.1.0+15` shipped to TestFlight Internal. No Alpha promotion — backend untouched.)
+**Last updated:** 2026-05-19 (end of AT:R25 — Auth Phase 1 + Phase 1.5 + Alpha promote. Backend now enforces route-level auth via a `get_current_user` dependency (HMAC-signed `scaffold:<hex>:<sig>` Bearer tokens); routers carry ownership checks against the bearer-identified user. An adversarial audit ([docs/08_tech/auth_phase1_adversarial_audit.md](docs/08_tech/auth_phase1_adversarial_audit.md)) caught 9 deploy-blocking issues the self-audit missed — Phase 1.5 closed all of them: env=dev lockdown (legacy tokens, debug code, Apple verifier all gated to env=local only); `/v1/auth/anon` is no longer a token-minting oracle (mints fresh unless caller's Bearer matches the supplied device_user_id); magic-link routes require auth and bind the claim to `current_user.id` (body `user_id` field dropped); `/v1/auth/apple` returns 503 outside local until Phase 3 verification work lands; `/v1/lessons/activations/grant` removed; body/object ownership on every room, coach, 1-on-1 route. Flutter: Dio interceptor auto-attaches Bearer; `_AuthGate` splash waits for bootstrap so feature providers never fire pre-auth; SSE handshake now sends Bearer via a `_sseRequest` helper (was bypassing Dio); `DeviceUser` persists the bearer token to SharedPreferences and replays it on cold start so A2 doesn't orphan users on every launch. Deployed as `alpha-2026-05-19-2` after the first promote (`alpha-2026-05-19-1`, deleted) exposed a compose gap — `docker-compose.yml` was reading `${AMI_ENV:-local}` but had no `SECRET_KEY` mapping, so the lockdowns were inert; fixed in `12a5da8`. melehost env file now carries `AMI_ENV=staging` + `SECRET_KEY=<64-hex>`; all five lockdown curls verified live (401 unauth, 401 legacy, 503 apple, 405 grant, mint-fresh anon). 6 commits, **306 backend tests passing**, TestFlight `0.1.0+16` shipped + Internal-Testing smoke verified before promote.)
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,24 +15,24 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **199 commits**, no remote yet |
-| Latest commit | `9c464b7` — chore(mobile): bump build 0.1.0+14 → 0.1.0+15 for TestFlight |
-| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` (latest `alpha-2026-05-17-5` — unchanged this session; backend was untouched) |
-| Backend tests | **275 passed, 0 failed** (unchanged — no backend code touched this session) |
+| Git state | Clean working tree, **206 commits**, no remote yet |
+| Latest commit | `12a5da8` — fix(compose): wire SECRET_KEY env var into api-alpha container |
+| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` + `alpha-2026-05-19-2` (latest `alpha-2026-05-19-2` — Phase 1.5 promote. `-1` was deleted after the compose-secret gap was caught.) |
+| Backend tests | **306 passed, 0 failed** (was 275; +31 this session: `test_auth_dependency.py` covers `get_current_user`/`parse_scaffold_token` happy paths + 401/403, `test_auth_phase1_5_audit_fixes.py` covers each adversarial-audit finding) |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; unchanged this session) |
 
 ```
 $ git log --oneline | head -10
+12a5da8 fix(compose): wire SECRET_KEY env var into api-alpha container
+181cbd1 docs(silent_scout): reframe README — workspace is broader than the LoRA track
+3d3c702 docs(silent_scout): Android test device selection — A16 5G for KSA Android dev rig
+13140af chore(mobile): bump build 0.1.0+15 → 0.1.0+16 for TestFlight
+48eb0d6 feat(auth): Phase 1 + 1.5 — route guards, HMAC tokens, audit fixes
+4276487 docs(auth): Phase 1 self-audit + adversarial review
+d97187b handover: wrap AT:R24 — 199 commits, 275 tests, TestFlight +15 live
 9c464b7 chore(mobile): bump build 0.1.0+14 → 0.1.0+15 for TestFlight
 bf2c83c chore(legal,website): canonical domain is agenticmarketintel.ai, not .com
 764a6ea docs(legal): add doc-level versioning to Privacy + ToS
-5761373 feat(website): publish alpha Privacy Policy + ToS at /privacy and /terms
-9fbfe6a docs(legal): standalone Privacy Policy + ToS drafts (pending lawyer review)
-24d0bc7 Revert "fix(bug:11fde6f6): match floor hex button style to lessons hex"
-b070055 Revert "chore(floor): bump agent hex size 72→96 for more visual weight"
-8fceb32 Revert "fix(floor): un-dim agent hexes — drop translucent border + use locked status"
-902b5ff fix(floor): un-dim agent hexes — drop translucent border + use locked status
-569ad06 chore(floor): bump agent hex size 72→96 for more visual weight
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -46,7 +46,9 @@ b070055 Revert "chore(floor): bump agent hex size 72→96 for more visual weight
 | Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
 | Routes | `/v1/health`, `/v1/auth/*`, `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*`, `/v1/feedback/bug` (now `multipart/form-data` with optional `file`) |
-| Mac-side tests | `pytest backend/tests/unit/ -q` — **275 passed**. Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **306 passed** (was 275; AT:R25 added `test_auth_dependency.py` + `test_auth_phase1_5_audit_fixes.py`). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` in melehost `~/ami_trade/.env` (canonical at `infra/alpha.env` on Mac, gitignored). Without `SECRET_KEY` the backend refuses to start when env != local (boot check in `app/main.py`). |
+| Auth | Phase 1.5 enforced: route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/coach`, `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. `/v1/auth/apple` returns 503 outside env=local (Phase 3 verification not yet shipped). |
 | Room env knobs | `ROOM_DEDUP_RUNNING_MINUTES=30` (in-flight dedup + startup-sweep cutoff) · `ROOM_DEDUP_COMPLETED_HOURS=24` (return prior verdict same day; design doc default was 5 days — we start tighter). Set completed_hours=0 to disable cached-run dedup. |
 | Push code to it | [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) — rsync + recreate + smoke. No GitHub remote yet. |
 
@@ -80,72 +82,108 @@ Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_pr
 | | |
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
-| pubspec version | **`0.1.0+15`** (repo) — pushed to TestFlight Internal this session. |
-| TESTING IPHONE 13 install | release build of HEAD (`9c464b7`) sideloaded via `scripts/install_iphone.sh` (repeatedly through the session as bugs were fixed). Same code path as the TestFlight build. |
-| TestFlight | **`0.1.0+15` is live on Internal Testing as of 2026-05-18.** Ships the AT:R23 walkthrough + the three AT:R24 bug fixes (`6fd4144d`, `cb81a6d8`, `e2857081`). No External Beta artefact yet — see carry-over. |
+| pubspec version | **`0.1.0+16`** (repo) — Phase 1 + 1.5 auth client. |
+| TESTING IPHONE 13 install | release build of `+16` sideloaded via `scripts/install_iphone.sh` for the pre-promote smoke; same build path as the TestFlight upload. |
+| TestFlight | **`0.1.0+16` is live on Internal Testing as of 2026-05-19.** Carries the Dio bearer interceptor, `_AuthGate` splash, `DeviceUser` token persistence, SSE auth helper, and the magic-link request shape change (no more body `user_id`). Smoke-tested on TESTING IPHONE 13 against the post-promote Alpha backend; Floor/Portfolio/Journal/Lessons load, Room SSE streams and writes a verdict to journal, 1-on-1 + Coach SSE both stream. No External Beta artefact yet — see carry-over. |
 | Build commands | `scripts/install_iphone.sh` (dev sideload — now uses `flutter devices --machine` so it doesn't print iPhone 17 LAN-probe noise), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
 
-App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **First-time walkthrough (AT:R23):** per-section coach-mark tours fire automatically on first visit to each tab — Floor opens with an intro bottom sheet ("Take the tour / Skip for now"), then 5 spotlight steps narrating Concierge → analyst team → locked agents → daily challenge → Convene; Portfolio / Journal / Lessons each fire 3 steps. Convene step exposes a "Try it now →" CTA that closes the tour and opens the Convene sheet. Each section flag (`tour_{floor,portfolio,journal,lessons}_seen`) is in SharedPreferences; Settings → WALKTHROUGH → "Restart app tour" clears all four. Journal filter chips: `ALL · ROOM · TRADE · 1-ON-1 · COACH · LESSONS · UNLOCKS` (ROOM + TRADE at positions 2/3). Journal has soft-delete with UNDO + 30-day Trash view + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green "✓ BUY 1 TSLA @ $X" pill once a sim_trade exists with `verdict_ref == runId`. Trade ticket sheet: live quote chip under the ticker field with `LIVE`/`MOCK` source pill + auto-suggested TP/SL at -6%/+13% of price; non-blocking "NO AI VERDICT" advisory at top when no verdict was convened. Ticker tape below bottom nav (Yahoo Finance, refreshes when watchlist changes). Settings → APPEARANCE is dark-only. Settings → COMPLIANCE labels are tappable. Bug-report sheet (long-press app-version chip) supports photo attachments, offers a `feature_request` category, and now scrolls correctly when the keyboard is open.
+App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **First-time walkthrough (AT:R23):** per-section coach-mark tours fire automatically on first visit to each tab — Floor opens with an intro bottom sheet ("Take the tour / Skip for now"), then 5 spotlight steps narrating Concierge → analyst team → locked agents → daily challenge → Convene; Portfolio / Journal / Lessons each fire 3 steps. Convene step exposes a "Try it now →" CTA that closes the tour and opens the Convene sheet. Each section flag (`tour_{floor,portfolio,journal,lessons}_seen`) is in SharedPreferences; Settings → WALKTHROUGH → "Restart app tour" clears all four. **AT:R25 auth gate:** a brand-new `_AuthGate` splash blocks the home (Onboarding or HomeShell) until `AuthNotifier.bootstrap()` has populated `state.token`; without this, feature providers could fire API calls before the Dio interceptor had a Bearer. Journal filter chips: `ALL · ROOM · TRADE · 1-ON-1 · COACH · LESSONS · UNLOCKS` (ROOM + TRADE at positions 2/3). Journal has soft-delete with UNDO + 30-day Trash view + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green "✓ BUY 1 TSLA @ $X" pill once a sim_trade exists with `verdict_ref == runId`. Trade ticket sheet: live quote chip under the ticker field with `LIVE`/`MOCK` source pill + auto-suggested TP/SL at -6%/+13% of price; non-blocking "NO AI VERDICT" advisory at top when no verdict was convened. Ticker tape below bottom nav (Yahoo Finance, refreshes when watchlist changes). Settings → APPEARANCE is dark-only. Settings → COMPLIANCE labels are tappable. Bug-report sheet (long-press app-version chip) supports photo attachments, offers a `feature_request` category, and now scrolls correctly when the keyboard is open.
 
 ---
 
-## What just landed (this session — AT:R24)
+## What just landed (this session — AT:R25)
 
-Three-track session: (a) clear the bug queue from AT:R23's walkthrough release, (b) draft + publish the alpha-stage Privacy Policy and Terms of Service, (c) push `0.1.0+15` to TestFlight Internal. 19 commits. Backend untouched (no `/promote-to-alpha`).
+Single-track session: build, audit, and promote real authentication. 6 commits. Backend promoted to Alpha as `alpha-2026-05-19-2`, TestFlight `+16` shipped. Two audit docs written. Working tree clean throughout.
 
-### Track A — Bug queue: 3 fixed, 1 attempted-and-reverted
+### Track A — Phase 1 (route guards + HMAC scaffold tokens)
 
-Used `/start-fresh` → bug list → `/fix-bugs` worktree (`.claude/worktrees/bug-fix-20260517-225716`, since cleaned up). All claimed atomically against melehost `bug_reports.assigned_branch`. Two of three saw both `pending_review` → `resolved` flips after Saiful verified on-device; the third is still `pending_review`.
+`4276487` (docs) + `48eb0d6` (code) land the foundation. The dependency `app/api/dependencies.py::get_current_user` extracts a `Bearer` token from `Authorization`, hands it to `parse_scaffold_token()`, and returns the live `User` row (or raises 401). Token format moves from the legacy unsigned `scaffold:<hex>` to HMAC-signed `scaffold:<hex>:<sig>` (`_scaffold_token` in `auth_service.py`, signature is HMAC-SHA256 over `user_id.hex` with `SECRET_KEY`). The legacy form is still accepted but only when `env=local` — so a developer running the Mac unit tests offline doesn't have to set a key.
 
-**`af01328` — fix(bug:6fd4144d): add explicit close button to bug report sheet.** The sheet had only a swipe-down dismiss; added a `×` icon in the header row next to "Report a bug". File: `mobile/lib/screens/feedback/bug_report_sheet.dart`. **Status: pending_review** (committed + on-device + on TestFlight, awaiting Saiful's flip to resolved).
+Routers swept: `mandate`, `journal`, `watchlist`, `coach`, `one_on_one`, `room` get a router-level `dependencies=[Depends(get_current_user)]`. `sim` + `lessons` mix public and user-specific routes, so the dependency is per-route. Every route that takes `user_id` in the path also asserts `current_user.id == user_id` and raises 403 on mismatch — `mandate.py`, `journal.py`, `watchlist.py`, `sim.py`, `lessons.py` use a local `_own(current_user, user_id)` helper for the check. Feedback's `_resolve_user_id` was migrated to call `parse_scaffold_token` (still returns None silently on bad/missing tokens — bug reports stay un-authed by design).
 
-**`75ba23a` (amended) — fix(bug:cb81a6d8,e2857081): lessons screen back nav + hex cluster layout.** Two fixes in one file:
+Flutter side of Phase 1: `mobile/lib/services/api/api_client.dart` gains a `_AuthInterceptor` (Dio) that attaches `Authorization: Bearer <token>` on every request once `_bearerToken` is non-null. `AuthNotifier.bootstrap()` + the magic-link verify + Apple sign-in handlers each call `api.setToken(r.token)` after they receive a fresh token.
 
-- `cb81a6d8` — `LessonsScreen._Header` now accepts a `showBack` parameter and renders an arrow when `Navigator.of(context).canPop()` is true. Fixes the no-exit trap when reached from the locked-agent "Go to Lessons" button (which pushes the screen standalone, outside the HomeShell IndexedStack where the bottom nav lives). **Status: resolved.**
-- `e2857081` — `_HexCluster` geometry rewritten in `a51a75b`: 1+6 clock arrangement (N/NE/SE/S/SW/NW around centre) where every surrounding hex shares a full edge with the centre. Replaces the prior 3-cols × 2-rows grid that had FA/SB as same-row neighbours of FON — and for flat-top hexes, same-row means single-vertex contact only ("points meeting points" per Saiful). `hexW = maxWidth × 2/5` so the cluster fills available width; cluster bounding box is 2.5*hexW × 3*hexH (≈ 358×372 on iPhone 13 vs the prior 358×207 — plus no overlap). **Status: resolved.**
+12 unit tests in `backend/tests/unit/test_auth_dependency.py` cover `parse_scaffold_token` happy paths, forgery rejection, malformed input, and 401/403/200 on the mandate routes. 287 backend tests pass at end of this track.
 
-**`11fde6f6` — floor hex agent style — attempted, reverted, re-attempted, re-reverted.** Pattern worth noting for future sessions: Saiful's bug report said "the design used in 'floor' for the hex agents should be similar to the design used in the lessons hex." First interpretation went big (`497a2a1`: full edge-to-edge 4×3 staggered honeycomb of `HexAvatar`s, captions stripped, lock state moved to `HexAvatarStatus.locked`). Rejected: *"oh no. that was ugly. revert it."* Reverted in `52748ce`. Second interpretation, clarified by Saiful: only the BUTTON COLOUR matched. Added a `solid: false` flag to `HexAvatar` that mirrors `TrackHexButton`'s translucent fill (`color × 0.15` alpha + role-colour label, no border in the variant). Iterated through size bumps and border removal across three commits (`9a1c93d`, `569ad06`, `902b5ff`). All three reverted by user request: *"I am too tired to evaluate right now."* Bug **flipped back to open** for a future session. The `<adj>-<noun>-<hex>` worktree pattern + atomic `bug_reports` claim held throughout — no leaked state.
+### Track B — Adversarial audit + Phase 1.5 corrective work
 
-DB at end of session: `open=2 / pending_review=1 / resolved=26 / wont_fix=2`. The 2 open are `11fde6f6` (re-deferred above) and `eeeb866f` (room-restart, large, Beta-window).
+`4276487` also lands the second audit doc: [docs/08_tech/auth_phase1_adversarial_audit.md](docs/08_tech/auth_phase1_adversarial_audit.md), produced by an external review of Phase 1. The reviewer caught 9 deploy-blocking issues the self-audit either missed or characterised as "accept for alpha" when they were actual bypasses of the new security layer. Same `48eb0d6` commit landed the fixes — they were intentionally bundled because Phase 1 alone was not promotable.
 
-### Track B — Privacy Policy + Terms of Service drafted, published, versioned
+Findings closed:
 
-Picked up A22 part 2 from the carry-over list. Three commits.
+- **A1.** `env=dev` accepted the legacy unsigned format AND returned the magic-link debug code in response bodies — both reachable via melehost's public Cloudflare Tunnel. Tightened: `parse_scaffold_token` accepts legacy only in `env=local`, `_is_dev_env()` returns True only in `local`, and `app/main.py` raises `RuntimeError` at boot if `env != local` and `SECRET_KEY` is still the default. A new env value `staging` is now the canonical alpha env (melehost runs as `AMI_ENV=staging`).
+- **A2.** `/v1/auth/anon` was a token-minting oracle — POST `{device_user_id: <victim>}` returned a signed token for any UUID. Fixed in `auth_service.py::ensure_anonymous`: a supplied `device_user_id` is honoured only when the caller also presents a Bearer whose parsed `user_id` matches. Otherwise the row is minted fresh, ignoring the body. `api/auth.py::anon_session` parses the optional Bearer with `_user_id_from_token` and passes it through.
+- **A3.** Magic-link verify trusted body `user_id`, letting any caller bind a captured email to a victim's row. Fixed: both `magic_link/start` and `magic_link/verify` require `get_current_user`, the `user_id` field was dropped from `MagicLinkStartRequest` and `MagicLinkVerifyRequest`, and the bind always goes to `current_user.id`. Debug code returns only in `env=local`.
+- **A4.** `/v1/auth/apple` decoded the JWT without verifying Apple's signature — a forged 3-part JWT with any `sub` worked. Until Phase 3 ships real verification (PyJWT + Apple JWKS), the route returns 503 outside `env=local`.
+- **A5.** `/v1/lessons/activations/grant` was completely unauthenticated. Removed (the underlying `lessons_service::grant_activation` stays; founder grants now happen via psql).
+- **A6.** Body / object ownership added to `room.py::stream_room` + `get_room` (loads run, checks `run.user_id`), every coach route (`_own_body` for body `user_id`, `_own_session` for routes that load a session), and every 1-on-1 route. `_own_session` is strict — a session with `user_id=None` is rejected.
+- **A7.** Flutter bootstrap was lazy (`Future.microtask(n.bootstrap)` fired only when something watched `authNotifierProvider`). Feature providers could call protected routes before the Dio interceptor had a token. Fixed: new `_AuthGate` widget wraps `home` in `app.dart` and watches `authNotifierProvider.token`; renders a splash until non-null. `DeviceUser` was extended to persist both the device_user_id AND the Bearer token to SharedPreferences (`getToken()`, `setIdAndToken()`, `clear()`), so cold starts replay the token and the backend recognises the returning user (otherwise A2 would orphan users on every launch).
+- **A8.** SSE methods (`streamCoachMessage`, `streamOneOnOneMessage`, the room stream) used raw `http.Client()` and bypassed the Dio interceptor — they would 401 against the new backend. Fixed: a new `ApiClient::_sseRequest(uri, body)` helper builds an `http.Request` with `Authorization: Bearer $_bearerToken` and throws if the token is missing. All three SSE call sites use it.
 
-**`9fbfe6a` — `docs/09_compliance/{privacy_policy,terms_of_service}.md`.** Assembled the clause-by-clause starter language from `legal_plan_ami_trade.md` into two standalone DRAFT documents lawyer review can act on (16 Privacy clauses + 14 ToS clauses + 2 placeholder subsections). Each clause keeps its "Inspired by" peer-source footnote inline so the lawyer can spot-check. Five lawyer-only items called out explicitly: ToS §2 (not investment advice), §11 (liability cap), §13 (governing law), §13.1 (arbitration), §15 (indemnity). ToS ends with a "Lawyer-only checklist" table.
+15 + 4 new tests in `backend/tests/unit/test_auth_phase1_5_audit_fixes.py` — one per finding plus body-ownership variants for room/coach/1-on-1 routes. 306 backend tests pass total.
 
-**`5761373` — alpha HTML published at `/privacy/` and `/terms/`.** `website/privacy/index.html` and `website/terms/index.html`. URL convention chosen as directory layout (`/privacy/index.html`) so Apache serves them at clean URLs matching the existing `index.html` footer's `/privacy` and `/terms` links. Style: imports the existing `assets/css/site.css` tokens, with inline page-specific CSS in each file (one-off rather than a shared `legal.css` since only 2 pages). Alpha-stage adjustments vs the markdown drafts: "Inspired by" footnotes stripped, "DRAFT — pending lawyer review" softened to an amber "Alpha disclosure" callout, ToS §13 filled in with Malaysian law + non-exclusive jurisdiction + mandatory-consumer-rights carve-out (preliminary; lawyer adjusts at incorporation), §13.1 arbitration + §15 indemnity dropped for alpha. `sitemap.xml` updated with both URLs.
+Two cleanup pieces also landed in the same commit: removed the dead `ApiClient::grantActivation()` Flutter method (no callers, route gone), and refreshed stale docstrings in `auth.py` + `auth_service.py` that still described the legacy token format.
 
-**`764a6ea` — doc-level versioning + publishing playbook (`docs/09_compliance/VERSIONING.md`).** Three layers identified: doc-level (this commit), URL-level (kicks in when v2 ships), app-level acceptance tracking (Beta+ work). Doc-level shipped: `<meta name="document-version">`, `<meta name="document-effective-date">`, `<meta name="document-status">` on each HTML; visible "Alpha · Version 1.0 · Effective 18 May 2026" in header; "Version history" `<section>` at the bottom (one entry now). Markdown sources synced with same Version + Effective + Published-HTML metadata. VERSIONING.md documents semver convention (major = material → 14-day notice; minor = clarification; patch = typos), material-vs-non-material gate (5 questions), step-by-step publish checklist (edit MD → mirror HTML → archive previous → bump meta → update sitemap → commit → FTP deploy → smoke-check), URL convention (canonical = self for archived versions, canonical = `/privacy/` for current), and a "What NEVER happens" footer.
+### Track C — Alpha promote (the two-attempt story)
 
-**`bf2c83c` — sweep `.com` → `.ai`.** Saiful uploaded the HTMLs, then I curl-checked and discovered `agenticmarketintel.com` doesn't resolve — the live marketing site is on `.ai`. Saiful confirmed via AskUserQuestion: "`.ai` is canonical". Perl-replaced URL refs across 10 files (`docs/09_compliance/*`, `website/{WEBSITE.md, deploy_ftp.py, sitemap.xml, index.html, privacy/index.html, terms/index.html}`). Preserved untouched: the two `hello@agenticmarketintel.com` email refs in `index.html` (lines 701, 767) — email hosting is a separate concern. Saiful re-uploaded; URLs verified live at `https://www.agenticmarketintel.ai/{privacy,terms}/`.
+First promote (`alpha-2026-05-19-1`, tag deleted) tagged at `181cbd1` and rsync'd cleanly. `infra/alpha.env` had been updated locally to add `ENV=staging` + `SECRET_KEY=$(openssl rand -hex 32)`. Backend booted healthy, but `curl /v1/health` returned `"env":"local"` and `docker exec` showed `SECRET_KEY length: 0` — the container wasn't seeing either value. Root cause: `docker-compose.yml` had `ENV: ${AMI_ENV:-local}` (looking for `AMI_ENV`, not `ENV`) and no entry for `SECRET_KEY` at all. So the file shipped via `scp infra/alpha.env melehost:~/ami_trade/.env` was being read by docker-compose but the two new keys were ignored.
 
-### Track C — TestFlight `+15`
+`12a5da8` (fix(compose)) added `SECRET_KEY: ${SECRET_KEY:-}` alongside the existing `ENV: ${AMI_ENV:-local}` mapping. `infra/alpha.env` was renamed `ENV=staging` → `AMI_ENV=staging` to match the compose convention. Second promote tagged `alpha-2026-05-19-2` at `12a5da8` ran cleanly:
 
-**`9c464b7` — pubspec bump 0.1.0+14 → +15.** `scripts/build_testflight.sh` ran cleanly: release build, signed with the same Distribution cert, uploaded via `altool`. Saiful confirms `+15` is live on TestFlight Internal. Ships the AT:R23 walkthrough (`+14` had it) + the three AT:R24 bug fixes above. No External Beta artefact yet (still a carry-over). App Store Connect → App Information → Privacy Policy URL should be set to `https://www.agenticmarketintel.ai/privacy/` per Saiful's confirmed canonical-domain answer.
+```
+$ curl -s https://api-alpha.agenticmarketintel.ai/v1/health
+{"status":"ok","version":"0.1.0","env":"staging"}
+```
 
-### Carry-overs for AT:R25
+Live verification of every adversarial-audit lockdown:
 
-Counts audited against tree state at end of AT:R24.
+| Probe | Expected | Got |
+|---|---|---|
+| `GET /v1/mandate/<any-uuid>` with no token | 401 | 401 ✓ |
+| `Authorization: Bearer scaffold:<hex>` (legacy unsigned) | 401 | 401 ✓ |
+| `POST /v1/auth/apple` | 503 | 503 ✓ |
+| `POST /v1/lessons/activations/grant` | 404/405 | 405 ✓ |
+| `POST /v1/auth/anon` with arbitrary `device_user_id` | fresh UUID | fresh ✓ |
 
-1. **`11fde6f6` floor hex agent style — re-open.** All this-session attempts reverted. Saiful's note before stopping: clarified that it was only the BUTTON COLOUR style he wanted to match (the lessons hex's translucent fill + colored text, not the cluster layout). Next session should try a fresh approach with that constraint clearer — possibly involving a `solid: false` variant of `HexAvatar` similar to what `902b5ff` shipped, but only after a design-only review (no commit-and-rebuild loops). All commit history is on main (in the revert pairs) if helpful.
-2. **`eeeb866f` — room run survives container restart — still open/deferred (large).** Clean upgrade path (Celery + Redis broker; per-user FIFO) sketched in `docs/external/async_job_server_design_prompt.md`. Beta-window work.
-3. **`6fd4144d` bug-report close button — `pending_review`.** Committed in `af01328`, on iPhone, on TestFlight. Saiful to flip to `resolved` once verified.
-4. **Lawyer review of Privacy + ToS.** The published HTML at `agenticmarketintel.ai/{privacy,terms}/` is the alpha-stage version (clearly disclosed in amber banner). The canonical markdown at `docs/09_compliance/{privacy_policy,terms_of_service}.md` keeps the lawyer-only placeholders and "Inspired by" footnotes for review. Five clauses are jurisdiction-sensitive — see ToS' "Lawyer-only checklist" table at the bottom.
-5. **App-side acceptance tracking** (the "version 14-day notice + re-accept" Beta+ work). Spec in `docs/09_compliance/VERSIONING.md` under "App-side acceptance tracking (Beta+ work)". Needs a `policy_acceptances` table + backend comparison logic + Flutter banner. Beta scope.
-6. **App Store Connect Privacy Policy URL** — confirm in App Store Connect that it's set to `https://www.agenticmarketintel.ai/privacy/`. Critical before External Beta submission. Probably already correct from prior sessions but worth a glance.
-7. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. `scripts/build_testflight.sh` uploads to Internal only by default; no External Beta artefact in the repo yet.
-8. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/`. All render `AmiHexPlaceholder`. See `memory/project_animations.md` for the Lottie vs CustomPainter decision.
-9. **A29 light-mode refactor** — 125+ hardcoded `AmiColors.slate900`/`slate800` references across `mobile/lib/`. v1.0 work.
-10. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (one commit `f94ad0e` — bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (one commit `ead7038` — lessons-landing hex-cluster redesign). Still pending Saiful decision: merge to main or discard. The hex-cluster redesign is especially worth a look now that `a51a75b` has changed how the lessons cluster is laid out — they may conflict or one may obsolete the other.
+TestFlight `+16` was uploaded and on-device-verified BEFORE the backend promote, per the adversarial audit's recommendation — otherwise `+15` clients (which don't have the eager bootstrap, SSE auth, or token persistence) would have 401'd the moment the new backend went live. Smoke checklist (Floor / Portfolio / Journal / Lessons / Room / 1-on-1 / Coach / Bug report) verified on TESTING IPHONE 13 via `scripts/install_iphone.sh` against the post-promote backend; backend logs show 2 completed TSLA Room runs (~5.4 min each), all 4 journal entry types written (lesson_complete, one_on_one, room_run, sim_trade) in the smoke window.
+
+Saiful's `325e0747` bug report ("check if the room is working async") was filed mid-smoke and resolved with the backend-evidence trail — async IS working; the room just legitimately takes ~5–6 min because 12 agents stream sequentially through on-prem vLLM.
+
+### Operational footnotes worth surfacing
+
+- `eeeb866f` (room run survives container restart) got a deferred-pre-beta note appended to `bug_reports.steps` early in the session: trigger = External Beta launch OR Cloud Run migration whichever first; Tier 1 (Celery+Redis full retry) is ~3–4 days, Tier 2 (+ LangGraph checkpoint resumption) is ~10–12 days.
+- A residual L-1 finding the self-audit flagged but Phase 1.5 did NOT close: `OneOnOneStartRequest.user_id` is `UUID | None`. Sending null bypasses the FLOOR_PASS gate (`_own_body` no-ops on None). Limited damage — the resulting session has `user_id=None` and `_own_session` rejects it on subsequent calls — but worth tightening if 1-on-1 abuse becomes a concern.
+- `http_audit` middleware (`backend/app/middleware/http_audit.py`) captures full request/response bodies, which means **every issued bearer token sits in `http_audit` rows** alongside magic-link codes and Apple JWTs. Adversarial audit flagged this as B4 (must-fix before External Beta); deferred this session.
+- The Phase 1.5 work is on `main` and the worktree `claude/cranky-leavitt-99418b` was left untouched. The branch isolation pattern from earlier sessions was sidestepped because every `Read`/`Edit` used absolute paths to the main checkout. Not a bug for this session (promote rsyncs from CWD, which was main), but a pattern to either embrace or fix next session.
+
+### Carry-overs for AT:R26
+
+Counts audited against tree state at end of AT:R25.
+
+1. **iPhone smoke against post-promote backend** — Saiful did the full checklist via the sideloaded build before promote. The TestFlight `+16` build is the same code; if any tester reinstalls `+16` after the promote and sees an unexpected 401, the first place to look is whether their feature provider somehow fires before `_AuthGate` lets the home render.
+2. **`11fde6f6` floor hex agent style — re-open from AT:R24.** No movement this session.
+3. **`eeeb866f` — room run survives container restart — open, deferred-pre-beta.** Note + estimate now in `bug_reports.steps`.
+4. **`6fd4144d` bug-report close button — `pending_review`.** Still on `+15` (which is now superseded by `+16`). Verify on `+16` and flip to resolved.
+5. **B-tier adversarial-audit findings (deferred to pre-External-Beta):** rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter + per-IP throttle; feedback upload size enforced at the proxy + streaming read; `http_audit` middleware scrubbing of tokens + auth-route bodies.
+6. **Phase 2 onwards from AT:R25's auth plan**:
+   - **Phase 3** federated sign-in for both iOS (Apple) and Android (Google). Both blocked on Saiful setting up the credentials (Apple Dev portal "Sign in with Apple" capability for `ai.agenticmarketintel.amiTrade` under team `S7RBWM4879`; Google Cloud Console OAuth 2.0 client ID with SHA-1 fingerprint for the Android app). Backend endpoints `POST /v1/auth/apple` and `POST /v1/auth/google` need real signature verification (PyJWT + provider JWKS) — `auth_service.py::_decode_apple_sub` is the current scaffold to replace.
+   - **Phase 4** sign-out (Flutter clears `_bearerToken` + calls `DeviceUser.clear()`; backend optional `DELETE /v1/auth/session` for completeness). Half a day.
+7. **Resend account → `RESEND_API_KEY` in melehost `.env`** — magic-link in prod (A3 in the original PRD backlog).
+8. **App Store Connect Privacy URL** — confirm it's set to `https://www.agenticmarketintel.ai/privacy/`. Blocks External Beta submission.
+9. **External TestFlight launch** — Beta App Description + ~24h Apple review on first external build. Still no External Beta artefact in the repo.
+10. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/` still render `AmiHexPlaceholder`. Lottie vs CustomPainter decision still open.
+11. **A29 light-mode refactor** — v1.0 work.
+12. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (lessons-landing hex-cluster redesign). Still pending Saiful decision.
+13. **Decide what to do with `claude/cranky-leavitt-99418b`** — the AT:R25 worktree is clean (all edits landed on main directly). It can be removed at any time or left as a marker.
 
 ### Watch items (not tasks)
 
-- **Domain mismatch hygiene.** The `.com` references in `index.html` for emails (`hello@agenticmarketintel.com` on lines 701 + 767) were deliberately preserved — email hosting is independent of web hosting. If Saiful's actual support email is on `.ai` now (the new legal docs use `privacy@.ai` and `legal@.ai`), those `hello@.com` refs become stale. Worth confirming his email setup and unifying.
-- **Testers on `+15`** are the first to see the bug-fix release. Three things to watch for in new bug reports: (a) anyone failing to find the new `×` close on the bug-report sheet (unlikely but possible if iconography reads wrong at smaller screen sizes); (b) the back arrow on `LessonsScreen` showing in unexpected contexts (it triggers on `canPop()` — fine on the agent-panel push, but verify it doesn't appear inside the main HomeShell where it'd just close the tab); (c) the new lessons hex cluster size (3*hexH tall) crowding any tour overlay positioning that AT:R23 set up for the smaller 2*hexH cluster.
-- **NVFP4 quantisation produces space-split tokens** — observed since day one. Not blocking alpha.
+- **First-promote-after-Phase-1.5 visibility window.** Existing TestFlight `+15` clients (anyone who hasn't updated to `+16`) WILL 401 against the new backend on any protected route. Only `+16` reliably sends `Authorization: Bearer` on every request. Watch the bug list for "everything broken" / "401" reports from anyone who skipped the update.
+- **Apple endpoint 503.** Internal testers tapping the Apple Sign-In button on the sign-in screen will get a 503 (instead of the old scaffold's "happy path" with a forged JWT). Until Phase 3 lands, magic-link is the only working claim path on Alpha.
+- **AT:R24's NVFP4 quantisation watch item still applies** — `ami-llm` (Gemma 4 31B NVFP4) occasionally emits space-split tokens. Not blocking.
+- **Two `silent_scout` doc commits landed mid-session** (`3d3c702`, `181cbd1`). Saiful authored them; not part of the AMI Trade auth track but they're in the repo + history.
 
 ---
 
@@ -157,7 +195,7 @@ Counts audited against tree state at end of AT:R24.
 
 The slash command reads HANDOVER.md + project plan, runs the Mac-side sanity-check curls, queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R25** (this is handover #24).
+Session name to use: **AT:R26** (this is handover #25).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 

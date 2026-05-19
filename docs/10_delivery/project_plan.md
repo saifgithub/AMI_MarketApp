@@ -5,7 +5,7 @@ Three phases. Each phase has an exit criterion, a concrete work list, and a who-
 Where we are right now (as of 2026-05-18, end of AT:R24):
 - 199 commits on `main`. 275 backend unit tests pass.
 - Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
-- TestFlight has build `0.1.0+15` on Internal Testing (pushed AT:R24). Ships the AT:R23 walkthrough + three AT:R24 bug fixes (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when reached from agent panel, `e2857081` lessons hex cluster proper edge-to-edge tiling).
+- TestFlight has build `0.1.0+16` on Internal Testing (pushed AT:R25). Ships the AT:R25 auth client (Dio bearer interceptor, `_AuthGate` splash, `DeviceUser` token persistence, SSE auth helper) — required to talk to the new backend, which now enforces route-level auth + ownership. AT:R24's three bug fixes (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when reached from agent panel, `e2857081` lessons hex cluster tiling) ride along.
 - Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
 - vLLM Gemma 4 31B (ami-llm) serving every agent. Room runner decoupled from SSE via background task + queue (AT:R22) — runs continue to verdict on client disconnect, dedup on same user+ticker (running + 24h-completed-cached windows), journal write retries.
 - First-time user walkthrough (AT:R23) — 4 per-section coach-mark tours fire automatically on first visit to each tab; resettable from Settings → WALKTHROUGH.
@@ -15,8 +15,8 @@ Where we are right now (as of 2026-05-18, end of AT:R24):
 
 Alpha (A1–A29):
 - **✅ Done**: A1, A2, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 15 items.
-- **⚡ Partial**: A6, A17, A21, A22, A28, A29 — 6 items (mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
-- **⏳ Blocked on external**: A3, A13, A15 — 3 items (Resend, TTS provider, OneSignal+APNs).
+- **⚡ Partial**: A17, A21, A22, A28, A29 — 5 items (mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
+- **⏳ Blocked on external**: A3, A6, A13, A15 — 4 items (Resend, Apple Dev capability, TTS provider, OneSignal+APNs).
 - **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of blocked externals).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
@@ -50,7 +50,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 | **A3** | Email provider — Resend account + DKIM/SPF DNS records. | Saiful | external | ⏳ blocked (Resend account) | Resend free tier covers alpha. Blocks A4/A5. |
 | **A4** | Email-confirmation flow. `/v1/auth/register` (email+password) → signed token → confirmation email → `/v1/auth/confirm`. Reuses W8 auth scaffold. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
 | **A5** | Flutter Register screen — email+password, "check your inbox" state, deep-link handler for the confirm URL. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
-| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec). | Saiful (cap) + Claude (code) | 0.5 session + 5 min Apple Dev | ⚡ partial (scaffold JWT works; real `sign_in_with_apple` not wired) | |
+| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec); add Apple JWKS signature verification in `auth_service.py::sign_in_with_apple`. | Saiful (cap) + Claude (code) | 0.5 session + 5 min Apple Dev | ⏳ blocked (Apple Dev capability) | AT:R25 Phase 1.5 disabled `/v1/auth/apple` outside `env=local` (returns 503) — the scaffold accepted forged JWTs. Unblocks once the capability is added; pair with Google `/v1/auth/google` as Phase 3. |
 | **A7** | Cloudflare Tunnel — named tunnel, hostname (`api-alpha.<your-domain>`), Cloudflare Access policy (email allowlist). | Saiful | external | ✅ done (AT:R11) | Blocks A12. |
 | **A8** | Backend production launch — systemd unit, env file in `/etc/ami-trade.env`, log rotation, restart-on-fail. | Claude | 0.5 session | ✅ done | |
 | **A9** | Postgres backups — `pg_dump` cron, offsite copy, restore drill. | Claude | 0.25 session | ✅ done | |
