@@ -10,22 +10,35 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.dependencies import get_current_user
+from app.db.models import User
 from app.schemas import Compliance, Mandate
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore, get_mandate_store
 
 
-router = APIRouter(prefix="/v1/mandate", tags=["mandate"])
+router = APIRouter(
+    prefix="/v1/mandate",
+    tags=["mandate"],
+    dependencies=[Depends(get_current_user)],
+)
+
+
+def _own(current_user: User, user_id: UUID) -> None:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
 @router.get("/{user_id}", response_model=Mandate)
 async def get_mandate(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     store: MandateStore = Depends(get_mandate_store),
 ) -> Mandate:
+    _own(current_user, user_id)
     return store.get_or_default(user_id)
 
 
@@ -33,8 +46,10 @@ async def get_mandate(
 async def patch_mandate(
     user_id: UUID,
     updates: dict[str, Any],
+    current_user: User = Depends(get_current_user),
     store: MandateStore = Depends(get_mandate_store),
 ) -> Mandate:
+    _own(current_user, user_id)
     before = store.get_or_default(user_id)
     updated = store.patch(user_id, updates)
 

@@ -33,6 +33,16 @@ configure_logging()
 # SENTRY_DSN is unset (dev).
 init_sentry()
 
+# Boot-time secret check — adversarial audit (2026-05-18) finding A1.
+# Any env reachable from the public tunnel MUST set its own SECRET_KEY;
+# the source-visible default would make HMAC signatures trivially forgeable.
+if settings.env != "local" and settings.secret_key == "dev-secret-change-in-prod":
+    raise RuntimeError(
+        f"Refusing to start: env={settings.env} requires SECRET_KEY to be set "
+        "to a non-default value (env file or environment variable). "
+        "Generate one with: openssl rand -hex 32"
+    )
+
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 
 

@@ -24,6 +24,7 @@ from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile, st
 
 from app.core.logging import logger
 from app.schemas.feedback import BugReportRequest, BugReportResponse
+from app.services.auth_service import parse_scaffold_token
 from app.services.bug_attachments import (
     AttachmentRejected,
     is_allowed_mime,
@@ -35,21 +36,14 @@ router = APIRouter(prefix="/v1/feedback", tags=["feedback"])
 
 
 def _resolve_user_id(authorization: str | None) -> UUID | None:
-    """Extract user_id from a scaffold token (`scaffold:<hex>`).
+    """Extract user_id from the Bearer token; returns None rather than raising.
 
-    Returns None rather than raising — we accept reports from un-authed
-    or partially-authed sessions.
+    Bug reports are accepted from un-authed or partially-authed sessions.
     """
     if not authorization or not authorization.startswith("Bearer "):
         return None
     token = authorization.removeprefix("Bearer ").strip()
-    if token.startswith("scaffold:"):
-        hex_part = token.removeprefix("scaffold:")
-        try:
-            return UUID(hex=hex_part)
-        except ValueError:
-            pass
-    return None
+    return parse_scaffold_token(token)
 
 
 @router.post(

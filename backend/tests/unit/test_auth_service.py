@@ -18,15 +18,26 @@ def _apple_jwt(sub: str) -> str:
     return f"{header}.{body}.{sig}"
 
 
-def test_anon_session_reuses_device_user_id():
+def test_anon_session_reuses_device_user_id_only_with_matching_bearer():
+    """A2 (adversarial audit 2026-05-18): device_user_id alone is no longer
+    proof of possession. Cold rebootstrap without a valid bearer always
+    mints a fresh user. The same user is only reused when the caller
+    presents a Bearer whose parsed user_id matches device_user_id.
+    """
     auth = AuthService()
-    device_id = uuid4()
-    user1, token1, is_new1 = auth.ensure_anonymous(device_user_id=device_id)
-    user2, token2, is_new2 = auth.ensure_anonymous(device_user_id=device_id)
-    assert user1.id == user2.id == device_id
-    assert token1 == token2
+    user1, token1, is_new1 = auth.ensure_anonymous(device_user_id=None)
+    # Re-bootstrap WITHOUT the matching bearer — should mint fresh, ignore device_id.
+    user2, _, _ = auth.ensure_anonymous(device_user_id=user1.id)
+    assert user2.id != user1.id, "device_user_id alone must not reuse the row"
+    # Re-bootstrap WITH the matching bearer — should reuse the original row.
+    user3, token3, is_new3 = auth.ensure_anonymous(
+        device_user_id=user1.id,
+        authenticated_user_id=user1.id,
+    )
+    assert user3.id == user1.id
+    assert token3 == token1
     assert is_new1 is True
-    assert is_new2 is False
+    assert is_new3 is False
     assert user1.is_anonymous is True
 
 

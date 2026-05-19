@@ -14,6 +14,8 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.dependencies import get_current_user
+from app.db.models import User
 from app.schemas import Plan
 from app.schemas.journal import (
     EntryType,
@@ -26,7 +28,16 @@ from app.services.journal_store import JournalStore, get_journal_store
 from pydantic import BaseModel, Field
 
 
-router = APIRouter(prefix="/v1/journal", tags=["journal"])
+router = APIRouter(
+    prefix="/v1/journal",
+    tags=["journal"],
+    dependencies=[Depends(get_current_user)],
+)
+
+
+def _own(current_user: User, user_id: UUID) -> None:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
 class AnnotateRequest(BaseModel):
@@ -43,8 +54,10 @@ async def list_entries(
     ticker: str | None = None,
     q: str | None = None,
     limit: int = 100,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalListResponse:
+    _own(current_user, user_id)
     try:
         plan_enum = Plan(plan)
     except ValueError:
@@ -71,8 +84,10 @@ async def list_entries(
 async def list_trash(
     user_id: UUID,
     limit: int = 100,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalListResponse:
+    _own(current_user, user_id)
     """Soft-deleted entries from the last 30 days.
 
     Rows older than the window stay in the DB (recoverable via the
@@ -87,8 +102,10 @@ async def list_trash(
 async def get_entry(
     user_id: UUID,
     entry_id: UUID,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalEntry:
+    _own(current_user, user_id)
     entry = store.get(user_id, entry_id)
     if entry is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
@@ -100,8 +117,10 @@ async def annotate_entry(
     user_id: UUID,
     entry_id: UUID,
     req: AnnotateRequest,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalEntry:
+    _own(current_user, user_id)
     updated = store.annotate(
         user_id, entry_id,
         note=req.note, tags=req.tags, outcome=req.outcome,
@@ -118,8 +137,10 @@ async def annotate_entry(
 async def delete_entry(
     user_id: UUID,
     entry_id: UUID,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> None:
+    _own(current_user, user_id)
     found = store.soft_delete(user_id, entry_id)
     if not found:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
@@ -132,6 +153,7 @@ async def delete_entry(
 async def restore_entry(
     user_id: UUID,
     entry_id: UUID,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> None:
     """Undo a soft-delete — clears deleted_at on the entry.
@@ -139,6 +161,7 @@ async def restore_entry(
     Used by the in-app UNDO snackbar after swipe-to-delete. The entry
     row was never actually destroyed, just hidden by `deleted_at`.
     """
+    _own(current_user, user_id)
     restored = store.restore(user_id, entry_id)
     if not restored:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
@@ -147,6 +170,9 @@ async def restore_entry(
 @router.post("", response_model=JournalEntry, status_code=status.HTTP_201_CREATED)
 async def append_entry(
     draft: JournalEntryCreate,
+    current_user: User = Depends(get_current_user),
     store: JournalStore = Depends(get_journal_store),
 ) -> JournalEntry:
+    if current_user.id != draft.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return store.append(draft)

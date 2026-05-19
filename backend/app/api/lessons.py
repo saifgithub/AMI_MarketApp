@@ -15,9 +15,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
-from app.schemas import AgentId
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.lessons import (
     AgentActivationRecord,
@@ -31,6 +29,8 @@ from app.schemas.lessons import (
 )
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import LessonsService, get_lessons_service
+from app.api.dependencies import get_current_user
+from app.db.models import User
 
 
 router = APIRouter(prefix="/v1/lessons", tags=["lessons"])
@@ -47,46 +47,51 @@ async def catalogue(
 @router.get("/progress/{user_id}", response_model=ProgressSummary)
 async def progress(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
 ) -> ProgressSummary:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return svc.progress_summary(user_id)
 
 
 @router.get("/progress/{user_id}/by_lesson", response_model=list[LessonStatus])
 async def progress_by_lesson(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
 ) -> list[LessonStatus]:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return svc.list_status(user_id)
 
 
 @router.get("/activations/{user_id}", response_model=list[AgentActivationRecord])
 async def activations(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
 ) -> list[AgentActivationRecord]:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return svc.list_activations(user_id)
 
 
-class GrantRequest(BaseModel):
-    user_id: UUID
-    agent_id: AgentId
-    method: str = "founder_grant"
-
-
-@router.post("/activations/grant", response_model=AgentActivationRecord)
-async def grant_activation(
-    req: GrantRequest,
-    svc: LessonsService = Depends(get_lessons_service),
-) -> AgentActivationRecord:
-    return svc.grant_activation(req.user_id, req.agent_id.value, method=req.method)
+# Adversarial audit (2026-05-18) finding A5: `POST /v1/lessons/activations/grant`
+# was unauthenticated and accepted any user_id, letting anyone unlock any agent
+# for any user. The route is removed; founder grants happen via psql when needed:
+#   INSERT INTO agent_activations (user_id, agent_id, method, granted_at)
+#   VALUES ('<uuid>', '<agent_id>', 'founder_grant', NOW());
 
 
 @router.post("/start", response_model=LessonStatus)
 async def start_lesson(
     req: StartLessonRequest,
+    current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
 ) -> LessonStatus:
+    if current_user.id != req.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     if svc.get(req.lesson_id) is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"lesson {req.lesson_id} not found")
     return svc.mark_started(req.user_id, req.lesson_id)
@@ -95,8 +100,11 @@ async def start_lesson(
 @router.post("/quiz", response_model=QuizSubmitResponse)
 async def submit_quiz(
     req: QuizSubmitRequest,
+    current_user: User = Depends(get_current_user),
     svc: LessonsService = Depends(get_lessons_service),
 ) -> QuizSubmitResponse:
+    if current_user.id != req.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     try:
         result = svc.submit_quiz(req)
     except ValueError as e:

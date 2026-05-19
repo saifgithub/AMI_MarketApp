@@ -10,6 +10,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     env: Literal["local", "dev", "staging", "prod"] = "local"
+    # Env policy (post-adversarial-audit):
+    #   local    — single-developer machine. Legacy unsigned tokens accepted,
+    #              magic-link debug code returned in response, Apple endpoint
+    #              accepts unverified JWTs (for offline testing).
+    #   dev      — same as staging in security posture. Used by CI.
+    #   staging  — melehost (public Cloudflare Tunnel). All bypasses off.
+    #   prod     — Cloud Run. All bypasses off + strictest checks.
 
     # Database / Supabase
     supabase_url: str = "http://localhost:54321"
@@ -80,6 +87,10 @@ class Settings(BaseSettings):
     # Hard cap per upload — generous enough for a phone photo at native
     # resolution, small enough that an abusive client can't flood the disk.
     bug_attachment_max_bytes: int = 5 * 1024 * 1024
+
+    # Auth — HMAC key for scaffold tokens. Override in prod/.env.
+    # The default is only used in local/dev; melehost .env must set SECRET_KEY.
+    secret_key: str = "dev-secret-change-in-prod"
 
     # CORS
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])

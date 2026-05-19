@@ -66,18 +66,20 @@ class AnonSessionResponse(BaseModel):
 
 class MagicLinkStartRequest(BaseModel):
     email: str
-    user_id: UUID | None = None  # for claiming an existing anonymous user
+    # Note: previously accepted `user_id` from the body. Removed by the
+    # adversarial audit (2026-05-18) finding A3 — the claim is bound to
+    # the caller's Bearer token instead.
 
 
 class MagicLinkStartResponse(BaseModel):
     sent: bool
-    debug_code: str | None = None  # only populated in non-prod envs
+    debug_code: str | None = None  # only populated when env=local
 
 
 class MagicLinkVerifyRequest(BaseModel):
     email: str
     code: str
-    user_id: UUID | None = None
+    # Note: `user_id` removed — see MagicLinkStartRequest comment.
 
 
 class AppleSignInRequest(BaseModel):

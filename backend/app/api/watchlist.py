@@ -15,8 +15,10 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.dependencies import get_current_user
+from app.db.models import User
 from app.schemas.watchlist import (
     WatchlistAddRequest,
     WatchlistEntryWithQuote,
@@ -25,11 +27,24 @@ from app.schemas.watchlist import (
 from app.services.market_data import get_market_data_provider
 from app.services.watchlist_store import get_watchlist_store
 
-router = APIRouter(prefix="/v1/watchlist", tags=["watchlist"])
+router = APIRouter(
+    prefix="/v1/watchlist",
+    tags=["watchlist"],
+    dependencies=[Depends(get_current_user)],
+)
+
+
+def _own(current_user: User, user_id: UUID) -> None:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
 @router.get("/{user_id}", response_model=WatchlistListResponse)
-async def list_watchlist(user_id: UUID) -> WatchlistListResponse:
+async def list_watchlist(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+) -> WatchlistListResponse:
+    _own(current_user, user_id)
     entries = get_watchlist_store().list_for_user(user_id)
     provider = get_market_data_provider()
     source = getattr(provider, "name", None)
@@ -51,8 +66,11 @@ async def list_watchlist(user_id: UUID) -> WatchlistListResponse:
     status_code=status.HTTP_201_CREATED,
 )
 async def add_to_watchlist(
-    user_id: UUID, req: WatchlistAddRequest,
+    user_id: UUID,
+    req: WatchlistAddRequest,
+    current_user: User = Depends(get_current_user),
 ) -> WatchlistEntryWithQuote:
+    _own(current_user, user_id)
     try:
         entry = get_watchlist_store().add(user_id, req.ticker, req.notes)
     except ValueError as exc:
@@ -71,7 +89,12 @@ async def add_to_watchlist(
 
 
 @router.delete("/{user_id}/{ticker}", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_from_watchlist(user_id: UUID, ticker: str) -> None:
+async def remove_from_watchlist(
+    user_id: UUID,
+    ticker: str,
+    current_user: User = Depends(get_current_user),
+) -> None:
+    _own(current_user, user_id)
     removed = get_watchlist_store().remove(user_id, ticker)
     if not removed:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ticker not on watchlist")

@@ -41,16 +41,56 @@ String _resolveBaseUrl() {
   return 'http://localhost:8000';
 }
 
+class _AuthInterceptor extends Interceptor {
+  _AuthInterceptor(this._client);
+  final ApiClient _client;
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    final token = _client._bearerToken;
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+}
+
 class ApiClient {
-  ApiClient({String? baseUrl})
-      : _dio = Dio(BaseOptions(
-          baseUrl: baseUrl ?? _resolveBaseUrl(),
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 30),
-          headers: {'Content-Type': 'application/json'},
-        ));
+  ApiClient({String? baseUrl}) : _dio = Dio(BaseOptions(
+        baseUrl: baseUrl ?? _resolveBaseUrl(),
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {'Content-Type': 'application/json'},
+      )) {
+    _dio.interceptors.add(_AuthInterceptor(this));
+  }
 
   final Dio _dio;
+  String? _bearerToken;
+
+  void setToken(String? token) {
+    _bearerToken = token;
+  }
+
+  /// Build a raw `http.Request` for SSE endpoints that can't go through Dio.
+  /// Adversarial audit (2026-05-18) finding A8: previously these requests
+  /// bypassed the Dio interceptor and sent no Authorization header, so
+  /// `/v1/coach/message`, `/v1/agents/one_on_one/message`, and
+  /// `/v1/room/stream` would 401 once the backend enforced auth.
+  http.Request _sseRequest(Uri uri, String body) {
+    final token = _bearerToken;
+    if (token == null) {
+      throw StateError(
+        'SSE request attempted before auth bootstrap completed — '
+        'no Bearer token available',
+      );
+    }
+    return http.Request('POST', uri)
+      ..headers['Content-Type'] = 'application/json'
+      ..headers['Accept'] = 'text/event-stream'
+      ..headers['Authorization'] = 'Bearer $token'
+      ..body = body;
+  }
 
   Dio get dio => _dio;
 
@@ -156,11 +196,7 @@ class ApiClient {
     });
     final client = http.Client();
     try {
-      final request = http.Request('POST', uri)
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
-        ..body = body;
-      final response = await client.send(request);
+      final response = await client.send(_sseRequest(uri, body));
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode} from coach stream');
       }
@@ -277,12 +313,7 @@ class ApiClient {
 
     final client = http.Client();
     try {
-      final request = http.Request('POST', uri)
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
-        ..body = body;
-
-      final response = await client.send(request);
+      final response = await client.send(_sseRequest(uri, body));
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode} from 1-on-1 stream');
       }
@@ -485,17 +516,9 @@ class ApiClient {
         .toList();
   }
 
-  Future<AgentActivationRecord> grantActivation({
-    required String userId,
-    required String agentId,
-    String method = 'founder_grant',
-  }) async {
-    final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/lessons/activations/grant',
-      data: {'user_id': userId, 'agent_id': agentId, 'method': method},
-    );
-    return AgentActivationRecord.fromJson(r.data!);
-  }
+  // `grantActivation()` was removed alongside the backend route per
+  // adversarial audit finding A5. Founder grants now happen via psql on
+  // melehost — see the comment block in `backend/app/api/lessons.py`.
 
   // ── Convene the Room ───────────────────────────────────────────
 
@@ -527,11 +550,7 @@ class ApiClient {
     });
     final client = http.Client();
     try {
-      final request = http.Request('POST', uri)
-        ..headers['Content-Type'] = 'application/json'
-        ..headers['Accept'] = 'text/event-stream'
-        ..body = body;
-      final response = await client.send(request);
+      final response = await client.send(_sseRequest(uri, body));
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode} from room stream');
       }
@@ -769,16 +788,13 @@ class ApiClient {
     return AnonSessionResponse.fromJson(r.data!);
   }
 
-  Future<MagicLinkStartResponse> startMagicLink({
-    required String email,
-    String? userId,
-  }) async {
+  // Adversarial audit (2026-05-18) finding A3: magic-link routes no longer
+  // accept user_id in the body. The claim is bound to the Bearer-authenticated
+  // user_id server-side (the Dio interceptor sends the anon token automatically).
+  Future<MagicLinkStartResponse> startMagicLink({required String email}) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/magic_link/start',
-      data: {
-        'email': email,
-        if (userId != null) 'user_id': userId,
-      },
+      data: {'email': email},
     );
     return MagicLinkStartResponse.fromJson(r.data!);
   }
@@ -786,15 +802,10 @@ class ApiClient {
   Future<AuthVerifyResponse> verifyMagicLink({
     required String email,
     required String code,
-    String? userId,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/magic_link/verify',
-      data: {
-        'email': email,
-        'code': code,
-        if (userId != null) 'user_id': userId,
-      },
+      data: {'email': email, 'code': code},
     );
     return AuthVerifyResponse.fromJson(r.data!);
   }

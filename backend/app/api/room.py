@@ -45,9 +45,15 @@ from app.schemas.room import RoomRun, Verdict
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.room_runner import RoomRunner, get_room_runner
+from app.api.dependencies import get_current_user
+from app.db.models import User
 
 
-router = APIRouter(prefix="/v1/room", tags=["room"])
+router = APIRouter(
+    prefix="/v1/room",
+    tags=["room"],
+    dependencies=[Depends(get_current_user)],
+)
 
 
 def _build_journal_entry(run: RoomRun, user_id: UUID) -> JournalEntryCreate:
@@ -118,8 +124,14 @@ class RoomStartRequest(BaseModel):
 @router.post("/stream")
 async def stream_room(
     req: RoomStartRequest,
+    current_user: User = Depends(get_current_user),
     runner: RoomRunner = Depends(get_room_runner),
 ) -> StreamingResponse:
+    # Adversarial audit (2026-05-18) finding A6: body-level ownership.
+    # Without this, an authenticated user can trigger a Room run under
+    # another user's identity, polluting their journal and burning credits.
+    if current_user.id != req.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     """Run a Room session and stream events via SSE.
 
     The run executes as a background task independent of the SSE connection —
@@ -245,11 +257,16 @@ async def stream_room(
 @router.get("/{run_id}", response_model=RoomRun)
 async def get_room(
     run_id: UUID,
+    current_user: User = Depends(get_current_user),
     runner: RoomRunner = Depends(get_room_runner),
 ) -> RoomRun:
     run = runner.get_run(run_id)
     if run is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "room run not found")
+    # Adversarial audit (2026-05-18) finding A6: prevent reading another
+    # user's transcript / verdict by guessing or harvesting their run_id.
+    if run.user_id != current_user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return run
 
 
@@ -257,6 +274,9 @@ async def get_room(
 async def list_user_rooms(
     user_id: UUID,
     limit: int = 50,
+    current_user: User = Depends(get_current_user),
     runner: RoomRunner = Depends(get_room_runner),
 ) -> list[RoomRun]:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return runner.list_runs_for_user(user_id, limit=limit)

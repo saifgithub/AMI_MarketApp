@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import hmac as _hmac
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -60,7 +61,54 @@ def _row_to_user(row: User) -> AuthUser:
 
 
 def _scaffold_token(user_id: UUID) -> str:
-    return f"scaffold:{user_id.hex}"
+    """Issue a scaffold Bearer token: `scaffold:<user_id_hex>:<hmac_sig>`.
+
+    HMAC prevents offline token forgery. The Beta swap point is a one-line
+    change in `parse_scaffold_token()` (verify a Supabase JWT instead).
+
+    The legacy unsigned format `scaffold:<hex>` is still parseable, but
+    only when `env == "local"` — see `parse_scaffold_token()`. Adversarial
+    audit (2026-05-18) tightened this from "local|dev" because melehost
+    runs as `env=dev` and its tunnel is public.
+    """
+    sig = _hmac.new(
+        settings.secret_key.encode("utf-8"),
+        user_id.hex.encode("utf-8"),
+        "sha256",
+    ).hexdigest()
+    return f"scaffold:{user_id.hex}:{sig}"
+
+
+def parse_scaffold_token(token: str) -> UUID | None:
+    """Parse and verify a scaffold Bearer token. Returns user_id or None."""
+    if not token.startswith("scaffold:"):
+        return None
+    rest = token[len("scaffold:"):]
+    parts = rest.split(":", 1)
+    if len(parts) == 2:
+        # New signed format: scaffold:<hex>:<sig>
+        hex_id, claimed_sig = parts
+        try:
+            user_id = UUID(hex_id)
+        except ValueError:
+            return None
+        expected_sig = _hmac.new(
+            settings.secret_key.encode("utf-8"),
+            hex_id.encode("utf-8"),
+            "sha256",
+        ).hexdigest()
+        if not _hmac.compare_digest(claimed_sig, expected_sig):
+            return None
+        return user_id
+    if len(parts) == 1 and settings.env == "local":
+        # Legacy unsigned format — accepted only on the developer's local
+        # machine. Adversarial audit (2026-05-18) closed dev-env acceptance:
+        # melehost is reachable via the public Cloudflare Tunnel.
+        try:
+            return UUID(parts[0])
+        except ValueError:
+            return None
+    return None
 
 
 def _b64url_decode(seg: str) -> bytes:
@@ -97,30 +145,46 @@ class AuthService:
         self,
         *,
         device_user_id: UUID | None,
+        authenticated_user_id: UUID | None = None,
         locale: str = "en",
         timezone_str: str = "UTC",
     ) -> tuple[AuthUser, str, bool]:
         """Return (user, token, is_new).
 
-        If `device_user_id` is given and an existing row matches, reuse
-        it. Otherwise create a fresh row.
+        `authenticated_user_id` is the user_id parsed from the caller's
+        Bearer token (if any). Adversarial audit (2026-05-18) finding A2:
+        without this guard the endpoint is a token-minting oracle — anyone
+        who knows a victim's UUID could POST {device_user_id: <victim>}
+        and receive a valid signed token for them.
+
+        Policy:
+          - No `device_user_id` supplied → mint a fresh user (cold start).
+          - `device_user_id` matches `authenticated_user_id` → legitimate
+            re-bootstrap from the rightful owner. Reuse the row.
+          - `device_user_id` supplied but DOESN'T match the bearer (or no
+            bearer at all) → ignore the supplied id, mint a fresh user.
+            The caller acts as if they were a brand-new install.
         """
         with get_session() as s:
             row: User | None = None
-            if device_user_id is not None:
+            # Only honour device_user_id when the caller has proved possession
+            # via a Bearer token for that same user.
+            trust_device_id = (
+                device_user_id is not None
+                and authenticated_user_id is not None
+                and device_user_id == authenticated_user_id
+            )
+            if trust_device_id:
                 row = s.execute(
                     select(User).where(User.device_user_id == device_user_id)
                 ).scalar_one_or_none()
                 if row is None:
-                    # The client-supplied id is the user_id directly. This
-                    # is the property that lets data survive claim: the
-                    # primary key never changes.
                     row = s.execute(
                         select(User).where(User.id == device_user_id)
                     ).scalar_one_or_none()
             is_new = row is None
             if row is None:
-                user_id = device_user_id or uuid4()
+                user_id = uuid4()  # always mint fresh when device_id untrusted
                 row = User(
                     id=user_id,
                     device_user_id=user_id,
@@ -261,4 +325,11 @@ def get_auth_service() -> AuthService:
 
 
 def _is_dev_env() -> bool:
-    return settings.env in ("local", "dev")
+    """Returns True only on a developer's local machine.
+
+    Controls debug affordances that must never leak via a public tunnel:
+    magic-link code returned in API response, Apple JWT signature skipped.
+    Adversarial audit (2026-05-18) tightened this from `local|dev` to `local`
+    after melehost was found leaking debug codes via the public hostname.
+    """
+    return settings.env == "local"

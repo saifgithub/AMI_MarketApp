@@ -8,9 +8,11 @@ Endpoint map:
   POST /v1/auth/apple                 Claim via Apple Sign-In identity token
   GET  /v1/auth/me                    Read the current user (by token)
 
-The token format in scaffold mode is `scaffold:<user_id_hex>`. We accept
-it via the `Authorization: Bearer <token>` header or as `?token=...` for
-mobile WebView callbacks.
+The token format in scaffold mode is `scaffold:<user_id_hex>:<hmac_sig>`
+(post AT:R25 Phase 1.5). We accept it via the `Authorization: Bearer <token>`
+header or as `?token=...` for mobile WebView callbacks. The legacy
+unsigned format `scaffold:<hex>` is still accepted when `env=local` for
+offline developer convenience, and rejected everywhere else.
 """
 
 from __future__ import annotations
@@ -33,7 +35,8 @@ from app.schemas.auth import (
     MagicLinkStartResponse,
     MagicLinkVerifyRequest,
 )
-from app.services.auth_service import AuthService, _is_dev_env, get_auth_service
+from app.api.dependencies import get_current_user
+from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
 
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -42,21 +45,24 @@ router = APIRouter(prefix="/v1/auth", tags=["auth"])
 def _user_id_from_token(token: str | None) -> UUID | None:
     if not token:
         return None
-    if token.startswith("scaffold:"):
-        try:
-            return UUID(token.split(":", 1)[1])
-        except ValueError:
-            return None
-    return None
+    return parse_scaffold_token(token)
 
 
 @router.post("/anon", response_model=AnonSessionResponse)
 def anon_session(
     req: AnonSessionRequest,
+    authorization: str | None = Header(default=None),
     auth: AuthService = Depends(get_auth_service),
 ) -> AnonSessionResponse:
+    # Adversarial audit (2026-05-18) finding A2: only honour an existing
+    # device_user_id when the caller has proved possession by sending the
+    # matching signed token. Otherwise treat the call as a fresh install.
+    bearer_user_id: UUID | None = None
+    if authorization and authorization.lower().startswith("bearer "):
+        bearer_user_id = _user_id_from_token(authorization.split(" ", 1)[1])
     user, token, is_new = auth.ensure_anonymous(
         device_user_id=req.device_user_id,
+        authenticated_user_id=bearer_user_id,
         locale=req.locale,
         timezone_str=req.timezone,
     )
@@ -66,11 +72,16 @@ def anon_session(
 @router.post("/magic_link/start", response_model=MagicLinkStartResponse)
 def magic_link_start(
     req: MagicLinkStartRequest,
+    current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ) -> MagicLinkStartResponse:
-    code = auth.start_magic_link(email=req.email, user_id=req.user_id)
-    # Dev convenience: surface the code so the iPhone client can copy it
-    # without an actual email send. Real prod (env=prod) never returns it.
+    # Adversarial audit (2026-05-18) finding A3: the challenge row is bound to
+    # the caller's authenticated user_id from the Bearer token. Body-supplied
+    # user_id is no longer accepted (the field is removed from the schema).
+    code = auth.start_magic_link(email=req.email, user_id=current_user.id)
+    # Dev affordance: only env=local returns the code in the response so the
+    # developer can paste it without an email send. _is_dev_env() now means
+    # local-only; melehost (staging) never leaks the code.
     return MagicLinkStartResponse(
         sent=True,
         debug_code=code if _is_dev_env() else None,
@@ -80,10 +91,14 @@ def magic_link_start(
 @router.post("/magic_link/verify", response_model=AuthVerifyResponse)
 def magic_link_verify(
     req: MagicLinkVerifyRequest,
+    current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
+    # Adversarial audit (2026-05-18) finding A3: the claim binds to the
+    # caller's authenticated user_id. Body-supplied user_id is no longer
+    # accepted.
     result = auth.verify_magic_link(
-        email=req.email, code=req.code, user_id=req.user_id,
+        email=req.email, code=req.code, user_id=current_user.id,
     )
     if result is None:
         raise HTTPException(
@@ -99,6 +114,17 @@ def sign_in_with_apple(
     req: AppleSignInRequest,
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
+    # Adversarial audit (2026-05-18) finding A4. The current implementation
+    # decodes Apple's JWT WITHOUT verifying its signature against Apple's
+    # public keys, so any forged 3-part JWT works. Real verification (PyJWT
+    # + JWKS fetch + issuer/audience/exp/nonce checks) lands in Phase 3.
+    # Until then, the endpoint is reachable only on the developer's local
+    # machine.
+    if settings.env != "local":
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            "Apple Sign-In not yet available — pending Phase 3 verification work",
+        )
     try:
         user, token = auth.sign_in_with_apple(
             identity_token=req.identity_token,

@@ -5,6 +5,11 @@
 /// driven by `localeNotifierProvider` — null means follow the system,
 /// non-null is the user's Settings → Language override. RTL is handled
 /// automatically by MaterialApp when the language is `ar`.
+///
+/// A7 (adversarial audit 2026-05-18): the home is gated behind
+/// `authNotifierProvider` — we wait for `state.token != null` before
+/// rendering Onboarding or HomeShell, so feature providers never fire
+/// API calls before the Dio interceptor has a token attached.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -12,6 +17,7 @@ import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
+import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/theme_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -35,12 +41,45 @@ class AmiTradeApp extends ConsumerWidget {
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,
-      initialRoute: startOnFloor ? '/floor' : '/onboarding',
+      home: _AuthGate(startOnFloor: startOnFloor),
       routes: {
         '/onboarding': (_) => const OnboardingScreen(),
         '/floor': (_) => const HomeShell(),
         '/dev-preview': (_) => const DevPreviewScreen(),
       },
     );
+  }
+}
+
+/// Splash widget that waits for `authNotifierProvider.bootstrap()` to finish
+/// before rendering the real home. Without this, the Onboarding/HomeShell
+/// providers can fire API calls before the Dio interceptor has a bearer token.
+class _AuthGate extends ConsumerWidget {
+  const _AuthGate({required this.startOnFloor});
+
+  final bool startOnFloor;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authNotifierProvider);
+    if (auth.token == null) {
+      // Bootstrap is in flight (or never started, or errored). Show the
+      // brand splash and let `Future.microtask(n.bootstrap)` in
+      // authNotifierProvider's factory do the work.
+      return Scaffold(
+        backgroundColor: AmiColors.slate900,
+        body: const Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.0,
+              valueColor: AlwaysStoppedAnimation(AmiColors.hexCyan),
+            ),
+          ),
+        ),
+      );
+    }
+    return startOnFloor ? const HomeShell() : const OnboardingScreen();
   }
 }

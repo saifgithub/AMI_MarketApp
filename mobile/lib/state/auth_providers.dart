@@ -68,8 +68,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
+      // Replay the persisted token (if any) so the backend can recognise the
+      // returning user. Without this, A2 would mint a fresh user on every
+      // launch, scattering data across orphaned anonymous rows.
+      final persistedToken = await DeviceUser.getToken();
+      if (persistedToken != null) api.setToken(persistedToken);
       final deviceUserId = await DeviceUser.getOrCreate();
       final r = await api.bootstrapAnon(deviceUserId: deviceUserId);
+      api.setToken(r.token);
+      // Persist the canonical (id, token) the backend returned. If the
+      // backend minted fresh (A2 path), this overwrites the stale local id.
+      await DeviceUser.setIdAndToken(r.user.id, r.token);
       state = state.copyWith(user: r.user, token: r.token, loading: false);
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
@@ -80,8 +89,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, clearError: true, clearDebugCode: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final userId = state.user?.id ?? await DeviceUser.getOrCreate();
-      final r = await api.startMagicLink(email: email, userId: userId);
+      // user_id removed from body — backend binds the claim to the bearer.
+      final r = await api.startMagicLink(email: email);
       state = state.copyWith(
         loading: false,
         lastDebugCode: r.debugCode,
@@ -97,8 +106,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final userId = state.user?.id ?? await DeviceUser.getOrCreate();
-      final r = await api.verifyMagicLink(email: email, code: code, userId: userId);
+      final r = await api.verifyMagicLink(email: email, code: code);
+      api.setToken(r.token);
+      await DeviceUser.setIdAndToken(r.user.id, r.token);
       state = state.copyWith(
         user: r.user,
         token: r.token,
@@ -122,6 +132,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         userId: userId,
         fullName: fullName,
       );
+      api.setToken(r.token);
+      await DeviceUser.setIdAndToken(r.user.id, r.token);
       state = state.copyWith(user: r.user, token: r.token, loading: false);
       return true;
     } catch (e) {

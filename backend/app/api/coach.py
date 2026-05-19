@@ -48,16 +48,38 @@ from app.services.overlay_store import (
     OverlayStore,
     get_overlay_store,
 )
+from app.api.dependencies import get_current_user
+from app.db.models import User
 
 
-router = APIRouter(prefix="/v1/coach", tags=["coach"])
+router = APIRouter(
+    prefix="/v1/coach",
+    tags=["coach"],
+    dependencies=[Depends(get_current_user)],
+)
+
+
+def _own_body(current_user: User, body_user_id: UUID) -> None:
+    """Body-level ownership: the body's user_id must match the bearer."""
+    if current_user.id != body_user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+
+def _own_session(current_user: User, session) -> None:
+    """Session-level ownership: load the session, compare its user_id."""
+    if session is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "coach session not found")
+    if session.user_id != current_user.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
 @router.post("/start", response_model=CoachStartResponse, status_code=status.HTTP_201_CREATED)
 async def coach_start(
     req: CoachStartRequest,
+    current_user: User = Depends(get_current_user),
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> CoachStartResponse:
+    _own_body(current_user, req.user_id)
     mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
     session, current, opener = engine.open_session(
         user_id=req.user_id,
@@ -75,11 +97,11 @@ async def coach_start(
 @router.post("/message")
 async def coach_message(
     req: CoachMessageRequest,
+    current_user: User = Depends(get_current_user),
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> StreamingResponse:
     session = engine.get_session(req.session_id)
-    if session is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "coach session not found")
+    _own_session(current_user, session)
 
     async def event_stream():
         total = 0
@@ -103,22 +125,22 @@ async def coach_message(
 @router.post("/propose", response_model=CoachProposal)
 async def coach_propose(
     req: CoachProposeRequest,
+    current_user: User = Depends(get_current_user),
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> CoachProposal:
     session = engine.get_session(req.session_id)
-    if session is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "coach session not found")
+    _own_session(current_user, session)
     return await engine.propose(session=session, history=req.history)
 
 
 @router.post("/accept")
 async def coach_accept(
     req: CoachAcceptRequest,
+    current_user: User = Depends(get_current_user),
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> dict:
     session = engine.get_session(req.session_id)
-    if session is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "coach session not found")
+    _own_session(current_user, session)
     result = engine.accept(session=session, proposal_id=req.proposal_id)
     if isinstance(result, CoachRefusal):
         return {"ok": False, "refusal": result.model_dump(mode="json")}
@@ -149,11 +171,11 @@ async def coach_accept(
 @router.post("/reject")
 async def coach_reject(
     req: CoachRejectRequest,
+    current_user: User = Depends(get_current_user),
     engine: CoachEngine = Depends(get_coach_engine),
 ) -> dict:
     session = engine.get_session(req.session_id)
-    if session is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "coach session not found")
+    _own_session(current_user, session)
     ok = engine.reject(session=session, proposal_id=req.proposal_id)
     return {"ok": ok}
 
@@ -161,8 +183,10 @@ async def coach_reject(
 @router.post("/rollback", response_model=UserOverlay)
 async def coach_rollback(
     req: CoachRollbackRequest,
+    current_user: User = Depends(get_current_user),
     store: OverlayStore = Depends(get_overlay_store),
 ) -> UserOverlay:
+    _own_body(current_user, req.user_id)
     try:
         return store.rollback_to(req.user_id, req.agent_id, req.to_version)
     except ValueError as e:
@@ -177,8 +201,11 @@ async def coach_history(
     user_id: UUID,
     agent_id: AgentId,
     plan: str = "trial_trader",
+    current_user: User = Depends(get_current_user),
     store: OverlayStore = Depends(get_overlay_store),
 ) -> CoachHistoryResponse:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     try:
         plan_enum = Plan(plan)
     except ValueError:

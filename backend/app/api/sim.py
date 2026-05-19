@@ -25,9 +25,16 @@ from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
 from app.services.watchlist_store import get_watchlist_store
+from app.api.dependencies import get_current_user
+from app.db.models import User
 
 
 router = APIRouter(prefix="/v1/sim", tags=["sim"])
+
+
+def _own(current_user: User, user_id: UUID) -> None:
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
 class SubmitTradeRequest(BaseModel):
@@ -72,8 +79,10 @@ class TradeListResponse(BaseModel):
 @router.get("/portfolio/{user_id}", response_model=PortfolioSnapshot)
 async def get_portfolio(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> PortfolioSnapshot:
+    _own(current_user, user_id)
     p = sim.ensure_portfolio(user_id)
     tickers = [h.ticker for h in p.holdings]
     marks = sim.current_marks(tickers)
@@ -105,17 +114,22 @@ async def get_portfolio(
 @router.post("/portfolio/{user_id}/reset", response_model=PortfolioSnapshot)
 async def reset_portfolio(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> PortfolioSnapshot:
+    _own(current_user, user_id)
     sim.reset_portfolio(user_id)
-    return await get_portfolio(user_id, sim)  # type: ignore[arg-type]
+    return await get_portfolio(user_id, current_user=current_user, sim=sim)
 
 
 @router.post("/submit")
 async def submit_trade(
     req: SubmitTradeRequest,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
+    if current_user.id != req.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     mandate = resolve_mandate(req.user_id, req.mandate_override)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (
@@ -187,8 +201,10 @@ async def submit_trade(
 async def list_trades(
     user_id: UUID,
     status_filter: str | None = None,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> TradeListResponse:
+    _own(current_user, user_id)
     trades = sim.list_trades(user_id, status=status_filter)  # type: ignore[arg-type]
     return TradeListResponse(trades=[t.to_json() for t in trades])
 
@@ -196,8 +212,10 @@ async def list_trades(
 @router.post("/trades/{user_id}/evaluate")
 async def evaluate_trades(
     user_id: UUID,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
+    _own(current_user, user_id)
     updates = sim.evaluate_outcomes(user_id)
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
@@ -246,8 +264,10 @@ class CloseRequest(BaseModel):
 async def close_trade(
     user_id: UUID,
     req: CloseRequest,
+    current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
 ) -> dict:
+    _own(current_user, user_id)
     closed: SimTrade | None = sim.manual_close(user_id, req.trade_id)
     if closed is None:
         raise HTTPException(
