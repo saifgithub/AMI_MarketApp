@@ -15,14 +15,16 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **206 commits**, no remote yet |
-| Latest commit | `12a5da8` — fix(compose): wire SECRET_KEY env var into api-alpha container |
+| Git state | Clean working tree, **208 commits**, no remote yet |
+| Latest commit | `9012e35` — docs(promote): surface AMI_ENV + SECRET_KEY in alpha.env.example + preflight |
 | Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` + `alpha-2026-05-19-2` (latest `alpha-2026-05-19-2` — Phase 1.5 promote. `-1` was deleted after the compose-secret gap was caught.) |
 | Backend tests | **306 passed, 0 failed** (was 275; +31 this session: `test_auth_dependency.py` covers `get_current_user`/`parse_scaffold_token` happy paths + 401/403, `test_auth_phase1_5_audit_fixes.py` covers each adversarial-audit finding) |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; unchanged this session) |
 
 ```
 $ git log --oneline | head -10
+9012e35 docs(promote): surface AMI_ENV + SECRET_KEY in alpha.env.example + preflight
+c8b2bf0 handover: wrap AT:R25 — Phase 1 + 1.5 auth + Alpha promote
 12a5da8 fix(compose): wire SECRET_KEY env var into api-alpha container
 181cbd1 docs(silent_scout): reframe README — workspace is broader than the LoRA track
 3d3c702 docs(silent_scout): Android test device selection — A16 5G for KSA Android dev rig
@@ -31,8 +33,6 @@ $ git log --oneline | head -10
 4276487 docs(auth): Phase 1 self-audit + adversarial review
 d97187b handover: wrap AT:R24 — 199 commits, 275 tests, TestFlight +15 live
 9c464b7 chore(mobile): bump build 0.1.0+14 → 0.1.0+15 for TestFlight
-bf2c83c chore(legal,website): canonical domain is agenticmarketintel.ai, not .com
-764a6ea docs(legal): add doc-level versioning to Privacy + ToS
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -176,7 +176,7 @@ Counts audited against tree state at end of AT:R25.
 10. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/` still render `AmiHexPlaceholder`. Lottie vs CustomPainter decision still open.
 11. **A29 light-mode refactor** — v1.0 work.
 12. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (lessons-landing hex-cluster redesign). Still pending Saiful decision.
-13. **Decide what to do with `claude/cranky-leavitt-99418b`** — the AT:R25 worktree is clean (all edits landed on main directly). It can be removed at any time or left as a marker.
+13. ~~Decide what to do with `claude/cranky-leavitt-99418b`~~ — removed at AT:R25 wrap (worktree was empty; all edits landed on main directly).
 
 ### Watch items (not tasks)
 
