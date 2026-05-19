@@ -69,6 +69,11 @@ services:
         condition: service_healthy
     environment:
       ENV: ${AMI_ENV:-local}
+      # Auth HMAC key for scaffold Bearer tokens. Set via ~/ami_trade/.env
+      # on melehost (canonical source: infra/alpha.env on Mac, shipped by
+      # /promote-to-alpha). Backend refuses to start when env!=local and
+      # this is unset (see backend/app/main.py boot check).
+      SECRET_KEY: ${SECRET_KEY:-}
       # Container-to-container connection still uses 5432 (internal port).
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0
