@@ -13,6 +13,7 @@
 |---|---|---|
 | 13-agent LoRA fine-tuning (Concierge first) | Active research | `00_environment/` → `05_agent_alignment/`. Approved plan: `~/.claude/plans/you-are-my-advance-tidy-engelbart.md` |
 | Android dev groundwork (KSA test device, future build prep) | Active | `06_android/` |
+| On-device STT + TTS research (EN/AR/MS/zh/yue) — informs `project_plan.md` A13/A14/A17 | Active research | `07_voice/`. Approved plan: `~/.claude/plans/you-are-working-on-stateless-sedgewick.md` |
 
 The boundary that defines this workspace is **blast radius**, not subject matter: anything in here is safe to iterate on without risking the live Alpha backend or the iOS TestFlight build. New forward-looking tracks land here.
 
@@ -70,6 +71,13 @@ Silent_Scout/
 ├── 05_agent_alignment/            ← LoRA-track alignment work
 ├── 06_android/                    ← Android dev groundwork (forward track)
 │   └── test_device_selection.md   ← KSA Android test-device procurement
+├── 07_voice/                      ← On-device STT + TTS research (forward track)
+│   ├── 01_constraints/            ← verbatim production-doc quotes (boundary fence)
+│   ├── 02_candidates/             ← STT + TTS candidate datasheets
+│   ├── 03_coverage_matrix/        ← 5 langs × N candidates → support tier
+│   ├── 04_eval/                   ← methodology + datasets + results/
+│   ├── 05_recommendation/         ← per-surface verdict + project_plan.md rewrite
+│   └── 06_prototypes/             ← bench harness + conversion notes
 └── .gitignore                     ← weights, checkpoints, runs/, raw corpora
 ```
 
