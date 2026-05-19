@@ -1,11 +1,24 @@
 # Silent_Scout
 
-> Research-only workspace for fine-tuning the 13 AMI Trade agents (12 trading + Concierge).
-> **Does not import from the production app. Does not ship.** Approved plan lives at `~/.claude/plans/you-are-my-advance-tidy-engelbart.md`.
+> Forward-deliverables R&D workspace. Anywhere we plan, prototype, or research a
+> future AMI Trade capability — kept out of the path of the running Alpha so
+> nothing in here can break what's already shipping.
+> **Does not import from the production app. Does not ship as-is.**
 
 ---
 
-## Why this exists
+## Current tracks
+
+| Track | Status | Lives in |
+|---|---|---|
+| 13-agent LoRA fine-tuning (Concierge first) | Active research | `00_environment/` → `05_agent_alignment/`. Approved plan: `~/.claude/plans/you-are-my-advance-tidy-engelbart.md` |
+| Android dev groundwork (KSA test device, future build prep) | Active | `06_android/` |
+
+The boundary that defines this workspace is **blast radius**, not subject matter: anything in here is safe to iterate on without risking the live Alpha backend or the iOS TestFlight build. New forward-looking tracks land here.
+
+---
+
+## LoRA fine-tuning track — why it exists
 
 The 13 agents currently run on Claude via [../backend/app/services/llm_gateway.py](../backend/app/services/llm_gateway.py). Three drivers for researching a fine-tuned alternative:
 
@@ -54,12 +67,15 @@ Silent_Scout/
 │   ├── general/                   ← MMLU / IFEval / GSM8K / HellaSwag harness
 │   ├── benches/                   ← FinanceBench subset
 │   └── (mandate_compliance, role_persona evals land here)
+├── 05_agent_alignment/            ← LoRA-track alignment work
+├── 06_android/                    ← Android dev groundwork (forward track)
+│   └── test_device_selection.md   ← KSA Android test-device procurement
 └── .gitignore                     ← weights, checkpoints, runs/, raw corpora
 ```
 
 Weights and large corpora live **outside the repo** at `/raid/silent_scout/` (or wherever GB10 has fast storage) and are referenced by absolute path in configs.
 
-## Phases (abridged)
+## LoRA track phases (abridged)
 
 | Phase | Goal | Calendar |
 |---|---|---|
