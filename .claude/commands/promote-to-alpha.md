@@ -136,12 +136,18 @@ scp infra/alpha.env melehost:~/ami_trade/.env
 Then verify the critical keys landed on melehost:
 
 ```bash
-ssh melehost "grep -E '^(VLLM_BASE_URL|VLLM_MODEL|USE_REAL_MARKET_DATA|CF_TUNNEL_TOKEN)' ~/ami_trade/.env | sed 's/=.*/=<set>/'"
+ssh melehost "grep -E '^(VLLM_BASE_URL|VLLM_MODEL|USE_REAL_MARKET_DATA|CF_TUNNEL_TOKEN|AMI_ENV|SECRET_KEY)' ~/ami_trade/.env | sed 's/=.*/=<set>/'"
 ```
 
-Expect all four to read `<set>`. Anything missing → stop, fix the
+Expect all six to read `<set>`. Anything missing → stop, fix the
 canonical file on the Mac, re-promote. **Do not edit melehost's `.env`
 in-place** — the next promotion will overwrite it.
+
+`AMI_ENV` + `SECRET_KEY` were added by AT:R25 Phase 1.5. Without them the
+backend either boots with all security lockdowns disabled (AMI_ENV=local
+default — silent regression) or refuses to start (AMI_ENV=staging without
+a non-default SECRET_KEY — explicit failure). See `backend/app/main.py`
+boot check.
 
 If you're rotating a key: edit `infra/alpha.env` on the Mac first, then
 run this command. The rotation flows Mac → melehost as a side-effect of
