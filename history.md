@@ -13,6 +13,55 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R25  (2026-05-19)
+
+Single-track session: build, audit, and promote real authentication. 6 commits. Backend promoted to Alpha as `alpha-2026-05-19-2`, TestFlight `+16` shipped. Two audit docs written. Working tree clean throughout.
+
+### Track A — Phase 1 (route guards + HMAC scaffold tokens)
+
+`4276487` (docs) + `48eb0d6` (code) land the foundation. The dependency `app/api/dependencies.py::get_current_user` extracts a `Bearer` token from `Authorization`, hands it to `parse_scaffold_token()`, and returns the live `User` row (or raises 401). Token format moves from the legacy unsigned `scaffold:<hex>` to HMAC-signed `scaffold:<hex>:<sig>` (`_scaffold_token` in `auth_service.py`, signature is HMAC-SHA256 over `user_id.hex` with `SECRET_KEY`). The legacy form is still accepted but only when `env=local` — so a developer running the Mac unit tests offline doesn't have to set a key.
+
+Routers swept: `mandate`, `journal`, `watchlist`, `coach`, `one_on_one`, `room` get a router-level `dependencies=[Depends(get_current_user)]`. `sim` + `lessons` mix public and user-specific routes, so the dependency is per-route. Every route that takes `user_id` in the path also asserts `current_user.id == user_id` and raises 403 on mismatch — `mandate.py`, `journal.py`, `watchlist.py`, `sim.py`, `lessons.py` use a local `_own(current_user, user_id)` helper for the check. Feedback's `_resolve_user_id` was migrated to call `parse_scaffold_token` (still returns None silently on bad/missing tokens — bug reports stay un-authed by design).
+
+Flutter side of Phase 1: `mobile/lib/services/api/api_client.dart` gains a `_AuthInterceptor` (Dio) that attaches `Authorization: Bearer <token>` on every request once `_bearerToken` is non-null. `AuthNotifier.bootstrap()` + the magic-link verify + Apple sign-in handlers each call `api.setToken(r.token)` after they receive a fresh token.
+
+12 unit tests in `backend/tests/unit/test_auth_dependency.py` cover `parse_scaffold_token` happy paths, forgery rejection, malformed input, and 401/403/200 on the mandate routes. 287 backend tests pass at end of this track.
+
+### Track B — Adversarial audit + Phase 1.5 corrective work
+
+`4276487` also lands the second audit doc: [docs/08_tech/auth_phase1_adversarial_audit.md](docs/08_tech/auth_phase1_adversarial_audit.md), produced by an external review of Phase 1. The reviewer caught 9 deploy-blocking issues the self-audit either missed or characterised as "accept for alpha" when they were actual bypasses of the new security layer. Same `48eb0d6` commit landed the fixes — they were intentionally bundled because Phase 1 alone was not promotable.
+
+Findings closed:
+
+- **A1.** `env=dev` accepted the legacy unsigned format AND returned the magic-link debug code in response bodies — both reachable via melehost's public Cloudflare Tunnel. Tightened: `parse_scaffold_token` accepts legacy only in `env=local`, `_is_dev_env()` returns True only in `local`, and `app/main.py` raises `RuntimeError` at boot if `env != local` and `SECRET_KEY` is still the default. A new env value `staging` is now the canonical alpha env (melehost runs as `AMI_ENV=staging`).
+- **A2.** `/v1/auth/anon` was a token-minting oracle — POST `{device_user_id: <victim>}` returned a signed token for any UUID. Fixed in `auth_service.py::ensure_anonymous`: a supplied `device_user_id` is honoured only when the caller also presents a Bearer whose parsed `user_id` matches. Otherwise the row is minted fresh, ignoring the body. `api/auth.py::anon_session` parses the optional Bearer with `_user_id_from_token` and passes it through.
+- **A3.** Magic-link verify trusted body `user_id`, letting any caller bind a captured email to a victim's row. Fixed: both `magic_link/start` and `magic_link/verify` require `get_current_user`, the `user_id` field was dropped from `MagicLinkStartRequest` and `MagicLinkVerifyRequest`, and the bind always goes to `current_user.id`. Debug code returns only in `env=local`.
+- **A4.** `/v1/auth/apple` decoded the JWT without verifying Apple's signature — a forged 3-part JWT with any `sub` worked. Until Phase 3 ships real verification (PyJWT + Apple JWKS), the route returns 503 outside `env=local`.
+- **A5.** `/v1/lessons/activations/grant` was completely unauthenticated. Removed (the underlying `lessons_service::grant_activation` stays; founder grants now happen via psql).
+- **A6.** Body / object ownership added to `room.py::stream_room` + `get_room` (loads run, checks `run.user_id`), every coach route (`_own_body` for body `user_id`, `_own_session` for routes that load a session), and every 1-on-1 route. `_own_session` is strict — a session with `user_id=None` is rejected.
+- **A7.** Flutter bootstrap was lazy (`Future.microtask(n.bootstrap)` fired only when something watched `authNotifierProvider`). Feature providers could call protected routes before the Dio interceptor had a token. Fixed: new `_AuthGate` widget wraps `home` in `app.dart` and watches `authNotifierProvider.token`; renders a splash until non-null. `DeviceUser` was extended to persist both the device_user_id AND the Bearer token to SharedPreferences (`getToken()`, `setIdAndToken()`, `clear()`), so cold starts replay the token and the backend recognises the returning user (otherwise A2 would orphan users on every launch).
+- **A8.** SSE methods (`streamCoachMessage`, `streamOneOnOneMessage`, the room stream) used raw `http.Client()` and bypassed the Dio interceptor — they would 401 against the new backend. Fixed: a new `ApiClient::_sseRequest(uri, body)` helper builds an `http.Request` with `Authorization: Bearer $_bearerToken` and throws if the token is missing. All three SSE call sites use it.
+
+15 + 4 new tests in `backend/tests/unit/test_auth_phase1_5_audit_fixes.py` — one per finding plus body-ownership variants for room/coach/1-on-1 routes. 306 backend tests pass total.
+
+Two cleanup pieces also landed in the same commit: removed the dead `ApiClient::grantActivation()` Flutter method (no callers, route gone), and refreshed stale docstrings in `auth.py` + `auth_service.py` that still described the legacy token format.
+
+### Track C — Alpha promote (the two-attempt story)
+
+First promote (`alpha-2026-05-19-1`, tag deleted) tagged at `181cbd1` and rsync'd cleanly. `infra/alpha.env` had been updated locally to add `ENV=staging` + `SECRET_KEY=$(openssl rand -hex 32)`. Backend booted healthy, but `curl /v1/health` returned `"env":"local"` and `docker exec` showed `SECRET_KEY length: 0` — the container wasn't seeing either value. Root cause: `docker-compose.yml` had `ENV: ${AMI_ENV:-local}` (looking for `AMI_ENV`, not `ENV`) and no entry for `SECRET_KEY` at all. So the file shipped via `scp infra/alpha.env melehost:~/ami_trade/.env` was being read by docker-compose but the two new keys were ignored.
+
+`12a5da8` (fix(compose)) added `SECRET_KEY: ${SECRET_KEY:-}` alongside the existing `ENV: ${AMI_ENV:-local}` mapping. `infra/alpha.env` was renamed `ENV=staging` → `AMI_ENV=staging` to match the compose convention. Second promote tagged `alpha-2026-05-19-2` at `12a5da8` ran cleanly: health returned `env=staging`, every adversarial-audit lockdown verified live (401 unauth, 401 legacy, 503 apple, 405 grant, fresh anon UUID).
+
+TestFlight `+16` was uploaded and on-device-verified BEFORE the backend promote, per the adversarial audit's recommendation — otherwise `+15` clients (which don't have the eager bootstrap, SSE auth, or token persistence) would have 401'd the moment the new backend went live. Smoke checklist verified on TESTING IPHONE 13; backend logs show 2 completed TSLA Room runs (~5.4 min each), all 4 journal entry types written in the smoke window.
+
+### Operational footnotes worth surfacing
+
+- `eeeb866f` (room run survives container restart) got a deferred-pre-beta note appended to `bug_reports.steps` early in the session: trigger = External Beta launch OR Cloud Run migration whichever first; Tier 1 (Celery+Redis full retry) is ~3–4 days, Tier 2 (+ LangGraph checkpoint resumption) is ~10–12 days.
+- A residual L-1 finding the self-audit flagged but Phase 1.5 did NOT close: `OneOnOneStartRequest.user_id` is `UUID | None`. Sending null bypasses the FLOOR_PASS gate (`_own_body` no-ops on None). Limited damage — the resulting session has `user_id=None` and `_own_session` rejects it on subsequent calls — but worth tightening if 1-on-1 abuse becomes a concern.
+- `http_audit` middleware captures full request/response bodies, which means **every issued bearer token sits in `http_audit` rows** alongside magic-link codes and Apple JWTs. Adversarial audit flagged this as B4 (must-fix before External Beta); deferred this session. **[Closed in AT:R26.]**
+
+---
+
 ## AT:R24  (2026-05-18)
 
 Three-track session: (a) clear the bug queue from AT:R23's walkthrough release, (b) draft + publish the alpha-stage Privacy Policy and Terms of Service, (c) push `0.1.0+15` to TestFlight Internal. 19 commits. Backend untouched (no `/promote-to-alpha`).

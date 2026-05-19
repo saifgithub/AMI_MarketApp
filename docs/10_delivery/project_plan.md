@@ -15,9 +15,9 @@ Where we are right now (as of 2026-05-18, end of AT:R24):
 
 Alpha (A1–A29):
 - **✅ Done**: A1, A2, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 15 items.
-- **⚡ Partial**: A17, A21, A22, A28, A29 — 5 items (mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
-- **⏳ Blocked on external**: A3, A6, A13, A15 — 4 items (Resend, Apple Dev capability, TTS provider, OneSignal+APNs).
-- **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of blocked externals).
+- **⚡ Partial**: A3, A6, A17, A21, A22, A28, A29 — 7 items (A3 SMTP wired but DNS pending; A6 Apple capability enabled + UX fix shipped, JWT verification still TBD; others: mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
+- **⏳ Blocked on external**: A13, A15 — 2 items (TTS provider, OneSignal+APNs).
+- **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of A3/A13/A15).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
 **Alpha is ~70% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, legal copy) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha).
@@ -47,10 +47,10 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 | # | Item | Who | Est | Status | Notes |
 |---|---|---|---|---|---|
-| **A3** | Email provider — Resend account + DKIM/SPF DNS records. | Saiful | external | ⏳ blocked (Resend account) | Resend free tier covers alpha. Blocks A4/A5. |
+| **A3** | Email provider — SMTP (`email_service.send_magic_link` via stdlib `smtplib`); 5 `SMTP_*` env vars on melehost. | Saiful + Claude | 0.25 session | ⚡ partial (AT:R26: code wired + tested + promoted; Saiful added `mail.agenticmarketintel.ai` A record but DNS still NXDOMAIN at session-end — real delivery blocked on DNS surfacing) | Switched from Resend to direct SMTP. Magic-link still works via debug-code-only fallback when SMTP_HOST is empty or DNS fails. |
 | **A4** | Email-confirmation flow. `/v1/auth/register` (email+password) → signed token → confirmation email → `/v1/auth/confirm`. Reuses W8 auth scaffold. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
 | **A5** | Flutter Register screen — email+password, "check your inbox" state, deep-link handler for the confirm URL. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
-| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec); add Apple JWKS signature verification in `auth_service.py::sign_in_with_apple`. | Saiful (cap) + Claude (code) | 0.5 session + 5 min Apple Dev | ⏳ blocked (Apple Dev capability) | AT:R25 Phase 1.5 disabled `/v1/auth/apple` outside `env=local` (returns 503) — the scaffold accepted forged JWTs. Unblocks once the capability is added; pair with Google `/v1/auth/google` as Phase 3. |
+| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec); add Apple JWKS signature verification in `auth_service.py::sign_in_with_apple`. | Saiful (cap) + Claude (code) | 0.5 session | ⚡ partial (AT:R26: Saiful enabled "Sign in with Apple" capability in Apple Developer portal; AT:R26 also fixed the UX so the 503 path now shows a friendly "Coming in v1.0" message instead of a generic error. Backend JWT verification work still pending — Phase 3.) | Pair with Google `/v1/auth/google` as Phase 3 (Google deferred to Android v1.0). |
 | **A7** | Cloudflare Tunnel — named tunnel, hostname (`api-alpha.<your-domain>`), Cloudflare Access policy (email allowlist). | Saiful | external | ✅ done (AT:R11) | Blocks A12. |
 | **A8** | Backend production launch — systemd unit, env file in `/etc/ami-trade.env`, log rotation, restart-on-fail. | Claude | 0.5 session | ✅ done | |
 | **A9** | Postgres backups — `pg_dump` cron, offsite copy, restore drill. | Claude | 0.25 session | ✅ done | |
