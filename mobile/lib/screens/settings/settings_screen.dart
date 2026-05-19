@@ -551,6 +551,22 @@ class _AccountSection extends ConsumerWidget {
             child: Text(claimed ? l.settingsManageAccount : l.settingsSignIn),
           ),
         ),
+        if (claimed) ...[
+          const SizedBox(height: AmiSpacing.s),
+          SizedBox(
+            height: 40,
+            child: OutlinedButton(
+              onPressed: ref.read(authNotifierProvider).loading
+                  ? null
+                  : () => ref.read(authNotifierProvider.notifier).signOut(),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AmiColors.hexRed,
+                side: const BorderSide(color: AmiColors.hexRed),
+              ),
+              child: const Text('Sign out'),
+            ),
+          ),
+        ],
       ],
     );
   }

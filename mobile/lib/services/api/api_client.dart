@@ -834,6 +834,15 @@ class ApiClient {
     }
   }
 
+  Future<void> signOut() async {
+    try {
+      await _dio.delete<void>('/v1/auth/session');
+    } catch (_) {
+      // Fire-and-forget — client clears its token regardless of server response.
+    }
+    _bearerToken = null;
+  }
+
   Future<AuthUser> me({required String token}) async {
     final r = await _dio.get<Map<String, dynamic>>(
       '/v1/auth/me',

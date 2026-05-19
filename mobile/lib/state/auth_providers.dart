@@ -122,6 +122,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<void> signOut() async {
+    final api = _ref.read(apiClientProvider);
+    await api.signOut();
+    await DeviceUser.clear();
+    state = const AuthState();
+    await bootstrap();
+  }
+
   Future<bool> signInWithApple(String identityToken, {String? fullName}) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
