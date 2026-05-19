@@ -815,15 +815,23 @@ class ApiClient {
     String? userId,
     String? fullName,
   }) async {
-    final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/auth/apple',
-      data: {
-        'identity_token': identityToken,
-        if (userId != null) 'user_id': userId,
-        if (fullName != null) 'full_name': fullName,
-      },
-    );
-    return AuthVerifyResponse.fromJson(r.data!);
+    try {
+      final r = await _dio.post<Map<String, dynamic>>(
+        '/v1/auth/apple',
+        data: {
+          'identity_token': identityToken,
+          if (userId != null) 'user_id': userId,
+          if (fullName != null) 'full_name': fullName,
+        },
+      );
+      return AuthVerifyResponse.fromJson(r.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 503) {
+        throw Exception(
+            'Apple sign-in isn\'t live in Alpha yet — use email sign-in instead.');
+      }
+      rethrow;
+    }
   }
 
   Future<AuthUser> me({required String token}) async {
