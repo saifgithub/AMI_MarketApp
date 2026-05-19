@@ -85,9 +85,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     if (ok) {
       Navigator.of(context).pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).signInAppleFailed)),
-      );
+      final msg = ref.read(authNotifierProvider).error
+              ?.replaceFirst('Exception: ', '') ??
+          AppLocalizations.of(context).signInAppleFailed;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -122,6 +124,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             _AppleButton(
               onPressed:
                   auth.loading ? null : _signInWithAppleScaffold,
+            ),
+            const SizedBox(height: AmiSpacing.xs),
+            Text(
+              'Coming in v1.0 — use email sign-in for now',
+              textAlign: TextAlign.center,
+              style:
+                  AmiTypography.caption.copyWith(color: AmiColors.textLow),
             ),
             const SizedBox(height: AmiSpacing.l),
             _EmailClaimCard(
