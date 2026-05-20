@@ -177,16 +177,22 @@ def test_magic_link_verify_binds_to_current_user(monkeypatch, client: TestClient
     assert body["user"]["is_anonymous"] is False
 
 
-# ── A4: Apple endpoint disabled outside env=local ─────────────────────────
+# ── A4: Apple endpoint now lives in every env (Phase 3 verification) ──────
+#
+# This was originally a 503-everywhere-but-local gate. Closed in AT:R29 by
+# the OIDCVerifier wiring — the route now reaches the verifier in every env.
+# Bogus tokens get a 400 from the verifier (not a 503 from a routing gate).
 
 
-def test_apple_endpoint_disabled_in_staging(monkeypatch, client: TestClient):
+def test_apple_endpoint_rejects_unverifiable_token(monkeypatch, client: TestClient):
     monkeypatch.setattr(settings, "env", "staging")
     r = client.post(
         "/v1/auth/apple",
         json={"identity_token": "header.body.sig", "user_id": str(uuid4())},
     )
-    assert r.status_code == 503
+    # Verifier rejects: malformed/unsigned token can't be validated against
+    # Apple's JWKS. Route translates the OIDCVerificationError into HTTP 400.
+    assert r.status_code == 400
 
 
 # ── A5: lessons grant route removed ───────────────────────────────────────

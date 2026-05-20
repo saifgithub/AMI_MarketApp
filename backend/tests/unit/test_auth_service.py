@@ -9,6 +9,7 @@ from uuid import uuid4
 import pytest
 
 from app.services.auth_service import AuthService
+from app.services.oidc_verifier import OIDCVerificationError
 
 
 def _apple_jwt(sub: str) -> str:
@@ -16,6 +17,25 @@ def _apple_jwt(sub: str) -> str:
     body = base64.urlsafe_b64encode(json.dumps({"sub": sub}).encode()).rstrip(b"=").decode()
     sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
     return f"{header}.{body}.{sig}"
+
+
+class _FakeAppleVerifier:
+    """Test double for OIDCVerifier — reads `sub` from the body, no signature
+    or claim verification. Lets the existing Apple sign-in tests focus on the
+    claim → user-row glue instead of having to mint real RSA-signed JWTs.
+    Real JWKS verification is covered separately in test_oidc_verifier.py.
+    """
+
+    def verify(self, identity_token: str) -> dict:
+        if not identity_token or identity_token.count(".") != 2:
+            raise OIDCVerificationError("malformed identity token")
+        try:
+            _hdr, body, _sig = identity_token.split(".")
+            padding = "=" * (-len(body) % 4)
+            payload = json.loads(base64.urlsafe_b64decode(body + padding).decode())
+        except Exception as e:
+            raise OIDCVerificationError(f"undecodable body: {e}") from e
+        return payload
 
 
 def test_anon_session_reuses_device_user_id_only_with_matching_bearer():
@@ -86,7 +106,7 @@ def test_magic_link_consumed_once():
 
 
 def test_apple_claim_attaches_sub_to_user():
-    auth = AuthService()
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
     user, token = auth.sign_in_with_apple(
@@ -100,6 +120,6 @@ def test_apple_claim_attaches_sub_to_user():
 
 
 def test_apple_rejects_undecodable_jwt():
-    auth = AuthService()
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
     with pytest.raises(ValueError):
         auth.sign_in_with_apple(identity_token="not-a-jwt", user_id=None)

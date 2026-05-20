@@ -98,6 +98,17 @@ arbitrary Apple ID to their row.
 **Recommended fix:** Disable `/v1/auth/apple` outside local until Apple
 JWKS/audience/issuer/nonce validation exists, or delegate this to Supabase now.
 **Effort:** 2-4 hours to disable; 1 day to verify properly
+**Status:** **CLOSED (AT:R29, 2026-05-20).** Both halves shipped: env=staging
+503 gate landed AT:R25 → AT:R26, then Phase 3 full verification in AT:R29.
+`OIDCVerifier` in `backend/app/services/oidc_verifier.py` fetches Apple's
+JWKS, looks up the JWK by `kid`, verifies the RSA signature, then enforces
+`iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, and `exp` not
+expired. The unverified-scaffold helper `_decode_apple_sub` is gone. The
+503 gate is gone; the route is live in every env. Same `OIDCVerifier` shape
+slots in for Google Sign-In when Android lands (project plan A6 → M4 →
+"next-after-Alpha" timeline). Tests: 9 verifier-level cases in
+`test_oidc_verifier.py` + the existing auth-service tests now inject a fake
+verifier instead of relying on the silent body-decode.
 
 **Finding:** Body and object ownership is still missing in the highest-cost
 routes.

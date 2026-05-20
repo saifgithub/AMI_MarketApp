@@ -14,9 +14,11 @@ Three flows for now:
      the user row, bumps claimed_at, returns a fresh session token.
 
   3. Apple Sign-In claim
-     /v1/auth/apple — decodes the JWT body without verification (scaffold
-     only), reads the `sub` claim, marks the user row claimed with
-     apple_id=sub.
+     /v1/auth/apple — verifies the identity token against Apple's
+     JWKS (`OIDCVerifier`), checks `iss`/`aud`/`exp`, reads the `sub`
+     claim, marks the user row claimed with apple_id=sub. Phase 3
+     verification landed in AT:R29; the earlier "trust the client"
+     scaffold was the audit's must-fix-A4 finding.
 
 `SessionToken` in scaffold mode is just `user_id.hex`. When Supabase
 plugs in, the real access JWT replaces it and `kind` becomes `supabase`.
@@ -40,6 +42,7 @@ from app.db import get_session, init_schema
 from app.db.models import AuthChallengeRow, User
 from app.schemas.auth import AuthUser
 from app.services.email_service import send_magic_link as _send_magic_link_email
+from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier
 
 
 MAGIC_LINK_TTL_MIN = 15
@@ -117,28 +120,25 @@ def _b64url_decode(seg: str) -> bytes:
     return base64.urlsafe_b64decode(seg + padding)
 
 
-def _decode_apple_sub(identity_token: str) -> str:
-    """Read the `sub` claim from an Apple JWT body without signature check.
-
-    Real prod: validate JWK + audience + nonce. This scaffold trusts the
-    client because we do not yet have Apple production keys plumbed in.
-    """
-    try:
-        _hdr, body, _sig = identity_token.split(".")
-        payload = json.loads(_b64url_decode(body).decode("utf-8"))
-        sub = payload.get("sub")
-        if not sub:
-            raise ValueError("apple jwt missing 'sub'")
-        return str(sub)
-    except Exception as e:
-        raise ValueError(f"apple jwt undecodable: {e}") from e
+# `_decode_apple_sub` previously read the JWT body without signature
+# verification — the must-fix-A4 finding from the 2026-05-18 audit.
+# Replaced in AT:R29 by AuthService._apple_verifier (OIDCVerifier with
+# real JWKS fetch). Helper deleted; no callers remain.
 
 
 class AuthService:
     """All auth flows. Sync API, opens its own DB session per call."""
 
-    def __init__(self) -> None:
+    def __init__(self, apple_verifier: OIDCVerifier | None = None) -> None:
         init_schema()
+        # Apple OIDC verifier (singleton-shaped — one instance owns the
+        # JWKS cache). Injectable so tests can pass a fake that trusts
+        # body claims without hitting Apple's network.
+        self._apple_verifier: OIDCVerifier = (
+            apple_verifier
+            if apple_verifier is not None
+            else build_apple_verifier(settings.apple_audiences)
+        )
 
     # ── Anonymous bootstrap ────────────────────────────────────────────
 
@@ -252,7 +252,14 @@ class AuthService:
         user_id: UUID | None,
         full_name: str | None = None,
     ) -> tuple[AuthUser, str]:
-        apple_sub = _decode_apple_sub(identity_token)
+        # Full verification: signature against Apple's JWKS, iss, aud,
+        # exp. Raises OIDCVerificationError (subclass of ValueError) on
+        # any failure — the route layer translates that to HTTP 400.
+        claims = self._apple_verifier.verify(identity_token)
+        apple_sub = claims.get("sub")
+        if not apple_sub:
+            raise ValueError("apple identity_token missing 'sub' claim")
+        apple_sub = str(apple_sub)
         with get_session() as s:
             # Prefer matching an existing apple_id row.
             row = s.execute(

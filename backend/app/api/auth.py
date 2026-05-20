@@ -22,7 +22,6 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 
-from app.core.config import settings
 from app.db import get_session
 from app.db.models import User
 from app.schemas.auth import (
@@ -114,17 +113,9 @@ def sign_in_with_apple(
     req: AppleSignInRequest,
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
-    # Adversarial audit (2026-05-18) finding A4. The current implementation
-    # decodes Apple's JWT WITHOUT verifying its signature against Apple's
-    # public keys, so any forged 3-part JWT works. Real verification (PyJWT
-    # + JWKS fetch + issuer/audience/exp/nonce checks) lands in Phase 3.
-    # Until then, the endpoint is reachable only on the developer's local
-    # machine.
-    if settings.env != "local":
-        raise HTTPException(
-            status.HTTP_503_SERVICE_UNAVAILABLE,
-            "Apple Sign-In not yet available — pending Phase 3 verification work",
-        )
+    # Phase 3 (AT:R29) closed audit finding A4. The endpoint now verifies
+    # the identity token against Apple's JWKS (signature + iss + aud +
+    # exp) via OIDCVerifier. Any failure surfaces as 400.
     try:
         user, token = auth.sign_in_with_apple(
             identity_token=req.identity_token,

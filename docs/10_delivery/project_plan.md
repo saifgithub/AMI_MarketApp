@@ -13,14 +13,14 @@ Where we are right now (as of 2026-05-20, end of AT:R28):
 
 ## Delivery status — Alpha snapshot
 
-Alpha (A1–A29):
-- **✅ Done**: A1, A2, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 15 items.
-- **⚡ Partial**: A3, A6, A17, A21, A22, A28, A29 — 7 items (A3 SMTP wired but DNS pending; A6 Apple capability enabled + UX fix shipped, JWT verification still TBD; others: mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
-- **⏳ Blocked on external**: A13, A15 — 2 items (TTS provider, OneSignal+APNs).
+Alpha (A1–A29, plus A6b pulled forward from MVP M4):
+- **✅ Done**: A1, A2, **A6**, A7, A8, A9, A10, A11, A12, A18, A19, A20, A23, A25, A26, A27 — 16 items (A6 closed AT:R29 with Phase 3 JWKS verification).
+- **⚡ Partial**: A3, A17, A21, A22, A28, A29 — 6 items (A3 SMTP wired but DNS pending; others: mechanisms / drafts exist; finishing touches blocked on external assets, lawyer review, or v1.0 work).
+- **⏳ Blocked on external**: A13, A15, **A6b** — 3 items (TTS, OneSignal+APNs, **Google Cloud OAuth client_id for Android**).
 - **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of A3/A13/A15).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
-**Alpha is ~70% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, legal copy) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha).
+**Alpha is ~73% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, Google OAuth, legal copy) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward).
 
 **Status legend** (used in every table below): `✅ done` · `⚡ partial` · `⏳ blocked` · `◯ unstarted` · `✖ superseded`. AT:R\<N\> tags in the status cell point to the session that delivered it — cross-reference with [HANDOVER.md](../../HANDOVER.md) / [history.md](../../history.md).
 
@@ -50,7 +50,8 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 | **A3** | Email provider — SMTP (`email_service.send_magic_link` via stdlib `smtplib`); 5 `SMTP_*` env vars on melehost. | Saiful + Claude | 0.25 session | ⚡ partial (AT:R26: code wired + tested + promoted; Saiful added `mail.agenticmarketintel.ai` A record but DNS still NXDOMAIN at session-end — real delivery blocked on DNS surfacing) | Switched from Resend to direct SMTP. Magic-link still works via debug-code-only fallback when SMTP_HOST is empty or DNS fails. |
 | **A4** | Email-confirmation flow. `/v1/auth/register` (email+password) → signed token → confirmation email → `/v1/auth/confirm`. Reuses W8 auth scaffold. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
 | **A5** | Flutter Register screen — email+password, "check your inbox" state, deep-link handler for the confirm URL. | Claude | 0.5 session | ◯ unstarted (blocked on A3) | |
-| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec); add Apple JWKS signature verification in `auth_service.py::sign_in_with_apple`. | Saiful (cap) + Claude (code) | 0.5 session | ⚡ partial (AT:R26: Saiful enabled "Sign in with Apple" capability in Apple Developer portal; AT:R26 also fixed the UX so the 503 path now shows a friendly "Coming in v1.0" message instead of a generic error. Backend JWT verification work still pending — Phase 3.) | Pair with Google `/v1/auth/google` as Phase 3 (Google deferred to Android v1.0). |
+| **A6** | Real Apple Sign-In. Add Sign in with Apple capability to bundle id under team S7RBWM4879; replace synthetic JWT in `sign_in_screen.dart` with `sign_in_with_apple` (already in pubspec); add Apple JWKS signature verification in `auth_service.py::sign_in_with_apple`. | Saiful (cap) + Claude (code) | 0.5 session | ✅ done (AT:R29) | Phase 3 closed AT:R29 — `OIDCVerifier` in `backend/app/services/oidc_verifier.py` does JWKS fetch + cache, RSA-signature verification, iss/aud/exp checks. Audit finding A4 closed. Same verifier shape reused for Google on Android — see **A6b** below. |
+| **A6b** | **Google Sign-In on Android** — **pulled forward from MVP M4 to Alpha closeout** (Saiful timeline: Android in "next week" as of 2026-05-20). Mobile: add `google_sign_in` to pubspec, render Google button on the sign-in screen on Android (hidden on iOS), pipe the returned id_token into `POST /v1/auth/google`. Backend: build `GOOGLE_VERIFIER` (same `OIDCVerifier` class, audiences = OAuth Web client_id from Google Cloud Console), add route + service method (mirrors `sign_in_with_apple`), schema (`GoogleSignInRequest`), and `users.google_id` column + migration. Add `google_audiences` to settings. Tests: claim → user-row glue + a verifier test mirroring `test_oidc_verifier.py`. | Saiful (Google Cloud Console + Android signing key) + Claude (code) | 0.5 session + external setup | ◯ unstarted | **Blocker:** Saiful needs to create the OAuth Web client_id in Google Cloud Console, register the Android SHA-1 signing fingerprint, hand over the client_id. Verifier abstraction already landed AT:R29 — half the work is done. |
 | **A7** | Cloudflare Tunnel — named tunnel, hostname (`api-alpha.<your-domain>`), Cloudflare Access policy (email allowlist). | Saiful | external | ✅ done (AT:R11) | Blocks A12. |
 | **A8** | Backend production launch — systemd unit, env file in `/etc/ami-trade.env`, log rotation, restart-on-fail. | Claude | 0.5 session | ✅ done | |
 | **A9** | Postgres backups — `pg_dump` cron, offsite copy, restore drill. | Claude | 0.25 session | ✅ done | |
@@ -97,7 +98,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 - No Supabase yet — local Postgres + the W8 auth scaffold serves Alpha. Supabase swap is the headline Beta item.
 - No payments. No RevenueCat. Floor Pass for everyone during alpha.
 - Cloud LLM stays Beta. On-prem vLLM Gemma 4 keeps serving Alpha.
-- No Android. iOS only via TestFlight.
+- ~~No Android.~~ **Android pulled into Alpha as of AT:R29** (Saiful timeline shift — "Android next week"). Closed-track Android testers join the Alpha cohort via Google Sign-In + Play internal-testing track. iOS still on TestFlight. See A6b.
 - No App Store production release (that's MVP).
 - No marketing / public launch.
 
@@ -150,7 +151,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 | **M1** | RevenueCat integration. Pricing tiers wired to backend (mandate.plan transitions); receipt validation; entitlement checks on premium routes (1-on-1 with PM, Convene the Room). | Claude + Saiful | 1 session + RC config | ◯ unstarted (MVP phase) | |
 | **M2** | App Store metadata — screenshots, app preview video, description copy, privacy nutrition labels, age rating. | Saiful (+ Claude drafts copy) | external | ◯ unstarted (MVP phase) | |
 | **M3** | App Store submission + review iteration. Be ready for the simulation/educational positioning to take 1–3 review rounds. | Saiful | external | ◯ unstarted (MVP phase) | |
-| **M4** | Android (GMS) release. Flutter build, Play Console setup, signing, closed beta → open beta → production. | Claude + Saiful | 1 session + external | ◯ unstarted (MVP phase) | |
+| **M4** | Android (GMS) release. Flutter build, Play Console setup, signing, closed beta → open beta → production. | Claude + Saiful | 1 session + external | ⚡ partial (AT:R29: Android slice pulled forward to Alpha — see A6b. MVP M4 now reduces to the Play Console **production** track + open-beta promotion; closed-beta + Google Sign-In land in Alpha.) | |
 | **M5** | Drop in AR + MS translations from the translators (i18n structure already shipped in Alpha A11). | Saiful | external | ⚡ partial (i18n plumbing landed in A11; AR + MS translations dropped in via Gemma 4 already — re-evaluate at MVP) | |
 | **M6** | Production APNs certificate from Apple Dev (Dev cert was used in Alpha). Push notifications cut over to production. | Saiful + Claude | 0.25 session + Apple Dev | ◯ unstarted (MVP phase) | |
 | **M7** | PostHog analytics. Funnel events, cohort tracking, feature flags. | Claude + Saiful | 0.5 session + PostHog account | ◯ unstarted (MVP phase) | |

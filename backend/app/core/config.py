@@ -98,6 +98,20 @@ class Settings(BaseSettings):
     # Beta: replace with admin_users table + JWT (middleware accepts both).
     admin_secret: str = ""
 
+    # Apple Sign-In — accepted audiences for the identity token's `aud`
+    # claim. iOS native flow uses the bundle ID; a Web Services ID would
+    # be added here if we ever ship Apple sign-in via web/Android. Comma-
+    # separated env var (`APPLE_AUDIENCES=ai.agenticmarketintel.amiTrade`),
+    # or `,` in the value to allow multiple.
+    apple_audiences: list[str] = Field(
+        default_factory=lambda: ["ai.agenticmarketintel.amiTrade"]
+    )
+
+    # Google Sign-In — wired when Android lands. Audience = the OAuth Web
+    # client_id (one per Android signing key configuration in Google Cloud
+    # Console). Leave empty until Android slice starts.
+    google_audiences: list[str] = Field(default_factory=list)
+
     # SMTP (magic-link email delivery). When smtp_host is empty the backend
     # falls back to debug-code-only mode (code shown in UI for alpha testers).
     smtp_host: str = ""
