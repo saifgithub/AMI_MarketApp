@@ -74,6 +74,10 @@ services:
       # /promote-to-alpha). Backend refuses to start when env!=local and
       # this is unset (see backend/app/main.py boot check).
       SECRET_KEY: ${SECRET_KEY:-}
+      # Admin back-office static bearer (AT:R27). All /v1/admin/* routes
+      # require it; empty value returns 503 from those routes (Alpha-only
+      # mechanism, replaced by admin_users + JWT in Beta).
+      ADMIN_SECRET: ${ADMIN_SECRET:-}
       # Container-to-container connection still uses 5432 (internal port).
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0
