@@ -92,6 +92,12 @@ class Settings(BaseSettings):
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
 
+    # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator
+    # access. All /v1/admin/* routes require this. Empty = admin disabled.
+    # Generate: openssl rand -hex 32
+    # Beta: replace with admin_users table + JWT (middleware accepts both).
+    admin_secret: str = ""
+
     # SMTP (magic-link email delivery). When smtp_host is empty the backend
     # falls back to debug-code-only mode (code shown in UI for alpha testers).
     smtp_host: str = ""

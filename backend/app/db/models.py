@@ -66,6 +66,19 @@ class User(Base):
     # claims with Apple/email we keep their original id but mark claimed_at.
     device_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True, index=True)
 
+    # Trial management (AT:R27 admin back-office)
+    trial_started_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    trial_expires_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+
+    # Admin-only suspension flag. Non-null = suspended; clears on reinstate.
+    suspended_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
     )
@@ -418,4 +431,29 @@ class OneOnOneMessageRow(Base):
     content: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class SubscriptionEventRow(Base):
+    """Complete audit trail for all plan / credit / trial / suspension changes.
+
+    Every admin write and every app-side credit consumption produces a row.
+    RevenueCat webhooks will write revenuecat_purchase rows in MVP M1.
+    source values: admin_override | app | revenuecat
+    """
+
+    __tablename__ = "subscription_events"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    from_value: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    to_value: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    admin_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
     )

@@ -57,4 +57,6 @@ def get_current_user(
                 "user not found",
                 headers={"WWW-Authenticate": "Bearer"},
             )
+        if row.suspended_at is not None:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "account_suspended")
         return row
