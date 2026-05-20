@@ -161,10 +161,19 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
             Row(
               children: [
                 Expanded(child: Text('Report a bug', style: AmiTypography.h4)),
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(Icons.close, size: 20,
-                      color: AmiColors.textLow),
+                // 44pt tap target (Apple HIG minimum) — earlier GestureDetector
+                // wrapped a 20px icon, giving a 20×20 hit area that testers
+                // couldn't reliably trigger (bugs 6fd4144d + a19871c3).
+                IconButton(
+                  icon: const Icon(Icons.close, size: 24,
+                      color: AmiColors.textMed),
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.of(context).pop(),
+                  constraints: const BoxConstraints(
+                    minWidth: 44, minHeight: 44,
+                  ),
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
