@@ -22,26 +22,27 @@ If MISSING, **stop and surface**:
 > to bootstrap the per-project config, then re-run
 > `/start-fresh-generic`.
 
-Otherwise read the file once. Then resolve the **active track**:
+Otherwise read the file once. Then resolve the **active track** in
+this priority order:
 
-1. **If the user passed a letter as argument** (e.g.
-   `/start-fresh-generic R`, `/start-fresh-generic M`): use that
-   letter. If the letter isn't a key under `tracks:` in config, stop
-   and surface: "Track <L> isn't configured. Tracks: <list>. Run
-   `/session-setup` to add it."
-2. **If no argument**: **default to `R`** (always present). Optionally,
-   if the most recent commit message has a `{project_prefix}:M<N>`
-   tag (or any non-R track), mention it as a hint: "Defaulting to R.
-   Most recent commit was {prefix}:M<N> — pass `M` if that's the track
-   you want."
-3. **Persist the resolved track** so `/handover-generic` knows which
+1. **Explicit argument** (e.g. `/start-fresh-generic R`,
+   `/start-fresh-generic M`): wins. If the letter isn't a key under
+   `tracks:` in config, stop and surface: "Track <L> isn't
+   configured. Tracks: <list>. Run `/session-setup` to add it."
+2. **Single configured track**: if `tracks:` has exactly one entry,
+   use it — no argument needed, no asking.
+3. **Multiple tracks, no argument**: ask via `AskUserQuestion` —
+   list every configured track with its letter + label, let the user
+   pick. Don't guess from commit history; an explicit pick at session
+   start is cheap and prevents wrapping the wrong track later.
+4. **Persist the resolved track** so `/handover-generic` knows which
    track this session belongs to without re-asking:
    ```bash
    echo "<track>" > .claude/active-track
    ```
    (Single-line file. Untracked — add `.claude/active-track` to
    `.gitignore` if it isn't already.)
-4. Surface the resolved track in your first user-visible line: e.g.
+5. Surface the resolved track in your first user-visible line: e.g.
    "Starting track R (Development)…"
 
 Throughout this skill, `{prefix}` is `project_prefix` and `{track}`

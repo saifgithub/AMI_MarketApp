@@ -51,12 +51,14 @@ this priority order:
    test -f .claude/active-track && cat .claude/active-track
    ```
    If the letter inside is a valid track in config, use it.
-3. **No argument, no active-track file**: don't guess. Ask via
+3. **Single configured track**: if no argument and no active-track
+   file, but `tracks:` has exactly one entry, use it.
+4. **Multiple tracks, no signal**: don't guess. Ask via
    `AskUserQuestion` — list all configured tracks with their labels
-   and let the user pick. Don't silently default to R; the user
-   probably skipped `/start-fresh-generic` and the safest move is to
-   confirm before clobbering a track's handover doc.
-4. Surface the resolved track in your first user-visible line: e.g.
+   and let the user pick. The user probably skipped
+   `/start-fresh-generic`; safest move is to confirm before
+   clobbering a track's handover doc.
+5. Surface the resolved track in your first user-visible line: e.g.
    "Wrapping track R (Development)…"
 
 Throughout this skill, `{prefix}` is `project_prefix` and `{track}`

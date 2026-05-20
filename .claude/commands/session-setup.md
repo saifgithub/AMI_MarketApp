@@ -12,16 +12,16 @@ config file. Without it, those two skills refuse to run.
 ## Multi-track shape
 
 A project has **one prefix** (e.g. `AT` for AMI Trade) and **one or
-more tracks** — each track is a single letter that marks a parallel
-stream of work. Sessions are tagged `<prefix>:<track><N>`:
+more tracks** — each track is a single letter the user picks to mark
+a parallel stream of work. Sessions are tagged `<prefix>:<track><N>`,
+e.g. `AT:R27`, `AT:M3`.
 
-- `AT:R27` — main development track, session 27
-- `AT:M3` — marketing track, session 3
-
-**Track `R` is mandatory.** Add others (`M`, `X`, whatever) as the
-project's workstreams demand. Each track has its own HANDOVER doc,
-history doc, optional memory file, and optional sanity-check / bug-
-list blocks — narratives don't interleave across tracks.
+The skill doesn't prescribe which letters or what they mean — the
+user decides. A common pattern is one track per workstream (R for
+development, M for marketing, etc.), but a project can also be
+single-track. Each track gets its own HANDOVER doc, history doc, and
+optional sanity-check / bug-list blocks — narratives don't interleave
+across tracks. The memory file is shared.
 
 ## When to trigger
 
@@ -73,18 +73,28 @@ find ~/.claude/projects -maxdepth 1 -type d -name '*' 2>/dev/null \
 If exactly one matches, propose the path `project_<slug>.md` inside
 it. If none or multiple, ask the user.
 
-#### 2b. Tracks (at least `R`; add more if the user wants)
+#### 2b. Tracks
 
-Always configure `R` first. After R is done, ask via `AskUserQuestion`:
-"Add another track? (M / X / no)". Loop until the user says no.
+First ask via `AskUserQuestion`: **"How many tracks does this project
+have?"** Offer 1, 2, 3, 4 as options. Most projects start with one and
+add more later — you can re-run `/session-setup` to add tracks
+anytime.
 
-For each track, ask:
+Then loop that many times. For each track, ask two questions before
+the detail fields:
+
+1. **Track letter** — a single letter the user picks (e.g. `R`, `M`,
+   `X`). Free text, no prescribed value. Verify it's not already
+   used by an earlier iteration.
+2. **Purpose / label** — short human label like "Development",
+   "Marketing", "Research". Used in reports + the plan-mode summary.
+
+Then ask for the per-track config:
 
 | Field | Default | Notes |
 |---|---|---|
-| `label` | `Development` for R, `Marketing` for M, otherwise free text | Human label for plan summaries + reports. |
-| `handover_path` | R → `HANDOVER.md`; M → `HANDOVER_MARKETING.md`; otherwise `HANDOVER_<letter>.md` | The rolling handover doc for this track. |
-| `history_path` | R → `history.md`; otherwise `history_<letter>.md` (optional) | Older session narratives. Skip = no rotation. |
+| `handover_path` | `HANDOVER_<letter>.md` | The rolling handover doc for this track. |
+| `history_path` | `history_<letter>.md` (optional) | Older session narratives. Skip = no rotation. |
 | `project_plan_path` | (ask, optional) | A backlog doc with per-item status this track ticks. |
 | `sanity_checks` | empty list (optional) | List of `{name, cmd}` to run during `/start-fresh-generic <letter>`. Loop with "Add another?". |
 | `bug_list` | disabled (optional) | If this track surfaces an open-bug queue at session start. |
@@ -92,6 +102,11 @@ For each track, ask:
 Note that `memory_project_file` is **not** per-track — it's a single
 shared file set at the top level (step 2a). Whichever track wraps
 updates the same file.
+
+If the user already has one or more handover docs on disk that match
+the suggested default path (e.g. `HANDOVER_R.md` exists), mention it
+in the prompt so they can confirm the existing file is the one this
+track owns.
 
 ### 3. Confirm + summarise
 
@@ -125,13 +140,13 @@ scan_excludes:
 
 # deploy_command: <slash command>    # optional; surfaces in handover's "don't auto-run" rule
 
-# Tracks — R is mandatory; add M, X, etc. as needed.
+# Tracks — at least one; user picks the letter + purpose for each.
 tracks:
-  R:
-    label: "Development"
-    handover_path: HANDOVER.md
-    # history_path: history.md                        # optional
-    # project_plan_path: <path>                       # optional
+  <LETTER>:
+    label: "<purpose>"
+    handover_path: HANDOVER_<LETTER>.md
+    # history_path: history_<LETTER>.md                # optional
+    # project_plan_path: <path>                        # optional
     # sanity_checks:
     #   - name: <label>
     #     cmd: <shell command>
@@ -141,17 +156,12 @@ tracks:
     #     <multi-line shell command>
     #   titles_cmd: |
     #     <multi-line shell command>
-
-  # M:
-  #   label: "Marketing"
-  #   handover_path: HANDOVER_MARKETING.md
-  #   ...
 ```
 
 Omit blocks the user skipped — don't write empty stanzas with
 placeholder values. Comments above optional blocks are fine as hints
-for someone editing later by hand. Always keep at least track R
-defined; refuse to write a config that omits it.
+for someone editing later by hand. At least one track must be
+defined; refuse to write a config with zero tracks.
 
 ### 5. Report
 
@@ -160,14 +170,17 @@ Print a short confirmation:
 ```
 ✅ Wrote .claude/session-config.yml
 
-Tracks configured: R (Development), M (Marketing)   ← list of tracks
+Tracks configured: <list with letters + labels>
 
 Next steps:
-- /start-fresh-generic R   (or just /start-fresh-generic — defaults to R)
-- /start-fresh-generic M   (for the marketing track)
-- /handover-generic [R|M]  (when you're ready to wrap a track)
-- /session-setup           (any time, to amend or add a track)
+- /start-fresh-generic <letter>   (start a session on that track)
+- /handover-generic               (wrap — reads .claude/active-track)
+- /session-setup                  (re-run any time to amend or add a track)
 ```
+
+If only one track is configured, mention that `/start-fresh-generic`
+and `/handover-generic` work without arguments (they auto-resolve to
+the only track).
 
 For each track whose `handover_path` doesn't exist yet, surface:
 
@@ -181,12 +194,13 @@ For each track whose `handover_path` doesn't exist yet, surface:
 - **Don't validate sanity-check commands by running them.** This
   skill captures config; verification happens when
   `/start-fresh-generic` runs.
-- **Don't write a config that omits track R.** It's the mandatory
-  baseline; surface and re-prompt if the user tries to drop it.
+- **Don't prescribe specific track letters or labels.** Ask the user
+  for the letter and purpose; don't suggest "R for Development" or
+  similar unless they ask for examples. Their convention, not yours.
 - **Don't merge a new track with the existing config naively.** When
   adding a track to an existing config, preserve every other track's
   block verbatim — read the existing YAML first.
 - **Don't refuse to write a minimal config.** If the user only fills
-  the three required fields for track R (label + handover_path +
-  prefix), that's fine — the generic skills skip every optional step
-  cleanly.
+  the three required fields (prefix + one track with a label and
+  handover_path), that's fine — the generic skills skip every
+  optional step cleanly.
