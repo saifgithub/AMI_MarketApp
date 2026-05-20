@@ -54,10 +54,24 @@ in the question's option labels. Group related fields where useful.
 | Field | Default | Notes |
 |---|---|---|
 | `project_prefix` | Initials of `basename "$(git rev-parse --show-toplevel)"` (e.g. "AMI Trade" → `AT`) | Used to build session tags. Letters only, no colon. |
+| `memory_project_file` | Auto-detect: `project_<slug>.md` in the CC project memory dir (optional) | **Shared** across all tracks. The CC per-project auto-memory file — one snapshot for the whole project, updated by whichever track wraps. Skip = no memory update during handover. |
 | `worktree_pattern` | `agent-*` | Subagent-worktree glob. |
 | `worktree_dir` | `.claude/worktrees` | Subagent-worktree location. |
 | `scan_excludes` | empty list | Pathspec excludes for consistency-scan greps. |
 | `deploy_command` | (no default — ask, optional) | Slash command that ships code; handover references it in the "don't auto-run" rule. |
+
+For `memory_project_file`, auto-detect the CC project memory dir
+without asking:
+
+```bash
+find ~/.claude/projects -maxdepth 1 -type d -name '*' 2>/dev/null \
+  | while read d; do
+      test -d "$d/memory" && echo "$d/memory"
+    done
+```
+
+If exactly one matches, propose the path `project_<slug>.md` inside
+it. If none or multiple, ask the user.
 
 #### 2b. Tracks (at least `R`; add more if the user wants)
 
@@ -72,22 +86,12 @@ For each track, ask:
 | `handover_path` | R → `HANDOVER.md`; M → `HANDOVER_MARKETING.md`; otherwise `HANDOVER_<letter>.md` | The rolling handover doc for this track. |
 | `history_path` | R → `history.md`; otherwise `history_<letter>.md` (optional) | Older session narratives. Skip = no rotation. |
 | `project_plan_path` | (ask, optional) | A backlog doc with per-item status this track ticks. |
-| `memory_project_file` | Auto-detect: `project_<slug>_<letter>.md` in the CC project memory dir (optional) | The CC per-project auto-memory file for this track. Skip = no memory update. |
 | `sanity_checks` | empty list (optional) | List of `{name, cmd}` to run during `/start-fresh-generic <letter>`. Loop with "Add another?". |
 | `bug_list` | disabled (optional) | If this track surfaces an open-bug queue at session start. |
 
-For `memory_project_file`, auto-detect the CC project memory dir
-without asking:
-
-```bash
-find ~/.claude/projects -maxdepth 1 -type d -name '*' 2>/dev/null \
-  | while read d; do
-      test -d "$d/memory" && echo "$d/memory"
-    done
-```
-
-If exactly one matches, propose the path `project_<slug>_<letter>.md`
-inside it. If none or multiple, ask the user.
+Note that `memory_project_file` is **not** per-track — it's a single
+shared file set at the top level (step 2a). Whichever track wraps
+updates the same file.
 
 ### 3. Confirm + summarise
 
@@ -111,6 +115,7 @@ the gathered values. Use this shape:
 project_prefix: "<value>"            # e.g. "AT". Session tags are <prefix>:<track><N>.
 
 # Shared across all tracks
+memory_project_file: project_<slug>.md   # optional; the CC per-project auto-memory file
 worktree_pattern: "agent-*"
 worktree_dir: .claude/worktrees
 
@@ -127,7 +132,6 @@ tracks:
     handover_path: HANDOVER.md
     # history_path: history.md                        # optional
     # project_plan_path: <path>                       # optional
-    # memory_project_file: project_<slug>_R.md        # optional
     # sanity_checks:
     #   - name: <label>
     #     cmd: <shell command>

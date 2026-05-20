@@ -35,24 +35,36 @@ If MISSING, **stop and surface**:
 > to bootstrap the per-project config, then re-run
 > `/handover-generic`.
 
-Otherwise read the file once. Then resolve the **active track**:
+Otherwise read the file once. Then resolve the **active track** in
+this priority order:
 
-1. **If the user passed a letter as argument** (e.g. `/handover-generic R`,
-   `/handover-generic M`): use that letter. If the letter isn't a key
-   under `tracks:` in config, stop and surface: "Track <L> isn't
-   configured. Tracks: <list>. Run `/session-setup` to add it."
-2. **If no argument**: try to auto-detect — read the most recent
-   commit messages and find the highest `{project_prefix}:<L><N>`
-   tag; the `<L>` it points at is the active track. If no such tag
-   exists, **default to `R`** (always present).
-3. Surface the resolved track in your first user-visible line: e.g.
+1. **Explicit argument** (e.g. `/handover-generic R`,
+   `/handover-generic M`): wins over everything. If the letter isn't
+   a key under `tracks:` in config, stop and surface: "Track <L>
+   isn't configured. Tracks: <list>. Run `/session-setup` to add it."
+   If `.claude/active-track` exists and disagrees with the argument,
+   surface a one-line warning ("active-track says R but you passed M
+   — using M") and proceed.
+2. **`.claude/active-track` file** (set by `/start-fresh-generic` at
+   session start). Read it:
+   ```bash
+   test -f .claude/active-track && cat .claude/active-track
+   ```
+   If the letter inside is a valid track in config, use it.
+3. **No argument, no active-track file**: don't guess. Ask via
+   `AskUserQuestion` — list all configured tracks with their labels
+   and let the user pick. Don't silently default to R; the user
+   probably skipped `/start-fresh-generic` and the safest move is to
+   confirm before clobbering a track's handover doc.
+4. Surface the resolved track in your first user-visible line: e.g.
    "Wrapping track R (Development)…"
 
 Throughout this skill, `{prefix}` is `project_prefix` and `{track}`
-is the resolved track letter. `{T.handover_path}`, `{T.history_path}`,
-`{T.memory_project_file}` are fields under `tracks.{track}` in the
-config. `{T.foo}` placeholders refer to per-track values; top-level
-fields like `worktree_pattern` apply to every track.
+is the resolved track letter. `{T.handover_path}`, `{T.history_path}`
+are fields under `tracks.{track}` in the config. `{T.foo}` placeholders
+refer to per-track values; top-level fields like `memory_project_file`,
+`worktree_pattern`, and `scan_excludes` are **shared** across every
+track.
 
 ## What to do, in order
 
@@ -254,22 +266,25 @@ plan: re-count the buckets if any changed.
 
 If no plan items moved this session, skip and mark N/A in the report.
 
-### 7. Update `{T.memory_project_file}`
+### 7. Update `{memory_project_file}`
 
-**Skip this step entirely if `{T.memory_project_file}` is not set
-under this track in config.**
+**Skip this step entirely if `memory_project_file` is not set at the
+top level of config.**
 
 This file lives OUTSIDE the repo at the captured path. It's the
-user's persistent memory across sessions for this track — must
-reflect the post-session state.
+user's persistent project-state memory **shared across all tracks**
+— whichever track wraps updates the same file. Must reflect the
+post-session state.
 
 Update at minimum:
-- Header date + commit count
+- Header date + commit count (counts are shared across tracks since
+  they come from one git repo)
 - "Stack snapshot" section if anything material changed
 - "What's done that previous handovers said was 'next'" — append
-  this session's wins
-- "What's 'next'" — replace with current carry-overs from
-  `{T.handover_path}`
+  this session's wins, tagged with `{prefix}:{track}<N>`
+- "What's 'next'" — refresh with this track's carry-overs from
+  `{T.handover_path}`. **Don't clobber other tracks' carry-over
+  entries** if the file already groups by track; merge in.
 
 ### 8. Final verification
 
@@ -280,6 +295,17 @@ git log --oneline | head -5    # confirm doc commits landed
 
 If `git status` is dirty after step 7 → that's the doc commits not
 yet staged; finish them and re-check. Don't surface until clean.
+
+Then clear the active-track pointer so the next session has to be
+opened deliberately via `/start-fresh-generic`:
+
+```bash
+rm -f .claude/active-track
+```
+
+If `/handover-generic` runs again later without a prior
+`/start-fresh-generic`, step 0 will fall through to the explicit
+"which track?" prompt rather than silently re-using this one.
 
 ### 9. Report to the user
 
@@ -297,7 +323,7 @@ Use this exact structure so deviations are easy to spot:
 | 5. Consistency scan | ✅ (K real stale refs fixed) |
 | 6. {T.handover_path} updated | ✅ |
 | 7. {T.project_plan_path} status ticked | ✅ (M items moved) or N/A |
-| 8. {T.memory_project_file} updated | ✅ or N/A |
+| 8. {memory_project_file} updated | ✅ or N/A |
 | 9. Final git status | ✅ |
 
 Session totals:

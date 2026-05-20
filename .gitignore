@@ -56,6 +56,9 @@ infra/prod.env
 *.swp
 *.swo
 
+# Claude Code session state
+.claude/active-track
+
 # OS
 .DS_Store
 Thumbs.db

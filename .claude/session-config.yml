@@ -1,0 +1,30 @@
+# session-config.yml — read by /handover-generic + /start-fresh-generic.
+# Re-run /session-setup to amend a field or add a track.
+
+project_prefix: "AT"            # Session tags: AT:R29, AT:M1, etc.
+
+# Shared across all tracks
+memory_project_file: project_ami_trade.md
+worktree_pattern: "agent-*"
+worktree_dir: .claude/worktrees
+
+scan_excludes:
+  - Silent_Scout/
+
+deploy_command: /promote-to-alpha
+
+tracks:
+  R:
+    label: "Development"
+    handover_path: HANDOVER_R.md
+    history_path: history_R.md
+    project_plan_path: docs/10_delivery/project_plan.md
+    sanity_checks:
+      - name: Alpha health
+        cmd: curl -s https://api-alpha.agenticmarketintel.ai/v1/health
+
+  M:
+    label: "Marketing"
+    handover_path: HANDOVER_M.md
+    # history_path: history_M.md          # create when first marketing session wraps
+    # project_plan_path:                  # no marketing backlog doc yet

@@ -34,7 +34,14 @@ Otherwise read the file once. Then resolve the **active track**:
    tag (or any non-R track), mention it as a hint: "Defaulting to R.
    Most recent commit was {prefix}:M<N> — pass `M` if that's the track
    you want."
-3. Surface the resolved track in your first user-visible line: e.g.
+3. **Persist the resolved track** so `/handover-generic` knows which
+   track this session belongs to without re-asking:
+   ```bash
+   echo "<track>" > .claude/active-track
+   ```
+   (Single-line file. Untracked — add `.claude/active-track` to
+   `.gitignore` if it isn't already.)
+4. Surface the resolved track in your first user-visible line: e.g.
    "Starting track R (Development)…"
 
 Throughout this skill, `{prefix}` is `project_prefix` and `{track}`
