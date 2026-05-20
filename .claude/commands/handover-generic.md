@@ -1,13 +1,13 @@
 ---
-description: Generic project-agnostic handover protocol. Reads .claude/session-config.yml for project-specific bits (session prefix, doc paths, deploy command, memory file) and runs the universal exit protocol — clean working tree, subagent-worktree cleanup, session-narrative rotation, consistency scan, doc + memory updates, structured report. Run when the user explicitly asks to wrap a session.
+description: Generic multi-track handover protocol. Pass a track letter (e.g. /handover-generic R or /handover-generic M). Reads .claude/session-config.yml — project_prefix + per-track block (handover doc, history, memory file, etc.) — and runs the universal exit protocol: clean working tree, subagent-worktree cleanup, narrative rotation, consistency scan, doc + memory updates, structured report. Run when the user explicitly asks to wrap a session.
 ---
 
 # /handover-generic
 
 The next session reads files at HEAD. Uncommitted edits are invisible
 to it. Stale text that contradicts a rule landed this session will
-mislead it. This skill is the **generic, config-driven** version of
-that protocol — every project-specific detail lives in
+mislead it. This skill is the **generic, config-driven, multi-track**
+version of that protocol — every project-specific detail lives in
 `.claude/session-config.yml`, produced by `/session-setup`.
 
 ## When to trigger
@@ -23,7 +23,7 @@ If the working tree is mid-flight on a single task when they ask,
 finish that task before running the protocol — the report assumes
 no work-in-progress edits.
 
-## Step 0 — Verify config exists
+## Step 0 — Verify config + resolve the track
 
 ```bash
 test -f .claude/session-config.yml && echo OK || echo MISSING
@@ -32,15 +32,27 @@ test -f .claude/session-config.yml && echo OK || echo MISSING
 If MISSING, **stop and surface**:
 
 > No `.claude/session-config.yml` found. Run `/session-setup` first
-> to bootstrap the per-project config, then re-run `/handover-generic`.
+> to bootstrap the per-project config, then re-run
+> `/handover-generic`.
 
-Don't try to handle without config — every step below references
-fields from it.
+Otherwise read the file once. Then resolve the **active track**:
 
-Otherwise, read the file once and keep its values in mind for every
-subsequent step. Throughout this skill, `{handover_path}`,
-`{history_path}`, `{session_prefix}`, etc. are placeholders for the
-values you read out of that file.
+1. **If the user passed a letter as argument** (e.g. `/handover-generic R`,
+   `/handover-generic M`): use that letter. If the letter isn't a key
+   under `tracks:` in config, stop and surface: "Track <L> isn't
+   configured. Tracks: <list>. Run `/session-setup` to add it."
+2. **If no argument**: try to auto-detect — read the most recent
+   commit messages and find the highest `{project_prefix}:<L><N>`
+   tag; the `<L>` it points at is the active track. If no such tag
+   exists, **default to `R`** (always present).
+3. Surface the resolved track in your first user-visible line: e.g.
+   "Wrapping track R (Development)…"
+
+Throughout this skill, `{prefix}` is `project_prefix` and `{track}`
+is the resolved track letter. `{T.handover_path}`, `{T.history_path}`,
+`{T.memory_project_file}` are fields under `tracks.{track}` in the
+config. `{T.foo}` placeholders refer to per-track values; top-level
+fields like `worktree_pattern` apply to every track.
 
 ## What to do, in order
 
@@ -60,12 +72,7 @@ git rev-list --count HEAD   # capture total commit count
 
 **Dirty tree rule:** if `git status --short` prints anything, list
 the files to the user and ask whether to commit, stash, or
-`.gitignore`. Don't auto-decide. Common cases:
-- Tracked file modified → propose a commit message; commit.
-- Untracked artefact (build output, scratch file) → `.gitignore` or
-  delete; ask.
-- Real work-in-progress → tell the user to finish it; abort the
-  handover.
+`.gitignore`. Don't auto-decide.
 
 **Branch rule:** if not on the main branch and the current branch is
 a clean ancestor-extension of main, fast-forward. If the branches
@@ -74,9 +81,8 @@ have diverged, surface to the user — don't auto-rebase or auto-merge.
 ### 2. Subagent worktree cleanup
 
 Spawned subagents with `isolation: worktree` leave worktrees +
-branches on disk if they made changes. Their commits get merged into
-main; the worktree dirs + branch refs are residue that clutters
-`git worktree list` and `git branch` for the next session.
+branches on disk if they made changes. The worktree dirs + branch
+refs are residue after their commits merge into main.
 
 ```bash
 git worktree list | grep "{worktree_pattern}" || true
@@ -88,9 +94,8 @@ For each matching worktree:
    ```bash
    git log <main-branch>..worktree-agent-<id> --oneline
    ```
-   - Empty output → safe to remove.
-   - Non-empty → STOP. Tell the user the subagent's commits aren't
-     merged; ask whether to merge, cherry-pick, or discard.
+   Empty → safe to remove. Non-empty → STOP and ask whether to merge,
+   cherry-pick, or discard.
 
 2. **Remove** (subagent worktrees are locked by the harness, so
    `-f -f` is required):
@@ -99,44 +104,45 @@ For each matching worktree:
    git branch -D worktree-agent-<id>
    ```
 
+This step is **track-agnostic** — clean up every matching worktree
+regardless of which track is wrapping.
+
 Sibling worktrees that pre-date this session and don't match
 `{worktree_pattern}` are not yours to clean — leave them alone.
 
-### 3. Rotate the prior session out to `{history_path}`
+### 3. Rotate the prior session out to `{T.history_path}`
 
-**Skip this step entirely if `history_path` is not set in config.**
+**Skip this step entirely if `{T.history_path}` is not set under
+this track in config.**
 
-`{handover_path}` is rolling: it should carry current truth + ONE
+`{T.handover_path}` is rolling: it should carry current truth + ONE
 session's "what just landed" narrative. Before writing this session's
 narrative, the previous session's section must be moved to
-`{history_path}` so the file stays bounded.
+`{T.history_path}` so the file stays bounded.
 
-Find the current `## What just landed (this session — {session_prefix}<N-1>)`
-section in `{handover_path}` (there should be exactly one). Move it
-to the **top** of `{history_path}` (newest-on-top), but BELOW any
+Find the current
+`## What just landed (this session — {prefix}:{track}<N-1>)`
+section in `{T.handover_path}` (there should be exactly one). Move it
+to the **top** of `{T.history_path}` (newest-on-top), below any
 existing intro preamble. Rename the heading on the way out:
 
 ```
-## What just landed (this session — {session_prefix}<N-1>)
+## What just landed (this session — {prefix}:{track}<N-1>)
                                    ↓
-## {session_prefix}<N-1>  (YYYY-MM-DD)
+## {prefix}:{track}<N-1>  (YYYY-MM-DD)
 ```
 
-That standardises the historical heading style and drops the
-"this session" qualifier — there's only ever one "this session" and
-it lives in `{handover_path}`.
-
-If `{handover_path}` doesn't have a `## What just landed (this session —`
+If `{T.handover_path}` doesn't have a `## What just landed (this session —`
 heading (first session, or because the previous session was a pure
 refactor), skip the rotation — just write the new section.
 
-If `{history_path}` doesn't exist yet, create it with a one-line
+If `{T.history_path}` doesn't exist yet, create it with a one-line
 intro:
 
 ```markdown
-# History
+# History — track {track} ({T.label})
 
-Older "what just landed" sections from {handover_path}, newest on top.
+Older "what just landed" sections from {T.handover_path}, newest on top.
 ```
 
 ### 4. Consistency scan
@@ -151,9 +157,9 @@ Reason about what changed this session and craft the grep patterns
 yourself. Reference baseline that always merits a pass:
 
 ```bash
-# Old commit count / test count if {handover_path} has them in tables
+# Old commit count / test count if {T.handover_path} has them in tables
 git grep -nE '\b[0-9]+ commits\b|\b[0-9]+ (passed|tests)\b' \
-  {scan_excludes_as_pathspecs} -- ':!{handover_path}'
+  {scan_excludes_as_pathspecs} -- ':!{T.handover_path}'
 
 # Followup chips that closed this session
 git grep -nE 'chip spawned|spawned chip|spawned task' \
@@ -162,23 +168,20 @@ git grep -nE 'chip spawned|spawned chip|spawned task' \
 # Routes / commands / env vars / files renamed or retired
 # (compose your own greps based on this session's diff)
 
-# Session-name counter ({session_prefix}<N>) — must increment for the next session
-git grep -nE '{session_prefix}[0-9]+' \
+# Session-name counter on THIS track — must increment for the next session
+git grep -nE '{prefix}:{track}[0-9]+' \
   {scan_excludes_as_pathspecs} | head -20
 ```
 
 `{scan_excludes_as_pathspecs}` expands to `':!<exclude>'` for each
-entry in `scan_excludes` (e.g. config `scan_excludes: [vendor, .claude/worktrees]`
-→ `':!vendor' ':!.claude/worktrees'`).
+entry in `scan_excludes`.
 
-For `{handover_path}` specifically, the rolling structure means the
-only narrative section there is the current `{session_prefix}<N>` one.
-Hits in the "what's on disk / what's running" table or the "how to
-start the next session" block are load-bearing and must be current.
-`{history_path}` hits inside session-tagged sections are usually
-fine — that's where stale text is *supposed* to live.
+**Cross-track caveat:** if other tracks exist and their handover docs
+also live in this repo, **don't rewrite session-tag references from
+those tracks** — they belong to a parallel narrative. Limit the scan
+fixes to text that's stale for *this* track.
 
-### 5. Update `{handover_path}`
+### 5. Update `{T.handover_path}`
 
 The doc has a stable shape. Maintain it:
 
@@ -186,37 +189,41 @@ The doc has a stable shape. Maintain it:
   summary of this session's marquee work.
 - **"What's on disk + what's running" table** (if present) — commit
   count, latest-commit hash + subject, deploy tags landed this
-  session, test count, anything else the project tracks here.
-  Numbers must match `git rev-list --count HEAD`, `git log -1`,
-  `git tag`, and the test-suite tail you ran.
-- **New section** `## What just landed (this session — {session_prefix}<N>)`
+  session, test count, anything else the track tracks here. Numbers
+  must match `git rev-list --count HEAD`, `git log -1`, `git tag`,
+  and the test-suite tail you ran.
+- **New section** `## What just landed (this session — {prefix}:{track}<N>)`
   inserted in the position the rotated section used to occupy
   (just before "How to start the next session"). Narrative summary
   of the substantive commits with hash callouts. Include carry-overs
   and any gotchas the next session will trip on.
 - **"How to start the next session"** — update the commit count /
-  test count / carry-over list. **Increment the session-name counter**
-  (e.g. `{session_prefix}19` → `{session_prefix}20`).
+  test count / carry-over list. **Increment the session counter on
+  this track** (e.g. `{prefix}:{track}19` → `{prefix}:{track}20`).
+  Mention the entry command: `/start-fresh-generic {track}` (or just
+  `/start-fresh-generic` if this is track R and config makes R the
+  default — see start-fresh skill).
 
-If `{handover_path}` doesn't exist yet, create it with the canonical
-shape:
+If `{T.handover_path}` doesn't exist yet, create it with the
+canonical shape:
 
 ```markdown
-# Handover — {project_name}
+# Handover — {T.label} ({prefix}:{track})
 
-**Last updated:** YYYY-MM-DD (end of {session_prefix}<N> — <summary>)
+**Last updated:** YYYY-MM-DD (end of {prefix}:{track}<N> — <summary>)
 
-Read this file **first** in any new session.
+Read this file **first** when starting a new {T.label} session
+(`/start-fresh-generic {track}`).
 
 ---
 
 ## What's on disk + what's running
 
-<project-specific table — fill in for your project>
+<project-specific table — fill in for your track>
 
 ---
 
-## What just landed (this session — {session_prefix}<N>)
+## What just landed (this session — {prefix}:{track}<N>)
 
 <narrative>
 
@@ -224,19 +231,20 @@ Read this file **first** in any new session.
 
 ## How to start the next session
 
-`{start_fresh_command}` (i.e. `/start-fresh-generic`)
+`/start-fresh-generic {track}`
 
-Session name to use: **{session_prefix}<N+1>**
+Session name to use: **{prefix}:{track}<N+1>**
 ```
 
-### 6. Tick delivered items in `{project_plan_path}`
+### 6. Tick delivered items in `{T.project_plan_path}`
 
-**Skip this step entirely if `project_plan_path` is not set in config.**
+**Skip this step entirely if `{T.project_plan_path}` is not set under
+this track in config.**
 
 The plan typically has a `Status` column per row. For each item that
 shipped (or moved buckets) this session, update the cell:
 
-- Newly delivered → change to `✅ done ({session_prefix}<N>)`
+- Newly delivered → change to `✅ done ({prefix}:{track}<N>)`
 - Newly partial → `⚡ partial (...short note on what's still missing...)`
 - Newly blocked → `⏳ blocked (...what's blocking...)`
 - Superseded by a different approach → `✖ superseded (...what replaced it...)`
@@ -244,25 +252,24 @@ shipped (or moved buckets) this session, update the cell:
 Also refresh any summary "Delivery status" block near the top of the
 plan: re-count the buckets if any changed.
 
-If no plan items moved this session, skip this step entry in the
-report (mark as N/A).
+If no plan items moved this session, skip and mark N/A in the report.
 
-### 7. Update `{memory_project_file}`
+### 7. Update `{T.memory_project_file}`
 
-**Skip this step entirely if `memory_project_file` is not set in config.**
+**Skip this step entirely if `{T.memory_project_file}` is not set
+under this track in config.**
 
-This file lives OUTSIDE the repo at the path captured by
-`memory_project_file`. It's the user's persistent memory across
-sessions — must reflect the post-session state.
+This file lives OUTSIDE the repo at the captured path. It's the
+user's persistent memory across sessions for this track — must
+reflect the post-session state.
 
 Update at minimum:
 - Header date + commit count
-- "Stack snapshot" section if anything material changed (new
-  provider, new env path, new container, new mount)
+- "Stack snapshot" section if anything material changed
 - "What's done that previous handovers said was 'next'" — append
   this session's wins
 - "What's 'next'" — replace with current carry-overs from
-  `{handover_path}`
+  `{T.handover_path}`
 
 ### 8. Final verification
 
@@ -279,54 +286,55 @@ yet staged; finish them and re-check. Don't surface until clean.
 Use this exact structure so deviations are easy to spot:
 
 ```
-## Handover complete — ready for fresh session.
+## Handover complete — ready for fresh {T.label} session ({prefix}:{track}<N+1>).
 
 | Step | Result |
 |---|---|
 | 1. Working tree clean | ✅ |
 | 2. On main / fast-forwarded | ✅ |
 | 3. Subagent worktrees cleaned | ✅ (N removed) or N/A |
-| 4. Prior session rotated to {history_path} | ✅ or N/A |
+| 4. Prior session rotated to {T.history_path} | ✅ or N/A |
 | 5. Consistency scan | ✅ (K real stale refs fixed) |
-| 6. {handover_path} updated | ✅ |
-| 7. {project_plan_path} status ticked | ✅ (M items moved) or N/A |
-| 8. {memory_project_file} updated | ✅ or N/A |
+| 6. {T.handover_path} updated | ✅ |
+| 7. {T.project_plan_path} status ticked | ✅ (M items moved) or N/A |
+| 8. {T.memory_project_file} updated | ✅ or N/A |
 | 9. Final git status | ✅ |
 
 Session totals:
 - N commits in (M new this session)
-- T tests passing (if your project runs tests in handover)
+- T tests passing (if your track runs tests in handover)
 - Tags: <list>
-- <any project-specific state — read off the "what's on disk" table>
+- <any track-specific state — read off the "what's on disk" table>
 
-Carry-overs flagged for next session:
+Carry-overs flagged for next {T.label} session:
 - <bullet>
 - <bullet>
 
-Recommended next-session prompt lives in {handover_path} section
-"How to start the next session" (session name {session_prefix}<N+1>).
+Recommended next-session start command:
+  /start-fresh-generic {track}      (session name {prefix}:{track}<N+1>)
 ```
 
 Rows for steps that were skipped because their config field was empty
 say **"N/A"** rather than ❌.
 
-If any step deviated — context budget overrun, a subagent worktree
-that couldn't be cleaned, a scan hit that needed human judgement —
-report it honestly at the bottom of the message under a
-**"Deviations to flag"** subsection. The user values an honest audit
-over a clean checklist.
+If any step deviated, report it honestly at the bottom of the message
+under a **"Deviations to flag"** subsection. Honest audit > clean
+checklist.
 
 ## What NOT to do
 
 - **Don't ask for confirmation before each step.** Execute and
   surface deviations.
+- **Don't rewrite other tracks' narratives.** This skill wraps one
+  track only. If the consistency scan returns hits in another
+  track's handover doc, leave them alone — they belong to that
+  track's next session.
 - **Don't squash, amend, or force-push commits.** They're the audit
-  trail for the session.
+  trail.
 - **Don't push to a remote** unless the user has explicitly opted
   into that as part of their workflow.
 - **Don't run `{deploy_command}`** (if set in config) as part of
-  handover unless the user explicitly asked. Handover is about
-  doc/state hygiene, not deployment.
+  handover unless the user explicitly asked.
 - **Don't skip the memory file update** because "nothing material
   changed." Header counts always change. (Skip only if the field is
   unset in config.)
