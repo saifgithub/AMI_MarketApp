@@ -14,7 +14,7 @@ Three tiers. Same USD list price globally. Promotions adjust regionally and over
 | **Market data** | 15-min delayed | 15-min delayed | Real-time (when phased in, v1.1+) |
 | **Sim portfolios** | 1 ($10K, monthly reset) | 2 ($100K, reset on demand) | 5 ($1M, reset on demand) |
 | **Decision Journal** | Last 30 days | Unlimited + search + tagging | Unlimited + search + tag + export (CSV / PDF) |
-| **Coach Your Agent** | 3 edits per agent, lifetime | Unlimited, 20-version history | Unlimited, infinite history, diff viewer, Raw Mode |
+| **Brief Your Agent** | 3 edits per agent, lifetime | Unlimited, 20-version history | Unlimited, infinite history, diff viewer, Raw Mode |
 | **Concierge** | Q&A + lesson routing (unlimited free) | + Assistant tools (schedule, reminders, journal summary, mute) | Same as Trader |
 | **Morning briefing** | Text-only, email | Text + voice TTS, push + email + in-app | Text + premium voice + personalised analyst commentary |
 | **Mandate Drift Alerts** | Weekly digest (email) | Daily (push + email) | Real-time + tunable thresholds |

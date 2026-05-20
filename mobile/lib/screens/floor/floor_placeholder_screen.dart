@@ -11,6 +11,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
@@ -118,9 +119,15 @@ class _FloorPlaceholderScreenState
   }
 
   void _openAgent(BuildContext context, Agent agent) {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => OneOnOneScreen(agent: agent),
-    ));
+    // Concierge skips the sheet — it has no Brief surface, so 1-on-1 is the
+    // only path. The other 12 agents get the [1-ON-1] / [BRIEF] chooser.
+    if (agent.family == AgentFamily.concierge) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => OneOnOneScreen(agent: agent),
+      ));
+      return;
+    }
+    AgentActionSheet.show(context, agent);
   }
 
   void _showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {

@@ -27,7 +27,7 @@ Goal: open the doors. Add the platforms, languages, and monetization that make A
 | **Voice TTS briefings** | Habit hook |
 | **Animated honeycomb** | Brand polish |
 | **Convene visualisation upgrade** (face-off animations, risk triangle, verdict card animation) | The signature visual experience |
-| **Coach Your Agent — Raw Mode** | Power-user feature |
+| **Brief Your Agent — Raw Mode** | Power-user feature |
 | **Multi-round debate** for Floor Manager | Floor Manager differentiator |
 | **Multi-portfolio** for paid tiers | Paid tier differentiator |
 | **Real-time Mandate Drift Alerts** for Floor Manager | Floor Manager differentiator |
@@ -75,7 +75,7 @@ Goal: scale-up features that need critical mass to ship well.
 | **Reasoning-quality leaderboard** — public ranking by reasoning, not P&L |
 | **Multi-mandate** — "Retirement" + "Speculative bucket" + others |
 | **Public Decision Journal sharing** — users can share Room replays with attribution |
-| **Community prompt-sets** — users publish their Coach Your Agent overlays for others to clone (start of marketplace dynamics) |
+| **Community prompt-sets** — users publish their Brief Your Agent overlays for others to clone (start of marketplace dynamics) |
 | **Voice morning briefings — premium narrative commentary** (Floor Manager) |
 | **Hijri calendar option** for AR users |
 | **Marketing site full build-out** with blog, case studies, founder stories |

@@ -51,7 +51,7 @@ FastAPI endpoint structure. Each resource has its own router.
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/coach/{agent_id}/session/start` | Start a Coach Your Agent session |
+| POST | `/coach/{agent_id}/session/start` | Start a Brief Your Agent session |
 | POST | `/coach/{agent_id}/session/{session_id}/message` | Chat with the agent for coaching |
 | POST | `/coach/{agent_id}/overlay` | Save a new overlay version |
 | GET | `/coach/{agent_id}/overlays` | List version history |

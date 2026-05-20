@@ -33,7 +33,7 @@ What could go wrong, and what we do about each.
 
 | Risk | Probability | Impact | Mitigation |
 |---|---|---|---|
-| **Finelo launches a directly competing AI feature** | Medium | Medium | Our moat is depth: 12 agents, mandate-driven, Coach Your Agent. A "we have AI now" Finelo update doesn't match. |
+| **Finelo launches a directly competing AI feature** | Medium | Medium | Our moat is depth: 12 agents, mandate-driven, Brief Your Agent. A "we have AI now" Finelo update doesn't match. |
 | **Big-tech competitor (Google / Apple) ships similar product** | Low | High | Hard to defend against, but the AR/MS + halal + dual-gating positioning is distinctive. Big tech goes mass-market, not niche. |
 | **Regulatory shift — sim-only apps required to register** | Low | High | Our advisory-only-simulation-only posture is the regulatory firewall. We monitor; if rules change, we adapt. |
 | **AR/MS markets adopt slower than expected** | Medium | Medium | Founders Pricing + Launch-Country Promo accelerate. EN remains a strong path. |

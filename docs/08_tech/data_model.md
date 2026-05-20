@@ -9,7 +9,7 @@ Postgres schema (via Supabase). Every table has Row-Level Security (RLS) enabled
 | `users` | Identity + plan + trial state | ~10K rows |
 | `mandates` | User mandates, versioned | ~20K rows |
 | `agent_activations` | Which agents each user has unlocked | ~120K rows |
-| `user_overlays` | Coach Your Agent prompt customisations | ~50K rows |
+| `user_overlays` | Brief Your Agent prompt customisations | ~50K rows |
 | `room_runs` | Convene the Room sessions | ~50K rows / mo |
 | `one_on_one_sessions` | 1-on-1 chat sessions | ~500K rows / mo |
 | `journal_entries` | Decision Journal entries (Rooms + 1-on-1 + sim trades + mandate edits) | ~600K rows / mo |
@@ -25,7 +25,7 @@ Postgres schema (via Supabase). Every table has Row-Level Security (RLS) enabled
 | `streaks` | Per-user streak state | ~10K rows |
 | `briefings` | Generated morning briefings | ~300K rows / mo |
 | `drift_alerts` | Mandate drift alerts | ~50K rows / mo |
-| `coach_sessions` | Coach Your Agent sessions | ~50K rows / mo |
+| `coach_sessions` | Brief Your Agent sessions | ~50K rows / mo |
 | `offers_redemptions` | Promo offer usage | ~10K rows |
 | `audit_log` | All sensitive actions | ~100K rows / mo |
 

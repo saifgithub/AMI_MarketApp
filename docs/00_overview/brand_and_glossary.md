@@ -69,7 +69,7 @@ Consumer-warming adjustments vs core AMI:
 | **Concierge** | The 13th agent. User's personal assistant: lesson routing, journal summary, briefing scheduling, mute/promote helpers, product Q&A. Always free. Never gives trading advice. |
 | **Convene the Room** | A full multi-agent debate session — all 12 agents run on a ticker. The streaming reasoning is visualised; the final verdict (Buy/Hold/Sell + sizing) is recorded to the Decision Journal. Costs credits. |
 | **1-on-1** | A solo chat with a single agent. Cheaper than a Room. |
-| **Coach Your Agent** | The feature where a user tunes an agent's prompt via conversation. The agent proposes prompt diffs; user accepts/refines/rejects. Versioned. Portfolio Manager's mandate enforcement is a *safety floor* — uncoachable. |
+| **Brief Your Agent** | The feature where a user tunes an agent's prompt via conversation. The agent proposes prompt diffs; user accepts/refines/rejects. Versioned. Portfolio Manager's mandate enforcement is a *safety floor* — uncoachable. |
 | **Decision Journal** | The permanent, searchable log of every Room, 1-on-1, sim trade, and mandate edit. Replayable. 30 days for Floor Pass; unlimited for paid. |
 | **Floor** | The home screen — the user's "trading floor" with the Concierge at the centre and the 12 agents in a honeycomb tessellation around her. See [`docs/05_design/floor_home_honeycomb.md`](../05_design/floor_home_honeycomb.md). |
 | **Earn Path** | The free progression: complete an Agent Academy module → unlock that agent. Costs time, not money. |

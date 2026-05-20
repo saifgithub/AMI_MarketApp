@@ -4,7 +4,11 @@
       "WebFetch(domain:finelo.com)",
       "Bash(ssh melehost *)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/health)",
+      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/llm/status)",
+      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL)",
+      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/lessons)"
     ]
   }
 }

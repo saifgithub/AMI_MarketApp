@@ -649,129 +649,129 @@ class AppLocalizationsAr extends AppLocalizations {
   String get oneOnOneCoachTooltip => 'تدريب هذا الوكيل';
 
   @override
-  String coachHeading(String agent) {
+  String briefHeading(String agent) {
     return 'تدريب $agent';
   }
 
   @override
-  String get coachNoOverlayYet => 'لا يوجد غطاء بعد — الإعدادات الافتراضية';
+  String get briefNoOverlayYet => 'لا يوجد غطاء بعد — الإعدادات الافتراضية';
 
   @override
-  String coachOverlayActive(int version) {
+  String briefOverlayActive(int version) {
     return 'الغطاء v$version نشط';
   }
 
   @override
-  String get coachNoEditsLeft =>
+  String get briefNoEditsLeft =>
       '⚠️ لا توجد تعديلات متبقية — قم بالترقية لمواصلة التدريب';
 
   @override
-  String coachOneEditLeft(int count) {
+  String briefOneEditLeft(int count) {
     return '⚠️ متبقي $count تعديل واحد في فئتك';
   }
 
   @override
-  String get coachVersionHistoryTooltip => 'سجل الإصدارات';
+  String get briefVersionHistoryTooltip => 'سجل الإصدارات';
 
   @override
-  String coachCurrentOverlayLabel(int version) {
+  String briefCurrentOverlayLabel(int version) {
     return 'الغطاء الحالي — v$version';
   }
 
   @override
-  String get coachProtectedSafetyFloor => 'محمي — FLOOR السلامة';
+  String get briefProtectedSafetyFloor => 'محمي — FLOOR السلامة';
 
   @override
-  String get coachProtectedMandate => 'محمي — قاعدة التفويض';
+  String get briefProtectedMandate => 'محمي — قاعدة التفويض';
 
   @override
-  String get coachEditLimitReached => 'تم الوصول إلى حد التعديل';
+  String get briefEditLimitReached => 'تم الوصول إلى حد التعديل';
 
   @override
-  String get coachRefused => 'رفضه المدرب';
+  String get briefRefused => 'رفضه المدرب';
 
   @override
-  String coachProposalSavedSnack(int version, String summary) {
+  String briefProposalSavedSnack(int version, String summary) {
     return 'تم الحفظ كـ v$version — $summary';
   }
 
   @override
-  String coachAgentRefused(String agent) {
+  String briefAgentRefused(String agent) {
     return 'رفض $agent';
   }
 
   @override
-  String coachAgentProposal(String agent) {
+  String briefAgentProposal(String agent) {
     return '$agent — مقترح';
   }
 
   @override
-  String get coachPlainEnglish => 'اللغة الإنجليزية المبسطة:';
+  String get briefPlainEnglish => 'اللغة الإنجليزية المبسطة:';
 
   @override
-  String get coachOverlayAddition => 'إضافة الطبقة:';
+  String get briefOverlayAddition => 'إضافة الطبقة:';
 
   @override
-  String get coachAccept => 'قبول';
+  String get briefAccept => 'قبول';
 
   @override
-  String get coachRefine => 'تحسين';
+  String get briefRefine => 'تحسين';
 
   @override
-  String get coachReject => 'رفض';
+  String get briefReject => 'رفض';
 
   @override
-  String get coachDismiss => 'تجاهل';
+  String get briefDismiss => 'تجاهل';
 
   @override
-  String get coachInputHint => 'أخبرني بما يجب تغييره...';
+  String get briefInputHint => 'أخبرني بما يجب تغييره...';
 
   @override
-  String get coachDrafting => 'جاري الصياغة...';
+  String get briefDrafting => 'جاري الصياغة...';
 
   @override
-  String get coachProposeChange => 'PROPOSE CHANGE';
+  String get briefProposeChange => 'PROPOSE CHANGE';
 
   @override
-  String coachHistoryHeading(String agent) {
+  String briefHistoryHeading(String agent) {
     return 'سجل $agent';
   }
 
   @override
-  String get coachHistorySubtitle => 'جميع نسخ التدريب المحفوظة';
+  String get briefHistorySubtitle => 'جميع نسخ التدريب المحفوظة';
 
   @override
-  String coachHistoryEditsUnlimited(int count) {
+  String briefHistoryEditsUnlimited(int count) {
     return 'تم إجراء $count تعديل • عدد غير محدود في باقتك';
   }
 
   @override
-  String coachHistoryEditsRemaining(int count, int remaining) {
+  String briefHistoryEditsRemaining(int count, int remaining) {
     return 'تم إجراء $count تعديل • المتبقي $remaining';
   }
 
   @override
-  String get coachHistoryEmpty =>
+  String get briefHistoryEmpty =>
       'لا يوجد سجل تدريب بعد.\nعد للخلف واقترح تغييرك الأول.';
 
   @override
-  String get coachHistoryActiveBadge => 'نشط';
+  String get briefHistoryActiveBadge => 'نشط';
 
   @override
-  String coachHistoryRollbackTitle(int version) {
+  String briefHistoryRollbackTitle(int version) {
     return 'الرجوع إلى v$version؟';
   }
 
   @override
-  String coachHistoryRollbackBody(int version) {
+  String briefHistoryRollbackBody(int version) {
     return 'سيبدأ العميل الخاص بك في استخدام v$version على الفور. ستبقى الإصدارات الأحدث في السجل.';
   }
 
   @override
-  String get coachHistoryRollback => 'استعادة';
+  String get briefHistoryRollback => 'استعادة';
 
   @override
-  String get coachHistoryRollbackToThis => 'استعادة لهذا الإصدار';
+  String get briefHistoryRollbackToThis => 'استعادة لهذا الإصدار';
 
   @override
   String get conveneHeading => 'CONVENE الغرفة';

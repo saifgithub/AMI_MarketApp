@@ -35,11 +35,11 @@ Return response
 | **Trader** | 1-on-1 | Sonnet 4.6 | GPT-5.4-mini | Gemini 3 Pro | Gemini 3 Pro |
 | Trader | Room | Sonnet 4.6 | GPT-5.4-mini | Gemini 3 Pro | Gemini 3 Pro |
 | Trader | Concierge | Haiku 4.5 | (same tier as Floor Pass) | — | Gemini Flash |
-| Trader | Coach Your Agent | Sonnet 4.6 | GPT-5.4-mini | — | — |
+| Trader | Brief Your Agent | Sonnet 4.6 | GPT-5.4-mini | — | — |
 | **Floor Manager** | 1-on-1 | Sonnet 4.6 | GPT-5.4-mini | — | Gemini 3 Pro |
 | Floor Manager | Room (premium) | **Opus 4.7** | GPT-5.4 | Gemini 3 Ultra | Gemini 3 Ultra |
 | Floor Manager | Concierge | Sonnet 4.6 | GPT-5.4-mini | — | Gemini 3 Pro |
-| Floor Manager | Coach Your Agent | Opus 4.7 | GPT-5.4 | — | — |
+| Floor Manager | Brief Your Agent | Opus 4.7 | GPT-5.4 | — | — |
 
 ## Why this routing
 
@@ -116,7 +116,7 @@ Streaming reduces perceived latency dramatically. User sees "Bull Researcher: St
 | 1-on-1 messages/min | 6 | 30 | 60 |
 | Convene per hour | 2 (capped by credits anyway) | 5 (capped by credits) | 8 (capped by credits) |
 | Concierge messages/min | 12 | 30 | 60 |
-| Coach Your Agent saves/hour | 1 (caps + edit limit) | 10 | 30 |
+| Brief Your Agent saves/hour | 1 (caps + edit limit) | 10 | 30 |
 
 Rate limits prevent abuse and protect against runaway-loop bugs. Returned via standard 429 with `Retry-After` header.
 

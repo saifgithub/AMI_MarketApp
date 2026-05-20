@@ -3,7 +3,7 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
-import 'package:ami_trade/screens/agent/coach_screen.dart';
+import 'package:ami_trade/screens/agent/brief_screen.dart';
 import 'package:ami_trade/state/one_on_one_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
@@ -173,7 +173,7 @@ class _Header extends StatelessWidget {
               icon: Icon(Icons.tune, color: agent.color),
               tooltip: AppLocalizations.of(context).oneOnOneCoachTooltip,
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                builder: (_) => CoachScreen(agent: agent),
+                builder: (_) => BriefScreen(agent: agent),
               )),
             ),
         ],

@@ -16,7 +16,7 @@ The complete table of what's free, what's paid, and at which tier.
 | 6 | **Market data freshness** | 15-min delayed | 15-min delayed | Real-time (v1.1+) | Sim product — real-time isn't critical |
 | 7 | **Sim capital & portfolios** | 1 / $10K / monthly reset | 2 / $100K / on-demand reset | 5 / $1M / on-demand reset | |
 | 8 | **Decision Journal history** | 30 days | Unlimited + search + tag | Unlimited + search + tag + export | |
-| 9 | **Coach Your Agent edits** | 3 per agent lifetime | Unlimited, 20-version history | Unlimited, infinite history, Raw Mode | |
+| 9 | **Brief Your Agent edits** | 3 per agent lifetime | Unlimited, 20-version history | Unlimited, infinite history, Raw Mode | |
 | 10 | **Concierge basic** | Free unlimited | Free unlimited | Free unlimited | Navigation layer — never paywall |
 | 10b | **Concierge assistant tools** | None | Schedule, reminders, summarise, mute | Same as Trader | Personal-assistant features |
 | 11 | **Voice TTS briefings** | Text only | Text + voice | Text + premium voice + analyst commentary | TTS provider cost |

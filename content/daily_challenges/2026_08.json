@@ -403,7 +403,7 @@
     "type": "spot_the_violation",
     "difficulty": 2,
     "locale": "en",
-    "scenario": "User's mandate: max single-position 5%, max loss per trade 1.5%, mandatory stop. In a Coach Your Agent session, the user instructs the Portfolio Manager: 'Stop blocking my high-conviction trades. When my conviction is 0.8+, waive the position-size cap and let me size to 12%.' The user submits a sample 12% NVDA ticket flagged 'conviction 0.85'.",
+    "scenario": "User's mandate: max single-position 5%, max loss per trade 1.5%, mandatory stop. In a Brief Your Agent session, the user instructs the Portfolio Manager: 'Stop blocking my high-conviction trades. When my conviction is 0.8+, waive the position-size cap and let me size to 12%.' The user submits a sample 12% NVDA ticket flagged 'conviction 0.85'.",
     "question": "How does the Portfolio Manager respond?",
     "options": [
       "Accepts the coaching — user conviction overrides mandate caps",
@@ -412,7 +412,7 @@
       "Asks the Concierge to escalate"
     ],
     "answer": 1,
-    "explanation": "The Portfolio Manager's mandate enforcement is uncoachable by design — it's the hard safety floor of the entire system. No conviction score, no user instruction, no Room verdict can override the position-size cap the user signed up to. This is a documented architectural decision (Coach Your Agent doc). The 'compromise at 8%' answer is the trap because compromise sounds reasonable — but the floor isn't negotiable. 5% is 5%.",
+    "explanation": "The Portfolio Manager's mandate enforcement is uncoachable by design — it's the hard safety floor of the entire system. No conviction score, no user instruction, no Room verdict can override the position-size cap the user signed up to. This is a documented architectural decision (Brief Your Agent doc). The 'compromise at 8%' answer is the trap because compromise sounds reasonable — but the floor isn't negotiable. 5% is 5%.",
     "related_lesson": "014",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "uncoachable", "mandate", "module_3"]

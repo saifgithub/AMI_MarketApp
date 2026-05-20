@@ -21,7 +21,7 @@
    │   AGENT INTERACTION                                     │
    │   ├── 1-on-1 chat with any unlocked agent               │
    │   ├── Convene the Room (full 12-agent debate)           │
-   │   └── Coach Your Agent (tune prompts via conversation)  │
+   │   └── Brief Your Agent (tune prompts via conversation)  │
    └──────────────────────┬──────────────────────────────────┘
                           ↓
    ┌─────────────────────────────────────────────────────────┐
@@ -79,7 +79,7 @@ Status legend:
 | Mandate overlay per agent prompt | 🟢 Alpha | |
 | 1-on-1 chat with any agent | 🟢 Alpha | |
 | Convene the Room (streaming logs + verdict) | 🟢 Alpha | Animated visual deck 🟡 v1.0 |
-| Coach Your Agent (conversational mode) | 🟢 Alpha | Raw Mode editor 🟡 v1.0 |
+| Brief Your Agent (conversational mode) | 🟢 Alpha | Raw Mode editor 🟡 v1.0 |
 | Coach version history | 🟢 Alpha | 20 versions paid; unlimited 🟡 v1.0 Floor Manager |
 | Coach safety floor on Portfolio Manager | 🟢 Alpha | Non-negotiable |
 | Multi-round debate (Floor Manager only) | 🟡 v1.0 | |

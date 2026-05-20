@@ -182,9 +182,9 @@
   {
     "id": "qa_plt_coach_what_is",
     "category": "platform",
-    "question": "What is Coach Your Agent?",
+    "question": "What is Brief Your Agent?",
     "short_answer": "A way to shape each agent's style — more verbose, more skeptical, more focused on certain data — without changing the safety rules.",
-    "long_answer": "Coach Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Coaching is a diff card that you review and approve. Find it under any agent's profile -> Coach.",
+    "long_answer": "Brief Your Agent lets you nudge an agent's personality and emphasis. You can tell the Fundamentals Analyst to weight cash flow heavier, ask the News Analyst to ignore tweet-level chatter, or tell the Technical Analyst you prefer daily over intraday timeframes. Coaching is a diff card that you review and approve. Find it under any agent's profile -> Coach.",
     "related_lessons": [],
     "related_agents": ["concierge"],
     "tags": ["coach", "customization"]
@@ -192,7 +192,7 @@
   {
     "id": "qa_plt_coach_what_customize",
     "category": "platform",
-    "question": "What can I actually customize in Coach Your Agent?",
+    "question": "What can I actually customize in Brief Your Agent?",
     "short_answer": "Style, emphasis, data sources to favor or ignore, verbosity, language register. Anything that doesn't touch the safety floor.",
     "long_answer": "Customizable: tone (formal/casual), depth (one-liner vs essay), emphasis (e.g., 'always lead with the bear case'), data weighting (e.g., 'favor SEC filings over analyst notes'), language register (technical vs plain English), and named heuristics you want them to use. Each change becomes a diff card you approve before it goes live; history is preserved so you can revert.",
     "related_lessons": [],
@@ -202,7 +202,7 @@
   {
     "id": "qa_plt_coach_cant_customize",
     "category": "platform",
-    "question": "What CAN'T I customize with Coach Your Agent?",
+    "question": "What CAN'T I customize with Brief Your Agent?",
     "short_answer": "The Portfolio Manager's mandate enforcement. Position caps, drawdown limits, compliance flags, and refusal floors are uncoachable.",
     "long_answer": "The PM is the safety floor and it doesn't take coaching. You cannot tell the PM to ignore your max drawdown, exceed position caps, override your halal flag, or skip the compliance check. You also can't coach any agent to recommend live trading, give specific dollar advice, or claim predictive certainty. These floors are deterministic and hard-coded — they exist so coaching can't turn AMI into a yes-man.",
     "related_lessons": [],
@@ -224,7 +224,7 @@
     "category": "platform",
     "question": "What's the difference between Floor Pass, Trader, and Floor Manager?",
     "short_answer": "Floor Pass is free with ads and limited Convenes. Trader removes ads and unlocks unlimited Convene + coaching. Floor Manager adds advanced tooling and credit-pack bundling.",
-    "long_answer": "Floor Pass (free, ad-supported) gives you the Concierge, 1-on-1 chat, lessons, and a capped number of Convene the Room runs per day. Trader ($14.99/mo) removes ads, unlocks unlimited Convenes, full Coach Your Agent, and full Decision Journal analytics. Floor Manager ($34.99/mo) adds advanced portfolio tools, priority agent compute, and a monthly credit-pack allowance for heavy room runs. See Settings -> Plans for the current full feature matrix.",
+    "long_answer": "Floor Pass (free, ad-supported) gives you the Concierge, 1-on-1 chat, lessons, and a capped number of Convene the Room runs per day. Trader ($14.99/mo) removes ads, unlocks unlimited Convenes, full Brief Your Agent, and full Decision Journal analytics. Floor Manager ($34.99/mo) adds advanced portfolio tools, priority agent compute, and a monthly credit-pack allowance for heavy room runs. See Settings -> Plans for the current full feature matrix.",
     "related_lessons": [],
     "related_agents": [],
     "tags": ["pricing", "tiers"]

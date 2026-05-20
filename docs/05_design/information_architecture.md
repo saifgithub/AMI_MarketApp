@@ -86,7 +86,7 @@ Concierge is a **single persistent thread per user**, never session-scoped. When
 | Type | When to use |
 |---|---|
 | **Bottom sheet (50–80% height)** | Quick 1-on-1 chat (from Floor long-press), trade ticket inline review, mandate field edits |
-| **Full-screen modal** | Concierge full thread, Coach Your Agent session, Convene the Room |
+| **Full-screen modal** | Concierge full thread, Brief Your Agent session, Convene the Room |
 | **Toast (auto-dismiss 3s)** | Confirmations: "Saved", "Streak +1", "Credits added" |
 | **Dialog (system-style)** | Destructive actions only: cancel subscription, delete mandate, etc. |
 

@@ -18,7 +18,7 @@ Credits fix this. The base subscription includes a monthly credit allowance size
 | **1-on-1 chat** | 1 | One agent, short context, single LLM call thread |
 | **Basic Room** (Floor Pass / Trader, 1 round) | 8 | 12 agents × short reasoning. ~$0.80 retail. |
 | **Premium Room** (Floor Manager, multi-round) | 25 | 12 agents × 2–3 rounds × premium model. ~$2.50 retail. |
-| **Coach Your Agent session** (Floor Pass overage only) | 2 | Mid-length conversation. Trader+ get unlimited free. |
+| **Brief Your Agent session** (Floor Pass overage only) | 2 | Mid-length conversation. Trader+ get unlimited free. |
 | **Daily Challenge** | 0 | Free, generated once per locale per day, cached |
 | **Lessons + AI-tutor wrapper** | 0 | Cached per (lesson, learning_style, locale, top compliance flags) tuple |
 | **Quizzes + remedial lessons** | 0 | Cheap model, cached. |
@@ -101,7 +101,7 @@ If a user has 0 credits and tries an operation:
 │                                              │
 │ Options:                                     │
 │ • Buy a pack ($4.99 / $19.99 / $49.99)       │
-│ • Try Coach Your Agent (no credits needed)   │
+│ • Try Brief Your Agent (no credits needed)   │
 │ • Wait for next month's refill               │
 │                                              │
 │ [Buy credits]   [Maybe later]                │

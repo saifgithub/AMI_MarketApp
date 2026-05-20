@@ -38,7 +38,7 @@ Apple review can be prickly about "trading" / "investment" claims. To smooth rev
 
 **Long description** structured as:
 - Hook (1 paragraph)
-- What's different (12 agents, Coach Your Agent, Halal screening)
+- What's different (12 agents, Brief Your Agent, Halal screening)
 - Who it's for (beginners, prosumers, halal/ESG-conscious investors)
 - How it works (3-step quick)
 - Disclaimer paragraph (educational simulation, not advice)

@@ -1,18 +1,18 @@
 /// Riverpod state for a Coach Your Agent session.
 ///
 /// Lifecycle:
-///   1. `openSession(agentId)` — hits /v1/coach/start.
-///   2. `send(text)` — streams /v1/coach/message tokens into the placeholder.
-///   3. `propose()` — calls /v1/coach/propose to crystallise the conversation
-///      into a structured CoachProposal. Sets `pendingProposal`.
-///   4. `accept()` — calls /v1/coach/accept. On success, clears proposal
+///   1. `openSession(agentId)` — hits /v1/brief/start.
+///   2. `send(text)` — streams /v1/brief/message tokens into the placeholder.
+///   3. `propose()` — calls /v1/brief/propose to crystallise the conversation
+///      into a structured BriefProposal. Sets `pendingProposal`.
+///   4. `accept()` — calls /v1/brief/accept. On success, clears proposal
 ///      and refreshes history. On refusal (server-side safety floor or limit),
 ///      surfaces `refusal` for the UI.
 ///   5. `reject()` — discards the pending proposal.
 ///   6. `loadHistory()` / `rollback(version)` — version-history utilities.
 library;
 
-import 'package:ami_trade/models/coach.dart';
+import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -28,8 +28,8 @@ class CoachRefusal {
 }
 
 @immutable
-class CoachState {
-  const CoachState({
+class BriefState {
+  const BriefState({
     this.session,
     this.currentOverlay,
     this.messages = const [],
@@ -42,25 +42,25 @@ class CoachState {
     this.savedOverlay,
   });
 
-  final CoachSession? session;
+  final BriefSession? session;
   final UserOverlay? currentOverlay;
   final List<ChatMessage> messages;
   final bool streaming;
   final bool proposing;
-  final CoachProposal? pendingProposal;
-  final CoachHistory? history;
+  final BriefProposal? pendingProposal;
+  final BriefHistory? history;
   final String? error;
   final CoachRefusal? refusal;
   final UserOverlay? savedOverlay;
 
-  CoachState copyWith({
-    CoachSession? session,
+  BriefState copyWith({
+    BriefSession? session,
     UserOverlay? currentOverlay,
     List<ChatMessage>? messages,
     bool? streaming,
     bool? proposing,
-    CoachProposal? pendingProposal,
-    CoachHistory? history,
+    BriefProposal? pendingProposal,
+    BriefHistory? history,
     String? error,
     CoachRefusal? refusal,
     UserOverlay? savedOverlay,
@@ -69,7 +69,7 @@ class CoachState {
     bool clearRefusal = false,
     bool clearSaved = false,
   }) {
-    return CoachState(
+    return BriefState(
       session: session ?? this.session,
       currentOverlay: currentOverlay ?? this.currentOverlay,
       messages: messages ?? this.messages,
@@ -84,8 +84,8 @@ class CoachState {
   }
 }
 
-class CoachNotifier extends StateNotifier<CoachState> {
-  CoachNotifier(this._ref, this._agentId) : super(const CoachState());
+class BriefNotifier extends StateNotifier<BriefState> {
+  BriefNotifier(this._ref, this._agentId) : super(const BriefState());
 
   final Ref _ref;
   final String _agentId;
@@ -95,7 +95,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final resp = await api.startCoach(
+      final resp = await api.startBrief(
         agentId: _agentId,
         userId: userId,
         mode: 'from_scratch',
@@ -131,7 +131,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     final buffer = StringBuffer();
 
     try {
-      final stream = api.streamCoachMessage(
+      final stream = api.streamBriefMessage(
         sessionId: session.id,
         userMessage: trimmed,
         history: history,
@@ -170,7 +170,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     state = state.copyWith(proposing: true, clearRefusal: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final proposal = await api.proposeCoachChange(
+      final proposal = await api.proposeBriefChange(
         sessionId: session.id,
         history: state.messages,
       );
@@ -186,7 +186,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     if (session == null || proposal == null) return;
     try {
       final api = _ref.read(apiClientProvider);
-      final result = await api.acceptCoachProposal(
+      final result = await api.acceptBriefProposal(
         sessionId: session.id,
         proposalId: proposal.id,
       );
@@ -220,7 +220,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     if (session == null || proposal == null) return;
     try {
       final api = _ref.read(apiClientProvider);
-      await api.rejectCoachProposal(sessionId: session.id, proposalId: proposal.id);
+      await api.rejectBriefProposal(sessionId: session.id, proposalId: proposal.id);
     } catch (_) {
       // Best-effort — the proposal is local-only state if the call fails.
     }
@@ -231,7 +231,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final h = await api.coachHistory(userId: userId, agentId: _agentId);
+      final h = await api.briefHistory(userId: userId, agentId: _agentId);
       state = state.copyWith(history: h);
     } catch (_) {
       // non-fatal
@@ -242,7 +242,7 @@ class CoachNotifier extends StateNotifier<CoachState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final rolled = await api.rollbackCoach(
+      final rolled = await api.rollbackBrief(
         userId: userId,
         agentId: _agentId,
         toVersion: version,
@@ -259,9 +259,9 @@ class CoachNotifier extends StateNotifier<CoachState> {
   }
 }
 
-final coachNotifierProvider = StateNotifierProvider.family
-    .autoDispose<CoachNotifier, CoachState, String>((ref, agentId) {
-  final notifier = CoachNotifier(ref, agentId);
+final briefNotifierProvider = StateNotifierProvider.family
+    .autoDispose<BriefNotifier, BriefState, String>((ref, agentId) {
+  final notifier = BriefNotifier(ref, agentId);
   Future.microtask(() => notifier.openSession());
   return notifier;
 });

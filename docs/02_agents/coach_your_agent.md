@@ -1,4 +1,4 @@
-# Coach Your Agent
+# Brief Your Agent
 
 The flagship differentiator. The user shapes how each of their 12 agents thinks — through conversation, not raw prompt editing.
 
@@ -13,11 +13,11 @@ This is the feature that earns AMI Trade the "AI-First" label. It is the single 
 ```
 agent.final_prompt = base_prompt           ← shipped by us, immutable
                    + mandate_overlay       ← auto-derived from mandate
-                   + user_overlay          ← edited by Coach Your Agent
+                   + user_overlay          ← edited by Brief Your Agent
                    + safety_floor          ← only on Portfolio Manager, uncoachable
 ```
 
-Coach Your Agent only edits the **user_overlay** block. The mandate overlay is regenerated only when the user edits their mandate; the user has no way to modify the mandate overlay directly through Coach. The safety floor (PM only) is invisible to Coach. (See [`safety_floor.md`](safety_floor.md).)
+Brief Your Agent only edits the **user_overlay** block. The mandate overlay is regenerated only when the user edits their mandate; the user has no way to modify the mandate overlay directly through Coach. The safety floor (PM only) is invisible to Coach. (See [`safety_floor.md`](safety_floor.md).)
 
 ## Session flow
 

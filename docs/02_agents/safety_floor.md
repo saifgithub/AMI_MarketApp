@@ -6,7 +6,7 @@ The single most important safety design in AMI Trade. Even users who "coach" all
 
 > **The Portfolio Manager's mandate enforcement cannot be coached away.**
 
-Coach Your Agent lets users tune the *style*, *prioritisation*, and *focus* of any agent — including the PM. It does **not** let users edit the part of PM's logic that checks compliance with their mandate and drawdown cap.
+Brief Your Agent lets users tune the *style*, *prioritisation*, and *focus* of any agent — including the PM. It does **not** let users edit the part of PM's logic that checks compliance with their mandate and drawdown cap.
 
 ## Two layers of defence
 
@@ -14,7 +14,7 @@ The safety floor is enforced at two layers:
 
 ### Layer 1 — Prompt-level safety floor
 
-After the user_overlay block in PM's prompt composition, a fixed block is appended that cannot be modified by Coach Your Agent:
+After the user_overlay block in PM's prompt composition, a fixed block is appended that cannot be modified by Brief Your Agent:
 
 ```
 agent.final_prompt = base_prompt
@@ -127,7 +127,7 @@ If the LLM tries to approve a non-compliant trade (whether due to coaching, jail
 
 ## What the user sees
 
-In the Coach Your Agent UI for PM, the safety floor block is shown as **visible but locked**:
+In the Brief Your Agent UI for PM, the safety floor block is shown as **visible but locked**:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -238,6 +238,6 @@ The chosen design is: **visible, locked, with a clear path (mandate edit) to leg
 
 ## Cross-references
 
-- Coach Your Agent: [`coach_your_agent.md`](coach_your_agent.md)
+- Brief Your Agent: [`coach_your_agent.md`](coach_your_agent.md)
 - Mandate schema (the source of truth that gets enforced): [`docs/03_onboarding/mandate_schema.md`](../03_onboarding/mandate_schema.md)
 - PM's overlay: [`mandate_overlays.md`](mandate_overlays.md#portfolio-manager)

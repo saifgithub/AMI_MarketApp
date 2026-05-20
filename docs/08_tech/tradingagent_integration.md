@@ -17,7 +17,7 @@ TradingAgentsService (our wrapper)
      ↓
 Apply mandate overlay to each agent's prompt
      ↓
-Apply user_overlay (from Coach Your Agent)
+Apply user_overlay (from Brief Your Agent)
      ↓
 Apply safety_floor (on Portfolio Manager only)
      ↓

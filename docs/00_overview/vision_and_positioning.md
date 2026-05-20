@@ -53,7 +53,7 @@ Secondary: **Prosumers and self-directed investors** who've outgrown beginner co
 | **AI** | One "Chart Analyzer" tool | **12 specialised agents** with visible reasoning and live debate |
 | **Personalisation** | Curriculum branches | **Mandate-driven** — every agent personalises to user's goals, horizon, risk, and constraints |
 | **Compliance options** | None | **Halal/Sharia** as a first-class mandate flag (huge for AR + MS markets) |
-| **Power-user features** | None | **Coach Your Agent** — users tune agent prompts via conversation |
+| **Power-user features** | None | **Brief Your Agent** — users tune agent prompts via conversation |
 | **Decision support** | Quizzes + simulator | **Sim portfolio with PM compliance check before every trade**, multi-agent debate as decision aid |
 | **Reasoning capture** | None | **Decision Journal** — every interaction permanently recorded and replayable |
 | **Languages** | 10 at launch | 3 at v1.0 (EN/AR/MS), pluggable architecture for more |
@@ -76,7 +76,7 @@ We are **not cheaper than Finelo**. We are **the same price ($14.99/mo Trader ti
 | Moat | Strength |
 |---|---|
 | **12-agent debate as visible UX** | Hard to copy — requires multi-agent orchestration *and* a way to make that legible to non-technical users |
-| **Coach Your Agent** | Unique in the category. Strong personalisation = high switching cost. |
+| **Brief Your Agent** | Unique in the category. Strong personalisation = high switching cost. |
 | **Decision Journal** | The longer a user is with us, the more valuable their journal becomes. Switching cost grows over time. |
 | **Halal/Sharia + Arabic + Malay positioning** | Mass-market competitors will not invest here. AR + MS markets get a *premium* product designed for them, not a translated afterthought. |
 | **AMI parent brand** | "Agentic Market Intel" is positioned to ship more agentic financial products — AMI Trade is product #1 in a planned portfolio. |

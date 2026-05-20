@@ -5,7 +5,7 @@ The mandate (see [`docs/03_onboarding/mandate_schema.md`](../03_onboarding/manda
 ```
 agent.final_prompt = base_prompt
                    + mandate_overlay(mandate)         ← auto-derived, non-editable
-                   + user_overlay(agent_id)           ← from Coach Your Agent
+                   + user_overlay(agent_id)           ← from Brief Your Agent
                    + safety_floor(agent_id)           ← only on Portfolio Manager
 ```
 

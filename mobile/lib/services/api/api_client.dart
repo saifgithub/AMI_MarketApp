@@ -14,7 +14,7 @@ import 'dart:io' show Platform;
 
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
-import 'package:ami_trade/models/coach.dart';
+import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -75,7 +75,7 @@ class ApiClient {
   /// Build a raw `http.Request` for SSE endpoints that can't go through Dio.
   /// Adversarial audit (2026-05-18) finding A8: previously these requests
   /// bypassed the Dio interceptor and sent no Authorization header, so
-  /// `/v1/coach/message`, `/v1/agents/one_on_one/message`, and
+  /// `/v1/brief/message`, `/v1/agents/one_on_one/message`, and
   /// `/v1/room/stream` would 401 once the backend enforced auth.
   http.Request _sseRequest(Uri uri, String body) {
     final token = _bearerToken;
@@ -165,14 +165,14 @@ class ApiClient {
 
   // ── Coach Your Agent ────────────────────────────────────────────
 
-  Future<CoachStartResponse> startCoach({
+  Future<BriefStartResponse> startBrief({
     required String agentId,
     required String userId,
     String mode = 'from_scratch',
     String locale = 'en',
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/coach/start',
+      '/v1/brief/start',
       data: {
         'agent_id': agentId,
         'user_id': userId,
@@ -180,15 +180,15 @@ class ApiClient {
         'locale': locale,
       },
     );
-    return CoachStartResponse.fromJson(r.data!);
+    return BriefStartResponse.fromJson(r.data!);
   }
 
-  Stream<String> streamCoachMessage({
+  Stream<String> streamBriefMessage({
     required String sessionId,
     required String userMessage,
     required List<ChatMessage> history,
   }) async* {
-    final uri = Uri.parse('$baseUrl/v1/coach/message');
+    final uri = Uri.parse('$baseUrl/v1/brief/message');
     final body = jsonEncode({
       'session_id': sessionId,
       'user_message': userMessage,
@@ -232,49 +232,49 @@ class ApiClient {
     }
   }
 
-  Future<CoachProposal> proposeCoachChange({
+  Future<BriefProposal> proposeBriefChange({
     required String sessionId,
     required List<ChatMessage> history,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/coach/propose',
+      '/v1/brief/propose',
       data: {
         'session_id': sessionId,
         'history': history.map((m) => m.toJson()).toList(),
       },
     );
-    return CoachProposal.fromJson(r.data!);
+    return BriefProposal.fromJson(r.data!);
   }
 
   /// Returns the new overlay if accepted, or a map with `refusal` if blocked.
-  Future<Map<String, dynamic>> acceptCoachProposal({
+  Future<Map<String, dynamic>> acceptBriefProposal({
     required String sessionId,
     required String proposalId,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/coach/accept',
+      '/v1/brief/accept',
       data: {'session_id': sessionId, 'proposal_id': proposalId},
     );
     return r.data!;
   }
 
-  Future<void> rejectCoachProposal({
+  Future<void> rejectBriefProposal({
     required String sessionId,
     required String proposalId,
   }) async {
     await _dio.post<Map<String, dynamic>>(
-      '/v1/coach/reject',
+      '/v1/brief/reject',
       data: {'session_id': sessionId, 'proposal_id': proposalId},
     );
   }
 
-  Future<UserOverlay> rollbackCoach({
+  Future<UserOverlay> rollbackBrief({
     required String userId,
     required String agentId,
     required int toVersion,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
-      '/v1/coach/rollback',
+      '/v1/brief/rollback',
       data: {
         'user_id': userId,
         'agent_id': agentId,
@@ -284,16 +284,16 @@ class ApiClient {
     return UserOverlay.fromJson(r.data!);
   }
 
-  Future<CoachHistory> coachHistory({
+  Future<BriefHistory> briefHistory({
     required String userId,
     required String agentId,
     String plan = 'trial_trader',
   }) async {
     final r = await _dio.get<Map<String, dynamic>>(
-      '/v1/coach/history/$userId/$agentId',
+      '/v1/brief/history/$userId/$agentId',
       queryParameters: {'plan': plan},
     );
-    return CoachHistory.fromJson(r.data!);
+    return BriefHistory.fromJson(r.data!);
   }
 
   /// Send a message and yield string chunks as they arrive (SSE).

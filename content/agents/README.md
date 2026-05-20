@@ -7,7 +7,7 @@ At runtime, the full prompt for any agent is composed as:
 ```
 agent.final_prompt = base_prompt (this file)
                    + mandate_overlay   ← from app/agents/overlay_generator.py
-                   + user_overlay      ← from Coach Your Agent (Postgres user_overlays)
+                   + user_overlay      ← from Brief Your Agent (Postgres user_overlays)
                    + safety_floor      ← only on Portfolio Manager, uncoachable
 ```
 

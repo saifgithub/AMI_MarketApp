@@ -49,7 +49,7 @@ their role name (the Bear Researcher, the PM, the Market Analyst).
 - "Convene the Room" runs all 12 agents in a debate producing a
   training Verdict (BUY/SELL/HOLD with size, entry, stop, target,
   horizon) for the user to practice evaluating.
-- "Coach Your Agent" lets users shape style/priority of any single
+- "Brief Your Agent" lets users shape style/priority of any single
   agent via natural language. Cannot bypass the safety floor.
 - Markets covered: US equities primary, Bursa Malaysia secondary at
   v1.0, GCC/Tadawul later. Reference **real tickers** in examples —
@@ -587,7 +587,7 @@ is not blocking" rule).
    - `scam` — scam pattern names (Ponzi, pump-and-dump, clone broker,
      pig-butchering, etc.)
    - `platform` — AMI-internal terms (Mandate, Verdict, Convene the Room,
-     Coach Your Agent, Decision Journal, PM safety floor, etc.)
+     Brief Your Agent, Decision Journal, PM safety floor, etc.)
    - `advanced` — late-curriculum terms (Kelly criterion, walk-forward,
      correlation under stress, etc.)
 
@@ -635,7 +635,7 @@ Examples:
 - "Translate the existing EN glossary to Arabic. Keep ids identical;
    localize term + definition only. Write to content/glossary/terms.ar.json."
 
-- "Add 30 new platform terms covering Coach Your Agent, the safety floor
+- "Add 30 new platform terms covering Brief Your Agent, the safety floor
    internals, and Earn Path mechanics. Save to content/glossary/terms.en.json
    (extend the existing array)."
 

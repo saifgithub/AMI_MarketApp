@@ -26,7 +26,7 @@ The user gets the **Trader tier experience** for 7 days:
 - 2 sim portfolios ($100K each)
 - Voice morning briefing
 - Unlimited 1-on-1s (within credit allowance)
-- Unlimited Coach Your Agent edits
+- Unlimited Brief Your Agent edits
 - Full Decision Journal history
 - Assistant Concierge tools (scheduling, summaries, etc.)
 
@@ -113,7 +113,7 @@ This is the only direct in-product nudge about the dual-gating during the trial.
 
 ### Mandate persistence
 - Mandate created during onboarding → persists indefinitely
-- Coach Your Agent edits → persist indefinitely
+- Brief Your Agent edits → persist indefinitely
 - Decision Journal entries → persist (subject to tier caps post-trial)
 
 ### Sim portfolio

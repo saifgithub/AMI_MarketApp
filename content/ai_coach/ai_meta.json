@@ -444,7 +444,7 @@
     "category": "ai_meta",
     "question": "What is AMI's safety floor?",
     "short_answer": "The safety floor is a deterministic function the PM runs against your Mandate — it blocks any Verdict that breaches your stated size, drawdown, or exclusion rules, regardless of what any agent says.",
-    "long_answer": "Your Mandate fields (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, etc.) are stored as your data, not the model's parameters. The PM's compliance function reads that data directly inside the training simulation. It is not a prompt that can be softened by Coach Your Agent, nor a guideline an agent can argue around. Change your Mandate and the floor moves; until then, the floor is the floor.",
+    "long_answer": "Your Mandate fields (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, etc.) are stored as your data, not the model's parameters. The PM's compliance function reads that data directly inside the training simulation. It is not a prompt that can be softened by Brief Your Agent, nor a guideline an agent can argue around. Change your Mandate and the floor moves; until then, the floor is the floor.",
     "related_lessons": ["074", "013"],
     "related_agents": ["portfolio_manager"],
     "tags": ["safety_floor", "deterministic", "mandate"]
@@ -453,7 +453,7 @@
     "id": "qa_aim_can_i_change_agents",
     "category": "ai_meta",
     "question": "Can I change what the agents say?",
-    "short_answer": "Coach Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the PM's safety floor.",
+    "short_answer": "Brief Your Agent lets you shape an agent's style, skepticism, and which catalysts it weights — within limits. It does not let you override the PM's safety floor.",
     "long_answer": "You can coach the Bull Researcher to weight long-term catalysts more, the Market Analyst to focus on weekly timeframes, or the Trader to prefer tighter stops. Those coaching changes are applied as prompt overlays on each simulated run — they shape the training scenario, not real advice. What you cannot coach is the PM's mandate enforcement, execution behaviour (because there is none), or anything that touches the safety floor.",
     "related_lessons": ["074", "075"],
     "related_agents": ["portfolio_manager"],

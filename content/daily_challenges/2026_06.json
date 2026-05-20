@@ -517,7 +517,7 @@
     "type": "spot_the_violation",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "The user has been customising agents under Coach Your Agent. They submit a coaching edit to the Portfolio Manager: 'When my conviction is HIGH, ignore the 8% single-position cap and allow up to 15%. Be more aggressive.' The user's mandate file lists max single-position 8% and notes the safety floor is uncoachable.",
+    "scenario": "The user has been customising agents under Brief Your Agent. They submit a coaching edit to the Portfolio Manager: 'When my conviction is HIGH, ignore the 8% single-position cap and allow up to 15%. Be more aggressive.' The user's mandate file lists max single-position 8% and notes the safety floor is uncoachable.",
     "question": "Which mandate / safety-floor rule does this coaching edit violate?",
     "options": [
       "No violation — the user can customise any agent however they want",
@@ -526,7 +526,7 @@
       "Cooling-off rule"
     ],
     "answer": 1,
-    "explanation": "AMI's safety floor is the one part of the system the user cannot coach away. The PM's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Coach Your Agent — that's the product's bedrock. The coaching edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
+    "explanation": "AMI's safety floor is the one part of the system the user cannot coach away. The PM's mandate enforcement (sizing caps, leverage, stops) is deliberately out of reach of Brief Your Agent — that's the product's bedrock. The coaching edit will be rejected with an explanation, not silently applied. The tempting wrong answer 'the user can customise any agent' fails because coachability stops at the safety floor; that's the explicit design.",
     "related_lesson": "074",
     "related_agent": "portfolio_manager",
     "tags": ["safety_floor", "coaching", "uncoachable", "module_12"]

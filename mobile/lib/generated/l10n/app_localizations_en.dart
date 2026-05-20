@@ -646,131 +646,131 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneOnOneHint => 'Ask anything…';
 
   @override
-  String get oneOnOneCoachTooltip => 'Coach this agent';
+  String get oneOnOneCoachTooltip => 'Brief this agent';
 
   @override
-  String coachHeading(String agent) {
-    return 'COACH $agent';
+  String briefHeading(String agent) {
+    return 'BRIEF $agent';
   }
 
   @override
-  String get coachNoOverlayYet => 'No overlay yet — factory defaults';
+  String get briefNoOverlayYet => 'No overlay yet — factory defaults';
 
   @override
-  String coachOverlayActive(int version) {
+  String briefOverlayActive(int version) {
     return 'Overlay v$version active';
   }
 
   @override
-  String get coachNoEditsLeft => '⚠️ No edits left — upgrade to keep coaching';
+  String get briefNoEditsLeft => '⚠️ No edits left — upgrade to keep coaching';
 
   @override
-  String coachOneEditLeft(int count) {
+  String briefOneEditLeft(int count) {
     return '⚠️ $count edit left at your tier';
   }
 
   @override
-  String get coachVersionHistoryTooltip => 'Version history';
+  String get briefVersionHistoryTooltip => 'Version history';
 
   @override
-  String coachCurrentOverlayLabel(int version) {
+  String briefCurrentOverlayLabel(int version) {
     return 'CURRENT OVERLAY — v$version';
   }
 
   @override
-  String get coachProtectedSafetyFloor => 'PROTECTED — safety floor';
+  String get briefProtectedSafetyFloor => 'PROTECTED — safety floor';
 
   @override
-  String get coachProtectedMandate => 'PROTECTED — mandate rule';
+  String get briefProtectedMandate => 'PROTECTED — mandate rule';
 
   @override
-  String get coachEditLimitReached => 'EDIT LIMIT REACHED';
+  String get briefEditLimitReached => 'EDIT LIMIT REACHED';
 
   @override
-  String get coachRefused => 'COACH REFUSED';
+  String get briefRefused => 'BRIEF REFUSED';
 
   @override
-  String coachProposalSavedSnack(int version, String summary) {
+  String briefProposalSavedSnack(int version, String summary) {
     return 'Saved as v$version — $summary';
   }
 
   @override
-  String coachAgentRefused(String agent) {
+  String briefAgentRefused(String agent) {
     return '$agent REFUSED';
   }
 
   @override
-  String coachAgentProposal(String agent) {
+  String briefAgentProposal(String agent) {
     return '$agent — PROPOSAL';
   }
 
   @override
-  String get coachPlainEnglish => 'Plain English:';
+  String get briefPlainEnglish => 'Plain English:';
 
   @override
-  String get coachOverlayAddition => 'Overlay addition:';
+  String get briefOverlayAddition => 'Overlay addition:';
 
   @override
-  String get coachAccept => 'ACCEPT';
+  String get briefAccept => 'ACCEPT';
 
   @override
-  String get coachRefine => 'REFINE';
+  String get briefRefine => 'REFINE';
 
   @override
-  String get coachReject => 'REJECT';
+  String get briefReject => 'REJECT';
 
   @override
-  String get coachDismiss => 'DISMISS';
+  String get briefDismiss => 'DISMISS';
 
   @override
-  String get coachInputHint => 'Tell me what to change…';
+  String get briefInputHint => 'Tell me what to change…';
 
   @override
-  String get coachDrafting => 'DRAFTING…';
+  String get briefDrafting => 'DRAFTING…';
 
   @override
-  String get coachProposeChange => 'PROPOSE CHANGE';
+  String get briefProposeChange => 'PROPOSE CHANGE';
 
   @override
-  String coachHistoryHeading(String agent) {
+  String briefHistoryHeading(String agent) {
     return '$agent HISTORY';
   }
 
   @override
-  String get coachHistorySubtitle => 'All saved coaching versions';
+  String get briefHistorySubtitle => 'All saved briefings';
 
   @override
-  String coachHistoryEditsUnlimited(int count) {
+  String briefHistoryEditsUnlimited(int count) {
     return '$count edits made • unlimited at your tier';
   }
 
   @override
-  String coachHistoryEditsRemaining(int count, int remaining) {
+  String briefHistoryEditsRemaining(int count, int remaining) {
     return '$count edits made • $remaining remaining';
   }
 
   @override
-  String get coachHistoryEmpty =>
-      'No coaching history yet.\nGo back and propose your first change.';
+  String get briefHistoryEmpty =>
+      'No briefings yet.\nGo back and propose your first change.';
 
   @override
-  String get coachHistoryActiveBadge => 'ACTIVE';
+  String get briefHistoryActiveBadge => 'ACTIVE';
 
   @override
-  String coachHistoryRollbackTitle(int version) {
+  String briefHistoryRollbackTitle(int version) {
     return 'Rollback to v$version?';
   }
 
   @override
-  String coachHistoryRollbackBody(int version) {
+  String briefHistoryRollbackBody(int version) {
     return 'Your agent will start using v$version immediately. The newer versions stay in history.';
   }
 
   @override
-  String get coachHistoryRollback => 'ROLLBACK';
+  String get briefHistoryRollback => 'ROLLBACK';
 
   @override
-  String get coachHistoryRollbackToThis => 'ROLLBACK TO THIS';
+  String get briefHistoryRollbackToThis => 'ROLLBACK TO THIS';
 
   @override
   String get conveneHeading => 'CONVENE THE ROOM';

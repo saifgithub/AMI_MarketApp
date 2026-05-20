@@ -1,7 +1,7 @@
 /// Coach Your Agent — the flagship screen.
 ///
 /// Conversation with an agent in "coach mode" + a "Propose change" CTA that
-/// asks the agent to crystallise the discussion into a CoachProposal. The
+/// asks the agent to crystallise the discussion into a BriefProposal. The
 /// proposal renders as a diff card with Accept / Refine / Reject. Accepting
 /// persists a new UserOverlay version (server-side) and refreshes history.
 ///
@@ -12,25 +12,25 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
-import 'package:ami_trade/models/coach.dart';
-import 'package:ami_trade/screens/agent/coach_history_screen.dart';
-import 'package:ami_trade/state/coach_providers.dart';
+import 'package:ami_trade/models/brief.dart';
+import 'package:ami_trade/screens/agent/brief_history_screen.dart';
+import 'package:ami_trade/state/brief_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class CoachScreen extends ConsumerStatefulWidget {
-  const CoachScreen({super.key, required this.agent});
+class BriefScreen extends ConsumerStatefulWidget {
+  const BriefScreen({super.key, required this.agent});
 
   final Agent agent;
 
   @override
-  ConsumerState<CoachScreen> createState() => _CoachScreenState();
+  ConsumerState<BriefScreen> createState() => _BriefScreenState();
 }
 
-class _CoachScreenState extends ConsumerState<CoachScreen> {
+class _BriefScreenState extends ConsumerState<BriefScreen> {
   final _textCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
 
@@ -56,44 +56,44 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     final txt = _textCtrl.text;
     if (txt.trim().isEmpty) return;
     _textCtrl.clear();
-    ref.read(coachNotifierProvider(widget.agent.id).notifier).send(txt);
+    ref.read(briefNotifierProvider(widget.agent.id).notifier).send(txt);
   }
 
   Future<void> _openHistory() async {
     await Navigator.of(context).push(MaterialPageRoute<void>(
-      builder: (_) => CoachHistoryScreen(agent: widget.agent),
+      builder: (_) => BriefHistoryScreen(agent: widget.agent),
     ));
     if (!mounted) return;
     // refresh history when returning
-    await ref.read(coachNotifierProvider(widget.agent.id).notifier).loadHistory();
+    await ref.read(briefNotifierProvider(widget.agent.id).notifier).loadHistory();
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(coachNotifierProvider(widget.agent.id));
+    final state = ref.watch(briefNotifierProvider(widget.agent.id));
 
     ref.listen<int>(
-      coachNotifierProvider(widget.agent.id).select((s) => s.messages.length),
+      briefNotifierProvider(widget.agent.id).select((s) => s.messages.length),
       (_, __) => _scrollToBottom(),
     );
     ref.listen<bool>(
-      coachNotifierProvider(widget.agent.id).select((s) => s.streaming),
+      briefNotifierProvider(widget.agent.id).select((s) => s.streaming),
       (_, __) => _scrollToBottom(),
     );
     ref.listen<UserOverlay?>(
-      coachNotifierProvider(widget.agent.id).select((s) => s.savedOverlay),
+      briefNotifierProvider(widget.agent.id).select((s) => s.savedOverlay),
       (_, saved) {
         if (saved != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(AppLocalizations.of(context)
-                  .coachProposalSavedSnack(saved.version, saved.plainEnglish)),
+                  .briefProposalSavedSnack(saved.version, saved.plainEnglish)),
               backgroundColor: AmiColors.slate800,
               behavior: SnackBarBehavior.floating,
             ),
           );
           ref
-              .read(coachNotifierProvider(widget.agent.id).notifier)
+              .read(briefNotifierProvider(widget.agent.id).notifier)
               .clearTransientFlags();
         }
       },
@@ -110,7 +110,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
             if (state.refusal != null)
               _RefusalBanner(refusal: state.refusal!, onDismiss: () {
                 ref
-                    .read(coachNotifierProvider(widget.agent.id).notifier)
+                    .read(briefNotifierProvider(widget.agent.id).notifier)
                     .clearTransientFlags();
               }),
             Expanded(child: _body(state)),
@@ -119,11 +119,11 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                 agent: widget.agent,
                 proposal: state.pendingProposal!,
                 onAccept: () =>
-                    ref.read(coachNotifierProvider(widget.agent.id).notifier).accept(),
+                    ref.read(briefNotifierProvider(widget.agent.id).notifier).accept(),
                 onReject: () =>
-                    ref.read(coachNotifierProvider(widget.agent.id).notifier).reject(),
+                    ref.read(briefNotifierProvider(widget.agent.id).notifier).reject(),
                 onRefine: () =>
-                    ref.read(coachNotifierProvider(widget.agent.id).notifier).reject(),
+                    ref.read(briefNotifierProvider(widget.agent.id).notifier).reject(),
               )
             else
               _InputBar(
@@ -133,7 +133,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
                 onSend: _send,
                 onPropose: state.messages.length >= 2
                     ? () =>
-                        ref.read(coachNotifierProvider(widget.agent.id).notifier).propose()
+                        ref.read(briefNotifierProvider(widget.agent.id).notifier).propose()
                     : null,
                 agentColor: widget.agent.color,
               ),
@@ -143,7 +143,7 @@ class _CoachScreenState extends ConsumerState<CoachScreen> {
     );
   }
 
-  Widget _body(CoachState state) {
+  Widget _body(BriefState state) {
     if (state.session == null && state.error == null) {
       return Center(child: CircularProgressIndicator(color: widget.agent.color));
     }
@@ -183,7 +183,7 @@ class _Header extends StatelessWidget {
   const _Header({required this.agent, required this.onHistory, required this.state});
   final Agent agent;
   final VoidCallback onHistory;
-  final CoachState state;
+  final BriefState state;
 
   @override
   Widget build(BuildContext context) {
@@ -211,15 +211,15 @@ class _Header extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  l.coachHeading(agent.displayName.toUpperCase()),
+                  l.briefHeading(agent.displayName.toUpperCase()),
                   style: AmiTypography.labelMono.copyWith(color: agent.color),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   version == 0
-                      ? l.coachNoOverlayYet
-                      : l.coachOverlayActive(version),
+                      ? l.briefNoOverlayYet
+                      : l.briefOverlayActive(version),
                   style: AmiTypography.caption,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -227,8 +227,8 @@ class _Header extends StatelessWidget {
                 if (editsLeft != null && editsLeft <= 1)
                   Text(
                     editsLeft == 0
-                        ? l.coachNoEditsLeft
-                        : l.coachOneEditLeft(editsLeft),
+                        ? l.briefNoEditsLeft
+                        : l.briefOneEditLeft(editsLeft),
                     style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
                   ),
               ],
@@ -236,7 +236,7 @@ class _Header extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.history, color: AmiColors.textMed),
-            tooltip: l.coachVersionHistoryTooltip,
+            tooltip: l.briefVersionHistoryTooltip,
             onPressed: onHistory,
           ),
         ],
@@ -265,7 +265,7 @@ class _CurrentOverlayBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppLocalizations.of(context).coachCurrentOverlayLabel(overlay.version),
+            AppLocalizations.of(context).briefCurrentOverlayLabel(overlay.version),
             style: AmiTypography.labelMono.copyWith(color: AmiColors.hexBlue),
           ),
           const SizedBox(height: AmiSpacing.xs),
@@ -305,12 +305,12 @@ class _RefusalBanner extends StatelessWidget {
               children: [
                 Text(
                   refusal.reason == 'safety_floor'
-                      ? l.coachProtectedSafetyFloor
+                      ? l.briefProtectedSafetyFloor
                       : refusal.reason == 'mandate_compliance'
-                          ? l.coachProtectedMandate
+                          ? l.briefProtectedMandate
                           : refusal.reason == 'edit_limit_reached'
-                              ? l.coachEditLimitReached
-                              : l.coachRefused,
+                              ? l.briefEditLimitReached
+                              : l.briefRefused,
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber),
                 ),
                 const SizedBox(height: 2),
@@ -345,7 +345,7 @@ class _DiffCard extends StatelessWidget {
   });
 
   final Agent agent;
-  final CoachProposal proposal;
+  final BriefProposal proposal;
   final VoidCallback onAccept;
   final VoidCallback onReject;
   final VoidCallback onRefine;
@@ -372,19 +372,19 @@ class _DiffCard extends StatelessWidget {
         children: [
           Text(
             isRefused
-                ? l.coachAgentRefused(agentUpper)
-                : l.coachAgentProposal(agentUpper),
+                ? l.briefAgentRefused(agentUpper)
+                : l.briefAgentProposal(agentUpper),
             style: AmiTypography.labelMono.copyWith(
               color: isRefused ? AmiColors.hexAmber : agent.color,
             ),
           ),
           const SizedBox(height: AmiSpacing.s),
-          Text(l.coachPlainEnglish, style: AmiTypography.caption),
+          Text(l.briefPlainEnglish, style: AmiTypography.caption),
           const SizedBox(height: 2),
           Text(proposal.plainEnglish, style: AmiTypography.body),
           if (!isRefused) ...[
             const SizedBox(height: AmiSpacing.m),
-            Text(l.coachOverlayAddition, style: AmiTypography.caption),
+            Text(l.briefOverlayAddition, style: AmiTypography.caption),
             const SizedBox(height: 2),
             Container(
               width: double.infinity,
@@ -411,7 +411,7 @@ class _DiffCard extends StatelessWidget {
                       foregroundColor: AmiColors.slate900,
                     ),
                     onPressed: onAccept,
-                    child: Text(l.coachAccept),
+                    child: Text(l.briefAccept),
                   ),
                 ),
               if (!isRefused) const SizedBox(width: AmiSpacing.s),
@@ -422,7 +422,7 @@ class _DiffCard extends StatelessWidget {
                     side: const BorderSide(color: AmiColors.slate700),
                   ),
                   onPressed: onRefine,
-                  child: Text(isRefused ? l.coachDismiss : l.coachRefine),
+                  child: Text(isRefused ? l.briefDismiss : l.briefRefine),
                 ),
               ),
               if (!isRefused) const SizedBox(width: AmiSpacing.s),
@@ -431,7 +431,7 @@ class _DiffCard extends StatelessWidget {
                   child: TextButton(
                     style: TextButton.styleFrom(foregroundColor: AmiColors.textLow),
                     onPressed: onReject,
-                    child: Text(l.coachReject),
+                    child: Text(l.briefReject),
                   ),
                 ),
             ],
@@ -496,7 +496,7 @@ class _InputBar extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.fact_check_outlined, size: 18),
-                  label: Text(proposing ? l.coachDrafting : l.coachProposeChange),
+                  label: Text(proposing ? l.briefDrafting : l.briefProposeChange),
                   onPressed: proposing ? null : onPropose,
                 ),
               ),
@@ -512,7 +512,7 @@ class _InputBar extends StatelessWidget {
                   enabled: !disabled,
                   onSubmitted: (_) => onSend(),
                   decoration: InputDecoration(
-                    hintText: disabled ? l.oneOnOneStreaming : l.coachInputHint,
+                    hintText: disabled ? l.oneOnOneStreaming : l.briefInputHint,
                     hintStyle: AmiTypography.body.copyWith(color: AmiColors.textLow),
                     filled: true,
                     fillColor: AmiColors.slate800,

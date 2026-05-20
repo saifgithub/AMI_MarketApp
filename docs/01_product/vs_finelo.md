@@ -43,7 +43,7 @@ These are the differentiators — none of Finelo's features above cover them.
 | 2 | **12 specialised AI agents** (TradingAgents framework) | Single chart analyser vs an entire analyst team. 12× the visible reasoning. |
 | 3 | **Convene the Room** | Visible multi-agent debate. No one else makes the reasoning legible at this scale. |
 | 4 | **1-on-1 with any agent** | Solo conversation with each role — like having a meeting with your fundamentals analyst, then your bear researcher. |
-| 5 | **Coach Your Agent** (conversational prompt tuning) | Users actively shape their team. Unique in the category. Switching cost goes up over time. |
+| 5 | **Brief Your Agent** (conversational prompt tuning) | Users actively shape their team. Unique in the category. Switching cost goes up over time. |
 | 6 | **AI Concierge as personal assistant** | Lesson routing, journal summary, scheduling, mute/promote agents — all by chat. |
 | 7 | **Halal / Sharia compliance as a first-class mandate flag** | Universe filter + debt-ratio check + interest-bearing exclusion. Mass-market apps ignore this. |
 | 8 | **Decision Journal with full transcripts** | Every Room, 1-on-1, trade, and mandate edit captured permanently. Replayable. The longer a user is with us, the more valuable their journal. |

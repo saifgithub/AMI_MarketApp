@@ -25,7 +25,7 @@ What ships in 12 weeks. iOS only. English only. Free for Founders cohort. The 12
 | Mandate overlay per agent prompt | ✓ |
 | 1-on-1 chat with any agent | ✓ |
 | Convene the Room (streaming logs + verdict card) | ✓ |
-| Coach Your Agent (conversational mode + diff + version history + safety floor) | ✓ |
+| Brief Your Agent (conversational mode + diff + version history + safety floor) | ✓ |
 | Concierge — Q&A + lesson routing + journal summary + basic scheduling | ✓ |
 | Decision Journal (all entries, full transcripts) | ✓ |
 | Sim portfolio + trade ticket + PM compliance pre-check | ✓ |
@@ -70,7 +70,7 @@ What ships in 12 weeks. iOS only. English only. Free for Founders cohort. The 12
 | Mandate Drift Alerts real-time | v1.0 |
 | Predict-the-Call free-text version | v1.0 (alpha is multiple-choice) |
 | 300 lessons (alpha ships with 100; ramp to 300 over v1.0 build) | v1.0 |
-| Coach Your Agent Raw Mode | v1.0 |
+| Brief Your Agent Raw Mode | v1.0 |
 | Real-time market data | v1.1 |
 | HMS AppGallery launch | v1.1 |
 | Per-agent performance scorecards + mute/promote | Phase 2 |

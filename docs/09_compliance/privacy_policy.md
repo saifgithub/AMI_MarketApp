@@ -45,7 +45,7 @@ We collect the prompts you send to our AMI analyst agents and the responses retu
 - Chat messages with the Concierge or any of the 12 analyst agents
 - Journal entries you write inside the app
 - The structured analyses produced for each ticker when you convene the Room (the multi-agent debate)
-- Coach Your Agent feedback you provide
+- Brief Your Agent feedback you provide
 
 > _Inspired by: [Character.AI Privacy Policy](https://character.ai/privacy)._
 
@@ -106,7 +106,7 @@ Unlike services that route your prompts through OpenAI, Anthropic, Google Gemini
 
 ## 9. How long we keep your agent conversations
 
-Prompts you send to AMI agents, and the responses returned, are retained in our LLM audit log for **90 days** for safety and quality review, and are then deleted. This retention period applies to chat messages, Convene-the-Room sessions, and Coach Your Agent feedback.
+Prompts you send to AMI agents, and the responses returned, are retained in our LLM audit log for **90 days** for safety and quality review, and are then deleted. This retention period applies to chat messages, Convene-the-Room sessions, and Brief Your Agent feedback.
 
 > _Inspired by: tighter than the open-ended "as necessary" wording in [Character.AI's policy](https://character.ai/privacy); the explicit 90-day cap is an AMI commitment._
 

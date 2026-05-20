@@ -92,7 +92,7 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 | Brand voice | Confident, analyst-to-analyst, numbers > adjectives, no marketing puffery. |
 | Pricing | Floor Pass (free, ads) / Trader $14.99 / Floor Manager $34.99 + credit packs. |
 | Onboarding | **Anonymous-first.** Concierge runs a conversational interview; account claim at the end. |
-| Coach Your Agent — safety floor | **PM mandate enforcement is uncoachable.** Hard floor in PM prompt + deterministic compliance check. |
+| Brief Your Agent — safety floor | **PM mandate enforcement is uncoachable.** Hard floor in PM prompt + deterministic compliance check. (Feature renamed from "Coach Your Agent" in AT:R27; the conceptual term "uncoachable" stays as the safety-floor's resistance label.) |
 
 Full decision log: [`docs/11_decisions/decision_log.md`](docs/11_decisions/decision_log.md).
 
@@ -133,7 +133,7 @@ Other essentials:
 - Don't try to be "helpful" by adding features Saiful didn't ask for.
 - Don't write tests that test the framework; test our logic.
 - Don't proactively run destructive commands (force push, reset hard, etc.).
-- Don't bypass the safety floor design in Coach Your Agent.
+- Don't bypass the safety floor design in Brief Your Agent.
 
 ---
 

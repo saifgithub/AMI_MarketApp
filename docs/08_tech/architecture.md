@@ -114,7 +114,7 @@ Mobile receives final via Realtime; renders verdict card
 Mobile prompts: "Open trade ticket?" / "Save and dismiss"
 ```
 
-### 2. Coach Your Agent
+### 2. Brief Your Agent
 
 ```
 User opens Coach session for Bear Researcher

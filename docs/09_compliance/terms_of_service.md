@@ -73,7 +73,7 @@ Subscription tiers (Floor Pass, Trader, Floor Manager) and one-time credit packs
 
 ## 7. Your content, your ownership
 
-You retain ownership of your journal entries, chat messages with agents, Coach Your Agent feedback, and bug reports.
+You retain ownership of your journal entries, chat messages with agents, Brief Your Agent feedback, and bug reports.
 
 You grant AMI a **non-exclusive, worldwide, royalty-free licence** to host, store, display, and process your content for the sole purpose of operating, securing, supporting, and improving the service. This licence ends when the content is deleted (whether by you or via our retention rules in the [Privacy Policy](privacy_policy.md)), with reasonable allowance for backup retention.
 

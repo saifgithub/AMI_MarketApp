@@ -1267,206 +1267,206 @@ abstract class AppLocalizations {
   /// No description provided for @oneOnOneCoachTooltip.
   ///
   /// In en, this message translates to:
-  /// **'Coach this agent'**
+  /// **'Brief this agent'**
   String get oneOnOneCoachTooltip;
 
   /// Coach Your Agent screen header. {agent} is the agent's display name in upper case.
   ///
   /// In en, this message translates to:
-  /// **'COACH {agent}'**
-  String coachHeading(String agent);
+  /// **'BRIEF {agent}'**
+  String briefHeading(String agent);
 
-  /// No description provided for @coachNoOverlayYet.
+  /// No description provided for @briefNoOverlayYet.
   ///
   /// In en, this message translates to:
   /// **'No overlay yet — factory defaults'**
-  String get coachNoOverlayYet;
+  String get briefNoOverlayYet;
 
   /// Header subtitle when an overlay is active. {version} is the integer version.
   ///
   /// In en, this message translates to:
   /// **'Overlay v{version} active'**
-  String coachOverlayActive(int version);
+  String briefOverlayActive(int version);
 
-  /// No description provided for @coachNoEditsLeft.
+  /// No description provided for @briefNoEditsLeft.
   ///
   /// In en, this message translates to:
   /// **'⚠️ No edits left — upgrade to keep coaching'**
-  String get coachNoEditsLeft;
+  String get briefNoEditsLeft;
 
   /// Amber notice when only 1 edit is left. {count} is the number remaining (typically 1).
   ///
   /// In en, this message translates to:
   /// **'⚠️ {count} edit left at your tier'**
-  String coachOneEditLeft(int count);
+  String briefOneEditLeft(int count);
 
-  /// No description provided for @coachVersionHistoryTooltip.
+  /// No description provided for @briefVersionHistoryTooltip.
   ///
   /// In en, this message translates to:
   /// **'Version history'**
-  String get coachVersionHistoryTooltip;
+  String get briefVersionHistoryTooltip;
 
   /// Banner label above the active overlay summary. {version} is the integer version.
   ///
   /// In en, this message translates to:
   /// **'CURRENT OVERLAY — v{version}'**
-  String coachCurrentOverlayLabel(int version);
+  String briefCurrentOverlayLabel(int version);
 
-  /// No description provided for @coachProtectedSafetyFloor.
+  /// No description provided for @briefProtectedSafetyFloor.
   ///
   /// In en, this message translates to:
   /// **'PROTECTED — safety floor'**
-  String get coachProtectedSafetyFloor;
+  String get briefProtectedSafetyFloor;
 
-  /// No description provided for @coachProtectedMandate.
+  /// No description provided for @briefProtectedMandate.
   ///
   /// In en, this message translates to:
   /// **'PROTECTED — mandate rule'**
-  String get coachProtectedMandate;
+  String get briefProtectedMandate;
 
-  /// No description provided for @coachEditLimitReached.
+  /// No description provided for @briefEditLimitReached.
   ///
   /// In en, this message translates to:
   /// **'EDIT LIMIT REACHED'**
-  String get coachEditLimitReached;
+  String get briefEditLimitReached;
 
-  /// No description provided for @coachRefused.
+  /// No description provided for @briefRefused.
   ///
   /// In en, this message translates to:
-  /// **'COACH REFUSED'**
-  String get coachRefused;
+  /// **'BRIEF REFUSED'**
+  String get briefRefused;
 
   /// Snackbar after a coach proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.
   ///
   /// In en, this message translates to:
   /// **'Saved as v{version} — {summary}'**
-  String coachProposalSavedSnack(int version, String summary);
+  String briefProposalSavedSnack(int version, String summary);
 
   /// Diff card title when an agent refuses a proposal. {agent} is the agent display name in upper case.
   ///
   /// In en, this message translates to:
   /// **'{agent} REFUSED'**
-  String coachAgentRefused(String agent);
+  String briefAgentRefused(String agent);
 
   /// Diff card title when an agent has drafted a proposal. {agent} is the agent display name in upper case.
   ///
   /// In en, this message translates to:
   /// **'{agent} — PROPOSAL'**
-  String coachAgentProposal(String agent);
+  String briefAgentProposal(String agent);
 
-  /// No description provided for @coachPlainEnglish.
+  /// No description provided for @briefPlainEnglish.
   ///
   /// In en, this message translates to:
   /// **'Plain English:'**
-  String get coachPlainEnglish;
+  String get briefPlainEnglish;
 
-  /// No description provided for @coachOverlayAddition.
+  /// No description provided for @briefOverlayAddition.
   ///
   /// In en, this message translates to:
   /// **'Overlay addition:'**
-  String get coachOverlayAddition;
+  String get briefOverlayAddition;
 
-  /// No description provided for @coachAccept.
+  /// No description provided for @briefAccept.
   ///
   /// In en, this message translates to:
   /// **'ACCEPT'**
-  String get coachAccept;
+  String get briefAccept;
 
-  /// No description provided for @coachRefine.
+  /// No description provided for @briefRefine.
   ///
   /// In en, this message translates to:
   /// **'REFINE'**
-  String get coachRefine;
+  String get briefRefine;
 
-  /// No description provided for @coachReject.
+  /// No description provided for @briefReject.
   ///
   /// In en, this message translates to:
   /// **'REJECT'**
-  String get coachReject;
+  String get briefReject;
 
-  /// No description provided for @coachDismiss.
+  /// No description provided for @briefDismiss.
   ///
   /// In en, this message translates to:
   /// **'DISMISS'**
-  String get coachDismiss;
+  String get briefDismiss;
 
-  /// No description provided for @coachInputHint.
+  /// No description provided for @briefInputHint.
   ///
   /// In en, this message translates to:
   /// **'Tell me what to change…'**
-  String get coachInputHint;
+  String get briefInputHint;
 
-  /// No description provided for @coachDrafting.
+  /// No description provided for @briefDrafting.
   ///
   /// In en, this message translates to:
   /// **'DRAFTING…'**
-  String get coachDrafting;
+  String get briefDrafting;
 
-  /// No description provided for @coachProposeChange.
+  /// No description provided for @briefProposeChange.
   ///
   /// In en, this message translates to:
   /// **'PROPOSE CHANGE'**
-  String get coachProposeChange;
+  String get briefProposeChange;
 
   /// Coach history screen title. {agent} is the agent's display name in upper case.
   ///
   /// In en, this message translates to:
   /// **'{agent} HISTORY'**
-  String coachHistoryHeading(String agent);
+  String briefHistoryHeading(String agent);
 
-  /// No description provided for @coachHistorySubtitle.
+  /// No description provided for @briefHistorySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'All saved coaching versions'**
-  String get coachHistorySubtitle;
+  /// **'All saved briefings'**
+  String get briefHistorySubtitle;
 
   /// Footer summary for unlimited-tier users. {count} is the edit count.
   ///
   /// In en, this message translates to:
   /// **'{count} edits made • unlimited at your tier'**
-  String coachHistoryEditsUnlimited(int count);
+  String briefHistoryEditsUnlimited(int count);
 
   /// Footer summary showing remaining edits. {count} edits made, {remaining} edits left.
   ///
   /// In en, this message translates to:
   /// **'{count} edits made • {remaining} remaining'**
-  String coachHistoryEditsRemaining(int count, int remaining);
+  String briefHistoryEditsRemaining(int count, int remaining);
 
-  /// No description provided for @coachHistoryEmpty.
+  /// No description provided for @briefHistoryEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No coaching history yet.\nGo back and propose your first change.'**
-  String get coachHistoryEmpty;
+  /// **'No briefings yet.\nGo back and propose your first change.'**
+  String get briefHistoryEmpty;
 
-  /// No description provided for @coachHistoryActiveBadge.
+  /// No description provided for @briefHistoryActiveBadge.
   ///
   /// In en, this message translates to:
   /// **'ACTIVE'**
-  String get coachHistoryActiveBadge;
+  String get briefHistoryActiveBadge;
 
   /// Confirm dialog title. {version} is the target version.
   ///
   /// In en, this message translates to:
   /// **'Rollback to v{version}?'**
-  String coachHistoryRollbackTitle(int version);
+  String briefHistoryRollbackTitle(int version);
 
   /// Confirm dialog body. {version} is the target version.
   ///
   /// In en, this message translates to:
   /// **'Your agent will start using v{version} immediately. The newer versions stay in history.'**
-  String coachHistoryRollbackBody(int version);
+  String briefHistoryRollbackBody(int version);
 
-  /// No description provided for @coachHistoryRollback.
+  /// No description provided for @briefHistoryRollback.
   ///
   /// In en, this message translates to:
   /// **'ROLLBACK'**
-  String get coachHistoryRollback;
+  String get briefHistoryRollback;
 
-  /// No description provided for @coachHistoryRollbackToThis.
+  /// No description provided for @briefHistoryRollbackToThis.
   ///
   /// In en, this message translates to:
   /// **'ROLLBACK TO THIS'**
-  String get coachHistoryRollbackToThis;
+  String get briefHistoryRollbackToThis;
 
   /// No description provided for @conveneHeading.
   ///

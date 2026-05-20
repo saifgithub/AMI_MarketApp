@@ -2,7 +2,7 @@
 
 The 12 agents are powered by the [TradingAgents](https://github.com/TauricResearch/TradingAgents) framework (mounted at `/Volumes/Extreme Pro/TradingAgent/`). Their roles are inherited; their *behaviour for our users* is customised through:
 - **Mandate overlays** (auto-derived, non-editable — see [`mandate_overlays.md`](mandate_overlays.md))
-- **User overlays** (from Coach Your Agent — see [`coach_your_agent.md`](coach_your_agent.md))
+- **User overlays** (from Brief Your Agent — see [`coach_your_agent.md`](coach_your_agent.md))
 - **Safety floor** (uncoachable, only on Portfolio Manager — see [`safety_floor.md`](safety_floor.md))
 
 ## The roster
@@ -162,7 +162,7 @@ Plus, distinct from the 12:
 
 **Mandate enforcement.** This is the gatekeeper. The **safety floor** lives here — see [`safety_floor.md`](safety_floor.md).
 
-**Coaching.** Users can coach PM's *style* and *prioritisation* via Coach Your Agent. They **cannot** coach away the mandate-enforcement safety floor.
+**Coaching.** Users can coach PM's *style* and *prioritisation* via Brief Your Agent. They **cannot** coach away the mandate-enforcement safety floor.
 
 ## Agent families & role colors (in product)
 

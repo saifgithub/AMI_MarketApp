@@ -1,17 +1,17 @@
-/// Coach Your Agent — client-side models.
-/// Mirrors backend/app/schemas/coach.py.
+/// Brief Your Agent — client-side models (was Coach — renamed AT:R27).
+/// Mirrors backend/app/schemas/brief.py.
 library;
 
-enum CoachMode { fromScratch, fromPastCalls, raw }
+enum BriefMode { fromScratch, fromPastCalls, raw }
 
-extension CoachModeJson on CoachMode {
+extension BriefModeJson on BriefMode {
   String get wire {
     switch (this) {
-      case CoachMode.fromScratch:
+      case BriefMode.fromScratch:
         return 'from_scratch';
-      case CoachMode.fromPastCalls:
+      case BriefMode.fromPastCalls:
         return 'from_past_calls';
-      case CoachMode.raw:
+      case BriefMode.raw:
         return 'raw';
     }
   }
@@ -52,8 +52,8 @@ class UserOverlay {
   }
 }
 
-class CoachProposal {
-  const CoachProposal({
+class BriefProposal {
+  const BriefProposal({
     required this.id,
     required this.sessionId,
     required this.plainEnglish,
@@ -71,8 +71,8 @@ class CoachProposal {
   final bool refused;
   final String? refusalReason;
 
-  factory CoachProposal.fromJson(Map<String, dynamic> j) {
-    return CoachProposal(
+  factory BriefProposal.fromJson(Map<String, dynamic> j) {
+    return BriefProposal(
       id: j['id'] as String,
       sessionId: j['session_id'] as String,
       plainEnglish: j['plain_english'] as String? ?? '',
@@ -84,8 +84,8 @@ class CoachProposal {
   }
 }
 
-class CoachSession {
-  const CoachSession({
+class BriefSession {
+  const BriefSession({
     required this.id,
     required this.userId,
     required this.agentId,
@@ -101,8 +101,8 @@ class CoachSession {
   final String locale;
   final int baseOverlayVersion;
 
-  factory CoachSession.fromJson(Map<String, dynamic> j) {
-    return CoachSession(
+  factory BriefSession.fromJson(Map<String, dynamic> j) {
+    return BriefSession(
       id: j['id'] as String,
       userId: j['user_id'] as String,
       agentId: j['agent_id'] as String,
@@ -113,21 +113,21 @@ class CoachSession {
   }
 }
 
-class CoachStartResponse {
-  const CoachStartResponse({
+class BriefStartResponse {
+  const BriefStartResponse({
     required this.session,
     required this.openingMessage,
     this.currentOverlay,
   });
 
-  final CoachSession session;
+  final BriefSession session;
   final UserOverlay? currentOverlay;
   final String openingMessage;
 
-  factory CoachStartResponse.fromJson(Map<String, dynamic> j) {
+  factory BriefStartResponse.fromJson(Map<String, dynamic> j) {
     final overlayJson = j['current_overlay'];
-    return CoachStartResponse(
-      session: CoachSession.fromJson(j['session'] as Map<String, dynamic>),
+    return BriefStartResponse(
+      session: BriefSession.fromJson(j['session'] as Map<String, dynamic>),
       currentOverlay: overlayJson == null
           ? null
           : UserOverlay.fromJson(overlayJson as Map<String, dynamic>),
@@ -136,8 +136,8 @@ class CoachStartResponse {
   }
 }
 
-class CoachHistory {
-  const CoachHistory({
+class BriefHistory {
+  const BriefHistory({
     required this.agentId,
     required this.userId,
     required this.versions,
@@ -153,9 +153,9 @@ class CoachHistory {
   final int editCount;
   final int? editsRemaining;
 
-  factory CoachHistory.fromJson(Map<String, dynamic> j) {
+  factory BriefHistory.fromJson(Map<String, dynamic> j) {
     final list = (j['versions'] as List<dynamic>?) ?? const [];
-    return CoachHistory(
+    return BriefHistory(
       agentId: j['agent_id'] as String,
       userId: j['user_id'] as String,
       versions: list

@@ -47,7 +47,7 @@ This list goes to programmatic networks as a blocklist + manual review for any d
 |---|---|
 | Floor home screen (the honeycomb) | Brand sanctity — the signature screen |
 | Concierge conversation | Would destroy trust in the assistant |
-| Convene the Room / 1-on-1 / Coach Your Agent | Would destroy product perception ("am I paying attention to my agent or to an ad?") |
+| Convene the Room / 1-on-1 / Brief Your Agent | Would destroy product perception ("am I paying attention to my agent or to an ad?") |
 | Inside Agent profile cards | The team metaphor breaks |
 | Inside Mandate flows | Too sensitive a context |
 | Onboarding / first-run | Set the brand cleanly before monetizing attention |

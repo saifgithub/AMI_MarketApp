@@ -1585,7 +1585,7 @@
   },
   {
     "id": "ami_coach_your_agent",
-    "term": "Coach Your Agent",
+    "term": "Brief Your Agent",
     "definition": "A simulator feature that lets the user shape an individual agent's style or analytical priorities through natural-language guidance. Coaching modifies the agent's reasoning surface; it cannot bypass the Portfolio Manager safety floor.",
     "category": "platform",
     "see_also": ["ami_pm_safety_floor", "ami_mandate"],

@@ -12,7 +12,7 @@
 | **W4** | TradingAgents containerised. Mandate overlay generator wired. First end-to-end 1-on-1 working: user → Bear Researcher → response. | Lessons 31–50. Agent Academy module spec drafted (one per agent). |
 | **W5** | All 12 agents responding via 1-on-1. Streaming responses via Supabase Realtime. Quick-1-on-1 bottom sheet. | Agent Academy modules 1–6 drafted. Lessons 51–70. |
 | **W6** | Convene the Room v1: full TradingAgentsGraph orchestration. Matrix Console streaming. Verdict card. PM compliance check function. | Agent Academy modules 7–12 drafted. Lessons 71–90. |
-| **W7** | Coach Your Agent: conversational + diff card + version save. Safety floor on PM (both prompt + deterministic check). | Lessons 91–100. Agent Academy modules 1–6 reviewed. |
+| **W7** | Brief Your Agent: conversational + diff card + version save. Safety floor on PM (both prompt + deterministic check). | Lessons 91–100. Agent Academy modules 1–6 reviewed. |
 | **W8** | Sim portfolio + trade ticket + PM compliance pre-check + Decision Journal (transcripts, search, replay). | Daily challenge generator. Agent Academy modules 7–12 reviewed. Saiful: open GCP, Supabase Cloud, RevenueCat (or defer). |
 | **W9** | Concierge as personal assistant: tools (search_lessons, search_journal, schedule_briefing, set_reminder, mute_agent, route_to_agent). **GCP migration starts**: provision via Terraform (Cloud Run + Supabase Cloud project + Secret Manager + Cloud Scheduler). | Privacy Policy + ToS first draft. Halal screening universe data sourced. |
 | **W10** | Floor home — static honeycomb with 12 agents + Concierge centre + briefing card + mandate health strip + watchlist signals. **GCP migration completes**: `pg_dump` → Supabase Cloud restore, backend deploy to Cloud Run, DNS cutover, smoke tests. Local stack stays warm as fallback. | Saiful: lawyer reviews legal docs. |
@@ -54,7 +54,7 @@ W4: First agent end-to-end (depends on auth + onboarding + TradingAgents)
    ↓
 W5-6: All 12 agents + Convene (depends on first agent working)
    ↓
-W7: Coach Your Agent (depends on agents)
+W7: Brief Your Agent (depends on agents)
    ↓
 W8-10: Surface features — Sim, Journal, Concierge, Floor home
    ↓
@@ -73,7 +73,7 @@ Lesson cadence target: **~10 lessons per week × 10 weeks = 100 lessons.** Each 
 
 - **W11 polish week** is the primary buffer. If we're behind by W10, we cut polish (e.g., simpler honeycomb), not features.
 - **App Store review** typically takes 1–3 days for a finance-adjacent app. We submit W11 to give 2-week buffer before W12 launch.
-- **If a week slips**: cut one thing from the Agent Academy modules (e.g., the Predict-the-Call exercise simplifies to a quiz) before cutting from Tier 1 (12 agents, Coach Your Agent, Convene).
+- **If a week slips**: cut one thing from the Agent Academy modules (e.g., the Predict-the-Call exercise simplifies to a quiz) before cutting from Tier 1 (12 agents, Brief Your Agent, Convene).
 
 ## Daily rhythm (suggestion)
 

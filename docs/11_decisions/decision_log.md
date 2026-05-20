@@ -76,7 +76,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 ### D-013 — Agents are the user's "team of analysts"
 - **Decided**: Reframe agents as the user's *employees* — they work for the user
 - **Source**: Saiful — "Trading Agents should be seen as the 'employee' of the user"
-- **Rationale**: Makes the agent metaphor concrete. Powers the Coach Your Agent feature. Makes mandate-driven personalisation intuitive.
+- **Rationale**: Makes the agent metaphor concrete. Powers the Brief Your Agent feature. Makes mandate-driven personalisation intuitive.
 
 ### D-014 — Concierge as 13th agent
 - **Decided**: Add a Concierge agent for product help / lesson routing / scheduling, distinct from the 12 trading agents
@@ -121,7 +121,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 
 ---
 
-## Coach Your Agent
+## Brief Your Agent
 
 ### D-022 — Conversational prompt tuning, not raw markdown editing
 - **Decided**: Users coach via conversation; agent proposes diff; user approves

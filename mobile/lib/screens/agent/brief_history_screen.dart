@@ -7,34 +7,34 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
-import 'package:ami_trade/models/coach.dart';
-import 'package:ami_trade/state/coach_providers.dart';
+import 'package:ami_trade/models/brief.dart';
+import 'package:ami_trade/state/brief_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class CoachHistoryScreen extends ConsumerStatefulWidget {
-  const CoachHistoryScreen({super.key, required this.agent});
+class BriefHistoryScreen extends ConsumerStatefulWidget {
+  const BriefHistoryScreen({super.key, required this.agent});
 
   final Agent agent;
 
   @override
-  ConsumerState<CoachHistoryScreen> createState() => _CoachHistoryScreenState();
+  ConsumerState<BriefHistoryScreen> createState() => _BriefHistoryScreenState();
 }
 
-class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
+class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() =>
-        ref.read(coachNotifierProvider(widget.agent.id).notifier).loadHistory());
+        ref.read(briefNotifierProvider(widget.agent.id).notifier).loadHistory());
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(coachNotifierProvider(widget.agent.id));
+    final state = ref.watch(briefNotifierProvider(widget.agent.id));
     final history = state.history;
 
     return Scaffold(
@@ -52,8 +52,8 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
                 child: Text(
                   history.editsRemaining == null
                       ? AppLocalizations.of(context)
-                          .coachHistoryEditsUnlimited(history.editCount)
-                      : AppLocalizations.of(context).coachHistoryEditsRemaining(
+                          .briefHistoryEditsUnlimited(history.editCount)
+                      : AppLocalizations.of(context).briefHistoryEditsRemaining(
                           history.editCount, history.editsRemaining!),
                   style: AmiTypography.caption,
                 ),
@@ -64,7 +64,7 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
     );
   }
 
-  Widget _body(CoachState state) {
+  Widget _body(BriefState state) {
     final history = state.history;
     if (history == null) {
       return Center(
@@ -80,7 +80,7 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
             const Icon(Icons.history, color: AmiColors.textLow, size: 48),
             const SizedBox(height: AmiSpacing.m),
             Text(
-              AppLocalizations.of(context).coachHistoryEmpty,
+              AppLocalizations.of(context).briefHistoryEmpty,
               textAlign: TextAlign.center,
               style: AmiTypography.body,
             ),
@@ -109,10 +109,10 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
                     context: context,
                     builder: (_) => AlertDialog(
                       backgroundColor: AmiColors.slate800,
-                      title: Text(l.coachHistoryRollbackTitle(v.version),
+                      title: Text(l.briefHistoryRollbackTitle(v.version),
                           style: AmiTypography.h4),
                       content: Text(
-                        l.coachHistoryRollbackBody(v.version),
+                        l.briefHistoryRollbackBody(v.version),
                         style: AmiTypography.body,
                       ),
                       actions: [
@@ -126,14 +126,14 @@ class _CoachHistoryScreenState extends ConsumerState<CoachHistoryScreen> {
                             foregroundColor: AmiColors.slate900,
                           ),
                           onPressed: () => Navigator.of(context).pop(true),
-                          child: Text(l.coachHistoryRollback),
+                          child: Text(l.briefHistoryRollback),
                         ),
                       ],
                     ),
                   );
                   if (confirmed == true && mounted) {
                     await ref
-                        .read(coachNotifierProvider(widget.agent.id).notifier)
+                        .read(briefNotifierProvider(widget.agent.id).notifier)
                         .rollback(v.version);
                   }
                 },
@@ -171,9 +171,9 @@ class _Header extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(AppLocalizations.of(context)
-                        .coachHistoryHeading(agent.displayName.toUpperCase()),
+                        .briefHistoryHeading(agent.displayName.toUpperCase()),
                     style: AmiTypography.labelMono.copyWith(color: agent.color)),
-                Text(AppLocalizations.of(context).coachHistorySubtitle,
+                Text(AppLocalizations.of(context).briefHistorySubtitle,
                     style: AmiTypography.caption),
               ],
             ),
@@ -227,7 +227,7 @@ class _VersionCard extends StatelessWidget {
                     color: agent.color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: Text(AppLocalizations.of(context).coachHistoryActiveBadge,
+                  child: Text(AppLocalizations.of(context).briefHistoryActiveBadge,
                       style: AmiTypography.labelMono.copyWith(
                           color: agent.color, fontSize: 10)),
                 ),
@@ -254,7 +254,7 @@ class _VersionCard extends StatelessWidget {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 icon: const Icon(Icons.restore, size: 16),
-                label: Text(AppLocalizations.of(context).coachHistoryRollbackToThis),
+                label: Text(AppLocalizations.of(context).briefHistoryRollbackToThis),
                 style: TextButton.styleFrom(foregroundColor: agent.color),
                 onPressed: onRollback,
               ),

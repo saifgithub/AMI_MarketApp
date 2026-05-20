@@ -1,4 +1,4 @@
-"""Tests for the Coach Your Agent engine + overlay store.
+"""Tests for the Brief Your Agent engine + overlay store (was Coach — renamed AT:R27).
 
 Coverage:
   - Open session yields a sensible opener.
@@ -26,14 +26,14 @@ from uuid import uuid4
 import pytest
 
 from app.schemas import AgentId, Mandate
-from app.schemas.coach import CoachMode, CoachProposal, CoachRefusal, UserOverlay
+from app.schemas.brief import BriefMode, BriefProposal, BriefRefusal, UserOverlay
 from app.schemas.mandate import Plan
 from app.schemas.one_on_one import ChatMsg
 from app.services.agent_prompts import build_agent_prompt
-from app.services.coach_engine import (
-    CoachEngine,
+from app.services.brief_engine import (
+    BriefEngine,
     heuristic_refusal_check,
-    hydrate_coach_mandate,
+    hydrate_brief_mandate,
 )
 from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier, MockProvider
 from app.services.overlay_store import OverlayStore
@@ -56,38 +56,38 @@ def mock_gateway() -> LLMGateway:
 
 
 @pytest.fixture
-def engine(mock_gateway: LLMGateway, fresh_store: OverlayStore) -> CoachEngine:
-    return CoachEngine(mock_gateway, fresh_store)
+def engine(mock_gateway: LLMGateway, fresh_store: OverlayStore) -> BriefEngine:
+    return BriefEngine(mock_gateway, fresh_store)
 
 
 @pytest.fixture
 def trader_mandate() -> Mandate:
-    return hydrate_coach_mandate({"plan": "trader", "user_id": str(uuid4())})
+    return hydrate_brief_mandate({"plan": "trader", "user_id": str(uuid4())})
 
 
 # ── Basics ─────────────────────────────────────────────────────────────────
 
 
-def test_open_session_returns_opening_message(engine: CoachEngine, trader_mandate: Mandate):
+def test_open_session_returns_opening_message(engine: BriefEngine, trader_mandate: Mandate):
     session, current, opener = engine.open_session(
         user_id=uuid4(),
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=trader_mandate,
     )
     assert current is None
     assert "Bear Researcher" in opener
     assert "what do you want" in opener.lower() or "factory defaults" in opener.lower()
     assert session.agent_id == AgentId.BEAR_RESEARCHER.value
-    assert session.mode == CoachMode.FROM_SCRATCH.value
+    assert session.mode == BriefMode.FROM_SCRATCH.value
 
 
-def test_propose_with_mock_seeds_proposal_from_last_user_message(engine: CoachEngine, trader_mandate: Mandate):
+def test_propose_with_mock_seeds_proposal_from_last_user_message(engine: BriefEngine, trader_mandate: Mandate):
     user_id = uuid4()
     session, _, _ = engine.open_session(
         user_id=user_id,
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=trader_mandate,
     )
     history = [
@@ -97,24 +97,24 @@ def test_propose_with_mock_seeds_proposal_from_last_user_message(engine: CoachEn
     proposal = asyncio.run(engine.propose(session=session, history=history))
     assert not proposal.refused
     assert "less negative on AI infrastructure" in proposal.plain_english
-    assert "Coaching note" in proposal.overlay_addition
+    assert "Briefing note" in proposal.overlay_addition
     assert proposal.full_overlay_preview  # non-empty
     assert session.pending_proposal is not None
 
 
 def test_accept_persists_new_version_and_increments_edit_count(
-    engine: CoachEngine, trader_mandate: Mandate, fresh_store: OverlayStore
+    engine: BriefEngine, trader_mandate: Mandate, fresh_store: OverlayStore
 ):
     user_id = uuid4()
     session, _, _ = engine.open_session(
         user_id=user_id,
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=trader_mandate,
     )
     history = [ChatMsg(role="user", content="Be more constructive, less doomy.")]
     proposal = asyncio.run(engine.propose(session=session, history=history))
-    assert isinstance(proposal, CoachProposal)
+    assert isinstance(proposal, BriefProposal)
 
     result = engine.accept(session=session, proposal_id=proposal.id)
     assert isinstance(result, UserOverlay)
@@ -124,12 +124,12 @@ def test_accept_persists_new_version_and_increments_edit_count(
     assert session.pending_proposal is None
 
 
-def test_reject_discards_proposal(engine: CoachEngine, trader_mandate: Mandate, fresh_store: OverlayStore):
+def test_reject_discards_proposal(engine: BriefEngine, trader_mandate: Mandate, fresh_store: OverlayStore):
     user_id = uuid4()
     session, _, _ = engine.open_session(
         user_id=user_id,
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=trader_mandate,
     )
     proposal = asyncio.run(
@@ -176,7 +176,7 @@ def test_mandate_compliance_refuses_override_attempts(trader_mandate: Mandate):
 
 
 def test_long_only_mandate_refuses_short_proposals():
-    mandate = hydrate_coach_mandate({"compliance": {"long_only": True}})
+    mandate = hydrate_brief_mandate({"compliance": {"long_only": True}})
     refusal = heuristic_refusal_check(
         "Go short on overvalued names when the setup looks good.",
         AgentId.TRADER,
@@ -200,15 +200,15 @@ def test_clean_proposal_passes_heuristic(trader_mandate: Mandate):
 
 def test_floor_pass_capped_at_three_lifetime_edits(mock_gateway: LLMGateway):
     store = OverlayStore()
-    engine = CoachEngine(mock_gateway, store)
+    engine = BriefEngine(mock_gateway, store)
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "floor_pass"})
+    mandate = hydrate_brief_mandate({"plan": "floor_pass"})
 
     for i in range(3):
         session, _, _ = engine.open_session(
             user_id=user_id,
             agent_id=AgentId.BEAR_RESEARCHER,
-            mode=CoachMode.FROM_SCRATCH,
+            mode=BriefMode.FROM_SCRATCH,
             mandate=mandate,
         )
         proposal = asyncio.run(
@@ -223,28 +223,28 @@ def test_floor_pass_capped_at_three_lifetime_edits(mock_gateway: LLMGateway):
     session, _, _ = engine.open_session(
         user_id=user_id,
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=mandate,
     )
     proposal = asyncio.run(
         engine.propose(session=session, history=[ChatMsg(role="user", content="edit number 4")])
     )
     result = engine.accept(session=session, proposal_id=proposal.id)
-    assert isinstance(result, CoachRefusal)
+    assert isinstance(result, BriefRefusal)
     assert result.reason == "edit_limit_reached"
     assert store.edit_count(user_id, AgentId.BEAR_RESEARCHER) == 3
 
 
 def test_trader_plan_has_unlimited_edits(mock_gateway: LLMGateway):
     store = OverlayStore()
-    engine = CoachEngine(mock_gateway, store)
+    engine = BriefEngine(mock_gateway, store)
     user_id = uuid4()
-    mandate = hydrate_coach_mandate({"plan": "trader"})
+    mandate = hydrate_brief_mandate({"plan": "trader"})
     for i in range(6):
         session, _, _ = engine.open_session(
             user_id=user_id,
             agent_id=AgentId.BEAR_RESEARCHER,
-            mode=CoachMode.FROM_SCRATCH,
+            mode=BriefMode.FROM_SCRATCH,
             mandate=mandate,
         )
         proposal = asyncio.run(
@@ -305,7 +305,7 @@ def test_user_overlay_appended_when_user_id_provided(trader_mandate: Mandate):
     store.save_new_version(
         user_id=user_id,
         agent_id=AgentId.BEAR_RESEARCHER,
-        content="## Coaching note\n- Skip macro doom narratives.",
+        content="## Briefing note\n- Skip macro doom narratives.",
         plain_english="Skip macro doom.",
         plan=Plan.TRADER,
     )
@@ -323,7 +323,7 @@ def test_user_overlay_appears_before_safety_floor_on_pm(trader_mandate: Mandate)
     store.save_new_version(
         user_id=user_id,
         agent_id=AgentId.PORTFOLIO_MANAGER,
-        content="## Coaching note\n- Prioritise long-horizon thinking.",
+        content="## Briefing note\n- Prioritise long-horizon thinking.",
         plain_english="Long horizon.",
         plan=Plan.TRADER,
     )
@@ -342,11 +342,11 @@ def test_no_overlay_when_user_id_none(trader_mandate: Mandate):
 # ── Streaming chat smoke ───────────────────────────────────────────────────
 
 
-def test_stream_chat_yields_text(engine: CoachEngine, trader_mandate: Mandate):
+def test_stream_chat_yields_text(engine: BriefEngine, trader_mandate: Mandate):
     session, _, _ = engine.open_session(
         user_id=uuid4(),
         agent_id=AgentId.BEAR_RESEARCHER,
-        mode=CoachMode.FROM_SCRATCH,
+        mode=BriefMode.FROM_SCRATCH,
         mandate=trader_mandate,
     )
 

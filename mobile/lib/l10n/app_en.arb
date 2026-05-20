@@ -316,89 +316,89 @@
     "oneOnOneAskAnything": "Ask me anything in my domain.\nType below to start.",
     "oneOnOneStreaming": "Streaming…",
     "oneOnOneHint": "Ask anything…",
-    "oneOnOneCoachTooltip": "Coach this agent",
+    "oneOnOneCoachTooltip": "Brief this agent",
 
-    "coachHeading": "COACH {agent}",
-    "@coachHeading": {
+    "briefHeading": "BRIEF {agent}",
+    "@briefHeading": {
         "description": "Coach Your Agent screen header. {agent} is the agent's display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
-    "coachNoOverlayYet": "No overlay yet — factory defaults",
-    "coachOverlayActive": "Overlay v{version} active",
-    "@coachOverlayActive": {
+    "briefNoOverlayYet": "No overlay yet — factory defaults",
+    "briefOverlayActive": "Overlay v{version} active",
+    "@briefOverlayActive": {
         "description": "Header subtitle when an overlay is active. {version} is the integer version.",
         "placeholders": {"version": {"type": "int"}}
     },
-    "coachNoEditsLeft": "⚠️ No edits left — upgrade to keep coaching",
-    "coachOneEditLeft": "⚠️ {count} edit left at your tier",
-    "@coachOneEditLeft": {
+    "briefNoEditsLeft": "⚠️ No edits left — upgrade to keep coaching",
+    "briefOneEditLeft": "⚠️ {count} edit left at your tier",
+    "@briefOneEditLeft": {
         "description": "Amber notice when only 1 edit is left. {count} is the number remaining (typically 1).",
         "placeholders": {"count": {"type": "int"}}
     },
-    "coachVersionHistoryTooltip": "Version history",
-    "coachCurrentOverlayLabel": "CURRENT OVERLAY — v{version}",
-    "@coachCurrentOverlayLabel": {
+    "briefVersionHistoryTooltip": "Version history",
+    "briefCurrentOverlayLabel": "CURRENT OVERLAY — v{version}",
+    "@briefCurrentOverlayLabel": {
         "description": "Banner label above the active overlay summary. {version} is the integer version.",
         "placeholders": {"version": {"type": "int"}}
     },
-    "coachProtectedSafetyFloor": "PROTECTED — safety floor",
-    "coachProtectedMandate": "PROTECTED — mandate rule",
-    "coachEditLimitReached": "EDIT LIMIT REACHED",
-    "coachRefused": "COACH REFUSED",
-    "coachProposalSavedSnack": "Saved as v{version} — {summary}",
-    "@coachProposalSavedSnack": {
+    "briefProtectedSafetyFloor": "PROTECTED — safety floor",
+    "briefProtectedMandate": "PROTECTED — mandate rule",
+    "briefEditLimitReached": "EDIT LIMIT REACHED",
+    "briefRefused": "BRIEF REFUSED",
+    "briefProposalSavedSnack": "Saved as v{version} — {summary}",
+    "@briefProposalSavedSnack": {
         "description": "Snackbar after a coach proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.",
         "placeholders": {"version": {"type": "int"}, "summary": {"type": "String"}}
     },
-    "coachAgentRefused": "{agent} REFUSED",
-    "@coachAgentRefused": {
+    "briefAgentRefused": "{agent} REFUSED",
+    "@briefAgentRefused": {
         "description": "Diff card title when an agent refuses a proposal. {agent} is the agent display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
-    "coachAgentProposal": "{agent} — PROPOSAL",
-    "@coachAgentProposal": {
+    "briefAgentProposal": "{agent} — PROPOSAL",
+    "@briefAgentProposal": {
         "description": "Diff card title when an agent has drafted a proposal. {agent} is the agent display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
-    "coachPlainEnglish": "Plain English:",
-    "coachOverlayAddition": "Overlay addition:",
-    "coachAccept": "ACCEPT",
-    "coachRefine": "REFINE",
-    "coachReject": "REJECT",
-    "coachDismiss": "DISMISS",
-    "coachInputHint": "Tell me what to change…",
-    "coachDrafting": "DRAFTING…",
-    "coachProposeChange": "PROPOSE CHANGE",
-    "coachHistoryHeading": "{agent} HISTORY",
-    "@coachHistoryHeading": {
+    "briefPlainEnglish": "Plain English:",
+    "briefOverlayAddition": "Overlay addition:",
+    "briefAccept": "ACCEPT",
+    "briefRefine": "REFINE",
+    "briefReject": "REJECT",
+    "briefDismiss": "DISMISS",
+    "briefInputHint": "Tell me what to change…",
+    "briefDrafting": "DRAFTING…",
+    "briefProposeChange": "PROPOSE CHANGE",
+    "briefHistoryHeading": "{agent} HISTORY",
+    "@briefHistoryHeading": {
         "description": "Coach history screen title. {agent} is the agent's display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
-    "coachHistorySubtitle": "All saved coaching versions",
-    "coachHistoryEditsUnlimited": "{count} edits made • unlimited at your tier",
-    "@coachHistoryEditsUnlimited": {
+    "briefHistorySubtitle": "All saved briefings",
+    "briefHistoryEditsUnlimited": "{count} edits made • unlimited at your tier",
+    "@briefHistoryEditsUnlimited": {
         "description": "Footer summary for unlimited-tier users. {count} is the edit count.",
         "placeholders": {"count": {"type": "int"}}
     },
-    "coachHistoryEditsRemaining": "{count} edits made • {remaining} remaining",
-    "@coachHistoryEditsRemaining": {
+    "briefHistoryEditsRemaining": "{count} edits made • {remaining} remaining",
+    "@briefHistoryEditsRemaining": {
         "description": "Footer summary showing remaining edits. {count} edits made, {remaining} edits left.",
         "placeholders": {"count": {"type": "int"}, "remaining": {"type": "int"}}
     },
-    "coachHistoryEmpty": "No coaching history yet.\nGo back and propose your first change.",
-    "coachHistoryActiveBadge": "ACTIVE",
-    "coachHistoryRollbackTitle": "Rollback to v{version}?",
-    "@coachHistoryRollbackTitle": {
+    "briefHistoryEmpty": "No briefings yet.\nGo back and propose your first change.",
+    "briefHistoryActiveBadge": "ACTIVE",
+    "briefHistoryRollbackTitle": "Rollback to v{version}?",
+    "@briefHistoryRollbackTitle": {
         "description": "Confirm dialog title. {version} is the target version.",
         "placeholders": {"version": {"type": "int"}}
     },
-    "coachHistoryRollbackBody": "Your agent will start using v{version} immediately. The newer versions stay in history.",
-    "@coachHistoryRollbackBody": {
+    "briefHistoryRollbackBody": "Your agent will start using v{version} immediately. The newer versions stay in history.",
+    "@briefHistoryRollbackBody": {
         "description": "Confirm dialog body. {version} is the target version.",
         "placeholders": {"version": {"type": "int"}}
     },
-    "coachHistoryRollback": "ROLLBACK",
-    "coachHistoryRollbackToThis": "ROLLBACK TO THIS",
+    "briefHistoryRollback": "ROLLBACK",
+    "briefHistoryRollbackToThis": "ROLLBACK TO THIS",
 
     "conveneHeading": "CONVENE THE ROOM",
     "convenePickTicker": "Pick a ticker. Your full team runs the debate.",

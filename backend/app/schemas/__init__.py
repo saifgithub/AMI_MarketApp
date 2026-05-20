@@ -8,14 +8,23 @@ from app.schemas.agents import (
     AgentMessage,
     TWELVE_AGENT_IDS,
 )
-from app.schemas.coach import (
-    CoachHistoryResponse,
-    CoachMode,
-    CoachProposal,
-    CoachRefusal,
-    CoachSession,
+from app.schemas.brief import (
+    BriefHistoryResponse,
+    BriefMode,
+    BriefProposal,
+    BriefRefusal,
+    BriefSession,
     UserOverlay,
 )
+
+# Back-compat aliases — Coach Your Agent was renamed to Brief in AT:R27.
+# Keep until the codebase is fully swept + Flutter +17 testers retired.
+CoachHistoryResponse = BriefHistoryResponse
+CoachMode = BriefMode
+CoachProposal = BriefProposal
+CoachRefusal = BriefRefusal
+CoachSession = BriefSession
+
 from app.schemas.mandate import (
     Compliance,
     DailyBriefing,
@@ -38,6 +47,12 @@ __all__ = [
     "AgentActivation",
     "AgentId",
     "AgentMessage",
+    "BriefHistoryResponse",
+    "BriefMode",
+    "BriefProposal",
+    "BriefRefusal",
+    "BriefSession",
+    # Deprecated aliases (kept for back-compat)
     "CoachHistoryResponse",
     "CoachMode",
     "CoachProposal",
