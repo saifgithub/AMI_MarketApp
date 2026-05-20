@@ -1,7 +1,7 @@
 """Admin back-office: suspended_at, trial columns, subscription_events
 
 Revision ID: a9d1c7e80006
-Revises: f7d9b2e60005
+Revises: b1c4e8d70007
 Create Date: 2026-05-20
 
 AT:R27 — Admin back-office foundation.
@@ -27,7 +27,7 @@ import app.db.base  # noqa: F401 — exposes Uuid / JsonB to autogen DDL
 
 
 revision: str = "a9d1c7e80006"
-down_revision: Union[str, Sequence[str], None] = "f7d9b2e60005"
+down_revision: Union[str, Sequence[str], None] = "b1c4e8d70007"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
