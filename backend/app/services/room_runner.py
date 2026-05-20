@@ -957,10 +957,12 @@ async def _speak_one_agent(
 
     text: str
     if live:
+        # Pass ctx.user_id so build_agent_prompt picks up the user's
+        # active Brief overlay (was user_id=None — AT:R27 bugfix).
         system_prompt, messages = build_room_messages(
             agent_id=agent_id,
             mandate=ctx.mandate,
-            user_id=None,
+            user_id=ctx.user_id,
             ticker=ctx.ticker,
             profile=profile,
             transcript=run.transcript,
@@ -1034,10 +1036,13 @@ async def _stream_pm_narration(
     """
     plan = ctx.mandate.plan if isinstance(ctx.mandate.plan, Plan) else Plan(ctx.mandate.plan)
     tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
+    # Pass ctx.user_id so build_agent_prompt picks up the user's active
+    # Brief overlay for the PM (was user_id=None — AT:R27 bugfix). Note:
+    # PM safety_floor still appends LAST regardless of overlay content.
     system_prompt, messages = build_room_messages(
         agent_id=AgentId.PORTFOLIO_MANAGER,
         mandate=ctx.mandate,
-        user_id=None,
+        user_id=ctx.user_id,
         ticker=ctx.ticker,
         profile=profile,
         transcript=run.transcript,
