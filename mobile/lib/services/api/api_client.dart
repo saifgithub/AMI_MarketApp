@@ -815,23 +815,17 @@ class ApiClient {
     String? userId,
     String? fullName,
   }) async {
-    try {
-      final r = await _dio.post<Map<String, dynamic>>(
-        '/v1/auth/apple',
-        data: {
-          'identity_token': identityToken,
-          if (userId != null) 'user_id': userId,
-          if (fullName != null) 'full_name': fullName,
-        },
-      );
-      return AuthVerifyResponse.fromJson(r.data!);
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 503) {
-        throw Exception(
-            'Apple sign-in isn\'t live in Alpha yet — use email sign-in instead.');
-      }
-      rethrow;
-    }
+    // Phase 3 (AT:R29): backend verifies the identity_token against
+    // Apple's JWKS. 400 on bad signature / wrong iss/aud / expired.
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/apple',
+      data: {
+        'identity_token': identityToken,
+        if (userId != null) 'user_id': userId,
+        if (fullName != null) 'full_name': fullName,
+      },
+    );
+    return AuthVerifyResponse.fromJson(r.data!);
   }
 
   Future<void> signOut() async {

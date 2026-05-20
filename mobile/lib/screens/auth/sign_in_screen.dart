@@ -1,16 +1,15 @@
 /// Sign-in screen — opens from Settings → Account.
 ///
 /// Anonymous users see two claim paths:
-///   1. Sign in with Apple — calls Sign in with Apple natively (when wired
-///      to a real Apple Developer setup); the scaffold path just sends a
-///      synthetic JWT so the backend flow can be exercised end-to-end.
+///   1. Sign in with Apple — native Sign in with Apple via the
+///      `sign_in_with_apple` package; the returned identity_token is
+///      verified against Apple's JWKS by the backend (Phase 3, AT:R29).
 ///   2. Continue with email — sends a 6-digit code; in dev the code is
 ///      returned from the backend so the alpha tester can paste it without
 ///      a real email being sent.
 ///
 /// Already-claimed users see a "Signed in as you@example.com" line + the
-/// option to stay (no sign-out flow yet; that lands when real Supabase
-/// plugs in).
+/// option to stay.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -18,6 +17,7 @@ import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -70,22 +70,64 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
-  Future<void> _signInWithAppleScaffold() async {
-    // Scaffold path: hand the backend a synthetic JWT. Real prod swaps
-    // this for `sign_in_with_apple` (the package) on iOS — the backend
-    // contract stays the same.
-    const fakeIdToken =
-        'eyJhbGciOiJSUzI1NiIsImtpZCI6ImFiYyJ9'
-        '.eyJzdWIiOiJzY2FmZm9sZC1hcHBsZS11c2VyIn0'
-        '.c2lnbmF0dXJl';
-    final ok = await ref
-        .read(authNotifierProvider.notifier)
-        .signInWithApple(fakeIdToken);
+  Future<void> _signInWithApple() async {
+    // Native Sign in with Apple → returns a real RSA-signed identity
+    // token from Apple. Backend verifies the signature against Apple's
+    // JWKS and the iss/aud/exp claims (OIDCVerifier, AT:R29).
+    final AuthorizationCredentialAppleID credential;
+    try {
+      credential = await SignInWithApple.getAppleIDCredential(
+        scopes: const [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      // User cancelled or denied — silent no-op for cancellation;
+      // anything else surfaces as a snackbar.
+      if (!mounted) return;
+      if (e.code == AuthorizationErrorCode.canceled) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Apple sign-in failed: ${e.code.name}')),
+      );
+      return;
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Apple sign-in failed: $e')),
+      );
+      return;
+    }
+
+    final identityToken = credential.identityToken;
+    if (identityToken == null || identityToken.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Apple returned no identity token')),
+      );
+      return;
+    }
+
+    // Apple only sends `givenName`/`familyName` on the first auth per
+    // app install. After that they're null — we capture once and let
+    // the backend persist if it wants the display name.
+    final fullName = [credential.givenName, credential.familyName]
+        .whereType<String>()
+        .where((s) => s.isNotEmpty)
+        .join(' ')
+        .trim();
+
+    final ok = await ref.read(authNotifierProvider.notifier).signInWithApple(
+          identityToken,
+          fullName: fullName.isEmpty ? null : fullName,
+        );
     if (!mounted) return;
     if (ok) {
       Navigator.of(context).pop();
     } else {
-      final msg = ref.read(authNotifierProvider).error
+      final msg = ref
+              .read(authNotifierProvider)
+              .error
               ?.replaceFirst('Exception: ', '') ??
           AppLocalizations.of(context).signInAppleFailed;
       ScaffoldMessenger.of(context)
@@ -123,14 +165,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
             _AppleButton(
               onPressed:
-                  auth.loading ? null : _signInWithAppleScaffold,
-            ),
-            const SizedBox(height: AmiSpacing.xs),
-            Text(
-              'Coming in v1.0 — use email sign-in for now',
-              textAlign: TextAlign.center,
-              style:
-                  AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                  auth.loading ? null : _signInWithApple,
             ),
             const SizedBox(height: AmiSpacing.l),
             _EmailClaimCard(
