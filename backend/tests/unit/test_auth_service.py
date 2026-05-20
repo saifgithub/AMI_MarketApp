@@ -12,9 +12,12 @@ from app.services.auth_service import AuthService
 from app.services.oidc_verifier import OIDCVerificationError
 
 
-def _apple_jwt(sub: str) -> str:
+def _apple_jwt(sub: str, *, email: str | None = None) -> str:
     header = base64.urlsafe_b64encode(b'{"alg":"RS256","kid":"abc"}').rstrip(b"=").decode()
-    body = base64.urlsafe_b64encode(json.dumps({"sub": sub}).encode()).rstrip(b"=").decode()
+    payload: dict = {"sub": sub}
+    if email is not None:
+        payload["email"] = email
+    body = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
     sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
     return f"{header}.{body}.{sig}"
 
@@ -123,3 +126,57 @@ def test_apple_rejects_undecodable_jwt():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     with pytest.raises(ValueError):
         auth.sign_in_with_apple(identity_token="not-a-jwt", user_id=None)
+
+
+def test_apple_first_auth_persists_email_claim():
+    """Apple ships the email claim only on first auth; we persist it."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-with-email", email="alpha@example.com"),
+        user_id=user_id,
+    )
+    assert user.email == "alpha@example.com"
+    assert user.apple_id == "apple-sub-with-email"
+
+
+def test_apple_subsequent_auth_without_email_keeps_existing():
+    """Subsequent Apple sign-ins don't ship the email claim. Existing
+    row's email must be preserved, not blanked out."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    # First auth — email present.
+    auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1", email="first@example.com"),
+        user_id=user_id,
+    )
+    # Second auth — Apple's contract: no email claim. Mobile sends the
+    # same identity_token shape but the JWT body has no email key.
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),  # no email
+        user_id=user_id,
+    )
+    assert user.email == "first@example.com"  # preserved
+
+
+def test_apple_does_not_overwrite_existing_email():
+    """If a user claimed via magic-link first (real email), then linked
+    Apple later (might be a `@privaterelay.appleid.com` relay), keep the
+    real email — never overwrite a populated email field."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    # Magic-link claim first → user.email = real email.
+    code = auth.start_magic_link(email="real@example.com", user_id=user_id)
+    auth.verify_magic_link(email="real@example.com", code=code, user_id=user_id)
+    # Then Apple sign-in with a relay address.
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt(
+            "apple-sub-relay", email="abc123@privaterelay.appleid.com"
+        ),
+        user_id=user_id,
+    )
+    assert user.email == "real@example.com"  # NOT overwritten
+    assert user.apple_id == "apple-sub-relay"

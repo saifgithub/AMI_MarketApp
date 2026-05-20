@@ -260,6 +260,24 @@ class AuthService:
         if not apple_sub:
             raise ValueError("apple identity_token missing 'sub' claim")
         apple_sub = str(apple_sub)
+        # Apple's first-auth-only contract: `email` (real or
+        # `@privaterelay.appleid.com` relay) ships only on the very first
+        # authorization per Apple-ID/app pair. Subsequent sign-ins omit
+        # the claim. So persist on first sight; never overwrite a value
+        # already in the row.
+        apple_email = claims.get("email")
+        apple_email = str(apple_email) if apple_email else None
+        # `full_name` is also first-auth-only and comes from the request
+        # body (the iOS SDK only returns it on the initial consent
+        # screen). `users.display_name` column doesn't exist yet — log
+        # for now; persistence lands when we add the column.
+        if full_name:
+            logger.info(
+                "apple_sign_in_full_name_received",
+                user_id=str(user_id) if user_id else None,
+                full_name=full_name,
+                note="not persisted — users.display_name column not added yet",
+            )
         with get_session() as s:
             # Prefer matching an existing apple_id row.
             row = s.execute(
@@ -272,6 +290,7 @@ class AuthService:
                     id=user_id or uuid4(),
                     device_user_id=user_id,
                     apple_id=apple_sub,
+                    email=apple_email,
                     is_anonymous=False,
                     claimed_at=datetime.now(timezone.utc),
                 )
@@ -279,6 +298,11 @@ class AuthService:
                 s.flush()
             else:
                 row.apple_id = apple_sub
+                # Never overwrite a populated email — protects against a
+                # user who first claimed via magic-link (real email) and
+                # later linked Apple (might be the relay address).
+                if apple_email and not row.email:
+                    row.email = apple_email
                 if row.is_anonymous:
                     row.is_anonymous = False
                     row.claimed_at = datetime.now(timezone.utc)
