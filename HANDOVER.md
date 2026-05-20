@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-19 (end of AT:R26 — closed three carry-overs in one promote. Bug:a84361f6 (Apple sign-in 503 glitch) fixed in the Flutter `api_client.dart` — DioException with 503 now throws a readable "Apple sign-in isn't live in Alpha yet" message; sign-in screen surfaces it via the snackbar (stripping the `Exception: ` prefix) and a caption under the Apple button sets expectations before the tap. **B4 closed**: `http_audit` middleware scrubs request + response bodies for `/v1/auth/{anon,magic_link/start,magic_link/verify,apple,session}` — bearer tokens, magic-link codes, and Apple JWTs no longer sit in audit rows. **Phase 4 sign-out shipped**: `DELETE /v1/auth/session` (stateless 200, hooks future blocklist); Flutter `AuthNotifier.signOut()` clears the Dio token, wipes SharedPreferences via `DeviceUser.clear()`, resets state, and calls `bootstrap()` so `_AuthGate` re-mints a fresh anon session without hanging. Red "Sign out" button in Settings → Account, visible only when `!user.isAnonymous`. **SMTP magic-link email wired** via stdlib `smtplib` (no new dep): `email_service.send_magic_link()` is a no-op when `SMTP_HOST=""` (alpha debug-code fallback preserved) and never raises on send failure. Saiful added 5 SMTP keys to `infra/alpha.env` pointing at `mail.agenticmarketintel.ai:465` SSL — DNS still NXDOMAIN at session-end (Cloudflare gray-cloud A record visible in dashboard but not surfacing on lou/rihana NS), so real email delivery is still gated on that resolving. Deployed as `alpha-2026-05-19-3` at `07f0974`; TestFlight `0.1.0+17` uploaded. 6 commits this session (incl. merge + a Silent_Scout `07_voice/` research dir from Saiful). **318 backend tests passing** (+12 new: `test_http_audit_scrub.py` + `test_email_service.py`).)
+**Last updated:** 2026-05-20 (end of AT:R27 — big session, 8 commits, 8 alpha tags). **Admin back-office foundation** shipped: `users.suspended_at` + `subscription_events` table (10 event types) + 9 endpoints at `/v1/admin/*` gated by static `ADMIN_SECRET` bearer + suspension enforcement in `get_current_user` + a single-file AMI-styled admin web UI at `/admin` (vanilla HTML/CSS/JS, no build step, usable from iPhone Safari). **Coach Your Agent → Brief Your Agent rename** complete end-to-end: backend (`/v1/brief/*` canonical, `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), Flutter (renamed `BriefScreen`/`BriefNotifier`/etc. + new `AgentActionSheet` widget on Floor with `[1-ON-1]` and `[BRIEF]` buttons fixing the discoverability gap), 33 l10n keys renamed across EN/AR/MS, 13+ content files swept (lessons, ai_meta Q&A, daily challenges, glossary definition), 27+ docs files swept, CLAUDE.md updated. Audit followup added 5 prompt-overlay regression tests and surfaced a real bug: **`room_runner.py` was hard-coding `user_id=None` when calling `build_room_messages`**, so user_overlays never reached the LLM during Convene the Room (1-on-1 was wired correctly). Fixed at lines 963 + 1040 with a source-level regression test that will catch any future revert. Also wired `ADMIN_SECRET` + the 5 `SMTP_*` env vars into `docker-compose.yml` (both were never being passed to the container — silent gaps). **348 backend tests passing** (was 318 — +5 prompt overlay regression + +25 admin tests + new test_brief_engine.py renamed from test_coach_engine.py).
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,24 +15,24 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **215 commits**, no remote yet |
-| Latest commit | `e04604b` — chore(mobile): bump build 0.1.0+16 → 0.1.0+17 for TestFlight |
-| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` + `alpha-2026-05-19-{2,3}` (latest `alpha-2026-05-19-3` — http_audit B4 scrub + Phase 4 sign-out + SMTP wiring) |
-| Backend tests | **318 passed, 0 failed** (was 306; +12 this session: `test_http_audit_scrub.py` covers SCRUB_PATHS produce `[REDACTED]` bodies for auth routes; `test_email_service.py` covers SMTP_SSL on 465, STARTTLS on 587, no-op when host empty, no-raise on send failure, plus the sign-out endpoint 200/401 check) |
-| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; unchanged this session) |
+| Git state | Clean working tree, **226 commits**, no remote yet |
+| Latest work commit | `9793c25` — chore(brief): audit sweep — close all user-facing Coach→Brief residuals (AT:R27). The actual HEAD is the handover-wrap commit immediately after; the count includes it. |
+| Alpha tags | `alpha-2026-05-13-{1..8}` + `alpha-2026-05-14-{1..9}` + `alpha-2026-05-15-{1..4}` + `alpha-2026-05-16-1` + `alpha-2026-05-17-{1..5}` + `alpha-2026-05-19-{2,3}` + `alpha-2026-05-20-{1..8}` (latest `alpha-2026-05-20-8` — Brief rename audit sweep + LLM prompt header BRIEFING + journal filter chip rename) |
+| Backend tests | **348 passed, 0 failed** (was 318; +30 net this session: +25 admin endpoints in `test_admin.py` covering all 9 routes + suspension enforcement, +5 prompt-overlay regression in `test_agent_prompts.py` covering build_agent_prompt overlay layering and the room_runner user_id=ctx.user_id source-level assertion. `test_coach_engine.py` was renamed to `test_brief_engine.py` with class renames inline.) |
+| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys** (EN canonical; 33 `coach*` keys renamed to `brief*` this session — same count, no new keys) |
 
 ```
 $ git log --oneline | head -10
-e04604b chore(mobile): bump build 0.1.0+16 → 0.1.0+17 for TestFlight
-07f0974 docs(silent_scout): add 07_voice/ — on-device STT+TTS research track
-c2ae379 feat(auth): Phase 4 sign-out — Flutter client clears token + re-bootstraps
-f7b6214 feat(auth): http_audit scrubbing (B4) + sign-out endpoint + SMTP email
-4edd0a1 Merge branch 'claude/bug-fix-20260519-140401' — fix(bug:a84361f6): Apple sign-in 503 glitch
-cd4a3f2 fix(bug:a84361f6): Apple sign-in 503 glitch — friendly message + visual hint
-4121eed docs(handover): sync HANDOVER table with post-wrap deviation-fix commits
-9012e35 docs(promote): surface AMI_ENV + SECRET_KEY in alpha.env.example + preflight
-c8b2bf0 handover: wrap AT:R25 — Phase 1 + 1.5 auth + Alpha promote
-12a5da8 fix(compose): wire SECRET_KEY env var into api-alpha container
+9793c25 chore(brief): audit sweep — close all user-facing Coach→Brief residuals (AT:R27)
+cf56afe fix(brief): thread user_id through Convene the Room — overlays now apply (AT:R27)
+2646971 feat(brief): rename Coach Your Agent → Brief Your Agent + Floor discoverability (AT:R27)
+1baeed6 feat(admin): single-page admin UI at /admin (AT:R27)
+28eb261 fix(compose): wire SMTP_* into api-alpha container env (AT:R27)
+fdeb14b fix(compose): wire ADMIN_SECRET into api-alpha container env (AT:R27)
+fbe1570 fix(migration): rebase admin_backoffice onto b1c4e8d70007 head
+faf4958 feat(admin): back-office foundation — plan/trial/credit/suspend API (AT:R27)
+453fbe4 docs(handover): elevate SMTP DNS blocker + drop worktree-pattern footnote
+febc06b handover: wrap AT:R26 — bug:a84361f6 + B4 + Phase 4 + SMTP wired
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -45,14 +45,23 @@ c8b2bf0 handover: wrap AT:R25 — Phase 1 + 1.5 auth + Alpha promote
 | Health from outside the LAN | `curl https://api-alpha.agenticmarketintel.ai/v1/health` |
 | Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
-| Routes | `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/coach/*`, `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`) |
-| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **318 passed** (was 306; AT:R26 added `test_http_audit_scrub.py` + `test_email_service.py`). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
-| Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` + `SMTP_{HOST,PORT,USER,PASSWORD,FROM}` (the 5 SMTP vars added in AT:R26 for magic-link delivery). Canonical at `infra/alpha.env` on Mac, gitignored; shipped via `scp` in `/promote-to-alpha` step 4. Without `SECRET_KEY` the backend refuses to start when env != local (boot check in `app/main.py`). |
-| Auth | Phase 1.5 + Phase 4 enforced: route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/coach`, `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`; the start route now triggers `email_service.send_magic_link()` (SMTP via stdlib `smtplib`; no-op when `SMTP_HOST=""`). `/v1/auth/apple` returns 503 outside env=local (Phase 3 verification not yet shipped). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now; hooks future token blocklist. `http_audit` middleware now scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). |
+| Routes | `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26), `/v1/admin/*` (9 routes — AT:R27, see "Admin back-office" below), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/brief/*` (was `/v1/coach/*` — renamed AT:R27; legacy `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`). Plus a public HTML page at `/admin` (no auth required; the page itself asks for the `ADMIN_SECRET` bearer on first load + stores in localStorage). |
+| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **348 passed** (was 318; AT:R27 added `test_admin.py` for the 9 admin endpoints + 5 prompt-overlay regression tests in `test_agent_prompts.py`; `test_coach_engine.py` renamed to `test_brief_engine.py` with class renames). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` + `ADMIN_SECRET=<64-hex>` (AT:R27, admin back-office bearer) + `SMTP_{HOST,PORT,USER,PASSWORD,FROM}` (5 vars, AT:R26). Canonical at `infra/alpha.env` on Mac, gitignored; shipped via `scp` in `/promote-to-alpha` step 4. Without `SECRET_KEY` the backend refuses to start when env != local. **`SMTP_HOST` is currently empty by design** — the `email_service` no-op path fires so no connect-attempts hit the ISP-blocked outbound to `mail.agenticmarketintel.ai`. Restore by uncommenting the line in `infra/alpha.env` once a working SMTP route (Gmail / Resend) is configured. |
+| Auth | Phase 1.5 + Phase 4 enforced: route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. `/v1/auth/apple` returns 503 outside env=local (Phase 3 verification not yet shipped). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now; hooks future token blocklist. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` now checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}` — applies to every authenticated route automatically. **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>` via the `get_admin` dependency (constant-time compare); returns 403 on any mismatch and 503 when `ADMIN_SECRET` is unset. |
 | Room env knobs | `ROOM_DEDUP_RUNNING_MINUTES=30` (in-flight dedup + startup-sweep cutoff) · `ROOM_DEDUP_COMPLETED_HOURS=24` (return prior verdict same day; design doc default was 5 days — we start tighter). Set completed_hours=0 to disable cached-run dedup. |
 | Push code to it | [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) — rsync + recreate + smoke. No GitHub remote yet. |
 
 Co-resident on melehost: **`api-website`** service (port 8001, builds from `./website_api/`, separate `ami_website` DB, CORS for `agenticmarketintel.ai`). The trade backend and marketing-site backend share zero code; waitlist is a website concern now.
+
+### Admin back-office (AT:R27)
+
+| | |
+|---|---|
+| Endpoints | `GET /v1/admin/users?email=&device_user_id=` (search) · `GET /v1/admin/users/{id}` (detail + last 20 events) · `PATCH /v1/admin/users/{id}/plan` (change plan tier) · `POST /v1/admin/users/{id}/trial` (grant trial, body: `{days, note?}`) · `PATCH /v1/admin/users/{id}/trial` (extend or revoke, body: `{action: "extend"|"revoke", days?, note?}`) · `POST /v1/admin/users/{id}/credits` (signed `delta`, body: `{delta, note?}`) · `POST /v1/admin/users/{id}/suspend` (sets `suspended_at = now()`) · `POST /v1/admin/users/{id}/reinstate` (clears `suspended_at`) · `GET /v1/admin/users/{id}/events?limit&offset` (paginated `subscription_events`) |
+| Web UI | `https://api-alpha.agenticmarketintel.ai/admin` — single HTML file at `backend/app/static/admin.html` served by FastAPI as `HTMLResponse`. AMI Hex-Reinforced Precision palette mirrored from `mobile/lib/theme/ami_theme.dart`. Mobile-first: sticky topbar, big touch targets, safe-area padding, PWA meta tags so Saiful can "Add to Home Screen" on iPhone Safari. First load asks for `ADMIN_SECRET`, stores in `localStorage` on device. Vanilla HTML+CSS+JS — no build step. Replaced 1:1 by a Flutter web admin app in Beta (same URL, same API contract). |
+| Event log | `subscription_events` table (10 event types): `plan_changed` · `trial_granted` · `trial_extended` · `trial_revoked` · `credits_added` · `credits_deducted` · `credits_consumed` · `revenuecat_purchase` · `user_suspended` · `user_reinstated`. Schema: `id UUID PK, user_id UUID FK, event_type VARCHAR, from_value TEXT, to_value TEXT, source VARCHAR (admin_override\|app\|revenuecat), admin_id UUID NULL (placeholder for Beta admin_users), note TEXT NULL, created_at TIMESTAMP`. Every admin write produces a row with `source=admin_override`. |
+| Deferred | `admin_users` table + JWT auth (Beta); Flutter web admin app (Beta); credit-consumption deduction in Room + 1-on-1 (after access-level design lands); RevenueCat webhook → `revenuecat_purchase` events (MVP M1); aggregate revenue dashboard (post-launch). |
 
 ### Postgres + persistence
 
@@ -65,12 +74,13 @@ Co-resident on melehost: **`api-website`** service (port 8001, builds from `./we
 | Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) |
 | Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `alembic_version`. Latest migration on melehost: `b1c4e8d70007` (`bug_reports.attachment_path` + `attachment_mime`). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container; review via `ssh melehost "sudo ls -la /var/lib/docker/volumes/ami-trade-local_bug_attachments/_data/"`.
+Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27), `auth_challenges`, `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `alembic_version`. Latest migration on melehost: `a9d1c7e80006` (`admin_backoffice` — adds the 3 new user columns + `subscription_events` table). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
 
 ### LLM gateway
 
 - **vLLM** at `http://192.168.20.74:8000` serving `ami-llm` (Gemma 4 31B, NVFP4 quantized, 262k context — rebranded from `gemma-4-31b-it-nvfp4`). Gateway preference: `vllm > anthropic > mock`.
 - Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`.
+- **AT:R27 prompt-composition fix:** `agent_runner.py:128` (1-on-1) AND `room_runner.py:963 + 1040` (Convene the Room) now both pass `user_id=ctx.user_id` (or `session.user_id`) to `build_agent_prompt` / `build_room_messages` so `_append_user_overlay` actually finds the user's active Brief overlay. Room runner was previously hard-coded to `user_id=None`, silently dropping every overlay. The user-overlay header text was also renamed: `USER COACHING OVERLAY` → `USER BRIEFING OVERLAY` (the literal text the LLM sees inside the prompt above the overlay block).
 
 ### Market data
 
@@ -82,135 +92,106 @@ Tables: `users`, `auth_challenges`, `mandates`, `agent_activations`, `lessons_pr
 | | |
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
-| pubspec version | **`0.1.0+17`** (repo) — AT:R26 closes: Apple sign-in 503 graceful UX, Phase 4 sign-out button (Settings → Account, red OutlinedButton). |
-| TESTING IPHONE 13 install | `+16` is the last sideloaded build (AT:R25); `+17` ships via TestFlight only. Use `scripts/install_iphone.sh` to install the dev build of `+17` if you want to test before App Store Connect finishes processing. |
-| TestFlight | **`0.1.0+17` uploaded 2026-05-19 — processing.** Adds Apple-glitch fix (a84361f6) + Phase 4 sign-out + bug-report close button verification surface. `+16` was the last Phase 1.5 build. No External Beta artefact yet — see carry-over. |
-| Build commands | `scripts/install_iphone.sh` (dev sideload — now uses `flutter devices --machine` so it doesn't print iPhone 17 LAN-probe noise), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number). |
+| pubspec version | **`0.1.0+17`** (repo) — AT:R26 closes. **AT:R27 changes are in-tree but not yet built** — next TestFlight upload will be `+18` carrying Brief rename + new `AgentActionSheet` on Floor. |
+| TESTING IPHONE 13 install | `+17` was the last TestFlight upload (AT:R26); `+18` not built yet. Use `scripts/install_iphone.sh` to install a dev build of the current tree if you want to smoke-test AT:R27 Flutter changes before TestFlight. |
+| TestFlight | `0.1.0+17` uploaded 2026-05-19. **AT:R27 has not pushed a new build** — backend-only deployment via 8 alpha promotes; mobile changes (Brief rename + AgentActionSheet) sit at HEAD waiting for next `scripts/build_testflight.sh`. |
+| Build commands | `scripts/install_iphone.sh` (dev sideload), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
 
-App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **First-time walkthrough (AT:R23):** per-section coach-mark tours fire automatically on first visit to each tab — Floor opens with an intro bottom sheet ("Take the tour / Skip for now"), then 5 spotlight steps narrating Concierge → analyst team → locked agents → daily challenge → Convene; Portfolio / Journal / Lessons each fire 3 steps. Convene step exposes a "Try it now →" CTA that closes the tour and opens the Convene sheet. Each section flag (`tour_{floor,portfolio,journal,lessons}_seen`) is in SharedPreferences; Settings → WALKTHROUGH → "Restart app tour" clears all four. **AT:R25 auth gate:** a brand-new `_AuthGate` splash blocks the home (Onboarding or HomeShell) until `AuthNotifier.bootstrap()` has populated `state.token`; without this, feature providers could fire API calls before the Dio interceptor had a Bearer. **AT:R26 sign-out (Phase 4):** Settings → Account now shows a red "Sign out" OutlinedButton when the user is non-anonymous; tap calls `AuthNotifier.signOut()` which fires `DELETE /v1/auth/session`, wipes `DeviceUser` (SharedPreferences), resets `AuthState`, and re-runs `bootstrap()` so a fresh anonymous session is minted before `_AuthGate` releases the home. **AT:R26 Apple-glitch fix:** the sign-in screen now shows a "Coming in v1.0 — use email sign-in for now" caption under the Apple button; if the user taps it anyway, the 503 from the backend is caught in `api_client.dart::signInWithApple` and surfaced via a snackbar as a readable "Apple sign-in isn't live in Alpha yet — use email sign-in instead." (Exception prefix stripped). Journal filter chips: `ALL · ROOM · TRADE · 1-ON-1 · COACH · LESSONS · UNLOCKS` (ROOM + TRADE at positions 2/3). Journal has soft-delete with UNDO + 30-day Trash view + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green "✓ BUY 1 TSLA @ $X" pill once a sim_trade exists with `verdict_ref == runId`. Trade ticket sheet: live quote chip under the ticker field with `LIVE`/`MOCK` source pill + auto-suggested TP/SL at -6%/+13% of price; non-blocking "NO AI VERDICT" advisory at top when no verdict was convened. Ticker tape below bottom nav (Yahoo Finance, refreshes when watchlist changes). Settings → APPEARANCE is dark-only. Settings → COMPLIANCE labels are tappable. Bug-report sheet (long-press app-version chip) supports photo attachments, offers a `feature_request` category, and now scrolls correctly when the keyboard is open.
+App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **AT:R27 Floor change:** tapping an unlocked agent no longer opens 1-on-1 directly — it now opens an `AgentActionSheet` bottom sheet with two big buttons: `[1-ON-1]` (talk to the agent) and `[BRIEF]` (modify how it thinks). Concierge skips the sheet — has no Brief surface, so 1-on-1 is the only path. The tune icon in the 1-on-1 header stays as a secondary route to Brief. **AT:R27 rename:** `CoachScreen` → `BriefScreen`, `BriefHistoryScreen`, `BriefNotifier`/`briefNotifierProvider`, `models/brief.dart`, `api_client.startBrief/streamBriefMessage/...`. The 33 l10n keys flipped from `coach*` to `brief*` (including the journal chips: `journalFilterCoach` → `journalFilterBrief`, value `COACH` → `BRIEF`; same for `journalEntryTypeCoach`). Journal filter chips now read: `ALL · ROOM · TRADE · 1-ON-1 · BRIEF · LESSONS · UNLOCKS`. **First-time walkthrough (AT:R23):** per-section coach-mark tours (still using `tutorial_coach_mark` package — unrelated to Brief feature) fire on first visit. **AT:R25 auth gate** + **AT:R26 sign-out (Phase 4)** + **AT:R26 Apple-glitch fix** still in place. Journal soft-delete + Trash + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green pill once a sim_trade exists. Trade ticket sheet has live quote chip + auto-suggested TP/SL. Ticker tape below bottom nav. Settings → APPEARANCE is dark-only. Bug-report sheet (long-press app-version chip) supports photo attachments.
 
 ---
 
-## What just landed (this session — AT:R26)
+## What just landed (this session — AT:R27)
 
-Closed three of the AT:R25 carry-overs in a single promote + TestFlight cycle: bug:a84361f6 (Apple-glitch UX), B4 (http_audit token leakage), and Phase 4 (sign-out). Also wired SMTP for real magic-link emails (delivery still gated on DNS resolution). 6 commits incl. one merge + a Silent_Scout `07_voice/` research dir Saiful authored mid-session. Backend promoted as `alpha-2026-05-19-3`, TestFlight `+17` uploaded.
+Big session, 8 commits, 8 alpha tags (`alpha-2026-05-20-{1..8}`). Three discrete tracks: admin back-office foundation, Coach → Brief rename + discoverability fix, and an audit-driven `user_overlay` runtime fix. Backend tests went 343 → 348 (added admin endpoint coverage + prompt-overlay regression). No TestFlight build pushed — Flutter changes sit at HEAD for the next promote.
 
-### Track A — bug:a84361f6 Apple sign-in 503 glitch
+### Track A — Admin back-office foundation (carry-over from AT:R26 design grill)
 
-Filed 2026-05-19 13:32, same day as the Phase 1.5 promote. The user tapped "Sign in with Apple" and saw a confusing "Apple sign-in failed." toast because the backend now returns 503 on `/v1/auth/apple` outside env=local (per A4) — the UI didn't explain that it was intentional.
+Saiful grilled the design upfront (single-operator MVP with upgrade path to multi-user; CLI for Alpha, Flutter web admin app for Beta; static `ADMIN_SECRET` for Alpha → `admin_users` + JWT in Beta; access level = plan tier only + suspension as sole per-user override; `subscription_events` table for fee tracking + audit; admin tools only, credit-consumption deferred until access-level design done).
 
-Fix on `claude/bug-fix-20260519-140401` (commit `cd4a3f2`, merged via `4edd0a1`):
-- `mobile/lib/services/api/api_client.dart::signInWithApple` wraps the Dio call in try/catch. On `DioException` with `response?.statusCode == 503`, throws `Exception("Apple sign-in isn\'t live in Alpha yet — use email sign-in instead.")`. Other status codes rethrow unchanged.
-- `mobile/lib/screens/auth/sign_in_screen.dart::_signInWithAppleScaffold` now reads `ref.read(authNotifierProvider).error` after a failed sign-in and strips the leading `"Exception: "` prefix before showing it in the snackbar (falls back to the generic `signInAppleFailed` l10n string if state has no error).
-- Same screen: caption added under the `_AppleButton` — *"Coming in v1.0 — use email sign-in for now"* (hardcoded English, AmiTypography.caption, textLow color, centered). Sets expectations before the tap. No l10n key added; this is alpha-only copy.
+`faf4958` shipped:
+- **Migration** `a9d1c7e80006_admin_backoffice.py` — adds `users.suspended_at`, `users.trial_started_at`, `users.trial_expires_at`, and creates `subscription_events` table. Initial commit had `down_revision="f7d9b2e60005"` which branched off the wrong head; fixed in `fbe1570` to point at `b1c4e8d70007`.
+- **Schemas** `backend/app/schemas/admin.py` — request/response Pydantic models (`AdminPlanChangeRequest`, `AdminTrialGrantRequest`, `AdminTrialUpdateRequest`, `AdminCreditsRequest`, `AdminNoteRequest`, `AdminUserSummary`, `AdminUserDetail`, `SubscriptionEventOut`, `AdminEventsResponse`).
+- **Router** `backend/app/api/admin.py` — 9 endpoints, `get_admin` dependency does constant-time HMAC compare on the bearer, 403 on mismatch, 503 when `ADMIN_SECRET` unset. Every write goes through `_record_event` helper → writes to `subscription_events`. Suspend/reinstate enforce 409 on no-op (already-suspended or not-suspended).
+- **Suspension enforcement** added to `get_current_user` in `backend/app/api/auth.py`: if `user.suspended_at is not None`, raises 403 with `detail="account_suspended"`. Every authenticated route inherits the block.
+- **Config** `ADMIN_SECRET: str = ""` in `Settings`; `infra/alpha.env.example` + `infra/alpha.env` populated.
+- **Tests** `test_admin.py` covers all 9 endpoints + the suspension dependency (negative tests for missing/wrong bearer + 403/404/409 paths).
 
-The bug-fix worktree was created via the `/fix-bugs` skill (atomic claim → commit → DB flip to `pending_review` → merge to main → worktree removed).
+Two follow-up `fix(compose)` commits closed the runtime gap: `docker-compose.yml` was enumerating env vars explicitly and **had never wired `ADMIN_SECRET` or any of the `SMTP_*` vars** through to the api-alpha container. First promote (`alpha-2026-05-20-1`) deployed code but admin endpoints returned 503 because the container saw `ADMIN_SECRET=""`. `fdeb14b` added `ADMIN_SECRET: ${ADMIN_SECRET:-}` to compose; `28eb261` added the 5 SMTP vars at the same time. `SMTP_HOST` itself was blanked out in `infra/alpha.env` (original value preserved as a commented line) so the email_service no-op path keeps firing until a working SMTP route exists — no timeout traffic, no `magic_link_email_failed` log spam.
 
-### Track B — http_audit scrubbing (adversarial audit B4 closed)
+`1baeed6` added the admin web UI: a single 660-line HTML file at `backend/app/static/admin.html`, served at `/admin` via `HTMLResponse` from `app.main`. AMI palette mirrored from `mobile/lib/theme/ami_theme.dart`. Vanilla JS with `fetch` + localStorage for the bearer. Mobile-first responsive, PWA meta tags. Saiful can `Add to Home Screen` on iPhone Safari for a chromeless app-style entry.
 
-`f7b6214`. `backend/app/middleware/http_audit.py` gets a new `SCRUB_PATHS` set containing `/v1/auth/{anon, magic_link/start, magic_link/verify, apple, session}`. The dispatch loop sets `scrub = path in SCRUB_PATHS` early; when true, both `captured_request` and `captured_response` are forced to `b"[REDACTED]"` before being passed to `record_http`. Method, path, query, status code, latency, and IP are still recorded — only the bodies are scrubbed. No effect on SSE routes (none are in SCRUB_PATHS) or on the request body that downstream handlers see (the scrub is purely about what gets persisted to the audit table).
+### Track B — Coach Your Agent → Brief Your Agent rename + discoverability fix
 
-3 tests in `backend/tests/unit/test_http_audit_scrub.py`:
-- Parametrised across all of `SCRUB_PATHS` — each path's request + response bodies must equal `b"[REDACTED]"` in the captured `record_http` call.
-- Non-scrub path (`/v1/some/other/route`) — body must NOT be `[REDACTED]`, request body must contain its actual content (`b"AAPL"`).
-- `/v1/health` — `record_http` must not be called at all (still in `SKIP_PATHS`).
+`2646971` — the rename commit (64 files, +1908/−1423).
 
-### Track C — Phase 4 sign-out
+**Why:** "Coach" carried the wrong power dynamic (mentor/therapist), conflicted with the AI Coach Q&A library + the `tutorial_coach_mark` package, and obscured the actual mechanic. "Brief" is CEO-native — a CEO briefs their analysts.
 
-`f7b6214` (backend) + `c2ae379` (Flutter).
+**Discoverability bug surfaced same session:** Brief was buried behind a single unlabelled tune icon in the 1-on-1 header. Even Saiful couldn't find it. Fix: tapping an agent on the Floor now opens a new `AgentActionSheet` widget (`mobile/lib/widgets/agent_action_sheet.dart`) with two big buttons — `[1-ON-1]` (chat icon, hex-blue) and `[BRIEF]` (tune icon, hex-amber). Concierge skips the sheet (no Brief surface). The 1-on-1 header tune icon stays as a secondary route.
 
-**Backend** (`backend/app/api/auth.py`): `DELETE /v1/auth/session` — requires `Depends(get_current_user)`, returns `{"signed_out": True}`. No DB writes. The doc comment makes the design explicit: scaffold tokens are stateless HMAC so there is nothing to invalidate server-side now — this endpoint exists as a clean HTTP contract for a future Phase 5+ token blocklist. Auth dependency means it's covered by the existing audit suite — the path was added to `SCRUB_PATHS` in Track B so bearers don't leak via this route either.
+**Backend:** `schemas/brief.py`, `services/brief_engine.py`, `api/brief.py` are the new canonical modules. `/v1/brief/*` is the new path. The old `coach.py` files are now back-compat shims: schemas re-export `BriefX as CoachX`, services re-export `BriefEngine as CoachEngine + get_brief_engine as get_coach_engine + hydrate_brief_mandate as hydrate_coach_mandate`, and `api/coach.py` is a 150-line shim that re-mounts the brief routes under `/v1/coach` with a `_log_deprecation` dependency that logs `deprecated_coach_route_used` warning on every hit. TestFlight `+17` keeps working without rebuild.
 
-**Flutter** (three files):
-- `mobile/lib/services/api/api_client.dart::signOut()` — fires `DELETE /v1/auth/session` inside a try/catch (server response is irrelevant; client wipes its token regardless), then sets `_bearerToken = null`.
-- `mobile/lib/state/auth_providers.dart::AuthNotifier.signOut()` — calls `api.signOut()`, then `DeviceUser.clear()` (wipes both the device_user_id AND the bearer token from SharedPreferences), resets `state = const AuthState()`, then `await bootstrap()` so a fresh anonymous session is minted before `_AuthGate` releases the splash. Without the final `bootstrap()` call the gate would hang waiting for a non-null token forever.
-- `mobile/lib/screens/settings/settings_screen.dart::_AccountSection` — adds a red OutlinedButton labeled "Sign out" below the existing "Manage Account" button. Only visible when `claimed` is true (i.e. `auth.user != null && !auth.user!.isAnonymous`). Disabled while `auth.loading` is true. Uses `AmiColors.hexRed` for foreground + border so it reads as a destructive-tier action.
+**Flutter:** `git mv` + class renames + l10n key renames + Dart consumer updates. 33 `coach*` l10n keys flipped to `brief*` across EN/AR/MS via Python script (then `flutter gen-l10n` regenerated `AppLocalizations`). Journal filter chip "COACH" → "BRIEF" via `journalFilterCoach` → `journalFilterBrief` key rename + value update.
 
-The route was added to the same SCRUB_PATHS set as the other auth routes (Track B) so the bearer in the inbound request doesn't end up in audit rows.
+**Content + docs:** mechanical Python-script sweep across `content/lessons/*.mdx`, `content/ai_coach/*.json`, `content/daily_challenges/*.json`, `content/glossary/terms.en.json`, and `docs/**/*.md`. CLAUDE.md decision-row updated.
 
-### Track D — SMTP magic-link email (carry-over #7 wired)
+**Preserved as concept vocabulary:** the word "uncoachable" + "cannot be coached around" stays as the Portfolio Manager safety-floor's resistance label (lesson 273 is built on this term — established product vocabulary). `EntryType.AGENT_COACH = "agent_coach"` enum value stays as the DB-stored value (no migration needed for existing journal rows). Audit log identifiers `coach_chat` (audit flow tag) and `coach_overlay_saved` (log key) stay for log-query continuity. The glossary term ID `ami_coach_your_agent` stays (17 lesson files reference it via `<Term id="…" />`) — only the display name was updated to "Brief Your Agent". Lesson file `278_coaching_changes_style_not_floor.en.mdx` keeps its filename + frontmatter `id` field (cross-reference safety); body content was updated.
 
-`f7b6214`. New file `backend/app/services/email_service.py` uses stdlib `smtplib` (no new pyproject dependency — `resend>=2.4` is already declared but unused). Single public function `send_magic_link(to, code)` builds a multipart message (plain + minimal dark-mode HTML), then picks the transport:
-- `settings.smtp_port == 465` → `smtplib.SMTP_SSL` (implicit TLS)
-- otherwise → `smtplib.SMTP` + `starttls()` (works for 587)
+### Track C — `user_overlay` runtime audit + fix
 
-Logs `smtp_not_configured_skip_email` and returns when `settings.smtp_host` is empty (alpha debug-code-only mode preserved). Catches any send exception, logs `magic_link_email_failed`, returns — never raises. Magic-link still works in fallback (debug code visible in UI on `env=local`; on staging the code is only visible in the response if you hit the start endpoint directly, never to the client per A1 lockdown).
+Saiful asked for an explicit audit: does `user_overlay` actually flow into 1-on-1 + Convene the Room runtime, or does the Brief UI persist overlays that the LLM never sees?
 
-`backend/app/services/auth_service.py::start_magic_link` adds one line: `_send_magic_link_email(email, code)` after the DB write. `backend/app/core/config.py` adds 5 fields: `smtp_host`, `smtp_port=465`, `smtp_user`, `smtp_password`, `smtp_from` (all empty by default). `infra/alpha.env.example` updated with a commented placeholder block.
+**Finding:**
+- **1-on-1: WIRED CORRECTLY.** `agent_runner.py:128` calls `build_agent_prompt(agent_id, mandate, user_id=session.user_id)`. In `agent_prompts.py:48-71`, when `user_id is not None`, `_append_user_overlay` calls `OverlayStore.get_active(user_id, agent_id)` and concatenates the overlay between mandate and safety_floor. Briefings actually shaped 1-on-1 conversations.
+- **Convene the Room: BROKEN.** `room_runner.py:963` (regular agents) AND `1037` (PM narration) both hard-coded `user_id=None` when calling `build_room_messages`. `ctx.user_id` was right there on the same line (used for `audit_user_id`) but not threaded into the prompt composer. Result: **every agent in every Room run received `base + mandate + safety_floor`, no overlay.** Brief did nothing during Convene.
 
-5 tests in `backend/tests/unit/test_email_service.py`:
-- No-op when `smtp_host=""` (asserts `SMTP_SSL` never called).
-- Port 465 → uses `SMTP_SSL`, logs in, sends to recipient with the 6-digit code in the body.
-- Port 587 → uses `SMTP` + `starttls()` + login.
-- ConnectionRefusedError from `SMTP_SSL` is swallowed (no raise).
-- Plus the sign-out endpoint smoke (200 with valid Bearer / 401 without) — same file because it's a small one-off.
+`cf56afe` fixed both call sites: `user_id=None` → `user_id=ctx.user_id`. Added 5 regression tests in `test_agent_prompts.py`:
+- `test_build_agent_prompt_includes_user_overlay_when_user_id_provided` — saved overlay appears in composed prompt with `USER_OVERLAY_HEADER`.
+- `test_build_agent_prompt_omits_overlay_when_user_id_is_none` — anonymous path stays clean.
+- `test_build_agent_prompt_omits_overlay_when_user_has_no_overlay` — fresh users get base + mandate only.
+- `test_pm_safety_floor_appended_after_user_overlay` — SAFETY FLOOR block stays last for PM.
+- `test_room_runner_threads_user_id_through_to_overlay` — **source-level regression**: parses `room_runner.py`, asserts every `build_room_messages(...)` call site passes `user_id=ctx.user_id` (and not `user_id=None`). Verified to fail by `git stash` of the fix.
 
-`infra/alpha.env` (gitignored, on Mac only) was populated by Saiful with `SMTP_HOST=mail.agenticmarketintel.ai`, `SMTP_PORT=465`, `SMTP_USER=ami.ai@agenticmarketintel.ai`, `SMTP_PASSWORD=<set>`, `SMTP_FROM=noreply@agenticmarketintel.ai`. **Real email delivery does NOT yet work end-to-end** because `mail.agenticmarketintel.ai` returns NXDOMAIN at every public resolver and at Cloudflare's authoritative NS (lou + rihana), despite the A record (`69.57.162.213`, gray cloud) being visible in the Cloudflare DNS dashboard. The underlying SMTP server IS reachable from Mac on ports 465/587/993 (confirmed via `nc -zv` against the IP directly), so the only thing blocking delivery is the DNS record actually surfacing on the authoritative nameservers. Once DNS resolves, the backend will start sending real emails on the next magic-link request — no further code change needed.
+### Track D — Audit sweep follow-up (`9793c25`)
 
-### Track E — Promote + TestFlight `+17`
-
-`/promote-to-alpha` ran cleanly on the second try (first preflight blocked on Saiful's uncommitted Silent_Scout work, which he then asked me to commit as `07f0974` — see Track F):
-- Tagged `alpha-2026-05-19-3` at `07f0974`.
-- rsync ✓; 5 new SMTP keys verified set on melehost alongside the existing 6.
-- `docker compose --profile tunnel up -d --build api-alpha` rebuilt the image, recreated only api-alpha (Postgres + Redis + tunnel kept running). Health check went to `healthy` in <10s.
-- `alembic upgrade head` ran clean (no migration changes this session).
-- Smoke: `/v1/health` → `env=staging`; `/v1/llm/status` → `vllm` active with all tiers routing to `ami-llm`; `/v1/sim/quote/AAPL` → $297.84 source=`yfinance` (real Yahoo); `DELETE /v1/auth/session` unauth → 401 (the new endpoint's auth guard fires).
-
-`scripts/build_testflight.sh` then auto-bumped `0.1.0+16` → `0.1.0+17` (`e04604b`), built the IPA (25 MB), and uploaded via altool — Delivery UUID `bff0c97f-9561-4218-8d38-9115d422c84f`. App Store Connect processing takes ~15-30 min before the build is visible in Internal Testing.
-
-### Track F — Silent_Scout 07_voice/ (Saiful authored, mid-session)
-
-`07f0974`. Saiful added a new research-track folder for on-device STT + TTS investigation covering 5 languages (EN/AR/MS/zh/yue). Mirrors the LoRA-track structure: `01_constraints` (verbatim production-doc quotes as the boundary fence), `02_candidates` (STT + TTS datasheets), `03_coverage_matrix`, `04_eval` (methodology + datasets + results-README), `05_recommendation` (daily-brief + interactive + path-forward), `06_prototypes` (README scaffold). Top-level `Silent_Scout/README.md` was updated to add the new row in the active-tracks table and the path tree. 1697 insertions across 14 new files. Not part of the AMI Trade production track but in the repo + history. Referenced approved plan: `~/.claude/plans/you-are-working-on-stateless-sedgewick.md`.
+Saiful asked for a thorough double-check on the rename. The first-pass sub had targeted phrase "Coach Your Agent" + key-prefix `coach[A-Z]`; verb-form usages, suffix-position keys, and mid-string values slipped through. Audit caught 8 classes of gap (LLM-prompt header text, journal chip l10n keys, embedded "coaching" in values, MS translations, content verb forms, glossary definition, docs verb forms, internal docstrings). All fixed in a single commit (59 files, +429/−152). Final classified residual: 174 hits across known-keep categories (concept terms, internal identifiers, backwards-compat shim, third-party package, AI Coach Q&A library).
 
 ### Operational footnotes worth surfacing
 
-- **Bug `6fd4144d`** (bug-report close button) — fix `af01328` was already in main from a prior session (the bug-fix worktree `claude/bug-fix-20260517-225716` was confirmed during AT:R26 to have no commits ahead of main). DB status still `pending_review`; verify on TestFlight `+17` and flip to resolved.
-- **Bug `a84361f6`** — DB status flipped to `pending_review` mid-session by `/fix-bugs`. Same verify-on-`+17`-then-flip-to-resolved pattern.
-- **SMTP DNS — UNRESOLVED at session end. Resume here on AT:R27.**
+- **SMTP — still blocked.** DNS resolved overnight (`mail.agenticmarketintel.ai` → `69.57.162.213`) but melehost's ISP blocks outbound to that IP on ports 465 AND 587 (TCP SYN succeeds, SSL/SMTP times out). `smtp.gmail.com` and `mail.privateemail.com` are both reachable from melehost. Carry-over: pick Gmail SMTP (Gmail App Password) or switch to Resend HTTP API (`resend>=2.4` already in pyproject.toml). Until resolved, magic-link sign-in delivers no emails. Compose plumbing for SMTP_* is now correct (was a silent gap pre-AT:R27); only `SMTP_HOST` value blocks the no-op path from triggering.
+- **TestFlight `+18` not built yet.** All AT:R27 Flutter work (Brief rename, AgentActionSheet, journal chip relabel) is at HEAD but not yet uploaded. Next session should run `scripts/build_testflight.sh` if Saiful wants to test the new UI on TF.
+- **17 anonymous users in the DB** (no claimed accounts yet — magic-link blocked by SMTP). Most recent: `b3bc18aa-3dca-48d7-beb4-803220b40b69` (2026-05-20 16:20). Safe to use for admin-endpoint smoke tests.
+- **`AGENT_COACH` enum value preserved.** Journal entries created via Brief Accept still write `entry_type='agent_coach'` to keep existing rows valid. New row titles read "Briefed Bear Researcher → v3" instead of "Coached …" — old rows keep their "Coached …" titles as historical strings.
+- **`alpha-2026-05-20-1` was a partial deploy** — schema didn't apply because the migration's `down_revision` was wrong. Caught + recovered mid-promote (no downtime, no rollback). `-2` shipped the migration fix; `-3` shipped the compose fix; `-4` blanked SMTP_HOST; `-5` added the admin UI; `-6` shipped the Brief rename; `-7` fixed the Room overlay bug; `-8` shipped the audit sweep. Don't be surprised by the count.
 
-  **State of evidence at end of session:**
-  - Cloudflare DNS dashboard for `agenticmarketintel.ai` shows: `Type=A, Name=mail, Content=69.57.162.213, Proxy=DNS only (gray cloud), TTL=Auto`. Warning triangle next to the row is benign — just the standard "exposes origin IP" notice for gray-cloud A records.
-  - But `dig +short mail.agenticmarketintel.ai @rihana.ns.cloudflare.com` AND `@lou.ns.cloudflare.com` (the two authoritative NS for the zone) both returned EMPTY. 1.1.1.1 and 8.8.8.8 returned NXDOMAIN. melehost's resolver returned SERVFAIL. **Authoritative NS empty means it's not a propagation delay — Cloudflare's nameservers genuinely don't see the record.**
-  - The IP itself IS a real Namecheap-owned mail server: from Mac, `nc -G 5 -zv 69.57.162.213` connects on ports 465, 587, 993. From melehost, port 465 timed out (separate question — possible ISP block on outbound 465; check 587 next).
-  - SMTP creds in `infra/alpha.env`: `SMTP_HOST=mail.agenticmarketintel.ai`, `SMTP_PORT=465`, `SMTP_USER=ami.ai@agenticmarketintel.ai`, `SMTP_PASSWORD=;hMo@u]n^{77`, `SMTP_FROM=noreply@agenticmarketintel.ai`. All 5 verified live on melehost via the promote step-4 `grep` (counted as `<set>`).
-  - Backend code is wired + tested + promoted (`alpha-2026-05-19-3`). `email_service.send_magic_link()` is a no-op when `smtp_host=""` and never raises on send failure — so the rest of the app is safe.
+### Carry-overs for AT:R28
 
-  **What to try on AT:R27** (in order, escalating):
-  1. **Re-query DNS first thing** — it might just have propagated overnight. `dig +short mail.agenticmarketintel.ai` from Mac. If non-empty, immediately re-run the SMTP smoke test from earlier in AT:R26 (use the IP directly to bypass DNS if needed — `openssl s_client -connect 69.57.162.213:465 -servername mail.agenticmarketintel.ai`).
-  2. **If still NXDOMAIN**, ask Saiful to delete + re-add the Cloudflare record. Sometimes a saved-but-not-actually-persisted state happens — re-creating the row forces a clean propagation.
-  3. **Check Namecheap's mail-server hostname** — the IP belongs to Namecheap; their Private Email service typically documents the SMTP hostname as e.g. `mail.privateemail.com`, NOT a custom-domain CNAME. Saiful might need to set `SMTP_HOST` to whatever Namecheap's mail dashboard documents (and the TLS cert will be issued for THAT hostname, not the custom domain).
-  4. **Test outbound port 465 from melehost** — `ssh melehost "timeout 8 nc -zv mail.privateemail.com 465"` once DNS works. If the connection times out, try 587. If both time out, melehost's ISP may be blocking outbound SMTP; the workaround is to route through a different SMTP provider that listens on a non-standard port, or relay through Mailgun/Postmark.
-  5. **Fallback**: Gmail SMTP. `smtp.gmail.com:587` + App Password from any Gmail account Saiful has 2FA enabled on. Drop-in — just update the 5 `SMTP_*` keys in `infra/alpha.env` and re-promote.
+Counts audited against tree state at end of AT:R27.
 
-  **Until SMTP works, magic-link sign-in is broken for any external user.** Alpha testers don't see it because on `env=staging` the debug code is NOT returned in the API response (Phase 1.5 A1 lockdown) — so a tester who taps "Send Code" gets stuck at the "enter the code" step with nothing to type. **This is a real blocker for External TestFlight launch.**
-- **L-1 residual** (from AT:R25 audit) still NOT closed: `OneOnOneStartRequest.user_id: UUID | None` lets a null body bypass `_own_body`. Limited blast radius (resulting session has `user_id=None`, `_own_session` rejects on subsequent calls) but worth tightening if 1-on-1 abuse becomes a real signal.
-- **TestFlight `+17` is the same code as +16 plus the AT:R26 changes** — testers on +16 will still work against the new backend (no breaking API change; only the new `DELETE /v1/auth/session` route was added). Apple sign-in attempt on +16 still produces the old generic error; only +17 has the friendly snackbar + caption.
-
-### Carry-overs for AT:R27
-
-Counts audited against tree state at end of AT:R26.
-
-1. **🚧 SMTP DNS — magic-link email is the External Beta blocker.** `mail.agenticmarketintel.ai` was NXDOMAIN at Cloudflare's authoritative NS at session-end despite the gray-cloud A record being visible in the dashboard. Backend code is wired + tested + promoted; only DNS surfacing blocks real email. **Full debug trail + escalation steps are in "Operational footnotes worth surfacing" above** — start by re-querying DNS on session resume; if still NXDOMAIN, try delete+re-add in Cloudflare, then Namecheap's documented mail hostname, then Gmail SMTP fallback.
-2. **`6fd4144d` bug-report close button — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
-3. **`a84361f6` Apple-sign-in 503 glitch — `pending_review`.** Verify on TestFlight `+17` and flip to resolved.
-4. **`11fde6f6` floor hex agent style — re-open from AT:R24/R25.** No movement again this session (deferred per Saiful).
-5. **`eeeb866f` — room run survives container restart — open, deferred-pre-beta.** Note + estimate still in `bug_reports.steps`.
-6. **Apple sign-in Phase 3** — Saiful enabled "Sign in with Apple" capability in the Apple Developer portal at the bundle ID this session. Backend still returns 503 outside `env=local` — replace `auth_service.py::_decode_apple_sub` with real PyJWT + Apple JWKS verification. ~1 day.
-7. **Google sign-in Phase 3** — explicit decision this session: **defer until Android v1.0**. Don't start the Flutter `google_sign_in` package wiring yet.
-8. **B-tier adversarial-audit findings remaining** (deferred to pre-External-Beta): rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter + per-IP throttle; feedback upload size enforced at the proxy + streaming read. (B4 token-scrubbing closed this session.)
-9. **App Store Connect Privacy URL** — Saiful confirmed `https://www.agenticmarketintel.ai/privacy/` is live and added it in App Store Connect → App Information → Privacy Policy URL. Done this session, unblocks External Beta submission.
-10. **External TestFlight launch** — still needs a Beta App Description from Saiful + ~24h Apple review on first external build. No External Beta artefact yet.
-11. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/` still render `AmiHexPlaceholder`. Lottie vs CustomPainter decision still open.
-12. **A29 light-mode refactor** — v1.0 work.
-13. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (lessons-landing hex-cluster redesign). Still pending Saiful decision.
+1. **🚧 SMTP — pick a working route.** Gmail SMTP (5 min — Saiful provides App Password) or Resend HTTP API (~30 min — sign up + swap `email_service.send_magic_link` from smtplib to `resend` SDK). Without this, magic-link sign-in is broken for external testers = **External Beta blocker**. Compose plumbing + DNS + creds are all in place; only the route choice is left.
+2. **TestFlight `+18` build** — `scripts/build_testflight.sh` to ship the Brief rename + AgentActionSheet + journal chip update. Auto-bumps build number from `+17`.
+3. **`6fd4144d` bug-report close button** — `pending_review`. Verify on `+17` or wait for `+18` → flip to resolved.
+4. **`a84361f6` Apple-sign-in 503 glitch** — `pending_review`. Same pattern.
+5. **`11fde6f6` floor hex agent style** — open, deferred from AT:R24/R25/R26/R27. The AgentActionSheet wiring may have indirectly addressed this; verify on next build.
+6. **`eeeb866f` room run survives container restart** — open, deferred pre-Beta.
+7. **Apple sign-in Phase 3** — PyJWT + Apple JWKS verification (~1 day). No movement.
+8. **Google sign-in Phase 3** — explicit defer until Android v1.0.
+9. **B-tier adversarial-audit findings** — rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter + per-IP throttle; feedback upload size enforced at proxy + streaming read. Deferred pre-External-Beta. (B4 token-scrubbing closed in AT:R26.)
+10. **L-1 residual** (from AT:R25 audit) — `OneOnOneStartRequest.user_id: UUID | None` lets a null body bypass `_own_body`. Tighten if 1-on-1 abuse becomes a real signal.
+11. **External TestFlight launch** — Beta App Description from Saiful + ~24h Apple review on first external build. Still no External Beta artefact.
+12. **Animation production** — 15 `<Animation>` MDX tags in `content/lessons/` still render `AmiHexPlaceholder`. Lottie vs CustomPainter decision still open.
+13. **A29 light-mode refactor** — v1.0 work.
+14. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` (bug-pipeline spec + D-057) and `claude/exciting-shtern-aad051` (lessons-landing hex-cluster redesign). Still pending Saiful decision.
+15. **Brief safety-floor terminology audit (deferred)** — the word "uncoachable" / "cannot be coached around" stays as the conceptual term for the PM's resistance to overlay-based modification. Renaming this concept (e.g. to "un-briefable") needs a broader product-design conversation and would touch lesson 273 + the entire safety-floor doc. Defer until product strategy explicitly decides.
+16. **Credit consumption** — `credits_consumed` event type exists in `subscription_events` but no app code emits it yet. Wire `credit_balance -= 1` + event write in `room.py` and `one_on_one.py` once Saiful finishes the access-level design (per-tier credit allocation, what Floor Pass users get, etc.).
 
 ### Watch items (not tasks)
 
-- **SMTP delivery in production.** Once DNS surfaces, the very first magic-link request will go out via SMTP. If the SMTP server returns a bad-credentials or unknown-recipient error, `email_service.send_magic_link` swallows it and logs a warning — the user still gets their code via the next attempt OR (on env=local) via the debug chip. On staging there's no debug-code fallback visible to the user, so a silently failing SMTP will look like "magic link doesn't work" to testers. Worth checking the api-alpha logs for `magic_link_email_failed` entries after the first real email attempt.
-- **Apple endpoint 503 still in effect on Alpha.** Phase 3 hasn't shipped, so any tester who taps "Sign in with Apple" still gets the 503 path — now with a friendly message (AT:R26 fix). Until Phase 3 lands, magic-link is the only working claim path on Alpha.
-- **AT:R24's NVFP4 quantisation watch item still applies** — `ami-llm` (Gemma 4 31B NVFP4) occasionally emits space-split tokens. Not blocking.
+- **Brief overlay actually shaping LLM responses now.** Once a Brief is saved, every Convene the Room call applies it (previously did nothing). Tone changes will be more visible. Worth watching if any agent's briefed-up behavior crosses into territory you didn't expect.
+- **`deprecated_coach_route_used` warning frequency** — once TF `+18` ships with `/v1/brief/*` paths, the `/v1/coach/*` alias should see traffic drop to zero. Grep api-alpha logs after the build is deployed; once clean for 2 sessions, the shim can be removed.
+- **NVFP4 quantisation watch item still applies** — `ami-llm` occasionally emits space-split tokens. Not blocking.
 
 ---
 
@@ -222,7 +203,7 @@ Counts audited against tree state at end of AT:R26.
 
 The slash command reads HANDOVER.md + project plan, runs the Mac-side sanity-check curls, queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R27** (this is handover #26).
+Session name to use: **AT:R28** (this is handover #27).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -244,6 +225,10 @@ scripts/build_testflight.sh
 
 # Backend unit tests — sqlite tempfile via conftest. Mac-side.
 pytest backend/tests/unit/ -q
+
+# Admin UI (browser, including iPhone Safari)
+# https://api-alpha.agenticmarketintel.ai/admin
+# First-load asks for ADMIN_SECRET (from infra/alpha.env line 43)
 ```
 
 ---
@@ -252,7 +237,7 @@ pytest backend/tests/unit/ -q
 
 - **Anthropic API key.** Not added — and not needed: on-prem vLLM at `192.168.20.74:8000` serves Gemma 4 31B for every agent. Anthropic remains a hot-swappable fallback if `VLLM_BASE_URL` is unset.
 - **Supabase project.** Not yet provisioned. RLS policies live but dormant — they enforce once the backend stops connecting as `postgres`.
-- **Apple Developer team.** Done (`S7RBWM4879`). Sign in with Apple capability still needs to be added to the bundle id for prod usage.
+- **Apple Developer team.** Done (`S7RBWM4879`). Sign in with Apple capability enabled at the bundle ID (Saiful did this in AT:R26). Backend Phase 3 verification still pending (see carry-over #7).
 - **App Store + APNs** — external. Market data is real Yahoo when `USE_REAL_MARKET_DATA=true`.
 
 Nothing is blocking the next chunk.
