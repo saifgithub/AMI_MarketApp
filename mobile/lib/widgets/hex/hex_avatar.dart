@@ -85,19 +85,14 @@ class HexAvatar extends StatelessWidget {
                   ),
                 ),
               ),
-            // The hex itself — matches the lessons-landing hex cluster
-            // treatment: 15%-alpha role-color fill + role-color label, not
-            // fully-saturated white-on-color. Border carries the full role
-            // color so the hex still reads at a glance. (Bug 11fde6f6.)
+            // The hex itself
             ClipPath(
               clipper: const FlatTopRegularHexagon(),
               child: Container(
                 width: size,
                 height: hexHeight,
                 decoration: BoxDecoration(
-                  color: _isLocked
-                      ? AmiColors.slate800
-                      : effectiveColor.withValues(alpha: 0.15),
+                  color: _isLocked ? AmiColors.slate800 : effectiveColor,
                   border: Border.all(
                     color: _isLocked ? AmiColors.slate600 : effectiveColor,
                     width: 1,
@@ -110,7 +105,7 @@ class HexAvatar extends StatelessWidget {
                     label,
                     style: AmiTypography.labelMono.copyWith(
                       fontSize: size * 0.16,
-                      color: _isLocked ? AmiColors.textLow : effectiveColor,
+                      color: _isLocked ? AmiColors.textLow : Colors.white,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
