@@ -2,10 +2,10 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
-Where we are right now (as of 2026-05-18, end of AT:R24):
-- 199 commits on `main`. 275 backend unit tests pass.
+Where we are right now (as of 2026-05-20, end of AT:R28):
+- 229 commits on `main`. 348 backend unit tests pass.
 - Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
-- TestFlight has build `0.1.0+16` on Internal Testing (pushed AT:R25). Ships the AT:R25 auth client (Dio bearer interceptor, `_AuthGate` splash, `DeviceUser` token persistence, SSE auth helper) — required to talk to the new backend, which now enforces route-level auth + ownership. AT:R24's three bug fixes (`6fd4144d` bug-report sheet close `×`, `cb81a6d8` LessonsScreen back arrow when reached from agent panel, `e2857081` lessons hex cluster tiling) ride along.
+- TestFlight has build `0.1.0+18` uploaded 2026-05-20 (AT:R28). Carries the AT:R27 Flutter payload: Coach Your Agent → Brief Your Agent rename (33 l10n keys EN/AR/MS, `BriefScreen`/`BriefNotifier`/etc., `/v1/brief/*` paths), new `AgentActionSheet` on Floor with `[1-ON-1]` + `[BRIEF]` buttons (discoverability fix), journal filter chip "COACH" → "BRIEF". Backend admin back-office (9 `/v1/admin/*` routes + suspension enforcement + `subscription_events` audit table + single-file admin web UI at `/admin`) shipped AT:R27. Earlier AT:R26 fixes (Phase 4 sign-out, http_audit token scrubbing, Apple sign-in 503 UX) plus AT:R25 auth client (Dio bearer interceptor, `_AuthGate` splash, `DeviceUser` token persistence, SSE auth helper) are all live.
 - Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
 - vLLM Gemma 4 31B (ami-llm) serving every agent. Room runner decoupled from SSE via background task + queue (AT:R22) — runs continue to verdict on client disconnect, dedup on same user+ticker (running + 24h-completed-cached windows), journal write retries.
 - First-time user walkthrough (AT:R23) — 4 per-section coach-mark tours fire automatically on first visit to each tab; resettable from Settings → WALKTHROUGH.
