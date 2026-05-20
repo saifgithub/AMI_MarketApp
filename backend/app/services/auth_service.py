@@ -58,6 +58,7 @@ def _row_to_user(row: User) -> AuthUser:
         id=row.id,
         email=row.email,
         apple_id=row.apple_id,
+        display_name=row.display_name,
         is_anonymous=row.is_anonymous,
         claimed_at=row.claimed_at,
         created_at=row.created_at,
@@ -267,17 +268,11 @@ class AuthService:
         # already in the row.
         apple_email = claims.get("email")
         apple_email = str(apple_email) if apple_email else None
-        # `full_name` is also first-auth-only and comes from the request
-        # body (the iOS SDK only returns it on the initial consent
-        # screen). `users.display_name` column doesn't exist yet — log
-        # for now; persistence lands when we add the column.
-        if full_name:
-            logger.info(
-                "apple_sign_in_full_name_received",
-                user_id=str(user_id) if user_id else None,
-                full_name=full_name,
-                note="not persisted — users.display_name column not added yet",
-            )
+        # `full_name` is also first-auth-only on the iOS SDK side —
+        # Apple only returns it on the initial SignInWithApple consent
+        # screen. Persisted into users.display_name on first sight,
+        # never overwritten (same rule as email).
+        full_name = (full_name or "").strip() or None
         with get_session() as s:
             # Prefer matching an existing apple_id row.
             row = s.execute(
@@ -291,6 +286,7 @@ class AuthService:
                     device_user_id=user_id,
                     apple_id=apple_sub,
                     email=apple_email,
+                    display_name=full_name,
                     is_anonymous=False,
                     claimed_at=datetime.now(timezone.utc),
                 )
@@ -303,6 +299,9 @@ class AuthService:
                 # later linked Apple (might be the relay address).
                 if apple_email and not row.email:
                     row.email = apple_email
+                # Same don't-overwrite rule for display_name.
+                if full_name and not row.display_name:
+                    row.display_name = full_name
                 if row.is_anonymous:
                     row.is_anonymous = False
                     row.claimed_at = datetime.now(timezone.utc)

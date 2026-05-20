@@ -49,6 +49,10 @@ class User(Base):
     apple_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     google_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     hms_unionid: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # Display name. Set on first OIDC auth (Apple `full_name` from iOS
+    # SDK, Google `name` claim) — minimum-data policy: sub + name + email
+    # is all we persist from OIDC providers. Never overwritten.
+    display_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     plan: Mapped[str] = mapped_column(String, default="floor_pass", nullable=False)
     credit_balance: Mapped[int] = mapped_column(Integer, default=0, nullable=False)

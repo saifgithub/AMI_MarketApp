@@ -161,6 +161,79 @@ def test_apple_subsequent_auth_without_email_keeps_existing():
     assert user.email == "first@example.com"  # preserved
 
 
+def test_apple_first_auth_persists_full_name():
+    """full_name from the iOS SDK is captured into users.display_name on
+    first auth (the only time Apple ships it)."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-named"),
+        user_id=user_id,
+        full_name="Alpha Tester",
+    )
+    assert user.display_name == "Alpha Tester"
+
+
+def test_apple_subsequent_auth_without_full_name_keeps_existing():
+    """Subsequent sign-ins don't ship a name — display_name preserved."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name="Alpha Tester",
+    )
+    # Second auth — mobile sends no full_name.
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name=None,
+    )
+    assert user.display_name == "Alpha Tester"
+
+
+def test_apple_does_not_overwrite_existing_display_name():
+    """If display_name already populated (e.g. set by an earlier auth or
+    a different provider), don't overwrite even if a new name arrives."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name="Original Name",
+    )
+    # A buggy/malicious second call with a different name should not
+    # rewrite the original.
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name="Different Name",
+    )
+    assert user.display_name == "Original Name"
+
+
+def test_apple_empty_full_name_does_not_clobber():
+    """Empty/whitespace full_name is treated as None — no clobber."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name="Real Name",
+    )
+    # Apple sometimes sends an empty PersonNameComponents — treat as no name.
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-1"),
+        user_id=user_id,
+        full_name="   ",
+    )
+    assert user.display_name == "Real Name"
+
+
 def test_apple_does_not_overwrite_existing_email():
     """If a user claimed via magic-link first (real email), then linked
     Apple later (might be a `@privaterelay.appleid.com` relay), keep the

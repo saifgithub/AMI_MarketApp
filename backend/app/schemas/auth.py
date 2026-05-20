@@ -43,6 +43,7 @@ class AuthUser(BaseModel):
     id: UUID
     email: str | None = None
     apple_id: str | None = None
+    display_name: str | None = None
     is_anonymous: bool
     claimed_at: datetime | None = None
     created_at: datetime
