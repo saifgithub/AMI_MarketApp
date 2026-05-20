@@ -4,7 +4,7 @@ A solo conversation with a single agent. Cheaper than Convene the Room; the brea
 
 ## What it is
 
-The user picks an agent — from the Floor honeycomb, the agent profile screen, or via Concierge — and starts a free-form chat. The agent has its full mandate overlay and any user coaching applied. Responses stream in.
+The user picks an agent — from the Floor honeycomb, the agent profile screen, or via Concierge — and starts a free-form chat. The agent has its full mandate overlay and any user briefing applied. Responses stream in.
 
 ## Triggers
 

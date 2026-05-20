@@ -25,7 +25,7 @@ Postgres schema (via Supabase). Every table has Row-Level Security (RLS) enabled
 | `streaks` | Per-user streak state | ~10K rows |
 | `briefings` | Generated morning briefings | ~300K rows / mo |
 | `drift_alerts` | Mandate drift alerts | ~50K rows / mo |
-| `coach_sessions` | Brief Your Agent sessions | ~50K rows / mo |
+| `brief_sessions` | Brief Your Agent sessions | ~50K rows / mo |
 | `offers_redemptions` | Promo offer usage | ~10K rows |
 | `audit_log` | All sensitive actions | ~100K rows / mo |
 
@@ -142,7 +142,7 @@ CREATE TABLE user_overlays (
     
     content TEXT NOT NULL,                -- the overlay markdown
     plain_english TEXT NOT NULL,          -- for the version history UI
-    based_on_coach_session UUID,
+    based_on_brief_session UUID,
     
     is_current BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -373,7 +373,7 @@ class UserOverlay(BaseModel):
     version: int
     content: str
     plain_english: str
-    based_on_coach_session: UUID | None
+    based_on_brief_session: UUID | None
     is_current: bool
     created_at: datetime
 

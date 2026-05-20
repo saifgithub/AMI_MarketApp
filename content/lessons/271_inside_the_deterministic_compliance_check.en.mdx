@@ -47,7 +47,7 @@ long_only: false
 
 The check runs in order, deterministically. *Is `proposed_size_pct` > `max_position_pct`?* 7.0 > 5 → BLOCK. *Is `region` in `region_allowlist`?* us → ok. *Does `no_fossil` apply?* No. *Does `halal` apply?* No. *Is `long_only` violated?* No. The first failure stops the chain and returns BLOCK with the specific clause. The PM persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same block. Edit your Mandate to `max_position_pct: 8` and run again — you get PASS. The model has not been re-prompted; the function read different data.
 
-Now contrast: if the check were "ask the PM agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A coaching note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see coaching. It sees two structured objects and a list of rules.
+Now contrast: if the check were "ask the PM agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A briefing note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see briefing. It sees two structured objects and a list of rules.
 
 ## The trap
 

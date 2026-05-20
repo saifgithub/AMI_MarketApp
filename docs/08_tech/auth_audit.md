@@ -51,7 +51,7 @@ Two layers, one swap point.
 
 **Token format:** `scaffold:<user_id_hex>:<hmac_sha256_hex>` (signed). Legacy `scaffold:<user_id_hex>` (unsigned) is accepted only when `env in ("local", "dev")` for migration backward compat.
 
-**Protected routers** (auth required): `mandate`, `journal`, `watchlist`, `coach`, `one_on_one`, `room`, `feedback`, plus per-route on `sim` and `lessons` (user-specific endpoints only).
+**Protected routers** (auth required): `mandate`, `journal`, `watchlist`, `brief` (+ legacy `coach`), `one_on_one`, `room`, `feedback`, plus per-route on `sim` and `lessons` (user-specific endpoints only).
 
 **Public routes** (no auth): `/v1/health`, `/v1/llm/status`, `/v1/sim/quote/{ticker}`, `/v1/sim/quotes`, `GET /v1/lessons`, `GET /v1/lessons/{lesson_id}`, `/v1/glossary/*`, `/v1/ai_coach/*`, `/v1/daily_challenge/*`, `/v1/onboarding/*`, all `POST /v1/auth/*`.
 
@@ -85,7 +85,7 @@ L-9 through L-12 surfaced during implementation and are added to the audit.
 
 **Test coverage:** [test_auth_dependency.py](../../backend/tests/unit/test_auth_dependency.py:107) — `test_wrong_user_returns_403`, `test_wrong_user_patch_returns_403`.
 
-**Residual risk:** Routes that use `user_id` in the body but DON'T do explicit ownership checks: room (`POST /v1/room/stream` accepts `user_id` in body — no ownership check), coach (`POST /v1/coach/start` etc.), one_on_one. For these, the caller must be authenticated (router-level guard) but can supply any `user_id` in the body. A malicious authenticated user could trigger a Room run against another user's identity, consuming the victim's credits or polluting their journal. **Accepted for alpha** (single tester, trusted), **must fix before External Beta** — add body-level `current_user.id == req.user_id` to all 7 affected routes.
+**Residual risk:** Routes that use `user_id` in the body but DON'T do explicit ownership checks: room (`POST /v1/room/stream` accepts `user_id` in body — no ownership check), brief (`POST /v1/brief/start` etc.), one_on_one. For these, the caller must be authenticated (router-level guard) but can supply any `user_id` in the body. A malicious authenticated user could trigger a Room run against another user's identity, consuming the victim's credits or polluting their journal. **Accepted for alpha** (single tester, trusted), **must fix before External Beta** — add body-level `current_user.id == req.user_id` to all 7 affected routes.
 
 ---
 
@@ -234,7 +234,7 @@ If any step fails, do NOT proceed to TestFlight. Roll back: `git tag --list 'alp
 
 | Item | When | Effort |
 |---|---|---|
-| Body-level ownership check on room/coach/one_on_one (L-1 residual) | Pre-External-Beta | ~2 hours |
+| Body-level ownership check on room/brief/one_on_one (L-1 residual) | Pre-External-Beta | ~2 hours |
 | auth_challenges cleanup job (L-4) | When table grows or pre-Beta | ~1 hour |
 | Anonymous continuity across reinstalls (L-5) | Pre-External-Beta | ~1 day |
 | Claim race fix (L-6) | Pre-Phase-3 | ~half day |

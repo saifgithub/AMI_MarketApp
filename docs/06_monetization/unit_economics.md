@@ -109,7 +109,7 @@ Two reasons:
 
 1. **The credits model self-meters cost.** Floor Manager users who run 20 premium Rooms × $2.50 = $50 LLM cost — well over their $34.99 sub. If they run only 10 (typical), cost is $25 — they're profitable. The 60% utilization assumption is a wash for us.
 
-2. **Power users are content creators.** They coach agents, write public replays (Phase 2), seed the reasoning-quality leaderboard. Their direct revenue might be break-even; their indirect value (community vitality, retention of free users who see their replays) is significant.
+2. **Power users are content creators.** They brief agents, write public replays (Phase 2), seed the reasoning-quality leaderboard. Their direct revenue might be break-even; their indirect value (community vitality, retention of free users who see their replays) is significant.
 
 If we discover the math is consistently negative, levers exist:
 - Reduce included credits (e.g., 500 → 400)

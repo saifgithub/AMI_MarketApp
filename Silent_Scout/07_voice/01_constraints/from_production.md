@@ -201,6 +201,58 @@ Implication: TTS renders text that has already been through the safety floor. Th
 
 ---
 
+## C-13: Storage architecture — text in DB, audio on device only
+
+Falls out of the locked scope (phone-everything, zero audio leaves the device). Verified against the production data model at `backend/app/db/models.py`.
+
+### Text → DB (existing storage paths)
+
+| Surface | Production table | Model class | File |
+|---|---|---|---|
+| 1-on-1 agent chat (STT transcript in + LLM response out) | `one_on_one_messages` | `OneOnOneMessageRow` | `backend/app/db/models.py:419–424` |
+| Room debate transcripts | `room_runs` | `RoomRunRow` | `backend/app/db/models.py:271–272` |
+| Journal entries (user-authored or agent-suggested) | `journal_entries` | `JournalEntryRow` | `backend/app/db/models.py:150–151` |
+| LLM audit trail (every gateway call) | `llm_audit` | `LLMAuditRow` | `backend/app/db/models.py:372–377` |
+| Concierge interview answers | (carried in `mandates` / `user_overlays`) | `MandateRow` / `UserOverlayRow` | `backend/app/db/models.py:91, 113` |
+| Daily briefing text | **does not exist yet** — new `daily_briefings` table needed when A17 ships | (new model class) | (to be added) |
+
+Voice features **inherit these paths exactly**:
+
+- STT transcripts are written to `one_on_one_messages` / `room_runs` as if the user typed them. No new table.
+- TTS outputs are read from those tables and rendered client-side. No new table.
+- Daily briefing assembled text needs a **new** `daily_briefings` row (user_id, render_date, text_body, voice_preference per Q8, status). The recommendation in `05_recommendation/path_forward.md` Stage 1 calls this out as part of A17.
+
+### Audio → device only
+
+- **TTS audio** is generated on the user's phone from text pulled out of the DB. Never uploaded.
+- **STT mic capture** is processed by the on-device recogniser and discarded. Only the resulting transcript is uploaded.
+- **No audio columns** in any production table. Don't add `audio_url` or `audio_blob`.
+- **Local audio cache** (Flutter side): daily-briefing audio cached for 7 days then auto-purged. Chat tap-to-listen audio is ephemeral (re-rendered each time, or cached for the duration of the chat session). UI/state policy lives in the Flutter app, not the backend.
+
+### Why the strict split
+
+- **Privacy.** "Zero audio leaves the device" is a locked scope decision (C-3, Saiful's "phone for everything"). Storing raw user audio server-side would violate that, even if encrypted.
+- **Cost.** No audio storage bills (S3 / Postgres bytea / etc.). No CDN bandwidth.
+- **Compliance + locale.** Sovereignty story per `Silent_Scout/README.md` "Sovereignty + locale" — same logic applies to user voice.
+- **Re-rendering is cheap.** Once on-device TTS is the path, the text *is* the canonical form. Audio is a derivative.
+
+### What this means for the LLM gateway + safety floor
+
+- LLM gateway (`backend/app/services/llm_gateway.py`) is unchanged. Input is text (STT-transcribed or typed), output is text (read aloud by TTS or read on screen).
+- Safety floor (`backend/app/agents/safety_floor.py`) is unchanged. Wraps the text before it ever reaches TTS — TTS only ever speaks post-safety output.
+- `llm_audit` continues to log every call. Voice surfaces produce more LLM calls (each spoken user turn is an LLM call) but the audit shape is identical.
+
+### What this means for `tts_gateway.py` (C-2)
+
+The originally-planned server-side `app/services/tts_gateway.py` (mirroring `llm_gateway.py` per A14) was sized to *render* audio. In the on-device path, the gateway either:
+
+- **Disappears** — voice config is part of the user's mandate row; client reads voice config + text + renders locally. No server-side TTS abstraction needed.
+- **Shrinks to voice-config-only** — `GET /v1/tts/voice-config?agent=fundamentals_analyst` returns "use voice X at quality Y for agent family Z." No audio bytes ever transit.
+
+`05_recommendation/path_forward.md` picks one of these explicitly.
+
+---
+
 ## What's NOT locked (and therefore in scope for this research to decide)
 
 - Whether TTS runs on the phone, on GB10 on-prem, or in cloud APIs.

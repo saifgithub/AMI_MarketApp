@@ -460,11 +460,11 @@ abstract class AppLocalizations {
   /// **'1-ON-1'**
   String get journalFilterOneOnOne;
 
-  /// No description provided for @journalFilterCoach.
+  /// No description provided for @journalFilterBrief.
   ///
   /// In en, this message translates to:
-  /// **'COACH'**
-  String get journalFilterCoach;
+  /// **'BRIEF'**
+  String get journalFilterBrief;
 
   /// No description provided for @journalFilterLessons.
   ///
@@ -493,7 +493,7 @@ abstract class AppLocalizations {
   /// No description provided for @journalEmptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Talk to an agent, coach one, or complete a lesson — every action lands here automatically.'**
+  /// **'Talk to an agent, brief one, or complete a lesson — every action lands here automatically.'**
   String get journalEmptyBody;
 
   /// No description provided for @journalEntryTypeOneOnOne.
@@ -502,11 +502,11 @@ abstract class AppLocalizations {
   /// **'1-ON-1'**
   String get journalEntryTypeOneOnOne;
 
-  /// No description provided for @journalEntryTypeCoach.
+  /// No description provided for @journalEntryTypeBrief.
   ///
   /// In en, this message translates to:
-  /// **'COACH'**
-  String get journalEntryTypeCoach;
+  /// **'BRIEF'**
+  String get journalEntryTypeBrief;
 
   /// No description provided for @journalEntryTypeLesson.
   ///
@@ -574,7 +574,7 @@ abstract class AppLocalizations {
   /// **'OVERLAY'**
   String get journalDetailBlockOverlay;
 
-  /// Coach proposal detail — shows which overlay version was saved. {version} is the integer version.
+  /// Brief proposal detail — shows which overlay version was saved. {version} is the integer version.
   ///
   /// In en, this message translates to:
   /// **'Saved as v{version}'**
@@ -1264,13 +1264,13 @@ abstract class AppLocalizations {
   /// **'Ask anything…'**
   String get oneOnOneHint;
 
-  /// No description provided for @oneOnOneCoachTooltip.
+  /// No description provided for @oneOnOneBriefTooltip.
   ///
   /// In en, this message translates to:
   /// **'Brief this agent'**
-  String get oneOnOneCoachTooltip;
+  String get oneOnOneBriefTooltip;
 
-  /// Coach Your Agent screen header. {agent} is the agent's display name in upper case.
+  /// Brief Your Agent screen header. {agent} is the agent's display name in upper case.
   ///
   /// In en, this message translates to:
   /// **'BRIEF {agent}'**
@@ -1291,7 +1291,7 @@ abstract class AppLocalizations {
   /// No description provided for @briefNoEditsLeft.
   ///
   /// In en, this message translates to:
-  /// **'⚠️ No edits left — upgrade to keep coaching'**
+  /// **'⚠️ No edits left — upgrade to keep briefing'**
   String get briefNoEditsLeft;
 
   /// Amber notice when only 1 edit is left. {count} is the number remaining (typically 1).
@@ -1336,7 +1336,7 @@ abstract class AppLocalizations {
   /// **'BRIEF REFUSED'**
   String get briefRefused;
 
-  /// Snackbar after a coach proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.
+  /// Snackbar after a brief proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.
   ///
   /// In en, this message translates to:
   /// **'Saved as v{version} — {summary}'**
@@ -1408,7 +1408,7 @@ abstract class AppLocalizations {
   /// **'PROPOSE CHANGE'**
   String get briefProposeChange;
 
-  /// Coach history screen title. {agent} is the agent's display name in upper case.
+  /// Brief history screen title. {agent} is the agent's display name in upper case.
   ///
   /// In en, this message translates to:
   /// **'{agent} HISTORY'**
@@ -1880,7 +1880,7 @@ abstract class AppLocalizations {
   /// Journal tour step 1 — filter chips body.
   ///
   /// In en, this message translates to:
-  /// **'Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.'**
+  /// **'Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.'**
   String get tourJournal1Body;
 
   /// Journal tour step 2 — search bar title.

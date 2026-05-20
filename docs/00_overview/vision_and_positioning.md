@@ -2,7 +2,7 @@
 
 ## One-line vision
 
-AMI Trade is a mobile-first, AI-first trading-education app where each user becomes the **CEO of their own 12-agent analyst team** — a team that is personalised to their financial mandate and that they progressively learn to command, coach, and trust.
+AMI Trade is a mobile-first, AI-first trading-education app where each user becomes the **CEO of their own 12-agent analyst team** — a team that is personalised to their financial mandate and that they progressively learn to command, brief, and trust.
 
 ## The problem we're solving
 
@@ -21,7 +21,7 @@ These are the actual skills professional traders use. They are unteachable throu
 
 > **Teach people to *manage a team that trades for them*, not to trade alone.**
 
-This is more durable than teaching trading mechanics — the team transfers, the mechanics rot. It also maps naturally onto AI: each role becomes an agent, and the agents debate visibly so the user learns by watching, then by coaching, then by overriding.
+This is more durable than teaching trading mechanics — the team transfers, the mechanics rot. It also maps naturally onto AI: each role becomes an agent, and the agents debate visibly so the user learns by watching, then by briefing, then by overriding.
 
 ## What we are (and aren't)
 

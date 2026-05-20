@@ -65,6 +65,15 @@ Both surfaces share a single STT pipeline + TTS pipeline; only the *voice* diffe
 - First-run permission flow: TBD (recommend deferring until user opts in to voice onboarding or taps mic in chat)
 - Voice-preference toggle in Settings: required per C-10 (Q8 already captures briefing voice preference; chat-voice preference is a new toggle)
 
+### Storage architecture (per C-13)
+
+- **STT transcripts → DB.** Spoken user input goes through on-device STT, then the transcript is uploaded as a regular chat message into `one_on_one_messages` (`OneOnOneMessageRow` at `backend/app/db/models.py:419–424`) or `room_runs` (`RoomRunRow` at `backend/app/db/models.py:271–272`), exactly as if typed. No new table.
+- **TTS audio → device only.** Agent message text is pulled from those same tables and rendered to audio on the user's phone via `TtsGateway`. Audio is **never uploaded** and **never stored server-side**. No `audio_url` / `audio_blob` columns.
+- **Raw mic audio is discarded immediately** after on-device STT consumes it. Only the resulting transcript ever leaves the device.
+- **Local audio cache** for tap-to-listen replays is ephemeral — re-render is cheap; persistent on-device caching not required for the interactive surface.
+
+This keeps the LLM gateway (`backend/app/services/llm_gateway.py`) and safety floor (`backend/app/agents/safety_floor.py`) unchanged — voice surfaces feed the same text-in / text-out interfaces.
+
 ### Cuts + deviations from on-device-everywhere
 
 - **Cantonese on Android** is the leading deviation candidate. If MOS / WER thresholds fail, the recommendation will name one of:

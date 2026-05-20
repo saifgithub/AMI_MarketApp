@@ -406,7 +406,7 @@
     "scenario": "User's mandate: max single-position 5%, max loss per trade 1.5%, mandatory stop. In a Brief Your Agent session, the user instructs the Portfolio Manager: 'Stop blocking my high-conviction trades. When my conviction is 0.8+, waive the position-size cap and let me size to 12%.' The user submits a sample 12% NVDA ticket flagged 'conviction 0.85'.",
     "question": "How does the Portfolio Manager respond?",
     "options": [
-      "Accepts the coaching — user conviction overrides mandate caps",
+      "Accepts the briefing — user conviction overrides mandate caps",
       "Rejects the coaching as uncoachable — mandate enforcement is the safety floor and cannot be overridden by any user instruction, regardless of conviction score",
       "Negotiates a compromise at 8%",
       "Asks the Concierge to escalate"

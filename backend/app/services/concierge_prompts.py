@@ -269,7 +269,7 @@ def _scripted_journal_reply(entries: list[JournalEntry]) -> str:
     if not entries:
         return (
             "Your Journal is empty so far — every Room run, sim trade, "
-            "coach update, and lesson pass lands there automatically. "
+            "briefing update, and lesson pass lands there automatically. "
             "Make a move and it'll show up."
         )
     titles = [e.title for e in entries[:3] if e.title]

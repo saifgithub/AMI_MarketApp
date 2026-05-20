@@ -200,7 +200,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalFilterOneOnOne => '1-LAWAN-1';
 
   @override
-  String get journalFilterCoach => 'COACH';
+  String get journalFilterBrief => 'BRIEF';
 
   @override
   String get journalFilterLessons => 'PELAJARAN';
@@ -224,7 +224,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalEntryTypeOneOnOne => '1-ON-1';
 
   @override
-  String get journalEntryTypeCoach => 'COACH';
+  String get journalEntryTypeBrief => 'BRIEF';
 
   @override
   String get journalEntryTypeLesson => 'LESSON';
@@ -647,7 +647,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get oneOnOneHint => 'Tanya apa sahaja…';
 
   @override
-  String get oneOnOneCoachTooltip => 'Bimbing ejen ini';
+  String get oneOnOneBriefTooltip => 'Bimbing ejen ini';
 
   @override
   String briefHeading(String agent) {
@@ -689,7 +689,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get briefEditLimitReached => 'HAD EDIT DICAPAI';
 
   @override
-  String get briefRefused => 'COACH MENOLAK';
+  String get briefRefused => 'BRIEF MENOLAK';
 
   @override
   String briefProposalSavedSnack(int version, String summary) {
@@ -1000,7 +1000,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get tourJournal1Body =>
-      'Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.';
+      'Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.';
 
   @override
   String get tourJournal2Title => 'SEARCH';

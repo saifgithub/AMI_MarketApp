@@ -310,7 +310,7 @@ def test_user_overlay_appended_when_user_id_provided(trader_mandate: Mandate):
         plan=Plan.TRADER,
     )
     full = build_agent_prompt(AgentId.BEAR_RESEARCHER, trader_mandate, user_id=user_id)
-    assert "USER COACHING OVERLAY" in full
+    assert "USER BRIEFING OVERLAY" in full
     assert "Skip macro doom narratives" in full
 
 
@@ -328,7 +328,7 @@ def test_user_overlay_appears_before_safety_floor_on_pm(trader_mandate: Mandate)
         plan=Plan.TRADER,
     )
     full = build_agent_prompt(AgentId.PORTFOLIO_MANAGER, trader_mandate, user_id=user_id)
-    overlay_idx = full.find("USER COACHING OVERLAY")
+    overlay_idx = full.find("USER BRIEFING OVERLAY")
     floor_idx = full.find("SAFETY FLOOR")
     assert overlay_idx > 0
     assert floor_idx > overlay_idx, "safety floor must come AFTER user overlay so it dominates"
@@ -336,7 +336,7 @@ def test_user_overlay_appears_before_safety_floor_on_pm(trader_mandate: Mandate)
 
 def test_no_overlay_when_user_id_none(trader_mandate: Mandate):
     full = build_agent_prompt(AgentId.BEAR_RESEARCHER, trader_mandate)
-    assert "USER COACHING OVERLAY" not in full
+    assert "USER BRIEFING OVERLAY" not in full
 
 
 # ── Streaming chat smoke ───────────────────────────────────────────────────

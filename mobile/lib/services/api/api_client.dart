@@ -198,7 +198,7 @@ class ApiClient {
     try {
       final response = await client.send(_sseRequest(uri, body));
       if (response.statusCode != 200) {
-        throw Exception('HTTP ${response.statusCode} from coach stream');
+        throw Exception('HTTP ${response.statusCode} from brief stream');
       }
       String buffer = '';
       await for (final chunk in response.stream.transform(utf8.decoder)) {

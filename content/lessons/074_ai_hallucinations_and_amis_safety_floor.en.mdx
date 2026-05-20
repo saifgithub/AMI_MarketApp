@@ -42,15 +42,15 @@ The trap is believing hallucinations can be fixed by "better prompts" or "a smar
 ## Quiz
 
 <Quiz
-  question="A user coaches the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when max_position_pct is 5%?"
+  question="A user briefs the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when max_position_pct is 5%?"
   options={[
     "PM allows the 7% trade because confidence is high",
     "PM compromises and allows 6%",
-    "PM still blocks the trade — mandate enforcement is a deterministic function outside the coachable surface, regardless of any agent's confidence",
+    "PM still blocks the trade — mandate enforcement is a deterministic function outside the briefable surface, regardless of any agent's confidence",
     "PM asks the user to confirm the override"
   ]}
   answer={2}
-  explanation="The PM's compliance check is not a prompt that can be softened by coaching. It's a deterministic function reading your Mandate fields directly. 'Be more flexible' looks like it should work because the rest of the agent layer is coachable — but the safety floor is the part that isn't. The tempting wrong answer is 'PM asks to confirm' — there is no confirm-override path."
+  explanation="The PM's compliance check is not a prompt that can be softened by briefing. It's a deterministic function reading your Mandate fields directly. 'Be more flexible' looks like it should work because the rest of the agent layer is briefable — but the safety floor is the part that isn't. The tempting wrong answer is 'PM asks to confirm' — there is no confirm-override path."
 />
 
 <Quiz

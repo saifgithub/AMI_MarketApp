@@ -90,7 +90,7 @@ Each module covers (at a minimum):
 | **How they're personalised** | Which mandate fields shape their behaviour |
 | **Common patterns** | What they say in bull markets vs bear markets vs sideways |
 | **How to read them** | What to look for in their reasoning |
-| **How to coach them** | Common Coach prompts users find useful |
+| **How to brief them** | Common Brief prompts users find useful |
 
 ## Predict the Call — design
 

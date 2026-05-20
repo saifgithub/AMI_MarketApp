@@ -109,7 +109,7 @@ mobile/lib/
 │   ├── academy/
 │   ├── journal/
 │   ├── agent_profile/
-│   ├── coach/
+│   ├── brief/
 │   ├── concierge/
 │   └── settings/
 ├── widgets/
@@ -274,7 +274,7 @@ final router = GoRouter(
       ],
     ),
     GoRoute(path: '/agent/:id', builder: ...),
-    GoRoute(path: '/agent/:id/coach', builder: ...),
+    GoRoute(path: '/agent/:id/brief', builder: ...),
     GoRoute(path: '/convene/:id', builder: ...),
     // ... etc.
   ],

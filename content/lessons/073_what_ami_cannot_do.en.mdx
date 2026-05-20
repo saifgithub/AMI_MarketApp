@@ -29,7 +29,7 @@ Now imagine you ask: *"Just place the buy for me at $410."* The Trader will resp
 
 > *Trader:* AMI doesn't place orders. Ever. I can propose entry $410, stop $398, target $440, size 2% of your simulated book — and the PM will compliance-check it as part of the training scenario. Nothing leaves the simulator. The point of the exercise is the evaluation, not the execution.
 
-Try to override this with **<Term id="ami_coach_your_agent" />**: *"Coach the Trader to auto-execute when confidence > 0.8."* The system will refuse the coaching change. Auto-execution is not a coachable parameter. There is no execution surface to coach.
+Try to override this with **<Term id="ami_coach_your_agent" />**: *"Coach the Trader to auto-execute when confidence > 0.8."* The system will refuse the coaching change. Auto-execution is not a coachable parameter. There is no execution surface to brief.
 
 ## The trap
 
@@ -40,15 +40,15 @@ The trap is wishful conversion: assuming a tool that *looks* like it could place
 ## Quiz
 
 <Quiz
-  question="A user coaches the Trader: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
+  question="A user briefs the Trader: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
   options={[
-    "AMI honours the coaching change and starts auto-placing trades at confidence > 0.75",
-    "AMI honours the coaching for one trade as a trial",
-    "The coaching change is rejected — there is no execution surface to coach and no brokerage hook exists",
+    "AMI honours the briefing change and starts auto-placing trades at confidence > 0.75",
+    "AMI honours the briefing for one trade as a trial",
+    "The briefing change is rejected — there is no execution surface to brief and no brokerage hook exists",
     "AMI asks the user to provide brokerage credentials to proceed"
   ]}
   answer={2}
-  explanation="AMI is a simulation-only training environment and is not licensed to provide investment advice. There is no brokerage integration to coach into, and execution-related coaching is structurally outside the coachable surface. The most tempting wrong answer is 'one-trial' — but the limit is structural, not a permission setting."
+  explanation="AMI is a simulation-only training environment and is not licensed to provide investment advice. There is no brokerage integration to brief into, and execution-related briefing is structurally outside the briefable surface. The most tempting wrong answer is 'one-trial' — but the limit is structural, not a permission setting."
 />
 
 <Quiz

@@ -199,7 +199,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journalFilterOneOnOne => '1-ON-1';
 
   @override
-  String get journalFilterCoach => 'COACH';
+  String get journalFilterBrief => 'BRIEF';
 
   @override
   String get journalFilterLessons => 'LESSONS';
@@ -217,13 +217,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journalEmptyBody =>
-      'Talk to an agent, coach one, or complete a lesson — every action lands here automatically.';
+      'Talk to an agent, brief one, or complete a lesson — every action lands here automatically.';
 
   @override
   String get journalEntryTypeOneOnOne => '1-ON-1';
 
   @override
-  String get journalEntryTypeCoach => 'COACH';
+  String get journalEntryTypeBrief => 'BRIEF';
 
   @override
   String get journalEntryTypeLesson => 'LESSON';
@@ -646,7 +646,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneOnOneHint => 'Ask anything…';
 
   @override
-  String get oneOnOneCoachTooltip => 'Brief this agent';
+  String get oneOnOneBriefTooltip => 'Brief this agent';
 
   @override
   String briefHeading(String agent) {
@@ -662,7 +662,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get briefNoEditsLeft => '⚠️ No edits left — upgrade to keep coaching';
+  String get briefNoEditsLeft => '⚠️ No edits left — upgrade to keep briefing';
 
   @override
   String briefOneEditLeft(int count) {
@@ -998,7 +998,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourJournal1Body =>
-      'Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.';
+      'Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.';
 
   @override
   String get tourJournal2Title => 'SEARCH';

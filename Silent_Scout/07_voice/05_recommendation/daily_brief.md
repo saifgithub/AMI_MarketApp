@@ -67,6 +67,15 @@ If the recommendation overturns A17 (phone-only or hybrid), `05_recommendation/p
 
 If the recommendation preserves A17 (server-side), it still recommends **swapping the cloud TTS** (Azure/ElevenLabs) for the on-prem TTS model running on GB10 — so A14 still gets a rewrite even if A17 doesn't.
 
+### Storage architecture (per C-13)
+
+- **Briefing text → DB.** The apscheduler job assembles the ~90-second text body server-side and persists it. **No `daily_briefings` table exists today** — A17 hasn't shipped (verified in `backend/app/db/models.py`). When A17 lands, a new `daily_briefings` row is needed with: `user_id`, `render_date`, `text_body`, `voice_preference` (from Q8 per C-10), `delivered_at`, `read_at`. Same SQLAlchemy + Alembic conventions as the existing models.
+- **Audio → device only.** The push notification carries the text payload (~2 KB) plus a job ID. The Flutter app receives the push, schedules a `BGProcessingTask` / `WorkManager` task ahead of the user's chosen briefing time, and renders the audio locally from that text via `TtsGateway`. **The audio file never exists on the server.**
+- **Local audio cache** — last 7 days of rendered audio files kept on-device; auto-purge on day 8. User can replay any of the last 7 from the briefing-history screen without re-rendering. After 7 days the text persists in DB but the audio does not — replaying an older brief triggers a fresh on-device render.
+- **No bandwidth audio cost.** Compared to the original A17 design (audio-attachment URL push), this saves ~1–3 MB per user per day in CDN bandwidth.
+
+If phone rendering proves infeasible on alpha floor (per the C-3 decision lattice above), the deviation is **server-side render on GB10 on-prem**, not cloud storage. Audio in that case is still never persisted server-side — it's streamed to the device on first play and cached locally with the same 7-day TTL.
+
 ### Cuts + deviations
 
 - **Cantonese Android** is the most likely deviation per `03_coverage_matrix/tts_language_coverage.md`. Likely outcome: server-rendered yue Android (single deviation cell) or defer yue to Phase 2.

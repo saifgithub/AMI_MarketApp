@@ -124,7 +124,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 ## Brief Your Agent
 
 ### D-022 — Conversational prompt tuning, not raw markdown editing
-- **Decided**: Users coach via conversation; agent proposes diff; user approves
+- **Decided**: Users brief via conversation; agent proposes diff; user approves
 - **Source**: Saiful — "the user can chat with the Agent and generate new prompts"
 - **Rationale**: Removes risk and intimidation of raw prompt editing. Flagship AI-first feature.
 

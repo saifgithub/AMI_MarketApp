@@ -593,7 +593,7 @@
     "category": "beginner",
     "question": "Why can't I change the Portfolio Manager's safety rules?",
     "short_answer": "Because beginners often try to override the only thing keeping them in the game on a bad day. The PM safety floor is a deliberately uncoachable guardrail.",
-    "long_answer": "You can coach every other agent \u2014 tone, focus, weight on technicals, how aggressive the Trader is. The Portfolio Manager's basic risk floor stays fixed. It is the part of the system that protects you from yourself when emotions run hot. If it ever blocks a trade, that is the feature working.",
+    "long_answer": "You can brief every other agent \u2014 tone, focus, weight on technicals, how aggressive the Trader is. The Portfolio Manager's basic risk floor stays fixed. It is the part of the system that protects you from yourself when emotions run hot. If it ever blocks a trade, that is the feature working.",
     "related_lessons": [
       "013"
     ],

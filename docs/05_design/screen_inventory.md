@@ -10,7 +10,7 @@ Every MVP screen with purpose, key elements, and interactions.
 | 03 | Floor (Home) | `/floor` | Honeycomb home — Concierge + 12 agents + mandate health + briefing |
 | 04 | 1-on-1 Bottom Sheet | overlay | Quick chat with one agent (from long-press on hex) |
 | 05 | Agent Profile | `/agent/{id}` | Overview / Past Calls / Performance / Coach tabs |
-| 06 | Coach Session | `/agent/{id}/coach` | Conversational prompt tuning with diff card |
+| 06 | Brief Session | `/agent/{id}/brief` | Conversational prompt tuning with diff card |
 | 07 | Sim Portfolio | `/sim` | Holdings, P&L, drawdown gauge, recent trades |
 | 08 | Position Detail | `/sim/{ticker}` | Single position deep-dive with agent takes |
 | 09 | Trade Ticket | `/sim/trade` | Submit a sim trade with PM compliance pre-check |
@@ -52,7 +52,7 @@ See [`floor_home_honeycomb.md`](floor_home_honeycomb.md) — full spec.
 | **Overview** | What they do + their current overlay summary (English) + last 3 calls + button "Start 1-on-1" / "Coach" |
 | **Past Calls** | Timeline of every Room and 1-on-1 this agent was in. Tap to replay. |
 | **Performance** (Phase 2) | Hit rate, alignment with user mandate, override rate |
-| **Coach** | Entry to [`06_coach_session`](#06-coach-session) |
+| **Brief** | Entry to [`06_brief_session`](#06-brief-session) |
 
 ### 06 Coach Session
 

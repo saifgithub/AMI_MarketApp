@@ -26,7 +26,7 @@ System diagram, data flow, background jobs.
 │  ─ Routes:                   │    │  • Realtime (websockets)         │
 │    /agents/*  /mandate/*     │    │                                  │
 │    /sim/*     /journal/*     │    │  Postgres tables:                │
-│    /concierge/* /coach/*     │    │  users, mandates, agent_runs,    │
+│    /concierge/* /brief/*     │    │  users, mandates, agent_runs,    │
 │    /lessons/*  /academy/*    │    │  journal_entries, user_overlays, │
 │    /billing/webhook (RC)     │    │  credit_transactions, ...        │
 └──────────────────────────────┘    └──────────────────────────────────┘
@@ -119,7 +119,7 @@ Mobile prompts: "Open trade ticket?" / "Save and dismiss"
 ```
 User opens Coach session for Bear Researcher
      ↓
-Mobile → API: GET /coach/bear_researcher/session/start
+Mobile → API: GET /brief/bear_researcher/session/start
      ↓
 API returns:
   - Current base_prompt + mandate_overlay + user_overlay (composed)
@@ -131,7 +131,7 @@ At end of session, Bear proposes overlay update (LLM-generated diff)
      ↓
 Mobile shows diff card; user taps Accept/Refine/Reject
      ↓
-On Accept → POST /coach/bear_researcher/overlay
+On Accept → POST /brief/bear_researcher/overlay
   - Creates new UserOverlay row (version increment)
   - is_current = TRUE for new row, FALSE for previous
      ↓

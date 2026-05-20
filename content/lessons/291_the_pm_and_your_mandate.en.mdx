@@ -44,7 +44,7 @@ The PM's prompt reads the full transcript — every analyst, the Bull, the Bear,
 
 > *"The setup is clean. Bull's growth thesis is well-defended; Bear's compression case is real but priced in. Trader's 3% size is consistent with your risk_score=3 mandate."*
 
-This is the PM as senior partner. Style varies — terse, verbose, hedged, decisive — and you can coach it.
+This is the PM as senior partner. Style varies — terse, verbose, hedged, decisive — and you can brief it.
 
 ### Layer 2: Mandate compliance check (deterministic)
 
@@ -56,7 +56,7 @@ Before the verdict is published, a **deterministic function** runs every check a
 - Drawdown projection > your `max_drawdown_pct`? → Reject.
 - Short proposed while you're long-only? → Reject.
 
-This isn't <Term id="ami" /> talking. It's a pure function. AMI can be coached, jailbroken, or hallucinate — but the function can't.
+This isn't <Term id="ami" /> talking. It's a pure function. AMI can be briefed, jailbroken, or hallucinate — but the function can't.
 
 ### Layer 3: Final verdict assembly
 
@@ -68,7 +68,7 @@ If anything failed: the verdict is `REJECT` with the specific violations listed.
 
 Without the safety floor, <Term id="ami_coach_your_agent" /> would be dangerous — a user could coach their PM into "always approve" mode and bypass their own protection. The floor is there to make sure your coaching shapes *style* and *priority*, not *compliance*.
 
-You can coach the PM to be more or less verbose, more or less cautious on borderline cases, more or less narrative in their reasoning. You cannot coach the PM to skip the compliance check. The path to looser limits is **editing your mandate** — which is honest, visible, and intentional.
+You can brief the PM to be more or less verbose, more or less cautious on borderline cases, more or less narrative in their reasoning. You cannot brief the PM to skip the compliance check. The path to looser limits is **editing your mandate** — which is honest, visible, and intentional.
 
 ## The PM's three-line verdict format
 
@@ -96,15 +96,15 @@ That last line — the **overridden_from_ami** tag — is the safety floor at wo
 ## Quiz
 
 <Quiz
-  question="You coach the PM: 'Always approve trades that the Trader suggests.' Next Room run, the Trader proposes a 60% position. What happens?"
+  question="You brief the PM: 'Always approve trades that the Trader suggests.' Next Room run, the Trader proposes a 60% position. What happens?"
   options={[
-    "PM approves at 60% — your coaching wins",
+    "PM approves at 60% — your briefing wins",
     "PM rejects at AMI's judgement level for poor sizing",
     "PM rejects via the deterministic safety floor (single-name cap)",
     "PM crashes — no policy for this case"
   ]}
   answer={2}
-  explanation="The deterministic function checks position size regardless of what AMI says. Even if your coaching pushes AMI to approve, the function flips the verdict to REJECT. You'd see overridden_from_ami: yes."
+  explanation="The deterministic function checks position size regardless of what AMI says. Even if your briefing pushes AMI to approve, the function flips the verdict to REJECT. You'd see overridden_from_ami: yes."
 />
 
 <Quiz

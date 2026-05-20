@@ -40,7 +40,7 @@ APP
 │           ├── overview tab
 │           ├── past_calls tab
 │           ├── performance tab           (Phase 2)
-│           └── coach tab → 06_coach_session
+│           └── brief tab → 06_brief_session
 ├── Sim (tab 2)
 │   ├── 07_sim_portfolio
 │   │   └── (tap holding) → 08_position_detail

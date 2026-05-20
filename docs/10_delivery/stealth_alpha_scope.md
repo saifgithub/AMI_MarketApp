@@ -88,7 +88,7 @@ The Founders cohort gives us:
 
 | Goal | What we measure |
 |---|---|
-| **Validate the core loop** | Do users actually run Rooms? Do they coach agents? Do they come back? |
+| **Validate the core loop** | Do users actually run Rooms? Do they brief agents? Do they come back? |
 | **Validate the 12-agent value proposition** | Do users find the multi-agent debate valuable? Do they understand each agent's role? |
 | **Validate mandate-driven personalisation** | Do users feel the agents are "theirs"? |
 | **Surface critical bugs** | Crash rate, broken flows, RTL edge cases (postponed to v1.0 anyway), agent quality issues |

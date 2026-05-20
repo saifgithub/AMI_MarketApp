@@ -103,7 +103,7 @@ When the 7-day trial expires:
 
 1. Push notification + email: *"Your trial ended. Here's where you stand."*
 2. On next app open, a single-screen summary:
-   - "You ran X Room sessions, had Y 1-on-1s, coached Z agents."
+   - "You ran X Room sessions, had Y 1-on-1s, briefed Z agents."
    - "You completed N Academy modules — those agents stay unlocked for free under Earn Path."
    - "You used [W] of [X] possible features."
    - Two clear paths forward:

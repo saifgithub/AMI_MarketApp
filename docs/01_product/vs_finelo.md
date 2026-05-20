@@ -49,7 +49,7 @@ These are the differentiators — none of Finelo's features above cover them.
 | 8 | **Decision Journal with full transcripts** | Every Room, 1-on-1, trade, and mandate edit captured permanently. Replayable. The longer a user is with us, the more valuable their journal. |
 | 9 | **PM compliance pre-check on every trade** | Before a sim trade submits, the Portfolio Manager evaluates against the user's mandate. Can veto with explanation. |
 | 10 | **Voice morning briefings** in EN/AR/MS | TTS audio "stand-up with your team." Habit-forming. Paid tier. |
-| 11 | **Mandate Drift Alerts** | Background check that the user's sim portfolio still matches their stated mandate. Proactive coaching. |
+| 11 | **Mandate Drift Alerts** | Background check that the user's sim portfolio still matches their stated mandate. Proactive briefing. |
 | 12 | **Safety floor on PM mandate enforcement** | Even crazy users get risk-managed. Uncoachable. Visible-but-locked in the Coach UI. |
 | 13 | **Reasoning-quality leaderboard** (Phase 2) | Public ranking by quality of reasoning, not P&L. Attracts serious learners; repels gambling-loop seekers. |
 | 14 | **AMI hex design language** | Distinctive visual identity. Honeycomb home screen with Concierge at the centre — no other app looks like this. |

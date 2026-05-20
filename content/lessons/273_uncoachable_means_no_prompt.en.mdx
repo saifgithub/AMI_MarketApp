@@ -21,7 +21,7 @@ When <Term id="ami" /> says the <Term id="ami_pm_safety_floor" /> is *uncoachabl
 
 ## How this plays out in real markets
 
-Picture two parallel files in AMI's backend. One is the Bull Researcher's prompt — a long natural-language instruction telling the agent how to write a bull thesis. **<Term id="ami_coach_your_agent" />** sends user-supplied text that gets composed into this prompt. You can coach the Bull Researcher to *"weight 5G infrastructure plays higher when discussing telecom"* and the next time the Bull Researcher runs, that string is in its prompt. The model's output shifts accordingly.
+Picture two parallel files in AMI's backend. One is the Bull Researcher's prompt — a long natural-language instruction telling the agent how to write a bull thesis. **<Term id="ami_coach_your_agent" />** sends user-supplied text that gets composed into this prompt. You can brief the Bull Researcher to *"weight 5G infrastructure plays higher when discussing telecom"* and the next time the Bull Researcher runs, that string is in its prompt. The model's output shifts accordingly.
 
 The other file is the PM compliance check. It looks roughly like:
 
@@ -43,7 +43,7 @@ The PM persona that explains the block in plain English does receive a prompt �
 
 ## The trap
 
-The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let coaching break the floor") and looking for the policy loophole. There is no policy. There is geography. The rules are in a place the coaching surface does not reach. This matters because policy promises can be broken — by a clever prompt injection, by a model update, by a configuration drift. Geography cannot. If your coaching never touches the compliance function, no string you type can change what the function does. That is what "structural" means in *"the safety floor is structural, not stylistic"*.
+The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let coaching break the floor") and looking for the policy loophole. There is no policy. There is geography. The rules are in a place the briefing surface does not reach. This matters because policy promises can be broken — by a clever prompt injection, by a model update, by a configuration drift. Geography cannot. If your coaching never touches the compliance function, no string you type can change what the function does. That is what "structural" means in *"the safety floor is structural, not stylistic"*.
 
 <ChatWith agent="portfolio_manager" />
 

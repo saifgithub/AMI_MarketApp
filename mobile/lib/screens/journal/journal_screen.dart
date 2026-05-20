@@ -38,7 +38,7 @@ class JournalScreen extends ConsumerStatefulWidget {
       (type: JournalEntryType.roomRun, label: l.journalFilterRoom),
       (type: JournalEntryType.simTrade, label: l.journalFilterTrade),
       (type: JournalEntryType.oneOnOne, label: l.journalFilterOneOnOne),
-      (type: JournalEntryType.agentCoach, label: l.journalFilterCoach),
+      (type: JournalEntryType.agentCoach, label: l.journalFilterBrief),
       (type: JournalEntryType.lessonComplete, label: l.journalFilterLessons),
       (type: JournalEntryType.agentUnlock, label: l.journalFilterUnlocks),
     ];
@@ -452,7 +452,7 @@ class _EntryCard extends StatelessWidget {
       case JournalEntryType.oneOnOne:
         return l.journalEntryTypeOneOnOne;
       case JournalEntryType.agentCoach:
-        return l.journalEntryTypeCoach;
+        return l.journalEntryTypeBrief;
       case JournalEntryType.lessonComplete:
         return l.journalEntryTypeLesson;
       case JournalEntryType.agentUnlock:

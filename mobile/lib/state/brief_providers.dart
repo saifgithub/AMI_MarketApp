@@ -109,7 +109,7 @@ class BriefNotifier extends StateNotifier<BriefState> {
       );
       await loadHistory();
     } catch (e) {
-      state = state.copyWith(error: 'Could not start coaching: $e');
+      state = state.copyWith(error: 'Could not start briefing: $e');
     }
   }
 

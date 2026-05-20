@@ -117,7 +117,7 @@
     "journalFilterRoom": "ROOM",
     "journalFilterTrade": "TRADE",
     "journalFilterOneOnOne": "1-ON-1",
-    "journalFilterCoach": "COACH",
+    "journalFilterBrief": "BRIEF",
     "journalFilterLessons": "LESSONS",
     "journalFilterUnlocks": "UNLOCKS",
     "journalRetentionWarning": "Floor Pass: last {days} days only. Upgrade to keep everything.",
@@ -126,9 +126,9 @@
         "placeholders": {"days": {"type": "int"}}
     },
     "journalEmptyTitle": "No entries yet.",
-    "journalEmptyBody": "Talk to an agent, coach one, or complete a lesson — every action lands here automatically.",
+    "journalEmptyBody": "Talk to an agent, brief one, or complete a lesson — every action lands here automatically.",
     "journalEntryTypeOneOnOne": "1-ON-1",
-    "journalEntryTypeCoach": "COACH",
+    "journalEntryTypeBrief": "BRIEF",
     "journalEntryTypeLesson": "LESSON",
     "journalEntryTypeUnlock": "UNLOCK",
     "journalEntryTypeTrade": "TRADE",
@@ -142,7 +142,7 @@
     "journalDetailBlockOverlay": "OVERLAY",
     "journalDetailSavedAsVersion": "Saved as v{version}",
     "@journalDetailSavedAsVersion": {
-        "description": "Coach proposal detail — shows which overlay version was saved. {version} is the integer version.",
+        "description": "Brief proposal detail — shows which overlay version was saved. {version} is the integer version.",
         "placeholders": {"version": {"type": "int"}}
     },
     "journalDetailVerdictLine": "VERDICT: {action}",
@@ -316,11 +316,11 @@
     "oneOnOneAskAnything": "Ask me anything in my domain.\nType below to start.",
     "oneOnOneStreaming": "Streaming…",
     "oneOnOneHint": "Ask anything…",
-    "oneOnOneCoachTooltip": "Brief this agent",
+    "oneOnOneBriefTooltip": "Brief this agent",
 
     "briefHeading": "BRIEF {agent}",
     "@briefHeading": {
-        "description": "Coach Your Agent screen header. {agent} is the agent's display name in upper case.",
+        "description": "Brief Your Agent screen header. {agent} is the agent's display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
     "briefNoOverlayYet": "No overlay yet — factory defaults",
@@ -329,7 +329,7 @@
         "description": "Header subtitle when an overlay is active. {version} is the integer version.",
         "placeholders": {"version": {"type": "int"}}
     },
-    "briefNoEditsLeft": "⚠️ No edits left — upgrade to keep coaching",
+    "briefNoEditsLeft": "⚠️ No edits left — upgrade to keep briefing",
     "briefOneEditLeft": "⚠️ {count} edit left at your tier",
     "@briefOneEditLeft": {
         "description": "Amber notice when only 1 edit is left. {count} is the number remaining (typically 1).",
@@ -347,7 +347,7 @@
     "briefRefused": "BRIEF REFUSED",
     "briefProposalSavedSnack": "Saved as v{version} — {summary}",
     "@briefProposalSavedSnack": {
-        "description": "Snackbar after a coach proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.",
+        "description": "Snackbar after a brief proposal is accepted. {version} is the new overlay version; {summary} is the plain-English summary.",
         "placeholders": {"version": {"type": "int"}, "summary": {"type": "String"}}
     },
     "briefAgentRefused": "{agent} REFUSED",
@@ -371,7 +371,7 @@
     "briefProposeChange": "PROPOSE CHANGE",
     "briefHistoryHeading": "{agent} HISTORY",
     "@briefHistoryHeading": {
-        "description": "Coach history screen title. {agent} is the agent's display name in upper case.",
+        "description": "Brief history screen title. {agent} is the agent's display name in upper case.",
         "placeholders": {"agent": {"type": "String"}}
     },
     "briefHistorySubtitle": "All saved briefings",
@@ -517,7 +517,7 @@
 
     "tourJournal1Title": "FILTER BY TYPE",
     "@tourJournal1Title": {"description": "Journal tour step 1 — filter chips title."},
-    "tourJournal1Body": "Everything gets logged — Room sessions, trades, coaching, lessons. Filter by type.",
+    "tourJournal1Body": "Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.",
     "@tourJournal1Body": {"description": "Journal tour step 1 — filter chips body."},
     "tourJournal2Title": "SEARCH",
     "@tourJournal2Title": {"description": "Journal tour step 2 — search bar title."},

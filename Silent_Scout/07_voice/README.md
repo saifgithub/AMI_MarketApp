@@ -40,6 +40,7 @@ Saiful re-opened those decisions. This track produces the evidence that drives t
 | `05_recommendation/interactive.md` | Named pick for Concierge + 12-agent-chat voice (phone, real-time). |
 | `05_recommendation/daily_brief.md` | Named pick for daily briefing — and explicit A17 verdict on phone-only rendering. |
 | `05_recommendation/path_forward.md` | What `project_plan.md` A13/A14/A17 should now say. |
+| `05_recommendation/delivery_brief.md` | Self-contained delivery brief for the main-app integration session. Three staged deliveries (Daily-briefing TTS → 12-agent chat voice → Concierge voice onboarding). Paste-able into a fresh Claude conversation as a session-starter prompt. |
 | `06_prototypes/` | Optional harness scripts; ONNX / Core ML / TFLite conversion notes. |
 
 ## Production source files read (not modified)

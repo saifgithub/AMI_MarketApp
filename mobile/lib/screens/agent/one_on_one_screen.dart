@@ -171,7 +171,7 @@ class _Header extends StatelessWidget {
           if (_coachable)
             IconButton(
               icon: Icon(Icons.tune, color: agent.color),
-              tooltip: AppLocalizations.of(context).oneOnOneCoachTooltip,
+              tooltip: AppLocalizations.of(context).oneOnOneBriefTooltip,
               onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
                 builder: (_) => BriefScreen(agent: agent),
               )),

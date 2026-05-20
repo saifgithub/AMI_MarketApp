@@ -42,7 +42,7 @@ def _strip_frontmatter(text: str) -> str:
     return match.group(1).strip() if match else text.strip()
 
 
-USER_OVERLAY_HEADER = "─── USER COACHING OVERLAY (you can be coached on this; the user has shaped these instructions) ───"
+USER_OVERLAY_HEADER = "─── USER BRIEFING OVERLAY (the user has briefed you on this; these instructions are theirs) ───"
 
 
 def build_agent_prompt(
@@ -56,7 +56,7 @@ def build_agent_prompt(
     Order matters:
         base_prompt + mandate_overlay + user_overlay + (safety_floor if PM)
 
-    user_overlay is fetched from the OverlayStore (Coach Your Agent output).
+    user_overlay is fetched from the OverlayStore (Brief Your Agent output).
     Pass user_id explicitly to look it up; if None, no overlay is applied.
     The safety floor is appended LAST so it always dominates instruction
     ordering for the PM (see docs/02_agents/safety_floor.md).

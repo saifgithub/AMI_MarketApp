@@ -1,6 +1,6 @@
 # Safety Floor — the uncoachable layer on Portfolio Manager
 
-The single most important safety design in AMI Trade. Even users who "coach" all the way to recklessness still get mandate-enforced trade approval.
+The single most important safety design in AMI Trade. Even users who "brief" all the way to recklessness still get mandate-enforced trade approval.
 
 ## The principle
 
@@ -96,7 +96,7 @@ LLM proposes verdict
        ↓ Yes → Accept LLM's APPROVE
 ```
 
-If the LLM tries to approve a non-compliant trade (whether due to coaching, jailbreak, or hallucination), the function flips it to REJECT and includes the specific violation list. **The LLM cannot bypass this function — it runs as a wrapper on PM's output.**
+If the LLM tries to approve a non-compliant trade (whether due to briefing, jailbreak, or hallucination), the function flips it to REJECT and includes the specific violation list. **The LLM cannot bypass this function — it runs as a wrapper on PM's output.**
 
 ## What's IN the safety floor
 
@@ -172,7 +172,7 @@ PM:  "I can't do that. PYPL doesn't pass your halal mandate's
 
 If somehow the LLM is jailbroken into outputting `APPROVE`, the deterministic compliance check function catches it and overrides the verdict.
 
-If the user complains: *"PM is supposed to do what I say after I coached it!"* — Concierge explains:
+If the user complains: *"PM is supposed to do what I say after I briefed it!"* — Concierge explains:
 
 > *"You can shape your PM's style and priorities. You can't ask it to skip the compliance check, because that's what keeps you within the limits you set in your own mandate. If you want PM to allow PYPL, edit your halal flag in Settings → My Mandate first."*
 
@@ -232,7 +232,7 @@ These tests run on every CI run.
 | **Only the deterministic check, no prompt floor** | LLM verdict reasoning becomes inconsistent. User-facing explanation reads as "system override" — bad UX. |
 | **Only the prompt floor, no deterministic check** | LLM can be jailbroken. One bug-in-prompt and the floor leaks. |
 | **Show the floor but let the user edit with a "I understand" toggle** | Defeats the point. Trains users to bypass safety. |
-| **Hide the floor entirely** | Paternalistic. Users feel surprised when their coached PM "doesn't listen". Erodes trust. |
+| **Hide the floor entirely** | Paternalistic. Users feel surprised when their briefed PM "doesn't listen". Erodes trust. |
 
 The chosen design is: **visible, locked, with a clear path (mandate edit) to legitimate change.** Best of all worlds.
 

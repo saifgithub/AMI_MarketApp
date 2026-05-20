@@ -47,17 +47,17 @@ FastAPI endpoint structure. Each resource has its own router.
 | POST | `/agents/{agent_id}/one_on_one/{session_id}/message` | Send a message; returns SSE stream |
 | GET | `/agents/{agent_id}/past_calls` | List past contributions to journal entries |
 
-### `/v1/coach`
+### `/v1/brief`  *(legacy alias: `/v1/coach`)*
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/coach/{agent_id}/session/start` | Start a Brief Your Agent session |
-| POST | `/coach/{agent_id}/session/{session_id}/message` | Chat with the agent for coaching |
-| POST | `/coach/{agent_id}/overlay` | Save a new overlay version |
-| GET | `/coach/{agent_id}/overlays` | List version history |
-| POST | `/coach/{agent_id}/overlays/{version}/rollback` | Rollback to a version |
-| GET | `/coach/{agent_id}/raw` | Get raw overlay markdown (Floor Manager only) |
-| PUT | `/coach/{agent_id}/raw` | Update raw overlay markdown (Floor Manager only) |
+| POST | `/brief/{agent_id}/session/start` | Start a Brief Your Agent session |
+| POST | `/brief/{agent_id}/session/{session_id}/message` | Chat with the agent for briefing |
+| POST | `/brief/{agent_id}/overlay` | Save a new overlay version |
+| GET | `/brief/{agent_id}/overlays` | List version history |
+| POST | `/brief/{agent_id}/overlays/{version}/rollback` | Rollback to a version |
+| GET | `/brief/{agent_id}/raw` | Get raw overlay markdown (Floor Manager only) |
+| PUT | `/brief/{agent_id}/raw` | Update raw overlay markdown (Floor Manager only) |
 
 ### `/v1/convene`
 
@@ -187,7 +187,7 @@ Per tier, per endpoint, per user:
 | `/convene` POST | 5/hour | 20/hour | 50/hour |
 | `/agents/.../one_on_one/.../message` | 60/hour | 300/hour | unlimited |
 | `/concierge/message` | 60/hour | 300/hour | unlimited |
-| `/coach/.../message` | 30/hour | 300/hour | unlimited |
+| `/brief/.../message` | 30/hour | 300/hour | unlimited |
 | `/mandate` PATCH | 10/day | 50/day | unlimited |
 
 Returns 429 with `Retry-After` header on exceed.

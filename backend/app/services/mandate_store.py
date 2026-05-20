@@ -27,7 +27,7 @@ from sqlalchemy import select, update
 from app.db import get_session, init_schema
 from app.db.models import MandateRow
 from app.schemas import Compliance, Mandate
-from app.services.coach_engine import hydrate_coach_mandate
+from app.services.brief_engine import hydrate_brief_mandate
 
 
 class MandateStore:
@@ -52,7 +52,7 @@ class MandateStore:
         m = self.get(user_id)
         if m is not None:
             return m
-        default = hydrate_coach_mandate({"user_id": str(user_id)})
+        default = hydrate_brief_mandate({"user_id": str(user_id)})
         return default.model_copy(update={"user_id": user_id})
 
     def upsert(self, user_id: UUID, mandate: Mandate) -> Mandate:
@@ -137,7 +137,7 @@ def resolve_mandate(
     if user_id is not None and (existing := store.get(user_id)) is not None:
         mandate = existing
     else:
-        mandate = hydrate_coach_mandate(override)
+        mandate = hydrate_brief_mandate(override)
     patch: dict[str, Any] = {}
     if user_id is not None:
         patch["user_id"] = user_id

@@ -57,7 +57,7 @@ feature providers wait for it.
 **Where:** `mobile/lib/services/api/api_client.dart:179`,
 `mobile/lib/services/api/api_client.dart:300`,
 `mobile/lib/services/api/api_client.dart:550`
-**Why it matters:** `/v1/coach/message`, `/v1/agents/one_on_one/message`, and
+**Why it matters:** `/v1/brief/message`, `/v1/agents/one_on_one/message`, and
 `/v1/room/stream` will 401 under the new backend even in the legitimate `+16`
 app.
 **Recommended fix:** Add a shared helper for `package:http` SSE requests that

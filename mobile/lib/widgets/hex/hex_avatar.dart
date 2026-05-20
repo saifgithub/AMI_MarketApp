@@ -13,7 +13,7 @@ enum HexAvatarStatus {
   /// Unlocked, flagged something today. Pulsing glow.
   signal,
 
-  /// Unlocked, agent wants attention (coach prompt, drift alert).
+  /// Unlocked, agent wants attention (brief prompt, drift alert).
   attention,
 
   /// Locked — user hasn't completed Earn Path or doesn't have Skip Path.

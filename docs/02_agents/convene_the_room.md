@@ -143,7 +143,7 @@ Concierge:
 | Mandate prohibits all candidates | Research Manager outputs "PASS — nothing fits mandate today" — saved to Journal, credits *not* charged |
 | One agent fails mid-run | Other agents continue; missing agent's slot shows "[Agent unavailable]"; Research Manager notes the gap |
 | Network drop mid-run | LangGraph checkpoint resumes on reconnect; user picks up where the run left off |
-| Compliance violation in user-coached agent | Trader/Researchers proceed as advocated; PM still rejects on violation — user learns *why* their coaching led to a violation |
+| Compliance violation in user-briefed agent | Trader/Researchers proceed as advocated; PM still rejects on violation — user learns *why* their briefing led to a violation |
 
 ## State persistence
 

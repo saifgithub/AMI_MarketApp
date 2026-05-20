@@ -102,7 +102,7 @@ Hex-clipped, role-colour-coded. Visible on profile and (Phase 2) on shared journ
 | **Bull Run** | Correctly predicted the Bull's call 10 times |
 | **Mandate Keeper** | Zero PM rejections for 30 consecutive days |
 | **Convener** | Ran 50 Room sessions |
-| **Coach** | Successfully coached 5+ agents |
+| **Briefer** | Successfully briefed 5+ agents |
 | **Halal Veteran** | 100 days as a halal-mandated user |
 | **Long Game** | 1-year streak on long_horizon path |
 | **Risk Manager** | Triggered PM-veto, then correctly responded by reducing position |

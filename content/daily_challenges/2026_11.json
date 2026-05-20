@@ -536,7 +536,7 @@
     "type": "whats_missing",
     "difficulty": 3,
     "locale": "en",
-    "scenario": "Saiful coaches an agent with a new rule: 'enter long any S&P stock that closes 8% below its 20-day MA when RSI(2) is under 5'. He activates the rule live the next day. The Brief Your Agent flow validates the rule passes the mandate safety floor (size, stops, no leverage). The user submits the first ticket the following session.",
+    "scenario": "Saiful briefs an agent with a new rule: 'enter long any S&P stock that closes 8% below its 20-day MA when RSI(2) is under 5'. He activates the rule live the next day. The Brief Your Agent flow validates the rule passes the mandate safety floor (size, stops, no leverage). The user submits the first ticket the following session.",
     "question": "What's structurally missing from this rule before live activation?",
     "options": [
       "An ESG screen",

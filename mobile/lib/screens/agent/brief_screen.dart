@@ -1,6 +1,6 @@
 /// Coach Your Agent — the flagship screen.
 ///
-/// Conversation with an agent in "coach mode" + a "Propose change" CTA that
+/// Conversation with an agent in "brief mode" + a "Propose change" CTA that
 /// asks the agent to crystallise the discussion into a BriefProposal. The
 /// proposal renders as a diff card with Accept / Refine / Reject. Accepting
 /// persists a new UserOverlay version (server-side) and refreshes history.

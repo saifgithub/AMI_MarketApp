@@ -162,7 +162,7 @@ Plus, distinct from the 12:
 
 **Mandate enforcement.** This is the gatekeeper. The **safety floor** lives here — see [`safety_floor.md`](safety_floor.md).
 
-**Coaching.** Users can coach PM's *style* and *prioritisation* via Brief Your Agent. They **cannot** coach away the mandate-enforcement safety floor.
+**Briefing.** Users can brief PM's *style* and *prioritisation* via Brief Your Agent. They **cannot** brief away the mandate-enforcement safety floor.
 
 ## Agent families & role colors (in product)
 
