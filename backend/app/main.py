@@ -2,9 +2,11 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from app.api.admin import router as admin_router
 from app.api.ai_coach import router as ai_coach_router
@@ -113,3 +115,14 @@ app.include_router(watchlist_router)
 @app.get("/v1/health")
 async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0", "env": settings.env}
+
+
+# Admin back-office stop-gap UI (AT:R27). The page itself is public; every
+# API call it makes is gated by the ADMIN_SECRET bearer. Will be replaced
+# by a compiled Flutter web bundle in Beta — same URL, same API.
+_ADMIN_HTML_PATH = Path(__file__).parent / "static" / "admin.html"
+
+
+@app.get("/admin", include_in_schema=False, response_class=HTMLResponse)
+async def admin_ui() -> HTMLResponse:
+    return HTMLResponse(_ADMIN_HTML_PATH.read_text(encoding="utf-8"))
