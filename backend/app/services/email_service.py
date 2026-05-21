@@ -1,11 +1,9 @@
-"""Transactional email via SMTP.
+"""Transactional email — Resend (primary) with SMTP fallback.
 
-Reads SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD / SMTP_FROM from
-settings. When SMTP_HOST is empty the function logs and returns without
-sending — callers (magic-link) still work in debug-code-only mode.
-
-Port 465 uses implicit TLS (smtplib.SMTP_SSL). Port 587 uses STARTTLS
-(smtplib.SMTP + starttls()). Both are supported; the selection is automatic.
+Priority:
+  1. RESEND_API_KEY set → Resend HTTP API (immune to ISP port blocks)
+  2. SMTP_HOST set      → smtplib (port 465 SSL / 587 STARTTLS)
+  3. Neither            → log + no-op (alpha debug-code-only mode)
 """
 
 from __future__ import annotations
@@ -14,6 +12,8 @@ import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+import resend
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -32,11 +32,32 @@ _MAGIC_LINK_PLAIN = "Your AMI Trade sign-in code: {code}\n\nExpires in 15 minute
 
 
 def send_magic_link(to: str, code: str) -> None:
-    """Send a magic-link 6-digit code to `to`. No-op when SMTP is unconfigured."""
-    if not settings.smtp_host:
-        logger.info("smtp_not_configured_skip_email", to=to)
-        return
+    """Send a magic-link 6-digit code to `to`. No-op when neither Resend nor SMTP is configured."""
+    if settings.resend_api_key:
+        _send_via_resend(to, code)
+    elif settings.smtp_host:
+        _send_via_smtp(to, code)
+    else:
+        logger.info("email_not_configured_skip", to=to)
 
+
+def _send_via_resend(to: str, code: str) -> None:
+    resend.api_key = settings.resend_api_key
+    from_addr = settings.smtp_from or "noreply@agenticmarketintel.ai"
+    try:
+        resend.Emails.send({
+            "from": f"AMI Trade <{from_addr}>",
+            "to": [to],
+            "subject": _MAGIC_LINK_SUBJECT,
+            "html": _MAGIC_LINK_HTML.format(code=code),
+            "text": _MAGIC_LINK_PLAIN.format(code=code),
+        })
+        logger.info("magic_link_email_sent", to=to, transport="resend")
+    except Exception as exc:
+        logger.warning("magic_link_email_failed", to=to, transport="resend", error=str(exc))
+
+
+def _send_via_smtp(to: str, code: str) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = _MAGIC_LINK_SUBJECT
     msg["From"] = settings.smtp_from or settings.smtp_user
@@ -55,6 +76,6 @@ def send_magic_link(to: str, code: str) -> None:
                 smtp.starttls(context=context)
                 smtp.login(settings.smtp_user, settings.smtp_password)
                 smtp.sendmail(msg["From"], to, msg.as_string())
-        logger.info("magic_link_email_sent", to=to)
+        logger.info("magic_link_email_sent", to=to, transport="smtp")
     except Exception as exc:
-        logger.warning("magic_link_email_failed", to=to, error=str(exc))
+        logger.warning("magic_link_email_failed", to=to, transport="smtp", error=str(exc))
