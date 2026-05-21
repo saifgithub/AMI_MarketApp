@@ -7,8 +7,37 @@ Two defences:
 See docs/02_agents/safety_floor.md for the full rationale.
 """
 
+from pydantic import BaseModel, Field
+
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
-from app.schemas.trade import ComplianceResult, ProposedTrade
+from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
+
+
+class HoldingViolation(BaseModel):
+    """Per-holding violation report — what's wrong with this position
+    under the (new) mandate."""
+
+    ticker: str
+    quantity: float
+    market_value: float
+    weight_pct: float  # % of total portfolio value
+    issues: list[str] = Field(default_factory=list)
+
+
+class HoldingsAuditResult(BaseModel):
+    """Result of evaluating an existing portfolio against a mandate.
+
+    Used by BL12 (post-PATCH mandate audit) — surfaces every holding that
+    now violates the new mandate so the mobile resolve modal can offer
+    Liquidate / Postpone / Override per position.
+    """
+
+    passed: bool
+    mandate_version: int
+    portfolio_value: float
+    current_drawdown_pct: float
+    drawdown_breach: bool  # True when total drawdown >= mandate.max_drawdown_pct
+    violations: list[HoldingViolation] = Field(default_factory=list)
 
 
 SAFETY_FLOOR_BLOCK = """
@@ -129,6 +158,87 @@ def check_mandate_compliance(
 
     passed = len(violations) == 0
     return ComplianceResult(passed=passed, violations=violations, blocked_by=blocked_by)
+
+
+def check_holdings_against_mandate(
+    holdings: list[Holding],
+    marks: dict[str, float],
+    portfolio_value: float,
+    current_drawdown_pct: float,
+    mandate: Mandate,
+    *,
+    halal_universe: set[str] | None = None,
+    locale_allowed_universe: set[str] | None = None,
+) -> HoldingsAuditResult:
+    """BL12: deterministic audit of an existing portfolio against a (possibly
+    just-edited) mandate. Returns per-holding violations + a portfolio-level
+    drawdown flag. No LLM.
+
+    Sibling to `check_mandate_compliance` (which checks a *proposed* trade).
+    Same compliance dimensions (blocklist, halal, locale, single-name cap)
+    re-applied to held positions instead of incoming orders.
+    """
+    c = mandate.compliance
+    block_set = {x.upper() for x in c.ticker_blocklist}
+    allow_set = (
+        {x.upper() for x in c.ticker_allowlist} if c.ticker_allowlist else None
+    )
+    halal_set = {x.upper() for x in halal_universe} if halal_universe else None
+    locale_set = (
+        {x.upper() for x in locale_allowed_universe}
+        if locale_allowed_universe else None
+    )
+
+    violations: list[HoldingViolation] = []
+    for h in holdings:
+        t = h.ticker.upper().strip()
+        mark = marks.get(h.ticker, h.avg_cost)
+        market_value = mark * h.quantity
+        weight_pct = (
+            (market_value / portfolio_value * 100) if portfolio_value > 0 else 0.0
+        )
+        issues: list[str] = []
+
+        if allow_set is not None and t not in allow_set:
+            issues.append(f"ticker {t} not in user allowlist")
+        if t in block_set:
+            issues.append(f"ticker {t} in user blocklist")
+        if c.halal:
+            if halal_set is None:
+                issues.append(
+                    "halal screen requested but halal_universe not provided"
+                )
+            elif t not in halal_set:
+                issues.append(f"ticker {t} fails Sharia compliance screen")
+        if locale_set is not None and t not in locale_set:
+            issues.append(
+                f"ticker {t} not available in user's locale ({mandate.locale})"
+            )
+        if weight_pct > SINGLE_NAME_CAP_PCT:
+            issues.append(
+                f"position {weight_pct:.1f}% exceeds single-name cap "
+                f"{SINGLE_NAME_CAP_PCT}%"
+            )
+
+        if issues:
+            violations.append(HoldingViolation(
+                ticker=t,
+                quantity=h.quantity,
+                market_value=round(market_value, 2),
+                weight_pct=round(weight_pct, 2),
+                issues=issues,
+            ))
+
+    drawdown_breach = current_drawdown_pct >= mandate.max_drawdown_pct
+
+    return HoldingsAuditResult(
+        passed=not violations and not drawdown_breach,
+        mandate_version=mandate.version,
+        portfolio_value=round(portfolio_value, 2),
+        current_drawdown_pct=round(current_drawdown_pct, 2),
+        drawdown_breach=drawdown_breach,
+        violations=violations,
+    )
 
 
 def enforce_safety_floor(
