@@ -61,6 +61,7 @@ class BriefProposal {
     required this.fullOverlayPreview,
     required this.refused,
     this.refusalReason,
+    this.proposedAt,
   });
 
   final String id;
@@ -70,6 +71,10 @@ class BriefProposal {
   final String fullOverlayPreview;
   final bool refused;
   final String? refusalReason;
+  // Backend default-factories this on creation. Nullable on the wire only
+  // because old payloads pre-AT:R32 didn't ship it. Once all clients are
+  // current, mark non-null. (BL14, AT:R32.)
+  final DateTime? proposedAt;
 
   factory BriefProposal.fromJson(Map<String, dynamic> j) {
     return BriefProposal(
@@ -80,6 +85,9 @@ class BriefProposal {
       fullOverlayPreview: j['full_overlay_preview'] as String? ?? '',
       refused: (j['refused'] as bool?) ?? false,
       refusalReason: j['refusal_reason'] as String?,
+      proposedAt: j['proposed_at'] != null
+          ? DateTime.parse(j['proposed_at'] as String)
+          : null,
     );
   }
 }
@@ -94,6 +102,7 @@ class BriefSession {
     required this.baseOverlayVersion,
     this.mandateUsed = const {},
     this.pendingProposal,
+    this.startedAt,
   });
 
   final String id;
@@ -112,6 +121,10 @@ class BriefSession {
   /// user accepts or rejects.
   final BriefProposal? pendingProposal;
 
+  /// Backend default-factories this when the session is created. Nullable
+  /// only for old payloads pre-AT:R32. (BL14, AT:R32.)
+  final DateTime? startedAt;
+
   factory BriefSession.fromJson(Map<String, dynamic> j) {
     return BriefSession(
       id: j['id'] as String,
@@ -126,6 +139,9 @@ class BriefSession {
           ? BriefProposal.fromJson(
               (j['pending_proposal'] as Map).cast<String, dynamic>(),
             )
+          : null,
+      startedAt: j['started_at'] != null
+          ? DateTime.parse(j['started_at'] as String)
           : null,
     );
   }
