@@ -297,3 +297,90 @@ def test_reauth_does_not_reset_existing_trial():
     with get_session() as s:
         row = s.execute(_select(UserModel).where(UserModel.id == user.id)).scalar_one()
         assert row.trial_expires_at == original_expiry  # window preserved
+
+
+# ── Account linking — Phase 1 (AT:R32) ─────────────────────────────────────
+
+
+def test_magic_link_adopts_existing_email_user_on_new_device():
+    """Same email + a fresh anon on a new device → adopt the existing user,
+    not create a parallel row. Resolves the multi-device fragmentation in
+    AT:R32 (3-rows-per-human bug)."""
+    auth = AuthService()
+    # Original device claims first.
+    original_user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=original_user_id)
+    code = auth.start_magic_link(email="shared@example.com", user_id=original_user_id)
+    first_result = auth.verify_magic_link(
+        email="shared@example.com", code=code, user_id=original_user_id,
+    )
+    assert first_result is not None
+    first_user, _ = first_result
+
+    # New device — fresh anon, then magic-link with the same email.
+    new_device_uid = uuid4()
+    auth.ensure_anonymous(device_user_id=new_device_uid)
+    code2 = auth.start_magic_link(email="shared@example.com", user_id=new_device_uid)
+    second_result = auth.verify_magic_link(
+        email="shared@example.com", code=code2, user_id=new_device_uid,
+    )
+    assert second_result is not None
+    second_user, _ = second_result
+
+    # Same row, not a parallel one.
+    assert second_user.id == first_user.id
+    assert second_user.id != new_device_uid
+
+
+def test_magic_link_creates_user_when_email_unknown():
+    """No existing identity match → fall through to the user_id-promote path
+    and claim the fresh anon row (the original AT:R26 magic-link flow)."""
+    auth = AuthService()
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    code = auth.start_magic_link(email="brand-new@example.com", user_id=user_id)
+    result = auth.verify_magic_link(
+        email="brand-new@example.com", code=code, user_id=user_id,
+    )
+    assert result is not None
+    user, _ = result
+    assert user.id == user_id  # the anon row got promoted, not a new row
+    assert user.email == "brand-new@example.com"
+
+
+def test_apple_links_to_existing_email_user():
+    """Magic-link first, then Apple Sign-In ships the same email → attach
+    apple_sub to the magic-link user instead of creating a parallel row."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    # Magic-link claim on device A.
+    user_id_a = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id_a)
+    code = auth.start_magic_link(email="link@example.com", user_id=user_id_a)
+    auth.verify_magic_link(email="link@example.com", code=code, user_id=user_id_a)
+
+    # Device B — fresh anon, then Apple Sign-In whose token carries the same
+    # email (Apple's first-auth-only email claim).
+    user_id_b = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id_b)
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-link", email="link@example.com"),
+        user_id=user_id_b,
+    )
+    assert user.id == user_id_a  # adopted the magic-link row
+    assert user.apple_id == "apple-sub-link"
+    assert user.email == "link@example.com"
+
+
+def test_apple_creates_user_when_sub_and_email_unknown():
+    """No apple_id match, no email match → fall through to the user_id-promote
+    path (the original AT:R29 first-Apple-auth flow)."""
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    auth.ensure_anonymous(device_user_id=user_id)
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-fresh", email="fresh@example.com"),
+        user_id=user_id,
+    )
+    assert user.id == user_id
+    assert user.apple_id == "apple-sub-fresh"
+    assert user.email == "fresh@example.com"

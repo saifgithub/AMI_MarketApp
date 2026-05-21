@@ -278,6 +278,17 @@ class AuthService:
             row = s.execute(
                 select(User).where(User.apple_id == apple_sub)
             ).scalar_one_or_none()
+            # Email fallback (AT:R32, account-linking Phase 1): if no
+            # apple_id match but Apple ships the email claim and an existing
+            # user owns that email, attach apple_sub to that row instead of
+            # creating a parallel user. Covers "magic-link first, then Apple
+            # later with the same email."
+            if row is None and apple_email:
+                row = s.execute(
+                    select(User).where(User.email == apple_email)
+                ).scalar_one_or_none()
+                if row is not None:
+                    row.apple_id = apple_sub
             if row is None and user_id is not None:
                 row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if row is None:
@@ -323,11 +334,16 @@ class AuthService:
         user_id: UUID | None,
         email: str,
     ) -> User:
+        # Identity-first lookup (AT:R32, account-linking Phase 1). An existing
+        # row matching the verified email always wins, so the same human
+        # signing in on a new device adopts their existing user instead of
+        # creating a parallel row. The fresh anon row referenced by user_id
+        # is left orphaned — pre-claim anon state is ephemeral.
         row: User | None = None
-        if user_id is not None:
-            row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
-        if row is None and email:
+        if email:
             row = s.execute(select(User).where(User.email == email)).scalar_one_or_none()
+        if row is None and user_id is not None:
+            row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if row is None:
             now = datetime.now(timezone.utc)
             row = User(
@@ -342,7 +358,12 @@ class AuthService:
             s.add(row)
             s.flush()
             return row
-        row.email = email
+        # Only set email on rows that don't have one yet (the user_id-matched
+        # anon path). An email-matched row already has the correct email and
+        # we deliberately don't reassign — re-magic-link with a different
+        # email cannot mutate an existing user's identity here.
+        if not row.email:
+            row.email = email
         if row.is_anonymous:
             now = datetime.now(timezone.utc)
             row.is_anonymous = False
