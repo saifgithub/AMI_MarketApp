@@ -189,18 +189,11 @@ For each track whose `handover_path` doesn't exist yet, surface:
 
 ## What NOT to do
 
-- **Don't write the YAML before the user confirms.** Walk → preview
-  → write, in that order.
-- **Don't validate sanity-check commands by running them.** This
-  skill captures config; verification happens when
-  `/start-fresh` runs.
-- **Don't prescribe specific track letters or labels.** Ask the user
-  for the letter and purpose; don't suggest "R for Development" or
-  similar unless they ask for examples. Their convention, not yours.
-- **Don't merge a new track with the existing config naively.** When
-  adding a track to an existing config, preserve every other track's
-  block verbatim — read the existing YAML first.
-- **Don't refuse to write a minimal config.** If the user only fills
-  the three required fields (prefix + one track with a label and
-  handover_path), that's fine — the generic skills skip every
-  optional step cleanly.
+- **Walk → preview → write.** Don't write the YAML before the user
+  confirms the preview.
+- **Don't prescribe specific track letters or labels.** Ask for the
+  letter and purpose; the user's convention, not yours.
+- **Don't clobber existing tracks when adding a new one.** Read the
+  current YAML first; preserve every other track's block verbatim.
+- **Don't refuse a minimal config.** Prefix + one track with a label
+  and `handover_path` is enough — optional steps skip cleanly.

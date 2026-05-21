@@ -35,10 +35,17 @@ If MISSING, **stop and surface**:
 > to bootstrap the per-project config, then re-run
 > `/handover`.
 
-Otherwise read the file once. Then resolve the **active track** in
-this priority order:
+Otherwise read the file once. Parse the invocation arguments:
 
-1. **Explicit argument** (e.g. `/handover R`,
+- A single non-flag token is a **track letter** (e.g. `R`, `M`).
+- The flag `--dry-run` puts the skill into dry-run mode (see the
+  "Dry-run mode" section below).
+- Both can be present in either order: `/handover --dry-run R` or
+  `/handover R --dry-run` both mean "wrap track R in dry-run mode".
+
+Then resolve the **active track** in this priority order:
+
+1. **Explicit track-letter argument** (e.g. `/handover R`,
    `/handover M`): wins over everything. If the letter isn't
    a key under `tracks:` in config, stop and surface: "Track <L>
    isn't configured. Tracks: <list>. Run `/session-setup` to add it."
@@ -68,6 +75,33 @@ refer to per-track values; top-level fields like `memory_project_file`,
 `worktree_pattern`, and `scan_excludes` are **shared** across every
 track.
 
+## Dry-run mode
+
+If invoked with `--dry-run` (e.g. `/handover --dry-run`,
+`/handover --dry-run R`), walk the full protocol but **skip every
+destructive or persistent operation**. Specifically:
+
+| Step | Normal run | Dry-run |
+|---|---|---|
+| 2. Subagent worktree cleanup | Removes worktrees + branches | List them; **don't remove** |
+| 3. Rotate prior session | Edits `{T.handover_path}` + `{T.history_path}` | Edit normally (shows up in `git diff`) |
+| 4. Consistency scan | Edits stale refs | Edit normally (shows up in `git diff`) |
+| 5/6/7. Doc updates | Edits HANDOVER + plan + memory file | Edit normally |
+| 8. Commit | Stages + commits the doc edits | **SKIP** |
+| 9. Final verification | Asserts clean tree, removes `.claude/active-track` | Run `git diff --stat` + `git diff` instead; **keep** active-track |
+| 10. Report | "Handover complete" | Prefix report with **`DRY-RUN — no commit made.`** + close with revert/commit instructions |
+
+End-of-dry-run hint to the user:
+
+> Dry-run done. Working tree has the proposed edits. Review with
+> `git diff`. To commit: `git add <paths>; git commit -m 'chore(handover):
+> wrap {prefix}:{track}<N>'`. To discard: `git restore .` then
+> `git checkout -- <any history file written>`.
+
+Throughout the rest of this skill, references to "skip in dry-run"
+refer to this table. If the user did NOT pass `--dry-run`, ignore
+this section entirely.
+
 ## What to do, in order
 
 Run every step. If a step surfaces an unresolved issue (dirty tree
@@ -93,6 +127,9 @@ a clean ancestor-extension of main, fast-forward. If the branches
 have diverged, surface to the user — don't auto-rebase or auto-merge.
 
 ### 2. Subagent worktree cleanup
+
+**In dry-run mode**: list any matching worktrees but **don't remove
+them**. Report what *would* be removed.
 
 Spawned subagents with `isolation: worktree` leave worktrees +
 branches on disk if they made changes. The worktree dirs + branch
@@ -255,16 +292,14 @@ Session name to use: **{prefix}:{track}<N+1>**
 **Skip this step entirely if `{T.project_plan_path}` is not set under
 this track in config.**
 
-The plan typically has a `Status` column per row. For each item that
-shipped (or moved buckets) this session, update the cell:
+If the plan has a status column or per-row tracking, update the rows
+that shipped or moved buckets this session, using **your project's
+existing status convention** (whatever emoji, words, or marks the
+file already uses). Tag each change with the session ID
+`{prefix}:{track}<N>` so the audit trail's clear.
 
-- Newly delivered → change to `✅ done ({prefix}:{track}<N>)`
-- Newly partial → `⚡ partial (...short note on what's still missing...)`
-- Newly blocked → `⏳ blocked (...what's blocking...)`
-- Superseded by a different approach → `✖ superseded (...what replaced it...)`
-
-Also refresh any summary "Delivery status" block near the top of the
-plan: re-count the buckets if any changed.
+If the plan has a summary block (counts by status, "delivery status
+snapshot", etc.), refresh those counts too.
 
 If no plan items moved this session, skip and mark N/A in the report.
 
@@ -288,15 +323,57 @@ Update at minimum:
   `{T.handover_path}`. **Don't clobber other tracks' carry-over
   entries** if the file already groups by track; merge in.
 
-### 8. Final verification
+### 8. Commit the doc edits
+
+**In dry-run mode: SKIP this step entirely.** The edits stay
+uncommitted so the user can review with `git diff` and decide.
+
+Steps 5–7 produced edits to `{T.handover_path}`, possibly
+`{T.history_path}` (from the rotation in step 3), possibly
+`{T.project_plan_path}` (step 6), and possibly `{memory_project_file}`
+(step 7). Stage and commit them as a single wrap commit so the audit
+trail shows one commit per session-wrap.
+
+```bash
+# Stage everything the wrap touched (skip any path that wasn't edited)
+git add {T.handover_path}
+test -n "{T.history_path}" && git add {T.history_path}
+test -n "{T.project_plan_path}" && git add {T.project_plan_path}
+# memory file lives outside the repo — don't try to git add it
+
+git commit -m "chore(handover): wrap {prefix}:{track}<N>"
+```
+
+If any edited path didn't actually change (e.g. nothing in the plan
+moved this session), `git add` is a no-op for it — that's fine. If
+**no** files changed at all, skip the commit (rare; would mean the
+session was a pure no-op).
+
+The memory file is OUTSIDE the repo, so don't try to commit it — it
+was saved in step 7 and that's the end of it.
+
+### 9. Final verification
+
+**In dry-run mode**: instead of asserting a clean tree, show what
+*would* have been committed:
+
+```bash
+git diff --stat       # files + line counts of the proposed wrap
+git diff              # the actual proposed changes
+```
+
+Then **skip the active-track cleanup** — the next session may want
+to re-run the wrap for real on the same track.
+
+**In normal mode**:
 
 ```bash
 git status   # MUST be "nothing to commit, working tree clean"
-git log --oneline | head -5    # confirm doc commits landed
+git log --oneline | head -5    # confirm the wrap commit landed
 ```
 
-If `git status` is dirty after step 7 → that's the doc commits not
-yet staged; finish them and re-check. Don't surface until clean.
+If `git status` is dirty here → step 8 missed a path. Stage what's
+left and amend the wrap commit. Don't surface until clean.
 
 Then clear the active-track pointer so the next session has to be
 opened deliberately via `/start-fresh`:
@@ -305,13 +382,20 @@ opened deliberately via `/start-fresh`:
 rm -f .claude/active-track
 ```
 
-If `/handover` runs again later without a prior
-`/start-fresh`, step 0 will fall through to the explicit
-"which track?" prompt rather than silently re-using this one.
+If `/handover` runs again later without a prior `/start-fresh`,
+step 0 will fall through to the explicit "which track?" prompt
+rather than silently re-using this one.
 
-### 9. Report to the user
+### 10. Report to the user
 
-Use this exact structure so deviations are easy to spot:
+Use this exact structure so deviations are easy to spot.
+
+**In dry-run mode**, prefix the header with `DRY-RUN — no commit made.`
+and replace rows 9 and 10 with the diff-stat summary from step 9.
+Append the "review with `git diff` / commit / discard" hint from the
+dry-run table at the bottom.
+
+**In normal mode**, use the structure as-is:
 
 ```
 ## Handover complete — ready for fresh {T.label} session ({prefix}:{track}<N+1>).
@@ -326,7 +410,8 @@ Use this exact structure so deviations are easy to spot:
 | 6. {T.handover_path} updated | ✅ |
 | 7. {T.project_plan_path} status ticked | ✅ (M items moved) or N/A |
 | 8. {memory_project_file} updated | ✅ or N/A |
-| 9. Final git status | ✅ |
+| 9. Wrap commit landed | ✅ (`<hash>`) |
+| 10. Final git status | ✅ |
 
 Session totals:
 - N commits in (M new this session)
@@ -351,23 +436,12 @@ checklist.
 
 ## What NOT to do
 
-- **Don't ask for confirmation before each step.** Execute and
-  surface deviations.
-- **Don't rewrite other tracks' narratives.** This skill wraps one
-  track only. If the consistency scan returns hits in another
-  track's handover doc, leave them alone — they belong to that
-  track's next session.
-- **Don't squash, amend, or force-push commits.** They're the audit
-  trail.
-- **Don't push to a remote** unless the user has explicitly opted
-  into that as part of their workflow.
+- **Don't rewrite other tracks' narratives.** Wraps one track only.
+  Consistency-scan hits in another track's handover doc are not
+  yours to fix — they belong to that track's next wrap.
 - **Don't run `{deploy_command}`** (if set in config) as part of
-  handover unless the user explicitly asked.
-- **Don't skip the memory file update** because "nothing material
-  changed." Header counts always change. (Skip only if the field is
-  unset in config.)
-- **Don't generate a perfect-looking report when something went
-  sideways.** Honest deviation > clean checklist.
-- **Don't edit `.claude/session-config.yml` mid-handover.** If a
-  field is wrong, surface it; let the user re-run `/session-setup`
-  after the wrap.
+  handover unless the user explicitly asked. Doc/state hygiene only.
+- **Don't fudge the report when something went sideways.** Honest
+  deviation > clean checklist.
+- **Don't edit `.claude/session-config.yml` mid-handover.** Surface
+  the wrong field; let the user re-run `/session-setup` after.

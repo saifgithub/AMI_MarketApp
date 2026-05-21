@@ -213,27 +213,13 @@ adjusts, and only THEN do any file edits start.
 
 ## What NOT to do
 
-- **Don't start editing files** before the user approves the plan.
-  Plan mode exists exactly for this — surface intent, get agreement,
-  then act.
-- **Don't auto-pick** a carry-over item. Offer the list; let the
-  user pick.
-- **Don't read other tracks' handover docs** unless the user asks.
-  Each track is its own context; pulling in the marketing-track
-  HANDOVER while working on R just creates noise.
-- **Don't run `{deploy_command}`** (if set in config) as part of
-  bootup. Promotion is its own deliberate step that happens after
-  a code change lands and is tested.
-- **Don't run `/handover`** at session start. That's the
-  EXIT protocol; this is the ENTRY protocol.
-- **Don't skip the track's sanity-check section** when it's
-  configured. The handful of seconds the checks take is the cheapest
-  way to catch an outage before you propose work that assumes a
-  working backend.
-- **Don't skip the track's bug-list pull** when it's configured.
-  User-facing bugs are the most expensive thing to leave
-  unaddressed; surfacing them upfront forces a conscious
-  "yes/no/later" rather than forgetting them.
+- **Don't auto-pick a carry-over item.** Offer the list; let the user
+  pick. Don't edit files before plan-mode approval.
+- **Don't read other tracks' handover docs.** Each track is its own
+  context; pulling in another track's HANDOVER creates noise.
+- **Don't skip configured sanity checks or bug-list pulls.** They're
+  the cheapest way to catch an outage or surface user-facing bugs
+  before work starts. Failures surface but don't block.
 - **Don't auto-claim or auto-fix bugs from this skill.** It only
   surfaces. Use whatever per-project bug-handling workflow exists.
 
