@@ -13,6 +13,42 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R31  (2026-05-21)
+
+**First code-change session post-audit.** Tackled the AT:R30 carry-over chips end-to-end: BL3 trial activation wired (real backend code + tests), `build_testflight.sh` hardening attempted-then-reverted (flag-pass-through assumption broke; rewrite chip filed), `decision_log.md` + `docs/02_agents/` + `docs/03_onboarding/` reconciled against shipped code following the AT:R30 methodology, then a self-audit for similar-shape issues that filed BL11–BL15. **8 AT:R31 commits + 1 pubspec bump = 9 new commits. 367 tests passing (was 365). No Alpha promotes, no TestFlight upload (the bump landed but the build failed on the flag bug).**
+
+### How the session ran
+
+Saiful opened with "what's left on track R?" → picked carry-over items **3** (`build_testflight.sh` hardening — the spawned chip from AT:R29) and **6** (BL3 trial activation) for the first half. After those landed, switched to **continuing the docs-vs-code reconciliation** started in AT:R30 — this time focused on `docs/02_agents/` (high overlap with prompts + safety floor + Brief), `docs/03_onboarding/` (high overlap with onboarding engine + mandate + claim path), and `docs/11_decisions/decision_log.md` (spot-check). Methodology was the same: parallel Explore agents per tree, triage with Saiful, then commit one tree per pass. Wrapped with a separate "audit for similar-shape issues" pass that surfaced two more BL items and one dead Pydantic field worth dropping.
+
+### Commits in order
+
+| Hash | What it does |
+|---|---|
+| `4090453` | **build_testflight.sh hardening (carry-over chip).** Added `-allowProvisioningUpdates` + ASC API key auth flags assuming `flutter build ipa -- <xcodebuild args>` would pass through. It does not. **Reverted in 19a0617** (see below). |
+| `e722dc5` | **BL3 — D-039 7-day trial activation on first claim.** `auth_service._claim_or_create()` (magic-link) + `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guard: `trial_started_at is None`, so admin-granted trials are preserved on re-auth. **2 new tests** (`test_claim_sets_trial_dates`, `test_reauth_does_not_reset_existing_trial`). 365→367 passing. Data plane only; downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). |
+| `9d403b7` | **decision_log.md spot-check.** D-022 annotated with the AT:R27 "Coach → Brief" rename; D-039 annotated with the AT:R31 data-plane wiring + remaining TODO layers; D-048 marked deferred (BL4) since `llm_gateway._pick_provider` accepts `locale` but doesn't yet route on it (blocked on GoogleProvider). |
+| `a9a8d7a` | **docs/02_agents/ reconciliation + `coach_your_agent.md → brief_your_agent.md` rename.** 1 CRIT fix (Concierge tier — Floor Manager runs `mid`, not `cheap`), Coach→Brief residue swept across 7 spots in the body of the renamed file, 4 cross-refs updated (`safety_floor.md`, `README.md`, `twelve_agents.md`, `one_on_one.md`, `screen_inventory.md`). `mandate_overlays.md` file ref fixed (`overlays.py` → `overlay_generator.py`). `one_on_one.md` got an honest "actual schema" block (`one_on_one_messages` row shape) + a Not-yet-delivered tail; `twelve_agents.md` reframed activation as intended-end-state and got its own Not-yet-delivered tail (Agent Academy modules, live TradingAgents integration, `/v1/agents` route → BL7). |
+| `5621c7b` | **docs/03_onboarding/ reconciliation + BL11/BL12/BL13 filed.** 5 critical doc-vs-code mismatches fixed: claim methods (only Apple + magic-link), session→user binding wrong field name (`converted_to_user` → `claimed_user_id`; and never assigned today — that's BL13), trial activation now atomic at claim (no separate step 6), Concierge tone calibration described as live but V0 is fully scripted (no LLM), storage example used non-existent fields. Plus reframed: trial-end UX (BL11), mandate audit on hard edits (BL12), Apple→magic-link auto-fallback (none exists), locale handling (English-only V0). `mandate_schema.md` Python example bumped from Pydantic v1 (`Config class`) to v2 (`ConfigDict`); `user_id: UUID` not `str`. |
+| `7bcbe78` | **pubspec.yaml `+24 → +25` bump.** Saiful tried to ship `+25` via `scripts/build_testflight.sh` between commits; the script auto-bumped + committed before hitting the flag-pass-through error. Build failed; IPA never produced. To finish the upload: `scripts/build_testflight.sh --no-bump`. |
+| `19a0617` | **Revert of 4090453.** `flutter build ipa` parses post-`--` tokens as Dart entrypoints, not as args to forward to xcodebuild — got `Target file "-allowProvisioningUpdates" not found.` Restored the working `flutter build ipa` invocation. **Followup chip spawned**: rewrite the script to split into `flutter build ios --no-codesign` + explicit `xcodebuild archive -allowProvisioningUpdates -authenticationKey*` + `xcodebuild -exportArchive`, so the API-key + provisioning-updates flags can land on the archive step where they belong. |
+| `47c08a4` | **Post-audit cleanup.** Drop dead `User.deleted_at` from `backend/app/schemas/user.py` — declared in Pydantic but no matching SQLAlchemy column existed in `User`. Soft-delete on users was never wired; the field always read as None. Plus BL14 (mobile drops Brief `proposed_at` + `started_at` timestamps on the wire) + BL15 (`AgentActivation` Pydantic class is fully dormant — `can_use_now()` never called, fields never written; preferred resolution is delete the class). |
+
+Plus the `chore(handover): wrap AT:R31` commit.
+
+### Backlog filed (AT:R31)
+
+| ID | Item | Est | Status hook |
+|---|---|---|---|
+| **BL3** | D-039 trial activation on claim | 0 (data plane done) | Wired AT:R31. Downstream layers still TODO — see BL11. |
+| **BL11** | Trial-end UX (notif + email + summary + reactivation modal + entitlement gate) | 1.5 | Pre-req: SMTP route + push integration |
+| **BL12** | Mandate audit on hard edits | 1 | Pre-req: holdings-vs-mandate evaluator (extract from `safety_floor.check_mandate_compliance`) |
+| **BL13** | `OnboardingSession.claimed_user_id` binding on claim | 0.5 | Schema field never assigned; sessions go orphan |
+| **BL14** | Mobile drops `BriefProposal.proposed_at` + `BriefSession.started_at` | 0.25 | Lossy round-trip; no UI consumer today |
+| **BL15** | Delete the dormant `AgentActivation` Pydantic class | 0.25 | Preferred resolution: delete + rely on `lessons.activations()` |
+
+---
+
 ## AT:R30  (2026-05-21)
 
 **Documentation reconciliation session.** Single track: bring `docs/08_tech/*` and the Dart mandate models into line with shipped code so the next session reads ground truth, not aspiration. **8 commits, 0 alpha promotes, 0 TestFlight uploads, 0 test changes, 0 backend code touched.** Mobile changes are limited to Dart model expansions that are backward-compatible at runtime.
