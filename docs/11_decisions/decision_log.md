@@ -127,6 +127,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 - **Decided**: Users brief via conversation; agent proposes diff; user approves
 - **Source**: Saiful — "the user can chat with the Agent and generate new prompts"
 - **Rationale**: Removes risk and intimidation of raw prompt editing. Flagship AI-first feature.
+- **Status**: ✅ Implemented as **"Brief Your Agent"** (renamed from "Coach Your Agent" in AT:R27). Propose→accept flow in `backend/app/services/brief_engine.py`; UI in `mobile/lib/features/brief/`. The conceptual term "uncoachable" stays as the safety-floor's resistance label (see D-023).
 
 ### D-023 — Hard safety floor on Portfolio Manager — uncoachable
 - **Decided**: PM's mandate-enforcement logic is uncoachable. Two layers: prompt-level safety floor + deterministic compliance check function.
@@ -212,6 +213,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 ### D-039 — 7-day Trader trial, no auto-bill
 - **Decided**: Every new user gets 7 days of Trader features. Trial does NOT auto-bill at expiry.
 - **Rationale**: Brand-positive. Trust > short-term conversion. Education-gate unlocks during trial stay.
+- **Status**: ⚠️ **Partially wired (AT:R31).** Data plane done: `auth_service._claim_or_create()` + `sign_in_with_apple()` populate `users.trial_started_at` + `users.trial_expires_at = now+7d` on first claim (commit `e722dc5`; tests in `backend/tests/unit/test_auth_service.py`). The mandate snapshot still gets `plan: TRIAL_TRADER` from `concierge_engine`. **Downstream still TODO:** entitlement gates that read these columns, expiry banner in mobile, conversion modal at expiry. See `docs/10_delivery/project_plan.md` BL3.
 
 ### D-040 — Hard ad-content policy (no get-rich-quick, no binary options, etc.)
 - **Decided**: Strict banned-categories list. Direct deals manually reviewed.
@@ -254,6 +256,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 ### D-048 — Arabic preferentially routed to Gemini
 - **Decided**: Arabic queries routed to Gemini family by default
 - **Rationale**: Google has invested heavily in Arabic quality.
+- **Status**: ⚠️ **Deferred (BL4).** `llm_gateway._pick_provider(locale, model_tier)` accepts the `locale` arg and audit-logs it but doesn't yet use it for provider selection. Blocked on `GoogleProvider` class — `llm_gateway.py:13` lists it as "Coming later (W4+)." Wire-up is ~3 lines once GoogleProvider lands. See `docs/10_delivery/project_plan.md` BL4.
 
 ### D-049 — Riverpod for Flutter state
 - **Decided**: Riverpod over Bloc/Redux
