@@ -13,6 +13,54 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R28  (2026-05-20)
+
+Short, single-task session: ship the TestFlight `+18` build that had been the AT:R27 → AT:R28 carry-over. 2 commits, 0 alpha promotes, 0 test changes.
+
+### Track A — TestFlight `0.1.0+18` upload
+
+`scripts/build_testflight.sh` ran clean end-to-end:
+
+- **Auto-bump** (`f22bf45`): `mobile/pubspec.yaml` `version: 0.1.0+17` → `0.1.0+18`. Script auto-commits the bump per its own protocol.
+- **Build**: `flutter build ipa --release --export-method=app-store --dart-define=ALLOW_BACKEND_SWITCH=true --dart-define=AMI_API_URL_ALPHA=https://api-alpha.agenticmarketintel.ai`. Archived in 45.4s, IPA built in 6.0s, final size 25 MB (`build/ios/ipa/ami_trade.ipa`).
+- **Upload**: `xcrun altool --upload-app --type ios` → `UPLOAD SUCCEEDED with no errors`. Delivery UUID `5b62b39f-b39f-4901-a1e9-4eb5b5fe00ca`, 25,994,051 bytes in 13.1s (2.0 MB/s). Confirmed at 15:02:05 UTC.
+
+App Store Connect validation noted the usual two warnings (placeholder app icon + launch image) — pre-existing, deferred to brand-asset pass.
+
+Build `+18` carries the **full AT:R27 Flutter payload** that had been sitting at HEAD with no TestFlight pickup:
+- `CoachScreen` → `BriefScreen` + `BriefHistoryScreen` + `BriefNotifier`/`briefNotifierProvider` + `models/brief.dart` + all `api_client` method renames
+- 33 `coach*` l10n keys flipped to `brief*` across EN / AR / MS
+- New `AgentActionSheet` widget on Floor — tapping an unlocked agent now shows `[1-ON-1]` + `[BRIEF]` buttons (Concierge skips the sheet)
+- Journal filter chip "COACH" → "BRIEF" (value + l10n key)
+
+### Track B — Upstream skill protocol sync (`53532a7`)
+
+Three project-local slash-command files received upstream updates from the harness during the session:
+- `.claude/commands/handover-generic.md`
+- `.claude/commands/session-setup.md`
+- `.claude/commands/start-fresh-generic.md`
+
+The new variant adds **multi-track support** — each generic skill now takes a track letter (e.g. `/start-fresh-generic R`, `/handover-generic M`) and reads a per-track block from `.claude/session-config.yml`. This project doesn't use the generic skills (it has bespoke `/start-fresh` and `/handover`), but the synced text is what the upstream now ships, so committing keeps the diff at zero.
+
+Committed as `chore(skills): sync generic session protocols from upstream — multi-track variant` to keep the tree clean for handover. No behavioural impact on this project's actual flow.
+
+### What didn't change
+
+- **No backend code touched.** Test count still 348 passing.
+- **No alpha promote.** Latest alpha tag stays `alpha-2026-05-20-8`.
+- **No content corpus changes.** Lessons / glossary / Q&A / daily challenges / i18n counts unchanged.
+- **No DB migrations.** Latest migration on melehost still `a9d1c7e80006` (admin_backoffice).
+- **No bug-list movement.** 2 open + 2 pending_review at session start; same at session end.
+
+### Operational footnotes worth surfacing
+
+- **Build is processing in App Store Connect.** First-pass processing typically 15–30 min after upload.
+- **`flutter pub get` flagged 59 packages with newer-incompatible versions.** Same as last build; no action needed.
+- **SMTP unchanged.** Still no outbound mail route. `SMTP_HOST` blanked in `infra/alpha.env`; `email_service` no-op path firing.
+- **iPhone 13 TestFlight install** — once Apple completes processing, install `+18` from TestFlight on device.
+
+---
+
 ## AT:R27  (2026-05-20)
 
 Big session, 8 commits, 8 alpha tags (`alpha-2026-05-20-{1..8}`). Three discrete tracks: admin back-office foundation, Coach → Brief rename + discoverability fix, and an audit-driven `user_overlay` runtime fix. Backend tests went 343 → 348 (added admin endpoint coverage + prompt-overlay regression). No TestFlight build pushed — Flutter changes sit at HEAD for the next promote.
