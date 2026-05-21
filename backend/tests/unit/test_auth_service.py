@@ -253,3 +253,47 @@ def test_apple_does_not_overwrite_existing_email():
     )
     assert user.email == "real@example.com"  # NOT overwritten
     assert user.apple_id == "apple-sub-relay"
+
+
+def test_claim_sets_trial_dates():
+    """First Apple claim populates trial_started_at + trial_expires_at on the user row (BL3 / D-039)."""
+    from datetime import timedelta
+    from app.db import get_session
+    from app.db.models import User as UserModel
+    from sqlalchemy import select as _select
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-trial", email="trial@example.com"),
+        user_id=user_id,
+    )
+    with get_session() as s:
+        row = s.execute(_select(UserModel).where(UserModel.id == user.id)).scalar_one()
+        assert row.trial_started_at is not None
+        assert row.trial_expires_at is not None
+        assert row.trial_expires_at - row.trial_started_at == timedelta(days=7)
+
+
+def test_reauth_does_not_reset_existing_trial():
+    """A second Apple sign-in must not slide the trial window forward."""
+    from app.db import get_session
+    from app.db.models import User as UserModel
+    from sqlalchemy import select as _select
+    auth = AuthService(apple_verifier=_FakeAppleVerifier())
+    user_id = uuid4()
+    user, _ = auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-reauth"),
+        user_id=user_id,
+    )
+    with get_session() as s:
+        original_expiry = s.execute(
+            _select(UserModel).where(UserModel.id == user.id)
+        ).scalar_one().trial_expires_at
+    # Re-auth (same apple_sub).
+    auth.sign_in_with_apple(
+        identity_token=_apple_jwt("apple-sub-reauth"),
+        user_id=user_id,
+    )
+    with get_session() as s:
+        row = s.execute(_select(UserModel).where(UserModel.id == user.id)).scalar_one()
+        assert row.trial_expires_at == original_expiry  # window preserved

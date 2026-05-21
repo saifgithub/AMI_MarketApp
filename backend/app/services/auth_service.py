@@ -281,6 +281,7 @@ class AuthService:
             if row is None and user_id is not None:
                 row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if row is None:
+                now = datetime.now(timezone.utc)
                 row = User(
                     id=user_id or uuid4(),
                     device_user_id=user_id,
@@ -288,7 +289,9 @@ class AuthService:
                     email=apple_email,
                     display_name=full_name,
                     is_anonymous=False,
-                    claimed_at=datetime.now(timezone.utc),
+                    claimed_at=now,
+                    trial_started_at=now,
+                    trial_expires_at=now + timedelta(days=7),
                 )
                 s.add(row)
                 s.flush()
@@ -303,8 +306,12 @@ class AuthService:
                 if full_name and not row.display_name:
                     row.display_name = full_name
                 if row.is_anonymous:
+                    now = datetime.now(timezone.utc)
                     row.is_anonymous = False
-                    row.claimed_at = datetime.now(timezone.utc)
+                    row.claimed_at = now
+                    if row.trial_started_at is None:
+                        row.trial_started_at = now
+                        row.trial_expires_at = now + timedelta(days=7)
             return _row_to_user(row), _scaffold_token(row.id)
 
     # ── Helpers ────────────────────────────────────────────────────────
@@ -322,20 +329,27 @@ class AuthService:
         if row is None and email:
             row = s.execute(select(User).where(User.email == email)).scalar_one_or_none()
         if row is None:
+            now = datetime.now(timezone.utc)
             row = User(
                 id=user_id or uuid4(),
                 device_user_id=user_id,
                 email=email,
                 is_anonymous=False,
-                claimed_at=datetime.now(timezone.utc),
+                claimed_at=now,
+                trial_started_at=now,
+                trial_expires_at=now + timedelta(days=7),
             )
             s.add(row)
             s.flush()
             return row
         row.email = email
         if row.is_anonymous:
+            now = datetime.now(timezone.utc)
             row.is_anonymous = False
-            row.claimed_at = datetime.now(timezone.utc)
+            row.claimed_at = now
+            if row.trial_started_at is None:
+                row.trial_started_at = now
+                row.trial_expires_at = now + timedelta(days=7)
         return row
 
     # Test helper
