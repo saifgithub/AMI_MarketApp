@@ -2,6 +2,8 @@
 
 How we wrap the TradingAgents framework. Their code is the reasoning engine; our code is the personalization, safety, and product layer.
 
+> **Alpha status:** the alpha Room uses a standalone scripted orchestrator (`RoomRunner`) with deterministic agent templates — TradingAgents graph is **not yet wired**. The architecture and code sketches below document the target design. The single-function swap to live LLM is noted where it applies.
+
 ## What TradingAgents is
 
 [TradingAgents](https://github.com/TauricResearch/TradingAgents) (mounted at `/Volumes/Extreme Pro/TradingAgent/`) is a multi-agent LLM framework that orchestrates 12 specialized agents through a LangGraph state machine. Given a ticker and analysis date, it produces a trading decision.
@@ -10,128 +12,143 @@ We **do not modify** TradingAgents. We wrap it.
 
 ## Integration architecture
 
+### Alpha (current)
+
 ```
 Our backend (FastAPI)
      ↓
-TradingAgentsService (our wrapper)
+RoomRunner  (backend/app/services/room_runner.py)
      ↓
-Apply mandate overlay to each agent's prompt
+build_room_messages()  (services/room_prompts.py)
+  → base prompt per agent
+  → mandate overlay   (generate_overlay)
+  → user brief overlay  (_append_user_overlay)
+  → safety_floor block  (portfolio_manager only)
      ↓
-Apply user_overlay (from Brief Your Agent)
+Scripted _TEMPLATES dict  ← alpha placeholder
+(one deterministic response per agent per ticker)
      ↓
-Apply safety_floor (on Portfolio Manager only)
+check_mandate_compliance()  ← deterministic, always runs
      ↓
-Pass to TradingAgentsGraph from tradingagents.graph
-     ↓
-Stream results back through LangGraph callbacks
-     ↓
-Our backend persists the run and bills credits
+Stream SSE events to Flutter client
 ```
 
-## The wrapper service
+### Planned (post-alpha)
+
+```
+RoomRunner
+     ↓
+build_room_messages()  (same prompt pipeline)
+     ↓
+TradingAgentsGraph.propagate()  ← swap in here
+     ↓
+Stream LangGraph callbacks → SSE events
+```
+
+The scripted `_TEMPLATES` block in `room_runner.py` is the only thing standing between alpha and live LLM. Everything else — prompt composition, safety floor, SSE streaming, dedup, background-task queue — is already production-grade.
+
+## The wrapper service — current
 
 ```python
-# backend/app/agents/service.py
+# backend/app/services/room_runner.py
 
-from tradingagents.graph.trading_graph import TradingAgentsGraph
-from tradingagents.default_config import DEFAULT_CONFIG
+class RoomRunner:
+    """Orchestrates a Convene the Room session.
 
-class AgentsService:
-    def __init__(self, llm_router, db):
-        self.llm_router = llm_router
-        self.db = db
-    
-    async def convene_room(
+    start_run()  — public entry: reserves a room_run row, enqueues
+                   background task, returns run_id immediately.
+    run()        — async generator: does the work, emits SSE events.
+    """
+
+    async def start_run(
         self,
-        user_id: str,
+        user_id: UUID,
+        ticker: str,
+        session: AsyncSession,
+    ) -> str:  # returns room_run_id
+        ...
+
+    async def run(
+        self,
+        room_run_id: str,
+        user_id: UUID,
         ticker: str,
         mandate: Mandate,
-        rounds: int = 1,
-    ) -> RoomRun:
-        # Compose per-agent overlays
-        agent_prompts = self._build_agent_prompts(mandate, user_id)
-        
-        # Configure TradingAgentsGraph with our LLM choices
-        config = self._build_config(mandate.plan, mandate.locale)
-        
-        # Create graph
-        graph = TradingAgentsGraph(config=config, debug=False)
-        
-        # Inject our overlays into each agent's system prompt
-        graph.inject_agent_prompts(agent_prompts)
-        
-        # Run propagation with streaming callbacks
-        room_run = RoomRun(
-            user_id=user_id,
-            ticker=ticker,
-            mandate_version=mandate.version,
-            started_at=now(),
-            status="running",
-        )
-        await self.db.save(room_run)
-        
-        # Stream
-        async for event in graph.propagate_stream(ticker, current_date()):
-            # Emit event to Supabase Realtime channel
-            await self._stream_event(room_run.id, event)
-        
-        # Get final decision
-        _, decision = graph.last_result
-        
-        # Apply safety_floor compliance check (deterministic)
-        if decision.action == "APPROVE":
-            check = check_mandate_compliance(decision, mandate)
-            if not check.passed:
-                decision = decision.with_override(
-                    action="REJECT",
-                    reason=f"Mandate violation: {check.violations}",
-                )
-        
-        # Persist verdict
-        room_run.verdict = decision
-        room_run.status = "completed"
-        await self.db.save(room_run)
-        
-        # Commit credit charge (was provisional)
-        await self.credits.commit(user_id, room_run.id)
-        
-        return room_run
-    
-    def _build_agent_prompts(self, mandate, user_id) -> dict:
-        prompts = {}
-        for agent_id in TWELVE_AGENT_IDS:
-            base = load_base_prompt(agent_id)
-            mandate_overlay = generate_overlay(agent_id, mandate)
-            user_overlay = get_user_overlay(user_id, agent_id)
-            
-            full_prompt = base + "\n\n" + mandate_overlay + "\n\n" + (user_overlay or "")
-            
-            # Append safety floor for Portfolio Manager
-            if agent_id == "portfolio_manager":
-                full_prompt += "\n\n" + SAFETY_FLOOR_BLOCK
-            
-            prompts[agent_id] = full_prompt
-        return prompts
-    
-    def _build_config(self, plan, locale):
-        config = DEFAULT_CONFIG.copy()
-        config["llm_provider"] = self.llm_router.provider_for(plan, locale)
-        config["deep_think_llm"] = self.llm_router.model_for(plan, locale, "deep")
-        config["quick_think_llm"] = self.llm_router.model_for(plan, locale, "quick")
-        config["max_debate_rounds"] = self.llm_router.rounds_for(plan)
-        return config
+    ) -> AsyncIterator[dict]:
+        # Alpha: iterate _TEMPLATES[ticker] entries
+        # Planned: graph.propagate(ticker, analysis_date)
+        ...
 ```
+
+## Prompt composition
+
+Prompt building for Room lives in `backend/app/services/room_prompts.py`:
+
+```python
+# backend/app/services/room_prompts.py
+
+def build_room_messages(
+    agent_id: AgentId,
+    mandate: Mandate,
+    user_id: UUID,
+    message_history: list[dict],
+    user_message: str,
+) -> list[dict]:
+    """Returns the full messages list for one agent call."""
+```
+
+Prompt building for 1-on-1 lives in `backend/app/services/agent_prompts.py`:
+
+```python
+# backend/app/services/agent_prompts.py
+
+def build_agent_prompt(
+    agent_id: AgentId,
+    mandate: Mandate,
+    user_id: UUID,
+) -> str:
+    """Composes base + mandate overlay + user brief overlay + safety floor (PM only)."""
+
+def _append_user_overlay(prompt: str, agent_id: AgentId, user_id: UUID) -> str:
+    """Private helper — looks up active Brief overlay for this user+agent, appends it."""
+```
+
+The user brief overlay lookup is internal to `build_agent_prompt` via `_append_user_overlay`. There is no public `get_user_overlay()` function.
+
+## Mandate compliance check
+
+```python
+# backend/app/agents/safety_floor.py
+
+def check_mandate_compliance(
+    proposed: ProposedTrade,
+    portfolio_value: float,
+    current_drawdown_pct: float,
+    mandate: Mandate,
+    *,
+    halal_universe: set[str] | None = None,
+    locale_allowed_universe: set[str] | None = None,
+) -> ComplianceResult:
+    """Deterministic mandate-compliance check. No LLM.
+
+    Returns ComplianceResult(passed: bool, violations: list[str], blocked_by: str | None).
+    """
+```
+
+Called after the Room verdict is produced. If the PM output violates the mandate, the decision is hard-overridden to REJECT before persisting.
+
+## Model tier routing
+
+Per-(plan, agent) tier selection is in `backend/app/services/tier_policy.py::pick_tier()`. It maps `(plan, agent_id)` → `cheap | mid | premium` tier, which the LLM gateway resolves to a specific model. The gateway preference chain is `vllm > anthropic > mock`.
 
 ## TradingAgents extension points
 
 The TradingAgents framework supports:
 - Multiple LLM providers (OpenAI, Anthropic, Google, xAI, DeepSeek, Qwen, GLM, OpenRouter, Ollama, Azure)
-- Custom agent prompts via the `inject_agent_prompts` mechanism (we contribute this if it doesn't exist)
+- Custom agent prompts via the `inject_agent_prompts` mechanism (we will contribute this if it doesn't exist upstream)
 - Streaming via LangGraph callbacks
-- Checkpoint resume via `--checkpoint` flag
+- Checkpoint resume via LangGraph's built-in checkpointer
 - Decision log via `~/.tradingagents/memory/`
-
-We use all of these. The `inject_agent_prompts` is the key integration — we don't fork TradingAgents to add per-user prompts; we use their config-driven prompt injection.
 
 ## What we contribute back
 
@@ -149,29 +166,25 @@ Most useful contributions back to TradingAgents (good open-source citizenship):
 A 1-on-1 doesn't use the full graph — it uses a single agent in isolation:
 
 ```python
-async def one_on_one(
-    user_id: str,
-    agent_id: str,
-    message_history: list[Message],
+# backend/app/services/agent_runner.py
+
+async def stream_one_on_one_message(
+    agent_id: AgentId,
+    message_history: list[dict],
     user_message: str,
     mandate: Mandate,
+    user_id: UUID,
+    plan: str,
 ) -> AsyncIterator[str]:
-    # Build the single agent
-    base = load_base_prompt(agent_id)
-    mandate_overlay = generate_overlay(agent_id, mandate)
-    user_overlay = get_user_overlay(user_id, agent_id)
-    
-    system_prompt = base + "\n\n" + mandate_overlay + "\n\n" + (user_overlay or "")
-    
-    # If PM, append safety floor (though 1-on-1 PM is mostly Q&A, not approval — still appended)
-    if agent_id == "portfolio_manager":
-        system_prompt += "\n\n" + SAFETY_FLOOR_BLOCK
-    
-    # Pick model based on plan
-    model = llm_router.model_for(mandate.plan, mandate.locale, "default")
-    
+    # Compose full system prompt (base + mandate overlay + user brief overlay + safety floor)
+    system_prompt = build_agent_prompt(agent_id, mandate, user_id)
+
+    # Pick model via tier policy
+    tier = pick_tier(plan, agent_id)
+    model = llm_gateway.model_for(tier)
+
     # Stream
-    async for chunk in llm.stream(
+    async for chunk in llm_gateway.stream(
         system=system_prompt,
         messages=message_history + [{"role": "user", "content": user_message}],
         model=model,
@@ -181,25 +194,26 @@ async def one_on_one(
 
 The 1-on-1 doesn't engage other agents. The user gets that agent's perspective only.
 
-## Checkpoint resume
+## Checkpoint resume (planned)
 
-TradingAgents supports LangGraph checkpoint resume. We enable this for Convene the Room runs:
+TradingAgents supports LangGraph checkpoint resume. We plan to enable this for Convene the Room runs once TradingAgents is wired:
 
 ```python
+# Planned — not active in alpha
 config["checkpoint_enabled"] = True
 config["checkpoint_path"] = f"/tmp/tradingagents-checkpoints/{user_id}/{room_run_id}.db"
 ```
 
 If a Room run crashes mid-execution (e.g., LLM provider timeout), the next request can resume from the last successful node instead of starting over. Saves time and LLM cost.
 
-## Memory log
+## Memory log (planned)
 
-TradingAgents has a memory log at `~/.tradingagents/memory/trading_memory.md` that records past decisions and reflections. We:
+TradingAgents has a memory log at `~/.tradingagents/memory/trading_memory.md` that records past decisions and reflections. Plan:
 - Store this per-user (`/tmp/tradingagents-memory/{user_id}/trading_memory.md`)
 - Mount it as a writable volume in Cloud Run
 - Periodically snapshot to Supabase Storage for persistence
 
-This gives users the benefit of "team learning over time" — past Room decisions inform future ones.
+Not active in alpha.
 
 ## Cost considerations
 
