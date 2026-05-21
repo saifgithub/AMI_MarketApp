@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
-# Build a release IPA and upload it to TestFlight in one shot.
+# Build a release IPA and upload it to TestFlight in one shot — no manual
+# Xcode intervention required.
 #
-# Auto-bumps the build number in pubspec.yaml so Apple accepts the upload
-# (App Store Connect rejects re-uploads at the same version+build combo),
-# then `flutter build ipa --release --export-method=app-store`, then
-# `xcrun altool --upload-app` with the App Store Connect API key stored
-# at ~/.appstoreconnect/private_keys/AuthKey_<APP_STORE_API_KEY_ID>.p8.
+# Pipeline (staged so signing flags can land where they apply):
+#   1. bump pubspec build number (Apple rejects re-uploads at the same +N)
+#   2. flutter build ios --release --no-codesign --dart-define=...
+#         (Flutter framework only — produces an unsigned .app bundle)
+#   3. xcodebuild -workspace ... archive  -allowProvisioningUpdates
+#         -authenticationKey* (signs + refreshes provisioning profile if
+#         needed via the ASC API key — the flag that flutter build ipa
+#         can't accept because of its '--' pass-through bug)
+#   4. xcodebuild -exportArchive  -exportOptionsPlist ios/ExportOptions.plist
+#         -allowProvisioningUpdates -authenticationKey*   (App Store IPA)
+#   5. xcrun altool --upload-app  (TestFlight)
+#
+# History: an earlier one-shot `flutter build ipa -- -allowProvisioningUpdates`
+# attempt failed because Flutter parses post-`--` tokens as Dart entrypoints,
+# not as xcodebuild args. See commit 19a0617 (revert) + AT:R31 handover.
 #
 # Usage:
 #   scripts/build_testflight.sh                  # full build + upload
-#   scripts/build_testflight.sh --no-upload      # build IPA, skip upload
+#   scripts/build_testflight.sh --no-upload      # build IPA, skip altool upload
 #   scripts/build_testflight.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_testflight.sh --no-commit      # don't auto-commit the bump
 #
@@ -25,6 +36,7 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MOBILE_DIR="${PROJECT_ROOT}/mobile"
+IOS_DIR="${MOBILE_DIR}/ios"
 
 : "${APP_STORE_API_KEY_ID:=44VJ5WADL2}"
 : "${APP_STORE_API_ISSUER:=289e6201-8fc9-44a3-abde-59e8e278527c}"
@@ -57,6 +69,12 @@ if [[ ! -f "$key_file" ]]; then
   exit 1
 fi
 
+export_options="${IOS_DIR}/ExportOptions.plist"
+if [[ ! -f "$export_options" ]]; then
+  echo "✗ ExportOptions.plist not found at $export_options"
+  exit 1
+fi
+
 pubspec="${MOBILE_DIR}/pubspec.yaml"
 current_line=$(grep -E "^version:" "$pubspec")
 current_version=$(echo "$current_line" | sed -E 's/version:[[:space:]]*//')
@@ -79,20 +97,51 @@ else
   echo "▶ using existing version ${semver}+${build_num} (--no-bump)"
 fi
 
-echo "▶ flutter build ipa  (release, app-store)"
+archive_path="${MOBILE_DIR}/build/Runner.xcarchive"
+ipa_dir="${MOBILE_DIR}/build/ios/ipa"
+
+echo "▶ flutter build ios  (release, no-codesign — framework only)"
 cd "$MOBILE_DIR"
-flutter build ipa --release \
-  --export-method=app-store \
+flutter build ios --release --no-codesign \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
   --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}"
 
-ipa="${MOBILE_DIR}/build/ios/ipa/ami_trade.ipa"
-if [[ ! -f "$ipa" ]]; then
-  echo "✗ expected IPA at $ipa — flutter build failed?"
+echo "▶ xcodebuild archive  (signs + auto-refreshes provisioning profile)"
+cd "$IOS_DIR"
+rm -rf "$archive_path"
+xcodebuild \
+  -workspace Runner.xcworkspace \
+  -scheme Runner \
+  -configuration Release \
+  -destination "generic/platform=iOS" \
+  -archivePath "$archive_path" \
+  -allowProvisioningUpdates \
+  -authenticationKeyPath "$key_file" \
+  -authenticationKeyID "$APP_STORE_API_KEY_ID" \
+  -authenticationKeyIssuerID "$APP_STORE_API_ISSUER" \
+  archive
+
+echo "▶ xcodebuild -exportArchive  (App Store IPA)"
+rm -rf "$ipa_dir"
+xcodebuild \
+  -exportArchive \
+  -archivePath "$archive_path" \
+  -exportOptionsPlist "$export_options" \
+  -exportPath "$ipa_dir" \
+  -allowProvisioningUpdates \
+  -authenticationKeyPath "$key_file" \
+  -authenticationKeyID "$APP_STORE_API_KEY_ID" \
+  -authenticationKeyIssuerID "$APP_STORE_API_ISSUER"
+
+# xcodebuild -exportArchive names the IPA after the scheme, not the Flutter
+# product. Resolve whichever .ipa landed in the export dir.
+ipa=$(ls "${ipa_dir}"/*.ipa 2>/dev/null | head -1)
+if [[ -z "$ipa" || ! -f "$ipa" ]]; then
+  echo "✗ no IPA produced in $ipa_dir — xcodebuild -exportArchive failed?"
   exit 1
 fi
 size_mb=$(du -m "$ipa" | cut -f1)
-echo "▶ built ${ipa} (${size_mb} MB, build ${semver}+${build_num})"
+echo "▶ built $(basename "$ipa") (${size_mb} MB, build ${semver}+${build_num})"
 
 if [[ "$DO_UPLOAD" != "1" ]]; then
   echo "▶ skipping upload (--no-upload)"
