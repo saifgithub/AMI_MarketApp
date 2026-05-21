@@ -238,6 +238,6 @@ The chosen design is: **visible, locked, with a clear path (mandate edit) to leg
 
 ## Cross-references
 
-- Brief Your Agent: [`coach_your_agent.md`](coach_your_agent.md)
+- Brief Your Agent: [`brief_your_agent.md`](brief_your_agent.md)
 - Mandate schema (the source of truth that gets enforced): [`docs/03_onboarding/mandate_schema.md`](../03_onboarding/mandate_schema.md)
 - PM's overlay: [`mandate_overlays.md`](mandate_overlays.md#portfolio-manager)

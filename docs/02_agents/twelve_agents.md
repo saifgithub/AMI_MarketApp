@@ -2,7 +2,7 @@
 
 The 12 agents are powered by the [TradingAgents](https://github.com/TauricResearch/TradingAgents) framework (mounted at `/Volumes/Extreme Pro/TradingAgent/`). Their roles are inherited; their *behaviour for our users* is customised through:
 - **Mandate overlays** (auto-derived, non-editable — see [`mandate_overlays.md`](mandate_overlays.md))
-- **User overlays** (from Brief Your Agent — see [`coach_your_agent.md`](coach_your_agent.md))
+- **User overlays** (from Brief Your Agent — see [`brief_your_agent.md`](brief_your_agent.md))
 - **Safety floor** (uncoachable, only on Portfolio Manager — see [`safety_floor.md`](safety_floor.md))
 
 ## The roster
@@ -182,13 +182,14 @@ These colours are used consistently throughout the product:
 
 ## Agent activation model
 
-All 12 agents must be **activated** before a user can summon them.
+All 12 agents are gated by tier + (when Earn Path ships) Agent Academy completion.
 
-**Floor Pass (free) → Earn Path:** Complete the corresponding Agent Academy module → agent activates.
-**Trader / Floor Manager → Skip Path:** Subscribe → all 12 agents instantly active.
-**During 7-day Trader trial:** All 12 unlocked Skip-Path-style. If user completes Academy modules during trial, those agents stay unlocked on Earn Path after trial expires.
+**Today (Alpha):** Activation state is computed by `backend/app/api/lessons.py::activations()` from the user's plan + completed lessons. The Earn-Path / Skip-Path / trial-bridging mechanics are documented as the intended design; what's actually wired is the plan-gated unlock. See [`docs/04_education/dual_gating.md`](../04_education/dual_gating.md) for the full intended mechanics.
 
-See [`docs/04_education/dual_gating.md`](../04_education/dual_gating.md) for full mechanics.
+**Intended end state:**
+- **Floor Pass (free) → Earn Path:** Complete the corresponding Agent Academy module → agent activates.
+- **Trader / Floor Manager → Skip Path:** Subscribe → all 12 agents instantly active.
+- **During 7-day Trader trial:** All 12 unlocked Skip-Path-style. If user completes Academy modules during trial, those agents stay unlocked on Earn Path after trial expires.
 
 ## Mapping to TradingAgents codebase
 
@@ -207,4 +208,12 @@ See [`docs/04_education/dual_gating.md`](../04_education/dual_gating.md) for ful
 | `neutral_debator` | `tradingagents/agents/risk_mgmt/neutral_debator.py` |
 | `portfolio_manager` | `tradingagents/agents/managers/portfolio_manager.py` |
 
-Our integration wraps `TradingAgentsGraph` and injects the mandate overlay before propagation. See [`docs/08_tech/tradingagent_integration.md`](../08_tech/tradingagent_integration.md).
+**Status:** This mapping is the intended Beta+ end state. **Alpha does not call TradingAgents at runtime** — each agent's behaviour is driven by a deterministic prompt in `backend/app/services/agent_prompts.py` running through the LLM gateway (on-prem vLLM Gemma 4 31B today). The `tradingagent_integration.md` doc describes the planned swap-in; the actual integration lands when the Beta cloud-migration stream picks it up. See [`docs/08_tech/tradingagent_integration.md`](../08_tech/tradingagent_integration.md).
+
+---
+
+## Not yet delivered
+
+- **Agent Academy modules** (Earn Path mechanics). `lessons` table + activation tracking exist; per-agent Academy module content + the unlock event don't. See `docs/04_education/dual_gating.md` for the design.
+- **Live TradingAgents integration.** Alpha uses our own prompt+gateway pipeline; the TradingAgents library is a Beta+ swap. The mapping table above is forward-looking.
+- **Per-agent activation state surfaced via `/v1/agents`** (BL7). Mobile currently uses a client-side 12-agent manifest + `/v1/lessons/activations/{u}` for state.

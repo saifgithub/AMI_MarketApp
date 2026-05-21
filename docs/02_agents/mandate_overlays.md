@@ -254,7 +254,7 @@ def generate_overlay(agent_id: str, mandate: Mandate) -> str:
     # Deterministic, no LLM call, fast.
 ```
 
-Lives in `backend/app/agents/overlays.py`. Unit-tested for every agent × every relevant mandate-flag combination.
+Lives in `backend/app/agents/overlay_generator.py`. Unit-tested for every agent × every relevant mandate-flag combination.
 
 ## Locale handling
 

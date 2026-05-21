@@ -107,7 +107,7 @@ Concierge **cannot**:
 | Assistant features (scheduling, reminders, mute, summarize_journal) | **Paid only** (Trader + Floor Manager) |
 | Morning briefing generation | Free (pre-generated overnight, batched) |
 
-Concierge runs on the cheap-tier LLM at all tier levels — the value here is in tool use and product context, not deep reasoning. Saves LLM cost.
+Concierge runs on the **cheap** tier for Floor Pass / Trial / Trader plans and the **mid** tier for Floor Manager (per `backend/app/services/tier_policy.py::pick_tier`). The value here is tool use + product context, not deep reasoning — running cheap is appropriate for the bulk of users.
 
 ## Behavioural rules (system prompt highlights)
 

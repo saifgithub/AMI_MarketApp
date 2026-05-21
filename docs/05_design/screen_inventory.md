@@ -54,9 +54,9 @@ See [`floor_home_honeycomb.md`](floor_home_honeycomb.md) — full spec.
 | **Performance** (Phase 2) | Hit rate, alignment with user mandate, override rate |
 | **Brief** | Entry to [`06_brief_session`](#06-brief-session) |
 
-### 06 Coach Session
+### 06 Brief Session
 
-See [`docs/02_agents/coach_your_agent.md`](../02_agents/coach_your_agent.md) — full spec including the diff card design.
+See [`docs/02_agents/brief_your_agent.md`](../02_agents/brief_your_agent.md) — full spec including the diff card design.
 
 ### 07 Sim Portfolio
 

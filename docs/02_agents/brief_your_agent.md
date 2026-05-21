@@ -6,7 +6,7 @@ The flagship differentiator. The user shapes how each of their 12 agents thinks 
 
 A raw system-prompt editor is a power-user fantasy. Most users don't know what makes a good prompt and won't risk breaking their agent. Conversation removes the risk: the agent narrates the change in human language, the user approves, and the diff is automatic.
 
-This is the feature that earns AMI Trade the "AI-First" label. It is the single highest switching-cost lever — a user who has spent hours coaching their agents is not going to start over with a competitor.
+This is the feature that earns AMI Trade the "AI-First" label. It is the single highest switching-cost lever — a user who has spent hours briefing their agents is not going to start over with a competitor.
 
 ## The prompt composition (reminder)
 
@@ -17,19 +17,23 @@ agent.final_prompt = base_prompt           ← shipped by us, immutable
                    + safety_floor          ← only on Portfolio Manager, uncoachable
 ```
 
-Brief Your Agent only edits the **user_overlay** block. The mandate overlay is regenerated only when the user edits their mandate; the user has no way to modify the mandate overlay directly through Coach. The safety floor (PM only) is invisible to Coach. (See [`safety_floor.md`](safety_floor.md).)
+Brief Your Agent only edits the **user_overlay** block. The mandate overlay is regenerated only when the user edits their mandate; the user has no way to modify the mandate overlay directly through Brief. The safety floor (PM only) is invisible to Brief. (See [`safety_floor.md`](safety_floor.md).)
+
+> **AT:R27 rename.** This feature was called "Coach Your Agent" until AT:R27. Code now lives under `brief_engine` / `BriefScreen` / `BriefSession`; the legacy `/v1/coach/*` route is kept as a deprecated alias that logs `deprecated_coach_route_used`. The conceptual term **"uncoachable"** stays as the safety-floor's resistance label.
 
 ## Session flow
 
 ### Entry
 
-User opens an agent's profile → tap **Coach** tab → choose mode:
+User opens an agent's profile → tap **BRIEF** (on the `AgentActionSheet` bottom sheet, or the tune icon in the 1-on-1 header) → choose mode:
 
 | Mode | When to use |
 |---|---|
-| **Coach from past calls** | Default for users who have history. Agent surfaces its last 5 decisions; user thumbs up/down each, optionally adds a comment per reasoning step. |
-| **Coach from scratch** | For brand-new agents or major redirection. Agent asks: *"What do you want me to do differently?"* in a conversational interview. |
+| **Brief from past calls** | Default for users who have history. Agent surfaces its last 5 decisions; user thumbs up/down each, optionally adds a comment per reasoning step. |
+| **Brief from scratch** | For brand-new agents or major redirection. Agent asks: *"What do you want me to do differently?"* in a conversational interview. |
 | **Raw Mode** (Floor Manager only, v1.0) | Direct markdown editing of the user_overlay block. For users who know what they're doing. |
+
+The Floor-tile flow (AT:R27): tapping an unlocked agent pops a sheet with two big buttons — `[1-ON-1]` (chat) and `[BRIEF]` (modify how it thinks). Concierge skips the sheet — has no Brief surface, so 1-on-1 is the only path.
 
 ### The conversation
 
@@ -79,7 +83,7 @@ When the agent proposes an overlay change, it shows a structured diff:
 
 ```
 ┌────────────────────────────────────────────────────┐
-│ BEAR RESEARCHER — Coach proposal v3                │
+│ BEAR RESEARCHER — Brief proposal v3                │
 ├────────────────────────────────────────────────────┤
 │                                                    │
 │ Plain English:                                     │
@@ -124,7 +128,7 @@ Iterate until the user is satisfied.
 
 ## Versioning
 
-Every accepted Coach update increments the agent's `user_overlay.version`:
+Every accepted Brief update increments the agent's `user_overlay.version`:
 
 ```python
 UserOverlay(
@@ -134,7 +138,7 @@ UserOverlay(
     content: str,           # the overlay markdown
     plain_english: str,     # human description (for the version history list)
     created_at: datetime,
-    based_on_session: uuid, # the Coach session that produced this version
+    based_on_session: uuid, # the Brief session that produced this version
 )
 ```
 
@@ -144,7 +148,7 @@ The user can browse all versions of any agent's overlay:
 
 ```
 ┌──────────────────────────────────────────────────┐
-│ BEAR RESEARCHER — Coaching history               │
+│ BEAR RESEARCHER — Brief history                  │
 ├──────────────────────────────────────────────────┤
 │ v3 (current)    2 days ago                       │
 │   "Lower priority on AI capex depreciation..."   │
@@ -169,7 +173,7 @@ The user can browse all versions of any agent's overlay:
 
 Rollback is one tap.
 
-## Coach edit limits
+## Brief edit limits
 
 | Tier | Max edits per agent (lifetime) | Why limit |
 |---|---|---|
@@ -177,11 +181,11 @@ Rollback is one tap.
 | Trader | Unlimited | |
 | Floor Manager | Unlimited + advanced (Raw Mode) | |
 
-A "Floor Pass user has used all 3 coach edits on the Bear Researcher" sees an upgrade prompt when they try a 4th.
+A "Floor Pass user has used all 3 Brief edits on the Bear Researcher" sees an upgrade prompt when they try a 4th.
 
 ## Safety floor in the UI
 
-When coaching the **Portfolio Manager**, a portion of the overlay is shown as grayed-out, locked:
+When briefing the **Portfolio Manager**, a portion of the overlay is shown as grayed-out, locked:
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -195,7 +199,7 @@ When coaching the **Portfolio Manager**, a portion of the overlay is shown as gr
 │ always reject trades violating your mandate.     │
 │ This is here to protect you.                     │
 ├──────────────────────────────────────────────────┤
-│ [Coach further]  [View version history]          │
+│ [Brief further] [View version history]           │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -228,7 +232,7 @@ then nuance.
 
 Saving in Raw Mode skips the conversational flow but still creates a new version. Diff view available.
 
-## The "Coach from past calls" mode
+## The "Brief from past calls" mode
 
 Triggered when the user has at least 5 entries in the Decision Journal involving that agent.
 
@@ -241,9 +245,9 @@ UI:
 
 This is the easier entry point for most users — they don't need to articulate what they want abstractly; they react to concrete examples.
 
-## Anti-patterns Coach refuses
+## Anti-patterns Brief refuses
 
-The Coach session is *not* an oracle for arbitrary requests. The agent will refuse to update its overlay if the requested change:
+The Brief session is *not* an oracle for arbitrary requests. The agent will refuse to update its overlay if the requested change:
 
 | Refuse on | Example |
 |---|---|
@@ -257,6 +261,6 @@ When refusing, the agent explains *why* and proposes the closest acceptable alte
 ## Cross-references
 
 - The safety floor design: [`safety_floor.md`](safety_floor.md)
-- Mandate overlay rules (auto-derived, not Coach-editable): [`mandate_overlays.md`](mandate_overlays.md)
+- Mandate overlay rules (auto-derived, not Brief-editable): [`mandate_overlays.md`](mandate_overlays.md)
 - Tier limits: [`docs/06_monetization/tiers_and_pricing.md`](../06_monetization/tiers_and_pricing.md)
 - Storage schema: [`docs/08_tech/data_model.md`](../08_tech/data_model.md)
