@@ -67,7 +67,7 @@ the backend is on the Mac or that the LLM is mocked.
 | **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |
 | **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | No GitHub remote yet. Mac → melehost only path. |
 
-Detail in [`docs/08_tech/hosting.md`](docs/08_tech/hosting.md) (melehost spec), [`docs/10_delivery/promotion_protocol.md`](docs/10_delivery/promotion_protocol.md) (how code ships), [`docs/08_tech/backend_modes.md`](docs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER.md`](HANDOVER.md).
+Detail in [`docs/08_tech/hosting.md`](docs/08_tech/hosting.md) (melehost spec), [`docs/10_delivery/promotion_protocol.md`](docs/10_delivery/promotion_protocol.md) (how code ships), [`docs/08_tech/backend_modes.md`](docs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER_R.md`](HANDOVER_R.md).
 
 If a check fails (curl returns 502 / connect refused), debug from melehost — don't fall back to "let me start a backend on the Mac":
 
@@ -117,7 +117,7 @@ Other essentials:
 ## What to do when you start a session
 
 1. Read this file (already loaded).
-2. Read [`HANDOVER.md`](HANDOVER.md) for the freshest state + immediate next steps.
+2. Read [`HANDOVER_R.md`](HANDOVER_R.md) for the freshest state + immediate next steps.
 3. Skim [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
 4. `git log --oneline` to verify the commit chain.
 5. Find the topic-specific doc(s) in `docs/` for your task.
@@ -148,5 +148,5 @@ He calls Claude "buddy" sometimes. That's fine.
 ## Autonomy + handover rules
 
 - **Inside this project folder, execute autonomously.** Don't ask "ready to commit?" — just do it. (See `memory/feedback_workflow.md`.)
-- **Handover hygiene.** When Saiful asks to wrap a session, run [`/handover`](.claude/commands/handover.md). That's the canonical protocol — it walks preflight, subagent-worktree cleanup, consistency scan, `HANDOVER.md` + `memory/project_ami_trade.md` updates, final verification, and a structured report. The next session reads files at HEAD, so uncommitted edits are invisible and stale text contradicting today's new rule will mislead the next agent — `/handover` produces a clean working tree and a consistency-scanned doc set in a fixed shape so an audit at the end is uniform. **Don't auto-trigger on context budget or "end of chapter" judgements** — Saiful decides when to wrap.
+- **Handover hygiene.** When Saiful asks to wrap a session, run [`/handover`](.claude/commands/handover.md) (multi-track, driven by `.claude/session-config.yml`). That's the canonical protocol — it walks preflight, subagent-worktree cleanup, consistency scan, `HANDOVER_R.md` (or the relevant track's handover doc) + `memory/project_ami_trade.md` updates, final verification, and a structured report. The next session reads files at HEAD, so uncommitted edits are invisible and stale text contradicting today's new rule will mislead the next agent — `/handover` produces a clean working tree and a consistency-scanned doc set in a fixed shape so an audit at the end is uniform. **Don't auto-trigger on context budget or "end of chapter" judgements** — Saiful decides when to wrap.
 - **Never delete files outside the project folder.** Saiful's exact words: *"unless it is something you physically cannot do, just go ahead and do it. just dont go crazy and delete files outside of your project folders!"*

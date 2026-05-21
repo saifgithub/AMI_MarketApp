@@ -1,11 +1,11 @@
 ---
-description: One-time bootstrap for /handover-generic + /start-fresh-generic. Walks you through filling in .claude/session-config.yml — project prefix, one or more tracks (R is required; add M, X, etc. as needed), and per-track specifics (handover doc, sanity checks, bug list, memory file). Re-runnable to amend a field or add a track.
+description: One-time bootstrap for /handover + /start-fresh. Walks you through filling in .claude/session-config.yml — project prefix, one or more tracks (R is required; add M, X, etc. as needed), and per-track specifics (handover doc, sanity checks, bug list, memory file). Re-runnable to amend a field or add a track.
 ---
 
 # /session-setup
 
-Bootstrap the per-project config that `/handover-generic` and
-`/start-fresh-generic` read on every invocation. The generic skills
+Bootstrap the per-project config that `/handover` and
+`/start-fresh` read on every invocation. The generic skills
 themselves are zero-edit — every project-specific bit lives in this
 config file. Without it, those two skills refuse to run.
 
@@ -25,7 +25,7 @@ across tracks. The memory file is shared.
 
 ## When to trigger
 
-- First time `/handover-generic` or `/start-fresh-generic` is invoked
+- First time `/handover` or `/start-fresh` is invoked
   in a project (they will tell you to run this).
 - You want to amend a field, rename a doc, or **add a new track**.
 
@@ -96,7 +96,7 @@ Then ask for the per-track config:
 | `handover_path` | `HANDOVER_<letter>.md` | The rolling handover doc for this track. |
 | `history_path` | `history_<letter>.md` (optional) | Older session narratives. Skip = no rotation. |
 | `project_plan_path` | (ask, optional) | A backlog doc with per-item status this track ticks. |
-| `sanity_checks` | empty list (optional) | List of `{name, cmd}` to run during `/start-fresh-generic <letter>`. Loop with "Add another?". |
+| `sanity_checks` | empty list (optional) | List of `{name, cmd}` to run during `/start-fresh <letter>`. Loop with "Add another?". |
 | `bug_list` | disabled (optional) | If this track surfaces an open-bug queue at session start. |
 
 Note that `memory_project_file` is **not** per-track — it's a single
@@ -124,7 +124,7 @@ Then use the `Write` tool to create `.claude/session-config.yml` with
 the gathered values. Use this shape:
 
 ```yaml
-# session-config.yml — read by /handover-generic + /start-fresh-generic.
+# session-config.yml — read by /handover + /start-fresh.
 # Re-run /session-setup to amend a field or add a track.
 
 project_prefix: "<value>"            # e.g. "AT". Session tags are <prefix>:<track><N>.
@@ -173,18 +173,18 @@ Print a short confirmation:
 Tracks configured: <list with letters + labels>
 
 Next steps:
-- /start-fresh-generic <letter>   (start a session on that track)
-- /handover-generic               (wrap — reads .claude/active-track)
+- /start-fresh <letter>   (start a session on that track)
+- /handover               (wrap — reads .claude/active-track)
 - /session-setup                  (re-run any time to amend or add a track)
 ```
 
-If only one track is configured, mention that `/start-fresh-generic`
-and `/handover-generic` work without arguments (they auto-resolve to
+If only one track is configured, mention that `/start-fresh`
+and `/handover` work without arguments (they auto-resolve to
 the only track).
 
 For each track whose `handover_path` doesn't exist yet, surface:
 
-> Note: <path> doesn't exist yet. `/handover-generic <letter>` will
+> Note: <path> doesn't exist yet. `/handover <letter>` will
 > create it on first wrap.
 
 ## What NOT to do
@@ -193,7 +193,7 @@ For each track whose `handover_path` doesn't exist yet, surface:
   → write, in that order.
 - **Don't validate sanity-check commands by running them.** This
   skill captures config; verification happens when
-  `/start-fresh-generic` runs.
+  `/start-fresh` runs.
 - **Don't prescribe specific track letters or labels.** Ask the user
   for the letter and purpose; don't suggest "R for Development" or
   similar unless they ask for examples. Their convention, not yours.

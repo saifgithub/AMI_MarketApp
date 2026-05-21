@@ -1,14 +1,54 @@
 ---
-description: Bootstrap a fresh session on this project — read HANDOVER.md + project plan, run Mac-side sanity checks against the live Alpha backend, switch to plan mode and wait for direction. Run this as the FIRST thing in a new session.
+description: Generic multi-track session-entry protocol. Pass a track letter (e.g. /start-fresh R or /start-fresh M). Reads .claude/session-config.yml — project_prefix + per-track block (handover doc, project plan, sanity checks, bug list) — and runs the universal bootstrap: start remote control, read HANDOVER + plan, run track-specific sanity checks, surface bugs, name the session, enter plan mode. Run as the FIRST thing in a new session.
 ---
 
 # /start-fresh
 
 CLAUDE.md is already loaded by the harness — this skill picks up
-everything else a fresh session needs before doing any work.
-Mirrors the protocol the previous session left in `HANDOVER.md`'s
-"Prompt to paste" block, but as a slash command so Saiful doesn't
-have to copy-paste it manually.
+everything else a fresh session needs before doing any work. This is
+the **generic, config-driven, multi-track** version of the entry
+protocol — every project-specific detail lives in
+`.claude/session-config.yml`, produced by `/session-setup`.
+
+## Step 0 — Verify config + resolve the track
+
+```bash
+test -f .claude/session-config.yml && echo OK || echo MISSING
+```
+
+If MISSING, **stop and surface**:
+
+> No `.claude/session-config.yml` found. Run `/session-setup` first
+> to bootstrap the per-project config, then re-run
+> `/start-fresh`.
+
+Otherwise read the file once. Then resolve the **active track** in
+this priority order:
+
+1. **Explicit argument** (e.g. `/start-fresh R`,
+   `/start-fresh M`): wins. If the letter isn't a key under
+   `tracks:` in config, stop and surface: "Track <L> isn't
+   configured. Tracks: <list>. Run `/session-setup` to add it."
+2. **Single configured track**: if `tracks:` has exactly one entry,
+   use it — no argument needed, no asking.
+3. **Multiple tracks, no argument**: ask via `AskUserQuestion` —
+   list every configured track with its letter + label, let the user
+   pick. Don't guess from commit history; an explicit pick at session
+   start is cheap and prevents wrapping the wrong track later.
+4. **Persist the resolved track** so `/handover` knows which
+   track this session belongs to without re-asking:
+   ```bash
+   echo "<track>" > .claude/active-track
+   ```
+   (Single-line file. Untracked — add `.claude/active-track` to
+   `.gitignore` if it isn't already.)
+5. Surface the resolved track in your first user-visible line: e.g.
+   "Starting track R (Development)…"
+
+Throughout this skill, `{prefix}` is `project_prefix` and `{track}`
+is the resolved track letter. `{T.handover_path}`,
+`{T.project_plan_path}`, `{T.sanity_checks}`, `{T.bug_list}` are
+fields under `tracks.{track}` in the config.
 
 ## What to do, in order
 
@@ -17,95 +57,121 @@ Run every step. Don't ask for confirmation — just execute.
 ### 1. Start remote control
 
 Run the built-in slash command to bridge this session to claude.ai/code
-so Saiful can monitor or continue from his browser or phone:
+so the user can monitor or continue from their browser or phone:
 
 ```
 /remote-control
 ```
 
-The command prints a URL. No further action needed — proceed to the next
-step while the session streams in the background.
+The command prints a URL. No further action needed — proceed to the
+next step while the session streams in the background.
+
+If `/remote-control` is not available in this environment (it's a
+Claude Code built-in; not every host supports it), silently skip it —
+don't block the entry protocol.
 
 ### 2. Read the freshest state on disk
 
 ```bash
-cat HANDOVER.md
+cat {T.handover_path}
 ```
 
-The "What's on disk + what's running" table near the top is
-current truth (commit count, latest commit, alpha tags, test
-count, content corpus state). The most recent
-`## What just landed (this session — AT:R<N>)` section captures
-substantive commits + carry-overs from the previous session.
+The "What's on disk + what's running" table near the top is current
+truth for this track (commit count, latest commit, deploy tags, test
+count, etc.). The most recent
+`## What just landed (this session — {prefix}:{track}<N>)` section
+captures substantive commits + carry-overs from the previous session
+on this track.
 
-Then skim:
-- `docs/10_delivery/project_plan.md` — A1–A28 Alpha backlog,
-  B1–B14 Beta, M1–M12 MVP. The Alpha "Carry-overs" list from
-  HANDOVER is the live working set.
-- `docs/10_delivery/promotion_protocol.md` — Mac → Alpha → Beta →
-  Prod tag walk. Run before any deploy work.
-
-You don't need to re-read the entire chronological narrative in
-HANDOVER.md — the recent-session sections + the top table are
-enough.
-
-### 3. Sanity-check the running stack
-
-Mac runs zero services. Every curl below hits the public
-Cloudflare Tunnel that routes to the melehost api-alpha container.
-If any fails, debug from melehost — see HANDOVER.md "Runtime
-state" / `ssh melehost`.
+If `{T.project_plan_path}` is set in config, also skim it for the
+backlog + the live working set:
 
 ```bash
-git status                                # MUST print "working tree clean"
-git log --oneline | head -10              # last 10 commits for context
-git tag --list "alpha-*" | tail -5        # most recent alpha tags
-
-curl -s https://api-alpha.agenticmarketintel.ai/v1/health
-curl -s https://api-alpha.agenticmarketintel.ai/v1/llm/status
-curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL
-curl -s https://api-alpha.agenticmarketintel.ai/v1/lessons | head -c 100
+test -n "{T.project_plan_path}" && head -200 {T.project_plan_path}
 ```
 
-Expected shape: health=ok, active_provider=vllm, quote returns a
-price + source (`yfinance` when Yahoo's serving, `mock_walk` when
-not — both fine), lessons returns 270+ entries.
+You don't need to re-read the entire chronological narrative in
+`{T.handover_path}` — the recent-session sections + the top table are
+enough.
 
-If the tree is dirty: STOP and surface to Saiful — the previous
-session didn't clean up; that's a bug, not something to bulldoze
-through.
+If `{T.handover_path}` doesn't exist yet (first session on this
+track), surface that and tell the user `/handover {track}`
+will create it on first wrap. Continue with the rest of the steps;
+just expect step 5 to fall back to `{prefix}:{track}1`.
+
+### 3. Sanity-check the local state
+
+Always run:
+
+```bash
+git status                                # confirm clean
+git log --oneline | head -10              # last 10 commits for context
+git tag --list | tail -5                  # most recent tags
+```
+
+If the working tree is dirty: STOP and surface to the user — the
+previous session didn't clean up; that's a bug, not something to
+bulldoze through.
+
+### 3a. Run track-specific sanity checks
+
+**Skip this sub-step entirely if `{T.sanity_checks}` is empty or
+unset in this track's config.**
+
+For each entry in `{T.sanity_checks}`:
+
+```bash
+echo "--- {T.sanity_checks[i].name} ---"
+{T.sanity_checks[i].cmd}
+```
+
+Surface the output. **Failures surface but don't block** — this skill
+never auto-debugs live infrastructure; that's the user's call. Note
+any failures clearly so the user can decide whether to investigate
+before starting work.
 
 ### 4. Pull the open bug list
 
-The in-app bug reporter writes to `bug_reports` on melehost. Surface the
-counts + the open titles so Saiful can choose to clear them before
-starting new work.
+**Skip this step entirely if `{T.bug_list.enabled}` is not true in
+this track's config.**
 
-```bash
-ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \"\
-  SELECT status, COUNT(*) FROM bug_reports \
-  WHERE status IN ('open','in_progress','pending_review') \
-  GROUP BY status ORDER BY status;\""
-```
+Run `{T.bug_list.count_cmd}` to get counts by status. If any status
+with "open"-like meaning has count > 0, also run
+`{T.bug_list.titles_cmd}` to get the titles.
 
-If `status='open'` count is **> 0**, also pull the titles so the plan in
-step 4 can list them:
-
-```bash
-ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -P pager=off -c \"\
-  SELECT to_char(created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS at, \
-    LEFT(id::text, 8) AS short_id, category, title \
-  FROM bug_reports WHERE status='open' ORDER BY created_at DESC LIMIT 10;\""
-```
-
-Note any `pending_review` rows too — those are bug-fix commits awaiting
-your merge to main from a previous `/fix-bugs` worktree.
+Note any rows that look like "awaiting merge" / "pending review" too
+— those may be bug-fix commits from a previous worktree-based fix
+session on this track.
 
 ### 5. Name the session
 
-HANDOVER.md's "Prompt to paste" block names the next session
-(e.g. `AT:R15:`). Use it for chapter markers (`mark_chapter`)
-and for any commit-message session-tag references.
+The `{T.handover_path}` "How to start the next session" block should
+name the next session, e.g. `{prefix}:{track}15`. Read it from there.
+If unavailable, increment from the highest `{prefix}:{track}<N>`
+reference you can find in recent commits:
+
+```bash
+git log --oneline | head -50 | grep -oE '{prefix}:{track}[0-9]+' | head -1
+```
+
+If no prior session tag exists on this track, use `{prefix}:{track}1`.
+
+Then **rename the chapter** so the conversation title matches the
+session name. The built-in `/rename` slash command works in the
+terminal CLI:
+
+```
+/rename {prefix}:{track}<N>
+```
+
+Issue it as if the user typed it (Claude can invoke built-in slash
+commands by emitting them). In IDE extensions where `/rename` isn't
+available, the call is a harmless no-op and the user can rename
+manually from the FleetView UI — surface that fallback once if you
+detect the rename didn't take.
+
+Use the session name for chapter markers, commit-message session-tag
+references, and the plan summary in step 6.
 
 ### 6. Switch to plan mode
 
@@ -115,65 +181,65 @@ Load `EnterPlanMode` via ToolSearch if not already available:
 ToolSearch query: "select:EnterPlanMode"
 ```
 
-Then call `EnterPlanMode` with a plan that summarizes:
-- Session name (AT:R<N>)
-- One-line state read: commit count, test count, alpha tag, what
-  Alpha is serving (LLM provider, lesson count, market data leaf
-  source)
-- **Open bug list from step 4** — render as a short table when count
-  > 0. For each: `short_id · category · title`. Note any
-  `pending_review` rows separately ("X bug fix(es) awaiting merge
-  from previous /fix-bugs worktree").
-- The current carry-over list from HANDOVER.md as bulleted
-  options Saiful might pick from
+Then call `EnterPlanMode` with a plan that summarises:
 
-Then **ask the user explicitly**, e.g. via AskUserQuestion or as the
-final paragraph of the plan: *"Bugs first or carry-over first?"* —
-phrased neutrally so he can also pick a brand new direction.
+- **Session name** (`{prefix}:{track}<N>` — and label, e.g.
+  "Development" or "Marketing", read from `{T.label}`)
+- **One-line state read**: commit count, test count (if tracked),
+  most recent tag, whatever else this track's "what's on disk"
+  table headlines.
+- **Sanity-check results** if any were run — one bullet per check,
+  "✅ ok" or the failure line.
+- **Open bug list** from step 4 if any were found — render as a
+  short table when count > 0. For each: `short_id · category ·
+  title`. Note any pending-review rows separately.
+- **Carry-over list** from `{T.handover_path}` as bulleted options
+  the user might pick from.
 
-The expected directive choices Saiful might give:
+Then **ask the user explicitly** via AskUserQuestion or as the final
+paragraph of the plan: a neutral "what would you like to work on?" —
+phrased so they can also pick a brand-new direction.
 
-| He says | Action |
-|---|---|
-| "fix bugs" / "yes, bugs first" | Invoke `/fix-bugs` (which spawns its own worktree, see that command's protocol). |
-| names a specific bug (by short id or title) | Treat as a one-off fix on the current branch — skip the full `/fix-bugs` worktree dance. |
-| names a carry-over / new direction | Start that work. |
-| "ignore bugs for now" | Drop the bug list, proceed with whatever else he picks. |
+If `{T.bug_list.enabled}` is true and bugs were found, frame the
+question as "bugs first or carry-over first?" — surface the bug
+option explicitly.
 
-ExitPlanMode is up to Saiful — he picks a direction, the plan adjusts,
-and only THEN do any file edits start.
-
-If the bug count is **0** for all of `open` / `in_progress` /
-`pending_review`, drop the bug section from the plan entirely — don't
+If the bug count is **0** across all statuses (or the section was
+skipped), drop the bug section from the plan entirely — don't
 manufacture noise just to fill a heading.
+
+ExitPlanMode is up to the user — they pick a direction, the plan
+adjusts, and only THEN do any file edits start.
 
 ## What NOT to do
 
-- **Don't start editing files** before Saiful approves the plan.
-  Plan mode exists exactly for this — surface intent, get
-  agreement, then act.
-- **Don't auto-pick** a carry-over item. Offer the list; let him
-  pick.
-- **Don't run `/promote-to-alpha`** as part of bootup. Promotion
-  is its own deliberate step that happens after a code change
-  lands and is tested.
-- **Don't run `/handover`** at session start. That's the EXIT
-  protocol; this is the ENTRY protocol.
-- **Don't skip the sanity-check curls**. The handful of seconds
-  they take is the cheapest way to catch a melehost outage
-  before you propose work that assumes a working backend.
-- **Don't skip the bug-list pull**. The user-facing bugs are the
-  most expensive thing to leave unaddressed; surfacing them
-  upfront forces a conscious "yes/no/later" rather than forgetting
-  them.
-- **Don't auto-claim or auto-fix bugs from /start-fresh**. This
-  command only surfaces; `/fix-bugs` is the entry point for
-  actually working through the queue (its own worktree + claim
-  protocol).
+- **Don't start editing files** before the user approves the plan.
+  Plan mode exists exactly for this — surface intent, get agreement,
+  then act.
+- **Don't auto-pick** a carry-over item. Offer the list; let the
+  user pick.
+- **Don't read other tracks' handover docs** unless the user asks.
+  Each track is its own context; pulling in the marketing-track
+  HANDOVER while working on R just creates noise.
+- **Don't run `{deploy_command}`** (if set in config) as part of
+  bootup. Promotion is its own deliberate step that happens after
+  a code change lands and is tested.
+- **Don't run `/handover`** at session start. That's the
+  EXIT protocol; this is the ENTRY protocol.
+- **Don't skip the track's sanity-check section** when it's
+  configured. The handful of seconds the checks take is the cheapest
+  way to catch an outage before you propose work that assumes a
+  working backend.
+- **Don't skip the track's bug-list pull** when it's configured.
+  User-facing bugs are the most expensive thing to leave
+  unaddressed; surfacing them upfront forces a conscious
+  "yes/no/later" rather than forgetting them.
+- **Don't auto-claim or auto-fix bugs from this skill.** It only
+  surfaces. Use whatever per-project bug-handling workflow exists.
 
 ## When to skip this
 
-If Saiful's first message in the session is a specific task
-("fix this bug", "add this feature", "promote what's on main"),
-just do the task. `/start-fresh` is for the "let's keep going on
-this project" opening, not every session.
+If the user's first message in the session is a specific task ("fix
+this bug", "add this feature", "deploy what's on main"), just do the
+task. `/start-fresh` is for the "let's keep going on this
+track" opening, not every session.
