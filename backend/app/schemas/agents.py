@@ -3,7 +3,6 @@
 from datetime import datetime
 from enum import Enum
 from typing import Literal
-from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict
 
@@ -73,35 +72,6 @@ AGENT_ROLE_COLORS: dict[AgentId, str] = {
     AgentId.PORTFOLIO_MANAGER: "purple",
     AgentId.CONCIERGE: "pink",
 }
-
-
-class ActivationMethod(str, Enum):
-    EARN_PATH = "earn_path"
-    SKIP_PATH = "skip_path"
-    TRIAL = "trial"
-    FOUNDER_GRANT = "founder_grant"
-
-
-class AgentActivation(BaseModel):
-    """Tracks whether a user has access to a given agent right now."""
-
-    model_config = ConfigDict(use_enum_values=True)
-
-    user_id: UUID
-    agent_id: AgentId
-    activation_method: ActivationMethod
-    activated_at: datetime
-    earn_path_completed_at: datetime | None = None
-    skip_path_valid_until: datetime | None = None
-
-    def can_use_now(self, now: datetime) -> bool:
-        if self.earn_path_completed_at is not None:
-            return True
-        if self.skip_path_valid_until is not None and self.skip_path_valid_until > now:
-            return True
-        if self.activation_method == ActivationMethod.FOUNDER_GRANT:
-            return True
-        return False
 
 
 class AgentMessage(BaseModel):

@@ -3,7 +3,6 @@
 from app.schemas.agents import (
     AGENT_FAMILIES,
     AGENT_ROLE_COLORS,
-    AgentActivation,
     AgentId,
     AgentMessage,
     TWELVE_AGENT_IDS,
@@ -44,7 +43,6 @@ __all__ = [
     "AGENT_FAMILIES",
     "AGENT_ROLE_COLORS",
     "TWELVE_AGENT_IDS",
-    "AgentActivation",
     "AgentId",
     "AgentMessage",
     "BriefHistoryResponse",
