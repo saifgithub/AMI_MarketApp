@@ -13,7 +13,7 @@ Renamed from "Coach Your Agent" in AT:R27. The previous symbol names
 this module so legacy imports keep working through the deprecation
 window.
 
-Spec: docs/02_agents/coach_your_agent.md (will be moved to brief_your_agent.md).
+Spec: docs/02_agents/brief_your_agent.md (renamed from coach_your_agent.md in AT:R31).
 Safety floor: docs/02_agents/safety_floor.md (PM mandate enforcement is
 un-briefable; see BriefRefusal in brief_engine.py).
 """

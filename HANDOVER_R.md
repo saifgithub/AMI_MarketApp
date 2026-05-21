@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-21 (end of AT:R30 — full docs-vs-code reconciliation sweep). **`docs/08_tech/*` is now ground truth** — every shipped route, table, service, and flow documented; every deferred feature explicitly flagged. 8 commits, no code touched outside mobile model expansions, **365 backend tests still passing** (no changes), no alpha promotes, no TestFlight uploads. 7 new backlog entries (BL4–BL10) filed against the audit findings. Earlier AT:R29 wrap (Apple Sign-In Phase 3 + bug sweep + Android-to-Alpha) is in [history_R.md](history_R.md).
+**Last updated:** 2026-05-21 (end of AT:R31 — first code-change session post-audit + Phase-2 doc reconciliation). **BL3 trial activation wired** (`auth_service` now populates `users.trial_started_at` + `trial_expires_at = now+7d` on first claim, 2 new tests, **367 passing**). **`docs/02_agents/` + `docs/03_onboarding/` reconciled** (matches the AT:R30 methodology applied to `docs/08_tech/`). `decision_log.md` D-022 / D-039 / D-048 annotated with current implementation status. **5 new backlog entries** filed (BL11–BL15). One spawned task chip is up: rewrite `build_testflight.sh` with staged xcodebuild calls — a flag-pass-through patch was attempted and reverted (commit `19a0617`). AT:R30 wrap is now in [history_R.md](history_R.md).
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,24 +15,25 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **258 commits** (8 new this session), no remote yet |
-| Latest work commit | `8599cd2` — docs(plan): file 7 new backlog items from AT:R30 audit (BL4-BL10). All 8 AT:R30 commits are docs-only (one touches `mobile/lib/models/*.dart` to expand Dart mandate fields against backend Pydantic). No backend code changed. |
-| Alpha tags | Unchanged from AT:R29. Latest still `alpha-2026-05-21-4`. **No promotes this session** — docs-only work. |
-| Backend tests | **365 passed, 0 failed** — unchanged. No backend code touched. |
+| Git state | Clean working tree, **267 commits** (9 new this session — 8 AT:R31 + 1 pubspec bump from a TestFlight attempt), no remote yet |
+| Latest work commit | `47c08a4` — chore(schema+plan): drop dead User.deleted_at + file BL14/BL15 from post-audit sweep (AT:R31). |
+| Alpha tags | Unchanged from AT:R29. Latest still `alpha-2026-05-21-4`. **No promotes this session** — docs + auth-service code only (auth-service change has tests but hasn't been promoted to melehost yet). |
+| Backend tests | **367 passed, 0 failed** (was 365 — 2 new tests on trial activation in `test_auth_service.py`). |
+| Mobile pubspec | **`0.1.0+25`** (was `+24` — bumped by `scripts/build_testflight.sh` during a TestFlight attempt that hit the reverted flag bug). IPA not built; re-run `scripts/build_testflight.sh --no-bump` to ship `+25`. |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys**. Unchanged. |
 
 ```
 $ git log --oneline | head -10
+47c08a4 chore(schema+plan): drop dead User.deleted_at + file BL14/BL15 from post-audit sweep (AT:R31)
+19a0617 revert(scripts): drop -allowProvisioningUpdates pass-through — flutter build ipa doesn't accept '--' xcodebuild args (AT:R31)
+7bcbe78 chore(mobile): bump build 0.1.0+24 → 0.1.0+25 for TestFlight
+5621c7b docs(onboarding): reconcile docs/03_onboarding/ against shipped code + file BL11/BL12/BL13 (AT:R31)
+a9a8d7a docs(agents): reconcile docs/02_agents/ against shipped code; rename coach_your_agent.md → brief_your_agent.md (AT:R31)
+9d403b7 docs(decisions): annotate D-022 + D-039 + D-048 with current implementation status (AT:R31)
+e722dc5 fix(auth): wire D-039 7-day trial activation on first claim (BL3, AT:R31)
+4090453 chore(scripts): bake -allowProvisioningUpdates + ASC API key into build_testflight.sh (AT:R31)
+632518a chore(handover): wrap AT:R30
 8599cd2 docs(plan): file 7 new backlog items from AT:R30 audit (BL4-BL10)
-c7f0155 docs(tech): reconcile auth/llm_routing/stack + flag payments/platform_facade as design-only (AT:R30)
-d5550cf docs(arch): architecture.md reconciled — Alpha reality, not MVP aspiration (AT:R30)
-b5c4858 docs(schema): data_model.md reconciled against models.py + Alembic chain (AT:R30)
-875e4e1 docs(api): full reconciliation — api_design.md now mirrors shipped routes (AT:R30)
-0e2e961 docs+mobile: sync code-vs-docs deviations from audit (AT:R30)
-8a10c76 chore(skills): handover/start-fresh/session-setup audit pass (AT:R29)
-c8dd6cf docs(handover): post-wrap count refresh — 248 → 250 (AT:R29)
-46320a7 docs(handover): rotate AT:R28 to history_R + write AT:R29 wrap
-4004b3d chore(skills+docs): adopt multi-track skills as canonical, delete legacy un-suffixed handover docs (AT:R29)
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -46,9 +47,9 @@ c8dd6cf docs(handover): post-wrap count refresh — 248 → 250 (AT:R29)
 | Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
 | Routes | `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26), `/v1/admin/*` (9 routes — AT:R27, see "Admin back-office" below), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/brief/*` (was `/v1/coach/*` — renamed AT:R27; legacy `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`). Plus a public HTML page at `/admin` (no auth required; the page itself asks for the `ADMIN_SECRET` bearer on first load + stores in localStorage). |
-| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **365 passed** (was 348; AT:R29 added `test_oidc_verifier.py` (9 cases) + 7 Apple persistence cases in `test_auth_service.py` + 1 A4 route test, replaced the 503-gate test with a 400-rejection test). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **367 passed** (was 365; AT:R31 added 2 trial-activation cases in `test_auth_service.py`: `test_claim_sets_trial_dates` + `test_reauth_does_not_reset_existing_trial`). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
 | Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` + `ADMIN_SECRET=<64-hex>` (AT:R27, admin back-office bearer) + `SMTP_{HOST,PORT,USER,PASSWORD,FROM}` (5 vars, AT:R26). Canonical at `infra/alpha.env` on Mac, gitignored; shipped via `scp` in `/promote-to-alpha` step 4. Without `SECRET_KEY` the backend refuses to start when env != local. **`SMTP_HOST` is currently empty by design** — the `email_service` no-op path fires so no connect-attempts hit the ISP-blocked outbound to `mail.agenticmarketintel.ai`. Restore by uncommenting the line in `infra/alpha.env` once a working SMTP route (Gmail / Resend) is configured. |
-| Auth | Phase 1.5 + Phase 3 + Phase 4 enforced. Route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. **Apple Sign-In Phase 3 (AT:R29):** `/v1/auth/apple` now lives in every env (no more 503 gate). `OIDCVerifier` in `app/services/oidc_verifier.py` fetches Apple's JWKS, RSA-verifies the identity token, validates `iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, `exp`. On first auth: persists `email` + `full_name` (→ `users.display_name`). On subsequent auths or magic-link priors: preserves existing email/name (never overwritten). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}`. **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>`. Audit finding A4 CLOSED. |
+| Auth | Phase 1.5 + Phase 3 + Phase 4 enforced. Route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. **Apple Sign-In Phase 3 (AT:R29):** `/v1/auth/apple` now lives in every env (no more 503 gate). `OIDCVerifier` in `app/services/oidc_verifier.py` fetches Apple's JWKS, RSA-verifies the identity token, validates `iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, `exp`. On first auth: persists `email` + `full_name` (→ `users.display_name`). On subsequent auths or magic-link priors: preserves existing email/name (never overwritten). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}`. **AT:R31 D-039 trial activation (BL3):** `_claim_or_create()` (magic-link) and `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guarded by `trial_started_at is None` so admin-granted trials are preserved. Downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>`. Audit finding A4 CLOSED. |
 | Room env knobs | `ROOM_DEDUP_RUNNING_MINUTES=30` (in-flight dedup + startup-sweep cutoff) · `ROOM_DEDUP_COMPLETED_HOURS=24` (return prior verdict same day; design doc default was 5 days — we start tighter). Set completed_hours=0 to disable cached-run dedup. |
 | Push code to it | [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) — rsync + recreate + smoke. No GitHub remote yet. |
 
@@ -103,129 +104,130 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R30)
+## What just landed (this session — AT:R31)
 
-**Documentation reconciliation session.** Single track: bring `docs/08_tech/*` and the Dart mandate models into line with shipped code so the next session reads ground truth, not aspiration. **8 commits, 0 alpha promotes, 0 TestFlight uploads, 0 test changes, 0 backend code touched.** Mobile changes are limited to Dart model expansions that are backward-compatible at runtime.
+**First code-change session post-audit.** Tackled the AT:R30 carry-over chips end-to-end: BL3 trial activation wired (real backend code + tests), `build_testflight.sh` hardening attempted-then-reverted (flag-pass-through assumption broke; rewrite chip filed), `decision_log.md` + `docs/02_agents/` + `docs/03_onboarding/` reconciled against shipped code following the AT:R30 methodology, then a self-audit for similar-shape issues that filed BL11–BL15. **8 AT:R31 commits + 1 pubspec bump = 9 new commits. 367 tests passing (was 365). No Alpha promotes, no TestFlight upload (the bump landed but the build failed on the flag bug).**
 
 ### How the session ran
 
-Saiful's framing: "keep our official docs in synch with the code. any that deviate, discuss with me." Started with a 4-phase parallel audit via Explore agents (API routes / database schema / backend services / Flutter models) — surfaced **62 deviations** (40 critical / 16 warning / 6 minor). Triaged with Saiful; then worked tier-by-tier:
-
-1. **First triage** (commit `0e2e961`): pick the cluster Saiful greenlit.
-2. **Then a question:** "we have so many of this. have we broken anything?" — answer: no, runtime is fine; docs are debt. Saiful: "I want to make sure we are in synch and that the functions described are accurate and delivered." Switched to **systematic reconciliation** — rewrite each tech doc to match shipped code, mark deferred features explicitly.
-3. **Six commits** later, every `docs/08_tech/*` doc is either ground truth or carries an explicit "design doc — not yet built" banner at the top.
-4. **Final ask:** "we have a project_plan.md somewhere that has the backlog right?" — yes; filed 7 new backlog items (BL4–BL10) for concrete deferred work surfaced by the audit that doesn't naturally land in any Phase 2/3 roadmap stream.
+Saiful opened with "what's left on track R?" → picked carry-over items **3** (`build_testflight.sh` hardening — the spawned chip from AT:R29) and **6** (BL3 trial activation) for the first half. After those landed, switched to **continuing the docs-vs-code reconciliation** started in AT:R30 — this time focused on `docs/02_agents/` (high overlap with prompts + safety floor + Brief), `docs/03_onboarding/` (high overlap with onboarding engine + mandate + claim path), and `docs/11_decisions/decision_log.md` (spot-check). Methodology was the same: parallel Explore agents per tree, triage with Saiful, then commit one tree per pass. Wrapped with a separate "audit for similar-shape issues" pass that surfaced two more BL items and one dead Pydantic field worth dropping.
 
 ### Commits in order
 
-| Hash | Doc | What it does |
-|---|---|---|
-| `0e2e961` | `mobile/lib/models/{mandate,brief,journal,auth}.dart` + initial `api_design.md` mandate + `project_plan.md` BL3 | M2 mobile mandate expansion (TargetOutcome, RiskComponents, DailyBriefing + risk_quotes, trial_expires_at, created_at/updated_at on UserMandate; `mandate_used` + `pending_proposal` on BriefSession; `mandate_version` on JournalEntry; `display_name` on AuthUser). All `fromJson` calls default safely if backend omits a field — backward-compatible. **BL3 filed** for D-039 7-day trial activation on claim (deferred). |
-| `875e4e1` | `docs/08_tech/api_design.md` | Full rewrite. 16 routers / 60+ routes from `backend/app/api/*.py` decorators. Per-resource tables list shipped routes only; "Not yet delivered" section lists specced-but-not-built routes with status (Replaced / Deferred / Cut). Added 8 sections that were undocumented (`/auth`, `/admin`, `/ai_coach`, `/daily_challenge`, `/glossary`, `/llm`, `/watchlist`, `/feedback`). Streaming section corrected: SSE-only. Rate limits relabelled "not yet enforced". |
-| `b5c4858` | `docs/08_tech/data_model.md` | Full rewrite against `backend/app/db/models.py` + Alembic chain (10 migrations). 18 tables documented with current DDL. Mandates clarified as JSONB-snapshot (not normalized columns). Added the audit/operational tables (`bug_reports`, `auth_challenges`, `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events`, `sim_watchlists`, `overlay_edit_counts`). Aspirational tables (`credit_transactions`, `llm_calls`, `daily_challenges`, `streaks`, `briefings`, `drift_alerts`, `brief_sessions`, `offers_redemptions`, `audit_log`, `academy_progress`, `one_on_one_sessions`) moved to "Not yet delivered" with replacement notes. |
-| `d5550cf` | `docs/08_tech/architecture.md` | Full rewrite. System diagram: melehost Docker Compose + Cloudflare Tunnel + on-prem vLLM. 24 backend services tabled with files + responsibilities. 5 data flows rewritten to match shipped code (Convene the Room, Brief, Onboarding+claim, 1-on-1, Sim trade). Streaming: SSE-only with `X-Room-Run-Id` reconnect path. Background jobs (8 specced) moved to "Not yet delivered". Third-party SaaS (RC / OneSignal / Twilio / Resend / Sentry / PostHog) all flagged as MVP scope; SMTP carry-over surfaced. D-039 trial activation explicitly flagged in the onboarding+claim flow as not-wired with BL3 cross-ref. |
-| `c7f0155` | `docs/08_tech/auth.md` + `llm_routing.md` + `stack.md` + design banners on `payments.md` + `platform_facade.md` | **auth.md** heavy rewrite — own `auth_service` reality, not Supabase; HS256 JWTs; A2 audit fix on `/auth/anon`; SMTP carry-over surfaced; HMS/Google/Phone-OTP all deferred. **llm_routing.md** heavy rewrite — preference order `vllm > anthropic > mock`; `TIER_TO_MODEL` table; `tier_policy.pick_tier()` matrix; OpenRouter+locale routing deferred; cache deferred. **stack.md** rewrite with new Status column (Alpha ✅ vs MVP-only per row); code-org tree refreshed. **payments.md** + **platform_facade.md** got status banners at top — both are design-only (RevenueCat SDK absent from pubspec; `mobile/lib/services/platform/` is empty). |
-| `8599cd2` | `docs/10_delivery/project_plan.md` | Filed 7 new backlog items (BL4-BL10) for concrete deferrals surfaced by the audit that aren't already absorbed by Phase 2/3 roadmap streams. See "Backlog reference" below. |
-
-Plus this `chore(handover): wrap AT:R30` commit.
-
-### Why so many deviations existed
-
-Three patterns, all benign:
-1. **Docs described the future, code shipped the present.** ~30% — 12 tables documented but never migrated were Beta/MVP features (`daily_challenges`, `briefings`, `drift_alerts`, `streaks`, …). Code is correct; docs were aspirational.
-2. **Code evolved faster than docs.** ~50% — Brief got the propose/accept rewrite AT:R27, endpoint structure shifted to body params, mandates were denormalized to JSONB for fast iteration. Each was deliberate; nobody back-updated the markdown.
-3. **Pragmatic additions never back-documented.** ~20% — `bug_reports`, audit tables, `auth_challenges`, `subscription_events`, trial date columns. Added because we needed them; nobody updated `data_model.md`.
-
-Code is the source of truth — Postgres + FastAPI + Flutter all agree with each other today. Only the markdown was stale.
-
-### Did the AT:R30 changes break anything?
-
-No. Six edits, all backward-compatible:
-
-| File | Risk | Why safe |
-|---|---|---|
-| `api_design.md` + `data_model.md` + `architecture.md` + `auth.md` + `llm_routing.md` + `stack.md` + `payments.md` + `platform_facade.md` + `project_plan.md` | 0 | Docs only — runtime ignores |
-| `mobile/lib/models/mandate.dart` | Low | New `TargetOutcome` / `RiskComponents` / `DailyBriefing` classes + 7 new fields; constructor adds `required this.riskComponents` + `required this.dailyBriefing` but **all consumers go through `UserMandate.fromJson`** which defaults safely if the backend omits a field. `grep -rn "UserMandate(" mobile/lib/ --include="*.dart" \| grep -v fromJson` returns only the model file itself. |
-| `mobile/lib/models/{brief,journal,auth}.dart` | 0 | `mandateUsed`, `pendingProposal`, `mandateVersion`, `displayName` all optional with defaults. `fromJson` tolerates missing keys. |
-
-`flutter analyze` clean on changed files (only 2 pre-existing infos in `floor_placeholder_screen.dart`, unrelated). No backend code touched; **365 backend tests still pass**.
-
-### Backlog reference
-
-Existing BL1 + BL2 + BL3 untouched. New items filed this session:
-
-| ID | Item | Est | Trigger |
-|---|---|---|---|
-| **BL4** | Arabic→Gemini locale routing (D-048) | 0.5 | Blocked on `GoogleProvider` |
-| **BL5** | Mandate history API (versions/rollback) | 1 | Replay works via journal today |
-| **BL6** | Mandate audit/resolve flow | 1 | Needs drift detection first |
-| **BL7** | Agent metadata routes (`/agents` list/details/past_calls) | 1 | Mobile uses client manifest |
-| **BL8** | Room run cancel + replay endpoints | 1.5 | Room is unkillable mid-flight |
-| **BL9** | Sim trade preview endpoint | 0.5 | Pre-flight extracted from `/sim/submit` |
-| **BL10** | Daily challenge attempt endpoint | 0.5 | Useful when streaks ship |
-
-Bigger items (Supabase migration, RevenueCat, OneSignal, Sentry, server-side rate limits, journal retention jobs, etc.) are already absorbed by Phase 2 / Phase 3 roadmap streams — not duplicated in the BL list.
-
-### Where to read the new ground truth
-
-| If you want to know… | Read |
+| Hash | What it does |
 |---|---|
-| What endpoints exist + their shape + what hasn't shipped yet | `docs/08_tech/api_design.md` |
-| What's in the database + what tables don't exist yet | `docs/08_tech/data_model.md` |
-| How a Convene/Brief/Onboarding actually flows + what runs vs what's MVP target | `docs/08_tech/architecture.md` |
-| The actual auth flow (own service, not Supabase yet) | `docs/08_tech/auth.md` |
-| LLM tier mapping + provider preference order | `docs/08_tech/llm_routing.md` |
-| The whole stack at a glance with Alpha / MVP status per row | `docs/08_tech/stack.md` |
+| `4090453` | **build_testflight.sh hardening (carry-over chip).** Added `-allowProvisioningUpdates` + ASC API key auth flags assuming `flutter build ipa -- <xcodebuild args>` would pass through. It does not. **Reverted in 19a0617** (see below). |
+| `e722dc5` | **BL3 — D-039 7-day trial activation on first claim.** `auth_service._claim_or_create()` (magic-link) + `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guard: `trial_started_at is None`, so admin-granted trials are preserved on re-auth. **2 new tests** (`test_claim_sets_trial_dates`, `test_reauth_does_not_reset_existing_trial`). 365→367 passing. Data plane only; downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). |
+| `9d403b7` | **decision_log.md spot-check.** D-022 annotated with the AT:R27 "Coach → Brief" rename; D-039 annotated with the AT:R31 data-plane wiring + remaining TODO layers; D-048 marked deferred (BL4) since `llm_gateway._pick_provider` accepts `locale` but doesn't yet route on it (blocked on GoogleProvider). |
+| `a9a8d7a` | **docs/02_agents/ reconciliation + `coach_your_agent.md → brief_your_agent.md` rename.** 1 CRIT fix (Concierge tier — Floor Manager runs `mid`, not `cheap`), Coach→Brief residue swept across 7 spots in the body of the renamed file, 4 cross-refs updated (`safety_floor.md`, `README.md`, `twelve_agents.md`, `one_on_one.md`, `screen_inventory.md`). `mandate_overlays.md` file ref fixed (`overlays.py` → `overlay_generator.py`). `one_on_one.md` got an honest "actual schema" block (`one_on_one_messages` row shape) + a Not-yet-delivered tail; `twelve_agents.md` reframed activation as intended-end-state and got its own Not-yet-delivered tail (Agent Academy modules, live TradingAgents integration, `/v1/agents` route → BL7). |
+| `5621c7b` | **docs/03_onboarding/ reconciliation + BL11/BL12/BL13 filed.** 5 critical doc-vs-code mismatches fixed: claim methods (only Apple + magic-link), session→user binding wrong field name (`converted_to_user` → `claimed_user_id`; and never assigned today — that's BL13), trial activation now atomic at claim (no separate step 6), Concierge tone calibration described as live but V0 is fully scripted (no LLM), storage example used non-existent fields. Plus reframed: trial-end UX (BL11), mandate audit on hard edits (BL12), Apple→magic-link auto-fallback (none exists), locale handling (English-only V0). `mandate_schema.md` Python example bumped from Pydantic v1 (`Config class`) to v2 (`ConfigDict`); `user_id: UUID` not `str`. |
+| `7bcbe78` | **pubspec.yaml `+24 → +25` bump.** Saiful tried to ship `+25` via `scripts/build_testflight.sh` between commits; the script auto-bumped + committed before hitting the flag-pass-through error. Build failed; IPA never produced. To finish the upload: `scripts/build_testflight.sh --no-bump`. |
+| `19a0617` | **Revert of 4090453.** `flutter build ipa` parses post-`--` tokens as Dart entrypoints, not as args to forward to xcodebuild — got `Target file "-allowProvisioningUpdates" not found.` Restored the working `flutter build ipa` invocation. **Followup chip spawned**: rewrite the script to split into `flutter build ios --no-codesign` + explicit `xcodebuild archive -allowProvisioningUpdates -authenticationKey*` + `xcodebuild -exportArchive`, so the API-key + provisioning-updates flags can land on the archive step where they belong. |
+| `47c08a4` | **Post-audit cleanup.** Drop dead `User.deleted_at` from `backend/app/schemas/user.py` — declared in Pydantic but no matching SQLAlchemy column existed in `User`. Soft-delete on users was never wired; the field always read as None. Plus BL14 (mobile drops Brief `proposed_at` + `started_at` timestamps on the wire) + BL15 (`AgentActivation` Pydantic class is fully dormant — `can_use_now()` never called, fields never written; preferred resolution is delete the class). |
 
-`hosting.md`, `backend_modes.md`, `coding_conventions.md` verified already in sync — left untouched. `tradingagent_integration.md`, `flutter_implementation.md`, `auth_audit.md`, `auth_phase1_adversarial_audit.md` not swept (historical / audit docs that should stay as-of-date-of-writing).
+Plus this `chore(handover): wrap AT:R31` commit.
+
+### What changed in the codebase (not docs)
+
+Auth path is the only code touched (`backend/app/services/auth_service.py`, 22 insertions / 4 deletions across `_claim_or_create()` + `sign_in_with_apple()`):
+
+- New rows: set `trial_started_at = now()` + `trial_expires_at = now() + 7d` alongside `claimed_at = now()`.
+- Existing anon→claim transitions: same, guarded by `if row.trial_started_at is None`.
+- Existing non-anon row found by email (magic-link) or apple_sub (Apple): no trial change. Email is reassigned (was already the case); the new code does not touch trial dates.
+
+Test coverage:
+- `test_claim_sets_trial_dates` — first Apple claim populates both columns; window is exactly 7d.
+- `test_reauth_does_not_reset_existing_trial` — second sign-in with the same apple_sub preserves the original `trial_expires_at`.
+
+The two tests cover the magic-link path implicitly via the Apple path (same shape). **Not yet promoted to melehost** — code is committed but hasn't shipped.
+
+Also bumped pubspec to `0.1.0+25` mid-session (Saiful's TestFlight attempt) — that's the only mobile change. No Dart code touched.
+
+### The build_testflight.sh chip — what happened
+
+The original chip (spawned in AT:R29) said: "bake `-allowProvisioningUpdates` + ASC API key into `build_testflight.sh` so the archive step can refresh provisioning profiles without manual Xcode intervention."
+
+I tried the shortest-possible patch: `flutter build ipa --release ... -- -allowProvisioningUpdates -authenticationKey*`. Saiful ran it and got `Target file "-allowProvisioningUpdates" not found.` — Flutter interpreted the post-`--` tokens as Dart entrypoints. There's no `--` pass-through for `flutter build ipa`.
+
+Reverted (`19a0617`). Filed a new spawned-task chip for the proper rewrite: split into `flutter build ios --release --no-codesign --dart-define=...` (Flutter framework), then `xcodebuild -workspace ios/Runner.xcworkspace -scheme Runner -archivePath ... archive -allowProvisioningUpdates -authenticationKey*` (signed archive), then `xcodebuild -exportArchive -archivePath ... -exportOptionsPlist ... -exportPath ... -allowProvisioningUpdates -authenticationKey*` (App Store IPA), then the existing `xcrun altool --upload-app` step.
+
+That's a script rewrite, not a 1-line patch. The chip is up; user can click it to spawn a worktree.
+
+### Backlog filed (AT:R31)
+
+| ID | Item | Est | Status hook |
+|---|---|---|---|
+| **BL3** | D-039 trial activation on claim | 0 (data plane done) | Wired AT:R31. Downstream layers still TODO — see BL11. |
+| **BL11** | Trial-end UX (notif + email + summary + reactivation modal + entitlement gate) | 1.5 | Pre-req: SMTP route + push integration |
+| **BL12** | Mandate audit on hard edits | 1 | Pre-req: holdings-vs-mandate evaluator (extract from `safety_floor.check_mandate_compliance`) |
+| **BL13** | `OnboardingSession.claimed_user_id` binding on claim | 0.5 | Schema field never assigned; sessions go orphan |
+| **BL14** | Mobile drops `BriefProposal.proposed_at` + `BriefSession.started_at` | 0.25 | Lossy round-trip; no UI consumer today |
+| **BL15** | Delete the dormant `AgentActivation` Pydantic class | 0.25 | Preferred resolution: delete + rely on `lessons.activations()` |
+
+### Did the AT:R31 changes break anything?
+
+No. Backend code change is local (auth_service) + tested (2 new tests + 365 unchanged). Docs are docs. Dropped `User.deleted_at` had zero readers/writers — confirmed via grep before removal.
+
+`flutter analyze` not re-run this session (no mobile code touched apart from the pubspec bump line). 
 
 ### Bug list at end of session
 
-Unchanged from AT:R29: **1 open** (`eeeb866f` room run survives container restart, pre-Beta) · **32 resolved** · **3 wont_fix**.
+Unchanged: **1 open** (`eeeb866f` room run survives container restart, pre-Beta) · **32 resolved** · **3 wont_fix**.
 
-### Carry-overs for AT:R31
+### Carry-overs for AT:R32
 
-All carry-overs from AT:R29 are still live (nothing was actively worked on outside docs):
+The AT:R30 carry-over list still applies — most items are deferrals waiting on external blockers (SMTP, Google Cloud Console, etc.). Updated with the AT:R31 delta:
 
-1. **🚧 SMTP — pick a working route.** Unchanged. Gmail SMTP (5 min — Saiful provides App Password) or Resend HTTP API (~30 min). **External Beta blocker.** Now also surfaced in `auth.md` + `stack.md` + `architecture.md` as the explicit Alpha gap.
-2. **A6b — Google Sign-In on Android.** Verifier abstraction in place; blocker: Saiful's Google Cloud Console setup (OAuth Web client_id + Android SHA-1).
+1. **🚧 SMTP — pick a working route.** Unchanged. Gmail App Password (5 min) or Resend HTTP API (~30 min). **Still the External Beta blocker.** Also gates BL11 (trial-end email).
+2. **A6b — Google Sign-In on Android.** Verifier abstraction in place; blocker: Saiful's Google Cloud Console setup.
 3. **`eeeb866f` room run survives container restart** — open, pre-Beta resilience.
 4. **B-tier adversarial-audit findings** — rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter; feedback upload streaming.
 5. **L-1 residual** — `OneOnOneStartRequest.user_id: UUID | None` tighten.
-6. **External TestFlight launch** — Beta App Description from Saiful + ~24h Apple review.
+6. **External TestFlight launch** — Beta App Description from Saiful + ~24h Apple review. Now also blocked on: `0.1.0+25` IPA needs to actually upload (re-run `scripts/build_testflight.sh --no-bump` once the flag rewrite lands OR run with manual Xcode intervention as before).
 7. **`CFBundleDisplayName` casing** — `Ami Trade` → `AMI Trade` one-liner in `Info.plist`.
 8. **Animation production** — 15 `<Animation>` MDX tags still render `AmiHexPlaceholder`.
 9. **A29 light-mode refactor** — v1.0 work.
-10. **Two sibling worktrees with unmerged docs** — `claude/blissful-darwin-419097` + `claude/exciting-shtern-aad051`. (Note: 25 `claude/*` worktrees exist on disk; not the `agent-*` pattern that `/handover` cleans automatically. Saiful decision.)
+10. **`claude/*` sibling worktrees on disk** — not the `agent-*` pattern that `/handover` auto-cleans. Saiful decision.
 11. **Brief safety-floor terminology audit (deferred)** — "uncoachable" stays.
 12. **Credit consumption** — `credits_consumed` event type exists but no app code emits it.
-13. **BL1 (low pri)** — Device info on `/v1/auth/anon` (model/OS/app_version).
-14. **BL2 (low pri)** — `user_devices` table for multi-device.
-15. **BL3 (low pri)** — D-039 7-day trial activation on claim (filed AT:R30).
-16. **BL4–BL10 (low pri)** — Audit-surfaced concrete deferrals filed AT:R30. See "Backlog reference" above.
-17. **Spawned task (chip): bake `-allowProvisioningUpdates` + ASC API key into build_testflight.sh.**
+13. **BL1 (low pri)** — Device info on `/v1/auth/anon`.
+14. **BL2 (low pri)** — `user_devices` table.
+15. **BL3** — **data plane wired AT:R31; downstream layers carried into BL11.**
+16. **BL4–BL10 (low pri)** — Audit-surfaced deferrals filed AT:R30.
+17. **BL11–BL15 (low pri)** — Audit-surfaced deferrals filed AT:R31.
+18. **Spawned task (chip): rewrite `build_testflight.sh` with staged Flutter + xcodebuild calls.** New AT:R31; eliminates manual Xcode intervention on TestFlight uploads.
+19. **Promote `e722dc5` to Alpha** — BL3 trial wiring is committed but never shipped to melehost. Next `/promote-to-alpha` will carry it; safe to do anytime (covered by tests + backward-compatible).
 
 ### Watch items (not tasks)
 
-- **Docs are now testable.** Every claim in `docs/08_tech/*` can be checked against a specific file in `backend/app/` or `mobile/lib/`. If a next-session edit drifts a doc out of sync, it shows up immediately — and the "Not yet delivered" sections are the canonical place to add new aspirational features so the boundary stays clean.
-- **Mobile mandate fields are richer.** Anything reading `UserMandate.targetOutcome` / `riskComponents` / `dailyBriefing` will now get real data when the backend includes it (since AT:R20+ the backend has been emitting these). If a screen renders these and crashes on null, it's a mobile bug to fix — not a backend question.
-- **The 25 `claude/*` sibling worktrees** in `.claude/worktrees/` are not from this session. `/handover` cleans `agent-*` pattern worktrees per `session-config.yml`; the `claude/*` ones are residue from prior subagent spawns across many sessions. Cleanup is a Saiful decision (some may have unmerged work).
+- **Trial wiring is unverified in production.** Tests pass; the path has not actually run on melehost. The first time a user signs in via Apple post-promote, watch the `users.trial_started_at` column to confirm it gets populated.
+- **`docs/02_agents/` + `docs/03_onboarding/` are now testable just like `docs/08_tech/`.** Every claim has a code citation; "Not yet delivered" sections are the canonical home for aspirational features.
+- **`build_testflight.sh` will fail the same way again** until the rewrite chip lands. If anyone runs it without `--no-bump`, the pubspec auto-bumps + auto-commits before failing on the build step.
+- **`User.deleted_at` is gone.** Anyone (mobile, admin UI) that reads it from a `User` API response was getting None forever anyway. Removal is safe.
 
 ---
 
 ## How to start the next session
 
 ```
-/start-fresh
+/start-fresh R
 ```
 
-The slash command reads HANDOVER.md + project plan, runs the Mac-side sanity-check curls, queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
+The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R31** (this is handover #30).
+Session name to use: **AT:R32** (this is handover #31).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
 If the first message is a specific task ("fix this", "add that"), skip `/start-fresh` and just do the task — the slash command is for the "let's keep going" opening.
+
+Quick-win candidates for next session (in priority order):
+
+1. **Re-run `scripts/build_testflight.sh --no-bump`** — pubspec is at `+25` from this session; the build hasn't actually shipped to TestFlight yet. The flag bug is reverted, so the build should succeed on a normal run. (1 min)
+2. **Click the `build_testflight.sh` rewrite chip** — proper fix for the manual-Xcode-intervention problem (staged Flutter + xcodebuild + exportArchive). (~1 session)
+3. **`/promote-to-alpha` to ship the BL3 trial wiring to melehost** — code is committed but not deployed. Safe (covered by tests + backward-compatible). (10 min)
+4. **`CFBundleDisplayName` casing fix** — `Ami Trade` → `AMI Trade` in `Info.plist`. (1 min)
+5. **Pick another `docs/` tree to reconcile** — `tradingagent_integration.md` + `flutter_implementation.md` are the only low-code-overlap docs left (intent docs); skipped per AT:R31 plan.
 
 ---
 
