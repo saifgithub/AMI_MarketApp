@@ -165,6 +165,18 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 ---
 
+## Backlog — low priority
+
+Nice-to-haves not blocking any phase exit. Pick up only when current
+work runs out.
+
+| # | Item | Est | Notes |
+|---|---|---|---|
+| **BL1** | **Device info on `/v1/auth/anon`.** Mobile sends device model, OS version, and app version (via `device_info_plus` + `package_info_plus` — both already in pubspec). Backend persists onto `users` (new columns: `device_model`, `os_version`, `last_app_version`). Useful for "what build is this anonymous tester on?" + bug-report context without needing the user to submit a report. | 0.5 session | AT:R29 deferred — Saiful explicitly low-pri'd it. Single-device-per-user assumption stays; multi-device is BL2. |
+| **BL2** | **`user_devices` table for multi-device tracking.** Replace the single `users.device_user_id` column with a `user_devices(user_id, device_user_id, model, os_version, app_version, last_seen_at, created_at)` table. Lets a user use the same Apple ID on iPhone + iPad without one device's UUID overwriting the other. Includes a "last seen" signal per device for cohort analysis. | 1 session | AT:R29 deferred. Needs migration + backfill (copy current `users.device_user_id` into the new table) + auth_service changes to register/touch on each anon-bootstrap + sign-in. Wait until we have a real cross-device tester to justify. |
+
+---
+
 ## Cross-cutting commitments
 
 These rules hold across every phase:

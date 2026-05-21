@@ -57,6 +57,7 @@ cmd_dashboard() {
            WHEN google_id IS NOT NULL THEN 'google'
            WHEN email IS NOT NULL THEN 'email'
            ELSE '?' END AS via,
+      COALESCE(substring(device_user_id::text, 1, 8), '-') AS device,
       to_char(claimed_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS claimed_my
     FROM users
     WHERE NOT is_anonymous
@@ -68,6 +69,7 @@ cmd_dashboard() {
   run_sql "
     SELECT
       substring(id::text, 1, 8) AS short_id,
+      COALESCE(substring(device_user_id::text, 1, 8), '-') AS device,
       to_char(anonymous_session_started_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS started_my,
       to_char(created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS created_my
     FROM users
@@ -87,6 +89,7 @@ cmd_recent() {
       plan,
       COALESCE(display_name, '-') AS name,
       COALESCE(email, '-') AS email,
+      COALESCE(substring(device_user_id::text, 1, 8), '-') AS device,
       to_char(created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS created_my
     FROM users
     ORDER BY created_at DESC
@@ -100,6 +103,7 @@ cmd_anon() {
   run_sql "
     SELECT
       substring(id::text, 1, 8) AS short_id,
+      COALESCE(substring(device_user_id::text, 1, 8), '-') AS device,
       to_char(anonymous_session_started_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS started_my,
       to_char(created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS created_my
     FROM users
@@ -158,10 +162,12 @@ cmd_search() {
            WHEN google_id IS NOT NULL THEN 'google'
            WHEN email IS NOT NULL THEN 'email'
            ELSE '-' END AS via,
+      COALESCE(substring(device_user_id::text, 1, 8), '-') AS device,
       to_char(claimed_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'MM-DD HH24:MI') AS claimed_my
     FROM users
     WHERE
       id::text ILIKE '%${qe}%'
+      OR device_user_id::text ILIKE '%${qe}%'
       OR email ILIKE '%${qe}%'
       OR display_name ILIKE '%${qe}%'
       OR apple_id ILIKE '%${qe}%'
@@ -174,6 +180,7 @@ cmd_search() {
   count=$(ssh "$SSH_HOST" "$PSQL -tA -c \"
     SELECT COUNT(*) FROM users
     WHERE id::text ILIKE '%${qe}%'
+       OR device_user_id::text ILIKE '%${qe}%'
        OR email ILIKE '%${qe}%'
        OR display_name ILIKE '%${qe}%'
        OR apple_id ILIKE '%${qe}%'
@@ -186,6 +193,7 @@ cmd_search() {
       WITH u AS (
         SELECT id FROM users
         WHERE id::text ILIKE '%${qe}%'
+           OR device_user_id::text ILIKE '%${qe}%'
            OR email ILIKE '%${qe}%'
            OR display_name ILIKE '%${qe}%'
            OR apple_id ILIKE '%${qe}%'
