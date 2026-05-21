@@ -231,9 +231,9 @@ Adds 3–5 more questions for users who want more personalisation:
 
 At MVP we ship Express only. Thorough is a settings option to "refine your mandate" after first run.
 
-## Conversation tone calibration
+## Conversation tone calibration — Not yet delivered (V1)
 
-Concierge adjusts tone based on early signals:
+The intended adaptation:
 
 | User signal | Tone shift |
 |---|---|
@@ -243,26 +243,41 @@ Concierge adjusts tone based on early signals:
 | Confident, decisive | Concierge moves fast, doesn't over-explain |
 | Anxious phrasing | Concierge slows down, reassures |
 
-This is implicit in the system prompt — Concierge has access to the conversation context and adapts.
+**Today (Alpha — V0 Concierge):** the engine is fully scripted and deterministic. See `backend/app/services/concierge_engine.py:1-15` — "V0 has no LLM dependency." Questions, follow-ups, and readback are hard-coded strings; there is no tone calibration. The V1 engine (LLM-driven, with `concierge_prompts.py` providing the prompt scaffold) will pick these signals up once the gateway is wired into the Concierge path.
 
 ## Storage during conversation
 
+The actual Pydantic schema (`backend/app/schemas/onboarding.py::OnboardingSession`):
+
 ```python
-OnboardingSession(
-    session_id: uuid,                  # links to anonymous session
-    started_at: datetime,
-    current_step: int,                 # 1-8
-    answers: dict[str, Any],           # raw answers per question
-    derived_mandate: Mandate | None,   # populated as we go
-    chat_transcript: list[Message],    # for debugging/improvement
-    completed: bool,
-    converted_to_user: uuid | None,    # set on account claim
-)
+class OnboardingSession(BaseModel):
+    model_config = ConfigDict(use_enum_values=True)
+
+    id: UUID                                  # session_id — the route's path param
+    started_at: datetime
+    updated_at: datetime
+
+    locale: str = "en"
+    timezone: str = "UTC"
+    detected_display_name: str | None = None
+
+    current_step: ConversationStep            # enum: WELCOME, Q1_GOAL, ..., COMPLETE
+    messages: list[Message]                   # full transcript
+    answers: dict[str, Any]                   # raw answers per step
+
+    risk_components_partial: dict[str, int]   # computed as we go
+
+    completed: bool = False
+    claimed_user_id: UUID | None = None       # ⚠️ defined but never set today; see BL13
 ```
+
+Persistence: `InMemorySessionStore` (`backend/app/services/session_store.py`) — dict keyed by `session_id`, 24h TTL evaluated on `.get()`. Not in Postgres. Replacement (Redis or Postgres) deferred — see the comment in `session_store.py:4-5`.
+
+The derived mandate is **not** stored on the session — `concierge_engine.session_to_mandate_dict()` builds it on-demand. The persistent mandate row is only written later, on first `GET /v1/mandate/{user_id}` after claim (lazy creation).
 
 ## Cross-references
 
-- Onboarding flow (the 7 steps): [`flow.md`](flow.md)
+- Onboarding flow (the steps): [`flow.md`](flow.md)
 - Mandate object schema: [`mandate_schema.md`](mandate_schema.md)
 - Lifecycle (edit, version, audit, drift): [`lifecycle.md`](lifecycle.md)
 - Concierge agent design: [`docs/02_agents/concierge.md`](../02_agents/concierge.md)

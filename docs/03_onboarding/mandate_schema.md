@@ -76,13 +76,16 @@ type Mandate = {
 
 ## Python / Pydantic definition
 
-```python
-# backend/app/schemas/mandate.py
+Excerpted from `backend/app/schemas/mandate.py` (Pydantic v2; full file is the authoritative source):
 
+```python
 from datetime import datetime
 from enum import Enum
-from typing import Optional, Literal
-from pydantic import BaseModel, Field
+from typing import Literal
+from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class PrimaryGoal(str, Enum):
     RETIREMENT = "retirement"
@@ -92,16 +95,19 @@ class PrimaryGoal(str, Enum):
     LEARNING_TO_TRADE = "learning_to_trade"
     EXPLORING = "exploring"
 
+
 class Horizon(str, Enum):
     SHORT = "short"
     MEDIUM = "medium"
     LONG = "long"
     VERY_LONG = "very_long"
 
+
 class Path(str, Enum):
     ACTIVE = "active"
     LONG_HORIZON = "long_horizon"
     BOTH = "both"
+
 
 class LearningStyle(str, Enum):
     QUICK = "quick"
@@ -109,75 +115,87 @@ class LearningStyle(str, Enum):
     VISUAL = "visual"
     HANDS_ON = "hands_on"
 
+
 class Plan(str, Enum):
     FLOOR_PASS = "floor_pass"
     TRADER = "trader"
     FLOOR_MANAGER = "floor_manager"
     TRIAL_TRADER = "trial_trader"
 
+
 class TargetOutcome(BaseModel):
     amount: float
-    currency: str
+    currency: str = "USD"
     by_year: int
+
 
 class RiskComponents(BaseModel):
     drawdown_response: int = Field(..., ge=1, le=5)
     regret_asymmetry: int = Field(..., ge=-1, le=1)
     concentration_tolerance: int = Field(..., ge=1, le=5)
 
+
 class Compliance(BaseModel):
     halal: bool = False
     esg_lite: bool = False
     no_tobacco_alcohol_gambling: bool = False
     no_fossil_fuels: bool = False
-    long_only: bool = True   # default: most users are long-only
-    liquid_only: bool = True  # default: most users want liquid names
-    ticker_blocklist: list[str] = []
-    ticker_allowlist: Optional[list[str]] = None
-    custom_constraints: list[str] = []
+    long_only: bool = True
+    liquid_only: bool = True
+    ticker_blocklist: list[str] = Field(default_factory=list)
+    ticker_allowlist: list[str] | None = None
+    custom_constraints: list[str] = Field(default_factory=list)
+
 
 class DailyBriefing(BaseModel):
     enabled: bool = False
-    time_local: str = "07:00"   # HH:MM
-    timezone: str               # IANA
-    voice_id: Optional[str] = None
-    delivery_channels: list[Literal["push", "in_app", "email"]] = ["in_app"]
-    language: str               # locale code
+    time_local: str = "07:00"
+    timezone: str = "UTC"
+    voice_id: str | None = None
+    delivery_channels: list[Literal["push", "in_app", "email"]] = Field(
+        default_factory=lambda: ["in_app"]
+    )
+    language: str = "en"
+
 
 class Mandate(BaseModel):
-    user_id: str
+    """Versioned user mandate. Injected into every agent's prompt as an overlay."""
+
+    model_config = ConfigDict(use_enum_values=True)
+
+    user_id: UUID
     version: int = 1
 
     display_name: str
-    locale: str
-    timezone: str
+    locale: str = "en"
+    timezone: str = "UTC"
 
     primary_goal: PrimaryGoal
     horizon: Horizon
-    target_outcome: Optional[TargetOutcome] = None
+    target_outcome: TargetOutcome | None = None
     path: Path
 
     risk_score: int = Field(..., ge=1, le=5)
     risk_components: RiskComponents
-    risk_quotes: list[str] = []
+    risk_quotes: list[str] = Field(default_factory=list)
     max_drawdown_pct: Literal[10, 20, 30, 50, 100]
 
-    compliance: Compliance
-
-    learning_style: LearningStyle
-
-    daily_briefing: DailyBriefing
+    compliance: Compliance = Field(default_factory=Compliance)
+    learning_style: LearningStyle = LearningStyle.QUICK
+    daily_briefing: DailyBriefing = Field(default_factory=DailyBriefing)
 
     plan: Plan = Plan.FLOOR_PASS
-    trial_expires_at: Optional[datetime] = None
+    trial_expires_at: datetime | None = None
     credit_balance: int = 0
 
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        use_enum_values = True
 ```
+
+Notes:
+- Pydantic v2 throughout — `model_config = ConfigDict(...)`, not the legacy `class Config`.
+- `user_id` is `UUID`, not `str`.
+- Several fields have safe defaults that earlier docs didn't show (`compliance`, `learning_style`, `daily_briefing`) — concierge can produce a valid mandate without explicitly composing every nested object.
 
 ## Database table
 

@@ -36,9 +36,13 @@ Editable fields:
 
 Every edit increments `mandate.version` and creates a new row.
 
-## Mandate Audit
+## Mandate Audit — Not yet delivered
 
-When a user makes a **hard** edit, the system runs an audit:
+The intended behaviour: when a user makes a **hard** edit, the system runs an audit on existing sim holdings + pending trades against the new mandate, then offers a resolve flow (Liquidate / Postpone / Override).
+
+**Today (Alpha):** `PATCH /v1/mandate/{user_id}` simply increments `mandate.version`, writes a new row with the JSONB snapshot, and emits a `mandate_edit` journal entry. There is no audit pass, no holdings scan, no resolve modal. The mandate-violation warning users may see is the **trade-time** check (`safety_floor.check_mandate_compliance()` invoked from `sim_engine.execute_trade()`), not a hard-edit retroactive sweep. See BL6 (resolve flow) + BL12 (audit on edit).
+
+For reference, the intended audit shape:
 
 ```python
 def run_audit(user_id, new_mandate, old_mandate) -> AuditResult:

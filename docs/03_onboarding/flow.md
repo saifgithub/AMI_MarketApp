@@ -4,7 +4,7 @@ Anonymous-first. The user invests in the conversation **before** we ask for cred
 
 This is the single highest-leverage conversion lever we have. Most apps ask for sign-up before showing value → 40–60% drop-off. We reverse it.
 
-## The 7 steps
+## The steps
 
 ```
 1. SPLASH                              ~3 sec
@@ -14,8 +14,15 @@ This is the single highest-leverage conversion lever we have. Most apps ask for 
    ↓
 
 2. ANONYMOUS SESSION
-   Server creates session_id (no user_id yet). 24-hour TTL.
-   All subsequent state stored against session_id.
+   Two parallel state lines (each with its own ID):
+   - `/v1/auth/anon` creates a User row with device_user_id (the
+     stable per-install UUID from shared_preferences) and
+     is_anonymous=true. Persisted in Postgres.
+   - `POST /v1/onboarding/sessions` creates an OnboardingSession
+     in the in-memory session store, keyed by session_id, 24-hour
+     TTL. Holds the conversation state.
+   The two are not yet linked server-side (see "Pre-claim data
+   handling" + Not-yet-delivered tail).
 
    ↓
 
@@ -45,27 +52,25 @@ This is the single highest-leverage conversion lever we have. Most apps ask for 
    Concierge: "Let's save this so your team remembers. 
    What's the easiest way to keep your account?"
    
-   Sign-in options shown:
-   • Apple Sign-In        (iOS only)
-   • Google Sign-In       (Android-GMS only)
-   • HMS Account          (Huawei only, v1.1)
-   • Email magic-link
-   • Phone OTP (SMS)
+   Sign-in options shown today (Alpha):
+   • Apple Sign-In        (iOS — POST /v1/auth/apple, Phase 3 JWKS)
+   • Email magic-link     (POST /v1/auth/magic_link/* — two-step)
    
    User picks one. Quick verification.
-   Account is created. session_id → user_id linkage.
+   The same call atomically does:
+   • Marks the User row is_anonymous=false, claimed_at=now()
+   • Persists email + display_name (Apple) or email (magic-link)
+   • Sets trial_started_at = now(), trial_expires_at = now() + 7d
+     (D-039 — AT:R31)
    Mandate becomes permanent (still version 1).
 
-   ↓
-
-6. TRIAL ACTIVATION                   ~2 sec
-   7-day Trader trial auto-activates.
-   "You've got 7 days with all 12 agents working for you. 
-    No auto-charge at the end — you choose."
+   (NB: there is no separate "Trial Activation" step — it's
+   atomic with the claim. See Not-yet-delivered tail for the
+   Google / HMS / phone-OTP options + the trial-end UX layer.)
 
    ↓
 
-7. FIRST FLOOR LOAD
+6. FIRST FLOOR LOAD
    Honeycomb home renders. All 12 agents unlocked 
    (Skip Path during trial). Concierge speaks:
    "Welcome to the Floor. Want me to introduce you to 
@@ -97,9 +102,9 @@ This mode is rare (estimated <15% of users). It exists for users who need to eva
 
 After 24 hours in Explore Mode without converting, the anonymous session expires and the user is prompted to start fresh.
 
-## The trial-end transition (day 8)
+## The trial-end transition (day 8) — Not yet delivered
 
-When the 7-day trial expires:
+The intended UX:
 
 1. Push notification + email: *"Your trial ended. Here's where you stand."*
 2. On next app open, a single-screen summary:
@@ -113,11 +118,13 @@ When the 7-day trial expires:
 
 The Founders Pricing offer (50% off Trader) is surfaced here if the user is still within the founder window.
 
+**Today (Alpha):** The 7-day window is stored on the user row (`trial_started_at` / `trial_expires_at`, wired AT:R31) but nothing reads it yet — no entitlement gate, no expiry banner, no conversion modal, no push or email. See `docs/10_delivery/project_plan.md` BL3 + BL11.
+
 ## Locale handling during onboarding
 
-The Concierge auto-detects locale from the device (`en-US`, `ar-SA`, `ms-MY`, etc.) and begins in that language. The user can switch language inline at any point: *"Switch to Arabic"* → Concierge picks up in AR.
+**Today (Alpha):** Concierge is English-only and runs a deterministic, fully scripted state machine (no LLM in V0 — see `concierge_engine.py:1-15`). The OnboardingSession schema accepts any `locale` string but the engine has no fallback or switching logic.
 
-If the locale isn't supported (e.g., user device set to French), Concierge defaults to English with a note: *"AMI Trade isn't available in your language yet. We can do this in English for now."*
+**Intended (Phase 2 — V1 Concierge):** Auto-detect locale from the device (`en-US`, `ar-SA`, `ms-MY`, etc.) and begin in that language. Inline language switching mid-conversation. If the locale isn't supported, default to English with a note. Tone calibration based on conversation signals.
 
 ## Voice mode (Phase 2)
 
@@ -128,29 +135,46 @@ The entire conversation can be conducted via voice — TTS for Concierge, STT fo
 
 ## Failure modes
 
-| Failure | Handling |
-|---|---|
-| User abandons mid-conversation | Session persists for 24 hours. On return, Concierge: *"Welcome back. Want to pick up where we left off, or start over?"* |
-| User declines all sign-in methods at step 5 | Concierge: *"No problem — your work is saved for 24 hours. If you change your mind, come back and we'll pick it up."* No coercion. |
-| Apple/Google/HMS auth fails | Fall back to email magic-link automatically |
-| Magic-link email doesn't arrive | After 60s, offer phone OTP as alternative |
-| Session expires before claim | Mandate data deleted (GDPR-compliant). User starts fresh on return. |
+| Failure | Handling | Status |
+|---|---|---|
+| User abandons mid-conversation | Session persists for 24 hours. On return, Concierge: *"Welcome back. Want to pick up where we left off, or start over?"* | In-memory session has 24h TTL today; the "welcome back" copy is mobile UX, not yet wired |
+| User declines sign-in at step 5 | Anonymous User row + onboarding session both live until 24h TTL. | ✅ shipped |
+| Apple auth fails | User must retry or pick magic-link manually. | Auto-fallback to magic-link is **Not yet delivered** |
+| Magic-link email doesn't arrive | User can request a new code; SMTP delivery is the bigger blocker (carry-over). | Phone-OTP fallback is **Not yet delivered** (no phone provider wired) |
+| Session expires before claim | OnboardingSession evicted from in-memory store on next `.get()`. User row remains anon until reused or pruned. | Anon-user pruning job is **Not yet delivered** |
 
 ## Pre-claim data handling
 
-All data captured during anonymous session is:
-- Stored against `session_id`
-- Encrypted at rest
-- Expires after 24 hours if not claimed
-- Auto-deleted on expiry
-- Linked to `user_id` on claim (becomes permanent)
-- Auditable: server logs include the session→user mapping for fraud investigation
+What's true today (Alpha):
+
+- **OnboardingSession** state: in-memory dict keyed by `session_id`. 24h TTL on `.get()`. Not persisted to Postgres. Evicted on expiry.
+- **Anonymous User row**: persisted to Postgres immediately at `/v1/auth/anon`. `is_anonymous=true`, `device_user_id` populated. Survives past the onboarding session.
+- **Mandate**: not persisted during onboarding — the `/v1/onboarding/sessions/{id}/preview` route builds it on-the-fly with a placeholder `user_id="anonymous-pending-claim"`. The mandate row is created later, after claim, on first GET via `/v1/mandate/{user_id}`.
+- **Auditability**: `http_audit` captures every onboarding + auth call. No explicit session→user mapping table is written.
+
+Intended (Phase 2):
+- Encryption-at-rest assertion for the OnboardingSession store (today: in-memory only; nothing at rest).
+- Explicit session→user binding (`OnboardingSession.claimed_user_id` set on claim — currently the field exists but is never assigned, see BL13).
+- Anonymous-user pruning + GDPR-driven deletion job.
+
+---
+
+## Not yet delivered
+
+- **Google Sign-In (Android)** — A6b, blocked on Google Cloud Console config.
+- **HMS Account (Huawei)** — Phase v1.1.
+- **Phone OTP (SMS)** — no SMS provider wired; no `/v1/auth/phone/*` routes.
+- **Apple/Google/HMS → magic-link auto-fallback** — no failure-routing logic.
+- **Trial-end UX** (push + email + summary + reactivation modal) — BL11.
+- **OnboardingSession → claimed_user_id binding** — BL13. Field exists in schema; never set during the auth claim path. Sessions go orphan after claim and expire via TTL.
+- **Anonymous-user pruning job** — anon User rows with no `claimed_at` and stale `anonymous_session_started_at` are never reaped.
+- **V1 Concierge (LLM-driven follow-ups, tone calibration, dynamic chips)** — V0 today is fully scripted.
 
 ## Tech reference
 
 | Concern | Doc |
 |---|---|
-| Auth providers (Apple, Google, HMS, magic-link, phone) | [`docs/08_tech/auth.md`](../08_tech/auth.md) |
+| Auth providers (Apple + magic-link shipped; Google/HMS/phone not yet) | [`docs/08_tech/auth.md`](../08_tech/auth.md) |
 | Anonymous session implementation | [`docs/08_tech/auth.md#anonymous-sessions`](../08_tech/auth.md) |
 | Mandate schema | [`mandate_schema.md`](mandate_schema.md) |
 | The conversation script | [`mandate_conversation.md`](mandate_conversation.md) |
