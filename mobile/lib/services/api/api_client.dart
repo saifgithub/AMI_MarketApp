@@ -776,6 +776,9 @@ class ApiClient {
     String? deviceUserId,
     String locale = 'en',
     String timezone = 'UTC',
+    String? deviceModel,
+    String? osVersion,
+    String? appVersion,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/anon',
@@ -783,6 +786,9 @@ class ApiClient {
         if (deviceUserId != null) 'device_user_id': deviceUserId,
         'locale': locale,
         'timezone': timezone,
+        if (deviceModel != null) 'device_model': deviceModel,
+        if (osVersion != null) 'os_version': osVersion,
+        if (appVersion != null) 'app_version': appVersion,
       },
     );
     return AnonSessionResponse.fromJson(r.data!);

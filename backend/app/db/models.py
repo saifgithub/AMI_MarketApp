@@ -70,6 +70,13 @@ class User(Base):
     # claims with Apple/email we keep their original id but mark claimed_at.
     device_user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True, index=True)
 
+    # Device + build context (BL1, AT:R33). Sent on every /v1/auth/anon call
+    # via device_info_plus + package_info_plus. Single-device-per-user is the
+    # locked alpha assumption — multi-device split is BL2.
+    device_model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    os_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    last_app_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
     # Trial management (AT:R27 admin back-office)
     trial_started_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,

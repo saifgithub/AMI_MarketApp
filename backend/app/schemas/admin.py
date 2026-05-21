@@ -78,6 +78,10 @@ class AdminUserDetail(BaseModel):
     timezone: str
     is_anonymous: bool
     device_user_id: Optional[UUID]
+    # BL1 (AT:R33): device + build context, refreshed on every /v1/auth/anon.
+    device_model: Optional[str] = None
+    os_version: Optional[str] = None
+    last_app_version: Optional[str] = None
     suspended_at: Optional[datetime]
     trial_started_at: Optional[datetime]
     trial_expires_at: Optional[datetime]

@@ -431,6 +431,12 @@ function renderUser(u) {
           <div class="stat"><div class="k">credits</div><div class="v">${u.credit_balance}</div></div>
           <div class="stat"><div class="k">trial exp</div><div class="v dim">${fmtRel(u.trial_expires_at)}</div></div>
         </div>
+        ${(u.device_model || u.os_version || u.last_app_version) ? `
+        <div class="stats">
+          <div class="stat"><div class="k">device</div><div class="v dim">${u.device_model || '—'}</div></div>
+          <div class="stat"><div class="k">os</div><div class="v dim">${u.os_version || '—'}</div></div>
+          <div class="stat"><div class="k">app</div><div class="v dim">${u.last_app_version || '—'}</div></div>
+        </div>` : ''}
       </div>
     </div>
 

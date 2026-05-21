@@ -150,6 +150,9 @@ class AuthService:
         authenticated_user_id: UUID | None = None,
         locale: str = "en",
         timezone_str: str = "UTC",
+        device_model: str | None = None,
+        os_version: str | None = None,
+        app_version: str | None = None,
     ) -> tuple[AuthUser, str, bool]:
         """Return (user, token, is_new).
 
@@ -194,9 +197,23 @@ class AuthService:
                     timezone=timezone_str,
                     is_anonymous=True,
                     anonymous_session_started_at=datetime.now(timezone.utc),
+                    device_model=device_model,
+                    os_version=os_version,
+                    last_app_version=app_version,
                 )
                 s.add(row)
                 s.flush()
+            else:
+                # BL1 (AT:R33): refresh device + build context on every
+                # bootstrap of an existing row. last_app_version is the most
+                # useful signal — answers "what build is this tester on?"
+                # without a bug-report round-trip.
+                if device_model is not None:
+                    row.device_model = device_model
+                if os_version is not None:
+                    row.os_version = os_version
+                if app_version is not None:
+                    row.last_app_version = app_version
             return _row_to_user(row), _scaffold_token(row.id), is_new
 
     # ── Magic-link ─────────────────────────────────────────────────────

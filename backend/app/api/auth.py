@@ -83,6 +83,9 @@ def anon_session(
         authenticated_user_id=bearer_user_id,
         locale=req.locale,
         timezone_str=req.timezone,
+        device_model=req.device_model,
+        os_version=req.os_version,
+        app_version=req.app_version,
     )
     return AnonSessionResponse(user=user, token=token, is_new=is_new)
 

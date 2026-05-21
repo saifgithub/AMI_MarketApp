@@ -7,8 +7,51 @@
 /// to the backend on every bootstrap. Same property survives across launches.
 library;
 
+import 'dart:io' show Platform;
+
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
+
+/// BL1 (AT:R33): device + build context shipped to /v1/auth/anon. All three
+/// values are best-effort — a read failure on any of them yields null,
+/// never blocks the bootstrap call.
+class DeviceContext {
+  const DeviceContext({this.deviceModel, this.osVersion, this.appVersion});
+  final String? deviceModel;
+  final String? osVersion;
+  final String? appVersion;
+
+  static Future<DeviceContext> read() async {
+    String? deviceModel;
+    String? osVersion;
+    String? appVersion;
+    try {
+      final di = DeviceInfoPlugin();
+      if (Platform.isIOS) {
+        final i = await di.iosInfo;
+        deviceModel = i.utsname.machine; // e.g. "iPhone15,2"
+        osVersion = '${i.systemName} ${i.systemVersion}'; // "iOS 18.2"
+      } else if (Platform.isAndroid) {
+        final a = await di.androidInfo;
+        deviceModel = '${a.manufacturer} ${a.model}';
+        osVersion = 'Android ${a.version.release}';
+      }
+    } catch (_) {
+      // device_info_plus can fail on simulators / unusual configs — fine.
+    }
+    try {
+      final p = await PackageInfo.fromPlatform();
+      appVersion = '${p.version}+${p.buildNumber}'; // e.g. "0.1.0+26"
+    } catch (_) {}
+    return DeviceContext(
+      deviceModel: deviceModel,
+      osVersion: osVersion,
+      appVersion: appVersion,
+    );
+  }
+}
 
 class DeviceUser {
   DeviceUser._();

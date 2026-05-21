@@ -57,6 +57,11 @@ class AnonSessionRequest(BaseModel):
     )
     locale: str = "en"
     timezone: str = "UTC"
+    # BL1 (AT:R33): mobile sends device + build context for admin support
+    # context. All optional — old clients still bootstrap fine.
+    device_model: str | None = Field(default=None, max_length=128)
+    os_version: str | None = Field(default=None, max_length=64)
+    app_version: str | None = Field(default=None, max_length=64)
 
 
 class AnonSessionResponse(BaseModel):

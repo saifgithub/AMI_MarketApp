@@ -74,7 +74,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final persistedToken = await DeviceUser.getToken();
       if (persistedToken != null) api.setToken(persistedToken);
       final deviceUserId = await DeviceUser.getOrCreate();
-      final r = await api.bootstrapAnon(deviceUserId: deviceUserId);
+      // BL1 (AT:R33): ship device + build context with every bootstrap so the
+      // admin back-office can see "what build is this anon tester on?".
+      final ctx = await DeviceContext.read();
+      final r = await api.bootstrapAnon(
+        deviceUserId: deviceUserId,
+        deviceModel: ctx.deviceModel,
+        osVersion: ctx.osVersion,
+        appVersion: ctx.appVersion,
+      );
       api.setToken(r.token);
       // Persist the canonical (id, token) the backend returned. If the
       // backend minted fresh (A2 path), this overwrites the stale local id.
