@@ -30,12 +30,17 @@ FastAPI endpoint structure. Each resource has its own router.
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/mandate` | Get current mandate (full object) |
-| GET | `/mandate/versions` | List version history |
-| GET | `/mandate/versions/{version}` | Get a specific past version |
-| PATCH | `/mandate` | Edit mandate fields. Body: partial mandate. Triggers audit if hard fields touched. |
-| POST | `/mandate/audit/resolve` | Resolve audit violations (liquidate / postpone / override) |
-| POST | `/mandate/rollback/{version}` | Rollback to a previous version |
+| GET | `/mandate/{user_id}` | Get current mandate (returns a default if none stored). Bearer must own `user_id`. |
+| PATCH | `/mandate/{user_id}` | Shallow-merge partial mandate. `compliance.*` merges by key. Bumps `version`, emits a `mandate_edit` journal entry with before/after snapshot. Bearer must own `user_id`. |
+
+**Not yet implemented** *(documented as future work — see backlog):*
+
+- `GET /mandate/{user_id}/versions` — list version history
+- `GET /mandate/{user_id}/versions/{version}` — fetch a past version
+- `POST /mandate/{user_id}/audit/resolve` — resolve audit violations (liquidate / postpone / override)
+- `POST /mandate/{user_id}/rollback/{version}` — rollback to a previous version
+
+Replay relies on the `mandate_edit` journal entries (full before/after payload captured per edit) until these routes exist.
 
 ### `/v1/agents`
 
@@ -188,7 +193,7 @@ Per tier, per endpoint, per user:
 | `/agents/.../one_on_one/.../message` | 60/hour | 300/hour | unlimited |
 | `/concierge/message` | 60/hour | 300/hour | unlimited |
 | `/brief/.../message` | 30/hour | 300/hour | unlimited |
-| `/mandate` PATCH | 10/day | 50/day | unlimited |
+| `/mandate/{user_id}` PATCH | 10/day | 50/day | unlimited |
 
 Returns 429 with `Retry-After` header on exceed.
 

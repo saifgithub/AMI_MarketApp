@@ -10,6 +10,7 @@ class AuthUser {
     required this.id,
     this.email,
     this.appleId,
+    this.displayName,
     required this.isAnonymous,
     this.claimedAt,
     required this.createdAt,
@@ -18,6 +19,10 @@ class AuthUser {
   final String id;
   final String? email;
   final String? appleId;
+  /// User's preferred display name. Populated from Apple Sign-In's `full_name`
+  /// on first claim (AT:R29), or from the mandate's `display_name` for
+  /// anon-bootstrapped users.
+  final String? displayName;
   final bool isAnonymous;
   final DateTime? claimedAt;
   final DateTime createdAt;
@@ -26,6 +31,7 @@ class AuthUser {
         id: j['id'] as String,
         email: j['email'] as String?,
         appleId: j['apple_id'] as String?,
+        displayName: j['display_name'] as String?,
         isAnonymous: j['is_anonymous'] as bool? ?? true,
         claimedAt: j['claimed_at'] != null
             ? DateTime.parse(j['claimed_at'] as String)
@@ -35,7 +41,7 @@ class AuthUser {
 
   bool get isClaimed => !isAnonymous;
   String get displayHandle =>
-      email ?? (appleId != null ? 'Apple ID' : 'Guest');
+      displayName ?? email ?? (appleId != null ? 'Apple ID' : 'Guest');
 }
 
 class AnonSessionResponse {

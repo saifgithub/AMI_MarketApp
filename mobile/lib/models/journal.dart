@@ -71,6 +71,7 @@ class JournalEntry {
     this.userNote,
     this.outcome,
     this.referenceId,
+    this.mandateVersion = 1,
     this.payload = const {},
     this.deletedAt,
   });
@@ -86,6 +87,9 @@ class JournalEntry {
   final List<String> tags;
   final String? userNote;
   final String? outcome;
+  /// Mandate version active when this entry was captured. Used to replay past
+  /// decisions against the mandate they were made under (audit trail).
+  final int mandateVersion;
   final Map<String, dynamic> payload;
   final DateTime createdAt;
   // Set only for entries returned from /v1/journal/{u}/trash; null on
@@ -107,6 +111,7 @@ class JournalEntry {
       tags: ((j['tags'] as List?) ?? const []).cast<String>(),
       userNote: j['user_note'] as String?,
       outcome: j['outcome'] as String?,
+      mandateVersion: (j['mandate_version'] as num?)?.toInt() ?? 1,
       payload: (j['payload'] as Map?)?.cast<String, dynamic>() ?? const {},
       createdAt: DateTime.parse(j['created_at'] as String),
       deletedAt: j['deleted_at'] != null

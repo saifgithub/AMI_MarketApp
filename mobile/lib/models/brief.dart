@@ -92,6 +92,8 @@ class BriefSession {
     required this.mode,
     required this.locale,
     required this.baseOverlayVersion,
+    this.mandateUsed = const {},
+    this.pendingProposal,
   });
 
   final String id;
@@ -101,6 +103,15 @@ class BriefSession {
   final String locale;
   final int baseOverlayVersion;
 
+  /// Full snapshot of the mandate at session start. Kept on the client for
+  /// post-hoc safety-floor audit + offline replay. Opaque map — same shape
+  /// as the backend `Mandate.model_dump()`.
+  final Map<String, dynamic> mandateUsed;
+
+  /// The proposal currently awaiting accept/reject, if any. Cleared when the
+  /// user accepts or rejects.
+  final BriefProposal? pendingProposal;
+
   factory BriefSession.fromJson(Map<String, dynamic> j) {
     return BriefSession(
       id: j['id'] as String,
@@ -109,6 +120,13 @@ class BriefSession {
       mode: j['mode'] as String,
       locale: j['locale'] as String? ?? 'en',
       baseOverlayVersion: ((j['base_overlay_version'] as num?) ?? 0).toInt(),
+      mandateUsed:
+          (j['mandate_used'] as Map?)?.cast<String, dynamic>() ?? const {},
+      pendingProposal: j['pending_proposal'] != null
+          ? BriefProposal.fromJson(
+              (j['pending_proposal'] as Map).cast<String, dynamic>(),
+            )
+          : null,
     );
   }
 }

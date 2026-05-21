@@ -75,6 +75,101 @@ class ComplianceFlags {
   }
 }
 
+/// Specific dollar/year target. Optional — only set for the "specific_goal" path.
+class TargetOutcome {
+  const TargetOutcome({
+    required this.amount,
+    this.currency = 'USD',
+    required this.byYear,
+  });
+
+  final double amount;
+  final String currency;
+  final int byYear;
+
+  factory TargetOutcome.fromJson(Map<String, dynamic> j) => TargetOutcome(
+        amount: (j['amount'] as num).toDouble(),
+        currency: j['currency'] as String? ?? 'USD',
+        byYear: (j['by_year'] as num).toInt(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'amount': amount,
+        'currency': currency,
+        'by_year': byYear,
+      };
+}
+
+/// Granular risk profile (1-5 / -1..1 scales). Derived from the risk-scenario
+/// questions during onboarding. Used by safety floor + drift detection.
+class RiskComponents {
+  const RiskComponents({
+    required this.drawdownResponse,
+    required this.regretAsymmetry,
+    required this.concentrationTolerance,
+  });
+
+  /// 1 (panic) → 5 (hold steady).
+  final int drawdownResponse;
+
+  /// -1 (regret losses more) → 0 (neutral) → 1 (regret missed gains more).
+  final int regretAsymmetry;
+
+  /// 1 (diversified always) → 5 (high-conviction concentration ok).
+  final int concentrationTolerance;
+
+  factory RiskComponents.fromJson(Map<String, dynamic> j) => RiskComponents(
+        drawdownResponse: (j['drawdown_response'] as num?)?.toInt() ?? 3,
+        regretAsymmetry: (j['regret_asymmetry'] as num?)?.toInt() ?? 0,
+        concentrationTolerance:
+            (j['concentration_tolerance'] as num?)?.toInt() ?? 3,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'drawdown_response': drawdownResponse,
+        'regret_asymmetry': regretAsymmetry,
+        'concentration_tolerance': concentrationTolerance,
+      };
+}
+
+/// Daily briefing preferences — time, channels, TTS voice.
+class DailyBriefing {
+  const DailyBriefing({
+    this.enabled = false,
+    this.timeLocal = '07:00',
+    this.timezone = 'UTC',
+    this.voiceId,
+    this.deliveryChannels = const ['in_app'],
+    this.language = 'en',
+  });
+
+  final bool enabled;
+  final String timeLocal;
+  final String timezone;
+  final String? voiceId;
+  final List<String> deliveryChannels; // push / in_app / email
+  final String language;
+
+  factory DailyBriefing.fromJson(Map<String, dynamic> j) => DailyBriefing(
+        enabled: (j['enabled'] as bool?) ?? false,
+        timeLocal: j['time_local'] as String? ?? '07:00',
+        timezone: j['timezone'] as String? ?? 'UTC',
+        voiceId: j['voice_id'] as String?,
+        deliveryChannels:
+            ((j['delivery_channels'] as List?) ?? const ['in_app']).cast<String>(),
+        language: j['language'] as String? ?? 'en',
+      );
+
+  Map<String, dynamic> toJson() => {
+        'enabled': enabled,
+        'time_local': timeLocal,
+        'timezone': timezone,
+        if (voiceId != null) 'voice_id': voiceId,
+        'delivery_channels': deliveryChannels,
+        'language': language,
+      };
+}
+
 class UserMandate {
   const UserMandate({
     required this.userId,
@@ -84,13 +179,20 @@ class UserMandate {
     required this.timezone,
     required this.primaryGoal,
     required this.horizon,
+    this.targetOutcome,
     required this.path,
     required this.riskScore,
+    required this.riskComponents,
+    this.riskQuotes = const [],
     required this.maxDrawdownPct,
     required this.learningStyle,
     required this.compliance,
+    required this.dailyBriefing,
     required this.plan,
+    this.trialExpiresAt,
     required this.creditBalance,
+    this.createdAt,
+    this.updatedAt,
   });
 
   final String userId;
@@ -100,13 +202,20 @@ class UserMandate {
   final String timezone;
   final String primaryGoal;
   final String horizon;
+  final TargetOutcome? targetOutcome;
   final String path;
   final int riskScore;
+  final RiskComponents riskComponents;
+  final List<String> riskQuotes;
   final int maxDrawdownPct;
   final String learningStyle;
   final ComplianceFlags compliance;
+  final DailyBriefing dailyBriefing;
   final String plan;
+  final DateTime? trialExpiresAt;
   final int creditBalance;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory UserMandate.fromJson(Map<String, dynamic> j) {
     return UserMandate(
@@ -117,15 +226,37 @@ class UserMandate {
       timezone: (j['timezone'] as String?) ?? 'UTC',
       primaryGoal: j['primary_goal'] as String? ?? 'long_term_wealth',
       horizon: j['horizon'] as String? ?? 'long',
+      targetOutcome: j['target_outcome'] != null
+          ? TargetOutcome.fromJson(
+              (j['target_outcome'] as Map).cast<String, dynamic>(),
+            )
+          : null,
       path: j['path'] as String? ?? 'long_horizon',
       riskScore: (j['risk_score'] as num?)?.toInt() ?? 3,
+      riskComponents: RiskComponents.fromJson(
+        (j['risk_components'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
+      riskQuotes:
+          ((j['risk_quotes'] as List?) ?? const []).cast<String>(),
       maxDrawdownPct: (j['max_drawdown_pct'] as num?)?.toInt() ?? 30,
       learningStyle: j['learning_style'] as String? ?? 'quick',
       compliance: ComplianceFlags.fromJson(
         (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {},
       ),
+      dailyBriefing: DailyBriefing.fromJson(
+        (j['daily_briefing'] as Map?)?.cast<String, dynamic>() ?? const {},
+      ),
       plan: j['plan'] as String? ?? 'trial_trader',
+      trialExpiresAt: j['trial_expires_at'] != null
+          ? DateTime.parse(j['trial_expires_at'] as String)
+          : null,
       creditBalance: (j['credit_balance'] as num?)?.toInt() ?? 75,
+      createdAt: j['created_at'] != null
+          ? DateTime.parse(j['created_at'] as String)
+          : null,
+      updatedAt: j['updated_at'] != null
+          ? DateTime.parse(j['updated_at'] as String)
+          : null,
     );
   }
 }
