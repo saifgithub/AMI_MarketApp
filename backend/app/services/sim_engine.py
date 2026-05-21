@@ -151,6 +151,23 @@ class SubmitResult:
 
 
 @dataclass
+class PreviewResult:
+    """Pre-flight preview of a sim trade — same mandate + cash/holdings checks
+    as submit(), but never persists. Returned to the client so the trade
+    ticket UI can render 'would this trade be allowed?' + sizing context
+    before the user commits.
+    """
+
+    accepted: bool
+    compliance: ComplianceResult
+    fill_price: float
+    notional: float
+    cash_available: float
+    held_quantity: float  # current holding for the ticker; 0.0 if none
+    price_source: str  # "yfinance" or "mock_walk"
+
+
+@dataclass
 class OutcomeUpdate:
     trade_id: UUID
     new_status: TradeStatus
@@ -494,6 +511,109 @@ class SimEngine:
         return SubmitResult(
             accepted=True, trade=trade,
             compliance=compliance, portfolio_snapshot=portfolio,
+        )
+
+    def preview(
+        self,
+        *,
+        user_id: UUID,
+        ticker: str,
+        side: Side,
+        quantity: float,
+        mandate: Mandate,
+        order_type: OrderType = OrderType.MARKET,
+        limit_price: float | None = None,
+        verdict_ref: UUID | None = None,
+        halal_universe: set[str] | None = None,
+        locale_allowed_universe: set[str] | None = None,
+    ) -> PreviewResult:
+        """Dry-run a trade through the same pre-flight checks as submit() —
+        compliance, verdict dedup, cash/holdings — without persisting.
+        """
+        portfolio = self.ensure_portfolio(user_id)
+        ticker = ticker.upper().strip()
+
+        if verdict_ref is not None:
+            existing_trade_id = self._existing_trade_for_verdict(user_id, verdict_ref)
+            if existing_trade_id is not None:
+                fail = ComplianceResult(
+                    passed=False,
+                    violations=[
+                        f"this verdict has already been executed "
+                        f"(trade {str(existing_trade_id)[:8]})"
+                    ],
+                    blocked_by="duplicate_verdict",
+                )
+                held = next(
+                    (h.quantity for h in portfolio.holdings if h.ticker == ticker),
+                    0.0,
+                )
+                return PreviewResult(
+                    accepted=False, compliance=fail,
+                    fill_price=0.0, notional=0.0,
+                    cash_available=portfolio.current_cash,
+                    held_quantity=held,
+                    price_source="mock_walk",
+                )
+
+        quote = self.current_quote(ticker)
+        mark = quote.price
+        fill_price = mark if order_type == OrderType.MARKET else (limit_price or mark)
+        proposed = ProposedTrade(
+            ticker=ticker,
+            side=side,
+            order_type=order_type,
+            quantity=quantity,
+            limit_price=limit_price,
+        )
+
+        compliance = check_mandate_compliance(
+            proposed,
+            portfolio_value=self.total_value(user_id),
+            current_drawdown_pct=self.current_drawdown_pct(user_id),
+            mandate=mandate,
+            halal_universe=halal_universe or DEFAULT_HALAL_UNIVERSE,
+            locale_allowed_universe=locale_allowed_universe,
+        )
+
+        notional = fill_price * quantity
+        held = next(
+            (h.quantity for h in portfolio.holdings if h.ticker == ticker),
+            0.0,
+        )
+
+        accepted = compliance.passed
+        if accepted:
+            if side == Side.BUY:
+                if notional > portfolio.current_cash + 1e-6:
+                    accepted = False
+                    compliance = ComplianceResult(
+                        passed=False,
+                        violations=[
+                            f"insufficient cash: need ${notional:.2f}, "
+                            f"have ${portfolio.current_cash:.2f}"
+                        ],
+                        blocked_by=None,
+                    )
+            else:
+                if held < quantity - 1e-6:
+                    accepted = False
+                    compliance = ComplianceResult(
+                        passed=False,
+                        violations=[
+                            f"cannot sell {quantity} {ticker}: not enough held"
+                        ],
+                        blocked_by="long_only",
+                    )
+
+        return PreviewResult(
+            accepted=accepted,
+            compliance=compliance,
+            fill_price=fill_price,
+            notional=notional,
+            cash_available=portfolio.current_cash,
+            held_quantity=held,
+            price_source=quote.source,
         )
 
     def _apply_buy_row(

@@ -2,6 +2,7 @@
 
 GET  /v1/sim/portfolio/{user_id}             Snapshot (cash + holdings + marks + P&L)
 POST /v1/sim/portfolio/{user_id}/reset       Wipe and restart with $10k
+POST /v1/sim/preview                         Dry-run a trade (compliance + cash check, no persist) — BL9
 POST /v1/sim/submit                          Submit a trade (PM safety floor runs)
 GET  /v1/sim/trades/{user_id}                List trades (filterable by status)
 POST /v1/sim/trades/{user_id}/evaluate       Sweep open trades for stop/target hits
@@ -120,6 +121,49 @@ async def reset_portfolio(
     _own(current_user, user_id)
     sim.reset_portfolio(user_id)
     return await get_portfolio(user_id, current_user=current_user, sim=sim)
+
+
+@router.post("/preview")
+async def preview_trade(
+    req: SubmitTradeRequest,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """Dry-run a trade: runs the same mandate + cash/holdings pre-flight
+    as /submit but never persists. Lets the mobile trade ticket render
+    a 'would this trade be allowed?' + sizing preview before commit.
+    """
+    if current_user.id != req.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+    mandate = resolve_mandate(req.user_id, req.mandate_override)
+    side = req.side if isinstance(req.side, Side) else Side(req.side)
+    order_type = (
+        req.order_type if isinstance(req.order_type, OrderType)
+        else OrderType(req.order_type)
+    )
+    pv = sim.preview(
+        user_id=req.user_id,
+        ticker=req.ticker,
+        side=side,
+        quantity=req.quantity,
+        mandate=mandate,
+        order_type=order_type,
+        limit_price=req.limit_price,
+        verdict_ref=req.verdict_ref,
+    )
+    return {
+        "accepted": pv.accepted,
+        "compliance": {
+            "passed": pv.compliance.passed,
+            "violations": pv.compliance.violations,
+            "blocked_by": pv.compliance.blocked_by,
+        },
+        "fill_price": pv.fill_price,
+        "notional": pv.notional,
+        "cash_available": pv.cash_available,
+        "held_quantity": pv.held_quantity,
+        "price_source": pv.price_source,
+    }
 
 
 @router.post("/submit")

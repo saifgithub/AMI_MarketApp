@@ -251,6 +251,75 @@ def test_current_quote_reports_leaf_source():
     assert q.price > 0
 
 
+def test_preview_accepts_compliant_trade_without_persisting():
+    """BL9: preview() runs same pre-flight as submit() but never persists.
+    Cash unchanged + no holdings recorded after a passing preview."""
+    sim = SimEngine()
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    price = sim.current_price("AAPL")
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=2,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert pv.accepted
+    assert pv.compliance.passed
+    assert pv.fill_price == price
+    assert pv.notional == price * 2
+    assert pv.cash_available == 10_000.0
+    assert pv.held_quantity == 0.0
+    # And critically: no persistence happened.
+    p = sim.ensure_portfolio(user_id)
+    assert p.current_cash == 10_000.0
+    assert p.holdings == []
+
+
+def test_preview_rejects_on_mandate_violation():
+    """BL9: preview() surfaces compliance violation for blocklisted ticker."""
+    sim = SimEngine()
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({
+        "plan": "trader",
+        "compliance": {"ticker_blocklist": ["AAPL"]},
+    })
+    pv = sim.preview(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=1,
+        mandate=mandate,
+    )
+    assert not pv.accepted
+    assert not pv.compliance.passed
+    assert any("blocklist" in v for v in pv.compliance.violations)
+
+
+def test_preview_rejects_on_insufficient_cash():
+    """BL9: preview() rejects when notional > current cash (after compliance
+    passes). Has to first reduce cash since the 50% single-name cap on a
+    fresh $10k portfolio bites before the cash check."""
+    sim = SimEngine()
+    user_id = uuid4()
+    mandate = hydrate_coach_mandate({"plan": "trader"})
+    # Spend most of the cash on one ticker first.
+    price = sim.current_price("AAPL")
+    qty = int((10_000 * 0.40) / price)  # ~40% of portfolio — under 50% cap
+    submit_res = sim.submit(
+        user_id=user_id, ticker="AAPL", side=Side.BUY, quantity=qty,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert submit_res.accepted
+    p = sim.ensure_portfolio(user_id)
+    cash_left = p.current_cash
+    # Now preview a different-ticker buy that's compliance-clean
+    # (under 50% single-name cap on current total value) but exceeds cash.
+    other_price = sim.current_price("NVDA")
+    over_cash_qty = int((cash_left * 1.5) / other_price) + 1
+    pv = sim.preview(
+        user_id=user_id, ticker="NVDA", side=Side.BUY, quantity=over_cash_qty,
+        mandate=mandate, order_type=OrderType.MARKET,
+    )
+    assert not pv.accepted
+    assert any("insufficient cash" in v for v in pv.compliance.violations)
+
+
 def test_manual_close_realises_pnl_and_returns_cash():
     sim = SimEngine()
     user_id = uuid4()
