@@ -81,6 +81,11 @@ class MagicLinkVerifyRequest(BaseModel):
     email: str
     code: str
     # Note: `user_id` removed — see MagicLinkStartRequest comment.
+    # BL13 (AT:R32): optional binding of the OnboardingSession that produced
+    # this user. Backwards-compatible — old clients omit it and the binding
+    # silently skips. Server-side use: cohort analysis (claim rate per
+    # Concierge variant) + GDPR deletion + onboarding replay.
+    onboarding_session_id: UUID | None = None
 
 
 class AppleSignInRequest(BaseModel):
@@ -95,6 +100,8 @@ class AppleSignInRequest(BaseModel):
     identity_token: str
     user_id: UUID | None = None
     full_name: str | None = None
+    # BL13 (AT:R32): see MagicLinkVerifyRequest.onboarding_session_id.
+    onboarding_session_id: UUID | None = None
 
 
 class AuthVerifyResponse(BaseModel):

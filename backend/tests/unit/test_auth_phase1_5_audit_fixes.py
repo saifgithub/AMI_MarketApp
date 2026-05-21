@@ -226,19 +226,25 @@ def test_coach_start_rejects_foreign_user_in_body(client: TestClient):
     assert r.status_code == 403
 
 
-def test_one_on_one_start_rejects_foreign_user_in_body(client: TestClient):
+def test_one_on_one_start_ignores_user_id_in_body(client: TestClient):
+    """L-1 (AT:R32): OneOnOneStartRequest no longer accepts user_id.
+    Extra fields are silently dropped by Pydantic; the route sources the
+    user from the Bearer token. Sending a foreign user_id in the body is
+    now harmless — the session opens under the bearer's identity."""
     user_a, token_a = _new_user()
-    user_b, _ = _new_user()
+    _user_b, _ = _new_user()
     r = client.post(
         "/v1/agents/one_on_one/start",
         json={
-            "user_id": str(user_b),
+            "user_id": str(_user_b),  # extra field — ignored
             "agent_id": "concierge",
             "locale": "en",
         },
         headers={"Authorization": f"Bearer {token_a}"},
     )
-    assert r.status_code == 403
+    assert r.status_code == 201
+    body = r.json()
+    assert body["user_id"] == str(user_a)  # bearer wins, not the body
 
 
 def test_room_stream_rejects_foreign_user_in_body(client: TestClient):
@@ -301,3 +307,71 @@ def test_dead_flutter_grant_call_404s(client: TestClient):
               "method": "founder_grant"},
     )
     assert r.status_code in (404, 405)
+
+
+# ── BL13 (AT:R32): OnboardingSession ↔ claimed_user_id binding ────────────
+
+
+def test_magic_link_verify_binds_onboarding_session(monkeypatch, client: TestClient):
+    """When the client passes `onboarding_session_id`, the matching session's
+    `claimed_user_id` is stamped with the new user. Enables cohort analysis +
+    GDPR-clean deletion."""
+    import asyncio
+    from app.schemas.onboarding import OnboardingSession
+    from app.services.session_store import get_session_store
+
+    monkeypatch.setattr(settings, "env", "local")
+    user_a, token_a = _new_user()
+
+    # Seed an onboarding session in the store.
+    store = get_session_store()
+    session = OnboardingSession()  # default-factories id + timestamps
+    asyncio.run(store.create(session))
+
+    # Mint a magic-link code as user_a (env=local returns debug_code).
+    r_start = client.post(
+        "/v1/auth/magic_link/start",
+        json={"email": "bl13@example.com"},
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    code = r_start.json()["debug_code"]
+
+    # Verify, passing the onboarding session id.
+    r = client.post(
+        "/v1/auth/magic_link/verify",
+        json={
+            "email": "bl13@example.com",
+            "code": code,
+            "onboarding_session_id": str(session.id),
+        },
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert r.status_code == 200
+
+    # Re-read the session — claimed_user_id now points to user_a.
+    saved = asyncio.run(store.get(session.id))
+    assert saved is not None
+    assert saved.claimed_user_id == user_a
+
+
+def test_magic_link_verify_unknown_session_id_silently_skips(monkeypatch, client: TestClient):
+    """An onboarding_session_id that doesn't exist in the store (expired or
+    fabricated) is silently ignored — verify still succeeds, no crash."""
+    monkeypatch.setattr(settings, "env", "local")
+    _, token_a = _new_user()
+    r_start = client.post(
+        "/v1/auth/magic_link/start",
+        json={"email": "unknown-session@example.com"},
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    code = r_start.json()["debug_code"]
+    r = client.post(
+        "/v1/auth/magic_link/verify",
+        json={
+            "email": "unknown-session@example.com",
+            "code": code,
+            "onboarding_session_id": str(uuid4()),  # never created
+        },
+        headers={"Authorization": f"Bearer {token_a}"},
+    )
+    assert r.status_code == 200

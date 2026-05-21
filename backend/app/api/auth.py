@@ -36,6 +36,25 @@ from app.schemas.auth import (
 )
 from app.api.dependencies import get_current_user
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
+from app.services.session_store import get_session_store
+
+
+async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> None:
+    """BL13 (AT:R32): if the client supplies the OnboardingSession that
+    produced this user, stamp `claimed_user_id` on it. Idempotent — re-binding
+    the same pair is a no-op. Silently skips if the session expired or was
+    never created (the user could have claimed without going through Concierge
+    via the Apple direct path, for instance)."""
+    if session_id is None:
+        return
+    store = get_session_store()
+    session = await store.get(session_id)
+    if session is None:
+        return
+    if session.claimed_user_id == user_id:
+        return
+    session.claimed_user_id = user_id
+    await store.save(session)
 
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])
@@ -88,7 +107,7 @@ def magic_link_start(
 
 
 @router.post("/magic_link/verify", response_model=AuthVerifyResponse)
-def magic_link_verify(
+async def magic_link_verify(
     req: MagicLinkVerifyRequest,
     current_user: User = Depends(get_current_user),
     auth: AuthService = Depends(get_auth_service),
@@ -105,11 +124,12 @@ def magic_link_verify(
             "invalid or expired code",
         )
     user, token = result
+    await _bind_onboarding_session(req.onboarding_session_id, user.id)
     return AuthVerifyResponse(user=user, token=token, claimed=True)
 
 
 @router.post("/apple", response_model=AuthVerifyResponse)
-def sign_in_with_apple(
+async def sign_in_with_apple(
     req: AppleSignInRequest,
     auth: AuthService = Depends(get_auth_service),
 ) -> AuthVerifyResponse:
@@ -124,6 +144,7 @@ def sign_in_with_apple(
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    await _bind_onboarding_session(req.onboarding_session_id, user.id)
     return AuthVerifyResponse(user=user, token=token, claimed=True)
 
 
