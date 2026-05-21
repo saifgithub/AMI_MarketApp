@@ -13,7 +13,7 @@ from app.schemas.one_on_one import (
     OneOnOneSession,
     OneOnOneStartRequest,
 )
-from app.services.agent_runner import AgentRunner, get_agent_runner, hydrate_mandate
+from app.services.agent_runner import AgentRunner, get_agent_runner
 from app.services.journal_store import get_journal_store
 from app.services.lessons_service import get_lessons_service
 from app.services.mandate_store import resolve_mandate
@@ -52,16 +52,15 @@ async def start_one_on_one(
     current_user: User = Depends(get_current_user),
     runner: AgentRunner = Depends(get_agent_runner),
 ) -> OneOnOneSession:
-    _own_body(current_user, req.user_id)
-    # Prefer the user's stored mandate over the inline override
+    # L-1 cleanup (AT:R32): user identity comes from the Bearer token, not the
+    # body. Removed the `_own_body(current_user, req.user_id)` check + the
+    # `req.user_id is None` fallback branch — both are unreachable now that
+    # `current_user.id` is always populated by the `Depends(get_current_user)`
+    # guard at the router level.
+    user_id = current_user.id
     mandate = resolve_mandate(
-        req.user_id, req.mandate_override, locale=req.locale,
+        user_id, req.mandate_override, locale=req.locale,
     )
-    # If we fell through to defaults (no store + no override) keep using
-    # hydrate_mandate's broader set of defaults to stay backward-compatible.
-    if req.user_id is None and req.mandate_override is None:
-        mandate = hydrate_mandate(None)
-        mandate = mandate.model_copy(update={"locale": req.locale})
 
     # Gate: Floor Pass users must earn agents. Paid tiers (trader / floor
     # manager / trial_trader) skip-path everything. Concierge is always free.
@@ -69,12 +68,8 @@ async def start_one_on_one(
         mandate.plan if isinstance(mandate.plan, Plan)
         else Plan(mandate.plan)
     )
-    if (
-        req.user_id is not None
-        and plan == Plan.FLOOR_PASS
-        and req.agent_id != AgentId.CONCIERGE
-    ):
-        unlocked = {a.agent_id for a in get_lessons_service().list_activations(req.user_id)}
+    if plan == Plan.FLOOR_PASS and req.agent_id != AgentId.CONCIERGE:
+        unlocked = {a.agent_id for a in get_lessons_service().list_activations(user_id)}
         if req.agent_id.value not in unlocked:
             raise HTTPException(
                 status.HTTP_403_FORBIDDEN,
@@ -86,7 +81,7 @@ async def start_one_on_one(
             )
 
     return runner.open_one_on_one(
-        agent_id=req.agent_id, mandate=mandate, user_id=req.user_id
+        agent_id=req.agent_id, mandate=mandate, user_id=user_id
     )
 
 

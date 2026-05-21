@@ -2,7 +2,6 @@
 library;
 
 import 'package:ami_trade/models/one_on_one.dart';
-import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,11 +45,9 @@ class OneOnOneNotifier extends StateNotifier<OneOnOneState> {
     final api = _ref.read(apiClientProvider);
     state = state.copyWith(error: null, clearError: true);
     try {
-      final userId = await DeviceUser.getOrCreate();
       final session = await api.startOneOnOne(
         agentId: agentId,
         locale: locale,
-        userId: userId,
       );
       state = state.copyWith(session: session, messages: const []);
     } catch (e) {

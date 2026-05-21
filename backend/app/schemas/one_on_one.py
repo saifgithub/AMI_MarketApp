@@ -27,9 +27,10 @@ class OneOnOneStartRequest(BaseModel):
     # a real auth/mandate-store yet. V1 reads from the user's stored mandate.
     mandate_override: dict | None = None
     locale: str = "en"
-    # Device-stable user_id from the Flutter client so Coach overlays
-    # accumulated across sessions are applied. Optional for backward compat.
-    user_id: UUID | None = None
+    # NOTE: `user_id` removed L-1 (AT:R32 audit-residual). The route now
+    # sources the user from the Bearer token (`current_user.id`) — matches
+    # the magic-link / Apple-claim hardening from audit A3. Extra `user_id`
+    # in the body is silently ignored (Pydantic default).
 
 
 class OneOnOneMessageRequest(BaseModel):

@@ -150,14 +150,14 @@ class ApiClient {
   Future<OneOnOneSession> startOneOnOne({
     required String agentId,
     String locale = 'en',
-    String? userId,
   }) async {
+    // L-1 cleanup (AT:R32): `user_id` no longer sent in the body. Backend
+    // sources the user from the Bearer token. See OneOnOneStartRequest.
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/agents/one_on_one/start',
       data: {
         'agent_id': agentId,
         'locale': locale,
-        if (userId != null) 'user_id': userId,
       },
     );
     return OneOnOneSession.fromJson(r.data!);
