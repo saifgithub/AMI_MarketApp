@@ -1,5 +1,24 @@
 # Platform Service Facade
 
+> **Status: design doc — not yet built.** The directory
+> `mobile/lib/services/platform/` exists but is empty. No
+> `PushService`, `AuthService`, `BillingService`, or `AdsService`
+> facade interfaces are defined in code yet, and no GMS/HMS/iOS
+> implementations have been written. The Android-GMS + Android-HMS
+> targets do not ship in Alpha (iOS only).
+>
+> Real Apple Sign-In is wired (`sign_in_with_apple` package + the
+> backend `oidc_verifier`), but it's a direct integration in
+> `mobile/lib/services/auth/`, not through this facade.
+>
+> The whole abstraction lands when Android-GMS prep starts (v1.0
+> milestone — see project_plan.md Phase 3 / Stream 5). Until then,
+> the design below is **forward-looking** and may be revised
+> against current Android-GMS / Huawei AppGallery rules at build
+> time.
+
+---
+
 Abstraction layer that lets the same app code run on iOS, Android-GMS, and Android-HMS by swapping service implementations at runtime.
 
 ## Why this exists

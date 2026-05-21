@@ -1,120 +1,120 @@
 # Stack — Quick Reference
 
-The full stack at a glance. Each row links to the deeper doc.
+The full stack at a glance, **annotated with current Alpha status**.
+"Alpha" = running today; "MVP" = target, not yet shipped. Each row
+links to the deeper doc where the reality vs target detail lives.
 
-| Layer | Choice | Why | More |
-|---|---|---|---|
-| **Mobile framework** | Flutter (Dart) | Single codebase iOS+Android, strong `CustomPainter` for hex shapes, mature i18n + RTL | [`flutter_implementation.md`](flutter_implementation.md) |
-| **State management** | Riverpod | Type-safe, testable, no boilerplate | [`flutter_implementation.md`](flutter_implementation.md) |
-| **Backend framework** | FastAPI (Python 3.13) | Async-first, fast, native fit with TradingAgents (also Python), Pydantic for schemas | [`api_design.md`](api_design.md) |
-| **Backend runtime** | Google Cloud Run | Serverless containers, scales to 0, cheap at MVP scale, easy to migrate | [`hosting.md`](hosting.md) |
-| **Database** | Postgres (via Supabase) | Standard. Portable. Row-level security. | [`data_model.md`](data_model.md) |
-| **Auth** | Supabase Auth | Apple/Google/HMS/Email/Phone OTP, anonymous sessions native | [`auth.md`](auth.md) |
-| **Storage** | Supabase Storage (S3-compatible) | User exports, briefing audio, lesson media | [`data_model.md`](data_model.md) |
-| **Realtime** | Supabase Realtime | Streaming agent responses, live Convene runs | [`architecture.md`](architecture.md) |
-| **LLM routing** | OpenRouter + direct keys | Cost flexibility, multi-provider redundancy | [`llm_routing.md`](llm_routing.md) |
-| **TradingAgents** | Containerised on Cloud Run | Multi-agent framework, mandate-overlay-wrapped | [`tradingagent_integration.md`](tradingagent_integration.md) |
-| **TTS** | Azure Speech (standard) + ElevenLabs (premium) | Multilingual quality at right cost | [`docs/07_localization/translation_and_languages.md`](../07_localization/translation_and_languages.md) |
-| **Mobile IAP** | RevenueCat | Unified wrapper over Apple IAP / Google Play Billing / HMS IAP | [`payments.md`](payments.md) |
-| **Web payments** (Phase 2) | Stripe | Marketing-site direct sub | [`payments.md`](payments.md) |
-| **CDN + DNS + WAF** | Cloudflare | Free tier covers MVP; edge in MENA + SEA | [`hosting.md`](hosting.md) |
-| **Email** | Resend | Best DX, fair pricing, deliverability | [`architecture.md`](architecture.md) |
-| **SMS OTP** | Twilio | Universal, reliable | [`auth.md`](auth.md) |
-| **Push notifications** | OneSignal | Wraps APNs + FCM + HMS Push in one SDK | [`platform_facade.md`](platform_facade.md) |
-| **Ads** | AdMob (iOS/Android-GMS) + Huawei Ads (HMS) | Per-platform | [`docs/06_monetization/ads.md`](../06_monetization/ads.md) |
-| **Mobile attribution** | AppsFlyer (Phase 2 when paid ads start) | Industry standard | [`platform_facade.md`](platform_facade.md) |
-| **Crash reporting** | Sentry | Flutter + Python SDKs, free tier covers MVP | [`architecture.md`](architecture.md) |
-| **Product analytics** | PostHog | Open-source, self-hostable, single tool for analytics + feature flags + session replay | [`architecture.md`](architecture.md) |
-| **Secrets** | GCP Secret Manager | Cheap, integrates with Cloud Run | [`hosting.md`](hosting.md) |
-| **Observability** | Cloud Logging + Sentry + OpenTelemetry tracing | Track multi-agent runs end-to-end | [`architecture.md`](architecture.md) |
-| **IaC** | Terraform | GCP + Cloudflare resources versioned | [`hosting.md`](hosting.md) |
-| **CI/CD** | GitHub Actions | Standard. Builds Flutter for iOS+Android, deploys backend to Cloud Run. | — |
-| **Region (MVP)** | GCP `europe-west3` Frankfurt | Best Saudi + US + Malaysia latency tradeoff | [`hosting.md`](hosting.md) |
+| Layer | Choice | Status | Why | More |
+|---|---|---|---|---|
+| **Mobile framework** | Flutter (Dart) | Alpha ✅ | Single codebase iOS+Android, strong `CustomPainter` for hex shapes, mature i18n + RTL | [`flutter_implementation.md`](flutter_implementation.md) |
+| **State management** | Riverpod | Alpha ✅ | Type-safe, testable, no boilerplate | [`flutter_implementation.md`](flutter_implementation.md) |
+| **Backend framework** | FastAPI (Python 3.13) | Alpha ✅ | Async-first, fast, Pydantic for schemas. 16 routers, 60+ routes today. | [`api_design.md`](api_design.md) |
+| **Backend runtime** | Cloud Run (target); **melehost Docker today** | Alpha: melehost · MVP: Cloud Run | Cloud Run for serverless scale-to-zero; melehost (Ubuntu LAN host) covers Alpha tester load. Migration W9–10. | [`hosting.md`](hosting.md), [`backend_modes.md`](backend_modes.md) |
+| **Database** | Postgres | Alpha ✅ (no RLS) · MVP: Supabase Postgres + RLS | Standard. Portable. RLS at MVP when Supabase plugs in (single trusted backend today). 18 tables, Alembic-managed. | [`data_model.md`](data_model.md) |
+| **Auth** | Custom `auth_service` today; **Supabase Auth** at MVP | Alpha: own JWT + `auth_challenges` · MVP: Supabase | Apple Sign-In + email magic-link delivered. User-row schema mirrors Supabase so the swap is mechanical. | [`auth.md`](auth.md) |
+| **Storage** | Supabase Storage | MVP only | User exports, briefing audio, lesson media — none of these features ship in Alpha; bug-report attachments live on the melehost local volume today. | [`data_model.md`](data_model.md) |
+| **Realtime** | Supabase Realtime (target) | MVP only — **SSE in Alpha** | All streaming today is SSE (Room runs, Brief, 1-on-1). Realtime channels are MVP scope. | [`architecture.md`](architecture.md) |
+| **LLM provider** | **on-prem vLLM** (Gemma 4 31B) → Anthropic fallback → mock | Alpha ✅ | vLLM is the primary; Anthropic is the failure fallback. OpenRouter aggregation + locale routing are MVP scope. | [`llm_routing.md`](llm_routing.md) |
+| **TradingAgents** | Containerised on Cloud Run (target) | MVP only — **scripted V0 in Alpha** | The 12-agent multi-agent flow uses scripted/deterministic responses in Alpha. LLM swap-in is wired but defaults to V0. | [`tradingagent_integration.md`](tradingagent_integration.md) |
+| **TTS** | Azure Speech + ElevenLabs (target) | MVP only — **not wired** | Daily-briefing TTS is MVP scope; no audio rendering in Alpha. | [`../07_localization/translation_and_languages.md`](../07_localization/translation_and_languages.md) |
+| **Mobile IAP** | RevenueCat (target) | MVP only — **not wired** | `purchases_flutter` not in `pubspec.yaml`; no `/v1/billing/webhook/revenuecat` route. `subscription_events` table is ready to absorb webhooks when it lands. | [`payments.md`](payments.md) |
+| **Web payments** | Stripe (Phase 2) | Post-MVP | Marketing-site direct sub; 10× margin vs App Store. | [`payments.md`](payments.md) |
+| **CDN + DNS** | **Cloudflare Tunnel** (delivered) + WAF (target) | Alpha: Tunnel ✅ · MVP: WAF | TLS termination + tunneling to melehost work today. WAF rules + DNS-level controls are MVP. | [`hosting.md`](hosting.md) |
+| **Email (SMTP)** | TBD — Gmail App Password vs Resend | **Carry-over from AT:R29** | Magic-link delivery wired; dev mode returns the code in-band. Pick a working SMTP route before external Beta. | [`auth.md`](auth.md) |
+| **SMS OTP** | Twilio (target) | MVP only — magic-link covers Alpha | Twilio Verify is the design; revisit at MVP — Saudi cost is high. | [`auth.md`](auth.md) |
+| **Push notifications** | OneSignal (target) | MVP only — `room_push_stub` log today | The Room runner has a TODO B1 push hook that currently logs only. | [`platform_facade.md`](platform_facade.md) |
+| **Ads** | AdMob + Huawei Ads (target) | Post-Alpha (Floor Pass tier) | No ads ship in Alpha. | [`../06_monetization/ads.md`](../06_monetization/ads.md) |
+| **Mobile attribution** | AppsFlyer (Phase 2) | Post-MVP | Wires when paid acquisition starts. | [`platform_facade.md`](platform_facade.md) |
+| **Crash reporting** | Sentry (target) | MVP only — **`structlog` covers Alpha** | Flutter + Python Sentry SDKs at MVP. Today: `docker logs ami_api_alpha`. | [`architecture.md`](architecture.md) |
+| **Product analytics** | PostHog (target) | MVP only — **no event analytics in Alpha** | Open-source, self-hostable. Onboarding funnel + Convene→sim conversion tracking is MVP scope. | [`architecture.md`](architecture.md) |
+| **Secrets** | GCP Secret Manager (target) · `.env` on melehost today | Alpha: `.env` file · MVP: Secret Manager | Loaded at container start on melehost. Secret Manager when GCP migration lands. | [`hosting.md`](hosting.md) |
+| **Observability** | `structlog` + `llm_audit` + `http_audit` + `subscription_events` (delivered) · Cloud Logging + OTEL + PostHog (target) | Alpha ✅ + MVP targets | Audit tables capture every LLM call, HTTP request, plan/credit change. Distributed tracing + dashboards at MVP. | [`architecture.md`](architecture.md) |
+| **IaC** | Terraform (target) | MVP only — none today | `infra/gcp/` + `infra/cloudflare/` directories scaffolded; no `.tf` files committed yet. Alpha infra is managed via the `/promote-to-alpha` rsync flow + manual systemd/Docker on melehost. | [`hosting.md`](hosting.md) |
+| **CI/CD** | GitHub Actions (target) | MVP only — manual `/promote-to-alpha` today | Mac → melehost via rsync; no GitHub remote yet on the project. | — |
+| **Region (MVP)** | GCP `europe-west3` Frankfurt | MVP target | Best Saudi + US + Malaysia latency tradeoff. | [`hosting.md`](hosting.md) |
 
-## Code organisation
+## Code organisation (live)
 
 ```
 AMI_MarketApp/
-├── docs/                         ← PRD (this folder)
-├── mobile/                       ← Flutter app
+├── docs/                         ← Product + tech docs
+│   └── 08_tech/                  ← This doc lives here
+├── mobile/                       ← Flutter app (iOS Alpha; Android v1.0)
 │   ├── lib/
 │   │   ├── main.dart
 │   │   ├── app.dart
 │   │   ├── theme/                ← AMI hex theme
-│   │   ├── i18n/                 ← generated from content/i18n/
+│   │   ├── i18n/                 ← Generated ARB locales
 │   │   ├── routes/
 │   │   ├── screens/
-│   │   │   ├── floor/
-│   │   │   ├── sim/
-│   │   │   ├── convene/
-│   │   │   ├── academy/
-│   │   │   └── journal/
 │   │   ├── widgets/
-│   │   │   ├── hex/              ← HexButton, HexAvatar, GlassPanel
-│   │   │   └── matrix_console/   ← Agent log stream widget
-│   │   ├── services/             ← API client, auth, billing, ads facades
+│   │   │   └── hex/              ← HexButton, HexAvatar, GlassPanel
+│   │   ├── services/
+│   │   │   ├── api/              ← apiClient + backend_modes.dart (alpha/beta/prod toggle)
+│   │   │   ├── auth/             ← Apple Sign-In + magic-link wiring
+│   │   │   └── platform/         ← (empty — facade not yet built; see platform_facade.md)
 │   │   ├── state/                ← Riverpod providers
-│   │   └── models/               ← Dart models (mirror backend Pydantic)
-│   ├── ios/
-│   ├── android/
+│   │   └── models/               ← Dart models, mirror backend Pydantic
+│   ├── ios/                      ← TestFlight build artefacts
+│   ├── android/                  ← Scaffolded, not yet shipping
 │   ├── assets/
-│   │   ├── fonts/
-│   │   ├── icons/
-│   │   ├── hex_mesh.svg
-│   │   └── logo_hex.svg
 │   └── pubspec.yaml
-├── backend/                      ← Python (FastAPI) service
+├── backend/                      ← FastAPI service (runs on melehost in Alpha)
 │   ├── app/
 │   │   ├── main.py
-│   │   ├── api/                  ← FastAPI routers per resource
-│   │   ├── agents/               ← Mandate overlay generator, safety floor, TradingAgent wrapper
-│   │   ├── schemas/              ← Pydantic models
-│   │   ├── services/             ← LLM gateway, TTS, email, push, supabase client
-│   │   ├── db/                   ← supabase client, migrations
-│   │   ├── workers/              ← Background job handlers
-│   │   └── core/                 ← config, security, telemetry
+│   │   ├── api/                  ← 16 routers (auth, onboarding, mandate, brief, room, sim, journal, lessons, admin, ai_coach, daily_challenge, glossary, watchlist, feedback, llm, coach-deprecated-alias)
+│   │   ├── agents/               ← safety_floor + overlay_generator
+│   │   ├── schemas/              ← Pydantic models per resource
+│   │   ├── services/             ← 24 services (llm_gateway, auth_service, room_runner, brief_engine, ...)
+│   │   ├── db/                   ← models.py + base.py (SQLite-portable JsonB / Uuid shims)
+│   │   └── core/                 ← config, logging
+│   ├── alembic/                  ← Migration chain (10 files; see data_model.md)
 │   ├── tests/
-│   ├── pyproject.toml
-│   └── Dockerfile
-├── content/                      ← Lessons, strings, agent base prompts
-│   ├── lessons/                  ← MDX, one per (lesson, locale)
-│   ├── i18n/                     ← Locale packs
-│   └── agents/                   ← Base prompts per agent, in MD
-├── infra/                        ← Terraform / IaC
-│   ├── gcp/
-│   ├── cloudflare/
-│   └── supabase/
-├── .github/
-│   └── workflows/                ← CI/CD pipelines
+│   └── pyproject.toml
+├── content/                      ← Lessons, ARB strings, agent base prompts
+├── infra/
+│   ├── docker/api/               ← Dockerfile + entrypoint for ami_api_alpha
+│   ├── systemd/                  ← melehost systemd unit files
+│   ├── cloudflared/              ← Tunnel config for ami_tunnel
+│   ├── gcp/                      ← (scaffolded; empty)
+│   └── cloudflare/               ← (scaffolded; empty)
+├── docker-compose.yml            ← The melehost Compose stack (api/postgres/redis/tunnel)
+├── scripts/                      ← run_dev.sh, build_testflight.sh, translate_arb.py, users.sh, ...
+├── .claude/
+│   ├── commands/                 ← /promote-to-alpha, /rollback-alpha, /handover, /start-fresh, ...
+│   ├── session-config.yml        ← Multi-track session config
+│   └── projects/                 ← (gitignored — per-session state)
+├── Silent_Scout/                 ← Sub-project (research only, does NOT import from production)
+├── HANDOVER_R.md                 ← Current Development-track handover state
 ├── README.md
 ├── CLAUDE.md
 └── .gitignore
 ```
 
-## Service-to-service auth
+## Service-to-service auth (current vs MVP)
 
-- Mobile → API: Supabase JWT (Bearer header)
-- API → Supabase: Service-role key (server-side only)
-- API → LLM providers: OpenRouter API key + direct keys
-- API → TTS: Azure / ElevenLabs API keys
-- API → RevenueCat: Server API key for entitlement verification
-- API → Cloud Run jobs (workers): Pub/Sub (Cloud Run native) OR direct HTTPS with shared secret
+| Hop | Today | MVP target |
+|---|---|---|
+| Mobile → API | Bearer JWT from `auth_service` | Same shape; minted by Supabase Auth |
+| API → Postgres | Plain Postgres credentials (`.env` on melehost) | Service-role key |
+| API → vLLM | LAN HTTP, no auth (private network) | Same (stays on-LAN if vLLM survives; else swap to Anthropic/OpenAI keys) |
+| API → Anthropic (fallback) | API key in `.env` | API key in GCP Secret Manager |
+| API → RevenueCat | n/a (not wired) | Server API key for webhook signature verify |
+| API → Cloud Run workers | n/a (no workers) | Pub/Sub triggers or shared-secret HTTPS |
 
-All keys live in **GCP Secret Manager**, loaded into Cloud Run as environment variables at deploy time. Never checked into git.
+All keys live in `.env` on melehost today; **GCP Secret Manager** at MVP, loaded into Cloud Run as env vars at deploy. Never checked into git.
 
 ## Local development
 
 Saiful's dev environment:
-- Flutter SDK locally
-- Docker Compose for local Postgres + Supabase Studio mirror
-- `.env.local` with dev keys (not committed)
-- iOS simulator + Android emulator (real device testing on his phones)
-
-Backend can run locally (`uvicorn` direct) OR in a docker-compose stack with Postgres + Redis.
+- Mac (Apple Silicon) — **pure editor**, no backend / DB. CLAUDE.md is explicit: every change ships via `/promote-to-alpha` to melehost.
+- Backend unit tests run on the Mac via `pytest backend/tests/unit/ -q` (sqlite tempfile fixture — the `JsonB()` / `Uuid()` shims make this possible).
+- iPhone (TestFlight) for end-to-end testing.
 
 ## Cross-references
 
-- Full architecture diagram: [`architecture.md`](architecture.md)
-- Hosting details: [`hosting.md`](hosting.md)
+- Full architecture: [`architecture.md`](architecture.md)
+- Hosting + promotion protocol: [`hosting.md`](hosting.md), [`../10_delivery/promotion_protocol.md`](../10_delivery/promotion_protocol.md)
 - Database schema: [`data_model.md`](data_model.md)
-- API endpoint structure: [`api_design.md`](api_design.md)
+- API surface: [`api_design.md`](api_design.md)
+- Backend modes (alpha/beta/prod toggle): [`backend_modes.md`](backend_modes.md)

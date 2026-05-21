@@ -1,5 +1,27 @@
 # Payments
 
+> **Status: design doc — nothing in this file is wired in Alpha.**
+> RevenueCat SDK is not in `mobile/pubspec.yaml`, the
+> `/v1/billing/webhook/revenuecat` endpoint does not exist in
+> `backend/app/api/`, no App Store / Play products are configured,
+> and no payment is taken today. The whole namespace is **deferred
+> to MVP (project_plan.md Phase 3)**.
+>
+> What ships in Alpha as a substitute: plan + credits are read off
+> the `users` row, and the admin back-office (`/v1/admin/users/...`)
+> can grant trial windows + credit grants manually. The
+> `subscription_events` table is already in place to absorb
+> RevenueCat webhooks when the integration lands — it captures every
+> plan / credit / trial / suspension change with a `source` column
+> (`admin_override` today; `revenuecat` when the webhook ships).
+>
+> The rest of this file is the **design** for when we wire it up.
+> Re-validate every product ID, price, and offer detail at MVP time
+> against current App Store / Play Console rules — the spec is from
+> AT:R-pre-Alpha and may have drifted.
+
+---
+
 RevenueCat wraps Apple IAP, Google Play Billing, and HMS IAP. We don't write three integrations.
 
 ## Why RevenueCat

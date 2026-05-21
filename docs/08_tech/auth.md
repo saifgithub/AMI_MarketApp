@@ -1,165 +1,208 @@
 # Auth
 
-Anonymous-first. Federated providers + email magic-link + phone OTP. Supabase Auth as the backbone.
+> **Reality vs target.** Alpha runs its **own** auth service in
+> `backend/app/services/auth_service.py` with bearer JWTs minted
+> locally + an `auth_challenges` table for magic-link + Apple OIDC
+> exchange. **Supabase Auth is the MVP target** (cloud migration
+> W9–10) — the user-row schema, anonymous-first model, and claim
+> semantics in our service intentionally mirror Supabase so the
+> swap-over is mechanical. Code-resident details below describe what
+> actually ships; the Supabase / MVP target sections are flagged.
 
-## Auth providers per platform
+Anonymous-first. Apple Sign-In + email magic-link in Alpha; Google
+Sign-In, Phone OTP, and HMS Account Kit are deferred (see "Not yet
+delivered" at the bottom).
 
-| Platform | Native federated | Universal fallback |
+## What ships in Alpha
+
+| Surface | Auth | Status |
 |---|---|---|
-| iOS | Apple Sign-In *(App Store mandates if any other federated is offered)* + Google Sign-In *(optional)* | Email magic-link, Phone OTP |
-| Android-GMS | Google Sign-In (one-tap), Apple Sign-In | Email magic-link, Phone OTP |
-| Android-HMS (v1.1) | HMS Account Kit (one-tap on Huawei devices) | Email magic-link, Phone OTP |
-| Web (Phase 2) | Google, Apple, magic-link | Magic-link |
+| iOS TestFlight | **Sign in with Apple** (real client wiring; `sign_in_with_apple` package) + **email magic-link** | Delivered ([`/v1/auth/apple`](api_design.md#v1auth), [`/v1/auth/magic_link/{start,verify}`](api_design.md#v1auth)) |
+| iOS TestFlight | **Anonymous** bootstrap on first launch | Delivered ([`/v1/auth/anon`](api_design.md#v1auth)) |
+| Android | n/a | Not yet built (v1.0 milestone) |
+| Web | n/a | Phase 2 |
 
-## Why Supabase Auth
+### Apple Sign-In — how it actually works
+
+```dart
+// mobile/lib/services/auth/apple_sign_in.dart
+final cred = await SignInWithApple.getAppleIDCredential(
+  scopes: [AppleIDAuthorizationScopes.email, AppleIDAuthorizationScopes.fullName],
+);
+
+// Send the identity token to our backend
+final res = await apiClient.post('/v1/auth/apple', body: {
+  'identity_token': cred.identityToken,
+  'authorization_code': cred.authorizationCode,
+  'full_name': cred.givenName != null
+      ? '${cred.givenName} ${cred.familyName ?? ''}'.trim()
+      : null,
+});
+```
+
+Backend verifies the identity token via `OIDCVerifier` (JWKS fetch +
+signature + audience + expiry), persists `users.apple_id` + `email`
+(if released) + `display_name` (from `full_name` on **first sign-in
+only** — Apple only releases the name on first auth, and we
+never overwrite). Returns the bearer JWT.
+
+### Magic-link
+
+```dart
+// Start: POST /v1/auth/magic_link/start { email }
+// → backend creates an auth_challenge row (hashed code, 10-min TTL)
+// → email_service sends the 6-digit code
+//   In dev/local env the code is also returned in the response as
+//   `debug_code` so the alpha tester can copy-paste without SMTP.
+//
+// Verify: POST /v1/auth/magic_link/verify { email, code }
+// → backend looks up the challenge, validates the hash, marks consumed,
+//   either claims the caller's anonymous user or creates a fresh one
+// → returns AuthVerifyResponse { user, token, claimed }
+```
+
+**SMTP carry-over from AT:R29.** Production email delivery is the
+external-Beta blocker — Gmail App Password vs Resend HTTP API is
+still TBD. Dev mode returns the code in-band today.
+
+### Anonymous bootstrap
+
+```dart
+// First app launch — POST /v1/auth/anon { device_user_id, locale, timezone }
+final res = await apiClient.post('/v1/auth/anon', body: {
+  'device_user_id': await sharedPrefs.getOrCreate('ami_device_user_id'),
+  'locale': PlatformDispatcher.instance.locale.toLanguageTag(),
+  'timezone': DateTime.now().timeZoneName,
+});
+// → AuthService.ensure_anonymous() returns {user, token, is_new}
+// → bearer stored locally; every subsequent request attaches it
+```
+
+**A2 audit fix (2026-05-18)**: a returned `device_user_id` is only
+honoured (i.e., re-attaches to that user) if the caller also presents
+the matching bearer in the `Authorization` header. Otherwise the call
+mints a fresh user — prevents a stranger from claiming someone else's
+anon account by guessing their device_user_id.
+
+### Anonymous user lifecycle
+
+- Mandate + journal + portfolio are written against the anon user_id from day one
+- **No 24-hour expiry yet.** Anon users stay forever until claimed (or until we add a cleanup job — MVP scope, currently deferred — see [`architecture.md`](architecture.md) background jobs)
+- On claim (via `/v1/auth/apple` or `/v1/auth/magic_link/verify`) the **same user_id is preserved** — mandate + journal + portfolio survive. `users.claimed_at` set; `users.email` / `apple_id` populated from OIDC.
+
+### Account claim — code reality
+
+```python
+# backend/app/services/auth_service.py
+def _claim_or_create(self, ...):
+    # 1. Verify the OIDC identity (Apple) or magic-link challenge
+    # 2. If the caller already has an anon user, mark it claimed:
+    #    user.claimed_at = utcnow()
+    #    user.is_anonymous = False
+    #    user.email = oidc.email if released
+    #    user.apple_id = oidc.sub
+    #    user.display_name = full_name if first sign-in
+    # 3. Else: look up existing user by apple_id OR email and re-attach
+    # 4. Else: create a fresh user row
+    # 5. Mint a bearer JWT, return AuthVerifyResponse
+```
+
+**Trial activation on claim is NOT YET WIRED** — D-039 promises a 7-day
+Trader trial; today's `_claim_or_create()` does not set
+`users.trial_started_at` or `users.trial_expires_at`. The admin
+back-office (`POST /v1/admin/users/{u}/trial`) is the only path that
+populates them. See `project_plan.md` BL3.
+
+## JWT structure (Alpha)
+
+The bearer JWTs minted by `auth_service` are **not Supabase-shaped**.
+They're plain HS256 JWTs signed with `settings.secret_key`:
+
+```json
+{
+  "sub": "<user_uuid>",
+  "is_anonymous": true | false,
+  "exp": 1234567890,
+  "iat": 1234567890
+}
+```
+
+`get_current_user` dependency (in `app/api/dependencies.py`) decodes
+the bearer, loads the user row, and attaches it to the request. No
+refresh-token flow today — bearer lifetime is long enough (multiple
+weeks) that mobile only re-auths on manual sign-out.
+
+Postgres RLS uses `auth.uid()` in the policy templates (migration
+`a4c7e9d10001_rls_policies.py`) — **not enforced today** (single
+trusted backend; see [`data_model.md`](data_model.md) storage realities).
+
+## Account deletion (GDPR / PDPL)
+
+> **Not yet wired in Alpha — deferred to MVP scope.**
+> The `users` table has no `pending_deletion` flag; there's no
+> `/v1/account/delete` route; no scheduled wipe job. When the
+> Founders cohort needs deletion, it's done manually via psql
+> against melehost.
+>
+> Spec for the eventual implementation:
+> 1. Confirm intent in mobile (modal with consequences listed)
+> 2. POST `/v1/account/delete` → mark `users.pending_deletion = true`
+> 3. Background job within 30 days wipes mandate, journals, overlays,
+>    sim trades, credit ledger, audio cache, etc.
+> 4. Audit rows retained for 6 years (compliance) but PII scrubbed
+> 5. User receives email confirmation within 24h
+
+## Not yet delivered
+
+### Auth providers
+
+| Provider | Status | Note |
+|---|---|---|
+| **Google Sign-In on iOS** | Deferred | Apple-only for Alpha; iOS App Store doesn't mandate Google. |
+| **Google Sign-In on Android-GMS** | Carry-over from AT:R29 (A6b) — verifier abstraction done; blocked on Saiful's Google Cloud Console setup (OAuth Web client_id + Android SHA-1). |
+| **HMS Account Kit** | v1.1 milestone | Huawei devices have no GMS; needs a backend `hms_exchange` endpoint (token validation against Huawei's servers, user lookup/create keyed on `users.hms_unionid`). The column exists on `users` (specced). |
+| **SMS OTP (Twilio)** | Deferred to MVP | Magic-link covers Alpha. Twilio Verify is the design; revisit at MVP — country cost varies (Saudi is expensive). |
+| **Phone OTP via Supabase** | MVP target | Once Supabase plugs in, phone OTP becomes free SDK-side. |
+
+### Supabase migration
+
+The whole point of mirroring Supabase shapes (user row layout, anon
+session model, claim semantics, `auth.uid()` in RLS templates) is so
+the cloud migration is mechanical:
+
+1. Drop our `users` table; create FK from app tables to `auth.users.id`
+2. Migrate `auth_challenges` rows in flight (or accept short downtime)
+3. Replace `auth_service` JWT minting with Supabase JWTs (1-hour expiry + refresh token + auto-refresh in SDK)
+4. Enable the RLS policies that ship today as placeholder migrations
+5. Point mobile at `supabase_flutter` SDK for auth flows; keep `apiClient` for the FastAPI routes
+
+Timeline: cloud migration is W9–10 in [`../10_delivery/project_plan.md`](../10_delivery/project_plan.md).
+
+### Why Supabase as the target
 
 | Reason | Detail |
 |---|---|
 | **Vendor-agnostic** | Open-source. Self-hostable. No lock-in. |
 | **All four flows out-of-box** | Apple, Google, magic-link, phone OTP — minimal config |
-| **Native anonymous sessions** | Built-in `signInAnonymously()` + claim flow — exactly our pattern |
+| **Native anonymous sessions** | `signInAnonymously()` + claim flow — exactly our pattern (which is why we mirrored it) |
 | **Flutter SDK mature** | `supabase_flutter` battle-tested |
 | **Same instance does DB + storage + realtime** | Single managed service replaces 3–4 |
-| **Postgres RLS** | User data isolation enforced at DB layer, not app code |
+| **Postgres RLS** | User data isolation at DB layer, not app code |
 
 Alternative considered: **Firebase Auth**. Rejected because of HMS incompatibility (no GMS = Firebase doesn't work cleanly).
 
-## Anonymous sessions
+### Session lifecycle (MVP target)
 
-```dart
-// Mobile (Dart, Flutter)
-final supabase = Supabase.instance.client;
-
-// Splash screen: ensure session exists
-if (supabase.auth.currentUser == null) {
-  await supabase.auth.signInAnonymously();
-}
-// Anonymous user has a session_id but no email/phone/identity
-```
-
-```sql
--- The user row created is marked is_anonymous = true
--- Postgres RLS distinguishes anonymous from claimed
-```
-
-Anonymous sessions:
-- Last 24 hours by default (configurable)
-- Have full read/write access to onboarding-related tables (mandate-in-progress)
-- Cannot persist data beyond the 24-hour window unless claimed
-- Are auto-cleaned by the `cleanup_expired_anon_sessions` background job
-
-## Account claim flow
-
-```dart
-// User completes onboarding, picks a sign-in method
-final response = await supabase.auth.signInWithIdToken(
-  provider: OAuthProvider.apple,    // or .google, .hms
-  idToken: appleIdToken,
-);
-
-// Or for magic link:
-await supabase.auth.signInWithOtp(email: 'user@example.com');
-// User receives email, clicks link, returns to app
-
-// Or for phone OTP:
-await supabase.auth.signInWithOtp(phone: '+966512345678');
-// User enters code in app
-await supabase.auth.verifyOTP(phone: '+966512345678', token: code, type: OtpType.sms);
-
-// On successful auth, Supabase merges the anonymous user_id with the claimed user
-// Mandate data persists because it was always tied to user_id (which doesn't change)
-```
-
-**Critical detail.** Anonymous user_ids are preserved on claim — they become the user_id forever. This means all the mandate-in-progress data the user spent 3 minutes producing stays with their account permanently.
-
-## HMS Account Kit integration (v1.1)
-
-Huawei devices don't have Google Play Services, so Supabase can't validate HMS tokens natively. We add a small backend endpoint:
-
-```python
-@router.post("/auth/hms-exchange")
-async def hms_exchange(hms_token: str):
-    # 1. Validate HMS access token with Huawei's servers
-    user_info = await verify_hms_token(hms_token)
-    
-    # 2. Look up or create a Supabase user keyed on hms_unionid
-    user = await supabase_admin.find_user_by_hms_unionid(user_info.unionid)
-    if not user:
-        user = await supabase_admin.create_user(
-            metadata={"hms_unionid": user_info.unionid, "provider": "hms"}
-        )
-    
-    # 3. Return a Supabase JWT for that user
-    jwt = await supabase_admin.generate_jwt_for(user)
-    return {"jwt": jwt}
-```
-
-The mobile app calls this endpoint with the HMS token, then uses the returned JWT for subsequent API calls.
-
-## SMS OTP
-
-Provider: **Twilio**.
-
-- Twilio Verify API handles the entire OTP flow
-- 6-digit codes, 10-minute TTL
-- Rate limited: max 5 requests per phone per hour
-- Cost: ~$0.05 per SMS (varies by country — Saudi is more expensive)
-
-Fallback: if Twilio delivery fails twice, offer magic-link instead. (Most common cause: number is on a do-not-disturb list.)
-
-## Magic link
-
-Provider: **Resend** for email delivery, Supabase for token issuance.
-
-- 24-hour link TTL
-- Single-use
-- Includes a security warning about phishing
-- Deep-links back to the app via custom URL scheme `amitrade://auth/callback?token=...`
-
-## JWT structure
-
-Supabase JWTs include:
-
-```json
-{
-  "iss": "https://<supabase>.supabase.co/auth/v1",
-  "sub": "user_id_uuid",
-  "aud": "authenticated",
-  "exp": 1234567890,
-  "user_metadata": {
-    "provider": "apple|google|hms|email|phone",
-    "hms_unionid": "...",            // only if HMS
-    "email": "user@example.com",     // if applicable
-    "phone": "+966512345678"         // if applicable
-  }
-}
-```
-
-Postgres RLS uses `auth.uid()` (extracted from JWT) to enforce per-user data isolation.
-
-## Session lifecycle
-
-- **Anonymous session**: 24-hour expiry, no refresh
-- **Claimed session**: standard Supabase JWT (1-hour expiry) + refresh token (long-lived). SDK auto-refreshes.
-- **Forced sign-out**: server can invalidate refresh tokens (e.g., after password change)
-- **Multi-device**: same user can have multiple active sessions; sign-out is per-session
-
-## Account deletion (GDPR / PDPL)
-
-Settings → About → Delete account.
-
-Flow:
-1. Confirm intent (modal with consequences listed)
-2. POST `/account/delete`
-3. Backend marks user `pending_deletion = true`
-4. Background job (within 30 days) wipes all user data: mandate, journals, overlays, sim trades, credit ledger, audio cache, etc.
-5. Audit log retained for 6 years (compliance) but PII removed
-
-User receives email confirmation within 24h that deletion is in progress.
+- **Anonymous session**: 24-hour expiry, no refresh (today: no expiry)
+- **Claimed session**: Supabase JWT 1-hour expiry + refresh token (today: long-lived bearer, no refresh)
+- **Forced sign-out**: server can invalidate refresh tokens (today: would need a bearer-revocation table)
+- **Multi-device**: same user can have multiple active sessions (today: single `users.device_user_id` column — multi-device is BL2 in project_plan)
 
 ## Cross-references
 
-- Anonymous-first onboarding flow: [`docs/03_onboarding/flow.md`](../03_onboarding/flow.md)
-- Data model with RLS policies: [`data_model.md`](data_model.md)
-- HMS platform service: [`platform_facade.md`](platform_facade.md)
-- Privacy compliance: [`docs/09_compliance/disclaimers_and_privacy.md`](../09_compliance/disclaimers_and_privacy.md)
+- API surface: [`api_design.md`](api_design.md) `/v1/auth/*` section
+- Backend services: [`architecture.md`](architecture.md) — Auth Service + OIDC Verifier
+- Data model: [`data_model.md`](data_model.md) — `users`, `auth_challenges` tables
+- A2 + A6 + A6b adversarial audit notes: [`auth_audit.md`](auth_audit.md), [`auth_phase1_adversarial_audit.md`](auth_phase1_adversarial_audit.md)
+- HMS platform-facade design: [`platform_facade.md`](platform_facade.md) (also marked as design doc — not yet built)
+- Privacy compliance: [`../09_compliance/disclaimers_and_privacy.md`](../09_compliance/disclaimers_and_privacy.md)
