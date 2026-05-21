@@ -84,7 +84,12 @@ cd "$MOBILE_DIR"
 flutter build ipa --release \
   --export-method=app-store \
   --dart-define=ALLOW_BACKEND_SWITCH=true \
-  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}"
+  --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+  -- \
+  -allowProvisioningUpdates \
+  -authenticationKeyPath "${key_file}" \
+  -authenticationKeyID "${APP_STORE_API_KEY_ID}" \
+  -authenticationKeyIssuerID "${APP_STORE_API_ISSUER}"
 
 ipa="${MOBILE_DIR}/build/ios/ipa/ami_trade.ipa"
 if [[ ! -f "$ipa" ]]; then
