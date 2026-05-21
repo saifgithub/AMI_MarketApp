@@ -156,6 +156,20 @@ git log --oneline | head -50 | grep -oE '{prefix}:{track}[0-9]+' | head -1
 
 If no prior session tag exists on this track, use `{prefix}:{track}1`.
 
+Then **rename the chapter** so the conversation title matches the
+session name. The built-in `/rename` slash command works in the
+terminal CLI:
+
+```
+/rename {prefix}:{track}<N>
+```
+
+Issue it as if the user typed it (Claude can invoke built-in slash
+commands by emitting them). In IDE extensions where `/rename` isn't
+available, the call is a harmless no-op and the user can rename
+manually from the FleetView UI — surface that fallback once if you
+detect the rename didn't take.
+
 Use the session name for chapter markers, commit-message session-tag
 references, and the plan summary in step 6.
 
