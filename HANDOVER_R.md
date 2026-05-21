@@ -15,8 +15,8 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **248 commits**, no remote yet |
-| Latest work commit | `07a8879` — chore(skills): upstream sync — bug_list block + /rename step (AT:R29). Then this handover-wrap commit. |
+| Git state | Clean working tree, **250 commits**, no remote yet |
+| Latest work commit | `46320a7` — docs(handover): rotate AT:R28 to history_R + write AT:R29 wrap. Includes the skill-restructure + legacy-handover-deletion commit `4004b3d` just before it. |
 | Alpha tags | All prior + `alpha-2026-05-21-{1..4}` (4 promotes this session). Latest `alpha-2026-05-21-4` = display_name migration + Apple Phase 3 + email persistence. |
 | Backend tests | **365 passed, 0 failed** (+9 OIDC verifier tests, +7 Apple persistence tests, +1 A4 route test, replaced 1 503-gate test with a 400-rejection test). |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys**. Lesson 269 edited this session to disambiguate Room vs 1-on-1. |

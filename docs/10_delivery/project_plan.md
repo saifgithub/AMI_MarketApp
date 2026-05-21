@@ -3,7 +3,7 @@
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
 Where we are right now (as of 2026-05-21, end of AT:R29):
-- 248 commits on `main`. 365 backend unit tests pass.
+- 250 commits on `main`. 365 backend unit tests pass.
 - Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
 - TestFlight has build `0.1.0+24` uploaded 2026-05-21 (AT:R29). Carries the Apple Sign-In Phase 3 chain: `OIDCVerifier` does JWKS fetch + RSA verification + iss/aud/exp checks; `users.email` + `users.display_name` persisted on first auth (migration `b3f9d2a80007`); iOS entitlements file added to make the system sheet actually appear. Plus the AT:R27 Flutter payload + admin back-office (9 `/v1/admin/*` routes) + AT:R26 auth scaffolding all live.
 - Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
