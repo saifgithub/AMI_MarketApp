@@ -779,6 +779,7 @@ class ApiClient {
     String? deviceModel,
     String? osVersion,
     String? appVersion,
+    String? deviceInstallId,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/anon',
@@ -789,6 +790,7 @@ class ApiClient {
         if (deviceModel != null) 'device_model': deviceModel,
         if (osVersion != null) 'os_version': osVersion,
         if (appVersion != null) 'app_version': appVersion,
+        if (deviceInstallId != null) 'device_install_id': deviceInstallId,
       },
     );
     return AnonSessionResponse.fromJson(r.data!);

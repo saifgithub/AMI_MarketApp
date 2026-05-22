@@ -74,14 +74,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final persistedToken = await DeviceUser.getToken();
       if (persistedToken != null) api.setToken(persistedToken);
       final deviceUserId = await DeviceUser.getOrCreate();
-      // BL1 (AT:R33): ship device + build context with every bootstrap so the
-      // admin back-office can see "what build is this anon tester on?".
+      // BL1 + BL2 (AT:R33): ship device + build context + stable install_id
+      // with every bootstrap. install_id keys user_devices so two phones on
+      // one Apple ID show as two rows under one user post-claim.
       final ctx = await DeviceContext.read();
+      final installId = await DeviceUser.getOrCreateInstallId();
       final r = await api.bootstrapAnon(
         deviceUserId: deviceUserId,
         deviceModel: ctx.deviceModel,
         osVersion: ctx.osVersion,
         appVersion: ctx.appVersion,
+        deviceInstallId: installId,
       );
       api.setToken(r.token);
       // Persist the canonical (id, token) the backend returned. If the

@@ -62,6 +62,12 @@ class AnonSessionRequest(BaseModel):
     device_model: str | None = Field(default=None, max_length=128)
     os_version: str | None = Field(default=None, max_length=64)
     app_version: str | None = Field(default=None, max_length=64)
+    # BL2 (AT:R33): stable per-install identifier. Generated once on first
+    # launch in shared_prefs and never overwritten (unlike device_user_id,
+    # which mobile overwrites with the adopted user_id on claim). Keys the
+    # user_devices table so the same human's two phones don't collapse into
+    # one device row after Apple/email claim merge.
+    device_install_id: UUID | None = None
 
 
 class AnonSessionResponse(BaseModel):

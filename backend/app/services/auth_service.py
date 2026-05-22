@@ -39,7 +39,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.models import AuthChallengeRow, User
+from app.db.models import AuthChallengeRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
 from app.services.email_service import send_magic_link as _send_magic_link_email
 from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier
@@ -47,6 +47,66 @@ from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier
 
 MAGIC_LINK_TTL_MIN = 15
 APPLE_CHALLENGE_TTL_MIN = 60
+
+
+def _upsert_user_device(
+    s,
+    *,
+    user_id: UUID,
+    device_install_id: UUID,
+    device_model: str | None,
+    os_version: str | None,
+    app_version: str | None,
+) -> None:
+    """BL2: register/touch a device row keyed by `device_install_id`. If the
+    row exists, refresh its owner + context + last_seen_at. If not, create
+    it. UNIQUE on device_install_id keeps this safe under races."""
+    now = datetime.now(timezone.utc)
+    existing = s.execute(
+        select(UserDeviceRow).where(
+            UserDeviceRow.device_install_id == device_install_id
+        )
+    ).scalar_one_or_none()
+    if existing is None:
+        s.add(UserDeviceRow(
+            user_id=user_id,
+            device_install_id=device_install_id,
+            device_model=device_model,
+            os_version=os_version,
+            app_version=app_version,
+            first_seen_at=now,
+            last_seen_at=now,
+        ))
+    else:
+        # Owner can change here on claim adoption — the next anon-bootstrap
+        # from the device after adoption arrives with a different Bearer
+        # (adopted user) and the row re-keys itself.
+        existing.user_id = user_id
+        existing.last_seen_at = now
+        if device_model is not None:
+            existing.device_model = device_model
+        if os_version is not None:
+            existing.os_version = os_version
+        if app_version is not None:
+            existing.app_version = app_version
+
+
+def _rekey_devices_to(s, *, from_user_id: UUID, to_user_id: UUID) -> int:
+    """BL2: on claim adoption (account-linking Phase 1), move any user_devices
+    rows owned by the pre-claim anon user to the adopting user so the
+    adopting user's device list reflects all phones the human owns.
+
+    Returns count of rows re-keyed.
+    """
+    if from_user_id == to_user_id:
+        return 0
+    from sqlalchemy import update as _update
+    result = s.execute(
+        _update(UserDeviceRow)
+        .where(UserDeviceRow.user_id == from_user_id)
+        .values(user_id=to_user_id)
+    )
+    return int(result.rowcount or 0)
 
 
 def _hash_code(code: str) -> str:
@@ -153,6 +213,7 @@ class AuthService:
         device_model: str | None = None,
         os_version: str | None = None,
         app_version: str | None = None,
+        device_install_id: UUID | None = None,
     ) -> tuple[AuthUser, str, bool]:
         """Return (user, token, is_new).
 
@@ -214,6 +275,19 @@ class AuthService:
                     row.os_version = os_version
                 if app_version is not None:
                     row.last_app_version = app_version
+
+            # BL2 (AT:R33): upsert a user_devices row keyed by install_id.
+            # Lets a single human's two phones each carry their own row.
+            if device_install_id is not None:
+                _upsert_user_device(
+                    s,
+                    user_id=row.id,
+                    device_install_id=device_install_id,
+                    device_model=device_model,
+                    os_version=os_version,
+                    app_version=app_version,
+                )
+
             return _row_to_user(row), _scaffold_token(row.id), is_new
 
     # ── Magic-link ─────────────────────────────────────────────────────
@@ -306,6 +380,11 @@ class AuthService:
                 ).scalar_one_or_none()
                 if row is not None:
                     row.apple_id = apple_sub
+            # BL2 (AT:R33): when adoption fires (existing apple_id OR
+            # existing-email row), move the pre-claim anon's devices to the
+            # adopted user so both phones surface under one user.
+            if row is not None and user_id is not None and row.id != user_id:
+                _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
             if row is None and user_id is not None:
                 row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if row is None:
@@ -359,6 +438,11 @@ class AuthService:
         row: User | None = None
         if email:
             row = s.execute(select(User).where(User.email == email)).scalar_one_or_none()
+        # BL2 (AT:R33): if email-lookup succeeded and the pre-claim anon row
+        # is being orphaned, move its devices to the adopted user so the
+        # new phone shows up in the existing user's device list.
+        if row is not None and user_id is not None and row.id != user_id:
+            _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
         if row is None and user_id is not None:
             row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
         if row is None:

@@ -86,6 +86,7 @@ def anon_session(
         device_model=req.device_model,
         os_version=req.os_version,
         app_version=req.app_version,
+        device_install_id=req.device_install_id,
     )
     return AnonSessionResponse(user=user, token=token, is_new=is_new)
 

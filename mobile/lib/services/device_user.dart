@@ -58,8 +58,14 @@ class DeviceUser {
 
   static const String _kIdKey = 'ami.device_user_id';
   static const String _kTokenKey = 'ami.bearer_token';
+  // BL2 (AT:R33): per-install stable identifier — generated once on first
+  // launch and NEVER overwritten (unlike _kIdKey, which gets replaced with
+  // the adopted user_id on claim). Keys the user_devices table so two
+  // phones on one Apple ID surface as two device rows under one user.
+  static const String _kInstallIdKey = 'ami.device_install_id';
   static String? _cachedId;
   static String? _cachedToken;
+  static String? _cachedInstallId;
 
   /// Return the persisted user_id, minting one on first launch.
   static Future<String> getOrCreate() async {
@@ -71,6 +77,20 @@ class DeviceUser {
       await prefs.setString(_kIdKey, id);
     }
     _cachedId = id;
+    return id;
+  }
+
+  /// BL2: return the stable per-install id, minting once. NEVER overwritten
+  /// by setIdAndToken or claim — survives across user-id rebinds.
+  static Future<String> getOrCreateInstallId() async {
+    if (_cachedInstallId != null) return _cachedInstallId!;
+    final prefs = await SharedPreferences.getInstance();
+    var id = prefs.getString(_kInstallIdKey);
+    if (id == null) {
+      id = const Uuid().v4();
+      await prefs.setString(_kInstallIdKey, id);
+    }
+    _cachedInstallId = id;
     return id;
   }
 

@@ -437,6 +437,13 @@ function renderUser(u) {
           <div class="stat"><div class="k">os</div><div class="v dim">${u.os_version || '—'}</div></div>
           <div class="stat"><div class="k">app</div><div class="v dim">${u.last_app_version || '—'}</div></div>
         </div>` : ''}
+        ${(u.devices && u.devices.length > 0) ? `
+        <div class="stat" style="margin-top:12px">
+          <div class="k">devices (${u.devices.length})</div>
+          <div class="v dim" style="font-size:11px;line-height:1.5">
+            ${u.devices.map(d => `${d.device_model || '?'} · ${d.os_version || '?'} · ${d.app_version || '?'} · ${fmtRel(d.last_seen_at)}`).join('<br>')}
+          </div>
+        </div>` : ''}
       </div>
     </div>
 

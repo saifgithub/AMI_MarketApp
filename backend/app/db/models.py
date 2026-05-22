@@ -99,6 +99,36 @@ class User(Base):
     )
 
 
+class UserDeviceRow(Base):
+    """BL2 (AT:R33): one row per device install. Keyed by `device_install_id`
+    (mobile-generated UUID persisted once on first launch, never overwritten).
+    Re-keyed to point at the adopting user on claim-adoption.
+    """
+
+    __tablename__ = "user_devices"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    device_install_id: Mapped[UUID] = mapped_column(
+        Uuid(), nullable=False, unique=True,
+    )
+
+    device_model: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    os_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    app_version: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    first_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    last_seen_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, server_default=func.now(),
+        nullable=False,
+    )
+
+
 class MandateRow(Base):
     __tablename__ = "mandates"
     __table_args__ = (UniqueConstraint("user_id", "version", name="uq_mandate_user_version"),)

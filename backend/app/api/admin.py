@@ -26,7 +26,7 @@ from sqlalchemy import func, select
 
 from app.core.config import settings
 from app.db import get_session
-from app.db.models import SubscriptionEventRow, User
+from app.db.models import SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.admin import (
     AdminCreditsRequest,
     AdminEventsResponse,
@@ -35,6 +35,7 @@ from app.schemas.admin import (
     AdminTrialGrantRequest,
     AdminTrialUpdateRequest,
     AdminUserDetail,
+    AdminUserDevice,
     AdminUserSummary,
     SubscriptionEventOut,
 )
@@ -125,7 +126,22 @@ def _user_summary(row: User) -> AdminUserSummary:
     )
 
 
-def _user_detail(row: User, events: list[SubscriptionEventRow]) -> AdminUserDetail:
+def _load_devices(s, user_id: UUID) -> list[UserDeviceRow]:
+    """BL2: per-user device list ordered most-recently-seen first."""
+    return list(
+        s.execute(
+            select(UserDeviceRow)
+            .where(UserDeviceRow.user_id == user_id)
+            .order_by(UserDeviceRow.last_seen_at.desc())
+        ).scalars()
+    )
+
+
+def _user_detail(
+    row: User,
+    events: list[SubscriptionEventRow],
+    devices: list[UserDeviceRow] | None = None,
+) -> AdminUserDetail:
     return AdminUserDetail(
         id=row.id,
         email=row.email,
@@ -141,6 +157,17 @@ def _user_detail(row: User, events: list[SubscriptionEventRow]) -> AdminUserDeta
         device_model=row.device_model,
         os_version=row.os_version,
         last_app_version=row.last_app_version,
+        devices=[
+            AdminUserDevice(
+                device_install_id=d.device_install_id,
+                device_model=d.device_model,
+                os_version=d.os_version,
+                app_version=d.app_version,
+                first_seen_at=d.first_seen_at,
+                last_seen_at=d.last_seen_at,
+            )
+            for d in (devices or [])
+        ],
         suspended_at=row.suspended_at,
         trial_started_at=row.trial_started_at,
         trial_expires_at=row.trial_expires_at,
@@ -191,7 +218,7 @@ def get_user(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.patch("/users/{user_id}/plan", response_model=AdminUserDetail)
@@ -229,7 +256,7 @@ def change_plan(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.post("/users/{user_id}/trial", response_model=AdminUserDetail)
@@ -265,7 +292,7 @@ def grant_trial(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.patch("/users/{user_id}/trial", response_model=AdminUserDetail)
@@ -323,7 +350,7 @@ def update_trial(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.post("/users/{user_id}/credits", response_model=AdminUserDetail)
@@ -360,7 +387,7 @@ def adjust_credits(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.post("/users/{user_id}/suspend", response_model=AdminUserDetail)
@@ -395,7 +422,7 @@ def suspend_user(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.post("/users/{user_id}/reinstate", response_model=AdminUserDetail)
@@ -430,7 +457,7 @@ def reinstate_user(
             .scalars()
             .all()
         )
-        return _user_detail(user, events)
+        return _user_detail(user, events, _load_devices(s, user_id))
 
 
 @router.get("/users/{user_id}/events", response_model=AdminEventsResponse)

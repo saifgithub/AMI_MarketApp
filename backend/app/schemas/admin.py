@@ -66,6 +66,17 @@ class SubscriptionEventOut(BaseModel):
     created_at: datetime
 
 
+class AdminUserDevice(BaseModel):
+    """BL2 (AT:R33): one row of the user's device list."""
+
+    device_install_id: UUID
+    device_model: Optional[str] = None
+    os_version: Optional[str] = None
+    app_version: Optional[str] = None
+    first_seen_at: datetime
+    last_seen_at: datetime
+
+
 class AdminUserDetail(BaseModel):
     id: UUID
     email: Optional[str]
@@ -82,6 +93,10 @@ class AdminUserDetail(BaseModel):
     device_model: Optional[str] = None
     os_version: Optional[str] = None
     last_app_version: Optional[str] = None
+    # BL2 (AT:R33): per-install device rows. Empty list for legacy users
+    # not yet seen post-BL2; the BL2 backfill seeds one row per user with
+    # device_user_id, so most users have at least one row.
+    devices: list[AdminUserDevice] = Field(default_factory=list)
     suspended_at: Optional[datetime]
     trial_started_at: Optional[datetime]
     trial_expires_at: Optional[datetime]
