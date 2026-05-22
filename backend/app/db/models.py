@@ -333,6 +333,10 @@ class RoomRunRow(Base):
     status: Mapped[str] = mapped_column(String, default="running", nullable=False)
     error_message: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     duration_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # AT:R34 (eeeb866f): startup sweep auto-retries stuck runs once before
+    # giving up. retry_count tracks how many times the row has been
+    # re-spawned by _sweep_stuck_runs after a container restart.
+    retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class SimWatchlistRow(Base):

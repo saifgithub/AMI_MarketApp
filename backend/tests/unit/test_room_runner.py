@@ -592,9 +592,65 @@ def test_start_run_deduplicates_same_user_same_ticker():
     asyncio.run(_run())
 
 
-def test_startup_sweep_marks_abandoned_run_failed():
-    """Simulates a server restart: a stuck RUNNING row older than 30 min
-    must be marked FAILED when a new RoomRunner is initialised."""
+def test_startup_sweep_queues_first_stuck_run_for_retry():
+    """eeeb866f (AT:R34): a stuck RUNNING row with retry_count=0 must be
+    claimed for retry — bumped to retry_count=1, transcript cleared,
+    started_at refreshed, status STILL running, queued in
+    _pending_retry. NOT marked failed on the first restart."""
+    from datetime import timedelta
+    from app.db import get_session
+    from app.db.models import RoomRunRow
+
+    user_id = uuid4()
+    stale_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    run_id = uuid4()
+
+    runner = RoomRunner()  # init schema
+    with get_session() as s:
+        s.add(RoomRunRow(
+            id=run_id,
+            user_id=user_id,
+            ticker="STUCK",
+            triggered_at=stale_at,
+            started_at=stale_at,
+            mandate_version=1,
+            model_tier="mid",
+            rounds=1,
+            transcript=[{"agent_id": "fundamentals_analyst", "role": "agent", "content": "stale"}],
+            verdict=None,
+            credit_cost=8,
+            status="running",
+            retry_count=0,
+        ))
+
+    # New runner instance triggers the sweep
+    runner2 = RoomRunner()
+
+    # Row is claimed: status still running, retry_count bumped, transcript cleared
+    from sqlalchemy import select as _select
+    with get_session() as s:
+        row = s.execute(
+            _select(RoomRunRow).where(RoomRunRow.id == run_id)
+        ).scalar_one()
+        assert row.status == "running"
+        assert row.retry_count == 1
+        assert row.transcript == []
+        assert row.error_message is None
+        # started_at refreshed — normalize sqlite-test naive datetime to UTC
+        row_started = row.started_at
+        if row_started.tzinfo is None:
+            row_started = row_started.replace(tzinfo=timezone.utc)
+        assert row_started > stale_at
+
+    # And queued for resume
+    assert len(runner2._pending_retry) == 1
+    assert runner2._pending_retry[0].run_id == run_id
+
+
+def test_startup_sweep_marks_failed_after_max_retries():
+    """eeeb866f (AT:R34): a stuck RUNNING row that already retried once
+    (retry_count=1) gets marked FAILED on the next restart. Two deaths in
+    a row likely indicates a real bug, not a transient restart."""
     from datetime import timedelta
     from app.db import get_session
     from app.db.models import RoomRunRow
@@ -602,12 +658,12 @@ def test_startup_sweep_marks_abandoned_run_failed():
     user_id = uuid4()
     stale_at = datetime.now(timezone.utc) - timedelta(hours=2)
 
-    runner = RoomRunner()  # init schema
+    runner = RoomRunner()
     with get_session() as s:
         s.add(RoomRunRow(
             id=uuid4(),
             user_id=user_id,
-            ticker="STUCK",
+            ticker="DEAD",
             triggered_at=stale_at,
             started_at=stale_at,
             mandate_version=1,
@@ -617,14 +673,78 @@ def test_startup_sweep_marks_abandoned_run_failed():
             verdict=None,
             credit_cost=8,
             status="running",
+            retry_count=1,  # already retried once
         ))
 
-    # New runner instance triggers the sweep
     runner2 = RoomRunner()
     runs = runner2.list_runs_for_user(user_id, limit=10)
     assert len(runs) == 1
     assert runs[0].status == RoomStatus.FAILED.value
     assert "abandoned" in (runs[0].error_message or "")
+    assert "auto-retried 1 time" in (runs[0].error_message or "")
+    assert runner2._pending_retry == []
+
+
+def test_resume_pending_retries_respawns_and_completes():
+    """eeeb866f (AT:R34): end-to-end — a stuck row gets respawned by
+    resume_pending_retries() and completes with a verdict in the journal."""
+    from datetime import timedelta
+    from app.db import get_session
+    from app.db.models import RoomRunRow
+    from app.services.mandate_store import get_mandate_store
+    from app.services.journal_store import get_journal_store
+    from sqlalchemy import select as _select
+
+    user_id = uuid4()
+    stale_at = datetime.now(timezone.utc) - timedelta(hours=2)
+    run_id = uuid4()
+
+    # Seed the user's current mandate at version 1 so the respawn can
+    # fetch a snapshot for the run.
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    get_mandate_store().upsert(user_id, mandate)
+
+    runner = RoomRunner()
+    with get_session() as s:
+        s.add(RoomRunRow(
+            id=run_id,
+            user_id=user_id,
+            ticker="AAPL",
+            triggered_at=stale_at,
+            started_at=stale_at,
+            mandate_version=1,
+            model_tier="mid",
+            rounds=1,
+            transcript=[],
+            verdict=None,
+            credit_cost=8,
+            status="running",
+            retry_count=0,
+        ))
+
+    runner2 = RoomRunner()
+    assert len(runner2._pending_retry) == 1
+
+    async def _resume_and_wait():
+        await runner2.resume_pending_retries()
+        # Drain the SSE queue so the background _pump runs to completion.
+        async for _ in runner2.subscribe(run_id):
+            pass
+
+    asyncio.run(_resume_and_wait())
+
+    # Row finalised
+    with get_session() as s:
+        row = s.execute(
+            _select(RoomRunRow).where(RoomRunRow.id == run_id)
+        ).scalar_one()
+        assert row.status == RoomStatus.COMPLETED.value
+        assert row.verdict is not None
+        assert row.retry_count == 1  # bumped by sweep, never re-bumped
+
+    # Journal entry was written (the retry path replays on_complete)
+    entries, _total, _retention = get_journal_store().list_for_user(user_id)
+    assert any(e.reference_id == run_id for e in entries)
 
 
 def test_start_run_deduplicates_recently_completed_run():

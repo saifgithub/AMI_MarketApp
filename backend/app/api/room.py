@@ -44,7 +44,11 @@ from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.room import RoomRun, Verdict
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
-from app.services.room_runner import RoomRunner, get_room_runner
+from app.services.room_runner import (
+    RoomRunner,
+    build_journal_entry_for_run,
+    get_room_runner,
+)
 from app.api.dependencies import get_current_user
 from app.db.models import User
 
@@ -56,58 +60,11 @@ router = APIRouter(
 )
 
 
-def _build_journal_entry(run: RoomRun, user_id: UUID) -> JournalEntryCreate:
-    """Build a JournalEntryCreate from a finished (or failed) RoomRun.
-
-    Completed runs: title = "Room on {ticker} — APPROVE/REJECT"
-    Failed/incomplete runs: title = "Room on {ticker} — {status}", summary
-    describes how many agents completed and what error occurred (if any).
-    Exposed at module level so it can be unit-tested directly.
-    """
-    if run.verdict is not None:
-        title = f"Room on {run.ticker} — {run.verdict.action}"
-        summary = f"{run.verdict.action} — {run.verdict.reason}"
-    else:
-        status = run.status if isinstance(run.status, str) else run.status.value
-        agents_done = len(run.transcript)
-        error_detail = (
-            f" — {run.error_message[:80]}" if run.error_message else ""
-        )
-        title = f"Room on {run.ticker} — {status}"
-        summary = (
-            f"Run stopped after {agents_done} of 12 agents "
-            f"without reaching a verdict{error_detail}"
-        )
-    return JournalEntryCreate(
-        user_id=user_id,
-        entry_type=EntryType.ROOM_RUN,
-        reference_id=run.id,
-        title=title,
-        summary=summary[:240],
-        ticker=run.ticker,
-        agents_involved=[
-            m.agent_id if isinstance(m.agent_id, str) else m.agent_id.value
-            for m in run.transcript
-        ],
-        mandate_version=run.mandate_version,
-        tags=["room"],
-        outcome=Outcome.PENDING,
-        payload={
-            "verdict": (
-                run.verdict.model_dump(mode="json") if run.verdict else None
-            ),
-            "model_tier": run.model_tier,
-            "transcript": [
-                {
-                    "agent_id": (
-                        m.agent_id if isinstance(m.agent_id, str)
-                        else m.agent_id.value
-                    ),
-                    "content": m.content,
-                } for m in run.transcript
-            ],
-        },
-    )
+# _build_journal_entry moved to services/room_runner.py as
+# `build_journal_entry_for_run` so the runner's retry path (AT:R34,
+# eeeb866f) can re-fire the journal write after a container restart
+# without an upward import from services → api.
+_build_journal_entry = build_journal_entry_for_run
 
 
 class RoomStartRequest(BaseModel):

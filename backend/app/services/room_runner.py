@@ -47,14 +47,26 @@ from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import RoomRunRow
 from app.schemas import AgentId, AgentMessage, Mandate
+from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_live_fundamentals
+from app.services.journal_store import get_journal_store
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
+
+
+# ── Startup auto-retry policy (eeeb866f, AT:R34) ──────────────────────────
+#
+# When the api container restarts mid-run, the startup sweep (see
+# _sweep_stuck_runs) auto-retries the run from scratch instead of marking
+# it failed and forcing the user to manually resubmit. retry_count on the
+# row caps this at MAX_AUTO_RETRIES — a run that dies twice is likely a
+# real bug, not a transient restart, and gets surfaced as failed.
+MAX_AUTO_RETRIES = 1
 
 
 # ── Phase definition ──────────────────────────────────────────────────────
@@ -352,6 +364,16 @@ PLAN_TO_TIER: dict[Plan, str] = {
 }
 
 
+@dataclass(frozen=True)
+class _PendingRetry:
+    """Stuck-run row claimed by _sweep_stuck_runs for async respawn (eeeb866f)."""
+
+    run_id: UUID
+    user_id: UUID
+    ticker: str
+    mandate_version: int
+
+
 def _row_to_room_run(row: RoomRunRow) -> RoomRun:
     transcript = [AgentMessage.model_validate(m) for m in (row.transcript or [])]
     verdict = Verdict.model_validate(row.verdict) if row.verdict else None
@@ -432,6 +454,64 @@ def _checkpoint_run(run: RoomRun) -> None:
         )
 
 
+def build_journal_entry_for_run(run: RoomRun, user_id: UUID) -> JournalEntryCreate:
+    """Build a JournalEntryCreate from a finished (or failed) RoomRun.
+
+    Completed runs: title = "Room on {ticker} — APPROVE/REJECT"
+    Failed/incomplete runs: title = "Room on {ticker} — {status}", summary
+    describes how many agents completed and what error occurred (if any).
+
+    Lives here (rather than api/room.py) so the runner's startup auto-retry
+    path (AT:R34, eeeb866f) can re-fire the journal write after a container
+    restart without an upward import from services → api. api/room.py
+    re-exports as `_build_journal_entry` for back-compat.
+    """
+    if run.verdict is not None:
+        title = f"Room on {run.ticker} — {run.verdict.action}"
+        summary = f"{run.verdict.action} — {run.verdict.reason}"
+    else:
+        status = run.status if isinstance(run.status, str) else run.status.value
+        agents_done = len(run.transcript)
+        error_detail = (
+            f" — {run.error_message[:80]}" if run.error_message else ""
+        )
+        title = f"Room on {run.ticker} — {status}"
+        summary = (
+            f"Run stopped after {agents_done} of 12 agents "
+            f"without reaching a verdict{error_detail}"
+        )
+    return JournalEntryCreate(
+        user_id=user_id,
+        entry_type=EntryType.ROOM_RUN,
+        reference_id=run.id,
+        title=title,
+        summary=summary[:240],
+        ticker=run.ticker,
+        agents_involved=[
+            m.agent_id if isinstance(m.agent_id, str) else m.agent_id.value
+            for m in run.transcript
+        ],
+        mandate_version=run.mandate_version,
+        tags=["room"],
+        outcome=Outcome.PENDING,
+        payload={
+            "verdict": (
+                run.verdict.model_dump(mode="json") if run.verdict else None
+            ),
+            "model_tier": run.model_tier,
+            "transcript": [
+                {
+                    "agent_id": (
+                        m.agent_id if isinstance(m.agent_id, str)
+                        else m.agent_id.value
+                    ),
+                    "content": m.content,
+                } for m in run.transcript
+            ],
+        },
+    )
+
+
 class RoomRunner:
     """Orchestrates a Convene the Room session, streams events, persists runs."""
 
@@ -448,6 +528,11 @@ class RoomRunner:
         # _pump finally. Avoids a race where the DB INSERT hasn't fired yet
         # but a second request arrives for the same user+ticker.
         self._active_by_key: dict[tuple[UUID, str], UUID] = {}
+        # Rows claimed by _sweep_stuck_runs for auto-retry on next boot
+        # (AT:R34, eeeb866f). Drained by resume_pending_retries() which
+        # runs from the FastAPI lifespan — splitting sync claim from async
+        # respawn so __init__ doesn't need a live event loop.
+        self._pending_retry: list[_PendingRetry] = []
         self._sweep_stuck_runs()
 
     def get_run(self, run_id: UUID) -> RoomRun | None:
@@ -468,30 +553,178 @@ class RoomRunner:
             return [_row_to_room_run(r) for r in rows]
 
     def _sweep_stuck_runs(self) -> None:
-        """On startup, mark room runs that were left RUNNING as FAILED.
+        """On startup, claim stuck RUNNING rows for auto-retry or mark FAILED.
 
         A run left in status=running means the server was restarted (or the
         process was killed) while the run was in progress. These rows will
-        never progress on their own; mark them failed so the client can
-        distinguish a dead run from an active one and choose to resubmit.
+        never progress on their own.
+
+        AT:R34 (eeeb866f) policy:
+          * retry_count < MAX_AUTO_RETRIES: bump retry_count, clear the
+            transcript + verdict, refresh started_at, queue for respawn
+            via resume_pending_retries(). Status stays "running" — the row
+            is now claimed for re-execution; dedup tier 1 will attach any
+            client resubmits to the live re-run.
+          * retry_count >= MAX_AUTO_RETRIES: a run that has already died
+            once on retry is likely a real bug, not a transient restart.
+            Mark failed so the client surfaces it and the user can
+            manually resubmit (or report).
+
+        Pure DB work — no event loop needed, runs from __init__. The
+        respawn happens later in resume_pending_retries() from the
+        lifespan startup hook.
         """
         cutoff = datetime.now(timezone.utc) - timedelta(
             minutes=settings.room_dedup_running_minutes
         )
         try:
+            now = datetime.now(timezone.utc)
             with get_session() as s:
                 rows = s.execute(
                     select(RoomRunRow)
                     .where(RoomRunRow.status == "running")
                     .where(RoomRunRow.started_at < cutoff)
                 ).scalars().all()
+                retried = 0
+                failed = 0
                 for row in rows:
-                    row.status = "failed"
-                    row.error_message = "abandoned: server restarted while run was in progress"
+                    if row.retry_count < MAX_AUTO_RETRIES:
+                        row.retry_count = row.retry_count + 1
+                        row.started_at = now
+                        row.transcript = []
+                        row.verdict = None
+                        row.error_message = None
+                        self._pending_retry.append(_PendingRetry(
+                            run_id=row.id,
+                            user_id=row.user_id,
+                            ticker=row.ticker,
+                            mandate_version=row.mandate_version,
+                        ))
+                        retried += 1
+                    else:
+                        row.status = "failed"
+                        row.error_message = (
+                            f"abandoned: auto-retried {row.retry_count} time(s), gave up"
+                        )
+                        failed += 1
                 if rows:
-                    logger.info("room_startup_sweep", abandoned=len(rows))
+                    logger.info(
+                        "room_startup_sweep",
+                        queued_for_retry=retried,
+                        marked_failed=failed,
+                    )
         except Exception as exc:
             logger.warning("room_startup_sweep_failed", error=str(exc)[:200])
+
+    async def resume_pending_retries(self) -> None:
+        """Spawn background tasks for runs claimed by _sweep_stuck_runs.
+
+        Called once on FastAPI startup (lifespan hook) — splits the sync
+        claim done in __init__ from the async respawn so __init__ never
+        needs a running event loop.
+
+        Each respawn re-runs the entire room from scratch (transcript was
+        cleared by the sweep) using the original mandate version + ticker.
+        Mid-run resumption from the checkpointed transcript is Tier 2
+        (10-12 days per the bug); a full retry is cheaper to ship and the
+        user-visible effect is the same: the verdict eventually lands in
+        the journal regardless of whether the SSE consumer is still around.
+        """
+        pending = list(self._pending_retry)
+        self._pending_retry.clear()
+        for p in pending:
+            try:
+                await self._respawn_run_from_row(p)
+            except Exception as exc:
+                logger.warning(
+                    "room_startup_retry_spawn_failed",
+                    run_id=str(p.run_id),
+                    error=str(exc)[:200],
+                )
+
+    async def _respawn_run_from_row(self, p: _PendingRetry) -> None:
+        """Re-spawn a stuck run from its DB state (AT:R34, eeeb866f).
+
+        Reuses the existing run_id so client-side references (mobile's
+        cached run_id, journal reference_id, dedup attach) keep working.
+        Loads the mandate snapshot from the version originally used.
+        """
+        from app.services.mandate_store import get_mandate_store
+
+        mandate = get_mandate_store().get_version(p.user_id, p.mandate_version)
+        if mandate is None:
+            logger.warning(
+                "room_startup_retry_no_mandate",
+                run_id=str(p.run_id),
+                user_id=str(p.user_id),
+                mandate_version=p.mandate_version,
+            )
+            with get_session() as s:
+                row = s.execute(
+                    select(RoomRunRow).where(RoomRunRow.id == p.run_id)
+                ).scalar_one_or_none()
+                if row is not None:
+                    row.status = "failed"
+                    row.error_message = (
+                        "auto_retry_failed: mandate version no longer exists"
+                    )
+            return
+
+        key = (p.user_id, p.ticker.upper())
+        q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
+        self._active_queues[p.run_id] = q
+        self._active_by_key[key] = p.run_id
+
+        async def _pump() -> None:
+            try:
+                async for ev in self.run(
+                    run_id=p.run_id,
+                    user_id=p.user_id,
+                    ticker=p.ticker,
+                    mandate=mandate,
+                ):
+                    await q.put(ev)
+            except Exception as exc:
+                await q.put(RoomEvent(
+                    kind="error", run_id=p.run_id, text=str(exc)[:300],
+                ))
+            finally:
+                await q.put(None)
+                self._active_queues.pop(p.run_id, None)
+                self._active_by_key.pop(key, None)
+                # Re-fire the journal write the original request's
+                # on_complete would have done — the closure is gone after
+                # restart, so we replay it here. Same 3× retry shape as
+                # api/room.py:_finalise_to_journal.
+                run = self.get_run(p.run_id)
+                if run is None:
+                    return
+                for attempt in range(3):
+                    try:
+                        get_journal_store().append(
+                            build_journal_entry_for_run(run, p.user_id)
+                        )
+                        logger.info(
+                            "room_startup_retry_journal_written",
+                            run_id=str(p.run_id),
+                        )
+                        return
+                    except Exception as exc:
+                        if attempt == 2:
+                            logger.error(
+                                "room_startup_retry_journal_failed",
+                                run_id=str(p.run_id),
+                                error=str(exc)[:200],
+                            )
+                        else:
+                            await asyncio.sleep(2 ** attempt)
+
+        asyncio.create_task(_pump())
+        logger.info(
+            "room_startup_retry_respawned",
+            run_id=str(p.run_id),
+            ticker=p.ticker,
+        )
 
     def _find_active_run(self, user_id: UUID, ticker: str) -> UUID | None:
         """Return run_id of an in-flight run for this user+ticker.

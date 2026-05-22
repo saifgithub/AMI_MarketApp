@@ -28,8 +28,10 @@ from app.api.watchlist import router as watchlist_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
+from app.core.logging import logger
 from app.middleware.http_audit import HTTPAuditMiddleware
 from app.services.audit import trim_audit_tables
+from app.services.room_runner import get_room_runner
 
 configure_logging()
 # Sentry must initialise BEFORE the FastAPI app is constructed so the
@@ -63,6 +65,16 @@ async def _nightly_audit_trim() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # AT:R34 (eeeb866f): respawn any room runs the previous boot left
+    # in status=running. The sweep itself ran in get_room_runner()'s
+    # __init__ (claiming rows + bumping retry_count); this drains the
+    # claimed list and spawns the retry background tasks now that we
+    # have a live event loop.
+    try:
+        await get_room_runner().resume_pending_retries()
+    except Exception:
+        logger.exception("room_resume_pending_retries_failed")
+
     task = asyncio.create_task(_nightly_audit_trim())
     try:
         yield
