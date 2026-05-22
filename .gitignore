@@ -86,3 +86,6 @@ backend/.alembic-placeholder.db
 
 # TestFlight upload artifacts (Xcode Organizer export) — local-only
 Apple_Store/
+
+# Local Claude tooling memory (sqlite) — host-side, not project state
+.deliveryos/
