@@ -142,6 +142,14 @@ def _user_detail(
     events: list[SubscriptionEventRow],
     devices: list[UserDeviceRow] | None = None,
 ) -> AdminUserDetail:
+    # BL11 (AT:R33): compute effective_plan from persisted plan + trial.
+    from app.schemas.mandate import Plan
+    from app.services.entitlements import effective_plan, is_trial_active
+    try:
+        _persisted = Plan(row.plan)
+    except ValueError:
+        _persisted = Plan.FLOOR_PASS
+    _effective = effective_plan(_persisted, row.trial_expires_at)
     return AdminUserDetail(
         id=row.id,
         email=row.email,
@@ -168,6 +176,8 @@ def _user_detail(
             )
             for d in (devices or [])
         ],
+        effective_plan=_effective.value,
+        trial_active=is_trial_active(row.trial_expires_at),
         suspended_at=row.suspended_at,
         trial_started_at=row.trial_started_at,
         trial_expires_at=row.trial_expires_at,

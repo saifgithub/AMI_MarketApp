@@ -46,6 +46,7 @@ from app.services.concierge_prompts import (
 )
 from app.services.fundamentals import build_live_data_block, extract_tickers
 from app.services.llm_gateway import ChatMessage, LLMGateway
+from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 
 
@@ -144,7 +145,8 @@ class AgentRunner:
                 if block:
                     system_prompt = system_prompt + "\n\n" + block
 
-            plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
+            # BL11 (AT:R33): effective_plan downgrades expired trials.
+            plan = effective_plan_for_user(session.user_id)
             tier = pick_tier(plan, agent_id)
             messages: list[ChatMessage] = [
                 ChatMessage(role=h.role, content=h.content) for h in history
@@ -180,7 +182,12 @@ class AgentRunner:
         history: list[ChatMsg],
         user_message: str,
     ) -> AsyncIterator[str]:
-        plan = Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan
+        # BL11 (AT:R33): effective_plan downgrades expired trials. Falls
+        # back to mandate.plan for pre-claim anon users (no user row yet).
+        plan = (
+            effective_plan_for_user(user_id) if user_id is not None
+            else (Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan)
+        )
         journal, unlocked, lessons = load_concierge_context(user_id=user_id, plan=plan)
 
         if not self._llm.has_real_provider():

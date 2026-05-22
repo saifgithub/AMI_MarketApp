@@ -97,6 +97,11 @@ class AdminUserDetail(BaseModel):
     # not yet seen post-BL2; the BL2 backfill seeds one row per user with
     # device_user_id, so most users have at least one row.
     devices: list[AdminUserDevice] = Field(default_factory=list)
+    # BL11 (AT:R33): effective plan after trial-expiry downgrade. Differs
+    # from `plan` only when trial_expires_at is in the past — surfaces
+    # cleanly when a tester's 7-day window has lapsed.
+    effective_plan: str
+    trial_active: bool
     suspended_at: Optional[datetime]
     trial_started_at: Optional[datetime]
     trial_expires_at: Optional[datetime]

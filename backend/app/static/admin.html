@@ -427,9 +427,9 @@ function renderUser(u) {
           ${u.plan === 'trial_trader' ? '<span class="badge trial">TRIAL</span>' : ''}
         </div>
         <div class="stats">
-          <div class="stat"><div class="k">plan</div><div class="v">${u.plan}</div></div>
+          <div class="stat"><div class="k">plan</div><div class="v">${u.plan}${u.effective_plan && u.effective_plan !== u.plan ? ` → <span style="color:#ff9d4a">${u.effective_plan}</span>` : ''}</div></div>
           <div class="stat"><div class="k">credits</div><div class="v">${u.credit_balance}</div></div>
-          <div class="stat"><div class="k">trial exp</div><div class="v dim">${fmtRel(u.trial_expires_at)}</div></div>
+          <div class="stat"><div class="k">trial</div><div class="v ${u.trial_active ? '' : 'dim'}">${u.trial_active ? 'ACTIVE' : (u.trial_expires_at ? 'EXPIRED' : '—')}${u.trial_expires_at ? ` · ${fmtRel(u.trial_expires_at)}` : ''}</div></div>
         </div>
         ${(u.device_model || u.os_version || u.last_app_version) ? `
         <div class="stats">

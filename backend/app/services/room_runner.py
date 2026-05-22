@@ -53,6 +53,7 @@ from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_live_fundamentals
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
+from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 
 
@@ -695,7 +696,8 @@ class RoomRunner:
         """
         run_id = run_id or uuid4()
         now = datetime.now(timezone.utc)
-        plan = mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
+        # BL11 (AT:R33): effective_plan downgrades expired trials.
+        plan = effective_plan_for_user(user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
         credit_cost = 25 if tier == "premium" else 8
 
@@ -952,7 +954,8 @@ async def _speak_one_agent(
     Appends the final text to `run.transcript` before yielding `agent_done`
     so the next agent sees this contribution in its prompt.
     """
-    plan = ctx.mandate.plan if isinstance(ctx.mandate.plan, Plan) else Plan(ctx.mandate.plan)
+    # BL11 (AT:R33): effective_plan downgrades expired trials.
+    plan = effective_plan_for_user(ctx.user_id)
     tier = pick_tier(plan, agent_id)
 
     text: str
@@ -1034,7 +1037,8 @@ async def _stream_pm_narration(
     regardless of upstream LLM chunk cadence. Tests don't care about
     pacing; production keeps a uniform feel.
     """
-    plan = ctx.mandate.plan if isinstance(ctx.mandate.plan, Plan) else Plan(ctx.mandate.plan)
+    # BL11 (AT:R33): effective_plan downgrades expired trials.
+    plan = effective_plan_for_user(ctx.user_id)
     tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
     # Pass ctx.user_id so build_agent_prompt picks up the user's active
     # Brief overlay for the PM (was user_id=None — AT:R27 bugfix). Note:

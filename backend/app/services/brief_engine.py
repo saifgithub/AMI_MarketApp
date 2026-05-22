@@ -54,6 +54,7 @@ from app.schemas.one_on_one import ChatMsg
 from app.services.agent_prompts import load_base_prompt
 from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier
 from app.services.overlay_store import OverlayStore, get_overlay_store
+from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 
 
@@ -250,7 +251,8 @@ class BriefEngine:
         )
         system_prompt = base + active_block + "\n\n" + BRIEF_MODE_PREFIX
 
-        plan = _plan_from_mandate(mandate)
+        # BL11 (AT:R33): effective_plan downgrades expired trials to floor_pass.
+        plan = effective_plan_for_user(session.user_id)
         tier = pick_tier(plan, agent_id)
         messages: list[ChatMessage] = [
             ChatMessage(role=h.role, content=h.content) for h in history
@@ -304,7 +306,7 @@ class BriefEngine:
         text = await self._stream_to_string(
             system_prompt=PROPOSE_SYSTEM_PROMPT,
             messages=[ChatMessage(role=h.role, content=h.content) for h in history],
-            tier=pick_tier(_plan_from_mandate(mandate), agent_id),
+            tier=pick_tier(effective_plan_for_user(session.user_id), agent_id),
             locale=mandate.locale,
         )
         parsed = _parse_proposal_json(text)
