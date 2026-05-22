@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-22 (end of AT:R34 — `eeeb866f` close). **Bug closed end-to-end**: Room run survives api-alpha container restart. Startup sweep now auto-retries stuck runs once (claims the row, bumps a new `retry_count`, clears transcript, re-spawns the background task with the original run_id) instead of marking-failed-and-forcing-resubmit. Avoided the Celery+Redis path the bug originally scoped (3-4 days) by reusing the existing `asyncio.create_task` pattern. **+2 work commits + 1 handover wrap = 3 new commits. 424 tests passing (was 422 — +2 retry tests). 2 Alpha promotes (`-8` sweep+retry, `-9` mandate-fallback). Bug list now empty (was 1 open).** Verified live: seeded a synthetic stuck row on alpha, restarted container, watched `room_startup_sweep → room_startup_retry_respawned → room_completed APPROVE → room_startup_retry_journal_written` fire end-to-end with a journal entry landing. Also confirmed BL1+BL2 working on both phones via direct DB inspection (iPhone 17 `iPhone18,1` + iPhone 13 mini `iPhone14,4` both signed in with same Apple ID → 2 devices under user `8f1e288a`). AT:R33 wrap is now in [history_R.md](history_R.md).
+**Last updated:** 2026-05-22 (end of AT:R35 — i18n Tier 1 lands). **Tier 1 ARB translations done via on-prem vLLM Gemma 4 31B** (LAN-direct, bypassing CF Tunnel). 311/311 AR keys + 310/311 MS keys filled — was 302/302 with 65 AR + 79 MS identical-to-EN. **Total ~7 minutes wall time for 162 missing keys.** Also: diagnosed why both iPhones see different progress despite same Apple ID (sign-out clears local identity → new anon user; both phones are currently on different orphan anon accounts, not on `8f1e288a`). **+1 work commit + 1 wrap = 2 new commits. Backend tests still 424 (no backend changes). 0 Alpha promotes (no backend changes). Bug list still 0.** Tier 2 (glossary + ai_coach + daily_challenges) + Tier 3 (lessons) scripts shipped but NOT run — first attempt hit vLLM saturation under 4 concurrent jobs, Saiful paused. AT:R34 wrap is now in [history_R.md](history_R.md).
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,15 +15,17 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **291 commits** (3 new this session — sweep+retry, mandate fallback, handover wrap), no remote yet |
-| Latest work commit | `3f4022a` — fix(room): retry path falls back to resolve_mandate when version row missing (AT:R34). |
-| Alpha tags | **2 promotes this session.** Latest `alpha-2026-05-22-9` (mandate fallback). Earlier today: `alpha-2026-05-22-8` (sweep+retry). |
-| Backend tests | **424 passed, 0 failed** (was 422 — +2 retry tests on top of an existing sweep test that was refactored to match the new claim-vs-fail policy). |
-| Mobile pubspec | **`0.1.0+27`** — unchanged this session (no mobile changes). Uploaded to App Store Connect AT:R33; carries BL1 + BL2 (device_info_plus pod + device_install_id). |
-| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys**. Unchanged. |
+| Git state | Clean working tree, **294 commits** (2 new this session — i18n pipeline + handover wrap), no remote yet |
+| Latest work commit | `17b482c` — feat(i18n): on-prem vLLM translation pipeline + Tier 1 ARB AR/MS (AT:R35). |
+| Alpha tags | **0 new promotes this session.** Still `alpha-2026-05-22-9` (AT:R34, mandate fallback). |
+| Backend tests | **424 passed, 0 failed** — no backend changes this session. |
+| Mobile pubspec | **`0.1.0+27`** — unchanged this session (no mobile changes). |
+| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys**. **Tier 1 ARB (UI strings) now translated to AR (311/311) + MS (310/311) via on-prem Gemma 4 31B.** Tier 2 + Tier 3 content remain EN-only. |
 
 ```
 $ git log --oneline | head -12
+17b482c feat(i18n): on-prem vLLM translation pipeline + Tier 1 ARB AR/MS (AT:R35)
+f646706 chore(handover): wrap AT:R34
 3f4022a fix(room): retry path falls back to resolve_mandate when version row missing (AT:R34)
 8510436 fix(room): eeeb866f — startup auto-retry for runs killed by container restart (AT:R34)
 1625e80 chore(handover): wrap AT:R33
@@ -34,8 +36,6 @@ d3cb451 feat(mandate): BL5 — mandate history API (AT:R33)
 2d8a0d8 feat(auth): BL2 — user_devices multi-device tracking (AT:R33)
 efe6b79 feat(mandate): BL12 — GET /v1/mandate/{user_id}/audit (AT:R33)
 9e1ce93 feat(auth): BL1 — device + build context on /v1/auth/anon (AT:R33)
-e5fbfc6 feat(daily_challenge): BL10 — POST /v1/daily_challenge/{cid}/attempt (AT:R33)
-7e5aa9a feat(sim): BL9 — POST /v1/sim/preview pre-flight endpoint (AT:R33)
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -105,72 +105,75 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R34)
+## What just landed (this session — AT:R35)
 
-**`eeeb866f` close.** The last open bug at session start was the deferred-pre-beta resilience item: "Room run survives api-alpha container restart." Closed end-to-end, verified live. **2 work commits + 1 wrap = 3 new commits. 424 tests passing (was 422 — +2 retry tests; existing sweep test refactored). 2 Alpha promotes (`-8`, `-9`). Bug list now empty.**
+**i18n Tier 1 done; Tiers 2 & 3 prepped but not yet run.** Translation infrastructure now ships LAN-direct to vLLM on `192.168.20.74:8000` via the OpenAI-compatible chat-completions API. Also diagnosed the "same Apple ID, different progress on each phone" question (it's a sign-out side-effect, not a sync bug). **1 work commit + 1 wrap = 2 new commits. 293 → 294 commits total. No backend changes; no Alpha promotes; tests still 424; bug list still 0.**
 
 ### How the session ran
 
-Saiful opened with `/start-fresh R` (session name `AT:R34`). Plan-mode survey landed with the standard carry-over list — 1 open bug + 15 deferred items. He first asked how to test BL1+BL2 from the prior session's TestFlight `+27`; we walked through it via direct DB inspection (no need for admin UI / no token forging): both phones (`iPhone18,1` iPhone 17, `iPhone14,4` iPhone 13 mini) signed in with same Apple ID land 2 device rows under `8f1e288a` ✅. Flagged a brief loading-loop on iPhone 17 first launch of `+27` (recovered, no backend errors). Briefly considered Option-B synthetic test for BL11 effective_plan — auto-mode classifier denied bearer-forging (correctly: forging an HMAC for a real user is auth bypass on the wire). Saiful chose "don't weaken security" and moved on to `eeeb866f`.
+Saiful opened with `/start-fresh R` (session name `AT:R35`). Plan-mode survey landed with the 15 deferred carry-overs from AT:R34 — no open bugs.
 
-Designed the fix as simplified Tier 1 — reuse the existing `asyncio.create_task` pattern instead of the bug's filed scope of Celery+Redis (3-4 days). Insight: the runner already checkpoints transcript after each agent, and the startup sweep already runs on boot. The missing piece was making the sweep **claim+respawn** instead of mark-fail. Shipped as commit `8510436` with a new `retry_count` column (migration `e7a4c5b00010`) capping auto-retries at 1. Promoted as `alpha-2026-05-22-8`.
+**First topic — the multi-phone observation.** Saiful: "I have the same Apple ID on two phones but different progress." Pulled the DB and found three relevant accounts: the Apple account `8f1e288a` (Siti Ahmad, 5 journal entries from earlier testing), a magic-link account `b747faf3` (saiful@atmmarketintel.com, from 3am today), and a fresh anon `0e0a9860` (iPhone 13 mini's current identity). Both phones HAVE been linked to `8f1e288a` in `user_devices` via earlier Apple Sign-In — but `signOut()` calls `DeviceUser.clear()` which wipes the persisted `(user_id, token)` pair, and the next `bootstrap()` mints a fresh anon user. After signing out, neither phone is on `8f1e288a` anymore — they're on different orphan anon accounts. Filed as: post-sign-out UX should prompt "sign back in to continue progress" rather than silently starting fresh. This is adjacent to BL16 (account merge) but cheaper to ship.
 
-First live test surfaced a real follow-up bug: the retry path called `get_mandate_store().get_version(user_id, mandate_version)` to rehydrate the mandate, but default-hydrated mandates (typical for users who never touched Brief Your Agent) aren't persisted to the `mandates` table — they're produced inline by `hydrate_brief_mandate`. So every default-mandate retry would have died with "auto_retry_failed: mandate version no longer exists" instead of actually retrying. Fixed in commit `3f4022a` with a `resolve_mandate` fallback (current stored OR default-hydrated). Promoted as `alpha-2026-05-22-9`.
+**Second topic — i18n prep.** Mapped the translation surface:
+- Tier 1: 312 EN ARB keys, 10 missing in AR/MS + 65 AR / 79 MS identical-to-EN (tour walkthrough strings shipped post last translation run).
+- Tier 2: 188 glossary terms, 280 AI coach Q&A, 183 daily challenges — all EN only.
+- Tier 3: 270 lessons × ~283K words — all EN only.
+- Agent prompts stay EN by design (LLM responds in `mandate.locale` at runtime).
 
-End-to-end live verification: seeded a synthetic stuck row (`aaaaaaaa-...`) with `started_at = now - 2h`, restarted api-alpha, watched logs fire `room_startup_sweep queued_for_retry=1` → `room_startup_retry_mandate_fallback` (the second-fix branch firing as designed for a user with no stored mandate) → `room_startup_retry_respawned` → all 12 agents speak (~6 min) → `room_completed action=APPROVE` → `room_startup_retry_journal_written`. Row landed at `status=completed, retry_count=1`, journal entry created. Cleanup deleted the synthetic row + journal entry, then UPDATE on `bug_reports` flipped the status to `closed` with `assigned_branch='AT:R34 commit 3f4022a'`.
+**Tier 1 ran successfully.** First attempt went through `scripts/translate_arb.py` which defaults to the public CF Tunnel route (designed for worktree-sandbox portability). Cloudflare's ~100s proxy timeout chewed up the 40-key batches at 90+s each, returning 502 Bad Gateway. Saiful: "This is a crazy route". Wrote a sister script `scripts/translate_arb_lan.py` that hits vLLM's OpenAI-compatible `/v1/chat/completions` directly on the LAN. Ran in 7 minutes for 74 AR + 80 MS keys, zero timeouts. Final state: 311/311 AR keys filled, 310/311 MS keys filled (one MS placeholder dropped by Gemma → falls back to EN).
 
-Network blipped mid-session: Mac↔melehost LAN dropped briefly between the two promotes. Public hostname stayed up via the Cloudflare Tunnel (outbound connection from melehost holds even when LAN routing fails); rsync resumed cleanly when LAN came back. Not a project bug — flagged for the next session as a watch item.
+**Tier 2 + Tier 3 hit a saturation wall.** Wrote two more LAN-direct scripts (`translate_content_lan.py` for JSON-based content, `translate_lessons_lan.py` for MDX with Quiz/Term/ChatWith/Animation component parsing). Kicked all three in parallel (glossary, ai_coach, daily_challenges) plus a 2-lesson smoke test. vLLM saturated: every batch in every job timed out at 300s. The smoke-test lessons produced English-with-corrupted-frontmatter output. Saiful asked to pause; all jobs killed; partial outputs deleted; vLLM verified healthy (3s for small request after the kill drain). The lesson: vLLM continuous batching helps but doesn't scale a single H100-class GPU to 4 large concurrent generation streams without per-stream latency blowing past the 300s timeout.
 
 ### Commits in order
 
 | Hash | What it does |
 |---|---|
-| `8510436` | **eeeb866f — startup auto-retry for runs killed by container restart.** Migration `e7a4c5b00010` adds `room_runs.retry_count INTEGER NOT NULL DEFAULT 0`. Constant `MAX_AUTO_RETRIES = 1` in `room_runner.py`. Rewrote `_sweep_stuck_runs` to claim stuck `running` rows (bump retry_count, clear transcript+verdict, refresh started_at, queue on `self._pending_retry`) instead of marking them failed. Added `async def resume_pending_retries()` to drain the claim list and spawn retry tasks now that the event loop is live. Added `_respawn_run_from_row` private helper that uses the existing run_id, re-derives mandate from the version, replays the journal-write that the original request's `on_complete` would have done. Wired into FastAPI lifespan in `main.py`. Moved `_build_journal_entry` from `api/room.py` to `services/room_runner.py` as `build_journal_entry_for_run` (with back-compat re-export) so the retry path doesn't need an upward import. **+2 backend tests (sweep queues first stuck run, sweep fails after max retries); existing sweep test refactored to seed retry_count=1 since the policy now requires already-retried-once for the fail path.** |
-| `3f4022a` | **Retry path falls back to `resolve_mandate` when version row missing.** Follow-up to `8510436` discovered during the first live promote: `get_version(user_id, 1)` returns None for any user who never customised their mandate (default-hydrated mandates are produced inline, never persisted). Without this fallback every such retry would mark itself failed with "mandate version no longer exists". Now falls back to `resolve_mandate(user_id, None)` which returns the current stored OR default-hydrated mandate. Logs `room_startup_retry_mandate_fallback` so we can spot drift cases later. |
+| `17b482c` | **i18n Tier 1: LAN-direct vLLM translation pipeline + AR/MS ARB.** Three new scripts under `scripts/translate_*_lan.py` — sister to the existing `translate_arb.py` (which is kept for worktree-sandbox portability). The LAN scripts call `http://192.168.20.74:8000/v1/chat/completions` directly with `model=ami-llm`. Tier 1 ARB outputs: `mobile/lib/l10n/app_ar.arb` 311/311, `app_ms.arb` 310/311. Also: ignore `.deliveryos/` (host-side sqlite tool memory). |
 
-Plus the `chore(handover): wrap AT:R34` commit.
+Plus the `chore(handover): wrap AT:R35` commit.
 
 ### What changed in the codebase
 
-**Backend** (`backend/app/`):
-- `db/models.py` — `RoomRunRow.retry_count` column (commit `8510436`)
-- `services/room_runner.py` — `MAX_AUTO_RETRIES` constant; `_PendingRetry` dataclass; `build_journal_entry_for_run` (moved from `api/room.py`); rewrote `_sweep_stuck_runs` to claim-or-fail; new `resume_pending_retries` + `_respawn_run_from_row`; journal_store / journal-schema imports added (commits `8510436`, `3f4022a`)
-- `api/room.py` — imports `build_journal_entry_for_run` from `services/room_runner.py`; back-compat alias `_build_journal_entry = build_journal_entry_for_run` so existing tests still resolve (commit `8510436`)
-- `main.py` — lifespan startup hook now awaits `get_room_runner().resume_pending_retries()`; logger import fixed at top (was used in `_nightly_audit_trim` without being imported — latent bug) (commit `8510436`)
+- `scripts/translate_arb_lan.py` (NEW) — Flutter ARB strings translator, OpenAI-compatible client.
+- `scripts/translate_content_lan.py` (NEW) — glossary + ai_coach + daily_challenges translator, config-driven per content type. NOT YET RUN against the real corpora.
+- `scripts/translate_lessons_lan.py` (NEW) — MDX lesson translator: frontmatter-aware, swaps MDX components for sentinels before translating prose, translates Quiz string attrs as structured JSON, reassembles. NOT YET RUN.
+- `mobile/lib/l10n/app_ar.arb` — 311 keys filled (was 238 after stripping 64 identical-to-EN).
+- `mobile/lib/l10n/app_ms.arb` — 310 keys filled (was 224 after stripping 78 identical-to-EN).
+- `.gitignore` — `.deliveryos/` added.
 
-**Migration** — `e7a4c5b00010_room_runs_retry_count.py` (room_runs.retry_count column).
+### Carry-overs for AT:R36
 
-**Tests** — 422 → 424 passing (+2 retry tests; `test_startup_sweep_marks_abandoned_run_failed` renamed/refactored to `test_startup_sweep_queues_first_stuck_run_for_retry` + `test_startup_sweep_marks_failed_after_max_retries` + new `test_resume_pending_retries_respawns_and_completes`).
+Top-priority (new this session):
 
-**Bug DB** — `bug_reports.eeeb866f` updated: `status='closed'`, `assigned_branch='AT:R34 commit 3f4022a'`. Open bug count: 1 → 0.
+1. **Re-run Tier 2 sequentially.** vLLM can't take 4 concurrent large generation streams without each hitting timeout. Run `scripts/translate_content_lan.py --type glossary` alone, wait, then `--type ai_coach`, then `--type daily_challenges`. Glossary alone took ~50 min when last attempted (got killed mid-run). Total Tier 2 wall time sequentially: ~5 hours. Could maybe parallelize 2 jobs with deeper investigation — but 1-at-a-time is the safe path.
+2. **Re-think Tier 3 (lessons) approach.** Sequential lessons = ~14 hours per locale, 28 hours total. Options: (a) per-lesson concurrency (still hits saturation), (b) bigger title/quiz batches across many lessons (reduces call count), (c) accept 28h over multiple sessions, (d) defer to v1.0 launch. Saiful's call.
+3. **Backend loader changes** for `ai_coach_service.py` + `daily_challenge_service.py` to glob `<locale>/*.json` subdirectories. Glossary already supports locale natively via `terms.<locale>.json`. Without this change, Tier 2 outputs in `content/{ai_coach,daily_challenges}/{ar,ms}/` are dead weight on disk.
+4. **Sign-out UX improvement.** When the user signs out, don't silently start a new anon session — show a "sign back in to continue" prompt. Adjacent to but cheaper than BL16 account-merge.
 
-### Carry-overs for AT:R35
+Carrying from AT:R34 (unchanged):
 
-The carry-over list shortened by one (`eeeb866f` is gone). Order shuffled to reflect what's now top-priority:
-
-1. **TF `+27` cold-launch loading loop on iPhone 17 — watch item.** Recovered without intervention this session and didn't repro on iPhone 13 mini. If it shows up again, the next session should capture: how long until it cleared, repro rate, whether airplane-mode / Wi-Fi-only matters. Backend logs show 200s for every `auth/anon` from `+27`, so the hang is client-side (likely `device_info_plus` or `shared_preferences` first-call on iOS 26.4.2).
-2. **External TestFlight launch.** Needs Beta App Description from Saiful + ~24h Apple review. `+27` is uploaded and verified across both phones. This is the alpha→beta gate.
-3. **B-tier adversarial-audit findings** — rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter; feedback upload streaming.
-4. **BL16** — Real account merge UX (filed AT:R32, design-first).
-5. **BL6** — Mandate resolve flow (Liquidate/Postpone/Override actions). Pre-req: drift detection (MVP scope). The audit half landed AT:R33 as BL12.
-6. **BL11 — push + in-app trial-end UX.** Entitlement gate landed AT:R33; mobile modal + OneSignal push still pending (Beta).
-7. **BL4** — Arabic → Gemini routing. Blocked on `GoogleProvider` class in llm_gateway.
-8. **BL7** — Agent metadata routes. Mobile workaround sufficient until v1.0 Android port.
-9. **BL8** — Room run cancel + replay. Cancel needs Postgres-side signalling (1.5 sessions, hard); replay is sugar.
-10. **A6b — Google Sign-In on Android.** Blocked on Google Cloud Console setup.
-11. **Animation production** — 15 `<Animation>` MDX tags still render `AmiHexPlaceholder`.
-12. **A29 light-mode refactor** — v1.0 work.
-13. **`claude/*` sibling worktrees on disk** — Saiful decision (keep or delete). Carries from AT:R32.
-14. **Credit consumption** — `credits_consumed` event type exists but no app code emits it.
-15. **`OnboardingSession.claimed_user_id` Flutter wiring** — backend accepts `onboarding_session_id` since AT:R32 BL13 but Flutter doesn't send it yet. Update when something consumes the binding.
+5. **TF `+27` cold-launch loading loop on iPhone 17 — watch item.** Not observed again this session (no device testing).
+6. **External TestFlight launch.** Beta App Description from Saiful + ~24h Apple review. Closes the alpha→beta gate.
+7. **B-tier adversarial-audit findings** — rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter; feedback upload streaming.
+8. **BL16** — Real account merge UX. Connect this with #4 (sign-out UX) — both touch the same auth surface.
+9. **BL6** — Mandate resolve flow (Liquidate/Postpone/Override actions).
+10. **BL11 — push + in-app trial-end UX.**
+11. **BL4** — Arabic → Gemini routing. Now MORE relevant since Tier 1 AR is shipping in the next app build.
+12. **BL7** — Agent metadata routes.
+13. **BL8** — Room run cancel + replay.
+14. **A6b — Google Sign-In on Android.**
+15. **Animation production** — 15 `<Animation>` MDX tags.
+16. **A29 light-mode refactor.**
+17. **`claude/*` sibling worktrees on disk** — keep-or-delete decision.
+18. **Credit consumption** — `credits_consumed` event type exists, no app code emits it.
+19. **`OnboardingSession.claimed_user_id` Flutter wiring.**
 
 ### Watch items (not tasks)
 
-- **Mid-run resumption stays deferred (Tier 2, 10-12 days).** AT:R34's fix retries the **whole run from scratch** — the checkpointed transcript is wiped on claim. If we ever want LangGraph-style continue-from-where-it-died, that's a separate piece of work. Tradeoff: AT:R34's retry pays for the LLM tokens twice when it fires, same cost as a user-initiated resubmit.
-- **Multi-container claim race not handled.** If we ever run more than one api-alpha pod, two pods could try to retry the same stuck row simultaneously. Mitigated for now by single-container deployment. Future fix: DB-level claim with `UPDATE ... WHERE status='running' RETURNING`. Comment in `_sweep_stuck_runs` flags it.
-- **Test data: 3 users with same human, still none linked.** `8f1e288a` Apple, `b747faf3` magic-link, `d9e81e45` orphan challenge. AT:R32 Phase 1 adopt-by-email logic prevents future forks but doesn't retroactively merge existing rows. Hand-merge later or accept as test artifacts.
-- **Backfill seeded 24 user_devices rows** on melehost during the BL2 migration. Those rows use the existing `device_user_id` as the install_id approximation — fine for legacy users, but the new `+27` mobile generates a fresh `device_install_id` UUID on first launch rather than reuse the device_user_id one.
-- **LAN connectivity to melehost was briefly flaky mid-session.** Two SSH timeouts during the AT:R34 promotes; recovered on retry. Public hostname stayed up the entire time (Cloudflare Tunnel outbound holds). Not a project bug; worth watching if it becomes a pattern.
+- **vLLM saturation pattern.** A single H100-class GPU can comfortably serve 1-2 concurrent generation streams of long-form translation (1K+ output tokens), but 4 streams blow per-stream latency past the 300s client timeout. If parallelism is needed, raise the script's `DEFAULT_TIMEOUT_S` AND cap concurrency at 2. Better: run sequentially.
+- **`scripts/translate_arb.py` (production path) still uses CF Tunnel.** Kept intentionally for worktree-sandbox portability. The LAN sister script is the right path when running from the Mac directly.
+- **One MS string falls back to EN** (`tourJournal2Body`) because Gemma dropped a placeholder. To fix: `backend/.venv/bin/python scripts/translate_arb_lan.py --overwrite --locales ms` — but it would re-translate the other 310 keys too. Better: a one-key flag, not in scope this session.
 
 ---
 
@@ -182,7 +185,7 @@ The carry-over list shortened by one (`eeeb866f` is gone). Order shuffled to ref
 
 The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on. Wait for direction — no bug to forcibly tackle.
 
-Session name to use: **AT:R35** (this is handover #34).
+Session name to use: **AT:R36** (this is handover #35).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -190,12 +193,12 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 Quick-win candidates for next session (in priority order):
 
-1. **External TestFlight launch.** Beta App Description from Saiful + ~24h Apple review. Closes the alpha→beta gate. `+27` is uploaded and verified across both iPhones. This is the next clear alpha→beta lever now that `eeeb866f` is closed.
-2. **iPhone 17 cold-launch loading loop watch.** Repro attempts + log capture on real device — likely client-side first-call slow path, not backend. Quick if it doesn't repro; depth-of-fix grows if it does.
-3. **B-tier audit work** — pick one: rate limiting on `/auth/anon`, magic-link attempt counter, feedback upload streaming.
-4. **`claude/*` sibling worktrees** — quick decision (keep or delete). Carries from AT:R32.
-5. **BL16 design** — start the account-merge UX wireframes if Saiful wants to think product before code.
-6. **BL6 / BL11-push / BL4 / BL7 / BL8** — the remaining BL backlog; each is a real session's worth of work.
+1. **Tier 2 sequential translation run** — kick `glossary` first (smallest, ~50 min), then `ai_coach`, then `daily_challenges`. Single foreground job; vLLM single-stream is reliable.
+2. **Tier 3 (lessons) approach call** — decide on parallelism + batching strategy before committing 28 hours of GPU.
+3. **Backend loader changes** for `ai_coach_service.py` + `daily_challenge_service.py` to glob `<locale>/*.json` subdirectories. Small, isolated diff; unlocks Tier 2 outputs once they exist.
+4. **External TestFlight launch.** Beta App Description from Saiful + ~24h Apple review.
+5. **Sign-out UX** (BL16-adjacent) — prompt "sign back in to continue progress" instead of silently minting a new anon user.
+6. **B-tier audit work / BL6 / BL11-push / BL4 / BL7 / BL8** — remaining backlog.
 
 ---
 

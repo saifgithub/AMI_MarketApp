@@ -2,8 +2,9 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
-Where we are right now (as of 2026-05-22, end of AT:R34):
-- 291 commits on `main`. 424 backend unit tests pass. **Zero open bugs.**
+Where we are right now (as of 2026-05-22, end of AT:R35):
+- 294 commits on `main`. 424 backend unit tests pass. **Zero open bugs.**
+- **AT:R35 i18n Tier 1 landed.** Translation pipeline ships LAN-direct to on-prem vLLM Gemma 4 31B (`192.168.20.74:8000`) via OpenAI-compatible chat-completions; bypasses CF Tunnel that the legacy `scripts/translate_arb.py` uses. Three new scripts in `scripts/translate_*_lan.py`. `mobile/lib/l10n/app_ar.arb` now 311/311 keys filled, `app_ms.arb` 310/311 (one MS placeholder dropped → EN fallback). Tier 2 (glossary/ai_coach/daily_challenges) + Tier 3 (lessons) scripts shipped but not yet run — first parallel attempt saturated vLLM; carry-over to run sequentially in AT:R36.
 - Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel. AT:R34 added container-restart resilience to Room runs: startup sweep auto-retries stuck `running` rows once before marking failed (migration `e7a4c5b00010` adds `room_runs.retry_count`; commits `8510436` + `3f4022a`). Closed the last open bug `eeeb866f`.
 - TestFlight has build `0.1.0+27` uploaded 2026-05-22 (AT:R33). **Verified live on both iPhone 17 + iPhone 13 mini with same Apple ID** (AT:R34): 2 device rows under one user via `device_install_id` re-keying on Apple Sign-In. Carries the BL1 + BL2 mobile slice: device_info_plus + device_install_id sent to `/v1/auth/anon` on every bootstrap. Plus the AT:R32 backend (account-linking Phase 1, Resend HTTP, BL13/BL14/BL15) + AT:R33 backend (BL9 sim preview, BL10 daily-challenge attempt, BL1 device columns + admin surface, BL12 mandate-audit, BL2 user_devices + re-keying, BL11 effective_plan, BL5 mandate history).
 - Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
