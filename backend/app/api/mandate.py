@@ -1,17 +1,22 @@
 """Mandate read + patch endpoints.
 
-GET   /v1/mandate/{user_id}        Read current mandate (returns a default if none stored).
-PATCH /v1/mandate/{user_id}        Shallow-merge updates. compliance.* fields merge by key.
-                                    Bumps version, emits a mandate_edit journal entry.
-GET   /v1/mandate/{user_id}/audit  BL12: audit current holdings against the current mandate.
+GET   /v1/mandate/{user_id}                       Read current mandate (returns a default if none stored).
+PATCH /v1/mandate/{user_id}                       Shallow-merge updates. compliance.* fields merge by key.
+                                                   Bumps version, emits a mandate_edit journal entry.
+GET   /v1/mandate/{user_id}/audit                 BL12: audit current holdings against the current mandate.
+GET   /v1/mandate/{user_id}/versions              BL5: list every persisted mandate version, newest first.
+GET   /v1/mandate/{user_id}/versions/{v}          BL5: fetch a specific historical version's snapshot.
+POST  /v1/mandate/{user_id}/rollback/{v}          BL5: create a new version mirroring version v.
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 
 from app.agents.safety_floor import (
     HoldingsAuditResult,
@@ -92,6 +97,118 @@ async def patch_mandate(
         pass
 
     return updated
+
+
+class MandateVersionSummary(BaseModel):
+    """BL5 (AT:R33): one row in the mandate history list."""
+
+    version: int
+    is_current: bool
+    created_at: datetime
+    change_summary: str | None = None  # from the matching mandate_edit journal entry
+
+
+class MandateVersionsResponse(BaseModel):
+    versions: list[MandateVersionSummary]
+
+
+@router.get("/{user_id}/versions", response_model=MandateVersionsResponse)
+async def list_mandate_versions(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    store: MandateStore = Depends(get_mandate_store),
+) -> MandateVersionsResponse:
+    """BL5: list every persisted mandate version for this user, newest first.
+
+    Decorates each version with the matching `mandate_edit` journal entry's
+    summary so the history UI can render plain-English change descriptions
+    inline. Versions without a journal entry (e.g. very early rows pre-AT:R20)
+    show null change_summary.
+    """
+    _own(current_user, user_id)
+    versions = store.list_versions(user_id)
+    # Pull all mandate_edit journal entries in one shot, then index by
+    # the version number embedded in their title ("Mandate edited → vN").
+    journal_entries, _, _ = get_journal_store().list_for_user(
+        user_id, entry_type=EntryType.MANDATE_EDIT, limit=200,
+    )
+    summary_by_version: dict[int, str] = {}
+    for e in journal_entries:
+        title = e.title or ""
+        # title format: "Mandate edited → vN"
+        if "→ v" in title:
+            try:
+                v = int(title.split("→ v", 1)[1].strip())
+                summary_by_version[v] = e.summary or ""
+            except ValueError:
+                continue
+    return MandateVersionsResponse(versions=[
+        MandateVersionSummary(
+            version=v["version"],
+            is_current=v["is_current"],
+            created_at=v["created_at"],
+            change_summary=summary_by_version.get(v["version"]),
+        )
+        for v in versions
+    ])
+
+
+@router.get("/{user_id}/versions/{version}", response_model=Mandate)
+async def get_mandate_version(
+    user_id: UUID,
+    version: int,
+    current_user: User = Depends(get_current_user),
+    store: MandateStore = Depends(get_mandate_store),
+) -> Mandate:
+    """BL5: fetch a specific historical mandate version's full snapshot."""
+    _own(current_user, user_id)
+    m = store.get_version(user_id, version)
+    if m is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"mandate version {version} not found for this user",
+        )
+    return m
+
+
+@router.post("/{user_id}/rollback/{version}", response_model=Mandate)
+async def rollback_mandate(
+    user_id: UUID,
+    version: int,
+    current_user: User = Depends(get_current_user),
+    store: MandateStore = Depends(get_mandate_store),
+) -> Mandate:
+    """BL5: rollback to a previous mandate version.
+
+    Forward-only: creates a NEW current version whose snapshot mirrors the
+    target. Old versions stay intact. Writes a mandate_edit journal entry
+    tagged with `rollback` so the history view shows it clearly.
+    """
+    _own(current_user, user_id)
+    before = store.get_or_default(user_id)
+    new_current = store.rollback_to(user_id, version)
+    if new_current is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"mandate version {version} not found for this user",
+        )
+    try:
+        get_journal_store().append(JournalEntryCreate(
+            user_id=user_id,
+            entry_type=EntryType.MANDATE_EDIT,
+            reference_id=None,
+            title=f"Mandate edited → v{new_current.version}",
+            summary=f"Rolled back to v{version}.",
+            tags=["mandate", "rollback"],
+            payload={
+                "before": before.model_dump(mode="json"),
+                "after": new_current.model_dump(mode="json"),
+                "rolled_back_to_version": version,
+            },
+        ))
+    except Exception:  # pragma: no cover
+        pass
+    return new_current
 
 
 @router.get("/{user_id}/audit", response_model=HoldingsAuditResult)

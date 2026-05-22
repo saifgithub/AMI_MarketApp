@@ -102,6 +102,55 @@ class MandateStore:
         new = current.model_copy(update=updates)
         return self.upsert(user_id, new)
 
+    def list_versions(self, user_id: UUID) -> list[dict]:
+        """BL5 (AT:R33): all mandate rows for a user, newest first.
+
+        Returns plain dicts with version + is_current + created_at — the
+        route layer decorates each with the corresponding `mandate_edit`
+        journal entry's change summary.
+        """
+        with get_session() as s:
+            rows = s.execute(
+                select(MandateRow)
+                .where(MandateRow.user_id == user_id)
+                .order_by(MandateRow.version.desc())
+            ).scalars().all()
+            return [
+                {
+                    "version": r.version,
+                    "is_current": bool(r.is_current),
+                    "created_at": r.created_at,
+                }
+                for r in rows
+            ]
+
+    def get_version(self, user_id: UUID, version: int) -> Mandate | None:
+        """BL5: fetch a specific historical mandate version. Returns None
+        if the (user_id, version) tuple doesn't exist."""
+        with get_session() as s:
+            row = s.execute(
+                select(MandateRow).where(
+                    MandateRow.user_id == user_id,
+                    MandateRow.version == version,
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            return Mandate.model_validate(row.snapshot)
+
+    def rollback_to(self, user_id: UUID, version: int) -> Mandate | None:
+        """BL5: rollback to a previous version. Creates a NEW mandate row
+        (with bumped version) whose snapshot mirrors the target version.
+
+        Old versions stay intact — rollback is forward-only history.
+        Returns None if the target version doesn't exist; otherwise the
+        new current Mandate.
+        """
+        target = self.get_version(user_id, version)
+        if target is None:
+            return None
+        return self.upsert(user_id, target)
+
     def clear(self) -> None:
         with get_session() as s:
             s.query(MandateRow).delete()
