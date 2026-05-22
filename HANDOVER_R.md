@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-21 (end of AT:R32 — quick-wins close-out session). **Major closes:** SMTP swap → Resend HTTP API (live on Alpha; magic-link delivered end-to-end to Gmail). **`build_testflight.sh` rewrite chip** landed — staged Flutter + xcodebuild + exportArchive with `-allowProvisioningUpdates`. **TestFlight `+25` + `+26`** shipped (Saiful's hands; `+26` via the rewritten script). **Account-linking Phase 1** — `_claim_or_create` + `sign_in_with_apple` now adopt existing-identity users by email instead of forking parallel rows. **CFBundleDisplayName casing** (`Ami Trade` → `AMI Trade`). **BL13, BL14, BL15, L-1 residual** all closed. **375 tests passing** (was 367 — +8 across account-linking, BL13, L-1). **3 Alpha promotes**: `alpha-2026-05-22-1` (Resend), `alpha-2026-05-22-2` (account-linking), `alpha-2026-05-22-3` (BL13/L-1/etc). AT:R31 wrap is now in [history_R.md](history_R.md).
+**Last updated:** 2026-05-22 (end of AT:R33 — BL-closeout sprint). **Closed 7 BL items**: BL9 sim preview, BL10 daily-challenge attempt, BL1 device info on /auth/anon, BL12 mandate audit on hard edits, BL2 user_devices multi-device tracking, BL11 trial-end entitlement gate, BL5 mandate history API. **Plus** reconciled the last two untested doc trees (`tradingagent_integration.md`, `flutter_implementation.md`) against actual codebase. **422 tests passing** (was 375 — +47 across the seven BLs). **4 Alpha promotes**: `alpha-2026-05-22-4` (BL9/10/1/12), `alpha-2026-05-22-5` (BL2 + migration), `alpha-2026-05-22-6` (BL11), `alpha-2026-05-22-7` (BL5). **TestFlight `+27` shipped** by Saiful — carries BL1 + BL2 mobile (device_info_plus + device_install_id). AT:R32 wrap is now in [history_R.md](history_R.md).
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,27 +15,27 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **277 commits** (10 new this session — 9 AT:R32 work commits + 1 pubspec bump from the rewritten `build_testflight.sh` shipping `+26`), no remote yet |
-| Latest work commit | `62b7c6d` — feat(auth): BL13 — bind OnboardingSession.claimed_user_id on claim (AT:R32). |
-| Alpha tags | **3 promotes this session.** Latest `alpha-2026-05-22-3` (BL13 + L-1 + BL14 + BL15). Earlier today: `alpha-2026-05-22-1` (Resend swap), `alpha-2026-05-22-2` (account-linking Phase 1). |
-| Backend tests | **375 passed, 0 failed** (was 367 — +4 account-linking Phase 1 + +2 BL13 + +2 misc; L-1 rewrote one test in place). |
-| Mobile pubspec | **`0.1.0+26`** (was `+25` — bumped automatically by the rewritten `scripts/build_testflight.sh` when Saiful shipped `+26` to TestFlight). Both `+25` and `+26` are uploaded to App Store Connect; processing complete. **Note**: `+26` carries the AT:R32 backend + the CFBundleDisplayName casing fix; `+25` was shipped before that casing landed. |
+| Git state | Clean working tree, **288 commits** (11 new this session — 1 docs reconciliation + 7 BL features + 1 pubspec bump + 1 Podfile.lock + 1 handover wrap), no remote yet |
+| Latest work commit | `d3cb451` — feat(mandate): BL5 — mandate history API (AT:R33). |
+| Alpha tags | **4 promotes this session.** Latest `alpha-2026-05-22-7` (BL5). Earlier today: `alpha-2026-05-22-4` (BL9/10/1/12), `-5` (BL2 + migration), `-6` (BL11). |
+| Backend tests | **422 passed, 0 failed** (was 375 — +47 across the seven BLs: +3 BL9 +5 BL10 +4 BL1 +8 BL12 +5 BL2 +12 BL11 +10 BL5). |
+| Mobile pubspec | **`0.1.0+27`** (was `+26` — bumped by `scripts/build_testflight.sh` when Saiful shipped `+27`). Uploaded to App Store Connect. Carries BL1 + BL2 mobile changes (device_info_plus pod + device_install_id) — first build where Saiful's two phones will surface as two devices under one user post-Apple-claim. |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **312 i18n keys**. Unchanged. |
 
 ```
 $ git log --oneline | head -12
+19eb5d7 chore(mobile): Podfile.lock — pull device_info_plus pod (BL1)
+ecea7bb chore(mobile): bump build 0.1.0+26 → 0.1.0+27 for TestFlight
+d3cb451 feat(mandate): BL5 — mandate history API (AT:R33)
+95e2337 feat(entitlements): BL11 — trial-end gate downgrades expired trials (AT:R33)
+2d8a0d8 feat(auth): BL2 — user_devices multi-device tracking (AT:R33)
+efe6b79 feat(mandate): BL12 — GET /v1/mandate/{user_id}/audit (AT:R33)
+9e1ce93 feat(auth): BL1 — device + build context on /v1/auth/anon (AT:R33)
+e5fbfc6 feat(daily_challenge): BL10 — POST /v1/daily_challenge/{cid}/attempt (AT:R33)
+7e5aa9a feat(sim): BL9 — POST /v1/sim/preview pre-flight endpoint (AT:R33)
+eaa12ce docs(tech): reconcile tradingagent_integration + flutter_implementation (AT:R33)
+011832e chore(handover): wrap AT:R32
 62b7c6d feat(auth): BL13 — bind OnboardingSession.claimed_user_id on claim
-98edbd0 refactor(auth): L-1 — remove OneOnOneStartRequest.user_id (audit A3 pattern)
-7b44110 fix(mobile): BL14 — parse Brief proposedAt/startedAt timestamps
-e238f12 chore(schema): BL15 — delete dormant AgentActivation Pydantic class
-1166cad feat(auth): account linking Phase 1 — adopt existing identity on claim
-35a5181 build(testflight): rewrite as staged xcodebuild + add ExportOptions.plist
-05ae2c3 chore(mobile): bump build 0.1.0+25 → 0.1.0+26 for TestFlight
-f57d1a1 fix(mobile): CFBundleDisplayName casing — Ami Trade → AMI Trade
-232e8c5 feat(email): swap SMTP for Resend HTTP API (SMTP_HOST ISP-blocked on melehost)
-549799e chore(handover): wrap AT:R31
-47c08a4 chore(schema+plan): drop dead User.deleted_at + file BL14/BL15 from post-audit sweep (AT:R31)
-19a0617 revert(scripts): drop -allowProvisioningUpdates pass-through — flutter build ipa doesn't accept '--' xcodebuild args (AT:R31)
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -48,10 +48,10 @@ f57d1a1 fix(mobile): CFBundleDisplayName casing — Ami Trade → AMI Trade
 | Health from outside the LAN | `curl https://api-alpha.agenticmarketintel.ai/v1/health` |
 | Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
-| Routes | `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26), `/v1/admin/*` (9 routes — AT:R27, see "Admin back-office" below), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/brief/*` (was `/v1/coach/*` — renamed AT:R27; legacy `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*`, `/v1/room/*`, `/v1/sim/*`, `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`). Plus a public HTML page at `/admin` (no auth required; the page itself asks for the `ADMIN_SECRET` bearer on first load + stores in localStorage). |
-| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **375 passed** (was 367; AT:R32 added +8: 4 account-linking Phase 1 cases in `test_auth_service.py`, 2 BL13 binding cases + 1 L-1-rewritten case in `test_auth_phase1_5_audit_fixes.py`). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Routes | `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26), `/v1/admin/*` (9 routes — AT:R27, see "Admin back-office" below), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/brief/*` (was `/v1/coach/*` — renamed AT:R27; legacy `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*` (now incl. **`/{u}/audit`** — BL12, **`/{u}/versions`** + **`/{u}/versions/{v}`** + **`POST /{u}/rollback/{v}`** — BL5, all AT:R33), `/v1/room/*`, `/v1/sim/*` (now incl. **`POST /sim/preview`** — BL9, AT:R33), `/v1/daily_challenge/*` (now incl. **`POST /{cid}/attempt`** — BL10, AT:R33), `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`). Plus a public HTML page at `/admin` (no auth required; the page itself asks for the `ADMIN_SECRET` bearer on first load + stores in localStorage). |
+| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **422 passed** (was 375; AT:R33 added +47 across the seven BLs landed this session). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
 | Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` + `ADMIN_SECRET=<64-hex>` (AT:R27, admin back-office bearer) + `SMTP_{HOST,PORT,USER,PASSWORD,FROM}` (5 vars, AT:R26 — now dormant) + **`RESEND_API_KEY=re_<…>`** (AT:R32, primary outbound mail route). Canonical at `infra/alpha.env` on Mac, gitignored; shipped via `scp` in `/promote-to-alpha` step 4. Without `SECRET_KEY` the backend refuses to start when env != local. **Email transport**: `email_service` prefers Resend (HTTP API, port 443 — bypasses melehost's ISP block on outbound 25/587) when `RESEND_API_KEY` is set; falls back to SMTP if `SMTP_HOST` is configured; falls back to no-op otherwise. Verified live: magic-link delivered to Gmail end-to-end. |
-| Auth | Phase 1.5 + Phase 3 + Phase 4 enforced. Route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. **Apple Sign-In Phase 3 (AT:R29):** `/v1/auth/apple` now lives in every env (no more 503 gate). `OIDCVerifier` in `app/services/oidc_verifier.py` fetches Apple's JWKS, RSA-verifies the identity token, validates `iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, `exp`. On first auth: persists `email` + `full_name` (→ `users.display_name`). On subsequent auths or magic-link priors: preserves existing email/name (never overwritten). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}`. **AT:R31 D-039 trial activation (BL3):** `_claim_or_create()` (magic-link) and `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guarded by `trial_started_at is None` so admin-granted trials are preserved. Downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). **AT:R32 account-linking Phase 1:** `_claim_or_create()` now does email-lookup-FIRST (adopt existing identity), then user_id-fallback (promote anon). `sign_in_with_apple()` gained an email fallback between apple_sub and user_id lookups — magic-link-first + Apple-later (with same email) now attaches `apple_id` to the existing row instead of forking. Existing-row's email is never mutated by re-verify. Pre-claim anon rows are left orphan (ephemeral). Real merge UX deferred to BL16. **AT:R32 BL13 binding:** `/v1/auth/magic_link/verify` + `/v1/auth/apple` accept optional `onboarding_session_id`; route looks up `OnboardingSession` in `session_store` and stamps `claimed_user_id`. Both routes are now async. **AT:R32 L-1 cleanup:** `OneOnOneStartRequest.user_id` removed — `/v1/agents/one_on_one/start` sources user from Bearer only (audit A3 pattern, finally consistent). **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>`. Audit finding A4 CLOSED. |
+| Auth | Phase 1.5 + Phase 3 + Phase 4 enforced. Route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. **Apple Sign-In Phase 3 (AT:R29):** `/v1/auth/apple` now lives in every env (no more 503 gate). `OIDCVerifier` in `app/services/oidc_verifier.py` fetches Apple's JWKS, RSA-verifies the identity token, validates `iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, `exp`. On first auth: persists `email` + `full_name` (→ `users.display_name`). On subsequent auths or magic-link priors: preserves existing email/name (never overwritten). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}`. **AT:R31 D-039 trial activation (BL3):** `_claim_or_create()` (magic-link) and `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guarded by `trial_started_at is None` so admin-granted trials are preserved. Downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). **AT:R32 account-linking Phase 1:** `_claim_or_create()` now does email-lookup-FIRST (adopt existing identity), then user_id-fallback (promote anon). `sign_in_with_apple()` gained an email fallback between apple_sub and user_id lookups — magic-link-first + Apple-later (with same email) now attaches `apple_id` to the existing row instead of forking. Existing-row's email is never mutated by re-verify. Pre-claim anon rows are left orphan (ephemeral). Real merge UX deferred to BL16. **AT:R32 BL13 binding:** `/v1/auth/magic_link/verify` + `/v1/auth/apple` accept optional `onboarding_session_id`; route looks up `OnboardingSession` in `session_store` and stamps `claimed_user_id`. Both routes are now async. **AT:R32 L-1 cleanup:** `OneOnOneStartRequest.user_id` removed — `/v1/agents/one_on_one/start` sources user from Bearer only (audit A3 pattern, finally consistent). **AT:R33 BL1 device context:** `/v1/auth/anon` accepts optional `device_model`, `os_version`, `app_version`; backend persists onto `users` (refreshed on every bootstrap). **AT:R33 BL2 user_devices:** `/v1/auth/anon` also accepts optional `device_install_id` (mobile-generated UUID, never overwritten by claim). Backend upserts a `user_devices` row keyed by install_id; on claim adoption (`_claim_or_create` + `sign_in_with_apple`), the pre-claim anon's devices re-key to the adopting user so two phones on one Apple ID surface under one user. **AT:R33 BL11 entitlement gate:** `effective_plan(plan, trial_expires_at)` is now resolved at every `pick_tier()` callsite (brief_engine, agent_runner, room_runner) — when a trial lapses, LLM routing automatically drops to cheap-tier without admin intervention. **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>`. Audit finding A4 CLOSED. |
 | Room env knobs | `ROOM_DEDUP_RUNNING_MINUTES=30` (in-flight dedup + startup-sweep cutoff) · `ROOM_DEDUP_COMPLETED_HOURS=24` (return prior verdict same day; design doc default was 5 days — we start tighter). Set completed_hours=0 to disable cached-run dedup. |
 | Push code to it | [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) — rsync + recreate + smoke. No GitHub remote yet. |
 
@@ -77,7 +77,7 @@ Co-resident on melehost: **`api-website`** service (port 8001, builds from `./we
 | Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) |
 | Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29), `auth_challenges`, `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `alembic_version`. Latest migration on melehost: **`b3f9d2a80007`** (`users_display_name` — AT:R29, adds the `display_name` column for OIDC name persistence). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
+Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29; `device_model`, `os_version`, `last_app_version` — AT:R33 BL1), `auth_challenges`, `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs`, `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), **`user_devices`** (AT:R33 BL2 — per-install rows keyed by device_install_id, backfilled 24 rows from existing users.device_user_id), `alembic_version`. Latest migration on melehost: **`d5f2a3b00009`** (`user_devices` — AT:R33 BL2). Prior in chain: `c4e8f1a90008` (`users_device_info` — AT:R33 BL1), `b3f9d2a80007` (`users_display_name` — AT:R29). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
 
 ### LLM gateway
 
@@ -106,88 +106,92 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R32)
+## What just landed (this session — AT:R33)
 
-**Quick-wins close-out session.** Tackled the entire AT:R31 carry-over chip list end-to-end. SMTP unblocked (Resend HTTP API), TestFlight pipeline rewritten (eliminates manual Xcode intervention), CFBundleDisplayName casing, account-linking Phase 1 (the multi-device fragmentation bug Saiful found mid-session got designed + tested + shipped), BL13/BL14/BL15/L-1 all closed. **9 AT:R32 work commits + 1 pubspec bump = 10 new commits. 375 tests passing (was 367). 3 Alpha promotes. 2 TestFlight builds shipped (`+25`, `+26`).**
+**BL-closeout sprint.** Closed 7 BL items end-to-end + reconciled the last two untested doc trees. Every change shipped to Alpha; mobile-side changes (BL1 + BL2) are in TestFlight `+27` (uploaded by Saiful). **11 new commits this session. 422 tests passing (was 375 — +47). 4 Alpha promotes (`-4`, `-5`, `-6`, `-7`). 1 TestFlight build (`+27`).**
 
 ### How the session ran
 
-Saiful opened with `/start-fresh R` (this is AT:R32 = handover #32). I surfaced the carry-over list; he framed the session as "quick-wins close-out". First half: SMTP via Resend → magic-link verified end-to-end → `/promote-to-alpha` (carrying BL3 trial wiring from AT:R31 too) → CFBundleDisplayName casing. Mid-session he ran `scripts/build_testflight.sh --no-bump` to ship `+25` (uploaded successfully on the original script). Then we clicked the `build_testflight.sh` rewrite chip and shipped `+26` via the new staged pipeline. Saiful tested the magic-link flow on `+26` and noticed he'd ended up with three user rows for the same human (one Apple, two magic-link, different emails) — we designed + implemented + tested + promoted **account-linking Phase 1** (adopt-existing-identity-by-email) right there. Wrapped with a four-item batch: BL15 → BL14 → L-1 → BL13.
+Saiful opened with `/start-fresh R`. First task: docs reconciliation — two parallel Explore agents audited `tradingagent_integration.md` + `flutter_implementation.md` against actual code, surfaced ~12 stale claims and ~5 phantom widgets/dirs; rewrote both in place (commit `eaa12ce`). Then he said "build all that's ready to ship" — kicked off a tight BL closeout batch: BL9 → BL10 → BL1 → BL12 → /promote-to-alpha (`-4`). Then BL2 ("I have 2 phones") with a careful design for `device_install_id` separate from `device_user_id` → migration + re-keying on claim adoption + admin device list → `-5`. Then BL11 entitlement gate (real alpha-needle item: trials weren't actually downgrading anyone) → `-6`. Then BL5 history API (Saiful overruled the "needs UI mockup" deferral) → `-7`. Saiful pushed TF `+27` himself, then asked to wrap.
 
 ### Commits in order
 
 | Hash | What it does |
 |---|---|
-| `232e8c5` | **SMTP swap → Resend HTTP API.** `backend/app/services/email_service.py` now prefers Resend (port 443, no ISP block) when `RESEND_API_KEY` is set; falls back to SMTP if `SMTP_HOST` is configured; falls back to no-op otherwise. `infra/alpha.env` got the API key. No new dependencies (uses `httpx` already in tree). Tests: `test_email_service.py` covers Resend success + failure paths. **Closes the External Beta SMTP blocker.** |
-| `f57d1a1` | **CFBundleDisplayName casing.** `Ami Trade` → `AMI Trade` in `mobile/ios/Runner/Info.plist`. Brand convention is all-caps AMI. Visible on next TestFlight build. |
-| `05ae2c3` | **pubspec `+25 → +26` bump.** Auto-committed by the rewritten `scripts/build_testflight.sh` when Saiful shipped `+26`. |
-| `35a5181` | **`build_testflight.sh` rewrite + `ios/ExportOptions.plist`.** Closes the spawned-task chip from AT:R31. Splits the prior `flutter build ipa` one-shot into 4 stages: (1) `flutter build ios --release --no-codesign --dart-define=...` (framework only), (2) `xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release archive -allowProvisioningUpdates -authenticationKey*` (signs + auto-refreshes provisioning profile), (3) `xcodebuild -exportArchive -exportOptionsPlist ios/ExportOptions.plist` (App Store IPA), (4) `xcrun altool --upload-app`. The `-allowProvisioningUpdates` + `-authenticationKey*` flags finally land on xcodebuild where they apply — eliminates manual Xcode intervention on TestFlight uploads. Verified end-to-end via `+26` ship. |
-| `1166cad` | **Account-linking Phase 1.** Resolves the 3-rows-per-human bug Saiful hit on `+26`. `_claim_or_create()` now tries email-lookup FIRST, falls back to fresh-anon user_id only when no identity match. `sign_in_with_apple()` gained an email-fallback between `apple_id` lookup and user_id fallback — magic-link-first + Apple-later (same email) attaches `apple_id` to the existing row instead of forking. Existing rows keep their original email (no mutation via re-verify). **4 new tests** in `test_auth_service.py` (369 → 373). Pre-claim anon rows orphaned by adopt are left as-is — real merge UX + conflict resolution deferred to **BL16**. |
-| `e238f12` | **BL15 — delete dormant `AgentActivation` Pydantic class.** `can_use_now()` was never called, timestamp fields never written. Real activation lives in `lessons_service.py` via `AgentActivationRecord`. Dropped from `app/schemas/agents.py` + the re-export in `app/schemas/__init__.py`. Trimmed unused `UUID` import as side-effect. |
-| `7b44110` | **BL14 — Mobile parses Brief `proposed_at` + `started_at`.** Added nullable `DateTime?` fields to `BriefProposal` + `BriefSession` Dart models. No UI consumer today; available for future audit-trail / replay / relative-time chip without a backend deploy. |
-| `98edbd0` | **L-1 — remove `OneOnOneStartRequest.user_id`.** Audit A3 pattern, finally consistent. `/v1/agents/one_on_one/start` sources user from Bearer (`current_user.id`) exclusively; the `_own_body` check + the `req.user_id is None` mandate-defaults branch are unreachable + deleted. Flutter `startOneOnOne` no longer sends the field; `DeviceUser.getOrCreate()` call removed from `one_on_one_providers.dart`. |
-| `62b7c6d` | **BL13 — bind `OnboardingSession.claimed_user_id` on claim.** Both `/v1/auth/magic_link/verify` and `/v1/auth/apple` accept optional `onboarding_session_id`; route looks up the matching session in `session_store` and stamps `claimed_user_id`. Routes converted to async (binding step awaits `session_store`). Backwards-compatible — old clients omit the field, binding silently skips. Enables cohort analysis, GDPR-clean deletion, onboarding replay. Bundles the L-1 test rewrite (same test file). **+2 tests** (373 → 375). |
+| `eaa12ce` | **Docs reconciliation** — `tradingagent_integration.md` + `flutter_implementation.md`. Last two untested doc trees. Two parallel Explore agents audited each against the current code; ~12 stale claims fixed (file paths, class names like `AgentsService` → `RoomRunner`, function signatures, Honeycomb → FloorPlaceholderScreen, MatrixConsole → RoomScreen, ChatRole → ChatAuthor, go_router → MaterialApp named routes, Supabase Realtime → SSE). Added clear "alpha status: scripted RoomRunner, not TradingAgents graph yet" callout. **230 lines net + 291 deletions.** |
+| `7e5aa9a` | **BL9 — sim trade preview.** `POST /v1/sim/preview` runs same compliance + cash/holdings pre-flight as `/submit` but never persists. Returns `{accepted, compliance, fill_price, notional, cash_available, held_quantity, price_source}` so the mobile trade ticket UI can render "would this trade be allowed?" + sizing context before commit. New `PreviewResult` dataclass + `SimEngine.preview()` method. **+3 sim_engine tests.** |
+| `e5fbfc6` | **BL10 — daily challenge attempt.** `POST /v1/daily_challenge/{cid}/attempt` records the attempt + journals it. Returns `{correct, correct_option, explanation, related_lesson, related_agent}` so the mobile detail screen renders the result inline. Adds `EntryType.DAILY_CHALLENGE` (no DB migration — entry_type is free-form String). Best-effort journal write. **+5 route tests.** |
+| `9e1ce93` | **BL1 — device + build context on /v1/auth/anon.** Mobile sends `device_model` + `os_version` + `app_version` (via `device_info_plus` + `package_info_plus`) on every bootstrap. Backend persists onto `users` (3 new nullable columns, migration `c4e8f1a90008`) and surfaces them in `/v1/admin/users/{id}` + the admin HTML. Refresh-on-rebootstrap so app upgrades are tracked. Backwards-compatible. Single-device-per-user assumption holds (multi-device split is BL2). **+4 backend tests.** |
+| `efe6b79` | **BL12 — mandate audit on hard edits.** `GET /v1/mandate/{u}/audit` runs deterministic per-holding audit of current portfolio against current mandate. New `check_holdings_against_mandate()` evaluator in `safety_floor.py` (sibling to `check_mandate_compliance` — same dimensions: blocklist, halal, locale, single-name cap, plus portfolio-level drawdown breach). Returns `HoldingsAuditResult { passed, mandate_version, portfolio_value, current_drawdown_pct, drawdown_breach, violations[] }`. Pure read — no journal writes. Designed to be called by mobile right after `PATCH /mandate` so the resolve modal renders inline. **+8 tests.** |
+| `2d8a0d8` | **BL2 — user_devices multi-device tracking.** New `user_devices` table keyed by `device_install_id` (mobile-generated UUID persisted once on first launch, NEVER overwritten by claim — unlike `device_user_id` which mobile overwrites with the adopted user's id on `setIdAndToken`). Migration `d5f2a3b00009` + backfill seeded 24 rows from existing `users.device_user_id`. `ensure_anonymous()` upserts the device row; `_claim_or_create` + `sign_in_with_apple` re-key the pre-claim anon's devices to the adopted user so two phones on one Apple ID surface as two device rows under one user. `AdminUserDetail.devices[]` + admin HTML list each device with model/OS/app_version/last_seen. Mobile adds `DeviceUser.getOrCreateInstallId()` + sends on bootstrap. **+5 backend tests including the full two-phones-one-Apple-ID flow.** users.device_user_id stays (still plays A2 role); drop is a follow-up. |
+| `95e2337` | **BL11 — trial-end entitlement gate.** `effective_plan(plan, trial_expires_at)` pure helper with three branches: active trial → at least TRIAL_TRADER, expired trial + plan=TRIAL_TRADER → FLOOR_PASS, else unchanged. Covers both trial paths (auto-claim and admin-granted). Wired into all 7 `pick_tier()` callsites (brief_engine ×2, agent_runner ×2, room_runner ×3) so when a trial lapses the LLM routing drops to cheap-tier on the next call — no admin intervention or background job needed. Admin surface gains `effective_plan` + `trial_active` fields; admin.html renders `plan → effective_plan` (orange arrow) when they differ + ACTIVE/EXPIRED column. `users.plan` stays immutable except on explicit admin/conversion events. Skipped (Beta): in-app trial-ended modal, conversion screen, push. **+12 tests.** |
+| `d3cb451` | **BL5 — mandate history API.** Three new routes (sugar over the existing versioned `mandates` table): `GET /v1/mandate/{u}/versions` (list newest-first, decorated with the matching `mandate_edit` journal entry's plain-English summary), `GET /v1/mandate/{u}/versions/{v}` (fetch a specific historical snapshot, 404 on miss), `POST /v1/mandate/{u}/rollback/{v}` (forward-only rollback: creates a new version mirroring v, writes a journal entry tagged `rollback` with `rolled_back_to_version` in payload). Store gains `list_versions` + `get_version` + `rollback_to`. **+10 route tests.** |
+| `ecea7bb` | **pubspec `+26 → +27` bump** — auto-committed by `scripts/build_testflight.sh` when Saiful shipped `+27` carrying BL1 + BL2 mobile changes. |
+| `19eb5d7` | **Podfile.lock — pull device_info_plus pod (BL1).** Auto-generated by pod install during the `+27` build. |
 
-Plus the `chore(handover): wrap AT:R32` commit.
+Plus the `chore(handover): wrap AT:R33` commit.
 
 ### What changed in the codebase
 
 **Backend** (`backend/app/`):
-- `services/email_service.py` — new Resend HTTP path, SMTP demoted to fallback (commit `232e8c5`)
-- `services/auth_service.py` — `_claim_or_create()` + `sign_in_with_apple()` reworked for identity-first lookup (commit `1166cad`)
-- `schemas/agents.py` — `AgentActivation` + `ActivationMethod` removed (commit `e238f12`)
-- `schemas/__init__.py` — re-export dropped
-- `schemas/one_on_one.py` — `OneOnOneStartRequest.user_id` removed (commit `98edbd0`)
-- `api/one_on_one.py` — `start_one_on_one` simplified (commit `98edbd0`)
-- `schemas/auth.py` — `MagicLinkVerifyRequest` + `AppleSignInRequest` gained optional `onboarding_session_id` (commit `62b7c6d`)
-- `api/auth.py` — `magic_link_verify` + `sign_in_with_apple` converted to async, gained `_bind_onboarding_session` helper (commit `62b7c6d`)
+- `services/sim_engine.py` — `PreviewResult` + `SimEngine.preview()` (commit `7e5aa9a`)
+- `api/sim.py` — `POST /v1/sim/preview` route (commit `7e5aa9a`)
+- `api/daily_challenge.py` — `POST /{cid}/attempt` route + response schemas (commit `e5fbfc6`)
+- `schemas/journal.py` — `EntryType.DAILY_CHALLENGE` (commit `e5fbfc6`)
+- `db/models.py` — `User.device_model/os_version/last_app_version` (commit `9e1ce93`); `UserDeviceRow` (commit `2d8a0d8`)
+- `schemas/auth.py` — `AnonSessionRequest` gains 3 device fields (BL1) + `device_install_id` (BL2)
+- `services/auth_service.py` — `ensure_anonymous` persists device context + upserts user_devices; `_claim_or_create` + `sign_in_with_apple` call `_rekey_devices_to`; new `_upsert_user_device` + `_rekey_devices_to` helpers (commits `9e1ce93`, `2d8a0d8`)
+- `api/auth.py` — `/v1/auth/anon` passes new fields through (commits `9e1ce93`, `2d8a0d8`)
+- `schemas/admin.py` — `AdminUserDetail` gains `device_model/os_version/last_app_version`, `devices[]`, `effective_plan`, `trial_active`; new `AdminUserDevice` (commits `9e1ce93`, `2d8a0d8`, `95e2337`)
+- `api/admin.py` — `_user_detail` populates new fields; new `_load_devices` helper (same)
+- `static/admin.html` — device list block + plan→effective_plan arrow + ACTIVE/EXPIRED trial column
+- `agents/safety_floor.py` — `HoldingViolation` + `HoldingsAuditResult` + `check_holdings_against_mandate` (commit `efe6b79`)
+- `api/mandate.py` — `/audit`, `/versions`, `/versions/{v}`, `/rollback/{v}` routes (commits `efe6b79`, `d3cb451`)
+- `services/mandate_store.py` — `list_versions`, `get_version`, `rollback_to` (commit `d3cb451`)
+- `services/entitlements.py` — new file: `effective_plan`, `is_trial_active`, `effective_plan_for_user` (commit `95e2337`)
+- `services/brief_engine.py` + `services/agent_runner.py` + `services/room_runner.py` — all 7 `pick_tier` callsites resolve effective_plan from user_id (commit `95e2337`)
 
 **Mobile** (`mobile/lib/`):
-- `ios/Runner/Info.plist` — display name casing (commit `f57d1a1`)
-- `ios/ExportOptions.plist` — new (commit `35a5181`)
-- `models/brief.dart` — `proposedAt` + `startedAt` parsed (commit `7b44110`)
-- `services/api/api_client.dart` — `startOneOnOne` drops `userId` param (commit `98edbd0`)
-- `state/one_on_one_providers.dart` — drops `DeviceUser` import (commit `98edbd0`)
+- `services/device_user.dart` — new `DeviceContext` class + `DeviceUser.getOrCreateInstallId()` (commits `9e1ce93`, `2d8a0d8`)
+- `services/api/api_client.dart` — `bootstrapAnon` accepts new fields (BL1, BL2)
+- `state/auth_providers.dart` — `bootstrap()` gathers + sends device context + install_id
 
-**Scripts/infra**:
-- `scripts/build_testflight.sh` — full rewrite (commit `35a5181`)
-- `infra/alpha.env` — `RESEND_API_KEY` added (commit `232e8c5`; gitignored, not in tree)
+**Mobile pubspec** — `device_info_plus: ^11.1.0` added; version bumped to `0.1.0+27` for TF.
 
-**Tests** — 367 → 375 passing.
+**Migrations** — `c4e8f1a90008` (BL1: user device columns), `d5f2a3b00009` (BL2: user_devices table + backfill).
 
-### Backlog filed (AT:R32)
+**Docs** (`docs/08_tech/`):
+- `tradingagent_integration.md` — reconciled (commit `eaa12ce`)
+- `flutter_implementation.md` — reconciled (same)
 
-| ID | Item | Est | Status hook |
-|---|---|---|---|
-| **BL16** | **Account linking — real merge UX + anon-state migration.** Phase 1 (AT:R32, commit `1166cad`) adopts existing identity by email but discards the fresh-anon's pre-claim state. Once journal entries / sim trades / lessons-progress / onboarding mandate get written pre-claim, the discard becomes visible data loss. Beta-grade fix: when claim adopts an existing identity, surface a "you have two accounts, merge?" UX with conflict resolution (which mandate wins? union the lessons? newest-by-timestamp for journal entries?). Subscription-events audit row for legal/billing. | 1 session | AT:R32 deferred. Pre-req: identify which collections to merge + UX wireframes. |
+**Tests** — 375 → 422 passing.
 
-### Carry-overs for AT:R33
+### Carry-overs for AT:R34
 
 The remaining unblocked items + persistent external blockers:
 
-1. **`eeeb866f` — Room run survives container restart.** Open bug, pre-Beta resilience. Carries from AT:R30+.
+1. **`eeeb866f` — Room run survives container restart.** The one real open bug, pre-Beta resilience. Carries from AT:R30+.
 2. **B-tier adversarial-audit findings** — rate limiting on `/auth/anon` + LLM-heavy routes; magic-link attempt counter; feedback upload streaming.
-3. **Docs reconciliation — `tradingagent_integration.md` + `flutter_implementation.md`.** Last two untested doc trees. ~60 min. Apply the AT:R30/R31 methodology.
-4. **BL16** — Real account merge UX (filed this session).
-5. **BL11** — Trial-end UX (push integration still missing even though SMTP closed).
-6. **BL12** — Mandate audit on hard edits.
-7. **A6b — Google Sign-In on Android.** Blocked on Google Cloud Console setup.
-8. **External TestFlight launch.** Beta App Description from Saiful + ~24h Apple review. **`+26` is uploaded** + carries CFBundleDisplayName casing + AT:R32 backend changes.
-9. **Animation production** — 15 `<Animation>` MDX tags still render `AmiHexPlaceholder`.
-10. **A29 light-mode refactor** — v1.0 work.
-11. **`claude/*` sibling worktrees on disk** — Saiful decision (keep or delete).
-12. **Brief safety-floor terminology audit (deferred)** — "uncoachable" stays.
-13. **Credit consumption** — `credits_consumed` event type exists but no app code emits it.
-14. **BL1, BL2** (low pri) — Device info on `/v1/auth/anon`, `user_devices` table.
-15. **BL4–BL10** (low pri) — AT:R30 audit deferrals.
-16. **BL11–BL15** — AT:R31 audit deferrals. **BL13, BL14, BL15 closed this session.** BL11, BL12 remain.
+3. **BL16** — Real account merge UX (filed AT:R32, design-first).
+4. **BL6** — Mandate resolve flow (Liquidate/Postpone/Override actions). Pre-req: drift detection (MVP scope). The audit half landed AT:R33 as BL12.
+5. **BL11 — push + in-app trial-end UX.** Entitlement gate landed AT:R33; mobile modal + OneSignal push still pending (Beta).
+6. **BL4** — Arabic → Gemini routing. Blocked on `GoogleProvider` class in llm_gateway.
+7. **BL7** — Agent metadata routes. Mobile workaround sufficient until v1.0 Android port.
+8. **BL8** — Room run cancel + replay. Cancel needs Postgres-side signalling (1.5 sessions, hard); replay is sugar.
+9. **A6b — Google Sign-In on Android.** Blocked on Google Cloud Console setup.
+10. **External TestFlight launch.** Needs Beta App Description from Saiful + ~24h Apple review. `+27` is uploaded.
+11. **Animation production** — 15 `<Animation>` MDX tags still render `AmiHexPlaceholder`.
+12. **A29 light-mode refactor** — v1.0 work.
+13. **`claude/*` sibling worktrees on disk** — Saiful decision (keep or delete). Carries from AT:R32.
+14. **Credit consumption** — `credits_consumed` event type exists but no app code emits it.
+15. **`OnboardingSession.claimed_user_id` Flutter wiring** — backend accepts `onboarding_session_id` since AT:R32 BL13 but Flutter doesn't send it yet. Update when something consumes the binding.
 
 ### Watch items (not tasks)
 
-- **3 users with same human, none linked.** Saiful's test data has 3 rows: `8f1e288a` (Apple, `saifulsaid@me.com`), `b747faf3` (magic-link, `saiful@atmmarketintel.com`), `d9e81e45` (orphan magic-link challenge, `saiful.mazli@gmail.com` — never verified). Phase 1 adopt-by-email logic is live but doesn't retroactively merge existing rows. Hand-merge later if you want one to be canonical, or just accept they're test artifacts.
-- **Resend deliverability.** First production magic-link flowed cleanly to Gmail in <2s. Watch for spam-folder rate on the @atmmarketintel.com domain once volume picks up — Resend's free tier and verified-sender-domain setup may need attention before Beta.
-- **TestFlight `+26` is the freshest build.** Carries CFBundleDisplayName casing + AT:R32 backend (via Alpha tag `alpha-2026-05-22-3`). If you reinstall TF before next build, you should see "AMI Trade" home-screen label.
-- **`OnboardingSession.claimed_user_id` is now wireable but no Flutter client sends `onboarding_session_id` yet.** Backwards-compatible no-op until Flutter is updated. Update Flutter when something starts consuming the binding (cohort analytics dashboard, GDPR deletion path).
+- **Saiful is the cross-device tester.** `+27` is the first build with device_install_id wiring. Verification flow: install on both iPhones via TestFlight → sign in with Apple on each with the same Apple ID → check admin UI; expected `devices (2)` block, both phones listed under one user.
+- **Test data: 3 users with same human, still none linked.** Saiful's pre-AT:R32 test data has 3 rows (`8f1e288a` Apple, `b747faf3` magic-link, `d9e81e45` orphan challenge). AT:R32 Phase 1 adopt-by-email logic prevents future forks but doesn't retroactively merge existing rows. Hand-merge later or accept as test artifacts.
+- **Backfill seeded 24 user_devices rows** on melehost during the BL2 migration. Those rows use the existing `device_user_id` as the install_id approximation — fine for legacy users, but if you compare admin's device list against the new `+27` mobile, brand-new installs will get a fresh `device_install_id` UUID rather than reuse the device_user_id one.
+- **Resend deliverability + `+27` TestFlight processing** — unchanged from AT:R32 wrap, watch over time.
 
 ---
 
@@ -199,7 +203,7 @@ The remaining unblocked items + persistent external blockers:
 
 The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list, then enters plan mode asking "bugs first or carry-over first?". Wait for direction.
 
-Session name to use: **AT:R33** (this is handover #32).
+Session name to use: **AT:R34** (this is handover #33).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -207,11 +211,12 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 Quick-win candidates for next session (in priority order):
 
-1. **Docs reconciliation — `tradingagent_integration.md` + `flutter_implementation.md`.** Last two untested doc trees. ~60 min. Apply the AT:R30/R31 methodology (parallel Explore agents per file, triage with Saiful, commit one tree per pass).
-2. **`eeeb866f` Room run survives container restart.** The one remaining open bug, pre-Beta resilience.
-3. **B-tier audit work** — pick one: rate limiting on `/auth/anon`, magic-link attempt counter, feedback upload streaming.
-4. **BL16 design** — start the account-merge UX wireframes if Saiful wants to think product before code.
-5. **`claude/*` sibling worktrees** — quick decision (keep or delete).
+1. **`eeeb866f` Room run survives container restart.** The one remaining open bug, pre-Beta resilience. AT:R33 closed every BL alpha-needle item — this is the next clear alpha lever.
+2. **TF `+27` verification on two phones.** If Saiful has tested BL1+BL2 on both iPhones, capture the result (or lack thereof) and decide if BL2 needs a fix-pass.
+3. **External TestFlight launch.** Beta App Description from Saiful + ~24h Apple review. Closes the alpha→beta gate.
+4. **B-tier audit work** — pick one: rate limiting on `/auth/anon`, magic-link attempt counter, feedback upload streaming.
+5. **`claude/*` sibling worktrees** — quick decision (keep or delete). Carries from AT:R32.
+6. **BL16 design** — start the account-merge UX wireframes if Saiful wants to think product before code.
 
 ---
 
