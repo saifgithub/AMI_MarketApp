@@ -13,6 +13,68 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R33  (2026-05-22)
+
+**BL-closeout sprint.** Closed 7 BL items end-to-end + reconciled the last two untested doc trees. Every change shipped to Alpha; mobile-side changes (BL1 + BL2) are in TestFlight `+27` (uploaded by Saiful). **11 new commits this session. 422 tests passing (was 375 — +47). 4 Alpha promotes (`-4`, `-5`, `-6`, `-7`). 1 TestFlight build (`+27`).**
+
+### How the session ran
+
+Saiful opened with `/start-fresh R`. First task: docs reconciliation — two parallel Explore agents audited `tradingagent_integration.md` + `flutter_implementation.md` against actual code, surfaced ~12 stale claims and ~5 phantom widgets/dirs; rewrote both in place (commit `eaa12ce`). Then he said "build all that's ready to ship" — kicked off a tight BL closeout batch: BL9 → BL10 → BL1 → BL12 → /promote-to-alpha (`-4`). Then BL2 ("I have 2 phones") with a careful design for `device_install_id` separate from `device_user_id` → migration + re-keying on claim adoption + admin device list → `-5`. Then BL11 entitlement gate (real alpha-needle item: trials weren't actually downgrading anyone) → `-6`. Then BL5 history API (Saiful overruled the "needs UI mockup" deferral) → `-7`. Saiful pushed TF `+27` himself, then asked to wrap.
+
+### Commits in order
+
+| Hash | What it does |
+|---|---|
+| `eaa12ce` | **Docs reconciliation** — `tradingagent_integration.md` + `flutter_implementation.md`. Last two untested doc trees. Two parallel Explore agents audited each against the current code; ~12 stale claims fixed (file paths, class names like `AgentsService` → `RoomRunner`, function signatures, Honeycomb → FloorPlaceholderScreen, MatrixConsole → RoomScreen, ChatRole → ChatAuthor, go_router → MaterialApp named routes, Supabase Realtime → SSE). Added clear "alpha status: scripted RoomRunner, not TradingAgents graph yet" callout. **230 lines net + 291 deletions.** |
+| `7e5aa9a` | **BL9 — sim trade preview.** `POST /v1/sim/preview` runs same compliance + cash/holdings pre-flight as `/submit` but never persists. Returns `{accepted, compliance, fill_price, notional, cash_available, held_quantity, price_source}` so the mobile trade ticket UI can render "would this trade be allowed?" + sizing context before commit. New `PreviewResult` dataclass + `SimEngine.preview()` method. **+3 sim_engine tests.** |
+| `e5fbfc6` | **BL10 — daily challenge attempt.** `POST /v1/daily_challenge/{cid}/attempt` records the attempt + journals it. Returns `{correct, correct_option, explanation, related_lesson, related_agent}` so the mobile detail screen renders the result inline. Adds `EntryType.DAILY_CHALLENGE` (no DB migration — entry_type is free-form String). Best-effort journal write. **+5 route tests.** |
+| `9e1ce93` | **BL1 — device + build context on /v1/auth/anon.** Mobile sends `device_model` + `os_version` + `app_version` (via `device_info_plus` + `package_info_plus`) on every bootstrap. Backend persists onto `users` (3 new nullable columns, migration `c4e8f1a90008`) and surfaces them in `/v1/admin/users/{id}` + the admin HTML. Refresh-on-rebootstrap so app upgrades are tracked. Backwards-compatible. Single-device-per-user assumption holds (multi-device split is BL2). **+4 backend tests.** |
+| `efe6b79` | **BL12 — mandate audit on hard edits.** `GET /v1/mandate/{u}/audit` runs deterministic per-holding audit of current portfolio against current mandate. New `check_holdings_against_mandate()` evaluator in `safety_floor.py` (sibling to `check_mandate_compliance` — same dimensions: blocklist, halal, locale, single-name cap, plus portfolio-level drawdown breach). Returns `HoldingsAuditResult { passed, mandate_version, portfolio_value, current_drawdown_pct, drawdown_breach, violations[] }`. Pure read — no journal writes. Designed to be called by mobile right after `PATCH /mandate` so the resolve modal renders inline. **+8 tests.** |
+| `2d8a0d8` | **BL2 — user_devices multi-device tracking.** New `user_devices` table keyed by `device_install_id` (mobile-generated UUID persisted once on first launch, NEVER overwritten by claim — unlike `device_user_id` which mobile overwrites with the adopted user's id on `setIdAndToken`). Migration `d5f2a3b00009` + backfill seeded 24 rows from existing `users.device_user_id`. `ensure_anonymous()` upserts the device row; `_claim_or_create` + `sign_in_with_apple` re-key the pre-claim anon's devices to the adopted user so two phones on one Apple ID surface as two device rows under one user. `AdminUserDetail.devices[]` + admin HTML list each device with model/OS/app_version/last_seen. Mobile adds `DeviceUser.getOrCreateInstallId()` + sends on bootstrap. **+5 backend tests including the full two-phones-one-Apple-ID flow.** users.device_user_id stays (still plays A2 role); drop is a follow-up. |
+| `95e2337` | **BL11 — trial-end entitlement gate.** `effective_plan(plan, trial_expires_at)` pure helper with three branches: active trial → at least TRIAL_TRADER, expired trial + plan=TRIAL_TRADER → FLOOR_PASS, else unchanged. Covers both trial paths (auto-claim and admin-granted). Wired into all 7 `pick_tier()` callsites (brief_engine ×2, agent_runner ×2, room_runner ×3) so when a trial lapses the LLM routing drops to cheap-tier on the next call — no admin intervention or background job needed. Admin surface gains `effective_plan` + `trial_active` fields; admin.html renders `plan → effective_plan` (orange arrow) when they differ + ACTIVE/EXPIRED column. `users.plan` stays immutable except on explicit admin/conversion events. Skipped (Beta): in-app trial-ended modal, conversion screen, push. **+12 tests.** |
+| `d3cb451` | **BL5 — mandate history API.** Three new routes (sugar over the existing versioned `mandates` table): `GET /v1/mandate/{u}/versions` (list newest-first, decorated with the matching `mandate_edit` journal entry's plain-English summary), `GET /v1/mandate/{u}/versions/{v}` (fetch a specific historical snapshot, 404 on miss), `POST /v1/mandate/{u}/rollback/{v}` (forward-only rollback: creates a new version mirroring v, writes a journal entry tagged `rollback` with `rolled_back_to_version` in payload). Store gains `list_versions` + `get_version` + `rollback_to`. **+10 route tests.** |
+| `ecea7bb` | **pubspec `+26 → +27` bump** — auto-committed by `scripts/build_testflight.sh` when Saiful shipped `+27` carrying BL1 + BL2 mobile changes. |
+| `19eb5d7` | **Podfile.lock — pull device_info_plus pod (BL1).** Auto-generated by pod install during the `+27` build. |
+
+Plus the `chore(handover): wrap AT:R33` commit.
+
+### What changed in the codebase
+
+**Backend** (`backend/app/`):
+- `services/sim_engine.py` — `PreviewResult` + `SimEngine.preview()` (commit `7e5aa9a`)
+- `api/sim.py` — `POST /v1/sim/preview` route (commit `7e5aa9a`)
+- `api/daily_challenge.py` — `POST /{cid}/attempt` route + response schemas (commit `e5fbfc6`)
+- `schemas/journal.py` — `EntryType.DAILY_CHALLENGE` (commit `e5fbfc6`)
+- `db/models.py` — `User.device_model/os_version/last_app_version` (commit `9e1ce93`); `UserDeviceRow` (commit `2d8a0d8`)
+- `schemas/auth.py` — `AnonSessionRequest` gains 3 device fields (BL1) + `device_install_id` (BL2)
+- `services/auth_service.py` — `ensure_anonymous` persists device context + upserts user_devices; `_claim_or_create` + `sign_in_with_apple` call `_rekey_devices_to`; new `_upsert_user_device` + `_rekey_devices_to` helpers (commits `9e1ce93`, `2d8a0d8`)
+- `api/auth.py` — `/v1/auth/anon` passes new fields through (commits `9e1ce93`, `2d8a0d8`)
+- `schemas/admin.py` — `AdminUserDetail` gains `device_model/os_version/last_app_version`, `devices[]`, `effective_plan`, `trial_active`; new `AdminUserDevice` (commits `9e1ce93`, `2d8a0d8`, `95e2337`)
+- `api/admin.py` — `_user_detail` populates new fields; new `_load_devices` helper (same)
+- `static/admin.html` — device list block + plan→effective_plan arrow + ACTIVE/EXPIRED trial column
+- `agents/safety_floor.py` — `HoldingViolation` + `HoldingsAuditResult` + `check_holdings_against_mandate` (commit `efe6b79`)
+- `api/mandate.py` — `/audit`, `/versions`, `/versions/{v}`, `/rollback/{v}` routes (commits `efe6b79`, `d3cb451`)
+- `services/mandate_store.py` — `list_versions`, `get_version`, `rollback_to` (commit `d3cb451`)
+- `services/entitlements.py` — new file: `effective_plan`, `is_trial_active`, `effective_plan_for_user` (commit `95e2337`)
+- `services/brief_engine.py` + `services/agent_runner.py` + `services/room_runner.py` — all 7 `pick_tier` callsites resolve effective_plan from user_id (commit `95e2337`)
+
+**Mobile** (`mobile/lib/`):
+- `services/device_user.dart` — new `DeviceContext` class + `DeviceUser.getOrCreateInstallId()` (commits `9e1ce93`, `2d8a0d8`)
+- `services/api/api_client.dart` — `bootstrapAnon` accepts new fields (BL1, BL2)
+- `state/auth_providers.dart` — `bootstrap()` gathers + sends device context + install_id
+
+**Mobile pubspec** — `device_info_plus: ^11.1.0` added; version bumped to `0.1.0+27` for TF.
+
+**Migrations** — `c4e8f1a90008` (BL1: user device columns), `d5f2a3b00009` (BL2: user_devices table + backfill).
+
+**Docs** (`docs/08_tech/`):
+- `tradingagent_integration.md` — reconciled (commit `eaa12ce`)
+- `flutter_implementation.md` — reconciled (same)
+
+**Tests** — 375 → 422 passing.
+
+---
+
 ## AT:R32  (2026-05-21)
 
 **Quick-wins close-out session.** Tackled the entire AT:R31 carry-over chip list end-to-end. SMTP unblocked (Resend HTTP API), TestFlight pipeline rewritten (eliminates manual Xcode intervention), CFBundleDisplayName casing, account-linking Phase 1 (the multi-device fragmentation bug Saiful found mid-session got designed + tested + shipped), BL13/BL14/BL15/L-1 all closed. **9 AT:R32 work commits + 1 pubspec bump = 10 new commits. 375 tests passing (was 367). 3 Alpha promotes. 2 TestFlight builds shipped (`+25`, `+26`).**

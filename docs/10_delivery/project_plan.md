@@ -2,10 +2,10 @@
 
 Three phases. Each phase has an exit criterion, a concrete work list, and a who-does-what split. Supersedes the older `timeline.md` (kept for historical context).
 
-Where we are right now (as of 2026-05-22, end of AT:R33):
-- 288 commits on `main`. 422 backend unit tests pass.
-- Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel.
-- TestFlight has build `0.1.0+27` uploaded 2026-05-22 (AT:R33). Carries the BL1 + BL2 mobile slice: device_info_plus + device_install_id sent to `/v1/auth/anon` on every bootstrap. Plus the AT:R32 backend (account-linking Phase 1, Resend HTTP, BL13/BL14/BL15) + AT:R33 backend (BL9 sim preview, BL10 daily-challenge attempt, BL1 device columns + admin surface, BL12 mandate-audit, BL2 user_devices + re-keying, BL11 effective_plan, BL5 mandate history).
+Where we are right now (as of 2026-05-22, end of AT:R34):
+- 291 commits on `main`. 424 backend unit tests pass. **Zero open bugs.**
+- Alpha live on melehost (Ubuntu LAN at `192.168.20.59`) via Cloudflare Tunnel. AT:R34 added container-restart resilience to Room runs: startup sweep auto-retries stuck `running` rows once before marking failed (migration `e7a4c5b00010` adds `room_runs.retry_count`; commits `8510436` + `3f4022a`). Closed the last open bug `eeeb866f`.
+- TestFlight has build `0.1.0+27` uploaded 2026-05-22 (AT:R33). **Verified live on both iPhone 17 + iPhone 13 mini with same Apple ID** (AT:R34): 2 device rows under one user via `device_install_id` re-keying on Apple Sign-In. Carries the BL1 + BL2 mobile slice: device_info_plus + device_install_id sent to `/v1/auth/anon` on every bootstrap. Plus the AT:R32 backend (account-linking Phase 1, Resend HTTP, BL13/BL14/BL15) + AT:R33 backend (BL9 sim preview, BL10 daily-challenge attempt, BL1 device columns + admin surface, BL12 mandate-audit, BL2 user_devices + re-keying, BL11 effective_plan, BL5 mandate history).
 - Alpha-stage Privacy Policy + ToS published at `https://www.agenticmarketintel.ai/{privacy,terms}/` with doc-level versioning (AT:R24). Lawyer review still pending; publishing playbook at `docs/09_compliance/VERSIONING.md`.
 - vLLM Gemma 4 31B (ami-llm) serving every agent. Room runner decoupled from SSE via background task + queue (AT:R22) — runs continue to verdict on client disconnect, dedup on same user+ticker (running + 24h-completed-cached windows), journal write retries.
 - First-time user walkthrough (AT:R23) — 4 per-section coach-mark tours fire automatically on first visit to each tab; resettable from Settings → WALKTHROUGH.
