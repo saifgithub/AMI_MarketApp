@@ -647,28 +647,27 @@ class RoomRunner:
 
         Reuses the existing run_id so client-side references (mobile's
         cached run_id, journal reference_id, dedup attach) keep working.
-        Loads the mandate snapshot from the version originally used.
+
+        Mandate resolution: prefer the exact version originally used
+        (preserves intent if the row references v1 and the user has since
+        moved to v2). Fall back to resolve_mandate when the stored
+        version doesn't exist — typical for users who never customised
+        their mandate, where mandate_version=1 is just a default-hydrated
+        placeholder that was never persisted to the mandates table.
         """
-        from app.services.mandate_store import get_mandate_store
+        from app.services.mandate_store import get_mandate_store, resolve_mandate
 
         mandate = get_mandate_store().get_version(p.user_id, p.mandate_version)
         if mandate is None:
-            logger.warning(
-                "room_startup_retry_no_mandate",
+            # Default-hydrated mandate path — common before Brief Your Agent
+            # has been used. resolve_mandate always returns a Mandate.
+            mandate = resolve_mandate(p.user_id, None)
+            logger.info(
+                "room_startup_retry_mandate_fallback",
                 run_id=str(p.run_id),
                 user_id=str(p.user_id),
                 mandate_version=p.mandate_version,
             )
-            with get_session() as s:
-                row = s.execute(
-                    select(RoomRunRow).where(RoomRunRow.id == p.run_id)
-                ).scalar_one_or_none()
-                if row is not None:
-                    row.status = "failed"
-                    row.error_message = (
-                        "auto_retry_failed: mandate version no longer exists"
-                    )
-            return
 
         key = (p.user_id, p.ticker.upper())
         q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
