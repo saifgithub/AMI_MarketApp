@@ -273,6 +273,7 @@
     "settingsAccountGuestNote": "Mandate, journal, and portfolio stay on this device until you sign in.",
     "settingsManageAccount": "MANAGE ACCOUNT",
     "settingsSignIn": "SIGN IN",
+    "settingsSignedOut": "You've been signed out.",
     "settingsLanguagePlaceholderNote": "AR + MS ship as placeholders today — missing keys fall back to English. Translators drop in proper ARBs and the locale lights up.",
     "settingsDeveloperActive": "Active backend",
     "settingsDeveloperNoUrl": "(no URL baked into this build)",

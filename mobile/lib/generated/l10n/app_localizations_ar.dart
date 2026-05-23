@@ -541,6 +541,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSignIn => 'تسجيل الدخول';
 
   @override
+  String get settingsSignedOut => 'You\'ve been signed out.';
+
+  @override
   String get settingsLanguagePlaceholderNote =>
       'يتم شحن AR + MS كعناصر نائبة حالياً — المفاتيح المفقودة تعود للغة الإنجليزية. يقوم المترجمون بإدراج ملفات ARB المناسبة ليتم تفعيل اللغة.';
 

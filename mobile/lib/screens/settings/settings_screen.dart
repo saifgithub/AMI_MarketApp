@@ -558,7 +558,16 @@ class _AccountSection extends ConsumerWidget {
             child: OutlinedButton(
               onPressed: ref.read(authNotifierProvider).loading
                   ? null
-                  : () => ref.read(authNotifierProvider.notifier).signOut(),
+                  : () async {
+                      await ref
+                          .read(authNotifierProvider.notifier)
+                          .signOut();
+                      if (!context.mounted) return;
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) =>
+                            const SignInScreen(showSignedOutBanner: true),
+                      ));
+                    },
               style: OutlinedButton.styleFrom(
                 foregroundColor: AmiColors.hexRed,
                 side: const BorderSide(color: AmiColors.hexRed),

@@ -541,6 +541,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSignIn => 'SIGN IN';
 
   @override
+  String get settingsSignedOut => 'You\'ve been signed out.';
+
+  @override
   String get settingsLanguagePlaceholderNote =>
       'AR + MS ship as placeholders today — missing keys fall back to English. Translators drop in proper ARBs and the locale lights up.';
 

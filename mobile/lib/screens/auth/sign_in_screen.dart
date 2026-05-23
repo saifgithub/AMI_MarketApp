@@ -34,7 +34,9 @@ const _googleOAuthWebClientId =
     String.fromEnvironment('GOOGLE_OAUTH_WEB_CLIENT_ID', defaultValue: '');
 
 class SignInScreen extends ConsumerStatefulWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({super.key, this.showSignedOutBanner = false});
+
+  final bool showSignedOutBanner;
 
   @override
   ConsumerState<SignInScreen> createState() => _SignInScreenState();
@@ -224,6 +226,25 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         child: ListView(
           padding: const EdgeInsets.all(AmiSpacing.m),
           children: [
+            if (widget.showSignedOutBanner) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AmiSpacing.m,
+                  vertical: AmiSpacing.s,
+                ),
+                decoration: BoxDecoration(
+                  color: AmiColors.glassChrome,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AmiColors.textMed.withAlpha(60)),
+                ),
+                child: Text(
+                  l.settingsSignedOut,
+                  style: AmiTypography.caption
+                      .copyWith(color: AmiColors.textMed),
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.m),
+            ],
             if (user != null && !user.isAnonymous) ...[
               _SignedInCard(user: user),
               const SizedBox(height: AmiSpacing.l),

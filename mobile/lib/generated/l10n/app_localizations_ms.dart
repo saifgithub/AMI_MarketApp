@@ -542,6 +542,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsSignIn => 'LOG MASUK';
 
   @override
+  String get settingsSignedOut => 'You\'ve been signed out.';
+
+  @override
   String get settingsLanguagePlaceholderNote =>
       'AR + MS dihantar sebagai placeholder hari ini — kunci yang hilang akan kembali ke bahasa Inggeris. Penterjemah memasukkan ARB yang betul dan lokaliti akan diaktifkan.';
 

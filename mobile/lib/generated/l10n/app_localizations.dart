@@ -1072,6 +1072,12 @@ abstract class AppLocalizations {
   /// **'SIGN IN'**
   String get settingsSignIn;
 
+  /// No description provided for @settingsSignedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve been signed out.'**
+  String get settingsSignedOut;
+
   /// No description provided for @settingsLanguagePlaceholderNote.
   ///
   /// In en, this message translates to:
