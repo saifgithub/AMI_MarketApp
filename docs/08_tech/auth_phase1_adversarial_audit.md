@@ -150,6 +150,7 @@ a trading-risk issue.
 caps, anonymous daily LLM quotas, and server-side rejection before model work
 starts.
 **Effort:** 1-2 days
+**Status:** ✅ Closed AT:R37 (commit `6a2ba97`). In-memory `RateLimiter` (sliding window keyed on `cf-connecting-ip`) applied as a FastAPI dep to `/v1/auth/anon` (10/min), `/v1/auth/magic_link/start` (3/min), `/v1/room/stream` (5/min). 429 with `Retry-After` on overrun. Process-local; will move to Redis when we shard. Per-user concurrent caps + LLM quotas remain deferred to Beta.
 
 **Finding:** Feedback upload size is not actually bounded before memory read.
 **Severity:** Medium
@@ -160,6 +161,7 @@ false.
 **Recommended fix:** Enforce request size at proxy/app level and stream-read
 with a running byte counter.
 **Effort:** 2-4 hours
+**Status:** ✅ Closed AT:R37 (commit `e12d998`). New `save_attachment_streaming(upload, mime, max_bytes=...)` validates MIME up-front, then loops `await upload.read(64*1024)` into the target file with a running byte counter. Mid-stream cap overrun raises `AttachmentRejected` and unlinks the partial file. `/v1/feedback/bug` switched to the streaming variant; the old in-memory `save_attachment(content=bytes)` stays for synchronous callers.
 
 **Finding:** HTTP audit can persist credentials or credential-adjacent data.
 **Severity:** Medium
@@ -180,6 +182,7 @@ TTL is still online-bruteforceable without per-target/IP attempt limits.
 **Recommended fix:** Add per-email and per-IP throttles, max failed attempts per
 challenge, and generic responses.
 **Effort:** 0.5 day
+**Status:** ✅ Closed AT:R37 (commit `eec3117`, migration `f8b5d1c00011`). `auth_challenges.attempts` column added. `verify_magic_link` now finds the most recent active challenge by `target` (regardless of `code_hash`); on hash mismatch it bumps `attempts` and force-consumes the row at `MAX_MAGIC_LINK_ATTEMPTS = 5`. The user always recovers via a fresh code. Caps brute-force at ~5e-6 per challenge against the 10^6 keyspace. Per-IP throttle on `/magic_link/start` (3/min) ships in the same session via the rate limiter.
 
 ## C. Defer to Beta migration
 

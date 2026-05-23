@@ -206,7 +206,7 @@ docker compose --profile tunnel up -d api-alpha  # restart picks it up
 
 **Decision:** Accept — intentional. The bug reporter is critical UX and we prefer accepting orphaned reports to losing them.
 
-**Beta mitigation:** Add rate-limiting (1 report per IP per minute) once we have a CDN-level rate-limit primitive. For alpha, the cost of a spam attack (some DB rows + disk for attachments) is bounded by `bug_attachment_max_bytes` (5 MB) and is operationally tolerable.
+**Beta mitigation:** Add rate-limiting (1 report per IP per minute) once we have a CDN-level rate-limit primitive. For alpha, the cost of a spam attack (some DB rows + disk for attachments) is bounded by `bug_attachment_max_bytes` (5 MB) and is operationally tolerable. **AT:R37 update:** the new in-memory `RateLimiter` in `app/services/rate_limit.py` (commit `6a2ba97`) could be extended to `/v1/feedback/bug` once we have a sensible per-IP rate for legitimate alpha testers (currently uncapped — testers can submit as fast as they can mash the button). Not done in AT:R37; left as a small follow-on.
 
 ---
 
