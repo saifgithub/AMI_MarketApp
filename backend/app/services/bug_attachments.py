@@ -15,10 +15,20 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Protocol
 from uuid import UUID, uuid4
 
 from app.core.config import settings
 from app.core.logging import logger
+
+
+# Streaming chunk size — large enough to amortize syscall overhead, small
+# enough that a 5MB cap is detected within one chunk's worth of buffer.
+_STREAM_CHUNK_BYTES = 64 * 1024
+
+
+class _AsyncReadable(Protocol):
+    async def read(self, size: int = ...) -> bytes: ...
 
 
 # MIME → file extension. Allowlist is photo-only at v1; expanding to
@@ -91,6 +101,75 @@ def save_attachment(
             f.write(content)
     except Exception:
         # Clean up partial write so a retry can succeed.
+        try:
+            out_path.unlink(missing_ok=True)
+        finally:
+            raise
+    return rel
+
+
+async def save_attachment_streaming(
+    *,
+    upload: _AsyncReadable,
+    mime: str,
+    max_bytes: int | None = None,
+) -> str:
+    """Stream an UploadFile (or any async .read(size)) to disk in 64KB chunks.
+
+    B-tier audit (AT:R37). Mirrors `save_attachment` but never holds the
+    full payload in memory — important once the size cap rises past the
+    current 5MB, and a useful defence against memory-pressure abuse
+    even at today's cap. MIME is validated up-front (no bytes written if
+    the type isn't allowed); the running byte counter aborts mid-stream
+    on overrun and deletes the partial file.
+
+    Raises AttachmentRejected on:
+      - unsupported MIME (no bytes written)
+      - empty body (no bytes consumed from the stream)
+      - oversized body (mid-stream abort + partial-file cleanup)
+    """
+    cap = max_bytes if max_bytes is not None else settings.bug_attachment_max_bytes
+    mime_lc = (mime or "").lower()
+    if mime_lc not in _ALLOWED_MIMES:
+        raise AttachmentRejected(f"unsupported MIME type: {mime!r}")
+
+    ext = _ALLOWED_MIMES[mime_lc]
+    rel = f"{uuid4().hex}{ext}"
+    target_dir = Path(settings.bug_attachments_dir)
+    try:
+        target_dir.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        logger.exception(
+            "bug_attachment_dir_unwritable", path=str(target_dir)
+        )
+        raise AttachmentRejected("attachment storage unavailable")
+    out_path = target_dir / rel
+
+    fd = os.open(out_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
+    bytes_written = 0
+    try:
+        with os.fdopen(fd, "wb") as f:
+            while True:
+                chunk = await upload.read(_STREAM_CHUNK_BYTES)
+                if not chunk:
+                    break
+                bytes_written += len(chunk)
+                if bytes_written > cap:
+                    # Mid-stream abort. Partial file is unlinked in the
+                    # except branch below.
+                    raise AttachmentRejected(
+                        f"upload exceeds {cap} bytes (got {bytes_written}+)"
+                    )
+                f.write(chunk)
+        if bytes_written == 0:
+            # Empty body — drop the placeholder file so a retry can reuse it.
+            try:
+                out_path.unlink(missing_ok=True)
+            finally:
+                raise AttachmentRejected("empty upload")
+    except Exception:
+        # On any failure (cap blown, disk full, etc.) clean up the partial
+        # write so a retry can succeed and the volume doesn't accrete junk.
         try:
             out_path.unlink(missing_ok=True)
         finally:

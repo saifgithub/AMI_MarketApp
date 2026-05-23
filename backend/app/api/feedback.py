@@ -28,7 +28,7 @@ from app.services.auth_service import parse_scaffold_token
 from app.services.bug_attachments import (
     AttachmentRejected,
     is_allowed_mime,
-    save_attachment,
+    save_attachment_streaming,
 )
 from app.services.feedback_store import get_feedback_store
 
@@ -66,42 +66,44 @@ async def submit_bug_report(
     attachment_path: str | None = None
     attachment_mime: str | None = None
     if file is not None and file.filename:
-        # Read upfront — UploadFile streams from disk, so the cap check
-        # below is on the in-memory bytes we already paid for. For 5MB
-        # this is fine; if we raise the cap, switch to chunked read +
-        # write with a running byte counter.
-        content = await file.read()
-        if not content:
-            # Treat an empty <input type=file> like no attachment — don't
-            # bounce the whole report just because the picker returned 0 B.
-            attachment_path = None
-        else:
-            mime = (file.content_type or "").lower()
-            if not is_allowed_mime(mime):
+        # B-tier audit (AT:R37): stream chunks to disk so the full body is
+        # never resident in memory. The running counter inside
+        # save_attachment_streaming aborts mid-stream on cap overrun, and
+        # MIME is validated up-front so unsupported types never touch the
+        # disk. We still do the MIME check here too, to return 415 rather
+        # than 400 (the streaming function only knows AttachmentRejected).
+        mime = (file.content_type or "").lower()
+        if not is_allowed_mime(mime):
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail=f"attachment MIME not allowed: {mime!r}",
+            )
+        try:
+            attachment_path = await save_attachment_streaming(
+                upload=file, mime=mime,
+            )
+            attachment_mime = mime
+        except AttachmentRejected as exc:
+            msg = str(exc)
+            if "empty" in msg:
+                # Treat an empty <input type=file> like no attachment —
+                # don't bounce the whole report because the picker
+                # returned 0 B.
+                attachment_path = None
+            elif "exceeds" in msg:
                 raise HTTPException(
-                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                    detail=f"attachment MIME not allowed: {mime!r}",
-                )
-            try:
-                attachment_path = save_attachment(content=content, mime=mime)
-                attachment_mime = mime
-            except AttachmentRejected as exc:
-                # Distinguish 413 (too big) from 415/400.
-                msg = str(exc)
-                if "exceeds" in msg:
-                    raise HTTPException(
-                        status_code=413,
-                        detail=msg,
-                    ) from exc
+                    status_code=413, detail=msg,
+                ) from exc
+            else:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST, detail=msg,
                 ) from exc
-            except OSError as exc:  # pragma: no cover — disk-full / permission
-                logger.exception("bug_attachment_write_failed")
-                # Don't drop the bug report — the text is more valuable than
-                # the photo. Log and continue with attachment_path=None.
-                attachment_path = None
-                attachment_mime = None
+        except OSError:  # pragma: no cover — disk-full / permission
+            logger.exception("bug_attachment_write_failed")
+            # Don't drop the bug report — the text is more valuable than
+            # the photo. Log and continue with attachment_path=None.
+            attachment_path = None
+            attachment_mime = None
 
     req = BugReportRequest(
         category=category,  # type: ignore[arg-type]

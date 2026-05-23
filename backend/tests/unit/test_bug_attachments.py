@@ -13,6 +13,7 @@ from app.services.bug_attachments import (
     is_allowed_mime,
     read_attachment,
     save_attachment,
+    save_attachment_streaming,
 )
 
 
@@ -106,3 +107,79 @@ def test_allowed_mimes_export_is_frozen():
     """Callers expect a frozenset they can safely cache."""
     assert isinstance(ALLOWED_MIMES, frozenset)
     assert "image/jpeg" in ALLOWED_MIMES
+
+
+# ── save_attachment_streaming (B-tier audit, AT:R37) ────────────────────
+
+
+class _FakeUpload:
+    """Mimics FastAPI's UploadFile.read(size) async interface from an
+    in-memory blob — gives us deterministic chunk replay without spinning
+    a TestClient."""
+
+    def __init__(self, payload: bytes):
+        self._buf = payload
+        self._pos = 0
+
+    async def read(self, size: int = -1) -> bytes:
+        if self._pos >= len(self._buf):
+            return b""
+        if size is None or size < 0:
+            chunk = self._buf[self._pos :]
+            self._pos = len(self._buf)
+            return chunk
+        chunk = self._buf[self._pos : self._pos + size]
+        self._pos += len(chunk)
+        return chunk
+
+
+async def test_streaming_writes_full_payload(tmp_path: Path):
+    payload = b"\x89PNG\r\n\x1a\n" + b"x" * 200_000  # ~200 KB — multiple chunks
+    rel = await save_attachment_streaming(
+        upload=_FakeUpload(payload), mime="image/png",
+    )
+    on_disk = (tmp_path / rel).read_bytes()
+    assert on_disk == payload
+
+
+async def test_streaming_rejects_oversized_mid_stream(tmp_path: Path):
+    """Cap is 256 bytes; payload is 1 KB. The function must abort partway
+    through (not after reading the whole thing) and leave no file behind."""
+    payload = b"x" * 1024
+    with pytest.raises(AttachmentRejected, match="exceeds"):
+        await save_attachment_streaming(
+            upload=_FakeUpload(payload),
+            mime="image/png",
+            max_bytes=256,
+        )
+    # No partial attachment should remain (the sqlite DB file from conftest
+    # also lives in tmp_path; filter to attachment extensions only).
+    leftovers = [p for p in tmp_path.iterdir() if p.suffix in {".png", ".jpg", ".heic", ".heif", ".webp", ".gif"}]
+    assert leftovers == []
+
+
+async def test_streaming_rejects_empty_body(tmp_path: Path):
+    with pytest.raises(AttachmentRejected, match="empty"):
+        await save_attachment_streaming(
+            upload=_FakeUpload(b""), mime="image/png",
+        )
+    leftovers = [p for p in tmp_path.iterdir() if p.suffix in {".png", ".jpg", ".heic", ".heif", ".webp", ".gif"}]
+    assert leftovers == []
+
+
+async def test_streaming_rejects_unsupported_mime_without_touching_disk(
+    tmp_path: Path,
+):
+    with pytest.raises(AttachmentRejected, match="unsupported"):
+        await save_attachment_streaming(
+            upload=_FakeUpload(b"x" * 100), mime="application/pdf",
+        )
+    leftovers = [p for p in tmp_path.iterdir() if p.suffix in {".png", ".jpg", ".heic", ".heif", ".webp", ".gif"}]
+    assert leftovers == []
+
+
+async def test_streaming_picks_extension_from_mime(tmp_path: Path):
+    rel = await save_attachment_streaming(
+        upload=_FakeUpload(b"\xff\xd8\xff" + b"y" * 50), mime="image/jpeg",
+    )
+    assert rel.endswith(".jpg")
