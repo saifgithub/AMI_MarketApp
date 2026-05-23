@@ -13,6 +13,51 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R35  (2026-05-22)
+
+**i18n Tier 1 done; Tiers 2 & 3 prepped but not yet run.** Translation infrastructure now ships LAN-direct to vLLM on `192.168.20.74:8000` via the OpenAI-compatible chat-completions API. Also diagnosed the "same Apple ID, different progress on each phone" question (it's a sign-out side-effect, not a sync bug). **1 work commit + 1 wrap = 2 new commits. 293 → 294 commits total. No backend changes; no Alpha promotes; tests still 424; bug list still 0.**
+
+### How the session ran
+
+Saiful opened with `/start-fresh R` (session name `AT:R35`). Plan-mode survey landed with the 15 deferred carry-overs from AT:R34 — no open bugs.
+
+**First topic — the multi-phone observation.** Saiful: "I have the same Apple ID on two phones but different progress." Pulled the DB and found three relevant accounts: the Apple account `8f1e288a` (Siti Ahmad, 5 journal entries from earlier testing), a magic-link account `b747faf3` (saiful@atmmarketintel.com, from 3am today), and a fresh anon `0e0a9860` (iPhone 13 mini's current identity). Both phones HAVE been linked to `8f1e288a` in `user_devices` via earlier Apple Sign-In — but `signOut()` calls `DeviceUser.clear()` which wipes the persisted `(user_id, token)` pair, and the next `bootstrap()` mints a fresh anon user. After signing out, neither phone is on `8f1e288a` anymore — they're on different orphan anon accounts. Filed as: post-sign-out UX should prompt "sign back in to continue progress" rather than silently starting fresh. This is adjacent to BL16 (account merge) but cheaper to ship.
+
+**Second topic — i18n prep.** Mapped the translation surface:
+- Tier 1: 312 EN ARB keys, 10 missing in AR/MS + 65 AR / 79 MS identical-to-EN (tour walkthrough strings shipped post last translation run).
+- Tier 2: 188 glossary terms, 280 AI coach Q&A, 183 daily challenges — all EN only.
+- Tier 3: 270 lessons × ~283K words — all EN only.
+- Agent prompts stay EN by design (LLM responds in `mandate.locale` at runtime).
+
+**Tier 1 ran successfully.** First attempt went through `scripts/translate_arb.py` which defaults to the public CF Tunnel route (designed for worktree-sandbox portability). Cloudflare's ~100s proxy timeout chewed up the 40-key batches at 90+s each, returning 502 Bad Gateway. Saiful: "This is a crazy route". Wrote a sister script `scripts/translate_arb_lan.py` that hits vLLM's OpenAI-compatible `/v1/chat/completions` directly on the LAN. Ran in 7 minutes for 74 AR + 80 MS keys, zero timeouts. Final state: 311/311 AR keys filled, 310/311 MS keys filled (one MS placeholder dropped by Gemma → falls back to EN).
+
+**Tier 2 + Tier 3 hit a saturation wall.** Wrote two more LAN-direct scripts (`translate_content_lan.py` for JSON-based content, `translate_lessons_lan.py` for MDX with Quiz/Term/ChatWith/Animation component parsing). Kicked all three in parallel (glossary, ai_coach, daily_challenges) plus a 2-lesson smoke test. vLLM saturated: every batch in every job timed out at 300s. The smoke-test lessons produced English-with-corrupted-frontmatter output. Saiful asked to pause; all jobs killed; partial outputs deleted; vLLM verified healthy (3s for small request after the kill drain). The lesson: vLLM continuous batching helps but doesn't scale a single H100-class GPU to 4 large concurrent generation streams without per-stream latency blowing past the 300s timeout.
+
+### Commits in order
+
+| Hash | What it does |
+|---|---|
+| `17b482c` | **i18n Tier 1: LAN-direct vLLM translation pipeline + AR/MS ARB.** Three new scripts under `scripts/translate_*_lan.py` — sister to the existing `translate_arb.py` (which is kept for worktree-sandbox portability). The LAN scripts call `http://192.168.20.74:8000/v1/chat/completions` directly with `model=ami-llm`. Tier 1 ARB outputs: `mobile/lib/l10n/app_ar.arb` 311/311, `app_ms.arb` 310/311. Also: ignore `.deliveryos/` (host-side sqlite tool memory). |
+
+Plus the `chore(handover): wrap AT:R35` commit.
+
+### What changed in the codebase
+
+- `scripts/translate_arb_lan.py` (NEW) — Flutter ARB strings translator, OpenAI-compatible client.
+- `scripts/translate_content_lan.py` (NEW) — glossary + ai_coach + daily_challenges translator, config-driven per content type. NOT YET RUN against the real corpora.
+- `scripts/translate_lessons_lan.py` (NEW) — MDX lesson translator: frontmatter-aware, swaps MDX components for sentinels before translating prose, translates Quiz string attrs as structured JSON, reassembles. NOT YET RUN.
+- `mobile/lib/l10n/app_ar.arb` — 311 keys filled (was 238 after stripping 64 identical-to-EN).
+- `mobile/lib/l10n/app_ms.arb` — 310 keys filled (was 224 after stripping 78 identical-to-EN).
+- `.gitignore` — `.deliveryos/` added.
+
+### Watch items (not tasks)
+
+- **vLLM saturation pattern.** A single H100-class GPU can comfortably serve 1-2 concurrent generation streams of long-form translation (1K+ output tokens), but 4 streams blow per-stream latency past the 300s client timeout. If parallelism is needed, raise the script's `DEFAULT_TIMEOUT_S` AND cap concurrency at 2. Better: run sequentially.
+- **`scripts/translate_arb.py` (production path) still uses CF Tunnel.** Kept intentionally for worktree-sandbox portability. The LAN sister script is the right path when running from the Mac directly.
+- **One MS string falls back to EN** (`tourJournal2Body`) because Gemma dropped a placeholder. To fix: `backend/.venv/bin/python scripts/translate_arb_lan.py --overwrite --locales ms` — but it would re-translate the other 310 keys too. Better: a one-key flag, not in scope this session.
+
+---
+
 ## AT:R34  (2026-05-22)
 
 **`eeeb866f` close.** The last open bug at session start was the deferred-pre-beta resilience item: "Room run survives api-alpha container restart." Closed end-to-end, verified live. **2 work commits + 1 wrap = 3 new commits. 424 tests passing (was 422 — +2 retry tests; existing sweep test refactored). 2 Alpha promotes (`-8`, `-9`). Bug list now empty.**

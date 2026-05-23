@@ -11,12 +11,13 @@ and is listed at the bottom under "Not yet delivered".
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │  MOBILE (Flutter)                                                      │
-│  iOS Alpha (TestFlight, on-device build 0.1.0+24 as of AT:R29)         │
+│  iOS Alpha (TestFlight, 0.1.0+27 as of AT:R33) +                       │
+│  Android-GMS Alpha (Play Console internal track, AT:R36 / D-057)       │
 │                                                                        │
 │  • Riverpod state                                                      │
 │  • Locally-stored bearer (anonymous + claimed users)                   │
 │  • REST + SSE client against api-alpha.agenticmarketintel.ai           │
-│  • Sign in with Apple (real client wiring)                             │
+│  • Sign in with Apple (iOS) / Sign in with Google (Android)            │
 └────────────────────────────────────────────────────────────────────────┘
                                   │
                                   ↓ HTTPS / Bearer JWT

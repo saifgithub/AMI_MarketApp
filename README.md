@@ -51,7 +51,7 @@ Every folder has a `README.md` index listing its files.
 | **Posture** | Simulation-only, advisory-only forever — no brokerage integration |
 | **Markets at MVP** | US equities |
 | **Languages at alpha** | EN; AR + MS at v1.0 |
-| **Platforms at alpha** | iOS only; Android-GMS at v1.0; AppGallery at v1.1 |
+| **Platforms at alpha** | iOS + Android-GMS (per [D-057](docs/11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha)); AppGallery at v1.1 |
 | **Monetization** | Floor Pass (free, ads) / Trader ($14.99/mo) / Floor Manager ($34.99/mo) + credits |
 | **Tech stack** | Flutter (frontend), Python + FastAPI (backend), Supabase, Google Cloud Run, OpenRouter + direct LLM keys |
 | **Design language** | AMI "Hex-Reinforced Precision" (hexagonal tessellation, dark slate, Inter + JetBrains Mono) |
