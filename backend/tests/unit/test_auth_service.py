@@ -108,6 +108,72 @@ def test_magic_link_consumed_once():
     assert second is None  # consumed
 
 
+# ── B-tier audit: brute-force lockout (AT:R37) ──────────────────────────
+
+
+def test_magic_link_locks_out_after_max_attempts():
+    """Five wrong attempts force-consume the active challenge — even the
+    correct code can't unlock it after that."""
+    from app.services.auth_service import MAX_MAGIC_LINK_ATTEMPTS
+
+    auth = AuthService()
+    correct = auth.start_magic_link(
+        email="lockout@example.com", user_id=None,
+    )
+    # Burn the budget on wrong codes.
+    for _ in range(MAX_MAGIC_LINK_ATTEMPTS):
+        assert auth.verify_magic_link(
+            email="lockout@example.com", code="000000", user_id=None,
+        ) is None
+    # The correct code is now locked out — challenge was force-consumed
+    # on the 5th miss.
+    assert auth.verify_magic_link(
+        email="lockout@example.com", code=correct, user_id=None,
+    ) is None
+
+
+def test_magic_link_attempts_counter_resets_with_new_challenge():
+    """Requesting a fresh code mints a new auth_challenges row, so the
+    counter starts at zero again. A user who got locked out can always
+    recover."""
+    from app.services.auth_service import MAX_MAGIC_LINK_ATTEMPTS
+
+    auth = AuthService()
+    auth.start_magic_link(email="reset@example.com", user_id=None)
+    # Burn the original challenge.
+    for _ in range(MAX_MAGIC_LINK_ATTEMPTS):
+        auth.verify_magic_link(
+            email="reset@example.com", code="000000", user_id=None,
+        )
+    # Mint a fresh challenge and verify with its code — should succeed.
+    new_code = auth.start_magic_link(email="reset@example.com", user_id=None)
+    result = auth.verify_magic_link(
+        email="reset@example.com", code=new_code, user_id=None,
+    )
+    assert result is not None
+    user, _token = result
+    assert user.email == "reset@example.com"
+
+
+def test_magic_link_correct_code_within_budget_still_works():
+    """Mistype, then submit the right code — should still succeed."""
+    auth = AuthService()
+    correct = auth.start_magic_link(
+        email="mistype@example.com", user_id=None,
+    )
+    # Two wrong attempts (well below the 5-attempt cap).
+    assert auth.verify_magic_link(
+        email="mistype@example.com", code="000000", user_id=None,
+    ) is None
+    assert auth.verify_magic_link(
+        email="mistype@example.com", code="111111", user_id=None,
+    ) is None
+    result = auth.verify_magic_link(
+        email="mistype@example.com", code=correct, user_id=None,
+    )
+    assert result is not None
+
+
 def test_apple_claim_attaches_sub_to_user():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()

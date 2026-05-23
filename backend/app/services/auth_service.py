@@ -47,6 +47,12 @@ from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier, build
 
 MAGIC_LINK_TTL_MIN = 15
 APPLE_CHALLENGE_TTL_MIN = 60
+# B-tier audit (AT:R37): wrong-code attempts allowed against a single
+# magic-link challenge before it's force-consumed. The 6-digit code has
+# 10^6 keyspace; 5 attempts caps the brute-force search at ~5e-6 per
+# challenge — well below useful for an attacker. Real users mistype once
+# or twice and remain inside the budget.
+MAX_MAGIC_LINK_ATTEMPTS = 5
 
 
 def _upsert_user_device(
@@ -331,22 +337,37 @@ class AuthService:
     ) -> tuple[AuthUser, str] | None:
         target = email.lower().strip()
         with get_session() as s:
-            row = s.execute(
+            # Find the most recent active (unconsumed + unexpired) challenge
+            # for this target regardless of code, so a wrong-code attempt can
+            # bump its counter. The hash comparison happens after.
+            active = s.execute(
                 select(AuthChallengeRow).where(
                     AuthChallengeRow.kind == "magic_link",
                     AuthChallengeRow.target == target,
-                    AuthChallengeRow.code_hash == _hash_code(code),
                     AuthChallengeRow.consumed_at.is_(None),
                     AuthChallengeRow.expires_at > datetime.now(timezone.utc),
                 ).order_by(AuthChallengeRow.created_at.desc()).limit(1)
             ).scalar_one_or_none()
-            if row is None:
+            if active is None:
                 return None
-            row.consumed_at = datetime.now(timezone.utc)
+            if active.code_hash != _hash_code(code):
+                # Wrong code: bump counter, lock out at threshold by marking
+                # consumed (the next /magic_link/start mints a fresh row with
+                # attempts=0, so a real user always has a recovery path).
+                active.attempts += 1
+                if active.attempts >= MAX_MAGIC_LINK_ATTEMPTS:
+                    active.consumed_at = datetime.now(timezone.utc)
+                    logger.warning(
+                        "magic_link_locked_out",
+                        target=target,
+                        attempts=active.attempts,
+                    )
+                return None
+            active.consumed_at = datetime.now(timezone.utc)
 
             # Claim or create the user.
             user = self._claim_or_create(
-                s, user_id=user_id or row.user_id, email=target,
+                s, user_id=user_id or active.user_id, email=target,
             )
             return _row_to_user(user), _scaffold_token(user.id)
 

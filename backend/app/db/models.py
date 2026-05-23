@@ -409,6 +409,13 @@ class AuthChallengeRow(Base):
     user_id: Mapped[Optional[UUID]] = mapped_column(Uuid(), nullable=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consumed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # B-tier audit (AT:R37): wrong-code-attempt counter. Bumped on every
+    # verify miss against the still-active challenge; once it hits
+    # MAX_MAGIC_LINK_ATTEMPTS the row is force-consumed so the attacker has
+    # to request a fresh code (which a real user can always do).
+    attempts: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0", default=0,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
