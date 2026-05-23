@@ -50,7 +50,7 @@ class OIDCVerifier:
     """
 
     jwks_uri: str
-    issuer: str
+    issuers: list[str]
     audiences: list[str]
     cache_ttl_s: int = 3600  # 1 hour; Apple/Google rotate keys roughly every few hours.
     http_timeout_s: float = 5.0
@@ -94,11 +94,10 @@ class OIDCVerifier:
                 identity_token,
                 jwk.construct(jwk_dict).to_pem().decode("utf-8"),
                 algorithms=[alg],
-                issuer=self.issuer,
                 options={
                     "verify_signature": True,
                     "verify_aud": False,  # we check membership below
-                    "verify_iss": True,
+                    "verify_iss": False,  # we check membership below (Google accepts two iss values)
                     "verify_exp": True,
                     "verify_iat": False,  # Apple sometimes returns iat slightly in the future of our clock
                     "verify_nbf": False,
@@ -107,10 +106,17 @@ class OIDCVerifier:
         except ExpiredSignatureError as e:
             raise OIDCVerificationError("token expired") from e
         except JWTClaimsError as e:
-            # python-jose raises this for issuer mismatch (and aud when verify_aud=True)
             raise OIDCVerificationError(f"claim validation failed: {e}") from e
         except JWTError as e:
             raise OIDCVerificationError(f"signature verification failed: {e}") from e
+
+        # Manual issuer membership check (Google emits both
+        # "https://accounts.google.com" and "accounts.google.com").
+        token_iss = claims.get("iss")
+        if token_iss not in self.issuers:
+            raise OIDCVerificationError(
+                f"iss {token_iss!r} not in accepted issuers {self.issuers!r}"
+            )
 
         # Manual audience membership check.
         token_aud = claims.get("aud")
@@ -196,21 +202,25 @@ def build_apple_verifier(audiences: list[str]) -> OIDCVerifier:
     """
     return OIDCVerifier(
         jwks_uri="https://appleid.apple.com/auth/keys",
-        issuer="https://appleid.apple.com",
+        issuers=["https://appleid.apple.com"],
         audiences=audiences,
     )
 
 
 def build_google_verifier(audiences: list[str]) -> OIDCVerifier:
-    """Construct the Google verifier — to be wired in when Android lands.
+    """Construct the Google verifier — wired AT:R36 for Android Sign-In.
 
-    Currently unused. Same shape as Apple — keeps the abstraction
-    honest and saves a re-design when the Android slice starts. The
-    audience for Google is the OAuth Web client_id (one per Android
-    package signing key configuration in Google Cloud Console).
+    Same shape as Apple. Audience list is the OAuth **Web client_id**
+    (NOT the Android client_id) from GCP Console — Google stamps the
+    Web client_id as `aud` into ID tokens returned to the Android
+    client.
+
+    Google issues tokens with `iss` equal to either
+    `https://accounts.google.com` or `accounts.google.com`; both
+    are valid per Google's OIDC docs, so we accept both.
     """
     return OIDCVerifier(
         jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
-        issuer="https://accounts.google.com",
+        issuers=["https://accounts.google.com", "accounts.google.com"],
         audiences=audiences,
     )

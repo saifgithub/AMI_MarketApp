@@ -160,6 +160,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
+
+  Future<bool> signInWithGoogle(String identityToken) async {
+    // D-057 (AT:R36): Android-only at alpha. No `fullName` parameter —
+    // Google ships `name` in the ID token and the backend reads it
+    // directly from verified claims.
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = state.user?.id ?? await DeviceUser.getOrCreate();
+      final r = await api.signInWithGoogle(
+        identityToken: identityToken,
+        userId: userId,
+      );
+      api.setToken(r.token);
+      await DeviceUser.setIdAndToken(r.user.id, r.token);
+      state = state.copyWith(user: r.user, token: r.token, loading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(loading: false, error: '$e');
+      return false;
+    }
+  }
 }
 
 final authNotifierProvider =

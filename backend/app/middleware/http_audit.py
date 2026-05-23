@@ -40,6 +40,7 @@ SCRUB_PATHS = {
     "/v1/auth/magic_link/start",
     "/v1/auth/magic_link/verify",
     "/v1/auth/apple",
+    "/v1/auth/google",
     "/v1/auth/session",
 }
 

@@ -1,21 +1,12 @@
 # Platform Service Facade
 
-> **Status: design doc — not yet built.** The directory
-> `mobile/lib/services/platform/` exists but is empty. No
-> `PushService`, `AuthService`, `BillingService`, or `AdsService`
-> facade interfaces are defined in code yet, and no GMS/HMS/iOS
-> implementations have been written. The Android-GMS + Android-HMS
-> targets do not ship in Alpha (iOS only).
+> **Status: design doc — facade still not built; Android-GMS now ships via direct integration.**
 >
-> Real Apple Sign-In is wired (`sign_in_with_apple` package + the
-> backend `oidc_verifier`), but it's a direct integration in
-> `mobile/lib/services/auth/`, not through this facade.
+> Per [D-057](../11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha), Android-GMS now ships in alpha alongside iOS. But the facade abstraction below (`PushService` / `BillingService` / `AdsService`) is **not** what lands at alpha — Android-GMS ships the same way iOS does: **direct integration** in `mobile/lib/services/auth/` (Apple on iOS, Google on Android) + a backend `OIDCVerifier` covering both providers' JWKS.
 >
-> The whole abstraction lands when Android-GMS prep starts (v1.0
-> milestone — see project_plan.md Phase 3 / Stream 5). Until then,
-> the design below is **forward-looking** and may be revised
-> against current Android-GMS / Huawei AppGallery rules at build
-> time.
+> The directory `mobile/lib/services/platform/` is still empty. The facade pattern remains the right call when **Android-HMS (v1.1)** lands — that's when the abstraction earns its keep, because HMS replaces FCM/AdMob/Apple-IAP/Google-Maps with HMS Push Kit / HMS Ads Kit / HMS IAP / HMS Maps, and you don't want `if (isHMS)` branches everywhere.
+>
+> Until then, the design below is **forward-looking** for the HMS milestone, and may be revised against current Huawei AppGallery rules at v1.1 build time.
 
 ---
 

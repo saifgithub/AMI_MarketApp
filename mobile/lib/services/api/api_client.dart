@@ -836,6 +836,25 @@ class ApiClient {
     return AuthVerifyResponse.fromJson(r.data!);
   }
 
+  Future<AuthVerifyResponse> signInWithGoogle({
+    required String identityToken,
+    String? userId,
+  }) async {
+    // D-057 (AT:R36): Android-only at alpha. Backend verifies the
+    // ID token against Google's JWKS (signature + iss + aud + exp +
+    // email_verified) via OIDCVerifier. 400 on any failure.
+    // No `full_name` field — Google ships `name` inside the verified
+    // ID token, so the backend reads it from claims.
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/google',
+      data: {
+        'identity_token': identityToken,
+        if (userId != null) 'user_id': userId,
+      },
+    );
+    return AuthVerifyResponse.fromJson(r.data!);
+  }
+
   Future<void> signOut() async {
     try {
       await _dio.delete<void>('/v1/auth/session');

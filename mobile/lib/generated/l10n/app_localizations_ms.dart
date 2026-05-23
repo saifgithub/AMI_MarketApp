@@ -295,37 +295,37 @@ class AppLocalizationsMs extends AppLocalizations {
   String get journalNoteSaved => 'Nota disimpan';
 
   @override
-  String get journalSearchHint => 'Search entries…';
+  String get journalSearchHint => 'Cari entri…';
 
   @override
-  String get journalSearchEmpty => 'No entries match your search.';
+  String get journalSearchEmpty => 'Tiada entri sepadan dengan carian anda.';
 
   @override
-  String get journalEntryDeleted => 'Entry removed';
+  String get journalEntryDeleted => 'Entri dipadam';
 
   @override
-  String get journalUndo => 'UNDO';
+  String get journalUndo => 'BATAL';
 
   @override
-  String get journalTrashHeading => 'TRASH';
+  String get journalTrashHeading => 'TONG SAMPAH';
 
   @override
   String get journalTrashEmpty =>
-      'Nothing here. Deleted entries appear in this list.';
+      'Tiada apa-apa di sini. Entri yang dipadam akan muncul dalam senarai ini.';
 
   @override
   String get journalTrashWindowNote =>
-      'Older entries are auto-hidden after 30 days.';
+      'Entri lama disembunyikan secara automatik selepas 30 hari.';
 
   @override
-  String get journalRestoreEntry => 'RESTORE';
+  String get journalRestoreEntry => 'KEMBALIKAN';
 
   @override
-  String get journalEntryRestored => 'Entry restored';
+  String get journalEntryRestored => 'Entri dikembalikan';
 
   @override
   String journalDeletedAgo(String ago) {
-    return 'Deleted $ago';
+    return 'Dipadam $ago';
   }
 
   @override
@@ -596,6 +596,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get signInWithApple => 'Log masuk dengan Apple';
 
   @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
   String get signInWithEmail => 'ATAU TERUSKAN DENGAN EMEL';
 
   @override
@@ -626,6 +629,9 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get signInAppleFailed => 'Log masuk Apple gagal.';
+
+  @override
+  String get signInGoogleFailed => 'Google sign-in failed.';
 
   @override
   String signInSignedInAs(String handle) {
@@ -809,7 +815,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomClose => 'TUTUP';
 
   @override
-  String get roomSafetyFloorPill => 'SAFETY FLOOR';
+  String get roomSafetyFloorPill => 'LANTAI KESELAMATAN';
 
   @override
   String roomVerdictHeading(String action) {
@@ -869,7 +875,7 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tradeTicketLabelStop => 'STOP';
 
   @override
-  String get tradeTicketLabelTarget => 'TARGET';
+  String get tradeTicketLabelTarget => 'SASARAN';
 
   @override
   String get tradeTicketLabelHorizon => 'HORIZON (HARI)';
@@ -909,83 +915,84 @@ class AppLocalizationsMs extends AppLocalizations {
   String get chatBubbleConcierge => 'CONCIERGE';
 
   @override
-  String get tourIntroTitle => 'Welcome to your trading floor.';
+  String get tourIntroTitle => 'Selamat datang ke lantai perdagangan anda.';
 
   @override
-  String get tourIntroSubtitle => 'A quick tour shows you how AMI Trade works.';
+  String get tourIntroSubtitle =>
+      'Lawatan ringkas ini menunjukkan cara AMI Trade berfungsi.';
 
   @override
-  String get tourTakeTheTour => 'Take the tour';
+  String get tourTakeTheTour => 'Mulakan lawatan';
 
   @override
-  String get tourSkipForNow => 'Skip for now';
+  String get tourSkipForNow => 'Langkau buat masa ini';
 
   @override
-  String get tourNext => 'Next →';
+  String get tourNext => 'Seterusnya →';
 
   @override
-  String get tourDone => 'Got it';
+  String get tourDone => 'Faham';
 
   @override
-  String get tourSkip => 'Skip tour';
+  String get tourSkip => 'Langkau lawatan';
 
   @override
-  String get tourConveneTryNow => 'Try it now →';
+  String get tourConveneTryNow => 'Cuba sekarang →';
 
   @override
-  String get tourFloor1Title => 'YOUR CONCIERGE';
+  String get tourFloor1Title => 'CONCIERGE ANDA';
 
   @override
   String get tourFloor1Body =>
-      'Always available. Ask anything — lessons, your portfolio, what to read next.';
+      'Sentiasa tersedia. Tanya apa sahaja — pelajaran, portfolio anda, atau bacaan seterusnya.';
 
   @override
-  String get tourFloor2Title => 'YOUR ANALYST TEAM';
+  String get tourFloor2Title => 'PASUKAN ANALIS ANDA';
 
   @override
   String get tourFloor2Body =>
-      '12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.';
+      '12 pakar, setiap satu dengan domain tersendiri. Ketik mana-mana yang tidak dikunci untuk memulakan sesi satu-lawan-satu.';
 
   @override
-  String get tourFloor3Title => 'LOCKED AGENTS';
+  String get tourFloor3Title => 'AGEN TERKUNCI';
 
   @override
   String get tourFloor3Body =>
-      'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.';
+      'Selesaikan pelajaran berkaitan untuk membuka kunci setiap analis. Ketik mana-mana yang terkunci untuk melihat syaratnya.';
 
   @override
-  String get tourFloor4Title => 'DAILY CHALLENGE';
+  String get tourFloor4Title => 'CABARAN HARIAN';
 
   @override
   String get tourFloor4Body =>
-      'One challenge a day sharpens your judgement. Takes under 2 minutes.';
+      'Satu cabaran sehari mengasah pertimbangan anda. Mengambil masa kurang 2 minit.';
 
   @override
   String get tourFloor5Title => 'CONVENE THE ROOM';
 
   @override
   String get tourFloor5Body =>
-      'Your most powerful tool. All 12 agents analyze a stock together — then you decide.';
+      'Alatan paling berkuasa anda. Semua 12 ejen menganalisis saham bersama — kemudian anda buat keputusan.';
 
   @override
-  String get tourCompletionFloor => 'Go convene your first Room.';
+  String get tourCompletionFloor => 'Pergi CONVENE Room pertama anda.';
 
   @override
-  String get tourPortfolio1Title => 'SIMULATION PORTFOLIO';
+  String get tourPortfolio1Title => 'PORTFOLIO SIMULASI';
 
   @override
   String get tourPortfolio1Body =>
-      'Use the + button to open a trade ticket. All trades are paper — no real money.';
+      'Gunakan butang + untuk OPEN TRADE TICKET. Semua dagangan adalah simulasi — tiada wang sebenar.';
 
   @override
-  String get tourPortfolio2Title => 'TOTAL VALUE & P&L';
+  String get tourPortfolio2Title => 'NILAI KESELURUHAN & P&L';
 
   @override
   String get tourPortfolio2Body =>
-      'Track your portfolio value and running P&L here. Aim to beat the market.';
+      'Jejak nilai portfolio dan P&L semasa di sini. Sasarkan untuk mengatasi pasaran.';
 
   @override
-  String get tourPortfolio3Title => 'WATCHLIST';
+  String get tourPortfolio3Title => 'SENARAI PEMERHATIAN';
 
   @override
   String get tourPortfolio3Body =>
@@ -993,65 +1000,65 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get tourCompletionPortfolio =>
-      'Try a trade — all simulation, no risk.';
+      'Cuba berdagang — semua simulasi, tanpa risiko.';
 
   @override
-  String get tourJournal1Title => 'FILTER BY TYPE';
+  String get tourJournal1Title => 'TAPIS MENGIKUT JENIS';
 
   @override
   String get tourJournal1Body =>
-      'Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.';
+      'Semua direkodkan — sesi Room, dagangan, taklimat, pengajaran. Tapis mengikut jenis.';
 
   @override
-  String get tourJournal2Title => 'SEARCH';
+  String get tourJournal2Title => 'CARI';
 
   @override
   String get tourJournal2Body =>
       'Find any entry by ticker, agent name, or keyword across your entire history.';
 
   @override
-  String get tourJournal3Title => 'YOUR HISTORY';
+  String get tourJournal3Title => 'SEJARAH ANDA';
 
   @override
   String get tourJournal3Body =>
-      'Every entry is permanent. Your decisions live here — review them to improve.';
+      'Setiap entri adalah kekal. Keputusan anda ada di sini — semak semula untuk penambahbaikan.';
 
   @override
   String get tourCompletionJournal =>
-      'Your history starts with your first Room session.';
+      'Sejarah anda bermula dengan sesi Room pertama anda.';
 
   @override
-  String get tourLessons1Title => 'LESSONS';
+  String get tourLessons1Title => 'PENGAJARAN';
 
   @override
   String get tourLessons1Body =>
-      'Lessons are your path to unlocking all 12 analysts. Complete tracks to grow your team.';
+      'Pengajaran adalah jalan anda untuk membuka kunci semua 12 penganalisis. Lengkapkan trek untuk besarkan pasukan anda.';
 
   @override
-  String get tourLessons2Title => 'YOUR PROGRESS';
+  String get tourLessons2Title => 'KEMAJUAN ANDA';
 
   @override
   String get tourLessons2Body =>
-      'Track lessons completed and agents unlocked. Every lesson adds firepower to your team.';
+      'Kesan pelajaran yang selesai dan ejen yang dibuka. Setiap pelajaran menambah kekuatan kepada pasukan anda.';
 
   @override
-  String get tourLessons3Title => 'LEARNING TRACKS';
+  String get tourLessons3Title => 'JEJAK PEMBELAJARAN';
 
   @override
   String get tourLessons3Body =>
-      'Each hex is a learning track. Tap any to explore its lessons and unlock your analysts.';
+      'Setiap heks adalah jejak pembelajaran. Ketik mana-mana untuk teroka pelajaran dan buka penganalisis anda.';
 
   @override
   String get tourCompletionLessons =>
-      'Start with Foundations to unlock your first analyst.';
+      'Mulakan dengan Foundations untuk membuka penganalisis pertama anda.';
 
   @override
-  String get tourSettingsSectionTitle => 'WALKTHROUGH';
+  String get tourSettingsSectionTitle => 'PANDUAN';
 
   @override
-  String get tourSettingsRestart => 'Restart app tour';
+  String get tourSettingsRestart => 'Mulakan semula jelajah aplikasi';
 
   @override
   String get tourSettingsResetDone =>
-      'Tour restarts next time you visit each section.';
+      'Jelajah akan bermula semula apabila anda melawat setiap bahagian nanti.';
 }

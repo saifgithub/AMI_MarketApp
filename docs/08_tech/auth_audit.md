@@ -130,7 +130,7 @@ L-9 through L-12 surfaced during implementation and are added to the audit.
 
 **Severity for alpha:** Low — testers use one device.
 
-**Severity for Android-on-alpha (next week):** Medium. iPhone testers might also have the Android build installed during testing, and the same device_user_id is per-device (SharedPreferences-scoped), so the race is rare. However, a tester who uses both iOS and Android with the same email/Apple ID could trigger it.
+**Severity for Android-on-alpha (now, per D-057):** Medium. iPhone testers may also have the Android build installed during testing, and `device_user_id` is per-device (SharedPreferences-scoped), so the race is rare. However, a tester who uses both iOS and Android with the same email could trigger it (Apple on iOS + Google on Android with the same email both land via account-linking-Phase-1 email-lookup-first onto the same user row, but old tokens from each platform may linger).
 
 **Decision:** Defer to Beta. Two possible fixes at Beta:
 1. `get_current_user` re-reads `is_anonymous` from DB on each call (already does — we read the UserRow). Add a per-route check `if requires_claimed and current_user.is_anonymous: raise 403`. Routes that require a claimed user can opt in.

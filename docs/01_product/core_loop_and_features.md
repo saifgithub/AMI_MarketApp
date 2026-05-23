@@ -199,7 +199,7 @@ Status legend:
 | Platform | Status |
 |---|---|
 | iOS | 🟢 Alpha |
-| Android (GMS) | 🟡 v1.0 |
+| Android (GMS) | 🟢 Alpha (Play Console internal track, per D-057) |
 | Huawei AppGallery (HMS) | 🔵 v1.1 |
 | Web companion | ⚪ Phase 2 |
 | Samsung Galaxy Store | ⚪ Phase 2 (Android-GMS binary works there) |

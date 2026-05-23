@@ -1,11 +1,12 @@
-"""Auth endpoints — anonymous bootstrap + magic-link / Apple claim.
+"""Auth endpoints — anonymous bootstrap + magic-link / Apple / Google claim.
 
 Endpoint map:
 
   POST /v1/auth/anon                  Bootstrap or re-bootstrap an anon session
   POST /v1/auth/magic_link/start      Begin email magic-link claim
   POST /v1/auth/magic_link/verify     Complete email magic-link claim
-  POST /v1/auth/apple                 Claim via Apple Sign-In identity token
+  POST /v1/auth/apple                 Claim via Apple Sign-In identity token (iOS)
+  POST /v1/auth/google                Claim via Google Sign-In identity token (Android; D-057)
   GET  /v1/auth/me                    Read the current user (by token)
 
 The token format in scaffold mode is `scaffold:<user_id_hex>:<hmac_sig>`
@@ -30,6 +31,7 @@ from app.schemas.auth import (
     AppleSignInRequest,
     AuthUser,
     AuthVerifyResponse,
+    GoogleSignInRequest,
     MagicLinkStartRequest,
     MagicLinkStartResponse,
     MagicLinkVerifyRequest,
@@ -152,6 +154,25 @@ async def sign_in_with_apple(
     return AuthVerifyResponse(user=user, token=token, claimed=True)
 
 
+@router.post("/google", response_model=AuthVerifyResponse)
+async def sign_in_with_google(
+    req: GoogleSignInRequest,
+    auth: AuthService = Depends(get_auth_service),
+) -> AuthVerifyResponse:
+    # D-057 (AT:R36). Mirrors the Apple route. Verifies the identity token
+    # against Google's JWKS (signature + iss + aud + exp + email_verified)
+    # via OIDCVerifier. Any failure surfaces as 400.
+    try:
+        user, token = auth.sign_in_with_google(
+            identity_token=req.identity_token,
+            user_id=req.user_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    await _bind_onboarding_session(req.onboarding_session_id, user.id)
+    return AuthVerifyResponse(user=user, token=token, claimed=True)
+
+
 @router.delete("/session", status_code=status.HTTP_200_OK)
 def sign_out(
     current_user: User = Depends(get_current_user),
@@ -182,6 +203,8 @@ def whoami(
             id=row.id,
             email=row.email,
             apple_id=row.apple_id,
+            google_id=row.google_id,
+            display_name=row.display_name,
             is_anonymous=row.is_anonymous,
             claimed_at=row.claimed_at,
             created_at=row.created_at,

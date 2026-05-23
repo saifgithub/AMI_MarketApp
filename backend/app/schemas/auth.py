@@ -43,6 +43,7 @@ class AuthUser(BaseModel):
     id: UUID
     email: str | None = None
     apple_id: str | None = None
+    google_id: str | None = None
     display_name: str | None = None
     is_anonymous: bool
     claimed_at: datetime | None = None
@@ -112,6 +113,22 @@ class AppleSignInRequest(BaseModel):
     user_id: UUID | None = None
     full_name: str | None = None
     # BL13 (AT:R32): see MagicLinkVerifyRequest.onboarding_session_id.
+    onboarding_session_id: UUID | None = None
+
+
+class GoogleSignInRequest(BaseModel):
+    """Google Sign-In identity-token exchange (Android only at alpha).
+
+    Mirrors AppleSignInRequest. Unlike Apple, Google ships `email` +
+    `name` in EVERY ID token (not first-only), so the client doesn't
+    need a separate `full_name` field — the backend pulls it from
+    verified claims. Per D-057 minimum-data policy, only `sub`, `email`,
+    `name` are persisted; other claims (`picture`, `locale`, `given_name`,
+    `family_name`, `hd`) are dropped.
+    """
+
+    identity_token: str
+    user_id: UUID | None = None
     onboarding_session_id: UUID | None = None
 
 

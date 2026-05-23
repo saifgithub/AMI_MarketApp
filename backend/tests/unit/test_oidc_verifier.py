@@ -61,7 +61,7 @@ def _fresh_verifier(audiences: list[str] | None = None) -> tuple[OIDCVerifier, r
     private_key, public_jwk = _gen_rsa()
     verifier = OIDCVerifier(
         jwks_uri="https://example.invalid/jwks",  # never hit in seeded tests
-        issuer="https://appleid.apple.com",
+        issuers=["https://appleid.apple.com"],
         audiences=audiences or ["ai.agenticmarketintel.amiTrade"],
     )
     verifier._seed_jwks_for_test({public_jwk["kid"]: public_jwk})
@@ -228,7 +228,7 @@ def test_jwks_cache_refreshes_on_kid_miss():
 
     verifier = OIDCVerifier(
         jwks_uri="https://example.invalid/jwks",
-        issuer="https://appleid.apple.com",
+        issuers=["https://appleid.apple.com"],
         audiences=["ai.agenticmarketintel.amiTrade"],
     )
     # Seed with the OLD key (different kid). The verifier should refresh on

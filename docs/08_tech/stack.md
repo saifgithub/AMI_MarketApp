@@ -39,7 +39,7 @@ links to the deeper doc where the reality vs target detail lives.
 AMI_MarketApp/
 ├── docs/                         ← Product + tech docs
 │   └── 08_tech/                  ← This doc lives here
-├── mobile/                       ← Flutter app (iOS Alpha; Android v1.0)
+├── mobile/                       ← Flutter app (iOS + Android-GMS Alpha; HMS v1.1)
 │   ├── lib/
 │   │   ├── main.dart
 │   │   ├── app.dart
@@ -51,12 +51,12 @@ AMI_MarketApp/
 │   │   │   └── hex/              ← HexButton, HexAvatar, GlassPanel
 │   │   ├── services/
 │   │   │   ├── api/              ← apiClient + backend_modes.dart (alpha/beta/prod toggle)
-│   │   │   ├── auth/             ← Apple Sign-In + magic-link wiring
+│   │   │   ├── auth/             ← Apple (iOS) + Google (Android) Sign-In + magic-link wiring
 │   │   │   └── platform/         ← (empty — facade not yet built; see platform_facade.md)
 │   │   ├── state/                ← Riverpod providers
 │   │   └── models/               ← Dart models, mirror backend Pydantic
 │   ├── ios/                      ← TestFlight build artefacts
-│   ├── android/                  ← Scaffolded, not yet shipping
+│   ├── android/                  ← Play Console internal-track build (minSdk 28, targetSdk 35, Play App Signing)
 │   ├── assets/
 │   └── pubspec.yaml
 ├── backend/                      ← FastAPI service (runs on melehost in Alpha)

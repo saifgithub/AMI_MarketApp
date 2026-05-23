@@ -67,6 +67,18 @@ dev_dependencies:
   custom_lint: ^0.7.0
   riverpod_lint: ^2.6.3
 
+  # Android adaptive-icon + iOS icon-set generator. Run once after dropping
+  # source PNGs at mobile/assets/icon/: `flutter pub run flutter_launcher_icons`.
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false  # iOS icons hand-managed in Runner/Assets.xcassets
+  image_path: "assets/icon/ami_icon_hires.png"
+  adaptive_icon_foreground: "assets/icon/ami_icon_foreground.png"
+  adaptive_icon_background: "assets/icon/ami_icon_background.png"
+  min_sdk_android: 28
+
 flutter:
   uses-material-design: true
   generate: true

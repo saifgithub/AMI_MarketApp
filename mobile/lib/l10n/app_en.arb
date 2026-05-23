@@ -292,6 +292,7 @@
     "signInHeading": "SIGN IN",
     "signInIntro": "Sign in to keep your mandate, journal, and portfolio across devices. Until then, everything you build stays on this device.",
     "signInWithApple": "Sign in with Apple",
+    "signInWithGoogle": "Sign in with Google",
     "signInWithEmail": "OR CONTINUE WITH EMAIL",
     "signInEmailHint": "you@example.com",
     "signInSendCode": "SEND CODE",
@@ -306,6 +307,7 @@
     "signInCodeSent": "Code sent. Check your email.",
     "signInCodeFailed": "Code did not verify. Try again.",
     "signInAppleFailed": "Apple sign-in failed.",
+    "signInGoogleFailed": "Google sign-in failed.",
     "signInSignedInAs": "Signed in as {handle}",
     "@signInSignedInAs": {
         "description": "Confirmation card on the sign-in screen for already-claimed users. {handle} is the display handle.",

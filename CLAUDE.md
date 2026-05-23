@@ -86,7 +86,7 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 | Endpoint of the journey | **Training simulator, simulation-only, forever.** AMI is not licensed to give investment advice; no brokerage integration ever. |
 | Markets | **US equities at MVP.** GCC/Tadawul + Bursa later. |
 | Languages | **EN at alpha, AR + MS at v1.0.** Pluggable i18n. |
-| Platforms | **iOS at alpha, Android-GMS at v1.0, Huawei AppGallery at v1.1.** |
+| Platforms | **iOS + Android-GMS at alpha, Huawei AppGallery at v1.1.** |
 | Tech stack | **Flutter** frontend, **Python (FastAPI)** backend, **GCP Cloud Run + Supabase**. |
 | Design | **AMI "Hex-Reinforced Precision"** — see [`docs/05_design/ami_hex_in_flutter.md`](docs/05_design/ami_hex_in_flutter.md). |
 | Brand voice | Confident, analyst-to-analyst, numbers > adjectives, no marketing puffery. |

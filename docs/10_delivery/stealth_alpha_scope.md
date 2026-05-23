@@ -1,6 +1,6 @@
 # Stealth Alpha Scope (v1.0-alpha)
 
-What ships in 12 weeks. iOS only. English only. Free for Founders cohort. The 12 agents are the centerpiece.
+What ships in 12 weeks. **iOS TestFlight + Android-GMS Play Console internal track** (Android pulled forward from v1.0 — see [D-057](../11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha)). English only at alpha; Tier 1 AR + MS translations landed at AT:R35 but not yet wired into the build pipeline. Free for Founders cohort. The 12 agents are the centerpiece.
 
 ## Guiding principles
 
@@ -15,11 +15,12 @@ What ships in 12 weeks. iOS only. English only. Free for Founders cohort. The 12
 
 | Feature | Status |
 |---|---|
-| iOS app (no Android, no web) | ✓ |
+| iOS TestFlight app | ✓ |
+| Android-GMS Play Console internal-track app | ✓ (per D-057) |
 | English only (no AR/MS) | ✓ |
 | Anonymous-first onboarding (Concierge conversation) | ✓ |
 | Mandate creation — Express path with 3 risk scenarios | ✓ |
-| Account claim (Apple Sign-In + Email magic-link) | ✓ |
+| Account claim (Apple on iOS, Google on Android, Email magic-link cross-platform) | ✓ |
 | Mandate edit + version history (last 5) | ✓ |
 | All 12 agents wired (TradingAgents on Cloud Run) | ✓ |
 | Mandate overlay per agent prompt | ✓ |
@@ -55,7 +56,7 @@ What ships in 12 weeks. iOS only. English only. Free for Founders cohort. The 12
 
 | Feature | Defer to |
 |---|---|
-| Android (GMS + HMS) | v1.0 |
+| Android-HMS (Huawei AppGallery) | v1.1 |
 | Arabic + Malay languages + RTL | v1.0 |
 | Voice TTS briefings | v1.0 |
 | Animated honeycomb (rotations, pulses) | v1.0 |

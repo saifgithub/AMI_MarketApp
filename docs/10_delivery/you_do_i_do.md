@@ -9,7 +9,15 @@ These things only a human (Saiful) can do. Block any further progress without hi
 ### Accounts & identity
 
 - Open Apple Developer Account ($99/yr) — *already done ✓*
-- Open Google Play Console account ($25 one-time) — when v1.0 phase starts
+- Open Google Play Console account ($25 one-time, **individual registration**) — **alpha phase, now** (per D-057)
+  - Identity verification via government ID + selfie (few-day turnaround)
+  - Individual accounts require 14-day / 12-tester closed testing before promoting to production — alpha **internal track** is unaffected by this gate
+- Generate Android upload keystore (`keytool -genkey -v -keystore ~/.android-keys/ami-trade-upload.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000`)
+  - Back up keystore file + password to 1Password (Secure Note attachment)
+  - Extract SHA-1 fingerprint for GCP OAuth client below
+- GCP setup for Google Sign-In: in the existing GCP project, enable Google Sign-In API, create OAuth 2.0 **Android client** (package `ai.agenticmarketintel.ami_trade` + SHA-1 from keystore), create OAuth 2.0 **Web client** (its Client ID → `GOOGLE_AUDIENCES` env var on melehost)
+- Produce three Android icon source PNGs from AMI hex design system (foreground 1024×1024 transparent with 660×660 safe zone, background 1024×1024 solid `#0F172A`, hi-res 512×512 pre-composited) — see plan asset prompt
+- Fill Play Console listing: app name, descriptions, screenshots, hi-res icon, privacy policy URL, Data Safety form, Content Rating questionnaire
 - Open Huawei Developer Account (free) — when v1.1 phase starts
 - Open Google Cloud Platform account, enable billing
 - Open Supabase account, Pro plan
@@ -28,7 +36,8 @@ These things only a human (Saiful) can do. Block any further progress without hi
 
 - Submit iOS app to TestFlight (week 12)
 - Submit iOS app to App Store (alpha launch)
-- Submit Android app to Play Console (v1.0)
+- Submit first signed AAB to Play Console internal testing track (mandatory-manual upload via web UI for Play App Signing enrollment) — alpha
+- Subsequent AAB uploads can stay manual or switch to `fastlane supply` once friction bites
 - Submit Android-HMS app to AppGallery Connect (v1.1)
 - Configure store listings (descriptions, screenshots, keywords) — Claude drafts; Saiful reviews + submits
 - Respond to App Store / Play Store / AppGallery reviewer questions if any
@@ -63,7 +72,7 @@ These things only a human (Saiful) can do. Block any further progress without hi
 ### Testing on real devices
 
 - Manual smoke tests on real iPhone (any model)
-- Manual tests on real Android-GMS device (a Pixel / Samsung) — v1.0+
+- Manual tests on real Android-GMS device (Samsung Galaxy A17, 8GB, Android 14 / API 34) — alpha
 - Manual tests on a real Huawei device — v1.1
 - Founders cohort onboarding & feedback management
 

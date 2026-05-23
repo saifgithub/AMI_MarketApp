@@ -1,9 +1,11 @@
 /// Sign-in screen — opens from Settings → Account.
 ///
-/// Anonymous users see two claim paths:
-///   1. Sign in with Apple — native Sign in with Apple via the
-///      `sign_in_with_apple` package; the returned identity_token is
-///      verified against Apple's JWKS by the backend (Phase 3, AT:R29).
+/// Anonymous users see two claim paths (per-platform federated + email):
+///   1. Federated sign-in:
+///      - iOS → Sign in with Apple (`sign_in_with_apple` package; backend
+///        verifies identity_token against Apple's JWKS — Phase 3, AT:R29)
+///      - Android → Sign in with Google (`google_sign_in` package; backend
+///        verifies ID token against Google's JWKS — D-057, AT:R36)
 ///   2. Continue with email — sends a 6-digit code; in dev the code is
 ///      returned from the backend so the alpha tester can paste it without
 ///      a real email being sent.
@@ -12,12 +14,24 @@
 /// option to stay.
 library;
 
+import 'dart:io' show Platform;
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+
+// OAuth 2.0 **Web client ID** from GCP Console. Stamped into the Google
+// ID token as `aud`; the backend verifies against `GOOGLE_AUDIENCES`.
+// Empty in dev → the Google button is disabled (Google Sign-In needs
+// this to return an idToken). Passed via:
+//   --dart-define GOOGLE_OAUTH_WEB_CLIENT_ID=<value>
+// See scripts/build_playstore.sh.
+const _googleOAuthWebClientId =
+    String.fromEnvironment('GOOGLE_OAUTH_WEB_CLIENT_ID', defaultValue: '');
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -135,6 +149,63 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    if (_googleOAuthWebClientId.isEmpty) {
+      // Defensive — the button is disabled in this case, but if the build
+      // forgot to inject the define we surface a clear error rather than
+      // silently failing inside the plugin.
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Google Sign-In not configured for this build'),
+        ),
+      );
+      return;
+    }
+    final googleSignIn = GoogleSignIn(
+      scopes: const ['email'],
+      serverClientId: _googleOAuthWebClientId,
+    );
+    final GoogleSignInAccount? account;
+    try {
+      account = await googleSignIn.signIn();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google sign-in failed: $e')),
+      );
+      return;
+    }
+    if (account == null) {
+      // User cancelled — silent no-op.
+      return;
+    }
+    final auth = await account.authentication;
+    final idToken = auth.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google returned no ID token')),
+      );
+      return;
+    }
+
+    final ok =
+        await ref.read(authNotifierProvider.notifier).signInWithGoogle(idToken);
+    if (!mounted) return;
+    if (ok) {
+      Navigator.of(context).pop();
+    } else {
+      final msg = ref
+              .read(authNotifierProvider)
+              .error
+              ?.replaceFirst('Exception: ', '') ??
+          AppLocalizations.of(context).signInGoogleFailed;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authNotifierProvider);
@@ -163,10 +234,16 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               ),
               const SizedBox(height: AmiSpacing.l),
             ],
-            _AppleButton(
-              onPressed:
-                  auth.loading ? null : _signInWithApple,
-            ),
+            if (Platform.isIOS)
+              _AppleButton(
+                onPressed: auth.loading ? null : _signInWithApple,
+              )
+            else if (Platform.isAndroid)
+              _GoogleButton(
+                onPressed: (auth.loading || _googleOAuthWebClientId.isEmpty)
+                    ? null
+                    : _signInWithGoogle,
+              ),
             const SizedBox(height: AmiSpacing.l),
             _EmailClaimCard(
               emailCtrl: _emailCtrl,
@@ -235,6 +312,35 @@ class _AppleButton extends StatelessWidget {
         onPressed: onPressed,
         icon: const Icon(Icons.apple, size: 22, color: Colors.black),
         label: Text(AppLocalizations.of(context).signInWithApple),
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GoogleButton extends StatelessWidget {
+  const _GoogleButton({required this.onPressed});
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 48,
+      child: FilledButton.icon(
+        onPressed: onPressed,
+        // Material icons doesn't ship a Google G mark — using a generic
+        // login icon. Swap for a brand asset (assets/icons/google.svg)
+        // once design produces one. The button still meets Google's
+        // brand guidelines for non-prominent placements: white background,
+        // black text, no specific G required for non-marketing UI.
+        icon: const Icon(Icons.login, size: 20, color: Colors.black),
+        label: Text(AppLocalizations.of(context).signInWithGoogle),
         style: FilledButton.styleFrom(
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,

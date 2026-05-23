@@ -595,6 +595,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithApple => 'Sign in with Apple';
 
   @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
   String get signInWithEmail => 'OR CONTINUE WITH EMAIL';
 
   @override
@@ -625,6 +628,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get signInAppleFailed => 'Apple sign-in failed.';
+
+  @override
+  String get signInGoogleFailed => 'Google sign-in failed.';
 
   @override
   String signInSignedInAs(String handle) {

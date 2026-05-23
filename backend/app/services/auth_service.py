@@ -42,7 +42,7 @@ from app.db import get_session, init_schema
 from app.db.models import AuthChallengeRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
 from app.services.email_service import send_magic_link as _send_magic_link_email
-from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier
+from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier, build_google_verifier
 
 
 MAGIC_LINK_TTL_MIN = 15
@@ -118,6 +118,7 @@ def _row_to_user(row: User) -> AuthUser:
         id=row.id,
         email=row.email,
         apple_id=row.apple_id,
+        google_id=row.google_id,
         display_name=row.display_name,
         is_anonymous=row.is_anonymous,
         claimed_at=row.claimed_at,
@@ -190,7 +191,11 @@ def _b64url_decode(seg: str) -> bytes:
 class AuthService:
     """All auth flows. Sync API, opens its own DB session per call."""
 
-    def __init__(self, apple_verifier: OIDCVerifier | None = None) -> None:
+    def __init__(
+        self,
+        apple_verifier: OIDCVerifier | None = None,
+        google_verifier: OIDCVerifier | None = None,
+    ) -> None:
         init_schema()
         # Apple OIDC verifier (singleton-shaped — one instance owns the
         # JWKS cache). Injectable so tests can pass a fake that trusts
@@ -199,6 +204,16 @@ class AuthService:
             apple_verifier
             if apple_verifier is not None
             else build_apple_verifier(settings.apple_audiences)
+        )
+        # Google OIDC verifier (AT:R36, D-057). Wired the same way as
+        # Apple. Audiences = OAuth Web client_id(s) from GCP Console.
+        # When google_audiences is empty the verifier still constructs
+        # — it just rejects every real token at the audience check,
+        # which is the right behavior in dev before GCP is set up.
+        self._google_verifier: OIDCVerifier = (
+            google_verifier
+            if google_verifier is not None
+            else build_google_verifier(settings.google_audiences)
         )
 
     # ── Anonymous bootstrap ────────────────────────────────────────────
@@ -410,6 +425,92 @@ class AuthService:
                 if apple_email and not row.email:
                     row.email = apple_email
                 # Same don't-overwrite rule for display_name.
+                if full_name and not row.display_name:
+                    row.display_name = full_name
+                if row.is_anonymous:
+                    now = datetime.now(timezone.utc)
+                    row.is_anonymous = False
+                    row.claimed_at = now
+                    if row.trial_started_at is None:
+                        row.trial_started_at = now
+                        row.trial_expires_at = now + timedelta(days=7)
+            return _row_to_user(row), _scaffold_token(row.id)
+
+    # ── Google Sign-In ─────────────────────────────────────────────────
+
+    def sign_in_with_google(
+        self,
+        *,
+        identity_token: str,
+        user_id: UUID | None,
+    ) -> tuple[AuthUser, str]:
+        """Google Sign-In claim (Android only at alpha; D-057).
+
+        Mirrors `sign_in_with_apple`. Differences from Apple:
+          - Google ships `email` + `name` in every ID token (not first-only),
+            so no `full_name` parameter is needed. We still apply the
+            don't-overwrite rule to keep magic-link / Apple identities
+            stable when a user signs in via multiple providers.
+          - `email` is reliably present and verified — Google's
+            `email_verified` claim is checked.
+          - Minimum-data policy (D-057 / AT:R29): persist only `sub`,
+            `email`, `name`. Other claims (`picture`, `locale`, `hd`,
+            `given_name`, `family_name`) are dropped on the floor.
+        """
+        claims = self._google_verifier.verify(identity_token)
+        google_sub = claims.get("sub")
+        if not google_sub:
+            raise ValueError("google identity_token missing 'sub' claim")
+        google_sub = str(google_sub)
+        google_email = claims.get("email")
+        google_email = str(google_email).lower() if google_email else None
+        # Reject unverified emails — protects against a malicious user who
+        # creates a Google account with someone else's email but never
+        # confirms it. Google's own libraries enforce this.
+        if google_email and not claims.get("email_verified", False):
+            google_email = None
+        full_name = claims.get("name")
+        full_name = str(full_name).strip() if full_name else None
+        if not full_name:
+            full_name = None
+        with get_session() as s:
+            # Prefer matching an existing google_id row.
+            row = s.execute(
+                select(User).where(User.google_id == google_sub)
+            ).scalar_one_or_none()
+            # Email fallback (account-linking Phase 1): existing user owns
+            # this email (via magic-link or Apple-with-same-email) — attach
+            # google_sub to that row instead of forking.
+            if row is None and google_email:
+                row = s.execute(
+                    select(User).where(User.email == google_email)
+                ).scalar_one_or_none()
+                if row is not None:
+                    row.google_id = google_sub
+            # BL2 device re-keying on adoption (mirrors Apple flow).
+            if row is not None and user_id is not None and row.id != user_id:
+                _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
+            if row is None and user_id is not None:
+                row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+            if row is None:
+                now = datetime.now(timezone.utc)
+                row = User(
+                    id=user_id or uuid4(),
+                    device_user_id=user_id,
+                    google_id=google_sub,
+                    email=google_email,
+                    display_name=full_name,
+                    is_anonymous=False,
+                    claimed_at=now,
+                    trial_started_at=now,
+                    trial_expires_at=now + timedelta(days=7),
+                )
+                s.add(row)
+                s.flush()
+            else:
+                row.google_id = google_sub
+                if google_email and not row.email:
+                    row.email = google_email
                 if full_name and not row.display_name:
                     row.display_name = full_name
                 if row.is_anonymous:

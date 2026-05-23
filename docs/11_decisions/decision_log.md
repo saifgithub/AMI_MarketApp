@@ -37,6 +37,7 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 ### D-006 — Mobile-first; iOS / Android / Huawei
 - **Decided**: Mobile-first product. iOS + Android-GMS + Android-HMS at v1.0. Web companion is Phase 2.
 - **Rationale**: Mobile is where retail users live (especially in our markets). Finelo is also mobile-first. Huawei matters for MENA + SEA.
+- **Revised** (2026-05-23, see [D-057](#d-057--android-gms-pulled-forward-from-v10-to-alpha)): Android-GMS pulled forward from v1.0 to alpha. HMS stays at v1.1.
 
 ### D-007 — Three launch languages: EN, AR, MS
 - **Decided**: English at alpha; Arabic + Malay added at v1.0. Pluggable architecture for adding more.
@@ -304,6 +305,23 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 - **Source**: Saiful — "can we just use a server I have as the back office and then move it to GCP when we are close to launch?"
 - **Rationale**: Saves ~$400–600 in dev-phase cloud burn. Faster iteration. Forces cloud-portability discipline (every interface must work locally + on GCP from day one). Migration is ~5 days of work with the architecture we've designed. Must complete before Founders cohort onboards (week 12) so real user data lives in Frankfurt per GDPR/PDPL.
 - **Affects**: [`docs/10_delivery/timeline.md`](../10_delivery/timeline.md) (W1 setup is local; W9–10 added as migration phase), [`docs/08_tech/hosting.md`](../08_tech/hosting.md) (local-first section added), [`docs/10_delivery/pre_alpha_checklist.md`](../10_delivery/pre_alpha_checklist.md) (most cloud accounts deferred from W0 to W8).
+
+---
+
+## Platform expansion
+
+### D-057 — Android-GMS pulled forward from v1.0 to alpha
+- **Decided** (2026-05-23): Android-GMS ships at alpha alongside iOS, not at v1.0. Distribution via Google Play Console **internal testing track**. Locked sub-decisions:
+  - **Auth**: Google Sign-In on Android (closes backlog A6b). New `/v1/auth/google` backend route mirrors `/v1/auth/apple` (OIDC verifier + JWKS + account-linking-Phase-1 email-lookup-first). Apple stays iOS-only; Google stays Android-only (no cross-pollination — clean platform conventions). Email magic-link on both as fallback.
+  - **Play Console**: Individual registration ($25). Internal track unaffected by the 14-day / 12-tester graduation gate (that's a v1.0-promotion problem).
+  - **Keystore**: Play App Signing (mandatory for new apps). Upload keystore at `~/.android-keys/ami-trade-upload.keystore`, outside repo, backed up to 1Password.
+  - **SDK floor**: `minSdk` **28** (Android 9 Pie, ~93% device coverage). `targetSdk` **35** (Play policy mandate). Test surface is one device (Samsung Galaxy A17) — narrower-claimed floor is safer than untested promises.
+  - **Test device**: Samsung Galaxy A17 8GB (Android 14, API 34).
+  - **Deferred**: Push notifications (FCM) and payments (RevenueCat / Google Play Billing) stay deferred — same as iOS, lands cross-platform when BL11 / payment work happens.
+- **Source**: Saiful — "I am moving the android support to alpha. I had read that the more I move forward without doing the android support, the harder it becomes."
+- **Rationale**: Every iOS-only assumption that creeps into the codebase compounds the eventual Android tax. Cheap to keep platforms in lockstep now (existing scaffold + `Platform.isAndroid` branches already in `device_user.dart`, `feedback_providers.dart`, `api_client.dart` — no `MethodChannel` code anywhere) versus expensive to retrofit later. The 12-agents differentiator (D-050 Option B) is unaffected — this is platform-scope, not feature-scope. Closes A6b.
+- **Affects**: [`docs/08_tech/platform_facade.md`](../08_tech/platform_facade.md) (status banner — Android-GMS now ships via direct integration, not the facade), [`docs/08_tech/auth.md`](../08_tech/auth.md) (new Google Sign-In section), [`docs/08_tech/stack.md`](../08_tech/stack.md), [`docs/10_delivery/project_plan.md`](../10_delivery/project_plan.md), [`docs/10_delivery/stealth_alpha_scope.md`](../10_delivery/stealth_alpha_scope.md), [`docs/10_delivery/you_do_i_do.md`](../10_delivery/you_do_i_do.md), [`docs/01_product/core_loop_and_features.md`](../01_product/core_loop_and_features.md), [`CLAUDE.md`](../../CLAUDE.md).
+- **Supersedes**: Partial supersession of D-006 (Android pulled from v1.0 to alpha; HMS still v1.1).
 
 ---
 

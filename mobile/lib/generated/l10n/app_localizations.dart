@@ -1174,6 +1174,12 @@ abstract class AppLocalizations {
   /// **'Sign in with Apple'**
   String get signInWithApple;
 
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInWithGoogle;
+
   /// No description provided for @signInWithEmail.
   ///
   /// In en, this message translates to:
@@ -1233,6 +1239,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apple sign-in failed.'**
   String get signInAppleFailed;
+
+  /// No description provided for @signInGoogleFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed.'**
+  String get signInGoogleFailed;
 
   /// Confirmation card on the sign-in screen for already-claimed users. {handle} is the display handle.
   ///

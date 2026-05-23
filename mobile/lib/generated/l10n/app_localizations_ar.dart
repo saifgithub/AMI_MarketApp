@@ -15,7 +15,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tabFloor => 'Floor';
 
   @override
-  String get tabPortfolio => 'Portfolio';
+  String get tabPortfolio => 'المحفظة';
 
   @override
   String get tabJournal => 'السجل';
@@ -294,37 +294,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String get journalNoteSaved => 'تم حفظ الملاحظة';
 
   @override
-  String get journalSearchHint => 'Search entries…';
+  String get journalSearchHint => 'بحث في المدخلات...';
 
   @override
-  String get journalSearchEmpty => 'No entries match your search.';
+  String get journalSearchEmpty => 'لا توجد مدخلات تطابق بحثك.';
 
   @override
-  String get journalEntryDeleted => 'Entry removed';
+  String get journalEntryDeleted => 'تم حذف المدخل';
 
   @override
-  String get journalUndo => 'UNDO';
+  String get journalUndo => 'تراجع';
 
   @override
-  String get journalTrashHeading => 'TRASH';
+  String get journalTrashHeading => 'السلة';
 
   @override
   String get journalTrashEmpty =>
-      'Nothing here. Deleted entries appear in this list.';
+      'لا يوجد شيء هنا. تظهر المدخلات المحذوفة في هذه القائمة.';
 
   @override
   String get journalTrashWindowNote =>
-      'Older entries are auto-hidden after 30 days.';
+      'يتم إخفاء المدخلات القديمة تلقائياً بعد 30 يوماً.';
 
   @override
-  String get journalRestoreEntry => 'RESTORE';
+  String get journalRestoreEntry => 'استعادة';
 
   @override
-  String get journalEntryRestored => 'Entry restored';
+  String get journalEntryRestored => 'تم استعادة المدخل';
 
   @override
   String journalDeletedAgo(String ago) {
-    return 'Deleted $ago';
+    return 'حُذف منذ $ago';
   }
 
   @override
@@ -595,6 +595,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signInWithApple => 'تسجيل الدخول باستخدام Apple';
 
   @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
   String get signInWithEmail => 'أو المتابعة عبر البريد الإلكتروني';
 
   @override
@@ -625,6 +628,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get signInAppleFailed => 'فشل تسجيل الدخول عبر Apple.';
+
+  @override
+  String get signInGoogleFailed => 'Google sign-in failed.';
 
   @override
   String signInSignedInAs(String handle) {
@@ -787,7 +793,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get conveneOrPickOne => 'أو اختر واحداً';
 
   @override
-  String get conveneCta => 'CONVENE';
+  String get conveneCta => 'اجتماع';
 
   @override
   String get roomHeadingPrefix => 'CONVENE ›';
@@ -908,83 +914,83 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chatBubbleConcierge => 'الكونسيرج';
 
   @override
-  String get tourIntroTitle => 'Welcome to your trading floor.';
+  String get tourIntroTitle => 'مرحباً بك في صالة التداول الخاصة بك.';
 
   @override
-  String get tourIntroSubtitle => 'A quick tour shows you how AMI Trade works.';
+  String get tourIntroSubtitle => 'جولة سريعة توضح لك آلية عمل AMI Trade.';
 
   @override
-  String get tourTakeTheTour => 'Take the tour';
+  String get tourTakeTheTour => 'ابدأ الجولة';
 
   @override
-  String get tourSkipForNow => 'Skip for now';
+  String get tourSkipForNow => 'تخطي الآن';
 
   @override
-  String get tourNext => 'Next →';
+  String get tourNext => 'التالي ←';
 
   @override
-  String get tourDone => 'Got it';
+  String get tourDone => 'فهمت';
 
   @override
-  String get tourSkip => 'Skip tour';
+  String get tourSkip => 'تخطي الجولة';
 
   @override
-  String get tourConveneTryNow => 'Try it now →';
+  String get tourConveneTryNow => 'جربه الآن ←';
 
   @override
-  String get tourFloor1Title => 'YOUR CONCIERGE';
+  String get tourFloor1Title => 'مساعدك الشخصي';
 
   @override
   String get tourFloor1Body =>
-      'Always available. Ask anything — lessons, your portfolio, what to read next.';
+      'متاح دائماً. اسأل عن أي شيء — الدروس، محفظتك، أو ماذا تقرأ تالياً.';
 
   @override
-  String get tourFloor2Title => 'YOUR ANALYST TEAM';
+  String get tourFloor2Title => 'فريق المحللين الخاص بك';
 
   @override
   String get tourFloor2Body =>
-      '12 specialists, each with a domain. Tap any unlocked one to start a one-on-one.';
+      '12 متخصصاً، لكل منهم مجاله. اضغط على أي محلل متاح لبدء جلسة فردية.';
 
   @override
-  String get tourFloor3Title => 'LOCKED AGENTS';
+  String get tourFloor3Title => 'وكلاء مقفلون';
 
   @override
   String get tourFloor3Body =>
-      'Complete the related lessons to unlock each analyst. Tap any locked one to see what you need.';
+      'أكمل الدروس ذات الصلة لفتح كل محلل. اضغط على أي محلل مقفل لمعرفة المتطلبات.';
 
   @override
-  String get tourFloor4Title => 'DAILY CHALLENGE';
+  String get tourFloor4Title => 'التحدي اليومي';
 
   @override
   String get tourFloor4Body =>
-      'One challenge a day sharpens your judgement. Takes under 2 minutes.';
+      'تحدٍ واحد يومياً يصقل حكمك التحليلي. يستغرق أقل من دقيقتين.';
 
   @override
-  String get tourFloor5Title => 'CONVENE THE ROOM';
+  String get tourFloor5Title => 'عقد اجتماع الغرفة';
 
   @override
   String get tourFloor5Body =>
-      'Your most powerful tool. All 12 agents analyze a stock together — then you decide.';
+      'أقوى أدواتك. يقوم جميع الوكلاء الـ 12 بتحليل السهم معاً — ثم تتخذ أنت القرار.';
 
   @override
-  String get tourCompletionFloor => 'Go convene your first Room.';
+  String get tourCompletionFloor => 'اذهب لعقد أول Room لك.';
 
   @override
-  String get tourPortfolio1Title => 'SIMULATION PORTFOLIO';
+  String get tourPortfolio1Title => 'محفظة محاكاة';
 
   @override
   String get tourPortfolio1Body =>
-      'Use the + button to open a trade ticket. All trades are paper — no real money.';
+      'استخدم زر + لفتح OPEN TRADE TICKET. جميع الصفقات تجريبية — بدون أموال حقيقية.';
 
   @override
-  String get tourPortfolio2Title => 'TOTAL VALUE & P&L';
+  String get tourPortfolio2Title => 'القيمة الإجمالية والربح والخسارة';
 
   @override
   String get tourPortfolio2Body =>
-      'Track your portfolio value and running P&L here. Aim to beat the market.';
+      'تتبع قيمة محفظتك والربح والخسارة الجاري هنا. هدفك هو التفوق على السوق.';
 
   @override
-  String get tourPortfolio3Title => 'WATCHLIST';
+  String get tourPortfolio3Title => 'قائمة المراقبة';
 
   @override
   String get tourPortfolio3Body =>
@@ -992,65 +998,63 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tourCompletionPortfolio =>
-      'Try a trade — all simulation, no risk.';
+      'جرب تداولاً — محاكاة كاملة، بدون مخاطر.';
 
   @override
-  String get tourJournal1Title => 'FILTER BY TYPE';
+  String get tourJournal1Title => 'تصفية حسب النوع';
 
   @override
   String get tourJournal1Body =>
-      'Everything gets logged — Room sessions, trades, briefings, lessons. Filter by type.';
+      'يتم تسجيل كل شيء — جلسات Room، الصفقات، الإيجازات، والدروس. قم بالتصفية حسب النوع.';
 
   @override
-  String get tourJournal2Title => 'SEARCH';
+  String get tourJournal2Title => 'بحث';
 
   @override
   String get tourJournal2Body =>
-      'Find any entry by ticker, agent name, or keyword across your entire history.';
+      'ابحث عن أي إدخال بواسطة الرمز، أو اسم الوكيل، أو كلمة مفتاحية عبر سجلك بالكامل.';
 
   @override
-  String get tourJournal3Title => 'YOUR HISTORY';
+  String get tourJournal3Title => 'سجلك';
 
   @override
   String get tourJournal3Body =>
-      'Every entry is permanent. Your decisions live here — review them to improve.';
+      'كل إدخال دائم. قراراتك محفوظة هنا — راجعها لتحسين أدائك.';
 
   @override
-  String get tourCompletionJournal =>
-      'Your history starts with your first Room session.';
+  String get tourCompletionJournal => 'يبدأ سجلك مع أول جلسة في الغرفة.';
 
   @override
-  String get tourLessons1Title => 'LESSONS';
+  String get tourLessons1Title => 'الدروس';
 
   @override
   String get tourLessons1Body =>
-      'Lessons are your path to unlocking all 12 analysts. Complete tracks to grow your team.';
+      'الدروس هي طريقك لفتح جميع المحللين الـ 12. أكمل المسارات لتوسيع فريقك.';
 
   @override
-  String get tourLessons2Title => 'YOUR PROGRESS';
+  String get tourLessons2Title => 'تقدمك';
 
   @override
   String get tourLessons2Body =>
-      'Track lessons completed and agents unlocked. Every lesson adds firepower to your team.';
+      'تتبع الدروس المكتملة والوكلاء الذين تم فتحهم. كل درس يضيف قوة هجومية لفريقك.';
 
   @override
-  String get tourLessons3Title => 'LEARNING TRACKS';
+  String get tourLessons3Title => 'مسارات التعلم';
 
   @override
   String get tourLessons3Body =>
-      'Each hex is a learning track. Tap any to explore its lessons and unlock your analysts.';
+      'كل شكل سداسي يمثل مسار تعلم. اضغط على أي منها لاستكشاف دروسه وفتح المحللين الخاصين بك.';
 
   @override
-  String get tourCompletionLessons =>
-      'Start with Foundations to unlock your first analyst.';
+  String get tourCompletionLessons => 'ابدأ بـ Foundations لفتح أول محلل لك.';
 
   @override
-  String get tourSettingsSectionTitle => 'WALKTHROUGH';
+  String get tourSettingsSectionTitle => 'الجولة التعريفية';
 
   @override
-  String get tourSettingsRestart => 'Restart app tour';
+  String get tourSettingsRestart => 'إعادة تشغيل جولة التطبيق';
 
   @override
   String get tourSettingsResetDone =>
-      'Tour restarts next time you visit each section.';
+      'ستبدأ الجولة مجدداً في المرة القادمة التي تزور فيها كل قسم.';
 }

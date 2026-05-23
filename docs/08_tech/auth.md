@@ -9,9 +9,10 @@
 > swap-over is mechanical. Code-resident details below describe what
 > actually ships; the Supabase / MVP target sections are flagged.
 
-Anonymous-first. Apple Sign-In + email magic-link in Alpha; Google
-Sign-In, Phone OTP, and HMS Account Kit are deferred (see "Not yet
-delivered" at the bottom).
+Anonymous-first. Per-platform federated sign-in: **Apple on iOS**,
+**Google on Android**. Email magic-link works cross-platform.
+Phone OTP and HMS Account Kit are deferred (see "Not yet delivered"
+at the bottom).
 
 ## What ships in Alpha
 
@@ -19,7 +20,8 @@ delivered" at the bottom).
 |---|---|---|
 | iOS TestFlight | **Sign in with Apple** (real client wiring; `sign_in_with_apple` package) + **email magic-link** | Delivered ([`/v1/auth/apple`](api_design.md#v1auth), [`/v1/auth/magic_link/{start,verify}`](api_design.md#v1auth)) |
 | iOS TestFlight | **Anonymous** bootstrap on first launch | Delivered ([`/v1/auth/anon`](api_design.md#v1auth)) |
-| Android | n/a | Not yet built (v1.0 milestone) |
+| Android Play Console (internal track) | **Sign in with Google** (`google_sign_in` package) + **email magic-link** | Delivered ([`/v1/auth/google`](api_design.md#v1auth), `/v1/auth/magic_link/{start,verify}`) |
+| Android Play Console (internal track) | **Anonymous** bootstrap on first launch | Delivered (same `/v1/auth/anon` as iOS) |
 | Web | n/a | Phase 2 |
 
 ### Apple Sign-In — how it actually works
@@ -45,6 +47,30 @@ signature + audience + expiry), persists `users.apple_id` + `email`
 (if released) + `display_name` (from `full_name` on **first sign-in
 only** — Apple only releases the name on first auth, and we
 never overwrite). Returns the bearer JWT.
+
+### Google Sign-In — how it actually works
+
+```dart
+// mobile/lib/services/auth/google_signin_service.dart
+final account = await GoogleSignIn(
+  scopes: ['email', 'profile'],
+  serverClientId: googleOAuthWebClientId, // Web client ID from GCP
+).signIn();
+final auth = await account!.authentication;
+
+// Send the ID token to our backend
+final res = await apiClient.post('/v1/auth/google', body: {
+  'id_token': auth.idToken,
+  'onboarding_session_id': sessionId, // optional, binds anon onboarding to claim
+});
+```
+
+Two OAuth 2.0 clients required in GCP Console (this catches people):
+
+- **Android client**: binds to package name `ai.agenticmarketintel.ami_trade` + SHA-1 of the upload keystore. Required by the device-side `google_sign_in` package; identifies the calling app to Google.
+- **Web client**: its Client ID becomes the `aud` claim Google stamps into ID tokens returned to the Android client. Backend verifies the token's `aud` against `GOOGLE_AUDIENCES` env var (the Web client ID, possibly comma-separated for rotation).
+
+Backend `GoogleOIDCVerifier` mirrors `AppleOIDCVerifier`: fetches `https://www.googleapis.com/oauth2/v3/certs` JWKS, RSA-verifies the ID token, validates `iss ∈ {https://accounts.google.com, accounts.google.com}`, `aud ∈ GOOGLE_AUDIENCES`, `exp`. On verified token: account-linking-Phase-1 email-lookup-FIRST (adopt existing magic-link / Apple user with same email — never fork), then `google_sub`-fallback (returning user). On first claim: populates `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` (guarded by `is None`), persists `email` + `display_name` (only if not already set), binds `onboarding_session_id` if provided.
 
 ### Magic-link
 
@@ -158,8 +184,8 @@ trusted backend; see [`data_model.md`](data_model.md) storage realities).
 
 | Provider | Status | Note |
 |---|---|---|
-| **Google Sign-In on iOS** | Deferred | Apple-only for Alpha; iOS App Store doesn't mandate Google. |
-| **Google Sign-In on Android-GMS** | Carry-over from AT:R29 (A6b) — verifier abstraction done; blocked on Saiful's Google Cloud Console setup (OAuth Web client_id + Android SHA-1). |
+| **Google Sign-In on iOS** | Deferred (intentional) | iOS stays Apple-only — clean platform conventions, no UX clutter. Backend `/v1/auth/google` is platform-agnostic so this can be turned on later with a UI-only change. |
+| **Google Sign-In on Android-GMS** | **Delivered at alpha** (closes A6b) | See section above. |
 | **HMS Account Kit** | v1.1 milestone | Huawei devices have no GMS; needs a backend `hms_exchange` endpoint (token validation against Huawei's servers, user lookup/create keyed on `users.hms_unionid`). The column exists on `users` (specced). |
 | **SMS OTP (Twilio)** | Deferred to MVP | Magic-link covers Alpha. Twilio Verify is the design; revisit at MVP — country cost varies (Saudi is expensive). |
 | **Phone OTP via Supabase** | MVP target | Once Supabase plugs in, phone OTP becomes free SDK-side. |
