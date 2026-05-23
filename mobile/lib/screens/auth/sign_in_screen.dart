@@ -17,6 +17,7 @@ library;
 import 'dart:io' show Platform;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/screens/auth/merge_sheet.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -73,17 +74,30 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final email = _emailCtrl.text.trim();
     final code = _codeCtrl.text.trim();
     if (email.isEmpty || code.isEmpty) return;
-    final ok = await ref
+    final outcome = await ref
         .read(authNotifierProvider.notifier)
         .verifyMagicLink(email: email, code: code);
     if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop();
+    if (outcome.success) {
+      await _afterClaim(outcome.adoptedFromUserId);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).signInCodeFailed)),
       );
     }
+  }
+
+  /// BL16 (AT:R38): post-claim hook. When the backend signals an
+  /// account-linking-Phase-1 adoption (adoptedFromUserId != null), surface
+  /// the merge sheet before popping back to whoever pushed this screen.
+  Future<void> _afterClaim(String? adoptedFromUserId) async {
+    if (adoptedFromUserId != null) {
+      await showMergeSheet(
+        context, ref, adoptedFromUserId: adoptedFromUserId,
+      );
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   Future<void> _signInWithApple() async {
@@ -133,13 +147,13 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         .join(' ')
         .trim();
 
-    final ok = await ref.read(authNotifierProvider.notifier).signInWithApple(
+    final outcome = await ref.read(authNotifierProvider.notifier).signInWithApple(
           identityToken,
           fullName: fullName.isEmpty ? null : fullName,
         );
     if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop();
+    if (outcome.success) {
+      await _afterClaim(outcome.adoptedFromUserId);
     } else {
       final msg = ref
               .read(authNotifierProvider)
@@ -192,11 +206,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       return;
     }
 
-    final ok =
+    final outcome =
         await ref.read(authNotifierProvider.notifier).signInWithGoogle(idToken);
     if (!mounted) return;
-    if (ok) {
-      Navigator.of(context).pop();
+    if (outcome.success) {
+      await _afterClaim(outcome.adoptedFromUserId);
     } else {
       final msg = ref
               .read(authNotifierProvider)

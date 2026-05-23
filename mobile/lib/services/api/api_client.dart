@@ -19,6 +19,7 @@ import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/mandate.dart';
+import 'package:ami_trade/models/merge.dart';
 import 'package:ami_trade/models/one_on_one.dart';
 import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
@@ -874,6 +875,29 @@ class ApiClient {
       // Fire-and-forget — client clears its token regardless of server response.
     }
     _bearerToken = null;
+  }
+
+  // ── BL16 account merge (AT:R38) ────────────────────────────────────────
+
+  /// Read-only counts of what an account merge would move from the orphan
+  /// `fromUserId` into the current bearer's user. 403 if the bearer is not
+  /// the legitimate adopter, 404 if the orphan was already merged.
+  Future<MergePreview> previewMerge({required String fromUserId}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/auth/merge/preview/$fromUserId',
+    );
+    return MergePreview.fromJson(r.data!);
+  }
+
+  /// Re-key journal / sim / lessons / overlays from orphan into the
+  /// current bearer's user. Server-side single transaction. The orphan
+  /// row is deleted at the end.
+  Future<MergeResult> executeMerge({required String fromUserId}) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/auth/merge',
+      data: {'from_user_id': fromUserId},
+    );
+    return MergeResult.fromJson(r.data!);
   }
 
   Future<AuthUser> me({required String token}) async {

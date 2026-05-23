@@ -1264,6 +1264,102 @@ abstract class AppLocalizations {
   /// **'AMI Trade is simulation-only. Nothing here is investment advice and no real trades are executed.'**
   String get signInLegalFootnote;
 
+  /// No description provided for @mergeSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'WELCOME BACK'**
+  String get mergeSheetTitle;
+
+  /// No description provided for @mergeSheetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We found data from your previous session on this device. Would you like to bring it into your account?'**
+  String get mergeSheetBody;
+
+  /// No description provided for @mergeSheetEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve signed back in. Nothing carried over from your previous session on this device.'**
+  String get mergeSheetEmptyBody;
+
+  /// Pluralised count of orphan journal entries shown in the merge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 journal entry} other{{count} journal entries}}'**
+  String mergeSheetJournalEntries(int count);
+
+  /// Pluralised count of orphan sim trades shown in the merge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 simulated trade} other{{count} simulated trades}}'**
+  String mergeSheetSimTrades(int count);
+
+  /// Pluralised count of orphan watchlist tickers in the merge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 watchlist ticker} other{{count} watchlist tickers}}'**
+  String mergeSheetWatchlist(int count);
+
+  /// Pluralised count of orphan lesson-progress rows in the merge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 lesson started} other{{count} lessons started}}'**
+  String mergeSheetLessons(int count);
+
+  /// Pluralised count of orphan 1-on-1 messages in the merge sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 1-on-1 message} other{{count} 1-on-1 messages}}'**
+  String mergeSheetOneOnOnes(int count);
+
+  /// Pluralised count of orphan Convene-the-Room runs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 Room run} other{{count} Room runs}}'**
+  String mergeSheetRoomRuns(int count);
+
+  /// No description provided for @mergeSheetMandate.
+  ///
+  /// In en, this message translates to:
+  /// **'Mandate (yours stays — we\'\'ll drop the older one)'**
+  String get mergeSheetMandate;
+
+  /// No description provided for @mergeSheetMandateMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Mandate from your previous session (no conflict)'**
+  String get mergeSheetMandateMove;
+
+  /// No description provided for @mergeSheetConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'MERGE EVERYTHING'**
+  String get mergeSheetConfirm;
+
+  /// No description provided for @mergeSheetKeepSeparate.
+  ///
+  /// In en, this message translates to:
+  /// **'KEEP SEPARATE'**
+  String get mergeSheetKeepSeparate;
+
+  /// No description provided for @mergeSheetClose.
+  ///
+  /// In en, this message translates to:
+  /// **'GOT IT'**
+  String get mergeSheetClose;
+
+  /// No description provided for @mergeSheetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Merged into your account.'**
+  String get mergeSheetSuccess;
+
+  /// No description provided for @mergeSheetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge failed. Try again from Settings later.'**
+  String get mergeSheetFailed;
+
   /// No description provided for @oneOnOneAskAnything.
   ///
   /// In en, this message translates to:

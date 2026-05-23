@@ -316,6 +316,47 @@
     },
     "signInLegalFootnote": "AMI Trade is simulation-only. Nothing here is investment advice and no real trades are executed.",
 
+    "mergeSheetTitle": "WELCOME BACK",
+    "mergeSheetBody": "We found data from your previous session on this device. Would you like to bring it into your account?",
+    "mergeSheetEmptyBody": "You've signed back in. Nothing carried over from your previous session on this device.",
+    "mergeSheetJournalEntries": "{count, plural, =1{1 journal entry} other{{count} journal entries}}",
+    "@mergeSheetJournalEntries": {
+        "description": "Pluralised count of orphan journal entries shown in the merge sheet.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetSimTrades": "{count, plural, =1{1 simulated trade} other{{count} simulated trades}}",
+    "@mergeSheetSimTrades": {
+        "description": "Pluralised count of orphan sim trades shown in the merge sheet.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetWatchlist": "{count, plural, =1{1 watchlist ticker} other{{count} watchlist tickers}}",
+    "@mergeSheetWatchlist": {
+        "description": "Pluralised count of orphan watchlist tickers in the merge sheet.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetLessons": "{count, plural, =1{1 lesson started} other{{count} lessons started}}",
+    "@mergeSheetLessons": {
+        "description": "Pluralised count of orphan lesson-progress rows in the merge sheet.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetOneOnOnes": "{count, plural, =1{1 1-on-1 message} other{{count} 1-on-1 messages}}",
+    "@mergeSheetOneOnOnes": {
+        "description": "Pluralised count of orphan 1-on-1 messages in the merge sheet.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetRoomRuns": "{count, plural, =1{1 Room run} other{{count} Room runs}}",
+    "@mergeSheetRoomRuns": {
+        "description": "Pluralised count of orphan Convene-the-Room runs.",
+        "placeholders": {"count": {"type": "int"}}
+    },
+    "mergeSheetMandate": "Mandate (yours stays — we''ll drop the older one)",
+    "mergeSheetMandateMove": "Mandate from your previous session (no conflict)",
+    "mergeSheetConfirm": "MERGE EVERYTHING",
+    "mergeSheetKeepSeparate": "KEEP SEPARATE",
+    "mergeSheetClose": "GOT IT",
+    "mergeSheetSuccess": "Merged into your account.",
+    "mergeSheetFailed": "Merge failed. Try again from Settings later.",
+
     "oneOnOneAskAnything": "Ask me anything in my domain.\nType below to start.",
     "oneOnOneStreaming": "Streaming…",
     "oneOnOneHint": "Ask anything…",

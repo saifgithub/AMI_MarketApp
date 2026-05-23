@@ -18,7 +18,12 @@ import 'package:ami_trade/screens/dev_preview_screen.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
 import 'package:ami_trade/state/auth_providers.dart';
+import 'package:ami_trade/state/journal_providers.dart';
+import 'package:ami_trade/state/lessons_providers.dart';
+import 'package:ami_trade/state/mandate_providers.dart';
+import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/theme_provider.dart';
+import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,6 +66,21 @@ class _AuthGate extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // BL16 (AT:R38): when user.id flips (sign-in adopting a different
+    // existing user, sign-out + re-bootstrap, merge that deletes the
+    // orphan), the per-user Riverpod caches (sim, journal, mandate,
+    // watchlist, lessons) still hold the previous user's data and
+    // would render stale. Invalidate them whenever AuthState transitions
+    // through a `previousUserId != null` tick.
+    ref.listen<AuthState>(authNotifierProvider, (prev, next) {
+      if (next.previousUserId == null) return;
+      ref.invalidate(simNotifierProvider);
+      ref.invalidate(journalNotifierProvider);
+      ref.invalidate(journalTrashNotifierProvider);
+      ref.invalidate(mandateNotifierProvider);
+      ref.invalidate(watchlistNotifierProvider);
+      ref.invalidate(lessonsNotifierProvider);
+    });
     final auth = ref.watch(authNotifierProvider);
     if (auth.token == null) {
       // Bootstrap is in flight (or never started, or errored). Show the

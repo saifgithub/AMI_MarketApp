@@ -28,6 +28,7 @@ class AuthState {
     this.loading = false,
     this.error,
     this.lastDebugCode,
+    this.previousUserId,
   });
 
   final AuthUser? user;
@@ -40,14 +41,24 @@ class AuthState {
   /// production.
   final String? lastDebugCode;
 
+  /// BL16 (AT:R38): set transiently when `user.id` changes (sign-in
+  /// adopting a different user, sign-out, sign-back-in). Downstream
+  /// providers (`sim`, `journal`, `mandate`, `watchlist`, `lessons`) hold
+  /// per-user caches that go stale on this transition; `_AuthGate`
+  /// listens for the change and invalidates them. Cleared on the next
+  /// state mutation that does NOT change user.id.
+  final String? previousUserId;
+
   AuthState copyWith({
     AuthUser? user,
     String? token,
     bool? loading,
     String? error,
     String? lastDebugCode,
+    String? previousUserId,
     bool clearError = false,
     bool clearDebugCode = false,
+    bool clearPreviousUserId = false,
   }) {
     return AuthState(
       user: user ?? this.user,
@@ -55,8 +66,27 @@ class AuthState {
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
       lastDebugCode: clearDebugCode ? null : (lastDebugCode ?? this.lastDebugCode),
+      previousUserId: clearPreviousUserId
+          ? null
+          : (previousUserId ?? this.previousUserId),
     );
   }
+}
+
+/// BL16 (AT:R38) — outcome of a claim attempt (magic-link / Apple / Google).
+/// Carries enough signal for [SignInScreen] to branch into the merge sheet
+/// when account-linking Phase 1 adopted an existing user row over the
+/// caller's anon.
+@immutable
+class ClaimOutcome {
+  const ClaimOutcome({required this.success, this.adoptedFromUserId});
+  final bool success;
+
+  /// Non-null when the backend silently adopted an existing email/sub row
+  /// — i.e. the pre-claim anon's user_id, ready to feed into
+  /// `ApiClient.previewMerge`. Null on the common case where the same
+  /// row got promoted.
+  final String? adoptedFromUserId;
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -90,10 +120,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // Persist the canonical (id, token) the backend returned. If the
       // backend minted fresh (A2 path), this overwrites the stale local id.
       await DeviceUser.setIdAndToken(r.user.id, r.token);
-      state = state.copyWith(user: r.user, token: r.token, loading: false);
+      state = _commitUserChange(state, user: r.user, token: r.token, loading: false);
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
     }
+  }
+
+  /// Centralised state-mutation for "this op might have changed user.id".
+  /// Captures the previous id into [AuthState.previousUserId] so the
+  /// `_AuthGate` listener can invalidate per-user caches. If the id
+  /// didn't actually change, leaves [previousUserId] alone (avoids
+  /// re-firing the invalidation on a no-op token refresh).
+  AuthState _commitUserChange(
+    AuthState current, {
+    required AuthUser user,
+    required String token,
+    bool loading = false,
+    bool clearDebugCode = false,
+  }) {
+    final wasId = current.user?.id;
+    final isChange = wasId != null && wasId != user.id;
+    return current.copyWith(
+      user: user,
+      token: token,
+      loading: loading,
+      clearDebugCode: clearDebugCode,
+      previousUserId: isChange ? wasId : null,
+      clearPreviousUserId: !isChange,
+    );
   }
 
   Future<bool> startMagicLink(String email) async {
@@ -113,7 +167,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> verifyMagicLink({required String email, required String code}) async {
+  Future<ClaimOutcome> verifyMagicLink({required String email, required String code}) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -128,16 +182,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       await DeviceUser.clearOnboardingSessionId();
-      state = state.copyWith(
-        user: r.user,
-        token: r.token,
-        loading: false,
-        clearDebugCode: true,
+      state = _commitUserChange(
+        state, user: r.user, token: r.token, clearDebugCode: true,
       );
-      return true;
+      return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
-      return false;
+      return const ClaimOutcome(success: false);
     }
   }
 
@@ -149,7 +200,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await bootstrap();
   }
 
-  Future<bool> signInWithApple(String identityToken, {String? fullName}) async {
+  Future<ClaimOutcome> signInWithApple(String identityToken, {String? fullName}) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
@@ -164,15 +215,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       await DeviceUser.clearOnboardingSessionId();
-      state = state.copyWith(user: r.user, token: r.token, loading: false);
-      return true;
+      state = _commitUserChange(state, user: r.user, token: r.token);
+      return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
-      return false;
+      return const ClaimOutcome(success: false);
     }
   }
 
-  Future<bool> signInWithGoogle(String identityToken) async {
+  Future<ClaimOutcome> signInWithGoogle(String identityToken) async {
     // D-057 (AT:R36): Android-only at alpha. No `fullName` parameter —
     // Google ships `name` in the ID token and the backend reads it
     // directly from verified claims.
@@ -189,11 +240,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
       await DeviceUser.clearOnboardingSessionId();
-      state = state.copyWith(user: r.user, token: r.token, loading: false);
-      return true;
+      state = _commitUserChange(state, user: r.user, token: r.token);
+      return ClaimOutcome(success: true, adoptedFromUserId: r.adoptedFromUserId);
     } catch (e) {
       state = state.copyWith(loading: false, error: '$e');
-      return false;
+      return const ClaimOutcome(success: false);
     }
   }
 }

@@ -85,16 +85,25 @@ class AuthVerifyResponse {
     required this.user,
     required this.token,
     required this.claimed,
+    this.adoptedFromUserId,
   });
 
   final AuthUser user;
   final String token;
   final bool claimed;
 
+  /// BL16 (AT:R38): when account-linking Phase 1 silently adopted an
+  /// existing email/sub row over the caller's pre-claim anon, this carries
+  /// the orphan's user_id so the client can prompt the user to merge the
+  /// stranded data via [ApiClient.previewMerge] + [ApiClient.executeMerge].
+  /// Null on the common case (caller's anon promoted in place).
+  final String? adoptedFromUserId;
+
   factory AuthVerifyResponse.fromJson(Map<String, dynamic> j) =>
       AuthVerifyResponse(
         user: AuthUser.fromJson(j['user'] as Map<String, dynamic>),
         token: j['token'] as String,
         claimed: j['claimed'] as bool? ?? false,
+        adoptedFromUserId: j['adopted_from_user_id'] as String?,
       );
 }

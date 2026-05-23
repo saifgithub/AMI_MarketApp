@@ -645,6 +645,106 @@ class AppLocalizationsEn extends AppLocalizations {
       'AMI Trade is simulation-only. Nothing here is investment advice and no real trades are executed.';
 
   @override
+  String get mergeSheetTitle => 'WELCOME BACK';
+
+  @override
+  String get mergeSheetBody =>
+      'We found data from your previous session on this device. Would you like to bring it into your account?';
+
+  @override
+  String get mergeSheetEmptyBody =>
+      'You\'ve signed back in. Nothing carried over from your previous session on this device.';
+
+  @override
+  String mergeSheetJournalEntries(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count journal entries',
+      one: '1 journal entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mergeSheetSimTrades(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count simulated trades',
+      one: '1 simulated trade',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mergeSheetWatchlist(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count watchlist tickers',
+      one: '1 watchlist ticker',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mergeSheetLessons(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count lessons started',
+      one: '1 lesson started',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mergeSheetOneOnOnes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 1-on-1 messages',
+      one: '1 1-on-1 message',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String mergeSheetRoomRuns(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Room runs',
+      one: '1 Room run',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get mergeSheetMandate =>
+      'Mandate (yours stays — we\'\'ll drop the older one)';
+
+  @override
+  String get mergeSheetMandateMove =>
+      'Mandate from your previous session (no conflict)';
+
+  @override
+  String get mergeSheetConfirm => 'MERGE EVERYTHING';
+
+  @override
+  String get mergeSheetKeepSeparate => 'KEEP SEPARATE';
+
+  @override
+  String get mergeSheetClose => 'GOT IT';
+
+  @override
+  String get mergeSheetSuccess => 'Merged into your account.';
+
+  @override
+  String get mergeSheetFailed => 'Merge failed. Try again from Settings later.';
+
+  @override
   String get oneOnOneAskAnything =>
       'Ask me anything in my domain.\nType below to start.';
 
