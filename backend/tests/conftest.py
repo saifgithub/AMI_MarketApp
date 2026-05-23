@@ -67,6 +67,14 @@ def _isolated_db(tmp_path: _Path) -> None:
     _ac._service = None
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
+    # B-tier audit (AT:R37): the rate-limit module holds module-level
+    # singletons too; flush their sliding windows between tests so the
+    # 4th `/v1/auth/magic_link/start` call in test_auth_phase1_5_audit_fixes
+    # doesn't trip the 3/min IP limit.
+    from app.services import rate_limit as _rl
+    _rl.anon_rate_limit.reset()
+    _rl.magic_link_start_rate_limit.reset()
+    _rl.room_stream_rate_limit.reset()
 
 
 @pytest.fixture

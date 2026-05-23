@@ -38,6 +38,10 @@ from app.schemas.auth import (
 )
 from app.api.dependencies import get_current_user
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
+from app.services.rate_limit import (
+    anon_rate_limit,
+    magic_link_start_rate_limit,
+)
 from app.services.session_store import get_session_store
 
 
@@ -68,7 +72,11 @@ def _user_id_from_token(token: str | None) -> UUID | None:
     return parse_scaffold_token(token)
 
 
-@router.post("/anon", response_model=AnonSessionResponse)
+@router.post(
+    "/anon",
+    response_model=AnonSessionResponse,
+    dependencies=[Depends(anon_rate_limit)],
+)
 def anon_session(
     req: AnonSessionRequest,
     authorization: str | None = Header(default=None),
@@ -93,7 +101,11 @@ def anon_session(
     return AnonSessionResponse(user=user, token=token, is_new=is_new)
 
 
-@router.post("/magic_link/start", response_model=MagicLinkStartResponse)
+@router.post(
+    "/magic_link/start",
+    response_model=MagicLinkStartResponse,
+    dependencies=[Depends(magic_link_start_rate_limit)],
+)
 def magic_link_start(
     req: MagicLinkStartRequest,
     current_user: User = Depends(get_current_user),

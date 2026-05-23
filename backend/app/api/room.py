@@ -51,6 +51,7 @@ from app.services.room_runner import (
 )
 from app.api.dependencies import get_current_user
 from app.db.models import User
+from app.services.rate_limit import room_stream_rate_limit
 
 
 router = APIRouter(
@@ -78,7 +79,7 @@ class RoomStartRequest(BaseModel):
     current_drawdown_pct: float = 0.0
 
 
-@router.post("/stream")
+@router.post("/stream", dependencies=[Depends(room_stream_rate_limit)])
 async def stream_room(
     req: RoomStartRequest,
     current_user: User = Depends(get_current_user),
