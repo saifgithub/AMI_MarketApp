@@ -1,5 +1,5 @@
-"""AICoachService — loads content/ai_coach/*.json, exposes substring/keyword
-retrieval over the 280 Q&A library.
+"""AICoachService — loads content/ai_coach/*.json + content/ai_coach/<locale>/*.json,
+exposes substring/keyword retrieval over the 280 Q&A library.
 
 Two consumers:
   1. Concierge `scripted_reply` — when no keyword route hits, search the
@@ -7,6 +7,17 @@ Two consumers:
      gets a useful canned response even with the LLM offline.
   2. The in-app help screen — `/v1/ai_coach/search?q=...` and category
      browse endpoints feed a search UI.
+
+Locale layout (AT:R37):
+  content/ai_coach/*.json                  # canonical EN
+  content/ai_coach/<locale>/*.json         # translated (ar, ms, ...)
+
+EN is always loaded from the root flat layout. Each `<locale>/` subdir
+contains the same shape (translated `question` + `short_answer` + tags
+left as-is since they're search keys). Lookups fall back to EN when a
+locale is missing or a specific id wasn't translated. The keyword
+retriever's pre-computed token sets are EN-only — non-EN search is a
+future problem (BL4 / embedding pipeline at Beta).
 
 Scoring: token-overlap between the lowercased, punctuation-stripped query
 and each entry's `question + tags`. Ties broken by lex order on id. A full
@@ -28,6 +39,7 @@ from app.schemas.ai_coach import CoachQA, CoachSearchHit
 CONTENT_AI_COACH_DIR = (
     Path(__file__).resolve().parent.parent.parent.parent / "content" / "ai_coach"
 )
+DEFAULT_LOCALE = "en"
 
 # Common english stop words that hurt retrieval more than they help.
 _STOPWORDS = frozenset({
@@ -52,46 +64,81 @@ def _tokens(text: str) -> set[str]:
 class AICoachService:
     def __init__(self, content_dir: Path = CONTENT_AI_COACH_DIR) -> None:
         self._content_dir = content_dir
-        self._by_id: dict[str, CoachQA] = {}
-        # Pre-computed token sets for fast scoring.
+        # locale -> id -> CoachQA. "en" is canonical; others fall back to it.
+        self._by_locale: dict[str, dict[str, CoachQA]] = {}
+        # Pre-computed token sets for fast scoring (EN-only — search runs EN).
         self._tokens_by_id: dict[str, set[str]] = {}
         self._lock = RLock()
         self._reload()
 
+    def _load_dir(self, directory: Path) -> dict[str, CoachQA]:
+        out: dict[str, CoachQA] = {}
+        for path in sorted(directory.glob("*.json")):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                for item in raw:
+                    qa = CoachQA(**item)
+                    out[qa.id] = qa
+            except Exception as e:
+                logger.error(
+                    "ai_coach_load_failed", path=str(path), error=str(e)
+                )
+        return out
+
     def _reload(self) -> None:
         with self._lock:
-            self._by_id.clear()
+            self._by_locale.clear()
             self._tokens_by_id.clear()
-            for path in sorted(self._content_dir.glob("*.json")):
-                try:
-                    raw = json.loads(path.read_text(encoding="utf-8"))
-                    for item in raw:
-                        qa = CoachQA(**item)
-                        self._by_id[qa.id] = qa
-                        searchable = " ".join(
-                            [qa.question, qa.short_answer, *qa.tags]
-                        )
-                        self._tokens_by_id[qa.id] = _tokens(searchable)
-                except Exception as e:
-                    logger.error(
-                        "ai_coach_load_failed", path=str(path), error=str(e)
-                    )
-            logger.info("ai_coach_loaded", count=len(self._by_id))
+            # EN — flat root layout.
+            en = self._load_dir(self._content_dir)
+            self._by_locale[DEFAULT_LOCALE] = en
+            for qa in en.values():
+                searchable = " ".join([qa.question, qa.short_answer, *qa.tags])
+                self._tokens_by_id[qa.id] = _tokens(searchable)
+            # Translated locales — one subdir per locale, same file shape.
+            for sub in sorted(p for p in self._content_dir.iterdir() if p.is_dir()):
+                self._by_locale[sub.name] = self._load_dir(sub)
+            logger.info(
+                "ai_coach_loaded",
+                locales=sorted(self._by_locale.keys()),
+                en_count=len(en),
+                locale_counts={
+                    loc: len(items)
+                    for loc, items in self._by_locale.items()
+                    if loc != DEFAULT_LOCALE
+                },
+            )
 
-    def get_by_id(self, qa_id: str) -> CoachQA | None:
-        with self._lock:
-            return self._by_id.get(qa_id)
+    def _en(self) -> dict[str, CoachQA]:
+        return self._by_locale.get(DEFAULT_LOCALE, {})
 
-    def by_category(self, category: str) -> list[CoachQA]:
+    def get_by_id(
+        self, qa_id: str, locale: str = DEFAULT_LOCALE
+    ) -> CoachQA | None:
         with self._lock:
+            localized = self._by_locale.get(locale, {}).get(qa_id)
+            if localized is not None:
+                return localized
+            return self._en().get(qa_id)
+
+    def by_category(
+        self, category: str, locale: str = DEFAULT_LOCALE
+    ) -> list[CoachQA]:
+        with self._lock:
+            # Iterate EN to define the universe; substitute localized rows.
+            loc_dict = self._by_locale.get(locale, {})
             return sorted(
-                (qa for qa in self._by_id.values() if qa.category == category),
+                (
+                    loc_dict.get(qa.id, qa)
+                    for qa in self._en().values()
+                    if qa.category == category
+                ),
                 key=lambda x: x.id,
             )
 
     def categories(self) -> list[str]:
         with self._lock:
-            return sorted({qa.category for qa in self._by_id.values()})
+            return sorted({qa.category for qa in self._en().values()})
 
     def search(self, query: str, limit: int = 5) -> list[CoachSearchHit]:
         query_tokens = _tokens(query)
@@ -99,7 +146,7 @@ class AICoachService:
             return []
         with self._lock:
             scored: list[tuple[int, str, CoachQA]] = []
-            for qa_id, qa in self._by_id.items():
+            for qa_id, qa in self._en().items():
                 tokens = self._tokens_by_id.get(qa_id, set())
                 score = len(query_tokens & tokens)
                 if score > 0:

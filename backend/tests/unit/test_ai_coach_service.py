@@ -156,3 +156,61 @@ def test_concierge_fallback_uses_coach_qa():
     )
     # Generic fallback would mention 'fallback mode' — a real hit should not.
     assert "fallback mode" not in reply.lower()
+
+
+# ── Locale subdirectory loading (AT:R37) ─────────────────────────────────
+
+
+def _write_corpus_with_arabic(tmp_path: Path) -> Path:
+    """Same as _write_corpus + an `ar/` subdir translating ONE of the two
+    platform entries — to exercise both the locale-hit and EN-fallback
+    branches inside the same test."""
+    d = _write_corpus(tmp_path)
+    ar = d / "ar"
+    ar.mkdir()
+    (ar / "platform.json").write_text(
+        json.dumps([
+            {
+                "id": "qa_plt_halal",
+                "category": "platform",
+                "question": "هل يوجد فلتر حلال؟",
+                "short_answer": "نعم — فعّل خيار حلال في المهمة.",
+                "long_answer": "AAOIFI screens.",
+                "tags": ["mandate", "halal", "compliance"],
+            },
+        ]),
+        encoding="utf-8",
+    )
+    return d
+
+
+def test_locale_subdir_loads_and_returns_translated(tmp_path: Path):
+    svc = AICoachService(content_dir=_write_corpus_with_arabic(tmp_path))
+    ar_qa = svc.get_by_id("qa_plt_halal", locale="ar")
+    assert ar_qa is not None
+    assert "حلال" in ar_qa.question
+
+
+def test_locale_fallback_returns_en_when_translation_missing(tmp_path: Path):
+    svc = AICoachService(content_dir=_write_corpus_with_arabic(tmp_path))
+    # qa_plt_edit_mandate is NOT in the ar/ subdir → falls back to EN.
+    ar_qa = svc.get_by_id("qa_plt_edit_mandate", locale="ar")
+    assert ar_qa is not None
+    assert ar_qa.question == "How do I edit my mandate?"
+
+
+def test_locale_fallback_for_unknown_locale_returns_en(tmp_path: Path):
+    svc = AICoachService(content_dir=_write_corpus_with_arabic(tmp_path))
+    # `ms` was never even loaded — every lookup should fall back to EN.
+    ms_qa = svc.get_by_id("qa_plt_halal", locale="ms")
+    assert ms_qa is not None
+    assert ms_qa.question == "Is there a halal filter?"
+
+
+def test_by_category_substitutes_translated_rows(tmp_path: Path):
+    svc = AICoachService(content_dir=_write_corpus_with_arabic(tmp_path))
+    rows = svc.by_category("platform", locale="ar")
+    # Two platform rows: halal translated, edit_mandate falls back to EN.
+    by_id = {r.id: r for r in rows}
+    assert "حلال" in by_id["qa_plt_halal"].question
+    assert by_id["qa_plt_edit_mandate"].question == "How do I edit my mandate?"
