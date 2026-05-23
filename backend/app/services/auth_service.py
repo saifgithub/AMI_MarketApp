@@ -39,7 +39,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
-from app.db.models import AuthChallengeRow, User, UserDeviceRow
+from app.db.models import AuthChallengeRow, SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.auth import AuthUser
 from app.services.email_service import send_magic_link as _send_magic_link_email
 from app.services.oidc_verifier import OIDCVerifier, build_apple_verifier, build_google_verifier
@@ -95,6 +95,32 @@ def _upsert_user_device(
             existing.os_version = os_version
         if app_version is not None:
             existing.app_version = app_version
+
+
+def _log_adoption_event(s, *, from_user_id: UUID, to_user_id: UUID) -> None:
+    """BL16 (AT:R38): write an audit row whenever account-linking Phase 1
+    silently adopts an existing user row over a pre-claim anon row. The
+    /v1/auth/merge endpoint reads this back to authorise the caller — only
+    the user who appears as `to_value` against the supplied `from_value`
+    can request a merge. Idempotent: if the exact pair was already logged
+    this session, skip (prevents duplicate rows when the same device
+    re-claims twice)."""
+    existing = s.execute(
+        select(SubscriptionEventRow.id).where(
+            SubscriptionEventRow.event_type == "account_adoption",
+            SubscriptionEventRow.from_value == str(from_user_id),
+            SubscriptionEventRow.to_value == str(to_user_id),
+        ).limit(1)
+    ).scalar_one_or_none()
+    if existing is not None:
+        return
+    s.add(SubscriptionEventRow(
+        user_id=to_user_id,
+        event_type="account_adoption",
+        from_value=str(from_user_id),
+        to_value=str(to_user_id),
+        source="app",
+    ))
 
 
 def _rekey_devices_to(s, *, from_user_id: UUID, to_user_id: UUID) -> int:
@@ -334,7 +360,11 @@ class AuthService:
         email: str,
         code: str,
         user_id: UUID | None,
-    ) -> tuple[AuthUser, str] | None:
+    ) -> tuple[AuthUser, str, UUID | None] | None:
+        """Returns (user, token, adopted_from_user_id) on success.
+        `adopted_from_user_id` is set when account-linking Phase 1 silently
+        adopted an existing email-row over the caller's anon — i.e. the
+        returned `user.id` differs from the caller's pre-claim user_id."""
         target = email.lower().strip()
         with get_session() as s:
             # Find the most recent active (unconsumed + unexpired) challenge
@@ -366,10 +396,20 @@ class AuthService:
             active.consumed_at = datetime.now(timezone.utc)
 
             # Claim or create the user.
+            pre_claim_uid = user_id or active.user_id
             user = self._claim_or_create(
-                s, user_id=user_id or active.user_id, email=target,
+                s, user_id=pre_claim_uid, email=target,
             )
-            return _row_to_user(user), _scaffold_token(user.id)
+            adopted_from = (
+                pre_claim_uid
+                if pre_claim_uid is not None and user.id != pre_claim_uid
+                else None
+            )
+            if adopted_from is not None:
+                _log_adoption_event(
+                    s, from_user_id=adopted_from, to_user_id=user.id,
+                )
+            return _row_to_user(user), _scaffold_token(user.id), adopted_from
 
     # ── Apple Sign-In ──────────────────────────────────────────────────
 
@@ -379,7 +419,7 @@ class AuthService:
         identity_token: str,
         user_id: UUID | None,
         full_name: str | None = None,
-    ) -> tuple[AuthUser, str]:
+    ) -> tuple[AuthUser, str, UUID | None]:
         # Full verification: signature against Apple's JWKS, iss, aud,
         # exp. Raises OIDCVerificationError (subclass of ValueError) on
         # any failure — the route layer translates that to HTTP 400.
@@ -419,8 +459,10 @@ class AuthService:
             # BL2 (AT:R33): when adoption fires (existing apple_id OR
             # existing-email row), move the pre-claim anon's devices to the
             # adopted user so both phones surface under one user.
+            adopted_from: UUID | None = None
             if row is not None and user_id is not None and row.id != user_id:
                 _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
+                adopted_from = user_id
             if row is None and user_id is not None:
                 row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if row is None:
@@ -455,7 +497,11 @@ class AuthService:
                     if row.trial_started_at is None:
                         row.trial_started_at = now
                         row.trial_expires_at = now + timedelta(days=7)
-            return _row_to_user(row), _scaffold_token(row.id)
+            if adopted_from is not None:
+                _log_adoption_event(
+                    s, from_user_id=adopted_from, to_user_id=row.id,
+                )
+            return _row_to_user(row), _scaffold_token(row.id), adopted_from
 
     # ── Google Sign-In ─────────────────────────────────────────────────
 
@@ -464,7 +510,7 @@ class AuthService:
         *,
         identity_token: str,
         user_id: UUID | None,
-    ) -> tuple[AuthUser, str]:
+    ) -> tuple[AuthUser, str, UUID | None]:
         """Google Sign-In claim (Android only at alpha; D-057).
 
         Mirrors `sign_in_with_apple`. Differences from Apple:
@@ -509,8 +555,10 @@ class AuthService:
                 if row is not None:
                     row.google_id = google_sub
             # BL2 device re-keying on adoption (mirrors Apple flow).
+            adopted_from: UUID | None = None
             if row is not None and user_id is not None and row.id != user_id:
                 _rekey_devices_to(s, from_user_id=user_id, to_user_id=row.id)
+                adopted_from = user_id
             if row is None and user_id is not None:
                 row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
             if row is None:
@@ -541,7 +589,11 @@ class AuthService:
                     if row.trial_started_at is None:
                         row.trial_started_at = now
                         row.trial_expires_at = now + timedelta(days=7)
-            return _row_to_user(row), _scaffold_token(row.id)
+            if adopted_from is not None:
+                _log_adoption_event(
+                    s, from_user_id=adopted_from, to_user_id=row.id,
+                )
+            return _row_to_user(row), _scaffold_token(row.id), adopted_from
 
     # ── Helpers ────────────────────────────────────────────────────────
 

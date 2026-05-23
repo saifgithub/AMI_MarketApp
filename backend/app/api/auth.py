@@ -24,7 +24,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy import select
 
 from app.db import get_session
-from app.db.models import User
+from app.db.models import SubscriptionEventRow, User
 from app.schemas.auth import (
     AnonSessionRequest,
     AnonSessionResponse,
@@ -35,9 +35,13 @@ from app.schemas.auth import (
     MagicLinkStartRequest,
     MagicLinkStartResponse,
     MagicLinkVerifyRequest,
+    MergeAccountRequest,
+    MergePreview,
+    MergeResult,
 )
 from app.api.dependencies import get_current_user
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
+from app.services.merge_service import MergeError, MergeService, get_merge_service
 from app.services.rate_limit import (
     anon_rate_limit,
     magic_link_start_rate_limit,
@@ -141,9 +145,12 @@ async def magic_link_verify(
             status.HTTP_401_UNAUTHORIZED,
             "invalid or expired code",
         )
-    user, token = result
+    user, token, adopted_from = result
     await _bind_onboarding_session(req.onboarding_session_id, user.id)
-    return AuthVerifyResponse(user=user, token=token, claimed=True)
+    return AuthVerifyResponse(
+        user=user, token=token, claimed=True,
+        adopted_from_user_id=adopted_from,
+    )
 
 
 @router.post("/apple", response_model=AuthVerifyResponse)
@@ -155,7 +162,7 @@ async def sign_in_with_apple(
     # the identity token against Apple's JWKS (signature + iss + aud +
     # exp) via OIDCVerifier. Any failure surfaces as 400.
     try:
-        user, token = auth.sign_in_with_apple(
+        user, token, adopted_from = auth.sign_in_with_apple(
             identity_token=req.identity_token,
             user_id=req.user_id,
             full_name=req.full_name,
@@ -163,7 +170,10 @@ async def sign_in_with_apple(
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
     await _bind_onboarding_session(req.onboarding_session_id, user.id)
-    return AuthVerifyResponse(user=user, token=token, claimed=True)
+    return AuthVerifyResponse(
+        user=user, token=token, claimed=True,
+        adopted_from_user_id=adopted_from,
+    )
 
 
 @router.post("/google", response_model=AuthVerifyResponse)
@@ -175,14 +185,111 @@ async def sign_in_with_google(
     # against Google's JWKS (signature + iss + aud + exp + email_verified)
     # via OIDCVerifier. Any failure surfaces as 400.
     try:
-        user, token = auth.sign_in_with_google(
+        user, token, adopted_from = auth.sign_in_with_google(
             identity_token=req.identity_token,
             user_id=req.user_id,
         )
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
     await _bind_onboarding_session(req.onboarding_session_id, user.id)
-    return AuthVerifyResponse(user=user, token=token, claimed=True)
+    return AuthVerifyResponse(
+        user=user, token=token, claimed=True,
+        adopted_from_user_id=adopted_from,
+    )
+
+
+def _assert_adopter(s, *, caller_id: UUID, from_user_id: UUID) -> None:
+    """BL16 (AT:R38) authorisation gate: the caller can only preview/execute
+    a merge from `from_user_id` if AuthService earlier logged an
+    `account_adoption` event with from_value=from_user_id, to_value=caller.
+    Anything else is 403."""
+    proof = s.execute(
+        select(SubscriptionEventRow.id).where(
+            SubscriptionEventRow.event_type == "account_adoption",
+            SubscriptionEventRow.from_value == str(from_user_id),
+            SubscriptionEventRow.to_value == str(caller_id),
+        ).limit(1)
+    ).scalar_one_or_none()
+    if proof is None:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "no recorded adoption from this user_id to the caller",
+        )
+
+
+@router.get("/merge/preview/{from_user_id}", response_model=MergePreview)
+def merge_preview(
+    from_user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    merge: MergeService = Depends(get_merge_service),
+) -> MergePreview:
+    """BL16 (AT:R38): show what would be moved off the orphan into the
+    adopting user. Caller's Bearer must be the adopting user, and an
+    `account_adoption` event with this exact pair must exist."""
+    with get_session() as s:
+        _assert_adopter(s, caller_id=current_user.id, from_user_id=from_user_id)
+        orphan = s.execute(
+            select(User).where(User.id == from_user_id)
+        ).scalar_one_or_none()
+        if orphan is None:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "orphan user not found (already merged?)",
+            )
+    try:
+        counts = merge.preview(
+            from_user_id=from_user_id, to_user_id=current_user.id,
+        )
+    except MergeError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    return MergePreview(
+        from_user_id=from_user_id,
+        to_user_id=current_user.id,
+        journal_entries=counts.journal_entries,
+        sim_trades=counts.sim_trades,
+        sim_holdings=counts.sim_holdings,
+        sim_watchlists=counts.sim_watchlists,
+        lessons_progress=counts.lessons_progress,
+        agent_activations=counts.agent_activations,
+        one_on_one_messages=counts.one_on_one_messages,
+        room_runs=counts.room_runs,
+        user_overlays=counts.user_overlays,
+        bug_reports=counts.bug_reports,
+        mandate_conflict=counts.mandate_conflict,
+    )
+
+
+@router.post("/merge", response_model=MergeResult)
+def merge_execute(
+    req: MergeAccountRequest,
+    current_user: User = Depends(get_current_user),
+    merge: MergeService = Depends(get_merge_service),
+) -> MergeResult:
+    """BL16 (AT:R38): re-key every per-user row from the orphan into the
+    adopting user. Single transaction. Idempotent after orphan is gone."""
+    with get_session() as s:
+        _assert_adopter(s, caller_id=current_user.id, from_user_id=req.from_user_id)
+        orphan = s.execute(
+            select(User).where(User.id == req.from_user_id)
+        ).scalar_one_or_none()
+        if orphan is None:
+            raise HTTPException(
+                status.HTTP_404_NOT_FOUND,
+                "orphan user not found (already merged?)",
+            )
+    try:
+        counts, mandate_kept, overlays_deactivated = merge.execute(
+            from_user_id=req.from_user_id, to_user_id=current_user.id,
+        )
+    except MergeError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(e)) from e
+    return MergeResult(
+        from_user_id=req.from_user_id,
+        to_user_id=current_user.id,
+        counts=counts,
+        mandate_kept=mandate_kept,
+        overlays_deactivated=overlays_deactivated,
+    )
 
 
 @router.delete("/session", status_code=status.HTTP_200_OK)

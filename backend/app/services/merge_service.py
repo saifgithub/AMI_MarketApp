@@ -1,0 +1,424 @@
+"""BL16 (AT:R38) — account merge service.
+
+When account-linking Phase 1 (AT:R32) silently adopts an existing email/sub
+row, the pre-claim anon row is left orphaned with whatever the user did
+while anonymous: journal entries, sim trades, lesson progress, mandate,
+overlays, room runs, 1-on-1 history. This service re-keys all of that into
+the adopting user when the client triggers the merge UX.
+
+Single transactional pass per call. Idempotent — a second `execute()` on
+the same pair finds nothing to move and returns zero counts.
+
+Conflict rules (kept deliberately simple for the alpha MVP):
+  - **mandate**: if the adopting user already has a mandate, keep it,
+    delete the orphan's. Otherwise re-key the orphan's mandate rows.
+  - **sim_portfolio**: each user owns at most one (UNIQUE on user_id).
+    If the adopting user has none, re-key the orphan's portfolio. If
+    both have one, keep the adopting user's and re-key only the orphan's
+    sim_trades into it (we drop the orphan's holdings — too messy to
+    sum without a UI for it).
+  - **lessons_progress / agent_activations / sim_watchlists**: UNIQUE on
+    (user_id, ...). Skip rows that would conflict; the orphan's "extra"
+    rows move over, but a (lesson_id) already on the target stays as-is.
+  - **user_overlays**: re-key, but mark as inactive when the target
+    already has an active overlay for that agent. Counted separately.
+  - **overlay_edit_counts**: UNIQUE on (user_id, agent_id). On conflict,
+    sum the counts into the adopting row and delete the orphan row.
+
+Defers the user-row delete to the very end after every other relation
+is re-keyed.
+
+The orphan's audit rows (`http_audit`, `llm_audit`, `auth_challenges`)
+are intentionally left in place — they reflect what happened during the
+anon session and re-keying them would lose forensic provenance.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from typing import Literal
+from uuid import UUID
+
+from sqlalchemy import and_, delete, func, select, update
+
+from app.core.logging import logger
+from app.db import get_session
+from app.db.models import (
+    AgentActivationRow,
+    BugReportRow,
+    JournalEntryRow,
+    LessonProgressRow,
+    MandateRow,
+    OneOnOneMessageRow,
+    OverlayEditCounter,
+    RoomRunRow,
+    SimHoldingRow,
+    SimPortfolioRow,
+    SimTradeRow,
+    SimWatchlistRow,
+    SubscriptionEventRow,
+    User,
+    UserOverlayRow,
+)
+
+
+@dataclass
+class _PreviewCounts:
+    journal_entries: int = 0
+    sim_trades: int = 0
+    sim_holdings: int = 0
+    sim_watchlists: int = 0
+    lessons_progress: int = 0
+    agent_activations: int = 0
+    one_on_one_messages: int = 0
+    room_runs: int = 0
+    user_overlays: int = 0
+    bug_reports: int = 0
+    mandate_conflict: bool = False
+
+
+class MergeError(ValueError):
+    """Raised when a merge call fails a precondition (orphan gone, same
+    user_id on both sides, etc.). The route layer translates to HTTP 4xx."""
+
+
+class MergeService:
+    """Stateless — opens its own session per call."""
+
+    def preview(self, *, from_user_id: UUID, to_user_id: UUID) -> _PreviewCounts:
+        """Read-only count of mergeable rows on the orphan side."""
+        if from_user_id == to_user_id:
+            raise MergeError("from_user_id and to_user_id must differ")
+        with get_session() as s:
+            return _PreviewCounts(
+                journal_entries=_count(s, JournalEntryRow, from_user_id),
+                sim_trades=_count(s, SimTradeRow, from_user_id),
+                sim_holdings=_count_holdings(s, from_user_id),
+                sim_watchlists=_count(s, SimWatchlistRow, from_user_id),
+                lessons_progress=_count(s, LessonProgressRow, from_user_id),
+                agent_activations=_count(s, AgentActivationRow, from_user_id),
+                one_on_one_messages=_count(s, OneOnOneMessageRow, from_user_id),
+                room_runs=_count(s, RoomRunRow, from_user_id),
+                user_overlays=_count(s, UserOverlayRow, from_user_id),
+                bug_reports=_count(s, BugReportRow, from_user_id),
+                mandate_conflict=_has_mandate(s, from_user_id) and _has_mandate(s, to_user_id),
+            )
+
+    def execute(
+        self,
+        *,
+        from_user_id: UUID,
+        to_user_id: UUID,
+    ) -> tuple[dict[str, int], Literal["target", "source", "neither"], int]:
+        """Re-key every per-user row from orphan → adopter inside one
+        transaction. Returns (counts, mandate_kept, overlays_deactivated).
+        """
+        if from_user_id == to_user_id:
+            raise MergeError("from_user_id and to_user_id must differ")
+        counts: dict[str, int] = {}
+        overlays_deactivated = 0
+        with get_session() as s:
+            # Bail loudly if the adopter row doesn't exist — the merge has
+            # nothing to land into.
+            target = s.execute(
+                select(User).where(User.id == to_user_id)
+            ).scalar_one_or_none()
+            if target is None:
+                raise MergeError("adopting user not found")
+
+            # ── Mandates ─────────────────────────────────────────────
+            target_has_mandate = _has_mandate(s, to_user_id)
+            source_has_mandate = _has_mandate(s, from_user_id)
+            mandate_kept: Literal["target", "source", "neither"]
+            if target_has_mandate and source_has_mandate:
+                # Keep adopter's. Drop orphan's mandate rows.
+                deleted = s.execute(
+                    delete(MandateRow).where(MandateRow.user_id == from_user_id)
+                )
+                counts["mandates_dropped"] = int(deleted.rowcount or 0)
+                mandate_kept = "target"
+            elif source_has_mandate and not target_has_mandate:
+                moved = s.execute(
+                    update(MandateRow)
+                    .where(MandateRow.user_id == from_user_id)
+                    .values(user_id=to_user_id)
+                )
+                counts["mandates"] = int(moved.rowcount or 0)
+                mandate_kept = "source"
+            elif target_has_mandate and not source_has_mandate:
+                mandate_kept = "target"
+            else:
+                mandate_kept = "neither"
+
+            # ── Sim portfolio + trades ───────────────────────────────
+            target_portfolio = s.execute(
+                select(SimPortfolioRow).where(SimPortfolioRow.user_id == to_user_id)
+            ).scalar_one_or_none()
+            source_portfolio = s.execute(
+                select(SimPortfolioRow).where(SimPortfolioRow.user_id == from_user_id)
+            ).scalar_one_or_none()
+            sim_trades_moved = 0
+            sim_holdings_moved = 0
+            if source_portfolio is not None and target_portfolio is None:
+                # Adopter has no portfolio — move orphan's wholesale.
+                s.execute(
+                    update(SimPortfolioRow)
+                    .where(SimPortfolioRow.id == source_portfolio.id)
+                    .values(user_id=to_user_id)
+                )
+                trades_moved = s.execute(
+                    update(SimTradeRow)
+                    .where(SimTradeRow.user_id == from_user_id)
+                    .values(user_id=to_user_id)
+                )
+                sim_trades_moved = int(trades_moved.rowcount or 0)
+                sim_holdings_moved = s.execute(
+                    select(func.count()).select_from(SimHoldingRow).where(
+                        SimHoldingRow.portfolio_id == source_portfolio.id
+                    )
+                ).scalar_one()
+            elif source_portfolio is not None and target_portfolio is not None:
+                # Both have portfolios — keep adopter's. Re-key only the
+                # trades into the adopter's portfolio. Holdings get dropped
+                # along with the orphan portfolio cascade.
+                trades_moved = s.execute(
+                    update(SimTradeRow)
+                    .where(SimTradeRow.user_id == from_user_id)
+                    .values(user_id=to_user_id, portfolio_id=target_portfolio.id)
+                )
+                sim_trades_moved = int(trades_moved.rowcount or 0)
+                # CASCADE on sim_holdings.portfolio_id wipes the orphan's
+                # holdings when we delete the orphan portfolio.
+                s.execute(
+                    delete(SimPortfolioRow)
+                    .where(SimPortfolioRow.id == source_portfolio.id)
+                )
+            counts["sim_trades"] = sim_trades_moved
+            counts["sim_holdings"] = sim_holdings_moved
+
+            # ── Sim watchlist (UNIQUE on user_id+ticker) ────────────
+            counts["sim_watchlists"] = _rekey_skipping_conflicts(
+                s, SimWatchlistRow,
+                from_user_id, to_user_id,
+                conflict_col=SimWatchlistRow.ticker,
+            )
+
+            # ── Lessons progress (UNIQUE on user_id+lesson_id) ──────
+            counts["lessons_progress"] = _rekey_skipping_conflicts(
+                s, LessonProgressRow,
+                from_user_id, to_user_id,
+                conflict_col=LessonProgressRow.lesson_id,
+            )
+
+            # ── Agent activations (UNIQUE on user_id+agent_id) ──────
+            counts["agent_activations"] = _rekey_skipping_conflicts(
+                s, AgentActivationRow,
+                from_user_id, to_user_id,
+                conflict_col=AgentActivationRow.agent_id,
+            )
+
+            # ── Overlay edit counts: sum on conflict ────────────────
+            counts["overlay_edit_counts"] = _merge_overlay_counts(
+                s, from_user_id, to_user_id,
+            )
+
+            # ── User overlays: re-key, deactivate if adopter has one ─
+            counts["user_overlays"], overlays_deactivated = _rekey_user_overlays(
+                s, from_user_id, to_user_id,
+            )
+
+            # ── Free-form re-keys (no uniqueness conflicts) ─────────
+            counts["journal_entries"] = _rekey_all(
+                s, JournalEntryRow, from_user_id, to_user_id,
+            )
+            counts["one_on_one_messages"] = _rekey_all(
+                s, OneOnOneMessageRow, from_user_id, to_user_id,
+            )
+            counts["room_runs"] = _rekey_all(
+                s, RoomRunRow, from_user_id, to_user_id,
+            )
+            counts["bug_reports"] = _rekey_all(
+                s, BugReportRow, from_user_id, to_user_id,
+            )
+
+            # ── Subscription event ──────────────────────────────────
+            s.add(SubscriptionEventRow(
+                user_id=to_user_id,
+                event_type="account_adoption_merged",
+                from_value=str(from_user_id),
+                to_value=str(to_user_id),
+                source="app",
+                note=json.dumps({k: v for k, v in counts.items() if v}),
+            ))
+
+            # ── Delete the now-empty orphan row ─────────────────────
+            # user_devices was re-keyed in AT:R33 on the original adoption,
+            # but a stray row could exist if the merge runs late; clean it
+            # up too.
+            from app.db.models import UserDeviceRow
+            s.execute(
+                update(UserDeviceRow)
+                .where(UserDeviceRow.user_id == from_user_id)
+                .values(user_id=to_user_id)
+            )
+            s.execute(delete(User).where(User.id == from_user_id))
+
+            logger.info(
+                "account_merge_executed",
+                from_user_id=str(from_user_id),
+                to_user_id=str(to_user_id),
+                counts={k: v for k, v in counts.items() if v},
+                mandate_kept=mandate_kept,
+                overlays_deactivated=overlays_deactivated,
+            )
+            return counts, mandate_kept, overlays_deactivated
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────
+
+
+def _count(s, model, user_id: UUID) -> int:
+    return int(s.execute(
+        select(func.count()).select_from(model).where(model.user_id == user_id)
+    ).scalar_one())
+
+
+def _count_holdings(s, user_id: UUID) -> int:
+    """sim_holdings is keyed by portfolio_id, not user_id directly. Count
+    by joining through sim_portfolios."""
+    return int(s.execute(
+        select(func.count())
+        .select_from(SimHoldingRow)
+        .join(SimPortfolioRow, SimHoldingRow.portfolio_id == SimPortfolioRow.id)
+        .where(SimPortfolioRow.user_id == user_id)
+    ).scalar_one())
+
+
+def _has_mandate(s, user_id: UUID) -> bool:
+    return s.execute(
+        select(MandateRow.id).where(MandateRow.user_id == user_id).limit(1)
+    ).scalar_one_or_none() is not None
+
+
+def _rekey_all(s, model, from_user_id: UUID, to_user_id: UUID) -> int:
+    """Free-form re-key; no UNIQUE conflicts to worry about."""
+    result = s.execute(
+        update(model)
+        .where(model.user_id == from_user_id)
+        .values(user_id=to_user_id)
+    )
+    return int(result.rowcount or 0)
+
+
+def _rekey_skipping_conflicts(
+    s, model,
+    from_user_id: UUID, to_user_id: UUID,
+    *, conflict_col,
+) -> int:
+    """Re-key orphan rows that wouldn't violate a UNIQUE(user_id, <col>)
+    constraint on the adopter side. Conflicting orphan rows are deleted
+    (we keep the adopter's version on collision).
+    """
+    # Find adopter's existing values to skip.
+    target_values = set(s.execute(
+        select(conflict_col).where(model.user_id == to_user_id)
+    ).scalars().all())
+    # Move non-conflicting orphan rows.
+    moved = s.execute(
+        update(model)
+        .where(and_(
+            model.user_id == from_user_id,
+            conflict_col.notin_(target_values) if target_values else True,
+        ))
+        .values(user_id=to_user_id)
+    )
+    # Drop conflicting orphan rows so the user row can be deleted at the end.
+    if target_values:
+        s.execute(
+            delete(model).where(and_(
+                model.user_id == from_user_id,
+                conflict_col.in_(target_values),
+            ))
+        )
+    return int(moved.rowcount or 0)
+
+
+def _merge_overlay_counts(s, from_user_id: UUID, to_user_id: UUID) -> int:
+    """Sum lifetime edit counts per (user_id, agent_id) — if both sides
+    have a row for an agent, add the orphan's count to the adopter's
+    and delete the orphan row. Otherwise re-key the orphan row.
+    """
+    source_rows = s.execute(
+        select(OverlayEditCounter).where(OverlayEditCounter.user_id == from_user_id)
+    ).scalars().all()
+    moved = 0
+    for src in source_rows:
+        target = s.execute(
+            select(OverlayEditCounter).where(and_(
+                OverlayEditCounter.user_id == to_user_id,
+                OverlayEditCounter.agent_id == src.agent_id,
+            ))
+        ).scalar_one_or_none()
+        if target is None:
+            src.user_id = to_user_id
+            moved += 1
+        else:
+            target.count = (target.count or 0) + (src.count or 0)
+            s.delete(src)
+            moved += 1
+    return moved
+
+
+def _rekey_user_overlays(
+    s, from_user_id: UUID, to_user_id: UUID,
+) -> tuple[int, int]:
+    """Re-key overlays from orphan → adopter. When the adopter already has
+    an active overlay for the same agent, mark the orphan's incoming
+    overlays inactive (preserves history without auto-replacing). Returns
+    (moved, deactivated).
+
+    Versions matter: UNIQUE(user_id, agent_id, version). If both sides
+    have a v1 for agent X, that collides — drop the orphan's version row.
+    """
+    agents_with_active_target = set(s.execute(
+        select(UserOverlayRow.agent_id).where(and_(
+            UserOverlayRow.user_id == to_user_id,
+            UserOverlayRow.is_active.is_(True),
+        ))
+    ).scalars().all())
+
+    # Collect all (agent_id, version) pairs already on the adopter so we
+    # can drop colliding orphan version rows before re-keying.
+    target_keys = set(s.execute(
+        select(UserOverlayRow.agent_id, UserOverlayRow.version)
+        .where(UserOverlayRow.user_id == to_user_id)
+    ).all())
+
+    source_rows = s.execute(
+        select(UserOverlayRow).where(UserOverlayRow.user_id == from_user_id)
+    ).scalars().all()
+    moved = 0
+    deactivated = 0
+    for src in source_rows:
+        if (src.agent_id, src.version) in target_keys:
+            s.delete(src)
+            continue
+        src.user_id = to_user_id
+        if src.agent_id in agents_with_active_target and src.is_active:
+            src.is_active = False
+            deactivated += 1
+        moved += 1
+    return moved, deactivated
+
+
+# ── Singleton ───────────────────────────────────────────────────────────
+
+_service: MergeService | None = None
+
+
+def get_merge_service() -> MergeService:
+    global _service
+    if _service is None:
+        _service = MergeService()
+    return _service

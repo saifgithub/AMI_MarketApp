@@ -69,7 +69,7 @@ def test_google_claim_attaches_sub_to_user():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, token = auth.sign_in_with_google(
+    user, token, _ = auth.sign_in_with_google(
         identity_token=_google_jwt("google-sub-123"),
         user_id=user_id,
     )
@@ -84,7 +84,7 @@ def test_google_first_auth_persists_email_and_name():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-named",
             email="named@example.com",
@@ -125,7 +125,7 @@ def test_google_drops_unverified_email():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-unverified",
             email="unverified@example.com",
@@ -153,7 +153,7 @@ def test_google_does_not_overwrite_existing_email():
     code = auth.start_magic_link(email="primary@example.com", user_id=user_id)
     auth.verify_magic_link(email="primary@example.com", code=code, user_id=user_id)
     # Then a separate Google account with a different verified email.
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-other",
             email="other@example.com",
@@ -179,7 +179,7 @@ def test_google_does_not_overwrite_existing_display_name():
         user_id=user_id,
     )
     # Re-auth with a different name (user changed it in their Google account).
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-d", email="d@example.com", name="Different Name"
         ),
@@ -198,7 +198,7 @@ def test_google_empty_name_does_not_clobber():
         ),
         user_id=user_id,
     )
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-e", email="e@example.com", name="   "
         ),
@@ -214,7 +214,7 @@ def test_google_first_claim_sets_trial_dates():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt("google-sub-trial", email="trial@example.com"),
         user_id=user_id,
     )
@@ -235,7 +235,7 @@ def test_google_reauth_does_not_reset_existing_trial():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt("google-sub-trial2", email="trial2@example.com"),
         user_id=user_id,
     )
@@ -272,7 +272,7 @@ def test_google_links_to_existing_magic_link_user_by_email():
     # Device B — fresh anon, then Google sign-in with same email.
     user_id_b = uuid4()
     auth.ensure_anonymous(device_user_id=user_id_b)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-link",
             email="link@example.com",
@@ -290,7 +290,7 @@ def test_google_creates_user_when_sub_and_email_unknown():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_google(
+    user, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt(
             "google-sub-fresh", email="fresh-g@example.com", name="Fresh"
         ),
@@ -305,11 +305,11 @@ def test_google_reauth_returns_same_user():
     auth = _auth()
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    first, _ = auth.sign_in_with_google(
+    first, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt("google-sub-repeat", email="repeat@example.com"),
         user_id=user_id,
     )
-    second, _ = auth.sign_in_with_google(
+    second, _, _ = auth.sign_in_with_google(
         identity_token=_google_jwt("google-sub-repeat", email="repeat@example.com"),
         user_id=user_id,
     )

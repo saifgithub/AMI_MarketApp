@@ -175,7 +175,7 @@ def test_apple_adoption_rekeys_devices_to_adopted_user(
         email="saiful@example.com", code=code, user_id=user_b.id,
     )
     assert result is not None
-    adopted_user, _token = result
+    adopted_user, _token, _adopted = result
     assert adopted_user.id == user_a.id  # adopted!
 
     # User A should now own both devices; user B should own none.

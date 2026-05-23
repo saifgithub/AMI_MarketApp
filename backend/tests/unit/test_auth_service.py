@@ -83,9 +83,10 @@ def test_magic_link_round_trip():
         email="alpha@example.com", code=code, user_id=user_id,
     )
     assert result is not None
-    user, token = result
+    user, token, adopted = result
     assert user.id == user_id
     assert user.email == "alpha@example.com"
+    assert adopted is None  # caller's anon promoted in place, not adopted
     assert user.is_anonymous is False
     assert user.claimed_at is not None
     assert token.startswith("scaffold:")
@@ -151,7 +152,7 @@ def test_magic_link_attempts_counter_resets_with_new_challenge():
         email="reset@example.com", code=new_code, user_id=None,
     )
     assert result is not None
-    user, _token = result
+    user, _token, _adopted = result
     assert user.email == "reset@example.com"
 
 
@@ -178,7 +179,7 @@ def test_apple_claim_attaches_sub_to_user():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, token = auth.sign_in_with_apple(
+    user, token, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-123"),
         user_id=user_id,
     )
@@ -199,7 +200,7 @@ def test_apple_first_auth_persists_email_claim():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-with-email", email="alpha@example.com"),
         user_id=user_id,
     )
@@ -220,7 +221,7 @@ def test_apple_subsequent_auth_without_email_keeps_existing():
     )
     # Second auth — Apple's contract: no email claim. Mobile sends the
     # same identity_token shape but the JWT body has no email key.
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-1"),  # no email
         user_id=user_id,
     )
@@ -233,7 +234,7 @@ def test_apple_first_auth_persists_full_name():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-named"),
         user_id=user_id,
         full_name="Alpha Tester",
@@ -252,7 +253,7 @@ def test_apple_subsequent_auth_without_full_name_keeps_existing():
         full_name="Alpha Tester",
     )
     # Second auth — mobile sends no full_name.
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-1"),
         user_id=user_id,
         full_name=None,
@@ -273,7 +274,7 @@ def test_apple_does_not_overwrite_existing_display_name():
     )
     # A buggy/malicious second call with a different name should not
     # rewrite the original.
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-1"),
         user_id=user_id,
         full_name="Different Name",
@@ -292,7 +293,7 @@ def test_apple_empty_full_name_does_not_clobber():
         full_name="Real Name",
     )
     # Apple sometimes sends an empty PersonNameComponents — treat as no name.
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-1"),
         user_id=user_id,
         full_name="   ",
@@ -311,7 +312,7 @@ def test_apple_does_not_overwrite_existing_email():
     code = auth.start_magic_link(email="real@example.com", user_id=user_id)
     auth.verify_magic_link(email="real@example.com", code=code, user_id=user_id)
     # Then Apple sign-in with a relay address.
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt(
             "apple-sub-relay", email="abc123@privaterelay.appleid.com"
         ),
@@ -329,7 +330,7 @@ def test_claim_sets_trial_dates():
     from sqlalchemy import select as _select
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-trial", email="trial@example.com"),
         user_id=user_id,
     )
@@ -347,7 +348,7 @@ def test_reauth_does_not_reset_existing_trial():
     from sqlalchemy import select as _select
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-reauth"),
         user_id=user_id,
     )
@@ -381,7 +382,7 @@ def test_magic_link_adopts_existing_email_user_on_new_device():
         email="shared@example.com", code=code, user_id=original_user_id,
     )
     assert first_result is not None
-    first_user, _ = first_result
+    first_user, _, _ = first_result
 
     # New device — fresh anon, then magic-link with the same email.
     new_device_uid = uuid4()
@@ -391,11 +392,13 @@ def test_magic_link_adopts_existing_email_user_on_new_device():
         email="shared@example.com", code=code2, user_id=new_device_uid,
     )
     assert second_result is not None
-    second_user, _ = second_result
+    second_user, _, adopted = second_result
 
     # Same row, not a parallel one.
     assert second_user.id == first_user.id
     assert second_user.id != new_device_uid
+    # BL16 (AT:R38): adoption signal points back at the new device's anon.
+    assert adopted == new_device_uid
 
 
 def test_magic_link_creates_user_when_email_unknown():
@@ -409,9 +412,10 @@ def test_magic_link_creates_user_when_email_unknown():
         email="brand-new@example.com", code=code, user_id=user_id,
     )
     assert result is not None
-    user, _ = result
+    user, _, adopted = result
     assert user.id == user_id  # the anon row got promoted, not a new row
     assert user.email == "brand-new@example.com"
+    assert adopted is None
 
 
 def test_apple_links_to_existing_email_user():
@@ -428,7 +432,7 @@ def test_apple_links_to_existing_email_user():
     # email (Apple's first-auth-only email claim).
     user_id_b = uuid4()
     auth.ensure_anonymous(device_user_id=user_id_b)
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-link", email="link@example.com"),
         user_id=user_id_b,
     )
@@ -443,7 +447,7 @@ def test_apple_creates_user_when_sub_and_email_unknown():
     auth = AuthService(apple_verifier=_FakeAppleVerifier())
     user_id = uuid4()
     auth.ensure_anonymous(device_user_id=user_id)
-    user, _ = auth.sign_in_with_apple(
+    user, _, _ = auth.sign_in_with_apple(
         identity_token=_apple_jwt("apple-sub-fresh", email="fresh@example.com"),
         user_id=user_id,
     )

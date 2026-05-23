@@ -33,7 +33,7 @@ Flow:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Literal
+from typing import Dict, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -136,6 +136,53 @@ class AuthVerifyResponse(BaseModel):
     user: AuthUser
     token: str
     claimed: bool
+    # BL16 (AT:R38): when an email-fallback adoption fires (caller's anon
+    # user_id != the row returned by email/sub lookup), this carries the
+    # pre-claim anon's user_id so the client can offer a merge UX. None on
+    # the common case where the same row was promoted in place.
+    adopted_from_user_id: UUID | None = None
+
+
+class MergeAccountRequest(BaseModel):
+    """Body for POST /v1/auth/merge — the adopting user merges data from a
+    pre-claim anon orphan that was left behind during account-linking
+    Phase 1 (AT:R32). Caller's Bearer must be the adopting user."""
+
+    from_user_id: UUID
+
+
+class MergePreview(BaseModel):
+    """Read-only counts of what an account merge would move from the orphan
+    `from_user_id` into the adopting `to_user_id`. Mandate is special-cased
+    because both rows may carry one — we always keep the adopting user's."""
+
+    from_user_id: UUID
+    to_user_id: UUID
+    journal_entries: int = 0
+    sim_trades: int = 0
+    sim_holdings: int = 0
+    sim_watchlists: int = 0
+    lessons_progress: int = 0
+    agent_activations: int = 0
+    one_on_one_messages: int = 0
+    room_runs: int = 0
+    user_overlays: int = 0
+    bug_reports: int = 0
+    mandate_conflict: bool = False
+
+
+class MergeResult(BaseModel):
+    """Outcome of POST /v1/auth/merge. `counts` is per-category rows moved
+    into the adopting user. `mandate_kept` says which side won when both
+    had a mandate. `overlays_deactivated` counts source overlays that were
+    re-keyed but marked inactive because the target already had an active
+    overlay for the same agent."""
+
+    from_user_id: UUID
+    to_user_id: UUID
+    counts: Dict[str, int]
+    mandate_kept: Literal["target", "source", "neither"]
+    overlays_deactivated: int = 0
 
 
 class SessionToken(BaseModel):
