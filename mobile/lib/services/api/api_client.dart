@@ -810,10 +810,16 @@ class ApiClient {
   Future<AuthVerifyResponse> verifyMagicLink({
     required String email,
     required String code,
+    String? onboardingSessionId,
   }) async {
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/auth/magic_link/verify',
-      data: {'email': email, 'code': code},
+      data: {
+        'email': email,
+        'code': code,
+        if (onboardingSessionId != null)
+          'onboarding_session_id': onboardingSessionId,
+      },
     );
     return AuthVerifyResponse.fromJson(r.data!);
   }
@@ -822,6 +828,7 @@ class ApiClient {
     required String identityToken,
     String? userId,
     String? fullName,
+    String? onboardingSessionId,
   }) async {
     // Phase 3 (AT:R29): backend verifies the identity_token against
     // Apple's JWKS. 400 on bad signature / wrong iss/aud / expired.
@@ -831,6 +838,8 @@ class ApiClient {
         'identity_token': identityToken,
         if (userId != null) 'user_id': userId,
         if (fullName != null) 'full_name': fullName,
+        if (onboardingSessionId != null)
+          'onboarding_session_id': onboardingSessionId,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);
@@ -839,6 +848,7 @@ class ApiClient {
   Future<AuthVerifyResponse> signInWithGoogle({
     required String identityToken,
     String? userId,
+    String? onboardingSessionId,
   }) async {
     // D-057 (AT:R36): Android-only at alpha. Backend verifies the
     // ID token against Google's JWKS (signature + iss + aud + exp +
@@ -850,6 +860,8 @@ class ApiClient {
       data: {
         'identity_token': identityToken,
         if (userId != null) 'user_id': userId,
+        if (onboardingSessionId != null)
+          'onboarding_session_id': onboardingSessionId,
       },
     );
     return AuthVerifyResponse.fromJson(r.data!);

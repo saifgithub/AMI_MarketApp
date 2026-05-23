@@ -117,9 +117,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(loading: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
-      final r = await api.verifyMagicLink(email: email, code: code);
+      // BL13: thread pending OnboardingSession.id through so the backend can
+      // stamp claimed_user_id. One-shot — cleared on success.
+      final onboardingSid = await DeviceUser.getOnboardingSessionId();
+      final r = await api.verifyMagicLink(
+        email: email,
+        code: code,
+        onboardingSessionId: onboardingSid,
+      );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
+      await DeviceUser.clearOnboardingSessionId();
       state = state.copyWith(
         user: r.user,
         token: r.token,
@@ -146,13 +154,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = state.user?.id ?? await DeviceUser.getOrCreate();
+      final onboardingSid = await DeviceUser.getOnboardingSessionId();
       final r = await api.signInWithApple(
         identityToken: identityToken,
         userId: userId,
         fullName: fullName,
+        onboardingSessionId: onboardingSid,
       );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
+      await DeviceUser.clearOnboardingSessionId();
       state = state.copyWith(user: r.user, token: r.token, loading: false);
       return true;
     } catch (e) {
@@ -169,12 +180,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = state.user?.id ?? await DeviceUser.getOrCreate();
+      final onboardingSid = await DeviceUser.getOnboardingSessionId();
       final r = await api.signInWithGoogle(
         identityToken: identityToken,
         userId: userId,
+        onboardingSessionId: onboardingSid,
       );
       api.setToken(r.token);
       await DeviceUser.setIdAndToken(r.user.id, r.token);
+      await DeviceUser.clearOnboardingSessionId();
       state = state.copyWith(user: r.user, token: r.token, loading: false);
       return true;
     } catch (e) {

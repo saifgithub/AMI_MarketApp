@@ -63,9 +63,15 @@ class DeviceUser {
   // the adopted user_id on claim). Keys the user_devices table so two
   // phones on one Apple ID surface as two device rows under one user.
   static const String _kInstallIdKey = 'ami.device_install_id';
+  // BL13 (AT:R32 backend, AT:R37 mobile wiring): session_id returned by
+  // /v1/onboarding/start. Persisted so the eventual claim call can pass it
+  // through to /v1/auth/*, letting the backend stamp `claimed_user_id` on
+  // the OnboardingSession row. Cleared on successful claim (one-shot).
+  static const String _kOnboardingSessionIdKey = 'ami.onboarding_session_id';
   static String? _cachedId;
   static String? _cachedToken;
   static String? _cachedInstallId;
+  static String? _cachedOnboardingSessionId;
 
   /// Return the persisted user_id, minting one on first launch.
   static Future<String> getOrCreate() async {
@@ -114,12 +120,40 @@ class DeviceUser {
     _cachedToken = token;
   }
 
-  /// Wipe both — used by sign-out (Phase 4).
+  /// Wipe both — used by sign-out (Phase 4). Install id + any pending
+  /// onboarding session id survive (the install id is per-physical-device
+  /// forever; a pending onboarding session id is one-shot and clears on
+  /// successful claim).
   static Future<void> clear() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kIdKey);
     await prefs.remove(_kTokenKey);
     _cachedId = null;
     _cachedToken = null;
+  }
+
+  /// BL13: persist the OnboardingSession id returned by /v1/onboarding/start.
+  /// Called from OnboardingNotifier.start() so a backgrounded app can still
+  /// stamp claimed_user_id when the user comes back and signs in.
+  static Future<void> setOnboardingSessionId(String sessionId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kOnboardingSessionIdKey, sessionId);
+    _cachedOnboardingSessionId = sessionId;
+  }
+
+  /// Read the pending OnboardingSession id (null if none).
+  static Future<String?> getOnboardingSessionId() async {
+    if (_cachedOnboardingSessionId != null) return _cachedOnboardingSessionId;
+    final prefs = await SharedPreferences.getInstance();
+    _cachedOnboardingSessionId = prefs.getString(_kOnboardingSessionIdKey);
+    return _cachedOnboardingSessionId;
+  }
+
+  /// Drop the pending OnboardingSession id — call after a successful claim
+  /// so a fresh onboarding can never double-stamp the same session row.
+  static Future<void> clearOnboardingSessionId() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kOnboardingSessionIdKey);
+    _cachedOnboardingSessionId = null;
   }
 }

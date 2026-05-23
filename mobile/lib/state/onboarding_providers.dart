@@ -5,6 +5,7 @@
 library;
 
 import 'package:ami_trade/services/api/api_client.dart';
+import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:flutter/foundation.dart';
@@ -133,6 +134,10 @@ class OnboardingNotifier extends StateNotifier<OnboardingState> {
     state = state.copyWith(phase: OnboardingPhase.starting, errorMessage: null);
     try {
       final resp = await _api.startOnboarding(locale: locale, timezone: timezone);
+      // BL13: persist session_id so the eventual claim call (magic-link verify,
+      // Apple, or Google) can pass it to the backend and stamp claimed_user_id
+      // on this OnboardingSession row.
+      await DeviceUser.setOnboardingSessionId(resp.sessionId);
       state = state.copyWith(
         phase: OnboardingPhase.inConversation,
         sessionId: resp.sessionId,
