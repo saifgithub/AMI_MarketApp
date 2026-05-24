@@ -418,6 +418,96 @@ abstract class AppLocalizations {
   /// **'Ticker (e.g. NVDA)'**
   String get portfolioAddDialogHint;
 
+  /// Label above the big position value on the Holding Detail screen.
+  ///
+  /// In en, this message translates to:
+  /// **'VALUE'**
+  String get holdingDetailValue;
+
+  /// Label for share quantity on Holding Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'QTY'**
+  String get holdingDetailQty;
+
+  /// Label for average cost basis on Holding Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'AVG COST'**
+  String get holdingDetailAvgCost;
+
+  /// Label for the current mark price on Holding Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'MARK'**
+  String get holdingDetailMark;
+
+  /// Caption beneath the P&L line on Holding Detail. {date} is a localized medium date.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened {date}'**
+  String holdingDetailOpened(String date);
+
+  /// Shown when the user navigated to a Holding Detail screen but the position is closed (no shares held). {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'No open position in {ticker}. History below.'**
+  String holdingDetailNoOpenPosition(String ticker);
+
+  /// Quick-action chip on Holding Detail — opens the trade ticket sheet prefilled with this ticker.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADE MORE'**
+  String get holdingDetailActionTrade;
+
+  /// Quick-action chip on Holding Detail — closes every open trade for this ticker after confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE POSITION'**
+  String get holdingDetailActionClose;
+
+  /// Section header above the per-ticker trade history list on Holding Detail. {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADES FOR {ticker}'**
+  String holdingDetailTradesHeading(String ticker);
+
+  /// Empty state shown beneath the per-ticker TRADES heading on Holding Detail when there are no historical trades.
+  ///
+  /// In en, this message translates to:
+  /// **'No trades on record for this ticker yet.'**
+  String get holdingDetailNoTrades;
+
+  /// Confirm-dialog title before closing every open trade for the ticker on Holding Detail. {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE {ticker} POSITION?'**
+  String holdingDetailClosePositionConfirmTitle(String ticker);
+
+  /// Body of the close-position confirm dialog on Holding Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'This closes every open trade for this ticker at the current mark. Realised P&L is final.'**
+  String get holdingDetailClosePositionConfirmBody;
+
+  /// Destructive CTA on the close-position confirm dialog on Holding Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE'**
+  String get holdingDetailClosePositionConfirmCta;
+
+  /// Heading on the placeholder card at the bottom of Holding Detail listing not-yet-built surfaces.
+  ///
+  /// In en, this message translates to:
+  /// **'COMING SOON'**
+  String get holdingDetailComingSoonHeading;
+
+  /// Body of the COMING SOON placeholder card on Holding Detail. Lists the next features that will land on this screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Candlestick chart · per-ticker news · earnings calendar'**
+  String get holdingDetailComingSoonBody;
+
   /// Generic cancel button in dialogs and sheets.
   ///
   /// In en, this message translates to:

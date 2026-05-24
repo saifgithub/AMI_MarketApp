@@ -14,11 +14,13 @@ import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
+import 'package:ami_trade/screens/sim/holding_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
+import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:ami_trade/widgets/watchlist_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -154,7 +156,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                   style: AmiTypography.caption),
             )
           else
-            for (final t in state.trades) _TradeRow(trade: t, ref: ref),
+            for (final t in state.trades) TradeRow(trade: t),
           const SizedBox(height: AmiSpacing.xxl),
         ],
       ),
@@ -318,121 +320,54 @@ class _HoldingCard extends StatelessWidget {
         : ((holding.mark - holding.avgCost) / holding.avgCost) * 100;
     final accent = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
     final fmt = NumberFormat('#,##0.00');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => HoldingDetailScreen(ticker: holding.ticker),
+        )),
         borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.slate700),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(holding.ticker,
-                    style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
-                const SizedBox(height: 2),
-                Text(
-                  '${holding.quantity.toStringAsFixed(0)} @ \$${fmt.format(holding.avgCost)}',
-                  style: AmiTypography.caption,
-                ),
-              ],
-            ),
+        child: Container(
+          padding: const EdgeInsets.all(AmiSpacing.m),
+          decoration: BoxDecoration(
+            color: AmiColors.slate800,
+            borderRadius: BorderRadius.circular(AmiRadii.card),
+            border: Border.all(color: AmiColors.slate700),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          child: Row(
             children: [
-              Text('\$${fmt.format(holding.value)}',
-                  style: AmiTypography.statSmall),
-              const SizedBox(height: 2),
-              Text(
-                '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
-                '(${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%)',
-                style: AmiTypography.labelMono.copyWith(color: accent, fontSize: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(holding.ticker,
+                        style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${holding.quantity.toStringAsFixed(0)} @ \$${fmt.format(holding.avgCost)}',
+                      style: AmiTypography.caption,
+                    ),
+                  ],
+                ),
               ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('\$${fmt.format(holding.value)}',
+                      style: AmiTypography.statSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
+                    '(${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%)',
+                    style: AmiTypography.labelMono.copyWith(color: accent, fontSize: 11),
+                  ),
+                ],
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              const Icon(Icons.chevron_right, color: AmiColors.textLow, size: 18),
             ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-
-class _TradeRow extends StatelessWidget {
-  const _TradeRow({required this.trade, required this.ref});
-  final SimTrade trade;
-  final WidgetRef ref;
-
-  Color get _accent {
-    if (trade.status == 'won') return AmiColors.hexGreen;
-    if (trade.status == 'lost') return AmiColors.hexRed;
-    if (trade.status == 'closed') {
-      return trade.realisedPnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
-    }
-    return AmiColors.hexCyan;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = NumberFormat('#,##0.00');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(AmiSpacing.s),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800,
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: _accent.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: _accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(trade.status.toUpperCase(),
-                style: AmiTypography.labelMono.copyWith(color: _accent, fontSize: 10)),
-          ),
-          const SizedBox(width: AmiSpacing.s),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${trade.side.toUpperCase()} ${trade.quantity.toStringAsFixed(0)} ${trade.ticker} @ \$${fmt.format(trade.entryPrice)}',
-                  style: AmiTypography.body,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  [
-                    if (trade.stop != null) 'stop \$${fmt.format(trade.stop)}',
-                    if (trade.target != null) 'target \$${fmt.format(trade.target)}',
-                    if (trade.closedPrice != null)
-                      'closed \$${fmt.format(trade.closedPrice)}',
-                  ].join(' • '),
-                  style: AmiTypography.caption,
-                ),
-              ],
-            ),
-          ),
-          if (trade.isOpen)
-            IconButton(
-              icon: const Icon(Icons.close, size: 16, color: AmiColors.textLow),
-              tooltip: AppLocalizations.of(context).portfolioCloseTooltip,
-              onPressed: () =>
-                  ref.read(simNotifierProvider.notifier).closeTrade(trade.id),
-            )
-          else if (trade.realisedPnl != 0)
-            Text(
-              '${trade.realisedPnl >= 0 ? '+' : ''}\$${fmt.format(trade.realisedPnl)}',
-              style: AmiTypography.labelMono.copyWith(color: _accent),
-            ),
-        ],
+        ),
       ),
     );
   }

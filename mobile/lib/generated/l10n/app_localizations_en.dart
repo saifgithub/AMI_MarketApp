@@ -178,6 +178,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get portfolioAddDialogHint => 'Ticker (e.g. NVDA)';
 
   @override
+  String get holdingDetailValue => 'VALUE';
+
+  @override
+  String get holdingDetailQty => 'QTY';
+
+  @override
+  String get holdingDetailAvgCost => 'AVG COST';
+
+  @override
+  String get holdingDetailMark => 'MARK';
+
+  @override
+  String holdingDetailOpened(String date) {
+    return 'Opened $date';
+  }
+
+  @override
+  String holdingDetailNoOpenPosition(String ticker) {
+    return 'No open position in $ticker. History below.';
+  }
+
+  @override
+  String get holdingDetailActionTrade => 'TRADE MORE';
+
+  @override
+  String get holdingDetailActionClose => 'CLOSE POSITION';
+
+  @override
+  String holdingDetailTradesHeading(String ticker) {
+    return 'TRADES FOR $ticker';
+  }
+
+  @override
+  String get holdingDetailNoTrades =>
+      'No trades on record for this ticker yet.';
+
+  @override
+  String holdingDetailClosePositionConfirmTitle(String ticker) {
+    return 'CLOSE $ticker POSITION?';
+  }
+
+  @override
+  String get holdingDetailClosePositionConfirmBody =>
+      'This closes every open trade for this ticker at the current mark. Realised P&L is final.';
+
+  @override
+  String get holdingDetailClosePositionConfirmCta => 'CLOSE';
+
+  @override
+  String get holdingDetailComingSoonHeading => 'COMING SOON';
+
+  @override
+  String get holdingDetailComingSoonBody =>
+      'Candlestick chart · per-ticker news · earnings calendar';
+
+  @override
   String get actionCancel => 'CANCEL';
 
   @override

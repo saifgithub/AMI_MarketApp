@@ -103,6 +103,72 @@
     "portfolioCloseTooltip": "Close",
     "portfolioAddDialogTitle": "ADD TO WATCHLIST",
     "portfolioAddDialogHint": "Ticker (e.g. NVDA)",
+
+    "holdingDetailValue": "VALUE",
+    "@holdingDetailValue": {
+        "description": "Label above the big position value on the Holding Detail screen."
+    },
+    "holdingDetailQty": "QTY",
+    "@holdingDetailQty": {
+        "description": "Label for share quantity on Holding Detail."
+    },
+    "holdingDetailAvgCost": "AVG COST",
+    "@holdingDetailAvgCost": {
+        "description": "Label for average cost basis on Holding Detail."
+    },
+    "holdingDetailMark": "MARK",
+    "@holdingDetailMark": {
+        "description": "Label for the current mark price on Holding Detail."
+    },
+    "holdingDetailOpened": "Opened {date}",
+    "@holdingDetailOpened": {
+        "description": "Caption beneath the P&L line on Holding Detail. {date} is a localized medium date.",
+        "placeholders": {"date": {"type": "String"}}
+    },
+    "holdingDetailNoOpenPosition": "No open position in {ticker}. History below.",
+    "@holdingDetailNoOpenPosition": {
+        "description": "Shown when the user navigated to a Holding Detail screen but the position is closed (no shares held). {ticker} is the symbol.",
+        "placeholders": {"ticker": {"type": "String"}}
+    },
+    "holdingDetailActionTrade": "TRADE MORE",
+    "@holdingDetailActionTrade": {
+        "description": "Quick-action chip on Holding Detail — opens the trade ticket sheet prefilled with this ticker."
+    },
+    "holdingDetailActionClose": "CLOSE POSITION",
+    "@holdingDetailActionClose": {
+        "description": "Quick-action chip on Holding Detail — closes every open trade for this ticker after confirm."
+    },
+    "holdingDetailTradesHeading": "TRADES FOR {ticker}",
+    "@holdingDetailTradesHeading": {
+        "description": "Section header above the per-ticker trade history list on Holding Detail. {ticker} is the symbol.",
+        "placeholders": {"ticker": {"type": "String"}}
+    },
+    "holdingDetailNoTrades": "No trades on record for this ticker yet.",
+    "@holdingDetailNoTrades": {
+        "description": "Empty state shown beneath the per-ticker TRADES heading on Holding Detail when there are no historical trades."
+    },
+    "holdingDetailClosePositionConfirmTitle": "CLOSE {ticker} POSITION?",
+    "@holdingDetailClosePositionConfirmTitle": {
+        "description": "Confirm-dialog title before closing every open trade for the ticker on Holding Detail. {ticker} is the symbol.",
+        "placeholders": {"ticker": {"type": "String"}}
+    },
+    "holdingDetailClosePositionConfirmBody": "This closes every open trade for this ticker at the current mark. Realised P&L is final.",
+    "@holdingDetailClosePositionConfirmBody": {
+        "description": "Body of the close-position confirm dialog on Holding Detail."
+    },
+    "holdingDetailClosePositionConfirmCta": "CLOSE",
+    "@holdingDetailClosePositionConfirmCta": {
+        "description": "Destructive CTA on the close-position confirm dialog on Holding Detail."
+    },
+    "holdingDetailComingSoonHeading": "COMING SOON",
+    "@holdingDetailComingSoonHeading": {
+        "description": "Heading on the placeholder card at the bottom of Holding Detail listing not-yet-built surfaces."
+    },
+    "holdingDetailComingSoonBody": "Candlestick chart · per-ticker news · earnings calendar",
+    "@holdingDetailComingSoonBody": {
+        "description": "Body of the COMING SOON placeholder card on Holding Detail. Lists the next features that will land on this screen."
+    },
+
     "actionCancel": "CANCEL",
     "@actionCancel": {
         "description": "Generic cancel button in dialogs and sheets."
