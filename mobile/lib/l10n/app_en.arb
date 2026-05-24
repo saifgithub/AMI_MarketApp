@@ -143,9 +143,17 @@
         "description": "Shown on Ticker Detail when the user has neither a position nor a watchlist entry for the ticker (rare mid-session state: closed position + removed from watchlist while on screen). {ticker} is the symbol.",
         "placeholders": {"ticker": {"type": "String"}}
     },
-    "tickerDetailChartComingSoon": "CHART COMING SOON",
-    "@tickerDetailChartComingSoon": {
-        "description": "Placeholder label in the chart slot on Ticker Detail until Bundle 2 (AT:R41) ships the real candlestick + period selector."
+    "tickerDetailChartUnavailable": "Chart unavailable. Tap to retry.",
+    "@tickerDetailChartUnavailable": {
+        "description": "Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch."
+    },
+    "tickerDetailChartExpand": "Expand chart",
+    "@tickerDetailChartExpand": {
+        "description": "Tooltip on the small expand icon at the top-right of the portrait chart on Ticker Detail. Pushes the landscape fullscreen chart route."
+    },
+    "tickerDetailChartClose": "Close fullscreen chart",
+    "@tickerDetailChartClose": {
+        "description": "Tooltip on the X / close button at the top of the fullscreen landscape chart route. Pops back to portrait Ticker Detail."
     },
     "tickerDetailActionTrade": "TRADE",
     "@tickerDetailActionTrade": {

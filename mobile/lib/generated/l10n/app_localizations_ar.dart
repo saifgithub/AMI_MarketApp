@@ -211,7 +211,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get tickerDetailChartComingSoon => 'CHART COMING SOON';
+  String get tickerDetailChartUnavailable => 'Chart unavailable. Tap to retry.';
+
+  @override
+  String get tickerDetailChartExpand => 'Expand chart';
+
+  @override
+  String get tickerDetailChartClose => 'Close fullscreen chart';
 
   @override
   String get tickerDetailActionTrade => 'TRADE';

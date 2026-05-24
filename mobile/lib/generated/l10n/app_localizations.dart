@@ -472,11 +472,23 @@ abstract class AppLocalizations {
   /// **'No open position or watchlist entry for {ticker}.'**
   String tickerDetailNoPosition(String ticker);
 
-  /// Placeholder label in the chart slot on Ticker Detail until Bundle 2 (AT:R41) ships the real candlestick + period selector.
+  /// Error state shown in the chart slot on Ticker Detail when /v1/sim/history fails (network down, server returned no candles). Tapping retries the fetch.
   ///
   /// In en, this message translates to:
-  /// **'CHART COMING SOON'**
-  String get tickerDetailChartComingSoon;
+  /// **'Chart unavailable. Tap to retry.'**
+  String get tickerDetailChartUnavailable;
+
+  /// Tooltip on the small expand icon at the top-right of the portrait chart on Ticker Detail. Pushes the landscape fullscreen chart route.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand chart'**
+  String get tickerDetailChartExpand;
+
+  /// Tooltip on the X / close button at the top of the fullscreen landscape chart route. Pops back to portrait Ticker Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'Close fullscreen chart'**
+  String get tickerDetailChartClose;
 
   /// Primary CTA on Ticker Detail when the user does NOT hold a position in this ticker. Opens the trade ticket sheet.
   ///

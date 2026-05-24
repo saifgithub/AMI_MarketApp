@@ -724,6 +724,16 @@ class ApiClient {
     );
   }
 
+  /// OHLCV history for the TickerDetail chart.
+  /// `period` is one of: 1d, 1w, 1m, 3m, 1y, 5y. Server caches 60s.
+  Future<SimHistory> simHistory(String ticker, String period) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/sim/history/$ticker',
+      queryParameters: {'period': period},
+    );
+    return SimHistory.fromJson(r.data!);
+  }
+
   // ── Watchlist (A18) ─────────────────────────────────────────────
 
   Future<List<WatchlistEntry>> watchlistList(String userId) async {

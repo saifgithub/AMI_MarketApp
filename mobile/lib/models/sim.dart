@@ -145,6 +145,63 @@ class SimTrade {
   }
 }
 
+/// One OHLCV bar from `GET /v1/sim/history`. `t` is Unix epoch seconds (UTC).
+class SimCandle {
+  const SimCandle({
+    required this.t,
+    required this.o,
+    required this.h,
+    required this.l,
+    required this.c,
+    required this.v,
+  });
+
+  final int t;
+  final double o;
+  final double h;
+  final double l;
+  final double c;
+  final double v;
+
+  DateTime get dateTime => DateTime.fromMillisecondsSinceEpoch(t * 1000, isUtc: true);
+
+  factory SimCandle.fromJson(Map<String, dynamic> j) => SimCandle(
+        t: (j['t'] as num).toInt(),
+        o: (j['o'] as num).toDouble(),
+        h: (j['h'] as num).toDouble(),
+        l: (j['l'] as num).toDouble(),
+        c: (j['c'] as num).toDouble(),
+        v: (j['v'] as num).toDouble(),
+      );
+}
+
+/// Chart-history payload: a ticker's OHLCV bars for a given period.
+/// `source` mirrors Quote.source — drives a LIVE / MOCK badge on the chart.
+class SimHistory {
+  const SimHistory({
+    required this.ticker,
+    required this.period,
+    required this.source,
+    required this.candles,
+  });
+
+  final String ticker;
+  final String period;
+  final String source;
+  final List<SimCandle> candles;
+
+  bool get isLivePrice => source != 'mock_walk' && source != 'unavailable';
+
+  factory SimHistory.fromJson(Map<String, dynamic> j) => SimHistory(
+        ticker: j['ticker'] as String,
+        period: j['period'] as String,
+        source: j['source'] as String? ?? 'unknown',
+        candles: ((j['candles'] as List?) ?? const [])
+            .map((c) => SimCandle.fromJson(c as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
 class SimSubmitResult {
   const SimSubmitResult({
     required this.ok,
