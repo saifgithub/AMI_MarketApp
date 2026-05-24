@@ -94,7 +94,7 @@ Then ask for the per-track config:
 | Field | Default | Notes |
 |---|---|---|
 | `handover_path` | `HANDOVER_<letter>.md` | The rolling handover doc for this track. |
-| `history_path` | `history_<letter>.md` (optional) | Older session narratives. Skip = no rotation. |
+| `history_dir` | `history/` if the handover doc lives at repo root; `<sibling-folder>/history/` if it lives in a subfolder (optional) | Folder for per-session wrap narratives. `/handover` writes `<dir>/<prefix>_<letter><N>.md` per wrap. Skip = no history writes. |
 | `project_plan_path` | (ask, optional) | A backlog doc with per-item status this track ticks. |
 | `sanity_checks` | empty list (optional) | List of `{name, cmd}` to run during `/start-fresh <letter>`. Loop with "Add another?". |
 | `bug_list` | disabled (optional) | If this track surfaces an open-bug queue at session start. |
@@ -145,7 +145,7 @@ tracks:
   <LETTER>:
     label: "<purpose>"
     handover_path: HANDOVER_<LETTER>.md
-    # history_path: history_<LETTER>.md                # optional
+    # history_dir: history/                            # optional; folder for per-session narratives
     # project_plan_path: <path>                        # optional
     # sanity_checks:
     #   - name: <label>

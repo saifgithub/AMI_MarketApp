@@ -72,16 +72,22 @@ don't block the entry protocol.
 
 ### 2. Read the freshest state on disk
 
-```bash
-cat {T.handover_path}
-```
+`{T.handover_path}` is **current-state-only** under the history-folder
+refactor — it holds the "What's on disk + what's running" table,
+carry-overs, the next-session counter, and a "Recent sessions" link
+block. The previous session's narrative lives in `{T.history_dir}/`
+as its own file.
 
-The "What's on disk + what's running" table near the top is current
-truth for this track (commit count, latest commit, deploy tags, test
-count, etc.). The most recent
-`## What just landed (this session — {prefix}:{track}<N>)` section
-captures substantive commits + carry-overs from the previous session
-on this track.
+Two short reads:
+
+```bash
+# Current state, carry-overs, next-session name.
+cat {T.handover_path}
+
+# Previous session's narrative — read the topmost link under
+# "Recent sessions" in HANDOVER, or fall back to:
+ls -1 {T.history_dir}/{prefix}_{track}*.md 2>/dev/null | tail -1 | xargs -r cat
+```
 
 If `{T.project_plan_path}` is set in config, also skim it for the
 backlog + the live working set:
@@ -90,14 +96,17 @@ backlog + the live working set:
 test -n "{T.project_plan_path}" && head -200 {T.project_plan_path}
 ```
 
-You don't need to re-read the entire chronological narrative in
-`{T.handover_path}` — the recent-session sections + the top table are
-enough.
+You don't need to read older history files unless something in the
+carry-overs explicitly points back at one.
 
 If `{T.handover_path}` doesn't exist yet (first session on this
-track), surface that and tell the user `/handover {track}`
-will create it on first wrap. Continue with the rest of the steps;
+track), surface that and tell the user `/handover {track}` will
+create it on first wrap. Continue with the rest of the steps;
 just expect step 5 to fall back to `{prefix}:{track}1`.
+
+If `{T.handover_path}` exists but `{T.history_dir}/` is empty (first
+wrap hasn't happened yet, or `history_dir` isn't configured), just
+skip the history-file read and proceed.
 
 ### 3. Sanity-check the local state
 

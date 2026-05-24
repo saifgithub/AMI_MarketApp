@@ -1,5 +1,5 @@
 ---
-description: Generic multi-track handover protocol. Pass a track letter (e.g. /handover R or /handover M). Reads .claude/session-config.yml — project_prefix + per-track block (handover doc, history, memory file, etc.) — and runs the universal exit protocol: clean working tree, subagent-worktree cleanup, narrative rotation, consistency scan, doc + memory updates, structured report. Run when the user explicitly asks to wrap a session.
+description: Generic multi-track handover protocol. Pass a track letter (e.g. /handover R or /handover M). Reads .claude/session-config.yml — project_prefix + per-track block (handover doc, history dir, memory file, etc.) — and runs the universal exit protocol: clean working tree, subagent-worktree cleanup, write the session narrative to history/, consistency scan, refresh current-state in HANDOVER, commit, structured report. Run when the user explicitly asks to wrap a session.
 ---
 
 # /handover
@@ -69,7 +69,7 @@ Then resolve the **active track** in this priority order:
    "Wrapping track R (Development)…"
 
 Throughout this skill, `{prefix}` is `project_prefix` and `{track}`
-is the resolved track letter. `{T.handover_path}`, `{T.history_path}`
+is the resolved track letter. `{T.handover_path}`, `{T.history_dir}`
 are fields under `tracks.{track}` in the config. `{T.foo}` placeholders
 refer to per-track values; top-level fields like `memory_project_file`,
 `worktree_pattern`, and `scan_excludes` are **shared** across every
@@ -84,7 +84,7 @@ destructive or persistent operation**. Specifically:
 | Step | Normal run | Dry-run |
 |---|---|---|
 | 2. Subagent worktree cleanup | Removes worktrees + branches | List them; **don't remove** |
-| 3. Rotate prior session | Edits `{T.handover_path}` + `{T.history_path}` | Edit normally (shows up in `git diff`) |
+| 3. Write history file | Creates `{T.history_dir}/{prefix}_{track}<N>.md` | Write normally (new file shows up as untracked in `git status`) |
 | 4. Consistency scan | Edits stale refs | Edit normally (shows up in `git diff`) |
 | 5/6/7. Doc updates | Edits HANDOVER + plan + memory file | Edit normally |
 | 8. Commit | Stages + commits the doc edits | **SKIP** |
@@ -161,39 +161,50 @@ regardless of which track is wrapping.
 Sibling worktrees that pre-date this session and don't match
 `{worktree_pattern}` are not yours to clean — leave them alone.
 
-### 3. Rotate the prior session out to `{T.history_path}`
+### 3. Write this session's narrative to `{T.history_dir}`
 
-**Skip this step entirely if `{T.history_path}` is not set under
+**Skip this step entirely if `{T.history_dir}` is not set under
 this track in config.**
 
-`{T.handover_path}` is rolling: it should carry current truth + ONE
-session's "what just landed" narrative. Before writing this session's
-narrative, the previous session's section must be moved to
-`{T.history_path}` so the file stays bounded.
+Each session's "what just landed" narrative lives in its own file in
+`{T.history_dir}`. `/handover` *creates* the file; it doesn't *rotate*
+anything out of `{T.handover_path}` (which is now current-state only —
+see step 5).
 
-Find the current
-`## What just landed (this session — {prefix}:{track}<N-1>)`
-section in `{T.handover_path}` (there should be exactly one). Move it
-to the **top** of `{T.history_path}` (newest-on-top), below any
-existing intro preamble. Rename the heading on the way out:
+Compose the narrative for this session: commits with hashes, what
+shipped, what was learned, gotchas for next session. Same prose that
+the old protocol used to splice into HANDOVER's "What just landed"
+section — it just goes straight to its own file now.
 
+Write to `{T.history_dir}/{prefix}_{track}<zero-padded N>.md` (four-
+digit zero-padding so `ls` sorts chronologically):
+
+```markdown
+---
+session: {prefix}:{track}<N>
+date: YYYY-MM-DD
+prev: {prefix}:{track}<N-1>     # omit on the first session
+---
+
+# {prefix}:{track}<N>  (YYYY-MM-DD)
+
+<narrative>
 ```
-## What just landed (this session — {prefix}:{track}<N-1>)
-                                   ↓
-## {prefix}:{track}<N-1>  (YYYY-MM-DD)
-```
 
-If `{T.handover_path}` doesn't have a `## What just landed (this session —`
-heading (first session, or because the previous session was a pure
-refactor), skip the rotation — just write the new section.
+**Collision rule:** if `{T.history_dir}/{prefix}_{track}<N>.md` already
+exists (rare — happens when re-wrapping the same session for testing),
+write to `{prefix}_{track}<N>.1.md`, `.2.md`, etc. instead of
+overwriting. Never overwrite an existing per-session narrative.
 
-If `{T.history_path}` doesn't exist yet, create it with a one-line
-intro:
+If `{T.history_dir}` doesn't exist yet, create it (including any
+parent dirs) and write a `README.md`:
 
 ```markdown
 # History — track {track} ({T.label})
 
-Older "what just landed" sections from {T.handover_path}, newest on top.
+Per-session wrap narratives. Each file = one /handover invocation.
+Sorted chronologically by filename. Don't read unless you need
+historical context — current state lives in {T.handover_path}.
 ```
 
 ### 4. Consistency scan
@@ -232,30 +243,29 @@ also live in this repo, **don't rewrite session-tag references from
 those tracks** — they belong to a parallel narrative. Limit the scan
 fixes to text that's stale for *this* track.
 
-### 5. Update `{T.handover_path}`
+### 5. Refresh `{T.handover_path}` (current-state only)
 
-The doc has a stable shape. Maintain it:
+`{T.handover_path}` is **narrative-free** after the history-folder
+refactor. The session's "what just landed" prose went to
+`{T.history_dir}` in step 3 — adding it here would duplicate.
 
-- **`**Last updated:**` line** — refresh with the date + a short
-  summary of this session's marquee work.
-- **"What's on disk + what's running" table** (if present) — commit
-  count, latest-commit hash + subject, deploy tags landed this
-  session, test count, anything else the track tracks here. Numbers
-  must match `git rev-list --count HEAD`, `git log -1`, `git tag`,
-  and the test-suite tail you ran.
-- **New section** `## What just landed (this session — {prefix}:{track}<N>)`
-  inserted in the position the rotated section used to occupy
-  (just before "How to start the next session"). Narrative summary
-  of the substantive commits with hash callouts. Include carry-overs
-  and any gotchas the next session will trip on.
-- **"How to start the next session"** — update the commit count /
-  test count / carry-over list. **Increment the session counter on
-  this track** (e.g. `{prefix}:{track}19` → `{prefix}:{track}20`).
-  Mention the entry command: `/start-fresh {track}` (or just
-  `/start-fresh` if this is track R and config makes R the
-  default — see start-fresh skill).
+Maintain only these sections:
 
-If `{T.handover_path}` doesn't exist yet, create it with the
+- **`Last updated:`** line — date + a one-sentence summary of this
+  session's marquee work (no narrative bullets, just the headline).
+- **"What's on disk + what's running" table** — commit count, latest
+  hash + subject, deploy tags landed this session, test count,
+  anything else the track tracks here. Numbers must match the values
+  captured in step 1 (`git rev-list --count HEAD`, `git log -1`,
+  `git tag`).
+- **Carry-overs** — refresh the bullet list. Drop items that closed
+  this session; add ones that surfaced.
+- **"How to start the next session"** — increment the counter
+  (`{prefix}:{track}<N>` → `{prefix}:{track}<N+1>`). Prepend a link
+  to this session's new history file to the "Recent sessions" list,
+  keeping the 3-5 most recent.
+
+If `{T.handover_path}` doesn't exist yet, create it with this
 canonical shape:
 
 ```markdown
@@ -264,7 +274,8 @@ canonical shape:
 **Last updated:** YYYY-MM-DD (end of {prefix}:{track}<N> — <summary>)
 
 Read this file **first** when starting a new {T.label} session
-(`/start-fresh {track}`).
+(`/start-fresh {track}`). Past session narratives live in
+[`{T.history_dir}`]({T.history_dir}) — see "Recent sessions" below.
 
 ---
 
@@ -274,17 +285,20 @@ Read this file **first** when starting a new {T.label} session
 
 ---
 
-## What just landed (this session — {prefix}:{track}<N>)
+## Carry-overs
 
-<narrative>
+- <bullet>
 
 ---
 
 ## How to start the next session
 
-`/start-fresh {track}`
+`/start-fresh {track}` — session name to use: **{prefix}:{track}<N+1>**
 
-Session name to use: **{prefix}:{track}<N+1>**
+Recent sessions (newest first):
+- [{prefix}:{track}<N>]({T.history_dir}/{prefix}_{track}<padded N>.md)
+- [{prefix}:{track}<N-1>]({T.history_dir}/{prefix}_{track}<padded N-1>.md)
+- [{prefix}:{track}<N-2>]({T.history_dir}/{prefix}_{track}<padded N-2>.md)
 ```
 
 ### 6. Tick delivered items in `{T.project_plan_path}`
@@ -329,7 +343,7 @@ Update at minimum:
 uncommitted so the user can review with `git diff` and decide.
 
 Steps 5–7 produced edits to `{T.handover_path}`, possibly
-`{T.history_path}` (from the rotation in step 3), possibly
+the new file in `{T.history_dir}/` (from step 3), possibly
 `{T.project_plan_path}` (step 6), and possibly `{memory_project_file}`
 (step 7). Stage and commit them as a single wrap commit so the audit
 trail shows one commit per session-wrap.
@@ -337,7 +351,8 @@ trail shows one commit per session-wrap.
 ```bash
 # Stage everything the wrap touched (skip any path that wasn't edited)
 git add {T.handover_path}
-test -n "{T.history_path}" && git add {T.history_path}
+test -n "{T.history_dir}" && git add {T.history_dir}/{prefix}_{track}*.md
+test -n "{T.history_dir}" && git add {T.history_dir}/README.md 2>/dev/null  # first wrap only
 test -n "{T.project_plan_path}" && git add {T.project_plan_path}
 # memory file lives outside the repo — don't try to git add it
 
@@ -405,7 +420,7 @@ dry-run table at the bottom.
 | 1. Working tree clean | ✅ |
 | 2. On main / fast-forwarded | ✅ |
 | 3. Subagent worktrees cleaned | ✅ (N removed) or N/A |
-| 4. Prior session rotated to {T.history_path} | ✅ or N/A |
+| 4. Session narrative written to {T.history_dir}/ | ✅ (`<file>`) or N/A |
 | 5. Consistency scan | ✅ (K real stale refs fixed) |
 | 6. {T.handover_path} updated | ✅ |
 | 7. {T.project_plan_path} status ticked | ✅ (M items moved) or N/A |
@@ -436,6 +451,9 @@ checklist.
 
 ## What NOT to do
 
+- **Don't add a "What just landed" narrative section to HANDOVER.**
+  That narrative lives in `{T.history_dir}/{prefix}_{track}<N>.md`
+  from step 3. HANDOVER is current-state-only after the refactor.
 - **Don't rewrite other tracks' narratives.** Wraps one track only.
   Consistency-scan hits in another track's handover doc are not
   yours to fix — they belong to that track's next wrap.
@@ -443,5 +461,3 @@ checklist.
   handover unless the user explicitly asked. Doc/state hygiene only.
 - **Don't fudge the report when something went sideways.** Honest
   deviation > clean checklist.
-- **Don't edit `.claude/session-config.yml` mid-handover.** Surface
-  the wrong field; let the user re-run `/session-setup` after.
