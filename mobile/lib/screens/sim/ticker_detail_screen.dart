@@ -16,23 +16,67 @@ import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/ticker_chart.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-class TickerDetailScreen extends ConsumerWidget {
+class TickerDetailScreen extends ConsumerStatefulWidget {
   const TickerDetailScreen({super.key, required this.ticker});
 
   final String ticker;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TickerDetailScreen> createState() => _TickerDetailScreenState();
+}
+
+class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
+  // Guard against the OrientationBuilder firing multiple landscape pushes
+  // for a single rotation. Reset when the fullscreen route pops.
+  bool _fullscreenPushed = false;
+
+  void _pushFullscreen() {
+    if (_fullscreenPushed) return;
+    _fullscreenPushed = true;
+    Navigator.of(context)
+        .push(MaterialPageRoute<void>(
+          builder: (_) => ChartFullscreenScreen(ticker: widget.ticker),
+        ))
+        .then((_) {
+      if (mounted) {
+        setState(() => _fullscreenPushed = false);
+      } else {
+        _fullscreenPushed = false;
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        // Side-effect: rotation to landscape pushes the fullscreen route.
+        // The fullscreen route is the only one that unlocks orientation,
+        // so this callback only fires landscape AFTER the route is already
+        // visible — unless the user is rotating the device against the
+        // app-wide portrait lock, which we treat as an explicit ask.
+        if (orientation == Orientation.landscape && !_fullscreenPushed) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => _pushFullscreen());
+        }
+        return _buildPortrait(context);
+      },
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final ticker = widget.ticker;
     final simState = ref.watch(simNotifierProvider);
     final watchlistState = ref.watch(watchlistNotifierProvider);
     final portfolio = simState.portfolio;
@@ -96,7 +140,11 @@ class TickerDetailScreen extends ConsumerWidget {
             children: [
               statusCard,
               const SizedBox(height: AmiSpacing.m),
-              _ChartPlaceholder(),
+              TickerChart(
+                ticker: ticker,
+                height: 220,
+                onExpand: _pushFullscreen,
+              ),
               const SizedBox(height: AmiSpacing.m),
               _PrimaryAction(ticker: ticker, isHeld: isHeld),
               const SizedBox(height: AmiSpacing.s),
@@ -324,36 +372,6 @@ class _StatRow extends StatelessWidget {
           const Spacer(),
           Text(value, style: AmiTypography.statSmall),
         ],
-      ),
-    );
-  }
-}
-
-
-/// Placeholder for the chart that lands in Bundle 2 (AT:R41).
-/// Renders a fixed-height slate box with a `COMING SOON` label so the
-/// screen rhythm doesn't change when the real chart drops in.
-class _ChartPlaceholder extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Container(
-      height: 220,
-      decoration: BoxDecoration(
-        color: AmiColors.slate800.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(color: AmiColors.slate700),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.show_chart, color: AmiColors.textLow, size: 32),
-            const SizedBox(height: AmiSpacing.xs),
-            Text(l.tickerDetailChartComingSoon,
-                style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
-          ],
-        ),
       ),
     );
   }
