@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-24 (end of AT:R39 — **Saiful registered as Google developer + the 3-session backend stack finally shipped**). Saiful did the external Google registrations end-to-end this session: GCP project + OAuth consent screen + Web client (`153141744056-03d6sa…`) + Android client (`153141744056-5aif1p…`, SHA-1 `91:B5:B7:DB:1F:AD:B9:79:9F:B6:57:84:FB:8B:18:3F:C6:09:9F:47`) all minted; Play Console individual signup submitted, pending Google's identity verification (1-48h). Android upload keystore created at `~/.android-keys/ami-trade-upload.keystore`. Web client_id landed in `infra/alpha.env` as `GOOGLE_AUDIENCES`. With audiences now populated, ran `/promote-to-alpha` → **`alpha-2026-05-24-1`** ships AT:R36 + AT:R37 + AT:R38 in one go. Migration `f8b5d1c00011` (auth_challenges.attempts) applied. All 6 smoke checks green: `/v1/health` 200, `/v1/llm/status` `active=vllm`, `/v1/sim/quote/AAPL` `source=yfinance`, `POST /v1/auth/google` 400 on malformed token, `POST /v1/auth/anon` 10×200 + 1×429 (rate limiter), `/v1/auth/merge` 401 unauth. **+1 work commit + 1 wrap = 2 new commits. Backend tests unchanged at 485** (no code changes this session — registrations + promote only). **Bug list still 0.** AT:R38 wrap is now in [history_R.md](history_R.md).
+**Last updated:** 2026-05-24 (end of AT:R40 — **Ticker Detail screen: v1 ships + grilling session designs Bundles 2-5 + Bundle 1 (UX restructure) lands**). Mobile-only session, no backend changes. First commit `5fa9037` introduced `HoldingDetailScreen` (tap a holding card on Portfolio → full detail view with position summary + agent quick-actions + per-ticker trade history + COMING SOON placeholder). Long `/grill-me` design pass then locked the full Ticker Detail design across 13 questions: one adaptive screen for held + watched + (rare) neither states; section order = Status → Chart → Actions → Earnings → News → Trades; adaptive chart (candlestick short / line long) + 6-button period selector (1D/1W/1M/3M/1Y/5Y, default 1M); fullscreen landscape chart route triggered by both expand-button AND device-rotation auto-push; actions row redesigned to primary full-width green button (TRADE / TRADE MORE adaptive) + secondary chip row (ASK / CONVENE / WATCH-toggle / CLOSE-conditional); yfinance-backed news (5 headlines, external Safari, 5-min cache) + earnings chip (date + EPS estimate, 90-day cutoff, 6h cache). Locked sequencing as Plan Y: Bundle 1 (UX restructure) this session, Bundle 2+3 (chart portrait + landscape) AT:R41, Bundle 4+5 (news + earnings) AT:R42. Second commit `a8b8523` shipped Bundle 1: rename HoldingDetail → TickerDetail, new `_WatchingCard` variant, primary-button + chip-row layout, watchlist row reroute (no longer opens `WatchlistSheet`; sheet stays alive for ticker-tape path), `SEE CHART` secondary button on the Room verdict card (shown in all 3 verdict states). 13 new `tickerDetail*` l10n keys + `roomVerdictSeeChart`. **+2 work commits + 1 wrap = 3 new commits. 308 → 311 commits. Backend tests unchanged at 485** (no backend code touched). **Bug list still 0.** No promote this session — Bundle 1 is mobile-only; no new Alpha tag. AT:R39 wrap rotated into [history_R.md](history_R.md). Plan file at `~/.claude/plans/r-partitioned-breeze.md` captures the full design.
 
 Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,15 +15,18 @@ Read this file **first** in any new session. It captures **current truth** + thi
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **308 commits** (1 chore + 1 wrap = 2 new this session), no remote yet |
-| Latest work commit | `d21b073` — chore: capture session-added permission allowlist entries (AT:R39). No production code changed; the session shipped registrations + promote. |
-| Alpha tags | **NEW: `alpha-2026-05-24-1` shipped this session** — first promote since `alpha-2026-05-22-9` (AT:R34). Carries AT:R36 (`/v1/auth/google` + `GoogleOIDCVerifier`) + AT:R37 (lockout migration `f8b5d1c00011`, rate limiter, streaming uploads) + AT:R38 (merge service + 2 merge routes + `account_adoption` event + `adopted_from_user_id` response field). All 6 smoke checks green. |
+| Git state | Clean working tree, **311 commits** (2 work + 1 wrap = 3 new this session), no remote yet |
+| Latest work commit | `a8b8523` — feat(mobile): TickerDetail Bundle 1 — rename + Watching card + actions row redesign + watchlist+verdict entry points (AT:R40) |
+| Alpha tags | **No new tag this session** — Bundle 1 is mobile-only; chart/news/earnings (Bundles 2-5) ship next sessions. Last tag remains `alpha-2026-05-24-1` (AT:R39 promote carrying AT:R36+R37+R38). |
 | Backend tests | **485 passed, 0 failed** — unchanged this session (no backend code touched). |
 | Mobile pubspec | **`0.1.0+27`** — unchanged (build bump deferred to first real Play Store AAB upload). |
-| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **329 i18n keys**. **Tier 1 ARB AR (311/329) + MS (310/329) via on-prem Gemma 4 31B**; the 18 / 19 unfilled keys fall back to EN. Tier 2 + Tier 3 content remain EN-only; loaders are ready when translated subdirs land. |
+| Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **342 i18n keys** (+13 `tickerDetail*` this session + `roomVerdictSeeChart`). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; the new keys fall back to EN until next translate pass. Tier 2 + Tier 3 content remain EN-only; loaders are ready when translated subdirs land. |
 
 ```
 $ git log --oneline | head -15
+a8b8523 feat(mobile): TickerDetail Bundle 1 — rename + Watching card + actions row redesign + watchlist+verdict entry points (AT:R40)
+5fa9037 feat(mobile): Holding Detail screen v1 — position summary + quick actions + per-ticker history (AT:R40)
+1f0170c chore(handover): wrap AT:R39
 d21b073 chore: capture session-added permission allowlist entries (AT:R39)
 4d913b9 chore(handover): wrap AT:R38
 313179c feat(auth): BL16 mobile — detect adoption + merge sheet + cache invalidation (AT:R38)
@@ -36,9 +39,6 @@ bdea6e8 feat(content): ai_coach + daily_challenge loaders glob <locale>/*.json (
 73b9f0d feat(auth): wire OnboardingSession.id through Flutter claim paths (BL13, AT:R37)
 88f8bbc chore: prune 24+ stale claude/* worktrees and branches (AT:R37)
 9b28b5f feat(auth): sign-out navigates to sign-in screen with 'you've been signed out' banner (AT:R37)
-5530228 chore(handover): wrap AT:R36
-5b94681 feat(android): Android-GMS alpha foundation — Google Sign-In + signing + build (AT:R36, D-057)
-91dce9c chore(handover): wrap AT:R35
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -109,95 +109,104 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R39)
+## What just landed (this session — AT:R40)
 
-**Saiful registered as Google developer + the 3-session backend stack finally shipped to Alpha.** Saiful opened with `/start-fresh R` → AT:R39 plan-mode survey landed (16 active carry-overs from AT:R38, 0 open bugs). Picked **carry-over #1 (Saiful Android setup)** — specifically "help me register as Google developer." Worked through GCP signup + OAuth client minting + Android upload keystore generation + populating `GOOGLE_AUDIENCES`. With audiences set, ran `/promote-to-alpha` → **`alpha-2026-05-24-1`** ships AT:R36 + AT:R37 + AT:R38 in one go. Migration `f8b5d1c00011` (auth_challenges.attempts) applied. All 6 smoke checks green. **+1 chore commit + 1 wrap = 2 new commits. 306 → 308 commits total. Backend tests unchanged at 485** (no backend code touched this session). **Bug list still 0.** Carry-over #2 (Promote backend, 3 stacked) **closed**; carry-over #1 (Saiful Android setup) **partially closed** (Play Console signup still pending Google's identity review; icons still pending).
+**Ticker Detail screen — v1 ships, design grilling locks Bundles 2-5, Bundle 1 (UX restructure) lands.** Saiful opened with `/start-fresh R` and answered the plan-mode survey with "we need to look at what other functions a good stock trading app should have." That kicked off a gap analysis (see `~/.claude/plans/r-partitioned-breeze.md`) which recommended a Tier-1 "Holding Detail" bundle (holding-detail screen + chart + news/earnings) as the biggest unlock per session — each gives a previously-theatrical agent (Technician, News, Macro) actual data to talk over. Saiful approved, picked Tier 1, deferred push-alerts (BL11 gating). Session then shipped **two work commits + one wrap = 3 new commits, 308 → 311**. Backend untouched. No promote.
 
 ### How the session ran
 
-Saiful picked "help me register as Google developer" from the plan-mode survey. The session walked through, in order: (a) Play Console individual signup — initiated, paid, ID under Google's review; gated on a phone number, resolved by using iPhone SMS; (b) GCP Console — created project, configured OAuth consent screen (External, scopes `openid`/`email`/`profile`), minted Web client (`153141744056-03d6sa…`) + Android client (`153141744056-5aif1p…`) with package `ai.agenticmarketintel.amiTrade`; (c) Android upload keystore generated at `~/.android-keys/ami-trade-upload.keystore` (RSA-2048, 10000-day cert, CN=`saiful said`, OU/O=`ATM Market Intel` — typo in metadata, never user-visible, not regenerating); (d) SHA-1 fingerprint extracted (`91:B5:B7:DB:1F:AD:B9:79:9F:B6:57:84:FB:8B:18:3F:C6:09:9F:47`) and pasted into the GCP Android client; (e) `GOOGLE_AUDIENCES` line added to `infra/alpha.env`. Mid-session I caught a gap and almost spun up a third (iOS) GCP OAuth client — Saiful corrected: **D-057 platform segregation already locks Apple-iOS-only / Google-Android-only** (re-read the decision log; confirmed `sign_in_screen.dart:272-280` already gates by `Platform.isIOS`/`isAndroid` — no code change, no iOS GCP client needed). With audiences populated, ran `/promote-to-alpha`: preflight clean (485 pytest passes, flutter analyze clean modulo 2 pre-existing infos), committed the harness-side `.claude/settings.local.json` permission additions as a chore (`d21b073`), tagged `alpha-2026-05-24-1`, rsync'd + scp'd + recreated + ran migration `f8b5d1c00011` + ran 6 smoke checks (3 standard + AT:R36 verifier + AT:R37 rate-limit-burst + AT:R38 merge-routes-401). All green. Total promote: ~5 minutes.
+Three phases:
+
+**Phase 1 — Holding Detail v1 (commit `5fa9037`).** Built a full-screen detail view reachable by tapping any holding card on Portfolio. Lays out position summary (qty / avg cost / mark / value / unrealised P&L / opened) + 4-chip quick-actions row (TRADE MORE / ASK MARKET ANALYST / CONVENE / CLOSE POSITION with confirm dialog) + per-ticker trade history + COMING SOON placeholder. Extracted `TradeRow` widget (was `_TradeRow` private in portfolio_screen.dart) to `lib/widgets/trade_row.dart` so both Portfolio + Holding Detail render trades identically. 13 new `holdingDetail*` l10n keys with context comments.
+
+**Phase 2 — `/grill-me` design pass.** Saiful asked "should be holding details or watch list ? or both ? how ro we change period?" and requested the grilling skill. Walked 13 questions one at a time, decision-tree style, each with a recommended answer and pushback. Locked decisions in order: Q1 Purpose=D (one screen, decision-support primary); Q2 Entry points=portfolio holdings + watchlist only (Room verdict added later as Q8); Q3 Section order = Status → Chart → Actions → Earnings → News → Trades; Q4 Chart=adaptive (candlestick 1D/1W/1M, line 3M/1Y/5Y) + volume bars + 220pt portrait + no indicators in v2; Q5 Landscape=A+C pattern (fullscreen route + expand button + device-rotation auto-push; main.dart's portraitUp lock relaxes per-route); Q6 Period selector=6 buttons (1D/1W/1M/3M/1Y/5Y, default 1M, per-session-only); Q7 Watching card variant=big price + day-change% + italic note + Added date; Q8 Room verdict=secondary "SEE CHART" button shown in all 3 verdict states; Q9+Q10 Actions row=primary full-width green button (TRADE / TRADE MORE adaptive) + secondary chip row (ASK/CONVENE/WATCH-toggle/CLOSE-conditional) — 5 chips wouldn't fit iPhone 13 mini width, so split primary/secondary; Q11 News=yfinance, 5 headlines, headline+publisher+relative-time, external Safari via url_launcher, hide-on-empty, 5-min server cache; Q12 Earnings=yfinance, date + EPS estimate, 90-day cutoff, no-tap inline amber pill, 6h server cache; Q13 Sequencing=Plan Y (Bundle 1 this session, Bundle 2+3 chart portrait+landscape AT:R41, Bundle 4+5 news+earnings AT:R42).
+
+**Phase 3 — Bundle 1 (commit `a8b8523`).** UX restructure of v1, no chart/news/earnings yet. (a) `git mv` holding_detail_screen.dart → ticker_detail_screen.dart; rename class + all internal refs. (b) New `_WatchingCard` variant for watched-not-held tickers (amber accent, big price, italic note, "Added DATE"); `_PositionCard` wins when held (strictly more informative); `_EmptyStateCard` handles the rare mid-session "closed AND removed-from-watchlist" state. Priority: held > watched > neither. (c) Actions row redesigned as `_PrimaryAction` (full-width green ElevatedButton, TRADE/TRADE MORE adaptive) + `_SecondaryActions` (Wrap of 4 chips with short labels: ASK / CONVENE / WATCH / CLOSE-conditional). WATCH chip uses outlined-vs-filled star to signal state. (d) Portfolio `_WatchlistRow.onTap` now pushes `TickerDetailScreen` instead of `showWatchlistSheet`; ticker-tape still uses the sheet (intentional — Q2 lock). (e) Room verdict card gained `SEE CHART` OutlinedButton below the existing CTA (cyan-outlined, `Icons.show_chart`); pushes TickerDetail. (f) L10n: mechanical rename `holdingDetail*` → `tickerDetail*`, plus new keys for Watching card / short chip labels / chart-placeholder / SEE CHART. AR + MS auto-fall-back per i18n policy.
+
+`flutter analyze` clean modulo the 2 pre-existing infos on `floor_placeholder_screen.dart`. `flutter test` green.
 
 ### Commits in order
 
 | Hash | What it does |
 |---|---|
-| `d21b073` | **chore: capture session-added permission allowlist entries (AT:R39).** Single touched file: `.claude/settings.local.json` — appends two Bash permission entries added during the session (`/remote-control` invocation + the rejected `echo R > .claude/active-track` attempt from step 0 of `/start-fresh`). Harness-side state only; no code, no infra, never ships to melehost (rsync excludes `.claude/`). Committed before the promote so the working tree was clean. |
+| `5fa9037` | **Holding Detail screen v1.** New `mobile/lib/screens/sim/holding_detail_screen.dart` (later renamed to `ticker_detail_screen.dart` in Bundle 1) — full-screen detail view reachable from Portfolio holding cards. Position summary card + 4-chip quick-actions row (TRADE MORE / ASK / CONVENE / CLOSE) + per-ticker trade history + COMING SOON placeholder. Extracted `TradeRow` to `lib/widgets/trade_row.dart` (shared with Portfolio's trade list). 13 new `holdingDetail*` l10n keys. `_HoldingCard` on portfolio_screen.dart wraps in `InkWell` + chevron-right glyph + pushes to the new screen. |
+| `a8b8523` | **TickerDetail Bundle 1 — UX restructure.** Pure UX work, no new content widgets yet. (1) Rename HoldingDetail → TickerDetail (file via `git mv`, class, l10n keys). (2) New `_WatchingCard` variant (amber, big price, day-change%, italic note, Added date) for watched-not-held users; `_PositionCard` priority on held; `_EmptyStateCard` for the rare mid-session neither state. (3) Actions row split into `_PrimaryAction` (full-width green ElevatedButton, TRADE / TRADE MORE adaptive) + `_SecondaryActions` (4-chip Wrap: ASK / CONVENE / WATCH-toggle / CLOSE-conditional). WATCH chip uses Icons.star vs Icons.star_border to signal current watchlist state. (4) `_WatchlistRow.onTap` on Portfolio reroutes to TickerDetailScreen instead of `showWatchlistSheet`; sheet stays alive (ticker_tape.dart:158 still uses it). (5) `_VerdictCard` on Room gained SEE CHART OutlinedButton below primary CTA, shown in all 3 verdict states (approve+no-trade, approve+traded, reject). (6) `holdingDetail*` l10n keys renamed to `tickerDetail*` + new keys for Watching card / short chip labels / chart-placeholder / `roomVerdictSeeChart`. |
 
-Plus the `chore(handover): wrap AT:R39` commit. **No backend code, no Flutter code, no migrations** authored this session — pure registration + deployment work.
+Plus the `chore(handover): wrap AT:R40` commit. **No backend code, no migrations** authored this session — pure mobile UX work.
 
 ### What changed in the codebase
 
-Repo-tracked:
-- `.claude/settings.local.json` — +2 permission allowlist entries (`Bash(/remote-control)` and `Bash(echo "R" > .claude/active-track && cat .claude/active-track)`). Harness state.
+Repo-tracked (in addition to the Silent_Scout/* changes that landed in parallel and rode along on the wrap commit per Saiful's call):
 
-Gitignored (real outputs of the session):
-- `infra/alpha.env` — new `GOOGLE_AUDIENCES=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com` line at line 68, under a new `# ── Google Sign-In (D-057, AT:R36) ──` section header. Shipped to `melehost:~/ami_trade/.env` via `/promote-to-alpha` step 4.
+| File | Change |
+|---|---|
+| `mobile/lib/screens/sim/ticker_detail_screen.dart` | NEW (renamed from `holding_detail_screen.dart`) — full TickerDetail screen with adaptive Status card (Position/Watching/Empty) + primary+secondary actions + chart placeholder + per-ticker trades + COMING SOON card |
+| `mobile/lib/widgets/trade_row.dart` | NEW — extracted from portfolio_screen.dart's private `_TradeRow`. Shared by Portfolio + TickerDetail |
+| `mobile/lib/screens/sim/portfolio_screen.dart` | `_HoldingCard` wraps in InkWell + chevron-right + pushes TickerDetail; `_WatchlistRow._showRowSheet` now pushes TickerDetail instead of calling showWatchlistSheet; import of watchlist_sheet.dart removed; duplicate `_TradeRow` deleted |
+| `mobile/lib/screens/room/room_screen.dart` | Import TickerDetailScreen; `_VerdictCard.build` gained a SEE CHART OutlinedButton at the bottom of the Column (outside the `if (isApprove)` conditional → shown in all verdict states) |
+| `mobile/lib/l10n/app_en.arb` | +13 `tickerDetail*` keys (mechanical rename from `holdingDetail*` + new ones for Watching card variant, short chip labels, chart placeholder) + `roomVerdictSeeChart`. AR/MS unchanged — auto-fall-back per i18n policy. |
+| `mobile/lib/generated/l10n/app_localizations*.dart` | Regenerated via `flutter gen-l10n` |
 
-Outside the repo (Saiful's external artifacts):
-- `~/.android-keys/ami-trade-upload.keystore` — NEW upload keystore (10000-day RSA-2048).
-- `~/.android-keys/keystore.properties` — **not yet written**; gated on Saiful rotating the keystore password (the original was shared in chat transcript — instructed to rotate via `keytool -storepasswd` + write the properties file with the new password).
-- `~/.zshrc` — **Saiful told to `export GOOGLE_OAUTH_WEB_CLIENT_ID=…`**; unverified whether he did.
-- GCP project: new OAuth consent screen + Web client + Android client.
-- Play Console: individual developer account signup submitted; **pending Google's identity verification (1-48h SLA)**.
+Plus the Silent_Scout/* parallel-track files (11 new backlog directories under `Silent_Scout/0[89]_*` + `1[012345678]_*` mirroring the AT:R40 gap analysis; README updated). Per CLAUDE.md these are research-only and do not import from or affect production. Riding along on this wrap so the working tree is clean for AT:R41.
 
-### Carry-overs for AT:R40
+Plan file: `~/.claude/plans/r-partitioned-breeze.md` — full gap analysis + 13-question grilling decisions + Plan Y sequencing.
 
-**Saiful's external follow-ons from THIS session** (do at his pace):
+### Carry-overs for AT:R41
 
-1. **Rotate the keystore password.** The original was shared in chat transcript — `keytool -storepasswd -keystore ~/.android-keys/ami-trade-upload.keystore`. Save the new password to 1Password.
-2. **Write `~/.android-keys/keystore.properties`** with `storeFile` (absolute), `storePassword`, `keyAlias=upload`, `keyPassword`. Without this file, `scripts/build_playstore.sh` falls back to debug signing (won't be accepted by Play Console).
-3. **Export `GOOGLE_OAUTH_WEB_CLIENT_ID`** in `~/.zshrc` (told him to; verify with `echo $GOOGLE_OAUTH_WEB_CLIENT_ID` next session).
-4. **Confirm Play Console approval** (1-48h after submission).
+**Top-priority — finish the Ticker Detail surface (THE work track):**
 
-**Top-priority next-session work** (Play Console-approval-gated):
+1. **Bundle 2 — Chart portrait.** fl_chart 0.69.0 already in pubspec. Candlestick widget for 1D/1W/1M periods + line widget for 3M/1Y/5Y (adaptive switch in `_chartType(period)`). Volume bars below the price chart always. 220pt fixed height. Crosshair on touch-drag. Loading skeleton + "Chart unavailable" error state. Period selector = 6 pill chips (1D/1W/1M/3M/1Y/5Y), default 1M, per-session-only. New backend route `GET /v1/sim/history/{ticker}?period=1m` returning `[{ts, open, high, low, close, volume}]` with 60s server cache.
+2. **Bundle 3 — Landscape fullscreen chart.** Paired with Bundle 2 (same session). New `ChartFullscreenScreen` widget, locked to `landscapeLeft + landscapeRight` via per-route `SystemChrome.setPreferredOrientations`. Expand button on the portrait chart card. Device-rotation auto-push (rotate to landscape on TickerDetail → push fullscreen; rotate back → pop). Dismiss via X button + swipe-down + system back. main.dart's `portraitUp` lock stays the default — only relaxes on this one route.
+3. **Bundle 4 — Per-ticker news.** News section between Earnings chip and Trades on TickerDetail. yfinance Ticker.news, 5 headlines, headline + publisher + relative-time ("2h ago" / "Yesterday" / "3d ago"). Tap → external Safari via `url_launcher` (new dep). Hide-on-empty section. New backend route `GET /v1/sim/news/{ticker}?limit=5` with 5-min server cache.
+4. **Bundle 5 — Earnings chip.** Inline amber pill between Actions and News on TickerDetail. yfinance Ticker.calendar. Format: "Q3 earnings · Jul 25 · est. EPS $2.04". 90-day cutoff (hide if next earnings > 90 days out). No-tap display-only. New backend route `GET /v1/sim/earnings/{ticker}` with 6h server cache.
 
-5. **First Play Console AAB upload.** After items 1-4 above: `scripts/build_playstore.sh` produces signed AAB → upload via Play Console web UI (mandatory-manual for Play App Signing enrollment) → fill Data Safety + Content Rating + screenshots → add internal testers → roll out.
-6. **Samsung A17 device validation** (~1 week out from delivery): install internal-track build, smoke-test golden path (Concierge → Google Sign-In → claim → 1-on-1 / Brief / Floor → Sentry crash → RTL Arabic spot-check → bug report). **First real-world Google Sign-In e2e test** — until the A17 lands, AT:R36 backend is unreachable from any device Saiful has (iPhone doesn't show the Google button per D-057).
-7. **Icons** (carry-over since AT:R36): 3 source PNGs at `mobile/assets/icon/` per prompt in `~/.claude/plans/giggly-knitting-harbor.md`, then `flutter pub run flutter_launcher_icons`.
+**Saiful's external follow-ons** (do at his pace, all carried from AT:R39):
+
+5. **Rotate the Android upload keystore password.** Original was shared in chat transcript — `keytool -storepasswd -keystore ~/.android-keys/ami-trade-upload.keystore`. Save new pw to 1Password.
+6. **Write `~/.android-keys/keystore.properties`** with `storeFile` (absolute), `storePassword`, `keyAlias=upload`, `keyPassword`. Without this file, `scripts/build_playstore.sh` falls back to debug signing.
+7. **Export `GOOGLE_OAUTH_WEB_CLIENT_ID`** in `~/.zshrc` (told him to in AT:R39; verify with `echo $GOOGLE_OAUTH_WEB_CLIENT_ID` next session).
+8. **Confirm Play Console approval** (signup submitted AT:R39 — 1-48h SLA).
+
+**Play-Console-approval-gated next work:**
+
+9. **First Play Console AAB upload.** After items 5-8: `scripts/build_playstore.sh` produces signed AAB → manual upload via Play Console web UI (completes Play App Signing enrollment) → fill Data Safety + Content Rating + screenshots → add internal testers.
+10. **Samsung A17 device validation** (~1 week out from delivery). First real-world Google Sign-In e2e test.
+11. **Icons** (carry-over since AT:R36): 3 source PNGs at `mobile/assets/icon/`, then `flutter pub run flutter_launcher_icons`.
 
 **Non-gated backend work** (pick based on energy):
 
-8. **Credit consumption emission.** `credits_consumed` event type already exists in `subscription_events`; nothing emits it. Wire Room + 1-on-1 to emit on completion. Probably gated on access-level design landing per back-office "Deferred" note.
-9. **BL7 — Agent metadata routes.** API for client-side rendering of agent profiles.
-10. **BL8 — Room run cancel + replay.** Backend: cancel an in-flight room run, replay a completed one.
-11. **A29 light-mode refactor.** Settings → APPEARANCE is dark-only; the canonical theme already has a `light_*.dart` token sibling but the surfaces aren't switched.
+12. **Credit consumption emission.** `credits_consumed` event type already exists in `subscription_events`; nothing emits it. Wire Room + 1-on-1.
+13. **BL7 — Agent metadata routes.** API for client-side rendering of agent profiles.
+14. **BL8 — Room run cancel + replay.** Backend: cancel an in-flight room run, replay a completed one.
+15. **A29 light-mode refactor.** Settings → APPEARANCE is dark-only.
 
-**BL16 followups** (deferred from AT:R38's "out-of-scope" list — only land if/when users ask for them):
+**BL16 followups** (deferred from AT:R38 — only land if/when users ask):
 
-12. **Per-bucket merge toggles.** Today's sheet is all-or-nothing.
-13. **Mandate-conflict UX.** Today target mandate wins silently when both have one; followup would show a side-by-side compare + pick.
-14. **Settings "Merged accounts" history section.** Surface `account_adoption_merged` events so the user can audit + re-trigger a missed KEEP-SEPARATE.
-15. **KEEP-SEPARATE orphan cleanup job.** Orphan stays in DB indefinitely; add a TTL.
-16. **Admin merge endpoint.** Support flow would need `POST /v1/admin/users/{id}/merge`.
-17. **Undo a merge within N hours.** Requires per-row audit log of original `user_id`.
+16. Per-bucket merge toggles · 17. Mandate-conflict UX · 18. Settings "Merged accounts" history · 19. KEEP-SEPARATE orphan cleanup TTL · 20. Admin merge endpoint · 21. Undo a merge within N hours.
 
-**Carrying from AT:R35** (still gated on a decision):
+**Carrying from AT:R35** (gated on decision):
 
-18. **Re-run Tier 2 sequentially.** `scripts/translate_content_lan.py --type glossary` (~50 min), then `--type ai_coach`, then `--type daily_challenges`. ~5h vLLM-blocking. Loaders are ready since AT:R37.
-19. **Re-think Tier 3 (lessons) approach.** Sequential = ~28h GPU. Options: per-lesson concurrency / bigger batches / accept 28h over multiple sessions / defer to v1.0. Saiful's call.
+22. Re-run Tier 2 sequentially (`scripts/translate_content_lan.py --type glossary` → `ai_coach` → `daily_challenges`, ~5h vLLM-blocking).
+23. Re-think Tier 3 (lessons) approach. Sequential = ~28h GPU.
 
 **Carrying from AT:R34 / earlier** (unchanged):
 
-20. TF `+27` cold-launch loading loop on iPhone 17 — watch item.
-21. External TestFlight launch (needs Beta App Description from Saiful + ~24h Apple review).
-22. **BL6** — Mandate resolve flow (Liquidate/Postpone/Override). Needs a design pass first.
-23. **BL11** — push (FCM/APNs) + in-app trial-end UX. Push gated on FCM/APNs config; in-app part doable solo.
-24. **BL4** — Arabic → Gemini routing.
-25. **Animation production** — 15 `<Animation>` MDX tags.
+24. TF `+27` cold-launch loading loop on iPhone 17 — watch item. · 25. External TestFlight launch (needs Beta App Description). · 26. **BL6** — Mandate resolve flow. · 27. **BL11** — push (FCM/APNs) + in-app trial-end UX. · 28. **BL4** — Arabic → Gemini routing. · 29. **Animation production** — 15 `<Animation>` MDX tags.
 
-(Drops from AT:R38 carry-over list: **#2 Promote backend** — closed by `alpha-2026-05-24-1`. Carry-over **#1 partial close** — GCP + keystore + audiences done; Play Console approval + keystore.properties + icons split out as items 1-7 above. AT:R38 had 22 items; AT:R40 list has 25 — net +3 from the keystore/zshrc/Play-Console-confirm follow-ons.)
+(Net change vs. AT:R39 carry-overs: AT:R40 splits Bundles 2-5 (Ticker Detail follow-on work) out as items 1-4. Previous "Saiful Android setup" items 1-4 from AT:R39 demote to 5-8. AT:R39 had 25 items; AT:R40 has 29 — net +4 from the four Bundle items.)
 
 ### Watch items (not tasks)
 
-- **Keystore password lives in this session's transcript.** Saiful was told to `keytool -storepasswd` before writing `keystore.properties`. If he forgets, the password Google App Signing enrolls under is a known-leaked one — not catastrophic (the upload key only authenticates uploads, not end-user installs) but worth getting clean before first AAB upload.
-- **Three sessions of backend stacked unshipped** — RESOLVED in `alpha-2026-05-24-1`. Watch the next 24h of melehost logs for AT:R36/R37/R38-specific error patterns: malformed Google token verifier errors (`google_audience_mismatch`, `invalid_signature`), rate-limit 429 spikes (means a client is hot-looping `/auth/anon`), merge route 403s (means an attacker is probing `/v1/auth/merge` without an `account_adoption` event).
-- **`/v1/auth/google` is reachable but unreachable from clients today.** Backend route is live; mobile Google button only shows on Android (D-057); no Android device until Samsung A17 arrives. The route's first real client traffic will be from the A17 in ~1 week.
-- **`MergeService.execute()` deletes the orphan `User` row at the end.** Intentional + final; no undo. Followup #17 tracks the undo gap.
-- **`KEEP SEPARATE` leaves the orphan user_id forever.** One-shot offer at sign-in time; no rescue UI yet.
-- **3 untranslated keys on AR, 4 on MS** (unchanged this session — no new ARB keys added). Fall back to EN automatically.
+- **TickerDetail v1 + Bundle 1 are iPhone-unverified.** Both commits ship structural changes (new screen + entry-point reroute) but neither has been built to device. Strong candidate for "build TestFlight + spot-check after Bundle 2+3 lands" — bundle the visual validation rather than rebuilding after each session.
+- **`SEE CHART` button shown when verdict = REJECT.** Argued in Q8 as the *most* valuable state (no trade → research more). But it does mean the verdict card has a cyan button under an amber-rejection card; might read visually as "agents say no but go look anyway." Worth eyeing in real iPhone test.
+- **Watchlist sheet split.** Portfolio watchlist rows now go to TickerDetail; ticker-tape rows still go to WatchlistSheet. Different entry points = different surface, intentional per Q2. May confuse users at first — they tap the same ticker from two surfaces and get two different UIs.
+- **Adaptive TRADE / TRADE MORE label.** Held users see "TRADE MORE", watched-only see "TRADE". Right call linguistically but adds 1 more decision for the LLM (1-on-1 / Brief) to factor into screen-aware references.
+- **CLOSE chip is conditional on `hasOpenTrades`.** Holdings with no open trade record (orphan position from an old migration?) would lose access to close. Existing positions all have trade records, so should be fine, but watch for edge cases.
+- **`/v1/auth/google` is reachable but unreachable from clients today.** Backend route live; mobile Google button only shows on Android (D-057); no Android device until Samsung A17 arrives.
+- **3 untranslated keys on AR, 4 on MS, plus the 13 new `tickerDetail*` + 1 `roomVerdictSeeChart` keys** (17 + 18 untranslated for AR/MS respectively as of this session). All fall back to EN automatically.
 - **vLLM saturation pattern.** Single H100-class GPU comfortably serves 1-2 concurrent long-form generation streams; 4 streams blow per-stream latency past 300s.
 - **Rate limiter is per-process.** When the backend scales beyond one container, the 10/3/5-per-minute caps become per-replica rather than global.
-- **Saved worktree patches.** `.claude/worktree-salvage/exciting-shtern-lessons-landing-spec.patch` (lessons landing redesign spec) and `.claude/worktree-salvage/magical-edison-280-lesson-edits.diff` (280 lesson files with "training simulator" reframing) are kept locally under gitignore. Inspect if anything reads stale, then delete.
+- **Saved worktree patches.** `.claude/worktree-salvage/exciting-shtern-lessons-landing-spec.patch` + `.claude/worktree-salvage/magical-edison-280-lesson-edits.diff` kept locally under gitignore.
 
 ---
 
@@ -209,7 +218,7 @@ Outside the repo (Saiful's external artifacts):
 
 The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R40** (this is handover #39).
+Session name to use: **AT:R41** (this is handover #40).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -217,14 +226,14 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 Quick-win candidates for next session (in priority order):
 
-1. **Check Play Console approval status** + **confirm Saiful did the 3 follow-ons** (carry-overs 1-3): keystore password rotated, `keystore.properties` written, `GOOGLE_OAUTH_WEB_CLIENT_ID` exported in zshrc. Once those are clean we can build a real AAB.
-2. **First Play Console AAB upload** (#5) — gated on Play Console approval + items in #1 above. `scripts/build_playstore.sh` produces signed AAB; manual upload completes Play App Signing enrollment.
-3. **iPhone validation of yesterday's promote** — magic-link sign-in / merge sheet / sign-out / 1-on-1 / Brief on a real device against `alpha-2026-05-24-1`. Catches anything backend smoke missed.
-4. **Credit consumption emission** (#8) — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
-5. **Tier 2 sequential translation run** (#18) — loaders are ready (`bdea6e8`). `scripts/translate_content_lan.py --type glossary` (~50 min), then `--type ai_coach`, then `--type daily_challenges`. ~5h vLLM-blocking; own session.
-6. **External TestFlight launch** (#21) — Beta App Description from Saiful + ~24h Apple review.
-7. **BL7 / BL8 / A29** — remaining backlog. Each moderate scope.
-8. **BL16 followups** (#12–#17) — per-bucket merge toggles, Settings "Merged accounts" history, KEEP-SEPARATE orphan TTL cleanup, etc. Only land if users actually ask.
+1. **Bundles 2+3 — Chart portrait + landscape fullscreen** (#1+#2). The headline next move. Chart on the new TickerDetail screen + period selector + adaptive candlestick/line + volume bars + fullscreen-landscape route triggered by both expand button and device rotation. New backend route `/v1/sim/history` + 60s server cache. Tight coupling means ship together to avoid the "portrait-only chart" interim. Plan in `~/.claude/plans/r-partitioned-breeze.md`.
+2. **TestFlight build + iPhone smoke** of v1 + Bundle 1 (and Bundle 2+3 if shipped same session) — magic-link / merge sheet / Holding-card → TickerDetail / Watchlist-row → TickerDetail / Room verdict → SEE CHART / actions row layout on iPhone 13 mini.
+3. **Check Play Console approval status** + **confirm Saiful did the 3 follow-ons** (carry-overs 5-7): keystore password rotated, `keystore.properties` written, `GOOGLE_OAUTH_WEB_CLIENT_ID` exported in zshrc. Once clean we can build a real AAB.
+4. **First Play Console AAB upload** (#9) — gated on Play Console approval + items in #3.
+5. **Bundles 4+5 — News + Earnings** (#3+#4) — ship together; both yfinance-backed, similar backend pattern. Probably AT:R42.
+6. **Credit consumption emission** (#12) — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
+7. **Tier 2 sequential translation run** (#22) — loaders are ready. ~5h vLLM-blocking; own session.
+8. **BL7 / BL8 / A29** — remaining backlog.
 
 ---
 

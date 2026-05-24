@@ -12,8 +12,8 @@
 | Track | Status | Lives in |
 |---|---|---|
 | 13-agent LoRA fine-tuning (Concierge first) | Active research | `00_environment/` → `05_agent_alignment/`. Approved plan: `~/.claude/plans/you-are-my-advance-tidy-engelbart.md` |
-| Android dev groundwork (KSA test device, future build prep) | Active | `06_android/` |
 | On-device STT + TTS research (EN/AR/MS/zh/yue) — informs `project_plan.md` A13/A14/A17 | Active research | `07_voice/`. Approved plan: `~/.claude/plans/you-are-working-on-stateless-sedgewick.md` |
+| UI feature-gap planning (Holding Detail, News Feed, Alerts, Earnings, Watchlist Badge, Sector Allocation + 5 deferred/rejected) | Planning | `08_holding_detail/` → `18_rejected_features/`. Approved plan: `~/.claude/plans/you-are-working-on-resilient-neumann.md` |
 
 The boundary that defines this workspace is **blast radius**, not subject matter: anything in here is safe to iterate on without risking the live Alpha backend or the iOS TestFlight build. New forward-looking tracks land here.
 
@@ -69,8 +69,6 @@ Silent_Scout/
 │   ├── benches/                   ← FinanceBench subset
 │   └── (mandate_compliance, role_persona evals land here)
 ├── 05_agent_alignment/            ← LoRA-track alignment work
-├── 06_android/                    ← Android dev groundwork (forward track)
-│   └── test_device_selection.md   ← KSA Android test-device procurement
 ├── 07_voice/                      ← On-device STT + TTS research (forward track)
 │   ├── 01_constraints/            ← verbatim production-doc quotes (boundary fence)
 │   ├── 02_candidates/             ← STT + TTS candidate datasheets
@@ -78,6 +76,38 @@ Silent_Scout/
 │   ├── 04_eval/                   ← methodology + datasets + results/
 │   ├── 05_recommendation/         ← per-surface verdict + project_plan.md rewrite
 │   └── 06_prototypes/             ← bench harness + conversion notes
+├── 08_holding_detail/             ← Holding detail screen (Tier 1 hub)
+│   └── 01_layout/                 ← zone wireframe + composition
+├── 09_per_ticker_news/            ← Per-ticker news feed (Tier 1, closes Gap 5)
+│   ├── 01_constraints/
+│   ├── 02_data_shape/
+│   ├── 03_backend_design/
+│   └── 04_frontend_design/
+├── 10_price_alerts/               ← Price alerts / push (Tier 1, gated on A15+A16)
+│   ├── 01_constraints/
+│   ├── 02_data_model/
+│   ├── 03_evaluation_loop/
+│   └── 04_push_payload/
+├── 11_earnings_dividends/         ← Earnings + dividend chip (Tier 2)
+│   ├── 01_data_shape/
+│   └── 02_chip_design/
+├── 12_watchlist_badge/            ← Watchlist % move badge (Tier 2, fastest path)
+│   └── 01_delivery_brief/         ← paste-ready implementation brief
+├── 13_sector_allocation/          ← Sector breakdown (Tier 2, feeds Risk Agent)
+│   ├── 01_constraints/
+│   ├── 02_data_source/
+│   ├── 03_aggregation_design/
+│   └── 04_chart_design/
+├── 14_cost_basis_lots/            ← Cost-basis lots (Tier 3, deferred)
+│   └── 01_design/
+├── 15_trailing_stop/              ← Trailing stop (Tier 3, deferred)
+│   └── 01_design/
+├── 16_multi_sim_portfolio/        ← Multiple sim portfolios (Tier 3, deferred, conflicts with CEO model)
+│   └── 01_deferral/
+├── 17_stock_comparison/           ← Stock comparison view (Tier 3, deferred, informal path works)
+│   └── 01_deferral/
+├── 18_rejected_features/          ← Rejected features register (reference only)
+│   └── rejected_features_register.md
 └── .gitignore                     ← weights, checkpoints, runs/, raw corpora
 ```
 
@@ -109,6 +139,7 @@ Weights and large corpora live **outside the repo** at `/raid/silent_scout/` (or
 ## What this workspace deliberately does NOT do
 
 - Touch the production app.
+- Implement features directly. Each section produces a delivery brief that is pasted into a fresh session to drive the actual code change.
 - Burn $ on Claude Opus distillation (deferred — see [01_research/datasets.md](01_research/datasets.md) for the cost ladder).
 - Commit to a v1.0 swap-out — decision deferred to Phase 4.
 - Fine-tune PM or research_manager — they stay on Claude until everything else is proven.

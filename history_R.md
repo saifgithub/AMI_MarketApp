@@ -13,6 +13,50 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R39  (2026-05-24)
+
+**Saiful registered as Google developer + the 3-session backend stack finally shipped to Alpha.** Saiful opened with `/start-fresh R` → AT:R39 plan-mode survey landed (16 active carry-overs from AT:R38, 0 open bugs). Picked **carry-over #1 (Saiful Android setup)** — specifically "help me register as Google developer." Worked through GCP signup + OAuth client minting + Android upload keystore generation + populating `GOOGLE_AUDIENCES`. With audiences set, ran `/promote-to-alpha` → **`alpha-2026-05-24-1`** ships AT:R36 + AT:R37 + AT:R38 in one go. Migration `f8b5d1c00011` (auth_challenges.attempts) applied. All 6 smoke checks green. **+1 chore commit + 1 wrap = 2 new commits. 306 → 308 commits total. Backend tests unchanged at 485** (no backend code touched this session). **Bug list still 0.** Carry-over #2 (Promote backend, 3 stacked) **closed**; carry-over #1 (Saiful Android setup) **partially closed** (Play Console signup still pending Google's identity review; icons still pending).
+
+### How the session ran
+
+Saiful picked "help me register as Google developer" from the plan-mode survey. The session walked through, in order: (a) Play Console individual signup — initiated, paid, ID under Google's review; gated on a phone number, resolved by using iPhone SMS; (b) GCP Console — created project, configured OAuth consent screen (External, scopes `openid`/`email`/`profile`), minted Web client (`153141744056-03d6sa…`) + Android client (`153141744056-5aif1p…`) with package `ai.agenticmarketintel.amiTrade`; (c) Android upload keystore generated at `~/.android-keys/ami-trade-upload.keystore` (RSA-2048, 10000-day cert, CN=`saiful said`, OU/O=`ATM Market Intel` — typo in metadata, never user-visible, not regenerating); (d) SHA-1 fingerprint extracted (`91:B5:B7:DB:1F:AD:B9:79:9F:B6:57:84:FB:8B:18:3F:C6:09:9F:47`) and pasted into the GCP Android client; (e) `GOOGLE_AUDIENCES` line added to `infra/alpha.env`. Mid-session I caught a gap and almost spun up a third (iOS) GCP OAuth client — Saiful corrected: **D-057 platform segregation already locks Apple-iOS-only / Google-Android-only** (re-read the decision log; confirmed `sign_in_screen.dart:272-280` already gates by `Platform.isIOS`/`isAndroid` — no code change, no iOS GCP client needed). With audiences populated, ran `/promote-to-alpha`: preflight clean (485 pytest passes, flutter analyze clean modulo 2 pre-existing infos), committed the harness-side `.claude/settings.local.json` permission additions as a chore (`d21b073`), tagged `alpha-2026-05-24-1`, rsync'd + scp'd + recreated + ran migration `f8b5d1c00011` + ran 6 smoke checks (3 standard + AT:R36 verifier + AT:R37 rate-limit-burst + AT:R38 merge-routes-401). All green. Total promote: ~5 minutes.
+
+### Commits in order
+
+| Hash | What it does |
+|---|---|
+| `d21b073` | **chore: capture session-added permission allowlist entries (AT:R39).** Single touched file: `.claude/settings.local.json` — appends two Bash permission entries added during the session (`/remote-control` invocation + the rejected `echo R > .claude/active-track` attempt from step 0 of `/start-fresh`). Harness-side state only; no code, no infra, never ships to melehost (rsync excludes `.claude/`). Committed before the promote so the working tree was clean. |
+
+Plus the `chore(handover): wrap AT:R39` commit. **No backend code, no Flutter code, no migrations** authored this session — pure registration + deployment work.
+
+### What changed in the codebase
+
+Repo-tracked:
+- `.claude/settings.local.json` — +2 permission allowlist entries (`Bash(/remote-control)` and `Bash(echo "R" > .claude/active-track && cat .claude/active-track)`). Harness state.
+
+Gitignored (real outputs of the session):
+- `infra/alpha.env` — new `GOOGLE_AUDIENCES=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com` line at line 68, under a new `# ── Google Sign-In (D-057, AT:R36) ──` section header. Shipped to `melehost:~/ami_trade/.env` via `/promote-to-alpha` step 4.
+
+Outside the repo (Saiful's external artifacts):
+- `~/.android-keys/ami-trade-upload.keystore` — NEW upload keystore (10000-day RSA-2048).
+- `~/.android-keys/keystore.properties` — **not yet written**; gated on Saiful rotating the keystore password (the original was shared in chat transcript — instructed to rotate via `keytool -storepasswd` + write the properties file with the new password).
+- `~/.zshrc` — **Saiful told to `export GOOGLE_OAUTH_WEB_CLIENT_ID=…`**; unverified whether he did.
+- GCP project: new OAuth consent screen + Web client + Android client.
+- Play Console: individual developer account signup submitted; **pending Google's identity verification (1-48h SLA)**.
+
+### Watch items (not tasks)
+
+- **Keystore password lives in this session's transcript.** Saiful was told to `keytool -storepasswd` before writing `keystore.properties`. If he forgets, the password Google App Signing enrolls under is a known-leaked one — not catastrophic (the upload key only authenticates uploads, not end-user installs) but worth getting clean before first AAB upload.
+- **Three sessions of backend stacked unshipped** — RESOLVED in `alpha-2026-05-24-1`. Watch the next 24h of melehost logs for AT:R36/R37/R38-specific error patterns: malformed Google token verifier errors (`google_audience_mismatch`, `invalid_signature`), rate-limit 429 spikes (means a client is hot-looping `/auth/anon`), merge route 403s (means an attacker is probing `/v1/auth/merge` without an `account_adoption` event).
+- **`/v1/auth/google` is reachable but unreachable from clients today.** Backend route is live; mobile Google button only shows on Android (D-057); no Android device until Samsung A17 arrives. The route's first real client traffic will be from the A17 in ~1 week.
+- **`MergeService.execute()` deletes the orphan `User` row at the end.** Intentional + final; no undo.
+- **`KEEP SEPARATE` leaves the orphan user_id forever.** One-shot offer at sign-in time; no rescue UI yet.
+- **3 untranslated keys on AR, 4 on MS** (unchanged this session — no new ARB keys added). Fall back to EN automatically.
+- **vLLM saturation pattern.** Single H100-class GPU comfortably serves 1-2 concurrent long-form generation streams; 4 streams blow per-stream latency past 300s.
+- **Rate limiter is per-process.** When the backend scales beyond one container, the 10/3/5-per-minute caps become per-replica rather than global.
+
+---
+
 ## AT:R38  (2026-05-24)
 
 **BL16 — Real account merge UX, end-to-end.** Saiful opened with `/start-fresh R` → AT:R38 plan-mode survey landed (16 active carry-overs from AT:R37, 0 open bugs). Picked **BL16** as the work, then the scope option "Full merge with data union" (over the safer "surface-only" alternative). Built backend + Flutter in one arc. **+2 work commits + 1 wrap = 3 new commits. 303 → 306 commits total. Backend tests 461 → 485 (+24). 0 Alpha promotes** — the AT:R36 + AT:R37 + AT:R38 backend stack still sits on Mac awaiting `GOOGLE_AUDIENCES` in `infra/alpha.env`. **Bug list still 0.** Carry-over #8 (BL16) **closed**.
