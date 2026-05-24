@@ -59,6 +59,31 @@ class Quote(NamedTuple):
     market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED
 
 
+class Candle(NamedTuple):
+    """One OHLCV bar. `t` is Unix epoch seconds (UTC)."""
+
+    t: int
+    o: float
+    h: float
+    low: float  # `low` because `l` shadows builtins / lint flags single-letter
+    c: float
+    v: float
+
+
+# Period → (yfinance period, yfinance interval, mock-walk candle count, mock-walk seconds-per-candle).
+# Mock-walk counts mirror what yfinance returns for typical regular-session symbols.
+_PERIOD_MAP: dict[str, tuple[str, str, int, int]] = {
+    "1d": ("1d",  "5m",  78, 5 * 60),                  # ~6.5h session / 5m
+    "1w": ("5d",  "30m", 65, 30 * 60),                 # 5 sessions × 13 bars
+    "1m": ("1mo", "1d",  22, 24 * 3600),               # ~22 trading days
+    "3m": ("3mo", "1d",  65, 24 * 3600),               # ~65 trading days
+    "1y": ("1y",  "1wk", 52, 7 * 24 * 3600),
+    "5y": ("5y",  "1mo", 60, 30 * 24 * 3600),
+}
+
+VALID_PERIODS: tuple[str, ...] = tuple(_PERIOD_MAP.keys())
+
+
 class MarketDataProvider(Protocol):
     name: str
 
@@ -74,6 +99,15 @@ class MarketDataProvider(Protocol):
 
     def get_price(self, ticker: str) -> float | None:
         """Back-compat shim — returns just the price."""
+        ...
+
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        """Return OHLCV candles for `period`, or None on any failure.
+
+        Wrappers (cache, fallback) propagate the inner result so the
+        leaf provider that actually served the bars stays attributable
+        to the caller via the surrounding API response's `source` field.
+        """
         ...
 
 
@@ -137,6 +171,47 @@ class MockWalkProvider:
     def get_price(self, ticker: str) -> float | None:
         q = self.quote(ticker)
         return q.price if q is not None else None
+
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        """Synthesize deterministic OHLCV from the per-ticker random walk.
+
+        Anchors the latest candle at "now" and walks backwards by the
+        period's bar interval. Open = previous close so consecutive
+        candles chain visually. High/low are ±0.5% noise seeded by
+        `hash((ticker, t))` so the same (ticker, period) always returns
+        the same bars within the same epoch second — important for the
+        cache-hit equality test. Volume is a fixed 1_000_000.
+        """
+        if period not in _PERIOD_MAP:
+            return None
+        t = ticker.upper().strip()
+        with self._lock:
+            walk = self._walks.get(t)
+            if walk is None:
+                walk = _walk_for(t)
+                self._walks[t] = walk
+        _, _, count, step = _PERIOD_MAP[period]
+        now = int(time.time())
+        # Anchor each bar at a tick boundary so repeated calls within the
+        # same second hit the same timestamps (matters for cache equality).
+        anchor = now - (now % step)
+        timestamps = [anchor - step * (count - 1 - i) for i in range(count)]
+        candles: list[Candle] = []
+        prev_close: float | None = None
+        for ts in timestamps:
+            close = walk.price_at(float(ts))
+            open_ = prev_close if prev_close is not None else close
+            jitter = random.Random(hash((t, ts))).uniform(-0.005, 0.005)
+            mid = (open_ + close) / 2.0
+            high = round(max(open_, close) * (1 + abs(jitter)), 4)
+            low = round(min(open_, close) * (1 - abs(jitter)), 4)
+            # Defensive: if open == close (flat tick), nudge so high > low.
+            if high <= low:
+                high = round(mid * 1.001, 4)
+                low = round(mid * 0.999, 4)
+            candles.append(Candle(t=ts, o=round(open_, 4), h=high, low=low, c=round(close, 4), v=1_000_000.0))
+            prev_close = close
+        return candles
 
 
 # ── Yahoo Finance ────────────────────────────────────────────────────────
@@ -205,6 +280,12 @@ class YahooQuoteProvider:
         q = self.quote(ticker)
         return q.price if q is not None else None
 
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        # Keyless chart endpoint isn't wired for OHLC history here —
+        # the production primary is YfinanceProvider. Return None so
+        # the fallback chain hands off to MockWalkProvider.
+        return None
+
     def close(self) -> None:
         self._client.close()
 
@@ -224,6 +305,7 @@ class CachingProvider:
         self._inner = inner
         self._ttl = ttl_seconds
         self._cache: dict[str, tuple[Quote, float]] = {}  # ticker → (quote, expires_at)
+        self._history_cache: dict[str, tuple[list[Candle], float]] = {}  # f"{ticker}:{period}" → (candles, expires_at)
         self._lock = RLock()
         self.name = f"cache({inner.name})"
 
@@ -245,12 +327,31 @@ class CachingProvider:
         q = self.quote(ticker)
         return q.price if q is not None else None
 
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        key = f"{ticker.upper().strip()}:{period}"
+        now = time.time()
+        with self._lock:
+            hit = self._history_cache.get(key)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        bars = self._inner.history(ticker, period)
+        if bars is not None:
+            with self._lock:
+                self._history_cache[key] = (bars, now + self._ttl)
+        return bars
+
     def invalidate(self, ticker: str | None = None) -> None:
         with self._lock:
             if ticker is None:
                 self._cache.clear()
+                self._history_cache.clear()
             else:
-                self._cache.pop(ticker.upper().strip(), None)
+                t = ticker.upper().strip()
+                self._cache.pop(t, None)
+                # Drop every period for this ticker.
+                self._history_cache = {
+                    k: v for k, v in self._history_cache.items() if not k.startswith(f"{t}:")
+                }
 
 
 # ── yfinance (preferred over raw Yahoo HTTP) ─────────────────────────────
@@ -297,6 +398,36 @@ class YfinanceProvider:
         q = self.quote(ticker)
         return q.price if q is not None else None
 
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        if period not in _PERIOD_MAP:
+            return None
+        t = ticker.upper().strip()
+        yf_period, yf_interval, _, _ = _PERIOD_MAP[period]
+        try:
+            df = self._yf.Ticker(t).history(period=yf_period, interval=yf_interval)
+        except Exception as exc:
+            logger.warn("yfinance_history_error", ticker=t, period=period, error=str(exc))
+            return None
+        if df is None or df.empty:
+            return None
+        bars: list[Candle] = []
+        for ts, row in df.iterrows():
+            # Index is a pandas Timestamp (tz-aware UTC for intraday, naive for daily/weekly/monthly).
+            try:
+                epoch = int(ts.timestamp())
+            except (AttributeError, ValueError):
+                continue
+            try:
+                o = float(row["Open"])
+                h = float(row["High"])
+                low = float(row["Low"])
+                c = float(row["Close"])
+                v = float(row.get("Volume", 0) or 0)
+            except (KeyError, TypeError, ValueError):
+                continue
+            bars.append(Candle(t=epoch, o=o, h=h, low=low, c=c, v=v))
+        return bars or None
+
 
 # ── Fallback chain ───────────────────────────────────────────────────────
 
@@ -325,6 +456,12 @@ class FallbackProvider:
     def get_price(self, ticker: str) -> float | None:
         q = self.quote(ticker)
         return q.price if q is not None else None
+
+    def history(self, ticker: str, period: str) -> list[Candle] | None:
+        bars = self._primary.history(ticker, period)
+        if bars:
+            return bars
+        return self._secondary.history(ticker, period)
 
 
 # ── Singleton factory ────────────────────────────────────────────────────

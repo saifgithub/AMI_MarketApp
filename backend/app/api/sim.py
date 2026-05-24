@@ -9,6 +9,7 @@ POST /v1/sim/trades/{user_id}/evaluate       Sweep open trades for stop/target h
 POST /v1/sim/trades/{user_id}/close          Manually close an open trade
 GET  /v1/sim/quote/{ticker}                  Current quote (price + change_pct + market_state)
 GET  /v1/sim/quotes?symbols=AAPL,MSFT,...    Batch quotes for ticker tape
+GET  /v1/sim/history/{ticker}?period=1m      OHLCV candles for the ticker-detail chart (Bundle 2)
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
+from app.services.market_data import VALID_PERIODS
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
 from app.services.watchlist_store import get_watchlist_store
 from app.api.dependencies import get_current_user
@@ -381,3 +383,32 @@ async def quotes_batch(
         }
         for ticker, q in zip(tickers, results)
     ]
+
+
+@router.get("/history/{ticker}")
+async def history(
+    ticker: str,
+    period: str = "1m",
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """OHLCV candles for the ticker-detail chart.
+
+    Public — same as `/quote`. Period must be one of:
+    1d, 1w, 1m, 3m, 1y, 5y. Response is cached server-side
+    for 60s per (ticker, period) in CachingProvider.
+    """
+    if period not in VALID_PERIODS:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"invalid period; must be one of {','.join(VALID_PERIODS)}",
+        )
+    bars, source = sim.current_history(ticker, period)
+    return {
+        "ticker": ticker.upper(),
+        "period": period,
+        "source": source,
+        "candles": [
+            {"t": b.t, "o": b.o, "h": b.h, "l": b.low, "c": b.c, "v": b.v}
+            for b in bars
+        ],
+    }

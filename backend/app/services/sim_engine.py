@@ -58,6 +58,7 @@ from app.schemas.trade import (
     Side,
 )
 from app.services.market_data import (
+    Candle,
     MarketDataProvider,
     MockWalkProvider,
     Quote,
@@ -273,6 +274,30 @@ class SimEngine:
         if len(sources) == 1:
             return next(iter(sources))
         return "mock_walk"
+
+    def current_history(self, ticker: str, period: str) -> tuple[list[Candle], str]:
+        """Return (candles, source) for the requested period.
+
+        Mirrors the `current_quote` contract: never raises, always
+        returns *something* (even if it's the defensive mock floor) so
+        the iPhone never sees a 500. `source` is the leaf provider that
+        actually served the bars — drives the chart's LIVE/MOCK badge
+        the same way Quote.source drives the quote chip.
+        """
+        bars = self._provider.history(ticker, period)
+        if bars:
+            # Infer the leaf source — we know the current production stack
+            # is yfinance-primary / mock_walk-secondary. Match the leaf by
+            # asking the cheaper quote() (already cached). Defaulting to
+            # the configured stack's primary name keeps the chart's
+            # source meaningful even if quote() somehow disagrees.
+            q = self._provider.quote(ticker)
+            source = q.source if q is not None else "yfinance"
+            return bars, source
+        fb = self._fallback.history(ticker, period)
+        if fb:
+            return fb, self._fallback.name
+        return [], "unavailable"
 
     # ── Portfolio ──────────────────────────────────────────────────────
 
