@@ -418,95 +418,149 @@ abstract class AppLocalizations {
   /// **'Ticker (e.g. NVDA)'**
   String get portfolioAddDialogHint;
 
-  /// Label above the big position value on the Holding Detail screen.
+  /// Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker).
   ///
   /// In en, this message translates to:
   /// **'VALUE'**
-  String get holdingDetailValue;
+  String get tickerDetailValue;
 
-  /// Label for share quantity on Holding Detail.
+  /// Label for share quantity on Ticker Detail (Position card).
   ///
   /// In en, this message translates to:
   /// **'QTY'**
-  String get holdingDetailQty;
+  String get tickerDetailQty;
 
-  /// Label for average cost basis on Holding Detail.
+  /// Label for average cost basis on Ticker Detail (Position card).
   ///
   /// In en, this message translates to:
   /// **'AVG COST'**
-  String get holdingDetailAvgCost;
+  String get tickerDetailAvgCost;
 
-  /// Label for the current mark price on Holding Detail.
+  /// Label for the current mark price on Ticker Detail (Position card).
   ///
   /// In en, this message translates to:
   /// **'MARK'**
-  String get holdingDetailMark;
+  String get tickerDetailMark;
 
-  /// Caption beneath the P&L line on Holding Detail. {date} is a localized medium date.
+  /// Caption beneath the P&L line on Ticker Detail Position card. {date} is a localized medium date.
   ///
   /// In en, this message translates to:
   /// **'Opened {date}'**
-  String holdingDetailOpened(String date);
+  String tickerDetailOpened(String date);
 
-  /// Shown when the user navigated to a Holding Detail screen but the position is closed (no shares held). {ticker} is the symbol.
+  /// Label on top of the Ticker Detail Watching card (user has the ticker on their watchlist but does not hold a position). Amber accent.
   ///
   /// In en, this message translates to:
-  /// **'No open position in {ticker}. History below.'**
-  String holdingDetailNoOpenPosition(String ticker);
+  /// **'WATCHING'**
+  String get tickerDetailWatchingHeading;
 
-  /// Quick-action chip on Holding Detail — opens the trade ticket sheet prefilled with this ticker.
+  /// Suffix used in the Watching card's day-change line. Example: '+2.30% today'.
+  ///
+  /// In en, this message translates to:
+  /// **'today'**
+  String get tickerDetailToday;
+
+  /// Caption beneath the watchlist note on Ticker Detail Watching card. {date} is when the ticker was added to the watchlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {date}'**
+  String tickerDetailAdded(String date);
+
+  /// Shown on Ticker Detail when the user has neither a position nor a watchlist entry for the ticker (rare mid-session state: closed position + removed from watchlist while on screen). {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'No open position or watchlist entry for {ticker}.'**
+  String tickerDetailNoPosition(String ticker);
+
+  /// Placeholder label in the chart slot on Ticker Detail until Bundle 2 (AT:R41) ships the real candlestick + period selector.
+  ///
+  /// In en, this message translates to:
+  /// **'CHART COMING SOON'**
+  String get tickerDetailChartComingSoon;
+
+  /// Primary CTA on Ticker Detail when the user does NOT hold a position in this ticker. Opens the trade ticket sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADE'**
+  String get tickerDetailActionTrade;
+
+  /// Primary CTA on Ticker Detail when the user already holds a position. Opens the trade ticket sheet to add to / trim the position.
   ///
   /// In en, this message translates to:
   /// **'TRADE MORE'**
-  String get holdingDetailActionTrade;
+  String get tickerDetailActionTradeMore;
 
-  /// Quick-action chip on Holding Detail — closes every open trade for this ticker after confirm.
+  /// Secondary chip on Ticker Detail — opens a 1-on-1 with the Market Analyst agent about this ticker. Shorter than watchlistAskMarketAnalyst to fit the chip row on iPhone 13 mini.
   ///
   /// In en, this message translates to:
-  /// **'CLOSE POSITION'**
-  String get holdingDetailActionClose;
+  /// **'ASK'**
+  String get tickerDetailActionAsk;
 
-  /// Section header above the per-ticker trade history list on Holding Detail. {ticker} is the symbol.
+  /// Secondary chip on Ticker Detail — pushes RoomScreen(ticker) to convene the 12-agent room on this ticker directly. Short form of watchlistConveneRoom.
   ///
   /// In en, this message translates to:
-  /// **'TRADES FOR {ticker}'**
-  String holdingDetailTradesHeading(String ticker);
+  /// **'CONVENE'**
+  String get tickerDetailActionConvene;
 
-  /// Empty state shown beneath the per-ticker TRADES heading on Holding Detail when there are no historical trades.
+  /// Secondary chip on Ticker Detail — toggles watchlist membership. The icon (outlined star = not watching, filled star = watching) signals current state; the label stays constant.
   ///
   /// In en, this message translates to:
-  /// **'No trades on record for this ticker yet.'**
-  String get holdingDetailNoTrades;
+  /// **'WATCH'**
+  String get tickerDetailActionWatch;
 
-  /// Confirm-dialog title before closing every open trade for the ticker on Holding Detail. {ticker} is the symbol.
-  ///
-  /// In en, this message translates to:
-  /// **'CLOSE {ticker} POSITION?'**
-  String holdingDetailClosePositionConfirmTitle(String ticker);
-
-  /// Body of the close-position confirm dialog on Holding Detail.
-  ///
-  /// In en, this message translates to:
-  /// **'This closes every open trade for this ticker at the current mark. Realised P&L is final.'**
-  String get holdingDetailClosePositionConfirmBody;
-
-  /// Destructive CTA on the close-position confirm dialog on Holding Detail.
+  /// Destructive secondary chip on Ticker Detail — closes every open trade for this ticker after confirm. Only shown when at least one open trade exists.
   ///
   /// In en, this message translates to:
   /// **'CLOSE'**
-  String get holdingDetailClosePositionConfirmCta;
+  String get tickerDetailActionClose;
 
-  /// Heading on the placeholder card at the bottom of Holding Detail listing not-yet-built surfaces.
+  /// Section header above the per-ticker trade history list on Ticker Detail. {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'TRADES FOR {ticker}'**
+  String tickerDetailTradesHeading(String ticker);
+
+  /// Empty state shown beneath the per-ticker TRADES heading on Ticker Detail when there are no historical trades.
+  ///
+  /// In en, this message translates to:
+  /// **'No trades on record for this ticker yet.'**
+  String get tickerDetailNoTrades;
+
+  /// Confirm-dialog title before closing every open trade for the ticker on Ticker Detail. {ticker} is the symbol.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE {ticker} POSITION?'**
+  String tickerDetailClosePositionConfirmTitle(String ticker);
+
+  /// Body of the close-position confirm dialog on Ticker Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'This closes every open trade for this ticker at the current mark. Realised P&L is final.'**
+  String get tickerDetailClosePositionConfirmBody;
+
+  /// Destructive CTA on the close-position confirm dialog on Ticker Detail.
+  ///
+  /// In en, this message translates to:
+  /// **'CLOSE'**
+  String get tickerDetailClosePositionConfirmCta;
+
+  /// Heading on the placeholder card at the bottom of Ticker Detail listing not-yet-built surfaces.
   ///
   /// In en, this message translates to:
   /// **'COMING SOON'**
-  String get holdingDetailComingSoonHeading;
+  String get tickerDetailComingSoonHeading;
 
-  /// Body of the COMING SOON placeholder card on Holding Detail. Lists the next features that will land on this screen.
+  /// Body of the COMING SOON placeholder card on Ticker Detail. Lists the features that will land in Bundles 2-5.
   ///
   /// In en, this message translates to:
   /// **'Candlestick chart · per-ticker news · earnings calendar'**
-  String get holdingDetailComingSoonBody;
+  String get tickerDetailComingSoonBody;
+
+  /// Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject).
+  ///
+  /// In en, this message translates to:
+  /// **'SEE CHART'**
+  String get roomVerdictSeeChart;
 
   /// Generic cancel button in dialogs and sheets.
   ///

@@ -9,6 +9,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
@@ -497,6 +498,28 @@ class _VerdictCard extends ConsumerWidget {
               textAlign: TextAlign.center,
             ),
           ],
+          // SEE CHART — secondary action; shown in ALL verdict states
+          // (approve+no-trade, approve+traded, reject). Lets the user
+          // pivot from the deliberation moment into the TickerDetail
+          // research surface (chart, news, earnings — Bundles 2-5).
+          const SizedBox(height: AmiSpacing.s),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AmiColors.hexCyan,
+                side: const BorderSide(color: AmiColors.hexCyan),
+                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+              ),
+              icon: const Icon(Icons.show_chart),
+              label: Text(l.roomVerdictSeeChart),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => TickerDetailScreen(ticker: ticker),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

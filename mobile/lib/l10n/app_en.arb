@@ -104,69 +104,106 @@
     "portfolioAddDialogTitle": "ADD TO WATCHLIST",
     "portfolioAddDialogHint": "Ticker (e.g. NVDA)",
 
-    "holdingDetailValue": "VALUE",
-    "@holdingDetailValue": {
-        "description": "Label above the big position value on the Holding Detail screen."
+    "tickerDetailValue": "VALUE",
+    "@tickerDetailValue": {
+        "description": "Label above the big position value on the Ticker Detail screen (Position card variant — user holds this ticker)."
     },
-    "holdingDetailQty": "QTY",
-    "@holdingDetailQty": {
-        "description": "Label for share quantity on Holding Detail."
+    "tickerDetailQty": "QTY",
+    "@tickerDetailQty": {
+        "description": "Label for share quantity on Ticker Detail (Position card)."
     },
-    "holdingDetailAvgCost": "AVG COST",
-    "@holdingDetailAvgCost": {
-        "description": "Label for average cost basis on Holding Detail."
+    "tickerDetailAvgCost": "AVG COST",
+    "@tickerDetailAvgCost": {
+        "description": "Label for average cost basis on Ticker Detail (Position card)."
     },
-    "holdingDetailMark": "MARK",
-    "@holdingDetailMark": {
-        "description": "Label for the current mark price on Holding Detail."
+    "tickerDetailMark": "MARK",
+    "@tickerDetailMark": {
+        "description": "Label for the current mark price on Ticker Detail (Position card)."
     },
-    "holdingDetailOpened": "Opened {date}",
-    "@holdingDetailOpened": {
-        "description": "Caption beneath the P&L line on Holding Detail. {date} is a localized medium date.",
+    "tickerDetailOpened": "Opened {date}",
+    "@tickerDetailOpened": {
+        "description": "Caption beneath the P&L line on Ticker Detail Position card. {date} is a localized medium date.",
         "placeholders": {"date": {"type": "String"}}
     },
-    "holdingDetailNoOpenPosition": "No open position in {ticker}. History below.",
-    "@holdingDetailNoOpenPosition": {
-        "description": "Shown when the user navigated to a Holding Detail screen but the position is closed (no shares held). {ticker} is the symbol.",
+    "tickerDetailWatchingHeading": "WATCHING",
+    "@tickerDetailWatchingHeading": {
+        "description": "Label on top of the Ticker Detail Watching card (user has the ticker on their watchlist but does not hold a position). Amber accent."
+    },
+    "tickerDetailToday": "today",
+    "@tickerDetailToday": {
+        "description": "Suffix used in the Watching card's day-change line. Example: '+2.30% today'."
+    },
+    "tickerDetailAdded": "Added {date}",
+    "@tickerDetailAdded": {
+        "description": "Caption beneath the watchlist note on Ticker Detail Watching card. {date} is when the ticker was added to the watchlist.",
+        "placeholders": {"date": {"type": "String"}}
+    },
+    "tickerDetailNoPosition": "No open position or watchlist entry for {ticker}.",
+    "@tickerDetailNoPosition": {
+        "description": "Shown on Ticker Detail when the user has neither a position nor a watchlist entry for the ticker (rare mid-session state: closed position + removed from watchlist while on screen). {ticker} is the symbol.",
         "placeholders": {"ticker": {"type": "String"}}
     },
-    "holdingDetailActionTrade": "TRADE MORE",
-    "@holdingDetailActionTrade": {
-        "description": "Quick-action chip on Holding Detail — opens the trade ticket sheet prefilled with this ticker."
+    "tickerDetailChartComingSoon": "CHART COMING SOON",
+    "@tickerDetailChartComingSoon": {
+        "description": "Placeholder label in the chart slot on Ticker Detail until Bundle 2 (AT:R41) ships the real candlestick + period selector."
     },
-    "holdingDetailActionClose": "CLOSE POSITION",
-    "@holdingDetailActionClose": {
-        "description": "Quick-action chip on Holding Detail — closes every open trade for this ticker after confirm."
+    "tickerDetailActionTrade": "TRADE",
+    "@tickerDetailActionTrade": {
+        "description": "Primary CTA on Ticker Detail when the user does NOT hold a position in this ticker. Opens the trade ticket sheet."
     },
-    "holdingDetailTradesHeading": "TRADES FOR {ticker}",
-    "@holdingDetailTradesHeading": {
-        "description": "Section header above the per-ticker trade history list on Holding Detail. {ticker} is the symbol.",
+    "tickerDetailActionTradeMore": "TRADE MORE",
+    "@tickerDetailActionTradeMore": {
+        "description": "Primary CTA on Ticker Detail when the user already holds a position. Opens the trade ticket sheet to add to / trim the position."
+    },
+    "tickerDetailActionAsk": "ASK",
+    "@tickerDetailActionAsk": {
+        "description": "Secondary chip on Ticker Detail — opens a 1-on-1 with the Market Analyst agent about this ticker. Shorter than watchlistAskMarketAnalyst to fit the chip row on iPhone 13 mini."
+    },
+    "tickerDetailActionConvene": "CONVENE",
+    "@tickerDetailActionConvene": {
+        "description": "Secondary chip on Ticker Detail — pushes RoomScreen(ticker) to convene the 12-agent room on this ticker directly. Short form of watchlistConveneRoom."
+    },
+    "tickerDetailActionWatch": "WATCH",
+    "@tickerDetailActionWatch": {
+        "description": "Secondary chip on Ticker Detail — toggles watchlist membership. The icon (outlined star = not watching, filled star = watching) signals current state; the label stays constant."
+    },
+    "tickerDetailActionClose": "CLOSE",
+    "@tickerDetailActionClose": {
+        "description": "Destructive secondary chip on Ticker Detail — closes every open trade for this ticker after confirm. Only shown when at least one open trade exists."
+    },
+    "tickerDetailTradesHeading": "TRADES FOR {ticker}",
+    "@tickerDetailTradesHeading": {
+        "description": "Section header above the per-ticker trade history list on Ticker Detail. {ticker} is the symbol.",
         "placeholders": {"ticker": {"type": "String"}}
     },
-    "holdingDetailNoTrades": "No trades on record for this ticker yet.",
-    "@holdingDetailNoTrades": {
-        "description": "Empty state shown beneath the per-ticker TRADES heading on Holding Detail when there are no historical trades."
+    "tickerDetailNoTrades": "No trades on record for this ticker yet.",
+    "@tickerDetailNoTrades": {
+        "description": "Empty state shown beneath the per-ticker TRADES heading on Ticker Detail when there are no historical trades."
     },
-    "holdingDetailClosePositionConfirmTitle": "CLOSE {ticker} POSITION?",
-    "@holdingDetailClosePositionConfirmTitle": {
-        "description": "Confirm-dialog title before closing every open trade for the ticker on Holding Detail. {ticker} is the symbol.",
+    "tickerDetailClosePositionConfirmTitle": "CLOSE {ticker} POSITION?",
+    "@tickerDetailClosePositionConfirmTitle": {
+        "description": "Confirm-dialog title before closing every open trade for the ticker on Ticker Detail. {ticker} is the symbol.",
         "placeholders": {"ticker": {"type": "String"}}
     },
-    "holdingDetailClosePositionConfirmBody": "This closes every open trade for this ticker at the current mark. Realised P&L is final.",
-    "@holdingDetailClosePositionConfirmBody": {
-        "description": "Body of the close-position confirm dialog on Holding Detail."
+    "tickerDetailClosePositionConfirmBody": "This closes every open trade for this ticker at the current mark. Realised P&L is final.",
+    "@tickerDetailClosePositionConfirmBody": {
+        "description": "Body of the close-position confirm dialog on Ticker Detail."
     },
-    "holdingDetailClosePositionConfirmCta": "CLOSE",
-    "@holdingDetailClosePositionConfirmCta": {
-        "description": "Destructive CTA on the close-position confirm dialog on Holding Detail."
+    "tickerDetailClosePositionConfirmCta": "CLOSE",
+    "@tickerDetailClosePositionConfirmCta": {
+        "description": "Destructive CTA on the close-position confirm dialog on Ticker Detail."
     },
-    "holdingDetailComingSoonHeading": "COMING SOON",
-    "@holdingDetailComingSoonHeading": {
-        "description": "Heading on the placeholder card at the bottom of Holding Detail listing not-yet-built surfaces."
+    "tickerDetailComingSoonHeading": "COMING SOON",
+    "@tickerDetailComingSoonHeading": {
+        "description": "Heading on the placeholder card at the bottom of Ticker Detail listing not-yet-built surfaces."
     },
-    "holdingDetailComingSoonBody": "Candlestick chart · per-ticker news · earnings calendar",
-    "@holdingDetailComingSoonBody": {
-        "description": "Body of the COMING SOON placeholder card on Holding Detail. Lists the next features that will land on this screen."
+    "tickerDetailComingSoonBody": "Candlestick chart · per-ticker news · earnings calendar",
+    "@tickerDetailComingSoonBody": {
+        "description": "Body of the COMING SOON placeholder card on Ticker Detail. Lists the features that will land in Bundles 2-5."
+    },
+    "roomVerdictSeeChart": "SEE CHART",
+    "@roomVerdictSeeChart": {
+        "description": "Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject)."
     },
 
     "actionCancel": "CANCEL",

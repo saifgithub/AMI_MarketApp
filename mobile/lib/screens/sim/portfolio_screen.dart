@@ -14,14 +14,13 @@ import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
-import 'package:ami_trade/screens/sim/holding_detail_screen.dart';
+import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
-import 'package:ami_trade/widgets/watchlist_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -324,7 +323,7 @@ class _HoldingCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-          builder: (_) => HoldingDetailScreen(ticker: holding.ticker),
+          builder: (_) => TickerDetailScreen(ticker: holding.ticker),
         )),
         borderRadius: BorderRadius.circular(AmiRadii.card),
         child: Container(
@@ -532,14 +531,13 @@ class _WatchlistRow extends ConsumerWidget {
   }
 
   void _showRowSheet(BuildContext context, WidgetRef ref) {
-    showWatchlistSheet(
-      context,
-      ref,
-      ticker: entry.ticker,
-      price: entry.price,
-      notes: entry.notes,
-      showRemove: true,
-    );
+    // AT:R40 Bundle 1 — watchlist rows on the Portfolio screen now route to
+    // the full TickerDetail surface (chart, news, earnings will land here
+    // in Bundles 2-5). The ticker-tape still uses showWatchlistSheet for
+    // ambient quick-actions; the sheet widget stays alive for that path.
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => TickerDetailScreen(ticker: entry.ticker),
+    ));
   }
 }
 

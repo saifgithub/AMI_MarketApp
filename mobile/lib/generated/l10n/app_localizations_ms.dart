@@ -179,60 +179,88 @@ class AppLocalizationsMs extends AppLocalizations {
   String get portfolioAddDialogHint => 'Ticker (cth. NVDA)';
 
   @override
-  String get holdingDetailValue => 'VALUE';
+  String get tickerDetailValue => 'VALUE';
 
   @override
-  String get holdingDetailQty => 'QTY';
+  String get tickerDetailQty => 'QTY';
 
   @override
-  String get holdingDetailAvgCost => 'AVG COST';
+  String get tickerDetailAvgCost => 'AVG COST';
 
   @override
-  String get holdingDetailMark => 'MARK';
+  String get tickerDetailMark => 'MARK';
 
   @override
-  String holdingDetailOpened(String date) {
+  String tickerDetailOpened(String date) {
     return 'Opened $date';
   }
 
   @override
-  String holdingDetailNoOpenPosition(String ticker) {
-    return 'No open position in $ticker. History below.';
+  String get tickerDetailWatchingHeading => 'WATCHING';
+
+  @override
+  String get tickerDetailToday => 'today';
+
+  @override
+  String tickerDetailAdded(String date) {
+    return 'Added $date';
   }
 
   @override
-  String get holdingDetailActionTrade => 'TRADE MORE';
+  String tickerDetailNoPosition(String ticker) {
+    return 'No open position or watchlist entry for $ticker.';
+  }
 
   @override
-  String get holdingDetailActionClose => 'CLOSE POSITION';
+  String get tickerDetailChartComingSoon => 'CHART COMING SOON';
 
   @override
-  String holdingDetailTradesHeading(String ticker) {
+  String get tickerDetailActionTrade => 'TRADE';
+
+  @override
+  String get tickerDetailActionTradeMore => 'TRADE MORE';
+
+  @override
+  String get tickerDetailActionAsk => 'ASK';
+
+  @override
+  String get tickerDetailActionConvene => 'CONVENE';
+
+  @override
+  String get tickerDetailActionWatch => 'WATCH';
+
+  @override
+  String get tickerDetailActionClose => 'CLOSE';
+
+  @override
+  String tickerDetailTradesHeading(String ticker) {
     return 'TRADES FOR $ticker';
   }
 
   @override
-  String get holdingDetailNoTrades =>
-      'No trades on record for this ticker yet.';
+  String get tickerDetailNoTrades => 'No trades on record for this ticker yet.';
 
   @override
-  String holdingDetailClosePositionConfirmTitle(String ticker) {
+  String tickerDetailClosePositionConfirmTitle(String ticker) {
     return 'CLOSE $ticker POSITION?';
   }
 
   @override
-  String get holdingDetailClosePositionConfirmBody =>
+  String get tickerDetailClosePositionConfirmBody =>
       'This closes every open trade for this ticker at the current mark. Realised P&L is final.';
 
   @override
-  String get holdingDetailClosePositionConfirmCta => 'CLOSE';
+  String get tickerDetailClosePositionConfirmCta => 'CLOSE';
 
   @override
-  String get holdingDetailComingSoonHeading => 'COMING SOON';
+  String get tickerDetailComingSoonHeading => 'COMING SOON';
 
   @override
-  String get holdingDetailComingSoonBody =>
+  String get tickerDetailComingSoonBody =>
       'Candlestick chart · per-ticker news · earnings calendar';
+
+  @override
+  String get roomVerdictSeeChart => 'SEE CHART';
 
   @override
   String get actionCancel => 'BATAL';
