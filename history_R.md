@@ -13,6 +13,115 @@ phase IDs (A1, A2, A11, …) from `docs/10_delivery/project_plan.md`.
 
 ---
 
+## AT:R37  (2026-05-23)
+
+**Carry-over cleanup session — seven discrete items, no marquee feature.** Saiful opened with "lets work on all the non-gated items" from the AT:R36 carry-over list. Worked through them smallest-to-largest. **+7 work commits + 1 wrap = 8 new commits. 296 → 303 commits total. Backend tests 438 → 461 (+23). 0 Alpha promotes** — AT:R36 (`/v1/auth/google`) and AT:R37 backend changes (lockout migration `f8b5d1c00011`, rate limiter, streaming uploads) all sit on Mac awaiting `GOOGLE_AUDIENCES` configuration before promote. **Bug list still 0.** B-tier adversarial audit (all 3 findings from AT:R22) **fully closed**.
+
+### How the session ran
+
+Saiful opened `/start-fresh R` → AT:R37 plan-mode survey landed (22 carry-overs, 0 open bugs). He picked **sign-out UX improvement** first. After shipping that, asked "what were the other items for completion?" → I listed all 22. He asked "what's not gated?" → I filtered to 11 non-gated. He said: "lets work on all the non-gated items." We worked smallest-to-largest. Three items were deferred from execution to next session (Tier 2 translation runs blocking vLLM for 5h, BL6 design-first, Tier 3 strategy decision). Got through 7 of the 11 before hitting the 45%-context handover threshold; the remaining 4 (Credit consumption, BL7, BL8, BL16, A29) carry forward.
+
+### Commits in order
+
+| Hash | What it does |
+|---|---|
+| `9b28b5f` | **Sign-out UX.** Settings sign-out button is now async — awaits `signOut()`, then `Navigator.push(SignInScreen(showSignedOutBanner: true))`. New `SignInScreen.showSignedOutBanner` param renders a `glassChrome` strip with `settingsSignedOut` ARB key ("You've been signed out.") above the existing sign-in intro + auth buttons. The anon-on-bootstrap still happens in the background (`_AuthGate` needs *some* token), but the user no longer sees Settings silently flip to "Guest (anonymous)" without context. |
+| `88f8bbc` | **Worktree sweep.** Pruned 24 stale `claude/*` worktrees under `.claude/worktrees/` + 6 dangling branches (5 `claude/bug-fix-*` + 1 `claude/sleepy-diffie-*`, all merged). Saved 2 patches locally under `.claude/worktree-salvage/` (now gitignored): `exciting-shtern-lessons-landing-spec.patch` (1 commit, lessons hex-cluster redesign spec) and `magical-edison-280-lesson-edits.diff` (280 lesson files with "training simulator" reframing). Working tree now lists only the main worktree. |
+| `73b9f0d` | **BL13 mobile wiring** (backend has accepted this since AT:R32, finally connected). `DeviceUser` gains `setOnboardingSessionId` / `getOnboardingSessionId` / `clearOnboardingSessionId` (SharedPreferences key `ami.onboarding_session_id`). `OnboardingNotifier.start()` persists the `sessionId` from `StartOnboardingResponse` after `/v1/onboarding/start` succeeds. The three claim methods in `ApiClient` (`verifyMagicLink`, `signInWithApple`, `signInWithGoogle`) and their three `AuthNotifier` counterparts all gain an optional `onboardingSessionId` param, threaded into the request body. On successful claim the notifier calls `DeviceUser.clearOnboardingSessionId()` so the same session can't double-stamp. Survives app termination because it's in SharedPreferences. |
+| `bdea6e8` | **Tier 2 content loaders + locale fallback.** `ai_coach_service.py` and `daily_challenge_service.py` were flat-EN-only; now they load EN from the root `*.json` plus every `<locale>/*.json` subdir. Internal storage shape: `self._by_locale: dict[str, dict[str, X]]` (locale → id → item). All public methods (`get_by_id`, `by_category`, `for_date`, `today`, `all_challenges`) gained optional `locale: str = "en"` with per-id EN fallback when a translation is missing. Existing call sites stay EN-only via the default. Search remains EN-only (pre-computed token sets) — BL4 / embedding pipeline at Beta. +8 tests covering load, locale hit, locale fallback, unknown-locale, by_category substitution, and for_date locale routing. **Unblocks the Tier 2 translation carry-over** — once `scripts/translate_content_lan.py --type ai_coach / --type daily_challenges` runs, the output lands at `content/<type>/<locale>/<file>.json` and the loader picks it up automatically. |
+| `eec3117` | **B-tier audit close #1 — magic-link brute-force lockout.** Migration `f8b5d1c00011` adds `auth_challenges.attempts INTEGER NOT NULL DEFAULT 0`. `AuthService.verify_magic_link` now finds the most recent active (unconsumed + unexpired) challenge for the `target` *regardless of code_hash*; on hash mismatch it bumps `attempts` and force-consumes the row at `MAX_MAGIC_LINK_ATTEMPTS = 5`. The user can always recover by requesting a fresh code (mints a new row). Caps brute-force search at ~5e-6 per challenge against the 10^6 keyspace of the 6-digit code. +3 tests (lockout-after-N, counter-resets-with-new-challenge, correct-code-within-budget). |
+| `6a2ba97` | **B-tier audit close #2 — in-memory rate limiter.** New `app/services/rate_limit.py` with an `RateLimiter` class (sliding window of deque[timestamps], `WINDOW_SECONDS=60`). Three module-level instances: `anon_rate_limit` (10/min on `/v1/auth/anon`), `magic_link_start_rate_limit` (3/min on `/v1/auth/magic_link/start`), `room_stream_rate_limit` (5/min on `/v1/room/stream`). IP resolution chain: `cf-connecting-ip` (Cloudflare authenticated) → `x-forwarded-for` first hop → `request.client.host`. 429 with `Retry-After` header on overrun, structured `rate_limit_hit` warning log. Process-local; will move to Redis when we shard. `conftest.py` autouse fixture calls `.reset()` on all three so tests don't trip the limit. +7 tests including end-to-end smoke against the real `/v1/auth/anon`. |
+| `e12d998` | **B-tier audit close #3 — feedback upload streaming.** New `save_attachment_streaming(*, upload, mime, max_bytes=None)` in `bug_attachments.py`. Validates MIME up-front (no disk write on unsupported types), opens the target file once, then loops `await upload.read(64*1024)` into the file handle with a running byte counter. Mid-stream cap overrun raises `AttachmentRejected("...exceeds...")` and unlinks the partial file in the `except` branch. Empty body + disk-full paths also clean up. Refactored `/v1/feedback/bug` to use the streaming variant; old synchronous `save_attachment(content=bytes,...)` kept for existing test surface. +5 tests covering full-payload streaming, mid-stream cap abort, empty-body, unsupported-MIME-no-disk-touch, MIME→extension. |
+
+Plus the `chore(handover): wrap AT:R37` commit.
+
+### What changed in the codebase
+
+Backend (services + routes):
+- `backend/app/services/auth_service.py` — `verify_magic_link` refactored for the attempt-counter pattern (find-by-target → check hash → bump-or-consume); new module-level `MAX_MAGIC_LINK_ATTEMPTS = 5`.
+- `backend/app/services/rate_limit.py` (NEW) — `RateLimiter` class + 3 module-level instances.
+- `backend/app/services/ai_coach_service.py` — `_by_id: dict` → `_by_locale: dict[str, dict]`; loads root EN + every subdir; all public methods take optional `locale`.
+- `backend/app/services/daily_challenge_service.py` — same locale refactor.
+- `backend/app/services/bug_attachments.py` — new `save_attachment_streaming()` (async, chunked); `_STREAM_CHUNK_BYTES = 64*1024`.
+- `backend/app/api/auth.py` — `dependencies=[Depends(anon_rate_limit)]` on `/v1/auth/anon`; `dependencies=[Depends(magic_link_start_rate_limit)]` on `/v1/auth/magic_link/start`.
+- `backend/app/api/room.py` — `dependencies=[Depends(room_stream_rate_limit)]` on `/v1/room/stream`.
+- `backend/app/api/feedback.py` — `/v1/feedback/bug` switched to `save_attachment_streaming(upload=file, mime=mime)`.
+
+Backend (schema + migration):
+- `backend/app/db/models.py` — `AuthChallengeRow.attempts: Mapped[int]` column added.
+- `backend/alembic/versions/f8b5d1c00011_auth_challenges_attempts.py` (NEW).
+
+Backend (tests):
+- `backend/tests/unit/test_ai_coach_service.py` — +4 locale tests (subdir load, fallback to EN, unknown-locale fallback, by_category substitution).
+- `backend/tests/unit/test_daily_challenge_service.py` — +4 locale tests (subdir load, fallback, for_date locale routing, for_date EN fallback).
+- `backend/tests/unit/test_auth_service.py` — +3 lockout tests.
+- `backend/tests/unit/test_rate_limit.py` (NEW) — 7 tests.
+- `backend/tests/unit/test_bug_attachments.py` — +5 streaming tests; reuses `_FakeUpload` helper to mimic UploadFile.read(size) without TestClient.
+- `backend/tests/conftest.py` — autouse fixture also resets the 3 module-level RateLimiter singletons.
+
+Mobile:
+- `mobile/lib/screens/auth/sign_in_screen.dart` — `SignInScreen.showSignedOutBanner: bool = false` param + banner widget.
+- `mobile/lib/screens/settings/settings_screen.dart` — sign-out button awaits, then pushes `SignInScreen(showSignedOutBanner: true)`.
+- `mobile/lib/services/device_user.dart` — `_kOnboardingSessionIdKey` + 3 helpers.
+- `mobile/lib/services/api/api_client.dart` — all 3 claim methods accept `onboardingSessionId`.
+- `mobile/lib/state/auth_providers.dart` — 3 claim notifier methods read + pass + clear the session id.
+- `mobile/lib/state/onboarding_providers.dart` — `OnboardingNotifier.start()` persists `resp.sessionId` to DeviceUser.
+- `mobile/lib/l10n/app_en.arb` + regenerated `app_localizations_{en,ar,ms}.dart` — `settingsSignedOut` key.
+
+Repo hygiene:
+- 24 dirs deleted under `.claude/worktrees/` + 6 branches.
+- `.gitignore` — added `.claude/worktree-salvage/`.
+
+### Carry-overs for AT:R38
+
+Top-priority (gated on Saiful's external Android setup — **unchanged from AT:R36 wrap**):
+
+1. **Saiful Android setup** (parallelizable, days of real-world lead time):
+   - Register Play Console account ($25, individual)
+   - `keytool -genkey -v -keystore ~/.android-keys/ami-trade-upload.keystore -alias upload -keyalg RSA -keysize 2048 -validity 10000` → backup to 1Password → extract SHA-1
+   - GCP Console: enable Google Sign-In API, create Android client (package + SHA-1), create Web client → put Web client_id into `infra/alpha.env` as `GOOGLE_AUDIENCES` + pass to build script as `GOOGLE_OAUTH_WEB_CLIENT_ID`
+   - Produce 3 icon source PNGs (see prompt in `~/.claude/plans/giggly-knitting-harbor.md`), drop at `mobile/assets/icon/`, run `flutter pub run flutter_launcher_icons`
+2. **Promote backend.** Mac has TWO sessions of unshipped backend now: AT:R36 (`/v1/auth/google` + `GoogleOIDCVerifier`) AND AT:R37 (magic-link lockout migration `f8b5d1c00011`, rate limiter, streaming uploads). Once `GOOGLE_AUDIENCES` is filled in `infra/alpha.env`, `/promote-to-alpha` ships both in one go. Smoke-check: 400 on malformed Google token + 429 on `/v1/auth/anon` after 11 calls + magic-link lockout after 5 wrong codes.
+3. **First Play Console AAB upload.** After keystore + GCP + Play Console account are live: `scripts/build_playstore.sh` produces signed AAB → upload via Play Console web UI (mandatory-manual for Play App Signing enrollment) → fill Data Safety form + Content Rating questionnaire + screenshots → add internal testers → roll out.
+4. **Samsung A17 device validation** (~1 week out): install internal-track build, smoke-test golden path (Concierge → Google Sign-In → claim → 1-on-1 / Brief / Floor → Sentry crash → RTL Arabic spot-check → bug report).
+
+Non-gated work that didn't fit this session (from the "do them all" run):
+
+5. **Credit consumption emission.** `credits_consumed` event type already exists in `subscription_events`; nothing emits it. Wire Room + 1-on-1 to emit on completion (probably after the access-level design lands per the back-office "Deferred" note).
+6. **BL7 — Agent metadata routes.** API for client-side rendering of agent profiles.
+7. **BL8 — Room run cancel + replay.** Backend: cancel an in-flight room run, replay a completed one.
+8. **BL16 — Real account merge UX.** Flutter. Connects to today's sign-out work (#8 from AT:R36 — now closed); when sign-back-in adopts an existing email-row, surface the merge.
+9. **A29 light-mode refactor.** Settings → APPEARANCE is dark-only; the canonical theme already has a `light_*.dart` token sibling but the surfaces aren't switched.
+
+Carrying from AT:R35 (still gated on a decision):
+
+10. **Re-run Tier 2 sequentially.** `scripts/translate_content_lan.py --type glossary` (~50 min), then `--type ai_coach`, then `--type daily_challenges`. ~5h vLLM-blocking. Loaders are now ready (AT:R37, `bdea6e8`) — landing the content is a single-script run, but it monopolises the GPU.
+11. **Re-think Tier 3 (lessons) approach.** Sequential = ~28h GPU. Options: (a) per-lesson concurrency, (b) bigger batches across lessons, (c) accept 28h over multiple sessions, (d) defer to v1.0. Saiful's call.
+
+Carrying from AT:R34 / earlier (unchanged):
+
+12. TF `+27` cold-launch loading loop on iPhone 17 — watch item.
+13. External TestFlight launch (needs Beta App Description from Saiful + ~24h Apple review).
+14. **BL6** — Mandate resolve flow (Liquidate/Postpone/Override). Needs a design pass first.
+15. **BL11** — push (FCM/APNs) + in-app trial-end UX. Push gated on FCM/APNs config; in-app part doable solo.
+16. **BL4** — Arabic → Gemini routing.
+17. **Animation production** — 15 `<Animation>` MDX tags.
+
+(Drops from AT:R36 carry-over list this session: **#8 sign-out UX**, **#11 B-tier audit findings** (all 3 closed), **#20 claude/* worktree sweep**, **#22 OnboardingSession.claimed_user_id Flutter wiring**, **#7 backend loader changes for Tier 2**. AT:R36 list went from 22 items to 16 active carry-overs.)
+
+### Watch items (not tasks)
+
+- **AT:R36 + AT:R37 backend changes both sit unshipped on Mac.** When `/promote-to-alpha` finally runs, it'll ship: `/v1/auth/google` route, `GoogleOIDCVerifier`, `OIDCVerifier.issuers` list refactor, **migration `f8b5d1c00011`** (auth_challenges.attempts), rate limiter dep on 3 routes, streaming uploads on `/v1/feedback/bug`. Smoke-check ALL of them, not just the Google route.
+- **`/v1/auth/google` will reject every token until `GOOGLE_AUDIENCES` is populated** on melehost. That's the safe default — empty audiences fail the manual membership check inside `OIDCVerifier.verify()`.
+- **Google button is disabled in the Android UI** when `--dart-define GOOGLE_OAUTH_WEB_CLIENT_ID=` is empty (the build script warns about this). Defensive fallback in the handler also surfaces "Google Sign-In not configured for this build" snackbar.
+- **`flutter_launcher_icons` is configured but not yet run.** The 3 source PNGs at `mobile/assets/icon/` don't exist yet. Running the generator before the PNGs land will fail loudly.
+- **3 untranslated keys on AR, 4 on MS** (was 2 / 3; added `settingsSignedOut` this session). They fall back to EN automatically. Non-blocking per CLAUDE.md i18n policy.
+- **vLLM saturation pattern.** A single H100-class GPU comfortably serves 1-2 concurrent long-form generation streams; 4 streams blow per-stream latency past 300s. Sequential is the safe path.
+- **Rate limiter is per-process.** When the backend scales beyond one container, the 10/3/5-per-minute caps become per-replica rather than global. Either accept (means an attacker hitting N replicas gets N× the budget) or move state to Redis. Not urgent at alpha.
+- **Saved worktree patches.** `.claude/worktree-salvage/exciting-shtern-lessons-landing-spec.patch` (lessons landing redesign spec) and `.claude/worktree-salvage/magical-edison-280-lesson-edits.diff` (280 lesson files with "training simulator" reframing) are kept locally under gitignore. Inspect if anything reads stale, then delete.
+
+
+
 ## AT:R36  (2026-05-23)
 
 **Android-GMS pulled into alpha, formalized as [D-057](docs/11_decisions/decision_log.md#d-057--android-gms-pulled-forward-from-v10-to-alpha).** Saiful: "I am moving the android support to alpha. I had read that the more I move forward without doing the android support, the harder it becomes." Every iOS-only assumption that creeps in compounds the eventual Android tax; closing that gap now is cheaper than retrofitting later. Closes backlog **A6b** (Google Sign-In on Android). **+1 work commit + 1 wrap = 2 new commits. 294 → 296 commits total. Backend tests 424 → 438 (+14 in `test_auth_google.py`). 0 Alpha promotes** (backend changes ship next session once Saiful provides the GCP OAuth Web client_id for `GOOGLE_AUDIENCES`). **Bug list still 0.**

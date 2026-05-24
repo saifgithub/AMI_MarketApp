@@ -8,7 +8,8 @@
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/health)",
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/llm/status)",
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL)",
-      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/lessons)"
+      "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/lessons)",
+      "Bash(echo \"R\" > .claude/active-track && cat .claude/active-track)"
     ]
   }
 }
