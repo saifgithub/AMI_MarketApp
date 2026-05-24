@@ -17,7 +17,7 @@ tracks:
   R:
     label: "Development"
     handover_path: HANDOVER_R.md
-    history_path: history_R.md
+    history_dir: history/
     project_plan_path: docs/10_delivery/project_plan.md
     sanity_checks:
       - name: Alpha health
@@ -38,5 +38,5 @@ tracks:
   M:
     label: "Marketing"
     handover_path: HANDOVER_M.md
-    # history_path: history_M.md          # create when first marketing session wraps
-    # project_plan_path:                  # no marketing backlog doc yet
+    # history_dir: history/              # add when first marketing session wraps; can share AMI's history/ folder (filenames are prefixed)
+    # project_plan_path:                 # no marketing backlog doc yet
