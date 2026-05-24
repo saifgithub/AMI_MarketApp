@@ -1,10 +1,10 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-05-24 (end of AT:R40 — **Ticker Detail screen: v1 ships + grilling session designs Bundles 2-5 + Bundle 1 (UX restructure) lands**). Mobile-only session, no backend changes. First commit `5fa9037` introduced `HoldingDetailScreen` (tap a holding card on Portfolio → full detail view with position summary + agent quick-actions + per-ticker trade history + COMING SOON placeholder). Long `/grill-me` design pass then locked the full Ticker Detail design across 13 questions: one adaptive screen for held + watched + (rare) neither states; section order = Status → Chart → Actions → Earnings → News → Trades; adaptive chart (candlestick short / line long) + 6-button period selector (1D/1W/1M/3M/1Y/5Y, default 1M); fullscreen landscape chart route triggered by both expand-button AND device-rotation auto-push; actions row redesigned to primary full-width green button (TRADE / TRADE MORE adaptive) + secondary chip row (ASK / CONVENE / WATCH-toggle / CLOSE-conditional); yfinance-backed news (5 headlines, external Safari, 5-min cache) + earnings chip (date + EPS estimate, 90-day cutoff, 6h cache). Locked sequencing as Plan Y: Bundle 1 (UX restructure) this session, Bundle 2+3 (chart portrait + landscape) AT:R41, Bundle 4+5 (news + earnings) AT:R42. Second commit `a8b8523` shipped Bundle 1: rename HoldingDetail → TickerDetail, new `_WatchingCard` variant, primary-button + chip-row layout, watchlist row reroute (no longer opens `WatchlistSheet`; sheet stays alive for ticker-tape path), `SEE CHART` secondary button on the Room verdict card (shown in all 3 verdict states). 13 new `tickerDetail*` l10n keys + `roomVerdictSeeChart`. **+2 work commits + 1 wrap = 3 new commits. 308 → 311 commits. Backend tests unchanged at 485** (no backend code touched). **Bug list still 0.** No promote this session — Bundle 1 is mobile-only; no new Alpha tag. AT:R39 wrap rotated into [history_R.md](history_R.md). Plan file at `~/.claude/plans/r-partitioned-breeze.md` captures the full design.
+**Last updated:** 2026-05-24 (end of AT:R40 — Ticker Detail v1 ships, grilling locks Bundles 2-5, Bundle 1 UX restructure lands). Narrative in [`history/AT_R0040.md`](history/AT_R0040.md).
 
-Read this file **first** in any new session. It captures **current truth** + this session's narrative + the carry-overs. Older sessions live in [history.md](history.md) — don't read unless you need historical context. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
+Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
-> **Doc shape**: HANDOVER.md = current state + one session's wrap + carry-overs. history.md = everything older, newest-on-top. `/handover` rotates the previous "what just landed" section out of HANDOVER and into history.md before writing this session's narrative.
+> **Doc shape**: HANDOVER_R.md = current state + carry-overs + Recent-sessions links. history/ = each session's wrap narrative as its own file. `/handover R` writes `history/AT_R<N>.md` per wrap; HANDOVER_R.md stays narrative-free.
 
 ---
 
@@ -109,106 +109,6 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 ---
 
-## What just landed (this session — AT:R40)
-
-**Ticker Detail screen — v1 ships, design grilling locks Bundles 2-5, Bundle 1 (UX restructure) lands.** Saiful opened with `/start-fresh R` and answered the plan-mode survey with "we need to look at what other functions a good stock trading app should have." That kicked off a gap analysis (see `~/.claude/plans/r-partitioned-breeze.md`) which recommended a Tier-1 "Holding Detail" bundle (holding-detail screen + chart + news/earnings) as the biggest unlock per session — each gives a previously-theatrical agent (Technician, News, Macro) actual data to talk over. Saiful approved, picked Tier 1, deferred push-alerts (BL11 gating). Session then shipped **two work commits + one wrap = 3 new commits, 308 → 311**. Backend untouched. No promote.
-
-### How the session ran
-
-Three phases:
-
-**Phase 1 — Holding Detail v1 (commit `5fa9037`).** Built a full-screen detail view reachable by tapping any holding card on Portfolio. Lays out position summary (qty / avg cost / mark / value / unrealised P&L / opened) + 4-chip quick-actions row (TRADE MORE / ASK MARKET ANALYST / CONVENE / CLOSE POSITION with confirm dialog) + per-ticker trade history + COMING SOON placeholder. Extracted `TradeRow` widget (was `_TradeRow` private in portfolio_screen.dart) to `lib/widgets/trade_row.dart` so both Portfolio + Holding Detail render trades identically. 13 new `holdingDetail*` l10n keys with context comments.
-
-**Phase 2 — `/grill-me` design pass.** Saiful asked "should be holding details or watch list ? or both ? how ro we change period?" and requested the grilling skill. Walked 13 questions one at a time, decision-tree style, each with a recommended answer and pushback. Locked decisions in order: Q1 Purpose=D (one screen, decision-support primary); Q2 Entry points=portfolio holdings + watchlist only (Room verdict added later as Q8); Q3 Section order = Status → Chart → Actions → Earnings → News → Trades; Q4 Chart=adaptive (candlestick 1D/1W/1M, line 3M/1Y/5Y) + volume bars + 220pt portrait + no indicators in v2; Q5 Landscape=A+C pattern (fullscreen route + expand button + device-rotation auto-push; main.dart's portraitUp lock relaxes per-route); Q6 Period selector=6 buttons (1D/1W/1M/3M/1Y/5Y, default 1M, per-session-only); Q7 Watching card variant=big price + day-change% + italic note + Added date; Q8 Room verdict=secondary "SEE CHART" button shown in all 3 verdict states; Q9+Q10 Actions row=primary full-width green button (TRADE / TRADE MORE adaptive) + secondary chip row (ASK/CONVENE/WATCH-toggle/CLOSE-conditional) — 5 chips wouldn't fit iPhone 13 mini width, so split primary/secondary; Q11 News=yfinance, 5 headlines, headline+publisher+relative-time, external Safari via url_launcher, hide-on-empty, 5-min server cache; Q12 Earnings=yfinance, date + EPS estimate, 90-day cutoff, no-tap inline amber pill, 6h server cache; Q13 Sequencing=Plan Y (Bundle 1 this session, Bundle 2+3 chart portrait+landscape AT:R41, Bundle 4+5 news+earnings AT:R42).
-
-**Phase 3 — Bundle 1 (commit `a8b8523`).** UX restructure of v1, no chart/news/earnings yet. (a) `git mv` holding_detail_screen.dart → ticker_detail_screen.dart; rename class + all internal refs. (b) New `_WatchingCard` variant for watched-not-held tickers (amber accent, big price, italic note, "Added DATE"); `_PositionCard` wins when held (strictly more informative); `_EmptyStateCard` handles the rare mid-session "closed AND removed-from-watchlist" state. Priority: held > watched > neither. (c) Actions row redesigned as `_PrimaryAction` (full-width green ElevatedButton, TRADE/TRADE MORE adaptive) + `_SecondaryActions` (Wrap of 4 chips with short labels: ASK / CONVENE / WATCH / CLOSE-conditional). WATCH chip uses outlined-vs-filled star to signal state. (d) Portfolio `_WatchlistRow.onTap` now pushes `TickerDetailScreen` instead of `showWatchlistSheet`; ticker-tape still uses the sheet (intentional — Q2 lock). (e) Room verdict card gained `SEE CHART` OutlinedButton below the existing CTA (cyan-outlined, `Icons.show_chart`); pushes TickerDetail. (f) L10n: mechanical rename `holdingDetail*` → `tickerDetail*`, plus new keys for Watching card / short chip labels / chart-placeholder / SEE CHART. AR + MS auto-fall-back per i18n policy.
-
-`flutter analyze` clean modulo the 2 pre-existing infos on `floor_placeholder_screen.dart`. `flutter test` green.
-
-### Commits in order
-
-| Hash | What it does |
-|---|---|
-| `5fa9037` | **Holding Detail screen v1.** New `mobile/lib/screens/sim/holding_detail_screen.dart` (later renamed to `ticker_detail_screen.dart` in Bundle 1) — full-screen detail view reachable from Portfolio holding cards. Position summary card + 4-chip quick-actions row (TRADE MORE / ASK / CONVENE / CLOSE) + per-ticker trade history + COMING SOON placeholder. Extracted `TradeRow` to `lib/widgets/trade_row.dart` (shared with Portfolio's trade list). 13 new `holdingDetail*` l10n keys. `_HoldingCard` on portfolio_screen.dart wraps in `InkWell` + chevron-right glyph + pushes to the new screen. |
-| `a8b8523` | **TickerDetail Bundle 1 — UX restructure.** Pure UX work, no new content widgets yet. (1) Rename HoldingDetail → TickerDetail (file via `git mv`, class, l10n keys). (2) New `_WatchingCard` variant (amber, big price, day-change%, italic note, Added date) for watched-not-held users; `_PositionCard` priority on held; `_EmptyStateCard` for the rare mid-session neither state. (3) Actions row split into `_PrimaryAction` (full-width green ElevatedButton, TRADE / TRADE MORE adaptive) + `_SecondaryActions` (4-chip Wrap: ASK / CONVENE / WATCH-toggle / CLOSE-conditional). WATCH chip uses Icons.star vs Icons.star_border to signal current watchlist state. (4) `_WatchlistRow.onTap` on Portfolio reroutes to TickerDetailScreen instead of `showWatchlistSheet`; sheet stays alive (ticker_tape.dart:158 still uses it). (5) `_VerdictCard` on Room gained SEE CHART OutlinedButton below primary CTA, shown in all 3 verdict states (approve+no-trade, approve+traded, reject). (6) `holdingDetail*` l10n keys renamed to `tickerDetail*` + new keys for Watching card / short chip labels / chart-placeholder / `roomVerdictSeeChart`. |
-
-Plus the `chore(handover): wrap AT:R40` commit. **No backend code, no migrations** authored this session — pure mobile UX work.
-
-### What changed in the codebase
-
-Repo-tracked (in addition to the Silent_Scout/* changes that landed in parallel and rode along on the wrap commit per Saiful's call):
-
-| File | Change |
-|---|---|
-| `mobile/lib/screens/sim/ticker_detail_screen.dart` | NEW (renamed from `holding_detail_screen.dart`) — full TickerDetail screen with adaptive Status card (Position/Watching/Empty) + primary+secondary actions + chart placeholder + per-ticker trades + COMING SOON card |
-| `mobile/lib/widgets/trade_row.dart` | NEW — extracted from portfolio_screen.dart's private `_TradeRow`. Shared by Portfolio + TickerDetail |
-| `mobile/lib/screens/sim/portfolio_screen.dart` | `_HoldingCard` wraps in InkWell + chevron-right + pushes TickerDetail; `_WatchlistRow._showRowSheet` now pushes TickerDetail instead of calling showWatchlistSheet; import of watchlist_sheet.dart removed; duplicate `_TradeRow` deleted |
-| `mobile/lib/screens/room/room_screen.dart` | Import TickerDetailScreen; `_VerdictCard.build` gained a SEE CHART OutlinedButton at the bottom of the Column (outside the `if (isApprove)` conditional → shown in all verdict states) |
-| `mobile/lib/l10n/app_en.arb` | +13 `tickerDetail*` keys (mechanical rename from `holdingDetail*` + new ones for Watching card variant, short chip labels, chart placeholder) + `roomVerdictSeeChart`. AR/MS unchanged — auto-fall-back per i18n policy. |
-| `mobile/lib/generated/l10n/app_localizations*.dart` | Regenerated via `flutter gen-l10n` |
-
-Plus the Silent_Scout/* parallel-track files (11 new backlog directories under `Silent_Scout/0[89]_*` + `1[012345678]_*` mirroring the AT:R40 gap analysis; README updated). Per CLAUDE.md these are research-only and do not import from or affect production. Riding along on this wrap so the working tree is clean for AT:R41.
-
-Plan file: `~/.claude/plans/r-partitioned-breeze.md` — full gap analysis + 13-question grilling decisions + Plan Y sequencing.
-
-### Carry-overs for AT:R41
-
-**Top-priority — finish the Ticker Detail surface (THE work track):**
-
-1. **Bundle 2 — Chart portrait.** fl_chart 0.69.0 already in pubspec. Candlestick widget for 1D/1W/1M periods + line widget for 3M/1Y/5Y (adaptive switch in `_chartType(period)`). Volume bars below the price chart always. 220pt fixed height. Crosshair on touch-drag. Loading skeleton + "Chart unavailable" error state. Period selector = 6 pill chips (1D/1W/1M/3M/1Y/5Y), default 1M, per-session-only. New backend route `GET /v1/sim/history/{ticker}?period=1m` returning `[{ts, open, high, low, close, volume}]` with 60s server cache.
-2. **Bundle 3 — Landscape fullscreen chart.** Paired with Bundle 2 (same session). New `ChartFullscreenScreen` widget, locked to `landscapeLeft + landscapeRight` via per-route `SystemChrome.setPreferredOrientations`. Expand button on the portrait chart card. Device-rotation auto-push (rotate to landscape on TickerDetail → push fullscreen; rotate back → pop). Dismiss via X button + swipe-down + system back. main.dart's `portraitUp` lock stays the default — only relaxes on this one route.
-3. **Bundle 4 — Per-ticker news.** News section between Earnings chip and Trades on TickerDetail. yfinance Ticker.news, 5 headlines, headline + publisher + relative-time ("2h ago" / "Yesterday" / "3d ago"). Tap → external Safari via `url_launcher` (new dep). Hide-on-empty section. New backend route `GET /v1/sim/news/{ticker}?limit=5` with 5-min server cache.
-4. **Bundle 5 — Earnings chip.** Inline amber pill between Actions and News on TickerDetail. yfinance Ticker.calendar. Format: "Q3 earnings · Jul 25 · est. EPS $2.04". 90-day cutoff (hide if next earnings > 90 days out). No-tap display-only. New backend route `GET /v1/sim/earnings/{ticker}` with 6h server cache.
-
-**Saiful's external follow-ons** (do at his pace, all carried from AT:R39):
-
-5. **Rotate the Android upload keystore password.** Original was shared in chat transcript — `keytool -storepasswd -keystore ~/.android-keys/ami-trade-upload.keystore`. Save new pw to 1Password.
-6. **Write `~/.android-keys/keystore.properties`** with `storeFile` (absolute), `storePassword`, `keyAlias=upload`, `keyPassword`. Without this file, `scripts/build_playstore.sh` falls back to debug signing.
-7. **Export `GOOGLE_OAUTH_WEB_CLIENT_ID`** in `~/.zshrc` (told him to in AT:R39; verify with `echo $GOOGLE_OAUTH_WEB_CLIENT_ID` next session).
-8. **Confirm Play Console approval** (signup submitted AT:R39 — 1-48h SLA).
-
-**Play-Console-approval-gated next work:**
-
-9. **First Play Console AAB upload.** After items 5-8: `scripts/build_playstore.sh` produces signed AAB → manual upload via Play Console web UI (completes Play App Signing enrollment) → fill Data Safety + Content Rating + screenshots → add internal testers.
-10. **Samsung A17 device validation** (~1 week out from delivery). First real-world Google Sign-In e2e test.
-11. **Icons** (carry-over since AT:R36): 3 source PNGs at `mobile/assets/icon/`, then `flutter pub run flutter_launcher_icons`.
-
-**Non-gated backend work** (pick based on energy):
-
-12. **Credit consumption emission.** `credits_consumed` event type already exists in `subscription_events`; nothing emits it. Wire Room + 1-on-1.
-13. **BL7 — Agent metadata routes.** API for client-side rendering of agent profiles.
-14. **BL8 — Room run cancel + replay.** Backend: cancel an in-flight room run, replay a completed one.
-15. **A29 light-mode refactor.** Settings → APPEARANCE is dark-only.
-
-**BL16 followups** (deferred from AT:R38 — only land if/when users ask):
-
-16. Per-bucket merge toggles · 17. Mandate-conflict UX · 18. Settings "Merged accounts" history · 19. KEEP-SEPARATE orphan cleanup TTL · 20. Admin merge endpoint · 21. Undo a merge within N hours.
-
-**Carrying from AT:R35** (gated on decision):
-
-22. Re-run Tier 2 sequentially (`scripts/translate_content_lan.py --type glossary` → `ai_coach` → `daily_challenges`, ~5h vLLM-blocking).
-23. Re-think Tier 3 (lessons) approach. Sequential = ~28h GPU.
-
-**Carrying from AT:R34 / earlier** (unchanged):
-
-24. TF `+27` cold-launch loading loop on iPhone 17 — watch item. · 25. External TestFlight launch (needs Beta App Description). · 26. **BL6** — Mandate resolve flow. · 27. **BL11** — push (FCM/APNs) + in-app trial-end UX. · 28. **BL4** — Arabic → Gemini routing. · 29. **Animation production** — 15 `<Animation>` MDX tags.
-
-(Net change vs. AT:R39 carry-overs: AT:R40 splits Bundles 2-5 (Ticker Detail follow-on work) out as items 1-4. Previous "Saiful Android setup" items 1-4 from AT:R39 demote to 5-8. AT:R39 had 25 items; AT:R40 has 29 — net +4 from the four Bundle items.)
-
-### Watch items (not tasks)
-
-- **TickerDetail v1 + Bundle 1 are iPhone-unverified.** Both commits ship structural changes (new screen + entry-point reroute) but neither has been built to device. Strong candidate for "build TestFlight + spot-check after Bundle 2+3 lands" — bundle the visual validation rather than rebuilding after each session.
-- **`SEE CHART` button shown when verdict = REJECT.** Argued in Q8 as the *most* valuable state (no trade → research more). But it does mean the verdict card has a cyan button under an amber-rejection card; might read visually as "agents say no but go look anyway." Worth eyeing in real iPhone test.
-- **Watchlist sheet split.** Portfolio watchlist rows now go to TickerDetail; ticker-tape rows still go to WatchlistSheet. Different entry points = different surface, intentional per Q2. May confuse users at first — they tap the same ticker from two surfaces and get two different UIs.
-- **Adaptive TRADE / TRADE MORE label.** Held users see "TRADE MORE", watched-only see "TRADE". Right call linguistically but adds 1 more decision for the LLM (1-on-1 / Brief) to factor into screen-aware references.
-- **CLOSE chip is conditional on `hasOpenTrades`.** Holdings with no open trade record (orphan position from an old migration?) would lose access to close. Existing positions all have trade records, so should be fine, but watch for edge cases.
-- **`/v1/auth/google` is reachable but unreachable from clients today.** Backend route live; mobile Google button only shows on Android (D-057); no Android device until Samsung A17 arrives.
-- **3 untranslated keys on AR, 4 on MS, plus the 13 new `tickerDetail*` + 1 `roomVerdictSeeChart` keys** (17 + 18 untranslated for AR/MS respectively as of this session). All fall back to EN automatically.
-- **vLLM saturation pattern.** Single H100-class GPU comfortably serves 1-2 concurrent long-form generation streams; 4 streams blow per-stream latency past 300s.
-- **Rate limiter is per-process.** When the backend scales beyond one container, the 10/3/5-per-minute caps become per-replica rather than global.
-- **Saved worktree patches.** `.claude/worktree-salvage/exciting-shtern-lessons-landing-spec.patch` + `.claude/worktree-salvage/magical-edison-280-lesson-edits.diff` kept locally under gitignore.
-
----
 
 ## How to start the next session
 
@@ -234,6 +134,14 @@ Quick-win candidates for next session (in priority order):
 6. **Credit consumption emission** (#12) — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
 7. **Tier 2 sequential translation run** (#22) — loaders are ready. ~5h vLLM-blocking; own session.
 8. **BL7 / BL8 / A29** — remaining backlog.
+
+### Recent sessions (newest first)
+
+- [AT:R40](history/AT_R0040.md)
+- [AT:R39](history/AT_R0039.md)
+- [AT:R38](history/AT_R0038.md)
+- [AT:R37](history/AT_R0037.md)
+- [AT:R36](history/AT_R0036.md)
 
 ---
 
