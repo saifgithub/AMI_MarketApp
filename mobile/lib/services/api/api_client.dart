@@ -734,6 +734,18 @@ class ApiClient {
     return SimHistory.fromJson(r.data!);
   }
 
+  /// Recent news articles for the TickerDetail news section. Server caches 5 min.
+  Future<SimNews> simNews(String ticker) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/news/$ticker');
+    return SimNews.fromJson(r.data!);
+  }
+
+  /// Upcoming earnings info within 90 days. Server caches 6 hours.
+  Future<SimEarnings> simEarnings(String ticker) async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/sim/earnings/$ticker');
+    return SimEarnings.fromJson(r.data!);
+  }
+
   // ── Watchlist (A18) ─────────────────────────────────────────────
 
   Future<List<WatchlistEntry>> watchlistList(String userId) async {

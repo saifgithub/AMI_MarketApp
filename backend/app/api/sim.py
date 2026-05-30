@@ -10,6 +10,8 @@ POST /v1/sim/trades/{user_id}/close          Manually close an open trade
 GET  /v1/sim/quote/{ticker}                  Current quote (price + change_pct + market_state)
 GET  /v1/sim/quotes?symbols=AAPL,MSFT,...    Batch quotes for ticker tape
 GET  /v1/sim/history/{ticker}?period=1m      OHLCV candles for the ticker-detail chart (Bundle 2)
+GET  /v1/sim/news/{ticker}?limit=5           Recent news articles for ticker (Bundle 4)
+GET  /v1/sim/earnings/{ticker}               Upcoming earnings info within 90 days (Bundle 5)
 """
 
 from __future__ import annotations
@@ -411,4 +413,53 @@ async def history(
             {"t": b.t, "o": b.o, "h": b.h, "l": b.low, "c": b.c, "v": b.v}
             for b in bars
         ],
+    }
+
+
+@router.get("/news/{ticker}")
+async def news(
+    ticker: str,
+    limit: int = 5,
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """Recent news articles for the ticker-detail screen.
+
+    Public — same as /quote and /history. Response cached 5 min
+    server-side in CachingProvider. Returns articles: [] when Yahoo
+    has no news for the ticker (not an error).
+    """
+    items, source = sim.current_news(ticker, limit)
+    return {
+        "ticker": ticker.upper(),
+        "source": source,
+        "articles": [
+            {
+                "title": a.title,
+                "link": a.link,
+                "publisher": a.publisher,
+                "published_at": a.published_at,
+            }
+            for a in items
+        ],
+    }
+
+
+@router.get("/earnings/{ticker}")
+async def earnings(
+    ticker: str,
+    sim: SimEngine = Depends(get_sim_engine),
+) -> dict:
+    """Upcoming earnings window within 90 days for the ticker-detail screen.
+
+    Public — same as /quote and /history. Response cached 6 hours
+    server-side in CachingProvider. All fields are null when no
+    earnings date is announced within 90 days.
+    """
+    info, source = sim.current_earnings(ticker)
+    return {
+        "ticker": ticker.upper(),
+        "source": source,
+        "earnings_date": info.earnings_date if info else None,
+        "quarter": info.quarter if info else None,
+        "eps_estimate": info.eps_estimate if info else None,
     }

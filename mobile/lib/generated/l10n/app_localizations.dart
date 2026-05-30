@@ -556,16 +556,28 @@ abstract class AppLocalizations {
   /// **'CLOSE'**
   String get tickerDetailClosePositionConfirmCta;
 
+  /// Section heading above recent news articles on Ticker Detail (Bundle 4, AT:R42).
+  ///
+  /// In en, this message translates to:
+  /// **'NEWS'**
+  String get tickerDetailNewsHeading;
+
+  /// EPS estimate shown on the earnings pill on Ticker Detail. {eps} is already formatted with $ sign and 2 decimal places.
+  ///
+  /// In en, this message translates to:
+  /// **'est. EPS {eps}'**
+  String tickerDetailNewsEpsEstimate(String eps);
+
   /// Heading on the placeholder card at the bottom of Ticker Detail listing not-yet-built surfaces.
   ///
   /// In en, this message translates to:
   /// **'COMING SOON'**
   String get tickerDetailComingSoonHeading;
 
-  /// Body of the COMING SOON placeholder card on Ticker Detail. Lists the features that will land in Bundles 2-5.
+  /// Body of the COMING SOON placeholder card on Ticker Detail. Lists features still to come after Bundles 2-5 shipped.
   ///
   /// In en, this message translates to:
-  /// **'Candlestick chart · per-ticker news · earnings calendar'**
+  /// **'Analyst targets · SEC filings · peer comparison'**
   String get tickerDetailComingSoonBody;
 
   /// Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject).

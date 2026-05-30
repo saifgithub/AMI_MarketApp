@@ -31,3 +31,15 @@ final tickerHistoryProvider =
   final api = ref.watch(apiClientProvider);
   return api.simHistory(key.ticker, key.period);
 });
+
+final tickerNewsProvider =
+    FutureProvider.autoDispose.family<SimNews, String>((ref, ticker) async {
+  final api = ref.watch(apiClientProvider);
+  return api.simNews(ticker);
+});
+
+final tickerEarningsProvider =
+    FutureProvider.autoDispose.family<SimEarnings, String>((ref, ticker) async {
+  final api = ref.watch(apiClientProvider);
+  return api.simEarnings(ticker);
+});

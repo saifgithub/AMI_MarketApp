@@ -19,6 +19,7 @@ import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
+import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ticker_chart.dart';
@@ -26,6 +27,7 @@ import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class TickerDetailScreen extends ConsumerStatefulWidget {
   const TickerDetailScreen({super.key, required this.ticker});
@@ -103,6 +105,9 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
     final trades = simState.trades.where((t) => t.ticker == ticker).toList();
     final hasOpenTrades = trades.any((t) => t.isOpen);
 
+    final earningsAsync = ref.watch(tickerEarningsProvider(ticker));
+    final newsAsync = ref.watch(tickerNewsProvider(ticker));
+
     Widget statusCard;
     if (isHeld) {
       // Position card wins when held — strictly more informative.
@@ -154,7 +159,28 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
                 hasOpenTrades: hasOpenTrades,
               ),
               const SizedBox(height: AmiSpacing.l),
-              // Earnings chip (Bundle 5) + News (Bundle 4) slot here.
+              earningsAsync.when(
+                data: (e) => e.hasData
+                    ? Padding(
+                        padding:
+                            const EdgeInsets.only(bottom: AmiSpacing.s),
+                        child: _EarningsPill(earnings: e),
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+              newsAsync.when(
+                data: (n) => n.articles.isEmpty
+                    ? const SizedBox.shrink()
+                    : Padding(
+                        padding:
+                            const EdgeInsets.only(bottom: AmiSpacing.m),
+                        child: _NewsSection(articles: n.articles),
+                      ),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
                 child: Text(
@@ -576,5 +602,158 @@ class _ComingSoonCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+
+/// Amber pill showing upcoming earnings within 90 days.
+/// Only rendered when SimEarnings.hasData is true.
+class _EarningsPill extends StatelessWidget {
+  const _EarningsPill({required this.earnings});
+
+  final SimEarnings earnings;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final dateStr = _fmtEarningsDate(earnings.earningsDate);
+    final eps = earnings.epsEstimate;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AmiSpacing.m, vertical: AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.hexAmber.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.hexAmber.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.calendar_today_outlined,
+              color: AmiColors.hexAmber, size: 14),
+          const SizedBox(width: AmiSpacing.s),
+          Text(
+            earnings.quarter ?? '',
+            style: AmiTypography.labelMono
+                .copyWith(color: AmiColors.hexAmber, fontSize: 11),
+          ),
+          if (dateStr != null) ...[
+            Text(
+              ' · $dateStr',
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.textMed, fontSize: 11),
+            ),
+          ],
+          if (eps != null) ...[
+            Text(
+              ' · ${l.tickerDetailNewsEpsEstimate('\$${eps.toStringAsFixed(2)}')}',
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.textLow, fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Format "YYYY-MM-DD" → "Jul 25".
+  static String? _fmtEarningsDate(String? iso) {
+    if (iso == null) return null;
+    try {
+      final dt = DateTime.parse(iso);
+      return DateFormat.MMMd().format(dt);
+    } catch (_) {
+      return iso;
+    }
+  }
+}
+
+
+/// News section: heading + up to 5 tappable article rows.
+class _NewsSection extends StatelessWidget {
+  const _NewsSection({required this.articles});
+
+  final List<SimNewsArticle> articles;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l.tickerDetailNewsHeading,
+          style: AmiTypography.labelMono,
+        ),
+        const SizedBox(height: AmiSpacing.s),
+        for (final a in articles) _NewsRow(article: a),
+      ],
+    );
+  }
+}
+
+
+class _NewsRow extends StatelessWidget {
+  const _NewsRow({required this.article});
+
+  final SimNewsArticle article;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () {
+        final uri = Uri.tryParse(article.link);
+        if (uri != null) {
+          launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      borderRadius: BorderRadius.circular(AmiRadii.card),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              article.title,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
+            ),
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                Text(
+                  article.publisher,
+                  style: AmiTypography.caption.copyWith(fontSize: 11),
+                ),
+                const SizedBox(width: AmiSpacing.s),
+                Text(
+                  '·',
+                  style: AmiTypography.caption.copyWith(
+                      color: AmiColors.textLow, fontSize: 11),
+                ),
+                const SizedBox(width: AmiSpacing.s),
+                Text(
+                  _relativeTime(article.publishedAt),
+                  style: AmiTypography.caption.copyWith(
+                      color: AmiColors.textLow, fontSize: 11),
+                ),
+              ],
+            ),
+            const Divider(height: 12, color: AmiColors.slate700),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _relativeTime(int epochSeconds) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(epochSeconds * 1000);
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 5) return 'just now';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return DateFormat.MMMd().format(dt);
   }
 }

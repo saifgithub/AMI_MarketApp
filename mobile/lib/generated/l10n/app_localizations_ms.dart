@@ -259,11 +259,19 @@ class AppLocalizationsMs extends AppLocalizations {
   String get tickerDetailClosePositionConfirmCta => 'CLOSE';
 
   @override
+  String get tickerDetailNewsHeading => 'NEWS';
+
+  @override
+  String tickerDetailNewsEpsEstimate(String eps) {
+    return 'est. EPS $eps';
+  }
+
+  @override
   String get tickerDetailComingSoonHeading => 'COMING SOON';
 
   @override
   String get tickerDetailComingSoonBody =>
-      'Candlestick chart · per-ticker news · earnings calendar';
+      'Analyst targets · SEC filings · peer comparison';
 
   @override
   String get roomVerdictSeeChart => 'SEE CHART';

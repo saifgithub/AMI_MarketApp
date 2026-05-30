@@ -59,8 +59,10 @@ from app.schemas.trade import (
 )
 from app.services.market_data import (
     Candle,
+    EarningsInfo,
     MarketDataProvider,
     MockWalkProvider,
+    NewsItem,
     Quote,
     get_market_data_provider,
 )
@@ -298,6 +300,22 @@ class SimEngine:
         if fb:
             return fb, self._fallback.name
         return [], "unavailable"
+
+    def current_news(self, ticker: str, limit: int = 5) -> tuple[list[NewsItem], str]:
+        """Return (articles, source). Empty list when no data — never raises."""
+        items = self._provider.news(ticker, limit)
+        if items:
+            q = self._provider.quote(ticker)
+            return items, q.source if q is not None else "yfinance"
+        return [], "unavailable"
+
+    def current_earnings(self, ticker: str) -> tuple[EarningsInfo | None, str]:
+        """Return (earnings_info, source). None info when outside 90-day window — never raises."""
+        info = self._provider.earnings(ticker)
+        if info is not None:
+            q = self._provider.quote(ticker)
+            return info, q.source if q is not None else "yfinance"
+        return None, "unavailable"
 
     # ── Portfolio ──────────────────────────────────────────────────────
 

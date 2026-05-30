@@ -201,13 +201,22 @@
     "@tickerDetailClosePositionConfirmCta": {
         "description": "Destructive CTA on the close-position confirm dialog on Ticker Detail."
     },
+    "tickerDetailNewsHeading": "NEWS",
+    "@tickerDetailNewsHeading": {
+        "description": "Section heading above recent news articles on Ticker Detail (Bundle 4, AT:R42)."
+    },
+    "tickerDetailNewsEpsEstimate": "est. EPS {eps}",
+    "@tickerDetailNewsEpsEstimate": {
+        "description": "EPS estimate shown on the earnings pill on Ticker Detail. {eps} is already formatted with $ sign and 2 decimal places.",
+        "placeholders": {"eps": {"type": "String"}}
+    },
     "tickerDetailComingSoonHeading": "COMING SOON",
     "@tickerDetailComingSoonHeading": {
         "description": "Heading on the placeholder card at the bottom of Ticker Detail listing not-yet-built surfaces."
     },
-    "tickerDetailComingSoonBody": "Candlestick chart · per-ticker news · earnings calendar",
+    "tickerDetailComingSoonBody": "Analyst targets · SEC filings · peer comparison",
     "@tickerDetailComingSoonBody": {
-        "description": "Body of the COMING SOON placeholder card on Ticker Detail. Lists the features that will land in Bundles 2-5."
+        "description": "Body of the COMING SOON placeholder card on Ticker Detail. Lists features still to come after Bundles 2-5 shipped."
     },
     "roomVerdictSeeChart": "SEE CHART",
     "@roomVerdictSeeChart": {

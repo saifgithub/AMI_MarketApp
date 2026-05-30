@@ -70,6 +70,23 @@ class Candle(NamedTuple):
     v: float
 
 
+class NewsItem(NamedTuple):
+    """One news article returned by the news provider."""
+
+    title: str
+    link: str
+    publisher: str
+    published_at: int  # Unix epoch seconds
+
+
+class EarningsInfo(NamedTuple):
+    """Upcoming earnings window for a ticker (within 90 days), or nulls."""
+
+    earnings_date: str | None   # ISO date "YYYY-MM-DD"
+    quarter: str | None         # "Q1"–"Q4" derived from month
+    eps_estimate: float | None  # yfinance Earnings Average
+
+
 # Period → (yfinance period, yfinance interval, mock-walk candle count, mock-walk seconds-per-candle).
 # Mock-walk counts mirror what yfinance returns for typical regular-session symbols.
 _PERIOD_MAP: dict[str, tuple[str, str, int, int]] = {
@@ -108,6 +125,14 @@ class MarketDataProvider(Protocol):
         leaf provider that actually served the bars stays attributable
         to the caller via the surrounding API response's `source` field.
         """
+        ...
+
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        """Return recent news articles for `ticker`, or None on any failure."""
+        ...
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        """Return upcoming earnings info within 90 days, or None if unavailable."""
         ...
 
 
@@ -213,6 +238,12 @@ class MockWalkProvider:
             prev_close = close
         return candles
 
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        return None
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        return None
+
 
 # ── Yahoo Finance ────────────────────────────────────────────────────────
 
@@ -286,6 +317,12 @@ class YahooQuoteProvider:
         # the fallback chain hands off to MockWalkProvider.
         return None
 
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        return None
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        return None
+
     def close(self) -> None:
         self._client.close()
 
@@ -306,6 +343,8 @@ class CachingProvider:
         self._ttl = ttl_seconds
         self._cache: dict[str, tuple[Quote, float]] = {}  # ticker → (quote, expires_at)
         self._history_cache: dict[str, tuple[list[Candle], float]] = {}  # f"{ticker}:{period}" → (candles, expires_at)
+        self._news_cache: dict[str, tuple[list[NewsItem], float]] = {}  # f"{ticker}:{limit}" → (items, expires_at)
+        self._earnings_cache: dict[str, tuple[EarningsInfo, float]] = {}  # ticker → (info, expires_at)
         self._lock = RLock()
         self.name = f"cache({inner.name})"
 
@@ -340,17 +379,49 @@ class CachingProvider:
                 self._history_cache[key] = (bars, now + self._ttl)
         return bars
 
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        key = f"{ticker.upper().strip()}:{limit}"
+        now = time.time()
+        with self._lock:
+            hit = self._news_cache.get(key)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        items = self._inner.news(ticker, limit)
+        if items is not None:
+            with self._lock:
+                self._news_cache[key] = (items, now + 300.0)  # 5-min TTL
+        return items
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        t = ticker.upper().strip()
+        now = time.time()
+        with self._lock:
+            hit = self._earnings_cache.get(t)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+        info = self._inner.earnings(ticker)
+        if info is not None:
+            with self._lock:
+                self._earnings_cache[t] = (info, now + 21600.0)  # 6-hour TTL
+        return info
+
     def invalidate(self, ticker: str | None = None) -> None:
         with self._lock:
             if ticker is None:
                 self._cache.clear()
                 self._history_cache.clear()
+                self._news_cache.clear()
+                self._earnings_cache.clear()
             else:
                 t = ticker.upper().strip()
                 self._cache.pop(t, None)
-                # Drop every period for this ticker.
+                self._earnings_cache.pop(t, None)
+                # Drop every keyed entry for this ticker.
                 self._history_cache = {
                     k: v for k, v in self._history_cache.items() if not k.startswith(f"{t}:")
+                }
+                self._news_cache = {
+                    k: v for k, v in self._news_cache.items() if not k.startswith(f"{t}:")
                 }
 
 
@@ -428,6 +499,72 @@ class YfinanceProvider:
             bars.append(Candle(t=epoch, o=o, h=h, low=low, c=c, v=v))
         return bars or None
 
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        t = ticker.upper().strip()
+        try:
+            raw = self._yf.Ticker(t).news or []
+        except Exception as exc:
+            logger.warn("yfinance_news_error", ticker=t, error=str(exc))
+            return None
+        items: list[NewsItem] = []
+        for a in raw[:limit]:
+            try:
+                items.append(NewsItem(
+                    title=str(a.get("title", "")),
+                    link=str(a.get("link", "")),
+                    publisher=str(a.get("publisher", "")),
+                    published_at=int(a.get("providerPublishTime", 0)),
+                ))
+            except (KeyError, TypeError, ValueError):
+                continue
+        return items or None
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        import datetime
+
+        t = ticker.upper().strip()
+        try:
+            import pandas as pd
+
+            cal = self._yf.Ticker(t).calendar
+            if not cal:
+                return None
+            dates = cal.get("Earnings Date") or []
+            if not isinstance(dates, list):
+                dates = [dates]
+            now = datetime.datetime.now(datetime.timezone.utc)
+            cutoff = now + datetime.timedelta(days=90)
+            target = None
+            for d in dates:
+                try:
+                    ts = d if isinstance(d, datetime.datetime) else pd.Timestamp(d).to_pydatetime()
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=datetime.timezone.utc)
+                    else:
+                        ts = ts.astimezone(datetime.timezone.utc)
+                    if now <= ts <= cutoff:
+                        target = ts
+                        break
+                except Exception:
+                    continue
+            if target is None:
+                return None
+            q_map = {
+                1: "Q1", 2: "Q1", 3: "Q1",
+                4: "Q2", 5: "Q2", 6: "Q2",
+                7: "Q3", 8: "Q3", 9: "Q3",
+                10: "Q4", 11: "Q4", 12: "Q4",
+            }
+            eps = cal.get("Earnings Average")
+            return EarningsInfo(
+                earnings_date=target.strftime("%Y-%m-%d"),
+                quarter=q_map.get(target.month),
+                eps_estimate=float(eps) if eps is not None else None,
+            )
+        except Exception as exc:
+            logger.warn("yfinance_earnings_error", ticker=t, error=str(exc))
+            return None
+
 
 # ── Fallback chain ───────────────────────────────────────────────────────
 
@@ -462,6 +599,18 @@ class FallbackProvider:
         if bars:
             return bars
         return self._secondary.history(ticker, period)
+
+    def news(self, ticker: str, limit: int = 5) -> list[NewsItem] | None:
+        items = self._primary.news(ticker, limit)
+        if items:
+            return items
+        return self._secondary.news(ticker, limit)
+
+    def earnings(self, ticker: str) -> EarningsInfo | None:
+        info = self._primary.earnings(ticker)
+        if info is not None:
+            return info
+        return self._secondary.earnings(ticker)
 
 
 # ── Singleton factory ────────────────────────────────────────────────────

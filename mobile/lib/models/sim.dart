@@ -230,3 +230,74 @@ class SimSubmitResult {
     );
   }
 }
+
+/// One news article for a ticker. Returned by GET /v1/sim/news/{ticker}.
+class SimNewsArticle {
+  const SimNewsArticle({
+    required this.title,
+    required this.link,
+    required this.publisher,
+    required this.publishedAt,
+  });
+
+  final String title;
+  final String link;
+  final String publisher;
+  final int publishedAt; // Unix epoch seconds
+
+  factory SimNewsArticle.fromJson(Map<String, dynamic> j) => SimNewsArticle(
+        title: j['title'] as String? ?? '',
+        link: j['link'] as String? ?? '',
+        publisher: j['publisher'] as String? ?? '',
+        publishedAt: j['published_at'] as int? ?? 0,
+      );
+}
+
+/// News payload returned by GET /v1/sim/news/{ticker}.
+class SimNews {
+  const SimNews({
+    required this.ticker,
+    required this.source,
+    required this.articles,
+  });
+
+  final String ticker;
+  final String source;
+  final List<SimNewsArticle> articles;
+
+  factory SimNews.fromJson(Map<String, dynamic> j) => SimNews(
+        ticker: j['ticker'] as String,
+        source: j['source'] as String? ?? 'unknown',
+        articles: ((j['articles'] as List?) ?? const [])
+            .map((a) => SimNewsArticle.fromJson(a as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+/// Upcoming earnings window within 90 days. Returned by GET /v1/sim/earnings/{ticker}.
+/// All fields are null when no earnings date is announced within the window.
+class SimEarnings {
+  const SimEarnings({
+    required this.ticker,
+    required this.source,
+    this.earningsDate,
+    this.quarter,
+    this.epsEstimate,
+  });
+
+  final String ticker;
+  final String source;
+  final String? earningsDate; // "YYYY-MM-DD"
+  final String? quarter;      // "Q1"–"Q4"
+  final double? epsEstimate;
+
+  bool get hasData => earningsDate != null;
+
+  factory SimEarnings.fromJson(Map<String, dynamic> j) => SimEarnings(
+        ticker: j['ticker'] as String,
+        source: j['source'] as String? ?? 'unknown',
+        earningsDate: j['earnings_date'] as String?,
+        quarter: j['quarter'] as String?,
+        epsEstimate: (j['eps_estimate'] as num?)?.toDouble(),
+      );
+}
