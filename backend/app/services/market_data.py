@@ -509,12 +509,27 @@ class YfinanceProvider:
         items: list[NewsItem] = []
         for a in raw[:limit]:
             try:
-                items.append(NewsItem(
-                    title=str(a.get("title", "")),
-                    link=str(a.get("link", "")),
-                    publisher=str(a.get("publisher", "")),
-                    published_at=int(a.get("providerPublishTime", 0)),
-                ))
+                # yfinance ≥0.2 nests article fields under a "content" key;
+                # fall back to the flat dict for older format.
+                content = a.get("content") or a
+                title = str(content.get("title", "") or a.get("title", ""))
+                url_obj = content.get("clickThroughUrl") or content.get("canonicalUrl") or {}
+                link = str(url_obj.get("url", "") or content.get("link", "") or a.get("link", ""))
+                provider_obj = content.get("provider") or {}
+                publisher = str(
+                    provider_obj.get("displayName", "")
+                    or content.get("publisher", "")
+                    or a.get("publisher", "")
+                )
+                pub_str = content.get("pubDate") or a.get("pubDate") or ""
+                if pub_str:
+                    from datetime import datetime, timezone
+                    published_at = int(
+                        datetime.fromisoformat(pub_str.replace("Z", "+00:00")).timestamp()
+                    )
+                else:
+                    published_at = int(a.get("providerPublishTime", 0))
+                items.append(NewsItem(title=title, link=link, publisher=publisher, published_at=published_at))
             except (KeyError, TypeError, ValueError):
                 continue
         return items or None
