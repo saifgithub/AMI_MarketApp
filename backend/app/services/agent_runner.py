@@ -48,6 +48,7 @@ from app.services.fundamentals import build_live_data_block, extract_tickers
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
+from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 
 
 # ── 1-on-1 runner ────────────────────────────────────────────────────────
@@ -126,7 +127,21 @@ class AgentRunner:
                 buf.append(chunk)
                 yield chunk
         else:
-            system_prompt = build_agent_prompt(agent_id, mandate, user_id=session.user_id)
+            # Alpaca paper portfolio snapshot — injected if the user has linked
+            # their Alpaca account. Best-effort: silently None on any error.
+            alpaca_snapshot: str | None = None
+            if session.user_id is not None:
+                from app.db import get_session as db_session
+                from app.db.models import User
+                from sqlalchemy import select
+                with db_session() as s:
+                    row = s.execute(select(User).where(User.id == session.user_id)).scalar_one_or_none()
+                    if row and row.alpaca_access_token:
+                        alpaca_snapshot = alpaca_snapshot_text(row.alpaca_access_token)
+
+            system_prompt = build_agent_prompt(
+                agent_id, mandate, user_id=session.user_id, alpaca_snapshot=alpaca_snapshot
+            )
 
             # Live ticker context — extract any ticker the user mentioned
             # (this message, or the last 3 turns of history if this message

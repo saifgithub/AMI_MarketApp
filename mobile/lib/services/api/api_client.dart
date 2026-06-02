@@ -12,6 +12,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/brief.dart';
@@ -997,5 +998,33 @@ class ApiClient {
           : null,
     );
     return r.data!;
+  }
+
+  // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────
+
+  Future<AlpacaStatus> alpacaStatus() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/alpaca/status');
+    return AlpacaStatus.fromJson(r.data!);
+  }
+
+  Future<void> alpacaLink(String code) async {
+    await _dio.post<Map<String, dynamic>>('/v1/alpaca/link', data: {'code': code});
+  }
+
+  Future<void> alpacaUnlink() async {
+    await _dio.delete<void>('/v1/alpaca/unlink');
+  }
+
+  Future<AlpacaPortfolio> alpacaPortfolio() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/alpaca/portfolio');
+    return AlpacaPortfolio.fromJson(r.data!);
+  }
+
+  Future<List<AlpacaPosition>> alpacaPositions() async {
+    final r = await _dio.get<List<dynamic>>('/v1/alpaca/positions');
+    return (r.data ?? [])
+        .cast<Map<String, dynamic>>()
+        .map(AlpacaPosition.fromJson)
+        .toList();
   }
 }

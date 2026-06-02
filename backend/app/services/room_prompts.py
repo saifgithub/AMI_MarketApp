@@ -75,6 +75,7 @@ def build_room_messages(
     profile: dict[str, Any],
     transcript: list[AgentMessage],
     pm_predetermined_action: str | None = None,
+    alpaca_snapshot: str | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -82,8 +83,11 @@ def build_room_messages(
     the deterministic safety floor has already produced an APPROVE or
     REJECT decision. The PM's LLM call writes the *prose rationale*
     around that action — it cannot override it.
+
+    `alpaca_snapshot` is a pre-formatted text block from
+    alpaca_service.snapshot_text(); injected after user_overlay when set.
     """
-    base = build_agent_prompt(agent_id, mandate, user_id=user_id)
+    base = build_agent_prompt(agent_id, mandate, user_id=user_id, alpaca_snapshot=alpaca_snapshot)
     phase = _PHASE_FOR_AGENT[agent_id]
     length = _LENGTH_GUIDE[agent_id]
     transcript_text = _format_transcript(transcript)

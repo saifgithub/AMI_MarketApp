@@ -120,6 +120,17 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_from: str = ""
 
+    # Alpaca paper trading OAuth (AT:R45).
+    # Register at https://app.alpaca.markets/oauth-clients to get these.
+    # client_id is public (also passed to mobile via --dart-define).
+    # client_secret is backend-only — never put it in the mobile build.
+    alpaca_client_id: str = ""
+    alpaca_client_secret: str = ""
+    alpaca_paper_base_url: str = "https://paper-api.alpaca.markets"
+    alpaca_oauth_token_url: str = "https://api.alpaca.markets/oauth/token"
+    # Redirect URI registered with Alpaca; webview intercepts this before OS.
+    alpaca_redirect_uri: str = "amitrade://alpaca/callback"
+
     # CORS
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
 

@@ -57,6 +57,7 @@ from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
+from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 
 
 # ── Startup auto-retry policy (eeeb866f, AT:R34) ──────────────────────────
@@ -180,6 +181,7 @@ class _RoomContext:
     halal_universe: set[str]
     locale_allowed_universe: set[str] | None
     user_id: UUID | None = None
+    alpaca_snapshot: str | None = None  # AT:R45 — pre-fetched once per run
     # Populated as phases progress
     bull_thesis: str = ""
     bear_risk: str = ""
@@ -961,6 +963,17 @@ class RoomRunner:
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 
+        # AT:R45 — fetch Alpaca paper portfolio once per run; injected into
+        # every agent's system prompt. Best-effort: None if unlinked or error.
+        alpaca_snap: str | None = None
+        if user_id is not None:
+            from app.db.models import User
+            from sqlalchemy import select as sa_select
+            with get_session() as s:
+                urow = s.execute(sa_select(User).where(User.id == user_id)).scalar_one_or_none()
+                if urow and urow.alpaca_access_token:
+                    alpaca_snap = alpaca_snapshot_text(urow.alpaca_access_token)
+
         ctx = _RoomContext(
             ticker=ticker.upper(),
             mandate=mandate,
@@ -969,6 +982,7 @@ class RoomRunner:
             halal_universe=halal,
             locale_allowed_universe=locale_allowed,
             user_id=user_id,
+            alpaca_snapshot=alpaca_snap,
             profile=_profile_for_ticker(ticker),
         )
 
@@ -1026,6 +1040,7 @@ class RoomRunner:
                             char_delay_min=char_delay_min,
                             char_delay_max=char_delay_max,
                             agent_timeout_s=agent_timeout_s,
+                            alpaca_snapshot=ctx.alpaca_snapshot,
                         ):
                             yield ev
                 else:
@@ -1175,6 +1190,7 @@ async def _speak_one_agent(
     char_delay_min: float,
     char_delay_max: float,
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+    alpaca_snapshot: str | None = None,
 ) -> AsyncIterator[RoomEvent]:
     """Stream one agent's contribution; LLM when live, scripted otherwise.
 
@@ -1201,6 +1217,7 @@ async def _speak_one_agent(
             ticker=ctx.ticker,
             profile=profile,
             transcript=run.transcript,
+            alpaca_snapshot=alpaca_snapshot,
         )
         try:
             chunks = await asyncio.wait_for(
@@ -1283,6 +1300,7 @@ async def _stream_pm_narration(
         profile=profile,
         transcript=run.transcript,
         pm_predetermined_action=predetermined,
+        alpaca_snapshot=ctx.alpaca_snapshot,
     )
     try:
         chunks = await asyncio.wait_for(

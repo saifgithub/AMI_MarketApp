@@ -16,6 +16,8 @@ import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
+import 'package:ami_trade/models/alpaca.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -124,6 +126,9 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
           ref.read(simNotifierProvider.notifier).refresh(),
           ref.read(watchlistNotifierProvider.notifier).refresh(),
         ]);
+        ref.invalidate(alpacaStatusProvider);
+        ref.invalidate(alpacaPortfolioProvider);
+        ref.invalidate(alpacaPositionsProvider);
       },
       child: ListView(
         padding: const EdgeInsets.all(AmiSpacing.m),
@@ -156,6 +161,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
             )
           else
             for (final t in state.trades) TradeRow(trade: t),
+          const _AlpacaPortfolioSection(),
           const SizedBox(height: AmiSpacing.xxl),
         ],
       ),
@@ -538,6 +544,168 @@ class _WatchlistRow extends ConsumerWidget {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => TickerDetailScreen(ticker: entry.ticker),
     ));
+  }
+}
+
+
+// ── Alpaca paper portfolio section (AT:R45) ────────────────────────────
+
+
+class _AlpacaPortfolioSection extends ConsumerWidget {
+  const _AlpacaPortfolioSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statusAsync = ref.watch(alpacaStatusProvider);
+    return statusAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (status) {
+        if (!status.linked) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AmiSpacing.l),
+            Row(
+              children: [
+                Text('ALPACA PAPER', style: AmiTypography.labelMono),
+                const SizedBox(width: AmiSpacing.s),
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AmiColors.hexGreen,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AmiSpacing.s),
+            _AlpacaAccountSummary(),
+            const SizedBox(height: AmiSpacing.s),
+            _AlpacaPositionsList(),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AlpacaAccountSummary extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final portfolioAsync = ref.watch(alpacaPortfolioProvider);
+    return portfolioAsync.when(
+      loading: () => const LinearProgressIndicator(
+        backgroundColor: AmiColors.slate800,
+        color: AmiColors.hexCyan,
+      ),
+      error: (_, __) => Text(
+        'Could not load Alpaca account',
+        style: AmiTypography.caption.copyWith(color: AmiColors.hexRed),
+      ),
+      data: (p) {
+        final fmt = NumberFormat.currency(symbol: r'$', decimalDigits: 2);
+        return Container(
+          padding: const EdgeInsets.all(AmiSpacing.m),
+          decoration: BoxDecoration(
+            color: AmiColors.glassChrome,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AmiColors.slate700),
+          ),
+          child: Row(
+            children: [
+              _AlpacaStat(label: 'CASH', value: fmt.format(p.cash)),
+              const SizedBox(width: AmiSpacing.m),
+              _AlpacaStat(label: 'PORTFOLIO', value: fmt.format(p.portfolioValue)),
+              const SizedBox(width: AmiSpacing.m),
+              _AlpacaStat(label: 'BUYING PWR', value: fmt.format(p.buyingPower)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AlpacaStat extends StatelessWidget {
+  const _AlpacaStat({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AmiTypography.caption.copyWith(color: AmiColors.slate500)),
+          Text(value, style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AlpacaPositionsList extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final positionsAsync = ref.watch(alpacaPositionsProvider);
+    return positionsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (positions) {
+        if (positions.isEmpty) {
+          return Text(
+            'No open positions',
+            style: AmiTypography.caption.copyWith(color: AmiColors.slate500),
+          );
+        }
+        return Column(
+          children: positions.map((p) => _AlpacaPositionTile(position: p)).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _AlpacaPositionTile extends StatelessWidget {
+  const _AlpacaPositionTile({required this.position});
+  final AlpacaPosition position;
+
+  @override
+  Widget build(BuildContext context) {
+    final pl = position.unrealizedPl;
+    final plColor = pl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
+    final plSign = pl >= 0 ? '+' : '';
+    final fmt = NumberFormat.currency(symbol: r'$', decimalDigits: 0);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AmiSpacing.xs),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              position.symbol,
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+            ),
+          ),
+          Text(
+            '×${position.qty.toStringAsFixed(position.qty == position.qty.floorToDouble() ? 0 : 2)}',
+            style: AmiTypography.caption.copyWith(color: AmiColors.slate500),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          Text(
+            fmt.format(position.marketValue),
+            style: AmiTypography.caption.copyWith(color: AmiColors.textMed),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          Text(
+            '$plSign${fmt.format(pl)}',
+            style: AmiTypography.caption.copyWith(color: plColor),
+          ),
+        ],
+      ),
+    );
   }
 }
 

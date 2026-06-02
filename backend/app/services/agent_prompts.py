@@ -50,14 +50,17 @@ def build_agent_prompt(
     mandate: Mandate,
     *,
     user_id: UUID | None = None,
+    alpaca_snapshot: str | None = None,
 ) -> str:
     """Compose the full runtime prompt for an agent.
 
     Order matters:
-        base_prompt + mandate_overlay + user_overlay + (safety_floor if PM)
+        base_prompt + mandate_overlay + user_overlay + alpaca_snapshot + (safety_floor if PM)
 
     user_overlay is fetched from the OverlayStore (Brief Your Agent output).
     Pass user_id explicitly to look it up; if None, no overlay is applied.
+    alpaca_snapshot is a pre-formatted text block from alpaca_service.snapshot_text().
+    If None, the block is silently omitted.
     The safety floor is appended LAST so it always dominates instruction
     ordering for the PM (see docs/02_agents/safety_floor.md).
     """
@@ -67,6 +70,9 @@ def build_agent_prompt(
 
     if user_id is not None:
         composed = _append_user_overlay(composed, agent_id, user_id)
+
+    if alpaca_snapshot:
+        composed = composed + f"\n\n{alpaca_snapshot}"
 
     return append_safety_floor(composed, agent_id)
 

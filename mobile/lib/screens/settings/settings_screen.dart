@@ -19,6 +19,9 @@ import 'package:ami_trade/services/api/backend_modes.dart';
 import 'package:ami_trade/state/auth_providers.dart';
 import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
+import 'package:ami_trade/screens/settings/alpaca_connect_screen.dart';
+import 'package:ami_trade/state/alpaca_providers.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -135,6 +138,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const _HelpSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _WalkthroughSection(),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _AlpacaSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _AccountSection(),
                   if (kAllowBackendSwitch) ...[
@@ -909,5 +914,107 @@ class _AppVersionChip extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+
+// ── Alpaca paper trading section (AT:R45) ──────────────────────────────
+
+
+class _AlpacaSection extends ConsumerWidget {
+  const _AlpacaSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authNotifierProvider).user;
+    final claimed = user != null && !user.isAnonymous;
+    if (!claimed) return const SizedBox.shrink();
+
+    final statusAsync = ref.watch(alpacaStatusProvider);
+
+    return _Section(
+      title: 'CONNECTED ACCOUNTS',
+      children: [
+        statusAsync.when(
+          loading: () => const SizedBox(
+            height: 48,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+          error: (_, __) => _AlpacaRow(linked: false, ref: ref),
+          data: (status) => _AlpacaRow(linked: status.linked, ref: ref),
+        ),
+      ],
+    );
+  }
+}
+
+class _AlpacaRow extends StatelessWidget {
+  const _AlpacaRow({required this.linked, required this.ref});
+
+  final bool linked;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: linked ? AmiColors.hexGreen : AmiColors.slate600,
+          ),
+        ),
+        const SizedBox(width: AmiSpacing.s),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ALPACA PAPER',
+                style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh),
+              ),
+              Text(
+                linked ? 'Connected' : 'Not connected',
+                style: AmiTypography.caption.copyWith(
+                  color: linked ? AmiColors.hexGreen : AmiColors.slate500,
+                ),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          onPressed: () => linked ? _disconnect(context) : _connect(context),
+          child: Text(
+            linked ? 'Disconnect' : 'Connect',
+            style: AmiTypography.labelMono.copyWith(
+              color: linked ? AmiColors.hexRed : AmiColors.hexBlue,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _connect(BuildContext context) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AlpacaConnectScreen()),
+    );
+    if (result == true) {
+      ref.invalidate(alpacaStatusProvider);
+      ref.invalidate(alpacaPortfolioProvider);
+      ref.invalidate(alpacaPositionsProvider);
+    }
+  }
+
+  Future<void> _disconnect(BuildContext context) async {
+    final api = ref.read(apiClientProvider);
+    try {
+      await api.alpacaUnlink();
+    } catch (_) {}
+    ref.invalidate(alpacaStatusProvider);
+    ref.invalidate(alpacaPortfolioProvider);
+    ref.invalidate(alpacaPositionsProvider);
   }
 }
