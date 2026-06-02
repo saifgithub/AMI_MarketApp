@@ -10,7 +10,9 @@
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/sim/quote/AAPL)",
       "Bash(curl -s https://api-alpha.agenticmarketintel.ai/v1/lessons)",
       "Bash(echo \"R\" > .claude/active-track && cat .claude/active-track)",
-      "Bash(/remote-control)"
+      "Bash(/remote-control)",
+      "Bash(brew cleanup *)",
+      "Bash(rm -rf ~/Library/Developer/Xcode/DerivedData && echo \"DerivedData deleted\")"
     ]
   }
 }
