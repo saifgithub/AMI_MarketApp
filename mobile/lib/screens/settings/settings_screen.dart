@@ -26,6 +26,7 @@ import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -889,7 +890,33 @@ class _HelpSection extends StatelessWidget {
             ),
           ),
         ),
+        _LegalRow(label: 'Terms of Service', url: 'https://www.agenticmarketintel.ai/terms/'),
+        _LegalRow(label: 'Privacy Policy', url: 'https://www.agenticmarketintel.ai/privacy/'),
       ],
+    );
+  }
+}
+
+class _LegalRow extends StatelessWidget {
+  const _LegalRow({required this.label, required this.url});
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          children: [
+            const Icon(Icons.open_in_new, color: AmiColors.hexBlue, size: 18),
+            const SizedBox(width: AmiSpacing.s),
+            Expanded(child: Text(label, style: AmiTypography.body)),
+            const Icon(Icons.chevron_right, color: AmiColors.textLow),
+          ],
+        ),
+      ),
     );
   }
 }
