@@ -26,7 +26,7 @@ import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:ami_trade/screens/settings/legal_screen.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -905,12 +905,14 @@ class _LegalRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LegalScreen(title: label, url: url),
+      )),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            const Icon(Icons.open_in_new, color: AmiColors.hexBlue, size: 18),
+            const Icon(Icons.description_outlined, color: AmiColors.hexBlue, size: 18),
             const SizedBox(width: AmiSpacing.s),
             Expanded(child: Text(label, style: AmiTypography.body)),
             const Icon(Icons.chevron_right, color: AmiColors.textLow),
