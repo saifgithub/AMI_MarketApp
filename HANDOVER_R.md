@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-06-02 (end of AT:R45 — Alpaca paper trading OAuth integration + in-app ToS/Privacy WebView). Narratives: AT:R43 (yfinance hotfix) in [`history/AT_R0043.md`](history/AT_R0043.md), AT:R44 (Android install tooling) in [`history/AT_R0044.md`](history/AT_R0044.md), AT:R45 in [`history/AT_R0045.md`](history/AT_R0045.md).
+**Last updated:** 2026-06-12 (end of AT:R46 — iOS Podfile + Android apkanalyzer space-in-path fixes; TestFlight 0.1.0+30 uploaded; AAB 0.1.0+31 built for Play Console). Narratives in [`history/`](history/) — see "Recent sessions" below.
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,30 +15,23 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **327 commits** (AT:R45: +3 — Alpaca integration, ToS/Privacy links, in-app legal WebView), no remote yet |
-| Latest work commit | `206d423` — fix(settings): show ToS + Privacy in-app WebView instead of external browser (AT:R45) |
-| Alpha tags | **`alpha-2026-06-02-2`** (AT:R43 hotfix promote — last promote). AT:R45 NOT yet promoted (awaiting Alpaca OAuth credentials from Saiful). |
-| Backend tests | **532 passed, 0 failed** (was 512; AT:R45 added +20 across `test_alpaca.py`). |
-| Mobile pubspec | **`0.1.0+29`** — unchanged this session (no TestFlight push; Alpaca creds pending). Added `webview_flutter ^4.10.0` (resolved 4.13.1). |
+| Git state | Clean working tree, **331 commits** (AT:R46: +4 — iOS Podfile fix, TestFlight bump +30, Play Store bump +31, wrap commit). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
+| Latest work commit | `08a5509` — fix(ios): uncomment platform :ios + regenerate Podfile.lock |
+| Alpha tags | **`alpha-2026-06-02-2`** (AT:R43 hotfix — last promote). AT:R45 + AT:R46 NOT yet promoted (awaiting Alpaca OAuth credentials from Saiful). |
+| Backend tests | **532 passed, 0 failed** (AT:R45 added +20; no new tests AT:R46). |
+| Mobile pubspec | **`0.1.0+31`** (bumped for Play Store AAB this session). TestFlight has **`0.1.0+30`** (uploaded this session). Added `webview_flutter ^4.10.0` (AT:R45). |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **354 i18n keys** (AT:R42 added 10 news/earnings keys). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
 ```
 $ git log --oneline | head -15
-<wrap commit>  chore(handover): wrap AT:R44
-6801ad4 chore(mobile): bump build 0.1.0+28 → 0.1.0+29 for Play Store
-d59d48e fix(sim): parse yfinance ≥0.2 nested news format (AT:R43)
-9b44ee1 feat(ticker): TickerDetail Bundles 4+5 — News + Earnings (AT:R42)
-f4b27ec chore(handover): wrap AT:R41
-3be83ee chore(mobile): bump build 0.1.0+27 → 0.1.0+28 for TestFlight
-2c868da feat(mobile): TickerDetail chart swap-in + landscape fullscreen route (AT:R41 Bundle 3)
-b7ccaf9 feat(mobile): TickerChart widget — adaptive candlestick/line + volume + crosshair (AT:R41 Bundle 2 mobile)
-62b4eea feat(sim): /v1/sim/history route + Candle + provider chain history() (AT:R41 Bundle 2 backend)
-7302397 chore(config): per-track history_path → history_dir (AT:R40)
-2d5ec10 chore(history): migrate history_R.md monolith → per-session files in history/ (AT:R40)
-a63cc36 chore(handover): wrap AT:R40
-a8b8523 feat(mobile): TickerDetail Bundle 1 — rename + Watching card + actions row redesign + watchlist+verdict entry points (AT:R40)
-5fa9037 feat(mobile): Holding Detail screen v1 — position summary + quick actions + per-ticker history (AT:R40)
-1f0170c chore(handover): wrap AT:R39
+08a5509 fix(ios): uncomment platform :ios + regenerate Podfile.lock
+a9e67d0 chore(mobile): bump build 0.1.0+30 → 0.1.0+31 for Play Store
+ebf84db chore(mobile): bump build 0.1.0+29 → 0.1.0+30 for TestFlight
+c1d04cf chore(handover): wrap AT:R45
+206d423 fix(settings): show ToS + Privacy in-app WebView instead of external browser (AT:R45)
+00dee31 feat(settings): add Terms of Service + Privacy Policy links to Help section (AT:R45)
+4bdcd54 feat(alpaca): paper trading OAuth link — embedded WebView + agent context (AT:R45)
+...
 ```
 
 ### Backend (lives on melehost — never the Mac)
@@ -100,9 +93,9 @@ Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` —
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
 | pubspec version | **`0.1.0+29`** (repo). Carries everything through AT:R45: Bundles 2+3 (chart), Bundles 4+5 (news/earnings), Alpaca OAuth WebView integration, in-app ToS/Privacy WebView. Added `webview_flutter ^4.10.0` (AT:R45). |
-| TestFlight | **`0.1.0+28`** is the live TestFlight build (uploaded for AT:R41 validation). External Beta still pending (no external testers added via App Store Connect yet). |
+| TestFlight | **`0.1.0+30`** uploaded this session (AT:R46). Delivery UUID `fd1a11ac-3f8f-42e7-9fcd-1b0a28ed924d`. Processing takes ~15-30 min; internal testers see it automatically. External Beta still pending (no external testers added via App Store Connect yet). |
 | Android test devices | **Galaxy Note Fan (SM-N935F, Android 9)** — serial `ce10171a8017590d01`. **Galaxy A17 (SM-A176B)** — serial `R5CY91AY99Y`. Both have AMI Trade `0.1.0+29` APK installed via USB (AT:R44). APK also shareable via WhatsApp for manual sideload. |
-| Play Console internal track | **Not yet uploaded.** Play Console account approved (AT:R44). Keystore + `keystore.properties` confirmed present. First AAB upload is a manual step — run `scripts/build_playstore.sh --no-bump` then upload `build/app/outputs/bundle/release/app-release.aab` to Play Console → Testing → Internal testing. |
+| Play Console internal track | **`0.1.0+31` AAB built (52.4 MB, signed). Awaiting manual upload.** Go to play.google.com/console → App → Testing → Internal testing → Create new release → upload `mobile/build/app/outputs/bundle/release/app-release.aab`. First upload also enrolls in Play App Signing (one-time, irreversible). |
 | Build commands | `scripts/install_iphone.sh` (dev sideload, iOS), `scripts/install_android.sh` (dev sideload, Android — both known devices or one if only one plugged in; **AT:R44**), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number), **`scripts/build_playstore.sh`** (Play Console AAB, signed when `~/.android-keys/keystore.properties` exists). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). Android: Play App Signing (mandatory for new apps; Google holds the signing key); upload keystore at `~/.android-keys/ami-trade-upload.keystore` (referenced by `android/app/build.gradle.kts` via `~/.android-keys/keystore.properties`; debug-signing fallback when the props file is absent). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
@@ -120,7 +113,7 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R46** (this is handover #45).
+Session name to use: **AT:R47** (this is handover #46).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -128,21 +121,23 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 Quick-win candidates for next session (in priority order):
 
-1. **Promote AT:R45 to Alpha** — once Saiful has Alpaca OAuth credentials (`ALPACA_CLIENT_ID` to build scripts, `ALPACA_CLIENT_SECRET` + `ALPACA_PAPER_BASE_URL` + `ALPACA_REDIRECT_URI` to `infra/alpha.env`). Migration `a1b2c3d40012` will run automatically on promote. **No TestFlight push until Alpaca is working on device.**
-2. **Alpaca OAuth smoke on device** — Settings → Connect Alpaca → WebView opens → login → returns linked. Portfolio tab shows paper positions. Agents mention live paper portfolio in Room + 1-on-1.
-3. **First Play Console AAB upload.** Account is approved, keystore is set up. Run `scripts/build_playstore.sh --no-bump` then manually upload the AAB to Play Console → Testing → Internal testing.
-4. **TestFlight external beta submission.** Submit `+29` to Apple's Beta App Review. App Store Connect → TestFlight → External Testing → create group → add build → submit for review (1-2 days).
+1. **Upload 0.1.0+31 AAB to Play Console.** AAB is built and signed at `mobile/build/app/outputs/bundle/release/app-release.aab`. Manual upload: play.google.com/console → Internal testing → Create new release. First upload enrolls in Play App Signing.
+2. **Promote AT:R45 to Alpha** — once Saiful has Alpaca OAuth credentials (`ALPACA_CLIENT_ID` to build scripts, `ALPACA_CLIENT_SECRET` + `ALPACA_PAPER_BASE_URL` + `ALPACA_REDIRECT_URI` to `infra/alpha.env`). Migration `a1b2c3d40012` will run automatically on promote.
+3. **Alpaca OAuth smoke on device** — Settings → Connect Alpaca → WebView opens → login → returns linked. Portfolio tab shows paper positions. Agents mention live paper portfolio in Room + 1-on-1.
+4. **TestFlight external beta submission.** Submit `+30` to Apple's Beta App Review. App Store Connect → TestFlight → External Testing → create group → add build → submit for review (~24h).
 5. **Credit consumption emission** — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
 6. **Tier 2 sequential translation run** — loaders are ready. ~5h vLLM-blocking; own session.
 7. **BL7 / BL8 / A29** — remaining backlog.
 
+**Android build note for next session:** `ANDROID_HOME=/Volumes/Extreme Pro/Android/sdk` has a space — always use `ANDROID_HOME=/Users/saiful/android-sdk` (symlink, no space) when running `flutter build appbundle`. The `apkanalyzer` `pwd -P` → `pwd` patch is in place on the local machine; if SDK is reinstalled it needs to be re-applied. Java 25 (system JVM) breaks KGP — always use `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home`.
+
 ### Recent sessions (newest first)
 
+- [AT:R46](history/AT_R0046.md)
 - [AT:R45](history/AT_R0045.md)
 - [AT:R44](history/AT_R0044.md)
 - [AT:R43](history/AT_R0043.md)
 - [AT:R42](history/AT_R0042.md)
-- [AT:R41](history/AT_R0041.md)
 
 ---
 
