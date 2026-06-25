@@ -1011,6 +1011,13 @@ class ApiClient {
     await _dio.post<Map<String, dynamic>>('/v1/alpaca/link', data: {'code': code});
   }
 
+  Future<void> alpacaLinkApiKey(String apiKey, String apiSecret) async {
+    await _dio.post<Map<String, dynamic>>(
+      '/v1/alpaca/link_apikey',
+      data: {'api_key': apiKey, 'api_secret': apiSecret},
+    );
+  }
+
   Future<void> alpacaUnlink() async {
     await _dio.delete<void>('/v1/alpaca/unlink');
   }

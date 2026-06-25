@@ -26,6 +26,7 @@ from app.services.alpaca_service import (
     exchange_code,
     get_account,
     get_positions,
+    validate_api_key,
 )
 
 router = APIRouter(prefix="/v1/alpaca", tags=["alpaca"])
@@ -48,6 +49,11 @@ def _require_linked(user: User) -> str:
 
 class LinkRequest(BaseModel):
     code: str
+
+
+class LinkApiKeyRequest(BaseModel):
+    api_key: str
+    api_secret: str
 
 
 class LinkResponse(BaseModel):
@@ -99,6 +105,29 @@ def link_alpaca(
     return LinkResponse(linked=True, linked_at=linked_at)
 
 
+@router.post("/link_apikey", response_model=LinkResponse, status_code=status.HTTP_200_OK)
+def link_alpaca_apikey(
+    body: LinkApiKeyRequest,
+    current_user: User = Depends(get_current_user),
+) -> LinkResponse:
+    _require_claimed(current_user)
+    try:
+        validate_api_key(body.api_key, body.api_secret)
+    except AlpacaError as exc:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, exc.detail) from exc
+
+    linked_at = datetime.now(timezone.utc)
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == current_user.id)).scalar_one()
+        row.alpaca_access_token = body.api_key
+        row.alpaca_refresh_token = body.api_secret
+        row.alpaca_linked_at = linked_at
+        row.alpaca_auth_mode = "apikey"
+        s.commit()
+
+    return LinkResponse(linked=True, linked_at=linked_at)
+
+
 @router.delete("/unlink", status_code=status.HTTP_200_OK)
 def unlink_alpaca(
     current_user: User = Depends(get_current_user),
@@ -109,6 +138,7 @@ def unlink_alpaca(
         row.alpaca_access_token = None
         row.alpaca_refresh_token = None
         row.alpaca_linked_at = None
+        row.alpaca_auth_mode = None
         s.commit()
     return {"unlinked": True}
 
@@ -130,8 +160,10 @@ def alpaca_portfolio(
 ) -> PortfolioResponse:
     _require_claimed(current_user)
     token = _require_linked(current_user)
+    auth_mode = current_user.alpaca_auth_mode or "oauth"
+    api_secret = current_user.alpaca_refresh_token if auth_mode == "apikey" else None
     try:
-        account = get_account(token)
+        account = get_account(token, auth_mode=auth_mode, api_secret=api_secret)
     except AlpacaError as exc:
         code = status.HTTP_401_UNAUTHORIZED if exc.status_code == 401 else status.HTTP_502_BAD_GATEWAY
         raise HTTPException(code, exc.detail) from exc
@@ -149,8 +181,10 @@ def alpaca_positions(
 ) -> list[PositionResponse]:
     _require_claimed(current_user)
     token = _require_linked(current_user)
+    auth_mode = current_user.alpaca_auth_mode or "oauth"
+    api_secret = current_user.alpaca_refresh_token if auth_mode == "apikey" else None
     try:
-        positions = get_positions(token)
+        positions = get_positions(token, auth_mode=auth_mode, api_secret=api_secret)
     except AlpacaError as exc:
         code = status.HTTP_401_UNAUTHORIZED if exc.status_code == 401 else status.HTTP_502_BAD_GATEWAY
         raise HTTPException(code, exc.detail) from exc

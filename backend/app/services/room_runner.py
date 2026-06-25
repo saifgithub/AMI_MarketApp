@@ -972,7 +972,11 @@ class RoomRunner:
             with get_session() as s:
                 urow = s.execute(sa_select(User).where(User.id == user_id)).scalar_one_or_none()
                 if urow and urow.alpaca_access_token:
-                    alpaca_snap = alpaca_snapshot_text(urow.alpaca_access_token)
+                    alpaca_snap = alpaca_snapshot_text(
+                        urow.alpaca_access_token,
+                        auth_mode=urow.alpaca_auth_mode or "oauth",
+                        api_secret=urow.alpaca_refresh_token if urow.alpaca_auth_mode == "apikey" else None,
+                    )
 
         ctx = _RoomContext(
             ticker=ticker.upper(),

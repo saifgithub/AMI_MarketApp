@@ -90,12 +90,15 @@ class User(Base):
         DateTime(timezone=True), nullable=True,
     )
 
-    # Alpaca paper trading link (AT:R45). Null = unlinked.
+    # Alpaca paper trading link (AT:R45/R47). Null = unlinked.
+    # auth_mode: 'oauth' (access_token = Bearer token) or 'apikey'
+    # (access_token = key ID, refresh_token = key secret).
     alpaca_access_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     alpaca_refresh_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     alpaca_linked_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )
+    alpaca_auth_mode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,

@@ -137,7 +137,11 @@ class AgentRunner:
                 with db_session() as s:
                     row = s.execute(select(User).where(User.id == session.user_id)).scalar_one_or_none()
                     if row and row.alpaca_access_token:
-                        alpaca_snapshot = alpaca_snapshot_text(row.alpaca_access_token)
+                        alpaca_snapshot = alpaca_snapshot_text(
+                            row.alpaca_access_token,
+                            auth_mode=row.alpaca_auth_mode or "oauth",
+                            api_secret=row.alpaca_refresh_token if row.alpaca_auth_mode == "apikey" else None,
+                        )
 
             system_prompt = build_agent_prompt(
                 agent_id, mandate, user_id=session.user_id, alpaca_snapshot=alpaca_snapshot

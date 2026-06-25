@@ -1,12 +1,15 @@
-"""Tests for Alpaca paper trading integration (AT:R45).
+"""Tests for Alpaca paper trading integration (AT:R45/R47).
 
 Covers:
   - alpaca_service.exchange_code — happy path + Alpaca error + missing config
   - alpaca_service.get_account — happy path + 401 (token expired) + network error
   - alpaca_service.get_positions — happy path + empty list
   - alpaca_service.snapshot_text — formatting + graceful None on error
+  - alpaca_service._paper_get — apikey auth sends correct headers
+  - alpaca_service.validate_api_key — delegates to _paper_get with apikey mode
   - POST /v1/alpaca/link — happy path + anonymous reject + bad code (502)
-  - DELETE /v1/alpaca/unlink — clears tokens
+  - POST /v1/alpaca/link_apikey — happy path + invalid key (502) + anonymous (403)
+  - DELETE /v1/alpaca/unlink — clears tokens + auth_mode
   - GET /v1/alpaca/status — linked + unlinked
   - GET /v1/alpaca/portfolio — happy path + not linked (409) + anonymous (403)
   - GET /v1/alpaca/positions — happy path + not linked (409)
@@ -161,6 +164,63 @@ class TestGetPositions:
         assert positions == []
 
 
+class TestPaperGetApiKeyMode:
+    def test_apikey_sends_correct_headers(self):
+        captured = {}
+
+        def fake_get(url, headers, params, timeout):
+            captured["headers"] = headers
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {}
+            return mock_resp
+
+        with patch("app.services.alpaca_service.httpx.get", side_effect=fake_get):
+            from app.services.alpaca_service import _paper_get
+            _paper_get("KEYID", "/v2/account", auth_mode="apikey", api_secret="SECRET")
+
+        assert captured["headers"]["APCA-API-KEY-ID"] == "KEYID"
+        assert captured["headers"]["APCA-API-SECRET-KEY"] == "SECRET"
+        assert "Authorization" not in captured["headers"]
+
+    def test_oauth_sends_bearer_header(self):
+        captured = {}
+
+        def fake_get(url, headers, params, timeout):
+            captured["headers"] = headers
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200
+            mock_resp.json.return_value = {}
+            return mock_resp
+
+        with patch("app.services.alpaca_service.httpx.get", side_effect=fake_get):
+            from app.services.alpaca_service import _paper_get
+            _paper_get("mytoken", "/v2/account")
+
+        assert captured["headers"]["Authorization"] == "Bearer mytoken"
+        assert "APCA-API-KEY-ID" not in captured["headers"]
+
+
+class TestValidateApiKey:
+    def test_valid_key_succeeds(self):
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {}
+        with patch("app.services.alpaca_service.httpx.get", return_value=mock_resp):
+            from app.services.alpaca_service import validate_api_key
+            validate_api_key("KEYID", "SECRET")
+
+    def test_invalid_key_raises(self):
+        from app.services.alpaca_service import AlpacaError
+        mock_resp = MagicMock()
+        mock_resp.status_code = 401
+        with patch("app.services.alpaca_service.httpx.get", return_value=mock_resp):
+            from app.services.alpaca_service import validate_api_key
+            with pytest.raises(AlpacaError) as exc_info:
+                validate_api_key("BADKEY", "BADSECRET")
+        assert exc_info.value.status_code == 401
+
+
 class TestSnapshotText:
     def test_formats_correctly(self):
         acc_mock = MagicMock(cash=10000.0, portfolio_value=50000.0, buying_power=20000.0)
@@ -215,6 +275,48 @@ class TestLinkRoute:
         assert resp.status_code == 502
 
 
+class TestLinkApiKeyRoute:
+    def test_happy_path(self, client):
+        user, token = _make_claimed_user()
+        with patch("app.api.alpaca.validate_api_key", return_value=None):
+            resp = client.post(
+                "/v1/alpaca/link_apikey",
+                json={"api_key": "KEYID123", "api_secret": "SECRET456"},
+                headers=_auth(token),
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["linked"] is True
+        assert "linked_at" in data
+
+        with get_session() as s:
+            row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+            assert row.alpaca_access_token == "KEYID123"
+            assert row.alpaca_refresh_token == "SECRET456"
+            assert row.alpaca_auth_mode == "apikey"
+            assert row.alpaca_linked_at is not None
+
+    def test_invalid_key_returns_502(self, client):
+        from app.services.alpaca_service import AlpacaError
+        user, token = _make_claimed_user()
+        with patch("app.api.alpaca.validate_api_key", side_effect=AlpacaError(401, "forbidden")):
+            resp = client.post(
+                "/v1/alpaca/link_apikey",
+                json={"api_key": "BAD", "api_secret": "BAD"},
+                headers=_auth(token),
+            )
+        assert resp.status_code == 502
+
+    def test_anonymous_user_rejected(self, client):
+        _, token = _make_anon_user()
+        resp = client.post(
+            "/v1/alpaca/link_apikey",
+            json={"api_key": "K", "api_secret": "S"},
+            headers=_auth(token),
+        )
+        assert resp.status_code == 403
+
+
 class TestUnlinkRoute:
     def test_clears_tokens(self, client):
         user, token = _make_claimed_user()
@@ -224,6 +326,7 @@ class TestUnlinkRoute:
             row.alpaca_access_token = "some_token"
             row.alpaca_refresh_token = "some_refresh"
             row.alpaca_linked_at = datetime.now(timezone.utc)
+            row.alpaca_auth_mode = "apikey"
             s.commit()
 
         resp = client.delete("/v1/alpaca/unlink", headers=_auth(token))
@@ -233,6 +336,7 @@ class TestUnlinkRoute:
             row = s.execute(select(User).where(User.id == user.id)).scalar_one()
             assert row.alpaca_access_token is None
             assert row.alpaca_linked_at is None
+            assert row.alpaca_auth_mode is None
 
 
 class TestStatusRoute:

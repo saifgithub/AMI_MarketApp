@@ -89,10 +89,26 @@ def exchange_code(code: str) -> AlpacaTokens:
     )
 
 
-def _paper_get(access_token: str, path: str, params: dict | None = None) -> dict | list:
-    """Authenticated GET against the Alpaca paper API."""
+def _paper_get(
+    access_token: str,
+    path: str,
+    params: dict | None = None,
+    auth_mode: str = "oauth",
+    api_secret: str | None = None,
+) -> dict | list:
+    """Authenticated GET against the Alpaca paper API.
+
+    auth_mode='oauth'  → Authorization: Bearer <access_token>
+    auth_mode='apikey' → APCA-API-KEY-ID + APCA-API-SECRET-KEY headers
+    """
     url = f"{settings.alpaca_paper_base_url}{path}"
-    headers = {"Authorization": f"Bearer {access_token}"}
+    if auth_mode == "apikey" and api_secret:
+        headers = {
+            "APCA-API-KEY-ID": access_token,
+            "APCA-API-SECRET-KEY": api_secret,
+        }
+    else:
+        headers = {"Authorization": f"Bearer {access_token}"}
     try:
         resp = httpx.get(url, headers=headers, params=params, timeout=_TIMEOUT)
     except httpx.RequestError as exc:
@@ -106,9 +122,21 @@ def _paper_get(access_token: str, path: str, params: dict | None = None) -> dict
     return resp.json()
 
 
-def get_account(access_token: str) -> AlpacaAccount:
+def validate_api_key(key: str, secret: str) -> None:
+    """Validate an Alpaca API key pair by fetching /v2/account.
+
+    Raises AlpacaError if the credentials are rejected or unreachable.
+    """
+    _paper_get(key, "/v2/account", auth_mode="apikey", api_secret=secret)
+
+
+def get_account(
+    access_token: str,
+    auth_mode: str = "oauth",
+    api_secret: str | None = None,
+) -> AlpacaAccount:
     """Fetch the paper account summary (cash, equity, etc.)."""
-    data = _paper_get(access_token, "/v2/account")
+    data = _paper_get(access_token, "/v2/account", auth_mode=auth_mode, api_secret=api_secret)
     return AlpacaAccount(
         cash=float(data.get("cash", 0)),
         portfolio_value=float(data.get("portfolio_value", 0)),
@@ -117,9 +145,13 @@ def get_account(access_token: str) -> AlpacaAccount:
     )
 
 
-def get_positions(access_token: str) -> list[AlpacaPosition]:
+def get_positions(
+    access_token: str,
+    auth_mode: str = "oauth",
+    api_secret: str | None = None,
+) -> list[AlpacaPosition]:
     """Fetch all open paper positions."""
-    data = _paper_get(access_token, "/v2/positions")
+    data = _paper_get(access_token, "/v2/positions", auth_mode=auth_mode, api_secret=api_secret)
     positions = []
     for item in data:  # type: ignore[union-attr]
         positions.append(
@@ -133,7 +165,11 @@ def get_positions(access_token: str) -> list[AlpacaPosition]:
     return positions
 
 
-def snapshot_text(access_token: str) -> str | None:
+def snapshot_text(
+    access_token: str,
+    auth_mode: str = "oauth",
+    api_secret: str | None = None,
+) -> str | None:
     """Build a compact text block for agent prompt injection.
 
     Returns None on any error so callers can safely skip the block.
@@ -144,8 +180,8 @@ def snapshot_text(access_token: str) -> str | None:
       ---
     """
     try:
-        account = get_account(access_token)
-        positions = get_positions(access_token)
+        account = get_account(access_token, auth_mode=auth_mode, api_secret=api_secret)
+        positions = get_positions(access_token, auth_mode=auth_mode, api_secret=api_secret)
     except AlpacaError as exc:
         logger.warning("alpaca_snapshot_failed", detail=exc.detail)
         return None
