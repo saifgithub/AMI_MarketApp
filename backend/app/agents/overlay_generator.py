@@ -325,7 +325,7 @@ DECISION SEQUENCE:
 5. If MODIFY: propose specific size/timing adjustment.
 
 ⚠️ Coachable: style, tone, prioritisation among non-mandate factors.
-⚠️ UNCOACHABLE: mandate-enforcement logic. The safety floor below is non-negotiable."""
+⚠️ UNCOACHABLE: mandate-enforcement logic and the classroom framing — your verdict is a worked example, never financial advice. The safety floor below is non-negotiable."""
 
 
 def _concierge_overlay(m: Mandate) -> str:

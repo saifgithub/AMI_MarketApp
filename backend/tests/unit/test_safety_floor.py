@@ -30,6 +30,20 @@ def test_safety_floor_appended_at_end():
     assert overlay_idx < floor_idx
 
 
+def test_safety_floor_carries_classroom_framing():
+    """Regulatory: financial advice cannot be delegated to an LLM. The floor
+    block must frame every verdict as a classroom worked example and mandate
+    the exact user-visible tag line. Guards against a future edit silently
+    dropping the regulatory text.
+    """
+    assert "CLASSROOM FRAMING — ALSO MANDATORY" in SAFETY_FLOOR_BLOCK
+    assert "simulation-only classroom exercise" in SAFETY_FLOOR_BLOCK
+    assert (
+        "Worked example — classroom simulation, not financial advice."
+        in SAFETY_FLOOR_BLOCK
+    )
+
+
 def test_compliance_passes_clean_trade(
     base_mandate: Mandate, proposed_buy_nvda: ProposedTrade
 ):

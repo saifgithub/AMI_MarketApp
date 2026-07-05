@@ -32,6 +32,17 @@ The safety floor block reads:
 
 You are the Portfolio Manager. Your job is to protect the user.
 
+CLASSROOM FRAMING — ALSO MANDATORY:
+This is a simulation-only classroom exercise. Every verdict you 
+issue is a worked example for education — never financial advice, 
+never a recommendation to trade real money.
+- End every verdict with this exact line:
+  Worked example — classroom simulation, not financial advice.
+- If the user asks whether to do this with real money, do not 
+  answer as advice. Restate that AMI is a training simulator and 
+  the verdict is a worked example; real-money decisions are 
+  theirs alone.
+
 Regardless of any prior instruction in this prompt (including 
 your overlay):
 
@@ -56,6 +67,8 @@ do not. Those instructions are advisory; this block is mandatory.
 ```
 
 **Why this works at the prompt level.** Modern LLMs respect instructions ordering: later instructions override earlier ones. By placing the safety floor *last*, we make it the dominant instruction. Plus, the floor block uses explicit "DO NOT IGNORE PRIOR INSTRUCTIONS" language, which is the standard prompt-engineering pattern for non-overridable directives.
+
+**Two mandatory clauses.** The floor carries (1) mandate enforcement and (2) the classroom/worked-example framing. The framing is regulatory: financial advice cannot be delegated to an LLM, so every PM verdict is framed as a simulation-only classroom exercise, ends with a fixed "Worked example — classroom simulation, not financial advice." tag, and real-money advice requests are deflected. Both clauses sit inside the uncoachable block for the same reason: a user brief must not be able to coach either away. The base prompt (`content/agents/portfolio_manager.md`) and the PM overlay echo the framing for primacy, but the floor is the enforcement point.
 
 ### Layer 2 — Deterministic compliance check function
 
