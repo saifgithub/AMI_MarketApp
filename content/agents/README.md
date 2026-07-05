@@ -42,6 +42,6 @@ role_color: cyan | purple | amber | green | pink
 
 ## Editing
 
-These prompts are intentionally LIVE — Saiful can iterate on them as agent quality is observed. After editing, the backend hot-reloads them on next request (no restart needed). Use [`docs/02_agents/twelve_agents.md`](../../docs/02_agents/twelve_agents.md) for the agent design references.
+These prompts are intentionally LIVE — Saiful can iterate on them as agent quality is observed. After editing, the backend hot-reloads them on next request (no restart needed). Use [`docs/initial_specs/02_agents/twelve_agents.md`](../../docs/initial_specs/02_agents/twelve_agents.md) for the agent design references.
 
 Translation: AR + MS variants come at v1.0 as `*.ar.md` and `*.ms.md`. The runtime loader picks the file matching the user's locale.

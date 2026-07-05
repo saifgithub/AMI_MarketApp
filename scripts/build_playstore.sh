@@ -68,7 +68,7 @@ keystore_props="$HOME/.android-keys/keystore.properties"
 if [[ ! -f "$keystore_props" ]]; then
   echo "⚠ no keystore at $keystore_props — Gradle will fall back to DEBUG signing"
   echo "  That AAB will NOT be accepted by Play Console. Set up the keystore"
-  echo "  first (per D-057 / docs/10_delivery/you_do_i_do.md), then re-run."
+  echo "  first (per D-057 / docs/initial_specs/10_delivery/you_do_i_do.md), then re-run."
   echo "  Continuing anyway for local smoke testing only."
   echo ""
 fi

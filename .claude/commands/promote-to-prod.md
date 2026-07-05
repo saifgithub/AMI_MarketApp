@@ -21,7 +21,7 @@ TestFlight.
 | **M6** | Production APNs cert (replaces Dev APNs from A15) |
 | **M10** | Legal compliance review |
 
-See `docs/10_delivery/project_plan.md` Phase 3 (MVP).
+See `docs/initial_specs/10_delivery/project_plan.md` Phase 3 (MVP).
 
 ## Design (what this will do)
 
@@ -60,8 +60,8 @@ Production needs Beta to be live first (project_plan B1-B10),
 plus the MVP-phase items: RevenueCat, App Store submission +
 review pass, production APNs cert, legal compliance review.
 
-See docs/10_delivery/promotion_protocol.md and Phase 3 of
-docs/10_delivery/project_plan.md.
+See docs/initial_specs/10_delivery/promotion_protocol.md and Phase 3 of
+docs/initial_specs/10_delivery/project_plan.md.
 ```
 
 Then stop.

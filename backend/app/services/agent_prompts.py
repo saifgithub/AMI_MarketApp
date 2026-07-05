@@ -62,7 +62,7 @@ def build_agent_prompt(
     alpaca_snapshot is a pre-formatted text block from alpaca_service.snapshot_text().
     If None, the block is silently omitted.
     The safety floor is appended LAST so it always dominates instruction
-    ordering for the PM (see docs/02_agents/safety_floor.md).
+    ordering for the PM (see docs/initial_specs/02_agents/safety_floor.md).
     """
     base = load_base_prompt(agent_id)
     overlay = generate_overlay(agent_id, mandate)

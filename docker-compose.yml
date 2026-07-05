@@ -6,7 +6,7 @@ name: ami-trade-local
 #   - Saiful's Mac (Docker Desktop)   — dev iteration
 #   - melehost (Ubuntu Linux server,    — Alpha host. Plain Docker
 #     192.168.20.9, plain Docker          Engine, no Docker Desktop.
-#     Engine + Compose v5)                See docs/08_tech/hosting.md.
+#     Engine + Compose v5)                See docs/initial_specs/08_tech/hosting.md.
 #
 # Mirrors the future production stack as closely as possible:
 #   - Postgres + Supabase = Supabase Cloud later

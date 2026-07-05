@@ -15,7 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _kOnboardingDoneKey = 'ami_onboarding_done';
 
 /// API client keyed on the active backend mode (Alpha / Beta / Prod —
-/// see docs/08_tech/backend_modes.md). When the user flips the toggle
+/// see docs/initial_specs/08_tech/backend_modes.md). When the user flips the toggle
 /// in Settings → Developer, this provider rebuilds with the new base
 /// URL and every dependent provider picks up the change on next read.
 final apiClientProvider = Provider<ApiClient>((ref) {

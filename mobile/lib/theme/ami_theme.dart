@@ -1,7 +1,7 @@
 /// AMI hex design system — Flutter port of `colors_and_type.css`.
 ///
 /// Source of truth: /Volumes/Extreme Pro/AMI AI Design System/colors_and_type.css
-/// Spec doc: docs/05_design/ami_hex_in_flutter.md
+/// Spec doc: docs/initial_specs/05_design/ami_hex_in_flutter.md
 ///
 /// Typography uses IBM Plex Sans + IBM Plex Mono via the `google_fonts`
 /// package — they're the canonical AMI typefaces. Inter and JetBrainsMono

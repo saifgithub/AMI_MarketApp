@@ -726,7 +726,7 @@ class _ThemeSection extends ConsumerWidget {
 // ── Developer — active backend (Alpha / Beta / Prod) ────────────────────
 //
 // Rendered only when ALLOW_BACKEND_SWITCH=true was set at build time
-// (see docs/08_tech/backend_modes.md). The whole subtree is gated by
+// (see docs/initial_specs/08_tech/backend_modes.md). The whole subtree is gated by
 // `if (kAllowBackendSwitch)` at the call site so prod builds compile
 // the section out entirely under tree-shaking.
 

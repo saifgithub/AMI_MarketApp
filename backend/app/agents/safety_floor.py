@@ -4,7 +4,7 @@ Two defences:
 1. Prompt-level: SAFETY_FLOOR_BLOCK appended to PM's prompt AFTER user overlay.
 2. Deterministic: check_mandate_compliance() runs as a wrapper on PM's verdict.
 
-See docs/02_agents/safety_floor.md for the full rationale.
+See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 """
 
 from pydantic import BaseModel, Field

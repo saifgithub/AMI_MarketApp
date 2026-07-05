@@ -1,6 +1,6 @@
 /// Backend mode plumbing — Alpha / Beta / Prod.
 ///
-/// See `docs/08_tech/backend_modes.md` for the full rationale and the
+/// See `docs/initial_specs/08_tech/backend_modes.md` for the full rationale and the
 /// build-command reference. In short:
 ///
 ///   - Pre-MVP TestFlight builds set `ALLOW_BACKEND_SWITCH=true` and bake

@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-07-05 (end of AT:R47 — Alpaca API key auth mode; TestFlight 0.1.0+34 IPA built, upload blocked by pending Apple agreement; APK 0.1.0+34 built). Narratives in [`history/`](history/) — see "Recent sessions" below.
 
-Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
+Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
 > **Doc shape**: HANDOVER_R.md = current state + carry-overs + Recent-sessions links. history/ = each session's wrap narrative as its own file. `/handover R` writes `history/AT_R<N>.md` per wrap; HANDOVER_R.md stays narrative-free.
 
@@ -111,7 +111,7 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 /start-fresh R
 ```
 
-The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
+The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
 Session name to use: **AT:R49** (AT:R47 + AT:R48 both wrapped; this is handover #47).
 

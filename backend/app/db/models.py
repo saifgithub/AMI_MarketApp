@@ -1,6 +1,6 @@
 """ORM models — the on-disk shape of every persisted store.
 
-Mirrors `docs/08_tech/data_model.md` with deliberate simplifications for the
+Mirrors `docs/initial_specs/08_tech/data_model.md` with deliberate simplifications for the
 solo-dev MVP:
   - RLS policies are NOT created here. Until Supabase is wired up we run
     behind a single trusted backend; RLS lands when real Supabase plugs in.

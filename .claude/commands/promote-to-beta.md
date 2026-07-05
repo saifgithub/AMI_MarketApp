@@ -24,8 +24,8 @@ unblocking sequence below so they know what to do next.
 | **B7** | Cloud LLM cutover (Vertex Gemini or Anthropic) |
 | **B8** | GCP Secret Manager wiring |
 
-See `docs/10_delivery/project_plan.md` and
-`docs/10_delivery/promotion_protocol.md` for the design.
+See `docs/initial_specs/10_delivery/project_plan.md` and
+`docs/initial_specs/10_delivery/promotion_protocol.md` for the design.
 
 ## Design (what this will do when implemented)
 
@@ -62,7 +62,7 @@ Beta runs on GCP Cloud Run + Supabase, which haven't been provisioned.
 The blockers are project_plan items B1-B8 (GCP project setup, Cloud Run
 deploy, Supabase provisioning, cloud LLM cutover).
 
-See docs/10_delivery/promotion_protocol.md for the design.
+See docs/initial_specs/10_delivery/promotion_protocol.md for the design.
 
 Want to provision GCP now? That's a Saiful-external step
 (see project_plan B1 — billing + IAM).

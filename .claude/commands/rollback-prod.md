@@ -6,7 +6,7 @@ description: STUB — roll back the GCP Cloud Run production service to a previo
 
 Not yet implemented. Depends on Prod being deployed — see
 [/promote-to-prod](./promote-to-prod.md) and
-`docs/10_delivery/promotion_protocol.md`.
+`docs/initial_specs/10_delivery/promotion_protocol.md`.
 
 Prod rollback is **the highest-stakes** operation across the whole
 protocol. When it's live, the design will:
@@ -25,7 +25,7 @@ protocol. When it's live, the design will:
 
 ```
 /rollback-prod is not yet implemented. Prod hasn't been deployed.
-See docs/10_delivery/promotion_protocol.md.
+See docs/initial_specs/10_delivery/promotion_protocol.md.
 ```
 
 Then stop. This command should be especially conservative — even

@@ -6,7 +6,7 @@
 /// override so a tester upgrading from TestFlight to App Store can't
 /// accidentally keep pointing at the alpha box.
 ///
-/// See `docs/08_tech/backend_modes.md`.
+/// See `docs/initial_specs/08_tech/backend_modes.md`.
 library;
 
 import 'package:ami_trade/services/api/backend_modes.dart';

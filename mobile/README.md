@@ -64,4 +64,4 @@ flutter test
 
 ## Structure
 
-See [`docs/08_tech/flutter_implementation.md`](../docs/08_tech/flutter_implementation.md) for the full structure.
+See [`docs/initial_specs/08_tech/flutter_implementation.md`](../docs/initial_specs/08_tech/flutter_implementation.md) for the full structure.

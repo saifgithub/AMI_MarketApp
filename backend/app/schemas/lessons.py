@@ -12,9 +12,9 @@ Agent Academy modules are the Earn-Path unlock path: passing every quiz in
 a track of lessons tied to an `agent_callouts` agent activates that agent.
 
 Spec:
-  - docs/04_education/lessons.md
-  - docs/04_education/agent_academy.md
-  - docs/04_education/dual_gating.md
+  - docs/initial_specs/04_education/lessons.md
+  - docs/initial_specs/04_education/agent_academy.md
+  - docs/initial_specs/04_education/dual_gating.md
 """
 
 from datetime import datetime, timezone

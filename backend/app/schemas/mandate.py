@@ -1,6 +1,6 @@
 """Mandate schema — the user's financial profile injected into every agent's prompt.
 
-See docs/03_onboarding/mandate_schema.md for the full spec.
+See docs/initial_specs/03_onboarding/mandate_schema.md for the full spec.
 """
 
 from datetime import datetime

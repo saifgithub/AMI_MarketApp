@@ -6,8 +6,8 @@ trades, mandate edits, and Coach proposals.
 Floor Pass users get 30-day retention; paid tiers are unlimited (enforced
 client-side in the list query for now; server-side cleanup job runs later).
 
-Spec: docs/08_tech/data_model.md (journal_entries),
-      docs/01_product/core_loop_and_features.md (Sim & Decision Journal).
+Spec: docs/initial_specs/08_tech/data_model.md (journal_entries),
+      docs/initial_specs/01_product/core_loop_and_features.md (Sim & Decision Journal).
 """
 
 from datetime import datetime, timezone

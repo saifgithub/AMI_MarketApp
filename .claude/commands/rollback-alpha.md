@@ -8,7 +8,7 @@ Re-deploy a previous `alpha-*` tag to `melehost`. Companion to
 [/promote-to-alpha](./promote-to-alpha.md). Use when a recent
 promotion broke Alpha and the testers are blocked.
 
-Full design rationale lives in `docs/10_delivery/promotion_protocol.md`
+Full design rationale lives in `docs/initial_specs/10_delivery/promotion_protocol.md`
 under "What a rollback to Alpha actually does".
 
 ## What to do, in order

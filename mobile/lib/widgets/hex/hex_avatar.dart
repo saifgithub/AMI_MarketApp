@@ -22,7 +22,7 @@ enum HexAvatarStatus {
 
 /// Hex avatar for one of the 12 agents (or the Concierge).
 ///
-/// Spec: docs/05_design/floor_home_honeycomb.md
+/// Spec: docs/initial_specs/05_design/floor_home_honeycomb.md
 class HexAvatar extends StatelessWidget {
   const HexAvatar({
     super.key,

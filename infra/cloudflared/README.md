@@ -8,7 +8,7 @@ backend itself never opens an inbound port on the WAN.
 
 **Host context:** `melehost` is the **Ubuntu Linux** server on
 Saiful's LAN at `192.168.20.59` — see
-[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
+[`docs/initial_specs/08_tech/hosting.md`](../../docs/initial_specs/08_tech/hosting.md) for the
 full spec. Everything below assumes Ubuntu + Docker Engine + systemd
 in production. Docker Desktop on the dev Mac works too; the compose
 file's `extra_hosts` line bridges the Docker Engine vs Docker

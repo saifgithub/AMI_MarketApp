@@ -13,7 +13,7 @@ Providers implemented:
 Coming later (W4+):
   - OpenAIProvider, GoogleProvider, OpenRouterProvider
 
-See docs/08_tech/llm_routing.md for the routing strategy.
+See docs/initial_specs/08_tech/llm_routing.md for the routing strategy.
 """
 
 from __future__ import annotations

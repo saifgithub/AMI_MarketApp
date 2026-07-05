@@ -26,7 +26,7 @@ used in 1-on-1 — see app/agents/safety_floor.py. A user with `halal=True`
 who runs the Room on a non-halal ticker will see the LLM-style approval
 flipped to REJECT by the floor. That's the safety floor working live.
 
-Spec: docs/02_agents/convene_the_room.md
+Spec: docs/initial_specs/02_agents/convene_the_room.md
 """
 
 from __future__ import annotations

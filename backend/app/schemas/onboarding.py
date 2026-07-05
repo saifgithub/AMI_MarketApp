@@ -4,7 +4,7 @@ The session is anonymous-first: no user_id until claim. Until then the session i
 keyed by a server-generated session_id and lives in the in-memory store (Week 2)
 or Postgres + Redis (Week 3+).
 
-See docs/03_onboarding/mandate_conversation.md for the conversation script.
+See docs/initial_specs/03_onboarding/mandate_conversation.md for the conversation script.
 """
 
 from datetime import datetime

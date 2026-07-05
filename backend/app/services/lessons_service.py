@@ -8,7 +8,7 @@ Earn-Path activation of that agent.
 Activation rule (MVP): an agent is earned when the user has passed the
 quiz on EVERY lesson in the catalogue that lists that agent in
 `agent_callouts`. (At v1.0 this becomes the full 4-part Agent Academy
-module — see docs/04_education/agent_academy.md.)
+module — see docs/initial_specs/04_education/agent_academy.md.)
 
 Persistence: lesson content is loaded from disk into memory (immutable,
 small). Per-user progress + activations live in Postgres so a user's

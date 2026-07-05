@@ -2,9 +2,9 @@
 
 Docker Compose stack for the AMI Trade backend on **melehost** (Ubuntu
 Linux server on Saiful's LAN, `192.168.20.59`). See
-[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md) for the
+[`docs/initial_specs/08_tech/hosting.md`](../../docs/initial_specs/08_tech/hosting.md) for the
 full melehost spec, and
-[`docs/10_delivery/promotion_protocol.md`](../../docs/10_delivery/promotion_protocol.md)
+[`docs/initial_specs/10_delivery/promotion_protocol.md`](../../docs/initial_specs/10_delivery/promotion_protocol.md)
 for how code reaches it.
 
 **The Mac is not a deployment target.** Mac is pure editor — no
@@ -77,7 +77,7 @@ serve and what to proxy.
 Use [`/promote-to-alpha`](../../.claude/commands/promote-to-alpha.md).
 That handles the rsync + recreate + smoke-check end to end. Manual
 rsync is reserved for emergencies — see
-[`docs/10_delivery/promotion_protocol.md`](../../docs/10_delivery/promotion_protocol.md).
+[`docs/initial_specs/10_delivery/promotion_protocol.md`](../../docs/initial_specs/10_delivery/promotion_protocol.md).
 
 For the **production** launch on melehost (systemd-managed backend
 + cloudflared, pg backup timer, etc.) see
@@ -107,4 +107,4 @@ docker compose exec backend python -m app.scripts.your_script
 
 ## Migration to GCP (W9)
 
-Once we're ready to move to production, see [`docs/10_delivery/timeline.md`](../../docs/10_delivery/timeline.md) for the migration playbook. Short version: `pg_dump` → restore into Supabase Cloud, deploy backend container to Cloud Run, switch DNS via Cloudflare.
+Once we're ready to move to production, see [`docs/initial_specs/10_delivery/timeline.md`](../../docs/initial_specs/10_delivery/timeline.md) for the migration playbook. Short version: `pg_dump` → restore into Supabase Cloud, deploy backend container to Cloud Run, switch DNS via Cloudflare.

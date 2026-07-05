@@ -4,7 +4,7 @@ Self-contained prompt for any AI tool (ChatGPT, Claude.ai, Gemini, etc.) to gene
 
 Saiful: paste one of the three **PROMPT** blocks below into your tool of choice. Adjust the "What you should write today" section at the bottom of each prompt to scope the generation run.
 
-The canonical curriculum sequence (Levels 1–8, Modules 1–12, lesson IDs) lives at [`docs/04_education/curriculum_map.md`](../../docs/04_education/curriculum_map.md). The prompt below references it — keep both in sync.
+The canonical curriculum sequence (Levels 1–8, Modules 1–12, lesson IDs) lives at [`docs/initial_specs/04_education/curriculum_map.md`](../../docs/initial_specs/04_education/curriculum_map.md). The prompt below references it — keep both in sync.
 
 ---
 
@@ -138,7 +138,7 @@ neutral_debator, portfolio_manager, concierge
 
 For the exact lesson ID, title, difficulty, track, and agent_callouts
 for each lesson in each module, see the canonical curriculum map at
-docs/04_education/curriculum_map.md. The "What you should write today"
+docs/initial_specs/04_education/curriculum_map.md. The "What you should write today"
 section at the bottom of this prompt will point you to specific IDs.
 
 ## Lesson file format
@@ -683,7 +683,7 @@ Output a single JSON array. Validate with `python -m json.tool` before saving.
 
 Animations live at `content/animations/<name>.json` (Lottie) or as
 Flutter-rendered widgets keyed by name. Catalog per module is listed in
-`docs/04_education/curriculum_map.md`. Missing animations render a
+`docs/initial_specs/04_education/curriculum_map.md`. Missing animations render a
 placeholder; lessons still work without them.
 
 ---

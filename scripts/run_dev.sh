@@ -16,7 +16,7 @@
 # between alpha / beta / prod from Settings → Developer at runtime.
 # The three URLs are baked in from the dart-defines below; if you
 # omit BETA / PROD they'll show as "not in this build" and only
-# Alpha will be reachable. See docs/08_tech/backend_modes.md.
+# Alpha will be reachable. See docs/initial_specs/08_tech/backend_modes.md.
 
 set -euo pipefail
 

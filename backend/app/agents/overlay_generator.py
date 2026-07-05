@@ -3,7 +3,7 @@
 Pure function. Given an agent ID and a Mandate, produces the markdown block
 appended to that agent's base prompt at runtime. Deterministic. No LLM calls.
 
-See docs/02_agents/mandate_overlays.md for the full spec.
+See docs/initial_specs/02_agents/mandate_overlays.md for the full spec.
 """
 
 from app.schemas import (

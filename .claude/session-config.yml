@@ -18,7 +18,7 @@ tracks:
     label: "Development"
     handover_path: HANDOVER_R.md
     history_dir: history/
-    project_plan_path: docs/10_delivery/project_plan.md
+    project_plan_path: docs/initial_specs/10_delivery/project_plan.md
     sanity_checks:
       - name: Alpha health
         cmd: curl -s https://api-alpha.agenticmarketintel.ai/v1/health

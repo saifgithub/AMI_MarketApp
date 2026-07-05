@@ -6,7 +6,7 @@ user, with env vars in `/etc/ami-trade.env`. This replaces the dev-only
 
 **Host:** all commands below run on `melehost` — the **Ubuntu Linux**
 server on Saiful's LAN at `192.168.20.59`. Specs + role in
-[`docs/08_tech/hosting.md`](../../docs/08_tech/hosting.md). The
+[`docs/initial_specs/08_tech/hosting.md`](../../docs/initial_specs/08_tech/hosting.md). The
 `apt` / `dpkg` / `systemctl` toolchain is assumed throughout.
 
 ## Files

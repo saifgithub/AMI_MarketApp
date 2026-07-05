@@ -82,7 +82,7 @@ All four must read `<set>`.
   the target host today, not a per-checkout `.env` on the Mac. The Mac
   has zero running services (memory: `feedback_mac_is_pure_editor.md`).
 - Cloud-provider secret stores. Beta + Prod will migrate to GCP Secret
-  Manager (item B8 in `docs/10_delivery/project_plan.md`); these
+  Manager (item B8 in `docs/initial_specs/10_delivery/project_plan.md`); these
   per-environment files are the bridge until then.
 
 ## Other contents

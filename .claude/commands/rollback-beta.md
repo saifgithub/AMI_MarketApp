@@ -6,7 +6,7 @@ description: STUB — roll back the GCP Cloud Run Beta service to a previous bet
 
 Not yet implemented. Depends on Beta being deployed first — see
 [/promote-to-beta](./promote-to-beta.md) and
-`docs/10_delivery/promotion_protocol.md`.
+`docs/initial_specs/10_delivery/promotion_protocol.md`.
 
 ## Design (what this will do)
 
@@ -23,7 +23,7 @@ Not yet implemented. Depends on Beta being deployed first — see
 
 ```
 /rollback-beta is not yet implemented. Beta hasn't been deployed.
-See docs/10_delivery/promotion_protocol.md.
+See docs/initial_specs/10_delivery/promotion_protocol.md.
 ```
 
 Then stop.
