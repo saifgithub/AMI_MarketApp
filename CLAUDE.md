@@ -8,7 +8,7 @@ Loaded into every Claude Code session in this project. High-level orientation, b
 
 **AMI Trade** is a mobile-first, simulation-only AI trading-education app where the user is the CEO of a 12-agent analyst team. Built on the [TradingAgents](https://github.com/TauricResearch/TradingAgents) multi-agent LLM framework and the AMI "Hex-Reinforced Precision" design language.
 
-Full spec under [`docs/`](docs/). Start with [`docs/00_overview/`](docs/00_overview/) and [`docs/01_product/core_loop_and_features.md`](docs/01_product/core_loop_and_features.md).
+Full spec under [`docs/`](docs/). Start with [`docs/initial_specs/00_overview/`](docs/initial_specs/00_overview/) and [`docs/initial_specs/01_product/core_loop_and_features.md`](docs/initial_specs/01_product/core_loop_and_features.md).
 
 ---
 
@@ -22,7 +22,7 @@ One founder (Saiful) + Claude. No engineers, no QA, no separate designer.
 - **Saiful is the human-in-the-loop.** He reviews content, makes decisions, tests on devices, opens dev accounts, talks to lawyers. Don't ask him to do code.
 - **Translation is not blocking.** Produce structured i18n string files with context comments; Saiful arranges translation externally.
 
-Full split: [`docs/10_delivery/you_do_i_do.md`](docs/10_delivery/you_do_i_do.md).
+Full split: [`docs/initial_specs/10_delivery/you_do_i_do.md`](docs/initial_specs/10_delivery/you_do_i_do.md).
 
 ---
 
@@ -67,7 +67,7 @@ the backend is on the Mac or that the LLM is mocked.
 | **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |
 | **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | No GitHub remote yet. Mac → melehost only path. |
 
-Detail in [`docs/08_tech/hosting.md`](docs/08_tech/hosting.md) (melehost spec), [`docs/10_delivery/promotion_protocol.md`](docs/10_delivery/promotion_protocol.md) (how code ships), [`docs/08_tech/backend_modes.md`](docs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER_R.md`](HANDOVER_R.md).
+Detail in [`docs/initial_specs/08_tech/hosting.md`](docs/initial_specs/08_tech/hosting.md) (melehost spec), [`docs/initial_specs/10_delivery/promotion_protocol.md`](docs/initial_specs/10_delivery/promotion_protocol.md) (how code ships), [`docs/initial_specs/08_tech/backend_modes.md`](docs/initial_specs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER_R.md`](HANDOVER_R.md).
 
 If a check fails (curl returns 502 / connect refused), debug from melehost — don't fall back to "let me start a backend on the Mac":
 
@@ -88,19 +88,19 @@ ssh melehost "docker logs ami_api_alpha --tail 50"
 | Languages | **EN at alpha, AR + MS at v1.0.** Pluggable i18n. |
 | Platforms | **iOS + Android-GMS at alpha, Huawei AppGallery at v1.1.** |
 | Tech stack | **Flutter** frontend, **Python (FastAPI)** backend, **GCP Cloud Run + Supabase**. |
-| Design | **AMI "Hex-Reinforced Precision"** — see [`docs/05_design/ami_hex_in_flutter.md`](docs/05_design/ami_hex_in_flutter.md). |
+| Design | **AMI "Hex-Reinforced Precision"** — see [`docs/initial_specs/05_design/ami_hex_in_flutter.md`](docs/initial_specs/05_design/ami_hex_in_flutter.md). |
 | Brand voice | Confident, analyst-to-analyst, numbers > adjectives, no marketing puffery. |
 | Pricing | Floor Pass (free, ads) / Trader $14.99 / Floor Manager $34.99 + credit packs. |
 | Onboarding | **Anonymous-first.** Concierge runs a conversational interview; account claim at the end. |
 | Brief Your Agent — safety floor | **PM mandate enforcement is uncoachable.** Hard floor in PM prompt + deterministic compliance check. (Feature renamed from "Coach Your Agent" in AT:R27; the conceptual term "uncoachable" stays as the safety-floor's resistance label.) |
 
-Full decision log: [`docs/11_decisions/decision_log.md`](docs/11_decisions/decision_log.md).
+Full decision log: [`docs/initial_specs/11_decisions/decision_log.md`](docs/initial_specs/11_decisions/decision_log.md).
 
 ---
 
 ## Conventions
 
-Full style rules: [`docs/08_tech/coding_conventions.md`](docs/08_tech/coding_conventions.md).
+Full style rules: [`docs/initial_specs/08_tech/coding_conventions.md`](docs/initial_specs/08_tech/coding_conventions.md).
 
 Behaviour-critical rule that affects every session — **the AI is named AMI**:
 
@@ -114,11 +114,28 @@ Other essentials:
 
 ---
 
+## Change governance (CR / Defect)
+
+Every change to this project is documented as a **CR** or a **Defect** (D-058). Two registers, both in `docs/`:
+
+- **CR** — *planned change* (a feature, refactor, process/infra/content change). Register: [`docs/forward_planning/cr_list.md`](docs/forward_planning/cr_list.md). Each CR gets a folder `docs/forward_planning/CR###_<topic>/` holding its what/why/scope/acceptance doc.
+- **Defect** — *fixing something broken vs. spec*. Register: [`docs/defect/def_list.md`](docs/defect/def_list.md). User-reported defects still flow in via `bug_reports` (melehost) → [`/fix-bugs`](.claude/commands/fix-bugs.md); the register is their processed record. Prompt-spotted defects get a `DEF###` too.
+
+Rules:
+
+- **Auto-file, proceed.** Saiful's prompt IS the approval. When he asks for a change, assign the next `CR###`, create its folder + doc, then implement. No separate approval gate. (A Defect is filed the same way when you spot or are handed one.)
+- **IDs** are zero-padded, sequential, never reused: `CR001…`, `DEF001…`.
+- **Commit tag:** append `(AT:R<N> CR###)` or `(AT:R<N> DEF###)` to the summary. User-reported bug fixes keep `fix(bug:<short-id>): … (AT:R<N> DEF###)`.
+- **Exempt** (plain `(AT:R<N>)`, no ID needed): handover wraps (`chore(handover)`), version/build bumps, docs-only commits.
+- **Enforcement is convention-only** — self-enforce each session; there is no git hook or promotion gate. Full format in [`docs/initial_specs/08_tech/coding_conventions.md`](docs/initial_specs/08_tech/coding_conventions.md).
+
+---
+
 ## What to do when you start a session
 
 1. Read this file (already loaded).
 2. Read [`HANDOVER_R.md`](HANDOVER_R.md) for the freshest state + immediate next steps.
-3. Skim [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
+3. Skim [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
 4. `git log --oneline` to verify the commit chain.
 5. Find the topic-specific doc(s) in `docs/` for your task.
 6. Ask Saiful what he wants to work on if it's not obvious. He decides priorities.
@@ -134,6 +151,7 @@ Other essentials:
 - Don't write tests that test the framework; test our logic.
 - Don't proactively run destructive commands (force push, reset hard, etc.).
 - Don't bypass the safety floor design in Brief Your Agent.
+- Don't ship a behaviour change without a CR or Defect ID (see Change governance). Exempt: handover wraps, version bumps, docs-only.
 
 ---
 

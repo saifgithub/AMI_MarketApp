@@ -243,6 +243,22 @@ also live in this repo, **don't rewrite session-tag references from
 those tracks** — they belong to a parallel narrative. Limit the scan
 fixes to text that's stale for *this* track.
 
+**Governance tags (non-blocking — convention only, D-058).** Every
+behaviour-changing commit should carry a `CR###` or `DEF###` tag;
+process commits (`chore(handover)`, version bumps, docs-only) are exempt.
+Surface any this-session commits that look like they changed behaviour
+but lack a tag — don't block the wrap, just list them so Saiful can
+back-fill a register entry:
+
+```bash
+git log --format='%h %s' {prefix}:{track}<N-1>..HEAD \
+  | grep -vE 'CR[0-9]{3}|DEF[0-9]{3}|chore\(handover\)|bump build|^[0-9a-f]+ docs'
+```
+
+Then confirm the registers were updated for this session's work:
+`docs/forward_planning/cr_list.md` (new/advanced CRs) and
+`docs/defect/def_list.md` (any defects processed).
+
 ### 5. Refresh `{T.handover_path}` (current-state only)
 
 `{T.handover_path}` is **narrative-free** after the history-folder

@@ -30,11 +30,17 @@ risk silent merge conflicts later.
      journal bug)
    - `docker-compose.yml`
    - `.claude/commands/*` (these are protocol; humans own them)
-5. **Each fix is its own commit.** Commit message prefix:
-   `fix(bug:<short-id>): <summary>` — short-id is the first 8 chars of
-   the bug_report.id. Makes git blame point straight at the report.
-6. **Never run `/promote-to-alpha`.** Saiful decides when to ship.
-7. **Don't mark `resolved` in the DB.** That's the merge-confirmation
+5. **Each fix is its own commit.** Commit message:
+   `fix(bug:<short-id>): <summary> (AT:R<N> DEF###)` — short-id is the
+   first 8 chars of the bug_report.id (makes git blame point straight at
+   the report); `DEF###` is the defect's ID in the register (rule 6).
+6. **Every fix gets a DEF entry.** When you claim a bug, assign the next
+   free `DEF###` and add a row to
+   [`docs/defect/def_list.md`](../../docs/defect/def_list.md) — the
+   processed record of the DB report. Source is `bug:<short-id>`. See
+   the register header for the column shape. (Governance: D-058.)
+7. **Never run `/promote-to-alpha`.** Saiful decides when to ship.
+8. **Don't mark `resolved` in the DB.** That's the merge-confirmation
    status; only Saiful or a post-merge hook flips it. `/fix-bugs` only
    ever sets `in_progress` (claim) → `pending_review` (committed).
 
@@ -109,17 +115,21 @@ For each claimed bug:
 2. Make the change. Run the relevant subset of tests:
    - Backend touched: `pytest backend/tests/unit/ -q`
    - Flutter touched: `flutter analyze --no-fatal-infos` (in `mobile/`)
-3. Commit:
+3. Assign the next free `DEF###` and append a row to
+   `docs/defect/def_list.md` (source `bug:${BUG_ID:0:8}`, the fix commit
+   hash filled after the commit). Commit the register update with the fix
+   or in the same batch.
+4. Commit:
    ```bash
    git add <only the files for this bug>
-   git commit -m "fix(bug:${BUG_ID:0:8}): <one-line summary>
+   git commit -m "fix(bug:${BUG_ID:0:8}): <one-line summary> (AT:R<N> DEF###)
 
    <2-4 line body explaining the change + root cause>
    Bug report: ${BUG_ID}
 
-   Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>"
+   Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
    ```
-4. Flip the DB status:
+5. Flip the DB status:
    ```bash
    ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -c \"\
      UPDATE bug_reports SET status='pending_review' WHERE id='${BUG_ID}';\""
