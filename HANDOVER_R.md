@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-06-12 (end of AT:R46 — iOS Podfile + Android apkanalyzer space-in-path fixes; TestFlight 0.1.0+30 uploaded; AAB 0.1.0+31 built for Play Console). Narratives in [`history/`](history/) — see "Recent sessions" below.
+**Last updated:** 2026-07-05 (end of AT:R47 — Alpaca API key auth mode; TestFlight 0.1.0+34 IPA built, upload blocked by pending Apple agreement; APK 0.1.0+34 built). Narratives in [`history/`](history/) — see "Recent sessions" below.
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/10_delivery/project_plan.md`](docs/10_delivery/project_plan.md).
 
@@ -15,22 +15,22 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **331 commits** (AT:R46: +4 — iOS Podfile fix, TestFlight bump +30, Play Store bump +31, wrap commit). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
-| Latest work commit | `08a5509` — fix(ios): uncomment platform :ios + regenerate Podfile.lock |
-| Alpha tags | **`alpha-2026-06-02-2`** (AT:R43 hotfix — last promote). AT:R45 + AT:R46 NOT yet promoted (awaiting Alpaca OAuth credentials from Saiful). |
-| Backend tests | **532 passed, 0 failed** (AT:R45 added +20; no new tests AT:R46). |
-| Mobile pubspec | **`0.1.0+31`** (bumped for Play Store AAB this session). TestFlight has **`0.1.0+30`** (uploaded this session). Added `webview_flutter ^4.10.0` (AT:R45). |
+| Git state | Clean working tree, **338 commits** (AT:R47: +4 — Alpaca API key feature, 3× TestFlight build bumps; AT:R48: +2 — PM classroom framing + textMed label fix). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
+| Latest work commit | `b499513` — style(mobile): use textMed token for Alpaca connect labels (AT:R48) |
+| Alpha tags | **`alpha-2026-06-02-2`** (AT:R43 hotfix — last promote). AT:R45 + AT:R46 + AT:R47 NOT yet promoted (Alpaca OAuth credentials still pending; migration chain `a1b2c3d40012` + `b2c3d4e50013` applies on next promote). |
+| Backend tests | **541 passed, 0 failed** (AT:R47 added +7 Alpaca apikey tests; AT:R48 added +2). |
+| Mobile pubspec | **`0.1.0+34`** (three TestFlight build bumps AT:R47). TestFlight: **`0.1.0+34` IPA built** but NOT yet uploaded — blocked by pending Apple Developer Agreement. Last successfully uploaded: **`0.1.0+30`** (AT:R46). |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **354 i18n keys** (AT:R42 added 10 news/earnings keys). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
 ```
-$ git log --oneline | head -15
-08a5509 fix(ios): uncomment platform :ios + regenerate Podfile.lock
-a9e67d0 chore(mobile): bump build 0.1.0+30 → 0.1.0+31 for Play Store
-ebf84db chore(mobile): bump build 0.1.0+29 → 0.1.0+30 for TestFlight
-c1d04cf chore(handover): wrap AT:R45
-206d423 fix(settings): show ToS + Privacy in-app WebView instead of external browser (AT:R45)
-00dee31 feat(settings): add Terms of Service + Privacy Policy links to Help section (AT:R45)
-4bdcd54 feat(alpaca): paper trading OAuth link — embedded WebView + agent context (AT:R45)
+$ git log --oneline | head -10
+b499513 style(mobile): use textMed token for Alpaca connect labels (AT:R48)
+190d253 feat(pm): classroom-exercise framing — verdict is a worked example (AT:R48)
+57775b6 chore(mobile): bump build 0.1.0+33 → 0.1.0+34 for TestFlight
+d6b6787 chore(mobile): bump build 0.1.0+32 → 0.1.0+33 for TestFlight
+0e8a667 chore(mobile): bump build 0.1.0+31 → 0.1.0+32 for TestFlight
+f66caba feat(alpaca): API key auth mode to bypass OAuth for testing (AT:R47)
+309e76b chore(handover): wrap AT:R46
 ...
 ```
 
@@ -73,7 +73,7 @@ Co-resident on melehost: **`api-website`** service (port 8001, builds from `./we
 | Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) |
 | Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29; `device_model`, `os_version`, `last_app_version` — AT:R33 BL1; **`alpaca_access_token`, `alpaca_refresh_token`, `alpaca_linked_at`** — AT:R45), `auth_challenges` (with **`attempts`** — AT:R37 B-tier audit), `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs` (with `retry_count` — AT:R34), `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `user_devices` (AT:R33 BL2), `alembic_version`. Latest migration in repo: **`a1b2c3d40012`** (`alpaca_credentials` — AT:R45; **not yet on melehost — ships with next promote after Alpaca credentials are set**). Prior in chain: `f8b5d1c00011` (`auth_challenges.attempts` — AT:R37), `e7a4c5b00010` (`room_runs.retry_count` — AT:R34), `d5f2a3b00009` (`user_devices` — AT:R33 BL2), `c4e8f1a90008` (`users_device_info` — AT:R33 BL1). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
+Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29; `device_model`, `os_version`, `last_app_version` — AT:R33 BL1; **`alpaca_access_token`, `alpaca_refresh_token`, `alpaca_linked_at`** — AT:R45; **`alpaca_auth_mode`** — AT:R47), `auth_challenges` (with **`attempts`** — AT:R37 B-tier audit), `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs` (with `retry_count` — AT:R34), `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `user_devices` (AT:R33 BL2), `alembic_version`. Latest migration in repo: **`b2c3d4e50013`** (`alpaca_auth_mode` — AT:R47; **not yet on melehost**). Prior: `a1b2c3d40012` (`alpaca_credentials` — AT:R45; **not yet on melehost**). Both apply together on next promote. Prior: `f8b5d1c00011` (`auth_challenges.attempts` — AT:R37), `e7a4c5b00010` (`room_runs.retry_count` — AT:R34), `d5f2a3b00009` (`user_devices` — AT:R33 BL2), `c4e8f1a90008` (`users_device_info` — AT:R33 BL1). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
 
 ### LLM gateway
 
@@ -92,9 +92,9 @@ Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` —
 | | |
 |---|---|
 | Bundle | `ai.agenticmarketintel.amiTrade` |
-| pubspec version | **`0.1.0+29`** (repo). Carries everything through AT:R45: Bundles 2+3 (chart), Bundles 4+5 (news/earnings), Alpaca OAuth WebView integration, in-app ToS/Privacy WebView. Added `webview_flutter ^4.10.0` (AT:R45). |
-| TestFlight | **`0.1.0+30`** uploaded this session (AT:R46). Delivery UUID `fd1a11ac-3f8f-42e7-9fcd-1b0a28ed924d`. Processing takes ~15-30 min; internal testers see it automatically. External Beta still pending (no external testers added via App Store Connect yet). |
-| Android test devices | **Galaxy Note Fan (SM-N935F, Android 9)** — serial `ce10171a8017590d01`. **Galaxy A17 (SM-A176B)** — serial `R5CY91AY99Y`. Both have AMI Trade `0.1.0+29` APK installed via USB (AT:R44). APK also shareable via WhatsApp for manual sideload. |
+| pubspec version | **`0.1.0+34`** (three TestFlight build bumps during AT:R47; APK also at +34). Added `alpacaLinkApiKey` to API client, two-tab AlpacaConnectScreen (API Key + OAuth). |
+| TestFlight | **`0.1.0+34` IPA built** (33.1 MB at `mobile/build/ios/ipa/ami_trade.ipa`) but **NOT uploaded** — blocked by pending Apple Developer Agreement. Accept at [appstoreconnect.apple.com/agreements](https://appstoreconnect.apple.com/agreements), then `scripts/build_testflight.sh --no-bump`. Last uploaded: `0.1.0+30` (AT:R46). **Note:** Xcode 26.5 breaks `xcrun altool --upload-app` (error 19); `build_testflight.sh` upload step needs updating to use `xcodebuild -exportArchive destination:upload`. |
+| Android test devices | **Galaxy Note Fan (SM-N935F, Android 9)** — serial `ce10171a8017590d01`. **Galaxy A17 (SM-A176B)** — serial `R5CY91AY99Y`. Both have AMI Trade `0.1.0+29` APK installed via USB (AT:R44). New APK `0.1.0+34` built (68.3 MB) at `mobile/build/app/outputs/flutter-apk/app-release.apk` — ready to install via USB or WhatsApp. |
 | Play Console internal track | **`0.1.0+31` AAB built (52.4 MB, signed). Awaiting manual upload.** Go to play.google.com/console → App → Testing → Internal testing → Create new release → upload `mobile/build/app/outputs/bundle/release/app-release.aab`. First upload also enrolls in Play App Signing (one-time, irreversible). |
 | Build commands | `scripts/install_iphone.sh` (dev sideload, iOS), `scripts/install_android.sh` (dev sideload, Android — both known devices or one if only one plugged in; **AT:R44**), `scripts/build_testflight.sh` (App Store upload, auto-bumps build number), **`scripts/build_playstore.sh`** (Play Console AAB, signed when `~/.android-keys/keystore.properties` exists). |
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). Android: Play App Signing (mandatory for new apps; Google holds the signing key); upload keystore at `~/.android-keys/ami-trade-upload.keystore` (referenced by `android/app/build.gradle.kts` via `~/.android-keys/keystore.properties`; debug-signing fallback when the props file is absent). |
@@ -113,7 +113,7 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R47** (this is handover #46).
+Session name to use: **AT:R49** (AT:R47 + AT:R48 both wrapped; this is handover #47).
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -121,23 +121,24 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 Quick-win candidates for next session (in priority order):
 
-1. **Upload 0.1.0+31 AAB to Play Console.** AAB is built and signed at `mobile/build/app/outputs/bundle/release/app-release.aab`. Manual upload: play.google.com/console → Internal testing → Create new release. First upload enrolls in Play App Signing.
-2. **Promote AT:R45 to Alpha** — once Saiful has Alpaca OAuth credentials (`ALPACA_CLIENT_ID` to build scripts, `ALPACA_CLIENT_SECRET` + `ALPACA_PAPER_BASE_URL` + `ALPACA_REDIRECT_URI` to `infra/alpha.env`). Migration `a1b2c3d40012` will run automatically on promote.
-3. **Alpaca OAuth smoke on device** — Settings → Connect Alpaca → WebView opens → login → returns linked. Portfolio tab shows paper positions. Agents mention live paper portfolio in Room + 1-on-1.
-4. **TestFlight external beta submission.** Submit `+30` to Apple's Beta App Review. App Store Connect → TestFlight → External Testing → create group → add build → submit for review (~24h).
-5. **Credit consumption emission** — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
-6. **Tier 2 sequential translation run** — loaders are ready. ~5h vLLM-blocking; own session.
-7. **BL7 / BL8 / A29** — remaining backlog.
+1. **Accept Apple Developer Agreement + upload TestFlight 0.1.0+34.** Go to [appstoreconnect.apple.com/agreements](https://appstoreconnect.apple.com/agreements), accept, then `scripts/build_testflight.sh --no-bump`. IPA is already built. Also: fix `build_testflight.sh` upload step to use `xcodebuild -exportArchive destination:upload` instead of `xcrun altool` (Xcode 26.5 broke altool for uploads).
+2. **Upload 0.1.0+31 AAB to Play Console.** AAB at `mobile/build/app/outputs/bundle/release/app-release.aab`. Manual: play.google.com/console → Internal testing → Create new release. First upload enrolls in Play App Signing.
+3. **Promote AT:R45+R47 to Alpha** — once Saiful has Alpaca OAuth credentials (`ALPACA_CLIENT_ID` to build scripts, `ALPACA_CLIENT_SECRET` + `ALPACA_PAPER_BASE_URL` + `ALPACA_REDIRECT_URI` to `infra/alpha.env`). Migrations `a1b2c3d40012` + `b2c3d4e50013` apply automatically on promote.
+4. **Alpaca API key smoke on device** — Settings → Connect Alpaca → API KEY tab → paste paper key+secret → CONNECT → status linked. Portfolio tab shows paper cash + positions.
+5. **TestFlight external beta submission.** Submit `+34` to Apple's Beta App Review (once uploaded).
+6. **Credit consumption emission** — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
+7. **Tier 2 sequential translation run** — loaders are ready. ~5h vLLM-blocking; own session.
+8. **BL7 / BL8 / A29** — remaining backlog.
 
 **Android build note for next session:** `ANDROID_HOME=/Volumes/Extreme Pro/Android/sdk` has a space — always use `ANDROID_HOME=/Users/saiful/android-sdk` (symlink, no space) when running `flutter build appbundle`. The `apkanalyzer` `pwd -P` → `pwd` patch is in place on the local machine; if SDK is reinstalled it needs to be re-applied. Java 25 (system JVM) breaks KGP — always use `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home`.
 
 ### Recent sessions (newest first)
 
+- [AT:R47](history/AT_R0047.md)
 - [AT:R46](history/AT_R0046.md)
 - [AT:R45](history/AT_R0045.md)
 - [AT:R44](history/AT_R0044.md)
 - [AT:R43](history/AT_R0043.md)
-- [AT:R42](history/AT_R0042.md)
 
 ---
 
