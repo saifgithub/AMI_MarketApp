@@ -147,7 +147,7 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
             const SizedBox(height: AmiSpacing.m),
             const Text(
               'Get your Paper Trading API key from app.alpaca.markets → Paper Trading → API Keys.',
-              style: TextStyle(color: AmiColors.slate400, fontSize: 13, height: 1.5),
+              style: TextStyle(color: AmiColors.textMed, fontSize: 13, height: 1.5),
             ),
             const SizedBox(height: AmiSpacing.xl),
             _label('API KEY ID'),
@@ -234,7 +234,7 @@ class _ApiKeyTabState extends ConsumerState<_ApiKeyTab> {
   Widget _label(String text) => Text(
         text,
         style: const TextStyle(
-          color: AmiColors.slate400,
+          color: AmiColors.textMed,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.1,
