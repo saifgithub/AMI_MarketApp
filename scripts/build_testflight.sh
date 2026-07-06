@@ -12,7 +12,9 @@
 #         can't accept because of its '--' pass-through bug)
 #   4. xcodebuild -exportArchive  -exportOptionsPlist ios/ExportOptions.plist
 #         -allowProvisioningUpdates -authenticationKey*   (App Store IPA)
-#   5. xcrun altool --upload-app  (TestFlight)
+#   5. xcodebuild -exportArchive  destination=upload  (TestFlight upload —
+#         Xcode 26.5 broke `xcrun altool --upload-app` with error 19, so we
+#         re-run exportArchive against the archive with an upload plist)
 #
 # History: an earlier one-shot `flutter build ipa -- -allowProvisioningUpdates`
 # attempt failed because Flutter parses post-`--` tokens as Dart entrypoints,
@@ -20,7 +22,7 @@
 #
 # Usage:
 #   scripts/build_testflight.sh                  # full build + upload
-#   scripts/build_testflight.sh --no-upload      # build IPA, skip altool upload
+#   scripts/build_testflight.sh --no-upload      # build IPA, skip the upload step
 #   scripts/build_testflight.sh --no-bump        # use whatever's in pubspec
 #   scripts/build_testflight.sh --no-commit      # don't auto-commit the bump
 #
@@ -146,16 +148,33 @@ echo "▶ built $(basename "$ipa") (${size_mb} MB, build ${semver}+${build_num})
 if [[ "$DO_UPLOAD" != "1" ]]; then
   echo "▶ skipping upload (--no-upload)"
   echo ""
-  echo "To upload manually:"
-  echo "  xcrun altool --upload-app --type ios -f '$ipa' \\"
-  echo "    --apiKey ${APP_STORE_API_KEY_ID} --apiIssuer ${APP_STORE_API_ISSUER}"
+  echo "To upload manually (Xcode 26.5+ — altool is broken, use xcodebuild):"
+  echo "  cp '$export_options' /tmp/ExportOptions.upload.plist"
+  echo "  /usr/libexec/PlistBuddy -c 'Set :destination upload' /tmp/ExportOptions.upload.plist"
+  echo "  xcodebuild -exportArchive -archivePath '$archive_path' \\"
+  echo "    -exportOptionsPlist /tmp/ExportOptions.upload.plist -exportPath '${ipa_dir}/upload' \\"
+  echo "    -allowProvisioningUpdates -authenticationKeyPath '$key_file' \\"
+  echo "    -authenticationKeyID ${APP_STORE_API_KEY_ID} -authenticationKeyIssuerID ${APP_STORE_API_ISSUER}"
   exit 0
 fi
 
-echo "▶ uploading to TestFlight…"
-xcrun altool --upload-app --type ios -f "$ipa" \
-  --apiKey "${APP_STORE_API_KEY_ID}" \
-  --apiIssuer "${APP_STORE_API_ISSUER}"
+# Xcode 26.5 broke `xcrun altool --upload-app` (error 19). Re-run exportArchive
+# against the archive with an upload-destination plist — this ships straight to
+# App Store Connect. The local IPA export above is left untouched (kept as the
+# build artifact + for --no-upload).
+echo "▶ uploading to TestFlight (xcodebuild -exportArchive destination=upload)…"
+upload_plist="${MOBILE_DIR}/build/ExportOptions.upload.plist"
+cp "$export_options" "$upload_plist"
+/usr/libexec/PlistBuddy -c "Set :destination upload" "$upload_plist"
+xcodebuild \
+  -exportArchive \
+  -archivePath "$archive_path" \
+  -exportOptionsPlist "$upload_plist" \
+  -exportPath "${ipa_dir}/upload" \
+  -allowProvisioningUpdates \
+  -authenticationKeyPath "$key_file" \
+  -authenticationKeyID "$APP_STORE_API_KEY_ID" \
+  -authenticationKeyIssuerID "$APP_STORE_API_ISSUER"
 
 echo ""
 echo "✓ uploaded ${semver}+${build_num}. Processing in App Store Connect now."
