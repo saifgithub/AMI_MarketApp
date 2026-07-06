@@ -70,6 +70,7 @@ DEF001–DEF036 are the backfill of every processed in-app report as of 2026-07-
 | DEF034 | 2026-05-20 | bug:9b9d4790 | other | Lesson claims Room Q&A feature — does it exist? | resolved | — | AT:R37 |
 | DEF035 | 2026-05-20 | bug:a19871c3 | ui_glitch | Bug-report "X" hard to trigger — need a better cancel | resolved | — | AT:R37 |
 | DEF036 | 2026-05-20 | bug:e2a30a64 | ui_glitch | Apple sign-in failed | resolved | — | AT:R37 |
+| DEF037 | 2026-07-06 | prompt | other | TestFlight upload broken — `xcrun altool --upload-app` error 19 on Xcode 26.5 | resolved | c079359 | AT:R49 |
 
 *Backfill note: sessions before AT:R38 are approximate (dated by report, mapped to the
 session that shipped the fix where a `fix(bug:…)` commit exists). Fix hashes are filled
