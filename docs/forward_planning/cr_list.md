@@ -30,3 +30,4 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR001 | 2026-07-05 | Change governance — CR/Defect registers + docs restructure | done | [CR001_change_governance/](CR001_change_governance/) | AT:R48 |
 | CR002 | 2026-07-06 | Reconcile the `bug_reports` status vocabulary | proposed | [CR002_bug_status_vocabulary/](CR002_bug_status_vocabulary/) | AT:R49 |
 | CR003 | 2026-07-06 | Correct stale "no GitHub remote" documentation | done | [CR003_github_remote_docs/](CR003_github_remote_docs/) | AT:R50 |
+| CR004 | 2026-07-06 | Release-readiness master plan — 4 workstreams (verify / playability / competition / attractiveness) | in_progress | [CR004_release_readiness/](CR004_release_readiness/) | AT:R51 |
