@@ -15,7 +15,7 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **343 commits** (since the R47 wrap: `aaecb82`; AT:R48/CR001: +2 — docs reorg `84792e5` + CR/Defect governance `58fbaf8`; AT:R49: +2 — DEF037 build_testflight upload fix `c079359` + register `d40947c`). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
+| Git state | Clean working tree, **345+ commits** — ⚠️ a **parallel Fable 5 session is still committing to `main`**; always `git log` to get the true count. This session (AT:R49): DEF037 build_testflight fix (`c079359` + `d40947c`). Parallel session: docs reorg `84792e5` + CR/Defect governance `58fbaf8` (AT:R48/CR001), plus `006e373` bug_reports-vocab reconcile (tagged AT:R49 CR002 — landed mid-wrap). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
 | Latest commit | `d40947c` — docs(defect): register DEF037 (AT:R49). Latest **code** change: `c079359` — build_testflight `altool`→`xcodebuild` upload fix. |
 | Alpha tags | **`alpha-2026-07-06-1`** (→ `b499513`) — latest promote; R45–R48 code reached Alpha on 2026-07-06. Supersedes the old `alpha-2026-06-02-2` / "R45–R47 not promoted" note (stale). ⚠️ **Not verified this session:** whether Alpaca OAuth creds are set on melehost and whether migrations `a1b2c3d40012` + `b2c3d4e50013` actually applied — confirm on next promote/debug. |
 | Backend tests | **541 passed, 0 failed** (AT:R47 added +7 Alpaca apikey tests; AT:R48 added +2). |
