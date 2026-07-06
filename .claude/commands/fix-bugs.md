@@ -167,7 +167,10 @@ To merge:
 
 ## What NOT to do
 
-- **No `git push`.** No remote configured anyway; just don't try.
+- **No `git push` from the worktree.** A GitHub remote (`origin`) exists
+  now, but bug-fix branches stay local — Saiful merges to `main` after
+  review, and `main` is what gets pushed. Don't push your
+  `claude/bug-fix-*` branch.
 - **No `--no-verify`** on commits. If a pre-commit hook fails, fix what
   it found.
 - **No mass-fix sprees.** 3 bugs max. Resist the urge to also "while I'm

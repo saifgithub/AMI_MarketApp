@@ -65,7 +65,7 @@ the backend is on the Mac or that the LLM is mocked.
 | **Public hostname** | `https://api-alpha.agenticmarketintel.ai` | Cloudflare Tunnel (token-mode connector running on melehost). TLS terminates at CF edge; backend doesn't open inbound ports. |
 | **LLM provider** | **On-prem vLLM** at `http://192.168.20.74:8000` — separate Ubuntu host on the LAN | Serving `ami-llm` (Gemma 4 31B, NVFP4 quantized, 262k context — rebranded). Gateway prefers `vllm > anthropic > mock`. Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`. **Not Anthropic, not OpenAI, not mock — real LLM.** |
 | **Market data** | Yahoo via `yfinance`, with deterministic mock-walk fallback | `USE_REAL_MARKET_DATA=true` in melehost's `.env`. |
-| **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | No GitHub remote yet. Mac → melehost only path. |
+| **Code transport** | rsync via [`/promote-to-alpha`](.claude/commands/promote-to-alpha.md) (slash command) | Deploy path to Alpha is **rsync-only** (melehost has no git remote; it doesn't pull from GitHub). Source *is* version-controlled on GitHub: `origin` → `github.com/saifgithub/AMI_MarketApp` (backup + multi-agent sync); push `main` there. GitHub is not a deploy path. |
 
 Detail in [`docs/initial_specs/08_tech/hosting.md`](docs/initial_specs/08_tech/hosting.md) (melehost spec), [`docs/initial_specs/10_delivery/promotion_protocol.md`](docs/initial_specs/10_delivery/promotion_protocol.md) (how code ships), [`docs/initial_specs/08_tech/backend_modes.md`](docs/initial_specs/08_tech/backend_modes.md) (Flutter Alpha/Beta/Prod modes), and the freshest state in [`HANDOVER_R.md`](HANDOVER_R.md).
 

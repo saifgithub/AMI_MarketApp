@@ -63,8 +63,11 @@ the per-day sequence in Saiful's local timezone (`Asia/Kuala_Lumpur`).
 git tag alpha-${TODAY}-${N}
 ```
 
-Don't push the tag yet — there's no remote. The tag is local until
-git-remote setup lands.
+The tag is local by default. A GitHub remote (`origin`) exists now, so
+push it if you want the `alpha-*` tag backed up
+(`git push origin alpha-${TODAY}-${N}`) — promotion itself doesn't push
+tags, and the deploy to melehost is rsync (not a git pull), so pushing
+the tag is optional.
 
 ### 3. Rsync to melehost
 
@@ -242,7 +245,7 @@ Total elapsed: 1m 23s
   operator decide. `/rollback-alpha` is a separate, deliberate act.
 - **Don't recreate Postgres or Redis.** Only the `api-alpha` service.
   The volumes carry the alpha-tester state.
-- **Don't push the tag to a remote.** No remote configured yet.
+- **Promotion doesn't auto-push tags.** A GitHub remote (`origin`) exists; push `alpha-*` tags manually if you want them backed up — it's not part of this flow (deploy is rsync, not a git pull).
 - **Don't sync `mobile/`, `.git/`, `.claude/`** to melehost — they
   bloat the rsync and aren't needed there.
 - **Don't touch any worktree other than the one you were invoked
