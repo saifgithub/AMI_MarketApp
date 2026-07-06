@@ -28,3 +28,4 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR | Date | Title | Status | Folder | Session |
 |---|---|---|---|---|---|
 | CR001 | 2026-07-05 | Change governance — CR/Defect registers + docs restructure | done | [CR001_change_governance/](CR001_change_governance/) | AT:R48 |
+| CR002 | 2026-07-06 | Reconcile the `bug_reports` status vocabulary | proposed | [CR002_bug_status_vocabulary/](CR002_bug_status_vocabulary/) | AT:R49 |
