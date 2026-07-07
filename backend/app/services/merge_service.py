@@ -47,11 +47,14 @@ from app.db import get_session
 from app.db.models import (
     AgentActivationRow,
     BugReportRow,
+    DailyChallengeAttemptRow,
     JournalEntryRow,
+    LeagueMemberRow,
     LessonProgressRow,
     MandateRow,
     OneOnOneMessageRow,
     OverlayEditCounter,
+    ReputationEventRow,
     RoomRunRow,
     SimHoldingRow,
     SimPortfolioRow,
@@ -217,6 +220,30 @@ class MergeService:
                 from_user_id, to_user_id,
                 conflict_col=AgentActivationRow.agent_id,
             )
+
+            # ── Challenge attempts (UNIQUE on user_id+challenge_id) ──
+            counts["daily_challenge_attempts"] = _rekey_skipping_conflicts(
+                s, DailyChallengeAttemptRow,
+                from_user_id, to_user_id,
+                conflict_col=DailyChallengeAttemptRow.challenge_id,
+            )
+
+            # ── League seats (UNIQUE on user_id+week) ────────────────
+            counts["league_members"] = _rekey_skipping_conflicts(
+                s, LeagueMemberRow,
+                from_user_id, to_user_id,
+                conflict_col=LeagueMemberRow.week,
+            )
+
+            # ── Reputation: move the ledger, sum the counter ─────────
+            counts["reputation_events"] = _rekey_all(
+                s, ReputationEventRow, from_user_id, to_user_id,
+            )
+            source_user = s.execute(
+                select(User).where(User.id == from_user_id)
+            ).scalar_one_or_none()
+            if source_user is not None and source_user.reputation:
+                target.reputation = (target.reputation or 0) + source_user.reputation
 
             # ── Overlay edit counts: sum on conflict ────────────────
             counts["overlay_edit_counts"] = _merge_overlay_counts(

@@ -100,6 +100,23 @@ class User(Base):
     )
     alpaca_auth_mode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
+    # Reputation + league identity (CR004, D-060). handle is the anonymous
+    # leaderboard name (adjective+noun, minted on first league contact);
+    # one self-service regeneration allowed. reputation is the lifetime
+    # point counter kept in lockstep with reputation_events.
+    handle: Mapped[Optional[str]] = mapped_column(
+        String, unique=True, index=True, nullable=True,
+    )
+    handle_regenerated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    reputation: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False,
+    )
+    show_display_name: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false", nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, server_default=func.now(), nullable=False,
     )
@@ -518,4 +535,96 @@ class SubscriptionEventRow(Base):
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
+    )
+
+
+class ReputationEventRow(Base):
+    """Append-only reputation point grants (CR004, D-060).
+
+    (user_id, event_type, ref_id) is the dedup anchor: award() refuses a
+    second grant for the same ref. users.reputation is the denormalized
+    running total; this table is the ledger behind it.
+    """
+
+    __tablename__ = "reputation_events"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    points: Mapped[int] = mapped_column(Integer, nullable=False)
+    ref_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
+    )
+
+
+class DailyChallengeAttemptRow(Base):
+    """Server truth for daily-challenge answers (CR004).
+
+    UNIQUE(user_id, challenge_id) closes the re-attempt exploit — the
+    route returns the stored result with already_attempted=true on a
+    duplicate instead of accepting a fresh answer.
+    """
+
+    __tablename__ = "daily_challenge_attempts"
+    __table_args__ = (
+        UniqueConstraint("user_id", "challenge_id", name="uq_challenge_attempt_user"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+
+    challenge_id: Mapped[str] = mapped_column(String, nullable=False)
+    selected_option: Mapped[int] = mapped_column(Integer, nullable=False)
+    correct: Mapped[bool] = mapped_column(Boolean, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class LeagueRow(Base):
+    """One weekly cohort at one tier (CR004, D-060). week is ISO 'YYYY-Www'."""
+
+    __tablename__ = "leagues"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    week: Mapped[str] = mapped_column(String(8), index=True, nullable=False)
+    tier: Mapped[str] = mapped_column(String, nullable=False)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+
+
+class LeagueMemberRow(Base):
+    """A user's seat in one weekly league (CR004, D-060).
+
+    week is denormalized from the league so UNIQUE(user_id, week) holds
+    without a join. points accrues in-week via reputation_service.award();
+    rank_final + outcome are stamped by the next weekly_roll().
+    """
+
+    __tablename__ = "league_members"
+    __table_args__ = (
+        UniqueConstraint("user_id", "week", name="uq_league_member_user_week"),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    league_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("leagues.id"), index=True, nullable=False,
+    )
+    user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    week: Mapped[str] = mapped_column(String(8), nullable=False)
+
+    points: Mapped[int] = mapped_column(
+        Integer, default=0, server_default="0", nullable=False,
+    )
+    rank_final: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    outcome: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    joined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
     )
