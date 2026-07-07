@@ -13,9 +13,11 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 
 from app.api.dependencies import get_current_user
-from app.db.models import User
+from app.db import get_session
+from app.db.models import SimTradeRow, User
 from app.schemas import Plan
 from app.schemas.journal import (
     EntryType,
@@ -25,6 +27,7 @@ from app.schemas.journal import (
     Outcome,
 )
 from app.services.journal_store import JournalStore, get_journal_store
+from app.services.reputation_service import get_reputation_service
 from pydantic import BaseModel, Field
 
 
@@ -127,6 +130,27 @@ async def annotate_entry(
     )
     if updated is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "entry not found")
+
+    # Reputation (CR004): reviewing a CLOSED trade (outcome or note on its
+    # journal entry) is the reflective habit the app teaches — award it.
+    # Entry-id ref dedup + the ≤3/day per-type limit keep it un-farmable.
+    if (
+        updated.entry_type == EntryType.SIM_TRADE
+        and (req.outcome is not None or req.note)
+        and updated.reference_id is not None
+    ):
+        try:
+            with get_session() as s:
+                trade = s.execute(
+                    select(SimTradeRow).where(SimTradeRow.id == updated.reference_id)
+                ).scalar_one_or_none()
+                if trade is not None and trade.status != "open":
+                    get_reputation_service().award(
+                        s, user_id=user_id,
+                        event_type="trade_reviewed", ref_id=str(entry_id),
+                    )
+        except Exception:  # pragma: no cover
+            pass
     return updated
 
 

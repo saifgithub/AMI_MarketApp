@@ -100,6 +100,25 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       POSTHOG_API_KEY: ${POSTHOG_API_KEY:-}
+      # OIDC audiences (DEF038: these lived in .env but were never
+      # forwarded here, so the container verified Google tokens against
+      # an empty audience list). CSV or single bare value — config.py
+      # parses both.
+      APPLE_AUDIENCES: ${APPLE_AUDIENCES:-ai.agenticmarketintel.amiTrade}
+      GOOGLE_AUDIENCES: ${GOOGLE_AUDIENCES:-}
+      # Alpaca paper-trading OAuth (AT:R45) — empty until Saiful registers
+      # the OAuth app; API-key mode works without them.
+      ALPACA_CLIENT_ID: ${ALPACA_CLIENT_ID:-}
+      ALPACA_CLIENT_SECRET: ${ALPACA_CLIENT_SECRET:-}
+      # Room dedup windows — defaults match config.py; override in .env.
+      ROOM_DEDUP_RUNNING_MINUTES: ${ROOM_DEDUP_RUNNING_MINUTES:-30}
+      ROOM_DEDUP_COMPLETED_HOURS: ${ROOM_DEDUP_COMPLETED_HOURS:-24}
+      # Reputation + weekly leagues (CR004, D-060).
+      REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
+      LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
+      LEAGUE_PROMOTE_COUNT: ${LEAGUE_PROMOTE_COUNT:-5}
+      LEAGUE_RELEGATE_COUNT: ${LEAGUE_RELEGATE_COUNT:-5}
+      LEAGUE_ELIGIBLE_PLANS: ${LEAGUE_ELIGIBLE_PLANS:-}
       CORS_ORIGINS: '["https://api-alpha.agenticmarketintel.ai","http://localhost:3000","http://localhost:8000"]'
       # Mount point for the bug_attachments named volume.
       BUG_ATTACHMENTS_DIR: /data/bug_attachments

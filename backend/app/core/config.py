@@ -1,13 +1,35 @@
 """Runtime config — all secrets via env vars, all environments via Pydantic Settings."""
 
-from typing import Literal
+import json
+from typing import Annotated, Literal
 
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+# list[str] env vars accept bare CSV ("a,b"), a single bare value, an empty
+# string (→ []), or JSON. NoDecode stops pydantic-settings from insisting on
+# JSON at the source layer — without it a plain `GOOGLE_AUDIENCES=<client_id>`
+# crashes boot (DEF038 — how Alpha ran with empty audiences unnoticed).
+CsvList = Annotated[list[str], NoDecode]
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @field_validator(
+        "apple_audiences", "google_audiences", "league_eligible_plans",
+        "cors_origins", mode="before",
+    )
+    @classmethod
+    def _csv_or_json_list(cls, v):
+        if isinstance(v, str):
+            text = v.strip()
+            if not text:
+                return []
+            if text.startswith("["):
+                return json.loads(text)
+            return [part.strip() for part in text.split(",") if part.strip()]
+        return v
 
     env: Literal["local", "dev", "staging", "prod"] = "local"
     # Env policy (post-adversarial-audit):
@@ -79,6 +101,16 @@ class Settings(BaseSettings):
     room_dedup_running_minutes: int = 30
     room_dedup_completed_hours: int = 24
 
+    # Reputation + weekly leagues (CR004, D-060).
+    # daily_cap bounds total points/user/local-day so no single behaviour
+    # can be farmed. eligible_plans empty = every plan competes (Engagement
+    # phase); set to "trader,floor_manager" at M1 per paywall axis 21.
+    reputation_daily_cap: int = 25
+    league_cohort_size: int = 30
+    league_promote_count: int = 5
+    league_relegate_count: int = 5
+    league_eligible_plans: CsvList = Field(default_factory=list)
+
     # In-app bug-report attachments — written to this directory by the
     # /v1/feedback/bug endpoint, retrieved by Saiful via SSH (no public
     # download endpoint in alpha). On melehost a named docker volume
@@ -103,14 +135,14 @@ class Settings(BaseSettings):
     # be added here if we ever ship Apple sign-in via web/Android. Comma-
     # separated env var (`APPLE_AUDIENCES=ai.agenticmarketintel.amiTrade`),
     # or `,` in the value to allow multiple.
-    apple_audiences: list[str] = Field(
+    apple_audiences: CsvList = Field(
         default_factory=lambda: ["ai.agenticmarketintel.amiTrade"]
     )
 
     # Google Sign-In — wired when Android lands. Audience = the OAuth Web
     # client_id (one per Android signing key configuration in Google Cloud
     # Console). Leave empty until Android slice starts.
-    google_audiences: list[str] = Field(default_factory=list)
+    google_audiences: CsvList = Field(default_factory=list)
 
     # SMTP (magic-link email delivery). When smtp_host is empty the backend
     # falls back to debug-code-only mode (code shown in UI for alpha testers).
@@ -132,7 +164,7 @@ class Settings(BaseSettings):
     alpaca_redirect_uri: str = "amitrade://alpaca/callback"
 
     # CORS
-    cors_origins: list[str] = Field(default_factory=lambda: ["*"])
+    cors_origins: CsvList = Field(default_factory=lambda: ["*"])
 
     # Server
     port: int = 8000

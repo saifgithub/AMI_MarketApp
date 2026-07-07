@@ -50,8 +50,10 @@ from app.services.room_runner import (
     get_room_runner,
 )
 from app.api.dependencies import get_current_user
+from app.db import get_session
 from app.db.models import User
 from app.services.rate_limit import room_stream_rate_limit
+from app.services.reputation_service import get_reputation_service
 
 
 router = APIRouter(
@@ -124,6 +126,17 @@ async def stream_room(
                     action=run.verdict.action if run.verdict else "no_verdict",
                     note="TODO B1: fire APNs push notification here",
                 )
+                # Reputation (CR004): run-id ref dedup + the ROOM_DEDUP_*
+                # windows prevent farming verdicts for points.
+                if run.verdict is not None:
+                    try:
+                        with get_session() as s:
+                            get_reputation_service().award(
+                                s, user_id=req.user_id,
+                                event_type="room_verdict", ref_id=str(run_id),
+                            )
+                    except Exception:  # pragma: no cover
+                        pass
                 return
             except Exception as exc:
                 if attempt == 2:

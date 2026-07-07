@@ -55,6 +55,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import feedback_store as _fb
     from app.services import daily_challenge_service as _dc
     from app.services import ai_coach_service as _ac
+    from app.services import reputation_service as _rep
     _ms._store = None
     _os._store = None
     _js._store = None
@@ -65,6 +66,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _fb._store = None
     _dc._service = None
     _ac._service = None
+    _rep._service = None
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
     # B-tier audit (AT:R37): the rate-limit module holds module-level

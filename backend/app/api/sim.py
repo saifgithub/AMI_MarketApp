@@ -18,20 +18,24 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
+from sqlalchemy import select
 
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.trade import OrderType, Side
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
+from app.services.reputation_service import get_reputation_service
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
 from app.services.watchlist_store import get_watchlist_store
 from app.api.dependencies import get_current_user
-from app.db.models import User
+from app.db import get_session
+from app.db.models import SimPortfolioRow, User
 
 
 router = APIRouter(prefix="/v1/sim", tags=["sim"])
@@ -123,6 +127,25 @@ async def reset_portfolio(
     sim: SimEngine = Depends(get_sim_engine),
 ) -> PortfolioSnapshot:
     _own(current_user, user_id)
+    # CR004: 24h cooldown. Reset recreates the portfolio, so its
+    # created_at IS the last-reset time — no extra column needed.
+    with get_session() as s:
+        row = s.execute(
+            select(SimPortfolioRow).where(SimPortfolioRow.user_id == user_id)
+        ).scalar_one_or_none()
+        if row is not None:
+            created_at = row.created_at
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+            elapsed = datetime.now(timezone.utc) - created_at
+            cooldown = timedelta(hours=24)
+            if elapsed < cooldown:
+                retry_after = int((cooldown - elapsed).total_seconds())
+                raise HTTPException(
+                    status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="reset_cooldown",
+                    headers={"Retry-After": str(retry_after)},
+                )
     sim.reset_portfolio(user_id)
     return await get_portfolio(user_id, current_user=current_user, sim=sim)
 
@@ -241,6 +264,19 @@ async def submit_trade(
         ))
     except Exception:  # pragma: no cover
         pass
+
+    # Reputation (CR004): a buy with both stop AND target that cleared the
+    # mandate check is a disciplined trade. Trade-id ref dedup + the ≤3/day
+    # per-type limit keep it un-farmable.
+    if side == Side.BUY and req.stop is not None and req.target is not None:
+        try:
+            with get_session() as s:
+                get_reputation_service().award(
+                    s, user_id=req.user_id,
+                    event_type="trade_disciplined", ref_id=str(trade.id),
+                )
+        except Exception:  # pragma: no cover
+            pass
 
     return {"ok": True, "trade": trade.to_json()}
 
