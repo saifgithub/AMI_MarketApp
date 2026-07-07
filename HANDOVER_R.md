@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-07-06 (end of AT:R49 — DEF037: TestFlight upload fix, `altool`→`xcodebuild -exportArchive` for Xcode 26.5. ⚠️ AT:R48/CR001 — docs reorg + CR/Defect governance — ran in a **parallel session** and may still be un-wrapped; see "How to start the next session"). Narratives in [`history/`](history/) — see "Recent sessions" below.
+**Last updated:** 2026-07-07 (end of AT:R51 — **CR004 release-readiness master plan**: 4 workstream plans + build specs + design-system audit; decisions **D-059–D-062** locked ("go as recommended"), OQ-007 resolved; Engagement phase inserted pre-Beta. Next work = CR004 implementation, D0 token-sync first). Narratives in [`history/`](history/) — see "Recent sessions" below.
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -15,9 +15,9 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **345+ commits** — ⚠️ a **parallel Fable 5 session is still committing to `main`**; always `git log` to get the true count. This session (AT:R49): DEF037 build_testflight fix (`c079359` + `d40947c`). Parallel session: docs reorg `84792e5` + CR/Defect governance `58fbaf8` (AT:R48/CR001), plus `006e373` bug_reports-vocab reconcile (tagged AT:R49 CR002 — landed mid-wrap). GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
-| Latest commit | `d40947c` — docs(defect): register DEF037 (AT:R49). Latest **code** change: `c079359` — build_testflight `altool`→`xcodebuild` upload fix. |
-| Alpha tags | **`alpha-2026-07-06-1`** (→ `b499513`) — latest promote; R45–R48 code reached Alpha on 2026-07-06. Supersedes the old `alpha-2026-06-02-2` / "R45–R47 not promoted" note (stale). ⚠️ **Not verified this session:** whether Alpaca OAuth creds are set on melehost and whether migrations `a1b2c3d40012` + `b2c3d4e50013` actually applied — confirm on next promote/debug. |
+| Git state | Clean working tree, **349 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50); always `git log` for the true count. This session (AT:R51): CR004 plans `69d5a4e` + build specs/decisions `7cca2d7` — docs only, no code. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp` (private, set AT:R45). |
+| Latest commit | `7cca2d7` — CR004 build specs + D-059–D-062 (AT:R51). Latest **code** change: `c079359` — build_testflight `altool`→`xcodebuild` upload fix (AT:R49). |
+| Alpha tags | **`alpha-2026-07-06-1`** (→ `b499513`) — latest promote; R45–R48 code reached Alpha on 2026-07-06. ✅ **Verified AT:R51:** melehost `alembic_version = b2c3d4e50013` (migrations 0012+0013 applied). ❌ **Alpaca OAuth creds NOT set** (neither container env nor local `infra/alpha.env`) — OAuth linking dead on Alpha; **API-key mode (AT:R47) is the working path**; unblock = Saiful registers the OAuth app with Alpaca. |
 | Backend tests | **541 passed, 0 failed** (AT:R47 added +7 Alpaca apikey tests; AT:R48 added +2). |
 | Mobile pubspec | **`0.1.0+34`** (three TestFlight build bumps AT:R47). TestFlight: **`0.1.0+34` IPA built** but NOT yet uploaded — blocked by pending Apple Developer Agreement. Last successfully uploaded: **`0.1.0+30`** (AT:R46). |
 | Content corpus | 270 lessons, 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **354 i18n keys** (AT:R42 added 10 news/earnings keys). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
@@ -73,7 +73,7 @@ Co-resident on melehost: **`api-website`** service (port 8001, builds from `./we
 | Backend unit tests | Per-test sqlite tempfile (autouse fixture in `backend/tests/conftest.py`) |
 | Backups | Nightly `pg_dump` via `infra/backups/ami-trade-pg-backup.timer` (systemd timer on melehost). Restore drill in `infra/backups/README.md`. |
 
-Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29; `device_model`, `os_version`, `last_app_version` — AT:R33 BL1; **`alpaca_access_token`, `alpaca_refresh_token`, `alpaca_linked_at`** — AT:R45; **`alpaca_auth_mode`** — AT:R47), `auth_challenges` (with **`attempts`** — AT:R37 B-tier audit), `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs` (with `retry_count` — AT:R34), `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `user_devices` (AT:R33 BL2), `alembic_version`. Latest migration in repo: **`b2c3d4e50013`** (`alpaca_auth_mode` — AT:R47; **not yet on melehost**). Prior: `a1b2c3d40012` (`alpaca_credentials` — AT:R45; **not yet on melehost**). Both apply together on next promote. Prior: `f8b5d1c00011` (`auth_challenges.attempts` — AT:R37), `e7a4c5b00010` (`room_runs.retry_count` — AT:R34), `d5f2a3b00009` (`user_devices` — AT:R33 BL2), `c4e8f1a90008` (`users_device_info` — AT:R33 BL1). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
+Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` — AT:R27; `display_name` — AT:R29; `device_model`, `os_version`, `last_app_version` — AT:R33 BL1; **`alpaca_access_token`, `alpaca_refresh_token`, `alpaca_linked_at`** — AT:R45; **`alpaca_auth_mode`** — AT:R47), `auth_challenges` (with **`attempts`** — AT:R37 B-tier audit), `mandates`, `agent_activations`, `lessons_progress`, `journal_entries` (with `deleted_at`), `overlay_edit_counts`, `user_overlays`, `room_runs` (with `retry_count` — AT:R34), `sim_holdings`, `sim_portfolios`, `sim_trades`, `sim_watchlists`, `bug_reports` (with `assigned_branch`, `attachment_path`, `attachment_mime`), `llm_audit`, `http_audit`, `one_on_one_messages`, `subscription_events` (AT:R27), `user_devices` (AT:R33 BL2), `alembic_version`. Latest migration in repo: **`b2c3d4e50013`** (`alpaca_auth_mode` — AT:R47; ✅ **applied on melehost, verified AT:R51** along with `a1b2c3d40012` (`alpaca_credentials` — AT:R45)). Next migration will be `..._0014_reputation_league` (CR004 build spec). Prior: `f8b5d1c00011` (`auth_challenges.attempts` — AT:R37), `e7a4c5b00010` (`room_runs.retry_count` — AT:R34), `d5f2a3b00009` (`user_devices` — AT:R33 BL2), `c4e8f1a90008` (`users_device_info` — AT:R33 BL1). `init_schema()` self-stamps Alembic on a fresh container, so `alembic upgrade head` is a no-op on first boot. Bug-report attachments live in the named docker volume `ami-trade-local_bug_attachments` mounted at `/data/bug_attachments` in the api-alpha container.
 
 ### LLM gateway
 
@@ -113,32 +113,37 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R50**. (AT:R49 wrapped here. ⚠️ AT:R48/CR001 ran as a **parallel Fable 5 session** and may still be un-wrapped — if it wraps after this, it must NOT reset this counter back to R49, and should add `history/AT_R0048.md` to Recent sessions.)
+Session name to use: **AT:R52**. (AT:R51 wrapped here. ⚠️ AT:R48 and AT:R50 ran as parallel sessions and never wrapped — no `history/AT_R0048.md`/`AT_R0050.md`; their work is committed and recorded in the CR register. A later wrap of either must NOT reset this counter below R52.)
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
 If the first message is a specific task ("fix this", "add that"), skip `/start-fresh` and just do the task — the slash command is for the "let's keep going" opening.
 
-Quick-win candidates for next session (in priority order):
+**The roadmap is now [CR004](docs/forward_planning/CR004_release_readiness/CR004_release_readiness.md)** (release-readiness umbrella; decisions D-059–D-062 locked). Work order for next sessions:
 
-1. **Accept Apple Developer Agreement + upload TestFlight 0.1.0+34.** Go to [appstoreconnect.apple.com/agreements](https://appstoreconnect.apple.com/agreements), accept, then `scripts/build_testflight.sh --no-bump`. IPA is already built. ✅ **The `build_testflight.sh` altool→`xcodebuild -exportArchive destination=upload` fix landed AT:R49 (DEF037, `c079359`)** — the upload path is repaired but **unverified** (needs the agreement accepted to run end-to-end).
-2. **Upload 0.1.0+31 AAB to Play Console.** AAB at `mobile/build/app/outputs/bundle/release/app-release.aab`. Manual: play.google.com/console → Internal testing → Create new release. First upload enrolls in Play App Signing.
-3. **Verify the AT:R45–R48 Alpha promote.** A `alpha-2026-07-06-1` tag (→ `b499513`) shows a 07-06 promote landed that code on Alpha. **Unverified this session:** whether Alpaca OAuth creds (`ALPACA_CLIENT_ID` in build scripts; `ALPACA_CLIENT_SECRET` + `ALPACA_PAPER_BASE_URL` + `ALPACA_REDIRECT_URI` in `infra/alpha.env`) are set, and whether migrations `a1b2c3d40012` + `b2c3d4e50013` actually applied on melehost. Confirm via `ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -c 'select version_num from alembic_version;'"`.
-4. **Alpaca API key smoke on device** — Settings → Connect Alpaca → API KEY tab → paste paper key+secret → CONNECT → status linked. Portfolio tab shows paper cash + positions.
-5. **TestFlight external beta submission.** Submit `+34` to Apple's Beta App Review (once uploaded).
-6. **Credit consumption emission** — `credits_consumed` event type exists in `subscription_events`, nothing emits it. Wire Room + 1-on-1.
-7. **Tier 2 sequential translation run** — loaders are ready. ~5h vLLM-blocking; own session.
-8. **Backlog — only BL7 + BL8 are unblocked-now.** BL7 (agent metadata routes, ~1 session, low urgency — mobile workaround fine). BL8 (Room `cancel`/`replay`, ~1.5 sessions — cancel is the real work, replay is sugar; unkillable Room burns a credit today). BL4 blocks on GoogleProvider; BL6 on MVP-scoped drift detection; A29 is v1.0 / marketing-held.
+1. **D0 token-sync pass** (~0.5 session, FIRST — everything builds on it): fix `AmiMotion.slow`, light `accentBlue`, Plex-default font, missing spacing/radius steps, add `AmiShadow` glow/shadow tokens. Spec: [design_system_audit.md](docs/forward_planning/CR004_release_readiness/design_system_audit.md).
+2. **Backend migration 0014 + reputation/league services** (~2.5 sessions). Spec: [build_backend_reputation_league.md](docs/forward_planning/CR004_release_readiness/build_backend_reputation_league.md). Then `/promote-to-alpha`.
+3. **Mobile engagement bundles** (celebrations → roster/dead-ends/empty-states → streaks → league UI → share cards, ~4–5 sessions). Spec: [build_mobile_engagement.md](docs/forward_planning/CR004_release_readiness/build_mobile_engagement.md).
+4. **Animations + motion** (7 painters → 15 slots, splash, pulses, ~3 sessions). Spec: [build_animations_motion.md](docs/forward_planning/CR004_release_readiness/build_animations_motion.md).
+5. **Plan A verification in parallel** — device matrix + degradation drills when Saiful has device time. Working doc: [build_verification_execution.md](docs/forward_planning/CR004_release_readiness/build_verification_execution.md).
+
+Saiful-external (unchanged, any time):
+
+- **Accept Apple Developer Agreement** → `scripts/build_testflight.sh --no-bump` uploads the built `0.1.0+34` IPA (also verifies DEF037 end-to-end).
+- **Upload 0.1.0+31 AAB to Play Console** (first upload enrolls Play App Signing).
+- **Register the Alpaca OAuth app** → creds into `infra/alpha.env` → promote (OAuth linking currently dead on Alpha; API-key mode works).
+
+Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run) is unchanged but now sequences AFTER the Engagement phase unless something breaks.
 
 **Android build note for next session:** `ANDROID_HOME=/Volumes/Extreme Pro/Android/sdk` has a space — always use `ANDROID_HOME=/Users/saiful/android-sdk` (symlink, no space) when running `flutter build appbundle`. The `apkanalyzer` `pwd -P` → `pwd` patch is in place on the local machine; if SDK is reinstalled it needs to be re-applied. Java 25 (system JVM) breaks KGP — always use `JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home`.
 
 ### Recent sessions (newest first)
 
+- [AT:R51](history/AT_R0051.md) — CR004 release-readiness plans + D-059–D-062
+- AT:R50 — parallel session (CR003, docs-only); never wrapped
 - [AT:R49](history/AT_R0049.md)
-- AT:R48 — parallel CR001 session (Fable 5); not yet wrapped, `history/AT_R0048.md` pending
+- AT:R48 — parallel CR001 session (Fable 5); never wrapped
 - [AT:R47](history/AT_R0047.md)
-- [AT:R46](history/AT_R0046.md)
-- [AT:R45](history/AT_R0045.md)
 
 ---
 

@@ -228,6 +228,6 @@ Status legend:
 | Feature | Status |
 |---|---|
 | Public Decision Journal entries / shareable replays | ⚪ Phase 2 |
-| Reasoning-quality leaderboard | ⚪ Phase 2 |
+| Reasoning-quality leaderboard | ~~⚪ Phase 2~~ ⚡ pulled forward to the pre-Beta Engagement phase as weekly reputation leagues (D-059/D-060, CR004) |
 | Community prompt-sets (publish Coach edits) | ⚫ Far horizon |
 | Friends / following / public profiles | ⚫ Far horizon |

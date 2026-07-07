@@ -72,7 +72,7 @@ Goal: scale-up features that need critical mass to ship well.
 | Feature |
 |---|
 | **Per-agent mute/promote weights** — users can fire / amplify agents in the Research Manager's synthesis |
-| **Reasoning-quality leaderboard** — public ranking by reasoning, not P&L |
+| **Reasoning-quality leaderboard** — public ranking by reasoning, not P&L. ⚡ **Pulled forward to the pre-Beta Engagement phase as weekly reputation leagues (D-059/D-060, CR004, AT:R51)** |
 | **Multi-mandate** — "Retirement" + "Speculative bucket" + others |
 | **Public Decision Journal sharing** — users can share Room replays with attribution |
 | **Community prompt-sets** — users publish their Brief Your Agent overlays for others to clone (start of marketplace dynamics) |

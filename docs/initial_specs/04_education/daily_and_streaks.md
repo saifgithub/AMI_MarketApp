@@ -90,7 +90,7 @@ Reputation measures *the quality of your reasoning*, not *the outcome of your lu
 | 2,000–10,000 | Senior |
 | 10,000+ | Floor Veteran |
 
-These are visible on the user's profile and (Phase 2) on the reasoning-quality leaderboard.
+These are visible on the user's profile and on the reasoning-quality leaderboard (~~Phase 2~~ pulled forward to the pre-Beta Engagement phase as weekly reputation leagues — D-059/D-060, CR004; scoring formula in CR004 Plan C §C1 resolves OQ-007).
 
 ## Badges
 
