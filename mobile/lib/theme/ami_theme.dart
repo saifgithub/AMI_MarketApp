@@ -49,6 +49,10 @@ abstract final class AmiColors {
 
   // Brand glow
   static const Color hexGlow = Color(0x803B82F6); // rgba(59,130,246,0.5)
+
+  // Hairline borders (--border-light / --border-subtle)
+  static const Color borderLight = Color(0x1AFFFFFF); // rgba(255,255,255,0.10)
+  static const Color borderSubtle = Color(0x0DFFFFFF); // rgba(255,255,255,0.05)
 }
 
 /// Light-mode token overrides (per AMI AI Design System DEVELOPER_PROMPT_LIGHT_MODE.md).
@@ -72,7 +76,7 @@ abstract final class AmiColorsLight {
   static const Color accentAmber = Color(0xFFB45309);
   static const Color accentRed = Color(0xFFB91C1C);
   static const Color accentPurple = Color(0xFF6D28D9);
-  static const Color accentBlue = Color(0xFF1D4ED8);
+  static const Color accentBlue = Color(0xFF2563EB); // --accent-blue-text (= hexBlue600)
   static const Color accentPink = Color(0xFFBE185D);
 }
 
@@ -135,14 +139,26 @@ abstract final class AmiTypography {
   );
 
   // Body (IBM Plex Sans)
+  static final TextStyle bodyLg = GoogleFonts.ibmPlexSans(
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: AmiColors.textMed,
+    height: 1.5,
+  );
   static final TextStyle body = GoogleFonts.ibmPlexSans(
     fontSize: 14,
     fontWeight: FontWeight.w400,
     color: AmiColors.textMed,
     height: 1.5,
   );
+  static final TextStyle bodySm = GoogleFonts.ibmPlexSans(
+    fontSize: 13,
+    fontWeight: FontWeight.w400,
+    color: AmiColors.textMed,
+    height: 1.5,
+  );
   static final TextStyle caption = GoogleFonts.ibmPlexSans(
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: FontWeight.w400,
     color: AmiColors.textLow,
   );
@@ -164,9 +180,14 @@ abstract final class AmiTypography {
     fontWeight: FontWeight.w600,
     color: AmiColors.textHigh,
   );
+  static final TextStyle dataMd = GoogleFonts.ibmPlexMono(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: AmiColors.textHigh,
+  );
   static final TextStyle statSmall = GoogleFonts.ibmPlexMono(
     fontSize: 13,
-    fontWeight: FontWeight.w500,
+    fontWeight: FontWeight.w400,
     color: AmiColors.textHigh,
   );
   static final TextStyle stream = GoogleFonts.ibmPlexMono(
@@ -182,15 +203,20 @@ abstract final class AmiTypography {
 // ─────────────────────────────────────────────────────────────────────────
 
 abstract final class AmiSpacing {
+  static const double none = 0.0;
   static const double xs = 4.0;
   static const double s = 8.0;
+  static const double sm = 12.0; // --sp-3
   static const double m = 16.0;
   static const double l = 24.0;
   static const double xl = 32.0;
   static const double xxl = 48.0;
+  static const double xxxl = 64.0; // --sp-8
 }
 
 abstract final class AmiRadii {
+  static const double sm = 4.0; // --radius-sm
+  static const double md = 6.0; // --radius-md
   static const double card = 8.0;
   static const double sheet = 12.0;
   static const double hexCornerMobile = 10.0;
@@ -200,10 +226,28 @@ abstract final class AmiRadii {
 abstract final class AmiMotion {
   static const Duration fast = Duration(milliseconds: 150);
   static const Duration normal = Duration(milliseconds: 200);
-  static const Duration slow = Duration(milliseconds: 350);
+  static const Duration slow = Duration(milliseconds: 300);
 
   // AMI default easing
   static const Cubic easeOut = Cubic(0.4, 0, 0.2, 1);
+}
+
+/// Elevation + glow (per colors_and_type.css --shadow-* / --glow-*).
+/// The DS applies these as filters on hex clip-paths; in Flutter they land
+/// as BoxShadow lists on the container BEHIND any clipped child.
+abstract final class AmiShadow {
+  static const List<BoxShadow> card = [
+    BoxShadow(color: Color(0x4D000000), offset: Offset(0, 8), blurRadius: 30),
+  ];
+  static const List<BoxShadow> modal = [
+    BoxShadow(color: Color(0x99000000), offset: Offset(0, 25), blurRadius: 60),
+  ];
+  static const List<BoxShadow> glowBlue = [
+    BoxShadow(color: Color(0x663B82F6), blurRadius: 20),
+  ];
+  static const List<BoxShadow> glowPurple = [
+    BoxShadow(color: Color(0x668B5CF6), blurRadius: 30),
+  ];
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -215,7 +259,9 @@ ThemeData amiTheme() {
     useMaterial3: true,
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AmiColors.slate900,
-    fontFamily: AmiTypography.inter,
+    // Author against Plex; Inter is the cold-launch fallback only (DS README).
+    fontFamily: GoogleFonts.ibmPlexSans().fontFamily,
+    fontFamilyFallback: const [AmiTypography.inter],
     colorScheme: const ColorScheme.dark(
       primary: AmiColors.hexBlue,
       secondary: AmiColors.hexCyan,
@@ -250,7 +296,8 @@ ThemeData amiLightTheme() {
     useMaterial3: true,
     brightness: Brightness.light,
     scaffoldBackgroundColor: AmiColorsLight.canvas,
-    fontFamily: AmiTypography.inter,
+    fontFamily: GoogleFonts.ibmPlexSans().fontFamily,
+    fontFamilyFallback: const [AmiTypography.inter],
     colorScheme: const ColorScheme.light(
       primary: AmiColorsLight.accentBlue,
       secondary: AmiColorsLight.accentCyan,

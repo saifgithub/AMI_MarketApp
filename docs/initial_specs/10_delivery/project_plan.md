@@ -118,6 +118,23 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 ---
 
+## Phase 1.5 — Engagement (pre-Beta, on-prem) — D-059
+
+**Exit criterion:** the stealth-alpha cohort experiences a *playable* app — celebrated success moments, persistent streaks + daily challenges, reputation-based weekly leagues, all 15 lesson animation slots live, branded launch. Ships via `/promote-to-alpha` on existing infra; nothing here waits on Beta.
+
+**Design home:** [CR004](../../forward_planning/CR004_release_readiness/CR004_release_readiness.md) — decisions D-059–D-062 locked 2026-07-07. Implementation commits tag `(AT:R<N> CR004)`.
+
+| # | Item | Spec | Est | Status |
+|---|---|---|---|---|
+| **E0** | D0 token-sync: `AmiShadow` glow/shadow tokens, Plex default family, motion/spacing/radius/type-ramp fixes | [design_system_audit.md](../../forward_planning/CR004_release_readiness/design_system_audit.md) | 0.5 | ⚡ in progress (AT:R52) |
+| **E1** | Backend: migration 0014, reputation engine, challenge attempts, weekly leagues, handles | [build_backend_reputation_league.md](../../forward_planning/CR004_release_readiness/build_backend_reputation_league.md) | 2.5 | ◯ |
+| **E2** | Mobile: celebrations + unlock screen, Room roster, dead-end removal, empty states, streak chip, challenge persistence, league UI, share cards | [build_mobile_engagement.md](../../forward_planning/CR004_release_readiness/build_mobile_engagement.md) | 4–5 | ◯ |
+| **E3** | Animations + motion: 7 CustomPainter primitives → 15 slots, branded splash, `HexPulseLoader`, HexAvatar pulse, dark-only cleanup (D-062) | [build_animations_motion.md](../../forward_planning/CR004_release_readiness/build_animations_motion.md) | 3 | ◯ |
+| **E4** | On-system components: glass bottom sheets, hex period toggle, `HexToast`, `HexBottomNav` | design_system_audit.md §D7/D8 | 1.5–2 | ◯ |
+| **E5** | Plan A verification: A2 device matrix + A3 degradation drills + A1 disposition burn-down | [build_verification_execution.md](../../forward_planning/CR004_release_readiness/build_verification_execution.md) | parallel | ◯ (Saiful device time) |
+
+---
+
 ## Phase 2 — Beta (cloud migration, infra only)
 
 **Exit criterion:** Backend runs on Cloud Run. Postgres + Auth on Supabase. LLM served from a cloud provider (Vertex AI Gemini, Anthropic, or both). On-prem hardware no longer in the request path. Same feature surface as Alpha — *nothing new ships*. Same testers, same app build (just pointed at the new backend hostname).
