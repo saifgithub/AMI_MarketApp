@@ -13,13 +13,16 @@ from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
-from app.api.dependencies import get_current_user
-from app.db.models import User
+from app.api.dependencies import get_current_user, get_current_user_optional
+from app.db import get_session
+from app.db.models import DailyChallengeAttemptRow, User
 from app.schemas.daily_challenge import (
     DailyChallenge,
     DailyChallengeListResponse,
     DailyChallengeResponse,
+    MyAttempt,
 )
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.services.daily_challenge_service import (
@@ -27,13 +30,24 @@ from app.services.daily_challenge_service import (
     get_daily_challenge_service,
 )
 from app.services.journal_store import get_journal_store
+from app.services.reputation_service import get_reputation_service
 
 
 router = APIRouter(prefix="/v1/daily_challenge", tags=["daily_challenge"])
 
 
+def _stored_attempt(session, user_id, challenge_id) -> DailyChallengeAttemptRow | None:
+    return session.execute(
+        select(DailyChallengeAttemptRow).where(
+            DailyChallengeAttemptRow.user_id == user_id,
+            DailyChallengeAttemptRow.challenge_id == challenge_id,
+        )
+    ).scalar_one_or_none()
+
+
 @router.get("/today", response_model=DailyChallengeResponse)
 async def today(
+    current_user: User | None = Depends(get_current_user_optional),
     svc: DailyChallengeService = Depends(get_daily_challenge_service),
 ) -> DailyChallengeResponse:
     ch, d = svc.today()
@@ -42,7 +56,19 @@ async def today(
             status.HTTP_404_NOT_FOUND,
             f"no daily challenge for {d.isoformat()}",
         )
-    return DailyChallengeResponse(challenge=ch, date=d.isoformat())
+    my_attempt = None
+    if current_user is not None:
+        with get_session() as s:
+            row = _stored_attempt(s, current_user.id, ch.id)
+            if row is not None:
+                my_attempt = MyAttempt(
+                    selected_option=row.selected_option,
+                    correct=row.correct,
+                    attempted_at=row.created_at.isoformat(),
+                )
+    return DailyChallengeResponse(
+        challenge=ch, date=d.isoformat(), my_attempt=my_attempt,
+    )
 
 
 @router.get("/by_date/{ymd}", response_model=DailyChallengeResponse)
@@ -98,6 +124,10 @@ class DailyChallengeAttemptResponse(BaseModel):
     explanation: str
     related_lesson: str | None = None
     related_agent: str | None = None
+    # CR004: true when this challenge was already answered — the response
+    # then carries the STORED result, not a re-grade of the new answer.
+    already_attempted: bool = False
+    selected_option: int = 0
 
 
 @router.post("/{cid}/attempt", response_model=DailyChallengeAttemptResponse)
@@ -107,9 +137,10 @@ async def attempt(
     current_user: User = Depends(get_current_user),
     svc: DailyChallengeService = Depends(get_daily_challenge_service),
 ) -> DailyChallengeAttemptResponse:
-    """BL10: record a daily-challenge attempt and journal it. Returns the
-    correct option + explanation + related-lesson/agent links so the mobile
-    detail screen can render the result inline.
+    """BL10 + CR004: record a daily-challenge attempt (one per user per
+    challenge — server truth), award reputation, and journal it. A repeat
+    submission returns the stored result with already_attempted=true (the
+    mobile card renders result-of-the-day; friendlier than a 409).
     """
     ch = svc.get_by_id(cid)
     if ch is None:
@@ -124,6 +155,35 @@ async def attempt(
         )
 
     correct = req.selected_option == ch.answer
+
+    with get_session() as s:
+        existing = _stored_attempt(s, current_user.id, cid)
+        if existing is not None:
+            return DailyChallengeAttemptResponse(
+                correct=existing.correct,
+                correct_option=ch.answer,
+                explanation=ch.explanation,
+                related_lesson=ch.related_lesson,
+                related_agent=ch.related_agent,
+                already_attempted=True,
+                selected_option=existing.selected_option,
+            )
+        s.add(DailyChallengeAttemptRow(
+            user_id=current_user.id,
+            challenge_id=cid,
+            selected_option=req.selected_option,
+            correct=correct,
+        ))
+        rep = get_reputation_service()
+        rep.award(
+            s, user_id=current_user.id,
+            event_type="challenge_attempted", ref_id=cid,
+        )
+        if correct:
+            rep.award(
+                s, user_id=current_user.id,
+                event_type="challenge_correct", ref_id=cid,
+            )
 
     # Journal capture — best-effort, never fail the request on a journal error.
     try:
@@ -153,4 +213,5 @@ async def attempt(
         explanation=ch.explanation,
         related_lesson=ch.related_lesson,
         related_agent=ch.related_agent,
+        selected_option=req.selected_option,
     )

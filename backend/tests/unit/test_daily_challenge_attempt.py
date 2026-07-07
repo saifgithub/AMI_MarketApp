@@ -130,3 +130,109 @@ def test_attempt_writes_journal_entry(client: TestClient) -> None:
     assert e.payload["selected_option"] == 1
     assert e.outcome == "win"
     assert "correct" in e.tags
+
+
+# ── CR004: persistence + already_attempted + reputation ────────────────────
+
+
+def test_second_attempt_returns_stored_result(client: TestClient) -> None:
+    """A repeat submission — even with a different answer — returns the
+    FIRST attempt's stored result with already_attempted=true."""
+    _, token = _make_user_and_token()
+    r1 = client.post(
+        "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
+        json={"selected_option": 0},  # wrong
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r1.status_code == 200
+    assert r1.json()["correct"] is False
+    assert r1.json()["already_attempted"] is False
+
+    r2 = client.post(
+        "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
+        json={"selected_option": 1},  # the exploit: retry with the right answer
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r2.status_code == 200
+    body = r2.json()
+    assert body["already_attempted"] is True
+    assert body["correct"] is False  # stored result, not the re-grade
+    assert body["selected_option"] == 0
+
+
+def test_attempt_awards_reputation(client: TestClient) -> None:
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import ReputationEventRow
+
+    user_id, token = _make_user_and_token()
+    r = client.post(
+        "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
+        json={"selected_option": 1},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200
+    with get_session() as s:
+        types = sorted(
+            e.event_type for e in s.execute(
+                select(ReputationEventRow).where(
+                    ReputationEventRow.user_id == user_id
+                )
+            ).scalars().all()
+        )
+    assert types == ["challenge_attempted", "challenge_correct"]
+
+
+def test_second_attempt_journals_once(client: TestClient) -> None:
+    user_id, token = _make_user_and_token()
+    for _ in range(2):
+        client.post(
+            "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
+            json={"selected_option": 1},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+    entries, _total, _retention = get_journal_store().list_for_user(
+        user_id, entry_type="daily_challenge",
+    )
+    assert len(entries) == 1
+
+
+def test_today_carries_my_attempt_when_authed(client: TestClient, monkeypatch) -> None:
+    """GET /today returns my_attempt after the user has answered."""
+    from datetime import date as _date
+
+    from app.services.daily_challenge_service import DailyChallengeService
+
+    # Pin "today" to the fixture challenge's date.
+    monkeypatch.setattr(
+        DailyChallengeService, "today",
+        lambda self: (self.get_by_id("dc_2026_06_01_aapl"), _date(2026, 6, 1)),
+    )
+    _, token = _make_user_and_token()
+    r = client.get(
+        "/v1/daily_challenge/today",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 200
+    assert r.json()["my_attempt"] is None
+
+    client.post(
+        "/v1/daily_challenge/dc_2026_06_01_aapl/attempt",
+        json={"selected_option": 1},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    r = client.get(
+        "/v1/daily_challenge/today",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    body = r.json()
+    assert body["my_attempt"] == {
+        "selected_option": 1,
+        "correct": True,
+        "attempted_at": body["my_attempt"]["attempted_at"],
+    }
+    # Unauthed callers still get the public shape, my_attempt null.
+    r = client.get("/v1/daily_challenge/today")
+    assert r.status_code == 200
+    assert r.json()["my_attempt"] is None

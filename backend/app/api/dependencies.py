@@ -60,3 +60,22 @@ def get_current_user(
         if row.suspended_at is not None:
             raise HTTPException(status.HTTP_403_FORBIDDEN, "account_suspended")
         return row
+
+
+def get_current_user_optional(
+    authorization: str | None = Header(default=None),
+) -> User | None:
+    """Best-effort variant for public routes that enrich their response
+    when a valid Bearer is present (e.g. /v1/daily_challenge/today gains
+    `my_attempt`). Missing/invalid/suspended → None, never an error."""
+    token = _extract_token(authorization)
+    if not token:
+        return None
+    user_id = parse_scaffold_token(token)
+    if user_id is None:
+        return None
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == user_id)).scalar_one_or_none()
+        if row is None or row.suspended_at is not None:
+            return None
+        return row

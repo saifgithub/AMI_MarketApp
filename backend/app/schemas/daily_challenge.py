@@ -29,9 +29,19 @@ class DailyChallenge(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class MyAttempt(BaseModel):
+    """The caller's stored answer for a challenge (CR004 — server truth;
+    lets the mobile card render the answered state after a restart)."""
+
+    selected_option: int
+    correct: bool
+    attempted_at: str  # ISO 8601
+
+
 class DailyChallengeResponse(BaseModel):
     challenge: DailyChallenge
     date: str  # YYYY-MM-DD
+    my_attempt: MyAttempt | None = None
 
 
 class DailyChallengeListResponse(BaseModel):
