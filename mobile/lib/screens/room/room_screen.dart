@@ -11,6 +11,7 @@ import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
+import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -55,6 +56,20 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
     ref.listen<int>(
       roomNotifierProvider(widget.ticker).select((s) => s.transcript.length),
       (_, __) => _scrollToBottom(),
+    );
+
+    // Celebration hook (CR004 B1): the verdict landing is the payoff of a
+    // 12-agent run — mark the moment it arrives with the micro tier.
+    ref.listen<RoomVerdict?>(
+      roomNotifierProvider(widget.ticker).select((s) => s.verdict),
+      (prev, next) {
+        if (prev == null && next != null) {
+          Celebrate.micro(
+            context,
+            accent: next.isApprove ? AmiColors.hexGreen : AmiColors.hexAmber,
+          );
+        }
+      },
     );
 
     return Scaffold(

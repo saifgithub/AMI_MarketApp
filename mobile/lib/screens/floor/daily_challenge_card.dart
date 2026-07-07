@@ -6,6 +6,7 @@
 library;
 
 import 'package:ami_trade/models/daily_challenge.dart';
+import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
@@ -184,7 +185,13 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                   label: 'SUBMIT',
                   onPressed: _selected == null
                       ? null
-                      : () => setState(() => _submitted = true),
+                      : () {
+                          setState(() => _submitted = true);
+                          if (_selected == ch.answer) {
+                            Celebrate.micro(context,
+                                accent: AmiColors.hexGreen);
+                          }
+                        },
                 )
               else ...[
                 Text(

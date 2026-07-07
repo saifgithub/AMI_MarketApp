@@ -1259,4 +1259,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tourSettingsResetDone =>
       'Tour restarts next time you visit each section.';
+
+  @override
+  String get agentUnlockedHeadline => 'AGENT UNLOCKED';
+
+  @override
+  String agentUnlockedMeet(String name) {
+    return 'MEET $name';
+  }
+
+  @override
+  String get agentUnlockedLater => 'Later';
 }

@@ -2254,6 +2254,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tour restarts next time you visit each section.'**
   String get tourSettingsResetDone;
+
+  /// Full-screen unlock celebration — mono label at the top.
+  ///
+  /// In en, this message translates to:
+  /// **'AGENT UNLOCKED'**
+  String get agentUnlockedHeadline;
+
+  /// Primary button on the unlock celebration screen. {name} is the agent's display name in caps.
+  ///
+  /// In en, this message translates to:
+  /// **'MEET {name}'**
+  String agentUnlockedMeet(String name);
+
+  /// Dismiss link under the MEET button on the unlock celebration screen.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get agentUnlockedLater;
 }
 
 class _AppLocalizationsDelegate

@@ -14,6 +14,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
@@ -57,6 +58,17 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Celebration hooks (CR004 B1): quiz pass = meso burst; an unlock in
+    // the result escalates to the full-screen major takeover.
+    ref.listen(lessonReaderProvider(widget.lessonId), (prev, next) {
+      final result = next.result;
+      if (prev?.result != null || result == null || !result.passed) return;
+      if (result.unlockedAgents.isNotEmpty) {
+        Celebrate.major(context, agent: agentById(result.unlockedAgents.first));
+      } else {
+        Celebrate.meso(context, accent: AmiColors.hexGreen);
+      }
+    });
     final state = ref.watch(lessonReaderProvider(widget.lessonId));
     final l = AppLocalizations.of(context);
     return Scaffold(

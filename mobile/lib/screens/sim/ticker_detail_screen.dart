@@ -20,6 +20,7 @@ import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
+import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ticker_chart.dart';
@@ -462,6 +463,9 @@ class _SecondaryActions extends ConsumerWidget {
       await notifier.remove(ticker);
     } else {
       await notifier.add(ticker);
+      if (context.mounted) {
+        Celebrate.micro(context, accent: AmiColors.hexCyan);
+      }
     }
   }
 

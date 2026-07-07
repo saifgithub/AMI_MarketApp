@@ -714,5 +714,15 @@
     "tourSettingsRestart": "Restart app tour",
     "@tourSettingsRestart": {"description": "Settings tile label — resets all four per-section tour flags."},
     "tourSettingsResetDone": "Tour restarts next time you visit each section.",
-    "@tourSettingsResetDone": {"description": "Snackbar after resetting the tour from Settings."}
+    "@tourSettingsResetDone": {"description": "Snackbar after resetting the tour from Settings."},
+
+    "agentUnlockedHeadline": "AGENT UNLOCKED",
+    "@agentUnlockedHeadline": {"description": "Full-screen unlock celebration — mono label at the top."},
+    "agentUnlockedMeet": "MEET {name}",
+    "@agentUnlockedMeet": {
+        "description": "Primary button on the unlock celebration screen. {name} is the agent's display name in caps.",
+        "placeholders": {"name": {"type": "String"}}
+    },
+    "agentUnlockedLater": "Later",
+    "@agentUnlockedLater": {"description": "Dismiss link under the MEET button on the unlock celebration screen."}
 }

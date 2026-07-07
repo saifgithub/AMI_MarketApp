@@ -1258,4 +1258,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get tourSettingsResetDone =>
       'ستبدأ الجولة مجدداً في المرة القادمة التي تزور فيها كل قسم.';
+
+  @override
+  String get agentUnlockedHeadline => 'AGENT UNLOCKED';
+
+  @override
+  String agentUnlockedMeet(String name) {
+    return 'MEET $name';
+  }
+
+  @override
+  String get agentUnlockedLater => 'Later';
 }
