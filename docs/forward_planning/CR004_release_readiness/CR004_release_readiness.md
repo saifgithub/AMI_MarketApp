@@ -40,14 +40,26 @@ NOW ──► Alpha close-out        Workstream A + remaining A-items      ~2–
 
 Rationale for Engagement-before-Beta rather than after: Beta freezes the feature surface ("nothing new ships" — project_plan.md), and testing retention mechanics needs live testers over multiple weeks — cheapest on the hardware we already run. The Beta migration then carries a *finished* product surface to the cloud once, instead of twice.
 
-## Decisions Saiful must make (each plan flags its own)
+## Decisions — LOCKED 2026-07-07 ("Go as recommended" — Saiful)
 
-| # | Decision | Recommendation | Where |
+| # | Decision | Locked as | Log |
 |---|---|---|---|
-| 1 | Competition scoring: reputation-based weekly league only, or also a P&L-adjacent trading cup? | **Reputation league only.** A trading cup collides with the locked anti-P&L guardrail and the store declaration "we explicitly do not gamify trading P&L" ([store_compliance.md:127](../../initial_specs/07_legal/store_compliance.md)) | Plan C §Variant |
-| 2 | Lesson animations: coded Flutter (CustomPainter) vs Lottie | **Coded Flutter** — 15 slots collapse into ~7 reusable primitives, no new dependency, matches hex language | Plan D §D1 |
-| 3 | Dark-only at launch vs fixing A29 (37 hard-coded slate sites) | **Dark-only for v1.0**; kill the dead Appearance toggle | Plan D §D4 |
-| 4 | Insert the Engagement phase pre-Beta | **Yes** (this doc's premise) | here |
+| 1 | Competition scoring | Reputation-based weekly leagues only; P&L-adjacent "Paper Cup" rejected | **D-060** (resolves OQ-007) |
+| 2 | Lesson animations | Coded Flutter (CustomPainter), 7 primitives, no Lottie | **D-061** |
+| 3 | Theme at launch | Dark-only v1.0; dead toggle removed; A29 → v1.1 | **D-062** |
+| 4 | Engagement phase pre-Beta | Approved | **D-059** |
+
+## Build specs (implementation-level detail)
+
+| Doc | Covers |
+|---|---|
+| [build_backend_reputation_league.md](build_backend_reputation_league.md) | Migration 0014 DDL, reputation service + scoring constants, league service + weekly roll, route changes, config knobs, ~+30 tests |
+| [build_mobile_engagement.md](build_mobile_engagement.md) | Celebration service + unlock screen, streak chip, Room roster, dead-end fixes, league screens, share cards |
+| [build_animations_motion.md](build_animations_motion.md) | 7 CustomPainter primitives → 15 slots, branded splash + HexPulseLoader, HexAvatar pulse, dark-only cleanup |
+| [build_verification_execution.md](build_verification_execution.md) | Live A0 results, A2 device checklist, A3 drill scripts, A1 disposition tracker |
+| [design_system_audit.md](design_system_audit.md) | App vs `/Volumes/Extreme Pro/AMI AI Design System/` — token diff, component/motion gaps, quick wins |
+
+Implementation commits tag `(AT:R<N> CR004)` — no per-bundle sub-CRs unless a bundle outgrows this folder.
 
 ## Scope
 

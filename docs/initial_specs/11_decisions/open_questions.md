@@ -46,9 +46,8 @@ Decisions we explicitly deferred or have not addressed. Revisit before they beco
 
 ### OQ-007 — Reasoning-quality leaderboard scoring formula
 - **Question**: How exactly do we score "reasoning quality"?
-- **Defer until**: Phase 2 build
-- **Components likely**: % alignment with agent predictions (when correct), mandate adherence, override-when-right, learning progression
-- **Notes**: Anti-gaming considerations — needs careful design to prevent farming.
+- **Resolved** (2026-07-07, D-060): reputation-event scoring table in [CR004 Plan C §C1](../../forward_planning/CR004_release_readiness/plan_c_gamification_social_leaderboard.md) — process-only points (challenges, lessons, unlocks, disciplined/reviewed trades, streak milestones), zero P&L input; anti-farming via UNIQUE-constraint dedup, per-type caps, 25/day global cap. Leaderboard pulled forward from Phase 2 to the Engagement phase (D-059).
+- **Deferred to formula v2**: % alignment with agent predictions and override-when-right — both need verdict-outcome tracking that doesn't exist yet.
 
 ### OQ-008 — Replay-as-case-study scoring
 - **Question**: When replaying a past Room, how do we score the user's predictions?

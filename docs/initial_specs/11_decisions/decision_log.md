@@ -286,6 +286,29 @@ When a future debate revisits any of these, refer to the rationale here. Decisio
 - **Source**: Saiful — "it's just me and you, mostly you buddy!"
 - **Rationale**: Capital-efficient. Decision velocity. Validation first; team later if it takes off.
 
+### D-059 — Engagement phase inserted between Alpha close-out and Beta
+- **Decided** (2026-07-07): a new delivery phase ships playability + competition + attractiveness work (CR004 workstreams B, C-v1, D1–D3) to stealth-alpha testers on on-prem infra, BEFORE the Beta cloud cutover. Beta stays infra-only as written.
+- **Source**: Saiful — "Go as recommended" on [CR004](../../forward_planning/CR004_release_readiness/CR004_release_readiness.md).
+- **Rationale**: Beta freezes the feature surface; launching without a retention loop burns the M12 acquisition push; retention mechanics need weeks of live testers — cheapest on hardware we already run.
+- **Affects**: [`project_plan.md`](../10_delivery/project_plan.md) (phase table gains Engagement when workstreams start).
+
+### D-060 — Competition is reputation-based weekly leagues; no P&L competition
+- **Decided** (2026-07-07): the leaderboard is pulled forward from Phase 2 into the Engagement phase as reputation-scored weekly cohort leagues (≤30, promote/relegate, pseudonymous handles, opt-in real names). The "Paper Cup" P&L-adjacent variant is rejected. Scoring formula per CR004 Plan C §C1 — **resolves OQ-007**.
+- **Source**: Saiful — "Go as recommended" (CR004 decision #1).
+- **Rationale**: raw-returns ranking crosses the anti-gambling guardrail ([roadmap "won't do"](../10_delivery/roadmap.md)), risks the store "simulated gambling: No" declaration ([store_compliance.md](../07_legal/store_compliance.md)), and needs NAV-history infra that doesn't exist. Reputation scoring is pure process — resets and mock-walk prices can't game it.
+- **Affects**: [`daily_and_streaks.md`](../04_education/daily_and_streaks.md), [`open_questions.md`](open_questions.md) OQ-007, paywall axis 21 ([tiers_and_pricing.md](../06_monetization/tiers_and_pricing.md) — league eligibility enforced at M1).
+
+### D-061 — Lesson animations are coded Flutter (CustomPainter), not Lottie
+- **Decided** (2026-07-07): the 15 `<Animation>` slots are served by 7 reusable CustomPainter primitives; no Lottie dependency, no design-tool pipeline.
+- **Source**: Saiful — "Go as recommended" (CR004 decision #2). Closes the deferred decision noted in `memory/project_animations.md`.
+- **Rationale**: all 15 slots are financial-chart concepts that collapse into parameterized primitives; themeable with the existing palette; zero new dependency for a one-person team.
+- **Affects**: [`build_animations_motion.md`](../../forward_planning/CR004_release_readiness/build_animations_motion.md).
+
+### D-062 — Dark-only at v1.0 launch
+- **Decided** (2026-07-07): ship dark-only; delete the dead Appearance toggle; `amiLightTheme` stays in-tree; A29 (37 hard-coded slate sites) deferred to v1.1.
+- **Source**: Saiful — "Go as recommended" (CR004 decision #3).
+- **Rationale**: dark is the brand ("trading floor at night"); fixing 37 call sites buys nothing at launch.
+
 ---
 
 ## Process / project
