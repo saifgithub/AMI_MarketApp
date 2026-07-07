@@ -8,7 +8,7 @@ Part of [CR004](CR004_release_readiness.md). This doc carries live A0 results, t
 
 | Check | Status | Detail |
 |---|---|---|
-| Migrations on melehost | ✅ **verified 2026-07-07** | `alembic_version = b2c3d4e50013` — both Alpaca migrations (0012, 0013) applied |
+| Migrations on melehost | ✅ **verified 2026-07-07 (AT:R52)** | `alembic_version = c3d4e5f60014` — 0014 reputation/league applied via `alpha-2026-07-07-1` (0012+0013 verified AT:R51) |
 | Alpaca OAuth creds | ❌ **NOT set** | No `ALPACA_*` vars in `ami_api_alpha` env nor local `infra/alpha.env`. OAuth-mode linking is dead on Alpha; **API-key mode (AT:R47) is the working path**. Unblock = Saiful registers the OAuth app with Alpaca → creds into `infra/alpha.env` → `/promote-to-alpha` |
 | `USE_REAL_MARKET_DATA` | ✅ set on melehost | Verify LIVE pill on-device during A2 |
 | TestFlight upload (DEF037 path) | ⏳ Saiful | Accept Developer Agreement → `scripts/build_testflight.sh --no-bump` (IPA `0.1.0+34` already built) |

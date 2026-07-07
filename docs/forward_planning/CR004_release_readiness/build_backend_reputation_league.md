@@ -3,6 +3,10 @@
 Part of [CR004](CR004_release_readiness.md). Implementation commits tag `(AT:R<N> CR004)`.
 Decisions locked 2026-07-07: D-060 (reputation-only competition). Resolves OQ-007.
 
+> **✅ IMPLEMENTED AT:R52** — commits `378d84f` `15a3ebb` `471345a` `9b7bc60`;
+> live on Alpha via `alpha-2026-07-07-1` (migration `c3d4e5f60014`, 578 tests).
+> This doc is now the as-built record.
+
 ---
 
 ## Migration `..._0014_reputation_league.py`

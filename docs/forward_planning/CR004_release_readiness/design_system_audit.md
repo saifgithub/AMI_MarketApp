@@ -37,7 +37,7 @@ Motion gaps (HexAvatar static pulse, zero glow states) are already owned by [bui
 
 ## Execution — where this lands in the Engagement phase
 
-**D0 — token-sync commit (~0.5 session, do FIRST — everything else builds on it):**
+**D0 — token-sync commit (~0.5 session, do FIRST — everything else builds on it):** — **✅ shipped AT:R52 (`1ec060b`)**
 T1–T7 in one pass: fix the two wrong values, flip default family to Plex(+Inter fallback), add missing spacing/radius steps, add `AmiShadow` (shadowCard, shadowModal, glowBlue, glowPurple), add borderLight/borderSubtle, fill the type-ramp gaps. Pure `ami_theme.dart` + no visual regression risk beyond the font default (eyeball key screens after).
 
 **Folded into existing build specs:**
