@@ -18,6 +18,7 @@ from app.api.coach import router as coach_router  # deprecated /v1/coach/* shim
 from app.api.daily_challenge import router as daily_challenge_router
 from app.api.glossary import router as glossary_router
 from app.api.journal import router as journal_router
+from app.api.league import router as league_router
 from app.api.lessons import router as lessons_router
 from app.api.llm import router as llm_router
 from app.api.mandate import router as mandate_router
@@ -51,6 +52,7 @@ if settings.env != "local" and settings.secret_key == "dev-secret-change-in-prod
     )
 
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
+_LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent
 
 
 async def _nightly_audit_trim() -> None:
@@ -62,6 +64,22 @@ async def _nightly_audit_trim() -> None:
             logger.info("audit_trim_complete", **counts)
         except Exception:
             logger.exception("audit_trim_failed")
+
+
+async def _league_roll_tick() -> None:
+    """Background task: hourly league roll (CR004). weekly_roll() no-ops
+    within an already-assembled ISO week, so restarts can't miss the
+    Monday 00:00 UTC boundary — the next tick catches up."""
+    from app.db import get_session
+    from app.services.league_service import get_league_service
+
+    while True:
+        try:
+            with get_session() as s:
+                get_league_service().weekly_roll(s)
+        except Exception:
+            logger.exception("league_roll_failed")
+        await asyncio.sleep(_LEAGUE_ROLL_INTERVAL_SECONDS)
 
 
 @asynccontextmanager
@@ -76,15 +94,20 @@ async def lifespan(app: FastAPI):
     except Exception:
         logger.exception("room_resume_pending_retries_failed")
 
-    task = asyncio.create_task(_nightly_audit_trim())
+    tasks = [
+        asyncio.create_task(_nightly_audit_trim()),
+        asyncio.create_task(_league_roll_tick()),
+    ]
     try:
         yield
     finally:
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
+        for task in tasks:
+            task.cancel()
+        for task in tasks:
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
 
 
 app = FastAPI(
@@ -119,6 +142,7 @@ app.include_router(coach_router)  # legacy /v1/coach/* — deprecated AT:R27
 app.include_router(daily_challenge_router)
 app.include_router(glossary_router)
 app.include_router(journal_router)
+app.include_router(league_router)
 app.include_router(lessons_router)
 app.include_router(llm_router)
 app.include_router(mandate_router)

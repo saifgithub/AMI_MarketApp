@@ -56,6 +56,8 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import daily_challenge_service as _dc
     from app.services import ai_coach_service as _ac
     from app.services import reputation_service as _rep
+    from app.services import league_service as _lg
+    _lg._service = None
     _ms._store = None
     _os._store = None
     _js._store = None
