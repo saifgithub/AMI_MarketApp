@@ -40,3 +40,8 @@ tracks:
     handover_path: HANDOVER_M.md
     # history_dir: history/              # add when first marketing session wraps; can share AMI's history/ folder (filenames are prefixed)
     # project_plan_path:                 # no marketing backlog doc yet
+
+  G:
+    label: "Governance"
+    handover_path: HANDOVER_G.md
+    history_dir: history/
