@@ -174,7 +174,9 @@ class _StandingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final promo = member.rank <= 5;
-    final releg = member.rank > total - 5;
+    // M2: the backend relegates bottom-5 only for cohorts >= 10
+    // (MIN_COHORT_FOR_RELEGATION) — don't show the red tint below that.
+    final releg = total >= 10 && member.rank > total - 5;
     Color? zone;
     if (member.isMe) {
       zone = AmiColors.hexBlue.withValues(alpha: 0.14);
