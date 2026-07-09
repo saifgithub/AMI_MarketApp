@@ -33,12 +33,25 @@ class BriefScreen extends ConsumerStatefulWidget {
 class _BriefScreenState extends ConsumerState<BriefScreen> {
   final _textCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
+  final _composerFocus = FocusNode();
 
   @override
   void dispose() {
     _textCtrl.dispose();
     _scrollCtrl.dispose();
+    _composerFocus.dispose();
     super.dispose();
+  }
+
+  /// B4 (Plan A #1 / DEF): "Refine" used to call `.reject()`, which discarded
+  /// the proposal and its diff. Now it keeps the diff on screen and seeds the
+  /// composer with the proposal text so the CEO can edit it into a follow-up
+  /// instruction — no server-side reject.
+  void _refine(String proposalText) {
+    _textCtrl.text = proposalText;
+    _textCtrl.selection =
+        TextSelection.collapsed(offset: _textCtrl.text.length);
+    _composerFocus.requestFocus();
   }
 
   void _scrollToBottom() {
@@ -114,6 +127,8 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
                     .clearTransientFlags();
               }),
             Expanded(child: _body(state)),
+            // B4: the composer stays mounted alongside a pending proposal so
+            // "Refine" can keep the diff on screen while the CEO edits.
             if (state.pendingProposal != null)
               _DiffCard(
                 agent: widget.agent,
@@ -122,21 +137,22 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
                     ref.read(briefNotifierProvider(widget.agent.id).notifier).accept(),
                 onReject: () =>
                     ref.read(briefNotifierProvider(widget.agent.id).notifier).reject(),
-                onRefine: () =>
-                    ref.read(briefNotifierProvider(widget.agent.id).notifier).reject(),
-              )
-            else
-              _InputBar(
-                controller: _textCtrl,
-                disabled: state.streaming || state.session == null,
-                proposing: state.proposing,
-                onSend: _send,
-                onPropose: state.messages.length >= 2
-                    ? () =>
-                        ref.read(briefNotifierProvider(widget.agent.id).notifier).propose()
-                    : null,
-                agentColor: widget.agent.color,
+                onRefine: () => _refine(state.pendingProposal!.plainEnglish),
               ),
+            _InputBar(
+              controller: _textCtrl,
+              focusNode: _composerFocus,
+              disabled: state.streaming || state.session == null,
+              proposing: state.proposing,
+              onSend: _send,
+              onPropose:
+                  (state.pendingProposal == null && state.messages.length >= 2)
+                      ? () => ref
+                          .read(briefNotifierProvider(widget.agent.id).notifier)
+                          .propose()
+                      : null,
+              agentColor: widget.agent.color,
+            ),
           ],
         ),
       ),
@@ -450,6 +466,7 @@ class _InputBar extends StatelessWidget {
     required this.proposing,
     required this.onSend,
     required this.agentColor,
+    this.focusNode,
     this.onPropose,
   });
 
@@ -459,6 +476,7 @@ class _InputBar extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback? onPropose;
   final Color agentColor;
+  final FocusNode? focusNode;
 
   @override
   Widget build(BuildContext context) {
@@ -506,6 +524,7 @@ class _InputBar extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
+                  focusNode: focusNode,
                   style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
                   minLines: 1,
                   maxLines: 4,
