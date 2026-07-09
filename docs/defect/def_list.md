@@ -72,6 +72,8 @@ DEF001–DEF036 are the backfill of every processed in-app report as of 2026-07-
 | DEF036 | 2026-05-20 | bug:e2a30a64 | ui_glitch | Apple sign-in failed | resolved | — | AT:R37 |
 | DEF037 | 2026-07-06 | prompt | other | TestFlight upload broken — `xcrun altool --upload-app` error 19 on Xcode 26.5 | resolved | c079359 | AT:R49 |
 | DEF038 | 2026-07-07 | prompt | config | GOOGLE_AUDIENCES never forwarded to api-alpha container (compose `environment:` omits it) — Google Sign-In verifies against empty audience list on Alpha; masked (no real Google traffic yet). Also: bare-CSV values crash pydantic-settings list fields | resolved | — | AT:R52 |
+| DEF039 | 2026-07-09 | prompt | other | `reputation_events` has no DB partial-unique index on its `(user_id, event_type, ref_id)` dedup anchor — dedup is app-code-only, so concurrent same-ref awards can double-insert (defense-in-depth gap on a monetized currency). Needs migration 0015 + promote. (CR004 audit round-1 finding F2) | open | — | AT:R53 |
+| DEF040 | 2026-07-09 | prompt | other | Account merge mid-week re-keys `reputation_events` and sums lifetime `reputation` but does not recompute the adopter's current-week `league_members.points` — a mid-week claim can undercount current-week league standing (lifetime reputation stays correct). (CR004 audit round-1 finding F5) | open | — | AT:R53 |
 
 *Backfill note: sessions before AT:R38 are approximate (dated by report, mapped to the
 session that shipped the fix where a `fix(bug:…)` commit exists). Fix hashes are filled
