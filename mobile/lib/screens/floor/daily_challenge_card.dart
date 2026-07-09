@@ -195,10 +195,16 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   }
 
   void _tick() {
-    final now = DateTime.now();
-    final nextMidnight =
-        DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    final remaining = nextMidnight.difference(now);
+    // CR010 M1: the backend rolls the daily challenge at Asia/Kuala_Lumpur
+    // midnight (DEFAULT_TZ, fixed UTC+8, no DST), NOT the device-local
+    // midnight — count to that so "next in HH:MM:SS" is right on any device tz.
+    const klOffset = Duration(hours: 8);
+    final nowUtc = DateTime.now().toUtc();
+    final nowKl = nowUtc.add(klOffset);
+    final nextKlMidnight =
+        DateTime.utc(nowKl.year, nowKl.month, nowKl.day)
+            .add(const Duration(days: 1));
+    final remaining = nextKlMidnight.subtract(klOffset).difference(nowUtc);
     if (!mounted) return;
     setState(
         () => _untilNext = remaining.isNegative ? Duration.zero : remaining);
