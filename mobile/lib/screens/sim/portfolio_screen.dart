@@ -21,6 +21,7 @@ import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
@@ -154,10 +155,11 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 style: AmiTypography.labelMono),
           ),
           if (state.trades.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AmiSpacing.s),
-              child: Text(AppLocalizations.of(context).portfolioNoTrades,
-                  style: AmiTypography.caption),
+            AmiEmptyState(
+              icon: Icons.receipt_long_outlined,
+              title: AppLocalizations.of(context).portfolioNoTrades,
+              ctaLabel: AppLocalizations.of(context).portfolioNewTrade,
+              onCta: () => TradeTicketSheet.show(context),
             )
           else
             for (final t in state.trades) TradeRow(trade: t),
@@ -430,12 +432,12 @@ class _WatchlistSection extends ConsumerWidget {
           ],
         ),
         if (state.items.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s),
-            child: Text(
-              l.watchlistEmpty,
-              style: AmiTypography.caption,
-            ),
+          AmiEmptyState(
+            icon: Icons.visibility_outlined,
+            title: l.watchlistEmptyTitle,
+            body: l.watchlistEmpty,
+            ctaLabel: l.watchlistAdd,
+            onCta: () => _showAddDialog(context, ref),
           )
         else
           for (final w in state.items) _WatchlistRow(entry: w),
@@ -656,9 +658,9 @@ class _AlpacaPositionsList extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (positions) {
         if (positions.isEmpty) {
-          return Text(
-            'No open positions',
-            style: AmiTypography.caption.copyWith(color: AmiColors.slate500),
+          return AmiEmptyState(
+            icon: Icons.inbox_outlined,
+            title: AppLocalizations.of(context).alpacaNoPositions,
           );
         }
         return Column(
