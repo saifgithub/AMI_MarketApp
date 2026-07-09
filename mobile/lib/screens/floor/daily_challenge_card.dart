@@ -5,10 +5,14 @@
 /// the explanation + related lesson/agent links.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
+import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:flutter/material.dart';
@@ -206,14 +210,38 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
                 Text(ch.explanation, style: AmiTypography.body),
                 const SizedBox(height: AmiSpacing.m),
                 if (ch.relatedLesson != null)
-                  Text(
-                    'Related lesson: ${ch.relatedLesson}',
-                    style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AmiColors.hexBlue,
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: const Icon(Icons.menu_book_outlined, size: 16),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) =>
+                              LessonReaderScreen(lessonId: ch.relatedLesson!),
+                        ),
+                      ),
+                      label: Text(AppLocalizations.of(context).challengeRelatedLesson),
+                    ),
                   ),
                 if (ch.relatedAgent != null)
-                  Text(
-                    'Related agent: ${ch.relatedAgent}',
-                    style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AmiColors.hexBlue,
+                        padding: EdgeInsets.zero,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      icon: const Icon(Icons.person_outline, size: 16),
+                      onPressed: () => AgentActionSheet.show(
+                        context, agentById(ch.relatedAgent!)),
+                      label: Text(AppLocalizations.of(context).challengeRelatedAgent),
+                    ),
                   ),
               ],
               const SizedBox(height: AmiSpacing.xl),
