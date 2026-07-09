@@ -1284,6 +1284,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String get challengeTapToReview => 'Answered — tap to review';
 
   @override
+  String get leagueCardHeading => 'WEEKLY LEAGUE';
+
+  @override
+  String get leagueTitle => 'LEAGUE';
+
+  @override
+  String get leagueRankLabel => 'RANK';
+
+  @override
+  String get leaguePts => 'PTS';
+
+  @override
+  String get leagueRollsInLabel => 'ROLLS IN';
+
+  @override
+  String get leagueUnassigned =>
+      'Your first league starts Monday — keep earning.';
+
+  @override
+  String get leagueError => 'Couldn\'t load standings.';
+
+  @override
+  String get leagueYou => 'YOU';
+
+  @override
+  String get leagueHistoryTitle => 'PAST WEEKS';
+
+  @override
+  String get leagueHistoryEmpty => 'No finished weeks yet.';
+
+  @override
+  String get leagueOutcomePromoted => 'Promoted';
+
+  @override
+  String get leagueOutcomeRelegated => 'Relegated';
+
+  @override
+  String get leagueOutcomeStay => 'Held';
+
+  @override
+  String get settingsSectionLeague => 'LEAGUE';
+
+  @override
+  String get leagueHandle => 'HANDLE';
+
+  @override
+  String get leagueReputation => 'REPUTATION';
+
+  @override
+  String get leagueRegenerate => 'REGENERATE HANDLE';
+
+  @override
+  String get leagueRegenerateFailed =>
+      'Couldn\'t change your handle — you get only one change.';
+
+  @override
   String get settingsAppearanceValue => 'DARK — floor standard';
 
   @override

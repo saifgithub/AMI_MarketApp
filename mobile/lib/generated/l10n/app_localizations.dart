@@ -2291,6 +2291,114 @@ abstract class AppLocalizations {
   /// **'Answered — tap to review'**
   String get challengeTapToReview;
 
+  /// Heading on the Floor league card.
+  ///
+  /// In en, this message translates to:
+  /// **'WEEKLY LEAGUE'**
+  String get leagueCardHeading;
+
+  /// Title of the league standings screen.
+  ///
+  /// In en, this message translates to:
+  /// **'LEAGUE'**
+  String get leagueTitle;
+
+  /// Prefixes the user's rank, e.g. RANK 7 / 30.
+  ///
+  /// In en, this message translates to:
+  /// **'RANK'**
+  String get leagueRankLabel;
+
+  /// Short unit label for league points (points this week).
+  ///
+  /// In en, this message translates to:
+  /// **'PTS'**
+  String get leaguePts;
+
+  /// Prefixes the week countdown, e.g. ROLLS IN 2D 14H.
+  ///
+  /// In en, this message translates to:
+  /// **'ROLLS IN'**
+  String get leagueRollsInLabel;
+
+  /// Shown when the user is not yet assigned to a weekly league cohort.
+  ///
+  /// In en, this message translates to:
+  /// **'Your first league starts Monday — keep earning.'**
+  String get leagueUnassigned;
+
+  /// Error state on the league screen when standings fail to load.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load standings.'**
+  String get leagueError;
+
+  /// Tag on the caller's own row in the standings list.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU'**
+  String get leagueYou;
+
+  /// Title of the league history bottom sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'PAST WEEKS'**
+  String get leagueHistoryTitle;
+
+  /// Empty state in the league history sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'No finished weeks yet.'**
+  String get leagueHistoryEmpty;
+
+  /// League history outcome — the user moved up a tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Promoted'**
+  String get leagueOutcomePromoted;
+
+  /// League history outcome — the user moved down a tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Relegated'**
+  String get leagueOutcomeRelegated;
+
+  /// League history outcome — the user stayed in the same tier.
+  ///
+  /// In en, this message translates to:
+  /// **'Held'**
+  String get leagueOutcomeStay;
+
+  /// Settings section title for the league profile block.
+  ///
+  /// In en, this message translates to:
+  /// **'LEAGUE'**
+  String get settingsSectionLeague;
+
+  /// Label for the user's pseudonymous league handle in Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'HANDLE'**
+  String get leagueHandle;
+
+  /// Label for the user's all-time reputation total in Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'REPUTATION'**
+  String get leagueReputation;
+
+  /// Button to regenerate the pseudonymous handle (allowed once).
+  ///
+  /// In en, this message translates to:
+  /// **'REGENERATE HANDLE'**
+  String get leagueRegenerate;
+
+  /// Snackbar shown when handle regeneration fails or was already used.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t change your handle — you get only one change.'**
+  String get leagueRegenerateFailed;
+
   /// Static appearance row in Settings; v1.0 is dark-only (D-062).
   ///
   /// In en, this message translates to:
