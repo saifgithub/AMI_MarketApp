@@ -16,12 +16,15 @@ import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
+import 'package:ami_trade/state/daily_challenge_providers.dart';
+import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
+import 'package:ami_trade/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -291,6 +294,9 @@ class _FloorScreenState
     final concierge = kAllAgents.last;
     final tradingAgents = kAllAgents.sublist(0, 12);
     final l = AppLocalizations.of(context);
+    final me = ref.watch(leagueMeProvider).valueOrNull;
+    final todayFilled =
+        ref.watch(dailyChallengeTodayProvider).valueOrNull?.myAttempt != null;
 
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -302,6 +308,15 @@ class _FloorScreenState
               padding: const EdgeInsets.all(AmiSpacing.m),
               child: Column(
                 children: [
+                  // ── B2 streak chip (top-right) ──
+                  if (me != null && me.streak.current > 0)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: StreakChip(
+                        count: me.streak.current,
+                        todayFilled: todayFilled,
+                      ),
+                    ),
                   const SizedBox(height: AmiSpacing.l),
                   // ── Concierge centerpiece ──
                   GestureDetector(

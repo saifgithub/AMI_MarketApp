@@ -5,16 +5,22 @@
 /// the explanation + related lesson/agent links.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
+import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
+import 'package:ami_trade/state/league_providers.dart';
+import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
+import 'package:ami_trade/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,6 +35,7 @@ class DailyChallengeCard extends ConsumerWidget {
       error: (e, _) => const SizedBox.shrink(),
       data: (data) {
         if (data == null) return const SizedBox.shrink();
+        final me = ref.watch(leagueMeProvider).valueOrNull;
         return AccentCard(
           accent: AmiColors.hexAmber,
           onTap: () => Navigator.of(context).push(
@@ -36,7 +43,7 @@ class DailyChallengeCard extends ConsumerWidget {
               builder: (_) => DailyChallengeScreen(data: data),
             ),
           ),
-          child: _Body(data: data),
+          child: _Body(data: data, streak: me?.streak),
         );
       },
     );
@@ -60,11 +67,14 @@ class DailyChallengeCard extends ConsumerWidget {
 
 
 class _Body extends StatelessWidget {
-  const _Body({required this.data});
+  const _Body({required this.data, this.streak});
   final DailyChallengeWithDate data;
+  final StreakInfo? streak;
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final answered = data.myAttempt != null;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -95,10 +105,23 @@ class _Body extends StatelessWidget {
         const SizedBox(height: AmiSpacing.xs),
         Row(
           children: [
-            Text(
-              'Tap to attempt →',
-              style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
-            ),
+            if (answered)
+              Text(
+                l.challengeTapToReview,
+                style: AmiTypography.caption.copyWith(
+                  color: data.myAttempt!.correct
+                      ? AmiColors.hexGreen
+                      : AmiColors.textLow,
+                ),
+              )
+            else
+              Text(
+                l.challengeTapToAttempt,
+                style: AmiTypography.caption.copyWith(color: AmiColors.hexBlue),
+              ),
+            const Spacer(),
+            if (streak != null && streak!.current > 0)
+              StreakChip(count: streak!.current, todayFilled: answered),
           ],
         ),
       ],
@@ -127,20 +150,95 @@ class _Body extends StatelessWidget {
 }
 
 
-class DailyChallengeScreen extends StatefulWidget {
+class DailyChallengeScreen extends ConsumerStatefulWidget {
   const DailyChallengeScreen({super.key, required this.data});
   final DailyChallengeWithDate data;
 
   @override
-  State<DailyChallengeScreen> createState() => _DailyChallengeScreenState();
+  ConsumerState<DailyChallengeScreen> createState() =>
+      _DailyChallengeScreenState();
 }
 
-class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
+class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   int? _selected;
   bool _submitted = false;
+  bool _submitting = false;
+  bool _correct = false;
+  Timer? _countdownTimer;
+  Duration _untilNext = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    // B5 server-truth: if today was already answered, open straight into the
+    // answered state (survives a tab switch / restart) from `my_attempt`.
+    final prior = widget.data.myAttempt;
+    if (prior != null) {
+      _selected = prior.selectedOption;
+      _correct = prior.correct;
+      _submitted = true;
+      _startCountdown();
+    }
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    _tick();
+    _countdownTimer?.cancel();
+    _countdownTimer =
+        Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+  }
+
+  void _tick() {
+    final now = DateTime.now();
+    final nextMidnight =
+        DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final remaining = nextMidnight.difference(now);
+    if (!mounted) return;
+    setState(
+        () => _untilNext = remaining.isNegative ? Duration.zero : remaining);
+  }
+
+  Future<void> _submit(DailyChallenge ch) async {
+    final sel = _selected;
+    if (sel == null || _submitting) return;
+    setState(() => _submitting = true);
+    try {
+      final result =
+          await ref.read(apiClientProvider).dailyChallengeAttempt(ch.id, sel);
+      if (!mounted) return;
+      setState(() {
+        _selected = result.selectedOption; // stored attempt wins
+        _correct = result.correct;
+        _submitted = true;
+        _submitting = false;
+      });
+      _startCountdown();
+      if (result.correct) {
+        Celebrate.micro(context, accent: AmiColors.hexGreen);
+      }
+      // Streak/points moved — refresh so the chip + card reflect it.
+      ref.invalidate(leagueMeProvider);
+      ref.invalidate(dailyChallengeTodayProvider);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+    }
+  }
+
+  String _fmt(Duration d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final ch = widget.data.challenge;
     return Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -187,27 +285,25 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
               if (!_submitted)
                 HexButton(
                   label: 'SUBMIT',
-                  onPressed: _selected == null
+                  onPressed: (_selected == null || _submitting)
                       ? null
-                      : () {
-                          setState(() => _submitted = true);
-                          if (_selected == ch.answer) {
-                            Celebrate.micro(context,
-                                accent: AmiColors.hexGreen);
-                          }
-                        },
+                      : () => _submit(ch),
                 )
               else ...[
                 Text(
-                  _selected == ch.answer ? 'CORRECT' : 'INCORRECT',
+                  _correct ? 'CORRECT' : 'INCORRECT',
                   style: AmiTypography.labelMono.copyWith(
-                    color: _selected == ch.answer
-                        ? AmiColors.hexGreen
-                        : AmiColors.hexRed,
+                    color: _correct ? AmiColors.hexGreen : AmiColors.hexRed,
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.s),
                 Text(ch.explanation, style: AmiTypography.body),
+                const SizedBox(height: AmiSpacing.m),
+                Text(
+                  l.challengeNextIn(_fmt(_untilNext)),
+                  style:
+                      AmiTypography.caption.copyWith(color: AmiColors.textLow),
+                ),
                 const SizedBox(height: AmiSpacing.m),
                 if (ch.relatedLesson != null)
                   Align(
