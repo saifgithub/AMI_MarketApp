@@ -12,6 +12,7 @@ table).
 |---|---|---|---|---|
 | CR004 | COMPLETE | none | R53 · round 2 | COMPLETE (r2) — delivered subset D0/E1/B1 |
 | CR009 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — B3/B4/B6 mobile; O1 addressed |
-| CR010 | AWAITING_AUDIT | none | R53 · round 1 | — |
+| CR010 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — B2/B5; M1 fixed, DEF042 filed |
+| CR011 | AWAITING_AUDIT | CR010 | R53 · round 1 | — |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
