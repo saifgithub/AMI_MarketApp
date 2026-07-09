@@ -725,6 +725,15 @@
     "@challengeRelatedLesson": {"description": "Tappable link under a graded daily challenge that opens the related lesson."},
     "challengeRelatedAgent": "RELATED AGENT",
     "@challengeRelatedAgent": {"description": "Tappable link under a graded daily challenge that opens the related agent's action sheet."},
+    "challengeNextIn": "Next challenge in {time}",
+    "@challengeNextIn": {
+        "description": "Countdown under a completed daily challenge to the next one at local midnight. {time} is HH:MM:SS.",
+        "placeholders": {"time": {"type": "String"}}
+    },
+    "challengeTapToAttempt": "Tap to attempt →",
+    "@challengeTapToAttempt": {"description": "Call to action on the daily challenge card when the user has not answered today."},
+    "challengeTapToReview": "Answered — tap to review",
+    "@challengeTapToReview": {"description": "Label on the daily challenge card once the user has answered today (colour signals correct/incorrect)."},
     "settingsAppearanceValue": "DARK — floor standard",
     "@settingsAppearanceValue": {"description": "Static appearance row in Settings; v1.0 is dark-only (D-062)."},
     "settingsAppearanceBody": "The floor runs dark. A light theme arrives in a later release.",

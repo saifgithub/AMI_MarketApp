@@ -2273,6 +2273,24 @@ abstract class AppLocalizations {
   /// **'RELATED AGENT'**
   String get challengeRelatedAgent;
 
+  /// Countdown under a completed daily challenge to the next one at local midnight. {time} is HH:MM:SS.
+  ///
+  /// In en, this message translates to:
+  /// **'Next challenge in {time}'**
+  String challengeNextIn(String time);
+
+  /// Call to action on the daily challenge card when the user has not answered today.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to attempt →'**
+  String get challengeTapToAttempt;
+
+  /// Label on the daily challenge card once the user has answered today (colour signals correct/incorrect).
+  ///
+  /// In en, this message translates to:
+  /// **'Answered — tap to review'**
+  String get challengeTapToReview;
+
   /// Static appearance row in Settings; v1.0 is dark-only (D-062).
   ///
   /// In en, this message translates to:

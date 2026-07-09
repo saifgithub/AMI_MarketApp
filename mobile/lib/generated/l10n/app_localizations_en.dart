@@ -1273,6 +1273,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get challengeRelatedAgent => 'RELATED AGENT';
 
   @override
+  String challengeNextIn(String time) {
+    return 'Next challenge in $time';
+  }
+
+  @override
+  String get challengeTapToAttempt => 'Tap to attempt →';
+
+  @override
+  String get challengeTapToReview => 'Answered — tap to review';
+
+  @override
   String get settingsAppearanceValue => 'DARK — floor standard';
 
   @override
