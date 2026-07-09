@@ -109,10 +109,17 @@ class ReputationService:
         user_id: UUID,
         event_type: str,
         ref_id: str | None = None,
+        always_record: bool = False,
     ) -> int:
         """Grant points for one engagement moment. Returns points actually
         granted — 0 when deduped, type-limited, or fully capped; a partial
         value when the global daily cap clips the grant.
+
+        `always_record=True` writes the `reputation_events` row even when the
+        daily cap has clipped the grant to zero points — used for milestone
+        awards whose row doubles as the once-ever credit-grant guard, so a
+        capped day can't leave the guard unwritten (F1). Dedup and type-limit
+        short-circuits still apply.
         """
         if event_type not in POINTS:
             raise ValueError(f"unknown reputation event_type: {event_type}")
@@ -153,9 +160,9 @@ class ReputationService:
             )
         ).scalar_one()
         remaining = self.daily_cap - int(spent_today)
-        if remaining <= 0:
+        if remaining <= 0 and not always_record:
             return 0
-        granted = min(points, remaining)
+        granted = min(points, max(remaining, 0))
 
         session.add(ReputationEventRow(
             id=uuid4(),
@@ -268,7 +275,13 @@ class ReputationService:
             session, user_id=user.id, event_type=event_type, ref_id=ref_id,
         ):
             return
-        self.award(session, user_id=user.id, event_type=event_type, ref_id=ref_id)
+        # always_record so the guard row persists even when the daily point
+        # cap clips this milestone to a zero-point award; without it the
+        # credit grant below re-fires on every subsequent streak() call (F1).
+        self.award(
+            session, user_id=user.id, event_type=event_type,
+            ref_id=ref_id, always_record=True,
+        )
 
         credits = STREAK_CREDITS[milestone]
         old_balance = user.credit_balance or 0
