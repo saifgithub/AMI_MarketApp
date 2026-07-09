@@ -18,6 +18,7 @@ import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/journal.dart';
+import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/models/merge.dart';
@@ -959,6 +960,48 @@ class ApiClient {
       if (e.response?.statusCode == 404) return null;
       rethrow;
     }
+  }
+
+  // CR010 (B5): server-graded attempt. A repeat returns the stored result
+  // with alreadyAttempted=true (backend persists one attempt per challenge).
+  Future<DailyChallengeAttemptResult> dailyChallengeAttempt(
+    String challengeId,
+    int selectedOption,
+  ) async {
+    final r = await _dio.post<Map<String, dynamic>>(
+      '/v1/daily_challenge/$challengeId/attempt',
+      data: {'selected_option': selectedOption},
+    );
+    return DailyChallengeAttemptResult.fromJson(r.data!);
+  }
+
+  // ── League (CR010) ──────────────────────────────────────────────────
+
+  Future<LeagueMe> leagueMe() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/league/me');
+    return LeagueMe.fromJson(r.data!);
+  }
+
+  Future<LeagueStandings?> leagueStandings() async {
+    try {
+      final r = await _dio.get<Map<String, dynamic>>('/v1/league/standings');
+      return LeagueStandings.fromJson(r.data!);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null; // not_in_league yet
+      rethrow;
+    }
+  }
+
+  Future<List<LeagueHistoryEntry>> leagueHistory() async {
+    final r = await _dio.get<List<dynamic>>('/v1/league/history');
+    return (r.data ?? const [])
+        .map((e) => LeagueHistoryEntry.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<String> regenerateHandle() async {
+    final r = await _dio.patch<Map<String, dynamic>>('/v1/league/handle');
+    return r.data!['handle'] as String;
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────
