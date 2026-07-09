@@ -20,6 +20,7 @@ import 'package:ami_trade/state/backend_mode_provider.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/screens/settings/alpaca_connect_screen.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
+import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -130,6 +131,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _ReadOnlyRow(label: l.settingsProfilePrimaryGoal, value: m.primaryGoal),
                     _ReadOnlyRow(label: l.settingsProfileCredits, value: '${m.creditBalance}'),
                   ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  const _LeagueSection(),
                   const SizedBox(height: AmiSpacing.l),
                   const _LanguageSection(),
                   const SizedBox(height: AmiSpacing.l),
@@ -516,6 +519,53 @@ class _ReadOnlyRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+
+/// CR011 (C3) — "LEAGUE": pseudonymous handle + reputation total + a one-shot
+/// handle regenerate. (The "show my real name" toggle is deferred — no backend
+/// route to persist `show_display_name` yet; tracked as a follow-up.)
+class _LeagueSection extends ConsumerWidget {
+  const _LeagueSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final me = ref.watch(leagueMeProvider).valueOrNull;
+    if (me == null) return const SizedBox.shrink();
+    return _Section(
+      title: l.settingsSectionLeague,
+      children: [
+        _ReadOnlyRow(label: l.leagueHandle, value: me.handle),
+        _ReadOnlyRow(label: l.leagueReputation, value: '${me.reputation}'),
+        const SizedBox(height: AmiSpacing.s),
+        SizedBox(
+          height: 40,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.refresh, size: 16),
+            onPressed: () => _regenerate(context, ref, l),
+            label: Text(l.leagueRegenerate),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _regenerate(
+      BuildContext context, WidgetRef ref, AppLocalizations l) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final handle = await ref.read(apiClientProvider).regenerateHandle();
+      ref.invalidate(leagueMeProvider);
+      messenger
+          .showSnackBar(SnackBar(content: Text('${l.leagueHandle}: $handle')));
+    } catch (_) {
+      // 409 already_regenerated, or a transient failure — one message covers
+      // both (the backend allows only one regeneration).
+      messenger
+          .showSnackBar(SnackBar(content: Text(l.leagueRegenerateFailed)));
+    }
   }
 }
 
