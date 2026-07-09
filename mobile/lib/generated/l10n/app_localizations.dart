@@ -316,11 +316,11 @@ abstract class AppLocalizations {
   /// **'GO TO LESSONS'**
   String get floorLockedGoToLessons;
 
-  /// No description provided for @floorLockedUpgradeSoon.
+  /// Earn-path progress on the locked-agent sheet; tapping opens the next unfinished gateway lesson's track.
   ///
   /// In en, this message translates to:
-  /// **'UPGRADE TO SKIP — coming soon'**
-  String get floorLockedUpgradeSoon;
+  /// **'{completed} / {total} gateway lessons passed'**
+  String floorLockedProgress(int completed, int total);
 
   /// No description provided for @portfolioHeading.
   ///
@@ -567,18 +567,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'est. EPS {eps}'**
   String tickerDetailNewsEpsEstimate(String eps);
-
-  /// Heading on the placeholder card at the bottom of Ticker Detail listing not-yet-built surfaces.
-  ///
-  /// In en, this message translates to:
-  /// **'COMING SOON'**
-  String get tickerDetailComingSoonHeading;
-
-  /// Body of the COMING SOON placeholder card on Ticker Detail. Lists features still to come after Bundles 2-5 shipped.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyst targets · SEC filings · peer comparison'**
-  String get tickerDetailComingSoonBody;
 
   /// Secondary CTA below the Room verdict card. Pushes the user to TickerDetailScreen for chart/news/earnings research. Shown in all verdict states (approve+no-trade, approve+traded, reject).
   ///
@@ -2272,6 +2260,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Later'**
   String get agentUnlockedLater;
+
+  /// Tappable link under a graded daily challenge that opens the related lesson.
+  ///
+  /// In en, this message translates to:
+  /// **'RELATED LESSON'**
+  String get challengeRelatedLesson;
+
+  /// Tappable link under a graded daily challenge that opens the related agent's action sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'RELATED AGENT'**
+  String get challengeRelatedAgent;
+
+  /// Static appearance row in Settings; v1.0 is dark-only (D-062).
+  ///
+  /// In en, this message translates to:
+  /// **'DARK — floor standard'**
+  String get settingsAppearanceValue;
+
+  /// Subtitle under the dark appearance row in Settings.
+  ///
+  /// In en, this message translates to:
+  /// **'The floor runs dark. A light theme arrives in a later release.'**
+  String get settingsAppearanceBody;
+
+  /// Title of the watchlist empty state on the Portfolio tab.
+  ///
+  /// In en, this message translates to:
+  /// **'No tickers yet'**
+  String get watchlistEmptyTitle;
+
+  /// Empty state shown when a linked Alpaca account has no open positions.
+  ///
+  /// In en, this message translates to:
+  /// **'No open positions'**
+  String get alpacaNoPositions;
 }
 
 class _AppLocalizationsDelegate

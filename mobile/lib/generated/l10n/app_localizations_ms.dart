@@ -125,7 +125,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get floorLockedGoToLessons => 'KE PELAJARAN';
 
   @override
-  String get floorLockedUpgradeSoon => 'UPGRADE UNTUK SKIP — akan datang';
+  String floorLockedProgress(int completed, int total) {
+    return '$completed / $total gateway lessons passed';
+  }
 
   @override
   String get portfolioHeading => 'PORTFOLIO';
@@ -265,13 +267,6 @@ class AppLocalizationsMs extends AppLocalizations {
   String tickerDetailNewsEpsEstimate(String eps) {
     return 'est. EPS $eps';
   }
-
-  @override
-  String get tickerDetailComingSoonHeading => 'COMING SOON';
-
-  @override
-  String get tickerDetailComingSoonBody =>
-      'Analyst targets · SEC filings · peer comparison';
 
   @override
   String get roomVerdictSeeChart => 'SEE CHART';
@@ -1273,4 +1268,23 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get agentUnlockedLater => 'Later';
+
+  @override
+  String get challengeRelatedLesson => 'RELATED LESSON';
+
+  @override
+  String get challengeRelatedAgent => 'RELATED AGENT';
+
+  @override
+  String get settingsAppearanceValue => 'DARK — floor standard';
+
+  @override
+  String get settingsAppearanceBody =>
+      'The floor runs dark. A light theme arrives in a later release.';
+
+  @override
+  String get watchlistEmptyTitle => 'No tickers yet';
+
+  @override
+  String get alpacaNoPositions => 'No open positions';
 }
