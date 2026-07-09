@@ -9,7 +9,6 @@ library;
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
-import 'package:ami_trade/state/theme_provider.dart';
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
@@ -679,18 +678,14 @@ class _LanguageRow extends StatelessWidget {
 // setting can't make any subsequent screen look half-themed.
 
 
-class _ThemeSection extends ConsumerWidget {
+// D-062 / D4: dark is pinned at the app level (see app.dart) — no more
+// render-time coercion of the theme provider. This is a static status row.
+class _ThemeSection extends StatelessWidget {
   const _ThemeSection();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final current = ref.watch(themeModeProvider);
-    if (current != ThemeMode.dark) {
-      // Coerce on first render; safe no-op if already dark.
-      Future.microtask(
-        () => ref.read(themeModeProvider.notifier).setMode(ThemeMode.dark),
-      );
-    }
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return _Section(
       title: 'APPEARANCE',
       children: [
@@ -705,12 +700,9 @@ class _ThemeSection extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Dark theme', style: AmiTypography.body),
+                    Text(l.settingsAppearanceValue, style: AmiTypography.body),
                     const SizedBox(height: 2),
-                    Text(
-                      'Alpha is dark-only. Light + Follow System land in v1.0.',
-                      style: AmiTypography.caption,
-                    ),
+                    Text(l.settingsAppearanceBody, style: AmiTypography.caption),
                   ],
                 ),
               ),

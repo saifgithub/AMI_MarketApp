@@ -22,7 +22,6 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
-import 'package:ami_trade/state/theme_provider.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
@@ -36,13 +35,14 @@ class AmiTradeApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeNotifierProvider);
-    final themeMode = ref.watch(themeModeProvider);
     return MaterialApp(
       title: 'AMI Trade',
       debugShowCheckedModeBanner: false,
       theme: amiLightTheme(),
       darkTheme: amiTheme(),
-      themeMode: themeMode,
+      // D-062: dark-only for v1.0. The light theme stays wired for a v1.1
+      // revival, but the mode is pinned dark and the Settings toggle is gone.
+      themeMode: ThemeMode.dark,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: supportedLocales,
