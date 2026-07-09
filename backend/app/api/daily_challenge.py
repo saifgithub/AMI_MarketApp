@@ -14,6 +14,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
 from app.api.dependencies import get_current_user, get_current_user_optional
 from app.db import get_session
@@ -174,6 +175,24 @@ async def attempt(
             selected_option=req.selected_option,
             correct=correct,
         ))
+        try:
+            s.flush()
+        except IntegrityError:
+            # Concurrent double-submit lost the UNIQUE(user, challenge) race —
+            # return the winner's stored result rather than a 500 (F4).
+            s.rollback()
+            existing = _stored_attempt(s, current_user.id, cid)
+            if existing is not None:
+                return DailyChallengeAttemptResponse(
+                    correct=existing.correct,
+                    correct_option=ch.answer,
+                    explanation=ch.explanation,
+                    related_lesson=ch.related_lesson,
+                    related_agent=ch.related_agent,
+                    already_attempted=True,
+                    selected_option=existing.selected_option,
+                )
+            raise
         rep = get_reputation_service()
         rep.award(
             s, user_id=current_user.id,
