@@ -1,5 +1,11 @@
 /// A29 — theme-mode state (light / dark / system).
 ///
+/// **DORMANT (D-062, AT:R53 CR009):** v1.0 is dark-only — `app.dart` pins
+/// `themeMode: ThemeMode.dark` and nothing currently reads `themeModeProvider`.
+/// This provider is intentionally kept (wired but unread) for the v1.1
+/// light-theme revival: re-point `app.dart`'s `themeMode` back at it then, and
+/// restore an Appearance control in Settings.
+///
 /// iOS does not expose the ambient light sensor to apps, so we support:
 ///   1. Manual override persisted via SharedPreferences (wins always).
 ///   2. Follow system (default) — honours iOS dark-mode toggle in Settings.
