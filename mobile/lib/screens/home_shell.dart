@@ -5,7 +5,7 @@ library;
 
 import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
-import 'package:ami_trade/screens/floor/floor_placeholder_screen.dart';
+import 'package:ami_trade/screens/floor/floor_screen.dart';
 import 'package:ami_trade/screens/journal/journal_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
@@ -26,7 +26,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
   int _tab = 0;
 
   static const _tabs = <Widget>[
-    FloorPlaceholderScreen(),
+    FloorScreen(),
     PortfolioScreen(),
     JournalScreen(),
     LessonsScreen(),

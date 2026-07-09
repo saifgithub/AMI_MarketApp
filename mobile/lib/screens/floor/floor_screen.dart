@@ -1,6 +1,6 @@
-/// Placeholder Floor home — shows the 12 agents as tappable hexes.
-/// Locked agents show a dim/lock state; tapping surfaces "How to unlock".
-/// The Concierge is always unlocked.
+/// Floor home — shows the 12 agents as tappable hexes.
+/// Locked agents show a dim/lock state; tapping surfaces "How to unlock" with
+/// earn-path progress. The Concierge is always unlocked.
 library;
 
 import 'package:ami_trade/features/tour/floor_tour.dart';
@@ -14,6 +14,7 @@ import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
+import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -25,16 +26,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
-class FloorPlaceholderScreen extends ConsumerStatefulWidget {
-  const FloorPlaceholderScreen({super.key});
+class FloorScreen extends ConsumerStatefulWidget {
+  const FloorScreen({super.key});
 
   @override
-  ConsumerState<FloorPlaceholderScreen> createState() =>
-      _FloorPlaceholderScreenState();
+  ConsumerState<FloorScreen> createState() =>
+      _FloorScreenState();
 }
 
-class _FloorPlaceholderScreenState
-    extends ConsumerState<FloorPlaceholderScreen> {
+class _FloorScreenState
+    extends ConsumerState<FloorScreen> {
   // GlobalKeys for coach-mark targets
   final _conciergeKey = GlobalKey();
   final _agentKey0 = GlobalKey();
@@ -190,7 +191,15 @@ class _FloorPlaceholderScreenState
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.school, size: 14, color: AmiColors.hexGreen),
+                        Icon(
+                          state.isLessonCompleted(lesson.id)
+                              ? Icons.check_circle
+                              : Icons.school,
+                          size: 14,
+                          color: state.isLessonCompleted(lesson.id)
+                              ? AmiColors.hexGreen
+                              : AmiColors.textLow,
+                        ),
                         const SizedBox(width: 6),
                         Expanded(child: Text(lesson.title, style: AmiTypography.body)),
                       ],
@@ -214,18 +223,40 @@ class _FloorPlaceholderScreenState
                   child: Text(l.floorLockedGoToLessons),
                 ),
               ),
-              const SizedBox(height: AmiSpacing.s),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AmiColors.hexBlue,
-                    side: const BorderSide(color: AmiColors.hexBlue),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(l.floorLockedUpgradeSoon),
-                ),
-              ),
+              // B4: the dead "UPGRADE TO SKIP — coming soon" button is gone.
+              // In its place, real earn-path progress that jumps to the next
+              // unfinished gateway lesson's track.
+              if (requiredLessons.isNotEmpty) ...[
+                const SizedBox(height: AmiSpacing.s),
+                Builder(builder: (_) {
+                  final completed = requiredLessons
+                      .where((m) => state.isLessonCompleted(m.id))
+                      .length;
+                  final next = requiredLessons.firstWhere(
+                    (m) => !state.isLessonCompleted(m.id),
+                    orElse: () => requiredLessons.first,
+                  );
+                  return SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AmiColors.hexBlue,
+                        side: const BorderSide(color: AmiColors.hexBlue),
+                      ),
+                      icon: const Icon(Icons.trending_up, size: 16),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).push(MaterialPageRoute<void>(
+                          builder: (_) => TrackLessonsScreen(trackId: next.track),
+                        ));
+                      },
+                      label: Text(
+                        l.floorLockedProgress(completed, requiredLessons.length),
+                      ),
+                    ),
+                  );
+                }),
+              ],
             ],
           ),
         ),
