@@ -37,5 +37,5 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR008 | 2026-07-09 | Convene the Room token estimation and prompt caching opportunities | proposed | [CR008_convene_room_prompt_caching/](CR008_convene_room_prompt_caching/) | AT:G2 |
 | CR009 | 2026-07-09 | Mobile engagement bundle B3/B4/B6 — Room roster + dead-end removal + empty states (impl CR under CR004) | done | [CR009_mobile_engagement_b3b4b6/](CR009_mobile_engagement_b3b4b6/) | AT:R53 |
 | CR010 | 2026-07-09 | B2/B5 — streak chip + challenge server-truth + league API layer (impl CR under CR004) | done | [CR010_mobile_streak_challenge_league_api/](CR010_mobile_streak_challenge_league_api/) | AT:R53 |
-| CR011 | 2026-07-09 | C3 — league surface: card + screen + Settings profile (impl CR under CR004) | in_progress | [CR011_mobile_league_surface/](CR011_mobile_league_surface/) | AT:R53 |
+| CR011 | 2026-07-09 | C3 — league surface: card + screen + Settings profile (impl CR under CR004) | done | [CR011_mobile_league_surface/](CR011_mobile_league_surface/) | AT:R53 |
 
