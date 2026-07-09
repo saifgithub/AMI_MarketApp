@@ -31,3 +31,4 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR002 | 2026-07-06 | Reconcile the `bug_reports` status vocabulary | proposed | [CR002_bug_status_vocabulary/](CR002_bug_status_vocabulary/) | AT:R49 |
 | CR003 | 2026-07-06 | Correct stale "no GitHub remote" documentation | done | [CR003_github_remote_docs/](CR003_github_remote_docs/) | AT:R50 |
 | CR004 | 2026-07-06 | Release-readiness master plan — 4 workstreams (verify / playability / competition / attractiveness) | in_progress | [CR004_release_readiness/](CR004_release_readiness/) | AT:R51 |
+| CR005 | 2026-07-09 | Architect/auditor audit-handshake protocol (ported from ami_ai) | done | [CR005_audit_handshake_protocol/](CR005_audit_handshake_protocol/) | AT:G1 |
