@@ -258,5 +258,54 @@ def test_streak_milestone_grants_points_and_credits_once():
         assert credit_events[0].note == "streak_milestone_7"
 
 
+def test_streak_milestone_credit_grant_idempotent_under_daily_cap():
+    """F1 regression (CR004 audit round 1): when the daily point cap is
+    already exhausted as a milestone fires, award() clips the milestone to a
+    zero-point write — but its reputation_events guard row must still persist,
+    or the once-ever credit grant re-fires on every subsequent streak() call
+    (GET /v1/league/me runs streak() on each league-screen load). Ported from
+    the auditor pin audit/handshake/regression/test_streak_milestone_cap_pin.py
+    into the main suite per the round-2 recommendation.
+    """
+    user = _make_user()
+    svc = ReputationService()
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for days_ago in range(7):  # a live 7-day streak → crosses streak_7
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"d{days_ago}",
+                created_at=now - timedelta(days=days_ago),
+            ))
+    # Exhaust today's 25-point cap with normal activity before the milestone.
+    with get_session() as s:
+        svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l1")
+        svc.award(s, user_id=user.id, event_type="lesson_passed", ref_id="l2")
+        svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c1")
+        svc.award(s, user_id=user.id, event_type="challenge_correct", ref_id="c2")
+        svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="r1")
+        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a1")
+        svc.award(s, user_id=user.id, event_type="challenge_attempted", ref_id="a2")
+        svc.award(s, user_id=user.id, event_type="agent_unlocked", ref_id="agent-1")
+    # Two league-screen loads under the exhausted cap.
+    with get_session() as s:
+        svc.streak(s, user.id)
+    with get_session() as s:
+        svc.streak(s, user.id)
+
+    milestone_events = [e for e in _events(user.id) if e.event_type == "streak_7"]
+    assert len(milestone_events) == 1       # guard row written exactly once
+    assert milestone_events[0].points == 0  # clipped to zero by the full cap
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+        assert row.credit_balance == 5      # granted once — not re-granted
+        credit_events = s.execute(
+            select(SubscriptionEventRow).where(
+                SubscriptionEventRow.user_id == user.id,
+                SubscriptionEventRow.event_type == "credits_added",
+            )
+        ).scalars().all()
+        assert len(credit_events) == 1
+
+
 def test_get_reputation_service_singleton():
     assert get_reputation_service() is get_reputation_service()
