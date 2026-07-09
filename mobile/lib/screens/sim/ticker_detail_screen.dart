@@ -23,6 +23,7 @@ import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/ticker_chart.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
@@ -190,17 +191,12 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
                 ),
               ),
               if (trades.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(AmiSpacing.s),
-                  child: Text(
-                    l.tickerDetailNoTrades,
-                    style: AmiTypography.caption,
-                  ),
+                AmiEmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  title: l.tickerDetailNoTrades,
                 )
               else
                 for (final t in trades) TradeRow(trade: t),
-              const SizedBox(height: AmiSpacing.xl),
-              _ComingSoonCard(),
               const SizedBox(height: AmiSpacing.xxl),
             ],
           ),
@@ -583,31 +579,6 @@ class _Chip extends StatelessWidget {
 }
 
 
-class _ComingSoonCard extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AmiSpacing.m),
-      decoration: BoxDecoration(
-        color: AmiColors.slate800.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        border: Border.all(
-            color: AmiColors.slate700, style: BorderStyle.solid, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.tickerDetailComingSoonHeading,
-              style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow)),
-          const SizedBox(height: AmiSpacing.xs),
-          Text(l.tickerDetailComingSoonBody,
-              style: AmiTypography.caption),
-        ],
-      ),
-    );
-  }
-}
 
 
 /// Amber pill showing upcoming earnings within 90 days.
