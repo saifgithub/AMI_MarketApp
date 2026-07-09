@@ -33,7 +33,6 @@
     "floorLockedNoLessons": "يتم إلغاء قفل هذا العميل تلقائياً عند توفر دروس Earn-Path الخاصة به. حالياً، يمكنك معاينتهم عبر 1-on-1 إذا كانت خطتك تسمح بذلك.",
     "floorLockedEarnByLessons": "احصل على هذا العميل مجاناً عبر اجتياز كل درس يتضمنه:",
     "floorLockedGoToLessons": "انتقل إلى الدروس",
-    "floorLockedUpgradeSoon": "ترقية للتخطي — قريباً",
     "portfolioHeading": "المحفظة",
     "portfolioNewTradeTooltip": "صفقة جديدة",
     "portfolioTotalValue": "القيمة الإجمالية",
