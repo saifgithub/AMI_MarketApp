@@ -88,6 +88,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
+                    if (state.streaming && state.order.isEmpty)
+                      _RoomRoster(state: state),
                     for (final agentId in state.order)
                       _AgentLine(
                         agentId: agentId,
@@ -244,6 +246,92 @@ class _AgentLine extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// B3 — Room roster skeleton. Replaces the empty-body + footer-spinner wait
+/// with the 12-agent lineup so convening the Room reads as a team assembling.
+/// Rows derive their state from `RoomState` (no per-agent status map exists):
+/// speaking = `activeAgent`, done = already in `order`, else standing by. In
+/// the display window (streaming + `order` empty) every row is standing by;
+/// the speaking/done branches light up automatically if the lineup is ever
+/// shown mid-run (the live pulse arrives with D3).
+class _RoomRoster extends StatelessWidget {
+  const _RoomRoster({required this.state});
+  final RoomState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final agent in kAllAgents.sublist(0, 12))
+          _RosterRow(agent: agent, state: state, standingByLabel: l.roomStandingBy),
+      ],
+    );
+  }
+}
+
+
+class _RosterRow extends StatelessWidget {
+  const _RosterRow({
+    required this.agent,
+    required this.state,
+    required this.standingByLabel,
+  });
+
+  final Agent agent;
+  final RoomState state;
+  final String standingByLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final speaking = state.activeAgent == agent.id;
+    final done = !speaking && state.order.contains(agent.id);
+    final lit = speaking || done;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+      child: Row(
+        children: [
+          Opacity(
+            opacity: lit ? 1.0 : 0.35,
+            child: HexAvatar(
+              label: agent.abbreviation,
+              color: agent.color,
+              size: 28,
+              status:
+                  speaking ? HexAvatarStatus.recentCall : HexAvatarStatus.idle,
+            ),
+          ),
+          const SizedBox(width: AmiSpacing.s),
+          Expanded(
+            child: Text(
+              agent.displayName,
+              style: AmiTypography.body.copyWith(
+                color: lit ? AmiColors.textHigh : AmiColors.textMed,
+              ),
+            ),
+          ),
+          if (speaking)
+            Container(
+              width: 6,
+              height: 6,
+              decoration:
+                  BoxDecoration(color: agent.color, shape: BoxShape.circle),
+            )
+          else if (done)
+            const Icon(Icons.check, color: AmiColors.hexGreen, size: 16)
+          else
+            Text(
+              standingByLabel.toUpperCase(),
+              style: AmiTypography.labelMono
+                  .copyWith(color: AmiColors.textLow, fontSize: 10),
+            ),
         ],
       ),
     );
@@ -580,6 +668,11 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // B3: while the roster skeleton owns the wait (streaming, nothing spoken
+    // yet), the footer spinner is redundant — the lineup is the activity cue.
+    if (state.streaming && state.order.isEmpty) {
+      return const SizedBox.shrink();
+    }
     if (state.streaming) {
       return Container(
         padding: const EdgeInsets.all(AmiSpacing.m),
