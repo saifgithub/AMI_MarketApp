@@ -11,6 +11,7 @@ import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_bottom_nav.dart';
 import 'package:ami_trade/widgets/ticker_tape.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,47 +48,29 @@ class _HomeShellState extends ConsumerState<HomeShell> {
               color: AmiColors.glassChrome,
               border: Border(top: BorderSide(color: AmiColors.slate700)),
             ),
-            // Strip the bottom inset from MediaQuery so BottomNavigationBar
-            // doesn't absorb it internally — TickerTape owns that space.
+            // Strip the bottom inset from MediaQuery so the nav doesn't absorb
+            // it internally — TickerTape owns that space.
             child: MediaQuery.removePadding(
               context: context,
               removeBottom: true,
-              child: BottomNavigationBar(
+              child: HexBottomNav(
                 currentIndex: _tab,
                 onTap: (i) {
                   setState(() => _tab = i);
                   ref.read(activeTabIndexProvider.notifier).state = i;
                 },
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                type: BottomNavigationBarType.fixed,
-                selectedItemColor: AmiColors.hexBlue,
-                unselectedItemColor: AmiColors.textLow,
-                selectedLabelStyle:
-                    AmiTypography.labelMono.copyWith(fontSize: 9),
-                unselectedLabelStyle:
-                    AmiTypography.labelMono.copyWith(fontSize: 9),
                 items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.grid_view_rounded),
-                    label: l.floorTabUpper,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.account_balance_wallet_outlined),
-                    label: l.portfolioTabUpper,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.menu_book_outlined),
-                    label: l.journalTabUpper,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.school_outlined),
-                    label: l.lessonsTabUpper,
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.settings_outlined),
-                    label: l.settingsTabUpper,
-                  ),
+                  HexNavItem(
+                      icon: Icons.grid_view_rounded, label: l.floorTabUpper),
+                  HexNavItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: l.portfolioTabUpper),
+                  HexNavItem(
+                      icon: Icons.menu_book_outlined, label: l.journalTabUpper),
+                  HexNavItem(
+                      icon: Icons.school_outlined, label: l.lessonsTabUpper),
+                  HexNavItem(
+                      icon: Icons.settings_outlined, label: l.settingsTabUpper),
                 ],
               ),
             ),
