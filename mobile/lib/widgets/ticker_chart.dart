@@ -20,6 +20,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -142,6 +143,8 @@ class _TickerChartState extends ConsumerState<TickerChart> {
 // ── Period selector ─────────────────────────────────────────────────────
 
 
+/// C3 (CR015/D7) — elongated-hex period toggle. Active cell = solid hexBlue +
+/// glow; inactive = slate800 with a slate700 hex border.
 class _PeriodSelector extends StatelessWidget {
   const _PeriodSelector({required this.period, required this.onChanged});
 
@@ -155,27 +158,64 @@ class _PeriodSelector extends StatelessWidget {
       runSpacing: 6,
       children: [
         for (final p in _kPeriods)
-          ChoiceChip(
-            label: Text(
-              p,
-              style: AmiTypography.labelMono.copyWith(
-                fontSize: 11,
-                color: p == period ? AmiColors.slate900 : AmiColors.textMed,
-              ),
-            ),
-            selected: p == period,
-            selectedColor: AmiColors.hexCyan,
-            backgroundColor: AmiColors.slate800,
-            side: BorderSide(
-              color: p == period ? AmiColors.hexCyan : AmiColors.slate700,
-            ),
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            onSelected: (selected) {
-              if (selected) onChanged(p);
-            },
+          _PeriodCell(
+            label: p,
+            active: p == period,
+            onTap: () => onChanged(p),
           ),
       ],
+    );
+  }
+}
+
+class _PeriodCell extends StatelessWidget {
+  const _PeriodCell({
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget cell = ClipPath(
+      clipper: const FlatTopHexagonClipper(cornerCut: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? AmiColors.hexBlue : AmiColors.slate800,
+          border: Border.all(
+            color: active ? AmiColors.hexBlue : AmiColors.slate700,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AmiTypography.labelMono.copyWith(
+            fontSize: 11,
+            color: active ? AmiColors.slate900 : AmiColors.textMed,
+          ),
+        ),
+      ),
+    );
+    if (active) {
+      cell = DecoratedBox(
+        decoration: const BoxDecoration(boxShadow: AmiShadow.glowBlue),
+        child: cell,
+      );
+    }
+    return Semantics(
+      button: true,
+      selected: active,
+      label: label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: cell,
+      ),
     );
   }
 }
