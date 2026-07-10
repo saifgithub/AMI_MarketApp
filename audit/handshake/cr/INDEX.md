@@ -14,6 +14,6 @@ table).
 | CR009 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — B3/B4/B6 mobile; O1 addressed |
 | CR010 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — B2/B5; M1 fixed, DEF042 filed |
 | CR011 | COMPLETE | CR010 | R53 · round 1 | COMPLETE (r1) — C3 league surface; M2 addressed |
-| CR012 | SUBMITTED | none | R53 · round 1 | — awaiting auditor (C4 share cards) |
+| CR012 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — C4 share cards; O1 (RTL) addressed |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
