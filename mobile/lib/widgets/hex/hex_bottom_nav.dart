@@ -33,6 +33,9 @@ class HexBottomNav extends StatelessWidget {
     return SizedBox(
       height: 62,
       child: Row(
+        // M1: stretch so each cell's tap target fills the full bar height
+        // (no dead strips top/bottom) — width already fills via Expanded.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (var i = 0; i < items.length; i++)
             Expanded(child: _Cell(
