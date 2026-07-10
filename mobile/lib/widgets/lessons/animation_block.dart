@@ -1,10 +1,9 @@
 /// AnimationBlock — renders `<Animation name="..." />` inside a lesson.
 ///
-/// Looks the name up in `AnimationRegistry`. If a Lottie asset is bundled,
-/// this widget would play it (Lottie playback is deliberately deferred —
-/// pubspec doesn't carry the `lottie` dependency yet). When the asset is
-/// missing, it renders `AmiHexPlaceholder` so the lesson surface still
-/// ships content authors can reference by name today.
+/// Looks the name up in `AnimationRegistry` (CR013 / D-061: coded Flutter
+/// animations, no Lottie). A registered name builds its parameterised
+/// `AmiAnimation`; an unknown name renders `AmiHexPlaceholder` so a lesson that
+/// references a not-yet-built animation still ships.
 library;
 
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -19,14 +18,11 @@ class AnimationBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final asset = AnimationRegistry.assetFor(name);
-    if (asset == null) {
+    final builder = AnimationRegistry.builderFor(name);
+    if (builder == null) {
       return AmiHexPlaceholder(name: name);
     }
-    // Asset registered but no Lottie runtime is wired yet. The placeholder
-    // path still applies; once the `lottie` package is added the body of
-    // this branch becomes `Lottie.asset(asset, ...)`.
-    return AmiHexPlaceholder(name: name, hasAsset: true);
+    return builder(context);
   }
 }
 
