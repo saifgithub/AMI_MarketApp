@@ -17,6 +17,7 @@ import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
+import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -305,8 +306,9 @@ class _RosterRow extends StatelessWidget {
               label: agent.abbreviation,
               color: agent.color,
               size: 28,
+              // CR014/D3: the currently-streaming agent pulses (signal).
               status:
-                  speaking ? HexAvatarStatus.recentCall : HexAvatarStatus.idle,
+                  speaking ? HexAvatarStatus.signal : HexAvatarStatus.idle,
             ),
           ),
           const SizedBox(width: AmiSpacing.s),
@@ -698,13 +700,7 @@ class _Footer extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(
-                strokeWidth: 2, color: AmiColors.hexGreen,
-              ),
-            ),
+            const HexPulseLoader(size: 16, color: AmiColors.hexGreen),
             const SizedBox(width: AmiSpacing.s),
             Text(
               '${AppLocalizations.of(context).roomDeliberating} ${state.phase ?? ""}'

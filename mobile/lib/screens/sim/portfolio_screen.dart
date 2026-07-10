@@ -231,8 +231,16 @@ class _ValueCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AmiSpacing.xs),
-          Text('\$${fmt.format(portfolio.totalValue)}',
-              style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
+          // CR014/D3: count-up on change. No `begin` ⇒ no sweep on first open;
+          // a changed total animates from the previous frame's value.
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(end: portfolio.totalValue),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => Text('\$${fmt.format(value)}',
+                style:
+                    AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
+          ),
           const SizedBox(height: AmiSpacing.s),
           Row(
             children: [

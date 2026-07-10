@@ -34,23 +34,21 @@ class _HexPulseLoaderState extends State<HexPulseLoader>
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SizedBox(
-        width: widget.size,
-        height: widget.size,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (_, __) {
-            final t = Curves.easeInOut.transform(_controller.value);
-            return CustomPaint(
-              painter: _HexPulsePainter(
-                color: widget.color,
-                scale: 0.92 + 0.16 * t,
-                glow: 0.3 + 0.4 * t,
-              ),
-            );
-          },
-        ),
+    return SizedBox(
+      width: widget.size,
+      height: widget.size,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (_, __) {
+          final t = Curves.easeInOut.transform(_controller.value);
+          return CustomPaint(
+            painter: _HexPulsePainter(
+              color: widget.color,
+              scale: 0.92 + 0.16 * t,
+              glow: 0.3 + 0.4 * t,
+            ),
+          );
+        },
       ),
     );
   }

@@ -24,6 +24,7 @@ import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -86,18 +87,9 @@ class _AuthGate extends ConsumerWidget {
       // Bootstrap is in flight (or never started, or errored). Show the
       // brand splash and let `Future.microtask(n.bootstrap)` in
       // authNotifierProvider's factory do the work.
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AmiColors.slate900,
-        body: const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.0,
-              valueColor: AlwaysStoppedAnimation(AmiColors.hexCyan),
-            ),
-          ),
-        ),
+        body: Center(child: HexPulseLoader()),
       );
     }
     return startOnFloor ? const HomeShell() : const OnboardingScreen();

@@ -20,6 +20,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -193,16 +194,7 @@ class _ChartSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AmiRadii.card),
         border: Border.all(color: AmiColors.slate700),
       ),
-      child: const Center(
-        child: SizedBox(
-          height: 18,
-          width: 18,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AmiColors.hexCyan,
-          ),
-        ),
-      ),
+      child: const Center(child: HexPulseLoader(size: 28)),
     );
   }
 }
