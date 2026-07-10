@@ -9,15 +9,23 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 
 class StreakChip extends StatelessWidget {
-  const StreakChip({super.key, required this.count, required this.todayFilled});
+  const StreakChip({
+    super.key,
+    required this.count,
+    required this.todayFilled,
+    this.onTap,
+  });
 
   final int count;
   final bool todayFilled;
 
+  /// Optional tap handler — the Floor wires this to share the streak (CR012 C4).
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final color = todayFilled ? AmiColors.hexGreen : AmiColors.hexAmber;
-    return Container(
+    final chip = Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
@@ -35,6 +43,12 @@ class StreakChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (onTap == null) return chip;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AmiRadii.card),
+      child: chip,
     );
   }
 }

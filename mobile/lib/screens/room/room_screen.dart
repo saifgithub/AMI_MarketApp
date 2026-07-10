@@ -12,6 +12,7 @@ import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/services/celebration.dart';
+import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -483,6 +484,21 @@ class _VerdictCard extends ConsumerWidget {
                       style: AmiTypography.labelMono.copyWith(
                           color: AmiColors.hexAmber, fontSize: 9)),
                 ),
+              IconButton(
+                tooltip: l.shareTooltip,
+                icon: const Icon(Icons.ios_share, size: 20),
+                color: AmiColors.textMed,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () => ShareService.shareVerdict(
+                  context,
+                  ticker: ticker,
+                  stanceLabel: l.roomVerdictHeading(verdict.action),
+                  isApprove: isApprove,
+                  reason: verdict.reason,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AmiSpacing.m),

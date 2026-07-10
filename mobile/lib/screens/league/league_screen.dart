@@ -6,6 +6,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/screens/league/league_common.dart';
+import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -308,6 +309,26 @@ class _HistorySheetState extends ConsumerState<_HistorySheet> {
                                   .copyWith(color: AmiColors.textMed)),
                           const SizedBox(width: AmiSpacing.s),
                           _OutcomeTag(outcome: e.outcome, l: l),
+                          IconButton(
+                            tooltip: l.shareTooltip,
+                            icon: const Icon(Icons.ios_share, size: 18),
+                            color: AmiColors.textLow,
+                            visualDensity: VisualDensity.compact,
+                            padding: const EdgeInsets.only(left: AmiSpacing.s),
+                            constraints: const BoxConstraints(),
+                            onPressed: () => ShareService.sharePromotion(
+                              context,
+                              tierLabel: leagueTierLabel(e.tier),
+                              tierColor: leagueTierColor(e.tier),
+                              week: e.week,
+                              rank: e.rankFinal,
+                              outcomeLabel: switch (e.outcome) {
+                                'promoted' => l.leagueOutcomePromoted,
+                                'relegated' => l.leagueOutcomeRelegated,
+                                _ => null,
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),

@@ -9,6 +9,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
+import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
@@ -105,12 +106,31 @@ class _AgentUnlockedScreenState extends State<AgentUnlockedScreen>
                 ),
               ),
               const SizedBox(height: AmiSpacing.s),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  l.agentUnlockedLater,
-                  style: AmiTypography.body,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      l.agentUnlockedLater,
+                      style: AmiTypography.body,
+                    ),
+                  ),
+                  const SizedBox(width: AmiSpacing.l),
+                  TextButton.icon(
+                    onPressed: () => ShareService.shareUnlock(
+                      context,
+                      agentName: agent.displayName,
+                      abbreviation: agent.abbreviation,
+                      accent: agent.color,
+                    ),
+                    icon: const Icon(Icons.ios_share, size: 18),
+                    label: Text(l.shareTooltip, style: AmiTypography.body),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AmiColors.textMed,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AmiSpacing.m),
             ],

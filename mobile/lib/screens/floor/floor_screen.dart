@@ -19,6 +19,7 @@ import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
+import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -316,6 +317,11 @@ class _FloorScreenState
                       child: StreakChip(
                         count: me.streak.current,
                         todayFilled: todayFilled,
+                        onTap: () => ShareService.shareStreak(
+                          context,
+                          days: me.streak.current,
+                          accent: AmiColors.hexGreen,
+                        ),
                       ),
                     ),
                   const SizedBox(height: AmiSpacing.l),
