@@ -17,7 +17,7 @@ table).
 | CR012 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — C4 share cards; O1 (RTL) addressed |
 | CR013 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E3/D1 15 lesson animations; replay-tooltip i18n addressed |
 | CR014 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E3/D2+D3 motion identity; no findings |
-| CR015 | SUBMITTED | none | R53 · round 1 | — awaiting auditor (E4/D7 HexToast/toggle/logo; C1+bulk deferred) |
+| CR015 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E4/D7 HexToast/toggle/logo; C1+bulk deferred; no findings |
 | CR016 | SUBMITTED | none | R53 · round 1 | — awaiting auditor (E4/D8 HexBottomNav) |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
