@@ -4,6 +4,7 @@
 /// primitives through the real `AnimationBlock` entry point.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/widgets/lessons/ami_animation.dart';
 import 'package:ami_trade/widgets/lessons/animation_block.dart';
 import 'package:ami_trade/widgets/lessons/animation_registry.dart';
@@ -31,6 +32,8 @@ const _slots = <String>[
 Future<void> _pump(WidgetTester t, String name) async {
   await t.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: ListView(children: [AnimationBlock(name: name)]),
       ),
