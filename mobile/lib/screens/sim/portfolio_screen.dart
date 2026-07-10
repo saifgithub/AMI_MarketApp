@@ -23,6 +23,7 @@ import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/empty_state.dart';
 import 'package:ami_trade/widgets/hex/hex_chip.dart';
+import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,11 +69,12 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       },
       onFinish: () {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tourCompletionPortfolio),
-          backgroundColor: AmiColors.hexCyan,
-          behavior: SnackBarBehavior.floating,
-        ));
+        HexToast.show(
+          context,
+          AppLocalizations.of(context).tourCompletionPortfolio,
+          accent: AmiColors.hexCyan,
+          icon: Icons.check_circle_outline,
+        );
       },
     ).show(context: context);
   }

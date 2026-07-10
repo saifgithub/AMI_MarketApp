@@ -26,9 +26,11 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_button.dart';
 import 'package:ami_trade/widgets/hex/hex_mesh_overlay.dart';
+import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/streak_chip.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class FloorScreen extends ConsumerStatefulWidget {
@@ -115,11 +117,12 @@ class _FloorScreenState
       },
       onFinish: () {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tourCompletionFloor),
-          backgroundColor: AmiColors.hexGreen,
-          behavior: SnackBarBehavior.floating,
-        ));
+        HexToast.show(
+          context,
+          AppLocalizations.of(context).tourCompletionFloor,
+          accent: AmiColors.hexGreen,
+          icon: Icons.check_circle_outline,
+        );
       },
     ).show(context: context);
   }
@@ -310,20 +313,27 @@ class _FloorScreenState
               padding: const EdgeInsets.all(AmiSpacing.m),
               child: Column(
                 children: [
-                  // ── B2 streak chip (top-right) ──
-                  if (me != null && me.streak.current > 0)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: StreakChip(
-                        count: me.streak.current,
-                        todayFilled: todayFilled,
-                        onTap: () => ShareService.shareStreak(
-                          context,
-                          days: me.streak.current,
-                          accent: AmiColors.hexGreen,
-                        ),
+                  // ── C5 logo (left) + B2 streak chip (right) ──
+                  Row(
+                    children: [
+                      SvgPicture.asset(
+                        'assets/logo_hex.svg',
+                        height: 26,
+                        semanticsLabel: 'AMI',
                       ),
-                    ),
+                      const Spacer(),
+                      if (me != null && me.streak.current > 0)
+                        StreakChip(
+                          count: me.streak.current,
+                          todayFilled: todayFilled,
+                          onTap: () => ShareService.shareStreak(
+                            context,
+                            days: me.streak.current,
+                            accent: AmiColors.hexGreen,
+                          ),
+                        ),
+                    ],
+                  ),
                   const SizedBox(height: AmiSpacing.l),
                   // ── Concierge centerpiece ──
                   GestureDetector(

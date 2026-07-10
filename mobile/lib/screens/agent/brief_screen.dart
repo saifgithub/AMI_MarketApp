@@ -18,6 +18,7 @@ import 'package:ami_trade/state/brief_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
+import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,13 +98,12 @@ class _BriefScreenState extends ConsumerState<BriefScreen> {
       briefNotifierProvider(widget.agent.id).select((s) => s.savedOverlay),
       (_, saved) {
         if (saved != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppLocalizations.of(context)
-                  .briefProposalSavedSnack(saved.version, saved.plainEnglish)),
-              backgroundColor: AmiColors.slate800,
-              behavior: SnackBarBehavior.floating,
-            ),
+          HexToast.show(
+            context,
+            AppLocalizations.of(context)
+                .briefProposalSavedSnack(saved.version, saved.plainEnglish),
+            accent: AmiColors.hexBlue,
+            icon: Icons.check_circle_outline,
           );
           ref
               .read(briefNotifierProvider(widget.agent.id).notifier)

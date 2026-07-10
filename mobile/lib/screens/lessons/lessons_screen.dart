@@ -14,6 +14,7 @@ import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
+import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/hex/track_hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,11 +83,12 @@ class _LessonsScreenState extends ConsumerState<LessonsScreen> {
       },
       onFinish: () {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).tourCompletionLessons),
-          backgroundColor: AmiColors.hexGreen,
-          behavior: SnackBarBehavior.floating,
-        ));
+        HexToast.show(
+          context,
+          AppLocalizations.of(context).tourCompletionLessons,
+          accent: AmiColors.hexGreen,
+          icon: Icons.check_circle_outline,
+        );
       },
     ).show(context: context);
   }
