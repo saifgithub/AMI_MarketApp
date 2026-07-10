@@ -40,6 +40,6 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR011 | 2026-07-09 | C3 — league surface: card + screen + Settings profile (impl CR under CR004) | done | [CR011_mobile_league_surface/](CR011_mobile_league_surface/) | AT:R53 |
 | CR012 | 2026-07-10 | C4 — share cards: offscreen ShareCard + 4 templates + entry points (impl CR under CR004) | done | [CR012_mobile_share_cards/](CR012_mobile_share_cards/) | AT:R53 |
 | CR013 | 2026-07-10 | E3/D1 — lesson animation chassis + 7 CustomPainter primitives + registry (impl CR under CR004) | done | [CR013_lesson_animation_primitives/](CR013_lesson_animation_primitives/) | AT:R53 |
-| CR014 | 2026-07-10 | E3/D2+D3 — motion identity: HexPulseLoader + avatar/chip/button glow + count-up (impl CR under CR004) | in_progress | [CR014_motion_identity/](CR014_motion_identity/) | AT:R53 |
+| CR014 | 2026-07-10 | E3/D2+D3 — motion identity: HexPulseLoader + avatar/chip/button glow + count-up (impl CR under CR004) | done | [CR014_motion_identity/](CR014_motion_identity/) | AT:R53 |
 | CR015 | 2026-07-10 | E4/D7 — on-system components: glass sheets + hex period toggle + HexToast + logo (impl CR under CR004) | in_progress | [CR015_on_system_components/](CR015_on_system_components/) | AT:R53 |
 
