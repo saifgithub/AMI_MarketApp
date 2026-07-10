@@ -791,5 +791,7 @@
     "shareCardPromotedKicker": "LEAGUE STANDING",
     "@shareCardPromotedKicker": {"description": "Kicker line at the top of a league-standing / promotion share card."},
     "shareCaption": "My AMI Trade analyst desk. Educational simulation — not investment advice.",
-    "@shareCaption": {"description": "Default text attached alongside the shared image in the OS share sheet."}
+    "@shareCaption": {"description": "Default text attached alongside the shared image in the OS share sheet."},
+    "lessonReplay": "Replay",
+    "@lessonReplay": {"description": "Tooltip on the replay control of a lesson animation."}
 }

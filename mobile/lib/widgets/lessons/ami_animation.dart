@@ -6,6 +6,7 @@
 /// without each painter reaching into `ami_theme.dart`.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/accent_card.dart';
 import 'package:flutter/material.dart';
@@ -160,7 +161,7 @@ class _AmiAnimationState extends State<AmiAnimation>
                     top: 4,
                     right: 4,
                     child: IconButton(
-                      tooltip: 'Replay',
+                      tooltip: AppLocalizations.of(context).lessonReplay,
                       icon: const Icon(Icons.replay, size: 18),
                       color: AmiColors.textLow,
                       visualDensity: VisualDensity.compact,

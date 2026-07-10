@@ -1373,4 +1373,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get shareCaption =>
       'My AMI Trade analyst desk. Educational simulation — not investment advice.';
+
+  @override
+  String get lessonReplay => 'Replay';
 }

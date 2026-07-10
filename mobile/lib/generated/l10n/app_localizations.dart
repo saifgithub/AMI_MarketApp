@@ -2464,6 +2464,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My AMI Trade analyst desk. Educational simulation — not investment advice.'**
   String get shareCaption;
+
+  /// Tooltip on the replay control of a lesson animation.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get lessonReplay;
 }
 
 class _AppLocalizationsDelegate
