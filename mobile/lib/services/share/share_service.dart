@@ -144,6 +144,9 @@ abstract final class ShareService {
     final overlay = Overlay.maybeOf(context, rootOverlay: true);
     if (overlay == null) return null;
     final mq = MediaQuery.of(context);
+    // Follow the app's locale direction (O1) so the card lays out correctly
+    // when AR (RTL) ships; falls back to LTR outside a Directionality scope.
+    final dir = Directionality.maybeOf(context) ?? TextDirection.ltr;
     final key = GlobalKey();
 
     final entry = OverlayEntry(
@@ -157,7 +160,7 @@ abstract final class ShareService {
           child: MediaQuery(
             data: mq.copyWith(textScaler: const TextScaler.linear(1)),
             child: Directionality(
-              textDirection: TextDirection.ltr,
+              textDirection: dir,
               child: card,
             ),
           ),
