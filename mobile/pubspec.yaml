@@ -58,6 +58,10 @@ dependencies:
   url_launcher: ^6.3.0
   webview_flutter: ^4.10.0
 
+  # Share cards (CR012 / C4) — offscreen-rendered PNG → OS share sheet
+  share_plus: ^10.1.4
+  path_provider: ^2.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

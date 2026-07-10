@@ -777,5 +777,19 @@
     "watchlistEmptyTitle": "No tickers yet",
     "@watchlistEmptyTitle": {"description": "Title of the watchlist empty state on the Portfolio tab."},
     "alpacaNoPositions": "No open positions",
-    "@alpacaNoPositions": {"description": "Empty state shown when a linked Alpaca account has no open positions."}
+    "@alpacaNoPositions": {"description": "Empty state shown when a linked Alpaca account has no open positions."},
+    "disclaimerShort": "Educational simulation. Not investment advice.",
+    "@disclaimerShort": {"description": "Short legal disclaimer strip printed on every share card. Simulation-only framing — keep the 'not investment advice' clause in every locale."},
+    "shareTooltip": "Share",
+    "@shareTooltip": {"description": "Tooltip / label for a share button (opens the OS share sheet with an image card)."},
+    "shareCardStreakUnit": "DAY STREAK",
+    "@shareCardStreakUnit": {"description": "Label under the big day-count number on a streak share card, e.g. '12' over 'DAY STREAK'."},
+    "shareCardUnlockKicker": "AGENT UNLOCKED",
+    "@shareCardUnlockKicker": {"description": "Kicker line above the agent name on an agent-unlock share card."},
+    "shareCardVerdictKicker": "THE ROOM'S VERDICT",
+    "@shareCardVerdictKicker": {"description": "Kicker line at the top of a verdict share card."},
+    "shareCardPromotedKicker": "LEAGUE STANDING",
+    "@shareCardPromotedKicker": {"description": "Kicker line at the top of a league-standing / promotion share card."},
+    "shareCaption": "My AMI Trade analyst desk. Educational simulation — not investment advice.",
+    "@shareCaption": {"description": "Default text attached alongside the shared image in the OS share sheet."}
 }

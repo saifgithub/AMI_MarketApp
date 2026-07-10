@@ -2422,6 +2422,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No open positions'**
   String get alpacaNoPositions;
+
+  /// Short legal disclaimer strip printed on every share card. Simulation-only framing — keep the 'not investment advice' clause in every locale.
+  ///
+  /// In en, this message translates to:
+  /// **'Educational simulation. Not investment advice.'**
+  String get disclaimerShort;
+
+  /// Tooltip / label for a share button (opens the OS share sheet with an image card).
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get shareTooltip;
+
+  /// Label under the big day-count number on a streak share card, e.g. '12' over 'DAY STREAK'.
+  ///
+  /// In en, this message translates to:
+  /// **'DAY STREAK'**
+  String get shareCardStreakUnit;
+
+  /// Kicker line above the agent name on an agent-unlock share card.
+  ///
+  /// In en, this message translates to:
+  /// **'AGENT UNLOCKED'**
+  String get shareCardUnlockKicker;
+
+  /// Kicker line at the top of a verdict share card.
+  ///
+  /// In en, this message translates to:
+  /// **'THE ROOM\'S VERDICT'**
+  String get shareCardVerdictKicker;
+
+  /// Kicker line at the top of a league-standing / promotion share card.
+  ///
+  /// In en, this message translates to:
+  /// **'LEAGUE STANDING'**
+  String get shareCardPromotedKicker;
+
+  /// Default text attached alongside the shared image in the OS share sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'My AMI Trade analyst desk. Educational simulation — not investment advice.'**
+  String get shareCaption;
 }
 
 class _AppLocalizationsDelegate

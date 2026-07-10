@@ -1354,4 +1354,27 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get alpacaNoPositions => 'No open positions';
+
+  @override
+  String get disclaimerShort =>
+      'Educational simulation. Not investment advice.';
+
+  @override
+  String get shareTooltip => 'Share';
+
+  @override
+  String get shareCardStreakUnit => 'DAY STREAK';
+
+  @override
+  String get shareCardUnlockKicker => 'AGENT UNLOCKED';
+
+  @override
+  String get shareCardVerdictKicker => 'THE ROOM\'S VERDICT';
+
+  @override
+  String get shareCardPromotedKicker => 'LEAGUE STANDING';
+
+  @override
+  String get shareCaption =>
+      'My AMI Trade analyst desk. Educational simulation — not investment advice.';
 }
