@@ -84,10 +84,7 @@ class HexChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (showDot) ...[
-              Container(
-                width: 6, height: 6,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-              ),
+              _PulseDot(color: color),
               const SizedBox(width: 5),
             ],
             Text(
@@ -100,6 +97,54 @@ class HexChip extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// C7 (CR014/D3) — the status dot breathes (opacity 0.4↔1.0, 1200ms) so LIVE /
+/// WARN / OFFLINE pills read as live rather than static.
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color});
+  final Color color;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (_, __) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        return Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: widget.color.withValues(alpha: 0.4 + 0.6 * t),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: 0.5 * t),
+                blurRadius: 4 * t,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
