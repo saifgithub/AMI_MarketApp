@@ -164,13 +164,18 @@ class _WordmarkRow extends StatelessWidget {
             letterSpacing: 4,
           ),
         ),
-        const Spacer(),
-        Text(
-          kicker,
-          style: AmiTypography.labelMono.copyWith(
-            color: accent,
-            fontSize: 26,
-            letterSpacing: 3,
+        const SizedBox(width: 24),
+        Flexible(
+          child: Text(
+            kicker,
+            textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AmiTypography.labelMono.copyWith(
+              color: accent,
+              fontSize: 26,
+              letterSpacing: 3,
+            ),
           ),
         ),
       ],
