@@ -90,7 +90,9 @@ flutter:
   generate: true
 
   assets:
-    - assets/icons/
+    # DEF050: assets/icons/ removed — it has no tracked contents, so a fresh
+    # clone warns asset_directory_does_not_exist. Re-add when the first brand
+    # icon lands there (see sign_in_screen.dart google.svg comment).
     - assets/hex_mesh.svg
     - assets/logo_hex.svg
     - assets/glossary/terms.en.json

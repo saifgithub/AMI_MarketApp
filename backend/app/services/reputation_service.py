@@ -64,6 +64,14 @@ STREAK_MILESTONES: tuple[int, ...] = (7, 30, 100)
 STREAK_CREDITS: dict[int, int] = {7: 5, 30: 25, 100: 100}
 
 
+class _AwardRaceLost(Exception):
+    """DEF049 — internal signal: this award() call lost the concurrent
+    insert race for its (user, event_type, ref_id) and rolled back, so it
+    wrote NO row. Only raised when the caller opts in via `_raise_on_race`
+    (the milestone path), so it can skip its follow-on credit grant. Every
+    other caller keeps the plain return-0 contract."""
+
+
 class StreakInfo(NamedTuple):
     current: int
     longest: int
@@ -111,6 +119,7 @@ class ReputationService:
         event_type: str,
         ref_id: str | None = None,
         always_record: bool = False,
+        _raise_on_race: bool = False,
     ) -> int:
         """Grant points for one engagement moment. Returns points actually
         granted — 0 when deduped, type-limited, or fully capped; a partial
@@ -121,6 +130,12 @@ class ReputationService:
         awards whose row doubles as the once-ever credit-grant guard, so a
         capped day can't leave the guard unwritten (F1). Dedup and type-limit
         short-circuits still apply.
+
+        `_raise_on_race=True` (DEF049) makes a lost concurrent-insert race
+        raise `_AwardRaceLost` instead of returning 0, so a caller that does
+        follow-on work gated on "did I write the row?" (the milestone credit
+        grant) can tell a rollback apart from a legitimate cap-clipped 0.
+        Default False keeps every other caller's return-0-on-race contract.
         """
         if event_type not in POINTS:
             raise ValueError(f"unknown reputation event_type: {event_type}")
@@ -198,6 +213,12 @@ class ReputationService:
             # so roll back (which also reverts the in-memory
             # user.reputation / member.points bumps above) and return 0.
             session.rollback()
+            # DEF049: a follow-on credit grant gated on "did I write the
+            # row?" must not fire on a rollback. Cap-clipped 0 (row written)
+            # never reaches here — only a genuine duplicate does — so the
+            # raise cleanly distinguishes race-loss from a legitimate 0.
+            if _raise_on_race:
+                raise _AwardRaceLost() from None
             return 0
 
         logger.info(
@@ -290,10 +311,16 @@ class ReputationService:
         # always_record so the guard row persists even when the daily point
         # cap clips this milestone to a zero-point award; without it the
         # credit grant below re-fires on every subsequent streak() call (F1).
-        self.award(
-            session, user_id=user.id, event_type=event_type,
-            ref_id=ref_id, always_record=True,
-        )
+        # _raise_on_race (DEF049) so a concurrent same-milestone race that
+        # rolled our guard-row insert back skips the credit grant below —
+        # otherwise the loser double-grants a monetized currency.
+        try:
+            self.award(
+                session, user_id=user.id, event_type=event_type,
+                ref_id=ref_id, always_record=True, _raise_on_race=True,
+            )
+        except _AwardRaceLost:
+            return
 
         credits = STREAK_CREDITS[milestone]
         old_balance = user.credit_balance or 0

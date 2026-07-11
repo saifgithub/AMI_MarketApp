@@ -331,5 +331,50 @@ def test_streak_milestone_credit_grant_idempotent_under_daily_cap():
         assert len(credit_events) == 1
 
 
+def test_streak_milestone_credit_not_double_granted_under_race(monkeypatch):
+    """DEF049 — the milestone credit grant must NOT fire when this call lost
+    the concurrent guard-row insert race. Winner grants streak_7 (guard row +
+    5 credits, committed); a concurrent loser whose _already_awarded() check
+    missed the winner's row must have its award() rollback AND skip the
+    credit grant. Without the fix (unconditional grant) the loser would push
+    credit_balance to 10 — a monetized double-grant."""
+    user = _make_user()
+    svc = ReputationService()
+    now = datetime.now(timezone.utc)
+    with get_session() as s:
+        for days_ago in range(7):  # live 7-day streak → crosses streak_7
+            s.add(JournalEntryRow(
+                user_id=user.id, entry_type="trade", title=f"d{days_ago}",
+                created_at=now - timedelta(days=days_ago),
+            ))
+
+    # Winner: normal streak() grants streak_7 + 5 credits, committed.
+    with get_session() as s:
+        svc.streak(s, user.id)
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+        assert row.credit_balance == 5
+
+    # Loser: force its dedup checks to miss the winner's committed guard row
+    # (the SELECT-then-INSERT race), so its award() insert hits the unique
+    # index → IntegrityError → rollback → _AwardRaceLost → credit skipped.
+    monkeypatch.setattr(ReputationService, "_already_awarded", lambda *a, **k: False)
+    with get_session() as s:
+        svc.streak(s, user.id)
+
+    milestone_events = [e for e in _events(user.id) if e.event_type == "streak_7"]
+    assert len(milestone_events) == 1  # still exactly one guard row
+    with get_session() as s:
+        row = s.execute(select(User).where(User.id == user.id)).scalar_one()
+        assert row.credit_balance == 5  # NOT 10 — no double-grant
+        credit_events = s.execute(
+            select(SubscriptionEventRow).where(
+                SubscriptionEventRow.user_id == user.id,
+                SubscriptionEventRow.event_type == "credits_added",
+            )
+        ).scalars().all()
+        assert len(credit_events) == 1
+
+
 def test_get_reputation_service_singleton():
     assert get_reputation_service() is get_reputation_service()

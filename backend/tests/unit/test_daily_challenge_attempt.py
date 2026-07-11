@@ -241,3 +241,27 @@ def test_today_carries_my_attempt_when_authed(client: TestClient, monkeypatch) -
     # DEF042 — the pre-attempt public shape never carries answer/explanation.
     assert "answer" not in r.json()["challenge"]
     assert "explanation" not in r.json()["challenge"]
+
+
+def test_all_read_routes_omit_answer_and_explanation(client: TestClient) -> None:
+    """DEF042 M1 — the leak was closed on all four read routes, not just
+    /today. Pin /by_id, /by_date, and /all to the public shape too."""
+    # /by_id → a bare DailyChallengePublic (no answer/explanation).
+    r = client.get("/v1/daily_challenge/by_id/dc_2026_06_01_aapl")
+    assert r.status_code == 200
+    assert "answer" not in r.json()
+    assert "explanation" not in r.json()
+
+    # /by_date → challenge nested under `challenge`.
+    r = client.get("/v1/daily_challenge/by_date/2026-06-01")
+    assert r.status_code == 200
+    assert "answer" not in r.json()["challenge"]
+    assert "explanation" not in r.json()["challenge"]
+
+    # /all → every item is the public shape.
+    r = client.get("/v1/daily_challenge/all")
+    assert r.status_code == 200
+    items = r.json()["items"]
+    assert items and all(
+        "answer" not in it and "explanation" not in it for it in items
+    )
