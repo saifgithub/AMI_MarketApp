@@ -75,6 +75,6 @@ Each drill: record PASS/FAIL + notes inline here; FAIL → DEF.
 | 5 | Pydantic User fields unbacked | `reputation` backed by migration 0014; `free_*_used_this_period` + `period_resets_at` → DEF or drop at pickup | partial |
 | 6 | Onboarding readback-edit 501 | DEF048 — mobile never called the edit path (readback screen only offers confirm), so "hide the option" was already true. Fixed the real bug found alongside it: the backend applied + persisted the edits *before* raising 501, so a client told "this failed" had actually already mutated session state. Building the real edit flow stays a future CR. | resolved |
 | 7 | Ungated portfolio reset | 24h cooldown in backend spec | specced |
-| 8 | `assets/icon/` missing | blocked on Saiful supplying real icon artwork — see [build_animations_motion.md](build_animations_motion.md) §D2 | blocked |
+| 8 | `assets/icon/` missing / stock-logo app icon | **SHIPPED AT:R54** — designed the "Diagonal duo" hex-candle icon from scratch; full iOS + Android set generated + wired. See [build_animations_motion.md](build_animations_motion.md) §D2 | resolved |
 | 9 | `FloorPlaceholderScreen` naming | rename bundled into B4 commit | specced |
 | 10 | `/dev-preview` route in prod | gate behind developer flag — bundle into B4 | specced |
