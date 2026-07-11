@@ -28,16 +28,38 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    TypeDecorator,
     UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.core.secret_crypto import decrypt_secret, encrypt_secret
 from app.db.base import Base, JsonB, Uuid
 
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class EncryptedString(TypeDecorator):
+    """String column encrypted at rest (DEF044).
+
+    Encrypts on write, decrypts on read, transparently — so every existing
+    call site reads/writes plaintext while Postgres stores ciphertext. Legacy
+    cleartext rows pass through unchanged (see `secret_crypto`). Not usable in
+    SQL filters (values are opaque ciphertext), which is fine here: these
+    columns are only ever read whole or checked for None.
+    """
+
+    impl = String
+    cache_ok = True
+
+    def process_bind_param(self, value: Optional[str], dialect) -> Optional[str]:
+        return encrypt_secret(value)
+
+    def process_result_value(self, value: Optional[str], dialect) -> Optional[str]:
+        return decrypt_secret(value)
 
 
 class User(Base):
@@ -93,8 +115,10 @@ class User(Base):
     # Alpaca paper trading link (AT:R45/R47). Null = unlinked.
     # auth_mode: 'oauth' (access_token = Bearer token) or 'apikey'
     # (access_token = key ID, refresh_token = key secret).
-    alpaca_access_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
-    alpaca_refresh_token: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # DEF044: both are encrypted at rest via EncryptedString (transparent to
+    # every read/write site); legacy cleartext rows migrate lazily on next write.
+    alpaca_access_token: Mapped[Optional[str]] = mapped_column(EncryptedString, nullable=True)
+    alpaca_refresh_token: Mapped[Optional[str]] = mapped_column(EncryptedString, nullable=True)
     alpaca_linked_at: Mapped[Optional[datetime]] = mapped_column(
         DateTime(timezone=True), nullable=True,
     )

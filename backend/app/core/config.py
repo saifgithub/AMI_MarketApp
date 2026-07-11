@@ -124,6 +124,11 @@ class Settings(BaseSettings):
     # The default is only used in local/dev; melehost .env must set SECRET_KEY.
     secret_key: str = "dev-secret-change-in-prod"
 
+    # DEF044 — at-rest encryption for Alpaca brokerage creds. Optional: when
+    # empty the cipher key is derived from SECRET_KEY, so encryption is active
+    # out-of-box. Set a dedicated urlsafe secret here to rotate independently.
+    alpaca_encryption_key: str = ""
+
     # Admin back-office secret (AT:R27). Static bearer for Alpha single-operator
     # access. All /v1/admin/* routes require this. Empty = admin disabled.
     # Generate: openssl rand -hex 32
