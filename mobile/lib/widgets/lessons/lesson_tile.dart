@@ -50,8 +50,11 @@ class LessonTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: AmiColors.slate700),
                   ),
-                  child: Text('L${meta.level}',
-                      style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+                  // CR018 — lead each row with the lesson's canonical number
+                  // (referenceable); the level tier moves to the caption below.
+                  child: Text(meta.numberLabel,
+                      style: AmiTypography.labelMono.copyWith(
+                          fontSize: 11, color: AmiColors.hexCyan)),
                 ),
                 const SizedBox(width: AmiSpacing.s),
                 Expanded(
@@ -62,7 +65,7 @@ class LessonTile extends StatelessWidget {
                       const SizedBox(height: 2),
                       Row(
                         children: [
-                          Text(l.lessonsDurationMin(meta.durationMin),
+                          Text('${l.lessonsDurationMin(meta.durationMin)} · L${meta.level}',
                               style: AmiTypography.caption),
                           if (callouts.isNotEmpty) ...[
                             const SizedBox(width: AmiSpacing.s),

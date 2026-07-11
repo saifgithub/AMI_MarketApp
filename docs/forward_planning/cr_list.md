@@ -44,4 +44,5 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR015 | 2026-07-10 | E4/D7 — on-system components: glass sheets + hex period toggle + HexToast + logo (impl CR under CR004) | done | [CR015_on_system_components/](CR015_on_system_components/) | AT:R53 |
 | CR016 | 2026-07-10 | E4/D8 — HexBottomNav: hex-pill bottom navigation (impl CR under CR004) | done | [CR016_hex_bottom_nav/](CR016_hex_bottom_nav/) | AT:R53 |
 | CR017 | 2026-07-10 | Multi-provider LLM routing + per-provider caching mechanics — DeepSeek/Qwen/Gemini, user-level routing (research; linked to CR008) | proposed | [CR017_multiprovider_llm_routing/](CR017_multiprovider_llm_routing/) | AT:R53 |
+| CR018 | 2026-07-11 | Lesson numbering — surface the canonical id-prefix lesson number (`001`–`292`, gapped) in the app (list + reader) so lessons are referenceable by number | done | [CR018_lesson_numbering/](CR018_lesson_numbering/) | AT:R54 |
 

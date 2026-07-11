@@ -164,6 +164,14 @@ def _coerce_jsx_value(raw: str) -> Any:
     return raw.strip('"')
 
 
+def lesson_number(lesson_id: str) -> int:
+    """CR018 — the lesson's canonical reference number, i.e. the numeric prefix
+    of its id ('023_support_and_resistance' -> 23). Stable per lesson; returns
+    0 when the id has no numeric prefix."""
+    head = lesson_id.split("_", 1)[0]
+    return int(head) if head.isdigit() else 0
+
+
 def parse_mdx(path: Path) -> Lesson:
     raw = path.read_text(encoding="utf-8")
     m = _FRONTMATTER_RE.match(raw)
@@ -178,6 +186,7 @@ def parse_mdx(path: Path) -> Lesson:
     level = int(fm.get("level", 1))
     meta = LessonMeta(
         id=fm["id"],
+        number=lesson_number(fm["id"]),
         title=fm["title"],
         duration_min=int(fm.get("duration_min", 3)),
         level=level,

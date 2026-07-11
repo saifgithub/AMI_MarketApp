@@ -93,11 +93,16 @@ class LessonMeta {
     required this.prerequisites,
     required this.tags,
     required this.agentCallouts,
+    this.number = 0,
     this.module = 0,
     this.difficulty = 0,
   });
 
   final String id;
+  // CR018: the lesson's canonical reference number (the numeric prefix of
+  // `id`, e.g. 23 for "023_support_and_resistance"), derived by the backend.
+  // Stable per lesson; 0 for a legacy id with no numeric prefix.
+  final int number;
   final String title;
   final int durationMin;
   final int level;
@@ -112,10 +117,16 @@ class LessonMeta {
   final int module;
   final int difficulty;
 
+  /// CR018 — the badge label: the zero-padded canonical lesson number
+  /// ("023"), or the level tier ("L2") for a legacy id with no numeric prefix.
+  String get numberLabel =>
+      number > 0 ? number.toString().padLeft(3, '0') : 'L$level';
+
   factory LessonMeta.fromJson(Map<String, dynamic> j) {
     final level = ((j['level'] as num?) ?? 1).toInt();
     return LessonMeta(
       id: j['id'] as String,
+      number: ((j['number'] as num?) ?? 0).toInt(),
       title: j['title'] as String,
       durationMin: ((j['duration_min'] as num?) ?? 3).toInt(),
       level: level,

@@ -253,13 +253,15 @@ class _LessonMetaBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AmiColors.slate700),
           ),
-          child: Text('L${meta.level}',
-              style: AmiTypography.labelMono.copyWith(fontSize: 11)),
+          // CR018 — the canonical lesson number (referenceable); level tier
+          // trails the duration/track meta line below.
+          child: Text(meta.numberLabel,
+              style: AmiTypography.labelMono.copyWith(
+                  fontSize: 11, color: AmiColors.hexCyan)),
         ),
         const SizedBox(width: AmiSpacing.s),
         Text(
-          AppLocalizations.of(context)
-              .lessonReaderMetaDurationTrack(meta.durationMin, meta.track),
+          '${AppLocalizations.of(context).lessonReaderMetaDurationTrack(meta.durationMin, meta.track)} · L${meta.level}',
           style: AmiTypography.caption,
         ),
         const Spacer(),

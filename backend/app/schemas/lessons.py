@@ -59,6 +59,12 @@ class LessonBlock(BaseModel):
 
 class LessonMeta(BaseModel):
     id: str
+    # CR018: the lesson's canonical reference number = the numeric prefix of
+    # its `id` (e.g. "023_support_and_resistance" -> 23). Derived at load time
+    # from the id, so no content/frontmatter change. Stable per lesson (a
+    # recomputed sequence would drift as lessons are added/removed). 0 when the
+    # id has no numeric prefix.
+    number: int = 0
     title: str
     duration_min: int
     level: int

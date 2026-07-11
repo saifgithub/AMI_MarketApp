@@ -67,6 +67,32 @@ def test_lesson_meta_defaults_module_zero_and_difficulty_to_level(tmp_path):
     assert lesson.meta.difficulty == lesson.meta.level == 2
 
 
+def test_lesson_number_derived_from_id_prefix(tmp_path):
+    """CR018 — the reference number is the numeric prefix of the id, derived at
+    load time (no frontmatter field), stable per lesson. 0 when unprefixed."""
+    from app.services.lessons_service import lesson_number, parse_mdx
+
+    assert lesson_number("023_support_and_resistance") == 23
+    assert lesson_number("001_what_is_a_stock") == 1
+    assert lesson_number("292_edge_case") == 292
+    assert lesson_number("no_numeric_prefix") == 0
+
+    mdx = tmp_path / "042_number_test.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "042_number_test"\n'
+        'title: "Number derivation"\n'
+        'duration_min: 3\n'
+        'level: 1\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'Body.\n',
+        encoding="utf-8",
+    )
+    assert parse_mdx(mdx).meta.number == 42
+
+
 def test_lesson_meta_reads_module_and_difficulty_when_present(svc: LessonsService):
     """W18+ lessons declare module + difficulty explicitly."""
     # Find any lesson the loader returns with module > 0 — the W18 set
