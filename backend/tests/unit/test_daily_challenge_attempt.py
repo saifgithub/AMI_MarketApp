@@ -230,9 +230,14 @@ def test_today_carries_my_attempt_when_authed(client: TestClient, monkeypatch) -
     assert body["my_attempt"] == {
         "selected_option": 1,
         "correct": True,
+        "correct_option": 1,
+        "explanation": "Premium multiple.",
         "attempted_at": body["my_attempt"]["attempted_at"],
     }
     # Unauthed callers still get the public shape, my_attempt null.
     r = client.get("/v1/daily_challenge/today")
     assert r.status_code == 200
     assert r.json()["my_attempt"] is None
+    # DEF042 — the pre-attempt public shape never carries answer/explanation.
+    assert "answer" not in r.json()["challenge"]
+    assert "explanation" not in r.json()["challenge"]

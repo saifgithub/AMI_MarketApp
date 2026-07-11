@@ -22,6 +22,7 @@ from app.db.models import DailyChallengeAttemptRow, User
 from app.schemas.daily_challenge import (
     DailyChallenge,
     DailyChallengeListResponse,
+    DailyChallengePublic,
     DailyChallengeResponse,
     MyAttempt,
 )
@@ -65,10 +66,14 @@ async def today(
                 my_attempt = MyAttempt(
                     selected_option=row.selected_option,
                     correct=row.correct,
+                    correct_option=ch.answer,
+                    explanation=ch.explanation,
                     attempted_at=row.created_at.isoformat(),
                 )
     return DailyChallengeResponse(
-        challenge=ch, date=d.isoformat(), my_attempt=my_attempt,
+        challenge=DailyChallengePublic.from_challenge(ch),
+        date=d.isoformat(),
+        my_attempt=my_attempt,
     )
 
 
@@ -90,21 +95,23 @@ async def by_date(
             status.HTTP_404_NOT_FOUND,
             f"no daily challenge for {d.isoformat()}",
         )
-    return DailyChallengeResponse(challenge=ch, date=d.isoformat())
+    return DailyChallengeResponse(
+        challenge=DailyChallengePublic.from_challenge(ch), date=d.isoformat(),
+    )
 
 
-@router.get("/by_id/{challenge_id}", response_model=DailyChallenge)
+@router.get("/by_id/{challenge_id}", response_model=DailyChallengePublic)
 async def by_id(
     challenge_id: str,
     svc: DailyChallengeService = Depends(get_daily_challenge_service),
-) -> DailyChallenge:
+) -> DailyChallengePublic:
     ch = svc.get_by_id(challenge_id)
     if ch is None:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             f"daily challenge {challenge_id} not found",
         )
-    return ch
+    return DailyChallengePublic.from_challenge(ch)
 
 
 @router.get("/all", response_model=DailyChallengeListResponse)
@@ -112,7 +119,10 @@ async def all_challenges(
     svc: DailyChallengeService = Depends(get_daily_challenge_service),
 ) -> DailyChallengeListResponse:
     items = svc.all_challenges()
-    return DailyChallengeListResponse(items=items, total=len(items))
+    return DailyChallengeListResponse(
+        items=[DailyChallengePublic.from_challenge(ch) for ch in items],
+        total=len(items),
+    )
 
 
 class DailyChallengeAttemptRequest(BaseModel):

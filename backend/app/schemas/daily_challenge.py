@@ -29,21 +29,53 @@ class DailyChallenge(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
+class DailyChallengePublic(BaseModel):
+    """The pre-attempt public shape of a challenge — `DailyChallenge` minus
+    `answer` AND `explanation` (DEF042: `/today` returned both, so an
+    API-direct user could either read `answer` outright or match the
+    always-correct-restating `explanation` text against the options —
+    either way the correct choice was derivable before attempting, which
+    is farmable for the `challenge_correct` streak/credit milestone).
+    Server-side grading still uses the full `DailyChallenge`; only the
+    response-facing views built from this class drop the giveaway fields.
+    """
+
+    id: str
+    type: str
+    difficulty: int = Field(ge=1, le=5)
+    locale: str = "en"
+    scenario: str
+    question: str
+    options: list[str]
+    related_lesson: str | None = None
+    related_agent: str | None = None
+    tags: list[str] = Field(default_factory=list)
+
+    @classmethod
+    def from_challenge(cls, ch: DailyChallenge) -> "DailyChallengePublic":
+        return cls(**ch.model_dump(exclude={"answer", "explanation"}))
+
+
 class MyAttempt(BaseModel):
     """The caller's stored answer for a challenge (CR004 — server truth;
-    lets the mobile card render the answered state after a restart)."""
+    lets the mobile card render the answered state after a restart).
+    Carries `correct_option` + `explanation` too (DEF042) — safe here
+    because this only ever populates for a challenge the caller has
+    already attempted."""
 
     selected_option: int
     correct: bool
+    correct_option: int
+    explanation: str
     attempted_at: str  # ISO 8601
 
 
 class DailyChallengeResponse(BaseModel):
-    challenge: DailyChallenge
+    challenge: DailyChallengePublic
     date: str  # YYYY-MM-DD
     my_attempt: MyAttempt | None = None
 
 
 class DailyChallengeListResponse(BaseModel):
-    items: list[DailyChallenge]
+    items: list[DailyChallengePublic]
     total: int

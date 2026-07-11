@@ -164,6 +164,10 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
   bool _submitted = false;
   bool _submitting = false;
   bool _correct = false;
+  // DEF042: the correct option + explanation only ever arrive post-attempt
+  // (attempt result or a prior my_attempt) — never read off the challenge.
+  int? _correctOption;
+  String? _explanation;
   Timer? _countdownTimer;
   Duration _untilNext = Duration.zero;
 
@@ -176,6 +180,8 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
     if (prior != null) {
       _selected = prior.selectedOption;
       _correct = prior.correct;
+      _correctOption = prior.correctOption;
+      _explanation = prior.explanation;
       _submitted = true;
       _startCountdown();
     }
@@ -221,6 +227,8 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
       setState(() {
         _selected = result.selectedOption; // stored attempt wins
         _correct = result.correct;
+        _correctOption = result.correctOption;
+        _explanation = result.explanation;
         _submitted = true;
         _submitting = false;
       });
@@ -282,7 +290,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   text: ch.options[i],
                   selected: _selected == i,
                   showResult: _submitted,
-                  correct: i == ch.answer,
+                  correct: _correctOption != null && i == _correctOption,
                   onTap: _submitted
                       ? null
                       : () => setState(() => _selected = i),
@@ -303,7 +311,7 @@ class _DailyChallengeScreenState extends ConsumerState<DailyChallengeScreen> {
                   ),
                 ),
                 const SizedBox(height: AmiSpacing.s),
-                Text(ch.explanation, style: AmiTypography.body),
+                Text(_explanation ?? '', style: AmiTypography.body),
                 const SizedBox(height: AmiSpacing.m),
                 Text(
                   l.challengeNextIn(_fmt(_untilNext)),

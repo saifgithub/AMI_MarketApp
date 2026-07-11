@@ -1,5 +1,10 @@
-/// DailyChallenge — one daily prediction/scenario question with options
-/// and an explanation that surfaces after the user submits.
+/// DailyChallenge — one daily prediction/scenario question with options.
+///
+/// DEF042: the correct option index and the explanation (which restates
+/// the correct choice) are NOT part of this pre-attempt shape — the
+/// backend only reveals them via `DailyChallengeAttemptResult` (after
+/// submitting) or `MyAttempt` (if already answered). Never trust a
+/// pre-attempt source for "which option is correct."
 library;
 
 import 'package:equatable/equatable.dart';
@@ -13,8 +18,6 @@ class DailyChallenge extends Equatable {
     required this.scenario,
     required this.question,
     required this.options,
-    required this.answer,
-    required this.explanation,
     this.relatedLesson,
     this.relatedAgent,
     this.tags = const [],
@@ -27,8 +30,6 @@ class DailyChallenge extends Equatable {
   final String scenario;
   final String question;
   final List<String> options;
-  final int answer;
-  final String explanation;
   final String? relatedLesson;
   final String? relatedAgent;
   final List<String> tags;
@@ -41,8 +42,6 @@ class DailyChallenge extends Equatable {
         scenario: j['scenario'] as String,
         question: j['question'] as String,
         options: List<String>.from(j['options'] as List),
-        answer: j['answer'] as int,
-        explanation: j['explanation'] as String,
         relatedLesson: j['related_lesson'] as String?,
         relatedAgent: j['related_agent'] as String?,
         tags: List<String>.from((j['tags'] as List?) ?? const []),
@@ -55,25 +54,34 @@ class DailyChallenge extends Equatable {
 
 /// CR010 (B5) — the caller's stored attempt for today's challenge, from
 /// `GET /today`'s `my_attempt`. Null when unauthenticated or unanswered.
+/// Carries `correctOption` + `explanation` (DEF042) — safe here since this
+/// only ever populates for a challenge the caller has already attempted.
 class MyAttempt extends Equatable {
   const MyAttempt({
     required this.selectedOption,
     required this.correct,
+    required this.correctOption,
+    required this.explanation,
     required this.attemptedAt,
   });
 
   final int selectedOption;
   final bool correct;
+  final int correctOption;
+  final String explanation;
   final String attemptedAt; // ISO 8601
 
   factory MyAttempt.fromJson(Map<String, dynamic> j) => MyAttempt(
         selectedOption: (j['selected_option'] as num).toInt(),
         correct: j['correct'] as bool,
+        correctOption: (j['correct_option'] as num).toInt(),
+        explanation: j['explanation'] as String,
         attemptedAt: j['attempted_at'] as String? ?? '',
       );
 
   @override
-  List<Object?> get props => [selectedOption, correct, attemptedAt];
+  List<Object?> get props =>
+      [selectedOption, correct, correctOption, explanation, attemptedAt];
 }
 
 
