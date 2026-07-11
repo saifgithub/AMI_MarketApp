@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 from uuid import UUID
 
@@ -64,6 +65,12 @@ from app.db.models import (
     User,
     UserOverlayRow,
 )
+from app.services.league_service import week_end
+from app.services.reputation_service import iso_week
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 @dataclass
@@ -244,6 +251,33 @@ class MergeService:
             ).scalar_one_or_none()
             if source_user is not None and source_user.reputation:
                 target.reputation = (target.reputation or 0) + source_user.reputation
+
+            # ── DEF040: recompute the adopter's current-week league
+            # points from the now-merged ledger. The league-seat re-key
+            # above (conflict_col=week) drops the orphan's league_members
+            # row outright when both sides already hold a seat this week —
+            # that silently lost whatever the orphan earned this week, even
+            # though its reputation_events rows (just re-keyed above) now
+            # belong to the adopter. A full resync from the ledger (not a
+            # delta-add) keeps points correct regardless of which side's
+            # seat survived the re-key.
+            current_week = iso_week(_utcnow())
+            adopter_seat = s.execute(
+                select(LeagueMemberRow).where(
+                    LeagueMemberRow.user_id == to_user_id,
+                    LeagueMemberRow.week == current_week,
+                )
+            ).scalar_one_or_none()
+            if adopter_seat is not None:
+                week_end_at = week_end(current_week)
+                week_start_at = week_end_at - timedelta(days=7)
+                adopter_seat.points = int(s.execute(
+                    select(func.coalesce(func.sum(ReputationEventRow.points), 0)).where(
+                        ReputationEventRow.user_id == to_user_id,
+                        ReputationEventRow.created_at >= week_start_at,
+                        ReputationEventRow.created_at < week_end_at,
+                    )
+                ).scalar_one())
 
             # ── Overlay edit counts: sum on conflict ────────────────
             counts["overlay_edit_counts"] = _merge_overlay_counts(

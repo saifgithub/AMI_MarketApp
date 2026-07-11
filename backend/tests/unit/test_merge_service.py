@@ -31,8 +31,10 @@ from app.db.models import (
     User,
     UserOverlayRow,
 )
+from app.db.models import LeagueMemberRow, LeagueRow, ReputationEventRow
 from app.services.auth_service import AuthService
 from app.services.merge_service import MergeError, MergeService
+from app.services.reputation_service import ReputationService, iso_week
 
 
 def _make_users() -> tuple[User, User]:
@@ -413,3 +415,51 @@ def test_execute_removes_orphan_rows_completely():
                 select(model).where(model.user_id == orphan.id)
             ).scalars().all()
             assert rows == [], f"{model.__tablename__} still owned by orphan"
+
+
+# ── DEF040: mid-week league points survive a same-week seat conflict ───
+
+
+def test_execute_recomputes_adopter_current_week_league_points_on_seat_conflict():
+    """Both sides already hold a league seat this week (the common case —
+    an anon user plays, later claims an account that also has activity).
+    The league-seat re-key drops the orphan's seat on the (user_id, week)
+    conflict; before DEF040, the adopter's points stayed frozen at its
+    pre-merge value even though the orphan's reputation_events (and thus
+    its week's earnings) moved over."""
+    orphan, adopter = _make_users()
+    rep = ReputationService()
+    week = iso_week(datetime.now(timezone.utc))
+
+    with get_session() as s:
+        for user in (orphan, adopter):
+            league = LeagueRow(week=week, tier="apprentice")
+            s.add(league)
+            s.flush()
+            s.add(LeagueMemberRow(
+                league_id=league.id, user_id=user.id, week=week, points=0,
+            ))
+
+    with get_session() as s:
+        # Orphan earns 5 (lesson) + 3 (room verdict) = 8 this week.
+        rep.award(s, user_id=orphan.id, event_type="lesson_passed", ref_id="l1")
+        rep.award(s, user_id=orphan.id, event_type="room_verdict", ref_id="r1")
+        # Adopter separately earns 3 (challenge_correct) this week.
+        rep.award(s, user_id=adopter.id, event_type="challenge_correct", ref_id="c1")
+
+    MergeService().execute(from_user_id=orphan.id, to_user_id=adopter.id)
+
+    with get_session() as s:
+        # Orphan's seat is gone (conflict-dropped); adopter's must reflect
+        # the combined ledger, not just its own pre-merge 3 points.
+        seats = s.execute(
+            select(LeagueMemberRow).where(LeagueMemberRow.week == week)
+        ).scalars().all()
+        assert len(seats) == 1
+        assert seats[0].user_id == adopter.id
+        assert seats[0].points == 11  # 8 (orphan) + 3 (adopter)
+
+        events = s.execute(
+            select(ReputationEventRow).where(ReputationEventRow.user_id == adopter.id)
+        ).scalars().all()
+        assert sum(e.points for e in events) == 11
