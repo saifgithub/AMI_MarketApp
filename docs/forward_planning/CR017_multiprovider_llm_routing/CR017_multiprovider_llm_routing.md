@@ -34,41 +34,46 @@ The gateway ([`backend/app/services/llm_gateway.py`](../../../backend/app/servic
 
 ---
 
-## 2. Q1 — Is the caching code different per provider? **Yes. Two categories.**
+## 2. Q1 — Is the caching code different per provider? **Yes — in three layers, not one.**
 
-Caching splits on a line orthogonal to the API-shape split (Anthropic vs OpenAI-compatible). The real split is **explicit (client writes cache markers)** vs **automatic (server-side, zero app code)**.
+> **Correction (AT:R53).** An earlier pass framed this as a binary — "Anthropic writes marker code; everyone else is automatic, zero work." That is misleading. "Automatic" means *no cache markers*, **not** *no work*. Every provider here is a **prefix cache** (matches from token 0 to the first differing byte), so all of them require prompt-structure discipline to get hits, and their hit-thresholds differ. The difference between providers is real and bigger than "markers or not."
 
-| Provider | Cache mechanism | App code required | Where the cache "lever" lives | Cached-read price | Min cacheable prefix |
-|---|---|---|---|---|---|
-| **Anthropic** | Explicit `cache_control` breakpoints | **YES — real code** | In the request body | ~10% (writes **+25%**) | **1,024** (Sonnet/Opus) / **2,048** (Haiku) |
-| **vLLM** (live) | Automatic prefix caching (KV reuse) | **None** | Server launch flag `--enable-prefix-caching` on 192.168.20.74 | free (on-prem) | ~block size |
-| **DeepSeek** | Automatic disk context cache | **None** | Server-side, always on | ~10%, **no write fee**, **0-token min** | 0 (64-tok increments) |
-| **Qwen** (DashScope) | Implicit context cache | **None** (one quirk, §3) | Server-side, on by default | discounted (implicit) | model-dependent |
-| **Gemini 2.5** | Implicit caching (auto) + explicit `cachedContents` | **None** for implicit | Server-side (implicit) | **~25%** (75% off) | ~1,024 (2.5 Flash) / ~2,048 (2.5 Pro) |
+**Live evidence that automatic ≠ done.** Our on-prem vLLM has prefix caching enabled, yet its live `/metrics` show only an **18.5% hit rate** (`prefix_cache_hits_total` 1,701,952 ÷ `prefix_cache_queries_total` 9,181,908, sampled AT:R53). Caching is *on* and barely helping — because our prompts aren't ordered for it (each agent's unique base prompt sits at the front of the prefix). That gap is Layer 2 below, and no provider gives it to us for free.
 
-### 2.1 The headline finding
-**Anthropic is the *only* provider where you write caching code.** For everyone else, the request body is unchanged and caching happens server-side automatically. Concretely, CR008 §4 (the plan to add `cache_control` plumbing into `room_runner` / `agent_runner`) **applies only if we stay on Anthropic.** If cheap/mid traffic routes to DeepSeek / Qwen / Gemini, caching is free and CR008 §4 becomes unnecessary for those calls.
+### 2.1 The three layers of "using cache"
 
-### 2.2 What the Anthropic code actually looks like (the only bespoke path)
-Today the body is `"system": system_prompt` (a plain string). To cache, `system` must become a **list of content blocks** with a breakpoint on the last cacheable block:
+**Layer 1 — Marker code (cache directives in the request body).** Anthropic **only**. Everyone else takes no markers.
+
+**Layer 2 — Prompt-structure discipline (required by ALL, us-owned, not done today).** A prefix cache only reuses the leading run of identical tokens. To benefit, the prompt must be ordered **stable-prefix-first, volatile-suffix-last**: `[agent base + mandate + alpaca snapshot]` then `[ticker + timestamp + transcript]`. Our current builder puts per-agent content at the front → the 18.5% vLLM number. This work is provider-agnostic and applies to DeepSeek exactly as much as Anthropic.
+
+**Layer 3 — Hit conditions + telemetry differ per provider** — so the *same* prompt yields different savings, and the *optimal* structure differs (see §2.2):
+
+| Provider | Markers? | Min prefix | Write fee | Cached read | TTL | Usage field |
+|---|---|---|---|---|---|---|
+| **Anthropic** | **Yes** | **1,024** (Sonnet/Opus) / **2,048** (Haiku) | **+25%** | ~10% | 5 min (1 h beta) | `cache_read_input_tokens` |
+| **DeepSeek** | No | **0** (64-tok blocks) | **none** | ~10% | hours (disk) | `prompt_cache_hit_tokens` |
+| **vLLM** (live) | No | ~16-tok block | n/a (on-prem) | free | LRU eviction, per-instance | *(only in `/metrics`, not the API response)* |
+| **Gemini 2.5** | No (implicit) | ~1,024 (Flash) / ~2,048 (Pro) | none | ~25% | opportunistic | `prompt_tokens_details.cached_tokens` |
+| **Qwen** (DashScope) | No (implicit) | model-dependent | none | discounted | short | usage cache fields |
+
+### 2.2 The min-prefix threshold changes what code you write
+This is where the per-provider difference bites. On **Anthropic** you must *engineer* a ≥1,024-token cacheable block to cache anything at all. On **DeepSeek (0 min)** and **vLLM (16-tok blocks)**, the small **~450-token context shared across all 12 agents in one run** — which CR008 §Opportunity C dismissed as "too small to cache" — **is cacheable.** So the same restructuring buys DeepSeek/vLLM a within-run win that Anthropic simply can't take. DeepSeek is the most forgiving of the set: 0-token min, no write surcharge, hours-long disk TTL vs Anthropic's 5 minutes. **You (Saiful) were right — DeepSeek definitely caches, and more usefully than Anthropic for our prompt sizes.**
+
+### 2.3 What the Anthropic marker code looks like (Layer 1, Anthropic-only)
+
 ```python
 "system": [
     {"type": "text", "text": static_prefix,
      "cache_control": {"type": "ephemeral"}},   # ← cached (base+mandate+alpaca)
     {"type": "text", "text": dynamic_room_addition},  # ← not cached
 ]
-# optionally: mark the second-to-last message block with cache_control too.
+# + read usage.cache_creation_input_tokens / cache_read_input_tokens from SSE.
 ```
-Plus reading `usage.cache_creation_input_tokens` / `usage.cache_read_input_tokens` from the `message_start` / `message_delta` SSE events. This is the entire "different per provider" surface.
 
-### 2.3 What the automatic providers need: *nothing in the body*
-DeepSeek / Qwen / Gemini-implicit / vLLM all cache prefixes with **no request change.** The only *optional* code is reading usage to measure the hit rate:
-- DeepSeek returns `usage.prompt_cache_hit_tokens` / `prompt_cache_miss_tokens`.
-- Gemini (OpenAI-compat) returns `usage.prompt_tokens_details.cached_tokens`.
-- Qwen returns cache fields in `usage` on supported models.
+DeepSeek/Qwen/Gemini-implicit/vLLM take **no** equivalent — but they still need Layer 2, and Gemini has an *optional* explicit `cachedContents` handle API (more code) if we ever want guaranteed (non-opportunistic) caching.
 
-### 2.4 Prerequisite gap: usage capture
-Our `stream_chat` yields text and drops the final usage frame. To measure caching on **any** provider we must send `"stream_options": {"include_usage": true}` (OpenAI-compat) or parse Anthropic's `message_delta.usage`, and thread the numbers into `record_llm_call` (which already stores per-call audit rows). One-time change; unblocks all cache telemetry.
+### 2.4 Prerequisite gap: usage capture (blocks measuring ALL of the above)
+Our `stream_chat` yields text and drops the final usage frame, so we can't measure a hit rate on any provider (the 18.5% above came from vLLM's server metrics, not our app). Fix: send `"stream_options": {"include_usage": true}` (OpenAI-compat) or parse Anthropic's `message_delta.usage`, and thread `input / output / cache_read / cache_write` into `record_llm_call`. One-time change; unblocks all cache telemetry and the Layer-2 tuning loop.
 
 ---
 
@@ -111,8 +116,8 @@ Putting **free users on vLLM** (the on-prem Gemma box) is economically clean: th
 
 **Open decision:** the inverse is also defensible — route *free* to the cheapest **API** (Qwen/DeepSeek Flash, ~$0.001–0.003/run) to reserve scarce vLLM capacity for **paid** users who need low LAN latency. This is a capacity-vs-cost call for Saiful. Recorded as an open item (§7).
 
-### 4.3 Routing and caching interact — caching becomes "free" for the cheap tiers
-Because free/pro/max analysts route to **automatic-cache** providers (vLLM / DeepSeek / Gemini), those calls get prefix caching with **zero code**. The only place we'd write Anthropic-style `cache_control` (CR008 §4) is the **max/ultra premium band** (Sonnet/Opus). So the routing design *shrinks* the caching-code surface to just the top tiers — a strong argument for doing routing first, caching-code second.
+### 4.3 Routing and caching interact — routing shrinks the *marker*-code surface, but not the Layer-2 work
+Because free/pro/max analysts route to **automatic-cache** providers (vLLM / DeepSeek / Gemini), those calls need **no cache *marker* code** — the only place we'd write Anthropic-style `cache_control` (CR008 §4) is the **max/ultra premium band** (Sonnet/Opus). So routing shrinks the *marker*-code surface to just the top tiers. **Caveat (per §2):** the Layer-2 prompt-prefix ordering is still required on *every* tier — automatic caches only pay off once the stable content is a literal prefix, which our builder doesn't do today (the live vLLM 18.5% hit rate is the proof). Sequence: (1) fix prompt ordering [helps all providers], (2) provider routing, (3) Anthropic markers for the top band only.
 
 ### 4.4 Mapping to current plans
 Current code plans are `FLOOR_PASS / TRIAL_TRADER / TRADER / FLOOR_MANAGER`. The 4 assumed levels are a **forward model**; a build CR must decide the mapping (e.g. `free=FLOOR_PASS`, `pro=TRADER`, `max=FLOOR_MANAGER`, `ultra=`new top SKU). Left open — this CR designs the routing *mechanism*, not the pricing SKUs.
@@ -121,6 +126,7 @@ Current code plans are `FLOOR_PASS / TRIAL_TRADER / TRADER / FLOOR_MANAGER`. The
 
 ## 5. Implementation sketch (NOT built — for the future build CR)
 
+0. **Prompt-prefix reordering (Layer 2 — highest leverage, provider-agnostic).** Restructure the prompt builders (`room_prompts` / `agent_prompts`) so the stable block (agent base + mandate + alpaca snapshot) is a literal prefix and volatile content (ticker, timestamp, transcript) comes last. Helps *every* provider's automatic cache — including the live vLLM currently at 18.5%. Do this first; it needs no provider or routing change.
 1. **Generalize the provider.** `VLLMProvider` → `OpenAICompatibleProvider(name, base_url, model, api_key, extra_body=None)`. Keep `VLLMProvider` as a thin alias for back-compat. (~40 LOC.)
 2. **Register providers from settings.** DeepSeek / Qwen / Gemini instances when their keys are present, mirroring the existing vLLM/Anthropic registration blocks. Add `dashscope_api_key`.
 3. **Capture usage.** Add `stream_options.include_usage` (OpenAI-compat) + Anthropic `message_delta.usage` parsing; thread `input/output/cache_read/cache_write` into `record_llm_call`. (Prereq for any caching KPI.)
