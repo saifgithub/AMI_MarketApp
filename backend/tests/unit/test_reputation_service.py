@@ -98,6 +98,30 @@ def test_award_same_type_different_ref_both_grant():
         assert svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="run-2") == 3
 
 
+def test_award_race_on_dedup_check_is_caught_by_db_index(monkeypatch):
+    """DEF039 — the _already_awarded() SELECT is not a lock: simulate two
+    concurrent award() calls both passing the dedup check (the loser's
+    check ran before the winner's commit), so the loser's INSERT is the
+    one that actually has to fight the unique index. Must return 0, not
+    raise, and must not leave a duplicate row."""
+    user = _make_user()
+    svc = ReputationService()
+
+    # Winner commits first, out-of-band, as a concurrent request would.
+    with get_session() as s:
+        svc.award(s, user_id=user.id, event_type="room_verdict", ref_id="run-race")
+
+    # Force the loser's dedup check to miss (as it would have, had it run
+    # before the winner's commit) so its INSERT reaches the DB index.
+    monkeypatch.setattr(ReputationService, "_already_awarded", lambda *a, **k: False)
+    with get_session() as s:
+        granted = svc.award(
+            s, user_id=user.id, event_type="room_verdict", ref_id="run-race",
+        )
+    assert granted == 0
+    assert len(_events(user.id)) == 1
+
+
 def test_per_type_daily_limit_trade_events():
     user = _make_user()
     svc = ReputationService()

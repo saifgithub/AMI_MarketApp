@@ -25,12 +25,14 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
     TypeDecorator,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -568,9 +570,24 @@ class ReputationEventRow(Base):
     (user_id, event_type, ref_id) is the dedup anchor: award() refuses a
     second grant for the same ref. users.reputation is the denormalized
     running total; this table is the ledger behind it.
+
+    DEF039: that dedup was app-code-only (a SELECT-then-INSERT race) — two
+    concurrent award() calls for the same ref could both pass the check and
+    double-insert. The partial unique index below is the defense-in-depth
+    backstop; it's partial (WHERE ref_id IS NOT NULL) because ref_id is
+    nullable and award() itself only dedups when a ref_id is given.
     """
 
     __tablename__ = "reputation_events"
+    __table_args__ = (
+        Index(
+            "uq_reputation_event_dedup",
+            "user_id", "event_type", "ref_id",
+            unique=True,
+            postgresql_where=text("ref_id IS NOT NULL"),
+            sqlite_where=text("ref_id IS NOT NULL"),
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)

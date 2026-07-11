@@ -22,6 +22,7 @@ from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.logging import logger
@@ -186,7 +187,18 @@ class ReputationService:
         # Sessions run autoflush=False (db/session.py) — flush so a second
         # award() in the same transaction sees this grant in its dedup/cap
         # queries.
-        session.flush()
+        try:
+            session.flush()
+        except IntegrityError:
+            # DEF039: the _already_awarded() check above is a SELECT, not a
+            # lock — two concurrent award() calls for the same
+            # (user_id, event_type, ref_id) can both pass it and race to
+            # insert. The partial unique index on reputation_events is the
+            # backstop; losing the race is equivalent to having deduped,
+            # so roll back (which also reverts the in-memory
+            # user.reputation / member.points bumps above) and return 0.
+            session.rollback()
+            return 0
 
         logger.info(
             "reputation_awarded",
