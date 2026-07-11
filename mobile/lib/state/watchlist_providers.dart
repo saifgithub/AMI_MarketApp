@@ -1,8 +1,9 @@
 /// Riverpod state for the user's watchlist (A18).
 ///
-/// The watchlist refreshes whenever Portfolio is refreshed (the screen
-/// pulls both), and after every add/remove. We deliberately don't poll —
-/// quotes are cached server-side and the user manually pull-to-refreshes.
+/// Loads once on provider creation (app start), then refreshes whenever
+/// Portfolio is refreshed (the screen pulls both) and after every
+/// add/remove. We deliberately don't poll — quotes are cached server-side
+/// and the user manually pull-to-refreshes.
 library;
 
 import 'package:ami_trade/models/watchlist.dart';
@@ -91,5 +92,7 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
 
 final watchlistNotifierProvider =
     StateNotifierProvider<WatchlistNotifier, WatchlistState>((ref) {
-  return WatchlistNotifier(ref);
+  final n = WatchlistNotifier(ref);
+  Future.microtask(n.refresh);
+  return n;
 });
