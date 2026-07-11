@@ -67,6 +67,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get watchlistRemove => 'REMOVE FROM WATCHLIST';
 
   @override
+  String get watchlistRemoved => 'Removed from watchlist';
+
+  @override
+  String get watchlistUndo => 'UNDO';
+
+  @override
   String get floorTabUpper => 'FLOOR';
 
   @override
@@ -1101,7 +1107,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-      String side, String qty, String ticker, String price) {
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  ) {
     return 'Filled: $side $qty $ticker @ \\\$$price';
   }
 

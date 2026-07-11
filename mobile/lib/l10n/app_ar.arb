@@ -17,6 +17,8 @@
     "watchlistAskMarketAnalyst": "اسأل محلل السوق",
     "watchlistConveneRoom": "جمع الغرفة",
     "watchlistRemove": "إزالة من قائمة المراقبة",
+    "watchlistRemoved": "تمت الإزالة من قائمة المراقبة",
+    "watchlistUndo": "تراجع",
     "floorTabUpper": "القاعة",
     "portfolioTabUpper": "المحفظة",
     "journalTabUpper": "السجل",
