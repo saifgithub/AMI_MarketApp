@@ -19,14 +19,16 @@ table).
 | CR014 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E3/D2+D3 motion identity; no findings |
 | CR015 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E4/D7 HexToast/toggle/logo; C1+bulk deferred; no findings |
 | CR016 | COMPLETE | none | R53 · round 1 | COMPLETE (r1) — E4/D8 HexBottomNav; M1 (tap-height) addressed |
-| DEF042 | AWAITING-AUDIT | none | R54 · round 1 | — · security; challenge answer+explanation leak (reopened CR010-O1); on main `85ec04e`, live `alpha-2026-07-11-2` |
-| DEF039 | AWAITING-AUDIT | none | R54 · round 1 | — · reputation dedup partial index (reopened CR004-F2); on main `2208f99` + migration 0015 live |
-| DEF040 | AWAITING-AUDIT | DEF039 | R54 · round 1 | — · merge current-week league recompute (reopened CR004-F5); on main `7ebc123` |
-| DEF047 | AWAITING-AUDIT | none | R54 · round 1 | — · onboarding locale hint (CR004 Plan-A #2); on main `fd0ab6f` |
-| DEF048 | AWAITING-AUDIT | none | R54 · round 1 | — · readback-edit 501 atomicity (CR004 Plan-A #6); on main `fd0ab6f` |
-| DEF045 | AWAITING-AUDIT | none | R54 · round 1 | — · watchlist cold-start load; ⚠️ on BRANCH `claude/bug-fix-20260711-115553` `9712006`, not main |
-| DEF046 | AWAITING-AUDIT | none | R54 · round 1 | — · watchlist swipe-delete; ⚠️ on BRANCH `claude/bug-fix-20260711-115553` `e2a3c1f`, not main |
+| DEF042 | COMPLETE | none | R54 · round 1 | COMPLETE (r1) — challenge answer+explanation leak closed (all 4 routes); M1 test gap addressed (`58bf138`) |
+| DEF039 | COMPLETE | none | R54 · round 1 | COMPLETE (r1) — reputation dedup partial index; O1 → minted DEF049 |
+| DEF040 | COMPLETE | DEF039 | R54 · round 1 | COMPLETE (r1) — merge current-week league recompute; M1 (past-week) noted, not minted |
+| DEF047 | COMPLETE | none | R54 · round 1 | COMPLETE (r1) — onboarding locale hint; O1 → minted DEF050 |
+| DEF048 | COMPLETE | none | R54 · round 1 | COMPLETE (r1) — readback-edit 501 atomicity |
+| DEF045 | COMPLETE | none | R54 · round 1 | COMPLETE (r1, pending-merge) — **merged to main `bd851b3` unchanged; verdict now unconditional** |
+| DEF046 | COMPLETE | none | R54 · round 1 | COMPLETE (r1, pending-merge) — **merged to main `bd851b3` unchanged; verdict now unconditional** |
+| DEF049 | AWAITING-AUDIT | DEF039 | R54 · round 1 | — · milestone credit double-grant under concurrency (from DEF039 O1); on main `58bf138`, **not yet promoted** |
+| DEF050 | AWAITING-AUDIT | none | R54 · round 1 | — · unused `assets/icons/` pubspec line (from shared O1); on main `58bf138`; **verify from a fresh worktree** |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
 
-_R54 batch (7 lanes): DEF039/040/042 are reopened prior audit findings (F2/F5/O1) on monetized currency/security — the priority set. DEF047/048 are onboarding (lower risk). DEF045/046 are user-reported mobile fixes still on the `/fix-bugs` branch — **their lanes point at branch SHAs; the auditor must check out the branch, or hold until Saiful merges to main.**_
+_R54 batch: DEF039/040/042/047/048 audited COMPLETE round 1. DEF045/046 audited COMPLETE (pending-merge) and are now **merged to main `bd851b3`** via clean `--no-ff` (diffs unchanged → verdicts stand). Two follow-up lanes minted from the auditor's OUT-OF-SCOPE findings: **DEF049** (DEF039 O1 — monetized credit double-grant, fixed) + **DEF050** (shared O1 — pubspec asset dir). DEF049 is on main but **awaits `/promote-to-alpha`** to reach the live server._
