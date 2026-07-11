@@ -58,6 +58,8 @@
     "watchlistAskMarketAnalyst": "ASK THE MARKET ANALYST",
     "watchlistConveneRoom": "CONVENE THE ROOM",
     "watchlistRemove": "REMOVE FROM WATCHLIST",
+    "watchlistRemoved": "Removed from watchlist",
+    "watchlistUndo": "UNDO",
 
     "floorTabUpper": "FLOOR",
     "portfolioTabUpper": "PORTFOLIO",

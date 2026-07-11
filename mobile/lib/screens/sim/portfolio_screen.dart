@@ -26,6 +26,7 @@ import 'package:ami_trade/widgets/hex/hex_chip.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:ami_trade/widgets/trade_row.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
@@ -511,37 +512,47 @@ class _WatchlistRow extends ConsumerWidget {
         : NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price);
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: InkWell(
-        onTap: () => _showRowSheet(context, ref),
-        borderRadius: BorderRadius.circular(AmiRadii.card),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
-          ),
-          decoration: BoxDecoration(
-            color: AmiColors.slate800,
-            borderRadius: BorderRadius.circular(AmiRadii.card),
-            border: Border.all(color: AmiColors.slate700),
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 64,
-                child: Text(entry.ticker,
-                    style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
-              ),
-              const SizedBox(width: AmiSpacing.s),
-              Expanded(
-                child: Text(
-                  entry.notes ?? '',
-                  style: AmiTypography.caption,
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
+      child: Dismissible(
+        key: ValueKey(entry.id),
+        direction: DismissDirection.endToStart,
+        // Match Journal's swipe-delete: demand a deliberate swipe past the
+        // midpoint before committing (default 0.4 fires on a casual
+        // half-swipe — accidental data loss).
+        dismissThresholds: const {DismissDirection.endToStart: 0.7},
+        background: const _WatchlistDeleteBackground(),
+        onDismissed: (_) => _removeWithUndo(context, ref),
+        child: InkWell(
+          onTap: () => _showRowSheet(context, ref),
+          borderRadius: BorderRadius.circular(AmiRadii.card),
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AmiSpacing.m, vertical: AmiSpacing.s,
+            ),
+            decoration: BoxDecoration(
+              color: AmiColors.slate800,
+              borderRadius: BorderRadius.circular(AmiRadii.card),
+              border: Border.all(color: AmiColors.slate700),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 64,
+                  child: Text(entry.ticker,
+                      style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
                 ),
-              ),
-              Text(priceText, style: AmiTypography.statMid),
-              const SizedBox(width: AmiSpacing.s),
-              const Icon(Icons.chevron_right, color: AmiColors.textLow),
-            ],
+                const SizedBox(width: AmiSpacing.s),
+                Expanded(
+                  child: Text(
+                    entry.notes ?? '',
+                    style: AmiTypography.caption,
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(priceText, style: AmiTypography.statMid),
+                const SizedBox(width: AmiSpacing.s),
+                const Icon(Icons.chevron_right, color: AmiColors.textLow),
+              ],
+            ),
           ),
         ),
       ),
@@ -556,6 +567,43 @@ class _WatchlistRow extends ConsumerWidget {
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => TickerDetailScreen(ticker: entry.ticker),
     ));
+  }
+
+  void _removeWithUndo(BuildContext context, WidgetRef ref) {
+    HapticFeedback.mediumImpact();
+    final notifier = ref.read(watchlistNotifierProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    final l = AppLocalizations.of(context);
+    notifier.remove(entry.ticker);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l.watchlistRemoved),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: l.watchlistUndo,
+          onPressed: () => notifier.add(entry.ticker, notes: entry.notes),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _WatchlistDeleteBackground extends StatelessWidget {
+  const _WatchlistDeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: AmiSpacing.l),
+      decoration: BoxDecoration(
+        color: AmiColors.hexRed,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+      ),
+      child: const Icon(Icons.delete_outline, color: Colors.white, size: 24),
+    );
   }
 }
 
