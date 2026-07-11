@@ -33,7 +33,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     // Auto-start onboarding on screen mount
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(onboardingNotifierProvider.notifier).start(
-            locale: 'en',
+            locale: Localizations.localeOf(context).languageCode,
             timezone: DateTime.now().timeZoneName,
           );
     });
@@ -98,7 +98,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         message: state.errorMessage ??
             AppLocalizations.of(context).onboardingErrorUnknown,
         onRetry: () => ref.read(onboardingNotifierProvider.notifier).start(
-              locale: 'en',
+              locale: Localizations.localeOf(context).languageCode,
               timezone: DateTime.now().timeZoneName,
             ),
       );

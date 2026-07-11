@@ -106,11 +106,11 @@ async def confirm_readback(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "session not found or expired")
 
     if req.confirm == "edit":
-        # Apply edits to session.answers and re-derive
-        for key, value in req.edits.items():
-            session.answers[key] = value
-        await store.save(session)
-        # Re-build the readback — return it via answer endpoint convention
+        # Not implemented yet (no mobile UI calls this path — the readback
+        # screen only offers confirm). Fail before touching session state:
+        # this used to apply the edits to session.answers and persist them
+        # before raising, so a client told "this failed, restart" had
+        # actually already had its session mutated underneath it.
         raise HTTPException(
             status.HTTP_501_NOT_IMPLEMENTED,
             "edit flow lands W2 day 3 — for now, restart the session",

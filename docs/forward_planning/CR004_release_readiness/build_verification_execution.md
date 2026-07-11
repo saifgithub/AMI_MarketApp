@@ -68,13 +68,13 @@ Each drill: record PASS/FAIL + notes inline here; FAIL → DEF.
 
 | # | Finding | Disposition | Status |
 |---|---|---|---|
-| 1 | Brief "Refine" calls reject() | DEF on pickup (fix specced in [build_mobile_engagement.md](build_mobile_engagement.md) §B4) | open |
-| 2 | Onboarding hardcodes locale 'en' | DEF on pickup | open |
+| 1 | Brief "Refine" calls reject() | fixed under CR009 B4 — DEF041 | resolved |
+| 2 | Onboarding hardcodes locale 'en' | DEF047 — resolved AT:R54 | resolved |
 | 3 | Challenge re-attempt exploit | closed by attempts table ([build_backend_reputation_league.md](build_backend_reputation_league.md)) | specced |
 | 4 | Streaks/reputation/badges unbuilt | closed by B2/C1 builds | specced |
 | 5 | Pydantic User fields unbacked | `reputation` backed by migration 0014; `free_*_used_this_period` + `period_resets_at` → DEF or drop at pickup | partial |
-| 6 | Onboarding readback-edit 501 | schedule edit flow or hide option — decide at pickup | open |
+| 6 | Onboarding readback-edit 501 | DEF048 — mobile never called the edit path (readback screen only offers confirm), so "hide the option" was already true. Fixed the real bug found alongside it: the backend applied + persisted the edits *before* raising 501, so a client told "this failed" had actually already mutated session state. Building the real edit flow stays a future CR. | resolved |
 | 7 | Ungated portfolio reset | 24h cooldown in backend spec | specced |
-| 8 | `assets/icon/` missing | DEF at pickup (see [build_animations_motion.md](build_animations_motion.md) §D2) | open |
+| 8 | `assets/icon/` missing | blocked on Saiful supplying real icon artwork — see [build_animations_motion.md](build_animations_motion.md) §D2 | blocked |
 | 9 | `FloorPlaceholderScreen` naming | rename bundled into B4 commit | specced |
 | 10 | `/dev-preview` route in prod | gate behind developer flag — bundle into B4 | specced |
