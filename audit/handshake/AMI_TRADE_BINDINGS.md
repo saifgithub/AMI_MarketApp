@@ -1,8 +1,10 @@
 <!--
 AMI_TRADE_BINDINGS.md — local parameter bindings for the verbatim-mirrored PROTOCOL.md (AMI Trade
-copy). PROTOCOL.md is a byte-identical copy of ami_ai/core_platform/audit/handshake/PROTOCOL.md
-(copied 2026-07-09) so upstream updates propagate by plain `cp`. NEVER edit PROTOCOL.md here;
-generic terms in it resolve via this table. Named distinctly from the source's own
+copy). PROTOCOL.md was a byte-identical copy of ami_ai/core_platform/audit/handshake/PROTOCOL.md
+(copied 2026-07-09) so upstream updates propagate by plain `cp`. DIVERGED 2026-07-12: guardrail 6
+(output compression) added locally ahead of upstream, at Saiful's direct instruction — re-sync by
+porting guardrail 6 upstream first, never by re-copying over it. NEVER edit PROTOCOL.md here
+otherwise; generic terms in it resolve via this table. Named distinctly from the source's own
 AMI_BINDINGS.md to avoid confusion between the two AMI-branded repos. This file exists only in
 the AMI_MarketApp repo — a re-copy of the protocol can never clobber it. Owner: AMI Trade (CR005).
 -->

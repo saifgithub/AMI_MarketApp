@@ -2,7 +2,8 @@
 Handshake PROTOCOL v2 for the Aegis-Quant Frontier audit loop, by AMI. Defines the PARALLEL per-item
   lane handshake between the BUILD ARCHITECT (builds + fixes) and the AUDITOR (verifies) so the two work
   concurrently without serializing, until each work item is COMPLETE (zero BLOCKER + zero MAJOR).
-  Ratified by the stakeholder 2026-06-21; DEF routing added 2026-06-27. Owner: ATM Market Intel (AMI).
+  Ratified by the stakeholder 2026-06-21; DEF routing added 2026-06-27; guardrail 6 (output
+  compression) added 2026-07-12. Owner: ATM Market Intel (AMI).
   Paradigm: FRONTIER (aegis2). Rule 7: no em or en dashes.
 -->
 
@@ -72,6 +73,13 @@ build steps); the protocol mandates no specific mechanism on the return path.
    independent treatment.
 5. SINGLE LEDGER: `audit/audit-trail.md` is the ONE chronological history across all lanes (the auditor
    appends every verdict), so there is one auditable record.
+6. OUTPUT COMPRESSION: narrative prose in `<ITEM>.architect.md`, `<ITEM>.auditor.md`, `audit-trail.md`
+   headlines, and `runs/<date>_run-NN/run_report.md` is written compressed — fragments over full
+   sentences, no filler or hedging, every technical noun and verb kept. Command output cited as
+   evidence, file:line citations, machine-parsed state (`SUBMITTED: round N`,
+   `VERDICT: COMPLETE | AWAITING_FIXES (round N)`, `depends-on:`), and severity labels (`BLOCKER`,
+   `MAJOR`, `MINOR`) are NEVER compressed or paraphrased, so the auditor's re-verification,
+   `watcher.sh`'s regex, and the trust-critical contract's COMPLETE test all stay exact.
 
 ## Borderline severity: doubt bounces
 
