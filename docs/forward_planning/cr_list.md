@@ -45,4 +45,8 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR016 | 2026-07-10 | E4/D8 — HexBottomNav: hex-pill bottom navigation (impl CR under CR004) | done | [CR016_hex_bottom_nav/](CR016_hex_bottom_nav/) | AT:R53 |
 | CR017 | 2026-07-10 | Multi-provider LLM routing + per-provider caching mechanics — DeepSeek/Qwen/Gemini, user-level routing (research; linked to CR008) | proposed | [CR017_multiprovider_llm_routing/](CR017_multiprovider_llm_routing/) | AT:R53 |
 | CR018 | 2026-07-11 | Lesson numbering — surface the canonical id-prefix lesson number (`001`–`292`, gapped) in the app (list + reader) so lessons are referenceable by number | done | [CR018_lesson_numbering/](CR018_lesson_numbering/) | AT:R54 |
+| CR019 | 2026-07-12 | Concierge lesson retrieval — **embedding mode** (robust semantic retrieval over the 270 lessons; needs an on-prem embedder) | proposed | [CR019_concierge_embedding_mode/](CR019_concierge_embedding_mode/) | AT:R54 |
+| CR020 | 2026-07-12 | Concierge lesson context — **full context mode** (cheap: compact all-lesson index with topic/tags in the prompt, no embeddings) | proposed | [CR020_concierge_full_context_mode/](CR020_concierge_full_context_mode/) | AT:R54 |
+| CR021 | 2026-07-12 | Concierge context **router** — `CONCIERGE_CONTEXT_MODE` flag selects saver / full_context / embedding (default full_context) | proposed | [CR021_concierge_context_router/](CR021_concierge_context_router/) | AT:R54 |
+| CR022 | 2026-07-12 | App manual corpus — Concierge app-usage knowledge, authored + indexed like lessons and routed through CR021 | proposed | [CR022_app_manual_corpus/](CR022_app_manual_corpus/) | AT:R54 |
 
