@@ -4,6 +4,13 @@ Every locked decision. Chronological by the conversation in which it was made.
 
 When a future debate revisits any of these, refer to the rationale here. Decisions are reversible, but changes should be deliberate.
 
+See also [`rejected_features_register.md`](rejected_features_register.md) — features
+considered and rejected (OCO orders, pre/after-hours quotes, screeners, brokerage
+integration, copy-trading, options/derivatives, tax features, order-book/Level 2,
+rewarded ads), each with its rejection reason and reopen precondition. Migrated here
+2026-07-12 (AT:R55) when `Silent_Scout/` (its original home) was closed and
+deprecated.
+
 ---
 
 ## Audience & positioning

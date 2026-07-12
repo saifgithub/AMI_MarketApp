@@ -147,10 +147,16 @@ into this CR — see Out of scope).
   future gap.
 - Replacing yfinance for market/price data (CR007 Phase 2 — Twelve Data, pending quote).
 - The Social Media Analyst (CR024, filed alongside this CR).
-- Correcting `Silent_Scout/09_per_ticker_news/README.md`'s stale "shipped" claim about
-  News Analyst context — flagged, not edited (out of this CR's named scope); will read
-  as accurate once this CR's implementation phase lands.
 - Actual implementation — this CR is the design doc only.
+
+**Update, same session:** Silent_Scout closed (AT:R55, Saiful decision — "its utility
+has come to an end"). Its News-Analyst-relevant research
+(`05_agent_alignment/` — the gap analysis + agent data matrix + validation suite that
+originally documented this gap, and `09_per_ticker_news/` — the already-partially-
+shipped mobile news feature, corrected in place) is preserved under
+[`original_silent_scout_research/`](original_silent_scout_research/) in this CR's
+folder rather than lost. The stale "shipped" claim mentioned above has been corrected
+in place at its new location.
 
 ## Acceptance (for this CR, docs-only)
 

@@ -51,4 +51,12 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR022 | 2026-07-12 | App manual corpus — Concierge app-usage knowledge, authored + indexed like lessons and routed through CR021 | proposed | [CR022_app_manual_corpus/](CR022_app_manual_corpus/) | AT:R54 |
 | CR023 | 2026-07-12 | Wire the News Analyst to a real live news feed (Alpha Vantage NEWS_SENTIMENT) — closes Gap 5 news half, builds on CR007 | proposed | [CR023_news_analyst_live_feed/](CR023_news_analyst_live_feed/) | AT:R55 |
 | CR024 | 2026-07-12 | Wire the Social Media Analyst to a real social-sentiment source (LunarCrush) — closes Gap 5 social half, builds on CR007 | proposed | [CR024_social_analyst_live_feed/](CR024_social_analyst_live_feed/) | AT:R55 |
+| CR025 | 2026-07-12 | Watchlist day-change % badge — backend wire-up + Flutter render (migrated from Silent_Scout, cheapest fix in the backlog) | proposed | [CR025_watchlist_daychange_badge/](CR025_watchlist_daychange_badge/) | AT:R55 |
+| CR026 | 2026-07-12 | Sector concentration enforcement + Portfolio-screen allocation chart — closes an unenforced mandate compliance rule (migrated from Silent_Scout) | proposed | [CR026_sector_allocation/](CR026_sector_allocation/) | AT:R55 |
+| CR027 | 2026-07-12 | Price alerts / push notifications — design complete, hard-gated on A15/A16 external cert work (migrated from Silent_Scout) | proposed | [CR027_price_alerts/](CR027_price_alerts/) | AT:R55 |
+| CR028 | 2026-07-12 | Trailing stop — Tier 3, sequenced after CR027 (migrated from Silent_Scout) | proposed | [CR028_trailing_stop/](CR028_trailing_stop/) | AT:R55 |
+| CR029 | 2026-07-12 | Cost-basis lots / FIFO realised-P&L display — Tier 3, deferred by product sequencing (migrated from Silent_Scout) | proposed | [CR029_cost_basis_lots/](CR029_cost_basis_lots/) | AT:R55 |
+| CR030 | 2026-07-12 | Dividend fields for the earnings chip — small gap-closer on an already-shipped feature (migrated from Silent_Scout) | proposed | [CR030_earnings_dividend_fields/](CR030_earnings_dividend_fields/) | AT:R55 |
+| CR031 | 2026-07-12 | On-device STT/TTS benchmark + recommendation for A13/A14/A17 — highest-leverage unblocked action found in Silent_Scout audit | proposed | [CR031_voice_stt_tts_benchmark/](CR031_voice_stt_tts_benchmark/) | AT:R55 |
+| CR032 | 2026-07-12 | GB10 shared-hardware conflict + LoRA fine-tuning go/no-go decision — production vLLM host doubles as the research training box, never resolved | proposed | [CR032_gb10_lora_finetuning_decision/](CR032_gb10_lora_finetuning_decision/) | AT:R55 |
 

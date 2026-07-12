@@ -38,17 +38,27 @@ This section closes that structural gap by integrating real yfinance news data i
 
 ## Delivery status
 
-**✅ SHIPPED (AT:R41)**
+**⚠️ PARTIALLY SHIPPED (AT:R41) — corrected 2026-07-12 (AT:R55)**
+
+The last line below ("News data flows into News Analyst context") was **false** as of
+2026-07-12 — verified against current `room_runner.py`/`agent_prompts.py`/
+`overlay_generator.py`: none of them import `market_data.py`, and no real news ever
+reaches any agent prompt. Everything else in this list genuinely shipped. This folder
+is preserved here (moved from `Silent_Scout/09_per_ticker_news/` when that workspace
+closed) because it's exactly the gap CR023 closes — see
+`../../CR023_news_analyst_live_feed.md`.
 
 Delivered:
 
-- Section widget (`NewsStrip`) implemented in Flutter
-- Backend endpoint `/v1/sim/news` wired and live
-- yfinance news payload integrated with 5-min cache
-- url_launcher dependency added for tap-to-open browser links
-- Tests written and passing
-- Integrated into holding detail screen (08_holding_detail)
-- News data flows into News Analyst context
+- Section widget (`NewsStrip`) implemented in Flutter — real, shipped
+- Backend endpoint `/v1/sim/news` wired and live — real, shipped
+- yfinance news payload integrated with 5-min cache — real, shipped
+- url_launcher dependency added for tap-to-open browser links — real, shipped
+- Tests written and passing — real, shipped
+- Integrated into holding detail screen (08_holding_detail) — real, shipped
+- ~~News data flows into News Analyst context~~ — **false, never happened.** The
+  NewsStrip/endpoint feed the mobile Ticker Detail screen only. CR023 (Alpha Vantage
+  NEWS_SENTIMENT — a richer feed than plain yfinance headlines) is the actual fix.
 
 ---
 

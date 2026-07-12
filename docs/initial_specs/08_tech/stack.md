@@ -84,7 +84,6 @@ AMI_MarketApp/
 │   ├── commands/                 ← /promote-to-alpha, /rollback-alpha, /handover, /start-fresh, ...
 │   ├── session-config.yml        ← Multi-track session config
 │   └── projects/                 ← (gitignored — per-session state)
-├── Silent_Scout/                 ← Sub-project (research only, does NOT import from production)
 ├── HANDOVER_R.md                 ← Current Development-track handover state
 ├── README.md
 ├── CLAUDE.md

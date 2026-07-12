@@ -2,9 +2,12 @@
 
 This table documents features evaluated in the AT:R40 gap analysis and rejected for v1.0.
 
+*Migrated 2026-07-12 (AT:R55) from `Silent_Scout/18_rejected_features/`, its original
+home, when that workspace was closed and deprecated.*
+
 | Feature | Date | Rejection Reason | Pre-condition to Re-open | Tracker |
 |---|---|---|---|---|
-| **OCO / Bracket orders** | 2026-05-23 | Target audience is learning simulators, not advanced traders. OCO is a niche feature; users master fixed stop/target first. | Users explicitly request bracket orders during Alpha testing; Tier 2+ research shows demand. | [[17_stock_comparison]] |
+| **OCO / Bracket orders** | 2026-05-23 | Target audience is learning simulators, not advanced traders. OCO is a niche feature; users master fixed stop/target first. | Users explicitly request bracket orders during Alpha testing; Tier 2+ research shows demand. | [[gap_analysis.md]] |
 | **Pre/after-hours quotes** | 2026-05-23 | yfinance free tier doesn't reliably surface pre/after-hours sessions. Building a paid data subscription is out of scope for Alpha. | Paid news/data tier ships (Phase 2+); premium market data becomes an option. | [[gap_analysis.md]] |
 | **Screeners / filters** | 2026-05-23 | Screeners replace the agent team's role. AMI's moat is the 12 agents, not the user searching for stocks themselves. Design conflict. | Product repositioned to include discovery (vs. team-only mode); agents become optional. (Unlikely.) | [[core_loop_and_features.md]] |
 | **Brokerage integration** | 2026-05-23 | Locked decision D-004: AMI is simulation-only, forever. No real money, no brokerage. Legal + regulatory scope explosion. | D-004 re-opened by founder. (Unlikely within 5 years.) | [[decision_log.md#D-004]] |

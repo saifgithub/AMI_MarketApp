@@ -8,9 +8,6 @@ memory_project_file: project_ami_trade.md
 worktree_pattern: "agent-*"
 worktree_dir: .claude/worktrees
 
-scan_excludes:
-  - Silent_Scout/
-
 deploy_command: /promote-to-alpha
 
 tracks:

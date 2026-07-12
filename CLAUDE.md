@@ -37,19 +37,29 @@ Read-only — integrate against them, don't modify.
 
 ---
 
-## In-repo sub-project: `Silent_Scout/` — aware, not engaged
+## `Silent_Scout/` — deprecated and closed (AT:R55, 2026-07-12)
 
-`Silent_Scout/` is part of this repo but on a **different roadmap**: it's the research-only workspace for fine-tuning the 13 AMI Trade agents (Concierge first). Its README opens with *"Does not import from the production app. Does not ship."* — see `Silent_Scout/README.md`.
+`Silent_Scout/` was an in-repo R&D workspace (LoRA fine-tuning research, on-device
+voice research, UI feature-gap planning) kept isolated from production. Saiful closed
+it: *"I want to close and deprecate silent scout. It's utility has come to an end."*
+— GTM mode means research-before-build in a separate sandbox no longer fits; work goes
+straight into the CR pipeline instead.
 
-**Rule:** be aware it exists; **do not pay attention to it unless you're specifically assigned to it.** A session working on AMI Trade backend / Flutter / docs / promotion / infra should treat `Silent_Scout/` as out of scope:
+**The directory no longer exists.** Everything of value was migrated:
 
-- Don't include it in greps or scans for AMI Trade work (e.g., use `git grep -- ':!Silent_Scout/'` if a global grep would otherwise pick it up).
-- Don't treat its code as authoritative for production — the production app doesn't import from it and isn't supposed to.
-- Don't refactor across the boundary. The cross-references go one way only (Silent_Scout reads from `backend/app/services/llm_gateway.py` and `backend/app/agents/overlay_generator.py` to mirror their shapes — never the other direction).
+- Actionable designs (watchlist badge, sector allocation, price alerts, trailing
+  stop, cost-basis lots, earnings/dividend fields, voice STT/TTS benchmark, the
+  GB10/LoRA hardware decision, the News/Social analyst live-feed gap) → **CR023–CR032**
+  in `docs/forward_planning/`, each with the original research preserved under its own
+  `original_silent_scout_research/` subfolder.
+- The rejected-features register → `docs/initial_specs/11_decisions/rejected_features_register.md`.
+- Historical/stale-but-shipped content with no forward action (old holding-detail
+  layout notes, two correctly-deferred Tier-3 features, the closure README) →
+  `docs/archive/silent_scout_2026-07-12/`.
 
-If Saiful explicitly says *"work on Silent_Scout"* or names a Silent_Scout file, then go. Otherwise stay in the production tree.
-
-The boundary protects two things: production stays trained on the live LLM through the gateway (not on local weights), and the research workspace can iterate freely without breaking running Alpha testers.
+If a future session finds a reference to `Silent_Scout/` anywhere (old commit
+messages, `history/` narratives, other CR docs), that's a historical mention of a now-
+closed workspace — don't try to `cd` into it or treat it as live.
 
 ---
 
