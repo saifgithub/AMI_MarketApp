@@ -1,6 +1,6 @@
 ---
 title: Agent Data Matrix — Prompt Claims vs Runtime Feed
-updated: 2026-05-15
+updated: 2026-07-12
 source_files:
   - content/agents/*.md
   - backend/app/services/room_runner.py (_profile_for_ticker, lines 185–272)
@@ -173,15 +173,20 @@ but are not included in `build_live_data_block()`. This is the highest-severity 
 | Forward macro catalyst | ⚠️ synthetic `forward_catalyst` field | ❌ nothing | Structural |
 | Macro tone | ⚠️ synthetic `macro_tone` string | ❌ nothing | Structural |
 | Fed stance | ⚠️ synthetic `fed_tone` string | ❌ nothing | Structural |
-| Real-time news feeds | ❌ not available | ❌ not available | Structural |
-| Macro calendar (CPI, NFP dates) | ❌ not available | ❌ not available | Structural |
-| Regulatory filings | ❌ not available | ❌ not available | Structural |
-| Earnings calendar | ❌ not available | ❌ not available | Structural |
+| Real-time news feeds | ❌ not available | ❌ not available | Structural → **Scheduled (CR023)** |
+| Macro calendar (CPI, NFP dates) | ❌ not available | ❌ not available | Structural (still — out of CR023 scope) |
+| Regulatory filings | ❌ not available | ❌ not available | Structural (still — out of CR023 scope) |
+| Earnings calendar | ❌ not available | ❌ not available | Structural (still — out of CR023 scope) |
 
 **Overall:** ⚠️ Partial in Room (synthetic placeholders) / ❌ Missing in 1-on-1.
 Room's synthetic catalyst/macro fields are better than nothing — the agent can narrate
 a plausible scenario. But they are hardcoded templates (not derived from real news).
-In 1-on-1 the News Analyst has zero news context. All gaps are structural.
+In 1-on-1 the News Analyst has zero news context. **2026-07-12 update (AT:R55):** the
+real-time news feed row is no longer open-ended — CR023
+(`docs/forward_planning/CR023_news_analyst_live_feed/`) designs wiring Alpha Vantage
+NEWS_SENTIMENT into both Room and 1-on-1 paths. Status `proposed`, not yet built.
+Macro calendar / regulatory filings remain genuinely structural — no provider chosen,
+not in CR023's scope.
 
 ---
 
@@ -201,14 +206,21 @@ In 1-on-1 the News Analyst has zero news context. All gaps are structural.
 | Mention trend | ⚠️ synthetic `mention_trend` (hardcoded "up 40% WoW") | ❌ nothing | Structural |
 | Influencer take | ⚠️ synthetic `influencer_take` (hardcoded phrase) | ❌ nothing | Structural |
 | Sentiment pattern | ⚠️ synthetic `pattern` (hardcoded) | ❌ nothing | Structural |
-| Reddit thread data | ❌ not available | ❌ not available | Structural |
-| Twitter/X cashtag data | ❌ not available | ❌ not available | Structural |
-| StockTwits real scores | ❌ not available | ❌ not available | Structural |
-| Google Trends | ❌ not available | ❌ not available | Structural |
+| Reddit thread data | ❌ not available | ❌ not available | Structural (ruled out by CR007 — cost/ToS) |
+| Twitter/X cashtag data | ❌ not available | ❌ not available | Structural (ruled out by CR007 — cost/ToS) |
+| StockTwits real scores | ❌ not available | ❌ not available | Structural (ruled out by CR007 — not accepting new registrations) |
+| Google Trends | ❌ not available | ❌ not available | Structural (CR007: best-effort only, fragile scraper) |
+| Aggregate social sentiment (LunarCrush) | ❌ not available | ❌ not available | Structural → **Scheduled (CR024)** |
 
 **Overall:** ⚠️ Partial in Room (synthetic sentiment block) / ❌ Missing in 1-on-1.
 Room gives 5 synthetic sentiment fields — enough for the agent to narrate a scenario.
-1-on-1 has nothing. All gaps are structural (no live social feed in simulation).
+1-on-1 has nothing. **2026-07-12 update (AT:R55):** CR007 researched every direct
+social channel (Reddit, Twitter/X, StockTwits, Google Trends, Discord) and ruled each
+out on cost, ToS, or availability grounds — those rows stay genuinely structural.
+LunarCrush (an aggregator) was CR007's one viable recommendation; CR024
+(`docs/forward_planning/CR024_social_analyst_live_feed/`) designs wiring it in. Status
+`proposed`, not yet built, and LunarCrush's own tier pricing/coverage is still
+unconfirmed pending a trial account.
 
 ---
 
@@ -352,8 +364,8 @@ Same as Aggressive Debator — same phase-parallel issue, same assessment.
 |---|---|---|---|---|
 | 1 | Fundamentals Analyst | ⚠️ Partial | ⚠️ Partial | Structural |
 | 2 | Market Analyst | ⚠️ Partial | ❌ Missing | **Accidental (High)** |
-| 3 | News Analyst | ⚠️ Partial | ❌ Missing | Structural |
-| 4 | Social Media Analyst | ⚠️ Partial | ❌ Missing | Structural |
+| 3 | News Analyst | ⚠️ Partial | ❌ Missing | Structural → Scheduled (CR023, proposed) |
+| 4 | Social Media Analyst | ⚠️ Partial | ❌ Missing | Structural → Scheduled (CR024, proposed) |
 | 5 | Bull Researcher | ✅ Covered | N/A | Accidental (Low) |
 | 6 | Bear Researcher | ✅ Covered | N/A | Accidental (Low) |
 | 7 | Research Manager | ✅ Covered | N/A | — |

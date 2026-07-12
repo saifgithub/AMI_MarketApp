@@ -49,4 +49,6 @@ Governance rationale: decision **D-058** in [`../initial_specs/11_decisions/deci
 | CR020 | 2026-07-12 | Concierge lesson context — **full context mode** (cheap: compact all-lesson index with topic/tags in the prompt, no embeddings) | proposed | [CR020_concierge_full_context_mode/](CR020_concierge_full_context_mode/) | AT:R54 |
 | CR021 | 2026-07-12 | Concierge context **router** — `CONCIERGE_CONTEXT_MODE` flag selects saver / full_context / embedding (default full_context) | proposed | [CR021_concierge_context_router/](CR021_concierge_context_router/) | AT:R54 |
 | CR022 | 2026-07-12 | App manual corpus — Concierge app-usage knowledge, authored + indexed like lessons and routed through CR021 | proposed | [CR022_app_manual_corpus/](CR022_app_manual_corpus/) | AT:R54 |
+| CR023 | 2026-07-12 | Wire the News Analyst to a real live news feed (Alpha Vantage NEWS_SENTIMENT) — closes Gap 5 news half, builds on CR007 | proposed | [CR023_news_analyst_live_feed/](CR023_news_analyst_live_feed/) | AT:R55 |
+| CR024 | 2026-07-12 | Wire the Social Media Analyst to a real social-sentiment source (LunarCrush) — closes Gap 5 social half, builds on CR007 | proposed | [CR024_social_analyst_live_feed/](CR024_social_analyst_live_feed/) | AT:R55 |
 

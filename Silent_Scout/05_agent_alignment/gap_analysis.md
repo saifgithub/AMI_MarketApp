@@ -1,8 +1,18 @@
 ---
 title: Gap Analysis — Agent Prompt vs Runtime Data Feed
-updated: 2026-05-15
+updated: 2026-07-12
 severity_scale: High / Medium / Low
 ---
+
+> **2026-07-12 (AT:R55) correction:** Gap 5 below was labeled "Structural" on
+> 2026-05-15 during initial development, when no news/social provider had been
+> evaluated. It's no longer an open-ended "someday" item — CR007
+> (`docs/forward_planning/CR007_agent_data_provider_research/`) researched real
+> providers (Alpha Vantage NEWS_SENTIMENT, LunarCrush), and CR023/CR024
+> (`docs/forward_planning/CR023_news_analyst_live_feed/`,
+> `CR024_social_analyst_live_feed/`) design the wiring. Status: **proposed, not yet
+> implemented** — the gap is real today, but now scheduled rather than structural.
+> See Gap 5's updated note below.
 
 # Gap Analysis
 
@@ -224,7 +234,8 @@ if latency budget allows.
 
 ## Gap 5 — News Analyst and Social Media Analyst: synthetic data in 1-on-1
 
-**Severity: Low | Type: Structural**
+**Severity: Low | Type: Structural (as of 2026-05-15) → Scheduled (as of 2026-07-12,
+AT:R55) — proposed via CR023 (news) + CR024 (social), not yet implemented.**
 
 ### What the prompts say
 News Analyst: "Real-time news feeds (Reuters, Bloomberg, FT, regional sources)",
@@ -235,11 +246,18 @@ Social Media Analyst: Reddit, Twitter/X, StockTwits, Google Trends, Discord.
 ### What 1-on-1 delivers
 Nothing. The 6-field yfinance block has no news or sentiment data.
 
-### Why this is structural
-There is no news feed API integrated. StockTwits/Reddit APIs are not in the stack.
-Adding them is a future feature (likely tied to a Paid tier — real news data has
-licensing cost). The Room provides synthetic placeholders (`catalyst`, `sentiment_tone`)
-which the 1-on-1 path doesn't even pass through.
+### Why this was structural (2026-05-15) — and why it isn't anymore (2026-07-12)
+At the time of the original audit there was no news feed API integrated, no chosen
+provider, and no budget line — "structural" meant genuinely open-ended. That's no
+longer accurate. CR007 (`docs/forward_planning/CR007_agent_data_provider_research/`)
+researched real providers and recommends Alpha Vantage NEWS_SENTIMENT (news,
+$49.99/mo) and LunarCrush (social, ~$30-100/mo). CR023 and CR024
+(`docs/forward_planning/CR023_news_analyst_live_feed/`,
+`CR024_social_analyst_live_feed/`) design the wiring for both agents, Room and
+1-on-1. **Status is `proposed` — nothing has shipped yet** — but this is now a
+scheduled, budgeted gap, not a permanent simulation constraint. The Room still
+provides synthetic placeholders (`catalyst`, `sentiment_tone`) which the 1-on-1 path
+doesn't even pass through, until CR023/CR024 land.
 
 ### Minimal fix (no new data sources required)
 Append the same synthetic narrative block to the 1-on-1 system prompt for these
@@ -309,7 +327,7 @@ system prompts only (to keep prompt length manageable for other agents).
 | 2 | Trader: runs before Risk Debators | High | Accidental | Phase reorder (v1.0) + prompt patch (now) | Medium / Trivial |
 | 3 | Trader: no portfolio state in 1-on-1 | Medium | Accidental | Wire portfolio fetch to 1-on-1 | Small |
 | 4 | Debators: parallel but prompt implies sequential | Low | Design | Update prompt framing | Trivial |
-| 5 | News/Social: nothing in 1-on-1 | Low | Structural | Append synthetic context block | Small |
+| 5 | News/Social: nothing in 1-on-1 | Low | Structural → Scheduled (CR023/CR024) | Wire real feeds (CR023 news, CR024 social) — proposed, not built | Small (interim) / Medium (real wiring) |
 | 6 | Bull/Bear: no Journal history | Low | Accidental | Journal fetch in Room | Medium |
 
 **Immediate actions (before next alpha build):**
