@@ -1,6 +1,6 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-07-12 (end of AT:R54 — **defect burn + release + design**: cleared DEF042 (challenge answer leak) + the reopened CR004 audit findings DEF039/DEF040, plus DEF045/046/047/048; ran the **full architect/auditor handshake** on all 9 lanes → COMPLETE, which surfaced + fixed DEF049 (milestone credit double-grant) + DEF050; promoted `alpha-2026-07-11-2` and `alpha-2026-07-11-3`; **designed + shipped the "Diagonal duo" app icon** (CR004 §D2) and cut **build 0.1.0+38** to TestFlight + APK; shipped **CR018 lesson numbering**; filed **CR019–022** concierge-context CRs (docs only). Next = **CR021 (context router) + CR020 (full_context mode)**). Narratives in [`history/`](history/) — see "Recent sessions" below.
+**Last updated:** 2026-07-12 (end of AT:R55 — **docs-only session: closed Silent_Scout**: confirmed the News + Social Media analysts run on zero real data, filed **CR023** (Alpha Vantage news feed) + **CR024** (LunarCrush social feed) building directly on CR007's existing provider research; ran a full audit of every remaining Silent_Scout track and surfaced a live production/research hardware conflict (GB10 = the box serving production vLLM), a mismarked-"delivered" watchlist badge, a broken safety-floor eval script, and 3 designs citing a nonexistent "Risk Agent"; then, per Saiful's call ("its utility has come to an end"), **closed and deprecated `Silent_Scout/` entirely** — filed **CR025–032** for everything actionable, migrated every file out (into each CR's `original_silent_scout_research/`, the rejected-features register into `docs/initial_specs/11_decisions/`, stale-but-harmless content into `docs/archive/`), deleted the directory, updated every reference to it. No code/test/build changes this session. Next = **Saiful's call on CR032** (GB10/LoRA go-no-go), otherwise **CR025** (watchlist badge) is the fastest win, or the still-pending **CR021+CR020** from AT:R54). Narratives in [`history/`](history/) — see "Recent sessions" below.
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -15,23 +15,23 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **470 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; always `git log` for the true count. AT:R54 was large (18 commits: governance catch-up + DEF039/040/042/045/046/047/048/049/050 + 9 audit lanes + app icon + build +38 + CR018 + CR019–022). Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`. |
-| Latest commit | `7b56dfb` — docs(cr): file CR019-022 — concierge context modes, router, app manual (AT:R54). |
+| Git state | Clean working tree, **474 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; always `git log` for the true count. AT:R55 was docs-only (2 commits: CR023/024 filing + Silent_Scout closure) + 1 parallel-session commit (audit handshake protocol tweak, unrelated to this track's work). Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
+| Latest commit | `06a3476` (parallel session, docs-only) — this track's latest is `0a3c7ae` — chore(silent-scout): close and deprecate Silent_Scout, migrate all content to CR023-032 (AT:R55). |
 | Alpha tags | **`alpha-2026-07-11-3`** (→ `7ebc123`) — latest promote (AT:R54 DEF049): milestone-credit double-grant fix (code-only, no migration). Prior this session: **`alpha-2026-07-11-2`** (DEF039/040/042/047/048 + **migration 0015** `d1e2f3a40015` — reputation_events partial-unique dedup index). ✅ melehost `alembic_version = d1e2f3a40015` (0015 applied clean on live Postgres). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. |
 | Backend tests | **590 passed, 0 failed** (AT:R54 added +6: DEF042 route-shape, DEF039 race, DEF040 league recompute, DEF049 credit-race, DEF042-M1 routes, CR018 number derivation). |
 | Mobile pubspec | **`0.1.0+38`** (AT:R54 — new "Diagonal duo" app icon + CR018 lesson numbers + merged watchlist fixes). TestFlight: **`+38` uploaded + processing** (benign objective_c.framework dSYM warning). APK: `+38` release-signed (66 MB, sent to Saiful). |
 | Content corpus | 270 lessons (**CR018: numbered by id-prefix, badge in list + reader**), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **356 i18n keys** (AT:R54 +2 watchlist remove/undo). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
-```
+```bash
 $ git log --oneline | head -8
+06a3476 docs(audit): add output-compression guardrail 6 to handshake protocol (AT:R55)
+0a3c7ae chore(silent-scout): close and deprecate Silent_Scout, migrate all content to CR023-032 (AT:R55 CR025-032)
+3e38b58 docs(cr): file CR023 (news analyst feed) + CR024 (social analyst feed), correct Silent_Scout Gap 5 framing (AT:R55 CR023 CR024)
+3222f4f chore(handover): wrap AT:R54
 7b56dfb docs(cr): file CR019-022 — concierge context modes, router, app manual (AT:R54)
 0bb5202 feat(lessons): number lessons for easy reference (AT:R54 CR018)
 0227cc9 chore(build): device build 0.1.0+38 — new hex-candle app icon → TestFlight + APK (AT:R54)
 cf8b90e feat(icon): ship the "Diagonal duo" hex-candle app icon — iOS + Android (AT:R54 CR004)
-8d4e537 chore(audit): DEF049 + DEF050 round 1 verdicts — both COMPLETE (AT:U1 CR005)
-071ae43 chore(audit): submit DEF049 + DEF050 lanes; R54 batch verdicts + merge status (AT:R54 CR005)
-bd851b3 merge(bugfix): watchlist cold-start load + swipe-delete (AT:R54 DEF045 DEF046)
-58bf138 fix: address R54 audit findings — DEF049 credit double-grant, DEF050 pubspec, DEF042 M1 (AT:R54 DEF049 DEF050 DEF042)
 ...
 ```
 
@@ -114,7 +114,7 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R55**. (AT:R54 wrapped here. ⚠️ AT:R48/R50 ran as parallel sessions and never wrapped; governance track G + auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any parallel session must NOT reset this counter below R55.)
+Session name to use: **AT:R56**. (AT:R55 wrapped here. ⚠️ AT:R48/R50 ran as parallel sessions and never wrapped; governance track G + auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any parallel session must NOT reset this counter below R56.)
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -122,11 +122,21 @@ If the first message is a specific task ("fix this", "add that"), skip `/start-f
 
 **The roadmap is [CR004](docs/forward_planning/CR004_release_readiness/CR004_release_readiness.md)** (release-readiness umbrella; D-059–D-062 locked). The full **B3–C4 + E3/E4 batch is now delivered**: AT:R52 gave D0 + backend + B1; **AT:R53 gave B2/B3/B4/B5/B6 (CR009/010), C3 (CR011), C4 (CR012), the animation/motion bundle (CR013/014), and design-system D7/D8 (CR015/016)** — all COMPLETE through the audit handshake, on builds `+36`/`+37`.
 
-**Priority next — the concierge-context family (Saiful decided the build order):**
+**Silent_Scout is closed (AT:R55).** The directory no longer exists — everything of
+value became CR023–CR032 (see below); don't look for it, don't `cd` into it.
 
-1. **CR021 (context router) + CR020 (full_context mode) — NEXT.** After the compaction/context rebuild, build these two together: the `CONCIERGE_CONTEXT_MODE` flag (saver | full_context | embedding, **default full_context**) + the cheap "all 270 lessons compact index with topic/tags in the prompt" mode. No new infra. Docs: [CR021](docs/forward_planning/CR021_concierge_context_router/CR021_concierge_context_router.md), [CR020](docs/forward_planning/CR020_concierge_full_context_mode/CR020_concierge_full_context_mode.md).
-2. **CR019 (embedding mode)** — robust semantic retrieval; needs an on-prem embedder stood up first (none exists — vLLM serves only generative models, `/v1/embeddings` → 404). [CR019](docs/forward_planning/CR019_concierge_embedding_mode/CR019_concierge_embedding_mode.md).
-3. **CR022 (app manual corpus)** — Concierge app-usage knowledge authored + indexed like lessons, routed through CR021. [CR022](docs/forward_planning/CR022_app_manual_corpus/CR022_app_manual_corpus.md).
+**Priority next — three independent threads, Saiful hasn't picked between them yet:**
+
+1. **CR032 needs Saiful's decision first, not code.** [CR032](docs/forward_planning/CR032_gb10_lora_finetuning_decision/CR032_gb10_lora_finetuning_decision.md) — the GB10 LoRA-fine-tuning research box turned out to be the exact same host serving production vLLM to all 13 live agents, a capacity conflict never addressed in 9 weeks of "active research." Continue (needs dedicated hardware or a maintenance-window protocol) or shelve (GTM mode's priority is real-data wiring, not model infra)?
+2. **CR025 (watchlist day-change badge)** — [doc](docs/forward_planning/CR025_watchlist_daychange_badge/CR025_watchlist_daychange_badge.md) — the fastest, cheapest build across everything filed this session: two backend field wire-ups + one Flutter widget, data already flows end-to-end.
+3. **CR021 (context router) + CR020 (full_context mode)** — still the AT:R54 carry-over, untouched this session: [CR021](docs/forward_planning/CR021_concierge_context_router/CR021_concierge_context_router.md), [CR020](docs/forward_planning/CR020_concierge_full_context_mode/CR020_concierge_full_context_mode.md). `CONCIERGE_CONTEXT_MODE` flag (saver | full_context | embedding, default full_context) + the cheap compact lesson index. No new infra.
+
+**Also filed this session, not yet started:** CR023/CR024 (wire News/Social analysts to
+Alpha Vantage + LunarCrush — needs API keys provisioned first), CR026 (sector
+concentration enforcement — real compliance gap), CR027 (price alerts — hard-gated on
+Saiful's A15 cert work), CR028/CR029 (trailing stop / cost-basis lots — Tier 3,
+correctly deferred), CR030 (dividend fields — small), CR031 (voice STT/TTS benchmark —
+zero external blocker, just needs the bench scripts run).
 
 *All 9 R54 defects (DEF039/040/042/045/046/047/048/049/050) resolved + audited COMPLETE; DEF042/039/040/049 live on Alpha. CR018 lesson numbering done. App icon shipped — the old "native splash + app icon" deferral is now just native splash.*
 
@@ -146,11 +156,11 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
+- [AT:R55](history/AT_R0055.md) — News/Social analyst live-feed gap → CR023/CR024; full Silent_Scout audit → closed + deprecated the workspace, filed CR025–032, migrated everything
 - [AT:R54](history/AT_R0054.md) — defect burn (DEF039/040/042/045/046/047/048/049/050) + full audit handshake, app icon "Diagonal duo", build +38 (TestFlight+APK), CR018 lesson numbers, CR019–022 filed
 - [AT:R53](history/AT_R0053.md) — CR004 execution #2 + release: CR009–CR016 batch, builds +36/+37, DEF043, CR017 research, DEF044 (Alpaca encryption) promoted
 - [AT:R52](history/AT_R0052.md) — CR004 execution #1: D0 + backend reputation/league (promoted) + B1 celebrations
 - [AT:R51](history/AT_R0051.md) — CR004 release-readiness plans + D-059–D-062
-- AT:R50 — parallel session (CR003, docs-only); never wrapped
 
 ---
 
