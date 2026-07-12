@@ -5,10 +5,7 @@ POST   /v1/watchlist/{user_id}                — add ticker (idempotent)
 DELETE /v1/watchlist/{user_id}/{ticker}       — remove ticker
 
 The list response embeds a live quote per row so the iPhone doesn't have
-to fan-out one /sim/quote call per watchlist entry. Day-change% is
-omitted for now — the configured market_data provider doesn't surface
-the previous close yet (W11 was just point-in-time price). When that
-lands, drop it into the schema with no client change.
+to fan-out one /sim/quote call per watchlist entry.
 """
 
 from __future__ import annotations
@@ -47,15 +44,17 @@ async def list_watchlist(
     _own(current_user, user_id)
     entries = get_watchlist_store().list_for_user(user_id)
     provider = get_market_data_provider()
-    source = getattr(provider, "name", None)
     items: list[WatchlistEntryWithQuote] = []
     for e in entries:
         try:
-            price = provider.get_price(e.ticker)
+            quote = provider.quote(e.ticker)
         except Exception:  # pragma: no cover — defensive
-            price = None
+            quote = None
         items.append(WatchlistEntryWithQuote(
-            entry=e, price=price, day_change_pct=None, price_source=source,
+            entry=e,
+            price=quote.price if quote else None,
+            day_change_pct=quote.change_pct if quote else None,
+            price_source=quote.source if quote else None,
         ))
     return WatchlistListResponse(items=items, total=len(items))
 
@@ -77,14 +76,14 @@ async def add_to_watchlist(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     provider = get_market_data_provider()
     try:
-        price = provider.get_price(entry.ticker)
+        quote = provider.quote(entry.ticker)
     except Exception:  # pragma: no cover — defensive
-        price = None
+        quote = None
     return WatchlistEntryWithQuote(
         entry=entry,
-        price=price,
-        day_change_pct=None,
-        price_source=getattr(provider, "name", None),
+        price=quote.price if quote else None,
+        day_change_pct=quote.change_pct if quote else None,
+        price_source=quote.source if quote else None,
     )
 
 

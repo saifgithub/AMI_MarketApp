@@ -1,6 +1,6 @@
 # CR025 — Watchlist day-change % badge
 
-**Status:** proposed · **Session:** AT:R55 · **Date:** 2026-07-12
+**Status:** done · **Filed:** AT:R55 · **Implemented:** AT:R56 · **Date:** 2026-07-12
 **Source:** migrated from `Silent_Scout/12_watchlist_badge/` as part of closing and
 deprecating Silent_Scout (Saiful — "its utility has come to an end"). The design
 below was already complete and paste-ready; filing it as a proper CR rather than
@@ -60,3 +60,29 @@ CR if wanted.
 - Watchlist rows render the badge, correctly colored, correctly signed.
 - Existing `test_watchlist.py` coverage updated to assert the real value.
 - No layout regression on either test device (iPhone 13, Galaxy Note Fan / A17).
+
+## Implementation (AT:R56, done)
+
+Design held up as written, with two corrections found at implementation time:
+
+- **`backend/app/api/watchlist.py`** — both call sites (`list_watchlist`,
+  `add_to_watchlist`) switched from the price-only `provider.get_price(ticker)` shim
+  to the full `provider.quote(ticker)` (already the pattern in `sim_engine.py`), which
+  carries `price` + `change_pct` + `source` together. `price_source` now comes from
+  `quote.source` (the leaf provider) rather than `provider.name` — matches the
+  `MarketDataProvider.quote()` docstring's attribution contract; no behavior change
+  today since the mock provider's `source` and `name` are identical. Dropped the
+  module docstring's stale "day-change% omitted for now" note.
+- **`mobile/lib/screens/sim/portfolio_screen.dart`** — `_WatchlistRow` renders the
+  badge exactly as specced (signed 1-decimal %, `hexGreen`/`hexRed`, 8px left padding,
+  hidden when `dayChangePct == null`). `flutter analyze` clean.
+- **Tests** — `backend/tests/unit/test_watchlist.py` (the CR's stated target)
+  **didn't exist**; only `test_watchlist_store.py` (store-level) did, and no
+  route-level test covered `/v1/watchlist` at all. Added
+  `backend/tests/unit/test_watchlist_routes.py` (2 tests, following the
+  `TestClient` + `AuthService.ensure_anonymous()` pattern from
+  `test_daily_challenge_attempt.py`) covering both the GET and POST routes.
+
+Backend suite 592 green (590 + 2 new); `flutter analyze` clean. Display-only,
+additive field — ships on the next device build; a promote is harmless but not
+required to unblock mobile testing against Alpha.

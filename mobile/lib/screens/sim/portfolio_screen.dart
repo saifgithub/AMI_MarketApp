@@ -510,6 +510,7 @@ class _WatchlistRow extends ConsumerWidget {
     final priceText = entry.price == null
         ? '—'
         : NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price);
+    final dayChangePct = entry.dayChangePct;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Dismissible(
@@ -549,6 +550,16 @@ class _WatchlistRow extends ConsumerWidget {
                   ),
                 ),
                 Text(priceText, style: AmiTypography.statMid),
+                if (dayChangePct != null)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 8),
+                    child: Text(
+                      '${dayChangePct >= 0 ? '+' : ''}${dayChangePct.toStringAsFixed(1)}%',
+                      style: AmiTypography.caption.copyWith(
+                        color: dayChangePct >= 0 ? AmiColors.hexGreen : AmiColors.hexRed,
+                      ),
+                    ),
+                  ),
                 const SizedBox(width: AmiSpacing.s),
                 const Icon(Icons.chevron_right, color: AmiColors.textLow),
               ],
