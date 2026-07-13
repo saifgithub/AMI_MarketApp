@@ -35,7 +35,7 @@ import asyncio
 import random
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -194,6 +194,31 @@ _TEMPLATES: dict[AgentId, list[str]] = {
 
 # ── Ticker-flavoured profile generator ────────────────────────────────────
 
+# Real 2026 FOMC decision dates (press-conference day = 2nd day of each
+# 2-day meeting), from the Fed's official calendar:
+# https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm
+# CR034: replaces a hardcoded "FOMC decision in 11 days" literal that was
+# only ever true on the one day it was written. Needs a manual refresh once
+# the Fed publishes next year's schedule.
+_FOMC_DECISION_DATES = [
+    date(2026, 1, 28), date(2026, 3, 18), date(2026, 4, 29), date(2026, 6, 17),
+    date(2026, 7, 29), date(2026, 9, 16), date(2026, 10, 28), date(2026, 12, 9),
+]
+
+
+def _forward_catalyst_text(today: date | None = None) -> str:
+    """Real days-to-next-FOMC-decision (CR034); sector-earnings-season
+    timing has no real feed and stays explicitly illustrative — same
+    disclosure convention as the synthetic social-sentiment fields."""
+    today = today or datetime.now(timezone.utc).date()
+    upcoming = [d for d in _FOMC_DECISION_DATES if d >= today]
+    if upcoming:
+        days_out = (upcoming[0] - today).days
+        fomc_part = f"FOMC decision in {days_out} day{'s' if days_out != 1 else ''}"
+    else:
+        fomc_part = "next FOMC decision date not yet published"
+    return f"{fomc_part}, sector earnings season (illustrative, not date-verified)"
+
 
 @dataclass
 class _RoomContext:
@@ -255,7 +280,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         "volume_tone": "above 20-day average — real participation"
             if rng.random() > 0.5 else "in-line with 20-day average",
         "catalyst": "Q3 earnings (beat by ~4%)",
-        "forward_catalyst": "FOMC decision in 11 days, sector earnings in 3 weeks",
+        "forward_catalyst": _forward_catalyst_text(),
         "macro_tone": "constructive but fragile",
         "fed_tone": "data-dependent with a dovish lean",
         "fed_impact": "is generally supportive of",

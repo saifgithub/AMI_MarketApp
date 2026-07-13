@@ -619,10 +619,65 @@ def test_profile_overlays_live_news_when_enabled(monkeypatch):
     assert profile["news_source"] == "live"
     assert "Apple beats on EPS" in profile["catalyst"]
     assert profile["news_headlines"] == [headline]
-    # Fields with no real source must stay exactly today's hardcoded strings.
-    assert profile["forward_catalyst"] == "FOMC decision in 11 days, sector earnings in 3 weeks"
+    # Fields with no real source must stay exactly today's hardcoded strings
+    # (forward_catalyst's FOMC half is real-computed since CR034 — see
+    # test_forward_catalyst_text_* below for that behavior).
+    assert "FOMC decision in" in profile["forward_catalyst"]
+    assert "sector earnings season (illustrative" in profile["forward_catalyst"]
     assert profile["macro_tone"] == "constructive but fragile"
     assert profile["fed_tone"] == "data-dependent with a dovish lean"
+
+
+# ── Real FOMC decision countdown (CR034) ──────────────────────────────────
+
+
+def test_forward_catalyst_text_counts_real_days_to_next_meeting():
+    from datetime import date
+    from app.services.room_runner import _forward_catalyst_text
+
+    # July 13, 2026 -> next meeting is July 28-29, decision day July 29.
+    text = _forward_catalyst_text(today=date(2026, 7, 13))
+    assert "FOMC decision in 16 days" in text
+    assert "sector earnings season (illustrative, not date-verified)" in text
+
+
+def test_forward_catalyst_text_on_the_decision_day_itself():
+    from datetime import date
+    from app.services.room_runner import _forward_catalyst_text
+
+    text = _forward_catalyst_text(today=date(2026, 7, 29))
+    assert "FOMC decision in 0 days" in text
+
+
+def test_forward_catalyst_text_singular_day_out():
+    from datetime import date
+    from app.services.room_runner import _forward_catalyst_text
+
+    text = _forward_catalyst_text(today=date(2026, 7, 28))
+    assert "FOMC decision in 1 day," in text
+    assert "1 days" not in text
+
+
+def test_forward_catalyst_text_after_years_last_published_meeting():
+    from datetime import date
+    from app.services.room_runner import _forward_catalyst_text
+
+    text = _forward_catalyst_text(today=date(2026, 12, 10))
+    assert text == (
+        "next FOMC decision date not yet published, "
+        "sector earnings season (illustrative, not date-verified)"
+    )
+
+
+def test_profile_forward_catalyst_uses_real_utc_today(monkeypatch):
+    """_profile_for_ticker calls _forward_catalyst_text with no override —
+    confirms the real-clock path (not just the injectable-today path above)
+    produces the same real-FOMC-countdown shape."""
+    from app.services.room_runner import _profile_for_ticker
+
+    profile = _profile_for_ticker("MSFT")
+    assert "FOMC decision in" in profile["forward_catalyst"]
+    assert "sector earnings season (illustrative, not date-verified)" in profile["forward_catalyst"]
 
 
 def test_profile_news_falls_back_to_synthetic_when_fetch_fails(monkeypatch):
