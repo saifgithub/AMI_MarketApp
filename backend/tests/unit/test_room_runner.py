@@ -331,6 +331,202 @@ def test_format_profile_labels_data_source():
     assert "alpha simulation scaffolding" in synth_block
 
 
+# ── Live news + earnings overlay (CR023, AT:R57) ──────────────────────────
+
+
+def test_profile_overlays_live_news_when_enabled(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.news_context import LiveHeadline
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    headline = LiveHeadline(
+        title="Apple beats on EPS", link="https://x", publisher="Reuters",
+        published_at=1_800_000_000, sentiment=None, source="yfinance",
+    )
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: [headline])
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["news_source"] == "live"
+    assert "Apple beats on EPS" in profile["catalyst"]
+    assert profile["news_headlines"] == [headline]
+    # Fields with no real source must stay exactly today's hardcoded strings.
+    assert profile["forward_catalyst"] == "FOMC decision in 11 days, sector earnings in 3 weeks"
+    assert profile["macro_tone"] == "constructive but fragile"
+    assert profile["fed_tone"] == "data-dependent with a dovish lean"
+
+
+def test_profile_news_falls_back_to_synthetic_when_fetch_fails(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["catalyst"] == "Q3 earnings (beat by ~4%)"
+    assert "news_source" not in profile
+
+
+def test_profile_news_independent_of_fundamentals_overlay(monkeypatch):
+    """A profile can have live fundamentals + synthetic news, or vice versa,
+    simultaneously — the two flags must not be coupled."""
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.news_context import LiveHeadline
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: {"pe": "35.2"})
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["data_source"] == "yfinance_live"
+    assert "news_source" not in profile
+
+    headline = LiveHeadline(title="X", link="", publisher="Y", published_at=1_800_000_000, sentiment=None, source="yfinance")
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: [headline])
+    profile2 = room_runner._profile_for_ticker("AAPL")
+    assert profile2["data_source"] == "synthetic"
+    assert profile2["news_source"] == "live"
+
+
+def test_profile_overlays_earnings_when_available(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.market_data import EarningsInfo
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+
+    class _EarningsProvider:
+        def earnings(self, t):
+            return EarningsInfo(earnings_date="2026-08-01", quarter="Q3", eps_estimate=2.1)
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _EarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["next_earnings_date"] == "2026-08-01"
+    assert profile["next_earnings_quarter"] == "Q3"
+
+
+def test_profile_earnings_absent_when_provider_errors(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+
+    class _BoomProvider:
+        def earnings(self, t):
+            raise RuntimeError("yfinance is down")
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _BoomProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert "next_earnings_date" not in profile
+
+
+def test_format_profile_labels_news_source_when_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "news_source": "live", "catalyst": "real headline"})
+    assert "Recent catalyst/headline: LIVE" in block
+
+
+def test_format_profile_labels_news_source_when_synthetic():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "Recent catalyst/headline: alpha simulation scaffolding" in block
+
+
+def test_format_profile_always_flags_forward_and_sentiment_as_synthetic():
+    """Even with fundamentals AND news both live, forward/macro/sentiment
+    must still be disclosed as always-synthetic — they have no real source."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "yfinance_live", "news_source": "live"})
+    assert "ALWAYS alpha simulation scaffolding" in block
+    assert "ALWAYS illustrative" in block
+
+
+def test_format_profile_includes_earnings_when_present():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "next_earnings_date": "2026-08-01", "next_earnings_quarter": "Q3"})
+    assert "Next earnings (LIVE): 2026-08-01 (Q3)" in block
+
+
+def test_format_profile_omits_earnings_when_absent():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "Next earnings" not in block
+
+
+# ── Social Media truthfulness (CR024, AT:R57) ─────────────────────────────
+
+
+def test_social_media_scripted_fallback_never_names_real_platforms():
+    from app.services.room_runner import _TEMPLATES
+
+    tpl = _TEMPLATES[AgentId.SOCIAL_MEDIA_ANALYST][0]
+    lowered = tpl.lower()
+    assert "stocktwits" not in lowered
+    assert "reddit" not in lowered
+    assert "wallstreetbets" not in lowered
+    assert "illustrative" in lowered
+    assert "no live social feed" in lowered
+
+
+def test_social_media_sentiment_score_has_no_sigma_unit():
+    from app.services import room_runner
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert "σ" not in profile["sentiment_score"]
+    assert "illustrative" in profile["sentiment_score"]
+
+
+def test_social_media_mention_trend_is_hedged_illustrative():
+    from app.services import room_runner
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert "illustrative" in profile["mention_trend"]
+    assert profile["mention_trend"] != "up 40% week-over-week"
+
+
+def test_social_media_mention_trend_varies_by_ticker():
+    """Regression guard: the old value was hardcoded identical for every
+    ticker regardless of the per-ticker rng seed."""
+    from app.services import room_runner
+
+    trends = {room_runner._profile_for_ticker(t)["mention_trend"] for t in ["AAPL", "MSFT", "NVDA", "TSLA", "GOOGL", "AMZN"]}
+    assert len(trends) > 1
+
+
 # ── Timeout fallback ──────────────────────────────────────────────────────
 
 

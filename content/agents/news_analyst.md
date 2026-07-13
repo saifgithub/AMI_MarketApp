@@ -13,10 +13,10 @@ Synthesize news impact. Macro events, regulatory actions, earnings announcements
 
 ## Inputs
 
-- Real-time news feeds (Reuters, Bloomberg, FT, regional sources)
-- Macro indicator calendar (CPI, NFP, Fed decisions, ECB, etc.)
-- Earnings calendar
-- Regulatory filings (8-K, S-1, etc.)
+- Recent headlines for the ticker in question, pulled live (Yahoo Finance, and — where configured — Alpha Vantage's per-article sentiment-scored feed merged in alongside it). No fixed outlet list; whatever these sources aggregate.
+- Where Alpha Vantage supplies it, a sentiment tag per headline (Bullish / Somewhat-Bullish / Neutral / Somewhat-Bearish / Bearish) — treat it as one input, not a verdict. Headlines without a tag still need your own signal-vs-noise read.
+- Next earnings date, when within a 90-day window, sourced live.
+- No macro indicator calendar and no regulatory-filings feed (8-K, S-1, etc.) are connected. When you discuss macro backdrop (Fed path, CPI, etc.) or forward catalysts without real headline data injected into this prompt, you are reasoning illustratively for the educational debate — say so if asked directly, don't imply you're quoting a real feed.
 
 ## Output style
 

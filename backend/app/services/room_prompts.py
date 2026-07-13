@@ -145,20 +145,45 @@ def _format_profile(profile: dict[str, Any]) -> str:
     P/E numbers as if they were fact, or quote stale training-memory
     facts when real numbers were available — both of which we've seen
     in bug reports.
+
+    Granular by design (AT:R57, CR023/CR024): a single profile can now have
+    live fundamentals AND live news AND still-synthetic sentiment/macro all
+    at once, so one binary flag can't describe it honestly anymore.
     """
-    source = profile.get("data_source", "synthetic")
-    if source == "yfinance_live":
-        header = (
-            "Data source: numeric fundamentals (price, P/E, growth, FCF, range) "
-            "are LIVE from Yahoo Finance as of this call. Narrative fields "
-            "(catalysts, sentiment, macro) are alpha simulation scaffolding."
+    fundamentals_live = profile.get("data_source") == "yfinance_live"
+    news_live = profile.get("news_source") == "live"
+
+    header_lines = ["Data source disclosure — some fields below are real, some are not:"]
+    if fundamentals_live:
+        header_lines.append(
+            "- Numeric fundamentals (price, P/E, growth, FCF, range): LIVE "
+            "from Yahoo Finance as of this call."
         )
     else:
-        header = (
-            "Data source: ALL fields below are alpha simulation scaffolding. "
-            "Do NOT present these as live market data; treat them as a "
-            "deterministic scenario for educational debate."
+        header_lines.append(
+            "- Numeric fundamentals (price, P/E, growth, FCF, range): alpha "
+            "simulation scaffolding — NOT live market data."
         )
+    if news_live:
+        header_lines.append(
+            "- Recent catalyst/headline: LIVE, real news as of this call "
+            "(publisher + recency shown below). Some headlines may carry a "
+            "sentiment tag; treat it as one input, not a verdict."
+        )
+    else:
+        header_lines.append(
+            "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
+            "a live news feed."
+        )
+    header_lines.append(
+        "- Forward catalyst, macro/Fed tone, retail sentiment/mention/"
+        "influencer fields: ALWAYS alpha simulation scaffolding. No real "
+        "macro-calendar or social-sentiment feed is connected in this app. "
+        "Treat these as a deterministic scenario for educational debate — "
+        "never present them as real."
+    )
+    header = "\n".join(header_lines)
+
     lines = [
         header,
         "",
@@ -170,11 +195,33 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"Recent range: ${profile.get('low')}–${profile.get('high')}, "
         f"breakout level: ${profile.get('breakout')}",
         f"Volume: {profile.get('volume_tone')}",
-        f"Catalysts — recent: {profile.get('catalyst')}; forward: {profile.get('forward_catalyst')}",
-        f"Macro: {profile.get('macro_tone')}; Fed: {profile.get('fed_tone')}",
-        f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
+        _catalyst_line(profile),
+        f"Macro (synthetic, illustrative): {profile.get('macro_tone')}; "
+        f"Fed (synthetic, illustrative): {profile.get('fed_tone')}",
+        f"Retail sentiment (ALWAYS illustrative — no live feed connected): "
+        f"{profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
     ]
+    if profile.get("next_earnings_date"):
+        lines.append(
+            f"Next earnings (LIVE): {profile['next_earnings_date']}"
+            + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")
+        )
     return "\n".join(lines)
+
+
+def _catalyst_line(profile: dict[str, Any]) -> str:
+    from app.services.news_context import format_headline
+
+    line = f"Catalysts — recent: {profile.get('catalyst')}"
+    extra_headlines = (profile.get("news_headlines") or [])[1:]
+    if extra_headlines:
+        extra = "; ".join(format_headline(h) for h in extra_headlines)
+        line += f"; other recent coverage: {extra}"
+    line += (
+        f"; forward (synthetic, illustrative — no real macro/earnings-"
+        f"calendar feed): {profile.get('forward_catalyst')}"
+    )
+    return line
 
 
 def _format_transcript(transcript: list[AgentMessage]) -> str:

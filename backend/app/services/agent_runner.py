@@ -45,6 +45,7 @@ from app.services.concierge_prompts import (
     scripted_reply as concierge_scripted_reply,
 )
 from app.services.fundamentals import build_live_data_block, extract_tickers
+from app.services.news_context import build_news_context_block
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
@@ -163,6 +164,17 @@ class AgentRunner:
                 block = build_live_data_block(t)
                 if block:
                     system_prompt = system_prompt + "\n\n" + block
+
+            # Real headlines — News Analyst only (CR023, AT:R57). Unlike
+            # fundamentals, headlines are analyst-specific, not shared
+            # across all 12 agents, so this doesn't touch _news_block()'s
+            # shared (agent_id, mandate) -> str contract in
+            # overlay_generator.py — the ticker is already extracted above.
+            if agent_id == AgentId.NEWS_ANALYST:
+                for t in tickers:
+                    news_block = build_news_context_block(t)
+                    if news_block:
+                        system_prompt = system_prompt + "\n\n" + news_block
 
             # BL11 (AT:R33): effective_plan downgrades expired trials.
             plan = effective_plan_for_user(session.user_id)

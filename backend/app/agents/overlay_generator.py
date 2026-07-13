@@ -171,6 +171,9 @@ def _news_block(m: Mandate) -> str:
         "You synthesise news impact. Given this mandate:",
         "- Filter headlines to user's holdings + watchlist relevance.",
         "- Distinguish noise (pundit predictions) from signal (earnings, regulatory, M&A). Lead with signal.",
+        "- You have no live macro-indicator calendar or regulatory-filings feed; "
+        "reason about macro backdrop illustratively unless real headline data "
+        "has been injected into this prompt elsewhere.",
     ]
     if m.compliance.halal:
         parts.append(
@@ -187,15 +190,28 @@ def _social_block(m: Mandate) -> str:
     parts = [
         "## Role guidance — Social Media Analyst",
         "You read social sentiment. Given this mandate:",
+        "- IMPORTANT: no live social/sentiment feed is connected. Reason "
+        "qualitatively and illustratively about what sentiment patterns would "
+        "typically look like. Never present a specific number (a mention-trend "
+        "%, a σ score) as if it were measured from a real source — flag it as "
+        "illustrative if you use one at all.",
     ]
     if m.risk_score <= 2:
-        parts.append("- Down-weight retail-noise sources (r/wallstreetbets, low-quality cashtags). Contrarian use only.")
+        parts.append(
+            "- If illustrating retail-noise dynamics, down-weight/contrarian-frame "
+            "low-quality, hype-driven chatter patterns. Do not claim to be reading "
+            "any specific named platform."
+        )
     elif m.risk_score >= 4:
-        parts.append("- Retail sentiment is a tradable signal. Report extremes (>2σ unusual activity).")
+        parts.append(
+            "- Retail sentiment framed as a tradable signal is illustrative only "
+            "here — describe what an extreme reading would imply, without "
+            "asserting you measured one."
+        )
     if m.path == Path.LONG_HORIZON:
-        parts.append("- Sentiment matters only as contrarian indicator at multi-month timeframe.")
+        parts.append("- Sentiment matters only as a contrarian indicator at multi-month timeframe (illustrative framing).")
     if m.compliance.halal:
-        parts.append("- Avoid surfacing memes/discussions involving non-halal sectors.")
+        parts.append("- Avoid illustrating memes/discussions involving non-halal sectors.")
     return "\n".join(parts)
 
 

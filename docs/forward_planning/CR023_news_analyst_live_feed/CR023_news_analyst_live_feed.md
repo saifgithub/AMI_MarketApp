@@ -176,3 +176,60 @@ in place at its new location.
 - API failure/timeout never surfaces as a Room/1-on-1 error to the user.
 - `content/agents/news_analyst.md` claims match actual runtime capability.
 - Cache respects 12h/1-2h-on-earnings-day TTL, keyed by ticker.
+
+## Implementation (AT:R57)
+
+Saiful provisioned `ALPHA_VANTAGE_API_KEY` mid-session (added to the root `.env`
+locally, mirrored into `infra/alpha.env` for the next `/promote-to-alpha`) and asked
+for the *combining* design, not a single-provider select: **Yahoo (free) is always
+tried; Alpha Vantage (paid, now live) is merged in alongside it whenever the key is
+set** — not a mode switch, and not Yahoo-until-upgraded as this doc originally
+specced. Either source can fail independently without taking the other down.
+
+New `backend/app/services/news_context.py` — not the originally-specced
+`news_provider.py` name, since that name implied a single active provider; this
+module's `LiveHeadline` NamedTuple carries an optional `sentiment` field (only ever
+populated by Alpha Vantage) so both sources share one shape. `_YfinanceSource` wraps
+the already-cached `get_market_data_provider().news()` (no new caching needed — the
+existing 5-min `CachingProvider._news_cache` TTL is enough, not this doc's originally
+specced 12h/earnings-day scheme, which was sized for a metered client Yahoo isn't).
+`_AlphaVantageSource` hits the real `NEWS_SENTIMENT` endpoint (call shape verified
+against the live API, not just the TradingAgents mount's connector — confirmed the
+real response's `feed[].ticker_sentiment[]` array carries a sentiment label **per
+mentioned ticker**, not one label per article, so the fetcher matches the requested
+ticker's own `ticker_sentiment_label` rather than the article's `overall_sentiment_label`
+falling back to the latter only if the requested ticker isn't listed). Its own 30-min
+TTL cache (billed API, unlike Yahoo's already-free path). `_merge_headlines()` dedupes
+by normalized title (Alpha Vantage's sentiment-carrying version wins a collision),
+sorts by recency, caps to the combined limit so running both sources doesn't blow out
+the prompt.
+
+Wired into `room_runner.py::_profile_for_ticker()` (overlays `catalyst` with the real
+top headline; `forward_catalyst`/`macro_tone`/`fed_tone`/`fed_impact` stay synthetic —
+no real source exists for those) and `agent_runner.py`'s 1-on-1 path (News-Analyst-gated,
+reusing the ticker already extracted for the shared fundamentals block — no change to
+`overlay_generator.py::_news_block()`'s shared `(agent_id, mandate) -> str` contract).
+`room_prompts.py::_format_profile()`'s disclosure header became granular (fundamentals,
+news, and forward/macro/sentiment each labeled independently) since a profile can now
+have live fundamentals AND live news AND still-synthetic sentiment simultaneously —
+the old binary header couldn't say that honestly.
+
+Also folded in the earnings-calendar closure this doc's own "Prompt rewrite" section
+incorrectly claimed was already done: `MarketDataProvider.earnings()` (already
+yfinance-backed, already 6h-cached) is now surfaced as `next_earnings_date` in the
+Room profile — real data instead of a bare disclaimer, at near-zero marginal cost.
+
+`content/agents/news_analyst.md` rewritten to describe the combined-source, no-fixed-
+outlet-list, sentiment-where-available, no-macro-calendar/regulatory-filings reality.
+
+48 new/extended tests across `test_news_context.py` (new, 25 tests — both sources,
+merge/dedupe, caching, degradation), `test_room_runner.py`, `test_room_prompts`
+coverage inside the same file, `test_overlay_generator.py`, `test_agent_prompts.py`,
+and new `test_one_on_one_news_injection.py`. Backend suite 592 → 640, all green.
+
+Status: `proposed` → **`in_progress`** — real headlines, sentiment (where available),
+and earnings now flow into both surfaces; the CR's stated acceptance items are
+substantively met, but "in_progress" (not "done") because Alpha Vantage's activation
+was confirmed structurally and against the live API's real response shape during this
+session, not yet verified end-to-end through a live Room run on Alpha — that's the
+natural next-session confirmation once this promotes.

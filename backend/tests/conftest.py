@@ -51,6 +51,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     from app.services import sim_engine as _sim
     from app.services import room_runner as _rr
     from app.services import market_data as _md
+    from app.services import news_context as _nc
     from app.services import watchlist_store as _ws
     from app.services import feedback_store as _fb
     from app.services import daily_challenge_service as _dc
@@ -71,6 +72,7 @@ def _isolated_db(tmp_path: _Path) -> None:
     _rep._service = None
     # Pin tests to the deterministic mock walk regardless of USE_REAL_MARKET_DATA.
     _md.set_market_data_provider(_md.MockWalkProvider())
+    _nc.set_alpha_vantage_source(None)
     # B-tier audit (AT:R37): the rate-limit module holds module-level
     # singletons too; flush their sliding windows between tests so the
     # 4th `/v1/auth/magic_link/start` call in test_auth_phase1_5_audit_fixes

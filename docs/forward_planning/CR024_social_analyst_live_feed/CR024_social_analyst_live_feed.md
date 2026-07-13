@@ -137,3 +137,52 @@ posture for an aggregated signal too.
   sentiment/mention/trend data instead of the `rng`-seeded placeholders.
 - API failure/credit exhaustion never surfaces as a Room/1-on-1 error to the user.
 - `content/agents/social_media_analyst.md` claims match actual runtime capability.
+
+## Interim measure (AT:R57)
+
+Saiful's directive this session was "news and social media analyst needs to be
+truthful now" — but unlike CR023's News Analyst (which had a free real-data path via
+Yahoo already sitting disconnected), this CR's own research already established there
+is **no free real-data path for social sentiment**. LunarCrush remains exactly as
+gated as this doc always specified: unconfirmed pricing, needs a trial account, no
+code lands until that happens. Nothing here changes that — this CR is **not closed**
+and stays `proposed`.
+
+What shipped instead was a truthfulness-only fix, three layers deep:
+
+1. `content/agents/social_media_analyst.md` — "Inputs" and "Output style" rewritten
+   to drop the Reddit/Twitter/StockTwits/Google Trends/Discord access claims entirely,
+   replaced with explicit "no live feed connected, reason illustratively, never
+   present a specific number as if measured" framing.
+2. `backend/app/agents/overlay_generator.py::_social_block()` — dropped the
+   "r/wallstreetbets" naming and the implied-real ">2σ unusual activity" framing from
+   the 1-on-1 mandate-overlay instructions.
+3. `backend/app/services/room_runner.py::_profile_for_ticker()`'s synthetic sentiment
+   values reworded — dropped the fake-precision `σ`-suffixed decimal and the
+   single hardcoded "up 40% week-over-week" string that was identical for literally
+   every ticker regardless of the per-ticker `rng` seed (the least defensible
+   fabrication in the whole profile). Values are now ticker-varied and explicitly
+   hedged ("elevated intensity (illustrative)" style). Keys unchanged, so no schema
+   ripple through `_format_profile`/`_TEMPLATES`.
+
+**Most severe finding, not scoped when this CR was filed:** `room_runner.py`'s
+`_TEMPLATES[AgentId.SOCIAL_MEDIA_ANALYST]` — the **scripted, non-LLM fallback**
+rendered verbatim to real users whenever `gateway.has_real_provider()` is False or an
+agent's LLM call times out — literally said *"Retail sentiment on {ticker}...
+(Stocktwits {sentiment_score}σ over the week). Reddit /r/investing mentions
+{mention_trend}..."*, naming real platforms by name in **user-facing** text, with no
+live-vs-scripted disclosure anywhere in `api/room.py` or the mobile client. This was
+more urgent than the LLM-prompt framing this CR originally scoped and is now fixed
+in the same template rewrite.
+
+`room_prompts.py::_format_profile()`'s disclosure header (shared with CR023) now
+labels sentiment/mention/influencer fields as "ALWAYS illustrative — no live feed
+connected" regardless of any other field's live/synthetic state.
+
+Covered by new/extended tests in `test_room_runner.py` (scripted-fallback platform-
+name ban, no-σ check, mention_trend now varies by ticker) and
+`test_overlay_generator.py` (`_social_block()` drops named-platform/fake-precision
+claims). Backend suite 592 → 640, all green.
+
+Status: **stays `proposed`** — no real sentiment data flows anywhere; the LunarCrush
+acceptance criteria above remain entirely unmet and unstarted.

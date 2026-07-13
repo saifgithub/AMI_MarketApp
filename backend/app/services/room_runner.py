@@ -53,6 +53,8 @@ from app.schemas.room import RoomRun, RoomStatus, Verdict, VerdictAction
 from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
+from app.services.market_data import get_market_data_provider
+from app.services.news_context import fetch_live_news, format_headline
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
@@ -122,10 +124,11 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         "{fed_tone}, which {fed_impact} multiples on growth names.",
     ],
     AgentId.SOCIAL_MEDIA_ANALYST: [
-        "Retail sentiment on {ticker} is {sentiment_tone} (Stocktwits "
-        "{sentiment_score}σ over the week). Reddit /r/investing mentions "
-        "{mention_trend}. Influencer narrative: {influencer_take}. "
-        "Pattern read: {pattern}.",
+        "Retail sentiment on {ticker} reads as {sentiment_tone} in this "
+        "illustrative scenario ({sentiment_score} — no live social feed "
+        "connected). Hypothetical mention volume: {mention_trend}. "
+        "Illustrative influencer narrative: {influencer_take}. Pattern read "
+        "(for discussion, not measured): {pattern}.",
     ],
     AgentId.BULL_RESEARCHER: [
         "Thesis: {bull_thesis}. Evidence: {bull_evidence}. What the market is "
@@ -239,8 +242,17 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         "fed_tone": "data-dependent with a dovish lean",
         "fed_impact": "is generally supportive of",
         "sentiment_tone": "moderately bullish" if rng.random() > 0.3 else "mixed",
-        "sentiment_score": f"+{rng.uniform(0.3, 1.8):.1f}",
-        "mention_trend": "up 40% week-over-week",
+        # No live social feed exists (CR024) — these are illustrative, not
+        # measured. Dropped the fake-precision "+X.Xσ" decimal (borrowed a
+        # real statistical unit's credibility for a number nobody measured)
+        # and the "up 40% week-over-week" string that used to be identical
+        # for every ticker regardless of the rng seed.
+        "sentiment_score": rng.choice(["elevated", "typical", "subdued"]) + " intensity (illustrative)",
+        "mention_trend": rng.choice([
+            "elevated versus a typical week (illustrative)",
+            "roughly typical for the week (illustrative)",
+            "quieter than a typical week (illustrative)",
+        ]),
         "influencer_take": "broadly constructive, no euphoria",
         "pattern": "sentiment confirming price, not yet at exhaustion",
         "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
@@ -262,6 +274,30 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         if live:
             profile.update(live)
             profile["data_source"] = "yfinance_live"
+
+        # Overlay a real headline onto `catalyst` (CR023, AT:R57). Only the
+        # top headline replaces `catalyst` — `forward_catalyst`/`macro_tone`/
+        # `fed_tone`/`fed_impact` are left untouched, since no real macro-
+        # calendar feed exists; fabricating a "fix" for those would be worse
+        # than clearly-labeled synthetic scaffolding (see room_prompts.py).
+        news_items = fetch_live_news(ticker)
+        if news_items:
+            profile["catalyst"] = format_headline(news_items[0])
+            profile["news_headlines"] = news_items
+            profile["news_source"] = "live"
+
+        # Real earnings date, when within the 90-day window the provider
+        # covers — closes the "earnings calendar" claim with real data
+        # instead of just disclaiming it (cheap: fetch/cache already exist
+        # and are already tested via test_sim_news_earnings.py).
+        try:
+            earnings = get_market_data_provider().earnings(ticker.upper().strip())
+        except Exception as exc:
+            logger.warn("room_runner_earnings_error", ticker=ticker, error=str(exc)[:200])
+            earnings = None
+        if earnings and earnings.earnings_date:
+            profile["next_earnings_date"] = earnings.earnings_date
+            profile["next_earnings_quarter"] = earnings.quarter
 
     # Derive narrative strings from whatever numbers ended up in the
     # profile (real or synthetic) so the prose is consistent with the data.

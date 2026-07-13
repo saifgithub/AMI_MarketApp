@@ -82,3 +82,33 @@ def test_overlay_has_no_llm_call(base_mandate: Mandate):
     import inspect
 
     assert not inspect.iscoroutinefunction(generate_overlay)
+
+
+# ── Social Media / News truthfulness (CR024/CR023, AT:R57) ────────────────
+
+
+def test_social_block_drops_named_platform_and_fake_precision_claims(
+    conservative_mandate: Mandate, aggressive_mandate: Mandate
+):
+    conservative = generate_overlay(AgentId.SOCIAL_MEDIA_ANALYST, conservative_mandate)
+    assert "down-weight retail-noise sources (r/wallstreetbets" not in conservative
+    assert "no live feed" in conservative.lower() or "no live social" in conservative.lower()
+
+    # Old aggressive-branch claim implied a real measured statistic
+    # ("Retail sentiment is a tradable signal. Report extremes (>2σ unusual
+    # activity)") — checking for that exact phrase, not a bare "σ" ban,
+    # since the (always-present) honesty intro legitimately mentions "a σ
+    # score" once while telling the agent not to fabricate one.
+    aggressive = generate_overlay(AgentId.SOCIAL_MEDIA_ANALYST, aggressive_mandate)
+    assert ">2σ unusual activity" not in aggressive
+    assert "illustrative" in aggressive.lower()
+
+
+def test_social_block_still_produces_role_guidance_header(base_mandate: Mandate):
+    overlay = generate_overlay(AgentId.SOCIAL_MEDIA_ANALYST, base_mandate)
+    assert "## Role guidance — Social Media Analyst" in overlay
+
+
+def test_news_block_reinforces_no_macro_feed(base_mandate: Mandate):
+    overlay = generate_overlay(AgentId.NEWS_ANALYST, base_mandate)
+    assert "no live macro-indicator calendar" in overlay.lower()

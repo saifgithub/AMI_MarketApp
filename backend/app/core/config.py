@@ -85,6 +85,15 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # News provider for the agent pipeline (Room + 1-on-1), see
+    # app/services/news_context.py. Yahoo (free, via the existing
+    # market-data provider stack) is always tried. When
+    # alpha_vantage_api_key is also set, its per-article + per-ticker
+    # sentiment-scored headlines are merged in alongside Yahoo's — same
+    # "presence of the key turns the feature on" convention as
+    # resend_api_key / google_audiences elsewhere in this file.
+    alpha_vantage_api_key: str = ""
+
     # Room dedup windows (see app/services/room_runner.py::start_run).
     # Same user+ticker submitted while a run is in flight always returns the
     # in-flight run_id, regardless of these knobs (running_minutes is just an

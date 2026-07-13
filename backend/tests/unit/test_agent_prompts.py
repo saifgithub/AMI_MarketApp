@@ -37,6 +37,40 @@ def test_base_prompt_frontmatter_stripped():
     assert "You are the Fundamentals Analyst" in text
 
 
+def test_news_analyst_prompt_drops_fabricated_feed_claims():
+    """CR023 (AT:R57): the base prompt used to claim Reuters/Bloomberg/FT/
+    macro-calendar/regulatory-filings ACCESS that never existed. Checking
+    for the exact old possession-claim phrasing, not bare substrings — the
+    honest rewrite still legitimately says "no ... regulatory filings feed
+    is connected", which would false-positive on a naive substring ban.
+    """
+    text = load_base_prompt(AgentId.NEWS_ANALYST)
+    for claim in (
+        "Real-time news feeds (Reuters, Bloomberg, FT, regional sources)",
+        "Macro indicator calendar (CPI, NFP, Fed decisions, ECB, etc.)",
+        "Regulatory filings (8-K, S-1, etc.)",
+    ):
+        assert claim not in text, f"news_analyst.md still claims: {claim}"
+
+
+def test_social_media_analyst_prompt_drops_fabricated_platform_claims():
+    """CR024 (AT:R57): the base prompt used to claim Reddit/Twitter/
+    StockTwits/Google Trends/Discord ACCESS — none of it exists. Checking
+    for the exact old possession-claim phrasing, not bare substrings — the
+    honest rewrite still legitimately names these platforms while saying
+    "no ... access exists," which would false-positive on a naive ban.
+    """
+    text = load_base_prompt(AgentId.SOCIAL_MEDIA_ANALYST)
+    for claim in (
+        "Reddit (r/investing, r/wallstreetbets, r/stocks)",
+        "Twitter/X cashtags + finance-influencer feeds",
+        "StockTwits sentiment scores",
+        "Discord communities (general signal only",
+    ):
+        assert claim not in text, f"social_media_analyst.md still claims: {claim}"
+    assert "no Reddit, Twitter/X, StockTwits, Google Trends, or Discord access exists" in text
+
+
 def test_concierge_prompt_distinct():
     concierge = load_base_prompt(AgentId.CONCIERGE)
     fundamentals = load_base_prompt(AgentId.FUNDAMENTALS_ANALYST)
