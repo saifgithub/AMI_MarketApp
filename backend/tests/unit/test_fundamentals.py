@@ -249,6 +249,38 @@ def test_fetch_handles_no_dividend_negative_fcf_and_no_rating(monkeypatch):
     assert out["sector"] == "Consumer Cyclical"
 
 
+def test_fetch_treats_nan_numeric_fields_as_absent(monkeypatch):
+    """DEF052's F1 lesson applied here proactively: yfinance's own
+    missing-value sentinel is NaN, not always a missing key. A NaN value
+    must be treated as absent, not rendered as the literal string "nan"
+    (peg_ratio) or silently misbehave in a comparison (fcf_yield's
+    market_cap > 0 guard)."""
+    import sys, types
+
+    nan = float("nan")
+
+    class _Ticker:
+        def __init__(self, _sym):
+            self.info = {
+                "currentPrice": 250.0,
+                "trailingPE": nan,
+                "priceToSalesTrailing12Months": nan,
+                "pegRatio": nan,
+                "freeCashflow": nan,
+                "marketCap": nan,
+                "dividendYield": nan,
+                "targetMeanPrice": nan,
+            }
+    fake_yf = types.SimpleNamespace(Ticker=_Ticker)
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    out = fetch_live_fundamentals("AAPL")
+    assert out is not None
+    for key in ("pe", "price_to_sales", "peg_ratio", "fcf_yield",
+                "dividend_yield", "analyst_target_price"):
+        assert key not in out
+
+
 def test_build_block_includes_valuation_sector_dividend_and_analyst_lines(monkeypatch):
     monkeypatch.setattr(settings, "use_real_market_data", True)
     monkeypatch.setattr(

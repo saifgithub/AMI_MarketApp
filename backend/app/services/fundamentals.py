@@ -15,6 +15,7 @@ and yfinance outages don't break either surface.
 
 from __future__ import annotations
 
+import math
 import re
 from typing import Any
 
@@ -101,13 +102,19 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         return None
 
     def _num(key: str) -> float | None:
+        # DEF052's F1 lesson applied proactively: yfinance's own
+        # missing-value sentinel is NaN, not always a missing key — a
+        # non-finite value must be treated as absent, not passed through
+        # to `f"{v:.1f}"` (renders the literal string "nan") or a
+        # downstream comparison that would silently misbehave.
         v = info.get(key)
         if v is None:
             return None
         try:
-            return float(v)
+            result = float(v)
         except (TypeError, ValueError):
             return None
+        return result if math.isfinite(result) else None
 
     price = _num("currentPrice") or _num("regularMarketPrice")
     pe = _num("trailingPE")
