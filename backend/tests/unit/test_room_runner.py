@@ -463,14 +463,32 @@ def test_format_profile_labels_news_source_when_synthetic():
     assert "Recent catalyst/headline: alpha simulation scaffolding" in block
 
 
-def test_format_profile_always_flags_forward_and_sentiment_as_synthetic():
-    """Even with fundamentals AND news both live, forward/macro/sentiment
-    must still be disclosed as always-synthetic — they have no real source."""
+def test_format_profile_always_flags_forward_catalyst_as_synthetic():
+    """Even with fundamentals AND news AND social all live, forward
+    catalyst/macro/Fed tone must still be disclosed as always-synthetic —
+    they have no real source (no macro-calendar feed exists). Unlike
+    sentiment (AT:R57-continued: now sometimes live via Adanos), this
+    subset is unconditional."""
     from app.services.room_prompts import _format_profile
 
-    block = _format_profile({"data_source": "yfinance_live", "news_source": "live"})
+    block = _format_profile({
+        "data_source": "yfinance_live", "news_source": "live", "social_source": "live",
+    })
     assert "ALWAYS alpha simulation scaffolding" in block
-    assert "ALWAYS illustrative" in block
+
+
+def test_format_profile_labels_social_source_when_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "social_source": "live"})
+    assert "Retail sentiment/mention/community fields: LIVE" in block
+
+
+def test_format_profile_labels_social_source_when_synthetic():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "Retail sentiment/mention/influencer fields: alpha simulation scaffolding" in block
 
 
 def test_format_profile_includes_earnings_when_present():
@@ -487,19 +505,113 @@ def test_format_profile_omits_earnings_when_absent():
     assert "Next earnings" not in block
 
 
+# ── Live Reddit sentiment overlay (CR024, AT:R57-continued) ──────────────
+
+
+def test_profile_overlays_live_sentiment_when_enabled(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.social_context import SocialSentiment
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+    sentiment = SocialSentiment(
+        ticker="AAPL", buzz_score=80.0, sentiment_score=0.3, mentions=500,
+        bullish_pct=40, bearish_pct=10, trend="rising", period_days=7,
+        top_subreddits=("wallstreetbets",), sample_snippets=(),
+    )
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: sentiment)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["social_source"] == "live"
+    assert profile["sentiment_tone"] == "bullish"
+    assert "Adanos" in profile["sentiment_score"]
+    assert "500" in profile["mention_trend"]
+    assert "wallstreetbets" in profile["influencer_take"]
+
+
+def test_profile_sentiment_falls_back_to_synthetic_when_fetch_fails(monkeypatch):
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert "social_source" not in profile
+    assert "illustrative" in profile["sentiment_score"]
+
+
+def test_profile_sentiment_independent_of_news_and_fundamentals(monkeypatch):
+    """A profile can have live news + synthetic sentiment, or vice versa —
+    all three (fundamentals/news/social) flip independently."""
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.news_context import LiveHeadline
+    from app.services.social_context import SocialSentiment
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(
+        room_runner, "fetch_live_news",
+        lambda t: [LiveHeadline(title="X", link="", publisher="Y", published_at=1_800_000_000, sentiment=None, source="yfinance")],
+    )
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["news_source"] == "live"
+    assert "social_source" not in profile
+
+
 # ── Social Media truthfulness (CR024, AT:R57) ─────────────────────────────
 
 
 def test_social_media_scripted_fallback_never_names_real_platforms():
+    """AT:R57-continued: the template itself is neutral (like NEWS_ANALYST's)
+    — it doesn't hardcode "Reddit" or "illustrative"/"no live feed" wording,
+    since the field VALUES now carry that honesty (real when Adanos is
+    configured and succeeds, clearly-hedged-illustrative otherwise). The
+    template must still never name Stocktwits/wallstreetbets outright,
+    since those platforms are categorically never real."""
     from app.services.room_runner import _TEMPLATES
 
     tpl = _TEMPLATES[AgentId.SOCIAL_MEDIA_ANALYST][0]
     lowered = tpl.lower()
     assert "stocktwits" not in lowered
-    assert "reddit" not in lowered
     assert "wallstreetbets" not in lowered
-    assert "illustrative" in lowered
-    assert "no live social feed" in lowered
+
+
+def test_social_media_scripted_fallback_renders_illustrative_values_honestly():
+    """The synthetic (no Adanos key) VALUES must self-disclose as
+    illustrative when rendered through the neutral template."""
+    from app.services.room_runner import _TEMPLATES, _profile_for_ticker
+
+    profile = _profile_for_ticker("AAPL")
+    rendered = _TEMPLATES[AgentId.SOCIAL_MEDIA_ANALYST][0].format(**profile)
+    assert "illustrative" in rendered.lower()
+    assert "stocktwits" not in rendered.lower()
+    assert "reddit" not in rendered.lower()
 
 
 def test_social_media_sentiment_score_has_no_sigma_unit():

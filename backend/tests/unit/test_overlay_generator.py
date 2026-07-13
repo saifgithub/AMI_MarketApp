@@ -92,7 +92,10 @@ def test_social_block_drops_named_platform_and_fake_precision_claims(
 ):
     conservative = generate_overlay(AgentId.SOCIAL_MEDIA_ANALYST, conservative_mandate)
     assert "down-weight retail-noise sources (r/wallstreetbets" not in conservative
-    assert "no live feed" in conservative.lower() or "no live social" in conservative.lower()
+    # AT:R57-continued: Reddit is now a real (when configured) source, so
+    # the overlay no longer claims a blanket "no live feed" — it names the
+    # platforms that still don't exist instead.
+    assert "no live twitter/x, stocktwits, google trends, or discord feed" in conservative.lower()
 
     # Old aggressive-branch claim implied a real measured statistic
     # ("Retail sentiment is a tradable signal. Report extremes (>2σ unusual

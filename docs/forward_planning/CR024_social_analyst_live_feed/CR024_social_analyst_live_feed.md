@@ -184,8 +184,8 @@ name ban, no-σ check, mention_trend now varies by ticker) and
 `test_overlay_generator.py` (`_social_block()` drops named-platform/fake-precision
 claims). Backend suite 592 → 640, all green.
 
-Status: **stays `proposed`** — no real sentiment data flows anywhere; the LunarCrush
-acceptance criteria above remain entirely unmet and unstarted.
+Status (superseded below, same session): real Reddit sentiment shipped via Adanos
+after the LunarCrush blocker below — see "Implementation via Adanos."
 
 ## LunarCrush trial finding (same session, AT:R57)
 
@@ -213,3 +213,77 @@ verified-against-a-real-response discipline CR023's Alpha Vantage client used.
 Presented Saiful with three options (upgrade-and-verify / code-blind-now /
 drop-and-stay-honesty-only); **he'll check/upgrade the LunarCrush plan** and this
 picks back up once the account can actually answer API calls.
+
+## Implementation via Adanos (same session, AT:R57-continued)
+
+Saiful redirected to Adanos (`https://api.adanos.org`) — a Reddit-only stock
+sentiment aggregator recommended by third-party research as a usable free tier
+(250 calls/month) — and provisioned `ADANOS_API_KEY`. Their own docs page
+(`api.adanos.org/docs`) is a client-rendered SPA, same unfetchable-via-automation
+issue as LunarCrush's and Finnhub's pricing pages — so the base URL and endpoint
+path were confirmed from Adanos's own homepage content (first-party, not a
+third-party guess) before a single live credential ever left the Mac, per the
+harness's own credential-materialization safeguard (an initial guessed
+domain+path combination was correctly blocked). One live call to
+`GET /reddit/stocks/v1/stock/AAPL` (`X-API-Key` header) confirmed the real
+response shape — a trimmed copy of that exact response is the test fixture in
+`test_social_context.py`, not a guessed shape. Response headers confirmed the
+250/month budget concretely: `x-ratelimit-limit-monthly: 250`,
+`x-account-type: free`.
+
+**New `backend/app/services/social_context.py`** — mirrors `news_context.py`'s
+shape: `SocialSentiment` NamedTuple (ticker, buzz_score, sentiment_score, mentions,
+bullish_pct, bearish_pct, trend, period_days, top 3 subreddits, up to 3 real post
+snippets), `_AdanosSource` (httpx client + 24h TTL cache — the free tier's 250/month
+budget means checking more than ~8 distinct tickers/day would exceed quota, so
+long caching by ticker is what keeps this viable), `fetch_live_sentiment(ticker)`
+(never raises, returns `None` when `adanos_api_key` is unset), and `format_*`
+helpers used by both surfaces. Real post text (`sample_snippets`) is Reddit
+community content, not ours to display verbatim — it's exposed only via
+`build_social_context_block()` for the 1-on-1 LLM-prompt block (which the agent
+must synthesize, never echo), and deliberately never stored in the Room profile
+dict, since that dict also feeds the scripted (non-LLM) fallback template shown
+directly to real users.
+
+**Wiring** — `room_runner.py::_profile_for_ticker()` overlays
+`sentiment_tone`/`sentiment_score`/`mention_trend`/`influencer_take`/`pattern`
+with real Adanos-derived values when available (aggregate stats only — subreddit
+names, mention counts, buzz score — never a raw post snippet, keeping the
+scripted-fallback surface safe); sets `profile["social_source"] = "live"`.
+`agent_runner.py`'s 1-on-1 path gets a Social-Media-Analyst-gated
+`build_social_context_block()` injection, mirroring CR023's News-Analyst gating —
+this is where the real post snippets appear, LLM-only, with an explicit
+"do NOT quote verbatim or attribute to a user" instruction.
+`room_prompts.py::_format_profile()`'s disclosure header gained a third
+independent category (social, alongside fundamentals and news) — a profile can
+now have any combination of live fundamentals/news/social simultaneously.
+
+**Scripted-fallback template correction** — the `_TEMPLATES[SOCIAL_MEDIA_ANALYST]`
+entry from this session's earlier (honesty-only) pass had hardcoded "in this
+illustrative scenario... no live social feed connected" directly into the template
+text — true at the time, but would have started lying the moment Adanos went live,
+since the template renders unconditionally regardless of data source. Reverted to
+neutral wording (matching `NEWS_ANALYST`'s existing pattern): the template no longer
+asserts real-or-synthetic itself; the field **values** now self-disclose
+("elevated intensity (illustrative)" when synthetic, "+0.30 (live Reddit sentiment,
+Adanos)" when real).
+
+**Prompt + overlay corrections** — `content/agents/social_media_analyst.md` and
+`overlay_generator.py::_social_block()` (both rewritten earlier this session to
+say "no live feed connected, full stop") were revised again to be conditionally
+accurate: Reddit-only real data where configured, Twitter/X/StockTwits/Google
+Trends/Discord still categorically nonexistent, illustrative reasoning as the
+documented fallback when Adanos has nothing for a ticker.
+
+**Tests** — new `test_social_context.py` (23 tests, fixture-verified against the
+real captured response), new `test_one_on_one_social_injection.py` (4 tests,
+mirrors CR023's News-only-gating test), plus extensions to `test_room_runner.py`
+(profile overlay, independence from fundamentals/news, scripted-template
+neutrality) and fixes to the 4 tests whose assertions encoded the now-outdated
+"no real data exists at all" assumption. Backend suite 640 → 673, all green.
+
+Status: `proposed` → **`in_progress`** — real Reddit sentiment now flows into both
+Room and 1-on-1 paths; not `done` because Twitter/X, StockTwits, Google Trends, and
+Discord remain entirely unconnected (LunarCrush, if ever unblocked, or a
+Twitter-specific source would be the path to closing those) — this CR's full
+multi-platform scope is still only partially met.

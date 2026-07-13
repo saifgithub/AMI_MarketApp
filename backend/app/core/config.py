@@ -94,6 +94,13 @@ class Settings(BaseSettings):
     # resend_api_key / google_audiences elsewhere in this file.
     alpha_vantage_api_key: str = ""
 
+    # Social sentiment provider for the agent pipeline (Room + 1-on-1), see
+    # app/services/social_context.py. Adanos (Reddit-only stock sentiment
+    # aggregator) — presence of the key turns the feature on, same
+    # convention as alpha_vantage_api_key above. Free tier is 250
+    # calls/month, so social_context.py caches aggressively (24h TTL).
+    adanos_api_key: str = ""
+
     # Room dedup windows (see app/services/room_runner.py::start_run).
     # Same user+ticker submitted while a run is in flight always returns the
     # in-flight run_id, regardless of these knobs (running_minutes is just an

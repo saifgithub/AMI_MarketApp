@@ -141,9 +141,16 @@ value became CR023–CR032 (see below); don't look for it, don't `cd` into it.
 
 **CR025 is done (AT:R56).** Watchlist day-change badge shipped end-to-end.
 
-**CR023/CR024 (News/Social Analyst truthfulness) are in progress as of AT:R57** —
-see the top of this file + `docs/forward_planning/CR023_news_analyst_live_feed/` and
-`CR024_social_analyst_live_feed/` for the implementation-session detail once that
+**CR023/CR024 (News/Social Analyst truthfulness) are `in_progress` as of AT:R57**
+— real data now flows into both. News: Yahoo (free) combined with Alpha Vantage
+(paid, sentiment-scored) when `ALPHA_VANTAGE_API_KEY` is set. Social: Reddit-only
+aggregate sentiment via Adanos (free, 250 calls/month) when `ADANOS_API_KEY` is
+set — LunarCrush turned out to need a paid-tier upgrade Saiful hasn't done, so
+this pivoted to Adanos instead, same session. Neither CR is `done`: News still
+lacks a macro/earnings-calendar feed by design (disclosed, not fabricated), and
+Social still has no Twitter/X/StockTwits/Google Trends/Discord coverage. See
+`docs/forward_planning/CR023_news_analyst_live_feed/` and
+`CR024_social_analyst_live_feed/` for full implementation detail once this
 session wraps.
 
 **Priority next — Saiful hasn't picked between the remaining threads yet:**
@@ -168,7 +175,7 @@ Saiful-external (any time):
 - **Upload `0.1.0+31`-or-later AAB to Play Console** via `scripts/build_playstore.sh` (first upload enrolls Play App Signing).
 - **Register the Alpaca OAuth app** → creds into `infra/alpha.env` → promote (OAuth linking currently dead on Alpha; API-key mode works — Siti Ahmad's test account is linked in apikey mode).
 - Confirm TestFlight `+38` finished processing (new app icon should show); validate Siti's Alpaca keys against the paper API.
-- **LunarCrush plan upgrade (CR024, AT:R57 finding)** — the API key Saiful provisioned mid-AT:R57 authenticates fine, but every v4 endpoint (stocks list, per-ticker topic, even crypto coins list) returns `402 "You must have an active Individual or higher subscription to use this endpoint."` A bare signup isn't enough — check lunarcrush.com's account/billing for what the "Individual" tier actually costs and upgrade if it's worth it. Once the account can answer real API calls, resume CR024 the same way CR023's Alpha Vantage path was built: verify one live response first, then wire the client. See `docs/forward_planning/CR024_social_analyst_live_feed/CR024_social_analyst_live_feed.md`'s "LunarCrush trial finding" section.
+- **LunarCrush plan upgrade — now optional, not blocking.** The API key Saiful provisioned mid-AT:R57 authenticates but every v4 endpoint returns `402 "Individual or higher subscription required"` — a bare signup isn't enough, needs a paid-tier upgrade. **Superseded**: CR024 pivoted to Adanos (Reddit-only, free 250 calls/month) instead and shipped real data the same session — see below. Revisit LunarCrush only if Twitter/X-specific coverage becomes worth the upgrade cost later.
 
 Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run) is unchanged, sequences after these.
 

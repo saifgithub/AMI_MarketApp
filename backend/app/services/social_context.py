@@ -1,0 +1,197 @@
+"""Live Reddit stock-sentiment for the agent pipeline (Room + 1-on-1) — CR024.
+
+Adanos (`https://api.adanos.org`) is a Reddit-only stock-sentiment aggregator
+— presence of `settings.adanos_api_key` turns this on, same convention as
+`alpha_vantage_api_key` in news_context.py. It does NOT cover Twitter/X,
+StockTwits, Google Trends, or Discord — those remain unconnected, same as
+before this CR. Free tier is 250 calls/month (confirmed via response headers
+during AT:R57 live verification), so this module caches aggressively (24h
+TTL) — at that budget, checking more than ~8 distinct tickers/day would
+exceed the monthly quota, so caching by ticker (not by user/pageview) is
+what keeps this viable as usage grows, same reasoning as news_context.py's
+Alpha Vantage cache.
+
+Real post text (`top_mentions[].text_snippet`) is Reddit community content,
+not ours to display verbatim — it's exposed ONLY via `format_social_context()`
+for the 1-on-1 LLM-prompt block (which the agent synthesizes, never echoes
+raw), and deliberately NEVER stored in the Room profile dict, since that
+dict also feeds the scripted (non-LLM) fallback template rendered directly
+to real users. Aggregate stats (buzz score, sentiment, subreddit names,
+mention counts) are safe for both surfaces.
+
+Never raises, returns None on any failure.
+"""
+
+from __future__ import annotations
+
+import time
+from threading import RLock
+from typing import NamedTuple
+
+import httpx
+
+from app.core.config import settings
+from app.core.logging import logger
+
+_ADANOS_BASE_URL = "https://api.adanos.org/reddit/stocks/v1/stock"
+_CACHE_TTL = 86_400.0  # 24h — see module docstring for the 250/month budget math
+
+
+class SocialSentiment(NamedTuple):
+    """Aggregate Reddit sentiment for one ticker over `period_days`."""
+
+    ticker: str
+    buzz_score: float
+    sentiment_score: float
+    mentions: int
+    bullish_pct: int
+    bearish_pct: int
+    trend: str
+    period_days: int
+    top_subreddits: tuple[str, ...]
+    sample_snippets: tuple[str, ...]
+
+
+class _AdanosSource:
+    def __init__(self, timeout_seconds: float = 4.0) -> None:
+        self._client = httpx.Client(timeout=timeout_seconds)
+        self._cache: dict[str, tuple[SocialSentiment, float]] = {}
+        self._lock = RLock()
+
+    def fetch(self, ticker: str) -> SocialSentiment | None:
+        sym = ticker.upper().strip()
+        now = time.time()
+        with self._lock:
+            hit = self._cache.get(sym)
+            if hit is not None and hit[1] > now:
+                return hit[0]
+
+        try:
+            resp = self._client.get(
+                f"{_ADANOS_BASE_URL}/{sym}",
+                headers={"X-API-Key": settings.adanos_api_key},
+            )
+        except httpx.HTTPError as exc:
+            logger.warn("social_context_adanos_network_error", ticker=sym, error=str(exc)[:200])
+            return None
+        if resp.status_code != 200:
+            logger.warn("social_context_adanos_bad_status", ticker=sym, status=resp.status_code)
+            return None
+        try:
+            body = resp.json()
+        except ValueError as exc:
+            logger.warn("social_context_adanos_parse_error", ticker=sym, error=str(exc)[:200])
+            return None
+        if not body.get("found"):
+            return None
+
+        sentiment = self._to_sentiment(sym, body)
+        with self._lock:
+            self._cache[sym] = (sentiment, now + _CACHE_TTL)
+        return sentiment
+
+    @staticmethod
+    def _to_sentiment(ticker: str, body: dict) -> SocialSentiment:
+        top_subreddits = tuple(
+            s["subreddit"] for s in (body.get("top_subreddits") or [])[:3] if s.get("subreddit")
+        )
+        sample_snippets = tuple(
+            m["text_snippet"] for m in (body.get("top_mentions") or [])[:3] if m.get("text_snippet")
+        )
+        return SocialSentiment(
+            ticker=ticker,
+            buzz_score=float(body.get("buzz_score") or 0.0),
+            sentiment_score=float(body.get("sentiment_score") or 0.0),
+            mentions=int(body.get("mentions") or 0),
+            bullish_pct=int(body.get("bullish_pct") or 0),
+            bearish_pct=int(body.get("bearish_pct") or 0),
+            trend=str(body.get("trend") or "flat"),
+            period_days=int(body.get("period_days") or 7),
+            top_subreddits=top_subreddits,
+            sample_snippets=sample_snippets,
+        )
+
+
+_source: _AdanosSource | None = None
+
+
+def get_adanos_source() -> _AdanosSource:
+    """Singleton (holds an httpx.Client + the 24h TTL cache). Tests can call
+    `set_adanos_source()` to inject a fake."""
+    global _source
+    if _source is None:
+        _source = _AdanosSource()
+    return _source
+
+
+def set_adanos_source(source: _AdanosSource | None) -> None:
+    global _source
+    _source = source
+
+
+def fetch_live_sentiment(ticker: str) -> SocialSentiment | None:
+    """Real Reddit sentiment for `ticker` via Adanos. Never raises. Returns
+    None if `adanos_api_key` is unset — callers gate on that separately
+    (mirrors news_context.py's shape) so this stays a pure fetch."""
+    if not settings.adanos_api_key:
+        return None
+    try:
+        return get_adanos_source().fetch(ticker)
+    except Exception as exc:
+        logger.warn("social_context_fetch_error", ticker=ticker, error=str(exc)[:200])
+        return None
+
+
+def format_sentiment_tone(s: SocialSentiment) -> str:
+    if s.bullish_pct > s.bearish_pct + 5:
+        return "bullish"
+    if s.bearish_pct > s.bullish_pct + 5:
+        return "bearish"
+    return "mixed"
+
+
+def format_sentiment_score(s: SocialSentiment) -> str:
+    return f"{s.sentiment_score:+.2f} (live Reddit sentiment, Adanos)"
+
+
+def format_mention_trend(s: SocialSentiment) -> str:
+    return f"{s.mentions:,} Reddit mentions over {s.period_days}d, trend: {s.trend}"
+
+
+def format_community_read(s: SocialSentiment) -> str:
+    if not s.top_subreddits:
+        return "no dominant community this period"
+    return f"most active in r/{', r/'.join(s.top_subreddits)}"
+
+
+def format_pattern(s: SocialSentiment) -> str:
+    return f"buzz score {s.buzz_score:.0f}/100, bullish {s.bullish_pct}% / bearish {s.bearish_pct}%"
+
+
+def build_social_context_block(ticker: str) -> str | None:
+    """System-prompt-ready block of real Reddit sentiment — 1-on-1 path,
+    Social Media Analyst only. Includes a couple of real post snippets as
+    LLM-only synthesis context — the agent must never quote them verbatim
+    or attribute to a specific user (enforced in the block's own text and
+    in content/agents/social_media_analyst.md).
+    """
+    if not settings.use_real_market_data or not settings.adanos_api_key:
+        return None
+    s = fetch_live_sentiment(ticker)
+    if s is None:
+        return None
+    sym = ticker.upper()
+    lines = [
+        f"─── LIVE SOCIAL SENTIMENT — {sym} (Reddit only, via Adanos) ───",
+        f"{format_mention_trend(s)}. {format_pattern(s)}.",
+        f"{format_community_read(s)}.",
+    ]
+    if s.sample_snippets:
+        lines.append("Sample community reactions (context only — do NOT quote verbatim or attribute to a user):")
+        lines += [f"- {snippet[:200]}" for snippet in s.sample_snippets]
+    lines.append(
+        "(Real Reddit-only aggregate for this ticker. No Twitter/X, StockTwits, "
+        "Google Trends, or Discord data exists. Synthesize the vibe in your own "
+        "words — never echo a snippet verbatim, never imply you read a specific post.)"
+    )
+    return "\n".join(lines)

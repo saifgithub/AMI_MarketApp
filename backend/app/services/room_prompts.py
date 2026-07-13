@@ -147,11 +147,15 @@ def _format_profile(profile: dict[str, Any]) -> str:
     in bug reports.
 
     Granular by design (AT:R57, CR023/CR024): a single profile can now have
-    live fundamentals AND live news AND still-synthetic sentiment/macro all
-    at once, so one binary flag can't describe it honestly anymore.
+    live fundamentals AND live news AND live social sentiment (or any subset
+    thereof) at once, so one binary flag can't describe it honestly anymore.
+    Forward catalyst / macro / Fed tone are the one subset with no real
+    source at all (no macro-calendar feed exists) — those stay unconditionally
+    synthetic regardless of what else is live.
     """
     fundamentals_live = profile.get("data_source") == "yfinance_live"
     news_live = profile.get("news_source") == "live"
+    social_live = profile.get("social_source") == "live"
 
     header_lines = ["Data source disclosure — some fields below are real, some are not:"]
     if fundamentals_live:
@@ -175,10 +179,20 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "- Recent catalyst/headline: alpha simulation scaffolding — NOT "
             "a live news feed."
         )
+    if social_live:
+        header_lines.append(
+            "- Retail sentiment/mention/community fields: LIVE, real Reddit "
+            "aggregate data as of this call (Reddit only — no Twitter/X, "
+            "StockTwits, Google Trends, or Discord data exists)."
+        )
+    else:
+        header_lines.append(
+            "- Retail sentiment/mention/influencer fields: alpha simulation "
+            "scaffolding — NOT a live social feed."
+        )
     header_lines.append(
-        "- Forward catalyst, macro/Fed tone, retail sentiment/mention/"
-        "influencer fields: ALWAYS alpha simulation scaffolding. No real "
-        "macro-calendar or social-sentiment feed is connected in this app. "
+        "- Forward catalyst, macro/Fed tone: ALWAYS alpha simulation "
+        "scaffolding. No real macro-calendar feed is connected in this app. "
         "Treat these as a deterministic scenario for educational debate — "
         "never present them as real."
     )
@@ -198,8 +212,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
         _catalyst_line(profile),
         f"Macro (synthetic, illustrative): {profile.get('macro_tone')}; "
         f"Fed (synthetic, illustrative): {profile.get('fed_tone')}",
-        f"Retail sentiment (ALWAYS illustrative — no live feed connected): "
-        f"{profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
+        f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
     ]
     if profile.get("next_earnings_date"):
         lines.append(

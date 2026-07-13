@@ -55,6 +55,14 @@ from app.services.fundamentals import fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.news_context import fetch_live_news, format_headline
+from app.services.social_context import (
+    fetch_live_sentiment,
+    format_community_read,
+    format_mention_trend,
+    format_pattern,
+    format_sentiment_score,
+    format_sentiment_tone,
+)
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
@@ -124,11 +132,13 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         "{fed_tone}, which {fed_impact} multiples on growth names.",
     ],
     AgentId.SOCIAL_MEDIA_ANALYST: [
-        "Retail sentiment on {ticker} reads as {sentiment_tone} in this "
-        "illustrative scenario ({sentiment_score} — no live social feed "
-        "connected). Hypothetical mention volume: {mention_trend}. "
-        "Illustrative influencer narrative: {influencer_take}. Pattern read "
-        "(for discussion, not measured): {pattern}.",
+        # Neutral wording, same discipline as NEWS_ANALYST above — the
+        # field VALUES carry the real-vs-illustrative honesty (see
+        # social_context.py's format_* helpers / room_runner.py's synthetic
+        # defaults), not the template text, since this template renders
+        # identically whether Adanos is configured or not (AT:R57).
+        "Retail sentiment on {ticker} reads as {sentiment_tone} ({sentiment_score}). "
+        "{mention_trend}. Community read: {influencer_take}. Pattern: {pattern}.",
     ],
     AgentId.BULL_RESEARCHER: [
         "Thesis: {bull_thesis}. Evidence: {bull_evidence}. What the market is "
@@ -298,6 +308,19 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+
+        # Overlay real Reddit sentiment (CR024, AT:R57-continued). Adanos is
+        # Reddit-only — Twitter/X, StockTwits, Google Trends, Discord remain
+        # unconnected. `fetch_live_sentiment` returns None (never raises)
+        # when ADANOS_API_KEY is unset, so this is a no-op until configured.
+        sentiment = fetch_live_sentiment(ticker)
+        if sentiment:
+            profile["sentiment_tone"] = format_sentiment_tone(sentiment)
+            profile["sentiment_score"] = format_sentiment_score(sentiment)
+            profile["mention_trend"] = format_mention_trend(sentiment)
+            profile["influencer_take"] = format_community_read(sentiment)
+            profile["pattern"] = format_pattern(sentiment)
+            profile["social_source"] = "live"
 
     # Derive narrative strings from whatever numbers ended up in the
     # profile (real or synthetic) so the prose is consistent with the data.

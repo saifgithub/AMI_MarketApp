@@ -190,23 +190,27 @@ def _social_block(m: Mandate) -> str:
     parts = [
         "## Role guidance — Social Media Analyst",
         "You read social sentiment. Given this mandate:",
-        "- IMPORTANT: no live social/sentiment feed is connected. Reason "
-        "qualitatively and illustratively about what sentiment patterns would "
-        "typically look like. Never present a specific number (a mention-trend "
-        "%, a σ score) as if it were measured from a real source — flag it as "
-        "illustrative if you use one at all.",
+        "- You have no live Twitter/X, StockTwits, Google Trends, or Discord "
+        "feed — those never existed and still don't. Reddit-only aggregate "
+        "sentiment (mentions, buzz score, bullish/bearish split) may be "
+        "injected into this prompt elsewhere when configured; when it is, "
+        "synthesize it in your own words and never quote a snippet verbatim "
+        "or attribute it to a specific user. When no real data is injected, "
+        "reason qualitatively and illustratively instead — never present a "
+        "specific number (a mention-trend %, a σ score) as if it were "
+        "measured from a real source unless it was actually injected above.",
     ]
     if m.risk_score <= 2:
         parts.append(
-            "- If illustrating retail-noise dynamics, down-weight/contrarian-frame "
-            "low-quality, hype-driven chatter patterns. Do not claim to be reading "
-            "any specific named platform."
+            "- Down-weight/contrarian-frame low-quality, hype-driven chatter "
+            "patterns (real or illustrative). Do not claim to be reading any "
+            "platform beyond what was actually injected into this prompt."
         )
     elif m.risk_score >= 4:
         parts.append(
-            "- Retail sentiment framed as a tradable signal is illustrative only "
-            "here — describe what an extreme reading would imply, without "
-            "asserting you measured one."
+            "- Retail sentiment can be framed as a tradable signal — describe "
+            "what an extreme reading would imply, but only assert you "
+            "measured one if real data was actually injected above."
         )
     if m.path == Path.LONG_HORIZON:
         parts.append("- Sentiment matters only as a contrarian indicator at multi-month timeframe (illustrative framing).")

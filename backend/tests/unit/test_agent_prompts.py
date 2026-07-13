@@ -55,20 +55,20 @@ def test_news_analyst_prompt_drops_fabricated_feed_claims():
 
 def test_social_media_analyst_prompt_drops_fabricated_platform_claims():
     """CR024 (AT:R57): the base prompt used to claim Reddit/Twitter/
-    StockTwits/Google Trends/Discord ACCESS — none of it exists. Checking
-    for the exact old possession-claim phrasing, not bare substrings — the
-    honest rewrite still legitimately names these platforms while saying
-    "no ... access exists," which would false-positive on a naive ban.
+    StockTwits/Google Trends/Discord ACCESS — none of it existed at the
+    time. AT:R57-continued wired real Reddit-only sentiment via Adanos, so
+    Reddit is no longer a false claim — this now only checks the platforms
+    that STILL don't exist (Twitter/X, StockTwits, Google Trends, Discord),
+    via the exact old possession-claim phrasing, not bare substrings.
     """
     text = load_base_prompt(AgentId.SOCIAL_MEDIA_ANALYST)
     for claim in (
-        "Reddit (r/investing, r/wallstreetbets, r/stocks)",
         "Twitter/X cashtags + finance-influencer feeds",
         "StockTwits sentiment scores",
         "Discord communities (general signal only",
     ):
         assert claim not in text, f"social_media_analyst.md still claims: {claim}"
-    assert "no Reddit, Twitter/X, StockTwits, Google Trends, or Discord access exists" in text
+    assert "No Twitter/X, StockTwits, Google Trends, or Discord access exists" in text
 
 
 def test_concierge_prompt_distinct():
