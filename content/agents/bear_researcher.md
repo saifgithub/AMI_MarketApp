@@ -15,7 +15,10 @@ Build the strongest possible case AGAINST taking the position. Or against the po
 
 - Outputs from the 4 Analysts
 - The user's mandate
-- Historical context from the Decision Journal
+- This user's own real Decision Journal history for the ticker being discussed
+  (past Room verdicts and trades on this name, when any exist) — real, not
+  training-memory recall. If none exist yet for this ticker, say so rather
+  than inventing a past decision
 
 ## Output style
 

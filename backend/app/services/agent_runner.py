@@ -45,6 +45,7 @@ from app.services.concierge_prompts import (
     scripted_reply as concierge_scripted_reply,
 )
 from app.services.fundamentals import build_live_data_block, extract_tickers
+from app.services.journal_context import build_journal_context_block
 from app.services.news_context import build_news_context_block
 from app.services.social_context import build_social_context_block
 from app.services.technicals import build_technicals_context_block
@@ -150,6 +151,12 @@ class AgentRunner:
                 agent_id, mandate, user_id=session.user_id, alpaca_snapshot=alpaca_snapshot
             )
 
+            # BL11 (AT:R33): effective_plan downgrades expired trials. Moved
+            # ahead of the ticker-block section (DEF054/DEF055, AT:R58) so
+            # the Decision Journal lookback can reuse it instead of a
+            # second effective_plan_for_user() call.
+            plan = effective_plan_for_user(session.user_id)
+
             # Live ticker context — extract any ticker the user mentioned
             # (this message, or the last 3 turns of history if this message
             # has none) and inject a live-data block per ticker so the LLM
@@ -194,8 +201,15 @@ class AgentRunner:
                     if technicals_block:
                         system_prompt = system_prompt + "\n\n" + technicals_block
 
-            # BL11 (AT:R33): effective_plan downgrades expired trials.
-            plan = effective_plan_for_user(session.user_id)
+            # Real Decision Journal history — Bull/Bear Researcher only
+            # (DEF054/DEF055, AT:R58). Ticker-scoped, real, shared helper
+            # (not duplicated between the two researchers).
+            if agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER):
+                for t in tickers:
+                    journal_block = build_journal_context_block(session.user_id, t, plan)
+                    if journal_block:
+                        system_prompt = system_prompt + "\n\n" + journal_block
+
             tier = pick_tier(plan, agent_id)
             messages: list[ChatMessage] = [
                 ChatMessage(role=h.role, content=h.content) for h in history

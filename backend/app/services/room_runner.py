@@ -1310,6 +1310,7 @@ async def _speak_one_agent(
             profile=profile,
             transcript=run.transcript,
             alpaca_snapshot=alpaca_snapshot,
+            plan=plan,
         )
         try:
             chunks = await asyncio.wait_for(
@@ -1393,6 +1394,7 @@ async def _stream_pm_narration(
         transcript=run.transcript,
         pm_predetermined_action=predetermined,
         alpaca_snapshot=ctx.alpaca_snapshot,
+        plan=plan,
     )
     try:
         chunks = await asyncio.wait_for(

@@ -405,6 +405,85 @@ def test_format_profile_includes_forward_eps_estimate_when_present():
     assert "consensus EPS est. $2.04" in block
 
 
+# ── DEF054/DEF055: real Decision Journal history for Bull/Bear Researcher ──
+
+
+def _build_messages(agent_id, mandate, user_id, ticker="AAPL"):
+    from app.services.room_prompts import build_room_messages
+
+    return build_room_messages(
+        agent_id=agent_id, mandate=mandate, user_id=user_id, ticker=ticker,
+        profile={"data_source": "synthetic"}, transcript=[],
+    )
+
+
+def test_bull_researcher_gets_journal_history_when_present(base_mandate):
+    from uuid import uuid4
+    from app.schemas import AgentId
+    from app.schemas.journal import EntryType, JournalEntryCreate
+    from app.services.journal_store import get_journal_store
+
+    user_id = uuid4()
+    get_journal_store().append(JournalEntryCreate(
+        user_id=user_id, entry_type=EntryType.ROOM_RUN,
+        title="Room on AAPL — APPROVE", ticker="AAPL",
+    ))
+
+    system_prompt, _ = _build_messages(AgentId.BULL_RESEARCHER, base_mandate, user_id)
+    assert "DECISION JOURNAL HISTORY — AAPL" in system_prompt
+    assert "Room on AAPL — APPROVE" in system_prompt
+
+
+def test_bear_researcher_gets_journal_history_when_present(base_mandate):
+    from uuid import uuid4
+    from app.schemas import AgentId
+    from app.schemas.journal import EntryType, JournalEntryCreate
+    from app.services.journal_store import get_journal_store
+
+    user_id = uuid4()
+    get_journal_store().append(JournalEntryCreate(
+        user_id=user_id, entry_type=EntryType.ROOM_RUN,
+        title="Room on AAPL — REJECT", ticker="AAPL",
+    ))
+
+    system_prompt, _ = _build_messages(AgentId.BEAR_RESEARCHER, base_mandate, user_id)
+    assert "DECISION JOURNAL HISTORY — AAPL" in system_prompt
+    assert "Room on AAPL — REJECT" in system_prompt
+
+
+def test_journal_history_absent_when_none_exists(base_mandate):
+    from uuid import uuid4
+    from app.schemas import AgentId
+
+    system_prompt, _ = _build_messages(AgentId.BULL_RESEARCHER, base_mandate, uuid4())
+    assert "DECISION JOURNAL HISTORY" not in system_prompt
+
+
+def test_journal_history_not_injected_for_other_agents(base_mandate):
+    """The Bull/Bear-only gate — journal history must not leak into every
+    agent's Room prompt (unlike the shared fundamentals/technicals block)."""
+    from uuid import uuid4
+    from app.schemas import AgentId
+    from app.schemas.journal import EntryType, JournalEntryCreate
+    from app.services.journal_store import get_journal_store
+
+    user_id = uuid4()
+    get_journal_store().append(JournalEntryCreate(
+        user_id=user_id, entry_type=EntryType.ROOM_RUN,
+        title="Room on AAPL — APPROVE", ticker="AAPL",
+    ))
+
+    system_prompt, _ = _build_messages(AgentId.MARKET_ANALYST, base_mandate, user_id)
+    assert "DECISION JOURNAL HISTORY" not in system_prompt
+
+
+def test_journal_history_absent_for_anonymous_user(base_mandate):
+    from app.schemas import AgentId
+
+    system_prompt, _ = _build_messages(AgentId.BULL_RESEARCHER, base_mandate, None)
+    assert "DECISION JOURNAL HISTORY" not in system_prompt
+
+
 # ── Live technicals overlay (DEF052, AT:R58) ──────────────────────────────
 
 

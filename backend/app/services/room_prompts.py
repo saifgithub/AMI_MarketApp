@@ -21,7 +21,9 @@ from __future__ import annotations
 from typing import Any
 
 from app.schemas import AgentId, AgentMessage, Mandate
+from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
+from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 
 
@@ -76,6 +78,7 @@ def build_room_messages(
     transcript: list[AgentMessage],
     pm_predetermined_action: str | None = None,
     alpaca_snapshot: str | None = None,
+    plan: Any = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -86,6 +89,10 @@ def build_room_messages(
 
     `alpaca_snapshot` is a pre-formatted text block from
     alpaca_service.snapshot_text(); injected after user_overlay when set.
+
+    `plan` gates the Decision Journal lookback window (DEF054/DEF055) for
+    Bull/Bear Researcher — same retention-by-plan rule journal_store
+    already applies everywhere else it's read.
     """
     base = build_agent_prompt(agent_id, mandate, user_id=user_id, alpaca_snapshot=alpaca_snapshot)
     phase = _PHASE_FOR_AGENT[agent_id]
@@ -104,6 +111,12 @@ def build_room_messages(
             "object you will see surfaced to the user).\n"
         )
 
+    journal_note = ""
+    if agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER):
+        journal_block = build_journal_context_block(user_id, ticker, plan or Plan.FLOOR_PASS)
+        if journal_block:
+            journal_note = f"\n\n{journal_block}\n"
+
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
         f"Ticker: {ticker}\n"
@@ -116,6 +129,7 @@ def build_room_messages(
         f"\n"
         f"Transcript so far:\n{transcript_text}\n"
         f"{pm_note}"
+        f"{journal_note}"
         f"\nYour turn. Speak as the {agent_id.value.replace('_', ' ').title()}. "
         f"Write {length}. Use specific numbers wherever possible — but ONLY "
         f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
