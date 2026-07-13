@@ -75,11 +75,21 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     Returned dict keys (all optional — missing fields mean yfinance
     didn't have them for this ticker):
       base_price, pe, rev_growth, fcf_margin, net_cash, low, high,
-      support, breakout
+      support, breakout, price_to_sales, ev_to_ebitda, peg_ratio,
+      fcf_yield, dividend_yield, sector, industry, analyst_target_price,
+      analyst_rating
 
     Only numeric fields the LLM is likely to misremember. Narrative
     fields stay synthetic at the call site so yfinance gaps don't
     create misleading absence-of-data.
+
+    DEF053 (AT:R58): price_to_sales/ev_to_ebitda/peg_ratio/fcf_yield/
+    dividend_yield/sector/industry/analyst_target_price/analyst_rating
+    all come free from yfinance's own `info` dict — confirmed live
+    against AAPL/MSFT/NVDA/GME before wiring, no Alpha Vantage key
+    needed. Full financial statements (income/balance/cash flow) and
+    buyback/M&A history remain unavailable — not fabricated, just
+    absent from the profile (see fundamentals_analyst.md).
     """
     try:
         import yfinance as yf
@@ -132,6 +142,50 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     total_debt = _num("totalDebt")
     if total_cash is not None and total_debt is not None:
         out["net_cash"] = round((total_cash - total_debt) / 1_000_000)
+
+    # Real valuation multiples beyond P/E (DEF053) — closes the "P/S,
+    # EV/EBITDA, FCF yield" overclaim without a second provider.
+    price_to_sales = _num("priceToSalesTrailing12Months")
+    if price_to_sales is not None:
+        out["price_to_sales"] = f"{price_to_sales:.1f}"
+    ev_to_ebitda = _num("enterpriseToEbitda")
+    if ev_to_ebitda is not None:
+        out["ev_to_ebitda"] = f"{ev_to_ebitda:.1f}"
+    peg_ratio = _num("pegRatio")
+    if peg_ratio is not None:
+        out["peg_ratio"] = f"{peg_ratio:.2f}"
+    free_cash_flow = _num("freeCashflow")
+    market_cap = _num("marketCap")
+    if free_cash_flow is not None and market_cap is not None and market_cap > 0:
+        out["fcf_yield"] = round(free_cash_flow / market_cap * 100, 1)
+
+    # Real capital allocation (dividends only — buybacks/M&A have no
+    # yfinance field and stay undisclosed rather than fabricated).
+    dividend_yield = _num("dividendYield")
+    if dividend_yield is not None:
+        out["dividend_yield"] = round(dividend_yield, 2)
+
+    # Real sector/industry classification replaces the old always-fake
+    # numeric `sector_pe` — a category, not a fabricated peer-average P/E
+    # (yfinance has no peer-basket P/E; computing one would need a peer
+    # mapping this app doesn't have).
+    sector = info.get("sector")
+    if sector:
+        out["sector"] = str(sector)
+    industry = info.get("industry")
+    if industry:
+        out["industry"] = str(industry)
+
+    # Real analyst consensus — the closest honest proxy for "forward
+    # guidance" available (a company's own guidance figures aren't
+    # exposed by yfinance; this is the Street's view, labeled as such).
+    analyst_target = _num("targetMeanPrice")
+    if analyst_target is not None:
+        out["analyst_target_price"] = round(analyst_target, 2)
+    rating = info.get("recommendationKey")
+    if rating and rating != "none":
+        out["analyst_rating"] = str(rating).replace("_", " ")
+
     return out
 
 
@@ -166,6 +220,27 @@ def build_live_data_block(ticker: str) -> str | None:
         lines.append(f"Net cash: ${data['net_cash']}M")
     if "low" in data and "high" in data:
         lines.append(f"52-week range: ${data['low']}–${data['high']}")
+    multiples = []
+    if "price_to_sales" in data:
+        multiples.append(f"P/S {data['price_to_sales']}x")
+    if "ev_to_ebitda" in data:
+        multiples.append(f"EV/EBITDA {data['ev_to_ebitda']}x")
+    if "peg_ratio" in data:
+        multiples.append(f"PEG {data['peg_ratio']}")
+    if "fcf_yield" in data:
+        multiples.append(f"FCF yield {data['fcf_yield']}%")
+    if multiples:
+        lines.append("Valuation: " + ", ".join(multiples))
+    if "dividend_yield" in data:
+        lines.append(f"Dividend yield: {data['dividend_yield']}%")
+    if "sector" in data or "industry" in data:
+        lines.append(f"Sector/industry: {data.get('sector', '—')} / {data.get('industry', '—')}")
+    if "analyst_target_price" in data or "analyst_rating" in data:
+        lines.append(
+            f"Analyst consensus: {data.get('analyst_rating', '—')}, "
+            f"target ${data.get('analyst_target_price', '—')} "
+            f"(Street view, not company guidance)"
+        )
     lines.append(
         f"(yfinance live snapshot for {sym}. Use these numbers when "
         f"discussing {sym}. Do NOT cite figures from training memory; "

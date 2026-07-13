@@ -116,7 +116,10 @@ PHASES: tuple[_Phase, ...] = (
 
 _TEMPLATES: dict[AgentId, list[str]] = {
     AgentId.FUNDAMENTALS_ANALYST: [
-        "{ticker} trades at a trailing P/E of {pe}x, vs sector median ~{sector_pe}x. "
+        # No sector/peer P/E comparison — DEF053 (AT:R58) dropped the old
+        # always-fake `sector_pe` rather than half-fixing it; nothing here
+        # claims a peer-average multiple this app doesn't actually compute.
+        "{ticker} trades at a trailing P/E of {pe}x. "
         "TTM revenue growth {rev_growth}%; FCF margin {fcf_margin}%. "
         "Balance sheet: net cash {net_cash}M. "
         "On the fundamentals alone, the name is {valuation_tone}.",
@@ -235,12 +238,10 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     pe = rng.uniform(12, 55)
     rev_growth = rng.randint(2, 40)
     fcf_margin = rng.randint(8, 35)
-    sector_pe = rng.uniform(15, 25)
     profile: dict[str, Any] = {
         "ticker": ticker.upper(),
         "base_price": round(base_price, 2),
         "pe": f"{pe:.1f}",
-        "sector_pe": f"{sector_pe:.0f}",
         "rev_growth": rev_growth,
         "fcf_margin": fcf_margin,
         "net_cash": rng.randint(-5_000, 80_000),
@@ -330,6 +331,12 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         if earnings and earnings.earnings_date:
             profile["next_earnings_date"] = earnings.earnings_date
             profile["next_earnings_quarter"] = earnings.quarter
+            # Real forward consensus EPS for the upcoming report (DEF053,
+            # AT:R58) — was already fetched here, just never surfaced. A
+            # genuine "forward guidance" data point, distinct from the
+            # backward-looking rev_growth/fcf_margin fields above.
+            if earnings.eps_estimate is not None:
+                profile["next_earnings_eps_estimate"] = earnings.eps_estimate
 
         # Overlay real Reddit sentiment (CR024, AT:R57-continued). Adanos is
         # Reddit-only — Twitter/X, StockTwits, Google Trends, Discord remain

@@ -215,7 +215,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
         header,
         "",
         f"Reference price: ${profile.get('base_price')}",
-        f"P/E: {profile.get('pe')} (sector ~{profile.get('sector_pe')})",
+        f"P/E: {profile.get('pe')}",
         f"TTM revenue growth: {profile.get('rev_growth')}%, FCF margin: {profile.get('fcf_margin')}%",
         f"Net cash: {profile.get('net_cash')}M",
         f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}",
@@ -227,12 +227,64 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"Fed (synthetic, illustrative): {profile.get('fed_tone')}",
         f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
     ]
+    for extra in (_valuation_line(profile), _sector_line(profile),
+                  _capital_allocation_line(profile), _analyst_line(profile)):
+        if extra:
+            lines.append(extra)
     if profile.get("next_earnings_date"):
         lines.append(
             f"Next earnings (LIVE): {profile['next_earnings_date']}"
             + (f" ({profile['next_earnings_quarter']})" if profile.get("next_earnings_quarter") else "")
+            + (f", consensus EPS est. ${profile['next_earnings_eps_estimate']}"
+               if profile.get("next_earnings_eps_estimate") is not None else "")
         )
     return "\n".join(lines)
+
+
+def _valuation_line(profile: dict[str, Any]) -> str | None:
+    """Real valuation multiples beyond P/E (DEF053). None when nothing live —
+    no fabricated peer/sector multiple is ever shown."""
+    parts = []
+    if profile.get("price_to_sales"):
+        parts.append(f"P/S {profile['price_to_sales']}x")
+    if profile.get("ev_to_ebitda"):
+        parts.append(f"EV/EBITDA {profile['ev_to_ebitda']}x")
+    if profile.get("peg_ratio"):
+        parts.append(f"PEG {profile['peg_ratio']}")
+    if profile.get("fcf_yield") is not None:
+        parts.append(f"FCF yield {profile['fcf_yield']}%")
+    if not parts:
+        return None
+    return "Valuation (LIVE): " + ", ".join(parts)
+
+
+def _sector_line(profile: dict[str, Any]) -> str | None:
+    """Real sector/industry classification (DEF053) — replaces the old
+    always-fake numeric `sector_pe`; this is a category, not a fabricated
+    peer-average P/E (yfinance has no peer-basket P/E to compute one from)."""
+    if not profile.get("sector"):
+        return None
+    return f"Sector/industry (LIVE): {profile['sector']} / {profile.get('industry', '—')}"
+
+
+def _capital_allocation_line(profile: dict[str, Any]) -> str | None:
+    """Real dividend yield only (DEF053) — buybacks/M&A have no yfinance
+    field and stay undisclosed rather than fabricated."""
+    if profile.get("dividend_yield") is None:
+        return None
+    return f"Dividend yield (LIVE): {profile['dividend_yield']}% (buybacks/M&A: not available, not claimed)"
+
+
+def _analyst_line(profile: dict[str, Any]) -> str | None:
+    """Real analyst consensus (DEF053) — the closest honest proxy for
+    'forward guidance' available. Explicitly labeled as the Street's view,
+    not the company's own guidance (which yfinance doesn't expose)."""
+    if not profile.get("analyst_target_price") and not profile.get("analyst_rating"):
+        return None
+    return (
+        f"Analyst consensus (LIVE, Street view — NOT company guidance): "
+        f"{profile.get('analyst_rating', '—')}, target ${profile.get('analyst_target_price', '—')}"
+    )
 
 
 def _catalyst_line(profile: dict[str, Any]) -> str:

@@ -158,3 +158,123 @@ def test_fetch_normalizes_yfinance_shape(monkeypatch):
     assert out["net_cash"] == 65_100
     assert out["low"] == 164.0
     assert out["high"] == 260.0
+
+
+# ── DEF053: real valuation multiples / sector / dividends / analyst consensus ──
+
+
+def test_fetch_includes_real_valuation_multiples_sector_and_consensus(monkeypatch):
+    """P/S, EV/EBITDA, PEG, FCF yield, sector/industry, dividend yield, and
+    analyst consensus all come free from yfinance's own info dict — no
+    Alpha Vantage key needed, confirmed live against real tickers pre-code."""
+    import sys, types
+
+    class _Ticker:
+        def __init__(self, _sym):
+            self.info = {
+                "currentPrice": 250.0,
+                "trailingPE": 35.0,
+                "priceToSalesTrailing12Months": 10.291255,
+                "enterpriseToEbitda": 29.051,
+                "pegRatio": 2.55,
+                "freeCashflow": 101_090_746_368,
+                "marketCap": 4_645_544_525_824,
+                "dividendYield": 0.34,
+                "sector": "Technology",
+                "industry": "Consumer Electronics",
+                "targetMeanPrice": 315.56668,
+                "recommendationKey": "strong_buy",
+            }
+    fake_yf = types.SimpleNamespace(Ticker=_Ticker)
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    out = fetch_live_fundamentals("AAPL")
+    assert out is not None
+    assert out["price_to_sales"] == "10.3"
+    assert out["ev_to_ebitda"] == "29.1"
+    assert out["peg_ratio"] == "2.55"
+    assert out["fcf_yield"] == round(101_090_746_368 / 4_645_544_525_824 * 100, 1)
+    assert out["dividend_yield"] == 0.34
+    assert out["sector"] == "Technology"
+    assert out["industry"] == "Consumer Electronics"
+    assert out["analyst_target_price"] == 315.57
+    assert out["analyst_rating"] == "strong buy"
+
+
+def test_fetch_omits_new_fields_when_absent(monkeypatch):
+    """Fields yfinance doesn't have for a ticker are omitted, not rendered
+    as a fabricated placeholder."""
+    import sys, types
+
+    class _Ticker:
+        def __init__(self, _sym):
+            self.info = {"currentPrice": 100.0, "trailingPE": 20.0}
+    fake_yf = types.SimpleNamespace(Ticker=_Ticker)
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    out = fetch_live_fundamentals("X")
+    for key in ("price_to_sales", "ev_to_ebitda", "peg_ratio", "fcf_yield",
+                "dividend_yield", "sector", "industry", "analyst_target_price",
+                "analyst_rating"):
+        assert key not in out
+
+
+def test_fetch_handles_no_dividend_negative_fcf_and_no_rating(monkeypatch):
+    """A non-dividend-payer with negative FCF and no analyst coverage
+    (e.g. GME) must degrade gracefully, not crash or fabricate."""
+    import sys, types
+
+    class _Ticker:
+        def __init__(self, _sym):
+            self.info = {
+                "currentPrice": 25.0,
+                "trailingPE": 40.0,
+                "freeCashflow": -1_261_250_048,
+                "marketCap": 9_902_615_552,
+                "dividendYield": None,
+                "targetMeanPrice": None,
+                "recommendationKey": "none",
+                "sector": "Consumer Cyclical",
+                "industry": "Specialty Retail",
+            }
+    fake_yf = types.SimpleNamespace(Ticker=_Ticker)
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    out = fetch_live_fundamentals("GME")
+    assert out is not None
+    assert out["fcf_yield"] < 0  # real negative FCF yield, not hidden
+    assert "dividend_yield" not in out
+    assert "analyst_target_price" not in out
+    assert "analyst_rating" not in out  # "none" must not render as a fake rating
+    assert out["sector"] == "Consumer Cyclical"
+
+
+def test_build_block_includes_valuation_sector_dividend_and_analyst_lines(monkeypatch):
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(
+        fundamentals, "fetch_live_fundamentals",
+        lambda t: {
+            "base_price": 250.50,
+            "pe": "35.2",
+            "price_to_sales": "10.3",
+            "ev_to_ebitda": "29.1",
+            "peg_ratio": "2.55",
+            "fcf_yield": 2.2,
+            "dividend_yield": 0.34,
+            "sector": "Technology",
+            "industry": "Consumer Electronics",
+            "analyst_target_price": 315.57,
+            "analyst_rating": "strong buy",
+        },
+    )
+    block = build_live_data_block("AAPL")
+    assert block is not None
+    assert "P/S 10.3x" in block
+    assert "EV/EBITDA 29.1x" in block
+    assert "PEG 2.55" in block
+    assert "FCF yield 2.2%" in block
+    assert "Dividend yield: 0.34%" in block
+    assert "Technology / Consumer Electronics" in block
+    assert "strong buy" in block
+    assert "$315.57" in block
+    assert "not company guidance" in block

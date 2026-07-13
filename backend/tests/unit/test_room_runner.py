@@ -331,6 +331,80 @@ def test_format_profile_labels_data_source():
     assert "alpha simulation scaffolding" in synth_block
 
 
+# ── DEF053: real valuation multiples / sector / dividends / analyst consensus ──
+
+
+def test_profile_no_longer_carries_fake_sector_pe():
+    """DEF053: sector_pe was always rng.uniform(15,25) — dropped entirely,
+    not just hidden. A fresh synthetic profile must not have the key."""
+    from app.services.room_runner import _profile_for_ticker
+
+    profile = _profile_for_ticker("AAPL")
+    assert "sector_pe" not in profile
+
+
+def test_format_profile_includes_valuation_line_when_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "price_to_sales": "10.3",
+        "ev_to_ebitda": "29.1", "peg_ratio": "2.55", "fcf_yield": 2.2,
+    })
+    assert "Valuation (LIVE): P/S 10.3x, EV/EBITDA 29.1x, PEG 2.55, FCF yield 2.2%" in block
+
+
+def test_format_profile_omits_valuation_line_when_absent():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "Valuation (LIVE)" not in block
+
+
+def test_format_profile_includes_sector_line_when_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "sector": "Technology", "industry": "Consumer Electronics",
+    })
+    assert "Sector/industry (LIVE): Technology / Consumer Electronics" in block
+
+
+def test_format_profile_omits_sector_line_when_absent():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "Sector/industry (LIVE)" not in block
+
+
+def test_format_profile_includes_dividend_line_and_disclaims_buybacks():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "dividend_yield": 0.34})
+    assert "Dividend yield (LIVE): 0.34%" in block
+    assert "buybacks/M&A: not available" in block
+
+
+def test_format_profile_includes_analyst_line_labeled_not_guidance():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "analyst_rating": "strong buy", "analyst_target_price": 315.57,
+    })
+    assert "strong buy" in block
+    assert "$315.57" in block
+    assert "NOT company guidance" in block
+
+
+def test_format_profile_includes_forward_eps_estimate_when_present():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({
+        "data_source": "synthetic", "next_earnings_date": "2026-08-01",
+        "next_earnings_quarter": "Q3", "next_earnings_eps_estimate": 2.04,
+    })
+    assert "consensus EPS est. $2.04" in block
+
+
 # ── Live technicals overlay (DEF052, AT:R58) ──────────────────────────────
 
 
@@ -538,6 +612,7 @@ def test_profile_overlays_earnings_when_available(monkeypatch):
     profile = room_runner._profile_for_ticker("AAPL")
     assert profile["next_earnings_date"] == "2026-08-01"
     assert profile["next_earnings_quarter"] == "Q3"
+    assert profile["next_earnings_eps_estimate"] == 2.1
 
 
 def test_profile_earnings_absent_when_provider_errors(monkeypatch):
