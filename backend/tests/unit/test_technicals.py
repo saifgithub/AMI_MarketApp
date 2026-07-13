@@ -156,6 +156,41 @@ def test_none_when_provider_raises(monkeypatch):
     assert compute_technicals("AAPL") is None
 
 
+def test_none_when_a_close_is_nan(monkeypatch):
+    """DEF052 round 2 (auditor F1, MAJOR): yfinance's own missing-value
+    sentinel for thin/recently-IPO'd/halted tickers is NaN, not a missing
+    candle — a type-valid Candle the 'never raises' contract must tolerate.
+    Before the fix, round(rsi) raised ValueError on a NaN close, taking down
+    the entire Room Convene, not just this agent's technicals."""
+    closes = [100.0] * 64 + [float("nan")]
+    monkeypatch.setattr(technicals, "get_market_data_provider", lambda: _FakeProvider(_candles(closes)))
+    assert compute_technicals("AAPL") is None
+
+
+def test_none_when_a_volume_is_nan(monkeypatch):
+    closes = [100.0 + i * 0.5 for i in range(65)]
+    volumes = [1_000_000.0] * 64 + [float("nan")]
+    monkeypatch.setattr(
+        technicals, "get_market_data_provider",
+        lambda: _FakeProvider(_candles(closes, volumes=volumes)),
+    )
+    assert compute_technicals("AAPL") is None
+
+
+def test_none_when_a_low_is_nan(monkeypatch):
+    """The auditor's own note: a NaN low alone doesn't reliably raise (min()
+    skips it) but would silently yield a wrong support — the isfinite guard
+    catches this case too, not just the raising ones."""
+    closes = [100.0 + i * 0.5 for i in range(65)]
+    lows = [c - 1 for c in closes]
+    lows[-1] = float("nan")
+    monkeypatch.setattr(
+        technicals, "get_market_data_provider",
+        lambda: _FakeProvider(_candles(closes, lows=lows)),
+    )
+    assert compute_technicals("AAPL") is None
+
+
 def test_build_technicals_context_block_absent_when_disabled(monkeypatch):
     from app.core.config import settings
 
