@@ -28,7 +28,12 @@ table).
 | DEF046 | COMPLETE | none | R54 · round 1 | COMPLETE (r1, pending-merge) — **merged to main `bd851b3` unchanged; verdict now unconditional** |
 | DEF049 | AWAITING-AUDIT | DEF039 | R54 · round 1 | — · milestone credit double-grant under concurrency (from DEF039 O1); on main `58bf138`, **not yet promoted** |
 | DEF050 | AWAITING-AUDIT | none | R54 · round 1 | — · unused `assets/icons/` pubspec line (from shared O1); on main `58bf138`; **verify from a fresh worktree** |
+| CR023 | AWAITING-AUDIT | none | R58 · round 1 | — · News Analyst real feed (Yahoo + Alpha Vantage), submitted late — shipped R57, opened R58; on main `4b153a2`, **not yet promoted** |
+| CR024 | AWAITING-AUDIT | none | R58 · round 1 | — · Social Media Analyst real feed (Adanos Reddit sentiment) + scripted-fallback platform-naming fix, submitted late — shipped R57, opened R58; on main `c942120`, **not yet promoted** |
+| DEF051 | AWAITING-AUDIT | none | R58 · round 1 | — · Room's fake $100k/0%-drawdown compliance-check input, resolved server-side via SimEngine; on main `22c84c6`, **not yet promoted, safety-floor-relevant** |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
 
 _R54 batch: DEF039/040/042/047/048 audited COMPLETE round 1. DEF045/046 audited COMPLETE (pending-merge) and are now **merged to main `bd851b3`** via clean `--no-ff` (diffs unchanged → verdicts stand). Two follow-up lanes minted from the auditor's OUT-OF-SCOPE findings: **DEF049** (DEF039 O1 — monetized credit double-grant, fixed) + **DEF050** (shared O1 — pubspec asset dir). DEF049 is on main but **awaits `/promote-to-alpha`** to reach the live server._
+
+_R58 batch: CR023/CR024/DEF051 all shipped R57 but were never opened as lanes before that session wrapped — opened now, R58, once Saiful flagged the gap. All three touch the same risk category (12-agent data truthfulness / safety-floor input) that motivated this handshake in the first place, so this batch skipped no fewer checks than usual — it just ran the self-check + submission one session late. All three on main, all three **not yet promoted to Alpha**; DEF051 is the highest-priority of the three (safety-floor compliance-check input, not a narrative honesty gap)._
