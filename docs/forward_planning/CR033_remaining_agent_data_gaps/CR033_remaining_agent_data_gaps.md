@@ -1,9 +1,22 @@
 # CR033 — Remaining agent truthfulness gaps (Market Analyst, Fundamentals Analyst, Bull Researcher)
 
-**Status:** proposed · **Session:** AT:R57 · **Date:** 2026-07-13
+**Status:** superseded by DEF052/DEF053/DEF054/DEF055 · **Session:** AT:R57 (filed) ·
+**Superseded:** AT:R58, 2026-07-13
+**Date:** 2026-07-13
 **Source:** Saiful asked "any agents still not getting real data?" after CR023/CR024
 (News/Social truthfulness) shipped. Auditing the rest of the 12-agent roster against
 what's actually wired surfaced three more prompt-honesty gaps, plus DEF051 (filed
+
+## Superseded (AT:R58)
+
+Saiful asked for each gap to be tracked and tackled as an individual Defect rather than
+one bundled CR, so each can close independently: **DEF052** (Market Analyst),
+**DEF053** (Fundamentals Analyst), **DEF054** (Bull Researcher). Re-checking agent
+wiring status after DEF051 shipped also surfaced a fourth gap this CR's own audit
+missed — Bear Researcher makes the identical fabricated "Decision Journal" claim as
+Bull Researcher — filed as **DEF055** (depends-on DEF054). This doc's research and
+scope framing carries forward unchanged into the four Defect docs; no re-analysis was
+needed, just re-packaging into the Defect register for individual tracking.
 separately — that one is a compliance-input bug, not a prompt-honesty issue).
 
 This CR is **documentation only** — no code ships under it. It records what was found;
