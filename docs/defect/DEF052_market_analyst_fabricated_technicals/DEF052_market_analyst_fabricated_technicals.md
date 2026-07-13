@@ -138,3 +138,21 @@ delivered, dropping any claim not actually implemented.
       independent of fundamentals/news/social.
 - [x] Regression tests: real values used when history available; synthetic fallback used
       when not; disclosure header correctly labels technicals as live vs synthetic.
+
+## Round 2 — audit finding F1 (MAJOR), fixed same session
+
+The independent audit (track U) reproduced a real gap: `compute_technicals()` wrapped
+only the `history()` fetch in try/except, not the computation itself. A NaN close
+(yfinance's own missing-value sentinel for thin/recently-IPO'd/halted tickers) made
+`round(rsi)` raise `ValueError`, which propagated past the `if technicals:` guard
+(only catches `None`) and failed the **entire 12-agent Room Convene**, not just the
+Market Analyst's technicals — directly contradicting the module's own "never raises"
+claim.
+
+Fixed with an explicit `math.isfinite()` guard over every OHLCV value plus wrapping
+the full computation in the same `try/except` the history fetch already had,
+matching the sibling modules (fundamentals/news/social). 3 new regression tests
+(NaN close, NaN volume, NaN low — the last one targeting the auditor's own noted
+non-raising-but-silently-wrong-result case), each adversarially confirmed to fail
+against the pre-fix code. Backend suite 709 → 712, all green. Full round-2 evidence:
+[`audit/handshake/cr/DEF052.architect.md`](../../../audit/handshake/cr/DEF052.architect.md).
