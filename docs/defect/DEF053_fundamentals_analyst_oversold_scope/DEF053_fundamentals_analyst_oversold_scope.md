@@ -1,8 +1,61 @@
 # DEF053 — Fundamentals Analyst prompt oversells its real scope, one field is always fake
 
-**Status:** open · **Filed:** AT:R58 · **Date:** 2026-07-13
+**Status:** resolved (AT:R58) · **Filed:** AT:R58 · **Date:** 2026-07-13
 **Source:** prompt — split out of CR033 (filed AT:R57, docs-only) into an individual Defect
 at Saiful's request, so each of the four remaining agent-truthfulness gaps can be tackled
+
+## Fix (AT:R58)
+
+**Step 1 finding — better than expected.** Checked Alpha Vantage's `OVERVIEW`/`EARNINGS`
+endpoints live (confirmed against the real API, not assumed from docs) — but then also
+checked yfinance's own `Ticker().info` dict, already the fetch path `fetch_live_fundamentals()`
+uses, and it already carries **all of it for free, no key needed**: verified live against
+AAPL/MSFT/NVDA/GME —
+
+- `priceToSalesTrailing12Months` → real P/S
+- `enterpriseToEbitda` → real EV/EBITDA
+- `pegRatio` → real PEG
+- `freeCashflow` + `marketCap` → real FCF yield (computed: `freeCashflow / marketCap × 100`)
+- `dividendYield` → real dividend yield (None for non-payers, e.g. GME)
+- `sector` / `industry` → real classification (not a numeric peer P/E — yfinance has no
+  peer-basket P/E to compute one from)
+- `targetMeanPrice` + `recommendationKey` → real analyst consensus (labeled as the
+  Street's view, never as the company's own guidance)
+
+So this shipped entirely via yfinance, gated only on `settings.use_real_market_data`
+(no `ALPHA_VANTAGE_API_KEY` dependency) — reaches every user, not just an
+Alpha-Vantage-configured deployment.
+
+**`sector_pe` — dropped, not fixed.** The always-fake `rng.uniform(15, 25)` field is
+removed entirely from the synthetic profile, `_format_profile()`, and the
+Fundamentals Analyst's scripted-fallback template (which referenced it in
+`"...vs sector median ~{sector_pe}x"` — reworded to drop the clause). Real
+`sector`/`industry` now carries the peer-context claim honestly, as a category rather
+than a fabricated number.
+
+**Bonus, near-zero marginal cost:** `market_data.py`'s `EarningsInfo.eps_estimate` was
+already fetched by the earnings overlay (CR023) but never surfaced — now flows into
+the profile as `next_earnings_eps_estimate`, a genuine forward consensus EPS tied to
+the real upcoming earnings date. Closes part of the "forward guidance" claim with
+actual data instead of just the analyst-consensus target price.
+
+**Still not available, explicitly disclaimed (not fabricated):** full financial
+statements (income/balance/cash-flow statements) and buyback/M&A history. Neither has
+a yfinance `info`-dict field; building either would mean parsing separate statement
+endpoints — out of scope for this Defect, noted in `fundamentals_analyst.md` so the
+agent says so rather than estimating.
+
+`content/agents/fundamentals_analyst.md` rewritten to describe the real (now richer)
+scope: real valuation multiples (P/E, P/S, EV/EBITDA, PEG, FCF yield), real
+sector/industry category, real dividend yield, real analyst consensus + forward EPS
+estimate — and an explicit "financial statements not available" disclaimer.
+
+12 new tests across `test_fundamentals.py` (+4: real fields present, absent when
+missing, negative FCF + no-dividend + no-rating degradation, `build_live_data_block`
+formatting) and `test_room_runner.py` (+8: `sector_pe` key gone, each new
+`_format_profile()` helper line present/absent, forward EPS estimate). Backend suite
+697 → 709, all green. Full
+submission: [`audit/handshake/cr/DEF053.architect.md`](../../../audit/handshake/cr/DEF053.architect.md).
 and closed one at a time instead of as one bundled CR.
 
 ## Problem
@@ -59,16 +112,21 @@ nothing more.
 
 ## Acceptance
 
-- [ ] Investigated whether Alpha Vantage (already-provisioned key) can supply P/S,
+- [x] Investigated whether Alpha Vantage (already-provisioned key) can supply P/S,
       EV/EBITDA, FCF yield, a real sector/peer P/E, or forward guidance — finding
-      documented either way (source verified against the live API, not assumed from docs).
-- [ ] `sector_pe` is either wired to a real source or the claim is dropped from the
-      prompt/profile — no longer an always-fake `rng.uniform(15, 25)` regardless of
-      `use_real_market_data`.
-- [ ] `content/agents/fundamentals_analyst.md` rewritten to match actual delivered scope
-      exactly — no claims of full financial statements / capital allocation history /
-      forward guidance / peer comparison unless genuinely wired this session.
-- [ ] Graceful degradation preserved: any newly-added source follows the same
-      never-raises + synthetic-fallback contract as the rest of `fetch_live_fundamentals()`.
-- [ ] Regression tests updated to reflect the corrected scope/claims (and any new
-      wired field, if Step 1 turns one up).
+      documented (verified against the live API), then superseded by a cheaper free
+      source: yfinance's own `info` dict already has P/S, EV/EBITDA, PEG, FCF
+      (computed), sector/industry, dividend yield, and analyst consensus — no
+      Alpha Vantage key needed.
+- [x] `sector_pe` is either wired to a real source or the claim is dropped from the
+      prompt/profile — dropped entirely (no genuine peer-basket P/E exists to wire);
+      real `sector`/`industry` classification carries the peer-context claim honestly.
+- [x] `content/agents/fundamentals_analyst.md` rewritten to match actual delivered
+      scope exactly — real valuation multiples, sector/industry, dividend yield,
+      analyst consensus + forward EPS estimate now claimed; full financial statements
+      and buyback/M&A history explicitly disclaimed as unavailable.
+- [x] Graceful degradation preserved: all new fields use the same `_num()`/`.get()`
+      None-checks as the existing fields — missing data is omitted, never fabricated
+      or crashing.
+- [x] Regression tests updated to reflect the corrected scope/claims and the new
+      wired fields (yfinance, not Alpha Vantage).
