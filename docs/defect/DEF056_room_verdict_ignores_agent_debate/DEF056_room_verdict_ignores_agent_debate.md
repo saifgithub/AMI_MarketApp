@@ -1,6 +1,6 @@
 # DEF056 — Room's structured Verdict ignores the 12-agent debate; PM prose can contradict it
 
-**Status:** open · **Filed:** AT:R58 · **Date:** 2026-07-13
+**Status:** resolved · **Filed:** AT:R58 · **Fixed:** AT:R58 · **Date:** 2026-07-13
 **Source:** prompt — spotted verifying a live RXT Room convene (checking that News/Social
 Analyst live-data fixes, shipped same session, actually worked end to end).
 
@@ -74,13 +74,52 @@ argued AVOID. The "12-agent analyst team" framing (core product pitch, per
 `docs/initial_specs/01_product/core_loop_and_features.md`) is not actually reflected
 in the binding output.
 
-## Not yet root-caused to a fix
+## Fix
 
-This defect is filed to capture the finding; the fix approach needs a design decision
-(does the Trader's own recommended size/action feed the Verdict, with the deterministic
-floor acting as a cap/veto rather than the sole source of action+size? does a PM-text
-vs. verdict mismatch trigger a regenerate-then-fallback-to-template guard, independent of
-the deeper fix? etc.) — planned in a follow-up session, not decided here.
+Flipped the PM phase from "narrate around a precomputed action" to "decide, then the
+deterministic floor vetoes." The PM already reads the entire transcript (all 11 prior
+agents) — its own decision now *is* the verdict, instead of an independently-computed
+verdict the PM was told to agree with.
+
+- `room_prompts.py::build_room_messages()` — dropped `pm_predetermined_action`/`pm_note`
+  (the "do NOT contradict" instruction). The PM now gets `_PM_VERDICT_FORMAT`: respond
+  with only a JSON object (`action: APPROVE | PASS`, `size_pct`/`entry`/`stop`/`target`/
+  `horizon_days` if APPROVE, `narration` for the user-visible text). Non-PM agents are
+  unaffected (`_PROSE_FORMAT`, unchanged).
+- `room_runner.py` — new `_parse_pm_verdict()` extracts the PM's JSON via a shared
+  tolerant-JSON helper (`llm_json.extract_json_object`, factored out of
+  `brief_engine.py`'s existing `_parse_proposal_json` — same pattern, now shared). A
+  parsed APPROVE goes through `enforce_safety_floor()` (`app/agents/safety_floor.py:254`
+  — previously dead code, never called anywhere) which re-runs
+  `check_mandate_compliance()` and overrides to REJECT if it fails, exactly like the old
+  deterministic-first flow did. A parsed PASS (the schema already had this member —
+  `"Research Manager: nothing fits mandate today"` — never used) passes straight through,
+  no compliance check needed. `size_pct` is clamped to the mandate's risk-tier ceiling
+  regardless of what the LLM asked for. Unparseable/empty PM responses fail safe to PASS
+  (`overridden_from_llm=True`) rather than fabricating a trade the debate never reached;
+  a total LLM failure (timeout/exception) still falls back to the old deterministic
+  `_assemble_verdict()` scripted path, same as every other agent's timeout fallback.
+- `safety_floor.py` — `SAFETY_FLOOR_BLOCK`'s embedded JSON example updated to the same
+  schema (it previously specified a different, never-parsed shape — a latent
+  inconsistency in the same prompt, now closed).
+- Mobile (`mobile/lib/models/room.dart`, `screens/room/room_screen.dart`,
+  `screens/journal/journal_detail_screen.dart`, `services/share/share_service.dart`) —
+  `PASS` rendered identical to `REJECT` (amber + cancel icon) everywhere it's shown;
+  given its own neutral treatment (slate + neutral icon) so a no-trade verdict doesn't
+  read as a mandate rejection.
+- Trader / Risk Debator phases untouched — still pure narration. The PM already sees
+  their conclusions in the transcript; making the PM's own decision authoritative was
+  enough to make the debate matter, without parsing every agent's prose.
+- Out of scope, noted for a future CR if needed: SELL/short verdicts (`ProposedTrade.side`
+  stays hardcoded `BUY`), `MODIFY` (stays unused), and a regenerate-on-self-contradiction
+  loop for the (much smaller, since prose+JSON now come from the same generation)
+  residual risk of the PM's own prose disagreeing with its own JSON action — deferred,
+  no incidence data yet to justify the added LLM cost per run.
+
++3 backend regression tests (`test_room_runner.py`): PM PASS-JSON verdict matches a
+Trader-WAIT debate, oversized PM approval clamped to the risk-tier ceiling, unparseable
+PM reply fails safe to PASS. 741 backend unit tests pass; `flutter analyze` clean.
+Commit `e939e46`.
 
 ## Evidence
 
