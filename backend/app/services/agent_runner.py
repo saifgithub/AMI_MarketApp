@@ -47,6 +47,7 @@ from app.services.concierge_prompts import (
 from app.services.fundamentals import build_live_data_block, extract_tickers
 from app.services.news_context import build_news_context_block
 from app.services.social_context import build_social_context_block
+from app.services.technicals import build_technicals_context_block
 from app.services.llm_gateway import ChatMessage, LLMGateway
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
@@ -184,6 +185,14 @@ class AgentRunner:
                     social_block = build_social_context_block(t)
                     if social_block:
                         system_prompt = system_prompt + "\n\n" + social_block
+
+            # Real technicals — Market Analyst only (DEF052, AT:R58). Same
+            # News/Social-only-style gating as above.
+            if agent_id == AgentId.MARKET_ANALYST:
+                for t in tickers:
+                    technicals_block = build_technicals_context_block(t)
+                    if technicals_block:
+                        system_prompt = system_prompt + "\n\n" + technicals_block
 
             # BL11 (AT:R33): effective_plan downgrades expired trials.
             plan = effective_plan_for_user(session.user_id)

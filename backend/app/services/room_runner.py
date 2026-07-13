@@ -55,6 +55,7 @@ from app.services.fundamentals import fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.news_context import fetch_live_news, format_headline
+from app.services.technicals import compute_technicals
 from app.services.social_context import (
     fetch_live_sentiment,
     format_community_read,
@@ -121,10 +122,16 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         "On the fundamentals alone, the name is {valuation_tone}.",
     ],
     AgentId.MARKET_ANALYST: [
-        "Daily chart shows {ticker} {trend} above the 50-day MA, with the 200-day "
-        "as longer-term support around ${support}. RSI({rsi}) — {rsi_tone}. "
-        "Last week's range was ${low}–${high}, breakout level sits at ${breakout}. "
-        "Volume {volume_tone}.",
+        # Neutral on the 20/50-day relationship's direction ("{trend}" is
+        # "trading" or "consolidating", not "up"/"down") — same discipline as
+        # SOCIAL_MEDIA_ANALYST above. Support/breakout described as a recent
+        # range, not tied to a specific MA window this template doesn't
+        # actually compute (DEF052, AT:R58 — was previously "the 200-day",
+        # a claim the real computation never backed).
+        "Daily chart shows {ticker} {trend} around its 20/50-day moving "
+        "averages, with recent support around ${support}. RSI({rsi}) — "
+        "{rsi_tone}. Last week's range was ${low}–${high}, breakout level "
+        "sits at ${breakout}. Volume {volume_tone}.",
     ],
     AgentId.NEWS_ANALYST: [
         "{ticker}'s last catalyst was {catalyst}. Forward catalysts: "
@@ -284,6 +291,21 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         if live:
             profile.update(live)
             profile["data_source"] = "yfinance_live"
+
+        # Overlay real technicals (DEF052, AT:R58) — RSI/trend/volume/
+        # support-breakout computed from real yfinance OHLCV, replacing the
+        # rng-based synthetic block. MACD/moving-average-crossover/Bollinger
+        # Bands are deliberately not computed (see technicals.py) — the
+        # prompt no longer claims them.
+        technicals = compute_technicals(ticker)
+        if technicals:
+            profile["rsi"] = technicals.rsi
+            profile["rsi_tone"] = technicals.rsi_tone
+            profile["trend"] = technicals.trend
+            profile["volume_tone"] = technicals.volume_tone
+            profile["support"] = technicals.support
+            profile["breakout"] = technicals.breakout
+            profile["technicals_source"] = "live"
 
         # Overlay a real headline onto `catalyst` (CR023, AT:R57). Only the
         # top headline replaces `catalyst` — `forward_catalyst`/`macro_tone`/

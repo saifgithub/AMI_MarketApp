@@ -154,6 +154,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
     synthetic regardless of what else is live.
     """
     fundamentals_live = profile.get("data_source") == "yfinance_live"
+    technicals_live = profile.get("technicals_source") == "live"
     news_live = profile.get("news_source") == "live"
     social_live = profile.get("social_source") == "live"
 
@@ -167,6 +168,18 @@ def _format_profile(profile: dict[str, Any]) -> str:
         header_lines.append(
             "- Numeric fundamentals (price, P/E, growth, FCF, range): alpha "
             "simulation scaffolding — NOT live market data."
+        )
+    if technicals_live:
+        header_lines.append(
+            "- RSI, trend, volume, support/breakout: LIVE, computed from "
+            "real yfinance price history as of this call. No MACD, "
+            "moving-average crossover signal, or Bollinger Bands are "
+            "computed — do not cite them."
+        )
+    else:
+        header_lines.append(
+            "- RSI, trend, volume, support/breakout: alpha simulation "
+            "scaffolding — NOT computed from real price history."
         )
     if news_live:
         header_lines.append(
@@ -205,7 +218,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"P/E: {profile.get('pe')} (sector ~{profile.get('sector_pe')})",
         f"TTM revenue growth: {profile.get('rev_growth')}%, FCF margin: {profile.get('fcf_margin')}%",
         f"Net cash: {profile.get('net_cash')}M",
-        f"RSI: {profile.get('rsi')}, trend: {profile.get('trend')}",
+        f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}",
         f"Recent range: ${profile.get('low')}–${profile.get('high')}, "
         f"breakout level: ${profile.get('breakout')}",
         f"Volume: {profile.get('volume_tone')}",

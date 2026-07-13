@@ -331,6 +331,115 @@ def test_format_profile_labels_data_source():
     assert "alpha simulation scaffolding" in synth_block
 
 
+# ── Live technicals overlay (DEF052, AT:R58) ──────────────────────────────
+
+
+def test_profile_overlays_live_technicals_when_enabled(monkeypatch):
+    """When use_real_market_data is on and compute_technicals succeeds, the
+    fabricated rng-based rsi/trend/volume_tone/support/breakout are replaced
+    with the real computed values."""
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.technicals import Technicals
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+    real = Technicals(
+        rsi=67, rsi_tone="neither overbought nor oversold", trend="trading",
+        volume_tone="above 20-day average", support=90.0, breakout=110.0,
+    )
+    monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["technicals_source"] == "live"
+    assert profile["rsi"] == 67
+    assert profile["rsi_tone"] == "neither overbought nor oversold"
+    assert profile["trend"] == "trading"
+    assert profile["volume_tone"] == "above 20-day average"
+    assert profile["support"] == 90.0
+    assert profile["breakout"] == 110.0
+
+
+def test_profile_technicals_falls_back_to_synthetic_when_unavailable(monkeypatch):
+    """compute_technicals returning None (short history, provider failure)
+    must not break the run — falls through to the synthetic block."""
+    from app.core.config import settings
+    from app.services import room_runner
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)
+    monkeypatch.setattr(room_runner, "compute_technicals", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert "technicals_source" not in profile
+    # Synthetic fields still present so the rest of the prompt build doesn't break.
+    assert "rsi" in profile and "trend" in profile
+
+
+def test_profile_technicals_independent_of_fundamentals_overlay(monkeypatch):
+    """A profile can have live fundamentals + synthetic technicals, or vice
+    versa, simultaneously — the two flags must not be coupled."""
+    from app.core.config import settings
+    from app.services import room_runner
+    from app.services.technicals import Technicals
+
+    monkeypatch.setattr(settings, "use_real_market_data", True)
+    monkeypatch.setattr(room_runner, "fetch_live_news", lambda t: None)
+    monkeypatch.setattr(room_runner, "fetch_live_sentiment", lambda t: None)
+
+    class _NoEarningsProvider:
+        def earnings(self, t):
+            return None
+
+    monkeypatch.setattr(room_runner, "get_market_data_provider", lambda: _NoEarningsProvider())
+
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: {"pe": "35.2"})
+    monkeypatch.setattr(room_runner, "compute_technicals", lambda t: None)
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["data_source"] == "yfinance_live"
+    assert "technicals_source" not in profile
+
+    real = Technicals(
+        rsi=50, rsi_tone="neither overbought nor oversold", trend="consolidating",
+        volume_tone="in-line with 20-day average", support=90.0, breakout=110.0,
+    )
+    monkeypatch.setattr(room_runner, "fetch_live_fundamentals", lambda t: None)
+    monkeypatch.setattr(room_runner, "compute_technicals", lambda t: real)
+    profile2 = room_runner._profile_for_ticker("AAPL")
+    assert profile2["data_source"] == "synthetic"
+    assert profile2["technicals_source"] == "live"
+
+
+def test_format_profile_labels_technicals_source_when_live():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "technicals_source": "live"})
+    assert "RSI, trend, volume, support/breakout: LIVE" in block
+
+
+def test_format_profile_labels_technicals_source_when_synthetic():
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic"})
+    assert "RSI, trend, volume, support/breakout: alpha simulation scaffolding" in block
+
+
 # ── Live news + earnings overlay (CR023, AT:R57) ──────────────────────────
 
 
