@@ -152,10 +152,18 @@ class _FakeGateway:
 
     async def stream_chat(self, *, system_prompt, messages, model_tier,
                           locale="en", max_tokens=1024, **_audit):
-        # Pick a reply based on agent_id sniffed from the system prompt.
+        # Pick a reply based on the current turn's own "Speak as the X"
+        # instruction (room_prompts.py) — NOT a loose substring-anywhere
+        # check. The running transcript-so-far embedded in later agents'
+        # prompts can itself contain another agent's canned reply text
+        # (e.g. "Trader: BUY 3%..."), which would otherwise false-match a
+        # "trader" reply key on the PM's own turn. Harmless before DEF056
+        # (the verdict never depended on which text the PM received); load
+        # -bearing now that it does.
         agent_key = "default"
+        prompt_lower = system_prompt.lower()
         for k in self._replies:
-            if f"agent_id: {k}" in system_prompt.lower() or k.replace("_", " ") in system_prompt.lower():
+            if f"speak as the {k.replace('_', ' ')}" in prompt_lower:
                 agent_key = k
                 break
         text = self._replies.get(agent_key, "AMI agent live reply.")
@@ -172,8 +180,8 @@ class _FakeGateway:
 
 def test_room_uses_gateway_for_every_agent_when_live():
     """With a fake live gateway, every non-PM agent emits LLM text into the
-    transcript; PM also calls the gateway (for rationale) but the verdict
-    action still comes from the deterministic safety floor.
+    transcript; the PM's own JSON verdict (DEF056) becomes the Verdict,
+    subject to the deterministic safety floor as a veto/cap on top.
     """
     fake = _FakeGateway(replies={
         "fundamentals_analyst": "FA: P/E reasonable, growth steady.",
@@ -187,7 +195,11 @@ def test_room_uses_gateway_for_every_agent_when_live():
         "aggressive_debator": "Push to 4.5%.",
         "conservative_debator": "Cap at 2%.",
         "neutral_debator": "Hold at 3%.",
-        "portfolio_manager": "PM: APPROVE; synthesis defended; mandate clears.",
+        "portfolio_manager": (
+            '{"action": "APPROVE", "size_pct": 3.0, "entry": 150, "stop": 141, '
+            '"target": 172, "horizon_days": 42, '
+            '"narration": "PM: APPROVE; synthesis defended; mandate clears."}'
+        ),
     })
     runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
     mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
@@ -203,9 +215,19 @@ def test_room_uses_gateway_for_every_agent_when_live():
     spoke = {e.agent_id for e in events if e.kind == "agent_done"}
     assert len(spoke) == 12
 
-    # Verdict still APPROVE (deterministic, AAPL is in the demo halal universe).
+    # Verdict reflects the PM's own JSON decision (AAPL is in the demo halal
+    # universe, so the deterministic floor doesn't need to veto it).
     v = next(e.verdict for e in events if e.kind == "verdict")
     assert v.action == VerdictAction.APPROVE.value
+    assert v.entry == 150
+    assert v.size_pct == 3.0
+
+    # The user-visible transcript shows clean prose, not the raw JSON.
+    run_id = events[0].run_id
+    transcript = runner.get_run(run_id).transcript
+    pm_message = next(m for m in transcript if m.agent_id == AgentId.PORTFOLIO_MANAGER.value)
+    assert "narration" not in pm_message.content
+    assert "PM: APPROVE" in pm_message.content
 
 
 def test_room_safety_floor_still_fires_under_live_gateway():
@@ -214,7 +236,10 @@ def test_room_safety_floor_still_fires_under_live_gateway():
     """
     # Liberal LLM reply — would APPROVE everything if it could.
     fake = _FakeGateway(replies={
-        "portfolio_manager": "PM: APPROVE; all good.",
+        "portfolio_manager": (
+            '{"action": "APPROVE", "size_pct": 3.0, "entry": 100, "stop": 94, '
+            '"target": 113, "horizon_days": 42, "narration": "PM: APPROVE; all good."}'
+        ),
     })
     runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
     mandate = hydrate_coach_mandate({
@@ -229,6 +254,66 @@ def test_room_safety_floor_still_fires_under_live_gateway():
     ))
     v = next(e.verdict for e in events if e.kind == "verdict")
     assert v.action == VerdictAction.REJECT.value
+    assert v.overridden_from_llm is True
+
+
+def test_room_pm_pass_verdict_matches_debate():
+    """DEF056 regression: when the debate leans against entry (Trader WAIT,
+    PM PASS), the stored verdict must say PASS too — not a fixed APPROVE
+    that ignores what every agent concluded."""
+    fake = _FakeGateway(replies={
+        "trader": "Trader: WAIT. No position — risk/reward doesn't clear the bar.",
+        "portfolio_manager": (
+            '{"action": "PASS", "narration": "PM: PASS — the debate does not '
+            'support entering a position right now."}'
+        ),
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.PASS.value
+    assert v.overridden_from_llm is False
+
+
+def test_room_pm_size_clamped_to_risk_tier_ceiling():
+    """An oversized PM-approved position gets clamped to the mandate's
+    risk-tier ceiling rather than passed through verbatim."""
+    fake = _FakeGateway(replies={
+        "portfolio_manager": (
+            '{"action": "APPROVE", "size_pct": 20.0, "entry": 100, "stop": 94, '
+            '"target": 113, "horizon_days": 42, "narration": "Go big."}'
+        ),
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 1})  # ceiling 1.5%
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.APPROVE.value
+    assert v.size_pct == 1.5
+
+
+def test_room_pm_unparseable_reply_fails_safe_to_pass():
+    """If the PM's live response isn't a machine-readable verdict, the run
+    must fail safe to PASS (no trade) rather than silently fabricating an
+    APPROVE the debate never actually reached."""
+    fake = _FakeGateway(replies={
+        "portfolio_manager": "Sorry, I'm not able to help with that request.",
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.PASS.value
     assert v.overridden_from_llm is True
 
 

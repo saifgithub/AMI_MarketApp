@@ -61,11 +61,45 @@ _LENGTH_GUIDE: dict[AgentId, str] = {
     AgentId.AGGRESSIVE_DEBATOR: "2 sentences (size push + one-line reason)",
     AgentId.CONSERVATIVE_DEBATOR: "2 sentences (size cap + one-line reason)",
     AgentId.NEUTRAL_DEBATOR: "2 sentences (middle size + one-line reason)",
-    AgentId.PORTFOLIO_MANAGER: "3–4 sentences (verdict rationale; the action itself comes from the deterministic safety-floor check, not from you)",
+    AgentId.PORTFOLIO_MANAGER: "3–4 sentences inside your JSON verdict's narration field — see the format instruction below",
 }
 
 
 # ── Public ───────────────────────────────────────────────────────────────
+
+
+# PM speaks last and its output is the binding Verdict (DEF056) — it gets a
+# structured JSON format instead of the free prose every other agent writes.
+# `enforce_safety_floor()` (app/agents/safety_floor.py) re-checks whatever
+# action the PM picks; this instruction just tells it the vocabulary and
+# shape we can actually parse.
+_PM_VERDICT_FORMAT = (
+    "\nYou are the final decision-maker. Weigh everything above — every "
+    "analyst, the Bull/Bear debate, the Trader's proposal, and the three "
+    "Risk Debators — then decide for yourself. Do not just restate the "
+    "Trader's numbers; agree or disagree based on the whole debate.\n"
+    "Respond with ONLY a single JSON object, no prose outside it and no "
+    "code fence needed, shaped exactly like:\n"
+    '{"action": "APPROVE" | "PASS",\n'
+    ' "size_pct": <number, required if APPROVE — position size as % of portfolio>,\n'
+    ' "entry": <number, required if APPROVE>,\n'
+    ' "stop": <number, required if APPROVE>,\n'
+    ' "target": <number, required if APPROVE>,\n'
+    ' "horizon_days": <integer, required if APPROVE>,\n'
+    ' "narration": "<3-4 sentences, your rationale, written for the user>"}\n'
+    "Use PASS when the debate does not support entering a position right now "
+    "(e.g. the Trader recommended WAIT, or the risk/reward doesn't clear the "
+    "bar) — PASS needs only narration, no size/entry/stop/target.\n"
+    "The safety floor above still applies regardless of what you decide — "
+    "if it detects a violation, output PASS and name the rule in narration."
+)
+
+_PROSE_FORMAT = (
+    "\nFormat: lead with a one-sentence thesis, then short bullet "
+    "points for supporting evidence. Use **bold** for key metrics "
+    "(numbers, levels, deadlines). Plain text otherwise — no headings, "
+    "no tables, no code fences. The Markdown is rendered live in the app."
+)
 
 
 def build_room_messages(
@@ -76,16 +110,15 @@ def build_room_messages(
     ticker: str,
     profile: dict[str, Any],
     transcript: list[AgentMessage],
-    pm_predetermined_action: str | None = None,
     alpaca_snapshot: str | None = None,
     plan: Any = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
-    `pm_predetermined_action` is set only when this agent is the PM and
-    the deterministic safety floor has already produced an APPROVE or
-    REJECT decision. The PM's LLM call writes the *prose rationale*
-    around that action — it cannot override it.
+    The Portfolio Manager is the one agent whose output is parsed back into
+    a structured `Verdict` (DEF056) — it gets `_PM_VERDICT_FORMAT` instead of
+    `_PROSE_FORMAT` and no forced action; `enforce_safety_floor()` vetoes its
+    decision afterward, it doesn't dictate it beforehand.
 
     `alpaca_snapshot` is a pre-formatted text block from
     alpaca_service.snapshot_text(); injected after user_overlay when set.
@@ -100,22 +133,13 @@ def build_room_messages(
     transcript_text = _format_transcript(transcript)
     profile_block = _format_profile(profile)
 
-    pm_note = ""
-    if agent_id == AgentId.PORTFOLIO_MANAGER and pm_predetermined_action is not None:
-        pm_note = (
-            f"\n\nDETERMINISTIC SAFETY-FLOOR RESULT: {pm_predetermined_action}.\n"
-            "Your job is to write the rationale prose explaining this verdict. "
-            "Do NOT contradict the action above. If APPROVE, explain why the "
-            "synthesis defends the position size. If REJECT, name the specific "
-            "mandate rule that was violated (already enumerated in the verdict "
-            "object you will see surfaced to the user).\n"
-        )
-
     journal_note = ""
     if agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER):
         journal_block = build_journal_context_block(user_id, ticker, plan or Plan.FLOOR_PASS)
         if journal_block:
             journal_note = f"\n\n{journal_block}\n"
+
+    format_instruction = _PM_VERDICT_FORMAT if agent_id == AgentId.PORTFOLIO_MANAGER else _PROSE_FORMAT
 
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
@@ -128,7 +152,6 @@ def build_room_messages(
         f"- locale: {mandate.locale}\n"
         f"\n"
         f"Transcript so far:\n{transcript_text}\n"
-        f"{pm_note}"
         f"{journal_note}"
         f"\nYour turn. Speak as the {agent_id.value.replace('_', ' ').title()}. "
         f"Write {length}. Use specific numbers wherever possible — but ONLY "
@@ -137,10 +160,7 @@ def build_room_messages(
         f"in the block above, qualify your claim or omit it. Build on the "
         f"transcript — do not repeat what's already been said. Do not preface "
         f"with 'As the X' or 'Speaking as'. Speak directly.\n"
-        f"\nFormat: lead with a one-sentence thesis, then short bullet "
-        f"points for supporting evidence. Use **bold** for key metrics "
-        f"(numbers, levels, deadlines). Plain text otherwise — no headings, "
-        f"no tables, no code fences. The Markdown is rendered live in the app."
+        f"{format_instruction}"
     )
 
     system_prompt = base + room_addition

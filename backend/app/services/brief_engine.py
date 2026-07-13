@@ -23,7 +23,6 @@ substantive message — enough for the iPhone UI to feel live without keys.
 
 from __future__ import annotations
 
-import json
 import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -53,6 +52,7 @@ from app.schemas.mandate import (
 from app.schemas.one_on_one import ChatMsg
 from app.services.agent_prompts import load_base_prompt
 from app.services.llm_gateway import ChatMessage, LLMGateway, ModelTier
+from app.services.llm_json import extract_json_object
 from app.services.overlay_store import OverlayStore, get_overlay_store
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
@@ -309,7 +309,7 @@ class BriefEngine:
             tier=pick_tier(effective_plan_for_user(session.user_id), agent_id),
             locale=mandate.locale,
         )
-        parsed = _parse_proposal_json(text)
+        parsed = extract_json_object(text)
         if parsed is None:
             proposal = BriefProposal(
                 session_id=session.id,
@@ -489,27 +489,6 @@ def _coerce_agent_id(value: Any) -> AgentId:
 
 def _plan_from_mandate(mandate: Mandate) -> Plan:
     return mandate.plan if isinstance(mandate.plan, Plan) else Plan(mandate.plan)
-
-
-def _parse_proposal_json(text: str) -> dict | None:
-    """Tolerant JSON extraction. LLMs sometimes wrap in ```json fences."""
-    if not text:
-        return None
-    # Strip code fences if present
-    cleaned = text.strip()
-    m = re.search(r"```(?:json)?\s*(\{.*\})\s*```", cleaned, re.DOTALL)
-    candidate = m.group(1) if m else cleaned
-    # If still not pure JSON, find the first '{' and last '}'
-    if not candidate.startswith("{"):
-        first = candidate.find("{")
-        last = candidate.rfind("}")
-        if first == -1 or last == -1 or last <= first:
-            return None
-        candidate = candidate[first : last + 1]
-    try:
-        return json.loads(candidate)
-    except json.JSONDecodeError:
-        return None
 
 
 # ── DI singleton ───────────────────────────────────────────────────────────

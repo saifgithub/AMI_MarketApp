@@ -29,13 +29,18 @@ abstract final class ShareService {
     required String stanceLabel,
     required bool isApprove,
     required String reason,
+    bool isPass = false,
   }) async {
     final l = AppLocalizations.of(context);
     await _capture(
       context,
       VerdictShareData(
         kicker: l.shareCardVerdictKicker,
-        accent: isApprove ? AmiColors.hexGreen : AmiColors.hexAmber,
+        accent: isApprove
+            ? AmiColors.hexGreen
+            : isPass
+                ? AmiColors.slate500
+                : AmiColors.hexAmber,
         ticker: ticker,
         stanceLabel: stanceLabel,
         reason: reason,

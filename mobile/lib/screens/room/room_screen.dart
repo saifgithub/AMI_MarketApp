@@ -68,7 +68,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
         if (prev == null && next != null) {
           Celebrate.micro(
             context,
-            accent: next.isApprove ? AmiColors.hexGreen : AmiColors.hexAmber,
+            accent: next.isApprove
+                ? AmiColors.hexGreen
+                : next.isPass
+                    ? AmiColors.slate500
+                    : AmiColors.hexAmber,
           );
         }
       },
@@ -442,7 +446,15 @@ class _VerdictCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isApprove = verdict.isApprove;
-    final accent = isApprove ? AmiColors.hexGreen : AmiColors.hexAmber;
+    final isPass = verdict.isPass;
+    // PASS ("no strong opinion, sit out") is neither an APPROVE nor a
+    // mandate REJECT — give it its own neutral treatment so it doesn't
+    // read as a rejection (DEF056: PASS is now a real, distinct outcome).
+    final accent = isApprove
+        ? AmiColors.hexGreen
+        : isPass
+            ? AmiColors.slate500
+            : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);
     // Detect a sim trade already placed against this verdict (bug 9b3a6c2f).
     // Watching sim trades lets the verdict card flip the Buy button into a
@@ -467,7 +479,11 @@ class _VerdictCard extends ConsumerWidget {
           Row(
             children: [
               Icon(
-                isApprove ? Icons.check_circle : Icons.cancel,
+                isApprove
+                    ? Icons.check_circle
+                    : isPass
+                        ? Icons.remove_circle_outline
+                        : Icons.cancel,
                 color: accent,
                 size: 28,
               ),
@@ -498,6 +514,7 @@ class _VerdictCard extends ConsumerWidget {
                   ticker: ticker,
                   stanceLabel: l.roomVerdictHeading(verdict.action),
                   isApprove: isApprove,
+                  isPass: isPass,
                   reason: verdict.reason,
                 ),
               ),

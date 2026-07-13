@@ -41,7 +41,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
-from app.agents.safety_floor import check_mandate_compliance, SINGLE_NAME_CAP_PCT
+from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor, SINGLE_NAME_CAP_PCT
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
@@ -65,6 +65,7 @@ from app.services.social_context import (
     format_sentiment_tone,
 )
 from app.services.llm_gateway import LLMGateway, get_llm_gateway
+from app.services.llm_json import extract_json_object
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
@@ -403,7 +404,93 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
 # ── Verdict assembly ──────────────────────────────────────────────────────
 
 
+def _risk_tier_size_ceiling(risk_score: int) -> float:
+    """Max position size (%) for a mandate's risk tier — a ceiling the PM's
+    LLM-decided size gets clamped to (DEF056), and the default cosmetic size
+    for the pre-debate aggressive/conservative/neutral display values."""
+    return (
+        4.5 if int(risk_score) >= 4
+        else 1.5 if int(risk_score) <= 2
+        else 3.0
+    )
+
+
+# Normalises minor PM vocabulary drift — the prompt only offers APPROVE/PASS
+# but a model can still emit a synonym despite instructions.
+_PM_ACTION_SYNONYMS = {
+    "APPROVE": "APPROVE", "BUY": "APPROVE", "ENTER": "APPROVE",
+    "PASS": "PASS", "REJECT": "PASS", "WAIT": "PASS", "HOLD": "PASS", "NO": "PASS",
+}
+
+
+def _safe_float(value: Any) -> float | None:
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if f > 0 else None
+
+
+def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
+    """Extract the PM's display narration + intended decision from its raw
+    LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
+    is None when the response couldn't be trusted as a real decision — the
+    caller fails safe to PASS in that case rather than fabricating APPROVE.
+    """
+    parsed = extract_json_object(text)
+    if parsed is None:
+        return text.strip(), None
+
+    narration = str(parsed.get("narration") or "").strip()
+    action = _PM_ACTION_SYNONYMS.get(str(parsed.get("action", "")).strip().upper())
+    if action is None:
+        return narration or text.strip(), None
+
+    if action == "PASS":
+        return narration, Verdict(
+            action=VerdictAction.PASS,
+            reason=narration or "No trade — debate did not support entry.",
+        )
+
+    size_pct = _safe_float(parsed.get("size_pct"))
+    if size_pct is None:
+        # No size the PM is willing to stand behind — don't invent one.
+        return narration or text.strip(), None
+
+    entry = _safe_float(parsed.get("entry")) or ctx.trader_entry
+    stop = _safe_float(parsed.get("stop")) or round(entry * 0.94, 2)
+    target = _safe_float(parsed.get("target")) or round(entry * 1.13, 2)
+    try:
+        horizon_days = int(parsed.get("horizon_days"))
+    except (TypeError, ValueError):
+        horizon_days = ctx.trader_horizon_weeks * 7
+
+    ceiling = _risk_tier_size_ceiling(ctx.mandate.risk_score)
+    reason = narration or "Synthesis defended."
+    if size_pct > ceiling:
+        size_pct = ceiling
+        reason += f" (sized down to {ceiling:.1f}% — mandate risk-tier ceiling.)"
+
+    return narration, Verdict(
+        action=VerdictAction.APPROVE,
+        size_pct=size_pct,
+        entry=entry,
+        stop=stop,
+        target=target,
+        time_horizon_days=horizon_days,
+        reason=reason,
+    )
+
+
 def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
+    """Deterministic scripted verdict — NOT the live path's decision-maker.
+
+    Used only when there's no LLM narration to parse: the non-live/scripted
+    demo path, and when the PM's live LLM call itself fails/times out/returns
+    nothing (same failure mode every other agent already falls back from).
+    In the normal live path the PM's own parsed decision is the verdict
+    (see `_parse_pm_verdict`) and this function is not called — see DEF056.
+    """
     proposed = ProposedTrade(
         ticker=ctx.ticker,
         side=Side.BUY,
@@ -1109,11 +1196,7 @@ class RoomRunner:
         ctx.trader_entry = round(base, 2)
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
-        ctx.trader_size_pct = (
-            4.5 if int(mandate.risk_score) >= 4
-            else 1.5 if int(mandate.risk_score) <= 2
-            else 3.0
-        )
+        ctx.trader_size_pct = _risk_tier_size_ceiling(mandate.risk_score)
         ctx.aggressive_size_pct = min(SINGLE_NAME_CAP_PCT, ctx.trader_size_pct + 2)
         ctx.conservative_size_pct = max(0.5, ctx.trader_size_pct - 1.5)
         ctx.neutral_size_pct = ctx.trader_size_pct
@@ -1161,44 +1244,72 @@ class RoomRunner:
                         ):
                             yield ev
                 else:
-                    # Phase 6 — PM: deterministic safety-floor first; LLM
-                    # narrates the rationale around that fixed action.
-                    verdict = _assemble_verdict(ctx, profile)
-                    if verdict.action == VerdictAction.APPROVE:
-                        mandate_check = "PASS"
-                        verdict_rationale_fallback = (
-                            f"Synthesis defended; sizing {ctx.trader_size_pct:.1f}% "
-                            f"consistent with risk_score {mandate.risk_score}."
-                        )
-                        predetermined = "APPROVE"
-                    else:
-                        mandate_check = f"FAIL — {', '.join(verdict.violations)}"
-                        verdict_rationale_fallback = verdict.reason
-                        predetermined = f"REJECT ({'; '.join(verdict.violations)})"
-
+                    # Phase 6 — PM: the LLM decides, informed by the full
+                    # 11-agent debate; the deterministic safety floor then
+                    # vetoes/validates that decision afterward — it never
+                    # invents it beforehand. See DEF056.
                     if live:
-                        pm_text = await _stream_pm_narration(
-                            run_id=run_id,
-                            ctx=ctx,
-                            profile=profile,
-                            formatter=formatter,
-                            run=run,
-                            gateway=gateway,
-                            predetermined=predetermined,
-                            mandate_check=mandate_check,
+                        raw_text = await _stream_pm_response(
+                            run_id=run_id, ctx=ctx, profile=profile,
+                            formatter=formatter, run=run, gateway=gateway,
                             agent_timeout_s=agent_timeout_s,
                         )
+                        if not raw_text:
+                            # LLM unavailable — same scripted fallback every
+                            # other agent already uses on timeout/failure.
+                            verdict = _assemble_verdict(ctx, profile)
+                            mandate_check = (
+                                "PASS" if verdict.action == VerdictAction.APPROVE
+                                else f"FAIL — {', '.join(verdict.violations)}"
+                            )
+                            pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
+                                **formatter, verdict_action=verdict.action,
+                                verdict_rationale=verdict.reason, mandate_check=mandate_check,
+                            )
+                        else:
+                            pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
+                            if parsed is None:
+                                verdict = Verdict(
+                                    action=VerdictAction.PASS,
+                                    reason=(
+                                        "Portfolio Manager did not return a "
+                                        "machine-readable verdict; defaulting "
+                                        "to no trade for safety."
+                                    ),
+                                    overridden_from_llm=True,
+                                )
+                                logger.warning("room_pm_verdict_parse_failed", run_id=str(run_id))
+                                if not pm_text:
+                                    pm_text = verdict.reason
+                            elif parsed.action == VerdictAction.APPROVE:
+                                proposed = ProposedTrade(
+                                    ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
+                                    quantity=max(1, int((ctx.portfolio_value * parsed.size_pct / 100) / parsed.entry)),
+                                    limit_price=parsed.entry,
+                                )
+                                verdict = enforce_safety_floor(
+                                    llm_verdict=parsed, proposed=proposed,
+                                    portfolio_value=ctx.portfolio_value,
+                                    current_drawdown_pct=ctx.current_drawdown_pct,
+                                    mandate=mandate, halal_universe=ctx.halal_universe,
+                                    locale_allowed_universe=ctx.locale_allowed_universe,
+                                )
+                            else:
+                                verdict = parsed  # PASS — nothing to check compliance on
                         async for ev in _restream_for_ui(
                             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
                             char_delay_min, char_delay_max,
                         ):
                             yield ev
                     else:
+                        verdict = _assemble_verdict(ctx, profile)
+                        mandate_check = (
+                            "PASS" if verdict.action == VerdictAction.APPROVE
+                            else f"FAIL — {', '.join(verdict.violations)}"
+                        )
                         pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
-                            **formatter,
-                            verdict_action=verdict.action,
-                            verdict_rationale=verdict_rationale_fallback,
-                            mandate_check=mandate_check,
+                            **formatter, verdict_action=verdict.action,
+                            verdict_rationale=verdict.reason, mandate_check=mandate_check,
                         )
                         async for ev in _typewriter(
                             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
@@ -1385,7 +1496,7 @@ async def _speak_one_agent(
     yield RoomEvent(kind="agent_done", run_id=run_id, agent_id=agent_id)
 
 
-async def _stream_pm_narration(
+async def _stream_pm_response(
     *,
     run_id: UUID,
     ctx: _RoomContext,
@@ -1393,16 +1504,15 @@ async def _stream_pm_narration(
     formatter: dict[str, Any],
     run: RoomRun,
     gateway: LLMGateway,
-    predetermined: str,
-    mandate_check: str,
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
 ) -> str:
-    """Buffer the PM's LLM rationale, then return the full text.
+    """Buffer the PM's raw LLM response and return it verbatim (DEF056).
 
-    Buffered (not streamed inline as we go) because the caller restreams
-    it through the UI typewriter so the rendering keeps a steady pace
-    regardless of upstream LLM chunk cadence. Tests don't care about
-    pacing; production keeps a uniform feel.
+    Returns "" on timeout/exception — the caller falls back to the fully
+    deterministic `_assemble_verdict` scripted path in that case, same as
+    every other agent's timeout fallback. A non-empty return still needs
+    parsing by `_parse_pm_verdict` — this function makes no attempt to
+    interpret the response, it only fetches it.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
     plan = effective_plan_for_user(ctx.user_id)
@@ -1417,7 +1527,6 @@ async def _stream_pm_narration(
         ticker=ctx.ticker,
         profile=profile,
         transcript=run.transcript,
-        pm_predetermined_action=predetermined,
         alpaca_snapshot=ctx.alpaca_snapshot,
         plan=plan,
     )
@@ -1428,31 +1537,20 @@ async def _stream_pm_narration(
                 messages=messages,
                 model_tier=tier,  # type: ignore[arg-type]
                 locale=ctx.mandate.locale,
-                max_tokens=500,
+                max_tokens=600,
                 audit_user_id=ctx.user_id,
                 audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
                 audit_flow="room_pm",
             )),
             timeout=agent_timeout_s,
         )
-        text = "".join(chunks).strip()
+        return "".join(chunks).strip()
     except asyncio.TimeoutError:
         logger.warning("room_pm_timeout", timeout_s=agent_timeout_s)
-        text = ""
+        return ""
     except Exception as exc:
         logger.warning("room_pm_llm_failed", error=str(exc)[:200])
-        text = ""
-
-    if not text:
-        # Fall back to the scripted PM template.
-        text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
-            **formatter,
-            verdict_action=predetermined.split(" ", 1)[0],
-            verdict_rationale="Synthesis defended; sizing consistent with mandate.",
-            mandate_check=mandate_check,
-        )
-
-    return text
+        return ""
 
 
 async def _restream_for_ui(

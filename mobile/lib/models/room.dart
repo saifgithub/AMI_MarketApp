@@ -28,6 +28,7 @@ class RoomVerdict {
 
   bool get isApprove => action == 'APPROVE';
   bool get isReject => action == 'REJECT';
+  bool get isPass => action == 'PASS';
 
   factory RoomVerdict.fromJson(Map<String, dynamic> j) {
     return RoomVerdict(

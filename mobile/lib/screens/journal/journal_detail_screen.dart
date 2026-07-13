@@ -273,10 +273,13 @@ class _PayloadBlock extends StatelessWidget {
       final v = (payload['verdict'] as Map?)?.cast<String, dynamic>();
       if (v != null) {
         final action = v['action'] as String? ?? '—';
+        final verdictColor = action == 'APPROVE'
+            ? AmiColors.hexGreen
+            : action == 'PASS'
+                ? AmiColors.slate500
+                : AmiColors.hexAmber;
         children.add(Text(l.journalDetailVerdictLine(action),
-            style: AmiTypography.labelMono.copyWith(
-              color: action == 'APPROVE' ? AmiColors.hexGreen : AmiColors.hexAmber,
-            )));
+            style: AmiTypography.labelMono.copyWith(color: verdictColor)));
         final reason = v['reason'] as String? ?? '';
         if (reason.isNotEmpty) {
           children.add(const SizedBox(height: 4));
