@@ -1,8 +1,29 @@
 # DEF051 — Convene the Room always checks compliance against a fake $100k / 0%-drawdown portfolio
 
-**Status:** open · **Filed:** AT:R57 · **Date:** 2026-07-13
+**Status:** resolved (AT:R58, `22c84c6`) · **Filed:** AT:R57 · **Date:** 2026-07-13
 **Source:** prompt — spotted while auditing which of the 12 agents get real data
 (same session as CR023/CR024's News/Social truthfulness fix), not a user-reported bug.
+
+## Fix (AT:R58)
+
+`stream_room` (`backend/app/api/room.py`) now takes `sim: SimEngine =
+Depends(get_sim_engine)` and resolves `portfolio_value = sim.total_value(req.user_id)`
+/ `current_drawdown_pct = sim.current_drawdown_pct(req.user_id)` immediately before
+calling `runner.start_run(...)`, mirroring the identical pattern already used by
+`mandate.py::audit_holdings`. `RoomStartRequest`'s client-suppliable
+`portfolio_value`/`current_drawdown_pct` fields were removed entirely (backend +
+mobile `streamRoom()`), since nothing ever overrides them once the route stops
+trusting client input. `RoomRunner`'s own internal defaults (used by
+`test_room_runner.py`, which calls the runner directly) were left untouched — the
+bug was specifically that the route never computed real values, not that the
+runner lacks a default.
+
+**Finding not anticipated by the original spec below**: a fresh user's real
+`total_value()` is $10,000 (real starting capital via `ensure_portfolio()`), not
+$100k — so no special-cased "fallback for users with no portfolio yet" was needed;
+the real computation already handles that case. See
+[`audit/handshake/cr/DEF051.architect.md`](../../../audit/handshake/cr/DEF051.architect.md)
+for the full submission, test evidence, and adversarial self-check.
 
 ## Problem
 
@@ -84,15 +105,20 @@ drawdown must REJECT, proving the check no longer sees a hardcoded 0%.
 
 ## Acceptance
 
-- [ ] `stream_room` resolves `portfolio_value` / `current_drawdown_pct` from
+- [x] `stream_room` resolves `portfolio_value` / `current_drawdown_pct` from
       `SimEngine.total_value(user_id)` / `.current_drawdown_pct(user_id)` server-side.
-- [ ] A user whose real simulated portfolio has breached `max_drawdown_pct` gets a
-      Room verdict that REJECTs on drawdown grounds (regression test, currently
-      impossible to write truthfully since the check always sees 0%).
-- [ ] `RoomStartRequest`'s client-suppliable fields no longer silently override the
-      real computed values (or are removed, if no caller needs an override).
-- [ ] Existing Room test suite (`test_room_runner.py`) still passes — most tests use
-      the default $100k/0% path deliberately (fixture users have no real sim
-      portfolio), so those defaults may still need to exist as a *fallback for users
-      with no sim portfolio yet* (e.g. `total_value()` on a fresh account), not as
-      the permanent value for every account.
+- [x] A user whose real simulated portfolio has breached `max_drawdown_pct` gets the
+      real drawdown passed through to the runner, proven at the route level
+      (`test_room.py::test_stream_room_ignores_spoofed_body_uses_real_sim_state` — a
+      seeded 50% drawdown reaches the runner even when the request body spoofs
+      `portfolio_value`/`current_drawdown_pct`). A full verdict-level REJECT test
+      would additionally require a real LLM-backed Room run + mandate, out of scope
+      for the fast unit-test layer this fix lives in.
+- [x] `RoomStartRequest`'s client-suppliable fields no longer silently override the
+      real computed values — removed entirely, backend + mobile.
+- [x] Existing Room test suite (`test_room_runner.py`) still passes untouched — it
+      calls `RoomRunner` directly (never through the route), so its own
+      $100k/0% defaults are unaffected by this fix. Turned out no special-cased
+      "fallback for users with no sim portfolio yet" was needed: `SimEngine`'s real
+      `ensure_portfolio()` already auto-creates a fresh portfolio at the real $10k
+      starting capital, so the real computation already covers that case correctly.
