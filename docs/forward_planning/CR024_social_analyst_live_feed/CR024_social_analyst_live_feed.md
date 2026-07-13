@@ -186,3 +186,30 @@ claims). Backend suite 592 → 640, all green.
 
 Status: **stays `proposed`** — no real sentiment data flows anywhere; the LunarCrush
 acceptance criteria above remain entirely unmet and unstarted.
+
+## LunarCrush trial finding (same session, AT:R57)
+
+Saiful signed up for a LunarCrush account and provisioned `LUNARCRUSH_API_KEY`
+mid-session. Live-probed the v4 public API directly (`stocks/list/v1`,
+`stocks/aapl/v1`, `topic/aapl/v1`, `coins/list/v1` — crypto included as a sanity
+check that the key works at all) before writing any client code, same discipline as
+CR023's Alpha Vantage verification. **Every endpoint returned the same response:**
+
+```text
+HTTP 402: "You must have an active Individual or higher subscription to use this endpoint."
+```
+
+The key itself authenticates (this is a 402, not a 401 invalid-key error) — the
+account's current plan simply doesn't include API access at all. This sharpens this
+doc's prior "exact tier pricing unconfirmed" framing into something concrete: **a
+bare LunarCrush signup is not sufficient — API access requires upgrading to their
+"Individual" tier or higher**, and the real price of that tier is still unknown
+(their pricing page is still the client-rendered JS page CR007 and this doc's
+provider-research section already flagged as unfetchable by automated means).
+
+No client code was written against this key — writing a parser against an API that
+returns nothing but a paywall error on every probe would be pure guesswork, not the
+verified-against-a-real-response discipline CR023's Alpha Vantage client used.
+Presented Saiful with three options (upgrade-and-verify / code-blind-now /
+drop-and-stay-honesty-only); **he'll check/upgrade the LunarCrush plan** and this
+picks back up once the account can actually answer API calls.

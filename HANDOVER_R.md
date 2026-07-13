@@ -168,6 +168,7 @@ Saiful-external (any time):
 - **Upload `0.1.0+31`-or-later AAB to Play Console** via `scripts/build_playstore.sh` (first upload enrolls Play App Signing).
 - **Register the Alpaca OAuth app** → creds into `infra/alpha.env` → promote (OAuth linking currently dead on Alpha; API-key mode works — Siti Ahmad's test account is linked in apikey mode).
 - Confirm TestFlight `+38` finished processing (new app icon should show); validate Siti's Alpaca keys against the paper API.
+- **LunarCrush plan upgrade (CR024, AT:R57 finding)** — the API key Saiful provisioned mid-AT:R57 authenticates fine, but every v4 endpoint (stocks list, per-ticker topic, even crypto coins list) returns `402 "You must have an active Individual or higher subscription to use this endpoint."` A bare signup isn't enough — check lunarcrush.com's account/billing for what the "Individual" tier actually costs and upgrade if it's worth it. Once the account can answer real API calls, resume CR024 the same way CR023's Alpha Vantage path was built: verify one live response first, then wire the client. See `docs/forward_planning/CR024_social_analyst_live_feed/CR024_social_analyst_live_feed.md`'s "LunarCrush trial finding" section.
 
 Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run) is unchanged, sequences after these.
 
