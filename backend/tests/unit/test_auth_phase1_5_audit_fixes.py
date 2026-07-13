@@ -256,8 +256,6 @@ def test_room_stream_rejects_foreign_user_in_body(client: TestClient):
             "user_id": str(user_b),
             "ticker": "AAPL",
             "locale": "en",
-            "portfolio_value": 100_000.0,
-            "current_drawdown_pct": 0.0,
         },
         headers={"Authorization": f"Bearer {token_a}"},
     )

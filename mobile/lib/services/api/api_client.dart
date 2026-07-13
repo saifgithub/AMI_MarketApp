@@ -539,8 +539,6 @@ class ApiClient {
     required String ticker,
     String locale = 'en',
     Map<String, dynamic>? mandateOverride,
-    double portfolioValue = 100000.0,
-    double currentDrawdownPct = 0.0,
   }) async* {
     final uri = Uri.parse('$baseUrl/v1/room/stream');
     final body = jsonEncode({
@@ -548,8 +546,6 @@ class ApiClient {
       'ticker': ticker,
       'locale': locale,
       if (mandateOverride != null) 'mandate_override': mandateOverride,
-      'portfolio_value': portfolioValue,
-      'current_drawdown_pct': currentDrawdownPct,
     });
     final client = http.Client();
     try {

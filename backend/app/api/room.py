@@ -54,6 +54,7 @@ from app.db import get_session
 from app.db.models import User
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.reputation_service import get_reputation_service
+from app.services.sim_engine import SimEngine, get_sim_engine
 
 
 router = APIRouter(
@@ -77,8 +78,6 @@ class RoomStartRequest(BaseModel):
     ticker: str
     mandate_override: dict | None = None
     locale: str = "en"
-    portfolio_value: float = 100_000.0
-    current_drawdown_pct: float = 0.0
 
 
 @router.post("/stream", dependencies=[Depends(room_stream_rate_limit)])
@@ -86,6 +85,7 @@ async def stream_room(
     req: RoomStartRequest,
     current_user: User = Depends(get_current_user),
     runner: RoomRunner = Depends(get_room_runner),
+    sim: SimEngine = Depends(get_sim_engine),
 ) -> StreamingResponse:
     # Adversarial audit (2026-05-18) finding A6: body-level ownership.
     # Without this, an authenticated user can trigger a Room run under
@@ -154,12 +154,16 @@ async def stream_room(
     #   2. attached to recently completed run → no events to stream; we
     #      replay the persisted transcript + verdict below so the client
     #      sees a full state instead of "no verdict" on the empty stream.
+    # DEF051: resolve the user's real sim-portfolio state server-side — never
+    # trust a client-suppliable override for a compliance-check input.
+    portfolio_value = sim.total_value(req.user_id)
+    current_drawdown_pct = sim.current_drawdown_pct(req.user_id)
     run_id = await runner.start_run(
         user_id=req.user_id,
         ticker=ticker,
         mandate=mandate,
-        portfolio_value=req.portfolio_value,
-        current_drawdown_pct=req.current_drawdown_pct,
+        portfolio_value=portfolio_value,
+        current_drawdown_pct=current_drawdown_pct,
         on_complete=_finalise_to_journal,
     )
     cached = not runner.is_active(run_id)
