@@ -1,15 +1,15 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-07-12 (end of AT:R56 — **implemented CR025** (watchlist
-day-change % badge): backend `watchlist.py` switched to the full `quote()` call,
-mobile `_WatchlistRow` renders the signed/colored badge, +2 route tests (592
-green). ⚠️ This session shipped real work but never ran `/handover` — caught and
-backfilled at the start of AT:R57, which wraps AT:R56 via
-[`history/AT_R0056.md`](history/AT_R0056.md) before starting its own work. Next =
-**Saiful's call on CR032** (GB10/LoRA go/no-go), or the still-pending
-**CR021+CR020** from AT:R54, or **CR023/CR024** (News/Social live feeds — now
-in progress as of AT:R57, see below)). Narratives in [`history/`](history/) —
-see "Recent sessions" below.
+**Last updated:** 2026-07-13 (end of AT:R57 — **made News + Social Media
+analysts truthful** (CR023/CR024, both `in_progress`): real headlines
+(Yahoo + Alpha Vantage) and real Reddit sentiment (Adanos, after LunarCrush
+turned out to need a paid-tier upgrade) now flow into both the Room and
+1-on-1 paths. Auditing the rest of the 12-agent roster surfaced **DEF051**
+— Convene the Room checks mandate compliance against a hardcoded fake
+$100k/0%-drawdown portfolio, always — filed **open**, next session's
+target. **CR033** (Market/Fundamentals Analyst + Bull Researcher
+truthfulness gaps) filed docs-only, sequenced after DEF051. Full narrative:
+[`history/AT_R0057.md`](history/AT_R0057.md).
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -24,23 +24,23 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **476 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; always `git log` for the true count. AT:R56 shipped CR025 (1 commit) but never wrapped — backfilled by AT:R57 via `history/AT_R0056.md`. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
-| Latest commit | `c71a683` — feat(watchlist): wire real day-change % badge, drop hardcoded None (AT:R56 CR025). |
-| Alpha tags | **`alpha-2026-07-11-3`** (→ `7ebc123`) — latest promote (AT:R54 DEF049): milestone-credit double-grant fix (code-only, no migration). Prior this session: **`alpha-2026-07-11-2`** (DEF039/040/042/047/048 + **migration 0015** `d1e2f3a40015` — reputation_events partial-unique dedup index). ✅ melehost `alembic_version = d1e2f3a40015` (0015 applied clean on live Postgres). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. CR025 (AT:R56) is code-only, no migration — a promote is harmless but not required to unblock mobile testing. |
-| Backend tests | **592 passed, 0 failed** (AT:R56 added +2: CR025 route-level watchlist tests). |
+| Git state | Clean working tree, **481 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; always `git log` for the true count. AT:R56 shipped CR025 (1 commit) but never wrapped — backfilled by AT:R57 via `history/AT_R0056.md`. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
+| Latest commit | `73e984f` — docs(defect,cr): file DEF051 (Room's fake portfolio/drawdown) + CR033 (remaining agent data gaps) (AT:R57 DEF051 CR033). |
+| Alpha tags | **`alpha-2026-07-11-3`** (→ `7ebc123`) — latest promote (AT:R54 DEF049): milestone-credit double-grant fix (code-only, no migration). Prior this session: **`alpha-2026-07-11-2`** (DEF039/040/042/047/048 + **migration 0015** `d1e2f3a40015` — reputation_events partial-unique dedup index). ✅ melehost `alembic_version = d1e2f3a40015` (0015 applied clean on live Postgres). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. AT:R57's News/Social work (CR023/024) is code-only, no migration — needs `ALPHA_VANTAGE_API_KEY` + `ADANOS_API_KEY` in `infra/alpha.env` (both already added this session) for a promote to activate real data on Alpha. |
+| Backend tests | **673 passed, 0 failed** (AT:R56 added +2 CR025 route tests; AT:R57 added +81 across `test_news_context.py`, `test_social_context.py`, `test_one_on_one_news_injection.py`, `test_one_on_one_social_injection.py`, and extensions to `test_room_runner.py`/`test_overlay_generator.py`/`test_agent_prompts.py`). |
 | Mobile pubspec | **`0.1.0+38`** (AT:R54 — new "Diagonal duo" app icon + CR018 lesson numbers + merged watchlist fixes). TestFlight: **`+38` uploaded + processing** (benign objective_c.framework dSYM warning). APK: `+38` release-signed (66 MB, sent to Saiful). |
 | Content corpus | 270 lessons (**CR018: numbered by id-prefix, badge in list + reader**), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **356 i18n keys** (AT:R54 +2 watchlist remove/undo). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
 ```bash
 $ git log --oneline | head -8
+73e984f docs(defect,cr): file DEF051 (Room's fake portfolio/drawdown) + CR033 (remaining agent data gaps) (AT:R57 DEF051 CR033)
+c942120 feat(agents): wire real Reddit sentiment into Social Media Analyst via Adanos (AT:R57 CR024)
+a812d95 docs(cr): record LunarCrush 402 finding, no client code written blind (AT:R57 CR024)
+4b153a2 feat(agents): make News + Social Media analysts truthful (AT:R57 CR023 CR024)
+1306e4f chore(handover): backfill wrap for AT:R56 (AT:R56)
 c71a683 feat(watchlist): wire real day-change % badge, drop hardcoded None (AT:R56 CR025)
 b85a637 chore(handover): wrap AT:R55
 06a3476 docs(audit): add output-compression guardrail 6 to handshake protocol (AT:R55)
-0a3c7ae chore(silent-scout): close and deprecate Silent_Scout, migrate all content to CR023-032 (AT:R55 CR025-032)
-3e38b58 docs(cr): file CR023 (news analyst feed) + CR024 (social analyst feed), correct Silent_Scout Gap 5 framing (AT:R55 CR023 CR024)
-3222f4f chore(handover): wrap AT:R54
-7b56dfb docs(cr): file CR019-022 — concierge context modes, router, app manual (AT:R54)
-0bb5202 feat(lessons): number lessons for easy reference (AT:R54 CR018)
 ...
 ```
 
@@ -55,7 +55,7 @@ b85a637 chore(handover): wrap AT:R55
 | Logs | `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Restart | `ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"` |
 | Routes | `/v1/alpaca/*` (**`POST /v1/alpaca/link`** — OAuth code exchange + token store; **`DELETE /v1/alpaca/unlink`**; **`GET /v1/alpaca/status`**; **`GET /v1/alpaca/portfolio`**; **`GET /v1/alpaca/positions`** — all require claimed user; AT:R45), `/v1/health`, `/v1/auth/*` (incl. `DELETE /v1/auth/session` — Phase 4 sign-out, AT:R26; **`POST /v1/auth/google`** — D-057, AT:R36; **`GET /v1/auth/merge/preview/{from}`** + **`POST /v1/auth/merge`** — BL16, AT:R38), `/v1/admin/*` (9 routes — AT:R27, see "Admin back-office" below), `/v1/onboarding/*`, `/v1/agents/one_on_one/*`, `/v1/brief/*` (was `/v1/coach/*` — renamed AT:R27; legacy `/v1/coach/*` kept as deprecated alias logging `deprecated_coach_route_used`), `/v1/journal/*` (incl. `/trash`, `/{id}/restore`), `/v1/lessons/*`, `/v1/llm/status`, `/v1/mandate/*` (now incl. **`/{u}/audit`** — BL12, **`/{u}/versions`** + **`/{u}/versions/{v}`** + **`POST /{u}/rollback/{v}`** — BL5, all AT:R33), `/v1/room/*`, `/v1/sim/*` (now incl. **`POST /sim/preview`** — BL9, AT:R33; **`GET /sim/history/{ticker}?period=`** — AT:R41 Bundle 2, public/no-auth, 6 periods 1d/1w/1m/3m/1y/5y, 60s cache, returns `{ticker, period, source, candles: [{t, o, h, l, c, v}]}`, 422 on invalid period; **`GET /sim/news/{ticker}?limit=5`** — AT:R42 Bundle 4, public/no-auth, 5-min cache, returns `[{title, link, publisher, pub_date}]`; **`GET /sim/earnings/{ticker}`** — AT:R42 Bundle 5, public/no-auth, 6h cache, 90-day forward window, returns `{ticker, next_earnings_date, estimated_eps, fiscal_quarter}`), `/v1/league/*` (**CR004, AT:R52** — `GET /standings` 404 `not_in_league` when unassigned · `GET /me` — mints the pseudonymous handle on first call, returns tier/reputation/week-points/rank/streak · `GET /history` · `PATCH /handle` — one regeneration, then 409 `already_regenerated`; all require auth), `/v1/daily_challenge/*` (now incl. **`POST /{cid}/attempt`** — BL10, AT:R33; **AT:R52 CR004:** persists to `daily_challenge_attempts` UNIQUE(user, challenge), duplicate returns stored result + `already_attempted: true`, awards reputation; `GET /today` gains `my_attempt` when authed), `/v1/watchlist/*`, `/v1/feedback/bug` (`multipart/form-data` with optional `file`). Plus a public HTML page at `/admin` (no auth required; the page itself asks for the `ADMIN_SECRET` bearer on first load + stores in localStorage). |
-| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **590 passed** (AT:R54 added +6). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
+| Mac-side tests | `backend/.venv/bin/pytest backend/tests/unit/ -q` — **673 passed** (AT:R57 added +81). Uses sqlite tempfile fixture in `tests/conftest.py`, no real DB needed. Only backend execution that happens on the Mac. |
 | Env knobs (alpha) | `AMI_ENV=staging` + `SECRET_KEY=<64-hex>` + `ADMIN_SECRET=<64-hex>` (AT:R27, admin back-office bearer) + `SMTP_{HOST,PORT,USER,PASSWORD,FROM}` (5 vars, AT:R26 — now dormant) + **`RESEND_API_KEY=re_<…>`** (AT:R32, primary outbound mail route) + **`GOOGLE_AUDIENCES=<web_client_id_csv>`** (AT:R36, D-057 — **populated AT:R39 with the GCP OAuth Web client_id** `153141744056-03d6sa…`; ⚠️ was NOT actually reaching the container until **DEF038 fixed AT:R52** — compose omitted it from `environment:`; truly live since `alpha-2026-07-07-1`). Canonical at `infra/alpha.env` on Mac, gitignored; shipped via `scp` in `/promote-to-alpha` step 4. Without `SECRET_KEY` the backend refuses to start when env != local. **Email transport**: `email_service` prefers Resend (HTTP API, port 443 — bypasses melehost's ISP block on outbound 25/587) when `RESEND_API_KEY` is set; falls back to SMTP if `SMTP_HOST` is configured; falls back to no-op otherwise. Verified live: magic-link delivered to Gmail end-to-end. |
 | Auth | Phase 1.5 + Phase 3 + Phase 4 enforced. Route-level `get_current_user` on `/v1/mandate`, `/v1/journal`, `/v1/watchlist`, `/v1/brief` (legacy `/v1/coach`), `/v1/agents/one_on_one`, `/v1/room`, plus per-route on user-specific `sim` + `lessons`. Bearer format `scaffold:<user_id_hex>:<hmac_sig>` (HMAC-SHA256 with `SECRET_KEY`). Legacy unsigned `scaffold:<hex>` accepted only in env=local. `/v1/auth/anon` mints fresh unless the caller's Bearer matches the supplied `device_user_id`. Magic-link routes require auth and bind to `current_user.id`. **Apple Sign-In Phase 3 (AT:R29):** `/v1/auth/apple` now lives in every env (no more 503 gate). `OIDCVerifier` in `app/services/oidc_verifier.py` fetches Apple's JWKS, RSA-verifies the identity token, validates `iss=https://appleid.apple.com`, `aud ∈ APPLE_AUDIENCES`, `exp`. On first auth: persists `email` + `full_name` (→ `users.display_name`). On subsequent auths or magic-link priors: preserves existing email/name (never overwritten). `DELETE /v1/auth/session` (Phase 4) requires auth and returns `{"signed_out": true}` — stateless no-op now. `http_audit` middleware scrubs request + response bodies for all `/v1/auth/*` routes (AT:R26 B4 close). **AT:R27 suspension enforcement:** `get_current_user` checks `users.suspended_at`; if set, raises `403 {"detail": "account_suspended"}`. **AT:R31 D-039 trial activation (BL3):** `_claim_or_create()` (magic-link) and `sign_in_with_apple()` (Apple) now populate `users.trial_started_at = now()` + `users.trial_expires_at = now() + 7d` on first claim. Guarded by `trial_started_at is None` so admin-granted trials are preserved. Downstream entitlement gate / expiry banner / conversion modal still TODO (BL11). **AT:R32 account-linking Phase 1:** `_claim_or_create()` now does email-lookup-FIRST (adopt existing identity), then user_id-fallback (promote anon). `sign_in_with_apple()` gained an email fallback between apple_sub and user_id lookups — magic-link-first + Apple-later (with same email) now attaches `apple_id` to the existing row instead of forking. Existing-row's email is never mutated by re-verify. Pre-claim anon rows are left orphan (ephemeral). Real merge UX deferred to BL16. **AT:R32 BL13 binding:** `/v1/auth/magic_link/verify` + `/v1/auth/apple` accept optional `onboarding_session_id`; route looks up `OnboardingSession` in `session_store` and stamps `claimed_user_id`. Both routes are now async. **AT:R32 L-1 cleanup:** `OneOnOneStartRequest.user_id` removed — `/v1/agents/one_on_one/start` sources user from Bearer only (audit A3 pattern, finally consistent). **AT:R33 BL1 device context:** `/v1/auth/anon` accepts optional `device_model`, `os_version`, `app_version`; backend persists onto `users` (refreshed on every bootstrap). **AT:R33 BL2 user_devices:** `/v1/auth/anon` also accepts optional `device_install_id` (mobile-generated UUID, never overwritten by claim). Backend upserts a `user_devices` row keyed by install_id; on claim adoption (`_claim_or_create` + `sign_in_with_apple`), the pre-claim anon's devices re-key to the adopting user so two phones on one Apple ID surface under one user. **AT:R33 BL11 entitlement gate:** `effective_plan(plan, trial_expires_at)` is now resolved at every `pick_tier()` callsite (brief_engine, agent_runner, room_runner) — when a trial lapses, LLM routing automatically drops to cheap-tier without admin intervention. **Admin auth:** `/v1/admin/*` uses `Authorization: Bearer <ADMIN_SECRET>`. Audit finding A4 CLOSED. **AT:R36 D-057 Google Sign-In:** `/v1/auth/google` mirrors `/v1/auth/apple` end-to-end. `GoogleOIDCVerifier` (in the same `oidc_verifier.py`) fetches `https://www.googleapis.com/oauth2/v3/certs`, RSA-verifies the ID token, accepts both Google issuers (`https://accounts.google.com` AND `accounts.google.com`), validates `aud ∈ GOOGLE_AUDIENCES`, `exp`. `OIDCVerifier.issuers` now a list (was `issuer: str`) with manual membership check, since python-jose only accepts a single string for the built-in `iss` check. `email_verified=false` guard drops the email on the floor (defends against unconfirmed-Google-account email squatting). Account-linking Phase 1 mirrors Apple: email-FIRST adoption of an existing magic-link/Apple row with the same email, then `google_sub`-fallback. Trial activation + BL2 device re-keying parallel Apple flow. Minimum-data policy (D-057, locked AT:R29 — "sub, name, email"): persist only `sub` → `users.google_id`, `email` → `users.email`, `name` → `users.display_name`; `picture`, `locale`, `hd`, `given_name`, `family_name` dropped. `AuthUser` schema gained `google_id`. `http_audit` SCRUB_PATHS includes `/v1/auth/google`. **AT:R37 B-tier audit close — magic-link brute-force lockout:** `verify_magic_link()` now finds the most recent active (unconsumed + unexpired) challenge for the target by `target` alone (not joined on `code_hash`), so a wrong-code attempt can bump `auth_challenges.attempts`. Once the counter hits `MAX_MAGIC_LINK_ATTEMPTS = 5` the row is force-consumed via `consumed_at = now()`, locking out even the correct code. The user always recovers by requesting a fresh code (mints a new row with `attempts=0`). **AT:R37 B-tier audit close — rate limiting:** new `app/services/rate_limit.py` ships an in-memory sliding-window `RateLimiter` dep applied to `/v1/auth/anon` (10/min/IP), `/v1/auth/magic_link/start` (3/min/IP — email cost), `/v1/room/stream` (5/min/IP — 12-agent LLM run cost). IP resolution: `cf-connecting-ip` → `x-forwarded-for` first hop → `request.client.host`. 429 with `Retry-After` header on overrun. Process-local — replaced by Redis-backed when we shard. **AT:R37 B-tier audit close — feedback upload streaming:** new `save_attachment_streaming()` reads UploadFile in 64KB chunks with a running byte counter; mid-stream cap overrun aborts + unlinks the partial file. MIME validated up-front so unsupported types never touch disk. **AT:R38 BL16 — adoption signal + merge endpoints:** `AuthVerifyResponse` gained `adopted_from_user_id: UUID | None`, populated by the 3 claim methods (`_claim_or_create`, `sign_in_with_apple`, `sign_in_with_google`) whenever the email/sub fallback returns a different `user_id` than the caller's bearer. Each adoption also writes a `subscription_events` row with `event_type=account_adoption`, which the new `GET /v1/auth/merge/preview/{from}` + `POST /v1/auth/merge` routes use as their authorisation proof (caller's bearer must match the `to_value`; 403 otherwise). The execute route delegates to `MergeService.execute()` — a single-transaction re-key of every per-user row from orphan → adopter, with per-table conflict rules; ends by `DELETE`-ing the orphan `users` row. |
 | Room env knobs | `ROOM_DEDUP_RUNNING_MINUTES=30` (in-flight dedup + startup-sweep cutoff) · `ROOM_DEDUP_COMPLETED_HOURS=24` (return prior verdict same day; design doc default was 5 days — we start tighter). Set completed_hours=0 to disable cached-run dedup. **AT:R34 eeeb866f:** startup sweep auto-retries stuck `running` rows once (`MAX_AUTO_RETRIES=1`, hard-coded in `room_runner.py`) before marking them failed. Lifespan startup hook calls `runner.resume_pending_retries()` to spawn the retry tasks; journal write is replayed inside the retry's `_pump` since the original request's `on_complete` closure is gone after restart. |
@@ -123,12 +123,11 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R58**. (AT:R56 wrapped here, backfilled — see
-[`history/AT_R0056.md`](history/AT_R0056.md). AT:R57 is in progress as of this
-edit — News/Social Analyst truthfulness fix (CR023/CR024). ⚠️ AT:R48/R50 ran as
-parallel sessions and never wrapped; governance track G + auditor track U also
-commit to `main` (AT:G1, AT:U1). A later wrap of any parallel session must NOT
-reset this counter below R58.)
+Session name to use: **AT:R58**. (AT:R57 wrapped here — News/Social Analyst
+truthfulness fix, AT:R56 backfill. ⚠️ AT:R48/R50 ran as parallel sessions and
+never wrapped; governance track G + auditor track U also commit to `main`
+(AT:G1, AT:U1). A later wrap of any parallel session must NOT reset this
+counter below R58.)
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -141,19 +140,40 @@ value became CR023–CR032 (see below); don't look for it, don't `cd` into it.
 
 **CR025 is done (AT:R56).** Watchlist day-change badge shipped end-to-end.
 
-**CR023/CR024 (News/Social Analyst truthfulness) are `in_progress` as of AT:R57**
-— real data now flows into both. News: Yahoo (free) combined with Alpha Vantage
-(paid, sentiment-scored) when `ALPHA_VANTAGE_API_KEY` is set. Social: Reddit-only
-aggregate sentiment via Adanos (free, 250 calls/month) when `ADANOS_API_KEY` is
-set — LunarCrush turned out to need a paid-tier upgrade Saiful hasn't done, so
-this pivoted to Adanos instead, same session. Neither CR is `done`: News still
-lacks a macro/earnings-calendar feed by design (disclosed, not fabricated), and
-Social still has no Twitter/X/StockTwits/Google Trends/Discord coverage. See
+**CR023/CR024 (News/Social Analyst truthfulness) are `in_progress`, shipped
+AT:R57** — real data now flows into both. News: Yahoo (free) combined with
+Alpha Vantage (paid, sentiment-scored) when `ALPHA_VANTAGE_API_KEY` is set.
+Social: Reddit-only aggregate sentiment via Adanos (free, 250 calls/month)
+when `ADANOS_API_KEY` is set — LunarCrush turned out to need a paid-tier
+upgrade Saiful hasn't done, so this pivoted to Adanos instead, same session.
+Neither CR is `done`: News still lacks a macro/earnings-calendar feed by
+design (disclosed, not fabricated), and Social still has no Twitter/X/
+StockTwits/Google Trends/Discord coverage. Full detail:
 `docs/forward_planning/CR023_news_analyst_live_feed/` and
-`CR024_social_analyst_live_feed/` for full implementation detail once this
-session wraps.
+`CR024_social_analyst_live_feed/`.
 
-**Priority next — Saiful hasn't picked between the remaining threads yet:**
+**DEF051 is the explicit next-session target** — [full spec](docs/defect/DEF051_room_portfolio_defaults/DEF051_room_portfolio_defaults.md).
+Convene the Room checks mandate compliance against a **hardcoded fake
+$100,000 / 0%-drawdown portfolio, always** — `RoomStartRequest`'s defaults
+(`backend/app/api/room.py:79-80`) are never overridden by the mobile
+client's `streamRoom()` call site (`mobile/lib/state/room_providers.dart:94`),
+even though `SimEngine.total_value(user_id)` / `.current_drawdown_pct(user_id)`
+already exist and are already correctly used by the real sim-trade
+compliance checks. Fix: resolve real values server-side in `stream_room`
+from `SimEngine`, don't trust the client-suppliable request fields. This is
+a safety-floor-input bug, not a prompt-honesty gap — highest priority of
+everything carried over.
+
+**CR033 (docs-only, filed AT:R57, sequenced after DEF051)** — three more
+prompt-honesty gaps found auditing the rest of the roster:
+[full spec](docs/forward_planning/CR033_remaining_agent_data_gaps/CR033_remaining_agent_data_gaps.md).
+Market Analyst's technicals (RSI/trend/volume) are 100% fabricated always,
+and it claims MACD/moving-averages/Bollinger-Bands that don't exist as
+fields at all; Fundamentals Analyst oversells its real (yfinance-backed)
+scope; Bull Researcher claims Decision Journal history that's never read
+back into a prompt.
+
+**Other priorities — Saiful hasn't picked between these yet:**
 
 1. **CR032 needs Saiful's decision first, not code.** [CR032](docs/forward_planning/CR032_gb10_lora_finetuning_decision/CR032_gb10_lora_finetuning_decision.md) — the GB10 LoRA-fine-tuning research box turned out to be the exact same host serving production vLLM to all 13 live agents, a capacity conflict never addressed in 9 weeks of "active research." Continue (needs dedicated hardware or a maintenance-window protocol) or shelve (GTM mode's priority is real-data wiring, not model infra)?
 2. **CR021 (context router) + CR020 (full_context mode)** — still the AT:R54 carry-over, untouched: [CR021](docs/forward_planning/CR021_concierge_context_router/CR021_concierge_context_router.md), [CR020](docs/forward_planning/CR020_concierge_full_context_mode/CR020_concierge_full_context_mode.md). `CONCIERGE_CONTEXT_MODE` flag (saver | full_context | embedding, default full_context) + the cheap compact lesson index. No new infra.
@@ -183,12 +203,11 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
+- [AT:R57](history/AT_R0057.md) — News + Social Media analysts made truthful (CR023/CR024); real headlines (Yahoo+Alpha Vantage) + real Reddit sentiment (Adanos, after LunarCrush needed a paid-tier upgrade); audited the rest of the roster → filed DEF051 (fake portfolio/drawdown, safety-floor-relevant) + CR033
 - [AT:R56](history/AT_R0056.md) — implemented CR025 (watchlist day-change badge); session shipped but never wrapped, backfilled at the start of AT:R57
 - [AT:R55](history/AT_R0055.md) — News/Social analyst live-feed gap → CR023/CR024; full Silent_Scout audit → closed + deprecated the workspace, filed CR025–032, migrated everything
 - [AT:R54](history/AT_R0054.md) — defect burn (DEF039/040/042/045/046/047/048/049/050) + full audit handshake, app icon "Diagonal duo", build +38 (TestFlight+APK), CR018 lesson numbers, CR019–022 filed
 - [AT:R53](history/AT_R0053.md) — CR004 execution #2 + release: CR009–CR016 batch, builds +36/+37, DEF043, CR017 research, DEF044 (Alpaca encryption) promoted
-- [AT:R52](history/AT_R0052.md) — CR004 execution #1: D0 + backend reputation/league (promoted) + B1 celebrations
-- [AT:R51](history/AT_R0051.md) — CR004 release-readiness plans + D-059–D-062
 
 ---
 
