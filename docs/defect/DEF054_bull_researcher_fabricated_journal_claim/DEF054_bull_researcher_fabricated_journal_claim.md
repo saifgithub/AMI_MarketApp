@@ -1,8 +1,40 @@
 # DEF054 — Bull Researcher claims Decision Journal history it never actually reads
 
-**Status:** open · **Filed:** AT:R58 · **Date:** 2026-07-13
+**Status:** resolved (AT:R58) · **Filed:** AT:R58 · **Date:** 2026-07-13
 **Source:** prompt — split out of CR033 (filed AT:R57, docs-only) into an individual Defect
 at Saiful's request, so each of the four remaining agent-truthfulness gaps can be tackled
+
+## Fix (AT:R58)
+
+New `backend/app/services/journal_context.py` mirrors Concierge's existing real
+pattern (`concierge_prompts.py::load_concierge_context()` →
+`journal_store.list_for_user()`) rather than inventing a new one. Genuinely
+ticker-scoped — `list_for_user()` already supports a `ticker` filter, no schema
+change needed — so this is real per-ticker history, not a general-recent fallback
+the original doc treated as the likely-necessary compromise.
+
+Wired into the Room path (`room_prompts.py::build_room_messages()`, mirroring the
+existing Portfolio-Manager-only `pm_note` pattern — a new `journal_note` appended
+only for Bull/Bear Researcher) and the 1-on-1 path (`agent_runner.py`,
+Bull/Bear-gated, mirroring CR023/CR024/DEF052's Analyst-only gating). No journal
+entries yet for a ticker → the block is simply absent, and the rewritten
+`content/agents/bull_researcher.md` explicitly instructs the agent to say so rather
+than invent one.
+
+**`bull_size`/`bull_falsifier` hardcoded literals:** left untouched this pass — the
+narrative-reasoning fix (the actual fabricated-input claim) was the higher-value
+target; the sizing figures are a separate, lower-priority finding (per the original
+doc's own framing), not folded in here.
+
+Shared with DEF055 (Bear Researcher) via the same `journal_context.py` module —
+neither the fetch nor the formatting logic is duplicated.
+
+19 new tests: `test_journal_context.py` (9 — fetch/format/degradation, ticker
+isolation, anonymous-user handling, store-error handling), `test_room_runner.py`
+extensions (5 — Room-level Bull/Bear-only gating), `test_one_on_one_journal_injection.py`
+(5, shared with DEF055 — 1-on-1 gating for both researchers). Backend suite
+714 → 733, all green. Full submission:
+[`audit/handshake/cr/DEF054.architect.md`](../../../audit/handshake/cr/DEF054.architect.md).
 and closed one at a time instead of as one bundled CR.
 
 ## Problem
@@ -58,15 +90,17 @@ original framing agreed this is lower priority than the fabricated-input claim).
 
 ## Acceptance
 
-- [ ] Bull Researcher's Room prompt receives real recent Decision Journal entries for
-      the authenticated user (ticker-scoped if the schema supports it cheaply, else
-      general-recent with the scope disclosed accurately in the prompt).
-- [ ] Real journal content is synthesized into a compact summary, not echoed verbatim
-      into the profile/prompt.
-- [ ] `content/agents/bull_researcher.md` claim matches actual scope exactly
-      (ticker-scoped vs. general-recent, whichever was built).
-- [ ] Graceful degradation: no journal entries yet → prompt discloses "no history yet,"
-      never errors the Room/1-on-1 turn.
-- [ ] Disposition recorded on `bull_size`/`bull_falsifier` (fixed alongside, or
-      explicitly deferred as a separate lower-priority item).
-- [ ] Regression tests: real entries injected when present; absent gracefully when not.
+- [x] Bull Researcher's Room prompt receives real recent Decision Journal entries for
+      the authenticated user — genuinely ticker-scoped (`list_for_user(..., ticker=)`
+      already supported it, no schema change needed).
+- [x] Real journal content is synthesized into a compact one-line-per-entry summary
+      (date + title + outcome), not echoed verbatim.
+- [x] `content/agents/bull_researcher.md` claim matches actual scope exactly
+      (ticker-scoped, real).
+- [x] Graceful degradation: no journal entries yet → the block is absent and the
+      prompt instructs the agent to say so; store errors return `[]`, never raise.
+- [x] Disposition recorded on `bull_size`/`bull_falsifier`: left untouched this pass —
+      explicitly deferred as the separate, lower-priority item the original doc
+      framed it as.
+- [x] Regression tests: real entries injected when present (ticker-isolated); absent
+      gracefully when not (no history, anonymous user, store error).

@@ -33,6 +33,8 @@ table).
 | DEF051 | COMPLETE | none | R58 · round 1 | COMPLETE (r1) — Room's fake $100k/0%-drawdown compliance-check input, resolved server-side via SimEngine; on main `22c84c6`, **not yet promoted, safety-floor-relevant** |
 | DEF052 | COMPLETE | none | R58 · round 2 | COMPLETE (r2) — F1 MAJOR (NaN close raised ValueError, failed whole Convene) fixed with isfinite guard + full try/except, independently re-verified in an isolated worktree at `762455b` |
 | DEF053 | COMPLETE | none | R58 · round 1 | COMPLETE (r1) — Fundamentals Analyst real valuation multiples (P/S, EV/EBITDA, PEG, FCF yield), sector/industry, dividends, analyst consensus — all free via yfinance, no Alpha Vantage key needed; `sector_pe` dropped. Auditor's two OUT-OF-SCOPE NaN observations (one in-scope minor, one pre-existing) closed same-session via a proactive `_num()` hardening, on main `0ca4829`, **not yet promoted** |
+| DEF054 | AWAITING-AUDIT | none | R58 · round 1 | — · Bull Researcher real Decision Journal history (ticker-scoped, via `journal_context.py` mirroring Concierge's real pattern); on main `5a7ad48`, **not yet promoted** |
+| DEF055 | AWAITING-AUDIT | DEF054 | R58 · round 1 | — · Bear Researcher — same fabricated claim CR033's audit missed, fixed together with DEF054 reusing its shared helper; on main `5a7ad48`, **not yet promoted** |
 
 _Lane scope for CR004 is the R52-delivered Engagement chunks (D0/E1/B1) only — see `CR004.architect.md`. Remaining CR004 chunks submit as their own future lanes._
 

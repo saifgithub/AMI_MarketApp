@@ -1,6 +1,6 @@
 # DEF055 — Bear Researcher claims Decision Journal history it never actually reads
 
-**Status:** open · **Filed:** AT:R58 · **Date:** 2026-07-13
+**Status:** resolved (AT:R58) · **Filed:** AT:R58 · **Date:** 2026-07-13
 **Source:** prompt — found while checking agent-wiring status after DEF051. **CR033's
 original audit (AT:R57) reviewed Bull Researcher for this exact claim but never checked
 whether Bear Researcher made the identical claim — this Defect closes that gap in the
@@ -46,19 +46,41 @@ narrated from opposite theses), not reimplemented.
 DEF054's `bull_size`/`bull_falsifier` — fix alongside if it falls out naturally from the
 shared journal-context wiring, otherwise explicitly note as deferred.
 
+## Fix (AT:R58)
+
+Implemented in the same commit as DEF054 — `journal_context.py`'s
+`build_journal_context_block()` is shared between both researchers, gated by
+`agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER)` at both call sites
+(`room_prompts.py::build_room_messages()` and `agent_runner.py`'s 1-on-1 path) —
+no duplicated query or formatting logic. `content/agents/bear_researcher.md`
+rewritten identically to Bull's (ticker-scoped, real, "no history yet" framing).
+
+**`bear_size`/`bear_catalyst`/`bear_invalidator` hardcoded literals:** left untouched
+this pass, same disposition as DEF054's `bull_size`/`bull_falsifier` — deferred as a
+separate, lower-priority item.
+
+Tests are shared with DEF054 where the assertion is symmetric (`test_journal_context.py`
+covers both agents equally since the module doesn't distinguish them) and dedicated
+where gating specifically needs to prove Bear's own path
+(`test_bear_researcher_gets_journal_history_when_present` in `test_room_runner.py`,
+`test_journal_block_injected_for_bear_researcher_when_ticker_mentioned` in
+`test_one_on_one_journal_injection.py`). Backend suite 714 → 733 (shared delta with
+DEF054 — see that Defect's doc for the full count breakdown). Full submission:
+[`audit/handshake/cr/DEF055.architect.md`](../../../audit/handshake/cr/DEF055.architect.md).
+
 ## Acceptance
 
-- [ ] Bear Researcher's Room prompt receives the same real recent Decision Journal
+- [x] Bear Researcher's Room prompt receives the same real recent Decision Journal
       context as Bull Researcher (DEF054), via **shared** logic, not a duplicated query.
-- [ ] `content/agents/bear_researcher.md` claim matches actual scope exactly, mirroring
-      DEF054's disclosure choice (ticker-scoped vs. general-recent).
-- [ ] Same graceful-degradation behavior as DEF054 (no history yet → disclosed, no
+- [x] `content/agents/bear_researcher.md` claim matches actual scope exactly, mirroring
+      DEF054's disclosure choice (ticker-scoped, real).
+- [x] Same graceful-degradation behavior as DEF054 (no history yet → disclosed, no
       error).
-- [ ] Disposition recorded on `bear_size`/`bear_catalyst`/`bear_invalidator` (fixed
-      alongside, or explicitly deferred), mirroring DEF054's decision.
-- [ ] Regression tests mirror DEF054's (real entries injected when present; absent
+- [x] Disposition recorded on `bear_size`/`bear_catalyst`/`bear_invalidator`: left
+      untouched, explicitly deferred, mirroring DEF054's decision.
+- [x] Regression tests mirror DEF054's (real entries injected when present; absent
       gracefully when not), extended to Bear Researcher's own gating test (only Bear's
       1-on-1/Room prompt gets the injection when the trigger is Bear-specific).
 
-**depends-on:** DEF054 — implement DEF054 first; this Defect reuses its wiring rather
-than re-deriving it from scratch.
+**depends-on:** DEF054 — implemented together in one commit; this Defect reused its
+wiring rather than re-deriving it from scratch, as planned.
