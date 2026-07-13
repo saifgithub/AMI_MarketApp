@@ -1,8 +1,50 @@
 # DEF052 — Market Analyst's technicals are 100% fabricated, prompt claims indicators that don't exist
 
-**Status:** open · **Filed:** AT:R58 · **Date:** 2026-07-13
+**Status:** resolved (AT:R58) · **Filed:** AT:R58 · **Date:** 2026-07-13
 **Source:** prompt — split out of CR033 (filed AT:R57, docs-only) into an individual Defect
 at Saiful's request, so each of the four remaining agent-truthfulness gaps can be tackled
+
+## Fix (AT:R58)
+
+New `backend/app/services/technicals.py` — `compute_technicals(ticker)` (never raises),
+pulling `MarketDataProvider.history(ticker, "3m")` (already-cached yfinance OHLCV, the
+same feed powering the mobile Ticker Detail chart) and computing:
+
+- **RSI(14)** — standard gain/loss average, real, hand-verified in tests.
+- **Trend** — "trading" when price + 20-day SMA + 50-day SMA are directionally aligned
+  (a real momentum read), "consolidating" otherwise. Same two-value vocabulary the
+  scripted-fallback template's grammar already depended on, now backed by real data
+  instead of a coin flip.
+- **Volume tone** — last-5-day average vs. last-20-day average, real, replacing another
+  coin flip.
+- **Support/breakout** — the real min/max of the last 50 candles' low/high, replacing
+  `base_price × 0.9` / `× 1.03`.
+
+Wired into `room_runner.py::_profile_for_ticker()` (overlay inside the existing
+`if settings.use_real_market_data:` block, alongside fundamentals/news/social) and into
+`agent_runner.py`'s 1-on-1 path (Market-Analyst-gated, mirroring the News/Social
+gating pattern). `room_prompts.py::_format_profile()`'s disclosure header gained a
+technicals category, independent of fundamentals/news/social.
+
+**MACD/Bollinger Bands scope decision:** dropped from the prompt rather than
+half-implemented. `content/agents/market_analyst.md` rewritten to describe only what's
+actually computed — RSI, a real moving-average trend read, real volume, real recent-range
+support/breakout — and explicitly states MACD/moving-average-crossover/Bollinger Bands
+are not computed anywhere in the app.
+
+**Also fixed in passing:** the scripted (non-LLM) fallback template
+(`_TEMPLATES[AgentId.MARKET_ANALYST]`) claimed `support` came from "the 200-day [MA]"
+— a claim the real computation never backs (it's a 50-day recent-range low). Reworded to
+"recent support" to match reality — same class of fix as CR024's scripted-fallback
+correction for Social.
+
+22 new tests: `test_technicals.py` (13 — RSI/trend/volume/support-breakout hand-verified
+against deterministic OHLCV fixtures, graceful degradation on missing/short/erroring
+history), `test_room_runner.py` extensions (5 — profile overlay, independence from
+fundamentals, disclosure header live/synthetic), `test_one_on_one_market_injection.py`
+(4 — Market-Analyst-only gating, mirroring CR023's News-only test). Backend suite
+675 → 697, all green. Full submission + adversarial evidence:
+[`audit/handshake/cr/DEF052.architect.md`](../../../audit/handshake/cr/DEF052.architect.md).
 and closed one at a time instead of as one bundled CR.
 
 ## Problem
@@ -80,18 +122,19 @@ delivered, dropping any claim not actually implemented.
 
 ## Acceptance
 
-- [ ] RSI computed from real OHLCV via yfinance when `use_real_market_data` is on and
+- [x] RSI computed from real OHLCV via yfinance when `use_real_market_data` is on and
       history fetch succeeds.
-- [ ] Trend signal derived from a real moving-average relationship, not a coin flip.
-- [ ] Volume tone derived from real volume vs. a real trailing average, not a coin flip.
-- [ ] Support/breakout derived from the real recent price range, not
+- [x] Trend signal derived from a real moving-average relationship, not a coin flip.
+- [x] Volume tone derived from real volume vs. a real trailing average, not a coin flip.
+- [x] Support/breakout derived from the real recent price range, not
       `base_price × fixed_multiplier`.
-- [ ] Explicit scope decision recorded on MACD/Bollinger Bands (implemented, or claim
-      dropped from the prompt) — no claim without matching capability either way.
-- [ ] Graceful degradation: history fetch failure/insufficient data/timeout falls back to
-      the synthetic block, never errors the Room/1-on-1 turn.
-- [ ] `content/agents/market_analyst.md` claims match actual runtime capability exactly.
-- [ ] Disclosure header (`_format_profile()`) gains a technicals live/synthetic label,
+- [x] Explicit scope decision recorded on MACD/Bollinger Bands — dropped from the prompt
+      (not implemented); `content/agents/market_analyst.md` explicitly says so.
+- [x] Graceful degradation: history fetch failure/insufficient data/timeout falls back to
+      the synthetic block, never errors the Room/1-on-1 turn (`compute_technicals`
+      never raises, returns `None`, callers check before overlaying).
+- [x] `content/agents/market_analyst.md` claims match actual runtime capability exactly.
+- [x] Disclosure header (`_format_profile()`) gains a technicals live/synthetic label,
       independent of fundamentals/news/social.
-- [ ] Regression tests: real values used when history available; synthetic fallback used
+- [x] Regression tests: real values used when history available; synthetic fallback used
       when not; disclosure header correctly labels technicals as live vs synthetic.
