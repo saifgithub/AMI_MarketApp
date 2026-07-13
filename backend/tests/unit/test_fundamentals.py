@@ -281,6 +281,35 @@ def test_fetch_treats_nan_numeric_fields_as_absent(monkeypatch):
         assert key not in out
 
 
+def test_fetch_treats_nan_in_preexisting_fields_as_absent_not_a_crash(monkeypatch):
+    """Auditor OUT-OF-SCOPE observation #2 on DEF053: the pre-existing
+    round(rev_growth*100)/round(profit_margin*100)/round((cash-debt)/1e6)
+    calls use round() without ndigits -- round(nan) raises ValueError,
+    same class as DEF052's F1, and predates this Defect. The centralized
+    _num() isfinite guard closes it without touching these call sites."""
+    import sys, types
+
+    nan = float("nan")
+
+    class _Ticker:
+        def __init__(self, _sym):
+            self.info = {
+                "currentPrice": 250.0,
+                "revenueGrowth": nan,
+                "profitMargins": nan,
+                "totalCash": nan,
+                "totalDebt": 1_000.0,
+            }
+    fake_yf = types.SimpleNamespace(Ticker=_Ticker)
+    monkeypatch.setitem(sys.modules, "yfinance", fake_yf)
+
+    out = fetch_live_fundamentals("AAPL")  # must not raise
+    assert out is not None
+    assert "rev_growth" not in out
+    assert "fcf_margin" not in out
+    assert "net_cash" not in out
+
+
 def test_build_block_includes_valuation_sector_dividend_and_analyst_lines(monkeypatch):
     monkeypatch.setattr(settings, "use_real_market_data", True)
     monkeypatch.setattr(
