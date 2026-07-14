@@ -109,8 +109,12 @@ def test_concierge_prompt_carries_lesson_catalogue(base_mandate):
     ))
     sp = fake.calls[0]["system_prompt"]
     assert "Available lessons" in sp
-    # Real lesson catalogue (loaded from content/lessons) shows at least one entry
-    assert "- " in sp.split("Available lessons", 1)[1]
+    # Real lesson catalogue (loaded from content/lessons) shows real entries.
+    # Default mode is full_context (CR020/CR021): every lesson is listed as
+    # `NNN · id · title · topic · tags`, grouped by track.
+    catalogue = sp.split("Available lessons", 1)[1]
+    assert "001_what_is_a_stock" in catalogue
+    assert " · " in catalogue
 
 
 def test_concierge_prompt_lists_unlocked_agents_for_real_user(base_mandate):

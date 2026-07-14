@@ -127,6 +127,16 @@ class Settings(BaseSettings):
     league_relegate_count: int = 5
     league_eligible_plans: CsvList = Field(default_factory=list)
 
+    # Concierge lesson-context router (CR021). Selects how much lesson
+    # knowledge the Floor Concierge is given:
+    #   saver        — first 25 lessons, id/title/track/level (legacy)
+    #   full_context — compact index of ALL lessons (number+title+topic+tags) [default]
+    #   embedding    — semantic top-K retrieval (CR019; not built → degrades to full_context)
+    # Unknown/empty → full_context. Kept a plain str (not Literal) so an
+    # unrecognised value degrades gracefully instead of crashing boot
+    # (the DEF038 lesson — strict source-layer typing took Alpha down once).
+    concierge_context_mode: str = "full_context"
+
     # In-app bug-report attachments — written to this directory by the
     # /v1/feedback/bug endpoint, retrieved by Saiful via SSH (no public
     # download endpoint in alpha). On melehost a named docker volume

@@ -26,11 +26,29 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
+from app.core.config import settings
+from app.core.logging import logger
 from app.schemas import AgentId, Mandate
 from app.schemas.journal import JournalEntry
 from app.schemas.lessons import LessonMeta
 from app.services.agent_prompts import build_agent_prompt
 from app.services.llm_gateway import ChatMessage
+
+
+# ── CR021 concierge context router ───────────────────────────────────────
+# The Floor Concierge's lesson knowledge is pluggable via the
+# CONCIERGE_CONTEXT_MODE flag (app/core/config.py). `saver` is today's
+# 25-lesson truncation; `full_context` (default, CR020) drops a compact
+# index of the WHOLE catalogue into the prompt; `embedding` (CR019) is a
+# future semantic-retrieval mode that, until it exists, degrades to
+# `full_context`. Unknown/empty → full_context.
+_VALID_CONTEXT_MODES = frozenset({"saver", "full_context", "embedding"})
+# Soft cap for the lesson-context block (chars/4 token estimate). ~270
+# lessons land near this; a future catalogue that blows past it is the
+# signal to switch the flag to `embedding` (CR019).
+_CONTEXT_TOKEN_BUDGET = 12_000
+# Log the embedding→full_context degradation once per process, not per turn.
+_embedding_fallback_logged = False
 
 
 # ── Public: prompt composition for the live path ─────────────────────────
@@ -45,6 +63,7 @@ def build_concierge_messages(
     recent_journal: list[JournalEntry],
     unlocked_agents: set[str],
     available_lessons: list[LessonMeta],
+    context_mode: str | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [chat_history + user_message]) for the Concierge.
 
@@ -53,8 +72,29 @@ def build_concierge_messages(
     addition gives the LLM concrete pointers so it stops speaking in
     abstractions ("I could open a lesson…") and starts naming specifics
     ("Lesson 003 — Mandate Basics; want me to open it?").
+
+    `context_mode` (CR021) selects how the lesson catalogue is presented.
+    When None it resolves from `settings.concierge_context_mode`
+    (default `full_context`), so the live runner needs no change.
     """
     base = build_agent_prompt(AgentId.CONCIERGE, mandate, user_id=user_id)
+
+    mode_in = context_mode if context_mode is not None else settings.concierge_context_mode
+    lesson_block, resolved_mode = _lesson_context_block(available_lessons, mode_in)
+    est_tokens = len(lesson_block) // 4
+    logger.info(
+        "concierge_context",
+        mode=resolved_mode,
+        lessons=len(available_lessons),
+        est_tokens=est_tokens,
+    )
+    if est_tokens > _CONTEXT_TOKEN_BUDGET:
+        logger.warn(
+            "concierge_context_over_budget",
+            mode=resolved_mode,
+            est_tokens=est_tokens,
+            budget=_CONTEXT_TOKEN_BUDGET,
+        )
 
     floor_addition = (
         "\n\n─── FLOOR CONCIERGE CONTEXT ───\n"
@@ -65,8 +105,8 @@ def build_concierge_messages(
         f"Currently unlocked trading agents (you can route the user to any of these):\n"
         f"{_format_unlocked(unlocked_agents)}\n"
         f"\n"
-        f"Available lessons you can recommend by ID + title:\n"
-        f"{_format_lessons(available_lessons)}\n"
+        f"Available lessons you can recommend by number, ID + title:\n"
+        f"{lesson_block}\n"
         f"\n"
         "Speak in 1–4 short sentences. Be specific — name the lesson ID, "
         "name the agent, name the journal entry by title or ticker. If the "
@@ -189,7 +229,41 @@ def _format_unlocked(agent_ids: set[str]) -> str:
     return ", ".join(pretty)
 
 
+def _resolve_context_mode(mode: str | None) -> str:
+    """Normalise the flag value; unknown/empty → the default `full_context`."""
+    m = (mode or "").strip().lower()
+    return m if m in _VALID_CONTEXT_MODES else "full_context"
+
+
+def _lesson_context_block(
+    lessons: list[LessonMeta], mode: str | None
+) -> tuple[str, str]:
+    """Return (lesson_context_text, resolved_mode) for the Concierge prompt.
+
+    CR021 router seam. `embedding` (CR019) has no retriever yet, so it
+    degrades to `full_context` (logged once). `full_context` is always
+    available with zero infra, so it is the terminal safe mode.
+    """
+    resolved = _resolve_context_mode(mode)
+    if resolved == "embedding":
+        global _embedding_fallback_logged
+        if not _embedding_fallback_logged:
+            logger.info(
+                "concierge_context_fallback",
+                requested="embedding",
+                used="full_context",
+                reason="lesson_retriever_not_built",
+            )
+            _embedding_fallback_logged = True
+        resolved = "full_context"
+
+    if resolved == "saver":
+        return _format_lessons(lessons), "saver"
+    return _full_context_index(lessons), "full_context"
+
+
 def _format_lessons(lessons: list[LessonMeta]) -> str:
+    """`saver` mode — the legacy first-25 truncation (id/title/track/level)."""
     if not lessons:
         return "(Lesson catalogue empty.)"
     lines: list[str] = []
@@ -198,6 +272,42 @@ def _format_lessons(lessons: list[LessonMeta]) -> str:
     if len(lessons) > 25:
         lines.append(f"- … and {len(lessons) - 25} more")
     return "\n".join(lines)
+
+
+def _full_context_index(lessons: list[LessonMeta]) -> str:
+    """`full_context` mode (CR020) — a compact index of EVERY lesson.
+
+    One line per lesson (`NNN · id · title · topic · tags`), grouped by
+    track for readability. Surfaces `topic` + `tags` — parsed today but
+    read nowhere — so the LLM can pick the right lesson anywhere in the
+    catalogue instead of being blind past the 25th.
+    """
+    if not lessons:
+        return "(Lesson catalogue empty.)"
+
+    # Lazy import to keep the existing no-top-level-lessons_service_import
+    # convention of this module (avoids any import-order coupling).
+    from app.services.lessons_service import TRACK_TITLES
+
+    by_track: dict[str, list[LessonMeta]] = {}
+    for m in lessons:
+        by_track.setdefault(m.track, []).append(m)
+
+    # Known tracks first, in the taxonomy's own order; any unexpected
+    # track slug trails after, alphabetically, so nothing is dropped.
+    ordered = [t for t in TRACK_TITLES if t in by_track]
+    ordered += sorted(t for t in by_track if t not in TRACK_TITLES)
+
+    lines: list[str] = []
+    for track in ordered:
+        title = TRACK_TITLES.get(track, track.replace("_", " ").title())
+        lines.append(f"[{title}]")
+        for m in sorted(by_track[track], key=lambda x: (x.number, x.id)):
+            tags = ", ".join(m.tags) if m.tags else "—"
+            lines.append(f"{m.number:03d} · {m.id} · {m.title} · {m.topic} · {tags}")
+        lines.append("")  # blank line between track groups
+
+    return "\n".join(lines).rstrip("\n")
 
 
 # ── Scripted-path intent matching ────────────────────────────────────────

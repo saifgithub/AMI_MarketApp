@@ -1,6 +1,9 @@
 # CR020 — Concierge lesson context: full context mode (cheap)
 
-**Status:** proposed (documentation only — no implementation in this CR)
+**Status:** ✅ done (AT:R59) — shipped with CR021. `full_context` is the default
+mode: all 270 lessons emitted as `NNN · id · title · topic · tags`, grouped by
+track, in `concierge_prompts.py::_full_context_index`. Measured ~10.2k tokens
+(under the ≤12k target). Backend 753 tests green (+11).
 **Filed:** 2026-07-12 (AT:R54)
 **Source:** Saiful — after the AT:R54 analysis of how the Concierge knows which lessons
 teach what. This CR documents the **cheap** route: put a compact index of *all* lessons

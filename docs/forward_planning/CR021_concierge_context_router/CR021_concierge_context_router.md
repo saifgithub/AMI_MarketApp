@@ -1,6 +1,12 @@
 # CR021 — Concierge context router (saver / full_context / embedding)
 
-**Status:** proposed (documentation only — no implementation in this CR)
+**Status:** ✅ done (AT:R59) — `CONCIERGE_CONTEXT_MODE` flag added
+(`config.py`, default `full_context`); router seam `_lesson_context_block` in
+`concierge_prompts.py` dispatches `saver` / `full_context` (CR020) / `embedding`.
+`embedding` degrades to `full_context` (logged once); unknown/empty → `full_context`.
+Per-turn `concierge_context` log (mode + est_tokens). `agent_runner.py` unchanged
+(resolves from settings). Backend 753 tests green (+11). Env knob documented in
+`infra/alpha.env(.example)`.
 **Filed:** 2026-07-12 (AT:R54)
 **Source:** Saiful — a selector over the three ways the Concierge can be given lesson
 (and later app-manual) knowledge. Routes to:
