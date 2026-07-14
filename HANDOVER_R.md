@@ -1,15 +1,20 @@
 # Handover — AMI Trade build session
 
-**Last updated:** 2026-07-13 (end of AT:R57 — **made News + Social Media
-analysts truthful** (CR023/CR024, both `in_progress`): real headlines
-(Yahoo + Alpha Vantage) and real Reddit sentiment (Adanos, after LunarCrush
-turned out to need a paid-tier upgrade) now flow into both the Room and
-1-on-1 paths. Auditing the rest of the 12-agent roster surfaced **DEF051**
-— Convene the Room checks mandate compliance against a hardcoded fake
-$100k/0%-drawdown portfolio, always — filed **open**, next session's
-target. **CR033** (Market/Fundamentals Analyst + Bull Researcher
-truthfulness gaps) filed docs-only, sequenced after DEF051. Full narrative:
-[`history/AT_R0057.md`](history/AT_R0057.md).
+**Last updated:** 2026-07-14 (end of AT:R58 — **closed out the full
+12-agent truthfulness/wiring audit** carried over from AT:R57. Fixed
+**DEF051** (Room's fake $100k/0%-drawdown compliance input — safety-floor-
+relevant), **DEF052** (Market Analyst's fabricated technicals → real
+RSI/trend/volume/support-breakout), **DEF053** (Fundamentals Analyst's
+oversold scope → real valuation multiples/sector/dividends/analyst
+consensus), **DEF054+DEF055** (Bull/Bear Researcher's fabricated Decision
+Journal claim → real ticker-scoped history), **DEF056** (the Room's
+structured Verdict ignored the 12-agent debate entirely — now the PM's own
+debate-informed decision, vetoed by a previously-dead-code safety floor),
+and **CR034** (Room's `forward_catalyst` FOMC date was a frozen "in 11
+days" literal → real 2026 Fed calendar). CR033 superseded by DEF052-055.
+All promoted to Alpha (`alpha-2026-07-14-3` is latest). CR034/DEF056 audit
+lanes opened but verdict not yet seen — next session's first check. Full
+narrative: [`history/AT_R0058.md`](history/AT_R0058.md).
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -24,23 +29,23 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **481 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; always `git log` for the true count. AT:R56 shipped CR025 (1 commit) but never wrapped — backfilled by AT:R57 via `history/AT_R0056.md`. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
-| Latest commit | `73e984f` — docs(defect,cr): file DEF051 (Room's fake portfolio/drawdown) + CR033 (remaining agent data gaps) (AT:R57 DEF051 CR033). |
-| Alpha tags | **`alpha-2026-07-11-3`** (→ `7ebc123`) — latest promote (AT:R54 DEF049): milestone-credit double-grant fix (code-only, no migration). Prior this session: **`alpha-2026-07-11-2`** (DEF039/040/042/047/048 + **migration 0015** `d1e2f3a40015` — reputation_events partial-unique dedup index). ✅ melehost `alembic_version = d1e2f3a40015` (0015 applied clean on live Postgres). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. AT:R57's News/Social work (CR023/024) is code-only, no migration — needs `ALPHA_VANTAGE_API_KEY` + `ADANOS_API_KEY` in `infra/alpha.env` (both already added this session) for a promote to activate real data on Alpha. |
-| Backend tests | **673 passed, 0 failed** (AT:R56 added +2 CR025 route tests; AT:R57 added +81 across `test_news_context.py`, `test_social_context.py`, `test_one_on_one_news_injection.py`, `test_one_on_one_social_injection.py`, and extensions to `test_room_runner.py`/`test_overlay_generator.py`/`test_agent_prompts.py`). |
-| Mobile pubspec | **`0.1.0+38`** (AT:R54 — new "Diagonal duo" app icon + CR018 lesson numbers + merged watchlist fixes). TestFlight: **`+38` uploaded + processing** (benign objective_c.framework dSYM warning). APK: `+38` release-signed (66 MB, sent to Saiful). |
+| Git state | Clean working tree, **513 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; this session also had **CR034 + DEF056 land from an unannounced parallel window under the same `AT:R58` tag** — always diff `git log <last-wrap-sha>..HEAD`, never rely on this conversation's own memory of what shipped. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
+| Latest commit | `27adb46` — docs(audit): open CR034/DEF056 architect lanes for track U (AT:R58 CR034 DEF056). |
+| Alpha tags | **`alpha-2026-07-14-3`** (→ `7561635`) — latest promote, DEF056 (PM verdict driven by debate) live. Chain this session: `alpha-2026-07-13-1` (DEF051) → `alpha-2026-07-14-1` (DEF052-055) → `alpha-2026-07-14-2` (CR034) → `alpha-2026-07-14-3` (DEF056). **No new migrations this session** — every DEF051-056/CR034 fix is code-only (real-data wiring + prompt/verdict logic, no schema change). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. |
+| Backend tests | **741 passed, 0 failed** (673 → 741, +68 this session across DEF051/052/053/054/055/056 + CR034 — see `history/AT_R0058.md` for the per-item breakdown). ⚠️ Run via `source backend/.venv/bin/activate` first — a bare `pytest` can pick up system Python 3.14 with no project deps (`ModuleNotFoundError: structlog`), which looks like mass collection failure, not a real regression. |
+| Mobile pubspec | **`0.1.0+38`** (AT:R54 — unchanged this session). DEF051 (`api_client.dart`) and DEF056 (4 files — PASS verdict's own visual treatment) touched mobile source but **no new build was cut** — these ship whenever Saiful next runs `scripts/build_testflight.sh`/`build_playstore.sh`. TestFlight: **`+38` uploaded + processing** (predates this session's mobile changes; benign objective_c.framework dSYM warning). APK: `+38` release-signed (66 MB, sent to Saiful). |
 | Content corpus | 270 lessons (**CR018: numbered by id-prefix, badge in list + reader**), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **356 i18n keys** (AT:R54 +2 watchlist remove/undo). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
 ```bash
 $ git log --oneline | head -8
-73e984f docs(defect,cr): file DEF051 (Room's fake portfolio/drawdown) + CR033 (remaining agent data gaps) (AT:R57 DEF051 CR033)
-c942120 feat(agents): wire real Reddit sentiment into Social Media Analyst via Adanos (AT:R57 CR024)
-a812d95 docs(cr): record LunarCrush 402 finding, no client code written blind (AT:R57 CR024)
-4b153a2 feat(agents): make News + Social Media analysts truthful (AT:R57 CR023 CR024)
-1306e4f chore(handover): backfill wrap for AT:R56 (AT:R56)
-c71a683 feat(watchlist): wire real day-change % badge, drop hardcoded None (AT:R56 CR025)
-b85a637 chore(handover): wrap AT:R55
-06a3476 docs(audit): add output-compression guardrail 6 to handshake protocol (AT:R55)
+27adb46 docs(audit): open CR034/DEF056 architect lanes for track U (AT:R58 CR034 DEF056)
+a2e836a docs(audit): DEF054/DEF055 round 1 COMPLETE — mark in INDEX, fix stale promoted-status notes (AT:R58 DEF054 DEF055)
+7561635 docs(defect): flip DEF056 to resolved (AT:R58 DEF056)
+e939e46 fix(room): PM's own verdict drives the outcome, safety floor vetoes it (AT:R58 DEF056)
+c87b0ce docs(defect): file DEF056 — Room verdict ignores agent debate, PM prose can contradict it (AT:R58 DEF056)
+e19bf56 feat(room): compute real days-to-next-FOMC-decision, drop frozen literal (AT:R58 CR034)
+b7317ca chore(audit): DEF055 round 1 verdict — COMPLETE (AT:U1 CR005)
+d703635 chore(audit): DEF054 round 1 verdict — COMPLETE (AT:U1 CR005)
 ...
 ```
 
@@ -110,7 +115,7 @@ Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` —
 | Signing | iOS Distribution cert in keychain (`C184E839…`, team `S7RBWM4879`). App Store Connect API key at `~/.appstoreconnect/private_keys/AuthKey_44VJ5WADL2.p8` (App Manager role; issuer `289e6201-8fc9-44a3-abde-59e8e278527c`). Android: Play App Signing (mandatory for new apps; Google holds the signing key); upload keystore at `~/.android-keys/ami-trade-upload.keystore` (referenced by `android/app/build.gradle.kts` via `~/.android-keys/keystore.properties`; debug-signing fallback when the props file is absent). |
 | Markdown render | `flutter_markdown` was discontinued by Google upstream; AT:R20 swapped to `flutter_markdown_plus ^1.0.3`. Drop-in API. |
 
-App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **AT:R27 Floor change:** tapping an unlocked agent no longer opens 1-on-1 directly — it now opens an `AgentActionSheet` bottom sheet with two big buttons: `[1-ON-1]` (talk to the agent) and `[BRIEF]` (modify how it thinks). Concierge skips the sheet — has no Brief surface, so 1-on-1 is the only path. The tune icon in the 1-on-1 header stays as a secondary route to Brief. **AT:R27 rename:** `CoachScreen` → `BriefScreen`, `BriefHistoryScreen`, `BriefNotifier`/`briefNotifierProvider`, `models/brief.dart`, `api_client.startBrief/streamBriefMessage/...`. The 33 l10n keys flipped from `coach*` to `brief*` (including the journal chips: `journalFilterCoach` → `journalFilterBrief`, value `COACH` → `BRIEF`; same for `journalEntryTypeCoach`). Journal filter chips now read: `ALL · ROOM · TRADE · 1-ON-1 · BRIEF · LESSONS · UNLOCKS`. **First-time walkthrough (AT:R23):** per-section coach-mark tours (still using `tutorial_coach_mark` package — unrelated to Brief feature) fire on first visit. **AT:R25 auth gate** + **AT:R26 sign-out (Phase 4)** + **AT:R26 Apple-glitch fix** still in place. **AT:R37 sign-out UX:** after the `signOut()` notifier completes (which still mints a fresh anon in the background via bootstrap, since the app gate needs *some* user), the Settings button now pushes `SignInScreen(showSignedOutBanner: true)` — the user lands on the sign-in screen with a subtle "You've been signed out." strip at the top and one-tap auth options. Back navigation returns to Settings as guest if they don't sign back in. **AT:R38 merge sheet (BL16):** after a successful claim, `SignInScreen` reads `AuthVerifyResponse.adoptedFromUserId` — when non-null (account-linking Phase 1 silently adopted an existing email/sub row over the caller's anon), it pushes `MergeSheet` showing the orphan's pluralised counts ("12 journal entries · 3 sim trades · 7 lessons started · mandate") with `[MERGE EVERYTHING]` / `[KEEP SEPARATE]`. Confirm hits `POST /v1/auth/merge`; backend re-keys the orphan's data into the adopting user in one transaction. `_AuthGate` also invalidates sim / journal / mandate / watchlist / lessons providers on every `user.id` change so the prior user's data doesn't render stale post-swap. Journal soft-delete + Trash + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green pill once a sim_trade exists. Trade ticket sheet has live quote chip + auto-suggested TP/SL. Ticker tape below bottom nav. Settings → APPEARANCE is dark-only. Bug-report sheet (long-press app-version chip) supports photo attachments. **AT:R41 TickerDetail chart:** the COMING SOON placeholder is gone — `TickerChart` widget renders adaptive candlestick (1D/1W/1M) or line (3M/1Y/5Y) with volume bars in the bottom 1/4 and a touch-drag crosshair with date+price readout. 6 ChoiceChip periods, default 1M, per-session-only. Expand button (top-right, portrait only) pushes `ChartFullscreenScreen` — the ONE route that unlocks orientation. **AT:R42 TickerDetail Bundles 4+5:** `_EarningsPill` (amber chip, "Q3 · Jul 25 · est. EPS $2.04", 90-day cutoff, hide-on-empty) and `_NewsSection` (5 `_NewsRow` tiles, publisher + relative-time label, tap opens Safari via `LaunchMode.externalApplication`). Both sections hide when data is empty. `tickerNewsProvider` + `tickerEarningsProvider` FutureProviders; `simNews()` + `simEarnings()` API client methods; `SimNewsArticle` + `SimNews` + `SimEarnings` models in `sim.dart`.
+App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concierge + 12 agents on Floor. **AT:R27 Floor change:** tapping an unlocked agent no longer opens 1-on-1 directly — it now opens an `AgentActionSheet` bottom sheet with two big buttons: `[1-ON-1]` (talk to the agent) and `[BRIEF]` (modify how it thinks). Concierge skips the sheet — has no Brief surface, so 1-on-1 is the only path. The tune icon in the 1-on-1 header stays as a secondary route to Brief. **AT:R27 rename:** `CoachScreen` → `BriefScreen`, `BriefHistoryScreen`, `BriefNotifier`/`briefNotifierProvider`, `models/brief.dart`, `api_client.startBrief/streamBriefMessage/...`. The 33 l10n keys flipped from `coach*` to `brief*` (including the journal chips: `journalFilterCoach` → `journalFilterBrief`, value `COACH` → `BRIEF`; same for `journalEntryTypeCoach`). Journal filter chips now read: `ALL · ROOM · TRADE · 1-ON-1 · BRIEF · LESSONS · UNLOCKS`. **First-time walkthrough (AT:R23):** per-section coach-mark tours (still using `tutorial_coach_mark` package — unrelated to Brief feature) fire on first visit. **AT:R25 auth gate** + **AT:R26 sign-out (Phase 4)** + **AT:R26 Apple-glitch fix** still in place. **AT:R37 sign-out UX:** after the `signOut()` notifier completes (which still mints a fresh anon in the background via bootstrap, since the app gate needs *some* user), the Settings button now pushes `SignInScreen(showSignedOutBanner: true)` — the user lands on the sign-in screen with a subtle "You've been signed out." strip at the top and one-tap auth options. Back navigation returns to Settings as guest if they don't sign back in. **AT:R38 merge sheet (BL16):** after a successful claim, `SignInScreen` reads `AuthVerifyResponse.adoptedFromUserId` — when non-null (account-linking Phase 1 silently adopted an existing email/sub row over the caller's anon), it pushes `MergeSheet` showing the orphan's pluralised counts ("12 journal entries · 3 sim trades · 7 lessons started · mandate") with `[MERGE EVERYTHING]` / `[KEEP SEPARATE]`. Confirm hits `POST /v1/auth/merge`; backend re-keys the orphan's data into the adopting user in one transaction. `_AuthGate` also invalidates sim / journal / mandate / watchlist / lessons providers on every `user.id` change so the prior user's data doesn't render stale post-swap. Journal soft-delete + Trash + server-side search. Room + 1-on-1 agent text renders as Markdown. Verdict card flips its "Open Trade Ticket" button into a green pill once a sim_trade exists. **AT:R58 DEF056:** the Verdict can now come back as `PASS` (debate concluded no trade fits, distinct from a mandate `REJECT`) — rendered with its own neutral slate/icon treatment (not amber+cancel like REJECT) in the verdict card, journal replay, and share card. Trade ticket sheet has live quote chip + auto-suggested TP/SL. Ticker tape below bottom nav. Settings → APPEARANCE is dark-only. Bug-report sheet (long-press app-version chip) supports photo attachments. **AT:R41 TickerDetail chart:** the COMING SOON placeholder is gone — `TickerChart` widget renders adaptive candlestick (1D/1W/1M) or line (3M/1Y/5Y) with volume bars in the bottom 1/4 and a touch-drag crosshair with date+price readout. 6 ChoiceChip periods, default 1M, per-session-only. Expand button (top-right, portrait only) pushes `ChartFullscreenScreen` — the ONE route that unlocks orientation. **AT:R42 TickerDetail Bundles 4+5:** `_EarningsPill` (amber chip, "Q3 · Jul 25 · est. EPS $2.04", 90-day cutoff, hide-on-empty) and `_NewsSection` (5 `_NewsRow` tiles, publisher + relative-time label, tap opens Safari via `LaunchMode.externalApplication`). Both sections hide when data is empty. `tickerNewsProvider` + `tickerEarningsProvider` FutureProviders; `simNews()` + `simEarnings()` API client methods; `SimNewsArticle` + `SimNews` + `SimEarnings` models in `sim.dart`.
 
 ---
 
@@ -123,11 +128,12 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
-Session name to use: **AT:R58**. (AT:R57 wrapped here — News/Social Analyst
-truthfulness fix, AT:R56 backfill. ⚠️ AT:R48/R50 ran as parallel sessions and
-never wrapped; governance track G + auditor track U also commit to `main`
-(AT:G1, AT:U1). A later wrap of any parallel session must NOT reset this
-counter below R58.)
+Session name to use: **AT:R59**. (AT:R58 wrapped here — closed the full
+12-agent truthfulness/wiring audit, DEF051-056 + CR034. ⚠️ AT:R48/R50 ran as
+parallel sessions and never wrapped; AT:R58 itself had CR034+DEF056 land from
+an unannounced parallel window under the same tag; governance track G +
+auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any
+parallel session must NOT reset this counter below R59.)
 
 If Alpha is down at session start, `/start-fresh` will surface that and tell you the melehost debug commands.
 
@@ -144,34 +150,34 @@ value became CR023–CR032 (see below); don't look for it, don't `cd` into it.
 AT:R57** — real data now flows into both. News: Yahoo (free) combined with
 Alpha Vantage (paid, sentiment-scored) when `ALPHA_VANTAGE_API_KEY` is set.
 Social: Reddit-only aggregate sentiment via Adanos (free, 250 calls/month)
-when `ADANOS_API_KEY` is set — LunarCrush turned out to need a paid-tier
-upgrade Saiful hasn't done, so this pivoted to Adanos instead, same session.
-Neither CR is `done`: News still lacks a macro/earnings-calendar feed by
-design (disclosed, not fabricated), and Social still has no Twitter/X/
-StockTwits/Google Trends/Discord coverage. Full detail:
-`docs/forward_planning/CR023_news_analyst_live_feed/` and
+when `ADANOS_API_KEY` is set. Neither CR is `done`: News still lacks a
+macro/earnings-calendar feed by design (disclosed, not fabricated), and
+Social still has no Twitter/X/StockTwits/Google Trends/Discord coverage.
+Full detail: `docs/forward_planning/CR023_news_analyst_live_feed/` and
 `CR024_social_analyst_live_feed/`.
 
-**DEF051 is the explicit next-session target** — [full spec](docs/defect/DEF051_room_portfolio_defaults/DEF051_room_portfolio_defaults.md).
-Convene the Room checks mandate compliance against a **hardcoded fake
-$100,000 / 0%-drawdown portfolio, always** — `RoomStartRequest`'s defaults
-(`backend/app/api/room.py:79-80`) are never overridden by the mobile
-client's `streamRoom()` call site (`mobile/lib/state/room_providers.dart:94`),
-even though `SimEngine.total_value(user_id)` / `.current_drawdown_pct(user_id)`
-already exist and are already correctly used by the real sim-trade
-compliance checks. Fix: resolve real values server-side in `stream_room`
-from `SimEngine`, don't trust the client-suppliable request fields. This is
-a safety-floor-input bug, not a prompt-honesty gap — highest priority of
-everything carried over.
+**DEF051-056 + CR034 all `resolved`/`done`, shipped AT:R58, all promoted**
+— the full 12-agent truthfulness/wiring audit closed out. DEF051 (Room's
+fake $100k/0%-drawdown compliance input, safety-floor-relevant), DEF052
+(Market Analyst real technicals), DEF053 (Fundamentals Analyst real
+valuation multiples/sector/dividends/consensus), DEF054+DEF055 (Bull/Bear
+Researcher real Decision Journal history), DEF056 (the Room's structured
+Verdict now reflects the actual 12-agent debate instead of a precomputed
+value set before any agent spoke), CR034 (Room's FOMC-date catalyst now
+real). CR033 superseded by DEF052-055. Full detail in each item's own
+`docs/defect/`/`docs/forward_planning/` folder and in
+[`history/AT_R0058.md`](history/AT_R0058.md).
 
-**CR033 (docs-only, filed AT:R57, sequenced after DEF051)** — three more
-prompt-honesty gaps found auditing the rest of the roster:
-[full spec](docs/forward_planning/CR033_remaining_agent_data_gaps/CR033_remaining_agent_data_gaps.md).
-Market Analyst's technicals (RSI/trend/volume) are 100% fabricated always,
-and it claims MACD/moving-averages/Bollinger-Bands that don't exist as
-fields at all; Fundamentals Analyst oversells its real (yfinance-backed)
-scope; Bull Researcher claims Decision Journal history that's never read
-back into a prompt.
+**CR034 + DEF056 audit verdicts not yet seen — check this first.** Both
+landed from a parallel window under the `AT:R58` tag without an audit lane
+open; lanes were opened retroactively at handover time
+(`audit/handshake/cr/CR034.architect.md`, `DEF056.architect.md`), submitted
+round 1, but track U hadn't responded as of this wrap. Run
+`sh audit/handshake/watcher.sh state` and check
+`audit/handshake/cr/{CR034,DEF056}.auditor.md` — if `AWAITING_FIXES`, fix
+per the DEF052-style pattern (read finding → fix → adversarially-confirmed
+regression test → new round section in the architect doc → re-submit). If
+`COMPLETE`, just update `INDEX.md`.
 
 **Other priorities — Saiful hasn't picked between these yet:**
 
@@ -203,11 +209,11 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
+- [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date); all promoted, CR034/DEF056 audit verdict pending
 - [AT:R57](history/AT_R0057.md) — News + Social Media analysts made truthful (CR023/CR024); real headlines (Yahoo+Alpha Vantage) + real Reddit sentiment (Adanos, after LunarCrush needed a paid-tier upgrade); audited the rest of the roster → filed DEF051 (fake portfolio/drawdown, safety-floor-relevant) + CR033
 - [AT:R56](history/AT_R0056.md) — implemented CR025 (watchlist day-change badge); session shipped but never wrapped, backfilled at the start of AT:R57
 - [AT:R55](history/AT_R0055.md) — News/Social analyst live-feed gap → CR023/CR024; full Silent_Scout audit → closed + deprecated the workspace, filed CR025–032, migrated everything
 - [AT:R54](history/AT_R0054.md) — defect burn (DEF039/040/042/045/046/047/048/049/050) + full audit handshake, app icon "Diagonal duo", build +38 (TestFlight+APK), CR018 lesson numbers, CR019–022 filed
-- [AT:R53](history/AT_R0053.md) — CR004 execution #2 + release: CR009–CR016 batch, builds +36/+37, DEF043, CR017 research, DEF044 (Alpaca encryption) promoted
 
 ---
 
