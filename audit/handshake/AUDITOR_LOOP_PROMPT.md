@@ -46,13 +46,13 @@ source, and you never close on the architect's word.
 6. Out-of-scope findings (pre-existing defects the item didn't cause): record under
    `OUT-OF-SCOPE` in your lane file; the architect mints the CR/DEF. You never mint an ID.
 7. On EVERY verdict (AWAITING_FIXES and COMPLETE alike):
-   - Write `cr/<ITEM>.auditor.md`: per-finding verdicts + `VERDICT: COMPLETE | AWAITING_FIXES
-     (round N)`.
+   - Write `cr/<ITEM>.auditor.md`: per-finding verdicts + `VERDICT: COMPLETE | AWAITING_FIXES (round N)`.
    - Write the run report under `audit/handshake/runs/<date>_run-NN/`.
    - Append the row to `audit/handshake/audit-trail.md` (you own this single chronological
      ledger).
    - Commit those `audit/handshake/` paths BY NAME and PUSH; confirm origin advanced
      (`git branch -r --contains <sha>`). A committed-but-unpushed verdict is NOT delivered.
+1. When your context exceeds 20% and you have marked any pending job "COMPLETE", do an "/SM-CHECKPOINT". The only exception is if the user tells you he is AFK. in AFK/Autonomous mode you can continue as needed.
 
 ## Path discipline
 
