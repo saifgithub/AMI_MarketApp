@@ -1042,6 +1042,26 @@ def test_social_media_mention_trend_varies_by_ticker():
     assert len(trends) > 1
 
 
+def test_profile_for_ticker_rng_seed_is_hash_seed_independent():
+    """DEF057 regression: _profile_for_ticker's rng used to seed off the
+    builtin hash(), which is randomized per-process (PYTHONHASHSEED)
+    unless pinned — so the "deterministic synthetic baseline" this
+    function's docstring promises wasn't actually deterministic across
+    process restarts, only within one. Pin the expected value against
+    zlib.crc32's own (process-independent) output for "AAPL" — a
+    hash()-seeded implementation would need a suspiciously exact PYTHONHASHSEED
+    to reproduce this by chance, so this pins the fix, not just a same-process
+    consistency check that would have passed before the fix too."""
+    import zlib
+
+    from app.services import room_runner
+
+    assert zlib.crc32(b"AAPL") == 3060094812  # pins crc32's own stability
+    profile = room_runner._profile_for_ticker("AAPL")
+    assert profile["base_price"] == 408.14
+    assert profile["pe"] == "53.3"
+
+
 # ── Timeout fallback ──────────────────────────────────────────────────────
 
 

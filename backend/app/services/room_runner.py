@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import zlib
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
@@ -259,7 +260,11 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     The returned profile carries a `data_source` field so the prompt
     layer can be honest with the LLM about what's live vs scaffolded.
     """
-    rng = random.Random(hash(ticker.upper()))
+    # zlib.crc32, not the builtin hash() — str hashing is randomized per
+    # process (PYTHONHASHSEED) unless pinned, so hash() broke the
+    # "deterministic synthetic baseline" this docstring promises: same
+    # ticker, different process, different synthetic profile (DEF057).
+    rng = random.Random(zlib.crc32(ticker.upper().encode()))
     base_price = 50 + rng.uniform(0, 400)
     pe = rng.uniform(12, 55)
     rev_growth = rng.randint(2, 40)
