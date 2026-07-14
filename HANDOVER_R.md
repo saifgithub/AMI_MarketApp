@@ -12,11 +12,12 @@ structured Verdict ignored the 12-agent debate entirely — now the PM's own
 debate-informed decision, vetoed by a previously-dead-code safety floor),
 and **CR034** (Room's `forward_catalyst` FOMC date was a frozen "in 11
 days" literal → real 2026 Fed calendar). CR033 superseded by DEF052-055.
-All promoted to Alpha (`alpha-2026-07-14-3` is latest) and all audited
-**COMPLETE** — zero BLOCKER/MAJOR findings across the whole batch. One
-follow-up, **DEF057** (a pre-existing flaky-test bug the auditor caught
-while checking DEF056), filed and fixed same-session, audit pending. Full
-narrative: [`history/AT_R0058.md`](history/AT_R0058.md).
+One follow-up, **DEF057** (a pre-existing rng-determinism bug the auditor
+caught while checking DEF056), filed and fixed same-session. **All 7
+Defects + CR034 audited COMPLETE round 1** — zero BLOCKER/MAJOR findings
+across the entire 10-lane batch (CR023/024 included). Everything except
+DEF057 promoted through `alpha-2026-07-14-3`; DEF057 is test-hygiene-only,
+no urgency. Full narrative: [`history/AT_R0058.md`](history/AT_R0058.md).
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
 
@@ -131,8 +132,8 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
 Session name to use: **AT:R59**. (AT:R58 wrapped here — closed the full
-12-agent truthfulness/wiring audit, DEF051-057 + CR034, all audited
-COMPLETE except DEF057 (verdict pending). ⚠️ AT:R48/R50 ran as parallel
+12-agent truthfulness/wiring audit, DEF051-057 + CR034, all 10 lanes
+audited COMPLETE round 1, zero BLOCKER/MAJOR. ⚠️ AT:R48/R50 ran as parallel
 sessions and never wrapped; AT:R58 itself had CR034+DEF056 land from an
 unannounced parallel window under the same tag; governance track G +
 auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any
@@ -175,19 +176,17 @@ safety-floor-override/fail-safe-to-PASS/size-clamp properties. Full detail
 in each item's own `docs/defect/`/`docs/forward_planning/` folder and in
 [`history/AT_R0058.md`](history/AT_R0058.md).
 
-**DEF057 — audit verdict not yet seen, check this first.** Track U's
-DEF056 review caught a pre-existing bug (O2): `_profile_for_ticker`'s rng
-seeded off Python's builtin `hash()`, randomized per process unless pinned
-— contradicted the function's own "deterministic synthetic baseline"
+**DEF057 — also audited COMPLETE, nothing left open from this batch.**
+Track U's DEF056 review caught a pre-existing bug (O2): `_profile_for_ticker`'s
+rng seeded off Python's builtin `hash()`, randomized per process unless
+pinned — contradicted the function's own "deterministic synthetic baseline"
 docstring and caused a flaky test. Filed and fixed same-session (seed off
-`zlib.crc32` instead — stable across processes); lane opened, submitted
-round 1, verdict not yet seen as of this wrap. Run
-`sh audit/handshake/watcher.sh state` and check
-`audit/handshake/cr/DEF057.auditor.md` — if `AWAITING_FIXES`, fix per the
-DEF052-style pattern (read finding → fix → adversarially-confirmed
-regression test → new round section in the architect doc → re-submit). If
-`COMPLETE`, just update `INDEX.md`. Not yet promoted (test-hygiene fix, no
+`zlib.crc32` instead — stable across processes); auditor independently
+proved determinism across 5 hash seeds and proved the old code was
+genuinely non-deterministic. Not yet promoted (test-hygiene fix, no
 user-facing urgency — can ride the next promotion of substantive work).
+**Every item from this session's audit batch (CR023/024/034, DEF051-057) is
+now COMPLETE — nothing pending for next session from this thread.**
 
 **Other priorities — Saiful hasn't picked between these yet:**
 
@@ -219,7 +218,7 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
-- [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date) → DEF057 (rng flakiness, minted from DEF056's audit); all promoted except DEF057, all audited COMPLETE except DEF057 (pending)
+- [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date) → DEF057 (rng flakiness, minted from DEF056's audit); all 10 lanes audited COMPLETE round 1, zero BLOCKER/MAJOR; all promoted except DEF057 (test-hygiene only)
 - [AT:R57](history/AT_R0057.md) — News + Social Media analysts made truthful (CR023/CR024); real headlines (Yahoo+Alpha Vantage) + real Reddit sentiment (Adanos, after LunarCrush needed a paid-tier upgrade); audited the rest of the roster → filed DEF051 (fake portfolio/drawdown, safety-floor-relevant) + CR033
 - [AT:R56](history/AT_R0056.md) — implemented CR025 (watchlist day-change badge); session shipped but never wrapped, backfilled at the start of AT:R57
 - [AT:R55](history/AT_R0055.md) — News/Social analyst live-feed gap → CR023/CR024; full Silent_Scout audit → closed + deprecated the workspace, filed CR025–032, migrated everything
