@@ -12,8 +12,10 @@ structured Verdict ignored the 12-agent debate entirely — now the PM's own
 debate-informed decision, vetoed by a previously-dead-code safety floor),
 and **CR034** (Room's `forward_catalyst` FOMC date was a frozen "in 11
 days" literal → real 2026 Fed calendar). CR033 superseded by DEF052-055.
-All promoted to Alpha (`alpha-2026-07-14-3` is latest). CR034/DEF056 audit
-lanes opened but verdict not yet seen — next session's first check. Full
+All promoted to Alpha (`alpha-2026-07-14-3` is latest) and all audited
+**COMPLETE** — zero BLOCKER/MAJOR findings across the whole batch. One
+follow-up, **DEF057** (a pre-existing flaky-test bug the auditor caught
+while checking DEF056), filed and fixed same-session, audit pending. Full
 narrative: [`history/AT_R0058.md`](history/AT_R0058.md).
 
 Read this file **first** in any new session. It captures **current truth** + the carry-overs. Per-session narratives live in [`history/`](history/) — one file per /handover wrap, newest filename = newest session. The PRD-derived backlog (with delivery status) is at [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md).
@@ -29,23 +31,23 @@ Read this file **first** in any new session. It captures **current truth** + the
 | | |
 |---|---|
 | Path | `/Volumes/Extreme Pro/AMI_MarketApp/` |
-| Git state | Clean working tree, **513 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; this session also had **CR034 + DEF056 land from an unannounced parallel window under the same `AT:R58` tag** — always diff `git log <last-wrap-sha>..HEAD`, never rely on this conversation's own memory of what shipped. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
-| Latest commit | `27adb46` — docs(audit): open CR034/DEF056 architect lanes for track U (AT:R58 CR034 DEF056). |
-| Alpha tags | **`alpha-2026-07-14-3`** (→ `7561635`) — latest promote, DEF056 (PM verdict driven by debate) live. Chain this session: `alpha-2026-07-13-1` (DEF051) → `alpha-2026-07-14-1` (DEF052-055) → `alpha-2026-07-14-2` (CR034) → `alpha-2026-07-14-3` (DEF056). **No new migrations this session** — every DEF051-056/CR034 fix is code-only (real-data wiring + prompt/verdict logic, no schema change). ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. |
-| Backend tests | **741 passed, 0 failed** (673 → 741, +68 this session across DEF051/052/053/054/055/056 + CR034 — see `history/AT_R0058.md` for the per-item breakdown). ⚠️ Run via `source backend/.venv/bin/activate` first — a bare `pytest` can pick up system Python 3.14 with no project deps (`ModuleNotFoundError: structlog`), which looks like mass collection failure, not a real regression. |
+| Git state | Clean working tree, **518 commits** (+wrap) — ⚠️ parallel sessions have committed to `main` before (R48, R50, G1) + the auditor track U interleaves `AT:U1` commits; this session also had **CR034 + DEF056 land from an unannounced parallel window under the same `AT:R58` tag** — always diff `git log <last-wrap-sha>..HEAD`, never rely on this conversation's own memory of what shipped. Pushed to GitHub: `https://github.com/saifgithub/AMI_MarketApp`, `origin/main` in sync. |
+| Latest commit | `309b92a` — docs(audit): CR034/DEF056 verdicts COMPLETE, fix wrong tag citations, open DEF057 lane (AT:R58 CR034 DEF056 DEF057). |
+| Alpha tags | **`alpha-2026-07-14-3`** (→ `7561635`) — latest promote, DEF056 (PM verdict driven by debate) live. Chain this session: `alpha-2026-07-13-1` (DEF051) → `alpha-2026-07-14-1` (DEF052-055) → `alpha-2026-07-14-2` (CR034) → `alpha-2026-07-14-3` (DEF056). **DEF057 (rng flakiness fix) not yet promoted** — test-hygiene fix, no user-facing urgency, will ride the next promotion. **No new migrations this session** — every fix is code-only. ❌ **Alpaca OAuth creds still NOT set** — API-key mode (AT:R47) is the working path. **DEF044 key derives from `SECRET_KEY`** — verify `infra/alpha.env` SECRET_KEY hash-matches melehost before every promote. |
+| Backend tests | **742 passed, 0 failed** (673 → 742, +69 this session across DEF051/052/053/054/055/056/057 + CR034 — see `history/AT_R0058.md` for the per-item breakdown). ⚠️ Run via `source backend/.venv/bin/activate` first — a bare `pytest` can pick up system Python 3.14 with no project deps (`ModuleNotFoundError: structlog`), which looks like mass collection failure, not a real regression. |
 | Mobile pubspec | **`0.1.0+38`** (AT:R54 — unchanged this session). DEF051 (`api_client.dart`) and DEF056 (4 files — PASS verdict's own visual treatment) touched mobile source but **no new build was cut** — these ship whenever Saiful next runs `scripts/build_testflight.sh`/`build_playstore.sh`. TestFlight: **`+38` uploaded + processing** (predates this session's mobile changes; benign objective_c.framework dSYM warning). APK: `+38` release-signed (66 MB, sent to Saiful). |
 | Content corpus | 270 lessons (**CR018: numbered by id-prefix, badge in list + reader**), 188 glossary terms, 280 AI Coach Q&A, 183 daily challenges, **356 i18n keys** (AT:R54 +2 watchlist remove/undo). **Tier 1 ARB AR + MS via on-prem Gemma 4 31B**; new keys fall back to EN until next translate pass. Tier 2 + Tier 3 remain EN-only; loaders ready when translated subdirs land. |
 
 ```bash
 $ git log --oneline | head -8
+309b92a docs(audit): CR034/DEF056 verdicts COMPLETE, fix wrong tag citations, open DEF057 lane (AT:R58 CR034 DEF056 DEF057)
+b0c85a2 fix(room): seed profile rng off a stable hash, not PYTHONHASHSEED-randomized hash() (AT:R58 DEF057)
+06baed0 chore(audit): CR034 round 1 verdict — COMPLETE (FOMC dates verified vs fed calendar) (AT:U1 CR005)
+15b234a chore(audit): DEF056 round 1 verdict — COMPLETE (safety floor vetoes verified; 3 obs) (AT:U1 CR005)
+deb653c chore(handover): wrap AT:R58
 27adb46 docs(audit): open CR034/DEF056 architect lanes for track U (AT:R58 CR034 DEF056)
 a2e836a docs(audit): DEF054/DEF055 round 1 COMPLETE — mark in INDEX, fix stale promoted-status notes (AT:R58 DEF054 DEF055)
 7561635 docs(defect): flip DEF056 to resolved (AT:R58 DEF056)
-e939e46 fix(room): PM's own verdict drives the outcome, safety floor vetoes it (AT:R58 DEF056)
-c87b0ce docs(defect): file DEF056 — Room verdict ignores agent debate, PM prose can contradict it (AT:R58 DEF056)
-e19bf56 feat(room): compute real days-to-next-FOMC-decision, drop frozen literal (AT:R58 CR034)
-b7317ca chore(audit): DEF055 round 1 verdict — COMPLETE (AT:U1 CR005)
-d703635 chore(audit): DEF054 round 1 verdict — COMPLETE (AT:U1 CR005)
 ...
 ```
 
@@ -129,9 +131,10 @@ App surface: bottom nav Floor / Portfolio / Journal / Lessons / Settings. Concie
 The slash command reads `HANDOVER_R.md` + `docs/initial_specs/10_delivery/project_plan.md`, runs the configured sanity checks (Alpha health curl), queries the live bug list (currently **0 open**), then enters plan mode asking what to work on.
 
 Session name to use: **AT:R59**. (AT:R58 wrapped here — closed the full
-12-agent truthfulness/wiring audit, DEF051-056 + CR034. ⚠️ AT:R48/R50 ran as
-parallel sessions and never wrapped; AT:R58 itself had CR034+DEF056 land from
-an unannounced parallel window under the same tag; governance track G +
+12-agent truthfulness/wiring audit, DEF051-057 + CR034, all audited
+COMPLETE except DEF057 (verdict pending). ⚠️ AT:R48/R50 ran as parallel
+sessions and never wrapped; AT:R58 itself had CR034+DEF056 land from an
+unannounced parallel window under the same tag; governance track G +
 auditor track U also commit to `main` (AT:G1, AT:U1). A later wrap of any
 parallel session must NOT reset this counter below R59.)
 
@@ -156,28 +159,35 @@ Social still has no Twitter/X/StockTwits/Google Trends/Discord coverage.
 Full detail: `docs/forward_planning/CR023_news_analyst_live_feed/` and
 `CR024_social_analyst_live_feed/`.
 
-**DEF051-056 + CR034 all `resolved`/`done`, shipped AT:R58, all promoted**
-— the full 12-agent truthfulness/wiring audit closed out. DEF051 (Room's
-fake $100k/0%-drawdown compliance input, safety-floor-relevant), DEF052
-(Market Analyst real technicals), DEF053 (Fundamentals Analyst real
-valuation multiples/sector/dividends/consensus), DEF054+DEF055 (Bull/Bear
-Researcher real Decision Journal history), DEF056 (the Room's structured
-Verdict now reflects the actual 12-agent debate instead of a precomputed
-value set before any agent spoke), CR034 (Room's FOMC-date catalyst now
-real). CR033 superseded by DEF052-055. Full detail in each item's own
-`docs/defect/`/`docs/forward_planning/` folder and in
+**DEF051-057 + CR034 all `resolved`/`done`, shipped AT:R58** — the full
+12-agent truthfulness/wiring audit closed out, every item audited
+**COMPLETE** by track U, zero BLOCKER/MAJOR findings across the whole
+batch. DEF051 (Room's fake $100k/0%-drawdown compliance input,
+safety-floor-relevant), DEF052 (Market Analyst real technicals), DEF053
+(Fundamentals Analyst real valuation multiples/sector/dividends/consensus),
+DEF054+DEF055 (Bull/Bear Researcher real Decision Journal history), DEF056
+(the Room's structured Verdict now reflects the actual 12-agent debate
+instead of a precomputed value set before any agent spoke — the
+highest-stakes fix of the session), CR034 (Room's FOMC-date catalyst now
+real). CR033 superseded by DEF052-055. DEF051-056 + CR034 promoted through
+`alpha-2026-07-14-3`; DEF056's own audit independently reproduced the
+safety-floor-override/fail-safe-to-PASS/size-clamp properties. Full detail
+in each item's own `docs/defect/`/`docs/forward_planning/` folder and in
 [`history/AT_R0058.md`](history/AT_R0058.md).
 
-**CR034 + DEF056 audit verdicts not yet seen — check this first.** Both
-landed from a parallel window under the `AT:R58` tag without an audit lane
-open; lanes were opened retroactively at handover time
-(`audit/handshake/cr/CR034.architect.md`, `DEF056.architect.md`), submitted
-round 1, but track U hadn't responded as of this wrap. Run
+**DEF057 — audit verdict not yet seen, check this first.** Track U's
+DEF056 review caught a pre-existing bug (O2): `_profile_for_ticker`'s rng
+seeded off Python's builtin `hash()`, randomized per process unless pinned
+— contradicted the function's own "deterministic synthetic baseline"
+docstring and caused a flaky test. Filed and fixed same-session (seed off
+`zlib.crc32` instead — stable across processes); lane opened, submitted
+round 1, verdict not yet seen as of this wrap. Run
 `sh audit/handshake/watcher.sh state` and check
-`audit/handshake/cr/{CR034,DEF056}.auditor.md` — if `AWAITING_FIXES`, fix
-per the DEF052-style pattern (read finding → fix → adversarially-confirmed
+`audit/handshake/cr/DEF057.auditor.md` — if `AWAITING_FIXES`, fix per the
+DEF052-style pattern (read finding → fix → adversarially-confirmed
 regression test → new round section in the architect doc → re-submit). If
-`COMPLETE`, just update `INDEX.md`.
+`COMPLETE`, just update `INDEX.md`. Not yet promoted (test-hygiene fix, no
+user-facing urgency — can ride the next promotion of substantive work).
 
 **Other priorities — Saiful hasn't picked between these yet:**
 
@@ -209,7 +219,7 @@ Pre-CR004 backlog (BL7, BL8, credit-consumption emission, Tier 2 translation run
 
 ### Recent sessions (newest first)
 
-- [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date); all promoted, CR034/DEF056 audit verdict pending
+- [AT:R58](history/AT_R0058.md) — closed the full 12-agent truthfulness/wiring audit: DEF051 (fake portfolio/drawdown) → DEF052 (Market Analyst technicals) → DEF053 (Fundamentals valuation) → DEF054/055 (Bull/Bear journal history) → DEF056 (Room verdict now reflects the actual debate) → CR034 (real FOMC date) → DEF057 (rng flakiness, minted from DEF056's audit); all promoted except DEF057, all audited COMPLETE except DEF057 (pending)
 - [AT:R57](history/AT_R0057.md) — News + Social Media analysts made truthful (CR023/CR024); real headlines (Yahoo+Alpha Vantage) + real Reddit sentiment (Adanos, after LunarCrush needed a paid-tier upgrade); audited the rest of the roster → filed DEF051 (fake portfolio/drawdown, safety-floor-relevant) + CR033
 - [AT:R56](history/AT_R0056.md) — implemented CR025 (watchlist day-change badge); session shipped but never wrapped, backfilled at the start of AT:R57
 - [AT:R55](history/AT_R0055.md) — News/Social analyst live-feed gap → CR023/CR024; full Silent_Scout audit → closed + deprecated the workspace, filed CR025–032, migrated everything
