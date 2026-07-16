@@ -95,13 +95,25 @@ def cohens_kappa(pairs: list[tuple[str, str]]) -> float | None:
     return (po - pe) / (1 - pe)
 
 
+def is_pm_parse_fallback(rec: dict) -> bool:
+    """DEF058: PASS substituted because the PM's JSON failed to parse —
+    not the Room's actual view, excluded from agreement scoring."""
+    verdict = rec.get("verdict") or {}
+    return bool(verdict.get("overridden_from_llm")) and "machine-readable" in (
+        verdict.get("reason") or ""
+    )
+
+
 def score_batch(runs: dict[str, dict], consensus: dict[str, dict[str, dict]]) -> dict:
-    scored, rejects, unscored = [], [], []
+    scored, rejects, unscored, pm_fallbacks = [], [], [], []
     for ticker, rec in sorted(runs.items()):
         verdict = rec.get("verdict") or {}
         action = verdict.get("action")
         rc = room_class(rec)
         cc = majority_class(consensus.get(ticker, {}))
+        if is_pm_parse_fallback(rec):
+            pm_fallbacks.append(ticker)
+            continue
         if action == "REJECT":
             rejects.append((ticker, verdict.get("reason", ""), verdict.get("violations", [])))
             continue
@@ -130,6 +142,7 @@ def score_batch(runs: dict[str, dict], consensus: dict[str, dict[str, dict]]) ->
     ]
     return {
         "scored": scored, "rejects": rejects, "unscored": unscored,
+        "pm_fallbacks": pm_fallbacks,
         "matrix": matrix, "agree": agree, "comparable": comparable,
         "red_line": red_line, "sell_names": sell_names, "kappa": kappa,
         "target_diffs": target_diffs,
@@ -141,6 +154,8 @@ def per_source_agreement(runs: dict, consensus: dict) -> list[tuple[str, int, in
     for source in ("yahoo", "stockanalysis"):
         agree = total = 0
         for ticker, rec in runs.items():
+            if is_pm_parse_fallback(rec):
+                continue
             rc = room_class(rec)
             src = consensus.get(ticker, {}).get(source)
             cc = consensus_class(src) if src else None
@@ -181,7 +196,9 @@ def build_report(
         f"",
         f"## Headline",
         f"",
-        f"- Scored runs: **{n}** (rejects: {len(b['rejects'])}, unscored: {len(b['unscored'])})",
+        f"- Scored runs: **{n}** (rejects: {len(b['rejects'])}, unscored: {len(b['unscored'])}, "
+        f"PM parse-fallbacks excluded per DEF058: {len(b['pm_fallbacks'])}"
+        + (f" — {', '.join(b['pm_fallbacks'])}" if b["pm_fallbacks"] else "") + ")",
         f"- Agreement vs pooled Street consensus (all scored): **{b['agree']}/{n} ({pct})**",
         f"- Agreement on Buy/Hold-consensus names (Room's expressible space): "
         f"**{comp_agree}/{comp_n} ({comp_pct})**, Cohen's κ = **{kappa}**",
@@ -220,6 +237,31 @@ def build_report(
     for s in b["scored"]:
         mark = "✅" if s["room"] == s["consensus"] else ("🚫" if s in b["red_line"] else "—")
         md.append(f"| {s['ticker']} | {s['action']} | {s['consensus']} | {mark} | {s['reason']} |")
+
+    zacks_path = runs_meta["out_dir"] / "zacks_ranks.json"
+    spot_path = runs_meta["out_dir"] / "spot_checks.json"
+    if zacks_path.exists() or spot_path.exists():
+        zacks = json.loads(zacks_path.read_text()) if zacks_path.exists() else {}
+        spot = (json.loads(spot_path.read_text()) if spot_path.exists() else {}).get("tickers", {})
+        md += [
+            f"",
+            f"## Respected-site spot-check (Zacks Rank + MarketBeat)",
+            f"",
+            f"Zacks Rank is Zacks' own earnings-revision model (1=Strong Buy … 5=Strong",
+            f"Sell), not Street consensus — shown for reference, excluded from scoring.",
+            f"MarketBeat consensus fetched for a 10-name spot set. TipRanks blocks",
+            f"automated access (HTTP 403) and could not be included.",
+            f"",
+            f"| Ticker | Room | Street (pooled) | Zacks Rank | MarketBeat |",
+            f"|---|---|---|---|---|",
+        ]
+        for s in b["scored"]:
+            t = s["ticker"]
+            z = zacks.get(t) or {}
+            zr = f"{z.get('zacks_rank')} {z.get('zacks_rank_text')}" if z.get("zacks_rank") else "—"
+            mb = (spot.get(t) or {}).get("marketbeat") or {}
+            mbs = f"{mb.get('rating')} (${mb.get('target')})" if mb else "—"
+            md.append(f"| {t} | {s['action']} | {s['consensus']} | {zr} | {mbs} |")
 
     if b["rejects"]:
         md += [f"", f"### REJECTs (excluded from scoring)", f""]
@@ -316,7 +358,8 @@ def main() -> int:
 
     report = build_report(
         baseline, ablation, baseline_runs, ablation_runs,
-        {"baseline": args.baseline, "ablation": args.ablation}, consensus,
+        {"baseline": args.baseline, "ablation": args.ablation, "out_dir": args.out_dir},
+        consensus,
     )
     out = args.out_dir / "report.md"
     out.write_text(report)

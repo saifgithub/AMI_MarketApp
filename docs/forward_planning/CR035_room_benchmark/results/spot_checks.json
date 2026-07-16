@@ -1,0 +1,78 @@
+{
+ "meta": {
+  "fetched": "2026-07-16",
+  "note": "MarketBeat via WebFetch; TipRanks 403-blocked; Zacks ranks in zacks_ranks.json"
+ },
+ "tickers": {
+  "NVDA": {
+   "marketbeat": {
+    "rating": "Moderate Buy",
+    "target": 304.26,
+    "n": 53
+   }
+  },
+  "AAPL": {
+   "marketbeat": {
+    "rating": "Moderate Buy",
+    "target": 314.26,
+    "n": 35
+   }
+  },
+  "INTC": {
+   "marketbeat": {
+    "rating": "Hold",
+    "target": 101.96,
+    "n": 49
+   }
+  },
+  "F": {
+   "marketbeat": {
+    "rating": "Hold",
+    "target": 14.72,
+    "n": 17
+   }
+  },
+  "BGS": {
+   "marketbeat": {
+    "rating": "Reduce",
+    "target": 4.88,
+    "n": 5
+   }
+  },
+  "WU": {
+   "marketbeat": {
+    "rating": "Reduce",
+    "target": 8.55,
+    "n": 13
+   }
+  },
+  "KSS": {
+   "marketbeat": {
+    "rating": "Reduce",
+    "target": 15.31,
+    "n": 16
+   }
+  },
+  "LCID": {
+   "marketbeat": {
+    "rating": "Reduce",
+    "target": 9.56,
+    "n": 11
+   }
+  },
+  "JBLU": {
+   "marketbeat": {
+    "rating": "Reduce",
+    "target": 5.31,
+    "n": 13
+   }
+  },
+  "SMCI": {
+   "marketbeat": {
+    "rating": "Hold",
+    "target": 38.71,
+    "n": 18
+   }
+  }
+ }
+}

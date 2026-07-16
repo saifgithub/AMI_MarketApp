@@ -1,0 +1,130 @@
+{
+ "NVDA": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "META": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "AMZN": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "DAL": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "V": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "WMT": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "SLB": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "UNH": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "BA": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "NFLX": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "LLY": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "AAPL": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "INTC": {
+  "zacks_rank": "1",
+  "zacks_rank_text": "Strong Buy"
+ },
+ "PEP": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "SO": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "F": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "ETSY": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "RIVN": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "ADP": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "GIS": {
+  "zacks_rank": "5",
+  "zacks_rank_text": "Strong Sell"
+ },
+ "SMCI": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "HOG": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "TRIP": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "KHC": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "BGS": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "WU": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "JBLU": {
+  "zacks_rank": "2",
+  "zacks_rank_text": "Buy"
+ },
+ "KSS": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "CPB": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "LCID": {
+  "zacks_rank": "4",
+  "zacks_rank_text": "Sell"
+ },
+ "RDW": {
+  "zacks_rank": "3",
+  "zacks_rank_text": "Hold"
+ },
+ "LWAY": {
+  "zacks_rank": "",
+  "zacks_rank_text": ""
+ }
+}
