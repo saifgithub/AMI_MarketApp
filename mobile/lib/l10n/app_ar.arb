@@ -148,7 +148,6 @@
     "onboardingHintSending": "جاري الإرسال...",
     "onboardingHintAnswer": "اكتب إجابتك...",
     "onboardingReadbackContinue": "صحيح — متابعة",
-    "onboardingMeetYourTeam": "تعرف على فريقك",
     "signInCodeHint": "رمز مكون من 6 أرقام",
     "signInVerify": "تحقق ومطالبة",
     "signInDevCode": "وضع DEV — الرمز: {code}",

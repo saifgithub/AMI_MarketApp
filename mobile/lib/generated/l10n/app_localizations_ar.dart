@@ -675,7 +675,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingReadbackContinue => 'صحيح — متابعة';
 
   @override
-  String get onboardingMeetYourTeam => 'تعرف على فريقك';
+  String get onboardingClaimPrompt =>
+      'Let\'s save this so your team remembers you.';
+
+  @override
+  String get onboardingSaveTeam => 'SAVE MY TEAM';
+
+  @override
+  String get onboardingSkipForNow => 'SKIP FOR NOW';
 
   @override
   String get onboardingErrorTitle => 'تعذر الاتصال بالخادم';
@@ -1108,11 +1115,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'تم التنفيذ: $side $qty $ticker بسعر \$$price';
   }
 

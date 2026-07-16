@@ -109,6 +109,52 @@ wired — funnel/cohort tracking must exist before spend does, not after.
 |---|---|
 | Landing-page copy, App/Play Store listing copy, invite copy, content | Pricing changes, positioning calls, promotional-campaign timing, partner/brand deals, all outreach, all store submissions, reviewer-question responses, legal counsel engagement, translator sourcing |
 
+### 5. MVP completeness — spec vs. build audit
+
+Saiful flagged directly: "our onboarding process is non-existent" — as one of the things GTM has
+to cover is confirming the app is actually MVP-ready, not just trusting `project_plan.md`'s
+`✅ done` labels. First pass, ground-truthed against the real code (not doc status):
+
+- **Onboarding conversion was broken — filed and fixed as [DEF060](../../defect/DEF060_onboarding_conversion_broken/DEF060_onboarding_conversion_broken.md), `resolved` (AT:R59).**
+  The Concierge chat interview was real and worked, but account claim was never offered after it
+  (routed straight to the Floor, still anonymous) and the mandate the user just built was
+  discarded, not persisted — the actual anonymous→claimed conversion mechanism the whole
+  Founders Pricing / trial / subscription model depends on didn't function. Fixed same session:
+  onboarding now shows an explicit claim step, and claim hydrates the real mandate from the
+  interview. Still worth a live-tester check before leaning on it for acquisition timing (M12) —
+  automated tests cover the mechanism, not the felt UX.
+- **Core loop stages beyond onboarding are genuinely built, not stubs.** Education, 1-on-1,
+  Convene the Room, Brief Your Agent, Sim Decision, Journal, and Mandate Refinement all have real
+  screens wired to real backend routes — this is good news and worth stating plainly rather than
+  assuming the same rot as onboarding.
+- **Two smaller self-disclosed/undisclosed gaps found in the same pass**, not yet defects (no
+  spec regression — just unbuilt): the daily/morning briefing (already tracked as `⚡ partial`
+  A17 in `project_plan.md` — genuinely disclosed, not hidden) and Mandate Drift Alerts (spec'd
+  under Reflection in `core_loop_and_features.md`, but **not tracked anywhere** in
+  `project_plan.md`'s status tables — worth a backlog entry so it doesn't stay invisible).
+
+**Round 2 (same session, deep-traced sim/journal/mandate end-to-end, not just screen existence):**
+
+- **[DEF061](../../defect/DEF061_mandate_compliance_toggles_not_enforced/DEF061_mandate_compliance_toggles_not_enforced.md), `open`.** 4 of 8 Settings compliance toggles (`esg_lite`, `no_tobacco_alcohol_gambling`,
+  `no_fossil_fuels`, `custom_constraints`) are presented as hard per-trade filters but the
+  deterministic safety-floor check never reads them — only LLM prompt narration does, which sim
+  trades never invoke. Directly relevant to the halal-conscious AR/MS launch positioning.
+- **DEF062, `open`.** `PATCH /v1/mandate/{user_id}` has no server-side validation —
+  `model_copy(update=...)` skips it — so out-of-range/wrong-typed values can be persisted and
+  feed straight into the safety floor's own numeric checks. Not reachable from the shipped app
+  UI today, but the endpoint itself has no floor.
+- Sim trade ordering (compliance-before-persist), Journal write-coverage, and Mandate-edit
+  downstream enforcement (for the fields that *are* checked) all confirmed genuinely correct —
+  not everything found was a gap.
+- BL5/BL12 (mandate history + audit) and BL6 (drift alerts) backlog rows annotated in
+  `project_plan.md` with what this audit reconfirmed — no new IDs, existing tracking was mostly
+  right, just not cross-referenced to the dead `DRIFT_ALERT` UI category before now.
+
+Two rounds in, still not exhaustive — Sim/Journal/Mandate got a deep trace; Education, Agent
+Interaction (1-on-1/Room/Brief), and Lessons only got the shallower screen-inventory pass.
+Treat "MVP-ready" as unconfirmed until a fuller pass (or CR004 Workstream A's own spec-vs-build
+verification, which this audit overlaps with) closes the remaining surface.
+
 ## Out of scope
 
 - Does not change any locked pricing, positioning, or compliance decision — this doc points

@@ -40,7 +40,10 @@ from app.schemas.auth import (
     MergeResult,
 )
 from app.api.dependencies import get_current_user
+from app.schemas import Mandate
 from app.services.auth_service import AuthService, _is_dev_env, get_auth_service, parse_scaffold_token
+from app.services.concierge_engine import session_to_mandate_dict
+from app.services.mandate_store import get_mandate_store
 from app.services.merge_service import MergeError, MergeService, get_merge_service
 from app.services.rate_limit import (
     anon_rate_limit,
@@ -54,7 +57,17 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
     produced this user, stamp `claimed_user_id` on it. Idempotent — re-binding
     the same pair is a no-op. Silently skips if the session expired or was
     never created (the user could have claimed without going through Concierge
-    via the Apple direct path, for instance)."""
+    via the Apple direct path, for instance).
+
+    DEF060 (AT:R59): the Concierge interview builds a real mandate
+    (`session_to_mandate_dict`) but historically it was only ever returned as
+    a preview to the client and discarded — nothing persisted it, so every
+    claimed user got the generic default mandate regardless of what they told
+    the Concierge. First-time binding (guarded by the idempotency check above)
+    now hydrates the real mandate from the completed session's answers. Skips
+    if a mandate row already exists for this user — never clobber a mandate
+    that may have been edited since claim (e.g. a re-auth replaying the same
+    onboarding_session_id)."""
     if session_id is None:
         return
     store = get_session_store()
@@ -65,6 +78,10 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
         return
     session.claimed_user_id = user_id
     await store.save(session)
+
+    if session.completed and get_mandate_store().get(user_id) is None:
+        mandate_dict = session_to_mandate_dict(session, user_id=user_id)
+        get_mandate_store().upsert(user_id, Mandate.model_validate(mandate_dict))
 
 
 router = APIRouter(prefix="/v1/auth", tags=["auth"])

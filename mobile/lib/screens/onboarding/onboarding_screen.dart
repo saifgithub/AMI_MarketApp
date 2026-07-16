@@ -8,6 +8,7 @@
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
+import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/chat/chat_bubble.dart';
@@ -215,17 +216,50 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  /// DEF060 (AT:R59): step 5 of flow.md — offer account claim before the
+  /// Floor, instead of routing straight there. `SignInScreen` is pushed
+  /// (not replaced) so its default back arrow doubles as the "decline"
+  /// path flow.md already treats as a shipped, acceptable outcome —
+  /// declining leaves the user on the Floor anonymous, same as today.
+  Future<void> _goToFloor() async {
+    await OnboardingNotifier.markComplete();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacementNamed('/floor');
+  }
+
   Widget _completedControls(OnboardingState state) {
+    final l = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(AmiSpacing.m),
-      child: HexButton(
-        label: AppLocalizations.of(context).onboardingMeetYourTeam,
-        color: AmiColors.hexPink,
-        onPressed: () async {
-          await OnboardingNotifier.markComplete();
-          if (!mounted) return;
-          Navigator.of(context).pushReplacementNamed('/floor');
-        },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+            child: Text(
+              l.onboardingClaimPrompt,
+              style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          HexButton(
+            label: l.onboardingSaveTeam,
+            color: AmiColors.hexPink,
+            onPressed: () async {
+              await Navigator.of(context).push<void>(
+                MaterialPageRoute(builder: (_) => const SignInScreen()),
+              );
+              await _goToFloor();
+            },
+          ),
+          TextButton(
+            onPressed: _goToFloor,
+            child: Text(
+              l.onboardingSkipForNow,
+              style: AmiTypography.labelMono.copyWith(color: AmiColors.textLow),
+            ),
+          ),
+        ],
       ),
     );
   }

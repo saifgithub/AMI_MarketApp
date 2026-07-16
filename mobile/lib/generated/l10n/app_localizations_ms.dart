@@ -676,7 +676,14 @@ class AppLocalizationsMs extends AppLocalizations {
   String get onboardingReadbackContinue => 'BETUL — TERUSKAN';
 
   @override
-  String get onboardingMeetYourTeam => 'KENALI PASUKAN ANDA';
+  String get onboardingClaimPrompt =>
+      'Let\'s save this so your team remembers you.';
+
+  @override
+  String get onboardingSaveTeam => 'SAVE MY TEAM';
+
+  @override
+  String get onboardingSkipForNow => 'SKIP FOR NOW';
 
   @override
   String get onboardingErrorTitle => 'GAGAL MENGHUBUNGI BACKEND';
@@ -1109,11 +1116,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Dipenuhi: $side $qty $ticker @ \$$price';
   }
 

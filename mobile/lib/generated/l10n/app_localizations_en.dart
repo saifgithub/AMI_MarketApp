@@ -675,7 +675,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingReadbackContinue => 'LOOKS RIGHT — CONTINUE';
 
   @override
-  String get onboardingMeetYourTeam => 'MEET YOUR TEAM';
+  String get onboardingClaimPrompt =>
+      'Let\'s save this so your team remembers you.';
+
+  @override
+  String get onboardingSaveTeam => 'SAVE MY TEAM';
+
+  @override
+  String get onboardingSkipForNow => 'SKIP FOR NOW';
 
   @override
   String get onboardingErrorTitle => 'CAN\'\'T REACH THE BACKEND';
@@ -1107,11 +1114,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Filled: $side $qty $ticker @ \\\$$price';
   }
 
