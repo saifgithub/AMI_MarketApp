@@ -317,6 +317,118 @@ def test_room_pm_unparseable_reply_fails_safe_to_pass():
     assert v.overridden_from_llm is True
 
 
+class _PMFailsGateway(_FakeGateway):
+    """Live gateway whose PM call dies (vLLM outage mid-run) while every
+    earlier agent already answered — the DEF059 scenario."""
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        if "speak as the portfolio manager" in system_prompt.lower():
+            raise RuntimeError("connect refused — vLLM down")
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages,
+            model_tier=model_tier, locale=locale, max_tokens=max_tokens,
+        ):
+            yield chunk
+
+
+def test_room_pm_llm_outage_fails_safe_to_pass():
+    """DEF059 regression: when the PM's live LLM call fails outright (model
+    host down), the verdict must fail SAFE to PASS with an honest outage
+    reason — never the scripted `_assemble_verdict` APPROVE, which minted
+    confident fake buy verdicts during the 2026-07-16 vLLM outage."""
+    fake = _PMFailsGateway()
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.PASS.value
+    assert v.overridden_from_llm is True
+    assert "model connection" in v.reason
+    assert "Synthesis defended" not in v.reason
+
+
+class _PMProseThenJsonGateway(_FakeGateway):
+    """PM narrates its decision in prose (ignoring the JSON instruction);
+    the DEF058 reformat retry then gets valid JSON."""
+
+    def __init__(self, reformat_reply: str):
+        super().__init__(replies={
+            "portfolio_manager": (
+                "I reduce the size to 5% and tighten the stop to 94.00 to "
+                "protect capital. We proceed with the entry at 100.00 "
+                "targeting 113.00 over six weeks."
+            ),
+        })
+        self._reformat_reply = reformat_reply
+        self.reformat_calls = 0
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        if "strict formatter" in system_prompt.lower():
+            self.reformat_calls += 1
+            self.calls.append({"system_prompt_len": len(system_prompt)})
+            yield self._reformat_reply
+            return
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages,
+            model_tier=model_tier, locale=locale, max_tokens=max_tokens,
+        ):
+            yield chunk
+
+
+def test_room_pm_prose_reply_recovered_by_reformat():
+    """DEF058 regression: a prose-only PM decision is recovered by the
+    one-shot reformat retry — the PM's real APPROVE survives instead of
+    being silently flipped to PASS."""
+    fake = _PMProseThenJsonGateway(
+        '{"action": "APPROVE", "size_pct": 2.5, "entry": 100, "stop": 94, '
+        '"target": 113, "horizon_days": 42, '
+        '"narration": "Approved at 2.5% — capital protected by the tighter stop."}'
+    )
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert fake.reformat_calls == 1
+    assert v.action == VerdictAction.APPROVE.value
+    assert v.size_pct == 2.5
+    assert v.entry == 100
+    # The user-visible PM message stays the PM's own prose voice.
+    run_id = events[0].run_id
+    pm_message = next(
+        m for m in runner.get_run(run_id).transcript
+        if m.agent_id == AgentId.PORTFOLIO_MANAGER.value
+    )
+    assert "I reduce the size to 5%" in pm_message.content
+
+
+def test_room_pm_reformat_never_invents_an_approve_size():
+    """DEF058 guard: if the reformatted JSON approves without a size (the
+    prose never stated one and the formatter honestly nulled it), the run
+    still fails safe to PASS — reformatting must not fabricate trades."""
+    fake = _PMProseThenJsonGateway(
+        '{"action": "APPROVE", "size_pct": null, "entry": null, "stop": null, '
+        '"target": null, "horizon_days": null, '
+        '"narration": "Approved in spirit but no size was stated."}'
+    )
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.PASS.value
+    assert v.overridden_from_llm is True
+
+
 def test_room_transcript_grows_for_subsequent_agents():
     """Later agents must see earlier agents' contributions in their prompt
     so they can build on the debate, not just speak in isolation.
@@ -341,10 +453,15 @@ def test_room_transcript_grows_for_subsequent_agents():
 
     # First agent (Fundamentals) sees an empty transcript marker.
     assert "(You are first to speak.)" in captured_prompts[0]
-    # Last agent (PM) sees every earlier agent's contribution in the
-    # transcript section — at least the Trader's line should be present.
-    assert "trader" in captured_prompts[-1].lower()
-    assert "AMI reply." in captured_prompts[-1]
+    # The PM sees every earlier agent's contribution in the transcript
+    # section — at least the Trader's line should be present. ("AMI reply."
+    # is unparseable, so a 13th DEF058 reformat call follows the PM's own;
+    # index by the PM's prompt, not the last capture.)
+    pm_prompt = next(
+        p for p in captured_prompts if "speak as the portfolio manager" in p.lower()
+    )
+    assert "trader" in pm_prompt.lower()
+    assert "AMI reply." in pm_prompt
 
 
 def test_profile_synthetic_when_real_market_data_disabled(monkeypatch):

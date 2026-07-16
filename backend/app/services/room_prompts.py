@@ -78,8 +78,10 @@ _PM_VERDICT_FORMAT = (
     "analyst, the Bull/Bear debate, the Trader's proposal, and the three "
     "Risk Debators — then decide for yourself. Do not just restate the "
     "Trader's numbers; agree or disagree based on the whole debate.\n"
-    "Respond with ONLY a single JSON object, no prose outside it and no "
-    "code fence needed, shaped exactly like:\n"
+    "Your ENTIRE reply must be one single JSON object — begin with '{' and "
+    "end with '}'. Do not write any prose outside the JSON (your reasoning "
+    "belongs inside the narration field); anything outside it is discarded "
+    "and your verdict is lost. Shape it exactly like:\n"
     '{"action": "APPROVE" | "PASS",\n'
     ' "size_pct": <number, required if APPROVE — position size as % of portfolio>,\n'
     ' "entry": <number, required if APPROVE>,\n'

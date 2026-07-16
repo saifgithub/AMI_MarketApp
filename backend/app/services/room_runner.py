@@ -65,7 +65,7 @@ from app.services.social_context import (
     format_sentiment_score,
     format_sentiment_tone,
 )
-from app.services.llm_gateway import LLMGateway, get_llm_gateway
+from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
 from app.services.room_prompts import build_room_messages
 from app.services.entitlements import effective_plan_for_user
@@ -490,11 +490,10 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
 def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
     """Deterministic scripted verdict — NOT the live path's decision-maker.
 
-    Used only when there's no LLM narration to parse: the non-live/scripted
-    demo path, and when the PM's live LLM call itself fails/times out/returns
-    nothing (same failure mode every other agent already falls back from).
-    In the normal live path the PM's own parsed decision is the verdict
-    (see `_parse_pm_verdict`) and this function is not called — see DEF056.
+    Used only by the non-live/scripted demo path. In the live path the PM's
+    own parsed decision is the verdict (see `_parse_pm_verdict`, DEF056);
+    a failed/timed-out live PM call fails safe to PASS instead of coming
+    here (DEF059 — an outage must never produce this function's APPROVE).
     """
     proposed = ProposedTrade(
         ticker=ctx.ticker,
@@ -1260,19 +1259,41 @@ class RoomRunner:
                             agent_timeout_s=agent_timeout_s,
                         )
                         if not raw_text:
-                            # LLM unavailable — same scripted fallback every
-                            # other agent already uses on timeout/failure.
-                            verdict = _assemble_verdict(ctx, profile)
-                            mandate_check = (
-                                "PASS" if verdict.action == VerdictAction.APPROVE
-                                else f"FAIL — {', '.join(verdict.violations)}"
+                            # DEF059: LLM unreachable — fail SAFE to PASS.
+                            # The scripted _assemble_verdict APPROVE belongs
+                            # to the non-live demo path only; an outage must
+                            # never mint a confident buy verdict.
+                            verdict = Verdict(
+                                action=VerdictAction.PASS,
+                                reason=(
+                                    "AMI's analyst room lost its model "
+                                    "connection before the Portfolio Manager "
+                                    "could rule. No trade — reconvene the "
+                                    "room in a little while."
+                                ),
+                                overridden_from_llm=True,
                             )
-                            pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
-                                **formatter, verdict_action=verdict.action,
-                                verdict_rationale=verdict.reason, mandate_check=mandate_check,
-                            )
+                            logger.error("room_pm_llm_unavailable", run_id=str(run_id))
+                            pm_text = verdict.reason
                         else:
                             pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
+                            if parsed is None:
+                                # DEF058: PM answered in prose. One reformat
+                                # retry re-expresses the same decision as the
+                                # JSON schema (nulls for unstated numbers —
+                                # never invented) before failing safe to PASS.
+                                reformatted = await _reformat_pm_response(
+                                    raw_text, ctx=ctx, gateway=gateway,
+                                    agent_timeout_s=agent_timeout_s,
+                                )
+                                if reformatted:
+                                    narration, parsed = _parse_pm_verdict(reformatted, ctx)
+                                    if parsed is not None:
+                                        logger.info(
+                                            "room_pm_verdict_reformatted",
+                                            run_id=str(run_id),
+                                        )
+                                        pm_text = pm_text or narration
                             if parsed is None:
                                 verdict = Verdict(
                                     action=VerdictAction.PASS,
@@ -1513,11 +1534,11 @@ async def _stream_pm_response(
 ) -> str:
     """Buffer the PM's raw LLM response and return it verbatim (DEF056).
 
-    Returns "" on timeout/exception — the caller falls back to the fully
-    deterministic `_assemble_verdict` scripted path in that case, same as
-    every other agent's timeout fallback. A non-empty return still needs
-    parsing by `_parse_pm_verdict` — this function makes no attempt to
-    interpret the response, it only fetches it.
+    Returns "" on timeout/exception — the caller fails SAFE to a PASS
+    verdict with an honest outage reason in that case (DEF059; the scripted
+    `_assemble_verdict` APPROVE is reserved for the non-live demo path). A
+    non-empty return still needs parsing by `_parse_pm_verdict` — this
+    function makes no attempt to interpret the response, it only fetches it.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
     plan = effective_plan_for_user(ctx.user_id)
@@ -1555,6 +1576,67 @@ async def _stream_pm_response(
         return ""
     except Exception as exc:
         logger.warning("room_pm_llm_failed", error=str(exc)[:200])
+        return ""
+
+
+# DEF058: the PM ignores the JSON-only instruction in a meaningful share of
+# live runs and narrates its decision in prose. Before failing safe to PASS
+# (and thereby discarding a real decision), one cheap follow-up call asks the
+# model to re-express that same prose as the parseable schema. Faithfulness
+# rules: never change the decision, never invent numbers (null when unstated
+# — `_parse_pm_verdict` then refuses APPROVE-without-size on its own).
+_PM_REFORMAT_SYSTEM = (
+    "You are a strict formatter for AMI's analyst room. The user message is "
+    "a Portfolio Manager's final verdict written in prose. Re-express that "
+    "verdict as ONLY a single JSON object, no prose outside it, shaped "
+    "exactly like:\n"
+    '{"action": "APPROVE" | "PASS",\n'
+    ' "size_pct": <number or null>,\n'
+    ' "entry": <number or null>,\n'
+    ' "stop": <number or null>,\n'
+    ' "target": <number or null>,\n'
+    ' "horizon_days": <integer or null>,\n'
+    ' "narration": "<3-4 sentences, faithful summary of the rationale>"}\n'
+    "Preserve the decision faithfully: do not change the action, sizes, or "
+    "price levels. If the prose enters/approves a position, action is "
+    "APPROVE; if it waits, passes, rejects, or reaches no decision, action "
+    "is PASS. If a number is not stated in the prose, use null — never "
+    "invent one. Begin your response with '{'."
+)
+
+
+async def _reformat_pm_response(
+    raw_text: str,
+    *,
+    ctx: _RoomContext,
+    gateway: LLMGateway,
+    agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
+) -> str:
+    """One-shot DEF058 retry: ask the model to re-express the PM's prose
+    verdict as the parseable JSON schema. Returns "" on timeout/exception —
+    the caller then falls through to the fail-safe PASS."""
+    plan = effective_plan_for_user(ctx.user_id)
+    tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
+    try:
+        chunks = await asyncio.wait_for(
+            _collect_agent_stream(gateway.stream_chat(
+                system_prompt=_PM_REFORMAT_SYSTEM,
+                messages=[ChatMessage(role="user", content=raw_text)],
+                model_tier=tier,  # type: ignore[arg-type]
+                locale=ctx.mandate.locale,
+                max_tokens=400,
+                audit_user_id=ctx.user_id,
+                audit_agent_id=AgentId.PORTFOLIO_MANAGER.value,
+                audit_flow="room_pm_reformat",
+            )),
+            timeout=agent_timeout_s,
+        )
+        return "".join(chunks).strip()
+    except asyncio.TimeoutError:
+        logger.warning("room_pm_reformat_timeout", timeout_s=agent_timeout_s)
+        return ""
+    except Exception as exc:
+        logger.warning("room_pm_reformat_failed", error=str(exc)[:200])
         return ""
 
 

@@ -1,6 +1,6 @@
 # DEF058 — PM verdict JSON fails to parse in ~22% of live Room runs (silent PASS fallback)
 
-**Filed:** 2026-07-16 (AT:R59) · **Status:** open · **Found by:** CR035 Room-vs-Street benchmark
+**Filed:** 2026-07-16 (AT:R59) · **Status:** resolved (AT:R59 same-session; live incidence re-measured by CR035 post-fix batches) · **Found by:** CR035 Room-vs-Street benchmark
 
 ## Symptom
 
