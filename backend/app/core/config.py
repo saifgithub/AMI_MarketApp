@@ -85,6 +85,12 @@ class Settings(BaseSettings):
     # When false (default), the legacy deterministic random walk runs.
     use_real_market_data: bool = False
 
+    # CR035: hide the Street's analyst rating/target from the agents'
+    # fundamentals context. Benchmark-only toggle — measures whether the
+    # Room's verdict is its own or parrots the consensus it is fed. Must
+    # be false outside an ablation batch window.
+    suppress_analyst_consensus: bool = False
+
     # News provider for the agent pipeline (Room + 1-on-1), see
     # app/services/news_context.py. Yahoo (free, via the existing
     # market-data provider stack) is always tried. When

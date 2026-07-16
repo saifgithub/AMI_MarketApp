@@ -186,12 +186,16 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     # Real analyst consensus — the closest honest proxy for "forward
     # guidance" available (a company's own guidance figures aren't
     # exposed by yfinance; this is the Street's view, labeled as such).
-    analyst_target = _num("targetMeanPrice")
-    if analyst_target is not None:
-        out["analyst_target_price"] = round(analyst_target, 2)
-    rating = info.get("recommendationKey")
-    if rating and rating != "none":
-        out["analyst_rating"] = str(rating).replace("_", " ")
+    # CR035: suppressible for ablation benchmarks — omitting the keys here
+    # drops the consensus line from both the Room profile and the 1-on-1
+    # data block (_analyst_line returns None when the keys are absent).
+    if not settings.suppress_analyst_consensus:
+        analyst_target = _num("targetMeanPrice")
+        if analyst_target is not None:
+            out["analyst_target_price"] = round(analyst_target, 2)
+        rating = info.get("recommendationKey")
+        if rating and rating != "none":
+            out["analyst_rating"] = str(rating).replace("_", " ")
 
     return out
 

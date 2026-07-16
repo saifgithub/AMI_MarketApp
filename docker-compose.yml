@@ -113,6 +113,9 @@ services:
       # Room dedup windows — defaults match config.py; override in .env.
       ROOM_DEDUP_RUNNING_MINUTES: ${ROOM_DEDUP_RUNNING_MINUTES:-30}
       ROOM_DEDUP_COMPLETED_HOURS: ${ROOM_DEDUP_COMPLETED_HOURS:-24}
+      # CR035 ablation toggle — hides the Street consensus line from the
+      # agents' fundamentals context. Benchmark windows only; keep false.
+      SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}
