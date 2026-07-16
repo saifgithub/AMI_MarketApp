@@ -1,6 +1,40 @@
 # CR035 — Room-vs-Street benchmark (Convene the Room vs analyst consensus)
 
-**Status:** in_progress · **Filed:** 2026-07-16 (AT:R59) · **Requested by:** Saiful ("time to do some testing … compare our results against the consensus of a few respected websites")
+**Status:** done (report in `results/report.md`) · **Filed:** 2026-07-16 (AT:R59) · **Requested by:** Saiful ("time to do some testing … compare our results against the consensus of a few respected websites")
+
+## Findings (2026-07-16, post-fix batches `baseline2` + `ablation2`, 64 convenes)
+
+1. **The Room is an entry-timing gate, not a consensus tracker.** 29/32 PASS,
+   3/32 APPROVE (1.5–3% sizes) per batch. Agreement with pooled Street consensus
+   53% (57% on Buy/Hold names), Cohen's κ = 0.08 ≈ no correlation. PASS reasons are
+   consistently discipline-shaped (RSI overbought, failed breakout, no margin of
+   safety) — it answers "buy now at this price?", the Street answers "attractive
+   over 12 months?".
+2. **Red-line clean:** zero APPROVEs on Street-Sell names (BGS, WU) in both batches.
+3. **Ablation (consensus hidden): no parroting signal.** Approve-rate identical
+   (3/32 both), overlap of approved names baseline∩ablation = 1 (NFLX). Run-to-run
+   sampling variance is the same order as any ablation effect, so n=32 can't resolve
+   a small anchoring effect — but the strong form ("Room = consensus echo") is ruled
+   out by κ≈0 alone.
+4. **DEF058** (PM prose verdicts, 22% pre-fix): fixed via prompt hardening + one-shot
+   reformat retry; **0/64 incidence post-fix** (acceptance <2% met). Pre-fix batches
+   kept in `results/runs_baseline-*.jsonl` as the incidence record.
+5. **DEF059** (vLLM outage → deterministic fake APPROVEs): found live when the vLLM
+   host went down mid-batch; fixed same-session (live PM failure now fails safe to
+   PASS with an honest AMI-voiced reason), regression-tested.
+6. **Compliance probes:** REJECT is unreachable live unless the PM first APPROVEs a
+   blocked name (safety floor is veto-only) — MO ethics-probe and RIVN blocklist-probe
+   both PASSed on market grounds. REJECT path remains covered by unit tests only.
+7. **Respected-site spot-checks:** MarketBeat rates all six of our sell-leaning picks
+   "Reduce" (validates the bucket); Zacks Rank diverges from Street consensus exactly
+   where its earnings-revision model should (INTC #1 vs Street hold, NFLX #4 vs Street
+   buy). TipRanks blocks automated access (HTTP 403) — excluded.
+8. **Ops lesson:** benchmark drivers run ON melehost (docker-exec the rsync'd scripts
+   inside `ami_api_alpha`, `--base-url http://localhost:8000`, copy JSONL back) — the
+   Mac driver lost 13 ticker-runs to local network blips before this was corrected.
+9. **Forward re-score:** every record carries a spot-price snapshot;
+   `room_benchmark_report --baseline baseline2-2026-07-16 --forward` in 2–4 weeks
+   computes Buy-vs-Hold forward returns.
 
 ## What
 
