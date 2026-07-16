@@ -1,0 +1,38 @@
+# CR035 benchmark universe — screened 2026-07-16 via yfinance recommendationMean.
+# 12 buy / 12 hold / 6 sell-leaning / 2 sparse-coverage probes = 32 tickers.
+# Buy bucket (mean ≤ ~1.8, key strong_buy/buy; mixed sectors)
+NVDA
+META
+AMZN
+DAL
+V
+WMT
+SLB
+UNH
+BA
+NFLX
+LLY
+AAPL
+# Hold bucket (mean 2.5–3.1, key hold)
+INTC
+PEP
+SO
+F
+ETSY
+RIVN
+ADP
+GIS
+SMCI
+HOG
+TRIP
+KHC
+# Sell / sell-leaning (mean ≥ 3.2; BGS + WU are true underperform)
+BGS
+WU
+JBLU
+KSS
+CPB
+LCID
+# Sparse-coverage robustness probes (no yahoo recommendationMean)
+RDW
+LWAY
