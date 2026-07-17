@@ -88,6 +88,29 @@ def set_plan(client: httpx.Client, base: str, user_id: str, plan: str) -> None:
     resp.raise_for_status()
 
 
+def grant_credits(client: httpx.Client, base: str, user_id: str, delta: int) -> int:
+    """Top up the benchmark user's credit balance, returning the new balance.
+
+    CR039 meters Convene the Room: a Trader plan gets a 150-credit monthly
+    allowance and a Basic Room costs 8, so a benchmark user runs dry after
+    exactly 18 convenes (which is how arm A died at 18/150 with 402s).
+
+    Granting up-front does NOT work: credit_service._ensure_period re-grants
+    the allowance when `credits_plan_at_grant` drifts, and this script patches
+    the plan straight after minting — so the first convene would reset any
+    pre-granted balance back to 150. Topping up in response to a 402 is
+    therefore the only order that survives the re-grant, and it self-heals if
+    a long batch drains the balance again.
+    """
+    resp = client.post(
+        f"{base}/v1/admin/users/{user_id}/credits",
+        json={"delta": delta, "note": "CR035 benchmark top-up (metered by CR039)"},
+        headers={"Authorization": f"Bearer {_admin_secret()}"},
+    )
+    resp.raise_for_status()
+    return int(resp.json().get("credit_balance", -1))
+
+
 def load_or_create_batch_user(
     out_dir: Path, client: httpx.Client, base: str, batch_id: str, plan: str,
     fresh: bool,
@@ -190,6 +213,9 @@ def main() -> int:
     parser.add_argument("--mandate-json", default=None,
                         help="JSON mandate_override replacing the neutral default "
                              "(compliance-probe batches).")
+    parser.add_argument("--credit-grant", type=int, default=2000,
+                        help="Credits to grant when a run is refused with 402 "
+                             "(CR039 metering). 150 tickers x 8 = 1200.")
     parser.add_argument("--poll-interval", type=float, default=20.0)
     parser.add_argument("--run-timeout", type=float, default=1500.0,
                         help="Seconds to wait for one run to reach a terminal status.")
@@ -230,12 +256,29 @@ def main() -> int:
             "ablation": args.ablation,
             "triggered_at": triggered_at,
         }
+        mandate_override = (
+            json.loads(args.mandate_json) if args.mandate_json else NEUTRAL_MANDATE_OVERRIDE
+        )
         try:
-            run_id, cached = start_room_run(
-                client, args.base_url, user["token"], user["user_id"], ticker,
-                json.loads(args.mandate_json) if args.mandate_json
-                else NEUTRAL_MANDATE_OVERRIDE,
-            )
+            try:
+                run_id, cached = start_room_run(
+                    client, args.base_url, user["token"], user["user_id"], ticker,
+                    mandate_override,
+                )
+            except httpx.HTTPStatusError as exc:
+                # CR039 credit gate. Top up and retry once — see grant_credits()
+                # for why this can't be done up-front.
+                if exc.response.status_code != 402:
+                    raise
+                balance = grant_credits(
+                    client, args.base_url, user["user_id"], args.credit_grant,
+                )
+                print(f"    402 insufficient credits — granted {args.credit_grant}, "
+                      f"balance now {balance}", flush=True)
+                run_id, cached = start_room_run(
+                    client, args.base_url, user["token"], user["user_id"], ticker,
+                    mandate_override,
+                )
             run = poll_run(
                 client, args.base_url, user["token"], run_id,
                 args.poll_interval, args.run_timeout,
