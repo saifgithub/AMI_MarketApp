@@ -68,6 +68,7 @@ from app.services.social_context import (
 from app.services.llm_gateway import ChatMessage, LLMGateway, get_llm_gateway
 from app.services.llm_json import extract_json_object
 from app.services.room_prompts import build_room_messages
+from app.services.credit_service import refund, room_cost_for_plan, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
@@ -1045,6 +1046,15 @@ class RoomRunner:
             )
             return completed
 
+        # CR039 (AT:R60): charge here — past both dedup tiers, before any work
+        # is committed to. This is the only point where we've decided to run a
+        # real Room, so it's the only point that can bill exactly once. Charging
+        # in the API layer instead would bill every reconnect and re-analysis
+        # request, defeating the dedup above (whose stated purpose is to prevent
+        # double-billing) and turning a flaky LTE handoff into a paywall.
+        # InsufficientCredits propagates to the endpoint as a 402.
+        spend(user_id, None, reason=f"room:{ticker.upper()}")
+
         run_id = uuid4()
         q: asyncio.Queue[RoomEvent | None] = asyncio.Queue()
         self._active_queues[run_id] = q
@@ -1137,7 +1147,9 @@ class RoomRunner:
         # BL11 (AT:R33): effective_plan downgrades expired trials.
         plan = effective_plan_for_user(user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
-        credit_cost = 25 if tier == "premium" else 8
+        # CR039: same source of truth start_run billed from, so the row can't
+        # disagree with what the user was actually charged.
+        credit_cost = room_cost_for_plan(plan)
 
         run = RoomRun(
             id=run_id,
@@ -1392,10 +1404,23 @@ class RoomRunner:
                 agents_completed=len(run.transcript),
             )
             raise
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             run.status = RoomStatus.FAILED
             run.error_message = str(e)[:500]
             _persist_run(run)
+            # CR039: the run was billed at start_run. It failed on our side, so
+            # give the credits back — otherwise a bad deploy silently eats a
+            # Floor Pass user's entire monthly allowance in one tap. Refund is
+            # best-effort: a failure here must not mask the original error.
+            try:
+                refund(user_id, run.credit_cost, reason=f"room_failed:{run_id}")
+            except Exception as refund_exc:
+                logger.error(
+                    "room_refund_failed",
+                    run_id=str(run_id),
+                    credits=run.credit_cost,
+                    error=str(refund_exc)[:200],
+                )
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
 

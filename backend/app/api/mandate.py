@@ -25,6 +25,8 @@ from app.agents.safety_floor import (
 from app.api.dependencies import get_current_user
 from app.db.models import User
 from app.schemas import Compliance, Mandate
+from app.services.credit_service import balance_for, room_cost_for_plan
+from app.services.entitlements import effective_plan_for_user
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore, get_mandate_store
@@ -47,6 +49,31 @@ def _own(current_user: User, user_id: UUID) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
+def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
+    """Stamp live plan + credit state onto a mandate response (CR039).
+
+    `Mandate.plan` / `trial_expires_at` / `credit_balance` are schema fields
+    with no columns behind them — they live on `users`. Nothing populated them,
+    so every client saw `floor_pass` with 0 credits no matter what it had. The
+    Room meter makes that gap visible (the UI can't render a wall it can't
+    see), so the read path resolves them here.
+
+    `balance_for` re-grants a due allowance as a side effect, which is what
+    makes an expired trial's drop appear on the next mandate read rather than
+    at month rollover.
+    """
+    plan = effective_plan_for_user(user.id)
+    balance, allowance, resets_at = balance_for(user.id)
+    return mandate.model_copy(update={
+        "plan": plan,
+        "trial_expires_at": user.trial_expires_at,
+        "credit_balance": balance,
+        "credit_allowance": allowance,
+        "credits_reset_at": resets_at,
+        "room_cost": room_cost_for_plan(plan),
+    })
+
+
 @router.get("/{user_id}", response_model=Mandate)
 async def get_mandate(
     user_id: UUID,
@@ -54,7 +81,7 @@ async def get_mandate(
     store: MandateStore = Depends(get_mandate_store),
 ) -> Mandate:
     _own(current_user, user_id)
-    return store.get_or_default(user_id)
+    return _with_plan_state(store.get_or_default(user_id), current_user)
 
 
 @router.patch("/{user_id}", response_model=Mandate)
@@ -96,7 +123,7 @@ async def patch_mandate(
     except Exception:  # pragma: no cover
         pass
 
-    return updated
+    return _with_plan_state(updated, current_user)
 
 
 class MandateVersionSummary(BaseModel):

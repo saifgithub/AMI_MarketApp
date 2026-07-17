@@ -1,21 +1,34 @@
-# CR037 — Social Media Analyst asserts synthetic sentiment as fact (gate it until CR024 lands)
+# CR037 — Social Media Analyst asserts synthetic sentiment as fact (fallback must not fabricate)
 
 **Status:** proposed · **Filed:** 2026-07-17 (AT:R59) · **Found by:** CR035 benchmark transcript audit
-· **Related:** [CR024](../CR024_social_analyst_live_feed/) (live social feed, in_progress) ·
+· **Blocked-by / precedes:** **[DEF063](../../defect/DEF063_adanos_alpha_vantage_keys_never_forwarded/)** —
+fix that first · **Related:** [CR024](../CR024_social_analyst_live_feed/) (live Adanos feed — *shipped*) ·
 [CR038](../CR038_macro_fed_scaffolding_asserted_as_fact/) (same failure mode, macro/Fed fields) ·
 DEF052–055 (the truthfulness batch that fixed this for every *other* analyst)
 
+> **Premise correction (2026-07-17).** This CR was originally filed claiming "CR024 is pending,
+> so the agent has no feed". **That was wrong** — Saiful challenged it, and he was right. CR024
+> *did* deliver the Adanos integration (`backend/app/services/social_context.py`) and the key is
+> provisioned in `infra/alpha.env`. The feed is dark only because `docker-compose.yml` never
+> forwards `ADANOS_API_KEY` into the container → **DEF063**. Once DEF063 lands, the agent gets
+> real Reddit sentiment and the "mute it" option below is moot. What survives is the narrower
+> question this CR now owns: what the agent says when the feed is *legitimately* unavailable
+> (API down, 250/month budget exhausted, ticker not covered).
+
 ## What
 
-The Social Media Analyst is the only one of the four data-gathering analysts with no live
-feed, and it states its synthetic inputs to the user as fact. Either mute the agent until
-CR024 connects a real source, or make its fallback structurally unable to assert fiction.
+The Social Media Analyst states unavailable-data scaffolding to the user as fact. Fix the
+fallback so it is structurally incapable of asserting fiction — regardless of why the feed is
+missing.
 
 ## Why — measured evidence (2026-07-16/17, 32-ticker `baseline2` batch)
 
+All measurements below were taken while the Adanos feed was dark (DEF063), i.e. they describe
+the **fallback path** — which is exactly this CR's subject.
+
 | Finding | Measurement |
 |---|---|
-| No live feed | Live NVDA profile on melehost: `data_source=yfinance_live`, `technicals_source=live`, `news_source=live`, **`social_source=None`** |
+| Feed inactive (cause: DEF063, not missing code) | Live NVDA profile on melehost: `data_source=yfinance_live`, `technicals_source=live`, `news_source=live`, **`social_source=None`** |
 | Inputs carry no information | Across the 32-ticker universe `sentiment_tone` takes **2 values** (`moderately bullish` 22, `mixed` 10); tone/score/trend seeded off `crc32(ticker)` — a deterministic function of the ticker's *name*, not the company |
 | Stated as fact | **23/32** social messages state the synthetic values with **no hedge** — the profile block labels them "(illustrative)" / "NOT a live social feed", the LLM drops the qualifier ~72% of the time |
 | Adds nothing to the verdict | PM cites social language **0/32**. Research Manager 4/32, Bull 11/32, Bear 7/32 |
@@ -29,28 +42,42 @@ This is the DEF052–055 failure mode (fabricated inputs asserted as fact) survi
 agent that batch didn't re-audit. Simulation-only doesn't excuse it: the user cannot tell this
 sentence is fiction.
 
-## Options
+## Sequencing
 
-- **(a) Gate the agent off until CR024 — recommended.** 12→11 agents; the Room stops asserting
-  fictional sentiment; measured verdict influence is ~0 so nothing of value is lost; ~8% cheaper
-  and faster. Needs an env flag + a Room-phase skip + the UI tolerating 11 speakers.
-- **(b) Prioritize CR024** (real Reddit/Adanos feed) and leave the agent live meanwhile —
-  keeps asserting fiction until it ships.
-- **(c) Harden the fallback prose only** — cheapest, but honesty still depends on prompt
-  obedience, which measures at 28% here. Weakest option; see CR038 for the same argument.
+**DEF063 first** (one compose line + promote) — that turns the feed on and makes the common case
+real. This CR then handles the residual: Adanos is a 250-calls/month free tier with a 24h cache
+(~8 distinct tickers/day), so a *cold* ticker will still hit the fallback regularly. The
+fallback is not a rare edge case; it's the daily path for anything outside the cache.
+
+## Options (for the fallback path)
+
+- **(a) Remove the synthetic fields at source — recommended.** When `social_source` isn't live,
+  omit `sentiment_tone`/`sentiment_score`/`mention_trend`/`influencer_take` from the profile
+  entirely and tell the agent to say it has no sentiment data for this ticker today. The agent
+  cannot assert what it was never handed — same argument, and same fix shape, as CR038(a).
+- **(b) Skip the agent's turn when the feed is unavailable.** 12→11 speakers for that run;
+  measured verdict influence is ~0 (PM cites social 0/32) so nothing of value is lost, ~8%
+  cheaper. Changes the "12-agent team" product story per-run — Saiful's call, not engineering's.
+- **(c) Harden the fallback prose only** — rejected: honesty still depends on prompt obedience,
+  which measures at 28% here and ~30% for macro/Fed (CR038). DEF058 showed the same model
+  ignoring an equally emphatic instruction ~22% of the time.
 
 ## Acceptance
 
-1. Zero unhedged synthetic-sentiment assertions over a ≥30-run batch (measure with the CR035
-   harness — the transcript audit script is the check).
-2. Under (a): approve-rate change vs `baseline2` stays inside the measured noise floor
-   (4/32 verdict flips ≈ 12%, no systematic direction) — i.e. muting Social doesn't move the
-   Room's decisions beyond sampling noise.
-3. Under (a): re-enabling is a single flag flip once CR024 lands.
+1. Zero unhedged synthetic-sentiment assertions over a ≥30-run batch, measured with the CR035
+   harness transcript audit (today's baseline: 23/32 unhedged).
+2. With the feed live post-DEF063: the agent's message cites real Reddit sentiment and
+   `social_source=live`.
+3. With the feed forced unavailable: the agent says so plainly; no invented tone/intensity/trend
+   appears anywhere in the transcript.
+4. Verdict movement vs `baseline2-2026-07-16` stays inside the measured noise floor (4/32 flips
+   ≈ 12%, no systematic direction).
 
 ## Risks
 
-- Muting an agent changes the 12-agent product story ("your 12-agent analyst team"). Product
-  call for Saiful, not an engineering one — the Room UI would show 11 seats until CR024.
-- At n=32 the benchmark can only detect large effects; a small influence from Social can't be
-  ruled out (see CR035 report's power note).
+- At n=32 the benchmark only detects large effects; a small influence from Social can't be ruled
+  out (see CR035 report's power note).
+- Option (b) makes the roster size vary run-to-run, which the Room UI and the "12-agent analyst
+  team" positioning both assume is fixed.
+- Real Adanos data will change verdicts in ways this benchmark hasn't measured — re-run
+  `baseline2` after DEF063 to re-establish the reference.

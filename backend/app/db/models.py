@@ -80,6 +80,16 @@ class User(Base):
 
     plan: Mapped[str] = mapped_column(String, default="floor_pass", nullable=False)
     credit_balance: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    # CR039 (AT:R60): the allowance window behind `credit_balance`. Credits
+    # reset monthly and don't accumulate (credits.md), so the balance is only
+    # meaningful alongside the period it was granted for. `credits_plan_at_grant`
+    # holds the *effective* plan at grant time — re-granting when it drifts is
+    # what makes trial expiry bite immediately instead of at month rollover.
+    # Both nullable: existing rows re-grant on first touch, no backfill.
+    credits_period_start: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    credits_plan_at_grant: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     locale: Mapped[str] = mapped_column(String, default="en", nullable=False)
     timezone: Mapped[str] = mapped_column(String, default="UTC", nullable=False)
 

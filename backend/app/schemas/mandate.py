@@ -116,10 +116,16 @@ class Mandate(BaseModel):
     # Delivery
     daily_briefing: DailyBriefing = Field(default_factory=DailyBriefing)
 
-    # Plan
+    # Plan. Not persisted on the mandate row — these live on `users` and are
+    # stamped onto the response by the mandate API (CR039). Until then they
+    # were schema defaults that nothing ever populated, so every client read
+    # `floor_pass` / 0 credits regardless of the user's actual state.
     plan: Plan = Plan.FLOOR_PASS
     trial_expires_at: datetime | None = None
     credit_balance: int = 0
+    credit_allowance: int = 0
+    credits_reset_at: datetime | None = None
+    room_cost: int = 0
 
     created_at: datetime
     updated_at: datetime

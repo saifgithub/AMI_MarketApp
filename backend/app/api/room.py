@@ -1,7 +1,7 @@
 """Convene the Room endpoints.
 
-POST /v1/room/start    Open a session for a ticker (validates plan + access).
 POST /v1/room/stream   Begin the run and stream agent contributions via SSE.
+                       Debits the plan's Room price first; 402 when short (CR039).
 GET  /v1/room/{id}     Final snapshot (transcript + verdict).
 GET  /v1/room/user/{user_id}  List recent runs for a user.
 
@@ -52,6 +52,7 @@ from app.services.room_runner import (
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import User
+from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.reputation_service import get_reputation_service
 from app.services.sim_engine import SimEngine, get_sim_engine
@@ -103,10 +104,11 @@ async def stream_room(
     Journal write and push notification hook fire via on_complete, which the
     background task calls on terminal state regardless of SSE connectivity.
     """
-    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
     ticker = req.ticker.upper().strip()
     if not ticker:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "ticker required")
+
+    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
 
     async def _finalise_to_journal(run_id: UUID) -> None:
         """Write the Decision Journal entry. Retries 3× with exponential backoff
@@ -158,14 +160,32 @@ async def stream_room(
     # trust a client-suppliable override for a compliance-check input.
     portfolio_value = sim.total_value(req.user_id)
     current_drawdown_pct = sim.current_drawdown_pct(req.user_id)
-    run_id = await runner.start_run(
-        user_id=req.user_id,
-        ticker=ticker,
-        mandate=mandate,
-        portfolio_value=portfolio_value,
-        current_drawdown_pct=current_drawdown_pct,
-        on_complete=_finalise_to_journal,
-    )
+    # CR039 (AT:R60): start_run debits the plan's Room price, but only once
+    # it's past its own dedup tiers — so a reconnect that attaches to an
+    # in-flight or recently-completed run is free, as it was before metering.
+    # The 402 lands here, before the StreamingResponse: once the stream is on
+    # the wire the status is already sent and a refusal could only be an
+    # in-band error event, which the client renders as a crash, not a wall.
+    try:
+        run_id = await runner.start_run(
+            user_id=req.user_id,
+            ticker=ticker,
+            mandate=mandate,
+            portfolio_value=portfolio_value,
+            current_drawdown_pct=current_drawdown_pct,
+            on_complete=_finalise_to_journal,
+        )
+    except InsufficientCredits as e:
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "code": "insufficient_credits",
+                "balance": e.balance,
+                "cost": e.cost,
+                "plan": e.plan.value,
+                "resets_at": e.resets_at.isoformat(),
+            },
+        ) from e
     cached = not runner.is_active(run_id)
 
     async def event_stream():
