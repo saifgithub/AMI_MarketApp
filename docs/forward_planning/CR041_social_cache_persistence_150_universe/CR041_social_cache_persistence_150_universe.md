@@ -1,6 +1,6 @@
 # CR041 — Durable 30-day social sentiment cache + 150-ticker benchmark universe
 
-**Status:** proposed · **Filed:** 2026-07-17 (AT:R59) · **Requested by:** Saiful ("make it 150
+**Status:** done (cache live in `alpha-2026-07-17-3`; 150/150 warmed; acceptance verified) · **Filed:** 2026-07-17 (AT:R59) · **Requested by:** Saiful ("make it 150
 calls, and extend our 32 to 150. and make sure we cache all calls so we can re use it while we
 test. set a staleness value to 30 days")
 · **Depends on:** [DEF063](../../defect/DEF063_adanos_alpha_vantage_keys_never_forwarded/) (feed
@@ -101,3 +101,38 @@ cost. Options: run baseline-only, run overnight, or subset the Room benchmark wh
   this cache, the agent must say how old the data is — otherwise it's CR038's failure mode with
   real numbers. **Recommend: 30d TTL for benchmark tickers, shorter for user-initiated convenes**
   — or at minimum, render the age.
+
+
+---
+
+## Outcome (2026-07-17, verified)
+
+**Warm-up:** 150/150 cached — **126 covered, 24 no-coverage**, ~153 calls.
+Budget: **89/250 remaining**, resets 2026-08-17. Re-runs are free for 30 days.
+
+**Acceptance #1 (the whole point) — verified by measurement, not assertion:**
+`x-ratelimit-used-monthly` 162 → `docker compose up -d --force-recreate api-alpha` →
+resolved TSLA (939 mentions), NVDA (1,725), AAPL (1,988) in the **fresh** container →
+used-monthly 163, of which 1 was the verification probe itself. **Quota spent by 3 lookups
+across a container recreate: 0.** Under the old in-memory cache this same restart cost 3 calls;
+across a 150-ticker universe it cost 150.
+
+**Acceptance #3 (negative caching):** 24 tickers have no Reddit coverage and are cached as
+`found=false` — previously each cost a live call *per convene*, forever.
+
+**Two bugs found in the warm script by reading its own output against the logs:**
+
+1. It reported network timeouts as *"no coverage (negative cached)"* — conflating "Adanos has no
+   data" (a cached result) with "the call failed" (retryable, uncached). PM and RBLX were
+   mislabelled this way. Now distinguished by checking whether a cache row actually landed.
+2. Budget arithmetic compared a *refreshed* `monthly_remaining` against a *cumulative* `spent`,
+   so it declared "monthly budget exhausted" with **99 calls left**, silently skipping LYFT, NKE
+   and TSLA. Now tracked per-probe. Both fixed; the 5 stragglers re-warmed.
+
+Note the first bug is P2 (silent confident degradation) in miniature — a script reporting a
+failure as a finding. The fix was the same shape: distinguish the states structurally instead of
+inferring from a `None`.
+
+**Coverage reality:** 24/150 (16%) of the universe has no Reddit sentiment at all. Those names
+fall to CR037's fabrication path on every convene — the fallback isn't an edge case, it's 1 in 6
+of this universe.

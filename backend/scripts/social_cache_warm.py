@@ -128,37 +128,55 @@ def main() -> int:
               f"month. Fetching what fits; the rest stay on the synthetic path (CR037).")
 
     source = get_adanos_source()
-    spent = hits = misses = 0
+    spent = hits = misses = errors = 0
+    # Budget is tracked against the LAST probe, not the run total: `q` is
+    # refreshed periodically, so comparing a fresh `monthly_remaining` against a
+    # cumulative `spent` under-reports the budget and stops the run early.
+    since_probe = 0
     for i, ticker in enumerate(todo):
         if spent >= args.max_calls:
             print(f"stopping: --max-calls={args.max_calls} reached")
             break
-        # Refresh burst state every N calls rather than every call (each probe
-        # would itself cost quota).
-        if spent and spent % (q["burst_limit"] - _BURST_SAFETY_MARGIN) == 0:
+        # Refresh burst/monthly state every N calls rather than every call
+        # (each probe itself costs quota).
+        if since_probe >= (q["burst_limit"] - _BURST_SAFETY_MARGIN):
             q = _quota()
             spent += 1
+            since_probe = 0
             if q["burst_remaining"] <= _BURST_SAFETY_MARGIN:
                 _sleep_until(q["burst_reset"])
                 q = _quota()
                 spent += 1
-        if q["monthly_remaining"] - spent <= 1:
-            print("stopping: monthly budget exhausted")
+        if q["monthly_remaining"] - since_probe <= 1:
+            print(f"stopping: monthly budget exhausted "
+                  f"({q['monthly_remaining']} left at last probe)")
             break
 
         got = source.fetch(ticker)
         spent += 1
-        if got is None:
-            misses += 1
-            print(f"[{i + 1}/{len(todo)}] {ticker}: no coverage (negative cached)", flush=True)
-        else:
+        since_probe += 1
+        if got is not None:
             hits += 1
             print(f"[{i + 1}/{len(todo)}] {ticker}: {got.mentions} mentions, "
                   f"sentiment {got.sentiment_score:+.3f}, buzz {got.buzz_score:.1f}", flush=True)
+        else:
+            # fetch() returns None for BOTH "Adanos has no coverage" (cached, a
+            # real result) and "the call failed" (not cached, retryable). The
+            # cache row is what distinguishes them — don't report a timeout as
+            # a finding.
+            cached_now = _cached_tickers([ticker])
+            if cached_now:
+                misses += 1
+                print(f"[{i + 1}/{len(todo)}] {ticker}: no coverage (negative cached)", flush=True)
+            else:
+                errors += 1
+                print(f"[{i + 1}/{len(todo)}] {ticker}: FETCH FAILED (not cached — "
+                      f"re-run to retry)", flush=True)
         time.sleep(0.4)
 
     final = _quota()
-    print(f"\nwarmed: {hits} covered, {misses} no-coverage, ~{spent} calls spent")
+    print(f"\nwarmed: {hits} covered, {misses} no-coverage, {errors} failed "
+          f"(retryable), ~{spent} calls spent")
     print(f"budget now: {final['monthly_remaining']}/{final['monthly_limit']} remaining, "
           f"resets {final['monthly_reset']}")
     print(f"cache TTL: {settings.social_cache_ttl_days}d — re-runs are free until then")
