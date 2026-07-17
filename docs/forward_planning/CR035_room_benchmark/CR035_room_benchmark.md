@@ -103,3 +103,33 @@ with the Street's?"
 - Degraded runs (90 s per-agent timeout) — recorded, resumable.
 - Circularity: baseline agreement is partly self-fulfilling because the Fundamentals
   agent sees Yahoo's consensus — this is exactly what the ablation isolates.
+
+---
+
+## Three-arm experiment (2026-07-17, AT:R59) — 150 tickers, real social data
+
+Saiful: *"run up the wall clock. take the time needed."* All three arms use the same 150-name
+universe (`tickers_150.txt`), a fresh benchmark user per arm (defeats the 24h dedup), and the
+driver runs **inside `ami_api_alpha`** against `localhost:8000` (CR035 ops lesson — a Mac-side
+network blip cost 13 ticker-runs on 2026-07-16).
+
+| Arm | Batch id | Street consensus in prompt | Social feed | Answers |
+|---|---|---|---|---|
+| **A — baseline** | `baseline150-2026-07-17` | visible | **live Adanos** | Room vs Street with everything real |
+| **B — consensus ablated** | `ablconsensus150-2026-07-17` | **hidden** (`SUPPRESS_ANALYST_CONSENSUS=true`) | live Adanos | Does the Room parrot the Street rating it's fed? |
+| **C — social ablated** | `ablsocial150-2026-07-17` | visible | **off** (`ADANOS_API_KEY=""` → synthetic path) | **Does the Social Analyst change any decisions?** — the question raised when auditing CR037 and unanswerable until the feed went live (DEF063) |
+
+~8 h per arm, ~24 h total, sequential (the arms need different container env states).
+
+Arm C costs **zero Adanos quota**: emptying the key short-circuits `fetch_live_sentiment` before
+any HTTP call, and the warm cache is untouched — so restoring is a flag flip, not a re-warm.
+
+**Restoration is mandatory after arm C**: `ADANOS_API_KEY` repopulated and
+`SUPPRESS_ANALYST_CONSENSUS=false`, verified via `GET /v1/admin/config-check`. Both arms B and C
+degrade live Alpha while running (fabricated sentiment / no Street view), so neither window may
+be left open.
+
+**Scoring:** A vs Street = the headline agreement number. A vs B = consensus anchoring. A vs C =
+social influence. Prior noise floor to beat: **4/32 verdict flips (~12%)** between two identical
+32-ticker runs — at n=150 a real effect needs to clear that, and 150 gives ~4.7× the paired
+sample to resolve it with.
