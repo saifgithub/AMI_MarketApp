@@ -1,6 +1,6 @@
 # DEF063 — CR023/CR024 live feeds are dark in Alpha: their API keys are never forwarded to the container
 
-**Filed:** 2026-07-17 (AT:R59) · **Status:** open · **Found by:** Saiful ("I am sure CR024 had
+**Filed:** 2026-07-17 (AT:R59) · **Status:** partially resolved (AT:R59) — compose forwarding + guard landed via CR040 (`9c699b1`); keys deliberately PARKED (commented) in `infra/alpha.env` pending Saiful's metered-tier budget call, so Alpha behaviour is unchanged and enabling is now a one-line deliberate act · **Found by:** Saiful ("I am sure CR024 had
 delivered adanos. why have we not used it?") during the CR035/CR037 audit
 · **Bug class:** identical to **DEF038** (OIDC audiences lived in `.env`, were never forwarded to
 the container, so the feature silently ran with an empty value) — the comment recording DEF038
