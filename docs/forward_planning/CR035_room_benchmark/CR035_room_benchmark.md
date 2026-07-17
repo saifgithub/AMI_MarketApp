@@ -133,3 +133,50 @@ be left open.
 social influence. Prior noise floor to beat: **4/32 verdict flips (~12%)** between two identical
 32-ticker runs — at n=150 a real effect needs to clear that, and 150 gives ~4.7× the paired
 sample to resolve it with.
+
+### RESUME STATE — live experiment, keep this block current
+
+**As of 2026-07-17 08:55 UTC:** arm A (`baseline150-2026-07-17`) running in-container; consensus
+for all 150 already fetched and committed; cache warm (150/150, 89/250 Adanos budget left).
+Saiful is AFK, expects results ~2026-07-18 09:00 UTC.
+
+Check progress: `ssh melehost "docker exec ami_api_alpha tail -2 /tmp/cr035/driver150.log"`
+Records so far: `ssh melehost "docker exec ami_api_alpha wc -l /tmp/cr035/runs_baseline150-2026-07-17.jsonl"`
+
+**Arm transition recipe** (identical for B and C — the container recreate WIPES `/tmp`, so
+re-stage every time):
+
+```bash
+# 1. copy the finished arm's results back BEFORE recreating anything
+ssh melehost "docker cp ami_api_alpha:/tmp/cr035/runs_<batch>.jsonl /tmp/ && docker cp ami_api_alpha:/tmp/cr035/users.json /tmp/"
+scp melehost:/tmp/runs_<batch>.jsonl docs/forward_planning/CR035_room_benchmark/results/
+
+# 2. flip the env for the next arm
+#    arm B: SUPPRESS_ANALYST_CONSENSUS=true      (consensus hidden, social live)
+#    arm C: ADANOS_API_KEY=""                    (social synthetic, consensus visible)
+ssh melehost "cd ~/ami_trade && <VAR>=<value> docker compose --profile tunnel up -d api-alpha"
+ssh melehost "docker exec ami_api_alpha env | grep -E 'SUPPRESS|ADANOS'"   # verify
+
+# 3. re-stage (/tmp was wiped by the recreate)
+scp docs/forward_planning/CR035_room_benchmark/tickers_150.txt melehost:/tmp/
+ssh melehost "docker exec ami_api_alpha mkdir -p /tmp/cr035 && docker cp ~/ami_trade/backend/scripts ami_api_alpha:/app/scripts && docker cp /tmp/tickers_150.txt ami_api_alpha:/tmp/cr035/"
+
+# 4. launch (add --ablation for arm B only — it just tags the records)
+ssh melehost "docker exec -d ami_api_alpha sh -c 'cd /app && python -m scripts.room_benchmark /tmp/cr035/tickers_150.txt --batch-id <batch> --base-url http://localhost:8000 --out-dir /tmp/cr035 >> /tmp/cr035/driver_<batch>.log 2>&1'"
+```
+
+**MANDATORY restoration after arm C** — both windows degrade live Alpha while open:
+
+```bash
+scp infra/alpha.env melehost:~/ami_trade/.env          # repopulates ADANOS_API_KEY
+ssh melehost "cd ~/ami_trade && docker compose --profile tunnel up -d api-alpha"
+ADMIN=$(grep '^ADMIN_SECRET=' infra/alpha.env | cut -d= -f2-)
+curl -fsS -H "Authorization: Bearer $ADMIN" https://api-alpha.agenticmarketintel.ai/v1/admin/config-check
+# ADANOS_API_KEY must read configured:true; SUPPRESS_ANALYST_CONSENSUS must be false in container env
+```
+
+**Then score:** `.venv/bin/python -m scripts.room_benchmark_report --baseline baseline150-2026-07-17 --ablation ablconsensus150-2026-07-17` (arm C needs a third-arm comparison — extend the report script or diff the JSONLs directly on `verdict.action` per ticker).
+
+**Known gotchas already paid for:** driver must run in-container (Mac network blips cost 13
+runs); `/tmp` dies on recreate; a fresh batch-id mints a fresh user which is what defeats the
+24h dedup; retry failures by re-running the same batch-id (it skips completed tickers).
