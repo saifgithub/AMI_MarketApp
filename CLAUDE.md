@@ -112,6 +112,17 @@ Full decision log: [`docs/initial_specs/11_decisions/decision_log.md`](docs/init
 
 Full style rules: [`docs/initial_specs/08_tech/coding_conventions.md`](docs/initial_specs/08_tech/coding_conventions.md).
 
+Behaviour-critical rule that affects every session — **degrade loudly** (CR040):
+
+- Any feature gated on config presence must fail **visibly**, never silently fall back. Adding an
+  env-driven setting? Forward it in `docker-compose.yml`'s `api-alpha` block — `backend/tests/unit/test_config_compose_parity.py` fails the build otherwise. Twice now a shipped
+  feature was dark for months for want of that one line (DEF038, DEF063).
+- Before shipping a fallback, ask: *if this fires constantly and silently, what does the user end
+  up believing?* DEF059 (LLM down → confident fake APPROVE) is what that question would have caught.
+- **Prompt instructions are not controls.** Agents ignore even emphatic "never present this as
+  real" ~70% of the time (CR038). If it must hold, make it structural.
+- Recurring classes + their enforcing checks: [`docs/initial_specs/08_tech/failure_patterns.md`](docs/initial_specs/08_tech/failure_patterns.md). Second occurrence of anything ⇒ add an entry **with a guard**.
+
 Behaviour-critical rule that affects every session — **the AI is named AMI**:
 
 - Code, route names, log keys, tests, internal docs → **LLM** is fine.

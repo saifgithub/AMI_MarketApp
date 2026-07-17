@@ -116,3 +116,20 @@ class AdminEventsResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class FeatureGate(BaseModel):
+    """One config-driven feature and whether it is actually live in this
+    process. `configured` is a boolean derived from the setting — never the
+    secret value itself (CR040)."""
+
+    name: str
+    setting: str
+    configured: bool
+    effect_when_unconfigured: str
+
+
+class AdminConfigCheckResponse(BaseModel):
+    env: str
+    gates: list[FeatureGate]
+    dark_count: int

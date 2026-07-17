@@ -363,3 +363,39 @@ def test_suspended_user_gets_403_on_authenticated_route() -> None:
     )
     assert r.status_code == 403
     assert r.json()["detail"] == "account_suspended"
+
+
+# ── Config check (CR040) ──────────────────────────────────────────────────────
+
+def test_config_check_reports_gate_states(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The diagnostic that would have made DEF063 a five-second question
+    instead of a months-long silent outage."""
+    monkeypatch.setattr(settings, "adanos_api_key", "")
+    monkeypatch.setattr(settings, "vllm_base_url", "http://192.168.20.74:8000")
+    r = client.get("/v1/admin/config-check", headers=_ADMIN_HDR)
+    assert r.status_code == 200
+    body = r.json()
+    gates = {g["setting"]: g for g in body["gates"]}
+    assert gates["ADANOS_API_KEY"]["configured"] is False
+    assert gates["VLLM_BASE_URL"]["configured"] is True
+    # Every dark gate must say what silently happens instead.
+    assert gates["ADANOS_API_KEY"]["effect_when_unconfigured"]
+    assert body["dark_count"] == sum(1 for g in body["gates"] if not g["configured"])
+
+
+def test_config_check_never_leaks_secret_values(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Booleans only. A config diagnostic that echoes keys is a credential leak
+    behind a single static bearer."""
+    secret_value = "super-secret-adanos-key-do-not-echo"
+    monkeypatch.setattr(settings, "adanos_api_key", secret_value)
+    r = client.get("/v1/admin/config-check", headers=_ADMIN_HDR)
+    assert r.status_code == 200
+    assert secret_value not in r.text
+    assert _SECRET not in r.text
+
+
+def test_config_check_requires_admin(client: TestClient) -> None:
+    assert client.get("/v1/admin/config-check").status_code == 403
+    assert client.get(
+        "/v1/admin/config-check", headers={"Authorization": "Bearer wrong"}
+    ).status_code == 403

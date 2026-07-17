@@ -222,6 +222,41 @@ non-200 or shows an unexpected shape (e.g., `active_provider=mock`),
 surface the diff to the user and stop — the deploy is technically
 done but smoke failed; the user decides next step.
 
+### 7b. Config-gate check — catch silently-dark features (CR040)
+
+Twice a shipped feature ran dead in Alpha because its key never reached
+the container (DEF038 OIDC audiences; DEF063 Adanos + Alpha Vantage,
+dark for the entire life of CR023/CR024). Nothing in this protocol would
+have noticed. This step does.
+
+```bash
+ADMIN=$(grep '^ADMIN_SECRET=' infra/alpha.env | cut -d= -f2-)
+curl -fsS -H "Authorization: Bearer ${ADMIN}" \
+  https://api-alpha.agenticmarketintel.ai/v1/admin/config-check
+```
+
+Returns each config-gated feature, whether it is `configured` in the
+running container, and what silently happens when it isn't. **Booleans
+only — it never echoes secret values.**
+
+Compare against intent: every key **populated (uncommented) in
+`infra/alpha.env`** must read `configured: true`. A key that is set on
+the Mac but `false` in the container is exactly the DEF038/DEF063 bug —
+its `${VAR}` line is missing from the `api-alpha` environment block in
+`docker-compose.yml`. Stop and fix the compose line; do not hand-edit
+melehost.
+
+`dark_count` is informational, not a failure: features are legitimately
+off when their key is deliberately parked (Adanos and Alpha Vantage are
+parked pending a metered-tier budget decision — see DEF063). The failure
+condition is a **mismatch between alpha.env and the container**, not a
+non-zero count.
+
+Note the commit-time guard already ran in step 1: `pytest` includes
+`test_config_compose_parity.py`, which fails if any `Settings` field is
+neither forwarded nor explicitly excused. This step catches what the
+static test can't — the deployed container's actual state.
+
 ### 8. Report the outcome
 
 Print a short summary like:

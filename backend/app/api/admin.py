@@ -28,6 +28,7 @@ from app.core.config import settings
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User, UserDeviceRow
 from app.schemas.admin import (
+    AdminConfigCheckResponse,
     AdminCreditsRequest,
     AdminEventsResponse,
     AdminNoteRequest,
@@ -37,6 +38,7 @@ from app.schemas.admin import (
     AdminUserDetail,
     AdminUserDevice,
     AdminUserSummary,
+    FeatureGate,
     SubscriptionEventOut,
 )
 
@@ -189,6 +191,54 @@ def _user_detail(
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────────
+
+# CR040: every feature that silently falls back when its config is missing.
+# DEF038 and DEF063 both shipped dark for want of one compose line, and nothing
+# anywhere could answer "is this actually on in Alpha?" without a shell on the
+# box. Adding a feature that degrades silently? Add it here too.
+#   (setting attr, human name, what happens when it's NOT configured)
+_FEATURE_GATES: list[tuple[str, str, str]] = [
+    ("adanos_api_key", "Social Analyst — live Reddit sentiment (CR024)",
+     "Social Analyst invents illustrative sentiment (CR037)"),
+    ("alpha_vantage_api_key", "News Analyst — Alpha Vantage sentiment merge (CR023)",
+     "Yahoo-only headlines; news_source still reads 'live' so the gap is invisible"),
+    ("vllm_base_url", "LLM — on-prem vLLM provider",
+     "gateway falls back to anthropic/mock"),
+    ("use_real_market_data", "Market data — real Yahoo quotes",
+     "deterministic mock random-walk prices"),
+    ("admin_secret", "Admin back-office auth",
+     "admin API returns 503"),
+    ("resend_api_key", "Transactional email (magic links)",
+     "email send is a no-op"),
+    ("sentry_dsn", "Sentry error reporting", "errors are local-log only"),
+    ("posthog_api_key", "PostHog analytics", "no product analytics"),
+]
+
+
+@router.get("/config-check", response_model=AdminConfigCheckResponse)
+def config_check(_: None = Depends(get_admin)) -> AdminConfigCheckResponse:
+    """Report which config-gated features are live in THIS container (CR040).
+
+    Booleans only — never echoes a secret. `dark_count` is the number of
+    features silently running on their fallback path; a promotion gate can
+    diff this against what infra/alpha.env intends to have enabled.
+    """
+    gates: list[FeatureGate] = []
+    for attr, name, effect in _FEATURE_GATES:
+        value = getattr(settings, attr, None)
+        configured = bool(value) if not isinstance(value, bool) else value
+        gates.append(FeatureGate(
+            name=name,
+            setting=attr.upper(),
+            configured=configured,
+            effect_when_unconfigured=effect,
+        ))
+    return AdminConfigCheckResponse(
+        env=settings.env,
+        gates=gates,
+        dark_count=sum(1 for g in gates if not g.configured),
+    )
+
 
 @router.get("/users", response_model=list[AdminUserSummary])
 def search_users(

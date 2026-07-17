@@ -116,6 +116,27 @@ services:
       # CR035 ablation toggle — hides the Street consensus line from the
       # agents' fundamentals context. Benchmark windows only; keep false.
       SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}
+      # RULE (CR040): every env-driven Settings field must be forwarded here,
+      # or listed in tests/unit/test_config_compose_parity.py::_NOT_FORWARDED
+      # with a reason. That test fails the build otherwise. A comment alone is
+      # not enough — DEF038 wrote one here and DEF063 still shipped two dark
+      # features seven lines below it.
+      # Agent live feeds (CR023 news / CR024 social). Both are metered free
+      # tiers gated on "key present = feature on", so an EMPTY value is the
+      # off switch — see DEF063 before populating them in infra/alpha.env.
+      ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-}
+      ADANOS_API_KEY: ${ADANOS_API_KEY:-}
+      # Concierge lesson-retrieval mode (CR021): saver | full_context | embedding.
+      CONCIERGE_CONTEXT_MODE: ${CONCIERGE_CONTEXT_MODE:-full_context}
+      # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —
+      # empty derives the cipher from SECRET_KEY, so at-rest encryption stays
+      # on; set it only to rotate independently.
+      ALPACA_ENCRYPTION_KEY: ${ALPACA_ENCRYPTION_KEY:-}
+      ALPACA_PAPER_BASE_URL: ${ALPACA_PAPER_BASE_URL:-https://paper-api.alpaca.markets}
+      ALPACA_OAUTH_TOKEN_URL: ${ALPACA_OAUTH_TOKEN_URL:-https://api.alpaca.markets/oauth/token}
+      ALPACA_REDIRECT_URI: ${ALPACA_REDIRECT_URI:-amitrade://alpaca/callback}
+      # Bug-report upload cap (bytes).
+      BUG_ATTACHMENT_MAX_BYTES: ${BUG_ATTACHMENT_MAX_BYTES:-5242880}
       # Reputation + weekly leagues (CR004, D-060).
       REPUTATION_DAILY_CAP: ${REPUTATION_DAILY_CAP:-25}
       LEAGUE_COHORT_SIZE: ${LEAGUE_COHORT_SIZE:-30}

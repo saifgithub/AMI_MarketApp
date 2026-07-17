@@ -8,9 +8,12 @@ from uuid import uuid4
 
 import pytest
 
+from app.db import get_session
+from app.db.models import User
 from app.schemas import AgentId, Compliance
 from app.schemas.mandate import Plan
 from app.schemas.room import RoomStatus, VerdictAction
+from app.services.auth_service import AuthService
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.room_runner import RoomRunner
 
@@ -22,6 +25,26 @@ def _collect(coro_gen) -> list:
             events.append(ev)
         return events
     return asyncio.run(run())
+
+
+def _billed_user(plan: str = "trader") -> "UUID":
+    """A real user row with an allowance behind it.
+
+    CR039 made `start_run` debit the Room price, so it needs a user that can
+    actually pay — a bare `uuid4()` has no row and no credits. `run()` still
+    takes any UUID (it falls back to floor_pass), so only the start_run tests
+    need this.
+
+    Defaults to `trader` (150 credits ≈ 18 Rooms) rather than floor_pass (13 =
+    exactly 1 Room): the dedup-disabled test converges two real Rooms and would
+    otherwise hit the wall mid-test.
+    """
+    auth = AuthService()
+    u, _, _ = auth.ensure_anonymous(device_user_id=None)
+    with get_session() as s:
+        row = s.get(User, u.id)
+        row.plan = plan
+    return u.id
 
 
 def test_room_streams_all_phases_and_lands_a_verdict():
@@ -1362,7 +1385,7 @@ def test_start_run_delivers_verdict_via_subscribe():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
         run_id = await runner.start_run(
-            user_id=uuid4(),
+            user_id=_billed_user(),
             ticker="MSFT",
             mandate=mandate,
             char_delay_min=0.0,
@@ -1387,7 +1410,7 @@ def test_start_run_completes_after_subscribe_exits():
     async def _run():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
-        user_id = uuid4()
+        user_id = _billed_user()
         run_id = await runner.start_run(
             user_id=user_id,
             ticker="AAPL",
@@ -1419,7 +1442,7 @@ def test_start_run_deduplicates_same_user_same_ticker():
     async def _run():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
-        user_id = uuid4()
+        user_id = _billed_user()
         run_id_1 = await runner.start_run(
             user_id=user_id, ticker="AAPL", mandate=mandate,
             char_delay_min=0.0, char_delay_max=0.0,
@@ -1602,7 +1625,7 @@ def test_start_run_deduplicates_recently_completed_run():
     async def _run():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
-        user_id = uuid4()
+        user_id = _billed_user()
         # First run — completes to verdict
         run_id_1 = await runner.start_run(
             user_id=user_id, ticker="MSFT", mandate=mandate,
@@ -1639,7 +1662,7 @@ def test_is_active_false_after_completed_dedup():
     async def _run():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
-        user_id = uuid4()
+        user_id = _billed_user()
         run_id_1 = await runner.start_run(
             user_id=user_id, ticker="MSFT", mandate=mandate,
             char_delay_min=0.0, char_delay_max=0.0,
@@ -1670,7 +1693,7 @@ def test_completed_dedup_window_zero_disables_dedup(monkeypatch):
     async def _run():
         runner = RoomRunner()
         mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
-        user_id = uuid4()
+        user_id = _billed_user()
         run_id_1 = await runner.start_run(
             user_id=user_id, ticker="GOOGL", mandate=mandate,
             char_delay_min=0.0, char_delay_max=0.0,
