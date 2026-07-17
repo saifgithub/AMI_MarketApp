@@ -1,6 +1,6 @@
 # DEF063 — CR023/CR024 live feeds are dark in Alpha: their API keys are never forwarded to the container
 
-**Filed:** 2026-07-17 (AT:R59) · **Status:** partially resolved (AT:R59) — compose forwarding + guard landed via CR040 (`9c699b1`); keys deliberately PARKED (commented) in `infra/alpha.env` pending Saiful's metered-tier budget call, so Alpha behaviour is unchanged and enabling is now a one-line deliberate act · **Found by:** Saiful ("I am sure CR024 had
+**Filed:** 2026-07-17 (AT:R59) · **Status:** blocked on Saiful — plumbing fixed and key enabled (`alpha-2026-07-17-1`), but **Adanos rejects the key with HTTP 401 "Invalid API key"**, so the feed is still dark. Needs a fresh key from the Adanos account. · **Found by:** Saiful ("I am sure CR024 had
 delivered adanos. why have we not used it?") during the CR035/CR037 audit
 · **Bug class:** identical to **DEF038** (OIDC audiences lived in `.env`, were never forwarded to
 the container, so the feature silently ran with an empty value) — the comment recording DEF038
@@ -79,3 +79,40 @@ posture first (accept the cap / widen the TTL / restrict to watchlist tickers).
 2. A live convene reports `social_source=live`; the Social Analyst's message cites real Reddit
    sentiment (re-measure with the CR035 transcript audit — see CR037).
 3. A config-check surface exists that would fail loudly on the next unforwarded key.
+
+
+---
+
+## Follow-up (2026-07-17, `alpha-2026-07-17-1`) — plumbing fixed, key is dead
+
+Saiful: *"turn on the key. We need to start using it."* Key uncommented in `infra/alpha.env`,
+promoted, verified reaching the container. The feed is **still dark — for a new reason.**
+
+| Check | Result |
+|---|---|
+| `GET /v1/admin/config-check` → `ADANOS_API_KEY` | `configured: true` (plumbing fixed ✅) |
+| Live `_profile_for_ticker("NVDA")` in-container | `social_source = None` ❌ |
+| Container log | `social_context_adanos_bad_status status=401 ticker=NVDA` |
+| Direct probe from the Mac, `X-API-Key` | `401 {"detail":"Invalid API key."}` |
+| Same probe with an obviously-fake key | **identical 401** — our key is no better than a fake one |
+| `Authorization: Bearer` / `x-api-key` / `apikey` variants | all 401 — not an auth-scheme bug |
+| `https://api.adanos.org/health` | `200` — service is up |
+| Endpoint without auth | `401`, not `404` — URL is correct |
+
+**Diagnosis: the key itself is invalid** (revoked, rotated, or the free tier lapsed). Our code is
+correct — right URL, right header. Note CR024's module docstring records that the 250/month limit
+was *"confirmed via response headers during AT:R57"* (2026-07-12), so the key **was working five
+days ago** and has died since.
+
+**Saiful's move (external account, can't be done from here):** sign in to the Adanos dashboard,
+check the subscription/trial state, regenerate the key, paste it into `infra/alpha.env`, and
+re-promote. That's the whole remaining step — everything downstream is verified.
+
+**Left enabled deliberately.** The failed call logs a warning per convene and falls back to the
+synthetic path, i.e. it degrades *loudly* (CR040 P2) instead of silently. Cost is one wasted
+~200 ms HTTP round-trip per convene and zero quota (401s don't bill). The moment a valid key
+lands, one promotion makes it real — no code change.
+
+**Acceptance still unmet:** #1 (`adanos_api_key` True) ✅, #2 (`social_source=live`) ❌ — blocked
+on the key. CR037's fallback question stays live regardless: with a 250/month budget, cold
+tickers hit the fallback daily even once the key works.
