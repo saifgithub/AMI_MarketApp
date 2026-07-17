@@ -34,9 +34,18 @@ from app.services.social_context import (
 
 
 class _FakeResponse:
-    def __init__(self, status_code: int, json_body: dict | None = None):
+    def __init__(self, status_code: int, json_body: dict | None = None,
+                 headers: dict | None = None):
         self.status_code = status_code
         self._json = json_body
+        # Adanos returns the monthly/burst budget on every response; CR041 logs
+        # it, so the fake carries a realistic set by default.
+        self.headers = headers if headers is not None else {
+            "x-ratelimit-limit-monthly": "250",
+            "x-ratelimit-remaining-monthly": "246",
+            "x-ratelimit-used-monthly": "4",
+            "x-ratelimit-remaining-burst": "99",
+        }
 
     def json(self) -> dict:
         if self._json is None:
@@ -309,3 +318,124 @@ def test_build_social_context_block_omits_snippet_section_when_none(monkeypatch)
     block = build_social_context_block("AAPL")
     assert block is not None
     assert "Sample community reactions" not in block
+
+
+# ── Durable cache (CR041) ──────────────────────────────────────────────────
+#
+# The cache used to be a dict on the source instance, so it died with the
+# process — and api-alpha is recreated on every promotion. Against a
+# 250-calls/month free tier that meant a 150-ticker benchmark re-burned the
+# whole budget on each restart. These tests pin the properties that make the
+# 30-day reuse plan arithmetically possible.
+
+
+def _clear_social_cache() -> None:
+    from app.db import get_session
+    from app.db.models import SocialSentimentCacheRow
+
+    with get_session() as s:
+        s.query(SocialSentimentCacheRow).delete()
+
+
+def test_cache_survives_a_new_source_instance(monkeypatch):
+    """The restart scenario: a fresh _AdanosSource (new process) must serve
+    from Postgres without spending another call."""
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    _clear_social_cache()
+
+    first = _AdanosSource()
+    first._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    assert first.fetch("AAPL") is not None
+    assert first._client.calls == 1
+
+    # Simulates the container being recreated: brand-new instance, empty L1.
+    second = _AdanosSource()
+    second._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    got = second.fetch("AAPL")
+    assert got is not None
+    assert got.mentions == REAL_AAPL_RESPONSE["mentions"]
+    assert second._client.calls == 0, "restart re-burned quota — CR041 regression"
+
+
+def test_not_found_is_cached_so_it_costs_one_call_not_one_per_convene(monkeypatch):
+    """An uncovered ticker used to cost a live call on every single convene."""
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    _clear_social_cache()
+
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(200, {"ticker": "XYZQ", "found": False}))
+    assert src.fetch("XYZQ") is None
+    assert src._client.calls == 1
+
+    fresh = _AdanosSource()
+    fresh._client = _FakeClient(_FakeResponse(200, {"ticker": "XYZQ", "found": False}))
+    assert fresh.fetch("XYZQ") is None
+    assert fresh._client.calls == 0, "negative not cached — quota leak (CR041)"
+
+
+def test_cache_refetches_once_stale(monkeypatch):
+    """Staleness is measured against SOCIAL_CACHE_TTL_DAYS at read time."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.db import get_session
+    from app.db.models import SocialSentimentCacheRow
+
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    monkeypatch.setattr(settings, "social_cache_ttl_days", 30)
+    _clear_social_cache()
+
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    src.fetch("AAPL")
+
+    # Age the row past the TTL.
+    with get_session() as s:
+        row = s.get(SocialSentimentCacheRow, "AAPL")
+        row.fetched_at = datetime.now(timezone.utc) - timedelta(days=31)
+
+    fresh = _AdanosSource()
+    fresh._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    assert fresh.fetch("AAPL") is not None
+    assert fresh._client.calls == 1, "stale row was served instead of refetched"
+
+
+def test_cache_within_ttl_is_not_refetched(monkeypatch):
+    """The other half of the TTL contract — a 29-day-old row is still good."""
+    from datetime import datetime, timedelta, timezone
+
+    from app.db import get_session
+    from app.db.models import SocialSentimentCacheRow
+
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    monkeypatch.setattr(settings, "social_cache_ttl_days", 30)
+    _clear_social_cache()
+
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    src.fetch("AAPL")
+    with get_session() as s:
+        s.get(SocialSentimentCacheRow, "AAPL").fetched_at = (
+            datetime.now(timezone.utc) - timedelta(days=29)
+        )
+
+    fresh = _AdanosSource()
+    fresh._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    assert fresh.fetch("AAPL") is not None
+    assert fresh._client.calls == 0
+
+
+def test_cached_payload_round_trips_every_field(monkeypatch):
+    """Cache fidelity: what comes back from Postgres must equal the live parse,
+    or the benchmark silently compares different data across runs."""
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    _clear_social_cache()
+
+    live = _AdanosSource()
+    live._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    direct = live.fetch("AAPL")
+
+    cached = _AdanosSource()
+    cached._client = _FakeClient(_FakeResponse(200, REAL_AAPL_RESPONSE))
+    from_cache = cached.fetch("AAPL")
+
+    assert from_cache == direct

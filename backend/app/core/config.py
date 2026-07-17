@@ -103,9 +103,17 @@ class Settings(BaseSettings):
     # Social sentiment provider for the agent pipeline (Room + 1-on-1), see
     # app/services/social_context.py. Adanos (Reddit-only stock sentiment
     # aggregator) — presence of the key turns the feature on, same
-    # convention as alpha_vantage_api_key above. Free tier is 250
-    # calls/month, so social_context.py caches aggressively (24h TTL).
+    # convention as alpha_vantage_api_key above. Free tier is 250 calls/month
+    # (plus a 100-call burst window), so results are cached in Postgres.
     adanos_api_key: str = ""
+    # CR041: how long a cached Adanos row stays usable. The cache is durable
+    # (social_sentiment_cache table) precisely so the monthly budget survives
+    # container restarts. Readers compare fetched_at against this, so changing
+    # it re-dates every row with no backfill.
+    # NOTE: 30d is a benchmark-reproducibility figure. Sentiment a month stale
+    # presented to a user as current is CR038's failure mode with real numbers
+    # — shorten it, or render the age, before this fronts live users.
+    social_cache_ttl_days: int = 30
 
     # Room dedup windows (see app/services/room_runner.py::start_run).
     # Same user+ticker submitted while a run is in flight always returns the

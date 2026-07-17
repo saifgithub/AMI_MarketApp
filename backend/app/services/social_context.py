@@ -25,6 +25,7 @@ Never raises, returns None on any failure.
 from __future__ import annotations
 
 import time
+from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import NamedTuple
 
@@ -34,7 +35,9 @@ from app.core.config import settings
 from app.core.logging import logger
 
 _ADANOS_BASE_URL = "https://api.adanos.org/reddit/stocks/v1/stock"
-_CACHE_TTL = 86_400.0  # 24h — see module docstring for the 250/month budget math
+# L1 in-process TTL. The durable cache is Postgres (CR041) — this only spares
+# a DB round-trip inside one process's lifetime, so it stays short.
+_L1_TTL = 300.0
 
 
 class SocialSentiment(NamedTuple):
@@ -52,10 +55,66 @@ class SocialSentiment(NamedTuple):
     sample_snippets: tuple[str, ...]
 
 
+def _cache_read(sym: str) -> tuple[bool, SocialSentiment | None] | None:
+    """(hit, sentiment) from the durable cache, or None when absent/stale.
+    A cached `found=False` is a hit returning None — that's the point (it stops
+    an uncovered ticker costing a live call on every convene)."""
+    from sqlalchemy import select
+
+    from app.db import get_session
+    from app.db.models import SocialSentimentCacheRow
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=settings.social_cache_ttl_days)
+    try:
+        with get_session() as s:
+            row = s.execute(
+                select(SocialSentimentCacheRow).where(
+                    SocialSentimentCacheRow.ticker == sym
+                )
+            ).scalar_one_or_none()
+            if row is None:
+                return None
+            fetched = row.fetched_at
+            if fetched.tzinfo is None:
+                fetched = fetched.replace(tzinfo=timezone.utc)
+            if fetched < cutoff:
+                return None
+            if not row.found:
+                return (True, None)
+            return (True, _AdanosSource._from_payload(sym, row.payload or {}))
+    except Exception as exc:  # noqa: BLE001 — cache must never break a convene
+        logger.warn("social_cache_read_failed", ticker=sym, error=str(exc)[:200])
+        return None
+
+
+def _cache_write(sym: str, sentiment: SocialSentiment | None) -> None:
+    from app.db import get_session
+    from app.db.models import SocialSentimentCacheRow
+
+    try:
+        with get_session() as s:
+            row = s.get(SocialSentimentCacheRow, sym)
+            payload = dict(sentiment._asdict()) if sentiment is not None else None
+            if payload is not None:
+                payload["top_subreddits"] = list(payload.get("top_subreddits") or ())
+                payload["sample_snippets"] = list(payload.get("sample_snippets") or ())
+            if row is None:
+                s.add(SocialSentimentCacheRow(
+                    ticker=sym, found=sentiment is not None, payload=payload,
+                    fetched_at=datetime.now(timezone.utc),
+                ))
+            else:
+                row.found = sentiment is not None
+                row.payload = payload
+                row.fetched_at = datetime.now(timezone.utc)
+    except Exception as exc:  # noqa: BLE001
+        logger.warn("social_cache_write_failed", ticker=sym, error=str(exc)[:200])
+
+
 class _AdanosSource:
     def __init__(self, timeout_seconds: float = 4.0) -> None:
         self._client = httpx.Client(timeout=timeout_seconds)
-        self._cache: dict[str, tuple[SocialSentiment, float]] = {}
+        self._cache: dict[str, tuple[SocialSentiment | None, float]] = {}
         self._lock = RLock()
 
     def fetch(self, ticker: str) -> SocialSentiment | None:
@@ -66,6 +125,12 @@ class _AdanosSource:
             if hit is not None and hit[1] > now:
                 return hit[0]
 
+        cached = _cache_read(sym)
+        if cached is not None:
+            with self._lock:
+                self._cache[sym] = (cached[1], now + _L1_TTL)
+            return cached[1]
+
         try:
             resp = self._client.get(
                 f"{_ADANOS_BASE_URL}/{sym}",
@@ -74,6 +139,28 @@ class _AdanosSource:
         except httpx.HTTPError as exc:
             logger.warn("social_context_adanos_network_error", ticker=sym, error=str(exc)[:200])
             return None
+        # Budget telemetry (CR041): the free tier is 250/month and the only
+        # signal is these headers. Log every live call so exhaustion is visible
+        # before the agent silently reverts to inventing sentiment (CR037).
+        remaining = resp.headers.get("x-ratelimit-remaining-monthly")
+        logger.info(
+            "social_context_adanos_call",
+            ticker=sym,
+            status=resp.status_code,
+            monthly_remaining=remaining,
+            monthly_used=resp.headers.get("x-ratelimit-used-monthly"),
+            burst_remaining=resp.headers.get("x-ratelimit-remaining-burst"),
+        )
+        try:
+            if remaining is not None and int(remaining) <= 10:
+                logger.warn(
+                    "social_context_adanos_budget_nearly_exhausted",
+                    monthly_remaining=remaining,
+                    resets=resp.headers.get("x-ratelimit-reset-monthly"),
+                    note="Social Analyst reverts to synthetic sentiment at zero (CR037)",
+                )
+        except ValueError:
+            pass
         if resp.status_code != 200:
             logger.warn("social_context_adanos_bad_status", ticker=sym, status=resp.status_code)
             return None
@@ -83,12 +170,33 @@ class _AdanosSource:
             logger.warn("social_context_adanos_parse_error", ticker=sym, error=str(exc)[:200])
             return None
         if not body.get("found"):
+            # Cache the negative: Adanos has no coverage for this ticker, and
+            # re-asking every convene burned one call each time (CR041).
+            _cache_write(sym, None)
+            with self._lock:
+                self._cache[sym] = (None, now + _L1_TTL)
             return None
 
         sentiment = self._to_sentiment(sym, body)
+        _cache_write(sym, sentiment)
         with self._lock:
-            self._cache[sym] = (sentiment, now + _CACHE_TTL)
+            self._cache[sym] = (sentiment, now + _L1_TTL)
         return sentiment
+
+    @staticmethod
+    def _from_payload(ticker: str, payload: dict) -> SocialSentiment:
+        return SocialSentiment(
+            ticker=ticker,
+            buzz_score=float(payload.get("buzz_score") or 0.0),
+            sentiment_score=float(payload.get("sentiment_score") or 0.0),
+            mentions=int(payload.get("mentions") or 0),
+            bullish_pct=int(payload.get("bullish_pct") or 0),
+            bearish_pct=int(payload.get("bearish_pct") or 0),
+            trend=str(payload.get("trend") or "flat"),
+            period_days=int(payload.get("period_days") or 7),
+            top_subreddits=tuple(payload.get("top_subreddits") or ()),
+            sample_snippets=tuple(payload.get("sample_snippets") or ()),
+        )
 
     @staticmethod
     def _to_sentiment(ticker: str, body: dict) -> SocialSentiment:

@@ -126,6 +126,9 @@ services:
       # off switch — see DEF063 before populating them in infra/alpha.env.
       ALPHA_VANTAGE_API_KEY: ${ALPHA_VANTAGE_API_KEY:-}
       ADANOS_API_KEY: ${ADANOS_API_KEY:-}
+      # CR041: durable-cache staleness. 30d keeps a 150-ticker benchmark
+      # re-runnable at zero quota cost against the 250/month free tier.
+      SOCIAL_CACHE_TTL_DAYS: ${SOCIAL_CACHE_TTL_DAYS:-30}
       # Concierge lesson-retrieval mode (CR021): saver | full_context | embedding.
       CONCIERGE_CONTEXT_MODE: ${CONCIERGE_CONTEXT_MODE:-full_context}
       # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —

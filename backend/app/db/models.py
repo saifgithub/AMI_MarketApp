@@ -679,3 +679,29 @@ class LeagueMemberRow(Base):
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class SocialSentimentCacheRow(Base):
+    """Durable Adanos sentiment cache (CR041).
+
+    The cache used to live in a dict on the _AdanosSource instance, so it died
+    with the process. That made the free tier's 250-calls/month budget
+    unspendable-on-purpose: api-alpha was recreated 4× on 2026-07-17 alone
+    (promotions, CR035 flag flips), and each restart re-burned the whole
+    universe. A 150-ticker benchmark needs the cache to outlive the container,
+    hence a table rather than memory or a volume (api-alpha mounts no /data).
+
+    `found=False` rows are cached deliberately: an uncovered ticker previously
+    cost one live call per convene forever, a quota leak independent of TTL.
+    Staleness is decided by the reader against SOCIAL_CACHE_TTL_DAYS, not by a
+    stored expiry — so changing the TTL re-dates every row without a backfill.
+    """
+
+    __tablename__ = "social_sentiment_cache"
+
+    ticker: Mapped[str] = mapped_column(String, primary_key=True)
+    found: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    payload: Mapped[Optional[dict]] = mapped_column(JsonB, nullable=True)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
+    )
