@@ -35,20 +35,25 @@ The trap is trailing tight to "lock in profit." A beginner moves the stop to bre
 
 <Quiz
   question="You're long GOOGL from $140. Price rises to $160. 14-day ATR is $3.50. Using a 3× ATR chandelier trail anchored to the highest close, where is the trailing stop after the $160 print?"
-  answer={149.5}
-  tolerance={0.25}
-  explanation="Trail = highest close − 3 × ATR = $160 − $10.50 = $149.50. That's above your $140 entry, locking in $9.50 of gain per share if hit, while leaving 3 ATR of room for normal pullbacks in the uptrend."
+  options={[
+    "$156.50",
+    "$149.50",
+    "$129.50",
+    "$140.00"
+  ]}
+  answer={1}
+  explanation="Trail = highest close − 3 × ATR = $160 − $10.50 = $149.50. That's above your $140 entry, locking in $9.50 of gain per share if hit, while leaving 3 ATR of room for normal pullbacks in the uptrend. A 1 ATR trail would sit at $156.50 — tight enough that ordinary noise takes you out of a trend that's still intact."
 />
 
 <Quiz
   question="Trader A trails with a 1× ATR stop ('tight to protect profits'). Trader B trails with a 3× ATR stop. Both enter the same uptrend in NVDA that runs from $480 to $620 over six weeks with one 8% mid-trend pullback. Who likely captures more of the move and why?"
   options={[
-    "Trader A — tighter trails always capture more profit because they exit closer to peaks.",
-    "Trader B — a healthy uptrend's normal pullbacks (often 1.5–2.5× ATR) fit inside a 3× ATR trail but trip a 1× ATR trail; Trader A almost certainly gets stopped on the mid-trend 8% pullback and misses the remainder of the move.",
     "Both capture roughly the same amount because trailing stops are an exit method, not an entry edge.",
-    "Trader A — trailing stops are not meant for trend trades, so the wider stop is irrelevant."
+    "Trader A — trailing stops are not meant for trend trades, so the wider stop is irrelevant.",
+    "Trader A — tighter trails always capture more profit because they exit closer to peaks.",
+    "Trader B — a healthy uptrend's normal pullbacks (often 1.5–2.5× ATR) fit inside a 3× ATR trail but trip a 1× ATR trail; Trader A almost certainly gets stopped on the mid-trend 8% pullback and misses the remainder of the move."
   ]}
-  answer={1}
+  answer={3}
   explanation="The tempting wrong answer is the first — 'tighter trail = closer to peak'. The flaw is that trends don't move in straight lines; the normal pullback inside a healthy uptrend is regularly 1.5–2.5× ATR. A 1× ATR trail is tighter than the trend's own noise, so it exits on every pullback rather than on the eventual reversal. Wider trails (3× ATR or below-the-last-swing-low) match the trend's noise envelope, letting the position survive pullbacks and only exiting on a structural change."
 />
 

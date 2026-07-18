@@ -36,25 +36,25 @@ The beginner mistake is mechanical bar-counting without the trend filter. You se
 <Quiz
   question="MSFT just printed three consecutive lower-close daily bars: $445, $441, $438. Today closes at $443 on a green bar that exceeds the prior bar's high. The 50-day MA is at $432, sloping up. What does the 3-bar pullback rule say?"
   options={[
-    "Enter long at $443; stop $437 (below pullback low)",
     "Wait for a fourth red bar to confirm the pattern",
     "No entry — three down bars is too shallow a pullback",
+    "Enter long at $443; stop $437 (below pullback low)",
     "Short — three down bars means the trend is breaking"
   ]}
-  answer={0}
-  explanation="Three consecutive lower closes inside an uptrend, followed by a bullish reversal bar that closes above the prior bar's high — that's the canonical 3-bar setup. Stop below the pullback low at $438 (lowest of the three) gives ~$5 risk per share. Option 1 (wait for a fourth bar) waits past the pattern and into a different setup. Option 3 (short) is the textbook way to short rallies in healthy uptrends and lose."
+  answer={2}
+  explanation="Three consecutive lower closes inside an uptrend, followed by a bullish reversal bar that closes above the prior bar's high — that's the canonical 3-bar setup. Stop below the pullback low at $438 (lowest of the three) gives ~$5 risk per share. Waiting for a fourth red bar waits past the pattern and into a different setup. Shorting here is the textbook way to short rallies in healthy uptrends and lose."
 />
 
 <Quiz
   question="On Bursa Malaysia: PETRONAS in an established uptrend prints a 5-bar pullback. Pullback low RM6.20, today's bullish reversal bar closes RM6.45. ATR is RM0.10. Mandate: 1% per-trade risk on RM40,000 account, drawdown cap 20%, currently 4% drawdown. Synthesis: entry, stop, and size?"
   options={[
-    "Entry RM6.45, stop RM6.15, size 1,333 shares",
+    "Entry RM6.45, stop RM6.30, size 2,666 shares",
     "Entry RM6.45, stop RM6.10, size 1,142 shares",
     "Entry RM6.45, stop RM6.00, size 888 shares",
-    "Entry RM6.45, stop RM6.30, size 2,666 shares"
+    "Entry RM6.45, stop RM6.15, size 1,333 shares"
   ]}
   answer={1}
-  explanation="Stop = pullback swing low (RM6.20) - ~0.5x ATR noise buffer = RM6.20 - RM0.10 = RM6.10. Risk per share = 6.45 - 6.10 = RM0.35. Max risk = 1% * 40,000 = RM400. Shares = 400 / 0.35 = 1,142.85, round down to 1,142. Option 3 (stop RM6.30) sets a stop ABOVE the pullback low — inside the noise, will get stopped on routine wicks. Option 0 omits the ATR buffer. Synthesis: stop placement always = pullback low MINUS a noise buffer, not the low itself."
+  explanation="Stop = pullback swing low (RM6.20) - ~0.5x ATR noise buffer = RM6.20 - RM0.10 = RM6.10. Risk per share = 6.45 - 6.10 = RM0.35. Max risk = 1% * 40,000 = RM400. Shares = 400 / 0.35 = 1,142.85, round down to 1,142. The RM6.30 stop sits ABOVE the pullback low — inside the noise, will get stopped on routine wicks. The RM6.15 stop omits the ATR buffer. Synthesis: stop placement always = pullback low MINUS a noise buffer, not the low itself."
 />
 
 ## Try it

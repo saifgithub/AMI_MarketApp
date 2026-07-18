@@ -36,25 +36,25 @@ The beginner mistake is sizing RSI(2) trades by the same per-trade risk as longe
 <Quiz
   question="AAPL closed at $220 today with RSI(2) at 4.1. AAPL is above its 200-day MA. There is no known negative catalyst. You entered the trade. Day 3 closes at $221 — still below the 5-day MA at $222.50, no exit trigger. Day 5 closes at $220.50 — still below the 5-day MA. What does the rule say?"
   options={[
-    "Hold — it's only $0.50 from entry and the bigger reversion is coming",
-    "Exit on Day 6's open per the time stop, even though you're break-even",
     "Add to the position because the entry is still good",
-    "Hold and switch to a longer-term trend-follow rule"
+    "Hold and switch to a longer-term trend-follow rule",
+    "Hold — it's only $0.50 from entry and the bigger reversion is coming",
+    "Exit on Day 6's open per the time stop, even though you're break-even"
   ]}
-  answer={1}
-  explanation="The time stop is non-negotiable. The strategy's edge lives in the first 1-5 sessions; past that, RSI(2) reversion is just an open position with no statistical edge supporting it. Option 0 is the tempting wrong answer — it 'feels' like break-even can hold for a bit longer — but mechanical strategies require mechanical exits or they become discretionary trades with the wrong stop logic. Option 3 (switch strategies) is the more sophisticated version of the same mistake: changing the strategy mid-trade."
+  answer={3}
+  explanation="The time stop is non-negotiable. The strategy's edge lives in the first 1-5 sessions; past that, RSI(2) reversion is just an open position with no statistical edge supporting it. Holding because you're only $0.50 from entry is the tempting wrong answer — it 'feels' like break-even can hold for a bit longer — but mechanical strategies require mechanical exits or they become discretionary trades with the wrong stop logic. Switching to a longer-term trend-follow rule is the more sophisticated version of the same mistake: changing the strategy mid-trade."
 />
 
 <Quiz
   question="You run an RSI(2) system. On a turbulent week, RSI(2) below 5 fires on five tickers simultaneously: AAPL, MSFT, GOOGL, AMZN, META. All are above their 200-day MAs. Your mandate caps per-trade risk at 1% and total drawdown at 20% on a $100,000 account, currently at 5% drawdown YTD. Conservative Debator argues 'these are highly correlated; don't take all five'. Synthesis: what's the right action?"
   options={[
-    "Take all five at 1% each — each meets the entry rules individually",
     "Take at most 2-3, sized at half-risk (~0.5% each), to cap simultaneous correlated exposure at 1.5% of account",
+    "Take all five but use a wider stop on each to avoid getting shaken out",
     "Take none — the cluster signal means a real regime change is coming",
-    "Take all five but use a wider stop on each to avoid getting shaken out"
+    "Take all five at 1% each — each meets the entry rules individually"
   ]}
-  answer={1}
-  explanation="The synthesis: RSI(2) trades on US large-cap tech are highly correlated, so 5 'independent' 1% trades behave like a single 5% trade in a market-wide selloff. The Conservative Debator's framing is correct. Half-sizing and capping the basket respects both the strategy's cluster property and the mandate's risk budget. Option 0 is the tempting wrong answer because each setup individually checks the rules — but mandate-level risk is portfolio-level, not per-trade-level. Option 3 (wider stops) compounds the error by increasing per-trade loss."
+  answer={0}
+  explanation="The synthesis: RSI(2) trades on US large-cap tech are highly correlated, so 5 'independent' 1% trades behave like a single 5% trade in a market-wide selloff. The Conservative Debator's framing is correct. Half-sizing and capping the basket respects both the strategy's cluster property and the mandate's risk budget. Taking all five at 1% each is the tempting wrong answer because each setup individually checks the rules — but mandate-level risk is portfolio-level, not per-trade-level. Taking all five with wider stops compounds the error by increasing per-trade loss."
 />
 
 ## Try it

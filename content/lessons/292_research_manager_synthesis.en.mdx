@@ -81,35 +81,35 @@ A real Research Manager will sometimes return "no trade." Specifically:
 <Quiz
   question="The Bull thinks 60% chance of +30% upside; the Bear thinks 40% chance of -25% downside. What expected return does the RM compute?"
   options={[
-    "+5%",
-    "+8%",
     "+13%",
-    "-1%"
+    "+5%",
+    "-1%",
+    "+8%"
   ]}
-  answer={1}
+  answer={3}
   explanation="EV = 0.6 × 30 − 0.4 × 25 = 18 − 10 = +8%. The RM's job is to run this calculation explicitly, not to vibe-check the debate."
 />
 
 <Quiz
   question="Which of these is NOT something the Research Manager does?"
   options={[
-    "Score upside vs downside asymmetry on the same axis",
-    "Translate a 'view' into a sized position with a stop",
     "Cast a tie-breaking vote between Bull and Bear",
-    "Apply the user's mandate constraints to position size"
+    "Score upside vs downside asymmetry on the same axis",
+    "Apply the user's mandate constraints to position size",
+    "Translate a 'view' into a sized position with a stop"
   ]}
-  answer={2}
+  answer={0}
   explanation="The RM is not a third opinion. They synthesise. If the RM is just voting, they've failed — there are already four Analysts upstream."
 />
 
 <Quiz
   question="The Bull case has no falsification condition and the Bear case is just a strawman of 'AI is overhyped.' What should the Research Manager do?"
   options={[
+    "Escalate directly to the Portfolio Manager",
     "Pick whichever side has more conviction",
     "Average the two and recommend a small position",
-    "Flag the debate quality and return 'no trade'",
-    "Escalate directly to the Portfolio Manager"
+    "Flag the debate quality and return 'no trade'"
   ]}
-  answer={2}
+  answer={3}
   explanation="The RM is the room's quality bar. If neither side built an honest case, there's no real signal. 'No trade' is a legitimate output — and the PM will respect it downstream."
 />

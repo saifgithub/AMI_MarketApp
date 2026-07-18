@@ -71,37 +71,37 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
 <Quiz
   question="You detected the bear-regime cluster firing fully on a stock-market index 4 weeks ago, and the regime has survived without invalidation. Your current mandate is set to the bull preset (max_position 10%, max_drawdown 25%, stop 8%, gross 100%). What is the regime-correct mandate update?"
   options={[
-    "Leave it alone — the bull preset is conservative enough.",
     "Update to the confirmed-bear preset incrementally: max_single_position_pct down toward 3–5%, max_drawdown_pct down toward 12–15%, stop_loss_pct down toward 4–5%, gross_exposure_pct down toward 30–50%. The PM safety floor (compliance flags, hard caps) does not change — those are uncoachable. If the regime reverses (200-day SMA reclaimed weekly), reverse the mandate adjustment back toward bull preset; don't flip all at once.",
     "Switch the mandate to 200% short with maximum leverage.",
-    "Zero out all exposure overnight."
+    "Zero out all exposure overnight.",
+    "Leave it alone — the bull preset is conservative enough."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 3 — 'just go to cash' feels safe but ignores the synthesis from lesson 252 about head fakes. Option 0 ignores the regime entirely. Option 2 inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
+  answer={0}
+  explanation="The tempting wrong answer is zeroing out all exposure overnight — 'just go to cash' feels safe but ignores the synthesis from lesson 252 about head fakes. Leaving the bull preset alone ignores the regime entirely. Flipping to 200% short inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
 />
 
 <Quiz
   question="Which of these is the Portfolio Manager's UNCOACHABLE safety floor — the rule that does NOT change with regime adjustments?"
   options={[
-    "max_single_position_pct (changes by regime).",
     "Compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if you've set them), hard maximum on single-position size, hard floor on stop-loss requirement. These are deterministic compliance checks on every trade and cannot be overridden by Brief Your Agent, regime adjustment, or agent debate.",
-    "max_drawdown_pct (changes by regime).",
-    "stop_loss_pct (changes by regime)."
+    "stop_loss_pct (changes by regime).",
+    "max_single_position_pct (changes by regime).",
+    "max_drawdown_pct (changes by regime)."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — max_single_position_pct sounds like a hard rule but is in fact a tunable mandate parameter. The uncoachable floor is the compliance layer plus the deterministic hard caps the PM enforces regardless of any coaching. This is the synthesis of the entire safety design from the AMI Trade architecture: regime adjustments are dials, the safety floor is bedrock."
+  answer={0}
+  explanation="The tempting wrong answer is max_single_position_pct — it sounds like a hard rule but is in fact a tunable mandate parameter. The uncoachable floor is the compliance layer plus the deterministic hard caps the PM enforces regardless of any coaching. This is the synthesis of the entire safety design from the AMI Trade architecture: regime adjustments are dials, the safety floor is bedrock."
 />
 
 <Quiz
   question="Synthesis. You detect: regime is confirmed bull (lesson 059), breadth is narrow (lesson 064 / 242), volatility regime is normal but VVIX is in the 80th percentile (lesson 249), and 2-of-5 late-bull warning signs are firing (lesson 242). The bull is intact but the warnings stack. Which mandate adjustment is most regime-consistent?"
   options={[
-    "Full bull preset — the regime is confirmed bull.",
     "Cash 100% — too many warnings.",
+    "Switch to bear preset preemptively.",
     "Bull preset compressed roughly to the mid-point between full-bull and late-bull: max_single_position around 6–7%, max_drawdown around 20%, stop_loss around 6%, gross exposure around 85%, concentration cap of 25% on top 3 names. The PM safety floor is untouched. Re-evaluate as more warning signs fire (which moves toward late-bull preset) or as VVIX percentile falls back (which moves toward full-bull preset).",
-    "Switch to bear preset preemptively."
+    "Full bull preset — the regime is confirmed bull."
   ]}
   answer={2}
-  explanation="The tempting wrong answer is option 0 — 'the regime is confirmed, why compress?' But the lesson's whole point is that mandate adjusts on warnings, not just on regime flips. Option 1 over-corrects out of the regime entirely. Option 3 pre-emptively bear-prices a still-bull regime. The synthesis is graduated compression on confirmed bull + accumulating warnings — exactly the framework from 242, 249, and 252 combined."
+  explanation="The tempting wrong answer is the full bull preset — 'the regime is confirmed, why compress?' But the lesson's whole point is that mandate adjusts on warnings, not just on regime flips. Going 100% cash over-corrects out of the regime entirely. Switching to the bear preset pre-emptively bear-prices a still-bull regime. The synthesis is graduated compression on confirmed bull + accumulating warnings — exactly the framework from 242, 249, and 252 combined."
 />
 
 ## Try it

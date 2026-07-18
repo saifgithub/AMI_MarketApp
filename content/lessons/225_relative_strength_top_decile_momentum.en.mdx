@@ -36,25 +36,25 @@ The beginner mistake is using the wrong lookback — most commonly the latest 3 
 <Quiz
   question="You're building a relative-strength momentum rule. Which lookback most reliably produces positive forward returns?"
   options={[
-    "Trailing 1-month total return — rank by recent strength",
-    "Trailing 12-month total return excluding the most recent month (12-1)",
+    "Trailing 1-day total return",
     "Trailing 3-month total return",
-    "Trailing 1-day total return"
+    "Trailing 1-month total return — rank by recent strength",
+    "Trailing 12-month total return excluding the most recent month (12-1)"
   ]}
-  answer={1}
-  explanation="The 12-1 lookback is the most-replicated specification in the academic momentum literature; it avoids the short-term reversal effect that dominates 1-month and even 3-month lookbacks. Option 0 is the tempting wrong answer because 'recent strength' feels intuitively like momentum — empirically it's the opposite (winners of the last month tend to underperform next month, the short-term reversal anomaly)."
+  answer={3}
+  explanation="The 12-1 lookback is the most-replicated specification in the academic momentum literature; it avoids the short-term reversal effect that dominates 1-month and even 3-month lookbacks. The trailing 1-month ranking is the tempting wrong answer because 'recent strength' feels intuitively like momentum — empirically it's the opposite (winners of the last month tend to underperform next month, the short-term reversal anomaly)."
 />
 
 <Quiz
   question="At a monthly rebalance, the top decile of your universe contains 10 names. NVDA is in there for the 13th consecutive month and is up ~250% over the period. You're tempted to exclude NVDA because 'it's overextended' and replace it with the #11 name. Your mandate caps drawdown at 25% and you're at 8%. Aggressive Debator argues 'hold all 10; the system's edge comes from not overriding'. Conservative Debator argues 'cap any single name at 8% of portfolio'. Synthesis: what's the right action?"
   options={[
-    "Exclude NVDA — it's been in too long; risk of mean reversion is high",
-    "Hold all 10 equal-weight per the rule",
     "Hold all 10 but cap NVDA's weight at 8% (Conservative Debator's framing) and redistribute the excess",
-    "Sell half of NVDA's position only"
+    "Exclude NVDA — it's been in too long; risk of mean reversion is high",
+    "Sell half of NVDA's position only",
+    "Hold all 10 equal-weight per the rule"
   ]}
-  answer={2}
-  explanation="Synthesis: the system says hold all 10 names, but a name that's been in the top decile for 13 months can grow to dominate the portfolio if equal-weight isn't re-enforced; a single 25% drawdown on one outsized name can hit the mandate cap. The Conservative Debator's cap respects the mandate without violating the rule's exit logic (NVDA still exits when it drops OUT of the top decile, not before). Option 0 (manual exclusion) is the tempting wrong answer that destroys the strategy's edge through discretion."
+  answer={0}
+  explanation="Synthesis: the system says hold all 10 names, but a name that's been in the top decile for 13 months can grow to dominate the portfolio if equal-weight isn't re-enforced; a single 25% drawdown on one outsized name can hit the mandate cap. The Conservative Debator's cap respects the mandate without violating the rule's exit logic (NVDA still exits when it drops OUT of the top decile, not before). Excluding NVDA by hand is the tempting wrong answer that destroys the strategy's edge through discretion."
 />
 
 ## Try it

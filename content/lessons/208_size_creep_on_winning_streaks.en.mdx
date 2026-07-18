@@ -36,24 +36,24 @@ The trap is that size creep does not feel like rule-breaking. Each individual tr
 <Quiz
   question="Your last 10 trades averaged 1.7% per-trade risk; the prior 10 averaged 1.0%. Your mandate is 1.0% per-trade risk. You have not breached the mandate on any single trade (the per-trade max was 1.9%). The win rate has not changed. What is the disciplined action?"
   options={[
+    "Cut all positions in half to compensate for the creep.",
     "Continue — no single trade has breached the mandate.",
     "Raise the mandate to 1.7% to match observed behaviour.",
-    "Freeze new entries at 1.0% mandate level; investigate whether any documented setup-criteria change justifies the prior 10 trades' elevated risk. If no documented change exists, the creep is unjustified — return to baseline immediately.",
-    "Cut all positions in half to compensate for the creep."
+    "Freeze new entries at 1.0% mandate level; investigate whether any documented setup-criteria change justifies the prior 10 trades' elevated risk. If no documented change exists, the creep is unjustified — return to baseline immediately."
   ]}
-  answer={2}
+  answer={3}
   explanation="'No single trade breached' is the classic size-creep rationalisation — the trend is the breach, not any single trade. 'Raise the mandate to match behaviour' is the 'rewrite the rule to legalise the breach' move and is the single most expensive mistake an overconfident trader can make. 'Cut everything in half' is panic mirrored. The disciplined answer freezes the variable in question (size), investigates the inputs that should drive it (documented setup criteria), and returns to baseline if no input change is documented. Equity curves are outcomes; criteria are inputs. Only inputs justify mandate changes."
 />
 
 <Quiz
   question="Which compound test catches size creep that no single trade breached?"
   options={[
-    "Any single trade exceeded the mandate.",
     "Rolling per-trade risk over the last 10 trades exceeds rolling per-trade risk over the prior 10 by 25% or more, with no written change in setup criteria documented in the Decision Journal.",
-    "Your account is at a new high.",
-    "You feel confident about your trading."
+    "Any single trade exceeded the mandate.",
+    "You feel confident about your trading.",
+    "Your account is at a new high."
   ]}
-  answer={1}
+  answer={0}
   explanation="Any-single-trade-breached catches only the gross breach, not the trend. New-high account is an outcome. Confidence is unfalsifiable. The compound test — rolling 10-trade comparison, 25% threshold, no documented criteria change — is the auditable signature that catches the drift across multiple trades before the streak-ending cluster arrives. Both numbers are computable from the Decision Journal in under a minute."
 />
 

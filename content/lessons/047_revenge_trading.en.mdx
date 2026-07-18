@@ -38,36 +38,36 @@ The trap is the belief that the next trade is independent of the last one. Mecha
 <Quiz
   question="You just stopped out for -RM1,000. You see a fresh setup on the same ticker that 'looks too good to pass up'. Per-trade risk in your Mandate is RM500. What's the right next move?"
   options={[
-    "Take the trade at 2x size — your edge is sharper now, and you need to make the loss back.",
-    "Take the trade at normal size — process unchanged.",
     "Pause for the cooldown window written in your Mandate (e.g. 60 minutes), journal the loss, and only re-evaluate the setup after the window expires.",
-    "Switch to a different ticker at the same size — diversifying away from the loser."
+    "Take the trade at normal size — process unchanged.",
+    "Switch to a different ticker at the same size — diversifying away from the loser.",
+    "Take the trade at 2x size — your edge is sharper now, and you need to make the loss back."
   ]}
-  answer={2}
+  answer={0}
   explanation="The setup may or may not be real. The problem is that you cannot tell the difference right now, because you have just been stopped out — your brain is running on a recovery objective, not an edge objective. The cooldown is not a punishment; it is a circuit breaker. Even 'take the trade at normal size' fails because the timing — minutes after a loss — is itself the tilt signature. Switching tickers is the same trade with extra steps."
 />
 
 <Quiz
   question="Which combination is the cleanest objective test for 'I am currently revenge-trading'?"
   options={[
-    "You feel angry at the market.",
     "Your last three entries were within 60 minutes of a closed loss, sized at least 1.5x your written per-trade risk, with at least two in the same instrument or sector as the original loser.",
-    "You took two trades today.",
-    "Your account is down on the day."
+    "Your account is down on the day.",
+    "You feel angry at the market.",
+    "You took two trades today."
   ]}
-  answer={1}
+  answer={0}
   explanation="The first option (anger) is real but unfalsifiable — you cannot audit it. 'Two trades today' and 'account down' are everyday outcomes, not patterns. The compound test — timing, size deviation, and instrument concentration — is the diagnostic that survives review at the end of the day. If two of those three boxes are ticked, the session is a tilt session regardless of how it turns out."
 />
 
 <Quiz
   question="You just took a -2% account loss on a single trade. Your Mandate says max per-trade risk is 1% and cooldown after a stop-out is 2 hours. The PM has flagged that your last entry was double the mandate size. What's the synthesis answer?"
   options={[
-    "Reduce size on the next trade to 0.5% and continue trading — you've already self-corrected.",
-    "Override the cooldown — the next setup is independent of the last loss.",
     "Stop trading for the day, journal both trades, and start the cooldown timer; review whether the mandate breach was a one-off or a pattern in the Decision Journal tomorrow.",
-    "Take one more trade at exactly 1% to 'reset' the day."
+    "Override the cooldown — the next setup is independent of the last loss.",
+    "Take one more trade at exactly 1% to 'reset' the day.",
+    "Reduce size on the next trade to 0.5% and continue trading — you've already self-corrected."
   ]}
-  answer={2}
+  answer={0}
   explanation="The mandate breach is the real signal here, not the loss itself. The PM's flag means the safety floor was crossed — the only correct response is to step away long enough that the next trade is not a reaction. 'Take one more trade to reset' is revenge framed as discipline. 'Override the cooldown because the next trade is independent' is technically true mechanically and behaviourally bankrupt — every revenge trader in history believed it. The cooldown exists precisely because the trader after a 2% loss is not the same trader who wrote the mandate."
 />
 

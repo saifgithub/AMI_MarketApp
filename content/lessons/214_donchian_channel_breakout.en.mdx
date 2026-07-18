@@ -36,25 +36,25 @@ The beginner mistake is optimising the channel length until backtests look gorge
 <Quiz
   question="You're running a 55-day high / 20-day low Donchian rule on AAPL. Today AAPL closes at $228.50, which is a new 20-day low. The 55-day high is $245 and your unrealised gain on the trade is +12%. What does the rule say?"
   options={[
-    "Hold — 12% is too good to give back, wait for a bounce",
+    "Roll the exit channel out to 30 days to give the trade more room",
     "Exit at tomorrow's open per the rule",
-    "Tighten the stop to today's low and re-evaluate intraday tomorrow",
-    "Roll the exit channel out to 30 days to give the trade more room"
+    "Hold — 12% is too good to give back, wait for a bounce",
+    "Tighten the stop to today's low and re-evaluate intraday tomorrow"
   ]}
   answer={1}
-  explanation="The 20-day-low exit fired. The rule's whole edge is mechanical execution — not 'mostly mechanical, except when I'm up nicely'. Option 0 is the tempting wrong answer because giving back open gains feels worse than taking a loss; that loss-aversion is exactly what Donchian was designed to remove. Option 3 (rolling the exit out) is the more sophisticated version of the same error — moving the goalposts after entry."
+  explanation="The 20-day-low exit fired. The rule's whole edge is mechanical execution — not 'mostly mechanical, except when I'm up nicely'. Holding for a bounce is the tempting wrong answer because giving back open gains feels worse than taking a loss; that loss-aversion is exactly what Donchian was designed to remove. Rolling the exit channel out to 30 days is the more sophisticated version of the same error — moving the goalposts after entry."
 />
 
 <Quiz
   question="A Donchian 55/20 rule fires a fresh entry on NVDA at $138 with the current 20-day low at $122. Your mandate caps single-position risk at 1.25% of a $40,000 account. Max position size in shares?"
   options={[
-    "31 shares",
+    "16 shares",
     "362 shares",
     "62 shares",
-    "16 shares"
+    "31 shares"
   ]}
-  answer={0}
-  explanation="Risk per share = $138 - $122 = $16. Max dollar risk = 1.25% of $40,000 = $500. Shares = $500 / $16 = 31.25, round down to 31. Option 1 (362) sizes the full dollar value into the ticker ignoring the stop — the classic trend-follower blow-up where wide channel stops meet oversized positions. The synthesis: the channel defines the stop and the mandate caps the size; both bind."
+  answer={3}
+  explanation="Risk per share = $138 - $122 = $16. Max dollar risk = 1.25% of $40,000 = $500. Shares = $500 / $16 = 31.25, round down to 31. The 362-share answer sizes the full dollar value into the ticker ignoring the stop — the classic trend-follower blow-up where wide channel stops meet oversized positions. The synthesis: the channel defines the stop and the mandate caps the size; both bind."
 />
 
 ## Try it

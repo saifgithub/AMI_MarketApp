@@ -42,12 +42,12 @@ The correct mental model: MACD is a trend-and-momentum filter, not a standalone 
 <Quiz
   question="AAPL closes at 232 with MACD line crossing above signal at -0.4, histogram flipping from -0.2 to +0.3. The MACD line is still below zero. What does the indicator say, strictly?"
   options={[
+    "It's a perfect short setup",
     "Trend regime is now bullish — the fast EMA is above the slow EMA",
     "Momentum is turning up, but trend regime is still bearish until MACD crosses zero",
-    "It's a perfect short setup",
     "Ignore the cross until price gains 10%"
   ]}
-  answer={1}
+  answer={2}
   explanation="MACD < 0 means the 12-EMA is still below the 26-EMA — bearish regime. The signal-line cross above MACD shows momentum turning up. Both things are true at once. The tempting wrong answer conflates the two crosses; the lesson is explicit that the zero-line cross is the regime confirmation, while the signal-line cross is the momentum turn."
 />
 
@@ -55,11 +55,11 @@ The correct mental model: MACD is a trend-and-momentum filter, not a standalone 
   question="You're flat. A stock has been chopping sideways for three weeks with no clear higher highs or lower lows. MACD has crossed its signal line four times in that span. Position-size rule is 1.5% account risk per trade. What's the best read?"
   options={[
     "Take every cross; statistically the next one will be the breakout",
-    "MACD signals in a sideways regime are mostly noise — wait for price to break structure before trusting a cross",
     "Increase position size on the next cross to compensate for the prior losses",
-    "Switch to a 5-minute chart so the signals come faster"
+    "Switch to a 5-minute chart so the signals come faster",
+    "MACD signals in a sideways regime are mostly noise — wait for price to break structure before trusting a cross"
   ]}
-  answer={1}
+  answer={3}
   explanation="The lesson names this directly: MACD is a filter that confirms a setup you already see in price, not a standalone signal. Chopping sideways with no structure break means there's no trend for MACD to confirm; the crosses are whips. The tempting wrong answer ('next one will be the breakout') is gambler's fallacy plus revenge sizing — the lesson and the risk-management track both warn against it."
 />
 

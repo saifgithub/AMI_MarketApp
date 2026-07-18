@@ -43,24 +43,24 @@ The trap is using the audit trail to argue with the PM after the fact. *"It bloc
 <Quiz
   question="You scroll your Decision Journal and find five PM blocks on `max_position_pct` over the last month, all on NVDA. What's the most useful inference?"
   options={[
-    "The PM is being too strict on NVDA specifically",
     "The Trader keeps proposing oversize positions on NVDA — either NVDA's setups genuinely warrant more size (and you should consider whether your `max_position_pct` matches your risk appetite) or the Trader is over-enthusiastic; either way the audit trail surfaced a pattern worth thinking about",
-    "AMI dislikes NVDA",
-    "The blocks should be ignored because NVDA ran higher anyway"
+    "The PM is being too strict on NVDA specifically",
+    "The blocks should be ignored because NVDA ran higher anyway",
+    "AMI dislikes NVDA"
   ]}
-  answer={1}
+  answer={0}
   explanation="The audit trail is a pattern-recognition tool. Five blocks on the same ticker is signal — either about the asset, your Mandate, or the Trader's calibration. The right move is reflection (and possibly Mandate review), not dismissing the blocks. The tempting wrong answer is the last one — outcome bias retconning the PM as wrong; the PM enforced your stated rules, and outcome on one trade does not validate ignoring them."
 />
 
 <Quiz
   question="You changed `max_position_pct` from 3 to 5 two weeks ago. You audit a PM block from a month ago that fired on a 4% proposal. What does the audit trail show?"
   options={[
-    "The block has been retroactively converted to PASS because 4% fits the current Mandate",
-    "The block is recorded with `max_position_pct: 3` as the active value at the time of decision — history is immutable; today's Mandate does not retro-grade past trades",
     "The block has been deleted because the rule changed",
-    "The audit trail shows whichever Mandate value the user picks"
+    "The audit trail shows whichever Mandate value the user picks",
+    "The block is recorded with `max_position_pct: 3` as the active value at the time of decision — history is immutable; today's Mandate does not retro-grade past trades",
+    "The block has been retroactively converted to PASS because 4% fits the current Mandate"
   ]}
-  answer={1}
+  answer={2}
   explanation="The trail records the Mandate state at decision time. That is what makes it an audit trail rather than a current-state dashboard. The tempting wrong answer is the retroactive one — a system that rewrites history every time you change a setting would have no auditable record at all."
 />
 

@@ -44,37 +44,37 @@ The trap is treating Fibonacci levels as precise price targets to trade against,
 <Quiz
   question="A stock rallies from $100 to $140 (a $40 move). It then pulls back. At what prices do the 38.2%, 50%, and 61.8% Fibonacci retracements sit?"
   options={[
-    "$124.72, $120.00, $115.28",
-    "$104.72, $100.00, $95.28",
     "$138.20, $135.00, $131.80",
-    "$120.00, $125.00, $130.00"
+    "$104.72, $100.00, $95.28",
+    "$120.00, $125.00, $130.00",
+    "$124.72, $120.00, $115.28"
   ]}
-  answer={0}
-  explanation="38.2% of the $40 move = $15.28; subtract from $140 = $124.72. 50% of $40 = $20; $140 minus $20 = $120.00. 61.8% of $40 = $24.72; $140 minus $24.72 = $115.28. Option 1 subtracts from $100 instead of $140 (calculating extension instead of retracement). Option 2 takes percentages of $140 directly instead of the move. Option 3 makes up plausible-looking round numbers."
+  answer={3}
+  explanation="38.2% of the $40 move = $15.28; subtract from $140 = $124.72. 50% of $40 = $20; $140 minus $20 = $120.00. 61.8% of $40 = $24.72; $140 minus $24.72 = $115.28. The $104.72 / $100.00 / $95.28 set subtracts from $100 instead of $140 (calculating extension instead of retracement). The $138.20 / $135.00 / $131.80 set takes percentages of $140 directly instead of the move. The $120.00 / $125.00 / $130.00 set makes up plausible-looking round numbers."
 />
 
 <Quiz
   question="NVDA rallies from a $108 swing low to a $148 swing high. Pullback begins. The prior structural higher-low (from the trend that produced the run) sits at $124. Today NVDA bounces from $128.40 and you're considering whether the pullback is healthy. Which is the most rigorous read combining Fibonacci zones with structural invalidation from lesson 025?"
   options={[
-    "Healthy — $128.40 is below the 50% retracement of $128, so the pullback already broke 50% and that means the trend is over",
-    "Healthy — a bounce from $128.40 is roughly a 49% retracement of the $40 move (50% zone), the prior structural higher-low at $124 is still intact, and a medium-depth pullback holding on first test is normal for a trending stock; the trend invalidates structurally only on a daily close below $124, not on a Fibonacci depth reading",
+    "Unhealthy — the bounce is below the prior swing high, so the trend has reversed",
     "Unhealthy — any pullback past 38.2% breaks the trend",
-    "Unhealthy — the bounce is below the prior swing high, so the trend has reversed"
+    "Healthy — a bounce from $128.40 is roughly a 49% retracement of the $40 move (50% zone), the prior structural higher-low at $124 is still intact, and a medium-depth pullback holding on first test is normal for a trending stock; the trend invalidates structurally only on a daily close below $124, not on a Fibonacci depth reading",
+    "Healthy — $128.40 is below the 50% retracement of $128, so the pullback already broke 50% and that means the trend is over"
   ]}
-  answer={1}
-  explanation="The 50% level on a $108-to-$148 move is $128 (50% of $40 below $148). A bounce from $128.40 is right on the 50% zone — a medium-depth healthy pullback. The structural floor is $124 (lesson 025), and the close is well above it. Both the depth read and the structural read confirm the pullback is healthy. Option 0 misreads the lesson — 50% is a normal medium-depth zone, not a trend-ender. Option 2 over-tightens the 38.2% level into a hard rule. Option 3 confuses 'price below the high' with 'trend reversed' which contradicts the structural definition of trend from lesson 022. The synthesis test is integrating depth (this lesson) with structural invalidation (lesson 025) — they're complementary tools, neither overrides the other."
+  answer={2}
+  explanation="The 50% level on a $108-to-$148 move is $128 (50% of $40 below $148). A bounce from $128.40 is right on the 50% zone — a medium-depth healthy pullback. The structural floor is $124 (lesson 025), and the close is well above it. Both the depth read and the structural read confirm the pullback is healthy. The 'the pullback already broke 50% so the trend is over' answer misreads the lesson — 50% is a normal medium-depth zone, not a trend-ender. The 'any pullback past 38.2% breaks the trend' answer over-tightens that level into a hard rule. The 'bounce is below the prior swing high' answer confuses 'price below the high' with 'trend reversed' which contradicts the structural definition of trend from lesson 022. The synthesis test is integrating depth (this lesson) with structural invalidation (lesson 025) — they're complementary tools, neither overrides the other."
 />
 
 <Quiz
   question="You enter long on a stock at $206 after it bounced from a 38.2% retracement zone near $204.50. Your stop is at $200, just below the prior structural higher-low at $201.80. Five sessions later the stock falls to a daily close of $199.40 — a 61.8% retracement. Which is the disciplined call?"
   options={[
-    "Hold — 61.8% is still a valid Fibonacci retracement zone for a healthy pullback",
-    "Exit — the daily close at $199.40 is below the structural higher-low of $201.80, voiding the trend per lesson 025; Fibonacci depth doesn't override the structural rule, and 61.8% being a 'valid zone' on its own is no answer to a broken higher-low",
     "Add to the position — the deeper discount improves the math",
+    "Exit — the daily close at $199.40 is below the structural higher-low of $201.80, voiding the trend per lesson 025; Fibonacci depth doesn't override the structural rule, and 61.8% being a 'valid zone' on its own is no answer to a broken higher-low",
+    "Hold — 61.8% is still a valid Fibonacci retracement zone for a healthy pullback",
     "Move the stop down to $195 because the trend might still hold"
   ]}
   answer={1}
-  explanation="This question deliberately pits the depth reading (61.8% is a 'last typical' zone for a healthy pullback) against the structural rule (close below $201.80 voids the trend). The lesson explicitly states the structural rule wins — fibs are depth guides, not invalidation rules. Option 0 lets the Fibonacci frame override structure. Option 2 is averaging into a falsified setup. Option 3 widens the stop after invalidation. The synthesis depth here is recognising that two indicators can produce different signals, and you need to know which takes priority — for trends, structure always does."
+  explanation="This question deliberately pits the depth reading (61.8% is a 'last typical' zone for a healthy pullback) against the structural rule (close below $201.80 voids the trend). The lesson explicitly states the structural rule wins — fibs are depth guides, not invalidation rules. The hold-because-61.8%-is-a-valid-zone answer lets the Fibonacci frame override structure. Adding to the position is averaging into a falsified setup. Moving the stop down to $195 widens the stop after invalidation. The synthesis depth here is recognising that two indicators can produce different signals, and you need to know which takes priority — for trends, structure always does."
 />
 
 ## Try it

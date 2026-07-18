@@ -38,25 +38,25 @@ The trap is computing PEG with the wrong growth input. Most readers grab next-ye
 <Quiz
   question="Stock A: P/E 35x, expected EPS growth 40% next year (driven by a one-off cost-cut), 3-year EPS CAGR estimate 12%. Stock B: P/E 30x, expected EPS growth 18% next year, 3-year EPS CAGR estimate 18%. Which PEG read is most honest, and which stock is better priced for its growth?"
   options={[
-    "Stock A — PEG using next-year growth = 35/40 = 0.88 vs Stock B PEG = 30/18 = 1.67, so A is much cheaper for its growth",
-    "Both stocks have the same PEG",
     "Stock B is better priced for its growth. Stock A's '40% next year' is a one-off, so the honest PEG uses the 3-year CAGR: 35/12 = 2.92. Stock B's growth is stable, so 30/18 = 1.67 is the honest PEG. B is paying ~1.67x its growth rate (slightly rich but reasonable); A is paying ~2.92x its sustainable growth. The single-year PEG would mislead a reader into picking the more expensive name",
-    "PEG only works for stocks with growth above 50%"
+    "PEG only works for stocks with growth above 50%",
+    "Stock A — PEG using next-year growth = 35/40 = 0.88 vs Stock B PEG = 30/18 = 1.67, so A is much cheaper for its growth",
+    "Both stocks have the same PEG"
   ]}
-  answer={2}
-  explanation="The tempting wrong answer is option 0 — it follows a mechanical rule and falls for a one-off boost in next-year growth. The right read insists on multi-year CAGR because PEG only means anything when the growth rate is durable. Option 1 is wrong on the arithmetic. Option 3 inverts the relationship — PEG breaks at *very high* growth and at *very low* growth, not at the middle. The synthesis: the input you choose for growth determines the answer, so choose the durable one."
+  answer={0}
+  explanation="The tempting wrong answer is the Stock A pick built on next-year growth — it follows a mechanical rule and falls for a one-off boost in next-year growth. The right read insists on multi-year CAGR because PEG only means anything when the growth rate is durable. The 'both have the same PEG' answer is wrong on the arithmetic. The 'PEG only works above 50% growth' answer inverts the relationship — PEG breaks at *very high* growth and at *very low* growth, not at the middle. The synthesis: the input you choose for growth determines the answer, so choose the durable one."
 />
 
 <Quiz
   question="An investor compares two stocks. TENAGA (Malaysian utility): P/E 13x, expected EPS growth 3% per year for the next five years, dividend yield 4.5%. NVDA: P/E 42x, expected EPS growth 40% per year for the next three years. PEG for TENAGA = 4.3, PEG for NVDA = 1.05. The investor concludes NVDA is the better value 'because its PEG is much lower'. What's the synthesis-level critique?"
   options={[
+    "NVDA's PEG is a coincidence and should be ignored",
     "The investor is correct — PEG below 1.0 is always cheaper than PEG above 4.0",
-    "Both stocks have the same earnings quality",
     "PEG breaks at very low growth rates and ignores yield. A utility like TENAGA isn't designed to grow earnings — its return is split between modest EPS growth and a 4.5% dividend yield, giving a total expected return of ~7.5% on flat multiples. PEG only ranks the growth-vs-multiple trade-off and is meaningless for stable, dividend-paying businesses. The right comparison uses different lenses: PEG for NVDA, dividend-discount or yield-plus-growth for TENAGA. Apples and oranges via a single ratio is exactly the failure mode the lesson warned about",
-    "NVDA's PEG is a coincidence and should be ignored"
+    "Both stocks have the same earnings quality"
   ]}
   answer={2}
-  explanation="The synthesis: PEG is one lens, not the lens. The tempting wrong answer is option 0 — the mechanical 'low PEG good, high PEG bad' shortcut. Utilities and dividend-heavy businesses fail PEG by design because they're not growth businesses. The right comparison uses business-model-appropriate metrics: total-return decomposition for utilities, growth-adjusted multiples for compounders. Option 1 ignores earnings quality entirely. Option 3 dismisses a useful number for the wrong reason."
+  explanation="The synthesis: PEG is one lens, not the lens. The tempting wrong answer is 'the investor is correct' — the mechanical 'low PEG good, high PEG bad' shortcut. Utilities and dividend-heavy businesses fail PEG by design because they're not growth businesses. The right comparison uses business-model-appropriate metrics: total-return decomposition for utilities, growth-adjusted multiples for compounders. The 'same earnings quality' answer ignores earnings quality entirely. The 'NVDA's PEG is a coincidence' answer dismisses a useful number for the wrong reason."
 />
 
 ## Try it

@@ -41,20 +41,25 @@ The trap is sizing by "what feels like a real position" — buying 50 shares bec
 
 <Quiz
   question="Account is $10,000. Max risk per trade is 1%. You buy AAPL at $200 with a stop at $195. How many shares?"
-  answer={20}
-  tolerance={0}
-  explanation="1% of $10,000 = $100 risk. Per-share risk = $200 − $195 = $5. Shares = $100 ÷ $5 = 20."
+  options={[
+    "20 shares",
+    "50 shares",
+    "100 shares",
+    "2,000 shares"
+  ]}
+  answer={0}
+  explanation="1% of $10,000 = $100 risk. Per-share risk = $200 − $195 = $5. Shares = $100 ÷ $5 = 20. Dividing the account by the share price instead gives 50 — that sizes the position to your whole account rather than to the risk you are willing to take."
 />
 
 <Quiz
   question="You have a $50,000 account, 1% max risk, and you find a setup where the technically valid stop is only $0.50 below entry. A friend says 'tighten the stop to $0.20 so you can buy more shares.' What's the problem?"
   options={[
-    "Nothing — tighter stops always reduce risk, so you can carry more shares at the same dollar risk.",
-    "The dollar risk per trade stays at 1%, but moving the stop closer than the chart supports means you get stopped out by normal noise, turning a valid thesis into a guaranteed loss.",
     "Tighter stops violate the PM safety floor automatically.",
-    "Bigger share counts trigger higher commissions, which is the real issue."
+    "Bigger share counts trigger higher commissions, which is the real issue.",
+    "The dollar risk per trade stays at 1%, but moving the stop closer than the chart supports means you get stopped out by normal noise, turning a valid thesis into a guaranteed loss.",
+    "Nothing — tighter stops always reduce risk, so you can carry more shares at the same dollar risk."
   ]}
-  answer={1}
+  answer={2}
   explanation="The seductive wrong answer is the first one — math-wise, 1% is still 1%. But position sizing only works when the stop is placed where the chart's invalidation actually sits. A $0.20 stop on a setup that needs $0.50 of room is not 'lower risk' — it is a near-certain stop-out from normal volatility, converting a valid setup into a forced loss. The stop comes from the chart; the share count is whatever the math allows."
 />
 

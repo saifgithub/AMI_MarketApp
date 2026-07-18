@@ -41,24 +41,24 @@ The trap is assuming role reversal always happens, and entering at the retest le
   question="A stock breaks out above $80 (prior resistance) and closes at $82.40 on heavy volume. Three sessions later it pulls back to $80.20 intraday and closes at $81.10. The next day it pushes to $83.50. Was $80 confirmed as the new support?"
   options={[
     "No — the intraday print at $80.20 was technically below $80, so the level was breached",
-    "Yes — the retest tagged the prior resistance, the daily close at $81.10 held above $80, and the follow-through to $83.50 confirms the flip; that's the textbook role reversal",
     "No — role reversal requires three retests before it counts",
+    "Yes — the retest tagged the prior resistance, the daily close at $81.10 held above $80, and the follow-through to $83.50 confirms the flip; that's the textbook role reversal",
     "Yes — but only because volume was heavy on the breakout day"
   ]}
-  answer={1}
-  explanation="The retest sequence is: pullback to the prior level, intraday test that closes back above it, follow-through. All three happened. Option 0 misuses the wick-vs-close rule from lesson 023 — $80.20 was above $80 anyway, and even if it had been below, the close at $81.10 is what counts. Option 2 invents a rule. Option 4 confuses confirming evidence with prerequisite — heavy volume on the breakout strengthens the signal but doesn't determine whether the retest itself confirmed."
+  answer={2}
+  explanation="The retest sequence is: pullback to the prior level, intraday test that closes back above it, follow-through. All three happened. The answer calling the $80.20 print a breach misuses the wick-vs-close rule from lesson 023 — $80.20 was above $80 anyway, and even if it had been below, the close at $81.10 is what counts. The three-retests answer invents a rule. The volume-only 'yes' confuses confirming evidence with prerequisite — heavy volume on the breakout strengthens the signal but doesn't determine whether the retest itself confirmed."
 />
 
 <Quiz
   question="GOOGL has been trading $158 support / $172 resistance for three months. On 4 March GOOGL closes at $174.80 — a clean break above $172. On 11 March GOOGL pulls back and closes at $169.40 — below the prior resistance. A trader holding long since the breakout asks: 'Is this a normal retest or has the flip failed?' Which response combines the lessons correctly, and what's the tempting wrong read?"
   options={[
-    "Normal retest — pullbacks to retest levels always happen",
     "The flip has failed — a daily close at $169.40 is below the prior resistance of $172, which is the explicit invalidation of the role-reversal thesis; what looked like a successful breakout has now become a failed breakout. The tempting wrong read is calling any pullback to the level a 'normal retest' even when the close has already gone through",
+    "Normal retest — pullbacks to retest levels always happen",
     "Wait one more session before deciding",
     "Hold and add to the position — the discount is the buying opportunity"
   ]}
-  answer={1}
-  explanation="A retest tests the level from above. A close *through* the level is a different event — it's the invalidation. The lesson defines it explicitly: a close below the prior resistance voids the support flip. Option 0 lazily labels everything a retest. Option 2 introduces vague delay that doesn't follow from any rule the lesson states. Option 3 averages into a falsified thesis — the classic averaging-down trap reinforced by lessons 024 and 025. The synthesis test is recognising that the same price action that confirms a flip (a touch followed by a close above) is structurally different from action that voids it (a close below)."
+  answer={0}
+  explanation="A retest tests the level from above. A close *through* the level is a different event — it's the invalidation. The lesson defines it explicitly: a close below the prior resistance voids the support flip. The 'normal retest' answer lazily labels everything a retest. The wait-one-more-session answer introduces vague delay that doesn't follow from any rule the lesson states. The hold-and-add answer averages into a falsified thesis — the classic averaging-down trap reinforced by lessons 024 and 025. The synthesis test is recognising that the same price action that confirms a flip (a touch followed by a close above) is structurally different from action that voids it (a close below)."
 />
 
 ## Try it

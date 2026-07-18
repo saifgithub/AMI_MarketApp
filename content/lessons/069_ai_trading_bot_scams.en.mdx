@@ -45,23 +45,23 @@ The trap is technical-sounding language doing the work of evidence. The reader h
     question="A proprietary AI trading platform claims 1.5% weekly returns. They show you a dashboard with 6 months of continuous positive PnL. They will not provide broker statements, on-chain transaction hashes, or any external execution evidence. What test would falsify this claim?"
     options={[
       "Check whether the AI is built with transformers or RNNs",
-      "Ask for trade-by-trade execution records from a regulated exchange or on-chain settlement that an outside party can verify",
       "Ask whether they use GPUs or TPUs",
-      "Ask the platform for more screenshots"
+      "Ask the platform for more screenshots",
+      "Ask for trade-by-trade execution records from a regulated exchange or on-chain settlement that an outside party can verify"
     ]}
-    answer={1}
+    answer={3}
     explanation="No real algorithmic strategy operates without a settlement venue — every trade lands somewhere external (an exchange, an OTC desk, a blockchain). If the operator cannot produce externally verifiable records, the trades may not exist. Technical jargon (transformers, GPUs, RNNs) is the marketing layer, not evidence. The decisive test is whether anyone outside the operator can confirm the trades happened."
   />
 
   <Quiz
     question="\"NeuroAlpha AI\" offers 2% weekly returns, accepts deposits in USDT to a wallet address, shows a slick dashboard with weekly green bars, and has 8,000 Telegram members. A few members confirm small successful withdrawals last month. What is the decisive red flag?"
     options={[
+      "Only 8,000 Telegram members",
       "The 2% weekly return is mathematically too high",
       "USDT deposit instead of fiat",
-      "The smoothness of weekly green bars — real strategies have losing weeks; smoothness without losses is the diagnostic of a fabricated equity curve",
-      "Only 8,000 Telegram members"
+      "The smoothness of weekly green bars — real strategies have losing weeks; smoothness without losses is the diagnostic of a fabricated equity curve"
     ]}
-    answer={2}
+    answer={3}
     explanation="The high return is suspicious but not decisive — venture-style returns exist. USDT and Telegram are common but not unique to scams. The decisive, falsifiable test is the *shape* of the equity curve. Every real strategy — even very good ones — has losing weeks. A curve with zero losing weeks across 6 months is statistically near-impossible for a market-exposed strategy and is the unmistakable signature of a fabricated dashboard. The small withdrawals are bait, not proof."
   />
 

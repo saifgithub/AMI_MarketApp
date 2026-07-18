@@ -37,20 +37,25 @@ The trap is using a flat percentage stop (5% below entry, say) across every tick
 
 <Quiz
   question="Account $40,000, max 1% risk = $400. NVDA at $500, 14-day ATR = $20. You set the stop at 2 ATR below entry. How many shares?"
-  answer={10}
-  tolerance={0}
-  explanation="Stop distance = 2 × $20 = $40 per share. Shares = $400 ÷ $40 = 10. Notional = $5,000 (12.5% of account). The same $400 risk on a low-vol name like KO with $0.75 ATR would buy 266 shares — totally different notional, identical risk."
+  options={[
+    "20 shares",
+    "266 shares",
+    "80 shares",
+    "10 shares"
+  ]}
+  answer={3}
+  explanation="Stop distance = 2 × $20 = $40 per share. Shares = $400 ÷ $40 = 10. Sizing off a 1 ATR stop instead of the specified 2 ATR would double it to 20. Notional = $5,000 (12.5% of account). The same $400 risk on a low-vol name like KO with $0.75 ATR would buy 266 shares — totally different notional, identical risk."
 />
 
 <Quiz
   question="Two traders both risk 1% per trade. Trader A uses a flat 5% stop on every ticker. Trader B uses 1.5× ATR. Over 30 trades across mixed-volatility names (some high-vol like TSLA, some low-vol like KO), why does Trader B usually end with a tighter equity curve?"
   options={[
-    "Trader A's wider stops on low-vol names let winners run longer, so Trader A compounds faster.",
     "Trader B's stops scale to each instrument's normal range, so stop-outs come from genuine invalidation rather than noise; Trader A's flat stops are tight relative to high-vol names (noise stop-outs) and loose relative to low-vol names (over-sized losses when the thesis actually fails).",
-    "ATR is a lagging indicator, so Trader B's stops are always wrong by construction.",
-    "They produce identical equity curves — 1% is 1%, the stop method doesn't matter."
+    "They produce identical equity curves — 1% is 1%, the stop method doesn't matter.",
+    "Trader A's wider stops on low-vol names let winners run longer, so Trader A compounds faster.",
+    "ATR is a lagging indicator, so Trader B's stops are always wrong by construction."
   ]}
-  answer={1}
+  answer={0}
   explanation="The tempting wrong answer is the last — 'same dollar risk, same outcome'. Dollar risk is the same per trade, but the probability and reason for getting stopped out are very different. Flat stops mix two errors: noise-driven stop-outs on volatile names (forced losses where the thesis was actually fine) and oversized losses on quiet names when the thesis did fail (the 5% gap is way past the chart's invalidation). ATR-based stops normalise that probability across instruments. The 'lagging indicator' distractor is a misreading — ATR being a 14-day average is the feature, not the bug, since it filters out single-day spikes."
 />
 

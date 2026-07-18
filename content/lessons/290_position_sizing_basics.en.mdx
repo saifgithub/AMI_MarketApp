@@ -75,19 +75,19 @@ You'll see the safety floor in action whenever you <Term id="ami_convene_the_roo
 
 <Quiz
   question="You have $20,000 and risk 1% per trade. You buy at $40 with a stop at $36. How many shares can you buy?"
-  options={["10", "20", "50", "100"]}
-  answer={2}
+  options={["50", "100", "20", "10"]}
+  answer={0}
   explanation="1R = $20,000 × 1% = $200. Stop distance = $40 − $36 = $4. Shares = $200 ÷ $4 = 50. (You'd buy $2,000 of stock — 10% of the portfolio.)"
 />
 
 <Quiz
   question="A trade has a 30% upside with a 60% downside if it goes wrong. The Aggressive Debator wants to size up. What's the PM's most likely response?"
   options={[
-    "Size up — Aggressive is correct",
-    "Refuse — bad asymmetry, downside >> upside",
     "Defer to the user's mandate alone",
-    "Approve at any size"
+    "Approve at any size",
+    "Refuse — bad asymmetry, downside >> upside",
+    "Size up — Aggressive is correct"
   ]}
-  answer={1}
+  answer={2}
   explanation="An asymmetric R:R of roughly 0.5:1 (you risk $2 to make $1) is a bad bet over enough samples. The PM will likely overrule the Aggressive case here regardless of conviction."
 />

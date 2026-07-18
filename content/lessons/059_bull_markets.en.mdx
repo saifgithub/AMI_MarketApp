@@ -43,24 +43,24 @@ The correct model: in a bull regime, momentum is the prior. You exit on a regime
   question="SPX closes 6% above its 200-day SMA, the 20-week SMA has risen for 11 straight weeks, and NYSE new highs have exceeded new lows for 6 of the last 8 weeks. Your friend says 'it's overextended, take everything off'. What does the regime framework say?"
   options={[
     "Sell — distance from the 200-day SMA above 5% is historically a top signal.",
-    "Hold trend-following longs. None of the invalidation conditions (close below 200-day SMA for 2 consecutive weeks; 50-day crossing below 200-day) have triggered.",
     "Switch to short — momentum has to mean-revert.",
+    "Hold trend-following longs. None of the invalidation conditions (close below 200-day SMA for 2 consecutive weeks; 50-day crossing below 200-day) have triggered.",
     "Move to 100% cash until the 200-day SMA catches up to price."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is the first one: 'extended' feels like a sell. But distance from the mean is not an invalidation condition — it is what bull regimes produce. The framework only flips on structural breaks (close below 200-day SMA for 2 consecutive weekly closes, or a death cross). Until those print, the prior is 'trend continues'."
 />
 
 <Quiz
   question="You detect a bull regime in SPX. From Module 9, which strategy archetype is best aligned and what is the right mandate adjustment?"
   options={[
+    "Hold cash; the regime will end soon.",
     "Mean-reversion shorts; tighten max position size to 2%.",
-    "Trend-following + buy-the-dip on the 20-day SMA; allow normal position sizes within mandate.",
     "Pairs trading market-neutral; raise max drawdown to 40%.",
-    "Hold cash; the regime will end soon."
+    "Trend-following + buy-the-dip on the 20-day SMA; allow normal position sizes within mandate."
   ]}
-  answer={1}
-  explanation="Bull regimes favour trend-following and dip-buying at the rising shorter MA. Mean-reversion shorts (option 1) is the most tempting wrong answer because it sounds 'risk-controlled' — but shorting a confirmed uptrend is a high-loss-rate strategy. The correct alignment is trend-with-mandate, not against-trend with tight stops."
+  answer={3}
+  explanation="Bull regimes favour trend-following and dip-buying at the rising shorter MA. The mean-reversion-shorts answer is the most tempting wrong one because it sounds 'risk-controlled' — but shorting a confirmed uptrend is a high-loss-rate strategy. The correct alignment is trend-with-mandate, not against-trend with tight stops."
 />
 
 ## Try it

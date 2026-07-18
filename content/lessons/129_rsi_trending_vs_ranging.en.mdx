@@ -43,11 +43,11 @@ The correct mental model: classify the regime first using price + MA + ribbon (l
   question="TSLA has been in a confirmed up-trend for 12 weeks (price above rising SMA50, ribbon fanned). Daily RSI(14) just hit 76 after a strong week. You have no position. What does the regime-aware RSI framework say?"
   options={[
     "RSI > 70 is overbought, short with size",
-    "In an up-trend, RSI > 70 is normal — wait for a pullback toward RSI 40–45 to buy continuation, not for a short at the overbought level",
+    "RSI is unreliable in trends; ignore it",
     "Buy a long now because RSI 76 means strong momentum",
-    "RSI is unreliable in trends; ignore it"
+    "In an up-trend, RSI > 70 is normal — wait for a pullback toward RSI 40–45 to buy continuation, not for a short at the overbought level"
   ]}
-  answer={1}
+  answer={3}
   explanation="In a confirmed up-trend, RSI thresholds shift — 'overbought' is normal and pullbacks toward 40–45 are the tradeable zone. The tempting wrong answer ('short the overbought') is exactly the mistake that produced 12 stop-outs in the TSLA example. Buying at RSI 76 (option C) is the opposite mistake — chasing strength at an extended level instead of waiting for the pullback. Regime-aware thresholds tell you where to wait, not where to chase."
 />
 
@@ -56,8 +56,8 @@ The correct mental model: classify the regime first using price + MA + ribbon (l
   options={[
     "Hold — RSI < 30 hasn't fired yet, so it's not oversold",
     "The lesson's invalidation has triggered: RSI < 40 for three sessions + close below SMA50 = regime shift; the up-trend RSI rule book no longer applies. Exit or cut position back per your stop discipline.",
-    "Buy more — pullback to RSI 40 is the textbook up-trend entry",
-    "Switch to a 5-minute chart to find a better entry"
+    "Switch to a 5-minute chart to find a better entry",
+    "Buy more — pullback to RSI 40 is the textbook up-trend entry"
   ]}
   answer={1}
   explanation="The lesson defines the regime-shift invalidation precisely: three RSI closes below 40 + price below SMA50 ends the up-trend rule book. The tempting wrong answer (option C) treats the RSI-40 pullback as a buy zone — but that's only valid inside a confirmed up-trend, and the trend has just ended by the lesson's mechanical rule. Holding (option A) and switching timeframes (D) are both ways of avoiding the regime change the indicators already flagged."

@@ -36,10 +36,10 @@ The trap is treating an add as a fresh entry rather than an extension of the ori
 <Quiz
   question="You entered TSLA at $200 with a 1% account risk and a stop at $185. The stock is at $230 with a clean higher swing-low at $215. You want to add. Which add is disciplined?"
   options={[
-    "Add the same dollar amount as the original entry with a new 1% stop on a $215 fresh stop — total account risk stays roughly 1% because you 'feel' the trade is working.",
+    "Add half the original size with no stop change, since the trade is in profit and 'has cushion'.",
     "Add a tranche sized so that, combined with raising the stop on the original shares to $215, total committed risk across the full position is still at or below 1% of account.",
     "Double the position because the trend is now confirmed.",
-    "Add half the original size with no stop change, since the trade is in profit and 'has cushion'."
+    "Add the same dollar amount as the original entry with a new 1% stop on a $215 fresh stop — total account risk stays roughly 1% because you 'feel' the trade is working."
   ]}
   answer={1}
   explanation="The disciplined add tightens the stop on the existing shares to the new structural level ($215) and sizes the new tranche so total account risk stays at or below the original mandate. The most tempting wrong answer is the first one — 'risk stays at 1% because the trade is working' confuses unrealised profit with risk capacity. Cushion is not risk budget. The original 1% is the only risk budget the mandate authorised, and the only valid way to expand the position is to shrink the stop distance on the existing shares so the math still holds."
@@ -48,12 +48,12 @@ The trap is treating an add as a fresh entry rather than an extension of the ori
 <Quiz
   question="Which compound test is the cleanest objective signal that a planned pyramid has become a greed pyramid?"
   options={[
-    "You have added to the position more than twice.",
-    "Your total committed risk across the position exceeds your written per-trade mandate, AND at least one add was placed without a documented new structural level (higher swing-low, retest, fresh consolidation).",
+    "You feel certain the move continues.",
     "The position is now your largest holding.",
-    "You feel certain the move continues."
+    "You have added to the position more than twice.",
+    "Your total committed risk across the position exceeds your written per-trade mandate, AND at least one add was placed without a documented new structural level (higher swing-low, retest, fresh consolidation)."
   ]}
-  answer={1}
+  answer={3}
   explanation="Adding more than twice can be fine if every add was structured. Being the largest holding is an outcome of pyramiding working, not a defect. Feeling certain is unfalsifiable. The auditable signature is the compound test — total committed risk above the mandate AND at least one undocumented add. Both elements are readable in the Decision Journal; if both are present, the position is no longer the strategy executing — it is the trader negotiating with the strategy on the fly."
 />
 
@@ -61,9 +61,9 @@ The trap is treating an add as a fresh entry rather than an extension of the ori
   question="You're up 21% YTD against a 20% max-drawdown mandate. Your NVDA position is at +35%, you have already pyramided twice, and total committed risk on NVDA is 2.4% of account against a 1% per-trade mandate. The Conservative Debator has flagged the exposure. Synthesis answer?"
   options={[
     "Add a third tranche — the trend is the strongest of the year.",
-    "Cut NVDA in half and use the freed risk for a different name.",
+    "Override the Conservative Debator — your equity curve justifies the extra risk.",
     "Hold the position, do not add, and use the next session's open to either raise the stop so total risk returns to 1% or scale out one tranche to bring the position back within mandate.",
-    "Override the Conservative Debator — your equity curve justifies the extra risk."
+    "Cut NVDA in half and use the freed risk for a different name."
   ]}
   answer={2}
   explanation="The position is already 2.4x the mandated risk on a single ticker. Adding a third tranche is the textbook trade that turns a profitable year into a flat one on a single bad gap. 'Cut in half and redeploy' is greed in a different costume — the freed risk is not budget for a new trade, it is the correction of a breach. 'Override the Conservative Debator' is the move every overconfident trader makes the month before the drawdown that ends the streak. The mandate-respecting answer is to bring total committed risk back to 1% via stop tightening or scaling — not to legalise the breach with a new add."

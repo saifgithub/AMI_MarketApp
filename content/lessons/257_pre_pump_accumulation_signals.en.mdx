@@ -51,24 +51,24 @@ The trap is reading the accumulation drift as a "stealth bid" and front-running 
   <Quiz
     question="A small-cap stock with average daily volume of 200,000 shares has drifted 18% higher over 3 weeks on volume averaging 280,000 shares per day, with no company news. Two block prints of 150,000 shares each have appeared at the offer. What is the most likely interpretation in the context of pump-group behaviour?"
     options={[
-      "A legitimate institutional accumulation that has not yet been reported",
-      "A possible pre-pump accumulation phase — the volume profile and large prints without a news catalyst match the pre-call fingerprint documented in SEC enforcement cases",
+      "Random market noise",
       "A short-squeeze setup",
-      "Random market noise"
+      "A possible pre-pump accumulation phase — the volume profile and large prints without a news catalyst match the pre-call fingerprint documented in SEC enforcement cases",
+      "A legitimate institutional accumulation that has not yet been reported"
     ]}
-    answer={1}
+    answer={2}
     explanation="Legitimate institutional accumulation typically aligns with a thesis-bearing catalyst — a filing, a sector tailwind, an upgrade — and is visible to broker desks. Drift plus block prints with zero external catalyst on a thinly-traded small-cap is the documented pre-pump fingerprint. The most tempting wrong answer is the legitimate-institution interpretation, because the price action looks like a quiet bid — exactly the impression the accumulator wants to create."
   />
 
   <Quiz
     question="You see all of the following on a US small-cap: 3-week drift up on slightly elevated volume, no news, large call open-interest building on near-the-money strikes, and a Telegram channel you follow casually mentions the ticker in passing. Two days later the channel posts a formal call to buy at 09:35 sharp. What is the decisive red flag?"
     options={[
-      "The 09:35 sharp synchronised buy time",
-      "The combination of the pre-call quiet drift, mismatched options skew, and casual chat seeding — followed by the synchronised call — matches the pump architecture, and your buy at the open is the liquidity the accumulators will sell into",
       "The Telegram channel is informal",
-      "Three weeks is too long for a setup"
+      "Three weeks is too long for a setup",
+      "The 09:35 sharp synchronised buy time",
+      "The combination of the pre-call quiet drift, mismatched options skew, and casual chat seeding — followed by the synchronised call — matches the pump architecture, and your buy at the open is the liquidity the accumulators will sell into"
     ]}
-    answer={1}
+    answer={3}
     explanation="The 09:35 entry time is the visible trigger but not the decisive signal — it is a consequence, not a cause. The decisive issue is the full architecture: the accumulation, the options positioning, the soft mentions days before the public call. Recognising the architecture lets you avoid the trade entirely rather than relying on speed to dodge the dump."
   />
 

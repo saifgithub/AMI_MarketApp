@@ -50,25 +50,25 @@ The beginner mistake is picking the scheme that has the highest backtested Sharp
 <Quiz
   question="You run two strategies: trend-following (vol 12%, CAGR 9%) and mean-reversion (vol 10%, CAGR 10%). They have similar vols and similar CAGR. What's the most defensible weighting scheme?"
   options={[
-    "Risk-parity, because lower-vol is always better",
-    "Equal-dollar 50/50 — the strategies have similar vol and similar return profile, the gain from risk-parity is marginal, and the simplicity is honest. Add regime-rotation only if both strategies have well-defined favourable regimes that are observable in real time.",
     "Regime-rotation, because it has the highest backtest Sharpe",
-    "100% to mean-reversion because it has higher CAGR"
+    "Risk-parity, because lower-vol is always better",
+    "100% to mean-reversion because it has higher CAGR",
+    "Equal-dollar 50/50 — the strategies have similar vol and similar return profile, the gain from risk-parity is marginal, and the simplicity is honest. Add regime-rotation only if both strategies have well-defined favourable regimes that are observable in real time."
   ]}
-  answer={1}
-  explanation="When vols are similar, risk-parity gives you something close to equal-dollar anyway, so the added complexity isn't justified. Equal-dollar is the honest baseline. Option 0 over-engineers. Option 2 backtest-chases without considering the data you have for regime indicators. Option 4 abandons diversification."
+  answer={3}
+  explanation="When vols are similar, risk-parity gives you something close to equal-dollar anyway, so the added complexity isn't justified. Equal-dollar is the honest baseline. The risk-parity answer over-engineers. The regime-rotation-for-the-highest-backtest-Sharpe answer backtest-chases without considering the data you have for regime indicators. Going 100% to mean-reversion abandons diversification."
 />
 
 <Quiz
   question="You run four strategies with vols 6%, 10%, 14%, and 22%. Mandate drawdown cap is 12%. Stress correlation across the four is ~0.6 (moderate but not extreme). The Conservative Debator wants risk-parity; the Neutral Debator wants regime-rotation; the Research Manager suggests combining them. Synthesis-correct deployment?"
   options={[
-    "Pick one scheme arbitrarily — they're roughly equivalent",
-    "Combine: use risk-parity for relative weights (the 22%-vol strategy can't dominate the portfolio at 12% mandate cap), AND use regime-rotation for total exposure (cut gross when failure regimes for the dominant strategies fire). Pre-commit the rules, smooth the regime indicator, and rebalance monthly. Validate via walk-forward.",
     "Use only equal-dollar weights",
-    "Use only regime-rotation"
+    "Combine: use risk-parity for relative weights (the 22%-vol strategy can't dominate the portfolio at 12% mandate cap), AND use regime-rotation for total exposure (cut gross when failure regimes for the dominant strategies fire). Pre-commit the rules, smooth the regime indicator, and rebalance monthly. Validate via walk-forward.",
+    "Use only regime-rotation",
+    "Pick one scheme arbitrarily — they're roughly equivalent"
   ]}
   answer={1}
-  explanation="The synthesis: with one strategy at 22% vol and a 12% mandate cap, risk-parity is necessary to prevent that strategy from dominating drawdown. With four strategies and observable regime indicators, regime-rotation adds value on total exposure. Walk-forward validation (lesson 229) is the discipline that prevents overfitting the combination. Option 0 abandons the design choice. Options 2 and 3 each miss half the problem — neither equal-dollar nor pure regime-rotation handles the vol-disparity issue alone."
+  explanation="The synthesis: with one strategy at 22% vol and a 12% mandate cap, risk-parity is necessary to prevent that strategy from dominating drawdown. With four strategies and observable regime indicators, regime-rotation adds value on total exposure. Walk-forward validation (lesson 229) is the discipline that prevents overfitting the combination. Picking one scheme arbitrarily abandons the design choice. The equal-dollar-only and regime-rotation-only answers each miss half the problem — neither handles the vol-disparity issue alone."
 />
 
 ## Try it

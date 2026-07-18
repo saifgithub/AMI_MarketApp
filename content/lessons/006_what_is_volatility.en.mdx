@@ -40,34 +40,34 @@ The trap is treating volatility and danger as the same thing. They're not. A hig
 <Quiz
   question="Stock A has averaged 1% daily moves for the past 30 days. Stock B has averaged 4% daily moves. Tomorrow, Stock A moves 3% and Stock B moves 3%. Which move is more unusual relative to its own history?"
   options={[
-    "Stock A's 3% move — it's three times its normal daily range",
-    "Stock B's 3% move — it's the bigger absolute swing",
     "They're equally unusual — same percentage move",
-    "Neither is unusual"
+    "Stock B's 3% move — it's the bigger absolute swing",
+    "Neither is unusual",
+    "Stock A's 3% move — it's three times its normal daily range"
   ]}
-  answer={0}
+  answer={3}
   explanation="The same 3% move is routine for Stock B but a three-standard-deviation event for Stock A. Volatility is measured relative to a stock's own typical range, not in absolute percentage terms. Always compare a move to that specific stock's recent average."
 />
 
 <Quiz
   question="VIX is sitting at 14. What does this tell you about the market's near-term expectations?"
   options={[
-    "The market expects high volatility and a crash within 30 days",
     "The market expects relatively calm conditions over the next 30 days",
-    "VIX at 14 always means stocks will go up",
-    "VIX is unrelated to stock-market expectations"
+    "The market expects high volatility and a crash within 30 days",
+    "VIX is unrelated to stock-market expectations",
+    "VIX at 14 always means stocks will go up"
   ]}
-  answer={1}
+  answer={0}
   explanation="VIX below 15 indicates the options market is pricing in calm — typical daily S&P 500 moves under 1%. It does not predict direction (up vs down), only width. VIX above 30 indicates expected big swings, usually during stress. Calm VIX has historically been a quieter, but not necessarily up-only, regime."
 />
 
 <Quiz
   question="You buy two positions of equal dollar size: one in BRK-B (typical daily move ~1%) and one in TSLA (typical daily move ~3-4%). Three days later, both positions are down. BRK-B is down 1.2% and TSLA is down 4.5%. What's the most reasonable read of the situation?"
   options={[
-    "TSLA is failing — sell immediately",
     "Both are equally bad — same percentage decline matters",
+    "BRK-B is more dangerous because slow declines hide problems",
     "Both moves are roughly in line with each stock's typical daily volatility — without other signals, neither move alone justifies action; the real question is whether sizing was appropriate",
-    "BRK-B is more dangerous because slow declines hide problems"
+    "TSLA is failing — sell immediately"
   ]}
   answer={2}
   explanation="Both drops sit within each stock's normal daily-move range — a 1.2% drop in BRK-B and a 4.5% drop in TSLA are both ordinary by their own histories, not signals. If TSLA's normal swing makes you panic, the issue is your position size, not the stock. The right move is to check whether the drivers (earnings, macro, sentiment, flows) have changed — and to size positions in proportion to each stock's volatility so the same dollar P&L noise stays tolerable across both."

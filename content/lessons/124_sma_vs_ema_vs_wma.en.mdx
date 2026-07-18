@@ -46,21 +46,21 @@ The correct mental model: match the MA's lag to the holding period of the trade.
 <Quiz
   question="QQQ bottoms on October 23. EMA20 turns bullish that same day at 483, WMA20 turns the next day at 484, SMA20 turns four sessions later at 487. Same chart, same lookback. What does the spread tell you?"
   options={[
-    "EMA is mathematically more accurate, so always use it",
-    "Each variant trades lag for noise differently — EMA is fastest but flips more often; SMA is slowest but cleaner. Pick the lag that matches your holding period.",
+    "The chart software is miscalibrated if the values differ",
     "WMA is broken because it landed between the other two",
-    "The chart software is miscalibrated if the values differ"
+    "EMA is mathematically more accurate, so always use it",
+    "Each variant trades lag for noise differently — EMA is fastest but flips more often; SMA is slowest but cleaner. Pick the lag that matches your holding period."
   ]}
-  answer={1}
+  answer={3}
   explanation="All three are valid; they distribute weight to recent bars differently. EMA's exponential decay makes it the fastest but also the most prone to false flips. The tempting wrong answer ('EMA is always better') ignores the QQQ November 14 example where the EMA gave a wrong directional flip the SMA correctly ignored. Speed costs you in whipsaws; pick by timeframe, not preference."
 />
 
 <Quiz
   question="You swing-trade off the daily chart with an average holding period of three weeks. You've been using EMA20 for trend reads and your cross signals are getting whipsawed three or four times a month, each time costing 0.4–0.6% on the stop. Position size is 1% account risk per trade. What's the best adjustment under the lesson's framework?"
   options={[
-    "Switch to EMA10 — go even faster to catch turns earlier",
-    "Switch to SMA20 (or SMA50) so the MA's lag matches the three-week holding period; the extra delay filters the noise that's eating the account",
     "Keep EMA20 and double the position size to compensate",
+    "Switch to SMA20 (or SMA50) so the MA's lag matches the three-week holding period; the extra delay filters the noise that's eating the account",
+    "Switch to EMA10 — go even faster to catch turns earlier",
     "Stop using moving averages entirely"
   ]}
   answer={1}

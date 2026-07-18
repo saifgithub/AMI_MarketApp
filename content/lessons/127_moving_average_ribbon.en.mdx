@@ -42,24 +42,24 @@ The correct mental model: the ribbon is a regime classifier. Fanned and aligned 
 <Quiz
   question="MSFT's EMA ribbon (8/21/34/55/89) is fully fanned with EMA8 on top, EMA89 on bottom, and roughly $36 spread between them. Two weeks later the spread has compressed to $11 and EMA8 has crossed below EMA21. What's the cleanest read?"
   options={[
-    "Buy aggressively — the ribbon is still mostly positive",
     "The ribbon is compressing and the fast lines are beginning to braid — the prevailing up-trend regime is at risk of ending; if the ribbon flips order, the regime is gone",
     "Ignore the ribbon and trade only on price",
-    "Add a faster EMA to confirm the up-trend"
+    "Add a faster EMA to confirm the up-trend",
+    "Buy aggressively — the ribbon is still mostly positive"
   ]}
-  answer={1}
+  answer={0}
   explanation="Compression from $36 to $11 of spread, plus the EMA8 dipping below EMA21, is exactly the lesson's regime-at-risk state. The tempting wrong answer ('mostly positive, buy') ignores the term-structure shape — one MA can still look good while three faster ones have already flipped. The ribbon's job is to surface that disagreement before a single-MA read catches up."
 />
 
 <Quiz
   question="You run a trend-following strategy. Your scan finds a stock where all six EMA-ribbon lines are tangled — EMA8 below EMA34, EMA21 above EMA55, and the spread between fastest and slowest is less than half its 60-day average. RSI is 52, MACD near zero. Position-size rule is 1% account risk. What does the lesson recommend?"
   options={[
-    "Take the trade — diversification across strategies justifies it",
     "Stand aside: a tangled ribbon means no trend, and a trend-following strategy is out of season. Wait for the ribbon to re-fan in a clear direction before entering.",
-    "Switch to mean-reversion and take the trade as a reversal",
-    "Buy half-size to hedge the uncertainty"
+    "Take the trade — diversification across strategies justifies it",
+    "Buy half-size to hedge the uncertainty",
+    "Switch to mean-reversion and take the trade as a reversal"
   ]}
-  answer={1}
+  answer={0}
   explanation="The ribbon is a regime classifier: tangled = no trend = trend-following strategies do not apply. The tempting wrong answer (option C) is the classic mistake of switching strategy mid-trade to justify entering. If your edge is trend-following, your edge requires a trend. Half-size in the wrong regime is still wrong, just smaller. The lesson is explicit: the ribbon tells you whether your strategy is in season."
 />
 

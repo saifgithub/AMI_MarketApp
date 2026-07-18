@@ -47,23 +47,23 @@ The beginner mistake is reporting only the aggregate and treating the strategy a
   options={[
     "The edge is uniform across regimes — deploy at full size",
     "The edge lives entirely in bull-trend regimes. Deploy with a 200-day MA regime filter that reduces or pauses the rule below the MA, accepting that you'll miss bear-rally re-entries until the trend confirms.",
-    "The edge lives in bear markets — deploy with shorts",
-    "The 8% aggregate is what matters; segmentation is noise"
+    "The 8% aggregate is what matters; segmentation is noise",
+    "The edge lives in bear markets — deploy with shorts"
   ]}
   answer={1}
-  explanation="A strategy with positive bull and negative bear segments isn't 'an 8% strategy' — it's a bull-conditional strategy. The honest deployment is to add a regime filter that respects where the edge actually lives. Option 0 ignores the segmentation. Option 2 flips the rule incorrectly — being a long-only strategy in bears doesn't suddenly become a short-only strategy. Option 3 is the foundational error this lesson exists to fix."
+  explanation="A strategy with positive bull and negative bear segments isn't 'an 8% strategy' — it's a bull-conditional strategy. The honest deployment is to add a regime filter that respects where the edge actually lives. The deploy-at-full-size answer ignores the segmentation. The deploy-with-shorts answer flips the rule incorrectly — being a long-only strategy in bears doesn't suddenly become a short-only strategy. The 'segmentation is noise' answer is the foundational error this lesson exists to fix."
 />
 
 <Quiz
   question="Mean-reversion strategy on US small-caps. Regime segmentation by VIX shows: low-vol CAGR 6%, high-vol CAGR 19%. Win rate is similar across regimes but average win size is much larger in high-vol. Conservative Debator warns: 'high-vol months also had 2x max drawdown'. Mandate caps drawdown at 25%. Synthesis-correct deployment?"
   options={[
     "Concentrate exposure in high-vol regimes for the higher CAGR",
-    "The edge is higher in high-vol but so is risk. Deploy with vol-aware position sizing (smaller positions when VIX is high) so the high-vol CAGR is captured without breaching the mandate's drawdown cap. Validate via walk-forward that the vol-adjusted version still has positive OOS edge.",
     "Trade only in low-vol since the drawdown is lower",
+    "The edge is higher in high-vol but so is risk. Deploy with vol-aware position sizing (smaller positions when VIX is high) so the high-vol CAGR is captured without breaching the mandate's drawdown cap. Validate via walk-forward that the vol-adjusted version still has positive OOS edge.",
     "Ignore segmentation and trade aggregate"
   ]}
-  answer={1}
-  explanation="The synthesis combines regime segmentation (edge profile) with mandate constraints (drawdown cap) and out-of-sample discipline (validate the vol-adjusted version). Option 0 maximises returns but risks breaching the mandate. Option 2 sacrifices most of the strategy's edge. Option 3 ignores the segmentation entirely. The honest path is vol-aware sizing validated walk-forward — three concepts from this module composed correctly."
+  answer={2}
+  explanation="The synthesis combines regime segmentation (edge profile) with mandate constraints (drawdown cap) and out-of-sample discipline (validate the vol-adjusted version). Concentrating in high-vol regimes maximises returns but risks breaching the mandate. Trading only low-vol sacrifices most of the strategy's edge. The trade-the-aggregate answer ignores the segmentation entirely. The honest path is vol-aware sizing validated walk-forward — three concepts from this module composed correctly."
 />
 
 ## Try it

@@ -52,24 +52,24 @@ The trap is treating the scoring framework as a black box and ignoring context. 
   question="A non-REIT, non-financial company posts: payout-on-FCF 95%, FCF declining 3 years in a row, interest coverage 2.5x, net debt / EBITDA 4.5x, dividend held flat for 5 years but no growth, refinancing wall of 35% of debt in the next 18 months. Which read is most accurate?"
   options={[
     "Mostly safe — the dividend has been maintained for 5 years",
+    "The framework doesn't apply to this company",
     "Five of six framework tests fail: payout-on-FCF above 80%, FCF declining, interest coverage below 3.0x, net debt / EBITDA above 4.0x, and a meaningful near-term refinancing wall. The only pass is dividend maintenance, which is exactly the lagging indicator that the framework is designed to look past. This is the pre-cut pattern. A high-confidence prediction would be a cut announced in the next 12–18 months, likely in conjunction with refinancing negotiations",
-    "Five of six fails — but the maintained dividend overrides the rest",
-    "The framework doesn't apply to this company"
+    "Five of six fails — but the maintained dividend overrides the rest"
   ]}
-  answer={1}
-  explanation="The synthesis test: applying the multi-factor framework. The tempting wrong answer is option 0 — anchoring on the history-of-dividend-maintenance signal that the framework explicitly down-weights as a lagging indicator. Option 2 makes the same mistake more explicitly. Option 3 dismisses the framework without justification. The right read counts the fails, names the specific pattern (refinancing wall + tight coverage + high payout + declining FCF), and predicts the typical 12–18-month cut timeline that this configuration has historically produced."
+  answer={2}
+  explanation="The synthesis test: applying the multi-factor framework. The tempting wrong answer is 'mostly safe, the dividend has been maintained for 5 years' — anchoring on the history-of-dividend-maintenance signal that the framework explicitly down-weights as a lagging indicator. The 'five of six fail but the maintained dividend overrides' answer makes the same mistake more explicitly. 'The framework doesn't apply' dismisses it without justification. The right read counts the fails, names the specific pattern (refinancing wall + tight coverage + high payout + declining FCF), and predicts the typical 12–18-month cut timeline that this configuration has historically produced."
 />
 
 <Quiz
   question="A US regulated electric utility posts: payout-on-FCF 110%, FCF flat for 3 years, interest coverage 3.5x, net debt / EBITDA 5.5x, dividend grown 5% annually for 20 years, no refinancing wall (laddered out 15 years). Which synthesis is most accurate?"
   options={[
+    "Utilities never cut dividends",
     "Three fails — cut likely",
-    "The headline payout-on-FCF and net debt / EBITDA fails are structurally normal for regulated utilities; the regulated rate base sets the leverage and the rate-of-return formula constrains FCF growth. The relevant sector tests are met: interest coverage above 3.0x, no refinancing wall, 20 years of dividend growth, and the regulatory framework explicitly factors dividend coverage into allowed returns. The cross-industry framework over-flags this; context-adjusted, the dividend is durable",
     "The framework predicts a cut",
-    "Utilities never cut dividends"
+    "The headline payout-on-FCF and net debt / EBITDA fails are structurally normal for regulated utilities; the regulated rate base sets the leverage and the rate-of-return formula constrains FCF growth. The relevant sector tests are met: interest coverage above 3.0x, no refinancing wall, 20 years of dividend growth, and the regulatory framework explicitly factors dividend coverage into allowed returns. The cross-industry framework over-flags this; context-adjusted, the dividend is durable"
   ]}
-  answer={1}
-  explanation="The synthesis tests sector-aware application. The tempting wrong answer is option 0 — mechanical scoring without context, the exact trap the lesson warns about. The right read recognises that regulated utilities are a structurally different sector where the absolute thresholds shift. Option 2 repeats the mechanical-scoring mistake. Option 3 over-generalises; utilities have cut dividends (PG&E, for instance), but only when the underlying business or regulatory framework was disrupted — not because of a generic payout-ratio threshold."
+  answer={3}
+  explanation="The synthesis tests sector-aware application. The tempting wrong answer is the 'three fails, cut likely' call — mechanical scoring without context, the exact trap the lesson warns about. The right read recognises that regulated utilities are a structurally different sector where the absolute thresholds shift. The 'the framework predicts a cut' answer repeats the mechanical-scoring mistake. 'Utilities never cut dividends' over-generalises; utilities have cut dividends (PG&E, for instance), but only when the underlying business or regulatory framework was disrupted — not because of a generic payout-ratio threshold."
 />
 
 ## Try it

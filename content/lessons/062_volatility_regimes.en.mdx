@@ -44,25 +44,25 @@ The correct model: risk-per-trade is fixed by mandate; position size is the vari
 <Quiz
   question="VIX has been under 14 for 12 of the last 15 sessions. You enter a long with a 2% chart stop at a 10% position size, risking 0.2% of account on the move. Two weeks later VIX spikes to 32 and ATR doubles. Your stop hasn't been hit yet. What is the regime-aware adjustment?"
   options={[
-    "Do nothing; the stop is the stop.",
-    "Move the stop tighter to lock in profit.",
     "Cut position size roughly in half to restore the original $-risk under the new ATR; widen the stop in proportion if the chart structure demands it; alternatively close the trade and re-enter at sized-for-regime.",
-    "Double the position size — fear means opportunity."
+    "Double the position size — fear means opportunity.",
+    "Do nothing; the stop is the stop.",
+    "Move the stop tighter to lock in profit."
   ]}
-  answer={2}
-  explanation="The tempting wrong answer is option 0 — 'discipline means don't touch the stop'. But discipline is about $-risk, not stop price. When ATR doubles, the same stop distance represents double the volatility-noise risk, and the position is now effectively oversized for the regime. Resizing is the regime-correct move. Option 3 (double up) is the classic vol-shock disaster."
+  answer={0}
+  explanation="The tempting wrong answer is the do-nothing answer — 'discipline means don't touch the stop'. But discipline is about $-risk, not stop price. When ATR doubles, the same stop distance represents double the volatility-noise risk, and the position is now effectively oversized for the regime. Resizing is the regime-correct move. Doubling the position size is the classic vol-shock disaster."
 />
 
 <Quiz
   question="VIX = 11. ATR on SPX = 1.4% of price. Which divergence signal does this fire, and what is the mandate-level response a Conservative Risk Debator would push?"
   options={[
-    "No divergence; both readings say 'calm'.",
     "Low-VIX-high-ATR divergence — option-market complacency disagrees with realised volatility. Tighten max position size by ~25% pre-emptively; consider reducing high-beta exposure until divergence resolves.",
     "Buy more — calm options means free upside.",
-    "Sell everything immediately; this always precedes a crash."
+    "Sell everything immediately; this always precedes a crash.",
+    "No divergence; both readings say 'calm'."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — VIX and ATR look like they should agree, so 'no divergence' feels right. But VIX is forward-looking option-implied vol; ATR is realised. When VIX is unusually low while ATR is unusually high, the divergence is the signal. The conservative response is pre-emptive sizing reduction, not panic exit (option 3) or denial (option 2)."
+  answer={0}
+  explanation="The tempting wrong answer is the 'no divergence, both readings say calm' call — VIX and ATR look like they should agree, so 'no divergence' feels right. But VIX is forward-looking option-implied vol; ATR is realised. When VIX is unusually low while ATR is unusually high, the divergence is the signal. The conservative response is pre-emptive sizing reduction, not the sell-everything panic exit or the buy-more denial."
 />
 
 ## Try it

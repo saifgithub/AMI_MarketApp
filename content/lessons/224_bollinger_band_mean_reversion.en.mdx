@@ -38,23 +38,23 @@ The beginner mistake is fading every band-tag without checking ADX or trend cont
   options={[
     "Enter long — outer-band touches are mean-reversion signals",
     "No entry — ADX > 25 and the 50-day is down; the regime filter disqualifies the trade",
-    "Enter half-size as a hedge against the trend",
-    "Short the lower band — trend continuation"
+    "Short the lower band — trend continuation",
+    "Enter half-size as a hedge against the trend"
   ]}
   answer={1}
-  explanation="ADX 32 means strong directional trend; that's the exact regime in which Bollinger mean reversion fails. The bands ride the trend, and 'oversold' readings stay oversold for weeks. Option 0 is the tempting wrong answer because the band-touch is mechanically the same — but the regime gate is the whole strategy. Without it, you're catching a falling knife inside the wrong system."
+  explanation="ADX 32 means strong directional trend; that's the exact regime in which Bollinger mean reversion fails. The bands ride the trend, and 'oversold' readings stay oversold for weeks. The enter-long-on-an-outer-band-touch answer is the tempting wrong one because the band-touch is mechanically the same — but the regime gate is the whole strategy. Without it, you're catching a falling knife inside the wrong system."
 />
 
 <Quiz
   question="On Bursa: KLCC closes at the lower Bollinger Band at RM7.18; ADX is 14, price is above the 200-day MA. Stop at RM7.05, target at mid-band RM7.40. You also have 3 other active mean-reversion positions (correlated REITs). Mandate: per-trade risk 1.5% on RM50,000 account, total mean-reversion basket capped at 4% of account. Currently you've used 3% of the basket cap. Synthesis: how much can you allocate to this trade?"
   options={[
-    "Full 1.5% per-trade allocation since each setup is individually valid",
-    "Up to 1% of account (the remaining basket capacity), sized down from the full per-trade limit",
     "Skip — three correlated positions is already enough",
-    "Override the basket cap because the setup is high quality"
+    "Override the basket cap because the setup is high quality",
+    "Up to 1% of account (the remaining basket capacity), sized down from the full per-trade limit",
+    "Full 1.5% per-trade allocation since each setup is individually valid"
   ]}
-  answer={1}
-  explanation="The basket cap is a portfolio-level limit, not a per-trade limit. You have 1% of remaining capacity (4% cap - 3% used). Size this trade to risk no more than 1%, which on a 13-cent stop (7.18 - 7.05) caps shares at 1% * 50,000 / 0.13 = 3,846 shares. Option 0 ignores the basket cap (the synthesis error — assuming per-trade rules dominate). Option 3 (override) is the catastrophic version — overriding mandate caps because a setup looked good is how strategies blow up across correlated trades."
+  answer={2}
+  explanation="The basket cap is a portfolio-level limit, not a per-trade limit. You have 1% of remaining capacity (4% cap - 3% used). Size this trade to risk no more than 1%, which on a 13-cent stop (7.18 - 7.05) caps shares at 1% * 50,000 / 0.13 = 3,846 shares. The full-1.5%-allocation answer ignores the basket cap (the synthesis error — assuming per-trade rules dominate). Overriding the basket cap is the catastrophic version — overriding mandate caps because a setup looked good is how strategies blow up across correlated trades."
 />
 
 ## Try it

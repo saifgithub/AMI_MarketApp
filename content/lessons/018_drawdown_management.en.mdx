@@ -37,20 +37,25 @@ The trap is increasing size to recover faster. After a 30% drawdown, the account
 
 <Quiz
   question="Your account is $100,000. After a bad month it sits at $60,000. What gain on the $60,000 base is required to recover to $100,000?"
-  answer={66.67}
-  tolerance={0.5}
-  explanation="Recovery = (100,000 − 60,000) ÷ 60,000 = 40,000 ÷ 60,000 = 66.67%. A 40% drawdown requires a 66.67% gain to recover — not 40%."
+  options={[
+    "66.67%",
+    "150%",
+    "40%",
+    "60%"
+  ]}
+  answer={0}
+  explanation="Recovery = (100,000 − 60,000) ÷ 60,000 = 40,000 ÷ 60,000 = 66.67%. A 40% drawdown requires a 66.67% gain to recover. Answering 40% assumes you win back the percentage you lost, but that percentage now applies to a smaller base, so it leaves you short."
 />
 
 <Quiz
   question="Trader A operates with a hard 15% drawdown ceiling — they pause new entries once down 15% from peak. Trader B has no ceiling and is willing to keep trading through any drawdown. Both have identical strategies that produce 1% average monthly returns when active. Over a five-year simulated stretch with two bad quarters and three good quarters per year, who ends up with more equity?"
   options={[
     "Trader B — more trading days at +1% expectancy means more compounded gains.",
-    "Trader A — the ceiling caps the recovery math at a tractable size (a 15% drawdown needs 17.6% to recover); Trader B's deeper drawdowns require disproportionately larger gains, and time spent in recovery is time not compounding upward.",
     "They tie — the underlying strategy is the same so expectancy converges.",
+    "Trader A — the ceiling caps the recovery math at a tractable size (a 15% drawdown needs 17.6% to recover); Trader B's deeper drawdowns require disproportionately larger gains, and time spent in recovery is time not compounding upward.",
     "Trader B — pausing trading is the same as having no edge during the pause."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is 'Trader B — more trading days = more wins'. It feels right because the underlying expectancy is positive. But the recovery math breaks the symmetry: every drawdown Trader B sits through requires a disproportionately larger gain to recover, and the months spent grinding back to even are months that Trader A's smaller drawdowns and faster recoveries spend compounding upward from a higher base. The 'tie — same strategy' distractor ignores that drawdown depth changes the base equity that future returns compound on."
 />
 

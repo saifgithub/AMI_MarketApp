@@ -48,10 +48,10 @@ The correct mental model: ATR is the unit of distance in volatility-space, not d
 <Quiz
   question="Account size $20,000, mandate cap 1% per trade. You're sizing a long on a stock at $80 with daily ATR(14) = $2.50. Your rule is a 1.5× ATR stop. How many shares can you take, and what's the capital deployed?"
   options={[
-    "100 shares; $8,000 capital deployed",
-    "53 shares (or 50 rounded); approximately $4,240 capital deployed. Math: $200 risk budget / ($2.50 × 1.5 stop distance) = 53.3 shares; round down to 53 or 50.",
     "200 shares; $16,000 capital deployed",
-    "There's not enough information — need to know expected return first"
+    "53 shares (or 50 rounded); approximately $4,240 capital deployed. Math: $200 risk budget / ($2.50 × 1.5 stop distance) = 53.3 shares; round down to 53 or 50.",
+    "There's not enough information — need to know expected return first",
+    "100 shares; $8,000 capital deployed"
   ]}
   answer={1}
   explanation="Risk budget = 1% of $20,000 = $200. Stop distance = 1.5 × $2.50 = $3.75. Shares = $200 / $3.75 ≈ 53. Capital = 53 × $80 ≈ $4,240. The tempting wrong answers (100 or 200 shares) ignore stop distance and just deploy a fixed dollar amount — exactly the fixed-stop trap the lesson identifies. Expected return is a separate question; sizing comes from risk math first."
@@ -62,8 +62,8 @@ The correct mental model: ATR is the unit of distance in volatility-space, not d
   options={[
     "It's a mistake — both positions should deploy equal capital",
     "Lower-ATR stocks have tighter stops, which fits more shares into the same dollar-risk budget. Capital deployed is the byproduct, not the input — dollar risk is the cap, not capital exposure. The Portfolio Manager's safety floor checks risk math, not gross capital.",
-    "AAPL is a bigger company so it deserves more capital",
-    "The arithmetic only works for one of the two tickers"
+    "The arithmetic only works for one of the two tickers",
+    "AAPL is a bigger company so it deserves more capital"
   ]}
   answer={1}
   explanation="The whole point of ATR sizing is that capital deployed varies inversely with per-share volatility while dollar risk stays constant. The tempting wrong answer (A) wants equal capital allocation, which sounds intuitive but means dollar risk would swing with volatility — exactly what the framework is designed to prevent. The PM's safety floor enforces risk, not capital symmetry, because risk is what kills accounts."

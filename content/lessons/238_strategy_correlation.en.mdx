@@ -45,25 +45,25 @@ The beginner mistake is using the full-sample correlation as if it were a consta
 <Quiz
   question="You have three strategies. Pairwise full-sample correlations are all near +0.3. Pairwise stress correlations (worst-decile market months) are all near +0.85. What does this tell you about diversification benefit during a crisis?"
   options={[
-    "Diversification is strong — the +0.3 number says so",
-    "Diversification disappears in the regime where it matters most. The three strategies will behave as roughly one strategy in a crisis. Size the combined portfolio as if it were a single concentrated bet, not three independent ones — drawdown estimates should use the +0.85 stress correlation.",
+    "Correlation doesn't matter at all",
     "Add a fourth strategy to fix the problem",
-    "Correlation doesn't matter at all"
+    "Diversification is strong — the +0.3 number says so",
+    "Diversification disappears in the regime where it matters most. The three strategies will behave as roughly one strategy in a crisis. Size the combined portfolio as if it were a single concentrated bet, not three independent ones — drawdown estimates should use the +0.85 stress correlation."
   ]}
-  answer={1}
-  explanation="Stress correlation determines crisis drawdown. A combined portfolio with stress correlation +0.85 has roughly the same crisis drawdown as a single strategy at the same total size. Option 0 is exactly the failure mode this lesson exists to fix. Option 2 doesn't help unless the new strategy has low stress correlation (most equity-related strategies do not). Option 4 is denial."
+  answer={3}
+  explanation="Stress correlation determines crisis drawdown. A combined portfolio with stress correlation +0.85 has roughly the same crisis drawdown as a single strategy at the same total size. The 'diversification is strong, +0.3 says so' answer is exactly the failure mode this lesson exists to fix. Adding a fourth strategy doesn't help unless the new strategy has low stress correlation (most equity-related strategies do not). The 'correlation doesn't matter at all' answer is denial."
 />
 
 <Quiz
   question="You're combining trend-following and mean-reversion. Average correlation +0.18, stress correlation +0.45 (mean-reversion has its known failure regime in trending bears, where trend-following thrives — so they don't fully overlap even in crisis). The Neutral Debator and Research Manager both weigh in. Synthesis-correct interpretation?"
   options={[
-    "The pair is fully diversified at all times",
     "The pair is meaningfully diversified BOTH in normal AND crisis regimes — exactly because their failure modes are non-overlapping. Size each strategy independently and combine, using the +0.45 stress correlation for portfolio drawdown estimates, with mandate-compliant total exposure.",
-    "The pair is undiversified because stress correlation is positive",
-    "Combine but allocate 90% to mean-reversion since it has higher backtest CAGR"
+    "The pair is fully diversified at all times",
+    "Combine but allocate 90% to mean-reversion since it has higher backtest CAGR",
+    "The pair is undiversified because stress correlation is positive"
   ]}
-  answer={1}
-  explanation="The synthesis: trend-following and mean-reversion are genuinely diversified because their failure regimes are opposed (chop vs trending bear). The +0.45 stress correlation reflects the residual co-movement (both lose somewhat in extreme vol spikes) without erasing the diversification benefit. Option 0 overstates the diversification. Option 2 sets the bar too high — perfect zero-correlation pairs are rare. Option 3 concentrates in one strategy, defeating the diversification."
+  answer={0}
+  explanation="The synthesis: trend-following and mean-reversion are genuinely diversified because their failure regimes are opposed (chop vs trending bear). The +0.45 stress correlation reflects the residual co-movement (both lose somewhat in extreme vol spikes) without erasing the diversification benefit. The 'fully diversified at all times' answer overstates the diversification. The 'undiversified because stress correlation is positive' answer sets the bar too high — perfect zero-correlation pairs are rare. The 90%-to-mean-reversion answer concentrates in one strategy, defeating the diversification."
 />
 
 ## Try it

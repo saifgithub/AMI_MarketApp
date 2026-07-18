@@ -50,25 +50,25 @@ The correct model: VVIX + IV-RV divergence is a regime-quality reading. When the
 <Quiz
   question="SPX 20-day realised vol is 8%. VIX is 16. VVIX is 128 (87th percentile of trailing year). IV-RV spread is +8 (82nd percentile). SPX is still above its 200-day SMA. What does the framework prescribe?"
   options={[
-    "Short SPX aggressively — option markets are pricing a crash.",
-    "Option-market-stress-whisper cluster is firing (both VVIX and IV-RV in their upper quartile). The bull regime from lesson 059 is still intact, so the response is mandate compression, not directional flip: cap new positions ~25% smaller, demand 2-of-3 confirmation indicators before adding, accept that the signal has false positives and a 4–8 week window. Invalidate the signal if VVIX falls back under its 50th percentile for 5+ sessions.",
+    "Ignore — VVIX is too obscure to matter.",
     "Buy more — option markets are usually wrong.",
-    "Ignore — VVIX is too obscure to matter."
+    "Option-market-stress-whisper cluster is firing (both VVIX and IV-RV in their upper quartile). The bull regime from lesson 059 is still intact, so the response is mandate compression, not directional flip: cap new positions ~25% smaller, demand 2-of-3 confirmation indicators before adding, accept that the signal has false positives and a 4–8 week window. Invalidate the signal if VVIX falls back under its 50th percentile for 5+ sessions.",
+    "Short SPX aggressively — option markets are pricing a crash."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — the option-market signal seems strong, why not act on it? But the historical record shows the lag is 4–8 weeks with significant false-positive rate. The right response is mandate-side, not directional. Option 2 dismisses a real signal; option 3 dismisses it equally. The synthesis is calibrated response: tighter mandate, not flipped direction."
+  answer={2}
+  explanation="The tempting wrong answer is shorting SPX aggressively — the option-market signal seems strong, why not act on it? But the historical record shows the lag is 4–8 weeks with significant false-positive rate. The right response is mandate-side, not directional. The 'buy more, option markets are usually wrong' answer dismisses a real signal; 'ignore VVIX' dismisses it equally. The synthesis is calibrated response: tighter mandate, not flipped direction."
 />
 
 <Quiz
   question="Two scenarios, same VIX = 15. (A) IV-RV spread = +3, VVIX = 85. (B) IV-RV spread = +8, VVIX = 130. Which scenario carries higher tail risk and what is the right Conservative Risk Debator response?"
   options={[
+    "(B) is lower risk because VVIX measures noise, not signal.",
     "Both equal — VIX is the only relevant gauge.",
-    "(B) has materially higher tail risk because the option market is paying up for protection beyond what spot VIX shows. Conservative response: smaller positions, lower drawdown ceiling, prefer setups with tighter stops and faster invalidation. (A) is a normal calm regime; full mandate-permitted sizing.",
     "(A) is higher risk because low IV-RV means complacency.",
-    "(B) is lower risk because VVIX measures noise, not signal."
+    "(B) has materially higher tail risk because the option market is paying up for protection beyond what spot VIX shows. Conservative response: smaller positions, lower drawdown ceiling, prefer setups with tighter stops and faster invalidation. (A) is a normal calm regime; full mandate-permitted sizing."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — same VIX, same regime, an understandable mistake. But the second-derivative readings differ materially. Option 2 inverts the relationship; option 3 dismisses VVIX. The synthesis is recognising that the same headline can mask very different positioning realities, and the mandate must respond."
+  answer={3}
+  explanation="The tempting wrong answer is calling the two equal — same VIX, same regime, an understandable mistake. But the second-derivative readings differ materially. Calling (A) the higher-risk regime inverts the relationship; calling (B) lower risk dismisses VVIX. The synthesis is recognising that the same headline can mask very different positioning realities, and the mandate must respond."
 />
 
 ## Try it

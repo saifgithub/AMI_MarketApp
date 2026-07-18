@@ -107,6 +107,52 @@ in a stream nobody tails), or the caller (an explicit status).
 
 ---
 
+## P3 — Content validated by exemplar, never as a corpus
+
+**Symptom.** Tests over a content-driven feature all pin to one hand-picked exemplar item.
+The exemplar is, by construction, well-formed — it was chosen *because* its content is
+controlled. So the suite is green while an arbitrary fraction of the real corpus is broken,
+and the defect surfaces only when a user hits it.
+
+**Instances (both surfaced in AT:R60, in the same audit).**
+
+| | Defect | Scale | Signal to anyone |
+|---|---|---|---|
+| **DEF064** | 12 quizzes authored in a numeric free-response form the pipeline never implemented → zero options → lesson permanently un-completable, 2 of 12 agents unlockable | 12 / 571 questions | none |
+| **DEF065** | 277 explanations cite an answer option by an index the reader never renders, under two contradictory conventions | 277 / 571 questions | none |
+
+**Why the existing guards could not see it.** `backend/tests/unit/test_lessons_service.py`
+has 16 tests over lessons and every one pins to `283_market_order_vs_limit` — a lesson
+selected for having *controlled* content. That is the structural reason, not an oversight:
+an exemplar test answers "does the parser work?", never "is the content valid?" Nothing
+iterated the other 269 lessons. `LessonsService._reload()` compounded it by swallowing
+parse failures with a log line, so a malformed lesson would have vanished from the
+catalogue rather than failing anything.
+
+Both defects also had a P2 flavour — `attrs.get("answer", 0)` and `options=... or []` are
+silent fallbacks that turned an unsupported authoring form into a dead end instead of an
+error — but the reason they *survived for months* is P3: no test ever looked at the corpus.
+
+**The invariant.** *If content ships, something iterates all of it.* An exemplar test and a
+corpus test answer different questions; a feature backed by authored content needs both.
+
+**Enforcing check.** `backend/tests/unit/test_lesson_corpus_integrity.py` — iterates all 270
+lessons: ≥2 options per question, answer index in range, options distinct and non-empty,
+question/explanation non-empty, no index citation in any user-visible surface
+(explanation, question **and** option text), no `tolerance=` attribute anywhere in the
+source, and lesson count exactly 270 so a silently-dropped lesson fails loudly. Verified red
+against the real defect before the fix — 4 assertions failed, naming all 12 files.
+
+Deliberately **not** asserted: the answer-position distribution CR042 corrected. A
+uniformity assertion would go red on legitimate content edits and teach the next session to
+weaken the file. One-off corrections belong in the authoring spec, not in a guard.
+
+The sibling corpus (`content/daily_challenges/`, 183 questions) had only
+`test_real_corpus_loads` asserting `len(items) >= 100`. It happened to be clean on both
+counts — Pydantic validates each record on load, which is why. That is luck, not coverage.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

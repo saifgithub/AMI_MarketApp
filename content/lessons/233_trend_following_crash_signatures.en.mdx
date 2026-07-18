@@ -43,25 +43,25 @@ The beginner mistake is to "trust the system" and keep taking every signal durin
 <Quiz
   question="You're running a 50/200 trend rule on SPY. ADX(14) is at 14 (well below 20). 50-day MA slope is flat. You've taken 4 small losses in 6 weeks. Aggressive Debator: 'every trend-follower has whipsaw periods, hold the line'. Bear Researcher and Conservative Debator: 'the regime signature is active, cut size'. Empirically which is correct?"
   options={[
-    "Aggressive — the strategy must be run at full size always",
     "Bear and Conservative — both regime signatures (ADX < 20, flat 50-day) are firing simultaneously, the documented whipsaw conditions. Cut size to roughly half until both signatures resolve.",
     "Switch to mean reversion",
+    "Aggressive — the strategy must be run at full size always",
     "Stop trading entirely"
   ]}
-  answer={1}
-  explanation="The two-signature confirmation is the documented whipsaw setup — running full size in this regime is statistically going to deliver more losses before the trend resumes. Option 0 dresses up 'trust the system' as discipline; the system itself has a regime overlay built in if you respect the signatures. Option 2 swaps to a strategy that may have its own failure mode in this regime. Option 3 over-corrects — you want to BE there when the trend resumes, just at reduced size."
+  answer={0}
+  explanation="The two-signature confirmation is the documented whipsaw setup — running full size in this regime is statistically going to deliver more losses before the trend resumes. The run-at-full-size-always answer dresses up 'trust the system' as discipline; the system itself has a regime overlay built in if you respect the signatures. Switching to mean reversion swaps to a strategy that may have its own failure mode in this regime. Stopping trading entirely over-corrects — you want to BE there when the trend resumes, just at reduced size."
 />
 
 <Quiz
   question="Your trend-following strategy hit its mandate-aware sizing-down trigger 3 weeks ago. ADX has now risen to 23, 50-day MA slope is positive, and SPY has reclaimed prior swing high. You're at half size. Synthesis question: what's the correct action and why?"
   options={[
-    "Stay at half size — the recent losses are still fresh, wait another month",
+    "Switch to a different strategy",
     "Both re-engage signatures (ADX > 22 AND positive 50-day slope) are met. Restore full size per the pre-committed re-engage rule. The whipsaw regime has resolved; staying small means missing the trend you sized down to be ready for.",
     "Go to 150% size to recover losses faster",
-    "Switch to a different strategy"
+    "Stay at half size — the recent losses are still fresh, wait another month"
   ]}
   answer={1}
-  explanation="The synthesis: regime detection is two-sided — you size down when the signature fires and size back up when it resolves, per pre-committed rules. Option 0 is the most tempting wrong answer because losses are recent and emotional — but the regime-aware system has no opinion on your recent P&L, only on the regime indicators. Option 2 is revenge-trading. Option 3 abandons the strategy at exactly the moment its regime is favourable."
+  explanation="The synthesis: regime detection is two-sided — you size down when the signature fires and size back up when it resolves, per pre-committed rules. Staying at half size is the most tempting wrong answer because losses are recent and emotional — but the regime-aware system has no opinion on your recent P&L, only on the regime indicators. Going to 150% size is revenge-trading. Switching to a different strategy abandons this one at exactly the moment its regime is favourable."
 />
 
 ## Try it

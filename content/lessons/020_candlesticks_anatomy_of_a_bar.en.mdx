@@ -40,25 +40,25 @@ The trap is treating the candle's colour as a verdict instead of a fact. Beginne
 <Quiz
   question="A daily candle on AAPL has these values: open $189.20, high $192.80, low $188.00, close $191.50. What colour is the body and what is its size in dollars?"
   options={[
-    "Red body, $2.30 in size",
     "Green body, $2.30 in size",
-    "Green body, $4.80 in size",
-    "Red body, $1.20 in size"
+    "Red body, $1.20 in size",
+    "Red body, $2.30 in size",
+    "Green body, $4.80 in size"
   ]}
-  answer={1}
+  answer={0}
   explanation="Close ($191.50) is above open ($189.20), so the body is green. The body size is close minus open: $191.50 - $189.20 = $2.30. The $4.80 distractor is the full range (high minus low) which includes the wicks, not just the body."
 />
 
 <Quiz
   question="On a daily chart, TSLA prints a red candle with a small body and a lower wick that is roughly three times longer than the body, finishing right at a price level the stock bounced from twice in the prior two weeks. Which reading is most consistent with what the candle is telling you?"
   options={[
-    "Sellers were in firm control; expect continuation lower next session",
-    "Sellers initially won the session but buyers absorbed the low at a known level — the long lower wick at support signals that selling was rejected",
     "The colour is red, so this is a bearish signal regardless of the wick",
-    "Wicks are noise; only the body matters when reading a candle"
+    "Wicks are noise; only the body matters when reading a candle",
+    "Sellers initially won the session but buyers absorbed the low at a known level — the long lower wick at support signals that selling was rejected",
+    "Sellers were in firm control; expect continuation lower next session"
   ]}
-  answer={1}
-  explanation="A long lower wick that ends at a level price has respected before is a rejection of the low — buyers stepped in. The candle closed red, but the shape says the seller advance was reversed inside the session. The tempting wrong answer (option 0) reads only the colour and ignores the wick; that's exactly the mistake the lesson warns against. Wicks are not noise — they are the record of who lost the intraday fight."
+  answer={2}
+  explanation="A long lower wick that ends at a level price has respected before is a rejection of the low — buyers stepped in. The candle closed red, but the shape says the seller advance was reversed inside the session. The tempting wrong answer — the one calling it bearish because the candle is red — reads only the colour and ignores the wick; that's exactly the mistake the lesson warns against. Wicks are not noise — they are the record of who lost the intraday fight."
 />
 
 ## Try it

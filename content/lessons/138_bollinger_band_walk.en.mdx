@@ -45,11 +45,11 @@ The correct mental model: the bands are statistical, but markets are not normall
   question="NVDA closes at or above its upper Bollinger Band on nine of eleven consecutive sessions while the SMA20 slope rises from 137 to 149. A beginner fades the first touch at 144. What does the framework say about the trade and the principle?"
   options={[
     "Good trade — upper band touch is a 2-sigma extreme, mean reversion is statistically required",
+    "Good trade — the second touch will reverse, just hold longer",
     "Bad trade — when 3-of-5 closes are at-or-above the upper band with the SMA20 slope rising at 0.5%+ per session, a band-walk is in effect and the trend overrides the 2-sigma 'extreme' reading. Fading a band-walk is a structural loser.",
-    "Neutral — the position size determines whether the trade was good or bad",
-    "Good trade — the second touch will reverse, just hold longer"
+    "Neutral — the position size determines whether the trade was good or bad"
   ]}
-  answer={1}
+  answer={2}
   explanation="Band-walks invalidate the mean-reversion assumption because trending markets have fat-tailed distributions, not normal ones. The tempting wrong answer ('statistically required reversion') is mechanically applying the 2-sigma framing without checking the slope. The slope is the regime filter. Option D compounds the error by holding through the rally."
 />
 
@@ -57,11 +57,11 @@ The correct mental model: the bands are statistical, but markets are not normall
   question="A stock has walked the upper band for six sessions. On session seven, the SMA20 slope flattens from +0.7% per session to +0.1% per session; on session eight, price closes 0.8% below the SMA20 for the first time. Account size $25,000, long position currently up 9% on $5,000 of capital deployed (1% account risk on entry). What does the framework say?"
   options={[
     "Hold — one close below SMA20 is noise",
-    "Exit or trail aggressively: the band-walk's two invalidation conditions both fired — the SMA20 slope flattened below 0.2% AND price closed back below the middle band. The trend regime that suspended mean-reversion logic has ended.",
     "Add to the position — the pullback is a buying opportunity",
+    "Exit or trail aggressively: the band-walk's two invalidation conditions both fired — the SMA20 slope flattened below 0.2% AND price closed back below the middle band. The trend regime that suspended mean-reversion logic has ended.",
     "Flip short with size — every band-walk ends in a reversal"
   ]}
-  answer={1}
+  answer={2}
   explanation="The lesson defines exactly these two invalidation conditions; both fired on the same setup. The tempting wrong answer ('one close is noise') was true during the walk but is false once the slope confirms regime change. Adding (C) doubles into a fading trend. Flipping short with size (D) treats a regime exit as a reversal signal — they're different events. Trail or exit and re-evaluate from neutral."
 />
 

@@ -47,10 +47,10 @@ The trap is reading "PASS" through the lens of approval. In everyday language, "
 <Quiz
   question="A simulated Verdict comes back: 'BUY NVDA · 3% · PM: PASS.' What is the PM actually telling you with PASS?"
   options={[
-    "AMI has approved the trade — you should take it",
-    "Inside the training scenario, the proposed 3% NVDA position fits your Mandate's hard floors. Nothing more. Whether the scenario taught you something useful is a separate evaluation",
     "The trade has been placed in simulation and is now live",
-    "AMI guarantees the trade will not lose money"
+    "Inside the training scenario, the proposed 3% NVDA position fits your Mandate's hard floors. Nothing more. Whether the scenario taught you something useful is a separate evaluation",
+    "AMI guarantees the trade will not lose money",
+    "AMI has approved the trade — you should take it"
   ]}
   answer={1}
   explanation="PASS = compliance: clear, within the simulator. It is silent on wisdom, outcome, and anything outside the app. The headline BUY is the trading team's simulated training output; the PM's PASS is the compliance result; they are independent training signals about different questions. The most tempting wrong answer is the first one — 'AMI has approved' sounds intuitive but collapses two distinct training signals into a fake recommendation AMI is not licensed to give."
@@ -59,12 +59,12 @@ The trap is reading "PASS" through the lens of approval. In everyday language, "
 <Quiz
   question="The PM PASSes a 2% trade on a stock with deteriorating fundamentals (clear Bear case in the transcript, Bull lean only 0.51). What's the correct reading?"
   options={[
-    "The PM disagrees with the Bear case",
     "The PM has no opinion on the thesis — it confirmed only that 2% sits inside your Mandate. The weak Bull lean is the trading team's signal, separate from the compliance result",
-    "PASS overrides the Bear case",
-    "The Bear case must be wrong since PM passed"
+    "The PM disagrees with the Bear case",
+    "The Bear case must be wrong since PM passed",
+    "PASS overrides the Bear case"
   ]}
-  answer={1}
+  answer={0}
   explanation="The PM and the trading team are independent layers. PASS at 2% means size fits Mandate; it does not endorse the thesis. A weak 0.51 lean is the Room's way of telling you the conviction is borderline — that signal is preserved alongside PASS, not erased by it. The tempting wrong answers all conflate compliance with thesis-endorsement."
 />
 

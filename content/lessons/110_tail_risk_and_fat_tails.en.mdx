@@ -36,24 +36,24 @@ The trap is sizing positions as if "average" volatility is what defines risk. Th
 <Quiz
   question="A trader sizes positions assuming returns are normally distributed: a 5% daily move 'shouldn't happen' in any realistic window. They run a 5% per-trade risk size with a 2× standard deviation stop. Over the course of a year, why is the realised drawdown distribution almost certainly much worse than the model predicts?"
   options={[
+    "Standard deviation is a perfect risk measure; the issue is purely psychological.",
     "The model is right — 5% moves are rare and rarely hit the portfolio.",
-    "Real equity returns have fat tails: 5%+ daily moves happen 30–100× more often than a normal distribution predicts, and the trader's 5% per-trade sizing means each tail event is a 5%+ account hit; combine multiple tail events over a year (likely) and drawdowns compound far past the model's predictions.",
     "The model overestimates risk because traders are skilled at avoiding tail days.",
-    "Standard deviation is a perfect risk measure; the issue is purely psychological."
+    "Real equity returns have fat tails: 5%+ daily moves happen 30–100× more often than a normal distribution predicts, and the trader's 5% per-trade sizing means each tail event is a 5%+ account hit; combine multiple tail events over a year (likely) and drawdowns compound far past the model's predictions."
   ]}
-  answer={1}
+  answer={3}
   explanation="The tempting wrong answer is the first — '5% moves are rare'. They are rare in absolute terms (a few times a year on an index, more on single stocks) but they are not rare in the sense the normal-distribution model implies. The whole point of fat tails is that extreme moves occur orders of magnitude more often than Gaussian models predict. At 5% per-trade sizing, each tail event hits the account hard, and over a year multiple tail events are essentially certain. The 'skilled at avoiding tail days' distractor reverses cause and effect — no one predicts tail days reliably; they're surprises by definition."
 />
 
 <Quiz
   question="Trader A sizes at 1% per trade with single-name notional capped at 15% and runs a 10% cash buffer. Trader B sizes at 3% per trade with no single-name cap and runs fully invested. Both have identical underlying strategies. After a year that includes one major tail event (a single −18% move on a held position), what does the math typically look like?"
   options={[
-    "Trader B — fully invested compounds faster, and one tail event is statistically rare.",
-    "Trader A — the single-name cap limits the tail event's damage to roughly 1.5–3% of account (15% notional × 18%), while Trader B's uncapped exposure can deliver a 6–10% single-day loss on top of any other open positions; over the year Trader A's lower per-event damage compounds into a meaningfully higher ending equity, even with slower upside.",
     "They produce identical outcomes — strategy is what matters.",
-    "Trader B — tail events are too rare to plan for."
+    "Trader B — tail events are too rare to plan for.",
+    "Trader A — the single-name cap limits the tail event's damage to roughly 1.5–3% of account (15% notional × 18%), while Trader B's uncapped exposure can deliver a 6–10% single-day loss on top of any other open positions; over the year Trader A's lower per-event damage compounds into a meaningfully higher ending equity, even with slower upside.",
+    "Trader B — fully invested compounds faster, and one tail event is statistically rare."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is the last — 'tail events are too rare to plan for'. They are rare per stock per year but essentially certain at the portfolio level over a multi-year horizon. Trader A's three structural defences — smaller per-trade risk, single-name cap, cash buffer — each independently shave a chunk off the worst-case loss; combined they keep a tail event survivable. Trader B's strategy is fine on average days but uncapped exposure on a tail day delivers a multi-percentage-point hit that takes months to recover. The math from lesson 107 then runs against B."
 />
 

@@ -52,24 +52,24 @@ The beginner mistake is using too many regime indicators and over-fitting the ro
   question="Today: SPY above its 200-day MA with positive slope, VIX at 14. By the regime-rotation rule (trend regime = bull, vol regime = low), what's the correct portfolio weight allocation across trend-following, mean-reversion, and momentum?"
   options={[
     "Equal weight 33/33/33 always",
-    "Trend-following 1.0, momentum 1.0, mean-reversion 0.5 — the bull/low-vol regime is favourable for trend and momentum, neutral for mean-reversion. Normalize the sum to mandate-compliant total exposure.",
     "All weight to mean-reversion because it has highest backtest CAGR",
-    "Cut all exposure because VIX is at multi-year lows"
+    "Cut all exposure because VIX is at multi-year lows",
+    "Trend-following 1.0, momentum 1.0, mean-reversion 0.5 — the bull/low-vol regime is favourable for trend and momentum, neutral for mean-reversion. Normalize the sum to mandate-compliant total exposure."
   ]}
-  answer={1}
-  explanation="The rule applies pre-committed weights based on observable regime indicators. Bull/low-vol favours trend and momentum; mean-reversion is neutral (its favourable regime is bull/high-vol). Option 0 ignores the rotation rule. Option 2 cherry-picks based on backtest CAGR ignoring regime. Option 3 misreads low VIX as a sell signal (low VIX is neutral for the bull regime, not bearish)."
+  answer={3}
+  explanation="The rule applies pre-committed weights based on observable regime indicators. Bull/low-vol favours trend and momentum; mean-reversion is neutral (its favourable regime is bull/high-vol). The always-equal-weight answer ignores the rotation rule. The all-to-mean-reversion answer cherry-picks on backtest CAGR, ignoring regime. The cut-all-exposure answer misreads low VIX as a sell signal (low VIX is neutral for the bull regime, not bearish)."
 />
 
 <Quiz
   question="Regime indicators flip: SPY breaks below 200-day MA on a sharp move, VIX spikes from 18 to 31 in one week. The Conservative Debator says 'rotate immediately to the bear/high-vol regime — cut mean-reversion to 0.25, cut momentum to 0.25'. The Research Manager says 'wait for the regime to persist 4 weeks before flipping weights'. Synthesis: which is correct?"
   options={[
+    "Add to mean-reversion because the dip is an opportunity",
     "Conservative is right — speed matters in crisis",
     "Research Manager is right — the pre-committed smoothing rule (4-week persistence) prevents the rotation overlay from being a high-frequency P&L-chase. Mandate-aware drawdown rules cut overall exposure during the wait if mandate cap is approaching, but the rotation weights themselves wait for confirmation.",
-    "Cut all strategies to zero immediately",
-    "Add to mean-reversion because the dip is an opportunity"
+    "Cut all strategies to zero immediately"
   ]}
-  answer={1}
-  explanation="The synthesis: the smoothing rule is the defence against noise-driven over-rotation. If every VIX spike triggered a weight rebalance, the strategy would underperform from transaction costs alone. AT THE SAME TIME, the mandate-aware drawdown rule (independent of rotation) cuts gross exposure as drawdown approaches the cap. Option 0 lets a single week dictate the rotation. Option 2 over-corrects. Option 4 ignores the regime signal entirely and trades emotion."
+  answer={2}
+  explanation="The synthesis: the smoothing rule is the defence against noise-driven over-rotation. If every VIX spike triggered a weight rebalance, the strategy would underperform from transaction costs alone. AT THE SAME TIME, the mandate-aware drawdown rule (independent of rotation) cuts gross exposure as drawdown approaches the cap. The 'Conservative is right, speed matters' answer lets a single week dictate the rotation. Cutting all strategies to zero over-corrects. Adding to mean-reversion on the dip ignores the regime signal entirely and trades emotion."
 />
 
 ## Try it

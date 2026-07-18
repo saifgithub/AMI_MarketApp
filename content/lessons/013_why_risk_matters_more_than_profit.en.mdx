@@ -39,20 +39,25 @@ The trap is the inner voice that says *"I'll just size bigger on my best ideas."
 
 <Quiz
   question="Your account is at $100,000. You take a 50% drawdown to $50,000. What percentage gain on the remaining capital do you need to get back to $100,000?"
-  answer={100}
-  tolerance={0}
-  explanation="$50,000 → $100,000 is a doubling: +100%. This is the asymmetry of loss — a 50% loss requires a 100% gain to recover. A 20% loss only requires a 25% gain. Risk grows non-linearly the deeper the hole."
+  options={[
+    "100%",
+    "200%",
+    "150%",
+    "50%"
+  ]}
+  answer={0}
+  explanation="$50,000 → $100,000 is a doubling: +100%. This is the asymmetry of loss — recovering a 50% drawdown takes a 100% gain, not another 50%, because you are gaining on the smaller surviving base. A 20% loss only requires a 25% gain. Risk grows non-linearly the deeper the hole."
 />
 
 <Quiz
   question="Two simulated traders trade the same year. Trader A: +29%, −42%, +18%, +22% (quarter by quarter). Trader B: +4.4%, −1%, +2.7%, +3.3%. Trader A's best quarter beats Trader B's whole year. Which trader ends 2025 with more capital, and why?"
   options={[
+    "Trader A — bigger swings always win across a full year because of geometric compounding.",
     "Trader A — the +29% quarter alone outweighs Trader B's entire return, and the recoveries make it back.",
-    "Trader B — losses compound against you, so Trader A's −42% quarter forces a +72% recovery just to reach flat, which the remaining quarters cannot deliver.",
     "Both end the year at roughly the same equity since their average quarterly returns are similar.",
-    "Trader A — bigger swings always win across a full year because of geometric compounding."
+    "Trader B — losses compound against you, so Trader A's −42% quarter forces a +72% recovery just to reach flat, which the remaining quarters cannot deliver."
   ]}
-  answer={1}
+  answer={3}
   explanation="The tempting wrong answer is the first one: Trader A's +29% quarter looks decisive. But returns compound multiplicatively, not additively. Trader A's sequence: 1.29 × 0.58 × 1.18 × 1.22 = 1.077, so +7.7%. Trader B's sequence: 1.044 × 0.99 × 1.027 × 1.033 = 1.097, so +9.7%. The −42% quarter for Trader A is what does the damage — after it, the account needs +72% just to return to its starting value, and the remaining two quarters together only deliver +44%. The trader who lost less ends up with more, even after a worse 'best quarter'. This is the entire reason Module 3 exists."
 />
 

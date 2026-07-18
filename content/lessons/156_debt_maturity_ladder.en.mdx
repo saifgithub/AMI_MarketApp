@@ -44,25 +44,25 @@ The trap is reading "total debt $5B" without reading the maturity schedule. A be
 <Quiz
   question="A company has $8B in total debt, debt-to-EBITDA of 3.5x, and interest coverage of 4.0x. The maturity schedule shows $2.5B due in 18 months at an existing 4% coupon. The current market rate for the company's credit is 8.5%. What is the approximate annual increase in interest expense after refinancing, and what does it mean for interest coverage?"
   options={[
+    "The change is negligible relative to the company's size",
     "No change — the company is healthy",
     "About $360M increase (the extra is uncertain)",
-    "About $113M annual increase ($2.5B × 4.5% spread). On unchanged operating income, interest expense rises and interest coverage falls — the magnitude depends on the current absolute interest expense but the direction is unambiguous. The ratios were healthy at the old coupon; they will compress at the new one. The full picture isn't visible from the trailing income statement",
-    "The change is negligible relative to the company's size"
+    "About $113M annual increase ($2.5B × 4.5% spread). On unchanged operating income, interest expense rises and interest coverage falls — the magnitude depends on the current absolute interest expense but the direction is unambiguous. The ratios were healthy at the old coupon; they will compress at the new one. The full picture isn't visible from the trailing income statement"
   ]}
-  answer={2}
-  explanation="The arithmetic: $2.5B × (8.5% – 4%) = $112.5M additional annual interest expense after the refinance. Whether that's manageable depends on the company's operating income base, but the directional answer is unambiguous: the trailing income statement (which includes the old coupon) overstates forward interest coverage. Option 0 ignores the rate shift entirely. Option 1 doubles the actual delta. Option 3 dismisses a calculable forward risk."
+  answer={3}
+  explanation="The arithmetic: $2.5B × (8.5% – 4%) = $112.5M additional annual interest expense after the refinance. Whether that's manageable depends on the company's operating income base, but the directional answer is unambiguous: the trailing income statement (which includes the old coupon) overstates forward interest coverage. The no-change answer ignores the rate shift entirely. The $360M answer doubles the actual delta. The negligible-at-this-size answer dismisses a calculable forward risk."
 />
 
 <Quiz
   question="Synthesis: combining this lesson with lesson 034, which of the following companies has the most acute balance-sheet risk over the next 24 months?"
   options={[
-    "Company A: $20B debt, debt-to-EBITDA 4x, interest coverage 3x, evenly staggered maturities through 2045",
     "Company B: $4B debt, debt-to-EBITDA 2.5x, interest coverage 5x, with 40% of debt maturing in the next 18 months at a coupon spread of +400bps over its current weighted average",
-    "Both equally risky",
-    "Company A — higher absolute debt is always the bigger risk"
+    "Company A — higher absolute debt is always the bigger risk",
+    "Company A: $20B debt, debt-to-EBITDA 4x, interest coverage 3x, evenly staggered maturities through 2045",
+    "Both equally risky"
   ]}
-  answer={1}
-  explanation="The synthesis: lesson 034 said absolute debt size is misleading; this lesson adds that maturity timing is the second axis. Company B looks lower-risk on the trailing ratios (lower leverage, better coverage) but has 40% of debt walling in 18 months at a +400bps spread. After refinancing, B's interest expense rises ~40% × old × 400bps/old coupon — typically compressing interest coverage by 30–50%. Company A's staggered ladder means any single year only forces refinancing of a small tranche, so the rate shock is absorbed gradually. Option 0 mistakes the trailing number for the forward one. Option 2 ignores the wall. Option 3 reverts to the absolute-size fallacy that lesson 034 explicitly warned against."
+  answer={0}
+  explanation="The synthesis: lesson 034 said absolute debt size is misleading; this lesson adds that maturity timing is the second axis. Company B looks lower-risk on the trailing ratios (lower leverage, better coverage) but has 40% of debt walling in 18 months at a +400bps spread. After refinancing, B's interest expense rises ~40% × old × 400bps/old coupon — typically compressing interest coverage by 30–50%. Company A's staggered ladder means any single year only forces refinancing of a small tranche, so the rate shock is absorbed gradually. Picking Company A on its weaker trailing ratios mistakes the trailing number for the forward one. The equally-risky answer ignores the wall. Picking Company A for its larger absolute debt reverts to the absolute-size fallacy that lesson 034 explicitly warned against."
 />
 
 ## Try it

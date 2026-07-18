@@ -41,13 +41,13 @@ The beginner mistake is averaging down on each new oversold signal — "the chea
 <Quiz
   question="You're running an RSI(2) mean-reversion rule on US large-caps. SPY is below its 200-day MA, VIX is at 32, and your last two positions have hit their stops at -2R losses. Today, three new oversold signals are firing. The Aggressive Debator says 'oversold = opportunity'. Bear Researcher says 'the blow-up pattern is at stage 2'. Which is correct?"
   options={[
+    "Average down on the existing losing positions",
     "Aggressive — three signals = strong probability of mean reversion",
     "Bear — both regime conditions (below 200-day, high VIX) are firing AND two stops hit in a row, the stage-2 pattern. Exit all positions and stop entering new mean-reversion trades until regime conditions reverse.",
-    "Average down on the existing losing positions",
     "Add more positions but smaller size"
   ]}
-  answer={1}
-  explanation="The two-regime confirmation (below 200-day MA + high VIX) combined with consecutive stops is the documented stage-2 signature. Adding more longs at stage 2 is how strategies blow up at stage 3 and 4. Option 0 treats the indicator as unconditional information — but RSI(2) only has edge in mean-reverting regimes. Option 2 averages into the failure mode. Option 3 disguises adding-into-loss as risk management."
+  answer={2}
+  explanation="The two-regime confirmation (below 200-day MA + high VIX) combined with consecutive stops is the documented stage-2 signature. Adding more longs at stage 2 is how strategies blow up at stage 3 and 4. The three-signals-means-strong-probability answer treats the indicator as unconditional information — but RSI(2) only has edge in mean-reverting regimes. Averaging down on the losing positions averages into the failure mode. Adding more positions at smaller size disguises adding-into-loss as risk management."
 />
 
 <Quiz
@@ -55,11 +55,11 @@ The beginner mistake is averaging down on each new oversold signal — "the chea
   options={[
     "Stay out — the recent drawdown means the strategy is broken",
     "Both regime conditions have reversed (above 200-day, VIX < 22) AND recent signals are behaving normally. Re-engage at half size per pre-committed protocol, monitor whether the normal behaviour holds for 4-6 more signals, then restore full size if the regime stays favourable.",
-    "Re-engage at full size immediately to recover losses",
-    "Switch to trend-following"
+    "Switch to trend-following",
+    "Re-engage at full size immediately to recover losses"
   ]}
   answer={1}
-  explanation="The synthesis: regime detection is two-sided. Just as you exit when both regime conditions and recent stops signal stage-2, you re-engage when both regimes reverse AND recent signal behaviour confirms the strategy is working again. Option 0 abandons the strategy at exactly its favourable regime. Option 2 ignores the prudent half-size re-entry rule. Option 3 changes strategies for emotional reasons rather than regime-driven ones."
+  explanation="The synthesis: regime detection is two-sided. Just as you exit when both regime conditions and recent stops signal stage-2, you re-engage when both regimes reverse AND recent signal behaviour confirms the strategy is working again. The stay-out answer abandons the strategy at exactly its favourable regime. Re-engaging at full size ignores the prudent half-size re-entry rule. Switching to trend-following changes strategies for emotional reasons rather than regime-driven ones."
 />
 
 ## Try it

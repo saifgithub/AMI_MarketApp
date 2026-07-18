@@ -36,24 +36,24 @@ The trap is wanting one clean answer because twelve voices feel like noise. They
 <Quiz
   question="Why does AMI use twelve role-specialised agents instead of a single generalist agent answering 'should I buy this stock?'"
   options={[
-    "Twelve agents are faster than one",
     "A single agent inherits every blind spot of the underlying language models in one pass; twelve role-specialised agents force the question through different frames so the dissent stays separable",
-    "Twelve agents are required by US securities regulations",
-    "Twelve agents allow AMI to predict prices more accurately"
+    "Twelve agents allow AMI to predict prices more accurately",
+    "Twelve agents are faster than one",
+    "Twelve agents are required by US securities regulations"
   ]}
-  answer={1}
+  answer={0}
   explanation="The architecture is cognitive diversity — splitting the work so different role-prompts probe different angles and the disagreement is preserved in the transcript. The most tempting wrong answer is the speed one — running twelve agents is actually slower than one; the trade-off is depth and auditability, not throughput. Prediction accuracy is not the goal; AMI describes process and probabilities, not point prices."
 />
 
 <Quiz
   question="You read a Convene the Room simulated Verdict on TSLA: BUY 2%, confidence 0.61. The Bear Researcher's section flags a 30% drop in EU registrations. You skim past that section and rubber-stamp the headline. What did the twelve-agent design just become for you?"
   options={[
-    "A more accurate version of a single-agent recommendation",
-    "Cheaper because you didn't read all the agents",
     "Effectively a one-agent product — you paid for diversity and consumed a headline",
-    "Higher confidence because twelve agents agreed"
+    "A more accurate version of a single-agent recommendation",
+    "Higher confidence because twelve agents agreed",
+    "Cheaper because you didn't read all the agents"
   ]}
-  answer={2}
+  answer={0}
   explanation="Twelve agents only give you cognitive diversity if you actually read the dissent. Skipping the Bear case collapses the architecture into a tip-service experience — and AMI is not a tip service, it is a training environment for evaluating analyst output. The tempting wrong answer is 'higher confidence because twelve agents agreed' — but they didn't agree; the Bear case dissented, which is the point you ignored."
 />
 

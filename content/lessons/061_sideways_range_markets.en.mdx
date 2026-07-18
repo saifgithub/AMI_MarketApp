@@ -40,13 +40,13 @@ The correct model: in a range regime, the edge is mean-reversion to the band mid
 <Quiz
   question="SPX 200-day SMA has been flat for 9 weeks. Price has touched 4,000 three times and 4,200 three times in the last 50 trading days. A breakout strategy from Module 9 just generated a long signal at 4,210. What is the regime-aware play?"
   options={[
-    "Take the breakout at full mandate-permitted size — Module 9 says trade the signal.",
-    "Take the breakout at reduced size (e.g., half mandate-permitted) with a tight stop back inside the range; confirm regime break only on a weekly close above 4,200 with rising 20-week SMA.",
     "Short at 4,210 — every range breakout fails.",
-    "Ignore the signal; ranges never break."
+    "Ignore the signal; ranges never break.",
+    "Take the breakout at full mandate-permitted size — Module 9 says trade the signal.",
+    "Take the breakout at reduced size (e.g., half mandate-permitted) with a tight stop back inside the range; confirm regime break only on a weekly close above 4,200 with rising 20-week SMA."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — execute the breakout as designed. But Module 9 strategies have a regime prior; a breakout signal inside a confirmed range has a higher false-positive rate. The synthesis answer is to take the trade with size reduced for regime uncertainty and let the weekly close confirm or invalidate. Option 2 (always-fade breakouts) is also wrong — many ranges resolve with the breakout, you just don't know in advance which one."
+  answer={3}
+  explanation="The tempting wrong answer is full mandate-permitted size — execute the breakout as designed. But Module 9 strategies have a regime prior; a breakout signal inside a confirmed range has a higher false-positive rate. The synthesis answer is to take the trade with size reduced for regime uncertainty and let the weekly close confirm or invalidate. Shorting at 4,210 on the view that every range breakout fails is also wrong — many ranges resolve with the breakout, you just don't know in advance which one."
 />
 
 <Quiz
@@ -54,11 +54,11 @@ The correct model: in a range regime, the edge is mean-reversion to the band mid
   options={[
     "Moving-average crossover trend-following.",
     "Mean-reversion: fade the band edges with a target near the band midpoint.",
-    "Buy-and-hold with no stops.",
-    "Daily news-driven momentum chasing."
+    "Daily news-driven momentum chasing.",
+    "Buy-and-hold with no stops."
   ]}
   answer={1}
-  explanation="Mean-reversion is the regime-aligned strategy: in a range, the edge is the band returning to its centre. MA crossovers will whipsaw because the MA is flat. The most tempting wrong answer is option 0 because it's what worked in 2024 — but it works in trending regimes, not range regimes. Strategy must match regime."
+  explanation="Mean-reversion is the regime-aligned strategy: in a range, the edge is the band returning to its centre. MA crossovers will whipsaw because the MA is flat. The most tempting wrong answer is MA-crossover trend-following because it's what worked in 2024 — but it works in trending regimes, not range regimes. Strategy must match regime."
 />
 
 ## Try it

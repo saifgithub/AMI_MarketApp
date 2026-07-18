@@ -42,25 +42,25 @@ The trap is using net income or EPS as the numerator instead of EBIT. Net income
 <Quiz
   question="A company reports EBIT of $400M and interest expense of $200M, giving coverage of 2.0x. EBITDA is $600M (D&A = $200M). Sixty percent of debt is floating-rate, and the policy rate has just risen 150 basis points. The company's weighted-average rate was 5%. Which read most accurately captures the near-term coverage outlook?"
   options={[
-    "Coverage is 2.0x and will remain so",
-    "Floating-rate debt repricing adds roughly 1.5 percentage points to 60% of the rate base, lifting blended cost from 5% to approximately 5.9%, an 18% rise in interest expense. Holding EBIT constant, new interest is ~$236M and coverage falls from 2.0x to roughly 1.7x. The company moves closer to the 1.5x distress threshold without any operational change",
     "Floating-rate debt doesn't affect coverage",
-    "Coverage will improve because EBIT grows with rates"
+    "Coverage is 2.0x and will remain so",
+    "Coverage will improve because EBIT grows with rates",
+    "Floating-rate debt repricing adds roughly 1.5 percentage points to 60% of the rate base, lifting blended cost from 5% to approximately 5.9%, an 18% rise in interest expense. Holding EBIT constant, new interest is ~$236M and coverage falls from 2.0x to roughly 1.7x. The company moves closer to the 1.5x distress threshold without any operational change"
   ]}
-  answer={1}
-  explanation="The synthesis ties interest coverage to rate exposure. The tempting wrong answer is option 0 — static reading of a dynamic input. The right calculation: 60% of debt × 150 bp = 90 bp blended rise on total debt; on a 5% base that's an 18% interest-expense jump, dropping coverage from 2.0x to ~1.7x. Option 2 ignores the mechanism. Option 3 invents a relationship that doesn't exist — EBIT generally compresses, not expands, with sustained rate hikes."
+  answer={3}
+  explanation="The synthesis ties interest coverage to rate exposure. The tempting wrong answer is 'coverage stays at 2.0x' — static reading of a dynamic input. The right calculation: 60% of debt × 150 bp = 90 bp blended rise on total debt; on a 5% base that's an 18% interest-expense jump, dropping coverage from 2.0x to ~1.7x. The 'floating-rate debt doesn't affect coverage' answer ignores the mechanism. The 'coverage improves because EBIT grows with rates' answer invents a relationship that doesn't exist — EBIT generally compresses, not expands, with sustained rate hikes."
 />
 
 <Quiz
   question="Companies A and B both report 4.0x interest coverage. A has fixed-rate debt with 8-year average maturity; B has 70% floating-rate debt with 80% maturing in the next 24 months. Which synthesis is most accurate?"
   options={[
-    "A and B are equally safe because coverage is identical",
     "A's coverage will hold through a rate cycle because the rate is locked and maturities are far out; B's coverage is highly path-dependent — rising rates compress coverage immediately on the 70% floating, and the 80% near-term maturity wall means the entire stack will re-price at whatever rate prevails when refinancing happens. Same headline ratio, very different stress profile",
-    "B is safer because shorter maturity means lower duration risk",
-    "A is riskier because long maturity locks in current rates"
+    "A is riskier because long maturity locks in current rates",
+    "A and B are equally safe because coverage is identical",
+    "B is safer because shorter maturity means lower duration risk"
   ]}
-  answer={1}
-  explanation="The synthesis tests whether interest coverage is read jointly with debt structure. The tempting wrong answer is option 0 — identical headline numbers, missed structural difference. The right read decomposes rate exposure (floating vs fixed) and refinancing exposure (maturity ladder) separately. Option 2 confuses bond duration (price sensitivity) with corporate refinancing risk. Option 3 reverses the direction — long fixed-rate maturity is a safety feature for the borrower, not a risk."
+  answer={0}
+  explanation="The synthesis tests whether interest coverage is read jointly with debt structure. The tempting wrong answer is 'equally safe because coverage is identical' — identical headline numbers, missed structural difference. The right read decomposes rate exposure (floating vs fixed) and refinancing exposure (maturity ladder) separately. The 'B is safer on shorter maturity' answer confuses bond duration (price sensitivity) with corporate refinancing risk. The 'A is riskier for locking in current rates' answer reverses the direction — long fixed-rate maturity is a safety feature for the borrower, not a risk."
 />
 
 ## Try it

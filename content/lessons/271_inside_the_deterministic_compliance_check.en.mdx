@@ -60,24 +60,24 @@ The trap is thinking the compliance check is sophisticated AI judgment. It is no
 <Quiz
   question="Your Mandate has `max_position_pct: 5`. Eleven agents argue for 7% on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the PM compliance check on each run?"
   options={[
-    "It might pass on the second run because the model's mood varies",
-    "It returns BLOCK identically both times — the check is a deterministic function reading your Mandate field 5 against the proposed 7, not an LLM call",
     "It passes once the trading team's confidence is high enough",
-    "It returns PASS the second time because the system learns from the first attempt"
+    "It might pass on the second run because the model's mood varies",
+    "It returns PASS the second time because the system learns from the first attempt",
+    "It returns BLOCK identically both times — the check is a deterministic function reading your Mandate field 5 against the proposed 7, not an LLM call"
   ]}
-  answer={1}
+  answer={3}
   explanation="The compliance check is deterministic — same inputs, same output, every time. Confidence, persuasion, and run number do not enter the function. That is the whole reason the check exists outside the model layer. The tempting wrong answer is 'learning from first attempt' — there is no learning loop on safety-floor rules; that would defeat the purpose."
 />
 
 <Quiz
   question="Why is AMI's compliance check intentionally unsophisticated (simple comparisons and exclusion flags) rather than nuanced AI judgment?"
   options={[
-    "Because Saiful didn't have time to build the smart version",
-    "Sophistication is exactly what you don't want at the safety floor — you want a check that cannot be argued with, cannot drift, and cannot be coached around",
     "Because nuanced AI judgment is too expensive in credits",
-    "Because the rules are public-domain and don't need AI"
+    "Because the rules are public-domain and don't need AI",
+    "Sophistication is exactly what you don't want at the safety floor — you want a check that cannot be argued with, cannot drift, and cannot be coached around",
+    "Because Saiful didn't have time to build the smart version"
   ]}
-  answer={1}
+  answer={2}
   explanation="The safety floor needs predictability, not cleverness. Deterministic functions are cheap to reason about and impossible to talk into changing their mind. The tempting wrong answer is the cost one — credits are not the constraint; auditability and immovability are."
 />
 

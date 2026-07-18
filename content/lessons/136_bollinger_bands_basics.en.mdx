@@ -44,24 +44,24 @@ The correct mental model: the bands are a probability envelope, not a reversal i
 <Quiz
   question="AAPL closes at 233.40 with Bollinger Bands set to default (20, 2). The upper band sits at 232. Statistically, what does this close represent?"
   options={[
-    "A guaranteed reversal — sell signal",
     "A 2-sigma outlier — under a normal distribution, only about 2.5% of closes should exceed the upper band; it's a statistical extreme, not a directional signal on its own",
-    "A breakout signal — buy aggressively",
-    "Noise that should be ignored"
+    "A guaranteed reversal — sell signal",
+    "Noise that should be ignored",
+    "A breakout signal — buy aggressively"
   ]}
-  answer={1}
+  answer={0}
   explanation="The default 2-sigma bands capture roughly 95% of normal-distribution price action, so a close outside is a statistical extreme. The tempting wrong answer ('guaranteed reversal — sell') is the band-touch-equals-reversal mistake; in a trending stock, walking the band is normal and fading every touch loses. The bands describe volatility, not direction."
 />
 
 <Quiz
   question="You're testing parameter choices. Setting Bollinger Bands to (20, 1) on a liquid name produces a tight envelope that price closes outside of in about 32% of sessions; setting (20, 3) produces a wide envelope crossed in roughly 0.3% of sessions. Default (20, 2) keeps about 95% of closes inside. Which parameter set is most useful for filtering for statistical extremes worth acting on?"
   options={[
-    "(20, 1) — fires more often, so more trade opportunities",
     "(20, 2) — the default, because a close outside is a genuine 2-sigma outlier; the other settings either fire too often (1-sigma) or so rarely the signal is unusable (3-sigma)",
-    "(20, 3) — the rarer the signal, the better",
-    "It doesn't matter; all parameter sets are equivalent"
+    "(20, 1) — fires more often, so more trade opportunities",
+    "It doesn't matter; all parameter sets are equivalent",
+    "(20, 3) — the rarer the signal, the better"
   ]}
-  answer={1}
+  answer={0}
   explanation="The default parameters are calibrated to the 2-sigma statistical threshold. The tempting wrong answer ('1-sigma fires more often, more opportunities') is the false-positive trap — when the signal fires constantly, it's not flagging extremes anymore. Faster doesn't mean better. (20, 3) is the opposite failure — so rare you wait months for a trade. Defaults exist for a reason; change them only with a sample-tested rationale."
 />
 

@@ -47,23 +47,23 @@ The correct mental model: the DI cross gives direction; ADX gives the gate. With
   question="AMD's DI+ briefly crosses above DI− while ADX is at 17. Four sessions later the cross reverses and price has chopped 4% in either direction without breaking out. Two months later, DI+ crosses above DI− again, this time with ADX at 22 and rising. Price runs 20% over eight weeks. What rule explains the difference?"
   options={[
     "The first cross was wrong; the indicator only works the second time around",
-    "DI+ / DI− crosses produce follow-through when ADX is above 20 (trend regime) and whipsaw when ADX is below 20 (range regime). The ADX gating halves the false-cross rate.",
     "DI crosses are random — don't use them",
-    "ADX is the wrong filter — should be RSI"
+    "ADX is the wrong filter — should be RSI",
+    "DI+ / DI− crosses produce follow-through when ADX is above 20 (trend regime) and whipsaw when ADX is below 20 (range regime). The ADX gating halves the false-cross rate."
   ]}
-  answer={1}
+  answer={3}
   explanation="ADX as a regime gate is the same pattern as the Stochastic location filter from lesson 139 — same indicator, different regime, completely different signal quality. The tempting wrong answer ('first cross was wrong, second was right') misses the rule that ties the two together. ADX 17 vs 22 is the entire difference."
 />
 
 <Quiz
   question="A stock shows DI− crossing above DI+ with ADX at 29 and rising. Price has broken below its SMA50 on the same bar. Account size $40,000, mandate cap 1% per trade, you're long with 100 shares at $50 cost (currently at $48, $200 unrealised loss). What does the framework say?"
   options={[
-    "Hold the long — the trend will recover, it always does",
-    "The framework flags a regime flip to downtrend: DI− above DI+ on rising ADX above 20, confirmed by price below SMA50. The long position's thesis has been invalidated by the directional cross combined with the trend filter. Exit the long; don't average down. Consider standing aside until a fresh setup forms.",
     "Add to the long — the cross is the bottom",
-    "Flip short with 4× the current position size to recover the $200 loss faster"
+    "Hold the long — the trend will recover, it always does",
+    "Flip short with 4× the current position size to recover the $200 loss faster",
+    "The framework flags a regime flip to downtrend: DI− above DI+ on rising ADX above 20, confirmed by price below SMA50. The long position's thesis has been invalidated by the directional cross combined with the trend filter. Exit the long; don't average down. Consider standing aside until a fresh setup forms."
   ]}
-  answer={1}
+  answer={3}
   explanation="Two indicators (DI cross with ADX gate, MA break) agree on the regime flip — a stronger signal than either alone, exactly the confluence framework from lesson 030. The tempting wrong answer (A) is the sunk-cost-plus-hope trap; (C) is reverse martingale; (D) is the revenge-trading anti-pattern flagged in Module 8. Exit on invalidation; size new trades from neutral, not from accumulated losses."
 />
 

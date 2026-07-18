@@ -44,13 +44,13 @@ The beginner mistake is thinking "more strategies = more diversification". Diver
 <Quiz
   question="You currently run only a trend-following strategy. You want to add a second to diversify. Which addition gives the biggest diversification benefit?"
   options={[
-    "Donchian-channel breakout (the failure regime overlaps with trend-following — both bleed in chop)",
     "Mean-reversion with a regime filter (failure regime is trending bear, which is when trend-following thrives)",
-    "Multi-timeframe trend confirmation (variations of trend-following)",
-    "ATR trailing-stop trend (also a trend variant)"
+    "Donchian-channel breakout (the failure regime overlaps with trend-following — both bleed in chop)",
+    "ATR trailing-stop trend (also a trend variant)",
+    "Multi-timeframe trend confirmation (variations of trend-following)"
   ]}
-  answer={1}
-  explanation="Mean-reversion's failure regime (trending bear) is when trend-following actively profits — and vice versa. The two have non-overlapping failure modes, which is exactly what diversification requires. Options 0, 2, and 3 are all variations on trend that bleed in the same regime — adding them gives the illusion of diversification without the substance. Cross-strategy correlation reveals the difference."
+  answer={0}
+  explanation="Mean-reversion's failure regime (trending bear) is when trend-following actively profits — and vice versa. The two have non-overlapping failure modes, which is exactly what diversification requires. The Donchian-breakout, multi-timeframe-confirmation, and ATR-trailing-stop answers are all variations on trend that bleed in the same regime — adding them gives the illusion of diversification without the substance. Cross-strategy correlation reveals the difference."
 />
 
 <Quiz
@@ -58,11 +58,11 @@ The beginner mistake is thinking "more strategies = more diversification". Diver
   options={[
     "Cut the mean-reversion strategy entirely",
     "Per the rebalancing rule, sell some of the recent winners and buy the loser back to equal weight, accepting that mean-reversion is operating in its failure regime as designed. Verify each strategy is within its own mandate-aware drawdown limits before rebalancing.",
-    "Add only to the winners",
-    "Increase total leverage to recover faster"
+    "Increase total leverage to recover faster",
+    "Add only to the winners"
   ]}
   answer={1}
-  explanation="Rebalancing into the recent loser captures the diversification benefit — and the strategy losing money is doing so in its known failure regime, which the others' winners are funding. Cutting the loser at its drawdown bottom is exactly the move that converts a normal regime-loss into a permanent reduction. Option 0 destroys the diversification. Option 2 amplifies concentration in current regime. Option 3 violates risk management. The synthesis combines failure-regime literacy + rebalancing discipline + mandate compliance."
+  explanation="Rebalancing into the recent loser captures the diversification benefit — and the strategy losing money is doing so in its known failure regime, which the others' winners are funding. Cutting the loser at its drawdown bottom is exactly the move that converts a normal regime-loss into a permanent reduction. Cutting the mean-reversion strategy destroys the diversification. Adding only to the winners amplifies concentration in the current regime. Increasing leverage violates risk management. The synthesis combines failure-regime literacy + rebalancing discipline + mandate compliance."
 />
 
 ## Try it

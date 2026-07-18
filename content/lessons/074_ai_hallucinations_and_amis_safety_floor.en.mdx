@@ -44,22 +44,22 @@ The trap is believing hallucinations can be fixed by "better prompts" or "a smar
 <Quiz
   question="A user briefs the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when max_position_pct is 5%?"
   options={[
-    "PM allows the 7% trade because confidence is high",
+    "PM asks the user to confirm the override",
     "PM compromises and allows 6%",
-    "PM still blocks the trade — mandate enforcement is a deterministic function outside the briefable surface, regardless of any agent's confidence",
-    "PM asks the user to confirm the override"
+    "PM allows the 7% trade because confidence is high",
+    "PM still blocks the trade — mandate enforcement is a deterministic function outside the briefable surface, regardless of any agent's confidence"
   ]}
-  answer={2}
+  answer={3}
   explanation="The PM's compliance check is not a prompt that can be softened by briefing. It's a deterministic function reading your Mandate fields directly. 'Be more flexible' looks like it should work because the rest of the agent layer is briefable — but the safety floor is the part that isn't. The tempting wrong answer is 'PM asks to confirm' — there is no confirm-override path."
 />
 
 <Quiz
   question="The Fundamentals Analyst hallucinates that XOM has a P/E of 4.2 (actual ~14). The Bull Researcher writes a BUY case citing the wrong number. The Trader proposes 4% size, which is within your mandate. What happens at the PM step?"
   options={[
-    "PM rejects the trade because the P/E is wrong",
     "PM verifies every number cited by every agent against ground truth",
+    "PM auto-corrects the P/E and re-runs the debate",
     "PM does not re-verify the analyst's fundamentals — its job is mandate compliance, not fact-checking. The trade passes if size and exclusions are within your Mandate",
-    "PM auto-corrects the P/E and re-runs the debate"
+    "PM rejects the trade because the P/E is wrong"
   ]}
   answer={2}
   explanation="The safety floor protects against mandate violations (size, drawdown, exclusions) — not against every possible hallucinated fact. Reading the Verdict transcript and cross-checking key numbers is part of your CEO job. The most tempting wrong answer is 'PM verifies everything' — it doesn't, and pretending it does is how you'd end up overtrusting."

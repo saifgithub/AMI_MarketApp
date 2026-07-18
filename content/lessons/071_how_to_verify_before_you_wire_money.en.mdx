@@ -54,34 +54,34 @@ The trap is running *some* of the checks and trusting the answer. Operators desi
   <Quiz
     question="An operator gives you a US SEC registration number. You look it up on SEC IAPD and the firm is real and registered. What additional check is mandatory before you wire?"
     options={[
-      "No further check is needed — IAPD registration is sufficient",
       "Match the contact phone, email domain, and office address against IAPD's listed details for that firm AND confirm the bank account is in the firm's name",
-      "Check whether the firm has more than 10 years of history",
-      "Check the firm's social media follower count"
+      "Check the firm's social media follower count",
+      "No further check is needed — IAPD registration is sufficient",
+      "Check whether the firm has more than 10 years of history"
     ]}
-    answer={1}
+    answer={0}
     explanation="Clone-firm scams routinely cite real registration numbers belonging to firms they are impersonating. IAPD registration alone does not protect you — it only proves the *named* firm exists. The decisive additional step is matching contact details against the regulator's listing (not the operator's) and verifying the destination bank account is in the firm's name. Skipping either check is how victims of clone scams get caught despite having looked the firm up."
   />
 
   <Quiz
     question="A pitch passes 4 of the 5 checks: the firm is on the SC Malaysia register, the phone matches, the email domain matches, written terms arrive on letterhead with a real registration number. Only the bank account fails — it's in the name of an individual who introduces himself as the \"settlement manager\". The operator says this is normal for fast onboarding. What is the correct action?"
     options={[
-      "Wire a small test amount to verify the account works, then commit",
-      "Proceed because 4 of 5 is strong enough",
+      "Ask for a 5% discount and proceed",
       "Do not wire — the bank-account-name failure alone is decisive, regardless of how many other checks passed",
-      "Ask for a 5% discount and proceed"
+      "Proceed because 4 of 5 is strong enough",
+      "Wire a small test amount to verify the account works, then commit"
     ]}
-    answer={2}
+    answer={1}
     explanation="The procedure is a complete set, not a majority vote. A licensed firm must hold client money in a trust account in the firm's name — every relevant regulator requires this. A request to wire to an individual's personal account is, by itself, sufficient to refuse. Test deposits do not protect you; they prove only that the account exists, not that your money will come back. The most tempting wrong answer is \"4 of 5 is strong enough\" — it is not. Any single failure stops the procedure."
   />
 
   <Quiz
     question="If a check fails, what is the appropriate next step?"
     options={[
-      "Confront the operator publicly online",
+      "Wire a small amount to test",
       "Travel to the operator's stated office to verify in person",
       "Do not wire, and file a report with the appropriate regulator — SEC tips at sec.gov/tcr, FCA at fca.org.uk, SC Malaysia complaints portal, ASIC reportascam, BNM TELELINK",
-      "Wire a small amount to test"
+      "Confront the operator publicly online"
     ]}
     answer={2}
     explanation="The correct action is regulatory, not personal. Confronting scammers can expose you to retaliation and rarely recovers funds. Regulators have legal tools — asset freezes, warnings to the public, criminal referral — that individuals do not. Filing a report also adds to the alert lists that protect the next person who searches the same operator's name."

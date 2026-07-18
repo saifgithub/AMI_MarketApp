@@ -47,23 +47,23 @@ The correct mental model: ADX is the volume knob on trend strength. It tells you
   question="MSFT trends cleanly from 445 to 488 over two months with daily ADX holding between 28 and 38. Then ADX peaks at 38, begins declining, and falls to 28 over ten sessions while price is still drifting higher. What's the lesson's read?"
   options={[
     "ADX declining means the trend is reversing — sell short",
+    "ADX declining is bullish because it's still positive",
     "ADX declining means trend strength is fading, even though direction is still positive. The trend is losing its grip; expect chop or consolidation soon, and tighten exits on trend-following positions.",
-    "ADX is irrelevant — only price matters",
-    "ADX declining is bullish because it's still positive"
+    "ADX is irrelevant — only price matters"
   ]}
-  answer={1}
+  answer={2}
   explanation="ADX declining tells you the trend's force is weakening, not that direction is reversing. The tempting wrong answer ('ADX declining = sell short') confuses strength with direction — the most common ADX error. MSFT's actual subsequent behaviour (four weeks of chop between 475 and 488) is exactly what fading ADX predicts: the strong trend regime is ending without necessarily reversing."
 />
 
 <Quiz
   question="You have a watchlist of three stocks. Stock A: ADX 16, price below SMA50. Stock B: ADX 32, price above rising SMA50. Stock C: ADX 31, price below declining SMA50. Account size $30,000, mandate cap 1% per trade, you only trade trend-following setups. Which stock fits your strategy and what's the directional bias?"
   options={[
-    "Stock A — ADX is low so it's primed to break out",
     "Stock B (long, with the trend) and Stock C (short, with the trend) both fit the trend-following framework because ADX > 25. Stock A's ADX < 20 means a range regime where trend-following will whipsaw — stand aside on Stock A regardless of price level.",
     "Stock A only — the rest are too extended",
-    "Stock C only — high ADX always means reversal soon"
+    "Stock C only — high ADX always means reversal soon",
+    "Stock A — ADX is low so it's primed to break out"
   ]}
-  answer={1}
+  answer={0}
   explanation="ADX > 25 gates trend-following; ADX < 20 disqualifies it. Stock B and Stock C both have ADX > 25 plus clear directional bias from MA slope — both fit a trend system, one long and one short. Stock A is the classic chop trap. The tempting wrong answer (option D) confuses high ADX with exhaustion — ADX above 25 is the start of the trend-following sweet spot, not the end."
 />
 

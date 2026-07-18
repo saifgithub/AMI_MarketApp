@@ -53,24 +53,24 @@ The correct mental model: indicator redundancy is mathematical correlation, not 
 <Quiz
   question="A trader sees RSI(14) at 32, Stochastic %K at 18, Williams %R at -82, and CCI at -135 — all four oversold by their conventional thresholds. The trader labels this 'four-indicator confluence' and takes a larger-than-normal position. What's wrong with this reasoning?"
   options={[
-    "Nothing — four indicators agreeing is genuine confluence",
     "All four indicators are price-only momentum oscillators, correlated by construction. They vote once, not four times. The 'confluence' is one signal in four wrappers, and the larger position size compounds the misjudgement.",
-    "The position size is fine; the indicators are the problem",
-    "The trader should have used five indicators instead of four"
+    "The trader should have used five indicators instead of four",
+    "Nothing — four indicators agreeing is genuine confluence",
+    "The position size is fine; the indicators are the problem"
   ]}
-  answer={1}
+  answer={0}
   explanation="Indicator redundancy means correlated indicators add minimal information. The tempting wrong answer (A) is the conviction-inflation trap the lesson explicitly identifies. Option C separates position size from indicator choice but the failure is integrated — false confluence drove the oversized position. Option D doubles the original error."
 />
 
 <Quiz
   question="Two setups on the same account, $30,000 size, 1% mandate cap. Setup A: RSI oversold, Stochastic oversold, Williams %R oversold, CCI oversold — four price momentum oscillators agreeing. Setup B: RSI oversold and OBV at a higher low than the prior price low — momentum agreeing with positive volume divergence. Under the orthogonality framework, which setup carries higher conviction and why?"
   options={[
-    "Setup A — four indicators agreeing is stronger than two",
     "Setup B — RSI and OBV measure different dimensions (momentum and participation), so their agreement is two independent signals. Setup A's four indicators all measure momentum, so their agreement is one signal repeated four times.",
+    "Setup A's larger position size is the only difference",
     "Both are equivalent — they fire on the same stock",
-    "Setup A's larger position size is the only difference"
+    "Setup A — four indicators agreeing is stronger than two"
   ]}
-  answer={1}
+  answer={0}
   explanation="Setup B's two orthogonal signals (price-momentum and volume-flow) carry more information than Setup A's four redundant momentum readings. The tempting wrong answer (A) is the false-confluence error in its purest form — counting indicator lines instead of distinct dimensions. The lesson's framework: dimensions count, not line counts."
 />
 

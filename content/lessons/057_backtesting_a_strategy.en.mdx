@@ -36,13 +36,13 @@ The beginner mistake is treating a backtest as proof. A backtest is a sanity che
 <Quiz
   question="You backtest a strategy and try 22 different parameter combinations. The best one shows a 30% annual return; the worst shows a 4% loss. Which is the most defensible interpretation?"
   options={[
-    "The 30% return is the right estimate — that's the configuration to deploy",
-    "The average of all 22 combinations is the honest estimate, and even that is optimistic without out-of-sample testing",
+    "Pick the parameters that look most intuitive",
     "Average the top 5 configurations",
-    "Pick the parameters that look most intuitive"
+    "The 30% return is the right estimate — that's the configuration to deploy",
+    "The average of all 22 combinations is the honest estimate, and even that is optimistic without out-of-sample testing"
   ]}
-  answer={1}
-  explanation="Reporting only the best of 22 trials is textbook overfitting — by chance some trial will look great. The honest estimate accounts for selection across all the parameter sets you tried, and out-of-sample testing is the only real defence. Option 0 is the most tempting wrong answer because the 30% number is what the spreadsheet showed."
+  answer={3}
+  explanation="Reporting only the best of 22 trials is textbook overfitting — by chance some trial will look great. The honest estimate accounts for selection across all the parameter sets you tried, and out-of-sample testing is the only real defence. Deploying the best-of-22 configuration is the most tempting wrong answer because the 30% number is what the spreadsheet showed."
 />
 
 <Quiz
@@ -54,19 +54,19 @@ The beginner mistake is treating a backtest as proof. A backtest is a sanity che
     "Data-snooping bias"
   ]}
   answer={2}
-  explanation="Using TODAY's S&P 500 to test a strategy in 2010 means you're only testing names that survived to today — every bankruptcy, delisting, and bad outcome got filtered out before you started. Option 0 (look-ahead) is the tempting wrong answer because it's the most famous bias name, but the actual error here is the universe definition."
+  explanation="Using TODAY's S&P 500 to test a strategy in 2010 means you're only testing names that survived to today — every bankruptcy, delisting, and bad outcome got filtered out before you started. Look-ahead bias is the tempting wrong answer because it's the most famous bias name, but the actual error here is the universe definition."
 />
 
 <Quiz
   question="You've designed a breakout strategy. Your backtest looks strong. Before deploying it (even in AMI's simulated trading), what's the synthesis test that justifies running it forward?"
   options={[
-    "Confirm the equity curve has no big drawdowns in the backtest",
-    "Pick the parameter set with the highest Sharpe and deploy",
+    "Compare it against buy-and-hold SPY",
     "Define the rule ex-ante, test on a survivorship-bias-free universe, execute on next-day open, run out-of-sample on a period you haven't looked at, and accept the rule only if its edge survives degradation to half the in-sample number with mandate-compliant drawdown",
-    "Compare it against buy-and-hold SPY"
+    "Pick the parameter set with the highest Sharpe and deploy",
+    "Confirm the equity curve has no big drawdowns in the backtest"
   ]}
-  answer={2}
-  explanation="The synthesis: every concept in this module has to compose with the others — ex-ante rule (no overfitting), survivorship-free universe, no look-ahead execution, out-of-sample validation, AND mandate-compliant drawdown. Option 0 is the tempting wrong answer because a clean equity curve LOOKS like proof — it's actually the easiest thing to manufacture by overfitting."
+  answer={1}
+  explanation="The synthesis: every concept in this module has to compose with the others — ex-ante rule (no overfitting), survivorship-free universe, no look-ahead execution, out-of-sample validation, AND mandate-compliant drawdown. The confirm-no-big-drawdowns answer is the tempting wrong one because a clean equity curve LOOKS like proof — it's actually the easiest thing to manufacture by overfitting."
 />
 
 ## Try it

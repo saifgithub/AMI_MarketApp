@@ -37,20 +37,25 @@ The trap is moving the target to make the R:R look acceptable. A beginner sees R
 
 <Quiz
   question="You buy AMZN at $185 with stop $180 and target $200. What is the risk/reward ratio?"
+  options={[
+    "5.0",
+    "1.5",
+    "0.33",
+    "3.0"
+  ]}
   answer={3}
-  tolerance={0.1}
-  explanation="Risk = $185 − $180 = $5. Reward = $200 − $185 = $15. R:R = 15 ÷ 5 = 3.0."
+  explanation="Risk = $185 − $180 = $5. Reward = $200 − $185 = $15. R:R = 15 ÷ 5 = 3.0. Inverting it to 5 ÷ 15 = 0.33 is the common slip — sanity-check which number belongs on top by asking whether the ratio makes the trade sound worth taking."
 />
 
 <Quiz
   question="Trader A takes only 1:3 setups and wins 35% of the time. Trader B takes only 1:1 setups and wins 55% of the time. Both risk $100 per trade. Over 100 trades, who makes more money?"
   options={[
-    "Trader B — a higher win rate is the strongest edge.",
-    "Trader A — 35 wins × $300 = $10,500, minus 65 losses × $100 = $6,500, net +$4,000. Trader B: 55 × $100 − 45 × $100 = +$1,000. Trader A nets four times as much.",
     "They are roughly equal because expected value is the same.",
-    "Trader B — losing 65 times in a row would blow up Trader A before the wins arrive."
+    "Trader B — losing 65 times in a row would blow up Trader A before the wins arrive.",
+    "Trader B — a higher win rate is the strongest edge.",
+    "Trader A — 35 wins × $300 = $10,500, minus 65 losses × $100 = $6,500, net +$4,000. Trader B: 55 × $100 − 45 × $100 = +$1,000. Trader A nets four times as much."
   ]}
-  answer={1}
+  answer={3}
   explanation="The tempting wrong answer is Trader B — a 55% win rate feels obviously better than 35%. But R:R changes the math entirely: Trader A is paid 3× per win, so even at a 35% hit rate the expectancy is +$40 per trade vs. Trader B's +$10. The 'blowup' distractor is a red herring — risk per trade is fixed at 1%, so 65 losses cannot wipe out an account that loses 1% at a time. R:R lets you be wrong more often and still win."
 />
 

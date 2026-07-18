@@ -50,24 +50,24 @@ The trap is treating briefing as a configuration knob for the whole app. It is n
 <Quiz
   question="Which of these briefing notes will measurably change agent behaviour the next time you convene the Room?"
   options={[
+    "'Coach the Research Manager to predict next week's closing price'",
     "'Coach the PM to be flexible on size when confidence > 0.8'",
     "'Coach the Trader to auto-place orders through my brokerage'",
-    "'Coach the Bull Researcher to weight insider buying and buyback authorisations higher when writing the Bull case'",
-    "'Coach the Research Manager to predict next week's closing price'"
+    "'Coach the Bull Researcher to weight insider buying and buyback authorisations higher when writing the Bull case'"
   ]}
-  answer={2}
+  answer={3}
   explanation="The Bull Researcher's catalyst weighting is exactly the kind of style/priority change Brief Your Agent is built for. The other three ask for behaviours outside the briefable surface — PM compliance enforcement, execution, and point-price prediction are all architecturally excluded, not just policy-restricted. The tempting wrong answer is the PM one, which sounds like it would work because the rest of the system *does* respond to briefing."
 />
 
 <Quiz
   question="A user complains: 'I briefed the PM to be more flexible on a confident trade, and the PM still blocked at 7% when my Mandate says 5%. The briefing is broken.' What's the right diagnosis?"
   options={[
-    "Coaching was applied wrong — re-write the note more clearly",
-    "The PM's compliance check is a deterministic function that does not consume prompt input. Briefing modifies prompts; the function never sees the briefing. The block at 5% is the system working as designed, not a briefing failure. If the user wants higher size, the only path is to edit the Mandate in Settings",
     "Coaching takes time to propagate — wait a day and try again",
-    "The user needs to spend more credits on briefing"
+    "Coaching was applied wrong — re-write the note more clearly",
+    "The user needs to spend more credits on briefing",
+    "The PM's compliance check is a deterministic function that does not consume prompt input. Briefing modifies prompts; the function never sees the briefing. The block at 5% is the system working as designed, not a briefing failure. If the user wants higher size, the only path is to edit the Mandate in Settings"
   ]}
-  answer={1}
+  answer={3}
   explanation="The PM's safety floor is uncoachable by architecture — the compliance function lives outside the prompt layer. The path to allowing larger size is the Mandate editor, not coaching. The tempting wrong answers (rewrite, wait, spend more) all assume the limit is policy and can be moved with enough effort; it cannot, because the limit is geographic."
 />
 

@@ -43,10 +43,10 @@ The trap is sunk-cost reasoning under stress. The victim has, say, USD 50,000 tr
   <Quiz
     question="A platform you cannot withdraw from asks for a 12% \"withholding tax certificate\" payment before the withdrawal can be processed. You pay. A week later, the platform asks for an 8% \"AML verification deposit\". What is the rational next step?"
     options={[
+      "Pay only if the platform shows a regulator letter authorising the AML fee",
       "Pay the 8% — having paid the 12%, walking away forfeits the chance to recover",
-      "Negotiate the 8% down to 4% and proceed",
       "Stop paying and treat the second fee request as further proof of the withdrawal-block scam architecture; document everything and file with the appropriate regulator",
-      "Pay only if the platform shows a regulator letter authorising the AML fee"
+      "Negotiate the 8% down to 4% and proceed"
     ]}
     answer={2}
     explanation="The escalation pattern — fee 1 paid, fee 2 requested — is the documented withdrawal-drain architecture. Paying fee 2 will almost certainly trigger fee 3. The sunk-cost reasoning that motivates the most tempting wrong answer is exactly the bias the operator exploits. Real AML processes require documents from the customer (proof of source of funds), not additional deposits. A \"regulator letter\" produced by the platform itself is not a regulator letter — it is paper produced by the entity being verified."
@@ -55,10 +55,10 @@ The trap is sunk-cost reasoning under stress. The victim has, say, USD 50,000 tr
   <Quiz
     question="Across CFTC, FCA, and BNM enforcement records, what is the falsifiable rule that distinguishes legitimate platforms from withdrawal-block scams?"
     options={[
-      "Legitimate platforms charge no fees of any kind",
+      "Legitimate platforms charge AML fees only to non-residents",
       "Legitimate platforms never require additional customer deposits to release funds already on deposit — withdrawal fees, when they exist, are deducted from the balance, not required as separate inbound payments",
       "Legitimate platforms charge fees only for amounts above USD 100,000",
-      "Legitimate platforms charge AML fees only to non-residents"
+      "Legitimate platforms charge no fees of any kind"
     ]}
     answer={1}
     explanation="The structural rule is universal across regulated venues: any genuine fee comes out of the balance, not on top of it. The requirement for a separate inbound payment to release an existing balance is the unmistakable signature of a drain operation. The most tempting wrong answer is the no-fees-at-all framing — real platforms do charge withdrawal fees, but they are netted against the balance, not solicited as new deposits."

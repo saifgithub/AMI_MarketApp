@@ -44,25 +44,25 @@ The beginner mistake is having no falsification protocol — running a strategy 
 <Quiz
   question="A strategy you deployed 18 months ago is at -11% drawdown. Backtest max drawdown was 8%. The current regime is the documented failure regime for the strategy (e.g., mean-reversion in a trending bear). Falsification protocol: retire if drawdown exceeds 1.5× backtest max IN FAVOURABLE regime. Which action is correct?"
   options={[
-    "Retire — drawdown has exceeded backtest max",
     "Continue — the protocol explicitly conditions the trigger on regime. The strategy is in its known failure regime; the larger drawdown is expected. Retire only if drawdown grows further once the regime turns favourable.",
-    "Increase size to recover the drawdown",
-    "Switch to a different strategy immediately"
+    "Switch to a different strategy immediately",
+    "Retire — drawdown has exceeded backtest max",
+    "Increase size to recover the drawdown"
   ]}
-  answer={1}
-  explanation="The protocol's regime-aware threshold is the entire point — drawdown in the failure regime is not a falsification, it's the strategy operating as designed. Option 0 retires at the moment when the strategy is doing what its backtest predicted. Option 2 amplifies risk during failure regime. Option 3 abandons strategy diversification at exactly the wrong moment."
+  answer={0}
+  explanation="The protocol's regime-aware threshold is the entire point — drawdown in the failure regime is not a falsification, it's the strategy operating as designed. The retire-now answer pulls the plug at the moment when the strategy is doing what its backtest predicted. Increasing size amplifies risk during failure regime. Switching strategies immediately abandons strategy diversification at exactly the wrong moment."
 />
 
 <Quiz
   question="Your strategy has been live for 30 months. Drawdown is 12% (backtest max 11%, regime currently favourable). Win rate is 51% (backtest 67%). Avg win/loss is 0.62 (backtest 1.1). Walk-forward efficiency is 0.32. The Bear Researcher and Research Manager both invoke the retirement protocol. The Aggressive Debator argues 'every strategy has dry periods'. Synthesis-correct decision?"
   options={[
-    "Aggressive is right — give the strategy more time",
-    "Three of four falsification conditions are firing simultaneously, in favourable regime. The strategy is structurally decayed, not in a temporary dry period. Retire it, reallocate capital to strategies inside their envelope, and run a post-mortem documenting what changed.",
     "Reduce size and continue",
-    "Re-optimize parameters on recent data"
+    "Re-optimize parameters on recent data",
+    "Three of four falsification conditions are firing simultaneously, in favourable regime. The strategy is structurally decayed, not in a temporary dry period. Retire it, reallocate capital to strategies inside their envelope, and run a post-mortem documenting what changed.",
+    "Aggressive is right — give the strategy more time"
   ]}
-  answer={1}
-  explanation="The synthesis: multiple conditions firing simultaneously in favourable regime is the structural-decay signature. Option 0 is sunk-cost reasoning — 'more time' has no defined endpoint and ignores the protocol. Option 2 reduces capital allocation but keeps a broken strategy in the mix, dragging on diversification. Option 4 is exactly the overfitting trap from 057/228 — re-fitting on recent data to recover an evaporated edge. The retirement protocol exists precisely to make this decision automatic."
+  answer={2}
+  explanation="The synthesis: multiple conditions firing simultaneously in favourable regime is the structural-decay signature. The 'give the strategy more time' answer is sunk-cost reasoning — 'more time' has no defined endpoint and ignores the protocol. Reducing size and continuing cuts capital allocation but keeps a broken strategy in the mix, dragging on diversification. Re-optimizing parameters is exactly the overfitting trap from 057/228 — re-fitting on recent data to recover an evaporated edge. The retirement protocol exists precisely to make this decision automatic."
 />
 
 ## Try it

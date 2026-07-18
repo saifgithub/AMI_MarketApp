@@ -45,23 +45,23 @@ The trap is treating each position as an independent 1% decision. The beginner a
   question="Account $50,000. Mandate: per-trade 1%, total open risk 5%, single-sector cap 2.5%. Open positions: NVDA 1.0% (semis), AMD 0.8% (semis), JPM 1.0% (banks), KO 0.7% (staples). You want to add MU at 1.0% risk (memory semis). What does the PM say?"
   options={[
     "Approved — total open risk goes to 4.5%, under the 5% ceiling.",
+    "Rejected — the account is already at 5 positions and a 5-position maximum applies.",
     "Approved — per-trade is 1.0%, exactly at the per-trade cap.",
-    "Rejected — semis exposure goes from 1.8% to 2.8%, exceeding the 2.5% single-sector cap; total open risk is fine but the sector cluster breaks.",
-    "Rejected — the account is already at 5 positions and a 5-position maximum applies."
+    "Rejected — semis exposure goes from 1.8% to 2.8%, exceeding the 2.5% single-sector cap; total open risk is fine but the sector cluster breaks."
   ]}
-  answer={2}
+  answer={3}
   explanation="The tempting wrong answer is the first — 'total open risk is under the ceiling, so approved'. Total open risk is only one of the layered caps. Adding MU pushes semis from 1.8% (NVDA + AMD) to 2.8%, which breaches the 2.5% sector cap even though total open risk (4.5%) is fine. The '5-position maximum' distractor invents a rule that doesn't exist in the mandate."
 />
 
 <Quiz
   question="You have a mandate with 1% per-trade, 5% total open risk, 2.5% single-sector, 20% single-name notional concentration. You currently hold AAPL at 22% of notional (a winner that grew past its entry size) with no other tech exposure. The Trader proposes adding MSFT at 1% risk. Which of these is the PM's correct response, and why?"
   options={[
+    "Rejected — AAPL and MSFT together exceed the total open risk ceiling regardless of size.",
     "Approved — MSFT is a different ticker and tech is broad enough not to cluster.",
     "Rejected — AAPL is already over its single-name notional concentration cap (22% > 20%), so before adding any new position the existing book has to come back into compliance; the new ticket cannot be opened on top of an out-of-policy book.",
-    "Approved — single-name concentration only applies to the new position, not to existing winners.",
-    "Rejected — AAPL and MSFT together exceed the total open risk ceiling regardless of size."
+    "Approved — single-name concentration only applies to the new position, not to existing winners."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is 'concentration only applies to new positions'. Mandate ceilings apply to the running state of the book, not just the moment of entry. AAPL at 22% of notional is already past the 20% single-name concentration cap (a position that grew into the breach via gains). The correct sequence: trim AAPL back to under 20% first, then evaluate the MSFT ticket. The 'tech is broad enough' distractor invents a generous reading of sector caps; the PM enforces the explicit numeric ceilings, not editorial judgments about sector breadth."
 />
 

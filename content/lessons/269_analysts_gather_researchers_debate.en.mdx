@@ -42,23 +42,23 @@ The trap is treating all twelve agents as interchangeable chat partners. Convene
   question="You want to know whether a proposed 6% position on NVDA fits your Mandate. Which agent should you ask in 1-on-1?"
   options={[
     "The Fundamentals Analyst",
+    "The Market Analyst",
     "The Bull Researcher",
-    "The Portfolio Manager",
-    "The Market Analyst"
+    "The Portfolio Manager"
   ]}
-  answer={2}
+  answer={3}
   explanation="Mandate compliance is the PM's surface — it runs the deterministic check against your `max_position_pct` and other fields. The Fundamentals Analyst reports company data; the Bull Researcher debates the thesis; the Market Analyst reads the chart. Routing the compliance question to any of them is a category error."
 />
 
 <Quiz
   question="What is the key reason AMI separates Analysts (who report), Researchers (who debate), and the PM (who governs) into distinct tiers?"
   options={[
-    "It makes the app feel more sophisticated",
     "Separable roles mean separable errors — if a researcher's thesis is wrong, the analyst data is still intact, and the PM's compliance check is independent of both",
-    "It lets AMI predict prices more accurately by averaging across tiers",
-    "It is required by financial regulations"
+    "It is required by financial regulations",
+    "It makes the app feel more sophisticated",
+    "It lets AMI predict prices more accurately by averaging across tiers"
   ]}
-  answer={1}
+  answer={0}
   explanation="The tiering is about error isolation and auditability. Mixing the layers would mean a single agent's mistake propagates through everything. Keeping roles separate lets you trace which layer broke when something goes wrong. The tempting wrong answer is the prediction one — AMI does not predict; it describes process and probabilities."
 />
 

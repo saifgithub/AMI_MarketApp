@@ -37,20 +37,20 @@ The trap is counting positions instead of counting bets. A beginner with NVDA, A
   question="Your mandate sets max single-factor exposure at 5% of account. You already hold NVDA (1.2%), AMD (1.0%), and TSM (1.5%) — all semiconductor names with realised 90-day correlation above 0.8. You want to add MU (memory chips) at 1.5%. What does the PM safety floor say?"
   options={[
     "Approved — total open risk is only 5.2%, just over the cap and within rounding.",
-    "Approved — each ticker is under 2% individually.",
     "Rejected — the four names function as one semiconductor bet at 5.2% aggregate, exceeding the 5% single-factor ceiling; the bet must shrink or one leg must close.",
+    "Approved — each ticker is under 2% individually.",
     "Rejected — four positions in the same sector violates a minimum diversification rule of five sectors."
   ]}
-  answer={2}
+  answer={1}
   explanation="The tempting wrong answer is the first: 'total open risk is 5.2%, basically at cap'. Total open risk is the wrong metric here — the PM enforces single-factor exposure. Four names that move together with correlation >0.8 collapse into one factor for risk purposes, and 5.2% of single-factor exposure breaches a 5% ceiling. The 'minimum five sectors' distractor invents a rule that does not exist in the mandate."
 />
 
 <Quiz
   question="You're long AAPL, MSFT, and an S&P 500 index ETF. The S&P 500 ETF is roughly 13% AAPL + MSFT by weight. If the market drops 5% and your two single-stock positions drop 6% each, how does this compound your real exposure versus what a position-count view suggests?"
   options={[
-    "It doesn't compound — the ETF is diversified, so it offsets the single-name moves.",
-    "Holding the ETF alongside AAPL and MSFT means you own those two names twice (directly + via the ETF), so your effective AAPL+MSFT exposure is larger than the position count implies, and a tech-led drawdown hits both layers at once.",
     "The ETF reduces volatility, so the effective exposure is lower than holding the single names alone.",
+    "Holding the ETF alongside AAPL and MSFT means you own those two names twice (directly + via the ETF), so your effective AAPL+MSFT exposure is larger than the position count implies, and a tech-led drawdown hits both layers at once.",
+    "It doesn't compound — the ETF is diversified, so it offsets the single-name moves.",
     "Position count is the right metric — three positions, three independent risks."
   ]}
   answer={1}

@@ -38,25 +38,25 @@ The trap is making a decision on one timeframe using evidence from a different o
 <Quiz
   question="A swing trader plans to hold a position for 1 to 4 weeks. Which timeframe combination is most appropriate for setting context, finding setups, and timing entries?"
   options={[
-    "5-minute for context, 1-minute for entries, hourly for confirmation",
     "Weekly for context, daily for setups, hourly for entries",
+    "Monthly for context, weekly for setups, daily for entries",
     "Daily for everything — one timeframe is cleanest",
-    "Monthly for context, weekly for setups, daily for entries"
+    "5-minute for context, 1-minute for entries, hourly for confirmation"
   ]}
-  answer={1}
-  explanation="A 1-to-4 week hold matches the daily chart for setup identification. Weekly gives the larger-trend context; hourly is fine-grained enough to time an entry without trapping you in intraday noise. The monthly/weekly/daily combo (option 3) is for position trades held for months. The 5m/1m combo is day-trading. One-timeframe-only (option 2) leaves you blind to context and entry timing."
+  answer={0}
+  explanation="A 1-to-4 week hold matches the daily chart for setup identification. Weekly gives the larger-trend context; hourly is fine-grained enough to time an entry without trapping you in intraday noise. The monthly/weekly/daily combo is for position trades held for months. The 5m/1m combo is day-trading. The daily-for-everything answer leaves you blind to context and entry timing."
 />
 
 <Quiz
   question="You're long NVDA based on a daily-chart uptrend. The hourly chart prints three red candles in a row and breaks an hourly support level. The daily candle is still green and the daily uptrend's higher-low is roughly 4% below current price. What is the disciplined response, and why?"
   options={[
-    "Sell immediately — the hourly break invalidates the trade",
-    "Hold the position; the hourly break does not invalidate the daily thesis, which is anchored on the daily higher-low about 4% below current price",
     "Add to the position; hourly weakness is always a buying opportunity inside a daily uptrend",
+    "Hold the position; the hourly break does not invalidate the daily thesis, which is anchored on the daily higher-low about 4% below current price",
+    "Sell immediately — the hourly break invalidates the trade",
     "Switch to the hourly timeframe and start managing the trade by hourly signals from now on"
   ]}
   answer={1}
-  explanation="The trade thesis was set on the daily, so the daily must invalidate it — specifically, a daily close below the higher-low. The hourly break is normal noise inside a daily uptrend. Option 0 is the trap: using lower-timeframe evidence to override a higher-timeframe thesis. Option 3 (switching timeframes mid-trade) is timeframe-hopping — you change the rules until they say 'sell', which is how disciplined plans turn into emotional exits. Option 2 adds risk on weak evidence."
+  explanation="The trade thesis was set on the daily, so the daily must invalidate it — specifically, a daily close below the higher-low. The hourly break is normal noise inside a daily uptrend. Selling immediately is the trap: using lower-timeframe evidence to override a higher-timeframe thesis. Switching to hourly management mid-trade is timeframe-hopping — you change the rules until they say 'sell', which is how disciplined plans turn into emotional exits. Adding to the position piles on risk on weak evidence."
 />
 
 ## Try it

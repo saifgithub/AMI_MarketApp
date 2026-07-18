@@ -46,24 +46,24 @@ The trap is the language of automation seducing you into outsourcing the decisio
 <Quiz
   question="The PM's compliance check on a simulated Verdict comes back PASS. What is the PM actually telling you?"
   options={[
-    "AMI has approved the trade and you should take it",
-    "Inside the training scenario, the proposed trade is within your Mandate's hard floors — nothing more. The point of the simulator is your evaluation of what that means",
     "The trade has been placed in simulation and is now live",
-    "AMI guarantees the trade will not lose more than max_drawdown_pct"
+    "AMI guarantees the trade will not lose more than max_drawdown_pct",
+    "AMI has approved the trade and you should take it",
+    "Inside the training scenario, the proposed trade is within your Mandate's hard floors — nothing more. The point of the simulator is your evaluation of what that means"
   ]}
-  answer={1}
+  answer={3}
   explanation="PASS is a 'this fits your stated risk frame within the training scenario' signal, not an instruction and not investment advice. It is also not a loss guarantee — the simulated stop can slip, and the mandate floor protects portfolio shape, not trade outcome. The most tempting wrong answer is the loss-guarantee one — read the PM's words carefully: it says compliance, never outcome."
 />
 
 <Quiz
   question="A user says: 'AMI told me to buy NVDA at $142 and now I'm down 6%. Whose call was that?'"
   options={[
-    "AMI's — the simulated Verdict said BUY",
-    "Shared — the agent debate produced the entry, so the responsibility is split",
+    "The Portfolio Manager's, since it issued the PASS",
     "The user's — AMI is a training simulator, not a licensed advisor; its Verdicts are practice artifacts for the user to evaluate, never instructions to follow. AMI does not execute and cannot",
-    "The Portfolio Manager's, since it issued the PASS"
+    "AMI's — the simulated Verdict said BUY",
+    "Shared — the agent debate produced the entry, so the responsibility is split"
   ]}
-  answer={2}
+  answer={1}
   explanation="AMI is a training simulator, not an advisor. Every action the user takes anywhere outside the app is their own decision; AMI's simulated Verdicts, PASS results, and confidence numbers are training artifacts. The most seductive wrong answer is 'shared' because it sounds fair — but shared responsibility requires shared agency, and AMI has no execution agency and is not licensed to direct one."
 />
 

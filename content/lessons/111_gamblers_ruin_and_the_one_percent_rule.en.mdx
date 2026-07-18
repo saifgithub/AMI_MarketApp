@@ -36,10 +36,10 @@ The trap is "I have an edge, so sizing up captures more of it." The math says no
 <Quiz
   question="At 1% per-trade sizing, the gambler's ruin probability on a positive-edge strategy is roughly 3 × 10⁻¹⁰ — effectively zero. At 5% per-trade sizing the same edge produces a ruin probability of about 1.8%. Sizing up by 5×, the ruin probability rises by roughly what factor?"
   options={[
+    "The same — ruin probability is independent of sizing when the edge is positive.",
     "5× — sizing and ruin scale linearly.",
-    "About 25× — ruin scales with the square of sizing.",
     "Roughly 60 million× — sizing enters the exponent in the ruin formula, so the relationship is exponential, not linear or quadratic; 5× sizing pushes ruin from near-zero to materially non-zero.",
-    "The same — ruin probability is independent of sizing when the edge is positive."
+    "About 25× — ruin scales with the square of sizing."
   ]}
   answer={2}
   explanation="The tempting wrong answer is the first — 'sizing and ruin scale linearly'. The math says exponential, not linear. Sizing per trade enters the formula as the exponent N (steps to zero), so doubling sizing roughly halves N and the ruin probability changes by a power, not a multiple. 'Independent of sizing' is the worst answer — ignoring sizing is exactly the misunderstanding that produces blown accounts. The exact ratio in this scenario is 1.8% / 3 × 10⁻¹⁰ ≈ 6 × 10⁷ — sixty million times higher ruin probability for 5× the sizing on the same edge."
@@ -49,11 +49,11 @@ The trap is "I have an edge, so sizing up captures more of it." The math says no
   question="Two traders both have a real edge — 55% win rate, 1R/1R payoff. Trader A sizes at 1% per trade and runs for 5 years across roughly 1,200 trades. Trader B sizes at 5% per trade and runs the same strategy across the same 1,200 trades. Across 1,000 simulated runs, who ends with more money, and what's the survival distribution?"
   options={[
     "Trader B in every run — 5× the sizing means 5× the realised gains.",
-    "Trader A in every run because Trader B always goes broke.",
     "Trader B has higher average ending equity but a meaningful fraction of runs hit ruin (roughly 1–2%) before completing; Trader A's runs almost never hit ruin and the median outcome is lower than Trader B's mean — but the survival-conditioned compounding favours Trader A across long horizons because the surviving paths matter, not the averaged paths.",
+    "Trader A in every run because Trader B always goes broke.",
     "They tie — both have the same edge, so both compound at the same rate."
   ]}
-  answer={2}
+  answer={1}
   explanation="The tempting wrong answer is the first — '5× sizing = 5× gains'. The math: Trader B's mean ending equity is higher per surviving run, but the survival rate is not 100% — in 1–2% of runs the account goes broke before 1,200 trades complete. Long-horizon investing math cares about the survival path, not the mean. Trader A's run almost certainly compounds upward across the full 5 years; Trader B's run produces a wider distribution including catastrophic outcomes. The 'always goes broke' distractor overstates the case — Trader B usually does fine, but the small ruin tail is what makes the strategy fail at scale."
 />
 

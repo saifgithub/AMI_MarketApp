@@ -8,11 +8,11 @@
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
       "Cheap — net cash and 41% ROE justify any multiple",
-      "Expensive on the multiple — 36.8x P/E is a 29% premium to peers (28.5x) while forward growth is only 10-12%, so the PEG-style read is stretched",
       "Fair — Microsoft is a quality compounder, multiples don't matter",
-      "Cheap — FCF of $79B means the company can buy itself back"
+      "Cheap — FCF of $79B means the company can buy itself back",
+      "Expensive on the multiple — 36.8x P/E is a 29% premium to peers (28.5x) while forward growth is only 10-12%, so the PEG-style read is stretched"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The Fundamentals Analyst reads the gap between price paid and growth delivered. A 36.8x P/E vs a 28.5x peer median is a 29% premium; that premium is normally paid for superior growth, but guided FY27 earnings growth is only 10-12%. That mismatch is the textbook 'expensive on the multiple' read. The tempting wrong answer 'Fair — quality compounder' is what a retail investor says; the agent's job is to read the numbers, and 36.8x against 10-12% growth is not fair.",
     "related_lesson": "037",
     "related_agent": "fundamentals_analyst",
@@ -26,10 +26,10 @@
     "scenario": "TENAGA (TNB) trailing twelve months: revenue RM58.4B (+4.2% YoY), net profit RM4.1B, EPS RM0.71. Stock at RM14.80. Declared dividends RM0.50/share, giving a dividend yield of 3.4%. Payout ratio 70%. Free cash flow is RM3.2B but capex is stepping up to RM12B for grid modernisation, leaving FCF after capex slightly negative. Debt-to-equity 0.92x.",
     "question": "What is the Fundamentals Analyst most likely to say about the dividend's sustainability?",
     "options": [
-      "Very safe — 3.4% yield is below market average so there is no risk",
+      "Unsafe — dividend yield of 3.4% is too low to attract investors",
       "At risk if capex stays elevated — 70% payout on RM4.1B earnings against RM12B capex and negative FCF-after-capex means the dividend is being funded by the balance sheet, not by cash generation",
-      "Safe — TENAGA is a regulated utility, dividends are guaranteed",
-      "Unsafe — dividend yield of 3.4% is too low to attract investors"
+      "Very safe — 3.4% yield is below market average so there is no risk",
+      "Safe — TENAGA is a regulated utility, dividends are guaranteed"
     ],
     "answer": 1,
     "explanation": "Payout ratios on accounting earnings mask the real question: can the company actually pay the dividend out of cash after reinvestment? Here, FCF-after-capex is negative because the RM12B capex programme exceeds RM3.2B in operating FCF. The RM0.50 dividend is being funded by debt or balance-sheet drawdown — that is the classic at-risk setup. The tempting wrong answer 'regulated utility, dividends are guaranteed' is a heuristic from textbooks; in reality, IPP/utility dividends are cut whenever capex cycles overwhelm cash generation.",
@@ -45,12 +45,12 @@
     "scenario": "NVDA has been consolidating between $182 and $192 for 18 sessions. Average daily volume during the range was 280M shares. Today NVDA closes at $196.40 on volume of 540M (1.93x range average). The 50-day moving average sits at $174 and is sloping up. RSI(14) is 64 — bullish but not overbought. There is no overhead supply until $215.",
     "question": "Which technical setup is the Market Analyst most likely to call this?",
     "options": [
+      "A bull flag still inside the range",
       "A bearish exhaustion gap — RSI above 60 means a top is forming",
       "A volume-confirmed breakout above $192 with the 50-day MA rising underneath and no overhead supply to $215",
-      "A failed breakout — single session above the range is not a setup",
-      "A bull flag still inside the range"
+      "A failed breakout — single session above the range is not a setup"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "Four ingredients line up: close above the $192 ceiling at $196.40, volume ~1.93x the range average (540M vs 280M), 50-day MA rising at $174, RSI 64 (room to run, not overbought), and a clean tape to $215. That is the canonical volume-confirmed breakout. The tempting wrong answer 'failed breakout — single session' ignores the volume confirmation: a session this loud isn't 'just one day' — the buyers committed real size.",
     "related_lesson": "024",
     "related_agent": "market_analyst",
@@ -64,12 +64,12 @@
     "scenario": "User's mandate: max single-position 8% of NAV, max sector exposure 30%, stop-loss required on every entry. Account NAV is $120,000. The user already holds AAPL $7,200, MSFT $9,600, GOOGL $8,400, NVDA $10,800, META $7,800 — total tech sector $43,800 (36.5% of NAV). The user now submits a buy for AMZN $6,000 (5% of NAV, single-position OK) with a stop-loss attached.",
     "question": "Which mandate rule does the Portfolio Manager flag as violated?",
     "options": [
-      "Single-position cap — 5% is too close to the 8% limit",
-      "Sector concentration — tech is already 36.5% of NAV against the 30% cap, and adding AMZN pushes it to 41.5%",
       "Stop-loss rule — the stop is not far enough from entry",
-      "Leverage rule — the user is over-extended"
+      "Single-position cap — 5% is too close to the 8% limit",
+      "Leverage rule — the user is over-extended",
+      "Sector concentration — tech is already 36.5% of NAV against the 30% cap, and adding AMZN pushes it to 41.5%"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "Single-position size is fine (5% < 8%) and a stop is attached, so those checks pass. The trip-wire is sector concentration: AAPL+MSFT+GOOGL+NVDA+META already total 36.5% of NAV, breaching the 30% sector cap. AMZN is another mega-cap tech name, pushing the sector to 41.5%. The PM blocks on concentration. The tempting wrong answer 'single-position cap' is what someone half-reading the mandate picks because the line is the most familiar — but the math says 5% is within 8%, so that rule isn't breached.",
     "related_lesson": "014",
     "related_agent": "portfolio_manager",
@@ -84,11 +84,11 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The News Analyst flagging that interchange-fee regulation may pressure margins next year",
-      "The Bull Researcher building the long thesis on network effects and durable pricing power",
+      "The Trader noting that V has broken out above its 200-day moving average",
       "The Bear Researcher arguing that fintech disintermediation will erode the network advantage",
-      "The Trader noting that V has broken out above its 200-day moving average"
+      "The Bull Researcher building the long thesis on network effects and durable pricing power"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The quote is a long-thesis construction: network effects, switching costs, ten-year margin stability, and an explicit 'moat is widening' verdict. That is the Bull Researcher's job — assemble the strongest case for owning the name based on durable advantage. The tempting wrong answer 'Fundamentals Analyst' (not offered here) or 'News Analyst' fails because the speaker isn't reporting facts neutrally; they are arguing for a position. Bull/Bear researchers advocate; analysts observe.",
     "related_lesson": "036",
     "related_agent": "bull_researcher",
@@ -102,12 +102,12 @@
     "scenario": "BRK-B trades at $458. Book value per Class B share is $284, giving a P/B of 1.61x. The five-year average P/B for BRK-B has been 1.42x. Berkshire's operating earnings grew 8% YoY; cash and Treasury bills sit at $325B (a record). Insurance float is $171B. ROE on the operating businesses is 11.5%. The Fundamentals Analyst is asked whether BRK-B is cheap, fair, or expensive on book.",
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
-      "Cheap — Berkshire has $325B of cash, so the stock can never fall",
       "Modestly expensive on book — 1.61x P/B is 13% above the 5-year average of 1.42x, despite ROE of only 11.5% on operating businesses",
       "Fair — Berkshire is a special situation, book value doesn't apply",
+      "Cheap — Berkshire has $325B of cash, so the stock can never fall",
       "Cheap — P/B of 1.61x is below the SPX P/B of ~4.5x"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "P/B compares a name against its own history, not against the SPX. BRK-B's 1.61x is 13% above its 5-year average of 1.42x — a real premium, not a discount. Add that operating ROE is 11.5% (not the 15-20% that justifies a meaningful book premium), and the read is 'modestly expensive on book'. The tempting wrong answer 'Cheap vs SPX P/B 4.5x' is the classic apples-to-oranges error: the SPX is asset-light tech-heavy; Berkshire is asset-heavy insurance and rails. You compare a name to itself and to true peers, not to a different index.",
     "related_lesson": "040",
     "related_agent": "fundamentals_analyst",
@@ -140,12 +140,12 @@
     "scenario": "META Q2 2026: revenue $43.2B (+19% YoY), advertising $42.0B (+18%), Reality Labs revenue $1.0B but operating loss $4.8B. Total operating margin 41.5% (up from 38.0% YoY). FCF $14.1B. Capex $11.5B (up 67% YoY) for AI infrastructure. EPS $6.42 (+34% YoY). The Fundamentals Analyst is asked: is profitability strengthening, steady, or weakening?",
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
-      "Weakening — Reality Labs is hemorrhaging $4.8B per quarter",
       "Strengthening — total operating margin expanded 3.5pp YoY to 41.5% while EPS grew 34%, despite a 67% capex step-up and continued Reality Labs losses",
-      "Steady — the ad business is fine but Reality Labs cancels out the gains",
-      "Weakening — capex up 67% YoY means returns on capital will collapse"
+      "Weakening — Reality Labs is hemorrhaging $4.8B per quarter",
+      "Weakening — capex up 67% YoY means returns on capital will collapse",
+      "Steady — the ad business is fine but Reality Labs cancels out the gains"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "Three independent profitability metrics moved up: total operating margin (+3.5pp), EPS (+34%), and FCF (still healthy at $14.1B despite the capex step-up). The advertising engine is absorbing Reality Labs losses and still expanding margin — that is strengthening, period. The tempting wrong answer 'Weakening — Reality Labs hemorrhaging' fixates on one line and ignores that the consolidated number is up 3.5pp. Fundamentals reads the whole P&L, not the worst segment.",
     "related_lesson": "033",
     "related_agent": "fundamentals_analyst",
@@ -160,11 +160,11 @@
     "question": "Which mandate rule does the Portfolio Manager flag as violated?",
     "options": [
       "Single-position cap — the ticket is right at the limit",
-      "Stop-loss rule — the mandate requires a stop within 8% of fill on every entry, and the user explicitly waived it",
       "Leverage rule — the user is borrowing money",
+      "Stop-loss rule — the mandate requires a stop within 8% of fill on every entry, and the user explicitly waived it",
       "Concentration rule — TSLA is a tech name"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "Single-position size is at the cap but not over (6.0% = 6.0%). The clean violation is the stop-loss rule: the mandate says 'every entry within 8% of fill' and the user is explicitly waiving it. This is exactly what the safety floor is designed to block — the user's mandate is uncoachable; the PM cannot let 'conviction trade' override a rule the user set for themselves. The tempting wrong answer 'single-position cap' fails on arithmetic: 6.0% is within 6.0%, not over it.",
     "related_lesson": "015",
     "related_agent": "portfolio_manager",
@@ -179,11 +179,11 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The Fundamentals Analyst, reporting the numbers without taking a directional view",
-      "The Bear Researcher, building the short thesis on decelerating growth, regional weakness, and buyback-masked EPS",
       "The Conservative Debator, recommending a small position with tight stops",
+      "The Bear Researcher, building the short thesis on decelerating growth, regional weakness, and buyback-masked EPS",
       "The News Analyst, summarising the China weakness in the press"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "The quote ends with 'risk-reward is unfavourable' — an explicit directional verdict. That is advocacy, not observation, and it stitches together three negatives (unit growth, services decel, China) plus a 'buybacks masking EPS' framing that is classic short-thesis construction. That is the Bear Researcher's lane. The tempting wrong answer 'Fundamentals Analyst' fails because the analyst reports; they do not conclude with 'risk-reward unfavourable'. Bull and Bear Researchers advocate; analysts feed them facts.",
     "related_lesson": "044",
     "related_agent": "bear_researcher",
@@ -197,12 +197,12 @@
     "scenario": "MAYBANK (Bursa) trailing: net interest income RM21.4B, net profit RM9.8B, total equity RM92.6B. ROE 10.6%. Three-year average ROE 9.8%. Asian bank peer median ROE 12.2%. CET1 ratio 14.8%. Loan growth 5.4% YoY. Cost-to-income ratio 47%. Dividend payout ratio 60%. The Fundamentals Analyst is asked about capital efficiency.",
     "question": "What is the Fundamentals Analyst most likely to say about Maybank's ROE?",
     "options": [
-      "Excellent — ROE of 10.6% is above the 9.8% three-year average",
       "Below peers — 10.6% ROE trails the Asian bank peer median of 12.2%, suggesting capital is not being deployed as efficiently as competitors, even though it has improved against its own history",
       "Excellent — CET1 of 14.8% means ROE will mechanically rise next year",
+      "Excellent — ROE of 10.6% is above the 9.8% three-year average",
       "Below peers — the dividend payout ratio is too high at 60%"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "ROE is read against peers AND against the name's own history. Maybank's 10.6% is up vs its own 9.8% average (mild positive) but still trails the regional peer median of 12.2% by 1.6pp. The Fundamentals Analyst gives both reads; the more important one is peer-relative, because that is what determines whether the bank deserves a premium or discount multiple. The tempting wrong answer 'CET1 means ROE rises next year' confuses regulatory capital ratios with returns — higher CET1 actually tends to *lower* ROE, not raise it, by inflating the denominator.",
     "related_lesson": "041",
     "related_agent": "fundamentals_analyst",
@@ -216,12 +216,12 @@
     "scenario": "Room verdict on JPM: 'Market Analyst — consolidating above the 50-day MA. News Analyst — Fed pause priced in. Fundamentals Analyst — revenue $42B, NIM 2.7%, ROE 17%. Bull Researcher — best-in-class deposit franchise. Bear Researcher — credit cycle concerns. Research Manager — moderate BUY. Trader — entry $214 stop $206 target $238. Portfolio Manager — within mandate. Verdict: BUY 6% of NAV.'",
     "question": "Which specific fundamentals data point is conspicuously missing for a large bank?",
     "options": [
-      "Forward P/E ratio versus the regional bank index",
-      "A debt-to-equity / capital read — for a bank, CET1 ratio or leverage profile is load-bearing and not stated anywhere in the verdict",
+      "Free cash flow conversion ratio for the trailing twelve months",
       "EBITDA margin trajectory year-over-year",
-      "Free cash flow conversion ratio for the trailing twelve months"
+      "Forward P/E ratio versus the regional bank index",
+      "A debt-to-equity / capital read — for a bank, CET1 ratio or leverage profile is load-bearing and not stated anywhere in the verdict"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "For a bank, the balance sheet IS the business. The Fundamentals read above gives revenue, NIM, ROE — but no capital ratio (CET1) or leverage. A bank's solvency-and-buffer profile is the single most important number after revenue; without it, the BUY verdict is incomplete. The tempting wrong answer 'EBITDA margin' fails because EBITDA is not a banking metric — banks live by NIM and capital ratios, not EBITDA. Knowing which numbers matter for which industry is the lesson here.",
     "related_lesson": "042",
     "related_agent": "fundamentals_analyst",
@@ -235,10 +235,10 @@
     "scenario": "AMZN TTM: revenue $674B (+11% YoY), GAAP net income $51B, operating cash flow $108B, capex $84B (mostly AWS data centres + fulfilment buildout), FCF $24B. EPS $4.85. Stock at $228 (47x earnings). The Fundamentals Analyst is asked: is cash flow telling the same story as earnings?",
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
-      "Cash flow confirms earnings — operating cash flow of $108B dwarfs net income of $51B",
-      "Cash flow is materially weaker than earnings — FCF of $24B is less than half of GAAP net income of $51B because of $84B in capex, and that gap is what valuation should anchor on, not the headline EPS",
       "Cash flow is identical to earnings, no gap to highlight",
-      "Cash flow doesn't matter for AMZN, the company reinvests everything"
+      "Cash flow is materially weaker than earnings — FCF of $24B is less than half of GAAP net income of $51B because of $84B in capex, and that gap is what valuation should anchor on, not the headline EPS",
+      "Cash flow doesn't matter for AMZN, the company reinvests everything",
+      "Cash flow confirms earnings — operating cash flow of $108B dwarfs net income of $51B"
     ],
     "answer": 1,
     "explanation": "Operating cash flow ($108B) does exceed net income ($51B), which is normal because of non-cash D&A. But the right metric for an investor is FCF — what is left after capex. FCF is $24B, less than half of reported net income. That gap is the entire story for Amazon: heavy reinvestment is driving the AWS franchise but compressing cash returns to shareholders today. Valuation off EPS at 47x is far less stretched than valuation off FCF at ~100x. The tempting wrong answer 'OCF dwarfs net income — confirms earnings' is the half-read take that misses the capex line entirely.",
@@ -254,12 +254,12 @@
     "scenario": "During a Room debate on PETRONAS Chemicals (PCHEM, Bursa), an agent says: 'Net cash position RM12.8B, debt-to-equity 0.08x, current ratio 3.6x. Even at a sustained $60/bbl Brent scenario the balance sheet absorbs four years of trough margins without any capital action. Capital structure is among the strongest in the regional petchem space.'",
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
-      "The Bull Researcher arguing that the strong balance sheet justifies a premium multiple",
       "The Fundamentals Analyst reporting balance-sheet metrics neutrally with a stress-scenario observation",
+      "The Portfolio Manager checking the trade against the mandate",
       "The Bear Researcher noting that net cash earns no return in a rate-cut environment",
-      "The Portfolio Manager checking the trade against the mandate"
+      "The Bull Researcher arguing that the strong balance sheet justifies a premium multiple"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "The speaker cites three numbers (net cash, D/E, current ratio) and one stress-scenario observation, without recommending a position. That is the Fundamentals Analyst's neutral-reporting register — facts plus a 'so-what' framing, no buy/sell verdict. The tempting wrong answer 'Bull Researcher' fails because a Bull would explicitly connect the balance sheet to upside ('justifies a premium multiple', 'asymmetric long'); the speaker here only describes resilience.",
     "related_lesson": "034",
     "related_agent": "fundamentals_analyst",
@@ -274,11 +274,11 @@
     "question": "Which mandate rule does the Portfolio Manager flag as violated by the SECOND ticket?",
     "options": [
       "Single-position cap — adding the option pushes exposure above 7%",
-      "No options/derivatives — the mandate explicitly prohibits options, and 'covered' doesn't override the rule when the user has set a no-derivatives floor",
+      "Margin rule — selling a call requires margin",
       "VaR limit — the covered call increases daily VaR",
-      "Margin rule — selling a call requires margin"
+      "No options/derivatives — the mandate explicitly prohibits options, and 'covered' doesn't override the rule when the user has set a no-derivatives floor"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The user's mandate explicitly bans options and derivatives. A covered call is still an option position; 'covered' describes the risk profile, not the instrument category. When the user has set a no-derivatives floor — uncoachable in the AMI safety floor design — the PM must block, full stop. The tempting wrong answer 'margin rule' confuses a covered call (no margin required) with a naked one. The right read is: the rule says no options, this is an option, blocked.",
     "related_lesson": "016",
     "related_agent": "portfolio_manager",
@@ -292,12 +292,12 @@
     "scenario": "GENTING (Bursa) ran from RM3.40 to RM4.20 over six weeks on rising volume averaging 18M shares/day. Over the last seven sessions it has pulled back to RM3.92 on declining volume (avg 9M shares/day, half the run-up average). The 20-day MA at RM3.95 has acted as support. The 50-day MA at RM3.62 is sloping up. RSI(14) cooled from 78 to 54.",
     "question": "Which technical setup is the Market Analyst most likely to call this?",
     "options": [
-      "A bearish trend reversal — RSI dropping from 78 to 54 signals momentum loss",
-      "A healthy pullback to support — price retreated on falling volume to the rising 20-day MA, RSI cooled to a neutral 54, and the 50-day MA continues to slope up underneath",
+      "A volume-confirmed breakdown below the 20-day MA",
       "A bull trap — the run from RM3.40 to RM4.20 was unsustainable",
-      "A volume-confirmed breakdown below the 20-day MA"
+      "A bearish trend reversal — RSI dropping from 78 to 54 signals momentum loss",
+      "A healthy pullback to support — price retreated on falling volume to the rising 20-day MA, RSI cooled to a neutral 54, and the 50-day MA continues to slope up underneath"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "Three things distinguish a healthy pullback from a reversal: volume should DROP on the pullback (it did — 9M vs 18M), price should hold at a moving average that is itself rising (it did at the 20-day MA RM3.95), and the longer-term trend should remain intact (50-day MA still sloping up). The tempting wrong answer 'bearish reversal' over-reads the RSI move; falling from 78 to 54 is consolidation from overbought, not a bearish signal — bearish reversals show RSI breaking 30, not normalising to 54.",
     "related_lesson": "025",
     "related_agent": "market_analyst",
@@ -312,11 +312,11 @@
     "question": "Which technical read is the Market Analyst most likely to call this?",
     "options": [
       "A bullish breakout setup — flat 50-day MA always precedes a breakout",
-      "A low-volatility consolidation with no edge — price is mid-range, volume is below average, both MAs are flat-to-rising but not actionable, no catalyst visible",
       "A bearish topping pattern — price has stalled near RM7.62 multiple times",
+      "A low-volatility consolidation with no edge — price is mid-range, volume is below average, both MAs are flat-to-rising but not actionable, no catalyst visible",
       "A volume-confirmed breakdown below the range"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "Nothing in this tape gives an edge: price is mid-range, volume is below average (1.6M vs 1.8M), MAs are not signalling, and there is no catalyst. The Market Analyst's honest call is 'no setup' — that is a legitimate output, not a failure. The tempting wrong answer 'bullish breakout setup' over-interprets a flat MA; flat MAs precede *either* direction, not specifically breakouts. Saying 'no setup' is a skill, not a weakness.",
     "related_lesson": "026",
     "related_agent": "market_analyst",
@@ -331,11 +331,11 @@
     "question": "Which specific Fundamentals Analyst data point is conspicuously missing for the Bull Researcher's 'discount to peers' thesis to be evaluable?",
     "options": [
       "Quarterly tax rate, since petchem names have variable effective tax",
-      "Peer-set EV/EBITDA and ROE comparables — the Bull cites 'discount to global peers' but no peer-set numbers (regional petchem median EV/EBITDA, peer ROE) appear in the Fundamentals read, so the discount claim cannot be verified",
+      "Inventory days, since petchem is a cyclical business",
       "Dividend yield, since the stock pays a dividend",
-      "Inventory days, since petchem is a cyclical business"
+      "Peer-set EV/EBITDA and ROE comparables — the Bull cites 'discount to global peers' but no peer-set numbers (regional petchem median EV/EBITDA, peer ROE) appear in the Fundamentals read, so the discount claim cannot be verified"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The Bull thesis is literally 'discount to global peers' — but the Fundamentals read only gives PCHEM's own numbers (EV/EBITDA 6.2x, ROE 8.4%). Without the peer-set median to compare against, the user cannot judge whether 6.2x is a real discount or already fair given lower ROE. That comparable set is the load-bearing missing data. The tempting wrong answer 'tax rate / dividend yield / inventory days' picks plausible-sounding metrics but none of them are required for evaluating the named thesis. Missing-data analysis means asking 'what would I need to verify the actual claim?'",
     "related_lesson": "038",
     "related_agent": "fundamentals_analyst",
@@ -350,11 +350,11 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The Aggressive Debator, pushing for a larger position",
-      "The Research Manager, synthesising Bull vs Bear into a sized, conditional recommendation",
+      "The Neutral Debator, refusing to take a side",
       "The Portfolio Manager, applying mandate constraints",
-      "The Neutral Debator, refusing to take a side"
+      "The Research Manager, synthesising Bull vs Bear into a sized, conditional recommendation"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The quote weighs the Bull and Bear theses against each other, judges which is more concretely grounded, and outputs a sized recommendation with a conditional risk overlay. That is exactly the Research Manager's mandate — synthesis with conviction. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate to a verdict; they don't generate the verdict. The Research Manager produces the call; the PM checks it against the user's rules.",
     "related_lesson": "030",
     "related_agent": "research_manager",
@@ -368,12 +368,12 @@
     "scenario": "Room verdict on AAPL: 'Fundamentals Analyst — revenue +3%, services +11%, FCF $98B. Market Analyst — uptrend intact above $215. News Analyst — iPhone 18 launch on track. Bull Researcher — install base of 2.4B devices is a moat. Research Manager — BUY 0.71 conviction. Trader — entry $228 stop $218 target $252. Portfolio Manager — within mandate. Verdict: BUY 7% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "The Bear Researcher — no short-thesis perspective appears, which means the verdict has not been stress-tested for downside arguments",
       "The Social Media Analyst, since Reddit sentiment matters for retail names",
+      "The Conservative Debator, who should have argued for a smaller position",
       "The Aggressive Debator, who should have pushed for a larger position",
-      "The Conservative Debator, who should have argued for a smaller position"
+      "The Bear Researcher — no short-thesis perspective appears, which means the verdict has not been stress-tested for downside arguments"
     ],
-    "answer": 0,
+    "answer": 3,
     "explanation": "Every Room verdict must include both Bull AND Bear Researcher inputs, then synthesise. The verdict above has the Bull case (install base = moat) but no Bear case at all. Without a Bear, the Research Manager's 0.71 conviction is unearned — they have only weighed one side. That is structurally wrong. The tempting wrong answer 'Social Media Analyst' is plausible but not load-bearing; Bull/Bear pairing is structural, social-media input is supplemental.",
     "related_lesson": "029",
     "related_agent": "bear_researcher",
@@ -388,11 +388,11 @@
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
       "At risk — total payout of 85% leaves little room for growth or stress losses",
-      "Sustainable but near the practical ceiling — 26% dividend payout is conservative, but combined with $32B buyback the total return ratio is 85%, leaving limited cushion if CET1 is drawn down in a stress scenario",
       "Sustainable — CET1 of 15.4% is above the minimum, so any payout is fine",
-      "At risk — dividend yield of 2.1% is too low to be a real payout"
+      "At risk — dividend yield of 2.1% is too low to be a real payout",
+      "Sustainable but near the practical ceiling — 26% dividend payout is conservative, but combined with $32B buyback the total return ratio is 85%, leaving limited cushion if CET1 is drawn down in a stress scenario"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The dividend alone (26% of net income) is conservative; the issue is the combined return ratio of 85%, which only works as long as earnings stay stable and CET1 doesn't get pressured by a credit cycle. The CET1 cushion (15.4% vs 13.5% minimum) is real but not infinite. The honest read is 'sustainable but near the practical ceiling'. The tempting wrong answer 'CET1 above the minimum, any payout is fine' ignores that a stress scenario can compress CET1 by 200-300bps in a year — at which point a 85% return ratio becomes the line that gets cut first.",
     "related_lesson": "043",
     "related_agent": "fundamentals_analyst",
@@ -406,10 +406,10 @@
     "scenario": "User's mandate: max single-position 5% of NAV, max sector exposure 25%, stop required within 10%. NAV $150,000. User holds BRK-B at $7,200 (4.8% of NAV). Submits an add: buy 8 more BRK-B at $462 ($3,696), pushing BRK-B to $10,896 (7.3% of NAV). Stop attached at $418 (9.5% from fill). No other financials/insurance holdings.",
     "question": "Which mandate rule does the Portfolio Manager flag as violated?",
     "options": [
-      "Sector concentration — financials sector now exceeds 25%",
+      "Leverage rule — the user is overextended",
       "Single-position cap — the add pushes BRK-B to 7.3% of NAV, breaching the 5% single-position cap",
-      "Stop-loss rule — 9.5% is too wide a stop",
-      "Leverage rule — the user is overextended"
+      "Sector concentration — financials sector now exceeds 25%",
+      "Stop-loss rule — 9.5% is too wide a stop"
     ],
     "answer": 1,
     "explanation": "The single-position cap is 5%. The current BRK-B position is 4.8% (within cap), but adding $3,696 pushes the combined position to $10,896, or 7.3% — over the cap by 2.3pp. The PM blocks the add. The tempting wrong answer 'sector concentration' fails because BRK-B alone (10,896 / 150,000 = 7.3%) doesn't get the financials sector to 25%, and there are no other holdings in the sector. Read the actual numbers; don't jump to the most familiar rule.",
@@ -425,12 +425,12 @@
     "scenario": "TSLA rallied from $220 to $278 in May, sold off to $246, then re-rallied to $276 in late August before fading. Both peaks ($278 and $276) printed within 0.7% of each other on declining relative volume — the second peak was on 40% lower volume than the first. Price now sits at $258. The 50-day MA at $262 has just crossed below the 100-day MA at $264. RSI(14) prints a lower high at the August peak versus the May peak.",
     "question": "Which technical setup is the Market Analyst most likely to call this?",
     "options": [
-      "A bullish cup-and-handle ready to break out above $278",
       "A double top with bearish divergence — two peaks at $278 / $276 on declining volume, RSI lower-high, and the 50-day MA crossing below the 100-day MA confirming the loss of trend",
-      "A neutral consolidation with no edge",
-      "A volume-confirmed breakout above $276"
+      "A volume-confirmed breakout above $276",
+      "A bullish cup-and-handle ready to break out above $278",
+      "A neutral consolidation with no edge"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "Three confirmations align: two peaks within 0.7% of each other (price symmetry), declining volume on the second test (demand fading), RSI lower-high (momentum divergence), AND a 50/100 MA bearish cross. That is the textbook double-top setup with multi-indicator confirmation. The tempting wrong answer 'cup-and-handle breakout' fails because cup-and-handles need volume to EXPAND on the breakout attempt — here volume was 40% lower at the second peak, the opposite signal. Same price level, two opposite stories — volume is the tiebreaker.",
     "related_lesson": "027",
     "related_agent": "market_analyst",
@@ -444,12 +444,12 @@
     "scenario": "A new user finishes the onboarding interview. An agent then says: 'Based on what you've told me — three-to-five-year horizon, USD income, comfort with a 20% drawdown, and an interest in US large-cap quality names — I'm proposing a starter mandate of max 5% per position, max 30% per sector, stop required on every entry. Want me to walk you through what that means before you accept?'",
     "question": "Which agent is speaking?",
     "options": [
-      "The Portfolio Manager, applying mandate rules to a trade",
       "The Concierge, finishing the onboarding interview by proposing a starter mandate",
-      "The Research Manager, recommending a portfolio",
-      "The Trader, sizing an entry"
+      "The Portfolio Manager, applying mandate rules to a trade",
+      "The Trader, sizing an entry",
+      "The Research Manager, recommending a portfolio"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "The Concierge is the onboarding agent — they run the conversational interview and propose a starter mandate at the end. The quote shows exactly that: synthesising the interview answers into a draft mandate and offering to explain it. The tempting wrong answer 'Portfolio Manager' fails because the PM enforces an *existing* mandate; they don't create one from a conversation with a brand-new user. Concierge proposes, PM enforces.",
     "related_lesson": null,
     "related_agent": "concierge",
@@ -463,12 +463,12 @@
     "scenario": "Room verdict on NVDA: 'Market Analyst — uptrend intact, breakout confirmed. News Analyst — AI capex from hyperscalers still ramping. Fundamentals Analyst — revenue $54B (+38%), gross margin 75%, op margin 62%. Bull Researcher — TAM expansion to $1T. Bear Researcher — peak hyperscaler capex risk. Research Manager — BUY 0.78. Trader — entry $148 stop $138 target $172. Portfolio Manager — within mandate. Verdict: BUY 6% of NAV.'",
     "question": "Which fundamentals data point is conspicuously missing given the named risk?",
     "options": [
+      "Quarterly tax rate, since semiconductor companies have variable tax exposure",
       "Dividend yield, since NVDA pays a small dividend",
-      "Customer-concentration disclosure — the Bear named hyperscaler-capex risk, but no breakdown of % of revenue from top customers (MSFT, META, GOOGL, AMZN) appears anywhere, which is load-bearing for that thesis",
       "Forward P/E ratio, since NVDA's valuation matters",
-      "Quarterly tax rate, since semiconductor companies have variable tax exposure"
+      "Customer-concentration disclosure — the Bear named hyperscaler-capex risk, but no breakdown of % of revenue from top customers (MSFT, META, GOOGL, AMZN) appears anywhere, which is load-bearing for that thesis"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The Bear Researcher explicitly cites 'peak hyperscaler capex risk' — but to evaluate that risk you need to know how concentrated NVDA's revenue is in those few customers. If 60-70% of revenue comes from MSFT/META/GOOGL/AMZN, the risk is acute; if it's 25%, much less so. That number is missing from the verdict, which makes the BUY 6% sizing decision underspecified. The tempting wrong answer 'Forward P/E' is real, but valuation isn't the named risk — customer concentration is the specific gap created by the Bear thesis being stated without supporting data.",
     "related_lesson": "036",
     "related_agent": "fundamentals_analyst",
@@ -482,10 +482,10 @@
     "scenario": "CIMB (Bursa) trades at RM7.20. Book value per share RM6.30. P/B 1.14x. Five-year average P/B 0.92x. ROE 11.2% (vs 5-year average 9.1%). CET1 15.1%. Asian bank peer median P/B 1.25x, peer ROE 12.2%. Dividend yield 4.8%. The Fundamentals Analyst is asked: is CIMB's P/B fair?",
     "question": "What is the Fundamentals Analyst most likely to say?",
     "options": [
-      "Expensive — 1.14x P/B is 24% above the 5-year average of 0.92x, end of story",
+      "Expensive — Asian banks should trade at 1x book or less",
       "Roughly fair — 1.14x P/B is justified by ROE running 210bps above its 5-year average, but it's still a discount to the regional peer at 1.25x where peer ROE is 100bps higher; the rerating is earned but not complete",
       "Cheap — P/B below peer median 1.25x means upside",
-      "Expensive — Asian banks should trade at 1x book or less"
+      "Expensive — 1.14x P/B is 24% above the 5-year average of 0.92x, end of story"
     ],
     "answer": 1,
     "explanation": "P/B always tracks ROE — higher ROE deserves higher P/B. CIMB's ROE has improved from 9.1% to 11.2% (+210bps), which justifies the rerating from 0.92x to 1.14x. But peers at 1.25x with ROE 12.2% suggest the rerating isn't fully complete — there's a small remaining gap. The honest call is 'roughly fair, partial rerating'. The tempting wrong answer 'Cheap vs peers' ignores that peer ROE is 100bps higher, so part of that P/B gap is earned by peers. P/B comparisons without ROE comparisons are meaningless.",
@@ -501,12 +501,12 @@
     "scenario": "Room verdict on XOM: 'Market Analyst — uptrend intact above the 50-day MA. News Analyst — OPEC+ holding cuts. Fundamentals Analyst — revenue $345B, op margin 16%, ROE 14%, total debt $42B, D/E 0.20x, interest coverage 19x. Bull Researcher — capital discipline since 2020 has improved through-cycle returns. Bear Researcher — commodity-price tail risk. Research Manager — moderate BUY 0.62. Trader — entry $118 stop $112 target $134. Portfolio Manager — within mandate. Verdict: BUY 5% of NAV.'",
     "question": "Which specific Fundamentals data point is conspicuously missing given the Bear's named risk?",
     "options": [
+      "Forward P/E ratio, since multiple compression matters",
       "Customer concentration percentage, since XOM is a B2B supplier",
       "Cash breakeven per barrel — the Bear cites 'commodity-price tail risk' but no breakeven (the price at which operations + dividends stay funded) appears in the verdict, so the size of the tail-risk cushion against current Brent is unmeasurable",
-      "Forward P/E ratio, since multiple compression matters",
       "Inventory days, since refining cycles run quarterly"
     ],
-    "answer": 1,
+    "answer": 2,
     "explanation": "Oil-major analysis lives or dies on the breakeven — the Brent price at which the company funds opex, capex, and the dividend without drawing on the balance sheet. Without breakeven, the Bear's 'commodity-price tail risk' is undefined: tail risk to what level? A name with a $45/bbl breakeven at $74 Brent has a $30 cushion; at $35 breakeven the cushion is $40. That number is missing from the verdict. The tempting wrong answer 'Forward P/E' is real but not the specific gap created by the named Bear thesis — the missing-data check is 'what would I need to evaluate the stated risk?'",
     "related_lesson": "034",
     "related_agent": "fundamentals_analyst",
@@ -520,12 +520,12 @@
     "scenario": "User's mandate: max single-position 5%, stop required, daily portfolio VaR cap 1.5% of NAV. NAV $250,000. The user submits a buy of AAPL: 50 shares at $238 ($11,900, 4.76% of NAV), stop at $222 (6.7% from fill). The PM's pre-trade VaR engine reports that AFTER adding this position, expected daily VaR rises from 1.2% to 1.7% because AAPL is highly correlated with existing META, MSFT, GOOGL holdings.",
     "question": "Which mandate rule does the Portfolio Manager flag as violated?",
     "options": [
-      "Single-position cap — 4.76% is too close to the 5% limit",
       "Portfolio VaR cap — adding AAPL pushes daily VaR from 1.2% to 1.7%, breaching the 1.5% portfolio-VaR limit, even though the individual position passes the sizing and stop checks",
       "Stop-loss rule — 6.7% is too wide a stop",
+      "Single-position cap — 4.76% is too close to the 5% limit",
       "Leverage rule — the user is fully invested"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "This is the subtle one: the individual position passes (4.76% < 5%, stop attached). But the portfolio-level VaR check fails because adding more correlated mega-cap tech to an already-tech-heavy book pushes aggregate risk past the user's 1.5% cap. The safety floor blocks even though no single-position rule is breached. The tempting wrong answer 'single-position cap — 4.76% too close to 5%' confuses 'close to a limit' with 'over a limit' — 4.76% < 5%, that test passes cleanly. Portfolio-level checks catch what position-level checks miss.",
     "related_lesson": "017",
     "related_agent": "portfolio_manager",
@@ -540,11 +540,11 @@
     "question": "Which of the 12 agents is most likely speaking?",
     "options": [
       "The Conservative Debator, urging restraint",
-      "The Aggressive Debator, pushing to size up on high conviction",
+      "The Neutral Debator, splitting the difference",
       "The Portfolio Manager, applying mandate caps",
-      "The Neutral Debator, splitting the difference"
+      "The Aggressive Debator, pushing to size up on high conviction"
     ],
-    "answer": 1,
+    "answer": 3,
     "explanation": "The speaker explicitly argues for a larger position than the Research Manager's recommendation and frames conservative sizing as 'the most expensive mistake'. That is the Aggressive Debator's lane — push the position bigger when conviction and fundamentals align. The tempting wrong answer 'Portfolio Manager' fails because the PM applies the user's mandate caps; they do not advocate for sizing up. The Aggressive Debator wants more; the PM decides whether the user's rules even allow it.",
     "related_lesson": "028",
     "related_agent": "aggressive_debator",
@@ -558,12 +558,12 @@
     "scenario": "Room verdict on GOOGL: 'Market Analyst — uptrend intact. News Analyst — DOJ ad-tech case overhang priced in. Fundamentals Analyst — revenue $98B (+13%), op margin 32%, FCF $26B, net cash $94B. Bear Researcher — search-share erosion to AI assistants. Research Manager — BUY 0.65 conviction. Trader — entry $198 stop $186 target $228. Portfolio Manager — within mandate. Verdict: BUY 5% of NAV.'",
     "question": "Whose input is conspicuously absent from this verdict?",
     "options": [
-      "The Social Media Analyst, since GOOGL has retail-investor following",
       "The Bull Researcher — no long-thesis perspective appears, so the 0.65 conviction is unsupported by a synthesised positive case",
       "The Aggressive Debator, who should have argued for a larger position",
+      "The Social Media Analyst, since GOOGL has retail-investor following",
       "The Conservative Debator, who should have argued for a smaller position"
     ],
-    "answer": 1,
+    "answer": 0,
     "explanation": "Mirror image of the AAPL gap two challenges back: every Room verdict needs BOTH Bull and Bear inputs before the Research Manager synthesises. This verdict has the Bear (search-share erosion to AI) but no Bull at all. Without a Bull thesis, the 0.65 BUY conviction is structurally unsupported — the Research Manager is taking a position without weighing the positive case. The tempting wrong answer 'Aggressive/Conservative Debator' fails because debators stress-test an existing thesis; here the missing piece is one of the two thesis builders themselves.",
     "related_lesson": "029",
     "related_agent": "bull_researcher",

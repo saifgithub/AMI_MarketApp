@@ -45,12 +45,12 @@ The trap is reflexively shorting any gap up (or buying any gap down) on the prem
   question="A stock has been ranging $40 to $44 for five weeks. Today it gaps up from a $43.20 close to a $46.10 open on 2.6x average volume after an earnings beat. Which gap type is this and what's the implication?"
   options={[
     "Common gap — small gap inside a range, will fill within days; short it",
-    "Breakaway gap — gap clears the entire range on heavy volume after a catalyst; treat as a high-conviction breakout, do not short it, and the gap invalidates if it fills (a daily close back inside $40-$44)",
+    "Runaway gap — mid-trend acceleration",
     "Exhaustion gap — any gap after a catalyst is exhaustion",
-    "Runaway gap — mid-trend acceleration"
+    "Breakaway gap — gap clears the entire range on heavy volume after a catalyst; treat as a high-conviction breakout, do not short it, and the gap invalidates if it fills (a daily close back inside $40-$44)"
   ]}
-  answer={1}
-  explanation="Location: gap cleared the entire $40-$44 range. Volume: 2.6x average. Context: post-catalyst, out of consolidation. That's the textbook breakaway. Option 0 ignores location and volume and applies a 'gaps fill' heuristic that doesn't fit this gap's class. Option 2 misuses 'exhaustion' which requires a preceding extended trend, not a range. Option 3 misclassifies — there's no preceding trend to call this a runaway."
+  answer={3}
+  explanation="Location: gap cleared the entire $40-$44 range. Volume: 2.6x average. Context: post-catalyst, out of consolidation. That's the textbook breakaway. The common-gap answer ignores location and volume and applies a 'gaps fill' heuristic that doesn't fit this gap's class. The exhaustion-gap answer misuses 'exhaustion' which requires a preceding extended trend, not a range. The runaway-gap answer misclassifies — there's no preceding trend to call this a runaway."
 />
 
 <Quiz
@@ -62,7 +62,7 @@ The trap is reflexively shorting any gap up (or buying any gap down) on the prem
     "Runaway gap — any high-volume gap in an uptrend is runaway"
   ]}
   answer={1}
-  explanation="Location: extreme of a 4-month rally. Volume: 2.3x. Fill: complete intraday. That's the exhaustion-gap signature. Option 0 ignores location at the trend extreme and same-day fill. Option 2 misreads same-day fill as a common-gap marker — same-day fill at the extreme of an extended trend on high volume is the *exhaustion* signature; common gaps form in ranges, not at trend extremes. Option 3 applies a high-volume = runaway rule that ignores location."
+  explanation="Location: extreme of a 4-month rally. Volume: 2.3x. Fill: complete intraday. That's the exhaustion-gap signature. The breakaway-gap answer ignores location at the trend extreme and same-day fill. The common-gap answer misreads same-day fill as a common-gap marker — same-day fill at the extreme of an extended trend on high volume is the *exhaustion* signature; common gaps form in ranges, not at trend extremes. The runaway-gap answer applies a high-volume = runaway rule that ignores location."
 />
 
 <Quiz
@@ -74,7 +74,7 @@ The trap is reflexively shorting any gap up (or buying any gap down) on the prem
     "First was exhaustion (any gap in an uptrend is exhaustion), second was a normal pullback"
   ]}
   answer={1}
-  explanation="This question demands classifying two gaps with different locations and behaviours, then synthesising the message. Runaway: mid-trend, holds, volume — the first gap. Exhaustion: at the extreme, fills same day, volume — the second gap. The combined read is that what looked like a continuing trend got a topping signal at the second gap. The tempting wrong move (option 0) treats both gaps identically and adds to longs right as the trend may be reversing. Option 2 dismisses two clear signals. Option 3 inverts the order entirely and misclassifies the first gap. The synthesis bar is using all four type definitions, location-and-volume classification, and the action implications of each on the same chart."
+  explanation="This question demands classifying two gaps with different locations and behaviours, then synthesising the message. Runaway: mid-trend, holds, volume — the first gap. Exhaustion: at the extreme, fills same day, volume — the second gap. The combined read is that what looked like a continuing trend got a topping signal at the second gap. The tempting wrong move — calling both gaps breakaway — treats them identically and adds to longs right as the trend may be reversing. The both-were-common-gaps answer dismisses two clear signals. The exhaustion-then-normal-pullback answer inverts the order entirely and misclassifies the first gap. The synthesis bar is using all four type definitions, location-and-volume classification, and the action implications of each on the same chart."
 />
 
 ## Try it

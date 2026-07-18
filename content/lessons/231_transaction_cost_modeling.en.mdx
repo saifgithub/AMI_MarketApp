@@ -39,24 +39,24 @@ The beginner mistake is using one cost number across all strategies. Costs are s
   question="A backtest of an intraday rule on US large-caps shows 15% CAGR with 200 trades per year and zero cost assumption. Realistic retail round-trip cost is 4 bps. What's the net CAGR after costs?"
   options={[
     "14.2%",
-    "Roughly 7% — 200 trades × 4 bps = 800 bps = 8% drag",
+    "Roughly 11% — 200 × 4 bps / 2 = 4% drag",
     "15% — costs don't matter for liquid names",
-    "Roughly 11% — 200 × 4 bps / 2 = 4% drag"
+    "Roughly 7% — 200 trades × 4 bps = 800 bps = 8% drag"
   ]}
-  answer={1}
-  explanation="200 round-trips × 4 bps per round-trip = 800 basis points = 8 percentage points of drag. The 15% gross becomes roughly 7% net. Option 0 is the tempting wrong answer for traders who forget that 4 bps is round-trip per trade and 200 trades compounds the drag. Option 3 mistakenly halves the cost (treating it as one-way when 4 bps was already round-trip)."
+  answer={3}
+  explanation="200 round-trips × 4 bps per round-trip = 800 basis points = 8 percentage points of drag. The 15% gross becomes roughly 7% net. The 14.2% answer is the tempting wrong one for traders who forget that 4 bps is round-trip per trade and 200 trades compounds the drag. The roughly-11% answer mistakenly halves the cost (treating it as one-way when 4 bps was already round-trip)."
 />
 
 <Quiz
   question="You have two backtested strategies. Strategy A: 12% CAGR, 8 trades/year, on US large-caps. Strategy B: 28% CAGR, 250 trades/year, on Bursa small-caps with average round-trip cost of 80 bps. Conservative Debator and Research Manager flag a synthesis question. Which deploys better?"
   options={[
-    "Strategy B — higher gross return wins",
     "Strategy A net: 12% - (8 × 5bps) = 11.6%. Strategy B net: 28% - (250 × 80bps) = 28% - 200% = deeply negative. Strategy A is the only deployable choice — Strategy B's edge cannot survive its implementation surface.",
     "Both equally — gross returns are similar",
+    "Strategy B — higher gross return wins",
     "Strategy B with larger size to overcome costs"
   ]}
-  answer={1}
-  explanation="Synthesis: cost is a function of trade count × per-trade cost, and small-cap spreads are catastrophic for high-turnover strategies. Strategy B's 200% cost drag means it's not just unprofitable — it's a disaster. Option 0 is the most tempting wrong answer because the gross number is what spreadsheets reward. Option 3 makes it worse by adding market-impact costs on top of spread costs."
+  answer={0}
+  explanation="Synthesis: cost is a function of trade count × per-trade cost, and small-cap spreads are catastrophic for high-turnover strategies. Strategy B's 200% cost drag means it's not just unprofitable — it's a disaster. Picking Strategy B on its gross return is the most tempting wrong answer because the gross number is what spreadsheets reward. Sizing Strategy B up to overcome costs makes it worse by adding market-impact costs on top of spread costs."
 />
 
 ## Try it

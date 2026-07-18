@@ -52,24 +52,24 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
 <Quiz
   question="A user types into Brief Your Agent: 'When the Bull case is strong, allow oversize positions.' Why is this guaranteed to fail at changing PM behaviour?"
   options={[
-    "The PM ignores coaching because of a policy rule that could be edited",
     "The coaching string is composed into agent prompts, but the PM compliance check is a Python function that does not take prompt input — the string never reaches the code that decides PASS/BLOCK",
     "The PM reads the coaching but disagrees with it",
+    "The PM ignores coaching because of a policy rule that could be edited",
     "The user did not phrase the coaching strongly enough"
   ]}
-  answer={1}
+  answer={0}
   explanation="The rules are geographic, not policy-based. Coaching inputs land in prompts for coachable agents; the safety-floor function does not consume prompts at all. The tempting wrong answer is the 'phrasing' one — better wording cannot reach code paths that were never wired to receive it."
 />
 
 <Quiz
   question="Which of these statements about AMI's uncoachable safety floor is accurate?"
   options={[
-    "The PM agent has a strict prompt that resists persuasion",
-    "The compliance rules live as Mandate data + a Python comparison function that runs outside the model layer — there is no prompt for coaching to modify because the decision is not made by an LLM",
     "AMI logs coaching attempts and refuses any that would weaken safety",
-    "The PM uses a separate, more conservative model than the rest of the agents"
+    "The PM uses a separate, more conservative model than the rest of the agents",
+    "The PM agent has a strict prompt that resists persuasion",
+    "The compliance rules live as Mandate data + a Python comparison function that runs outside the model layer — there is no prompt for coaching to modify because the decision is not made by an LLM"
   ]}
-  answer={1}
+  answer={3}
   explanation="The compliance decision is not produced by a model. It is produced by a deterministic function reading structured data. The persona that explains the result uses the model layer for phrasing, but the verdict (PASS or BLOCK) is already decided. The tempting wrong answer is 'strict prompt that resists' — that would be policy, which is exactly the weaker design AMI deliberately does not rely on."
 />
 

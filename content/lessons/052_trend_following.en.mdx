@@ -36,24 +36,24 @@ The beginner mistake is asking "is the trend still strong?" every morning. Trend
 <Quiz
   question="A trend-following rule says: exit on a daily close below the 50-day MA. NVDA closes at $138.10 today. The 50-day MA is $139.40. What should you do?"
   options={[
-    "Hold — the trend has been strong for a year and one close is noise",
     "Exit at tomorrow's open per the rule",
-    "Tighten the stop but stay long until the 200-day breaks",
-    "Add to the position because price is on sale below the average"
+    "Hold — the trend has been strong for a year and one close is noise",
+    "Add to the position because price is on sale below the average",
+    "Tighten the stop but stay long until the 200-day breaks"
   ]}
-  answer={1}
-  explanation="The rule fired. The whole point of writing a mechanical rule is removing your judgement at the moment of stress. Option 0 feels right because the trend looked strong, but every trend ends with a close below its moving average — discretion at the exit is how trend-followers give back gains."
+  answer={0}
+  explanation="The rule fired. The whole point of writing a mechanical rule is removing your judgement at the moment of stress. Holding feels right because the trend looked strong, but every trend ends with a close below its moving average — discretion at the exit is how trend-followers give back gains."
 />
 
 <Quiz
   question="Your mandate caps single-position risk at 1% of a $50,000 account. You want to enter a trend-following position in TSLA at $230 with a stop at the 50-day MA of $210. What is your max position size in shares?"
   options={[
-    "217 shares",
     "25 shares",
-    "50 shares",
-    "108 shares"
+    "217 shares",
+    "108 shares",
+    "50 shares"
   ]}
-  answer={1}
+  answer={0}
   explanation="Risk per share = $230 - $210 = $20. Max dollar risk = 1% of $50,000 = $500. Shares = $500 / $20 = 25. The tempting wrong answer (217) ignores the stop and just sizes 1% of account into the ticker — that's how trend-followers blow up in choppy markets where stops are wide."
 />
 

@@ -200,12 +200,26 @@ def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
     lesson = svc.get(LEGACY_MARKET_ORDER_LESSON)
     assert lesson is not None
     assert len(lesson.quizzes) == 2
-    assert lesson.quizzes[0].options[1] == "Your order fills immediately at $152"
-    assert lesson.quizzes[0].answer_index == 1
+    # Assert on the answer's TEXT, not its position — CR042 randomised which
+    # slot holds the correct option, and content edits will move it again.
+    q0 = lesson.quizzes[0]
+    assert q0.options[q0.answer_index] == "Your order fills immediately at $152"
     kinds = [b.kind for b in lesson.blocks]
     assert "markdown" in kinds
     assert "quiz" in kinds
     assert "chat_with" in kinds
+
+
+def _correct_answers(svc: LessonsService, lesson_id: str) -> list[int]:
+    lesson = svc.get(lesson_id)
+    assert lesson is not None
+    return [q.answer_index for q in lesson.quizzes]
+
+
+def _wrong_answers(svc: LessonsService, lesson_id: str) -> list[int]:
+    lesson = svc.get(lesson_id)
+    assert lesson is not None
+    return [(q.answer_index + 1) % len(q.options) for q in lesson.quizzes]
 
 
 def test_quiz_submit_correct_passes(svc: LessonsService):
@@ -213,7 +227,7 @@ def test_quiz_submit_correct_passes(svc: LessonsService):
     result = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id=LEGACY_MARKET_ORDER_LESSON,
-        answers=[1, 1],
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert result.correct == 2
     assert result.total == 2
@@ -230,7 +244,7 @@ def test_quiz_submit_wrong_does_not_pass(svc: LessonsService):
     result = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id=LEGACY_MARKET_ORDER_LESSON,
-        answers=[0, 0],
+        answers=_wrong_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert not result.passed
     assert result.correct == 0
@@ -265,7 +279,7 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id=LEGACY_MARKET_ORDER_LESSON,
-        answers=[1, 1],
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert "trader" in res.unlocked_agents
     activations = svc.list_activations(user_id)
@@ -274,7 +288,7 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     res2 = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id=LEGACY_MARKET_ORDER_LESSON,
-        answers=[1, 1],
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert res2.unlocked_agents == []
 
@@ -303,7 +317,8 @@ def test_earn_path_caps_required_set_at_first_n_lessons(svc: LessonsService):
 
     # Pass JUST the legacy lesson — not enough.
     res = svc.submit_quiz(QuizSubmitRequest(
-        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON,
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert "trader" not in res.unlocked_agents
 
@@ -314,7 +329,8 @@ def test_earn_path_caps_required_set_at_first_n_lessons(svc: LessonsService):
         if fid == LEGACY_MARKET_ORDER_LESSON:
             continue
         last_res = svc.submit_quiz(QuizSubmitRequest(
-            user_id=user_id, lesson_id=fid, answers=[1, 1],
+            user_id=user_id, lesson_id=fid,
+            answers=_correct_answers(svc, fid),
         ))
 
     assert last_res is not None
@@ -341,13 +357,13 @@ def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsS
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id=LEGACY_MARKET_ORDER_LESSON,
-        answers=[1, 1],
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     assert res.unlocked_agents == []  # second lesson not done
     res2 = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
         lesson_id="999_fake_trader_lesson",
-        answers=[1, 1],
+        answers=_correct_answers(svc, "999_fake_trader_lesson"),
     ))
     assert "trader" in res2.unlocked_agents
     # cleanup
@@ -357,7 +373,8 @@ def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsS
 def test_progress_summary_tracks_completion(svc: LessonsService):
     user_id = uuid4()
     svc.submit_quiz(QuizSubmitRequest(
-        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON,
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     summary = svc.progress_summary(user_id)
     assert summary.lessons_completed >= 1
@@ -378,7 +395,8 @@ def test_list_status_returns_per_lesson_rows(svc: LessonsService):
     assert not rows[0].quiz_passed
     # Pass the quiz — completed_at and quiz_passed should be set
     svc.submit_quiz(QuizSubmitRequest(
-        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON, answers=[1, 1],
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON,
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
     rows = svc.list_status(user_id)
     assert len(rows) == 1

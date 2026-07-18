@@ -46,12 +46,12 @@ The trap is treating extreme leverage as an opportunity rather than a structural
   <Quiz
     question="A retail FX account with 1:500 leverage is taking a maximum-margin position in EUR/USD. Approximately what adverse price move wipes out the account?"
     options={[
-      "5%",
+      "Roughly 0.2% — the inverse of the leverage ratio is the margin-to-equity buffer, and EUR/USD routinely moves multiples of this in a session",
       "2%",
-      "0.5%",
-      "Roughly 0.2% — the inverse of the leverage ratio is the margin-to-equity buffer, and EUR/USD routinely moves multiples of this in a session"
+      "5%",
+      "0.5%"
     ]}
-    answer={3}
+    answer={0}
     explanation="At 1:500 leverage on a maximum-margin position, the margin available is 1/500 of the notional, or roughly 0.2%. Any adverse move of that size hits the maintenance margin and liquidates. EUR/USD intraday ranges of 0.5–1% are routine — meaning the account's expected lifespan at this leverage is short. This is the structural reason every tier-1 regulator has capped retail FX leverage at 1:30 or 1:50."
   />
 
@@ -59,11 +59,11 @@ The trap is treating extreme leverage as an opportunity rather than a structural
     question="A Telegram \"signals\" channel directs followers to an offshore broker offering 1:500 leverage on FX majors and 1:1000 on crypto. The channel claims 95% accuracy. Withdrawals work for the first small amount. What is the decisive structural red flag?"
     options={[
       "The 95% accuracy claim is implausibly high",
-      "The leverage offered exceeds every tier-1 regulator's retail cap by an order of magnitude — that alone, regardless of the signals channel's behaviour, places the broker outside meaningful client-protection regimes and makes statistical ruin near-certain",
       "Telegram as the distribution channel",
+      "The leverage offered exceeds every tier-1 regulator's retail cap by an order of magnitude — that alone, regardless of the signals channel's behaviour, places the broker outside meaningful client-protection regimes and makes statistical ruin near-certain",
       "First small withdrawals being permitted"
     ]}
-    answer={1}
+    answer={2}
     explanation="The 95% accuracy and Telegram channel are red flags but not the decisive structural issue. The decisive fact is the leverage offering itself: 1:500 on FX and 1:1000 on crypto are 10–500x what tier-1 regulators allow because the data shows that levels above tier-1 caps produce systematic retail-account ruin. A broker offering such leverage to a retail audience has, by structure, made the typical account near-certain to be liquidated regardless of which signals are followed. The small first withdrawals are the bait, not the test."
   />
 

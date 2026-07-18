@@ -39,24 +39,24 @@ The beginner mistake is "breakout = entry" — taking every breakout regardless 
   question="NVDA breaks above a 6-week range high. Breakout bar volume is 28M versus the 20-day average of 45M. ATR(14) has been contracting for two weeks. ADX(14) is at 16. The Aggressive Debator says 'the level broke, enter'. The Market Analyst and Bear Researcher both invoke the fakeout signature. Which view is empirically correct?"
   options={[
     "Aggressive — price action is the signal, not volume",
-    "Market Analyst and Bear — all three fakeout-signature components are firing simultaneously (sub-average volume, contracting ATR, ADX < 20). Base rate suggests ~72% probability of fakeout within 5 sessions; pass on this entry.",
+    "Wait for retest before entering",
     "Enter half size — the level broke even if confirmation is weak",
-    "Wait for retest before entering"
+    "Market Analyst and Bear — all three fakeout-signature components are firing simultaneously (sub-average volume, contracting ATR, ADX < 20). Base rate suggests ~72% probability of fakeout within 5 sessions; pass on this entry."
   ]}
-  answer={1}
-  explanation="All three negative-signature conditions firing simultaneously moves the historical failure rate to ~72%. Entering anyway is taking the wrong side of a measurable asymmetry. Option 0 treats price as unconditional information — it's not, context matters. Option 2 disguises a bad bet as a smaller bad bet (you're still on the 28% side). Option 3 (retest) sounds disciplined but in fakeout regimes the retest often fails too — the underlying problem isn't entry timing, it's regime."
+  answer={3}
+  explanation="All three negative-signature conditions firing simultaneously moves the historical failure rate to ~72%. Entering anyway is taking the wrong side of a measurable asymmetry. The 'price action is the signal, not volume' answer treats price as unconditional information — it's not, context matters. The half-size entry disguises a bad bet as a smaller bad bet (you're still on the 28% side). Waiting for a retest sounds disciplined but in fakeout regimes the retest often fails too — the underlying problem isn't entry timing, it's regime."
 />
 
 <Quiz
   question="You've taken three breakout attempts on QQQ in the past month — all fakeouts, each with sub-average volume. Today QQQ breaks a new 6-month high on volume 70% ABOVE the 20-day average, ATR(14) is expanding for the first time in weeks, and ADX(14) crossed 24. Synthesis-correct action?"
   options={[
     "Skip — three consecutive losses means breakouts aren't working",
-    "All three fakeout-signature components have REVERSED — volume confirmed, ATR expanding, ADX > 22. The regime that produced the prior fakeouts has changed; the base rate for this new signature is ~64% success. Enter per the rule, respecting position-size limits from prior losses.",
+    "Wait for the regime to fully establish before entering",
     "Enter triple size to recover losses",
-    "Wait for the regime to fully establish before entering"
+    "All three fakeout-signature components have REVERSED — volume confirmed, ATR expanding, ADX > 22. The regime that produced the prior fakeouts has changed; the base rate for this new signature is ~64% success. Enter per the rule, respecting position-size limits from prior losses."
   ]}
-  answer={1}
-  explanation="The synthesis: regime detection is two-sided. The same three indicators that flagged fakeouts now flag a confirmation regime. Refusing to engage when the regime turns favourable means missing the bulk of the strategy's edge. Option 0 confuses recent losses (operating in failure regime) with strategy validity. Option 2 is revenge sizing. Option 3 (wait) is the cost of perfectionism — if all three signatures fire positively, the entry is the trade by definition."
+  answer={3}
+  explanation="The synthesis: regime detection is two-sided. The same three indicators that flagged fakeouts now flag a confirmation regime. Refusing to engage when the regime turns favourable means missing the bulk of the strategy's edge. The skip-after-three-losses answer confuses recent losses (operating in failure regime) with strategy validity. Entering triple size is revenge sizing. Waiting for the regime to fully establish is the cost of perfectionism — if all three signatures fire positively, the entry is the trade by definition."
 />
 
 ## Try it

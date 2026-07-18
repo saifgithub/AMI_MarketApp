@@ -235,14 +235,31 @@ the quiz is the assessment surface. So:
                  the lesson body."
   />
 
-For numeric free-response:
-  <Quiz
-    question="If your account is RM5,000 and your max risk per trade
-              is 1%, how much can you lose per trade?"
-    answer={50}
-    tolerance={0}
-    explanation="1% of 5,000 = 50."
-  />
+**Multiple-choice is the ONLY supported quiz form.** There is no numeric
+free-response variant. A `<Quiz>` without an `options` array parses to a
+question with zero tappable answers, which permanently blocks the lesson —
+the client requires an answer to every question before it will let the user
+submit. `backend/tests/unit/test_lesson_corpus_integrity.py` rejects any
+`tolerance=` attribute for this reason. (DEF064: 12 lessons shipped this way
+and were un-completable for months, taking two agent-unlock gateways down
+with them.)
+
+**Never reference an option by number in an explanation.** No "option 0", no
+"Option 3". The reader UI renders the option text with an icon and no label —
+no A/B/C/D, no numbers — so a numeric reference points at something the user
+cannot see. Name the option by its content instead:
+
+    BAD:  "The tempting wrong answer is option 0 — it looks cheaper."
+    GOOD: "The tempting wrong answer is the one citing the lower headline
+           multiple — it looks cheaper."
+
+The same corpus test enforces this. (DEF065: 277 explanations across 138
+lessons did it, under two contradictory conventions — some counting from 0,
+some from 1.)
+
+**Vary which position holds the correct answer.** Spread it across all four
+slots. Before CR042 the answer sat in the second slot in 71% of questions,
+which is a pattern a reader can exploit without learning anything.
 
 ### 6. Action task (40-100 words, heading: "## Try it")
 
@@ -272,8 +289,9 @@ opening a trade ticket.
 - `<Quiz question="..." options={[...]} answer={N} explanation="..." />`
   Multiple-choice. `answer` is a zero-indexed integer.
 
-- `<Quiz question="..." answer={N} tolerance={X} explanation="..." />`
-  Numeric free-response. `tolerance` is absolute. No `options` array.
+  This is the only supported quiz form. `options` is required; a `tolerance`
+  attribute is rejected by the corpus test. Explanations must not name an
+  option by number — see the Quiz section above.
 
 - `<ChatWith agent="<agent_id>" />`
   Button: "Ask <agent_name> about this". Limit 1 per lesson (part 4

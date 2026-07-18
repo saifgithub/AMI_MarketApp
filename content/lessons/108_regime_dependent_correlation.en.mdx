@@ -36,12 +36,12 @@ The trap is sizing the portfolio off "long-run average" correlations and assumin
 <Quiz
   question="You hold 4 positions: NVDA, JPM, XOM, IHH — each sized at 1% account risk. Average pairwise correlation in calm markets is 0.15. In a stressed scenario, correlations across these names typically rise to about 0.7. Roughly what is the realised peak exposure during a stressed day, expressed as a multiple of the naive 4%?"
   options={[
-    "0.5× — diversification cuts the exposure in half because the book is multi-sector.",
     "1.0× — the 4% is the right number; correlations don't compound exposure.",
     "Roughly 1.6×–1.8× of the naive 4% — when correlations approach 0.7 the positions move together enough that the cross-position diversification benefit collapses to a small residual.",
-    "4.0× — correlations of 0.7 mean each position effectively quadruples in stress."
+    "4.0× — correlations of 0.7 mean each position effectively quadruples in stress.",
+    "0.5× — diversification cuts the exposure in half because the book is multi-sector."
   ]}
-  answer={2}
+  answer={1}
   explanation="The tempting wrong answer is '1.0×, 4% is 4%'. That ignores that the 4% naive number bakes in a diversification benefit that only exists when correlations are low. When stressed correlations hit 0.7, most of that benefit evaporates. The realised stressed exposure isn't exactly 4 × 4% (=16%) because correlation 0.7 is not 1.0, but it's substantially larger than 4% — typically 1.5–2× the naive number for a 4-position book. The '4.0×' distractor treats correlation as multiplicative, which is wrong; correlation rescales the diversification factor, not the exposure itself."
 />
 
@@ -49,11 +49,11 @@ The trap is sizing the portfolio off "long-run average" correlations and assumin
   question="A trader runs a portfolio of 6 tech names (NVDA, AMD, AAPL, MSFT, GOOGL, META) at 1% each and a portfolio of 6 cross-sector names (NVDA, JPM, XOM, KO, IHH, MRDIY) at 1% each, both seen as 'diversified within their universe'. In a sharp risk-off week, why is the cross-sector book usually meaningfully less damaged even though all six positions are sized identically?"
   options={[
     "The tech book benefits from positive momentum so the risk-off hit is offset.",
-    "The cross-sector book starts with much lower calm-state correlations (0.10–0.25 vs 0.6–0.8 for tech), so even when stressed correlations rise across both books, the cross-sector book ends up with average stressed correlations in the 0.5–0.7 range while the tech book hits 0.85+ — closer to a single 6× position.",
     "Both are equally damaged because risk-off events hit all sectors the same.",
+    "The cross-sector book starts with much lower calm-state correlations (0.10–0.25 vs 0.6–0.8 for tech), so even when stressed correlations rise across both books, the cross-sector book ends up with average stressed correlations in the 0.5–0.7 range while the tech book hits 0.85+ — closer to a single 6× position.",
     "Position count is what matters, not sector mix — six positions in either book is six positions."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is the last — 'position count is what matters'. The point of this lesson is that the position count is misleading when correlations rise. Tech names already correlate at 0.6+ in calm markets; in stress they approach 0.85–0.95 and the book becomes effectively a single 6%-sized tech bet. Cross-sector names start near-independent and even when stressed correlation rises, the ceiling is well below 1, so the diversification benefit partially survives. The 'tech has momentum' distractor is wishful thinking; in risk-off events, the strongest names get sold first to raise liquidity."
 />
 

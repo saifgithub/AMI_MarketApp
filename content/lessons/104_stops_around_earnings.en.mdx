@@ -35,20 +35,25 @@ The trap is treating the stop as insurance against everything. A beginner takes 
 
 <Quiz
   question="You're long TSLA at $250 with a stop at $238 (1% account risk on a $50,000 account, so $12 per share × 41 shares). TSLA reports tonight. Implied move from options is roughly 8%. If TSLA opens tomorrow at $225 (a 10% gap, within the implied move), what's your realised loss versus the planned 1%?"
-  answer={2.05}
-  tolerance={0.1}
-  explanation="Per-share loss = $250 − $225 = $25 (not $12). Total loss = 41 × $25 = $1,025 ≈ 2.05% of $50,000. The stop filled at the open; there was no $238 print between the close and the open. The 1% mandate became a 2.05% realised loss because the stop can't defend against a gap."
+  options={[
+    "0.98%",
+    "1.00%",
+    "4.10%",
+    "2.05%"
+  ]}
+  answer={3}
+  explanation="Per-share loss = $250 − $225 = $25, not the $12 you planned for. Total loss = 41 × $25 = $1,025 ≈ 2.05% of $50,000. The stop filled at the open; there was no $238 print between the close and the open for it to catch. Answering 1% assumes the stop did its job — the whole point is that a stop cannot defend against a gap."
 />
 
 <Quiz
   question="Three traders all hold the same 1%-risk NVDA position the day before earnings, where options imply a 7% move. Trader A halves the position before the close. Trader B exits fully and plans to re-enter after the print resolves. Trader C keeps the full position with the stop in place. Which trader has correctly addressed the event risk?"
   options={[
-    "Only Trader B — the only safe response to earnings is to be flat through the event.",
     "Trader A and Trader B both correctly address the gap risk (one by reducing exposure, one by removing it); Trader C has not addressed it at all — keeping the stop pretends the gap won't happen, and a 7% implied move gaps through a 4% stop more often than not.",
+    "Only Trader B — the only safe response to earnings is to be flat through the event.",
     "Only Trader C — holding through earnings is the only way to capture the move; A and B miss the trade entirely.",
     "All three are equivalent because the stop level is the same in each case."
   ]}
-  answer={1}
+  answer={0}
   explanation="The tempting wrong answer is 'only flat is safe' or 'only full-size captures the move'. Both reduce a nuanced risk decision to a single right answer. Reality: A, B, and C represent three legitimate event-risk policies, but only A and B have made a decision; C is doing nothing while believing the stop will hold. The stop cannot fill in a gap, so C's '1% risk' is actually 'whatever the gap delivers'. Picking a policy is the discipline — pretending the stop covers gaps is the mistake."
 />
 

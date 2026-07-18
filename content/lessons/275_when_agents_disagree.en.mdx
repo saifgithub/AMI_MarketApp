@@ -42,10 +42,10 @@ The trap is treating agreement as confirmation. Two human analysts who never dis
 <Quiz
   question="Two BUY 3% verdicts on the same ticker over a month — Verdict A has Bull lean 0.68 and tight Risk Debator cluster; Verdict B has Bull lean 0.52 and Risk Debators ranging 1% to 5%. What does the difference tell you?"
   options={[
-    "They are the same trade because the headline is identical",
+    "Verdict B's spread is a bug",
     "Verdict B reflects much weaker conviction — wide internal disagreement and a near-coin-flip synthesis. Treat the two trades very differently even though the BUY/SIZE line is identical",
-    "Verdict A is more accurate",
-    "Verdict B's spread is a bug"
+    "They are the same trade because the headline is identical",
+    "Verdict A is more accurate"
   ]}
   answer={1}
   explanation="The headline is the tip; the disagreement is the substance. Same BUY 3% can mean broad alignment or barely-leaning consensus. Reading the spread is how you tell. The tempting wrong answer is 'Verdict A is more accurate' — accuracy is not the relevant metric; conviction is. AMI does not predict; it tells you how confident its debate is, and 0.52 vs 0.68 is a different conversation."
@@ -55,11 +55,11 @@ The trap is treating agreement as confirmation. Two human analysts who never dis
   question="A verdict comes back with all twelve agents unanimously leaning Bull, Research Manager confidence 0.91, Risk Debators all landing within 0.3% of each other. How should you read this?"
   options={[
     "This is the strongest trade you'll see — take it",
-    "Unanimity at this level is rare enough to deserve scrutiny — read the Bear Researcher's section anyway and ask whether the case is genuinely one-sided or whether the agents converged due to shared training-data tendencies; AMI's debate is designed to disagree",
     "AMI has finally figured out the market",
-    "The Bear Researcher must have been miscoached"
+    "The Bear Researcher must have been miscoached",
+    "Unanimity at this level is rare enough to deserve scrutiny — read the Bear Researcher's section anyway and ask whether the case is genuinely one-sided or whether the agents converged due to shared training-data tendencies; AMI's debate is designed to disagree"
   ]}
-  answer={1}
+  answer={3}
   explanation="Effortless agreement is a signal to investigate, not to celebrate. A debate that does not surface a credible counter-case might be reflecting model-level convergence rather than independent validation. The tempting wrong answer is the first one — high confidence on a unanimous read is exactly the situation where overreliance is most dangerous."
 />
 

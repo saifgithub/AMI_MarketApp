@@ -48,25 +48,25 @@ The trap is treating CFO as a single metric without decomposing it. A beginner s
 <Quiz
   question="A company reports net income $400M, CFO $700M, capex $250M, depreciation $230M. Estimate maintenance capex, growth capex, and free cash flow available for non-maintenance purposes."
   options={[
-    "Maintenance capex roughly $230M (≈ depreciation), growth capex roughly $20M, total FCF $450M ($700M – $250M). Only about $20M is funding genuine expansion; the rest of capex is asset replacement. FCF after maintenance is roughly $470M but FCF *for growth or shareholder return* (after subtracting maintenance and growth capex) is about $450M. The company has limited growth-capex headroom relative to its operating cash flow",
-    "All capex is growth capex; FCF is $450M",
     "Maintenance capex is zero; FCF is $700M",
-    "Cannot compute without revenue"
+    "All capex is growth capex; FCF is $450M",
+    "Cannot compute without revenue",
+    "Maintenance capex roughly $230M (≈ depreciation), growth capex roughly $20M, total FCF $450M ($700M – $250M). Only about $20M is funding genuine expansion; the rest of capex is asset replacement. FCF after maintenance is roughly $470M but FCF *for growth or shareholder return* (after subtracting maintenance and growth capex) is about $450M. The company has limited growth-capex headroom relative to its operating cash flow"
   ]}
-  answer={0}
-  explanation="The approximation: maintenance capex ≈ depreciation ($230M), so growth capex ≈ total capex – maintenance = $250M – $230M = $20M. FCF as conventionally measured (CFO – total capex) = $700M – $250M = $450M. The relevant decomposition for growth investors is that only $20M of capex is funding expansion; the rest is keeping existing assets running. Option 1 ignores the depreciation proxy. Option 2 confuses depreciation with non-existent. Option 3 demands data not needed."
+  answer={3}
+  explanation="The approximation: maintenance capex ≈ depreciation ($230M), so growth capex ≈ total capex – maintenance = $250M – $230M = $20M. FCF as conventionally measured (CFO – total capex) = $700M – $250M = $450M. The relevant decomposition for growth investors is that only $20M of capex is funding expansion; the rest is keeping existing assets running. The 'all capex is growth capex' answer ignores the depreciation proxy. The zero-maintenance-capex answer treats depreciation as though it doesn't exist. The 'cannot compute without revenue' answer demands data not needed."
 />
 
 <Quiz
   question="Synthesis: a company reports net income +12% YoY but operating cash flow –4% YoY. Inventory grew 35% YoY and accounts receivable grew 22% YoY against revenue growth of 8%. Capex is unchanged. Which read best fits the lesson combined with prior lessons?"
   options={[
+    "Insufficient data without margin figures",
     "Healthy — net income growth is what matters",
-    "Healthy — inventory build is always strategic preparation for growth",
     "The income statement shows EPS growth but the cash flow statement is telling a different story: working capital is bloating (inventory +35%, receivables +22%, both running well ahead of 8% revenue growth) and pulling operating cash flow down 4% even as net income grows 12%. Combined with the revenue-recognition concerns from lesson 148 and the earnings-vs-cash diagnostic from lesson 035, this is the configuration that suggests demand softening is being absorbed into inventory while accounting revenue keeps being recognised. The trailing EPS overstates forward earnings power until the working capital corrects",
-    "Insufficient data without margin figures"
+    "Healthy — inventory build is always strategic preparation for growth"
   ]}
   answer={2}
-  explanation="The synthesis: this lesson plus lessons 148 and 035 produce a layered diagnostic. Inventory and receivables building well ahead of revenue, while net income grows but operating cash flow falls, is the textbook pattern that precedes margin cuts and inventory write-downs. Several major consumer-hardware and industrial-sector EPS misses of recent years were visible in this configuration 1–2 quarters before they hit the press release. Option 0 reads only the income statement. Option 1 makes an unsupported optimistic interpretation. Option 4 dodges; the data given are sufficient for the diagnosis."
+  explanation="The synthesis: this lesson plus lessons 148 and 035 produce a layered diagnostic. Inventory and receivables building well ahead of revenue, while net income grows but operating cash flow falls, is the textbook pattern that precedes margin cuts and inventory write-downs. Several major consumer-hardware and industrial-sector EPS misses of recent years were visible in this configuration 1–2 quarters before they hit the press release. The 'net income growth is what matters' answer reads only the income statement. The 'inventory build is always strategic' answer makes an unsupported optimistic interpretation. The 'insufficient data without margins' answer dodges; the data given are sufficient for the diagnosis."
 />
 
 ## Try it

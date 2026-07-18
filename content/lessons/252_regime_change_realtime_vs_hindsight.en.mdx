@@ -46,25 +46,25 @@ The correct model: regime calls in real time are probabilistic, not binary. The 
 <Quiz
   question="SPX closed below its 200-day SMA two weeks ago. The 50-day SMA is approaching the 200-day but hasn't crossed. NYSE new lows have exceeded new highs for 3 of the last 5 weeks (below the 4-of-5 threshold). VIX is 22, above its calm-regime band but not in stress mode. The bear-regime detection cluster has 2 of 3 markers firing. What does the synthesis framework prescribe?"
   options={[
-    "Go fully defensive — the bear is confirmed.",
     "Two of three markers is suggestive, not confirmed. Compress mandate by ~50% (smaller positions, tighter invalidation, reduced gross exposure), avoid adding new longs at full size, but do not flip fully defensive until all three markers fire or 4 weeks of regime-consistent confirmation print. If the cluster reverses (200-day reclaimed weekly), the call is invalidated and the small mandate-compression cost is the price of optionality.",
-    "Stay at full bullish exposure — only one cluster fires count.",
-    "Sell everything and short SPX with leverage."
+    "Sell everything and short SPX with leverage.",
+    "Go fully defensive — the bear is confirmed.",
+    "Stay at full bullish exposure — only one cluster fires count."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — committing to the regime call feels decisive. But the 2015 and Brexit examples are the live counter-examples where the regime call would have been wrong. Option 2 ignores the partial cluster. The synthesis is graduated sizing: more markers firing = more compression, fully confirmed = full regime sizing. The cost of compression is the premium you pay for optionality."
+  answer={0}
+  explanation="The tempting wrong answer is going fully defensive — committing to the regime call feels decisive. But the 2015 and Brexit examples are the live counter-examples where the regime call would have been wrong. Staying at full bullish exposure ignores the partial cluster. The synthesis is graduated sizing: more markers firing = more compression, fully confirmed = full regime sizing. The cost of compression is the premium you pay for optionality."
 />
 
 <Quiz
   question="What single condition most distinguishes a REAL regime change from a head fake in the historical record from this lesson (2015, 2016, 2018)?"
   options={[
-    "The size of the initial price move.",
     "Whether ALL three detection markers fire AND the breadth indicator from lesson 064 confirms by moving >10 points in the regime-consistent direction AND the regime survives 4 weeks without invalidation. Head fakes typically fail at least one of these.",
+    "Whether the news headlines feel scary.",
     "The Fed's interest-rate stance.",
-    "Whether the news headlines feel scary."
+    "The size of the initial price move."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — bigger moves seem more regime-defining. But Brexit was a 5.3% 2-day drop that was clearly a head fake; 2015 was a 12% correction that wasn't a bear. Option 2 ignores the rate-cycle independence point from lesson 250. Option 3 is the headline trap. The synthesis is the full-confirmation cluster plus breadth plus duration — the same three filters that distinguish noise from signal in regime analysis."
+  answer={0}
+  explanation="The tempting wrong answer is the size of the initial price move — bigger moves seem more regime-defining. But Brexit was a 5.3% 2-day drop that was clearly a head fake; 2015 was a 12% correction that wasn't a bear. Pointing at the Fed's rate stance ignores the rate-cycle independence point from lesson 250. The scary-headlines answer is the headline trap. The synthesis is the full-confirmation cluster plus breadth plus duration — the same three filters that distinguish noise from signal in regime analysis."
 />
 
 ## Try it

@@ -38,25 +38,25 @@ The beginner mistake is "peeking" — running the rule on the OOS, seeing it dis
 <Quiz
   question="You have 10 years of daily data on NVDA. You design a momentum rule. Which split is most defensible?"
   options={[
-    "Random 70/30 across all days",
     "Contiguous in-sample 2015-2021 (7 years), contiguous OOS 2022-2024 (3 years), no peeking",
+    "Random 70/30 across all days",
     "Use all 10 years for in-sample, no OOS needed because the rule is intuitive",
     "OOS 2015-2017, in-sample 2018-2024"
   ]}
-  answer={1}
-  explanation="Contiguous time splits with OOS at the end is the only honest choice for time-series data. Option 0 (random shuffle) leaks correlated information across the split. Option 2 abandons OOS entirely. Option 3 puts OOS at the start, which means parameter selection happens with knowledge of the post-OOS regime (you saw 2018-2024 before fitting), violating the firewall."
+  answer={0}
+  explanation="Contiguous time splits with OOS at the end is the only honest choice for time-series data. The random 70/30 shuffle leaks correlated information across the split. Using all 10 years in-sample abandons OOS entirely. Putting OOS at 2015-2017 places it at the start, which means parameter selection happens with knowledge of the post-OOS regime (you saw 2018-2024 before fitting), violating the firewall."
 />
 
 <Quiz
   question="In-sample 2010-2020 shows CAGR 14%, max drawdown 12%. Out-of-sample 2021-2024 shows CAGR 6%, max drawdown 19%. Your mandate caps drawdown at 20%. The Research Manager and Conservative Debator weigh in. What's the synthesis-correct decision?"
   options={[
     "Deploy at full mandate size — OOS is positive",
-    "Efficiency ratio is 0.43 (below the 0.5 robustness threshold) AND OOS drawdown nearly hit the mandate cap. Size the strategy at well below mandate maximum (e.g., half size), monitor live drawdown against the OOS max, and retire the rule if live drawdown exceeds OOS by a meaningful margin.",
+    "Re-run with different parameters until OOS improves",
     "Retire the strategy — drawdown nearly hit the cap",
-    "Re-run with different parameters until OOS improves"
+    "Efficiency ratio is 0.43 (below the 0.5 robustness threshold) AND OOS drawdown nearly hit the mandate cap. Size the strategy at well below mandate maximum (e.g., half size), monitor live drawdown against the OOS max, and retire the rule if live drawdown exceeds OOS by a meaningful margin."
   ]}
-  answer={1}
-  explanation="The synthesis: OOS edge is real but marginal, AND drawdown signal is approaching mandate floor. A halved size respects both the weak edge and the drawdown reality. Option 0 ignores the efficiency-ratio warning. Option 2 over-corrects — a 6% OOS CAGR with controlled risk is deployable at reduced size. Option 3 is the contamination trap from foundation 057 — you'd be tuning on OOS data."
+  answer={3}
+  explanation="The synthesis: OOS edge is real but marginal, AND drawdown signal is approaching mandate floor. A halved size respects both the weak edge and the drawdown reality. Deploying at full mandate size ignores the efficiency-ratio warning. Retiring the strategy over-corrects — a 6% OOS CAGR with controlled risk is deployable at reduced size. Re-running with different parameters until OOS improves is the contamination trap from foundation 057 — you'd be tuning on OOS data."
 />
 
 ## Try it

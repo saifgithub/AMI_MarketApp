@@ -38,25 +38,25 @@ The beginner mistake is celebrating the highest-Sharpe cell in the sweep and dep
 <Quiz
   question="You sweep an RSI mean-reversion rule across RSI lookback (2,3,5,7,10) and threshold (5,10,15,20,25). The cell at lookback=3, threshold=15 returns 22% CAGR. Its four nearest neighbours return -2%, 4%, 1%, and -3%. What does this pattern mean?"
   options={[
-    "Deploy lookback=3, threshold=15 — it's clearly the optimal configuration",
-    "The isolated peak surrounded by collapsing neighbours is the textbook overfitting signature. The rule has no robust edge at these parameters.",
     "Average the five cells and deploy the mean",
-    "The neighbours are losing money so they're outliers — ignore them"
+    "The neighbours are losing money so they're outliers — ignore them",
+    "Deploy lookback=3, threshold=15 — it's clearly the optimal configuration",
+    "The isolated peak surrounded by collapsing neighbours is the textbook overfitting signature. The rule has no robust edge at these parameters."
   ]}
-  answer={1}
-  explanation="A single high cell with collapsing neighbours means the strategy is fitting noise at exactly that parameter pair. There's no structural reason RSI(3,15) should work when RSI(2,15) and RSI(3,10) don't. Option 0 is the most tempting wrong answer because the 22% number is what the spreadsheet rewards. Option 2 (averaging) sounds disciplined but you're still concentrating around a noise spike."
+  answer={3}
+  explanation="A single high cell with collapsing neighbours means the strategy is fitting noise at exactly that parameter pair. There's no structural reason RSI(3,15) should work when RSI(2,15) and RSI(3,10) don't. Deploying lookback=3, threshold=15 is the most tempting wrong answer because the 22% number is what the spreadsheet rewards. Averaging the five cells sounds disciplined but you're still concentrating around a noise spike."
 />
 
 <Quiz
   question="Your sweep of a breakout rule shows a wide plateau where 17 adjacent cells return between 6% and 9% CAGR, and one outlier cell returns 15%. Out-of-sample testing isn't available. What's the synthesis-correct deployment choice?"
   options={[
     "Deploy the 15% cell — out-of-sample testing is optional",
-    "Deploy the centre of the plateau, accept the 6-9% range as the honest estimate, and size the strategy assuming returns at the lower bound to stay mandate-compliant",
+    "Skip the strategy entirely — without out-of-sample data nothing is deployable",
     "Deploy the 15% cell with extra position size to capitalise on the edge",
-    "Skip the strategy entirely — without out-of-sample data nothing is deployable"
+    "Deploy the centre of the plateau, accept the 6-9% range as the honest estimate, and size the strategy assuming returns at the lower bound to stay mandate-compliant"
   ]}
-  answer={1}
-  explanation="Synthesis: the plateau is the robust edge, the outlier is noise. Sizing for the lower bound of the plateau (6%) protects you when the strategy degrades from in-sample to live (foundation 057 said assume degradation to half the backtest). Option 0 chases the spike. Option 2 doubles the bet on a single noisy cell. Option 3 over-corrects — a robust plateau is meaningful evidence even without out-of-sample, you just size conservatively."
+  answer={3}
+  explanation="Synthesis: the plateau is the robust edge, the outlier is noise. Sizing for the lower bound of the plateau (6%) protects you when the strategy degrades from in-sample to live (foundation 057 said assume degradation to half the backtest). Deploying the 15% cell chases the spike. Deploying that cell with extra size doubles the bet on a single noisy cell. Skipping the strategy entirely over-corrects — a robust plateau is meaningful evidence even without out-of-sample, you just size conservatively."
 />
 
 ## Try it

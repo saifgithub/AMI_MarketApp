@@ -50,24 +50,24 @@ The correct model: in contango, the structure pays you (and pays VIX-short ETPs 
   question="Spot VIX is 23, VIX3M is 20.5. SPX has chopped sideways for two weeks but is still above its 200-day SMA. A trader reads 'VIX 23 is normal' and adds a 10% position. What does the term-structure framework say?"
   options={[
     "VIX 23 is moderate — full sizing is fine.",
-    "VIX1M/VIX3M ratio is 1.12 — backwardation regime is active despite a moderate-looking VIX print. Compress new-position sizes (e.g., 5% rather than 10%), tighten stops to the volatility-adjusted regime stop distance, and require backwardation to revert to contango (ratio < 0.95 for 5 consecutive sessions) before restoring full sizing.",
+    "Sell everything — backwardation always means a crash next week.",
     "Buy more aggressively — VIX-short ETPs are about to pay.",
-    "Sell everything — backwardation always means a crash next week."
+    "VIX1M/VIX3M ratio is 1.12 — backwardation regime is active despite a moderate-looking VIX print. Compress new-position sizes (e.g., 5% rather than 10%), tighten stops to the volatility-adjusted regime stop distance, and require backwardation to revert to contango (ratio < 0.95 for 5 consecutive sessions) before restoring full sizing."
   ]}
-  answer={1}
-  explanation="The tempting wrong answer is option 0 — the spot VIX number looks unremarkable, and most traders stop the analysis there. But backwardation can persist at moderate VIX levels and historically marks regime stress that doesn't always announce itself in the headline number. Option 3 over-corrects; option 2 inverts the relationship. The synthesis: read the ratio, not the headline."
+  answer={3}
+  explanation="The tempting wrong answer is 'VIX 23 is moderate' — the spot VIX number looks unremarkable, and most traders stop the analysis there. But backwardation can persist at moderate VIX levels and historically marks regime stress that doesn't always announce itself in the headline number. The backwardation-always-means-a-crash answer over-corrects; the buy-VIX-short-ETPs answer inverts the relationship. The synthesis: read the ratio, not the headline."
 />
 
 <Quiz
   question="VIX1M/VIX3M has been under 0.90 for 6 months. SPX is making new highs. A friend recommends a long-VIX hedge 'because vol is too cheap'. What does the framework say about the trade's likely cost?"
   options={[
-    "It's free money — cheap vol is always worth buying.",
-    "In sustained contango, long-VIX positions incur a structural roll cost (futures roll down the curve as they approach expiry). A 6-month long-VIX hold during 2017's contango regime lost ~50% of value through pure decay. The hedge has a cost; size it as insurance, not opportunity, and respect mandate caps.",
     "Free, but only if SPX is rising.",
-    "Cost is irrelevant — only protection matters."
+    "In sustained contango, long-VIX positions incur a structural roll cost (futures roll down the curve as they approach expiry). A 6-month long-VIX hold during 2017's contango regime lost ~50% of value through pure decay. The hedge has a cost; size it as insurance, not opportunity, and respect mandate caps.",
+    "Cost is irrelevant — only protection matters.",
+    "It's free money — cheap vol is always worth buying."
   ]}
   answer={1}
-  explanation="The tempting wrong answer is option 0 — 'cheap vol' is one of the most repeated and most expensive aphorisms in markets. The contango regime is the structural drag on long-VIX exposure; 2017 is the textbook decay year. Option 3 ignores cost entirely. The synthesis is: long-VIX in contango is insurance with an ongoing premium, and the size must reflect that."
+  explanation="The tempting wrong answer is the free-money read — 'cheap vol' is one of the most repeated and most expensive aphorisms in markets. The contango regime is the structural drag on long-VIX exposure; 2017 is the textbook decay year. The cost-is-irrelevant answer ignores cost entirely. The synthesis is: long-VIX in contango is insurance with an ongoing premium, and the size must reflect that."
 />
 
 ## Try it

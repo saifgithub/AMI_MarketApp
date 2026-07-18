@@ -45,24 +45,24 @@ The trap is doing the workflow in the wrong order, usually bottom-up. A beginner
   question="You're planning a long swing trade on AAPL. You scan the weekly chart and find a clean downtrend with lower highs and lower lows. The hourly chart looks like it's setting up a bounce off intraday support. What does the top-down workflow say to do?"
   options={[
     "Take the long trade — hourly support is enough to time an entry inside any larger trend",
-    "Stop at pass 1 — the weekly is against the direction you wanted to trade, so passes 2 and 3 don't start; if you want a long swing trade, find a ticker whose weekly trend supports it",
     "Take the long trade with a tight stop because the weekly downtrend means more upside potential",
+    "Stop at pass 1 — the weekly is against the direction you wanted to trade, so passes 2 and 3 don't start; if you want a long swing trade, find a ticker whose weekly trend supports it",
     "Skip the weekly pass — it's too slow to matter for active traders"
   ]}
-  answer={1}
-  explanation="The workflow is sequential and gated. A weekly downtrend disqualifies a long swing thesis, full stop. Option 0 violates the workflow by letting the lowest timeframe override the highest — exactly the failure mode the lesson names. Option 2 invents a mean-reversion rule that confuses 'oversold' with 'tradable long', and conflates downtrends with discounts. Option 3 dismisses the slowest, highest-information timeframe in the name of being 'active' — which is precisely how active traders end up fighting trends."
+  answer={2}
+  explanation="The workflow is sequential and gated. A weekly downtrend disqualifies a long swing thesis, full stop. The take-the-trade-on-hourly-support answer violates the workflow by letting the lowest timeframe override the highest — exactly the failure mode the lesson names. The tight-stop-because-more-upside answer invents a mean-reversion rule that confuses 'oversold' with 'tradable long', and conflates downtrends with discounts. The skip-the-weekly-pass answer dismisses the slowest, highest-information timeframe in the name of being 'active' — which is precisely how active traders end up fighting trends."
 />
 
 <Quiz
   question="On NVDA you complete pass 1 (weekly trend up, invalidation = weekly close below $128) and pass 2 (daily pullback to higher-low at $134, invalidation = daily close below $134). On the hourly chart you can't find a clean trigger — price is choppy with no clear higher hourly low yet. A friend says 'just enter at market, the setup is good'. Which response best applies the workflow, and what's the most tempting alternative?"
   options={[
-    "Enter at market — passes 1 and 2 are enough, the trigger is a bonus",
-    "Wait — passes 1 and 2 are necessary but not sufficient; the trigger pass converts a valid setup into an entry. Trading without it means accepting random intraday adverse moves you have no plan for. Most tempting wrong move: treating a great setup as permission to skip the trigger",
     "Cancel the trade — if the hourly is choppy the daily setup must be wrong too",
-    "Drop to the 5-minute chart and find a trigger there instead"
+    "Drop to the 5-minute chart and find a trigger there instead",
+    "Enter at market — passes 1 and 2 are enough, the trigger is a bonus",
+    "Wait — passes 1 and 2 are necessary but not sufficient; the trigger pass converts a valid setup into an entry. Trading without it means accepting random intraday adverse moves you have no plan for. Most tempting wrong move: treating a great setup as permission to skip the trigger"
   ]}
-  answer={1}
-  explanation="Each pass produces a deliverable; entry is the deliverable of pass 3. Without a trigger, you have a setup but no entry — and 'enter at market' inside a choppy hourly is how a 1R risk plan turns into a 3R drawdown before the setup has a chance to play out. Option 0 collapses the workflow's three-step structure. Option 2 over-corrects and lets pass 3 invalidate passes 1 and 2 — they don't, they're independent. Option 3 is timeframe-skipping in the other direction — dropping to 5-minute for a swing trade plan reintroduces all the noise the higher timeframes were designed to filter. The synthesis test is recognising that the three passes are coupled but each has its own job."
+  answer={3}
+  explanation="Each pass produces a deliverable; entry is the deliverable of pass 3. Without a trigger, you have a setup but no entry — and 'enter at market' inside a choppy hourly is how a 1R risk plan turns into a 3R drawdown before the setup has a chance to play out. The enter-at-market answer collapses the workflow's three-step structure. Cancelling the trade over-corrects and lets pass 3 invalidate passes 1 and 2 — they don't, they're independent. Dropping to the 5-minute chart is timeframe-skipping in the other direction — dropping to 5-minute for a swing trade plan reintroduces all the noise the higher timeframes were designed to filter. The synthesis test is recognising that the three passes are coupled but each has its own job."
 />
 
 ## Try it

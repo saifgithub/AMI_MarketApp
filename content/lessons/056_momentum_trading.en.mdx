@@ -36,13 +36,13 @@ The beginner mistake is selling momentum winners early because they "feel toppy"
 <Quiz
   question="You're running a monthly-rebalanced momentum rule. NVDA has tripled and is up 65% in the last six months. Today is mid-month, between rebalances. NVDA drops 8% on no news. What does the rule say?"
   options={[
-    "Sell immediately — momentum is breaking",
-    "Hold — rebalance is at month-end, and one bad day doesn't break the rule",
+    "Sell half and re-evaluate",
     "Add to the position because it's on sale",
-    "Sell half and re-evaluate"
+    "Hold — rebalance is at month-end, and one bad day doesn't break the rule",
+    "Sell immediately — momentum is breaking"
   ]}
-  answer={1}
-  explanation="The rule rebalances monthly, period. Selling between rebalances on intraday moves is exactly the discretionary error that kills momentum returns. Option 0 is the tempting wrong answer because the drop feels like a signal — but the system was designed to ignore intramonth noise."
+  answer={2}
+  explanation="The rule rebalances monthly, period. Selling between rebalances on intraday moves is exactly the discretionary error that kills momentum returns. Selling immediately is the tempting wrong answer because the drop feels like a signal — but the system was designed to ignore intramonth noise."
 />
 
 <Quiz
@@ -50,11 +50,11 @@ The beginner mistake is selling momentum winners early because they "feel toppy"
   options={[
     "Add — momentum crashes always recover",
     "Hold the full position and wait for month-end rebalance",
-    "Cut size to respect the mandate, then let the rule rebalance you back in if momentum re-establishes",
-    "Exit fully and switch to mean reversion"
+    "Exit fully and switch to mean reversion",
+    "Cut size to respect the mandate, then let the rule rebalance you back in if momentum re-establishes"
   ]}
-  answer={2}
-  explanation="The synthesis: the mandate's drawdown cap is a non-negotiable floor that overrides any single agent's view. You are 7% from the cap. Adding (option 0) is how momentum traders blow up in crashes; full hold (option 1) ignores the mandate; full exit (option 3) abandons the rule. Cut size to protect the floor, let the rebalance rule reauthorise exposure if the factor recovers."
+  answer={3}
+  explanation="The synthesis: the mandate's drawdown cap is a non-negotiable floor that overrides any single agent's view. You are 7% from the cap. Adding on the crash is how momentum traders blow up; holding the full position to month-end ignores the mandate; exiting fully and switching to mean reversion abandons the rule. Cut size to protect the floor, let the rebalance rule reauthorise exposure if the factor recovers."
 />
 
 ## Try it

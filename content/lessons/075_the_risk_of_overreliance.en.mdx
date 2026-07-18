@@ -38,24 +38,24 @@ Automation bias is the classic name for it: humans systematically over-trust the
 <Quiz
   question="You've rubber-stamped four simulated BUY Verdicts this month without writing your own reasoning. Three of the simulated trades went against you. You convene the Room on a fifth ticker and the simulated Verdict is BUY 3% with confidence 0.71. What's the *right* next move?"
   options={[
-    "Take the trade — AMI's process has been consistent",
-    "Skip the trade — three losses in a row means AMI is wrong",
     "Open the Decision Journal, review what actually went wrong on the three losers, and decide whether your Mandate or your reading of verdicts (not AMI's process) needs adjusting",
+    "Skip the trade — three losses in a row means AMI is wrong",
+    "Take the trade — AMI's process has been consistent",
     "Coach the PM to be more conservative"
   ]}
-  answer={2}
+  answer={0}
   explanation="Streaks of losses are not by themselves evidence that the process is broken — but they are a forcing function to audit. The Journal is where you discover whether you were skipping the Bear case, sizing past the Trader's recommendation, or trading in a regime your Mandate doesn't fit. The tempting wrong answer is 'brief the PM' — the PM is your floor, not your strategy."
 />
 
 <Quiz
   question="Which of these is a sign you've crossed into overreliance on AMI?"
   options={[
-    "You read the full debate transcript before deciding",
     "You journal every trade with your own reasoning alongside the Verdict",
     "You catch yourself describing trades as 'AMI told me to buy' rather than 'I decided to buy after seeing AMI's case'",
+    "You read the full debate transcript before deciding",
     "You sometimes reject the Verdict entirely"
   ]}
-  answer={2}
+  answer={1}
   explanation="The language test is real. 'AMI told me' frames the agent as the decision-maker; 'I decided after seeing' keeps you in the CEO seat the simulator is built to train you for. The first three options are healthy CEO behaviour. The fourth one — rejecting verdicts — is also healthy and actively expected; AMI is not in the business of issuing advice you follow."
 />
 

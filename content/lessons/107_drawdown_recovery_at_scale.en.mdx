@@ -39,20 +39,25 @@ The trap is "I'm down, I need to size up to recover faster." It is the exact beh
 
 <Quiz
   question="Account at $80,000 after a 20% drawdown from $100,000 peak. Required recovery on current base = 25%. Assume +0.375% per-trade expectancy at 1% sizing. Roughly how many trades to recover?"
-  answer={67}
-  tolerance={3}
-  explanation="(1.00375)^N = 1.25 → N × ln(1.00375) = ln(1.25) → N ≈ 0.223 ÷ 0.00374 ≈ 60. Using a simple compound estimate, roughly 60–67 trades depending on rounding. The point is the math: even at a positive expectancy, recovery from a 20% drawdown is two to three months of disciplined execution at 1% sizing — not the few weeks it feels like it should be."
+  options={[
+    "About 60 trades",
+    "About 250 trades",
+    "About 25 trades",
+    "About 120 trades"
+  ]}
+  answer={0}
+  explanation="(1.00375)^N = 1.25 → N × ln(1.00375) = ln(1.25) → N = 0.2231 ÷ 0.003743 ≈ 60 trades. Answering 25 mistakes the required recovery percentage for a trade count. The point is the math: even at a positive expectancy, climbing out of a 20% drawdown is two to three months of disciplined execution at 1% sizing — not the few weeks it feels like it should be."
 />
 
 <Quiz
   question="Two traders both sit at a 30% drawdown. Trader A keeps 1% per-trade sizing and accepts ~5 months to recover. Trader B doubles to 2% per-trade sizing 'to climb out faster' and projects ~2.5 months. Across 1,000 simulated recovery sequences with realistic loss streaks, who recovers more often without hitting a 50% peak-to-trough drawdown?"
   options={[
     "Trader B — faster recovery means less time exposed to fresh drawdowns.",
-    "Trader A — recovery sequences include normal loss streaks; at 2% sizing those streaks roughly double the depth of any fresh drawdown during recovery, and the combined depth (original 30% plus a 16% additional) puts Trader B's account past the 50% danger threshold in a meaningful fraction of paths, while Trader A's 8% additional drawdown stays well below it.",
     "They recover at the same rate because expectancy per trade is unchanged.",
-    "Trader B — the higher per-trade gain compounds faster than streaks can erode it."
+    "Trader B — the higher per-trade gain compounds faster than streaks can erode it.",
+    "Trader A — recovery sequences include normal loss streaks; at 2% sizing those streaks roughly double the depth of any fresh drawdown during recovery, and the combined depth (original 30% plus a 16% additional) puts Trader B's account past the 50% danger threshold in a meaningful fraction of paths, while Trader A's 8% additional drawdown stays well below it."
   ]}
-  answer={1}
+  answer={3}
   explanation="The tempting wrong answer is the first or last — 'faster gain = better outcome'. The math says otherwise: positive expectancy means the average path recovers faster at 2%, but the variance of the path also doubles. The relevant survival question is not the average, it is the fraction of paths that survive without breaching a critical drawdown. At 2% sizing those paths see fresh 16% drawdowns added to the existing 30%, and combined depths past 50% trigger the recovery cliff from lesson 018 where the math becomes a multi-year problem regardless of skill."
 />
 

@@ -41,11 +41,11 @@ The trap is reading a Verdict as a prediction because it contains numbers. Numbe
   question="A Verdict reads: 'BUY MSFT · entry $418 · stop $402 · target $445 · horizon 5 weeks · confidence 0.64.' Which interpretation is correct?"
   options={[
     "AMI predicts MSFT will reach $445 within 5 weeks with 64% probability",
+    "AMI's model expects $445 ± confidence interval",
     "AMI is committing to a $445 price target",
-    "If you take the entry, your downside is defined at $402 and the trade is meant to play out toward $445 within ~5 weeks — none of those numbers is a price prediction",
-    "AMI's model expects $445 ± confidence interval"
+    "If you take the entry, your downside is defined at $402 and the trade is meant to play out toward $445 within ~5 weeks — none of those numbers is a price prediction"
   ]}
-  answer={2}
+  answer={3}
   explanation="The verdict is a conditional commitment, not a forecast. Entry/stop/target/horizon/confidence are scaffolding for a *trade plan you might take* — not a probability distribution over future prices. The most tempting wrong answer is the first one — 'predicts $445 at 64%' — because the structure looks statistical, but AMI's confidence is the Room's weighted lean, not a calibrated forecast."
 />
 
@@ -53,11 +53,11 @@ The trap is reading a Verdict as a prediction because it contains numbers. Numbe
   question="A user asks the Market Analyst: 'What will AAPL close at next Friday?' What does AMI actually say?"
   options={[
     "Gives a single price with a confidence band",
-    "Declines to forecast a point price on a fixed date, describes the current setup, gives a probabilistic expected range from realised volatility, and names what would invalidate the current read",
+    "Generates a model output saying 'AAPL Friday close: $237.42'",
     "Refuses to discuss AAPL entirely",
-    "Generates a model output saying 'AAPL Friday close: $237.42'"
+    "Declines to forecast a point price on a fixed date, describes the current setup, gives a probabilistic expected range from realised volatility, and names what would invalidate the current read"
   ]}
-  answer={1}
+  answer={3}
   explanation="This is the signature behaviour of a decision-support system. State the setup, give probabilistic ranges (not point forecasts), and identify invalidation. Saying '$237.42 on Friday' would be a prediction — exactly what AMI is built not to do. The tempting wrong answer is the first one ('price with confidence band') — that *looks* like decision-support, but a point price even with a band is still a forecast."
 />
 

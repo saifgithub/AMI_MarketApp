@@ -44,22 +44,22 @@ The correct mental model: ATR is a calibration parameter for everything else. St
 <Quiz
   question="AAPL trades at 230 with daily ATR(14) of $2.80. NVDA trades at 140 with daily ATR(14) of $5.10. Computing ATR as a percent of price, what do you learn about the two stocks?"
   options={[
-    "NVDA is in a stronger trend because its ATR is higher",
     "AAPL's ATR-to-price ratio is 1.2% (low-vol regime); NVDA's is 3.6% (normal-to-elevated). Same dollar risk on the two requires very different position sizes and stop distances because the typical daily range is roughly 3× different in percentage terms.",
     "AAPL is more attractive because its ATR is lower",
+    "NVDA is in a stronger trend because its ATR is higher",
     "ATR doesn't matter at the position level — only the dollar amount does"
   ]}
-  answer={1}
+  answer={0}
   explanation="ATR-as-percent-of-price is the regime read. The tempting wrong answer ('higher ATR = stronger trend') is the directional misreading the lesson explicitly calls out — ATR is non-directional. The other mistakes attach moral value (more attractive / less attractive) to volatility itself, when ATR is a calibration input, not a judgement."
 />
 
 <Quiz
   question="TSLA's daily ATR(14) jumped from $8.20 (3.0% of price) to $11.50 (5.0% of price) over a four-week window. You've been running a mean-reversion strategy on TSLA with a $4 stop. The strategy's win rate has dropped from 58% to 41% over the same window. Which interpretation is most consistent with the lesson's framework?"
   options={[
-    "TSLA's trend has changed direction — flip the strategy long-only",
+    "Add to losing positions — high ATR means bigger bounces",
     "The volatility regime has shifted from normal to elevated. A $4 stop is now well inside daily noise (about 35% of one ATR). Either widen the stop and reduce size proportionally to keep dollar risk constant, or stand aside until ATR normalises — mean-reversion strategies tend to underperform in elevated-volatility regimes.",
     "Reduce ATR-based stops because they're losing money",
-    "Add to losing positions — high ATR means bigger bounces"
+    "TSLA's trend has changed direction — flip the strategy long-only"
   ]}
   answer={1}
   explanation="The regime change is exactly what the lesson predicts — high ATR clusters, mean-reversion struggles, trend-following dominates. The tempting wrong answer (A) reads volatility as direction. Option C ('reduce ATR-based stops') is backwards — wider ATR demands wider stops. Option D is the revenge-trading anti-pattern flagged in Module 8."

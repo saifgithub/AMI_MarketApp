@@ -35,20 +35,25 @@ The trap is plugging in optimistic numbers and trusting the output. A beginner r
 
 <Quiz
   question="You've taken 100 trades. Win rate 55%, average winner +1.5R, average loser −1R. What does the simplified Kelly formula recommend as the full-Kelly fraction?"
-  answer={25}
-  tolerance={1}
-  explanation="f = (0.55 × 1.5 − 0.45) ÷ 1.5 = (0.825 − 0.45) ÷ 1.5 = 0.375 ÷ 1.5 = 0.25, or 25%. Full Kelly says 25% of account per trade — which is why you'd run quarter-Kelly (6.25%) or stick to the 1% mandate rule rather than trust a single sample."
+  options={[
+    "6.25%",
+    "55%",
+    "25%",
+    "37.5%"
+  ]}
+  answer={2}
+  explanation="f = (0.55 × 1.5 − 0.45) ÷ 1.5 = (0.825 − 0.45) ÷ 1.5 = 0.375 ÷ 1.5 = 0.25, or 25%. Stopping at 0.375 before dividing by the payoff ratio gives 37.5% — the most common slip in this formula. Full Kelly says 25% of account per trade, which is exactly why you'd run quarter-Kelly (6.25%) or stick to the 1% mandate rule rather than trust a single 100-trade sample."
 />
 
 <Quiz
   question="Two traders both compute full Kelly at 20% per trade from their backtests. Trader A sizes every trade at 20%. Trader B sizes at 5% (quarter-Kelly). Both run the same 100-trade sequence with a real but noisy edge. Why does Trader B usually compound better in practice?"
   options={[
+    "They tie — Kelly is just a guideline, not a real edge in itself.",
     "Trader A always compounds faster — full Kelly is mathematically optimal.",
     "Sample-estimated Kelly fractions are biased upward by noise, and full-Kelly drawdowns are deep enough (typically 50%+) that a wrong estimate or a normal losing streak can blow up the account before the edge realises; fractional Kelly trades a small slice of expected return for survival.",
-    "Trader B compounds faster because lower-percentage trades have lower fees.",
-    "They tie — Kelly is just a guideline, not a real edge in itself."
+    "Trader B compounds faster because lower-percentage trades have lower fees."
   ]}
-  answer={1}
+  answer={2}
   explanation="The tempting wrong answer is the first — full Kelly is provably growth-optimal, so it should win. The catch is that 'provably optimal' assumes the true win rate and payoff are known exactly. In practice the inputs are sample estimates with error, and Kelly's payoff function is asymmetric — overshooting size punishes you far more than undershooting. Full-Kelly drawdowns regularly hit 50%+ even on a correct edge, putting the account in the recovery hole from lesson 018. Fractional Kelly is a survival adjustment for measurement error."
 />
 

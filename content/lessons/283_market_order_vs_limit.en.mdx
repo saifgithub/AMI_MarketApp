@@ -89,19 +89,19 @@ Either way, your PM still runs a compliance check before the trade is recorded. 
 <Quiz
   question="If you set a limit order to BUY at $155 when the stock is at $152, what happens?"
   options={[
+    "Your order is rejected",
     "Nothing — your limit is above the current price",
     "Your order fills immediately at $152",
-    "Your order fills at $155",
-    "Your order is rejected"
+    "Your order fills at $155"
   ]}
-  answer={1}
+  answer={2}
   explanation="A limit price is a worst-case ceiling for buys. $152 is better than $155, so the exchange fills you at $152 immediately. Limit orders only sit pending if the limit is *worse* than the current market."
 />
 
 <Quiz
   question="Which order guarantees execution but not price?"
-  options={["Limit order", "Market order", "GTC order", "Both have the same guarantees"]}
-  answer={1}
+  options={["Market order", "GTC order", "Limit order", "Both have the same guarantees"]}
+  answer={0}
   explanation="Market orders guarantee execution but not the exact price (slippage possible). Limit orders guarantee price but not execution (may not fill)."
 />
 

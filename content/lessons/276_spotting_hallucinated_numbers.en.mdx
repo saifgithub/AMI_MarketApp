@@ -46,24 +46,24 @@ The trap is over-trusting <Term id="ami" /> on data because the verdict is struc
 <Quiz
   question="A Bull Researcher's case on AAPL leads with: 'Services revenue grew 30% YoY in Q3, gross margin expanded to 78%, dividend yield 2.4%.' Two of those numbers feel high. What's the right CEO move?"
   options={[
-    "Trust the verdict — AMI's twelve agents would have caught any errors",
     "Reject the verdict outright because something feels off",
     "Open 1-on-1 with the Fundamentals Analyst, cross-check the two numbers that feel wrong against the most recent filing the Analyst can pull, and decide whether the Bull case still stands once corrected",
-    "Coach the Bull Researcher to be more accurate next time"
+    "Coach the Bull Researcher to be more accurate next time",
+    "Trust the verdict — AMI's twelve agents would have caught any errors"
   ]}
-  answer={2}
+  answer={1}
   explanation="The CEO job is to verify load-bearing numbers, not to trust or reject blindly. Cross-checking is a 60-second 1-on-1. Coaching does not retroactively fix the Verdict you already have. The tempting wrong answer is the first one — 'twelve agents would have caught it' assumes peer-review across agents, which is not how the architecture works; the PM checks Mandate compliance, not factual accuracy."
 />
 
 <Quiz
   question="Which of these is the *correct* model of where hallucination protection lives in AMI?"
   options={[
-    "The PM fact-checks every number in every Verdict",
+    "AMI never hallucinates because the agents cross-verify each other",
     "The Research Manager catches all hallucinations by comparing Bull and Bear claims",
-    "The PM enforces Mandate compliance deterministically. Factual hallucinations on company data are an LLM-layer reality that the user (you, as CEO) is expected to spot-check on load-bearing claims using 1-on-1",
-    "AMI never hallucinates because the agents cross-verify each other"
+    "The PM fact-checks every number in every Verdict",
+    "The PM enforces Mandate compliance deterministically. Factual hallucinations on company data are an LLM-layer reality that the user (you, as CEO) is expected to spot-check on load-bearing claims using 1-on-1"
   ]}
-  answer={2}
+  answer={3}
   explanation="The safety floor and the fact-check are different jobs. The PM binds Mandate compliance (size, drawdown, exclusions); factual accuracy is a CEO responsibility supported by 1-on-1 cross-checks. The tempting wrong answer is 'Research Manager catches all hallucinations' — the synthesiser weights cases, it does not run ground-truth verification across the corpus."
 />
 

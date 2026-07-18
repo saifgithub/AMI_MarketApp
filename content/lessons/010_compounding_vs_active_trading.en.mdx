@@ -51,32 +51,37 @@ The trap is treating compounding as boring and trading as productive. Compoundin
 
 <Quiz
   question="$10,000 compounded at 8% per year for 20 years grows to approximately what amount?"
-  answer={46610}
-  tolerance={500}
-  explanation="$10,000 × 1.08²⁰ ≈ $46,610. The doubling time at 8% is about 9 years (Rule of 72: 72 / 8 = 9), so you double roughly twice over 20 years and a bit more — from $10K to ~$46K."
+  options={[
+    "$80,000",
+    "$46,610",
+    "$26,000",
+    "$40,000"
+  ]}
+  answer={1}
+  explanation="$10,000 × 1.08²⁰ ≈ $46,610. The doubling time at 8% is about 9 years (Rule of 72: 72 ÷ 8 = 9), so you get two full doublings to $40,000 and a bit more on top. The $26,000 answer is what simple interest would pay — 8% × 20 years = 160% — and the gap between the two is compounding."
 />
 
 <Quiz
   question="A trader claims their strategy generates a gross annualised return of 9%, beating an 8% buy-and-hold benchmark by 1 percentage point. Their estimated annual friction (commissions + spreads + short-term tax drag) is 3%. Which conclusion is sound?"
   options={[
-    "The trader is winning by 1% per year — over 20 years that's a meaningful edge",
     "The trader's net return after friction is about 6%, which is lower than the 8% buy-and-hold; the trader is destroying value despite a positive gross alpha",
-    "The trader needs a tighter stop-loss to improve performance",
-    "Friction doesn't compound; only returns compound, so the 3% drag is a one-time cost"
+    "Friction doesn't compound; only returns compound, so the 3% drag is a one-time cost",
+    "The trader is winning by 1% per year — over 20 years that's a meaningful edge",
+    "The trader needs a tighter stop-loss to improve performance"
   ]}
-  answer={1}
+  answer={0}
   explanation="Gross 9% minus 3% friction equals 6% net. The benchmark is 8% with near-zero friction (tax deferred until sale, low commissions on a single buy-and-hold trade). At $10K over 20 years: trader ends near $32K, buy-and-hold ends near $46K. The trader had positive gross alpha and still lost. Friction compounds against you exactly as returns compound for you."
 />
 
 <Quiz
   question="A reader argues: 'Active trading is better because I can sidestep bear markets that buy-and-hold investors have to ride out.' What is the strongest counter that uses what this lesson taught?"
   options={[
-    "Bear markets are unpredictable, so this is impossible",
     "The claim is testable: it requires the trader to be right about when to exit AND when to re-enter, after friction and taxes, more often than not. The default math says they would also need that combined accuracy to add more than 2–3% annualised — which is a much higher bar than 'sidestepping bear markets' makes it sound",
     "Active trading is psychologically easier than holding through drawdowns",
-    "Bear markets always recover, so sidestepping them is unnecessary"
+    "Bear markets always recover, so sidestepping them is unnecessary",
+    "Bear markets are unpredictable, so this is impossible"
   ]}
-  answer={1}
+  answer={0}
   explanation="The synthesis: 'beating buy-and-hold' is not one decision (exit) but two (exit + re-entry), repeated, taxed, and commissioned. The lesson's falsification rule — gross alpha must exceed friction — applies here directly. Most market-timing strategies fail not because exiting is hard but because re-entering after the bottom is harder than it looks, and the friction compounds against you while you wait."
 />
 

@@ -42,24 +42,24 @@ The trap is wishful conversion: assuming a tool that *looks* like it could place
 <Quiz
   question="A user briefs the Trader: 'When confidence is above 0.75, place the order automatically through my broker.' What actually happens?"
   options={[
+    "The briefing change is rejected — there is no execution surface to brief and no brokerage hook exists",
     "AMI honours the briefing change and starts auto-placing trades at confidence > 0.75",
     "AMI honours the briefing for one trade as a trial",
-    "The briefing change is rejected — there is no execution surface to brief and no brokerage hook exists",
     "AMI asks the user to provide brokerage credentials to proceed"
   ]}
-  answer={2}
+  answer={0}
   explanation="AMI is a simulation-only training environment and is not licensed to provide investment advice. There is no brokerage integration to brief into, and execution-related briefing is structurally outside the briefable surface. The most tempting wrong answer is 'one-trial' — but the limit is structural, not a permission setting."
 />
 
 <Quiz
   question="You ask the Fundamentals Analyst: 'What will GOOGL's EPS be in Q4 2027?' What is AMI actually going to say or do?"
   options={[
-    "Give a single EPS number with a confidence percentage",
-    "Decline to predict and instead summarise current analyst consensus ranges, current guidance, and what would shift the picture",
     "Refuse to answer anything about GOOGL",
-    "Generate a 4-quarter forward EPS model and call it a forecast"
+    "Generate a 4-quarter forward EPS model and call it a forecast",
+    "Decline to predict and instead summarise current analyst consensus ranges, current guidance, and what would shift the picture",
+    "Give a single EPS number with a confidence percentage"
   ]}
-  answer={1}
+  answer={2}
   explanation="AMI describes process and probabilities, not point forecasts on future dates. It will reference consensus ranges and current guidance and flag the assumptions — but it will not stake a single EPS number on Q4 2027 as a prediction."
 />
 

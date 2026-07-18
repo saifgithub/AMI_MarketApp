@@ -44,31 +44,31 @@ The trap is calling near-engulfings "close enough". A green body that covers 80%
     "No — engulfings require gaps that are at least 1% wide"
   ]}
   answer={1}
-  explanation="The strict rule is: Day 2 must open at-or-below Day 1's close AND close at-or-above Day 1's open. Day 1 close = $41.10, Day 2 open = $41.20 — that's 10 cents above, so the open condition fails. The pattern is a near-miss. Option 0 ignores the open/close anchors that define the pattern. Option 2 trivializes it to a colour sequence. Option 4 invents a gap-size rule the pattern doesn't have."
+  explanation="The strict rule is: Day 2 must open at-or-below Day 1's close AND close at-or-above Day 1's open. Day 1 close = $41.10, Day 2 open = $41.20 — that's 10 cents above, so the open condition fails. The pattern is a near-miss. The bigger-body answer ignores the open/close anchors that define the pattern. The alternating-colours answer trivializes it to a colour sequence. The 1%-gap answer invents a gap-size rule the pattern doesn't have."
 />
 
 <Quiz
   question="META has been in a clean uptrend for eight weeks. On a routine sideways consolidation week, META prints a strict bearish engulfing on the daily chart, but the engulfing is mid-range, well below the most recent swing high and well above the most recent higher-low, on average volume. A trader who memorised candlestick patterns shorts the stock at the engulfing close. Which best describes the trade and the most tempting alternative reading?"
   options={[
-    "Smart trade — bearish engulfings are always short signals",
     "Poor trade — the engulfing satisfies the shape rule but lacks context (no extended trend to reverse, no resistance level overhead, no volume expansion); shape alone is not the signal. The most tempting wrong read is letting the strict-engulfing label override the missing context",
     "Smart trade — uptrends are precisely when shorting engulfings works best",
+    "Smart trade — bearish engulfings are always short signals",
     "Poor trade — bearish engulfings only work on Tuesdays"
   ]}
-  answer={1}
-  explanation="The pattern is structurally clean but contextually empty: mid-range, mid-trend, no level, no volume. The lesson's binary filter (strict definition) keeps you from false positives, but passing the filter is necessary not sufficient — context is the second test. Option 0 treats the binary filter as the whole game. Option 2 inverts cause and effect. Option 4 is absurd by construction; it's the kind of distractor that catches a tired reader who's just confirming the obvious answer is the lesson's point."
+  answer={0}
+  explanation="The pattern is structurally clean but contextually empty: mid-range, mid-trend, no level, no volume. The lesson's binary filter (strict definition) keeps you from false positives, but passing the filter is necessary not sufficient — context is the second test. Treating bearish engulfings as always-short signals makes the binary filter the whole game. The claim that uptrends are when shorting engulfings works best inverts cause and effect. The Tuesdays-only answer is absurd by construction; it's the kind of distractor that catches a tired reader who's just confirming the obvious answer is the lesson's point."
 />
 
 <Quiz
   question="A trader sees a strict bullish engulfing on AAPL at a confirmed support level after a 9% downmove, on 2x volume. They enter long at the engulfing close of $186.40 with a stop at $182.80 (below the engulfing low of $183.20). Three sessions later AAPL closes at $182.10. What is the disciplined call, and what makes the wrong answer tempting?"
   options={[
-    "Hold — the pattern was correct, give it time",
     "Exit — the daily close at $182.10 is below the engulfing low of $183.20, which is the explicit invalidation. The pattern's structural premise has failed regardless of how clean the original setup looked. The most tempting wrong call is anchoring on how well the setup met the rules and ignoring the falsification trigger",
-    "Add to the position because the pullback is a discount",
-    "Move the stop to $180 to give it more room"
+    "Move the stop to $180 to give it more room",
+    "Hold — the pattern was correct, give it time",
+    "Add to the position because the pullback is a discount"
   ]}
-  answer={1}
-  explanation="The setup was excellent ex ante; the falsification still rules ex post. A daily close below the engulfing low is the explicit invalidation stated in the lesson, and 'this was a great setup' doesn't override that. Option 0 confuses setup quality with thesis validity — every setup has a falsification price, and good setups can still fail. Option 2 averages into a losing thesis. Option 3 widens the stop after the thesis broke — classic emotional behaviour the lesson warns against."
+  answer={0}
+  explanation="The setup was excellent ex ante; the falsification still rules ex post. A daily close below the engulfing low is the explicit invalidation stated in the lesson, and 'this was a great setup' doesn't override that. The hold-and-give-it-time answer confuses setup quality with thesis validity — every setup has a falsification price, and good setups can still fail. Adding on the pullback averages into a losing thesis. Moving the stop to $180 widens it after the thesis broke — classic emotional behaviour the lesson warns against."
 />
 
 ## Try it

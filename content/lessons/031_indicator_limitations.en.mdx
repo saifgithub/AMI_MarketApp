@@ -46,8 +46,8 @@ The correct mental model: indicators are filters that improve your hit rate when
   options={[
     "The indicators failed — they should have predicted the news",
     "The setup worked as designed: the signal had a stated invalidation, news invalidated it, and the defined stop capped the loss to roughly its planned size",
-    "The trader should have ignored the stop and held",
-    "The trader should never use indicators again because they don't see news"
+    "The trader should never use indicators again because they don't see news",
+    "The trader should have ignored the stop and held"
   ]}
   answer={1}
   explanation="Indicators describe past price and volume; they cannot see future news. The setup didn't fail when JPM gapped down — the invalidation condition (close through 242) triggered, exactly as the rule defined. The most tempting wrong answer ('indicators failed, should have predicted the news') misunderstands what indicators are. They're not forecasts. They're filters with stated invalidation conditions, and the lesson explicitly frames falsifiability as the point."
@@ -56,12 +56,12 @@ The correct mental model: indicators are filters that improve your hit rate when
 <Quiz
   question="You see a great-looking RSI divergence on NVDA at a new high. MACD agrees. Volume on the new-high bar was 0.6× the 20-day average. But you can't articulate what would prove the short signal wrong in a specific number. How should you handle this setup under the lesson's framework?"
   options={[
-    "Take the trade — three indicators agree, that's enough",
-    "Don't take it; without a stated invalidation in a specific price, it's not a setup, it's a hope. Define the level where the divergence cancels, or stand aside.",
     "Take the trade and decide the stop later",
-    "Buy NVDA instead — the indicators are bullish"
+    "Take the trade — three indicators agree, that's enough",
+    "Buy NVDA instead — the indicators are bullish",
+    "Don't take it; without a stated invalidation in a specific price, it's not a setup, it's a hope. Define the level where the divergence cancels, or stand aside."
   ]}
-  answer={1}
+  answer={3}
   explanation="The lesson's core rule: a signal without a stated invalidation is not a signal. Strong-looking confluence does not substitute for falsifiability — and 'decide the stop later' (option C) is the unfalsifiable hope-trade pattern the lesson explicitly names. The tempting wrong answer (option A) is treating indicator agreement as sufficient. It isn't. Without an a-priori invalidation level, you have no way to know when the trade is wrong, which means you'll discover it the hard way — by holding through a 6.9% loss instead of taking a 3.1% one."
 />
 

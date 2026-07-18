@@ -42,25 +42,25 @@ The beginner mistake is treating drawdowns as proof the strategy is broken. Ever
 <Quiz
   question="You're running a trend-following rule on US large-caps. Over the last 60 sessions, ADX has been at 14, the 50-day MA has been flat, and you've taken five small losses in a row. What does the regime analysis say?"
   options={[
-    "Keep trading the rule — five losses is normal variance",
     "The regime indicators (ADX < 20, flat 50-day) match the failure mode for trend-following. Cut size or pause the rule until the regime resolves.",
-    "Switch to mean reversion immediately",
-    "Add to the next trade to make back the losses"
+    "Keep trading the rule — five losses is normal variance",
+    "Add to the next trade to make back the losses",
+    "Switch to mean reversion immediately"
   ]}
-  answer={1}
-  explanation="The drawdown by itself doesn't tell you anything; the drawdown plus the regime signature does. Option 0 is the tempting wrong answer because 'trust the process' sounds disciplined — but trusting a process in its known failure regime is how you turn a 5% drawdown into a 20% one. Option 3 is revenge-trading dressed up as conviction."
+  answer={0}
+  explanation="The drawdown by itself doesn't tell you anything; the drawdown plus the regime signature does. Keeping the rule running is the tempting wrong answer because 'trust the process' sounds disciplined — but trusting a process in its known failure regime is how you turn a 5% drawdown into a 20% one. Adding to the next trade is revenge-trading dressed up as conviction."
 />
 
 <Quiz
   question="A trader runs a mean-reversion rule on US tech. SPY is in a clear downtrend below its 200-day MA. The rule has lost money for three months. The Bear Researcher and Conservative Debator both flag a regime change. The trader argues 'the rule has 14 years of backtest data'. What's the synthesis?"
   options={[
     "The trader is right — 14 years of data trumps three months of losses",
+    "Increase position size to recover the drawdown faster",
     "Mean reversion's documented failure mode is exactly 'trending bear market' — the backtest's 14 years includes those periods AS losses. The current losses are the strategy operating as designed in its failure regime. Cut size to mandate-compliant levels and resume when SPY reclaims the 200-day.",
-    "Switch the rule to short-only mean reversion",
-    "Increase position size to recover the drawdown faster"
+    "Switch the rule to short-only mean reversion"
   ]}
-  answer={1}
-  explanation="The synthesis: a strategy operating in its known failure regime is doing what the backtest said it would do. The backtest's overall edge doesn't mean every month is profitable — it means the good months outweigh the bad. Option 0 is the most tempting wrong answer because it dresses up willful blindness as long-term thinking. The right move is to respect the failure mode AND the mandate, not abandon the rule."
+  answer={2}
+  explanation="The synthesis: a strategy operating in its known failure regime is doing what the backtest said it would do. The backtest's overall edge doesn't mean every month is profitable — it means the good months outweigh the bad. The '14 years of data trumps three months' answer is the most tempting wrong one because it dresses up willful blindness as long-term thinking. The right move is to respect the failure mode AND the mandate, not abandon the rule."
 />
 
 ## Try it

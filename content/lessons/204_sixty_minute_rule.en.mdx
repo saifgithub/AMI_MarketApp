@@ -37,12 +37,12 @@ The trap is the belief that the cooldown is a punishment. It is not. The cooldow
   question="Why 60 minutes specifically as the default cooldown, rather than 5 minutes or the entire trading session?"
   options={[
     "60 minutes is the regulatory cooling-off window required by most brokers.",
-    "60 minutes is long enough that the loss-driven physiological response (elevated heart rate, narrowed attention, urgency to act) has largely subsided, but short enough that the cooldown does not eliminate a full session's worth of setups — it is a circuit breaker, not a market shutdown.",
     "60 minutes matches the standard candle resolution most strategies operate on.",
-    "60 minutes is the average time a single news cycle dominates the tape."
+    "60 minutes is the average time a single news cycle dominates the tape.",
+    "60 minutes is long enough that the loss-driven physiological response (elevated heart rate, narrowed attention, urgency to act) has largely subsided, but short enough that the cooldown does not eliminate a full session's worth of setups — it is a circuit breaker, not a market shutdown."
   ]}
-  answer={1}
-  explanation="There is no regulatory requirement (option 1 is fiction in a simulation context). The candle-resolution and news-cycle answers are post-hoc rationalisations. The actual reason is behavioural — the elevated physiological response to a loss subsides materially within roughly an hour, and 60 minutes is the shortest window that meaningfully reduces 'next trade after loss' decisions while preserving the rest of the session for the same strategy. Strategies are not paused; only the worst hour of the trader is."
+  answer={3}
+  explanation="There is no regulatory requirement — the broker cooling-off answer is fiction in a simulation context. The candle-resolution and news-cycle answers are post-hoc rationalisations. The actual reason is behavioural — the elevated physiological response to a loss subsides materially within roughly an hour, and 60 minutes is the shortest window that meaningfully reduces 'next trade after loss' decisions while preserving the rest of the session for the same strategy. Strategies are not paused; only the worst hour of the trader is."
 />
 
 <Quiz
@@ -50,8 +50,8 @@ The trap is the belief that the cooldown is a punishment. It is not. The cooldow
   options={[
     "Take the trade — the setup is independent, the checklist confirms it, and the cooldown is a guideline.",
     "Wait until 11:45am. If the setup still ticks every box at that time, take it at normal mandate size; if it does not, you have just been protected from a trade your physiology was rationalising.",
-    "Take the trade at half size — partial cooldown observance.",
-    "Switch to a different sector with the same timing — the cooldown only applies to the original loser's ticker."
+    "Switch to a different sector with the same timing — the cooldown only applies to the original loser's ticker.",
+    "Take the trade at half size — partial cooldown observance."
   ]}
   answer={1}
   explanation="The cooldown is not a suggestion modulated by setup quality — it is a parameter that exists *precisely* because your assessment of setup quality is degraded in the first 60 minutes after a loss. 'Take at half size' is the same trade with a discount sticker. 'Different sector with same timing' is the sector-rotation revenge variant (see lesson 205). The only disciplined answer is to let the clock run. If the setup is real at 11:45, it will still be real at 11:45; if it is not, you have just saved the trade. The cooldown costs you nothing on real setups and protects you on the rationalised ones."

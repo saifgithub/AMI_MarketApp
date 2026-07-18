@@ -50,25 +50,25 @@ The beginner mistake is treating risk parity as a magic formula. Risk parity giv
 <Quiz
   question="Two strategies. Strategy A vol 6%, expected CAGR 7%. Strategy B vol 20%, expected CAGR 14%. Equal-dollar weights would give B roughly 92% of portfolio risk. Risk-parity weights are roughly 77/23 in favour of A. What's the key trade-off?"
   options={[
-    "Risk parity is always better — lower risk wins",
-    "Risk parity dramatically reduces portfolio vol but also reduces expected CAGR (since you under-weight the higher-return strategy). The trade-off is Sharpe vs absolute return. Use risk parity if the lower vol matters for mandate compliance; use equal-dollar or somewhere between if mandate has room and you want the higher CAGR.",
+    "Combine them 50/50 by some other method",
     "Equal-dollar is always better — higher return wins",
-    "Combine them 50/50 by some other method"
+    "Risk parity is always better — lower risk wins",
+    "Risk parity dramatically reduces portfolio vol but also reduces expected CAGR (since you under-weight the higher-return strategy). The trade-off is Sharpe vs absolute return. Use risk parity if the lower vol matters for mandate compliance; use equal-dollar or somewhere between if mandate has room and you want the higher CAGR."
   ]}
-  answer={1}
-  explanation="Risk parity is a tool, not a panacea. It trades CAGR for lower drawdown. The right choice depends on the mandate. Option 0 ignores the return cost. Option 2 ignores the risk cost. Option 3 is non-specific. The synthesis: the mandate's drawdown cap determines whether the vol reduction is worth the CAGR sacrifice."
+  answer={3}
+  explanation="Risk parity is a tool, not a panacea. It trades CAGR for lower drawdown. The right choice depends on the mandate. The risk-parity-is-always-better answer ignores the return cost. The equal-dollar-is-always-better answer ignores the risk cost. The unspecified 50/50 blend is non-specific. The synthesis: the mandate's drawdown cap determines whether the vol reduction is worth the CAGR sacrifice."
 />
 
 <Quiz
   question="You apply risk parity to three strategies. In Q1 2020, stress correlation across the three jumps from ~0.3 (average) to ~0.85. Conservative Debator: 'the risk-parity weights are now wrong because correlations changed'. Research Manager: 'the weights are still mathematically valid but the diversification they delivered is gone'. Synthesis: what's the correct action?"
   options={[
-    "Continue with risk parity weights — they were set ex-ante",
-    "Risk parity equalises individual-strategy risk, not portfolio risk under high correlation. When stress correlation spikes, treat the combined portfolio as a single concentrated bet and cut total gross exposure to respect mandate drawdown — independent of the relative weights between strategies. Restore mandate-compliant gross when stress correlation falls back.",
     "Re-compute weights with new correlations and add leverage",
-    "Switch to equal-dollar weights"
+    "Continue with risk parity weights — they were set ex-ante",
+    "Switch to equal-dollar weights",
+    "Risk parity equalises individual-strategy risk, not portfolio risk under high correlation. When stress correlation spikes, treat the combined portfolio as a single concentrated bet and cut total gross exposure to respect mandate drawdown — independent of the relative weights between strategies. Restore mandate-compliant gross when stress correlation falls back."
   ]}
-  answer={1}
-  explanation="The synthesis: risk parity does not protect against correlation regime shifts. The mandate-aware overlay (cut gross exposure when stress correlation spikes) operates ABOVE the risk-parity weights. Option 0 leaves you exposed to crisis correlation. Option 2 amplifies the problem with leverage. Option 3 switches schemes mid-crisis, which doesn't address the underlying correlation issue. The right action operates at the gross-exposure level, not the relative-weight level."
+  answer={3}
+  explanation="The synthesis: risk parity does not protect against correlation regime shifts. The mandate-aware overlay (cut gross exposure when stress correlation spikes) operates ABOVE the risk-parity weights. Continuing with the ex-ante risk-parity weights leaves you exposed to crisis correlation. Re-computing weights and adding leverage amplifies the problem. Switching to equal-dollar weights changes schemes mid-crisis, which doesn't address the underlying correlation issue. The right action operates at the gross-exposure level, not the relative-weight level."
 />
 
 ## Try it

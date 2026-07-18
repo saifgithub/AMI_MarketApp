@@ -38,25 +38,25 @@ The beginner mistake is running WFA but then "fixing" the rule mid-stream when a
 <Quiz
   question="You run a walk-forward analysis on a breakout strategy. In-sample CAGR is 18%; aggregated out-of-sample CAGR is 4%. What does this tell you?"
   options={[
-    "The strategy is robust — both numbers are positive",
     "Walk-forward efficiency is 4/18 = 0.22, well below the 0.5 robust threshold. Most of the in-sample performance was overfit; the OOS edge is marginal at best and probably not worth deploying after costs.",
+    "Re-run the WFA with different windows until OOS improves",
     "Deploy the in-sample parameters anyway since out-of-sample is 'just one path'",
-    "Re-run the WFA with different windows until OOS improves"
+    "The strategy is robust — both numbers are positive"
   ]}
-  answer={1}
-  explanation="An efficiency ratio of 0.22 means roughly 80% of the in-sample edge evaporated when the rule was applied without peeking. That's the textbook overfit signature. Option 0 is the tempting wrong answer because 4% is positive — but a 4% rule probably can't survive transaction costs and any drawdown. Option 3 is the contamination trap: re-running until OOS looks better is just slow-motion overfitting."
+  answer={0}
+  explanation="An efficiency ratio of 0.22 means roughly 80% of the in-sample edge evaporated when the rule was applied without peeking. That's the textbook overfit signature. The 'both numbers are positive so the strategy is robust' answer is tempting because 4% is positive — but a 4% rule probably can't survive transaction costs and any drawdown. Re-running the WFA with different windows is the contamination trap: re-running until OOS looks better is just slow-motion overfitting."
 />
 
 <Quiz
   question="You design a walk-forward test for an intraday mean-reversion rule on QQQ that trades every day. In-sample window is 4 years, out-of-sample window is 1 year. The Research Manager flags a problem. What is it?"
   options={[
-    "The windows are too short",
-    "Mean reversion needs anchored windows",
     "For a high-frequency strategy, 4 years contains thousands of trades — plenty for parameter fitting — but a 1-year OOS window contains hundreds of trades, giving statistical confidence. The structure is fine. The real synthesis-test is whether you've also segmented by regime: does the rule's OOS perform similarly in 2018 (low vol), 2020 (crisis), and 2022 (bear)?",
+    "Mean reversion needs anchored windows",
+    "The windows are too short",
     "The OOS window should always equal the IS window"
   ]}
-  answer={2}
-  explanation="The synthesis: window sizes should be appropriate to bar frequency AND the regimes inside them. A trading rule that aggregates strongly in low-vol years but bleeds in high-vol years can show a positive aggregate OOS while being unusable in real life. Regime-segmented OOS is the deeper test. Option 0 is the tempting wrong answer because 'longer is always better' is a common myth; Option 1 is a fabricated rule; Option 3 is a heuristic, not a requirement."
+  answer={0}
+  explanation="The synthesis: window sizes should be appropriate to bar frequency AND the regimes inside them. A trading rule that aggregates strongly in low-vol years but bleeds in high-vol years can show a positive aggregate OOS while being unusable in real life. Regime-segmented OOS is the deeper test. The 'windows are too short' answer is tempting because 'longer is always better' is a common myth; 'mean reversion needs anchored windows' is a fabricated rule; 'the OOS window should equal the IS window' is a heuristic, not a requirement."
 />
 
 ## Try it

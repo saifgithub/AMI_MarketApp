@@ -36,8 +36,8 @@ The trap is the belief that the loser ticker (or its sector) is the carrier of t
 <Quiz
   question="You stopped out on NVDA at 10:00am for -1.4%. The cooldown window in your mandate is 60 minutes. At 10:20am you see a clean setup on XOM, an energy name (entirely different sector). Your conviction is high. What is the disciplined action?"
   options={[
-    "Take the XOM trade — the cooldown applies to NVDA, not to unrelated sectors.",
     "Take the XOM trade at half size as a 'diversification' compromise.",
+    "Take the XOM trade — the cooldown applies to NVDA, not to unrelated sectors.",
     "Wait until 11:00am (cooldown expiry). If the XOM setup still ticks every box at that time, take it; if not, you have been protected from sector-switching revenge.",
     "Skip XOM today and re-enter NVDA instead since you understand it better."
   ]}
@@ -48,24 +48,24 @@ The trap is the belief that the loser ticker (or its sector) is the carrier of t
 <Quiz
   question="Which compound test is the cleanest signature of sector-switching revenge rather than a legitimate fresh setup?"
   options={[
-    "You traded in a different sector than your loss.",
     "Two or more entries placed within 90 minutes of a closed loss, at least one in a different sector, average size 1.3x mandate or more, with the trades not on the written watchlist at session start.",
-    "Your total daily loss has grown beyond the first trade.",
-    "You feel the urge to keep trading after a loss."
+    "You traded in a different sector than your loss.",
+    "You feel the urge to keep trading after a loss.",
+    "Your total daily loss has grown beyond the first trade."
   ]}
-  answer={1}
+  answer={0}
   explanation="Trading a different sector after a loss may be legitimate or revenge — by itself it doesn't say which. Total daily loss growing is an outcome, not a process diagnostic. The urge to keep trading is real and unfalsifiable. The compound test — count (2+), timing (within 90 min), sector switch, size escalation, off-watchlist — is the auditable signature. Three boxes ticked is a tilt session regardless of whether one trade happens to close green and disguise the rest."
 />
 
 <Quiz
   question="Your mandate has a 60-minute cooldown enforced per-ticker (not per-trader). In the last 10 stop-outs, you have placed 6 entries within the cooldown window — all in different sectors from the original loss. 4 of the 6 closed at a loss. Synthesis answer?"
   options={[
+    "Change the cooldown enforcement scope from per-ticker to per-trader (any new entry on any ticker is blocked during the cooldown window). The data shows the per-ticker rule is the loophole — the time was correct, the scope was the leak.",
     "Increase the cooldown duration to 120 minutes — the per-ticker scope is fine, the time was too short.",
     "Remove the cooldown — your behaviour shows you cannot follow it anyway.",
-    "Change the cooldown enforcement scope from per-ticker to per-trader (any new entry on any ticker is blocked during the cooldown window). The data shows the per-ticker rule is the loophole — the time was correct, the scope was the leak.",
     "Switch to a 'minimum trade gap' (e.g. no trades within 60 minutes of each other) instead of a loss-specific cooldown."
   ]}
-  answer={2}
+  answer={0}
   explanation="The data isolates the failure exactly: the rule was being followed on the loser-ticker but bypassed via sector switch. The correct fix is to close the loophole — make the cooldown apply to the trader, not the ticker. Increasing the duration on a broken scope keeps the leak. Removing the cooldown is the 'rewrite the rule to legalise behaviour' move. A 'minimum trade gap' applied to all trading (not just post-loss) is a different rule entirely — and weaker, because it does not respond to the moment of loss. The diagnostic test in this lesson exists to catch this exact disguise; the response is to make the rule catch the disguise too."
 />
 

@@ -37,35 +37,35 @@ The trap is the belief that "everything is correlated in a crash, so I should se
   question="You have 5 open positions. The index is down 4% intraday on a macro headline. Your account is down 11% against a 20% max-drawdown mandate. The PM has not flagged a breach. You want to 'just be in cash.' What does the disciplined action look like?"
   options={[
     "Liquidate everything to cash — the macro headline changes the entire setup.",
-    "Do not liquidate the book. If any individual position has hit its written stop, honour that stop only. If you need to de-risk, scale each position by a fixed fraction (e.g. close 30% of each) — but do not zero the book.",
     "Hold and add to the weakest position — fear is a buy signal.",
+    "Do not liquidate the book. If any individual position has hit its written stop, honour that stop only. If you need to de-risk, scale each position by a fixed fraction (e.g. close 30% of each) — but do not zero the book.",
     "Move all stops to breakeven to lock in current open profits."
   ]}
-  answer={1}
+  answer={2}
   explanation="Liquidating the book is the textbook portfolio-panic move — it converts a drawdown the mandate was built to survive into a realised loss the strategy cannot recover from inside the year. 'Add to the weakest' is fear inviting greed to the same trade. 'All stops to breakeven' draws new stops mid-panic with no structural basis. The disciplined answer is the proportional de-risk: scale every position by a fixed fraction. That preserves participation in any recovery while halving exposure, and it is executable in seconds without making a panic-driven 'all or nothing' choice."
 />
 
 <Quiz
   question="Which compound test is the cleanest signature of portfolio-wide panic selling rather than a planned de-risk?"
   options={[
-    "You sold more than one position today.",
-    "You closed three or more positions in under sixty minutes, at least half were below their written stops, the PM had not flagged a mandate breach, and the session had a major risk-off headline.",
+    "You feel anxious about your portfolio.",
     "Your account is at a new low.",
-    "You feel anxious about your portfolio."
+    "You sold more than one position today.",
+    "You closed three or more positions in under sixty minutes, at least half were below their written stops, the PM had not flagged a mandate breach, and the session had a major risk-off headline."
   ]}
-  answer={1}
+  answer={3}
   explanation="Selling multiple positions in a day can be a structured de-risk. A new account low is an outcome, not a process diagnostic. Anxiety is real but unfalsifiable. The compound test — speed (under 60 minutes), stop violations, no mandate breach, headline coincidence — is the auditable signature of panic rather than process. Three of four boxes ticked is a panic session; the chart does not need to validate the diagnosis."
 />
 
 <Quiz
   question="Your account drawdown is -19% against a 20% mandate. You have 6 open positions. The PM has just flagged the mandate. The market is closing in 45 minutes. The feed is full of crisis headlines. Synthesis answer?"
   options={[
-    "Liquidate everything now to stay inside the mandate.",
-    "Honour the PM's mandate floor by reducing portfolio risk to bring drawdown projection back inside the mandate — typically by closing the weakest-thesis positions first or scaling all positions proportionally — and execute against a written de-risk plan rather than a panic timer.",
     "Override the PM flag — drawdown will reverse by close.",
-    "Add to your strongest position to 'fight back'."
+    "Add to your strongest position to 'fight back'.",
+    "Liquidate everything now to stay inside the mandate.",
+    "Honour the PM's mandate floor by reducing portfolio risk to bring drawdown projection back inside the mandate — typically by closing the weakest-thesis positions first or scaling all positions proportionally — and execute against a written de-risk plan rather than a panic timer."
   ]}
-  answer={1}
+  answer={3}
   explanation="The PM mandate breach is the authority that forces action — but the *type* of action still must be planned, not panicked. 'Liquidate everything now' is the action a panicked trader takes; 'reduce risk proportionally or close weakest-thesis positions' is the action the mandate-respecting trader takes. Overriding the PM is the trade that converts -19% into -32%. Adding to the strongest is the trade that converts -19% into -28%. Only the structured de-risk respects both the PM's floor and the fact that a planned action under stress is the only one the next-month version of you will be able to defend in the journal."
 />
 

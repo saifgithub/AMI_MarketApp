@@ -42,25 +42,25 @@ The trap is treating support and resistance as exact prices instead of zones, an
 <Quiz
   question="A stock has bounced off the $50.00 level three separate times over two months, each time printing a daily close above $50.40. Today it trades intraday down to $49.80 and closes the day at $50.65. Has the $50 support broken?"
   options={[
-    "Yes — the $49.80 print is below $50.00, so the level is broken",
     "No — the intraday wick tested the zone but the daily close at $50.65 is above $50, so structurally the support held",
     "Yes — three touches mean the support was already weak and this confirms the break",
-    "Cannot tell without checking the weekly chart"
+    "Cannot tell without checking the weekly chart",
+    "Yes — the $49.80 print is below $50.00, so the level is broken"
   ]}
-  answer={1}
-  explanation="Support is broken by a *close* below the zone, not an intraday wick. A 20-cent dip below $50 on a daily candle that closes above $50 is a test, not a break — and a successful one. The tempting wrong answer (option 0) treats the level as a hard line; the lesson explicitly says levels are zones confirmed by closes. The 'more touches = weaker' framing in option 2 is the opposite of how support works — more confirmed touches typically build, not erode, conviction in a level, until the close finally breaks it."
+  answer={0}
+  explanation="Support is broken by a *close* below the zone, not an intraday wick. A 20-cent dip below $50 on a daily candle that closes above $50 is a test, not a break — and a successful one. The tempting wrong answer — the one calling the $49.80 print a break — treats the level as a hard line; the lesson explicitly says levels are zones confirmed by closes. The 'more touches = weaker' framing in the three-touches answer is the opposite of how support works — more confirmed touches typically build, not erode, conviction in a level, until the close finally breaks it."
 />
 
 <Quiz
   question="NVDA trades in a range with support at $107 and resistance at $122. The stock is currently at $109 with a daily uptrend on the higher timeframe. You want to take a long position. Which entry-and-stop combination best reflects the levels and the falsification rule, and gives a sensible risk/reward?"
   options={[
-    "Buy at $109 with a stop at $108.50 — tight stops are always best",
-    "Buy at $109 with a stop at $106 (just below the support zone, allowing wick room) and a target near $121, the lower edge of the resistance zone",
+    "Buy at $121.80 because price is closest to breaking resistance and breakouts always run",
     "Buy at $109 with no stop because the range will hold",
-    "Buy at $121.80 because price is closest to breaking resistance and breakouts always run"
+    "Buy at $109 with a stop at $108.50 — tight stops are always best",
+    "Buy at $109 with a stop at $106 (just below the support zone, allowing wick room) and a target near $121, the lower edge of the resistance zone"
   ]}
-  answer={1}
-  explanation="Risking ~$3 (from $109 to $106) to make ~$12 (from $109 to $121) is a roughly 1:4 risk-to-reward, with the stop placed beyond the support zone — exactly the 'breathing room' the lesson advises. Option 0's tight stop at $108.50 sits inside the range and will get hit by normal noise. Option 2 ignores the falsification rule entirely — every trade needs an invalidation. Option 3 chases the resistance line with no edge: you're buying expensive and you don't yet have a confirmed close above $122. The right answer requires combining trend context, level placement, wick allowance, and risk/reward — pure recall of any one of those won't get you there."
+  answer={3}
+  explanation="Risking ~$3 (from $109 to $106) to make ~$12 (from $109 to $121) is a roughly 1:4 risk-to-reward, with the stop placed beyond the support zone — exactly the 'breathing room' the lesson advises. The tight-stop answer at $108.50 places it inside the range and will get hit by normal noise. The no-stop answer ignores the falsification rule entirely — every trade needs an invalidation. Buying at $121.80 chases the resistance line with no edge: you're buying expensive and you don't yet have a confirmed close above $122. The right answer requires combining trend context, level placement, wick allowance, and risk/reward — pure recall of any one of those won't get you there."
 />
 
 ## Try it

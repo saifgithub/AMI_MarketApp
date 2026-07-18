@@ -38,23 +38,23 @@ The beginner mistake is treating all pullback supports as equivalent and using o
   options={[
     "Enter at $223, stop $215 (use the static S/R as the stop)",
     "Enter at $223, stop $218 (under the 50-day MA at the dynamic support's noise band)",
-    "Wait for a tag of $215 then enter with a stop at $210",
-    "Skip — too many possible supports means none is binding"
+    "Skip — too many possible supports means none is binding",
+    "Wait for a tag of $215 then enter with a stop at $210"
   ]}
   answer={1}
-  explanation="The closer support is the 50-day MA at $222; price already closed above it with confirmation. Stop placement = MA - ~1 ATR = $222 - $4 = $218, giving the dynamic support its natural noise band. Option 0 uses the further support and over-risks by $7/share when the closer support has already confirmed. Option 2 waits for a tag of $215 that may never come because the MA held."
+  explanation="The closer support is the 50-day MA at $222; price already closed above it with confirmation. Stop placement = MA - ~1 ATR = $222 - $4 = $218, giving the dynamic support its natural noise band. The $215-stop answer uses the further support and over-risks by $7/share when the closer support has already confirmed. The wait-for-$215 answer waits for a tag that may never come because the MA held."
 />
 
 <Quiz
   question="On Bursa Malaysia: TENAGA in an uptrend. The 50-day MA is at RM14.20; a prior horizontal breakout level sits at RM14.20 — both supports coincide. Price pulls back and closes at RM14.30 with a clean confirmation candle. ATR is RM0.30. Mandate: per-trade risk 1% on RM30,000 account. Synthesis: best entry/stop AND max position size?"
   options={[
     "Entry RM14.30, stop RM14.05, size 1,200 shares",
-    "Entry RM14.30, stop RM13.80, size 600 shares",
+    "Entry RM14.30, stop RM13.50, size 375 shares",
     "Entry RM14.30, stop RM14.05, size 600 shares",
-    "Entry RM14.30, stop RM13.50, size 375 shares"
+    "Entry RM14.30, stop RM13.80, size 600 shares"
   ]}
   answer={0}
-  explanation="When MA and static S/R coincide, the support is stronger so the stop can be tighter — use the smaller noise band ~0.8x ATR below the level: RM14.20 - RM0.15 = RM14.05. Risk per share = 14.30 - 14.05 = RM0.25. Max risk = 1% * 30,000 = RM300. Shares = 300 / 0.25 = 1,200. Option 1 uses a normal MA-only buffer when both supports stack — over-risking. Synthesis: the stop type AND the stop distance both flow from the support type AND its noise band, then the mandate caps size."
+  explanation="When MA and static S/R coincide, the support is stronger so the stop can be tighter — use the smaller noise band ~0.8x ATR below the level: RM14.20 - RM0.15 = RM14.05. Risk per share = 14.30 - 14.05 = RM0.25. Max risk = 1% * 30,000 = RM300. Shares = 300 / 0.25 = 1,200. The RM13.80-stop answer uses a normal MA-only buffer when both supports stack — over-risking. Synthesis: the stop type AND the stop distance both flow from the support type AND its noise band, then the mandate caps size."
 />
 
 ## Try it

@@ -38,24 +38,24 @@ The trap is placing the stop at "the dollar amount I'm willing to lose" instead 
 <Quiz
   question="You enter NVDA at $480 with a stop at $470. NVDA dips to $471.20 intraday on news, then closes at $478. What should you do?"
   options={[
+    "Take partial profits to lock in something before the next dip.",
     "Exit immediately — the intraday move proves volatility is too high.",
     "Move the stop down to $465 to give the trade more room since it nearly hit.",
-    "Do nothing. The stop is at $470; price closed at $478, so the thesis is intact.",
-    "Take partial profits to lock in something before the next dip."
+    "Do nothing. The stop is at $470; price closed at $478, so the thesis is intact."
   ]}
-  answer={2}
+  answer={3}
   explanation="The seductive wrong answer is 'move the stop to $465' — it feels like flexibility. But moving a stop wider after entry is the exact behaviour stops exist to prevent: it converts 'wrong' into 'not yet wrong'. The stop was set at the price that invalidates the thesis. Price did not close below it. The trade is fine; the math holds; do nothing."
 />
 
 <Quiz
   question="Two traders both buy AAPL at $200 with $100 of risk per trade. Trader A's chart-based stop is at $195. Trader B sets a flat 2% stop at $196. Same setup, same target $215. Whose stop is structurally sound?"
   options={[
-    "Trader B — 2% is a standard professional rule.",
     "Trader A — the stop is placed at the price that invalidates the setup, not at an arbitrary percentage; Trader B will get shaken out by noise that does not violate the thesis.",
+    "Trader B — 2% is a standard professional rule.",
     "Both are equivalent because the dollar risk is the same.",
     "Neither — both stops are too tight for a $200 stock."
   ]}
-  answer={1}
+  answer={0}
   explanation="The tempting wrong answer is 'both equivalent — same $100'. The dollar risk is identical, but the structural meaning is not. Trader A's stop is falsifiable: 'if AAPL closes below $195, my thesis is dead.' Trader B's stop is just a budget — $196 might be well inside normal daily noise, so the trade can be stopped out without the setup ever actually failing. A stop has to mark the price at which the thesis is wrong, not the price at which the wallet hurts."
 />
 

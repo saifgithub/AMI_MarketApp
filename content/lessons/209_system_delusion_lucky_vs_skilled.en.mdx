@@ -36,10 +36,10 @@ The trap is the certainty that comes from a winning streak. Certainty is not evi
 <Quiz
   question="Your strategy has produced 22 winning trades and 8 losing trades over 5 months — 73% win rate, expectancy +5.1% per trade. You want to raise per-trade risk to capture the edge. What does the disciplined response require?"
   options={[
-    "Raise per-trade risk immediately — 30 trades is a sufficient sample, and the expectancy is well above zero.",
-    "Wait until at least 100 trades across at least two distinct market regimes (e.g. a trending and a choppy or a bull and a correction phase) before raising per-trade risk. The current sample is consistent with both 'real edge' and 'lucky run in a favourable regime.'",
     "Raise per-trade risk halfway (e.g. 1.0% to 1.5%) — partial confidence.",
-    "Document the result, do not raise risk, and run a backtest covering 10 years to validate the strategy."
+    "Wait until at least 100 trades across at least two distinct market regimes (e.g. a trending and a choppy or a bull and a correction phase) before raising per-trade risk. The current sample is consistent with both 'real edge' and 'lucky run in a favourable regime.'",
+    "Document the result, do not raise risk, and run a backtest covering 10 years to validate the strategy.",
+    "Raise per-trade risk immediately — 30 trades is a sufficient sample, and the expectancy is well above zero."
   ]}
   answer={1}
   explanation="30 trades sounds substantial but is statistically insufficient to distinguish skill from luck for most retail strategies — even a 73% observed win rate has a non-trivial probability under a true 50% rate at that sample size. 'Halfway raise' is the seductive compromise — it bakes regime-dependent confidence into a permanent mandate change. The backtest answer is partially right (a backtest does help) but skips the critical condition: the strategy must be observed *live* through at least one regime change before its edge is measured, not just on historical data. The disciplined answer requires both sample size and regime diversity."
@@ -49,23 +49,23 @@ The trap is the certainty that comes from a winning streak. Certainty is not evi
   question="Which compound test distinguishes a true edge from a lucky run in a flattering regime?"
   options={[
     "Win rate above 60%.",
-    "Positive expectancy across at least 100 live trades that span at least two distinct market regimes (e.g. trending and choppy, or bull and correction), with no single regime contributing more than 60% of the trades.",
+    "Positive expectancy on a backtest going back 10 years.",
     "Five consecutive winners.",
-    "Positive expectancy on a backtest going back 10 years."
+    "Positive expectancy across at least 100 live trades that span at least two distinct market regimes (e.g. trending and choppy, or bull and correction), with no single regime contributing more than 60% of the trades."
   ]}
-  answer={1}
+  answer={3}
   explanation="Win rate alone says nothing about expectancy distribution. Five consecutive winners is consistent with random. A 10-year backtest is useful but not sufficient — strategies overfit to past regimes routinely. The compound test — sample size (100+), regime diversity (2+), regime balance (no single regime >60%) — is the auditable framework that distinguishes edge from luck. All three numbers are checkable in the Decision Journal once the data exists; until it does, the strategy is a hypothesis, not a system."
 />
 
 <Quiz
   question="Your strategy has 28 live trades, 64% win rate, expectancy +4.2% per trade. All 28 trades occurred during a clearly trending bull market. You are about to raise per-trade risk to 2% from 1%. The Conservative Debator flags that no regime change has been observed. The PM has not breached. Synthesis answer?"
   options={[
+    "Run a backtest covering 2008 and 2020 — if positive, raise risk.",
     "Override the Conservative Debator — equity curve and expectancy support the size increase.",
     "Raise per-trade risk to 1.5% as a 'partial' increase.",
-    "Do not raise per-trade risk. Keep the strategy at 1% until at least one regime change has been observed and the strategy has held up across it (i.e., positive expectancy through a choppy or correction phase). Document the constraint in the Decision Journal and the mandate.",
-    "Run a backtest covering 2008 and 2020 — if positive, raise risk."
+    "Do not raise per-trade risk. Keep the strategy at 1% until at least one regime change has been observed and the strategy has held up across it (i.e., positive expectancy through a choppy or correction phase). Document the constraint in the Decision Journal and the mandate."
   ]}
-  answer={2}
+  answer={3}
   explanation="The 'override the Conservative Debator' move is exactly the overconfidence pattern this lesson exists to prevent — and is the most common error a trader makes in month 6 of a winning streak. 'Partial raise to 1.5%' bakes regime-conditional confidence into a permanent mandate change. The backtest answer is supplementary, not substitutive — historical regime survival is informative but a strategy untested live through a regime change is still unproven live. The disciplined answer requires live regime diversity before a size increase, and is willing to leave a real edge under-sized for several more months in exchange for not converting a regime-conditional edge into a permanent mandate breach."
 />
 

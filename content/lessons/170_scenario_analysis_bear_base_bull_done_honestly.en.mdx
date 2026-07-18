@@ -48,25 +48,25 @@ The trap is using probability weights to confirm a pre-existing view. A beginner
 <Quiz
   question="An analyst presents: bear $150 (20% probability), base $300 (50% probability), bull $900 (30% probability). The stock trades at $400. The bear case is -50% from base; the bull case is +200% from base. Which is the cleanest critique under the lesson?"
   options={[
-    "Expected value is 0.2×$150 + 0.5×$300 + 0.3×$900 = $30+$150+$270 = $450. Buy",
     "The scenarios are asymmetric in a way that inflates the answer. Bear is -50% from base, bull is +200% from base — that's a 4:1 upside asymmetry that almost no real-world distribution justifies. A disciplined bear case should be roughly as far below base as bull is above, in percent terms. Rebuild with bear at $150 (-50%) and bull at $450 (+50%), the expected value drops to $30+$150+$135 = $315 — close to fair, not 'buy'. The asymmetry was doing the work, not the analysis",
+    "Buy because the bull case is bigger",
     "Reject scenario analysis — it's all subjective",
-    "Buy because the bull case is bigger"
+    "Expected value is 0.2×$150 + 0.5×$300 + 0.3×$900 = $30+$150+$270 = $450. Buy"
   ]}
-  answer={1}
-  explanation="The synthesis is that asymmetric scenarios — bear shallow, bull deep — inflate expected value mechanically without requiring better information. The lesson's discipline is that the upside and downside should be roughly symmetric in percent terms unless there's a specific structural reason (e.g., bankruptcy is a one-way floor). The most tempting wrong answer is option 0 — the math is technically correct but the inputs are rigged. Option 2 over-rejects — scenario analysis is rigorous when disciplined. Option 3 falls for exactly the rigging the lesson warns about."
+  answer={0}
+  explanation="The synthesis is that asymmetric scenarios — bear shallow, bull deep — inflate expected value mechanically without requiring better information. The lesson's discipline is that the upside and downside should be roughly symmetric in percent terms unless there's a specific structural reason (e.g., bankruptcy is a one-way floor). The most tempting wrong answer is the $450 expected-value calculation — the math is technically correct but the inputs are rigged. Rejecting scenario analysis as subjective over-rejects — it is rigorous when disciplined. The buy-because-the-bull-case-is-bigger answer falls for exactly the rigging the lesson warns about."
 />
 
 <Quiz
   question="You've built a bear/base/bull for a stock. The stock falls 15% over two months. Without any change in fundamentals, the analyst raises the bull probability from 20% to 35% because 'the lower price improves the risk-reward.' What's the cleanest critique?"
   options={[
-    "Correct — lower price always improves risk-reward",
     "The probability of each scenario shouldn't change because the stock price changed — the probabilities are about what happens to the business, not the stock. The lesson's falsifiable test is that probabilities should update only when observable business events occur. Updating probabilities because price moved is reverse-engineering bullishness from price action. The correct response to a 15% price drop with no fundamental change is to recompute expected value at the new price using unchanged probabilities — if the new price is now below the EV, that's the buy signal, not raising the bull weight",
+    "Correct — lower price always improves risk-reward",
     "Correct — momentum should be weighted into scenarios",
     "Indeterminate — depends on the volume"
   ]}
-  answer={1}
-  explanation="The synthesis is the lesson's core discipline — scenario probabilities are about the business, the stock price is the input to whether the EV is attractive. Conflating the two creates motivated reasoning. Option 0 confuses price improvement with probability change. Option 2 imports a technical-analysis concept into a fundamental framework where it doesn't belong. Option 3 dodges the methodological error."
+  answer={0}
+  explanation="The synthesis is the lesson's core discipline — scenario probabilities are about the business, the stock price is the input to whether the EV is attractive. Conflating the two creates motivated reasoning. The lower-price-always-improves-risk-reward answer confuses price improvement with probability change. The weight-in-momentum answer imports a technical-analysis concept into a fundamental framework where it doesn't belong. The depends-on-volume answer dodges the methodological error."
 />
 
 ## Try it

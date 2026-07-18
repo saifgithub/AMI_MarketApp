@@ -47,12 +47,12 @@ The correct mental model: RSI(2) is a precision tool for a specific regime — s
 <Quiz
   question="GOOGL closes above its SMA200 every day from March through December. Daily RSI(2) drops below 10 nine separate times in that window. Following each signal, you buy the next open and exit on RSI(2) > 70. Seven winners average +1.8% (3–4 day hold); two losers average -2.2%. What does this tell you about RSI(2) mean reversion?"
   options={[
+    "Two losers means the system is broken",
     "Mean reversion always works; RSI(2) is universally profitable",
     "The 78% win rate and small holding period are working as designed — but the system requires the SMA200 up-trend filter; same signal in a down-trend has historically returned roughly zero or worse",
-    "RSI(2) is a long-term trend indicator",
-    "Two losers means the system is broken"
+    "RSI(2) is a long-term trend indicator"
   ]}
-  answer={1}
+  answer={2}
   explanation="The example shows the system working inside its proper regime. The tempting wrong answer ('always works') ignores the trend filter — the lesson contrasts GOOGL's profitable signals with TSLA's losing ones from the same indicator without the filter. Two losers in nine trades is normal; mean-reversion systems typically have 70–80% win rates with controlled losers. Calling the system broken (option D) misreads the math — the system is doing what it's designed to do."
 />
 
@@ -61,8 +61,8 @@ The correct mental model: RSI(2) is a precision tool for a specific regime — s
   options={[
     "Buy with full size — RSI(2) < 10 is a strong oversold signal",
     "Skip the trade: RSI(2) mean reversion requires price above a rising SMA200. The signal in a down-trend has no edge, and the lesson cited TSLA's four losing signals in the same condition as evidence.",
-    "Buy half size to test the signal",
-    "Short the stock instead because RSI(2) is overbought"
+    "Short the stock instead because RSI(2) is overbought",
+    "Buy half size to test the signal"
   ]}
   answer={1}
   explanation="The signal's edge is regime-conditional. Without the up-trend filter, the historical expectation is roughly zero or worse — the lesson cites TSLA's -3.4% average across four signals in a down-trend. The tempting wrong answer ('buy full size, oversold is oversold') is exactly the mistake the lesson is built to prevent. Half-size in a no-edge condition (option C) is still a no-edge bet, just smaller. The trend filter is not a refinement; it is the entire system."

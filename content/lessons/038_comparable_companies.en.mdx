@@ -42,25 +42,25 @@ The trap is reverse-engineering the comp set to support a conclusion you've alre
 <Quiz
   question="You're valuing a mid-cap US regional bank. Which peer set is most defensible for a comparable-companies analysis?"
   options={[
-    "JPM, BAC, WFC — the largest US banks, because they're the most-followed and have the cleanest data",
-    "A set of mid-cap regional banks with similar geographic footprint, loan mix, and asset size — even if individually less famous than the megabanks",
+    "A mix of regional banks and fintech lenders, to capture the disruption angle",
     "Any S&P 500 financial-sector company, because they all live in the same sector ETF",
-    "A mix of regional banks and fintech lenders, to capture the disruption angle"
+    "A set of mid-cap regional banks with similar geographic footprint, loan mix, and asset size — even if individually less famous than the megabanks",
+    "JPM, BAC, WFC — the largest US banks, because they're the most-followed and have the cleanest data"
   ]}
-  answer={1}
-  explanation="Comparable analysis requires comparable business models. JPM (option 0) is a global universal bank with capital-markets exposure; a mid-cap regional bank has none of that — the multiples will differ for structural reasons that have nothing to do with whether the target is cheap. Option 2 is too broad — insurers and asset managers earn very different returns on equity. Option 3 mixes business models that price on entirely different bases (book value vs growth multiples). The most tempting wrong answer is option 0 because megabank data is the most accessible; convenience is not the same as comparability."
+  answer={2}
+  explanation="Comparable analysis requires comparable business models. JPM — from the megabank set — is a global universal bank with capital-markets exposure; a mid-cap regional bank has none of that — the multiples will differ for structural reasons that have nothing to do with whether the target is cheap. The any-financial-sector-company set is too broad — insurers and asset managers earn very different returns on equity. The regional-banks-plus-fintech-lenders set mixes business models that price on entirely different bases (book value vs growth multiples). The most tempting wrong answer is the megabank set because its data is the most accessible; convenience is not the same as comparability."
 />
 
 <Quiz
   question="You assemble a peer set of five companies. The forward P/E multiples are: 14, 18, 20, 22, and 65. The target company trades at 19. The mean of the peer set is 27.8. The median is 20. Which conclusion best applies the lesson?"
   options={[
-    "The target is undervalued — it trades below the peer mean of 27.8",
     "The target is fairly valued — at 19 it's essentially at the median of 20, and the 65x outlier is dragging the mean upward in a misleading way. The right step is to either drop the outlier (if it doesn't actually fit the comp set) or rely on the median, which is the standard answer when there's a single extreme value distorting the average. Either way the target is not cheap relative to a clean read of its peers",
-    "The target is overvalued — most peers trade below 22",
-    "Can't decide — need more peers"
+    "The target is undervalued — it trades below the peer mean of 27.8",
+    "Can't decide — need more peers",
+    "The target is overvalued — most peers trade below 22"
   ]}
-  answer={1}
-  explanation="The synthesis is that comparable analysis depends on a clean peer set AND a robust central-tendency measure. A single outlier (the 65x) distorts the mean but not the median — which is exactly why analysts default to median in skewed sets. At 19x against a median of 20x, the target is essentially in line. The most tempting wrong answer is option 0 — the headline 'below the mean' is the kind of number a careless analyst uses to push a 'cheap' narrative. But the 65x is either an outlier that doesn't belong in the set (in which case the mean is fake), or it does belong (in which case the median is the honest summary). Option 2 misreads the median. Option 3 is over-cautious — five peers is a reasonable set."
+  answer={0}
+  explanation="The synthesis is that comparable analysis depends on a clean peer set AND a robust central-tendency measure. A single outlier (the 65x) distorts the mean but not the median — which is exactly why analysts default to median in skewed sets. At 19x against a median of 20x, the target is essentially in line. The most tempting wrong answer is the undervalued-versus-mean read — the headline 'below the mean' is the kind of number a careless analyst uses to push a 'cheap' narrative. But the 65x is either an outlier that doesn't belong in the set (in which case the mean is fake), or it does belong (in which case the median is the honest summary). The overvalued answer misreads the median. The need-more-peers answer is over-cautious — five peers is a reasonable set."
 />
 
 ## Try it

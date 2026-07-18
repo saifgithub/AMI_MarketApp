@@ -37,24 +37,24 @@ The beginner mistake is treating momentum crashes as black swans you can't see c
   question="A momentum portfolio is up strongly YTD. Cross-sectional dispersion (the gap between top-decile and bottom-decile trailing returns) has risen to its highest level in 4 years. The Aggressive Debator says 'the trend is strong, hold full exposure'. The Conservative Debator says 'reduce gross exposure — wide dispersion precedes crashes'. Which framing is empirically correct?"
   options={[
     "Aggressive Debator — current profitability is the signal that matters",
-    "Conservative Debator — wide dispersion is a documented precondition for momentum crashes",
     "Neither — dispersion is unrelated to crash risk",
-    "Both equally — it's a coin flip"
+    "Both equally — it's a coin flip",
+    "Conservative Debator — wide dispersion is a documented precondition for momentum crashes"
   ]}
-  answer={1}
-  explanation="Wide cross-sectional dispersion is the most robust pre-crash signal in the momentum-crash literature (Daniel and Moskowitz, 2016 showed factor volatility and dispersion forecast crash probability). The Aggressive Debator's framing — strength validates exposure — is the exact heuristic that fails before crashes. Option 3 (coin flip) is the tempting wrong answer for traders who haven't studied the factor's distribution; the asymmetry is real and quantified."
+  answer={3}
+  explanation="Wide cross-sectional dispersion is the most robust pre-crash signal in the momentum-crash literature (Daniel and Moskowitz, 2016 showed factor volatility and dispersion forecast crash probability). The Aggressive Debator's framing — strength validates exposure — is the exact heuristic that fails before crashes. The coin-flip answer is the tempting wrong answer for traders who haven't studied the factor's distribution; the asymmetry is real and quantified."
 />
 
 <Quiz
   question="On a vaccine-style rotation day, your momentum basket is down 8% intraday. Your mandate caps drawdown at 25% and you're now at 17% from a YTD high (so 8% of capacity left). The 25% per-position stop hasn't fired on any single name yet — biggest single-name drawdown is 18%. Aggressive Debator: 'hold; this is the bottom of the unwind'. Conservative Debator: 'cut basket gross by 50%, protect the mandate cap'. Synthesis: what's the right action?"
   options={[
     "Hold full basket — single-name stops haven't fired, system says hold",
+    "Add to the position because momentum names will recover",
     "Cut basket gross by ~50% to respect the mandate cap; let any name that hits 25% drawdown trigger its individual stop on its own",
-    "Exit entire basket immediately — the regime has changed",
-    "Add to the position because momentum names will recover"
+    "Exit entire basket immediately — the regime has changed"
   ]}
-  answer={1}
-  explanation="The synthesis: per-position stops are independent of the mandate's drawdown cap. With 8% of capacity left, another 8-10% basket drawdown puts you AT the mandate floor — at which point you must liquidate everything under safety-floor logic. Pre-emptively cutting basket gross by 50% preserves capacity while keeping the system intact. Option 0 (hold) is the tempting wrong answer because it follows the system at the per-trade level — but mandate-level risk supersedes strategy-level rules when the mandate is approaching its hard floor. Option 2 (exit fully) over-corrects and prevents recovery."
+  answer={2}
+  explanation="The synthesis: per-position stops are independent of the mandate's drawdown cap. With 8% of capacity left, another 8-10% basket drawdown puts you AT the mandate floor — at which point you must liquidate everything under safety-floor logic. Pre-emptively cutting basket gross by 50% preserves capacity while keeping the system intact. Holding the full basket is the tempting wrong answer because it follows the system at the per-trade level — but mandate-level risk supersedes strategy-level rules when the mandate is approaching its hard floor. Exiting the entire basket over-corrects and prevents recovery."
 />
 
 ## Try it

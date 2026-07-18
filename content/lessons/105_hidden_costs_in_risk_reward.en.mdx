@@ -35,17 +35,22 @@ The trap is treating a 1.2:1 R:R setup as positive expectancy. The paper math lo
 
 <Quiz
   question="You set up a trade with entry $100, stop $98, target $103. Paper R:R is 1.5. Estimated total friction (spread + slippage + fees) round-trip is $0.30 per share. What is the realised R:R after friction?"
-  answer={1.17}
-  tolerance={0.05}
-  explanation="Realised risk = $2 + $0.30 = $2.30. Realised reward = $3 − $0.30 = $2.70. Realised R:R = 2.70 ÷ 2.30 = 1.17. The paper 1.5 setup collapses to a much weaker 1.17 once friction is included — and on a 50% win rate that's barely positive expectancy."
+  options={[
+    "1.30",
+    "0.87",
+    "1.50",
+    "1.17"
+  ]}
+  answer={3}
+  explanation="Friction cuts both ways: realised risk = $2 + $0.30 = $2.30, realised reward = $3 − $0.30 = $2.70. Realised R:R = 2.70 ÷ 2.30 = 1.17. Subtracting friction from the reward alone, and forgetting it also widens the risk, gives the too-generous 1.30. The paper 1.5 setup collapses to 1.17 once friction is counted — on a 50% win rate, that's barely positive expectancy."
 />
 
 <Quiz
   question="A small-cap setup shows paper R:R of 2.0 with $0.10 risk and $0.20 reward. Round-trip friction on this name is about $0.04 per share. A blue-chip setup shows paper R:R of 1.8 with $5.00 risk and $9.00 reward; round-trip friction is $0.10 per share. After friction, which trade has the better realised R:R, and what does that imply about minimum thresholds for small-caps?"
   options={[
-    "Small-cap — higher paper R:R always wins.",
-    "Blue-chip — realised R:R is (9.00 − 0.10) ÷ (5.00 + 0.10) = 1.75 vs small-cap (0.20 − 0.04) ÷ (0.10 + 0.04) = 1.14, so small-caps need a much higher paper R:R hurdle than blue-chips to survive friction.",
     "They tie — friction is built into the spread and cancels out.",
+    "Blue-chip — realised R:R is (9.00 − 0.10) ÷ (5.00 + 0.10) = 1.75 vs small-cap (0.20 − 0.04) ÷ (0.10 + 0.04) = 1.14, so small-caps need a much higher paper R:R hurdle than blue-chips to survive friction.",
+    "Small-cap — higher paper R:R always wins.",
     "Small-cap — lower-priced stocks have lower friction because the spread is small in dollar terms."
   ]}
   answer={1}
