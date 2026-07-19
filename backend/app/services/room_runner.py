@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+import re
 import zlib
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass, field
@@ -421,12 +422,61 @@ def _risk_tier_size_ceiling(risk_score: int) -> float:
     )
 
 
-# Normalises minor PM vocabulary drift — the prompt only offers APPROVE/PASS
-# but a model can still emit a synonym despite instructions.
+# Normalises PM vocabulary drift to the two Room actions (APPROVE/PASS).
+# The Room prompt offers only those two, but the shared PM profile still
+# advertises MODIFY-AND-APPROVE (in this schema a modification IS an approval),
+# and a model can coin further variants. DEF067: 90% of PM verdicts arrived as
+# "MODIFY-AND-APPROVE" — every one a complete, sized APPROVE — and the missing
+# synonym silently routed them to the fail-safe PASS. Keys are separator-
+# stripped (see _normalize_pm_action); values are the canonical action.
 _PM_ACTION_SYNONYMS = {
     "APPROVE": "APPROVE", "BUY": "APPROVE", "ENTER": "APPROVE",
+    "MODIFY": "APPROVE", "MODIFYANDAPPROVE": "APPROVE",
+    "MODIFYAPPROVE": "APPROVE", "APPROVEWITHMODIFICATION": "APPROVE",
+    "APPROVEMODIFIED": "APPROVE",
     "PASS": "PASS", "REJECT": "PASS", "WAIT": "PASS", "HOLD": "PASS", "NO": "PASS",
 }
+
+# Token-level fallback for an unforeseen action string. An affirmative token
+# with no negation → APPROVE; the reverse → PASS; anything mixed or empty →
+# None (caller fails safe to PASS). Safe against fabricating a trade because
+# _parse_pm_verdict still refuses an APPROVE that carries no size_pct.
+_AFFIRMATIVE_ACTION_TOKENS = {"APPROVE", "APPROVED", "BUY", "ENTER", "MODIFY", "LONG"}
+_NEGATION_ACTION_TOKENS = {
+    "PASS", "REJECT", "REJECTED", "WAIT", "HOLD", "NO", "NOT", "AVOID", "SKIP", "DECLINE",
+}
+
+
+def _normalize_pm_action(raw: Any) -> str | None:
+    """Map the PM's raw action string to 'APPROVE' / 'PASS' / None (DEF067)."""
+    text = str(raw or "").upper()
+    squashed = re.sub(r"[^A-Z]", "", text)
+    if not squashed:
+        return None
+    if squashed in _PM_ACTION_SYNONYMS:
+        return _PM_ACTION_SYNONYMS[squashed]
+    tokens = {t for t in re.split(r"[^A-Z]+", text) if t}
+    affirm = tokens & _AFFIRMATIVE_ACTION_TOKENS
+    negate = tokens & _NEGATION_ACTION_TOKENS
+    if affirm and not negate:
+        return "APPROVE"
+    if negate and not affirm:
+        return "PASS"
+    return None
+
+
+_RAW_ACTION_RE = re.compile(r'"action"\s*:\s*"([^"]+)"')
+
+
+def _raw_is_affirmative(text: str) -> bool:
+    """True if a raw PM reply carries an affirmative `action` (DEF067 obs).
+
+    Used only to flag the anomaly where the parser could not read an
+    affirmative-looking reply and the reformatter then downgraded it to PASS —
+    i.e. an APPROVE we may have lost. Best-effort regex over the raw text so it
+    still fires on JSON too malformed for the parser to load."""
+    m = _RAW_ACTION_RE.search(text or "")
+    return bool(m) and _normalize_pm_action(m.group(1)) == "APPROVE"
 
 
 def _safe_float(value: Any) -> float | None:
@@ -448,7 +498,7 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         return text.strip(), None
 
     narration = str(parsed.get("narration") or "").strip()
-    action = _PM_ACTION_SYNONYMS.get(str(parsed.get("action", "")).strip().upper())
+    action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
 
@@ -1290,22 +1340,36 @@ class RoomRunner:
                         else:
                             pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
                             if parsed is None:
-                                # DEF058: PM answered in prose. One reformat
-                                # retry re-expresses the same decision as the
-                                # JSON schema (nulls for unstated numbers —
-                                # never invented) before failing safe to PASS.
+                                # DEF058: the PM's shape slipped past the parser.
+                                # One reformat retry re-expresses the same
+                                # decision as the JSON schema (nulls for unstated
+                                # numbers — never invented) before failing safe.
                                 reformatted = await _reformat_pm_response(
                                     raw_text, ctx=ctx, gateway=gateway,
                                     agent_timeout_s=agent_timeout_s,
                                 )
                                 if reformatted:
-                                    narration, parsed = _parse_pm_verdict(reformatted, ctx)
-                                    if parsed is not None:
+                                    narration, reparsed = _parse_pm_verdict(reformatted, ctx)
+                                    # DEF067: the reformatter exists only to
+                                    # RECOVER an APPROVE the parser missed. Accept
+                                    # its output only when it does so. A
+                                    # reformatter PASS recovered nothing — never
+                                    # let its narration (often a schema-complaint
+                                    # like "'MODIFY-AND-APPROVE' is not a valid
+                                    # enum value") become the user's verdict;
+                                    # fall through to the clean fail-safe below.
+                                    if reparsed is not None and reparsed.action == VerdictAction.APPROVE:
+                                        parsed = reparsed
+                                        pm_text = pm_text or narration
                                         logger.info(
                                             "room_pm_verdict_reformatted",
                                             run_id=str(run_id),
                                         )
-                                        pm_text = pm_text or narration
+                                    elif reparsed is not None and _raw_is_affirmative(raw_text):
+                                        logger.warning(
+                                            "room_pm_reformat_downgrade_rejected",
+                                            run_id=str(run_id),
+                                        )
                             if parsed is None:
                                 verdict = Verdict(
                                     action=VerdictAction.PASS,
@@ -1498,6 +1562,11 @@ async def _speak_one_agent(
             transcript=run.transcript,
             alpaca_snapshot=alpaca_snapshot,
             plan=plan,
+            trade_proposal={
+                "size_pct": ctx.trader_size_pct,
+                "entry": ctx.trader_entry,
+                "stop": ctx.trader_stop,
+            },
         )
         try:
             chunks = await asyncio.wait_for(
@@ -1580,6 +1649,11 @@ async def _stream_pm_response(
         transcript=run.transcript,
         alpaca_snapshot=ctx.alpaca_snapshot,
         plan=plan,
+        trade_proposal={
+            "size_pct": ctx.trader_size_pct,
+            "entry": ctx.trader_entry,
+            "stop": ctx.trader_stop,
+        },
     )
     try:
         chunks = await asyncio.wait_for(
@@ -1604,16 +1678,20 @@ async def _stream_pm_response(
         return ""
 
 
-# DEF058: the PM ignores the JSON-only instruction in a meaningful share of
-# live runs and narrates its decision in prose. Before failing safe to PASS
-# (and thereby discarding a real decision), one cheap follow-up call asks the
-# model to re-express that same prose as the parseable schema. Faithfulness
-# rules: never change the decision, never invent numbers (null when unstated
-# — `_parse_pm_verdict` then refuses APPROVE-without-size on its own).
+# DEF058/DEF067: when the PM's reply slips past `_parse_pm_verdict` (genuinely
+# unparseable prose, or malformed JSON), one cheap follow-up call asks the model
+# to re-express the same decision as the parseable schema before failing safe to
+# PASS. Post-DEF067 the common out-of-enum case ("MODIFY-AND-APPROVE" with a
+# valid size) is handled by the parser directly, so this rarely fires. It only
+# ever RECOVERS an APPROVE — a reformatter PASS is discarded by the caller (see
+# the DEF067 note at the call site). Faithfulness rules: never change the
+# decision, never invent numbers (null when unstated — `_parse_pm_verdict` then
+# refuses APPROVE-without-size on its own).
 _PM_REFORMAT_SYSTEM = (
-    "You are a strict formatter for AMI's analyst room. The user message is "
-    "a Portfolio Manager's final verdict written in prose. Re-express that "
-    "verdict as ONLY a single JSON object, no prose outside it, shaped "
+    "You are a strict formatter for AMI's analyst room. The user message is a "
+    "Portfolio Manager's final verdict. It may be prose, or JSON that uses an "
+    "action value outside the allowed set (e.g. 'MODIFY-AND-APPROVE'). "
+    "Re-express it as ONLY a single JSON object, no prose outside it, shaped "
     "exactly like:\n"
     '{"action": "APPROVE" | "PASS",\n'
     ' "size_pct": <number or null>,\n'
@@ -1622,11 +1700,15 @@ _PM_REFORMAT_SYSTEM = (
     ' "target": <number or null>,\n'
     ' "horizon_days": <integer or null>,\n'
     ' "narration": "<3-4 sentences, faithful summary of the rationale>"}\n'
-    "Preserve the decision faithfully: do not change the action, sizes, or "
-    "price levels. If the prose enters/approves a position, action is "
-    "APPROVE; if it waits, passes, rejects, or reaches no decision, action "
-    "is PASS. If a number is not stated in the prose, use null — never "
-    "invent one. Begin your response with '{'."
+    "There are exactly two action values: APPROVE and PASS. A modification is "
+    "an approval — if the verdict enters or approves a position (including "
+    "'MODIFY-AND-APPROVE', 'approve with a smaller size', or any affirmative "
+    "wording), action is APPROVE and you carry its size/entry/stop across "
+    "unchanged. If it waits, passes, rejects, or reaches no decision, action "
+    "is PASS. Preserve the decision faithfully: never flip an approval to a "
+    "pass, never change sizes or price levels, and if a number is not stated "
+    "use null — never invent one. Do NOT comment on the input's format or "
+    "validity; only translate it. Begin your response with '{'."
 )
 
 

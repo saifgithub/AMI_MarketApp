@@ -78,6 +78,9 @@ _PM_VERDICT_FORMAT = (
     "analyst, the Bull/Bear debate, the Trader's proposal, and the three "
     "Risk Debators — then decide for yourself. Do not just restate the "
     "Trader's numbers; agree or disagree based on the whole debate.\n"
+    "This output format REPLACES the 'Verdict:' / 'Output format' block "
+    "described earlier in your profile. In the Room you answer here, and only "
+    "here.\n"
     "Your ENTIRE reply must be one single JSON object — begin with '{' and "
     "end with '}'. Do not write any prose outside the JSON (your reasoning "
     "belongs inside the narration field); anything outside it is discarded "
@@ -89,6 +92,12 @@ _PM_VERDICT_FORMAT = (
     ' "target": <number, required if APPROVE>,\n'
     ' "horizon_days": <integer, required if APPROVE>,\n'
     ' "narration": "<3-4 sentences, your rationale, written for the user>"}\n'
+    "There are exactly two action values: APPROVE and PASS. A modification IS "
+    "an approval — if you want to cut the Trader's size, tighten the stop, or "
+    "shift the entry, use action APPROVE with your revised numbers in "
+    "size_pct/entry/stop and explain the change in narration. Do NOT write "
+    "'MODIFY', 'MODIFY-AND-APPROVE', or any other value — they are discarded "
+    "and your verdict is lost.\n"
     "Use PASS when the debate does not support entering a position right now "
     "(e.g. the Trader recommended WAIT, or the risk/reward doesn't clear the "
     "bar) — PASS needs only narration, no size/entry/stop/target.\n"
@@ -104,6 +113,40 @@ _PROSE_FORMAT = (
 )
 
 
+def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | None) -> str:
+    """The mandate-snapshot drawdown line (DEF066).
+
+    Always states that the cap is portfolio-level, not a per-trade stop budget.
+    When a concrete Trader proposal is supplied (RISK / VERDICT phases), it also
+    hands the agent the *derived* contribution figure so no agent has to do — or
+    mis-do — the arithmetic that made 16 names un-buyable in the CR035 benchmark
+    (a stop distance was compared directly against the cap, ~20x overstating the
+    risk)."""
+    cap = mandate.max_drawdown_pct
+    line = (
+        f"- max_drawdown_pct: {cap} — PORTFOLIO-level cap on total drawdown, NOT a "
+        f"per-trade stop budget. A position of size P% with a stop S% below entry "
+        f"contributes about P×S/100 percentage points to portfolio drawdown."
+    )
+    if not trade_proposal:
+        return line
+    size = float(trade_proposal.get("size_pct") or 0)
+    entry = float(trade_proposal.get("entry") or 0)
+    stop = float(trade_proposal.get("stop") or 0)
+    if size > 0 and entry > 0 and 0 < stop < entry:
+        stop_dist = (entry - stop) / entry * 100
+        contrib = size * stop_dist / 100
+        pct_of_cap = contrib / cap * 100 if cap else 0
+        line += (
+            f"\n  Trader's proposal: {size:.1f}% size, entry {entry:.2f}, "
+            f"stop {stop:.2f} → stop {stop_dist:.1f}% below entry → "
+            f"portfolio-drawdown contribution ≈ {contrib:.2f} pt of the {cap:.0f} pt "
+            f"cap (~{pct_of_cap:.0f}% of it). Size the trade against THIS figure, "
+            f"not the raw stop distance."
+        )
+    return line
+
+
 def build_room_messages(
     *,
     agent_id: AgentId,
@@ -114,6 +157,7 @@ def build_room_messages(
     transcript: list[AgentMessage],
     alpaca_snapshot: str | None = None,
     plan: Any = None,
+    trade_proposal: dict[str, Any] | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -143,6 +187,12 @@ def build_room_messages(
 
     format_instruction = _PM_VERDICT_FORMAT if agent_id == AgentId.PORTFOLIO_MANAGER else _PROSE_FORMAT
 
+    # DEF066: only agents that judge the proposed trade (RISK debators, the PM's
+    # VERDICT) get the derived contribution figure; earlier phases have no
+    # proposal yet, so they see the portfolio-cap clarification only.
+    proposal = trade_proposal if phase in ("RISK", "VERDICT") else None
+    drawdown_line = _drawdown_snapshot_line(mandate, proposal)
+
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
         f"Ticker: {ticker}\n"
@@ -150,7 +200,7 @@ def build_room_messages(
         f"\n"
         f"User mandate snapshot:\n"
         f"- risk_score: {mandate.risk_score} (1=most conservative, 5=most aggressive)\n"
-        f"- max_drawdown_pct: {mandate.max_drawdown_pct}\n"
+        f"{drawdown_line}\n"
         f"- locale: {mandate.locale}\n"
         f"\n"
         f"Transcript so far:\n{transcript_text}\n"

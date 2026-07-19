@@ -55,7 +55,11 @@ def _mandate_common_block(mandate: Mandate) -> str:
 - Target outcome: {target_text}
 - Path: {mandate.path}
 - Risk score: {mandate.risk_score}/5
-- Max acceptable drawdown: {mandate.max_drawdown_pct}%
+- Max acceptable drawdown: {mandate.max_drawdown_pct}% — a PORTFOLIO-level cap on \
+total drawdown, NOT a per-trade stop budget. A single position of size P% (of \
+portfolio) with a stop S% below entry contributes only about P×S/100 percentage \
+points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of a \
+30% cap). Do not compare a stop's distance directly against this cap.
 
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance)}
@@ -273,7 +277,8 @@ def _trader_block(m: Mandate) -> str:
         "You translate synthesis into a trade idea. Given this mandate:",
         "- Output specific: instrument, side, size (% portfolio), entry, target, stop-loss, time horizon.",
         f"- Position size capped at {max_pos}% per name (risk_score={m.risk_score}).",
-        f"- Total position size never exceeds remaining drawdown capacity (max {m.max_drawdown_pct}%).",
+        f"- A position's contribution to portfolio drawdown is size% × stop-distance%, "
+        f"and total portfolio drawdown must stay within {m.max_drawdown_pct}% (portfolio-level).",
     ]
     if m.compliance.long_only:
         parts.append("- Long-only mandate enforced.")
@@ -289,7 +294,8 @@ def _aggressive_block(m: Mandate) -> str:
         "## Role guidance — Aggressive Debator",
         "You argue for risk-on. Given this mandate:",
         "- Push for full mandate-allowed sizing. Cite opportunity cost of caution.",
-        f"- HARD CONSTRAINT: cannot advocate positions whose worst-case drawdown exceeds {m.max_drawdown_pct}%.",
+        f"- HARD CONSTRAINT: a position's portfolio-drawdown contribution (size% × "
+        f"stop-distance%) plus existing drawdown cannot exceed {m.max_drawdown_pct}%.",
     ]
     if m.risk_score <= 2:
         parts.append(
@@ -303,7 +309,8 @@ def _conservative_block(m: Mandate) -> str:
         "## Role guidance — Conservative Debator",
         "You argue for capital preservation. Given this mandate:",
         "- Push for smaller sizing, tighter stops, faster exits.",
-        f"- {m.max_drawdown_pct}% is the ceiling; argue toward comfortable distance below it.",
+        f"- {m.max_drawdown_pct}% portfolio drawdown is the ceiling (a position adds "
+        f"size% × stop-distance% to it); argue toward comfortable distance below it.",
     ]
     if m.risk_score <= 2:
         parts.append("- Lead the debate. Aggressive voice must justify any deviation toward higher risk.")
@@ -317,7 +324,9 @@ def _neutral_block(m: Mandate) -> str:
         "## Role guidance — Neutral Debator\n"
         "You balance Aggressive vs Conservative. Given this mandate:\n"
         "- Synthesise both extremes.\n"
-        f"- Propose a position respecting risk_score={m.risk_score} and max_drawdown_pct={m.max_drawdown_pct}%.\n"
+        f"- Propose a position respecting risk_score={m.risk_score} and the "
+        f"portfolio-level max_drawdown_pct={m.max_drawdown_pct}% (a position adds "
+        f"size% × stop-distance% to portfolio drawdown).\n"
         "- Note inconsistencies between Aggressive's optimism and Conservative's caution that data doesn't resolve."
     )
 

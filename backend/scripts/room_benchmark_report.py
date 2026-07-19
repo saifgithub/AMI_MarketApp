@@ -95,12 +95,38 @@ def cohens_kappa(pairs: list[tuple[str, str]]) -> float | None:
     return (po - pe) / (1 - pe)
 
 
+# DEF067: a reformatter that refused an out-of-enum verdict wrote its own
+# schema-complaint as the reason, and did so WITHOUT setting overridden_from_llm
+# — so these PASSes looked like genuine Room conservatism. Match the complaint
+# text as well so the class is excluded from agreement scoring in old batches
+# (batches run after the DEF067 fix should produce none of these).
+_REFORMATTER_REFUSAL_MARKERS = (
+    "not one of the allowed enum",
+    "invalid enum value",
+    "does not conform to the required schema",
+    "invalid action value",
+    "invalid action type",
+    "does not map to the required",
+    "rather than the expected prose",
+    "json object rather than a prose",
+    "modify-and-approve",
+)
+
+
 def is_pm_parse_fallback(rec: dict) -> bool:
-    """DEF058: PASS substituted because the PM's JSON failed to parse —
-    not the Room's actual view, excluded from agreement scoring."""
+    """PASS substituted for a verdict the parser/reformatter could not accept —
+    not the Room's actual view, excluded from agreement scoring.
+
+    DEF058: the explicit `overridden_from_llm` fail-safe (its reason names a
+    'machine-readable' verdict). DEF067: the DEF058 reformatter refused an
+    out-of-enum affirmative ('MODIFY-AND-APPROVE') and leaked its complaint as
+    the verdict text with `overridden_from_llm` unset — detected by content."""
     verdict = rec.get("verdict") or {}
-    return bool(verdict.get("overridden_from_llm")) and "machine-readable" in (
-        verdict.get("reason") or ""
+    reason = (verdict.get("reason") or "").lower()
+    if bool(verdict.get("overridden_from_llm")) and "machine-readable" in reason:
+        return True
+    return verdict.get("action") == "PASS" and any(
+        marker in reason for marker in _REFORMATTER_REFUSAL_MARKERS
     )
 
 

@@ -123,6 +123,41 @@ and no-trigger refusals do not depend on the consensus line.
 
 ---
 
+## 4b. Arm C: removing the social feed moves as many verdicts as removing consensus
+
+Arm C set `ADANOS_API_KEY=""`, cutting the Social Analyst's live Reddit sentiment (it falls back to
+the CR037 fabrication path). This directly answers the earlier question — *how critical is the
+Social agent; would removing it change any decisions?*
+
+| | Arm A (all live) | Arm B (no consensus) | Arm C (no social) |
+|---|---|---|---|
+| Agreement vs Street | 73/146 (50%) | 61/150 (41%) | 64/142 (45%) |
+| APPROVE rate | 36/150 (24%) | 29/150 (19%) | 30/150 (20%) |
+| Verdict flips vs A | — | 51/146 (35%) | **42/135 (31%)** |
+| Surviving-APPROVE overlap vs chance | — | 7 vs 6.9 (p=0.57) | 9 vs 6.55 (p=0.16) |
+
+**Yes — removing the Social feed changes ~42 verdicts (31%), nearly as many as removing the
+analyst consensus (51).** So the answer to "does the Social agent matter?" is, on raw flip count,
+clearly yes.
+
+But the *kind* of change is the same noise signature as arm B. The surviving-APPROVE overlap (9)
+is only marginally above chance (6.55) and independence cannot be rejected (p=0.16) — a little more
+structure than arm B's dead-on-chance 7, but not a stable, social-driven reselection. The approve
+*rate* is again nearly unmoved (20% vs 24%).
+
+The consistent three-arm picture: **the Room holds a stable *rate* of buying (~19–24% across every
+arm) but no statistically stable view of *which* names to buy.** Knock out either major input and a
+third of the verdicts change, yet the new buy-set looks redrawn, not re-reasoned. Social sentiment
+is not a decisive signal carrier here; it is one of several inputs perturbing a high-variance
+process.
+
+**Load-bearing caveat.** All three arms ran on the *pre-fix* Room. DEF066 (16 suppressed buys) and
+DEF067 (6% lost APPROVEs) are present in every arm and inflate the apparent variance. These
+ablation readings measure the buggy Room; the clean re-run is what actually settles the anchoring
+and social-criticality questions. Treat §4/§4b as strong hypotheses, not verdicts.
+
+---
+
 ## 5. What this means
 
 1. **DEF067 first** — it is a pure loss of correct decisions, cheap to fix, and it is currently

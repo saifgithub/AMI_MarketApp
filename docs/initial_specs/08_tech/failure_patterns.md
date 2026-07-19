@@ -171,6 +171,48 @@ counts — Pydantic validates each record on load, which is why. That is luck, n
 
 ---
 
+## P4 — Contradictory instruction sets across prompt layers
+
+**Symptom.** An LLM prompt is assembled from several layers (a base profile, an overlay, a
+per-turn format block). Two layers give conflicting instructions about the *same* thing — the
+allowed output vocabulary, the required shape. The model follows one layer; the parser expects
+the other; the mismatch is dropped to a silent fail-safe. Green tests, because no test builds the
+*assembled* prompt and checks it against the parser that consumes its output.
+
+**Instances (both surfaced by the CR035 benchmark, AT:R59).**
+
+| | The two layers that disagreed | What the model did | What was lost |
+|---|---|---|---|
+| **DEF058** | base PM profile said *"Output format: prose"*; `_PM_VERDICT_FORMAT` said *"one JSON object"* | mixed — mostly JSON, sometimes prose | prose verdicts hit a fragile reformatter; ~22% lost at first measure |
+| **DEF067** | base PM profile advertised `MODIFY-AND-APPROVE` as an action; `_PM_ACTION_SYNONYMS` knew only `APPROVE`/`PASS` | **90%** of live verdicts used `MODIFY-AND-APPROVE` — every one a complete, sized approval | parser returned `None` → reformatter → **~13% refused and lost** (5/150 arm A, 8/150 arm B), all scored as genuine Room conservatism |
+
+**Why the previous guard failed.** DEF058's fix added `test_room_pm_prose_reply_recovered_by_reformat`
+— but it tested the *recovery mechanism* (feed prose, assert the reformatter rescues it), never
+the *contradiction* (does any layer of the real prompt offer a token the parser can't read?). So
+when the very next batch showed the model wasn't writing prose at all but valid JSON with an
+out-of-enum action, the existing test stayed green: it was exercising a path the model had already
+stopped taking. An exemplar/mechanism test answers "does the rescue work?"; it never answers "is
+the prompt internally consistent with its parser?"
+
+**The invariant.** *A prompt and the parser that reads its output are one contract; test them
+together against the assembled prompt, not the fragments.* Every action/shape token any layer
+offers the model must be understood by the code that parses the reply — or it is a silent loss.
+
+**Enforcing check (DEF067).** `backend/tests/unit/test_room_prompt_parity.py` — assembles the real
+Portfolio-Manager system prompt via `build_room_messages(...)`, extracts every action token the
+prompt enumerates as a verdict option, and asserts each normalises to a known action through
+`_normalize_pm_action`. Verified **red** against the pre-DEF067 parser (`MODIFY-AND-APPROVE` →
+None) before the fix. A companion test asserts the extractor actually finds the vocabulary, so a
+green result can never mean "found nothing".
+
+**Rule for new code.** Adding or changing an action/shape a prompt layer offers ⇒ the parity test
+must still pass (extend the parser, or don't offer the token). Contradiction between layers is not
+resolved by prompt wording — the CR035 data shows recency wins on shape but the older layer's
+*vocabulary* still leaks through ~90% of the time. Make the parser tolerant of everything any
+layer offers.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

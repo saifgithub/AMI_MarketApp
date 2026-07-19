@@ -452,6 +452,91 @@ def test_room_pm_reformat_never_invents_an_approve_size():
     assert v.overridden_from_llm is True
 
 
+# ── DEF067: the PM's out-of-enum affirmative ("MODIFY-AND-APPROVE") ──────────
+
+
+def test_normalize_pm_action_maps_modify_variants_to_approve():
+    """DEF067 unit: a modification IS an approval. Every affirmative spelling
+    the PM actually emitted (90% of live verdicts were 'MODIFY-AND-APPROVE')
+    must normalise to APPROVE; negations to PASS; noise/empty to None."""
+    from app.services.room_runner import _normalize_pm_action
+
+    for s in ["APPROVE", "buy", "ENTER", "MODIFY", "MODIFY-AND-APPROVE",
+              "modify_and_approve", "Modify And Approve",
+              "APPROVE-WITH-MODIFICATION", "approve (modified)"]:
+        assert _normalize_pm_action(s) == "APPROVE", s
+    for s in ["PASS", "REJECT", "wait", "HOLD", "NO"]:
+        assert _normalize_pm_action(s) == "PASS", s
+    for s in ["", "   ", "banana", None]:
+        assert _normalize_pm_action(s) is None, s
+
+
+class _NoReformatGateway(_FakeGateway):
+    """Fails the test loudly if the DEF058 reformatter ever fires — the first
+    parse must accept the PM's action itself (DEF067)."""
+
+    def __init__(self, replies):
+        super().__init__(replies=replies)
+        self.reformat_calls = 0
+
+    async def stream_chat(self, *, system_prompt, messages, model_tier,
+                          locale="en", max_tokens=1024, **_audit):
+        if "strict formatter" in system_prompt.lower():
+            self.reformat_calls += 1
+        async for chunk in super().stream_chat(
+            system_prompt=system_prompt, messages=messages,
+            model_tier=model_tier, locale=locale, max_tokens=max_tokens,
+        ):
+            yield chunk
+
+
+def test_room_pm_modify_and_approve_parses_as_approve_without_reformat():
+    """DEF067 regression: the PM's most common real output — a complete,
+    sized MODIFY-AND-APPROVE — must parse to APPROVE on the first pass, not
+    trip the reformatter and not fail safe to PASS. This is the exact shape
+    that lost 13 APPROVEs across the CR035 arms."""
+    fake = _NoReformatGateway(replies={
+        "portfolio_manager": (
+            '{"action": "MODIFY-AND-APPROVE", "size_pct": 4.0, "entry": 100, '
+            '"stop": 94, "target": 113, "horizon_days": 210, '
+            '"narration": "I cut the Trader 8% to 4% and tighten the stop."}'
+        ),
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 5})  # ceiling 4.5%
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.APPROVE.value
+    assert v.size_pct == 4.0
+    assert v.overridden_from_llm is False
+    assert fake.reformat_calls == 0
+
+
+def test_room_pm_reformatter_refusal_never_becomes_verdict():
+    """DEF067 regression: when the reformatter declines (writing a schema
+    complaint that happens to parse as PASS), its complaint must NOT surface
+    as the user's verdict. The run uses the clean fail-safe message instead —
+    a formatter that recovered nothing recovered nothing."""
+    fake = _PMProseThenJsonGateway(
+        '{"action": "PASS", "size_pct": null, "narration": '
+        '"The input action MODIFY-AND-APPROVE is not one of the allowed enum values."}'
+    )
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="AAPL", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    v = next(e.verdict for e in events if e.kind == "verdict")
+    assert v.action == VerdictAction.PASS.value
+    assert "enum" not in v.reason.lower()
+    assert "not one of the allowed" not in v.reason.lower()
+    assert "machine-readable" in v.reason
+
+
 def test_room_transcript_grows_for_subsequent_agents():
     """Later agents must see earlier agents' contributions in their prompt
     so they can build on the debate, not just speak in isolation.
