@@ -69,7 +69,18 @@ class LessonMeta(BaseModel):
     duration_min: int
     level: int
     track: str
+    # CR044: the group-scoped code the user actually says out loud — "TECH 12",
+    # "N&M 22". `<track prefix> <n>` with n contiguous 1..N inside the track,
+    # authored into frontmatter and frozen there. Distinct from `number`, which
+    # stays the id-derived identity + sort key: swapping the catalogue's sort to
+    # code order would reorder the curriculum away from its journey sequence.
+    code: str = ""
     topic: str
+    # CR044/DEF068: the agents this lesson gates, derived at load from
+    # AGENT_GATEWAYS. Display metadata so the lesson list can mark the 5 that
+    # unlock an agent — before this, a gateway lesson was visually identical to
+    # the dozens that merely name the agent in `agent_callouts`.
+    gates_agents: list[str] = Field(default_factory=list)
     # `module` and `difficulty` are introduced by the W18 curriculum_map. Legacy
     # lessons authored pre-W18 don't declare them; the loader defaults module=0
     # ("uncategorised / legacy") and difficulty=<level> so the catalogue stays
@@ -149,6 +160,33 @@ class ProgressSummary(BaseModel):
     by_track: dict[str, dict[str, int]]  # track -> {"completed": N, "total": M}
     agents_unlocked: list[str]
     next_recommended_lesson: str | None = None
+
+
+class GatewayLessonStatus(BaseModel):
+    """One lesson in an agent's gateway set, with this user's progress on it."""
+
+    lesson_id: str
+    code: str
+    title: str
+    track: str
+    passed: bool
+
+
+class AgentUnlockRequirement(BaseModel):
+    """DEF068 — what this user still has to pass to unlock one agent.
+
+    Exists because nothing used to answer this. `progress` returned only
+    `agents_unlocked`, `activations` only unlocked agents, and `QuizSubmitResponse`
+    only what a single submit unlocked — so the client re-derived the gateway set
+    itself behind a hardcoded copy of the gateway size. It is authoritative now;
+    the client renders it rather than computing it.
+    """
+
+    agent_id: str
+    unlocked: bool
+    required: list[GatewayLessonStatus]
+    passed_count: int
+    remaining_count: int
 
 
 # ── Agent activation (Earn Path) ────────────────────────────────────────

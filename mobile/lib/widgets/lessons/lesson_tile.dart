@@ -42,17 +42,21 @@ class LessonTile extends StatelessWidget {
             child: Row(
               children: [
                 Container(
-                  width: 36,
-                  height: 36,
+                  // Padding-sized, not the old fixed 36×36: "TECH 12" doesn't
+                  // fit in 36px. `minWidth` keeps short codes ("N&M 1") from
+                  // collapsing so the titles still line up down the list.
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: AmiColors.slate900,
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: AmiColors.slate700),
                   ),
-                  // CR018 — lead each row with the lesson's canonical number
-                  // (referenceable); the level tier moves to the caption below.
-                  child: Text(meta.numberLabel,
+                  // CR044 — lead each row with the group-scoped code ("TECH 12"),
+                  // the identifier AMI and the user both say out loud. The level
+                  // tier sits in the caption below.
+                  child: Text(meta.codeLabel,
                       style: AmiTypography.labelMono.copyWith(
                           fontSize: 11, color: AmiColors.hexCyan)),
                 ),
@@ -67,6 +71,28 @@ class LessonTile extends StatelessWidget {
                         children: [
                           Text('${l.lessonsDurationMin(meta.durationMin)} · L${meta.level}',
                               style: AmiTypography.caption),
+                          // DEF068 — mark the lessons that actually move an
+                          // agent-unlock gate. Without this a gateway lesson is
+                          // indistinguishable from the dozens that merely name
+                          // the agent, which is how a user could pass 50 lessons
+                          // and still sit at 0 on three agents.
+                          if (meta.isGateway) ...[
+                            const SizedBox(width: AmiSpacing.s),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 5, vertical: 1),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(3),
+                                border:
+                                    Border.all(color: AmiColors.hexAmber, width: 1),
+                              ),
+                              child: Text(
+                                l.lessonsUnlocksAgent,
+                                style: AmiTypography.labelMono.copyWith(
+                                    fontSize: 9, color: AmiColors.hexAmber),
+                              ),
+                            ),
+                          ],
                           if (callouts.isNotEmpty) ...[
                             const SizedBox(width: AmiSpacing.s),
                             for (final id in callouts)

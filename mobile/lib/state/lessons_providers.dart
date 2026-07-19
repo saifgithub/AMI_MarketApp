@@ -14,6 +14,7 @@ class LessonsState {
     this.progress,
     this.activations = const [],
     this.lessonStatuses = const {},
+    this.unlockRequirements = const {},
     this.loading = false,
     this.error,
   });
@@ -23,11 +24,21 @@ class LessonsState {
   final List<AgentActivationRecord> activations;
   /// Per-lesson status keyed by lessonId. Empty until the first refresh completes.
   final Map<String, LessonStatus> lessonStatuses;
+  /// DEF068 — per-agent gateway progress, straight from the server. The locked
+  /// sheet renders this instead of re-deriving the gate set from `agentCallouts`.
+  final Map<String, AgentUnlockRequirement> unlockRequirements;
   final bool loading;
   final String? error;
 
-  Set<String> get unlockedAgentIds =>
-      {for (final a in activations) a.agentId};
+  /// DEF068 — only the 12 gated trading agents. The Concierge is never locked
+  /// (the Floor renders it outside the grid) but it used to accumulate an
+  /// `earn_path` activation row like any other agent, which made both "/ 12"
+  /// counters capable of reading "13 of 12 unlocked". The backend no longer
+  /// writes that row; this filter also covers the rows already in the database.
+  Set<String> get unlockedAgentIds => {
+        for (final a in activations)
+          if (a.agentId != 'concierge') a.agentId,
+      };
 
   bool isLessonCompleted(String lessonId) =>
       lessonStatuses[lessonId]?.quizPassed ?? false;
@@ -40,6 +51,7 @@ class LessonsState {
     ProgressSummary? progress,
     List<AgentActivationRecord>? activations,
     Map<String, LessonStatus>? lessonStatuses,
+    Map<String, AgentUnlockRequirement>? unlockRequirements,
     bool? loading,
     String? error,
     bool clearError = false,
@@ -49,6 +61,7 @@ class LessonsState {
       progress: progress ?? this.progress,
       activations: activations ?? this.activations,
       lessonStatuses: lessonStatuses ?? this.lessonStatuses,
+      unlockRequirements: unlockRequirements ?? this.unlockRequirements,
       loading: loading ?? this.loading,
       error: clearError ? null : (error ?? this.error),
     );
@@ -69,11 +82,13 @@ class LessonsNotifier extends StateNotifier<LessonsState> {
       final prog = await api.lessonsProgress(userId);
       final acts = await api.agentActivations(userId);
       final statuses = await api.lessonStatusByLesson(userId);
+      final reqs = await api.unlockRequirements(userId);
       state = state.copyWith(
         catalogue: cat,
         progress: prog,
         activations: acts,
         lessonStatuses: statuses,
+        unlockRequirements: reqs,
         loading: false,
       );
     } catch (e) {

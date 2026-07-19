@@ -114,12 +114,19 @@ The exemplar is, by construction, well-formed — it was chosen *because* its co
 controlled. So the suite is green while an arbitrary fraction of the real corpus is broken,
 and the defect surfaces only when a user hits it.
 
-**Instances (both surfaced in AT:R60, in the same audit).**
+**Instances (all surfaced in AT:R60).**
 
 | | Defect | Scale | Signal to anyone |
 |---|---|---|---|
 | **DEF064** | 12 quizzes authored in a numeric free-response form the pipeline never implemented → zero options → lesson permanently un-completable, 2 of 12 agents unlockable | 12 / 571 questions | none |
 | **DEF065** | 277 explanations cite an answer option by an index the reader never renders, under two contradictory conventions | 277 / 571 questions | none |
+| **DEF068** | agent-unlock gateways derived by lexicographic id sort over `agent_callouts` — a set nobody chose, scattered so far through the corpus that a user 50 lessons deep held 1 of 12 agents | 12 / 12 agents | none |
+
+DEF068 is the same shape one level up: the *relationship between* content items
+was derived incidentally and never validated as a whole. `_gateway_lessons_for_agent`
+sorted and sliced, so it always returned something plausible, for any corpus, in any
+order — there was no state it could report as wrong. The tests that existed asserted
+the slice worked, never that the resulting sets made sense.
 
 **Why the existing guards could not see it.** `backend/tests/unit/test_lessons_service.py`
 has 16 tests over lessons and every one pins to `283_market_order_vs_limit` — a lesson
@@ -135,6 +142,9 @@ error — but the reason they *survived for months* is P3: no test ever looked a
 
 **The invariant.** *If content ships, something iterates all of it.* An exemplar test and a
 corpus test answer different questions; a feature backed by authored content needs both.
+DEF068 adds a corollary: *a derivation over content is content too.* Anything that computes a
+relationship across the corpus — which lessons gate an agent, what a code resolves to — needs
+its whole output checked, not just the function that produces one element of it.
 
 **Enforcing check.** `backend/tests/unit/test_lesson_corpus_integrity.py` — iterates all 270
 lessons: ≥2 options per question, answer index in range, options distinct and non-empty,
@@ -142,6 +152,14 @@ question/explanation non-empty, no index citation in any user-visible surface
 (explanation, question **and** option text), no `tolerance=` attribute anywhere in the
 source, and lesson count exactly 270 so a silently-dropped lesson fails loudly. Verified red
 against the real defect before the fix — 4 assertions failed, naming all 12 files.
+
+DEF068 + CR044 extend the same file rather than starting a new one, since they are the same
+class: every lesson has a `code` (present, unique, prefix matching its `track`, contiguous
+`1..N` within the track), and the curated gateway map is checked whole — all 12 agents, exactly
+`GATEWAY_SIZE` lessons each, every id resolving to a real lesson, every gateway lesson naming
+its agent in its own `agent_callouts`, and `gates_agents` matching the inverse of the map so
+the badge and the unlock check can't drift apart. Each was verified red against an injected
+regression before being trusted.
 
 Deliberately **not** asserted: the answer-position distribution CR042 corrected. A
 uniformity assertion would go red on legitimate content edits and teach the next session to

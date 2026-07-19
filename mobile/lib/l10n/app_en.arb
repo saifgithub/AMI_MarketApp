@@ -81,7 +81,11 @@
     "floorFooter": "⬢  AMI TRADE • EDUCATIONAL SIMULATION • NOT ADVICE",
     "floorLockedHowTo": "HOW TO UNLOCK",
     "floorLockedNoLessons": "This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.",
-    "floorLockedEarnByLessons": "Earn this agent free by passing every lesson that involves them:",
+    "floorLockedEarnByLessons": "Pass these {count} lessons to earn this agent:",
+    "@floorLockedEarnByLessons": {
+        "description": "Locked-agent sheet, above the gateway checklist. DEF068: the previous copy said 'every lesson that involves them', which was wrong \u2014 market_analyst is named by 71 lessons and gated by 5. {count} is bound to the server's gateway size so the copy cannot drift from the rule again.",
+        "placeholders": {"count": {"type": "int"}}
+    },
     "floorLockedGoToLessons": "GO TO LESSONS",
     "floorLockedProgress": "{completed} / {total} gateway lessons passed",
     "@floorLockedProgress": {
@@ -305,6 +309,10 @@
         "placeholders": {"unlocked": {"type": "int"}}
     },
     "lessonsNextUp": "NEXT UP",
+    "lessonsUnlocksAgent": "UNLOCKS",
+    "@lessonsUnlocksAgent": {
+        "description": "Small amber chip on a lesson tile marking it as a gateway lesson \u2014 passing it moves an agent-unlock gate forward. Keep to one short word; it sits inline in a dense caption row."
+    },
     "lessonsDurationMin": "{min} min",
     "@lessonsDurationMin": {
         "description": "Lesson card duration label. {min} is the integer duration in minutes.",
@@ -317,11 +325,6 @@
     "@lessonReaderQuizOnlyBannerMany": {
         "description": "Banner shown when the user enters quiz-only mode and there are 2+ quizzes. {count} is the integer number of quiz blocks.",
         "placeholders": {"count": {"type": "int"}}
-    },
-    "lessonReaderMetaDurationTrack": "{min} min · {track}",
-    "@lessonReaderMetaDurationTrack": {
-        "description": "Lesson meta bar — duration in minutes + track name.",
-        "placeholders": {"min": {"type": "int"}, "track": {"type": "String"}}
     },
     "lessonReaderQuiz": "QUIZ",
     "lessonReaderChatWith": "CHAT WITH {agent}",

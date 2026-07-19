@@ -316,11 +316,11 @@ abstract class AppLocalizations {
   /// **'This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.'**
   String get floorLockedNoLessons;
 
-  /// No description provided for @floorLockedEarnByLessons.
+  /// Locked-agent sheet, above the gateway checklist. DEF068: the previous copy said 'every lesson that involves them', which was wrong — market_analyst is named by 71 lessons and gated by 5. {count} is bound to the server's gateway size so the copy cannot drift from the rule again.
   ///
   /// In en, this message translates to:
-  /// **'Earn this agent free by passing every lesson that involves them:'**
-  String get floorLockedEarnByLessons;
+  /// **'Pass these {count} lessons to earn this agent:'**
+  String floorLockedEarnByLessons(int count);
 
   /// No description provided for @floorLockedGoToLessons.
   ///
@@ -898,6 +898,12 @@ abstract class AppLocalizations {
   /// **'NEXT UP'**
   String get lessonsNextUp;
 
+  /// Small amber chip on a lesson tile marking it as a gateway lesson — passing it moves an agent-unlock gate forward. Keep to one short word; it sits inline in a dense caption row.
+  ///
+  /// In en, this message translates to:
+  /// **'UNLOCKS'**
+  String get lessonsUnlocksAgent;
+
   /// Lesson card duration label. {min} is the integer duration in minutes.
   ///
   /// In en, this message translates to:
@@ -927,12 +933,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skipping straight to the {count} quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.'**
   String lessonReaderQuizOnlyBannerMany(int count);
-
-  /// Lesson meta bar — duration in minutes + track name.
-  ///
-  /// In en, this message translates to:
-  /// **'{min} min · {track}'**
-  String lessonReaderMetaDurationTrack(int min, String track);
 
   /// No description provided for @lessonReaderQuiz.
   ///

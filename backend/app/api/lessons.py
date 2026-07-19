@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.schemas.lessons import (
     AgentActivationRecord,
+    AgentUnlockRequirement,
     Lesson,
     LessonCatalogue,
     LessonStatus,
@@ -66,6 +67,23 @@ async def progress_by_lesson(
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
     return svc.list_status(user_id)
+
+
+@router.get("/requirements/{user_id}", response_model=list[AgentUnlockRequirement])
+async def unlock_requirements(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    svc: LessonsService = Depends(get_lessons_service),
+) -> list[AgentUnlockRequirement]:
+    """DEF068 — the authoritative "what do I still need to unlock each agent".
+
+    The locked-agent sheet used to answer this itself, by filtering the catalogue
+    on `agent_callouts` and taking the first N behind a hardcoded copy of the
+    gateway size. That derivation is gone; this is the only source now.
+    """
+    if current_user.id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+    return svc.unlock_requirements(user_id)
 
 
 @router.get("/activations/{user_id}", response_model=list[AgentActivationRecord])

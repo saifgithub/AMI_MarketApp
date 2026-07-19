@@ -155,6 +155,7 @@ level: <1-8>                    # Saiful's pedagogical Level
 module: <1-12>                  # the module within the level
 difficulty: <1-5>               # how hard the content itself is
 track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process>"
+code: "<TRACK PREFIX> <next free number in that track>"
 topic: "<short slug>"
 prerequisites: ["<lesson_id>", ...]
 tags: ["<short tags>", ...]
@@ -305,10 +306,34 @@ opening a trade ticket.
 - `module` = the cohesive group within the level (1-12).
 - `difficulty` = how hard the content is (1-5), independent of level.
 - `track` MUST be one of the 7 enum values. Determined by the
-  curriculum map. Drives agent-unlock routing.
+  curriculum map.
+- `code` (CR044) is what the user reads off the lesson badge and says back
+  to AMI — "go read N&M 22". Format is `<PREFIX> <n>`:
+
+  | track | prefix | | track | prefix |
+  |---|---|---|---|---|
+  | `foundations` | `CORE` | | `sentiment_behaviour` | `SENT` |
+  | `fundamentals_analysis` | `FUND` | | `risk_portfolio` | `RISK` |
+  | `technical_analysis` | `TECH` | | `edge_process` | `EDGE` |
+  | `news_macro` | `N&M` | | | |
+
+  **Take the next free number in that track and never reuse or reassign one.**
+  Codes are permanent: one may already be sitting in a user's chat log or a
+  screenshot, and renumbering silently invalidates it. Do NOT resequence a track
+  to close a gap. `scripts/assign_lesson_codes.py` was the one-off that stamped
+  the original 270 and it refuses to renumber anything already coded.
+  `test_lesson_corpus_integrity` enforces presence, uniqueness, a prefix matching
+  the track, and contiguity within the track.
 - `agent_callouts` MUST match the curriculum map for that lesson ID.
   Tag only the agent(s) this lesson teaches about — not every agent
   loosely mentioned.
+- `agent_callouts` is NOT the unlock rule (DEF068). Which lessons unlock an
+  agent is curated in `backend/app/services/agent_gateways.py` — 5 per agent,
+  chosen deliberately. Adding a callout makes the lesson *mention* an agent (it
+  gets that agent's hex avatar on the tile); it does not make the lesson a gate.
+  If you believe a new lesson should gate an agent, edit that file explicitly and
+  drop one of the existing five — the set is fixed at 5, and every gateway lesson
+  must also list its agent in `agent_callouts`.
 - `prerequisites`: real lesson IDs only.
 - Dates: use today's date in YYYY-MM-DD for both.
 

@@ -251,7 +251,9 @@ class AgentRunner:
             effective_plan_for_user(user_id) if user_id is not None
             else (Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan)
         )
-        journal, unlocked, lessons = load_concierge_context(user_id=user_id, plan=plan)
+        journal, unlocked, lessons, unlock_reqs = load_concierge_context(
+            user_id=user_id, plan=plan,
+        )
 
         if not self._llm.has_real_provider():
             text = concierge_scripted_reply(
@@ -272,6 +274,7 @@ class AgentRunner:
             recent_journal=journal,
             unlocked_agents=unlocked,
             available_lessons=lessons,
+            unlock_requirements=unlock_reqs,
         )
         tier = pick_tier(plan, AgentId.CONCIERGE)
 

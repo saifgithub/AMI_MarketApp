@@ -123,8 +123,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'This agent unlocks automatically once the Earn-Path lessons for them ship. For now you can preview them via 1-on-1 if your plan allows.';
 
   @override
-  String get floorLockedEarnByLessons =>
-      'Earn this agent free by passing every lesson that involves them:';
+  String floorLockedEarnByLessons(int count) {
+    return 'Pass these $count lessons to earn this agent:';
+  }
 
   @override
   String get floorLockedGoToLessons => 'GO TO LESSONS';
@@ -449,6 +450,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonsNextUp => 'NEXT UP';
 
   @override
+  String get lessonsUnlocksAgent => 'UNLOCKS';
+
+  @override
   String lessonsDurationMin(int min) {
     return '$min min';
   }
@@ -466,11 +470,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String lessonReaderQuizOnlyBannerMany(int count) {
     return 'Skipping straight to the $count quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.';
-  }
-
-  @override
-  String lessonReaderMetaDurationTrack(int min, String track) {
-    return '$min min · $track';
   }
 
   @override

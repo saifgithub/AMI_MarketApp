@@ -141,14 +141,13 @@ class _FloorScreenState
 
   void _showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
     final state = ref.read(lessonsNotifierProvider);
-    const gatewaySize = 3;
-    final calloutLessons = (state.catalogue?.tracks
-                .expand((t) => t.lessons)
-                .where((l) => l.agentCallouts.contains(agent.id))
-                .toList() ??
-            const <LessonMeta>[])
-      ..sort((a, b) => a.id.compareTo(b.id));
-    final requiredLessons = calloutLessons.take(gatewaySize).toList();
+    // DEF068 — the gateway set comes from the server. This used to filter the
+    // catalogue on `agentCallouts` and take the first 3 by id, duplicating a
+    // backend constant; the two then had to be kept in step by hand, and the
+    // gate is 5 now. `required_` also carries per-lesson `passed`, so the
+    // checklist no longer joins against `lessonStatuses` either.
+    final requirement = state.unlockRequirements[agent.id];
+    final requiredLessons = requirement?.required_ ?? const <GatewayLessonStatus>[];
     final l = AppLocalizations.of(context);
     showModalBottomSheet<void>(
       context: context,
@@ -190,7 +189,7 @@ class _FloorScreenState
                 )
               else ...[
                 Text(
-                  l.floorLockedEarnByLessons,
+                  l.floorLockedEarnByLessons(requiredLessons.length),
                   style: AmiTypography.body,
                 ),
                 const SizedBox(height: AmiSpacing.s),
@@ -200,13 +199,19 @@ class _FloorScreenState
                     child: Row(
                       children: [
                         Icon(
-                          state.isLessonCompleted(lesson.id)
-                              ? Icons.check_circle
-                              : Icons.school,
+                          lesson.passed ? Icons.check_circle : Icons.school,
                           size: 14,
-                          color: state.isLessonCompleted(lesson.id)
+                          color: lesson.passed
                               ? AmiColors.hexGreen
                               : AmiColors.textLow,
+                        ),
+                        const SizedBox(width: 6),
+                        // CR044 — lead with the code so the user can actually go
+                        // find it, and so this reads the same way AMI says it.
+                        Text(
+                          lesson.code,
+                          style: AmiTypography.labelMono.copyWith(
+                              fontSize: 11, color: AmiColors.hexCyan),
                         ),
                         const SizedBox(width: 6),
                         Expanded(child: Text(lesson.title, style: AmiTypography.body)),
@@ -237,11 +242,9 @@ class _FloorScreenState
               if (requiredLessons.isNotEmpty) ...[
                 const SizedBox(height: AmiSpacing.s),
                 Builder(builder: (_) {
-                  final completed = requiredLessons
-                      .where((m) => state.isLessonCompleted(m.id))
-                      .length;
+                  final completed = requirement?.passedCount ?? 0;
                   final next = requiredLessons.firstWhere(
-                    (m) => !state.isLessonCompleted(m.id),
+                    (m) => !m.passed,
                     orElse: () => requiredLessons.first,
                   );
                   return SizedBox(

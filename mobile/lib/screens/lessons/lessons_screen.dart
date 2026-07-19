@@ -191,7 +191,9 @@ class _SlimProgressBar extends StatelessWidget {
           children: [
             Text(l.lessonsAgents,
                 style: AmiTypography.labelMono.copyWith(fontSize: 10)),
-            Text(l.lessonsAgentsCount(state.activations.length),
+            // DEF068: was `activations.length`, which counted the Concierge's
+            // earn_path row and could render "13 / 12".
+            Text(l.lessonsAgentsCount(state.unlockedAgentIds.length),
                 style: AmiTypography.statMid),
           ],
         ),

@@ -124,8 +124,9 @@ class AppLocalizationsMs extends AppLocalizations {
       'Ejen ini akan unlock secara automatik sebaik sahaja pelajaran Earn-Path tersedia. Buat masa ini, anda boleh pratonton melalui 1-on-1 jika pelan anda membenarkannya.';
 
   @override
-  String get floorLockedEarnByLessons =>
-      'Dapatkan ejen ini secara percuma dengan melengkapkan setiap pelajaran yang melibatkan mereka:';
+  String floorLockedEarnByLessons(int count) {
+    return 'Lulus $count pelajaran ini untuk memperoleh ejen ini:';
+  }
 
   @override
   String get floorLockedGoToLessons => 'KE PELAJARAN';
@@ -450,6 +451,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get lessonsNextUp => 'SETERUSNYA';
 
   @override
+  String get lessonsUnlocksAgent => 'BUKA';
+
+  @override
   String lessonsDurationMin(int min) {
     return '$min min';
   }
@@ -467,11 +471,6 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String lessonReaderQuizOnlyBannerMany(int count) {
     return 'Terus ke $count kuiz. Luluskan semua dan pelajaran tetap dikira untuk pembukaan ejen. Jawapan salah akan memaparkan penjelasan.';
-  }
-
-  @override
-  String lessonReaderMetaDurationTrack(int min, String track) {
-    return '$min min · $track';
   }
 
   @override

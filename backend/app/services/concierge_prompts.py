@@ -63,6 +63,7 @@ def build_concierge_messages(
     recent_journal: list[JournalEntry],
     unlocked_agents: set[str],
     available_lessons: list[LessonMeta],
+    unlock_requirements: list[Any] | None = None,
     context_mode: str | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [chat_history + user_message]) for the Concierge.
@@ -105,15 +106,23 @@ def build_concierge_messages(
         f"Currently unlocked trading agents (you can route the user to any of these):\n"
         f"{_format_unlocked(unlocked_agents)}\n"
         f"\n"
-        f"Available lessons you can recommend by number, ID + title:\n"
+        f"How the user unlocks each agent they don't have yet — these lists are "
+        f"exhaustive and authoritative:\n"
+        f"{_format_unlock_paths(unlock_requirements)}\n"
+        f"\n"
+        f"Available lessons you can recommend by code, ID + title:\n"
         f"{lesson_block}\n"
         f"\n"
-        "Speak in 1–4 short sentences. Be specific — name the lesson ID, "
+        "Speak in 1–4 short sentences. Be specific — name the lesson by its "
+        "code (\"TECH 12\", \"N&M 22\"), "
         "name the agent, name the journal entry by title or ticker. If the "
         "user wants trading advice on a ticker, do NOT speculate; route them "
         "to the right Analyst or to Convene the Room. If the user wants to "
         "edit a mandate field, walk them to Settings → Mandate. Never "
-        "invent a lesson, agent, or journal entry that isn't listed above."
+        "invent a lesson, agent, or journal entry that isn't listed above. "
+        "When asked how to unlock an agent, name ONLY the lessons in that "
+        "agent's list above — the unlock rule is exactly those lessons, not "
+        "every lesson that mentions the agent."
     )
 
     system_prompt = base + floor_addition
@@ -229,6 +238,34 @@ def _format_unlocked(agent_ids: set[str]) -> str:
     return ", ".join(pretty)
 
 
+def _format_unlock_paths(requirements: list[Any] | None) -> str:
+    """DEF068 — the gateway lessons still owed, per locked agent.
+
+    Without this the Concierge had the lesson catalogue and the unlocked-agent
+    set but no mapping between them, so every specific answer to "what do I read
+    to unlock the Trader?" was a guess. Only locked agents are listed: an unlocked
+    one has no path left, and spending prompt on it invites the model to tell a
+    user to go earn something they already have.
+    """
+    if not requirements:
+        return "(Unlock paths unavailable — do not guess; tell the user to open the agent on the Floor to see them.)"
+    lines: list[str] = []
+    for req in requirements:
+        if req.unlocked:
+            continue
+        pretty = req.agent_id.replace("_", " ").title()
+        done = [l for l in req.required if l.passed]
+        todo = [l for l in req.required if not l.passed]
+        remaining = ", ".join(f"{l.code} ({l.title})" for l in todo)
+        lines.append(
+            f"- {pretty}: {len(done)}/{len(req.required)} done. "
+            f"Still needs: {remaining}"
+        )
+    if not lines:
+        return "(All 12 agents already unlocked.)"
+    return "\n".join(lines)
+
+
 def _resolve_context_mode(mode: str | None) -> str:
     """Normalise the flag value; unknown/empty → the default `full_context`."""
     m = (mode or "").strip().lower()
@@ -268,7 +305,7 @@ def _format_lessons(lessons: list[LessonMeta]) -> str:
         return "(Lesson catalogue empty.)"
     lines: list[str] = []
     for m in lessons[:25]:
-        lines.append(f"- {m.id}: {m.title} (track={m.track}, level={m.level})")
+        lines.append(f"- {m.code}: {m.title} (id={m.id}, level={m.level})")
     if len(lessons) > 25:
         lines.append(f"- … and {len(lessons) - 25} more")
     return "\n".join(lines)
@@ -277,10 +314,15 @@ def _format_lessons(lessons: list[LessonMeta]) -> str:
 def _full_context_index(lessons: list[LessonMeta]) -> str:
     """`full_context` mode (CR020) — a compact index of EVERY lesson.
 
-    One line per lesson (`NNN · id · title · topic · tags`), grouped by
+    One line per lesson (`CODE · id · title · topic · tags`), grouped by
     track for readability. Surfaces `topic` + `tags` — parsed today but
     read nowhere — so the LLM can pick the right lesson anywhere in the
     catalogue instead of being blind past the 25th.
+
+    CR044 — the line leads with the group-scoped code ("TECH 12") rather than
+    the bare number, because that is the identifier the user sees on the badge
+    and can repeat back. The raw `id` stays on the line so a code the model
+    garbles is still recoverable.
     """
     if not lessons:
         return "(Lesson catalogue empty.)"
@@ -304,7 +346,7 @@ def _full_context_index(lessons: list[LessonMeta]) -> str:
         lines.append(f"[{title}]")
         for m in sorted(by_track[track], key=lambda x: (x.number, x.id)):
             tags = ", ".join(m.tags) if m.tags else "—"
-            lines.append(f"{m.number:03d} · {m.id} · {m.title} · {m.topic} · {tags}")
+            lines.append(f"{m.code} · {m.id} · {m.title} · {m.topic} · {tags}")
         lines.append("")  # blank line between track groups
 
     return "\n".join(lines).rstrip("\n")
@@ -416,8 +458,8 @@ def load_concierge_context(
     *,
     user_id: UUID | None,
     plan: Any,
-) -> tuple[list[JournalEntry], set[str], list[LessonMeta]]:
-    """Pull (recent_journal, unlocked_agents, available_lessons) for one call.
+) -> tuple[list[JournalEntry], set[str], list[LessonMeta], list[Any]]:
+    """Pull (recent_journal, unlocked_agents, available_lessons, unlock_requirements).
 
     Best-effort: any data-layer failure returns empty collections rather
     than killing the chat stream. Anonymous (no user_id) users get an
@@ -426,6 +468,7 @@ def load_concierge_context(
     journal: list[JournalEntry] = []
     activations: set[str] = set()
     lessons: list[LessonMeta] = []
+    requirements: list[Any] = []
 
     try:
         from app.services.lessons_service import get_lessons_service
@@ -434,6 +477,11 @@ def load_concierge_context(
         lessons = lessons_service.all_meta()
         if user_id is not None:
             activations = {a.agent_id for a in lessons_service.list_activations(user_id)}
+            # DEF068 — anonymous users get no requirements block rather than one
+            # computed against a nonexistent progress row: _format_unlock_paths
+            # renders an explicit "unavailable, don't guess" line for the empty
+            # case, which is the honest answer for a user with no account.
+            requirements = lessons_service.unlock_requirements(user_id)
     except Exception:  # pragma: no cover — defensive
         pass
 
@@ -448,4 +496,4 @@ def load_concierge_context(
         except Exception:  # pragma: no cover — defensive
             pass
 
-    return journal, activations, lessons
+    return journal, activations, lessons, requirements

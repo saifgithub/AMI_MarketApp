@@ -93,6 +93,8 @@ class LessonMeta {
     required this.prerequisites,
     required this.tags,
     required this.agentCallouts,
+    this.code = '',
+    this.gatesAgents = const [],
     this.number = 0,
     this.module = 0,
     this.difficulty = 0,
@@ -107,20 +109,34 @@ class LessonMeta {
   final int durationMin;
   final int level;
   final String track;
+  // CR044: the group-scoped code the user says out loud — "TECH 12", "N&M 22".
+  // Authored into the lesson's frontmatter and frozen there, so it stays valid
+  // in a chat log or a screenshot long after the corpus grows.
+  final String code;
   final String topic;
   final List<String> prerequisites;
   final List<String> tags;
   final List<String> agentCallouts;
+  // DEF068: the agents this lesson actually gates — a strict subset of
+  // `agentCallouts`. market_analyst is named by 71 lessons and gated by 5, and
+  // before this the list couldn't tell them apart.
+  final List<String> gatesAgents;
   // `module` + `difficulty` were introduced by the W18 curriculum_map. Older
   // lessons authored before W18 omit them; we default module to 0 and
   // difficulty to the lesson's level so the UI can sort consistently.
   final int module;
   final int difficulty;
 
-  /// CR018 — the badge label: the zero-padded canonical lesson number
-  /// ("023"), or the level tier ("L2") for a legacy id with no numeric prefix.
-  String get numberLabel =>
-      number > 0 ? number.toString().padLeft(3, '0') : 'L$level';
+  /// CR044 — the badge label. The group-scoped code ("TECH 12") when the
+  /// lesson has one; otherwise CR018's zero-padded number, then the level tier.
+  /// The fallbacks are for a lesson served by an older backend, not for missing
+  /// content: `test_lesson_corpus_integrity` fails the build on an uncoded lesson.
+  String get codeLabel => code.isNotEmpty
+      ? code
+      : (number > 0 ? number.toString().padLeft(3, '0') : 'L$level');
+
+  /// DEF068 — does passing this lesson move an agent-unlock gate forward?
+  bool get isGateway => gatesAgents.isNotEmpty;
 
   factory LessonMeta.fromJson(Map<String, dynamic> j) {
     final level = ((j['level'] as num?) ?? 1).toInt();
@@ -131,6 +147,8 @@ class LessonMeta {
       durationMin: ((j['duration_min'] as num?) ?? 3).toInt(),
       level: level,
       track: j['track'] as String? ?? 'foundations',
+      code: j['code'] as String? ?? '',
+      gatesAgents: ((j['gates_agents'] as List?) ?? const []).cast<String>(),
       topic: j['topic'] as String? ?? 'general',
       prerequisites: ((j['prerequisites'] as List?) ?? const []).cast<String>(),
       tags: ((j['tags'] as List?) ?? const []).cast<String>(),
@@ -286,6 +304,66 @@ class AgentActivationRecord {
       activationMethod: j['activation_method'] as String,
       activatedAt: DateTime.parse(j['activated_at'] as String),
       triggeringLessonId: j['triggering_lesson_id'] as String?,
+    );
+  }
+}
+
+/// DEF068 — one lesson in an agent's gateway set, with this user's progress.
+class GatewayLessonStatus {
+  const GatewayLessonStatus({
+    required this.lessonId,
+    required this.code,
+    required this.title,
+    required this.track,
+    required this.passed,
+  });
+
+  final String lessonId;
+  final String code;
+  final String title;
+  final String track;
+  final bool passed;
+
+  factory GatewayLessonStatus.fromJson(Map<String, dynamic> j) {
+    return GatewayLessonStatus(
+      lessonId: j['lesson_id'] as String,
+      code: j['code'] as String? ?? '',
+      title: j['title'] as String,
+      track: j['track'] as String? ?? 'foundations',
+      passed: j['passed'] as bool? ?? false,
+    );
+  }
+}
+
+/// DEF068 — what the user still has to pass to unlock one agent.
+///
+/// The locked-agent sheet used to work this out locally, filtering the catalogue
+/// on `agentCallouts` and taking the first N behind its own copy of the gateway
+/// size. That copy silently duplicated a backend constant; this type replaces it.
+class AgentUnlockRequirement {
+  const AgentUnlockRequirement({
+    required this.agentId,
+    required this.unlocked,
+    required this.required_,
+    required this.passedCount,
+    required this.remainingCount,
+  });
+
+  final String agentId;
+  final bool unlocked;
+  final List<GatewayLessonStatus> required_;
+  final int passedCount;
+  final int remainingCount;
+
+  factory AgentUnlockRequirement.fromJson(Map<String, dynamic> j) {
+    return AgentUnlockRequirement(
+      agentId: j['agent_id'] as String,
+      unlocked: j['unlocked'] as bool? ?? false,
+      required_: ((j['required'] as List?) ?? const [])
+          .map((e) => GatewayLessonStatus.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      passedCount: ((j['passed_count'] as num?) ?? 0).toInt(),
+      remainingCount: ((j['remaining_count'] as num?) ?? 0).toInt(),
     );
   }
 }

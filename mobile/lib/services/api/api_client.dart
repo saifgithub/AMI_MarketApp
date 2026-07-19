@@ -511,6 +511,20 @@ class ApiClient {
     };
   }
 
+  /// DEF068 — per-agent gateway lessons and how far this user has got on each.
+  /// Keyed by agent id for the locked sheet's direct lookup.
+  Future<Map<String, AgentUnlockRequirement>> unlockRequirements(
+      String userId) async {
+    final r = await _dio.get<List<dynamic>>(
+      '/v1/lessons/requirements/$userId',
+    );
+    return {
+      for (final e in (r.data ?? const []))
+        (e as Map<String, dynamic>)['agent_id'] as String:
+            AgentUnlockRequirement.fromJson(e),
+    };
+  }
+
   Future<List<AgentActivationRecord>> agentActivations(String userId) async {
     final r = await _dio.get<List<dynamic>>(
       '/v1/lessons/activations/$userId',

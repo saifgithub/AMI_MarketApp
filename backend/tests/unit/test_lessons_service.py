@@ -7,6 +7,7 @@ from uuid import uuid4
 import pytest
 
 from app.schemas.lessons import QuizSubmitRequest
+from app.services.agent_gateways import AGENT_GATEWAYS
 from app.services.lessons_service import LessonsService, get_lessons_service
 
 
@@ -25,6 +26,28 @@ def svc() -> LessonsService:
     s = get_lessons_service()
     s.clear()
     return s
+
+
+@pytest.fixture(autouse=True)
+def _restore_gateways():
+    """Undo any gateway pinning after each test.
+
+    `get_lessons_service()` is a process singleton and `AGENT_GATEWAYS` is a
+    module-level dict, so a test that repoints the trader gateway leaks into
+    every test that runs after it — including
+    test_lesson_corpus_integrity's "every agent has exactly GATEWAY_SIZE
+    lessons", which would then pass or fail on file ordering alone.
+    """
+    original = {a: list(ids) for a, ids in AGENT_GATEWAYS.items()}
+    svc = get_lessons_service()
+    saved = {lid: list(l.meta.gates_agents) for lid, l in svc._lessons.items()}
+    yield
+    AGENT_GATEWAYS.clear()
+    AGENT_GATEWAYS.update(original)
+    for lid, gates in saved.items():
+        lesson = svc._lessons.get(lid)
+        if lesson is not None:
+            lesson.meta.gates_agents = gates
 
 
 def test_catalogue_lists_foundations_track(svc: LessonsService):
@@ -252,29 +275,32 @@ def test_quiz_submit_wrong_does_not_pass(svc: LessonsService):
     assert any(pq.get("explanation") for pq in result.per_question)
 
 
-def _isolate_trader_callouts(svc: LessonsService, *keep_ids: str) -> None:
-    """Strip 'trader' from every lesson's agent_callouts except the kept ones.
+def _pin_trader_gateway(svc: LessonsService, *lesson_ids: str) -> None:
+    """Make `lesson_ids` the entire gateway set for `trader`, for one test.
 
-    The earn-path tests were authored when only `004_market_order_vs_limit`
-    had `agent_callouts: [trader]`. W17/W18 added more trader-callout lessons
-    (014/015/016/...), which (correctly) means the activation rule now
-    requires passing all of them. To keep the unit tests narrowly scoped to
-    the earn-path mechanics rather than the curriculum churn, we monkey-patch
-    the in-memory cache here.
+    DEF068 moved the gate from "first 3 lessons by id that callout the agent" to
+    an explicit curated list, so isolating the earn-path mechanics now means
+    pinning the map rather than stripping callouts. Both sides have to move
+    together: `AGENT_GATEWAYS` is what `_gateway_lessons_for_agent` reads, and
+    `meta.gates_agents` is what `_check_agent_unlocks` iterates to decide which
+    agents a just-passed lesson could even affect.
+
+    Mutates the service's in-memory cache and the gateway dict in place, matching
+    what the earn-path tests here have always done; the `svc` fixture rebuilds
+    both per test.
     """
-    keep = set(keep_ids)
+    AGENT_GATEWAYS["trader"] = list(lesson_ids)
+    keep = set(lesson_ids)
     for lid, lesson in svc._lessons.items():
+        gates = [a for a in lesson.meta.gates_agents if a != "trader"]
         if lid in keep:
-            continue
-        if "trader" in lesson.meta.agent_callouts:
-            lesson.meta.agent_callouts = [
-                a for a in lesson.meta.agent_callouts if a != "trader"
-            ]
+            gates.append("trader")
+        lesson.meta.gates_agents = sorted(gates)
 
 
 def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
-    """With 004 as the sole trader-callout lesson, passing it unlocks Trader."""
-    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
+    """With one lesson as the whole trader gateway, passing it unlocks Trader."""
+    _pin_trader_gateway(svc, LEGACY_MARKET_ORDER_LESSON)
     user_id = uuid4()
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,
@@ -293,66 +319,86 @@ def test_earn_path_unlocks_trader_after_all_trader_lessons(svc: LessonsService):
     assert res2.unlocked_agents == []
 
 
-def test_earn_path_caps_required_set_at_first_n_lessons(svc: LessonsService):
-    """When more lessons callout an agent than the gateway cap, only the
-    first N (by id, sorted) are required to unlock. The remaining
-    lessons are enrichment — they don't gate the unlock.
+def test_gateway_set_is_the_curated_list_not_every_callout(svc: LessonsService):
+    """Passing lessons that merely *mention* an agent never unlocks it (DEF068).
+
+    This used to assert the opposite shape — that the gate was the first
+    UNLOCK_REQUIRED_PER_AGENT lessons by id sort, whichever those happened to be.
+    That rule is what put `aggressive_debator`'s third gate at lesson 225 and left
+    a 50-lesson alpha user at 0/3 on three agents. The gate is now exactly the
+    curated list and nothing else counts, which is the property worth pinning.
     """
-    from app.services.lessons_service import UNLOCK_REQUIRED_PER_AGENT
-    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
     user_id = uuid4()
-    # Inject 5 fake trader-callout lessons with ids that sort AFTER 004.
-    fake_ids = [f"99{i}_fake_trader_{i}" for i in range(5)]
-    fake_template = svc.get(LEGACY_MARKET_ORDER_LESSON)
-    for fid in fake_ids:
-        f = fake_template.model_copy(deep=True)
+    _pin_trader_gateway(svc, LEGACY_MARKET_ORDER_LESSON)
+
+    # Lessons that call out trader but aren't in the gateway set.
+    enrichment_ids = [f"99{i}_fake_trader_{i}" for i in range(3)]
+    template = svc.get(LEGACY_MARKET_ORDER_LESSON)
+    for fid in enrichment_ids:
+        f = template.model_copy(deep=True)
         f.meta.id = fid
         f.meta.agent_callouts = ["trader"]
+        f.meta.gates_agents = []
         svc._lessons[fid] = f
 
-    # Gateway set should be the first N by id — the legacy lesson (004 or
-    # 283 depending on corpus) PLUS the first (N-1) fake lessons.
-    gateway = svc._gateway_lessons_for_agent("trader")
-    assert len(gateway) == UNLOCK_REQUIRED_PER_AGENT
+    assert svc._gateway_lessons_for_agent("trader") == [LEGACY_MARKET_ORDER_LESSON]
 
-    # Pass JUST the legacy lesson — not enough.
+    for fid in enrichment_ids:
+        res = svc.submit_quiz(QuizSubmitRequest(
+            user_id=user_id, lesson_id=fid,
+            answers=_correct_answers(svc, fid),
+        ))
+        assert res.passed
+        assert "trader" not in res.unlocked_agents
+
+    # The one gateway lesson does it on its own.
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON,
         answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
     ))
-    assert "trader" not in res.unlocked_agents
+    assert "trader" in res.unlocked_agents
 
-    # Pass enough fakes to clear the gateway. Each new pass is checked
-    # against the gateway set.
-    last_res = None
-    for fid in gateway:
-        if fid == LEGACY_MARKET_ORDER_LESSON:
-            continue
-        last_res = svc.submit_quiz(QuizSubmitRequest(
-            user_id=user_id, lesson_id=fid,
-            answers=_correct_answers(svc, fid),
-        ))
-
-    assert last_res is not None
-    assert "trader" in last_res.unlocked_agents
-
-    # Cleanup
-    for fid in fake_ids:
+    for fid in enrichment_ids:
         del svc._lessons[fid]
 
 
-def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsService):
-    """If two lessons both have agent_callouts: [trader], passing one is
-    not enough — the activation only fires after every required lesson
-    is passed.
-    """
-    _isolate_trader_callouts(svc, LEGACY_MARKET_ORDER_LESSON)
+def test_unlock_requirements_reports_progress_per_agent(svc: LessonsService):
+    """DEF068 — the endpoint behind the locked-agent sheet. Nothing used to
+    answer "which lessons do I still owe", which is why the client derived it."""
     user_id = uuid4()
-    # Inject a second required trader-callout lesson alongside 004
+    _pin_trader_gateway(svc, LEGACY_MARKET_ORDER_LESSON)
+
+    before = {r.agent_id: r for r in svc.unlock_requirements(user_id)}
+    assert set(before) == set(AGENT_GATEWAYS)
+    trader = before["trader"]
+    assert trader.unlocked is False
+    assert [l.lesson_id for l in trader.required] == [LEGACY_MARKET_ORDER_LESSON]
+    assert trader.passed_count == 0
+    assert trader.remaining_count == 1
+    # Each gateway lesson carries the code the sheet renders and AMI speaks.
+    assert all(l.code for l in trader.required)
+
+    svc.submit_quiz(QuizSubmitRequest(
+        user_id=user_id, lesson_id=LEGACY_MARKET_ORDER_LESSON,
+        answers=_correct_answers(svc, LEGACY_MARKET_ORDER_LESSON),
+    ))
+
+    after = {r.agent_id: r for r in svc.unlock_requirements(user_id)}["trader"]
+    assert after.unlocked is True
+    assert after.passed_count == 1
+    assert after.remaining_count == 0
+    assert after.required[0].passed is True
+
+
+def test_earn_path_locks_remain_until_every_required_lesson_passes(svc: LessonsService):
+    """With two lessons in the gateway, passing one is not enough — the
+    activation only fires once every required lesson is passed.
+    """
+    user_id = uuid4()
     fake = svc.get(LEGACY_MARKET_ORDER_LESSON).model_copy(deep=True)
     fake.meta.id = "999_fake_trader_lesson"
-    fake.meta.agent_callouts = ["trader"]
     svc._lessons["999_fake_trader_lesson"] = fake
+    _pin_trader_gateway(svc, LEGACY_MARKET_ORDER_LESSON, "999_fake_trader_lesson")
 
     res = svc.submit_quiz(QuizSubmitRequest(
         user_id=user_id,

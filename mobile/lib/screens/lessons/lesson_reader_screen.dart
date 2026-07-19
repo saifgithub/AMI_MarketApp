@@ -253,15 +253,18 @@ class _LessonMetaBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: AmiColors.slate700),
           ),
-          // CR018 — the canonical lesson number (referenceable); level tier
-          // trails the duration/track meta line below.
-          child: Text(meta.numberLabel,
+          // CR044 — the group-scoped code ("TECH 12"); level tier trails the
+          // duration meta line below.
+          child: Text(meta.codeLabel,
               style: AmiTypography.labelMono.copyWith(
                   fontSize: 11, color: AmiColors.hexCyan)),
         ),
         const SizedBox(width: AmiSpacing.s),
+        // The track used to be interpolated here straight from the API, so this
+        // line showed users a raw `risk_portfolio`. The code carries the track
+        // now, legibly, so the duplicate is gone rather than relabelled.
         Text(
-          '${AppLocalizations.of(context).lessonReaderMetaDurationTrack(meta.durationMin, meta.track)} · L${meta.level}',
+          '${AppLocalizations.of(context).lessonsDurationMin(meta.durationMin)} · L${meta.level}',
           style: AmiTypography.caption,
         ),
         const Spacer(),

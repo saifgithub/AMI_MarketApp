@@ -31,8 +31,11 @@ from sqlalchemy import delete, select
 from app.core.logging import logger
 from app.db import get_session, init_schema
 from app.db.models import AgentActivationRow, LessonProgressRow
+from app.services.agent_gateways import AGENT_GATEWAYS, GATEWAY_SIZE
 from app.schemas.lessons import (
     AgentActivationRecord,
+    AgentUnlockRequirement,
+    GatewayLessonStatus,
     Lesson,
     LessonBlock,
     LessonCatalogue,
@@ -51,11 +54,14 @@ CONTENT_LESSONS_DIR = (
 )
 
 
-# Earn-path gateway size — only the first N lessons (sorted by id) that
-# callout an agent count toward the unlock requirement. The remaining
-# lessons that reference the agent are enrichment, not gates. See
-# _check_agent_unlocks() for the rationale.
-UNLOCK_REQUIRED_PER_AGENT = 3
+# DEF068 — the earn-path gateway set is curated per agent in agent_gateways.py,
+# not derived from `agent_callouts` by id sort. `GATEWAY_SIZE` (5) is re-exported
+# here because callers historically imported the size from this module.
+#
+# Callouts and gateways are now different things: `agent_callouts` says "this
+# lesson involves that agent" (drives the tile's hex avatars), `gates_agents`
+# says "passing this lesson counts toward unlocking them". market_analyst has
+# 71 of the former and 5 of the latter.
 
 
 TRACK_TITLES = {
@@ -66,6 +72,24 @@ TRACK_TITLES = {
     "sentiment_behaviour": "Sentiment & Behaviour",
     "risk_portfolio": "Risk & Portfolio Construction",
     "edge_process": "Edge & Process",
+}
+
+
+# CR044 — the prefix each track contributes to a lesson's `code`. Lives beside
+# TRACK_TITLES because it is a property of the same taxonomy; `scripts/
+# assign_lesson_codes.py` and the corpus test both read it from here so the
+# stamped content and the guard can't disagree about what TECH means.
+#
+# `foundations -> CORE`, deliberately not `FND`: these codes get spoken aloud and
+# typed into a chat box, and FND/FUND are one letter apart.
+TRACK_PREFIX = {
+    "foundations": "CORE",
+    "fundamentals_analysis": "FUND",
+    "technical_analysis": "TECH",
+    "news_macro": "N&M",
+    "sentiment_behaviour": "SENT",
+    "risk_portfolio": "RISK",
+    "edge_process": "EDGE",
 }
 
 
@@ -172,6 +196,16 @@ def lesson_number(lesson_id: str) -> int:
     return int(head) if head.isdigit() else 0
 
 
+def gateways_for_lesson(lesson_id: str) -> list[str]:
+    """DEF068 — which agents this lesson gates. The inverse of AGENT_GATEWAYS.
+
+    A lesson can gate more than one agent: `014_position_sizing_basics` gates both
+    `trader` and `portfolio_manager`, and `290_position_sizing_basics` gates all
+    three debators.
+    """
+    return sorted(a for a, ids in AGENT_GATEWAYS.items() if lesson_id in ids)
+
+
 def parse_mdx(path: Path) -> Lesson:
     raw = path.read_text(encoding="utf-8")
     m = _FRONTMATTER_RE.match(raw)
@@ -191,6 +225,12 @@ def parse_mdx(path: Path) -> Lesson:
         duration_min=int(fm.get("duration_min", 3)),
         level=level,
         track=fm.get("track", "foundations"),
+        # CR044 — the group-scoped display code ("TECH 12"). Frozen in frontmatter,
+        # never derived: a recomputed per-track rank would renumber a whole track on
+        # mid-corpus insertion. Empty string when absent rather than a fabricated
+        # code — test_lesson_corpus_integrity fails the build on a missing one, so a
+        # blank badge can never quietly ship (CLAUDE.md: degrade loudly).
+        code=str(fm.get("code", "")),
         topic=fm.get("topic", "general"),
         # Legacy frontmatter omits module/difficulty — default per W18 spec:
         # module=0 marks uncategorised, difficulty falls back to level so
@@ -200,6 +240,7 @@ def parse_mdx(path: Path) -> Lesson:
         prerequisites=list(fm.get("prerequisites") or []),
         tags=list(fm.get("tags") or []),
         agent_callouts=list(fm.get("agent_callouts") or []),
+        gates_agents=gateways_for_lesson(fm["id"]),
         locale_versions=list(fm.get("locale_versions") or ["en"]),
     )
 
@@ -422,30 +463,31 @@ class LessonsService:
     # ── activation ────────────────────────────────────────────────────
 
     def _gateway_lessons_for_agent(self, agent_id: str) -> list[str]:
-        """Return the gateway lesson ids for an agent — the first
-        UNLOCK_REQUIRED_PER_AGENT lessons (sorted by lesson id) that
-        callout this agent. If the agent has fewer callouts than the
-        cap, all of them are required (the cap is an upper bound only).
+        """Return the curated gateway lesson ids for an agent (DEF068).
+
+        Was: the first 3 lessons by id sort that mentioned the agent — a set
+        nobody picked, which put `aggressive_debator`'s third gate at lesson 225
+        of 292 and left a 50-lesson user at 0/3 on three agents. Now explicit,
+        five per agent, in `agent_gateways.AGENT_GATEWAYS`.
         """
-        all_lessons = sorted(
-            (l.meta.id for l in self._lessons.values()
-             if agent_id in l.meta.agent_callouts),
-        )
-        return all_lessons[:UNLOCK_REQUIRED_PER_AGENT]
+        return list(AGENT_GATEWAYS.get(agent_id, ()))
 
     def _check_agent_unlocks(self, user_id: UUID, just_completed: Lesson) -> list[str]:
-        """For each agent referenced by the just-completed lesson, check
-        whether the user has now passed the gateway set for that agent —
-        the first UNLOCK_REQUIRED_PER_AGENT lessons (sorted by id) that
-        call out the agent. If yes — and the agent is not already
-        activated — record the activation and return the agent ids.
+        """For each agent gated by the just-completed lesson, check whether the
+        user has now passed that agent's full curated gateway set. If yes — and
+        the agent is not already activated — record the activation and return
+        the agent ids.
 
-        The cap matters because the W18 + magical-edison content drop
-        scaled lesson count from 13 → 270, and the most-referenced
-        agents (market_analyst, fundamentals_analyst) now appear in 70+
-        lessons each. Requiring all of them is unreachable in practice;
-        the gateway-set model keeps unlock cost bounded and predictable
-        while letting the broader corpus reinforce understanding.
+        A bounded gateway set matters because the W18 + magical-edison content
+        drop scaled lesson count from 13 → 270, and the most-referenced agents
+        (market_analyst, fundamentals_analyst) now appear in 70+ lessons each.
+        Requiring all of them is unreachable in practice; the gateway model keeps
+        unlock cost bounded and predictable while the broader corpus reinforces.
+
+        Iterates `gates_agents`, not `agent_callouts`: a lesson merely naming an
+        agent can't complete a gate it isn't part of, and walking the callouts
+        also meant `concierge` — 26 callouts, never gated in the UI — earned an
+        `earn_path` row, which is why the two "/ 12" counters could read 13 of 12.
         """
         newly_unlocked: list[str] = []
         with get_session() as s:
@@ -454,7 +496,7 @@ class LessonsService:
                     AgentActivationRow.user_id == user_id,
                 )
             ).scalars().all())
-            for agent_id in just_completed.meta.agent_callouts:
+            for agent_id in just_completed.meta.gates_agents:
                 if agent_id in existing_ids:
                     continue
                 required = self._gateway_lessons_for_agent(agent_id)
@@ -501,6 +543,60 @@ class LessonsService:
                 )
                 for r in rows
             ]
+
+    def unlock_requirements(self, user_id: UUID) -> list[AgentUnlockRequirement]:
+        """DEF068 — per agent, the gateway lessons and which of them this user has passed.
+
+        One query for the whole set rather than per agent: the gateway lessons across
+        all 12 agents are ~50 ids, and a locked-agent sheet that had to fan out 12
+        requests to render would be worse than the client-side derivation it replaces.
+        """
+        required_ids = {i for ids in AGENT_GATEWAYS.values() for i in ids}
+        with get_session() as s:
+            passed = set(s.execute(
+                select(LessonProgressRow.lesson_id).where(
+                    LessonProgressRow.user_id == user_id,
+                    LessonProgressRow.lesson_id.in_(required_ids),
+                    LessonProgressRow.quiz_passed.is_(True),
+                )
+            ).scalars().all())
+            unlocked = set(s.execute(
+                select(AgentActivationRow.agent_id).where(
+                    AgentActivationRow.user_id == user_id,
+                )
+            ).scalars().all())
+
+        out: list[AgentUnlockRequirement] = []
+        for agent_id, ids in AGENT_GATEWAYS.items():
+            lessons: list[GatewayLessonStatus] = []
+            for lesson_id in ids:
+                lesson = self._lessons.get(lesson_id)
+                if lesson is None:
+                    # Guarded by test_lesson_corpus_integrity, so this is a
+                    # can't-happen. Skipping silently would understate the gate and
+                    # show the user a shorter checklist than they actually face.
+                    logger.error(
+                        "gateway_lesson_missing_from_corpus",
+                        agent_id=agent_id,
+                        lesson_id=lesson_id,
+                    )
+                    continue
+                lessons.append(GatewayLessonStatus(
+                    lesson_id=lesson_id,
+                    code=lesson.meta.code,
+                    title=lesson.meta.title,
+                    track=lesson.meta.track,
+                    passed=lesson_id in passed,
+                ))
+            done = sum(1 for l in lessons if l.passed)
+            out.append(AgentUnlockRequirement(
+                agent_id=agent_id,
+                unlocked=agent_id in unlocked,
+                required=lessons,
+                passed_count=done,
+                remaining_count=len(lessons) - done,
+            ))
+        return out
 
     def grant_activation(
         self,

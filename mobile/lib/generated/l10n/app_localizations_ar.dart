@@ -123,8 +123,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتم إلغاء قفل هذا العميل تلقائياً عند توفر دروس Earn-Path الخاصة به. حالياً، يمكنك معاينتهم عبر 1-on-1 إذا كانت خطتك تسمح بذلك.';
 
   @override
-  String get floorLockedEarnByLessons =>
-      'احصل على هذا العميل مجاناً عبر اجتياز كل درس يتضمنه:';
+  String floorLockedEarnByLessons(int count) {
+    return 'اجتز هذه الدروس الـ $count لكسب هذا العميل:';
+  }
 
   @override
   String get floorLockedGoToLessons => 'انتقل إلى الدروس';
@@ -449,6 +450,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lessonsNextUp => 'التالي';
 
   @override
+  String get lessonsUnlocksAgent => 'يفتح';
+
+  @override
   String lessonsDurationMin(int min) {
     return '$min دقيقة';
   }
@@ -466,11 +470,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String lessonReaderQuizOnlyBannerMany(int count) {
     return 'سيتم الانتقال مباشرة إلى $count اختبارات. عند اجتيازها جميعاً، سيتم احتساب الدرس ضمن عمليات فتح الوكلاء. ستظهر التوضيحات عند الإجابات الخاطئة.';
-  }
-
-  @override
-  String lessonReaderMetaDurationTrack(int min, String track) {
-    return '$min دقيقة · $track';
   }
 
   @override
