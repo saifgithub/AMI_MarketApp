@@ -15,6 +15,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/screens/dev_preview_screen.dart';
+import 'package:ami_trade/screens/feedback/bug_resolution_toasts.dart';
 import 'package:ami_trade/screens/home_shell.dart';
 import 'package:ami_trade/screens/onboarding/onboarding_screen.dart';
 import 'package:ami_trade/state/auth_providers.dart';
@@ -92,6 +93,11 @@ class _AuthGate extends ConsumerWidget {
         body: Center(child: HexPulseLoader()),
       );
     }
-    return startOnFloor ? const HomeShell() : const OnboardingScreen();
+    // CR043: bug-resolution toasts wrap the home shell only — a user still
+    // in onboarding has no reported bugs, and the sheet that files them
+    // isn't reachable from there.
+    return startOnFloor
+        ? const BugResolutionToasts(child: HomeShell())
+        : const OnboardingScreen();
   }
 }

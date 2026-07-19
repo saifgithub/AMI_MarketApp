@@ -1390,4 +1390,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessonReplay => 'Replay';
+
+  @override
+  String bugReportThanks(String shortId) {
+    return 'Report received — ref $shortId. Thank you.';
+  }
+
+  @override
+  String bugReportResolved(String title) {
+    return 'Fixed: $title';
+  }
 }

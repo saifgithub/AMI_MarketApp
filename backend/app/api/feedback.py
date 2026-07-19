@@ -23,7 +23,11 @@ from uuid import UUID
 from fastapi import APIRouter, File, Form, Header, HTTPException, UploadFile, status
 
 from app.core.logging import logger
-from app.schemas.feedback import BugReportRequest, BugReportResponse
+from app.schemas.feedback import (
+    BugReportRequest,
+    BugReportResponse,
+    BugResolutionUpdate,
+)
 from app.services.auth_service import parse_scaffold_token
 from app.services.bug_attachments import (
     AttachmentRejected,
@@ -116,3 +120,47 @@ async def submit_bug_report(
         attachment_mime=attachment_mime,
     )
     return get_feedback_store().submit_bug(req, user_id)
+
+
+def _require_user_id(authorization: str | None) -> UUID:
+    """Same parse as _resolve_user_id, but 401s instead of shrugging.
+
+    The submit path deliberately tolerates a missing user_id — a report
+    without an author still has value. The read paths cannot: with no
+    caller identity there is nothing to scope the query to, and an
+    unscoped one would hand a stranger someone else's reports.
+    """
+    user_id = _resolve_user_id(authorization)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="authentication required",
+        )
+    return user_id
+
+
+@router.get("/updates", response_model=list[BugResolutionUpdate])
+async def list_resolution_updates(
+    authorization: str | None = Header(default=None),
+) -> list[BugResolutionUpdate]:
+    """Resolved reports the caller filed and hasn't been shown yet.
+
+    Polled once per cold start. Normally returns [].
+    """
+    user_id = _require_user_id(authorization)
+    return get_feedback_store().list_unacknowledged(user_id)
+
+
+@router.post("/{report_id}/ack", status_code=status.HTTP_204_NO_CONTENT)
+async def acknowledge_resolution(
+    report_id: UUID,
+    authorization: str | None = Header(default=None),
+) -> None:
+    """Mark a resolution message as delivered, so it fires exactly once.
+
+    404s on a report that isn't the caller's — same response as one that
+    doesn't exist, so this can't be used to probe for other users' ids.
+    """
+    user_id = _require_user_id(authorization)
+    if not get_feedback_store().acknowledge(user_id, report_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

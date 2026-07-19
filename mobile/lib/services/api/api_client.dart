@@ -17,6 +17,7 @@ import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
+import 'package:ami_trade/models/feedback.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/league.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -1037,6 +1038,20 @@ class ApiClient {
           : null,
     );
     return r.data!;
+  }
+
+  /// CR043 — resolved reports this user filed and hasn't been shown yet.
+  /// Polled once per cold start; normally returns an empty list.
+  Future<List<BugResolutionUpdate>> feedbackUpdates() async {
+    final r = await _dio.get<List<dynamic>>('/v1/feedback/updates');
+    return (r.data ?? [])
+        .map((e) => BugResolutionUpdate.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Mark a resolution message delivered so it fires exactly once.
+  Future<void> ackFeedback(String reportId) async {
+    await _dio.post<void>('/v1/feedback/$reportId/ack');
   }
 
   // ── Alpaca paper trading (AT:R45) ──────────────────────────────────────

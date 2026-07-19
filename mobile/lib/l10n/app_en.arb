@@ -797,5 +797,19 @@
     "shareCaption": "My AMI Trade analyst desk. Educational simulation — not investment advice.",
     "@shareCaption": {"description": "Default text attached alongside the shared image in the OS share sheet."},
     "lessonReplay": "Replay",
-    "@lessonReplay": {"description": "Tooltip on the replay control of a lesson animation."}
+    "@lessonReplay": {"description": "Tooltip on the replay control of a lesson animation."},
+    "bugReportThanks": "Report received — ref {shortId}. Thank you.",
+    "@bugReportThanks": {
+        "description": "Toast shown right after a bug report is sent successfully. Confirms receipt and gives the user a reference they can quote. Keep it short — it renders in a single toast line.",
+        "placeholders": {
+            "shortId": {"type": "String", "example": "a52455ad"}
+        }
+    },
+    "bugReportResolved": "Fixed: {title}",
+    "@bugReportResolved": {
+        "description": "Toast shown on app open when a bug the user reported has been marked resolved. {title} is the title they wrote when filing it, so they recognise their own report.",
+        "placeholders": {
+            "title": {"type": "String", "example": "Lesson doesn't return to the lesson UI"}
+        }
+    }
 }

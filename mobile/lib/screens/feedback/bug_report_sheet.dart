@@ -10,8 +10,10 @@ library;
 
 import 'dart:io';
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/hex/hex_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -119,6 +121,11 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    // Grab the root navigator/overlay context before the sheet pops — after
+    // pop() this widget's own context is defunct and the toast would have
+    // no Overlay to insert into.
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final l = AppLocalizations.of(context);
     final ok = await ref.read(feedbackNotifierProvider.notifier).submitBug(
           category: _category,
           title: _titleController.text.trim(),
@@ -129,7 +136,17 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
           attachmentPath: _attachment?.path,
           attachmentMime: _attachment == null ? null : _mimeFor(_attachment!),
         );
-    if (ok && mounted) Navigator.of(context).pop();
+    if (!ok || !mounted) return;
+    final shortId = ref.read(feedbackNotifierProvider).shortId;
+    Navigator.of(context).pop();
+    if (shortId == null || !rootContext.mounted) return;
+    HexToast.show(
+      rootContext,
+      l.bugReportThanks(shortId),
+      accent: AmiColors.hexGreen,
+      icon: Icons.check_circle_outline,
+      duration: const Duration(seconds: 4),
+    );
   }
 
   @override

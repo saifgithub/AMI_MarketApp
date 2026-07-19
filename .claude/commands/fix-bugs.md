@@ -43,6 +43,26 @@ risk silent merge conflicts later.
 8. **Don't mark `resolved` in the DB.** That's the merge-confirmation
    status; only Saiful or a post-merge hook flips it. `/fix-bugs` only
    ever sets `in_progress` (claim) → `pending_review` (committed).
+9. **`resolved` is now user-visible (CR043).** Flipping a report to
+   `resolved` makes the app toast its reporter on their next cold start.
+   So the flip carries copy, and the copy is read by the person who filed
+   the bug — not by an engineer:
+
+   ```bash
+   ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -c \"\
+     UPDATE bug_reports SET status='resolved', resolved_at=NOW(), \
+       resolution_note='<one plain-English sentence>' WHERE id='${BUG_ID}';\""
+   ```
+
+   `resolution_note` is optional — omit it and the reporter just gets
+   `Fixed: <their title>`. When you do write one: no defect IDs, no file
+   paths, no jargon. "The quiz now accepts your answer" — not
+   "DEF064: numeric quiz parser dropped options[]".
+
+   Two consequences worth knowing: `pending_review` notifies **nobody**
+   by design (the fix is on a branch, not shipped — telling the reporter
+   then invites them to retest against a server that still has the bug),
+   and a report with `user_id IS NULL` is structurally unnotifiable.
 
 ---
 

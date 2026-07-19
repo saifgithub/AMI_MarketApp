@@ -453,6 +453,19 @@ class BugReportRow(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+    # CR043 — the reporter-facing half of the lifecycle.
+    # resolved_at + resolution_note are written when Saiful flips the
+    # status to 'resolved'; the note is shown to the reporter verbatim.
+    # acknowledged_at is stamped once that user has actually been shown
+    # the toast, so the message fires exactly once and survives reinstall
+    # (a device-local "seen" flag would not).
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
+    resolution_note: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    acknowledged_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
 
 
 class AuthChallengeRow(Base):

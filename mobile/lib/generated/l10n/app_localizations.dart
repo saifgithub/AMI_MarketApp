@@ -2494,6 +2494,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replay'**
   String get lessonReplay;
+
+  /// Toast shown right after a bug report is sent successfully. Confirms receipt and gives the user a reference they can quote. Keep it short — it renders in a single toast line.
+  ///
+  /// In en, this message translates to:
+  /// **'Report received — ref {shortId}. Thank you.'**
+  String bugReportThanks(String shortId);
+
+  /// Toast shown on app open when a bug the user reported has been marked resolved. {title} is the title they wrote when filing it, so they recognise their own report.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed: {title}'**
+  String bugReportResolved(String title);
 }
 
 class _AppLocalizationsDelegate

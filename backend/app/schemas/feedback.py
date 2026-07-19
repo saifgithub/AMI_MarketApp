@@ -21,7 +21,19 @@ BugCategory = Literal[
     "other",
 ]
 
-BugStatus = Literal["open", "triaged", "fixed", "wont_fix"]
+# CR043 (minimal half of CR002): the canonical lifecycle, matching what
+# `/fix-bugs` and Saiful actually write. The previous Literal carried
+# `triaged`/`fixed` — never written by anything — and lacked `resolved`,
+# of which the Alpha DB held 35 rows. That mismatch was harmless only
+# while this schema was write-only; `GET /updates` serialises resolved
+# rows, so it would have raised ValidationError on every one of them.
+BugStatus = Literal[
+    "open",
+    "in_progress",
+    "pending_review",
+    "resolved",
+    "wont_fix",
+]
 
 _VALID_PLATFORMS = {"ios", "android_gms", "android_hms"}
 
@@ -57,3 +69,17 @@ class BugReportResponse(BaseModel):
     status: BugStatus
     created_at: datetime
     attachment_path: str | None = None
+
+
+class BugResolutionUpdate(BaseModel):
+    """A resolved report the reporter hasn't been told about yet.
+
+    `resolution_note` is written by Saiful at the moment he flips the
+    status and is shown to the reporter verbatim — it is user-facing
+    copy, not an engineering note.
+    """
+
+    id: UUID
+    title: str
+    resolved_at: datetime | None = None
+    resolution_note: str | None = None
