@@ -1,6 +1,6 @@
 # CR035 Room-vs-Street benchmark report
 
-Generated 2026-07-18 09:21 UTC · baseline batch `baseline150-2026-07-17`
+Generated 2026-07-19 09:00 UTC · baseline batch `baseline150-2026-07-17` · ablation batch `ablconsensus150-2026-07-18`
 
 ## Headline
 
@@ -371,3 +371,64 @@ automated access (HTTP 403) and could not be included.
 | XOM | PASS | buy | — | — |
 | XPEV | PASS | buy | — | — |
 | XRX | PASS | hold | — | — |
+
+## Ablation (analyst-consensus line suppressed)
+
+- Ablation agreement vs Street: **61/150 (41%)** (baseline: 73/146 (50%))
+- Verdict flips baseline → ablation: **51**
+
+- AAPL: APPROVE → PASS
+- ABT: APPROVE → PASS
+- AES: PASS → APPROVE
+- AMZN: APPROVE → PASS
+- AVGO: APPROVE → PASS
+- BAC: PASS → APPROVE
+- BLK: APPROVE → PASS
+- CI: PASS → APPROVE
+- DAL: APPROVE → PASS
+- DASH: APPROVE → PASS
+- DE: APPROVE → PASS
+- DELL: APPROVE → PASS
+- EBAY: PASS → APPROVE
+- EOG: APPROVE → PASS
+- EQIX: PASS → APPROVE
+- ETSY: PASS → APPROVE
+- FDX: APPROVE → PASS
+- GILD: APPROVE → PASS
+- GOOGL: PASS → APPROVE
+- HON: PASS → APPROVE
+- HRL: APPROVE → PASS
+- INTC: APPROVE → PASS
+- JPM: PASS → APPROVE
+- LEVI: PASS → APPROVE
+- LVS: APPROVE → PASS
+- MDLZ: PASS → APPROVE
+- META: PASS → APPROVE
+- MO: PASS → APPROVE
+- MU: PASS → APPROVE
+- NFLX: PASS → APPROVE
+- NKE: APPROVE → PASS
+- PGR: APPROVE → PASS
+- PINS: APPROVE → PASS
+- QCOM: APPROVE → PASS
+- RTX: APPROVE → PASS
+- SMCI: PASS → APPROVE
+- SO: PASS → APPROVE
+- SPOT: APPROVE → PASS
+- STX: PASS → APPROVE
+- STZ: APPROVE → PASS
+- SYK: APPROVE → PASS
+- T: APPROVE → PASS
+- TRIP: PASS → APPROVE
+- TSLA: APPROVE → PASS
+- VRTX: APPROVE → PASS
+- VZ: PASS → APPROVE
+- WDC: APPROVE → PASS
+- WFC: PASS → APPROVE
+- WMT: APPROVE → PASS
+- WYNN: APPROVE → PASS
+- XPEV: PASS → APPROVE
+
+A large agreement drop or heavy flipping means baseline agreement was
+substantially the Room parroting the consensus it is fed; small deltas mean
+the debate reaches the Street view from its own inputs.
