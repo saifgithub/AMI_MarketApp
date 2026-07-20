@@ -41,31 +41,39 @@ Two-sided by construction (referrer is rewarded twice, at signup and again at co
 strictly better acquisition-loop shape than a single flat reward, since it pays out at both
 funnel moments instead of just one.
 
+### Claude's recommended parameters (2026-07-20, AT:R61) — proposed, not yet locked
+
+| Decision | Recommendation | Why |
+|---|---|---|
+| Stage 1 (signup) | **7 days Trader** | Matches the existing 7-day trial exactly — reuses the same "temporary Trader access" grant mechanic DEF060/CR039 already understand, no new duration to explain. Reads as "a real week," not a token gesture. |
+| Stage 2 (conversion) | **+23 days Trader** (tops up to 30 total) | Framing: *"your friend joins → free week. They subscribe → we top you up to a full free month."* 30 days matches §5's existing reward size exactly — not more generous than what's already locked, just paid out in two moments instead of one, weighted so the harder action (an actual paying customer) earns the bulk (23 of 30 days). |
+| Tier | **Trader only, never Floor Manager** | Matches §5's precedent. Floor Manager costs ~3.3x more in credits (500 vs 150) to grant for free; letting referrals reach the top tier for free undercuts the real subscription. |
+| Eligibility | **Every user, including Floor Pass** — not "paying only" like §5 | The load-bearing change. §5 restricts to already-paying users, which makes it retention, not acquisition. Opening it to free users is what makes this a genuine top-of-funnel tactic — a free user refers a friend and *feels* Trader for a week (also doubles as candidate #6, "taste of premium," for free). |
+| Stacking cap | **Days stack across referrals, capped at 90 banked days** | No cap on referral *count* — simpler to say "invite as many friends as you want" than "only your first 3 count." The ceiling is a banked-days cap instead, so a viral spike or throwaway-account farm can't hand out unbounded free months. 90 days (3 months) rewards a genuine super-referrer without being open-ended. |
+| Friend-side reward | **Carry over §5's unchanged: 30 bonus credits** | Two-sided referral programs consistently outperform one-sided ones (Dropbox, Robinhood) — don't drop the friend's incentive just because the referrer's got redesigned. |
+| Abuse bar, stage 1 | **Friend must claim (not stay anonymous) + complete onboarding** | Same bar §5 already uses — cheap, precedented, filters the obvious anon-session-farm abuse. |
+| Build order | **Stage 1 ships standalone first; stage 2 waits on M1 (RevenueCat)** | Stage 1 is just a plan-grant, buildable now with existing trial-grant code. Stage 2 needs a real subscription event to exist — "converted to paying" can't be verified before payments do. |
+
+**Precedent leaned on:** PayPal's 1999 $10-refer-$10 (explosive but paid out on signup alone,
+unsustainable — the lesson behind weighting the expensive reward, 23 of 30 days, to require an
+actual transaction, not just a click); Dropbox's referral (kept the per-referral reward small,
+relied on volume — same logic behind the 90-day cap instead of bigger individual grants);
+Robinhood's free-stock referral (two-sided, modest expected value, tied to a real event — the
+model for keeping the friend-side reward intact).
+
 **How this relates to the already-locked Referral offer** (`offers.md` §5 — *"Refer 3 friends
 who sign up + complete onboarding → 1 free month Trader; friend gets 30 bonus credits"*):
-different shape, not obviously the same program. The locked offer is bulk-threshold (needs 3),
-single-tier reward, credits-flavored for the friend. This is per-referral, two-tier, premium-days
-flavored for the referrer, and doesn't specify a friend-side reward at all. **Open question for
-Saiful:** does "Share a Premium" replace offers.md §5, run alongside it as a second program, or
-is it meant to *be* §5's real mechanic and the "refer 3 → 1 month" framing was just launch-offer
-marketing copy over the same underlying per-referral math? Worth settling before either gets
-built, so there's one referral system, not two competing ones.
-
-**Not yet decided (flagged, not guessed):** exact N and M (days per stage); which tier unlocks
-(Trader vs Floor Manager); whether this is available to Floor Pass users too or only
-already-paying ones (the locked offer restricts to "any paying user" — this idea reads as open
-to everyone, which is what makes it a *funnel* tactic rather than a retention perk); cap on
-total stacked days from multiple referrals, if any.
+**Claude's recommendation: retire §5, let "Share a Premium" replace it.** §5 pays a full free
+month for 3 mere *signups* — no purchase required from any of them, worse-aligned than a
+mechanic whose big reward (23 of 30 days) only fires on an actual paying conversion. Same total
+ceiling per fully-successful referral (30 days either way) — strictly better incentive
+alignment. **Needs Saiful's explicit sign-off** — `offers.md` is a locked launch offer and
+hasn't been touched; this is a recommendation, not a change.
 
 **Build note, not a blocker:** no referral infrastructure exists yet anywhere in the codebase —
 no share link, no referral code, no attribution tracking (`offers.md` notes the locked offer
-itself depends on Phase 2 AppsFlyer attribution). Whichever referral mechanic ships first builds
-that plumbing once; the two programs, if both survive, would share it.
-
-**Abuse guardrail to design in from the start:** self-referral and throwaway-account farming are
-the standard failure mode for any per-referral (not per-3) reward — worth a minimum bar (e.g.
-referred account must complete onboarding + hold a real claim method, not just an anon session)
-before stage 1 pays out.
+itself depends on Phase 2 AppsFlyer attribution). Whichever referral mechanic ships builds that
+plumbing once.
 
 ## Candidate plans — for review / naming
 
