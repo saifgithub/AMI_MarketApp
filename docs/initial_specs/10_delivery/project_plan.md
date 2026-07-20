@@ -34,7 +34,7 @@ Alpha (A1–A29, plus A6b pulled forward from MVP M4):
 - **◯ Unstarted**: A4, A5, A14, A16 — 4 items (all downstream of A3/A13/A15).
 - **✖ Superseded**: A24 — 1 item (CLI `altool` replaced Transporter).
 
-**Alpha is ~77% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, Google OAuth, legal copy, Play Console identity verification) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward and code landed AT:R36).
+**Alpha is ~77% complete.** The unblocked engineering surface (every `done` + `partial` Claude-only item) is wrapped. What's left of Alpha is mostly Saiful-external setup (email/TTS/push providers, Google OAuth, legal copy, Play Console identity verification) + downstream code that depends on it. Beta + MVP are mostly unstarted (M5 partial because i18n landed early in Alpha; M4 partial because Android slice pulled forward and code landed AT:R36; M1 partial because CR039 pulled its entitlement half forward AT:R60).
 
 **Status legend** (used in every table below): `✅ done` · `⚡ partial` · `⏳ blocked` · `◯ unstarted` · `✖ superseded`. AT:R\<N\> tags in the status cell point to the session that delivered it — cross-reference with [HANDOVER_R.md](../../../HANDOVER_R.md) / [history/](../../../history/).
 
@@ -179,7 +179,7 @@ Grouped by stream. Engineering items (Claude) are sized in sessions; external it
 
 | # | Item | Who | Est | Status | Notes |
 |---|---|---|---|---|---|
-| **M1** | RevenueCat integration. Pricing tiers wired to backend (mandate.plan transitions); receipt validation; entitlement checks on premium routes (1-on-1 with PM, Convene the Room). | Claude + Saiful | 1 session + RC config | ◯ unstarted (MVP phase) | |
+| **M1** | RevenueCat integration. Pricing tiers wired to backend (mandate.plan transitions); receipt validation; entitlement checks on premium routes (1-on-1 with PM, Convene the Room). | Claude + Saiful | 1 session + RC config | ⚡ partial ([CR039](../../forward_planning/CR039_room_credit_gate/CR039_room_credit_gate.md), AT:R60, in_progress: pulled the entitlement half forward — credit spend/refund ledger, real 402 wall on Convene the Room, allowance re-grant when the effective plan drifts (trial expiry bites immediately). Charging stays off. M1 now reduces to RevenueCat + receipt validation + wiring the 402's upgrade sheet to a real purchase — waits on Saiful's Apple/Google dev accounts + RC product config.) | |
 | **M2** | App Store metadata — screenshots, app preview video, description copy, privacy nutrition labels, age rating. | Saiful (+ Claude drafts copy) | external | ◯ unstarted (MVP phase) | |
 | **M3** | App Store submission + review iteration. Be ready for the simulation/educational positioning to take 1–3 review rounds. | Saiful | external | ◯ unstarted (MVP phase) | |
 | **M4** | Android (GMS) release. Flutter build, Play Console setup, signing, closed beta → open beta → production. | Claude + Saiful | 1 session + external | ⚡ partial (AT:R29: Android slice pulled forward to Alpha — see A6b. MVP M4 now reduces to the Play Console **production** track + open-beta promotion; closed-beta + Google Sign-In land in Alpha.) | |
