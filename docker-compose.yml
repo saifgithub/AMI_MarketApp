@@ -204,6 +204,13 @@ services:
       # because Compose evaluates interpolation even for profile-gated
       # services, which would block plain `docker compose config`.
       TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN:-}
+      # DEF070: force HTTP/2 (TCP) transport instead of the default QUIC
+      # (UDP). melehost's UDP path to the CF edge drops packets, so QUIC
+      # connections flap with "timeout: no recent network activity" and
+      # users intermittently get 502s while all edge connections reconnect.
+      # HTTP/2 sidesteps every UDP failure mode. Revert to quic/auto only if
+      # the UDP path is fixed. Values: quic | http2 | auto.
+      TUNNEL_TRANSPORT_PROTOCOL: ${CF_TUNNEL_PROTOCOL:-http2}
     # On plain Docker Engine for Linux (e.g. Ubuntu / melehost),
     # `host.docker.internal` is NOT provided automatically — only
     # Docker Desktop on Mac / Windows ships it. We add it explicitly
