@@ -1,0 +1,48 @@
+# DEF071 — Lesson badge number reads as out-of-sequence
+
+**Source:** `bug:b860aabf` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** open — routed back to the CR044 lessons agent.
+
+## Symptom
+
+Report (with screenshot): *"why is the lesson number not in sequence?"* The lessons list
+shows badges reading **EDGE 49**, then **EDGE 2**, **EDGE 3**, **EDGE 4**, **EDGE 5** —
+the first number is far larger than the ones below it, so the list looks mis-ordered.
+
+## Root cause — working as designed, but illegible
+
+Two independent, correct behaviours collide:
+
+1. **The badge is a *stable canonical* number, not a position.** `lesson_tile.dart:59`
+   renders `meta.codeLabel`; `LessonMeta.codeLabel` ([`mobile/lib/models/lessons.dart:130-136`](../../../mobile/lib/models/lessons.dart#L130))
+   is the group-scoped code introduced in **CR044** — `"EDGE " + number`, where `number`
+   is CR018's canonical reference (the numeric prefix of the lesson id, e.g. `49` from
+   `049_…`). It is deliberately a permanent "say-it-out-loud" identifier, **frozen per
+   lesson**, not a display counter.
+2. **The list sorts by progress tier, not by number.** `track_lessons_screen.dart:101-112`
+   (`_sortedWithStatus`) does a three-tier sort — *in-progress → never-started →
+   completed*, catalogue order preserved within a tier. So a lesson the user has started
+   (EDGE 49) is pinned above never-started lessons (EDGE 2–5).
+
+Net: the prominent number is non-monotonic in the displayed order. Nothing is broken; the
+UI just gives the user no cue *why* the order is what it is, so a stable id reads as a
+sequence error.
+
+## Fix plan (recommended direction — final call with the implementing agent)
+
+Make the ordering legible **without** dropping the stable CR044 reference:
+
+- **Add tier section headers** to the list — "In progress", "Not started", "Completed" —
+  matching the existing three-tier sort in `_sortedWithStatus`. The jump from 49→2 then
+  becomes self-explanatory (49 sits under "In progress").
+- Optionally add a small **"Continue" / "In progress" chip** on the pinned in-progress
+  tile (`lesson_tile.dart`) so it's obvious it was floated, not mis-sorted.
+
+**Do NOT renumber the badge to list position** — that destroys the canonical CR044/CR018
+reference the Concierge and the user both quote out loud, and re-breaks DEF068's badge work.
+
+Scope: mobile-only, `track_lessons_screen.dart` + `lesson_tile.dart`. No backend, no API.
+
+## Out of scope
+
+The main lessons hex/feed screens (`lessons_screen.dart`) if they don't share the same
+tile — verify whether the same confusion exists there and fold in if trivial.
