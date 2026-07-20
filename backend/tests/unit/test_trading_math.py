@@ -90,6 +90,16 @@ def test_risk_tier_cap_accepts_a_custom_table():
     assert risk_tier_cap(2, caps={1: 10.0, 2: 20.0}) == 20.0
 
 
+def test_risk_tier_cap_total_for_sparse_custom_tables():
+    # CR046 O1: a sparse table + an intermediate score snaps to the nearest present
+    # key (ties round down) instead of KeyError-ing — matters for reuse elsewhere.
+    sparse = {1: 5.0, 5: 25.0}
+    assert risk_tier_cap(1, caps=sparse) == 5.0
+    assert risk_tier_cap(3, caps=sparse) == 5.0  # equidistant → rounds down to tier 1
+    assert risk_tier_cap(4, caps=sparse) == 25.0  # nearest present key is 5
+    assert risk_tier_cap(9, caps=sparse) == 25.0
+
+
 def test_every_tier_cap_stays_under_the_absolute_backstop():
     assert all(c <= SINGLE_NAME_ABSOLUTE_CAP_PCT for c in DEFAULT_RISK_TIER_CAPS.values())
 

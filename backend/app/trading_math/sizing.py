@@ -27,12 +27,16 @@ SINGLE_NAME_ABSOLUTE_CAP_PCT: float = 50.0
 def risk_tier_cap(risk_score: int, caps: dict[int, float] | None = None) -> float:
     """The single-name position-size cap (%) for a risk tier.
 
-    Table-driven and total: a risk_score outside the table's keys clamps to the
-    nearest tier rather than raising, so a malformed score can never crash sizing.
+    Total for any non-empty table: a risk_score without an exact key snaps to the
+    nearest key present (ties round down to the lower tier), so neither an
+    out-of-range score nor a *sparse* custom `caps` table can raise (CR046 O1).
+    An empty table is the one unsupported input — a caller error, not a score one.
     """
     table = DEFAULT_RISK_TIER_CAPS if caps is None else caps
-    key = min(max(int(risk_score), min(table)), max(table))
-    return table[key]
+    score = int(risk_score)
+    if score in table:
+        return table[score]
+    return table[min(table, key=lambda k: (abs(k - score), k))]
 
 
 def clamp_size(proposed_pct: float, cap_pct: float) -> float:
