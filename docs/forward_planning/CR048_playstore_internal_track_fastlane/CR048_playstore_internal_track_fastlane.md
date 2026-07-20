@@ -35,9 +35,14 @@ The build/signing half already exists. What's new: (1) the one-time bootstrap to
 ### One-time operations (Saiful — Part-C checklist)
 
 **1. Play Console API service account (enables fastlane)**
-- Play Console → **Setup → API access** → link or create a Google Cloud project.
-- Create a service account (opens GCP IAM) → back in Play Console, grant it app access under **Users & permissions**: *"Release to testing tracks, excluding production"* + *"Manage testing track releases"*.
-- In GCP, create a **JSON key** for that service account → save it to `~/.android-keys/play-service-account.json` (never commit it).
+
+Google moved this out of the old "Setup → API access" page; the work now happens mostly in Google Cloud Console (verified against fastlane's current setup docs, R64). Play Console → **Account details** shows the linked Google Cloud project to use.
+
+- **Enable the API:** [console.cloud.google.com/apis/library/androidpublisher.googleapis.com](https://console.cloud.google.com/apis/library/androidpublisher.googleapis.com) → select the linked project → **Enable**.
+- **Create the service account:** [console.cloud.google.com/iam-admin/serviceaccounts](https://console.cloud.google.com/iam-admin/serviceaccounts) → select project → **Create service account** → name `fastlane-supply` → **Done** (no project roles needed).
+- **JSON key:** on the service account → **⋮ Actions → Manage keys → Add key → Create new key → JSON** → save to `~/.android-keys/play-service-account.json` (never commit it).
+- **Grant in Play Console:** **Users and permissions → Invite new users** → paste the service-account email (`…@….iam.gserviceaccount.com`) → App permissions for AMI Trade: *"Release to testing tracks"* (or Admin) → **Invite user**.
+- **Test the key** (credential only, no AAB): `cd mobile/android && bundle exec fastlane run validate_play_store_json_key json_key:$HOME/.android-keys/play-service-account.json`.
 
 **2. First manual upload (enrolls Play App Signing — one-time, irreversible)**
 - Build a fresh AAB (Claude does this in R64, or run `scripts/build_playstore.sh`).
