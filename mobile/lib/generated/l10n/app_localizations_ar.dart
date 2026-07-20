@@ -450,6 +450,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lessonsNextUp => 'التالي';
 
   @override
+  String get lessonsTierInProgress => 'قيد التقدم';
+
+  @override
+  String get lessonsTierNotStarted => 'لم تبدأ';
+
+  @override
+  String get lessonsTierCompleted => 'مكتمل';
+
+  @override
+  String get lessonsContinue => 'متابعة';
+
+  @override
   String get lessonsUnlocksAgent => 'يفتح';
 
   @override

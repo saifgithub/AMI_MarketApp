@@ -1,11 +1,15 @@
 /// Per-track lesson list — navigated to from the lessons hex cluster.
 ///
-/// Lessons are sorted in three tiers: in-progress → never-started → completed.
-/// Status comes from GET /v1/lessons/progress/{userId}/by_lesson via LessonsState.
+/// Lessons are grouped into three tiers: in-progress → never-started →
+/// completed, in that order, with a section header per tier once the user has
+/// any progress (DEF071). Status comes from
+/// GET /v1/lessons/progress/{userId}/by_lesson via LessonsState.
 library;
 
+import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
+import 'package:ami_trade/screens/lessons/track_row_builder.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/lessons/lesson_tile.dart';
@@ -67,50 +71,80 @@ class TrackLessonsScreen extends ConsumerWidget {
       );
     }
 
-    final lessons = _sortedWithStatus(track.lessons, state);
+    final rows = _rows(track.lessons, state, AppLocalizations.of(context));
 
     return RefreshIndicator(
       onRefresh: () => ref.read(lessonsNotifierProvider.notifier).refresh(),
       color: AmiColors.hexBlue,
-      child: ListView.separated(
+      child: ListView.builder(
         padding: const EdgeInsets.all(AmiSpacing.m),
-        itemCount: lessons.length,
-        separatorBuilder: (_, __) => const SizedBox(height: AmiSpacing.s),
+        itemCount: rows.length,
         itemBuilder: (context, i) {
-          final meta = lessons[i];
-          return LessonTile(
-            meta: meta,
-            status: state.lessonStatuses[meta.id],
-            onRead: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => LessonReaderScreen(lessonId: meta.id),
-              ),
-            ),
-            onQuizOnly: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) =>
-                    LessonReaderScreen(lessonId: meta.id, quizOnly: true),
-              ),
-            ),
-          );
+          final row = rows[i];
+          switch (row) {
+            case TrackHeaderRow():
+              return _TierHeader(label: row.label, isFirst: row.isFirst);
+            case TrackLessonRow(:final meta):
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AmiSpacing.s),
+                child: LessonTile(
+                  meta: meta,
+                  status: state.lessonStatuses[meta.id],
+                  onRead: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => LessonReaderScreen(lessonId: meta.id),
+                    ),
+                  ),
+                  onQuizOnly: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) =>
+                          LessonReaderScreen(lessonId: meta.id, quizOnly: true),
+                    ),
+                  ),
+                ),
+              );
+          }
         },
       ),
     );
   }
 
-  /// Three-tier sort: in-progress → never-started → completed.
-  /// Within each tier, catalogue order is preserved.
-  List<LessonMeta> _sortedWithStatus(
-      List<LessonMeta> lessons, LessonsState state) {
-    int tier(LessonMeta m) {
-      if (state.isLessonInProgress(m.id)) return 0;
-      if (state.isLessonCompleted(m.id)) return 2;
-      return 1;
+  /// Classify then delegate to the pure [buildTrackRows] (see
+  /// `track_row_builder.dart` for the ordering rules and the DEF071 rationale).
+  List<TrackRow> _rows(
+      List<LessonMeta> lessons, LessonsState state, AppLocalizations l) {
+    LessonTier tierOf(LessonMeta m) {
+      if (state.isLessonInProgress(m.id)) return LessonTier.inProgress;
+      if (state.isLessonCompleted(m.id)) return LessonTier.completed;
+      return LessonTier.notStarted;
     }
 
-    final copy = List<LessonMeta>.from(lessons);
-    copy.sort((a, b) => tier(a).compareTo(tier(b)));
-    return copy;
+    return buildTrackRows(
+      lessons: lessons,
+      tierOf: tierOf,
+      inProgressLabel: l.lessonsTierInProgress,
+      notStartedLabel: l.lessonsTierNotStarted,
+      completedLabel: l.lessonsTierCompleted,
+    );
+  }
+}
+
+class _TierHeader extends StatelessWidget {
+  const _TierHeader({required this.label, required this.isFirst});
+  final String label;
+  final bool isFirst;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+          top: isFirst ? 0 : AmiSpacing.m, bottom: AmiSpacing.s),
+      child: Text(
+        label,
+        style: AmiTypography.labelMono
+            .copyWith(fontSize: 11, color: AmiColors.textMed),
+      ),
+    );
   }
 }
 

@@ -1,6 +1,6 @@
 # DEF071 — Lesson badge number reads as out-of-sequence
 
-**Source:** `bug:b860aabf` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** open — routed back to the CR044 lessons agent.
+**Source:** `bug:b860aabf` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** fixed (AT:R63) — tier section headers + a "Continue" label on floated tiles; badge left as the stable CR044 code.
 
 ## Symptom
 
@@ -46,3 +46,32 @@ Scope: mobile-only, `track_lessons_screen.dart` + `lesson_tile.dart`. No backend
 
 The main lessons hex/feed screens (`lessons_screen.dart`) if they don't share the same
 tile — verify whether the same confusion exists there and fold in if trivial.
+
+## Resolution (AT:R63)
+
+Ships mobile-only, as scoped:
+
+- **Tier section headers** — the flat `ListView.separated` in `track_lessons_screen.dart`
+  is now a `ListView.builder` over rows built by `buildTrackRows` (new
+  `mobile/lib/screens/lessons/track_row_builder.dart`). Headers ("IN PROGRESS · n",
+  "NOT STARTED · n", "COMPLETED · n") appear **only when more than one tier is non-empty**,
+  so a first visit (everything never-started) is unchanged. The 49→2 jump now sits under a
+  header that names it.
+- **"CONTINUE" label** on in-progress tiles in `lesson_tile.dart`, mirroring the existing
+  "COMPLETED" label, so a floated tile reads as resumable rather than mis-sorted. That
+  hard-coded "COMPLETED" string was localised in the same edit (`lessonsTierCompleted`).
+- **Badge untouched** — still `LessonMeta.codeLabel` (the CR044 code). No renumbering, so the
+  say-it-out-loud reference and DEF068's gateway work are intact.
+- Ordering was previously a `List.sort` on a tier key; `buildTrackRows` partitions instead, so
+  "catalogue order within a tier" is now actually guaranteed (Dart's `List.sort` is not stable).
+
+**Verified out-of-scope:** `LessonTile` is used only by `track_lessons_screen.dart`;
+`lessons_screen.dart` is a hex cluster that renders no lesson list, so the confusion cannot
+appear there.
+
+**Guard:** `mobile/test/widgets/track_row_builder_test.dart` — 5 cases including the exact
+reporter scenario (EDGE 49 in-progress floating above EDGE 2–5), the single-tier no-header
+case, and catalogue-order-within-tier. New i18n keys in all three ARBs.
+
+**Verification:** `flutter test` 29 passed · `flutter analyze --no-fatal-infos` clean (4
+pre-existing infos).

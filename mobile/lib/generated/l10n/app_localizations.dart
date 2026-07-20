@@ -898,6 +898,30 @@ abstract class AppLocalizations {
   /// **'NEXT UP'**
   String get lessonsNextUp;
 
+  /// DEF071 — section header above lessons the user has started. The per-track list sorts started lessons to the top, so a lesson with a high canonical badge number (e.g. EDGE 49) can sit above lower-numbered unstarted ones; these headers explain the jump. Uppercase, short.
+  ///
+  /// In en, this message translates to:
+  /// **'IN PROGRESS'**
+  String get lessonsTierInProgress;
+
+  /// DEF071 — section header above lessons the user has not started yet. Uppercase, short.
+  ///
+  /// In en, this message translates to:
+  /// **'NOT STARTED'**
+  String get lessonsTierNotStarted;
+
+  /// DEF071 — section header above finished lessons, and the small green label on a completed lesson tile. Uppercase, short.
+  ///
+  /// In en, this message translates to:
+  /// **'COMPLETED'**
+  String get lessonsTierCompleted;
+
+  /// DEF071 — small blue label on an in-progress lesson tile, mirroring the COMPLETED label, so a lesson floated to the top of the list reads as resumable rather than mis-sorted. Uppercase, short.
+  ///
+  /// In en, this message translates to:
+  /// **'CONTINUE'**
+  String get lessonsContinue;
+
   /// Small amber chip on a lesson tile marking it as a gateway lesson — passing it moves an agent-unlock gate forward. Keep to one short word; it sits inline in a dense caption row.
   ///
   /// In en, this message translates to:

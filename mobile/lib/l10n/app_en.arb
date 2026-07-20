@@ -309,6 +309,22 @@
         "placeholders": {"unlocked": {"type": "int"}}
     },
     "lessonsNextUp": "NEXT UP",
+    "lessonsTierInProgress": "IN PROGRESS",
+    "@lessonsTierInProgress": {
+        "description": "DEF071 — section header above lessons the user has started. The per-track list sorts started lessons to the top, so a lesson with a high canonical badge number (e.g. EDGE 49) can sit above lower-numbered unstarted ones; these headers explain the jump. Uppercase, short."
+    },
+    "lessonsTierNotStarted": "NOT STARTED",
+    "@lessonsTierNotStarted": {
+        "description": "DEF071 — section header above lessons the user has not started yet. Uppercase, short."
+    },
+    "lessonsTierCompleted": "COMPLETED",
+    "@lessonsTierCompleted": {
+        "description": "DEF071 — section header above finished lessons, and the small green label on a completed lesson tile. Uppercase, short."
+    },
+    "lessonsContinue": "CONTINUE",
+    "@lessonsContinue": {
+        "description": "DEF071 — small blue label on an in-progress lesson tile, mirroring the COMPLETED label, so a lesson floated to the top of the list reads as resumable rather than mis-sorted. Uppercase, short."
+    },
     "lessonsUnlocksAgent": "UNLOCKS",
     "@lessonsUnlocksAgent": {
         "description": "Small amber chip on a lesson tile marking it as a gateway lesson \u2014 passing it moves an agent-unlock gate forward. Keep to one short word; it sits inline in a dense caption row."

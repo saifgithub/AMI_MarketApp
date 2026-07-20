@@ -450,6 +450,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lessonsNextUp => 'NEXT UP';
 
   @override
+  String get lessonsTierInProgress => 'IN PROGRESS';
+
+  @override
+  String get lessonsTierNotStarted => 'NOT STARTED';
+
+  @override
+  String get lessonsTierCompleted => 'COMPLETED';
+
+  @override
+  String get lessonsContinue => 'CONTINUE';
+
+  @override
   String get lessonsUnlocksAgent => 'UNLOCKS';
 
   @override

@@ -451,6 +451,18 @@ class AppLocalizationsMs extends AppLocalizations {
   String get lessonsNextUp => 'SETERUSNYA';
 
   @override
+  String get lessonsTierInProgress => 'SEDANG BERJALAN';
+
+  @override
+  String get lessonsTierNotStarted => 'BELUM DIMULAKAN';
+
+  @override
+  String get lessonsTierCompleted => 'SELESAI';
+
+  @override
+  String get lessonsContinue => 'TERUSKAN';
+
+  @override
   String get lessonsUnlocksAgent => 'BUKA';
 
   @override

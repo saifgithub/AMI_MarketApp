@@ -119,9 +119,23 @@ class LessonTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: AmiSpacing.xs),
               child: Text(
-                'COMPLETED',
+                l.lessonsTierCompleted,
                 style: AmiTypography.labelMono.copyWith(
                     fontSize: 10, color: AmiColors.hexGreen),
+              ),
+            ),
+          // DEF071 — mirror the COMPLETED label for started lessons. The list
+          // floats in-progress lessons to the top, so their high canonical
+          // badge number (e.g. EDGE 49) can sit above lower-numbered unstarted
+          // ones; this label makes the pinned tile read as resumable, not
+          // mis-sorted.
+          if (status?.isInProgress == true)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AmiSpacing.xs),
+              child: Text(
+                l.lessonsContinue,
+                style: AmiTypography.labelMono.copyWith(
+                    fontSize: 10, color: AmiColors.hexBlue),
               ),
             ),
           const SizedBox(height: AmiSpacing.s),
