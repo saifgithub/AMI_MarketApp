@@ -1,8 +1,7 @@
 """Tests for the mandate overlay generator. Pure-function; runs fast."""
 
-import pytest
 
-from app.agents.overlay_generator import generate_overlay
+from app.agents.overlay_generator import _max_position_pct, generate_overlay
 from app.schemas import AgentId, Mandate
 
 
@@ -51,9 +50,13 @@ def test_trader_position_size_scales_with_risk_score(
 ):
     conservative = generate_overlay(AgentId.TRADER, conservative_mandate)
     aggressive = generate_overlay(AgentId.TRADER, aggressive_mandate)
-    # Risk 1 → 5% cap; Risk 5 → 40% cap
-    assert "5%" in conservative
-    assert "40%" in aggressive
+    # CR046 M03: the Trader is told exactly the per-risk-tier cap the PM enforces,
+    # and the cap still scales with risk (risk 1 → 1.5%, risk 5 → 4.5%).
+    lo = _max_position_pct(conservative_mandate.risk_score)
+    hi = _max_position_pct(aggressive_mandate.risk_score)
+    assert f"{lo}% per name" in conservative
+    assert f"{hi}% per name" in aggressive
+    assert hi > lo
 
 
 def test_risk_score_in_overlay(base_mandate: Mandate):

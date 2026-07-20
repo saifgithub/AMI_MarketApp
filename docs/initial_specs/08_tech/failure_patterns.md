@@ -213,6 +213,56 @@ layer offers.
 
 ---
 
+## P5 — LLM asked to compute a number it presents as fact
+
+**Symptom.** An agent states a specific figure — a technical indicator, a risk percentage, a
+position cap — that it derived itself from data in the prompt. The number is wrong, or drifts from
+what the system actually enforces, and the user (or the PM's binding verdict) treats it as measured
+truth.
+
+**Mechanism.** LLMs are unreliable at arithmetic. A prompt hands the model raw inputs and asks it,
+explicitly or implicitly, to do the sum. Sometimes there is no data at all and the model invents
+one. Either way the output is fluent and confident, so nothing downstream can tell a computed number
+from a fabricated one.
+
+**Instances.**
+
+| | What the LLM was left to compute | What went wrong | Scale |
+|---|---|---|---|
+| **DEF052** | RSI / trend / volume / support for the Market Analyst | 100% fabricated (a coin flip or `rng.randint`); the prompt also claimed MACD/MAs/Bollinger never computed anywhere | every ticker, every run |
+| **DEF066** | a position's contribution to portfolio drawdown | compared a raw stop *distance* to the portfolio cap, ignoring size — ~20× overstatement | 16 of 64 benchmark Buys refused |
+| **CR046 M03** | (latent) what position size is "allowed" | the Trader was *told* 40% per name while the PM *clamped* to 4.5% — shown ≠ enforced, ~9× gap | every risk-5 convene |
+
+**Why prose could not fix it.** The task framing already hard-instructs *"use ONLY numbers from the
+data block… do not cite figures from training memory."* Compliance with that class of instruction
+measures ~30% (P2). An emphatic "compute this carefully" is a wish; the model still does the sum, or
+invents it. The fix is always the same shape: **compute it in Python, inject the finished figure,
+and make the number the agent is shown equal to the number the system enforces.**
+
+**The invariant.** *If an agent presents a number as fact and it can be computed deterministically,
+Python computes it and the agent is handed the result — never asked to derive it.* This is the
+standing charter of **CR046** (`docs/forward_planning/CR046_agent_math_ledger/`): every such number
+is a ledger entry with a formula, a source, and a guard test, computed in the portable
+`app/trading_math/` library.
+
+**Enforcing check.**
+
+- Per-calc guard tests pin each computation (`test_trading_math.py`, `test_technicals.py`,
+  `test_room_prompts.py`, `test_fundamentals.py`).
+- **Coherence tests** for any agent-facing figure the system also enforces:
+  `test_position_sizing.py` asserts the cap the Trader is *shown* equals the cap the PM *clamps to*,
+  for every risk tier — verified red against the pre-fix 40-vs-4.5 state.
+- The CR046 ledger discipline: a new number that reaches an agent gets a ledger entry + a test, or
+  it does not ship (the house rule, applied to numbers).
+
+**Rule for new code.** Before a prompt hands an agent inputs to reason over numerically, ask: *is
+there a figure here the model will state as fact?* If yes and it's derivable, compute it in
+`trading_math/`, inject it, add its ledger entry + guard test. If it's genuinely unmeasurable, mark
+it illustrative in the value string itself (the CR034/sentiment convention), not in a separate
+prompt line the LLM can drop.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

@@ -7,7 +7,6 @@ See docs/initial_specs/02_agents/mandate_overlays.md for the full spec.
 """
 
 from app.schemas import (
-    AGENT_FAMILIES,
     TWELVE_AGENT_IDS,
     AgentId,
     Compliance,
@@ -16,6 +15,7 @@ from app.schemas import (
     Mandate,
     Path,
 )
+from app.trading_math.sizing import risk_tier_cap
 
 
 def generate_overlay(agent_id: AgentId, mandate: Mandate) -> str:
@@ -391,8 +391,10 @@ or Convene the Room?"
 ---"""
 
 
-def _max_position_pct(risk_score: int) -> int:
-    return {1: 5, 2: 10, 3: 15, 4: 25, 5: 40}[risk_score]
+def _max_position_pct(risk_score: int) -> float:
+    # Canonical per-risk-tier cap lives in app.trading_math.sizing (CR046 M03).
+    # The Trader is now told the same cap the Portfolio Manager clamps to.
+    return risk_tier_cap(risk_score)
 
 
 _ROLE_BUILDERS = {

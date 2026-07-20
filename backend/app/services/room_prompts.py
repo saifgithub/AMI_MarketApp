@@ -25,7 +25,7 @@ from app.schemas.mandate import Plan
 from app.services.agent_prompts import build_agent_prompt
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
-
+from app.trading_math.risk import drawdown_contribution
 
 # ── Phase framing ────────────────────────────────────────────────────────
 
@@ -133,9 +133,10 @@ def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | N
     size = float(trade_proposal.get("size_pct") or 0)
     entry = float(trade_proposal.get("entry") or 0)
     stop = float(trade_proposal.get("stop") or 0)
-    if size > 0 and entry > 0 and 0 < stop < entry:
-        stop_dist = (entry - stop) / entry * 100
-        contrib = size * stop_dist / 100
+    dc = drawdown_contribution(size, entry, stop)
+    if dc:
+        stop_dist = dc.stop_distance_pct
+        contrib = dc.contribution_pts
         pct_of_cap = contrib / cap * 100 if cap else 0
         line += (
             f"\n  Trader's proposal: {size:.1f}% size, entry {entry:.2f}, "

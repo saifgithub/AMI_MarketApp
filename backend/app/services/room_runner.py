@@ -73,6 +73,7 @@ from app.services.credit_service import refund, room_cost_for_plan, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
+from app.trading_math.sizing import risk_tier_cap
 
 
 # ── Startup auto-retry policy (eeeb866f, AT:R34) ──────────────────────────
@@ -414,12 +415,11 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
 def _risk_tier_size_ceiling(risk_score: int) -> float:
     """Max position size (%) for a mandate's risk tier — a ceiling the PM's
     LLM-decided size gets clamped to (DEF056), and the default cosmetic size
-    for the pre-debate aggressive/conservative/neutral display values."""
-    return (
-        4.5 if int(risk_score) >= 4
-        else 1.5 if int(risk_score) <= 2
-        else 3.0
-    )
+    for the pre-debate aggressive/conservative/neutral display values.
+
+    Canonical values live in app.trading_math.sizing (CR046 M03) — the same
+    table the Trader's prompt narration now reads, so shown == enforced."""
+    return risk_tier_cap(risk_score)
 
 
 # Normalises PM vocabulary drift to the two Room actions (APPROVE/PASS).

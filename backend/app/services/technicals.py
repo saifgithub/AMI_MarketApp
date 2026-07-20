@@ -28,6 +28,13 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.services.market_data import get_market_data_provider
 
+# RSI/SMA math now lives in the portable trading_math library (CR046 M01).
+# Re-exported under the original private names so this module's internals and
+# any importers are unchanged; the computation is identical (Cutler's RSI).
+from app.trading_math.indicators import rsi as _rsi
+from app.trading_math.indicators import rsi_tone as _rsi_tone
+from app.trading_math.indicators import sma as _sma
+
 _HISTORY_PERIOD = "3m"  # ~65 daily candles — enough for RSI-14 and a 50-day SMA
 _RSI_PERIOD = 14
 _SMA_SHORT = 20
@@ -45,38 +52,6 @@ class Technicals(NamedTuple):
     volume_tone: str
     support: float
     breakout: float
-
-
-def _rsi(closes: list[float], period: int = _RSI_PERIOD) -> float | None:
-    """Standard 14-period RSI (simple average of gains/losses)."""
-    if len(closes) < period + 1:
-        return None
-    gains: list[float] = []
-    losses: list[float] = []
-    for i in range(1, len(closes)):
-        delta = closes[i] - closes[i - 1]
-        gains.append(max(delta, 0.0))
-        losses.append(max(-delta, 0.0))
-    avg_gain = sum(gains[-period:]) / period
-    avg_loss = sum(losses[-period:]) / period
-    if avg_loss == 0:
-        return 100.0
-    rs = avg_gain / avg_loss
-    return 100 - (100 / (1 + rs))
-
-
-def _rsi_tone(rsi: float) -> str:
-    if rsi >= 70:
-        return "overbought"
-    if rsi <= 30:
-        return "oversold"
-    return "neither overbought nor oversold"
-
-
-def _sma(values: list[float], window: int) -> float | None:
-    if len(values) < window:
-        return None
-    return sum(values[-window:]) / window
 
 
 def compute_technicals(ticker: str) -> Technicals | None:

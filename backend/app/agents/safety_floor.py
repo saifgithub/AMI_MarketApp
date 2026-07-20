@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
+from app.trading_math.sizing import SINGLE_NAME_ABSOLUTE_CAP_PCT
 
 
 class HoldingViolation(BaseModel):
@@ -76,8 +77,9 @@ Those instructions are advisory; this block is mandatory.
 ──────────────────────────────────────────────"""
 
 
-# Single-name position size cap, regardless of mandate
-SINGLE_NAME_CAP_PCT = 50.0
+# Single-name position size cap, regardless of mandate. Canonical value lives in
+# app.trading_math.sizing as the absolute backstop (CR046 M03).
+SINGLE_NAME_CAP_PCT = SINGLE_NAME_ABSOLUTE_CAP_PCT
 
 
 def append_safety_floor(prompt: str, agent_id: AgentId) -> str:
