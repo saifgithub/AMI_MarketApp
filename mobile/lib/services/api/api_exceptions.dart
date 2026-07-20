@@ -67,3 +67,19 @@ class InsufficientCreditsException implements Exception {
       'InsufficientCreditsException(balance: $balance, cost: $cost, '
       'plan: $plan, funnel: $funnel, cooldownUntil: $cooldownUntil)';
 }
+
+/// Raised when the backend or the Cloudflare edge returns a 5xx (500/502/503/504).
+///
+/// DEF073: transport-level unavailability — usually transient (a deploy, a
+/// container restart, or a tunnel blip like DEF070). The UI must render a
+/// friendly, localized "try again" message with a Retry, never a raw status
+/// code. Mapped centrally: from the Room SSE path in [ApiClient.streamRoom] and,
+/// for REST, annotated onto the `DioException.error` by the client's server-error
+/// interceptor so callers can `is`-check it.
+class ServerUnavailableException implements Exception {
+  final int statusCode;
+  const ServerUnavailableException(this.statusCode);
+
+  @override
+  String toString() => 'ServerUnavailableException(status: $statusCode)';
+}

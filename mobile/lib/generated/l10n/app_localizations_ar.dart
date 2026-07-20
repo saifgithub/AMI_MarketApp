@@ -1079,7 +1079,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomWinzipBody(String countdown) {
-    return 'You\'ve used this Room. AMI\'s topping you up — your next Room unlocks in $countdown.';
+    return 'You\'ve used this Room — AMI\'s already topping you up. Your next Room unlocks in $countdown.';
   }
 
   @override
@@ -1100,8 +1100,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomPaywallBody(String date) {
-    return 'You\'ve used your Room credits. They reset on $date.';
+    return 'Sorry — you\'re out of Room credits for now. They\'ll refresh on $date.';
   }
+
+  @override
+  String get roomServerErrorTitle => 'AMI\'s briefly offline';
+
+  @override
+  String get roomServerErrorBody =>
+      'The connection dropped for a moment — nothing\'s wrong on your end. Give it a second and try again.';
+
+  @override
+  String get roomRetry => 'TRY AGAIN';
 
   @override
   String get tradeTicketHeading => 'صفقة جديدة';

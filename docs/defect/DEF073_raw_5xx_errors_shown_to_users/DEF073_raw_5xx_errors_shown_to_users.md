@@ -1,6 +1,6 @@
 # DEF073 — Raw 5xx errors shown to users (add friendly handling)
 
-**Source:** `bug:7f0c5531` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** open — routed back to the client agent. Reaction chosen by Saiful: *"Add friendly 5xx handling."*
+**Source:** `bug:7f0c5531` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** resolved AT:R63 — typed `ServerUnavailableException` + central mapping (SSE + Dio interceptor) + friendly Retry card; ships `0.1.0+41`. Reaction chosen by Saiful: *"Add friendly 5xx handling."*
 
 ## Symptom
 

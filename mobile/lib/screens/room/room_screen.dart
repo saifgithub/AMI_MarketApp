@@ -101,6 +101,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                         info: state.paywall!,
                         ticker: widget.ticker,
                       ),
+                    if (state.serverError)
+                      _ServerErrorCard(ticker: widget.ticker),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
@@ -589,6 +591,65 @@ class _ErrorBanner extends StatelessWidget {
           const Icon(Icons.error_outline, color: AmiColors.hexRed, size: 18),
           const SizedBox(width: AmiSpacing.s),
           Expanded(child: Text(message, style: AmiTypography.body)),
+        ],
+      ),
+    );
+  }
+}
+
+
+/// DEF073: friendly card shown when a Room convene hits a 5xx (502/503/504).
+/// Reassures the user it's transient and offers a one-tap Retry (re-runs the
+/// convene), instead of surfacing a raw status code.
+class _ServerErrorCard extends ConsumerWidget {
+  const _ServerErrorCard({required this.ticker});
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    const accent = AmiColors.hexRed;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: accent),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.cloud_off_outlined, color: accent, size: 18),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  l.roomServerErrorTitle,
+                  style: AmiTypography.labelMono.copyWith(color: accent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.s),
+          Text(l.roomServerErrorBody, style: AmiTypography.body),
+          const SizedBox(height: AmiSpacing.m),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AmiColors.hexCyan,
+                foregroundColor: AmiColors.slate900,
+                padding: const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+              ),
+              icon: const Icon(Icons.refresh),
+              label: Text(l.roomRetry),
+              onPressed: () =>
+                  ref.read(roomNotifierProvider(ticker).notifier).start(),
+            ),
+          ),
         ],
       ),
     );

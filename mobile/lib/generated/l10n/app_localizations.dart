@@ -1933,7 +1933,7 @@ abstract class AppLocalizations {
   /// Winzip cooldown card body. {countdown} is a live mm:ss timer string.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve used this Room. AMI\'s topping you up — your next Room unlocks in {countdown}.'**
+  /// **'You\'ve used this Room — AMI\'s already topping you up. Your next Room unlocks in {countdown}.'**
   String roomWinzipBody(String countdown);
 
   /// No description provided for @roomWinzipReady.
@@ -1966,11 +1966,29 @@ abstract class AppLocalizations {
   /// **'Out of Room credits'**
   String get roomPaywallTitle;
 
-  /// Hard credit-wall body (GTM_FUNNEL=none). {date} is the reset date, pre-formatted.
+  /// Hard credit-wall body (GTM_FUNNEL=none). Apologetic tone (DEF072). {date} is the reset date, pre-formatted.
   ///
   /// In en, this message translates to:
-  /// **'You\'ve used your Room credits. They reset on {date}.'**
+  /// **'Sorry — you\'re out of Room credits for now. They\'ll refresh on {date}.'**
   String roomPaywallBody(String date);
+
+  /// DEF073: title of the friendly card shown when a Room convene hits a 5xx (502/503/504). Uses AMI by name, never 'the AI'.
+  ///
+  /// In en, this message translates to:
+  /// **'AMI\'s briefly offline'**
+  String get roomServerErrorTitle;
+
+  /// DEF073: body of the friendly 5xx card for a failed Room convene. Reassures the user it's transient and invites a retry.
+  ///
+  /// In en, this message translates to:
+  /// **'The connection dropped for a moment — nothing\'s wrong on your end. Give it a second and try again.'**
+  String get roomServerErrorBody;
+
+  /// DEF073: retry button on the friendly server-error card; re-runs the Room convene.
+  ///
+  /// In en, this message translates to:
+  /// **'TRY AGAIN'**
+  String get roomRetry;
 
   /// No description provided for @tradeTicketHeading.
   ///

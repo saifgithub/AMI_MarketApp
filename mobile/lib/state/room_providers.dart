@@ -35,6 +35,7 @@ class RoomState {
     this.reconnecting = false,
     this.error,
     this.paywall,
+    this.serverError = false,
   });
 
   final String? phase;
@@ -55,6 +56,9 @@ class RoomState {
   // CR047: set when a convene was refused for credits (HTTP 402). Drives the
   // paywall / Winzip countdown card instead of the generic error banner.
   final InsufficientCreditsException? paywall;
+  // DEF073: set when a convene hit a 5xx (502/503/504). Drives a friendly
+  // "AMI's briefly offline — try again" card with a Retry, never a raw code.
+  final bool serverError;
 
   RoomState copyWith({
     String? phase,
@@ -70,6 +74,7 @@ class RoomState {
     bool clearError = false,
     InsufficientCreditsException? paywall,
     bool clearPaywall = false,
+    bool? serverError,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -83,6 +88,7 @@ class RoomState {
       reconnecting: reconnecting ?? this.reconnecting,
       error: clearError ? null : (error ?? this.error),
       paywall: clearPaywall ? null : (paywall ?? this.paywall),
+      serverError: serverError ?? this.serverError,
     );
   }
 }
@@ -151,6 +157,10 @@ class RoomNotifier extends StateNotifier<RoomState> {
       // run_id yet), so surface it as a paywall — for Winzip, a live cooldown
       // countdown — never a generic "Stream failed".
       state = state.copyWith(streaming: false, paywall: e);
+    } on ServerUnavailableException {
+      // DEF073: a 5xx at the convene POST (no run started). Show a friendly
+      // "AMI's briefly offline — try again" card with Retry, not a raw code.
+      state = state.copyWith(streaming: false, serverError: true);
     } catch (e) {
       // Stream broke (phone sleep, network loss, etc.). The backend
       // keeps the run going in a detached task and persists the final

@@ -60,6 +60,41 @@ class _AuthInterceptor extends Interceptor {
   }
 }
 
+/// DEF073: annotate any 5xx response with a [ServerUnavailableException] on the
+/// `DioException.error` slot, centralizing 5xx detection for REST callers. Purely
+/// additive — the exception still propagates as a `DioException` with its original
+/// type/message, so existing `catch` blocks are unchanged, while call sites that
+/// want a friendly path can check `e is DioException && e.error is
+/// ServerUnavailableException` (or `serverUnavailableFrom(e)`).
+class _ServerErrorInterceptor extends Interceptor {
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final code = err.response?.statusCode;
+    if (code != null && code >= 500) {
+      handler.next(DioException(
+        requestOptions: err.requestOptions,
+        response: err.response,
+        type: err.type,
+        message: err.message,
+        stackTrace: err.stackTrace,
+        error: ServerUnavailableException(code),
+      ));
+      return;
+    }
+    handler.next(err);
+  }
+}
+
+/// Extract a [ServerUnavailableException] from a thrown REST error, if the 5xx
+/// interceptor annotated it. Returns null for any other error (DEF073).
+ServerUnavailableException? serverUnavailableFrom(Object error) {
+  if (error is ServerUnavailableException) return error;
+  if (error is DioException && error.error is ServerUnavailableException) {
+    return error.error as ServerUnavailableException;
+  }
+  return null;
+}
+
 class ApiClient {
   ApiClient({String? baseUrl}) : _dio = Dio(BaseOptions(
         baseUrl: baseUrl ?? _resolveBaseUrl(),
@@ -68,6 +103,7 @@ class ApiClient {
         headers: {'Content-Type': 'application/json'},
       )) {
     _dio.interceptors.add(_AuthInterceptor(this));
+    _dio.interceptors.add(_ServerErrorInterceptor()); // DEF073
   }
 
   final Dio _dio;
@@ -583,6 +619,11 @@ class ApiClient {
           throw InsufficientCreditsException.fromJson(decoded);
         }
         throw Exception('HTTP 402 from room stream');
+      }
+      if (response.statusCode >= 500) {
+        // DEF073: a 5xx (deploy/restart/tunnel blip) — surface it typed so the
+        // Room screen renders a friendly "try again" card, not a raw status code.
+        throw ServerUnavailableException(response.statusCode);
       }
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode} from room stream');

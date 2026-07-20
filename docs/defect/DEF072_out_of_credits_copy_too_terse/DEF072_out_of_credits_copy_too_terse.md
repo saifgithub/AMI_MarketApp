@@ -1,6 +1,6 @@
 # DEF072 — Out-of-credits copy is too terse
 
-**Source:** `bug:6566b5da` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** open — routed back to the copy/l10n agent.
+**Source:** `bug:6566b5da` · **Reporter:** Platinum Anchor (`8f1e288a`, floor_pass, iOS `0.1.0+39`) · **Filed:** 2026-07-20 (AT:R63) · **Status:** resolved AT:R63 — `roomPaywallBody` softened, `roomWinzipBody` warmed; ships `0.1.0+41`.
 
 ## Symptom
 
