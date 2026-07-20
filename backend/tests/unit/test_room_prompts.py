@@ -67,6 +67,30 @@ def test_no_room_prompt_emits_a_bare_max_drawdown_line(base_mandate, agent_id):
         assert "Trader's proposal:" not in system_prompt
 
 
+def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
+    """DEF074 — the Room fact-sheet must render the computed technical support
+    (profile['support']) as the recent-range floor, matching the value the 1-on-1
+    technicals block already shows, and must not drop it in favour of the 52-week
+    low (profile['low']). The 52-week range stays as explicit context."""
+    profile = {
+        "data_source": "live",
+        "support": 273.75,   # technical 50-day support (compute_technicals)
+        "breakout": 334.99,  # technical 50-day breakout
+        "low": 201.5,        # 52-week low (fundamentals)
+        "high": 334.99,      # 52-week high
+    }
+    sp, _ = build_room_messages(
+        agent_id=AgentId.MARKET_ANALYST, mandate=base_mandate, user_id=None,
+        ticker="AAPL", profile=profile, transcript=[],
+    )
+    # Floor is the technical support, not the 52-week low.
+    assert "Recent range: $273.75" in sp
+    # The 52-week low survives, but labelled as 52-week context.
+    assert "52-week: $201.5" in sp
+    # Regression guard: the 52-week low must never be the recent-range floor again.
+    assert "Recent range: $201.5" not in sp
+
+
 def test_derived_line_only_for_trade_judging_phases(base_mandate):
     """RISK debators and the PM see the derived proposal figure; analysts and
     researchers (who speak before any proposal exists) do not."""

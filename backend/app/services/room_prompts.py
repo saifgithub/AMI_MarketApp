@@ -306,8 +306,13 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"TTM revenue growth: {profile.get('rev_growth')}%, FCF margin: {profile.get('fcf_margin')}%",
         f"Net cash: {profile.get('net_cash')}M",
         f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}",
-        f"Recent range: ${profile.get('low')}–${profile.get('high')}, "
-        f"breakout level: ${profile.get('breakout')}",
+        # DEF074: the recent-range floor is the computed technical support
+        # (profile['support'], the 50-day min that compute_technicals produced and
+        # the 1-on-1 path already shows) — NOT the 52-week low, which was being
+        # rendered here while `support` was computed and silently dropped. The
+        # 52-week range stays as explicit context.
+        f"Recent range: ${profile.get('support')}–${profile.get('breakout')} "
+        f"(52-week: ${profile.get('low')}–${profile.get('high')})",
         f"Volume: {profile.get('volume_tone')}",
         _catalyst_line(profile),
         f"Macro (synthetic, illustrative): {profile.get('macro_tone')}; "

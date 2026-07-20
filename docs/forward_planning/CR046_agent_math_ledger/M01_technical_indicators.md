@@ -34,3 +34,10 @@ pure functions under their original private names.
 - 2026-07-13 (DEF052): created — real indicators replace fabricated ones.
 - 2026-07-20 (CR046, AT:R62): `rsi`/`rsi_tone`/`sma` migrated verbatim into `trading_math/indicators.py`;
   `technicals.py` now delegates. Byte-identical. Decision D1: hand-rolled, kept Cutler's.
+- 2026-07-21 (DEF074, AT:R62): found verifying M01 was sent correctly to the live Alpha agents —
+  the Room `_format_profile` rendered the **52-week low** as the "recent range" floor and **dropped
+  the computed 50-day technical support** (`profile['support']`) entirely, diverging from the 1-on-1
+  surface which does show it. RSI/trend/volume/breakout were sent correctly; the support was
+  computed and thrown away. Fixed in `room_prompts._format_profile` (renders the technical
+  support–breakout pair + 52-week range as context). See
+  [`../../defect/DEF074_room_drops_technical_support/`](../../defect/DEF074_room_drops_technical_support/DEF074_room_drops_technical_support.md).
