@@ -21,6 +21,13 @@ mobile/android/app/profile/
 mobile/android/app/debug/
 mobile/android/app/*.jks
 
+# fastlane (CR048) — generated artifacts; Fastfile/Appfile/Gemfile.lock ARE tracked.
+# Service-account key lives in ~/.android-keys/, never in the repo.
+mobile/android/fastlane/report.xml
+mobile/android/fastlane/README.md
+mobile/android/.bundle/
+mobile/android/vendor/bundle/
+
 # Python
 **/__pycache__/
 **/*.pyc

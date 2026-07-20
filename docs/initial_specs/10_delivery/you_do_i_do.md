@@ -37,7 +37,9 @@ These things only a human (Saiful) can do. Block any further progress without hi
 - Submit iOS app to TestFlight (week 12)
 - Submit iOS app to App Store (alpha launch)
 - Submit first signed AAB to Play Console internal testing track (mandatory-manual upload via web UI for Play App Signing enrollment) — alpha
-- Subsequent AAB uploads can stay manual or switch to `fastlane supply` once friction bites
+- [CR048] Create a Play Console API service account (Setup → API access → grant "Release to testing tracks") and download its JSON key to `~/.android-keys/play-service-account.json` — one-time, enables the automated path
+- [CR048] Add internal testers (email list) + share the opt-in link — this replaces sending APKs
+- Subsequent AAB uploads are automated via `fastlane supply` (`scripts/publish_playstore.sh`) — fastlane scaffolding shipped in CR048
 - Submit Android-HMS app to AppGallery Connect (v1.1)
 - Configure store listings (descriptions, screenshots, keywords) — Claude drafts; Saiful reviews + submits
 - Respond to App Store / Play Store / AppGallery reviewer questions if any

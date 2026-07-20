@@ -1,0 +1,47 @@
+# Fastfile — pushes an already-built, release-signed AAB to the Play Console
+# internal testing track (the TestFlight-equivalent tier). CR048.
+#
+# The AAB is produced upstream by scripts/build_playstore.sh; these lanes do NOT
+# build — they only upload. Run via scripts/publish_playstore.sh, which builds
+# first. Metadata/screenshots/changelogs are skipped: this is a test track, not
+# a public store listing.
+#
+# The very FIRST upload of a new app must be done manually in the Play Console
+# web UI to enroll Play App Signing — supply can only push release #2 onward.
+#
+#   bundle exec fastlane internal   # build already done → upload to internal
+#   bundle exec fastlane validate   # dry run, no publish
+
+opt_out_usage  # no anonymous analytics ping on every run
+
+default_platform(:android)
+
+AAB_PATH = "../build/app/outputs/bundle/release/app-release.aab"
+
+platform :android do
+  desc "Upload the latest release AAB to the Play internal testing track"
+  lane :internal do
+    upload_to_play_store(
+      track: "internal",
+      aab: AAB_PATH,
+      release_status: "completed",
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+    )
+  end
+
+  desc "Validate the AAB against the Play API without publishing (dry run)"
+  lane :validate do
+    upload_to_play_store(
+      track: "internal",
+      aab: AAB_PATH,
+      validate_only: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+    )
+  end
+end

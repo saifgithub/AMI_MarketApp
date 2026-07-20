@@ -1,0 +1,12 @@
+# Gemfile — pins fastlane for reproducible Android release automation.
+#
+# fastlane drives `upload_to_play_store` (aka `supply`) to push signed AABs to
+# the Google Play Console internal testing track. See fastlane/Fastfile and
+# scripts/publish_playstore.sh. Introduced by CR048.
+#
+# Setup once:  cd mobile/android && bundle install
+# Then:        scripts/publish_playstore.sh   (from repo root)
+
+source "https://rubygems.org"
+
+gem "fastlane"

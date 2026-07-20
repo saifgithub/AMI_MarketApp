@@ -1,0 +1,8 @@
+# Appfile — identifies the app and the Play Console API credential for fastlane.
+#
+# The service-account JSON key is NEVER committed. It lives next to the upload
+# keystore in ~/.android-keys/ and is created once by Saiful (Play Console →
+# Setup → API access). Overridable via the SUPPLY_JSON_KEY env var. See CR048.
+
+json_key_file(ENV["SUPPLY_JSON_KEY"] || File.expand_path("~/.android-keys/play-service-account.json"))
+package_name("ai.agenticmarketintel.ami_trade")

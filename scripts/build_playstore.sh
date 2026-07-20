@@ -14,8 +14,9 @@
 #   3. surface the AAB path + the manual upload reminder
 #
 # First upload to Play Console is mandatory-manual (Play App Signing
-# enrollment on the very first build). Move to `fastlane supply` for
-# subsequent builds when manual friction bites.
+# enrollment on the very first build). For every release AFTER the first,
+# use scripts/publish_playstore.sh — it builds (via this script) then pushes
+# to the internal track with `fastlane supply` (CR048). No web UI.
 #
 # Usage:
 #   scripts/build_playstore.sh                  # bump + build + show path
@@ -127,3 +128,6 @@ echo "  4. Fill release notes, save, review, roll out"
 echo ""
 echo "First upload also enrolls in Play App Signing (one-time, irreversible)."
 echo "Internal testers get the build via the opt-in link once review completes."
+echo ""
+echo "After that first upload, ship release #2+ with one command:"
+echo "  scripts/publish_playstore.sh          # build + fastlane push to internal"
