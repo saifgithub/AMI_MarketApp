@@ -828,7 +828,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mergeSheetMandate =>
-      'Mandate (yours stays — we\'\'ll drop the older one)';
+      'Mandate (yours stays — we\'ll drop the older one)';
 
   @override
   String get mergeSheetMandateMove =>
@@ -1067,7 +1067,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomWinzipBody(String countdown) {
-    return 'You\'\'ve used this Room. AMI\'\'s topping you up — your next Room unlocks in $countdown.';
+    return 'You\'ve used this Room. AMI\'s topping you up — your next Room unlocks in $countdown.';
   }
 
   @override
@@ -1088,7 +1088,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String roomPaywallBody(String date) {
-    return 'You\'\'ve used your Room credits. They reset on $date.';
+    return 'You\'ve used your Room credits. They reset on $date.';
   }
 
   @override

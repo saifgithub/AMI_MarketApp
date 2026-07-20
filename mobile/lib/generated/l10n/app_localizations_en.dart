@@ -163,7 +163,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get portfolioStartSimTradingBody =>
-      'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'\'s safety floor runs on every submit.';
+      'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'s safety floor runs on every submit.';
 
   @override
   String get portfolioNewTrade => 'NEW TRADE';
@@ -373,7 +373,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journalNoteHint =>
-      'Why this mattered. What you learned. What you\'\'d do differently.';
+      'Why this mattered. What you learned. What you\'d do differently.';
 
   @override
   String get journalNoteOutcome => 'OUTCOME';
@@ -465,7 +465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lessonReaderQuizOnlyBannerOne =>
-      'Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that\'\'s your teaching surface.';
+      'Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that\'s your teaching surface.';
 
   @override
   String lessonReaderQuizOnlyBannerMany(int count) {
@@ -684,7 +684,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSkipForNow => 'SKIP FOR NOW';
 
   @override
-  String get onboardingErrorTitle => 'CAN\'\'T REACH THE BACKEND';
+  String get onboardingErrorTitle => 'CAN\'T REACH THE BACKEND';
 
   @override
   String get onboardingErrorUnknown => 'Unknown error';
@@ -828,7 +828,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mergeSheetMandate =>
-      'Mandate (yours stays — we\'\'ll drop the older one)';
+      'Mandate (yours stays — we\'ll drop the older one)';
 
   @override
   String get mergeSheetMandateMove =>
@@ -1059,14 +1059,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roomTradeTicketCaption =>
-      'Submits with the verdict\'\'s size / stop / target. PM safety floor reruns.';
+      'Submits with the verdict\'s size / stop / target. PM safety floor reruns.';
 
   @override
   String get roomWinzipTitle => 'Your Room is warming up';
 
   @override
   String roomWinzipBody(String countdown) {
-    return 'You\'\'ve used this Room. AMI\'\'s topping you up — your next Room unlocks in $countdown.';
+    return 'You\'ve used this Room. AMI\'s topping you up — your next Room unlocks in $countdown.';
   }
 
   @override
@@ -1087,7 +1087,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String roomPaywallBody(String date) {
-    return 'You\'\'ve used your Room credits. They reset on $date.';
+    return 'You\'ve used your Room credits. They reset on $date.';
   }
 
   @override

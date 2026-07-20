@@ -385,7 +385,7 @@ abstract class AppLocalizations {
   /// No description provided for @portfolioStartSimTradingBody.
   ///
   /// In en, this message translates to:
-  /// **'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'\'s safety floor runs on every submit.'**
+  /// **'Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM\'s safety floor runs on every submit.'**
   String get portfolioStartSimTradingBody;
 
   /// No description provided for @portfolioNewTrade.
@@ -763,7 +763,7 @@ abstract class AppLocalizations {
   /// No description provided for @journalNoteHint.
   ///
   /// In en, this message translates to:
-  /// **'Why this mattered. What you learned. What you\'\'d do differently.'**
+  /// **'Why this mattered. What you learned. What you\'d do differently.'**
   String get journalNoteHint;
 
   /// No description provided for @journalNoteOutcome.
@@ -925,7 +925,7 @@ abstract class AppLocalizations {
   /// No description provided for @lessonReaderQuizOnlyBannerOne.
   ///
   /// In en, this message translates to:
-  /// **'Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that\'\'s your teaching surface.'**
+  /// **'Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that\'s your teaching surface.'**
   String get lessonReaderQuizOnlyBannerOne;
 
   /// Banner shown when the user enters quiz-only mode and there are 2+ quizzes. {count} is the integer number of quiz blocks.
@@ -1327,7 +1327,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingErrorTitle.
   ///
   /// In en, this message translates to:
-  /// **'CAN\'\'T REACH THE BACKEND'**
+  /// **'CAN\'T REACH THE BACKEND'**
   String get onboardingErrorTitle;
 
   /// No description provided for @onboardingErrorUnknown.
@@ -1501,7 +1501,7 @@ abstract class AppLocalizations {
   /// No description provided for @mergeSheetMandate.
   ///
   /// In en, this message translates to:
-  /// **'Mandate (yours stays — we\'\'ll drop the older one)'**
+  /// **'Mandate (yours stays — we\'ll drop the older one)'**
   String get mergeSheetMandate;
 
   /// No description provided for @mergeSheetMandateMove.
@@ -1897,7 +1897,7 @@ abstract class AppLocalizations {
   /// No description provided for @roomTradeTicketCaption.
   ///
   /// In en, this message translates to:
-  /// **'Submits with the verdict\'\'s size / stop / target. PM safety floor reruns.'**
+  /// **'Submits with the verdict\'s size / stop / target. PM safety floor reruns.'**
   String get roomTradeTicketCaption;
 
   /// No description provided for @roomWinzipTitle.
@@ -1909,7 +1909,7 @@ abstract class AppLocalizations {
   /// Winzip cooldown card body. {countdown} is a live mm:ss timer string.
   ///
   /// In en, this message translates to:
-  /// **'You\'\'ve used this Room. AMI\'\'s topping you up — your next Room unlocks in {countdown}.'**
+  /// **'You\'ve used this Room. AMI\'s topping you up — your next Room unlocks in {countdown}.'**
   String roomWinzipBody(String countdown);
 
   /// No description provided for @roomWinzipReady.
@@ -1945,7 +1945,7 @@ abstract class AppLocalizations {
   /// Hard credit-wall body (GTM_FUNNEL=none). {date} is the reset date, pre-formatted.
   ///
   /// In en, this message translates to:
-  /// **'You\'\'ve used your Room credits. They reset on {date}.'**
+  /// **'You\'ve used your Room credits. They reset on {date}.'**
   String roomPaywallBody(String date);
 
   /// No description provided for @tradeTicketHeading.

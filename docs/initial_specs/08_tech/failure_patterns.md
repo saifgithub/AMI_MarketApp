@@ -263,6 +263,45 @@ prompt line the LLM can drop.
 
 ---
 
+## P6 — ARB copy authored for the wrong escaping mode (renders literally)
+
+**Symptom.** A localized string ships with a visible escaping artifact — a doubled
+apostrophe `''` where one belongs. It looks correct in the ARB to anyone who "knows"
+ICU MessageFormat needs apostrophes escaped, and there is no lint for it, so it reaches
+the user's screen unchanged.
+
+**Mechanism.** Flutter gen-l10n's `use-escaping` is **off** (unset in `mobile/l10n.yaml`
+→ default `false`). Under that mode the ICU quote character is not processed: a literal
+`''` in an ARB value is copied verbatim into the generated Dart and renders as two
+apostrophes. The correct authoring is a single `'`. The mistake is a *plausible-but-wrong
+belief* — "ARB is ICU, so escape apostrophes" — which is true only with `use-escaping:
+true`, the mode this project does not use.
+
+**Instances (all surfaced by DEF069, on one on-device report).** 9 occurrences across 8
+keys in `app_en.arb`: `roomWinzipBody`, `roomPaywallBody` (CR047), and **6 pre-dating
+CR047** — `onboardingErrorTitle` ("CAN''T REACH THE BACKEND"), `portfolioStartSimTradingBody`
+("PM''s"), `journalNoteHint`, `lessonReaderQuizOnlyBannerOne`, `mergeSheetMandate`,
+`roomTradeTicketCaption`. Every one had **no signal to anyone** — `flutter analyze` does
+not inspect ARB content, and no test iterated the string values.
+
+**Why nothing caught it.** The one automated gate over Dart (`flutter analyze`) lints code,
+not ARB copy. The correct-looking strings (`settingsSignedOut: "You've…"`, single `'`) and
+the wrong ones coexisted for months because nothing ever compared them.
+
+**The invariant.** *ARB values are authored for the configured escaping mode.* With
+`use-escaping` off, apostrophes are single; `''` is always a rendering bug.
+
+**Enforcing check (DEF069).** `backend/tests/unit/test_arb_apostrophe_escaping.py` — fails
+if any `''` appears in `mobile/lib/l10n/app_*.arb`. Runs in the `pytest` promote-preflight
+(the one gate that executes; `flutter analyze` can't see this), skips cleanly when the mobile
+tree is absent.
+
+**Rule for new code.** New ARB string with an apostrophe ⇒ single `'`, never `''`, unless
+`use-escaping` is turned on in `l10n.yaml` (a deliberate, whole-file decision). The guard
+enforces it.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

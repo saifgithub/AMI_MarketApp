@@ -105,7 +105,7 @@
     "portfolioLive": "LIVE",
     "portfolioMock": "MOCK",
     "portfolioStartSimTrading": "Start sim trading",
-    "portfolioStartSimTradingBody": "Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM''s safety floor runs on every submit.",
+    "portfolioStartSimTradingBody": "Convene the Room to get a verdict, then open a trade — or place one directly from here. Your PM's safety floor runs on every submit.",
     "portfolioNewTrade": "NEW TRADE",
     "portfolioHoldings": "HOLDINGS",
     "portfolioTrades": "TRADES",
@@ -273,7 +273,7 @@
         "placeholders": {"action": {"type": "String"}}
     },
     "journalNoteHeading": "YOUR NOTE",
-    "journalNoteHint": "Why this mattered. What you learned. What you''d do differently.",
+    "journalNoteHint": "Why this mattered. What you learned. What you'd do differently.",
     "journalNoteOutcome": "OUTCOME",
     "journalNoteOutcomeWin": "WIN",
     "journalNoteOutcomeLoss": "LOSS",
@@ -320,7 +320,7 @@
     },
     "lessonReaderLoading": "Loading…",
     "lessonReaderQuizOnlyBadge": "QUIZ ONLY",
-    "lessonReaderQuizOnlyBannerOne": "Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that''s your teaching surface.",
+    "lessonReaderQuizOnlyBannerOne": "Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that's your teaching surface.",
     "lessonReaderQuizOnlyBannerMany": "Skipping straight to the {count} quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.",
     "@lessonReaderQuizOnlyBannerMany": {
         "description": "Banner shown when the user enters quiz-only mode and there are 2+ quizzes. {count} is the integer number of quiz blocks.",
@@ -409,7 +409,7 @@
     "onboardingClaimPrompt": "Let's save this so your team remembers you.",
     "onboardingSaveTeam": "SAVE MY TEAM",
     "onboardingSkipForNow": "SKIP FOR NOW",
-    "onboardingErrorTitle": "CAN''T REACH THE BACKEND",
+    "onboardingErrorTitle": "CAN'T REACH THE BACKEND",
     "onboardingErrorUnknown": "Unknown error",
     "onboardingTryAgain": "TRY AGAIN",
 
@@ -472,7 +472,7 @@
         "description": "Pluralised count of orphan Convene-the-Room runs.",
         "placeholders": {"count": {"type": "int"}}
     },
-    "mergeSheetMandate": "Mandate (yours stays — we''ll drop the older one)",
+    "mergeSheetMandate": "Mandate (yours stays — we'll drop the older one)",
     "mergeSheetMandateMove": "Mandate from your previous session (no conflict)",
     "mergeSheetConfirm": "MERGE EVERYTHING",
     "mergeSheetKeepSeparate": "KEEP SEPARATE",
@@ -598,10 +598,10 @@
     },
     "roomViolations": "VIOLATIONS",
     "roomOpenTradeTicket": "OPEN TRADE TICKET",
-    "roomTradeTicketCaption": "Submits with the verdict''s size / stop / target. PM safety floor reruns.",
+    "roomTradeTicketCaption": "Submits with the verdict's size / stop / target. PM safety floor reruns.",
 
     "roomWinzipTitle": "Your Room is warming up",
-    "roomWinzipBody": "You''ve used this Room. AMI''s topping you up — your next Room unlocks in {countdown}.",
+    "roomWinzipBody": "You've used this Room. AMI's topping you up — your next Room unlocks in {countdown}.",
     "@roomWinzipBody": {
         "description": "Winzip cooldown card body. {countdown} is a live mm:ss timer string.",
         "placeholders": {"countdown": {"type": "String"}}
@@ -611,7 +611,7 @@
     "roomWinzipReviewTraining": "Review a Training session while you wait",
     "roomWinzipVoiceLine": "Your Room is available now",
     "roomPaywallTitle": "Out of Room credits",
-    "roomPaywallBody": "You''ve used your Room credits. They reset on {date}.",
+    "roomPaywallBody": "You've used your Room credits. They reset on {date}.",
     "@roomPaywallBody": {
         "description": "Hard credit-wall body (GTM_FUNNEL=none). {date} is the reset date, pre-formatted.",
         "placeholders": {"date": {"type": "String"}}
