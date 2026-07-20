@@ -332,3 +332,177 @@ def test_ownership_403_precedes_any_billing(app, client):
     assert r.status_code == 403
     assert balance_for(attacker_id)[0] == before
     assert balance_for(victim_id)[0] == ALLOWANCE[Plan.FLOOR_PASS]
+
+
+# ── CR047 "The Winzip" — the soft wall + cooldown reset ──────────────────
+
+from app.services import credit_service as _cs  # noqa: E402
+
+
+@pytest.fixture
+def winzip(monkeypatch):
+    """Arm the Winzip funnel with a real (positive) cooldown for the test run."""
+    monkeypatch.setattr(_cs.settings, "gtm_funnel", "winzip")
+    monkeypatch.setattr(_cs.settings, "winzip_cooldown_minutes", 5)
+
+
+def _cooldown_of(user_id: UUID):
+    with get_session() as s:
+        return s.get(User, user_id).room_cooldown_until
+
+
+def _winzip_resets(user_id: UUID) -> int:
+    return sum(
+        1 for e in _ledger(user_id)
+        if e.event_type == "credits_added" and e.note == "winzip_reset"
+    )
+
+
+def test_winzip_exhaustion_resets_one_room_and_starts_cooldown(winzip):
+    """The whole point: the wall stops being a dead end. Floor Pass burns its
+    monthly Room, and the next convene — which used to 402 until the 1st — now
+    tops the balance back up to exactly one Room and starts a felt cooldown.
+    """
+    user_id, _ = _new_user()
+    assert spend(user_id, None, reason="room:AAPL")[0] == 5  # 13 - 8, free Room
+
+    with pytest.raises(InsufficientCredits) as e:
+        spend(user_id, None, reason="room:MSFT")
+
+    assert e.value.funnel == "winzip"
+    assert e.value.cost == ROOM_COST_BASIC
+    assert e.value.balance == ROOM_COST_BASIC, "topped up to exactly one Room"
+    assert e.value.cooldown_until is not None
+    assert e.value.cooldown_until > datetime.now(timezone.utc)
+    # The re-grant persisted despite the raise (deferred-raise contract).
+    assert balance_for(user_id)[0] == ROOM_COST_BASIC
+    assert _cooldown_of(user_id) is not None
+    assert _winzip_resets(user_id) == 1
+
+
+def test_winzip_cooldown_blocks_without_double_granting(winzip):
+    """Retrying inside the cooldown must keep showing the wall — and must NOT
+    grant a second Room each time, or the cooldown would hand out infinite
+    credits instead of pacing one Room per window.
+    """
+    user_id, _ = _new_user()
+    spend(user_id, None, reason="room:AAPL")          # 13 -> 5
+    with pytest.raises(InsufficientCredits):
+        spend(user_id, None, reason="room:MSFT")      # exhaustion -> reset to 8
+    first_cooldown = _cooldown_of(user_id)
+
+    # Impatient re-tap, still inside the window.
+    with pytest.raises(InsufficientCredits) as e:
+        spend(user_id, None, reason="room:MSFT")
+    assert e.value.funnel == "winzip"
+    assert balance_for(user_id)[0] == ROOM_COST_BASIC, "no double-grant"
+    assert _cooldown_of(user_id) == first_cooldown, "cooldown not extended"
+    assert _winzip_resets(user_id) == 1, "reset happens once per window"
+
+
+def test_winzip_grants_one_room_after_the_cooldown_then_loops(winzip):
+    """After the wait, the granted Room is spendable; exhausting it starts the
+    loop again. One Room per cooldown, unlimited — the WinZip nag, made real.
+    """
+    user_id, _ = _new_user()
+    spend(user_id, None, reason="room:AAPL")          # 13 -> 5
+    with pytest.raises(InsufficientCredits):
+        spend(user_id, None, reason="room:MSFT")      # reset to 8 + cooldown
+
+    # Fast-forward past the cooldown.
+    with get_session() as s:
+        s.get(User, user_id).room_cooldown_until = (
+            datetime.now(timezone.utc) - timedelta(seconds=1)
+        )
+
+    balance, cost = spend(user_id, None, reason="room:MSFT")  # the free Room
+    assert (balance, cost) == (0, ROOM_COST_BASIC)
+
+    # Balance exhausted again → back to the wall, a fresh window opens.
+    with pytest.raises(InsufficientCredits) as e:
+        spend(user_id, None, reason="room:GOOGL")
+    assert e.value.funnel == "winzip"
+    assert _winzip_resets(user_id) == 2
+
+
+def test_winzip_off_is_the_legacy_hard_wall():
+    """GTM_FUNNEL=none (default): CR039 behaviour is untouched — a hard 402 with
+    no funnel tag, no cooldown, and no sneaky re-grant.
+    """
+    user_id, _ = _new_user()
+    spend(user_id, None, reason="room:AAPL")
+    with pytest.raises(InsufficientCredits) as e:
+        spend(user_id, None, reason="room:MSFT")
+    assert e.value.funnel is None
+    assert e.value.cooldown_until is None
+    assert balance_for(user_id)[0] == 5, "hard wall must not re-grant"
+    assert _cooldown_of(user_id) is None
+
+
+def test_winzip_does_not_touch_paid_plans(winzip):
+    """Winzip is a Floor-Pass acquisition tactic. A paying plan that somehow
+    runs dry gets the ordinary wall, never a free re-grant.
+    """
+    user_id, _ = _new_user(plan="trader")
+    balance_for(user_id)  # establish the allowance window (grants 150)
+    with get_session() as s:
+        s.get(User, user_id).credit_balance = 3  # below the 8 Room cost
+
+    with pytest.raises(InsufficientCredits) as e:
+        spend(user_id, None, reason="room:MSFT")
+    assert e.value.funnel is None
+    assert balance_for(user_id)[0] == 3, "paid plan is not topped up"
+    assert _cooldown_of(user_id) is None
+
+
+class _WinzipBrokeRunner:
+    """A runner whose start_run refuses with a Winzip soft wall."""
+
+    def __init__(self):
+        self.cooldown = datetime.now(timezone.utc) + timedelta(minutes=5)
+
+    async def start_run(self, **_kwargs):
+        raise InsufficientCredits(
+            balance=8, cost=8, plan=Plan.FLOOR_PASS,
+            resets_at=datetime(2026, 8, 1, tzinfo=timezone.utc),
+            funnel="winzip", cooldown_until=self.cooldown,
+        )
+
+    def is_active(self, run_id) -> bool:
+        return False
+
+    def get_run(self, run_id):
+        return None
+
+
+def test_stream_402_carries_the_winzip_cooldown(app, client, winzip):
+    """The client renders the countdown straight from this response — funnel +
+    cooldown_until + retry_after_seconds, all in the one 402 body.
+    """
+    user_id, token = _new_user()
+    app.dependency_overrides[get_room_runner] = lambda: _WinzipBrokeRunner()
+
+    r = client.post(
+        "/v1/room/stream",
+        json={"user_id": str(user_id), "ticker": "AAPL", "locale": "en"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert r.status_code == 402
+    detail = r.json()["detail"]
+    assert detail["code"] == "insufficient_credits"
+    assert detail["funnel"] == "winzip"
+    assert detail["cooldown_until"].startswith("2026")
+    assert 0 <= detail["retry_after_seconds"] <= 300
+
+
+def test_unknown_gtm_funnel_fails_boot_loudly():
+    """CR040 degrade-loudly: a typo'd funnel must refuse to boot, never silently
+    fall back to 'no funnel' and quietly change every free user's paywall.
+    """
+    from pydantic import ValidationError
+
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError):
+        Settings(gtm_funnel="bogus", _env_file=None)

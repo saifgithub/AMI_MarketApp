@@ -6,11 +6,15 @@
 /// abbreviation. The final Verdict card lands at the bottom.
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/screens/lessons/lessons_screen.dart';
 import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
+import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/celebration.dart';
 import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/room_providers.dart';
@@ -21,6 +25,7 @@ import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class RoomScreen extends ConsumerStatefulWidget {
   const RoomScreen({super.key, required this.ticker});
@@ -91,6 +96,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    if (state.paywall != null)
+                      _PaywallCard(
+                        info: state.paywall!,
+                        ticker: widget.ticker,
+                      ),
                     if (state.error != null)
                       _ErrorBanner(message: state.error!),
                     if (state.reconnecting) const _ReconnectingBanner(),
@@ -365,6 +375,197 @@ MarkdownStyleSheet _agentMarkdownStyle(Color color) {
     h2: base.copyWith(fontWeight: FontWeight.w600, fontSize: 15),
     h3: base.copyWith(fontWeight: FontWeight.w600, fontSize: 14),
   );
+}
+
+
+/// CR047 "The Winzip" — the soft credit wall, rendered as a warm countdown
+/// instead of a dead paywall. Under the winzip funnel the server has already
+/// re-granted one Room; this card just runs down the cooldown, speaks AMI's
+/// "your Room is available now" line when it lands, and lets the user convene
+/// again — with a Training nudge to fill the wait. Falls back to a plain
+/// "out of credits, resets on the reset date" card when the wall is the hard
+/// monthly one (GTM_FUNNEL=none).
+class _PaywallCard extends ConsumerStatefulWidget {
+  const _PaywallCard({required this.info, required this.ticker});
+
+  final InsufficientCreditsException info;
+  final String ticker;
+
+  @override
+  ConsumerState<_PaywallCard> createState() => _PaywallCardState();
+}
+
+class _PaywallCardState extends ConsumerState<_PaywallCard> {
+  Timer? _tick;
+  bool _announced = false;
+
+  bool get _isWinzip =>
+      widget.info.isWinzip && widget.info.cooldownUntil != null;
+
+  Duration get _remaining {
+    final until = widget.info.cooldownUntil;
+    if (until == null) return Duration.zero;
+    final d = until.difference(DateTime.now());
+    return d.isNegative ? Duration.zero : d;
+  }
+
+  bool get _ready => _isWinzip && _remaining == Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isWinzip && _remaining > Duration.zero) {
+      _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() {});
+        if (_ready) {
+          _tick?.cancel();
+          _announceReady(AppLocalizations.of(context).roomWinzipVoiceLine);
+        }
+      });
+    } else if (_isWinzip) {
+      // Cooldown already elapsed by the time we render — no chime, just ready.
+      _announced = true;
+    }
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _announceReady(String line) async {
+    if (_announced) return;
+    _announced = true;
+    // The voice is a delight, never load-bearing — swallow any TTS failure so
+    // a device without a usable voice engine still shows the Convene button.
+    try {
+      final tts = FlutterTts();
+      await tts.setLanguage('en-US');
+      await tts.setSpeechRate(0.5);
+      await _preferFemaleVoice(tts);
+      await tts.speak(line);
+    } catch (_) {}
+  }
+
+  Future<void> _preferFemaleVoice(FlutterTts tts) async {
+    try {
+      final voices = (await tts.getVoices) as List?;
+      if (voices == null) return;
+      const preferred = {
+        'samantha', 'karen', 'moira', 'tessa', 'fiona', 'serena', 'aria',
+      };
+      for (final v in voices) {
+        final m = Map<String, dynamic>.from(v as Map);
+        final name = (m['name'] as String? ?? '').toLowerCase();
+        final locale = (m['locale'] as String? ?? '').toLowerCase();
+        if (locale.startsWith('en') &&
+            (preferred.any(name.contains) || name.contains('female'))) {
+          await tts.setVoice({
+            'name': m['name'].toString(),
+            'locale': m['locale'].toString(),
+          });
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  String _fmt(Duration d) {
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  String _resetDateStr() {
+    final r = widget.info.resetsAt;
+    if (r == null) return 'the 1st';
+    return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
+        '${r.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    const accent = AmiColors.hexAmber;
+    final title = _isWinzip ? l.roomWinzipTitle : l.roomPaywallTitle;
+    final body = _isWinzip
+        ? (_ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining)))
+        : l.roomPaywallBody(_resetDateStr());
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: accent),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _ready ? Icons.check_circle_outline : Icons.hourglass_bottom,
+                color: accent,
+                size: 18,
+              ),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AmiTypography.labelMono.copyWith(color: accent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.s),
+          Text(body, style: AmiTypography.body),
+          if (_isWinzip && !_ready) ...[
+            const SizedBox(height: AmiSpacing.m),
+            Center(
+              child: Text(
+                _fmt(_remaining),
+                style: AmiTypography.statBig.copyWith(color: accent),
+              ),
+            ),
+          ],
+          const SizedBox(height: AmiSpacing.m),
+          if (_ready)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AmiColors.hexCyan,
+                  foregroundColor: AmiColors.slate900,
+                  padding:
+                      const EdgeInsets.symmetric(vertical: AmiSpacing.s + 2),
+                ),
+                icon: const Icon(Icons.groups_2_outlined),
+                label: Text(l.roomWinzipConvene),
+                onPressed: () => ref
+                    .read(roomNotifierProvider(widget.ticker).notifier)
+                    .start(),
+              ),
+            ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: accent),
+              icon: const Icon(Icons.school_outlined, size: 18),
+              label: Text(l.roomWinzipReviewTraining),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LessonsScreen()),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 

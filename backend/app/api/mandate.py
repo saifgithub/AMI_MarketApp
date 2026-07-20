@@ -71,6 +71,7 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         "credit_allowance": allowance,
         "credits_reset_at": resets_at,
         "room_cost": room_cost_for_plan(plan),
+        "room_cooldown_until": user.room_cooldown_until,
     })
 
 

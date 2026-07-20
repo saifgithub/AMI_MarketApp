@@ -1062,6 +1062,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Submits with the verdict\'\'s size / stop / target. PM safety floor reruns.';
 
   @override
+  String get roomWinzipTitle => 'Your Room is warming up';
+
+  @override
+  String roomWinzipBody(String countdown) {
+    return 'You\'\'ve used this Room. AMI\'\'s topping you up — your next Room unlocks in $countdown.';
+  }
+
+  @override
+  String get roomWinzipReady => 'Your Room is ready to convene.';
+
+  @override
+  String get roomWinzipConvene => 'CONVENE NOW';
+
+  @override
+  String get roomWinzipReviewTraining =>
+      'Review a Training session while you wait';
+
+  @override
+  String get roomWinzipVoiceLine => 'Your Room is available now';
+
+  @override
+  String get roomPaywallTitle => 'Out of Room credits';
+
+  @override
+  String roomPaywallBody(String date) {
+    return 'You\'\'ve used your Room credits. They reset on $date.';
+  }
+
+  @override
   String get tradeTicketHeading => 'NEW TRADE';
 
   @override

@@ -113,6 +113,11 @@ services:
       # Room dedup windows — defaults match config.py; override in .env.
       ROOM_DEDUP_RUNNING_MINUTES: ${ROOM_DEDUP_RUNNING_MINUTES:-30}
       ROOM_DEDUP_COMPLETED_HOURS: ${ROOM_DEDUP_COMPLETED_HOURS:-24}
+      # GTM funnel selector (CR047): none (legacy CR039 hard wall) | winzip
+      # ("The Winzip" soft wall + cooldown reset). Set GTM_FUNNEL=winzip in
+      # infra/alpha.env to arm it on Alpha. Unknown value fails boot by design.
+      GTM_FUNNEL: ${GTM_FUNNEL:-none}
+      WINZIP_COOLDOWN_MINUTES: ${WINZIP_COOLDOWN_MINUTES:-5}
       # CR035 ablation toggle — hides the Street consensus line from the
       # agents' fundamentals context. Benchmark windows only; keep false.
       SUPPRESS_ANALYST_CONSENSUS: ${SUPPRESS_ANALYST_CONSENSUS:-false}

@@ -600,6 +600,23 @@
     "roomOpenTradeTicket": "OPEN TRADE TICKET",
     "roomTradeTicketCaption": "Submits with the verdict''s size / stop / target. PM safety floor reruns.",
 
+    "roomWinzipTitle": "Your Room is warming up",
+    "roomWinzipBody": "You''ve used this Room. AMI''s topping you up — your next Room unlocks in {countdown}.",
+    "@roomWinzipBody": {
+        "description": "Winzip cooldown card body. {countdown} is a live mm:ss timer string.",
+        "placeholders": {"countdown": {"type": "String"}}
+    },
+    "roomWinzipReady": "Your Room is ready to convene.",
+    "roomWinzipConvene": "CONVENE NOW",
+    "roomWinzipReviewTraining": "Review a Training session while you wait",
+    "roomWinzipVoiceLine": "Your Room is available now",
+    "roomPaywallTitle": "Out of Room credits",
+    "roomPaywallBody": "You''ve used your Room credits. They reset on {date}.",
+    "@roomPaywallBody": {
+        "description": "Hard credit-wall body (GTM_FUNNEL=none). {date} is the reset date, pre-formatted.",
+        "placeholders": {"date": {"type": "String"}}
+    },
+
     "tradeTicketHeading": "NEW TRADE",
     "tradeTicketSafetyFloorBlocked": "SAFETY FLOOR — TRADE BLOCKED",
     "tradeTicketChangeMandate": "Change what is enforced via Settings → My Mandate.",

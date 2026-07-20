@@ -13,6 +13,7 @@ library;
 import 'dart:async';
 
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
@@ -33,6 +34,7 @@ class RoomState {
     this.streaming = false,
     this.reconnecting = false,
     this.error,
+    this.paywall,
   });
 
   final String? phase;
@@ -50,6 +52,9 @@ class RoomState {
   // alive in the background; we just wait for it to land.
   final bool reconnecting;
   final String? error;
+  // CR047: set when a convene was refused for credits (HTTP 402). Drives the
+  // paywall / Winzip countdown card instead of the generic error banner.
+  final InsufficientCreditsException? paywall;
 
   RoomState copyWith({
     String? phase,
@@ -63,6 +68,8 @@ class RoomState {
     bool? reconnecting,
     String? error,
     bool clearError = false,
+    InsufficientCreditsException? paywall,
+    bool clearPaywall = false,
   }) {
     return RoomState(
       phase: phase ?? this.phase,
@@ -75,6 +82,7 @@ class RoomState {
       streaming: streaming ?? this.streaming,
       reconnecting: reconnecting ?? this.reconnecting,
       error: clearError ? null : (error ?? this.error),
+      paywall: clearPaywall ? null : (paywall ?? this.paywall),
     );
   }
 }
@@ -138,6 +146,11 @@ class RoomNotifier extends StateNotifier<RoomState> {
             break;
         }
       }
+    } on InsufficientCreditsException catch (e) {
+      // CR047: the credit wall. This lands before any `started` event (no
+      // run_id yet), so surface it as a paywall — for Winzip, a live cooldown
+      // countdown — never a generic "Stream failed".
+      state = state.copyWith(streaming: false, paywall: e);
     } catch (e) {
       // Stream broke (phone sleep, network loss, etc.). The backend
       // keeps the run going in a detached task and persists the final

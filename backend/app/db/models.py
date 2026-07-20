@@ -90,6 +90,13 @@ class User(Base):
         DateTime(timezone=True), nullable=True,
     )
     credits_plan_at_grant: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    # CR047 "The Winzip": when a Floor-Pass user's Room credits are exhausted
+    # under GTM_FUNNEL=winzip we reset +1 Room immediately but block the next
+    # convene until this timestamp. NULL = no cooldown pending. Only the winzip
+    # funnel writes it; every other path ignores it. See credit_service.spend.
+    room_cooldown_until: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
     locale: Mapped[str] = mapped_column(String, default="en", nullable=False)
     timezone: Mapped[str] = mapped_column(String, default="UTC", nullable=False)
 

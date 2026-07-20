@@ -1900,6 +1900,54 @@ abstract class AppLocalizations {
   /// **'Submits with the verdict\'\'s size / stop / target. PM safety floor reruns.'**
   String get roomTradeTicketCaption;
 
+  /// No description provided for @roomWinzipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Room is warming up'**
+  String get roomWinzipTitle;
+
+  /// Winzip cooldown card body. {countdown} is a live mm:ss timer string.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'\'ve used this Room. AMI\'\'s topping you up — your next Room unlocks in {countdown}.'**
+  String roomWinzipBody(String countdown);
+
+  /// No description provided for @roomWinzipReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Room is ready to convene.'**
+  String get roomWinzipReady;
+
+  /// No description provided for @roomWinzipConvene.
+  ///
+  /// In en, this message translates to:
+  /// **'CONVENE NOW'**
+  String get roomWinzipConvene;
+
+  /// No description provided for @roomWinzipReviewTraining.
+  ///
+  /// In en, this message translates to:
+  /// **'Review a Training session while you wait'**
+  String get roomWinzipReviewTraining;
+
+  /// No description provided for @roomWinzipVoiceLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Room is available now'**
+  String get roomWinzipVoiceLine;
+
+  /// No description provided for @roomPaywallTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Out of Room credits'**
+  String get roomPaywallTitle;
+
+  /// Hard credit-wall body (GTM_FUNNEL=none). {date} is the reset date, pre-formatted.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'\'ve used your Room credits. They reset on {date}.'**
+  String roomPaywallBody(String date);
+
   /// No description provided for @tradeTicketHeading.
   ///
   /// In en, this message translates to:

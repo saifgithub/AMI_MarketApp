@@ -131,6 +131,21 @@ class Settings(BaseSettings):
     room_dedup_running_minutes: int = 30
     room_dedup_completed_hours: int = 24
 
+    # GTM funnel selector (CR047, under the CR045 tactic library). Chooses which
+    # conversion-nudge mechanic sits on top of the CR039 credit wall:
+    #   none    — legacy CR039 behaviour: exhausted Floor Pass → hard 402 until
+    #             the monthly reset. [default]
+    #   winzip  — "The Winzip": on Floor-Pass exhaustion, reset +1 Room the
+    #             instant the 402 is sent but enforce a cooldown before the next
+    #             convene (see credit_service.spend / winzip_cooldown_minutes).
+    # A Literal on purpose (not a plain str like concierge_context_mode): a
+    # typo'd funnel must fail boot LOUDLY, never silently fall back to "no
+    # funnel" and quietly change how every free user's paywall behaves (CR040).
+    gtm_funnel: Literal["none", "winzip"] = "none"
+    # How long the Winzip cooldown lasts. "A few minutes" — the felt wait
+    # between free Rooms. Only consulted when gtm_funnel == "winzip".
+    winzip_cooldown_minutes: int = 5
+
     # Reputation + weekly leagues (CR004, D-060).
     # daily_cap bounds total points/user/local-day so no single behaviour
     # can be farmed. eligible_plans empty = every plan competes (Engagement

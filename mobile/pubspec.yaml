@@ -39,6 +39,10 @@ dependencies:
 
   # Audio (for voice briefings — v1.0; included now so the API stays stable)
   just_audio: ^0.9.42
+  # On-device text-to-speech (CR047 "The Winzip"): AMI speaks "Your Room is
+  # available now" when the cooldown countdown ends. just_audio only plays
+  # assets — it can't synthesize speech — so this is a separate dependency.
+  flutter_tts: ^4.2.0
 
   # Sign-in
   sign_in_with_apple: ^6.1.3

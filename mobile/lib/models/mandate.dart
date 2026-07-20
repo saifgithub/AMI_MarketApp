@@ -191,6 +191,10 @@ class UserMandate {
     required this.plan,
     this.trialExpiresAt,
     required this.creditBalance,
+    this.creditAllowance = 0,
+    this.roomCost = 0,
+    this.creditsResetAt,
+    this.roomCooldownUntil,
     this.createdAt,
     this.updatedAt,
   });
@@ -214,8 +218,19 @@ class UserMandate {
   final String plan;
   final DateTime? trialExpiresAt;
   final int creditBalance;
+  // CR039/CR047 credit state (stamped by the mandate API from `users`).
+  final int creditAllowance;
+  final int roomCost;
+  final DateTime? creditsResetAt;
+  // CR047 "The Winzip": when set and in the future, the next Room convene is in
+  // cooldown — the UI can pre-empt with the countdown card. NULL/past = clear.
+  final DateTime? roomCooldownUntil;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  /// True when a Winzip cooldown is currently blocking a convene.
+  bool get roomCooldownActive =>
+      roomCooldownUntil != null && roomCooldownUntil!.isAfter(DateTime.now());
 
   factory UserMandate.fromJson(Map<String, dynamic> j) {
     return UserMandate(
@@ -251,6 +266,14 @@ class UserMandate {
           ? DateTime.parse(j['trial_expires_at'] as String)
           : null,
       creditBalance: (j['credit_balance'] as num?)?.toInt() ?? 75,
+      creditAllowance: (j['credit_allowance'] as num?)?.toInt() ?? 0,
+      roomCost: (j['room_cost'] as num?)?.toInt() ?? 0,
+      creditsResetAt: j['credits_reset_at'] != null
+          ? DateTime.parse(j['credits_reset_at'] as String).toLocal()
+          : null,
+      roomCooldownUntil: j['room_cooldown_until'] != null
+          ? DateTime.parse(j['room_cooldown_until'] as String).toLocal()
+          : null,
       createdAt: j['created_at'] != null
           ? DateTime.parse(j['created_at'] as String)
           : null,

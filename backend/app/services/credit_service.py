@@ -29,9 +29,10 @@ re-grant *sets* the balance rather than adding to it.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
+from app.core.config import settings
 from app.db import get_session
 from app.db.models import SubscriptionEventRow, User, _utcnow
 from app.schemas.mandate import Plan
@@ -77,13 +78,29 @@ class InsufficientCredits(Exception):
     """Raised by `spend` when the balance won't cover the operation.
 
     Carries what the client needs to render the wall without a second call.
+
+    Under a GTM funnel (CR047), the wall can be *soft*: `funnel` names the active
+    tactic and `cooldown_until` is when the user may convene again. For "winzip"
+    the raise is deliberately paired with an immediate +1-Room re-grant inside
+    `spend`, so the 402 the client renders is a countdown, not a dead end.
     """
 
-    def __init__(self, *, balance: int, cost: int, plan: Plan, resets_at: datetime) -> None:
+    def __init__(
+        self,
+        *,
+        balance: int,
+        cost: int,
+        plan: Plan,
+        resets_at: datetime,
+        funnel: str | None = None,
+        cooldown_until: datetime | None = None,
+    ) -> None:
         self.balance = balance
         self.cost = cost
         self.plan = plan
         self.resets_at = resets_at
+        self.funnel = funnel
+        self.cooldown_until = cooldown_until
         super().__init__(f"insufficient credits: have {balance}, need {cost}")
 
 
@@ -202,14 +219,30 @@ def spend(user_id: UUID, amount: int | None, *, reason: str) -> tuple[int, int]:
         eff = _ensure_period(s, user)
         cost = room_cost_for_plan(eff) if amount is None else amount
         old_balance = user.credit_balance or 0
-        if old_balance < cost:
+        now = _utcnow()
+
+        # CR047 "The Winzip" — a soft wall for exhausted Floor-Pass Room
+        # convenes. Room-only (`amount is None`), Floor-Pass-only, armed by the
+        # GTM_FUNNEL flag. The cooldown, not the balance, is the pacing gate:
+        # each exhaustion tops the balance up to exactly one Room, so it must be
+        # checked *before* the balance test or the just-granted credit would let
+        # the very next convene straight through and the wait would never bite.
+        winzip = (
+            amount is None
+            and eff == Plan.FLOOR_PASS
+            and settings.gtm_funnel == "winzip"
+        )
+        cooldown = _as_utc(user.room_cooldown_until)
+
+        if winzip and cooldown is not None and cooldown > now:
+            # Still inside the felt cooldown — block regardless of balance and
+            # do not re-grant (the +1 Room from the last reset already waits).
             shortfall = InsufficientCredits(
-                balance=old_balance,
-                cost=cost,
-                plan=eff,
-                resets_at=_next_month_start(_utcnow()),
+                balance=old_balance, cost=cost, plan=eff,
+                resets_at=_next_month_start(now),
+                funnel="winzip", cooldown_until=cooldown,
             )
-        else:
+        elif old_balance >= cost:
             user.credit_balance = old_balance - cost
             new_balance = user.credit_balance
             _record(
@@ -217,6 +250,35 @@ def spend(user_id: UUID, amount: int | None, *, reason: str) -> tuple[int, int]:
                 old_balance=old_balance,
                 event_type="credits_spent",
                 note=reason,
+            )
+        elif winzip:
+            # Floor-Pass exhaustion under Winzip: reset to exactly one Room and
+            # start the cooldown. The 402 still fires (the client renders the
+            # countdown), but it's soft — the user returns after the cooldown to
+            # spend what we just granted, and the loop repeats. One Room per
+            # cooldown, unlimited, the user never actually lost.
+            cd = now + timedelta(minutes=settings.winzip_cooldown_minutes)
+            user.credit_balance = cost
+            user.room_cooldown_until = cd
+            _record(
+                session=s, user=user,
+                old_balance=old_balance,
+                event_type="credits_added",
+                note="winzip_reset",
+            )
+            shortfall = InsufficientCredits(
+                balance=cost, cost=cost, plan=eff,
+                resets_at=_next_month_start(now),
+                funnel="winzip", cooldown_until=cd,
+            )
+        else:
+            # Legacy CR039 hard wall (GTM_FUNNEL=none, or a non-Floor-Pass plan
+            # / non-Room spend hitting its own balance limit).
+            shortfall = InsufficientCredits(
+                balance=old_balance,
+                cost=cost,
+                plan=eff,
+                resets_at=_next_month_start(now),
             )
 
     if shortfall is not None:

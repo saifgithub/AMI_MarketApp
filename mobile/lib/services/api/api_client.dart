@@ -28,6 +28,7 @@ import 'package:ami_trade/models/onboarding.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/watchlist.dart';
+import 'package:ami_trade/services/api/api_exceptions.dart';
 import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
@@ -565,6 +566,24 @@ class ApiClient {
     final client = http.Client();
     try {
       final response = await client.send(_sseRequest(uri, body));
+      if (response.statusCode == 402) {
+        // CR047: the credit wall. Read the structured body and surface it as a
+        // typed exception so the Room screen can render a paywall / Winzip
+        // countdown instead of a generic "Stream failed". The 402 lands before
+        // the SSE stream starts (see api/room.py), so the body is the whole
+        // response, not an in-band event.
+        final raw = await response.stream.bytesToString();
+        Map<String, dynamic>? decoded;
+        try {
+          decoded = jsonDecode(raw) as Map<String, dynamic>;
+        } catch (_) {
+          decoded = null;
+        }
+        if (decoded != null) {
+          throw InsufficientCreditsException.fromJson(decoded);
+        }
+        throw Exception('HTTP 402 from room stream');
+      }
       if (response.statusCode != 200) {
         throw Exception('HTTP ${response.statusCode} from room stream');
       }

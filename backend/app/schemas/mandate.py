@@ -126,6 +126,10 @@ class Mandate(BaseModel):
     credit_allowance: int = 0
     credits_reset_at: datetime | None = None
     room_cost: int = 0
+    # CR047 "The Winzip": when set and in the future, the next Room convene is
+    # in cooldown — the client shows the countdown card instead of firing a
+    # doomed request. NULL / past = no cooldown pending.
+    room_cooldown_until: datetime | None = None
 
     created_at: datetime
     updated_at: datetime

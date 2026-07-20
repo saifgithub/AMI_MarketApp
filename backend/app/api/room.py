@@ -32,6 +32,7 @@ from __future__ import annotations
 import asyncio
 import json
 import structlog
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -176,16 +177,23 @@ async def stream_room(
             on_complete=_finalise_to_journal,
         )
     except InsufficientCredits as e:
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            detail={
-                "code": "insufficient_credits",
-                "balance": e.balance,
-                "cost": e.cost,
-                "plan": e.plan.value,
-                "resets_at": e.resets_at.isoformat(),
-            },
-        ) from e
+        detail = {
+            "code": "insufficient_credits",
+            "balance": e.balance,
+            "cost": e.cost,
+            "plan": e.plan.value,
+            "resets_at": e.resets_at.isoformat(),
+        }
+        # CR047: a funnel-flavoured wall (e.g. "winzip") carries the cooldown so
+        # the client renders a live countdown instead of a dead paywall. The
+        # server did the re-grant already; the countdown is all the client needs.
+        if e.funnel is not None:
+            detail["funnel"] = e.funnel
+        if e.cooldown_until is not None:
+            detail["cooldown_until"] = e.cooldown_until.isoformat()
+            remaining = (e.cooldown_until - datetime.now(timezone.utc)).total_seconds()
+            detail["retry_after_seconds"] = max(0, int(remaining))
+        raise HTTPException(status.HTTP_402_PAYMENT_REQUIRED, detail=detail) from e
     cached = not runner.is_active(run_id)
 
     async def event_stream():
