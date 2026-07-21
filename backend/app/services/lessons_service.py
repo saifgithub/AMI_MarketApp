@@ -77,6 +77,11 @@ TRACK_TITLES = {
     "economics_macro": "Economics & Macro",
     "quant_methods": "Quantitative Methods",
     "ethics_integrity": "Ethics & Integrity",
+    # CR059 — net-new facets 5/6 (locked 13-facet taxonomy). Empty at wiring
+    # time; content lands via CR058 (islamic_finance) and a later lane
+    # (decision_evaluation).
+    "islamic_finance": "Islamic Finance",
+    "decision_evaluation": "Evaluating Analysis",
 }
 
 
@@ -103,6 +108,11 @@ TRACK_PREFIX = {
     "economics_macro": "MACRO",
     "quant_methods": "QUANT",
     "ethics_integrity": "ETHIC",
+    # CR059 — frozen from wiring (CR059 §1 note): SHARIA over HALAL/ISLAM,
+    # EVAL confirmed over the portfolio_construction swap. No collision with
+    # any prefix above.
+    "islamic_finance": "SHARIA",
+    "decision_evaluation": "EVAL",
 }
 
 

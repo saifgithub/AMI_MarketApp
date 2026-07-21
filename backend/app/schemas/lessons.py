@@ -56,6 +56,11 @@ class Track(str, Enum):
     economics_macro = "economics_macro"
     quant_methods = "quant_methods"
     ethics_integrity = "ethics_integrity"
+    # CR059 — net-new facets 5/6 of the locked 13-facet taxonomy. Empty at
+    # wiring time (0 lessons each); islamic_finance content lands via CR058,
+    # decision_evaluation via a later content lane. Additive only.
+    islamic_finance = "islamic_finance"
+    decision_evaluation = "decision_evaluation"
 
 
 class QuizQuestion(BaseModel):

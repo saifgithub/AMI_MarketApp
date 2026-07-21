@@ -319,6 +319,11 @@ def test_gates_agents_is_the_inverse_of_the_gateway_map(lessons):
 # asserted the 4 tracks held zero lessons; it was scaffolding by design ("the
 # enforcement floor until Wave 1 fills the tracks") and was retired by
 # CR054-GUARD the moment Wave 1 began landing content.
+#
+# CR059 extends this set with the 2 net-new facets that complete the locked
+# 13-facet taxonomy: `islamic_finance` (SHARIA) and `decision_evaluation`
+# (EVAL). Same guard, same empty-until-content-lands posture — no new
+# emptiness pin, per CR059 §4 (CR044 contiguity covers population later).
 
 
 CR054_NEW_TRACKS = {
@@ -326,6 +331,8 @@ CR054_NEW_TRACKS = {
     "economics_macro": "MACRO",
     "quant_methods": "QUANT",
     "ethics_integrity": "ETHIC",
+    "islamic_finance": "SHARIA",
+    "decision_evaluation": "EVAL",
 }
 
 
