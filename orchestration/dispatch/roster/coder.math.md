@@ -9,10 +9,10 @@ owns: backend/app/trading_math/** (indicators, risk, sizing — pure, no I/O), t
        backend/tests/unit/test_trading_math*.py
 wip_cap: 2
 auditor: auditor.core
-live_handle:
+live_handle: 69560e3e-1ef0-4928-b2fb-5e024398425d   # CR054-W0d worker — claude --resume
 commit_tag: AT:coder.math
 worktree: .claude/worktrees/coder.math-<ITEM>
-active_lanes: []
+active_lanes: [CR054-W0d]
 ```
 
 **Pure library** — zero cross-service imports; does not touch `db/models.py` or any I/O. Owns the

@@ -15,3 +15,5 @@ slurp. Per-item detail lives in ../history/lanes/<ITEM>.md, not here.
 | 2026-07-21 23:40 | CR030 | architect | 1 | RE-QUEUE | Freed a coder.api WIP slot for the CR054 dogfood; CR030 (earnings/dividend) re-queued behind Wave 0 |
 | 2026-07-21 23:40 | CR054 | architect | 1 | DECOMPOSE | Wave 0 split into W0a (coder.api track enum, ASSIGNED r1) + W0b (mobile labels, dep W0a) + W0c (author-prompt v2, noncoder.edu) + W0d (CR046 math, coder.math). Track decision: Option A — add ASST/MACRO/QUANT/ETHIC |
 | 2026-07-21 23:40 | CR054-W0a | architect | 1 | ASSIGN | Root lane assigned to coder.api; launching first real headless worker (dogfood of the CR052 protocol) |
+| 2026-07-22 00:10 | CR054-W0a | coder.api | 1 | READY_FOR_AUDIT | Built 4 tracks (ASST/MACRO/QUANT/ETHIC), 892 tests green (+6 guards), pushed c401a17; disjoint paths held (saw+skipped another lane's room_runner WIP) |
+| 2026-07-22 00:15 | CR054 | architect | 1 | WAVE-0-FANOUT | Deliver-whole-CR054 kickoff: launched auditor.core on W0a + assigned/launched W0c (noncoder.edu author-prompt v2) + W0d (coder.math CR046 math) in parallel |
