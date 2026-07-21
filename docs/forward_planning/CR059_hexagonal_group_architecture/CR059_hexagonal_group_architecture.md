@@ -40,7 +40,7 @@ count is a **design constraint**, not just a taxonomy convenience.
 | 3 | `quant_methods` | **QUANT** | Quantitative Methods | the evaluator's math (M20–M21) | research_manager | wired, unwritten |
 | 4 | `ethics_integrity` | **ETHIC** | Ethics & Integrity | market integrity (M22–M23) **+ ESG / sustainable (M26)** | portfolio_manager / concierge | ✅ **live** — 10 lessons / 24 Q |
 | 5 | `islamic_finance` | **SHARIA** | Islamic Finance | Sharia-compliant investing (M25 — CR058) | portfolio_manager / fundamentals_analyst | **net-new** (wire enum) |
-| 6 | `decision_evaluation` | **EVAL** | The Discerning CEO | evaluating analyst & AI output (M24 — the moat) | research_manager / concierge | **net-new** (wire enum) |
+| 6 | `decision_evaluation` | **EVAL** | Evaluating Analysis | evaluating analyst & AI output (M24) | research_manager / concierge | **net-new** (wire enum) |
 
 **Why these complete the six:**
 

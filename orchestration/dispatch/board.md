@@ -38,8 +38,12 @@ from this table. CR052.
 | ~~CR054-W1-ASST~~ | **DONE ✓ (r1)** | noncoder.edu | 20 Asset lessons (ASST 1-20, 303-322) integrated ff4978c, corpus→300, P2 exact |
 | ~~CR054-W1-MACRO~~ | **DONE ✓ (r1)** | noncoder.edu | 12 Macro lessons (MACRO 1-12, 323-334) integrated b4a30e5, corpus→312, P2 exact |
 | ~~CR054-W1-QUANT~~ | **DONE ✓ (r1)** | noncoder.edu | 12 Quant lessons (QUANT 1-12, 335-346, L12) integrated 680a8f3, corpus→324, P2 hand-verified. **Wave-1 lesson tracks COMPLETE** |
-| **CR059** | **QUEUED — architect (Saiful-direct: immediate)** | coder.api → auditor.core | wire 2 net-new tracks (`islamic_finance`/SHARIA, `decision_evaluation`/EVAL) → locks 13-facet hex tessellation. Enables CR058 + M24 |
-| **CR058** | **QUEUED — content (Saiful-direct: immediate)** | noncoder.edu | Sharia strand M25 (~10 lessons + 20 glossary + 15 Q&A + 10 daily). DEPENDS-ON CR059 (islamic_finance wired) |
+| ~~CR059~~ (backend) | **DONE ✓ (r1)** | coder.api → auditor.core | islamic_finance/SHARIA + decision_evaluation/EVAL wired (a63d1c5); auditor COMPLETE (927 pass + blind probe). 13-facet taxonomy locked |
+| **CR059-MOBILE** | **QUEUED** | coder.mobile → auditor.core | `_trackShortLabel` for SHARIA/EVAL. Must land before first SHARIA/EVAL content drop |
+| **CR058-MATH** | **QUEUED** | coder.math → auditor.core | `screening.py` Sharia ratios + purification + guard tests (CR058 §7 — computed, not authored) |
+| **CR058-CONTENT** | **QUEUED** | noncoder.edu | Sharia M25 (~10 lessons SHARIA 1-10 ids 347+ + glossary cat/terms + Q&A + daily). DEPENDS-ON CR058-MATH + CR059 |
+| **CR053** (impl) | **QUEUED — 3 lanes** | coder.api/mobile + noncoder.edu | `<Lesson code/>` token + reader/gateway deep-links + migrate 279 bare refs. Saiful: do it |
+| **CR061** (proposed) | **QUEUED — quick wins** | architect | verify helper + audit-launch helper + test-timeout wrapper (828s) + roster live_handle fix |
 | CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |
 | CR026 | UNASSIGNED (queued) | coder.api | sector enforcement — DEPENDS-ON DEF061 (safety_floor hot) |
