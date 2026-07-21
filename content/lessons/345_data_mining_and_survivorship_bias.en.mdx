@@ -1,0 +1,68 @@
+---
+id: "345_data_mining_and_survivorship_bias"
+title: "Data-mining & survivorship bias"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 11"
+topic: "survivorship_bias"
+prerequisites: ["344_monte_carlo_simulation"]
+tags: ["survivorship-bias", "data-mining", "backtesting", "quant"]
+sources: ["Stephen J. Brown, William N. Goetzmann, Roger G. Ibbotson & Stephen A. Ross — Survivorship bias in performance studies, Review of Financial Studies (1992)"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Data-mining & survivorship bias
+
+Survivorship bias creeps in when a backtest's universe of stocks, funds, or indices quietly excludes the ones that failed and were delisted, liquidated, or dropped along the way — leaving only the survivors in the sample. Because failure is exactly what a real investor risked encountering, testing only on survivors systematically overstates how well a strategy actually performed on the choices that were genuinely available at the time. Related but distinct: data-mining bias is testing so many strategy variations against the same data that some will look good purely by chance, the multi-strategy cousin of the single-strategy overfitting problem from two lessons ago.
+
+## Example
+
+Say a backtest is built on a universe of 100 funds that existed in 2005. By 2025, **30 of them shut down** — liquidated, merged away, or delisted — leaving **70 survivors** with an average return of **+8% per year**. A backtest that only includes today's fund list (the 70 survivors) reports that 8% figure as "the historical performance of this universe." But an investor in 2005 couldn't have known in advance which 30 would fail — the true historical universe included all 100. Assume the 30 that shut down averaged -5% per year before closing (a reasonable stand-in for "failing badly enough to be shut down"). The true, survivorship-corrected blended return = (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = **4.1% per year** — barely half the 8% the survivors-only backtest reported.
+
+That 8%-versus-4.1% gap is pure survivorship bias, with no strategy skill involved on either side — it's entirely a function of which funds were included in the tested universe. Any backtest run only on today's list of "still-existing" companies, funds, or indices carries this same silent inflation, whether or not anyone building it intended it.
+
+## The trap
+
+The trap is building a backtest from a current list of tickers, funds, or index members — because that's the easy, available data — without asking whether that list quietly excludes everything that failed along the way. It feels like a reasonable shortcut because "today's list" is the obvious dataset to reach for. The correct habit: before trusting a historical performance figure, ask whether the tested universe includes delisted, liquidated, or merged-away names from the period — and if it doesn't, treat the reported return as inflated versus the true historical experience, roughly in proportion to how much of the original universe failed.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Of 100 funds that existed in 2005, 30 shut down by 2025 (assume they averaged -5%/year before closing) and 70 survived (averaging +8%/year). What is the true, survivorship-corrected blended annual return across the full original universe of 100 funds?"
+  options={[
+    "8% — the surviving funds' return is the only one that should count, since the others no longer exist",
+    "1.5% — averaging +8% and -5% without weighting by fund count",
+    "3% — subtracting the failure rate (30%) from the survivor return (8%) directly",
+    "4.1% — (70 × 8% + 30 × -5%) ÷ 100 = (560 - 150) ÷ 100 = 410 ÷ 100 = 4.1%, weighting each group by its share of the original 100 funds"
+  ]}
+  answer={3}
+  explanation="The correct blend weights each group by its share of the true original universe: (70 × 8 + 30 × -5) ÷ 100 = (560 - 150) ÷ 100 = 4.1%. Using only the 8% survivor figure ignores the 30 funds an investor in 2005 could have picked; the unweighted average (1.5%) and the direct-subtraction shortcut (3%) both skip the required weighting by fund count entirely."
+/>
+
+<Quiz
+  question="A backtest reports an 8% average annual return for a fund universe, built using only funds that still exist today. What does this lesson say a reader should do with that 8% figure before trusting it?"
+  options={[
+    "Ask whether the tested universe excludes funds that were delisted, liquidated, or merged away over the period — if it does, treat the reported 8% as inflated relative to the true historical experience, since the calculation above shows the correction can cut the figure by more than half",
+    "Accept the 8% figure at face value, since only currently-existing funds are relevant to a decision made today",
+    "Assume the 8% figure already accounts for survivorship bias, since fund-performance reporting is a regulated industry",
+    "Reject the 8% figure outright as fabricated, since no fund universe can have any failures at all"
+  ]}
+  answer={0}
+  explanation="This lesson's entire point is that a 'current universe' backtest silently drops the funds that failed, and the correction (here, from 8% down to 4.1%) can be dramatic. Assuming regulation already handles this, or that the figure is simply fabricated, both skip the actual, checkable question: what was the full original universe, and how much of it survived?"
+/>
+
+## Try it
+
+Pick an index, ETF category, or fund universe you're tracking and ask the Research Manager whether its backtest or historical-performance figure includes companies or funds that were later delisted, liquidated, or merged away. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A historical return built only from today's survivors is not the true historical return of that universe — always weight in what failed before trusting the number.

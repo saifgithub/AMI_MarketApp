@@ -1,0 +1,68 @@
+---
+id: "336_base_rates_why_they_beat_the_story"
+title: "Base rates — why they beat the story"
+duration_min: 5
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 2"
+topic: "base_rates"
+prerequisites: ["335_expected_value_the_core_of_every_decision"]
+tags: ["base-rate", "probability", "cognitive-bias", "quant"]
+sources: ["Daniel Kahneman & Amos Tversky — base-rate neglect, Psychological Review (1973)"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Base rates — why they beat the story
+
+A base rate is how often something is actually true across the whole population it's drawn from, before you look at any specific evidence in front of you — and base-rate neglect is ignoring that background frequency because a vivid, specific-feeling story (a chart pattern, a screener flag, a hot tip) feels more persuasive than a boring population statistic. The outside view asks "how often does this kind of claim turn out to be true, across everyone who's made it?" before it asks "does this particular case feel convincing?" Skipping that first question is how a genuinely rare event gets treated as a sure thing.
+
+## Example
+
+Say a breakout screener scans 1,000 stocks. The true base rate of a real breakout among all scanned stocks is 10% — 100 real breakouts, 900 non-breakouts. The screener is good: it correctly flags 90% of real breakouts (sensitivity), and it also mistakenly flags 10% of non-breakouts as "breakout" too (false-positive rate). Run the numbers: true positives = 90% × 100 = **90**. False positives = 10% × 900 = **90**. Total flagged as "breakout" = 90 + 90 = **180**. Of those 180 alerts, only 90 are real — precision = 90 / 180 = **50%**.
+
+A screener that's 90% accurate on both fronts still produces alerts that are correct only half the time, because non-breakouts vastly outnumber breakouts in the underlying population (900 vs. 100) — even a small false-positive rate applied to a huge pool of non-events generates as much noise as the real signal. The screener's accuracy numbers sound great in isolation; the base rate is what tells you the alert itself is a coin flip.
+
+## The trap
+
+The trap is reacting to "the screener flagged it" as if that alone means "it's probably a real breakout" — treating a specific-feeling alert as stronger evidence than the boring population math sitting behind it. It feels right because the flag is concrete and immediate, while the 10%-base-rate arithmetic is abstract and easy to skip. The correct habit: before trusting any flag, alert, or hot tip, ask what fraction of the underlying population it's actually drawn from — a 90%-accurate signal on a 10%-base-rate event still means most alerts are false alarms, as the 50% precision above shows directly.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Using the screener numbers above (1,000 stocks, 10% true base rate, 90% sensitivity, 10% false-positive rate), what fraction of stocks the screener flags as 'breakout' are actually real breakouts?"
+  options={[
+    "90% — the screener's sensitivity rate is what determines the accuracy of each individual alert",
+    "10% — the false-positive rate alone determines how trustworthy an alert is",
+    "50% — of the 180 total flags (90 true positives + 90 false positives), only 90 are real breakouts, so precision is 90/180",
+    "99% — combining a 90% sensitivity with a 10% base rate multiplies to near-certainty"
+  ]}
+  answer={2}
+  explanation="90 true positives (90% of the 100 real breakouts) plus 90 false positives (10% of the 900 non-breakouts) gives 180 total alerts, of which 90 are real: 90/180 = 50%. The sensitivity rate (90%) describes how well the screener catches real breakouts, not how trustworthy a given alert is once it fires — that's the base-rate-neglect trap this lesson names directly."
+/>
+
+<Quiz
+  question="A trader sees the screener's 'breakout' flag on a ticker and, knowing the screener is described as '90% accurate,' assumes the stock is very likely a real breakout. What does the base-rate calculation above say about that assumption?"
+  options={[
+    "The assumption is correct — a 90%-accurate tool means any single alert is 90% likely to be right",
+    "The assumption is wrong — because real breakouts are rare (10% base rate) relative to the much larger pool of non-breakouts, the alert is only about 50% likely to be a real breakout, despite the screener's individually impressive accuracy numbers",
+    "The assumption is wrong, but only because the screener's sensitivity and false-positive rates were misreported",
+    "The 90%-accurate framing and the 50% precision figure describe the exact same thing, so there is no contradiction to resolve"
+  ]}
+  answer={1}
+  explanation="This is the capstone point of base-rate neglect: 90% sensitivity and 90% specificity sound like the alert should be highly trustworthy, but because true breakouts are rare relative to non-breakouts in the scanned population, the same math that produced those accuracy numbers also produces only 50% precision. Nothing about the screener's reported rates was wrong — the trap is skipping the base-rate arithmetic and reading the accuracy percentages as if they described the alert directly."
+/>
+
+## Try it
+
+In 1-on-1 with the Research Manager, describe a screener or news flag you'd trust at face value, and ask it to walk through the base-rate math the way this lesson did — how often is the underlying event actually true in the wider population it's drawn from? Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Before trusting any flag, alert, or tip, ask how rare the thing it claims to detect actually is in the whole population — a highly "accurate"-sounding signal on a rare event still produces mostly false alarms.

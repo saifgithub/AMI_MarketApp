@@ -1,0 +1,82 @@
+---
+id: "340_capstone_thinking_in_probabilities_bayesian_updating"
+title: "Capstone: thinking in probabilities (Bayesian updating)"
+duration_min: 7
+level: 12
+module: 20
+difficulty: 5
+track: "quant_methods"
+code: "QUANT 6"
+topic: "bayesian_updating_capstone"
+prerequisites: ["335_expected_value_the_core_of_every_decision", "336_base_rates_why_they_beat_the_story", "337_distributions_and_fat_tails", "338_correlation_is_not_causation", "339_sample_size_and_statistical_significance"]
+tags: ["quant", "capstone", "synthesis", "bayes", "base-rate", "expected-value", "sample-size"]
+sources: ["Thomas Bayes — An Essay towards solving a Problem in the Doctrine of Chances (1763)"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Capstone: thinking in probabilities (Bayesian updating)
+
+You now hold the full M20 toolkit: expected value as the probability-weighted average of a decision, base rates as the background frequency a claim must clear before evidence can move it, fat tails as a reminder that extreme outcomes are more common than clean models suggest, correlation-versus-causation as a check on what a relationship actually means, and sample size as a check on how much any one result should move your belief. Bayesian updating is the formula that ties all of them together: it takes a prior probability (informed by the base rate), updates it with new evidence (whose strength depends on the sample size behind it), and produces a posterior probability you can then run back through an expected-value calculation.
+
+## One scenario, every M20 concept
+
+A vendor claims a new trading strategy has a real edge. Before looking at any evidence, what's the **prior** probability that a randomly claimed "edge" like this is genuinely real? Per the base-rate lesson: most claimed edges are noise, so start with a prior of **10%** real. Now the evidence arrives: a backtest over **20 trades** shows a **70% win rate** — the exact scenario from the sample-size lesson, where a two-standard-error bar (≈20.5 points) only *just* fails to clear the observed 20-point edge. Because that evidence is weak (not because it's fake), say it would show up 80% of the time if the edge were genuinely real, but it would *also* show up 20% of the time by pure chance even with no real edge at all — a likelihood ratio of 4-to-1 in favor of "real," not overwhelming.
+
+Bayes' rule: posterior = [P(evidence | real) × P(real)] ÷ [P(evidence | real) × P(real) + P(evidence | not real) × P(not real)] = (0.8 × 0.10) ÷ (0.8 × 0.10 + 0.2 × 0.90) = 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ **30.8%**. The weak evidence moved belief from a 10% prior to a 30.8% posterior — real movement, but nowhere near "proven." Now run that posterior back through expected value: if the edge is real, assume it's worth +$1,000; if it isn't, assume acting on it costs -$1,000. EV = (0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ **-$385**. Even after updating upward from 10% to 30.8% on real evidence, the expected value of trusting this claim is still firmly negative.
+
+## The steelman
+
+The strongest case against this whole exercise: "You made up the prior (10%), the likelihood ratio (4-to-1), and the assumed payoffs (±$1,000) — precise-looking math built on guessed inputs is false precision, not rigor." That's a fair caution — Bayesian updating is only as good as its inputs, and dressing a guess in decimal points doesn't make it less of a guess. The falsifier: even *rough* versions of these inputs (a low prior because most claimed edges fail, a modest likelihood ratio because 20 trades is weak evidence per the sample-size lesson) point to the same directional conclusion — a 20-trade backtest alone should shift belief only modestly, not to conviction. The discipline isn't "trust the decimal point"; it's "update in the right direction by roughly the right amount, and don't let a small, weak sample jump you straight to certainty."
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Starting from a 10% prior that a claimed edge is real, and evidence that's 4 times more likely under 'real' than under 'not real' (0.8 vs. 0.2), what is the Bayesian posterior probability the edge is real?"
+  options={[
+    "80% — the likelihood ratio itself becomes the posterior directly",
+    "40% — multiplying the prior by the likelihood ratio (10% × 4)",
+    "18% — using only the false-positive term (0.2 × 0.90) as the answer",
+    "≈30.8% — (0.8 × 0.10) ÷ [(0.8 × 0.10) + (0.2 × 0.90)] = 0.08 ÷ 0.26 ≈ 0.308"
+  ]}
+  answer={3}
+  explanation="Bayes' rule requires dividing the 'real and evidence occurs' term by the total probability of the evidence occurring under both hypotheses: 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ 30.8%. Multiplying the prior by the likelihood ratio (giving 40%) skips the normalization step entirely; the other two options each isolate a single term from the full calculation rather than combining them correctly."
+/>
+
+<Quiz
+  question="After updating to a 30.8% posterior that the edge is real, and assuming the edge is worth +$1,000 if real and -$1,000 if not, what does the resulting expected-value calculation say about acting on this claim now?"
+  options={[
+    "EV ≈ -$385 — even after the update, (0.308 × $1,000) + (0.692 × -$1,000) is still solidly negative, so the evidence so far doesn't justify treating this as a good bet",
+    "EV ≈ +$385 — updating the probability upward always makes the expected value positive",
+    "EV ≈ +$1,000 — a posterior above the 10% prior means the full payoff should be counted",
+    "EV cannot be calculated because the posterior is not exactly 50%"
+  ]}
+  answer={0}
+  explanation="(0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ -$385 — still negative, even though the posterior more than tripled from the 10% prior. Moving a belief upward doesn't automatically make a bet positive-EV; it depends on how far it moved and what the payoffs are, which is exactly why this capstone chains the Bayes update back into the EV formula rather than stopping at the posterior."
+/>
+
+<Quiz
+  question="Pulling together base rates, sample size, Bayesian updating, and expected value — what is the single discipline this capstone trains you to apply the next time you evaluate a claimed trading edge, in the news or inside AMI's simulated Verdicts?"
+  options={[
+    "Trust any backtest that shows a win rate clearly above 50%, regardless of how many trades it covers",
+    "Reject every claimed edge outright, since base rates show most of them are false",
+    "Judge a claim only by its most recent evidence, without reference to how rare real edges are in general",
+    "Start from a realistic base rate for how often a claim like this is true, weigh new evidence by how strong it actually is (which depends on its sample size), update the probability with Bayes' rule rather than jumping straight to belief or disbelief, and then run the updated probability through an expected-value calculation before deciding whether to act"
+  ]}
+  answer={3}
+  explanation="This is the capstone's full synthesis: no single M20 lesson stands alone in evaluating a real claim — base rates set the starting point, sample size determines how much the new evidence should move that starting point, Bayes' rule does the moving correctly, and expected value turns the resulting probability into an actual decision. Treating any one piece in isolation — trusting a high win rate alone, rejecting all edges by default, or ignoring the base rate — is exactly the shortcut this module was built to correct."
+/>
+
+## Try it
+
+Pick a strategy claim you've heard about (a screener result, a Room verdict, a tip). Write down your own prior, a rough likelihood ratio for the evidence you have, compute the Bayesian posterior by hand, and then run that posterior through an expected-value calculation before deciding what to do with it. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Don't just ask "is this evidence convincing?" — start from a realistic base rate, update it by exactly as much as the evidence's strength justifies, and only then compute whether the resulting probability makes the bet worth taking.
+
+*Where this comes from: Bayes' theorem for updating probability with new evidence — Thomas Bayes, An Essay towards solving a Problem in the Doctrine of Chances (1763).*

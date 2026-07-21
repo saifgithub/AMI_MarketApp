@@ -1,0 +1,67 @@
+---
+id: "344_monte_carlo_simulation"
+title: "Monte Carlo simulation"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 10"
+topic: "monte_carlo"
+prerequisites: ["343_out_of_sample_and_walk_forward_validation"]
+tags: ["monte-carlo", "simulation", "tail-risk", "quant"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Monte Carlo simulation
+
+A single historical backtest shows you one path — the one sequence of wins and losses that actually happened. Monte Carlo simulation asks a different question: given a strategy's true win probability and payoffs, what does the *distribution* of possible outcomes look like across many randomly generated paths, including the unlucky ones the one historical path never happened to show you? It converts "here's the one equity curve that occurred" into "here's the range of equity curves that were possible, and how often each kind occurs."
+
+## Example
+
+Recall the 60%-win, +$500/-$300 setup from the expected-value lesson (EV = +$180/trade). A single historical backtest might show a smooth, ever-climbing equity curve — but that's only one path out of many the same 60/40 process could have produced. Monte Carlo simulation asks: across many random 100-trade sequences drawn from this same 60%/40% process, how often does a bad losing streak occur? Take the simplest tail case — five losses in a row. Probability of five consecutive losses = 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = **0.01024**, or about **1.02%**.
+
+That means in roughly 1 out of every 100 stretches of five trades, this genuinely positive-EV strategy produces a five-loss streak — a real, quantifiable tail event, not a sign the edge is broken. A single historical backtest, which only ever shows the one sequence that happened to occur, might never have contained a five-loss streak at all — giving a falsely smooth impression of a process that, run out across many possible paths, produces real bad stretches on a predictable schedule.
+
+## The trap
+
+The trap is looking at one smooth historical equity curve and assuming that's a representative picture of what the strategy will do going forward — when it's just the one path that happened to occur, out of a much wider distribution of paths the same underlying probabilities could produce. It feels reassuring because it's the *actual* history, not a hypothetical. The correct habit: even with genuinely positive EV, ask what a Monte Carlo simulation of many random paths from the same win/loss probabilities would show — including how often a losing streak of a given length shows up — so a real drawdown doesn't get mistaken for the edge failing.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="For a setup that wins 60% of the time and loses 40% of the time (independent trades), what is the probability of five losses in a row?"
+  options={[
+    "≈1.02% — 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = 0.01024",
+    "40% — the single-trade loss probability applies unchanged to any streak length",
+    "8% — dividing the 40% loss probability by 5",
+    "0.4% — multiplying 0.4 by 1% instead of raising it to the 5th power"
+  ]}
+  answer={0}
+  explanation="Independent-trade probability multiplies: 0.4⁵ = 0.4×0.4×0.4×0.4×0.4 = 0.01024, or about 1.02%. The other options either use the single-trade probability unchanged, divide when they should multiply, or apply the wrong operation entirely."
+/>
+
+<Quiz
+  question="A trader's single historical backtest of this 60/40 setup shows a smooth equity curve with no five-loss streak anywhere in it. Given the ≈1.02% probability of a five-loss streak calculated above, what should the trader conclude?"
+  options={[
+    "The strategy is safer than the math suggests, since the actual historical path never showed a five-loss streak",
+    "The 1.02% figure must be wrong, since a real backtest should always match the theoretical probability exactly",
+    "The absence of a five-loss streak in one historical path doesn't mean such streaks are unlikely going forward — it may just mean this one path (out of many the same 60/40 process could produce) happened not to contain one, and a Monte Carlo simulation across many random paths would still show streaks like this occurring on a predictable schedule",
+    "Five-loss streaks are impossible for any strategy with a win rate above 50%"
+  ]}
+  answer={2}
+  explanation="A single historical backtest is only one realization of the underlying random process — it can easily happen not to contain a five-loss streak even though the math says such streaks occur in roughly 1 out of every 100 five-trade stretches over the long run. That's the core Monte Carlo insight: simulating many paths reveals the true range of outcomes, including the unlucky ones a single historical path may have simply avoided by chance."
+/>
+
+## Try it
+
+Take a strategy's win rate and payoff sizes from your Decision Journal and hand-calculate the probability of a 3-loss or 5-loss streak by raising the loss probability to that power. Compare it to whether you've actually experienced a streak that long. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+One historical equity curve is one path among many a strategy's true probabilities could produce — calculate the odds of a real losing streak directly, rather than judging risk by the one path that happened to occur.

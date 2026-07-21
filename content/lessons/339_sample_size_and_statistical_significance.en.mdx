@@ -1,0 +1,67 @@
+---
+id: "339_sample_size_and_statistical_significance"
+title: "Sample size & statistical significance"
+duration_min: 5
+level: 12
+module: 20
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 5"
+topic: "sample_size_significance"
+prerequisites: ["338_correlation_is_not_causation"]
+tags: ["sample-size", "significance", "standard-error", "quant"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Sample size & statistical significance
+
+A win rate calculated from a small number of trades carries a wide margin of error — small-n noise that can make an ordinary run of luck look like a real edge, or a real edge look like noise. The standard error of a win rate is roughly √(p(1-p)/n), where p is the observed win rate and n is the number of trades — it tells you how much that win rate could plausibly wobble just from randomness alone. A rough rule of thumb: an edge needs to clear about two standard errors above 50% before you should take it seriously as more than a coin flip.
+
+## Example
+
+A trader runs 20 trades and wins 14 of them — a 70% win rate (p = 0.7, n = 20). Standard error = √(0.7 × 0.3 / 20) = √(0.21 / 20) = √0.0105 ≈ **10.25%**. A rough two-standard-error bar is 2 × 10.25% = **20.5 percentage points**. The observed edge — 70% versus a 50% coin flip — is 20 points, which sits just **under** that 20.5-point bar. In other words, at only 20 trades, a 70% win rate is not yet clearly distinguishable from a 50% coin flip getting lucky, even though it feels like a strong result.
+
+Now compare a bigger sample: 200 trades at the same 70% win rate. Standard error = √(0.7 × 0.3 / 200) = √(0.00105) ≈ **3.24%**, and 2 × 3.24% = **6.5 points** — the same 20-point edge now clears the bar with room to spare. The win rate didn't change; the confidence you can place in it changed enormously, purely because n went from 20 to 200.
+
+## The trap
+
+The trap is treating a small-sample win rate as if it were the true, stable edge — 14 wins out of 20 trades *feels* like solid proof, because 70% is a big, round, impressive-sounding number. The correct habit: before trusting any win rate, check the sample size behind it and estimate the standard error. A 70% record over 20 trades and a 70% record over 200 trades are not the same claim, even though they report the identical number.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A trader shows a 70% win rate (p = 0.7) over 20 trades (n = 20). Using standard error ≈ √(p(1-p)/n), what is the approximate standard error of this win rate?"
+  options={[
+    "≈20.5% — doubling the gap between the win rate and 50%",
+    "≈0.21% — forgetting to take the square root of 0.0105",
+    "≈1.05% — dividing 0.21 by 200 instead of 20",
+    "≈10.2% — √(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, so about 10.2 percentage points"
+  ]}
+  answer={3}
+  explanation="√(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, or about 10.2 percentage points. The first option skips the square root and just doubles the raw gap from 50%; the second option is the pre-square-root variance (0.0105) misread as a percentage; the third divides by the wrong sample size."
+/>
+
+<Quiz
+  question="Using a rough two-standard-error bar (2 × 10.2% ≈ 20.5 points) against the observed 20-point edge (70% vs. a 50% coin flip), is the 70% win rate over just 20 trades statistically distinguishable from chance?"
+  options={[
+    "No — the 20-point observed edge sits just under the ≈20.5-point two-standard-error bar, meaning 20 trades isn't yet enough to clearly separate this record from a lucky run at a 50% true rate",
+    "Yes — 70% is comfortably above 50%, and a win-rate gap that large doesn't need a statistical bar to be taken seriously",
+    "Yes — any win rate at or above 70% automatically clears standard significance thresholds regardless of sample size",
+    "No — because winning 14 of 20 trades is not mathematically possible in the first place"
+  ]}
+  answer={0}
+  explanation="20.5 points is a rough estimate of the two-standard-error bar; the observed 20-point edge falls just short of it, so at n=20 this record isn't yet clearly distinguishable from chance — even though it looks like a strong result. The sample-size lesson from this module is exactly why: the same 70% win rate over 200 trades (SE ≈3.24%, bar ≈6.5 points) would clear this same bar easily. Winning 14 of 20 trades is entirely possible; the question is whether it's meaningful, not whether it happened."
+/>
+
+## Try it
+
+Open your Decision Journal, count how many trades your longest logged streak covers, and hand-calculate its standard error using √(p(1-p)/n). Compare the result to how confident you feel about that streak being a "real" edge. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A win rate is only as trustworthy as the sample size behind it — always ask "how many trades is that based on?" before treating any streak as proof of an edge.

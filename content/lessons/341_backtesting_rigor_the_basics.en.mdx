@@ -1,0 +1,67 @@
+---
+id: "341_backtesting_rigor_the_basics"
+title: "Backtesting rigor — the basics"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 7"
+topic: "backtesting_basics"
+prerequisites: ["340_capstone_thinking_in_probabilities_bayesian_updating"]
+tags: ["backtesting", "expected-value", "quant"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Backtesting rigor — the basics
+
+A backtest replays a trading rule against historical price data to estimate how it would have performed — and it can tell you the historical expected value of that exact rule over that exact data, nothing more. It cannot tell you the rule will keep working, that the historical period was representative, or that the number of trades tested was enough to trust (that's the next four lessons). Treat every backtest result as a historical EV estimate with a confidence level attached, not as a verified fact about the future.
+
+## Example
+
+A trader backtests a simple rule over 300 historical trades: it wins 65% of the time for an average +$150, and loses 35% of the time for an average -$100. In-sample expected value = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = **+$62.50 per trade**. That number is real — it's an accurate description of what this exact rule did on this exact historical data. What it is *not*: a guarantee about trades the rule hasn't seen yet, which is a completely different claim requiring completely different evidence (the out-of-sample test two lessons from now).
+
+A rigorous backtest states its window (which years, which market regime), its trade count (300, not "a lot"), and its assumptions (slippage, commissions, whether dividends were included) — because each of those choices can move the +$62.50 figure meaningfully. A backtest report that just says "65% win rate, great strategy" without those details is a headline, not evidence.
+
+## The trap
+
+The trap is reading a strong backtest number and treating the strategy as proven, when a backtest only ever proves what happened on the specific historical data tested — it says nothing yet about whether that data was representative, whether the rule was tuned to fit it, or whether the sample was even large enough to trust. The correct habit: read a backtest's win rate and EV as one input, and immediately ask what window it covers, how many trades it's built on, and whether it's been tested on data it wasn't built on — the questions the rest of this module exists to answer.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="A backtest over 300 trades shows a 65% win rate at an average +$150 win and a 35% loss rate at an average -$100 loss. What is the in-sample expected value per trade?"
+  options={[
+    "+$62.50 — (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = $62.50",
+    "+$97.50 — using only the win-side term and ignoring the loss side",
+    "+$50 — averaging the win rate and loss rate directly",
+    "-$35 — using only the loss-side term and ignoring the win side"
+  ]}
+  answer={0}
+  explanation="EV = (0.65 × $150) + (0.35 × -$100) = $97.50 - $35 = $62.50 per trade. The other options each drop one term of the weighted sum or substitute a different (wrong) operation for it."
+/>
+
+<Quiz
+  question="The backtest above reports a strong +$62.50 in-sample expected value. Does that number, by itself, tell you how the strategy will perform on new trades it hasn't seen yet?"
+  options={[
+    "Yes — a backtest's EV is definitionally the same as the strategy's future expected value",
+    "Yes, as long as the win rate is above 60%",
+    "No, and it isn't designed to — a backtest measures historical performance on the specific data tested; whether that performance holds up on unseen data, whether the rule was tuned to fit this exact history, and whether 300 trades is even enough to trust are separate questions this module answers next",
+    "No — because backtests are only valid if run on at least 10 years of data regardless of trade count"
+  ]}
+  answer={2}
+  explanation="A backtest's EV describes what happened historically on the tested data — it says nothing on its own about overfitting, regime-dependence, or whether the sample size is adequate, which is exactly what the next few lessons (overfitting, out-of-sample validation, survivorship bias) exist to check. There's no fixed 'must be 10 years' rule; the real question is out-of-sample performance and honest trade-count assessment, not a specific calendar length."
+/>
+
+## Try it
+
+Open a strategy you've built or seen in the app and find its stated win rate and average win/loss. Hand-calculate its expected value, then check whether the report states the trade count and data window it's based on. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A backtest's expected value is only as trustworthy as the questions you ask about it afterward — what window, how many trades, and has it been tested on data it wasn't built on.

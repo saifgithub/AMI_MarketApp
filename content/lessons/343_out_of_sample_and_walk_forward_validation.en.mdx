@@ -1,0 +1,67 @@
+---
+id: "343_out_of_sample_and_walk_forward_validation"
+title: "Out-of-sample & walk-forward validation"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 9"
+topic: "out_of_sample_validation"
+prerequisites: ["342_overfitting_and_curve_fitting"]
+tags: ["out-of-sample", "walk-forward", "validation", "quant"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Out-of-sample & walk-forward validation
+
+Out-of-sample testing means checking a strategy on data it was never tuned on — a holdout period the optimizer never saw. Walk-forward validation extends this into a repeatable process: tune on one window, test on the next untouched window, then roll forward and repeat. The holdout is sacred because it's the only honest answer to the overfitting problem — a strategy that only performs well on the data it was fitted to hasn't been tested at all; it's just been described.
+
+## Example
+
+Recall the 65%-win-rate rule from the backtesting lesson: in-sample EV was (0.65 × $150) + (0.35 × -$100) = **+$62.50 per trade**, on the 300-trade history the rule was built and tuned on. Now run that same rule, unchanged, on a fresh out-of-sample period it never saw during tuning. Suppose the win rate drops to 35% out-of-sample, with the same average win and loss sizes: EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = **-$12.50 per trade**. The rule didn't just get weaker out-of-sample — its expected value flipped from clearly positive (+$62.50) to clearly negative (-$12.50), on the exact same rule with nothing changed except which data it was tested on.
+
+That flip is the honest test working as intended: it shows the "edge" the in-sample backtest found was substantially a product of fitting to that specific historical window, not a real, repeatable pattern. A strategy that survives walk-forward validation — tuned on window 1, holding up on untouched window 2, then window 3, and so on — has cleared a much higher bar than one that only has an in-sample number to show.
+
+## The trap
+
+The trap is skipping the holdout entirely, or worse, "peeking" at out-of-sample data and re-tuning the strategy until it performs well there too — which quietly turns the holdout into just more in-sample data, destroying the one honest test available. It feels efficient to use every data point to improve the strategy. The correct habit: set aside out-of-sample data before any tuning begins, never adjust the strategy based on how it performs there, and treat a strategy's out-of-sample result — not its in-sample result — as the number that actually matters.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="The rule with +$62.50 in-sample EV (65% win rate, +$150/-$100) is tested on a fresh out-of-sample period where its win rate drops to 35%, with the same average win and loss sizes. What is the out-of-sample expected value?"
+  options={[
+    "+$12.50 — the sign stays positive because the win and loss sizes didn't change",
+    "+$52.50 — using only the win-side term of the calculation",
+    "-$65 — using only the loss-side term of the calculation",
+    "-$12.50 — (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50, a full flip from the in-sample +$62.50"
+  ]}
+  answer={3}
+  explanation="EV = (0.35 × $150) + (0.65 × -$100) = $52.50 - $65 = -$12.50. The strategy's expected value flips sign entirely between in-sample and out-of-sample testing, even though the win/loss payoff sizes never changed — only the win rate did, once tested on data the rule wasn't tuned on."
+/>
+
+<Quiz
+  question="If a trader, after seeing the -$12.50 out-of-sample result, goes back and re-tunes the strategy's parameters until it performs well on that same out-of-sample period too, what has actually happened to the validity of the test?"
+  options={[
+    "Nothing changes — re-tuning a strategy after seeing out-of-sample results is a normal part of walk-forward validation",
+    "The holdout has been destroyed — once the strategy is adjusted based on how it performed on that data, it is no longer untouched data the rule was never tuned on; it has effectively become more in-sample data, and the strategy has not actually been out-of-sample tested at all",
+    "The strategy is now proven more robust, since it has now been validated on two separate periods",
+    "The out-of-sample result becomes more trustworthy the more times this re-tuning process is repeated"
+  ]}
+  answer={1}
+  explanation="The entire value of an out-of-sample test comes from the strategy never having been adjusted based on that data. The moment a trader re-tunes to improve the out-of-sample number, that period functions as in-sample data instead — the 'validation' no longer validates anything, and repeating this process makes the eventual number less trustworthy, not more, since there's now no untouched data left to test on."
+/>
+
+## Try it
+
+Take a rule you've backtested and split its historical trade log into an earlier tuning window and a later holdout window you haven't looked at yet. Compute the rule's EV separately on each, without adjusting anything based on the holdout result. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A strategy's in-sample number tells you what it fit; only an untouched out-of-sample result tells you whether it actually works — never adjust the strategy based on the holdout, or you've destroyed the one honest test you had.

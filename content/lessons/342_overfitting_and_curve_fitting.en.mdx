@@ -1,0 +1,68 @@
+---
+id: "342_overfitting_and_curve_fitting"
+title: "Overfitting & curve-fitting"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 8"
+topic: "overfitting"
+prerequisites: ["341_backtesting_rigor_the_basics"]
+tags: ["overfitting", "curve-fitting", "backtesting", "quant"]
+sources: ["Andrew W. Lo & A. Craig MacKinlay — data-snooping bias in tests of financial asset pricing models, Review of Financial Studies (1990)"]
+agent_callouts: ["trader"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Overfitting & curve-fitting
+
+Overfitting happens when a strategy gets tuned with enough free parameters — moving averages, thresholds, filters — that it starts fitting the noise in a specific historical dataset rather than a real, repeatable pattern. More parameters relative to the amount of data always makes the in-sample backtest look better; it does not make the strategy more likely to keep working. A rough sanity check: divide the number of historical trades by the number of tunable parameters — the fewer trades you have per parameter, the more of that backtest's "edge" is probably just curve-fit to this one specific history.
+
+## Example
+
+Take a rule tested on 50 historical trades. With **1** tunable parameter (say, a single moving-average length), that's **50 trades per parameter** — a reasonable amount of data to estimate one setting from. Now add filters until the rule has **10** tunable parameters (moving-average length, RSI threshold, volume filter, volatility filter, time-of-day filter, and so on) tested on the *same* 50 trades — that's only **5 trades per parameter** (50 ÷ 10 = 5). With 10 free parameters and only 50 data points to fit them to, the optimizer has enormous freedom to find a combination that happens to explain this specific history well, whether or not any of those filters reflect a real, repeatable market pattern.
+
+The in-sample backtest for the 10-parameter version will almost always show a higher win rate and EV than the 1-parameter version — that's not evidence the 10-parameter version is a better strategy; it's the expected result of giving an optimizer more knobs to turn against the same fixed amount of data. The extra "edge" it found is exactly as likely to be noise fit to this one history as it is to be real.
+
+## The trap
+
+The trap is treating a strategy's rising in-sample performance as more parameters get added as proof each new filter is finding a real pattern, when it's equally consistent with the optimizer simply having more freedom to fit the specific noise in that one dataset. It feels like progress because the backtest number keeps improving with each tweak. The correct habit: check the trades-per-parameter ratio before trusting an "improved" backtest — a rule with 10 parameters and 5 trades per parameter earns far more skepticism than a rule with 1 parameter and 50 trades per parameter, even if the 10-parameter version's backtest number looks better.
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="A rule is tested on 50 historical trades. Version A uses 1 tunable parameter; version B adds filters until it uses 10 tunable parameters, tested on the same 50 trades. What is the trades-per-parameter ratio for each version?"
+  options={[
+    "Version A: 1 trade per parameter; Version B: 10 trades per parameter",
+    "Version A: 50 trades per parameter (50 ÷ 1); Version B: 5 trades per parameter (50 ÷ 10) — ten times less data supporting each individual parameter",
+    "Both versions have the same ratio, since the trade count (50) didn't change",
+    "Version A: 500 trades per parameter; Version B: 50 trades per parameter"
+  ]}
+  answer={1}
+  explanation="Trades per parameter = total trades ÷ parameter count: 50 ÷ 1 = 50 for version A, and 50 ÷ 10 = 5 for version B. The parameter count changed even though the trade count stayed fixed at 50, which is exactly why the ratio — and the reliability of each fitted parameter — dropped tenfold from A to B."
+/>
+
+<Quiz
+  question="Version B (10 parameters, 5 trades per parameter) shows a higher in-sample win rate and EV than version A (1 parameter, 50 trades per parameter) on the same 50-trade history. Does that higher in-sample number mean version B found a better, more repeatable trading pattern?"
+  options={[
+    "Not necessarily — a higher in-sample result with far more parameters relative to the same fixed data is exactly what curve-fitting to noise produces, whether or not any of the added filters reflect a real, repeatable pattern",
+    "Yes — a higher backtest number always indicates a better strategy regardless of how many parameters produced it",
+    "Yes, because adding more filters can only ever remove noise, never fit to it",
+    "No, because 10-parameter strategies are always worse than 1-parameter strategies in every case"
+  ]}
+  answer={0}
+  explanation="With 10 free parameters and only 50 data points, the optimizer has far more freedom to find a combination that flatters this one specific history, independent of whether it captures anything real — this is the definition of overfitting. The higher number is exactly what you'd expect from curve-fitting to noise, not proof either way; it's also not a blanket rule that more parameters are always worse (a genuinely justified extra filter can help) — the point is that the number alone can't tell you which case you're in without checking the trades-per-parameter ratio."
+/>
+
+## Try it
+
+Look at any strategy you've built with multiple filters or conditions. Count the tunable parameters, divide your backtest's trade count by that number, and ask whether each individual filter is justified by something other than "it improved the historical number." Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+More parameters always make an in-sample backtest look better — that alone is never evidence of a real edge; check trades-per-parameter before trusting the improvement.

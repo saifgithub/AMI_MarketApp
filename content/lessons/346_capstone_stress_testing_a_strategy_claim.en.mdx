@@ -1,0 +1,81 @@
+---
+id: "346_capstone_stress_testing_a_strategy_claim"
+title: "Capstone: stress-testing a strategy claim"
+duration_min: 7
+level: 12
+module: 21
+difficulty: 5
+track: "quant_methods"
+code: "QUANT 12"
+topic: "strategy_stress_test_capstone"
+prerequisites: ["341_backtesting_rigor_the_basics", "342_overfitting_and_curve_fitting", "343_out_of_sample_and_walk_forward_validation", "344_monte_carlo_simulation", "345_data_mining_and_survivorship_bias"]
+tags: ["quant", "capstone", "synthesis", "backtesting", "overfitting", "out-of-sample", "monte-carlo", "survivorship-bias"]
+agent_callouts: ["trader", "research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Capstone: stress-testing a strategy claim
+
+You now hold the full M21 toolkit: what a backtest can and can't prove, how too many parameters relative to trade count curve-fits to noise, why only untouched out-of-sample data is an honest test, how Monte Carlo simulation reveals the tail risk one historical path might hide, and how survivorship bias inflates returns when a backtest's universe quietly excludes what failed. This capstone runs one plausible-looking vendor claim through all five checks at once — the discipline of stress-testing any strategy claim before trusting it.
+
+## One scenario, every M21 concept
+
+A vendor claims a strategy backtested on S&P 500 constituents from 2015-2024 (300 trades) shows a **68% win rate**, averaging **+$220** on wins and **-$150** on losses, using **14** tunable filters. First, the backtesting check: in-sample EV = (0.68 × $220) + (0.32 × -$150) = $149.60 - $48 = **+$101.60 per trade** — a real number, describing only this exact historical data. Second, the overfitting check: 300 trades ÷ 14 parameters = **≈21.4 trades per parameter** — thin, well below the 50-per-parameter ratio the module's simpler example used, meaning a meaningful share of that +$101.60 could be curve-fit to this specific history rather than a repeatable pattern.
+
+Third, the out-of-sample check: walk the same unmodified rule forward onto 2025 data it wasn't tuned on, and the win rate drops to **45%**: EV = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = **+$16.50 per trade** — a decay of ($101.60 - $16.50) ÷ $101.60 ≈ **84%** from the in-sample figure. Fourth, the Monte Carlo check: even taking that surviving +$16.50 EV at face value, with a 55% per-trade loss probability, the odds of five consecutive losses = 0.55⁵ ≈ **5.03%** — about 1 in 20 five-trade stretches produces a losing streak that size, a real and sizeable tail risk sitting underneath a still-positive average. Fifth, the survivorship check: the backtest's universe was *today's* S&P 500 constituents — meaning any company that was delisted, went bankrupt, or was removed from the index between 2015 and 2024 never appears in the tested data at all, which (per the survivorship-bias lesson) means even the surviving +$16.50 out-of-sample figure is probably still overstated relative to what an investor choosing among the full 2015 universe would actually have experienced.
+
+Five checks, one claim: a headline 68% win rate and +$101.60 in-sample EV shrinks to a thin, survivorship-inflated, tail-risk-bearing +$16.50 once actually stress-tested — still possibly a real, if modest, edge, but nothing like the number the vendor led with.
+
+## The steelman
+
+The strongest case against this five-check gauntlet: "No claim can survive this much scrutiny — you could sink any strategy, however genuine, by demanding perfect trades-per-parameter ratios, undecayed out-of-sample performance, zero tail risk, and a perfectly survivorship-free universe all at once." That's a fair caution against an impossible standard. The falsifier: the gauntlet isn't a pass/fail gate demanding perfection on all five — it's a discipline for sizing conviction to what actually survives. This scenario's strategy didn't fail every check; it kept a positive, if much smaller, out-of-sample EV even after all five stress tests. The right conclusion isn't "reject every strategy that isn't flawless" — it's "size your conviction and your position to the +$16.50 that survived stress-testing, not the +$101.60 headline that didn't."
+
+<ChatWith agent="trader" />
+
+## Quiz
+
+<Quiz
+  question="The vendor's strategy shows a 68% win rate (+$220 win / -$150 loss) in-sample, then a 45% win rate out-of-sample with the same payoff sizes. What is the out-of-sample expected value, and roughly how much did it decay from the in-sample +$101.60?"
+  options={[
+    "+$16.50 out-of-sample — a decay of about 84% from the in-sample +$101.60",
+    "+$101.60 out-of-sample — identical to in-sample, since payoff sizes didn't change",
+    "-$16.50 out-of-sample — a full sign flip from the in-sample figure",
+    "+$82.50 out-of-sample — using only the loss-side term of the out-of-sample calculation"
+  ]}
+  answer={0}
+  explanation="Out-of-sample EV = (0.45 × $220) + (0.55 × -$150) = $99 - $82.50 = $16.50. Decay = ($101.60 - $16.50) ÷ $101.60 ≈ 84%. The win rate drop (68% to 45%) is what drives the decay even though the win/loss payoff sizes stayed fixed — the EV shrank sharply but stayed positive, it didn't flip sign."
+/>
+
+<Quiz
+  question="Even after confirming a surviving +$16.50 out-of-sample expected value, what do the Monte Carlo and survivorship checks add that the out-of-sample number alone doesn't capture?"
+  options={[
+    "Nothing — once out-of-sample EV is positive, no further checks are needed",
+    "They prove the strategy is fraudulent and should be discarded entirely",
+    "They only matter if the out-of-sample win rate had been below 50%",
+    "The Monte Carlo check (0.55⁵ ≈ 5.03% chance of a 5-loss streak) quantifies a real tail risk sitting underneath the average even though the average itself is positive, while the survivorship check flags that testing only on today's S&P 500 constituents excludes delisted or failed companies from 2015-2024, meaning even the +$16.50 figure is probably still overstated"
+  ]}
+  answer={3}
+  explanation="A positive average EV doesn't describe the variance around it — the Monte Carlo check shows a real, quantifiable ≈5.03% chance of a 5-loss streak, information the average alone hides. Separately, the survivorship check addresses a different failure mode entirely: the tested universe itself excluded exactly the companies whose failure over 2015-2024 would have hurt a real historical investor, meaning the true historical EV was probably even lower than $16.50. Neither issue is resolved just because the out-of-sample EV cleared zero."
+/>
+
+<Quiz
+  question="Pulling together backtesting basics, overfitting, out-of-sample validation, Monte Carlo simulation, and survivorship bias — what is the single discipline this capstone trains you to apply the next time a strategy claim (a vendor pitch, a screener result, an AMI-simulated Verdict) reports an impressive backtested win rate?"
+  options={[
+    "Trust the headline win rate and EV directly, since a large enough trade count (300) already rules out overfitting",
+    "Reject every strategy claim outright, since all backtests are equally unreliable regardless of how they're constructed",
+    "Run the claim through all five checks — the trades-per-parameter ratio, an untouched out-of-sample test, the tail-risk distribution a Monte Carlo simulation reveals, and whether the tested universe excludes what failed — and size your conviction to whatever EV survives that gauntlet, not to the in-sample headline",
+    "Judge the claim only by whether its out-of-sample win rate exceeds 50%, since that alone determines whether a strategy is worth using"
+  ]}
+  answer={2}
+  explanation="This is the capstone's full synthesis: no single M21 lesson stands alone in evaluating a real strategy claim — trades-per-parameter flags curve-fitting risk, the out-of-sample test is the one honest performance check, Monte Carlo simulation surfaces tail risk an average hides, and the survivorship check tests whether the universe itself was rigged toward success. A large trade count alone doesn't rule out overfitting (14 parameters on 300 trades was still thin), rejecting everything outright throws away the modest genuine edge this scenario's strategy retained, and a bare win-rate threshold ignores payoff sizes, tail risk, and universe construction entirely."
+/>
+
+## Try it
+
+Take a strategy claim you've encountered — a vendor pitch, a screener result, or a Room verdict — and run it through all five M21 checks by hand: trades-per-parameter, an out-of-sample split, a Monte Carlo losing-streak estimate, and a check on whether its universe excludes delisted or failed names. Log what survives in your Decision Journal. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A strategy claim's headline win rate is the least-tested number in the pitch — run it through the trades-per-parameter check, an untouched out-of-sample test, a Monte Carlo tail-risk estimate, and a survivorship check before sizing any conviction on it at all.

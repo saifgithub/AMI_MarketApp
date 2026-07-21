@@ -1,0 +1,67 @@
+---
+id: "338_correlation_is_not_causation"
+title: "Correlation ≠ causation"
+duration_min: 4
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 4"
+topic: "correlation_causation"
+prerequisites: ["337_distributions_and_fat_tails"]
+tags: ["correlation", "causation", "spurious-relationships", "quant"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Correlation ≠ causation
+
+Correlation measures how closely two things move together; causation means one of them actually makes the other happen. Two series can move together almost perfectly and still have no causal link between them at all — because a third, unmentioned variable is driving both. Treating "these two things moved together" as "one caused the other" is one of the fastest ways to build a trading thesis on a coincidence.
+
+## Example
+
+Airline stocks and energy-sector names like XOM often show a strong negative correlation over multi-month stretches — when oil prices fall, airline fuel costs drop and airline margins improve, while energy-producer revenue and equity prices fall with the same oil price. It looks, on a chart, like "airlines moving up causes energy stocks to move down" or vice versa. It doesn't: neither stock is causing the other's move. The third variable — the oil price itself — is driving both series in opposite directions at the same time. An investor who buys airlines "because energy is falling" has the right correlation and the wrong mechanism; the trade only works for as long as the oil-price link holds, and breaks the moment airlines and energy move together instead (e.g., during a demand shock that hits both sectors at once).
+
+Ice-cream sales and drowning deaths show a similar pattern seasonally: both rise together every summer, not because ice cream causes drowning, but because hot weather drives more of both swimming and ice-cream buying. The correlation is real and the causal story implied by it is entirely wrong.
+
+## The trap
+
+The trap is spotting a correlation on a chart and immediately building a causal story to explain it, because a causal story is more satisfying than "these two things happen to move together for a reason I haven't identified yet." It feels right because a plausible-sounding mechanism ("airlines and energy move opposite because they're linked") is easy to invent after the fact. The correct habit: before trading a correlation, ask what the actual causal mechanism is and what third variable might be driving both series — if you can't name the mechanism, you're trading a coincidence that can break without warning.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Airline stocks and energy-producer stocks like XOM often move in opposite directions over multi-month stretches. What is the most accurate description of why?"
+  options={[
+    "Airline stock price moves directly cause energy-producer stock price moves in the opposite direction",
+    "The oil price is a third variable driving both series — falling oil cuts airline fuel costs (helping airline margins) while cutting energy-producer revenue (hurting energy stocks) — so the correlation reflects a shared cause, not either sector causing the other",
+    "Energy-producer stock moves directly cause airline stock moves in the opposite direction",
+    "The two sectors have no real relationship, and any observed correlation between them is pure statistical noise"
+  ]}
+  answer={1}
+  explanation="Oil price is the common driver: it moves airline costs and energy-producer revenue in opposite directions at the same time, producing a real correlation with no direct causal link between the two stock groups. The first and third options each assign causation to one sector over the other with no mechanism for how that would work; the last option denies a correlation that is real and well-documented, just non-causal."
+/>
+
+<Quiz
+  question="A trader notices ice-cream sales and drowning deaths rise together every summer and initially assumes one causes the other. What does this lesson say is actually happening, and what should the trader do before trading a similar-looking correlation in markets?"
+  options={[
+    "Conclude ice cream causes drowning and act on that relationship directly",
+    "Conclude drowning causes ice-cream sales to rise and act on that relationship directly",
+    "Recognize the correlation is real but driven by a third variable (hot weather driving both swimming and ice-cream buying), and before trading any market correlation, identify the actual causal mechanism or shared driver — if none can be named, treat the correlation as liable to break without warning",
+    "Dismiss the correlation entirely as coincidence with no explanation, since summer weather cannot be measured"
+  ]}
+  answer={2}
+  explanation="This is the lesson's core discipline: a real, strong correlation can still have zero direct causal link, driven instead by a shared third variable (here, summer heat). The trading version — airlines and energy linked by oil price — works the same way. The first two options invent direct causation in either direction, and the last option wrongly claims the driver (weather) is unmeasurable when it's actually the correctly identified explanation."
+/>
+
+## Try it
+
+Pick two tickers from different sectors that you've noticed moving together on a chart. In 1-on-1 with the Research Manager, ask it to name a plausible third variable that could be driving both, rather than asking whether one causes the other. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A strong correlation tells you two things move together; it never tells you why — find the actual mechanism, or a shared third variable, before trading the relationship.

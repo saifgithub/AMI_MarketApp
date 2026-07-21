@@ -1,0 +1,68 @@
+---
+id: "335_expected_value_the_core_of_every_decision"
+title: "Expected value — the core of every decision"
+duration_min: 5
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 1"
+topic: "expected_value"
+prerequisites: ["100_kelly_criterion_simplified"]
+tags: ["expected-value", "probability", "ev", "quant"]
+sources: ["Blaise Pascal & Pierre de Fermat — correspondence on the problem of points (1654), the origin of expected value"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Expected value — the core of every decision
+
+Expected value (EV) is the probability-weighted average of every possible outcome of a decision, and it is the single number every other quant tool in this module builds on. EV = Σ pᵢ·xᵢ — multiply each outcome by its probability, then add the products. A trade, a bet, or a strategy is only "good" in the long-run sense if its EV is positive; a high win rate alone tells you nothing without knowing what you win and lose each time. Here's the part that trips people up: a positive-EV decision can still lose money on any single try — EV describes the long-run average, not any one outcome.
+
+## Example
+
+Say a setup wins 60% of the time for +$500, and loses the other 40% of the time for -$300. EV = (0.6 × $500) + (0.4 × -$300) = $300 - $120 = **+$180 per trade**. Take this setup 100 times and the *average* outcome per trade converges toward +$180 — roughly +$18,000 total, though any individual run will scatter around that number.
+
+Now look at what EV does NOT promise: on any single instance of this trade, there's still a **40% chance of losing $300** — that's the p=0.4 term in the same equation, not a separate risk lurking outside it. A trader who takes this setup once and loses is not "unlucky in a way that disproves the edge" — a 40% loss rate is priced into the +$180 EV from the start. Convene the Room on a name like NVDA and look at the Trader's proposed size next to the Bull and Bear cases: a well-run size assumes the loss scenario is a normal, expected outcome of a positive-EV process, not a failure of the process.
+
+## The trap
+
+The trap is judging a single outcome instead of the process that produced it. A trader takes the +$180-EV setup once, loses the $300, and concludes "that edge doesn't work" — abandoning a genuinely positive-EV process because one draw from a 40%-probability branch happened to land. The correct mental model: EV is a claim about the *average* over many repetitions, not a prediction about the next one. Judge a decision by whether its EV was positive going in, not by whether that particular instance won.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A setup wins 70% of the time for +$100, and loses 30% of the time for -$400. What is its expected value, and is it a good setup on that basis alone?"
+  options={[
+    "+$70 — since the setup wins most of the time, the win probability alone sets the expected value",
+    "-$120 — only the loss side matters once a loss is possible at all",
+    "-$50 — weighting both outcomes by probability, (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50, so despite winning 70% of the time this is a negative-EV setup",
+    "+$50 — a win rate above 50% guarantees a positive edge regardless of payoff size"
+  ]}
+  answer={2}
+  explanation="EV = Σ pᵢ·xᵢ = (0.7 × $100) + (0.3 × -$400) = $70 - $120 = -$50. The large loss size relative to the small win size overwhelms the high win rate — a 70% win rate is not, by itself, evidence of a good setup. The first and last options isolate the win-rate term and ignore the loss term entirely; the second option does the reverse."
+/>
+
+<Quiz
+  question="For the +$180-EV setup above (60% win at +$500, 40% loss at -$300), a trader takes it once and loses the $300. Does this one result mean the setup's edge was wrong?"
+  options={[
+    "Yes — a genuine positive-EV setup should never lose on any individual attempt",
+    "No — a 40% loss probability was already built into the +$180 EV calculation; losing once is a normal, expected branch of a positive-EV process, not evidence the process is broken",
+    "Yes — EV only applies once at least 1,000 repetitions have been observed, so a single loss before then invalidates it",
+    "No — because EV guarantees this exact trade will eventually turn into a win if repeated"
+  ]}
+  answer={1}
+  explanation="The 40% loss probability is part of the same equation that produces the +$180 EV — it isn't a separate, unexpected event. A single loss is fully consistent with a positive-EV process; judging the process by one draw (rather than by whether its EV was positive going in) is exactly the trap this lesson names. EV says nothing about any specific future repetition of this exact trade — it's a statement about the long-run average across many independent instances."
+/>
+
+## Try it
+
+Open a Convene the Room session on any watchlist ticker and find the Trader's proposed position size. Estimate the implied win/loss probabilities and payoffs from the Bull and Bear cases, then hand-calculate the EV yourself before comparing it to the Trader's stated conviction. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A decision's quality is set by its expected value — the probability-weighted average of every outcome — not by whether any single instance of it happened to win or lose.

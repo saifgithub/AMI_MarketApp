@@ -1,0 +1,68 @@
+---
+id: "337_distributions_and_fat_tails"
+title: "Distributions & fat tails"
+duration_min: 5
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 3"
+topic: "fat_tails"
+prerequisites: ["336_base_rates_why_they_beat_the_story"]
+tags: ["distributions", "fat-tails", "volatility", "quant"]
+sources: ["Nassim Nicholas Taleb — The Black Swan (2007), on fat-tailed distributions in markets"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Distributions & fat tails
+
+A distribution describes how likely each possible outcome is, and the normal ("bell curve") distribution — the one most risk models quietly assume — says extreme moves should be vanishingly rare, shrinking toward zero probability the further you get from the average. Real market returns don't behave that way: they're **fat-tailed**, meaning extreme moves happen far more often than a normal distribution predicts. A model that assumes normality will keep telling you a crash "shouldn't" happen right up until one does — because the model, not the market, is what's wrong.
+
+## Example
+
+Take a stock with typical daily volatility (standard deviation, or "sigma") of about **1%** — a fairly ordinary day moves the price roughly ±1%. On October 19, 1987 ("Black Monday"), the S&P 500 fell **20.5%** in a single day. Measured against a 1% daily sigma, that's a **20.5-sigma event** (20.5% ÷ 1% = 20.5). Under a normal distribution, a move that extreme has a probability so close to zero it would not be expected to happen even once across the entire history of the universe repeated many times over — and yet it happened, in one trading day, within recorded market history.
+
+That gap — "the model says essentially impossible" versus "it happened" — is the fat-tail problem in one number. It isn't that Black Monday was a freak coincidence outside the system; it's that the normal distribution is the wrong tool for describing how markets actually move at the extremes. Fat-tailed distributions assign meaningfully more probability to large moves, which is why risk models built only on "typical" daily volatility keep getting blindsided by the moves that matter most.
+
+## The trap
+
+The trap is treating a risk estimate built on normal-distribution math ("a move this big is a 6-sigma event, essentially impossible") as if it settles the question of whether that move can happen. It feels rigorous because it's quantified — a precise-sounding sigma count reads as more trustworthy than a vague "markets can do surprising things." The correct habit: treat any "this can't happen" claim built on normal-distribution assumptions as a description of the *model's* comfort zone, not a hard limit on the *market* — and size risk assuming the tail is fatter than the model says.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A stock's typical daily volatility (sigma) is 1%. A single-day move of 20.5% occurs — how many standard deviations is that move, and what does a normal distribution say about its probability?"
+  options={[
+    "2.05 sigma — a fairly ordinary move that a normal distribution treats as unremarkable",
+    "20.5 sigma — a move a normal distribution treats as effectively impossible, which is exactly why fat-tailed markets keep producing moves normal models say shouldn't occur",
+    "205 sigma — the calculation multiplies the two percentages together rather than dividing",
+    "0.205 sigma — dividing the smaller volatility figure by the larger move figure"
+  ]}
+  answer={1}
+  explanation="20.5% ÷ 1% = 20.5 standard deviations. Under a normal distribution, a move of that many sigmas is treated as essentially impossible — yet single trading days like this have occurred within recorded market history, which is the fat-tail gap this lesson describes. The other options either divide in the wrong direction or misplace the decimal."
+/>
+
+<Quiz
+  question="A risk model reports that a projected loss is a '6-sigma event, essentially impossible' based on the asset's normal daily volatility. What should this lesson's fat-tails logic make you do with that claim?"
+  options={[
+    "Accept it at face value — a precisely quantified sigma count is inherently more reliable than a qualitative risk judgment",
+    "Ignore volatility-based risk estimates entirely, since they are always meaningless in fat-tailed markets",
+    "Treat the '6-sigma, impossible' framing as a statement about what the normal-distribution model assumes, not a hard limit on what the market can do — and size the position as if the true tail risk is fatter than the model implies",
+    "Conclude the model must have made an arithmetic error, since no real risk is ever exactly 6 sigma"
+  ]}
+  answer={2}
+  explanation="The lesson's whole point is that normal-distribution risk estimates understate real tail risk in markets — a '6-sigma, essentially impossible' claim describes the model's assumptions, not a guarantee about the market. That doesn't mean volatility estimates are useless (the second option overcorrects into nihilism) or that the model necessarily contains an arithmetic error — it means the model's normal-distribution assumption is the wrong tool for the extremes, so the sensible response is to size risk assuming fatter tails than the model states."
+/>
+
+## Try it
+
+Open the Market Analyst chat on a volatile ticker and ask for its recent daily volatility (sigma). Divide any single-day move you can find in its price history by that sigma to see how many standard deviations it represented, and compare that to what a normal distribution would predict. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Markets move in fat tails, not bell curves — treat any "this is essentially impossible" risk claim built on normal-distribution math as understating the real chance of an extreme move, not as settling the question.
