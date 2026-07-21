@@ -34,24 +34,43 @@ this file + roster/ change. CR052.
 
 ## Hosting & launch (interrogable fleet)
 
-Instances are **named background sessions**, not Architect subagents — so Saiful can list, peek,
-reply to, and attach to each. (Agent-tool subagents are invisible/ephemeral and are used only for
-disposable helper work inside an instance.)
+An instance is an **independent session**, not an Architect subagent (subagents are invisible /
+ephemeral, used only for disposable helper work inside an instance). Coordination is **file-only** —
+each instance self-notices via `sh orchestration/dispatch/dispatch.sh inst <id>` and hands off
+through the git repo; the Architect never messages an instance in-process.
 
-- **Launch (Saiful onboards each instance):** `claude --bg` from shell, `/bg` from a session, or the
-  `claude agents` TUI. Name it with the project prefix so it groups: `claude -n "AMI-TRADE coder.api"`
-  (or `/rename`). Opening prompt: *"You are `coder.api`. Read `orchestration/dispatch/roster/coder.api.md` +
-  `orchestration/dispatch/loop_prompts/CODER.md` and run your loop."*
-- **Worktree isolation:** background agents run under `.claude/worktrees/` — the per-instance worktree
-  the protocol already specifies. Keep `worktree.bgIsolation` on.
-- **Monitor / interrogate the fleet:** `claude agents` (grouped Needs-input / Working / Completed);
-  `claude agents --json` for a scriptable list. Space = peek, type + Enter = reply, → = attach.
-- **`live_handle`** in each `roster/<id>.md` = that session's name/id (e.g. `AMI-TRADE coder.api`),
-  filled once Saiful launches it. It is a resume/interrogate handle, NOT a subagent agentId.
-- **Idle stop:** a background agent's supervisor stops after ~1h idle — fine, because instances are
-  short-lived per-lane (token-economy rule) and resumable via `claude --resume`.
-- **Coordination is file-only:** the Architect never messages an instance in-process; each self-notices
-  via `sh orchestration/dispatch/dispatch.sh inst <id>` and hands off through the git repo.
+Three ways to host, with a verified tradeoff (empirically checked on `claude` v2.1.145):
+
+**A. Local headless workers — RECOMMENDED (local + fresh + auto + interrogable).**
+The Architect launches a fresh per-lane worker from its own shell (background), and Saiful
+interrogates it by resuming its session id. Verified: `claude -p --session-id <uuid>` runs headless
+from an agent's shell, persists to `~/.claude/projects/<hash>/<uuid>.jsonl`, and `claude --resume
+<uuid>` restores its full context.
+```
+# Architect, per lane (run in background; --permission-mode lets it act autonomously):
+claude -p --session-id <uuid> --permission-mode acceptEdits --add-dir <repo> \
+  "You are coder.api. Read orchestration/dispatch/roster/coder.api.md +
+   orchestration/dispatch/loop_prompts/CODER.md. Work your assigned lane end-to-end,
+   hand off to the Auditor, then stop."
+# Saiful, anytime — interrogate (restores the worker's context):
+claude --resume <uuid>
+```
+`live_handle` in `roster/<id>.md` = the **current run's `<uuid>`**. Fresh uuid per lane ⇒ small,
+cheap context (short-lived, token-economy rule). Interrogation is **resume-by-id**, not live mid-run
+streaming.
+
+**B. Interactive background agents (`claude agents`) — local, live-attachable, but human-launched.**
+Saiful dispatches from the `claude agents` TUI (peek = Space, reply = Enter, attach = →);
+`claude agents --json` lists them for scripting. **Not agent-launchable:** dispatch requires an
+interactive TTY, which the Architect's shell lacks (`claude agents` refuses without a TTY). Long-lived
+ones also grow context toward the ~1M auto-compaction ceiling — avoid for cheap operation.
+
+**C. Routines (cloud) — auto + fresh, web-interrogable.** The Architect fires a per-instance routine
+(`POST …/routines/<id>/fire`, agent-callable) → a fresh cloud session + a `claude.ai/code` URL to
+watch/continue. Not in the local picker; runs on Anthropic cloud. Use if you want unattended cloud
+workers instead of local ones.
+
+**Worktree isolation** applies to all: an instance builds in `.claude/worktrees/<id>-<ITEM>/`.
 
 ## Auditor mapping (sharding)
 
