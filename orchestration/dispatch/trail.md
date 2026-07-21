@@ -24,3 +24,4 @@ slurp. Per-item detail lives in ../history/lanes/<ITEM>.md, not here.
 | 2026-07-22 00:35 | CR054-W1-ETHIC | architect | 1 | ASSIGN | Wave 1 begins — Ethics Level 13 (10 lessons, ETHIC 1-10, ids 293-302) launched on noncoder.edu; Ethics leads (no math dep) |
 | 2026-07-22 00:45 | CR054-W0d | architect | 1 | ACCEPTED | Math M09–M12 audited COMPLETE (200f127), archived; coder.math idle; unblocks ASST/MACRO/QUANT lessons |
 | 2026-07-22 00:55 | CR054-W0b | architect | 1 | ACCEPTED | Mobile new-track labels audited COMPLETE (isolated-worktree flutter analyze clean); Wave 0 fully DONE (W0a-W0d) |
+| 2026-07-22 01:05 | CR054-W1-ETHIC | noncoder.edu | 1 | NEEDS-INFO | 10 Ethics lessons authored (uncommitted, working tree); correctly refused to edit backend/ guard. A1: coder.api lands CR054-GUARD (count→floor, retire wave-0 emptiness pin, +capstone guard), then bump Ethics to r2 |

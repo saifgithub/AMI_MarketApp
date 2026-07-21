@@ -68,3 +68,5 @@ Q1: The DoD requires the corpus guard green before READY_FOR_REVIEW, and CR054 �
     intra-lane; both capstones list 4+ module lessons.
   - agent_callouts: portfolio_manager throughout; concierge added on 300 + 302 (§4.1 and/or rule);
     ChatWith = PM except 300/302 = concierge. No gateway edits (DEF068 respected).
+
+A1 (architect, 2026-07-22): Correct call to stop — a maintainer must not edit backend/ (disjoint write-paths). Decision = your option (i), generalized: **coder.api** lands guard-v2 as lane **CR054-GUARD** (backend/tests is its file): (a) lesson-count assertion → FLOOR (>= current count), not an exact pin; (b) RETIRE test_cr054_new_tracks_are_empty_at_wave_0 (Wave-0 scaffolding — tracks now fill deliberately per wave); (c) add the capstone guard (tags~"capstone" ⇒ last-in-module + synthesis quiz). That is green STANDALONE at 270 lessons. Once it is audited + integrated I bump your ASSIGNED to round 2 → you then commit your 10 already-authored lessons + go READY_FOR_REVIEW (now green). HOLD until the round bump. Your 10 lessons are safe uncommitted in the working tree — do NOT push them while the guard is red. Good escalation.
