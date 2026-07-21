@@ -73,10 +73,16 @@ failure was capability, same tier if it was harness.** (dispatch.sh remains the 
   `/compact` — the two heritage weaknesses it fixes). A future hybrid (Agent-tool for ephemeral fires,
   `claude -p` for sustained/interrogable roles) would erase P1/P2 if interrogability ever stops mattering.
 
-## Acceptance
+## Definition of Done (`docs/governance/CR_DEFINITION_OF_DONE.md`)
 
-- [x] `dispatch_launch.sh` dry-run resolves all tier×fanout combos + rejects bad input.
-- [x] `--model`/`--effort`/`--max-budget-usd` verified accepted; `Workflow`+`Agent` present under the
-      ultra tool set.
-- [ ] First real launch through the helper (CR054-W1-ETHIC round 2, economy/solo) commits green.
-- [ ] Loop prompts + DoD row + BINDINGS + failure_patterns committed.
+| Row | Disposition |
+|---|---|
+| **Scope** | Matches §What: helper (tier→model/effort/hard-budget, fanout, footgun-avoidance, dry-run) + escalation ladder + headless-one-shot loop-prompt fix + DoD row + BINDINGS rewrite + failure_patterns P6/P7. All present. |
+| **Tests** | N/A — no Python/runtime behaviour (POSIX `sh` + markdown). Exercised instead: `DISPATCH_DRY_RUN` resolved economy/standard/premium × solo/ultra and rejected bad tier + missing args (exit 2); `--model`/`--effort`/`--max-budget-usd` accepted and `Workflow`/`Agent` present, via a Haiku probe. |
+| **Manual verification** | Real launches through the helper: Ethics r2 (`002cab10`, economy/$2 → committed `32eac8a`; full suite **927 passed, exit 0** re-run in a clean checkout — not the worker's word); Asset (`ea9acb59`, `claude-sonnet-5`/standard confirmed via `ps`). `live_handle` auto-recorded; task-tracked exit callback fired. |
+| **Docs** | This CR doc; BINDINGS Model-A rewrite + tier/verification note; DoD Model/effort/budget row; failure_patterns P6/P7; CODER/AUDITOR/NONCODER loop prompts. |
+| **Commit tag** | `(AT:architect CR057)` on `6538ad7`, `d63b729`. ✓ |
+| **Register** | `cr_list.md` CR057 row, `in_progress`. ✓ |
+| **Scope discipline** | Multi-file but all CR057-scoped; no content/backend behaviour bundled. |
+| **Model/effort/budget** | This CR is Architect work (opus main-loop, this session — a design/governance task, §15 Premium-equivalent). Ships: economy=haiku/low/$2 · standard=sonnet/med/$5 · premium=opus/high/$10; ultra ×3. |
+| **Independent check** | **⚠ GAP — self-authored AND self-shipped; no auditor has verified this table.** For a fleet-wide governance change that is the wrong default (self-certification is what the DoD exists to prevent). → route to `auditor.core` before this is called COMPLETE. Per CLAUDE.md the audit layer is Saiful-invoked; recommended here. |

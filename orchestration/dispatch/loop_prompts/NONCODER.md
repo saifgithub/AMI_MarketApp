@@ -46,6 +46,14 @@ failure_patterns.md P7). For long output, redirect to a log and read it after it
 through `| tail` (heritage MABP §8). **A maintainer does not stop until the content is committed AND
 pushed;** a requester not until the intake draft is written. State lives in files — deliver it first.
 
+**Self-test scope + the 120s timeout trap.** Your content self-test is the corpus-integrity test
+ONLY — `cd backend && uv run pytest tests/unit/test_lesson_corpus_integrity.py -q` (~6s, exit 0). Do
+**NOT** run the full `tests/unit/` suite: it takes ~210s, a command past the Bash ~120s default
+timeout is **auto-backgrounded by the harness and kills your one-shot session** (this already killed a
+lane mid-commit), and no backend logic changed anyway — the full suite is the Architect's
+wave-integration checkpoint, not your lane's. If you ever must run a genuinely long command, pass an
+explicit Bash `timeout` (up to 600000 ms) so it can't be auto-backgrounded out from under you.
+
 ## Discipline (both kinds)
 
 Write only your owned paths + (maintainer) your `lanes/<ITEM>.<your-id>.md` / (requester) your
