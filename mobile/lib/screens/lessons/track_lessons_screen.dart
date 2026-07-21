@@ -25,6 +25,12 @@ const _trackShortLabel = {
   'sentiment_behaviour': 'SENTIMENT',
   'risk_portfolio': 'RISK',
   'edge_process': 'EDGE',
+  // CR054 Wave 0 — new BOK tracks (backend prefixes ASST/MACRO/QUANT/ETHIC).
+  // Empty until Wave-1 lessons carry them.
+  'asset_classes': 'ASSET CLASSES',
+  'economics_macro': 'ECONOMICS',
+  'quant_methods': 'QUANT',
+  'ethics_integrity': 'ETHICS',
 };
 
 class TrackLessonsScreen extends ConsumerWidget {
