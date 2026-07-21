@@ -69,3 +69,9 @@ your files by name. Do not sweep the architect's in-flight files into your commi
   ledger, not in your session memory. Re-read your own prior rounds before re-auditing a bounce.
 - Your verdicts are evidence-or-reject: every CONFIRMED/FIXED claim cites file:line, a command
   you ran, and its observed output.
+- **Ledger retention (once, at wrap — your housekeeping).** `audit-trail.md` is append-only; keep it
+  small. At session wrap, or when it has grown, run
+  `python3 orchestration/dispatch/rotate_trail.py --trail orchestration/audit/audit-trail.md --history orchestration/audit/trail`
+  (`--dry-run` first) to roll rows older than ~4 days into `orchestration/audit/trail/trail-<YYYY-MM>.md`,
+  then commit. A SINGLE job — you are the ledger's sole writer. The ledger is a log; state lives in
+  the lane `VERDICT` + `cr/INDEX.md`, detail in `runs/`. See AMI_TRADE_BINDINGS.md gap-fill 6.

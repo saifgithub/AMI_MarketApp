@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
-"""rotate_trail.py — retention for the dispatch ledger (CR052, DISPATCH_PROTOCOL.md §8.6).
+"""rotate_trail.py — retention for a handshake ledger (CR052, DISPATCH_PROTOCOL.md §8.6).
 
-Moves rows older than --keep-days out of the active dispatch/trail.md into monthly archives
-under history/trail/trail-<YYYY-MM>.md, so the active ledger stays small and cheap to read.
+Moves rows older than --keep-days out of an active ledger into monthly archives
+(<history>/trail-<YYYY-MM>.md), so the active ledger stays small and cheap to read.
 
-This is a SINGLE, SHARED job owned by the Architect — NOT per-agent. trail.md + history/ are
-single-writer (the Architect); running N per-agent rotators would race and corrupt the ledger.
-Run it manually, or wire it to ONE daily routine (/schedule or cron) acting as the Architect.
+LEDGER-AGNOSTIC: works on any pipe-table ledger whose data rows start with a `| YYYY-MM-DD` cell
+(time optional). It therefore serves BOTH ledgers — each rotated by ITS OWN single writer:
+  * Architect → the dispatch ledger:
+      python3 rotate_trail.py                      # defaults: dispatch/trail.md → ../history/trail/
+  * Auditor   → the audit ledger (its own domain):
+      python3 rotate_trail.py --trail ../audit/audit-trail.md --history ../audit/trail
 
-The trail is a LOG, not a state store: the current state of any lane always comes from the lane
-files (`dispatch.sh state`), never the trail. So archiving old log rows — even for a still-open
-item — is always safe; you find the history in the dated archive if you ever need it.
+SINGLE, SHARED job per ledger — NOT per-agent. Each ledger + its archive dir are single-writer;
+running N rotators on one ledger would race and corrupt it. Run at session wrap, or wire to ONE
+daily routine acting as that ledger's owner.
 
-Row format (pipe table): `| YYYY-MM-DD HH:MM | Item | Instance | Round | Event | Headline |`
-Only rows whose first cell parses as a date are treated as data; the header/comment block is kept.
+The ledger is a LOG, not a state store: current state always comes from the lane/verdict files,
+never the trail — so archiving old rows (even for a still-open item) is always safe.
+
+Row format: `| YYYY-MM-DD[ HH:MM] | ... |`. Only rows whose first cell parses as a date are data;
+the header/comment block is kept in place.
 
 Usage:
   python3 rotate_trail.py [--keep-days N] [--dry-run] [--trail PATH] [--history DIR]
@@ -52,7 +58,7 @@ def _row_date(line: str):
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--keep-days", type=int, default=30, help="retain rows dated within the last N days (default 30)")
+    ap.add_argument("--keep-days", type=int, default=4, help="retain rows dated within the last N days (default 4)")
     ap.add_argument("--dry-run", action="store_true", help="report what would move; write nothing")
     ap.add_argument("--trail", default=DEFAULT_TRAIL)
     ap.add_argument("--history", default=DEFAULT_HISTORY)

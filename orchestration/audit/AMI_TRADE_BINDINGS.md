@@ -46,6 +46,15 @@ the AMI_MarketApp repo — a re-copy of the protocol can never clobber it. Owner
 5. **On-device findings:** when a finding can only be confirmed on a physical iPhone (neither
    role has one in-session), the auditor notes it explicitly as `NEEDS-DEVICE-CHECK` rather than
    guessing; Saiful's acceptance test is expected to cover it.
+6. **Ledger retention (`audit-trail.md` stays small):** the ledger is append-only and grows
+   unbounded (already tens of KB), so rotate it exactly as the dispatch layer rotates its trail —
+   with the shared, ledger-agnostic tool `orchestration/dispatch/rotate_trail.py`. This is the
+   AUDITOR's housekeeping in its OWN domain: at session wrap (or when the ledger has grown) run
+   `python3 orchestration/dispatch/rotate_trail.py --trail orchestration/audit/audit-trail.md --history orchestration/audit/trail`
+   (`--dry-run` first) to roll rows older than ~4 days into monthly
+   `orchestration/audit/trail/trail-<YYYY-MM>.md`, then commit. A SINGLE job — the auditor is the
+   ledger's sole writer. The ledger is a LOG; authoritative state is the per-lane `VERDICT` +
+   `cr/INDEX.md`, and per-audit detail already persists in `runs/`, so archiving old rows is safe.
 
 ## Relationship to existing governance
 

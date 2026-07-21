@@ -60,10 +60,14 @@ Tier-1 things and is the single acceptance checkpoint after COMPLETE. Details: [
 
 ## Memory
 
-`history/` (archived lanes + rotated trail) + `dispatch/trail.md` + `audit/audit-trail.md` +
-`audit/runs/` are the operational history; the Architect distills durable lessons into the project
-`memory/` + `failure_patterns.md`. Keep the active `trail.md` small — query it, don't slurp it
-([history/README.md](history/README.md)).
+`history/` (archived lanes + rotated dispatch trail) + `dispatch/trail.md` + `audit/audit-trail.md`
++ `audit/trail/` (rotated audit ledger) + `audit/runs/` are the operational history; the Architect
+distills durable lessons into the project `memory/` + `failure_patterns.md`.
+
+**Both ledgers stay small by rotation** — `dispatch/rotate_trail.py` (ledger-agnostic, ~4-day
+window) rolls old rows into monthly archives. Each ledger is rotated by ITS sole writer: the
+Architect rotates `dispatch/trail.md` → `history/trail/`; the Auditor rotates `audit/audit-trail.md`
+→ `audit/trail/`. Query the ledgers, don't slurp them ([history/README.md](history/README.md)).
 
 ## Replicating in another project
 

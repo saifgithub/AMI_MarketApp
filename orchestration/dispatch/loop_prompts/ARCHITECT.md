@@ -39,8 +39,9 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
    legal, keys, device — escalate to the human; do not try to clear it yourself.
 8. **Housekeeping — trail retention (you own it, once per session).** At session wrap, or whenever
    `dispatch/trail.md` has grown, run `python3 orchestration/dispatch/rotate_trail.py` (`--dry-run`
-   first to preview) to roll rows older than 30 days into `history/trail/trail-<YYYY-MM>.md`; commit
-   the rotated files. This is a **SINGLE shared job — NEVER per-instance** (`trail.md`/`history/` are
+   first to preview) to roll rows older than the retention window (**default 4 days**) into
+   `history/trail/trail-<YYYY-MM>.md`; commit the rotated files. This is a **SINGLE shared job —
+   NEVER per-instance** (`trail.md`/`history/` are
    single-writer; parallel rotators race). The trail is a log, not a state store, so archiving old
    rows is always safe (current state comes from the lanes). (DISPATCH_PROTOCOL.md §8.6.)
 
