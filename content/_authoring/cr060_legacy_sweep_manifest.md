@@ -82,5 +82,15 @@ SEP; Bodie-Kane-Marcus.
 
 fundamentals_analysis 66 · technical_analysis 45 · edge_process 98 · risk_portfolio 16 ·
 sentiment_behaviour 10 · + new-track stragglers (asset_classes 3, ethics_integrity 6, quant_methods
-6). Plus the 9 empty-`sources:[]` asset-class lessons (303/305/306/307/308/309/310/313/314). Next
-wave gated on the strategy decision (patch vs regenerate the data-dense examples).
+6). Plus the 9 empty-`sources:[]` asset-class lessons (303/305/306/307/308/309/310/313/314).
+
+**Decisions locked (Saiful, 2026-07-22):**
+- **Finish the full sweep** — measure every legacy lesson before committing remediation. Wave 2
+  (FUND+TECH+RISK, 127) + Wave 3 (EDGE+SENT+ASST+ETHIC+QUANT, 123) run next.
+- **Fix approach = ground worked examples in real sourced data** (structural — extend CR046 to
+  lesson content; **regenerate** the data-heavy examples from real market data rather than hand-patch
+  hundreds of confabulated numbers). This reframes the legacy findings from a patch-defect into a
+  **remediation CR** (to be filed once the full sweep gives the complete scope). The definitional
+  lessons that verify clean are stamped as-is.
+- **Stamping:** all VERIFIED lessons across waves get their discovered `sources:` + `verified:` stamp
+  in one batch at sweep-end (clean single scoped commit).
