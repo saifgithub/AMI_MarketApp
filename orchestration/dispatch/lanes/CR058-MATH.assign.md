@@ -35,4 +35,15 @@ examples a reviewer can check by hand, e.g. debt 10B / mktcap 100B → 10.0%; in
 auditor does that via background+poll).
 
 ASSIGNED: coder.math round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
+
+<!-- Accepted 2026-07-22 by architect: auditor.core VERDICT COMPLETE (round 1) on code 21fb8b6
+(verdict 8401218). Independent evidence: auditor HAND-RECOMPUTED all six worked values (10.0/20.0/
+3.0/40.0-fail/all-under-pass/10.00) and the code agrees; 68 math tests + 22 corpus green exit 0;
+additive (no existing trading_math fn altered), divide-by-zero guarded → None. screening.py = CR046
+M13 (sharia_debt/liquidity/impermissible-income ratios + sharia_screen + purification_amount).
+NOTE: first audit attempt (7fae8e78) died with no verdict — ran the full 828s suite via background-
+poll and premium-opus polling burned the $10 cap before writing; RE-RUN lean (targeted tests, no
+pipe) succeeded → dispatch_audit.sh needs a test-scope param + infrequent polling (CR061 follow-up).
+coder.math freed. Unblocks CR058-CONTENT (lessons 3+5 use sharia_screen/purification_amount). -->
+

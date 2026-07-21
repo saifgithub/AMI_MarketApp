@@ -40,7 +40,7 @@ from this table. CR052.
 | ~~CR054-W1-QUANT~~ | **DONE ✓ (r1)** | noncoder.edu | 12 Quant lessons (QUANT 1-12, 335-346, L12) integrated 680a8f3, corpus→324, P2 hand-verified. **Wave-1 lesson tracks COMPLETE** |
 | ~~CR059~~ (backend) | **DONE ✓ (r1)** | coder.api → auditor.core | islamic_finance/SHARIA + decision_evaluation/EVAL wired (a63d1c5); auditor COMPLETE (927 pass + blind probe). 13-facet taxonomy locked |
 | ~~CR059-MOBILE~~ | **DONE ✓ (r1)** | coder.mobile | `_trackShortLabel` ISLAMIC FINANCE/EVALUATION wired (f188d7b), flutter analyze clean. **CR059 fully DONE** |
-| **CR058-MATH** | **QUEUED** | coder.math → auditor.core | `screening.py` Sharia ratios + purification + guard tests (CR058 §7 — computed, not authored) |
+| ~~CR058-MATH~~ | **DONE ✓ (r1)** | coder.math → auditor.core | `screening.py` (CR046 M13) integrated 21fb8b6; auditor COMPLETE (hand-recompute + 68+22 green). Unblocks CR058-CONTENT |
 | **CR058-CONTENT** | **QUEUED** | noncoder.edu | Sharia M25 (~10 lessons SHARIA 1-10 ids 347+ + glossary cat/terms + Q&A + daily). DEPENDS-ON CR058-MATH + CR059 |
 | **CR053** (impl) | **QUEUED — 3 lanes** | coder.api/mobile + noncoder.edu | `<Lesson code/>` token + reader/gateway deep-links + migrate 279 bare refs. Saiful: do it |
 | **CR061** (proposed) | **QUEUED — quick wins** | architect | verify helper + audit-launch helper + test-timeout wrapper (828s) + roster live_handle fix |
