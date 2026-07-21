@@ -40,5 +40,19 @@ is COMPUTED via CR046 screening.py, correct to the stated dp — a wrong halal n
 
 **Self-test (headless one-shot — corpus test ONLY):** `cd backend && uv run pytest tests/unit/test_lesson_corpus_integrity.py -q` green (~6s, corpus 324→334). NOT the full suite (P7).
 
-ASSIGNED: noncoder.edu round 1
+ASSIGNED: noncoder.edu round 2
 DISPATCH: OPEN
+
+<!-- Round-1 content review (architect, 2026-07-22): SUBSTANCE PASS but BOUNCED for ONE
+non-negotiable gap. Round-1 commit 2b52d04: 10 lessons SHARIA 1-10 (347-356), corpus 324→334,
+codes contiguous, L13/M25, capstone 356 tagged, zero "the AI", zero positional option refs
+(complied). **P2 verified exact** — 349 read full: debt 138000/128000=107.8%, liquidity 4200/128000
+=3.3%, income 900/122000=0.7%, overall fails-on-debt, all recomputed by hand + quizzes match. Sources
+Tier-1/2 (AAOIFI Std 21, DJIM). BOUNCE REASON (round 2): the **"methodology, not a Sharia ruling"**
+load-bearing frame (CR058 §7 — required in EVERY lesson, as firm as "not investment advice") is
+inconsistent — 349 carries NEITHER the Sharia-ruling disclaimer NOR the standard simulation "training
+artifact" line; 353 has zero frame language. Round 2 = frame-only pass: every lesson must carry BOTH
+(a) the simulation "training artifact, not investment advice" line AND (b) "screening methodology, not
+a Sharia ruling — AMI does not issue religious rulings; consult a qualified scholar". Do NOT touch the
+verified P2 numbers, codes, ids, or quizzes. -->
+
