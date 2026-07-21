@@ -24,4 +24,13 @@ so content additions are green without any content lane touching `backend/`. Roo
 `cd backend && uv run pytest tests/unit/test_lesson_corpus_integrity.py -q` green; full suite green.
 
 ASSIGNED: coder.api round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
+
+<!-- Integrated 2026-07-22 by architect: auditor.core VERDICT COMPLETE (da3c3f8) on src fd64a29 —
+927 reproduced at both corpus states, 5 blind probes bit, 071 exemption load-bearing, floor-vs-pin
+judged acceptable, new permanent pin test_cr054_guard_capstone_floor_pin.py added. Unblocks ALL
+Wave 1-3 content lanes. 2 MINOR advisories: (1) floor-bump-per-wave is a backend edit → wave-
+integration checklist item (I bump LESSON_COUNT_FLOOR via a coder.api micro-step at each wave wrap;
+CR044 contiguity covers the lag meanwhile); (2) synthesis-tag contract → add to authoring capstone
+template (folded into W1-ETHIC round 2). -->
+

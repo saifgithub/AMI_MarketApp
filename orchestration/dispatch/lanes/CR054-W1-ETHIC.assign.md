@@ -11,5 +11,13 @@ HOT-FILES: global lesson-id sequence — reserved block ids 293-302 / ETHIC 1-10
 & conflicts), ETHIC 1-10, ids 293-302. First Wave-1 lane — Ethics leads (CFA-first, zero files today,
 no math dependency). Content-review gate, not the Auditor. Self-check with the corpus-integrity test.
 
-ASSIGNED: noncoder.edu round 1
+**Round 2 (2026-07-22):** CR054-GUARD is integrated (guards now content-addition-safe) → the HOLD
+lifts. Commit your 10 already-authored lessons (293-302, untracked in the working tree), run the
+corpus-integrity suite green, go READY_FOR_REVIEW. Architect content pre-review is already PASS
+(see the lane file) — this is the commit+signal step, not a re-author. ALSO fold in auditor MINOR-2:
+add the `synthesis`-tag requirement to the "Module capstone template (v2)" in
+`content/_authoring/lesson_authoring_prompt.md` (a capstone's final quiz is a synthesis question,
+declared via the `synthesis` tag — the corpus guard now enforces it). Small, same commit is fine.
+
+ASSIGNED: noncoder.edu round 2
 DISPATCH: OPEN

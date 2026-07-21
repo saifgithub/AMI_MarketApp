@@ -13,10 +13,10 @@ owns: backend/app/** EXCEPT trading_math/ and the room cluster
 schema_owner: true          # SOLE owner of backend/app/db/models.py + Alembic migrations
 wip_cap: 2
 auditor: auditor.core
-live_handle: 723676c8-faf8-46ef-87c7-3ac1f5867fd5   # last: CR054-W0a (DONE) — `claude --resume <uuid>` to interrogate
+live_handle: d85d44f0-5bdd-4f7e-8e1d-cd3b5fe7f639   # last: CR054-GUARD (DONE, integrated da3c3f8) — `claude --resume <uuid>`
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
-active_lanes: [DEF062]   # CR054-W0a integrated 2026-07-22; 1 free slot
+active_lanes: [DEF062]   # CR054-GUARD integrated 2026-07-22; 1 free slot
 ```
 
 **Hot files:** owns `db/models.py` (schema-owner — others `DEPENDS-ON` its schema lane), and the
