@@ -63,11 +63,17 @@ ra AS (
 # ── DB transport ──────────────────────────────────────────────────────────────
 
 def _psql_argv(local: bool, ssh_host: str) -> list[str]:
+    if local:
+        # No shell in between: pass a clean argv so the field separator is a
+        # bare '|' (splitting a shell string would keep the quotes literally).
+        return ["docker", "exec", "-i", CONTAINER, "psql", "-U", DB_USER,
+                "-d", DB, "-At", "-F", "|", "-q", "-v", "ON_ERROR_STOP=1"]
+    # SSH runs a remote shell, which strips the quotes around the separator.
     exec_cmd = (
         f"docker exec -i {CONTAINER} "
         f"psql -U {DB_USER} -d {DB} -At -F '|' -q -v ON_ERROR_STOP=1"
     )
-    return exec_cmd.split() if local else ["ssh", ssh_host, exec_cmd]
+    return ["ssh", ssh_host, exec_cmd]
 
 
 def query(sql: str, *, local: bool, ssh_host: str) -> list[list[str]]:

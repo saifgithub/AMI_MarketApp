@@ -35,14 +35,25 @@ runs).
 
 **Timezone:** `Asia/Kuala_Lumpur` (matches `users.sh`).
 
-## Cadence + notify (staged)
+## Cadence + automation (shipped)
 
-- **Now:** generator + first real dashboard published as a private claude.ai **Artifact**
-  (updates redeploy to the same URL — ideal for a daily refresh Saiful opens anywhere).
-- **Automation:** the daily refresh + notify has a real infra constraint — generation needs
-  the LAN DB (melehost/Mac), Artifact publish needs Claude. Wired as a follow-up once the
-  report shape is stable; the notify channel is me surfacing the headline (no outbound
-  push/email infra exists — CR043).
+Saiful's call (2026-07-21): **no alerting** — he refreshes/views the HTML on demand — but
+**a daily generation crontab on melehost**, built to grow more reports later.
+
+- **First dashboard** published as a private claude.ai **Artifact** for immediate viewing.
+- **`scripts/analytics/generate_reports.sh`** — the extensible generation shell. A `reports`
+  array (`name | generator | args`) drives it; adding a report = one line + its generator.
+  Writes `~/ami_trade/reports/<name>.html` + `.txt` and a dated `archive/` snapshot (60-day
+  prune). No notify.
+- **melehost host crontab:** `30 23 * * *` (UTC) = **07:30 Asia/Kuala_Lumpur**, appended
+  without disturbing the 5 pre-existing crons. Runs on the host (Python 3.14, `saiful` in the
+  `docker` group → `--local` uses `docker exec ami_postgres psql` directly).
+- **`--local` fix:** the local psql argv is now a clean list (`-F |`), not a shell-split
+  string — the SSH path strips the quotes, a direct `subprocess` argv would not. Only the SSH
+  path was exercised before; the cron uses `--local`, so this mattered.
+- **Viewing:** open `~/ami_trade/reports/daily_usage.html` (scp, or a future CF-Access-gated
+  serve route — deferred; the page carries user emails so it must not be public).
+- **Notify:** none, by choice. No outbound push/email infra exists anyway (CR043).
 
 ## Out of scope
 
