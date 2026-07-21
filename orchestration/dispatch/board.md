@@ -25,21 +25,27 @@ from this table. CR052.
 
 | Item | State | Instance | Notes |
 |---|---|---|---|
-| DEF062 | ASSIGNED r1 | coder.api | validate mandate PATCH — head of safety chain |
-| CR030 | ASSIGNED r1 | coder.api | earnings/dividend fields (coder.api at WIP cap 2) |
-| CR038 | ASSIGNED r1 | coder.room | remove macro/Fed scaffolding at source |
-| CR048 | ASSIGNED r1 | coder.store | Play internal track + fastlane (first upload Saiful-gated) |
-| CR049 | ASSIGNED r1 | coder.web | website support + Concierge (keys/deploy Saiful-gated) |
-| CR050 | ASSIGNED r1 | coder.mobile | login UX (mobile half; Google-on Saiful config) |
+| **CR054-W0a** | **ASSIGNED r1 · WORKER LIVE** | coder.api | **BOK track-enum wiring (dogfood — first real worker).** Root of the Wave-0 expansion |
+| DEF062 | ASSIGNED r1 (idle) | coder.api | validate mandate PATCH — head of safety chain; no worker yet |
+| CR038 | ASSIGNED r1 (seed) | coder.room | remove macro/Fed scaffolding at source |
+| CR048 | ASSIGNED r1 (seed) | coder.store | Play internal track + fastlane (first upload Saiful-gated) |
+| CR049 | ASSIGNED r1 (seed) | coder.web | website support + Concierge (keys/deploy Saiful-gated) |
+| CR050 | ASSIGNED r1 (seed) | coder.mobile | login UX (mobile half; Google-on Saiful config) |
+| CR054-W0b | UNASSIGNED (queued) | coder.mobile | new-track short labels — DEPENDS-ON CR054-W0a |
+| CR054-W0c | UNASSIGNED (ready) | noncoder.edu | author-prompt v2 — launch after W0a validates the mechanism |
+| CR054-W0d | UNASSIGNED (ready) | coder.math | CR046 bond/option/portfolio math entries — launch after W0a |
+| CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |
 | CR026 | UNASSIGNED (queued) | coder.api | sector enforcement — DEPENDS-ON DEF061 (safety_floor hot) |
 | CR020 | UNASSIGNED (queued) | coder.api | concierge full-context — head of CR020→021→022 |
 
-**Idle/available:** `coder.math` (CR046 standing ledger), `noncoder.edu` (content review on demand).
+**Idle/available:** `noncoder.edu` (W0c ready), `coder.math` (W0d ready).
 **Intake awaiting triage:** `intake/gtm-001.md` (Share-a-Premium impl CR proposal); `errors-001` is a
 format template.
 
 ## WIP snapshot
 
-- `coder.api`: 2 active (DEF062, CR030) — **at cap**; DEF061/CR026/CR020 queued until a slot frees.
-- All other coders: 1 active each. Auditor queue: 0 IN_AUDIT (nothing submitted yet).
+- `coder.api`: 2 active (**CR054-W0a — worker live**, DEF062 idle) — **at cap**; CR030/DEF061/CR026/
+  CR020 queued. CR030 re-queued behind the CR054 dogfood to keep the cap honest.
+- All other coders: 1 seed lane each (no workers). Auditor queue: 0 IN_AUDIT (W0a not yet submitted).
+- **Live workers:** `coder.api` on CR054-W0a — `live_handle` in `roster/coder.api.md`.

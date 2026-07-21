@@ -13,10 +13,10 @@ owns: backend/app/** EXCEPT trading_math/ and the room cluster
 schema_owner: true          # SOLE owner of backend/app/db/models.py + Alembic migrations
 wip_cap: 2
 auditor: auditor.core
-live_handle:                # set when spawned
+live_handle: 723676c8-faf8-46ef-87c7-3ac1f5867fd5   # CR054-W0a headless worker — `claude --resume <uuid>` to interrogate
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
-active_lanes: []
+active_lanes: [CR054-W0a, DEF062]
 ```
 
 **Hot files:** owns `db/models.py` (schema-owner — others `DEPENDS-ON` its schema lane), and the
