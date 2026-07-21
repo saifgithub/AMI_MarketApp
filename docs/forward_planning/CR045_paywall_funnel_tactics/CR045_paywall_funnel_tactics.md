@@ -1,6 +1,6 @@
 # CR045 — Paywall funnel tactic library
 
-**Status:** proposed
+**Status:** in_progress — Plan 1 shipped (CR047), Plan 2 params locked, 8 candidates unpicked
 **Filed:** 2026-07-20 (AT:R61)
 **Source:** Saiful — "We need a few plans to be the paywall funnel to lead users to pay. I have
 just created the first one called 'The Winzip'." Named-by-tactic convention is his: each plan
@@ -43,7 +43,7 @@ Two-sided by construction (referrer is rewarded twice, at signup and again at co
 strictly better acquisition-loop shape than a single flat reward, since it pays out at both
 funnel moments instead of just one.
 
-### Claude's recommended parameters (2026-07-20, AT:R61) — proposed, not yet locked
+### Parameters — **locked by Saiful, 2026-07-21** (recommended 2026-07-20, AT:R61)
 
 | Decision | Recommendation | Why |
 |---|---|---|
@@ -65,12 +65,11 @@ model for keeping the friend-side reward intact).
 
 **How this relates to the already-locked Referral offer** (`offers.md` §5 — *"Refer 3 friends
 who sign up + complete onboarding → 1 free month Trader; friend gets 30 bonus credits"*):
-**Claude's recommendation: retire §5, let "Share a Premium" replace it.** §5 pays a full free
-month for 3 mere *signups* — no purchase required from any of them, worse-aligned than a
-mechanic whose big reward (23 of 30 days) only fires on an actual paying conversion. Same total
-ceiling per fully-successful referral (30 days either way) — strictly better incentive
-alignment. **Needs Saiful's explicit sign-off** — `offers.md` is a locked launch offer and
-hasn't been touched; this is a recommendation, not a change.
+**Decided 2026-07-21 — retired.** §5 paid a full free month for 3 mere *signups* — no purchase
+required from any of them, worse-aligned than a mechanic whose big reward (23 of 30 days) only
+fires on an actual paying conversion. Same total ceiling per fully-successful referral (30 days
+either way) — strictly better incentive alignment. `offers.md` §5 now marked superseded by this
+plan; the referral-plumbing note below still applies to whichever ships first.
 
 **Build note, not a blocker:** no referral infrastructure exists yet anywhere in the codebase —
 no share link, no referral code, no attribution tracking (`offers.md` notes the locked offer
@@ -98,9 +97,9 @@ and names them.
 
 ## Out of scope
 
-- Building Plan 1 ("The Winzip") — tracked elsewhere, not respecced here.
-- Building Plan 2 ("Share a Premium") or resolving its open questions (exact days, tier,
-  eligibility, relationship to `offers.md` §5) — documented, not decided or built.
+- Building Plan 1 ("The Winzip") — shipped as CR047, confirmed live 2026-07-21.
+- Building Plan 2 ("Share a Premium") — params locked 2026-07-21 (see above), no implementation
+  CR filed yet. Stage 1 is buildable now; stage 2 waits on M1 (RevenueCat).
 - Choosing which candidate plans actually ship — Saiful's call (pricing/promotional-campaign
   decisions are Saiful-only per `10_delivery/you_do_i_do.md`).
 - Anything that gates the free-tier-sanctity axes (mandate complexity, halal screening,

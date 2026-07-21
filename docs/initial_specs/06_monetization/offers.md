@@ -54,7 +54,16 @@ These 5 offers ship at v1.0 public launch. Three more (Student, Reactivation, Bo
 | **Mechanic** | Banner on splash + Wallet screen; one-tap to upgrade |
 | **Why** | Drives commitment + cash up front; first 12 months of LLM cost is the highest-risk period for us |
 
-### 5. Referral
+### 5. Referral — **retired 2026-07-21**
+
+**Superseded by "Share a Premium"** ([CR045](../../forward_planning/CR045_paywall_funnel_tactics/CR045_paywall_funnel_tactics.md) Plan 2, params locked 2026-07-21): a two-stage
+mechanic (signup → 7 days free Trader; friend's paid conversion → +23 days, 30 total) open to
+every user including Floor Pass, not just paying users. Same 30-day ceiling per fully-successful
+referral, better-aligned payout (the big reward requires an actual paying conversion, not a bare
+signup). Kept below for the historical record; do not build against this version.
+
+<details>
+<summary>Original spec (retired)</summary>
 
 | Aspect | Detail |
 |---|---|
@@ -63,6 +72,8 @@ These 5 offers ship at v1.0 public launch. Three more (Student, Reactivation, Bo
 | **Friend reward** | 30 bonus credits (worth $3) on their account, regardless of plan |
 | **Mechanic** | Unique share link from user profile; tracked via attribution (AppsFlyer Phase 2) |
 | **Why** | Two-sided, accretive. Lowest-cost user acquisition channel. |
+
+</details>
 
 ## Phase 2 offers
 
