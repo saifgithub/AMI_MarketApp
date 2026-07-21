@@ -477,7 +477,7 @@ section { padding: 5rem 0; }
   overflow: hidden;
   display: flex; align-items: center; justify-content: center;
 }
-.iphone-screen img { width: 100%; height: 100%; object-fit: cover; }
+.iphone-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
 .screen-placeholder {
   width: 100%; height: 100%;
   background: linear-gradient(160deg, rgba(59,130,246,0.15), rgba(139,92,246,0.1));
