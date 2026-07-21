@@ -19,15 +19,7 @@ locked free-tier commitments in
 
 ## Plan 1 — "The Winzip"
 
-**Implementation CR: [CR047](../CR047_winzip_funnel/CR047_winzip_funnel.md)** (filed AT:R63). Locked mechanics: Floor-Pass-only, behind a `GTM_FUNNEL` flag — on credit exhaustion, reset +1 Room the instant the 402 is sent but enforce a hard 5-min cooldown before the next convene (unlimited Rooms, one per cooldown); mobile countdown card + AMI TTS at 0. See CR047 for full scope.
-
-**In progress elsewhere — not touched by this session, not re-specced here.** Per Saiful:
-*"the code is already cooking."* Understood shape from his description: user is told their
-[quota] is exhausted, informed it'll reset "in a few minutes," and it genuinely does — no false
-promise. Mechanic category: named after WinZip's famous shareware nag — creates a felt limit
-without ever actually losing the user. Exact gate (a new cooldown/pacing throttle vs. a
-first-hit softener on the real credit wall) and timing are being decided/built in that other
-thread; this doc doesn't guess further.
+**Implementation CR: [CR047](../CR047_winzip_funnel/CR047_winzip_funnel.md)** (filed AT:R63, shipped, audited COMPLETE, confirmed live in production 2026-07-21). Locked mechanics: Floor-Pass-only, behind a `GTM_FUNNEL` flag — on credit exhaustion, reset +1 Room the instant the 402 is sent but enforce a hard 5-min cooldown before the next convene (unlimited Rooms, one per cooldown); mobile countdown card + AMI TTS at 0. Mechanic category: named after WinZip's famous shareware nag — creates a felt limit without ever actually losing the user. See CR047 for full scope.
 
 ## Plan 2 — "Share a Premium" (working title, Saiful's — not yet named)
 
