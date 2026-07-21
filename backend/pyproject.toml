@@ -29,7 +29,12 @@ dependencies = [
     # session, exponential backoff). Pulls pandas/numpy (~100MB of
     # image bloat) — fine for melehost; will matter at Beta cold-start
     # on Cloud Run where we'll likely cut over to a paid provider.
-    "yfinance>=0.2.50",
+    # Floor is 1.0, NOT 0.2.x: CR046 M04's dividend_yield_pct is a
+    # pass-through round that is only correct on the 1.x convention where
+    # info['dividendYield'] is already a percent. 0.2.x returned a decimal
+    # fraction → a silent 100× under-report on any rebuild that resolved an
+    # older wheel. (Installed: Mac 1.3.0, Alpha 1.5.1 — both satisfy this.)
+    "yfinance>=1.0",
     # TradingAgents — installed from local mount for dev; published version in prod
     # "tradingagents @ file:///Volumes/Extreme Pro/TradingAgent",
 ]

@@ -75,7 +75,7 @@ from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
-from app.trading_math.trade import risk_reward, trade_asymmetry
+from app.trading_math.trade import risk_reward, rr_is_coherent, trade_asymmetry
 from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
 
 
@@ -406,7 +406,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     profile["bear_risk"] = (
         f"multiple compression if growth decelerates — {pe_val:.0f}x is sensitive"
     )
-    # DEF075: the inline `int(pe/(pe+10)*100-50)` was simply wrong — it printed
+    # DEF077: the inline `int(pe/(pe+10)*100-50)` was simply wrong — it printed
     # ~16% for a real 50% drop. A delta-point compression of a P/E is a delta/pe
     # drawdown (price ∝ multiple, earnings held). Computed in trading_math (M07).
     downside = multiple_compression_downside(pe_val, 10)
@@ -556,6 +556,53 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         time_horizon_days=horizon_days,
         reason=reason,
     )
+
+
+# A reward-to-risk ratio the PM narrated in prose: "R:R = 3:1", "risk/reward of
+# 2.5:1", "a 3:1 risk-to-reward", "R/R 4x". Two orderings — keyword then N:1, or
+# N:1 then keyword — with a bounded gap so a distant "20:1 earnings multiple"
+# doesn't match. Precision-biased: a missed ratio just means no signal (harmless),
+# a spurious one would be telemetry noise.
+_PM_RR_KEYWORD = r"(?:r[:/\s-]?r|risk[\s/-]*(?:to[\s-]*)?reward|reward[\s/-]*(?:to[\s-]*)?risk)"
+_PM_RR_RATIO = r"(\d+(?:\.\d+)?)\s*(?::\s*1|\s*to\s*1|x)\b"
+_PM_STATED_RR_RE = re.compile(
+    rf"(?:{_PM_RR_KEYWORD}[^0-9]{{0,20}}?{_PM_RR_RATIO})|(?:{_PM_RR_RATIO}[^0-9]{{0,6}}?{_PM_RR_KEYWORD})",
+    re.IGNORECASE,
+)
+
+
+def _extract_stated_rr(text: str | None) -> float | None:
+    """Pull the reward multiple (the R in "R:R = R:1") the PM narrated in prose,
+    or None when it stated no ratio. Best-effort telemetry input — never a control."""
+    if not text:
+        return None
+    m = _PM_STATED_RR_RE.search(text)
+    if m is None:
+        return None
+    try:
+        return float(m.group(1) or m.group(2))
+    except (TypeError, ValueError):
+        return None
+
+
+def _pm_rr_coherence_signal(
+    pm_text: str | None,
+    entry: float | None,
+    stop: float | None,
+    target: float | None,
+) -> dict[str, float] | None:
+    """Telemetry payload for a PM APPROVE whose *narrated* R:R contradicts the R:R
+    its own entry/stop/target imply (CR046 M06 `rr_is_coherent`). Returns
+    {stated_rr, implied_rr} when the PM stated a ratio the levels don't support,
+    else None. Flag only — the safety floor owns vetoes; this never changes the
+    verdict. `implied_rr` is -1.0 when the levels imply no valid ratio (a stated
+    ratio on a degenerate setup is itself incoherent).
+    """
+    stated = _extract_stated_rr(pm_text)
+    if stated is None or rr_is_coherent(entry, stop, target, stated):
+        return None
+    implied = risk_reward(entry, stop, target)
+    return {"stated_rr": stated, "implied_rr": implied if implied is not None else -1.0}
 
 
 def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
@@ -1425,6 +1472,16 @@ class RoomRunner:
                                     quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
                                     limit_price=parsed.entry,
                                 )
+                                # CR046 M06: flag (never veto) an APPROVE whose narrated
+                                # R:R contradicts its own levels. The safety floor owns
+                                # vetoes; this is structural telemetry only.
+                                _rr_sig = _pm_rr_coherence_signal(
+                                    pm_text, parsed.entry, parsed.stop, parsed.target
+                                )
+                                if _rr_sig is not None:
+                                    logger.warning(
+                                        "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
+                                    )
                                 verdict = enforce_safety_floor(
                                     llm_verdict=parsed, proposed=proposed,
                                     portfolio_value=ctx.portfolio_value,

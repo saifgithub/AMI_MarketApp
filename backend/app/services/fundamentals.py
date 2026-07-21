@@ -51,6 +51,39 @@ _TICKER_BLOCKLIST: frozenset[str] = frozenset({
 
 _TICKER_RE = re.compile(r"\$?([A-Z]{1,5})\b")
 
+_yf_convention_checked = False
+
+
+def _yfinance_major(version: str | None) -> int:
+    """Major version number from a yfinance `__version__` string, or -1 if it
+    can't be parsed. Isolated so the convention gate below is a pure, testable
+    decision rather than string-fiddling inline."""
+    try:
+        return int((version or "").split(".")[0])
+    except (ValueError, IndexError):
+        return -1
+
+
+def _warn_if_yfinance_convention_stale(yf_module: Any) -> None:
+    """Degrade loudly (CR040) if the installed yfinance predates the 1.x
+    dividend-yield convention CR046 M04 depends on. On 0.2.x, `dividendYield`
+    is a decimal fraction, so `dividend_yield_pct`'s pass-through round would
+    under-report every payer's yield ~100× — silently. The pin is `>=1.0`; this
+    shouts once per process if a build somehow resolves an older major, rather
+    than letting a wrong-but-plausible yield reach the analyst."""
+    global _yf_convention_checked
+    if _yf_convention_checked:
+        return
+    _yf_convention_checked = True
+    installed = getattr(yf_module, "__version__", "") or ""
+    if _yfinance_major(installed) < 1:
+        logger.error(
+            "yfinance_below_dividend_convention_floor",
+            installed=installed,
+            required=">=1.0",
+            impact="dividendYield is a fraction on <1.0 → dividend yield ~100x too low",
+        )
+
 
 def extract_tickers(text: str) -> list[str]:
     """Pull plausible US-equity tickers from free-form text.
@@ -101,6 +134,7 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     """
     try:
         import yfinance as yf
+        _warn_if_yfinance_convention_stale(yf)
         info = yf.Ticker(ticker.upper()).info
     except Exception as exc:
         logger.warn("yfinance_fundamentals_error", ticker=ticker, error=str(exc)[:200])

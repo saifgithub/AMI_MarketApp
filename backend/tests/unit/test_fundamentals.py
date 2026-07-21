@@ -339,3 +339,67 @@ def test_build_block_includes_valuation_sector_dividend_and_analyst_lines(monkey
     assert "strong buy" in block
     assert "$315.57" in block
     assert "not company guidance" in block
+
+
+# ── CR046 M04 yfinance convention floor (FIX 3) ──────────────────────────
+
+
+class _CapLogger:
+    """Minimal stand-in that records error() calls, so the degrade-loudly path
+    is asserted without exercising structlog itself."""
+
+    def __init__(self) -> None:
+        self.errors: list[tuple[str, dict]] = []
+
+    def error(self, event: str, **kw) -> None:
+        self.errors.append((event, kw))
+
+
+def test_yfinance_major_parses_the_convention_floor():
+    """CR046 M04 pin guard: dividend_yield_pct is only correct on yfinance major
+    >= 1. 0.2.x (fraction convention) must read as below the floor; the two
+    versions actually installed today (Mac 1.3.0, Alpha 1.5.1) as above it."""
+    assert fundamentals._yfinance_major("0.2.50") == 0
+    assert fundamentals._yfinance_major("1.3.0") == 1
+    assert fundamentals._yfinance_major("1.5.1") == 1
+    assert fundamentals._yfinance_major("") == -1
+    assert fundamentals._yfinance_major(None) == -1
+    assert fundamentals._yfinance_major("garbage") == -1
+    # the gate that decides whether to shout
+    assert (fundamentals._yfinance_major("0.2.50") < 1) is True
+    assert (fundamentals._yfinance_major("1.5.1") < 1) is False
+
+
+def test_stale_yfinance_shouts_loudly_once(monkeypatch):
+    """degrade-loudly (CR040): a <1.0 yfinance logs an error, because on 0.2.x
+    dividendYield is a fraction and every payer's yield would be ~100x too low —
+    silently. The check fires once per process, not per fetch."""
+    cap = _CapLogger()
+    monkeypatch.setattr(fundamentals, "logger", cap)
+    monkeypatch.setattr(fundamentals, "_yf_convention_checked", False)
+
+    class _Stale:
+        __version__ = "0.2.50"
+
+    class _Ok:
+        __version__ = "1.5.1"
+
+    fundamentals._warn_if_yfinance_convention_stale(_Stale())
+    assert [e for e, _ in cap.errors] == ["yfinance_below_dividend_convention_floor"]
+    assert cap.errors[0][1]["installed"] == "0.2.50"
+    # once-guard: a later call (even a fine version) does not re-log.
+    fundamentals._warn_if_yfinance_convention_stale(_Ok())
+    assert len(cap.errors) == 1
+
+
+def test_current_yfinance_convention_is_silent(monkeypatch):
+    """A 1.x install (today's reality) must NOT shout — no false alarm."""
+    cap = _CapLogger()
+    monkeypatch.setattr(fundamentals, "logger", cap)
+    monkeypatch.setattr(fundamentals, "_yf_convention_checked", False)
+
+    class _Ok:
+        __version__ = "1.5.1"
+
+    fundamentals._warn_if_yfinance_convention_stale(_Ok())
+    assert cap.errors == []

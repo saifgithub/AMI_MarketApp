@@ -633,6 +633,38 @@ def test_bear_quant_downside_uses_library_not_the_old_broken_formula():
     assert f"~{old}% downside" not in profile["bear_quant"] or round(expected) == old
 
 
+def test_pm_rr_incoherent_narration_produces_a_signal():
+    """CR046 M06 (rr_is_coherent wired): a PM APPROVE whose prose narrates an R:R
+    its own entry/stop/target don't support is flagged — telemetry only, no veto.
+    Levels 100/94/113 imply ~2.2:1; a narrated 3:1 contradicts them."""
+    from app.services.room_runner import _pm_rr_coherence_signal
+
+    sig = _pm_rr_coherence_signal("Approve — R:R = 3:1 clears our bar.", 100, 94, 113)
+    assert sig is not None
+    assert sig["stated_rr"] == 3.0
+    assert sig["implied_rr"] == 2.2  # risk_reward(100, 94, 113)
+
+
+def test_pm_rr_signal_flags_a_stated_ratio_on_degenerate_levels():
+    """A stated ratio on levels that imply no valid R:R (target ≤ entry) is itself
+    incoherent — flagged with implied_rr = -1.0, never a silent pass."""
+    from app.services.room_runner import _pm_rr_coherence_signal
+
+    sig = _pm_rr_coherence_signal("risk/reward of 3:1", 100, 94, 90)
+    assert sig == {"stated_rr": 3.0, "implied_rr": -1.0}
+
+
+def test_pm_rr_coherent_or_silent_narration_produces_no_signal():
+    """No signal when the narrated R:R matches the levels, or when the PM stated
+    no ratio at all — the flag fires only on a genuine contradiction."""
+    from app.services.room_runner import _pm_rr_coherence_signal
+
+    assert _pm_rr_coherence_signal("R:R roughly 2:1 here.", 100, 94, 113) is None
+    assert _pm_rr_coherence_signal("Synthesis defended; sizing to 3%.", 100, 94, 113) is None
+    assert _pm_rr_coherence_signal("trading at 30x earnings", 100, 94, 113) is None
+    assert _pm_rr_coherence_signal(None, 100, 94, 113) is None
+
+
 def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
     """A yfinance failure (network error, unknown ticker) must not break
     the runner — it falls through to the deterministic synthetic profile."""
