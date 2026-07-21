@@ -20,4 +20,11 @@ add the `synthesis`-tag requirement to the "Module capstone template (v2)" in
 declared via the `synthesis` tag — the corpus guard now enforces it). Small, same commit is fine.
 
 ASSIGNED: noncoder.edu round 2
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 2)
+
+<!-- Accepted 2026-07-22 by architect: content review PASS (pre-reviewed on disk; commit 32eac8a
+verified = exactly the 10 pre-reviewed lessons + the 2-line synthesis-tag template edit, zero
+forbidden paths). Corpus 270→280. First Wave-1 content track shipped end-to-end, AND the first
+launch through the CR057 helper — ran at economy tier (haiku/low, $2 cap) instead of Fable-5/xhigh:
+the cost fix proven live. noncoder.edu slot freed. -->
+
