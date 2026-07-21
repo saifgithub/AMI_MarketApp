@@ -1,0 +1,68 @@
+---
+id: "351_purification_tazkiyah"
+title: "Purification (tazkiyah)"
+duration_min: 5
+level: 13
+module: 25
+difficulty: 3
+track: "islamic_finance"
+code: "SHARIA 5"
+topic: "purification"
+prerequisites: ["347_the_four_prohibitions", "349_the_three_financial_ratio_screens"]
+tags: ["islamic-finance", "purification", "tazkiyah", "dividend", "aaoifi"]
+sources: ["AAOIFI — Shariah Standards on purification of impermissible income", "Usmani — An Introduction to Islamic Finance (2002)"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Purification (tazkiyah)
+
+Even a stock that clears both the business-activity screen and the three financial-ratio screens can carry a small sliver of impermissible income inside it — interest earned on the company's own cash holdings, for instance. *Tazkiyah* (purification) is the practice of calculating that sliver's share of a dividend received and donating that exact amount away, rather than keeping it. It is a per-dividend calculation, computed from the company's own disclosed non-compliant-income ratio, never a hand-waved estimate. By the end of this lesson you'll be able to compute a purification amount from real inputs and explain why it applies even to a stock that already passed every screen.
+
+## Example
+
+Take a hypothetical balance sheet shaped like a large, screen-passing tech company — the kind that clears the business and ratio screens comfortably but still holds a cash pile earning some interest. Say its non-compliant (interest) income is **$700M** against total income of **$100,000M**, and you received a dividend of **$960.00** from your holding this quarter. Run this through AMI's `purification_amount` function: (700 / 100,000) × 960.00 = **$6.72 exactly**. That $6.72 — 0.7% of the dividend, matching the company's own impermissible-income share — is the amount purified away, typically donated to charity without expectation of tax benefit or spiritual credit for the donor, since it was never legitimately theirs to keep in the first place. The remaining $953.28 of the dividend is retained as ordinary income. Note the ratio driving this (0.7%, from non-compliant income over total income) is a different figure from the *income ratio* in lesson 3's screen (which compares non-compliant income to total *revenue*, not total income) — related concepts, distinct denominators.
+
+## The trap
+
+Beginners assume that once a stock passes the Sharia screen, its dividends are automatically "clean" and need no further step. That's the exact gap purification exists to close: passing the screen (lesson 3's ratio caps) tells you the company's impermissible income is *small enough to tolerate holding the stock at all* — it does not mean that small sliver of impermissible income disappears. The correct mental model: screening decides whether you may hold the stock; purification decides what fraction of what you're paid from it, you must not keep. Skipping purification because "it already passed the screen" conflates two separate steps that solve two separate problems.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company's non-compliant income is $700M against total income of $100,000M, and you received a $960.00 dividend. What is the exact purification amount, and what should happen to it?"
+  options={[
+    "$6.72 — computed as (700/100,000) × 960.00 — typically donated to charity rather than kept, since it represents the impermissible-income share of the payout",
+    "$953.28 — the majority of the dividend, since most of a large company's income is presumed impermissible",
+    "$0, since the company already passed the financial-ratio screen in an earlier lesson",
+    "$700.00 — the full non-compliant income figure, regardless of the dividend actually received"
+  ]}
+  answer={0}
+  explanation="(700/100,000) × 960.00 = 6.72 exactly, computed via AMI's screening function — that dollar amount is the impermissible-income share of this specific dividend and is typically donated away rather than retained. $953.28 is the amount correctly retained, not purified; passing the financial-ratio screen (lesson 3) makes the stock holdable at all, it does not zero out the small impermissible-income sliver requiring purification; and $700M is the company-wide income figure, not the amount owed on a single shareholder's dividend."
+/>
+
+<Quiz
+  question="Why does a stock that already passed the business-activity and financial-ratio screens still require a purification calculation on its dividends?"
+  options={[
+    "It doesn't — purification only applies to stocks that failed the screen",
+    "Because purification uses a different, unrelated ratio that has nothing to do with the earlier screen",
+    "Because passing the ratio screen means the impermissible-income share is small enough to tolerate holding the stock, not that the impermissible income has become zero — the two steps solve different problems",
+    "Purification is a legal requirement enforced by exchange regulators, unrelated to Sharia compliance"
+  ]}
+  answer={2}
+  explanation="This is the core distinction of the lesson: the ratio screen (lesson 3) sets a tolerance threshold for holding the stock at all; purification then removes the specific dollar sliver of impermissible income actually paid to the shareholder, since a small remaining fraction is exactly what the ratio cap tolerated rather than eliminated. Purification applies precisely to screen-passing stocks (a screen-failing stock generally shouldn't be held at all, making purification moot), it uses the same non-compliant-income concept from the screen (applied to total income and the actual dividend rather than total revenue), and it is a Sharia-compliance practice, not an exchange regulatory requirement."
+/>
+
+## Try it
+
+Open a real holding's dividend history in the app and, in the Fundamentals Analyst chat, ask AMI to walk through how a purification amount would be computed on that dividend if the company's non-compliant-income figure were disclosed. Remember: AMI's training output is a practice artifact, not a religious ruling or investment advice.
+
+## Takeaway
+
+A screen-passing stock can still owe purification on its dividends — compute the impermissible-income share exactly, and treat it as never legitimately yours to keep.
+
+*Where this comes from: AAOIFI's Shariah Standards on purification of impermissible income; Usmani's An Introduction to Islamic Finance (2002).*

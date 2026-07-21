@@ -1,0 +1,68 @@
+---
+id: "347_the_four_prohibitions"
+title: "The four prohibitions"
+duration_min: 5
+level: 13
+module: 25
+difficulty: 2
+track: "islamic_finance"
+code: "SHARIA 1"
+topic: "four_prohibitions"
+prerequisites: []
+tags: ["islamic-finance", "riba", "gharar", "maysir", "risk-sharing", "foundations"]
+sources: ["AAOIFI — Shariah Standards, general principles on riba/gharar/maysir", "Usmani — An Introduction to Islamic Finance (2002)", "El-Gamal — Islamic Finance: Law, Economics, and Practice (2006)"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# The four prohibitions
+
+Islamic finance screens what a business does and how it earns money against four prohibitions: *riba* (interest), *gharar* (excessive uncertainty in a contract), *maysir* (gambling), and dealing in a *haram* (forbidden) core activity. Underneath all four sits one organizing principle — Islamic finance prefers **risk-sharing over risk-transfer**: a lender who charges guaranteed interest regardless of outcome has transferred all the venture's risk onto the borrower, while a partner who shares in the actual profit or loss has shared the risk of the venture itself. By the end of this lesson you'll be able to name each prohibition and explain the risk-sharing principle that ties them together — this is AMI teaching the published screening methodology, not issuing a religious ruling.
+
+## Example
+
+Compare two ways to fund the same $10M factory expansion. A conventional bank loan charges a fixed 7% annual interest regardless of whether the factory turns a profit — the lender is owed $700,000/year even in a year the borrower loses money. That guaranteed, outcome-independent return is *riba*. A *musharakah* (partnership) structure instead has the financier take, say, 30% of the factory's actual profit — if the factory earns $2M that year, the financier receives $600,000; if the factory loses money, the financier's return falls too. The dollar amounts can land close in a good year, but the *legal and risk structure* is opposite: one is a fixed claim regardless of outcome, the other is a shared claim on the outcome. *Gharar* shows up differently — a contract to sell "the fish I catch next month, price and quantity unknown" is void for excessive uncertainty, while a forward sale of "500kg of palm oil, delivered March, at $X/tonne" specifies enough that both sides know what they're agreeing to. *Maysir* is the clean case: a bet on Bursa Malaysia's KLCI closing above 1,600 next Friday, win-or-lose-nothing-in-between, is a wager, not an investment.
+
+## The trap
+
+Beginners assume Islamic finance is "no interest" and stop there, missing that *gharar* and *maysir* independently disqualify plenty of instruments that charge no interest at all. A commodity futures contract with genuinely undefined terms can fail on *gharar* even though nobody is charging riba. A lottery-style structured product can fail on *maysir* even though it's marketed as an "investment." The correct mental model: riba, gharar, maysir, and haram business activity are four *independent* filters, and a structure has to clear all four, not just the interest one. Screening only for "does it pay interest?" is exactly the shortcut that lets a genuinely gharar-heavy or maysir-heavy product slip through looking clean.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A financier takes 30% of a factory's actual annual profit instead of a fixed 7% loan rate. What principle does this restructuring illustrate?"
+  options={[
+    "Risk-sharing over risk-transfer — the financier's return now moves with the venture's actual outcome instead of being guaranteed regardless of it",
+    "It illustrates gharar, since the financier's exact dollar return is unknown in advance",
+    "It is functionally identical to the loan and changes nothing about risk",
+    "It illustrates maysir, since the outcome depends on the factory's performance"
+  ]}
+  answer={0}
+  explanation="The 7% loan is owed regardless of the factory's outcome — risk sits entirely with the borrower. The 30%-of-profit structure ties the financier's return to the venture's actual result, sharing the risk instead of transferring it away. An unknown final dollar figure that is nonetheless tied to a clearly specified, real economic outcome is not the kind of uncertainty gharar targets, and there is no win-or-lose wager here — the factory's profit is a real business outcome, not a bet."
+/>
+
+<Quiz
+  question="A structured product markets itself as an 'investment' but pays out purely on whether the KLCI closes above 1,600 on a specific date, with no share in any underlying business's profit or loss. Which prohibition does this fail on, independent of whether it charges any interest?"
+  options={[
+    "Riba, because all financial products default to being interest-bearing unless proven otherwise",
+    "Maysir — it is a win-or-lose wager on a price level, with no link to real economic activity or shared risk in a venture",
+    "It fails no prohibition, since it charges no interest",
+    "Gharar, because the KLCI's closing level cannot be known in advance"
+  ]}
+  answer={1}
+  explanation="This is a clean maysir case: a binary bet on a price level with no underlying business risk being shared is gambling in economic substance, regardless of whether interest is involved. Nothing here charges guaranteed interest, so it is not a riba case, and the KLCI's future level being unknown is normal market uncertainty, not the kind of contractual ambiguity gharar addresses — the trap this lesson names is stopping at 'no interest charged, therefore clean.'"
+/>
+
+## Try it
+
+Open the Fundamentals Analyst chat and ask: "Explain riba, gharar, and maysir using a real trade structure, not a textbook definition." Compare AMI's training explanation against the factory-financing example above.
+
+## Takeaway
+
+Four independent filters — riba, gharar, maysir, and haram business activity — all have to clear, and the principle underneath all four is risk-sharing over risk-transfer.
+
+*Where this comes from: AAOIFI Shariah Standards' general treatment of riba/gharar/maysir; Usmani's An Introduction to Islamic Finance (2002).*

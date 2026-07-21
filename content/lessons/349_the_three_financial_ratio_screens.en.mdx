@@ -1,0 +1,72 @@
+---
+id: "349_the_three_financial_ratio_screens"
+title: "The three financial-ratio screens"
+duration_min: 6
+level: 13
+module: 25
+difficulty: 3
+track: "islamic_finance"
+code: "SHARIA 3"
+topic: "financial_ratio_screens"
+prerequisites: ["348_the_business_activity_screen"]
+tags: ["islamic-finance", "financial-ratios", "debt-ratio", "liquidity-ratio", "income-ratio", "aaoifi"]
+sources: ["AAOIFI — Shariah Standard No. 21, financial ratio screening thresholds", "Dow Jones Islamic Market Index Methodology — 33%/33%/5% ratio criteria"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# The three financial-ratio screens
+
+A company that clears the business-activity screen still has to clear three quantitative ratios, each checked against a cap under the AAOIFI-style methodology: interest-bearing debt as a percent of market cap (cap 33%), cash plus interest-bearing securities as a percent of market cap (cap 33%), and non-compliant (interest) income as a percent of total revenue (cap 5%). All three must pass — failing any one fails the whole screen. AMI computes these three ratios exactly, via the same screening logic that runs behind the halal Mandate flag, never by hand. By the end of this lesson you'll be able to read a real balance sheet through all three ratios and know why a company can pass the business screen and still fail here.
+
+## Example
+
+Take a hypothetical balance sheet built like a heavily-levered real-economy company — think of the debt load a legacy telecom carrier such as **AT&T (T)** has historically carried: interest-bearing debt of **$138,000M**, market cap of **$128,000M**, cash plus interest-bearing securities of **$4,200M**, non-compliant (interest) income of **$900M**, and total revenue of **$122,000M**. Run these through AMI's screening function (`sharia_screen`) and the exact output is: **debt ratio 107.8%** (cap 33% — **fails**), **liquidity ratio 3.3%** (cap 33% — **passes**), **income ratio 0.7%** (cap 5% — **passes**). Overall: **fails**, on the debt ratio alone, even though the other two ratios are comfortably clean. This is the realistic shape of a real-economy-business failure — not a casino, not a brewery, just ordinary telecom-scale leverage that happens to exceed a third of market cap. Compare that to the capstone lesson later in this module, where a lightly-levered tech balance sheet clears all three comfortably.
+
+## The trap
+
+Beginners assume that once a company clears the business-activity screen (lesson 2), it's "basically halal" — treating the ratio screen as a formality. The AT&T-shaped example above shows why that's wrong: a telecom carrier has an entirely permissible core business and still fails outright on leverage alone. The correct mental model: the ratio screen is not a rubber stamp on companies that already passed the qualitative check — it independently disqualifies genuinely permissible businesses that have simply borrowed too much relative to their market value. Debt level, not business type, is the more common reason an otherwise-ordinary company fails the overall screen.
+
+## The steelman
+
+A skeptic might argue: "A 33% debt-to-market-cap cap is arbitrary — why not 25% or 40%? Market cap itself swings daily on sentiment, so a stock can flip compliant-to-non-compliant on a price move alone, with the company's actual balance sheet unchanged." That's a fair critique, and it's exactly why lesson 4 covers standards disagreement — AAOIFI, Bursa SAC, and the major index providers don't all use identical thresholds or the identical denominator (some use trailing 12-month average market cap instead of a single-day snapshot, precisely to dampen this volatility). The falsifier: if the 33% line were purely arbitrary noise, every standard-setter would have converged on wildly different numbers; instead, AAOIFI, Dow Jones Islamic, S&P Shariah, and MSCI Islamic all cluster near a third — evidence the threshold reflects a real judgment about "how much of the enterprise's value is effectively financed by interest-bearing debt," not an arbitrary round number.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A company has interest-bearing debt of $138,000M against a market cap of $128,000M. Its cash-plus-interest-securities ratio and income ratio both pass comfortably. What is the outcome of the overall Sharia screen?"
+  options={[
+    "It passes overall, since two of the three ratios are clean and the debt ratio is a minor technicality",
+    "It fails overall — the debt ratio here is 107.8%, far above the 33% cap, and the screen requires all three ratios to pass, not a majority",
+    "It passes because market cap exceeding revenue offsets the high debt figure",
+    "The screen cannot be run because debt exceeds market cap, which the formula does not support"
+  ]}
+  answer={1}
+  explanation="138,000/128,000 × 100 = 107.8%, computed exactly via AMI's screening function, far above the 33% cap — and the screen requires ALL three ratios to pass, not a majority, so one failing ratio fails the whole screen regardless of how clean the other two are. Debt exceeding market cap is unusual but the ratio formula handles it without issue; it is not a formula error, it is a genuine screen failure."
+/>
+
+<Quiz
+  question="Two ratios in this lesson's worked example came back clean: liquidity at 3.3% (cap 33%) and income at 0.7% (cap 5%). What does the overall 'fails' result on this company tell you about how the three-ratio screen is structured?"
+  options={[
+    "That a single failing ratio fails the whole screen even when the other two ratios are well within their caps — the screen has no averaging or override mechanism",
+    "That the three ratios are averaged, and this company's average happened to exceed a combined cap",
+    "That the liquidity and income ratios don't actually matter if the debt ratio is checked first",
+    "That the result must be an error, since two of three passing ratios should be enough to pass overall"
+  ]}
+  answer={0}
+  explanation="Each of the three ratios is checked independently against its own cap, with no averaging and no override — a company must clear all three, so one ratio (debt, at 107.8% against a 33% cap) failing is sufficient to fail the whole screen regardless of how clean the other two are. There is no sequencing that skips ratios, and 'two of three passing' is not the rule the screen applies."
+/>
+
+## Try it
+
+Open Settings → Mandate and confirm the halal flag is on, then Convene the Room on a real, heavily-levered ticker of your choosing. Ask the Fundamentals Analyst to walk through which of the three ratios it computed and which one, if any, drove a fail.
+
+## Takeaway
+
+Three independent ratios — debt/market-cap, liquidity/market-cap, and income/revenue — each capped and each computed exactly; failing any one fails the whole screen, business activity notwithstanding.
+
+*Where this comes from: AAOIFI Shariah Standard No. 21's financial-ratio screening thresholds, mirrored in the Dow Jones Islamic Market Index methodology's 33%/33%/5% criteria.*

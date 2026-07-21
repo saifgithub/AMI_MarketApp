@@ -1,0 +1,68 @@
+---
+id: "354_islamic_indices_etfs_and_funds"
+title: "Islamic indices, ETFs & funds"
+duration_min: 5
+level: 13
+module: 25
+difficulty: 3
+track: "islamic_finance"
+code: "SHARIA 8"
+topic: "islamic_etfs"
+prerequisites: ["350_standards_differ_why_the_same_stock_flips", "310_etfs_vs_mutual_funds"]
+tags: ["islamic-finance", "etf", "islamic-index", "spus", "hlal", "bursa-i"]
+sources: ["Dow Jones Islamic Market Index Methodology", "S&P Shariah Indices Methodology", "MSCI Islamic Index Series Methodology", "FTSE Shariah Global Equity Index Series methodology"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Islamic indices, ETFs & funds
+
+You already know how to evaluate any fund — expense ratio, tracking error, passive vs active (lessons 310-312). A Sharia-compliant ETF adds exactly one more layer on top: which index methodology it tracks, and how often that index rebalances to drop stocks that drift out of compliance (lesson 4's "compliance drift"). The fund-selection skills you already have transfer directly; the new judgment is reading an Islamic ETF's prospectus for its named benchmark. By the end of this lesson you'll be able to name real Islamic ETFs and explain what to check beyond the usual expense-ratio comparison.
+
+## Example
+
+**SPUS** (SP Funds S&P 500 Sharia Industry Exclusions ETF) tracks the S&P 500 Sharia Industry Exclusions Index — S&P's own methodology applied to the S&P 500 universe. **HLAL** (Wahed FTSE USA Shariah ETF) tracks a FTSE Shariah index. **iShares MSCI World Islamic UCITS ETF** and similar names track MSCI's Islamic Index Series. Each of these applies a *different* named standard (lesson 4's disagreement, now showing up in a fund wrapper) — so two "Islamic ETFs" covering similar large-cap universes can hold a meaningfully different stock list, because S&P's screening methodology and FTSE's don't produce identical pass/fail outcomes on every borderline name. On Bursa Malaysia, the exchange itself designates a **Shariah-compliant securities list** (Bursa-i), refreshed twice yearly by the SAC — an investor building a Bursa-only Islamic portfolio checks that list directly rather than relying on a US-domiciled ETF's index. The expense-ratio and tracking-error checks from lesson 311 still apply in full — a Sharia-compliant fund with a bloated expense ratio is still a bad fund on cost grounds, compliance aside.
+
+## The trap
+
+Beginners assume "it says Islamic/Shariah in the fund name" is itself the due diligence — pick any fund with that label and move on. That skips exactly the check lesson 4 already taught: **which standard** does this specific fund's index track, and does that match the standard the investor actually wants applied? A fund tracking a more lenient methodology can hold names a stricter-standard investor would exclude. The correct mental model: an Islamic ETF's name tells you it applies *some* Sharia screen; the prospectus's stated index methodology tells you *which one* — read that before assuming two "Islamic" funds are interchangeable.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="SPUS tracks an S&P Sharia Industry Exclusions index, while HLAL tracks a FTSE Shariah index. Why might these two Islamic ETFs, both covering large-cap US stocks, hold a meaningfully different set of names?"
+  options={[
+    "They wouldn't — any fund labeled 'Islamic' or 'Shariah' applies an identical screen by regulation",
+    "Because S&P's and FTSE's Shariah screening methodologies use different thresholds and denominators (lesson 4's standards-disagreement), so borderline names can pass one index's screen and fail the other's",
+    "Because one of the two funds must be mislabeled or non-compliant",
+    "Because ETF holdings are randomized within a stated universe regardless of the tracked index"
+  ]}
+  answer={1}
+  explanation="This directly applies lesson 4: different Sharia standards (here, S&P's vs FTSE's index methodologies) use different thresholds and denominators, so a borderline stock can genuinely pass one and fail the other — producing different holdings even across two funds targeting a similar large-cap US universe. There is no single regulatory-mandated Islamic screen that all funds share, neither fund is necessarily mislabeled just because their methodologies differ, and ETF holdings track their stated index deliberately, not randomly."
+/>
+
+<Quiz
+  question="An investor picks an Islamic ETF purely because its name includes 'Shariah,' without checking its expense ratio or which index it tracks. What is this lesson's correction to that approach?"
+  options={[
+    "Nothing further is needed — the name itself is sufficient due diligence for a Sharia-compliant fund",
+    "Check the named index methodology (which standard, matching lesson 4's disagreement) AND still apply the ordinary expense-ratio/tracking-error checks from lesson 311 — compliance labeling doesn't exempt a fund from cost scrutiny",
+    "Islamic ETFs are exempt from expense-ratio comparison since compliance is the only relevant criterion",
+    "The investor should instead pick the ETF with the lowest expense ratio regardless of which Sharia standard it applies"
+  ]}
+  answer={1}
+  explanation="The lesson's core correction: the fund's name only confirms that some Sharia screen is applied, so the investor still needs to check which specific standard's index it tracks, and separately still run the ordinary fund-selection checks (expense ratio, tracking error) from lesson 311 — a compliant fund with high costs is still a costly fund. Neither compliance alone nor cost alone is sufficient; both checks apply together."
+/>
+
+## Try it
+
+Open the Fundamentals Analyst chat with a real Islamic ETF ticker (e.g. SPUS or HLAL) and ask which index methodology it tracks and how its expense ratio compares to a conventional broad-market ETF covering a similar universe.
+
+## Takeaway
+
+An Islamic ETF's name confirms a Sharia screen is applied; the prospectus's named index methodology tells you which standard — and the ordinary cost checks from lesson 311 still apply in full.
+
+*Where this comes from: the published S&P Shariah, FTSE Shariah, MSCI Islamic, and Dow Jones Islamic index methodologies, each of which discloses its own screening standard.*

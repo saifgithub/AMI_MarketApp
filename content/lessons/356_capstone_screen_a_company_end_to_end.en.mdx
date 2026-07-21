@@ -1,0 +1,80 @@
+---
+id: "356_capstone_screen_a_company_end_to_end"
+title: "Capstone: screen a company end to end"
+duration_min: 7
+level: 13
+module: 25
+difficulty: 4
+track: "islamic_finance"
+code: "SHARIA 10"
+topic: "sharia_screening_capstone"
+prerequisites: ["347_the_four_prohibitions", "348_the_business_activity_screen", "349_the_three_financial_ratio_screens", "350_standards_differ_why_the_same_stock_flips", "351_purification_tazkiyah", "355_how_amis_halal_flag_maps_to_real_screening"]
+tags: ["islamic-finance", "capstone", "synthesis", "business-screen", "financial-ratios", "aaoifi"]
+sources: ["AAOIFI — Shariah Standards", "Dow Jones Islamic Market Index Methodology"]
+agent_callouts: ["fundamentals_analyst", "portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Capstone: screen a company end to end
+
+You now hold the full M25 toolkit: the four prohibitions and the risk-sharing principle beneath them, the two-stage screen (business activity, then three financial ratios), why standards disagree at the margin, purification of any remaining impermissible income, and how AMI's halal Mandate flag wires all of this into the PM's uncoachable floor. This capstone runs one real ticker through the entire pipeline in sequence — business screen, three ratios computed exactly, naming the standard applied, and a final decision — the same discipline the PM runs behind the halal flag every time you Convene the Room.
+
+## One scenario, every M25 concept
+
+Take a hypothetical balance sheet shaped like a large, permissible-sector semiconductor company — think of the scale **NVDA** operates at. **Stage 1, business activity (lesson 2):** semiconductor design and manufacturing is not in any excluded category (no alcohol, tobacco, gambling, conventional banking/insurance, weapons, adult content, or non-halal food) — it clears stage one and proceeds to the ratio screen. **Stage 2, the three ratios (lesson 3), computed via AMI's `sharia_screen`** with interest-bearing debt of **$8,500M**, cash plus interest-bearing securities of **$34,000M**, market cap of **$3,200,000M**, non-compliant income of **$500M**, and total revenue of **$130,000M**: **debt ratio 0.3%** (cap 33% — passes), **liquidity ratio 1.1%** (cap 33% — passes), **income ratio 0.4%** (cap 5% — passes). All three clear comfortably — a sharp contrast with lesson 3's own worked example (a heavily-levered real-economy business that failed at 107.8% debt ratio despite an equally permissible business line). **Naming the standard (lesson 4):** this pass-result holds under the AAOIFI-style 33%/33%/5% thresholds used here; a stricter or more lenient index methodology (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah, or Bursa SAC) could apply a different denominator or snapshot convention, so the honest answer is "compliant under this AAOIFI-style screen" — not "compliant, full stop." **Decision:** the halal Mandate flag (lesson 9) would PASS a trade on this ticker, and any dividend received would still be checked for a purification amount (lesson 5) against the disclosed 0.4% income ratio, even though the stock cleared the screen.
+
+## The steelman
+
+The strongest case against running this full six-lesson pipeline every time: "For a company this comfortably clean — 0.3%, 1.1%, 0.4% against 33%/33%/5% caps — the ratio screen was never going to be close, so tracing the entire pipeline in detail is more process than the moment actually required; a quick sector check plus a glance at the debt ratio would have reached the same PASS." That's a fair efficiency critique for an obviously clean case. The falsifier: this capstone's own worked ratios are far from the caps precisely because NVDA-scale market cap dwarfs its debt — but lesson 3's contrasting example (107.8% debt ratio on an otherwise permissible real-economy business) shows the same pipeline reaching the opposite verdict on a company that looked, at the business-activity stage, identical in kind. You cannot know in advance which case you're in without running the ratios — the discipline pays for itself precisely on the companies that are NOT obviously clean or obviously excluded, and a habit of skipping the ratio stage on "obviously fine" businesses is exactly the shortcut lesson 3 warned against.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="This capstone's semiconductor example passes all three ratios (0.3%, 1.1%, 0.4% against 33%/33%/5% caps), while lesson 3's own worked example — an equally permissible-sector real-economy business — failed at a 107.8% debt ratio. Combining the business-activity and ratio-screen lessons, what does this contrast demonstrate?"
+  options={[
+    "That the business-activity screen alone predicts the ratio-screen outcome, so once a company passes stage one, the ratio result is a formality",
+    "That business activity and financial ratios are independent gates — two companies with equally permissible core businesses can land on opposite sides of the ratio screen purely based on their balance-sheet leverage relative to market cap",
+    "That semiconductor companies always pass and telecom companies always fail the ratio screen as a matter of sector rule",
+    "That the two examples must contain a computational inconsistency, since both passed business activity"
+  ]}
+  answer={1}
+  explanation="This is the synthesis of lessons 2 and 3: passing the qualitative business-activity screen says nothing about the quantitative ratio outcome — two permissible-sector businesses can diverge completely based on leverage relative to market cap, exactly as this capstone's clean pass and lesson 3's 107.8%-debt fail demonstrate side by side. There is no sector-level rule guaranteeing an outcome (this is about each company's specific balance sheet, not its industry), and there is no inconsistency — different companies with different balance sheets legitimately produce different ratio results."
+/>
+
+<Quiz
+  question="The capstone concludes this ticker is 'compliant under this AAOIFI-style screen' rather than simply 'compliant.' Drawing on the standards-disagreement and halal-flag-mapping lessons together, why does that phrasing matter?"
+  options={[
+    "It's just a stylistic preference with no substantive difference in meaning",
+    "Because a different named standard (Bursa SAC, or a different index methodology) could apply a different threshold or denominator and reach a different verdict on the identical company — naming the standard, rather than declaring an unqualified 'compliant,' is the disagreement-presenting discipline the halal flag itself follows",
+    "Because AAOIFI is the only standard AMI is legally permitted to reference",
+    "Because 'compliant' would imply investment advice, while 'compliant under this screen' does not carry any regulatory meaning at all"
+  ]}
+  answer={1}
+  explanation="This ties lessons 4 and 9 together: because standards can genuinely disagree at the margin (different thresholds, different denominators), naming which specific standard produced a verdict — rather than asserting an unqualified, standard-agnostic 'compliant' — is exactly the 'present the disagreement, never adjudicate' discipline the PM's halal flag itself is built on. It is a substantive precision, not mere style; AMI is not restricted to AAOIFI alone (it names whichever standard applies); and the phrasing distinction is about methodology transparency, not a mechanism for avoiding the 'not investment advice' framing (which is a separate, load-bearing rule that still applies regardless of phrasing)."
+/>
+
+<Quiz
+  question="Pulling together the four prohibitions, the two-stage screen, standards disagreement, purification, and the halal flag's architecture — what is the single discipline this capstone trains you to apply the next time you evaluate whether a real position is Sharia-compliant?"
+  options={[
+    "Trust the ticker's sector label alone — if it isn't an obviously excluded industry, treat it as compliant",
+    "Run both screening stages in sequence (business activity, then the three ratios computed exactly), name the specific standard the result is verified against, remember that a passing screen still leaves a purification calculation on any dividend received, and treat the whole result as a methodology output — never a religious ruling",
+    "Rely exclusively on AMI's halal Mandate flag result with no understanding of what it computed, since the PM's check is uncoachable and therefore always correct by definition",
+    "Skip the financial-ratio stage whenever the business-activity stage passes, since business activity is the more decisive filter"
+  ]}
+  answer={1}
+  explanation="This is the capstone's full synthesis: no single M25 lesson stands alone in a real screening decision — the discipline is running both stages, naming the exact standard applied, still checking purification on a passing stock's dividends, and holding the entire result as 'methodology, not a Sharia ruling,' deferring final judgment to a qualified Sharia authority. A sector label alone was disproven by lesson 3's own example; the halal flag's determinism (lesson 9) makes it consistent, not infallible or a substitute for understanding what it checks; and skipping the ratio stage after a business-activity pass is precisely the trap lesson 3 named."
+/>
+
+## Try it
+
+Pick a real ticker on your own watchlist. In the Fundamentals Analyst chat, ask it to walk the ticker through the business-activity screen, then the three ratios, then name which standard the result would be checked against. Cross-check the PM's PASS/BLOCK reasoning the next time you Convene the Room on that name. Remember: AMI teaches the published screening methodology — it is not a fatwa, and the final call on your own holdings belongs to your own qualified Sharia authority.
+
+## Takeaway
+
+Screening a company end to end means both stages, the named standard, and the purification step that survives even a clean pass — held throughout as methodology, never a ruling.
+
+*Where this comes from: AAOIFI's two-stage Shariah screening methodology, the same logic wired into AMI's deterministic halal Mandate flag.*

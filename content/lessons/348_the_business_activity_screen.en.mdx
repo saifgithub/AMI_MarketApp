@@ -1,0 +1,68 @@
+---
+id: "348_the_business_activity_screen"
+title: "The business-activity screen"
+duration_min: 5
+level: 13
+module: 25
+difficulty: 2
+track: "islamic_finance"
+code: "SHARIA 2"
+topic: "business_activity_screen"
+prerequisites: ["347_the_four_prohibitions"]
+tags: ["islamic-finance", "sector-exclusions", "business-screen", "halal", "haram"]
+sources: ["AAOIFI — Shariah Standards, sector exclusion criteria", "Bursa Malaysia SAC — Shariah screening methodology", "Dow Jones Islamic Market Index Methodology — business activity criteria"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# The business-activity screen
+
+Before any ratio gets checked, Sharia screening asks a qualitative question first: what does this company actually *do*? A business whose core revenue comes from alcohol, tobacco, pork or non-halal food, gambling, conventional (interest-based) banking and insurance, weapons, or adult entertainment is excluded outright — no ratio can rescue a company whose core business is one of these. This is the first of the two-stage screen: business activity, then (lesson 3) the financial ratios. By the end of this lesson you'll be able to apply the business-activity screen to a real ticker and explain why it comes before the ratios, not after.
+
+## Example
+
+Run the qualitative screen against a short real-ticker list. **Diageo** (alcohol, London-listed but illustrative) and **Philip Morris International (PM)** (tobacco) fail outright — their core revenue is a prohibited product, so the screen stops there; their balance-sheet ratios are irrelevant. **Genting Berhad** and **Genting Malaysia** (Bursa: GENTING, GENM) fail because gaming/casino revenue is their core business — a name every Malaysian investor recognizes, and a textbook example every Bursa SAC screening report uses. Conventional banks like **Maybank** or **CIMB** fail on business activity too — not because banking is inherently wrong, but because a *conventional* bank's core revenue is interest income (riba) by construction; this is why Islamic banks are structured as separate legal entities with murabahah/ijarah-based products rather than a screened subset of a conventional bank. By contrast, **NVDA** (semiconductors), **AAPL** (consumer electronics), and **TENAGA** (Malaysian utility) pass the business-activity stage — their core revenue isn't in an excluded sector — and move on to the ratio screen in the next lesson.
+
+## The trap
+
+Beginners think the business screen is the whole test — "it's not a casino or a brewery, so it's halal." That's only stage one. A semiconductor company with a clean business line can still fail the *financial-ratio* screen in lesson 3 if its debt or interest-bearing cash pile is too large a share of its market cap. The correct mental model: business activity and financial ratios are two independent gates in sequence, and a company must clear *both* — passing the first tells you nothing about the second. The reverse trap also exists: don't assume a company is automatically excluded just because it holds *some* interest-bearing debt — nearly every large company does, which is exactly why the ratio screen (not a zero-tolerance rule) exists to draw the line.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Genting Berhad's core revenue comes from casino and gaming operations. Why does it fail the Sharia screen at the business-activity stage rather than at the financial-ratio stage?"
+  options={[
+    "It fails at the ratio stage because its debt-to-market-cap ratio is unusually high for a gaming company",
+    "It doesn't actually fail either stage — gaming companies are treated the same as any other consumer business",
+    "Gambling (maysir) is one of the excluded core-business categories, so the screen stops at stage one regardless of what its financial ratios would show",
+    "It fails only because it is listed on Bursa Malaysia rather than a US exchange"
+  ]}
+  answer={2}
+  explanation="Gaming/casino revenue is a maysir-based excluded business category — the business-activity screen (stage one) excludes it outright, so the financial ratios in stage two are never even reached. Listing exchange has no bearing on the business-activity screen, and no ratio outcome can rescue a company whose core revenue is in an excluded category — that's precisely why business activity is checked first."
+/>
+
+<Quiz
+  question="A semiconductor company passes the business-activity screen (its core revenue isn't in any excluded sector). What does that tell you about whether it's Sharia-compliant overall?"
+  options={[
+    "Nothing conclusive yet — it still has to clear the financial-ratio screen (debt, liquidity, impermissible income) in the next stage",
+    "It is fully compliant — business activity is the only test that matters",
+    "It automatically fails, since semiconductor companies always carry excessive interest-bearing debt",
+    "Compliance is now guaranteed permanently, regardless of future balance-sheet changes"
+  ]}
+  answer={0}
+  explanation="Passing business activity clears stage one only; stage two (the financial-ratio screen from lesson 3) checks debt, liquidity, and impermissible-income ratios independently, and a company can still fail there. Nothing about being a semiconductor company implies automatic failure or automatic permanent pass — compliance is checked per-period, not locked in once."
+/>
+
+## Try it
+
+In your Mandate settings, toggle the halal flag on and add a mixed watchlist (a bank, a consumer-tech name, a Bursa gaming stock). Ask the Fundamentals Analyst which names the business-activity screen alone would exclude, before any ratio is even computed.
+
+## Takeaway
+
+The business-activity screen runs first and is categorical — a business in an excluded sector fails regardless of its balance sheet, and passing it only earns a company a shot at the ratio screen next.
+
+*Where this comes from: Bursa Malaysia SAC's published sector-exclusion methodology; the Dow Jones Islamic Market Index's business-activity screening criteria.*
