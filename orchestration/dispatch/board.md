@@ -37,7 +37,9 @@ from this table. CR052.
 | ~~CR054-W1-ETHIC~~ | **DONE ✓ (r2)** | noncoder.edu | 10 Ethics lessons (ETHIC 1-10, 293-302) integrated 32eac8a, corpus→280 |
 | ~~CR054-W1-ASST~~ | **DONE ✓ (r1)** | noncoder.edu | 20 Asset lessons (ASST 1-20, 303-322) integrated ff4978c, corpus→300, P2 exact |
 | ~~CR054-W1-MACRO~~ | **DONE ✓ (r1)** | noncoder.edu | 12 Macro lessons (MACRO 1-12, 323-334) integrated b4a30e5, corpus→312, P2 exact |
-| **CR054-W1-QUANT** | **ASSIGNED r1 · launching** | noncoder.edu | **Wave 1 — 12 Quant lessons (QUANT 1-12, ids 335-346, L12). Content-review gate. Last Wave-1 lesson track** |
+| ~~CR054-W1-QUANT~~ | **DONE ✓ (r1)** | noncoder.edu | 12 Quant lessons (QUANT 1-12, 335-346, L12) integrated 680a8f3, corpus→324, P2 hand-verified. **Wave-1 lesson tracks COMPLETE** |
+| **CR059** | **QUEUED — architect (Saiful-direct: immediate)** | coder.api → auditor.core | wire 2 net-new tracks (`islamic_finance`/SHARIA, `decision_evaluation`/EVAL) → locks 13-facet hex tessellation. Enables CR058 + M24 |
+| **CR058** | **QUEUED — content (Saiful-direct: immediate)** | noncoder.edu | Sharia strand M25 (~10 lessons + 20 glossary + 15 Q&A + 10 daily). DEPENDS-ON CR059 (islamic_finance wired) |
 | CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |
 | CR026 | UNASSIGNED (queued) | coder.api | sector enforcement — DEPENDS-ON DEF061 (safety_floor hot) |
@@ -49,11 +51,12 @@ format template.
 
 ## WIP snapshot
 
-- **CR054 Wave 1 progress:** ETHIC ✓ (10) + ASST ✓ (20) + MACRO ✓ (12) integrated = **corpus 270→312**.
-  QUANT (12, ids 335-346) launching now = last Wave-1 lesson track; then glossary (~120) + coach Q&A (~80).
-- `noncoder.edu`: 1 active (CR054-W1-QUANT launching). Content tracks run **sequentially** — the CR057
-  launch helper works in the main repo, so concurrent commits would race (disjoint files author fine in
-  parallel, but `git commit`/`pull --rebase` don't).
-- All coders idle apart from seed lanes; `coder.api` at cap-1 (DEF062 idle). Auditor queue: 0 IN_AUDIT.
-- Open: CR057 → auditor.core audit recommended (Saiful's call); LESSON_COUNT_FLOOR 270→312 bump at
-  Wave-1 wrap (coder.api micro-lane).
+- **CR054 Wave-1 LESSON tracks COMPLETE:** ETHIC ✓ (10) + ASST ✓ (20) + MACRO ✓ (12) + QUANT ✓ (12)
+  = 54 lessons integrated, **corpus 270→324**. Remaining Wave-1: glossary (~120) + coach Q&A (~80).
+- **Saiful-direct (immediate): CR059 then CR058.** CR059 = wire the 2 net-new tracks (`islamic_finance`,
+  `decision_evaluation`) → locks the 13-facet hex tessellation (7 existing + 6 new). CR058 = Sharia
+  content (M25), DEPENDS-ON CR059. Both "address the same areas" as the in-flight BOK.
+- Content tracks run **sequentially** — the CR057 launch helper works in the main repo, so concurrent
+  commits would race (disjoint files author fine in parallel, but `git commit`/`pull --rebase` don't).
+- Open: CR057 → auditor.core audit (Saiful's call); LESSON_COUNT_FLOOR 270→324 + positional-option-ref
+  guard, bundled into one coder.api micro-lane at Wave-1 wrap; CR060 (provenance/accuracy gate) standing.
