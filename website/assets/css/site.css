@@ -612,16 +612,16 @@ section { padding: 5rem 0; }
 .honey-abs {
   position: relative;
   width: 700px;
-  height: 304px;
+  height: 404px;
   margin: 0 auto 2rem;
   overflow: visible;
 }
 .honey-hex {
   position: absolute;
   width: 140px;
-  height: 121px;
+  height: 162px;
   transform: translate(-50%, -50%);
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: var(--card-bg);
   display: flex;
   flex-direction: column;
@@ -677,7 +677,7 @@ section { padding: 5rem 0; }
   .honey-abs {
     transform: scale(0.75);
     transform-origin: top center;
-    margin-bottom: calc((304px * 0.75) - 304px + 2rem);
+    margin-bottom: calc((404px * 0.75) - 404px + 2rem);
   }
 }
 @media (max-width: 560px) {
