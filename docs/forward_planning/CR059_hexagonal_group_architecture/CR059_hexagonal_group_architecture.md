@@ -12,6 +12,14 @@ A **group** = a lesson `track` (CR044 codes are group-scoped: `TECH 12`, `ASST 1
 "Hex-Reinforced Precision" language renders groups as hex facets in the lessons cluster, so the
 count is a **design constraint**, not just a taxonomy convenience.
 
+> **Decisions locked (2026-07-21, Saiful):**
+> - **6th facet = `decision_evaluation`** (EVAL) — confirmed over the `portfolio_construction` swap.
+>   **Downplay the "Discerning CEO" framing:** it is a normal facet, NOT to be positioned as "the
+>   moat / product signature." Working **display name = "Evaluating Analysis"** (plain, functional;
+>   adjustable — the display string is not frozen, only the `EVAL` prefix is). Portfolio theory keeps
+>   deepening the existing `risk_portfolio` track (CR054 Level 11).
+> - **Islamic Finance prefix = `SHARIA`** — confirmed over HALAL / ISLAM. Frozen from wiring.
+
 ---
 
 ## 1. The decision
