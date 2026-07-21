@@ -1,30 +1,4 @@
-"""Waitlist endpoint tests — sqlite tempfile, no Postgres required."""
-
-import os
-import tempfile
-
-import pytest
-from fastapi.testclient import TestClient
-
-
-@pytest.fixture(autouse=True)
-def _sqlite_db(tmp_path):
-    db_file = tmp_path / "test_website.db"
-    os.environ["WEBSITE_TEST_DATABASE_URL"] = f"sqlite:///{db_file}"
-    # Reset engine so the fixture URL is picked up
-    import app.db.session as sess
-    sess._engine = None
-    sess._SessionLocal = None
-    yield
-    sess._engine = None
-    sess._SessionLocal = None
-    del os.environ["WEBSITE_TEST_DATABASE_URL"]
-
-
-@pytest.fixture
-def client():
-    from app.main import app
-    return TestClient(app)
+"""Waitlist endpoint tests — sqlite tempfile (fixtures in conftest.py)."""
 
 
 def test_health(client):
@@ -54,6 +28,5 @@ def test_join_waitlist_invalid_email(client):
 
 def test_join_waitlist_normalises_email(client):
     client.post("/waitlist", json={"email": "  User@Example.COM  "})
-    # Second POST with normalised form should be a duplicate, not a new entry
     r = client.post("/waitlist", json={"email": "user@example.com"})
     assert r.json() == {"ok": True, "new": False}

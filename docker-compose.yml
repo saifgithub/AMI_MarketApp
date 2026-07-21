@@ -241,6 +241,17 @@ services:
       ENV: prod
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_website
       CORS_ORIGINS: https://www.agenticmarketintel.ai,https://agenticmarketintel.ai
+      # On-prem model for the website Concierge (reuses the same LAN server as api-alpha).
+      VLLM_BASE_URL: ${VLLM_BASE_URL:-}
+      VLLM_MODEL: ${VLLM_MODEL:-ami-llm}
+      VLLM_API_KEY: ${VLLM_API_KEY:-}
+      # Transactional email (Resend) for auto-answers, acks, and data-request notices.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${WEBSITE_RESEND_FROM:-AMI <support.ai@agenticmarketintel.ai>}
+      # Where contact escalations + data requests are forwarded (set to Saiful's inbox).
+      NOTIFY_EMAIL: ${WEBSITE_NOTIFY_EMAIL:-}
+      # Cloudflare Turnstile secret — unset → bot-check bypassed (see turnstile.py).
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:-}
     ports:
       - "8001:8000"
     depends_on:

@@ -671,6 +671,37 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
+     CONTACT
+════════════════════════════════════════════════════════ -->
+<section id="contact" class="section-alt" aria-labelledby="contact-h2">
+  <div class="container">
+    <div class="contact-inner">
+      <span class="sec-eyebrow" style="color: var(--accent-cyan); display: block; margin-bottom: 1rem;">Questions?</span>
+      <h2 id="contact-h2">Ask us anything.</h2>
+      <p>Send a question and our Concierge answers common ones instantly by email. Anything it can't, a human on our team picks up. You can also chat with the Concierge in the corner of this page.</p>
+
+      <form class="contact-form" id="contact-form" novalidate>
+        <div class="contact-row">
+          <input type="email" class="contact-input" id="contact-email" name="email"
+                 placeholder="your@email.com" autocomplete="email" required aria-label="Your email">
+          <input type="text" class="contact-input" id="contact-subject" name="subject"
+                 placeholder="Subject (optional)" maxlength="200" aria-label="Subject">
+        </div>
+        <textarea class="contact-input contact-textarea" id="contact-message" name="message"
+                  placeholder="How can we help?" rows="4" maxlength="4000" required aria-label="Your message"></textarea>
+        <!-- Turnstile widget mounts here when a site key is configured (see JS). -->
+        <div id="contact-turnstile" class="cf-slot"></div>
+        <button type="submit" class="btn btn-primary contact-submit">Send message</button>
+      </form>
+
+      <div class="waitlist-status" id="contact-status" role="status" aria-live="polite"></div>
+      <p class="contact-fineprint">Or email <a href="mailto:support.ai@agenticmarketintel.ai">support.ai@agenticmarketintel.ai</a> directly. Simulation only — not investment advice.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
      FOOTER
 ════════════════════════════════════════════════════════ -->
 <footer class="site-footer" role="contentinfo">
@@ -698,7 +729,8 @@
         <ul class="footer-links">
           <li><a href="/privacy">Privacy Policy</a></li>
           <li><a href="/terms">Terms of Service</a></li>
-          <li><a href="mailto:hello@agenticmarketintel.com">Contact Us</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="/ami-trade/sad-to-see-you-go">Delete Your Account</a></li>
         </ul>
       </div>
 
@@ -716,9 +748,68 @@
 
 
 <!-- ═══════════════════════════════════════════════════════
+     CONCIERGE CHAT WIDGET
+════════════════════════════════════════════════════════ -->
+<button id="concierge-fab" class="concierge-fab" aria-label="Ask the Concierge" aria-expanded="false">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M12 3C7 3 3 6.4 3 10.6c0 2.2 1.1 4.2 2.9 5.6L5 21l4.3-2.3c.85.2 1.75.3 2.7.3 5 0 9-3.4 9-7.7S17 3 12 3Z"
+          stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </svg>
+  <span>Ask the Concierge</span>
+</button>
+
+<div id="concierge-panel" class="concierge-panel" role="dialog" aria-label="AMI Concierge" hidden>
+  <div class="concierge-head">
+    <div>
+      <span class="concierge-title">AMI Concierge</span>
+      <span class="concierge-sub">Here to help — simulation only</span>
+    </div>
+    <button id="concierge-close" class="concierge-close" aria-label="Close">&times;</button>
+  </div>
+  <div id="concierge-log" class="concierge-log" aria-live="polite"></div>
+  <form id="concierge-form" class="concierge-inputbar">
+    <input id="concierge-input" type="text" autocomplete="off" maxlength="2000"
+           placeholder="Ask about AMI Trade…" aria-label="Message the Concierge">
+    <button type="submit" class="concierge-send" aria-label="Send">&#8593;</button>
+  </form>
+  <p class="concierge-disclaimer">AMI Trade is a simulation-only training tool. Not investment advice.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════════
      JAVASCRIPT
 ════════════════════════════════════════════════════════ -->
 <script defer>
+  // ── Config ────────────────────────────────────────────────────────────
+  // website_api — standalone service, separate from the app backend.
+  const API_BASE = 'https://api-website.agenticmarketintel.ai';
+  // Cloudflare Turnstile site key. Leave '' to disable bot protection (no
+  // external script loads). Paste the key from the CF dashboard to enable.
+  const TURNSTILE_SITEKEY = '';
+
+  // ── Turnstile helper (loads CF script only when a key is set) ──────────
+  let _tsLoad = null;
+  function loadTurnstile() {
+    if (!TURNSTILE_SITEKEY) return Promise.resolve(false);
+    if (_tsLoad) return _tsLoad;
+    _tsLoad = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true; s.defer = true;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+    return _tsLoad;
+  }
+  // Mount a widget into `containerId`; returns a getter for the current token.
+  async function mountTurnstile(containerId) {
+    const ok = await loadTurnstile();
+    if (!ok || !window.turnstile) return () => undefined;
+    const wid = window.turnstile.render('#' + containerId, { sitekey: TURNSTILE_SITEKEY });
+    return () => window.turnstile.getResponse(wid);
+  }
+
   // Mobile nav toggle
   const toggle = document.getElementById('mobile-toggle');
   const nav    = document.getElementById('main-nav');
@@ -748,8 +839,7 @@
     status.textContent = '';
 
     try {
-      // website_api — standalone service, separate from the app backend
-      const res = await fetch('https://api-website.agenticmarketintel.ai/waitlist', {
+      const res = await fetch(API_BASE + '/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, source: 'marketing_site' }),
@@ -764,10 +854,51 @@
       }
     } catch {
       status.className = 'waitlist-status error';
-      status.textContent = 'Something went wrong — email hello@agenticmarketintel.com if this persists.';
+      status.textContent = 'Something went wrong — email support.ai@agenticmarketintel.ai if this persists.';
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Claim My Spot';
+    }
+  });
+
+  // ── Contact form ──────────────────────────────────────────────────────
+  const contactForm   = document.getElementById('contact-form');
+  const contactStatus = document.getElementById('contact-status');
+  let contactToken = () => undefined;
+  if (TURNSTILE_SITEKEY) mountTurnstile('contact-turnstile').then(g => { contactToken = g; });
+
+  contactForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email   = document.getElementById('contact-email').value.trim();
+    const subject = document.getElementById('contact-subject').value.trim();
+    const message = document.getElementById('contact-message').value.trim();
+    if (!email || !message) return;
+
+    const submitBtn = contactForm.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    contactStatus.className = 'waitlist-status';
+    contactStatus.textContent = '';
+
+    try {
+      const res = await fetch(API_BASE + '/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, subject, message, turnstile_token: contactToken() }),
+      });
+      if (!res.ok) throw new Error('server_error');
+      const data = await res.json();
+      contactStatus.className = 'waitlist-status success';
+      contactStatus.textContent = data.answered
+        ? '✓ Sent — check your inbox, the Concierge just emailed you an answer.'
+        : "✓ Sent — we've got your message and a human will reply shortly.";
+      contactForm.reset();
+    } catch {
+      contactStatus.className = 'waitlist-status error';
+      contactStatus.textContent = 'Something went wrong — email support.ai@agenticmarketintel.ai directly.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send message';
     }
   });
 
@@ -785,6 +916,114 @@
     });
   }, { rootMargin: '-40% 0px -55% 0px' });
   sections.forEach(s => observer.observe(s));
+
+  // ── Concierge chat widget (SSE stream from website_api) ────────────────
+  (function () {
+    const fab   = document.getElementById('concierge-fab');
+    const panel = document.getElementById('concierge-panel');
+    const closeBtn = document.getElementById('concierge-close');
+    const log   = document.getElementById('concierge-log');
+    const cForm = document.getElementById('concierge-form');
+    const cInput = document.getElementById('concierge-input');
+    if (!fab || !panel) return;
+
+    const history = [];
+    let greeted = false, busy = false;
+
+    function addMsg(role, text) {
+      const el = document.createElement('div');
+      el.className = 'cmsg cmsg-' + role;
+      el.textContent = text;
+      log.appendChild(el);
+      log.scrollTop = log.scrollHeight;
+      return el;
+    }
+    function openPanel() {
+      panel.hidden = false;
+      fab.setAttribute('aria-expanded', 'true');
+      cInput.focus();
+      if (!greeted) {
+        addMsg('assistant', "Hi — I'm the AMI Concierge. Ask me about how AMI Trade works, pricing, or getting started.");
+        greeted = true;
+      }
+    }
+    function closePanel() {
+      panel.hidden = true;
+      fab.setAttribute('aria-expanded', 'false');
+    }
+    fab.addEventListener('click', () => (panel.hidden ? openPanel() : closePanel()));
+    closeBtn.addEventListener('click', closePanel);
+
+    // Reverse the server's SSE escaping ("\\" and "\n").
+    function decodeSSE(s) {
+      let o = '';
+      for (let i = 0; i < s.length; i++) {
+        if (s[i] === '\\' && i + 1 < s.length) {
+          const n = s[i + 1];
+          if (n === 'n') { o += '\n'; i++; continue; }
+          if (n === '\\') { o += '\\'; i++; continue; }
+        }
+        o += s[i];
+      }
+      return o;
+    }
+    const FALLBACK = 'Sorry — I had trouble answering. Please email support.ai@agenticmarketintel.ai.';
+
+    cForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = cInput.value.trim();
+      if (!msg || busy) return;
+      busy = true;
+      addMsg('user', msg);
+      cInput.value = '';
+      const botEl = addMsg('assistant', '');
+      botEl.classList.add('cmsg-typing');
+      let full = '';
+      try {
+        const res = await fetch(API_BASE + '/concierge/message', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg, history: history.slice(-8) }),
+        });
+        if (!res.ok || !res.body) throw new Error('bad');
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          let idx;
+          while ((idx = buf.indexOf('\n\n')) >= 0) {
+            const frame = buf.slice(0, idx);
+            buf = buf.slice(idx + 2);
+            let ev = 'message', data = '';
+            for (const ln of frame.split('\n')) {
+              if (ln.startsWith('event:')) ev = ln.slice(6).trim();
+              else if (ln.startsWith('data:')) data += ln.slice(5).replace(/^ /, '');
+            }
+            if (ev === 'token') {
+              full += decodeSSE(data);
+              botEl.classList.remove('cmsg-typing');
+              botEl.textContent = full;
+              log.scrollTop = log.scrollHeight;
+            } else if (ev === 'error' && !full) {
+              botEl.textContent = FALLBACK;
+            }
+          }
+        }
+        botEl.classList.remove('cmsg-typing');
+        if (!full) botEl.textContent = FALLBACK;
+        history.push({ role: 'user', content: msg });
+        history.push({ role: 'assistant', content: full });
+      } catch {
+        botEl.classList.remove('cmsg-typing');
+        botEl.textContent = 'Sorry — I had trouble connecting. Please email support.ai@agenticmarketintel.ai.';
+      } finally {
+        busy = false;
+      }
+    });
+  })();
 </script>
 
 </body>

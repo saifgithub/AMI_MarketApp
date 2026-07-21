@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Delete Your Account — AMI Trade</title>
+  <meta name="description" content="Request deletion of your AMI Trade account and personal data. Steps to request deletion and what data is removed vs. retained.">
+  <link rel="canonical" href="https://agenticmarketintel.ai/ami-trade/sad-to-see-you-go">
+  <meta name="robots" content="index, follow">
+
+  <!-- Favicon (inline SVG hex mark) -->
+  <link rel="icon" href="data:image/svg+xml,%3csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='64' height='64' rx='12' fill='%230f172a'/%3e%3cpolygon points='32,8 56,21 56,43 32,56 8,43 8,21' fill='none' stroke='%233b82f6' stroke-width='3'/%3e%3ccircle cx='32' cy='32' r='4' fill='%233b82f6'/%3e%3c/svg%3e" type="image/svg+xml">
+
+  <link rel="stylesheet" href="/assets/css/site.css">
+</head>
+<body>
+
+<header class="site-header" role="banner">
+  <div class="container">
+    <a href="/" class="header-brand">
+      <img src="/assets/svg/ami_logo_matrix.svg" alt="AMI" width="36" height="36">
+      <div class="brand-text">
+        <span class="brand-name">AMI Trade</span>
+        <span class="brand-sub">Applied AI</span>
+      </div>
+    </a>
+  </div>
+</header>
+
+<main class="legal-shell">
+  <div class="legal-wrap">
+
+    <span class="legal-eyebrow">Account Deletion</span>
+    <h1 class="legal-title">Delete your AMI Trade account</h1>
+    <p class="legal-meta">Sad to see you go. Here's how to remove your account and data from <strong>AMI Trade</strong>.</p>
+
+    <p class="legal-intro">
+      This page lets you request deletion of your <strong>AMI Trade</strong> account — the AI
+      trading-education app listed on the Google Play Store and the App Store. Submit the form
+      below (or email us from your account address) and we'll remove your data. AMI Trade is
+      simulation-only; deleting your account does not affect any real-world holdings because
+      there are none.
+    </p>
+
+    <section class="legal-section">
+      <h2><span class="num">1.</span> How to request deletion</h2>
+      <ol class="delete-steps">
+        <li><strong>Fill in the form below</strong> with the email address on your AMI Trade account, and choose <em>Delete my account and data</em>.</li>
+        <li><strong>Or email us</strong> at <a href="mailto:support.ai@agenticmarketintel.ai">support.ai@agenticmarketintel.ai</a> from that same email address, with the subject "Delete my account".</li>
+        <li>We <strong>verify</strong> the request using the email on file, so please use the address you signed up with.</li>
+        <li>We <strong>delete your data within 30 days</strong> and email you to confirm when it's done.</li>
+      </ol>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">2.</span> What gets deleted — and what we keep</h2>
+      <div class="legal-banner">
+        <strong>All of your data is deleted, except two things.</strong>
+        <p>We permanently delete everything associated with your account — your profile, chat and Concierge messages, journal entries, simulated trades, mandate, and settings. The <strong>only</strong> data we retain is:</p>
+      </div>
+      <ul class="delete-keep">
+        <li><strong>Your email address</strong> — kept so we have a record that the deletion was requested and completed, and to prevent abuse of the deletion process.</li>
+        <li><strong>System logs</strong> — kept for security, fraud prevention, and to meet our legal obligations.</li>
+      </ul>
+      <p class="legal-note">Everything else is erased. Retained email and system logs are held only as long as needed for those purposes and are never used to rebuild your account.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">3.</span> Request form</h2>
+      <form class="contact-form" id="delete-form" novalidate>
+        <input type="email" class="contact-input" id="delete-email" name="email"
+               placeholder="Email on your AMI Trade account" autocomplete="email" required aria-label="Account email">
+        <label class="delete-type-label" for="delete-type">Request type</label>
+        <select class="contact-input" id="delete-type" name="request_type" aria-label="Request type">
+          <option value="deletion">Delete my account and data</option>
+          <option value="access">Send me a copy of my data (access request)</option>
+          <option value="correction">Correct my data</option>
+          <option value="other">Other privacy request</option>
+        </select>
+        <textarea class="contact-input contact-textarea" id="delete-details" name="details"
+                  placeholder="Anything else we should know (optional)" rows="3" maxlength="2000" aria-label="Details"></textarea>
+        <!-- Turnstile widget mounts here when a site key is configured (see JS). -->
+        <div id="delete-turnstile" class="cf-slot"></div>
+        <button type="submit" class="btn btn-primary contact-submit">Submit request</button>
+      </form>
+      <div class="waitlist-status" id="delete-status" role="status" aria-live="polite"></div>
+    </section>
+
+    <a class="legal-nav-back" href="/">← Back to AMI Trade</a>
+
+  </div>
+</main>
+
+<script defer>
+  const API_BASE = 'https://api-website.agenticmarketintel.ai';
+  const TURNSTILE_SITEKEY = ''; // paste Cloudflare Turnstile site key to enable bot protection
+
+  let _tsLoad = null;
+  function loadTurnstile() {
+    if (!TURNSTILE_SITEKEY) return Promise.resolve(false);
+    if (_tsLoad) return _tsLoad;
+    _tsLoad = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      s.async = true; s.defer = true;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+    return _tsLoad;
+  }
+  let deleteToken = () => undefined;
+  if (TURNSTILE_SITEKEY) {
+    loadTurnstile().then((ok) => {
+      if (ok && window.turnstile) {
+        const wid = window.turnstile.render('#delete-turnstile', { sitekey: TURNSTILE_SITEKEY });
+        deleteToken = () => window.turnstile.getResponse(wid);
+      }
+    });
+  }
+
+  const form   = document.getElementById('delete-form');
+  const status = document.getElementById('delete-status');
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('delete-email').value.trim();
+    const request_type = document.getElementById('delete-type').value;
+    const details = document.getElementById('delete-details').value.trim();
+    if (!email) return;
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting…';
+    status.className = 'waitlist-status';
+    status.textContent = '';
+
+    try {
+      const res = await fetch(API_BASE + '/data-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, request_type, details, turnstile_token: deleteToken() }),
+      });
+      if (!res.ok) throw new Error('server_error');
+      status.className = 'waitlist-status success';
+      status.textContent = "✓ Request received. We'll email you to confirm within 30 days.";
+      form.reset();
+    } catch {
+      status.className = 'waitlist-status error';
+      status.textContent = 'Something went wrong — email support.ai@agenticmarketintel.ai directly.';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit request';
+    }
+  });
+</script>
+
+</body>
+</html>

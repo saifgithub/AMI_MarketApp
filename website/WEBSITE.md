@@ -63,8 +63,30 @@ Standalone FastAPI service. **Completely separate from the main app.**
 | Container | `ami_website_api` |
 | Port | 8001 (external) → 8000 (internal) |
 | Hostname | `api-website.agenticmarketintel.ai` |
-| Endpoints | `POST /waitlist`, `GET /health` |
-| Tests | `website_api/tests/test_waitlist.py` — 5/5 passing |
+| Endpoints | `POST /waitlist`, `POST /concierge/message` (SSE), `POST /contact`, `POST /data-request`, `GET /health` |
+| Tests | `website_api/tests/` — 23/23 passing |
+
+### CR049 — support intake + Concierge chatbot
+
+Added three public capabilities (still **zero shared code** with `backend/` — the vLLM
+streaming client, rate limiter, and Resend sender are *ported copies*, not imports):
+
+- **Concierge chatbot** — `POST /concierge/message` (SSE, `event: token|error|done`). Streams
+  the on-prem model (`VLLM_BASE_URL`, LAN-direct) grounded **only** in
+  `app/knowledge/faq.md`. A deterministic pre-filter (`faq_answer.classify_escalation`) routes
+  advice/account/legal questions to a human and never lets them reach the model; the
+  simulation-only disclaimer is appended by the server. Front-end: floating widget in
+  `index.html`.
+- **Contact form** — `POST /contact`. Stores the message, then AI-auto-answers FAQ questions by
+  email (Resend) or escalates to `NOTIFY_EMAIL`. Front-end: `#contact` section.
+- **Data-request form** — `POST /data-request`. Access/deletion (GDPR/CCPA/Play-Store), logged
+  with a 30-day SLA, human-actioned, never AI-answered. Front-end page:
+  `ami-trade/sad-to-see-you-go/index.html` (URL `/ami-trade/sad-to-see-you-go`), linked from the
+  footer + privacy page.
+
+Security: Cloudflare Turnstile on the two form POSTs (bypassed until `TURNSTILE_SECRET` is set),
+ported sliding-window rate limiter, LLM input/token caps. All settings degrade gracefully when
+their env var is unset, so the site runs locally with no secrets.
 
 `POST /waitlist` body: `{ "email": "...", "source": "marketing_site" }`
 - Validates email (regex)
@@ -88,7 +110,18 @@ python3 deploy_ftp.py YOUR_FTP_PASSWORD
 
 The script lists the FTP root first. Confirm `index.html` should go to the root (or adjust `target` in the script). Do NOT deploy `deploy_ftp.py`, `WEBSITE.md`, or `website_api/` — static files only.
 
-**Files to deploy:** `index.html`, `assets/`, `sitemap.xml`, `robots.txt`
+**Files to deploy:** `index.html`, `assets/`, `sitemap.xml`, `robots.txt`, `privacy/`, `terms/`, `ami-trade/` (the `sad-to-see-you-go` deletion page).
+
+### CR049 go-live steps (Saiful — dashboards + .env)
+
+The code degrades gracefully without these, so nothing breaks if they're skipped — but the
+Concierge/auto-answer and bot protection stay off until they're set:
+
+1. **melehost `.env`** — add: `VLLM_BASE_URL=http://192.168.20.74:8000` (usually already set for api-alpha), `RESEND_API_KEY=…`, `WEBSITE_NOTIFY_EMAIL=<your inbox>` (where contact escalations + data requests land), and later `TURNSTILE_SECRET=…`. Then `docker compose up -d --build api-website`.
+2. **Resend** — verify `support.ai@agenticmarketintel.ai` (or the `agenticmarketintel.ai` domain) as a sender so auto-answers/acks deliver.
+3. **Cloudflare Email Routing** — forward `support.ai@agenticmarketintel.ai` → your Gmail, so people who email directly (not via the form) still reach you.
+4. **Cloudflare Turnstile** — create a widget; paste the **site key** into `TURNSTILE_SITEKEY` in `index.html` **and** `ami-trade/sad-to-see-you-go/index.html`, and the **secret** into `.env` as `TURNSTILE_SECRET`.
+5. **Review `website_api/app/knowledge/faq.md`** — confirm the pricing wording and agent-count wording before launch (see the comment at the top of that file).
 
 ### 2. Deploy `website_api` on melehost
 

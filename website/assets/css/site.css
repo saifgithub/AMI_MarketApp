@@ -699,3 +699,114 @@ section { padding: 5rem 0; }
 .mb-6 { margin-bottom: 1.5rem; }
 .mt-8 { margin-top: 2rem; }
 .gap-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONTACT FORM (CR049)
+═══════════════════════════════════════════════════════════════════ */
+.contact-inner { text-align: center; max-width: 620px; margin: 0 auto; }
+.contact-inner h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); margin-bottom: 0.9rem; }
+.contact-inner p { font-size: 1.05rem; margin-bottom: 2rem; color: var(--text-muted); }
+.contact-form { display: flex; flex-direction: column; gap: 0.75rem; text-align: left; }
+.contact-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.contact-input {
+  width: 100%; flex: 1; min-width: 200px;
+  height: 48px; padding: 0 1.1rem;
+  background: rgba(59,130,246,0.08);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-md);
+  color: var(--text-main);
+  font-family: var(--font-ui);
+  font-size: var(--fs-body);
+  transition: border-color var(--dur-std) var(--ease), background var(--dur-std) var(--ease);
+}
+.contact-input::placeholder { color: var(--text-dim); }
+.contact-input:focus {
+  outline: none;
+  border-color: var(--hex-blue);
+  background: rgba(59,130,246,0.13);
+}
+.contact-textarea { height: auto; min-height: 120px; padding: 0.85rem 1.1rem; resize: vertical; line-height: 1.5; }
+.contact-submit { height: 48px; align-self: flex-start; }
+.cf-slot:empty { display: none; }
+.contact-fineprint { margin-top: 1.1rem; font-size: var(--fs-sm); color: var(--text-dim); }
+.contact-fineprint a { color: var(--accent-cyan); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONCIERGE CHAT WIDGET (CR049)
+═══════════════════════════════════════════════════════════════════ */
+.concierge-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 900;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 50px; padding: 0 18px;
+  background: linear-gradient(135deg, var(--hex-blue), var(--accent-purple));
+  color: #fff; border: none; border-radius: 999px;
+  font-family: var(--font-ui); font-size: var(--fs-sm); font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+  transition: transform var(--dur-std) var(--ease), box-shadow var(--dur-std) var(--ease);
+}
+.concierge-fab:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139,92,246,0.4); }
+.concierge-fab svg { flex: none; }
+
+.concierge-panel {
+  position: fixed; right: 20px; bottom: 20px; z-index: 950;
+  width: min(380px, calc(100vw - 32px));
+  height: min(560px, calc(100vh - 40px));
+  display: flex; flex-direction: column;
+  background: var(--panel-bg-solid);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r-xl);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+.concierge-panel[hidden] { display: none; }
+.concierge-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(139,92,246,0.18));
+  border-bottom: 1px solid var(--border-color);
+}
+.concierge-title { display: block; font-weight: 700; font-size: var(--fs-body); color: var(--text-main); }
+.concierge-sub { display: block; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.concierge-close { background: none; border: none; color: var(--text-muted); font-size: 1.6rem; line-height: 1; cursor: pointer; padding: 0 4px; }
+.concierge-close:hover { color: var(--text-main); }
+
+.concierge-log { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.cmsg {
+  max-width: 85%; padding: 9px 13px; border-radius: 12px;
+  font-size: var(--fs-body); line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;
+}
+.cmsg-user { align-self: flex-end; background: var(--hex-blue); color: #fff; border-bottom-right-radius: 3px; }
+.cmsg-assistant { align-self: flex-start; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-bottom-left-radius: 3px; }
+.cmsg-typing::after { content: '▋'; animation: cmsg-blink 1s steps(2) infinite; color: var(--text-dim); }
+@keyframes cmsg-blink { 50% { opacity: 0; } }
+
+.concierge-inputbar { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border-color); }
+.concierge-inputbar input {
+  flex: 1; height: 40px; padding: 0 14px;
+  background: rgba(59,130,246,0.08); border: 1px solid var(--border-color);
+  border-radius: 999px; color: var(--text-main); font-family: var(--font-ui); font-size: var(--fs-body);
+}
+.concierge-inputbar input:focus { outline: none; border-color: var(--hex-blue); }
+.concierge-send {
+  flex: none; width: 40px; height: 40px; border: none; border-radius: 50%;
+  background: var(--hex-blue); color: #fff; font-size: 1.1rem; cursor: pointer;
+  transition: background var(--dur-std) var(--ease);
+}
+.concierge-send:hover { background: var(--hex-blue-600); }
+.concierge-disclaimer { margin: 0; padding: 0 12px 12px; font-size: var(--fs-xs); color: var(--text-dim); text-align: center; }
+
+@media (max-width: 480px) {
+  .concierge-fab span { display: none; }
+  .concierge-fab { padding: 0; width: 50px; justify-content: center; }
+}
+
+/* ── Account-deletion page (CR049) ────────────────────────────────── */
+.delete-steps { margin: 0.5rem 0 0; padding-left: 1.3rem; line-height: 1.7; color: var(--text-muted); }
+.delete-steps li { margin-bottom: 0.6rem; }
+.delete-steps strong, .delete-keep strong { color: var(--text-main); }
+.delete-keep { margin: 0.75rem 0; padding-left: 1.3rem; line-height: 1.7; color: var(--text-muted); }
+.delete-keep li { margin-bottom: 0.5rem; }
+.legal-note { font-size: var(--fs-sm); color: var(--text-dim); }
+.delete-type-label { display: block; font-family: var(--font-mono); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 0.25rem; }
+#delete-form select.contact-input { appearance: none; cursor: pointer; }
