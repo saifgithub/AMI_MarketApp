@@ -91,6 +91,11 @@ gap between screening a stock and endorsing it.
 
 ## 4. Track decision (architect confirms, consistent with CR054 §4.2)
 
+> **RESOLVED by CR059 (2026-07-21).** Islamic finance is its **own** first-class group —
+> `islamic_finance`, prefix **SHARIA** — one of the 6 new hex groups, *not* the shared
+> `mandate_compliance` track mooted below. ESG moves to `ethics_integrity`. The Preferred/Fallback
+> options below are superseded; the module content (§3) is unchanged.
+
 Islamic-finance screening is a **values/rules discipline tied to a Mandate flag** — the same shape
 as **ESG** (CR054 M26, which also maps to a mandate flag). Recommendation:
 

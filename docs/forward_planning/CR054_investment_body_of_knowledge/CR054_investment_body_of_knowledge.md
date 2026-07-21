@@ -214,6 +214,12 @@ waves at quality; the count is a target shape.
 
 ### 4.2 The track decision (architect must wire the enum)
 
+> **SUPERSEDED by CR059 (2026-07-21).** Saiful locked the new-group count at **6** (hex
+> tessellation), not 4: the four below (ASST/MACRO/QUANT/ETHIC) **plus** net-new
+> **`islamic_finance`** (SHARIA — from CR058) and **`decision_evaluation`** (EVAL — the
+> Discerning-CEO moat). **ESG** folds into `ethics_integrity` rather than a `mandate_compliance`
+> track. CR059 holds the authoritative 13-group table; the Option A/B text below is kept as history.
+
 The new domains do not all fit the 7 existing tracks, and **track drives both agent-unlock routing
 and the CR044 code prefix**. Two options — recommendation follows:
 
