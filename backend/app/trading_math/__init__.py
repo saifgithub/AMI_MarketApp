@@ -18,15 +18,28 @@ Because it depends on nothing but the stdlib, the folder is copy-portable: drop
 Scope today: `indicators` (RSI/SMA/tone), `risk` (position-level drawdown
 contribution), `sizing` (per-risk-tier caps + the Risk-Debator spread), `trade`
 (risk/reward + asymmetry from entry/stop/target), `valuation` (P/E-compression
-downside + fundamentals unit conversions), and `portfolio` (value, drawdown,
-weight, size→shares). The return/risk-metric family (Sharpe, max drawdown, CAGR,
-…) is backlog — CR046 Decision D1 (library_survey.md) adopts `empyrical-reloaded`
-for it when built, and hand-rolls the indicator family because our RSI is
-Cutler's, not Wilder's.
+downside + fundamentals unit conversions), `portfolio` (value, drawdown,
+weight, size→shares), and — opened for the CR054 BOK Wave-1 worked examples —
+`bond` (price/YTM/duration, M09), `option` (payoff/break-even, M10),
+`portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), and `returns`
+(Sharpe/max-drawdown/CAGR, M12, hand-rolled stdlib — the wider family Sortino/
+Calmar/vol stays on the D1 `empyrical-reloaded` backlog, a dep that needs
+sign-off). The indicator family stays hand-rolled because our RSI is Cutler's,
+not Wilder's (Decision D1, library_survey.md).
 """
 
+from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
 from .indicators import DEFAULT_RSI_PERIOD, rsi, rsi_tone, sma
+from .option import option_break_even, option_intrinsic_value, option_payoff
 from .portfolio import drawdown_pct, position_pct, shares_for_size, total_value
+from .portfolio_stats import (
+    beta,
+    correlation,
+    covariance,
+    portfolio_variance,
+    variance,
+)
+from .returns import cagr_pct, max_drawdown_pct, sharpe_ratio
 from .risk import DrawdownContribution, drawdown_contribution
 from .sizing import (
     DEFAULT_RISK_TIER_CAPS,
@@ -76,4 +89,23 @@ __all__ = [
     "position_pct",
     "shares_for_size",
     "total_value",
+    # bond math (M09)
+    "bond_price",
+    "bond_ytm",
+    "macaulay_duration",
+    "modified_duration",
+    # option math (M10)
+    "option_break_even",
+    "option_intrinsic_value",
+    "option_payoff",
+    # portfolio statistics (M11)
+    "beta",
+    "correlation",
+    "covariance",
+    "portfolio_variance",
+    "variance",
+    # return-series metrics (M12)
+    "cagr_pct",
+    "max_drawdown_pct",
+    "sharpe_ratio",
 ]

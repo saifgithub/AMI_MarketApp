@@ -70,6 +70,10 @@ files with no registry**, which had two costs:
 | [M06](M06_risk_reward.md) | Risk/reward ratio + stated-vs-implied coherence check | CR046 audit F2 | `trading_math/trade.py` (via `services/room_runner.py`) | `test_trading_math.py` | done |
 | [M07](M07_multiple_compression_downside.md) | P/E-compression downside (`delta/pe`) — fixes DEF077 | CR046 audit D-a / DEF077 | `trading_math/valuation.py` (via `services/room_runner.py`) | `test_trading_math.py`, `test_room_runner.py` | done |
 | [M08](M08_trade_asymmetry.md) | Trade asymmetry — upside% vs downside% of a long setup | CR046 audit F3 | `trading_math/trade.py` (via `services/room_runner.py`) | `test_trading_math.py` | done |
+| [M09](M09_bond_math.md) | Bond math — price, YTM (bisection), Macaulay/modified duration | CR054 §4.5 | `trading_math/bond.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
+| [M10](M10_option_payoff.md) | Option payoff, intrinsic value & break-even (long side, per share) | CR054 §4.5 | `trading_math/option.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
+| [M11](M11_portfolio_statistics.md) | Portfolio statistics — variance/covariance/correlation/beta + wᵀΣw | CR054 §4.5 | `trading_math/portfolio_stats.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
+| [M12](M12_return_metrics.md) | Return metrics — CAGR, max drawdown, Sharpe (hand-rolled, no new dep) | CR054 §4.5 / D1 backlog | `trading_math/returns.py` | `test_trading_math_bok.py` | done (Wave-1 lessons consume) |
 
 **Ledger convention:** an `ID` is a *calculation concern*. Fixing or reconciling an existing calc
 updates that entry's changelog — it does not mint a new ID. A genuinely **new** calculation gets the
@@ -88,7 +92,9 @@ expand we look at it again"*). Outcomes:
 - **Return/risk metrics (Sharpe, max drawdown, CAGR, Sortino, Calmar, vol): adopt
   `empyrical-reloaded`** when built — Apache-2.0, actively maintained, adds only `scipy` (pure
   wheels, no system lib). **This is a new dependency → needs Saiful's OK before it lands** (lean-
-  stack rule). Backlog, not built here.
+  stack rule). Backlog, not built here. *(2026-07-21, CR054-W0d: narrowed — the three the BOK
+  needed, Sharpe/max-drawdown/CAGR, were trivial and shipped hand-rolled dependency-free as M12;
+  `empyrical-reloaded` remains the path for the wider family if it's ever needed.)*
 - **Drawdown-contribution + sizing caps: hand-roll** — no library exposes these primitives.
 - **Hard NOs:** TA-Lib (C dep + Wilder mismatch), finta/tulipy (LGPL + unmaintained), **vectorbt
   (Apache-2.0 + Commons Clause — a commercial-resale license risk for a paid app)**, QuantLib /
@@ -107,9 +113,10 @@ expand we look at it again"*). Outcomes:
 
 ## Backlog — identified, not yet built
 
-- **Return/risk metrics** (Sharpe, max drawdown, CAGR, Sortino, volatility) → adopt
-  `empyrical-reloaded` per D1 (**needs dep sign-off** — the one item held back from the AT:R62
-  build-out; not currently surfaced to agents).
+- **Return/risk metrics, the wider family** (Sortino, Calmar, rolling volatility) → adopt
+  `empyrical-reloaded` per D1 (**needs dep sign-off**; not currently surfaced to agents).
+  Sharpe/max-drawdown/CAGR left this backlog 2026-07-21 as **M12** (hand-rolled, no new dep,
+  CR054-W0d).
 - **Indicator families** EMA, MACD, Bollinger Bands — hand-roll (or wrap `ta` for *new* indicators
   only, never RSI) if the backlog grows.
 - **win-rate + realized/unrealized P&L** — bespoke arithmetic over our own fills; hand-roll.
@@ -164,3 +171,14 @@ an agent still presents as fact that was LLM-derived, bare, inline, or a drift-p
 - **Coherence hardening:** C-a (the PM safety-floor prose now interpolates `SINGLE_NAME_CAP_PCT` —
   shown == enforced), C-b/C-c (halal + microcap thresholds single-sourced).
 - No enforced value changed. Full suite green (886).
+
+## What shipped in CR054-W0d (AT:coder.math)
+
+The four BOK-math entries CR054 §4.5 routes Wave-1 worked examples through, opened ahead of lesson
+authoring: **M09** (bond price/YTM/duration, `bond.py`), **M10** (option payoff/intrinsic/
+break-even, `option.py`), **M11** (variance/covariance/correlation/beta/wᵀΣw,
+`portfolio_stats.py`), **M12** (CAGR/max-drawdown/Sharpe, `returns.py` — hand-rolled, **no new
+dependency**; D1's `empyrical-reloaded` backlog narrowed to the Sortino/Calmar/vol tail). Pure
+stdlib functions, guard tests in `test_trading_math_bok.py`. **No production caller yet by
+design** — Wave-1 lesson authoring is the consumer; agent-facing wiring, if any, is a future
+changelog line on each entry.
