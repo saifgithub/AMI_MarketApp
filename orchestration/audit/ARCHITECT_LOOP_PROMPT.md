@@ -1,7 +1,7 @@
 <!--
 ARCHITECT_LOOP_PROMPT.md: the standing v2 reminder prompt for the AMI Trade BUILD ARCHITECT.
   Hand this to the track-R (Development) session at the start of a build sprint. Same name and
-  section skeleton as the ami_ai original (audit/handshake/ARCHITECT_LOOP_PROMPT.md) so upstream
+  section skeleton as the ami_ai original (orchestration/audit/ARCHITECT_LOOP_PROMPT.md) so upstream
   improvements propagate by structural diff; bindings here are AMI Trade's (see
   AMI_TRADE_BINDINGS.md). PROTOCOL.md remains authoritative; if this prompt and PROTOCOL.md ever
   disagree, PROTOCOL.md wins. Owner: AMI Trade (CR005).
@@ -28,17 +28,17 @@ checkpoint per item is his own hands-on acceptance test after the auditor's COMP
 
 ## Read first (authoritative, in order)
 
-1. `audit/handshake/PROTOCOL.md` — the v2 per-item lane handshake. This is the contract; it wins
+1. `orchestration/audit/PROTOCOL.md` — the v2 per-item lane handshake. This is the contract; it wins
    on any conflict. Read `AMI_TRADE_BINDINGS.md` beside it for this repo's term bindings.
-2. `audit/handshake/cr/INDEX.md` — the glanceable state table of every lane, which you maintain
-   (`sh audit/handshake/watcher.sh state` prints the derived truth to reconcile against).
+2. `orchestration/audit/cr/INDEX.md` — the glanceable state table of every lane, which you maintain
+   (`sh orchestration/audit/watcher.sh state` prints the derived truth to reconcile against).
 3. `CLAUDE.md` (auto-loaded) + `HANDOVER_R.md` — build state and governance rules.
 4. The CR or DEF you are building, in `docs/forward_planning/cr_list.md` or
    `docs/defect/def_list.md` (and its own folder, e.g. `docs/forward_planning/CR###_<topic>/`).
 
 ## The lane loop (v2: state is DERIVED, there is no shared flag)
 
-Each item is its own lane, two files under `audit/handshake/cr/`. You own `<ITEM>.architect.md`
+Each item is its own lane, two files under `orchestration/audit/cr/`. You own `<ITEM>.architect.md`
 and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
 
 1. Pick any item NOT AWAITING_AUDIT (build a new one, or fix a bounced one). An item is yours
@@ -57,7 +57,7 @@ and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
    resubmit. Update `INDEX.md` to match.
 5. Commit ONLY your own paths, staged by name, and PUSH to `origin`. Delivery is on origin, not
    local. The auditor only ever sees committed SHAs, never a half-built tree.
-6. Wait — your choice of mechanism; `sh audit/handshake/watcher.sh architect` blocks until a
+6. Wait — your choice of mechanism; `sh orchestration/audit/watcher.sh architect` blocks until a
    verdict returns, or poll between build steps. On AWAITING_FIXES, fix the findings in priority
    order and resubmit at the next round (go to step 2). On COMPLETE, update the item's status in
    `cr_list.md`/`def_list.md` and flag it to Saiful for his hands-on acceptance test (his single
@@ -65,7 +65,7 @@ and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
    Other lanes proceed independently.
 
 COMPLETE is the auditor's call (zero BLOCKER + zero MAJOR, dependencies COMPLETE). Do not mark a
-finding closed yourself, and do not edit `audit/handshake/` (beyond your own lane files) to make
+finding closed yourself, and do not edit `orchestration/audit/` (beyond your own lane files) to make
 a check pass: fix the SOURCE.
 
 ## Branch and path discipline (shared branch, DISJOINT paths)
@@ -73,10 +73,10 @@ a check pass: fix the SOURCE.
 Work on `main` (the branch the auditor audits).
 
 - You edit SOURCE (everything except `audit/`) plus your own lane files
-  (`audit/handshake/cr/<ITEM>.architect.md`, `audit/handshake/cr/INDEX.md`).
-- NEVER touch the auditor's paths: `audit/handshake/cr/<ITEM>.auditor.md`,
-  `audit/handshake/runs/`, `audit/handshake/audit-trail.md`, `audit/handshake/PROTOCOL.md`.
-- Commit ONLY your own paths, staged by name; never `git add` `audit/handshake/` wholesale. Push
+  (`orchestration/audit/cr/<ITEM>.architect.md`, `orchestration/audit/cr/INDEX.md`).
+- NEVER touch the auditor's paths: `orchestration/audit/cr/<ITEM>.auditor.md`,
+  `orchestration/audit/runs/`, `orchestration/audit/audit-trail.md`, `orchestration/audit/PROTOCOL.md`.
+- Commit ONLY your own paths, staged by name; never `git add` `orchestration/audit/` wholesale. Push
   so the auditor sees your SHAs.
 
 ## Guardrails (stakeholder-required)
@@ -89,7 +89,7 @@ Work on `main` (the branch the auditor audits).
    Declare `depends-on` honestly so a bounced dependency never strands a dependent.
 4. PER-ITEM RIGOR UNCHANGED: every item gets the full independent treatment. Parallel is not
    batch-and-skim.
-5. SINGLE LEDGER: `audit/handshake/audit-trail.md` is auditor-owned. Do not write it; the
+5. SINGLE LEDGER: `orchestration/audit/audit-trail.md` is auditor-owned. Do not write it; the
    auditor appends every verdict there.
 6. STALL RULE: at the cap with no verdict movement for >4h of active session time, escalate to
    Saiful instead of throttling indefinitely.

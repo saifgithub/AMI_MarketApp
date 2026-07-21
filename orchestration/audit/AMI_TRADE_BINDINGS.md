@@ -1,6 +1,6 @@
 <!--
 AMI_TRADE_BINDINGS.md — local parameter bindings for the verbatim-mirrored PROTOCOL.md (AMI Trade
-copy). PROTOCOL.md was a byte-identical copy of ami_ai/core_platform/audit/handshake/PROTOCOL.md
+copy). PROTOCOL.md was a byte-identical copy of ami_ai/core_platform/orchestration/audit/PROTOCOL.md
 (copied 2026-07-09) so upstream updates propagate by plain `cp`. DIVERGED 2026-07-12: guardrail 6
 (output compression) added locally ahead of upstream, at Saiful's direct instruction — re-sync by
 porting guardrail 6 upstream first, never by re-copying over it. NEVER edit PROTOCOL.md here
@@ -17,8 +17,8 @@ the AMI_MarketApp repo — a re-copy of the protocol can never clobber it. Owner
 | WORK ITEM: DEF (`DEF_LIST.MD`) | `DEF###` row in [`docs/defect/def_list.md`](../../docs/defect/def_list.md) |
 | `<ITEM>` id format | `CR###` or `DEF###`, zero-padded per this repo's existing convention (lane file `CR005.architect.md`, not `CR-0005`) |
 | Shared branch `audit/frontier` | `main` — this repo works directly off main (Team reality: sequential work, one thing at a time). Delivery = pushed to `origin` (`github.com/saifgithub/AMI_MarketApp`) |
-| SOURCE paths (architect/builder) | everything except `audit/` — plus own lane files `audit/handshake/cr/<ITEM>.architect.md`, `audit/handshake/cr/INDEX.md` |
-| AUDITOR paths | `audit/handshake/**` only (minus `cr/*.architect.md`, `cr/INDEX.md`) |
+| SOURCE paths (architect/builder) | everything except `audit/` — plus own lane files `orchestration/audit/cr/<ITEM>.architect.md`, `orchestration/audit/cr/INDEX.md` |
+| AUDITOR paths | `orchestration/audit/**` only (minus `cr/*.architect.md`, `cr/INDEX.md`) |
 | Independent regression suite (`pytest audit/regression -q -o addopts=""`) | `pytest backend/tests/unit/ -q` (Mac-safe, sqlite tempfile fixture — runs with no backend/DB started, per `CLAUDE.md`) for unit coverage; for anything touching the live stack, the auditor independently SSHes/curls melehost (`curl https://api-alpha.agenticmarketintel.ai/v1/health`, `ssh melehost "docker logs ami_api_alpha --tail 50"`) rather than trusting the architect's pasted output |
 | GB10 3.11 deploy-target | melehost (Alpha host, LAN `192.168.20.59`, public `api-alpha.agenticmarketintel.ai`) |
 | Real measurement | the item's actual behaviour reproduced live on melehost/Alpha or via Mac pytest, per MABP-equivalent evidence discipline — never the architect's claim alone |

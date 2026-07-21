@@ -13,7 +13,7 @@ the dispatch handshake (Architect → you) and the audit handshake (you → Audi
 
 ## Your loop
 
-1. **Watch.** `sh orchestration/dispatch.sh inst <your-id>` blocks until a lane is `ASSIGNED` to you
+1. **Watch.** `sh orchestration/dispatch/dispatch.sh inst <your-id>` blocks until a lane is `ASSIGNED` to you
    (new work) or `AUDIT_RETURNED` on your lane (a bounce to fix).
 2. **Claim.** Write `lanes/<ITEM>.<your-id>.md` with `STATUS: CLAIMED (round N)` (N = the assign
    round). Read `ACCEPTANCE` (the CR/DEF spec) and the `DEPENDS-ON` / `HOT-FILES` header.

@@ -18,13 +18,13 @@
 #                                    (UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED)
 #   dispatch.sh inst <id> [-i N]   block until >=1 lane is ASSIGNED to <id> or AUDIT_RETURNED on it
 # Env: DISPATCH_LANE_DIR overrides the lane dir (default <script dir>/lanes).
-#      DISPATCH_AUDIT_DIR overrides the audit lane dir (default <script dir>/../audit/handshake/cr).
-# Portable POSIX sh, no dependencies. Sibling of audit/handshake/watcher.sh.
+#      DISPATCH_AUDIT_DIR overrides the audit lane dir (default <script dir>/../audit/cr).
+# Portable POSIX sh, no dependencies. Sibling of orchestration/audit/watcher.sh.
 
 set -u
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 LANE_DIR=${DISPATCH_LANE_DIR:-"$SCRIPT_DIR/lanes"}
-AUDIT_DIR=${DISPATCH_AUDIT_DIR:-"$SCRIPT_DIR/../audit/handshake/cr"}
+AUDIT_DIR=${DISPATCH_AUDIT_DIR:-"$SCRIPT_DIR/../audit/cr"}
 
 last_round() {  # $1=file $2=extended-regex; echoes the last round number or empty
   [ -f "$1" ] || { echo ""; return; }
@@ -39,7 +39,7 @@ last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the last match
 lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict"
   # Dispatch tokens (ASSIGNED/DISPATCH/STATUS) MUST be at line start — anchored so a token
   # mentioned in prose/backticks is never parsed as a live signal. (VERDICT is read unanchored to
-  # mirror audit/handshake/watcher.sh, whose files carry a `## VERDICT:` heading + a trailer.)
+  # mirror orchestration/audit/watcher.sh, whose files carry a `## VERDICT:` heading + a trailer.)
   a="$LANE_DIR/$1.assign.md"
   asg_line=$(grep -Eo '^ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+' "$a" 2>/dev/null | tail -1)
   if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - -"; return; fi

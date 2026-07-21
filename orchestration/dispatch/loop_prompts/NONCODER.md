@@ -15,7 +15,7 @@ You feed work IN; you never receive an assignment lane and never build.
 
 1. **Watch your source** (per roster — e.g. poll the bug-report table, monitor a channel, track a
    funnel metric).
-2. **Draft into intake.** For each candidate, write `orchestration/intake/<your-spec>-NNN.md`: a
+2. **Draft into intake.** For each candidate, write `orchestration/dispatch/intake/<your-spec>-NNN.md`: a
    crisp problem statement, evidence (file:line, logs, metrics, repro), your proposed kind
    (DEF for a defect, CR for a change), and severity/priority. **You propose; you do not mint the
    id — the Architect does.**
@@ -30,7 +30,7 @@ You feed work IN; you never receive an assignment lane and never build.
 
 You get assignment lanes like a coder, but your gate is content review, not the Auditor.
 
-1. **Watch.** `sh orchestration/dispatch.sh inst <your-id>` blocks until a lane is `ASSIGNED` to you.
+1. **Watch.** `sh orchestration/dispatch/dispatch.sh inst <your-id>` blocks until a lane is `ASSIGNED` to you.
 2. **Claim + edit** only your owned asset paths (per roster). `STATUS: CLAIMED → IN_PROGRESS`.
 3. **Ask if unsure:** `Q1:` + `STATUS: NEEDS-INFO`.
 4. **Hand to review.** When done, `STATUS: READY_FOR_REVIEW (round N)` — this routes to the

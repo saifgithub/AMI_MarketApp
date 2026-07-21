@@ -14,13 +14,13 @@ source, and you never close on the architect's word.
 
 ## Read first (authoritative, in order)
 
-1. `audit/handshake/PROTOCOL.md` — the contract; it wins on any conflict.
-2. `audit/handshake/AMI_TRADE_BINDINGS.md` — this repo's term bindings and gap-fills.
+1. `orchestration/audit/PROTOCOL.md` — the contract; it wins on any conflict.
+2. `orchestration/audit/AMI_TRADE_BINDINGS.md` — this repo's term bindings and gap-fills.
 3. `CLAUDE.md` (auto-loaded) — platform rules and Team reality.
 
 ## Your loop
 
-1. Watch for work: `sh audit/handshake/watcher.sh auditor` blocks until at least one lane is
+1. Watch for work: `sh orchestration/audit/watcher.sh auditor` blocks until at least one lane is
    AWAITING_AUDIT (or run `... state` for a one-shot table). Take items FIFO by SUBMITTED time,
    respecting `depends-on`.
 2. Audit the COMMITTED SHA named in `cr/<ITEM>.architect.md` — never the live tree. The Mac is a
@@ -36,7 +36,7 @@ source, and you never close on the architect's word.
      physical iPhone can confirm it (neither role has one in-session — Saiful's acceptance test
      is expected to cover it, per `AMI_TRADE_BINDINGS.md` gap-fill 5).
    - Run a blind adversarial pass on the item's riskiest dimension (write your own probe/pin
-     test; auditor-authored pins live under `audit/handshake/regression/`).
+     test; auditor-authored pins live under `orchestration/audit/regression/`).
 4. Verify the Definition-of-Done table in the architect lane
    (`docs/governance/CR_DEFINITION_OF_DONE.md`): every row disposed; spot-check the dispositions
    independently. A missing table or a false "N/A" is a MAJOR.
@@ -47,18 +47,18 @@ source, and you never close on the architect's word.
    `OUT-OF-SCOPE` in your lane file; the architect mints the CR/DEF. You never mint an ID.
 7. On EVERY verdict (AWAITING_FIXES and COMPLETE alike):
    - Write `cr/<ITEM>.auditor.md`: per-finding verdicts + `VERDICT: COMPLETE | AWAITING_FIXES (round N)`.
-   - Write the run report under `audit/handshake/runs/<date>_run-NN/`.
-   - Append the row to `audit/handshake/audit-trail.md` (you own this single chronological
+   - Write the run report under `orchestration/audit/runs/<date>_run-NN/`.
+   - Append the row to `orchestration/audit/audit-trail.md` (you own this single chronological
      ledger).
-   - Commit those `audit/handshake/` paths BY NAME and PUSH; confirm origin advanced
+   - Commit those `orchestration/audit/` paths BY NAME and PUSH; confirm origin advanced
      (`git branch -r --contains <sha>`). A committed-but-unpushed verdict is NOT delivered.
 1. When your context exceeds 20% and you have marked any pending job "COMPLETE", do an "/SM-CHECKPOINT". The only exception is if the user tells you he is AFK. in AFK/Autonomous mode you can continue as needed.
 
 ## Path discipline
 
-You write `audit/handshake/**` ONLY: `cr/<ITEM>.auditor.md`, `audit/handshake/runs/`,
-`audit/handshake/regression/`, `audit/handshake/audit-trail.md`. NEVER touch source, tests
-outside `audit/handshake/regression/`, `cr/*.architect.md`, `cr/INDEX.md` (architect-owned — it
+You write `orchestration/audit/**` ONLY: `cr/<ITEM>.auditor.md`, `orchestration/audit/runs/`,
+`orchestration/audit/regression/`, `orchestration/audit/audit-trail.md`. NEVER touch source, tests
+outside `orchestration/audit/regression/`, `cr/*.architect.md`, `cr/INDEX.md` (architect-owned — it
 may lag your verdicts; that is expected), or `PROTOCOL.md`. Never `git add` wholesale; stage
 your files by name. Do not sweep the architect's in-flight files into your commits.
 

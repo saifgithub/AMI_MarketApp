@@ -18,7 +18,7 @@ all-agent company."*
 
 ## What
 
-A second coordination layer on top of the existing audit handshake (`audit/handshake/`, CR005):
+A second coordination layer on top of the existing audit handshake (`orchestration/audit/`, CR005):
 an **Architect → builder dispatch handshake** under a new portable tree `orchestration/`. The
 Architect (one COO-equivalent) allocates scoped work-item lanes to a fleet of specialized agent
 **instances**, who build in isolated worktrees; the independent Auditor verifies (unchanged); the
@@ -46,7 +46,7 @@ project + a per-project bindings file — mirroring how `PROTOCOL.md` stays byte
   (instance-owned). Machine tokens `ASSIGNED: <id> round N`, `STATUS: … (round N)`,
   `DISPATCH: OPEN|ACCEPTED`, plus a `NEEDS-INFO`/`Q:`/`A:` clarification round-trip. State derived
   by `dispatch.sh` (adapted from `watcher.sh`), which reads the audit lane's `VERDICT` to bridge
-  into the audit layer. Full mechanics: [../../../orchestration/DISPATCH_PROTOCOL.md](../../../orchestration/DISPATCH_PROTOCOL.md).
+  into the audit layer. Full mechanics: [../../../orchestration/dispatch/DISPATCH_PROTOCOL.md](../../../orchestration/dispatch/DISPATCH_PROTOCOL.md).
 - **Collision avoidance:** disjoint write-paths on `main`, per-instance domain ownership, a
   **hot-file registry** (measured — `db/models.py` routed through `coder.api` as sole schema owner;
   `safety_floor.py` serialized `coder.api`↔`coder.room`), worktree isolation, per-instance WIP cap,
@@ -60,17 +60,17 @@ project + a per-project bindings file — mirroring how `PROTOCOL.md` stays byte
 `dispatch.sh` + board/trail + seeded first-wave lanes). Governance: this CR doc + register row.
 
 **Out:** spawning/running the instance sessions (Saiful starts them, or a later CR automates it);
-authoring the downstream CR/DEF specs (they exist); any change to `audit/handshake/` (untouched);
+authoring the downstream CR/DEF specs (they exist); any change to `orchestration/audit/` (untouched);
 the optional `db/models.py` per-domain split (a future CR if collisions prove frequent).
 
 ## Acceptance
 
 - `orchestration/` exists with the generic core, `BINDINGS.md`, 9 `roster/<id>.md`, `board.md`,
   `trail.md`, seeded `lanes/` + `intake/`.
-- `sh orchestration/dispatch.sh state` renders the board; the derived-state transitions
+- `sh orchestration/dispatch/dispatch.sh state` renders the board; the derived-state transitions
   (`UNASSIGNED → ASSIGNED → IN_PROGRESS → NEEDS-INFO → IN_AUDIT → AUDIT_RETURNED → AUDIT_PASSED →
   DONE`) each print correctly on temp lanes, and a paraphrased machine token FAILS the regex.
-- The bridge is real: a lane driven to `READY_FOR_AUDIT` produces an `audit/handshake/cr/` submission
+- The bridge is real: a lane driven to `READY_FOR_AUDIT` produces an `orchestration/audit/cr/` submission
   that `watcher.sh state` reads as `AWAITING_AUDIT`.
 - Replication smoke: copying the portable set + a 2-instance roster into a throwaway dir derives
   cleanly with zero code edits.

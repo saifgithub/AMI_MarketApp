@@ -1,0 +1,72 @@
+<!--
+README.md — map of the multi-agent orchestration system ("the all-agent company"). CR052.
+Start here. Generic core is copy-verbatim across projects; per-project specifics live in the
+BINDINGS files + roster/.
+-->
+
+# Orchestration — the all-agent company
+
+How a fleet of specialized agent **instances** builds this project in parallel without colliding,
+with every code change independently verified before it lands. File-based, git-mediated — no shared
+mutable flag; state derived from round-number watermarks; disjoint write-paths; delivery on origin.
+
+## The two layers
+
+| Layer | Path | Handshake | Owner docs |
+|---|---|---|---|
+| **Dispatch** | [`dispatch/`](dispatch/) | Architect → builder (assign → build → integrate) | [DISPATCH_PROTOCOL.md](dispatch/DISPATCH_PROTOCOL.md) |
+| **Audit** | [`audit/`](audit/) | builder → Auditor (independent verify; CR005) | [audit/PROTOCOL.md](audit/PROTOCOL.md) |
+
+A builder instance is the **bridge**: it receives a lane from the Architect (dispatch) and, when
+ready, submits into the audit layer; the Auditor's `VERDICT` flows back up. Shared role model:
+[ROLES.md](ROLES.md).
+
+## Tree
+
+```
+orchestration/
+  README.md · ROLES.md                 # start here; the 4-role model (shared)
+  dispatch/                            # Architect ↔ instance layer
+    DISPATCH_PROTOCOL.md · dispatch.sh # generic contract + state-deriver/watcher
+    BINDINGS.md                        # per-project: paths, hosts, hot-files, hosting/launch
+    loop_prompts/{ARCHITECT,AUDITOR,CODER,NONCODER}.md
+    roster/<instance-id>.md            # the fleet (open — add a file to add an instance)
+    board.md · trail.md                # ops dashboard + active ledger (bounded)
+    lanes/<ITEM>.assign.md · <ITEM>.<instance-id>.md   # the live queue
+    intake/                            # requester drafts awaiting triage
+  audit/                              # builder ↔ Auditor layer (was audit/handshake/)
+    PROTOCOL.md · watcher.sh · AMI_TRADE_BINDINGS.md
+    AUDITOR_LOOP_PROMPT.md · ARCHITECT_LOOP_PROMPT.md
+    cr/ · runs/ · regression/ · audit-trail.md
+  history/                            # durable memory: archived DONE lanes + rotated ledger
+```
+
+## The org (roles)
+
+**Architect** (1, COO) assigns + integrates, never builds or self-closes · **Auditor** (≥1, QA)
+independently verifies · **Coder** (many) builds a bound domain · **Non-coder** (≥1) *requesters*
+feed work in (bugs→DEF, GTM→CR) / *maintainers* edit non-code assets. The human is CEO — provisions
+Tier-1 things and is the single acceptance checkpoint after COMPLETE. Details: [ROLES.md](ROLES.md).
+
+## Running it
+
+- **Instances are named background sessions** you launch + interrogate (`claude --bg -n
+  "AMI-TRADE coder.api"`, monitor with `claude agents`) — NOT Architect subagents. Coordination is
+  file-only. See [dispatch/BINDINGS.md](dispatch/BINDINGS.md) → Hosting.
+- **Board:** `sh orchestration/dispatch/dispatch.sh state`. **Watch (Architect):** `… architect`.
+  **Watch (an instance):** `… inst <id>`.
+- **Context/cost:** instances are short-lived per-lane; continuity is in files, so they resume or
+  respawn — no `/compact` needed. DISPATCH_PROTOCOL.md §8.8–8.9.
+
+## Memory
+
+`history/` (archived lanes + rotated trail) + `dispatch/trail.md` + `audit/audit-trail.md` +
+`audit/runs/` are the operational history; the Architect distills durable lessons into the project
+`memory/` + `failure_patterns.md`. Keep the active `trail.md` small — query it, don't slurp it
+([history/README.md](history/README.md)).
+
+## Replicating in another project
+
+Copy the generic core (`ROLES.md`, `dispatch/DISPATCH_PROTOCOL.md`, `dispatch/loop_prompts/`,
+`dispatch/dispatch.sh`, `audit/PROTOCOL.md`, `audit/watcher.sh`), then write the two BINDINGS files
++ a `roster/<id>.md` per instance. No code changes.

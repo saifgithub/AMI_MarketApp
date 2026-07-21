@@ -149,7 +149,7 @@ Rules:
 - **Commit tag:** append `(AT:R<N> CR###)` or `(AT:R<N> DEF###)` to the summary. User-reported bug fixes keep `fix(bug:<short-id>): … (AT:R<N> DEF###)`.
 - **Exempt** (plain `(AT:R<N>)`, no ID needed): handover wraps (`chore(handover)`), version/build bumps, docs-only commits.
 - **Enforcement is convention-only** — self-enforce each session; there is no git hook or promotion gate. Full format in [`docs/initial_specs/08_tech/coding_conventions.md`](docs/initial_specs/08_tech/coding_conventions.md).
-- **Optional independent-verification layer** for a risky CR/Defect: an architect (track R) + auditor (track U) handshake — see [`audit/handshake/PROTOCOL.md`](audit/handshake/PROTOCOL.md) + [`audit/handshake/AMI_TRADE_BINDINGS.md`](audit/handshake/AMI_TRADE_BINDINGS.md) (CR005). Not required per item — Saiful invokes it.
+- **Optional independent-verification layer** for a risky CR/Defect: an architect (track R) + auditor (track U) handshake — see [`orchestration/audit/PROTOCOL.md`](orchestration/audit/PROTOCOL.md) + [`orchestration/audit/AMI_TRADE_BINDINGS.md`](orchestration/audit/AMI_TRADE_BINDINGS.md) (CR005). Not required per item — Saiful invokes it.
 
 ---
 

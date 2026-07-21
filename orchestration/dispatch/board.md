@@ -1,6 +1,6 @@
 <!--
 board.md — Architect-owned glanceable dispatch board (DISPATCH_PROTOCOL.md §8.6). Regenerable via
-`sh orchestration/dispatch.sh state`. May lag real state — detect truth from the lane tokens, never
+`sh orchestration/dispatch/dispatch.sh state`. May lag real state — detect truth from the lane tokens, never
 from this table. CR052.
 -->
 
@@ -21,7 +21,7 @@ from this table. CR052.
 | `noncoder.gtm` | non-coder / requester | GTM → CR drafts | — |
 | *(gate)* `auditor.core` | auditor | existing track-U loop; gates all coders | — |
 
-## Lanes (regenerate: `sh orchestration/dispatch.sh state`)
+## Lanes (regenerate: `sh orchestration/dispatch/dispatch.sh state`)
 
 | Item | State | Instance | Notes |
 |---|---|---|---|

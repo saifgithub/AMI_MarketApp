@@ -12,8 +12,8 @@ this file + roster/ change. CR052.
 | Generic term | AMI Trade binding |
 |---|---|
 | Shared branch | `main` — delivery = pushed to `origin` (`github.com/saifgithub/AMI_MarketApp`) |
-| `<AUDIT_ROOT>` | `audit/handshake` |
-| `<AUDIT_LANE_DIR>` | `audit/handshake/cr` (the builder writes `<ITEM>.architect.md` here on hand-off) |
+| `<AUDIT_ROOT>` | `orchestration/audit` |
+| `<AUDIT_LANE_DIR>` | `orchestration/audit/cr` (the builder writes `<ITEM>.architect.md` here on hand-off) |
 | `<WORKTREE_DIR>` | `.claude/worktrees` (pattern `agent-*` per session-config; instance worktrees `<instance-id>-<ITEM>`) |
 | `<TAG_PREFIX>` | `AT` — commit tag `(AT:<instance-id> CR###\|DEF###)` |
 | Change registers | CR: `docs/forward_planning/cr_list.md` · DEF: `docs/defect/def_list.md` (Architect owns status) |
@@ -40,8 +40,8 @@ disposable helper work inside an instance.)
 
 - **Launch (Saiful onboards each instance):** `claude --bg` from shell, `/bg` from a session, or the
   `claude agents` TUI. Name it with the project prefix so it groups: `claude -n "AMI-TRADE coder.api"`
-  (or `/rename`). Opening prompt: *"You are `coder.api`. Read `orchestration/roster/coder.api.md` +
-  `orchestration/loop_prompts/CODER.md` and run your loop."*
+  (or `/rename`). Opening prompt: *"You are `coder.api`. Read `orchestration/dispatch/roster/coder.api.md` +
+  `orchestration/dispatch/loop_prompts/CODER.md` and run your loop."*
 - **Worktree isolation:** background agents run under `.claude/worktrees/` — the per-instance worktree
   the protocol already specifies. Keep `worktree.bgIsolation` on.
 - **Monitor / interrogate the fleet:** `claude agents` (grouped Needs-input / Working / Completed);
@@ -51,7 +51,7 @@ disposable helper work inside an instance.)
 - **Idle stop:** a background agent's supervisor stops after ~1h idle — fine, because instances are
   short-lived per-lane (token-economy rule) and resumable via `claude --resume`.
 - **Coordination is file-only:** the Architect never messages an instance in-process; each self-notices
-  via `sh orchestration/dispatch.sh inst <id>` and hands off through the git repo.
+  via `sh orchestration/dispatch/dispatch.sh inst <id>` and hands off through the git repo.
 
 ## Auditor mapping (sharding)
 

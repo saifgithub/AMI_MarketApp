@@ -1,7 +1,7 @@
 <!--
 DISPATCH_PROTOCOL.md — the Architect ↔ instance dispatch handshake. GENERIC and PROJECT-AGNOSTIC:
 copy verbatim into any project. Project specifics resolve via BINDINGS.md. Companion: ROLES.md
-(the role model). Layers ON TOP OF the existing builder→Auditor audit handshake (audit/handshake/
+(the role model). Layers ON TOP OF the existing builder→Auditor audit handshake (orchestration/audit/
 PROTOCOL.md), which it does not modify. On any conflict about verification, the audit PROTOCOL wins.
 Owner: the Architect. CR052.
 -->
@@ -56,7 +56,7 @@ is deliberately run as the Architect's own ephemeral subagent — not the interr
 
 ## 3. The lanes (directory as queue, no shared mutable flag)
 
-Per work item, under `orchestration/lanes/`:
+Per work item, under `orchestration/dispatch/lanes/`:
 
 - **`<ITEM>.assign.md`** (Architect owns): `KIND:` (code | content | requester-note),
   `INSTANCE: <instance-id>`, `ACCEPTANCE: <path to the CR/DEF spec>`, `DEPENDS-ON:` (or none),
@@ -125,7 +125,7 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
 ## 7. Non-coder flows
 
 - **Requester** (`noncoder.*` feeding DEFs/CRs): never receives an assignment lane. Drops a draft
-  into `orchestration/intake/`; the Architect triages (with the §5 round-trip if more is needed) →
+  into `orchestration/dispatch/intake/`; the Architect triages (with the §5 round-trip if more is needed) →
   authors the CR/DEF spec → opens an assignment lane. **Requesters propose; only the Architect
   mints the dispatched work item.**
 - **Maintainer** (`noncoder.*` editing assets): receives assignment lanes like a coder, but
@@ -141,9 +141,18 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
 4. **Worktree isolation.** Each instance builds in its own worktree, commits its own paths by name,
    pushes to origin. The Auditor audits the committed SHA in its own worktree, never the live tree.
 5. **Dependencies.** A dependent item's COMPLETE is provisional until its `DEPENDS-ON` is COMPLETE.
-6. **Single ledger + shared board.** `trail.md` is the one chronological record (Architect appends
-   one row per assignment and per closure). `board.md` is the glanceable table, regenerable via
-   `dispatch.sh state`; it may lag — detect real state from the tokens, never from the board.
+6. **Single ledger + shared board + retention (keep files small).** `trail.md` is the chronological
+   record — the Architect appends one **terse, timestamped** row (`YYYY-MM-DD HH:MM` KL) per
+   assignment and per closure. The trail is a **LOG, not a state store**: the current state of any
+   lane always comes from the lane files (`dispatch.sh state`), never the trail — so old rows can be
+   archived safely even for a still-open item. Keep it bounded with **`rotate_trail.py`** (a SINGLE,
+   SHARED Architect job — NOT per-agent, since `trail.md`/`history/` are single-writer and N rotators
+   would race): it moves rows older than `--keep-days` into monthly `../history/trail/trail-<YYYY-MM>.md`
+   archives. Run it manually or wire it to ONE daily routine. **Query the trail, never slurp it**
+   (`grep`/`tail`). Per-item *detail* is NOT in the trail — it is the archived lane
+   (`../history/lanes/<ITEM>.md`). `board.md` is the glanceable table, regenerable via
+   `dispatch.sh state`; it may lag — detect real state from the tokens, never from the board. Only the
+   Architect reads/writes the trail; instances read their lane + the relevant archived lane.
 7. **Stall rule.** At a cap with no movement for the BINDINGS stall window, the Architect escalates
    to the human rather than blocking indefinitely.
 8. **Context (no human needed).** `/compact` cannot be automated — agents can't run slash commands,
@@ -173,9 +182,17 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
 
 On the Auditor's COMPLETE (`AUDIT_PASSED`), the Architect: verifies the verdict is on origin,
 updates the CR/DEF register status, appends the `trail.md` closure row, writes
-`DISPATCH: ACCEPTED (round N)` on the assign lane, and frees the instance's WIP slot. The human's
-own hands-on test after ACCEPTED is the single stakeholder checkpoint; a defect they find reopens
-the lane at the next round.
+`DISPATCH: ACCEPTED (round N)` on the assign lane, **archives the closed lane pair to
+`../history/lanes/<ITEM>.md`** (the durable per-item record — what/why, every Q/A round-trip, the
+verdict; this keeps active `lanes/` lean and is the collective memory), and frees the instance's WIP
+slot. The human's own hands-on test after ACCEPTED is the single stakeholder checkpoint; a defect
+they find reopens the lane at the next round.
+
+**Collective memory.** The archived lanes + `trail.md` + the audit layer's `audit/audit-trail.md` +
+`audit/runs/` are the operational history any agent can grep for prior decisions. Periodically (at
+session wrap, or via `/sm-checkpoint`) the Architect distills durable, cross-agent lessons from them
+into the project's existing memory (`memory/` + its index, and `failure_patterns.md` for recurring
+classes) — feeding the SAME collective memory, not a parallel one.
 
 ## 10. Replicability
 

@@ -11,7 +11,7 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
 
 ## Your loop
 
-1. **Watch.** `sh orchestration/dispatch.sh architect` blocks until a lane needs you
+1. **Watch.** `sh orchestration/dispatch/dispatch.sh architect` blocks until a lane needs you
    (`UNASSIGNED | BLOCKED | NEEDS-INFO | IN_REVIEW | AUDIT_PASSED`), or `... state` for the board.
 2. **Triage intake.** Read `intake/*.md` drafts from requesters. If a draft is thin, set
    `TRIAGE: NEEDS-INFO` + a `Q1:` block and ping the requester (§5 round-trip); wait for `A1:`.
