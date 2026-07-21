@@ -6,13 +6,11 @@ auto-answer. The model is instructed to answer strictly from what's here and to
 ESCALATE anything else. Keep it factual, product-level, and free of anything that
 could read as investment advice.
 
->>> SAIFUL: review this content before go-live. Two things to confirm:
-    1. Exact prices — the marketing site deliberately doesn't publish numbers yet,
-       so this file doesn't either. If you want the bot to quote $14.99 / $34.99,
-       add them below. Until then it says "announced at launch".
-    2. Agent count wording — the site hero says "13 agents", the footer says "12".
-       This file says "12 specialist analysts coordinated by the Concierge (13 in
-       total)". Align the site copy or this file, whichever you prefer.
+Decisions (Saiful, 2026-07-21):
+  - Pricing: intentionally NOT published as numbers yet — stays "announced at launch"
+    to match the marketing site. Add $14.99 / $34.99 here only when the site does.
+  - Agent count: 12 analyst agents + the Concierge = 13 in all. Site standardised on
+    "13"; this file says "12 specialist analysts coordinated by the Concierge (13 in all)".
 -->
 
 # AMI — Website FAQ (grounding knowledge)
