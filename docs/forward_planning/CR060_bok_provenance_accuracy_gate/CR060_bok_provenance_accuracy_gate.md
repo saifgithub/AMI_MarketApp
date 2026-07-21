@@ -1,6 +1,6 @@
 # CR060 — BOK provenance & accuracy gate: every claim sourced *and* verified
 
-**Status:** planned — **quality gate / governance CR** (architect + Saiful) · **Session:** AT:R63 · **Filed:** 2026-07-21
+**Status:** **standing** (always-open, never closes — like CR046) · **Owner: Claude — BOK content-quality lane** (Saiful, AT:R63: *"CR060 is your core business. You're responsible for the quality of the lessons, questions and answers."*) · **Session:** AT:R63 · **Filed:** 2026-07-21
 
 > Requirement (Saiful): *"A high-quality body of knowledge also means 100% certainty the lessons
 > are accurate. We need to know the sources of each lesson, and they must come from reputable
@@ -9,6 +9,15 @@
 **Direct answer: No — not yet.** This CR makes source-provenance **and** independent verification a
 hard, enforced requirement across the entire BOK, and elevates CR054's P1 (the sourcing spine) from
 a Wave-3 nicety to a **shipping gate**.
+
+> **Scope (Saiful, AT:R63): provenance is internal-only — users never see it.** *"The users do not
+> need to see the provenance, but we as owners must be sure they are correct."* So `sources` /
+> `verified` are **owner-facing QA metadata** (frontmatter + the registry), **never rendered in the
+> app** — no reader "sources" section, no client/UI work, no user-facing citations. The deliverable
+> is *our* certainty the content is correct, not a user-visible authority display. (This also
+> **retires CR054 §4.3's mooted user-facing "Where this comes from" line** — it stays internal.)
+> The one thing users *do* experience is the *effect*: unverified content is held back (§6), so what
+> they see has passed the gate.
 
 ---
 
@@ -103,7 +112,30 @@ extend `backend/tests/unit/test_lesson_corpus_integrity.py` —
 4. **Question-level provenance** — every quiz explanation ties to its lesson's verified sources.
 5. **Glossary / daily / coach** — same pass.
 
-## 7. Decision for Saiful — the verification standard (the cost of 100%)
+## 7. The verification standard — RESOLVED (AT:R63)
+
+**Saiful assigned ownership to Claude** ("CR060 is your core business… you're responsible for the
+quality of the lessons, questions and answers"). That resolves the "who confirms accuracy" question
+into a **hybrid where Claude is the standing verification engine**, with a human-sign-off carve-out
+where an AI must not be the final authority:
+
+- **Claude owns:** the registry, the schema, the corpus guards, and the systematic verification pass
+  — checking every factual claim and every quiz answer against a Tier-1/2/3 source, flagging
+  mismatches, and stamping `verified` only when a claim genuinely maps to its source. Numbers go
+  through CR046, not my own arithmetic.
+- **Escalate to a human authority (never auto-verify):** **Sharia rulings** (CR058 — "methodology,
+  not a Sharia ruling"; defer to qualified scholars), and **legal/regulatory adjudication** where
+  being wrong has real consequence. Claude surfaces these; Saiful/SME signs off.
+- **Honesty guard on myself:** I am also AI-authored judgement. To avoid the DEF059 failure (an AI
+  confidently self-approving), a `verified` stamp records *which source and which claim* were
+  checked, so the reasoning is auditable and re-checkable — the stamp is evidence, not a vibe.
+
+Operating model — **verify-on-commit, don't edit live WIP:** content is authored by parallel lanes
+and much is uncommitted. I verify committed content and hand findings back on WIP (the
+[quality findings log](../../../content/_authoring/source_registry.md) is the channel); I don't edit
+another lane's in-flight files. This keeps ownership of *quality* without colliding with *authoring*.
+
+### Original options (kept for the record)
 
 Structural provenance is not the hard part; **who confirms accuracy** is. Options:
 
