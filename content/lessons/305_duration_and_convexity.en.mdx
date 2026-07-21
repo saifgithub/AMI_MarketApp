@@ -1,0 +1,83 @@
+---
+id: "305_duration_and_convexity"
+title: "Duration & convexity intuition"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 3"
+topic: "duration_convexity"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm"]
+tags: ["bonds", "fixed-income", "duration", "convexity", "interest-rate-risk"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Duration & convexity intuition
+
+Not every bond reacts to a rate move by the same amount — a 2-year bond barely flinches at a 1-point yield swing while a 20-year bond can drop double digits. Duration is the number that tells you how sensitive a bond's price is to a change in yield, and it's the single fastest way to compare interest-rate risk across very different bonds. After this lesson you'll be able to read a duration figure and predict roughly how much a bond's price moves for a given rate move.
+
+## Example
+
+Take the same hypothetical $1,000 face, 4% coupon, semiannual bond from the pricing lesson, priced at a 5% YTM. At 10 years to maturity, its Macaulay duration is **8.26 years** and its modified duration is **8.05**. The heuristic: price moves roughly **-modified duration % per 1-point yield move**. So if yields rise 1 percentage point, this bond's price should fall roughly 8.05%. Now compare it to the same coupon and yield but only 2 years to maturity: Macaulay duration **1.94 years**, modified duration **1.89**. The same 1-point yield rise costs the 2-year bond roughly 1.89% — over four times less pain than the 10-year bond, purely because more of its cash flow arrives sooner. The clearest teaching case is a zero-coupon 10-year bond at 5% YTM: Macaulay duration is exactly **10.0 years** — its maturity. With no coupons along the way, 100% of your cash flow sits at maturity, so duration collapses to exactly the time you wait. That's the anchor case that makes duration intuitive: duration is a cash-flow-weighted average time to get your money back, and coupons pull that average earlier.
+
+## The trap
+
+Beginners treat duration like a fixed, permanent property of a bond — "this bond has 8 years of duration" as if it's stamped on the certificate. It isn't. Duration changes as the bond ages, as yields move, and it's specific to the yield level it was measured at. The bigger trap: treating the duration estimate as exact. Modified duration is a **linear** approximation of a curved relationship — it gets the direction and rough magnitude right but overstates the loss on a rate rise and understates the gain on a rate fall. The correct mental model: duration tells you the slope at one point on a curve, not the whole curve.
+
+## The steelman
+
+A sharp critic could say: "If duration is just an approximation, why not always compute the exact repriced value instead of relying on a linear shortcut?" Fair — and desks with pricing engines do exactly that for a single bond. But duration earns its keep as a **portfolio-level risk yardstick**: you can sum duration times dollar exposure across hundreds of bonds with different coupons and maturities to get one portfolio-level rate-sensitivity number, something you can't do by re-running full repricing models position by position in real time. The falsifier for whether duration is "good enough": compare the linear duration-implied price move against the bond's actual repriced value for a realistic rate move (1-2 points). If the gap is small — which convexity theory predicts it will be for moderate moves — the shortcut earns its use; for large rate shocks the gap widens and you need the convexity correction.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A 10-year bond has modified duration 8.05; a 2-year bond with the same coupon and yield has modified duration 1.89. If yields rise 1 percentage point, roughly how do their price reactions compare?"
+  options={[
+    "They fall by the same amount, since duration only matters for yield level, not maturity",
+    "The 10-year bond falls roughly 8.05% while the 2-year bond falls roughly 1.89% — over four times less rate sensitivity for the shorter bond",
+    "The 2-year bond falls more because it matures sooner and has less time to recover",
+    "Neither bond's price changes; only newly issued bonds reprice with yield changes"
+  ]}
+  answer={1}
+  explanation="Modified duration is a direct estimate of percentage price change per 1-point yield move, so 8.05 and 1.89 translate almost directly into 8.05% and 1.89% price drops. The 2-year bond is less sensitive precisely because more of its cash flow — including full principal — arrives sooner, not because it has less time to recover. Existing bonds reprice constantly in secondary markets; that's the entire premise of yield-to-maturity."
+/>
+
+<Quiz
+  question="A 10-year zero-coupon bond at 5% YTM has a Macaulay duration of exactly 10.0 years — precisely its maturity. Why does a zero-coupon bond's duration always equal its maturity, while a coupon-paying bond's duration is shorter than its maturity?"
+  options={[
+    "Zero-coupon bonds are riskier, so regulators require duration to equal maturity as a disclosure rule",
+    "Zero-coupon bonds don't have a modified duration, only Macaulay duration, so the two numbers can't be compared",
+    "It's a mathematical coincidence specific to the 5% yield used in this example",
+    "Duration is a cash-flow-weighted average time to receive your money; with no coupons paid along the way, all cash flow sits at maturity, so the average collapses to exactly that date — coupon payments pull the average earlier"
+  ]}
+  answer={3}
+  explanation="Duration weights each cash flow by how much value it contributes and when it arrives; a zero-coupon bond has exactly one cash flow, at maturity, so the weighted average is trivially the maturity date itself. A coupon bond returns some cash earlier via coupons, which pulls the weighted average below the maturity date — that's why the 10-year coupon bond's duration (8.26 years Macaulay) is shorter than its 10-year maturity. This holds at any yield level, not just 5%, and zero-coupon bonds have both duration measures like any bond."
+/>
+
+<Quiz
+  question="Modified duration predicts a bond's price move as a straight line, but convexity means the real price/yield relationship curves. What does convexity actually predict about the accuracy of a duration-only estimate for a rate rise versus a rate fall?"
+  options={[
+    "For a rate rise, the actual price drop is somewhat smaller than the linear duration estimate predicts; for a rate fall, the actual price gain is somewhat larger — the curve is more forgiving than the straight line in both directions",
+    "Duration is exactly accurate in both directions; convexity only matters for options, not bonds",
+    "For a rate rise, the actual price drop is larger than duration predicts, punishing bondholders more than the linear estimate suggests",
+    "Convexity makes duration estimates less accurate for short-maturity bonds and more accurate for long-maturity bonds"
+  ]}
+  answer={0}
+  explanation="The price/yield relationship is curved, not straight, and it curves in the bondholder's favor on both sides: losses on a rate rise come in a bit lighter than the linear duration estimate, and gains on a rate fall come in a bit richer. That's the defining shape of positive convexity in a plain coupon bond. Duration is never exact for any maturity — the approximation error just grows with the size of the rate move, and it applies at all maturities, not selectively to short or long bonds."
+/>
+
+## Try it
+
+In 1-on-1 with the Fundamentals Analyst, ask: "If I'm comparing a short-dated bond fund to a long-dated bond fund, what does duration tell me about which one is riskier if rates move?" Use the 8.05-vs-1.89 comparison from this lesson to sanity-check the answer.
+
+## Takeaway
+
+Duration tells you roughly how much a bond's price moves per 1-point yield change — longer maturity and lower coupons mean higher duration and more rate sensitivity — but it's a straight-line estimate of a curved relationship, so treat it as a fast approximation, not an exact forecast.
+</content>

@@ -1,0 +1,65 @@
+---
+id: "316_calls_and_puts"
+title: "Calls & puts — the two building blocks"
+duration_min: 4
+level: 9
+module: 15
+difficulty: 2
+track: "asset_classes"
+code: "ASST 14"
+topic: "options_basics"
+prerequisites: []
+tags: ["options", "calls", "puts", "derivatives", "vocabulary"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Calls & puts — the two building blocks
+
+Every option that trades — on AAPL, NVDA, or a Bursa Malaysia derivatives contract — reduces to one of two building blocks: a call, the right to buy an underlying at a fixed strike price by a fixed expiry, or a put, the right to sell it. Each block has two sides: the buyer, who pays a premium for the right, and the seller, who collects that premium in exchange for an obligation if the buyer chooses to exercise. Every option strategy in this module — payoff diagrams, covered calls, protective puts — is just these two blocks combined differently. After this lesson you'll be able to name all four positions and state, without hesitating, who holds a right and who holds an obligation in each.
+
+## Example
+
+Take AAPL, illustratively trading near $195. A trader who wants upside exposure without committing to 100 shares outright can buy a call: for example, the right to buy 100 AAPL shares at a $200 strike, expiring in a month, for a premium of a few dollars per share (illustrative figure, not a live quote — real premiums move with AAPL's price and implied volatility). That trader is now **long a call** — they hold a right, not an obligation. If AAPL never gets near $200, they simply let the option expire and lose only what they paid. On the other side of that same contract sits whoever sold it — **short the call** — who collected the premium upfront but is now obligated to deliver 100 AAPL shares at $200 if the buyer exercises, no matter how high AAPL has actually gone. The put works as the mirror image: a trader who wants downside protection or a bearish bet can buy a put — the right to sell at a fixed strike — while the put seller is obligated to buy the shares at that strike if exercised. Four positions, two rights, two obligations.
+
+## The trap
+
+Beginners hear "buying a call" and picture buying the stock at a discount — as if the premium is a down payment that gets applied toward the shares. It isn't. The premium is a separate, non-refundable cost for the *right* to transact later; if the stock never reaches the strike, that premium is gone regardless of what happens to the stock afterward. The second beginner mistake is symmetry-blindness: assuming buyer and seller carry equivalent risk because they're on "opposite sides of the same trade." They don't. The option buyer's maximum loss is capped at the premium paid, full stop. The option seller's risk is structurally different — a short call against a stock with no ceiling on how high it can run carries a loss that grows with the stock, uncapped. Right and obligation are not symmetric risks wearing different labels.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A trader buys a put option on NVDA with a $400 strike, paying a premium. Which statement correctly describes what that trader now holds?"
+  options={[
+    "The right, but not the obligation, to sell 100 NVDA shares at $400 before expiry",
+    "An obligation to sell 100 NVDA shares at $400 if the option is exercised",
+    "An obligation to buy 100 NVDA shares at $400 if the option is exercised",
+    "Ownership of 100 NVDA shares at a $400 cost basis"
+  ]}
+  answer={0}
+  explanation="Buying a put means paying for a right — the choice to sell at $400 — not an obligation. Obligations belong to whoever sold the put. And buying a put creates no share position on its own; it's a separate contract, not a purchase of the underlying stock."
+/>
+
+<Quiz
+  question="An options trader tells you: 'I sold a call against NVDA — the buyer and I both took on the same risk, just from different sides.' Using what you now know about rights versus obligations, what's wrong with that claim?"
+  options={[
+    "Nothing is wrong — buyer and seller always have identical maximum loss on any option contract",
+    "The buyer holds a right with a loss capped at the premium paid; the seller holds an obligation with loss that grows uncapped as the underlying rises, which is not symmetric",
+    "The claim is wrong because only puts have asymmetric risk — calls are always symmetric between buyer and seller",
+    "The claim is wrong because option sellers can never lose money, only buyers can"
+  ]}
+  answer={1}
+  explanation="A call buyer's downside is fixed the moment the premium is paid — they can always just not exercise. A call seller has no such floor: the obligation to deliver shares at the strike gets more expensive the higher the stock runs, with no contractual ceiling. Same contract, structurally different risk on each side."
+/>
+
+## Try it
+
+Open the Glossary and look up "call" and "put." Then ask the Fundamentals Analyst: "If I'm long a call and the stock never reaches my strike, what happens to my premium?" Confirm the answer matches this lesson before moving on to payoff diagrams next.
+
+## Takeaway
+
+A call is the right to buy, a put is the right to sell — the buyer of either pays a premium for a right capped at that cost, while the seller collects the premium for an obligation that isn't capped the same way.

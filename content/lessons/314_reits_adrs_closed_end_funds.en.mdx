@@ -1,0 +1,74 @@
+---
+id: "314_reits_adrs_closed_end_funds"
+title: "REITs, ADRs & closed-end funds"
+duration_min: 5
+level: 9
+module: 14
+difficulty: 2
+track: "asset_classes"
+code: "ASST 12"
+topic: "specialty_vehicles"
+prerequisites: ["313_leveraged_inverse_etfs_decay"]
+tags: ["reit", "adr", "closed-end-fund", "income", "cross-border", "bursa"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# REITs, ADRs & closed-end funds
+
+Three vehicle types solve three different access problems: a REIT lets you own a slice of commercial real estate without buying a building; an ADR lets you hold a foreign company on a home exchange without opening a foreign brokerage account; a closed-end fund raises a fixed pool of capital once and then trades like a stock, which means its market price and its actual portfolio value can drift apart. After this lesson you'll be able to name what problem each vehicle solves and the specific mechanical quirk that comes with it.
+
+## Example
+
+A REIT (Real Estate Investment Trust) must, by the structure that gives it favorable tax treatment, distribute at least 90% of its taxable income to shareholders as dividends — which is why REITs typically carry higher yields than the broad equity market. On Bursa Malaysia, Sunway REIT holds a portfolio of retail, hotel, and office properties and trades on the exchange like any other stock, giving a retail investor exposure to Malaysian commercial real estate with the liquidity of a listed security instead of the illiquidity of buying a physical property.
+
+An ADR (American Depositary Receipt) is a US-listed certificate representing shares of a foreign company held by a custodian bank abroad — it lets a US brokerage account hold, say, Alibaba (BABA) or Taiwan Semiconductor (TSM) without a foreign trading account, priced in US dollars during US market hours. The mechanism adds a layer: currency conversion happens inside the ADR structure, and some ADR programs charge a small annual custody fee deducted from dividends.
+
+A closed-end fund (CEF) raises a fixed amount of capital in an IPO, then closes to new investment — its shares trade on an exchange at whatever price buyers and sellers agree on, which can sit at a premium or discount to the fund's actual net asset value (NAV) depending on demand. Unlike an ETF, there's no creation/redemption mechanism forcing the market price back toward NAV, so a CEF trading at a 10% discount to NAV means the market is pricing the fund's underlying holdings at 90 cents on the dollar — sometimes for structural reasons, sometimes as a real opportunity, sometimes as a warning about the fund's costs or manager.
+
+## The trap
+
+Beginners assume every fund-like ticker trades at what its holdings are worth, the way an ETF does. It feels safe to assume "the price is the value" because that's true for the ETF and index-fund examples earlier in this module. The correct mental model: only ETFs have the arbitrage mechanism (creation/redemption) that keeps price tight to NAV. A closed-end fund has no such mechanism — its price is set by ordinary supply and demand for the shares themselves, so price and NAV can diverge for long stretches, and a "cheap-looking" discount can stay wide, or widen further, with no guarantee of narrowing.
+
+## The steelman
+
+A light counterpoint on REITs specifically: high mandatory payout ratios mean REITs must keep raising new capital (debt or share issuance) to grow, since they can't retain much cash — which makes them more sensitive to interest rates than a typical company that funds growth from retained earnings. That's a real structural cost of the same feature that produces the attractive yield; it's not a flaw to dismiss, just the tradeoff the 90%-distribution rule requires.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A closed-end fund trades on Bursa Malaysia at RM 0.90 per share while its published net asset value per share is RM 1.00 — a 10% discount. Why can this discount persist, unlike a similar gap in an ETF?"
+  options={[
+    "Closed-end funds are always mispriced due to low trading volume alone",
+    "ETFs and closed-end funds both correct instantly, so this discount is a data error",
+    "Closed-end funds have no creation/redemption arbitrage mechanism forcing the market price toward NAV, so price is set purely by supply and demand for the shares and can diverge from NAV for extended periods",
+    "The RM prefix means Bursa-listed funds are exempt from NAV-based pricing rules"
+  ]}
+  answer={2}
+  explanation="ETFs stay close to NAV because authorized participants can create or redeem shares for the underlying basket whenever a gap opens, arbitraging it away. Closed-end funds have a fixed share count and no such mechanism, so the discount reflects genuine market supply and demand, which can persist or widen. It isn't a data error, isn't purely a volume artifact, and the RM currency prefix is just locale notation from this lesson's Bursa example — it doesn't change the pricing mechanism."
+/>
+
+<Quiz
+  question="An ADR lets a US brokerage account hold shares of a company like Taiwan Semiconductor (TSM) without a foreign trading account. What does the ADR structure add on top of simply owning the underlying foreign shares?"
+  options={[
+    "Nothing — an ADR is functionally identical to holding the foreign shares directly on a foreign exchange, with no additional layer",
+    "A custodian-bank layer that handles currency conversion and, in some programs, deducts a small annual custody fee from dividends, in exchange for US-dollar pricing and US market-hours trading",
+    "A guarantee that the ADR will never trade at a different price than the underlying foreign-listed shares",
+    "Automatic conversion of the ADR into a leveraged position"
+  ]}
+  answer={1}
+  explanation="The custodian bank is the mechanism that makes cross-border access possible — it holds the real shares abroad and issues the US-dollar-denominated certificate, handling currency conversion and sometimes charging a custody fee. This is a real structural layer, not a null convenience, and it carries no guarantee against price divergence from the home-market shares (currency moves and liquidity differences can create gaps). Nothing about an ADR involves leverage."
+/>
+
+## Try it
+
+Open the app's fund-literacy reference and look up one REIT, one ADR, and one closed-end fund (real or from your watchlist). For the closed-end fund specifically, note whether it discloses its current premium/discount to NAV — that single number tells you more about the fund's market pricing dynamics than its recent price chart alone.
+
+## Takeaway
+
+Match the vehicle to the mechanism: only an ETF's arbitrage keeps price near NAV — a REIT's yield comes with a payout-driven capital dependency, and a closed-end fund's price is free to drift from what it actually holds.

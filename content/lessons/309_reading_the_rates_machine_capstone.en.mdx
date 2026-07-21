@@ -1,0 +1,81 @@
+---
+id: "309_reading_the_rates_machine_capstone"
+title: "Capstone: reading the rates machine"
+duration_min: 7
+level: 9
+module: 13
+difficulty: 4
+track: "asset_classes"
+code: "ASST 7"
+topic: "rates_machine_capstone"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "305_duration_and_convexity", "306_yield_curve_and_inversion", "307_credit_spreads_and_ratings", "308_how_rates_price_equities"]
+tags: ["bonds", "fixed-income", "capstone", "synthesis", "duration", "credit-spreads", "yield-curve", "equity-valuation"]
+sources: []
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Capstone: reading the rates machine
+
+You now hold the full M13 toolkit: what a bond actually is, how price and yield move inversely, how duration measures rate sensitivity, what an inverted yield curve says about growth expectations, how credit spreads price default risk, and how the discount rate reaches all the way into equity valuations. This capstone runs a single surprise rate shock through all of it — the kind of one-day event where a bond desk, a credit desk, and an equity desk are all repricing the same fact at once. The skill being tested: seeing one Fed surprise ripple through four different markets via one shared mechanism.
+
+## One scenario, every M13 concept
+
+A 20-year corporate bond, face value $1,000, 4.5% coupon (semiannual), was issued at par — priced at exactly **$1,000.00** when the market's required yield was 4.5%. Then the Fed delivers a surprise: a 100 basis point hike, pushing the market's required yield on this bond to 5.5%. The bond instantly reprices to **$879.61** — a $120.39 drop, 12.0% of its value, on a single rate announcement, with nothing about the issuer's business changing at all. Duration explains why the move is that large: modified duration at issue (4.5% YTM) is **13.1 years**, so the linear estimate predicts roughly 100bp × 13.1 ≈ 13.1% — close to the actual 12.0% drop, with convexity making the real loss a bit smaller than the straight-line estimate, exactly as the duration lesson predicted it would.
+
+Now trace the same shock through the rest of the machine. **The yield curve:** if this hike was the market repricing near-term policy while long-run growth expectations stayed anchored or worsened, the short end can rise faster than the long end — pushing the curve flatter or toward inversion, the market's signal that it now assigns higher odds to a future slowdown. **Credit spreads:** this bond's 12.0% repricing came purely from the risk-free rate moving; a lower-rated issuer's bond takes that same risk-free-rate hit *and* often sees its spread widen on top, because a sudden hike raises the odds that weaker borrowers can't refinance cheaply — so junk-rated debt falls harder than this investment-grade example, a compounding effect, not a coincidence. **Equities:** the same 100bp move that just cost this bond 12% is the identical discount-rate input equity valuation runs on — a long-duration growth stock, priced mostly on cash flows a decade out, takes a proportionally larger hit than a mature dividend payer, for the same duration reason the bond just demonstrated numerically. One number — the discount rate — is doing all four jobs at once.
+
+## The steelman
+
+The strongest case against reading this as one clean mechanism: "Real markets don't move this tidily — a Fed surprise also changes growth expectations, currency, and sector-specific factors simultaneously, so attributing the equity and credit moves purely to the discount-rate channel overstates how mechanical it really is." That's a fair challenge, and it's the same discipline the rates-and-equities lesson raised: rates are one input, not the only one. The falsifier: isolate names and bonds where near-term fundamentals and credit quality are genuinely unchanged around the announcement. If their prices still move by roughly the duration-implied amount, that isolates the discount-rate channel cleanly. Where guidance or credit quality also shift in the same window, the moves are compounding, not contradicting — the duration/discount-rate mechanism is still present, just riding alongside other forces you have to separate out, exactly as this capstone's credit-spread section showed for the lower-rated issuer.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The bond reprices from $1,000.00 to $879.61 on a 100bp hike, and modified duration at issue was 13.1 years. A lower-rated issuer with a similar-duration bond falls even further on the same day. Combining the duration and credit-spread lessons, what explains the lower-rated bond's larger drop?"
+  options={[
+    "It fell purely due to duration being higher for lower-rated bonds by definition, unrelated to credit",
+    "It absorbs the same risk-free-rate-driven repricing this bond just took, plus additional spread widening as the market raises its odds of refinancing trouble for weaker borrowers — two effects stacking on top of each other",
+    "Lower-rated bonds are unaffected by Fed rate moves since their yields are already high",
+    "The drop is unrelated to this bond's move; credit-rated bonds trade on a completely separate pricing mechanism"
+  ]}
+  answer={1}
+  explanation="The lower-rated bond takes the identical risk-free-rate hit this investment-grade bond just demonstrated (roughly the same duration-implied percentage, if durations are similar) and then typically sees its credit spread widen on top, because a sudden hike raises real refinancing risk for weaker borrowers — the two effects compound rather than being alternatives. Rating has no mechanical relationship to duration, high yields don't insulate a bond from rate moves, and both bond types are priced with the same discount-rate machinery, just with a different additional risk premium layered on."
+/>
+
+<Quiz
+  question="The same 100bp hike that cost this bond 12.0% also hits equity valuations through the discount rate. Combining the duration lesson and the rates-and-equities lesson, which equity would you expect to fall proportionally hardest, and why?"
+  options={[
+    "A mature, dividend-paying value stock, because dividend payers are the most exposed to any rate change",
+    "All equities fall by exactly the same percentage regardless of when their cash flows arrive, since the discount rate is one number applied uniformly",
+    "A long-duration growth stock priced mostly on cash flows a decade or more out — the same reason this 20-year, 13.1-modified-duration bond fell harder than a shorter-duration bond would have on the identical rate move",
+    "None of them, because equities are not discounted using interest rates the way bonds are"
+  ]}
+  answer={2}
+  explanation="The duration intuition transfers directly: a stock whose value sits mostly in distant future cash flows behaves like this capstone's long-duration bond, highly sensitive to the discount rate, while a stock with more value in near-term cash flows behaves like a shorter-duration instrument and absorbs less of the same rate shock — that's precisely the mechanism the rates-and-equities lesson built on this module's duration math. Dividend payers are actually the less rate-sensitive case, not the most, and equity valuation explicitly runs on a discount rate built from the risk-free yield, so the 'not discounted like bonds' answer is simply wrong."
+/>
+
+<Quiz
+  question="Pulling together the whole scenario — the bond's 12.0% drop, the possible curve-flattening, the credit-spread widening on weaker issuers, and the harder hit to long-duration equities — what is the single mechanism connecting all four reactions to one Fed surprise?"
+  options={[
+    "A single discount-rate shock propagating through every instrument whose value depends on future cash flows — the size of each reaction scales with how much of that instrument's value sits far in the future (its duration), plus, for credit, an added layer of default-risk repricing",
+    "Four unrelated markets that happened to move on the same day by coincidence",
+    "The Fed directly sets the price of every bond, stock, and credit spread by regulation, so all four move together by mandate",
+    "Only the bond market actually reacted to the hike; the yield-curve, credit, and equity reactions described are unrelated coincidental market noise"
+  ]}
+  answer={0}
+  explanation="Every reaction in this scenario traces back to the same discount-rate mechanism: instruments whose value depends on cash flows far in the future move more (higher duration), instruments carrying default risk absorb an additional spread-widening layer on top, and the curve shape reflects the market's own read on how persistent the shock will be — one shared rate-repricing mechanism, with each market's reaction scaled by its own duration and risk profile. There is no direct price-setting mandate from the Fed over bonds, stocks, or spreads, and treating the four reactions as coincidental ignores the entire mechanism this module built."
+/>
+
+## Try it
+
+Convene the Room on a mixed watchlist — one long-duration growth stock and one steady dividend payer — right after any real rate announcement. Compare how each agent's argument in the simulated Verdict weighs the discount-rate channel versus company-specific fundamentals. Log in your Decision Journal which agent's reasoning best separated the two. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+One rate shock, one discount rate, four markets: the bond's duration-scaled price drop, the yield curve's shape, the credit spread's default-risk premium, and the equity discount rate are all the same mechanism wearing different clothes — learn to see the single thread instead of four separate stories.
+</content>

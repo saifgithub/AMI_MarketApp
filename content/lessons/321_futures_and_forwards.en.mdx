@@ -1,0 +1,86 @@
+---
+id: "321_futures_and_forwards"
+title: "Futures & forwards"
+duration_min: 5
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 19"
+topic: "futures_forwards"
+prerequisites: ["320_implied_vs_realized_volatility"]
+tags: ["options", "futures", "forwards", "mark-to-market", "obligation"]
+sources: ["CME Group — standard futures contract specifications and daily mark-to-market settlement"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Futures & forwards
+
+Calls and puts give one side a right and the other an obligation. Futures and forwards skip the right entirely — both sides are obligated from the start, with no premium paid for the choice to walk away. A futures contract is the standardized, exchange-traded, daily-settled version of that obligation; a forward is its private, customized, over-the-counter cousin. After this lesson you'll be able to explain why an obligation-based contract behaves fundamentally differently from an option, especially when a position moves hard against you.
+
+## Example
+
+A wheat farmer and a food company might enter a forward contract to lock in a delivery price six months out — customized, privately negotiated, off-exchange, and only as reliable as the counterparty's ability to honor it. Compare that to CME wheat futures: standardized contract size, standardized expiry, and a clearinghouse in the middle marking positions to market every single day, so gains and losses settle in cash daily instead of accumulating unseen until expiry. Both sides in a futures contract have accepted an obligation — unlike an option, nobody paid a premium for the right to walk away.
+
+Bursa Malaysia Derivatives lists its own standardized futures, like FCPO (crude palm oil) and FKLI (FTSE Bursa Malaysia KLCI futures) — but retail access to *single-stock options*, the kind this module has focused on, is far more limited in Malaysia than in the US, where listed single-stock options trade on nearly every liquid large-cap ticker.
+
+## The trap
+
+Beginners treat futures as "just leveraged stock" and don't grasp the mandatory daily cash settlement — mark-to-market. A losing futures position can trigger a margin call demanding more cash well before any "expiry," unlike a long option, where the maximum loss is fixed the moment the premium is paid. The correct mental model: an option's worst case is capped by contract design; a futures position's worst case is only capped by how far the market is willing to move against you before you're forced to close.
+
+## The steelman
+
+A skeptic might argue: since both futures and options can deliver leveraged directional exposure, the distinction between "right" and "obligation" is academic — in practice both get closed out before expiry and the real-world payoff looks similar. The falsifier: compare margin-call behavior directly. A long option's downside is contractually capped at the premium paid, full stop, no matter how violently the market moves against it overnight. A futures position has no such floor — daily mark-to-market can demand additional margin repeatedly, and a large enough adverse move can force liquidation for far more than any comparable option premium would have cost. The clearest real-world falsifier: on April 20, 2020, front-month WTI crude futures traded below $0 per barrel intraday — an obligation-based contract produced a loss with no floor at zero, something no long option position can ever do.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A trader is long a futures contract. Overnight, the underlying moves sharply against the position. What happens that would NOT happen to a trader who was instead long a call option with the same notional exposure?"
+  options={[
+    "Nothing different — both positions behave identically since both provide directional exposure",
+    "The futures position is marked to market daily and can trigger a margin call demanding more cash, while the long call's maximum loss stays capped at the premium already paid",
+    "The futures position automatically expires worthless, just like an out-of-the-money option",
+    "The long call position would also face a margin call, since options are marked to market the same way"
+  ]}
+  answer={1}
+  explanation="Daily mark-to-market is what makes a futures position demand fresh cash the moment it moves against you, regardless of how far off expiry sits. A long option carries no such margin-call risk — its worst case was fixed the moment the premium was paid, and there is nothing further to post."
+/>
+
+<Quiz
+  question="What is the key structural difference between a forward contract and a futures contract on the same underlying?"
+  options={[
+    "Forwards are always cheaper than futures for the same exposure",
+    "Futures are customized private agreements while forwards are standardized and exchange-traded",
+    "Futures are standardized, exchange-traded, and marked to market daily through a clearinghouse; forwards are customized, privately negotiated, and carry direct counterparty risk",
+    "There is no meaningful difference — the terms are interchangeable"
+  ]}
+  answer={2}
+  explanation="Standardization and the clearinghouse are what set futures apart: daily mark-to-market and a central counterparty largely remove the risk that the other side simply doesn't pay. A forward carries that counterparty risk directly, in exchange for terms customized to the two parties involved."
+/>
+
+<Quiz
+  question="The April 2020 WTI crude futures contract traded briefly below $0 per barrel. Using the right-vs-obligation distinction from calls & puts and the mark-to-market mechanics of futures, explain why this outcome is structurally impossible for someone who was instead long a call option on oil, no matter how extreme the move."
+  options={[
+    "It isn't actually impossible — a long call option can also lose more than its premium in an extreme enough move",
+    "It's impossible only because oil futures are illegal to hold long past a certain date",
+    "Long call options and long futures positions have identical risk profiles once leverage is accounted for",
+    "A long call's maximum loss is contractually fixed at the premium paid, because the holder has a right they can simply decline to exercise; a long futures position is an obligation with no floor, so its mark-to-market losses can in principle exceed the entire value of the position, including going negative in extreme cases like WTI in April 2020"
+  ]}
+  answer={3}
+  explanation="A long call's floor is structural: you never have to exercise, so the worst outcome is losing the premium, full stop — that ceiling on loss cannot be broken by any market move, however extreme. A long futures position carries no such contractual right to decline; it's a pure obligation, which is exactly what let WTI's mark-to-market losses run through zero and into negative territory."
+/>
+
+## Try it
+
+Ask the Market Analyst: "What's the difference between how a futures position and a long option position each respond to an overnight gap move?" Compare the answer to the margin-call mechanics described in this lesson.
+
+## Takeaway
+
+A future is an obligation with no built-in floor — mark-to-market can call for cash before you ever reach expiry — while a long option's worst case was fixed the moment you paid the premium; know which one you're looking at before you judge the risk.
+
+*Where this comes from: CME Group's standard futures contract specifications — the daily mark-to-market mechanism that defines how a futures obligation differs from an option's right.*

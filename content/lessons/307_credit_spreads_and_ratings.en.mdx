@@ -1,0 +1,71 @@
+---
+id: "307_credit_spreads_and_ratings"
+title: "Credit spreads & ratings"
+duration_min: 5
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 5"
+topic: "credit_spreads"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "306_yield_curve_and_inversion"]
+tags: ["bonds", "fixed-income", "credit-spreads", "credit-ratings", "default-risk"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Credit spreads & ratings
+
+Two bonds with the same maturity can pay very different yields, and the gap between them — the credit spread — is the market's real-time price on default risk. Credit rating agencies (S&P, Moody's, Fitch) grade issuers from safest to riskiest, and the spread between a risky issuer's yield and a same-maturity government bond widens or narrows as the market's confidence in getting repaid changes. After this lesson you'll be able to read a credit spread as a risk gauge and explain why spreads widen exactly when you'd least want to be caught holding risky debt.
+
+## Example
+
+S&P, Moody's, and Fitch rate bonds on a letter scale — AAA/Aaa down through BBB-/Baa3 is "investment grade," and anything below that is "high yield" or "junk," compensating investors for materially higher default risk with a materially higher coupon. The credit spread is the extra yield a risky issuer pays over a same-maturity Treasury: a stable investment-grade corporate might trade 100-150 basis points over Treasuries in calm markets, while high-yield issuers can trade several hundred basis points over. The clearest real-world illustration is 2008: credit spreads on corporate debt — especially financial-sector and high-yield bonds — widened dramatically as the market repriced default risk in real time, well before most rating agency downgrades caught up; spreads are a faster-moving, more market-driven signal than ratings, which update on a slower committee cycle. The same logic applies on Bursa Malaysia and the broader Islamic finance market: a sukuk issued by a lower-rated corporate will price at a spread over Malaysian Government Securities or an equivalent sovereign benchmark, for exactly the same default-risk reason, even though the sukuk structure avoids conventional interest.
+
+## The trap
+
+Beginners treat a credit rating as a fixed, trustworthy label — "it's rated A, so it's safe" — and stop there. Two problems: ratings change slower than reality (agencies review periodically, not continuously, and 2008 showed AAA-rated structured products could be catastrophically mispriced), and a rating is a category, not a number you can compare precisely across issuers within the same tier. The correct mental model: use the rating as a starting filter, but read the *spread* as the market's live, continuously updated verdict on default risk — if a spread is widening while the rating hasn't moved yet, the market is telling you something the rating agency hasn't caught up to.
+
+## The steelman
+
+A skeptic might argue: "Spreads are noisy and can widen for reasons that have nothing to do with the specific issuer's default risk — a broad market liquidity crunch pushes even solid credits' spreads wider, so treating spread-widening as a pure default-risk signal is overreading it." That's a fair and important qualifier. The falsifier: compare the widening across issuers of different quality during the same stress period. If spreads widen roughly proportionally across investment-grade and high-yield alike, that's a liquidity/risk-appetite story, not an issuer-specific default story. If low-rated issuers' spreads widen dramatically more than high-rated issuers' during the same window — which is exactly what happened in 2008 — that differential is the genuine default-risk signal, distinct from the market-wide liquidity effect layered on top of it.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A corporate bond trades at a wider spread over Treasuries than it did last month, but its S&P rating hasn't changed. What is the most accurate read?"
+  options={[
+    "The market is continuously repricing perceived default risk in real time, and can move ahead of the slower, periodic rating-review cycle — the widening spread may be signaling something the rating hasn't caught up to yet",
+    "The bond has definitely defaulted and the rating agency has simply not announced it yet",
+    "Nothing meaningful has changed, since the rating is the authoritative measure and it's unchanged",
+    "Spreads and ratings always move in lockstep, so this situation is not possible"
+  ]}
+  answer={0}
+  explanation="Spreads are a continuously traded, real-time market signal, while ratings update on a periodic review cycle — 2008 demonstrated this gap dramatically, with spreads widening well before agency downgrades caught up on plenty of structured and corporate debt. Treating an unchanged rating as proof nothing has changed ignores that gap; and a widening spread is a probability signal, not proof of an actual default event."
+/>
+
+<Quiz
+  question="During a market stress period, spreads widen across both investment-grade and high-yield bonds, but high-yield spreads widen far more. What does that differential tell you, combining this lesson with the idea that spreads can move for market-wide reasons?"
+  options={[
+    "It's pure noise and shouldn't be read as meaningful, since all spreads moved somewhat",
+    "The widening is entirely a liquidity effect with no default-risk content, since it affected both categories",
+    "High-yield bonds always widen more during any market move, regardless of the cause, so the differential is meaningless",
+    "The broad widening across both categories likely reflects a market-wide liquidity or risk-appetite effect, while the much larger widening concentrated in high-yield is the genuine issuer-specific default-risk signal layered on top"
+  ]}
+  answer={3}
+  explanation="Disentangling the two effects is exactly the discipline the steelman raises: a uniform, proportional widening across quality tiers points to a market-wide liquidity story, while a differential — high-yield widening much more than investment-grade — is the default-risk signal specifically concentrated where default probability is actually higher. Dismissing the whole move as noise, or attributing it entirely to one cause, both throw away real information the differential contains."
+/>
+
+## Try it
+
+Open the Fundamentals Analyst chat and ask about a lower-rated name on your watchlist: "What credit rating does this company carry, and what would a widening spread on its debt suggest about how the market views its risk right now?" Compare the answer's framing to the rating-alone trap this lesson names.
+
+## Takeaway
+
+A credit rating is a slow-moving category; a credit spread is the market's live, continuously repricing verdict on default risk — read the spread first, and treat a rating as a starting filter, not the final word.
+</content>

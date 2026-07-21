@@ -1,0 +1,85 @@
+---
+id: "304_bond_pricing_and_ytm"
+title: "Bond pricing & yield-to-maturity"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 2"
+topic: "bond_pricing"
+prerequisites: ["303_why_bonds_exist"]
+tags: ["bonds", "fixed-income", "yield-to-maturity", "bond-pricing", "interest-rates"]
+sources: ["Standard fixed-income present-value pricing — discounted cash flow applied to a fixed coupon stream"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Bond pricing & yield-to-maturity
+
+A bond's price moves every day even though its coupon and face value never change — because the market is constantly repricing what that fixed cash flow is worth against current interest rates. Yield-to-maturity (YTM) is the single number that answers "what am I actually earning if I buy at this price and hold to maturity, coupons and all?" After this lesson you'll be able to explain why bond prices and yields move in opposite directions and read a bond price as a verdict on where rates are headed.
+
+## Example
+
+Take a hypothetical corporate bond like ones from JPM or MSFT might carry: face value $1,000, 4% annual coupon (paid semiannually), 10 years to maturity. Run it through two rate environments. If the market's required yield on comparable debt is 5%, this bond's fixed 4% coupon looks stingy — nobody pays full face value for a below-market coupon, so the price falls to **$922.05**. If the market's required yield drops to 3%, this same bond's 4% coupon now looks generous — investors bid the price up to **$1,085.84** to capture it. Run it the other direction: if you observe this bond trading at a market price of $950, the implied YTM is **4.630%** (the discount to par is compensating you for the below-market coupon). If it trades at $1,050, the implied YTM is **3.406%**. This is exactly why the 10-year US Treasury yield moves every time the market reprices Fed policy expectations — the yield and the price are two views of the same number, and every basis point on one is a whole recalculation of the other.
+
+## The trap
+
+Beginners hear "bond prices fell" and assume something went wrong with the issuer — like a stock selling off on bad earnings. That's usually not it. A bond's price falls when *market interest rates rise*, because a fixed 4% coupon becomes less attractive next to a fresh bond paying 5%, full stop — even if the issuer's credit is flawless. The correct mental model: bond price and yield are inversely linked by definition, not by sentiment. When you see a bond price drop, ask "did the issuer's ability to pay change, or did the general level of rates change?" — those are two entirely different explanations for the same price move, and only one of them says anything about credit risk.
+
+## The steelman
+
+A skeptic might argue: "If price and yield always move opposite, then YTM tells me nothing new beyond price — it's a purely mechanical inverse." That's a fair simplification for a single bond, but it breaks down as a portfolio tool. The falsifier: compare two bonds trading at the *same* price but different coupons and maturities — their YTMs will differ. YTM standardizes bonds with different coupon rates and maturities onto one comparable return figure, which raw price cannot do. If YTM were purely redundant with price, professional bond desks wouldn't quote yield as the primary number and back into price — but they do exactly that, because yield is the portable unit across a portfolio of dissimilar bonds.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A 4%-coupon, 10-year, $1,000 face bond prices at $922.05 when the market YTM is 5%, and $1,085.84 when the market YTM is 3%. What explains the price falling as the yield rises?"
+  options={[
+    "The issuer's credit quality worsened when yields rose",
+    "A fixed 4% coupon becomes less attractive relative to the higher yield newly issued bonds offer, so buyers only accept the old bond at a discount",
+    "Bond prices and yields are unrelated; the coincidence is a rounding artifact",
+    "The bond's face value changed to reflect the new rate environment"
+  ]}
+  answer={1}
+  explanation="Price and yield are mathematically inverse for a fixed coupon: to make an underpriced-relative-to-market coupon competitive with what new bonds pay, the market discounts the price until the total return (coupon plus price appreciation to par) matches the prevailing yield. Nothing about the issuer's creditworthiness needs to change, and face value is fixed by contract — it never moves with rates."
+/>
+
+<Quiz
+  question="You observe this same bond trading at a market price of $1,050. What is the implied YTM, and what does that number tell you relative to buying at $950?"
+  options={[
+    "3.406% — lower than the 4.630% YTM at $950, because paying more upfront for the same fixed coupon and face value lowers your total annualized return",
+    "4.630% — the YTM stays fixed regardless of price since the coupon rate never changes",
+    "5% — the YTM always equals the original coupon rate stated at issuance",
+    "3.406% — higher than at $950 because a higher price signals more market confidence"
+  ]}
+  answer={0}
+  explanation="At $1,050 the implied YTM is 3.406%, below the 4.630% YTM you'd earn buying at $950 — paying a higher price for the identical fixed $40/year coupon and $1,000 repayment mechanically lowers your annualized return. YTM is not the coupon rate; the coupon rate is fixed at issuance while YTM moves with whatever price you actually pay."
+/>
+
+<Quiz
+  question="Why do professional bond desks quote yield-to-maturity as the primary number, rather than just quoting price?"
+  options={[
+    "Because YTM is required by regulation and price is optional to disclose",
+    "Because price is always a rounder, easier number to communicate over a trading desk",
+    "Because bonds with different coupons and maturities can share the same price coincidentally but have very different real returns, so YTM standardizes them onto one comparable figure",
+    "Because YTM never changes once a bond is issued, making it a stable reference point"
+  ]}
+  answer={2}
+  explanation="Two bonds can trade at identical prices while offering very different actual returns once you account for their different coupon rates and time to maturity — YTM collapses those differences into one comparable annualized-return number, which is exactly what a desk comparing many bonds needs. YTM is not fixed at issuance; it moves with the price the bond currently trades at, which is the opposite of the claim in the wrong answer."
+/>
+
+## Try it
+
+Open the Fundamentals Analyst chat and ask: "If the Fed signals more rate hikes, what happens to existing bond prices, and why doesn't that mean the issuer got riskier?" Use the answer to check your own mental model against AMI's training explanation.
+
+## Takeaway
+
+Bond price and yield move in lockstep opposite directions for a simple mechanical reason — a fixed coupon has to compete with whatever the market currently pays — so a bond price move is a verdict on rates, not automatically a verdict on credit.
+
+*Where this comes from: standard fixed-income present-value pricing, the same discounting logic used across corporate finance to price any fixed cash-flow stream.*
+</content>

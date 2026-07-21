@@ -1,0 +1,88 @@
+---
+id: "312_passive_vs_active_bogle"
+title: "Passive vs active — the Bogle case"
+duration_min: 6
+level: 9
+module: 14
+difficulty: 3
+track: "asset_classes"
+code: "ASST 10"
+topic: "passive_vs_active"
+prerequisites: ["311_expense_ratio_tracking_error"]
+tags: ["passive", "active", "bogle", "index-investing", "alpha", "spiva"]
+sources: ["Bogle — Common Sense on Mutual Funds (1999)"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Passive vs active — the Bogle case
+
+John Bogle's argument for indexing isn't "active managers are bad at their jobs" — it's arithmetic. Before costs, the average actively managed dollar and the average passively managed dollar in the same market must earn the *same* gross return, because together they are the market. After costs, the passive dollar wins on average, because it pays less to get there. After this lesson you'll be able to state the case precisely enough to know what would actually prove it wrong.
+
+## Example
+
+Every year, S&P Dow Jones publishes the SPIVA scorecard, comparing actively managed funds against their benchmark indices. The consistent finding across two decades of data: the majority of actively managed US large-cap funds underperform the S&P 500 in a typical year, and the underperformance rate rises the longer the measurement window — over 15-to-20-year horizons it has repeatedly run well above 80%. This isn't a claim that no manager ever beats the market in a given year; some do, every year. It's a claim about the odds, compounding: a fund that beats its benchmark 6 years out of 10 but trails badly in the other 4 can still lag over the full decade, especially once its higher expense ratio (see the prior lesson's $13,844.08 fee-drag example) is subtracted every single year, win or lose.
+
+The mechanism is Bogle's "cost matters hypothesis": pre-cost, active and passive management are a zero-sum split of the market's return, because active managers collectively hold something close to the market portfolio. Post-cost, passive wins the average, because trading costs, research costs, and management fees are a direct subtraction that indexing mostly avoids.
+
+## The trap
+
+Beginners hear "most active funds underperform" and conclude "therefore no active manager is worth paying for," which overshoots the evidence. It feels justified because the SPIVA numbers are so lopsided. The correct mental model: the claim is about the *average*, not every individual manager, and it says nothing about whether you personally can identify the above-average manager *in advance* — which is a much harder problem than noticing, after the fact, who won.
+
+## The steelman
+
+The strongest case for active management: markets aren't perfectly efficient everywhere. In less-covered corners — small-cap stocks, emerging markets, distressed debt, illiquid situations — fewer analysts are pricing the security, so skilled research has more room to find a mispricing before it closes. Some categories of active funds (certain small-cap and fixed-income strategies) show meaningfully better relative SPIVA results than large-cap US equity active funds do. Passive investing also has a structural dependency problem: it works because enough active participants are still doing the price-discovery work that makes an index's prices meaningful in the first place — if everyone indexed, someone would need to still be analyzing companies for stock prices to reflect anything real.
+
+The falsifier for "active adds value in inefficient corners": track a specific active fund's post-fee, risk-adjusted return against its actual benchmark (not a broad index it doesn't resemble) over a full market cycle, not a hot 2-year stretch. If the outperformance survives fees and full cycles, the case holds for that fund; if it evaporates once both are applied, the "inefficient corner" argument was really a "got lucky in one regime" story wearing a stronger costume.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Bogle's 'cost matters hypothesis' argues that before costs, active and passive management must earn roughly the same gross return in aggregate. Why?"
+  options={[
+    "Active managers are legally required to match the index",
+    "Active and passive investors collectively make up the market, so together their gross returns must average out to the market's return — one side can't out-earn the other in aggregate before costs are subtracted",
+    "Passive funds are guaranteed a fixed return by the exchange",
+    "Because most active managers copy the index anyway"
+  ]}
+  answer={1}
+  explanation="This is the arithmetic core of the case: everyone's holdings, active and passive combined, sum to the market. Pre-cost, the two groups can't both beat the average of themselves. There's no legal mandate to match anything, no guaranteed return for indexing, and 'most active managers copy the index' isn't the mechanism — the mechanism is that gross returns are a zero-sum split by definition before fees enter."
+/>
+
+<Quiz
+  question="SPIVA data shows active large-cap fund underperformance rates rising the longer the measurement window — often above 80% over 15-20 years. What does the steelman's 'inefficient corners' argument add that this statistic alone doesn't capture?"
+  options={[
+    "That the 80% figure must be wrong because some managers do beat the market every year",
+    "That active underperformance is uniform across every fund category, so the 15-20 year figure applies equally to small-cap and emerging-market funds",
+    "That skilled research has more room to find mispricings where fewer analysts are covering a security, and some categories (certain small-cap, fixed-income strategies) show better relative results than large-cap US equity — the aggregate statistic can mask category-level variation",
+    "That fees don't matter in less-covered markets"
+  ]}
+  answer={2}
+  explanation="The steelman's real contribution is nuance: the lopsided large-cap statistic doesn't automatically apply everywhere with equal force, because efficiency (how much research already prices in known information) varies by market segment. It doesn't invalidate the 80% figure — some managers beating the market yearly is compatible with most losing over long windows — and fees still matter everywhere, including less-covered markets; the steelman's claim is about where mispricings might be more findable, not about fees disappearing."
+/>
+
+<Quiz
+  question="You're evaluating an actively managed small-cap fund that outperformed its benchmark by 3% annually over the last 2 years, after a 0.95% expense ratio. Combining this lesson with the expense-ratio lesson, what should you check before concluding the fund's active approach is 'working'?"
+  options={[
+    "Nothing further — 2 years of post-fee outperformance is sufficient proof the strategy works",
+    "Only the expense ratio number itself, in isolation from performance",
+    "Whether the fund is an ETF or a mutual fund, since that determines skill",
+    "Whether the outperformance holds over a full market cycle rather than a short hot stretch, and whether it's measured against the fund's actual stated benchmark rather than a broad index it doesn't resemble — exactly the falsifier this lesson's steelman requires"
+  ]}
+  answer={3}
+  explanation="Two years is close to the 'hot stretch' this lesson's falsifier warns about — real evaluation needs a full cycle and the right benchmark comparison, because even skilled-sounding active results can be a short-window artifact. The expense ratio alone doesn't tell you about performance, and ETF-vs-mutual-fund wrapper (from an earlier lesson) is a tax/trading question, not a skill question. Synthesizing the module: cost is a known drag, and outperformance claims need the same full-cycle, correct-benchmark scrutiny before you treat them as evidence of skill rather than luck."
+/>
+
+## Try it
+
+Convene the Room on a stock where the Research Manager's synthesis leans on a specific analyst call. Ask yourself: is this argument closer to "found a mispricing in an under-covered corner" or "chasing a recent hot stretch"? AMI's training output is a practice artifact for exactly this kind of evaluation — not investment advice.
+
+## Takeaway
+
+The case for indexing isn't that active managers are unskilled — it's that skill, even where real, has to clear a cost hurdle every single year to show up in your account.
+
+*Where this comes from: Bogle's cost matters hypothesis — Common Sense on Mutual Funds (1999) — and the SPIVA scorecard methodology it predicted decades before the data existed to test it.*

@@ -1,0 +1,72 @@
+---
+id: "310_etfs_vs_mutual_funds"
+title: "ETFs vs mutual funds vs index funds"
+duration_min: 5
+level: 9
+module: 14
+difficulty: 2
+track: "asset_classes"
+code: "ASST 8"
+topic: "fund_structure"
+prerequisites: ["303_why_bonds_exist"]
+tags: ["etf", "mutual-fund", "index-fund", "fund-structure", "costs"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# ETFs vs mutual funds vs index funds
+
+"ETF," "mutual fund," and "index fund" describe two different things people mix up as one. ETF vs mutual fund is a question about *wrapper* — how you buy it, when it prices, how it's taxed. Index vs active is a question about *strategy* — does the fund copy a benchmark or pay someone to try to beat it. After this lesson you'll be able to place any fund on both axes independently and explain why the wrapper changes your cost and behavior even when the underlying holdings are identical.
+
+## Example
+
+Look at three ways to hold the same broad market exposure. SPY (SPDR S&P 500 ETF Trust) trades on NYSE Arca all day like a stock — buy 3 shares at 10:47am, sell them at 2:15pm, at whatever price the market is making that minute. VFIAX (Vanguard 500 Index Fund, Admiral Shares) tracks the same S&P 500 index, but as a mutual fund it prices once, at 4pm ET market close — every order that day fills at that single net asset value (NAV), whether placed at 9:31am or 3:59pm. A third option, a traditional actively managed large-cap fund, also prices once daily, but a manager picks stocks and deviates from any benchmark, betting the deviation earns more than it costs.
+
+The wrapper matters structurally, not just cosmetically. ETFs use an in-kind creation/redemption mechanism — institutional "authorized participants" swap ETF shares for a basket of the underlying stocks rather than cash. That mechanism is why ETFs are generally more tax-efficient than mutual funds in a taxable account: fewer forced capital-gains distributions land on shareholders who didn't sell anything. Mutual funds, needing cash to meet redemptions, sometimes must sell holdings and pass the resulting taxable gain to everyone still in the fund — including investors who held the whole year.
+
+## The trap
+
+Beginners treat "ETF" as a synonym for "cheap" and "index fund" as a synonym for "boring but safe," collapsing two independent choices into one. It feels right because low-cost index ETFs are the products beginners hear about first, so the three words blur into a single idea. The correct mental model: pick your strategy (index or active) and your wrapper (ETF or mutual fund) separately. You can buy an actively managed ETF (higher cost, ETF tax treatment) or an index mutual fund (low cost, single daily price) — four combinations exist, not one.
+
+## The steelman
+
+The case against ETFs-are-simply-better: a mutual fund's single daily price is a feature, not a bug, for a systematic investor. It removes the temptation to watch a ticker tick and trade on the noise — you place an order and it fills at end-of-day NAV regardless of intraday panic. Automatic monthly contribution plans, common with 401(k)-style mutual fund lineups, also don't map cleanly onto ETF share-based buying. The falsifier: if intraday liquidity caused worse investor outcomes, ETF investors should show measurably worse behavior-gap returns (fund return minus what the average dollar in the fund actually earned) than mutual fund investors in the same index. Where that gap has been measured, it favors the discipline argument in some years and the cost/tax argument in others — the honest read is that the wrapper choice is a real tradeoff, not a solved question.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An ETF and a mutual fund both track the S&P 500. What is the structural reason the ETF is generally more tax-efficient in a taxable account?"
+  options={[
+    "In-kind creation/redemption lets the ETF avoid forcing capital-gains distributions onto shareholders who didn't sell",
+    "ETFs are legally exempt from capital gains tax",
+    "ETFs only hold cash, so there are no gains to distribute",
+    "Mutual funds are taxed at a higher statutory rate than ETFs"
+  ]}
+  answer={0}
+  explanation="The in-kind mechanism swaps shares for a stock basket instead of cash, so the fund rarely needs to sell holdings and realize gains. Mutual funds meeting cash redemptions sometimes must sell, passing a taxable gain to every remaining holder. Neither fund type is tax-exempt, and the tax treatment isn't a special statutory rate — it flows from how each structure handles investor cash flows."
+/>
+
+<Quiz
+  question="A fund is an actively managed ETF — a manager picks stocks and deviates from a benchmark, but it trades intraday on an exchange like SPY does. Using the two-axis model from this lesson, what does that combination tell you?"
+  options={[
+    "It's a contradiction — active management can only exist in mutual fund form",
+    "It means the fund is automatically cheaper than an index mutual fund because it's an ETF",
+    "It means the fund's holdings must exactly match a published index",
+    "It confirms wrapper (ETF, intraday-traded) and strategy (active, benchmark-deviating) are independent choices, so this fund carries ETF-style trading and tax mechanics alongside active-style cost and deviation risk"
+  ]}
+  answer={3}
+  explanation="This lesson's core distinction is that wrapper and strategy are separate axes — ETF/mutual fund is about trading and tax mechanics, index/active is about whether the fund copies or deviates from a benchmark. An actively managed ETF is a real, common product: it inherits intraday liquidity and creation/redemption tax mechanics from being an ETF, while still carrying manager risk and typically higher fees from being active. Being an ETF says nothing about cost by itself, and 'must match a published index' describes an index fund, not an active one."
+/>
+
+## Try it
+
+Open the app's fund-literacy reference (or your own brokerage's fund screener off-app) and find one ETF and one mutual fund that track the same index. Note the ticker, the trading mechanism (intraday vs once-daily NAV), and which one you'd expect to distribute more in taxable capital gains in a normal year — then check if your reasoning matches the fund's actual distribution history.
+
+## Takeaway
+
+Wrapper and strategy are two separate questions — ask "how does this trade and get taxed" and "does this copy a benchmark or try to beat it" separately, every time.

@@ -1,0 +1,72 @@
+---
+id: "313_leveraged_inverse_etfs_decay"
+title: "Leveraged & inverse ETFs — the decay trap"
+duration_min: 5
+level: 9
+module: 14
+difficulty: 3
+track: "asset_classes"
+code: "ASST 11"
+topic: "leveraged_etfs"
+prerequisites: ["312_passive_vs_active_bogle"]
+tags: ["leveraged-etf", "inverse-etf", "volatility-decay", "daily-reset", "derivatives"]
+sources: []
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Leveraged & inverse ETFs — the decay trap
+
+A 2x leveraged ETF doesn't promise double the index's return over any period you choose — it promises double the index's return *for one single day*, then resets. That reset is the whole story: over multiple days, compounding a daily-reset multiple against a volatile, choppy market produces a result that can diverge sharply, and negatively, from "2x the index's actual multi-day move." After this lesson you'll be able to compute why a leveraged ETF can lose money even when its underlying index ends flat or even up.
+
+## Example
+
+Suppose an index starts at 100. Day 1 it rises 10% to 110. Day 2 it falls 10% (from the new base) back to 99 — down 1% from where it started over two days, a realistic round trip. A 2x leveraged ETF tracking that index resets daily: Day 1 it gains 20% (2 × 10%), Day 2 it loses 20% (2 × -10%). Starting at $100: Day 1 → $120. Day 2 → $120 × (1 − 0.20) = $96. The underlying index lost 1% over the two days; the "2x" ETF lost 4% — four times the loss, not two times, purely from daily compounding through a reversal. Run that same choppy back-and-forth pattern for weeks and a leveraged fund can bleed value steadily even while the underlying index goes nowhere. This is volatility decay (also called "beta slippage"): the more a market chops sideways with volatility, the worse daily-reset leverage performs relative to its stated multiple, independent of any long-term direction.
+
+Real products carry explicit warnings about this: leveraged and inverse ETFs (tickers like TQQQ for 3x Nasdaq-100 exposure, or SQQQ for -3x) disclose in their prospectuses that they are designed to meet their stated multiple only over a single trading day, and that holding periods beyond that carry compounding risk that can produce outcomes far from what a naive "multiply the index return" calculation would suggest.
+
+## The trap
+
+Beginners see "2x S&P 500 ETF" and mentally model it as "if the S&P 500 is up 8% this year, I made 16%." It feels like simple multiplication should work. The correct mental model: the 2x multiple resets every single day, and daily-reset leverage compounds — in a choppy or declining market it compounds against you faster than the index moves, and even in a smoothly trending market the multi-day result is close to but not exactly double. These products are built and disclosed as short-term tactical or hedging tools, not buy-and-hold positions.
+
+## The steelman
+
+The case for using leveraged ETFs deliberately: a trader with a strong, short-term directional view — hours to a few days, not months — can use a leveraged ETF to express that view without the margin account, borrowing costs, or liquidation risk of an actual leveraged position. In a smoothly trending (low-volatility, one-direction) market over a short holding period, the daily-reset multiple tracks its target reasonably well — the decay problem is specifically a volatility-and-holding-period problem, not a leverage-is-always-broken problem. The falsifier: compare a leveraged ETF's realized multi-day return against its naive multiple, across both a smooth trending period and a choppy sideways period for the same underlying index. If the tracking holds up in the trend and breaks down in the chop, the steelman is right about *when* leverage works — which is precisely why these are short-holding-period tools, never long-term ones.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An index goes 100 → 110 (Day 1, +10%) → 99 (Day 2, -10% from the new base), a net -1% over two days. A 2x leveraged ETF starting at $100 goes to $120 on Day 1, then loses 20% on Day 2. What is the ETF's two-day result, and why doesn't it equal 2x the index's -1%?"
+  options={[
+    "The ETF ends at $96, a -4% result — because the 2x multiple resets and compounds daily, not against the two-day total move",
+    "The ETF ends at $98, a -2% result, exactly double the index's -1%",
+    "The ETF ends at $100, flat, because the up day and down day cancel out",
+    "The ETF ends at $102, a +2% gain, because leverage always amplifies in the holder's favor over time"
+  ]}
+  answer={0}
+  explanation="$120 × 0.80 = $96, a -4% two-day result — four times the index's -1% loss, not two. The multiple applies to each day's return individually, then compounds; it is never simply 2x applied to the multi-day total. Flat or positive results ignore that the down day is calculated against the higher post-rally base, which is exactly where daily-reset compounding does its damage."
+/>
+
+<Quiz
+  question="Combining this lesson with the passive-vs-active lesson, what is the single biggest structural difference between a broad-market index ETF (like one tracking the S&P 500) and a leveraged ETF (like a 2x or 3x product), in terms of appropriate holding period?"
+  options={[
+    "There is no meaningful difference — both are designed to be held indefinitely with similar risk",
+    "The leveraged ETF is actually safer for long-term holding because its higher expected return outpaces any decay",
+    "The only difference is the expense ratio, which is higher on leveraged products",
+    "The index ETF's tracking error is a slow, small annual drag suitable for long-term holding; the leveraged ETF's daily-reset compounding can produce sharp divergence from its stated multiple within weeks in a choppy market, making it structurally unsuited to long-term holding"
+  ]}
+  answer={3}
+  explanation="A standard index ETF's main cost drag (tracking error, expense ratio) is small and roughly linear over time, consistent with long holding periods. A leveraged ETF's decay mechanism is different in kind, not degree — it's driven by daily compounding through volatility, and can erase value within weeks in a choppy market regardless of the index's long-term direction. That is a structural, not incidental, difference. Higher expense ratios on leveraged products are real but are not the main risk this lesson describes — decay would exist even at zero fees."
+/>
+
+## Try it
+
+In 1-on-1 with the Market Analyst, ask: "If [a ticker on your watchlist] chopped sideways for two weeks, what would that do to a 2x leveraged version of it?" Use the agent's answer to check your own mental model of decay against a concrete, current example — remember AMI's response is a training explanation, not a signal to hold or avoid any real position.
+
+## Takeaway
+
+A leveraged ETF's multiple is a promise about one day, not your holding period — the longer and choppier the hold, the further the result drifts from "just multiply the index."

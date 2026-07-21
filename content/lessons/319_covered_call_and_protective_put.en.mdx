@@ -1,0 +1,86 @@
+---
+id: "319_covered_call_and_protective_put"
+title: "Covered call & protective put"
+duration_min: 6
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 17"
+topic: "options_hedging_structures"
+prerequisites: ["318_the_greeks_delta_theta_vega"]
+tags: ["options", "covered-call", "protective-put", "hedging", "income"]
+sources: ["CBOE — standard covered call and protective put equity-option hedging structures"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Covered call & protective put
+
+Options aren't only standalone bets — combined with shares you already hold, they become structures for reshaping risk. A covered call sells away some of your upside in exchange for income collected today. A protective put pays a cost today in exchange for a defined floor under your downside. Neither eliminates risk; each trades one kind of risk for another, on purpose. After this lesson you'll be able to explain what each structure gives up and what it buys.
+
+## Example
+
+Consider a trader holding 100 shares of a stock, illustratively priced near $205, who sells (writes) a call against those shares: a $210-strike short call, collecting a $4.00 premium per share upfront. This is a covered call — "covered" because the trader already owns the shares that would need to be delivered if the option is exercised. If the stock is at $215 at expiry, the short call's intrinsic value is $5.00 — meaning the shares get called away at $210, capping the trader's upside there, but the $4.00 premium collected upfront is kept regardless of what happens next. The trade converts unlimited upside above $210 into fixed income plus a capped gain.
+
+The protective put runs the opposite trade: a trader holding shares near $195 buys a $190-strike put for a $5.00 premium, paying for a floor under their position. The break-even for that put leg alone is $185.00 (strike minus premium) — below $185, the put's payoff keeps growing, offsetting further share losses. If the stock falls to $170, the protective put's payoff is $15.00 per share: without the put, that decline would hit the shares uncushioned; with it, the loss is capped near the strike, minus what was paid for the insurance. The put itself cost $5.00 upfront, the same way a fixed insurance premium is paid whether or not the claim is ever used.
+
+## The trap
+
+Beginners think a covered call is close to free money — harvest the premium, no real cost. They miss that the cost is the capped upside, which can be a large opportunity loss if the stock rallies hard past the strike. The mirror mistake: treating a protective put as free insurance. It isn't — the premium is a guaranteed cost that drags on returns in every scenario where the crash never happens, the same way home insurance costs money every year the house doesn't burn down. Both structures have a real, upfront price; the trap is noticing the benefit and forgetting to price the trade-off.
+
+## The steelman
+
+The strongest case against routinely selling covered calls: doing it repeatedly means systematically capping your best-performing positions right as they run — you get called away on your winners and keep riding your losers, the opposite of what a disciplined process should do. The falsifier is measurable in a portfolio log: track how often shares get called away during your biggest winning stretches versus your losing ones. If covered-call writing is quietly amputating your winners, the pattern shows up as a lower average gain on called-away positions than on the ones you kept fully.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A trader holds 100 shares and sells a $210-strike covered call for a $4.00 premium. The stock finishes at $215 at expiry. What happens?"
+  options={[
+    "The trader loses $5.00 per share because the stock rose above the strike",
+    "The call expires worthless because $215 is not far enough above $210 to matter",
+    "The trader keeps the shares and the $4.00 premium, since the call only pays out above $220",
+    "The shares get called away at $210, but the trader keeps the $4.00 premium collected upfront regardless"
+  ]}
+  answer={3}
+  explanation="At $215, the $210-strike call has $5.00 of intrinsic value and will be exercised — the shares get called away at $210. That caps the trader's sale price, but the $4.00 premium was already collected and pocketed at the start of the trade, independent of what happens to the stock afterward."
+/>
+
+<Quiz
+  question="A trader buys a $190-strike protective put for a $5.00 premium on shares purchased near $195. What is the break-even for the put leg alone, and what does that mean?"
+  options={[
+    "$185.00 — strike minus premium; below that level, the put's payoff is offsetting further declines in the shares",
+    "$195.00 — the put only starts protecting once the stock returns to the original purchase price",
+    "$210.00 — strike plus premium, mirroring how a call's break-even works",
+    "$190.00 — exactly at the strike, since premiums don't affect a put's break-even"
+  ]}
+  answer={0}
+  explanation="A long put's break-even is strike minus premium: $190 - $5.00 = $185.00. Below that level, the put's growing intrinsic value is offsetting share losses dollar-for-dollar; premium always shifts the break-even away from the strike, for both calls and puts."
+/>
+
+<Quiz
+  question="A trader is comparing two structures on the same stock: a covered call collecting $4.00 in premium capped at $210 upside, versus a protective put costing $5.00 with a $185.00 break-even floor. Using the payoff logic from this lesson and the intrinsic/time value logic from the payoff diagrams lesson, which statement correctly describes the fundamental trade-off between them?"
+  options={[
+    "Both structures are identical in effect — collecting a premium and paying a premium produce the same portfolio outcome",
+    "The covered call trades away upside above the strike in exchange for guaranteed income today; the protective put pays a guaranteed cost today in exchange for a defined floor against further downside — one monetizes a capped ceiling, the other purchases a floor",
+    "The covered call has unlimited risk while the protective put has no risk at all",
+    "Neither structure changes the position's risk profile versus holding the shares alone"
+  ]}
+  answer={1}
+  explanation="These are mirror-image trades: the covered call sells a piece of upside for cash today (income), while the protective put spends cash today to buy a floor against downside (insurance). Both change the position's risk-and-return shape relative to holding shares alone — neither structure is risk-free, and they aren't the same trade wearing different labels."
+/>
+
+## Try it
+
+Open the Decision Journal and find a position you're tracking, or pick a watchlist ticker. Ask yourself: would you rather cap this position's upside for income today (covered call) or pay for a floor under it (protective put) if you held real shares? There's no options trading in AMI Trade — this is a thought exercise in trade-off reasoning, not a live order.
+
+## Takeaway
+
+A covered call sells away your ceiling for income today; a protective put buys you a floor for a cost today — both are structures for shaping risk, not ways to eliminate it.
+
+*Where this comes from: the CBOE's standard equity-option hedging structures — the covered call and protective put are the two textbook ways to combine stock with a single option.*

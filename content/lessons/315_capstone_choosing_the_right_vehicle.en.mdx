@@ -1,0 +1,79 @@
+---
+id: "315_capstone_choosing_the_right_vehicle"
+title: "Capstone: choosing the right vehicle"
+duration_min: 6
+level: 9
+module: 14
+difficulty: 3
+track: "asset_classes"
+code: "ASST 13"
+topic: "vehicle_selection"
+prerequisites: ["310_etfs_vs_mutual_funds", "311_expense_ratio_tracking_error", "312_passive_vs_active_bogle", "313_leveraged_inverse_etfs_decay", "314_reits_adrs_closed_end_funds"]
+tags: ["capstone", "synthesis", "vehicle-selection", "etf", "reit", "leverage", "fund-structure"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Capstone: choosing the right vehicle
+
+You now hold the full M14 toolkit: wrapper vs strategy, fee drag compounding, the passive/active cost hurdle, leveraged-ETF decay, and the mechanical quirks of REITs, ADRs, and closed-end funds. This capstone runs them all against one saver's decision — the kind where every option "sounds reasonable" in isolation, and the skill being tested is matching the vehicle's mechanics to the goal, not to the pitch.
+
+## One scenario, every M14 concept
+
+A saver has $10,000 and a 30-year horizon before retirement, plus a separate, smaller amount she's set aside specifically to express a short-term view on a volatile sector she's been reading about. She's comparing four options for the core $10,000: (1) a broad-market index ETF at a 0.03% expense ratio, (2) a comparable actively-managed mutual fund at a 0.75% expense ratio, (3) a REIT paying a high current yield, and (4) — for the separate short-term money only — a 2x leveraged ETF on the sector she has a view on.
+
+Run the toolkit against the core decision. Between the index ETF and the active fund, this module's worked number applies directly: at 7% gross return over 30 years, the fee gap between 0.03% and 0.75% costs $13,844.08 — 18.3% of the low-cost fund's terminal value — for identical gross exposure, before any judgment about whether the active fund's manager adds skill worth that cost (the Bogle cost-matters case: skill has to clear the fee hurdle every year, and most funds in this category don't, per the SPIVA pattern). The REIT's high yield is real, but it's a payout-structure feature (the 90%-distribution requirement) that comes with rate sensitivity and less capital retained for growth — appropriate as an income *sleeve*, not automatically superior core exposure, and not comparable apples-to-apples with the ETF's total-return profile. For the separate short-term sector view, the leveraged ETF is the vehicle built for that job specifically because it is not built for the 30-year core money — its daily-reset compounding means a choppy few weeks in that sector could erode value even if her long-term view on the sector eventually proves right, which is exactly why that exposure belongs in the small, short-term-labeled bucket and nowhere near the 30-year core.
+
+## The steelman
+
+The strongest case against this whole framework: "diversifying across vehicle types (some index, some active, some REIT, some leverage) reduces the chance that any single mistake wrecks the outcome — why not hold a little of everything instead of optimizing hard on the core?" The falsifier is the fee-drag arithmetic itself: diversification across vehicles doesn't cancel out a structural, guaranteed cost like the 0.72-percentage-point fee gap — that cost compounds against you at the same rate regardless of what else you hold alongside it. Diversification protects against uncertain, unknowable risks (which specific stock underperforms); it does nothing against a known, certain drag like an expense ratio difference. The steelman is right that vehicle mixing has real diversification value for genuinely uncertain risks — sector calls, single-manager risk — but it doesn't launder away a cost that's already known and already certain to compound.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The saver is deciding how to size the leveraged 2x sector ETF relative to her 30-year core $10,000. Combining the decay lesson with this capstone's framing, what is the strongest reason it belongs in a small, separate bucket rather than blended into the core allocation?"
+  options={[
+    "Leveraged ETFs are always illegal to hold for retirement-horizon money",
+    "The core money's 30-year horizon is exactly the holding period where daily-reset compounding through volatility does the most damage, while the leveraged ETF is structurally built for short, directional holds — mixing them puts long-horizon capital inside a vehicle whose decay risk grows with holding period",
+    "Leveraged ETFs have higher expense ratios than REITs, which is disqualifying on its own",
+    "The core allocation should never include any vehicle that trades intraday"
+  ]}
+  answer={1}
+  explanation="This synthesizes the decay lesson (holding period is the risk driver, not just direction) with the capstone's core-vs-tactical framing: a 30-year hold is precisely the scenario where volatility decay compounds worst, while the leveraged ETF's design assumption is a short, directional hold. There's no legal prohibition being described, expense ratio differences are real but not the disqualifying mechanism here (decay would matter even at a lower fee), and intraday trading itself (true of ordinary ETFs too) isn't the problem — daily-reset leverage specifically is."
+/>
+
+<Quiz
+  question="The REIT in this scenario offers a high current yield. Combining the REIT mechanics lesson with the fee-drag lesson, what should the saver check before treating the REIT's yield as a straightforward reason to prefer it over the low-cost index ETF for her core money?"
+  options={[
+    "Nothing — a higher current yield is always a better outcome than a lower-fee total-return vehicle",
+    "Only the REIT's expense ratio, since yield and fees are otherwise unrelated",
+    "That the yield stems from the mandatory 90%-distribution structure (which increases rate sensitivity and capital-raising dependency) rather than from underlying business outperformance, and that comparing a yield-heavy vehicle to a total-return index fund requires looking at total return, not just the distribution rate",
+    "Whether the REIT trades as an ETF or a closed-end fund, since that alone determines its yield sustainability"
+  ]}
+  answer={2}
+  explanation="This is the module's synthesis point: a REIT's yield is a structural artifact of its distribution requirement, not proof of superior performance, and it carries a real tradeoff (rate sensitivity, reliance on external capital for growth) covered in the vehicles lesson. Comparing it to the ETF fairly means total return, not headline yield alone — the same discipline the fee-drag lesson demands when comparing costs. The REIT's specific wrapper (ETF-style vs closed-end) affects price-to-NAV behavior, covered in the prior lesson, but doesn't by itself determine whether the yield is sustainable, and yield is never a costless positive."
+/>
+
+<Quiz
+  question="Across all four options in this scenario, what is the one synthesis that ties the module together: why does 'which vehicle is best' not have a single answer?"
+  options={[
+    "Because each vehicle solves a different structural problem — low-cost broad exposure, income via mandatory payout, short-term directional leverage, or active manager access — and the right choice depends on matching the vehicle's mechanics to the specific goal and holding period, not on ranking vehicles by a single universal metric",
+    "Because index ETFs are always correct and the other three vehicles exist only as cautionary examples",
+    "Because fees are the only variable that matters, so whichever vehicle is cheapest wins in every case",
+    "Because leverage always outperforms over long enough holding periods, so vehicle choice is really just a matter of patience"
+  ]}
+  answer={0}
+  explanation="This is the module's core lesson made explicit: wrapper, strategy, cost, and holding period are separate, interacting variables — this capstone's scenario forced structure/cost (fee-drag), active-vs-passive tradeoff, leveraged decay, and REIT mechanics to all bear on one decision simultaneously. Index ETFs aren't universally correct (the leveraged ETF was the right tool for the short-term sector view); fees matter but don't override structural fit (the REIT's yield served a different purpose); and leverage's decay risk gets worse, not better, with a longer choppy holding period — the opposite of 'patience fixes it.'"
+/>
+
+## Try it
+
+Convene the Room on a ticker from your watchlist and, in the simulated Verdict, identify which vehicle type (if any) each agent's argument implicitly assumes — a single-stock pick, an index-style broad bet, or something with leverage or a payout structure baked in. Log the mismatch, if any, between the agent's assumed vehicle and your own stated goal in your Decision Journal. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+There is no universally "best" fund vehicle — there is only the vehicle whose mechanics match your specific horizon, goal, and tolerance for cost and decay, checked deliberately rather than assumed.

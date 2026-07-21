@@ -1,0 +1,88 @@
+---
+id: "317_payoff_diagrams_intrinsic_time_value"
+title: "Payoff diagrams — intrinsic & time value"
+duration_min: 6
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 15"
+topic: "options_payoff"
+prerequisites: ["316_calls_and_puts"]
+tags: ["options", "payoff-diagrams", "intrinsic-value", "time-value", "break-even"]
+sources: ["Standard option payoff decomposition — intrinsic value plus time value, as used in exchange-listed option pricing"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Payoff diagrams — intrinsic & time value
+
+An option's premium is really two numbers stacked together: intrinsic value (what it would be worth if you exercised it right this second) and time value (everything extra you paid, betting the intrinsic value grows before expiry). At expiry, time value is gone entirely — only intrinsic value survives, and the option's payoff is that intrinsic value minus what you originally paid. After this lesson you'll be able to read a payoff diagram and separate "this is worth something" from "this made money."
+
+## Example
+
+Take a hypothetical AAPL $200-strike call, bought for a $6.50 premium (illustrative — not a live quote). At any point before expiry, that $6.50 splits into intrinsic value and time value. At expiry, only intrinsic value survives — which is exactly why the Greeks lesson that follows treats time value as something that decays away.
+
+Run the numbers. If AAPL finishes at $180, $190, $195, or even exactly $200 at expiry, the call is out of the money — the right to buy at $200 is worth nothing when AAPL is at or below $200, so intrinsic value is $0 and the payoff is -$6.50: a full loss of the premium, no matter which of those four levels AAPL actually landed on. The break-even for this call is $206.50 (strike plus premium) — at that exact price, intrinsic value equals $6.50, which exactly offsets what you paid, so payoff is $0.00. You don't clear a profit until AAPL trades above $206.50. At $210, intrinsic value is $10.00 and payoff is $3.50. At $220, intrinsic value is $20.00 and payoff is $13.50. Below the strike, payoff sits flat at -$6.50 no matter how far below; above break-even, payoff rises dollar-for-dollar with the stock.
+
+The same $200 strike and $6.50 premium as a put runs in the opposite direction: break-even is $193.50 (strike minus premium). At $180, intrinsic value is $20 and payoff is $13.50; at $190, intrinsic value is $10 and payoff is $3.50; at $193.50 (break-even), intrinsic value is $6.50 and payoff is $0.00; at $200 or $210, the put is worthless — intrinsic value $0, payoff -$6.50.
+
+## The trap
+
+Beginners treat "in the money" as a synonym for "profitable." It isn't. An option can be in the money — worth something if exercised — and still be a losing trade if it hasn't cleared the break-even yet. The correct mental model: payoff isn't measured against the strike, it's measured against strike plus premium (for a call) or strike minus premium (for a put). Between the strike and the break-even, you're recovering losses, not booking gains — and most beginners stop tracking the position the moment it flips "in the money," exactly the range where it's still underwater.
+
+## The steelman
+
+A skeptic might argue payoff-at-expiry diagrams overstate the risk, since almost nobody actually holds an option all the way to expiry — most retail traders close positions early, so the flat -$6.50 floor rarely matters in practice. The falsifier: closing early changes *when* you realize the loss, not the direction time value is working. Theta (time decay, covered next lesson) erodes an unprofitable long option every single day it's held, whether closed early or not — the payoff diagram describes the destination the position is drifting toward the whole time, not just a rule that only bites at the final bell.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="You bought the illustrative $200-strike AAPL call for a $6.50 premium. AAPL finishes at $195 at expiry. What is the payoff?"
+  options={[
+    "$0.00, because the option is close enough to the strike to break even",
+    "$5.00, the intrinsic value the option would have if exercised",
+    "-$6.50, a full loss of the premium, because the call finished out of the money",
+    "-$1.50, a partial loss reflecting how close $195 came to the $200 strike"
+  ]}
+  answer={2}
+  explanation="At $195, the call is out of the money — nobody would pay $200 for a share worth $195 — so intrinsic value is $0 and the payoff is the full -$6.50 premium lost. Payoff below the strike doesn't scale with proximity; it's flat at -$6.50 anywhere at or below $200."
+/>
+
+<Quiz
+  question="What underlying price does AAPL need to reach at expiry for this call to break even?"
+  options={[
+    "$200.00 — exactly at the strike",
+    "$193.50 — strike minus premium",
+    "$213.00 — strike plus twice the premium",
+    "$206.50 — strike plus premium"
+  ]}
+  answer={3}
+  explanation="Break-even for a long call is strike plus premium: $200 + $6.50 = $206.50. At that price, intrinsic value ($6.50) exactly offsets the premium paid, so payoff is $0.00 — reaching the strike itself ($200) still leaves the full premium as a loss."
+/>
+
+<Quiz
+  question="AAPL finishes at exactly $200.00 at expiry — right at the strike, having rallied the whole way up from $180. A trader says 'I was right about the direction, so I should be roughly break-even.' Using intrinsic value, time value, and the break-even math from this lesson, why is that wrong?"
+  options={[
+    "At $200 the call has zero intrinsic value because it isn't above the strike, so the full $6.50 premium is lost — direction alone isn't enough, the underlying has to clear the strike plus the premium paid, i.e. $206.50, before any profit shows",
+    "The trader is correct — being right about direction always produces a break-even or better outcome regardless of the premium paid",
+    "The trader is wrong only because AAPL should have finished above $220 to break even",
+    "The trader is wrong because time value always equals zero regardless of how close the stock gets to the strike"
+  ]}
+  answer={0}
+  explanation="Reaching the strike is not the same as reaching break-even. At $200 exactly, intrinsic value is still $0 — the call only starts to have exercise value above $200 — so the entire $6.50 premium is lost. The rally from $180 to $200 was real and correctly called, but it stopped $6.50 short of where the premium paid gets recovered."
+/>
+
+## Try it
+
+Open a Market Analyst 1-on-1 and pick a real ticker on your watchlist. Ask: "If I looked at this ticker's option chain at a strike above the current price, what premium would separate being right about direction from actually profiting?" Use AMI's training explanation to check your own break-even math.
+
+## Takeaway
+
+An option's payoff at expiry isn't the stock's move — it's the stock's move minus the premium you paid, and until you clear the break-even, being right about direction still loses money.
+
+*Where this comes from: the standard option payoff decomposition — intrinsic value plus time value — used across every exchange-listed option pricing model.*

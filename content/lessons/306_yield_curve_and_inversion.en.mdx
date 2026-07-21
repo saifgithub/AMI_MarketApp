@@ -1,0 +1,71 @@
+---
+id: "306_yield_curve_and_inversion"
+title: "The yield curve & what inversion means"
+duration_min: 5
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 4"
+topic: "yield_curve"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "305_duration_and_convexity"]
+tags: ["bonds", "fixed-income", "yield-curve", "inversion", "recession-signal"]
+sources: []
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# The yield curve & what inversion means
+
+Plot the yield of government bonds against how long you'd have to hold them — 3 months, 2 years, 10 years, 30 years — and you get the yield curve. Normally it slopes upward: lenders demand more yield to tie up money for longer. When that slope flips and short-term yields pay more than long-term ones, the curve is "inverted" — one of the most closely watched signals in markets, because it has preceded every US recession since the 1960s. After this lesson you'll be able to read a yield curve shape and explain what the market is collectively betting on when it inverts.
+
+## Example
+
+The most-watched version is the "2s10s" spread — the 10-year Treasury yield minus the 2-year Treasury yield. It inverted in 2022, with the 2-year yield trading above the 10-year for an extended stretch into 2023, one of the longest inversions on record; a recession followed the broader post-2022 tightening cycle, consistent with the curve's long historical track record as a leading (not perfectly timed) signal. The mechanism: when the market expects the central bank to cut rates in the future because growth is slowing, long-dated bonds price in those future lower rates today, pulling 10-year yields down even while the current policy rate — and therefore short-term yields — stays high. Bank Negara Malaysia's Overnight Policy Rate (OPR) plays an analogous role on Bursa Malaysia: it's the short end anchor that the broader Malaysian government securities curve prices against, and MGS curve shape gets read for the same growth-expectation signal, even though Malaysia's curve has a different history and drivers than the US Treasury curve.
+
+## The trap
+
+Beginners see "yield curve inverted" and treat it as a precise recession-timing tool — "sell everything now." That's wrong on two counts. First, the lag between inversion and recession has historically ranged from about 6 months to over 2 years, so it's a warning, not a countdown clock. Second, inversion doesn't cause a recession; it *reflects* the market's aggregate forecast that one is coming, priced through thousands of independent trades. The correct mental model: the yield curve is a real-time poll of bond-market expectations about future growth and rate policy, not a mechanical trigger. Treat an inversion as raising the probability you assign to a slowdown, not as a fixed date on a calendar.
+
+## The steelman
+
+A sharp skeptic could argue: "The 2s10s curve has also inverted without a recession following closely, or with false-alarm timing bad enough to make the signal unreliable for anyone trading on it." That's a real critique — the curve isn't a perfect predictor, and post-2008 unconventional central bank policy (quantitative easing, forward guidance) has arguably distorted the long end of the curve in ways that weaken the historical pattern. The falsifier: track the realized lag and false-positive rate across multiple cycles, not just one. If inversions increasingly fail to precede recessions as central bank tools evolve, the signal's reliability is genuinely degrading — that's an empirical question worth revisiting each cycle, not a reason to dismiss the signal outright given its multi-decade track record.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="What does it mean when the 2-year Treasury yield trades above the 10-year Treasury yield (a '2s10s inversion')?"
+  options={[
+    "The government is offering a special discount on longer-term bonds to attract buyers",
+    "Long-term bond demand has permanently collapsed and will never recover",
+    "The bond market collectively expects the central bank to cut rates in the future due to slowing growth, pulling long-dated yields below short-dated ones that reflect today's still-high policy rate",
+    "It means 10-year bonds have become riskier to hold than 2-year bonds"
+  ]}
+  answer={2}
+  explanation="Long-dated yields reflect the market's forecast of the average rate environment over that whole horizon; when investors expect future rate cuts, they price that into today's long-dated yield, pulling it below the current short-dated yield which still reflects today's policy rate. This is a demand-driven repricing based on expectations, not a discount program, a permanent collapse, or a claim about relative default risk between maturities of the same issuer."
+/>
+
+<Quiz
+  question="The 2022-2023 inversion was one of the longest on record, and a recession followed the broader tightening cycle. What is the correct way to use that historical pattern when reading a current inversion?"
+  options={[
+    "Treat inversion as a precise countdown — sell risk assets on the exact day of inversion",
+    "Ignore the curve entirely since one historical episode doesn't prove causation",
+    "Assume the recession has already happened by the time the curve inverts",
+    "Raise your probability estimate for a future slowdown and widen your time horizon for it, since historical lags have ranged roughly 6 months to over 2 years"
+  ]}
+  answer={3}
+  explanation="The historical record supports the curve as a leading indicator with a meaningfully wide and variable lag — useful for updating your probability of a slowdown, not for pinpointing timing. Dismissing the signal ignores a multi-decade pattern; treating it as a precise trigger ignores how wide that historical lag actually is. The recession, if it comes, follows the inversion — it doesn't precede it."
+/>
+
+## Try it
+
+In 1-on-1 with the Market Analyst, ask: "What does the current yield curve shape look like, and has any part of it inverted recently?" Notice whether the answer frames it as a probability update rather than a certainty — that's the discipline this lesson is teaching.
+
+## Takeaway
+
+An inverted yield curve is the bond market's aggregate bet that growth is slowing enough to warrant future rate cuts — a real, historically meaningful signal, but a probability update over a wide time window, not a countdown clock.
+</content>

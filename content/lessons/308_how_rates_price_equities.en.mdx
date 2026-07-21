@@ -1,0 +1,71 @@
+---
+id: "308_how_rates_price_equities"
+title: "How rates price equities (the discount rate)"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 6"
+topic: "rates_and_equity_valuation"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "306_yield_curve_and_inversion", "307_credit_spreads_and_ratings", "037_valuation_what_is_a_stock_worth"]
+tags: ["bonds", "fixed-income", "discount-rate", "equity-valuation", "interest-rates"]
+sources: []
+agent_callouts: ["market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# How rates price equities (the discount rate)
+
+A stock's value is the present value of all the cash it will ever generate for you — and "present value" requires a discount rate to translate future dollars into today's dollars. That discount rate is built on the same interest-rate machinery you just learned for bonds: it starts at the risk-free Treasury yield and adds a premium for equity risk on top. When rates rise, every future dollar a company might earn gets worth less today, which is why a Fed rate decision can move the entire stock market on a day when not a single company's earnings actually changed. After this lesson you'll be able to explain why growth stocks react harder to rate moves than value stocks.
+
+## Example
+
+Recall the stock valuation framework from lesson 037: a stock's fair value is its expected future cash flows discounted back to today. The discount rate used is roughly the risk-free rate (the 10-year Treasury yield) plus an equity risk premium. When the 10-year Treasury yield rose sharply through 2022 as the Fed hiked aggressively, high-growth, long-duration names — companies like many in the Nasdaq's most speculative tier, priced heavily on cash flows expected a decade or more out — fell far harder than steady-cash-flow value names, even though many of those growth companies' near-term business fundamentals hadn't changed. The mechanism is the same duration intuition from lesson 305: a stock whose value depends on distant future cash flows behaves like a long-duration, low-coupon bond — its price is highly sensitive to the discount rate. A mature, dividend-paying value stock behaves more like a short-duration bond — most of its value comes from cash flows arriving sooner, so it's less sensitive to the same rate move. This is why "growth stocks are rate-sensitive" isn't a vague market truism — it's the same duration math from M13 applied to equities instead of bonds.
+
+## The trap
+
+Beginners treat a stock's price drop during a rate-hike cycle as evidence the company is doing something wrong — "the business must be struggling." Often nothing about the business changed at all; only the discount rate did. The correct mental model: separate the numerator (the company's actual expected cash flows) from the denominator (the discount rate applied to them). A rate hike attacks the denominator across the entire market simultaneously, hitting long-duration growth names hardest — that's a valuation mechanics story, not a verdict on any single company's operations. Conflating the two leads to selling good businesses at exactly the wrong moment, or buying into "it's cheap now" without asking whether the discount rate justifies the new price.
+
+## The steelman
+
+A skeptic could argue: "This framework overstates how mechanically rates drive stock prices — plenty of stocks fell in 2022 for company-specific reasons (slowing growth, margin compression, competitive pressure), not purely because of the discount rate." That's true and important: rates are one input, not the only one. The falsifier: isolate the rate effect by comparing how similarly-profiled companies with genuinely unchanged near-term fundamentals moved during the same rate-hike window. If long-duration, high-multiple names across unrelated industries all compressed together while their actual near-term guidance stayed intact, that's the discount-rate mechanism at work independent of company-specific stories. Where a company's own guidance also deteriorated in the same period, both effects are stacking — and separating them is exactly the analytical discipline this lesson is teaching, not a reason to dismiss the rate effect.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="During 2022, high-growth tech names fell much harder than steady-cash-flow value stocks as the Fed hiked rates aggressively — even for companies whose near-term guidance hadn't materially changed. What best explains this divergence?"
+  options={[
+    "Growth companies' actual businesses always deteriorate faster than value companies' during any economic period",
+    "Growth stocks' value depends heavily on cash flows expected far in the future, making them behave like long-duration bonds — highly sensitive to the discount rate — while value stocks' nearer-term cash flows behave more like short-duration bonds",
+    "The divergence was random noise with no connection to interest rates",
+    "Value stocks are legally required to pay dividends, which protected them from any rate effect"
+  ]}
+  answer={1}
+  explanation="This is the same duration mechanism from the bond lessons applied to equities: a stock priced mostly on distant future cash flows is far more sensitive to a rise in the discount rate than one priced mostly on near-term cash flows, independent of whether either company's actual guidance changed. It's not that growth businesses inherently deteriorate faster, and dividend payment isn't a legal shield from rate effects — it's a proxy for how much of the value sits in near-term versus distant cash flows."
+/>
+
+<Quiz
+  question="A stock falls 15% during a rate-hike cycle. Using both this lesson and the credit-spread lesson, what two questions should you ask before concluding the business itself is in trouble?"
+  options={[
+    "Only whether the CEO issued a statement, and whether the stock is still listed on its exchange",
+    "Only whether trading volume increased, since volume alone determines whether a move is fundamental or rate-driven",
+    "Whether the stock's ticker symbol changed recently",
+    "Whether the company's actual expected cash flows (the numerator) changed, and separately whether the discount rate or credit spread applied to it (the denominator, or its risk premium) moved for market-wide reasons unrelated to this specific company"
+  ]}
+  answer={3}
+  explanation="Separating the cash-flow numerator from the discount-rate denominator — and checking whether any credit-spread widening is issuer-specific or market-wide, per the credit-spreads lesson — is exactly the diagnostic this module builds toward: distinguishing a genuine business deterioration from a valuation-mechanics repricing that happens to every long-duration asset at once. Volume and ticker changes don't answer that question at all."
+/>
+
+## Try it
+
+Convene the Room on a growth-oriented ticker from your watchlist during any period of rate volatility. In the simulated Verdict, find where the Market Analyst or Fundamentals Analyst distinguishes a fundamentals-driven view from a rates-driven view. Remember: AMI's training output is a practice artifact, not investment advice — you're evaluating its reasoning, not acting on the call.
+
+## Takeaway
+
+A rate move changes the discount rate applied to every future dollar a stock might earn — hitting long-duration growth names hardest — so before reading a rate-driven selloff as a verdict on the business, separate what actually changed in expected cash flows from what changed in the rate used to discount them.
+</content>

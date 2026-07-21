@@ -1,0 +1,69 @@
+---
+id: "318_the_greeks_delta_theta_vega"
+title: "The Greeks — delta, theta, vega intuition"
+duration_min: 5
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 16"
+topic: "options_greeks"
+prerequisites: ["317_payoff_diagrams_intrinsic_time_value"]
+tags: ["options", "greeks", "delta", "theta", "vega", "time-decay"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# The Greeks — delta, theta, vega intuition
+
+An option's price isn't one number moving for one reason — it's three forces pulling at once. Delta is how much the option's price shifts when the underlying moves. Theta is how much value the option bleeds just from time passing, with no price move at all. Vega is how much the option's price shifts when the market's expectation of future volatility changes. You don't need the formulas to use this lesson — you need the intuition that all three are always active on any position you hold, not just the one you happen to be watching. After this lesson you'll be able to explain, in plain language, why an option can lose value even when you called the stock's direction correctly.
+
+## Example
+
+Ahead of AAPL's earnings report, the market bids up the price of calls and puts alike — even ones far from the current price — because implied volatility (vega's target) rises when an outsized move looks more possible. That's vega at work: pure anticipation, no price move required. Meanwhile, every option in that chain is also losing a little value every single day just from the calendar ticking forward — that's theta, and it never pauses, earnings or not. After the earnings print, even if AAPL moves in the anticipated direction, options can lose value overnight if the volatility crush (vega snapping back down once the uncertainty resolves) outweighs the price movement (delta) — especially if the move wasn't as large as what was priced in.
+
+## The trap
+
+Beginners treat the Greeks as three unrelated stats an option happens to have, rather than three forces actively fighting each other in real time. The common mistake: buying a short-dated option ahead of a known event, expecting delta to pay off if the direction call is right — and then losing money even when the direction call *is* right, because theta was decaying the position every hour and vega gave back more in the crush than delta gained from the move. The correct mental model: every option position is delta, theta, and vega happening simultaneously, and a "correct" read on one of the three doesn't protect you from being wrong, or just outpaced, on the other two.
+
+## The steelman
+
+The strongest case against learning Greeks intuition: "I don't need decay curves — I just need to be right about direction, and the payoff diagram already tells me what happens at expiry." The falsifier: watch what happens to that same option's price *before* expiry, not just at it. Two identical-strike options on the same stock, with different days left to expiry, can react to the exact same stock move by wildly different percentages — purely because theta and vega are doing different amounts of work on each one. If direction were the whole story, both would move the same way by the same amount. They don't.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="An AAPL call with three days left to expiry and an AAPL call with six months left to expiry both have the same strike, currently near the stock's price. AAPL doesn't move at all for a week. Which one loses more value purely from time decay?"
+  options={[
+    "The six-month call, because it has more total time value to lose",
+    "The three-day call, because theta accelerates as expiry approaches, so a short-dated option decays faster per day",
+    "Neither loses value if the stock price is unchanged",
+    "Both lose exactly the same dollar amount, since theta is constant across expiries"
+  ]}
+  answer={1}
+  explanation="Theta isn't constant — it accelerates as expiry nears, because there's less and less time left for the option to become profitable. A short-dated option bleeds a larger share of its remaining value per day than a longer-dated one, even with zero movement in the stock."
+/>
+
+<Quiz
+  question="Ahead of a NVDA earnings report, a trader buys a call, correctly predicts NVDA will rise, and NVDA does rise the next day — yet the call's price barely moves, or even falls. Using delta, theta, and vega together, what's the most likely explanation?"
+  options={[
+    "The option pricing system made an error, since a correct directional call should always profit",
+    "Theta alone explains it — one day of decay was enough to erase a correct directional bet",
+    "Implied volatility was priced up ahead of the event (vega) and collapsed once the report passed (the volatility crush), and that vega-driven repricing outweighed the delta gain from the stock actually rising",
+    "Delta briefly went negative overnight, causing the call to move opposite to the stock"
+  ]}
+  answer={2}
+  explanation="This is the classic post-earnings volatility crush: the option was priced with elevated implied volatility ahead of a known event, and once the event passes, that premium collapses regardless of direction. The delta gain from NVDA rising was real, but it was outweighed by the vega loss from IV normalizing — a call option's price is never delta acting alone."
+/>
+
+## Try it
+
+Open the option chain view (or ask the Market Analyst) for a ticker with earnings coming up in the next two weeks. Compare the premium on a near-dated option versus a longer-dated option at the same strike — the gap between them is the market pricing theta and vega, not just delta.
+
+## Takeaway
+
+Delta tells you how an option reacts to the stock moving, theta tells you what it costs you just to wait, and vega tells you how much the market's fear of a big move is baked into the price — all three are working on your position at once, not just the one you happen to be watching.

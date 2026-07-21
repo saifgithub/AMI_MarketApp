@@ -1,0 +1,84 @@
+---
+id: "320_implied_vs_realized_volatility"
+title: "Implied vs realized volatility"
+duration_min: 5
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 18"
+topic: "implied_realized_volatility"
+prerequisites: ["319_covered_call_and_protective_put"]
+tags: ["options", "implied-volatility", "realized-volatility", "vega", "risk-premium"]
+sources: ["Volatility risk premium — the documented tendency for implied volatility to run above subsequently realized volatility across broad equity index option markets"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Implied vs realized volatility
+
+Implied volatility (IV) is the market's forward-looking guess, baked into option prices, of how much an underlying is likely to move before expiry. Realized volatility is what the stock actually did once the period is over. The two rarely match exactly, and the gap between them is where option buyers and sellers systematically win or lose — not from being right about direction, but from being right or wrong about how much the market's *estimate of uncertainty* was worth. After this lesson you'll be able to tell the difference between "this stock is about to crash" and "the market is pricing a big move, in either direction."
+
+## Example
+
+Ahead of NVDA's quarterly earnings, options implied volatility might run well above NVDA's typical level the rest of the year (illustrative — not a live quote), because the market is pricing in the chance of an outsized post-earnings move. After the print, once the uncertainty resolves, implied volatility "crushes" back down toward normal levels regardless of which direction the stock actually moved — because the event IV was pricing has now happened and passed. This is why two options on the same stock, one filed before earnings and one after, can imply very different expected ranges even though nothing about the company's long-run business changed.
+
+## The trap
+
+Beginners conflate "implied volatility is high" with "the stock is about to crash." IV measures the *size* of an expected move, not its direction — a stock can have sky-high IV heading into a binary event and still rally hard. The mirror trap: assuming a "cheap-looking" option with a low premium is automatically a bargain, without checking whether IV is low because the market genuinely expects a quiet stretch — in which case a low price for a low-probability event can still be a poor bet, not a discount.
+
+## The steelman
+
+A skeptic could argue that since implied volatility is "the market's best guess," it's already efficient — there's no edge in noticing IV-versus-realized spreads, you're just reading a price the market already set correctly. The falsifier: the historical spread itself. Across long samples, implied volatility has tended to run persistently above subsequently realized volatility — a volatility risk premium — which is why systematic option-selling strategies have documented a long-run edge even though any single trade is still close to a coin flip. If IV were unbiased on average, that persistent spread wouldn't exist. The falsifier is checking the historical IV-minus-realized gap on a broad index across many cycles, not the outcome of any one earnings print.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Implied volatility on a stock's options spikes sharply the week before its earnings report, then drops sharply the day after — regardless of whether the stock went up or down. What does this pattern tell you implied volatility actually measures?"
+  options={[
+    "The direction the market expects the stock to move",
+    "A guarantee that the stock will move by the implied percentage",
+    "The magnitude of uncertainty the market is pricing in around an event, not the direction of the eventual move",
+    "The company's underlying earnings growth rate"
+  ]}
+  answer={2}
+  explanation="IV rising and falling symmetric to an event, independent of the outcome's direction, is the signature of a magnitude estimate, not a directional forecast. The market prices the size of the expected swing; it says nothing about which way that swing goes."
+/>
+
+<Quiz
+  question="A trader sees a stock's options trading at unusually low implied volatility and calls them 'cheap.' What is the trap in that reasoning?"
+  options={[
+    "Options can never be mispriced, so 'cheap' is always meaningless",
+    "Low implied volatility only ever means the stock is about to have a large move",
+    "Low implied volatility guarantees the option will expire worthless",
+    "Cheap premium relative to IV doesn't mean underpriced — IV can be low because the market genuinely expects a quiet period, and a low price with a low probability of a big move can still be a poor bet"
+  ]}
+  answer={3}
+  explanation="A low premium reflects a low priced-in probability of a large move — that's consistent pricing, not necessarily a discount. 'Cheap' only means something relative to what actually happens next, which is exactly the implied-versus-realized comparison this lesson is about."
+/>
+
+<Quiz
+  question="Combining this lesson with the Greeks lesson: a trader buys a far-dated call specifically because implied volatility looks 'cheap' relative to its recent history, expecting IV to rise and lift the option's price even before the stock moves. What is this trader implicitly betting on, and what could invalidate the thesis?"
+  options={[
+    "They're betting on vega — that implied volatility itself will rise, lifting the option's price independent of the stock; the thesis is invalidated if IV stays flat or falls even while the stock is flat, since theta keeps decaying the position the whole time regardless",
+    "They're betting purely on delta — the thesis is invalidated only if the stock price falls",
+    "They're betting on theta — the thesis is invalidated only if time passes",
+    "This trade has no risk, since implied volatility historically always reverts upward over any holding period"
+  ]}
+  answer={0}
+  explanation="Buying an option specifically to benefit from IV rising is a vega-driven bet, separate from a directional (delta) call. It fails not just if IV stays flat, but even in that flat-IV, flat-price scenario theta is still eating the position every day — 'waiting for IV to rise' is not a free option on time."
+/>
+
+## Try it
+
+Ask the Market Analyst: "Is [ticker]'s options implied volatility currently high or low relative to its own recent history?" Note that AMI's answer describes a market condition — it is not a signal to place a trade, since AMI Trade has no options trading.
+
+## Takeaway
+
+Implied volatility prices the size of an expected move, not its direction, and it tends to overstate what actually happens on average — realized volatility is the scorecard that eventually settles the bet.
+
+*Where this comes from: the volatility risk premium — the documented, long-run tendency for implied volatility to exceed subsequently realized volatility across broad equity index option markets.*
