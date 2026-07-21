@@ -25,7 +25,7 @@ from this table. CR052.
 
 | Item | State | Instance | Notes |
 |---|---|---|---|
-| **CR054-W0a** | **IN_AUDIT r1** | coder.api → auditor.core | **BOK track-enum wiring — built, 892 tests green, pushed (c401a17). Auditor verifying** |
+| ~~CR054-W0a~~ | **DONE ✓ (r1)** | coder.api → auditor.core | **Integrated. 4 tracks wired, audited COMPLETE (72a9403), archived → history/lanes. Unblocks W0b. Awaiting Saiful acceptance** |
 | DEF062 | ASSIGNED r1 (idle) | coder.api | validate mandate PATCH — head of safety chain; no worker yet |
 | CR038 | ASSIGNED r1 (seed) | coder.room | remove macro/Fed scaffolding at source |
 | CR048 | ASSIGNED r1 (seed) | coder.store | Play internal track + fastlane (first upload Saiful-gated) |

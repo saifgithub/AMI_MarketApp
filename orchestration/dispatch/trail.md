@@ -17,3 +17,4 @@ slurp. Per-item detail lives in ../history/lanes/<ITEM>.md, not here.
 | 2026-07-21 23:40 | CR054-W0a | architect | 1 | ASSIGN | Root lane assigned to coder.api; launching first real headless worker (dogfood of the CR052 protocol) |
 | 2026-07-22 00:10 | CR054-W0a | coder.api | 1 | READY_FOR_AUDIT | Built 4 tracks (ASST/MACRO/QUANT/ETHIC), 892 tests green (+6 guards), pushed c401a17; disjoint paths held (saw+skipped another lane's room_runner WIP) |
 | 2026-07-22 00:15 | CR054 | architect | 1 | WAVE-0-FANOUT | Deliver-whole-CR054 kickoff: launched auditor.core on W0a + assigned/launched W0c (noncoder.edu author-prompt v2) + W0d (coder.math CR046 math) in parallel |
+| 2026-07-22 00:25 | CR054-W0a | architect | 1 | ACCEPTED | Integrated — auditor COMPLETE (72a9403), DISPATCH: ACCEPTED, archived to history/lanes; coder.api slot freed; unblocks W0b. First full dispatch cycle closed end-to-end |
