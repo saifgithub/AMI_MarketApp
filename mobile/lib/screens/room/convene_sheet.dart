@@ -8,6 +8,7 @@ library;
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 
 const _suggestedTickers = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'META', 'TSLA', 'AMZN'];
@@ -55,7 +56,8 @@ class _ConveneSheetState extends State<ConveneSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
-        AmiSpacing.l + MediaQuery.of(context).viewInsets.bottom,
+        // DEF075 — clear keyboard AND nav bar, not just the keyboard.
+        AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -152,11 +152,16 @@ class _FloorScreenState
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: AmiColors.slate800,
+      // DEF075 — scroll-controlled + scrollable so the "GO TO LESSONS" CTA
+      // isn't overflowed past the 9/16 cap (and under the nav bar) when an
+      // agent has a full 5-lesson gateway list.
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (_) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          child: Padding(
           padding: const EdgeInsets.all(AmiSpacing.l),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -270,6 +275,7 @@ class _FloorScreenState
               ],
             ],
           ),
+        ),
         ),
       ),
     );

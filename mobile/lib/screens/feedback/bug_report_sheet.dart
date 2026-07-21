@@ -14,6 +14,7 @@ import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/hex/hex_toast.dart';
+import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -152,7 +153,9 @@ class _BugReportSheetState extends ConsumerState<_BugReportSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(feedbackNotifierProvider);
-    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    // DEF075 — clear the nav bar too, not just the keyboard, so "Send report"
+    // isn't drawn under the Android system nav (was viewInsets.bottom only).
+    final bottom = sheetBottomInset(MediaQuery.of(context));
 
     return Padding(
       padding: EdgeInsets.fromLTRB(AmiSpacing.m, AmiSpacing.m, AmiSpacing.m, AmiSpacing.m + bottom),

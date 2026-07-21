@@ -15,6 +15,7 @@ import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -244,7 +245,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
-        AmiSpacing.l + MediaQuery.of(context).viewInsets.bottom,
+        // DEF075 — clear keyboard AND nav bar, not just the keyboard.
+        AmiSpacing.l + sheetBottomInset(MediaQuery.of(context)),
       ),
       child: SingleChildScrollView(
         child: Column(
