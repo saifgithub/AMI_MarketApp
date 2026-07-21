@@ -30,7 +30,11 @@ A17="R5CY91AY99Y"
 ALL_KNOWN=("$NOTE_FAN" "$A17")
 
 : "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
-: "${GOOGLE_OAUTH_WEB_CLIENT_ID:=}"
+# CR050 — GCP OAuth 2.0 **Web** client_id (ami-trade-web). Public config: it is
+# stamped into the Google ID token's `aud` and the backend verifies it against
+# GOOGLE_AUDIENCES. Baked as the default so Google Sign-In is never silently
+# disabled by a forgotten export (DEF038-class). Override via env if the key rotates.
+: "${GOOGLE_OAUTH_WEB_CLIENT_ID:=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com}"
 : "${SENTRY_DSN:=}"
 
 # Locate adb
