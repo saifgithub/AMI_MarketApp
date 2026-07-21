@@ -722,6 +722,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get signInWithEmail => 'ATAU TERUSKAN DENGAN EMEL';
 
   @override
+  String get signInUseEmailInstead => 'Use email instead';
+
+  @override
   String get signInEmailHint => 'anda@contoh.com';
 
   @override

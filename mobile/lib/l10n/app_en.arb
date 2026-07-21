@@ -434,6 +434,10 @@
     "signInWithApple": "Sign in with Apple",
     "signInWithGoogle": "Sign in with Google",
     "signInWithEmail": "OR CONTINUE WITH EMAIL",
+    "signInUseEmailInstead": "Use email instead",
+    "@signInUseEmailInstead": {
+        "description": "CR050 — small demoted disclosure link under the primary Apple/Google sign-in button. Tapping it reveals the email 6-digit-code claim card, kept as a cross-ecosystem recovery fallback."
+    },
     "signInEmailHint": "you@example.com",
     "signInSendCode": "SEND CODE",
     "signInResendCode": "RESEND CODE",

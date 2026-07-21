@@ -721,6 +721,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signInWithEmail => 'OR CONTINUE WITH EMAIL';
 
   @override
+  String get signInUseEmailInstead => 'Use email instead';
+
+  @override
   String get signInEmailHint => 'you@example.com';
 
   @override

@@ -1,14 +1,17 @@
 /// Sign-in screen — opens from Settings → Account.
 ///
-/// Anonymous users see two claim paths (per-platform federated + email):
-///   1. Federated sign-in:
+/// Anonymous users see two claim paths. Federated one-tap sign-in is the
+/// hero (CR050); the email code is demoted behind a "Use email instead"
+/// disclosure so the primary surface stays one-tap:
+///   1. Federated sign-in (primary):
 ///      - iOS → Sign in with Apple (`sign_in_with_apple` package; backend
 ///        verifies identity_token against Apple's JWKS — Phase 3, AT:R29)
 ///      - Android → Sign in with Google (`google_sign_in` package; backend
 ///        verifies ID token against Google's JWKS — D-057, AT:R36)
-///   2. Continue with email — sends a 6-digit code; in dev the code is
-///      returned from the backend so the alpha tester can paste it without
-///      a real email being sent.
+///   2. Continue with email (demoted, behind a disclosure) — sends a 6-digit
+///      code; in dev the code is returned from the backend so the alpha
+///      tester can paste it without a real email being sent. Retained as the
+///      only portable cross-ecosystem recovery path + future Huawei fallback.
 ///
 /// Already-claimed users see a "Signed in as you@example.com" line + the
 /// option to stay.
@@ -47,6 +50,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   final _emailCtrl = TextEditingController();
   final _codeCtrl = TextEditingController();
   bool _codeRequested = false;
+  // CR050 — email claim is demoted behind a "Use email instead" disclosure;
+  // federated one-tap sign-in is the primary surface. Hidden until tapped.
+  bool _showEmail = false;
 
   @override
   void dispose() {
@@ -261,34 +267,52 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ],
             if (user != null && !user.isAnonymous) ...[
               _SignedInCard(user: user),
-              const SizedBox(height: AmiSpacing.l),
             ] else ...[
               Text(
                 l.signInIntro,
                 style: AmiTypography.body,
               ),
               const SizedBox(height: AmiSpacing.l),
+              // One-tap federated sign-in is the hero. Apple on iOS,
+              // Google on Android — per-platform, no cross-pollination
+              // (D-057). This is the "just use your Apple/Android OAuth" path.
+              if (Platform.isIOS)
+                _AppleButton(
+                  onPressed: auth.loading ? null : _signInWithApple,
+                )
+              else if (Platform.isAndroid)
+                _GoogleButton(
+                  onPressed: (auth.loading || _googleOAuthWebClientId.isEmpty)
+                      ? null
+                      : _signInWithGoogle,
+                ),
+              const SizedBox(height: AmiSpacing.m),
+              // CR050 — email 6-digit code retained but demoted: it's the only
+              // portable cross-ecosystem recovery path (Apple ID is iOS-only,
+              // Google Android-only) and the future Huawei fallback. Hidden
+              // behind a disclosure so the primary surface stays one-tap.
+              if (_showEmail)
+                _EmailClaimCard(
+                  emailCtrl: _emailCtrl,
+                  codeCtrl: _codeCtrl,
+                  codeRequested: _codeRequested,
+                  loading: auth.loading,
+                  onRequestCode: _requestCode,
+                  onVerifyCode: _verifyCode,
+                  debugCode: auth.lastDebugCode,
+                )
+              else
+                Center(
+                  child: TextButton(
+                    onPressed: () => setState(() => _showEmail = true),
+                    child: Text(
+                      l.signInUseEmailInstead,
+                      style: AmiTypography.labelMono
+                          .copyWith(color: AmiColors.textLow),
+                    ),
+                  ),
+                ),
             ],
-            if (Platform.isIOS)
-              _AppleButton(
-                onPressed: auth.loading ? null : _signInWithApple,
-              )
-            else if (Platform.isAndroid)
-              _GoogleButton(
-                onPressed: (auth.loading || _googleOAuthWebClientId.isEmpty)
-                    ? null
-                    : _signInWithGoogle,
-              ),
-            const SizedBox(height: AmiSpacing.l),
-            _EmailClaimCard(
-              emailCtrl: _emailCtrl,
-              codeCtrl: _codeCtrl,
-              codeRequested: _codeRequested,
-              loading: auth.loading,
-              onRequestCode: _requestCode,
-              onVerifyCode: _verifyCode,
-              debugCode: auth.lastDebugCode,
-            ),
             if (auth.error != null) ...[
               const SizedBox(height: AmiSpacing.m),
               Text(

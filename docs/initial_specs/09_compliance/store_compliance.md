@@ -11,10 +11,28 @@ Apple App Store, Google Play, Huawei AppGallery — what they require for a fina
 | **3.1.1 In-App Purchase** | All digital subs and credits MUST use Apple IAP. We do — via RevenueCat. |
 | **3.2.1 Acceptable** (financial services) | Apps using financial-trading metaphors must be transparent about being simulations. We disclose extensively. |
 | **3.2.2 Unacceptable** | "Provide false or fraudulent financial information." We don't. |
+| **4.8 Sign in with Apple** | Required *only* if the app offers any third-party/social login on iOS. We do offer Sign in with Apple on iOS, and it is the **only** federated login on iOS — so 4.8 is satisfied. See the coupling note below. |
 | **5.1.1 Privacy** | Privacy Policy required + ATT prompt if cross-app tracking. We comply. |
 | **5.1.2 Data Use & Sharing** | Privacy Manifest required (iOS 17+). We provide one declaring data we collect. |
 | **5.1.5 Location Services** | We don't collect location beyond country (IP-based). OK. |
 | **2.5.1 Software Requirements** | Must compile with latest SDK. Standard. |
+
+#### Guideline 4.8 coupling — why login stays per-platform (CR050)
+
+Apple's Guideline 4.8 makes "Sign in with Apple" **mandatory** on iOS as soon as the
+app presents *any* other social/third-party login (Google, Facebook, etc.) that
+collects the equivalent of name/email. Our login is deliberately **per-platform**
+(D-057): iOS shows **only** Sign in with Apple; Android shows **only** Google
+Sign-In; email 6-digit-code (demoted behind a "Use email instead" disclosure) is a
+first-party passwordless path, not a third-party social login, so it does not trip
+4.8. Result: iOS is compliant today.
+
+The trap to remember: **turning Google Sign-In on for iOS would immediately make
+Sign in with Apple binding** on that screen. We already ship SIWA, so we'd still be
+compliant — but the button ordering/parity rules in 4.8 would then apply. If a future
+CR ever adds Google (or any social provider) to iOS, keep Sign in with Apple present
+and at least as prominent. Backend `/v1/auth/google` is platform-agnostic, so this is
+a UI-only risk to watch, not a backend one.
 
 ### App Review tips for trading-themed apps
 

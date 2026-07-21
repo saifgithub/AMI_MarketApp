@@ -1396,6 +1396,12 @@ abstract class AppLocalizations {
   /// **'OR CONTINUE WITH EMAIL'**
   String get signInWithEmail;
 
+  /// CR050 — small demoted disclosure link under the primary Apple/Google sign-in button. Tapping it reveals the email 6-digit-code claim card, kept as a cross-ecosystem recovery fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Use email instead'**
+  String get signInUseEmailInstead;
+
   /// No description provided for @signInEmailHint.
   ///
   /// In en, this message translates to:
