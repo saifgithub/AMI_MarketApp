@@ -307,6 +307,56 @@ enforces it.
 
 ---
 
+## P6 — A guard on deliberately-growing data pinned exact, not floored (blocks the next addition)
+
+A count/emptiness guard written as an exact equality against today's size turns red the instant the
+data grows as designed — and when the guard lives in a tree a different role owns, it deadlocks that
+role's lane.
+
+| | The pin | What it blocked | Who was deadlocked |
+|---|---|---|---|
+| **CR054 (count)** | `EXPECTED_LESSON_COUNT == 270` in `test_lesson_corpus_integrity.py` | every Wave-1+ content lane (each adds lessons) | `noncoder.edu` — a maintainer may not edit `backend/` |
+| **CR054 (emptiness)** | `test_cr054_new_tracks_are_empty_at_wave_0` | the same lanes (tracks fill by design in Wave 1) | same |
+
+**Why the previous guard failed.** The guard's real job — catch a *silent shrink* (a lesson that
+vanishes because the loader swallows a parse error) — is served equally by a floor; the exact upper
+pin added nothing but a tripwire on intended growth. "Strict = safe" read as correct.
+
+**The invariant.** *A guard on data designed to grow is a FLOOR (`>=`), never an exact pin. Before
+shipping any count/emptiness guard, ask: does this go red on the next planned addition?*
+
+**Enforcing check (CR054-GUARD).** `LESSON_COUNT_FLOOR` (`>=`) + the auditor pin
+`orchestration/audit/regression/test_cr054_guard_capstone_floor_pin.py`. The floor is bumped at each
+wave's integration (a code-side micro-step) so shrink-detection stays tight without blocking growth.
+
+---
+
+## P7 — A headless one-shot agent backgrounds a command and dies before it returns
+
+A `claude -p` worker ends the instant it stops calling tools. Backgrounding a long command and
+"waiting" ends the turn first — the worker dies mid-lane, and in a detached launch nothing notices.
+
+| | What was backgrounded | Result |
+|---|---|---|
+| **CR054-GUARD builder** | `uv run pytest &` (to dodge `-q` output buffering) + a "waiting…" message | session ended before the suite returned; lane stuck at `STATUS: CLAIMED`, work uncommitted; a full re-run billed on top |
+| **CR054-GUARD launch** | `claude -p … & echo` (the Architect's own launch) | the `&` detached the worker from the Bash task-tracker → no completion callback, stdout to nowhere |
+
+**Why the previous guard failed.** There was none — the discipline lived only in the DeliveryOS
+heritage (MABP §8: foreground + redirect-to-log, never `| tail`) and had not been ported into the
+CR052 loop prompts. Both instances are the same class: *backgrounding in a headless one-shot context
+breaks the coordination it was meant to help.*
+
+**The invariant.** *In a headless one-shot session, run every command in the FOREGROUND; for long
+output redirect to a log and read it after the command returns — never `| tail`, never `&`, never an
+"I'll check back" message; don't stop until the work is committed + pushed.*
+
+**Enforcing check (CR057).** The "Headless one-shot mode" section in
+`orchestration/dispatch/loop_prompts/{CODER,AUDITOR,NONCODER}.md`; the launch footguns are removed
+structurally by `orchestration/dispatch/dispatch_launch.sh` (no `&`, task-tracked) + the liveness
+relaunch rule.
+
+---
+
 ## Adding an entry
 
 1. Name the class, not the instance. Two instances minimum.

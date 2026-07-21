@@ -37,6 +37,15 @@ You get assignment lanes like a coder, but your gate is content review, not the 
    Architect/human content review (`IN_REVIEW`), NOT the Auditor, and runs no tests. On a bounce,
    revise and re-signal; on accept, the Architect marks `DISPATCH: ACCEPTED`.
 
+## Headless one-shot mode (non-negotiable — maintainers especially)
+
+You run as a single-shot `claude -p` session: **the session ENDS the moment you stop calling tools.**
+Never background a command and wait for it — run the corpus-integrity suite and git in the
+**foreground** and let them block (backgrounding-and-waiting killed a worker mid-lane, CR057 /
+failure_patterns.md P7). For long output, redirect to a log and read it after it returns, never pipe
+through `| tail` (heritage MABP §8). **A maintainer does not stop until the content is committed AND
+pushed;** a requester not until the intake draft is written. State lives in files — deliver it first.
+
 ## Discipline (both kinds)
 
 Write only your owned paths + (maintainer) your `lanes/<ITEM>.<your-id>.md` / (requester) your

@@ -14,6 +14,16 @@ lanes, audit the committed SHA in your own worktree, re-read at file:line, re-ru
 yourself, reproduce the real measurement, run a blind adversarial pass, verdict COMPLETE only on
 zero BLOCKER + zero MAJOR, doubt bounces).
 
+## Headless one-shot mode (non-negotiable)
+
+You run as a single-shot `claude -p` session: **the session ENDS the moment you stop calling tools.**
+Run every command (the suite re-run, your adversarial probe, git) in the **foreground** — never
+background a command and wait for it (there is no "back"; this killed a builder mid-lane, CR057 /
+failure_patterns.md P7). For the long suite, redirect to a log and read it after it returns
+(`cmd > /tmp/audit-<item>.log 2>&1` then `tail`), never pipe straight through `| tail` (buffering
+hides progress / reads as 0 bytes — heritage MABP §8). **Do not stop until your `VERDICT` is written
+AND pushed** — a committed-but-unpushed verdict is not delivered.
+
 ## What the dispatch layer adds
 
 - **You have an instance ID** (`auditor.<spec>`) and a **shard**: you gate the coder instances whose

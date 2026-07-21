@@ -47,12 +47,16 @@ interrogates it by resuming its session id. Verified: `claude -p --session-id <u
 from an agent's shell, persists to `~/.claude/projects/<hash>/<uuid>.jsonl`, and `claude --resume
 <uuid>` restores its full context.
 ```
-# Architect, per lane (run in background; --permission-mode lets it act autonomously):
-claude -p --session-id <uuid> --permission-mode acceptEdits --add-dir <repo> \
-  "You are coder.api. Read orchestration/dispatch/roster/coder.api.md +
-   orchestration/dispatch/loop_prompts/CODER.md. Work your assigned lane end-to-end,
-   hand off to the Auditor, then stop."
-# Saiful, anytime — interrogate (restores the worker's context):
+# Architect, per lane — ALWAYS via the helper (CR057), run through the Bash tool with
+# run_in_background:true (task-tracked ⇒ completion callback for the liveness rule). It encodes the
+# whole recipe and REQUIRES a cost tier, so no launch is ever hand-assembled or silently premium:
+sh orchestration/dispatch/dispatch_launch.sh <instance> <lane> <tier> <fanout> "<task body>"
+#   tier   = economy(haiku/low/$2) | standard(sonnet/medium/$5) | premium(opus/high/$10)
+#   fanout = solo | ultra   (ultra = grant Workflow+Agent for in-worktree ultracode fan-out, 3× budget)
+#   e.g.  … noncoder.edu CR054-W1-ETHIC economy solo "Commit your 10 authored lessons, run the suite…"
+#   DISPATCH_DRY_RUN=1 sh …/dispatch_launch.sh …   # prints the resolved launch, spends nothing
+# Start cheap; escalate on failure (economy-fail→standard; a died/harness failure = BLOCKER, 0 retries).
+# Saiful, anytime — interrogate (restores the worker's context; uuid printed + written to roster):
 claude --resume <uuid>
 ```
 `live_handle` in `roster/<id>.md` = the **current run's `<uuid>`**. Fresh uuid per lane ⇒ small,

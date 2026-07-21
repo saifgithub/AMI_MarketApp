@@ -35,6 +35,23 @@ the dispatch handshake (Architect → you) and the audit handshake (you → Audi
    resubmit (go to step 5). Stay the owner. On COMPLETE, the Architect integrates — you're free for
    the next lane.
 
+## Headless one-shot mode (non-negotiable — read before you run anything)
+
+You run as a single-shot `claude -p` session: **the session ENDS the moment you stop calling tools.**
+
+- **Never background a command and wait for it.** No trailing `&`, no "I'll let this run and check
+  back" — there is no "back". Run every command (tests, builds, git) in the **foreground** and let it
+  block until it returns. Emitting a final message while a job is still running ends your turn and
+  ends you — this already killed one worker mid-lane (CR057 / failure_patterns.md P7).
+- **For long/noisy output, redirect to a log then read it** *after* the command returns:
+  `cmd > /tmp/<lane>.log 2>&1` then `tail -200 /tmp/<lane>.log`. **Never pipe straight through
+  `| tail`** — the pipe buffers until the producer exits, hiding progress and sometimes reading as a
+  0-byte file on a long run (heritage MABP §8).
+- **Do not stop until you have committed AND pushed.** Your state lives in files; deliver it first.
+- If your launch granted ultracode (`fanout=ultra`), you MAY use the Workflow/Agent tools to fan out
+  disposable sub-agents INSIDE your worktree for a heavy lane — keep each at the cheapest tier its
+  sub-task needs; the fan-out is disposable, the lane still lands as one hand-off.
+
 ## Discipline
 
 - **Write only:** your owned source paths + `lanes/<ITEM>.<your-id>.md` + your audit lane
