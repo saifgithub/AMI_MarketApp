@@ -28,14 +28,21 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
 4. **Answer questions.** On `NEEDS-INFO`, resolve the `Q:` in the lane with an `A:` block; on a
    requester `TRIAGE: NEEDS-INFO`, same.
 5. **Integrate on `AUDIT_PASSED`.** Confirm the Auditor's `VERDICT: COMPLETE` is on origin
-   (`git branch -r --contains <sha>`). Update the CR/DEF register to done, append the `trail.md`
-   closure row, write `DISPATCH: ACCEPTED (round N)` on the assign lane, free the instance's WIP
-   slot, assign its next lane. Flag the item to the human for their acceptance test — a defect they
-   find reopens the lane at the next round.
+   (`git branch -r --contains <sha>`). Update the CR/DEF register to done, append the timestamped
+   `trail.md` closure row, write `DISPATCH: ACCEPTED (round N)` on the assign lane, **archive the
+   closed lane pair to `../history/lanes/<ITEM>.md`**, free the instance's WIP slot, assign its next
+   lane. Flag the item to the human for their acceptance test — a defect they find reopens the lane
+   at the next round.
 6. **On `IN_REVIEW`** (a Maintainer content lane): review the assets yourself (or hand to the human);
    accept → `DISPATCH: ACCEPTED`; bounce → write the fix note, the instance revises.
 7. **On `BLOCKED`**: read the reason. If it is a human-only (Tier-1) blocker — accounts, money,
    legal, keys, device — escalate to the human; do not try to clear it yourself.
+8. **Housekeeping — trail retention (you own it, once per session).** At session wrap, or whenever
+   `dispatch/trail.md` has grown, run `python3 orchestration/dispatch/rotate_trail.py` (`--dry-run`
+   first to preview) to roll rows older than 30 days into `history/trail/trail-<YYYY-MM>.md`; commit
+   the rotated files. This is a **SINGLE shared job — NEVER per-instance** (`trail.md`/`history/` are
+   single-writer; parallel rotators race). The trail is a log, not a state store, so archiving old
+   rows is always safe (current state comes from the lanes). (DISPATCH_PROTOCOL.md §8.6.)
 
 ## Discipline
 
