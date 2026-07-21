@@ -70,19 +70,35 @@ release/rule/report, not the institution alone.
 
 ---
 
+## Verification passes
+
+### 2026-07-22 — sourced batch (lessons 293–345, 30 lessons) · dual-AI-pass + adversarial refute
+
+Full auditable record: **`cr060_verification_report_2026-07-22.md`** (this folder).
+
+- ✅ **10 VERIFIED** and stamped `verified: {by: cr060-ai-dual-pass, date: 2026-07-22, …}`:
+  ETHIC 6/8, ASST 19, MACRO 3/7/11/12, QUANT 1/3/8 (lessons 298, 300, 321, 325, 329, 333, 334, 335,
+  337, 342).
+- ⚠️ **20 FINDINGS** (genuine defects, handed to the education lane — not fixed by this lane):
+  ETHIC 1/2, ASST 2/9/10/15/17/18/20, MACRO 1/2/4/5/6/8/9/10, QUANT 2/6/11 (lessons 293, 294, 304,
+  311, 312, 317, 319, 320, 322, 323, 324, 326, 327, 328, 330, 331, 332, 336, 340, 345).
+  **7 of them poison a graded quiz answer/explanation** (311, 322, 323, 324, 327, 328, 345).
+- ⚖️ **1 legal escalation** — `294 ETHIC 2` insider trading: "MNPI, no matter how you learned it"
+  contradicts *Chiarella*/*Dirks* (breach-of-duty required). **Needs human/SME sign-off**, not an
+  auto-fix. See report §5.
+
 ## Quality findings log (Claude, CR060 owner)
 
-Issues I've flagged while seeding this registry. These are **provenance soft-spots** — citations
-that describe a concept as "standard" without naming a checkable source. They pass "has a `sources`
-field" but fail "resolves to a specific reputable source," and must be upgraded before their lessons
-are marked `verified`:
+Provenance soft-spots — citations that name no checkable source. Now **subsumed** into the
+2026-07-22 findings above (each of these lessons also has content findings in the report):
 
-- **QF-001** `304_bond_pricing_and_ytm` — *"Standard fixed-income present-value pricing…"* → replace
-  with a Tier-2/3 citation (e.g. Hull, or a CFA fixed-income reading).
-- **QF-002** `317_payoff_diagrams_intrinsic_time_value` — *"Standard option payoff decomposition…"*
-  → cite Hull or CBOE explicitly.
-- **QF-003** `320_implied_vs_realized_volatility` — *"Volatility risk premium — the documented
-  tendency…"* → cite the VRP literature or a CBOE/academic source, not a bare assertion.
+- **QF-001** `304_bond_pricing_and_ytm` (ASST 2) — *"Standard fixed-income present-value pricing…"*
+  → cite Hull or a CFA fixed-income reading. *(Lesson also has a market-practice overstatement.)*
+- **QF-002** `317_payoff_diagrams_intrinsic_time_value` (ASST 15) — *"Standard option payoff
+  decomposition…"* → cite Hull or CBOE. *(Lesson also mislabels the at-the-money case.)*
+- **QF-003** `320_implied_vs_realized_volatility` (ASST 18) — *"Volatility risk premium — the
+  documented tendency…"* → cite the VRP literature / CBOE. *(Lesson also mis-frames short-vol as a
+  "coin flip".)*
 
 Log new findings here as verification passes run; resolved items get struck through with the fixing
 commit.
