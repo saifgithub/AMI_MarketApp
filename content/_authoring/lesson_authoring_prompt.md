@@ -2,9 +2,11 @@
 
 Self-contained prompt for any AI tool (ChatGPT, Claude.ai, Gemini, etc.) to generate AMI Trade lessons + daily-challenge data + AI Coach Q&A entries that drop straight into this repo.
 
-Saiful: paste one of the three **PROMPT** blocks below into your tool of choice. Adjust the "What you should write today" section at the bottom of each prompt to scope the generation run.
+Saiful: paste one of the four **PROMPT** blocks below into your tool of choice. Adjust the "What you should write today" section at the bottom of each prompt to scope the generation run.
 
-The canonical curriculum sequence (Levels 1–8, Modules 1–12, lesson IDs) lives at [`docs/initial_specs/04_education/curriculum_map.md`](../../docs/initial_specs/04_education/curriculum_map.md). The prompt below references it — keep both in sync.
+The canonical curriculum sequence (Levels 1–8, Modules 1–12, lesson IDs) lives at [`docs/initial_specs/04_education/curriculum_map.md`](../../docs/initial_specs/04_education/curriculum_map.md). The prompt below references it — keep both in sync. The CR054 BOK expansion (Levels 9–14, Modules M13–M26) is mapped in [`docs/forward_planning/CR054_investment_body_of_knowledge/CR054_investment_body_of_knowledge.md`](../../docs/forward_planning/CR054_investment_body_of_knowledge/CR054_investment_body_of_knowledge.md) §4.1 until its `bok_architecture.md` lands; new-module lesson IDs are minted per wave, never invented.
+
+**v2 (CR054, 2026-07-21).** This prompt now covers the BOK expansion: new Levels 9–14 / Modules M13–M26 in four new tracks (`asset_classes`/ASST, `economics_macro`/MACRO, `quant_methods`/QUANT, `ethics_integrity`/ETHIC), an optional steelman/red-team beat, an optional `sources` frontmatter field + "Where this comes from" closing line, a module-capstone template, and five new glossary + AI-coach categories. Everything v2 adds is optional or new-content-only — **the existing 270 lessons remain valid unchanged.**
 
 ---
 
@@ -119,7 +121,9 @@ neutral_debator, portfolio_manager, concierge
   amounts. When using a non-USD example, prefix with country context
   ("On Bursa Malaysia: ...").
 
-## Curriculum structure: 8 Levels, 12 Modules
+## Curriculum structure: 14 Levels, 26 Modules
+
+The original journey (Levels 1–8, Modules 1–12 — the shipped 270 lessons):
 
 | Level | Module | Theme |
 |-------|--------|-------|
@@ -136,10 +140,37 @@ neutral_debator, portfolio_manager, concierge
 | 7 — Scam Protection | 11 | Investment Scam Awareness |
 | 8 — AI + Modern Trading | 12 | AI-Assisted Trading |
 
+The CR054 BOK expansion (v2) — Levels 9–14, Modules M13–M26, shipped in
+waves. Each new module belongs to a track (which fixes its code prefix):
+
+| Level | Module | Theme | track |
+|-------|--------|-------|-------|
+| 9 — The Investable Universe | M13 | Fixed income & rates | asset_classes |
+| 9 — The Investable Universe | M14 | Funds & vehicles | asset_classes |
+| 9 — The Investable Universe | M15 | Options & derivatives literacy | asset_classes |
+| 10 — The Macro Machine | M16 | Growth, inflation & the cycle | economics_macro |
+| 10 — The Macro Machine | M17 | Central banks, policy & currency | economics_macro |
+| 11 — Building a Portfolio | M18 | Diversification & allocation | risk_portfolio |
+| 11 — Building a Portfolio | M19 | Modern theory & factors | risk_portfolio |
+| 12 — The Evaluator's Math | M20 | Probability & evidence | quant_methods |
+| 12 — The Evaluator's Math | M21 | Testing a claim | quant_methods |
+| 13 — Ethics & Market Integrity | M22 | Playing it straight | ethics_integrity |
+| 13 — Ethics & Market Integrity | M23 | Duty & conflicts | ethics_integrity |
+| 14 — The Discerning CEO | M24 | Evaluating analyst & AI output | edge_process |
+| Specialty strand | M25 | Islamic finance & Sharia investing | fundamentals_analysis |
+| Specialty strand | M26 | Sustainable / ESG investing | fundamentals_analysis |
+
+Agent-callout guide for the new domains: asset_classes lessons usually
+tag fundamentals_analyst or market_analyst; economics_macro tags
+news_analyst (macro is its beat); quant_methods tags research_manager;
+ethics_integrity tags portfolio_manager or concierge. M24 tags whichever
+agent the lesson teaches the user to evaluate.
+
 For the exact lesson ID, title, difficulty, track, and agent_callouts
 for each lesson in each module, see the canonical curriculum map at
-docs/initial_specs/04_education/curriculum_map.md. The "What you should write today"
-section at the bottom of this prompt will point you to specific IDs.
+docs/initial_specs/04_education/curriculum_map.md. New-module (M13–M26)
+lesson IDs are minted per CR054 wave — the "What you should write today"
+section will point you to specific IDs; never invent IDs.
 
 ## Lesson file format
 
@@ -151,14 +182,15 @@ Structure:
 id: "<NNN>_<snake_case_slug>"
 title: "Human-readable title"
 duration_min: <integer, typically 3-6>
-level: <1-8>                    # Saiful's pedagogical Level
-module: <1-12>                  # the module within the level
+level: <1-14>                   # Saiful's pedagogical Level (9-14 are CR054)
+module: <1-26>                  # the module within the level (13-26 are CR054)
 difficulty: <1-5>               # how hard the content itself is
-track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process>"
+track: "<one of: foundations | fundamentals_analysis | technical_analysis | news_macro | sentiment_behaviour | risk_portfolio | edge_process | asset_classes | economics_macro | quant_methods | ethics_integrity>"
 code: "<TRACK PREFIX> <next free number in that track>"
 topic: "<short slug>"
 prerequisites: ["<lesson_id>", ...]
 tags: ["<short tags>", ...]
+sources: ["<one-line canon anchor>", ...]   # OPTIONAL (v2) — see Frontmatter rules
 agent_callouts: ["<agent_id>", ...]
 locale_versions: ["en"]
 created_at: "YYYY-MM-DD"
@@ -170,6 +202,10 @@ updated_at: "YYYY-MM-DD"
 <Body follows the 7-part lesson template below.>
 
 ## The 7-part lesson template (every lesson MUST follow this shape)
+
+v2 adds one OPTIONAL beat (3b, the steelman) and one OPTIONAL closing
+line ("Where this comes from"). Both are additive — a 7-part lesson
+without them is still fully valid, and no existing lesson is retrofitted.
 
 ### 1. Short explanation (50-120 words, no heading)
 
@@ -199,6 +235,22 @@ Name the specific wrong move a beginner makes here and why it feels
 right at the time. Then explain what the correct mental model looks
 like instead. This is the lesson's most important paragraph — most
 people get this part wrong.
+
+### 3b. Steelman / red-team (OPTIONAL 8th beat, v2 — 60-120 words,
+heading: "## The steelman")
+
+For ANALYTICAL lessons only — lessons whose core is a thesis or method
+someone could argue against (valuation calls, macro reads, strategy and
+quant claims, evaluating Room output; most Level 9-14 material,
+especially M24). Right after "The trap", state the STRONGEST case
+against the lesson's thesis — the argument a sharp Bear (or Bull)
+Researcher would actually make, not a strawman — then give its
+falsifier: the evidence that would settle the disagreement either way.
+
+This trains the evaluator's habit of arguing the other side, the same
+discipline the 12-agent debate models. Skip it on vocabulary and
+mechanics lessons ("what is a coupon", "how a limit order fills") —
+there is no thesis to oppose, and a forced steelman reads as filler.
 
 ### 4. Ask AMI (one line, no heading)
 
@@ -258,6 +310,12 @@ The same corpus test enforces this. (DEF065: 277 explanations across 138
 lessons did it, under two contradictory conventions — some counting from 0,
 some from 1.)
 
+**No calibration quizzes yet.** CR054 plans a confidence-weighted ("how sure
+are you?") quiz variant for Level 12/14, but it needs its own client
+rendering and guards, which do not exist. Until that lands as its own
+change, multiple-choice `<Quiz>` is the only form you may emit — do not
+improvise a confidence field.
+
 **Vary which position holds the correct answer.** Spread it across all four
 slots. Before CR042 the answer sat in the second slot in 71% of questions,
 which is a pattern a reader can exploit without learning anything.
@@ -278,6 +336,22 @@ Examples:
 The one thing the reader should remember when they close the app. Make
 it portable — something they could say out loud to themselves before
 opening a trade ticket.
+
+### Closing line — "Where this comes from" (OPTIONAL, v2; one italic
+line after the Takeaway, no heading)
+
+Anchors the lesson to the investment canon — the authoritative origin
+of its core idea:
+
+  *Where this comes from: Graham's margin-of-safety idea — The
+  Intelligent Investor (1949), ch. 20.*
+
+One anchor, one line, and it must mirror the `sources` frontmatter
+field (use both or neither). Concept lineage ONLY — this is never a
+citation for a recommendation. "This is the Kelly (1956) sizing idea"
+is fine; "Graham says buy value stocks" is a regulatory violation.
+Not academic footnoting: no page-number pedantry, no multi-source
+bibliographies.
 
 ## MDX components available
 
@@ -302,11 +376,11 @@ opening a trade ticket.
 
 - `id`: zero-padded 3-digit prefix matches curriculum_map.md.
   Filename = `<id>.en.mdx`.
-- `level` = Saiful's pedagogical Level (1-8).
-- `module` = the cohesive group within the level (1-12).
+- `level` = Saiful's pedagogical Level (1-14; 9-14 are CR054).
+- `module` = the cohesive group within the level (1-26; 13-26 are CR054).
 - `difficulty` = how hard the content is (1-5), independent of level.
-- `track` MUST be one of the 7 enum values. Determined by the
-  curriculum map.
+- `track` MUST be one of the 11 enum values (7 original + 4 CR054 BOK
+  tracks). Determined by the curriculum map / the module table above.
 - `code` (CR044) is what the user reads off the lesson badge and says back
   to AMI — "go read N&M 22". Format is `<PREFIX> <n>`:
 
@@ -315,7 +389,14 @@ opening a trade ticket.
   | `foundations` | `CORE` | | `sentiment_behaviour` | `SENT` |
   | `fundamentals_analysis` | `FUND` | | `risk_portfolio` | `RISK` |
   | `technical_analysis` | `TECH` | | `edge_process` | `EDGE` |
-  | `news_macro` | `N&M` | | | |
+  | `news_macro` | `N&M` | | `asset_classes` | `ASST` |
+  | `economics_macro` | `MACRO` | | `quant_methods` | `QUANT` |
+  | `ethics_integrity` | `ETHIC` | | | |
+
+  The 4 BOK tracks (v2) start empty — the first lesson in each takes
+  `<PREFIX> 1`, contiguous from there. Don't confuse the two macro-ish
+  tracks: `news_macro` (N&M) is the news/catalyst-reading skill track;
+  `economics_macro` (MACRO) is the economics discipline (M16-M17).
 
   **Take the next free number in that track and never reuse or reassign one.**
   Codes are permanent: one may already be sitting in a user's chat log or a
@@ -335,7 +416,41 @@ opening a trade ticket.
   drop one of the existing five — the set is fixed at 5, and every gateway lesson
   must also list its agent in `agent_callouts`.
 - `prerequisites`: real lesson IDs only.
+- `sources` (OPTIONAL, v2): list of one-line canon anchors — the
+  authoritative origin of the lesson's core idea, in the form
+  `"Author — Work (year), locator"` (e.g. `"Graham — The Intelligent
+  Investor (1949), ch. 20"`, `"Kelly (1956), as applied by
+  fractional-Kelly practitioners"`). One anchor is the norm; it pairs
+  with the "Where this comes from" closing line. Concept lineage ONLY —
+  never a source for a buy/sell claim. When `content/_authoring/canon.md`
+  (the BOK source index, CR054 Wave 3) lands, every `sources` entry must
+  resolve to an entry there — keep anchors in the short form above so
+  they index cleanly.
 - Dates: use today's date in YYYY-MM-DD for both.
+
+## Module capstone template (v2 — one per NEW module, M13-M26)
+
+Every CR054 module ends with exactly ONE capstone — the module's LAST
+lesson. A capstone is a normal 7-part lesson (every rule above applies)
+with these extras:
+
+- **Purpose: synthesis, not a new concept.** The reader proves they can
+  make the module's ideas interact on one scenario.
+- **`tags` MUST include `"capstone"`** — the corpus-integrity guard
+  (extended per wave) identifies capstones by this tag and enforces
+  last-in-module + synthesis-quiz.
+- **`prerequisites`** list the module's core lessons (3+).
+- **Example (part 2):** ONE scenario forcing at least three of the
+  module's concepts to interact. E.g. an M13 capstone walks a surprise
+  rate hike through a bond's price (duration), its credit spread, and
+  the equity-sector effect — three lessons, one scenario.
+- **Quizzes: 2-3, ALL synthesis, zero recall.** Each question should
+  need at least two of the module's lessons to answer; the last should
+  span the module.
+- **Include the steelman beat.** A capstone is analytical by
+  definition — synthesis without a counter-case is incomplete.
+- Existing modules M1-M12 have no capstones. Do NOT retrofit them; they
+  get capstones only if a future wave deliberately adds them.
 
 ## Quality bar (per lesson)
 
@@ -354,6 +469,15 @@ opening a trade ticket.
 9. Avoids: "as we'll see", "stay tuned", "in the next lesson". Each
    lesson stands alone.
 10. AMI naming. Never "the AI", "the model", "the LLM".
+11. Multi-market discipline (v2): across a batch, examples span US AND
+    Bursa, with occasional GCC/Tadawul where the concept fits (e.g.
+    oil-linked sectors, sukuk). Non-USD amounts keep the country-context
+    prefix per the locale rule above.
+12. New-domain numbers (v2, M13-M26): any worked example that can be
+    computed deterministically (bond price/YTM, option payoff and
+    break-even, portfolio variance/beta, EV/Kelly) is verified against
+    `backend/app/trading_math/` (CR046) before shipping. Authors flag
+    any number they could not verify rather than shipping it.
 
 ## Output format
 
@@ -452,6 +576,12 @@ Quality bar (same as lessons):
 - Explanations must address why the *attractive* wrong answer fails.
 - One challenge per day per locale; aim for ~30 challenges per batch
   (one month).
+- New BOK domains (v2 — bonds, funds/ETFs, options literacy, macro,
+  ethics, quant rigor, halal/ESG screening) are in scope using the
+  EXISTING five types — e.g. spot_the_violation works for an
+  insider-trading scenario, predict_the_call for a rate-decision macro
+  read. Proposed new types (value_the_bond, read_the_payoff,
+  spot_the_conflict) are NOT yet supported — do not emit them.
 
 ## What you should write today
 
@@ -490,7 +620,7 @@ Schema:
 
 {
   "id": "qa_<slug>",                  // unique
-  "category": "beginner" | "intermediate" | "psychology" | "scam" | "ai_meta" | "platform",
+  "category": "beginner" | "intermediate" | "psychology" | "scam" | "ai_meta" | "platform" | "asset_classes" | "economics" | "ethics" | "quantitative" | "islamic_finance",
   "question": "<as a user would phrase it>",
   "short_answer": "<1-2 sentence canonical answer. No fluff.>",
   "long_answer": "<3-6 sentence elaboration. Optional — only if the
@@ -515,6 +645,20 @@ Categories explained:
 - ai_meta: "Can AMI predict the market?", "Why didn't AMI say what I
   expected?"
 - platform: "How do I edit my mandate?", "Where is the Decision Journal?"
+
+v2 (CR054) categories — mirror the BOK expansion; these are the
+questions users actually ask once the new domains exist:
+
+- asset_classes: "What is a bond?", "Are ETFs safer than single
+  stocks?", "What's a covered call?"
+- economics: "Why does a Fed rate decision move my stocks?", "What does
+  inflation do to my portfolio?"
+- ethics: "What counts as insider trading?", "Why can't AMI just tell
+  me what to buy?" (advice vs education — reinforces our own frame)
+- quantitative: "Is my backtest legit?", "How many trades before my
+  results mean anything?", "What are base rates?"
+- islamic_finance: "Is this stock halal?", "What is riba?", "How does
+  the halal mandate flag actually screen?"
 
 Quality bar:
 - Each entry answers a question users actually ask, not a question
@@ -581,7 +725,7 @@ is not blocking" rule).
   "id": "<snake_case_english_id>",     // STABLE ACROSS LOCALES — never translated
   "term": "<localized term>",          // displayed text in this locale
   "definition": "<1-3 sentence definition in this locale>",
-  "category": "basics" | "order_types" | "technical" | "fundamental" | "ratios" | "psychology" | "strategy" | "regime" | "macro" | "options_derivatives" | "scam" | "platform" | "advanced",
+  "category": "basics" | "order_types" | "technical" | "fundamental" | "ratios" | "psychology" | "strategy" | "regime" | "macro" | "options_derivatives" | "scam" | "platform" | "advanced" | "asset_classes" | "economics" | "ethics" | "quantitative" | "islamic_finance",
   "see_also": ["<other_term_id>", ...],         // optional, references other glossary IDs
   "related_lessons": ["<lesson_id>", ...],      // optional, numeric 3-digit IDs
   "related_agents": ["<agent_id>", ...],        // optional, canonical 13
@@ -634,6 +778,27 @@ is not blocking" rule).
    - `advanced` — late-curriculum terms (Kelly criterion, walk-forward,
      correlation under stress, etc.)
 
+   v2 (CR054) categories — mirror the BOK expansion:
+
+   - `asset_classes` — fixed-income and fund/vehicle terms (bond, coupon,
+     yield to maturity, duration, credit spread, ETF, expense ratio,
+     tracking error, NAV, REIT, ADR, closed-end fund). Option-specific
+     terms STAY in `options_derivatives`.
+   - `economics` — macro-economics terms (GDP, CPI, business cycle,
+     leading indicator, monetary vs fiscal policy, QE/QT, yield curve
+     inversion, FX transmission). Extends `macro`, which stays valid for
+     existing entries — do NOT re-categorize existing `macro` terms;
+     whether `macro` folds into `economics` is an architect decision.
+   - `ethics` — market-integrity terms (insider trading, front-running,
+     market manipulation, fiduciary duty, conflict of interest,
+     suitability, disclosure).
+   - `quantitative` — evaluator's-math terms (expected value, base rate,
+     fat tails, statistical significance, overfitting, out-of-sample,
+     walk-forward, Monte Carlo, survivorship bias).
+   - `islamic_finance` — Sharia-investing terms (riba, gharar, sukuk,
+     purification, Sharia screening, halal ratio thresholds). Describe
+     the screening concept only; never rule on a specific instrument.
+
 6. **see_also** references the IDs of related glossary entries. Optional.
    Use it to build a small graph (e.g., "support" sees_also "resistance" and
    "trendline").
@@ -647,7 +812,7 @@ is not blocking" rule).
 9. **tags** is a non-empty array of short string tags useful for search and
    filtering (e.g., ["beginner", "vocabulary", "ownership"]).
 
-10. **Coverage target** for the EN v1 batch: ~150-200 entries spanning all 13
+10. **Coverage target** for the EN v1 batch: ~150-200 entries spanning all 18
     categories. Bias toward terms a Module 1-3 user would naturally encounter
     (basics, order_types, basic technical, key fundamental concepts, common
     ratios), plus all platform terms (so the Concierge can define them).
@@ -669,11 +834,16 @@ content/glossary/terms.en.json first.
 
 Examples:
 
-- "Write 180 terms for the EN v1 glossary, spanning all 13 categories.
+- "Write 180 terms for the EN v1 glossary, spanning all 18 categories.
    At least 25 basics, 20 order_types + technical, 25 fundamental + ratios,
    15 psychology, 15 strategy, 12 regime, 12 macro, 8 options_derivatives,
    12 scam (mirror Module 11), 12 platform (AMI-internal terms), 12 advanced.
    Use today's date if you embed a timestamp in tags."
+
+- "Write the CR054 mirror batch: 40 asset_classes, 25 economics, 20
+   ethics, 20 quantitative, 15 islamic_finance, plus ~20 more
+   options_derivatives (payoff, Greeks, IV vs realized vol). Extend the
+   existing array in content/glossary/terms.en.json."
 
 - "Translate the existing EN glossary to Arabic. Keep ids identical;
    localize term + definition only. Write to content/glossary/terms.ar.json."
