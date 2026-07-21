@@ -21,6 +21,13 @@ from typing import Any
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.trading_math.valuation import (
+    dividend_yield_pct,
+    fcf_yield_pct,
+    net_cash_millions,
+    net_position_phrase,
+    ratio_to_pct,
+)
 
 
 # Common English words / acronyms that look like tickers in caps. The
@@ -75,10 +82,10 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
 
     Returned dict keys (all optional — missing fields mean yfinance
     didn't have them for this ticker):
-      base_price, pe, rev_growth, fcf_margin, net_cash, low, high,
-      support, breakout, price_to_sales, ev_to_ebitda, peg_ratio,
-      fcf_yield, dividend_yield, sector, industry, analyst_target_price,
-      analyst_rating
+      base_price, pe, rev_growth, profit_margin, net_cash, low, high,
+      week52_range_live, support, breakout, price_to_sales, ev_to_ebitda,
+      peg_ratio, fcf_yield, dividend_yield, sector, industry,
+      analyst_target_price, analyst_rating
 
     Only numeric fields the LLM is likely to misremember. Narrative
     fields stay synthetic at the call site so yfinance gaps don't
@@ -135,20 +142,28 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     if fifty_two_low is not None and fifty_two_high is not None:
         out["low"] = round(fifty_two_low, 2)
         out["high"] = round(fifty_two_high, 2)
+        # DEF-audit D-c: only the REAL yfinance 52-week range earns the
+        # "52-week range" label. When these fields are missing, low/high stay the
+        # ±5% placeholder above (kept so the range tracks the live price) but the
+        # 1-on-1 block labels it a placeholder rather than claiming 52 weeks.
+        out["week52_range_live"] = True
     if pe is not None:
         out["pe"] = f"{pe:.1f}"
+    # Unit conversions live in trading_math.valuation (CR046 M04).
     rev_growth = _num("revenueGrowth")
     if rev_growth is not None:
-        # yfinance reports growth as a decimal (0.05 = 5%).
-        out["rev_growth"] = round(rev_growth * 100)
+        out["rev_growth"] = ratio_to_pct(rev_growth)
+    # profitMargins is the NET PROFIT margin — keyed and labeled as such. It was
+    # stored as `fcf_margin` and rendered "FCF margin" in the Room, a metric this
+    # value is not (CR046 D-b).
     profit_margin = _num("profitMargins")
     if profit_margin is not None:
-        out["fcf_margin"] = round(profit_margin * 100)
+        out["profit_margin"] = ratio_to_pct(profit_margin)
     # totalCash / totalDebt are dollars; net cash in millions for the prompt.
     total_cash = _num("totalCash")
     total_debt = _num("totalDebt")
     if total_cash is not None and total_debt is not None:
-        out["net_cash"] = round((total_cash - total_debt) / 1_000_000)
+        out["net_cash"] = net_cash_millions(total_cash, total_debt)
 
     # Real valuation multiples beyond P/E (DEF053) — closes the "P/S,
     # EV/EBITDA, FCF yield" overclaim without a second provider.
@@ -158,19 +173,24 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     ev_to_ebitda = _num("enterpriseToEbitda")
     if ev_to_ebitda is not None:
         out["ev_to_ebitda"] = f"{ev_to_ebitda:.1f}"
-    peg_ratio = _num("pegRatio")
+    # yfinance renamed pegRatio → trailingPegRatio; try the current key first,
+    # fall back to the legacy one, so the PEG line doesn't silently disappear.
+    peg_ratio = _num("trailingPegRatio")
+    if peg_ratio is None:
+        peg_ratio = _num("pegRatio")
     if peg_ratio is not None:
         out["peg_ratio"] = f"{peg_ratio:.2f}"
     free_cash_flow = _num("freeCashflow")
     market_cap = _num("marketCap")
-    if free_cash_flow is not None and market_cap is not None and market_cap > 0:
-        out["fcf_yield"] = round(free_cash_flow / market_cap * 100, 1)
+    fcf_yield = fcf_yield_pct(free_cash_flow, market_cap)
+    if fcf_yield is not None:
+        out["fcf_yield"] = fcf_yield
 
     # Real capital allocation (dividends only — buybacks/M&A have no
     # yfinance field and stay undisclosed rather than fabricated).
     dividend_yield = _num("dividendYield")
     if dividend_yield is not None:
-        out["dividend_yield"] = round(dividend_yield, 2)
+        out["dividend_yield"] = dividend_yield_pct(dividend_yield)
 
     # Real sector/industry classification replaces the old always-fake
     # numeric `sector_pe` — a category, not a fabricated peer-average P/E
@@ -225,12 +245,19 @@ def build_live_data_block(ticker: str) -> str | None:
         lines.append(f"P/E: {data['pe']}")
     if "rev_growth" in data:
         lines.append(f"TTM revenue growth: {data['rev_growth']}%")
-    if "fcf_margin" in data:
-        lines.append(f"Profit margin: {data['fcf_margin']}%")
+    if "profit_margin" in data:
+        lines.append(f"Profit margin: {data['profit_margin']}%")
     if "net_cash" in data:
-        lines.append(f"Net cash: ${data['net_cash']}M")
+        phrase = net_position_phrase(data["net_cash"])  # "net cash $X M" / "net debt $Y M"
+        lines.append(phrase[:1].upper() + phrase[1:])
     if "low" in data and "high" in data:
-        lines.append(f"52-week range: ${data['low']}–${data['high']}")
+        if data.get("week52_range_live"):
+            lines.append(f"52-week range: ${data['low']}–${data['high']}")
+        else:
+            lines.append(
+                f"Recent range (±5% placeholder — real 52-week range unavailable): "
+                f"${data['low']}–${data['high']}"
+            )
     multiples = []
     if "price_to_sales" in data:
         multiples.append(f"P/S {data['price_to_sales']}x")

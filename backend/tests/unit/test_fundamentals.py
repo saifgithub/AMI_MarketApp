@@ -70,7 +70,7 @@ def test_build_block_formats_full_data(monkeypatch):
             "base_price": 250.50,
             "pe": "35.2",
             "rev_growth": 8,
-            "fcf_margin": 25,
+            "profit_margin": 25,
             "net_cash": 65_000,
             "low": 165.0,
             "high": 260.0,
@@ -154,7 +154,7 @@ def test_fetch_normalizes_yfinance_shape(monkeypatch):
     assert out["base_price"] == 250.0
     assert out["pe"] == "35.1"
     assert out["rev_growth"] == 8
-    assert out["fcf_margin"] == 25
+    assert out["profit_margin"] == 25
     assert out["net_cash"] == 65_100
     assert out["low"] == 164.0
     assert out["high"] == 260.0
@@ -306,7 +306,7 @@ def test_fetch_treats_nan_in_preexisting_fields_as_absent_not_a_crash(monkeypatc
     out = fetch_live_fundamentals("AAPL")  # must not raise
     assert out is not None
     assert "rev_growth" not in out
-    assert "fcf_margin" not in out
+    assert "profit_margin" not in out
     assert "net_cash" not in out
 
 

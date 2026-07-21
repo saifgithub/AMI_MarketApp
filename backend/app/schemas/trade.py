@@ -7,6 +7,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
+from app.trading_math.portfolio import total_value as _total_value
+
 
 class Side(str, Enum):
     BUY = "buy"
@@ -39,17 +42,18 @@ class Portfolio(BaseModel):
     created_at: datetime
 
     def total_value(self, marks: dict[str, float] | None = None) -> float:
-        """Sum cash + (quantity * price) for each holding. marks: ticker→price."""
+        """Sum cash + (quantity * price) for each holding. marks: ticker→price.
+
+        Arithmetic lives in app.trading_math.portfolio (CR046 M05)."""
         marks = marks or {}
-        invested = sum(h.quantity * marks.get(h.ticker, h.avg_cost) for h in self.holdings)
-        return self.current_cash + invested
+        return _total_value(
+            self.current_cash,
+            ((h.quantity, marks.get(h.ticker, h.avg_cost)) for h in self.holdings),
+        )
 
     def total_drawdown_pct(self, marks: dict[str, float] | None = None) -> float:
-        """Drawdown vs starting capital, as a positive percentage."""
-        if self.starting_capital <= 0:
-            return 0.0
-        v = self.total_value(marks)
-        return max(0.0, (self.starting_capital - v) / self.starting_capital * 100)
+        """Drawdown vs starting capital, as a positive percentage (CR046 M05)."""
+        return _drawdown_pct(self.starting_capital, self.total_value(marks))
 
 
 class ProposedTrade(BaseModel):

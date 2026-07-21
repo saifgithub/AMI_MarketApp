@@ -43,7 +43,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import select
 
-from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor, SINGLE_NAME_CAP_PCT
+from app.agents.safety_floor import check_mandate_compliance, enforce_safety_floor
 from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session, init_schema
@@ -73,7 +73,10 @@ from app.services.credit_service import refund, room_cost_for_plan, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
-from app.trading_math.sizing import risk_tier_cap
+from app.trading_math.portfolio import shares_for_size
+from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
+from app.trading_math.trade import risk_reward, trade_asymmetry
+from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
 
 
 # ── Startup auto-retry policy (eeeb866f, AT:R34) ──────────────────────────
@@ -125,8 +128,8 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         # always-fake `sector_pe` rather than half-fixing it; nothing here
         # claims a peer-average multiple this app doesn't actually compute.
         "{ticker} trades at a trailing P/E of {pe}x. "
-        "TTM revenue growth {rev_growth}%; FCF margin {fcf_margin}%. "
-        "Balance sheet: net cash {net_cash}M. "
+        "TTM revenue growth {rev_growth}%; profit margin {profit_margin}%. "
+        "Balance sheet: {net_cash_phrase}. "
         "On the fundamentals alone, the name is {valuation_tone}.",
     ],
     AgentId.MARKET_ANALYST: [
@@ -138,7 +141,7 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         # a claim the real computation never backed).
         "Daily chart shows {ticker} {trend} around its 20/50-day moving "
         "averages, with recent support around ${support}. RSI({rsi}) — "
-        "{rsi_tone}. Last week's range was ${low}–${high}, breakout level "
+        "{rsi_tone}. 52-week range ${low}–${high}, breakout level "
         "sits at ${breakout}. Volume {volume_tone}.",
     ],
     AgentId.NEWS_ANALYST: [
@@ -173,7 +176,7 @@ _TEMPLATES: dict[AgentId, list[str]] = {
     ],
     AgentId.TRADER: [
         "Translating the synthesis: {action} {ticker} at ${entry}. Stop ${stop} "
-        "(below the {stop_basis}). Target ${target} (R:R = {rr}:1). "
+        "({stop_basis}). Target ${target} (R:R = {rr}:1). "
         "Time horizon: {horizon_weeks} weeks. Position size: {size_pct}% of portfolio.",
     ],
     AgentId.AGGRESSIVE_DEBATOR: [
@@ -271,13 +274,13 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     base_price = 50 + rng.uniform(0, 400)
     pe = rng.uniform(12, 55)
     rev_growth = rng.randint(2, 40)
-    fcf_margin = rng.randint(8, 35)
+    profit_margin = rng.randint(8, 35)
     profile: dict[str, Any] = {
         "ticker": ticker.upper(),
         "base_price": round(base_price, 2),
         "pe": f"{pe:.1f}",
         "rev_growth": rev_growth,
-        "fcf_margin": fcf_margin,
+        "profit_margin": profit_margin,
         "net_cash": rng.randint(-5_000, 80_000),
         "trend": "trading" if rng.random() > 0.5 else "consolidating",
         "support": round(base_price * 0.9, 2),
@@ -368,7 +371,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
             # Real forward consensus EPS for the upcoming report (DEF053,
             # AT:R58) — was already fetched here, just never surfaced. A
             # genuine "forward guidance" data point, distinct from the
-            # backward-looking rev_growth/fcf_margin fields above.
+            # backward-looking rev_growth/profit_margin fields above.
             if earnings.eps_estimate is not None:
                 profile["next_earnings_eps_estimate"] = earnings.eps_estimate
 
@@ -389,7 +392,7 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
     # profile (real or synthetic) so the prose is consistent with the data.
     pe_val = float(profile["pe"]) if isinstance(profile["pe"], str) else float(profile["pe"])
     rev_growth_val = profile["rev_growth"]
-    fcf_margin_val = profile["fcf_margin"]
+    profit_margin_val = profile["profit_margin"]
     is_growth = pe_val > 30 and rev_growth_val > 15
     profile["is_growth"] = is_growth
     profile["valuation_tone"] = (
@@ -397,14 +400,20 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
         else "trading at a discount to its peers"
     )
     profile["bull_thesis"] = (
-        f"{ticker.upper()}'s revenue growth ({rev_growth_val}%) and FCF margin "
-        f"({fcf_margin_val}%) justify a premium multiple"
+        f"{ticker.upper()}'s revenue growth ({rev_growth_val}%) and profit margin "
+        f"({profit_margin_val}%) justify a premium multiple"
     )
     profile["bear_risk"] = (
         f"multiple compression if growth decelerates — {pe_val:.0f}x is sensitive"
     )
+    # DEF075: the inline `int(pe/(pe+10)*100-50)` was simply wrong — it printed
+    # ~16% for a real 50% drop. A delta-point compression of a P/E is a delta/pe
+    # drawdown (price ∝ multiple, earnings held). Computed in trading_math (M07).
+    downside = multiple_compression_downside(pe_val, 10)
     profile["bear_quant"] = (
-        f"a 10-point multiple compression = ~{int(pe_val / (pe_val + 10) * 100 - 50)}% downside"
+        f"a 10-point multiple compression = ~{downside:.0f}% downside"
+        if downside is not None
+        else "a multiple compression would pressure the price"
     )
     return profile
 
@@ -514,8 +523,13 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
         return narration or text.strip(), None
 
     entry = _safe_float(parsed.get("entry")) or ctx.trader_entry
-    stop = _safe_float(parsed.get("stop")) or round(entry * 0.94, 2)
-    target = _safe_float(parsed.get("target")) or round(entry * 1.13, 2)
+    # Explicit None-checks (not `or`): a real level is used as-is; only a genuinely
+    # missing stop/target is defaulted, and that default is disclosed (audit F6) so
+    # a minted ~6%/13% protective level is never shown as a PM-chosen price.
+    stop_raw = _safe_float(parsed.get("stop"))
+    target_raw = _safe_float(parsed.get("target"))
+    stop = stop_raw if stop_raw is not None else round(entry * 0.94, 2)
+    target = target_raw if target_raw is not None else round(entry * 1.13, 2)
     try:
         horizon_days = int(parsed.get("horizon_days"))
     except (TypeError, ValueError):
@@ -526,6 +540,12 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     if size_pct > ceiling:
         size_pct = ceiling
         reason += f" (sized down to {ceiling:.1f}% — mandate risk-tier ceiling.)"
+    _defaulted = [n for n, raw in (("stop", stop_raw), ("target", target_raw)) if raw is None]
+    if _defaulted:
+        reason += (
+            f" ({'/'.join(_defaulted)} not stated by the PM — defaulted to a "
+            f"~6%/13%-from-entry protective level, not a PM-chosen price.)"
+        )
 
     return narration, Verdict(
         action=VerdictAction.APPROVE,
@@ -550,7 +570,7 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         ticker=ctx.ticker,
         side=Side.BUY,
         order_type=OrderType.LIMIT,
-        quantity=max(1, int((ctx.portfolio_value * ctx.trader_size_pct / 100) / ctx.trader_entry)),
+        quantity=shares_for_size(ctx.portfolio_value, ctx.trader_size_pct, ctx.trader_entry),
         limit_price=ctx.trader_entry,
     )
     result = check_mandate_compliance(
@@ -1263,9 +1283,17 @@ class RoomRunner:
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
         ctx.trader_size_pct = _risk_tier_size_ceiling(mandate.risk_score)
-        ctx.aggressive_size_pct = min(SINGLE_NAME_CAP_PCT, ctx.trader_size_pct + 2)
-        ctx.conservative_size_pct = max(0.5, ctx.trader_size_pct - 1.5)
-        ctx.neutral_size_pct = ctx.trader_size_pct
+        # Debate spread lives next to the caps it orbits (CR046 M03).
+        _debator = risk_debator_sizes(ctx.trader_size_pct)
+        ctx.aggressive_size_pct = _debator.aggressive
+        ctx.conservative_size_pct = _debator.conservative
+        ctx.neutral_size_pct = _debator.neutral
+
+        # Derived figures — computed in trading_math, never left to the scripted
+        # f-strings to (mis-)do: R:R (M06), upside/downside asymmetry (M08).
+        _rr = risk_reward(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
+        _asym = trade_asymmetry(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
+        _net_phrase = net_position_phrase(profile.get("net_cash")) or "net cash n/a"
 
         # Run-context sent into f-string formatters; we merge per-template
         formatter = dict(profile)
@@ -1278,13 +1306,21 @@ class RoomRunner:
             "target": ctx.trader_target,
             "horizon_weeks": ctx.trader_horizon_weeks,
             "size_pct": f"{ctx.trader_size_pct:.1f}",
-            "stop_basis": "20-day low",
-            "rr": f"{(ctx.trader_target - ctx.trader_entry) / max(0.01, ctx.trader_entry - ctx.trader_stop):.1f}",
+            # The scripted stop is a fixed ~6% protective stop, not a 20-day low —
+            # don't claim a level-basis the number wasn't derived from (audit F8).
+            "stop_basis": "~6% protective stop",
+            "rr": f"{_rr:.1f}" if _rr is not None else "n/a",
+            "net_cash_phrase": _net_phrase,
             "agg_size": f"{ctx.aggressive_size_pct:.1f}",
             "cons_size": f"{ctx.conservative_size_pct:.1f}",
             "neu_size": f"{ctx.neutral_size_pct:.1f}",
             "synth_size": f"{ctx.trader_size_pct:.1f}",
         })
+        if _asym is not None:
+            # Replace the fixed "28% vs 18%" seed constants with the real
+            # asymmetry of the reference levels (M08).
+            formatter["upside"] = _asym.upside_pct
+            formatter["downside"] = _asym.downside_pct
 
         gateway = self._llm or get_llm_gateway()
         live = gateway.has_real_provider()
@@ -1386,7 +1422,7 @@ class RoomRunner:
                             elif parsed.action == VerdictAction.APPROVE:
                                 proposed = ProposedTrade(
                                     ticker=ctx.ticker, side=Side.BUY, order_type=OrderType.LIMIT,
-                                    quantity=max(1, int((ctx.portfolio_value * parsed.size_pct / 100) / parsed.entry)),
+                                    quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
                                     limit_price=parsed.entry,
                                 )
                                 verdict = enforce_safety_floor(

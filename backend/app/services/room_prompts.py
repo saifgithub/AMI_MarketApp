@@ -26,6 +26,7 @@ from app.services.agent_prompts import build_agent_prompt
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.trading_math.risk import drawdown_contribution
+from app.trading_math.valuation import net_position_phrase
 
 # ── Phase framing ────────────────────────────────────────────────────────
 
@@ -117,11 +118,17 @@ def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | N
     """The mandate-snapshot drawdown line (DEF066).
 
     Always states that the cap is portfolio-level, not a per-trade stop budget.
-    When a concrete Trader proposal is supplied (RISK / VERDICT phases), it also
+    When a concrete reference proposal is supplied (RISK / VERDICT phases), it also
     hands the agent the *derived* contribution figure so no agent has to do — or
     mis-do — the arithmetic that made 16 names un-buyable in the CR035 benchmark
     (a stop distance was compared directly against the cap, ~20x overstating the
-    risk)."""
+    risk).
+
+    Audit D-e: the numbers are a DETERMINISTIC reference position (the risk-tier
+    ceiling at a reference entry/stop), computed before the debate — not the live
+    Trader's exact words, which live only in the transcript. Labelled as a
+    reference so the figure is honest rather than attributed to a proposal the
+    Trader may not have made."""
     cap = mandate.max_drawdown_pct
     line = (
         f"- max_drawdown_pct: {cap} — PORTFOLIO-level cap on total drawdown, NOT a "
@@ -139,11 +146,11 @@ def _drawdown_snapshot_line(mandate: Mandate, trade_proposal: dict[str, Any] | N
         contrib = dc.contribution_pts
         pct_of_cap = contrib / cap * 100 if cap else 0
         line += (
-            f"\n  Trader's proposal: {size:.1f}% size, entry {entry:.2f}, "
-            f"stop {stop:.2f} → stop {stop_dist:.1f}% below entry → "
+            f"\n  Reference position (risk-tier ceiling {size:.1f}% size, entry "
+            f"{entry:.2f}, stop {stop:.2f}) → stop {stop_dist:.1f}% below entry → "
             f"portfolio-drawdown contribution ≈ {contrib:.2f} pt of the {cap:.0f} pt "
-            f"cap (~{pct_of_cap:.0f}% of it). Size the trade against THIS figure, "
-            f"not the raw stop distance."
+            f"cap (~{pct_of_cap:.0f}% of it). Size the actual trade against THIS "
+            f"figure, not the raw stop distance."
         )
     return line
 
@@ -303,8 +310,8 @@ def _format_profile(profile: dict[str, Any]) -> str:
         "",
         f"Reference price: ${profile.get('base_price')}",
         f"P/E: {profile.get('pe')}",
-        f"TTM revenue growth: {profile.get('rev_growth')}%, FCF margin: {profile.get('fcf_margin')}%",
-        f"Net cash: {profile.get('net_cash')}M",
+        f"TTM revenue growth: {profile.get('rev_growth')}%, profit margin: {profile.get('profit_margin')}%",
+        _net_position_line(profile),
         f"RSI: {profile.get('rsi')} ({profile.get('rsi_tone')}), trend: {profile.get('trend')}",
         # DEF074: the recent-range floor is the computed technical support
         # (profile['support'], the 50-day min that compute_technicals produced and
@@ -331,6 +338,14 @@ def _format_profile(profile: dict[str, Any]) -> str:
                if profile.get("next_earnings_eps_estimate") is not None else "")
         )
     return "\n".join(lines)
+
+
+def _net_position_line(profile: dict[str, Any]) -> str:
+    """Balance-sheet line, sign-aware: net cash vs net debt (never 'Net cash: $-42000M')."""
+    phrase = net_position_phrase(profile.get("net_cash"))
+    if phrase is None:
+        return "Balance sheet: net cash not available"
+    return phrase[:1].upper() + phrase[1:]
 
 
 def _valuation_line(profile: dict[str, Any]) -> str | None:

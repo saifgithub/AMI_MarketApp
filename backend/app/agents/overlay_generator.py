@@ -71,12 +71,24 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 ---"""
 
 
+# Screen thresholds NARRATED to agents (CR046 C-b/C-c). These describe the
+# AAOIFI/liquidity standards the precomputed screens enforce (halal_universe
+# membership; the liquidity filter) — single-sourced here so the prose can't drift
+# into claiming a cutoff the screen doesn't use. Narration constants, not the
+# enforcement itself.
+_HALAL_MAX_DEBT_TO_EQUITY_PCT = 33
+_HALAL_MAX_INTEREST_INCOME_PCT = 5
+_MICROCAP_FLOOR_USD_M = 500
+
+
 def _compliance_block(c: Compliance) -> str:
     flags: list[str] = []
     if c.halal:
         flags.append(
             "- HALAL / Sharia screen REQUIRED. Exclude interest-based banking, conventional insurance, "
-            "gambling, tobacco, alcohol, pork, weapons. Check debt-to-equity ≤ 33%, interest income ≤ 5% of total."
+            f"gambling, tobacco, alcohol, pork, weapons. Check debt-to-equity "
+            f"≤ {_HALAL_MAX_DEBT_TO_EQUITY_PCT}%, interest income "
+            f"≤ {_HALAL_MAX_INTEREST_INCOME_PCT}% of total."
         )
     if c.esg_lite:
         flags.append("- ESG-lite screen: avoid heavy polluters, controversies, weapons.")
@@ -87,7 +99,7 @@ def _compliance_block(c: Compliance) -> str:
     if c.long_only:
         flags.append("- LONG-ONLY. No short recommendations. Frame negative views as 'avoid' / 'wait'.")
     if c.liquid_only:
-        flags.append("- Liquid only. Avoid microcaps (< $500M market cap) and illiquid names.")
+        flags.append(f"- Liquid only. Avoid microcaps (< ${_MICROCAP_FLOOR_USD_M}M market cap) and illiquid names.")
     if c.ticker_blocklist:
         flags.append(f"- Ticker blocklist (NEVER advocate): {', '.join(c.ticker_blocklist)}")
     if c.ticker_allowlist is not None:

@@ -136,7 +136,7 @@ def build_technicals_context_block(ticker: str) -> str | None:
         f"RSI(14): {t.rsi} ({t.rsi_tone})\n"
         f"Trend: {t.trend} (price vs. 20/50-day moving averages)\n"
         f"Volume: {t.volume_tone}\n"
-        f"Recent range — support: ${t.support}, breakout level: ${t.breakout}\n"
+        f"Recent range (50-day) — support: ${t.support}, breakout level: ${t.breakout}\n"
         f"(Real yfinance OHLCV for {sym}, computed this call. Use these "
         f"numbers when discussing {sym}'s technicals. Do NOT claim MACD, a "
         f"moving-average crossover signal, or Bollinger Bands — none of "

@@ -48,7 +48,7 @@ def test_pm_prompt_states_cap_is_portfolio_level_even_without_proposal(base_mand
     assert "PORTFOLIO-level cap" in prompt
     assert "not a per-trade stop budget" in prompt.lower()
     # No proposal → no invented contribution figure.
-    assert "Trader's proposal:" not in prompt
+    assert "Reference position" not in prompt
 
 
 @pytest.mark.parametrize("agent_id", list(_PHASE_FOR_AGENT))
@@ -64,7 +64,7 @@ def test_no_room_prompt_emits_a_bare_max_drawdown_line(base_mandate, agent_id):
     assert "PORTFOLIO-level cap" in system_prompt
     # A pre-trade phase must not show a concrete proposal it hasn't heard yet.
     if _PHASE_FOR_AGENT[agent_id] not in ("RISK", "VERDICT"):
-        assert "Trader's proposal:" not in system_prompt
+        assert "Reference position" not in system_prompt
 
 
 def test_recent_range_floor_is_technical_support_not_52w_low(base_mandate):
@@ -95,7 +95,7 @@ def test_derived_line_only_for_trade_judging_phases(base_mandate):
     """RISK debators and the PM see the derived proposal figure; analysts and
     researchers (who speak before any proposal exists) do not."""
     def has_proposal(agent_id) -> bool:
-        return "Trader's proposal:" in _pm_prompt_for(agent_id, base_mandate)
+        return "Reference position" in _pm_prompt_for(agent_id, base_mandate)
 
     def _pm_prompt_for(agent_id, mandate):
         sp, _ = build_room_messages(

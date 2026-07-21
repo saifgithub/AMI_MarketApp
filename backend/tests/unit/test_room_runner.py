@@ -599,7 +599,7 @@ def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
             "base_price": 250.50,
             "pe": "35.2",
             "rev_growth": 8,
-            "fcf_margin": 25,
+            "profit_margin": 25,
             "net_cash": 65_000,
             "low": 165.0,
             "high": 260.0,
