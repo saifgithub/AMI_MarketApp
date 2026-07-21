@@ -706,27 +706,46 @@ section { padding: 5rem 0; }
 .contact-inner { text-align: center; max-width: 620px; margin: 0 auto; }
 .contact-inner h2 { font-size: clamp(1.8rem, 3.5vw, 2.6rem); margin-bottom: 0.9rem; }
 .contact-inner p { font-size: 1.05rem; margin-bottom: 2rem; color: var(--text-muted); }
-.contact-form { display: flex; flex-direction: column; gap: 0.75rem; text-align: left; }
-.contact-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Form shell — constrained so inputs never stretch across wide screens. */
+.contact-form {
+  display: flex; flex-direction: column; gap: 0.85rem;
+  max-width: 540px;
+  text-align: left;
+}
+.contact-inner .contact-form { margin-left: auto; margin-right: auto; } /* centre on the marketing page */
+.contact-row { display: flex; gap: 0.85rem; flex-wrap: wrap; }
+.contact-label {
+  display: block;
+  font-family: var(--font-mono); font-size: var(--fs-xs);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin: 0.35rem 0 -0.2rem;
+}
 .contact-input {
-  width: 100%; flex: 1; min-width: 200px;
-  height: 48px; padding: 0 1.1rem;
-  background: rgba(59,130,246,0.08);
+  width: 100%; box-sizing: border-box;
+  height: 50px; padding: 0 1rem;
+  background: rgba(255,255,255,0.035);
   border: 1px solid var(--border-color);
   border-radius: var(--r-md);
   color: var(--text-main);
   font-family: var(--font-ui);
   font-size: var(--fs-body);
-  transition: border-color var(--dur-std) var(--ease), background var(--dur-std) var(--ease);
+  transition: border-color var(--dur-std) var(--ease),
+              background var(--dur-std) var(--ease),
+              box-shadow var(--dur-std) var(--ease);
 }
+.contact-row .contact-input { flex: 1 1 200px; min-width: 0; }
 .contact-input::placeholder { color: var(--text-dim); }
+.contact-input:hover { border-color: #4b5563; }
 .contact-input:focus {
   outline: none;
   border-color: var(--hex-blue);
-  background: rgba(59,130,246,0.13);
+  background: rgba(59,130,246,0.06);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
 }
-.contact-textarea { height: auto; min-height: 120px; padding: 0.85rem 1.1rem; resize: vertical; line-height: 1.5; }
-.contact-submit { height: 48px; align-self: flex-start; }
+.contact-textarea { height: auto; min-height: 130px; padding: 0.8rem 1rem; resize: vertical; line-height: 1.6; }
+.contact-submit { height: 50px; align-self: flex-start; margin-top: 0.35rem; }
 .cf-slot:empty { display: none; }
 .contact-fineprint { margin-top: 1.1rem; font-size: var(--fs-sm); color: var(--text-dim); }
 .contact-fineprint a { color: var(--accent-cyan); }
