@@ -297,3 +297,121 @@ def test_gates_agents_is_the_inverse_of_the_gateway_map(lessons):
         if sorted(l.meta.gates_agents) != sorted(expected.get(l.meta.id, []))
     ]
     assert not mismatched, f"gates_agents drifted (id, actual, expected): {mismatched}"
+
+
+# ── CR054 Wave 0: BOK track wiring ──────────────────────────────────────
+#
+# The 4 new tracks (asset_classes / economics_macro / quant_methods /
+# ethics_integrity) hold zero lessons at Wave 0 — the contiguity + prefix-
+# matches-track assertions above therefore have nothing to check for them. This
+# section is the enforcement floor until Wave 1 fills the tracks: it asserts
+# each new track is declared in the `Track` enum AND wired into both maps with
+# the frozen CR044 prefix, that no prefix collides with any existing one, and
+# that the display/prefix maps are 1:1 keyed to the `Track` enum. Anything
+# thinner and a wave-1 author could ship an "ASST 1" badge that renders empty.
+
+
+CR054_NEW_TRACKS = {
+    "asset_classes": "ASST",
+    "economics_macro": "MACRO",
+    "quant_methods": "QUANT",
+    "ethics_integrity": "ETHIC",
+}
+
+
+def test_cr054_new_tracks_are_declared_in_the_track_enum():
+    """The `Track` enum in schemas/lessons.py is the single source of truth for
+    the valid track set — a new track that lives only in the service-layer maps
+    but not in the enum is silently untyped and cannot be referenced from
+    schema-level validation later."""
+    from app.schemas.lessons import Track
+
+    enum_values = {t.value for t in Track}
+    missing = [t for t in CR054_NEW_TRACKS if t not in enum_values]
+    assert not missing, f"CR054 tracks missing from Track enum: {missing}"
+
+
+def test_cr054_new_tracks_have_display_names_and_prefixes():
+    """Every new BOK track has BOTH a display name (rendered in the catalogue
+    tile) and a CR044 prefix (stamped into every lesson's spoken code). One
+    without the other ships a half-wired track that a Wave 1 author would
+    discover only when their frontmatter fails to load or their tile renders
+    with no title."""
+    from app.services.lessons_service import TRACK_TITLES, TRACK_PREFIX
+
+    for track, prefix in CR054_NEW_TRACKS.items():
+        assert track in TRACK_TITLES, f"missing display name for CR054 track: {track}"
+        assert TRACK_TITLES[track].strip(), f"blank display name for CR054 track: {track}"
+        assert TRACK_PREFIX.get(track) == prefix, (
+            f"CR044 prefix mismatch for {track}: got {TRACK_PREFIX.get(track)!r}, "
+            f"want {prefix!r}"
+        )
+
+
+def test_all_cr044_prefixes_are_unique():
+    """A shared prefix would make "MACRO 3" ambiguous between two tracks — the
+    exact class of failure CR044 exists to prevent. Covers the whole prefix
+    map, not just the new rows, so a future addition that collides with an
+    existing prefix (e.g. someone reusing TECH) fails here too."""
+    from app.services.lessons_service import TRACK_PREFIX
+
+    seen: dict[str, str] = {}
+    collisions: list[tuple[str, str, str]] = []
+    for track, prefix in TRACK_PREFIX.items():
+        if prefix in seen:
+            collisions.append((prefix, seen[prefix], track))
+        else:
+            seen[prefix] = track
+    assert not collisions, (
+        f"duplicate CR044 track prefixes (prefix, first_track, second_track): {collisions}"
+    )
+
+
+def test_track_title_and_prefix_maps_have_matching_keys():
+    """Wire drift — a track present in TRACK_TITLES but not in TRACK_PREFIX
+    (or vice versa) ships either a titled track with no lesson codes or a
+    prefix that cannot be rendered anywhere. Enforce the 1:1 across both maps."""
+    from app.services.lessons_service import TRACK_TITLES, TRACK_PREFIX
+
+    only_titles = set(TRACK_TITLES) - set(TRACK_PREFIX)
+    only_prefixes = set(TRACK_PREFIX) - set(TRACK_TITLES)
+    assert not only_titles and not only_prefixes, (
+        f"TRACK_TITLES vs TRACK_PREFIX drift — only in titles: {sorted(only_titles)}, "
+        f"only in prefixes: {sorted(only_prefixes)}"
+    )
+
+
+def test_track_enum_and_maps_cover_the_same_track_set():
+    """`Track` enum is the canonical set; the two service-layer maps must
+    exactly enumerate it. A `Track` value with no maps is a track without
+    display/prefix wiring (dead in the UI); a map entry with no `Track` value
+    is a stringly-typed track no schema can validate."""
+    from app.schemas.lessons import Track
+    from app.services.lessons_service import TRACK_PREFIX, TRACK_TITLES
+
+    enum_values = {t.value for t in Track}
+    assert set(TRACK_TITLES) == enum_values, (
+        f"TRACK_TITLES keys drifted from Track enum: "
+        f"only_in_map={sorted(set(TRACK_TITLES) - enum_values)}, "
+        f"only_in_enum={sorted(enum_values - set(TRACK_TITLES))}"
+    )
+    assert set(TRACK_PREFIX) == enum_values, (
+        f"TRACK_PREFIX keys drifted from Track enum: "
+        f"only_in_map={sorted(set(TRACK_PREFIX) - enum_values)}, "
+        f"only_in_enum={sorted(enum_values - set(TRACK_PREFIX))}"
+    )
+
+
+def test_cr054_new_tracks_are_empty_at_wave_0(lessons):
+    """Wave 0 wires the tracks; Wave 1 fills them. If a lesson lands in a new
+    track before Wave 1's author pipeline is in place, the CR044 code
+    contiguity guarantee could break mid-authoring — fail loudly here so the
+    stray lesson is noticed at build time, not from a user report."""
+    stray = [
+        (l.meta.id, l.meta.track)
+        for l in lessons
+        if l.meta.track in CR054_NEW_TRACKS
+    ]
+    assert not stray, (
+        f"CR054 new tracks are Wave-0 empty; found lessons already in them: {stray}"
+    )

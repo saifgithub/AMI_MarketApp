@@ -72,6 +72,11 @@ TRACK_TITLES = {
     "sentiment_behaviour": "Sentiment & Behaviour",
     "risk_portfolio": "Risk & Portfolio Construction",
     "edge_process": "Edge & Process",
+    # CR054 Wave 0 — new BOK tracks. Empty at Wave 0; Wave 1 fills them.
+    "asset_classes": "Asset Classes",
+    "economics_macro": "Economics & Macro",
+    "quant_methods": "Quantitative Methods",
+    "ethics_integrity": "Ethics & Integrity",
 }
 
 
@@ -90,6 +95,14 @@ TRACK_PREFIX = {
     "sentiment_behaviour": "SENT",
     "risk_portfolio": "RISK",
     "edge_process": "EDGE",
+    # CR054 Wave 0 — CR044 prefixes for the new BOK tracks. Chosen per CR054
+    # §4.2: spoken aloud, unambiguous, no collision with an existing prefix
+    # ("MACRO" over "MAC" to avoid confusion with an OS name, "ETHIC" over
+    # "ETH" to stay clear of ethereum ticker chatter). Frozen from this point.
+    "asset_classes": "ASST",
+    "economics_macro": "MACRO",
+    "quant_methods": "QUANT",
+    "ethics_integrity": "ETHIC",
 }
 
 

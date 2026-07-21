@@ -18,6 +18,7 @@ Spec:
 """
 
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Literal
 from uuid import UUID, uuid4
 
@@ -26,6 +27,35 @@ from pydantic import BaseModel, ConfigDict, Field
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+class Track(str, Enum):
+    """Canonical curriculum-track ids.
+
+    Single source of truth for the set of valid tracks. `TRACK_TITLES` and
+    `TRACK_PREFIX` in `lessons_service.py` extend each value with its display
+    name and its frozen CR044 spoken-code prefix; a value here without an
+    entry in those maps is caught by `test_lesson_corpus_integrity`.
+
+    `LessonMeta.track` stays typed as `str` so already-authored MDX frontmatter
+    loads unchanged — this enum names the tracks, it does not (yet) validate
+    the field on parse.
+    """
+
+    foundations = "foundations"
+    fundamentals_analysis = "fundamentals_analysis"
+    technical_analysis = "technical_analysis"
+    news_macro = "news_macro"
+    sentiment_behaviour = "sentiment_behaviour"
+    risk_portfolio = "risk_portfolio"
+    edge_process = "edge_process"
+    # CR054 Wave 0 — new BOK tracks. Empty at Wave 0 (0 lessons each); filled
+    # by Wave 1 content lanes owned by noncoder.edu. Additive only: existing
+    # tracks and CR044 codes are untouched.
+    asset_classes = "asset_classes"
+    economics_macro = "economics_macro"
+    quant_methods = "quant_methods"
+    ethics_integrity = "ethics_integrity"
 
 
 class QuizQuestion(BaseModel):
