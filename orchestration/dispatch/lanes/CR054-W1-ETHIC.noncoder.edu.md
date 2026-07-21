@@ -1,7 +1,7 @@
 <!-- dispatch worker lane — noncoder.edu-owned. CR052. -->
 # CR054-W1-ETHIC — noncoder.edu
 
-STATUS: NEEDS-INFO (round 1)
+STATUS: READY_FOR_REVIEW (round 2)
 
 Lane: all 10 Level-13 Ethics & Market Integrity lessons (M22 + M23) — ids 293-302, ETHIC 1-10,
 track ethics_integrity, per wave1_ethics.md + authoring prompt v2. Gate: Architect/Saiful content

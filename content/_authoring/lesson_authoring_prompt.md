@@ -446,7 +446,8 @@ with these extras:
   the equity-sector effect — three lessons, one scenario.
 - **Quizzes: 2-3, ALL synthesis, zero recall.** Each question should
   need at least two of the module's lessons to answer; the last should
-  span the module.
+  span the module. The final quiz MUST include `tags=["synthesis"]` —
+  the corpus guard now enforces this for capstones.
 - **Include the steelman beat.** A capstone is analytical by
   definition — synthesis without a counter-case is incomplete.
 - Existing modules M1-M12 have no capstones. Do NOT retrofit them; they

@@ -1,0 +1,79 @@
+---
+id: "295_market_manipulation"
+title: "Market manipulation: pumps, spoofs, and wash trades"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 3"
+topic: "market_manipulation"
+prerequisites: ["293_market_integrity_why", "066_telegram_whatsapp_pump_groups"]
+tags: ["ethics", "manipulation", "spoofing", "pump-and-dump", "wash-trading"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Market manipulation: pumps, spoofs, and wash trades
+
+Manipulation is manufacturing a signal that other people trade on. The three classic shapes: **pump-and-dump** manufactures a narrative (coordinated hype inflates price so organisers can sell into it), **spoofing** manufactures supply or demand (large orders placed with no intention to fill, cancelled once the market reacts), and **wash trading** manufactures volume (trading with yourself so activity looks like interest). You met pump groups from the victim's side in the scam-protection module; this lesson shows you the machinery from the market's side, so you can spot all three in a tape.
+
+## How this plays out in real markets
+
+Navinder Sarao, trading from his parents' house in London, spoofed the S&P 500 E-mini futures for years — layering large sell orders he intended to cancel, creating phantom supply that nudged prices down so his real orders could profit. US authorities said he made about $40 million between 2010 and 2014, and his activity contributed to conditions on May 6, 2010, when the Dow fell 998.5 points intraday — the Flash Crash — before recovering within minutes. One trader, fake orders, measurable market-wide damage.
+
+On Bursa Malaysia, the recurring version is the penny-counter pump: a Telegram group "discovers" an illiquid stock, coordinated buying triples the volume and lifts the price 40-80% in days, screenshots of gains recruit the next wave, and the organisers — who accumulated first — sell into the demand they manufactured. The chart shows a spike and collapse; the mechanism is the same phantom-signal trick as spoofing, done with narrative instead of orders.
+
+## The trap
+
+Beginners treat volume as proof of genuine interest: "look how much is trading — someone knows something." It feels right because in an honest market, volume *is* information. Manipulated volume is engineered precisely to exploit that instinct — a wash-traded token or a pumped penny stock produces the exact tape a real accumulation would. The correct mental model: **ask what would falsify the tape.** Does the bid depth persist when it's actually hit, or vanish? Did volume arrive with a verifiable catalyst — a filing, a contract, an earnings release — or only with anonymous conviction? A signal you can't trace to a source is a signal someone may have built for you.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A trader repeatedly places a 500,000-share sell order two ticks above the best ask, waits for other sellers to undercut it, cancels, and buys from the sellers he attracted. Which manipulation is this?"
+  options={[
+    "Spoofing — the large order manufactures phantom supply he never intends to fill",
+    "Wash trading — he is trading against his own order",
+    "Pump-and-dump — he is inflating the price before selling",
+    "Front-running — he is trading ahead of other people's orders"
+  ]}
+  answer={0}
+  explanation="The signature of spoofing is the order placed to be seen, not filled: phantom supply moves other participants, then the cancel removes it. It isn't wash trading because no trade executes against himself, and it isn't a pump because nothing is being hyped — the fake signal is in the order book, not the narrative."
+/>
+
+<Quiz
+  question="Wash trading targets one specific signal that other traders rely on. Which one, and why does it work?"
+  options={[
+    "Price — it pushes the price directly to new highs",
+    "News flow — it generates headlines about the asset",
+    "Volume — activity is read as genuine interest, so fake activity attracts real buyers",
+    "Volatility — wild swings force short sellers to cover"
+  ]}
+  answer={2}
+  explanation="A wash trader buys from and sells to himself: net position unchanged, but the printed volume looks like surging interest. Screeners rank it, momentum traders notice it, and real money follows the fake activity. Price can tick around during it, but the manufactured product is the volume print itself — that's what the honest market would have read as information."
+/>
+
+<Quiz
+  question="A Telegram group pumps an illiquid Bursa counter: volume triples, price is up 60% in three days, no filing or announcement exists. A member argues the volume proves real demand. What does this lesson say the volume actually is?"
+  options={[
+    "Evidence of accumulation by informed institutional investors",
+    "The manufactured signal itself — coordinated buying built the tape the group now cites as proof",
+    "A neutral fact that says nothing either way",
+    "Proof the organisers are still buying, so the pump has further to run"
+  ]}
+  answer={1}
+  explanation="The pump's product IS the tape: coordinated buying creates the volume and the gain screenshots, which recruit the next wave the organisers sell into. Citing that volume as independent confirmation is circular — the group is quoting its own manufactured signal. The 'organisers still buying' answer is the most dangerous distractor: by the time volume peaks, accumulation happened weeks ago and distribution is underway."
+/>
+
+## Try it
+
+Convene the Room on a small-cap from your watchlist and read the Market Analyst's volume commentary closely. Does it distinguish *how much* is trading from *why* it's trading — does any cited volume trace to a verifiable catalyst? Practising that one question on a simulated verdict builds the reflex that protects you on a manipulated tape.
+
+## Takeaway
+
+Manipulation manufactures the exact signals you were taught to trust — volume, depth, momentum. Before you weight a signal, trace its source; a tape without a catalyst is a claim, not a fact.

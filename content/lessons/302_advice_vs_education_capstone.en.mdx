@@ -1,0 +1,81 @@
+---
+id: "302_advice_vs_education_capstone"
+title: "Capstone: advice vs education"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 10"
+topic: "advice_vs_education"
+prerequisites: ["298_fiduciary_duty", "299_conflicts_of_interest", "300_suitability_kyc", "301_disclosure_transparency", "073_what_ami_cannot_do"]
+tags: ["ethics", "advice-vs-education", "capstone", "synthesis", "simulation-only"]
+agent_callouts: ["concierge", "portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Capstone: advice vs education
+
+Everything in this module — fiduciary duty, conflicts, suitability, disclosure — converges on one line: the line between **education** and **advice**. Education transfers understanding; advice tells a specific person what to do with their money, and the moment it does, every duty you've studied attaches to the adviser. This capstone runs all four duties against a single scenario you see every day in this app, and explains from the inside why AMI is a training simulator, simulation-only, forever — not as a legal disclaimer, but as a structural consequence of M23.
+
+## One scenario, every M23 duty
+
+You convene the Room and the simulated Verdict lands: **BUY 5% NVDA, entry $118, stop $104, target $150, horizon 6 months** — a training artifact for you to practice evaluating. Now run the thought experiment: what would have to be true for that same output to be *advice* you could act on through a real brokerage?
+
+**Fiduciary duty:** advice creates a duty of loyalty to your specific situation. AMI holds your training mandate, not your real balance sheet, debts, dependents, or tax position — it structurally cannot owe, or discharge, loyalty to circumstances it never measured. **Suitability and KYC:** the 5% sizing is suitable against your *simulated* mandate. Against your real finances it is unmeasured — and an unmeasured recommendation is the definition of a suitability failure, however good the analysis. **Conflicts:** an app monetised per trade would want you trading; AMI's training subscription earns the same whether you accept, modify, or reject every verdict — the conflict a real advisory relationship must manage is designed out. **Disclosure:** the Verdict arrives labelled a practice artifact. That label is the disclosure duty done honestly — it tells you exactly what the output is and is not.
+
+Acting on the verdict off-app doesn't upgrade it to advice; it strips it of every protection advice is required to carry. The duties attach — and nobody is there to bear them.
+
+## The steelman
+
+The strongest counter: "If AMI's analysis is good enough to learn from, it's good enough to trade — refusing to advise protects lawyers, not users. A licensed AMI-adviser would help more people." Take it seriously: quality is real, and licensed robo-advisers exist. The falsifier is that **quality was never the line — accountability is**. Advice is a duty chain: KYC of your real finances → suitability against them → loyalty when interests collide → disclosure → recourse when it fails. Ask of any output: *if this goes wrong, who owes you what?* In education, nobody owes, because nobody who knows you told you to act. A robo-adviser accepts the whole chain for a narrow, measured slice of you. A training simulator issuing actionable calls would be the worst of both — advice's influence with none of its duties. That is the gap AMI refuses to occupy.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="Of the four M23 duties, which one can AMI structurally never discharge for a real-money trade, no matter how good its analysis becomes — and why?"
+  options={[
+    "Disclosure — AMI cannot label its outputs clearly enough",
+    "Conflict management — a subscription model creates unmanageable conflicts",
+    "Suitability — AMI measures a training mandate, not your real financial capacity, and suitability is fit against the measured client",
+    "Fiduciary duty — no software can ever be loyal"
+  ]}
+  answer={2}
+  explanation="Suitability is fit between a recommendation and a *measured* client — real capacity, horizon, liabilities. AMI's Concierge interview measures a training mandate, deliberately not your real balance sheet, so any real-money sizing is unmeasured by construction. The disclosure answer inverts the design: the practice-artifact label is disclosure done properly. And the subscription model *reduces* conflict rather than creating it — AMI earns the same whether or not you trade."
+/>
+
+<Quiz
+  question="A trading app charges nothing but earns a fee from every executed trade, and its 'daily pick' notification urges users to act before the close. Using the conflicts and advice-vs-education lenses together, what distinguishes this from AMI's Verdict?"
+  options={[
+    "The app's pick is monetised per action it urges, and it urges real-money action without owing any adviser's duty — AMI's verdict is a practice artifact from a service paid the same either way",
+    "Nothing — both are software producing trade ideas",
+    "The app is superior because its picks are actionable",
+    "The app's pick is fine as long as a risk disclaimer is attached"
+  ]}
+  answer={0}
+  explanation="Map the money, then map the duties. The app earns per trade, so the notification's urgency serves its revenue — a live conflict — while the action it urges is real and no fiduciary, suitability, or KYC duty stands behind it. 'Both are software' misses that the difference is structural, not technological. And a disclaimer is not a discharged duty — the disclosure lesson showed labels matter only when they honestly describe the product, which 'urgent pick, we profit per trade' would not."
+/>
+
+<Quiz
+  question="A user asks the Concierge: 'Skip the lessons — just tell me what to buy.' Which reply correctly reflects the full M23 architecture?"
+  options={[
+    "'AMI cannot answer, because markets are unpredictable'",
+    "'AMI's verdicts are usually right, but regulations prevent sharing them for real trading'",
+    "'Buy an index fund — that advice is generic enough to be safe'",
+    "'Telling you what to buy would be advice — it would attach duties AMI cannot carry for you: measuring your real finances, owing you loyalty, and answering if it fails. AMI trains your evaluation of analysis instead'"
+  ]}
+  answer={3}
+  explanation="The correct reply names the duty chain, not a disclaimer: advice requires KYC of real capacity, suitability against it, loyalty, and recourse — none of which a training simulator can carry, which is why the product trains the evaluator instead. The 'usually right but regulations' answer commits the exact framing violation this module dismantles — implying withheld advice exists. Unpredictability is true but beside the point, and even 'safe generic' recommendations are still unmeasured advice."
+/>
+
+## Try it
+
+Ask the Concierge exactly that question — "why won't you just tell me what to buy?" — and grade the answer against this lesson: does it name duties (measurement, loyalty, recourse), or hide behind disclaimers? Log your grading in the Decision Journal. Remember: AMI is a training simulator; every verdict you'll ever see here is a practice artifact, not investment advice.
+
+## Takeaway
+
+Education means nobody has to know you; advice means somebody must — and must answer for it. Never take investment direction from anything that can't know you, and notice that AMI is built to never pretend otherwise.

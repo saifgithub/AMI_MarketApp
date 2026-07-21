@@ -1,0 +1,70 @@
+---
+id: "298_fiduciary_duty"
+title: "Fiduciary duty: the client's interest first"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 2
+track: "ethics_integrity"
+code: "ETHIC 6"
+topic: "fiduciary_duty"
+prerequisites: ["293_market_integrity_why"]
+tags: ["ethics", "fiduciary", "duty-of-loyalty", "fees"]
+sources: ["CFA Institute — Standards of Professional Conduct, Standard III(A) Loyalty, Prudence, and Care (2014)"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Fiduciary duty: the client's interest first
+
+A fiduciary must place the client's interest above their own — loyalty, prudence, and care, in that order of famous phrasing. It is the highest duty in finance, and the sharpest tool you have for evaluating anyone who touches your money: not "is this person smart?" but "whose interest does this recommendation serve?" This lesson gives you the test and shows, in dollars, what its absence costs.
+
+## How this plays out in real markets
+
+Two ways to own the S&P 500. An index ETF like SPY carries a 0.09% expense ratio. A commission-paid salesperson instead offers an actively managed US equity fund with a 5.5% front-end load and 1.5% annual expenses. Put $10,000 in each for 20 years and assume the same 7% gross market return. The loaded fund starts at $9,450 (the load comes off day one) and compounds at roughly 5.5% net: about **$27,573**. SPY compounds at roughly 6.91% net: about **$38,051**. Gap: **$10,478** — the index route ends 38% richer on identical market performance.
+
+Nothing about recommending the loaded fund is necessarily illegal under a plain sales relationship. But a **fiduciary** must justify that recommendation by the client's interest — and against a $10,478 expected shortfall, "it pays my commission" doesn't survive contact with the duty. That's the entire architecture of the standard: it doesn't make salespeople evil, it makes the conflict *legally relevant*. Historically, US brokers owed only "suitability" while registered investment advisers owed the full fiduciary duty — one word of difference, $10,478 of consequence.
+
+## The trap
+
+Beginners equate duty with results: "my adviser made me money, so they did right by me." It feels fair — outcomes are what you wanted. But fiduciary duty is a **process and loyalty standard, not an outcome standard**. An adviser who churns your account through unnecessary trades that happen to profit still breached the duty — the churning served their commissions, not you. An adviser who prudently diversified you before a crash that hit everything did not breach it, despite the loss. Judge the duty by what the decision served at the time it was made, not by what the market did afterwards.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="In the worked example, both funds ride the same 7% gross market return for 20 years on $10,000. What does the 5.5% load plus higher annual expenses cost versus the index ETF?"
+  options={[
+    "About $550 — the front-end load is the only real difference",
+    "About $2,000 — expenses matter but compounding mostly evens out",
+    "About $10,478 — the load plus a ~1.4% annual drag compounds into a 38% final-wealth gap",
+    "Nothing determinable — the active fund might outperform"
+  ]}
+  answer={2}
+  explanation="$27,573 versus $38,051. The $550 answer is the intuitive trap — it counts the visible day-one load and misses that a ~1.4% annual expense gap compounds for 20 years, which is where most of the $10,478 comes from. The 'might outperform' answer changes the question: the example holds gross returns equal precisely to isolate what the fee structure itself costs."
+/>
+
+<Quiz
+  question="An adviser puts a client through 40 unnecessary trades in a year; the account nets a 12% gain. A second adviser prudently diversifies a client, who then loses 8% in a broad market decline. Who breached fiduciary duty?"
+  options={[
+    "The second — losing client money is the definitive breach",
+    "The first — churning served the adviser's commissions regardless of the profitable outcome",
+    "Neither — one made money and the other followed the market down",
+    "Both — excessive trading and losses each violate the duty"
+  ]}
+  answer={1}
+  explanation="Fiduciary duty is judged on loyalty and process at the time of the decision, not on outcome. Forty unnecessary trades served the adviser's interest — the client's gain arrived despite the breach, not because of it. The diversified loss reflects market risk prudently taken, which the duty permits. The 'losing money is the breach' answer is the outcome-standard trap this lesson exists to break."
+/>
+
+## Try it
+
+Open Settings → Mandate and read your own constraints as a client would read an investment policy: which line would you insist a real adviser never override? Then ask the PM in 1-on-1 what it does when a simulated verdict conflicts with your mandate — the safety floor is a fiduciary's "no" made deterministic: it cannot be coached into serving anything but your stated constraints.
+
+## Takeaway
+
+Before "will this make money," ask "whose interest does this serve?" — fiduciary duty is that question with legal force, and it's judged on loyalty and process, never on outcome.
+
+*Where this comes from: CFA Institute Standard III(A) — Loyalty, Prudence, and Care (2014), the profession's statement of the client-first duty.*

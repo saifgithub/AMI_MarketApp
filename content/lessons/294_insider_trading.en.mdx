@@ -1,0 +1,82 @@
+---
+id: "294_insider_trading"
+title: "Insider trading: material non-public information"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 2"
+topic: "insider_trading"
+prerequisites: ["293_market_integrity_why"]
+tags: ["ethics", "insider-trading", "mnpi", "mosaic-theory"]
+sources: ["U.S. SEC — Rule 10b-5 under the Securities Exchange Act of 1934"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Insider trading: material non-public information
+
+Insider trading has a precise two-prong test, and you can run it yourself: is the information **material** — would a reasonable investor consider it important to the price — and is it **non-public** — not yet released through proper disclosure? Both prongs must be true. Material and public: trade freely. Non-public but immaterial: no case. Material *and* non-public — MNPI — and trading is off, no matter how you learned it. This lesson makes the test automatic.
+
+## How this plays out in real markets
+
+December 27, 2001: Martha Stewart sold 3,928 shares of ImClone Systems after her broker's assistant tipped her that ImClone's CEO was dumping his own stock. The next day the FDA publicly rejected ImClone's cancer drug application and the stock fell. The sale avoided a loss of about $45,673 — pocket change against her net worth. She served five months in prison. (Legal nuance worth knowing: her conviction was for obstructing the investigation — lying about the trade — which is its own lesson about cover-ups.)
+
+Scale it up: Raj Rajaratnam ran the Galleon Group hedge fund on a network of corporate tippers feeding him earnings and deal information before release. Wiretaps caught it. In 2011 he was sentenced to 11 years and later hit with a record $92.8 million SEC civil penalty. Two ends of the spectrum — a $45,673 avoided loss and a systematic tip network — same two-prong test, same offence.
+
+## The trap
+
+The beginner's rationalisation: "I didn't steal any documents — I just overheard it," or "my trade is far too small for anyone to notice." Both feel exculpatory and both are irrelevant. The test is the **status of the information**, not how innocently it reached you or how small your order is — a tippee who trades on MNPI inherits the liability, and Stewart's case shows the size defence is fiction. The correct mental model is the **mosaic**: assembling *public* pieces — filings, channel checks on public data, industry knowledge — into a non-obvious conclusion is legitimate analysis. The moment one piece of the mosaic is material and non-public, the whole trade is contaminated.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A friend who works at a chip company tells you over dinner that an unannounced acquisition will be revealed next week. Which prong analysis is correct?"
+  options={[
+    "Not insider trading, because you didn't work at the company yourself",
+    "Material AND non-public — trading on it would be insider trading, even though you heard it passively",
+    "Material but public, since the friend spoke about it openly at dinner",
+    "Non-public but immaterial, because acquisitions are routine corporate events"
+  ]}
+  answer={1}
+  explanation="An unannounced acquisition is close to the definition of material — deals move prices — and 'told over dinner' is not public disclosure; public means released through proper channels to everyone at once. Trading would make you a tippee with inherited liability. The tempting wrong answer is the one about not working there yourself: the test follows the information, not your employment."
+/>
+
+<Quiz
+  question="An analyst reads a retailer's public filings, counts cars in store parking lots, and interviews shoppers, then concludes the quarter will beat estimates and buys. What is this?"
+  options={[
+    "Insider trading, because the conclusion was not publicly known",
+    "Front-running, because the analyst traded before the earnings release",
+    "A grey area that depends on how confident the conclusion was",
+    "Legitimate mosaic-theory analysis — every input was public or independently gathered"
+  ]}
+  answer={3}
+  explanation="This is the mosaic in action: public filings plus original fieldwork, assembled into a non-obvious conclusion. That the *conclusion* is unique doesn't matter — no input was material non-public information from an inside source. The tempting wrong answer says the conclusion itself was non-public; the test applies to the information you receive, not the insight you build."
+/>
+
+<Quiz
+  question="Stewart avoided a $45,673 loss and served five months; Rajaratnam's network generated tens of millions and he served 11 years. What principle do the two cases establish together?"
+  options={[
+    "The two-prong MNPI test applies at every scale — trade size changes the sentence, not the offence",
+    "Enforcement only targets famous people and large funds",
+    "Tips received from a broker are legal, but tips from executives are not",
+    "Avoiding a loss is treated differently from making a gain"
+  ]}
+  answer={0}
+  explanation="The span between the cases is the point: $45,673 avoided at one end, a systematic tip network at the other — both prosecuted, because the offence is trading on material non-public information at any size. The distractor about avoiding a loss fails directly on Stewart: avoided losses count exactly like gains."
+/>
+
+## Try it
+
+In 1-on-1 with the News Analyst, paste a rumour-style headline about a ticker on your watchlist ("sources say X is exploring a sale") and ask how it weighs sourced-but-unconfirmed stories against filed disclosures. Notice the discipline: AMI's simulated analysis leans on public, verifiable information — the same line the two-prong test draws for you.
+
+## Takeaway
+
+Run the two prongs before the trade: material? non-public? If both, the trade is off — full stop, regardless of how the information found you or how small you'd size it.
+
+*Where this comes from: SEC Rule 10b-5 (1934 Act) — the anti-fraud rule US insider-trading enforcement is built on.*

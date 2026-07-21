@@ -1,0 +1,67 @@
+---
+id: "299_conflicts_of_interest"
+title: "Conflicts of interest: follow the money"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 7"
+topic: "conflicts_of_interest"
+prerequisites: ["298_fiduciary_duty"]
+tags: ["ethics", "conflicts", "incentives", "disclosure"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Conflicts of interest: follow the money
+
+A conflict of interest is structural, not moral: it exists whenever the person advising you is paid in a way that can pull against your interest — before anyone behaves badly, and even if they never do. That framing matters because it changes what you look for. You don't audit character; you **map the payment flow**. This lesson trains the map: find who pays, what behaviour the payment rewards, and then decide how much weight the advice deserves.
+
+## How this plays out in real markets
+
+Robinhood advertised commission-free trading. In December 2020 the SEC fined it $65 million for failing to properly disclose that its real revenue was **payment for order flow** — market makers paying Robinhood to execute its customers' orders. The SEC found customers received inferior execution prices costing them $34.1 million *even after accounting for the zero commissions*. The service wasn't free; the fee was hidden inside the fills, and the broker's paying customer was the market maker, not you.
+
+Bigger and older: the 2003 Global Research Analyst Settlement. Ten Wall Street firms paid $1.4 billion after regulators showed their "independent" research was marketing for their investment-banking clients — analysts publicly rating stocks a buy while privately deriding them, because the covered companies paid the firm for banking services. Retail investors read the ratings as analysis; they were priced as advertising. Same map in both cases: the advice flowed to you, the money flowed from someone whose interest wasn't yours.
+
+## The trap
+
+The beginner's shortcut: "it was disclosed, so it's handled." Disclosure feels like a solved problem — the conflict is in the open, everyone can adjust. But disclosure removes the *secrecy*, not the *incentive*: the analyst's pay still depends on the banking relationship after the footnote is printed. Behavioural research adds a nastier wrinkle — advisers can lean harder into biased advice after disclosing, feeling licensed by their own honesty. The correct model: treat disclosure as the *starting* signal. Read it to build the payment map, then weight the advice as if the incentive works — because it usually does.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="A zero-commission broker earns payment for order flow from market makers. Where is the conflict of interest?"
+  options={[
+    "The broker's revenue depends on routing decisions and trading volume, while the customer's interest is best execution — the payer and the served can diverge",
+    "There is none, because customers pay nothing for trades",
+    "Market makers are prohibited from paying brokers, so the arrangement itself is illegal",
+    "The conflict only exists if execution prices are proven inferior in every trade"
+  ]}
+  answer={0}
+  explanation="Map the flow: the market maker pays the broker for the orders; the customer wants the best fill. Those can diverge — and in Robinhood's case the SEC quantified the divergence at $34.1 million of inferior execution despite zero commissions. The 'customers pay nothing' answer is the trap: free-to-you means someone else is the paying customer, which is where the incentive points. PFOF is legal when disclosed, and the conflict exists structurally whether or not any single fill was inferior."
+/>
+
+<Quiz
+  question="Applying this lesson and the fiduciary lesson together: a firm's analyst rates a stock a buy; the covered company is also paying the firm $5 million in banking fees, disclosed in a footnote. How should you weight the rating?"
+  options={[
+    "At full weight — disclosure means the conflict has been neutralised",
+    "At zero — every conflicted opinion is worthless",
+    "At full weight if the analyst has a strong track record",
+    "As advertising-adjacent — the disclosure starts the analysis, and the rating needs independent confirmation before it earns analytical weight"
+  ]}
+  answer={3}
+  explanation="Disclosure removes secrecy, not incentive — the 2003 settlement showed exactly this structure producing public buys and private contempt at $1.4 billion of consequence. Full discount to zero overcorrects; conflicted research can still contain real information. The fiduciary lens sharpens it: this analyst's loyalty runs to the banking client, so you supply the scepticism a fiduciary would have owed you. Track record doesn't cure a structural incentive."
+/>
+
+## Try it
+
+In 1-on-1 with the PM, ask: "What incentive does AMI have in whether I take a simulated trade?" Then build the same map for a real-world platform you know: who pays it, per what behaviour? AMI's answer — a training subscription that earns the same whether you trade or not — is the map you should demand from anything that touches real money.
+
+## Takeaway
+
+Every piece of advice arrives with an incentive attached. Find who pays before you weigh what's said — and treat disclosure as where the analysis starts, not where it ends.

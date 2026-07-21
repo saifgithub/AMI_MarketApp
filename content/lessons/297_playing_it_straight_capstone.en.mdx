@@ -1,0 +1,79 @@
+---
+id: "297_playing_it_straight_capstone"
+title: "Capstone: playing it straight"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 5"
+topic: "market_integrity"
+prerequisites: ["293_market_integrity_why", "294_insider_trading", "295_market_manipulation", "296_front_running_fair_dealing"]
+tags: ["ethics", "market-integrity", "capstone", "synthesis"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Capstone: playing it straight
+
+You now hold the full M22 toolkit: the trust discount, the two-prong MNPI test, the three manipulation shapes, and the duty-plus-provenance test for front-running. This capstone runs them all against a single, realistic week — the kind where the red flags arrive stacked, wearing the costume of opportunity. The skill being tested: seeing four separate integrity problems inside one "hot" trade, and knowing which makes a trade illegal versus merely foolish.
+
+## One scenario, every M22 concept
+
+On Bursa Malaysia: TOPGLOV sits on your watchlist. Over one week, four things happen. **One:** a Telegram group you were added to declares it "the next 300% glove rally" and coordinates buy times; volume triples with no filing or announcement anywhere. **Two:** your cousin, a manager at the company, mentions an unannounced supply contract that "will be huge when it drops." **Three:** watching the order book, you notice large bids stacking two ticks below the market, then vanishing whenever price dips toward them — repeatedly. **Four:** a group admin posts gain screenshots urging members to "load up before the announcement we all know is coming."
+
+Run the toolkit. The volume spike with no catalyst plus coordinated hype is a **pump-and-dump** in progress — you would be the exit liquidity, and the tape being cited as proof is the group's own manufactured signal. The vanishing bids are **spoofing** — phantom demand propping the ramp. Your cousin's contract is **material non-public information** — trading on it fails both prongs, and being family doesn't dilute tippee liability. And the admin's "announcement we all know is coming" claims MNPI is circulating — meaning if it's true, the pump is built on insider information; if false, the narrative itself is the manufactured product. The clean actor's move: no trade on any of it, and note what the week told you about who else is in this stock.
+
+## The steelman
+
+The strongest case against playing it straight: "These rules bind professionals. Retail traders never get prosecuted — a small trader ignoring them risks nothing and sometimes catches a pump early." Two falsifiers. Legally: enforcement reaches retail scale — Martha Stewart's case was one avoided loss of $45,673. Economically: the pump's structure makes the follower the product — organisers accumulate *before* recruiting you, so your expected entry is above their exit. You don't need the law to lose; the arithmetic of manufactured demand is already against you.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Of the four events in the TOPGLOV week, which one would make a trade ILLEGAL, as opposed to merely unwise?"
+  options={[
+    "Buying during the volume spike the Telegram group created",
+    "Buying after your cousin's mention of the unannounced supply contract",
+    "Buying while the spoofed bids were propping up the price",
+    "Buying after seeing the admin's gain screenshots"
+  ]}
+  answer={1}
+  explanation="The cousin's contract is material non-public information — trading on it is insider trading as a tippee, both prongs failed. Buying into the pump, the spoofed book, or the screenshot hype makes you the *victim* of someone else's manipulation: financially dangerous, but the legal breach belongs to the manipulators. The distinction matters — one event creates your liability, the other three create your losses."
+/>
+
+<Quiz
+  question="The group cites the tripled volume and the deep bids as proof of real institutional demand. Combining the manipulation and integrity lessons, what is the follower's actual position in this trade?"
+  options={[
+    "Exit liquidity — buying signals the organisers manufactured, at prices above where they accumulated",
+    "Early — the volume confirms accumulation is still in its first phase",
+    "Hedged — the visible bid depth limits the downside if the pump fails",
+    "Neutral — manufactured and real demand move price the same way"
+  ]}
+  answer={0}
+  explanation="Both cited proofs are manufactured: the volume is the group's own coordinated buying, and the bid depth is spoofed — it vanishes exactly when tested, which is when a follower would need it. Organisers accumulated before recruiting, so the follower's entry funds their exit. The 'hedged by bid depth' answer fails on the spoof's defining property: phantom orders provide phantom support."
+/>
+
+<Quiz
+  question="Playing it straight, you skip the trade entirely — and TOPGLOV rises another 20% before collapsing. What did the discipline actually cost and buy, in this module's terms?"
+  options={[
+    "It cost nothing, because manipulated rallies always collapse before anyone can exit",
+    "It cost a certain 20% gain and bought only the moral high ground",
+    "It bought regulatory approval of your trading record",
+    "It cost a possible gain that required perfectly timing an exit against the manipulators, and bought immunity from the dump, from tippee liability, and from funding the scheme"
+  ]}
+  answer={3}
+  explanation="Honest accounting cuts both ways: some followers do exit pumps profitably, so the forgone gain was real but conditional on out-timing the people running the scheme with better information than yours. What integrity bought is structural — you can't be caught in the collapse, can't inherit MNPI liability from the 'announcement' chatter, and didn't pay the trust discount forward. The 'always collapse before anyone exits' answer overclaims; the module's case doesn't need it."
+/>
+
+## Try it
+
+Convene the Room on TOPGLOV (or any small-cap from your watchlist). Read each agent's argument in the simulated verdict and mark every claim that depends on information you could not verify from a public source. Log the count in your Decision Journal — that number is the integrity risk of the thesis. Remember: AMI is a training simulator; the verdict is a practice artifact, not investment advice.
+
+## Takeaway
+
+When integrity red flags stack — manufactured volume, phantom depth, whispered announcements — the trade isn't early, you're the product. Playing it straight means the arithmetic and the law both stay on your side.

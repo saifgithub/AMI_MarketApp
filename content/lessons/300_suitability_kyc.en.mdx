@@ -1,0 +1,74 @@
+---
+id: "300_suitability_kyc"
+title: "Suitability and know-your-client"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 2
+track: "ethics_integrity"
+code: "ETHIC 8"
+topic: "suitability_kyc"
+prerequisites: ["298_fiduciary_duty", "291_the_pm_and_your_mandate"]
+tags: ["ethics", "suitability", "kyc", "risk-capacity"]
+sources: ["CFA Institute — Standards of Professional Conduct, Standard III(C) Suitability (2014)"]
+agent_callouts: ["portfolio_manager", "concierge"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Suitability and know-your-client
+
+Suitability says a recommendation must fit **this** client — their objectives, horizon, financial capacity, and tolerance — not clients in general. Know-your-client (KYC) is the discipline that makes it possible: you cannot fit what you never measured. The deep idea, and the one beginners miss: an asset is never risky or safe in the abstract. Risk lives in the fit between a position and the person holding it.
+
+## How this plays out in real markets
+
+TSLA fell about 65% in 2022 — from $352.26 to $123.18 over the calendar year. Now put that one fact into two portfolios. A 28-year-old engineer with a 30-year horizon holds a 10% TSLA position: the drawdown costs 6.5% of the portfolio, painful, recoverable, arguably within a growth mandate. A 67-year-old retiree, sold on the same growth story, holds 80% and draws monthly income from the account: the same move costs **52% of the portfolio** (0.80 × 0.65), and because withdrawals continue through the trough, part of the loss is *realised* every month — selling shares at $123 that were bought at $350. Recovery math that works on paper fails a portfolio being spent.
+
+Same stock, same year, same facts. One holder had a position; the other had a wipeout. Any professional who recommended the second allocation without measuring horizon, capacity, and income needs didn't make a market error — they made a suitability error, which is why KYC obligations (client profiling, risk questionnaires, source-of-funds checks) are regulatory requirements, not courtesies.
+
+## The trap
+
+Beginners treat risk tolerance as a personality trait: "I'm aggressive, I can handle it." That conflates **willingness** (how volatility feels) with **capacity** (what your finances can absorb) — and willingness is a mood that bull markets inflate on cue. Everyone is risk-tolerant at the top. Capacity is arithmetic: horizon, income needs, liabilities, and what a 50% drawdown does to each. The correct model: **capacity binds first.** Willingness decides how far below your capacity ceiling you choose to sit — it never raises the ceiling.
+
+## The steelman
+
+The libertarian counter: "Suitability is paternalism — an informed adult should size positions however they like." Half right, and the half matters: the standard binds the **professional making the recommendation**, not the individual investing their own money. You remain free to be aggressive with your own account. The rule exists because in an advised sale, the seller knows the product's risk better than the client knows their own exposure — and the falsifier is in the complaint statistics: arbitration dockets cluster in mis-sold complexity (leveraged ETFs held long-term, structured notes, unsuitable concentration for retirees), not in self-directed index investing.
+
+<ChatWith agent="concierge" />
+
+## Quiz
+
+<Quiz
+  question="Using the 2022 TSLA numbers, why is the retiree's outcome categorically worse than the engineer's — beyond the position simply being bigger?"
+  options={[
+    "Because TSLA's decline was harder to predict for older investors",
+    "Because the retiree's stated risk tolerance was lower than the engineer's",
+    "Because retirees are always required to hold only bonds",
+    "Because monthly withdrawals through the trough convert paper losses into realised ones, so the 52% hit can't ride out a recovery"
+  ]}
+  answer={3}
+  explanation="Size alone understates it. The engineer's 6.5% hit stays unrealised and has 30 years to recover; the retiree spends from the account through the drawdown, selling shares near $123 that were bought near $350 — locking losses in every month. Horizon and income needs are capacity factors, which is exactly what KYC measures. The bonds-only answer is a caricature: suitability fits positions to capacity, it doesn't assign asset classes by age."
+/>
+
+<Quiz
+  question="AMI's Concierge interview asks about your goals, horizon, and loss limits before building your Mandate, and the PM enforces fields like max_drawdown_pct on every simulated trade. Which professional structure does this pair model?"
+  options={[
+    "Portfolio optimisation — the interview estimates expected returns for allocation",
+    "KYC feeding suitability — the interview measures the client, and the mandate enforces recommendations against that measurement",
+    "Conflict-of-interest disclosure — the interview reveals how AMI is paid",
+    "Insider-trading surveillance — the interview screens for access to non-public information"
+  ]}
+  answer={1}
+  explanation="The Concierge interview is the know-your-client step: measuring objectives, horizon, and capacity. The Mandate is that measurement made machine-readable, and the PM's floor is suitability enforcement — a simulated trade that violates your max drawdown fails deterministically, exactly as a suitability regime is meant to stop an unsuitable recommendation. It teaches the structure; the training verdicts it gates remain practice artifacts, not advice."
+/>
+
+## Try it
+
+Open Settings → Mandate and audit two fields against your real life, not your mood: does max_drawdown_pct reflect what your finances could absorb (capacity), or what current markets make you feel (willingness)? Then ask the Concierge in chat to walk through what each mandate field changes downstream — that's a KYC interview seen from the professional's side.
+
+## Takeaway
+
+Capacity binds first; willingness only chooses where below that ceiling you sit. No position is suitable or unsuitable until you've measured the person holding it.
+
+*Where this comes from: CFA Institute Standard III(C) — Suitability (2014), the requirement to make recommendations fit the measured client.*

@@ -1,0 +1,74 @@
+---
+id: "293_market_integrity_why"
+title: "Why market integrity matters"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 2
+track: "ethics_integrity"
+code: "ETHIC 1"
+topic: "market_integrity"
+prerequisites: []
+tags: ["ethics", "market-integrity", "trust", "cost-of-capital"]
+sources: ["CFA Institute — Code of Ethics and Standards of Professional Conduct (2014)"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Why market integrity matters
+
+A market is a machine for turning honest information into prices. Every quote you see assumes the filings are real, the volume is real, and nobody traded on what you couldn't know. When that assumption breaks, the machine doesn't just misprice one stock — investors start charging every stock for the risk of being cheated. After this lesson you'll be able to explain how integrity failures show up as losses, and read integrity risk the way you read any other position risk.
+
+## How this plays out in real markets
+
+Enron traded at $90.75 in August 2000, a top-ten US company by market value. Its reported profits ran through off-balance-sheet entities designed so shareholders couldn't see the debt. When the structure surfaced, the stock went to under $1 by late November 2001 and the company filed for bankruptcy that December. Employee retirement accounts holding Enron stock were wiped out alongside outside shareholders — tens of billions of dollars of market value gone, not because a business cycle turned, but because the numbers were never real.
+
+The damage didn't stop at one ticker. Auditor Arthur Andersen collapsed, Congress passed Sarbanes-Oxley, and for years investors applied a "trust discount" to any company with complex reporting. On Bursa Malaysia, the 1MDB scandal (the US Department of Justice traced roughly $4.5 billion misappropriated) weighed on foreign participation in Malaysian markets for years. Integrity failures are systemic: honest companies pay higher costs of capital because a dishonest one poisoned the well.
+
+## The trap
+
+Beginners file ethics under "compliance paperwork" — rules for professionals that don't touch a retail P&L. It feels right because integrity failures are invisible until they detonate; nothing in a candlestick chart shows you the books are fake. The correct mental model: **integrity risk is position risk.** A stock whose numbers can't be trusted can gap down 90% on a single disclosure, straight through any stop-loss. You can't diversify away a fraud you're holding, and you can't manage a risk you've defined as someone else's problem.
+
+## The steelman
+
+A serious counterargument exists: some economists have argued that insider trading makes markets *more* efficient — insiders trading on real information moves prices toward truth faster than waiting for disclosure. The falsifier is measurable: if that were the whole story, markets with weak enforcement would trade at normal valuations. They don't. Markets where outsiders expect to be picked off show wider bid-ask spreads, thinner participation, and persistent valuation discounts — investors price the cheating risk and pay less for everything. Efficiency for the insider is a tax on everyone else.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="Why does weak market integrity raise the cost of capital for honest companies, not just dishonest ones?"
+  options={[
+    "Regulators fine every company in a market where fraud is found",
+    "Honest companies must hire more auditors after a scandal",
+    "Investors can't tell who is honest in advance, so they demand a discount from everyone to cover the risk of being cheated",
+    "Stock exchanges raise listing fees after every fraud case"
+  ]}
+  answer={2}
+  explanation="Fraud is invisible until it surfaces, so investors price the risk into every stock — wider spreads, lower multiples, thinner participation. That is a real financing cost paid by honest firms. The answers about fines and fees describe direct costs to specific parties, not the market-wide trust discount that makes integrity everyone's problem."
+/>
+
+<Quiz
+  question="Enron went from $90.75 to under $1 in about 15 months. Which statement best explains why 'the market will sort out bad actors on its own' failed the shareholders who held it?"
+  options={[
+    "The market did eventually correct the price, but only after the losses had already landed on people who trusted the reported numbers",
+    "The market never corrected — Enron's price stayed wrong permanently",
+    "Shareholders were protected because the decline was gradual enough to exit",
+    "The correction failed because regulators suspended trading too early"
+  ]}
+  answer={0}
+  explanation="Prices did eventually reflect the truth — that's the 'market sorts it out' claim — but price discovery after a fraud is cold comfort: the loss lands on whoever trusted the fake inputs before the truth surfaced. Integrity rules exist to protect the inputs, because correcting the output later doesn't give anyone their retirement account back. The 'gradual decline' answer is factually wrong: fraud-driven collapses gap through exits."
+/>
+
+## Try it
+
+In 1-on-1 with the PM, ask: "What does the safety floor check before a simulated trade passes?" Map each check the PM names to a form of trust — that positions are sized honestly against the mandate, that constraints can't be talked around. AMI's safety floor is a working model of what a market integrity function does: it doesn't trust claims, it verifies them.
+
+## Takeaway
+
+Price discovery only works when the inputs are honest. When integrity goes, the discount arrives before the headlines do — so price integrity risk like any other risk you hold.
+
+*Where this comes from: the CFA Institute Code of Ethics and Standards of Professional Conduct (2014) — the profession's baseline case that market integrity is what makes investing investable.*

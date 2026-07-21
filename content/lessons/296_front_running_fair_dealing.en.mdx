@@ -1,0 +1,71 @@
+---
+id: "296_front_running_fair_dealing"
+title: "Front-running and fair dealing"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 4"
+topic: "front_running"
+prerequisites: ["294_insider_trading"]
+tags: ["ethics", "front-running", "fair-dealing", "order-flow"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Front-running and fair dealing
+
+Front-running is insider trading's close cousin: instead of trading on a company's private information, you trade on private knowledge of **someone else's order**. A client's pending order is material non-public information about the order book — whoever holds it owes the client its value. Fair dealing is the same duty widened: when you act for many clients, no client gets the call, the fill, or the research before the others. After this lesson you can tell both apart from legitimate speed and competition.
+
+## How this plays out in real markets
+
+On Bursa Malaysia: a broker holds a client instruction to buy 500,000 MAYBANK shares, currently quoted around RM9.80. Before working the order, the broker buys 50,000 shares for his own book at RM9.80. The client's demand then pushes the price to RM9.95, and the broker sells his 50,000 into it. Broker's profit: RM0.15 × 50,000 = **RM7,500**. That money is not conjured — it comes out of the client's execution, who now fills at prices the broker's own buying helped lift. The client paid RM7,500 for the privilege of telling his broker his intentions.
+
+Fair dealing violations look gentler but rhyme: a firm's analyst cuts a rating from buy to sell, and the desk phones its five largest accounts an hour before the note is published to everyone else. The big five sell into a market that doesn't know yet — the remaining clients are the liquidity. Same structure as the MAYBANK trade: private knowledge of pending information, monetised against the people owed it.
+
+## The trap
+
+Beginners collapse this into "fast trading is cheating," which feels right after watching high-frequency firms race exchange feeds. But speed is not the offence — **duty plus information source** is. A market maker who reads public order flow and anticipates momentum is competing, aggressively but legally: it owes those traders nothing and holds nothing private of theirs. The broker in the MAYBANK example holds his own client's unexecuted order — information he was *entrusted with*, monetised against the person who entrusted it. Ask two questions: did the trader owe this person a duty, and was the traded-on information theirs? Both yes: front-running. Either no: competition.
+
+## The steelman
+
+The strong opposing case: "Banning anticipation of order flow just protects slow incumbents — speed competition narrows spreads and everyone benefits from cheaper execution." That argument is largely *right about public information* — and that's the falsifier that keeps the categories honest. If a strategy works purely on public data (quotes, prints, published feeds available to any subscriber), it's competition, whatever its speed. The moment the edge requires **client-entrusted, non-public order information**, the same trade becomes theft from a principal. The line isn't milliseconds; it's provenance.
+
+<ChatWith agent="portfolio_manager" />
+
+## Quiz
+
+<Quiz
+  question="In the MAYBANK example, the broker made RM7,500 buying 50,000 shares ahead of a 500,000-share client order. Who paid the RM7,500, and how?"
+  options={[
+    "The exchange, through wider spreads during the order",
+    "Other market makers who sold to the broker at RM9.80",
+    "Nobody — the broker's profit came from market movement that would have happened anyway",
+    "The client, who filled at prices lifted partly by the broker's own front-purchase"
+  ]}
+  answer={3}
+  explanation="The broker's buying added demand ahead of the client's, so the client's 500,000 shares filled at worse prices — the RM7,500 is a transfer from the client's execution to the broker's book. The 'would have happened anyway' answer is the seductive one: the price rise was caused by the client's own order, which is exactly why its value belonged to the client, not to whoever saw it first."
+/>
+
+<Quiz
+  question="Which trader is front-running, rather than legitimately competing? Trader A anticipates momentum from the public consolidated feed and buys milliseconds before others react. Trader B is a fund's execution desk employee who buys a stock personally after seeing the fund's own unexecuted buy order."
+  options={[
+    "Trader A — acting faster than others on the same information is unfair",
+    "Both — any trading ahead of other participants is front-running",
+    "Trader B — he holds non-public knowledge of an order he owes a duty to, while Trader A uses public data",
+    "Neither — both are simply reading order flow"
+  ]}
+  answer={2}
+  explanation="Run the two questions: duty owed, and whose information? Trader B holds his own principal's unexecuted order — entrusted, non-public, monetised against its owner. Trader A's edge is speed on data any subscriber can buy: aggressive, but no duty and no private order knowledge. The 'both' answer is the trap this lesson exists to dismantle — it makes speed the crime and lets the actual breach hide behind it."
+/>
+
+## Try it
+
+In 1-on-1 with the Trader, ask how AMI's simulated executions model slippage on a large order. Notice that the simulated cost of moving the market is the same value a front-runner steals in the real one — the price impact of an order belongs to whoever placed it.
+
+## Takeaway
+
+The test is never speed — it's whose information you're holding when you trade. If the edge came from an order entrusted to you, its value was never yours to take.
