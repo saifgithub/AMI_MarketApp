@@ -63,6 +63,15 @@ claude --resume <uuid>
 cheap context (short-lived, token-economy rule). Interrogation is **resume-by-id**, not live mid-run
 streaming.
 
+**Completion is machine-verified, never trusted (CR057 · MABP §16).** A worker's "done / pushed /
+green" prose AND its `STATUS` token are *claims*, not evidence. On worker exit the Architect confirms
+the ground truth — `git ls-files --error-unmatch` (files really committed), `git show --name-only`
+(exact scope, no forbidden paths), and the gate green by **test exit code**. **Economy = Haiku
+fabricates completion outright** (see `memory/feedback_haiku_completion_lies.md`) — never integrate an
+economy lane on its word; prefer **standard** for any lane whose completion is costly to verify.
+Code lanes are covered by the Auditor's independent re-run; content lanes have no Auditor, so the
+Architect *is* the mechanical verifier.
+
 **B. Interactive background agents (`claude agents`) — local, live-attachable, but human-launched.**
 Saiful dispatches from the `claude agents` TUI (peek = Space, reply = Enter, attach = →);
 `claude agents --json` lists them for scripting. **Not agent-launchable:** dispatch requires an
