@@ -1,6 +1,6 @@
 # DEF063 — CR023/CR024 live feeds are dark in Alpha: their API keys are never forwarded to the container
 
-**Filed:** 2026-07-17 (AT:R59) · **Status:** blocked on Saiful — plumbing fixed and key enabled (`alpha-2026-07-17-1`), but **Adanos rejects the key with HTTP 401 "Invalid API key"**, so the feed is still dark. Needs a fresh key from the Adanos account. · **Found by:** Saiful ("I am sure CR024 had
+**Filed:** 2026-07-17 (AT:R59) · **Status:** Adanos half **resolved** 2026-07-21 (fresh key, verified live end-to-end — see follow-up below). Alpha Vantage half (`ALPHA_VANTAGE_API_KEY`) remains parked/unconfigured, separate open item. · **Found by:** Saiful ("I am sure CR024 had
 delivered adanos. why have we not used it?") during the CR035/CR037 audit
 · **Bug class:** identical to **DEF038** (OIDC audiences lived in `.env`, were never forwarded to
 the container, so the feature silently ran with an empty value) — the comment recording DEF038
@@ -113,6 +113,35 @@ synthetic path, i.e. it degrades *loudly* (CR040 P2) instead of silently. Cost i
 ~200 ms HTTP round-trip per convene and zero quota (401s don't bill). The moment a valid key
 lands, one promotion makes it real — no code change.
 
-**Acceptance still unmet:** #1 (`adanos_api_key` True) ✅, #2 (`social_source=live`) ❌ — blocked
-on the key. CR037's fallback question stays live regardless: with a 250/month budget, cold
-tickers hit the fallback daily even once the key works.
+**Acceptance was unmet at the time:** #1 (`adanos_api_key` True) ✅, #2 (`social_source=live`) ❌ —
+blocked on the key. CR037's fallback question stays live regardless: with a 250/month budget,
+cold tickers hit the fallback daily even once the key works.
+
+---
+
+## Follow-up (2026-07-21, daily check-in) — fresh keys, Adanos half resolved
+
+Saiful signed up 2 new Adanos accounts and put both keys in `infra/alpha.env` (already promoted —
+melehost `~/ami_trade/.env` matches). Verified from scratch, not assumed:
+
+| Check | Result |
+|---|---|
+| `GET /v1/admin/config-check` → `ADANOS_API_KEY` | `configured: true` |
+| `docker exec ami_api_alpha env \| grep ADANOS` | primary key present, live in the running container |
+| Direct probe, primary key, `AAPL` | `HTTP 200`, real data — `x-ratelimit-used-monthly: 165`, `remaining-monthly: 85`, resets `2026-08-17` |
+| Direct probe, secondary key (`ADANOS_API_KEY_SECONDARY`), `MSFT` | `HTTP 200`, real data — `used-monthly: 109`, `remaining-monthly: 141`, resets `2026-08-13` |
+| In-container `fetch_live_sentiment("COIN")` (uncached ticker, real code path, not a raw probe) | Returned genuine `SocialSentiment` — real buzz/sentiment scores, real subreddits (`wallstreetbets`, `investing`, `stockstobuytoday`), real post snippets |
+
+**Both acceptance criteria now met for the Adanos half:** #1 `adanos_api_key=True` ✅, #2
+`social_source=live` (confirmed via the actual `fetch_live_sentiment` call, not inference) ✅.
+
+**Secondary key is valid but unused.** `ADANOS_API_KEY_SECONDARY` isn't referenced anywhere in
+`config.py`, `social_context.py`, or `docker-compose.yml` — the code has no concept of a second
+key. It's currently just spare quota (141/250 remaining) sitting idle. If Saiful wants to actually
+use it (failover when the primary nears exhaustion, or split traffic to roughly double effective
+monthly budget to ~500 calls), that's a small follow-up CR/DEF, not automatic from having the key
+in `alpha.env`.
+
+**Remaining, unrelated:** `ALPHA_VANTAGE_API_KEY` is still commented out in `alpha.env` — the News
+Analyst's Alpha Vantage sentiment-scored merge (CR023's second half) stays dark until Saiful
+decides to provision/enable that key too. Not addressed by this follow-up.
