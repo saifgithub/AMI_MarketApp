@@ -39,10 +39,20 @@ key on EVERY channel:
 | Watcher | `dispatch.sh inst <instance-id>` blocks until a lane targets THIS instance |
 | Worktree | `<WORKTREE_DIR>/<instance-id>-<ITEM>/` |
 | Commit tag | `(<TAG_PREFIX>:<instance-id> <ITEM>)` |
-| Live channel | SendMessage to the instance's `live_handle` (agentId, recorded in its roster file) |
+| Interrogation | the instance is a **named background session** the human lists/attaches (`live_handle` = its session name/id) |
 
 The roster (`roster/<instance-id>.md`) binds a role to a spec + its owned paths + its addressing
 block. Adding a file adds an instance — the fleet is open.
+
+**Hosting (important).** An instance is an **independent, listable session — NOT a subagent of the
+Architect.** Only an independent session appears in the human's session/agent list and can be opened
+and interrogated; an Agent-tool subagent is nested in its parent and is invisible. Consequences:
+(1) coordination is **file-only** — independent sessions share no memory, so the Architect never
+messages an instance in-process; each instance self-notices its turn via `dispatch.sh inst <id>`.
+(2) The human launches and names the instance sessions (onboarding); the Architect only assigns work
+via lanes. (3) `live_handle` records the session name/id for human interrogation. See BINDINGS for the
+concrete launch/monitor commands. (SendMessage applies only in the degenerate case where an instance
+is deliberately run as the Architect's own ephemeral subagent — not the interrogable-fleet model.)
 
 ## 3. The lanes (directory as queue, no shared mutable flag)
 

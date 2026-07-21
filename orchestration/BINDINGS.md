@@ -32,6 +32,27 @@ this file + roster/ change. CR052.
 - **Human = single acceptance checkpoint** after `DISPATCH: ACCEPTED`; a defect Saiful finds reopens
   the lane.
 
+## Hosting & launch (interrogable fleet)
+
+Instances are **named background sessions**, not Architect subagents — so Saiful can list, peek,
+reply to, and attach to each. (Agent-tool subagents are invisible/ephemeral and are used only for
+disposable helper work inside an instance.)
+
+- **Launch (Saiful onboards each instance):** `claude --bg` from shell, `/bg` from a session, or the
+  `claude agents` TUI. Name it with the project prefix so it groups: `claude -n "AMI-TRADE coder.api"`
+  (or `/rename`). Opening prompt: *"You are `coder.api`. Read `orchestration/roster/coder.api.md` +
+  `orchestration/loop_prompts/CODER.md` and run your loop."*
+- **Worktree isolation:** background agents run under `.claude/worktrees/` — the per-instance worktree
+  the protocol already specifies. Keep `worktree.bgIsolation` on.
+- **Monitor / interrogate the fleet:** `claude agents` (grouped Needs-input / Working / Completed);
+  `claude agents --json` for a scriptable list. Space = peek, type + Enter = reply, → = attach.
+- **`live_handle`** in each `roster/<id>.md` = that session's name/id (e.g. `AMI-TRADE coder.api`),
+  filled once Saiful launches it. It is a resume/interrogate handle, NOT a subagent agentId.
+- **Idle stop:** a background agent's supervisor stops after ~1h idle — fine, because instances are
+  short-lived per-lane (token-economy rule) and resumable via `claude --resume`.
+- **Coordination is file-only:** the Architect never messages an instance in-process; each self-notices
+  via `sh orchestration/dispatch.sh inst <id>` and hands off through the git repo.
+
 ## Auditor mapping (sharding)
 
 - Start with a single **`auditor.core`** = the existing track-U audit loop (`AT:U1`), gating every
