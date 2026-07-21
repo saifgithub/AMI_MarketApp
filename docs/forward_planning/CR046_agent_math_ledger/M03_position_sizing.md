@@ -49,3 +49,7 @@ failure-patterns **P5**.
   guard added. Canonical scale chosen = the enforced 1.5/3.0/4.5 (correcting the lie, not the
   enforcement). **Open for Saiful:** if the *enforced* caps themselves should be higher, that's a
   position-sizing policy change (a new changelog line here), not a bug.
+- 2026-07-21 (CR046, AT:R62): added `risk_debator_sizes(trader_size, backstop)` — the
+  Aggressive/Conservative/Neutral debate spread (+2 / −1.5 / hold, Aggressive capped at the absolute
+  backstop) that the Room ran as inline magic offsets now lives next to the caps it orbits. These are
+  debate *positions*, not enforced sizes — the PM clamp + safety floor remain the enforcement.

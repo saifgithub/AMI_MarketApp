@@ -65,8 +65,11 @@ files with no registry**, which had two costs:
 | [M01](M01_technical_indicators.md) | Technical indicators — RSI(14, Cutler's), 20/50 SMA trend, volume tone, support/breakout | DEF052 | `trading_math/indicators.py` (via `services/technicals.py`) | `test_trading_math.py`, `test_technicals.py` | done |
 | [M02](M02_drawdown_contribution.md) | Position drawdown contribution — size% × stop-dist% → pts of cap | DEF066 | `trading_math/risk.py` (via `services/room_prompts.py`) | `test_trading_math.py`, `test_room_prompts.py` | done |
 | [M03](M03_position_sizing.md) | Position sizing — per-risk-tier single-name cap + absolute backstop | pre-existing / CR046 | `trading_math/sizing.py` | `test_trading_math.py`, `test_position_sizing.py` | done (incoherence fixed) |
-| [M04](M04_fundamentals_units.md) | Fundamentals unit conversions — rev/margin ×100, net-cash /1e6, fcf-yield, multiples | DEF016-era | `services/fundamentals.py::fetch_live_fundamentals` | `test_fundamentals.py` | done (not yet migrated to library) |
-| [M05](M05_portfolio_value_drawdown.md) | Portfolio value + total drawdown denominator | pre-existing | `schemas/trade.py::total_value` / `total_drawdown_pct` | `test_sim_engine.py` (indirect) | done (not yet migrated to library) |
+| [M04](M04_fundamentals_units.md) | Fundamentals unit conversions — rev/margin ×100, net-cash /1e6, fcf-yield, dividend, multiples | DEF016-era | `trading_math/valuation.py` (via `services/fundamentals.py`) | `test_trading_math.py`, `test_fundamentals.py` | done (migrated) |
+| [M05](M05_portfolio_value_drawdown.md) | Portfolio value + total drawdown denominator + weight% + size→shares | pre-existing | `trading_math/portfolio.py` (via `schemas/trade.py`, `safety_floor.py`, `room_runner.py`) | `test_trading_math.py`, `test_sim_engine.py` | done (migrated) |
+| [M06](M06_risk_reward.md) | Risk/reward ratio + stated-vs-implied coherence check | CR046 audit F2 | `trading_math/trade.py` (via `services/room_runner.py`) | `test_trading_math.py` | done |
+| [M07](M07_multiple_compression_downside.md) | P/E-compression downside (`delta/pe`) — fixes DEF077 | CR046 audit D-a / DEF077 | `trading_math/valuation.py` (via `services/room_runner.py`) | `test_trading_math.py`, `test_room_runner.py` | done |
+| [M08](M08_trade_asymmetry.md) | Trade asymmetry — upside% vs downside% of a long setup | CR046 audit F3 | `trading_math/trade.py` (via `services/room_runner.py`) | `test_trading_math.py` | done |
 
 **Ledger convention:** an `ID` is a *calculation concern*. Fixing or reconciling an existing calc
 updates that entry's changelog — it does not mint a new ID. A genuinely **new** calculation gets the
@@ -105,15 +108,19 @@ expand we look at it again"*). Outcomes:
 ## Backlog — identified, not yet built
 
 - **Return/risk metrics** (Sharpe, max drawdown, CAGR, Sortino, volatility) → adopt
-  `empyrical-reloaded` per D1 (needs dep sign-off).
+  `empyrical-reloaded` per D1 (**needs dep sign-off** — the one item held back from the AT:R62
+  build-out; not currently surfaced to agents).
 - **Indicator families** EMA, MACD, Bollinger Bands — hand-roll (or wrap `ta` for *new* indicators
   only, never RSI) if the backlog grows.
 - **win-rate + realized/unrealized P&L** — bespoke arithmetic over our own fills; hand-roll.
-- **Formatting / units layer** (`fmt_pct`, `fmt_usd`, `fmt_bps`, one rounding rule) — today every
-  LLM-facing number re-decides precision and %/$ handling via inline f-strings.
+- **Formatting / units layer** (`fmt_pct`, `fmt_usd`, `fmt_bps`, one rounding rule) — partially seeded
+  (`net_position_phrase` in `valuation.py`); the general layer isn't built, so most LLM-facing numbers
+  still re-decide precision/%/$ via inline f-strings.
 - **PM verdict numbers** — the Portfolio Manager still emits `size_pct/entry/stop/target` as JSON
   (the largest remaining "LLM does math" surface); constraining that is a verdict-contract change.
-- **Migrate M04 (fundamentals units) and M05 (portfolio value/drawdown) into `trading_math/`.**
+  M06 added a *validator* (`rr_is_coherent`) but the contract is unchanged. The live-path Research
+  Manager asymmetry (M08) and Trader R:R (M06) likewise stay LLM-authored until the Trader emits
+  structured levels.
 
 ## Out of scope (this filing)
 
@@ -138,3 +145,22 @@ resolve to real functions/tests).
 - M01 + M02 migrated into the library (byte-identical); `technicals.py` / `room_prompts.py` delegate.
 - Guard tests `test_trading_math.py` + `test_position_sizing.py` (the P5 enforcing check).
   Full suite: **854 passed**.
+
+## What shipped in the AT:R62 audit follow-up (MODE-A sweep)
+
+A discovery audit of all seven prompt surfaces (`docs`-linked in the DEF077 note) found every number
+an agent still presents as fact that was LLM-derived, bare, inline, or a drift-prone literal. Closed:
+
+- **New calcs:** M06 (risk/reward + coherence check), M07 (P/E-compression downside — fixes the
+  wrong-math **DEF077**), M08 (trade asymmetry). New `trading_math` modules `trade.py`, `valuation.py`,
+  `portfolio.py`; `sizing.py` gained the Risk-Debator spread.
+- **Migrations:** M04 (fundamentals units) and M05 (portfolio value/drawdown/weight/shares) moved into
+  the library; the library is now the single home for every deterministic agent-facing number.
+- **Data-honesty fixes:** D-b (profit-margin mislabelled "FCF margin" → renamed), D-c (synthetic band
+  no longer claims "52-week range"; template relabel), D-e (drawdown line labelled a deterministic
+  reference, not a "Trader's proposal"), net-debt sign, `trailingPegRatio`, honest scripted stop
+  basis, PM defaulted-level disclosure. D-d (dividend yield) **verified correct** on yfinance 1.5.1 —
+  no change, convention documented.
+- **Coherence hardening:** C-a (the PM safety-floor prose now interpolates `SINGLE_NAME_CAP_PCT` —
+  shown == enforced), C-b/C-c (halal + microcap thresholds single-sourced).
+- No enforced value changed. Full suite green (886).

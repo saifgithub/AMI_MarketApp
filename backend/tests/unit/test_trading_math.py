@@ -150,12 +150,12 @@ def test_multiple_compression_downside_is_delta_over_pe():
     # A 10-pt compression from 20x -> 10x halves the price: 50% downside.
     assert multiple_compression_downside(20, 10) == 50.0
     # From 55x, a 10-pt compression is ~18%, NOT the ~34% the old inline
-    # `int(pe/(pe+10)*100-50)` formula printed (DEF075).
+    # `int(pe/(pe+10)*100-50)` formula printed (DEF077).
     assert multiple_compression_downside(55, 10) == pytest.approx(18.2, abs=0.1)
 
 
 def test_multiple_compression_downside_beats_the_old_broken_formula():
-    # RED-proof for DEF075: the replaced formula, evaluated here, disagrees with
+    # RED-proof for DEF077: the replaced formula, evaluated here, disagrees with
     # the correct one — so a caller wired to the old code fails this class.
     for pe in (12.0, 20.0, 34.2, 55.0):
         old = int(pe / (pe + 10) * 100 - 50)  # the buggy inline expression

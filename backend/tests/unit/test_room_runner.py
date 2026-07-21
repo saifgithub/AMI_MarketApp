@@ -616,6 +616,23 @@ def test_profile_overlays_live_fundamentals_when_enabled(monkeypatch):
     assert "35x" in profile["bear_risk"]
 
 
+def test_bear_quant_downside_uses_library_not_the_old_broken_formula():
+    """DEF077 (audit D-a): the Bear Researcher's '10-pt multiple compression'
+    downside must be the correct delta/pe figure (trading_math M07), not the old
+    inline int(pe/(pe+10)*100-50) that printed ~16% for a real 50% drop."""
+    from app.services import room_runner
+    from app.trading_math import multiple_compression_downside
+
+    profile = room_runner._profile_for_ticker("AAPL")
+    pe = float(profile["pe"])
+    expected = multiple_compression_downside(pe, 10)
+    assert expected is not None
+    assert f"~{expected:.0f}% downside" in profile["bear_quant"]
+    # RED-proof: the old broken formula would print a different number for this pe.
+    old = int(pe / (pe + 10) * 100 - 50)
+    assert f"~{old}% downside" not in profile["bear_quant"] or round(expected) == old
+
+
 def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
     """A yfinance failure (network error, unknown ticker) must not break
     the runner — it falls through to the deterministic synthetic profile."""

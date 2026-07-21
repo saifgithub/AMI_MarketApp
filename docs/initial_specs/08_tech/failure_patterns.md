@@ -232,6 +232,8 @@ from a fabricated one.
 | **DEF052** | RSI / trend / volume / support for the Market Analyst | 100% fabricated (a coin flip or `rng.randint`); the prompt also claimed MACD/MAs/Bollinger never computed anywhere | every ticker, every run |
 | **DEF066** | a position's contribution to portfolio drawdown | compared a raw stop *distance* to the portfolio cap, ignoring size — ~20× overstatement | 16 of 64 benchmark Buys refused |
 | **CR046 M03** | (latent) what position size is "allowed" | the Trader was *told* 40% per name while the PM *clamped* to 4.5% — shown ≠ enforced, ~9× gap | every risk-5 convene |
+| **DEF077** | the Bear Researcher's P/E-compression downside | inline `int(pe/(pe+10)*100−50)` — unrelated to a de-rating; ~3× understated at P/E 20, ~2× overstated at P/E 55 | every scripted / LLM-timeout Bear turn |
+| **CR046 audit (AT:R62)** | a systematic sweep of all 7 prompt surfaces for the class | D-b (profit margin mislabelled "FCF margin"), C-a (a bare "50%" in the PM safety-floor prose that could drift from the enforced cap), M06/M08 (R:R & asymmetry the LLM invented, incl. a fixed "28% vs 18%" for every ticker) | Room + 1-on-1 |
 
 **Why prose could not fix it.** The task framing already hard-instructs *"use ONLY numbers from the
 data block… do not cite figures from training memory."* Compliance with that class of instruction
@@ -252,6 +254,9 @@ is a ledger entry with a formula, a source, and a guard test, computed in the po
 - **Coherence tests** for any agent-facing figure the system also enforces:
   `test_position_sizing.py` asserts the cap the Trader is *shown* equals the cap the PM *clamps to*,
   for every risk tier — verified red against the pre-fix 40-vs-4.5 state.
+  `test_safety_floor.py::test_safety_floor_prose_cap_equals_the_enforced_constant` (C-a) asserts the
+  single-name cap the PM is *shown* in `SAFETY_FLOOR_BLOCK` equals the `SINGLE_NAME_CAP_PCT` the
+  deterministic check *enforces* — the prose interpolates the constant instead of a bare literal.
 - The CR046 ledger discipline: a new number that reaches an agent gets a ledger entry + a test, or
   it does not ship (the house rule, applied to numbers).
 

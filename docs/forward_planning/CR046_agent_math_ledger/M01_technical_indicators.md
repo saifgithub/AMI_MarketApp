@@ -41,3 +41,6 @@ pure functions under their original private names.
   computed and thrown away. Fixed in `room_prompts._format_profile` (renders the technical
   support–breakout pair + 52-week range as context). See
   [`../../defect/DEF074_room_drops_technical_support/`](../../defect/DEF074_room_drops_technical_support/DEF074_room_drops_technical_support.md).
+- 2026-07-21 (CR046, AT:R62): audit Tier-4 wording — the 1-on-1 technicals block now labels the
+  support/breakout range "(50-day)" so a relaying agent can't mistake the computed 50-day floor for a
+  5-day or 52-week level (the Room block already qualified it, DEF074).

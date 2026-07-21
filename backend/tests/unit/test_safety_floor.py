@@ -1,5 +1,7 @@
 """Tests for the safety floor — both prompt-level and deterministic check."""
 
+import re
+
 from app.agents.safety_floor import (
     SAFETY_FLOOR_BLOCK,
     SINGLE_NAME_CAP_PCT,
@@ -28,6 +30,18 @@ def test_safety_floor_appended_at_end():
     overlay_idx = result.index("USER OVERLAY")
     floor_idx = result.index("SAFETY FLOOR")
     assert overlay_idx < floor_idx
+
+
+def test_safety_floor_prose_cap_equals_the_enforced_constant():
+    """CR046 C-a: the single-name cap the PM is SHOWN in SAFETY_FLOOR_BLOCK must
+    equal the cap the deterministic check ENFORCES (SINGLE_NAME_CAP_PCT). The prose
+    used to hardcode a bare '50%' that could silently drift from the constant; it
+    now interpolates it. Parse the shown number and assert shown == enforced."""
+    m = re.search(r"above (\d+)% of user's portfolio", SAFETY_FLOOR_BLOCK)
+    assert m is not None, "single-name cap line missing from SAFETY_FLOOR_BLOCK"
+    assert int(m.group(1)) == int(SINGLE_NAME_CAP_PCT)
+    # And the bare literal is gone — no stray '50%' that isn't the constant.
+    assert "above 50%" not in SAFETY_FLOOR_BLOCK or int(SINGLE_NAME_CAP_PCT) == 50
 
 
 def test_safety_floor_carries_classroom_framing():
