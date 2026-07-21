@@ -147,6 +147,18 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
    tool output so large it refills context immediately after compacting — is avoided by keeping lanes
    narrowly scoped. **No human is ever required to manage an instance's context.**
 
+9. **Token economy — bound instance lifetime to a work unit, not the context ceiling.**
+   Auto-compaction (§8) fires only near the model's context limit (~1M tokens); operating there is
+   expensive because input is billed on every tool call in proportion to the context carried, so it
+   is a backstop, NOT the operating point. Keep instances **short-lived**: spawn a fresh instance per
+   lane (or per round), build, hand off, **exit** — the next lane gets a new instance starting small.
+   Continuity is in files, so ending early costs nothing. Push heavy reads/exploration into
+   **disposable subagents** (ultracode) whose transcript never enters the instance's context. Keep
+   the stable prefix (these protocol docs, CLAUDE.md, the lane file) byte-stable so **prompt caching**
+   discounts it every call. Use **session resume** only for a tight same-lane bounce loop where the
+   prior context is still relevant; otherwise respawn fresh. The Architect sizes lanes narrowly so no
+   single instance-session grows large.
+
 ## 9. Done (per item)
 
 On the Auditor's COMPLETE (`AUDIT_PASSED`), the Architect: verifies the verdict is on origin,

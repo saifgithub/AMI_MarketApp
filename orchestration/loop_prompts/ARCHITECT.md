@@ -43,5 +43,8 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
 - **Never self-close.** COMPLETE is the Auditor's call; you only `ACCEPTED` after it.
 - **Keep the board honest.** `board.md` is a convenience cache and may lag; the truth is the tokens
   (`dispatch.sh state`). Reconcile the board when you touch it.
-- **Context.** You cannot `/compact` an instance. If one is bloated, resume it or respawn it fresh
-  on the same lane — its state is in the files. Keep SendMessage lightweight.
+- **Context & cost.** You cannot `/compact` an instance, and you should not want to — auto-compaction
+  at ~1M tokens is a costly backstop, not the operating point. Run instances **short-lived**: spawn a
+  fresh one per lane (or per round), let it hand off and exit, respawn for the next lane. Its state is
+  in the files, so ending early is free. Size lanes narrowly; keep SendMessage lightweight.
+  (DISPATCH_PROTOCOL.md §8.9.)

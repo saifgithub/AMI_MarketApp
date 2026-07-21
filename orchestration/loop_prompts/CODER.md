@@ -44,3 +44,7 @@ the dispatch handshake (Architect → you) and the audit handshake (you → Audi
 - **Never close your own findings.** COMPLETE is the Auditor's call.
 - **Machine tokens byte-exact:** `STATUS: … (round N)`, `SUBMITTED: round N`. A paraphrase breaks
   the watcher.
+- **Run lean, then exit.** After `READY_FOR_AUDIT` (and again after the Architect integrates), you
+  are done — **exit**; don't idle-accumulate context waiting for the next lane. Your state is in the
+  files, so a fresh instance picks up the next lane cheaply. Offload heavy reads/exploration to
+  disposable subagents (ultracode) so your own context stays small. (DISPATCH_PROTOCOL.md §8.9.)
