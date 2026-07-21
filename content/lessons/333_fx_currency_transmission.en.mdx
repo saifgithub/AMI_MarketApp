@@ -1,0 +1,72 @@
+---
+id: "333_fx_currency_transmission"
+title: "FX & currency — US → Bursa/GCC transmission"
+duration_min: 6
+level: 10
+module: 17
+difficulty: 4
+track: "economics_macro"
+code: "MACRO 11"
+topic: "fx_transmission"
+prerequisites: ["330_rate_decisions_and_policy_transmission", "250_rate_sensitive_sectors_hiking_cutting"]
+tags: ["fx", "currency", "interest-rate-differential", "bursa-malaysia", "gcc-peg", "macro"]
+sources: ["Bank Negara Malaysia — Overnight Policy Rate decisions", "Saudi Central Bank (SAMA) — USD peg policy"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# FX & currency — US → Bursa/GCC transmission
+
+A US Fed decision doesn't stay inside US borders — it moves currencies everywhere, and currency moves change how every non-US market prices in dollar terms. The core mechanism is the interest-rate differential: capital tends to flow toward the currency offering the higher return, so when the Fed hikes while another central bank holds steady, that currency pair tends to move against the country holding rates lower, all else equal. This lesson traces that mechanism from the Fed specifically into Bursa Malaysia and the GCC, the two markets AMI Trade covers beyond the US.
+
+## Example
+
+Through 2022-2023, the Fed hiked its target rate from near 0% to 5.25%-5.50% while Bank Negara Malaysia (BNM) held its Overnight Policy Rate (OPR) at **3.00% for most of 2023** after a more measured hiking path of its own. That widening rate gap — US yields pulling further ahead of Malaysian yields — was a direct contributor to the ringgit weakening past **RM4.70 per USD in 2023**, touching levels not seen since the Asian Financial Crisis era, as reported by Bank Negara Malaysia and widely covered financial media. For a Malaysian investor, or a US investor holding Bursa-listed names, that currency move matters independently of what any individual stock did: a Bursa stock that was flat in ringgit terms over that stretch was still down in USD terms purely from the currency leg.
+
+The GCC transmission works through a completely different, more mechanical channel: most Gulf currencies — including the Saudi riyal — are formally pegged to the US dollar. Because of that peg, Gulf central banks like SAMA (the Saudi Central Bank) generally move their own policy rates in lockstep with the Fed almost automatically, to defend the peg — when the Fed hikes, SAMA hikes by essentially the same amount, regardless of whether Saudi domestic conditions would otherwise call for it. That's a structurally different, tighter transmission than the ringgit's floating-rate response.
+
+## The trap
+
+The trap is assuming every non-US currency responds to the Fed the same way. The ringgit is a managed float — it responds to the rate differential but isn't mechanically bound to match the Fed move for move, so its 2023 weakening reflected the *differential*, not a fixed formula. The Saudi riyal, by contrast, is peg-bound — SAMA's hikes track the Fed almost automatically to preserve the peg, meaning Gulf domestic monetary conditions are effectively imported from Washington regardless of local economic conditions. Confusing the two regimes — expecting a peg-bound currency to float freely, or expecting a floating currency to move in lockstep — will misread every FX headline that touches either market.
+
+## The steelman
+
+The strongest case against reading FX moves as cleanly explained by rate differentials alone: currency markets are also driven by capital flows unrelated to rates (trade balances, commodity prices — highly relevant for both Malaysia's export economy and the oil-linked GCC), risk sentiment, and political developments, so attributing a currency's full move to "the Fed minus the local rate" oversimplifies a genuinely multi-factor market. That's a fair caution, especially for commodity-linked currencies. The falsifier: isolate periods where rate differentials moved sharply while trade balances and commodity prices stayed relatively stable — if the currency still tracked the rate gap closely in those windows, the differential channel is doing real work even if it's not the only force in play across the full period.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Through 2023, the Fed hiked toward 5.25%-5.50% while Bank Negara Malaysia held its OPR near 3.00%, and the ringgit weakened past RM4.70/USD. What is the core mechanism connecting the Fed's decision to the ringgit's move?"
+  options={[
+    "Capital tends to flow toward the currency offering the higher return, so a widening gap between US and Malaysian rates puts depreciation pressure on the lower-yielding currency (the ringgit), all else equal",
+    "Bank Negara Malaysia is contractually required to match every Fed rate move exactly, and any gap is a policy violation",
+    "The ringgit's move was entirely unrelated to interest rates and was caused only by domestic Malaysian politics",
+    "The Fed directly sets Malaysia's exchange rate as part of its statutory mandate"
+  ]}
+  answer={0}
+  explanation="The interest-rate differential is the core mechanism: as the gap between US and Malaysian yields widened, capital economics favored holding US dollar assets over ringgit assets, adding depreciation pressure on the ringgit — exactly what the lesson's numbers show. BNM has no obligation to match the Fed (it's an independently managed float, unlike the GCC peg case), the ringgit's move is not explained as purely domestic-political, and the Fed has no authority over Malaysia's exchange rate whatsoever."
+/>
+
+<Quiz
+  question="Why does the Saudi riyal's response to a Fed hike look mechanically different from the Malaysian ringgit's response, even though both are described as 'US → local currency transmission'?"
+  options={[
+    "There is no real difference — both currencies respond identically to every Fed move",
+    "The Saudi riyal is formally pegged to the USD, so SAMA moves its own policy rate in near-lockstep with the Fed to defend that peg, importing US monetary conditions almost automatically — unlike the ringgit's managed float, which responds to the rate differential without a fixed peg to defend",
+    "Malaysia and Saudi Arabia use the same currency, so there is nothing to compare",
+    "The Saudi riyal ignores Fed decisions entirely because Gulf economies are fully insulated from US monetary policy"
+  ]}
+  answer={1}
+  explanation="This is the exact regime distinction the trap section warns against collapsing: a peg-bound currency (the riyal) imports Fed policy almost mechanically to preserve its peg, while a managed float (the ringgit) responds to the rate gap without being bound to match it move for move. The two countries do not share a currency, and Gulf economies are clearly not insulated from Fed policy — the peg is precisely what ties them to it so tightly."
+/>
+
+## Try it
+
+Open the News Analyst chat and ask how the current USD/MYR rate compares to where it was a year ago, and whether that move lines up with the current gap between the Fed's rate and Bank Negara Malaysia's OPR. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Not every currency transmits Fed policy the same way — know whether you're reading a managed float responding to the rate differential or a dollar-pegged currency importing Fed policy almost automatically.

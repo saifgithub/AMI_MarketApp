@@ -1,0 +1,72 @@
+---
+id: "330_rate_decisions_and_policy_transmission"
+title: "Rate decisions & how policy transmits"
+duration_min: 6
+level: 10
+module: 17
+difficulty: 4
+track: "economics_macro"
+code: "MACRO 8"
+topic: "policy_transmission"
+prerequisites: ["329_the_fed_and_the_dual_mandate", "308_how_rates_price_equities"]
+tags: ["fed-funds-rate", "policy-transmission", "mortgage-rates", "credit", "macro"]
+sources: ["Federal Reserve — FOMC target rate history", "Freddie Mac — Primary Mortgage Market Survey"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Rate decisions & how policy transmits
+
+The Fed doesn't set the interest rate you pay on a mortgage or a car loan directly — it sets one number, the federal funds rate (the rate banks charge each other for overnight loans), and that single number ripples outward through a chain: bank lending rates, mortgage rates, corporate borrowing costs, and ultimately asset prices, including the equity discount rate you met in the asset-classes track. Understanding that chain — not just the headline rate decision — is what separates reading a Fed announcement from understanding what it actually does to the economy and your portfolio.
+
+## Example
+
+The Fed's most recent hiking cycle is the cleanest illustration of transmission on record. The federal funds target range started at **0.00%-0.25% in March 2022** and reached **5.25%-5.50% by July 2023** — eleven rate hikes in sixteen months, the fastest tightening pace in over 40 years, taken directly to fight the 9.1% CPI print from two lessons ago. Trace what that did downstream: the average 30-year fixed US mortgage rate rose from roughly **3.2% in January 2022** to over **7% by October 2023** (Freddie Mac Primary Mortgage Market Survey) — more than doubling the monthly payment on a given loan amount for a new homebuyer, which cooled the housing market sharply even though the Fed never touches the mortgage market directly.
+
+That's the transmission chain working exactly as designed: fed funds rate up → bank cost of funds up → mortgage and corporate lending rates up → borrowing and spending slow → demand cools → (eventually) inflation eases. It's also why rate decisions move markets the moment they're announced, well before any real economic effect shows up — markets are pricing the entire downstream chain in advance, not just the headline number.
+
+## The trap
+
+The trap is treating the fed funds rate as if it's the rate that directly affects you or a company you're evaluating — "rates are at 5.5%, so borrowing costs 5.5%." The fed funds rate is the anchor at the very start of the chain; by the time it reaches a 30-year mortgage or a corporate bond issuance, it's been marked up for term length, credit risk, and market expectations about where rates go next — which is exactly why mortgage rates rose from 3.2% to over 7% (a roughly 400 basis point move) while the fed funds rate itself moved about 500 basis points over a similar window, not a 1:1 match. Always ask "how many links down the chain is this rate from the Fed's own number," not just "what did the Fed do."
+
+## The steelman
+
+The strongest case against overweighting the Fed-to-mortgage-rate chain as a clean, predictable mechanism: long-term rates like the 30-year mortgage are priced more off the 10-year Treasury yield and inflation expectations than off the fed funds rate directly, and the relationship can decouple — long rates sometimes fall even while the Fed hikes, if markets expect a recession and future cuts. That's a real and important qualifier. The falsifier: check whether the 10-year Treasury yield and mortgage rates moved with or against the fed funds rate during the specific window you're analyzing. During most of 2022-2023 they moved together, which is why this example holds — but a reader treating the fed-funds-to-mortgage chain as an unbreakable mechanical law, rather than a usual-but-not-guaranteed relationship, will be caught off guard in a decoupling period.
+
+<ChatWith agent="market_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The fed funds rate rose from near 0% to 5.25%-5.50% between March 2022 and July 2023, while the 30-year mortgage rate rose from about 3.2% to over 7% over a similar window — a roughly 400 basis point move against the Fed's roughly 500 basis point move. What does this gap best illustrate about policy transmission?"
+  options={[
+    "The mortgage rate move should have exactly matched the fed funds rate move, so the data must contain an error",
+    "Mortgage rates are entirely unrelated to the fed funds rate and moved for completely independent reasons",
+    "By the time the fed funds rate reaches a downstream rate like a 30-year mortgage, it has been marked up for term length, credit risk, and rate expectations — so the two moves track each other loosely, not point for point",
+    "The Fed directly sets the 30-year mortgage rate as a matter of policy, so the two rates should always move in lockstep"
+  ]}
+  answer={2}
+  explanation="Downstream rates aren't a copy of the fed funds rate — they layer on term premium, credit spread, and market expectations about the future path of rates, which is exactly why a ~500bp fed funds move produced a somewhat different, though clearly related, ~400bp mortgage move. There's no data error here, mortgage rates are not unrelated to Fed policy (the correlation through this period was strong), and the Fed does not set mortgage rates directly — it only sets the anchor rate the chain starts from."
+/>
+
+<Quiz
+  question="A reader argues 'the Fed hiked, so mortgage rates must always rise in lockstep' — but the steelman notes long-term rates sometimes decouple from the fed funds rate. What would cause that decoupling?"
+  options={[
+    "Long-term rates like the 30-year mortgage are priced more off the 10-year Treasury yield and inflation expectations; if markets start pricing in a recession and future rate cuts even while the Fed is still hiking in the present, long rates can fall or stall despite the fed funds rate rising",
+    "Mortgage lenders are legally required to keep rates flat during any Fed hiking cycle",
+    "Decoupling only happens due to computer errors at Freddie Mac",
+    "The fed funds rate and mortgage rates are calculated using an identical formula, so decoupling is mathematically impossible"
+  ]}
+  answer={0}
+  explanation="This is the steelman's exact falsifier: long-end rates price off future expectations (via the 10-year Treasury), not just the Fed's current target, so if the market starts pricing future cuts, long rates can decouple from a still-hiking fed funds rate. There's no legal flat-rate requirement on lenders, no data-collection-error explanation, and the two rates are set through entirely different mechanisms — an identical formula would rule out the very decoupling the question asks about."
+/>
+
+## Try it
+
+Open the Market Analyst chat and ask how the current 10-year Treasury yield compares to the fed funds rate, and what that gap implies about where the market expects rates to go next. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+The fed funds rate is the start of a chain, not the end of it — track how many links separate any rate you're evaluating from the Fed's own number before assuming they move together.

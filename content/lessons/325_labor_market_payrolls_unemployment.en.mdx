@@ -1,0 +1,72 @@
+---
+id: "325_labor_market_payrolls_unemployment"
+title: "The labor market — payrolls & unemployment"
+duration_min: 5
+level: 10
+module: 16
+difficulty: 3
+track: "economics_macro"
+code: "MACRO 3"
+topic: "labor_market"
+prerequisites: ["324_inflation_mechanics_cpi_pce"]
+tags: ["labor-market", "unemployment", "payrolls", "wage-price-feedback", "macro"]
+sources: ["US Bureau of Labor Statistics — Employment Situation report"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# The labor market — payrolls & unemployment
+
+The labor market is the macro series markets watch most closely on a monthly cadence, because it feeds directly into both halves of the Fed's mandate: a hot jobs market can fuel wage-driven inflation, and a weak one signals recession risk. The two headline numbers from the BLS's monthly "Employment Situation" report are nonfarm payrolls (how many jobs were added or lost) and the unemployment rate (the share of the labor force actively looking for work and not finding it). Understanding why the Fed treats jobs data as decisive — not just informative — is the key to reading every rate decision that follows in this module.
+
+## Example
+
+In January 2023, the US economy added **517,000 nonfarm payroll jobs** (BLS) — more than double what economists had forecast, a genuine blowout print. The unemployment rate that same month fell to **3.4%**, the lowest reading since 1969. On paper this looked like unambiguous good news. Markets read it very differently: strong job creation and near-record-low unemployment meant the labor market was still running hot, which meant continued wage pressure, which meant the Fed had less reason to slow its rate hikes — equity indices sold off on the day the report landed, precisely because "good news" for workers read as "bad news" for the pace of rate cuts investors were hoping for.
+
+This is the wage-price feedback loop in miniature: when unemployment is very low, workers have leverage to demand higher wages; employers pass some of that cost through to prices; higher prices show up in the next inflation reading; the Fed responds by keeping rates higher for longer. A single strong payrolls report can move markets more than a full quarter of GDP data, because it's timelier and it speaks directly to whether inflation pressure is easing or building.
+
+## The trap
+
+The trap is assuming "strong jobs report = good for stocks" as a fixed rule. Whether a payrolls beat is bullish or bearish for markets depends entirely on where the Fed is in its policy cycle. In a low-inflation, easy-policy environment, strong job growth is straightforwardly good news for corporate earnings and stock prices. In a high-inflation, hiking-cycle environment — exactly the setting of the January 2023 print above — the same strong number can be read as a reason for the Fed to stay tighter for longer, and markets can sell off on ostensibly good economic news. Read every jobs report through "what does this mean for the Fed's next move," not through "is this number big or small."
+
+## The steelman
+
+The strongest case against over-weighting monthly payrolls: the number is subject to large revisions (the initial estimate for a given month is often revised meaningfully in the following two reports), it's noisy month to month, and reading too much into any single print risks whipsawing your view of the economy. That's a fair caution. The falsifier: look at the three-month or six-month moving average of payroll gains rather than any single month. If the trend — not the noise — is decelerating (say, from 300k+ average gains down toward 100k or below) alongside a rising unemployment rate, that's a real labor-market cooling signal that a single volatile print alone can't give you.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="In January 2023, US nonfarm payrolls rose 517,000 (BLS) and unemployment fell to 3.4%, the lowest since 1969 — yet US equity indices fell on the news. What best explains markets treating strong jobs data as bad news?"
+  options={[
+    "A hot labor market signals continued wage-driven inflation pressure, which reduces the Fed's incentive to slow rate hikes — strong jobs data can mean tighter policy for longer",
+    "The payrolls report was later found to be entirely fabricated by the BLS",
+    "Markets always fall the day any economic data is released, regardless of content",
+    "Unemployment falling below 4% automatically triggers a stock market circuit breaker"
+  ]}
+  answer={0}
+  explanation="The mechanism is the wage-price feedback loop: very low unemployment gives workers leverage to demand higher wages, which employers partly pass through as higher prices, which keeps inflation elevated and gives the Fed reason to hold rates higher for longer — a headwind for equity valuations. There was no fabrication and no automatic circuit breaker tied to the unemployment rate, and markets do not react uniformly to every data release; the reaction depends on what the data implies for Fed policy, which is the whole point of this lesson."
+/>
+
+<Quiz
+  question="Why might a macro reader distrust a single month's nonfarm payrolls print and instead look at the three- or six-month moving average?"
+  options={[
+    "The BLS only calculates accurate figures once every six months",
+    "Moving averages are required by SEC regulation before markets are permitted to react to jobs data",
+    "A single month's payrolls number is always fabricated for political reasons and cannot be trusted at all",
+    "Individual monthly payroll figures are frequently revised in subsequent reports and can be noisy, so the trend across several months is a more reliable signal than any one print"
+  ]}
+  answer={3}
+  explanation="Payroll figures get revised as more complete survey data comes in, and any single month carries noise from seasonal adjustment and sampling — smoothing across several months filters that out and reveals the underlying trend, which is what actually matters for a Fed reaction function. There's no six-month-only BLS cadence, no SEC rule gating market reactions, and dismissing the data as fabricated ignores that revisions are a routine, transparent part of how the BLS improves its own estimates over time."
+/>
+
+## Try it
+
+In the News Analyst chat, ask "what was the most recent nonfarm payrolls number and how did markets react?" Then ask the follow-up: "was that reaction about the jobs number itself, or about what it implies for the Fed?" Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+A strong jobs report is not automatically bullish — read it through the Fed's reaction function, and trust the multi-month trend over any single volatile print.

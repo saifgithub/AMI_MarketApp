@@ -1,0 +1,72 @@
+---
+id: "326_leading_coincident_lagging_indicators"
+title: "Leading, coincident & lagging indicators"
+duration_min: 5
+level: 10
+module: 16
+difficulty: 3
+track: "economics_macro"
+code: "MACRO 4"
+topic: "macro_indicators"
+prerequisites: ["325_labor_market_payrolls_unemployment"]
+tags: ["indicators", "leading-indicators", "ism-pmi", "macro-dashboard"]
+sources: ["The Conference Board — Leading Economic Index", "Institute for Supply Management — Manufacturing PMI"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Leading, coincident & lagging indicators
+
+No single economic number tells you where the economy is headed — you need a dashboard, and every gauge on it falls into one of three categories: leading indicators move *before* the economy turns (new orders, building permits, the yield curve you met in the asset-classes track), coincident indicators move *with* it in real time (payrolls, industrial production, personal income), and lagging indicators confirm a turn only *after* it's already happened (the unemployment rate, CPI). Reading macro well means knowing which category a headline number belongs to before you decide what it's telling you.
+
+## Example
+
+Take the ISM Manufacturing PMI (Purchasing Managers' Index) — a classic leading indicator, since it surveys purchasing managers about *new orders*, activity that will show up in production and hiring months later. A PMI reading above 50 signals expansion; below 50 signals contraction. In **November 2023**, the ISM Manufacturing PMI printed **46.7** (ISM) — its 13th consecutive month below the 50 threshold, a persistent contraction signal in the manufacturing sector specifically, even while broader US GDP was still growing (recall the Q3 2023 4.9% annualized print from two lessons ago). That divergence is a dashboard doing its job: a leading indicator (PMI) flashing weakness in one sector well before a lagging indicator (the unemployment rate, which stayed low through this stretch) would ever show it.
+
+Compare that to a lagging indicator like the unemployment rate: by the time it's clearly rising, the labor-market weakening it reflects usually started months earlier. That's why the Fed and market participants lean so heavily on leading and coincident data — waiting for lagging confirmation means reacting to news that's already stale.
+
+## The trap
+
+The trap is reading every economic number as if it's telling you the same thing: "the economy right now." A trader who sees PMI at 46.7 and unemployment at 3.4% in the same news cycle and concludes "the data is contradictory, so it's unreadable" has missed that these are two different clocks — one running ahead, one running behind. The correct model: sort every macro number you read into leading, coincident, or lagging before you decide what weight to give it, and expect leading and lagging indicators to *disagree* at every turning point — that disagreement is the dashboard working, not a data error.
+
+## The steelman
+
+The strongest case against leaning too hard on leading indicators: they generate false positives — PMI, LEI, and similar gauges have flagged looming contractions that didn't fully materialize, and a reader who trades every leading-indicator wobble will get whipsawed. That's a legitimate caution. The falsifier: leading indicators earn credibility through *persistence and breadth*, not a single reading. One month of sub-50 PMI is noise; 13 consecutive months (as in the November 2023 example) across a broad survey of purchasing managers is a much harder signal to wave away — even if it hadn't yet shown up as a broad recession by that point. Weight a leading indicator by how long and how widely it's been signaling, not by its most recent print alone.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The ISM Manufacturing PMI printed 46.7 in November 2023 (13th straight month below 50), while the unemployment rate — a lagging indicator — stayed near multi-decade lows through the same stretch. What's the correct way to read this apparent contradiction?"
+  options={[
+    "PMI and the unemployment rate are measuring two different points in the economic cycle — PMI leads (new orders signal future activity), unemployment lags (it confirms weakness only after it's already spread) — so disagreement between them at a turning point is expected, not a data error",
+    "One of the two data series must be wrong, since a healthy labor market and a contracting PMI cannot both be true at the same time",
+    "PMI only measures stock market sentiment and has no connection to actual manufacturing activity",
+    "The unemployment rate is calculated from the same survey as PMI, so any disagreement is a reporting glitch"
+  ]}
+  answer={0}
+  explanation="Leading and lagging indicators are built to move at different points in the cycle by design — that's the entire premise of the leading/coincident/lagging framework. Neither series is 'wrong': PMI genuinely surveys new orders (a forward-looking signal) while unemployment genuinely reflects labor conditions that take longer to shift. They are not computed from the same survey, and PMI is a real gauge of manufacturing purchasing activity, not a stock-sentiment proxy."
+/>
+
+<Quiz
+  question="Why does a single month of sub-50 ISM PMI carry less weight as a signal than 13 consecutive months of sub-50 readings?"
+  options={[
+    "The ISM changes its survey methodology every single month, making one-off readings meaningless by design",
+    "A single month's PMI reading is not actually published by the ISM at all",
+    "Leading indicators earn credibility through persistence — one reading can be noise or a temporary dip, while a long, sustained streak is a much harder signal to dismiss as random variation",
+    "13 months is a regulatory threshold the SEC requires before PMI data can be reported publicly"
+  ]}
+  answer={2}
+  explanation="This is the steelman's falsifier in practice: any indicator can wobble for one period, so persistence and breadth are what separate signal from noise. The ISM publishes a PMI reading every single month (there is no threshold gating publication), and there's no monthly methodology overhaul — the point is purely about how much evidentiary weight a reader should assign to a short streak versus a long one."
+/>
+
+## Try it
+
+Pick a recent macro headline from the News Analyst chat and ask AMI to classify it: "Is this a leading, coincident, or lagging indicator, and what should I expect it to disagree with right now?" Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Sort every macro number into leading, coincident, or lagging before you trust it — disagreement between the three at a turning point is the dashboard working correctly, not noise to ignore.

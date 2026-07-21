@@ -1,0 +1,74 @@
+---
+id: "324_inflation_mechanics_cpi_pce"
+title: "Inflation mechanics — CPI, PCE & why prices rise"
+duration_min: 6
+level: 10
+module: 16
+difficulty: 3
+track: "economics_macro"
+code: "MACRO 2"
+topic: "inflation_mechanics"
+prerequisites: ["323_gdp_what_the_economy_measures"]
+tags: ["inflation", "cpi", "pce", "real-vs-nominal", "macro"]
+sources: ["US Bureau of Labor Statistics — Consumer Price Index", "Irving Fisher — The Theory of Interest (1930), the Fisher equation"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Inflation mechanics — CPI, PCE & why prices rise
+
+Inflation is the rate at which prices rise across the economy, and it comes from two directions: demand-pull (too much money chasing too few goods) and cost-push (input costs — energy, wages, supply chains — force prices up regardless of demand). The two headline US gauges are CPI (Consumer Price Index, from the Bureau of Labor Statistics) and PCE (Personal Consumption Expenditures, the Fed's own preferred measure) — they're built differently and can print different numbers in the same month. What matters for you as an investor isn't memorizing the formulas; it's understanding that inflation quietly eats your nominal returns, and the gap between nominal and real is not an approximation you can eyeball.
+
+## Example
+
+US CPI year-over-year inflation peaked at **9.1% in June 2022** (BLS) — the highest reading in over four decades, driven by a mix of pandemic-era demand-pull (stimulus-fueled spending) and cost-push (energy prices spiking after Russia's invasion of Ukraine, plus snarled supply chains). That single print reshaped the entire 2022-2023 market narrative: it's the number that pushed the Fed into the most aggressive hiking cycle in 40 years, which you'll trace through in M17.
+
+Now the arithmetic that actually matters to your portfolio. Say your portfolio returned a nominal **10%** in a year where inflation ran **5%** (illustrative, clean numbers — not a live data point). The lazy shortcut is real ≈ nominal − inflation = 10% − 5% = 5%. The exact relationship (the Fisher equation) is: (1 + real) = (1 + nominal) / (1 + inflation). Solving: (1 + real) = 1.10 / 1.05 = 1.04762, so real return = **4.762%**, not 5%. The subtraction shortcut overstates your real gain by roughly a quarter of a percentage point here — small at low inflation, but the gap widens fast as inflation rises, which is exactly why the exact formula matters more in a high-inflation year like 2022 than in a calm one.
+
+## The trap
+
+The trap is anchoring to the subtraction shortcut and believing your portfolio kept pace with inflation when it didn't, quite. At low inflation (1-3%) the shortcut is close enough that the error rarely matters. At the kind of inflation the US saw in 2022 (peaking near 9%), the gap between the shortcut and the exact Fisher calculation grows large enough to change whether you actually beat inflation or merely broke even against it. The correct habit: when inflation is elevated, run the exact division, not the subtraction — especially before concluding "I beat inflation this year."
+
+## The steelman
+
+The strongest case against sweating CPI-versus-PCE precision at all: "Both measures move together over long stretches, revisions are common, and most investors will never build a portfolio strategy around a 0.3% gauge difference — this is textbook pedantry that doesn't change any real decision." That's largely true for casual reading of headlines. The falsifier: the two gauges diverge meaningfully in exactly the periods that matter most — CPI weights housing more heavily than PCE, so during a housing-cost surge (like 2022-2023) CPI can run persistently hotter than PCE, and the Fed sets policy off PCE, not CPI. If you're reading news about "the Fed's target" and mentally substituting the CPI number you saw that morning, you're reading the wrong gauge for the Fed's own reaction function — a distinction that matters precisely when the two disagree.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="A portfolio returns a nominal 10% in a year with 5% inflation (illustrative numbers). Using the exact Fisher relationship (1 + real) = (1 + nominal) / (1 + inflation), what is the real return, and how does it compare to the 'nominal minus inflation' shortcut?"
+  options={[
+    "4.762% — lower than the shortcut's 5%, because the shortcut overstates real return by dividing incorrectly",
+    "5.5% — higher than the shortcut, because compounding always favors the investor",
+    "4.762% — lower than the shortcut's 5%, because the exact formula divides out the effect of inflation compounding on your nominal gain rather than simply subtracting it",
+    "5% exactly — the shortcut and the exact formula always agree regardless of the inflation rate"
+  ]}
+  answer={2}
+  explanation="(1.10 / 1.05) − 1 = 4.762%, below the shortcut's naive 5%. The shortcut ignores that inflation compounds against your nominal gain rather than subtracting cleanly from it — the first option states the right number but the wrong mechanism (it's not a division 'error', it's what division correctly does that subtraction approximates). The two methods only converge as inflation approaches zero; at 9% CPI inflation like June 2022, the gap between them is far larger than at 5%."
+/>
+
+<Quiz
+  question="US CPI inflation peaked at 9.1% year-over-year in June 2022 (BLS), while the Fed sets policy primarily off PCE inflation, not CPI. Why does this distinction matter to a reader tracking Fed policy?"
+  options={[
+    "It doesn't matter — CPI and PCE are two names for the identical calculation and always print the same number",
+    "PCE is calculated by a different agency with no relationship to consumer prices at all",
+    "CPI is only used for Social Security adjustments and has no relationship to markets whatsoever",
+    "CPI and PCE are built differently (different weights, notably housing) and can diverge, so reading CPI headlines while assuming you know where the Fed's actual PCE-based target stands can mislead you exactly when the two gauges disagree most"
+  ]}
+  answer={3}
+  explanation="CPI and PCE are distinct measures with different methodologies and weightings — housing carries more weight in CPI, for instance — so they can and do diverge, especially during housing-driven inflation episodes. Since the Fed's 2% target is explicitly a PCE target, substituting a CPI print for 'where the Fed thinks it stands' can be actively misleading. PCE is a real, BEA-published measure closely tied to consumer spending, not an unrelated fabrication, and CPI has real market relevance well beyond Social Security indexing."
+/>
+
+## Try it
+
+Open the News Analyst chat and ask: "What's the difference between the last CPI print and the last PCE print, and which one is the Fed actually targeting?" Note which gauge news headlines you see today are quoting. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Inflation is not one number — CPI and PCE can disagree — and once inflation runs hot, "real return ≈ nominal minus inflation" stops being close enough; do the exact division.
+
+*Where this comes from: the Fisher equation relating nominal and real rates — Irving Fisher, The Theory of Interest (1930).*

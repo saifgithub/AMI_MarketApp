@@ -1,0 +1,72 @@
+---
+id: "331_qe_qt_and_the_balance_sheet"
+title: "QE, QT & the central-bank balance sheet"
+duration_min: 6
+level: 10
+module: 17
+difficulty: 4
+track: "economics_macro"
+code: "MACRO 9"
+topic: "qe_qt_balance_sheet"
+prerequisites: ["330_rate_decisions_and_policy_transmission"]
+tags: ["quantitative-easing", "quantitative-tightening", "balance-sheet", "liquidity", "macro"]
+sources: ["Federal Reserve — H.4.1 statistical release, factors affecting reserve balances"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# QE, QT & the central-bank balance sheet
+
+Beyond the interest rate, the Fed has a second, less-visible policy lever: the size of its own balance sheet. Quantitative easing (QE) is the Fed buying large quantities of Treasury and mortgage bonds, injecting cash into the financial system and pushing down longer-term rates when the policy rate is already near zero. Quantitative tightening (QT) is the reverse — letting those bonds mature without replacing them, draining liquidity from the system. This is a market force in its own right, separate from the headline rate decision, and reading only the fed funds rate while ignoring the balance sheet is reading half the story.
+
+## Example
+
+The Fed's balance sheet size tells the story on its own. Before the pandemic, in February 2020, Fed assets stood at roughly **$4.2 trillion** (Fed H.4.1 data). Through 2020-2021, in response to the pandemic shock, the Fed bought bonds aggressively, and the balance sheet **peaked at roughly $8.9 trillion in April 2022** — more than double its pre-pandemic size, an unprecedented injection of liquidity into the financial system. The Fed then began quantitative tightening in **June 2022**, letting bonds run off its balance sheet (initially capped at $47.5 billion a month, later increased), and by late 2023 the balance sheet had fallen back toward roughly **$7.9 trillion** — still far above pre-pandemic levels, but meaningfully drained.
+
+Notice the timing: QT began the same month, June 2022, that the Fed was also aggressively hiking rates toward that 5.25%-5.50% peak from the last lesson. Both levers pulled in the same tightening direction at once — rates up *and* liquidity draining — which is part of why the 2022-2023 tightening cycle hit markets as hard as it did. A trader reading only "rates went from 0% to 5.5%" and missing "the balance sheet also shrank by roughly $1 trillion over the same window" is missing half the tightening the market actually absorbed.
+
+## The trap
+
+The trap is treating QE/QT as a background technical detail that only bond-market specialists need to track. The balance sheet directly affects liquidity available to the entire financial system — QE eras (2020-2021) coincided with abundant liquidity and elevated risk-asset valuations across equities, credit, and speculative assets broadly; QT eras drain that same liquidity, tightening financial conditions even if the fed funds rate itself holds steady. The correct model: when reading Fed policy, check both levers — the rate decision and the balance sheet trend — because a Fed that's "done hiking" but still running QT is still actively tightening, not neutral.
+
+## The steelman
+
+The strongest case against overweighting balance-sheet moves relative to the rate decision: the fed funds rate is announced eight times a year with enormous market attention and immediate repricing, while QT runs on a slow, largely pre-announced, mechanical schedule that markets absorb gradually — treating the two as equally market-moving in the short term overstates QT's day-to-day importance. That's fair for short-horizon trading. The falsifier: look at cumulative effect over a full tightening cycle rather than any single day — a ~$1 trillion balance-sheet reduction represents a real, sustained liquidity drain that shows up in bond market depth and risk-asset valuations over quarters, even if no single QT data point moves markets the way a surprise rate decision does. Different time horizons, both real.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="The Fed's balance sheet peaked near $8.9 trillion in April 2022 (roughly double its pre-pandemic $4.2 trillion) and then fell to roughly $7.9 trillion by late 2023 as QT ran alongside the rate-hiking cycle. What does tracking both the balance sheet AND the fed funds rate add that watching the rate alone would miss?"
+  options={[
+    "Nothing — the balance sheet is a purely technical detail with no effect on financial conditions",
+    "QT drains liquidity from the financial system independently of the rate decision, so a Fed running QT is tightening financial conditions even during periods when the fed funds rate itself is unchanged — missing this means underestimating how tight policy actually is",
+    "The balance sheet and the fed funds rate are two names for the exact same policy tool",
+    "The balance sheet only affects foreign exchange markets and has no relevance to US equities or bonds"
+  ]}
+  answer={1}
+  explanation="QE and QT are a genuinely separate lever from the interest rate — they directly affect liquidity and bond-market depth, which flows through to broader financial conditions including equity valuations, independent of what the fed funds rate itself is doing at any given moment. The balance sheet is not purely technical (this lesson's whole point), it is not the same tool as the rate decision (they can move independently), and its effects are not limited to FX."
+/>
+
+<Quiz
+  question="QT began in June 2022, the same month the Fed was mid-way through its rate-hiking cycle. Why does the steelman argue you shouldn't weight QT's day-to-day market impact the same as a surprise rate decision, even though both matter?"
+  options={[
+    "QT is completely irrelevant and should be ignored entirely, contradicting the rest of this lesson",
+    "Rate decisions have no market impact at all compared to QT",
+    "QT and rate decisions are announced at the exact same press conference, so they cannot be meaningfully separated",
+    "QT runs on a slower, largely pre-announced, mechanical schedule that markets absorb gradually, whereas a rate decision is a single announced event with immediate, concentrated repricing — different time horizons, both real"
+  ]}
+  answer={3}
+  explanation="The steelman's point is about time horizon, not relevance: QT's effect is real but shows up gradually as cumulative liquidity drainage over quarters, while a rate decision is a discrete, high-attention event that reprices markets within minutes. Calling QT 'irrelevant' contradicts the lesson's core point, rate decisions clearly do move markets sharply (established earlier in this module), and while both are FOMC-adjacent, QT operates on its own separately announced runoff schedule, not the same press-conference moment as every rate call."
+/>
+
+## Try it
+
+Ask the News Analyst: "Is the Fed currently doing QE or QT, and how large is its balance sheet compared to a year ago?" Note whether that trend agrees or disagrees with the direction of the most recent rate decision. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+The balance sheet is a second policy lever, not a footnote — check whether the Fed is doing QE or QT alongside the rate decision, because the two can tighten or loosen policy independently of each other.

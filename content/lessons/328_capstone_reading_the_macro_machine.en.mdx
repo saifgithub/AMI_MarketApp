@@ -1,0 +1,80 @@
+---
+id: "328_capstone_reading_the_macro_machine"
+title: "Capstone: reading the macro machine"
+duration_min: 7
+level: 10
+module: 16
+difficulty: 4
+track: "economics_macro"
+code: "MACRO 6"
+topic: "macro_machine_capstone"
+prerequisites: ["323_gdp_what_the_economy_measures", "324_inflation_mechanics_cpi_pce", "325_labor_market_payrolls_unemployment", "326_leading_coincident_lagging_indicators", "327_business_cycle_expansion_recession"]
+tags: ["macro", "capstone", "synthesis", "gdp", "inflation", "labor-market", "indicators", "business-cycle"]
+sources: ["US Bureau of Economic Analysis", "US Bureau of Labor Statistics", "National Bureau of Economic Research"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# Capstone: reading the macro machine
+
+You now hold the M16 toolkit: what GDP actually measures versus what the market prices, how inflation splits into demand-pull and cost-push (and why the exact real-return math matters once it runs hot), how the labor market feeds the Fed's reaction function, how to sort any indicator into leading/coincident/lagging before trusting it, and how the business cycle is actually dated versus the popular shortcut. This capstone runs one real, contradictory stretch of US macro history — 2022 to early 2023 — through all five lessons at once, because that period is the cleanest real-world case of every M16 concept disagreeing with every other one simultaneously.
+
+## One scenario, every M16 concept
+
+Here is the full contradiction, dated and sourced. **GDP:** US real GDP contracted in Q1 2022 (-1.6% annualized) and Q2 2022 (-0.6% annualized) — two straight negative quarters (BEA). **Inflation:** CPI year-over-year peaked at **9.1% in June 2022** (BLS), the hottest reading in over four decades. **Labor market:** despite the GDP contraction, unemployment kept falling, reaching **3.4% in January 2023** (BLS) — the lowest since 1969 — while payrolls added 517,000 jobs that same month. **Indicators:** ISM Manufacturing PMI spent over a year below the 50 expansion threshold (46.7 in November 2023, ISM) — a leading indicator flashing manufacturing-sector contraction the whole time the labor market stayed hot. **Business cycle:** despite satisfying the popular "two consecutive negative GDP quarters" recession rule in H1 2022, NBER never declared a recession, because its multi-indicator standard — payrolls, income, spending, production together — never showed the broad-based decline its definition requires.
+
+Put all five together and you get the "no landing" narrative that dominated 2023 market commentary: an economy where GDP wobbled and manufacturing genuinely contracted, while the labor market and consumer spending stayed resilient enough that no recession was ever confirmed — even as the Fed hiked rates at the fastest pace in 40 years specifically to fight the inflation print that started this whole chain. Every M16 lesson is present in this one 18-month window: the GDP/market divergence, the real-versus-nominal stakes of 9.1% inflation, the labor market driving Fed policy in the opposite direction GDP alone suggested, a leading indicator (PMI) disagreeing with a lagging one (unemployment) for over a year, and a popular recession rule failing its most consequential real-world test.
+
+## The steelman
+
+The strongest case against reading 2022-2023 as one coherent "macro machine" story: "This is cherry-picked hindsight — with enough indicators, you can always find some combination that looks instructive after the fact. In real time, this period was genuinely confusing, and plenty of serious forecasters called a recession that never came." That's a fair challenge, and worth sitting with: this period is famous precisely *because* it broke the standard playbook (an inverted yield curve, historically a reliable recession signal, was flashing red the whole time too, and still no NBER recession followed as of this writing). The falsifier: the value of the M16 framework was never "predict the outcome with certainty" — it's "know which indicator is leading, which is lagging, and why they can legitimately disagree at a turning point." By that standard the framework worked exactly as designed: it explains *why* GDP, PMI, and unemployment told different stories at the same time, even though it couldn't tell you in advance which story would ultimately win.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="Q1-Q2 2022 saw two straight negative GDP quarters, CPI peaked at 9.1% in June 2022, yet unemployment fell to 3.4% by January 2023 and NBER never called a recession. Which combination of M16 concepts best explains why the popular 'GDP contracted twice = recession' read was wrong here?"
+  options={[
+    "GDP is backward-looking and doesn't equal the market (lesson 1), NBER's actual recession standard weighs a full basket of indicators rather than GDP alone (lesson 5), and the labor market — a key part of that basket — stayed strong throughout (lesson 3)",
+    "The GDP figures for 2022 were later revised to show growth in both quarters, so there was never a real contradiction",
+    "NBER simply forgot to issue a recession call and corrected the omission years later",
+    "CPI inflation has no relationship to how NBER dates recessions, so it can be ignored entirely in this analysis"
+  ]}
+  answer={0}
+  explanation="This is the capstone synthesis: no single M16 lesson explains 2022-2023 alone, but stacking GDP-vs-market (lesson 1), NBER's multi-indicator recession standard (lesson 5), and labor-market resilience (lesson 3) together explains exactly why the popular two-quarter GDP rule failed its real-world test. GDP was not revised away, NBER did not simply forget, and while CPI isn't a direct NBER recession input, it's the reason the Fed's hiking cycle existed in the first place — deeply relevant to the full picture even if not literally part of NBER's own criteria."
+/>
+
+<Quiz
+  question="ISM Manufacturing PMI stayed below 50 for over a year through this period while unemployment sat at multi-decade lows. Applying the leading/coincident/lagging framework from lesson 4, what should a reader conclude from this specific disagreement?"
+  options={[
+    "PMI and unemployment are measuring the same thing, so one of the two data sources must be unreliable",
+    "PMI (a leading indicator, tracking new orders) can legitimately diverge from unemployment (a lagging indicator) for an extended period without either being wrong — they are different clocks, and the disagreement itself is informative about where in the cycle each part of the economy sits",
+    "Manufacturing PMI has no relevance to the broader US economy and should be ignored",
+    "The Fed relies exclusively on PMI and ignores unemployment data entirely when setting policy"
+  ]}
+  answer={1}
+  explanation="This directly applies lesson 4's core lesson: leading and lagging indicators are expected to disagree at turning points precisely because they measure different phases of the cycle, and a long, persistent PMI contraction (13+ months) is a real signal about manufacturing specifically, even while it coexists with labor-market strength elsewhere in the economy. Neither series is unreliable, PMI is not irrelevant, and the Fed's dual mandate (covered next module) explicitly weighs employment alongside inflation — it does not rely on PMI alone."
+/>
+
+<Quiz
+  question="Pulling together GDP, inflation, the labor market, the leading/lagging framework, and the business-cycle definition — what is the single takeaway this capstone is building toward for how you read macro news going forward?"
+  options={[
+    "Ignore GDP entirely and trade only off unemployment, since GDP proved unreliable in 2022",
+    "Wait for NBER's official recession call before updating any view of the economy, since it is the only trustworthy source",
+    "Any one macro headline in isolation can mislead — the discipline is classifying what kind of indicator it is (leading, coincident, lagging), checking it against the others, and expecting genuine disagreement at turning points rather than treating it as a data error",
+    "Macro indicators are too unreliable to be worth reading at all, given how contradictory 2022-2023 was"
+  ]}
+  answer={2}
+  explanation="This is the capstone's synthesis: the discipline isn't picking one 'correct' indicator and discarding the rest — GDP, unemployment, PMI, and CPI are all doing different jobs on different clocks, and reading them together (classifying each, expecting disagreement at turning points) is what this whole module built toward. Ignoring GDP or trading off one series alone throws away real information; waiting for NBER's call means acting on news that's often confirmed over a year late; and 'too unreliable to read' is the opposite of this capstone's point — the framework explained the disagreement rather than being defeated by it."
+/>
+
+## Try it
+
+Convene the Room on a ticker sensitive to manufacturing (an industrial name) right after checking the latest ISM PMI print. Ask the News Analyst how it's weighing that leading indicator against the latest jobs report in its simulated read. Log in your Decision Journal which indicator each agent leaned on most. Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+No single macro number tells the whole story — the skill is knowing which clock each indicator runs on and expecting them to disagree at turning points, not treating disagreement as noise to resolve.

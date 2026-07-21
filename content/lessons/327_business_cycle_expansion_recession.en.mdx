@@ -1,0 +1,72 @@
+---
+id: "327_business_cycle_expansion_recession"
+title: "The business cycle — expansion to recession"
+duration_min: 6
+level: 10
+module: 16
+difficulty: 4
+track: "economics_macro"
+code: "MACRO 5"
+topic: "business_cycle"
+prerequisites: ["326_leading_coincident_lagging_indicators", "063_sector_rotation"]
+tags: ["business-cycle", "recession", "sector-rotation", "macro"]
+sources: ["National Bureau of Economic Research — US Business Cycle Dating Committee"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+
+# The business cycle — expansion to recession
+
+The economy moves in cycles — expansion, peak, contraction, trough, repeat — and different sectors lead or lag at each stage, which is why "the market" never moves as one block through a full cycle. What officially counts as a recession in the US isn't the popular rule of thumb you've probably heard; it's a judgment call by a small committee looking at several indicators at once, and knowing the real definition is the difference between reading the cycle correctly and reading a myth.
+
+## Example
+
+Here's the popular rule versus the real one, tested against actual 2022 data. In the first half of 2022, US real GDP contracted for two consecutive quarters: **Q1 2022 at -1.6% annualized** and **Q2 2022 at -0.6% annualized** (BEA) — which satisfies the informal "two consecutive quarters of negative GDP growth" definition of a recession that gets repeated constantly in financial media. The National Bureau of Economic Research (NBER) — the body that actually dates US recessions — **did not declare a recession** for that period. Why: NBER's Business Cycle Dating Committee looks at a *basket* of indicators together — nonfarm payrolls, real personal income, industrial production, real consumer spending — not GDP alone, and in the first half of 2022 the labor market was still adding jobs robustly and consumer spending stayed positive. Two negative GDP quarters occurred without NBER ever calling it a recession.
+
+Contrast that with the actual NBER-dated COVID recession: **February 2020 to April 2020**, the shortest recession on record at two months, declared quickly because the collapse in employment, income, and spending was so severe and broad-based across every indicator NBER tracks — the opposite situation from 2022's narrow, GDP-only weakness.
+
+## The trap
+
+The trap is repeating "two consecutive quarters of negative GDP = recession" as if it's the official rule, then being confused when NBER doesn't confirm it — or worse, trading on that mistaken definition as if a recession call is imminent. The correct model: NBER's actual definition is "a significant decline in economic activity spread across the economy, lasting more than a few months," assessed across multiple indicators, not a single mechanical GDP threshold. The popular two-quarter rule is a decent rough proxy in many historical cases, but 2022 is the clean counter-example proving it isn't the rule NBER actually uses.
+
+## The steelman
+
+The strongest case for the two-quarter GDP rule despite 2022's counter-example: it's simple, transparent, calculable the moment GDP data lands, and doesn't depend on a committee's discretionary judgment that's only announced well after the fact (NBER often confirms a recession's start date many months, sometimes over a year, after it began). A rule you can compute yourself beats a black-box committee call for real-time decision-making. The falsifier: check whether the two-quarter rule and NBER's eventual call *agree* across a longer history of recessions — they usually do, which is exactly why the shortcut persists. 2022 is the standout exception precisely because the labor market decoupled from GDP so sharply; it's the case that proves you need the full basket, not proof the shortcut is worthless in general.
+
+<ChatWith agent="news_analyst" />
+
+## Quiz
+
+<Quiz
+  question="US real GDP contracted in both Q1 2022 (-1.6% annualized) and Q2 2022 (-0.6% annualized), satisfying the popular 'two consecutive quarters' recession rule — yet NBER never declared a recession for that period. What explains this?"
+  options={[
+    "The BEA's GDP figures for 2022 were later corrected to show positive growth in both quarters",
+    "NBER's Business Cycle Dating Committee assesses a basket of indicators together (payrolls, income, spending, production), and in H1 2022 those other indicators — especially strong job growth — stayed positive even as GDP alone contracted",
+    "NBER only issues recession calls during presidential election years",
+    "A recession requires three consecutive negative GDP quarters, not two, so 2022 simply fell one quarter short"
+  ]}
+  answer={1}
+  explanation="NBER explicitly does not use a mechanical GDP-only rule — it looks across payrolls, income, spending, and production together, and the labor market's continued strength through H1 2022 is exactly what kept NBER from calling a recession despite the negative GDP prints. The GDP figures were not revised to positive, there's no election-year rule governing NBER's calendar, and NBER doesn't apply a fixed 'three quarters' threshold either — its standard is deliberately not a single numeric rule."
+/>
+
+<Quiz
+  question="The COVID recession (Feb–April 2020) was the shortest on record, and NBER dated it relatively quickly. What distinguished it from H1 2022's negative GDP quarters, where no recession was ever called?"
+  options={[
+    "NBER dates recessions purely based on stock market drawdowns, and 2020's crash was larger",
+    "The COVID recession was declared only because Congress passed a law requiring it",
+    "There is no real distinction — NBER's calls are effectively random",
+    "Nonfarm payrolls, income, spending, and production all collapsed together, broadly and severely, in Feb–April 2020 — meeting NBER's 'significant decline spread across the economy' standard across every indicator at once, unlike 2022's narrow GDP-only weakness"
+  ]}
+  answer={3}
+  explanation="The COVID episode hit every indicator NBER tracks — employment, income, spending, production — simultaneously and severely, which is precisely the broad-based decline NBER's definition requires. 2022's weakness, by contrast, showed up narrowly in GDP while the labor market stayed strong. NBER's dating process has nothing to do with stock drawdowns as the primary criterion, no congressional mandate triggers a call, and the process is a documented, indicator-based judgment — not random."
+/>
+
+## Try it
+
+Open the Market Analyst chat and ask which sectors on your watchlist historically lead versus lag at a business-cycle peak (cyclicals like industrials/consumer discretionary versus defensives like utilities/staples). Remember: AMI's training output is a practice artifact, not investment advice.
+
+## Takeaway
+
+"Two negative GDP quarters" is a popular shortcut, not NBER's actual rule — the real definition weighs a basket of indicators together, and 2022 is the clean proof the shortcut can miss.
