@@ -136,8 +136,16 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
    `dispatch.sh state`; it may lag — detect real state from the tokens, never from the board.
 7. **Stall rule.** At a cap with no movement for the BINDINGS stall window, the Architect escalates
    to the human rather than blocking indefinitely.
-8. **Context.** An orchestrator cannot `/compact` an instance (agents can't run slash commands).
-   Continuity lives in files; a bloated instance is resumed or respawned fresh on the same lane.
+8. **Context (no human needed).** `/compact` cannot be automated — agents can't run slash commands,
+   no skill/hook/setting triggers compaction (`PreCompact` only observes or blocks one), and there is
+   no SDK trigger. It is also **not needed**: auto-compaction is **always on and runs in headless /
+   SDK / subagent contexts** (it clears old tool outputs, then summarizes, as an instance nears its
+   limit — no human, no command). Three tiers, all Architect-automatable: (1) auto-compaction handles
+   routine creep; (2) **session resume** (`resume: sessionId`) or respawn-fresh-on-the-same-lane
+   resets an instance's context while continuity lives in files; (3) heavy reads go to disposable
+   subagents (ultracode) so an instance's own context stays lean. The one failure mode — a single
+   tool output so large it refills context immediately after compacting — is avoided by keeping lanes
+   narrowly scoped. **No human is ever required to manage an instance's context.**
 
 ## 9. Done (per item)
 
