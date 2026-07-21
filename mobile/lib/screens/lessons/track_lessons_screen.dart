@@ -31,6 +31,9 @@ const _trackShortLabel = {
   'economics_macro': 'ECONOMICS',
   'quant_methods': 'QUANT',
   'ethics_integrity': 'ETHICS',
+  // CR059 Wave-1 — SHARIA/EVAL tracks (backend prefixes ISLAM/EVAL).
+  'islamic_finance': 'ISLAMIC FINANCE',
+  'decision_evaluation': 'EVALUATION',
 };
 
 class TrackLessonsScreen extends ConsumerWidget {
