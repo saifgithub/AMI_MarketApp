@@ -9,10 +9,10 @@ kind: content
 owns: content/{lessons,daily_challenges,glossary,ai_coach}/** (the corpus DATA + frontmatter)
 wip_cap: 2
 auditor: none               # gate is Architect/Saiful content review, not the Auditor
-live_handle: 002cab10-2814-4e3a-b891-bc73ab9327f0   # live: CR054-W1-ETHIC (economy/solo, $2 cap) — claude --resume
+live_handle: 04da07dd-95ec-4425-83cc-ce2f8ddb42f5   # live: CR054-W1-ASST (economy/solo, $2 cap) — claude --resume
 commit_tag: AT:noncoder.edu
 worktree: .claude/worktrees/noncoder.edu-<ITEM>
-active_lanes: []   # CR054-W1-ETHIC integrated 2026-07-22 (32eac8a); idle
+active_lanes: []   # CR054-W1-ASST integrated 2026-07-22 (ff4978c); idle
 ```
 
 **Does NOT code.** Maintains the education corpus (270 lessons, challenges, glossary). The *code*

@@ -13,4 +13,14 @@ One commit (contiguous codes). Content-review gate, not the Auditor. Self-check 
 test at 300 lessons. **Route all bond/option numbers through CR046 M09/M10 — never author arithmetic (P2).**
 
 ASSIGNED: noncoder.edu round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
+
+<!-- Accepted 2026-07-22 by architect: content review PASS. 20 lessons committed ff4978c (corpus
+270→300, verified green by MY exit code 22-pass, not the worker's word). Compliance sweep clean:
+ASST 1-20 contiguous, all L9, M13/M14/M15 exact, 3 capstones (309/315/322) last-in-module +
+capstone/synthesis tagged, CR042 answer variety, zero "the AI". 304 read in full — Ethics-grade
+quality; **P2 verified: bond math correct to the cent** ($922.05@5%YTM, $1085.84@3% recomputed by
+hand = exact). Validates the sonnet/standard authoring tier at Ethics quality. Two workers: authoring
+(ea9acb59, sonnet/ultra — died on the 120s-suite-timeout, work survived on disk) + finish (04da07dd,
+economy/$2 — committed clean, mechanically verified). noncoder.edu freed. -->
+
