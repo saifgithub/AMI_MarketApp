@@ -21,11 +21,12 @@ contribution), `sizing` (per-risk-tier caps + the Risk-Debator spread), `trade`
 downside + fundamentals unit conversions), `portfolio` (value, drawdown,
 weight, size→shares), and — opened for the CR054 BOK Wave-1 worked examples —
 `bond` (price/YTM/duration, M09), `option` (payoff/break-even, M10),
-`portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), and `returns`
+`portfolio_stats` (variance/correlation/beta/wᵀΣw, M11), `returns`
 (Sharpe/max-drawdown/CAGR, M12, hand-rolled stdlib — the wider family Sortino/
 Calmar/vol stays on the D1 `empyrical-reloaded` backlog, a dep that needs
-sign-off). The indicator family stays hand-rolled because our RSI is Cutler's,
-not Wilder's (Decision D1, library_survey.md).
+sign-off), and — opened for CR058 — `screening` (Sharia debt/liquidity/income
+ratios + purification, M13). The indicator family stays hand-rolled because
+our RSI is Cutler's, not Wilder's (Decision D1, library_survey.md).
 """
 
 from .bond import bond_price, bond_ytm, macaulay_duration, modified_duration
@@ -41,6 +42,14 @@ from .portfolio_stats import (
 )
 from .returns import cagr_pct, max_drawdown_pct, sharpe_ratio
 from .risk import DrawdownContribution, drawdown_contribution
+from .screening import (
+    ShariaScreenResult,
+    purification_amount,
+    sharia_debt_ratio,
+    sharia_impermissible_income_ratio,
+    sharia_liquidity_ratio,
+    sharia_screen,
+)
 from .sizing import (
     DEFAULT_RISK_TIER_CAPS,
     SINGLE_NAME_ABSOLUTE_CAP_PCT,
@@ -108,4 +117,11 @@ __all__ = [
     "cagr_pct",
     "max_drawdown_pct",
     "sharpe_ratio",
+    # sharia screening (M13)
+    "ShariaScreenResult",
+    "purification_amount",
+    "sharia_debt_ratio",
+    "sharia_impermissible_income_ratio",
+    "sharia_liquidity_ratio",
+    "sharia_screen",
 ]

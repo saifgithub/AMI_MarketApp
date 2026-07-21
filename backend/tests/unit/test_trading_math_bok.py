@@ -25,6 +25,11 @@ from app.trading_math import (
     option_intrinsic_value,
     option_payoff,
     portfolio_variance,
+    purification_amount,
+    sharia_debt_ratio,
+    sharia_impermissible_income_ratio,
+    sharia_liquidity_ratio,
+    sharia_screen,
     sharpe_ratio,
     variance,
 )
@@ -216,3 +221,92 @@ def test_sharpe_rejects_nonsense():
     assert sharpe_ratio([2.0], 0.0, 252) is None  # one observation
     assert sharpe_ratio([2.0, 2.0, 2.0], 0.0, 252) is None  # flat -> zero sd
     assert sharpe_ratio([1.0, 3.0], 0.0, 0) is None  # no periods
+
+
+# ── screening.sharia_* / purification_amount (M13) ───────────────────────────
+
+
+def test_sharia_debt_ratio_textbook_value():
+    assert sharia_debt_ratio(10e9, 100e9) == 10.0
+
+
+def test_sharia_liquidity_ratio_textbook_value():
+    assert sharia_liquidity_ratio(20e9, 100e9) == 20.0
+
+
+def test_sharia_impermissible_income_ratio_textbook_value():
+    assert sharia_impermissible_income_ratio(3, 100) == 3.0
+
+
+def test_sharia_ratios_reject_nonpositive_denominator():
+    assert sharia_debt_ratio(10e9, 0) is None
+    assert sharia_liquidity_ratio(20e9, -1) is None
+    assert sharia_impermissible_income_ratio(3, 0) is None
+
+
+def test_sharia_screen_passes_when_all_ratios_under_cap():
+    result = sharia_screen(
+        interest_bearing_debt=10e9,
+        cash_plus_interest_securities=20e9,
+        market_cap=100e9,
+        non_compliant_income=3,
+        total_revenue=100,
+    )
+    assert result is not None
+    assert result.debt_ratio_pct == 10.0
+    assert result.liquidity_ratio_pct == 20.0
+    assert result.income_ratio_pct == 3.0
+    assert result.debt_passes is True
+    assert result.liquidity_passes is True
+    assert result.income_passes is True
+    assert result.passes is True
+
+
+def test_sharia_screen_fails_when_one_ratio_over_cap():
+    # Debt 40B / 100B mkt cap = 40% > the 33% default cap.
+    result = sharia_screen(
+        interest_bearing_debt=40e9,
+        cash_plus_interest_securities=20e9,
+        market_cap=100e9,
+        non_compliant_income=3,
+        total_revenue=100,
+    )
+    assert result is not None
+    assert result.debt_ratio_pct == 40.0
+    assert result.debt_passes is False
+    assert result.liquidity_passes is True
+    assert result.income_passes is True
+    assert result.passes is False
+
+
+def test_sharia_screen_rejects_nonpositive_denominators():
+    assert (
+        sharia_screen(
+            interest_bearing_debt=10e9,
+            cash_plus_interest_securities=20e9,
+            market_cap=0,
+            non_compliant_income=3,
+            total_revenue=100,
+        )
+        is None
+    )
+    assert (
+        sharia_screen(
+            interest_bearing_debt=10e9,
+            cash_plus_interest_securities=20e9,
+            market_cap=100e9,
+            non_compliant_income=3,
+            total_revenue=0,
+        )
+        is None
+    )
+
+
+def test_purification_amount_textbook_value():
+    # 5B non-compliant / 100B total income * $200 dividend = $10.
+    assert purification_amount(5e9, 100e9, 200) == 10.0
+
+
+def test_purification_amount_rejects_nonpositive_total_income():
+    assert purification_amount(5e9, 0, 200) is None
+    assert purification_amount(5e9, -1, 200) is None
