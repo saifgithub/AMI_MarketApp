@@ -31,9 +31,10 @@ from this table. CR052.
 | CR048 | ASSIGNED r1 (seed) | coder.store | Play internal track + fastlane (first upload Saiful-gated) |
 | CR049 | ASSIGNED r1 (seed) | coder.web | website support + Concierge (keys/deploy Saiful-gated) |
 | CR050 | ASSIGNED r1 (seed) | coder.mobile | login UX (mobile half; Google-on Saiful config) |
-| CR054-W0b | UNASSIGNED (queued) | coder.mobile | new-track short labels — DEPENDS-ON CR054-W0a |
-| CR054-W0c | **ASSIGNED r1 · WORKER LIVE** | noncoder.edu | author-prompt v2 (content review gate, not Auditor) |
-| CR054-W0d | **ASSIGNED r1 · WORKER LIVE** | coder.math | CR046 bond/option/portfolio math entries + guard tests |
+| CR054-W0b | **ASSIGNED r1 · WORKER LIVE** | coder.mobile | new-track short labels (unblocked by W0a) |
+| ~~CR054-W0c~~ | **DONE ✓ (r1)** | noncoder.edu | author-prompt v2 accepted (Saiful); archived. Now the Wave-1 authoring standard |
+| CR054-W0d | **IN_AUDIT r1** | coder.math → auditor.core | CR046 bond/option/portfolio math — built, submitted; auditor verifying |
+| **CR054-W1-ETHIC** | **ASSIGNED r1 · WORKER LIVE** | noncoder.edu | **Wave 1 — 10 Ethics lessons (ETHIC 1-10, ids 293-302). Content-review gate** |
 | CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |
 | CR026 | UNASSIGNED (queued) | coder.api | sector enforcement — DEPENDS-ON DEF061 (safety_floor hot) |

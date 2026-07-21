@@ -8,10 +8,10 @@ kind: code
 owns: mobile/lib/** (screens, state, models, widgets, theme, i18n, services) + mobile/test/**
 wip_cap: 2
 auditor: auditor.core
-live_handle:
+live_handle: 1a9152a7-3b92-4da9-9648-de62a2b70da9   # CR054-W0b worker — claude --resume
 commit_tag: AT:coder.mobile
 worktree: .claude/worktrees/coder.mobile-<ITEM>
-active_lanes: []
+active_lanes: [CR054-W0b]
 ```
 
 **Internal serialization (single owner, no cross-agent collision):** `services/api/api_client.dart`
