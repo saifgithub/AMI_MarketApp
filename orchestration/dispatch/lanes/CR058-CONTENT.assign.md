@@ -41,7 +41,17 @@ is COMPUTED via CR046 screening.py, correct to the stated dp — a wrong halal n
 **Self-test (headless one-shot — corpus test ONLY):** `cd backend && uv run pytest tests/unit/test_lesson_corpus_integrity.py -q` green (~6s, corpus 324→334). NOT the full suite (P7).
 
 ASSIGNED: noncoder.edu round 2
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 2)
+
+<!-- Accepted 2026-07-22 by architect (round 2): content review PASS. Round-2 commit e3c4533 added the
+"methodology, not a Sharia ruling" + simulation frames to every lesson in natural varied voice (verified
+by reading 348/349/354 in full — all carry training-context + not-a-ruling + defer-to-scholar). Corpus
+22 green exit 0 (my run), 334 lessons; 349 P2 numbers (107.8/3.3/0.7) untouched by the frame pass;
+origin synced. 10 Islamic-finance lessons SHARIA 1-10 (347-356) DONE — L13/M25, capstone 356 tagged,
+codes contiguous, zero "the AI", zero positional refs, sources Tier-1/2 (AAOIFI/DJIM/Bursa SAC). P2
+computed via CR046 screening.py. Two workers: authoring 773ae787 (r1, sonnet/ultra), frame-fix
+b51dh8q9w… (r2, economy). noncoder.edu freed. NEXT: CR058-SUPPORT (glossary/Q&A/daily) then CR053. -->
+
 
 <!-- Round-1 content review (architect, 2026-07-22): SUBSTANCE PASS but BOUNCED for ONE
 non-negotiable gap. Round-1 commit 2b52d04: 10 lessons SHARIA 1-10 (347-356), corpus 324→334,
