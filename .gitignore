@@ -98,3 +98,6 @@ Apple_Store/
 
 # Local Claude tooling memory (sqlite) — host-side, not project state
 .deliveryos/
+
+# CR061 — ephemeral per-lane live-handle files (worker session ids)
+orchestration/dispatch/handles/

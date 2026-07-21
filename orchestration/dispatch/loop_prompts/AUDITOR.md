@@ -17,12 +17,19 @@ zero BLOCKER + zero MAJOR, doubt bounces).
 ## Headless one-shot mode (non-negotiable)
 
 You run as a single-shot `claude -p` session: **the session ENDS the moment you stop calling tools.**
-Run every command (the suite re-run, your adversarial probe, git) in the **foreground** — never
-background a command and wait for it (there is no "back"; this killed a builder mid-lane, CR057 /
-failure_patterns.md P7). For the long suite, redirect to a log and read it after it returns
-(`cmd > /tmp/audit-<item>.log 2>&1` then `tail`), never pipe straight through `| tail` (buffering
-hides progress / reads as 0 bytes — heritage MABP §8). **Do not stop until your `VERDICT` is written
-AND pushed** — a committed-but-unpushed verdict is not delivered.
+Run short commands (your adversarial probe, git, the fast corpus test) in the **foreground** — never
+background a short command and wait for it (there is no "back"; this killed a builder mid-lane, CR057
+/ failure_patterns.md P7).
+
+**The full unit suite is the one exception, and it is a trap (CR061).** It measures **~828s —
+LONGER than the 600s max Bash-tool timeout** — so it can NEVER complete in a foreground call; it is
+always auto-backgrounded, which kills you. Run it via the wrapper with **background+poll**: launch
+`sh orchestration/dispatch/run_full_suite.sh` with the Bash tool `run_in_background:true` (NO trailing
+`&`), then **poll its output file until the line `SUITE_EXIT=<code>` appears**, and read that code
+(never infer pass/fail from pytest's progress dots — buffering hides them, heritage MABP §8). Never
+run a blind probe *concurrently* with the full suite (the probe file would pollute the suite's corpus
+scan). **Do not stop until your `VERDICT` is written AND pushed** — a committed-but-unpushed verdict is
+not delivered.
 
 ## What the dispatch layer adds
 

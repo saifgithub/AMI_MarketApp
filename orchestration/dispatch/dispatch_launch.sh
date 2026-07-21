@@ -62,12 +62,13 @@ esac
 SID=$(uuidgen | tr '[:upper:]' '[:lower:]')
 PROMPT="AMI-TRADE · $INSTANCE · $LANE — ${BODY}${ULTRA_CLAUSE}"
 
-# Best-effort: record the live handle in the roster so the worker is interrogable. Non-fatal.
-ROSTER="$REPO/orchestration/dispatch/roster/$INSTANCE.md"
-if [ -f "$ROSTER" ] && grep -q '^[[:space:]]*live_handle:' "$ROSTER"; then
-  sed -i.bak "s|^\([[:space:]]*\)live_handle:.*|\1live_handle: $SID   # live: $LANE ($TIER/$FANOUT, \$$BUDGET cap) — claude --resume|" "$ROSTER" \
-    && rm -f "$ROSTER.bak" || echo "warn: roster live_handle not updated for $INSTANCE" >&2
-fi
+# Record the live handle in a PER-LANE file so the worker is interrogable (CR061). Writing the
+# shared roster/<instance>.md (old behaviour) collided under same-instance concurrency and left it
+# modified-uncommitted every launch; a disjoint per-lane handle file avoids both. Non-fatal.
+HANDLES="$REPO/orchestration/dispatch/handles"
+mkdir -p "$HANDLES" 2>/dev/null || true
+printf '%s\t%s\t%s/%s\t$%s cap\tclaude --resume %s\n' "$SID" "$INSTANCE" "$TIER" "$FANOUT" "$BUDGET" "$SID" \
+  > "$HANDLES/$LANE.handle" 2>/dev/null || echo "warn: handle file not written for $LANE" >&2
 
 echo "launch  $INSTANCE  lane=$LANE  tier=$TIER($MODEL/$EFFORT)  fanout=$FANOUT  budget=\$$BUDGET  session=$SID"
 echo "resume  claude --resume $SID"
