@@ -39,7 +39,11 @@ _OPTION_INDEX_CITATION = re.compile(r"\boptions?\s+\d", re.IGNORECASE)
 # parse_mdx silently discards it, so the parsed form shows no trace.
 _TOLERANCE_ATTR = re.compile(r"\btolerance=")
 
-EXPECTED_LESSON_COUNT = 270
+# A floor, not an exact pin (CR054-GUARD). Content waves append lessons without
+# touching backend/, so an exact count would turn red on every wave; a floor
+# still catches the silent-shrink failure this file exists for. Bump it when a
+# wave integrates — it only ever grows, never returns to an exact pin.
+LESSON_COUNT_FLOOR = 270
 
 
 def _lesson_paths() -> list[Path]:
@@ -58,8 +62,9 @@ def test_every_lesson_parses():
     curriculum, which is exactly the kind of quiet degradation we don't want.
     """
     paths = _lesson_paths()
-    assert len(paths) == EXPECTED_LESSON_COUNT, (
-        f"expected {EXPECTED_LESSON_COUNT} lesson files, found {len(paths)}"
+    assert len(paths) >= LESSON_COUNT_FLOOR, (
+        f"expected at least {LESSON_COUNT_FLOOR} lesson files, found "
+        f"{len(paths)} — lessons have silently disappeared from the corpus"
     )
     for path in paths:
         parse_mdx(path)  # raises on malformed frontmatter/body
@@ -302,13 +307,18 @@ def test_gates_agents_is_the_inverse_of_the_gateway_map(lessons):
 # ── CR054 Wave 0: BOK track wiring ──────────────────────────────────────
 #
 # The 4 new tracks (asset_classes / economics_macro / quant_methods /
-# ethics_integrity) hold zero lessons at Wave 0 — the contiguity + prefix-
-# matches-track assertions above therefore have nothing to check for them. This
-# section is the enforcement floor until Wave 1 fills the tracks: it asserts
-# each new track is declared in the `Track` enum AND wired into both maps with
-# the frozen CR044 prefix, that no prefix collides with any existing one, and
-# that the display/prefix maps are 1:1 keyed to the `Track` enum. Anything
-# thinner and a wave-1 author could ship an "ASST 1" badge that renders empty.
+# ethics_integrity) start empty and fill deliberately, wave by wave. This
+# section guards the wiring: each new track is declared in the `Track` enum
+# AND wired into both maps with the frozen CR044 prefix, no prefix collides
+# with any existing one, and the display/prefix maps are 1:1 keyed to the
+# `Track` enum. Anything thinner and a wave-1 author could ship an "ASST 1"
+# badge that renders empty. Population correctness is the CR044 guards' job
+# above (prefix-matches-track + contiguous 1..N).
+#
+# A Wave-0 pin (`test_cr054_new_tracks_are_empty_at_wave_0`) additionally
+# asserted the 4 tracks held zero lessons; it was scaffolding by design ("the
+# enforcement floor until Wave 1 fills the tracks") and was retired by
+# CR054-GUARD the moment Wave 1 began landing content.
 
 
 CR054_NEW_TRACKS = {
@@ -402,16 +412,75 @@ def test_track_enum_and_maps_cover_the_same_track_set():
     )
 
 
-def test_cr054_new_tracks_are_empty_at_wave_0(lessons):
-    """Wave 0 wires the tracks; Wave 1 fills them. If a lesson lands in a new
-    track before Wave 1's author pipeline is in place, the CR044 code
-    contiguity guarantee could break mid-authoring — fail loudly here so the
-    stray lesson is noticed at build time, not from a user report."""
-    stray = [
-        (l.meta.id, l.meta.track)
+# ── CR054-GUARD: capstone invariants ────────────────────────────────────
+#
+# Every CR054 module (M13–M26) ends with exactly one capstone — a synthesis
+# lesson per the authoring prompt's "Module capstone template (v2)". The
+# author's declaration is the `capstone` tag; these guards hold that tag to
+# the template's two structural promises: the capstone is its module's LAST
+# lesson, and it ends on a synthesis quiz (declared via the `synthesis` tag —
+# there is no per-quiz type field, so the tag is the machine-checkable form;
+# whether the questions genuinely span the module is the content-review
+# gate's judgement, not a regex's).
+
+
+# 071_how_to_verify_before_you_wire_money (EDGE 21, module 11) predates the
+# CR054 template — its "capstone" tag is informal M11-era usage: it sits
+# mid-module (M11 runs through lesson 267) and declares no synthesis quiz.
+# The authoring prompt is explicit that M1–M12 have no capstones and must not
+# be retrofitted, so it is exempt rather than held to rules written two
+# hundred lessons after it shipped.
+PRE_CR054_CAPSTONE_TAGS = {"071_how_to_verify_before_you_wire_money"}
+
+
+def _cr054_capstones(lessons):
+    return [
+        l
         for l in lessons
-        if l.meta.track in CR054_NEW_TRACKS
+        if "capstone" in l.meta.tags and l.meta.id not in PRE_CR054_CAPSTONE_TAGS
     ]
-    assert not stray, (
-        f"CR054 new tracks are Wave-0 empty; found lessons already in them: {stray}"
+
+
+def test_every_capstone_is_the_last_lesson_in_its_module(lessons):
+    """A capstone mid-module means either the capstone landed early or a
+    later lesson was appended after it — both break the module's arc (the
+    capstone synthesises everything before it, so nothing may follow it).
+    Uses the id-derived `number` as the order, same as the catalogue sort."""
+    last_by_module: dict[int, object] = {}
+    for l in lessons:
+        cur = last_by_module.get(l.meta.module)
+        if cur is None or l.meta.number > cur.meta.number:
+            last_by_module[l.meta.module] = l
+
+    offenders = []
+    for l in _cr054_capstones(lessons):
+        if l.meta.module <= 0:
+            offenders.append((l.meta.id, "no module: declared in frontmatter"))
+        elif last_by_module[l.meta.module].meta.id != l.meta.id:
+            offenders.append(
+                (
+                    l.meta.id,
+                    f"module {l.meta.module} ends with "
+                    f"{last_by_module[l.meta.module].meta.id}",
+                )
+            )
+    assert not offenders, (
+        f"capstones that are not their module's last lesson: {offenders}"
     )
+
+
+def test_every_capstone_ends_on_a_synthesis_quiz(lessons):
+    """The capstone's final quiz must test synthesis, not recall (authoring
+    prompt: capstone quizzes "need at least two of the module's lessons to
+    answer"). The authored declaration of that contract is the `synthesis`
+    tag; a capstone without it — or with no quiz at all — either skipped the
+    synthesis quiz or forgot to declare it. Both need a deliberate look."""
+    offenders = []
+    for l in _cr054_capstones(lessons):
+        if not l.quizzes:
+            offenders.append((l.meta.id, "capstone has no quiz at all"))
+        elif "synthesis" not in l.meta.tags:
+            offenders.append(
+                (l.meta.id, 'tags missing "synthesis" — declare the synthesis quiz')
+            )
+    assert not offenders, f"capstones without a declared synthesis quiz: {offenders}"
