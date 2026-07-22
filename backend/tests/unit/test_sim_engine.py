@@ -134,7 +134,8 @@ def test_halal_rejects_non_halal_ticker():
         mandate=mandate,
     )
     assert not result.accepted
-    assert any("Sharia" in v or "halal" in v for v in result.compliance.violations)
+    # DEF084: rejection copy names the curated demonstration universe, not a screen.
+    assert any("demonstration universe" in v for v in result.compliance.violations)
 
 
 def test_single_name_cap_rejects_too_large_buy():

@@ -68,10 +68,16 @@ from app.services.market_data import (
 )
 
 
-# ── Mock price engine ──────────────────────────────────────────────────────
-
-
-DEFAULT_HALAL_UNIVERSE = {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
+# ── Halal-flag demonstration universe (NOT a Sharia screen — DEF084) ────────
+#
+# The `halal` mandate flag is enforced by membership in this fixed, curated set:
+# it is a demonstration universe, explicitly NOT a computed Sharia compliance
+# screen. No ticker here has been ratio-screened. A real screen
+# (`app.trading_math.screening.sharia_screen`) exists but is wired to nothing on
+# this enforcement path. Any copy a client renders off the halal flag must call
+# this a demonstration universe and must never claim a screen ran.
+# See docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/.
+DEFAULT_HALAL_DEMO_UNIVERSE = {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
 
 
 # ── Sim trade record (in-Python dataclass that mirrors SimTradeRow) ────────
@@ -454,7 +460,7 @@ class SimEngine:
             portfolio_value=self.total_value(user_id),
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
-            halal_universe=halal_universe or DEFAULT_HALAL_UNIVERSE,
+            halal_universe=halal_universe or DEFAULT_HALAL_DEMO_UNIVERSE,
             locale_allowed_universe=locale_allowed_universe,
         )
 
@@ -615,7 +621,7 @@ class SimEngine:
             portfolio_value=self.total_value(user_id),
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
-            halal_universe=halal_universe or DEFAULT_HALAL_UNIVERSE,
+            halal_universe=halal_universe or DEFAULT_HALAL_DEMO_UNIVERSE,
             locale_allowed_universe=locale_allowed_universe,
         )
 

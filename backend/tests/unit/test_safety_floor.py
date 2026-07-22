@@ -148,7 +148,9 @@ def test_compliance_halal_with_excluded_ticker(
         halal_universe={"AAPL", "MSFT"},  # NVDA not in halal universe
     )
     assert not result.passed
-    assert "Sharia" in result.violations[0]
+    # DEF084: copy names the curated demonstration universe, not a Sharia screen.
+    assert "demonstration universe" in result.violations[0]
+    assert "not a Sharia screen" in result.violations[0]
     assert result.blocked_by == "compliance"
 
 
