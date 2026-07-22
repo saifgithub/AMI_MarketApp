@@ -90,9 +90,17 @@ rsync -az --delete \
   --exclude='.idea' \
   --exclude='.vscode' \
   --exclude='website/' \
+  --exclude='audit/' \
+  --exclude='reports/' \
   ./ \
   melehost:~/ami_trade/
 ```
+
+**`audit/` and `reports/` MUST be excluded (DEF081).** They are **melehost-generated
+runtime data not present in the Mac source** — `reports/` is the CR051 daily-usage
+analytics output, `audit/handshake/runs/*` are audit run histories. Without these two
+excludes, `--delete` wipes them off the host (134 files in the AT:R64 promote). They are
+not backend runtime; the container never reads them. Never let `--delete` destroy them.
 
 **`.env` MUST be excluded from rsync.** rsync has no default dotfile
 exclusion. Without `--exclude='.env'`, the rsync would overwrite the
