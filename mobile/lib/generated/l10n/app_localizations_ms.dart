@@ -132,6 +132,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get floorLockedGoToLessons => 'KE PELAJARAN';
 
   @override
+  String get floorLockedTapHint => 'Tap a lesson to start';
+
+  @override
   String floorLockedProgress(int completed, int total) {
     return '$completed / $total gateway lessons passed';
   }
@@ -472,6 +475,9 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get lessonReaderLoading => 'Memuatkan…';
+
+  @override
+  String get lessonReaderPrerequisites => 'PREREQUISITES';
 
   @override
   String get lessonReaderQuizOnlyBadge => 'KUIZ SAHAJA';

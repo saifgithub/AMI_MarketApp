@@ -131,6 +131,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get floorLockedGoToLessons => 'انتقل إلى الدروس';
 
   @override
+  String get floorLockedTapHint => 'Tap a lesson to start';
+
+  @override
   String floorLockedProgress(int completed, int total) {
     return '$completed / $total gateway lessons passed';
   }
@@ -471,6 +474,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lessonReaderLoading => 'جاري التحميل...';
+
+  @override
+  String get lessonReaderPrerequisites => 'PREREQUISITES';
 
   @override
   String get lessonReaderQuizOnlyBadge => 'اختبار فقط';

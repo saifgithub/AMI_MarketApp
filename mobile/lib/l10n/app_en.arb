@@ -87,6 +87,7 @@
         "placeholders": {"count": {"type": "int"}}
     },
     "floorLockedGoToLessons": "GO TO LESSONS",
+    "floorLockedTapHint": "Tap a lesson to start",
     "floorLockedProgress": "{completed} / {total} gateway lessons passed",
     "@floorLockedProgress": {
         "description": "Earn-path progress on the locked-agent sheet; tapping opens the next unfinished gateway lesson's track.",
@@ -335,6 +336,7 @@
         "placeholders": {"min": {"type": "int"}}
     },
     "lessonReaderLoading": "Loading…",
+    "lessonReaderPrerequisites": "PREREQUISITES",
     "lessonReaderQuizOnlyBadge": "QUIZ ONLY",
     "lessonReaderQuizOnlyBannerOne": "Skipping straight to the 1 quiz. Pass it and the lesson still counts toward agent unlocks. Wrong answers will show the explanation — that's your teaching surface.",
     "lessonReaderQuizOnlyBannerMany": "Skipping straight to the {count} quizzes. Pass them all and the lesson still counts toward agent unlocks. Wrong answers will show the explanation.",

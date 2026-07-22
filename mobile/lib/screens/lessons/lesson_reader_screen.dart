@@ -108,6 +108,7 @@ class _LessonReaderScreenState extends ConsumerState<LessonReaderScreen> {
       padding: const EdgeInsets.all(AmiSpacing.m),
       children: [
         _LessonMetaBar(meta: lesson.meta),
+        _PrerequisitesRow(prerequisites: lesson.meta.prerequisites),
         if (widget.quizOnly) ...[
           const SizedBox(height: AmiSpacing.m),
           _QuizOnlyBanner(quizCount: visibleBlocks.length),
@@ -520,12 +521,13 @@ class _MarkdownView extends StatelessWidget {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: widgets);
   }
 
-  /// Tokenise **bold**, *italic*, `code`, and `{{term:id}}` inline.
-  /// Term tokens render as a tappable inline chip via WidgetSpan.
+  /// Tokenise **bold**, *italic*, `code`, `{{term:id}}` and `{{lesson:id}}`
+  /// inline. Term tokens render as a tappable inline chip via WidgetSpan;
+  /// lesson tokens (CR053) do the same, deep-linking to that lesson's reader.
   Widget _inline(String src, TextStyle base) {
     final spans = <InlineSpan>[];
     final pattern = RegExp(
-      r'(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\{\{term:[a-zA-Z0-9_]+\}\})',
+      r'(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\{\{term:[a-zA-Z0-9_]+\}\}|\{\{lesson:[a-zA-Z0-9_]+\}\})',
     );
     int cursor = 0;
     for (final m in pattern.allMatches(src)) {
@@ -538,6 +540,12 @@ class _MarkdownView extends StatelessWidget {
         spans.add(WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           child: _InlineTermChip(termId: id, baseStyle: base),
+        ));
+      } else if (tok.startsWith('{{lesson:')) {
+        final id = tok.substring(9, tok.length - 2);
+        spans.add(WidgetSpan(
+          alignment: PlaceholderAlignment.middle,
+          child: _InlineLessonChip(lessonId: id, baseStyle: base),
         ));
       } else if (tok.startsWith('**')) {
         spans.add(TextSpan(
@@ -598,6 +606,134 @@ class _InlineTermChip extends StatelessWidget {
             color: AmiColors.hexBlue,
             fontWeight: FontWeight.w600,
           ),
+        ),
+      ),
+    );
+  }
+}
+
+
+/// CR053 — inline chip for a `{{lesson:ID}}` token. Label is the target
+/// lesson's CR044 code (matches the tile/meta-bar badge); tap deep-links into
+/// that lesson's reader. Distinguished from `_InlineTermChip` by color (cyan,
+/// not blue) since it points at a lesson, not a glossary term.
+/// Degrades loudly (CR040): an id absent from the catalogue renders as plain
+/// text, never a dead tap.
+class _InlineLessonChip extends ConsumerWidget {
+  const _InlineLessonChip({required this.lessonId, required this.baseStyle});
+  final String lessonId;
+  final TextStyle baseStyle;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final catalogue = ref.watch(lessonsNotifierProvider).catalogue;
+    final meta = _findLessonMetaById(catalogue, lessonId);
+    if (meta == null) {
+      return Text(lessonId, style: baseStyle);
+    }
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LessonReaderScreen(lessonId: meta.id),
+      )),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+        decoration: const BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: AmiColors.hexCyan, width: 1),
+          ),
+        ),
+        child: Text(
+          meta.codeLabel,
+          style: baseStyle.copyWith(
+            color: AmiColors.hexCyan,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Flat scan of the catalogue's tracks for a lesson id. Small enough
+/// (hundreds of lessons) that a lookup map isn't worth the extra state.
+LessonMeta? _findLessonMetaById(LessonCatalogue? catalogue, String id) {
+  if (catalogue == null) return null;
+  for (final track in catalogue.tracks) {
+    for (final m in track.lessons) {
+      if (m.id == id) return m;
+    }
+  }
+  return null;
+}
+
+
+/// CR053 — the lesson's `prerequisites` (already parsed into `LessonMeta`,
+/// never surfaced before). Renders nothing when the list is empty. Each
+/// prereq is a tappable chip (code + title) that deep-links into that
+/// lesson's reader; an id absent from the catalogue degrades to plain text
+/// (CR040), never a dead tap.
+class _PrerequisitesRow extends ConsumerWidget {
+  const _PrerequisitesRow({required this.prerequisites});
+  final List<String> prerequisites;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (prerequisites.isEmpty) return const SizedBox.shrink();
+    final catalogue = ref.watch(lessonsNotifierProvider).catalogue;
+    final l = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: AmiSpacing.s),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l.lessonReaderPrerequisites,
+            style: AmiTypography.labelMono
+                .copyWith(color: AmiColors.textLow, fontSize: 11),
+          ),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final id in prerequisites)
+                _PrerequisiteChip(
+                  lessonId: id,
+                  meta: _findLessonMetaById(catalogue, id),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PrerequisiteChip extends StatelessWidget {
+  const _PrerequisiteChip({required this.lessonId, required this.meta});
+  final String lessonId;
+  final LessonMeta? meta;
+
+  @override
+  Widget build(BuildContext context) {
+    if (meta == null) {
+      return Text(lessonId, style: AmiTypography.caption);
+    }
+    final m = meta!;
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LessonReaderScreen(lessonId: m.id),
+      )),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AmiColors.slate800,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: AmiColors.hexCyan),
+        ),
+        child: Text(
+          '${m.codeLabel} · ${m.title}',
+          style: AmiTypography.caption.copyWith(color: AmiColors.hexCyan),
         ),
       ),
     );

@@ -328,6 +328,12 @@ abstract class AppLocalizations {
   /// **'GO TO LESSONS'**
   String get floorLockedGoToLessons;
 
+  /// No description provided for @floorLockedTapHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a lesson to start'**
+  String get floorLockedTapHint;
+
   /// Earn-path progress on the locked-agent sheet; tapping opens the next unfinished gateway lesson's track.
   ///
   /// In en, this message translates to:
@@ -939,6 +945,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading…'**
   String get lessonReaderLoading;
+
+  /// No description provided for @lessonReaderPrerequisites.
+  ///
+  /// In en, this message translates to:
+  /// **'PREREQUISITES'**
+  String get lessonReaderPrerequisites;
 
   /// No description provided for @lessonReaderQuizOnlyBadge.
   ///

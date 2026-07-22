@@ -14,8 +14,8 @@ import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/screens/floor/daily_challenge_card.dart';
 import 'package:ami_trade/screens/league/league_card.dart';
+import 'package:ami_trade/screens/lessons/lesson_reader_screen.dart';
 import 'package:ami_trade/screens/lessons/lessons_screen.dart';
-import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/state/daily_challenge_providers.dart';
 import 'package:ami_trade/state/league_providers.dart';
@@ -197,30 +197,43 @@ class _FloorScreenState
                   l.floorLockedEarnByLessons(requiredLessons.length),
                   style: AmiTypography.body,
                 ),
+                const SizedBox(height: 2),
+                // CR053 — each row used to just name the lesson and do nothing
+                // on tap (§4.2 #1, the single biggest friction point here).
+                Text(l.floorLockedTapHint, style: AmiTypography.caption),
                 const SizedBox(height: AmiSpacing.s),
                 for (final lesson in requiredLessons)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(
-                          lesson.passed ? Icons.check_circle : Icons.school,
-                          size: 14,
-                          color: lesson.passed
-                              ? AmiColors.hexGreen
-                              : AmiColors.textLow,
-                        ),
-                        const SizedBox(width: 6),
-                        // CR044 — lead with the code so the user can actually go
-                        // find it, and so this reads the same way AMI says it.
-                        Text(
-                          lesson.code,
-                          style: AmiTypography.labelMono.copyWith(
-                              fontSize: 11, color: AmiColors.hexCyan),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(child: Text(lesson.title, style: AmiTypography.body)),
-                      ],
+                  InkWell(
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).push(MaterialPageRoute<void>(
+                        builder: (_) =>
+                            LessonReaderScreen(lessonId: lesson.lessonId),
+                      ));
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            lesson.passed ? Icons.check_circle : Icons.school,
+                            size: 14,
+                            color: lesson.passed
+                                ? AmiColors.hexGreen
+                                : AmiColors.textLow,
+                          ),
+                          const SizedBox(width: 6),
+                          // CR044 — lead with the code so the user can actually go
+                          // find it, and so this reads the same way AMI says it.
+                          Text(
+                            lesson.code,
+                            style: AmiTypography.labelMono.copyWith(
+                                fontSize: 11, color: AmiColors.hexCyan),
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(child: Text(lesson.title, style: AmiTypography.body)),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -242,8 +255,8 @@ class _FloorScreenState
                 ),
               ),
               // B4: the dead "UPGRADE TO SKIP — coming soon" button is gone.
-              // In its place, real earn-path progress that jumps to the next
-              // unfinished gateway lesson's track.
+              // In its place, real earn-path progress that jumps straight
+              // into the next unfinished gateway lesson's reader (CR053).
               if (requiredLessons.isNotEmpty) ...[
                 const SizedBox(height: AmiSpacing.s),
                 Builder(builder: (_) {
@@ -260,10 +273,15 @@ class _FloorScreenState
                         side: const BorderSide(color: AmiColors.hexBlue),
                       ),
                       icon: const Icon(Icons.trending_up, size: 16),
+                      // CR053 §4.2 #2 — deep-link straight to the next
+                      // unfinished gateway lesson (already computed above via
+                      // firstWhere) instead of the track list the user then
+                      // had to search.
                       onPressed: () {
                         Navigator.of(context).pop();
                         Navigator.of(context).push(MaterialPageRoute<void>(
-                          builder: (_) => TrackLessonsScreen(trackId: next.track),
+                          builder: (_) =>
+                              LessonReaderScreen(lessonId: next.lessonId),
                         ));
                       },
                       label: Text(
