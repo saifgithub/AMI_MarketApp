@@ -596,7 +596,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your PM refuses trades that would push the portfolio past this.';
 
   @override
-  String get settingsComplianceHalal => 'Halal screen';
+  String get settingsComplianceHalal => 'Curated demonstration universe';
+
+  @override
+  String get settingsComplianceHalalSubtitle =>
+      'A fixed 7-ticker list, not a Sharia screen';
 
   @override
   String get settingsComplianceEsgLite => 'ESG-lite';

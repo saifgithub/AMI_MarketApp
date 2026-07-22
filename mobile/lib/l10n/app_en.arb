@@ -392,7 +392,14 @@
     "settingsRiskLabel5": "Highest risk tolerance. Concentrated bets allowed.",
     "settingsMaxDrawdown": "Max drawdown",
     "settingsMaxDrawdownExplain": "Your PM refuses trades that would push the portfolio past this.",
-    "settingsComplianceHalal": "Halal screen",
+    "settingsComplianceHalal": "Curated demonstration universe",
+    "@settingsComplianceHalal": {
+        "description": "DEF084: restricts trading to a fixed 7-ticker curated demonstration universe. Explicitly NOT a Sharia screen — no debt, liquidity, or income ratio is computed. OBSERVANCE-SENSITIVE: do not invent a religious term when translating; keep the honest, non-claiming wording. Saiful arranges translation externally."
+    },
+    "settingsComplianceHalalSubtitle": "A fixed 7-ticker list, not a Sharia screen",
+    "@settingsComplianceHalalSubtitle": {
+        "description": "DEF084: subtitle shown under the toggle label so the honest disclaimer is visible without tapping through. Must not claim a computed screen ran. OBSERVANCE-SENSITIVE — translator note applies, see @settingsComplianceHalal."
+    },
     "settingsComplianceEsgLite": "ESG-lite",
     "settingsComplianceTAG": "No tobacco / alcohol / gambling",
     "settingsComplianceFossil": "No fossil fuels",

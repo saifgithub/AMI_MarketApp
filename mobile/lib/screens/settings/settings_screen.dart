@@ -346,14 +346,20 @@ class _DrawdownPicker extends StatelessWidget {
 /// tapping the label in _ComplianceToggles (separate from flipping the
 /// switch). User-filed bug: people wanted to know what "Halal screen"
 /// actually means before turning it on.
+///
+/// DEF084: this flag is enforced by membership in a fixed 7-ticker curated
+/// demonstration universe (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) —
+/// not a computed Sharia screen. No debt, liquidity, or income ratio is
+/// evaluated. Copy here must not claim otherwise.
 const Map<String, _ComplianceExplanation> _complianceExplanations = {
   'halal': _ComplianceExplanation(
-    title: 'Halal screen',
-    body: 'Filters out tickers that fail standard Shariah screens: '
-        'conventional financials (interest-based banking, insurance), '
-        'alcohol, pork, tobacco, gambling, adult entertainment, and '
-        'weapons. Also flags companies whose debt-to-equity ratio '
-        'crosses common AAOIFI thresholds.',
+    title: 'Curated demonstration universe',
+    body: 'Restricts trading to a fixed set of 7 large-cap US tickers '
+        '(AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). This is a curated '
+        'demonstration universe, not a Sharia screen — no debt-to-equity, '
+        'liquidity, or impermissible-income ratio is computed. Real Sharia '
+        'screens vary by standard (AAOIFI, DJIM, S&P, MSCI, FTSE), so the '
+        'same stock can pass one and fail another.',
   ),
   'esgLite': _ComplianceExplanation(
     title: 'ESG-lite',
@@ -407,7 +413,8 @@ class _ComplianceToggles extends StatelessWidget {
     return Column(
       children: [
         _row(context, 'halal', l.settingsComplianceHalal, value.halal,
-            (v) => onChanged(value.copyWith(halal: v))),
+            (v) => onChanged(value.copyWith(halal: v)),
+            subtitle: l.settingsComplianceHalalSubtitle),
         _row(context, 'esgLite', l.settingsComplianceEsgLite, value.esgLite,
             (v) => onChanged(value.copyWith(esgLite: v))),
         _row(context, 'tag', l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
@@ -423,7 +430,7 @@ class _ComplianceToggles extends StatelessWidget {
   }
 
   Widget _row(BuildContext context, String key, String label, bool v,
-      ValueChanged<bool> onChanged) {
+      ValueChanged<bool> onChanged, {String? subtitle}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
@@ -434,15 +441,28 @@ class _ComplianceToggles extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Flexible(child: Text(label, style: AmiTypography.body)),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.info_outline,
-                      size: 14,
-                      color: AmiColors.textLow,
+                    Row(
+                      children: [
+                        Flexible(child: Text(label, style: AmiTypography.body)),
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.info_outline,
+                          size: 14,
+                          color: AmiColors.textLow,
+                        ),
+                      ],
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: AmiTypography.caption
+                            .copyWith(color: AmiColors.textLow),
+                      ),
+                    ],
                   ],
                 ),
               ),

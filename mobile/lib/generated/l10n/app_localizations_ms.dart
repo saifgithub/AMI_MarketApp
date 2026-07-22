@@ -600,6 +600,10 @@ class AppLocalizationsMs extends AppLocalizations {
   String get settingsComplianceHalal => 'Saringan Halal';
 
   @override
+  String get settingsComplianceHalalSubtitle =>
+      'Senarai tetap 7 saham, bukan saringan Syariah';
+
+  @override
   String get settingsComplianceEsgLite => 'ESG-lite';
 
   @override

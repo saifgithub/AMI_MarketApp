@@ -87,6 +87,13 @@
     "settingsMaxDrawdown": "Drawdown maksimum",
     "settingsMaxDrawdownExplain": "PM anda menolak dagangan yang akan menolak PORTFOLIO melebihi had ini.",
     "settingsComplianceHalal": "Saringan Halal",
+    "@settingsComplianceHalal": {
+        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): EN source changed from 'Halal screen' to 'Curated demonstration universe' — the flag restricts trading to a fixed 7-ticker allowlist and is explicitly NOT a Sharia screen (no ratio is computed). The Malay value above is the pre-DEF084 placeholder and has NOT been updated to match — do not invent religious terminology here. A qualified translator/SME must supply the corrected wording; Saiful arranges translation externally."
+    },
+    "settingsComplianceHalalSubtitle": "Senarai tetap 7 saham, bukan saringan Syariah",
+    "@settingsComplianceHalalSubtitle": {
+        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): placeholder only, not reviewed by a qualified translator/SME. See @settingsComplianceHalal."
+    },
     "settingsComplianceTAG": "Tiada tembakau / alkohol / perjudian",
     "settingsComplianceFossil": "Tiada bahan api fosil",
     "settingsProfilePlan": "Pelan",

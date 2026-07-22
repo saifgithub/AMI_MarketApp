@@ -1156,11 +1156,17 @@ abstract class AppLocalizations {
   /// **'Your PM refuses trades that would push the portfolio past this.'**
   String get settingsMaxDrawdownExplain;
 
-  /// No description provided for @settingsComplianceHalal.
+  /// DEF084: restricts trading to a fixed 7-ticker curated demonstration universe. Explicitly NOT a Sharia screen — no debt, liquidity, or income ratio is computed. OBSERVANCE-SENSITIVE: do not invent a religious term when translating; keep the honest, non-claiming wording. Saiful arranges translation externally.
   ///
   /// In en, this message translates to:
-  /// **'Halal screen'**
+  /// **'Curated demonstration universe'**
   String get settingsComplianceHalal;
+
+  /// DEF084: subtitle shown under the toggle label so the honest disclaimer is visible without tapping through. Must not claim a computed screen ran. OBSERVANCE-SENSITIVE — translator note applies, see @settingsComplianceHalal.
+  ///
+  /// In en, this message translates to:
+  /// **'A fixed 7-ticker list, not a Sharia screen'**
+  String get settingsComplianceHalalSubtitle;
 
   /// No description provided for @settingsComplianceEsgLite.
   ///

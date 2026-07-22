@@ -599,6 +599,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsComplianceHalal => 'فلتر الحلال';
 
   @override
+  String get settingsComplianceHalalSubtitle =>
+      'قائمة ثابتة من 7 أسهم، وليست فحصًا شرعيًا';
+
+  @override
   String get settingsComplianceEsgLite => 'ESG-lite';
 
   @override

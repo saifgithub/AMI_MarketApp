@@ -125,6 +125,13 @@
     "settingsMaxDrawdown": "أقصى تراجع",
     "settingsMaxDrawdownExplain": "يرفض مدير المحفظة الصفقات التي قد تدفع PORTFOLIO لتجاوز هذا الحد.",
     "settingsComplianceHalal": "فلتر الحلال",
+    "@settingsComplianceHalal": {
+        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): EN source changed from 'Halal screen' to 'Curated demonstration universe' — the flag restricts trading to a fixed 7-ticker allowlist and is explicitly NOT a Sharia screen (no ratio is computed). The Arabic value above is the pre-DEF084 placeholder and has NOT been updated to match — do not invent religious terminology here. A qualified translator/SME must supply the corrected wording; Saiful arranges translation externally."
+    },
+    "settingsComplianceHalalSubtitle": "قائمة ثابتة من 7 أسهم، وليست فحصًا شرعيًا",
+    "@settingsComplianceHalalSubtitle": {
+        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): placeholder only, not reviewed by a qualified translator/SME. See @settingsComplianceHalal."
+    },
     "settingsComplianceTAG": "بدون تبغ / كحول / قمار",
     "settingsComplianceFossil": "بدون وقود أحفوري",
     "settingsComplianceLongOnly": "مراكز شراء فقط",
