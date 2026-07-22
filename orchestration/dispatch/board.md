@@ -25,6 +25,10 @@ from this table. CR052.
 
 | Item | State | Instance | Notes |
 |---|---|---|---|
+| **DEF084-BE** | **ASSIGNED r1 — TOP** | coder.api | **halal flag is a 7-ticker allowlist, not a screen — serving now.** Option 2 (Saiful, 07-22): relabel as a curated demonstration universe + guard that every mandate flag is enforced by the mechanism its copy describes. 4th degrade-loudly occurrence |
+| **DEF084-MOBILE** | ASSIGNED r1 | coder.mobile | Settings toggle says "Halal screen" — relabel + subtitle, 3 locales. **DEPENDS-ON DEF084-BE** (mirror its wording) |
+| **DEF084-CONTENT** | ASSIGNED r1 | noncoder.edu | lessons `355`/`351` claim a two-stage screen + a reachable `purification_amount`. **DEPENDS-ON DEF084-BE** (spec: do not correct 355 first). Religious substance EXCLUDED — Saiful/SME only |
+| **DEF083** | ASSIGNED r1 | noncoder.edu | 11 quiz explanations name the wrong option (incl. `276`/`277`, the don't-over-trust-AMI pair). Guard ships WITH the fix — DEF079's regex only matches the literal word "option"; mirror into `shuffle_quiz_answers.py` |
 | ~~CR054-W0a~~ | **DONE ✓ (r1)** | coder.api → auditor.core | **Integrated. 4 tracks wired, audited COMPLETE (72a9403), archived → history/lanes. Unblocks W0b. Awaiting Saiful acceptance** |
 | DEF062 | ASSIGNED r1 (idle) | coder.api | validate mandate PATCH — head of safety chain; no worker yet |
 | CR038 | ASSIGNED r1 (seed) | coder.room | remove macro/Fed scaffolding at source |
