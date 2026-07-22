@@ -1,6 +1,6 @@
 # DEF076 — Google Sign-In fails on Android with DEVELOPER_ERROR (code 10)
 
-**Source:** `bug:56d6d6cb` · **Reporter:** Vector Lynx (`e5777149`, floor_pass, Xiaomi 2412DPC0AG, Android 16, `0.1.0+43`) · **Filed:** 2026-07-21 (AT:R64) · **Status:** open — **investigated AT:R64 2026-07-22 at Saiful's request** (*"investigate why the android google oauth is not working"*); every app-side and backend-side cause is eliminated and the fault is isolated to two fields on the GCP Android OAuth client — see the **Investigation** section below. Remaining fix is console-side (Saiful's domain); **no code change and no rebuild required**.
+**Source:** `bug:56d6d6cb` · **Reporter:** Vector Lynx (`e5777149`, floor_pass, Xiaomi 2412DPC0AG, Android 16, `0.1.0+43`) · **Filed:** 2026-07-21 (AT:R64) · **Status:** ✅ **RESOLVED 2026-07-22 (AT:R64)** — root cause was the **Play App Signing certificate's SHA-1 missing from any Android OAuth client**. Fixed console-side by registering a third Android client (`153141744056-pvhabf9u…`, project `ami-trade-497304`) carrying that SHA-1 against package `ai.agenticmarketintel.ami_trade`. **Confirmed by a Play-signed `0.1.0+44` install completing Google Sign-In** — see *Confirmation* below. No code change, no rebuild.
 
 ## Symptom
 
@@ -140,14 +140,66 @@ every external tester. This matches the reporter (`Vector Lynx`, Play internal, 
 (`ami_trade`, upload SHA-1). The other therefore holds something that is *not* the App Signing cert —
 most likely the local **debug keystore** SHA-1. That is the client to repoint.
 
-### Verification tripwire
+### Verification tripwire — the counter ALONE is not sufficient
 
-The counter is now at **1** (Saiful's USB test). A Play-installed tester signing in successfully takes
-it to **2** — unambiguous, since no other path increments it:
+The `/v1/auth/google` counter proves *a* Google sign-in happened, **not which build did it**. All requests
+egress from the tunnel container (`172.18.0.3`), so the access log carries no install-source signal. The
+counter reaching **2** on 2026-07-22 was **not** a confirmation — `users.last_app_version` showed
+`0.1.0+46`, i.e. the **USB/upload-key** build again (Play cannot serve +46; the Play AAB is still +45 and
+unuploaded, so Play has at most **+44**). Same device, same known-good path, no new information.
+
+Always pair the counter with the **app version**:
 
 ```bash
-ssh melehost "docker logs -f ami_api_alpha 2>&1 | grep -i auth/google"
+ssh melehost "docker exec ami_postgres psql -U postgres -d ami_trade -c \"select left(id::text,8), (google_id is not null) as has_google, device_model, last_app_version, claimed_at from users where updated_at > now() - interval '1 hour' order by updated_at desc;\""
 ```
+
+**Confirmation requires `has_google = t` AND a Play-signed `last_app_version`** (`0.1.0+44` or lower).
+A `+45`/`+46` row proves only that the upload key works, which was never in doubt.
+
+Corroborating signal already in the data: the same Samsung SM-A176B carries a **`+44` (Play-signed) install
+that has never linked Google**, next to the `+46` USB install that just did.
+
+## CONFIRMATION — fixed, verified 2026-07-22 09:02:36 UTC
+
+Registering Android client #3 with the **App signing key certificate** SHA-1 resolved it. Proof came from
+`user_devices` (per-**install** rows) plus the adoption ledger — *not* from `users.last_app_version`, which
+is unreliable for this purpose (see the tripwire warning above).
+
+| time (UTC) | event | source |
+|---|---|---|
+| 08:27 | `+46` APK built on the Mac (`install_android.sh`) | file mtime |
+| 08:28:45 | install `2d846db4` (**+46**, upload-key sideload) last seen | `user_devices` |
+| 08:29:45 | Google claim #2 — **the +46 sideload**, i.e. the already-working path | `users.claimed_at` |
+| **09:01:44** | install `9b6b4d0f` (**+44**, **Play-signed**) **first seen** → creates anon `1bdcc70e` | `user_devices` |
+| **09:02:36** | **`account_adoption` `1bdcc70e` → `d5985482`** — 52 s after install | `subscription_events` |
+| 09:14:34 | second adoption `d368f3b2` → `d5985482` | `subscription_events` |
+
+`/v1/auth/google` moved **2 → 3**, and `auth/google` is the **only** claim endpoint in the entire container
+log (no `auth/apple`, no `auth/magic`). `_log_adoption_event` is written *by* `sign_in_with_google`.
+Therefore the 09:02:36 adoption was a Google Sign-In performed by a **Play App Signing-signed `+44`
+build** — the exact path that produced DEVELOPER_ERROR 10 for the reporter. **Defect closed.**
+
+### Two traps this investigation exposed (worth remembering)
+
+1. **`users.last_app_version` is last-write-wins, refreshed on every anon bootstrap** — it answers "what
+   build most recently opened this account?", *not* "what build performed this claim?". It briefly implied
+   the fix had failed. Use `user_devices` (keyed by `device_install_id`, so each install is its own row)
+   whenever the question is *which build did X*.
+2. **`install_android.sh` does not bump the version** — it builds whatever `pubspec.yaml` holds. Because
+   `build_testflight.sh` had just bumped pubspec to `+46` for iOS, the *sideload* carried a **higher**
+   build number than the Play release (`+44`), inverting the usual assumption that a higher number means
+   a newer store build. The app shows its version in-app (Settings, and the bug-report sheet as
+   `v0.1.0+44 · <route>` via `appVersionProvider`) — checking there is the fastest disambiguation.
+
+### Fastest way to exercise the Play-signed path (no release rollout)
+
+Play Console → **Release → App bundle explorer** → select the version → **Downloads** → **"Signed,
+universal APK"**. That artifact is signed with the **Play App Signing key**, so sideloading it tests the
+exact binding under suspicion in minutes instead of waiting on an internal-testing release.
+
+**Uninstall the USB build first** — same package, different signing certificate, so an in-place install
+fails with `INSTALL_FAILED_UPDATE_INCOMPATIBLE`.
 
 ### Which SHA-1 actually matters for this reporter
 
