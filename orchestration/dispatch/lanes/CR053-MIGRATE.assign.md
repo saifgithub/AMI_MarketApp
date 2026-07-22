@@ -13,19 +13,39 @@ switched the visible id to the group code) to the identifiable/linkable forms. D
 migration script** (like `scripts/shuffle_quiz_answers.py`: textual, in-place, idempotent, re-runnable), NOT
 by hand-editing 150 files. TWO reference classes, DIFFERENT mechanisms:
 
-**A. Lesson bodies (238 refs across 117 files) → `<Lesson id="NNN"/>` MDX tag.**
-- Bare prose refs ("lesson 039", "the math from Lesson 010", "023 (support and resistance)") become
-  `<Lesson id="039"/>` etc. The reader renders these as tappable chips showing the CR044 code (CR053-MOBILE).
-- Handle the forms the audit found: `lesson 0?\d\d`, `Lesson NNN`, `NNN (title)`, and **ranges** ("lessons
-  007–011", "lessons 007-011") — expand a range to individual tags or tag the endpoints; do NOT mangle the
-  sentence. When a ref already carries a title in parens ("lesson 014 (Position sizing basics)"), keep the
-  title text and tag the number.
-- **Never** rewrite a number that isn't a lesson ref (dates "in 2024", prices "$135", quiz option indices,
-  frontmatter). The script must be conservative + auditable — print every edit (file, before→after).
-- Add the strict guard NOW (ships with this migration): extend `test_lesson_corpus_integrity.py` — **no bare
-  `\blesson\s+\d{2,3}\b` (case-insensitive) remains in any migrated lesson body**, except an explicit
-  allowlist for intentional non-link prose. Combined with CR053-BE's resolve guard, this makes the corpus
-  self-policing.
+**A. Lesson bodies → `<Lesson id="NNN"/>` MDX tag. TWO ref classes — the architect measured the corpus
+(now 334 lessons, up from the doc's 270) and they MUST be disambiguated or the migration corrupts links:**
+
+  **Class 1 — GLOBAL-ID refs (~235): safe, the primary migration.** A "lesson NNN" where the number is
+  written 3-digit / zero-padded ("lesson 039", "Lesson 010", "lesson 014 (Position sizing basics)",
+  "lesson 070") OR its value is ≥16 and, zero-padded to 3 digits, matches a real `content/lessons/<NNN>_*.en.mdx`.
+  → replace with `<Lesson id="NNN"/>` (3-digit id). When a title already trails in parens, KEEP the title text
+  and tag the number. Ranges ("lessons 007–011") → tag each endpoint (or expand); never mangle the sentence.
+
+  **Class 2 — WITHIN-MODULE ORDINALS (~51, almost all in the new lessons 293–356): DO NOT tag as id="N".**
+  A **bare 1–2 digit** "lesson N" (value ≤15, NOT zero-padded) inside a lesson that carries a CR044 `code`
+  (prefix P) is a *within-module ordinal*: "lesson 4" in a lesson coded **MACRO 6** means **MACRO 4**, NOT
+  global id 004. Resolve it via the same-prefix code map: build `code → id` from every lesson's frontmatter,
+  then "lesson N" in a lesson with prefix P → the lesson coded "P N" → tag THAT lesson's global id
+  (`<Lesson id="326"/>` renders "MACRO 4"). **If no same-prefix "P N" lesson exists, DO NOT guess — leave
+  the text and add it to a flagged list in the report.** (Tagging "lesson 4" as id="004" would pass the
+  resolve guard yet link the WRONG lesson — the resolve guard can't catch this, so the same-prefix
+  resolution must be correct by construction. This is the single riskiest part of the lane.)
+
+  **Never** rewrite a number that isn't a lesson ref (dates "in 2024", prices "$135", quiz option indices,
+  frontmatter, "the 3 ratios"). Conservative + auditable.
+
+  **MANDATORY dry-run report (for architect review BEFORE trusting the apply):** the script runs in a
+  `--dry-run` mode first and writes `content/_authoring/cr053_migration_report.md` listing EVERY edit as
+  `file | class | before → after`, plus a FLAGGED section (Class-2 refs with no same-prefix match, ranges,
+  anything ambiguous). Commit this report alongside the migration so the architect content-review reads the
+  edit plan, not just the diff.
+
+  **Guard (ships with this migration):** extend `test_lesson_corpus_integrity.py` — **no bare zero-padded
+  `\blesson\s+0\d\d\b` and no `\blesson\s+(1[6-9]|[2-9]\d|\d{3})\b` (i.e. no un-tagged GLOBAL-id ref)
+  remains in any lesson body**, except an explicit allowlist. Do NOT forbid bare "lesson N" (N≤15) — those
+  are legitimately within-module ordinals now converted to tags; a blanket ban would false-positive. Combined
+  with CR053-BE's resolve guard (every `{{lesson:}}` resolves), the corpus is self-policing for Class 1.
 
 **B. Daily-challenge prose (41 refs) → CR044 code string + structured `related_lesson`.**
 - Daily challenges are **plain-text JSON, NOT MDX** — `<Lesson/>` tags will NOT render there. So for the 41
