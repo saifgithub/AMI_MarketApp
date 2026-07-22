@@ -2,7 +2,7 @@
 
 > **DRAFT — pending lawyer review.** Not legally binding until reviewed and signed off by counsel. The "Inspired by" footnotes after each clause cite the peer document that informed the starter language; they are not part of the published policy and should be removed before publishing.
 >
-> **Three clauses below remain marked `[LAWYER REVIEW REQUIRED]`** and must not be finalised without counsel: limitation-of-liability cap (§11), governing law (§13), and the securities-regulator framing (§2). Arbitration (§13.1) and indemnity (§15) now carry founder-drafted starter language (added AT:legal CR068, 2026-07-23) — published to alpha under the same not-yet-counsel-reviewed footing as §11/§13, but no longer blank placeholders. See [`legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md) for the "must-confirm-with-lawyer" tracking.
+> **Two clauses below remain marked `[LAWYER REVIEW REQUIRED]`** and must not be finalised without counsel: limitation-of-liability cap (§11) and the securities-regulator framing (§2). **Saiful directed (2026-07-23) that these Terms carry no governing-law or arbitration clause at all** — no named court, no named arbitral forum — relying instead on an explicit assumption-of-risk / sole-responsibility framing (§3) and indemnification (§14). Indemnity (§14) carries founder-drafted starter language, published to alpha under the same not-yet-counsel-reviewed footing as §11. See [`legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md) for the "must-confirm-with-lawyer" tracking.
 
 **Version:** 2.0 (alpha)
 **Effective:** 23 July 2026
@@ -32,6 +32,8 @@ Nothing in AMI Trade is intended to provide investment, legal, tax, or any other
 
 AMI agent output does not constitute a recommendation to buy, sell, or hold any specific security, and using AMI Trade does not create an advisory, brokerage, or fiduciary relationship between you and AMI.
 
+Investing in real securities involves risk, including the possible loss of some or all of your principal. AMI Trade's educational simulation does not reduce, hedge, or otherwise affect that risk in any way. Any decision to invest real money — whether or not informed by anything you learned or saw in AMI Trade — is yours alone to make, and yours alone to bear the consequences of.
+
 > `[LAWYER REVIEW REQUIRED]` — the exact wording that simultaneously satisfies the US **SEC**, the UK **FCA**, the Monetary Authority of Singapore (**MAS**), and the **Securities Commission Malaysia** is jurisdiction-sensitive. Counsel must confirm before publication, and especially before v1.0 opens the GCC and Malaysian markets.
 
 > _Inspired by: [Public.com Terms](https://public.com/disclosures/terms-of-service) and [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/)._
@@ -42,7 +44,7 @@ The AMI Concierge and the 12 analyst agents are **AI systems**. Their output may
 
 You should not rely on AMI agent output as a sole source of truth or as a substitute for professional advice. Cross-reference any factual claim before acting on it outside the simulation.
 
-By using AMI Trade, you acknowledge and accept that AI-generated output — including Portfolio Manager verdicts, mandate-compliance checks, and any other automated assessment — may be wrong, and you agree not to treat it as a recommendation or as a basis for a real-world financial decision. Automated mandate-compliance checks are a simulation-design feature, built to keep the training exercise consistent with the mandate you set; they are not a guarantee of accuracy and do not create an advisory or fiduciary relationship.
+AMI agent output — including Portfolio Manager verdicts, mandate-compliance checks, and any other automated assessment — is provided for **educational purposes only**. By using AMI Trade, you acknowledge and accept that this output may be wrong, and that **you are solely responsible for any real-world decision or action you take, or outcome you experience, based in whole or in part on AMI agent output**. AMI accepts no responsibility or liability for any such decision, action, or outcome. Automated mandate-compliance checks are a simulation-design feature, built to keep the training exercise consistent with the mandate you set; they are not a guarantee of accuracy and do not create an advisory or fiduciary relationship.
 
 > _Inspired by: [OpenAI Terms](https://openai.com/policies/row-terms-of-use/) — "sole source of truth" framing._
 
@@ -128,39 +130,15 @@ AMI Trade is provided **"as is" and "as available"**, with all faults. To the ma
 
 > _Inspired by: [OpenAI Terms](https://openai.com/policies/row-terms-of-use/) and [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/)._
 
-## 13. Governing law and dispute resolution — `[LAWYER PLACEHOLDER]`
+## 13. Changes to these Terms
 
-> **`[LAWYER PLACEHOLDER]` — this section must be drafted by counsel.**
->
-> AMI is operated by an individual founder based in Malaysia, with the corporate entity to be confirmed at incorporation. The choice of governing law and dispute-resolution forum depends on where AMI is ultimately incorporated, where it sells, and the chosen App Store / Play Store distribution territories. Drafted language should cover at minimum:
->
-> - **Governing law** — Malaysian law? Delaware? Singapore?
-> - **Forum** — courts of [jurisdiction] / arbitration
-> - **Class-action waiver** — whether to include, and how to satisfy EU consumer-protection rules where class waivers are unenforceable
-> - **Carve-outs** — for users in jurisdictions where the chosen law and forum are not enforceable against consumers
-
-### 13.1 Dispute resolution — arbitration — `[LAWYER REVIEW REQUIRED]`
-
-Most disagreements can be resolved by emailing legal@agenticmarketintel.ai. If a dispute cannot be resolved informally within 30 days, you and AMI agree to resolve it by binding individual arbitration administered by the Asian International Arbitration Centre (AIAC) in Kuala Lumpur, Malaysia, under the AIAC Arbitration Rules then in force, rather than in court, except as set out below.
-
-- Arbitration is on an individual basis only. Neither you nor AMI may bring a claim as a plaintiff or class member in any purported class, collective, or representative proceeding.
-- You may opt out of this arbitration agreement by emailing legal@agenticmarketintel.ai within 30 days of first creating your account, stating that you opt out. If you opt out, disputes are resolved under clause 13 (governing law) alone.
-- Either party may bring an individual claim in small-claims court instead of arbitration, where the claim qualifies.
-- This clause does not limit either party's right to seek injunctive relief for misuse of intellectual property, or affect any mandatory consumer-protection right you have under the law of your country of residence, including your right to bring a claim before your local courts or regulator where arbitration is not enforceable against consumers under that law.
-
-> `[LAWYER REVIEW REQUIRED]` — founder-drafted starter language (AT:legal CR068, 2026-07-23), not yet reviewed by Malaysian or international arbitration counsel. AIAC Kuala Lumpur was picked as the Malaysia-appropriate equivalent of the US AAA/JAMS pattern, with a class-action waiver and a 30-day opt-out window to strengthen enforceability against an unconscionability challenge. Revisit before v1.0 opens the GCC and EU markets — the class-waiver + mandatory-arbitration pattern may not be enforceable against consumers in those jurisdictions even with the carve-outs above.
->
-> _Inspired by: standard US consumer-arbitration pattern (AAA/JAMS), adapted to a Malaysia-appropriate venue with an opt-out window — see [`legal_samples.md`](../docs/initial_specs/09_compliance/legal_samples.md) for the peer research this project's clause bank draws from._
-
-## 14. Changes to these Terms
-
-We may update these Terms. For material changes — changes that meaningfully expand the restrictions placed on you, change the price model, or change the dispute-resolution provisions — we will give you at least **14 days' notice** before they take effect. Notice will be given via an in-app banner or by email to the address tied to your claimed account.
+We may update these Terms. For material changes — changes that meaningfully expand the restrictions placed on you, change the price model, or narrow your rights — we will give you at least **14 days' notice** before they take effect. Notice will be given via an in-app banner or by email to the address tied to your claimed account.
 
 If you do not accept the updated Terms you must stop using the service. Continued use after the effective date constitutes acceptance.
 
 > _Inspired by: [StockTrak Privacy Policy](https://www.stocktrak.com/privacy-policy/)._
 
-## 15. Indemnification — `[LAWYER REVIEW REQUIRED]`
+## 14. Indemnification — `[LAWYER REVIEW REQUIRED]`
 
 To the extent permitted by applicable law, you agree to indemnify, defend, and hold harmless AMI, its founder, and its personnel from any third-party claim, damage, liability, cost, or expense (including reasonable legal fees) arising out of or related to:
 
@@ -179,10 +157,10 @@ This clause does not apply to claims arising from AMI's own breach of these Term
 
 ## § Version history
 
-- **v2.0** — effective 23 July 2026. Added §13.1 (arbitration) and §15 (indemnification) — both previously unfilled `[LAWYER PLACEHOLDER]` gaps, now founder-drafted starter language. Strengthened §2 (no-fiduciary/no-recommendation sentence) and §3 (assumption-of-risk + mandate-compliance-is-not-a-guarantee sentence) against "the AI gave bad advice" claims. Renumbering: none — §13.1 and §15 filled the slots already reserved in v1.0. Filed as [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md).
+- **v2.0** — effective 23 July 2026. Added §14 (indemnification) — a previously unfilled `[LAWYER PLACEHOLDER]` gap, now founder-drafted starter language. Strengthened §2 (no-fiduciary/no-recommendation + explicit real-world-investing-is-risky sentence) and §3 (educational-purposes-only + explicit sole-responsibility sentence) against "the AI gave bad advice" claims. **Deliberately omits any governing-law or arbitration clause** — Saiful's direction (2026-07-23): no named court, no named arbitral forum; the risk-shifting work is done entirely by §2/§3's assumption-of-risk framing and §14's indemnification, not by controlling the forum. Renumbering: former §14 (Changes to these Terms) is now §13; former §15 (Indemnification) is now §14. Filed as [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md).
 - **v1.0** — effective 18 May 2026. Initial alpha-stage Terms published with AMI Trade closed alpha. Earlier versions: none. Archived at [`../history/terms_of_service/v1.0_2026-05-18.md`](../history/terms_of_service/v1.0_2026-05-18.md).
 
-When a new version is published, the previous version is preserved at `/terms/v<N>/` (website) and `legal/history/terms_of_service/` (markdown source) for audit. Material changes are notified per clause 14 with at least 14 days' notice.
+When a new version is published, the previous version is preserved at `/terms/v<N>/` (website) and `legal/history/terms_of_service/` (markdown source) for audit. Material changes are notified per clause 13 with at least 14 days' notice.
 
 ---
 
@@ -208,6 +186,5 @@ Before publishing, counsel must confirm or replace:
 |---|---|---|
 | 2 | Not investment advice | Exact wording for SEC / FCA / MAS / SC Malaysia simultaneously |
 | 11 | Limitation of liability cap | $100 floor may be void in EU / FR / DE consumer law |
-| 13 | Governing law | Depends on incorporation jurisdiction (TBD) |
-| 13.1 | Arbitration / class-action waiver | Founder-drafted (AIAC KL, class waiver, 30-day opt-out) — unreviewed; unenforceable in several target jurisdictions even with the carve-outs |
-| 15 | Indemnity | Founder-drafted, narrowed scope — unreviewed; broad indemnities are unenforceable against consumers in most jurisdictions AMI serves |
+| 14 | Indemnity | Founder-drafted, narrowed scope — unreviewed; broad indemnities are unenforceable against consumers in most jurisdictions AMI serves |
+| — | No governing-law or arbitration clause | Saiful's explicit call (2026-07-23) to omit both entirely rather than name a forum. Counsel should confirm this is a defensible position — most consumer contracts still name *some* governing law even without arbitration, since its total absence can itself create forum uncertainty that cuts against AMI as the defendant. |

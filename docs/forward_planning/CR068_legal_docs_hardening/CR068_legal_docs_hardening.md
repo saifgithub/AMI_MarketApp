@@ -30,7 +30,7 @@ under `docs/initial_specs/` instead of being a dedicated top-level folder.
 | 1 | Relationship between the new `legal/` folder and the existing `docs/initial_specs/09_compliance/` drafts | **Split**: the actual documents (+ versioning + history) move to `legal/`; research/planning material stays in `09_compliance/` with a pointer |
 | 2 | Legal entity name for the T&C | Keep placeholder "AMI" / Malaysia-founder framing — no entity is incorporated yet |
 | 3 | Privacy Policy's inaccurate third-party-AI-vendor claim | Fix in this pass, but **generically** — "a third-party AI infrastructure provider," never naming a specific vendor |
-| 4 | Missing arbitration + indemnification clauses | Add both now, founder-drafted, modeled on peer patterns already in `legal_samples.md`, marked pending formal counsel review |
+| 4 | Missing arbitration + indemnification clauses | Add both now, founder-drafted, modeled on peer patterns already in `legal_samples.md`, marked pending formal counsel review — **superseded same day, see §3B below**: Saiful withdrew the arbitration/governing-law approach entirely in favor of pure assumption-of-risk + indemnification |
 
 ## 3. Scope
 
@@ -39,13 +39,24 @@ under `docs/initial_specs/` instead of being a dedicated top-level folder.
 (first two moved + updated via `git mv`, third new), `history/{terms_of_service,privacy_policy}/v1.0_2026-05-18.md`
 (frozen pre-edit snapshots).
 
-**B. Terms of Service v1.0 → v2.0** — strengthened §2 (no-fiduciary/no-recommendation
-sentence) and §3 (assumption-of-risk + "mandate-compliance checks are not a guarantee"
-sentence, deliberately not over-promising the "uncoachable" safety floor given DEF061's
-enforcement gaps); filled the previously-blank §13.1 (arbitration — individual, AIAC Kuala
-Lumpur, class-action waiver, 30-day opt-out) and §15 (indemnification — narrowed scope, with
+**B. Terms of Service v1.0 → v2.0** — strengthened §2 (no-fiduciary/no-recommendation sentence
++ explicit "investing is risky" statement) and §3 (educational-purposes-only +
+"mandate-compliance checks are not a guarantee" + explicit sole-responsibility sentence,
+deliberately not over-promising the "uncoachable" safety floor given DEF061's enforcement
+gaps); filled the previously-blank §15 (indemnification, renumbered §14 — narrowed scope, with
 carve-outs for AMI's own misconduct and non-waivable consumer rights); renamed "Coach Your
 Agent" → "Brief Your Agent" in the live HTML (markdown source was already current).
+
+**B.1 — Arbitration/governing-law removed same day, before publish.** An arbitration clause
+(§13.1, individual, AIAC Kuala Lumpur, class-action waiver, 30-day opt-out) and a governing-law
+clause (§13, Malaysia, non-exclusive courts) were drafted first, then withdrawn at Saiful's
+explicit direction: *"No arbitration. No courts. Just make the user take all responsibility of
+any actions the user took based on the LLM opinion which should only be used for educational
+purposes only. Investments are risky. Users should know that they are making a risky
+decision."* The Terms now carry **no forum-selection language of any kind** — clauses
+renumbered (former §14 Changes-to-Terms → §13, former §15 Indemnification → §14), and the
+risk-shifting work moved entirely into §2/§3's assumption-of-risk framing plus §14's
+indemnification.
 
 **C. Privacy Policy v1.0 → v2.0** — corrected §7/§8's AI-infrastructure disclosure from an
 absolute "never third-party" claim to an accurate self-hosted-primary /
