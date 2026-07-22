@@ -2,14 +2,26 @@
 
 Legal disclaimers, privacy/data-residency, store compliance, ad policy.
 
-## Published-policy drafts (lawyer review pending)
+## Where the actual legal documents live
+
+**Moved 2026-07-23 (AT:legal CR068).** The canonical legal documents — Terms of Service,
+Privacy Policy, Data Deletion Policy — and the versioning playbook that governs them, now live
+in the top-level [`legal/`](../../../legal/README.md) folder, not here. This folder keeps the
+research and planning material that fed those drafts, plus the operational references below.
+
+| What moved | New location |
+|---|---|
+| Terms of Service | [`legal/policies/terms_of_service.md`](../../../legal/policies/terms_of_service.md) |
+| Privacy Policy | [`legal/policies/privacy_policy.md`](../../../legal/policies/privacy_policy.md) |
+| Data Deletion Policy (new) | [`legal/policies/data_deletion_policy.md`](../../../legal/policies/data_deletion_policy.md) |
+| `VERSIONING.md` | [`legal/VERSIONING.md`](../../../legal/VERSIONING.md) |
+| Archived prior versions | [`legal/history/`](../../../legal/history/) |
+
+## Research and planning (stays here)
 
 | File | What it is |
 |---|---|
-| [`privacy_policy.md`](privacy_policy.md) | **DRAFT** standalone Privacy Policy (canonical source for lawyer review). Published HTML at `website/privacy/index.html` → `agenticmarketintel.ai/privacy/`. |
-| [`terms_of_service.md`](terms_of_service.md) | **DRAFT** standalone Terms of Service (canonical source for lawyer review). Published HTML at `website/terms/index.html` → `agenticmarketintel.ai/terms/`. |
-| [`VERSIONING.md`](VERSIONING.md) | Publishing playbook — version numbering, material-vs-non-material gate, archive convention, deploy steps. **Read before editing either policy.** |
-| [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md) | Clause-by-clause plan that fed the two drafts — keep for traceability + cited peer sources. |
+| [`legal_plan_ami_trade.md`](legal_plan_ami_trade.md) | Clause-by-clause plan that fed the published drafts — kept for traceability + cited peer sources. |
 | [`legal_samples.md`](legal_samples.md) | Peer-policy excerpts informing the plan. |
 
 ## Operational references

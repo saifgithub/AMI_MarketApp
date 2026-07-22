@@ -1,6 +1,13 @@
-# Versioning legal documents — Privacy Policy + ToS
+# Versioning legal documents — Terms, Privacy, Data Deletion Policy
 
-How AMI publishes, archives, and versions its legal documents. Follow this every time `privacy_policy.md` or `terms_of_service.md` changes in a way that affects the published copy at `agenticmarketintel.ai/privacy/` or `/terms/`.
+How AMI publishes, archives, and versions its legal documents. Follow this every time `terms_of_service.md`, `privacy_policy.md`, or `data_deletion_policy.md` changes in a way that affects the published copy at `agenticmarketintel.ai/terms/`, `/privacy/`, or `/ami-trade/sad-to-see-you-go/`.
+
+> **Moved 2026-07-23 (AT:legal CR068).** This file, and the canonical markdown it governs, used
+> to live under `docs/initial_specs/09_compliance/`. They now live in this top-level `legal/`
+> folder. `docs/initial_specs/09_compliance/` keeps the research/planning material that fed the
+> drafts (`legal_plan_ami_trade.md`, `legal_samples.md`) plus operational references
+> (`disclaimers_and_privacy.md`, `store_compliance.md`, `ad_policy.md`) — see its
+> [`README.md`](../docs/initial_specs/09_compliance/README.md).
 
 ---
 
@@ -8,9 +15,10 @@ How AMI publishes, archives, and versions its legal documents. Follow this every
 
 | What | Where |
 |---|---|
-| Canonical source markdown | `docs/initial_specs/09_compliance/{privacy_policy,terms_of_service}.md` |
-| Published HTML — current version | `website/{privacy,terms}/index.html` |
-| Published HTML — archived versions | `website/{privacy,terms}/v<N>/index.html` |
+| Canonical source markdown | `legal/policies/{terms_of_service,privacy_policy,data_deletion_policy}.md` |
+| Archived source markdown | `legal/history/{terms_of_service,privacy_policy,data_deletion_policy}/v<N>_<date>.md` |
+| Published HTML — current version | `website/{privacy,terms}/index.html`, `website/ami-trade/sad-to-see-you-go/index.html` |
+| Published HTML — archived versions | `website/{privacy,terms}/v<N>/index.html`, `website/ami-trade/sad-to-see-you-go/v<N>/index.html` |
 | Machine-readable version + date | `<meta name="document-version">` and `<meta name="document-effective-date">` at the top of each HTML page |
 | Visible in the doc | "Version X · Effective DD Month YYYY" in the header; "Version history" section at the bottom |
 
@@ -50,9 +58,9 @@ When in doubt, treat as material and notify. The cost of an extra in-app banner 
 
 ## Publishing checklist (each version)
 
-1. **Edit the markdown source** in `docs/initial_specs/09_compliance/{privacy_policy,terms_of_service}.md`. This stays the canonical text and is what counsel reviews.
-2. **Apply the changes to the HTML** at `website/{privacy,terms}/index.html`.
-3. **If this is a major bump**, archive the **previous** version before saving:
+1. **Edit the markdown source** in `legal/policies/{privacy_policy,terms_of_service,data_deletion_policy}.md`. This stays the canonical text and is what counsel reviews.
+2. **Apply the changes to the HTML** at `website/{privacy,terms}/index.html` (or `website/ami-trade/sad-to-see-you-go/index.html`).
+3. **If this is a major bump**, snapshot the **previous** markdown version into `legal/history/<doc>/v<N>_<date>.md`, then archive the **previous** HTML version before saving:
    ```bash
    PREV=1                  # the version being replaced
    cd "/Volumes/Extreme Pro/AMI_MarketApp/website/privacy"
@@ -87,6 +95,7 @@ When in doubt, treat as material and notify. The cost of an extra in-app banner 
 | `/privacy/v1/` | Permanently frozen v1.0.x family (any patch versions roll up here). |
 | `/privacy/v2/` | Permanently frozen v2.0.x family (created when v3 publishes). |
 | `/terms/` and `/terms/v<N>/` | Same pattern. |
+| `/ami-trade/sad-to-see-you-go/` and `/ami-trade/sad-to-see-you-go/v<N>/` | Same pattern, once this page has a superseded version to archive (currently v1.0, no archive yet). |
 
 Each archived version's HTML must set `<link rel="canonical">` to **itself** (the versioned URL), not to `/privacy/`. This is the difference between "this is what's in force today" (canonical = `/privacy/`) and "this is what v1 said for the record" (canonical = `/privacy/v1/`).
 

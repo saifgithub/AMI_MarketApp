@@ -4,6 +4,10 @@
 
 This is the clause-by-clause plan and starter language for AMI Trade's Privacy Policy and Terms of Service, distilled from the peer sample set in [`legal_samples.md`](legal_samples.md). Every draft below is borrowed from / inspired by a cited peer document. Hand this to counsel for review and signoff before publishing.
 
+> **The published drafts now live in [`legal/`](../../../legal/README.md)**, not here (moved
+> 2026-07-23, AT:legal CR068). This document stays as the traceability record of what informed
+> them.
+
 ---
 
 ## Privacy Policy — clause map
@@ -55,9 +59,9 @@ This is the clause-by-clause plan and starter language for AMI Trade's Privacy P
 These five clauses are the ones where wrong wording creates real risk. Do **not** draft these from peer samples — they're jurisdiction-sensitive and tied to AMI's specific corporate structure.
 
 1. **Governing law & jurisdiction.** Saiful is in Malaysia. Corporate entity TBD. Where do disputes resolve? Malaysian courts? Delaware? This depends entirely on where AMI is incorporated and where it sells.
-2. **Arbitration clause** (and whether to have one). US apps usually pick AAA arbitration with a class-action waiver; this is unenforceable in some EU jurisdictions. Lawyer call.
+2. **Arbitration clause** (and whether to have one). US apps usually pick AAA arbitration with a class-action waiver; this is unenforceable in some EU jurisdictions. Lawyer call. **Update 2026-07-23 (CR068):** founder-drafted starter language now exists in `legal/policies/terms_of_service.md` §13.1 — individual arbitration via AIAC Kuala Lumpur, class-action waiver, 30-day opt-out window. Still not lawyer-reviewed; revisit before v1.0 opens the GCC/EU markets.
 3. **Limitation-of-liability cap.** Drafted at $100 above (matching Public). The cap may be void in some jurisdictions (notably DE, FR consumer law). Lawyer to confirm enforceability and consider a jurisdiction-by-jurisdiction carve-out.
-4. **Indemnity** (user indemnifies AMI). Not drafted above on purpose. Standard SaaS clause but the scope (esp. for an 18+ consumer app) needs counsel.
+4. **Indemnity** (user indemnifies AMI). Not drafted above on purpose. Standard SaaS clause but the scope (esp. for an 18+ consumer app) needs counsel. **Update 2026-07-23 (CR068):** founder-drafted starter language now exists in `legal/policies/terms_of_service.md` §15 — narrowed to ToS violations, off-simulation reliance on agent output, submitted content, and law/third-party-rights violations, with carve-outs for AMI's own misconduct and non-waivable consumer rights. Still not lawyer-reviewed.
 5. **Securities-regulator framing.** "Not a registered investment adviser or broker-dealer in any jurisdiction" is a strong, defensible claim because AMI Trade is genuinely simulation-only. But the *exact* wording that satisfies SEC, FCA, MAS (Singapore), and Securities Commission Malaysia simultaneously is a lawyer question. Especially before we open the GCC + MY markets in v1.0.
 
 ---

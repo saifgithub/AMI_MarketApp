@@ -1,0 +1,213 @@
+# Terms of Service — AMI Trade
+
+> **DRAFT — pending lawyer review.** Not legally binding until reviewed and signed off by counsel. The "Inspired by" footnotes after each clause cite the peer document that informed the starter language; they are not part of the published policy and should be removed before publishing.
+>
+> **Three clauses below remain marked `[LAWYER REVIEW REQUIRED]`** and must not be finalised without counsel: limitation-of-liability cap (§11), governing law (§13), and the securities-regulator framing (§2). Arbitration (§13.1) and indemnity (§15) now carry founder-drafted starter language (added AT:legal CR068, 2026-07-23) — published to alpha under the same not-yet-counsel-reviewed footing as §11/§13, but no longer blank placeholders. See [`legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md) for the "must-confirm-with-lawyer" tracking.
+
+**Version:** 2.0 (alpha)
+**Effective:** 23 July 2026
+**Contact:** legal@agenticmarketintel.ai
+**Published HTML:** `website/terms/index.html` → `https://www.agenticmarketintel.ai/terms/`
+**Publishing process:** see [`VERSIONING.md`](../VERSIONING.md)
+
+---
+
+## Acceptance
+
+By installing, opening, or using AMI Trade you agree to these Terms of Service ("Terms"). If you do not agree, do not use the service. These Terms form a binding agreement between you and AMI ("we," "us," "our"). For how we handle personal information, see our [Privacy Policy](privacy_policy.md).
+
+---
+
+## 1. AMI Trade is a simulation
+
+AMI Trade is a training and education simulator. It **does not offer, solicit, or arrange the sale or purchase of any security, derivative, fund, or other financial product**. All trades, portfolios, prices, and returns shown in the app are simulated and do not reflect real investment results.
+
+You cannot buy or sell real assets through AMI Trade. The "Trade" actions in the app place orders against an internal simulation only; no order is ever routed to a brokerage, exchange, or market maker.
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/) — closest peer phrasing._
+
+## 2. Not investment, legal, or tax advice — `[LAWYER REVIEW REQUIRED]`
+
+Nothing in AMI Trade is intended to provide investment, legal, tax, or any other professional advice. AMI is **not a registered investment adviser or broker-dealer in any jurisdiction**. Output from the AMI agents — including ticker analyses, Bull/Bear debates, Trader and Portfolio Manager verdicts, lesson content, and Concierge guidance — is for educational and simulation purposes only.
+
+AMI agent output does not constitute a recommendation to buy, sell, or hold any specific security, and using AMI Trade does not create an advisory, brokerage, or fiduciary relationship between you and AMI.
+
+> `[LAWYER REVIEW REQUIRED]` — the exact wording that simultaneously satisfies the US **SEC**, the UK **FCA**, the Monetary Authority of Singapore (**MAS**), and the **Securities Commission Malaysia** is jurisdiction-sensitive. Counsel must confirm before publication, and especially before v1.0 opens the GCC and Malaysian markets.
+
+> _Inspired by: [Public.com Terms](https://public.com/disclosures/terms-of-service) and [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/)._
+
+## 3. AMI agents are AI — output can be wrong
+
+The AMI Concierge and the 12 analyst agents are **AI systems**. Their output may be inaccurate, incomplete, out of date, or fabricated. The agents may reference companies, prices, or events that do not exist or that no longer exist; they may produce confident-sounding analysis that is, in whole or in part, wrong.
+
+You should not rely on AMI agent output as a sole source of truth or as a substitute for professional advice. Cross-reference any factual claim before acting on it outside the simulation.
+
+By using AMI Trade, you acknowledge and accept that AI-generated output — including Portfolio Manager verdicts, mandate-compliance checks, and any other automated assessment — may be wrong, and you agree not to treat it as a recommendation or as a basis for a real-world financial decision. Automated mandate-compliance checks are a simulation-design feature, built to keep the training exercise consistent with the mandate you set; they are not a guarantee of accuracy and do not create an advisory or fiduciary relationship.
+
+> _Inspired by: [OpenAI Terms](https://openai.com/policies/row-terms-of-use/) — "sole source of truth" framing._
+
+## 4. Hypothetical-performance disclaimer
+
+Any simulated portfolio performance, win-rate, return, or profit shown in AMI Trade is **hypothetical**. It does not reflect actual trading and is not a guarantee of future results in real markets. Past simulated performance — yours or anyone else's — is not indicative of how a similar real-money strategy would perform.
+
+> _Inspired by: [Public.com Terms](https://public.com/disclosures/terms-of-service)._
+
+## 5. Acceptable use
+
+You agree not to:
+
+- (a) Use the service for any unlawful or fraudulent purpose
+- (b) Scrape, mirror, crawl, or programmatically extract content, agent prompts, lesson copy, or any other material from the app or our infrastructure
+- (c) Harass, threaten, impersonate, or harm any other user via shared content (room verdicts shared externally, journal exports, screenshots, etc.)
+- (d) Use AMI agent output for commercial purposes — including resale, repackaging, republication, or as training data for any other AI system or machine-learning model
+- (e) Attempt to bypass, disable, or interfere with any security feature, rate limit, or paywall in the service
+- (f) Use automated tools, bots, or third-party clients to interact with the service except where we have authorised them in writing
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/), with a novel anti-AI-training clause in (d)._
+
+## 6. Subscriptions and credits
+
+Subscription tiers (Floor Pass, Trader, Floor Manager) and one-time credit packs are purchased through **Apple In-App Purchase** on iOS and **Google Play Billing** on Android. Billing, renewals, and most refunds are governed by the relevant platform store's policies, not by AMI.
+
+- Subscriptions auto-renew unless you cancel them through your platform account at least 24 hours before the end of the current period.
+- Credits, once consumed, are **non-refundable**. Unused credits at the end of a subscription period roll over according to the rules described in the in-app pricing screen.
+- Where the platform store grants you a refund for a subscription, the corresponding entitlements in AMI Trade are revoked.
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/) (subscription non-refundable pattern)._
+
+## 7. Your content, your ownership
+
+You retain ownership of your journal entries, chat messages with agents, Brief Your Agent feedback, and bug reports.
+
+You grant AMI a **non-exclusive, worldwide, royalty-free licence** to host, store, display, and process your content for the sole purpose of operating, securing, supporting, and improving the service. This licence ends when the content is deleted (whether by you or via our retention rules in the [Privacy Policy](privacy_policy.md)), with reasonable allowance for backup retention.
+
+We do **not** claim a perpetual or irrevocable licence over your content, and we will not use your content to train AI models for any other product.
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/) — narrowed (we do not need "irrevocable, perpetual")._
+
+## 8. Our intellectual property
+
+The AMI Trade app, the AMI Hex-Reinforced Precision design system, the 12-agent framework, the agent prompts, the lesson content, the glossary, the AI Coach corpus, the daily-challenge corpus, and all related text, audio, video, graphics, and code are owned by AMI or its licensors and protected by copyright, trademark, and other intellectual-property laws.
+
+You receive a limited, personal, non-exclusive, non-transferable licence to use the AMI Trade app on your own devices as permitted by these Terms. No other right or licence is granted, expressly or by implication.
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/)._
+
+## 9. Anonymous accounts and the claim flow
+
+You may use AMI Trade with an **anonymous account** (the default on first launch) or **claim a permanent account** via Sign in with Apple or Sign in with Google.
+
+- While anonymous, your data is bound to a device-generated identifier (see the [Privacy Policy](privacy_policy.md), clause 1).
+- On claim, your anonymous-era data (journal, simulated portfolio, lesson progress, agent conversations) is migrated to your claimed account.
+- Once an anonymous identifier has been claimed, it cannot be re-used. The migration is one-way.
+- If you lose access to a device that holds an unclaimed anonymous account, the data on that account is not recoverable.
+
+> _Inspired by: novel — no peer covers this flow._
+
+## 10. Termination
+
+We may suspend or terminate your access to AMI Trade if you violate these Terms, if your use of the service creates a security or legal risk to us or to other users, or if we are required to do so by law. Where the circumstances allow, we will give notice before suspension or termination.
+
+You may delete your account at any time from the in-app settings. Deletion removes your account-level data subject to the retention rules in the [Privacy Policy](privacy_policy.md).
+
+> _Inspired by: [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/) and [Character.AI Privacy Policy](https://character.ai/privacy)._
+
+## 11. Limitation of liability — `[LAWYER REVIEW REQUIRED]`
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, AMI'S AGGREGATE LIABILITY FOR ANY CLAIM ARISING FROM OR RELATED TO YOUR USE OF THE SERVICE WILL NOT EXCEED THE GREATER OF (A) THE AMOUNT YOU PAID TO AMI IN THE 12 MONTHS BEFORE THE EVENT GIVING RISE TO THE CLAIM, OR (B) USD $100.
+
+IN NO EVENT WILL AMI BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR ANY LOSS OF PROFITS, DATA, GOODWILL, OR HYPOTHETICAL INVESTMENT GAINS, EVEN IF AMI HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+> `[LAWYER REVIEW REQUIRED]` — the $100 floor matches the Public.com pattern but may be **void in some consumer-protective jurisdictions** (notably Germany and France under EU consumer law). Counsel should confirm enforceability and consider a jurisdiction-by-jurisdiction carve-out.
+
+> _Inspired by: [Public.com Terms](https://public.com/disclosures/terms-of-service) — verbatim structure._
+
+## 12. Disclaimer of warranties
+
+AMI Trade is provided **"as is" and "as available"**, with all faults. To the maximum extent permitted by law, we disclaim all warranties of any kind, whether express, implied, or statutory, including without limitation the warranties of accuracy, completeness, merchantability, fitness for a particular purpose, and non-infringement. We do not warrant that the service will be uninterrupted, secure, error-free, or that any data produced by the AMI agents is accurate or up to date.
+
+> _Inspired by: [OpenAI Terms](https://openai.com/policies/row-terms-of-use/) and [Wall Street Survivor Terms](https://www.wallstreetsurvivor.com/terms-and-conditions/)._
+
+## 13. Governing law and dispute resolution — `[LAWYER PLACEHOLDER]`
+
+> **`[LAWYER PLACEHOLDER]` — this section must be drafted by counsel.**
+>
+> AMI is operated by an individual founder based in Malaysia, with the corporate entity to be confirmed at incorporation. The choice of governing law and dispute-resolution forum depends on where AMI is ultimately incorporated, where it sells, and the chosen App Store / Play Store distribution territories. Drafted language should cover at minimum:
+>
+> - **Governing law** — Malaysian law? Delaware? Singapore?
+> - **Forum** — courts of [jurisdiction] / arbitration
+> - **Class-action waiver** — whether to include, and how to satisfy EU consumer-protection rules where class waivers are unenforceable
+> - **Carve-outs** — for users in jurisdictions where the chosen law and forum are not enforceable against consumers
+
+### 13.1 Dispute resolution — arbitration — `[LAWYER REVIEW REQUIRED]`
+
+Most disagreements can be resolved by emailing legal@agenticmarketintel.ai. If a dispute cannot be resolved informally within 30 days, you and AMI agree to resolve it by binding individual arbitration administered by the Asian International Arbitration Centre (AIAC) in Kuala Lumpur, Malaysia, under the AIAC Arbitration Rules then in force, rather than in court, except as set out below.
+
+- Arbitration is on an individual basis only. Neither you nor AMI may bring a claim as a plaintiff or class member in any purported class, collective, or representative proceeding.
+- You may opt out of this arbitration agreement by emailing legal@agenticmarketintel.ai within 30 days of first creating your account, stating that you opt out. If you opt out, disputes are resolved under clause 13 (governing law) alone.
+- Either party may bring an individual claim in small-claims court instead of arbitration, where the claim qualifies.
+- This clause does not limit either party's right to seek injunctive relief for misuse of intellectual property, or affect any mandatory consumer-protection right you have under the law of your country of residence, including your right to bring a claim before your local courts or regulator where arbitration is not enforceable against consumers under that law.
+
+> `[LAWYER REVIEW REQUIRED]` — founder-drafted starter language (AT:legal CR068, 2026-07-23), not yet reviewed by Malaysian or international arbitration counsel. AIAC Kuala Lumpur was picked as the Malaysia-appropriate equivalent of the US AAA/JAMS pattern, with a class-action waiver and a 30-day opt-out window to strengthen enforceability against an unconscionability challenge. Revisit before v1.0 opens the GCC and EU markets — the class-waiver + mandatory-arbitration pattern may not be enforceable against consumers in those jurisdictions even with the carve-outs above.
+>
+> _Inspired by: standard US consumer-arbitration pattern (AAA/JAMS), adapted to a Malaysia-appropriate venue with an opt-out window — see [`legal_samples.md`](../docs/initial_specs/09_compliance/legal_samples.md) for the peer research this project's clause bank draws from._
+
+## 14. Changes to these Terms
+
+We may update these Terms. For material changes — changes that meaningfully expand the restrictions placed on you, change the price model, or change the dispute-resolution provisions — we will give you at least **14 days' notice** before they take effect. Notice will be given via an in-app banner or by email to the address tied to your claimed account.
+
+If you do not accept the updated Terms you must stop using the service. Continued use after the effective date constitutes acceptance.
+
+> _Inspired by: [StockTrak Privacy Policy](https://www.stocktrak.com/privacy-policy/)._
+
+## 15. Indemnification — `[LAWYER REVIEW REQUIRED]`
+
+To the extent permitted by applicable law, you agree to indemnify, defend, and hold harmless AMI, its founder, and its personnel from any third-party claim, damage, liability, cost, or expense (including reasonable legal fees) arising out of or related to:
+
+- (a) your use of AMI Trade in violation of these Terms;
+- (b) any real-world decision you make, or action you take, based on AMI agent output, outside the simulation;
+- (c) content you submit through the service; or
+- (d) your violation of any law or the rights of a third party.
+
+This clause does not apply to claims arising from AMI's own breach of these Terms, gross negligence, or wilful misconduct, and does not limit any non-waivable consumer-protection right you have under the law of your country of residence.
+
+> `[LAWYER REVIEW REQUIRED]` — founder-drafted starter language (AT:legal CR068, 2026-07-23), not yet reviewed by counsel. Deliberately narrowed relative to a bare "any and all claims whatsoever" SaaS template — scoped to ToS violations, off-simulation reliance on agent output, submitted content, and law/third-party-rights violations, with an express carve-out for AMI's own misconduct and for non-waivable consumer rights — per the caution in [`legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md) that broad indemnities are unenforceable against consumers in most jurisdictions AMI serves (EU, UK, Malaysia, GCC).
+>
+> _Inspired by: standard SaaS indemnity pattern, narrowed per the scope caution already flagged in `legal_plan_ami_trade.md`'s "must-confirm-with-lawyer" item 4._
+
+---
+
+## § Version history
+
+- **v2.0** — effective 23 July 2026. Added §13.1 (arbitration) and §15 (indemnification) — both previously unfilled `[LAWYER PLACEHOLDER]` gaps, now founder-drafted starter language. Strengthened §2 (no-fiduciary/no-recommendation sentence) and §3 (assumption-of-risk + mandate-compliance-is-not-a-guarantee sentence) against "the AI gave bad advice" claims. Renumbering: none — §13.1 and §15 filled the slots already reserved in v1.0. Filed as [CR068](../../docs/forward_planning/CR068_legal_docs_hardening/CR068_legal_docs_hardening.md).
+- **v1.0** — effective 18 May 2026. Initial alpha-stage Terms published with AMI Trade closed alpha. Earlier versions: none. Archived at [`../history/terms_of_service/v1.0_2026-05-18.md`](../history/terms_of_service/v1.0_2026-05-18.md).
+
+When a new version is published, the previous version is preserved at `/terms/v<N>/` (website) and `legal/history/terms_of_service/` (markdown source) for audit. Material changes are notified per clause 14 with at least 14 days' notice.
+
+---
+
+## Contact
+
+For any question about these Terms, contact:
+
+**legal@agenticmarketintel.ai**
+
+For requests relating to your personal data, see the [Privacy Policy](privacy_policy.md).
+
+---
+
+## Document status
+
+This is a draft prepared from the clause-by-clause plan in [`legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md). It must be reviewed and signed off by counsel before being published at `agenticmarketintel.ai/legal/terms.html` and referenced from the App Store / Play Store listings.
+
+### Lawyer-only checklist
+
+Before publishing, counsel must confirm or replace:
+
+| § | Clause | Why it needs counsel |
+|---|---|---|
+| 2 | Not investment advice | Exact wording for SEC / FCA / MAS / SC Malaysia simultaneously |
+| 11 | Limitation of liability cap | $100 floor may be void in EU / FR / DE consumer law |
+| 13 | Governing law | Depends on incorporation jurisdiction (TBD) |
+| 13.1 | Arbitration / class-action waiver | Founder-drafted (AIAC KL, class waiver, 30-day opt-out) — unreviewed; unenforceable in several target jurisdictions even with the carve-outs |
+| 15 | Indemnity | Founder-drafted, narrowed scope — unreviewed; broad indemnities are unenforceable against consumers in most jurisdictions AMI serves |

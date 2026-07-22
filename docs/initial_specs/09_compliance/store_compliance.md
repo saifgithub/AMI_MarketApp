@@ -85,6 +85,7 @@ Apple review can be prickly about "trading" / "investment" claims. To smooth rev
 | **Personal & Sensitive User Data** | Privacy Policy required, declare in console |
 | **Permissions** | Minimal (network, push) |
 | **Data Safety form** | Filled out completely; published on listing |
+| **Account & data deletion (2023 policy)** | Requires a public, web-accessible deletion-request page reachable without installing the app, for both Android and iOS, plus an in-app path. **Satisfied** by [`website/ami-trade/sad-to-see-you-go/`](../../../website/ami-trade/sad-to-see-you-go/index.html) (CR049/CR050; formalized as [`legal/policies/data_deletion_policy.md`](../../../legal/policies/data_deletion_policy.md) under CR068) and the in-app Settings deletion path referenced in Terms clause 10. |
 | **Subscriptions** | Must use Google Play Billing. RevenueCat handles. |
 | **Closed beta** for initial cohort | Use Internal Testing track for alpha |
 | **Open testing** for soft launch | Phase before full release |
