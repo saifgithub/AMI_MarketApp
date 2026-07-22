@@ -49,7 +49,10 @@ _ANSWER_RE = re.compile(r"answer=\{(?P<val>[^}]*)\}")
 _EXPLANATION_RE = re.compile(r'explanation="(?P<val>(?:[^"\\]|\\.)*)"', re.DOTALL)
 # One quoted option literal, preserving whatever surrounds it.
 _STRING_RE = re.compile(r'"(?:[^"\\]|\\.)*"')
-_OPTION_INDEX_CITATION = re.compile(r"\boptions?\s+\d", re.IGNORECASE)
+_OPTION_INDEX_CITATION = re.compile(
+    r"\boptions?\s+\d|\b(?:first|second|third|fourth|fifth|last)\s+options?\b",
+    re.IGNORECASE,
+)
 # Daily-challenge JSON: the "options" array and the "answer" that indexes it,
 # which always sit adjacent in the record. `gap` preserves the exact
 # whitespace between them.

@@ -31,8 +31,12 @@ import pytest
 from app.services.lessons_service import CONTENT_LESSONS_DIR, parse_mdx
 
 # Matches an explanation citing an option by number, either convention:
-# "option 0", "Option 3", "options 1". DEF065.
-_OPTION_INDEX_CITATION = re.compile(r"\boptions?\s+\d", re.IGNORECASE)
+# "option 0", "Option 3", "options 1" (DEF065) — or by position, "the first
+# option", "the last option" (DEF079, same failure under answer-shuffle).
+_OPTION_INDEX_CITATION = re.compile(
+    r"\boptions?\s+\d|\b(?:first|second|third|fourth|fifth|last)\s+options?\b",
+    re.IGNORECASE,
+)
 
 # The unsupported numeric free-response attribute. DEF064 — catching it at the
 # source text (not the parsed model) is what makes reintroduction impossible:
@@ -43,7 +47,7 @@ _TOLERANCE_ATTR = re.compile(r"\btolerance=")
 # touching backend/, so an exact count would turn red on every wave; a floor
 # still catches the silent-shrink failure this file exists for. Bump it when a
 # wave integrates — it only ever grows, never returns to an exact pin.
-LESSON_COUNT_FLOOR = 270
+LESSON_COUNT_FLOOR = 334
 
 
 def _lesson_paths() -> list[Path]:
