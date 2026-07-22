@@ -150,6 +150,18 @@ def _inline_term_tokens(body: str) -> str:
     return _TERM_RE.sub(lambda m: f"{{{{term:{m.group('id')}}}}}", body)
 
 
+# CR053 — <Lesson id="039" /> — inline cross-lesson quick-link. Substituted to
+# an id-keyed `{{lesson:id}}` token inside the prose, mirroring `_TERM_RE`
+# exactly. parse_mdx sees one file at a time and has no global lesson code
+# map, so the id->code (CR044) resolution happens client-side (CR053-MOBILE).
+_LESSON_RE = re.compile(r'<Lesson\s+id\s*=\s*"(?P<id>[^"]+)"\s*/>')
+
+
+def _inline_lesson_tokens(body: str) -> str:
+    """Replace `<Lesson id="X"/>` with `{{lesson:X}}` inline tokens."""
+    return _LESSON_RE.sub(lambda m: f"{{{{lesson:{m.group('id')}}}}}", body)
+
+
 def _parse_jsx_attrs(text: str) -> dict[str, Any]:
     """Tolerant parser for the small subset of JSX attribute syntax we use.
 
@@ -238,6 +250,7 @@ def parse_mdx(path: Path) -> Lesson:
     # Inline-tokenize <Term/> tags before block extraction so they ride
     # inside prose blocks rather than getting promoted to standalone blocks.
     body = _inline_term_tokens(body)
+    body = _inline_lesson_tokens(body)
     fm = yaml.safe_load(fm_raw) or {}
 
     level = int(fm.get("level", 1))

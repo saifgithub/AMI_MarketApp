@@ -150,6 +150,36 @@ def test_no_lesson_uses_the_unsupported_numeric_quiz_form():
     )
 
 
+# ── CR053: `{{lesson:ID}}` inline quick-link resolve guard ──────────────
+#
+# `<Lesson id="ID"/>` is substituted (parse_mdx, mirroring `<Term>`) to the
+# inline token `{{lesson:ID}}`. Nothing validates that ID against the corpus
+# at substitution time — parse_mdx sees one file and has no global id map —
+# so a typo'd or deleted id would otherwise ship as a dead client-side chip.
+# This is the resolve guard (degrade-loudly, CR040): every token produced
+# across the whole corpus must resolve to a real `content/lessons/<ID>_*.en.mdx`.
+#
+# Pre-migration (CR053-MIGRATE not yet landed) there are zero `<Lesson/>` tags
+# in the corpus, so this passes vacuously today — that's correct; it arms the
+# guard so the migration's tags are validated as they land.
+
+_LESSON_TOKEN_RE = re.compile(r"\{\{lesson:(?P<id>[^}]+)\}\}")
+
+
+def test_every_lesson_token_resolves_to_a_real_lesson_id(lessons):
+    known_ids = {l.meta.id for l in lessons}
+    offenders = []
+    for lesson in lessons:
+        for block in lesson.blocks:
+            for token_id in _LESSON_TOKEN_RE.findall(block.markdown or ""):
+                if token_id not in known_ids:
+                    offenders.append((lesson.meta.id, token_id))
+    assert not offenders, (
+        "{{lesson:ID}} tokens with no matching content/lessons/<ID>_*.en.mdx "
+        f"(source lesson, dangling id): {offenders}"
+    )
+
+
 # ── CR044: group-scoped lesson codes ────────────────────────────────────
 #
 # The code is the identifier the user reads off the badge and says back to the

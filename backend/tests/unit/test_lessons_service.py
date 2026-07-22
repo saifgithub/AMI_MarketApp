@@ -219,6 +219,36 @@ def test_lesson_inlines_multiple_terms_in_one_sentence(tmp_path):
     assert "{{term:stop_loss}}" in body
 
 
+def test_lesson_inlines_lesson_tokens_into_prose(tmp_path):
+    """CR053 — `<Lesson id="…"/>` is substituted to a `{{lesson:…}}` inline
+    token inside the surrounding markdown block, NOT promoted to a separate
+    block. Mirrors `<Term>`'s treatment exactly.
+    """
+    from app.services.lessons_service import parse_mdx
+
+    mdx = tmp_path / "097_lesson_ref_test.en.mdx"
+    mdx.write_text(
+        '---\n'
+        'id: "097_lesson_ref_test"\n'
+        'title: "Lesson ref parse test"\n'
+        'duration_min: 2\n'
+        'level: 1\n'
+        'track: "foundations"\n'
+        'topic: "test"\n'
+        '---\n\n'
+        'See <Lesson id="039" /> for a refresher.\n',
+        encoding="utf-8",
+    )
+    lesson = parse_mdx(mdx)
+    kinds = [b.kind for b in lesson.blocks]
+    # No lesson-ref blocks emitted — tokens ride inside prose.
+    assert "lesson" not in kinds
+    md_blocks = [b for b in lesson.blocks if b.kind == "markdown"]
+    assert any("{{lesson:039}}" in (b.markdown or "") for b in md_blocks)
+    joined = " ".join(b.markdown or "" for b in md_blocks)
+    assert "See" in joined and "for a refresher" in joined
+
+
 def test_lesson_extracts_quizzes_and_markdown(svc: LessonsService):
     lesson = svc.get(LEGACY_MARKET_ORDER_LESSON)
     assert lesson is not None
