@@ -185,3 +185,44 @@ a code change.
 - `flutter test test/honeycomb_layout_test.dart` — 8/8.
 - Live `GET /v1/lessons` returns 12 tracks / 334 lessons; the comb renders 12 with the 13th
   slot empty, and will render 13 the moment CR062 promotes.
+
+### Regression introduced and fixed in the same round — `+47` shipped hexes at 2x
+
+Saiful, on the `+47` build: *"the hexagons are far too large"*, then *"no way. they are HUMONGOUS in
+android and IOS"*, then *"if you say that this was not changed, then something else went wrong
+because each hex is MUCH bigger than before. you need to figure out why rather than just gloss it
+over."* He was right and the first response — asserting the size was unchanged because the source
+still read "⅖ × maxWidth" — was wrong.
+
+The original line was:
+
+```dart
+final hexW = constraints.maxWidth * 2 / 5;                     // 0.40
+```
+
+The DEF082 refactor substituted the new named constant into it:
+
+```dart
+final hexW = constraints.maxWidth * 2 / honeycombWidthInHexes; // 2 / 2.5 = 0.80
+```
+
+The literal `5` was the denominator of the *fraction* `2/5`, not the cluster's width in hexes. They
+are unrelated numbers that both describe the layout, which is exactly why the substitution looked
+right. The comment immediately above it still read `// hexW = maxWidth * 2/5` — comment preserved,
+code broken, and no test compared them. On a 358 pt content width every hex rendered at **286 pt
+instead of 143**, a **716 × 1240** cluster inside a 358 pt column.
+
+**Fixed** by making the fraction its own named constant at its true value,
+`honeycombHexWidthFraction = 0.40` — the size the 7-hex flower shipped with, which is what Saiful
+asked for (*"use the previous size please, just extended by two lines"*). Five rows at that size is
+620 pt and scrolls; that is inherent to the layout he chose, not a sizing problem.
+
+**Guard:** `honeycomb_layout_test.dart` now asserts
+`honeycombHexWidthFraction * honeycombWidthInHexes <= 1.0` and that no slot's right edge exceeds the
+box. The bad value is 2.0 against that bound, so the build fails instead of shipping. The lesson is
+narrower than "degrade loudly" — a *dimensionless ratio* and a *count* are not interchangeable even
+when both are literals in the same expression, and geometry needs at least one assertion tying the
+rendered extent back to the space it was given.
+
+Interim `0.1.0+48` (fraction 0.30) was built but **never shipped** — it was shrinking against the
+wrong baseline. `0.1.0+49` carries the correct 0.40.

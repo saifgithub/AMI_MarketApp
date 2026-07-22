@@ -169,6 +169,24 @@ void main() {
   });
 
   group('honeycomb geometry', () {
+    test('the comb fits the width it is given', () {
+      // 0.1.0+47 shipped `maxWidth * 2 / honeycombWidthInHexes` — a misread of
+      // the original `2 / 5` — which is 0.80, so the comb rendered at 2x and
+      // overflowed its column. This is the assertion that would have caught it.
+      expect(honeycombHexWidthFraction * honeycombWidthInHexes,
+          lessThanOrEqualTo(1.0),
+          reason: 'three columns span 2.5 hexes; they cannot exceed the box');
+
+      const maxWidth = 358.0;
+      final hexW = maxWidth * honeycombHexWidthFraction;
+      final slots = honeycombSlots(13, hexW, hexW / 1.1547005);
+      for (final s in slots) {
+        expect(s.dx + hexW, lessThanOrEqualTo(maxWidth + 0.5),
+            reason: 'a hex hangs off the right edge');
+      }
+    });
+
+
     test('centre column runs one taller than the sides', () {
       expect(honeycombCentreCount(7), 3); // the old 2/3/2 flower
       expect(honeycombCentreCount(12), 5);
