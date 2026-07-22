@@ -1741,5 +1741,205 @@
     "see_also": ["kelly_criterion", "atr_based_sizing"],
     "related_lessons": ["155"],
     "tags": ["advanced", "risk", "math"]
+  },
+  {
+    "id": "riba",
+    "term": "Riba",
+    "definition": "Interest — a guaranteed, outcome-independent return on money lent, charged regardless of whether the borrower's venture profits or loses. One of the four core Sharia prohibitions; the organizing principle it violates is risk-sharing over risk-transfer, since the lender's claim is fixed no matter the underlying outcome.",
+    "category": "islamic_finance",
+    "see_also": ["gharar", "maysir", "haram", "musharakah", "mudarabah"],
+    "related_lessons": ["347", "352", "353"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "riba", "interest", "four_prohibitions"]
+  },
+  {
+    "id": "gharar",
+    "term": "Gharar",
+    "definition": "Excessive uncertainty in a contract's terms — subject matter, price, or quantity left genuinely undefined. One of the four core Sharia prohibitions; distinct from riba, gharar disqualifies a contract even when no interest is charged, because the ambiguity itself is the defect.",
+    "category": "islamic_finance",
+    "see_also": ["riba", "maysir", "haram"],
+    "related_lessons": ["347"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "gharar", "uncertainty", "four_prohibitions"]
+  },
+  {
+    "id": "maysir",
+    "term": "Maysir",
+    "definition": "Gambling — a win-or-lose wager with no link to real economic activity or shared venture risk. One of the four core Sharia prohibitions; a structure can fail on maysir even while charging no interest at all, e.g. a binary bet on an index level.",
+    "category": "islamic_finance",
+    "see_also": ["riba", "gharar", "haram"],
+    "related_lessons": ["347", "348"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "maysir", "gambling", "four_prohibitions"]
+  },
+  {
+    "id": "halal",
+    "term": "Halal",
+    "definition": "Permissible under Sharia. In AMI's screening context, a company or instrument is halal when it clears both stages of the two-stage screen — the business-activity screen and the three financial-ratio screens — under a named standard. AMI's use of the term reflects a published screening methodology, not a religious ruling.",
+    "category": "islamic_finance",
+    "see_also": ["haram", "sharia_compliant", "business_activity_screen", "financial_ratio_screen"],
+    "related_lessons": ["348", "349", "355"],
+    "related_agents": ["fundamentals_analyst", "portfolio_manager"],
+    "tags": ["islamic_finance", "halal", "screening"]
+  },
+  {
+    "id": "haram",
+    "term": "Haram",
+    "definition": "Forbidden under Sharia. A company whose core revenue comes from a haram business activity — alcohol, tobacco, pork or non-halal food, gambling, conventional interest-based banking or insurance, weapons, or adult entertainment — fails the business-activity screen outright, regardless of its financial ratios.",
+    "category": "islamic_finance",
+    "see_also": ["halal", "business_activity_screen", "riba", "maysir"],
+    "related_lessons": ["347", "348"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "haram", "business_activity_screen"]
+  },
+  {
+    "id": "sukuk",
+    "term": "Sukuk",
+    "definition": "An Islamic financing instrument structured as partial ownership of a real, underlying asset or venture; the return is rental income, profit-share, or a sale-and-leaseback markup, not interest on money lent. Prices similarly to a conventional bond, but the legal claim underneath — real asset ownership rather than a debt owed regardless of outcome — is what makes it non-riba.",
+    "category": "islamic_finance",
+    "see_also": ["riba", "ijarah", "sharia_compliant"],
+    "related_lessons": ["352", "303", "304", "307"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "sukuk", "fixed_income"]
+  },
+  {
+    "id": "ijarah",
+    "term": "Ijarah",
+    "definition": "An Islamic leasing contract: the financier retains ownership of an asset and leases it to the customer for a fixed rental, with either an option to buy at the end (ijarah muntahia bittamlik) or a straight operating lease. Conventional analogue: an equipment or property lease. A common structuring basis for sukuk al-ijarah.",
+    "category": "islamic_finance",
+    "see_also": ["sukuk", "murabahah", "musharakah", "mudarabah", "takaful"],
+    "related_lessons": ["353", "352"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "ijarah", "contracts", "leasing"]
+  },
+  {
+    "id": "murabahah",
+    "term": "Murabahah",
+    "definition": "A cost-plus sale contract: the financier buys an asset and immediately resells it to the customer at a disclosed, fixed markup, payable over time. Legally a sale, not a loan — no compounding, no penalty interest on the outstanding balance. Conventional analogue: a loan, though the legal substance differs.",
+    "category": "islamic_finance",
+    "see_also": ["ijarah", "musharakah", "mudarabah", "takaful", "riba"],
+    "related_lessons": ["353"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "murabahah", "contracts"]
+  },
+  {
+    "id": "musharakah",
+    "term": "Musharakah",
+    "definition": "A partnership contract: two or more parties contribute capital and share profit and loss in a pre-agreed ratio. Conventional analogue: joint-venture equity. Illustrates risk-sharing over risk-transfer — both parties' returns move with the venture's actual outcome.",
+    "category": "islamic_finance",
+    "see_also": ["mudarabah", "murabahah", "ijarah", "takaful", "riba"],
+    "related_lessons": ["347", "353"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "musharakah", "contracts", "risk_sharing"]
+  },
+  {
+    "id": "mudarabah",
+    "term": "Mudarabah",
+    "definition": "A profit-sharing venture contract: one party contributes capital, a manager contributes expertise and labor, and profit is split by a pre-agreed ratio, while capital loss (absent manager negligence) falls on the capital provider. Conventional analogue: a fund with a general-partner/limited-partner split.",
+    "category": "islamic_finance",
+    "see_also": ["musharakah", "murabahah", "ijarah", "takaful"],
+    "related_lessons": ["353"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "mudarabah", "contracts", "risk_sharing"]
+  },
+  {
+    "id": "takaful",
+    "term": "Takaful",
+    "definition": "Mutual, Sharia-compliant risk-sharing: participants pool contributions into a shared fund that pays out claims, with any surplus returned to participants rather than kept as insurer profit. Conventional analogue: mutual insurance, structurally closer to a cooperative than a for-profit insurer underwriting risk for its own account.",
+    "category": "islamic_finance",
+    "see_also": ["musharakah", "mudarabah", "murabahah", "ijarah"],
+    "related_lessons": ["353"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "takaful", "contracts", "insurance"]
+  },
+  {
+    "id": "tazkiyah",
+    "term": "Tazkiyah (purification)",
+    "definition": "The practice of calculating the impermissible-income share of a dividend received from a screen-passing stock and donating that exact amount away rather than keeping it. Computed from the company's own disclosed non-compliant-income ratio applied to total income, then to the specific dividend paid — never a hand-waved estimate. Applies even to stocks that clear both the business-activity and financial-ratio screens.",
+    "category": "islamic_finance",
+    "see_also": ["financial_ratio_screen", "sharia_compliant", "halal"],
+    "related_lessons": ["351", "349"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "tazkiyah", "purification", "dividends"]
+  },
+  {
+    "id": "aaoifi",
+    "term": "AAOIFI",
+    "definition": "Accounting and Auditing Organization for Islamic Financial Institutions — a standard-setting body whose Shariah Standards define, among other things, the four prohibitions, the two-stage screening methodology, and the debt/liquidity/income ratio caps (33%/33%/5% by default) AMI's screening logic follows. One of several named standards; AAOIFI, Bursa Malaysia's SAC, and the major index providers can disagree at the margin.",
+    "category": "islamic_finance",
+    "see_also": ["shariah_advisory_council", "dow_jones_islamic_market_index", "financial_ratio_screen", "sharia_screening"],
+    "related_lessons": ["349", "350", "351", "352"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "aaoifi", "standards"]
+  },
+  {
+    "id": "shariah_advisory_council",
+    "term": "Shariah Advisory Council (SAC)",
+    "definition": "Bursa Malaysia's Shariah Advisory Council — the body that publishes and maintains the Bursa-i Shariah-compliant securities list, refreshed twice yearly. Its methodology is widely understood to run more leniently than an AAOIFI/GCC-style screen on some criteria, e.g. denominator choice for the debt and liquidity ratios — one concrete source of standards disagreement, not an error in either methodology.",
+    "category": "islamic_finance",
+    "see_also": ["aaoifi", "dow_jones_islamic_market_index", "sharia_screening"],
+    "related_lessons": ["350", "354"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "sac", "bursa_malaysia", "standards"]
+  },
+  {
+    "id": "dow_jones_islamic_market_index",
+    "term": "Dow Jones Islamic Market Index",
+    "definition": "One of the major Sharia-compliant index families (alongside S&P Shariah, MSCI Islamic, and FTSE Shariah), each publishing its own business-activity exclusion list and financial-ratio thresholds. Islamic ETFs like SPUS and HLAL track a named index from this family or a peer; two Islamic ETFs covering a similar universe can hold different names because the underlying index methodologies don't always agree on borderline stocks.",
+    "category": "islamic_finance",
+    "see_also": ["shariah_advisory_council", "aaoifi", "islamic_etf", "sharia_screening"],
+    "related_lessons": ["349", "350", "354"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "index", "etf", "standards"]
+  },
+  {
+    "id": "sharia_screening",
+    "term": "Sharia screening",
+    "definition": "The two-stage process of determining whether a company or instrument is compliant under a named Sharia standard: the business-activity screen (qualitative sector exclusion) runs first, then the financial-ratio screen (three quantitative caps) runs on companies that pass stage one. AMI's halal Mandate flag runs this exact pipeline, computed via backend screening logic, never a keyword shortcut.",
+    "category": "islamic_finance",
+    "see_also": ["business_activity_screen", "financial_ratio_screen", "halal", "sharia_compliant"],
+    "related_lessons": ["348", "349", "355"],
+    "related_agents": ["fundamentals_analyst", "portfolio_manager"],
+    "tags": ["islamic_finance", "screening", "methodology"]
+  },
+  {
+    "id": "business_activity_screen",
+    "term": "Business-activity screen",
+    "definition": "The first, qualitative stage of the Sharia screen: does the company's core revenue come from an excluded sector — alcohol, tobacco, pork or non-halal food, gambling, conventional interest-based banking or insurance, weapons, or adult entertainment? A company in an excluded sector fails outright, regardless of its financial ratios; passing it only earns a company a shot at the ratio screen next.",
+    "category": "islamic_finance",
+    "see_also": ["financial_ratio_screen", "sharia_screening", "haram", "maysir"],
+    "related_lessons": ["348", "349"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "screening", "business_activity"]
+  },
+  {
+    "id": "financial_ratio_screen",
+    "term": "Financial-ratio screen",
+    "definition": "The second, quantitative stage of the Sharia screen: three ratios, each checked against a cap under an AAOIFI-style methodology — interest-bearing debt / market cap (33%), cash plus interest-bearing securities / market cap (33%), and non-compliant income / total revenue (5%). All three must pass; failing any one fails the whole screen, independent of the business-activity result. Computed via AMI's `sharia_screen` function, never hand-authored.",
+    "category": "islamic_finance",
+    "see_also": ["business_activity_screen", "sharia_screening", "aaoifi", "tazkiyah"],
+    "related_lessons": ["349", "355", "356"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "screening", "ratios"]
+  },
+  {
+    "id": "sharia_compliant",
+    "term": "Sharia-compliant",
+    "definition": "Having cleared a named Sharia standard's screening methodology — always qualified by which standard produced the result, since AAOIFI, Bursa SAC, and the major index providers can reach different verdicts on the same company at the same moment. AMI names the standard applied rather than asserting an unqualified 'compliant, full stop.'",
+    "category": "islamic_finance",
+    "see_also": ["halal", "sharia_screening", "aaoifi", "shariah_advisory_council"],
+    "related_lessons": ["350", "356"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "sharia_compliant", "standards"]
+  },
+  {
+    "id": "islamic_etf",
+    "term": "Islamic ETF",
+    "definition": "An exchange-traded fund that tracks a Sharia-compliant index, e.g. SPUS (S&P 500 Sharia Industry Exclusions Index) or HLAL (FTSE Shariah). The fund's name confirms some Sharia screen is applied; the prospectus's stated index methodology tells you which standard — two Islamic ETFs covering a similar universe can hold different names. Ordinary expense-ratio and tracking-error checks still apply in full.",
+    "category": "islamic_finance",
+    "see_also": ["dow_jones_islamic_market_index", "shariah_advisory_council", "sharia_compliant"],
+    "related_lessons": ["354", "310"],
+    "related_agents": ["fundamentals_analyst"],
+    "tags": ["islamic_finance", "etf", "funds"]
   }
 ]

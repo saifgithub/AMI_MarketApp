@@ -1,0 +1,240 @@
+[
+  {
+    "id": "dc_2026_12_01_casino_business_screen",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user with the halal Mandate flag on adds Genting Berhad (Bursa: GENTING) to a screening request. The Fundamentals Analyst pulls its balance sheet: interest-bearing debt is a modest 12% of market cap, cash plus interest-bearing securities is 9% of market cap, and non-compliant income is 1.2% of revenue — all three comfortably inside the 33%/33%/5% caps. The user argues the ratios are clean, so the screen should pass.",
+    "question": "Where does AMI's two-stage Sharia screen actually stop for this ticker, and why?",
+    "options": [
+      "It fails at the business-activity screen — casino and gaming revenue is an excluded maysir-based category, so the screen never reaches the ratio stage regardless of how clean the ratios are",
+      "It passes overall — all three financial ratios clear their caps comfortably",
+      "It fails at the ratio screen, since the debt ratio secretly exceeds 33% once trailing-average market cap is used",
+      "It passes conditionally, pending a purification calculation on future dividends"
+    ],
+    "answer": 0,
+    "explanation": "Gaming and casino revenue is an excluded core-business category under the business-activity screen — stage one of the two-stage pipeline — so the screen stops there regardless of what the financial ratios show. No ratio outcome can rescue a company whose core business sits in an excluded sector; clean ratios are irrelevant once the business-activity gate has already failed the ticker.",
+    "related_lesson": "348",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "business_activity_screen",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_02_leveraged_telecom_ratio_screen",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A user screens a heavily-levered telecom carrier: core business is telecommunications (no excluded sector), so the Fundamentals Analyst reports 'business-activity screen: pass' and stops there, marking the ticker halal-eligible for the Mandate. The balance sheet shows interest-bearing debt of $138,000M against a market cap of $128,000M.",
+    "question": "What step did the analyst's report skip before calling this ticker halal-eligible?",
+    "options": [
+      "A purification calculation on the company's most recent dividend",
+      "The three financial-ratio screens — running debt/market cap ($138,000M / $128,000M = 107.8%, cap 33%) would have failed the screen outright on leverage alone, independent of the clean business-activity result",
+      "A check for whether the company is listed on Bursa Malaysia or a US exchange",
+      "Confirmation that the company pays a dividend at all"
+    ],
+    "answer": 1,
+    "explanation": "Passing the business-activity screen only clears stage one. The debt ratio here — $138,000M interest-bearing debt against a $128,000M market cap — computes to 107.8%, more than three times the 33% cap, which fails the screen outright on the financial-ratio stage regardless of the clean business-activity result. Purification only applies to a screen-passing stock's dividends, which this ticker never reaches; listing exchange has no bearing on either stage.",
+    "related_lesson": "349",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "financial_ratio_screen",
+      "debt_ratio",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_03_sukuk_fixed_buyback",
+    "type": "spot_the_violation",
+    "difficulty": 4,
+    "locale": "en",
+    "scenario": "An issuer markets a new instrument as a 'sukuk al-ijarah': an SPV holds a warehouse and leases it back to the issuer, with sukuk holders earning the rental income. The prospectus also guarantees the issuer will repurchase the warehouse from the SPV at a fixed, pre-agreed price at maturity, regardless of the warehouse's market value at that time, so holders receive a fixed principal-equivalent payout no matter what.",
+    "question": "What is the strongest critique a Sharia scholar would raise against this specific structure?",
+    "options": [
+      "None — any structure using an SPV and a lease is automatically compliant regardless of other terms",
+      "The warehouse itself must be a religious violation, since real estate cannot legally back a sukuk",
+      "The fixed-price purchase-undertaking at maturity can reproduce a guaranteed principal-plus-return claim in economic substance — the same risk-transfer outcome the asset-ownership framing is meant to avoid, functioning as riba in substance despite the sukuk label",
+      "The structure fails only because it uses a warehouse instead of an office tower"
+    ],
+    "answer": 2,
+    "explanation": "This is the genuine, scholar-raised critique of certain sukuk structures: a guaranteed fixed-price buyback at maturity can functionally recreate a guaranteed-return loan claim, undermining the risk-sharing rationale that justifies calling the structure non-riba. AAOIFI's own standards have tightened over time specifically in response to this pattern. Using an SPV and a lease is a necessary structural feature, not sufficient on its own; nothing about the asset type (warehouse vs. any other real asset) is the issue — the concern is the guaranteed fixed-price term, not the collateral.",
+    "related_lesson": "352",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "steelman",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_04_unnamed_standard",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "The Fundamentals Analyst returns a screening summary for a mid-cap stock: 'Business activity: pass. Debt ratio: 29.4%. Liquidity ratio: 18.1%. Income ratio: 3.2%. Overall: compliant.' The user asks whether this stock would also be compliant under Bursa Malaysia's SAC methodology.",
+    "question": "What's missing from the analyst's summary that would answer the user's question directly?",
+    "options": [
+      "A purification amount for the company's next dividend",
+      "The company's ticker symbol",
+      "A backtest of the stock's price history over the last five years",
+      "The specific standard (which ratio caps and which denominator) the reported 29.4%/18.1%/3.2% figures were checked against — without naming it, there's no way to know if the SAC's methodology would produce the same verdict"
+    ],
+    "answer": 3,
+    "explanation": "Because standards genuinely disagree on thresholds and denominators, an unqualified 'compliant' is incomplete — the discipline is naming which standard produced the result (e.g. 'compliant under an AAOIFI-style 33%/33%/5% screen'), since a different standard's denominator or snapshot convention could shift a borderline ratio across its cap. Purification only applies once a specific standard's screen has been named and passed; the ticker symbol and a price backtest don't address the standards-disagreement question the user actually asked.",
+    "related_lesson": "350",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "standards_disagreement",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_05_dividend_purification_skipped",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A stock clears both the business-activity screen and all three financial-ratio caps under an AAOIFI-style screen. Its disclosed non-compliant (interest) income is $700M against total income of $100,000M. A user receives a $960.00 dividend from the position and treats the full $960.00 as clean income because 'the stock already passed the Sharia screen.'",
+    "question": "What step is the user skipping, and what would it change?",
+    "options": [
+      "Purification: (700 / 100,000) × 960.00 = $6.72 of the dividend represents the impermissible-income share and should be donated away, leaving $953.28 as legitimately retained income",
+      "Nothing — a screen-passing stock's dividends are automatically fully compliant with no further step required",
+      "Re-running the business-activity screen on every dividend received",
+      "Converting the dividend into a sukuk before it can be considered clean"
+    ],
+    "answer": 0,
+    "explanation": "Passing the ratio screen means the impermissible-income share was small enough to tolerate holding the stock at all — it does not mean that sliver disappears from any dividend actually paid. The purification calculation applies the company's own non-compliant-income fraction (700/100,000 = 0.7%) to the specific dividend received: 0.7% of $960.00 is $6.72, which is typically donated away, leaving $953.28 as legitimately retained. Re-screening business activity per dividend isn't how purification works, and converting a dividend into a sukuk is not a real step in this process.",
+    "related_lesson": "351",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "purification",
+      "tazkiyah",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_06_conventional_bank_screen",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "An analyst evaluates a conventional commercial bank for the halal Mandate. Its balance sheet ratios are unremarkable for a bank — nothing alarming versus sector peers — so the analyst runs the three financial-ratio screens directly and reports 'debt ratio, liquidity ratio, and income ratio all within normal bank ranges; recommend pass.'",
+    "question": "What did the analyst get wrong about how the screen should have been applied here?",
+    "options": [
+      "Nothing — banks are screened on their financial ratios exactly like any other company, with no special treatment",
+      "The analyst used the wrong denominator for the debt ratio",
+      "The analyst skipped the business-activity screen entirely — a conventional bank's core revenue is interest income (riba) by construction, which excludes it categorically at stage one, before any ratio is ever reached",
+      "The analyst should have used a 40% debt cap instead of 33% because banks are naturally more levered"
+    ],
+    "answer": 2,
+    "explanation": "A conventional bank's core business model — lending money at interest and earning a spread — is riba by construction, which is a business-activity exclusion, not a ratio problem. This is why the screen fails a conventional bank categorically at stage one, before any financial ratio is even computed; it's also why Islamic banks are structured as separate legal entities built on murabahah/ijarah-style products rather than a screened subset of a conventional bank's book. Running only the ratio stage skips the gate that actually disqualifies this ticker; there's no bank-specific exception to the standard 33% caps.",
+    "related_lesson": "348",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "business_activity_screen",
+      "banking",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_07_halal_flag_not_separate_step",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "With the halal Mandate flag on, the Room debates a ticker and the Bull Researcher makes a strong case; the Verdict comes back bullish. The user assumes the trade is automatically approved as halal because 'the debate never raised any compliance concerns.'",
+    "question": "What step is missing from the user's reasoning about how the halal flag actually works?",
+    "options": [
+      "Nothing — if no analyst in the debate raises a Sharia objection, the trade is halal by default",
+      "The PM's deterministic business-activity-plus-ratio check, which runs as a separate step AFTER the debate finishes and can still block the trade regardless of how convincing the bullish debate was — it is not something any analyst's opinion inside the debate settles",
+      "A vote among all 12 agents on whether the ticker is halal",
+      "A manual override the user must click before the trade can be blocked"
+    ],
+    "answer": 1,
+    "explanation": "The halal Mandate flag is not a topic the analyst debate resolves by consensus — it's the PM's uncoachable, deterministic check (the same architecture as the PM's other compliance floors), which runs the actual two-stage screen after the debate produces its Verdict and can block the trade regardless of how bullish or persuasive the debate was. There's no 12-agent vote and no manual step required to trigger the block; the debate not raising an objection tells you nothing about the separate deterministic result.",
+    "related_lesson": "355",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "islamic_finance",
+      "halal_flag",
+      "mandate",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_08_overstated_compliance_claim",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "A large-cap semiconductor company runs cleanly through the two-stage screen: interest-bearing debt of $8,500M against a $3,200,000M market cap, cash plus interest-bearing securities of $34,000M, non-compliant income of $500M against $130,000M revenue — debt ratio 0.3%, liquidity ratio 1.1%, income ratio 0.4%, all well inside the 33%/33%/5% caps. The Fundamentals Analyst's summary states: 'This stock is Sharia-compliant.'",
+    "question": "What's the precision problem with stating the result this way?",
+    "options": [
+      "There's no problem — the ratios are so far inside the caps that no further qualification is needed",
+      "The claim is wrong because a 0.3% debt ratio is actually too low to be considered a real company",
+      "The claim should have used the company's total assets figure instead of its market cap",
+      "The claim should name the specific standard the screen was checked against (e.g. 'compliant under this AAOIFI-style 33%/33%/5% screen') rather than an unqualified 'compliant,' since a different named standard could apply a different denominator or threshold and reach a different verdict on the identical company"
+    ],
+    "answer": 3,
+    "explanation": "Even for a comfortably clean pass, the discipline is naming the standard behind the verdict rather than asserting an unqualified 'compliant' — because a different standard (a different index rulebook, a different denominator) could genuinely reach a different result on the same company, and the whole point of the standards-disagreement lesson is presenting that possibility rather than adjudicating it away. A very low ratio doesn't exempt the report from naming its methodology, an unusually low debt ratio isn't itself a red flag, and total assets vs. market cap is a real methodology choice — but the missing piece here is naming whichever one was actually used, not switching to a different one by default.",
+    "related_lesson": "356",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "standards_disagreement",
+      "capstone",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_09_sukuk_priced_as_loan",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "en",
+    "scenario": "An analyst compares a sukuk al-ijarah's yield to a conventional bond's coupon and concludes: 'the pricing mechanics are identical to a bond's, so for compliance purposes they can be treated the same.'",
+    "question": "What distinction is the analyst's conclusion missing?",
+    "options": [
+      "Nothing — identical pricing mechanics means the two instruments are Sharia-equivalent",
+      "That sukuk always yield less than conventional bonds, which the analyst should have caught",
+      "That similar pricing behavior (price moving opposite to yield, the same way it does for a conventional bond) says nothing about the underlying legal claim — what makes the sukuk non-riba is genuine ownership of, and rental income from, a real asset, not the size or shape of the payment stream",
+      "That sukuk cannot be priced using yield-to-maturity concepts at all"
+    ],
+    "answer": 2,
+    "explanation": "A sukuk's price does move the way a bond's does — the mechanics from lesson 304 (price opposite to yield) still apply — but that mechanical similarity says nothing about compliance. What makes a sukuk non-riba is the legal claim underneath: real asset ownership generating rental or profit income, not a debt owed regardless of the asset's performance. Similar pricing behavior does not make the two instruments interchangeable for Sharia purposes; sukuk yields aren't structurally required to be lower, and YTM-style pricing concepts do apply to sukuk — that's precisely why the mechanics look similar in the first place.",
+    "related_lesson": "352",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "bonds",
+      "module_25"
+    ]
+  },
+  {
+    "id": "dc_2026_12_10_islamic_etf_assumed_identical",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "en",
+    "scenario": "A user compares SPUS (tracks an S&P Sharia Industry Exclusions index) and HLAL (tracks a FTSE Shariah index), both covering large-cap US stocks. Seeing both labeled 'Islamic ETF,' the user assumes they hold the same underlying stocks and picks whichever has the lower expense ratio without checking holdings.",
+    "question": "What assumption in the user's reasoning doesn't hold?",
+    "options": [
+      "That 'Islamic ETF' in the name means both funds apply an identical screen — in fact S&P's and FTSE's Shariah methodologies use different thresholds and denominators, so borderline names can pass one index's screen and fail the other's, producing different holdings",
+      "That expense ratio is a valid factor to consider at all when comparing two Islamic ETFs",
+      "That either fund could legally be labeled 'Islamic' without applying any screen",
+      "That large-cap US equity ETFs are permitted to hold non-US stocks"
+    ],
+    "answer": 0,
+    "explanation": "Both funds do apply a real Sharia screen — that's not in question — but S&P's and FTSE's methodologies don't always agree on borderline names, so two 'Islamic' ETFs covering a similar universe can legitimately hold different stock lists. The user's error is treating the shared label as proof of identical holdings rather than checking each fund's named index methodology. Expense ratio is still a valid, ordinary comparison factor once the holdings question is settled — it just isn't sufficient on its own, and nothing here concerns whether the funds hold non-US names.",
+    "related_lesson": "354",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "islamic_finance",
+      "etf",
+      "standards_disagreement",
+      "module_25"
+    ]
+  }
+]

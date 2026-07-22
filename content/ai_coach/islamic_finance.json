@@ -1,0 +1,303 @@
+[
+  {
+    "id": "qa_islamic_is_ticker_halal",
+    "category": "islamic_finance",
+    "question": "Is [ticker] halal?",
+    "short_answer": "AMI doesn't issue a yes/no ruling on any ticker. It runs the ticker through the published two-stage screen — business activity, then the three financial ratios — under a named standard, and shows you the result and which standard produced it.",
+    "long_answer": "Ask AMI to screen a ticker and it runs the same two-stage pipeline the halal Mandate flag uses: first, the business-activity screen — does the company's core revenue come from an excluded sector (alcohol, tobacco, pork/non-halal food, gambling, conventional interest-based banking or insurance, weapons, adult entertainment)? A company in an excluded sector fails outright, no ratio can rescue it. Second, for companies that pass stage one, the three financial ratios computed exactly via AMI's screening logic — interest-bearing debt / market cap (cap 33%), cash plus interest-bearing securities / market cap (cap 33%), and non-compliant income / total revenue (cap 5%). All three must pass. Because AAOIFI, Bursa Malaysia's SAC, and the major index providers (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah) don't always agree on thresholds or denominators, the same ticker can genuinely land on different sides of the line under different standards — AMI names which standard produced its result rather than declaring one 'correct.' This is AMI teaching the published screening methodology as a training exercise, not issuing a religious ruling. For a real portfolio decision, consult a qualified Sharia scholar or your own Islamic finance authority.",
+    "related_lessons": [
+      "348",
+      "349",
+      "350",
+      "355"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "islamic_finance",
+      "halal",
+      "screening",
+      "not_a_ruling"
+    ]
+  },
+  {
+    "id": "qa_islamic_what_does_halal_filter_check",
+    "category": "islamic_finance",
+    "question": "What does AMI's halal filter actually check?",
+    "short_answer": "It runs the ticker's business activity, then three financial ratios (debt, liquidity, income) through a deterministic screen — the same discipline as the PM's other compliance checks — after the analyst debate finishes, not as a keyword filter.",
+    "long_answer": "The halal Mandate flag is not a sector-keyword scan for words like 'bank' or 'brewery.' It runs AMI's actual two-stage screen: stage one excludes companies whose core revenue is in a prohibited business category; stage two checks three ratios against caps (debt / market cap ≤ 33%, cash plus interest-bearing securities / market cap ≤ 33%, non-compliant income / total revenue ≤ 5%), computed exactly via backend screening logic, never hand-authored. A company can pass a naive 'no excluded sector keyword' check and still fail here on the ratio screen alone — a permissible-sector, heavily-levered business is a real failure mode. This runs as a separate, deterministic step after the analyst debate produces its Verdict — the same uncoachable-floor architecture as the PM's other mandate checks, immune to how convincing the debate's bull case was.",
+    "related_lessons": [
+      "348",
+      "349",
+      "355"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "halal",
+      "mandate",
+      "screening"
+    ]
+  },
+  {
+    "id": "qa_islamic_why_stock_stopped_halal",
+    "category": "islamic_finance",
+    "question": "Why did a stock stop being halal?",
+    "short_answer": "Most often its debt or interest-bearing cash grew relative to its market cap and crossed a ratio cap — not because its business changed. Compliance is checked per period, not locked in permanently.",
+    "long_answer": "A company's business-activity status rarely flips (a semiconductor company doesn't suddenly become a brewery), but the financial-ratio result can flip in either direction for two common reasons. First, the company's own balance sheet changed — it took on more interest-bearing debt, or its interest-bearing cash pile grew as a share of market cap. Second, and just as common, the market cap itself moved — since the debt and liquidity ratios use market cap as the denominator, a falling share price alone can push interest-bearing debt above the 33% cap even if the company's debt in dollar terms didn't change at all. This is exactly why the ratio screen is re-run rather than cached: compliance is a snapshot of the current ratios against the current market cap, not a permanent label. AMI's Fundamentals Analyst can show which specific ratio crossed its cap and by how much.",
+    "related_lessons": [
+      "349",
+      "350"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "compliance_drift",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_islamic_sukuk_vs_bond",
+    "category": "islamic_finance",
+    "question": "Is a sukuk the same as a bond?",
+    "short_answer": "No. A conventional bond is a loan owed regardless of outcome; a sukuk is structured as partial ownership of a real asset or venture, paying rental or profit-share income. The pricing mechanics look similar; the legal claim underneath is different.",
+    "long_answer": "A conventional bond is a debt instrument — the issuer owes principal plus interest, full stop, regardless of what the borrowed money was used for. A sukuk is structured as ownership: a common form, sukuk al-ijarah, has the issuer sell a real asset to a special-purpose vehicle, which leases it back; sukuk holders own a share of that vehicle and earn rental income, with the issuer buying the asset back at a pre-agreed price at maturity. The market still prices a sukuk's cash-flow stream the way it prices a bond's — price moves opposite to yield either way — but what makes a sukuk non-riba is the underlying legal claim (real asset ownership generating real income), not the size of the payment or the label on the prospectus. There's a genuine, ongoing debate inside Islamic finance itself: some sukuk structures use a fixed-price purchase-undertaking at maturity that can reproduce a guaranteed-return loan in economic substance, which is exactly why AAOIFI's own standards have tightened over time on this point.",
+    "related_lessons": [
+      "352",
+      "304",
+      "307"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "bonds",
+      "fixed_income"
+    ]
+  },
+  {
+    "id": "qa_islamic_which_standard_does_ami_use",
+    "category": "islamic_finance",
+    "question": "Which Sharia standard does AMI use?",
+    "short_answer": "AMI's halal Mandate flag applies an AAOIFI-style screen (33%/33%/5% ratio caps) by default and always names the standard behind a result — it doesn't declare a result 'compliant, full stop' without saying which methodology produced it.",
+    "long_answer": "AAOIFI, Bursa Malaysia's Shariah Advisory Council (SAC), and the major index providers (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah) each publish their own methodology, and they don't always agree — they can use different ratio thresholds, different denominators (market cap vs. total assets), and different market-cap conventions (single-day snapshot vs. trailing average). AMI's screening logic defaults to an AAOIFI-style 33%/33%/5% threshold set, but the discipline that matters more than which default is chosen is naming the standard behind every result — 'compliant under this AAOIFI-style screen,' not an unqualified 'compliant.' Where a stock would flip under a different named standard, AMI presents that disagreement rather than picking a winner; the final call on which standard governs a real decision belongs to the user's own qualified Sharia authority.",
+    "related_lessons": [
+      "349",
+      "350"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "standards",
+      "aaoifi",
+      "not_a_ruling"
+    ]
+  },
+  {
+    "id": "qa_islamic_purify_dividends",
+    "category": "islamic_finance",
+    "question": "Do I need to purify my dividends?",
+    "short_answer": "Even a stock that clears the full Sharia screen can carry a small impermissible-income sliver (e.g. interest on its own cash). Purification (tazkiyah) is calculating that sliver's share of a dividend and donating it away.",
+    "long_answer": "Passing the business-activity and financial-ratio screens tells you a company's impermissible income is small enough to tolerate holding the stock at all — it does not mean that sliver disappears. Purification is a separate, per-dividend step: take the company's disclosed non-compliant (interest) income as a fraction of its total income, and apply that fraction to the actual dividend received. Worked example from AMI's training content: non-compliant income of $700M against total income of $100,000M is a 0.7% fraction; applied to a $960.00 dividend, that's (700 / 100,000) × 960.00 = $6.72 exactly, typically donated to charity rather than kept. Note this uses a different denominator than the financial-ratio screen's income check (total income here, vs. total revenue in the ratio screen) — related concepts, distinct calculations. AMI computes this exactly via its screening functions; it is never a hand-waved estimate.",
+    "related_lessons": [
+      "351",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "purification",
+      "tazkiyah",
+      "dividends"
+    ]
+  },
+  {
+    "id": "qa_islamic_is_crypto_halal",
+    "category": "islamic_finance",
+    "question": "Is crypto halal?",
+    "short_answer": "It's a genuinely contested edge case among Islamic finance scholars — no single settled answer. AMI doesn't rule on it; it explains the competing arguments (asset-backing, gharar, maysir concerns) and defers to a qualified scholar.",
+    "long_answer": "Crypto sits outside the standard two-stage equity screen because it usually isn't a claim on a company's business activity or balance sheet at all — it's a different asset class, and the four prohibitions apply differently. The debate among scholars centers on a few threads: whether a given token represents a real, tangible underlying asset or venture (closer to the asset-backing logic behind sukuk) versus being a purely speculative claim with no underlying economic activity (raising gharar and maysir concerns); whether high-volatility trading resembles maysir-style wagering; and whether specific use cases (e.g. a token used purely for payment/settlement vs. one structured as a yield-bearing lending product resembling riba) change the analysis. Different scholars and standard-setting bodies have reached different conclusions on different tokens, and the field is actively evolving. AMI's role here, as with equity screening, is to lay out the methodology and the live disagreement — not to issue a verdict. Consult a qualified Sharia scholar for guidance on any specific token or structure.",
+    "related_lessons": [
+      "347"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "crypto",
+      "edge_case",
+      "not_a_ruling"
+    ]
+  },
+  {
+    "id": "qa_islamic_what_is_riba",
+    "category": "islamic_finance",
+    "question": "What is riba, in plain terms?",
+    "short_answer": "A guaranteed, outcome-independent return on money lent — the lender is owed the same amount whether the borrower's venture profits or loses. The alternative Islamic finance prefers is a shared claim on the actual outcome.",
+    "long_answer": "Riba is interest: a fixed claim the lender is owed regardless of what happens to the money. Compare a conventional 7% loan on a $10M factory expansion — the lender is owed $700,000/year even in a year the factory loses money — to a musharakah (partnership) structure where the financier takes, say, 30% of the factory's actual profit: if the factory earns $2M, the financier gets $600,000; if it loses money, the financier's return falls too. The dollar amounts can land close in a good year, but the legal and risk structure is opposite — one is risk-transfer (all risk lands on the borrower), the other is risk-sharing (the financier's return moves with the real outcome). This risk-sharing-over-risk-transfer principle is the organizing idea behind riba's prohibition and behind why Islamic contract structures (murabahah, ijarah, musharakah, mudarabah) replace fixed debt claims with sales, leases, or genuinely shared risk.",
+    "related_lessons": [
+      "347",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "riba",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "qa_islamic_gharar_vs_maysir",
+    "category": "islamic_finance",
+    "question": "What's the difference between gharar and maysir?",
+    "short_answer": "Gharar is excessive uncertainty in a contract's terms (what, how much, at what price). Maysir is gambling — a win-or-lose wager unconnected to real economic activity. Both can disqualify a structure even with zero interest involved.",
+    "long_answer": "They're independent prohibitions, not two names for the same thing. Gharar targets contractual ambiguity: a contract to sell 'the fish I catch next month, price and quantity unknown' is void for excessive uncertainty, while 'deliver 500kg of palm oil in March at $X/tonne' specifies enough that both sides know what they've agreed to. Maysir targets wagering: a bet on an index closing above a price level next Friday, win-or-lose-nothing-in-between, is a wager with no link to real business risk. A structure can fail on either one independently of riba — a commodity contract with genuinely undefined terms fails on gharar even though nobody's charging interest; a lottery-style structured product fails on maysir even when it's marketed as an 'investment.' The trap beginners fall into is checking only 'does it charge interest?' and treating that as the whole test — riba, gharar, maysir, and haram business activity are four independent filters that a structure has to clear all of.",
+    "related_lessons": [
+      "347"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "gharar",
+      "maysir",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "qa_islamic_business_screen_vs_ratio_screen",
+    "category": "islamic_finance",
+    "question": "What's the difference between the business-activity screen and the ratio screen?",
+    "short_answer": "The business-activity screen is a qualitative sector exclusion checked first — no ratio can rescue a company in an excluded sector. The financial-ratio screen is three quantitative caps checked second, and it independently fails permissible-sector companies that are too heavily levered.",
+    "long_answer": "The two-stage screen runs in a fixed order because they answer different questions. Stage one asks 'what does this company do?' — alcohol, tobacco, pork/non-halal food, gambling, conventional interest-based banking or insurance, weapons, and adult entertainment are excluded outright, and a company in one of these categories fails regardless of its balance sheet. Stage two, reached only if stage one passes, asks 'how is this company financed and what does its income look like?' — three ratios (debt/market cap ≤ 33%, cash plus interest-bearing securities/market cap ≤ 33%, non-compliant income/revenue ≤ 5%), all of which must pass. The common beginner mistake is treating a stage-one pass as 'basically halal' — but a company with an entirely permissible core business (e.g. a heavily-levered telecom carrier) can still fail outright at stage two on debt alone. Debt level, not business type, is the more common reason an otherwise-ordinary company fails the overall screen.",
+    "related_lessons": [
+      "348",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "business_activity",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_islamic_why_standards_disagree",
+    "category": "islamic_finance",
+    "question": "Why do different Sharia standards disagree on the same stock?",
+    "short_answer": "They use different denominators (market cap vs. total assets) and different market-cap conventions (single-day snapshot vs. trailing average), among other calibration choices — not because one is right and one is wrong.",
+    "long_answer": "AAOIFI, Bursa Malaysia's SAC, and the major index providers (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah) all check the same underlying idea — how much of a company is effectively financed by interest-bearing debt, and how much of its income is impermissible — but they calibrate differently. Some measure interest-bearing debt against total assets, others against market capitalization, and a company with a large market cap relative to its balance sheet gets a much smaller ratio under the market-cap denominator. Separately, some standards use a single trading-day market-cap snapshot while others use a 12-month trailing average, which changes the outcome for any stock whose price has moved sharply — a stock priced high on the snapshot day looks compliant, while the same company checked against a lower trailing-average price during a downturn can cross the same 33% line. Neither convention is 'wrong' — they're published methodologies answering a slightly different question. AMI's role is to name which standard produced a given verdict, never to declare one the 'real' answer.",
+    "related_lessons": [
+      "350"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "standards",
+      "disagreement"
+    ]
+  },
+  {
+    "id": "qa_islamic_sukuk_asset_backed_critique",
+    "category": "islamic_finance",
+    "question": "Is a sukuk really asset-backed, or just a bond in disguise?",
+    "short_answer": "It's a real, ongoing debate among Islamic finance scholars, not a settled question. The strongest critique: some sukuk use a fixed-price buyback guarantee at maturity that can reproduce a guaranteed-return loan in substance.",
+    "long_answer": "This is the honest steelman inside Islamic finance itself, not an outside attack. Many sukuk al-ijarah structures include a purchase-undertaking mechanism guaranteeing the issuer will buy back the underlying asset at a fixed, pre-agreed price at maturity — which, in economic substance, can reproduce a guaranteed principal-plus-return claim much like a conventional bond, with 'asset ownership' functioning as a legal formality rather than genuine shared risk. This concern is raised by serious scholars inside Islamic finance, and AAOIFI's own standards (Shariah Standard No. 17) have tightened over time specifically in response to it — evidence the critique landed, not that it was dismissed. The distinguishing test: compare a sukuk with a genuine, tradable, income-producing underlying asset (real rental income that can rise or fall with the market) against one where the 'asset' is a thin formality wrapped around what is functionally a fixed-return loan. AMI presents this debate as part of the sukuk lesson rather than declaring any specific issuance compliant or not.",
+    "related_lessons": [
+      "352"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "steelman",
+      "not_a_ruling"
+    ]
+  },
+  {
+    "id": "qa_islamic_islamic_etf_selection",
+    "category": "islamic_finance",
+    "question": "How do I pick between two Islamic ETFs?",
+    "short_answer": "Check which index methodology each fund tracks (they can disagree on borderline names), then apply the same expense-ratio and tracking-error checks you'd use for any fund — a Sharia label doesn't exempt a fund from cost scrutiny.",
+    "long_answer": "An Islamic ETF's name (e.g. SPUS tracking the S&P 500 Sharia Industry Exclusions Index, or HLAL tracking a FTSE Shariah index) only confirms that some Sharia screen is applied — it doesn't tell you which standard. Because different index providers use different thresholds and denominators, two 'Islamic' ETFs covering a similar large-cap universe can hold a meaningfully different set of names, since a borderline stock can pass one index's screen and fail the other's. On Bursa Malaysia, the exchange itself maintains a Shariah-compliant securities list (Bursa-i) via the SAC, refreshed twice yearly — an investor building a Bursa-only Islamic portfolio checks that list directly. Beyond the methodology question, the ordinary fund-selection checks still apply in full: expense ratio and tracking error. A Sharia-compliant fund with a bloated expense ratio is still a costly fund on cost grounds, compliance aside.",
+    "related_lessons": [
+      "354",
+      "310"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "etf",
+      "index",
+      "funds"
+    ]
+  },
+  {
+    "id": "qa_islamic_conventional_bank_always_fails",
+    "category": "islamic_finance",
+    "question": "Why do conventional banks always fail the halal screen?",
+    "short_answer": "Not because banking itself is prohibited, but because a conventional bank's core revenue is interest income (riba) by construction — the business-activity screen excludes it at stage one, before any ratio is even checked.",
+    "long_answer": "A conventional bank like Maybank or CIMB fails the business-activity screen because its core revenue model — lending money at interest and earning a spread — is riba by construction, not because 'banking' as an activity is inherently forbidden. This is exactly why Islamic banks exist as separate legal entities, structured around murabahah (cost-plus sale), ijarah (leasing), musharakah (partnership), and mudarabah (profit-share) products, rather than as a screened subset of a conventional bank's balance sheet. Because the exclusion is categorical at the business-activity stage, a conventional bank never even reaches the financial-ratio screen — no debt-ratio or liquidity-ratio calculation could change the outcome, since the core business itself is the disqualifying factor.",
+    "related_lessons": [
+      "348",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "business_activity_screen",
+      "banking",
+      "riba"
+    ]
+  },
+  {
+    "id": "qa_islamic_contracts_overview",
+    "category": "islamic_finance",
+    "question": "What are murabahah, ijarah, musharakah, mudarabah, and takaful?",
+    "short_answer": "Five Islamic contract structures that each replace a debt-and-interest claim with a sale, lease, partnership, profit-share, or mutual risk-pool: murabahah (cost-plus sale), ijarah (lease), musharakah (partnership), mudarabah (profit-share venture), takaful (mutual insurance).",
+    "long_answer": "Each has a conventional analogue that helps place it, but the legal substance is different, not just the label. Murabahah: the financier buys an asset and resells it at a disclosed, fixed markup — legally a sale (analogue: a loan, structurally distinct). Ijarah: the financier retains ownership and leases the asset for a fixed rental (analogue: an equipment lease). Musharakah: two or more parties contribute capital and share profit and loss in a pre-agreed ratio (analogue: joint-venture equity). Mudarabah: one party contributes capital, a manager contributes expertise, profit splits by a pre-agreed ratio while capital loss (absent negligence) falls on the capital provider (analogue: a general-partner/limited-partner fund). Takaful: participants pool contributions into a shared fund that pays claims, with surplus returned to participants rather than kept as insurer profit (analogue: mutual insurance). A common misconception is treating an 'Islamic loan' as a conventional loan with an Arabic name — check what the contract's legal substance actually transfers (ownership, a lease, or shared risk), not the label.",
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "contracts",
+      "murabahah",
+      "ijarah",
+      "musharakah",
+      "mudarabah",
+      "takaful"
+    ]
+  }
+]
