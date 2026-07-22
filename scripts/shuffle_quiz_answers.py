@@ -49,8 +49,13 @@ _ANSWER_RE = re.compile(r"answer=\{(?P<val>[^}]*)\}")
 _EXPLANATION_RE = re.compile(r'explanation="(?P<val>(?:[^"\\]|\\.)*)"', re.DOTALL)
 # One quoted option literal, preserving whatever surrounds it.
 _STRING_RE = re.compile(r'"(?:[^"\\]|\\.)*"')
+# DEF083: widened to match the same pattern as the corpus-integrity guard
+# (test_lesson_corpus_integrity.py) — the literal-"option(s)" requirement
+# missed "the first one", "the first answer", "the last — '...'".
 _OPTION_INDEX_CITATION = re.compile(
-    r"\boptions?\s+\d|\b(?:first|second|third|fourth|fifth|last)\s+options?\b",
+    r"\boptions?\s+\d"
+    r"|\b(?:first|second|third|fourth|fifth|last)\s+(?:options?|ones?|answers?|choices?)\b"
+    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s*[—–-]",
     re.IGNORECASE,
 )
 # Daily-challenge JSON: the "options" array and the "answer" that indexes it,

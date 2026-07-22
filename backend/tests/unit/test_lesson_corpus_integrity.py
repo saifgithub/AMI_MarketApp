@@ -33,8 +33,15 @@ from app.services.lessons_service import CONTENT_LESSONS_DIR, parse_mdx
 # Matches an explanation citing an option by number, either convention:
 # "option 0", "Option 3", "options 1" (DEF065) — or by position, "the first
 # option", "the last option" (DEF079, same failure under answer-shuffle).
+# DEF083 widened the positional branch: DEF079's guard required the literal
+# word "option(s)" after the ordinal, but the corpus overwhelmingly writes
+# "the first one", "the first answer", or a bare "the last — 'quoted text'" —
+# none of which contain "option", so none were caught. Also matches ordinals
+# followed by "ones?|answers?|choices?", or a bare "the <ordinal> —" form.
 _OPTION_INDEX_CITATION = re.compile(
-    r"\boptions?\s+\d|\b(?:first|second|third|fourth|fifth|last)\s+options?\b",
+    r"\boptions?\s+\d"
+    r"|\b(?:first|second|third|fourth|fifth|last)\s+(?:options?|ones?|answers?|choices?)\b"
+    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s*[—–-]",
     re.IGNORECASE,
 )
 
