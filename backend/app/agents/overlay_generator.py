@@ -71,13 +71,15 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 ---"""
 
 
-# Screen thresholds NARRATED to agents (CR046 C-b/C-c). These describe the
-# AAOIFI/liquidity standards the precomputed screens enforce (halal_universe
-# membership; the liquidity filter) — single-sourced here so the prose can't drift
-# into claiming a cutoff the screen doesn't use. Narration constants, not the
-# enforcement itself.
-_HALAL_MAX_DEBT_TO_EQUITY_PCT = 33
-_HALAL_MAX_INTEREST_INCOME_PCT = 5
+# Liquidity floor NARRATED to agents (CR046 C-b/C-c) — single-sourced so the prose
+# can't drift from the filter. Narration constant, not the enforcement itself.
+#
+# The `halal` flag has NO narrated ratio cutoff (DEF084): it is enforced by
+# membership in a fixed, curated *demonstration universe*
+# (`sim_engine.DEFAULT_HALAL_DEMO_UNIVERSE`), NOT by a computed Sharia ratio
+# screen. Nothing checks a debt-to-equity or interest-income ratio on that path,
+# so the overlay must not narrate one. See
+# docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/.
 _MICROCAP_FLOOR_USD_M = 500
 
 
@@ -85,10 +87,9 @@ def _compliance_block(c: Compliance) -> str:
     flags: list[str] = []
     if c.halal:
         flags.append(
-            "- HALAL / Sharia screen REQUIRED. Exclude interest-based banking, conventional insurance, "
-            f"gambling, tobacco, alcohol, pork, weapons. Check debt-to-equity "
-            f"≤ {_HALAL_MAX_DEBT_TO_EQUITY_PCT}%, interest income "
-            f"≤ {_HALAL_MAX_INTEREST_INCOME_PCT}% of total."
+            "- HALAL constraint: only advocate names within AMI's curated demonstration "
+            "universe (a fixed allowlist). This is NOT a Sharia screen and no ratio is "
+            "computed — do not tell the user a screen was run or a ratio was checked."
         )
     if c.esg_lite:
         flags.append("- ESG-lite screen: avoid heavy polluters, controversies, weapons.")
@@ -154,7 +155,10 @@ def _fundamentals_block(m: Mandate) -> str:
     else:
         parts.append("- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.")
     if m.compliance.halal:
-        parts.append("- Apply Sharia screen on every candidate (see compliance block above).")
+        parts.append(
+            "- Halal user: restrict candidates to AMI's curated demonstration universe "
+            "(a fixed allowlist; NOT a Sharia screen — no ratio is computed)."
+        )
     if m.risk_score <= 2:
         parts.append("- Surface red flags prominently. Lead with risks.")
     elif m.risk_score >= 4:
@@ -297,7 +301,10 @@ def _trader_block(m: Mandate) -> str:
     if m.compliance.ticker_blocklist:
         parts.append("- Respect ticker_blocklist.")
     if m.compliance.halal:
-        parts.append("- Instrument must pass Sharia screen.")
+        parts.append(
+            "- Instrument must be within AMI's curated demonstration universe "
+            "(a fixed allowlist; NOT a Sharia screen — no ratio is computed)."
+        )
     return "\n".join(parts)
 
 
