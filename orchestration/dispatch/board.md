@@ -70,10 +70,15 @@ format template.
 - **CR054 Wave-1 LESSON tracks COMPLETE:** ETHIC ✓ (10) + ASST ✓ (20) + MACRO ✓ (12) + QUANT ✓ (12)
   = 54 lessons, corpus 270→324, then CR058 SHARIA (10) → **334**. Remaining Wave-1: glossary + coach Q&A
   (CR058-SUPPORT already added 20 islamic_finance glossary terms + 15 Q&A).
-- **BACKEND IS LIVE ON ALPHA** (tag `alpha-2026-07-22-1` @ 5acd423): 414 files rsync'd, api-alpha
-  rebuilt and healthy, alembic no-op, smoke green (vllm + yfinance). The 334-lesson corpus and the
-  `{{lesson:}}` tokens are serving today.
-- **Mobile 0.1.0+45 BUILT, awaiting Saiful upload** (commit 48611d5): signed AAB (50MB, upload-key SHA-1
+- **BACKEND IS LIVE ON ALPHA** (tag `alpha-2026-07-22-3` @ 44759a9): rsync 0.9s, api-alpha rebuilt and
+  healthy on the first poll, alembic no-op, smoke green (vllm + yfinance AAPL $327.74), config-check
+  matches `infra/alpha.env` intent. **342 lessons / 13 tracks** (EVAL authored by CR062). `audit/` +
+  `reports/` intact — DEF081 excludes held. Lesson `294`'s duty-based reframe verified served by the
+  API: equal-access phrase gone, duty framing present, retired provenance line absent.
+- **Mobile 0.1.0+50 SHIPPED to both stores** — Play internal verified via the Play API
+  (`google_play_track_version_codes track:internal` → `[50]`), TestFlight uploaded. Carries the DEF082
+  honeycomb, so all 13 tracks are reachable in-app. *(Superseded note, kept for the audit trail:)*
+  earlier `0.1.0+45` (commit 48611d5): signed AAB (50MB, upload-key SHA-1
   verified) + signed IPA (26MB, `CFBundleVersion 45`). **+45 is required** — the live backend serves
   `{{lesson:…}}` tokens that only the CR053-MOBILE render branch understands; testers on +44 see raw
   token text. Upload (TestFlight + Play internal) is **Saiful-gated** — I build, he uploads.
