@@ -1,0 +1,76 @@
+---
+id: "361_the_pre_mortem"
+title: "The pre-mortem"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 3
+track: "decision_evaluation"
+code: "EVAL 5"
+topic: "premortem"
+prerequisites: ["360_steelmanning_the_other_side"]
+tags: ["pre-mortem", "prospective-hindsight", "decision-process", "risk-identification", "debiasing"]
+sources: ["Gary Klein — \"Performing a Project Premortem\", Harvard Business Review (September 2007): prospective hindsight","Daniel Kahneman — Thinking, Fast and Slow: the premortem as a debiasing procedure"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# The pre-mortem
+
+A pre-mortem inverts the usual risk question. Instead of asking what could go wrong, you assume the decision has already failed — the position is closed, the thesis is dead — and you write the story of how it happened. Gary Klein's method works because a concrete causal story recruits different reasoning than an open-ended list does: the prospective-hindsight research Klein cites found that imagining an event has already occurred raises the ability to correctly identify reasons for that outcome by roughly 30%. By the end of this lesson you can run one on a Room verdict before you commit, and turn each failure story into a tripwire you can actually check.
+
+## Example
+
+Take a hypothetical mid-cap industrial — invented figures, no real ticker, so read the numbers as the shape of the problem rather than a market claim. The simulated Room returns a BUY: entry $50, stop $44, 8% of the simulated portfolio, six-month horizon. The planned worst case is arithmetic: a 12% move against you on an 8% weight is a 0.96% portfolio hit.
+
+Now run the pre-mortem. It is six months later, the position is closed, the thesis is dead. Three stories, all past tense:
+
+1. The margin expansion the Bull Researcher leaned on was a one-off input-cost benefit. It reversed by the third quarter and the multiple re-rated down with it.
+2. The single customer supplying roughly a third of revenue did not renew. You never checked the contract calendar.
+3. The miss arrived at earnings, the open gapped straight through $44, and the fill landed near $41 — an 18% position loss, 1.44% of the portfolio, half again the 0.96% you had budgeted.
+
+Each story ends in a tripwire: the cost-line detail in the next filing, the disclosed customer concentration, the earnings date sitting inside your holding period. None of the three shows up on a "what could go wrong" list, because that list produces categories — margin risk, customer risk — with no check attached to them.
+
+## The trap
+
+The beginner move is to ask what could go wrong and answer with nouns: macro risk, competition, valuation. It feels rigorous, and it changes nothing, because a category has no observable attached to it. The second failure mode is timing — run the pre-mortem after you have already committed to the position and the exercise stops being a search and becomes a justification (Klein's method runs on a fully specified plan — sized, priced, stop set — but strictly before commitment). It is also not the same as arguing the other side (<Lesson id="360_steelmanning_the_other_side"/>): the steelman disputes the thesis now, while the pre-mortem grants the thesis and asks how it still ended badly. The correct model is to assume failure as a fact, write it in past tense before you commit, and make every story name the one thing you could check that would show it starting.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="A simulated verdict sizes a hypothetical position at 8% of the portfolio, entry $50, stop $44. Your pre-mortem story says the miss arrives at earnings, the open gaps through the stop, and the fill lands near $41. What portfolio hit does that story imply, against the planned one?"
+  options={[
+    "18% — the loss on the position, which is the number the pre-mortem is measuring",
+    "0.96%, unchanged, because the stop at $44 caps the loss regardless of how price gets there",
+    "0.48% — half the planned loss, since running a pre-mortem lets you exit ahead of the gap",
+    "1.44% against a planned 0.96% — a $50 to $41 fill is an 18% position loss on an 8% weight, half again the budgeted 12% stop"
+  ]}
+  answer={3}
+  explanation="$50 to $41 is a $9 move, 18% of entry; 18% x 8% weight = 1.44% of the portfolio, against the 0.96% (12% x 8%) the stop was budgeted for. The answer claiming the hit is unchanged because the stop caps the loss is the tempting one, and it is exactly what this pre-mortem exists to kill — a stop is an instruction, not a guarantee, and a gapped open fills where the market opens. The 18% answer states the position loss rather than the portfolio hit. The 0.48% answer credits the exercise with foresight it does not have: a pre-mortem surfaces the story, it does not move the fill."
+/>
+
+<Quiz
+  question="You run a pre-mortem on a simulated long before accepting the Room's verdict. Which output shows the method actually did its job?"
+  options={[
+    "A past-tense story naming one specific cause of the loss, plus the disclosure or date that would show that cause starting",
+    "A four-item risk list — macro, competition, execution, valuation — covering the categories that apply to any equity",
+    "A decision to reject the verdict outright, on the grounds that being able to imagine failure shows the thesis is weak",
+    "A restatement of the Bear Researcher's strongest argument from the Room debate, since that is the best case against the trade"
+  ]}
+  answer={0}
+  explanation="The output of a pre-mortem is a causal story with a check attached: the story says what failure looks like, the tripwire says when to start believing it is happening. The four-item risk list is the trap — those categories are true of every equity and attach to no observable, which is why asking what could go wrong surfaces less than prospective hindsight does. Rejecting the verdict because failure is imaginable would kill every position ever taken; every thesis has a failure story, and the question is only whether you can see it coming. Restating the Bear Researcher's strongest argument is steelmanning (<Lesson id="360_steelmanning_the_other_side"/>), a different exercise: the steelman says the thesis is wrong now, the pre-mortem grants the thesis and asks what happened in the six months after."
+/>
+
+## Try it
+
+Open a Room verdict you have not accepted yet. In the Decision Journal, write one paragraph dated six months out that starts "This position was closed at a loss because" and finish it in past tense. Then name the single disclosure, date, or price level that would show that story starting. Ask the Research Manager which part of the Room's argument your story contradicts. AMI's verdict is a training artifact, not investment advice.
+
+## Takeaway
+
+Assume it already failed and write the story: a specific cause you can check beats a risk category you cannot. If your failure story does not end in a tripwire, the pre-mortem is not finished.
+
+*Where this comes from: Gary Klein's project premortem — Harvard Business Review (September 2007) — and Kahneman's treatment of it as a debiasing procedure in Thinking, Fast and Slow.*

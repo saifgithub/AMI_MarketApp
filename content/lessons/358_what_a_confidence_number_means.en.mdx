@@ -1,0 +1,76 @@
+---
+id: "358_what_a_confidence_number_means"
+title: "What a confidence number actually means"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 3
+track: "decision_evaluation"
+code: "EVAL 2"
+topic: "calibration"
+prerequisites: ["357_process_vs_outcome"]
+tags: ["calibration", "confidence", "brier-score", "probability", "track-record"]
+sources: ["Philip Tetlock & Dan Gardner — Superforecasting (2015): calibration, resolution, Brier score","Daniel Kahneman — Thinking, Fast and Slow: overconfidence and the illusion of validity"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# What a confidence number actually means
+
+A confidence number only means something if it can be scored. Calibration is that test: if you say 70% and you are well calibrated, then across all the times you say 70%, about 70% of those calls resolve the way you said. A single call proves nothing — calibration is a property of a track record, not of one number. AMI's confidence figure is the Room's weighted lean rather than a calibrated probability, which <Lesson id="077_decision_support_vs_prediction"/> covers. This lesson covers the other half: what calibration would actually require, and how a number becomes a claim you can be scored on.
+
+## Example
+
+Suppose you log ten calls over a quarter, each one written down at 70% confidence — the kind of call where you record "I think this thesis holds" and mark it 0.70. Five resolve as you called them; five don't.
+
+Now score it. The standard scoring rule is the Brier score: for each call take (stated probability − outcome), where outcome is 1 if it happened and 0 if it didn't, square it, then average across all calls. Zero is perfect, 1 is the worst possible, lower is better. (That is the single-event convention used throughout this lesson. Tetlock's *Superforecasting* reports Brier scores on a 0–2 scale, where 0.5 is chance rather than 0.25 — the same ranking, every figure doubled. Compare scores only within one convention.)
+
+Your five hits contribute (0.70 − 1)² = 0.09 each, so 5 × 0.09 = 0.45. Your five misses contribute (0.70 − 0)² = 0.49 each, so 5 × 0.49 = 2.45. Total 2.90 across ten calls → **Brier 0.290**.
+
+Then the benchmark. Had you written 0.50 on all ten and claimed nothing at all, every term would be (0.50 − outcome)² = 0.25, for a Brier of **0.250**. Your confident calls scored worse than making no claim.
+
+Run the same arithmetic on a 7-of-10 quarter: 7 × 0.09 = 0.63, 3 × 0.49 = 1.47, total 2.10 → **Brier 0.210**, which beats the 0.250 benchmark. Identical stated confidence, different resolution rate — and the score, not the feeling, is what separates them.
+
+## The trap
+
+The trap is treating a confidence number as a description of how strongly you feel rather than a claim you have agreed to be scored on. It feels right, because the number does encode something real: 0.75 genuinely feels surer than 0.55. But a feeling cannot be wrong, and a claim can. Calibration only exists where three things are present — many calls, a resolution criterion fixed before the outcome exists, and a scoring rule applied to every call rather than the memorable ones. Drop any one of the three and the number reverts to vocabulary. The correct mental model: a confidence figure is an entry in a ledger you will settle later. If you never settle it, you never had a probability. You had an adjective wearing a decimal point.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Over a quarter you make 20 calls, each stated at 60% confidence. What would 'well calibrated' mean for that set?"
+  options={[
+    "The 20 calls should have averaged a 60% return",
+    "Each call carried a 60% chance individually, so any call that misses shows the number was wrong",
+    "Roughly 12 of the 20 should resolve as called — calibration is a property of the whole set of 60% calls, not of any single one",
+    "A call needs at least 60% confidence before it is worth logging at all"
+  ]}
+  answer={2}
+  explanation="60% of 20 is 12, and calibration is measured across the bucket: if the 60% calls come in near 12-of-20, the number is earned. The 'any call that misses shows the number was wrong' answer is the tempting one — but a 60% call that misses is exactly what calibration predicts, since 40% of such calls are supposed to miss. Confidence is not an expected return, and there is no minimum threshold for logging; the low-confidence calls are precisely what test whether your high-confidence ones mean anything."
+/>
+
+<Quiz
+  question="You log ten calls at 70% confidence and five resolve as called. Using Brier = mean of (stated probability − outcome)², with outcome 1 or 0, what is the score and what does it tell you?"
+  options={[
+    "0.210 — better than the 0.250 you would have scored by writing 0.50 on all ten",
+    "0.290 — worse than the 0.250 you would have scored by writing 0.50 on all ten, so the 70% was not earned",
+    "0.500 — five of ten is a coin flip, so the score equals the hit rate",
+    "0.090 — the per-call penalty carried by each of the five calls that resolved as stated"
+  ]}
+  answer={1}
+  explanation="Five hits contribute 5 × (0.70 − 1)² = 0.45, five misses contribute 5 × (0.70 − 0)² = 2.45, total 2.90 over ten calls = 0.290. Writing 0.50 on every call scores (0.50 − outcome)² = 0.25 each, a Brier of 0.250 — so claiming 70% while resolving at 50% is worse than having claimed nothing. The '0.210' answer is the score for a 7-of-10 quarter, which would have beaten the benchmark; the '0.500' answer swaps a scoring rule for a hit rate; and 0.090 is one hit's contribution, not an average over all ten calls."
+/>
+
+## Try it
+
+Open the Decision Journal and take your three most recent entries. Before checking how each resolved, write a probability on it and the resolution criterion that would settle it. Then ask the Research Manager how the Room arrived at the confidence figure on a recent verdict. You are holding two different objects side by side: a weighted lean, and a claim you have agreed to score. Remember that AMI's verdicts are practice artifacts, not investment advice.
+
+## Takeaway
+
+A confidence number means nothing until it has been scored against many resolutions — say 70% often enough and roughly 70% should happen, or the number is decoration. AMI's confidence is the Room's weighted lean; the numbers you can actually calibrate are your own.
+
+*Where this comes from: Tetlock and Gardner on calibration, resolution and Brier scoring — Superforecasting (2015); Kahneman on overconfidence and the illusion of validity — Thinking, Fast and Slow.*

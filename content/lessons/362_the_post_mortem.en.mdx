@@ -1,0 +1,79 @@
+---
+id: "362_the_post_mortem"
+title: "The post-mortem that isn't a blame hunt"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 3
+track: "decision_evaluation"
+code: "EVAL 6"
+topic: "postmortem"
+prerequisites: ["357_process_vs_outcome","359_keeping_a_decision_journal"]
+tags: ["post-mortem", "process-vs-outcome", "variance", "decision-journal", "review-discipline"]
+sources: ["Annie Duke — Thinking in Bets: separating decision quality from outcome quality in review","Michael Mauboussin — The Success Equation (2012): disentangling skill from luck"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# The post-mortem that isn't a blame hunt
+
+A post-mortem has one job: decide which decisions to repeat. That is not the same job as deciding which positions made money. A journalled position that lost, with its invalidation defined in advance and honoured on the day, is a sound process meeting variance — repeat it. An unjournalled position that won is a warning wearing a win's clothing. And the moment a review turns into a hunt for who to blame, it stops producing that information at all, because the reliable response to blame is to record fewer decisions. This lesson gives you the separation and the one question that keeps it honest.
+
+## Example
+
+Take four closed simulated positions from one quarter of your own journal. The figures are invented here to keep the arithmetic clean — no real ticker, no real price.
+
+- **A** — thesis and invalidation level written before entry; stop honoured exactly as specified: **−1.2%** of portfolio.
+- **B** — no journal entry; size doubled on a hunch after entry; stop moved down twice: **+4.1%**.
+- **C** — thesis journalled, invalidation defined, played out as written: **+2.3%**.
+- **D** — thesis journalled, but closed at the first red candle, well above the invalidation level you had already defined: **−0.4%**.
+
+Net for the quarter: −1.2 + 4.1 + 2.3 − 0.4 = **+4.8%**.
+
+Score by outcome and you have two winners (B, C) and two losers (A, D). Score by process — did you follow what you wrote before the outcome existed, as <Lesson id="359_keeping_a_decision_journal"/> requires? — and you have two sound (A, C) and two broken (B, D). Same two-and-two split, different membership: the scorecards agree on C and D and disagree on A and B.
+
+That disagreement is the whole output of the review. A is a sound process that lost; repeat it. B is a broken process that won — and it produced 4.1 of the 4.8 points, **85% of the quarter's net gain**, from the one sequence of decisions you least want to repeat. D is a process error the P&L barely registers, because cutting before your own invalidation is still not following your plan.
+
+## The trap
+
+The trap is opening the review by asking "what went wrong?" and stopping at the biggest loser. That feels like accountability — someone is being held to account, a lesson is apparently being extracted. What it actually does is teach the reviewer (you, or an analyst on your team) that written-down decisions are ammunition. The next thesis gets journalled vaguely, or after the fact, or not at all, and the record a post-mortem depends on quietly disappears. The correct opening question is process-first and outcome-blind: *given only what was on the page before entry, was this decision one I would make again?* Answer that, then look at the P&L — never the reverse.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="Four closed positions: A (journalled, invalidation defined, stop honoured) −1.2%; B (no journal entry, size doubled mid-trade, stop moved twice) +4.1%; C (journalled, played out as written) +2.3%; D (journalled, but closed early above its own invalidation level) −0.4%. Net +4.8%. What does a process-first post-mortem conclude?"
+  options={[
+    "The quarter's process was sound — a +4.8% net result across four positions is the evidence that matters",
+    "Position A should be dropped from the playbook: it followed the process exactly and still lost money",
+    "Position D is the one to copy — a 0.4% loss is the smallest drawdown of the four",
+    "Position B is the one most in need of correction: an unjournalled, resized, stop-moved process produced 85% of the period's net gain, which makes it a warning rather than a validation"
+  ]}
+  answer={3}
+  explanation="B contributed 4.1 of the 4.8 net points — 4.1 / 4.8 = 85% — while breaking every rule the journal exists to enforce, so its size is exactly what makes it dangerous: repeated across twenty positions, moved stops eventually meet a position that does not come back. The 'the quarter's process was sound because it netted +4.8%' answer reads the aggregate outcome as a verdict on process, which is the error this lesson names. Dropping A punishes a decision that defined and honoured its own invalidation and simply met variance. And D is nothing to copy — closing above your own invalidation level is a process error that the small loss happens to disguise."
+/>
+
+<Quiz
+  question="A review turns up a position that lost 1.2%. The thesis was journalled before entry, the invalidation level was defined in advance, and the stop was honoured exactly as written. What is the correct post-mortem conclusion?"
+  options={[
+    "The process failed, because it lost money — rewrite the entry rule before the next position",
+    "The process is sound and should be repeated; the loss is variance inside a decision that defined its own invalidation before the outcome existed",
+    "No conclusion is available until at least 100 positions have closed, so the entry is set aside unreviewed",
+    "The journal entry should be revised now to reflect what the market actually did, so the record is accurate"
+  ]}
+  answer={1}
+  explanation="Judged at the moment it was made — the process-vs-outcome standard — this decision stated its thesis, named what would prove it wrong, and acted on that when it happened. Nothing in it needs changing, so it is repeated. The 'it lost money, so rewrite the entry rule' answer is resulting: it edits a working process on the evidence of one draw. Waiting for 100 closed positions confuses a per-decision review with the base-rate scoring that needs sample size — you can grade a single decision's process today without claiming to know your hit rate. And rewriting the journal entry to match the outcome destroys the one artifact that made the review possible."
+/>
+
+## Try it
+
+Open the Decision Journal, pick three closed positions, and label each one twice — process sound or broken, outcome positive or negative — before you look at the P&L column. Any position where the two labels disagree is where the lesson is. Then ask the Research Manager to argue the opposite label on your most profitable trade. Remember: AMI is a training simulator, and its output is a practice artifact, not investment advice.
+
+## Takeaway
+
+Grade the decision on what was written before the outcome existed: a journalled loss is variance and gets repeated, an unjournalled win is a warning. The review that hunts for blame stops getting decisions written down at all.
+
+*Where this comes from: Annie Duke's separation of decision quality from outcome quality in Thinking in Bets; Mauboussin's work on disentangling skill from luck in The Success Equation (2012).*

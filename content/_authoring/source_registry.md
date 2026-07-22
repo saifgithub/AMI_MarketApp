@@ -67,6 +67,22 @@ release/rule/report, not the institution alone.
 | Shiller — *Irrational Exuberance* / *Narrative Economics* | bubbles, sentiment |
 | Irving Fisher — *The Theory of Interest* (1930) | the Fisher equation |
 | Pascal & Fermat — problem of points (1654) | expected value origin |
+| Tetlock & Gardner — *Superforecasting* (2015) | calibration, resolution, Brier scoring — **note: reports Brier on the 0–2 scale (0.5 = chance); the single-event convention is 0–1 (0.25 = chance). Always name which convention a figure uses.** |
+| Annie Duke — *Thinking in Bets* (2018) | "resulting" — judging decision quality by outcome quality |
+| Gary Klein — "Performing a Project Premortem", *HBR* (Sept 2007) | the pre-mortem / prospective hindsight |
+| Mauboussin — *The Success Equation* (2012) | luck vs skill, sample size, reversion to the mean |
+| Parasuraman & Riley (1997), "Humans and Automation: Use, Misuse, Disuse, Abuse", *Human Factors* 39(2) | automation bias, cognitive offloading |
+
+The five entries above were added by **CR062** (EVAL track) — the decision-science canon behind
+module M24. The Tetlock caveat is not decoration: the first CR062 verification pass caught a lesson
+computing Brier on the 0–1 scale while citing a source that reports on 0–2, which is a
+citation-integrity defect even though every number was arithmetically correct.
+
+Several sweep passes also proposed **peer-reviewed primary research** not listed here — Barber &
+Odean (2000), Barber/Lee/Liu/Odean (2014), Chague/De-Losso/Giovannetti (2020) on retail trader
+performance; Coval & Shumway (2005) on post-loss risk-taking; Sloan (1996) on accruals. They are
+reputable and were used as *evidence against* lessons, but are **not yet admitted to the
+allowlist** — admitting them is a decision, not a formality, and belongs to the remediation CR.
 
 ---
 

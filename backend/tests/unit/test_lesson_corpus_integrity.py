@@ -47,7 +47,7 @@ _TOLERANCE_ATTR = re.compile(r"\btolerance=")
 # touching backend/, so an exact count would turn red on every wave; a floor
 # still catches the silent-shrink failure this file exists for. Bump it when a
 # wave integrates — it only ever grows, never returns to an exact pin.
-LESSON_COUNT_FLOOR = 334
+LESSON_COUNT_FLOOR = 342
 
 
 def _lesson_paths() -> list[Path]:

@@ -1,0 +1,96 @@
+---
+id: "364_capstone_evaluate_a_room_verdict"
+title: "Capstone: evaluate one Room verdict end to end"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 4
+track: "decision_evaluation"
+code: "EVAL 8"
+topic: "capstone"
+prerequisites: ["357_process_vs_outcome","358_what_a_confidence_number_means","359_keeping_a_decision_journal","360_steelmanning_the_other_side","361_the_pre_mortem","362_the_post_mortem","363_scoring_yourself_over_time"]
+tags: ["capstone", "synthesis", "decision-process", "invalidation", "override", "verdict-evaluation"]
+sources: ["Annie Duke — Thinking in Bets: decision process under uncertainty","Howard Marks — The Most Important Thing: second-level thinking applied to a stated view"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Capstone: evaluate one Room verdict end to end
+
+You now hold the whole EVAL toolkit: judging the decision rather than the result, reading a confidence number as a scorable claim, writing the thesis before the outcome exists, arguing the strongest opposing case, assuming failure in advance, separating process error from variance, and tracking your own hit rate. This capstone puts that toolkit to work on one training Verdict as six steps in sequence — read, check, steelman, pre-mortem, journal, decide — and records the reasoning whether you accept or override. Nothing new is introduced here; the skill is making the pieces interact on a single artifact under time pressure.
+
+## Example
+
+Take a hypothetical mid-cap industrial — no real ticker, invented figures, so the numbers are the lesson rather than a market claim. The Room returns: **BUY · size 3% · entry $50 · stop $44 · target $62 · horizon 8 weeks · confidence 0.68 · PM: PASS**.
+
+**Read it.** PASS is a compliance result, not an endorsement — see <Lesson id="277_pass_is_not_buy"/>. Two independent statements arrived together; treat them separately.
+
+**Check the numbers.** The geometry is checkable in ten seconds: risk per share $50 − $44 = **$6** (12% of entry), reward $62 − $50 = **$12**, so **2.0 to 1**. At 3% size, a clean stop-out costs 0.03 × 0.12 = **0.36% of the portfolio**. Then audit the load-bearing claim underneath — if the Bull case rests on one cash-flow figure, that figure is the one to verify, per <Lesson id="276_spotting_hallucinated_numbers"/>.
+
+**Steelman the opposite.** State the sharpest bear case in its strongest form, not a version you can knock over.
+
+**Pre-mortem.** It is eight weeks later and the position stopped out. Write why — before you know.
+
+**Journal it.** Thesis, the 0.68 confidence, the reward-to-risk, and one invalidation condition specific enough to fire on its own: *close below $44, or the cash-flow claim failing verification.*
+
+**Decide.** Accept or override — and record which, and why, in the same entry. An unrecorded override is indistinguishable later from an unrecorded accept.
+
+## The trap
+
+The trap is performing all six steps and then treating the performance itself as the answer. It shows up in one place: the invalidation condition. "If the thesis breaks" cannot fire — nothing observable triggers it, so eight weeks later you will interpret whatever happened as consistent with what you wrote. "Close below $44" fires or it doesn't, and the journal grades you rather than comforting you. The same failure hides inside the override: writing "overrode on gut" records the act but not the reasoning, so the post-mortem has nothing to separate a genuine read from an unearned one. The process is only worth its cost when each step produces something falsifiable.
+
+## The steelman
+
+The strongest case against this sequence: it is expensive, and here it changed nothing — you read, checked, steelmanned, pre-mortemed, journalled, then accepted the 3% BUY exactly as proposed. Six steps, same position; on a fast setup that latency buys no observable difference. The falsifier is measurable from your own record, but not quickly. Splitting logged verdicts into examined and unexamined arms and comparing hit rates needs far more decisions than it feels like it should: at thirty verdicts you have roughly fifteen an arm and an interval wide enough to hide any real effect, so "indistinguishable" there means *not yet resolved*, not *ritual* — the small-sample trap <Lesson id="363_scoring_yourself_over_time"/> exists to name. The reading available sooner is not a rate at all: count how often the pre-mortem named an invalidation that later fired and would otherwise have surprised you. That is observable on a single decision rather than only in aggregate. If, across many decisions, it never names anything that fires, the sequence is ritual and should be cut down. Note the test needs the journal to exist first — skipping the process destroys the evidence that would settle whether skipping it was right.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="The Verdict carries confidence 0.68 alongside a PM PASS. Combining what a confidence number is with how you score yourself over time, what does 0.68 actually license you to conclude here?"
+  options={[
+    "That AMI is 68% sure the $62 target will print, which makes the trade positive-expected-value by definition",
+    "That 0.68 is a claim you can be scored on later — it means something only once it is recorded and checked across many 0.68-confidence verdicts to see whether roughly that share resolved as called",
+    "That anything under 0.70 should be discarded without further evaluation, since the Room lacks conviction",
+    "That confidence stops mattering once the PM stamps PASS, because compliance is the binding constraint on the decision"
+  ]}
+  answer={1}
+  explanation="A confidence number is a testable claim about a population of calls, not a probability you can bank on this single one — which is why it is only informative after you have logged enough of them to check calibration. The 'AMI is 68% sure, so it's positive-EV' answer skips both the verification of the underlying numbers and the fact that expected value needs the payoff geometry, not just a probability. The 'discard anything under 0.70' answer invents a threshold the confidence number never carried. And the 'PASS makes confidence irrelevant' answer collapses two independent signals: PASS reports Mandate compliance only, and says nothing about the strength of the thesis."
+/>
+
+<Quiz
+  question="The Verdict proposes a 3% position with entry $50, stop $44, target $62. Before you write the journal entry, what is the reward-to-risk ratio, and what does a clean stop-out cost the portfolio?"
+  options={[
+    "1.4 to 1, and 0.36% of the portfolio",
+    "2.0 to 1, and 3% of the portfolio — a stop-out costs the whole position",
+    "2.0 to 1, and 12% of the portfolio",
+    "2.0 to 1, and 0.36% of the portfolio"
+  ]}
+  answer={3}
+  explanation="Risk per share is $50 − $44 = $6; reward is $62 − $50 = $12; 12 ÷ 6 = 2.0 to 1. The stop is 12% below entry, and the position is 3% of the portfolio, so 0.03 × 0.12 = 0.0036 = 0.36%. The '3% of the portfolio' answer confuses position size with loss — the whole position is only lost if the instrument goes to zero, not at a $44 stop. The '12% of the portfolio' answer reports the per-position loss as if the position were the portfolio. The '1.4 to 1' answer divides the $62 target by the $44 stop (62 ÷ 44 ≈ 1.41) instead of comparing the $12 of reward with the $6 at risk."
+/>
+
+<Quiz
+  question="Eight weeks on, the position stopped out for the 0.36% portfolio loss. Your journal shows the invalidation condition — close below $44 — fired exactly as written, and your pre-mortem had named this failure path in advance. Pulling the whole module together, what is the correct post-mortem verdict?"
+  options={[
+    "The process held: thesis, invalidation and pre-mortem were all written before the outcome existed and the exit fired as specified, so this is a correctly-executed decision with a losing outcome — one result carries almost no information about the process, and the entry belongs in a score built over many decisions",
+    "The decision was good because the loss was small — size, not reasoning, is what a post-mortem grades",
+    "The decision was bad: it lost money, and a process that produces losses needs replacing",
+    "The pre-mortem naming this failure path means the position should never have been opened — a risk identified in advance is a reason to decline"
+  ]}
+  answer={0}
+  explanation="This is the module's core synthesis: process is judged at the moment of decision, against what was knowable then, and a single loss inside a pre-specified risk of 0.36% is variance rather than evidence of error. The 'it lost money, so it was bad' answer is exactly the outcome-based reasoning the module exists to break. The 'good because the loss was small' answer grades the right thing for the wrong reason — small size limits damage, but says nothing about whether the reasoning was sound. And the 'a named risk is a reason to decline' answer misreads the pre-mortem: its job is to surface failure paths so they can be priced and monitored, not to veto every position that has one — every position has one."
+/>
+
+## Try it
+
+Open the Decision Journal and find your most recent entry. Check one thing: is the invalidation condition specific enough that something in the market could fire it without your interpretation? If not, rewrite it as a price, a level, or a datapoint. Then Convene the Room on a watchlist ticker and run the full sequence once, timing yourself. Remember: the Verdict is a training artifact for you to evaluate, not investment advice.
+
+## Takeaway
+
+Read, check the numbers, steelman, pre-mortem, journal with an invalidation condition that can actually fire, then decide — and record the reasoning whether you accept or override, because the entry you skip is the one your future scoring needs most.
+
+*Where this comes from: Annie Duke's Thinking in Bets on decision process under uncertainty, and Howard Marks' The Most Important Thing on second-level thinking applied to a stated view.*

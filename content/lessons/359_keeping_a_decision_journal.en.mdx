@@ -1,0 +1,78 @@
+---
+id: "359_keeping_a_decision_journal"
+title: "Keeping a decision journal"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 2
+track: "decision_evaluation"
+code: "EVAL 3"
+topic: "decision_journal"
+prerequisites: ["357_process_vs_outcome"]
+tags: ["decision-journal", "hindsight-bias", "invalidation", "pre-commitment", "process-discipline"]
+sources: ["Daniel Kahneman — Thinking, Fast and Slow: hindsight bias and the narrative fallacy", "Philip Tetlock & Dan Gardner — Superforecasting: recording forecasts so they can be scored"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Keeping a decision journal
+
+An un-journalled decision cannot be honestly reviewed, because the version you remember is not the version you made. Once the outcome exists, memory quietly rewrites the thesis to fit it — you recall being more certain than you were, or having anticipated the thing that actually happened. The fix is mechanical rather than psychological: write the thesis, the confidence, and the invalidation condition *before* the outcome exists. By the end of this lesson you'll be able to write an entry that survives its own outcome uncorrupted.
+
+## Example
+
+Take a hypothetical mid-cap industrial — no real ticker, because what matters here is the shape of the entry, not the company. You open the position at $40, sized at 4% of a simulated portfolio, and before anything resolves you write three lines:
+
+- **Thesis:** gross margin expands as the new plant comes online; the market is still pricing the old cost base.
+- **Confidence:** 60%.
+- **Invalidation:** two consecutive quarters of negative free cash flow, or a weekly close below $34.
+
+Twelve weeks later it trades at $48 — up $8, or 20% on the position, which is 0.8% at portfolio level. Comfortable. But the entry is still sitting there, and it says margin expansion. Margins contracted. The move came from a takeover rumour that the thesis never mentioned.
+
+Without those three lines, the honest reconstruction is simply unavailable: you would remember a 20% winner and file the thesis as confirmed. With them, the review is unambiguous — the stated reason failed, the outcome was good, and those are two separate facts about the same trade. The invalidation line is doing work too: at $34 you exit on a rule written when you had nothing yet to defend, which is the only moment such a rule is cheap to write.
+
+## The trap
+
+The trap is journalling after the fact — opening the entry when the position closes, or "remembering" the thesis at review time. It feels equivalent; you were there, you know what you thought. You don't. Hindsight bias is not forgetting, it's a silent edit: the outcome becomes part of the recalled reasoning, and recalled reasoning is always better calibrated than the real thing was. A retrospective entry is a story about a result, not a record of a decision.
+
+The correct mental model is that the entry is evidence, and evidence collected after the verdict is worthless. Write it while you can still be wrong — that is the entire mechanism. Anything written later is commentary.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You entered a hypothetical position at $40 on a margin-expansion thesis, logged 60% confidence, and set invalidation at two consecutive quarters of negative free cash flow or a weekly close below $34. Twelve weeks later it trades at $48 on an unrelated takeover rumour, and margins have contracted. What does the written entry let you conclude that memory alone would not?"
+  options={[
+    "That the thesis was sound, since the position is up 20% and no invalidation condition ever fired",
+    "That the 60% confidence figure was set too low, because the position gained 20%",
+    "That the +20% came from a cause the entry never named — the margin thesis failed on its own terms, and the gain is separate evidence that says nothing about the decision",
+    "That the invalidation conditions were badly chosen, since neither of them triggered"
+  ]}
+  answer={2}
+  explanation="The written entry pins the thesis to margin expansion, and margins contracted — so the stated reason failed even though the position gained. The 'thesis was sound because it's up 20%' answer is exactly the substitution the journal exists to block: an unrelated takeover rumour paid you, not the reasoning you underwrote. The answer arguing the 60% confidence was too low grades a probability by a single outcome, which no single result can do. And the answer calling the invalidation conditions badly chosen misreads them — an invalidation level that never triggers is not a failed level; it only becomes informative if it fires."
+/>
+
+<Quiz
+  question="Same hypothetical entry: 4% of the portfolio, entered at $40, invalidation set at a weekly close below $34. Suppose instead the invalidation fires and you exit at $34. What is the portfolio-level impact, and what does the pre-written entry establish at review?"
+  options={[
+    "A 0.6% portfolio loss (a 15% move against a 4% position), and the entry establishes that the exit was a pre-committed rule firing rather than an improvised reaction — a process success that is independent of the loss",
+    "A 15% portfolio loss — the full move against the position is what the portfolio absorbs",
+    "A 0.6% portfolio loss, and the entry establishes that the decision was a mistake, because a journalled decision that loses money was mis-reasoned",
+    "A 4% portfolio loss, since the whole position was exposed once price broke the invalidation level"
+  ]}
+  answer={0}
+  explanation="$40 to $34 is $6, or 15% against the position; 15% of a 4% position is 0.6% of the portfolio. The answer claiming a 15% portfolio loss confuses the position-level move with the portfolio-level one — position sizing is what converts between them. The answer claiming a 4% portfolio loss treats the entire position as lost, when only the 15% move was. And the answer reading the loss as proof of mis-reasoning is the error a journal is built to prevent: the entry shows a rule written in advance and honoured, which is what a good process looks like on a losing trade."
+/>
+
+## Try it
+
+Open the Decision Journal and pick a position that hasn't resolved yet. Add three lines before it does: the thesis in one sentence, confidence as a number, and the specific condition that would make you wrong. Then read it against the trail described in <Lesson id="274_the_safety_floors_audit_trail"/> — the PM records what the rules did; only you can record what you believed. AMI is a training simulator, so the entry is practice material, not advice.
+
+## Takeaway
+
+Write the thesis, the confidence, and the invalidation before the outcome exists — afterwards, your memory is a witness that has already read the verdict.
+
+*Where this comes from: Kahneman's account of hindsight bias and the narrative fallacy in Thinking, Fast and Slow; Tetlock and Gardner's insistence in Superforecasting that a forecast be recorded precisely enough to be scored.*

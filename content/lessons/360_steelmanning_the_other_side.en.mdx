@@ -1,0 +1,74 @@
+---
+id: "360_steelmanning_the_other_side"
+title: "Steelmanning the other side"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 3
+track: "decision_evaluation"
+code: "EVAL 4"
+topic: "steelman"
+prerequisites: ["357_process_vs_outcome"]
+tags: ["steelman", "red-team", "confirmation-bias", "thesis-testing", "disagreement"]
+sources: ["Howard Marks — The Most Important Thing: second-level thinking; the consensus already in the price","Daniel Kahneman — Thinking, Fast and Slow: confirmation bias and motivated reasoning"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+
+# Steelmanning the other side
+
+A thesis you have never argued against is a thesis you have only rehearsed. Steelmanning is the discipline of building the strongest available case against your own position — the version a sharp opponent would sign their name to — and then checking whether your thesis survives it. The weak version, the one you dismiss in a sentence, teaches you nothing; knocking it down proves only that you can knock down a bad argument. By the end of this lesson you'll be able to construct an opposing case rigorous enough that the other side would endorse it, and name the evidence that would settle the disagreement either way.
+
+## Example
+
+Take a hypothetical mid-cap industrial — no real ticker, invented figures, so what you're grading is the reasoning rather than the numbers. You hold a simulated 6% position entered at $50. Your thesis: a new plant coming online lifts gross margin from 28% to 33% over two years, and the multiple holds.
+
+The strawman bear case: *"it's already run, so it's expensive."* You dispatch that in one line — the move is exactly what a margin story predicts, and price alone is not an argument. You feel tested. You were not tested.
+
+The steelman: the 5-point margin gain is a capacity effect, not a moat. Two competitors have announced capex to match it; if half the gain is competed away inside the two-year window, you get 2.5 points, not 5 — margin lands near 30.5%. And the backlog underwriting the plant is 61% concentrated in two customers whose contracts renew in 18 months, which is before your thesis is due to pay off. Same conclusion as the strawman — *this is worth less than you think* — but now it carries a mechanism, a magnitude, and a clock.
+
+The falsifier makes it usable: the next annual report's customer-concentration disclosure, and the competitors' announced commissioning dates. If concentration drops materially and competitor capacity slips past the renewal window, the bear case weakens on its own terms. If it doesn't, yours does. Notice which of the two cases you could argue, and which you could only dismiss.
+
+## The trap
+
+The trap is testing your thesis against the weakest objection available. It feels like rigour and delivers reassurance, which is why it is the most efficient form confirmation bias takes — you did the work of arguing, and arrived exactly where you started. The correct standard is not *"can I answer this objection?"* but *"would a bear read my version of their case and say yes, that's mine"*. If you can't state it that well, you don't hold a thesis; you hold a conclusion plus the reasons you happened to encounter first. Remember also that someone sold you the share. The other side's argument is already in the price — steelmanning is how you find out what it was. <Lesson id="275_when_agents_disagree"/> covers how to read that opposition when the Room supplies it; this lesson is about supplying it yourself, so you can tell whether the Room's version was any good.
+
+<ChatWith agent="research_manager" />
+
+## Quiz
+
+<Quiz
+  question="You are long a hypothetical mid-cap industrial on a thesis that gross margin rises from 28% to 33% over two years. Which of these is the steelman of the bear case?"
+  options={[
+    "Bears on this name have been wrong for three years running, so their view can be discounted",
+    "The stock has already run, so it is expensive here",
+    "The 5-point gain is a capacity effect two competitors have announced capex to match — if half is competed away inside the window you get 2.5 points, not 5 — and 61% of the backlog sits with two customers renewing in 18 months, before the thesis pays off",
+    "The margin story is probably right, but it may take three years rather than two"
+  ]}
+  answer={2}
+  explanation="A steelman needs a mechanism, a magnitude and a clock — competitive capacity replication, half the 5 points lost (leaving 2.5, or roughly 30.5% margin), and a renewal date that lands before the thesis matures. That version a bear would endorse as their own. The 'already run, so it is expensive' answer states a conclusion with no mechanism, so there is nothing to falsify. The answer attacking bears' three-year track record argues about the arguer, not the argument. And the 'right, but it may take three years' answer is a concession to your own thesis wearing opposition's clothes — it grants the mechanism and haggles over timing, which is not a counter-case."
+/>
+
+<Quiz
+  question="A Room verdict comes back BUY, with the Research Manager's Bull lean at 0.72 and the Bear Researcher's section running two hedged paragraphs. Applying the steelman discipline, what is the right read?"
+  options={[
+    "A 0.72 lean against a weak counter-case is the cleanest confirmation you will get — the lean is the number that matters",
+    "Brief the Bear Researcher to argue harder until the lean falls below 0.6, then re-read the verdict",
+    "Discard the verdict — a debate without a strong bear case is unusable",
+    "A lean is only informative if the case it beat was strong: write the strongest bear case yourself, and if yours is better than the Room's, the 0.72 reflects weak opposition rather than a strong thesis"
+  ]}
+  answer={3}
+  explanation="0.72 is a ratio of one case against another, so it inherits the quality of the loser — a lean over a thin bear case tells you about the debate, not about the company, which is the same reason <Lesson id="275_when_agents_disagree"/> treats effortless agreement as something to check rather than celebrate. Writing the bear case yourself is the only way to grade the one you were given. The 'cleanest confirmation you will get' answer takes the lean at face value and skips that check entirely. Briefing the Bear Researcher until the lean drops below 0.6 is worse than doing nothing: steering an agent toward a target output is engineering the answer you want, not testing it. And discarding the verdict overcorrects — a weak bear case is information about where you still have to do the work yourself, not grounds to throw the artifact away."
+/>
+
+## Try it
+
+Open Convene the Room on a watchlist ticker and read only the Bull Researcher's case. Before scrolling to the Bear Researcher's section, write your own bear case in the Decision Journal — mechanism, magnitude, and the evidence that would settle it. Then compare. If the Bear Researcher's version is stronger than yours, you were holding a strawman. Remember: AMI is a training simulator, and the verdict is a practice artifact, not investment advice.
+
+## Takeaway
+
+If you cannot state the opposing case well enough that its holders would endorse it, you don't have a thesis — you have a conclusion. Argue the strongest version, then name the evidence that would settle it either way.
+
+*Where this comes from: Marks's second-level thinking — the consensus is already in the price (The Most Important Thing); and Kahneman's account of confirmation bias and motivated reasoning (Thinking, Fast and Slow).*
