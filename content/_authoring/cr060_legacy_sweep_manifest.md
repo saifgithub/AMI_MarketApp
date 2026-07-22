@@ -229,6 +229,46 @@ fundamentals_analysis 66 · technical_analysis 45 · edge_process 98 · risk_por
 sentiment_behaviour 10 · + new-track stragglers (asset_classes 3, ethics_integrity 6, quant_methods
 6). Plus the 9 empty-`sources:[]` asset-class lessons (303/305/306/307/308/309/310/313/314).
 
+### Coverage gap found 2026-07-22 — 19 lessons were in NO wave (Wave 4)
+
+Prompted by Saiful asking whether the EVAL group has lessons. Diffing the corpus against every
+wave script (`cr060_*.mjs`) exposed a real hole:
+
+| | |
+|---|---|
+| Corpus total | **334** `.en.mdx` lessons |
+| Covered by W1 + W2 + W3 + sourced batch | **315** |
+| **In no wave at all** | **19** |
+
+The 19 split into two populations needing **different** checks:
+
+- **10 `islamic_finance` (SHARIA 1–10, lessons 347–356)** — never enumerated by any wave. The
+  wave lists were built off pre-CR058 track counts, so the entire track landed after the lists
+  were frozen. **These already declare `sources:`** (AAOIFI Shariah Standards, DJIM) — so the job
+  is *not* source discovery, it is **citation integrity**: does the cited standard actually say
+  what the lesson attributes to it? A reputable-looking citation attached to a claim the source
+  never makes is worse than a missing one, because it reads as verified. Highest-stakes content in
+  the corpus: any ruling → **ESCALATE to Saiful/SME, never the education lane**.
+  `355_how_amis_halal_flag_maps_to_real_screening` additionally asserts things about **AMI's own
+  halal flag**, so it must be checked against the backend implementation, not just external sources.
+- **9 `asset_classes` with `sources: []`** (303/305/306/307/308/309/310/313/314) — already known,
+  now folded into the same wave. Rates/bonds/ETF content: duration & convexity, curve inversion,
+  credit spreads, leveraged-ETF decay math — numeric, i.e. the exact profile that fabricates.
+
+Script ready: `scratchpad/cr060_legacy_sweep_w4.mjs` (dual-prompt — `discover` for ASST,
+`sharia` / `sharia_product` for SHARIA). Launch after Wave 3 lands (avoid a third concurrent
+fan-out — that is what tripped the session limit).
+
+**Separate finding, no lessons involved:** the **`decision_evaluation` (EVAL)** track is fully
+registered — enum `backend/app/schemas/lessons.py:63`, display name "Evaluating Analysis" and code
+prefix `EVAL` in `lessons_service.py:84,115`, present in the corpus-test taxonomy — but has
+**0 lessons**. It renders as an empty group. The code comment says content was deferred to "a
+later content lane" that never ran. Needs either content or de-registration; flagged to Saiful.
+
+**Process lesson:** the sweep's own coverage was never asserted — it was assumed from track counts
+captured before CR058 shipped. Phase 6 should add a guard that every corpus lesson appears in a
+sweep manifest, so a new track can't land unmeasured again.
+
 **Decisions locked (Saiful, 2026-07-22):**
 - **Finish the full sweep** — measure every legacy lesson before committing remediation. Wave 2
   (FUND+TECH+RISK, 127) + Wave 3 (EDGE+SENT+ASST+ETHIC+QUANT, 123) run next.
