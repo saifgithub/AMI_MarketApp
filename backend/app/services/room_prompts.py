@@ -243,9 +243,10 @@ def _format_profile(profile: dict[str, Any]) -> str:
     Granular by design (AT:R57, CR023/CR024): a single profile can now have
     live fundamentals AND live news AND live social sentiment (or any subset
     thereof) at once, so one binary flag can't describe it honestly anymore.
-    Forward catalyst / macro / Fed tone are the one subset with no real
-    source at all (no macro-calendar feed exists) — those stay unconditionally
-    synthetic regardless of what else is live.
+    Macro/Fed tone and the sector-earnings half of forward catalyst had no
+    real source at all and were removed at source (CR038) rather than kept
+    around with a disclosure the agents ignored 70% of the time — only the
+    real FOMC-date half of forward catalyst remains.
     """
     fundamentals_live = profile.get("data_source") == "yfinance_live"
     technicals_live = profile.get("technicals_source") == "live"
@@ -298,10 +299,8 @@ def _format_profile(profile: dict[str, Any]) -> str:
             "scaffolding — NOT a live social feed."
         )
     header_lines.append(
-        "- Forward catalyst, macro/Fed tone: ALWAYS alpha simulation "
-        "scaffolding. No real macro-calendar feed is connected in this app. "
-        "Treat these as a deterministic scenario for educational debate — "
-        "never present them as real."
+        "- Forward catalyst: the FOMC decision countdown below is REAL, "
+        "from the Fed's published calendar."
     )
     header = "\n".join(header_lines)
 
@@ -322,8 +321,6 @@ def _format_profile(profile: dict[str, Any]) -> str:
         f"(52-week: ${profile.get('low')}–${profile.get('high')})",
         f"Volume: {profile.get('volume_tone')}",
         _catalyst_line(profile),
-        f"Macro (synthetic, illustrative): {profile.get('macro_tone')}; "
-        f"Fed (synthetic, illustrative): {profile.get('fed_tone')}",
         f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
     ]
     for extra in (_valuation_line(profile), _sector_line(profile),
@@ -402,10 +399,7 @@ def _catalyst_line(profile: dict[str, Any]) -> str:
     if extra_headlines:
         extra = "; ".join(format_headline(h) for h in extra_headlines)
         line += f"; other recent coverage: {extra}"
-    line += (
-        f"; forward (synthetic, illustrative — no real macro/earnings-"
-        f"calendar feed): {profile.get('forward_catalyst')}"
-    )
+    line += f"; forward (REAL, Fed's published calendar): {profile.get('forward_catalyst')}"
     return line
 
 

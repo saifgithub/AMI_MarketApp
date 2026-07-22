@@ -145,9 +145,11 @@ _TEMPLATES: dict[AgentId, list[str]] = {
         "sits at ${breakout}. Volume {volume_tone}.",
     ],
     AgentId.NEWS_ANALYST: [
-        "{ticker}'s last catalyst was {catalyst}. Forward catalysts: "
-        "{forward_catalyst}. Macro backdrop is {macro_tone} — Fed path is "
-        "{fed_tone}, which {fed_impact} multiples on growth names.",
+        # CR038: macro/Fed tone dropped — no macro-calendar feed backed it and
+        # it was asserted as fact 70% of the time despite an explicit
+        # disclosure. Fixed at source, not by prompting harder.
+        "{ticker}'s last catalyst was {catalyst}. Forward catalyst: "
+        "{forward_catalyst}.",
     ],
     AgentId.SOCIAL_MEDIA_ANALYST: [
         # Neutral wording, same discipline as NEWS_ANALYST above — the
@@ -215,17 +217,16 @@ _FOMC_DECISION_DATES = [
 
 
 def _forward_catalyst_text(today: date | None = None) -> str:
-    """Real days-to-next-FOMC-decision (CR034); sector-earnings-season
-    timing has no real feed and stays explicitly illustrative — same
-    disclosure convention as the synthetic social-sentiment fields."""
+    """Real days-to-next-FOMC-decision (CR034). The sector-earnings-season
+    half used to ride along here as "(illustrative, not date-verified)" —
+    CR038 removed it at source: no earnings-calendar feed backed it, and
+    the disclosure didn't stop agents citing it as fact 70% of the time."""
     today = today or datetime.now(timezone.utc).date()
     upcoming = [d for d in _FOMC_DECISION_DATES if d >= today]
     if upcoming:
         days_out = (upcoming[0] - today).days
-        fomc_part = f"FOMC decision in {days_out} day{'s' if days_out != 1 else ''}"
-    else:
-        fomc_part = "next FOMC decision date not yet published"
-    return f"{fomc_part}, sector earnings season (illustrative, not date-verified)"
+        return f"FOMC decision in {days_out} day{'s' if days_out != 1 else ''}"
+    return "next FOMC decision date not yet published"
 
 
 @dataclass
@@ -293,9 +294,6 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
             if rng.random() > 0.5 else "in-line with 20-day average",
         "catalyst": "Q3 earnings (beat by ~4%)",
         "forward_catalyst": _forward_catalyst_text(),
-        "macro_tone": "constructive but fragile",
-        "fed_tone": "data-dependent with a dovish lean",
-        "fed_impact": "is generally supportive of",
         "sentiment_tone": "moderately bullish" if rng.random() > 0.3 else "mixed",
         # No live social feed exists (CR024) — these are illustrative, not
         # measured. Dropped the fake-precision "+X.Xσ" decimal (borrowed a
@@ -346,10 +344,10 @@ def _profile_for_ticker(ticker: str) -> dict[str, Any]:
             profile["technicals_source"] = "live"
 
         # Overlay a real headline onto `catalyst` (CR023, AT:R57). Only the
-        # top headline replaces `catalyst` — `forward_catalyst`/`macro_tone`/
-        # `fed_tone`/`fed_impact` are left untouched, since no real macro-
-        # calendar feed exists; fabricating a "fix" for those would be worse
-        # than clearly-labeled synthetic scaffolding (see room_prompts.py).
+        # top headline replaces `catalyst` — `forward_catalyst` (the real
+        # FOMC-date half; CR038 removed the synthetic sector-earnings half
+        # entirely) is left untouched, since no real earnings-calendar feed
+        # exists to overlay onto it.
         news_items = fetch_live_news(ticker)
         if news_items:
             profile["catalyst"] = format_headline(news_items[0])

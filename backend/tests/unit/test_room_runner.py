@@ -978,13 +978,15 @@ def test_profile_overlays_live_news_when_enabled(monkeypatch):
     assert profile["news_source"] == "live"
     assert "Apple beats on EPS" in profile["catalyst"]
     assert profile["news_headlines"] == [headline]
-    # Fields with no real source must stay exactly today's hardcoded strings
-    # (forward_catalyst's FOMC half is real-computed since CR034 — see
-    # test_forward_catalyst_text_* below for that behavior).
+    # forward_catalyst is real-computed since CR034 (FOMC countdown) — see
+    # test_forward_catalyst_text_* below. macro_tone/fed_tone/fed_impact and
+    # the sector-earnings half of forward_catalyst were removed at source
+    # (CR038) — they must no longer exist on the profile at all.
     assert "FOMC decision in" in profile["forward_catalyst"]
-    assert "sector earnings season (illustrative" in profile["forward_catalyst"]
-    assert profile["macro_tone"] == "constructive but fragile"
-    assert profile["fed_tone"] == "data-dependent with a dovish lean"
+    assert "sector earnings season" not in profile["forward_catalyst"]
+    assert "macro_tone" not in profile
+    assert "fed_tone" not in profile
+    assert "fed_impact" not in profile
 
 
 # ── Real FOMC decision countdown (CR034) ──────────────────────────────────
@@ -996,8 +998,7 @@ def test_forward_catalyst_text_counts_real_days_to_next_meeting():
 
     # July 13, 2026 -> next meeting is July 28-29, decision day July 29.
     text = _forward_catalyst_text(today=date(2026, 7, 13))
-    assert "FOMC decision in 16 days" in text
-    assert "sector earnings season (illustrative, not date-verified)" in text
+    assert text == "FOMC decision in 16 days"
 
 
 def test_forward_catalyst_text_on_the_decision_day_itself():
@@ -1005,7 +1006,7 @@ def test_forward_catalyst_text_on_the_decision_day_itself():
     from app.services.room_runner import _forward_catalyst_text
 
     text = _forward_catalyst_text(today=date(2026, 7, 29))
-    assert "FOMC decision in 0 days" in text
+    assert text == "FOMC decision in 0 days"
 
 
 def test_forward_catalyst_text_singular_day_out():
@@ -1013,7 +1014,7 @@ def test_forward_catalyst_text_singular_day_out():
     from app.services.room_runner import _forward_catalyst_text
 
     text = _forward_catalyst_text(today=date(2026, 7, 28))
-    assert "FOMC decision in 1 day," in text
+    assert text == "FOMC decision in 1 day"
     assert "1 days" not in text
 
 
@@ -1022,10 +1023,7 @@ def test_forward_catalyst_text_after_years_last_published_meeting():
     from app.services.room_runner import _forward_catalyst_text
 
     text = _forward_catalyst_text(today=date(2026, 12, 10))
-    assert text == (
-        "next FOMC decision date not yet published, "
-        "sector earnings season (illustrative, not date-verified)"
-    )
+    assert text == "next FOMC decision date not yet published"
 
 
 def test_profile_forward_catalyst_uses_real_utc_today(monkeypatch):
@@ -1036,7 +1034,7 @@ def test_profile_forward_catalyst_uses_real_utc_today(monkeypatch):
 
     profile = _profile_for_ticker("MSFT")
     assert "FOMC decision in" in profile["forward_catalyst"]
-    assert "sector earnings season (illustrative, not date-verified)" in profile["forward_catalyst"]
+    assert "sector earnings season" not in profile["forward_catalyst"]
 
 
 def test_profile_news_falls_back_to_synthetic_when_fetch_fails(monkeypatch):
@@ -1140,18 +1138,19 @@ def test_format_profile_labels_news_source_when_synthetic():
     assert "Recent catalyst/headline: alpha simulation scaffolding" in block
 
 
-def test_format_profile_always_flags_forward_catalyst_as_synthetic():
-    """Even with fundamentals AND news AND social all live, forward
-    catalyst/macro/Fed tone must still be disclosed as always-synthetic —
-    they have no real source (no macro-calendar feed exists). Unlike
-    sentiment (AT:R57-continued: now sometimes live via Adanos), this
-    subset is unconditional."""
+def test_format_profile_always_flags_forward_catalyst_as_real_fomc_only():
+    """CR038: macro/Fed tone and the sector-earnings half of forward
+    catalyst were removed at source — the disclosure block no longer
+    mentions them at all. What's left (the FOMC countdown) is real, from
+    the Fed's published calendar, regardless of what else is live."""
     from app.services.room_prompts import _format_profile
 
     block = _format_profile({
         "data_source": "yfinance_live", "news_source": "live", "social_source": "live",
     })
-    assert "ALWAYS alpha simulation scaffolding" in block
+    assert "macro" not in block.lower()
+    assert "fed tone" not in block.lower()
+    assert "FOMC decision" in block or "forward catalyst" in block.lower()
 
 
 def test_format_profile_labels_social_source_when_live():
