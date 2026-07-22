@@ -60,12 +60,25 @@ format template.
 
 ## WIP snapshot
 
+- **Saiful's AFK directive "058, 059, 053 all done" — DELIVERED (AT:R64).** CR058 (math + 10 SHARIA
+  lessons + support content) ✓, CR059 (13-facet taxonomy: backend + mobile labels) ✓, CR053 (reference
+  identifiability: BE + MOBILE + MIGRATE) ✓. Corpus **334 lessons**.
 - **CR054 Wave-1 LESSON tracks COMPLETE:** ETHIC ✓ (10) + ASST ✓ (20) + MACRO ✓ (12) + QUANT ✓ (12)
-  = 54 lessons integrated, **corpus 270→324**. Remaining Wave-1: glossary (~120) + coach Q&A (~80).
-- **Saiful-direct (immediate): CR059 then CR058.** CR059 = wire the 2 net-new tracks (`islamic_finance`,
-  `decision_evaluation`) → locks the 13-facet hex tessellation (7 existing + 6 new). CR058 = Sharia
-  content (M25), DEPENDS-ON CR059. Both "address the same areas" as the in-flight BOK.
+  = 54 lessons, corpus 270→324, then CR058 SHARIA (10) → **334**. Remaining Wave-1: glossary + coach Q&A
+  (CR058-SUPPORT already added 20 islamic_finance glossary terms + 15 Q&A).
+- **BACKEND IS LIVE ON ALPHA** (tag `alpha-2026-07-22-1` @ 5acd423): 414 files rsync'd, api-alpha
+  rebuilt and healthy, alembic no-op, smoke green (vllm + yfinance). The 334-lesson corpus and the
+  `{{lesson:}}` tokens are serving today.
+- **Mobile 0.1.0+45 BUILT, awaiting Saiful upload** (commit 48611d5): signed AAB (50MB, upload-key SHA-1
+  verified) + signed IPA (26MB, `CFBundleVersion 45`). **+45 is required** — the live backend serves
+  `{{lesson:…}}` tokens that only the CR053-MOBILE render branch understands; testers on +44 see raw
+  token text. Upload (TestFlight + Play internal) is **Saiful-gated** — I build, he uploads.
 - Content tracks run **sequentially** — the CR057 launch helper works in the main repo, so concurrent
   commits would race (disjoint files author fine in parallel, but `git commit`/`pull --rebase` don't).
-- Open: CR057 → auditor.core audit (Saiful's call); LESSON_COUNT_FLOOR 270→324 + positional-option-ref
-  guard, bundled into one coder.api micro-lane at Wave-1 wrap; CR060 (provenance/accuracy gate) standing.
+- Open: CR057 → auditor.core audit (Saiful's call); **DEF078** (20 CR060 sourced-lesson content errors,
+  1 legal escalation — routed to the education lane, live on Alpha today); **DEF076** (Android Google
+  Sign-In code 10 — console/propagation side, NOT a build fix: upload key + web-client-id + audience all
+  verified correct); CR060 (provenance/accuracy gate) standing.
+- Closed this round: DEF079 (positional option refs + guard + `LESSON_COUNT_FLOOR` 270→334), DEF080
+  (concierge context budget 12k→20k — had blocked the promote), DEF081 (`/promote-to-alpha` rsync
+  `--delete` would have wiped 134 melehost-only files; excludes added).
