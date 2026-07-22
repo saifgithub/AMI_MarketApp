@@ -70,5 +70,24 @@ Report the edit count (how many refs migrated in each class) + the two guard res
 (round 1)` + manifest (refs migrated A/B, files touched, script path, guard exits). ONE commit (script +
 migrated content + guard), tag `(AT:noncoder.edu CR053)`, push origin main. Verified by git + exit code.
 
-ASSIGNED: (held — launches after CR053-BE integrates)
-DISPATCH: OPEN
+ASSIGNED: noncoder.edu round 1
+DISPATCH: ACCEPTED (round 1)
+
+<!-- Accepted 2026-07-22 by architect (round 1): content review PASS on migration commit 320bf45 +
+hand-off 1b27363. I re-ran the guards myself: test_lesson_corpus_integrity + test_daily_challenge_service
+= 35 passed exit 0. DEEP REVIEW of content/_authoring/cr053_migration_report.md (327 lesson-body edits, 0
+flagged, 33 daily): CLASS-2 (57 within-module ordinals) all resolved CORRECTLY via same-prefix code — 328
+(MACRO 6) "lesson 4"→326 (MACRO 4, leading/coincident/lagging), NOT 004; SHARIA 349 "lesson 2"→348; every
+one maps to the right same-track lesson, zero misresolved-to-global. Independent sweep: ZERO bare global
+refs remain in any lesson body. **Worker's key catch (correct + necessary):** tagged with the FULL
+frontmatter id (id="039_the_pe_ratio") not bare 3-digit — because CR053-BE's resolve guard + the mobile
+_findLessonMetaById both key on LessonMeta.id (the full string); bare "039" would fail the guard and
+degrade to plain text on device. My lane examples said bare 3-digit — the worker was right, I was wrong.
+Ranges + title-in-parens handled. Daily rewrites correct (lesson 070→EDGE 20, 063→N&M 5, prices/dates
+untouched). Two trivial daily-prose residuals ("N&M 4 + 064", "EDGE 9 and 058" — trailing bare number a
+converted code left behind) I fixed myself as reviewer touch-up (→ N&M 6 / EDGE 14), daily test re-green.
+Commit = 141 files, all content/scripts/tests, no forbidden files. noncoder.edu freed. **CR053 FULLY DONE
+(BE 36314f4 + MOBILE 921f15f + MIGRATE 320bf45).** NEXT: Wave-1 wrap (LESSON_COUNT_FLOOR + positional-ref
+guard). Note follow-up: the mobile widget test fixture used a bare id "039" — production emits full ids;
+test still valid (exact-match logic identical) but a fidelity nit to upgrade in Wave-1 wrap. -->
+

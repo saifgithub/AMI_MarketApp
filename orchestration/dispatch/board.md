@@ -45,7 +45,7 @@ from this table. CR052.
 | ~~CR058-SUPPORT~~ | **DONE ✓ (r1)** | noncoder.edu | 20 islamic_finance glossary (188→208) + 15 Q&A + 10 daily (2026_12) integrated 5ebfef4; content review PASS (P2 exact, frame verified, 32 green). **CR058 FULLY CLOSED** (math+lessons+support) |
 | ~~CR053-BE~~ | **DONE ✓ (r1)** | coder.api → auditor.core | `{{lesson:}}` token + resolve guard integrated 36314f4; auditor COMPLETE (257587d) — blind probe proved the guard bites, 41 green. Lean AUDIT_TESTS audit (no 828s trap). Unblocks MOBILE+MIGRATE |
 | ~~CR053-MOBILE~~ | **DONE ✓ (r1)** | coder.mobile → auditor.core | `{{lesson:}}` chip + prereq render/link + tappable gateway rows integrated 921f15f; auditor COMPLETE (a4aede0) — additive tokenizer, 37/37 tests, degrade-to-text proven. Render branch shipped |
-| **CR053-MIGRATE** | **ASSIGNED r1 → launching** | noncoder.edu → review | migrate 235 global-id refs (→`<Lesson id/>`) + 51 within-module ordinals (→same-prefix code) + 38 daily refs. Dry-run report review gate. LAST CR053 lane |
+| ~~CR053-MIGRATE~~ | **DONE ✓ (r1)** | noncoder.edu → review | 327 lesson-body refs → full-id `<Lesson/>` tags (270 global + 57 within-module, 0 flagged) + 33 daily → codes, integrated 320bf45; content review PASS (Class-2 same-prefix verified, 0 bare refs remain, guards green). **CR053 FULLY DONE (BE+MOBILE+MIGRATE)** |
 | **CR061** (proposed) | **QUEUED — quick wins** | architect | verify helper + audit-launch helper + test-timeout wrapper (828s) + roster live_handle fix |
 | CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |

@@ -1,8 +1,11 @@
 # CR053 — Curriculum reference identifiability, quick-link feasibility, and unlock UX
 
-**Status:** **implementation greenlit** (AT:R64, 2026-07-22) — Saiful: *"do it."* The §5 plan is now
-being built under this same CR053 id (3 lanes: CR053-BE / CR053-MOBILE / CR053-MIGRATE; Phase 3 runtime
-linkifier deferred as optional). Original filing was audit + feasibility only · **Session:** AT:R63 · **Filed:** 2026-07-21
+**Status:** **IMPLEMENTED** (AT:R64, 2026-07-22) — Saiful: *"do it."* Built + audited under this same
+CR053 id in 3 lanes: **CR053-BE** (`<Lesson id/>`→`{{lesson:}}` token + resolve guard, auditor COMPLETE
+257587d) · **CR053-MOBILE** (`{{lesson:}}` chip + prerequisites render/link + tappable gateway rows,
+auditor COMPLETE a4aede0) · **CR053-MIGRATE** (327 lesson-body refs → full-id `<Lesson/>` tags + 33 daily
+→ CR044 codes, content review PASS). Phase 3 (runtime Concierge/chat code-regex linkifier) deferred as
+optional per §5 — Saiful's call. Original filing was audit + feasibility only · **Session:** AT:R63 · **Filed:** 2026-07-21
 
 > Directive (Saiful, verbatim): *"go through all educational and daily-challenge materials
 > again. (1) any internal reference made to any material can be easily identified by the

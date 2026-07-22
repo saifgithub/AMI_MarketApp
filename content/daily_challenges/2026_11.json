@@ -89,7 +89,7 @@
       "Social Media Analyst"
     ],
     "answer": 2,
-    "explanation": "VIX at 31 is the 80th-percentile vol regime; SPX 9% off ATH with breadth at 34% is a deteriorating tape. The Market Analyst owns the volatility-regime and breadth read (N&M 4 + 064). Adding a new 4% long without a regime gate is the textbook missing input. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment is colour, not a structural gate; the Market Analyst's regime call is load-bearing — if the regime is hostile, sizing should shrink or the trade should wait.",
+    "explanation": "VIX at 31 is the 80th-percentile vol regime; SPX 9% off ATH with breadth at 34% is a deteriorating tape. The Market Analyst owns the volatility-regime and breadth read (N&M 4 + N&M 6). Adding a new 4% long without a regime gate is the textbook missing input. The tempting wrong answer 'Social Media Analyst' fails because retail sentiment is colour, not a structural gate; the Market Analyst's regime call is load-bearing — if the regime is hostile, sizing should shrink or the trade should wait.",
     "related_lesson": "062",
     "related_agent": "market_analyst",
     "tags": ["regime", "volatility", "breadth", "module_10"]
@@ -317,7 +317,7 @@
       "A Social Media Analyst input"
     ],
     "answer": 2,
-    "explanation": "EDGE 9 and 058 are explicit: a breakout requires both price AND volume confirmation. The verdict labels itself a 'breakout entry' but the Market Analyst only confirmed the price half. Without volume, the user has no way to evaluate the breakout's conviction, which is exactly the false-break setup. The tempting wrong answer 'Aggressive Debator vote' fails because directional cheerleading is colour; the structural miss is the missing volume datum the strategy label itself requires.",
+    "explanation": "EDGE 9 and EDGE 14 are explicit: a breakout requires both price AND volume confirmation. The verdict labels itself a 'breakout entry' but the Market Analyst only confirmed the price half. Without volume, the user has no way to evaluate the breakout's conviction, which is exactly the false-break setup. The tempting wrong answer 'Aggressive Debator vote' fails because directional cheerleading is colour; the structural miss is the missing volume datum the strategy label itself requires.",
     "related_lesson": "053",
     "related_agent": "market_analyst",
     "tags": ["breakout", "volume", "module_9"]
