@@ -57,7 +57,7 @@ The trap is using a flat percentage stop (5% below entry, say) across every tick
     "ATR is a lagging indicator, so Trader B's stops are always wrong by construction."
   ]}
   answer={0}
-  explanation="The tempting wrong answer is the last — 'same dollar risk, same outcome'. Dollar risk is the same per trade, but the probability and reason for getting stopped out are very different. Flat stops mix two errors: noise-driven stop-outs on volatile names (forced losses where the thesis was actually fine) and oversized losses on quiet names when the thesis did fail (the 5% gap is way past the chart's invalidation). ATR-based stops normalise that probability across instruments. The 'lagging indicator' distractor is a misreading — ATR being a 14-day average is the feature, not the bug, since it filters out single-day spikes."
+  explanation="The tempting wrong answer is the 'same dollar risk, same outcome' one. Dollar risk is the same per trade, but the probability and reason for getting stopped out are very different. Flat stops mix two errors: noise-driven stop-outs on volatile names (forced losses where the thesis was actually fine) and oversized losses on quiet names when the thesis did fail (the 5% gap is way past the chart's invalidation). ATR-based stops normalise that probability across instruments. The 'lagging indicator' distractor is a misreading — ATR being a 14-day average is the feature, not the bug, since it filters out single-day spikes."
 />
 
 ## Try it

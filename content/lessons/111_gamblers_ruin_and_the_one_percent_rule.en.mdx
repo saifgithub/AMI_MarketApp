@@ -43,7 +43,7 @@ The trap is "I have an edge, so sizing up captures more of it." The math says no
     "About 25× — ruin scales with the square of sizing."
   ]}
   answer={2}
-  explanation="The tempting wrong answer is the first — 'sizing and ruin scale linearly'. The math says exponential, not linear. Sizing per trade enters the formula as the exponent N (steps to zero), so doubling sizing roughly halves N and the ruin probability changes by a power, not a multiple. 'Independent of sizing' is the worst answer — ignoring sizing is exactly the misunderstanding that produces blown accounts. The exact ratio in this scenario is 1.8% / 3 × 10⁻¹⁰ ≈ 6 × 10⁷ — sixty million times higher ruin probability for 5× the sizing on the same edge."
+  explanation="The tempting wrong answer is the 'sizing and ruin scale linearly' one. The math says exponential, not linear. Sizing per trade enters the formula as the exponent N (steps to zero), so doubling sizing roughly halves N and the ruin probability changes by a power, not a multiple. 'Independent of sizing' is the worst answer — ignoring sizing is exactly the misunderstanding that produces blown accounts. The exact ratio in this scenario is 1.8% / 3 × 10⁻¹⁰ ≈ 6 × 10⁷ — sixty million times higher ruin probability for 5× the sizing on the same edge."
 />
 
 <Quiz
@@ -55,7 +55,7 @@ The trap is "I have an edge, so sizing up captures more of it." The math says no
     "They tie — both have the same edge, so both compound at the same rate."
   ]}
   answer={1}
-  explanation="The tempting wrong answer is the first — '5× sizing = 5× gains'. The math: Trader B's mean ending equity is higher per surviving run, but the survival rate is not 100% — in 1–2% of runs the account goes broke before 1,200 trades complete. Long-horizon investing math cares about the survival path, not the mean. Trader A's run almost certainly compounds upward across the full 5 years; Trader B's run produces a wider distribution including catastrophic outcomes. The 'always goes broke' distractor overstates the case — Trader B usually does fine, but the small ruin tail is what makes the strategy fail at scale."
+  explanation="The tempting wrong answer is the '5× sizing = 5× gains' one. The math: Trader B's mean ending equity is higher per surviving run, but the survival rate is not 100% — in 1–2% of runs the account goes broke before 1,200 trades complete. Long-horizon investing math cares about the survival path, not the mean. Trader A's run almost certainly compounds upward across the full 5 years; Trader B's run produces a wider distribution including catastrophic outcomes. The 'always goes broke' distractor overstates the case — Trader B usually does fine, but the small ruin tail is what makes the strategy fail at scale."
 />
 
 ## Try it
