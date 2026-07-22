@@ -239,3 +239,32 @@ sentiment_behaviour 10 · + new-track stragglers (asset_classes 3, ethics_integr
   lessons that verify clean are stamped as-is.
 - **Stamping:** all VERIFIED lessons across waves get their discovered `sources:` + `verified:` stamp
   in one batch at sweep-end (clean single scoped commit).
+
+## Resume state — session usage limit hit 2026-07-22 (resets 4:20am Asia/Riyadh)
+
+Two things pending, both cheap; run after the limit resets (or next session):
+
+1. **Wave 3** (EDGE 98 + SENT 10 + ASST 3 + ETHIC 6 + QUANT 6 = 123) — script ready at
+   `scratchpad/cr060_legacy_sweep_w3.mjs` (embedded lessons, compact returns). Launch with
+   `Workflow({scriptPath: ".../cr060_legacy_sweep_w3.mjs"})`.
+2. **19 Wave-2 refutes** that got cut off (marked `VERIFIED*` above) — re-run to confirm-clean:
+   `Workflow({scriptPath: ".../cr060_legacy_sweep_w2.mjs", resumeFromRunId: "wf_0455e054-10c"})`
+   (replays the 108 cached agents instantly, re-runs only the 19 failed refutes). Pending codes:
+   FUND 17, 25, 26, 34, 35, 38, 41, 43, 49, 51, 57, 60, 61, 62, 66 · RISK 7, 8, 9 · TECH 45.
+
+**At sweep-end** (after Wave 3 + the 19 refutes): batch-stamp every VERIFIED lesson with its
+discovered `sources:` + `verified:` (one scoped commit), and file the **remediation CR** (ground
+worked examples in real sourced data / regenerate the data-heavy examples — the FINDINGs across all
+waves are its scope).
+
+### Running totals (measured 192 of ~317 unverified lessons)
+
+| Batch | Lessons | Verified | Pending refute | No-source-needed | Findings |
+|---|---|---|---|---|---|
+| Sourced (293–345) | 30 | 10 | — | — | 20 (+1 legal escalation) |
+| Legacy W1 (CORE+N&M) | 35 | 8 | — | 0 | 27 |
+| Legacy W2 (FUND+TECH+RISK) | 127 | 3 | 19 | 5 | 100 |
+| **Total** | **192** | **21** | **19** | **5** | **147** |
+
+**~77% of measured lessons carry a genuine defect**, overwhelmingly confabulated worked-example
+data. Remaining unmeasured: Legacy W3 (123) + the 9 empty-`sources:[]` asset-class lessons.
