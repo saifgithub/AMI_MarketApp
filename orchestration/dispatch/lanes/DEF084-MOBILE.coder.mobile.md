@@ -3,7 +3,7 @@
 
 STATUS: READY_FOR_AUDIT (round 1)
 
-SHA: <pending — see commit below>
+SHA: e344b27 — `fix(mobile): DEF084 Option 2 … (AT:coder.mobile DEF084)`
 AUDIT-LANE: orchestration/audit/cr/DEF084-MOBILE.architect.md (SUBMITTED: round 1)
 SELF-TEST: `flutter analyze lib/` → 4 pre-existing infos, none in touched files.
 `flutter test` → All tests passed! (48). `uv run pytest
