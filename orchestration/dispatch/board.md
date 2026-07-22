@@ -43,9 +43,9 @@ from this table. CR052.
 | ~~CR058-MATH~~ | **DONE ✓ (r1)** | coder.math → auditor.core | `screening.py` (CR046 M13) integrated 21fb8b6; auditor COMPLETE (hand-recompute + 68+22 green). Unblocks CR058-CONTENT |
 | ~~CR058-CONTENT~~ | **DONE ✓ (r2)** | noncoder.edu | 10 Sharia lessons SHARIA 1-10 (347-356) integrated, corpus 324→**334**. P2 via screening.py, frame in every lesson |
 | ~~CR058-SUPPORT~~ | **DONE ✓ (r1)** | noncoder.edu | 20 islamic_finance glossary (188→208) + 15 Q&A + 10 daily (2026_12) integrated 5ebfef4; content review PASS (P2 exact, frame verified, 32 green). **CR058 FULLY CLOSED** (math+lessons+support) |
-| **CR053-BE** | **ASSIGNED r1 → launching** | coder.api → auditor.core | `<Lesson id/>`→`{{lesson:}}` token + resolve guard. Head of CR053; unblocks MOBILE+MIGRATE |
-| CR053-MOBILE | **held (DEPENDS-ON BE)** | coder.mobile → auditor.core | `{{lesson:}}` chip + prereq render/link + tappable gateway rows |
-| CR053-MIGRATE | **held (DEPENDS-ON BE)** | noncoder.edu → review | migrate 238 lesson + 41 daily bare refs → tags/codes (scripted + guard) |
+| ~~CR053-BE~~ | **DONE ✓ (r1)** | coder.api → auditor.core | `{{lesson:}}` token + resolve guard integrated 36314f4; auditor COMPLETE (257587d) — blind probe proved the guard bites, 41 green. Lean AUDIT_TESTS audit (no 828s trap). Unblocks MOBILE+MIGRATE |
+| **CR053-MOBILE** | **ASSIGNED r1 → launching** | coder.mobile → auditor.core | `{{lesson:}}` chip + prereq render/link + tappable gateway rows. Ships render branch BEFORE MIGRATE content reaches users |
+| CR053-MIGRATE | **held (DEPENDS-ON BE; run after MOBILE)** | noncoder.edu → review | migrate 238 lesson + 41 daily bare refs → tags/codes (scripted + guard) |
 | **CR061** (proposed) | **QUEUED — quick wins** | architect | verify helper + audit-launch helper + test-timeout wrapper (828s) + roster live_handle fix |
 | CR030 | UNASSIGNED (re-queued) | coder.api | earnings/dividend — re-queued behind CR054 Wave 0 to free a slot |
 | DEF061 | UNASSIGNED (queued) | coder.api | enforce 4 mandate toggles — DEPENDS-ON DEF062 |

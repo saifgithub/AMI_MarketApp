@@ -48,4 +48,18 @@ ONE commit, tag `(AT:coder.api CR053)`, push origin main (pull --rebase --autost
 commit sha + pytest exit code. Completion is verified by git + exit code, never your word.
 
 ASSIGNED: coder.api round 1
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
+
+<!-- Accepted 2026-07-22 by architect: auditor.core VERDICT COMPLETE (round 1) on code 36314f4 (verdict
+257587d). Independent evidence: BLIND PROBE proved the resolve guard bites — appended <Lesson
+id="zzz_nonexistent"/> to a lesson body → guard FAILED naming ('283_market_order_vs_limit',
+'zzz_nonexistent'); probe removed via git checkout, re-green 23 passed. _LESSON_RE/_inline_lesson_tokens
+are exact additive mirrors of _TERM_RE/_inline_term_tokens (0 deletions, all existing regexes/signatures
+unchanged), called in parse_mdx at L253 right after _inline_term_tokens (L252); token id-keyed
+{{lesson:ID}}, no server-side resolution. Unit test asserts the token rides inside a markdown block (kind
+'lesson' NOT emitted). Targeted AUDIT_TESTS 41 passed exit 0 (I also re-ran = 41 passed). Full suite N/A —
+isolated/additive, out of blast radius (this is exactly the dispatch_audit.sh AUDIT_TESTS fix working: lean
+targeted audit, no 828s budget trap). Commit 36314f4 = exactly lessons_service.py + the 2 test files.
+coder.api freed. **Unblocks CR053-MOBILE (render the token) + CR053-MIGRATE (produce tokens the guard
+validates).** NEXT: CR053-MOBILE (ship the render branch BEFORE migrated content reaches users). -->
+
