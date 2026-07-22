@@ -37,3 +37,5 @@ failing output into your lane file.
 
 ASSIGNED: coder.room round 1
 DISPATCH: OPEN
+
+DISPATCH: ACCEPTED (round 1)

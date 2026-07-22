@@ -73,3 +73,5 @@ Branch: `noncoder.edu-DEF084-CONTENT` (pushed to origin), commit `52c5b15`.
 Self-test: `test_lesson_corpus_integrity.py` — 24 passed.
 
 STATUS: READY_FOR_REVIEW (round 1)
+
+DISPATCH: ACCEPTED (round 1)

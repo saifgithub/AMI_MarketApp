@@ -28,3 +28,5 @@ screen. Do not touch `mobile/lib/screens/lessons/**` (DEF082 just landed there).
 
 ASSIGNED: coder.mobile round 1
 DISPATCH: OPEN
+
+DISPATCH: ACCEPTED (round 1)
