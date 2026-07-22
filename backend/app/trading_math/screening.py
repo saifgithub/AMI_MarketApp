@@ -9,6 +9,16 @@ liquidity, and impermissible-income ratios each checked against a threshold
 (33% / 33% / 5% by default, but callers pass whichever standard they name).
 
 Pure — floats in, floats/a NamedTuple/None out. No I/O.
+
+NOT REACHABLE FROM THE `halal` MANDATE FLAG TODAY (DEF084). Despite the name,
+none of this module is wired into the `halal` enforcement path. That flag is
+enforced by membership in a fixed, curated *demonstration universe*
+(`sim_engine.DEFAULT_HALAL_DEMO_UNIVERSE`), NOT by these ratio computations.
+The only references to `sharia_screen()` & friends outside this module are the
+re-exports in `trading_math/__init__.py`. Wiring this in (routing the `halal`
+flag through `sharia_screen()` with a real fundamentals feed and a named
+standard) is DEF084 Option 1 — deferred; Saiful chose Option 2 (tell the truth
+about the allowlist). See docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/.
 """
 
 from __future__ import annotations

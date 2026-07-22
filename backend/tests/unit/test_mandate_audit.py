@@ -89,7 +89,7 @@ def test_audit_flags_halal_violation(base_mandate: Mandate) -> None:
     )
     assert not result.passed
     assert [v.ticker for v in result.violations] == ["NEVR"]
-    assert any("Sharia" in issue for issue in result.violations[0].issues)
+    assert any("demonstration universe" in issue for issue in result.violations[0].issues)
 
 
 def test_audit_flags_single_name_concentration(base_mandate: Mandate) -> None:

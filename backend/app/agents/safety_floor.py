@@ -107,9 +107,10 @@ def check_mandate_compliance(
 
     Returns ComplianceResult(passed: bool, violations: list[str], blocked_by: str | None).
 
-    halal_universe: optional set of tickers that pass Sharia screen.
-        If None and mandate.compliance.halal is True, we conservatively reject
-        with reason 'halal_universe_unavailable' — caller must provide the set.
+    halal_universe: optional set of tickers in the `halal` flag's curated
+        demonstration universe (a fixed allowlist — NOT a computed Sharia screen;
+        see DEF084). If None and mandate.compliance.halal is True, we
+        conservatively reject — caller must provide the set.
     locale_allowed_universe: optional set of tickers available in user's locale.
         If None, no locale filter applied.
     """
@@ -137,13 +138,18 @@ def check_mandate_compliance(
         # full portfolio context.
         pass  # delegated to trade service
 
-    # 4) Halal screen (requires the halal universe to be provided)
+    # 4) Halal flag — curated demonstration universe, NOT a Sharia screen (DEF084).
+    #    Enforcement is membership in a fixed allowlist; no ratio is computed, so
+    #    the copy below must not claim a screen ran.
     if c.halal:
         if halal_universe is None:
-            violations.append("halal screen requested but halal_universe not provided")
+            violations.append("halal flag set but demonstration universe not provided")
             blocked_by = blocked_by or "compliance"
         elif t not in {x.upper() for x in halal_universe}:
-            violations.append(f"ticker {t} fails Sharia compliance screen")
+            violations.append(
+                f"ticker {t} is outside AMI's curated demonstration universe "
+                f"(halal flag; not a Sharia screen)"
+            )
             blocked_by = blocked_by or "compliance"
 
     # 5) Locale-allowed instruments
@@ -220,10 +226,13 @@ def check_holdings_against_mandate(
         if c.halal:
             if halal_set is None:
                 issues.append(
-                    "halal screen requested but halal_universe not provided"
+                    "halal flag set but demonstration universe not provided"
                 )
             elif t not in halal_set:
-                issues.append(f"ticker {t} fails Sharia compliance screen")
+                issues.append(
+                    f"ticker {t} is outside AMI's curated demonstration universe "
+                    f"(halal flag; not a Sharia screen)"
+                )
         if locale_set is not None and t not in locale_set:
             issues.append(
                 f"ticker {t} not available in user's locale ({mandate.locale})"
