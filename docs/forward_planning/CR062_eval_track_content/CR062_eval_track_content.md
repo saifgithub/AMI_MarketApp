@@ -145,3 +145,57 @@ so long.
    authored verified-from-birth**, rather than swept years later.
 4. Zero positional distractor references (DEF083 pattern) — checked by the deterministic scan.
 5. `GET /v1/lessons` returns `decision_evaluation` with 8 lessons after promotion.
+
+---
+
+## 9. Verification outcome — NOT VERIFIED after two passes (2026-07-22)
+
+The 8 lessons are committed (`ed7926b`) but **must not be stamped `verified:`**. Two full gate
+passes have run; the content is not clean.
+
+| pass | result |
+|---|---|
+| **Pass 1** (`wf_2df6fa9b-bfe`) | 1 VERIFIED, 7 rejected. 6 confirmed defects hand-fixed; 1 triaged as a false positive (wrongly — see below). |
+| **Pass 2** (`wf_81d07121-d8c`, fresh run) | **1 VERIFIED (`359`), 5 REFUTED, 2 STILL_FINDING.** |
+
+Pass 2 was a **new run, not a resume** — resuming would have replayed the unchanged verify prompts
+from cache and returned verdicts on the pre-fix content.
+
+### Outstanding defects
+
+| lesson | defect |
+|---|---|
+| `357` | Quiz 2 explanation: A "sized so a total loss costs 0.3%" — a total loss is $2,000 = **2.0%**; 0.3% is the *stopped-out* loss. Contradicts its own body, and `364` names this exact conflation as a wrong answer. |
+| `358` | Brier fix **holds**, but Quiz 2 keys "the 70% was not earned" off n=10 — P(≤5 \| p=.7) = 15%, 1.38 SD from calibrated. Contradicts `362`/`363`'s own small-sample teaching. |
+| `360` | The user-facing *"Where this comes from"* line. **CR060 §18 retires it — provenance is internal-only.** My pass-1 triage called this a false positive by reading the older authoring prompt; that was wrong. **Corpus-wide: 33 lessons carry the line.** |
+| `361` | "The pre-mortem grants the thesis" misstates Klein's method and is contradicted by its own Example stories 1 and 3, and by prerequisite `360`. |
+| `362` | "Try it" demands an outcome label *before* reading the P&L column — impossible, and it inverts the lesson's own process-then-P&L rule. |
+| `363` | Stem fix **holds**, but Quiz 2's first distractor still says the 64% figure "covers decisions you didn't take" — residue of the old rejected-subset framing the fix missed. My fix was incomplete. |
+| `364` | Quiz 1 keys AMI's 0.68 as a **scorable calibration claim**, contradicting `358`/`077`/`275`: AMI's confidence is *the Room's weighted lean, not a calibrated probability*. No option states the correct reading, and the body repeats the conflation. **This is the load-bearing decision-support-not-prediction framing** — the most serious of the seven. |
+
+### What this establishes
+
+**LLM-authored lesson content did not reach a verifiable standard in two passes**, under the
+strictest prompt available and with a hand-fix round between them — even though the *dominant*
+corpus defect was successfully eliminated (zero fake-real data, zero positional refs, verified
+attributions).
+
+What survived is a different and harder class: **internal contradiction** — against the lesson's
+own body, against its prerequisites, and against the product's regulatory framing. A per-lesson
+gate is structurally poor at catching this, because each defect is only visible when two documents
+are read together.
+
+Two consequences for the wider plan:
+
+1. The remediation CR should not assume "regenerate and verify" converges in one round. Budget for
+   iteration, or accept a lower assurance tier and say so.
+2. A **cross-lesson consistency check** is a distinct detector, alongside citation-integrity and
+   the repo-truth check that found DEF084. All three found things the others could not.
+
+### Next actions (not yet done)
+
+1. Fix the seven above; strip the "Where this comes from" line from all 8.
+2. Re-run pass 3 (fresh run, not a resume).
+3. Only then stamp `verified:`.
+4. Separately: the 33 legacy lessons carrying the retired provenance line — belongs to the
+   remediation CR, not here.
