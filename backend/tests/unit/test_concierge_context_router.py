@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from app.core.config import settings
 from app.services.concierge_prompts import (
+    _CONTEXT_TOKEN_BUDGET,
     _full_context_index,
     _lesson_context_block,
     _resolve_context_mode,
@@ -65,10 +66,10 @@ def test_full_context_surfaces_topic_and_tags():
 
 
 def test_full_context_token_budget():
-    """~270 lessons should land within the ~12k-token soft cap (chars/4 est)."""
+    """~334 lessons (headroom to ~500) should land within the token soft cap (chars/4 est)."""
     block = _full_context_index(_all_lessons())
     est_tokens = len(block) // 4
-    assert est_tokens < 13_000, f"lesson index too large: ~{est_tokens} tokens"
+    assert est_tokens < _CONTEXT_TOKEN_BUDGET, f"lesson index too large: ~{est_tokens} tokens"
 
 
 def test_full_context_empty_catalogue():

@@ -43,10 +43,13 @@ from app.services.llm_gateway import ChatMessage
 # future semantic-retrieval mode that, until it exists, degrades to
 # `full_context`. Unknown/empty → full_context.
 _VALID_CONTEXT_MODES = frozenset({"saver", "full_context", "embedding"})
-# Soft cap for the lesson-context block (chars/4 token estimate). ~270
-# lessons land near this; a future catalogue that blows past it is the
-# signal to switch the flag to `embedding` (CR019).
-_CONTEXT_TOKEN_BUDGET = 12_000
+# Soft cap for the lesson-context block (chars/4 token estimate). The
+# corpus is 334 lessons and growing (CR054 later waves + CR058); the
+# on-prem vLLM `ami-llm` has a 262k context window, so a ~13-20k index
+# is a non-issue. `embedding` mode (CR019) remains the escape hatch once
+# the catalogue reaches many hundreds and full_context stops being the
+# right strategy.
+_CONTEXT_TOKEN_BUDGET = 20_000
 # Log the embedding→full_context degradation once per process, not per turn.
 _embedding_fallback_logged = False
 
