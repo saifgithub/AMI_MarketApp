@@ -33,6 +33,8 @@ Then the benchmark. Had you written 0.50 on all ten and claimed nothing at all, 
 
 Run the same arithmetic on a 7-of-10 quarter: 7 × 0.09 = 0.63, 3 × 0.49 = 1.47, total 2.10 → **Brier 0.210**, which beats the 0.250 benchmark. Identical stated confidence, different resolution rate — and the score, not the feeling, is what separates them.
 
+One caution before you read too much into ten calls. If you really are calibrated at 70%, five-or-fewer hits in ten still happens about **15%** of the time — roughly one quarter in seven, from luck alone. The 0.290 is a fact about this sample; it is not yet evidence the 70% was unearned. Sustain the same rate to forty calls — twenty-or-fewer hits — and the luck explanation drops under **1%**. That is when the number is genuinely in trouble. <Lesson id="363_scoring_yourself_over_time"/> covers how many samples a verdict on yourself actually takes.
+
 ## The trap
 
 The trap is treating a confidence number as a description of how strongly you feel rather than a claim you have agreed to be scored on. It feels right, because the number does encode something real: 0.75 genuinely feels surer than 0.55. But a feeling cannot be wrong, and a claim can. Calibration only exists where three things are present — many calls, a resolution criterion fixed before the outcome exists, and a scoring rule applied to every call rather than the memorable ones. Drop any one of the three and the number reverts to vocabulary. The correct mental model: a confidence figure is an entry in a ledger you will settle later. If you never settle it, you never had a probability. You had an adjective wearing a decimal point.
@@ -57,12 +59,12 @@ The trap is treating a confidence number as a description of how strongly you fe
   question="You log ten calls at 70% confidence and five resolve as called. Using Brier = mean of (stated probability − outcome)², with outcome 1 or 0, what is the score and what does it tell you?"
   options={[
     "0.210 — better than the 0.250 you would have scored by writing 0.50 on all ten",
-    "0.290 — worse than the 0.250 you would have scored by writing 0.50 on all ten, so the 70% was not earned",
+    "0.290 — worse than the 0.250 you would have scored by writing 0.50 on all ten, though ten calls is too few to convict the 70%",
     "0.500 — five of ten is a coin flip, so the score equals the hit rate",
     "0.090 — the per-call penalty carried by each of the five calls that resolved as stated"
   ]}
   answer={1}
-  explanation="Five hits contribute 5 × (0.70 − 1)² = 0.45, five misses contribute 5 × (0.70 − 0)² = 2.45, total 2.90 over ten calls = 0.290. Writing 0.50 on every call scores (0.50 − outcome)² = 0.25 each, a Brier of 0.250 — so claiming 70% while resolving at 50% is worse than having claimed nothing. The '0.210' answer is the score for a 7-of-10 quarter, which would have beaten the benchmark; the '0.500' answer swaps a scoring rule for a hit rate; and 0.090 is one hit's contribution, not an average over all ten calls."
+  explanation="Five hits contribute 5 × (0.70 − 1)² = 0.45, five misses contribute 5 × (0.70 − 0)² = 2.45, total 2.90 over ten calls = 0.290. Writing 0.50 on every call scores (0.50 − outcome)² = 0.25 each, a Brier of 0.250 — so on this sample, claiming 70% scored worse than having claimed nothing. What it does not yet establish is that the 70% is wrong: a genuinely calibrated 70% forecaster gets five-or-fewer in ten about 15% of the time, so one quarter cannot convict a number. The '0.210' answer is the score for a 7-of-10 quarter, which would have beaten the benchmark; the '0.500' answer swaps a scoring rule for a hit rate; and 0.090 is one hit's contribution, not an average over all ten calls."
 />
 
 ## Try it
@@ -72,5 +74,3 @@ Open the Decision Journal and take your three most recent entries. Before checki
 ## Takeaway
 
 A confidence number means nothing until it has been scored against many resolutions — say 70% often enough and roughly 70% should happen, or the number is decoration. AMI's confidence is the Room's weighted lean; the numbers you can actually calibrate are your own.
-
-*Where this comes from: Tetlock and Gardner on calibration, resolution and Brier scoring — Superforecasting (2015); Kahneman on overconfidence and the illusion of validity — Thinking, Fast and Slow.*

@@ -19,7 +19,7 @@ updated_at: "2026-07-22"
 
 # Capstone: evaluate one Room verdict end to end
 
-You now hold the whole EVAL toolkit: judging the decision rather than the result, reading a confidence number as a scorable claim, writing the thesis before the outcome exists, arguing the strongest opposing case, assuming failure in advance, separating process error from variance, and tracking your own hit rate. This capstone puts that toolkit to work on one training Verdict as six steps in sequence — read, check, steelman, pre-mortem, journal, decide — and records the reasoning whether you accept or override. Nothing new is introduced here; the skill is making the pieces interact on a single artifact under time pressure.
+You now hold the whole EVAL toolkit: judging the decision rather than the result, reading AMI's confidence figure for what it is — the Room's weighted lean rather than a calibrated probability — writing the thesis before the outcome exists, arguing the strongest opposing case, assuming failure in advance, separating process error from variance, and tracking your own hit rate. This capstone puts that toolkit to work on one training Verdict as six steps in sequence — read, check, steelman, pre-mortem, journal, decide — and records the reasoning whether you accept or override. Nothing new is introduced here; the skill is making the pieces interact on a single artifact under time pressure.
 
 ## Example
 
@@ -50,15 +50,15 @@ The strongest case against this sequence: it is expensive, and here it changed n
 ## Quiz
 
 <Quiz
-  question="The Verdict carries confidence 0.68 alongside a PM PASS. Combining what a confidence number is with how you score yourself over time, what does 0.68 actually license you to conclude here?"
+  question="The Verdict carries confidence 0.68 alongside a PM PASS. What does 0.68 actually license you to conclude here?"
   options={[
     "That AMI is 68% sure the $62 target will print, which makes the trade positive-expected-value by definition",
-    "That 0.68 is a claim you can be scored on later — it means something only once it is recorded and checked across many 0.68-confidence verdicts to see whether roughly that share resolved as called",
-    "That anything under 0.70 should be discarded without further evaluation, since the Room lacks conviction",
+    "That the Room's debate resolved 0.68 of the way toward BUY — a weighted lean, not a calibrated probability: it tells you which case won and points you at the evidence that carried it, while the number you can genuinely score for calibration is the one you write in your own journal",
+    "That 0.68 is a claim AMI can be scored on — log enough 0.68-confidence verdicts and roughly 68% of them should resolve as called",
     "That confidence stops mattering once the PM stamps PASS, because compliance is the binding constraint on the decision"
   ]}
   answer={1}
-  explanation="A confidence number is a testable claim about a population of calls, not a probability you can bank on this single one — which is why it is only informative after you have logged enough of them to check calibration. The 'AMI is 68% sure, so it's positive-EV' answer skips both the verification of the underlying numbers and the fact that expected value needs the payoff geometry, not just a probability. The 'discard anything under 0.70' answer invents a threshold the confidence number never carried. And the 'PASS makes confidence irrelevant' answer collapses two independent signals: PASS reports Mandate compliance only, and says nothing about the strength of the thesis."
+  explanation="AMI's confidence is the Room's weighted lean — read it as 'lean, not lock', per <Lesson id="077_decision_support_vs_prediction"/> — so the useful question is which case carried the debate and on what evidence, not what odds to bank. The 'AMI is 68% sure, so it's positive-EV' answer treats the lean as a forecast and also skips the payoff geometry that expected value needs. The 'log enough 0.68 verdicts and 68% should resolve' answer is the subtler error and the one worth naming: calibration is a property of numbers issued as probabilities, and the Room's figure is not one — the calls you can honestly score are your own, which is the whole point of <Lesson id="363_scoring_yourself_over_time"/>. And the 'PASS makes confidence irrelevant' answer collapses two independent signals: PASS reports Mandate compliance only, and says nothing about the strength of the thesis."
 />
 
 <Quiz
@@ -92,5 +92,3 @@ Open the Decision Journal and find your most recent entry. Check one thing: is t
 ## Takeaway
 
 Read, check the numbers, steelman, pre-mortem, journal with an invalidation condition that can actually fire, then decide — and record the reasoning whether you accept or override, because the entry you skip is the one your future scoring needs most.
-
-*Where this comes from: Annie Duke's Thinking in Bets on decision process under uncertainty, and Howard Marks' The Most Important Thing on second-level thinking applied to a stated view.*

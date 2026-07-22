@@ -52,13 +52,13 @@ The trap is resulting on your own record: you go 6-for-10, conclude the approach
 <Quiz
   question="After 100 resolved decisions your hit rate is 60% (95% interval roughly 50.4% to 69.6%). Over the same period, every candidate you screened — held over the same horizon with no selection applied — resolved favourably 64% of the time. What is the defensible reading?"
   options={[
-    "60% clears the coin flip, so the process is validated; the 64% figure is irrelevant because it covers decisions you didn't take",
+    "60% clears the coin flip, so the process is validated; the 64% figure is irrelevant because nobody would hold every candidate they screened",
     "The sample is now large enough to be distinguishable from a coin, but 60% sits below the 64% base rate — so the record gives no support for selection skill",
     "The sample is still far too small to say anything; 100 resolved decisions is no more informative than 10",
     "Because the interval's lower bound (50.4%) is above 50%, the 4-point gap to the base rate is within noise and can be ignored"
   ]}
   answer={1}
-  explanation="Both bars have to be cleared, and here only one is. Sample size: at 100 decisions the interval (roughly 50.4% to 69.6%) just clears 50%, which the same 60% across 10 decisions never did. Base rate: 60% measured against a 64% benchmark means the point estimate has the selection step giving back about four points, so the record supports no claim of skill. The answer calling the 64% figure irrelevant skips the one comparison that makes a hit rate mean anything — without a benchmark you cannot tell whether the selecting did any work. The answer claiming 100 decisions is no better than 10 ignores that interval width falls with the square root of the sample. And the answer treating the 4-point gap as ignorable applies an interval built for the comparison against 50% to a different comparison entirely; that gap genuinely isn't resolved at 100 decisions, which is an argument for logging more, not for dismissing it."
+  explanation="Both bars have to be cleared, and here only one is. Sample size: at 100 decisions the interval (roughly 50.4% to 69.6%) just clears 50%, which the same 60% across 10 decisions never did. Base rate: 60% measured against a 64% benchmark means the point estimate has the selection step giving back about four points, so the record supports no claim of skill. The answer calling the 64% figure irrelevant skips the one comparison that makes a hit rate mean anything: nobody holds the whole screen, but that is precisely what makes it the benchmark — it is what your record would have been with the selection step switched off, and without it you cannot tell whether the selecting did any work. The answer claiming 100 decisions is no better than 10 ignores that interval width falls with the square root of the sample. And the answer treating the 4-point gap as ignorable applies an interval built for the comparison against 50% to a different comparison entirely; that gap genuinely isn't resolved at 100 decisions, which is an argument for logging more, not for dismissing it."
 />
 
 ## Try it
@@ -68,5 +68,3 @@ Open the Decision Journal and count how many entries have actually resolved — 
 ## Takeaway
 
 A hit rate is an estimate with an error bar: 6-for-10 is what a coin does 38% of the time. Score yourself against a base rate, across enough decisions that luck cannot be the explanation — and until you have them, "I don't know yet" is the accurate answer.
-
-*Where this comes from: Mauboussin's luck–skill continuum and small-sample argument in The Success Equation; Tetlock and Gardner's case for scoring forecasts across many predictions in Superforecasting.*
