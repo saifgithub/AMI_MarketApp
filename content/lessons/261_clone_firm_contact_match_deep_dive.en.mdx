@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Clone-firm spotting: the contact-detail match in depth
 
-Lesson 067 introduced clone-firm fraud. This lesson goes deeper on the single technique that defeats almost every clone: the contact-detail match. You take the entity name the operator gives you, look up that name on the relevant regulator's register, and compare every contact data point — domain, phone, address, named representative, listed bank — against what the operator actually sent you. Each individual data point is forgeable; the cluster is not. This is the verification routine the FCA, SC Malaysia, and ASIC tell investors to run before any transfer.
+<Lesson id="067_fake_brokers_and_clone_entities"/> introduced clone-firm fraud. This lesson goes deeper on the single technique that defeats almost every clone: the contact-detail match. You take the entity name the operator gives you, look up that name on the relevant regulator's register, and compare every contact data point — domain, phone, address, named representative, listed bank — against what the operator actually sent you. Each individual data point is forgeable; the cluster is not. This is the verification routine the FCA, SC Malaysia, and ASIC tell investors to run before any transfer.
 
 ## How this plays out in real markets
 
@@ -29,7 +29,7 @@ The FCA's Warning List at fca.org.uk/scamsmart and SC Malaysia's Investor Alert 
 - **Email domain.** The legitimate firm's email always lives on the firm's primary domain (representative@firmname.com). Clones use a near-domain or — increasingly — a free email service (gmail, outlook). No major regulated firm contacts clients about deposits from a free email.
 - **Office address.** The address on the register matches what appears on the legitimate firm's letterhead. The clone often invents a prestigious-sounding address (a known financial-district tower the clone does not occupy). Cross-reference against the regulator's listing, not the clone's website.
 - **Named representative.** Where the regulator lists individual representatives (FINRA BrokerCheck, FCA register, SEC IAPD), check the name of the person contacting you. If the firm exists but the named individual is not registered as one of its representatives, you have caught the clone.
-- **Bank-account name.** Already covered in lesson 071 — destination must be the firm's name, never an individual's name.
+- **Bank-account name.** Already covered in <Lesson id="071_how_to_verify_before_you_wire_money"/> — destination must be the firm's name, never an individual's name.
 
 The FCA's published case studies typically show clones failing on three or four of these dimensions simultaneously. The investor who runs the check catches the clone; the investor who skips it does not.
 
@@ -62,7 +62,7 @@ The trap is the partial match. The operator gets the firm name right (the easy p
       "The Hong Kong phone number does not match the FCA-listed phone for the firm — combined with WhatsApp as the channel for a regulated-firm onboarding, this is the contact-detail mismatch that catches the clone"
     ]}
     answer={3}
-    explanation="WhatsApp alone is a red flag but not decisive — some regulated firms permit it for non-substantive contact. The Hong Kong bank account in the firm's name passes one of the lesson 071 checks. The decisive falsification is the phone number not matching the FCA register's listed phone for the firm — combined with the informal contact channel, this is the signature contact-detail mismatch of a clone-firm scam. Pass-through checks on the firm name alone are how clones evade casual diligence."
+    explanation="WhatsApp alone is a red flag but not decisive — some regulated firms permit it for non-substantive contact. The Hong Kong bank account in the firm's name passes one of the <Lesson id="071_how_to_verify_before_you_wire_money"/> checks. The decisive falsification is the phone number not matching the FCA register's listed phone for the firm — combined with the informal contact channel, this is the signature contact-detail mismatch of a clone-firm scam. Pass-through checks on the firm name alone are how clones evade casual diligence."
   />
 
 ## Try it

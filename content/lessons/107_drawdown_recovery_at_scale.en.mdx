@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Drawdown recovery at different per-trade sizes
 
-This lesson assumes you've completed lesson 018 (Drawdown management); here we go deeper on the specific link between per-trade risk and how many trades it takes to climb out of a drawdown. Lesson 018 showed that a 30% drawdown requires a 42.9% gain. This lesson answers the follow-up: at 1% risk per trade and a 55% win rate with average 1.5R winners, how many trades is that? At 2%? At 5%? The numbers are sobering and they're why the 1% rule earns its place — the recovery path at higher per-trade sizes looks shorter on a single-trade basis but exposes the account to a fresh, deeper drawdown well before the first one is healed.
+This lesson assumes you've completed <Lesson id="018_drawdown_management"/> (Drawdown management); here we go deeper on the specific link between per-trade risk and how many trades it takes to climb out of a drawdown. <Lesson id="018_drawdown_management"/> showed that a 30% drawdown requires a 42.9% gain. This lesson answers the follow-up: at 1% risk per trade and a 55% win rate with average 1.5R winners, how many trades is that? At 2%? At 5%? The numbers are sobering and they're why the 1% rule earns its place — the recovery path at higher per-trade sizes looks shorter on a single-trade basis but exposes the account to a fresh, deeper drawdown well before the first one is healed.
 
 ## Example
 
@@ -32,7 +32,7 @@ At 5% risk per trade: expectancy ≈ +1.875% per trade. Roughly 19 trades to rec
 
 ## The trap
 
-The trap is "I'm down, I need to size up to recover faster." It is the exact behaviour from lesson 018's trap section, and here is the quantitative version: doubling per-trade size cuts the recovery trade count roughly in half, but it more than doubles the depth of any new drawdown during the recovery — and recovery-on-top-of-recovery compounds the math in the wrong direction. The correct mental model: during a drawdown, halve per-trade size if anything. A 0.5% per-trade sizing during recovery makes the trade count roughly double, but the worst-case fresh drawdown during the recovery period also halves. You trade speed for survival, which is the right side of the trade-off when you're already in the hole.
+The trap is "I'm down, I need to size up to recover faster." It is the exact behaviour from <Lesson id="018_drawdown_management"/>'s trap section, and here is the quantitative version: doubling per-trade size cuts the recovery trade count roughly in half, but it more than doubles the depth of any new drawdown during the recovery — and recovery-on-top-of-recovery compounds the math in the wrong direction. The correct mental model: during a drawdown, halve per-trade size if anything. A 0.5% per-trade sizing during recovery makes the trade count roughly double, but the worst-case fresh drawdown during the recovery period also halves. You trade speed for survival, which is the right side of the trade-off when you're already in the hole.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -59,7 +59,7 @@ The trap is "I'm down, I need to size up to recover faster." It is the exact beh
     "Trader A — recovery sequences include normal loss streaks; at 2% sizing those streaks roughly double the depth of any fresh drawdown during recovery, and the combined depth (original 30% plus a 16% additional) puts Trader B's account past the 50% danger threshold in a meaningful fraction of paths, while Trader A's 8% additional drawdown stays well below it."
   ]}
   answer={3}
-  explanation="The tempting wrong answer is the first or last — 'faster gain = better outcome'. The math says otherwise: positive expectancy means the average path recovers faster at 2%, but the variance of the path also doubles. The relevant survival question is not the average, it is the fraction of paths that survive without breaching a critical drawdown. At 2% sizing those paths see fresh 16% drawdowns added to the existing 30%, and combined depths past 50% trigger the recovery cliff from lesson 018 where the math becomes a multi-year problem regardless of skill."
+  explanation="The tempting wrong answer is the first or last — 'faster gain = better outcome'. The math says otherwise: positive expectancy means the average path recovers faster at 2%, but the variance of the path also doubles. The relevant survival question is not the average, it is the fraction of paths that survive without breaching a critical drawdown. At 2% sizing those paths see fresh 16% drawdowns added to the existing 30%, and combined depths past 50% trigger the recovery cliff from <Lesson id="018_drawdown_management"/> where the math becomes a multi-year problem regardless of skill."
 />
 
 ## Try it

@@ -78,7 +78,7 @@
     "question": "Which agent owns the response pattern for this pitch?",
     "options": ["The Research Manager would synthesise the Room debate", "The Concierge — trains users in the 72-hour pause rule for pressure tactics", "The Aggressive Debator would argue the merits of a real allocation", "The Social Media Analyst would track sentiment on the name"],
     "answer": 1,
-    "explanation": "Urgency + scarcity + refusal to put terms in writing is the lesson 070 fingerprint. The Concierge is the agent trained to install the 72-hour pause rule. The aggressive debator would argue the merits of a real allocation; there is no real allocation to argue about here.",
+    "explanation": "Urgency + scarcity + refusal to put terms in writing is the EDGE 20 fingerprint. The Concierge is the agent trained to install the 72-hour pause rule. The aggressive debator would argue the merits of a real allocation; there is no real allocation to argue about here.",
     "related_lesson": "070",
     "related_agent": "concierge",
     "tags": ["scams", "urgency", "concierge"]
@@ -246,7 +246,7 @@
     "question": "Which agent installs the '72-hour pause + written terms on letterhead' rule?",
     "options": ["The Research Manager synthesises Room debate", "The Fundamentals Analyst reviews company metrics", "The Neutral Debator weighs sides on a real thesis", "The Concierge — installs the 72-hour pause rule for pressure tactics and requires written terms"],
     "answer": 3,
-    "explanation": "Module 11, lesson 070 — the 72-hour pause is the Concierge's installed reflex. The research_manager synthesises Room debate; the neutral_debator weighs sides on a real thesis. Neither owns scam pressure-tactic recognition. The Concierge does.",
+    "explanation": "Module 11, EDGE 20 — the 72-hour pause is the Concierge's installed reflex. The research_manager synthesises Room debate; the neutral_debator weighs sides on a real thesis. Neither owns scam pressure-tactic recognition. The Concierge does.",
     "related_lesson": "070",
     "related_agent": "concierge",
     "tags": ["scams", "urgency", "verification"]
@@ -428,7 +428,7 @@
     "question": "Which agent owns the five-check verification procedure?",
     "options": ["The Concierge — owns the Module 11 five-check verification procedure before money moves", "The Research Manager synthesises Room debate and scores conviction", "The Trader executes entry, stop, target, and size", "The Portfolio Manager enforces trade mandates and sizing rules"],
     "answer": 0,
-    "explanation": "The five-check verification procedure is the canonical Module 11 capstone (lesson 071), owned by the Concierge. The Portfolio Manager enforces the mandate; the Research Manager synthesises Room debate. Neither owns the regulator-lookup procedure that protects users before money moves.",
+    "explanation": "The five-check verification procedure is the canonical Module 11 capstone (EDGE 21), owned by the Concierge. The Portfolio Manager enforces the mandate; the Research Manager synthesises Room debate. Neither owns the regulator-lookup procedure that protects users before money moves.",
     "related_lesson": "071",
     "related_agent": "concierge",
     "tags": ["scams", "verification", "concierge"]

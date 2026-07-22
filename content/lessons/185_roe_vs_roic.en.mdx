@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # ROE vs ROIC — why ROIC matters more for capital-heavy businesses
 
-Lesson 041 set ROE as "the closest single number to what this business is compounding shareholder capital at." This lesson sharpens that claim. ROE measures return on the equity slice of the capital stack; ROIC (return on invested capital) measures return on the *whole* capital stack — equity plus debt. For capital-heavy businesses, the gap between the two tells you whether ROE is real operating excellence or financial-engineering noise. By the end you should be able to compute ROIC, recognise which businesses demand it, and name the falsifiable condition under which a high ROE with a low ROIC is a sell signal.
+<Lesson id="041_return_on_equity"/> set ROE as "the closest single number to what this business is compounding shareholder capital at." This lesson sharpens that claim. ROE measures return on the equity slice of the capital stack; ROIC (return on invested capital) measures return on the *whole* capital stack — equity plus debt. For capital-heavy businesses, the gap between the two tells you whether ROE is real operating excellence or financial-engineering noise. By the end you should be able to compute ROIC, recognise which businesses demand it, and name the falsifiable condition under which a high ROE with a low ROIC is a sell signal.
 
 ## How this plays out in real markets
 
@@ -36,7 +36,7 @@ Falsifiable claim: for capital-intensive businesses (utilities, telecoms, autos,
 
 ## The trap
 
-The trap is using ROE alone for capital-heavy businesses and concluding "good ROE = good business." Auto OEMs, telecoms, airlines, capital-intensive industrials — each can report 15–20% ROE on operations that earn 4–8% ROIC, simply by stacking interest-bearing debt against equity. The 15% ROE compounds shareholder capital *only as long as the leverage sticks*; the moment a credit shock arrives or refinancing terms harden, the ROE collapses faster than the headline ever suggested. The correct mental model: for any business with debt-to-equity above 1.0x, compute ROIC alongside ROE. If ROIC is at or below cost of capital while ROE is high, the business is creating value for *bondholders and management*, not for shareholders. What invalidates the signal: financial companies (banks, insurers) are special — the debt-like funding (deposits, premiums) is the raw material of the business, not balance-sheet engineering, and ROIC as commonly defined doesn't apply. For banks, use ROE with cost of equity (lesson 181) instead.
+The trap is using ROE alone for capital-heavy businesses and concluding "good ROE = good business." Auto OEMs, telecoms, airlines, capital-intensive industrials — each can report 15–20% ROE on operations that earn 4–8% ROIC, simply by stacking interest-bearing debt against equity. The 15% ROE compounds shareholder capital *only as long as the leverage sticks*; the moment a credit shock arrives or refinancing terms harden, the ROE collapses faster than the headline ever suggested. The correct mental model: for any business with debt-to-equity above 1.0x, compute ROIC alongside ROE. If ROIC is at or below cost of capital while ROE is high, the business is creating value for *bondholders and management*, not for shareholders. What invalidates the signal: financial companies (banks, insurers) are special — the debt-like funding (deposits, premiums) is the raw material of the business, not balance-sheet engineering, and ROIC as commonly defined doesn't apply. For banks, use ROE with cost of equity (<Lesson id="181_pb_for_banks_regulatory_book"/>) instead.
 
 <ChatWith agent="fundamentals_analyst" />
 
@@ -55,11 +55,11 @@ The trap is using ROE alone for capital-heavy businesses and concluding "good RO
 />
 
 <Quiz
-  question="A reader compares MSFT (ROE 36%, ROIC 28%, debt-to-equity 0.4x) with F (ROE 14%, ROIC 5%, debt-to-equity 2.8x). Which is the right synthesis pairing this with the lesson 040/181 P/B-and-bank framework?"
+  question="A reader compares MSFT (ROE 36%, ROIC 28%, debt-to-equity 0.4x) with F (ROE 14%, ROIC 5%, debt-to-equity 2.8x). Which is the right synthesis pairing this with the <Lesson id="040_price_to_book"/>/181 P/B-and-bank framework?"
   options={[
     "ROE differences are the only thing that matters",
     "Both companies have the same business quality",
-    "MSFT's ROIC at 28% — far above any reasonable cost of capital — earns the high P/B implied by lesson 040's framework; the high ROE is operationally sourced and durable. Ford's ROIC at 5% — below cost of capital — explains its persistent low P/B and modest multiples; the 14% ROE is leverage-driven and the market correctly prices the operating capital at less than its accounting value. The right tool for MSFT is also EV/EBITDA and DCF (lesson 182, asset-light); the right tool for Ford is ROIC-anchored multiples plus cycle awareness",
+    "MSFT's ROIC at 28% — far above any reasonable cost of capital — earns the high P/B implied by <Lesson id="040_price_to_book"/>'s framework; the high ROE is operationally sourced and durable. Ford's ROIC at 5% — below cost of capital — explains its persistent low P/B and modest multiples; the 14% ROE is leverage-driven and the market correctly prices the operating capital at less than its accounting value. The right tool for MSFT is also EV/EBITDA and DCF (<Lesson id="182_pb_for_asset_light_businesses"/>, asset-light); the right tool for Ford is ROIC-anchored multiples plus cycle awareness",
     "Both businesses should be valued on P/B"
   ]}
   answer={2}

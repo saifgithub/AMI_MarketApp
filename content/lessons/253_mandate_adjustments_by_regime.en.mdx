@@ -54,14 +54,14 @@ High-volatility regime (e.g., October 2022, VIX > 25 sustained):
 - Position sizing scales inversely with ATR: as 20-day ATR doubles, share count halves to keep $-risk constant.
 - max_drawdown_pct: drop by one-third from your baseline.
 
-Backwardation regime (per lesson 248, VIX1M/VIX3M > 1.0 for 3+ sessions):
+Backwardation regime (per <Lesson id="248_vix_term_structure"/>, VIX1M/VIX3M > 1.0 for 3+ sessions):
 - All long positions compressed by ~25% until backwardation reverts.
 
 The Portfolio Manager's safety floor is uncoachable. Regardless of regime preset, the PM will enforce: compliance flags (halal / no T/A/G / no fossil / long-only / ESG-lite if set), hard maximum on single-position size, hard floor on stop-loss requirement. The PM will block a trade that violates these even if you <Term id="ami_coach_your_agent" /> to ignore the regime. This is by design — the regime adjustments are dials within bounds, not overrides of the bounds.
 
 ## The trap
 
-The mandate-adjustment trap is the all-or-nothing flip. A trader detects a bear regime and zeroes out exposure overnight — and gets whipsawed in if the call was a head fake (lesson 252). Or they detect a bull regime and instantly max out every dial — and get caught at full exposure when a vol-shock prints (lesson 062's 5 August 2024 example).
+The mandate-adjustment trap is the all-or-nothing flip. A trader detects a bear regime and zeroes out exposure overnight — and gets whipsawed in if the call was a head fake (<Lesson id="252_regime_change_realtime_vs_hindsight"/>). Or they detect a bull regime and instantly max out every dial — and get caught at full exposure when a vol-shock prints (<Lesson id="062_volatility_regimes"/>'s 5 August 2024 example).
 
 The correct model: mandate adjustments scale with confirmation strength. Two-of-three regime markers firing = halfway to the regime preset. Three-of-three confirmed = full preset. Surviving 4 weeks = stable preset. And when the regime invalidates, you scale back — you don't reverse all at once. Treat the mandate as a continuous dial, not a binary switch.
 
@@ -78,7 +78,7 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
     "Leave it alone — the bull preset is conservative enough."
   ]}
   answer={0}
-  explanation="The tempting wrong answer is zeroing out all exposure overnight — 'just go to cash' feels safe but ignores the synthesis from lesson 252 about head fakes. Leaving the bull preset alone ignores the regime entirely. Flipping to 200% short inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
+  explanation="The tempting wrong answer is zeroing out all exposure overnight — 'just go to cash' feels safe but ignores the synthesis from <Lesson id="252_regime_change_realtime_vs_hindsight"/> about head fakes. Leaving the bull preset alone ignores the regime entirely. Flipping to 200% short inverts safety into recklessness. The synthesis is graduated mandate adjustment within the PM safety floor, mirrored on the way back out."
 />
 
 <Quiz
@@ -94,7 +94,7 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
 />
 
 <Quiz
-  question="Synthesis. You detect: regime is confirmed bull (lesson 059), breadth is narrow (lesson 064 / 242), volatility regime is normal but VVIX is in the 80th percentile (lesson 249), and 2-of-5 late-bull warning signs are firing (lesson 242). The bull is intact but the warnings stack. Which mandate adjustment is most regime-consistent?"
+  question="Synthesis. You detect: regime is confirmed bull (<Lesson id="059_bull_markets"/>), breadth is narrow (<Lesson id="064_market_breadth"/> / 242), volatility regime is normal but VVIX is in the 80th percentile (<Lesson id="249_vvix_and_iv_rv_divergence"/>), and 2-of-5 late-bull warning signs are firing (<Lesson id="242_late_bull_warning_signs"/>). The bull is intact but the warnings stack. Which mandate adjustment is most regime-consistent?"
   options={[
     "Cash 100% — too many warnings.",
     "Switch to bear preset preemptively.",

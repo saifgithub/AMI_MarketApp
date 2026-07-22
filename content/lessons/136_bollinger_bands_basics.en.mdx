@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Bollinger Bands — basics and parameters
 
-Lesson 026 framed a moving average as the centre of gravity for price. Bollinger Bands wrap that centre with a volatility envelope: a 20-period SMA in the middle, with an upper band at +2 standard deviations of the last 20 closes and a lower band at -2 standard deviations. The envelope widens when volatility rises and contracts when it falls. The default parameters — 20-period, 2-sigma — were John Bollinger's deliberate choice because they capture roughly 95% of normal-distribution price action; meaning a close outside a band is a statistical outlier, not a routine event. Knowing what the bands measure is half the lesson; the other half is knowing what parameter changes actually mean.
+<Lesson id="026_moving_averages"/> framed a moving average as the centre of gravity for price. Bollinger Bands wrap that centre with a volatility envelope: a 20-period SMA in the middle, with an upper band at +2 standard deviations of the last 20 closes and a lower band at -2 standard deviations. The envelope widens when volatility rises and contracts when it falls. The default parameters — 20-period, 2-sigma — were John Bollinger's deliberate choice because they capture roughly 95% of normal-distribution price action; meaning a close outside a band is a statistical outlier, not a routine event. Knowing what the bands measure is half the lesson; the other half is knowing what parameter changes actually mean.
 
 ## How this plays out in real markets
 
@@ -36,7 +36,7 @@ On Bursa Malaysia: GENTING in Q3 2025 had a Bollinger width of around RM0.40 at 
 
 The trap is reading a band touch as a reversal signal. "Price hit the upper band — sell." That's a half-truth that fails in trending markets. In a strong up-trend, price can "walk the band" — repeatedly touch or close at the upper band over days or weeks — and trying to fade every touch is a quick way to lose money. The bands describe volatility extremes; they don't mandate mean reversion.
 
-The correct mental model: the bands are a probability envelope, not a reversal indicator. A touch tells you price is statistically extended relative to its recent 20-bar range. Whether that extension reverses or continues depends on regime — which you read from the middle band's slope and other context (covered in lesson 137). Don't fade a band touch in isolation; read the slope first.
+The correct mental model: the bands are a probability envelope, not a reversal indicator. A touch tells you price is statistically extended relative to its recent 20-bar range. Whether that extension reverses or continues depends on regime — which you read from the middle band's slope and other context (covered in <Lesson id="137_bollinger_squeeze_and_breakout"/>). Don't fade a band touch in isolation; read the slope first.
 
 <ChatWith agent="market_analyst" />
 

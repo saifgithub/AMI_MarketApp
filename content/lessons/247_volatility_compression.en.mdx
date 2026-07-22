@@ -18,15 +18,15 @@ updated_at: "2026-05-12"
 
 # Volatility compression: the calm before a regime change
 
-Lessons 061 and 062 defined range and volatility regimes separately. This lesson teaches the transition signal — *compression* — that often precedes a regime change in either direction. When realised volatility drops to multi-month lows while price holds a tight band, the market is loading energy for a directional move. After this lesson you will be able to detect a compression setup using ATR-percentile and Bollinger-Band-Width readings, name the strategies that pair with the resolution, and state the condition that confirms a true breakout vs a false one.
+<Lesson id="061_sideways_range_markets"/> and <Lesson id="062_volatility_regimes"/> defined range and volatility regimes separately. This lesson teaches the transition signal — *compression* — that often precedes a regime change in either direction. When realised volatility drops to multi-month lows while price holds a tight band, the market is loading energy for a directional move. After this lesson you will be able to detect a compression setup using ATR-percentile and Bollinger-Band-Width readings, name the strategies that pair with the resolution, and state the condition that confirms a true breakout vs a false one.
 
 ## How this plays out in real markets
 
 SPX in late 2017 ran a famous compression: from August to December 2017, SPX 20-day ATR fell to ~0.36% of price — the lowest reading since 1965 by some measures. Bollinger Band Width (the BB width / middle band, 20-day, 2-sigma) compressed to ~2.6% in late November 2017. The compression resolved upward — SPX gained another 7% into the 26 January 2018 high of 2,872. Then the regime broke violently: the 5 February 2018 "volmageddon" session saw SPX drop 4.1%, VIX spike to 50.30 intraday, and the XIV inverse-VIX product de-listed.
 
-A cleaner two-sided compression: SPX August 2023. After the June–July range from lesson 061, SPX 20-day ATR fell to 0.45% of price by 1 August 2023. Bollinger Band Width compressed to ~3.1%. The compression resolved DOWN — SPX fell 8.3% from 4,588 on 27 July 2023 to 4,217 on 27 October 2023. A breakout strategy that traded the *direction* of the resolution would have caught it; a strategy that assumed up-resolution would have lost.
+A cleaner two-sided compression: SPX August 2023. After the June–July range from <Lesson id="061_sideways_range_markets"/>, SPX 20-day ATR fell to 0.45% of price by 1 August 2023. Bollinger Band Width compressed to ~3.1%. The compression resolved DOWN — SPX fell 8.3% from 4,588 on 27 July 2023 to 4,217 on 27 October 2023. A breakout strategy that traded the *direction* of the resolution would have caught it; a strategy that assumed up-resolution would have lost.
 
-Detection rule for compression: 20-day ATR-as-%-of-price reads in the bottom 15% of its trailing 1-year distribution AND Bollinger Band Width (20, 2) reads under 4% AND the move occurs while the regime is range-classified per lesson 061. All three present is the compression cluster.
+Detection rule for compression: 20-day ATR-as-%-of-price reads in the bottom 15% of its trailing 1-year distribution AND Bollinger Band Width (20, 2) reads under 4% AND the move occurs while the regime is range-classified per <Lesson id="061_sideways_range_markets"/>. All three present is the compression cluster.
 
 Confirmation rule for the resolution: a daily close OUTSIDE the prior 20-session high-low band on volume at least 1.5x the 20-day average. Without the volume confirmation, the breakout is suspect — Q1 2024 SPX printed two such low-volume breakouts that briefly retraced before the eventual move.
 
@@ -61,7 +61,7 @@ The correct model: compression is a setup for *either* direction. The trade is b
     "Confirmation that the breakout is fake — short immediately."
   ]}
   answer={1}
-  explanation="The tempting wrong answer is the high-quality-breakout call — 'no resistance, easy move' is a common rationalisation. But the empirical pattern from lessons 024 and 029 is the opposite: low-volume breakouts have a high false-positive rate. Shorting it as a confirmed fake over-corrects; 'only price matters' ignores a well-documented relationship. The synthesis is to demand confirmation or size for the uncertainty."
+  explanation="The tempting wrong answer is the high-quality-breakout call — 'no resistance, easy move' is a common rationalisation. But the empirical pattern from <Lesson id="024_breakouts"/> and <Lesson id="029_volume_confirmation"/> is the opposite: low-volume breakouts have a high false-positive rate. Shorting it as a confirmed fake over-corrects; 'only price matters' ignores a well-documented relationship. The synthesis is to demand confirmation or size for the uncertainty."
 />
 
 ## Try it

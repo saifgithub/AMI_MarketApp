@@ -180,6 +180,45 @@ def test_every_lesson_token_resolves_to_a_real_lesson_id(lessons):
     )
 
 
+# ── CR053-MIGRATE: no un-tagged GLOBAL-id ref left in prose ─────────────
+#
+# scripts/migrate_lesson_refs.py converts every "lesson NNN" (3-digit/
+# zero-padded, or value>=16 matching a real lesson) to a `<Lesson id=.../>`
+# tag, which parse_mdx substitutes to `{{lesson:...}}` before this test ever
+# sees the raw body — so a real edit disappears from _RAW_LESSON_REF_RE's
+# view entirely; only a MISSED one would still read as bare prose here. Bare
+# "lesson N" for N<=15 is deliberately NOT forbidden — CR053-MIGRATE resolves
+# those as within-module ordinals (same-prefix code lookup, not a global id),
+# and a blanket ban would false-positive on the ~57 legitimate ones.
+_RAW_LESSON_REF_RE = re.compile(
+    r"\blesson\s+(?:0\d\d|(?:1[6-9]|[2-9]\d|\d{3}))\b", re.IGNORECASE
+)
+
+# No allowlist entries exist post-migration (0 flagged in
+# content/_authoring/cr053_migration_report.md). A future addition here must
+# name the specific lesson + ref and say why it's exempt, not just silence
+# the guard.
+CR053_GLOBAL_REF_ALLOWLIST: set[tuple[str, str]] = set()
+
+
+def test_no_untagged_global_lesson_ref_remains_in_any_body():
+    """CR053-MIGRATE guard — combined with the resolve guard above, the
+    corpus is self-policing for Class 1: every global-id ref is either a
+    resolving `{{lesson:}}` token or doesn't exist as bare prose any more."""
+    offenders = []
+    for path in _lesson_paths():
+        raw = path.read_text(encoding="utf-8")
+        body = raw.split("---", 2)[-1] if raw.startswith("---") else raw
+        for m in _RAW_LESSON_REF_RE.finditer(body):
+            if (path.name, m.group(0)) in CR053_GLOBAL_REF_ALLOWLIST:
+                continue
+            offenders.append((path.name, m.group(0)))
+    assert not offenders, (
+        "un-tagged global-id 'lesson NNN' prose ref (should be a "
+        f"<Lesson id=.../> tag, or added to the allowlist with a reason): {offenders}"
+    )
+
+
 # ── CR044: group-scoped lesson codes ────────────────────────────────────
 #
 # The code is the identifier the user reads off the badge and says back to the

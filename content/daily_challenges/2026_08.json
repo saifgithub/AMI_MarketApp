@@ -355,7 +355,7 @@
       "The News Analyst summarising the clinical readout"
     ],
     "answer": 0,
-    "explanation": "The quote is meta-technical — it's the Market Analyst naming the limits of their own toolkit. RSI and MACD are price-derived; when an event rewrites the price distribution overnight, the indicator readings reflect old context. Naming that limitation explicitly is exactly the discipline of lesson 031. The 'News Analyst' answer is the trap — yes, a news event is the trigger, but the agent isn't summarising the news, they're explaining why technicals will misread the post-news tape.",
+    "explanation": "The quote is meta-technical — it's the Market Analyst naming the limits of their own toolkit. RSI and MACD are price-derived; when an event rewrites the price distribution overnight, the indicator readings reflect old context. Naming that limitation explicitly is exactly the discipline of EDGE 3. The 'News Analyst' answer is the trap — yes, a news event is the trigger, but the agent isn't summarising the news, they're explaining why technicals will misread the post-news tape.",
     "related_lesson": "031",
     "related_agent": "market_analyst",
     "tags": ["agents", "indicator_limits", "module_5"]
@@ -469,7 +469,7 @@
       "Insider data"
     ],
     "answer": 2,
-    "explanation": "Five momentum indicators agreeing is impressive — until you realise they're all the same family. Momentum says 'price is moving up'; it doesn't say where price is. Is RM6.95 just under a major resistance? At a 52-week high? Inside a flat range? Indicator stacking from one family creates a confirmation illusion. A complete read pairs momentum with structure: trend, MAs, support/resistance. That's the limitation lesson 031 names.",
+    "explanation": "Five momentum indicators agreeing is impressive — until you realise they're all the same family. Momentum says 'price is moving up'; it doesn't say where price is. Is RM6.95 just under a major resistance? At a 52-week high? Inside a flat range? Indicator stacking from one family creates a confirmation illusion. A complete read pairs momentum with structure: trend, MAs, support/resistance. That's the limitation EDGE 3 names.",
     "related_lesson": "031",
     "related_agent": "market_analyst",
     "tags": ["indicator_limits", "completeness", "bursa", "module_5"]

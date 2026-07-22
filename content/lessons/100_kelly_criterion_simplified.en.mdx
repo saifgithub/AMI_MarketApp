@@ -18,13 +18,13 @@ updated_at: "2026-05-12"
 
 # Kelly criterion, simplified
 
-This lesson assumes you've completed lesson 014 (Position sizing basics); here we go deeper on a different sizing model — Kelly — that uses your historical win rate and average R:R to recommend a per-trade fraction. The Kelly formula tells you the size that maximises long-run compounded growth given a real edge. The catch: it assumes your win rate and payoff are stable and accurately measured, and full Kelly produces stomach-churning drawdowns. Most disciplined traders run fractional Kelly — a quarter or half — for that reason. This lesson teaches the simplified formula, the inputs that break it, and why "half-Kelly" is the working compromise.
+This lesson assumes you've completed <Lesson id="014_position_sizing_basics"/> (Position sizing basics); here we go deeper on a different sizing model — Kelly — that uses your historical win rate and average R:R to recommend a per-trade fraction. The Kelly formula tells you the size that maximises long-run compounded growth given a real edge. The catch: it assumes your win rate and payoff are stable and accurately measured, and full Kelly produces stomach-churning drawdowns. Most disciplined traders run fractional Kelly — a quarter or half — for that reason. This lesson teaches the simplified formula, the inputs that break it, and why "half-Kelly" is the working compromise.
 
 ## Example
 
 Look at a 60-trade sample on US tech setups from your <Term id="ami_decision_journal" />. You won 38 of them — a 63% win rate. Average winner: +1.8R. Average loser: −1R. The simplified Kelly formula for an asymmetric payoff is f = (W × R − L) ÷ R, where W is win probability, L = 1 − W, and R is the win/loss payoff ratio. Plug in: f = (0.63 × 1.8 − 0.37) ÷ 1.8 = (1.134 − 0.37) ÷ 1.8 = 0.424. Full Kelly says size each trade at 42% of your account.
 
-That number should alarm you. A single losing trade at 42% of account is a 42% drawdown — well past the recovery cliff from lesson 018. Worse, your "63% win rate" is a sample estimate; the true win rate could easily be 55% (Kelly = 18%) or 50% (Kelly = 5.5%). Half-Kelly on the same numbers is 21%, quarter-Kelly is 10.6% — still aggressive. The 1% rule you already use is roughly tenth-Kelly on a credible edge, which is why it survives sampling error. On Bursa Malaysia: same 38/60 sample on PETRONAS swing setups, same formula, same problematic output. Falsifiable test: if your measured win rate × payoff ratio doesn't exceed 1, your edge is negative and Kelly returns a negative fraction — sit out, not size up.
+That number should alarm you. A single losing trade at 42% of account is a 42% drawdown — well past the recovery cliff from <Lesson id="018_drawdown_management"/>. Worse, your "63% win rate" is a sample estimate; the true win rate could easily be 55% (Kelly = 18%) or 50% (Kelly = 5.5%). Half-Kelly on the same numbers is 21%, quarter-Kelly is 10.6% — still aggressive. The 1% rule you already use is roughly tenth-Kelly on a credible edge, which is why it survives sampling error. On Bursa Malaysia: same 38/60 sample on PETRONAS swing setups, same formula, same problematic output. Falsifiable test: if your measured win rate × payoff ratio doesn't exceed 1, your edge is negative and Kelly returns a negative fraction — sit out, not size up.
 
 ## The trap
 
@@ -55,7 +55,7 @@ The trap is plugging in optimistic numbers and trusting the output. A beginner r
     "Trader B compounds faster because lower-percentage trades have lower fees."
   ]}
   answer={2}
-  explanation="The tempting wrong answer is the first — full Kelly is provably growth-optimal, so it should win. The catch is that 'provably optimal' assumes the true win rate and payoff are known exactly. In practice the inputs are sample estimates with error, and Kelly's payoff function is asymmetric — overshooting size punishes you far more than undershooting. Full-Kelly drawdowns regularly hit 50%+ even on a correct edge, putting the account in the recovery hole from lesson 018. Fractional Kelly is a survival adjustment for measurement error."
+  explanation="The tempting wrong answer is the first — full Kelly is provably growth-optimal, so it should win. The catch is that 'provably optimal' assumes the true win rate and payoff are known exactly. In practice the inputs are sample estimates with error, and Kelly's payoff function is asymmetric — overshooting size punishes you far more than undershooting. Full-Kelly drawdowns regularly hit 50%+ even on a correct edge, putting the account in the recovery hole from <Lesson id="018_drawdown_management"/>. Fractional Kelly is a survival adjustment for measurement error."
 />
 
 ## Try it

@@ -18,13 +18,13 @@ updated_at: "2026-05-12"
 
 # Debt maturity ladder and refinancing risk
 
-Lesson 034 introduced debt-to-EBITDA and interest coverage. This lesson adds the *time dimension*. Two companies with identical debt levels can carry very different risk profiles depending on *when* the debt matures and at *what* coupon. Debt due next year at 4% becomes debt due next year at 8% if refinanced into a high-rate environment — and the resulting jump in interest expense can crush an otherwise healthy company. By the end of this lesson you should know how to read a debt maturity schedule, identify a refinancing wall, and quantify the interest-expense risk it represents.
+<Lesson id="034_debt_and_the_balance_sheet"/> introduced debt-to-EBITDA and interest coverage. This lesson adds the *time dimension*. Two companies with identical debt levels can carry very different risk profiles depending on *when* the debt matures and at *what* coupon. Debt due next year at 4% becomes debt due next year at 8% if refinanced into a high-rate environment — and the resulting jump in interest expense can crush an otherwise healthy company. By the end of this lesson you should know how to read a debt maturity schedule, identify a refinancing wall, and quantify the interest-expense risk it represents.
 
 ## How this plays out in real markets
 
 Every 10-K includes a debt maturity table in the notes — typically titled "Long-term debt" or "Contractual obligations". It shows the principal coming due each year for the next five years and "thereafter". A healthy ladder is *staggered* — roughly equal amounts maturing each year, so the company refinances small tranches at a time. A risky ladder is *bunched* — a cliff of maturities in a single year that requires bulk refinancing.
 
-Real example: in 2023–2024, several commercial real estate companies faced "maturity walls" where 30–40% of total debt was scheduled to refinance within a 24-month window. The debt had been issued at 3–4% coupons in the 2020–2021 ultra-low-rate era; rolling it at then-prevailing 7–9% commercial mortgage rates roughly doubled the interest expense on the rolled tranche. For a company with debt-to-EBITDA around 5x and interest coverage around 2x at the old rate, refinancing the same principal at double the coupon mathematically pushes interest coverage below 1x — the textbook stress configuration from lesson 034.
+Real example: in 2023–2024, several commercial real estate companies faced "maturity walls" where 30–40% of total debt was scheduled to refinance within a 24-month window. The debt had been issued at 3–4% coupons in the 2020–2021 ultra-low-rate era; rolling it at then-prevailing 7–9% commercial mortgage rates roughly doubled the interest expense on the rolled tranche. For a company with debt-to-EBITDA around 5x and interest coverage around 2x at the old rate, refinancing the same principal at double the coupon mathematically pushes interest coverage below 1x — the textbook stress configuration from <Lesson id="034_debt_and_the_balance_sheet"/>.
 
 For a healthy ladder: MSFT's long-term debt of ~$42B in fiscal 2024 was spread across maturities running out beyond 2050, with weighted-average coupon under 4% and no single year representing more than 8% of total debt outstanding. The refinancing risk is essentially zero — the company can let any given tranche mature and either refinance or repay from cash.
 
@@ -36,7 +36,7 @@ The falsifiable claim: a company with >25% of total debt maturing in any single 
 
 ## The trap
 
-The trap is reading "total debt $5B" without reading the maturity schedule. A beginner checks debt-to-EBITDA, sees a comfortable 3x, and stops. They miss that $2B of the $5B matures in the next 18 months at a coupon that may have to double on refinancing. The same debt-to-EBITDA ratio that looked fine carries a hidden +30% jump in interest expense baked in to the forward year. The correct mental model: debt has two co-equal dimensions — *amount* (which lesson 034 covered) and *timing* (which is this lesson). Both must be assessed. A company with a clean staggered ladder can carry meaningfully more debt than a peer with a wall; a peer with a wall can be stressed at a much smaller absolute level.
+The trap is reading "total debt $5B" without reading the maturity schedule. A beginner checks debt-to-EBITDA, sees a comfortable 3x, and stops. They miss that $2B of the $5B matures in the next 18 months at a coupon that may have to double on refinancing. The same debt-to-EBITDA ratio that looked fine carries a hidden +30% jump in interest expense baked in to the forward year. The correct mental model: debt has two co-equal dimensions — *amount* (which <Lesson id="034_debt_and_the_balance_sheet"/> covered) and *timing* (which is this lesson). Both must be assessed. A company with a clean staggered ladder can carry meaningfully more debt than a peer with a wall; a peer with a wall can be stressed at a much smaller absolute level.
 
 <ChatWith agent="fundamentals_analyst" />
 
@@ -55,7 +55,7 @@ The trap is reading "total debt $5B" without reading the maturity schedule. A be
 />
 
 <Quiz
-  question="Synthesis: combining this lesson with lesson 034, which of the following companies has the most acute balance-sheet risk over the next 24 months?"
+  question="Synthesis: combining this lesson with <Lesson id="034_debt_and_the_balance_sheet"/>, which of the following companies has the most acute balance-sheet risk over the next 24 months?"
   options={[
     "Company B: $4B debt, debt-to-EBITDA 2.5x, interest coverage 5x, with 40% of debt maturing in the next 18 months at a coupon spread of +400bps over its current weighted average",
     "Company A — higher absolute debt is always the bigger risk",
@@ -63,7 +63,7 @@ The trap is reading "total debt $5B" without reading the maturity schedule. A be
     "Both equally risky"
   ]}
   answer={0}
-  explanation="The synthesis: lesson 034 said absolute debt size is misleading; this lesson adds that maturity timing is the second axis. Company B looks lower-risk on the trailing ratios (lower leverage, better coverage) but has 40% of debt walling in 18 months at a +400bps spread. After refinancing, B's interest expense rises ~40% × old × 400bps/old coupon — typically compressing interest coverage by 30–50%. Company A's staggered ladder means any single year only forces refinancing of a small tranche, so the rate shock is absorbed gradually. Picking Company A on its weaker trailing ratios mistakes the trailing number for the forward one. The equally-risky answer ignores the wall. Picking Company A for its larger absolute debt reverts to the absolute-size fallacy that lesson 034 explicitly warned against."
+  explanation="The synthesis: <Lesson id="034_debt_and_the_balance_sheet"/> said absolute debt size is misleading; this lesson adds that maturity timing is the second axis. Company B looks lower-risk on the trailing ratios (lower leverage, better coverage) but has 40% of debt walling in 18 months at a +400bps spread. After refinancing, B's interest expense rises ~40% × old × 400bps/old coupon — typically compressing interest coverage by 30–50%. Company A's staggered ladder means any single year only forces refinancing of a small tranche, so the rate shock is absorbed gradually. Picking Company A on its weaker trailing ratios mistakes the trailing number for the forward one. The equally-risky answer ignores the wall. Picking Company A for its larger absolute debt reverts to the absolute-size fallacy that <Lesson id="034_debt_and_the_balance_sheet"/> explicitly warned against."
 />
 
 ## Try it

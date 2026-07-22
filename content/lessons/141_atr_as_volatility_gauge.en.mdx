@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # ATR as a volatility gauge
 
-Average True Range (ATR) measures how much a stock typically moves per session, in dollars. It's the 14-bar (default) average of "true range" — the largest of: today's high minus today's low; today's high minus yesterday's close; or yesterday's close minus today's low. The third term captures overnight gaps that simple high-minus-low ignores. ATR is not a directional indicator — it doesn't say up or down. It says how much. That single number is the volatility input for every position-sizing and stop-placement decision; this lesson teaches reading ATR as a regime gauge before lesson 102 ties it to stops and lesson 101 ties it to sizing.
+Average True Range (ATR) measures how much a stock typically moves per session, in dollars. It's the 14-bar (default) average of "true range" — the largest of: today's high minus today's low; today's high minus yesterday's close; or yesterday's close minus today's low. The third term captures overnight gaps that simple high-minus-low ignores. ATR is not a directional indicator — it doesn't say up or down. It says how much. That single number is the volatility input for every position-sizing and stop-placement decision; this lesson teaches reading ATR as a regime gauge before <Lesson id="102_atr_based_stops"/> ties it to stops and <Lesson id="101_volatility_adjusted_sizing"/> ties it to sizing.
 
 ## How this plays out in real markets
 
@@ -36,7 +36,7 @@ On Bursa Malaysia: GENTING in mid-2025 had daily ATR around RM0.08 against a pri
 
 The trap is treating ATR as a directional or strength indicator. "ATR is rising — the trend is strong." That's wrong. ATR rises in both directions; a stock crashing has elevated ATR just like a stock rallying does. The other trap is ignoring ATR entirely and using a fixed dollar stop on every name — placing $1 stops on AAPL (with $2.80 ATR) and $1 stops on TSLA (with $11.50 ATR) is the same mistake at different magnitudes. The first stop is reasonable; the second is inside daily noise.
 
-The correct mental model: ATR is a calibration parameter for everything else. Stop distance is some multiple of ATR (lesson 102). Position size adjusts inversely with ATR (lesson 101). Volatility regime — quiet vs normal vs elevated — informs which strategy family even fits the current tape. ATR is the dial that makes the rest of your toolkit speak the language of the stock you're actually trading.
+The correct mental model: ATR is a calibration parameter for everything else. Stop distance is some multiple of ATR (<Lesson id="102_atr_based_stops"/>). Position size adjusts inversely with ATR (<Lesson id="101_volatility_adjusted_sizing"/>). Volatility regime — quiet vs normal vs elevated — informs which strategy family even fits the current tape. ATR is the dial that makes the rest of your toolkit speak the language of the stock you're actually trading.
 
 <ChatWith agent="market_analyst" />
 

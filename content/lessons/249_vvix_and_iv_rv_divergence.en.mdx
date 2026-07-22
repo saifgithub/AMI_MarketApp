@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # VVIX and the implied-vs-realised volatility divergence
 
-Lesson 062 introduced ATR as realised volatility and VIX as implied volatility. Lesson 248 added VIX term structure. This lesson teaches two more refined readings: VVIX (the volatility of VIX itself) and the IV-vs-RV spread. Together they flag when option-market participants are positioning for stress that hasn't shown up in the tape yet. After this lesson you will be able to read VVIX in percentile terms, compute and interpret the IV-RV spread, name the strategies that pair with each divergence, and state the invalidation.
+<Lesson id="062_volatility_regimes"/> introduced ATR as realised volatility and VIX as implied volatility. <Lesson id="248_vix_term_structure"/> added VIX term structure. This lesson teaches two more refined readings: VVIX (the volatility of VIX itself) and the IV-vs-RV spread. Together they flag when option-market participants are positioning for stress that hasn't shown up in the tape yet. After this lesson you will be able to read VVIX in percentile terms, compute and interpret the IV-RV spread, name the strategies that pair with each divergence, and state the invalidation.
 
 ## How this plays out in real markets
 
@@ -53,7 +53,7 @@ The correct model: VVIX + IV-RV divergence is a regime-quality reading. When the
   options={[
     "Ignore — VVIX is too obscure to matter.",
     "Buy more — option markets are usually wrong.",
-    "Option-market-stress-whisper cluster is firing (both VVIX and IV-RV in their upper quartile). The bull regime from lesson 059 is still intact, so the response is mandate compression, not directional flip: cap new positions ~25% smaller, demand 2-of-3 confirmation indicators before adding, accept that the signal has false positives and a 4–8 week window. Invalidate the signal if VVIX falls back under its 50th percentile for 5+ sessions.",
+    "Option-market-stress-whisper cluster is firing (both VVIX and IV-RV in their upper quartile). The bull regime from <Lesson id="059_bull_markets"/> is still intact, so the response is mandate compression, not directional flip: cap new positions ~25% smaller, demand 2-of-3 confirmation indicators before adding, accept that the signal has false positives and a 4–8 week window. Invalidate the signal if VVIX falls back under its 50th percentile for 5+ sessions.",
     "Short SPX aggressively — option markets are pricing a crash."
   ]}
   answer={2}

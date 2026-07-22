@@ -203,7 +203,7 @@
       "That sukuk cannot be priced using yield-to-maturity concepts at all"
     ],
     "answer": 2,
-    "explanation": "A sukuk's price does move the way a bond's does — the mechanics from lesson 304 (price opposite to yield) still apply — but that mechanical similarity says nothing about compliance. What makes a sukuk non-riba is the legal claim underneath: real asset ownership generating rental or profit income, not a debt owed regardless of the asset's performance. Similar pricing behavior does not make the two instruments interchangeable for Sharia purposes; sukuk yields aren't structurally required to be lower, and YTM-style pricing concepts do apply to sukuk — that's precisely why the mechanics look similar in the first place.",
+    "explanation": "A sukuk's price does move the way a bond's does — the mechanics from ASST 2 (price opposite to yield) still apply — but that mechanical similarity says nothing about compliance. What makes a sukuk non-riba is the legal claim underneath: real asset ownership generating rental or profit income, not a debt owed regardless of the asset's performance. Similar pricing behavior does not make the two instruments interchangeable for Sharia purposes; sukuk yields aren't structurally required to be lower, and YTM-style pricing concepts do apply to sukuk — that's precisely why the mechanics look similar in the first place.",
     "related_lesson": "352",
     "related_agent": "fundamentals_analyst",
     "tags": [
