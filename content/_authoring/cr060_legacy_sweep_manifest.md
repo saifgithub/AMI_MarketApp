@@ -639,6 +639,20 @@ The 25 survivors are the definitional lessons — the ones with the least to fab
    from Saiful about the EVAL group exposed the hole. Phase 6 adds a guard that every corpus lesson
    appears in a manifest.
 
+### Corpus-wide item found outside the wave tables — the retired provenance line
+
+**25 lessons render a user-facing *"Where this comes from: …"* italic line.** CR060 §18 retires it —
+provenance is owner-facing QA metadata, never shown to users (Saiful's AT:R63 scope decision), so
+every one of these is a defect against a rule that postdates them. All 25 are from the newest
+sourced batches, and **all 10 SHARIA lessons are among them**:
+
+`293` `294` `298` `300` `304` `311` `312` `317` `319` `320` `321` `322` `324` `329` `340` `347`
+`348` `349` `350` `351` `352` `353` `354` `355` `356`
+
+Mechanically removable — one italic line at the end of the body, no prose depends on it. The 8 EVAL
+lessons carried it too and were stripped in `44f7c13`. **Route: the P2 remediation CR**, in the same
+pass that touches these files, not a separate edit round.
+
 **Next:** classify all 293 findings P1 / P2a / P2b / P2c / ESCALATE (Phase 2), dual-pass re-verify
 the P1 corrections before any of them are applied (Phase 3 — the manifest's "correct value" is an
 agent's lead, not a verified replacement), then route: P1 defect + P2 remediation CR, batch-stamp
