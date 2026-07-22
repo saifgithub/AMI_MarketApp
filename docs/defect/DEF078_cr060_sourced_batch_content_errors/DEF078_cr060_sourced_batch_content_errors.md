@@ -51,6 +51,17 @@ US law (*Chiarella* 1980, *Dirks* 1983, *O'Hagan* 1997) requires a **breach of a
 the "equal-access" theory the lesson states was expressly rejected. Reframe to the duty-based rule
 after SME approval. See report §5.
 
+**CLOSED 2026-07-22 (`4dfd6c9`).** Saiful edited the lesson himself, adding *who* holds the
+information to the non-public prong (CEO/directors/employees; lawyers/bankers/auditors) — which is
+the duty test in all but name — then approved the reframe of the closing rule. The equal-access
+claim appeared in **four** places, all now moved together: the intro, "the trap", quiz 1's answer
+text + explanation, and the takeaway. Quiz 1's correct index is unchanged; it was already right, for
+the wrong stated reason. The three cases are now in `sources`, and the provenance line records that
+this is US law specifically — several jurisdictions do run a possession-based rule, so the old text
+was not wrong everywhere, only where it claimed to be. The operating heuristic ("holding MNPI with
+no innocent path you can name ⇒ don't trade") survives as a heuristic rather than as a claim about
+the law.
+
 ## Acceptance
 
 1. Each Tier-A/B/C fix applied to its lesson by the education lane, matching the report's fix column.
