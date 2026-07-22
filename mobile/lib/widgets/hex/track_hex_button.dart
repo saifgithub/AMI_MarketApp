@@ -35,6 +35,10 @@ class TrackHexButton extends StatelessWidget {
         builder: (context, constraints) {
           final h = constraints.maxHeight;
           final donutSize = h * 0.52;
+          // The DEF082 palette is optimised for separation *between* hexes, so
+          // it admits a token too dark to set type in (hexIndigo600, 2.8:1).
+          // Fill keeps the true brand colour; foreground marks get the lift.
+          final ink = readableOnCanvas(color);
           return ClipPath(
             clipper: const FlatTopRegularHexagon(),
             child: Container(
@@ -49,7 +53,7 @@ class TrackHexButton extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: AmiTypography.labelMono.copyWith(
                       fontSize: 8,
-                      color: color,
+                      color: ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -58,7 +62,7 @@ class TrackHexButton extends StatelessWidget {
                     height: donutSize,
                     child: CustomPaint(
                       painter: _DoughnutPainter(
-                        color: color,
+                        color: ink,
                         fraction: total == 0
                             ? 0
                             : (completed / total).clamp(0.0, 1.0),

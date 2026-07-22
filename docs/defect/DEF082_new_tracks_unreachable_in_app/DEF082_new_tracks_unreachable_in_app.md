@@ -109,3 +109,79 @@ guard, not just the missing entries.
 - **CR054 Wave-1** — ETHIC/ASST/MACRO/QUANT lessons (54 of the dark 64).
 - **CR058** — 10 SHARIA lessons (the remaining 10 dark), shipped live in the AT:R64 promote.
 - **DEF038 / DEF063** — prior degrade-loudly repeats named in CLAUDE.md.
+
+---
+
+## Resolution (AT:R64, 2026-07-22)
+
+**Status: FIXED.** Layout direction approved by Saiful after reviewing a live mock —
+*"how about this way"* (the 13-agent comb from the marketing site), then
+*"colours look ok"*, then *"lets deploy the new 13 hex modules on both android and apple"*.
+
+### What shipped
+
+**1. The count comes from the API and nowhere else.** New file
+`mobile/lib/screens/lessons/honeycomb_layout.dart` holds the slot geometry, the fill order,
+the colour map and the label map. `_HexCluster` now does
+`for (var i = 0; i < ordered.length; i++)` over `orderTracksForHoneycomb(servedTracks)` —
+there is no literal position map left to iterate. `honeycombCentreCount(n)` sizes the comb
+to `n`, so a 14th track grows the comb instead of falling off it. An unknown track renders
+with a cycled fallback colour and `track.title` from the response.
+
+**2. Layout — 3 columns, 4/5/4.** Transposed from `website/index.html`'s own 13-cell
+honeycomb (the one that represents the 13 agents), so app and marketing site now share a
+geometry. Three columns means `2.5 · hexW = maxWidth`, i.e. **hexW is unchanged at ~143 pt**
+— all 13 fit at full prose labels, nothing shrank. Cost is height: 372 → 620 pt, so the
+cluster scrolls. `foundations` keeps the visual centre (C2).
+
+**3. Colour as the boundary layer.** Saiful: *"select the colours such that they are distinct
+from the neighbours, so we can use the colours also as the design boundary layers."* Six new
+tokens in `ami_theme.dart`, chosen by maximising the **minimum** OKLab ΔE across the comb's
+26 adjacent pairs (max-min, not max-average — the weakest seam is what the eye finds):
+
+| token | hex | track |
+|---|---|---|
+| `hexOrange500` | `#F97316` | `asset_classes` |
+| `hexLime400` | `#A3E635` | `economics_macro` |
+| `hexGreen400` | `#4ADE80` | `quant_methods` |
+| `hexIndigo600` | `#4F46E5` | `ethics_integrity` |
+| `hexFuchsia500` | `#D946EF` | `islamic_finance` |
+| `hexRose400` | `#FB7185` | `decision_evaluation` |
+
+Weakest seam **ΔE 0.3278** at 13 tracks, **0.3415** at 12 — against **0.1807** for the
+shipped palette's own closest pair (`hexPink`/`hexRed`) and 0.2306 for `hexBlue`/`hexCyan`.
+Global distinctness across 13 is not achievable in this palette; adjacency distinctness is,
+which is exactly what was asked for.
+
+**4. Slot order is fixed, and `decision_evaluation` is last.** The separation is a property of
+the *placement*, not of the palette (`hexRose400` sits ΔE 0.12 from `hexRed` globally), so
+re-sorting by lesson count or alphabetically would let near-identical colours touch. EVAL is
+pinned to the final slot because it is registered with zero lessons until CR062 lands — the
+live API serves 12 tracks, and an absent EVAL must end the comb early rather than punch a
+hole in the middle of it.
+
+**5. Contrast.** `readableOnCanvas()` in `ami_theme.dart` lifts any accent below 4.2:1 on
+`slate900` (the floor set by the dimmest already-shipped token, `hexPurple`). Only
+`hexIndigo600` trips it today at 2.84:1; the hex fill keeps the true brand colour, the label
+and progress arc get the lifted ink. Deriving it means the next dark token is covered without
+a code change.
+
+### The guard (CLAUDE.md: second occurrence ⇒ add a guard)
+
+`mobile/test/honeycomb_layout_test.dart`, 8 tests:
+
+- every served track gets a slot, exactly once, for n = 1…16 — the direct
+  rendered-count == served-count assertion the defect demanded;
+- unknown tracks survive and never shift the known placements;
+- every one of the 13 backend tracks has a slot order, a colour and a label;
+- no two adjacent hexes fall below ΔE 0.30, at both 12 and 13 tracks — this is what catches
+  a future reorder silently undoing the colour solve;
+- every label ink clears the contrast floor;
+- geometry: centre column one taller than the sides; columns at 0, ¾W, 1½W; an unauthored
+  track empties the **last** slot, not a middle one.
+
+### Verification
+
+- `flutter test test/honeycomb_layout_test.dart` — 8/8.
+- Live `GET /v1/lessons` returns 12 tracks / 334 lessons; the comb renders 12 with the 13th
+  slot empty, and will render 13 the moment CR062 promotes.

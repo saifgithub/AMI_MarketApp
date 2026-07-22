@@ -9,6 +9,8 @@
 /// first paint before Plex resolves on cold launch.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -37,6 +39,18 @@ abstract final class AmiColors {
   static const Color hexRed = Color(0xFFEF4444); // --accent-red
   static const Color hexPurple = Color(0xFF8B5CF6); // --accent-purple (was #A855F7)
   static const Color hexPink = Color(0xFFEC4899); // --accent-pink
+
+  // Lesson-track accents (6 more, DEF082) — the corpus grew from 7 groups to 13
+  // and the honeycomb needs a distinct colour per facet. Chosen by maximising
+  // the *minimum* OKLab distance across the comb's 26 adjacent pairs, so the
+  // colour itself reads as the boundary between cells; every seam is ≥ 2.1x the
+  // separation of the shipped palette's own closest pair (hexPink/hexRed).
+  static const Color hexOrange500 = Color(0xFFF97316);
+  static const Color hexLime400 = Color(0xFFA3E635);
+  static const Color hexGreen400 = Color(0xFF4ADE80);
+  static const Color hexIndigo600 = Color(0xFF4F46E5);
+  static const Color hexFuchsia500 = Color(0xFFD946EF);
+  static const Color hexRose400 = Color(0xFFFB7185);
 
   // Text on dark
   static const Color textHigh = Color(0xFFF3F4F6); // --text-main
@@ -78,6 +92,34 @@ abstract final class AmiColorsLight {
   static const Color accentPurple = Color(0xFF6D28D9);
   static const Color accentBlue = Color(0xFF2563EB); // --accent-blue-text (= hexBlue600)
   static const Color accentPink = Color(0xFFBE185D);
+}
+
+/// Contrast floor for accent text on [AmiColors.slate900], set by the dimmest
+/// token already shipped (hexPurple, 4.22:1). Anything below this is legible as
+/// a shape but not as type.
+const double amiCanvasContrastFloor = 4.2;
+
+double _contrastOnCanvas(Color c) {
+  final a = c.computeLuminance();
+  final b = AmiColors.slate900.computeLuminance();
+  return (math.max(a, b) + 0.05) / (math.min(a, b) + 0.05);
+}
+
+/// Returns [c] if it already clears [amiCanvasContrastFloor] on the dark canvas,
+/// otherwise the same hue lifted until it does.
+///
+/// Needed because the DEF082 palette is optimised for *separation between
+/// hexes*, which admits a dark token: hexIndigo600 reads 2.84:1 on slate900, so
+/// its label would be a smudge. Deriving the ink rather than hand-picking a
+/// second colour means any future dark accent is covered without a code change.
+Color readableOnCanvas(Color c) {
+  if (_contrastOnCanvas(c) >= amiCanvasContrastFloor) return c;
+  var hsl = HSLColor.fromColor(c);
+  while (hsl.lightness < 0.95 &&
+      _contrastOnCanvas(hsl.toColor()) < amiCanvasContrastFloor) {
+    hsl = hsl.withLightness(hsl.lightness + 0.02);
+  }
+  return hsl.toColor();
 }
 
 /// Maps an agent family ("analyst", "risk", "researcher", "manager",

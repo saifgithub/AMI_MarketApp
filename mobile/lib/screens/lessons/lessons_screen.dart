@@ -1,7 +1,7 @@
 /// Lessons landing — hex cluster overview.
 ///
 /// Zone A: slim progress bar (lesson count + agents unlocked).
-/// Zone B: 7-hex honeycomb cluster (1 centre + 6 surrounding tracks).
+/// Zone B: honeycomb cluster, one hex per track the API served (13 today).
 /// Tapping a hex navigates to [TrackLessonsScreen].
 library;
 
@@ -10,6 +10,7 @@ import 'package:ami_trade/features/tour/tour_providers.dart';
 import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/lessons.dart';
+import 'package:ami_trade/screens/lessons/honeycomb_layout.dart';
 import 'package:ami_trade/screens/lessons/track_lessons_screen.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -19,28 +20,6 @@ import 'package:ami_trade/widgets/hex/track_hex_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-
-// ─── track config ────────────────────────────────────────────────────────────
-
-const _trackColor = {
-  'foundations': AmiColors.hexBlue,
-  'fundamentals_analysis': AmiColors.hexCyan,
-  'technical_analysis': AmiColors.hexPurple,
-  'news_macro': AmiColors.hexAmber,
-  'sentiment_behaviour': AmiColors.hexPink,
-  'risk_portfolio': AmiColors.hexRed,
-  'edge_process': AmiColors.hexGreen,
-};
-
-const _trackLabel = {
-  'foundations': 'FOUNDATIONS',
-  'fundamentals_analysis': 'FUNDAMENTALS',
-  'technical_analysis': 'TECHNICAL',
-  'news_macro': 'NEWS & MACRO',
-  'sentiment_behaviour': 'SENTIMENT',
-  'risk_portfolio': 'RISK',
-  'edge_process': 'EDGE',
-};
 
 // ─── screen ──────────────────────────────────────────────────────────────────
 
@@ -204,23 +183,23 @@ class _SlimProgressBar extends StatelessWidget {
 
 // ─── Zone B — hex cluster ────────────────────────────────────────────────────
 
-/// 7-hex honeycomb: foundations (centre) + 6 surrounding tracks.
+/// Honeycomb of every track the API served — 13 today, 4/5/4 across three
+/// columns, foundations at the visual centre.
 ///
-/// Flat-top hex tiling has true edge-sharing neighbours at six positions —
-/// N, NE, SE, S, SW, NW (H3-style). Centre-to-neighbour offsets:
-///   N/S:  (0, ∓hexH)            // share full flat top/bottom edge
-///   NE/SE/SW/NW: (±¾hexW, ±½hexH) // share diagonal edges
+/// Flat-top hex tiling shares full edges at six positions (N, NE, SE, S, SW,
+/// NW, H3-style), so three columns at x = 0, ¾W, 1½W with the side columns
+/// dropped half a hex give a gapless comb of any height:
 ///
-/// Clock layout (all 6 surroundings touch FON edge-to-edge):
+///         [C0]
+///     [L0]    [R0]
+///         [C1]
+///     [L1]    [R1]        ← centre column runs one taller than the sides
+///          …
 ///
-///         [TA]            ← 12 (N)
-///     [FA]    [NM]        ← 10 (NW), 2 (NE)
-///         [FON]           ← centre
-///     [RP]    [SB]        ← 8  (SW), 4 (SE)
-///         [EP]            ← 6  (S)
-///
-/// Cluster bounding box: 2.5*hexW × 3*hexH. To make it fill the available
-/// width, hexW = ⅖ × maxWidth.
+/// Bounding box: 2.5·hexW wide (hence hexW = ⅖ × maxWidth) by
+/// [honeycombHeightInHexes] tall. Slot geometry and fill order live in
+/// `honeycomb_layout.dart`; the count comes from [tracks] and nowhere else,
+/// which is the whole point of DEF082.
 class _HexCluster extends StatelessWidget {
   const _HexCluster({
     super.key,
@@ -235,50 +214,39 @@ class _HexCluster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final trackMap = {for (final t in tracks) t.track: t};
+    final ordered = orderTracksForHoneycomb(trackMap.keys);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         // Cluster width = 2.5 * hexW → hexW = maxWidth * 2/5.
-        final hexW = constraints.maxWidth * 2 / 5;
+        final hexW = constraints.maxWidth * 2 / honeycombWidthInHexes;
         final hexH = hexW / flatTopRegularHexagonAspectRatio;
-        final clusterH = 3 * hexH;
-
-        // Each Positioned uses (left, top) of the hex bounding box.
-        // Centre FON at (¾hexW, hexH); the cluster's centre point is
-        // (1¼hexW, 1½hexH) inside a 2½hexW × 3hexH container.
-        final origins = {
-          'technical_analysis':     Offset(hexW * 0.75, 0),            // N
-          'news_macro':             Offset(hexW * 1.5,  hexH * 0.5),   // NE
-          'sentiment_behaviour':    Offset(hexW * 1.5,  hexH * 1.5),   // SE
-          'edge_process':           Offset(hexW * 0.75, hexH * 2),     // S
-          'risk_portfolio':         Offset(0,           hexH * 1.5),   // SW
-          'fundamentals_analysis':  Offset(0,           hexH * 0.5),   // NW
-          'foundations':            Offset(hexW * 0.75, hexH),         // centre
-        };
-
-        final trackMap = {for (final t in tracks) t.track: t};
+        final slots = honeycombSlots(ordered.length, hexW, hexH);
 
         return SizedBox(
           width: constraints.maxWidth,
-          height: clusterH,
+          height: honeycombHeightInHexes(ordered.length) * hexH,
           child: Stack(
             children: [
-              for (final entry in origins.entries)
-                if (trackMap.containsKey(entry.key))
-                  Positioned(
-                    left: entry.value.dx,
-                    top: entry.value.dy,
-                    width: hexW,
-                    height: hexH,
-                    child: TrackHexButton(
-                      label:
-                          _trackLabel[entry.key] ?? entry.key.toUpperCase(),
-                      color: _trackColor[entry.key] ?? AmiColors.hexBlue,
-                      completed: progress?.byTrack[entry.key]?['completed'] ?? 0,
-                      total: progress?.byTrack[entry.key]?['total'] ??
-                          trackMap[entry.key]!.lessons.length,
-                      onTap: () => onTrackTap(entry.key),
-                    ),
+              for (var i = 0; i < ordered.length; i++)
+                Positioned(
+                  left: slots[i].dx,
+                  top: slots[i].dy,
+                  width: hexW,
+                  height: hexH,
+                  child: TrackHexButton(
+                    label: honeycombTrackLabel[ordered[i]] ??
+                        trackMap[ordered[i]]!.title.toUpperCase(),
+                    color: honeycombTrackColor[ordered[i]] ??
+                        honeycombFallbackColors[i % honeycombFallbackColors.length],
+                    completed:
+                        progress?.byTrack[ordered[i]]?['completed'] ?? 0,
+                    total: progress?.byTrack[ordered[i]]?['total'] ??
+                        trackMap[ordered[i]]!.lessons.length,
+                    onTap: () => onTrackTap(ordered[i]),
                   ),
+                ),
             ],
           ),
         );
