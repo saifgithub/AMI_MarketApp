@@ -1,4 +1,8 @@
-# CR060 legacy sweep — running manifest (unsourced curriculum)
+# CR060 legacy sweep — manifest (**COMPLETE 2026-07-22 — 334 / 334 lessons measured**)
+
+**Status:** measurement finished. **25 lessons clean, 293 carry a genuine defect (88%), 11 need no
+source, 6 escalated to Saiful/SME.** Final totals + method findings at the bottom; remediation
+(classification → dual-pass re-verification → routing) is Phases 2–6, not yet done.
 
 **Owner:** Claude (CR060). **Internal-only.** The 285 legacy lessons carry **no `sources:`**. This
 sweep, per wave, has each unsourced lesson's reputable source **discovered and verified in one
@@ -419,11 +423,102 @@ behaviour**, which only a code check can verify. Worth a standing check of its o
 | SENT 9 | `212_bias_inventory` | FINDING | 1 | Checked 5 bias definitions (Kahneman/Tversky 1974, Fischhoff 1975, Arkes & Blumer 1985), all 3 quiz answers (correct), arithmetic (250->185=26% OK). FINDING: "held PETRONAS through a 22% drawdown" — Petroliam Nasional Bhd is unlisted/govt-owned; only PETDAG/PETGAS/PCHEM trade. Fix: use PETDAG. |
 | SENT 10 | `288_sentiment_and_the_crowd` | FINDING | 3 | Contrarian core OK vs Marks/Shiller; both quiz keys correct. FINDING: 'this time it's different' sold as high-probability / 'most reliable contrarian signal in modern market history' — evidence is only a contested FAJ 2007 cover study; 'within weeks of a bottom' invented. Hedge as heuristic. |
 
-## Remaining sweep scope
+## Wave 4 — islamic_finance (SHARIA) + the 9 empty-`sources:[]` asset_classes (ASST), 19 lessons · 2026-07-22
 
-fundamentals_analysis 66 · technical_analysis 45 · edge_process 98 · risk_portfolio 16 ·
-sentiment_behaviour 10 · + new-track stragglers (asset_classes 3, ethics_integrity 6, quant_methods
-6). Plus the 9 empty-`sources:[]` asset-class lessons (303/305/306/307/308/309/310/313/314).
+**Result: 1 VERIFIED · 0 NO_SOURCE_NEEDED · 16 FINDING · 2 ESCALATE** (`wf_aae74b87-4d8`,
+26/26 agents, 0 errors). **This closes the sweep: 315 + 19 = 334 = the whole corpus.**
+
+| Track | n | FINDING | rate |
+|---|---|---|---|
+| `islamic_finance` (SHARIA) | 10 | 8 (+**2 ESCALATE**) | **100%** — zero verified |
+| `asset_classes` (ASST, empty-sources subset) | 9 | 8 | **89%** |
+
+Wave 4 ran a **different check** from waves 1–3. The SHARIA lessons already carried `sources:`
+(AAOIFI, DJIM, SC Malaysia), so the risk was never a missing citation — it was a **citation that
+does not support its claim**, which reads as verified and is therefore worse than no citation at
+all. The check was citation *integrity*, plus (for `355`) integrity against the **repo**.
+
+### The systematic error — 33% attributed to AAOIFI
+
+**AAOIFI Shari'ah Standard No. 21 sets 30% / 30% / 5% against market cap.** The 33% figure belongs
+to the **DJIM / S&P index family**, against a different denominator (trailing 24-month average
+market cap; S&P uses 36-month; MSCI/FTSE/Bursa use total assets; AAOIFI is point-in-time).
+
+Four lessons carry the mix-up, and it is the same error each time — an index-provider number
+attributed to the standard-setter:
+
+- `349` (SHARIA 3) — 33% caps attributed to AAOIFI SS 21; "12-month average" matches no standard.
+- `350` (SHARIA 4) — "12-month trailing average market cap" in body **and Quiz 1's stem**.
+- `351` (SHARIA 5) — teaches the DJIM/S&P purification formula as AAOIFI's (SS 21 Art. 3/4/6/4 is
+  per-share: prohibited income / shares outstanding × shares held at year-end).
+- `355`, `356` (SHARIA 9, 10) — 33/33/5 presented as AAOIFI, incl. `356`'s Quiz 1 stem.
+
+`352` (SHARIA 6) **inverts** its source outright: AAOIFI's Feb-2008 sukuk statement *permits*
+nominal-value purchase undertakings in *sukuk al-ijarah* (banning them for
+musharakah/mudarabah/wakala); the steelman and Quiz 2 say the opposite. `348` (SHARIA 2) cites a
+**"Bursa Malaysia SAC"** that does not exist — the SAC belongs to the Securities Commission
+Malaysia — and `354` (SHARIA 8) repeats the same misattribution of who designates the list.
+
+### ⚖️ The 2 escalations — religious rulings, SME sign-off required, never auto-fix
+
+- **SHARIA 1 `347_the_four_prohibitions`** — cites "AAOIFI, general principles" where **SS No. 31**
+  is the specific *gharar* standard, and two worked examples (a palm-oil forward, a futures contract
+  with "undefined terms") contradict **SS 20 / SS 10**, which prohibit specified futures and
+  debt-for-debt. The lesson's own quiz is tighter than its body.
+- **SHARIA 7 `353_islamic_contracts_and_instruments`** — **El-Gamal (2006) is cited in support of**
+  the claim that Islamic products are *not* a cosmetic rename of conventional loans, while his book
+  substantially argues the opposite ("Sharia arbitrage", form-over-substance). Misrepresenting a
+  named scholar's position is a human call, not a numbers fix. Also cites takaful to no standard
+  (SS 26 exists), and neither Usmani nor El-Gamal is in the source registry.
+
+### Repo-truth: DEF084
+
+`355_how_amis_halal_flag_maps_to_real_screening` was checked against the **code**, the one class of
+claim no web citation can reach. The lesson says the `halal` flag runs a real two-stage screen. It
+does not: `sim_engine.py:74` holds a hardcoded 7-ticker `DEFAULT_HALAL_UNIVERSE`, and
+`trading_math/screening.py`'s `sharia_screen()` is **called nowhere**. Filed as **DEF084** (high) —
+fourth occurrence of the CR040 degrade-loudly class, and a **product decision, not a content edit**.
+`351`'s worked example has the same shape: *"run this through AMI's `purification_amount` function"*,
+a function reachable from no user-facing path.
+
+> One agent cited `safety_floor.py:141` for the allowlist. **That file does not exist** — the
+> substantive claim was true, the citation invented. Everything in DEF084 was re-verified by reading
+> the repo directly. AI-refuted ≠ real defect, in both directions.
+
+**Sequencing consequence:** DEF082 currently leaves all 10 SHARIA lessons unreachable in the app.
+Its fix switches them on. Shipping DEF082 before DEF084 is resolved starts serving content that is
+wrong about the published standards *and* about the product's own behaviour.
+
+### Verdicts
+
+| Code | Lesson | Verdict | # | Discovered source / defect + fix |
+|---|---|---|---|---|
+| ASST 1 | `303_why_bonds_exist` | FINDING | 1 | SEC OIEA "What Are Corporate Bonds?" + "Bankruptcy for a Public Company". refuted: Quiz explanation misdefines a zero-coupon bond as paying "$1,000 plus accumulated interest" — a zero pays face value ONLY (the interest is the purchase discount); that payoff is an accrual bond. Keyed answer 2 correct, explanation wrong. |
+| ASST 3 | `305_duration_and_convexity` | **VERIFIED** | 0 | Bodie/Kane/Marcus ch.16 + CFA Institute refreshers. Recomputed every figure: 10y 4%/5% semiannual → Macaulay 8.2556 / modified 8.0542 (lesson: 8.26/8.05); 2y → 1.9413/1.8940; 10y zero Macaulay exactly 10.0; 20y modified 13.14. Convexity asymmetry matches CFA wording; all 3 quiz keys correct. |
+| ASST 4 | `306_yield_curve_and_inversion` | FINDING | 2 | FRED T10Y2Y + NBER cycle dates + Estrella & Mishkin 1996. FALSE: "a recession followed the broader post-2022 tightening cycle" — NBER has dated **no US peak after Feb 2020**; the 2022–24 inversion (longest on record) is the signal's first miss. Quiz 2's stem repeats it (answer 3 still holds). |
+| ASST 5 | `307_credit_spreads_and_ratings` | FINDING | 1 | FRED BAMLC0A0CM / BAMLH0A0HYM2 + S&P ratings definitions. refuted: the steelman's falsifier is contradicted by its own source — 2008 IG 0.85→6.56 (7.7×) vs HY 2.41→21.82 (9.1×) is roughly proportional, and the absolute-bps reading also fires in Mar-2020, a liquidity event. |
+| ASST 6 | `308_how_rates_price_equities` | FINDING | 1 | FOMC 2022 (+425bp over 7 hikes), FTSE Russell CY2022 (R1000 Growth −29.14% vs Value −7.54%), Damodaran. All facts + both quiz keys verify. Defect is structural: the body cites Lesson `305` as its core mechanism but omits it from `prerequisites`, breaking recommendation gating and the prereq chips. |
+| ASST 7 | `309_reading_the_rates_machine_capstone` | FINDING | 1 | Bond math recomputed correct ($879.61, 13.1y modified duration, 12.0% drop, convexity gap); 3 keys correct. FALSE: "junk-rated debt falls harder than this IG example" — HY effective duration ~3.0y vs IG ~6.5y (ICE), and HY *beat* IG in 2022 (−11.2% vs −15.8%). Fix: qualify to similar-duration. |
+| ASST 8 | `310_etfs_vs_mutual_funds` | FINDING | 1 | SEC ETF bulletin + Rule 6c-11 + IRC §852(b)(6). refuted: the steelman says the measured behaviour gap "favours the cost/tax argument in some years" — Morningstar *Mind the Gap* finds it one-directional every period (index MF −0.2%/yr vs index ETF −1.1%/yr, 10y to Dec 2023). Uncited, and the gap cannot measure cost/tax at all. |
+| ASST 11 | `313_leveraged_inverse_etfs_decay` | FINDING | 1 | SEC OIEA leveraged/inverse bulletin + ProShares 497K + FINRA 09-31. refuted: "in a choppy **or declining** market it compounds against you" is backwards — steady −10%/−10% gives index −19%, 2× ETF −36% vs naive −38%: compounding **helps** in a trend. Decay is volatility-driven, not direction-driven; contradicts the lesson's own steelman. |
+| ASST 12 | `314_reits_adrs_closed_end_funds` | FINDING | 1 | SEC REIT + ADR bulletins, Rule 6c-11. refuted: Quiz 2's keyed answer and explanation say the **custodian** bank issues the ADR, converts currency and deducts the fee; the cited SEC bulletin says the **depositary** does all three (the custodian only safekeeps the foreign shares). The cited source contradicts the claim it was used to verify. |
+| SHARIA 1 | `347_the_four_prohibitions` | **ESCALATE** | 4 | Generic AAOIFI cite where **SS 31** is the *gharar* standard; palm-oil forward + "undefined terms" futures examples contradict **SS 20 / SS 10**. Usmani 2002 and El-Gamal 2006 both absent from the registry. → Saiful/SME. |
+| SHARIA 2 | `348_the_business_activity_screen` | FINDING | 4 | SC Malaysia SAC methodology + DJIM + AAOIFI SS 21. **"Bursa Malaysia SAC" does not exist** (the SAC is the Securities Commission's). The cited SAC/DJIM make stage one a quantitative 5%-revenue benchmark, not the "qualitative, zero-tolerance" gate claimed; "every Bursa SAC screening report" is uncorroborable. Quizzes correct. |
+| SHARIA 3 | `349_the_three_financial_ratio_screens` | FINDING | 5 | **AAOIFI SS 21 is 30/30/5 of market cap, not the 33% the lesson attributes to it.** DJIM's three 33% ratios are debt/cash/receivables vs trailing **24-month** average mcap (not 33/33/5); "12-month average" is wrong (DJIM 24, S&P 36); MSCI/FTSE use total assets. Arithmetic and both keys correct. |
+| SHARIA 4 | `350_standards_differ_why_the_same_stock_flips` | FINDING | 2 | Wrong window: "12-month trailing average market cap" (body + **Quiz 1 stem**) matches no cited standard — DJIM 24mo, S&P 36mo, MSCI/FTSE/Bursa total assets, AAOIFI point-in-time at 30%. The "same 33% line" for snapshot-vs-average is unrealizable as written. |
+| SHARIA 5 | `351_purification_tazkiyah` | FINDING | 3 | Arithmetic (6.72 / 953.28) and both keys correct. The taught formula (non-compliant income / total income × dividend) is the **DJIM/S&P/MSCI/FTSE** method, not AAOIFI's (SS 21 Art. 3/4/6/4 is per-share). Fix: cite the DJIM methodology. Worked example also invokes `purification_amount`, which no user path reaches (DEF084). |
+| SHARIA 6 | `352_sukuk_vs_conventional_bonds` | FINDING | 4 | **Inverts its source:** AAOIFI's Feb-2008 sukuk statement *permits* nominal-value purchase undertakings in *sukuk al-ijarah* (banning them for musharakah/mudarabah/wakala); the steelman and Quiz 2 say the opposite. SS-17 (2003) never tightened. Usmani cite is the wrong work — the critique is his Nov-2007 paper. |
+| SHARIA 7 | `353_islamic_contracts_and_instruments` | **ESCALATE** | 6 | AAOIFI SS 8/9/12/13 exist, quizzes correct, no thresholds. But **El-Gamal (2006) is cited in support of a claim his book argues against**; takaful is cited to no standard (SS 26); Usmani + El-Gamal absent from the registry. → Saiful/SME. |
+| SHARIA 8 | `354_islamic_indices_etfs_and_funds` | FINDING | 3 | All four cited methodologies (S&P/FTSE/MSCI/DJIM) real and supporting; both quizzes correct. Defect: the **SC Malaysia SAC** designates the Shariah list, not Bursa; "Bursa-i" is a trading platform, not the list's name; the claim cites no source. |
+| SHARIA 9 | `355_how_amis_halal_flag_maps_to_real_screening` | FINDING | 4 | **→ DEF084.** Lesson claims the flag runs a real two-stage screen via `sharia_screen`; the code is a hardcoded 7-ticker allowlist (`sim_engine.py:74`) and `sharia_screen()` is never called. **Quiz 2's keyed answer repeats the false claim.** Also 33% attributed to AAOIFI (30%). Content fix waits on Saiful's product decision. |
+| SHARIA 10 | `356_capstone_screen_a_company_end_to_end` | FINDING | 2 | Arithmetic (0.3 / 1.1 / 0.4%) and all 3 keys verified correct. 33/33/5 attributed to the cited AAOIFI source, which is **30/30/5**; 33% is the DJIM/S&P number. Also uses spot market cap, not DJIM's 24-month average. Fix: body, **Quiz 1 stem**, and the provenance line. |
+
+## Remaining sweep scope — **NONE. Sweep complete 2026-07-22.**
+
+All **334** corpus lessons are measured across the sourced batch + W1–W4. Nothing is unmeasured.
+Historical scope (now closed): fundamentals_analysis 66 · technical_analysis 45 · edge_process 98 ·
+risk_portfolio 16 · sentiment_behaviour 10 · asset_classes 3 + 9 · ethics_integrity 6 ·
+quant_methods 6 · islamic_finance 10.
 
 ### Coverage gap found 2026-07-22 — 19 lessons were in NO wave (Wave 4)
 
@@ -455,19 +550,21 @@ Script ready: `scratchpad/cr060_legacy_sweep_w4.mjs` (dual-prompt — `discover`
 `sharia` / `sharia_product` for SHARIA). Launch after Wave 3 lands (avoid a third concurrent
 fan-out — that is what tripped the session limit).
 
-**Separate finding, no lessons involved:** the **`decision_evaluation` (EVAL)** track is fully
-registered — enum `backend/app/schemas/lessons.py:63`, display name "Evaluating Analysis" and code
-prefix `EVAL` in `lessons_service.py:84,115`, present in the corpus-test taxonomy — but has
-**0 lessons**. It renders as an empty group. The code comment says content was deferred to "a
-later content lane" that never ran. Needs either content or de-registration; flagged to Saiful.
+**Separate finding, no lessons involved — RESOLVED same day:** the **`decision_evaluation` (EVAL)**
+track was fully registered — enum `backend/app/schemas/lessons.py:63`, display name "Evaluating
+Analysis" and code prefix `EVAL` in `lessons_service.py:84,115`, present in the corpus-test taxonomy
+— but had **0 lessons**, rendering as an empty group. Content had been deferred to "a later content
+lane" that never ran. Saiful: *"we need the eval urgently."* → **CR062** authored EVAL 1–8
+(lessons `357`–`364`), corpus 334 → 342. Those 8 are **not** part of this sweep's totals and are
+**not yet stamped** — they failed CR060's own gate twice; see the CR062 doc §9.
 
 **Process lesson:** the sweep's own coverage was never asserted — it was assumed from track counts
 captured before CR058 shipped. Phase 6 should add a guard that every corpus lesson appears in a
 sweep manifest, so a new track can't land unmeasured again.
 
 **Decisions locked (Saiful, 2026-07-22):**
-- **Finish the full sweep** — measure every legacy lesson before committing remediation. Wave 2
-  (FUND+TECH+RISK, 127) + Wave 3 (EDGE+SENT+ASST+ETHIC+QUANT, 123) run next.
+- **Finish the full sweep** — measure every legacy lesson before committing remediation. Done:
+  W2 (127) + W3 (123) + W4 (19) all landed, 334/334.
 - **Fix approach = ground worked examples in real sourced data** (structural — extend CR046 to
   lesson content; **regenerate** the data-heavy examples from real market data rather than hand-patch
   hundreds of confabulated numbers). This reframes the legacy findings from a patch-defect into a
@@ -476,9 +573,7 @@ sweep manifest, so a new track can't land unmeasured again.
 - **Stamping:** all VERIFIED lessons across waves get their discovered `sources:` + `verified:` stamp
   in one batch at sweep-end (clean single scoped commit).
 
-## Resume state — session usage limit hit 2026-07-22 (resets 4:20am Asia/Riyadh)
-
-Two things pending, both cheap; run after the limit resets (or next session):
+## Wave log — all closed
 
 1. ~~**Wave 3** (EDGE 98 + SENT 10 + ASST 3 + ETHIC 6 + QUANT 6 = 123)~~ — **DONE 2026-07-22**
    (`wf_f9e2429e-3fa`, 139/139 agents, 0 errors). Result: **2 VERIFIED · 6 NO_SOURCE_NEEDED ·
@@ -487,46 +582,64 @@ Two things pending, both cheap; run after the limit resets (or next session):
    `resumeFromRunId: wf_0455e054-10c`; 149/149 agents, 0 errors. The journal confirmed the 19 were
    never cached as null (149 `started` vs 130 `result` entries), so the resume genuinely re-ran
    them rather than replaying empties. **Result: 18 refuted → FINDING, 1 held (`TECH 45`).**
-3. **Wave 4** (10 SHARIA citation-integrity + 9 empty-`sources:` ASST = 19) — **RUNNING**
-   (`wf_aae74b87-4d8`, `scratchpad/cr060_legacy_sweep_w4.mjs`). Completes corpus coverage:
-   315 + 19 = 334 ✓.
+3. ~~**Wave 4** (10 SHARIA citation-integrity + 9 empty-`sources:` ASST = 19)~~ — **DONE 2026-07-22**
+   (`wf_aae74b87-4d8`, 26/26 agents, 0 errors). Result: **1 VERIFIED · 16 FINDING · 2 ESCALATE.**
+   Corpus coverage closed: 315 + 19 = 334 ✓.
 
-**At sweep-end** (after Wave 4): batch-stamp every VERIFIED lesson with its
-discovered `sources:` + `verified:` (one scoped commit), and file the **remediation CR** (ground
-worked examples in real sourced data / regenerate the data-heavy examples — the FINDINGs across all
-waves are its scope).
+## Final totals — sweep complete, 334 / 334 measured · 2026-07-22
 
-### Running totals (measured 192 of ~317 unverified lessons)
-
-| Batch | Lessons | Verified | Pending refute | No-source-needed | Findings |
+| Batch | Lessons | Verified | No-source-needed | Findings | Escalations |
 |---|---|---|---|---|---|
-| Sourced (293–345) | 30 | 10 | — | — | 20 (+1 legal escalation) |
-| Legacy W1 (CORE+N&M) | 35 | 8 | — | 0 | 27 |
-| Legacy W2 (FUND+TECH+RISK) | 127 | **4** | **0** | 5 | **118** |
-| Legacy W3 (EDGE+SENT+ASST+ETHIC+QUANT) | 123 | 2 | 0 | 6 | **112** (+3 escalations) |
-| **Total** | **315** | **24** | **0** | **11** | **277** (+4 escalations) |
+| Sourced (293–345) | 30 | 10 | — | 20 | 1 |
+| Legacy W1 (CORE + N&M) | 35 | 8 | 0 | 27 | — |
+| Legacy W2 (FUND + TECH + RISK) | 127 | 4 | 5 | 118 | — |
+| Legacy W3 (EDGE + SENT + ASST + ETHIC + QUANT) | 123 | 2 | 6 | 112 | 3 |
+| Legacy W4 (SHARIA + ASST empty-sources) | 19 | 1 | 0 | 16 | 2 |
+| **Total** | **334** | **25** | **11** | **293** | **6** |
 
-**277 of 315 measured lessons carry a genuine defect — 88%.**
+**293 of 334 lessons carry a genuine defect — 88%. Only 25 of 334 are clean.**
 
-Wave 2's 19 pending refutes resolved 18→FINDING, 1→VERIFIED (147 → 165, 77% → 86%); Wave 3 then
-added 112 more findings and held the rate at **88%**.
+The rate held at 88% across three independent waves measured on different tracks with different
+prompts, which is what makes it a property of the corpus rather than of any one wave's rubric.
 
-Per-track defect rate across the whole sweep, worst first:
+Per-track defect rate, worst first:
 
 | Track | rate |
 |---|---|
-| `sentiment_behaviour` (SENT) · `asset_classes` (ASST, W3 subset) | **100%** |
+| `islamic_finance` (SHARIA) · `sentiment_behaviour` (SENT) | **100%** — SHARIA scored **zero verified out of 10** |
 | `technical_analysis` (TECH) | **96%** |
 | `edge_process` (EDGE) | **93%** |
-| `fundamentals_analysis` (FUND) | ~76% |
+| `asset_classes` (ASST, all 12 measured) | **92%** |
 | `quant_methods` (QUANT) | 83% |
-| `ethics_integrity` (ETHIC) | 33% — but **all 4 legal escalations in the corpus are here or in `294`** |
+| `fundamentals_analysis` (FUND) | ~76% |
+| `ethics_integrity` (ETHIC) | 33% — but **every legal escalation in the corpus is here or in `294`** |
 
-Only **24 of 315** lessons survived both passes clean. The two Wave-3 survivors are
-`301_disclosure_transparency` (ETHIC 9) and `341_backtesting_rigor_the_basics` (QUANT 7).
+The 25 survivors are the definitional lessons — the ones with the least to fabricate. Named so far:
+`301_disclosure_transparency` (ETHIC 9), `341_backtesting_rigor_the_basics` (QUANT 7),
+`305_duration_and_convexity` (ASST 3).
 
-Remaining: **Wave 4 (19: 10 SHARIA + 9 ASST)**, running. Corpus is **334**, and
-315 + 19 = 334 ✓ — the sweep now accounts for every lesson in the corpus.
+### What the sweep proved about its own method
 
-**~77% of measured lessons carry a genuine defect**, overwhelmingly confabulated worked-example
-data. Remaining unmeasured: Legacy W3 (123) + the 9 empty-`sources:[]` asset-class lessons.
+1. **Dual-pass is load-bearing, and now has a number.** Of the 19 W2 lessons that reached the
+   refute layer, **18 were refuted and 1 held — a 95% false-clean rate for single-pass.** Anything
+   that verifies content in one pass should be assumed to be measuring nothing.
+2. **Three independent detectors, each catching what the others structurally could not:**
+   - **citation integrity** (sources present → does the cited standard say this?) — the entire
+     AAOIFI 30% vs DJIM 33% class, invisible to source *discovery*;
+   - **repo truth** (does the lesson describe what the code does?) — **DEF084**, and EDGE 87's
+     `no_fossil` / `max_position_pct`. No external source can catch these;
+   - **cross-lesson consistency** — EVAL `364` contradicting `358` / `077` / `275`.
+   Only the first was in the original design. **All three belong in Phase 6.**
+3. **A deterministic scan beat the LLM for its class.** The DEF083 positional-reference scan found
+   **11** machine-confirmed rows for free; the refute passes surfaced 3–5 of them incidentally.
+   Where a defect is mechanically decidable, grep is the better detector — and it becomes a guard,
+   not an audit.
+4. **The sweep never asserted its own coverage.** Wave lists were built from track counts captured
+   before CR058 shipped, so an entire track (SHARIA, 10 lessons) sat unmeasured until a question
+   from Saiful about the EVAL group exposed the hole. Phase 6 adds a guard that every corpus lesson
+   appears in a manifest.
+
+**Next:** classify all 293 findings P1 / P2a / P2b / P2c / ESCALATE (Phase 2), dual-pass re-verify
+the P1 corrections before any of them are applied (Phase 3 — the manifest's "correct value" is an
+agent's lead, not a verified replacement), then route: P1 defect + P2 remediation CR, batch-stamp
+the 25 clean lessons, and land the guards. The 6 escalations stay with Saiful/SME.
