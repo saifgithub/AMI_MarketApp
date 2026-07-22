@@ -41,7 +41,7 @@ from app.services.lessons_service import CONTENT_LESSONS_DIR, parse_mdx
 _OPTION_INDEX_CITATION = re.compile(
     r"\boptions?\s+\d"
     r"|\b(?:first|second|third|fourth|fifth|last)\s+(?:options?|ones?|answers?|choices?)\b"
-    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s*[—–-]",
+    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s+[—–]",
     re.IGNORECASE,
 )
 

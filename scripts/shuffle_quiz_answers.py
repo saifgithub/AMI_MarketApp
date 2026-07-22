@@ -55,7 +55,7 @@ _STRING_RE = re.compile(r'"(?:[^"\\]|\\.)*"')
 _OPTION_INDEX_CITATION = re.compile(
     r"\boptions?\s+\d"
     r"|\b(?:first|second|third|fourth|fifth|last)\s+(?:options?|ones?|answers?|choices?)\b"
-    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s*[—–-]",
+    r"|\bthe\s+(?:first|second|third|fourth|fifth|last)\s+[—–]",
     re.IGNORECASE,
 )
 # Daily-challenge JSON: the "options" array and the "answer" that indexes it,
