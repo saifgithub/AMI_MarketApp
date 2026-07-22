@@ -1,6 +1,6 @@
 # CR062 — Author the `decision_evaluation` (EVAL) track: 8 lessons completing CR054 M24
 
-**Status:** in progress
+**Status:** **done** — 8 lessons authored, verified across 4 gate rounds, stamped (`61688d5`)
 **Round:** AT:R64
 **Owner:** Claude (CR060 content-quality lane)
 **Trigger:** Saiful, 2026-07-22 — *"we need the eval urgently."*
@@ -148,20 +148,63 @@ so long.
 
 ---
 
-## 9. Verification outcome — NOT VERIFIED after two passes (2026-07-22)
+## 9. Verification outcome — VERIFIED after four passes (2026-07-22)
 
-The 8 lessons are committed (`ed7926b`) but **must not be stamped `verified:`**. Two full gate
-passes have run; the content is not clean.
+**Status: stamped `verified:` in `61688d5`.** It took four full gate rounds. The pass-by-pass record
+below is the most useful artifact this CR produced, because it is the only controlled measurement we
+have of whether an LLM gate on lesson content converges — and CR060 has 293 findings waiting on that
+answer.
 
-| pass | result |
-|---|---|
-| **Pass 1** (`wf_2df6fa9b-bfe`) | 1 VERIFIED, 7 rejected. 6 confirmed defects hand-fixed; 1 triaged as a false positive (wrongly — see below). |
-| **Pass 2** (`wf_81d07121-d8c`, fresh run) | **1 VERIFIED (`359`), 5 REFUTED, 2 STILL_FINDING.** |
+| pass | run | clean | where the defects were |
+|---|---|---|---|
+| **1** | `wf_2df6fa9b-bfe` | 1/8 | quizzes, citations. 6 defects hand-fixed; 1 triaged a false positive — wrongly (see below) |
+| **2** | `wf_81d07121-d8c` | 1/8 (`359`) | incomplete pass-1 fixes: one sentence repaired, the passage around it left contradicting it |
+| **3** | `wf_93b674f6-94b` | **0/8** | Try it, Takeaway, the body's numbered steps — sections passes 1–2 never examined |
+| **4** | `wf_69fbc4ea-f1e` | 0/8 clean, but **0 blocking / 8 marginal**, `fix_holds` true on 7 of 8 | wording precision, interval methods, one citation nuance |
 
-Pass 2 was a **new run, not a resume** — resuming would have replayed the unchanged verify prompts
-from cache and returned verdicts on the pre-fix content.
+Every pass was a **fresh run, never a resume** — resuming replays unchanged verify prompts from
+cache and returns verdicts on pre-fix content.
 
-### Outstanding defects
+### The convergence result
+
+Reading pass 4 as "0/8, no better than pass 3" is the wrong reading, and the `severity` field added
+in pass 4 is what makes the difference legible: **three rounds of blocking damage, then none.** Eight
+independent reviewers, each told explicitly that reporting "only marginal" was an acceptable answer,
+could not find a claim in any of the 8 lessons that would mislead a reader. That is convergence —
+just not to a state where an adversarial LLM returns silence, which is not an achievable target.
+
+**Consequence for CR060 Phase 3: the acceptance criterion cannot be "a reviewer finds nothing."**
+It has to be "no reviewer finds anything *blocking*", with severity graded by the reviewer and the
+grading prompt explicitly permitting a marginal verdict. Without that field this track would have
+looked like a failure at pass 4 and consumed passes 5, 6, 7 chasing wording.
+
+### Two measurements worth keeping
+
+**1. The gate is not stable run-to-run.** `359` and `360` were VERIFIED at pass 2 and REFUTED at
+pass 3 on content that had changed only by deletion of the provenance line. A single clean pass is
+evidence about the run, not about the file. This is why a one-pass stamp is not defensible and why
+the corpus survivors need their pass count recorded in the stamp.
+
+**2. Hand-fixes inject defects at roughly a third.** Of the 7 pass-2 corrections applied by hand,
+pass 3 found that `361` carried two brand-new defects written into it (a claim that Example story 1
+vindicated a bear case the Example does not contain; and calling a restatement of the Room's Bear
+Researcher "steelmanning", which prerequisite `360` defines as building the case yourself), and the
+`362` Try-it rewrite entrenched a heuristic dropping one of the lesson's own four cases. Pass 4 then
+found three more marginal items in pass-3 sentences. **Every fix round needs its own verification
+round; a fix list is not a terminal artifact.**
+
+### One pass-4 finding was misgraded — in the useful direction
+
+`363` quoted a 95% interval of 50.4%–69.6% at n=100 and built Quiz 2 on it "just clearing" 50%.
+That is the **Wald** interval. The exact **Clopper-Pearson** interval is 49.7%–69.7% and does *not*
+clear. The lesson's claim survives on Wald, on **Wilson** (50.2%–69.1%) and on a one-sided binomial
+test (P(X≥60 | n=100, p=0.5) = **2.8%**) — but not unconditionally, and the reviewer graded it
+marginal. It now names the method, quotes the binomial figure, and teaches the knife-edge. Recomputing
+a reviewer's own numbers is worth doing even when they grade themselves as nitpicking.
+
+### The defect log — all resolved
+
+**Pass-2 defects** (fixed in `44f7c13`):
 
 | lesson | defect |
 |---|---|
@@ -173,29 +216,54 @@ from cache and returned verdicts on the pre-fix content.
 | `363` | Stem fix **holds**, but Quiz 2's first distractor still says the 64% figure "covers decisions you didn't take" — residue of the old rejected-subset framing the fix missed. My fix was incomplete. |
 | `364` | Quiz 1 keys AMI's 0.68 as a **scorable calibration claim**, contradicting `358`/`077`/`275`: AMI's confidence is *the Room's weighted lean, not a calibrated probability*. No option states the correct reading, and the body repeats the conflation. **This is the load-bearing decision-support-not-prediction framing** — the most serious of the seven. |
 
+**Pass-3 defects** (fixed in `ef10c33`) — all in sections passes 1–2 never examined:
+
+| lesson | defect |
+|---|---|
+| `357` | Try it graded blind, then called blind-vs-outcome divergence a "resulting habit" — but that divergence *is* the lesson (Decision A). A blind grade cannot detect resulting at all. Now: grade blind, grade again knowing the outcome, read the gap. |
+| `358` | Try it had the reader retro-fit a probability onto **already-resolved** entries, against the lesson's own rule that the criterion must be fixed before the outcome exists. |
+| `359` | Quiz 1's explanation defended the example's invalidation set; neither condition tracked the margin claim the thesis rested on, so the thesis could fail with nothing firing. |
+| `360` | The falsifier tested competitor capacity against the **18-month renewal date** while the margin leg of the bear case runs to the **two-year thesis window** — capacity arriving at month 19–24 passed the test with the bear case fully intact. |
+| `361` | **Both defects were mine, from the pass-2 fix.** "As story 1 does" claimed the bear case was vindicated when the Example has no bear case, only a falsified bull premise; and it still called restating the Room's Bear Researcher "steelmanning". |
+| `362` | "That disagreement is the whole output of the review" drops position D — labels agree, still a process error. **My pass-2 Try-it rewrite had entrenched it.** |
+| `363` | Takeaway said "6-for-10 is what a coin does 38% of the time". 38% is P(≥6); exactly-6 is 20.5%. Byte-identical since the original commit — both earlier fix rounds only touched the quiz block. |
+| `364` | "Journal it." still said to journal the 0.68 — AMI's lean written into the slot `359` defines as your own scorable probability. **My pass-2 fix corrected the quiz and left the body.** |
+
+**Pass-4 items** (all marginal; fixed in `afcbcfb`): the `363` interval method above; `357`'s
+"resulting" attribution and its one-directional Try-it close; `361`'s prospective-hindsight claim
+(Klein's HBR gloss says "correctly identify reasons", but Mitchell/Russo/Pennington 1989 counted
+reasons *generated* and never scored correctness); `360`'s "the margin gain" where the bear case
+claims half of it; `362`'s dangling D-clause; `364`'s unqualified "most recent entry", which on a
+closed entry would have the reader make the post-outcome edit `359` forbids.
+
 ### What this establishes
 
-**LLM-authored lesson content did not reach a verifiable standard in two passes**, under the
-strictest prompt available and with a hand-fix round between them — even though the *dominant*
-corpus defect was successfully eliminated (zero fake-real data, zero positional refs, verified
-attributions).
+**The dominant corpus defect class was eliminated on the first pass** — zero fake-real data, zero
+positional refs, attributions verified. Everything after that was a different and harder class:
+**internal contradiction**, against the lesson's own body, its prerequisites, or the product's
+regulatory framing. A per-lesson gate is structurally poor at this, because each defect is only
+visible when two documents are read together — which is why the defects arrived in layers, one
+section-class per pass, rather than all at once.
 
-What survived is a different and harder class: **internal contradiction** — against the lesson's
-own body, against its prerequisites, and against the product's regulatory framing. A per-lesson
-gate is structurally poor at catching this, because each defect is only visible when two documents
-are read together.
+Four consequences for the wider plan:
 
-Two consequences for the wider plan:
+1. **Budget four rounds, not one.** "Regenerate and verify" does not converge in a single round, and
+   each fix round needs its own verification round because fixes inject defects at roughly a third.
+2. **Grade severity, or the loop never terminates.** Acceptance is "nothing *blocking*", self-graded
+   by the reviewer under a prompt that explicitly allows "only marginal" as an answer.
+3. **Point the gate at whole files.** Passes 1–2 were aimed at quizzes and citations and therefore
+   could not see the Try it / Takeaway / body-step defects that pass 3 found. Section coverage is a
+   property of the prompt, and it needs asserting.
+4. A **cross-lesson consistency check** is a distinct detector, alongside citation-integrity and the
+   repo-truth check that found DEF084. All three found things the others could not.
 
-1. The remediation CR should not assume "regenerate and verify" converges in one round. Budget for
-   iteration, or accept a lower assurance tier and say so.
-2. A **cross-lesson consistency check** is a distinct detector, alongside citation-integrity and
-   the repo-truth check that found DEF084. All three found things the others could not.
+### Next actions
 
-### Next actions (not yet done)
+**None for this CR — it is closed.** The 8 lessons are authored, verified across four rounds, and
+stamped (`61688d5`). They are the best-evidenced content in the corpus.
 
-1. Fix the seven above; strip the "Where this comes from" line from all 8.
-2. Re-run pass 3 (fresh run, not a resume).
-3. Only then stamp `verified:`.
+Carried elsewhere: the **25 legacy lessons** still rendering the retired provenance line go to the
+P2 remediation CR (inventoried in `content/_authoring/cr060_legacy_sweep_manifest.md`, `84ff1a0`),
+and EVAL stays invisible in the app until **DEF082** ships — see §7.
 4. Separately: the 33 legacy lessons carrying the retired provenance line — belongs to the
    remediation CR, not here.
