@@ -68,6 +68,15 @@ lives *entirely* in the Cloud console, which is why the console is the only rema
 | Web (`serverClientId`) | `153141744056-03d6sabmvita0a2civs6e0ngjoac54v7…` | ✅ probe → `redirect_uri_mismatch` |
 | Android #1 | `153141744056-5aif1pgtrp3fdnc1gnfabd9hqtga78sq…` | ✅ probe → `redirect_uri_mismatch` |
 | Android #2 | `153141744056-esi2afqkau54pm5or8ilhddr08ovti8f…` | ✅ probe → `redirect_uri_mismatch` |
+| Android #3 — **new, created for this fix** 2026-07-22 | `153141744056-pvhabf9ucc372hjdqiffgi02q7n25q4q…` (project `ami-trade-497304`) | ✅ probe → `redirect_uri_mismatch` |
+
+**The Android client id is never referenced by the app.** The app sends the **Web** client id as
+`serverClientId`; an Android client's only function is to *exist in the project carrying a
+(package name, SHA-1) pair* that Play Services looks the calling app up by. So creating client #3 is the
+entire fix — there is no corresponding code change, no `client_secret` JSON to add to the repo (Android
+clients have no secret), and **no rebuild**: it repairs the `+43` build testers already have.
+Whether it works turns solely on two fields Google does not expose externally — package must be exactly
+`ai.agenticmarketintel.ami_trade` and the SHA-1 must be the **App signing key certificate**.
 
 All three carry the **same project number `153141744056`**, and all three resolve at Google's authorize
 endpoint. This **eliminates** the two leading hypotheses: the Android clients are *not* in a foreign
