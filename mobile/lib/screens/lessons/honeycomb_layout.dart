@@ -116,6 +116,13 @@ List<Offset> honeycombSlots(int n, double hexW, double hexH) {
 /// Cluster width is always 2.5 hexes (three columns overlapping by a quarter).
 const honeycombWidthInHexes = 2.5;
 
+/// Hex width as a fraction of the available width. The 7-hex flower used 0.4
+/// (2.5 hexes filling the row edge to edge); at five rows that reads far too
+/// heavy and overruns the viewport, so the comb is scaled down and centred.
+/// 0.30 puts the whole 13-facet cluster on one screen with no scroll. This is
+/// the single number to turn if the cells want to be smaller still.
+const honeycombHexWidthFraction = 0.30;
+
 /// Total height for [n] cells, in hexes — the centre column's span.
 int honeycombHeightInHexes(int n) => honeycombCentreCount(n);
 

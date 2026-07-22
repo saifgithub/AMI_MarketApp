@@ -219,10 +219,12 @@ class _HexCluster extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Cluster width = 2.5 * hexW → hexW = maxWidth * 2/5.
-        final hexW = constraints.maxWidth * 2 / honeycombWidthInHexes;
+        final hexW = constraints.maxWidth * honeycombHexWidthFraction;
         final hexH = hexW / flatTopRegularHexagonAspectRatio;
         final slots = honeycombSlots(ordered.length, hexW, hexH);
+        // The comb no longer spans the full row, so centre it.
+        final inset =
+            (constraints.maxWidth - honeycombWidthInHexes * hexW) / 2;
 
         return SizedBox(
           width: constraints.maxWidth,
@@ -231,7 +233,7 @@ class _HexCluster extends StatelessWidget {
             children: [
               for (var i = 0; i < ordered.length; i++)
                 Positioned(
-                  left: slots[i].dx,
+                  left: inset + slots[i].dx,
                   top: slots[i].dy,
                   width: hexW,
                   height: hexH,
