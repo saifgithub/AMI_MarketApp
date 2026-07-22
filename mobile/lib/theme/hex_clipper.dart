@@ -70,3 +70,22 @@ class FlatTopRegularHexagon extends CustomClipper<Path> {
 
 /// Convenience: aspect ratio of a flat-topped regular hexagon.
 const double flatTopRegularHexagonAspectRatio = 2.0 / 1.7320508075688772; // 2 / sqrt(3)
+
+/// Width of a [FlatTopRegularHexagon], as a fraction of its bounding box, at a
+/// height [yFraction] down from the top.
+///
+/// The diagonals start a quarter of the way in, so the shape is 0.5x its box at
+/// the flat top and only reaches full width at the vertical middle. Anything
+/// laid out off-centre must be sized against *this*, not against the box.
+double flatTopHexWidthFractionAt(double yFraction) {
+  final d = (yFraction.clamp(0.0, 1.0) - 0.5).abs() * 2; // 0 at middle, 1 at top
+  return 1.0 - 0.5 * d;
+}
+
+/// Where [TrackHexButton] puts its label: centred on ~0.224 of the hex height,
+/// above the progress ring. Sizing the label against the bounding box instead
+/// left ISLAMIC FINANCE 4.7 pt of headroom at 1.0 text scale and none at 1.15,
+/// so the diagonal sliced its ends off.
+const double flatTopHexLabelYFraction = 0.224;
+final double flatTopHexWidthFractionAtLabel =
+    flatTopHexWidthFractionAt(flatTopHexLabelYFraction);

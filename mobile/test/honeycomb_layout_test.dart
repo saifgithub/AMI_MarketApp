@@ -12,6 +12,7 @@ import 'dart:math' as math;
 
 import 'package:ami_trade/screens/lessons/honeycomb_layout.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -165,6 +166,36 @@ void main() {
             greaterThanOrEqualTo(amiCanvasContrastFloor),
             reason: '$t label ink fails the contrast floor');
       }
+    });
+  });
+
+  group('hex label fits inside the hexagon, not just its box', () {
+    test('width at the label height is the narrow measurement', () {
+      // Sizing against the bounding box is what sliced ISLAMIC FINANCE: at the
+      // label's height a flat-top hexagon is 0.72x its box, not 1.0x.
+      expect(flatTopHexWidthFractionAt(0.5), closeTo(1.0, 1e-9));
+      expect(flatTopHexWidthFractionAt(0.0), closeTo(0.5, 1e-9));
+      expect(flatTopHexWidthFractionAt(1.0), closeTo(0.5, 1e-9));
+      expect(flatTopHexWidthFractionAtLabel, lessThan(0.75));
+      expect(flatTopHexWidthFractionAtLabel, greaterThan(0.6));
+    });
+
+    test('the longest label fits at 143 pt, with the system text scale up', () {
+      const hexW = 143.2; // what honeycombHexWidthFraction gives on a 358 pt column
+      final box = hexW * flatTopHexWidthFractionAtLabel;
+      // IBM Plex Mono at 8 pt: 0.6 em advance + 1.8 letterSpacing per glyph.
+      double labelWidth(String s, double scale) =>
+          s.length * (8 * scale * 0.6 + 1.8);
+      final longest = honeycombTrackLabel.values
+          .reduce((a, b) => a.length >= b.length ? a : b);
+      expect(longest, 'ISLAMIC FINANCE');
+      // At 1.0 the raw label fits the hexagon with only ~4 pt to spare, and at
+      // 1.15 it does not — which is why the widget wraps it in a scaleDown
+      // FittedBox instead of trusting the margin.
+      expect(labelWidth(longest, 1.0), lessThan(box));
+      expect(labelWidth(longest, 1.15), greaterThan(box),
+          reason: 'if this ever passes, the FittedBox is no longer load-bearing '
+              'and this test should be revisited rather than deleted');
     });
   });
 

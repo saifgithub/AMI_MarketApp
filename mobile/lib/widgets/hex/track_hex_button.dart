@@ -34,7 +34,13 @@ class TrackHexButton extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final h = constraints.maxHeight;
+          final w = constraints.maxWidth;
           final donutSize = h * 0.52;
+          // The label sits above centre, where a flat-top hexagon is far
+          // narrower than its bounding box — 0.72 x W, not W. Sizing the text
+          // against the box let ISLAMIC FINANCE run under the diagonal and get
+          // sliced (4.7 pt of headroom at 1.0 text scale, negative at 1.15).
+          final labelBox = w * flatTopHexWidthFractionAtLabel;
           // The DEF082 palette is optimised for separation *between* hexes, so
           // it admits a token too dark to set type in (hexIndigo600, 2.8:1).
           // Fill keeps the true brand colour; foreground marks get the lift.
@@ -46,14 +52,24 @@ class TrackHexButton extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: AmiTypography.labelMono.copyWith(
-                      fontSize: 8,
-                      color: ink,
+                  SizedBox(
+                    width: labelBox,
+                    // Long track names shrink to fit rather than being clipped
+                    // or ellipsised — a half-readable label is worse than a
+                    // slightly smaller one, and this also absorbs the user's
+                    // system text-scale setting.
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        softWrap: false,
+                        textAlign: TextAlign.center,
+                        style: AmiTypography.labelMono.copyWith(
+                          fontSize: 8,
+                          color: ink,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
