@@ -16,7 +16,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.agents.safety_floor import (
     HoldingsAuditResult,
@@ -94,7 +94,10 @@ async def patch_mandate(
 ) -> Mandate:
     _own(current_user, user_id)
     before = store.get_or_default(user_id)
-    updated = store.patch(user_id, updates)
+    try:
+        updated = store.patch(user_id, updates)
+    except ValidationError as exc:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
 
     # Journal — record what changed, in plain English
     try:

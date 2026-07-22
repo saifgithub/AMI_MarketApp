@@ -158,7 +158,10 @@ def test_correct_user_patch_returns_200(client: TestClient):
     r = client.patch(
         f"/v1/mandate/{user_id}",
         headers={"Authorization": f"Bearer {token}"},
-        json={"max_drawdown_pct": 8.0},
+        # DEF062: must be one of the schema's Literal[10,20,30,50,100] values —
+        # 8.0 (the prior value here) only ever "worked" because the route had
+        # no validation and would have silently persisted it.
+        json={"max_drawdown_pct": 20},
     )
     assert r.status_code == 200
-    assert r.json()["max_drawdown_pct"] == 8.0
+    assert r.json()["max_drawdown_pct"] == 20

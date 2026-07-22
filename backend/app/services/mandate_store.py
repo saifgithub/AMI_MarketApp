@@ -93,13 +93,23 @@ class MandateStore:
 
         `compliance` is merged by key and re-coerced into a Compliance
         instance so downstream code (.compliance.halal etc) keeps working.
+
+        DEF062: `model_copy(update=...)` explicitly skips validation, so an
+        out-of-range `max_drawdown_pct` / `risk_score` (or any wrong-typed
+        field) would otherwise persist untouched and `max_drawdown_pct`
+        specifically feeds a raw numeric comparison inside the safety
+        floor's deterministic compliance check. Re-validate the merged
+        result through the full `Mandate` schema before persisting —
+        `Mandate.model_validate` raises `ValidationError` on anything the
+        schema wouldn't have accepted on write.
         """
         current = self.get_or_default(user_id)
         if "compliance" in updates and isinstance(updates["compliance"], dict):
             current_compl = current.compliance.model_dump()
             current_compl.update(updates["compliance"])
             updates = {**updates, "compliance": Compliance(**current_compl)}
-        new = current.model_copy(update=updates)
+        merged = current.model_copy(update=updates)
+        new = Mandate.model_validate(merged.model_dump(mode="json"))
         return self.upsert(user_id, new)
 
     def list_versions(self, user_id: UUID) -> list[dict]:
