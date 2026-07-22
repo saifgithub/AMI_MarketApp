@@ -1,6 +1,8 @@
 # CR053 — Curriculum reference identifiability, quick-link feasibility, and unlock UX
 
-**Status:** planned (audit + feasibility only — **no code this CR**) · **Session:** AT:R63 · **Filed:** 2026-07-21
+**Status:** **implementation greenlit** (AT:R64, 2026-07-22) — Saiful: *"do it."* The §5 plan is now
+being built under this same CR053 id (3 lanes: CR053-BE / CR053-MOBILE / CR053-MIGRATE; Phase 3 runtime
+linkifier deferred as optional). Original filing was audit + feasibility only · **Session:** AT:R63 · **Filed:** 2026-07-21
 
 > Directive (Saiful, verbatim): *"go through all educational and daily-challenge materials
 > again. (1) any internal reference made to any material can be easily identified by the
