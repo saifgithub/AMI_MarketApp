@@ -91,15 +91,54 @@ neither of which Google exposes publicly (they *are* the security check):
 
 (Propagation delay remains possible but is unlikely to be the sole cause a day after the report.)
 
-### The discriminating experiment — isolates 1 vs 2 with no console access
+### The discriminating experiment — RUN, and it resolved the defect
 
 `scripts/install_android.sh` builds an APK signed with the **upload key** (SHA-1 verified above) and
-installs it over USB. Run it on a test device and tap "Sign in with Google":
+installs it over USB. Saiful ran it 2026-07-22: **Google Sign-In succeeded.**
 
-| Result | Conclusion | Fix |
-|---|---|---|
-| Google Sign-In **works** | Package + upload-key SHA-1 are registered correctly. The gap is specifically the **Play App Signing SHA-1**, so only Play-installed testers break — consistent with the reporter | Add the Play App Signing SHA-1 to an Android client |
-| Google Sign-In **still fails (code 10)** | The **package name** on the Android clients is wrong — the upload-key SHA-1 is certainly one of the two registered, so package is the only variable left | Correct the package string to `ai.agenticmarketintel.ami_trade` |
+Confirmed end-to-end on the backend — the `/v1/auth/google` counter moved **0 → 1** for the first time
+in the life of the deployment:
+
+```text
+INFO:     172.18.0.3:41136 - "POST /v1/auth/google HTTP/1.1" 200 OK
+```
+
+That single success proves, by execution rather than inference, that **all** of these are correctly
+configured: the package name, the upload-key SHA-1, the Web client / `serverClientId`, the backend
+`GOOGLE_AUDIENCES`, and the OIDC verifier (it returned **200**, not an audience reject).
+
+## ROOT CAUSE (confirmed 2026-07-22, AT:R64)
+
+**The Play App Signing certificate's SHA-1 is not registered on any Android OAuth client in project
+`153141744056`.** Everything else in the chain is proven working.
+
+Play internal testing **re-signs** the uploaded AAB with Google's own App Signing key, so a
+Play-installed app presents a *different* SHA-1 than the upload key. USB installs keep the upload key —
+which *is* registered — which is exactly why the defect is invisible to Saiful's own device and hits
+every external tester. This matches the reporter (`Vector Lynx`, Play internal, `+43`) precisely.
+
+### Fix (console-only; no code change, no rebuild)
+
+1. **Play Console → Test and release → Setup → App signing.** That page lists **two** certificates.
+   Take the SHA-1 of the **"App signing key certificate"** — **not** the "Upload key certificate".
+   Copying the upload cert here (it is the visually adjacent one, and it is the one already registered)
+   is the most common way this defect survives a fix attempt.
+2. **GCP → APIs & Services → Credentials** (project `153141744056`) → an Android OAuth client →
+   package `ai.agenticmarketintel.ami_trade` + that SHA-1.
+3. Allow propagation, then have a tester **reinstall** (not update) from the internal-testing link.
+
+**Check the second Android client while there:** since USB works, one of the two clients holds
+(`ami_trade`, upload SHA-1). The other therefore holds something that is *not* the App Signing cert —
+most likely the local **debug keystore** SHA-1. That is the client to repoint.
+
+### Verification tripwire
+
+The counter is now at **1** (Saiful's USB test). A Play-installed tester signing in successfully takes
+it to **2** — unambiguous, since no other path increments it:
+
+```bash
+ssh melehost "docker logs -f ami_api_alpha 2>&1 | grep -i auth/google"
+```
 
 ### Which SHA-1 actually matters for this reporter
 
