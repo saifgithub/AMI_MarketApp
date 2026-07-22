@@ -10,7 +10,7 @@ code: "ETHIC 2"
 topic: "insider_trading"
 prerequisites: ["293_market_integrity_why"]
 tags: ["ethics", "insider-trading", "mnpi", "mosaic-theory"]
-sources: ["U.S. SEC — Rule 10b-5 under the Securities Exchange Act of 1934"]
+sources: ["U.S. SEC — Rule 10b-5 under the Securities Exchange Act of 1934","Chiarella v. United States, 445 U.S. 222 (1980): no general duty to disclose or abstain absent a relationship of trust; equal-access theory rejected","Dirks v. SEC, 463 U.S. 646 (1983): tippee liability derives from the tipper's breach for personal benefit","United States v. O'Hagan, 521 U.S. 642 (1997): misappropriation theory"]
 agent_callouts: ["portfolio_manager"]
 locale_versions: ["en"]
 created_at: "2026-07-22"
@@ -19,7 +19,7 @@ updated_at: "2026-07-22"
 
 # Insider trading: material non-public information
 
-Insider trading has a precise two-prong test, and you can run it yourself: is the information **material** — would a reasonable investor consider it important to the price, price-sensitive information — and is it **non-public** — not yet released through proper disclosure, and/or obtainable only by position in a company (CEO, directors, employees) or by access to confidential information (lawyers, bankers, auditors)? Both prongs must be true. Material and public: trade freely. Non-public but immaterial: no case. Material *and* non-public — MNPI — and trading is off, no matter how you learned it. This lesson makes the test automatic.
+Insider trading has a precise two-prong test, and you can run it yourself: is the information **material** — would a reasonable investor consider it important to the price, price-sensitive information — and is it **non-public** — not yet released through proper disclosure, and/or obtainable only by position in a company (CEO, directors, employees) or by access to confidential information (lawyers, bankers, auditors)? Both prongs must be true. Material and public: trade freely. Non-public but immaterial: no case. Material *and* non-public — MNPI — and if you got it through one of those channels, or from someone who did, trading is off. This lesson makes the test automatic.
 
 ## How this plays out in real markets
 
@@ -29,7 +29,7 @@ Scale it up: Raj Rajaratnam ran the Galleon Group hedge fund on a network of cor
 
 ## The trap
 
-The beginner's rationalisation: "I didn't steal any documents — I just overheard it," or "my trade is far too small for anyone to notice." Both feel exculpatory and both are irrelevant. The test is the **status of the information**, not how innocently it reached you or how small your order is — a tippee who trades on MNPI inherits the liability, and Stewart's case shows the size defence is fiction. The correct mental model is the **mosaic**: assembling *public* pieces — filings, channel checks on public data, industry knowledge — into a non-obvious conclusion is legitimate analysis. The moment one piece of the mosaic is material and non-public, the whole trade is contaminated.
+The beginner's rationalisation: "I didn't steal any documents — I just overheard it," or "my trade is far too small for anyone to notice." The size defence is fiction — Stewart avoided $45,673 and served five months. The overheard defence is subtler, because liability runs through the **breach of a duty**, not through the information alone: a genuine stranger who owes nobody a duty can fall outside it. Assume that is not you. A tippee inherits the tipper's breach the moment they know, or should know, that the information came out of a confidence — and a friend at the chip company talking over dinner is precisely that. The correct mental model is the **mosaic**: assembling *public* pieces — filings, channel checks on public data, industry knowledge — into a non-obvious conclusion is legitimate analysis. The moment one piece of the mosaic is material and non-public, the whole trade is contaminated.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -39,12 +39,12 @@ The beginner's rationalisation: "I didn't steal any documents — I just overhea
   question="A friend who works at a chip company tells you over dinner that an unannounced acquisition will be revealed next week. Which prong analysis is correct?"
   options={[
     "Not insider trading, because you didn't work at the company yourself",
-    "Material AND non-public — trading on it would be insider trading, even though you heard it passively",
+    "Material AND non-public, and it reached you from someone who owed a duty of confidence — trading on it would be insider trading",
     "Material but public, since the friend spoke about it openly at dinner",
     "Non-public but immaterial, because acquisitions are routine corporate events"
   ]}
   answer={1}
-  explanation="An unannounced acquisition is close to the definition of material — deals move prices — and 'told over dinner' is not public disclosure; public means released through proper channels to everyone at once. Trading would make you a tippee with inherited liability. The tempting wrong answer is the one about not working there yourself: the test follows the information, not your employment."
+  explanation="An unannounced acquisition is close to the definition of material — deals move prices — and 'told over dinner' is not public disclosure; public means released through proper channels to everyone at once. Your friend owes their employer a duty of confidence and broke it, and you can see that they did, so you inherit the breach as a tippee. The tempting wrong answer is the one about not working there yourself: you need not be the insider, only the knowing recipient of an insider's breach."
 />
 
 <Quiz
@@ -77,6 +77,6 @@ In 1-on-1 with the News Analyst, paste a rumour-style headline about a ticker on
 
 ## Takeaway
 
-Run the two prongs before the trade: material? non-public? If both, the trade is off — full stop, regardless of how the information found you or how small you'd size it.
+Run the two prongs before the trade: material? non-public? If both, ask the third question — did it reach you from someone who owed a duty of confidence, directly or down a chain? If so the trade is off, full stop, however small you'd size it. In practice, if you are holding MNPI and cannot name an innocent path it took to reach you, treat the trade as off.
 
-*Where this comes from: SEC Rule 10b-5 (1934 Act) — the anti-fraud rule US insider-trading enforcement is built on.*
+*Where this comes from: SEC Rule 10b-5 (1934 Act) — the anti-fraud rule US insider-trading enforcement is built on — as read by the Supreme Court in Chiarella (1980), Dirks (1983) and O'Hagan (1997), which is where the duty requirement comes from. Other jurisdictions draw the line differently; several use a possession-based rule closer to "if you hold it, do not trade".*
