@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.sharia import ShariaVerdict
 from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
 from app.trading_math.portfolio import total_value as _total_value
 
@@ -82,3 +83,9 @@ class ComplianceResult(BaseModel):
     passed: bool
     violations: list[str] = Field(default_factory=list)
     blocked_by: Literal["compliance", "drawdown", "concentration", "long_only", "blocklist", "allowlist", "locale", "duplicate_verdict", None] = None
+    # CR069: the sourced Sharia verdict (with provenance) when the halal flag is
+    # on. Present on BOTH a blocked screened-out trade AND a permitted PASS/UNKNOWN
+    # one, so the disclosure travels even when the trade succeeds — a permitted
+    # unknown that says nothing is a silent pass on an observance decision (G3).
+    # None when the halal flag is off (or the legacy bare-set path was used).
+    sharia_verdict: ShariaVerdict | None = None

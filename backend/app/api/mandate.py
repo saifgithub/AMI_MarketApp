@@ -30,8 +30,8 @@ from app.services.entitlements import effective_plan_for_user
 from app.schemas.journal import EntryType, JournalEntryCreate
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import MandateStore, get_mandate_store
+from app.services.sharia_universe import default_halal_universe
 from app.services.sim_engine import (
-    DEFAULT_HALAL_DEMO_UNIVERSE,
     SimEngine,
     get_sim_engine,
 )
@@ -271,5 +271,5 @@ async def audit_holdings(
         portfolio_value=portfolio_value,
         current_drawdown_pct=drawdown_pct,
         mandate=mandate,
-        halal_universe=DEFAULT_HALAL_DEMO_UNIVERSE,
+        halal_universe=default_halal_universe(),
     )

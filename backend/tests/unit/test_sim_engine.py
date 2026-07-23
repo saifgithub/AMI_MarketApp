@@ -121,21 +121,38 @@ def test_blocklist_rejects():
     assert any("blocklist" in v for v in result.compliance.violations)
 
 
-def test_halal_rejects_non_halal_ticker():
-    sim = SimEngine()
-    user_id = uuid4()
-    mandate = hydrate_coach_mandate({
-        "plan": "trader",
-        "compliance": {"halal": True},
-    })
-    # NEVR is not in the demo halal universe
-    result = sim.submit(
-        user_id=user_id, ticker="NEVR", side=Side.BUY, quantity=1,
-        mandate=mandate,
+def test_halal_screens_out_in_index_but_permits_unknown():
+    """CR069 three-state at the sim boundary. A ticker in the parent index but
+    absent from the compliant set is SCREENED_OUT (rejected, message names the
+    standard). A ticker outside the parent index is UNKNOWN → PERMITTED (G3)."""
+    from datetime import date
+
+    from app.services.sharia_universe import HalalUniverse
+
+    universe = HalalUniverse(
+        {"AAPL", "MSFT"}, parent_index={"AAPL", "MSFT", "JPM"}, as_of=date(2026, 7, 22)
     )
-    assert not result.accepted
-    # DEF084: rejection copy names the curated demonstration universe, not a screen.
-    assert any("demonstration universe" in v for v in result.compliance.violations)
+    sim = SimEngine()
+    mandate = hydrate_coach_mandate({"plan": "trader", "compliance": {"halal": True}})
+
+    # JPM: in the parent index, not compliant → screened out → rejected.
+    screened = sim.submit(
+        user_id=uuid4(), ticker="JPM", side=Side.BUY, quantity=1,
+        mandate=mandate, halal_universe=universe,
+    )
+    assert not screened.accepted
+    msg = " ".join(screened.compliance.violations)
+    assert "AAOIFI" in msg and "2026-07-22" in msg
+
+    # NEVR: outside the parent index → unknown → PERMITTED, with the verdict
+    # (provenance) still attached so the disclosure can travel on a successful trade.
+    unknown = sim.submit(
+        user_id=uuid4(), ticker="NEVR", side=Side.BUY, quantity=1,
+        mandate=mandate, halal_universe=universe,
+    )
+    assert unknown.accepted
+    assert unknown.compliance.sharia_verdict is not None
+    assert unknown.compliance.sharia_verdict.status.value == "unknown"
 
 
 def test_single_name_cap_rejects_too_large_buy():

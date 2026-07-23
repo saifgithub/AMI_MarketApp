@@ -56,6 +56,7 @@ from app.schemas.trade import OrderType, ProposedTrade, Side
 from app.services.fundamentals import fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
+from app.services.sharia_universe import default_halal_universe  # CR069 (import for the :1293 rewire)
 from app.services.news_context import fetch_live_news, format_headline
 from app.services.technicals import compute_technicals
 from app.services.social_context import (
@@ -1289,8 +1290,8 @@ class RoomRunner:
         # `done` event, useless to a disconnected client.
         yield RoomEvent(kind="started", run_id=run_id)
 
-        # Halal universe: tiny demo set. Real screen ships at W8+.
-        halal = halal_universe or {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
+        # Halal universe: sourced AAOIFI allowlist w/ three-state resolver + loud degrade (CR069).
+        halal = halal_universe or default_halal_universe()
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 

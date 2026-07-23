@@ -10,6 +10,7 @@ See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 from pydantic import BaseModel, Field
 
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
+from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
 from app.trading_math.portfolio import position_pct as _position_pct
 from app.trading_math.sizing import SINGLE_NAME_ABSOLUTE_CAP_PCT
@@ -107,15 +108,19 @@ def check_mandate_compliance(
 
     Returns ComplianceResult(passed: bool, violations: list[str], blocked_by: str | None).
 
-    halal_universe: optional set of tickers in the `halal` flag's curated
-        demonstration universe (a fixed allowlist — NOT a computed Sharia screen;
-        see DEF084). If None and mandate.compliance.halal is True, we
-        conservatively reject — caller must provide the set.
+    halal_universe: the `halal` flag's universe. Normally a
+        `sharia_universe.HalalUniverse` (a sourced AAOIFI allowlist that carries
+        its parent index + provenance, so it resolves three states: pass /
+        screened-out / unknown — CR069). A bare `set` is the legacy two-state
+        path (tests only): absence blocks conservatively. None → the screen is
+        paused (loud degrade). Either way this is a SOURCED ALLOWLIST, never a
+        computed ratio screen (`sharia_screen()` stays dormant, constraint 4).
     locale_allowed_universe: optional set of tickers available in user's locale.
         If None, no locale filter applied.
     """
     violations: list[str] = []
     blocked_by: str | None = None
+    sharia_verdict: ShariaVerdict | None = None
 
     c = mandate.compliance
     t = proposed.ticker.upper().strip()
@@ -138,18 +143,28 @@ def check_mandate_compliance(
         # full portfolio context.
         pass  # delegated to trade service
 
-    # 4) Halal flag — curated demonstration universe, NOT a Sharia screen (DEF084).
-    #    Enforcement is membership in a fixed allowlist; no ratio is computed, so
-    #    the copy below must not claim a screen ran.
+    # 4) Halal flag — a SOURCED allowlist (AAOIFI via SPUS), NOT a computed ratio
+    #    screen (CR069; `sharia_screen()` stays dormant per constraint 4). Three
+    #    states: pass / screened-out / unknown. UNKNOWN is PERMITTED with the
+    #    disclosure attached (G3) — it must never reach the violations list or the
+    #    ruling inverts. The verdict (with its provenance) travels on the result
+    #    either way so a permitted trade still surfaces "AMI has no ruling on this".
     if c.halal:
-        if halal_universe is None:
-            violations.append("halal flag set but demonstration universe not provided")
+        resolve = getattr(halal_universe, "resolve", None)
+        if callable(resolve):
+            sharia_verdict = resolve(t)
+            if sharia_verdict.is_blocking:
+                violations.append(sharia_verdict.message())
+                blocked_by = blocked_by or "compliance"
+        elif halal_universe is None:
+            violations.append(
+                "halal flag set but no sourced Sharia universe is available "
+                "— the halal screen is paused (CR069 degrade-loudly)"
+            )
             blocked_by = blocked_by or "compliance"
         elif t not in {x.upper() for x in halal_universe}:
-            violations.append(
-                f"ticker {t} is outside AMI's curated demonstration universe "
-                f"(halal flag; not a Sharia screen)"
-            )
+            # Legacy bare-set path (tests): no parent index → block on absence.
+            violations.append(f"ticker {t} is outside the configured halal universe")
             blocked_by = blocked_by or "compliance"
 
     # 5) Locale-allowed instruments
@@ -179,7 +194,12 @@ def check_mandate_compliance(
         blocked_by = blocked_by or "drawdown"
 
     passed = len(violations) == 0
-    return ComplianceResult(passed=passed, violations=violations, blocked_by=blocked_by)
+    return ComplianceResult(
+        passed=passed,
+        violations=violations,
+        blocked_by=blocked_by,
+        sharia_verdict=sharia_verdict,
+    )
 
 
 def check_holdings_against_mandate(
@@ -224,15 +244,18 @@ def check_holdings_against_mandate(
         if t in block_set:
             issues.append(f"ticker {t} in user blocklist")
         if c.halal:
-            if halal_set is None:
+            resolve = getattr(halal_universe, "resolve", None)
+            if callable(resolve):
+                hv = resolve(t)
+                if hv.is_blocking:  # UNKNOWN is permitted (G3) — no issue raised
+                    issues.append(hv.message())
+            elif halal_set is None:
                 issues.append(
-                    "halal flag set but demonstration universe not provided"
+                    "halal flag set but no sourced Sharia universe is available "
+                    "— the halal screen is paused (CR069 degrade-loudly)"
                 )
             elif t not in halal_set:
-                issues.append(
-                    f"ticker {t} is outside AMI's curated demonstration universe "
-                    f"(halal flag; not a Sharia screen)"
-                )
+                issues.append(f"ticker {t} is outside the configured halal universe")
         if locale_set is not None and t not in locale_set:
             issues.append(
                 f"ticker {t} not available in user's locale ({mandate.locale})"
