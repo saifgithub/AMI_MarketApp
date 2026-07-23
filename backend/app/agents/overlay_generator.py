@@ -6,6 +6,8 @@ appended to that agent's base prompt at runtime. Deterministic. No LLM calls.
 See docs/initial_specs/02_agents/mandate_overlays.md for the full spec.
 """
 
+from typing import Any
+
 from app.schemas import (
     TWELVE_AGENT_IDS,
     AgentId,
@@ -18,17 +20,35 @@ from app.schemas import (
 from app.trading_math.sizing import risk_tier_cap
 
 
-def generate_overlay(agent_id: AgentId, mandate: Mandate) -> str:
+def generate_overlay(
+    agent_id: AgentId,
+    mandate: Mandate,
+    *,
+    halal_universe: Any = None,
+    ticker: str | None = None,
+) -> str:
     """Generate the mandate-overlay markdown for a given agent + mandate.
 
     The output is the block injected after the agent's base system prompt.
     Safety floor (PM only) is appended separately by safety_floor.append_safety_floor().
+
+    `halal_universe` is the same object `safety_floor` enforces against — normally a
+    `sharia_universe.HalalUniverse`, which carries the standard, source, as-of date and
+    a `.resolve(ticker)` returning a `ShariaVerdict` (CR069-BE). When the mandate sets
+    the `halal` flag, the agents are told what that object actually says; when it is
+    absent or is a bare set with no provenance, they are told the screen could not be
+    attached rather than being left to assume one ran (CR040 — degrade loudly).
+
+    `ticker` is the name under discussion, when there is one (the Room path always has
+    one; the 1-on-1 path may not). Given both, the per-ticker `ShariaVerdict` is
+    rendered verbatim from the sourced type, so this narration cannot drift away from
+    what the deterministic path decided.
     """
     if agent_id == AgentId.CONCIERGE:
         # Concierge doesn't get a trading mandate overlay — it gets a product-context overlay
         return _concierge_overlay(mandate)
 
-    base = _mandate_common_block(mandate)
+    base = _mandate_common_block(mandate, halal_universe=halal_universe, ticker=ticker)
     role_specific = _role_specific_block(agent_id, mandate)
     return base + "\n\n" + role_specific
 
@@ -38,7 +58,9 @@ def generate_overlay(agent_id: AgentId, mandate: Mandate) -> str:
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def _mandate_common_block(mandate: Mandate) -> str:
+def _mandate_common_block(
+    mandate: Mandate, *, halal_universe: Any = None, ticker: str | None = None
+) -> str:
     target = mandate.target_outcome
     target_text = (
         f"{target.amount:,.0f} {target.currency} by {target.by_year}"
@@ -62,7 +84,7 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 30% cap). Do not compare a stop's distance directly against this cap.
 
 ## Compliance constraints (HARD — cannot violate)
-{_compliance_block(mandate.compliance)}
+{_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker)}
 
 ## Preferences
 - Learning style: {mandate.learning_style}
@@ -74,23 +96,22 @@ points to portfolio drawdown (e.g. 5% size, 20% stop → 1.0 pt, i.e. 1/30th of 
 # Liquidity floor NARRATED to agents (CR046 C-b/C-c) — single-sourced so the prose
 # can't drift from the filter. Narration constant, not the enforcement itself.
 #
-# The `halal` flag has NO narrated ratio cutoff (DEF084): it is enforced by
-# membership in a fixed, curated *demonstration universe*
-# (`sim_engine.DEFAULT_HALAL_DEMO_UNIVERSE`), NOT by a computed Sharia ratio
-# screen. Nothing checks a debt-to-equity or interest-income ratio on that path,
-# so the overlay must not narrate one. See
-# docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/.
+# The `halal` flag still has NO narrated ratio cutoff. CR069-BE replaced DEF084's
+# curated demonstration universe with a *sourced allowlist* — the published
+# constituents of the AAOIFI-screened S&P 500 Sharia Industry Exclusions Index — but
+# `trading_math.screening.sharia_screen` stays dormant (CR069 constraint 4), so no
+# debt-to-equity or interest-income figure is computed anywhere on this path and the
+# overlay must never quote one. What the overlay DOES narrate now is the sourced
+# verdict: standard, source, as-of date, and which of the three states applies.
 _MICROCAP_FLOOR_USD_M = 500
 
 
-def _compliance_block(c: Compliance) -> str:
+def _compliance_block(
+    c: Compliance, *, halal_universe: Any = None, ticker: str | None = None
+) -> str:
     flags: list[str] = []
     if c.halal:
-        flags.append(
-            "- HALAL constraint: only advocate names within AMI's curated demonstration "
-            "universe (a fixed allowlist). This is NOT a Sharia screen and no ratio is "
-            "computed — do not tell the user a screen was run or a ratio was checked."
-        )
+        flags.append(_halal_narration(halal_universe, ticker))
     if c.esg_lite:
         flags.append("- ESG-lite screen: avoid heavy polluters, controversies, weapons.")
     if c.no_tobacco_alcohol_gambling:
@@ -110,6 +131,70 @@ def _compliance_block(c: Compliance) -> str:
     for custom in c.custom_constraints:
         flags.append(f"- Custom constraint: {custom}")
     return "\n".join(flags) if flags else "(no hard constraints declared)"
+
+
+# The three states in agent-facing language. Rendered for EVERY halal mandate, not
+# only for the state the current ticker happens to be in: an agent that is only ever
+# shown "pass" has no way to narrate the other two correctly when it reasons about a
+# comparable name. `unknown` carries the heaviest wording because it is the state
+# where DEF084's failure is easiest to repeat — an unreviewed name narrated as though
+# it cleared. G3 (Saiful, 2026-07-23): unknown is PERMITTED, never blocked.
+_THREE_STATES_NARRATION = """  The screen has exactly three states and you must narrate whichever applies:
+    * PASSES — the name is in the published compliant list. Say it passes, and name the standard, \
+the source and the as-of date above.
+    * SCREENED OUT — the name is in the parent index but absent from the compliant list. That is a \
+real exclusion: this mandate will not trade it.
+    * NOT REVIEWED — the name is outside the parent index, so this standard has never looked at it. \
+This is NOT a ruling either way and NOT a failure. It is permitted, and you must say plainly that \
+AMI does not know rather than implying it cleared — and equally never imply the trade is risky \
+because of it.
+  Never say a name was screened when it was not reviewed, and never quote a ratio, threshold or \
+percentage cutoff for this constraint — AMI computes none; it reads a published list."""
+
+
+def _halal_narration(halal_universe: Any, ticker: str | None) -> str:
+    """The HALAL constraint line(s) the 12 agents receive.
+
+    Single-sourced from the `ShariaVerdict` the deterministic path resolves, so the
+    narration cannot claim something the enforcement did not decide (DEF084-ROOM was
+    exactly that contradiction, pointing the other way).
+    """
+    resolve = getattr(halal_universe, "resolve", None)
+    if not callable(resolve):
+        # No provenance attached — a bare set, or nothing. Degrade loudly (CR040):
+        # saying nothing here is what lets an agent assume a screen ran.
+        return (
+            "- HALAL constraint: the user's mandate requires Sharia-compliant names, but AMI's "
+            "Sharia screen and its provenance were NOT attached to this briefing. Do not tell the "
+            "user a Sharia screen was applied, and do not treat any name as screened. Say the "
+            "halal filter could not be confirmed for this session."
+        )
+
+    # `.resolve()` needs a ticker; when there is none, resolve a sentinel purely to
+    # read the universe's provenance and paused-ness off the verdict it returns.
+    probe = resolve(ticker or "")
+    standard = probe.standard
+    source = probe.source
+    as_of = probe.as_of.isoformat() if probe.as_of is not None else "unknown"
+
+    if getattr(halal_universe, "stale", False):
+        # UNAVAILABLE — the source could not be refreshed. An agent that narrates
+        # nothing here is a silent fallback with a narrator.
+        return (
+            f"- HALAL constraint — PAUSED. AMI could not refresh the {standard} Sharia screen "
+            f"(last updated {as_of}). Tell the user the halal filter is paused; do NOT tell them a "
+            f"Sharia screen was applied, and do not treat any name as screened or as excluded."
+        )
+
+    lines = [
+        f"- HALAL constraint: AMI applies the {standard} Sharia standard as published in "
+        f"{source}, as of {as_of}. AMI reads that published list — it does not issue its own "
+        f"ruling and computes no financial ratio here.",
+        _THREE_STATES_NARRATION,
+    ]
+    if ticker:
+        lines.append(f"  This session's name: {probe.message()}")
+    return "\n".join(lines)
 
 
 def _horizon_label(h: Horizon) -> str:
@@ -156,8 +241,9 @@ def _fundamentals_block(m: Mandate) -> str:
         parts.append("- Emphasise momentum in fundamentals (earnings revisions, surprise history), guidance.")
     if m.compliance.halal:
         parts.append(
-            "- Halal user: restrict candidates to AMI's curated demonstration universe "
-            "(a fixed allowlist; NOT a Sharia screen — no ratio is computed)."
+            "- Halal user: restrict candidates to names on the published compliant list named in "
+            "the HALAL constraint above. A name that list has not reviewed is not a pass — say so "
+            "rather than implying it cleared. Compute no compliance ratio of your own."
         )
     if m.risk_score <= 2:
         parts.append("- Surface red flags prominently. Lead with risks.")
@@ -302,8 +388,9 @@ def _trader_block(m: Mandate) -> str:
         parts.append("- Respect ticker_blocklist.")
     if m.compliance.halal:
         parts.append(
-            "- Instrument must be within AMI's curated demonstration universe "
-            "(a fixed allowlist; NOT a Sharia screen — no ratio is computed)."
+            "- Instrument must be on the published compliant list named in the HALAL constraint "
+            "above. If it is outside that list's coverage, state that plainly in the proposal — "
+            "the trade is permitted, but never present an unreviewed name as though it cleared."
         )
     return "\n".join(parts)
 

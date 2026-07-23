@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 from uuid import UUID
 
 from app.agents.overlay_generator import generate_overlay
@@ -51,6 +52,8 @@ def build_agent_prompt(
     *,
     user_id: UUID | None = None,
     alpaca_snapshot: str | None = None,
+    halal_universe: Any = None,
+    ticker: str | None = None,
 ) -> str:
     """Compose the full runtime prompt for an agent.
 
@@ -61,11 +64,16 @@ def build_agent_prompt(
     Pass user_id explicitly to look it up; if None, no overlay is applied.
     alpaca_snapshot is a pre-formatted text block from alpaca_service.snapshot_text().
     If None, the block is silently omitted.
+    halal_universe + ticker are handed straight to the overlay so a halal mandate's
+    agents receive the sourced Sharia verdict with its provenance (CR069) rather than
+    a bare flag. Omitting them on a halal mandate makes the overlay say so out loud.
     The safety floor is appended LAST so it always dominates instruction
     ordering for the PM (see docs/initial_specs/02_agents/safety_floor.md).
     """
     base = load_base_prompt(agent_id)
-    overlay = generate_overlay(agent_id, mandate)
+    overlay = generate_overlay(
+        agent_id, mandate, halal_universe=halal_universe, ticker=ticker
+    )
     composed = f"{base}\n\n{overlay}"
 
     if user_id is not None:

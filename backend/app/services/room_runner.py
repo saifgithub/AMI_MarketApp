@@ -1659,6 +1659,9 @@ async def _speak_one_agent(
                 "entry": ctx.trader_entry,
                 "stop": ctx.trader_stop,
             },
+            # CR069: the same universe enforce_safety_floor decides against, so the
+            # narration and the deterministic verdict cannot contradict each other.
+            halal_universe=ctx.halal_universe,
         )
         try:
             chunks = await asyncio.wait_for(
@@ -1746,6 +1749,9 @@ async def _stream_pm_response(
             "entry": ctx.trader_entry,
             "stop": ctx.trader_stop,
         },
+        # CR069 — see the sibling call site: the PM narrates the same sourced verdict
+        # its own safety floor enforces.
+        halal_universe=ctx.halal_universe,
     )
     try:
         chunks = await asyncio.wait_for(
