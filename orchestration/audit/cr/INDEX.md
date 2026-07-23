@@ -51,3 +51,24 @@ _R58 batch: CR023/CR024/DEF051 all shipped R57 but were never opened as lanes be
 _R58 reconciliation: this same pass discovered DEF049/DEF050 had been sitting COMPLETE in their own lane files since 2026-07-11 (R54) without this table ever being updated to match — a stale-INDEX gap, not a stale-audit gap (the verdicts themselves were always current; only this glanceable table lagged). Fixed here. Worth remembering: this table is regenerable via `sh audit/handshake/watcher.sh state` and should be spot-checked against that output at the top of any session that touches the handshake, not assumed current._
 
 _R58 batch, continued: DEF052 (Market Analyst technicals) bounced round 1 on a genuine MAJOR (NaN close price crashing the whole Room Convene via an unguarded `round()`), fixed with an `isfinite()` guard + full try/except, re-audited COMPLETE round 2. DEF053 (Fundamentals Analyst valuation/sector/consensus) audited COMPLETE round 1 with two non-blocking OUT-OF-SCOPE NaN observations (one in-scope-adjacent, one pre-existing in `rev_growth`/`profit_margin`/`net_cash`), both closed proactively via a centralized `_num()` hardening rather than minting follow-up lanes. DEF054+DEF055 (Bull/Bear real Decision Journal history, shared `journal_context.py`) both audited COMPLETE round 1, zero findings, nothing minted — Bear's gating was independently confirmed as genuinely wired (not just inferred from Bull passing) via its own dedicated tests. **All five of DEF051–055 plus CR023/CR024 are COMPLETE and confirmed promoted at `alpha-2026-07-14-1`** — verified via `git merge-base --is-ancestor` (every DEF051–055 commit is an ancestor of the tag) and HANDOVER_R.md's own promotion log; nothing left to deploy from this batch. The two `chore(audit)` verdict commits for DEF054/055 (`d703635`, `b7317ca`) landed after the tag but touch only `audit/handshake/` markdown, not app code — no re-promote needed for those._
+
+## Deferred backlog (parked, still owed an audit)
+
+Six lanes shipped to Alpha without a gate. They remain `UNGATED` on the dispatch board and
+carry `GATE: independent`; nothing here is closed or waived. Their lane files moved to
+[`backlog/`](backlog/README.md) so `watcher.sh`'s glob stops surfacing them to a working
+auditor — see that README for the parked list, the SHAs, and the one-line restore. CR073.
+
+| Item | Builder | SHA |
+|---|---|---|
+| CR038 | `coder.room` | `c0d6c87` |
+| CR058-MATH | `coder.math` | `21fb8b6` |
+| DEF062 | `coder.api` | `4a87312` |
+| DEF084-BE | `coder.api` | `bd5c74d` |
+| DEF084-MOBILE | `coder.mobile` | `e344b27` |
+| DEF084-ROOM | `coder.room` | `cef212f` |
+
+_This table has run stale before (the R58 reconciliation note above). It is regenerable —
+`sh orchestration/audit/watcher.sh state` for the auditor's live queue,
+`sh orchestration/dispatch/dispatch.sh state` for the gate truth. Spot-check both rather than
+trusting this section._
