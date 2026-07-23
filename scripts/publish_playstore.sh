@@ -64,4 +64,15 @@ else
   bundle exec fastlane internal
   echo ""
   echo "✓ pushed to internal track — testers get it as a Play Store update."
+
+  # CR079 — the store release ships an AAB to Play, but our automated tester on
+  # melehost consumes an APK. Build + scp it here too so the rig is refreshed on
+  # this build, not only when install_android.sh happens to run. Guarded: a scp
+  # hiccup must not fail a release whose Play upload already succeeded — but the
+  # helper's loud STALE warning still fires so a stale rig can't pass unnoticed.
+  echo ""
+  echo "▶ refreshing the automated-tester APK on melehost (CR079)"
+  if ! "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
+    echo "⚠ Play upload succeeded but the automated-tester APK is STALE — see above." >&2
+  fi
 fi

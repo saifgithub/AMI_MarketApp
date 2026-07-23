@@ -92,22 +92,20 @@ flutter build apk --release \
 
 APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release.apk"
 
-# CR078 — publish the APK to melehost's shared folder, replacing what's there.
-# Saiful hands this path out for sideloading, so a stale copy is worse than no
-# copy: it looks current and isn't. Failure is reported loudly at the end rather
-# than aborting, so a LAN hiccup never costs an otherwise-good device install.
-: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
-SHARE_OK=0
 if [[ ! -f "$APK" ]]; then
   echo "✗ no APK at $APK — flutter build apk failed?" >&2
   exit 1
 fi
-echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}"
-if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
+
+# CR079 (supersedes CR078's inline copy) — refresh the automated tester's APK on
+# melehost. The scp lives in one place, scripts/share_apk_to_tester.sh, shared
+# with the store-release path so the rig is refreshed on EVERY build. Guarded so
+# a LAN hiccup can never abort an otherwise-good device install; the helper
+# prints its own loud STALE warning, which its exit code echoes into SHARE_OK.
+: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+SHARE_OK=0
+if AMI_APK_SHARE_DEST="$AMI_APK_SHARE_DEST" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh" "$APK"; then
   SHARE_OK=1
-  echo "✓ shared copy replaced"
-else
-  echo "⚠ scp FAILED — the shared copy at ${AMI_APK_SHARE_DEST} is now STALE." >&2
 fi
 
 # Install on each target
@@ -126,11 +124,11 @@ for SERIAL in "${TARGETS[@]}"; do
 done
 
 echo ""
-if [[ "$SHARE_OK" == "1" ]]; then
-  echo "✓ shared APK is current: ${AMI_APK_SHARE_DEST}"
-else
-  echo "✗ shared APK is STALE — ${AMI_APK_SHARE_DEST} still holds the previous build."
-  echo "  Re-run, or copy by hand:  scp \"${APK}\" \"${AMI_APK_SHARE_DEST}\""
+# The automated-tester APK status was already printed by share_apk_to_tester.sh
+# above; SHARE_OK just gates the one-line reminder here so a stale rig can't hide
+# under a wall of adb output.
+if [[ "$SHARE_OK" != "1" ]]; then
+  echo "✗ automated-tester APK is STALE — re-run or fix the LAN route (see above)."
 fi
 if [[ "$INSTALLED" == "0" ]]; then
   echo "✗ no devices were updated. Plug in a device with USB debugging enabled."

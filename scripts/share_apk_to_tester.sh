@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Publish a release APK to melehost's shared folder — the input our automated
+# tester consumes. Single source of truth for "get the current APK onto the
+# tester", called by BOTH the device-install path (install_android.sh) and the
+# store-release path (publish_playstore.sh) so the rig is refreshed on EVERY
+# build, never just when someone remembers.
+#
+# Why this exists as its own script (CR079, superseding CR078's "only
+# install_android produces an APK" scope): the melehost folder is not a
+# convenience hand-out — it feeds an automated test rig. A stale APK there means
+# the rig silently tests code that has moved, and reports pass/fail against the
+# wrong build. That is worse than a missing copy, and it is the CR040
+# "degrade loudly" class: the failure must be impossible to miss.
+#
+# Usage:
+#   scripts/share_apk_to_tester.sh                 # build a fresh release APK, then scp
+#   scripts/share_apk_to_tester.sh <path-to-apk>   # scp an APK the caller already built
+#
+# Env:
+#   AMI_APK_SHARE_DEST            scp destination (default: melehost tester folder)
+#   AMI_API_URL_ALPHA            backend URL baked into a freshly-built APK
+#   GOOGLE_OAUTH_WEB_CLIENT_ID   Google Sign-In web client_id (same as the other build scripts)
+#   SENTRY_DSN                   optional
+#
+# Exit status: 0 iff the shared copy was replaced. Non-zero on scp failure so a
+# caller can react — but callers MUST invoke this guarded (inside `if`, or with
+# `|| true`) if they run `set -e` and a LAN hiccup must not abort them. The loud
+# STALE message is printed here regardless, so the warning is never lost.
+
+set -uo pipefail
+
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MOBILE_DIR="${PROJECT_ROOT}/mobile"
+
+: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+: "${AMI_API_URL_ALPHA:=https://api-alpha.agenticmarketintel.ai}"
+# CR050 — GCP OAuth 2.0 **Web** client_id (ami-trade-web). Public config; baked as
+# the default so Google Sign-In is never silently disabled by a forgotten export.
+: "${GOOGLE_OAUTH_WEB_CLIENT_ID:=153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com}"
+: "${SENTRY_DSN:=}"
+
+APK="${1:-}"
+
+if [[ -z "$APK" ]]; then
+  APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release.apk"
+  echo "▶ flutter build apk --release  (for the automated tester)"
+  ( cd "$MOBILE_DIR" && flutter build apk --release \
+      --dart-define=ALLOW_BACKEND_SWITCH=true \
+      --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
+      --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
+      --dart-define=SENTRY_DSN="${SENTRY_DSN}" )
+fi
+
+if [[ ! -f "$APK" ]]; then
+  echo "✗ no APK at $APK — flutter build apk failed?" >&2
+  echo "✗ automated-tester APK is STALE — ${AMI_APK_SHARE_DEST} still holds the previous build." >&2
+  exit 1
+fi
+
+echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}"
+if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
+  echo "✓ automated-tester APK is current: ${AMI_APK_SHARE_DEST}"
+  exit 0
+fi
+
+echo "✗ scp FAILED — automated-tester APK is STALE at ${AMI_APK_SHARE_DEST}." >&2
+echo "  The rig is now testing the PREVIOUS build. Re-run, or copy by hand:" >&2
+echo "  scp \"${APK}\" \"${AMI_APK_SHARE_DEST}\"" >&2
+exit 1
