@@ -13,10 +13,16 @@ here describes an allowlist; do not let it drift into claiming AMI runs a screen
 
 Three states, not two (constraint 2): the compliant set alone cannot tell "screened
 out" from "never looked at" — SPUS publishes only the compliant names, so absence means
-both identically. The **parent index** (S&P 500 membership, read the same way from a
-large-cap S&P 500 ETF's published holdings CSV) is what distinguishes them. In parent
-index + absent from compliant ⇒ SCREENED_OUT (blocked). Not in parent index ⇒ UNKNOWN
-(permitted, with the disclosure attached — G3 RESOLVED 2026-07-23).
+both identically. The **parent index** (S&P 500 membership) is what distinguishes them.
+In parent index + absent from compliant ⇒ SCREENED_OUT (blocked). Not in parent index ⇒
+UNKNOWN (permitted, with the disclosure attached — G3 RESOLVED 2026-07-23).
+
+DEF089: the parent index is NOT read from iShares' IVV endpoint. That URL answers a plain
+server-side client with HTTP 200 and an HTML interstitial carrying `content-type: text/csv`
+(a bot-mitigation layer in front of the origin), so as configured the screen could only ever
+pause. It now reads a published plain-fetch constituent mirror instead — no key, no browser
+emulation, the same shape of dependency as the HLAL fetch in the CR069 research. The
+tradeoff is stated at `settings.sharia_parent_index_url`.
 
 Degrade loudly (constraint 3 / CR040): if the source can't be fetched or is stale beyond
 its window, the flag PAUSES visibly — never a silent stale read, never a fall back to the
@@ -31,9 +37,11 @@ full three states rather than two.
 
 from __future__ import annotations
 
+import asyncio
 import csv
 import io
 import re
+import time
 from datetime import date, datetime, timezone
 
 import httpx
@@ -45,14 +53,16 @@ from app.schemas.sharia import ShariaStatus, ShariaVerdict
 # ── Provenance constants ────────────────────────────────────────────────────
 STANDARD = "AAOIFI"
 SOURCE = "S&P 500 Sharia Industry Exclusions Index (via SPUS)"
-PARENT_SOURCE = "S&P 500 (via iShares IVV)"
+PARENT_SOURCE = "S&P 500 constituents (published list)"
 
 # Plain equity ticker: 1-5 letters, optional single-letter share-class suffix
 # (BRK.B). Rejects the CSV's non-equity line items — cash/CVR rows carry digits
 # (`003654100CVR`, `2602335D`) and footer/disclaimer text carries spaces/commas,
 # so neither survives this anchor. (CR069 §2: "plain alphabetic tickers only".)
 _TICKER_RE = re.compile(r"^[A-Z]{1,5}(\.[A-Z])?$")
-_TICKER_COLS = ("stockticker", "ticker")
+# Order matters — the first column present wins. SPUS/Tidal publish `StockTicker`;
+# the parent-index constituent list publishes `Symbol` (DEF089).
+_TICKER_COLS = ("stockticker", "ticker", "symbol")
 _DATE_COLS = ("date",)
 
 # A truncated download must RAISE, never yield a short universe (CR069 §2 / DEF084
@@ -64,6 +74,12 @@ _SPUS_MIN_ROWS = 150
 _PARENT_MIN_ROWS = 400
 
 _FETCH_TIMEOUT_S = 15.0
+
+# How often the provider will re-attempt the fetch. Staleness itself is re-derived
+# on every `get()` (cheap arithmetic); this only throttles the network retry, so a
+# dead source is not hammered once per trade while the flag is paused. SPUS
+# publishes daily, so sub-hourly is ample.
+_REFETCH_INTERVAL_S = 900.0
 
 
 class ShariaSourceError(RuntimeError):
@@ -134,9 +150,9 @@ class HalalUniverse(frozenset):
 
 
 def _locate_header(rows: list[list[str]]) -> tuple[int, dict[str, int]]:
-    """Find the header row (SPUS/Tidal have it first; iShares carry a preamble)
-    and return (row_index, {lowercased_column: index}). Raises if no ticker
-    column is found anywhere."""
+    """Find the header row (SPUS/Tidal and the constituent list have it first;
+    some ETF exports carry a preamble) and return (row_index,
+    {lowercased_column: index}). Raises if no ticker column is found anywhere."""
     for i, row in enumerate(rows):
         cols = {c.strip().strip('"').lower(): j for j, c in enumerate(row)}
         if any(tc in cols for tc in _TICKER_COLS):
@@ -148,10 +164,14 @@ def parse_holdings_csv(text: str) -> tuple[frozenset, date | None]:
     """Parse a published-holdings CSV into (tickers, as_of).
 
     Tolerant of the two shapes in play: SPUS/Tidal (clean, `StockTicker` + per-row
-    `Date`) and iShares (preamble + `Ticker`, no per-row date). Non-equity rows and
-    footer/disclaimer lines are dropped by the ticker anchor. `as_of` comes from a
-    per-row Date column when present (SPUS); None otherwise (parent index needs
-    membership only)."""
+    `Date`) and the parent-index constituent list (`Symbol`, no per-row date).
+    Non-equity rows and footer/disclaimer lines are dropped by the ticker anchor.
+    `as_of` comes from a per-row Date column when present (SPUS); None otherwise
+    (parent index needs membership only).
+
+    The date-column match is exact on `date`, deliberately: the constituent list
+    carries a `Date added` column holding each name's *index-admission* date
+    (1957-03-04 for MMM), which would be a nonsense as-of if it were matched."""
     rows = list(csv.reader(io.StringIO(text)))
     if not rows:
         raise ShariaSourceError("empty holdings CSV")
@@ -227,6 +247,15 @@ class ShariaUniverseProvider:
     `fetcher` is injectable so tests exercise the parser + cache against a
     checked-in fixture and never touch the network. In production the default
     fetcher uses httpx.
+
+    Cache lifecycle (the F2 fix). The first cut evaluated staleness only inside
+    `_build()`, which only ran when the cache was empty — so a container that
+    started with fresh data never noticed it going stale and served the same
+    universe until restart. `ami_api_alpha` is a single long-running container,
+    so that is every deployment. `get()` now re-derives staleness against a live
+    `now` on **every** call (pure arithmetic, no network) and separately retries
+    the fetch on a throttled interval, mirroring `news_context.py`'s per-call TTL
+    check rather than a fetch-once-per-process cache.
     """
 
     def __init__(
@@ -237,13 +266,16 @@ class ShariaUniverseProvider:
         staleness_days: int,
         enabled: bool,
         fetcher=None,
+        refetch_interval_s: float = _REFETCH_INTERVAL_S,
     ) -> None:
         self._compliant_url = compliant_url
         self._parent_url = parent_url
         self._staleness_days = staleness_days
         self._enabled = enabled
         self._fetcher = fetcher or self._default_fetcher
+        self._refetch_interval_s = refetch_interval_s
         self._cache: HalalUniverse | None = None
+        self._last_attempt: float | None = None
 
     def _default_fetcher(self) -> tuple[frozenset, date | None, frozenset]:
         with httpx.Client(timeout=_FETCH_TIMEOUT_S) as client:
@@ -283,9 +315,33 @@ class ShariaUniverseProvider:
         )
         return HalalUniverse(compliant, parent_index=parent, as_of=as_of)
 
+    def _refetch_due(self) -> bool:
+        if self._last_attempt is None:
+            return True
+        return (time.monotonic() - self._last_attempt) >= self._refetch_interval_s
+
     def get(self, *, refresh: bool = False, now: date | None = None) -> HalalUniverse:
-        if self._cache is None or refresh:
+        """Return the current universe. May block on network I/O — see
+        `default_halal_universe_async()` for the event-loop-safe accessor."""
+        now = now or datetime.now(timezone.utc).date()
+        if self._cache is None or refresh or self._refetch_due():
+            self._last_attempt = time.monotonic()
             self._cache = self._build(now=now)
+            return self._cache
+        # Per-call staleness re-check. The cached universe was fresh when it was
+        # fetched, but the calendar has moved on and the next refetch attempt is
+        # not due yet. Answering PASS/SCREENED_OUT from data that is now outside
+        # its window is the silent stale read constraint 3 forbids, so pause
+        # immediately rather than waiting for the refetch tick.
+        if not self._cache.stale and _is_stale(
+            self._cache.as_of, now, self._staleness_days
+        ):
+            logger.error(
+                "sharia_universe_stale",
+                as_of=self._cache.as_of.isoformat() if self._cache.as_of else None,
+                max_age_days=self._staleness_days,
+            )
+            return self._paused(as_of=self._cache.as_of)
         return self._cache
 
 
@@ -314,7 +370,26 @@ def reset_sharia_universe_provider(provider: ShariaUniverseProvider | None = Non
 def default_halal_universe() -> HalalUniverse:
     """The sourced `halal` universe for callers that don't pass one explicitly.
 
-    Cheap after the first call (cached). When the feature is disabled or the source
-    is unavailable/stale, returns a paused universe so the halal flag degrades
-    loudly instead of enforcing a stale or placeholder set."""
+    Usually cheap (cached), but **may block on network I/O** whenever a fetch or a
+    throttled refetch is due. Synchronous contexts only — anything running on the
+    event loop must use `default_halal_universe_async()`.
+
+    When the feature is disabled or the source is unavailable/stale, returns a
+    paused universe so the halal flag degrades loudly instead of enforcing a stale
+    or placeholder set."""
     return get_sharia_universe_provider().get()
+
+
+async def default_halal_universe_async() -> HalalUniverse:
+    """Event-loop-safe accessor (the F3 fix).
+
+    `_default_fetcher()` is a synchronous `httpx.Client` doing two real round-trips
+    at up to 15s each. The API runs one uvicorn process with no `--workers`, so
+    calling it straight from an `async def` handler stalls the whole event loop —
+    every concurrent user, including an unrelated in-flight Room stream — not just
+    the triggering request. Offloaded to a worker thread, matching the
+    `run_in_executor` precedent at `app/api/sim.py:411`.
+
+    This is not a first-fetch-only concern: the F2 refetch tick means the blocking
+    call can recur for as long as the process lives."""
+    return await asyncio.to_thread(get_sharia_universe_provider().get)

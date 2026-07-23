@@ -168,9 +168,19 @@ class Settings(BaseSettings):
     sharia_spus_holdings_url: str = (
         "https://www.sp-funds.com/wp-content/uploads/data/TidalFG_Holdings_SPUS.csv"
     )
+    # DEF089: this was the iShares IVV holdings endpoint, which answers a plain
+    # server-side client with HTTP 200 and an HTML interstitial that still carries
+    # `content-type: text/csv` — bot mitigation in front of the origin. The screen
+    # could only ever pause. Now a published S&P 500 constituent list on a plain
+    # static endpoint: no key, no browser emulation, auto-updated on membership
+    # changes. Tradeoff, stated rather than buried: it is a community-maintained
+    # mirror, not a regulatory disclosure like SPUS. It is used for *membership
+    # only*, and the failure direction is safe — a name missing from a lagging
+    # mirror resolves UNKNOWN (permitted + disclosed), never a false PASS. The
+    # 400-row floor in `sharia_universe.py` catches truncation.
     sharia_parent_index_url: str = (
-        "https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf/"
-        "1467271812596.ajax?fileType=csv&fileName=IVV_holdings&dataType=fund"
+        "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/"
+        "main/data/constituents.csv"
     )
     # SPUS refreshes daily; the index rebalances quarterly. Beyond this many days
     # without a fresh as-of, the flag pauses loudly rather than reading stale.
