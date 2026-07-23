@@ -92,6 +92,24 @@ flutter build apk --release \
 
 APK="${MOBILE_DIR}/build/app/outputs/flutter-apk/app-release.apk"
 
+# CR078 — publish the APK to melehost's shared folder, replacing what's there.
+# Saiful hands this path out for sideloading, so a stale copy is worse than no
+# copy: it looks current and isn't. Failure is reported loudly at the end rather
+# than aborting, so a LAN hiccup never costs an otherwise-good device install.
+: "${AMI_APK_SHARE_DEST:=saiful@192.168.20.59:/home/saiful/hermes_folder/project/AMI_MarketApps/apk/}"
+SHARE_OK=0
+if [[ ! -f "$APK" ]]; then
+  echo "✗ no APK at $APK — flutter build apk failed?" >&2
+  exit 1
+fi
+echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}"
+if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
+  SHARE_OK=1
+  echo "✓ shared copy replaced"
+else
+  echo "⚠ scp FAILED — the shared copy at ${AMI_APK_SHARE_DEST} is now STALE." >&2
+fi
+
 # Install on each target
 INSTALLED=0
 for SERIAL in "${TARGETS[@]}"; do
@@ -108,6 +126,12 @@ for SERIAL in "${TARGETS[@]}"; do
 done
 
 echo ""
+if [[ "$SHARE_OK" == "1" ]]; then
+  echo "✓ shared APK is current: ${AMI_APK_SHARE_DEST}"
+else
+  echo "✗ shared APK is STALE — ${AMI_APK_SHARE_DEST} still holds the previous build."
+  echo "  Re-run, or copy by hand:  scp \"${APK}\" \"${AMI_APK_SHARE_DEST}\""
+fi
 if [[ "$INSTALLED" == "0" ]]; then
   echo "✗ no devices were updated. Plug in a device with USB debugging enabled."
   echo "  Run  scripts/install_android.sh --list  to see what's connected."
