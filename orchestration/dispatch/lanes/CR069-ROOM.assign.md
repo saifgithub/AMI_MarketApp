@@ -61,9 +61,12 @@ computed one — `sharia_screen()` stays dormant (constraint 4).
 Push to `lane/CR069-ROOM.coder.room`, never `main`. Hand-off:
 `orchestration/dispatch/lanes/CR069-ROOM.coder.room.md` (`STATUS: READY_FOR_AUDIT (round 1)`) +
 `orchestration/audit/cr/CR069-ROOM.architect.md` (`SUBMITTED: round 1`).
-**Commit those two hand-off files.** The board derives from the working tree, so an uncommitted
-hand-off looks identical to a delivered one and is invisible to an auditor in a fresh worktree —
-see DEF087. Chunk evidence list, not the DoD. Commit tag `(AT:coder.room CR069)`.
+**Commit those two hand-off files to the SHARED branch, not your lane branch** (DEF090) — source
+goes to the lane branch, lane files are shared coordination state and every board reads them on the
+shared branch. An uncommitted hand-off now renders `UNCOMMITTED` (DEF087); one committed only to
+your lane branch is invisible to both boards, which has already stranded a finished round. Chunk evidence list, not the DoD. Commit tag `(AT:coder.room CR069)`.
 
-<!-- Not ASSIGNED yet — depends on CR069-BE being merged. Renders UNASSIGNED until then. -->
+<!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
 DISPATCH: OPEN
+
+ASSIGNED: coder.room round 1

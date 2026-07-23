@@ -210,4 +210,4 @@ Do not ship a two-state screen. Do not quietly widen `UNKNOWN` to cover it.
 - Bump both round markers to **2**: `STATUS: READY_FOR_AUDIT (round 2)` and `SUBMITTED: round 2`.
 
 ASSIGNED: coder.api round 2
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 3)

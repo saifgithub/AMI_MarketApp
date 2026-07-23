@@ -53,10 +53,17 @@ Push to `lane/CR069-DIVERGE.coder.api`, never `main`. Hand-off:
 `orchestration/audit/cr/CR069-DIVERGE.architect.md` (`SUBMITTED: round 1`). Chunk evidence list, not
 the DoD. Commit tag `(AT:coder.api CR069)`.
 
+**Commit both hand-off files to the SHARED branch, not your lane branch** (DEF090) — source goes
+to the lane branch; the lane files are shared coordination state and every board reads them on the
+shared branch. A hand-off committed only to a lane branch is invisible to both boards and has
+already stranded a finished round; an uncommitted one now renders `UNCOMMITTED` (DEF087).
+
 **Deferred teaching surface.** The CR frames divergence as the "standards differ" teaching moment
 (lesson `350_standards_differ_why_the_same_stock_flips`). Surfacing it to users is **not** in this
 lane — that is user-facing content, it would change this lane's gate, and lesson content is G7/SME
 territory. Log first; decide whether to teach from it later.
 
-<!-- Not ASSIGNED yet — depends on CR069-BE's fetcher. Renders UNASSIGNED until that lands. -->
+<!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
 DISPATCH: OPEN
+
+ASSIGNED: coder.api round 1

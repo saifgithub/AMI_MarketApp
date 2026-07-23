@@ -79,9 +79,14 @@ exact lane's ancestor.
 `SUBMITTED: round 1`. Chunk evidence list, **not** the Definition of Done. Include the real backend
 JSON you verified `fromJson` against.
 
+**Commit both hand-off files to the SHARED branch, not your lane branch** (DEF090) — source goes
+to the lane branch; the lane files are shared coordination state and every board reads them on the
+shared branch. A hand-off committed only to a lane branch is invisible to both boards and has
+already stranded a finished round; an uncommitted one now renders `UNCOMMITTED` (DEF087).
+
 Commit tag `(AT:coder.mobile CR069)`. Report SHA + `flutter analyze` / `flutter test` exit codes.
 
-<!-- Not ASSIGNED yet — hard dependency on CR069-BE. Renders UNASSIGNED (Architect-actionable) until
-that lane's gate is satisfied and merged. Assigning now would put a coder to work against an API
-that does not exist. -->
+<!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
 DISPATCH: OPEN
+
+ASSIGNED: coder.mobile round 1
