@@ -916,12 +916,13 @@
  {
   "code": "RISK 7",
   "id": "101_volatility_adjusted_sizing",
-  "bucket": "P1",
+  "bucket": "P2a",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Q2's explanation misidentifies the distractor: it calls \"the last\" option the '1% is 1%' answer, but that is options[1]; options[3] is the ATR-lagging distractor the same explanation separately discusses. Prose also: Bursa share counts break the 100-unit board lot.",
   "exact_change": "Q2 explanation: replace \"The tempting wrong answer is the last — 'same dollar risk, same outcome'\" with \"...is the second option — 'They produce identical equity curves — 1% is 1%'\". answer={0} unchanged. Prose: 4,166 -> 4,100 and 2,777 -> 2,700 shares (Bursa 100-unit board lots); \"4x bigger bet\" -> \"roughly 3x bigger in volatility terms (TSLA ATR 3.75% of price vs KO 1.2%)\". AIRASIA relisted as Capital A (CAPITALA) — needs sourcing before renaming.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "quiz poison FIXED (Q2 explanation names 'same dollar risk' distractor, key 0 stands); residual: Bursa board-lot prose (4,166/2,777 shares) + AIRASIA->CapitalA rename"
  },
  {
   "code": "RISK 8",
@@ -936,12 +937,13 @@
  {
   "code": "RISK 9",
   "id": "103_trailing_stops",
-  "bucket": "P1",
+  "bucket": "P2a",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Q2's explanation cites \"the first\" as the tempting wrong answer and quotes 'tighter trail = closer to peak', but that text is options[2]; options[0] is the \"both capture the same\" distractor. Prose also calls the gain \"$7 above the chandelier-set price\" when $193 is the trail.",
   "exact_change": "Q2 explanation: replace \"The tempting wrong answer is the first\" with \"The tempting wrong answer is the third option\". answer={3} unchanged. Example: replace \"roughly $7 per share above the chandelier-set price\" with \"roughly $7 per share above entry ($185 entry, ~$192 exit)\".",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "quiz poison FIXED (Q2 explanation names 'tighter trail = closer to peak' distractor, key 3 stands); residual: '$7 above chandelier-set price' prose slip + named-ticker genericize"
  },
  {
   "code": "RISK 10",
@@ -971,7 +973,8 @@
   "quiz_affected": true,
   "defect_summary": "Q1's keyed answer (\"roughly 1.6x-1.8x of the naive 4%\") contradicts the lesson's own model: at corr 0.7 a 4 x 1% book's risk is 1% x sqrt(4 + 12x0.7) = 3.5%, i.e. 0.88x the naive 4% sum and never above it. The learner who correctly picks \"1.0x\" is marked wrong.",
   "exact_change": "Rewrite option[1] in place (answer={1} stays): \"Roughly 1.5x the calm-state modelled exposure — ~2.4% at corr 0.15 rises to ~3.5% at 0.7 — still just under the naive 4% sum\". Reword option[0]: \"1.0x — correlation is irrelevant; the naive sum is always the exposure\". Explanation: replace \"typically 1.5-2x the naive number\" and \"substantially larger than 4%\" with \"typically 0.85-0.9x the naive sum\". Bursa 0.20->0.55 stat needs sourcing or cut; PETRONAS is not Bursa-listed.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: quiz key '1.6x-1.8x of naive 4%' contradicts lesson's own sqrt model (~0.88x, never above naive); present; PETRONAS not Bursa."
  },
  {
   "code": "TECH 1",
@@ -1233,7 +1236,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 1's stem is built on the fabricated AMZN Q4-2025 example (cross at 17 from 195, 14-point rally, mid-range cross at 217); AMZN's actual Oct-2025 range was $213-244. Quiz 2's explanation also certifies the uncorroborated CIMB Feb-2025 7% move.",
   "exact_change": "Quiz 1 stem: \"AMZN's daily Stochastic %K crosses above %D twice\" -> \"A stock's daily Stochastic %K crosses above %D twice\". answer={0} unchanged. Quiz 2 explanation: delete the final sentence \"CIMB in February 2025 ran exactly this pattern for a 7% move.\" answer={2} unchanged. Prose: replace the AMZN Oct-22 195/201/209 and Nov-28 217 anchors with an undated hypothetical; cut the CIMB paragraph.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: fabricated AMZN Oct-2025 example underpinning Quiz-1 stem + CIMB Feb-2025 in Quiz-2 explanation, all present."
  },
  {
   "code": "TECH 40",
@@ -1733,7 +1737,9 @@
   "quiz_affected": true,
   "defect_summary": "Manifest missed the bigger defect: `max_position_pct` is not a Mandate field yet sits in Quiz 1's stem/option[0] and in Quiz 2's stem plus its KEYED option [2]. Secondary: L53's explanation calls the outcome-bias distractor \"the last one\" when it is option [2].",
   "exact_change": "L27/28/32/34 + both quiz stems: `max_position_pct` -> \"the single-name cap your `risk_score` sets\". Quiz 2 L57 \"changed `max_position_pct` from 3 to 5\" -> \"changed `risk_score` from 3 to 4, moving the cap 3.0% -> 4.5%\"; keyed option[2] \"`max_position_pct: 3`\" -> \"the 3.0% cap active at the time\"; key answer={2}. Quiz 1 L53: \"the last one\" -> \"the third one ('ignore the blocks because NVDA ran higher anyway')\". L29: no_fossil block -> blocklist block (DEF061).",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: phantom `max_position_pct` in quiz stems + keyed option — verified absent from schema.",
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
  },
  {
   "code": "EDGE 93",
@@ -1745,7 +1751,8 @@
   "exact_change": "L35: \"A non-dividend payer (e.g. NVDA at most prior periods) suddenly given a yield.\" -> \"A token-dividend payer given a headline yield. NVDA has paid a small quarterly dividend since 2012, at a yield well under 0.1%; a quoted 1.5% is invented.\" L25/L27 TENAGA \"3-4%\"/\"~3.9%\": uncorroborated — genericize to \"a Bursa-listed regulated utility\" and drop the percentages (needs sourcing: TNB IR). Quiz 1 L56: \"the first one\" -> \"the last one\"; key answer={1}.",
   "confidence": "high",
   "retriage_why": "Quiz-affected (Q1 explanation misnumbers its distractor); and flag #5 teaches verification against NVDA's real dividend behaviour — a hypothetical payer teaches nothing to check.",
-  "genericizable": false
+  "genericizable": false,
+  "revalidated": "STAYS P1: NVDA 'non-dividend payer' (false since 2012) present; positional half fixed."
  },
  {
   "code": "EDGE 94",
@@ -1757,7 +1764,9 @@
   "exact_change": "L29: \"within max_position_pct 5, within max_drawdown_pct 20\" -> \"within your risk tier's 3% single-name cap, within max_drawdown_pct 20\". L34: \"Conditional on your Mandate's `max_position_pct`. If your mandate were 2%...\" -> \"Conditional on the cap your `risk_score` sets. At risk_score 2 the cap is 1.5% and the same debate would land at 1.5%.\" Quiz 1 L57: \"the tempting wrong answer is the first one\" -> \"the last one\"; key answer={1}.",
   "confidence": "high",
   "retriage_why": "Quiz-affected, and max_position_pct is a claim about our own PM mechanic (cap derives from risk_score) — a mechanic, not decoration; nothing to genericize.",
-  "genericizable": false
+  "genericizable": false,
+  "revalidated": "STAYS P1: phantom `max_position_pct` (L29/L34) — verified absent from schema. Fix values verified vs DEFAULT_RISK_TIER_CAPS.",
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
  },
  {
   "code": "EDGE 96",
@@ -1767,7 +1776,9 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 2's explanation (L66) says \"The first three are the CEO-of-evaluation authority points\" while the key is answer={1} — read literally it asserts that authorising AMI to place brokerage trades IS a user authority, contradicting the simulation-only boundary the question teaches.",
   "exact_change": "Quiz 2 L66: \"The first three are the CEO-of-evaluation authority points. The fourth describes a feature that does not and will not exist\" -> \"Choosing tickers, accepting/rejecting a Verdict and editing the Mandate are the authority points; the second option — brokerage execution — does not and will not exist\"; \"the fourth one\" -> \"the second one\"; key answer={1}. L27: use `risk_score: 4` (4.5% cap), `max_drawdown_pct: 20`, `halal: true`, `no_fossil_fuels: false`, `long_only: true`.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1 narrowed: quiz-2 brokerage contradiction FIXED; driver is phantom `max_position_pct` (L27 prose Mandate block).",
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
  },
  {
   "code": "EDGE 97",
@@ -1854,12 +1865,13 @@
  {
   "code": "SENT 1",
   "id": "045_greed",
-  "bucket": "P1",
+  "bucket": "P2a",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Quiz 1's explanation calls the keyed-correct FIRST option the \"most tempting wrong answer\" while quoting option 4's text, so a correct learner is told they were wrong. Also the NVDA late-2024 anecdote is impossible (+34%/+41% off $115 = $154/$162; 2024 high $152.89).",
   "exact_change": "Quiz 1 explanation: \"The most tempting wrong answer is the first one: 'the crowd has new information'\" -> \"The most tempting wrong answer is the last one: raise the target to $80 because 'the crowd has new information'\". answer={0} unchanged. L25: \"In late 2024, a trader on NVDA bought 200 shares around $115\" -> \"A trader bought 200 shares of a stock at $115\". Exit: \"at +7%\" -> \"7% above his original entry - about 1% below blended cost after the +41% add\".",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "quiz poison FIXED (Q1 names 'crowd has new information' distractor, key 0 stands; quiz itself already genericized to $50/$60); residual: prose NVDA $115/late-2024 anecdote genericize"
  },
  {
   "code": "SENT 2",
@@ -1889,17 +1901,19 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 3 is poisoned twice: its stem prices a $138-entry position at \"+18%\" when $150 is +8.7% (option 3 says +8.7%), and calls $173 NVDA's \"prior all-time high\" - false (2024 ATH $152.89; $173 first printed 2025-07-17). Its explanation faults \"the fourth answer\", the keyed-correct one.",
   "exact_change": "Quiz 3 stem: \"+18%\" -> \"+8.7%\"; \"Your NVDA position\" -> \"Your position\"; \"the prior all-time high at $173\" -> \"the prior swing high at $173\". Explanation: \"The fourth answer outsources your target to strangers on the internet\" -> \"The second answer outsources...\"; same ATH->swing-high fix in its closing line. answer={3} unchanged. Body L25: drop \"In November 2024\" and \"NVDA\" -> \"A trader entered a stock around $138...\"; $138/$150/$172 arithmetic can stay.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: quiz-3 LIVE internal contradiction — stem '+18%' vs option[2] '+8.7%' for the same position; + NVDA $173 named 'prior all-time high'. DEF083 fixed only the positional pointer. Fix: genericize NVDA out + reconcile the percentages."
  },
  {
   "code": "SENT 5",
   "id": "202_bottom_tick_capitulation",
-  "bucket": "P1",
+  "bucket": "P2a",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Quiz 1's explanation calls \"the first answer\" the textbook bottom-tick move, then in the same paragraph calls that same first answer (\"hold and add\") greed - the bottom-tick move is option 4. META prose is also wrong: Nov 4 closed $90.79 not $98, $110 never traded.",
   "exact_change": "Quiz 1 explanation: \"The first answer feels like adult risk management and is the textbook bottom-tick move\" -> \"The last answer - sell at market now - feels like adult risk management and is the textbook bottom-tick move\". answer={1} unchanged. L25: drop \"META\" and the dates; \"$150, $130, $110, and finally $89\" -> \"$150, $130, $100, and finally $89\" ($110 never traded); \"printed $88.09 that afternoon\" -> \"the next morning\"; \"closed November 4 at $98\" -> \"closed the next session near $91\".",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "quiz poison FIXED (Q1 names 'cutting losses is the only adult move' distractor, key 1 stands); residual: NVDA/META named quiz stems + prose META/$110/$98 fabrication -> genericize"
  },
  {
   "code": "SENT 6",
@@ -2063,7 +2077,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 2's keyed correct option and its explanation both say Trader A needs +72% 'to reach flat'; +72% only regains the $129k peak — the $100k start needs +34%, which the remaining quarters do deliver.",
   "exact_change": "Quiz 2 option[3] + explanation + body L31: replace '+72% recovery just to reach flat, which the remaining quarters cannot deliver' / 'needs +72% just to return to its starting value' with '+34% to get back to the $100,000 start (+72% only regains the $129,000 peak)'. Answer key stays 3 (B still wins, +9.7% vs +7.7%). Body L29: '$4,400 (~1%)'→'$1,000 (~1%)'.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: quiz-2 key '+72% to reach flat' present (true +34% to $100k start; +72% only regains $129k peak)."
  },
  {
   "code": "RISK 4",
@@ -2282,12 +2297,13 @@
  {
   "code": "EDGE 2",
   "id": "019_survival_mindset",
-  "bucket": "P1",
+  "bucket": "P2a",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Both quiz explanations call 'the first' option the tempting wrong answer, but answer={0} — the first IS the key, so each tells a correct learner they were wrong; also mislabels the gambler's fallacy.",
   "exact_change": "Quiz1 explanation: 'The tempting wrong answer is the first' -> 'is the last' (option[3], size up to 3%); \"gambler's fallacy in reverse\" -> \"gambler's fallacy\". Quiz2 explanation: 'the first or the last' -> 'the second or the last'. Keys stay 0/0. Secondary: genericize 'Fed surprise + TSLA earnings miss' (no FOMC that week), soften the 90%/1-in-4 claim (needs sourcing).",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "quiz poison FIXED (DEF083 named the distractor by content, key 0 stands); residual: TSLA-dated Fed anecdote genericize + 'gambler's fallacy in reverse' wording nit + 90%/1-in-4 stat soften"
  },
  {
   "code": "EDGE 3",
@@ -2533,7 +2549,9 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 2 explanation contradicts its key: answer={1} is the overreliance sign, but the text calls 'the first three options' healthy CEO behaviour — index 1 included — labelling the correct answer wrong.",
   "exact_change": "Q2 explanation: \"The first three options are healthy CEO behaviour. The fourth one — rejecting verdicts — is also healthy\" -> \"The other three options are healthy CEO behaviour, and rejecting verdicts is actively expected\". Key stays {1}. L27: \"the six trades\" -> \"the six Verdicts — 3 BUYs, 3 HOLDs\". L21: \"`max_position_pct: 5` mandate\" -> \"3% cap your risk tier sets\".",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1 narrowed: quiz-2 contradiction FIXED; driver is now phantom `max_position_pct:5` (L21) — verified absent from mandate.py schema. Fix: 'the single-name cap your risk_score sets'.",
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
  },
  {
   "code": "EDGE 27",
@@ -2555,7 +2573,8 @@
   "exact_change": "L27: \"55% (Kelly = 18%) or 50% (Kelly = 5.5%)\" -> \"55% (Kelly = 30%) or 50% (Kelly = 22%)\". L27: \"doesn't exceed 1, your edge is negative\" -> \"doesn't exceed your loss probability (W × R > 1 − W), your edge is negative\". L27: \"PETRONAS swing setups\" -> \"a Bursa large-cap's swing setups\" (naming PCHEM: needs sourcing). Leave 42.4%, half/quarter-Kelly, keys {2}/{2}.",
   "confidence": "high",
   "retriage_why": "Driver is the Kelly threshold/formula itself plus wrong derived fractions — the mechanism is the lesson; the PETRONAS mention is only a secondary decoration.",
-  "genericizable": false
+  "genericizable": false,
+  "revalidated": "STAYS P1: Kelly=18%/5.5% (true 30%/22.2%), threshold 'W*R>1' (true W*R>1-W), PETRONAS not Bursa-listed — all present. false_fact, no quiz."
  },
  {
   "code": "EDGE 29",
@@ -2575,7 +2594,9 @@
   "quiz_affected": true,
   "defect_summary": "5-sigma given as ~14,000 trading days (true ~3.5M days / ~14,000 yrs); Mar-2020 'multiple -10% days'; Aug-2024 12% was the Nikkei not S&P; NVDA -16% was -17% on 27-Jan-2025; keyed quiz answer asserts '30-100x'.",
   "exact_change": "'~14,000 trading days' -> '~3.5M trading days (~14,000 years)'; 'March 2020: multiple -10%+ days in a single week' -> 'S&P -11.98%, 16 Mar 2020'; 'Aug 2024: a 12% intraday swing' -> Nikkei 225, 5 Aug 2024; NVDA '2024 ... -16%' -> '-17%, 27 Jan 2025'. Cut '30-100x' (quiz-1 opt D) and 'at least 30x' - needs sourcing. Both expls: 'the first'/'the last' -> option B. Keys 3/2 stay.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1 WIDENED: 5-sigma '~14,000 trading days' off ~250x (true ~3.5M days / ~14,000 yrs) present L31; NEW phantom field `max_single_name_notional_pct` (L63) — not in mandate.py. Quiz NOT mis-keyed; '30-100x' in key is P2b soften. Aug-2024 Nikkei-as-S&P + NVDA wrong date = P2a.",
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
  },
  {
   "code": "EDGE 31",
@@ -2585,7 +2606,8 @@
   "quiz_affected": true,
   "defect_summary": "(0.45/0.55)^100 = 1.93e-9, not the stated 3e-10 (6.4x off), so Quiz-1's keyed '60 million x' should be ~9.3 million x; Quiz-2's keyed answer says 1% out-compounds 5% but Kelly f*=10% at p=0.55/1R, so 5% wins.",
   "exact_change": "Prose + Quiz-1 stem '3 x 10^-10' -> '1.9 x 10^-9'. Quiz-1 opt idx2 '60 million' -> '9 million'; expl '6 x 10^7 - sixty million times' -> '9.3 x 10^6 - nine million times'; 'the first' -> 'option B'. Quiz-2 (key 1): cut the clause that compounding favours A - Kelly f*=10%, so 5% makes ~90x vs 1%'s ~3.1x over 1200 trades; restate B as higher median AND mean with a 1-2% ruin tail.",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "STAYS P1: exponent 3x10^-10 (true 1.9x10^-9) and '60 million' (true ~9M) present; quiz math."
  },
  {
   "code": "EDGE 32",
@@ -2629,7 +2651,8 @@
   "defect_summary": "Driver: L27 lists \"SIPC insurance\" as the US client-money backstop in a forex/CFD lesson beside CFTC — SIPC covers neither forex nor futures. Second: Quiz 2's explanation names the wrong distractor.",
   "exact_change": "L27 SIPC clause -> \"SEC/FINRA client-asset rules; SIPC protects securities at failed broker-dealers but NOT forex or futures — retail FX segregation is the CFTC/NFA regime\". Quiz 2 explanation: \"The most tempting wrong answer is the first\" -> \"is the last option (Fully regulated and safe — the licence is real)\"; answer stays 1.",
   "retriage_why": "Quiz-affected (override); and which backstop covers which product/regulator (SIPC vs CFTC) is the lesson's whole teaching point.",
-  "genericizable": false
+  "genericizable": false,
+  "revalidated": "STAYS P1: SIPC named as forex/CFD backstop (SIPC covers neither) present; positional-ref half fixed."
  },
  {
   "code": "EDGE 78",
@@ -2732,14 +2755,15 @@
  {
   "code": "SHARIA 5",
   "id": "351_purification_tazkiyah",
-  "bucket": "P1",
+  "bucket": "ESCALATE",
   "p1_trigger": "false_fact",
   "quiz_affected": false,
   "defect_summary": "L13/L68 credit the taught formula (non-compliant income / total income x dividend) to AAOIFI; it is the DJIM/S&P/MSCI/FTSE method — SS 21 is per-share. Arithmetic and both keys correct.",
   "exact_change": "L13 + L68: replace the AAOIFI attribution with 'Dow Jones Islamic / S&P Shariah purification methodology'. Do not restate AAOIFI's per-share variant — needs sourcing: exact SS 21 article text. Quizzes unchanged (keys 0, 2). Separate: L26 cites `purification_amount`, unreachable by any user path (DEF084).",
   "confidence": "medium",
   "retriage_why": "Pure attribution defect — crediting the index-provider formula to AAOIFI; which body prescribes which method is the teaching point, nothing to genericize.",
-  "genericizable": false
+  "genericizable": false,
+  "revalidated": "DEF084-CONTENT rewrote it: in-body AAOIFI mis-attribution gone, purification_amount code ref gone. Residual is a Sharia methodology-provenance question (is sourcing the pro-rata-dividend purification formula to AAOIFI SS-21 correct, vs the DJIM/S&P index-provider method?) -> SME, not auto-fix."
  },
  {
   "code": "SHARIA 6",
@@ -2766,12 +2790,13 @@
  {
   "code": "SHARIA 9",
   "id": "355_how_amis_halal_flag_maps_to_real_screening",
-  "bucket": "P1",
+  "bucket": "REPO_TRUTH_CR069",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Lesson says the halal flag computes the screen \"the same way sharia_screen computes them\"; runtime uses a 7-ticker allowlist (sim_engine.py:74 → mandate.py:271), sharia_screen() is never called. Both quiz keys repeat it.",
   "exact_change": "Blocked on DEF084. If content moves to code: Example/trap ¶ 'the two-stage screen … the same way `sharia_screen` computes them' → flag restricts to a pre-screened universe; strip 'a real business-activity + ratio screen' from Q1 opt[1] and 'checks the full two-stage screen' from Q2 opt[1]+explanation. Keys stay 1. Also 33%→30% or drop AAOIFI (Saiful's call).",
-  "confidence": "high"
+  "confidence": "high",
+  "revalidated": "RECLASSIFY: original finding obsolete. DEF084-CONTENT rewrote 355 (5790c15) to describe the Option-2 seven-ticker allowlist; CR069 (1504621, ~12h later) retired that allowlist and rewired all 5 halal sites to a SOURCED S&P Sharia universe with degrade-loudly pause. 355 now describes a mechanism the code deleted AND sources 'DEFAULT_HALAL_DEMO_UNIVERSE' which sim_engine.py:74 marks 'gone'; both quiz keys certify the retired architecture. NEW repo-truth defect -> route to CR069/content lane (noncoder.edu owns 351/355)."
  },
  {
   "code": "SHARIA 10",
