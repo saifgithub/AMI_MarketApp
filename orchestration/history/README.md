@@ -1,5 +1,6 @@
 <!--
-history/ — the dispatch layer's durable memory + retention (keeps active files small). CR052.
+history/ — the dispatch layer's durable memory + retention (keeps active files small).
+PORTABLE CORE: copy this README; never copy the archived contents.
 -->
 
 # Dispatch history (collective memory)
@@ -26,6 +27,7 @@ A single unbounded ledger is expensive to read and noisy in diffs. So:
 
 ## Who reads it
 
-Any agent, for prior-decision context (e.g. a coder starting CR021 greps `history/lanes/CR020.md`
-to see how the concierge context landed). The Architect distills durable cross-agent lessons from
-here into the project `memory/` + `failure_patterns.md` — see DISPATCH_PROTOCOL.md §9.
+Any agent, for prior-decision context — a coder starting an item greps the archived lane of the
+item it builds on, to see how that one actually landed. The Architect distills durable cross-agent
+lessons from here into the project's own memory + failure-pattern register — see
+DISPATCH_PROTOCOL.md §9.

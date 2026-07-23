@@ -12,14 +12,14 @@
 #   AUDIT_RETURNED : audit VERDICT = AWAITING_FIXES
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
 #   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
-#   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud, CR070
+#   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud
 #
-# CR070: DONE no longer derives from DISPATCH: ACCEPTED alone. Before this, `dispatch.sh` returned
-# DONE the moment the Architect wrote its own acceptance token, without ever reading a verdict — so
-# 10 of 14 coder lanes shipped ungated and printed identically to the 4 that passed. The state
-# machine could not express "shipped without a gate"; UNGATED is that state.
+# DONE does not derive from DISPATCH: ACCEPTED alone. It once did — returning DONE the moment the
+# Architect wrote its own acceptance token, without ever reading a verdict — and in the deployment
+# that produced this rule 10 of 14 coder lanes shipped ungated and printed identically to the 4 that
+# passed. The state machine could not express "shipped without a gate"; UNGATED is that state.
 #   GATE: none                -> no audit required; recorded UPFRONT at decomposition time, never
-#                                at hand-off (the tired-at-hand-off window is what waived DEF084)
+#                                at hand-off (the tired-at-hand-off window is where gates get waived)
 #   GATE: spawned|independent -> requires audit VERDICT: COMPLETE, else UNGATED
 #   GATE: absent              -> UNGATED. An unbound gate fails LOUD, never open.
 # Usage:
@@ -117,7 +117,7 @@ print_state() {
 }
 
 # needs_architect: lane state is one the Architect must act on.
-# UNGATED is included (CR070): an accepted lane whose gate is unsatisfied or unrecorded is a
+# UNGATED is included: an accepted lane whose gate is unsatisfied or unrecorded is a
 # protocol breach the Architect must resolve — either route it to an auditor or record GATE: none.
 needs_architect() {
   case "$1" in

@@ -1,33 +1,39 @@
 <!--
-AMI_TRADE_BINDINGS.md — local parameter bindings for the verbatim-mirrored PROTOCOL.md (AMI Trade
-copy). PROTOCOL.md was a byte-identical copy of ami_ai/core_platform/orchestration/audit/PROTOCOL.md
-(copied 2026-07-09) so upstream updates propagate by plain `cp`. DIVERGED 2026-07-12: guardrail 6
-(output compression) added locally ahead of upstream, at Saiful's direct instruction — re-sync by
-porting guardrail 6 upstream first, never by re-copying over it. NEVER edit PROTOCOL.md here
-otherwise; generic terms in it resolve via this table. Named distinctly from the source's own
-AMI_BINDINGS.md to avoid confusion between the two AMI-branded repos. This file exists only in
-the AMI_MarketApp repo — a re-copy of the protocol can never clobber it. Owner: AMI Trade (CR005).
+AMI_TRADE_BINDINGS.md — local parameter bindings for the portable PROTOCOL.md (AMI Trade copy).
+PROTOCOL.md began as a byte-identical copy of an upstream project's audit protocol (copied
+2026-07-09). DIVERGED 2026-07-12 (guardrail 6, output compression) and again 2026-07-23 (CR071:
+genericized — the upstream copy had that project's own paths, branch and deploy target baked into
+what claimed to be the portable half). It is now the PORTABLE CORE: every project-specific term in
+it resolves through this table. Do not paste project paths back into PROTOCOL.md; extend this file
+instead. Named distinctly to avoid confusion between the two AMI-branded repos. This file exists
+only in the AMI_MarketApp repo — a re-copy of the protocol can never clobber it.
+Owner: AMI Trade (CR005, CR071).
 -->
 
 # AMI Trade bindings for PROTOCOL.md
 
+Companion to [`../dispatch/BINDINGS.md`](../dispatch/BINDINGS.md) (the dispatch layer's bindings);
+where both define a term, they agree.
+
 | Term in PROTOCOL.md | Binding in this repo |
 |---|---|
-| WORK ITEM: CR (`Forward_Planning/`) | `CR###` row in [`docs/forward_planning/cr_list.md`](../../docs/forward_planning/cr_list.md) |
-| WORK ITEM: DEF (`DEF_LIST.MD`) | `DEF###` row in [`docs/defect/def_list.md`](../../docs/defect/def_list.md) |
+| WORK ITEM: CR | `CR###` row in [`docs/forward_planning/cr_list.md`](../../docs/forward_planning/cr_list.md) |
+| WORK ITEM: DEF | `DEF###` row in [`docs/defect/def_list.md`](../../docs/defect/def_list.md) |
 | `<ITEM>` id format | `CR###` or `DEF###`, zero-padded per this repo's existing convention (lane file `CR005.architect.md`, not `CR-0005`) |
-| Shared branch `audit/frontier` | `main` — this repo works directly off main (Team reality: sequential work, one thing at a time). Delivery = pushed to `origin` (`github.com/saifgithub/AMI_MarketApp`) |
-| SOURCE paths (architect/builder) | everything except `audit/` — plus own lane files `orchestration/audit/cr/<ITEM>.architect.md`, `orchestration/audit/cr/INDEX.md` |
+| `<AUDIT_ROOT>` | `orchestration/audit` |
+| `<AUDIT_LANE_DIR>` | `orchestration/audit/cr` (holds CR and DEF lanes alike) |
+| Shared branch | `main` — this repo works directly off main (Team reality: sequential work, one thing at a time). Delivery = pushed to `origin` (`github.com/saifgithub/AMI_MarketApp`) |
+| SOURCE paths (architect/builder) | everything except `orchestration/audit/` — plus own lane files `orchestration/audit/cr/<ITEM>.architect.md`, `orchestration/audit/cr/INDEX.md` |
 | AUDITOR paths | `orchestration/audit/**` only (minus `cr/*.architect.md`, `cr/INDEX.md`) |
-| Independent regression suite (`pytest audit/regression -q -o addopts=""`) | `pytest backend/tests/unit/ -q` (Mac-safe, sqlite tempfile fixture — runs with no backend/DB started, per `CLAUDE.md`) for unit coverage; for anything touching the live stack, the auditor independently SSHes/curls melehost (`curl https://api-alpha.agenticmarketintel.ai/v1/health`, `ssh melehost "docker logs ami_api_alpha --tail 50"`) rather than trusting the architect's pasted output |
-| GB10 3.11 deploy-target | melehost (Alpha host, LAN `192.168.20.59`, public `api-alpha.agenticmarketintel.ai`) |
-| Real measurement | the item's actual behaviour reproduced live on melehost/Alpha or via Mac pytest, per MABP-equivalent evidence discipline — never the architect's claim alone |
-| Architect's inner process | **not MABP** (that's DeliveryOS-specific tooling, unrelated to AMI Trade). Bind to `CLAUDE.md`'s existing sequential single-session model: Saiful + Claude, one thing at a time, no builder/QA sub-agent split. The architect still self-tests before submitting (own pytest run + own device/API check), exactly as `CLAUDE.md` already expects; the handshake adds a genuinely independent second look before an item is called done |
-| Auditor identity | a separate Claude Code session on **track U** (Auditor — see `.claude/session-config.yml`), started explicitly by Saiful. Fresh session per round is fine — continuity lives in the lane files, not session memory |
+| Independent regression suite | `pytest backend/tests/unit/ -q` (Mac-safe, sqlite tempfile fixture — runs with no backend/DB started, per `CLAUDE.md`) for unit coverage; for anything touching the live stack, the auditor independently SSHes/curls melehost (`curl https://api-alpha.agenticmarketintel.ai/v1/health`, `ssh melehost "docker logs ami_api_alpha --tail 50"`) rather than trusting the architect's pasted output. Auditor-authored pins live under `orchestration/audit/regression/` |
+| Deploy-target environment | melehost (Alpha host, LAN `192.168.20.59`, public `api-alpha.agenticmarketintel.ai`) |
+| Real measurement | the item's actual behaviour reproduced live on melehost/Alpha or via Mac pytest — never the architect's claim alone |
+| Architect's inner process | `CLAUDE.md`'s sequential single-session model: the stakeholder + Claude, one thing at a time, no builder/QA sub-agent split. The architect still self-tests before submitting (own pytest run + own device/API check), exactly as `CLAUDE.md` already expects; the handshake adds a genuinely independent second look before an item is called done |
+| Auditor identity | a separate Claude Code session on **track U** (Auditor — see `.claude/session-config.yml`), started explicitly by the stakeholder, or an Architect-spawned agent where the lane's `GATE:` is `spawned`. Fresh session per round is fine — continuity lives in the lane files, not session memory |
 | Auditing the "live tree" | the Mac is a single shared checkout — the architect (track R) may have uncommitted work at any moment. The auditor MUST check out the architect's committed SHA into a scratch worktree (`.claude/worktrees/audit-<ITEM>/`, matching this repo's existing subagent-worktree convention) or `git archive <sha>`, never trust the shared working tree as-is |
-| Rule 7 "no em or en dashes" | not binding in this repo (N/A) |
-| Definition-of-Done table (`Docs/governance/CR_DEFINITION_OF_DONE.md`) | [`docs/governance/CR_DEFINITION_OF_DONE.md`](../../docs/governance/CR_DEFINITION_OF_DONE.md) — a lightweight, AMI Trade-scoped checklist (CR005) |
-| `page_registry.json` / Rule 4 | N/A — no equivalent; AMI Trade is a Flutter app, not a web dashboard suite |
+| Concurrency cap N (guardrail 1) | see [`../dispatch/BINDINGS.md`](../dispatch/BINDINGS.md) § Caps and windows — the dispatch layer's spawn cap supersedes a fixed `AWAITING_AUDIT` count (CR070) |
+| Definition-of-Done table | portable core [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md), answered by [`docs/governance/CR_DEFINITION_OF_DONE.md`](../../docs/governance/CR_DEFINITION_OF_DONE.md) (CR070) |
+| Device-only verification | `NEEDS-DEVICE-CHECK` — see gap-fill 5 |
 
 ## Gap fills (agreed 2026-07-09, CR005; PROTOCOL.md is silent on these)
 

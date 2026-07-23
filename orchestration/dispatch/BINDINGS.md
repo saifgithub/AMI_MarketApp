@@ -11,17 +11,39 @@ this file + roster/ change. CR052.
 
 | Generic term | AMI Trade binding |
 |---|---|
+| The stakeholder | **Saiful** — founder, sole human-in-the-loop, single acceptance checkpoint after COMPLETE (`CLAUDE.md` § Team reality). The portable files never name him; this row is the only place the name belongs |
 | Shared branch | `main` — delivery = pushed to `origin` (`github.com/saifgithub/AMI_MarketApp`) |
+| `<ORCH_ROOT>` | `orchestration` |
+| `<DISPATCH_ROOT>` | `orchestration/dispatch` |
 | `<AUDIT_ROOT>` | `orchestration/audit` |
 | `<AUDIT_LANE_DIR>` | `orchestration/audit/cr` (the builder writes `<ITEM>.architect.md` here on hand-off) |
 | `<WORKTREE_DIR>` | `.claude/worktrees` (pattern `agent-*` per session-config; instance worktrees `<instance-id>-<ITEM>`) |
 | `<TAG_PREFIX>` | `AT` — commit tag `(AT:<instance-id> CR###\|DEF###)` |
 | Change registers | CR: `docs/forward_planning/cr_list.md` · DEF: `docs/defect/def_list.md` (Architect owns status) |
-| Backend test command | `pytest backend/tests/unit/ -q` (Mac-safe, sqlite tempfile — no DB) |
-| Mobile test command | `flutter analyze lib/` + **contract check**: re-verify `fromJson` against real backend JSON |
+| Backend test command | `cd backend && .venv/bin/python -m pytest tests/unit/ -q` — **measured 2026-07-23: 948 passed in 112 s, exit 0** on an idle Mac (sqlite tempfile, no DB). Fits a foreground Bash call with an explicit `timeout` |
+| Mobile test command | `flutter analyze lib/` + `flutter test` |
+| Contract check | backend↔mobile is a **hand-mirrored JSON contract, not type-enforced**: re-verify `fromJson` against **real backend JSON**, not just that it compiles (`?? default` hides a rename at runtime) |
+| Long-running test command | `sh orchestration/dispatch/run_full_suite.sh` (`uv run pytest tests/unit/`) — launch with `run_in_background:true` and poll for the `SUITE_EXIT=<code>` line. **Runtime unresolved:** CR061's helper scripts assert ~828 s, longer than the 600 s Bash ceiling, while the `.venv` invocation above measured 112 s on 2026-07-23. Whether `uv run` costs the difference or the 828 s figure is stale has not been re-measured — until it is, treat the wrapper as the safe path and don't quote either number as fact |
+| Content self-test | `cd backend && uv run pytest tests/unit/test_lesson_corpus_integrity.py -q` (~6 s, exit 0) — a maintainer's whole gate; never the full suite |
 | Live-stack verification | curl `https://api-alpha.agenticmarketintel.ai/v1/health`; `ssh melehost "docker logs ami_api_alpha --tail 50"` |
 | Deploy path | `/promote-to-alpha` (rsync to melehost; Mac is a pure editor — no local backend) |
 | Requester source (errors) | melehost `bug_reports` table (see `.claude/session-config.yml` track R `bug_list`) |
+
+## Escalation precedents (the evidence behind the portable rules)
+
+The portable core states the rules without citing this repo's history. The history is here, so a
+rule that looks arbitrary can be traced to what it cost.
+
+| Portable rule | What happened here |
+|---|---|
+| Route to an independent auditor on **reversibility, not size** | **DEF084-MOBILE** — three ARB files and one widget, shipped a false claim about a Sharia screen to two app stores |
+| Record `GATE:` **upfront**, never at hand-off | DEF084-MOBILE's gate was waived at hand-off, when the work looked finished and the session was long |
+| Push to a **lane branch**, never the shared branch | DEF084-MOBILE pushed its source directly to `main` (`e344b27`), bypassing both the audit and the integration step |
+| **Commit incrementally** | **DEF083** died on `Exceeded USD budget (5)` after editing 31 lessons and before its first commit; all 31 had to be redone |
+| **Never economy tier for an auditor** | **DEF059** — LLM down, confident fake `APPROVE`, shipped. A cheap gate manufactures false confidence rather than leaving a visible gap. Economy-tier workers also fabricate the `STATUS` token itself (`memory/feedback_haiku_completion_lies.md`) |
+| The **stall rule computes nothing** | **CR050** sat `AWAITING_AUDIT` across whole sessions with its audit never launched, showing as an ordinary in-flight state |
+| Never background a command in a one-shot session | **CR057** — a worker emitted a final message while a job ran and was killed mid-lane (`failure_patterns.md` P7) |
+| A `DONE` that never read a verdict | **CR070** — of 14 coder lanes marked `DONE`, only 4 carried an auditor `VERDICT: COMPLETE` |
 
 ## Caps and windows
 
@@ -87,9 +109,11 @@ workers instead of local ones.
 
 ## Auditor mapping (sharding)
 
-- Start with a single **`auditor.core`** = the existing track-U audit loop (`AT:U1`), gating every
-  coder instance. Shard into `auditor.backend` / `auditor.mobile` only if the audit queue saturates
-  (each coder's roster `auditor:` field is the switch).
+- **`auditor.core` as a standing instance was dropped (CR070).** A lane's `GATE:` names its gate:
+  `independent` = a session Saiful starts on track U (`AT:U1`) following `AUDITOR_LOOP_PROMPT.md`;
+  `spawned` = a fresh agent the Architect spawns per audit, same prompt; `none` = no audit, recorded
+  upfront at decomposition. Shard into `auditor.backend` / `auditor.mobile` only if the audit queue
+  saturates (each coder's roster `auditor:` field is the switch).
 
 ## Hot-file registry (measured — serialize via DEPENDS-ON, never parallel)
 

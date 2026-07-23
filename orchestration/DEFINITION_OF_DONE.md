@@ -2,8 +2,8 @@
 DEFINITION_OF_DONE.md — PORTABLE CORE. Copy verbatim into any project adopting this orchestration
 protocol; do not edit it per project. Every row here is a QUESTION plus what makes an answer valid.
 The concrete commands, paths and formats that answer them live in the project's BINDINGS file, as
-do any project-specific rows. Owner: CR070 (supersedes the AMI-Trade-only
-docs/governance/CR_DEFINITION_OF_DONE.md, which is now a pointer).
+do any project-specific rows. Each project points its own governance checklist at this file
+rather than restating the questions.
 -->
 
 # Definition of Done — portable core

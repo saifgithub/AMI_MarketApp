@@ -9,7 +9,7 @@
 #   watcher.sh auditor   [-i N]   block until >=1 lane is AWAITING_AUDIT  (poll every N s, default 30)
 #   watcher.sh architect [-i N]   block until >=1 lane is AWAITING_FIXES
 # Env: HANDSHAKE_CR_DIR overrides the lane directory (default: <script dir>/cr).
-# Portable POSIX sh, no dependencies. Shared verbatim with the Aegis-Finance audit loop.
+# Portable POSIX sh, no dependencies.
 
 set -u
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

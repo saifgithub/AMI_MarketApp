@@ -3,7 +3,7 @@ DISPATCH_PROTOCOL.md — the Architect ↔ instance dispatch handshake. GENERIC 
 copy verbatim into any project. Project specifics resolve via BINDINGS.md. Companion: ROLES.md
 (the role model). Layers ON TOP OF the existing builder→Auditor audit handshake (orchestration/audit/
 PROTOCOL.md), which it does not modify. On any conflict about verification, the audit PROTOCOL wins.
-Owner: the Architect. CR052.
+Owner: the Architect.
 -->
 
 # Dispatch handshake: Architect assigns, instances build, Auditor verifies
@@ -39,18 +39,18 @@ key on EVERY channel:
 | Watcher | `dispatch.sh inst <instance-id>` blocks until a lane targets THIS instance |
 | Worktree | `<WORKTREE_DIR>/<instance-id>-<ITEM>/` |
 | Commit tag | `(<TAG_PREFIX>:<instance-id> <ITEM>)` |
-| Interrogation | the instance is a **named background session** the human lists/attaches (`live_handle` = its session name/id) |
+| Interrogation | the instance is a **named background session** the stakeholder lists/attaches (`live_handle` = its session name/id) |
 
 The roster (`roster/<instance-id>.md`) binds a role to a spec + its owned paths + its addressing
 block. Adding a file adds an instance — the fleet is open.
 
 **Hosting (important).** An instance is an **independent, listable session — NOT a subagent of the
-Architect.** Only an independent session appears in the human's session/agent list and can be opened
+Architect.** Only an independent session appears in the stakeholder's session/agent list and can be opened
 and interrogated; an Agent-tool subagent is nested in its parent and is invisible. Consequences:
 (1) coordination is **file-only** — independent sessions share no memory, so the Architect never
 messages an instance in-process; each instance self-notices its turn via `dispatch.sh inst <id>`.
-(2) The human launches and names the instance sessions (onboarding); the Architect only assigns work
-via lanes. (3) `live_handle` records the session name/id for human interrogation. See BINDINGS for the
+(2) The stakeholder launches and names the instance sessions (onboarding); the Architect only assigns work
+via lanes. (3) `live_handle` records the session name/id for stakeholder interrogation. See BINDINGS for the
 concrete launch/monitor commands. (SendMessage applies only in the degenerate case where an instance
 is deliberately run as the Architect's own ephemeral subagent — not the interrogable-fleet model.)
 
@@ -89,7 +89,7 @@ appending).
 | `UNASSIGNED` | no `ASSIGNED` line | **Architect** — allocate |
 | `ASSIGNED` | `ASSIGNED round` > instance `STATUS round`, or no instance file | Instance — claim/build |
 | `IN_PROGRESS` | instance `STATUS` = CLAIMED/IN_PROGRESS | Instance |
-| `BLOCKED` | instance `STATUS` = BLOCKED | **Architect** / human |
+| `BLOCKED` | instance `STATUS` = BLOCKED | **Architect** / stakeholder |
 | `NEEDS-INFO` | instance `STATUS` = NEEDS-INFO | **Architect** — answer `Q:` |
 | `IN_REVIEW` | instance `STATUS` = READY_FOR_REVIEW (content) | **Architect** — content review |
 | `IN_AUDIT` | `READY_FOR_AUDIT` + audit `VERDICT` not COMPLETE/AWAITING_FIXES yet | Auditor |
@@ -98,25 +98,25 @@ appending).
 | `DONE` | `DISPATCH: ACCEPTED` **and** the lane's `GATE` is satisfied (§4a) | — |
 | `UNGATED` | `DISPATCH: ACCEPTED` but the gate is **not** satisfied | **Architect** — gate it or record why |
 
-## 4a. The gate (CR070)
+## 4a. The gate
 
 `DONE` used to derive from `DISPATCH: ACCEPTED` alone — the Architect's own token, read without ever
 consulting a verdict. The state machine could not express *"shipped without a gate"*, so it never
-did: **10 of 14 coder lanes shipped ungated and printed identically to the 4 that passed.**
-`UNGATED` is that missing state.
+did: in the deployment that produced this rule, **10 of 14 coder lanes shipped ungated and printed
+identically to the 4 that passed.** `UNGATED` is that missing state.
 
 | `GATE:` | Meaning | Reaches `DONE` when |
 |---|---|---|
 | `none` | No audit required — a chunk small enough, and with a small enough blast radius, to ship on its self-test | `DISPATCH: ACCEPTED` |
 | `spawned` | Audited by an agent the Architect spawned | audit `VERDICT: COMPLETE` |
-| `independent` | Audited by a human-started session the Architect does not control | audit `VERDICT: COMPLETE` |
+| `independent` | Audited by a stakeholder-started session the Architect does not control | audit `VERDICT: COMPLETE` |
 | *absent* | — | **never** — renders `UNGATED`. An unbound gate fails **loud**, never open |
 
 **Record `GATE:` when you WRITE the lane, not when the work comes back.** At decomposition time you
 have no stake in the answer. At hand-off the work looks finished, the session is long, and skipping
-is the cheapest move available — which is the exact state in which DEF084-MOBILE's gate was waived,
-after which it shipped a false claim about a religious screen to two app stores. Deciding upfront
-closes that window structurally. *Prompt instructions are not controls.*
+is the cheapest move available — which is the exact state in which a gate gets waived on the lane
+that most needed it. Deciding upfront closes that window structurally.
+*Prompt instructions are not controls.*
 
 **A CR ships as chunks + a CR-level audit, or as CR-only. The CR-level audit is mandatory in both
 branches.** That is what makes `GATE: none` safe on a chunk: there is no path to a finished CR that
@@ -133,7 +133,8 @@ floor, or the schema — regardless of how small the diff is).
 compliance text, a schema migration that moves data, money/credits/entitlements, the safety floor,
 or a user-facing claim about what the product does ⇒ `independent`. Everything else is a redeploy
 away from being fixed. Judge it against the **real diff after the work**, not a prediction made
-before it — a chunk sized as trivial that returns touching `db/models.py` trips the rule on its own.
+before it — a chunk sized as trivial that comes back touching a `HOT-FILES` entry trips the rule on
+its own.
 
 `dispatch.sh` modes: `state` (print the board once); `architect [-i N]` (block until a lane needs
 the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`); `inst <id> [-i N]`
@@ -169,7 +170,7 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
   authors the CR/DEF spec → opens an assignment lane. **Requesters propose; only the Architect
   mints the dispatched work item.**
 - **Maintainer** (`noncoder.*` editing assets): receives assignment lanes like a coder, but
-  `READY_FOR_REVIEW` routes to Architect/human content review (`IN_REVIEW`) — no Auditor, no tests.
+  `READY_FOR_REVIEW` routes to Architect/stakeholder content review (`IN_REVIEW`) — no Auditor, no tests.
 
 ## 8. Guardrails
 
@@ -194,17 +195,19 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
    `dispatch.sh state`; it may lag — detect real state from the tokens, never from the board. Only the
    Architect reads/writes the trail; instances read their lane + the relevant archived lane.
 7. **Stall rule.** At a cap with no movement for the BINDINGS stall window, the Architect escalates
-   to the human rather than blocking indefinitely. **Nothing computes this and nothing enforces it**
-   — CR050 sat awaiting audit across whole sessions with its audit never launched, and the board
-   showed it as an ordinary in-flight state. Until it has an owner and a real elapsed-time input it
-   is an acknowledged gap, not a control: the Architect re-derives the board at the **start of every
-   session** and clears anything in `UNGATED` / `AWAITING_AUDIT` before taking new work.
-7a. **Concurrency cap (CR070).** The cap is on **concurrently spawned agents of any role** — coders,
+   to the stakeholder rather than blocking indefinitely. **Nothing computes this and nothing
+   enforces it** — an item has sat awaiting audit across whole sessions with its audit never
+   launched, while the board showed it as an ordinary in-flight state. Until it has an owner and a
+   real elapsed-time input it is an acknowledged gap, not a control: the Architect re-derives the
+   board at the **start of every session** and clears anything in `UNGATED` / `AWAITING_AUDIT`
+   before taking new work.
+7a. **Concurrency cap.** The cap is on **concurrently spawned agents of any role** — coders,
    auditors and the DoD agent draw one shared quota — and it **queues rather than blocks**. The
-   binding constraint is the rolling usage window: exhausting it strands every in-flight agent at
-   once and everything uncommitted dies with them, so instances **commit incrementally** (DEF083
-   lost 31 edited lessons to a budget wall before its first commit) and the Architect **stops at
-   lane boundaries** rather than starting an audit that may die mid-verdict.
+   binding constraint is the provider's rolling usage window: exhausting it strands every in-flight
+   agent at once and everything uncommitted dies with them, so instances **commit incrementally**
+   (a worker has lost a full lane of edits to a budget wall before reaching its first commit) and
+   the Architect **stops at lane boundaries** rather than starting an audit that may die
+   mid-verdict.
 8. **Context (no human needed).** `/compact` cannot be automated — agents can't run slash commands,
    no skill/hook/setting triggers compaction (`PreCompact` only observes or blocks one), and there is
    no SDK trigger. It is also **not needed**: auto-compaction is **always on and runs in headless /
@@ -223,7 +226,7 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
    lane (or per round), build, hand off, **exit** — the next lane gets a new instance starting small.
    Continuity is in files, so ending early costs nothing. Push heavy reads/exploration into
    **disposable subagents** (ultracode) whose transcript never enters the instance's context. Keep
-   the stable prefix (these protocol docs, CLAUDE.md, the lane file) byte-stable so **prompt caching**
+   the stable prefix (these protocol docs, the agent guide, the lane file) byte-stable so **prompt caching**
    discounts it every call. Use **session resume** only for a tight same-lane bounce loop where the
    prior context is still relevant; otherwise respawn fresh. The Architect sizes lanes narrowly so no
    single instance-session grows large.
@@ -235,14 +238,14 @@ updates the CR/DEF register status, appends the `trail.md` closure row, writes
 `DISPATCH: ACCEPTED (round N)` on the assign lane, **archives the closed lane pair to
 `../history/lanes/<ITEM>.md`** (the durable per-item record — what/why, every Q/A round-trip, the
 verdict; this keeps active `lanes/` lean and is the collective memory), and frees the instance's WIP
-slot. The human's own hands-on test after ACCEPTED is the single stakeholder checkpoint; a defect
+slot. The stakeholder's own hands-on test after ACCEPTED is their single checkpoint; a defect
 they find reopens the lane at the next round.
 
 **Collective memory.** The archived lanes + `trail.md` + the audit layer's `audit/audit-trail.md` +
 `audit/runs/` are the operational history any agent can grep for prior decisions. Periodically (at
 session wrap, or via `/sm-checkpoint`) the Architect distills durable, cross-agent lessons from them
-into the project's existing memory (`memory/` + its index, and `failure_patterns.md` for recurring
-classes) — feeding the SAME collective memory, not a parallel one.
+into the project's existing memory and its recurring-failure register — feeding the SAME
+collective memory, not a parallel one.
 
 ## 10. Replicability
 

@@ -2,7 +2,7 @@
 ROLES.md — the role model for the multi-agent orchestration protocol. GENERIC and
 PROJECT-AGNOSTIC: copy this file verbatim into any project. All project specifics (paths, hosts,
 the actual roster of instances) live in BINDINGS.md + roster/, never here.
-Owner: the Architect. Companion: DISPATCH_PROTOCOL.md (mechanics). CR052.
+Owner: the Architect. Companion: DISPATCH_PROTOCOL.md (mechanics).
 -->
 
 # Roles — an all-agent company
@@ -23,10 +23,13 @@ instances. The Architect maintains the roster.
 ## The company metaphor (how to reason about it)
 
 - **Architect = COO.** Runs operations; does not set strategy and does not do the building.
-- **The human stakeholder = CEO / board.** Sets strategy and does the things only they can do
+- **The stakeholder = CEO / board.** Sets strategy and does the things only they can do
   (accounts, money, legal, pricing, business decisions, real-device testing, store submissions).
-  **The human is the single acceptance checkpoint after COMPLETE.** This is an audited operation,
-  not an autonomous swarm.
+  **The stakeholder is the single acceptance checkpoint after COMPLETE.** This is an audited
+  operation, not an autonomous swarm.
+  **"The stakeholder" is the protocol's only term for the person these files answer to** — the
+  portable files never name an individual, and "the human" where it appears means exactly this
+  role. Who it resolves to is a BINDINGS entry, not a fact any portable file states.
 - **Auditor = QA / compliance.** Independent sign-off — separation of duties. Operations cannot
   approve its own work.
 - **Coders = engineering. Non-coders = content / marketing / support / intake.**

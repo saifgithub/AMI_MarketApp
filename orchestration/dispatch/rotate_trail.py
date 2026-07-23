@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""rotate_trail.py — retention for a handshake ledger (CR052, DISPATCH_PROTOCOL.md §8.6).
+"""rotate_trail.py — retention for a handshake ledger (DISPATCH_PROTOCOL.md §8.6).
 
 Moves rows older than --keep-days out of an active ledger into monthly archives
 (<history>/trail-<YYYY-MM>.md), so the active ledger stays small and cheap to read.
@@ -38,7 +38,7 @@ DEFAULT_HISTORY = os.path.abspath(os.path.join(HERE, "..", "history", "trail"))
 
 DATE_RE = re.compile(r"^\|\s*(\d{4})-(\d{2})-(\d{2})(?:[ T]\d{2}:\d{2})?\s*\|")
 ARCHIVE_HEADER = (
-    "<!-- Rotated dispatch-ledger rows for {period} (rotate_trail.py, CR052). "
+    "<!-- Rotated dispatch-ledger rows for {period} (rotate_trail.py). "
     "Append-only archive; the active ledger is ../../dispatch/trail.md. -->\n\n"
     "# Dispatch ledger — {period}\n\n"
     "| When (KL) | Item | Instance | Round | Event | Headline |\n"
