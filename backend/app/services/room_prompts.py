@@ -166,6 +166,7 @@ def build_room_messages(
     alpaca_snapshot: str | None = None,
     plan: Any = None,
     trade_proposal: dict[str, Any] | None = None,
+    halal_universe: Any = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -180,8 +181,21 @@ def build_room_messages(
     `plan` gates the Decision Journal lookback window (DEF054/DEF055) for
     Bull/Bear Researcher — same retention-by-plan rule journal_store
     already applies everywhere else it's read.
+
+    `halal_universe` is the run's `HalalUniverse` (`_RoomContext.halal_universe`) —
+    the same object `enforce_safety_floor` decides against. Passing it here is what
+    lets the agents narrate the sourced verdict for `ticker` instead of a bare flag
+    (CR069); a Room turn that omits it makes the overlay say the screen could not be
+    attached, which is the loud degrade, not a silent one.
     """
-    base = build_agent_prompt(agent_id, mandate, user_id=user_id, alpaca_snapshot=alpaca_snapshot)
+    base = build_agent_prompt(
+        agent_id,
+        mandate,
+        user_id=user_id,
+        alpaca_snapshot=alpaca_snapshot,
+        halal_universe=halal_universe,
+        ticker=ticker,
+    )
     phase = _PHASE_FOR_AGENT[agent_id]
     length = _LENGTH_GUIDE[agent_id]
     transcript_text = _format_transcript(transcript)

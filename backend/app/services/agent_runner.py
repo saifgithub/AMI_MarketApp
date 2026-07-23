@@ -47,6 +47,7 @@ from app.services.concierge_prompts import (
 from app.services.fundamentals import build_live_data_block, extract_tickers
 from app.services.journal_context import build_journal_context_block
 from app.services.news_context import build_news_context_block
+from app.services.sharia_universe import default_halal_universe_async
 from app.services.social_context import build_social_context_block
 from app.services.technicals import build_technicals_context_block
 from app.services.llm_gateway import ChatMessage, LLMGateway
@@ -147,8 +148,21 @@ class AgentRunner:
                             api_secret=row.alpaca_refresh_token if row.alpaca_auth_mode == "apikey" else None,
                         )
 
+            # CR069: a halal mandate's 1-on-1 turns get the same sourced Sharia
+            # universe the Room path narrates. No ticker is known at this point —
+            # the overlay then renders the standard/source/as-of and the three
+            # states without a per-name verdict, which is what the agent needs to
+            # avoid narrating an unreviewed name as screened.
+            halal_universe = None
+            if mandate.compliance.halal:
+                halal_universe = await default_halal_universe_async()
+
             system_prompt = build_agent_prompt(
-                agent_id, mandate, user_id=session.user_id, alpaca_snapshot=alpaca_snapshot
+                agent_id,
+                mandate,
+                user_id=session.user_id,
+                alpaca_snapshot=alpaca_snapshot,
+                halal_universe=halal_universe,
             )
 
             # BL11 (AT:R33): effective_plan downgrades expired trials. Moved
