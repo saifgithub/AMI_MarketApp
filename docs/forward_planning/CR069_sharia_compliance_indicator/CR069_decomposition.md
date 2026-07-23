@@ -15,13 +15,16 @@ document — a chunk nobody wrote down is a hole the terminal gate cannot catch.
 | `CR069-MOBILE` | `coder.mobile` | **independent** | CR069-BE (hard) | written, unassigned |
 | `CR069-ROOM` | `coder.room` | **independent** | CR069-BE | **added after the fact — see below** |
 | `CR069-DIVERGE` | `coder.api` | spawned | CR069-BE | written, unassigned |
-| `CR069-MY` | `coder.api` | **independent** | CR069-BE | **blocked — Saiful** |
-| `CR069-VENDOR` | `coder.api` | spawned | CR069-BE | **blocked — Saiful (G5, G6)** |
+| `CR069-MY` | `coder.api` | **independent** | CR069-BE | **deferred — Saiful, 2026-07-23** |
+| `CR069-VENDOR` | `coder.api` | spawned | CR069-BE | **deferred — Saiful, 2026-07-23** |
 | `CR069` | `architect` | **independent** | all dispatched chunks | terminal gate |
 
-Only `CR069-BE` is assigned. `-MOBILE` and `-DIVERGE` wait on a real dependency; `-MY` and `-VENDOR`
-wait on the stakeholder. All five unassigned lanes render `UNASSIGNED` on the board, which is
-correct — the open action on each is the Architect's.
+Only `CR069-BE` is assigned. `-MOBILE` and `-DIVERGE` wait on a real dependency; `-MY` and
+`-VENDOR` are **deferred, not dropped** (daily check-in, 2026-07-23): `-MY` until there's a real
+go/no-go on entering the Malaysia market (Malaysia isn't in MVP scope — US equities at MVP,
+GCC/Bursa later); `-VENDOR` until CR069-BE's free ETF-derived screen has been live long enough to
+judge whether paid vendor data (Halal Terminal/Zoya/Musaffa) is worth pursuing at all. Neither lane
+is dispatched; revisit both when their trigger condition is met, not on a timer.
 
 ## Gate routing — the reasoning, since it is the point of the exercise
 
@@ -90,7 +93,13 @@ in the direction nobody checks. The lane instructs `BLOCKED` over faking it.
   trade rather than a rejection.
 - **G4 — index-constituent licensing.** Lawyer question. Does not block building or internal
   testing; **does** block marketing or public launch. No agent resolves this.
-- **G5/G6** — vendor account and quotes, which block `CR069-VENDOR` entirely.
+- **G5/G6 — RESOLVED (Saiful, 2026-07-23 daily check-in): defer.** Don't pursue vendor
+  trial accounts/quotes now — see how CR069-BE's free ETF-derived screen performs live first.
+  `CR069-VENDOR` stays unassigned until that judgement is made, not until G5/G6 are answered.
+- **CR069-MY timing — RESOLVED (Saiful, 2026-07-23 daily check-in): defer to MY market launch.**
+  Malaysia isn't in MVP scope (US equities at MVP, GCC/Bursa later); building the PDF-ingestion
+  screen ahead of a real go/no-go on that market isn't worth it. `CR069-MY` stays unassigned until
+  Malaysia market work actually starts.
 
 ## The decomposition was incomplete — `CR069-ROOM` (added after CR069-BE returned)
 
