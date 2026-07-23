@@ -162,18 +162,66 @@ A fetcher + cache that pulls the **primary standard's** holdings CSV, extracts `
 `Date` column as the **as-of stamp**, and exposes the set as the `halal` universe in place of
 `DEFAULT_HALAL_DEMO_UNIVERSE`.
 
-**One named primary standard — no failover, no union, no intersection** (see §3a: the sources
-disagree on 47.9% of the union). Recommended primary: **SPUS / AAOIFI**, because AAOIFI is the
-reference standard the curriculum already teaches and SP Funds states AAOIFI adherence explicitly —
-**but the choice is Saiful's, not the build team's.** HLAL is fetched as a *divergence monitor*: log
-when the two disagree on a name a user holds or convenes, and surface it as the "standards differ"
-teaching moment rather than as an input to the verdict.
+**DECIDED (Saiful, 2026-07-23): the standard is AAOIFI, sourced from SPUS — "for what it covers."**
+That last clause is scope, not hedging: SPUS screens the S&P 500, so AAOIFI/SPUS is authoritative
+for S&P 500 members and **silent — not negative — for everything else**. Build the three-state logic
+around exactly that boundary.
+
+**No failover, no union, no intersection** (see §3a: the sources disagree on 47.9% of the union).
+HLAL is fetched as a *divergence monitor* only: log when FTSE and AAOIFI disagree on a name a user
+holds or convenes, and surface it as the "standards differ" teaching moment — never as an input to
+the verdict.
 
 If the primary source is unavailable, the flag **degrades loudly** (constraint 3). It must never
 quietly answer from the other standard.
 
 The CSV carries non-equity rows (cash / CVR line items such as `003654100CVR`, `2602335D`) — filter
 them, and assert a plausible row count so a truncated download cannot quietly shrink the universe.
+
+### Phase 1b — UI copy (ships with Phase 1, same commit)
+
+The DEF084 copy says "curated demonstration universe … not a Sharia screen." After Phase 1 that is
+false in the other direction — it *is* a screen now, for what it covers. Replace it. Proposed EN
+strings below; the build team may tighten wording, but must not drop the standard name, the source,
+the as-of date, or the coverage boundary.
+
+`settingsComplianceHalal` (toggle label)
+
+> **Sharia screen — AAOIFI**
+
+`settingsComplianceHalalSubtitle`
+
+> **AAOIFI standard, S&P 500 Sharia index · as of {date}**
+
+`_complianceExplanations['halal']` — title **"Sharia screen (AAOIFI)"**, body:
+
+> Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to
+> the S&P 500 Sharia Industry Exclusions Index. AMI reads that index's published constituents — it
+> does not run its own ruling. Currently {n} companies, as of {date}.
+>
+> Coverage is the S&P 500. A company outside it hasn't been screened by this standard, so AMI will
+> tell you it's unscreened rather than guess.
+>
+> Sharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and
+> denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on
+> about half the names between them. This screen follows AAOIFI.
+
+**The unknown state** — three states, and "unknown" must read as *no ruling*, not as a soft no.
+Shown wherever a ticker's status appears (Room convene, trade rejection, watchlist):
+
+- **Passes** → *"{TICKER} passes the AAOIFI screen (S&P 500 Sharia, as of {date})."*
+- **Screened out** → *"{TICKER} is in the S&P 500 but does not pass the AAOIFI screen, so this
+  mandate won't trade it."*
+- **Unknown** → *"{TICKER} isn't in the S&P 500, so the AAOIFI screen AMI uses hasn't reviewed it.
+  That's not a ruling either way — AMI doesn't know."*
+- **Source unavailable / stale** (constraint 3, degrade loudly) → *"AMI couldn't refresh the Sharia
+  screen (last updated {date}). The halal filter is paused until it can."*
+
+Whether an unknown ticker is **blocked or permitted** with the disclosure attached is a behaviour
+choice, not a copy choice — build team proposes, and it goes in the Gate at the end.
+
+New/changed ARB keys need translator notes and stay **placeholder in AR and MS** until reviewed —
+observance-sensitive, same posture as the DEF084 strings.
 
 ### Phase 2 — Malaysia via the SC SAC list
 
@@ -244,19 +292,6 @@ to refuse. Ships in the same commit as the fix, per the `failure_patterns.md` ho
 5. Phase 3 output is a numbers table — measured API agreement against the Phase-1 set and a real
    monthly cost at projected convene volume. No estimate stated as a measurement.
 
-## Open decisions — Saiful's, and Phase 1 should not start without the first two
-
-1. **Which standard is primary?** AAOIFI/SPUS (recommended) or FTSE/HLAL. Not an engineering call —
-   47.9% of names hang on it, including META and KO. §3a has the measured split.
-2. **What does the UI say now?** Phase 1 replaces "curated demonstration universe" with a real
-   sourced screen, so `settingsComplianceHalal` + its subtitle + the explanation body
-   (`settings_screen.dart:355`, `app_en.arb:395`) all need new copy naming the standard, the source
-   and the as-of date — plus the **unknown** state, which has no UI today. Observance-sensitive
-   strings: the AR/MS entries carry translator notes and stay placeholder until reviewed.
-3. **Licensing** (constraint 5) — lawyer question, blocks marketing, not building.
-4. **Human-dependency items, Phase 3:** Saiful opens the Halal Terminal free-tier account and
-   requests the Musaffa / Zoya quotes. Claude cannot self-serve either.
-
 ## Out of scope
 
 - Any brokerage or real-trading integration (permanently out — simulation-only).
@@ -269,3 +304,22 @@ Commit tag `(AT:R<N> CR069)`. Closes the sourcing gap DEF084 left open (its Opti
 the Option-2 placeholder without removing its honesty. Relates to **CR046** (the screening math is
 M13, already written and waiting), **CR040** (degrade loudly), **CR060** (Sharia content is
 SME-escalated), and **DEF082** (lesson-gating sequencing).
+
+---
+
+## GATE — items needing Saiful, deliberately last
+
+**None of these block Phase 1 or Phase 1b. Build now; these resolve in parallel.**
+
+| # | Item | Blocks | Status |
+|---|---|---|---|
+| G1 | **Standard choice** — AAOIFI via SPUS, "for what it covers" | Phase 1 | **RESOLVED 2026-07-23** |
+| G2 | **UI copy** — approve or tighten the Phase 1b strings | Phase 1b merge | **RESOLVED 2026-07-23** — build to the copy above |
+| G3 | **Unknown-ticker behaviour** — block with disclosure, or permit with disclosure? Build team proposes; Saiful rules | nothing (default: **block + disclose**, the conservative read) | open |
+| G4 | **Index-constituent licensing** — SEC daily-transparency publication is not obviously an S&P data licence; FTSE's terms restrict building products on their data; US case law inconsistent on constituent lists | **marketing/public launch only** — not building, not internal testing | open · lawyer |
+| G5 | **Halal Terminal free-tier account** (500 calls/mo) — Saiful registers, Claude cannot self-serve | Phase 3 only | open |
+| G6 | **Musaffa + Zoya quotes** — both quote-only/contact-sales | Phase 3 only | open |
+| G7 | **SHARIA lesson corrections** — 8 of 10 carry threshold errors (AAOIFI is 30/30/5, not the 33% stated); 2 escalated on scholarly-position grounds. SME sign-off per CR060 | lesson content only; sequenced after Phase 1 behaviour locks; also behind DEF082 | open · SME |
+
+G3 has a safe default so the build team is never stalled on it: **block and disclose**, using the
+unknown-state copy in Phase 1b. If Saiful rules the other way it is a one-line change.
