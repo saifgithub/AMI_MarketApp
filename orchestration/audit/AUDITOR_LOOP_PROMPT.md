@@ -78,9 +78,9 @@ repo layout, and do not proceed on an unresolved token.
      invalidated in the actual deployed process (not only in a test that resets it), and does it
      respect the project's concurrency model (no operation that should be non-blocking blocks the
      process while it's shared)? Correct on the first call is a different claim from correct on the
-     thousandth, or under concurrent access — verify both, not just the one you traced by hand
-     (DEF088 — this class of check was previously implicit and got missed on the first round of a
-     real item; it was not superstition).
+     thousandth, or under concurrent access — verify both, not just the one you traced by hand.
+     This check was implicit once and a real item passed a round without it (BINDINGS → Escalation
+     precedents); it is not superstition.
 4. Verify the Definition-of-Done table in the architect lane — the portable questions in
    [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md) as answered by this project's bindings.
    **CR-level submissions only**: a chunk carries the shorter chunk evidence list instead and must

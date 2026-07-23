@@ -44,6 +44,9 @@ rule that looks arbitrary can be traced to what it cost.
 | The **stall rule computes nothing** | **CR050** sat `AWAITING_AUDIT` across whole sessions with its audit never launched, showing as an ordinary in-flight state |
 | Never background a command in a one-shot session | **CR057** — a worker emitted a final message while a job ran and was killed mid-lane (`failure_patterns.md` P7) |
 | A `DONE` that never read a verdict | **CR070** — of 14 coder lanes marked `DONE`, only 4 carried an auditor `VERDICT: COMPLETE` |
+| Verify a **stateful construct across its full lifecycle**, not just first construction | **DEF088** — CR069-BE round 1 verified the sourced-universe resolver's logic exhaustively and passed. Round 2, prompted by the stakeholder questioning the pace, found two MAJORs in the same code's *runtime shape*: a staleness re-check that only ran when the cache was empty (so a long-running process never noticed data going stale) and a synchronous fetch blocking the async event loop. Correct on the first call is a different claim from correct on the thousandth |
+| Evidence that lives in one working tree | **DEF087** — a coder exited having written both hand-off files and committed neither, and the board read `AWAITING_AUDIT`; separately an auditor's `COMPLETE` was briefly uncommitted while the board read `AUDIT_PASSED`, the state that authorises a merge. Both scripts now render `UNCOMMITTED` (CR074) |
+| A "verified live" claim that verified **one of two** required sources | **DEF089** — CR069's brief curl'd the compliant-set URL in detail and never once fetched the parent-index URL, which turns out to serve an HTML bot-mitigation page with `content-type: text/csv` on it. The gap survived a brief, a lane and a build |
 
 ## Caps and windows
 

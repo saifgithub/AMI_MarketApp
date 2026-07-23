@@ -151,5 +151,63 @@ verify named rather than omitted.
 Commit tag `(AT:coder.api CR069)`. Report the SHA and the pytest exit code. **Completion is verified
 by git and exit code, never by your word.**
 
-ASSIGNED: coder.api round 1
+---
+
+# Round 2 — three fixes (auditor bounced round 1, `AWAITING_FIXES`)
+
+Read [`orchestration/audit/cr/CR069-BE.auditor.md`](../../audit/cr/CR069-BE.auditor.md) in full
+first. Round 1's resolver correctness is **confirmed and not reopened** — PASS / SCREENED_OUT /
+UNKNOWN / UNAVAILABLE semantics stand, G3 stands, the guard stands. Do not redo them, do not
+"improve" them. Three specific gaps, all in the provider's runtime shape.
+
+**F2 — MAJOR. Staleness re-check is dead after process start.** The window is only evaluated when
+`_cache is None`, so a process that starts with fresh data never notices it going stale — it serves
+the same universe until restart. That contradicts constraint 3 for any long-running deployment,
+which is every deployment. Check elapsed time against `as_of` on **every `get()`**, mirroring
+`news_context.py`'s per-call TTL check, or add an explicit periodic refresh caller.
+
+**F3 — MAJOR. The synchronous fetch blocks the async event loop** on first use, at all three call
+sites, on a single-worker deployment — so the first `halal` trade after a restart stalls every other
+in-flight request. Use `asyncio.to_thread(self._build, ...)` or `run_in_executor`, matching the
+existing pattern at `sim.py:411`.
+
+**DEF089 — the configured parent-index URL does not serve CSV.** New in round 2, and it is why
+nothing can go live: `sharia_parent_index_url` (`config.py:171-173`, `docker-compose.yml:146`)
+returns HTTP 200 with the iShares **product webpage**, carrying `content-type: text/csv` and a
+`content-disposition` filename on an HTML body — an upstream bot-mitigation layer
+(`server: istio-envoy`). Your `parse_holdings_csv()` handles it correctly (raises
+`ShariaSourceError`, `_build()` catches it and pauses) so the code is not at fault, but as
+configured `SHARIA_SCREEN_ENABLED=true` would pause the screen **permanently**, and without
+parent-index membership there is no third state at all.
+
+Spec: [`DEF089`](../../../docs/defect/DEF089_parent_index_url_serves_html_not_csv/DEF089_parent_index_url_serves_html_not_csv.md).
+Two candidate shapes, in preference order:
+
+1. **A published mirror fetched the same way HLAL already is** — the CR069 doc's §3 pattern uses a
+   Google-Sheets CSV export, no key, no browser emulation. Any S&P 500 constituent list on a
+   comparable plain-fetch endpoint qualifies.
+2. Browser emulation / session handling for the iShares endpoint. **Weaker, and say so if you pick
+   it** — it makes the screen depend on defeating a bot-mitigation layer that can change without
+   notice, in a feature whose entire purpose is not to break silently.
+
+**Fetch whichever you choose LIVE and paste the real response in your hand-off** — status, byte
+count, first line, ticker count, and the as-of date. A URL nobody fetched is what produced this
+defect: the brief's "verified live" section verified SPUS and never the parent index, and read as
+though it had done both.
+
+If no plain-fetch source works, come back **`BLOCKED`** with what you tried and the actual responses.
+Do not ship a two-state screen. Do not quietly widen `UNKNOWN` to cover it.
+
+## Round 2 constraints
+
+- Keep the tests fixture-based — no network in the unit suite. The live check is evidence in your
+  hand-off, not a test.
+- Same boundaries as round 1: no ARB, no `settings_screen.dart`, no `overlay_generator.py`
+  (CR069-ROOM), no lesson content, `sharia_screen()` stays dormant.
+- Same branch: `lane/CR069-BE.coder.api`. **Commit the hand-off files this time** — round 1 wrote
+  both and committed neither, and the board reported a delivered submission anyway (DEF087, now
+  fixed: an uncommitted lane file renders `UNCOMMITTED`).
+- Bump both round markers to **2**: `STATUS: READY_FOR_AUDIT (round 2)` and `SUBMITTED: round 2`.
+
+ASSIGNED: coder.api round 2
 DISPATCH: OPEN

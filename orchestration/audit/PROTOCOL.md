@@ -24,8 +24,8 @@ lane mechanics. Below, `<ITEM>` is any item id in this project's id format (BIND
   more than one call — that pass covers its FULL lifecycle, not just first-construction correctness:
   does it ever refresh/expire/invalidate in the deployed process (not only in a test that resets it),
   and does it respect the project's concurrency model. Correct on the first call is a different claim
-  from correct on the thousandth, or under concurrent access (DEF088). Per-item rigor is unchanged
-  under parallelism (guardrail 4).
+  from correct on the thousandth, or under concurrent access (BINDINGS → Escalation precedents).
+  Per-item rigor is unchanged under parallelism (guardrail 4).
 - DISJOINT PATHS, shared branch (BINDINGS): the ARCHITECT writes SOURCE + its own
   `<AUDIT_LANE_DIR>/<ITEM>.architect.md` + `<AUDIT_LANE_DIR>/INDEX.md`; the AUDITOR writes
   `<AUDIT_ROOT>/**` only (`<ITEM>.auditor.md`, `runs/`, `regression/`, `audit-trail.md`, this
