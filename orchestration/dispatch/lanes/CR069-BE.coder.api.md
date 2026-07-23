@@ -1,7 +1,7 @@
 <!-- dispatch lane file — coder.api-owned. CR052. -->
 # CR069-BE — coder.api
 
-STATUS: READY_FOR_AUDIT (round 2)
+STATUS: READY_FOR_AUDIT (round 3)
 
 **Branch:** `lane/CR069-BE.coder.api` (pushed to origin; never main)
 **Round-2 SHAs:** `6b26310` → `88776b3` → `c2683da`, on top of round 1's `c1a8706`.

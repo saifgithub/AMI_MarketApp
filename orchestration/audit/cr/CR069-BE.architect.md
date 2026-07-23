@@ -1,7 +1,7 @@
 <!-- audit bridge — builder writes, auditor reads. CR069-BE. -->
 # CR069-BE — audit submission (coder.api → auditor.core)
 
-SUBMITTED: round 2
+SUBMITTED: round 3
 GATE: independent
 BRANCH: lane/CR069-BE.coder.api  (origin; nothing pushed to main)
 ACCEPTANCE: docs/forward_planning/CR069_sharia_compliance_indicator/CR069_sharia_compliance_indicator.md (§Phase 1, §Design constraints 1-4, §Guard, §Acceptance 1-3)

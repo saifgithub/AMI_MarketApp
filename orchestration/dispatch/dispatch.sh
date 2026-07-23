@@ -79,6 +79,12 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
 
   u="$AUDIT_DIR/$1.auditor.md"
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
+  # Read the verdict's ROUND, not just its keyword. Submissions and verdicts share one counter, and
+  # a verdict only answers the submission at its own round: once a newer submission lands, the old
+  # keyword is history. Reading the keyword alone made a resubmitted lane keep reporting the verdict
+  # it had already addressed — and left this board disagreeing with the audit watcher, which had
+  # compared rounds all along.
+  v_round=$(last_round "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES) *\(round *[0-9]+'); v_round=${v_round:-0}
   # A verdict nobody committed has not been delivered, so it cannot satisfy a gate. Render it as
   # its own loud state rather than letting it read as a pass — the same reason UNGATED exists.
   if [ -n "$v_kw" ] && [ -n "$(undelivered "$u")" ]; then v_kw="UNCOMMITTED"; fi
@@ -111,6 +117,8 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
     NEEDS-INFO)          echo "NEEDS-INFO $inst $asg_round $st_kw - $g" ;;
     READY_FOR_REVIEW)    echo "IN_REVIEW $inst $asg_round $st_kw - $g" ;;
     READY_FOR_AUDIT)
+      # A submission newer than the last verdict is unanswered, whatever that verdict said.
+      if [ "$st_round" -gt "$v_round" ]; then echo "IN_AUDIT $inst $asg_round $st_kw - $g"; return; fi
       case "${v_kw:-}" in
         AWAITING_FIXES) echo "AUDIT_RETURNED $inst $asg_round $st_kw $v_kw $g" ;;
         COMPLETE)       echo "AUDIT_PASSED $inst $asg_round $st_kw $v_kw $g" ;;

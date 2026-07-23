@@ -73,17 +73,34 @@ You run as a single-shot `claude -p` session: **the session ENDS the moment you 
 - **Write only:** your owned source paths + `lanes/<ITEM>.<your-id>.md` + your audit lane
   `<AUDIT_LANE_DIR>/<ITEM>.architect.md`. Never touch another instance's paths, the assign lane, the
   board, or the Auditor's files. Stage by name. Commit tag `(<TAG_PREFIX>:<your-id> <ITEM>)`.
-- **Delivery is on origin, to YOUR LANE BRANCH — never to the shared branch.** Push to
-  `lane/<ITEM>.<your-id>`. A committed-but-unpushed submission is invisible to your Auditor, and a
-  submission pushed straight to the shared branch has skipped the gate entirely: **nothing reaches
-  the shared branch except through the Architect**, who merges only once the lane's `GATE:` is
-  satisfied. This was ambiguous before — the instruction read "push to origin" without naming a
-  branch — and a lane pushed its source straight to the shared branch, bypassing both the audit and
-  the integration step before either could be applied. If you find yourself on the shared branch,
-  stop and branch.
+- **SOURCE goes to your lane branch. YOUR TWO LANE FILES go to the shared branch. This split is
+  the whole delivery rule and both halves are load-bearing.**
+
+  **Source** — push to `lane/<ITEM>.<your-id>`, never the shared branch. A submission pushed
+  straight to the shared branch has skipped the gate entirely: **nothing reaches the shared branch
+  except through the Architect**, who merges only once the lane's `GATE:` is satisfied. This was
+  ambiguous once — the instruction read "push to origin" without naming a branch — and a lane pushed
+  its source straight to the shared branch, bypassing both the audit and the integration step. If you
+  find yourself committing source on the shared branch, stop and branch.
+
+  **Your lane file and your audit-bridge file** — commit these to the **shared branch**. They are
+  not deliverables, they are shared coordination state: every watcher derives the board from them on
+  the shared branch, so a hand-off that exists only on your lane branch is invisible to everyone.
+  A whole finished round has already sat waiting this way, with one board reporting the coder still
+  working and the other reporting the auditor had nothing (BINDINGS → Escalation precedents).
+  Committing them is not "reaching the shared branch" in the sense the gate cares about — they carry
+  no source, and the Architect still controls every merge.
+
+  A committed-but-unpushed anything is invisible to your Auditor. Push both.
 - **Never close your own findings.** COMPLETE is the Auditor's call.
 - **Machine tokens byte-exact:** `STATUS: … (round N)`, `SUBMITTED: round N`. A paraphrase breaks
   the watcher.
+- **The round counter is the LANE's, not yours.** Submissions and verdicts share one sequence, and
+  the watcher only sees work when your `SUBMITTED` round is **greater than** the last `VERDICT`
+  round. So do not assume your resubmission is "round 2" because it is your second try — read the
+  auditor's latest verdict round first and submit at the next number above it. An auditor that
+  re-opens its own verdict consumes a round, and a resubmission that reuses it reads as already
+  answered: the lane goes quiet with the work finished and nobody's turn.
 - **Run lean, then exit.** After `READY_FOR_AUDIT` (and again after the Architect integrates), you
   are done — **exit**; don't idle-accumulate context waiting for the next lane. Your state is in the
   files, so a fresh instance picks up the next lane cheaply. Offload heavy reads/exploration to
