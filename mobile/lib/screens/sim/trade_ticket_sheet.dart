@@ -10,11 +10,13 @@ import 'dart:async';
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
+import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/sharia_verdict_banner.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -237,11 +239,40 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     }
   }
 
+  /// Violations minus the backend's English Sharia sentence, when the same
+  /// fact is about to be rendered from the ARB as a localized banner. See the
+  /// call site for why the match is deliberately narrow.
+  static List<String> _visibleViolations(SimSubmitResult r) {
+    final v = r.shariaVerdict;
+    if (v == null || !v.isBlocking) return r.violations;
+    final ticker = v.ticker.toUpperCase();
+    final standard = v.standard.toUpperCase();
+    if (ticker.isEmpty || standard.isEmpty) return r.violations;
+    return r.violations
+        .where((s) =>
+            !(s.toUpperCase().contains(ticker) &&
+                s.toUpperCase().contains(standard)))
+        .toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(simNotifierProvider);
     final refusal = state.lastSubmit != null && !state.lastSubmit!.ok;
     final l = AppLocalizations.of(context);
+    // CR069 G3: the Sharia disclosure rides on BOTH outcomes. A screened-out
+    // ticker is refused and its verdict sits inside the refusal panel below; a
+    // pass or an unknown is PERMITTED, so its verdict has no refusal to ride on
+    // and gets its own banner here. A permitted unknown that renders nothing is
+    // a silent pass on an observance decision — this CR's failure class
+    // pointing the other way.
+    final permittedVerdict = state.lastSubmit != null && state.lastSubmit!.ok
+        ? state.lastSubmit!.shariaVerdict
+        : null;
+    final blockingVerdict = refusal &&
+            (state.lastSubmit!.shariaVerdict?.isBlocking ?? false)
+        ? state.lastSubmit!.shariaVerdict
+        : null;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l,
@@ -336,6 +367,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
               ),
               const SizedBox(height: AmiSpacing.m),
             ],
+            if (permittedVerdict != null) ...[
+              ShariaVerdictBanner(verdict: permittedVerdict),
+              const SizedBox(height: AmiSpacing.m),
+            ],
             if (refusal) ...[
               Container(
                 width: double.infinity,
@@ -358,11 +393,24 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    for (final v in state.lastSubmit!.violations)
+                    // The backend composes its violation sentences in English
+                    // (they also feed the agent prompts). When a blocking
+                    // Sharia verdict arrives structured, its localized banner
+                    // is rendered below instead, so drop the English twin here
+                    // rather than showing the same fact twice in two
+                    // languages. The match is on the verdict's own ticker AND
+                    // standard, so a violation from any other rule survives;
+                    // if it ever fails to match, the user sees the English
+                    // sentence as well — duplicated, never missing.
+                    for (final v in _visibleViolations(state.lastSubmit!))
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
                         child: Text('• $v', style: AmiTypography.caption),
                       ),
+                    if (blockingVerdict != null) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      ShariaVerdictBanner(verdict: blockingVerdict),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       l.tradeTicketChangeMandate,
