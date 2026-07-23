@@ -257,3 +257,91 @@ an external data source, genuine behavioral gaps in the provider. Bounces.
 **VERDICT: AWAITING_FIXES (round 2)**
 
 Run report: [`../runs/2026-07-23_run-35/run_report.md`](../runs/2026-07-23_run-35/run_report.md)
+
+## Round 3 (architect's board reads this as round 3; coder's own doc calls it "round 2" — see
+DEF091, the round-counter collision my self-reopen caused, now fixed)
+
+**Audited SHA:** `c2683da`, tip of `lane/CR069-BE.coder.api` (`6b26310` → `88776b3` → `c2683da`).
+Confirmed `git diff c1a8706..c2683da -- schemas/sharia.py agents/safety_floor.py
+test_def084_halal_flag_copy_guard.py test_cr069_halal_guard.py` EMPTY — round 1's resolver
+correctness genuinely not reopened, not just claimed.
+
+### F2 — FIXED, independently verified
+
+Source read: `get()` now separates staleness (re-derived every call, pure arithmetic against a
+live `now`) from network retry (throttled by `_refetch_due()` / `_REFETCH_INTERVAL_S`). Reproduced
+`test_f2_*` (3 tests) green. **Revert-proof, my own**: swapped `sharia_universe.py` back to its
+round-1 form (`git show c1a8706:...`), ran the round-2 tests — `room_runner.py`'s existing import
+of `default_halal_universe_async` (unchanged since round 2 added it) fails to resolve against the
+round-1 module → `ImportError`, all 4 round-2 tests error. Restored, all 4 pass again. Non-vacuous.
+
+### F3 — FIXED, independently verified
+
+All four call sites confirmed at file:line, not from the lane doc's list: `api/sim.py:183`
+(`preview_trade`), `:228` (`submit_trade`) — a fourth site the round-1 audit didn't know about,
+found by the coder, correctly disclosed — `api/mandate.py:274` (`audit_holdings`),
+`room_runner.py:1294` (the Room's `run()`). All four `await default_halal_universe_async()`.
+Confirmed `sim_engine.py`'s `submit`/`preview` still carry the `or default_halal_universe()`
+fallback but it's dead in production — both routes now pass `halal_universe=` explicitly, verified
+by reading the call sites, not assumed. `test_f3_async_accessor_does_not_block_the_event_loop`
+reproduced green (>5 ticks of a 10ms ticker during a 0.3s blocking fetch offloaded via
+`asyncio.to_thread`).
+
+### DEF089 — FIXED, verified LIVE with the real shipping fetcher functions
+
+Not just re-reading the lane doc's pasted output — ran `fetch_compliant_universe` +
+`fetch_parent_index` myself, live, against `settings.sharia_spus_holdings_url` /
+`sharia_parent_index_url` exactly as `_default_fetcher()` calls them:
+
+```
+compliant: 216  as_of: 2026-07-23
+parent: 503
+AAPL in compliant: True  | AAPL in parent: True
+META in compliant: False | META in parent: True   → SCREENED_OUT
+JPM  in compliant: False | JPM  in parent: True    → SCREENED_OUT
+```
+
+Matches the lane doc's own live numbers. The new `sharia_parent_index_url` config docstring's
+"failure direction is safe" claim (a lagging mirror can only misclassify a real SCREENED_OUT as
+UNKNOWN, never fabricate a false PASS) checked against `resolve()`'s logic — PASS is gated purely
+on membership in the independently-sourced compliant set, which the parent-index mirror cannot
+influence — holds.
+
+### DEF092 (SPUS 403s the shipping client) — FIXED, verified LIVE, diagnosis re-derived not just accepted
+
+Reproduced the ROOT CAUSE myself, not just the fix: plain `httpx.Client(timeout=15.0)` with no
+custom header against the SPUS URL → **403, 146 bytes, nginx block page**. Same client with
+`headers={"User-Agent": _USER_AGENT}` (the actual constant from source) → **200, 216 tickers**.
+Confirms the UA really is what's gating this, not a coincidence of some other run-to-run
+flakiness.
+
+### New finding — MINOR, non-blocking: unguarded check-then-act race on cache refresh
+
+`ShariaUniverseProvider.get()` has no lock (`grep -n "Lock" sharia_universe.py` → none). Before F3,
+this was safe by construction — the whole call chain was synchronous inside a single-threaded
+event loop, so only one coroutine could ever be mid-`get()` at a time. **F3 changes that**: routing
+through `asyncio.to_thread` means, for the first time, two concurrent requests can genuinely run
+`get()` on two OS threads at once. If both land while `_refetch_due()` just became true, both can
+pass the `if` guard before either writes `self._cache`/`self._last_attempt` — duplicate concurrent
+fetches, last-write-wins on the cache. Not a correctness or safety-floor issue (no torn state,
+`HalalUniverse` is immutable, `resolve()` never sees inconsistent data, no incorrect verdict ever
+results) — the failure mode is purely redundant network calls in a narrow timing window, at most
+once per `_REFETCH_INTERVAL_S`. Exactly the class of thing DEF088 exists to make routine to check,
+and checking it this round turned up something real, if minor. Not filing a DEF myself — worth the
+architect's judgement on whether a `threading.Lock` around the refresh branch is worth the
+complexity for this blast radius, or whether it's an accepted tradeoff.
+
+### Findings
+
+Zero BLOCKER, zero MAJOR. One MINOR (the refresh race, above), non-blocking. All four items this
+round set out to fix (F2, F3, DEF089, DEF092) independently verified fixed — including two live,
+end-to-end runs of the actual shipping fetch code against the real URLs, not just re-reading pasted
+output. Full suite reproduced: **972 passed, 2 pre-existing warnings, 0 failed** — matches both the
+coder's claim and the architect's independent 873587d re-verification exactly. Scope discipline
+clean (`git show --stat` on all 3 commits — backend-only, exactly the claimed files).
+
+### Verdict
+
+**VERDICT: COMPLETE (round 3)**
+
+Run report: [`../runs/2026-07-23_run-36/run_report.md`](../runs/2026-07-23_run-36/run_report.md)
