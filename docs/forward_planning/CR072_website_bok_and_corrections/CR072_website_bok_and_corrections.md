@@ -1,6 +1,6 @@
 # CR072 — Website update: market the Body of Knowledge, correct the Sharia claim
 
-**Status:** in_progress · **Opened:** 2026-07-23 · **Track:** R64
+**Status:** done · **Opened:** 2026-07-23 · **Track:** R64
 **Owner split:** Claude ships all copy + code + deploy; Saiful decides DEF084, supplies the
 Play opt-in / TestFlight links and the Lessons screenshot.
 
@@ -52,7 +52,7 @@ US-equities-at-MVP decision — removed in the same pass.
 | 2 | New `#curriculum` section + 13-track comb (HTML + CSS) | second |
 | 3 | Android/Play + app-preview framing | third |
 | 4 | Concierge KB (`faq.md`) + Sharia escalation | third |
-| 5 | Cache-bust sweep → `?v=cr063` on all four pages | fourth |
+| 5 | Cache-bust sweep → `?v=cr072` on all four pages | fourth |
 
 ## Two rules this CR is built on
 
@@ -114,7 +114,7 @@ Track table as of 2026-07-22 (slot order = the app's `honeycombTrackOrder`):
 4. Android framing states internal-testing/TestFlight, not a public store download.
 5. `faq.md` agrees with the page; a halal/Sharia question escalates rather than being
    auto-answered.
-6. `website_api` tests green; all four pages on `?v=cr063`; live curl checks pass.
+6. `website_api` tests green; all four pages on `?v=cr072`; live curl checks pass.
 
 ## Out of scope (flagged, not fixed here)
 
@@ -134,3 +134,46 @@ Track table as of 2026-07-22 (slot order = the app's `honeycombTrackOrder`):
 - Play internal-testing opt-in URL + TestFlight link (CTAs stay on `#waitlist` until sent).
 - Lessons-comb device screenshot for a fourth preview frame.
 - Designed og-image (PIL temp still live), Turnstile SECRET, CF purge of stale `Archive.zip`.
+
+---
+
+## Outcome (2026-07-23) — shipped and verified live
+
+| WS | Commit | Result |
+|---|---|---|
+| 1 Corrections | `c976785` | Sharia + GCC claims removed; `Coach Your Agent` -> `Brief Your Agent`; roadmap line added |
+| 2 Curriculum | `d43241e` | `#curriculum` section + 13-track comb; nav entry |
+| 3/4/5 | `ddf82f9` | Android/Play framing; KB refresh; `_COMPLIANCE_RE` escalation; cache-bust sweep |
+| Leak fix | `81778dd` | `website/` reduced to deployable content only |
+
+**Live verification:**
+
+```
+curl .../ | grep -c 'honey-hex t-'                  -> 13
+curl .../ | grep -c 'Halal / Sharia|Coach Your Agent' -> 0
+site.css?v=cr072, cf-cache-status: MISS, 26 .t- rules served
+Archive.zip / WEBSITE.md / deploy_ftp.py            -> 404, 404, 404
+api-website /health                                  -> {"ok":true}
+"Is AAPL halal?"          -> compliance escalation, "does not run a Sharia compliance screen"
+"Is Tesla a good halal buy?" -> compliance wins over advice, as ordered
+"Should I buy NVDA?"      -> advice escalation intact
+"How many lessons?"       -> "342 lessons across 13 tracks ... 208 glossary terms ... CFA, CMT, FRM"
+```
+
+`website_api` tests 23 -> 25.
+
+## What this CR found that it was not looking for
+
+**The CR049 leak fix was never durable.** The rsync dry-run before deploy showed
+`website/` still contained `Archive.zip`, `WEBSITE.md` and `deploy_ftp.py` — the three
+files CR049 deleted from the live docroot after finding them publicly served. CR049
+removed them from the *server* and not from the *source*, so this deploy would have
+re-published all three. Fixed by relocating them out of `website/` (`81778dd`) rather
+than by adding excludes, so the property holds by construction.
+
+The same dry-run showed `--delete` would have removed the server's `.well-known/` and
+`.ftpquota`. Same class as DEF081. Both now excluded and documented in `docs/WEBSITE.md`.
+
+**Generalisable rule, now in `docs/WEBSITE.md`:** deleting a file from a server is not
+the same as fixing the thing that put it there. And always dry-run an rsync with
+`--delete` against a host whose contents you did not author.

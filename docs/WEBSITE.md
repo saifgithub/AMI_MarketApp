@@ -95,90 +95,88 @@ their env var is unset, so the site runs locally with no secrets.
 
 ---
 
-## What still needs doing
+## Deploying
 
-### 1. Deploy website files to hosting (priority)
+Both tiers ship by rsync over SSH. **FTP is retired** (`scripts/deploy_ftp_legacy.py`
+is kept for reference only).
 
-**Hosting:** cPanel at `server373.web-hosting.com`
-**FTP:** `claude@agenticmarketintel.ai` on `ftp.agenticmarketintel.ai:21`
+### Static site → cPanel
 
-Run from inside `website/`:
 ```bash
-cd "/Volumes/Extreme Pro/AMI_MarketApp/website"
-python3 deploy_ftp.py YOUR_FTP_PASSWORD
+cd "/Volumes/Extreme Pro/AMI_MarketApp"
+# ALWAYS dry-run first (-n) and read the deletions before removing it
+rsync -avz --delete \
+  --exclude='.DS_Store' --exclude='.well-known/' --exclude='.ftpquota' --exclude='cgi-bin/' \
+  website/ ami-web:agenticmarketintel.ai/
 ```
 
-The script lists the FTP root first. Confirm `index.html` should go to the root (or adjust `target` in the script). Do NOT deploy `deploy_ftp.py`, `WEBSITE.md`, or `website_api/` — static files only.
+Three things about that command are load-bearing:
 
-**Files to deploy:** `index.html`, `assets/`, `sitemap.xml`, `robots.txt`, `privacy/`, `terms/`, `ami-trade/` (the `sad-to-see-you-go` deletion page).
+- **The target is `agenticmarketintel.ai/`, the addon-domain docroot — NOT `public_html`.**
+  `~/public_html` hosts a different site entirely. Deploying there would overwrite it.
+- **The `.well-known/` and `.ftpquota` excludes are not optional.** They exist on the
+  server and not in our source, so `--delete` would remove them; losing `.well-known/`
+  can break domain verification and certificate issuance.
+- **`website/` must contain deployable content only.** It is what makes `--delete` safe.
+  Until CR072 it also held `Archive.zip`, `WEBSITE.md` and `deploy_ftp.py`, all of which
+  were publicly served for months; CR049 deleted them from the server but left them in
+  the source, so the next deploy would have restored them. Don't put anything in
+  `website/` you would not publish.
 
-### CR049 go-live steps (Saiful — dashboards + .env)
+**Cloudflare caches static assets for 7 days; HTML is `DYNAMIC` (served fresh).** So any
+change to `assets/css/site.css` is invisible to returning visitors until the `?v=` query
+on the `<link>` is bumped — in **all four** pages (`index.html`, `privacy/`, `terms/`,
+`ami-trade/sad-to-see-you-go/`). Current version: `?v=cr072`. Verify a bump landed with:
 
-The code degrades gracefully without these, so nothing breaks if they're skipped — but the
-Concierge/auto-answer and bot protection stay off until they're set:
-
-1. **melehost `.env`** — add: `VLLM_BASE_URL=http://192.168.20.74:8000` (usually already set for api-alpha), `RESEND_API_KEY=…`, `WEBSITE_NOTIFY_EMAIL=<your inbox>` (where contact escalations + data requests land), and later `TURNSTILE_SECRET=…`. Then `docker compose up -d --build api-website`.
-2. **Resend** — verify `support.ai@agenticmarketintel.ai` (or the `agenticmarketintel.ai` domain) as a sender so auto-answers/acks deliver.
-3. **Cloudflare Email Routing** — forward `support.ai@agenticmarketintel.ai` → your Gmail, so people who email directly (not via the form) still reach you.
-4. **Cloudflare Turnstile** — create a widget; paste the **site key** into `TURNSTILE_SITEKEY` in `index.html` **and** `ami-trade/sad-to-see-you-go/index.html`, and the **secret** into `.env` as `TURNSTILE_SECRET`.
-5. **Review `website_api/app/knowledge/faq.md`** — confirm the pricing wording and agent-count wording before launch (see the comment at the top of that file).
-
-### 2. Deploy `website_api` on melehost
-
-Three steps:
-
-**a) Create the database:**
 ```bash
-ssh melehost "docker exec ami_postgres psql -U postgres -c 'CREATE DATABASE ami_website;'"
+curl -sSI 'https://agenticmarketintel.ai/assets/css/site.css?v=cr072' | grep -i cf-cache-status
+# MISS on the first request = the new file is being fetched from origin
 ```
 
-**b) Add service to `~/ami_trade/docker-compose.yml`:**
-```yaml
-ami_website_api:
-  build:
-    context: ./website_api
-  container_name: ami_website_api
-  restart: unless-stopped
-  environment:
-    ENV: prod
-    DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD}@ami_postgres:5432/ami_website
-    CORS_ORIGIN: https://www.agenticmarketintel.ai
-  ports:
-    - "8001:8000"
-  depends_on:
-    ami_postgres:
-      condition: service_healthy
-  extra_hosts:
-    - "host.docker.internal:host-gateway"
-```
+### `website_api` → melehost
 
-Then rsync and start:
 ```bash
-# rsync website_api/ to melehost
-ssh melehost "cd ~/ami_trade && docker compose up -d ami_website_api"
+cd "/Volumes/Extreme Pro/AMI_MarketApp"
+rsync -avz --delete \
+  --exclude='__pycache__/' --exclude='*.pyc' --exclude='.pytest_cache/' \
+  --exclude='.venv/' --exclude='*.db' --exclude='.DS_Store' \
+  website_api/ melehost:~/ami_trade/website_api/
+ssh melehost "cd ~/ami_trade && docker compose up -d --build api-website"
+curl -sS https://api-website.agenticmarketintel.ai/health     # {"ok":true}
 ```
 
-**c) Add Cloudflare Tunnel route:**
-- Zero Trust dashboard → Networks → Tunnels → your existing tunnel → Edit
-- Public Hostname tab → Add hostname:
-  - Subdomain: `api-website` · Domain: `agenticmarketintel.ai`
-  - Service: `http://host.docker.internal:8001`
-- No new token needed — uses the same `CF_TUNNEL_TOKEN` already in melehost `.env`
+Service name is `api-website`, container `ami_website_api`, port 8001, public via the
+Cloudflare Tunnel hostname `api-website.agenticmarketintel.ai`.
 
-### 3. Replace iPhone placeholder frames
+**melehost's `.env` is not edited in place** — it is overwritten wholesale from
+`infra/alpha.env` (Mac, gitignored) by `/promote-to-alpha`. Any new setting goes in
+`infra/alpha.env` first, or it is silently lost on the next promote.
 
-The app preview section (`#app-preview`) has CSS placeholder frames. Replace with real screenshots when ready:
-- Drop screenshots into `website/assets/img/`
-- In `index.html` find the three `.screen-placeholder` divs and replace with `<img src="assets/img/YOUR_SCREENSHOT.png">`
+### Smoke checks after a website deploy
 
-### 4. Create OG image
-
-`og-image.png` (1200×630) is referenced in meta tags but doesn't exist yet.
-- Dark canvas (`#0f172a`) + AMI matrix logo + "13 AI agents. One decision." headline
-- Place at `website/assets/img/og-image.png`
-- Update the meta tag path once done
+```bash
+curl -sS https://agenticmarketintel.ai/ | grep -c 'honey-hex t-'          # 13 curriculum tracks
+curl -sS https://agenticmarketintel.ai/ | grep -o 'site.css?v=[a-z0-9]*'  # cache-bust version
+# nothing sensitive is served
+for f in Archive.zip WEBSITE.md deploy_ftp.py; do
+  curl -s -o /dev/null -w "$f %{http_code}\n" "https://agenticmarketintel.ai/$f"; done   # all 404
+# the deterministic escalation floor still holds
+curl -sS -N -X POST https://api-website.agenticmarketintel.ai/concierge/message \
+  -H 'Content-Type: application/json' -d '{"message":"Is AAPL halal?"}' | head -3
+```
 
 ---
+
+## Open items (need Saiful)
+
+| Item | State |
+|---|---|
+| **Turnstile SECRET** | Site key is live in both forms; the backend still bypasses verification because `TURNSTILE_SECRET` is unset. Forms work, bots are not blocked. Goes in `infra/alpha.env`, never melehost's `.env` directly. |
+| **og-image** | A PIL-generated stopgap is live (1200x630, "13 AI agents. One decision."). Wants a designed replacement — and the site now leads on the curriculum too. |
+| **Play internal-testing opt-in URL + TestFlight link** | Not yet supplied; every CTA points at the waitlist until they are. |
+| **Lessons-comb screenshot** | For a fourth `#app-preview` frame showing the 13-facet Lessons screen. |
+| **`Archive.zip` at the CF edge** | Origin returns 404; a cached edge copy may persist. One-click purge in the Cloudflare dashboard. |
+| **Privacy policy s14** | `legal/policies/privacy_policy.md:148` and its live transcription still say "If you enable Halal/Shariah screening" — stale after DEF084's relabel. Legal track owns that document. |
 
 ## Running locally
 
@@ -192,9 +190,9 @@ python3 -m http.server 8765
 cd "/Volumes/Extreme Pro/AMI_MarketApp/website_api"
 uvicorn app.main:app --reload --port 8001
 
-# Run website_api tests
+# Run website_api tests (system python3 is fine — sqlite tempfile fixture)
 cd "/Volumes/Extreme Pro/AMI_MarketApp/website_api"
-/path/to/venv/bin/pytest tests/ -v
+python3 -m pytest tests/ -q     # 25 passing
 ```
 
 ---
@@ -216,8 +214,8 @@ cd "/Volumes/Extreme Pro/AMI_MarketApp/website_api"
 
 | Item | Where |
 |---|---|
-| FTP password | Ask Saiful |
-| FTP user | `claude@agenticmarketintel.ai` |
-| FTP host | `ftp.agenticmarketintel.ai` (resolves to 69.57.162.213) |
+| SSH to the web host | alias `ami-web` (`~/.ssh/config`) — key `~/.ssh/id_rsa_ami_webserver`, passphrase in the macOS Keychain. **This is the deploy path.** |
+| Web docroot | `~/agenticmarketintel.ai/` on the web host — the addon domain. NOT `~/public_html` (different site). |
 | cPanel | `server373.web-hosting.com:2083` |
+| FTP (retired) | Superseded by SSH/rsync. `scripts/deploy_ftp_legacy.py` kept for reference; user `claude@agenticmarketintel.ai`, password from Saiful. |
 | Cloudflare tunnel token | melehost `~/ami_trade/.env` → `CF_TUNNEL_TOKEN` |
