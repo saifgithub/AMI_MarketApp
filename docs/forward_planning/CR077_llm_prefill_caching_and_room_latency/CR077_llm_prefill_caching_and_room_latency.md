@@ -205,6 +205,35 @@ assumption they are not.
 
 So the deliverable below is gated on an A/B, and the A/B is the actual work.
 
+### Evidence added 2026-07-23: the ANALYSTS phase is already four monologues
+
+The architect flagged this caveat and held it as a "what is the Room" question rather than laning
+it — correct instinct. But it is measurable, and the live transcripts answer it. Reading the four
+analyst turns from each of the two convenes that produced trades (INGN 07-22, MSFT 07-23, from
+`llm_audit`):
+
+- **Decisive: `news_analyst` quoted the Reddit sentiment score** — `+0.09` (INGN), `+0.03` (MSFT) —
+  which is the *social* analyst's domain. But the phase order is fundamentals → market → news →
+  social, so **news speaks before social**. It cannot have read that number from the transcript; it
+  came from the shared data block. The analysts draw on shared data, not on each other.
+- **They already repeat each other despite the "do not repeat" instruction:** `-7% margin` and
+  `-1.4% FCF` each appear in 3 of the 4 INGN turns; `$7.08` in 3 of 4; `$556.75` target in 3 of 4
+  MSFT turns. The redundancy this caveat feared is present in today's *sequential* output.
+- **No analyst references another analyst's judgment** — only shared figures, every one traceable to
+  the profile block, not to a prior analyst's prose.
+
+**Conclusion:** `"build on the transcript — do not repeat what's already been said"` is already inert
+for the ANALYSTS phase. It is load-bearing for RESEARCHERS (bull/bear rebut), RISK (three debators),
+and VERDICT — which stay sequential — and not for the analysts. So concurrency does **not** change
+what the Room is in this phase; it removes serialization latency. This is not a Saiful decision.
+
+Two conditions this puts on Phase 2, both now folded into the scope below:
+1. The `"build on the transcript / do not repeat"` line must be **removed or rescoped** for the
+   concurrent analysts — otherwise it instructs them to build on a transcript they cannot see. If
+   anything, sharpen each analyst's role to cut the repetition that already exists.
+2. Phase 1's A/B stays as the confirmation gate, but it is now a **check** (pre-loaded toward
+   "safe"), not an open question.
+
 ---
 
 ## Scope
