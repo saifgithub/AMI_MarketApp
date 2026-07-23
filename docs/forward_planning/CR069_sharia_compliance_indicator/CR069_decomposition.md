@@ -13,6 +13,7 @@ document — a chunk nobody wrote down is a hole the terminal gate cannot catch.
 |---|---|---|---|---|
 | `CR069-BE` | `coder.api` | **independent** | — | **dispatched, round 1** |
 | `CR069-MOBILE` | `coder.mobile` | **independent** | CR069-BE (hard) | written, unassigned |
+| `CR069-ROOM` | `coder.room` | **independent** | CR069-BE | **added after the fact — see below** |
 | `CR069-DIVERGE` | `coder.api` | spawned | CR069-BE | written, unassigned |
 | `CR069-MY` | `coder.api` | **independent** | CR069-BE | **blocked — Saiful** |
 | `CR069-VENDOR` | `coder.api` | spawned | CR069-BE | **blocked — Saiful (G5, G6)** |
@@ -91,7 +92,24 @@ in the direction nobody checks. The lane instructs `BLOCKED` over faking it.
   testing; **does** block marketing or public launch. No agent resolves this.
 - **G5/G6** — vendor account and quotes, which block `CR069-VENDOR` entirely.
 
-## Defect found while decomposing
+## The decomposition was incomplete — `CR069-ROOM` (added after CR069-BE returned)
+
+`overlay_generator.py` renders the compliance text the 12 agents receive. It is `coder.room`'s file,
+so `CR069-BE` could not touch it and correctly did not — it named the gap in its hand-off instead of
+leaving it silent. **I missed the chunk; the coder caught it.**
+
+The consequence is not cosmetic. CR069-BE moved the deterministic path to a real sourced AAOIFI
+screen, so the agent layer now contradicts it in the *opposite* direction from DEF084: the code runs
+a real screen while the prompts still say "curated demonstration universe." DEF084-ROOM (`cef212f`)
+was that same contradiction pointing the other way.
+
+The rule that all chunks be written before any is dispatched exists precisely so the terminal audit
+can diff the decomposition against the CR. It did not save me here — the gap was found one layer
+earlier, by a builder who could see a file I had not thought about. Worth recording: **the CR-level
+audit is the backstop for a missing chunk, not the detector.** `CR069-ROOM` is now filed with
+`GATE: independent`, dependent on CR069-BE.
+
+## Defects found while decomposing and verifying
 
 **DEF086** — `dispatch.sh` returned the `UNASSIGNED` state before reading the lane's `GATE:`, so all
 five unassigned CR069 lanes printed a bare `-` regardless of the gate recorded in them. The one
