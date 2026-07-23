@@ -52,11 +52,16 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   # mirror orchestration/audit/watcher.sh, whose files carry a `## VERDICT:` heading + a trailer.)
   a="$LANE_DIR/$1.assign.md"
   asg_line=$(grep -Eo '^ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+' "$a" 2>/dev/null | tail -1)
-  if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - - -"; return; fi
+  # Read GATE before the UNASSIGNED return. A lane written at decomposition and not yet assigned is
+  # exactly the state the record-upfront rule creates, and it was the one state whose gate the board
+  # could not show: an UNASSIGNED lane printed a bare `-`, identical whether its GATE was recorded or
+  # forgotten. The rule says decide upfront; the board has to be able to show you did.
+  gate_kw=$(last_kw "$a" '^GATE: *(independent|spawned|none)')
+
+  if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - - ${gate_kw:-MISSING}"; return; fi
   inst=$(echo "$asg_line" | awk '{print $2}')
   asg_round=$(echo "$asg_line" | grep -Eo '[0-9]+' | tail -1); asg_round=${asg_round:-0}
 
-  gate_kw=$(last_kw "$a" '^GATE: *(independent|spawned|none)')
   u="$AUDIT_DIR/$1.auditor.md"
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
 
