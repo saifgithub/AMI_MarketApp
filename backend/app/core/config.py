@@ -156,6 +156,36 @@ class Settings(BaseSettings):
     league_relegate_count: int = 5
     league_eligible_plans: CsvList = Field(default_factory=list)
 
+    # CR069 — Sharia-compliance indicator for the `halal` mandate flag.
+    # Off by default so the flag degrades LOUDLY (pauses) rather than silently
+    # enforcing the retired 7-ticker demo set. Flip on Alpha once the source
+    # fetch is verified. The URLs are the published daily-transparency holdings
+    # CSVs: SPUS = the S&P 500 Sharia Industry Exclusions Index (AAOIFI, the
+    # compliant set); the parent index = a large-cap S&P 500 ETF (IVV) used ONLY
+    # to distinguish "screened out" from "unknown" (CR069 constraint 2). Both are
+    # config, not literals — this file's CR040 rule forwards them in compose.
+    sharia_screen_enabled: bool = False
+    sharia_spus_holdings_url: str = (
+        "https://www.sp-funds.com/wp-content/uploads/data/TidalFG_Holdings_SPUS.csv"
+    )
+    # DEF089: this was the iShares IVV holdings endpoint, which answers a plain
+    # server-side client with HTTP 200 and an HTML interstitial that still carries
+    # `content-type: text/csv` — bot mitigation in front of the origin. The screen
+    # could only ever pause. Now a published S&P 500 constituent list on a plain
+    # static endpoint: no key, no browser emulation, auto-updated on membership
+    # changes. Tradeoff, stated rather than buried: it is a community-maintained
+    # mirror, not a regulatory disclosure like SPUS. It is used for *membership
+    # only*, and the failure direction is safe — a name missing from a lagging
+    # mirror resolves UNKNOWN (permitted + disclosed), never a false PASS. The
+    # 400-row floor in `sharia_universe.py` catches truncation.
+    sharia_parent_index_url: str = (
+        "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/"
+        "main/data/constituents.csv"
+    )
+    # SPUS refreshes daily; the index rebalances quarterly. Beyond this many days
+    # without a fresh as-of, the flag pauses loudly rather than reading stale.
+    sharia_staleness_days: int = 7
+
     # Concierge lesson-context router (CR021). Selects how much lesson
     # knowledge the Floor Concierge is given:
     #   saver        — first 25 lessons, id/title/track/level (legacy)

@@ -148,9 +148,10 @@ def test_compliance_halal_with_excluded_ticker(
         halal_universe={"AAPL", "MSFT"},  # NVDA not in halal universe
     )
     assert not result.passed
-    # DEF084: copy names the curated demonstration universe, not a Sharia screen.
-    assert "demonstration universe" in result.violations[0]
-    assert "not a Sharia screen" in result.violations[0]
+    # CR069: legacy bare-set path (a plain set, no parent index) blocks on absence
+    # with a neutral message. The sourced three-state path (screened-out names the
+    # AAOIFI standard) is covered in test_sharia_universe / the CR069 guard.
+    assert "outside the configured halal universe" in result.violations[0]
     assert result.blocked_by == "compliance"
 
 

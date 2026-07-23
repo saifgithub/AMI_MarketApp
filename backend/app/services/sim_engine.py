@@ -66,18 +66,19 @@ from app.services.market_data import (
     Quote,
     get_market_data_provider,
 )
+from app.services.sharia_universe import default_halal_universe
 
 
-# ── Halal-flag demonstration universe (NOT a Sharia screen — DEF084) ────────
+# ── Halal-flag universe (CR069) ─────────────────────────────────────────────
 #
-# The `halal` mandate flag is enforced by membership in this fixed, curated set:
-# it is a demonstration universe, explicitly NOT a computed Sharia compliance
-# screen. No ticker here has been ratio-screened. A real screen
-# (`app.trading_math.screening.sharia_screen`) exists but is wired to nothing on
-# this enforcement path. Any copy a client renders off the halal flag must call
-# this a demonstration universe and must never claim a screen ran.
-# See docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/.
-DEFAULT_HALAL_DEMO_UNIVERSE = {"AAPL", "MSFT", "NVDA", "GOOGL", "META", "TSLA", "AMZN"}
+# The retired 7-ticker DEFAULT_HALAL_DEMO_UNIVERSE placeholder (DEF084) is gone.
+# The `halal` flag now enforces a SOURCED allowlist — the S&P 500 Sharia Industry
+# Exclusions Index constituents (AAOIFI, via SPUS), resolved to three states with
+# provenance by `app.services.sharia_universe`. It is a sourced allowlist, NOT a
+# computed ratio screen (`trading_math.screening.sharia_screen` stays dormant,
+# CR069 constraint 4). Callers that don't pass a universe get `default_halal_universe()`,
+# which degrades loudly (pauses) when the source is disabled/unavailable/stale —
+# never a silent fall back to the old demo set.
 
 
 # ── Sim trade record (in-Python dataclass that mirrors SimTradeRow) ────────
@@ -460,7 +461,7 @@ class SimEngine:
             portfolio_value=self.total_value(user_id),
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
-            halal_universe=halal_universe or DEFAULT_HALAL_DEMO_UNIVERSE,
+            halal_universe=halal_universe or default_halal_universe(),
             locale_allowed_universe=locale_allowed_universe,
         )
 
@@ -621,7 +622,7 @@ class SimEngine:
             portfolio_value=self.total_value(user_id),
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
-            halal_universe=halal_universe or DEFAULT_HALAL_DEMO_UNIVERSE,
+            halal_universe=halal_universe or default_halal_universe(),
             locale_allowed_universe=locale_allowed_universe,
         )
 
