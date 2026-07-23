@@ -151,3 +151,109 @@ implicate this chunk's own correctness).
 **VERDICT: COMPLETE (round 1)**
 
 Run report: [`../runs/2026-07-23_run-34/run_report.md`](../runs/2026-07-23_run-34/run_report.md)
+
+## Round 2 — self-reopened, no architect resubmission
+
+Saiful pushed back on round 1's pace given the CR's structural weight ("that was quick, these are
+pretty structural changes") — fair, and re-examining turned up two real gaps round 1 didn't cover:
+provider lifecycle (does staleness ever get re-checked?) and the async/sync boundary (does the
+first fetch block the event loop?). Neither is about whether the *values* CR069-BE computes are
+correct — round 1's source read of the resolver logic stands — both are about the **provider's
+runtime behavior in a long-lived process**, a dimension round 1 didn't probe at all. Re-audited the
+same SHA `c1a8706`, no new architect submission (architect `SUBMITTED` is still round 1) — I'm
+advancing the round on my own initiative per protocol's "detect by the VERDICT keyword, not round
+number" note. No source changed; this corrects round 1's coverage, not CR069-BE's code.
+
+### F2 — MAJOR: staleness is checked once per process lifetime, never again
+
+`ShariaUniverseProvider.get()` (`sharia_universe.py:286-289`):
+```python
+def get(self, *, refresh: bool = False, now: date | None = None) -> HalalUniverse:
+    if self._cache is None or refresh:
+        self._cache = self._build(now=now)
+    return self._cache
+```
+`_is_stale()` — the entire mechanism behind constraint 3's "degrades loudly... if stale beyond its
+window" — is evaluated **only inside `_build()`**, which only runs when `self._cache is None` (the
+very first call in the process) or when a caller explicitly passes `refresh=True`. Grepped the
+whole tree: `refresh=True` has **zero call sites** in `app/`, and `reset_sharia_universe_provider`
+(the only other cache-buster) is **only called from tests**. So in melehost's actual deployment —
+a single long-running `ami_api_alpha` container, not restarted per request — the sequence is:
+container starts → first halal-flagged request fetches once, caches whatever `HalalUniverse` (or
+paused state) results → **every request for the rest of that container's uptime gets the exact
+same cached object**, `stale` flag and all, never re-derived against a fresh `now`.
+
+`sharia_staleness_days: int = 7` (`config.py:177`) is real config, forwarded correctly, and
+genuinely dead in practice: it can only fire in the narrow window right after a restart, never
+during normal long-running operation. A universe that was fresh at container start silently
+serves increasingly-stale verdicts — `resolve()` reports `PASS`/`SCREENED_OUT` with full
+confidence, no `UNAVAILABLE`, no pause — for as long as the container runs, contradicting
+constraint 3 in exactly the way it was written to prevent (a silent stale read, just delayed
+rather than immediate). This is a **religious-observance-relevant** flag; "correct at container
+boot, silently frozen after" is not what "degrades loudly" was meant to buy.
+
+Cross-checked against this codebase's own precedent for the same problem: `news_context.py`'s
+`_AlphaVantageSource` (`_ALPHA_VANTAGE_CACHE_TTL`, `news_context.py:47,95-130`) checks
+`time.time()` against a **per-call** expiry on every read, not just the first — a real
+self-expiring cache. `sharia_universe.py`'s provider does not follow that established pattern.
+
+### F3 — MAJOR: the first fetch is a blocking synchronous call inside async route handlers
+
+`_default_fetcher()` (`sharia_universe.py:248-252`) uses `httpx.Client` (sync), not
+`httpx.AsyncClient`, doing up to two real HTTP round-trips with `timeout=15.0` each. All three
+callers of `default_halal_universe()` are invoked with no `await`, no `run_in_executor`, directly
+inside `async def` FastAPI route handlers / async generators:
+- `app/api/mandate.py:274`, inside `async def audit_holdings` (`:265`).
+- `app/api/sim.py:210` (`sim.submit(...)` → `sim_engine.py:464`/`:625`), inside
+  `async def submit_trade` (`app/api/sim.py:197`).
+- `app/services/room_runner.py:1294`, inside `async def run(...)` (`:1236`) — the Room's own
+  SSE/streaming Convene generator, the single highest-traffic path this flag touches.
+
+`docker-compose.yml`/`Dockerfile:34` run a single `uvicorn` process with **no `--workers`
+flag** (default: one process, one event loop) — confirmed, not assumed. A synchronous blocking
+call inside any of these three async handlers stalls **the entire event loop**, i.e. every
+concurrent user on the whole API, not just the triggering request, for the duration of the live
+network call(s). Because of F2, this only happens once per container lifetime (bounded blast
+radius) — but it happens unpredictably, on whichever of the three entry points a real user hits
+first after `SHARIA_SCREEN_ENABLED=true` is set or the container restarts, and freezes the whole
+service for everyone else connected at that moment (including an in-progress Room stream on an
+unrelated ticker).
+
+This is not a hypothetical Python subtlety being applied for the first time to this codebase: this
+project already has an established fix for exactly this shape of problem —
+`app/api/sim.py:411` offloads a blocking `sim.current_quote` call via
+`loop.run_in_executor(pool, ...)`. CR069-BE's three call sites don't follow that precedent.
+
+### Why round 1 missed both
+
+Round 1 verified the resolver's *logic* exhaustively (three-state correctness, G3, provenance
+propagation) and the fetcher's *parsing* correctness (including the live URL adversarial pass) —
+both genuinely thorough. It never asked how the `ShariaUniverseProvider` singleton behaves *as a
+long-lived object inside a running server process* — cache lifecycle and the sync/async boundary.
+That's a real gap in round-1 coverage, not a false alarm on re-check: both F2 and F3 reproduce from
+reading the actual shipped code, no speculation.
+
+### Findings (round 2 additions)
+
+- **F2 — MAJOR.** Staleness re-check dead after process start; contradicts constraint 3 for any
+  long-running deployment. Fix shape: check elapsed time against `as_of`/staleness window on every
+  `get()`, not only when `_cache is None` (mirror `news_context.py`'s per-call TTL check), or add an
+  explicit periodic refresh caller.
+- **F3 — MAJOR.** Synchronous network fetch blocks the async event loop on first use, at all three
+  call sites, on a single-worker deployment. Fix shape: `asyncio.to_thread(self._build, ...)` (or
+  `run_in_executor`, matching `sim.py:411`'s existing pattern) so the first fetch doesn't stall
+  other requests.
+
+Neither finding touches the resolver's correctness (PASS/SCREENED_OUT/UNKNOWN/UNAVAILABLE
+semantics stand, round 1's verification of those is unchanged) or reopens the live parent-index-URL
+finding already carried from round 1 (still separately tracked, still not this chunk's defect).
+Both are the provider's own runtime shape and are this chunk's to fix.
+
+### Verdict (round 2)
+
+Zero BLOCKER. Two MAJOR (F2, F3) against code this chunk shipped — not process-completeness, not
+an external data source, genuine behavioral gaps in the provider. Bounces.
+
+**VERDICT: AWAITING_FIXES (round 2)**
+
+Run report: [`../runs/2026-07-23_run-35/run_report.md`](../runs/2026-07-23_run-35/run_report.md)
