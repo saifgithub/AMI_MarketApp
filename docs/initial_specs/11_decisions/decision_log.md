@@ -390,6 +390,33 @@ deprecated.
 - **Rationale**: A scored, publicly-ranked, currency-awarding competition running with no governing terms at all is a real gap, sharpened by streak-milestone credits being a purchasable currency (needs an explicit no-cash-value characterization) and by the store's "no gambling / no simulated gambling" declaration depending on the zero-P&L rule holding as a binding invariant, not a design note. Keeping it forum-clause-free rather than drafting a divergent one avoids creating two legal documents that could someday disagree about how a dispute is resolved.
 - **Affects**: [`legal/policies/competition_rules.md`](../../../legal/policies/competition_rules.md) (new), [`legal/policies/terms_of_service.md`](../../../legal/policies/terms_of_service.md) §15, `website/terms/`, `website/competition-rules/` (new), [`legal/VERSIONING.md`](../../../legal/VERSIONING.md), [`legal/README.md`](../../../legal/README.md). Filed as [CR064](../../forward_planning/CR064_competition_terms/CR064_competition_terms.md). Builds directly on [D-063](#d-063--legal-docs-get-a-dedicated-legal-home-tc-hardened-against-the-ai-gave-bad-advice-claims-privacy-policys-ai-vendor-claim-genericized).
 
+### D-065 — Malaysia added as governing law (ToS §16, v4.0) — partial amendment of D-063
+
+- **Decided** (2026-07-23): Terms of Service §16 now names **Malaysia** as governing law. The
+  clause is deliberately a **bare choice-of-law clause** — it states which law applies and
+  explicitly disclaims designating a court/venue and explicitly disclaims constituting an
+  arbitration agreement. No jurisdiction/venue clause was added; no arbitration clause was
+  added. Terms bumped v3.0 → v4.0 (material change under `VERSIONING.md`'s own gate — "changes
+  the governing law"); v3.0 archived to `legal/history/terms_of_service/v3.0_2026-07-23.md` and
+  `website/terms/v3/`.
+- **Source**: Saiful, verbatim: *"use malaysia as governing law."* Given in direct response to
+  the open question raised while implementing CR064 — peer research had found that every
+  comparable app checked (StockTrak/WSS, Public.com, Character.AI, OpenAI, Perplexity, Cleo,
+  Composer, Robinhood, Anthropic, Signal, DuckDuckGo — 11 of 11) names *some* governing law even
+  when it drops arbitration, with D-063's total absence of any forum-adjacent clause being the
+  outlier.
+- **Rationale**: Resolves the forum-uncertainty gap the peer research flagged, without
+  reopening D-063's separate, deliberate "no arbitration, no named court" call — Saiful's
+  instruction named governing law only, so the clause is drafted to answer exactly that
+  question and nothing more. Malaysia is the obvious choice: it is where Saiful, the founder,
+  is based, matching the "AMI has no incorporated entity yet, founder is Malaysia-based"
+  framing already used throughout the Terms (D-063, `legal_plan_ami_trade.md`).
+- **Supersedes (partial)**: [D-063](#d-063--legal-docs-get-a-dedicated-legal-home-tc-hardened-against-the-ai-gave-bad-advice-claims-privacy-policys-ai-vendor-claim-genericized)'s
+  "no governing-law clause at all" sub-point only. D-063's "no arbitration" and "no named court"
+  positions are unchanged and still control — D-063 itself is **not** marked as fully
+  superseded.
+- **Affects**: [`legal/policies/terms_of_service.md`](../../../legal/policies/terms_of_service.md) §16, `website/terms/`, [`docs/initial_specs/09_compliance/legal_plan_ami_trade.md`](../09_compliance/legal_plan_ami_trade.md) (governing-law checklist item reopened and re-resolved), [`website/sitemap.xml`](../../../website/sitemap.xml). Filed as [CR076](../../forward_planning/CR076_governing_law_malaysia/CR076_governing_law_malaysia.md).
+
 ---
 
 ## How to add a new decision
