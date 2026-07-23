@@ -1,17 +1,24 @@
 # CR064 — Competition terms & conditions (reputation, streaks, weekly leagues)
 
-**Status:** proposed · **Raised:** 2026-07-23 (AT:R65) · **Owner:** Claude drafts → **Saiful's
-lawyer reviews and signs off** (per `docs/initial_specs/10_delivery/you_do_i_do.md`)
-**Related:** CR063 (in-app delivery) · CR068 (legal-docs hardening — **read first**) ·
-CR004 / D-060 · CR049 (data-request flow) · CR065
+**Status:** done · **Raised:** 2026-07-23 (AT:R65) · **Implemented:** 2026-07-23 (AT:legal) ·
+**Owner:** Claude drafts → **Saiful's lawyer reviews and signs off** (per
+`docs/initial_specs/10_delivery/you_do_i_do.md`)
+**Related:** CR063 (in-app delivery — still `proposed`, dev/build team) · CR068 (legal-docs
+hardening — **read first**) · CR004 / D-060 · CR049 (data-request flow) · CR065
 
 > **Builds on CR068 — [`CR068_legal_docs_hardening/`](../CR068_legal_docs_hardening/)
 > (`AT:legal`, done 2026-07-23).** Its numeric ID churned while both CRs were being filed the
 > same day; trust the folder name if the number ever disagrees. That CR moved the canonical legal
 > markdown out of `docs/initial_specs/09_compliance/` into a new top-level **`legal/`**
-> folder, bumped Terms to **v2.0**, and filled the previously-blank §13.1 arbitration and
-> §15 indemnification clauses. This CR targets that new structure and must obey
-> [`legal/VERSIONING.md`](../../../legal/VERSIONING.md).
+> folder and bumped Terms to **v2.0**. **Correction, discovered when this CR was implemented:**
+> CR068 did *not* end up shipping an arbitration clause — Saiful withdrew it the same day
+> ("No arbitration. No courts...", see D-063) — so ToS v2.0 filled **only** §14
+> (indemnification); there is no §13.1 and no governing-law clause at all. This CR's original
+> summary (below, left unedited for the record) assumed the arbitration clause still existed
+> and targeted a "§16" hook; both are stale. **What actually shipped: §15**, inheriting §14
+> indemnification and §2/§3's assumption-of-risk framing — see §11 "Governing law, disputes,
+> and indemnity" below for the corrected treatment. This CR targets the structure left by
+> CR068 and obeys [`legal/VERSIONING.md`](../../../legal/VERSIONING.md).
 
 ---
 
@@ -39,7 +46,7 @@ ToS section — not the full text inside the ToS.
 |---|---|
 | Canonical source | `legal/policies/competition_rules.md` (new — joins the three existing policies) |
 | Published page | `website/competition-rules/index.html` (new — mirror the `website/terms/` + `website/privacy/` pattern) |
-| ToS hook | new **§16** "Reputation, streaks and weekly leagues" in `legal/policies/terms_of_service.md`, incorporating the standalone rules by reference (§16 is the next free number — the doc currently ends at §15) |
+| ToS hook | new **§15** "Reputation, streaks and weekly leagues" in `legal/policies/terms_of_service.md`, incorporating the standalone rules by reference (§15 is the next free number — the doc, post-CR068's no-arbitration reversal, ends at §14) |
 | ToS published mirror | `website/terms/index.html` |
 | Archived ToS v2.0 | `legal/history/terms_of_service/v2.0_2026-07-23.md` + `website/terms/v2/index.html` |
 | In-app route | linked from CR063's rules screen via the existing `LegalScreen` WebView |
@@ -209,16 +216,24 @@ ToS §1–§4 explicitly inside the competition context.
 State retention of the reputation ledger (`reputation_events`) and league history
 (`league_members`).
 
-### 11. Governing law, disputes, and indemnity
+### 11. Governing law, disputes, and indemnity — corrected at implementation
 
-**Do not re-draft — inherit.** CR068 already filled these: §13.1 is founder-drafted individual
-arbitration (AIAC Kuala Lumpur, class-action waiver, 30-day opt-out) and §15 is
-indemnification, both marked `[LAWYER REVIEW REQUIRED]`. The competition rules must
-**explicitly incorporate** them rather than restate or vary them — a competition-specific
-dispute clause that diverges from §13.1 would create a conflict between two live documents.
+**Do not re-draft — inherit.** ~~CR068 already filled these: §13.1 is founder-drafted
+individual arbitration (AIAC Kuala Lumpur, class-action waiver, 30-day opt-out) and §15 is
+indemnification~~ — **stale.** CR068 shipped, then the same day Saiful withdrew the
+arbitration/governing-law approach entirely (D-063: *"No arbitration. No courts..."*). ToS
+v2.0 as actually published has **no §13.1, no governing-law clause of any kind**, and
+indemnification landed at **§14** (not §15).
+
+What the competition rules actually inherit: ToS §2/§3's assumption-of-risk /
+sole-responsibility framing, §11 (liability cap), §12 (warranty disclaimer), and §14
+(indemnification) — with **no forum-selection language to point to**, because none exists.
+The competition rules must **not** introduce a governing-law or dispute-resolution clause of
+their own either, for consistency with Saiful's direction; they simply state that Competition
+disputes are handled exactly as any other ToS dispute, under whichever of §11/§12/§14 applies.
 
 Confirm with counsel that competition disputes (e.g. a voided score or a delisting) fall
-inside the §13.1 arbitration scope and the §15 indemnity carve-outs. `[LAWYER REVIEW REQUIRED]`
+inside the §14 indemnity carve-outs. `[LAWYER REVIEW REQUIRED]`
 
 ---
 
@@ -236,7 +251,7 @@ inside the §13.1 arbitration scope and the §15 indemnity carve-outs. `[LAWYER 
 
 1. `competition_rules.md` exists, carries the rules of the game exactly as above, and covers
    all 11 special conditions.
-2. ToS §16 added, incorporating the standalone rules by reference; published mirrors updated
+2. ToS §15 added, incorporating the standalone rules by reference; published mirrors updated
    at `website/terms/index.html` and `website/competition-rules/index.html`.
 3. Every `[LAWYER REVIEW REQUIRED]` / `[LAWYER PLACEHOLDER]` item appears in the ToS
    lawyer-only checklist.
@@ -244,6 +259,35 @@ inside the §13.1 arbitration scope and the §15 indemnity carve-outs. `[LAWYER 
 5. No statement in the document describes behaviour the code does not implement — verified
    line-by-line against `reputation_service.py` / `league_service.py` / `config.py`.
 6. Website deploy carries a `?v=` cache-bust (CF caches 7 days).
+
+## Implementation notes (2026-07-23, AT:legal)
+
+Items 1, 2, 3, 5 done:
+
+- [`legal/policies/competition_rules.md`](../../../legal/policies/competition_rules.md) v1.0
+  written, covering all 11 special conditions (§§1–13, with 4 carried forward as
+  `[LAWYER REVIEW REQUIRED]`: Sharia/legal ruling for MY/GCC in §2, credits-as-currency in §5,
+  leaderboard/GDPR erasure in §7, skill-vs-chance cohort randomisation in §8).
+- ToS bumped **v2.0 → v3.0**, new §15 added (incorporation-by-reference, no separate forum),
+  both markdown and `website/terms/index.html`. v2.0 archived to
+  [`legal/history/terms_of_service/v2.0_2026-07-23.md`](../../../legal/history/terms_of_service/v2.0_2026-07-23.md)
+  and `website/terms/v2/index.html`.
+- `website/competition-rules/index.html` published, mirroring the `website/terms/` structure.
+- `legal/VERSIONING.md` and `legal/README.md` updated to add `competition_rules.md` to the
+  governed set. `website/sitemap.xml` updated.
+- Every drafted claim checked line-by-line against `reputation_service.py`, `league_service.py`,
+  and `config.py` as read 2026-07-23 (§3 scoring table, §4 limits, §6 league mechanics, §2
+  eligibility) — no statement describes unbuilt behaviour; CR065's excluded items (365-day
+  milestone, lifetime tiers, badges, streak freezes, reminders, partial credit) do not appear.
+
+Item 4 — **not done, out of legal-track scope.** CR063 (the in-app rules screen and its
+`LegalScreen` link) is still `proposed`, owned by the dev/build team, and untouched by this
+pass. The published page exists at `/competition-rules/` and is ready to be linked once CR063
+ships; this CR does not block on it, matching how CR068 shipped its ToS/Privacy content ahead
+of the deploy step.
+
+Item 6 — **not done, pending Saiful's wording review**, same as CR068 left Terms/Privacy v2.0.
+Nothing from this CR has been deployed via `deploy_ftp.py`.
 
 ## Verification
 

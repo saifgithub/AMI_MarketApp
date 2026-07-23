@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Competition Rules — AMI Trade</title>
+  <meta name="description" content="AMI Trade Competition Rules — how reputation, streaks, and weekly leagues work, and how they relate to the Terms of Service.">
+  <link rel="canonical" href="https://www.agenticmarketintel.ai/competition-rules/">
+  <meta name="robots" content="index, follow">
+  <!-- Document versioning — visible in the page footer too. When publishing a
+       new version, archive the current /competition-rules/index.html to
+       /competition-rules/vN/ before overwriting. See legal/VERSIONING.md. -->
+  <meta name="document-version" content="1.0">
+  <meta name="document-effective-date" content="2026-07-23">
+  <meta name="document-status" content="alpha">
+  <link rel="icon" href="data:image/svg+xml,%3csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='64' height='64' rx='12' fill='%230f172a'/%3e%3cpolygon points='32,8 56,21 56,43 32,56 8,43 8,21' fill='none' stroke='%233b82f6' stroke-width='3'/%3e%3ccircle cx='32' cy='32' r='4' fill='%233b82f6'/%3e%3c/svg%3e" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/site.css?v=cr072">
+  <style>
+    .legal-shell {
+      padding: 6.5rem 0 4rem;
+      min-height: 70vh;
+    }
+    .legal-wrap {
+      max-width: 740px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+    .legal-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--fs-label);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--accent-purple);
+      margin-bottom: var(--sp-3);
+      display: block;
+    }
+    .legal-title {
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      color: var(--text-main);
+      font-weight: 700;
+      margin-bottom: var(--sp-2);
+      line-height: 1.15;
+    }
+    .legal-meta {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--text-dim);
+      letter-spacing: 0.08em;
+      margin-bottom: var(--sp-6);
+    }
+    .legal-banner {
+      background: rgba(245,158,11,0.08);
+      border-left: 3px solid var(--accent-amber);
+      padding: var(--sp-4) var(--sp-5);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      margin-bottom: var(--sp-7);
+    }
+    .legal-banner strong {
+      color: var(--accent-amber);
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .legal-banner p {
+      color: var(--text-muted);
+      font-size: var(--fs-sm);
+      line-height: 1.55;
+    }
+    .legal-intro {
+      color: var(--text-muted);
+      font-size: 1.02rem;
+      line-height: 1.7;
+      margin-bottom: var(--sp-7);
+    }
+    .legal-intro a {
+      color: var(--hex-blue);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .legal-section {
+      margin-bottom: var(--sp-7);
+    }
+    .legal-section h2 {
+      font-size: 1.25rem;
+      color: var(--text-main);
+      font-weight: 600;
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-2);
+      border-bottom: 1px solid var(--border-light);
+    }
+    .legal-section h2 .num {
+      font-family: var(--font-mono);
+      color: var(--accent-purple);
+      font-size: 0.9rem;
+      margin-right: 0.75rem;
+      font-weight: 500;
+    }
+    .legal-section p {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      line-height: 1.7;
+      margin-bottom: var(--sp-3);
+    }
+    .legal-section ul {
+      color: var(--text-muted);
+      font-size: 0.98rem;
+      line-height: 1.7;
+      margin: var(--sp-3) 0 var(--sp-3) var(--sp-5);
+    }
+    .legal-section li { margin-bottom: 6px; }
+    .legal-section strong { color: var(--text-main); }
+    .legal-section a {
+      color: var(--hex-blue);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .legal-section table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: var(--sp-3) 0 var(--sp-4);
+      font-size: 0.94rem;
+    }
+    .legal-section th, .legal-section td {
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-muted);
+    }
+    .legal-section th {
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .legal-contact {
+      background: var(--card-bg-alt);
+      border: 1px solid var(--border-color);
+      border-radius: var(--r-lg);
+      padding: var(--sp-5);
+      margin-top: var(--sp-7);
+      text-align: center;
+    }
+    .legal-contact .label {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      display: block;
+      margin-bottom: 8px;
+    }
+    .legal-contact a {
+      color: var(--accent-purple);
+      font-size: 1.05rem;
+      font-family: var(--font-mono);
+      text-decoration: none;
+    }
+    .legal-nav-back {
+      display: inline-block;
+      margin-top: var(--sp-6);
+      color: var(--text-muted);
+      font-size: var(--fs-sm);
+      text-decoration: none;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 2px;
+    }
+    .legal-nav-back:hover { color: var(--hex-blue); border-color: var(--hex-blue); }
+  </style>
+</head>
+<body>
+
+<header class="site-header" role="banner">
+  <div class="container">
+    <a href="/" class="header-brand">
+      <img src="../assets/svg/ami_logo_matrix.svg" alt="AMI" width="36" height="36">
+      <div class="brand-text">
+        <span class="brand-name">AMI Trade</span>
+        <span class="brand-sub">Applied AI</span>
+      </div>
+    </a>
+  </div>
+</header>
+
+<main class="legal-shell">
+  <div class="legal-wrap">
+
+    <span class="legal-eyebrow">Competition Rules</span>
+    <h1 class="legal-title">Reputation, Streaks &amp; Weekly Leagues</h1>
+    <p class="legal-meta">Alpha · <strong>Version 1.0</strong> · Effective 23 July 2026</p>
+
+    <div class="legal-banner">
+      <strong>Alpha disclosure</strong>
+      <p>AMI Trade is in closed alpha. These Rules are the alpha-stage version and are subject to revision before public launch. They are incorporated into our <a href="/terms/">Terms of Service</a>, clause 15.</p>
+    </div>
+
+    <p class="legal-intro">
+      These Competition Rules govern AMI Trade's weekly reputation leagues, activity streaks, and related competitive features (the "Competition"). They are incorporated by reference into our <a href="/terms/">Terms of Service</a>. Using any part of the Competition means you agree to these Rules in addition to the Terms. These Rules do not create a separate legal framework for the Competition — clauses 1–4, 11, 12, and 14 of the Terms apply to the Competition exactly as they apply to the rest of AMI Trade. <strong>No purchase is necessary to compete or to earn any Competition reward</strong> — every plan, including the free Floor Pass, is eligible under the same rules.
+    </p>
+
+    <section class="legal-section">
+      <h2><span class="num">1.</span> What the Competition is — and is not</h2>
+      <p>The Competition rewards engagement with the training simulator — completing lessons, running Room sessions to a verdict, logging disciplined and reviewed trades, maintaining daily activity streaks — with points, a weekly leaderboard, and small amounts of in-app currency at streak milestones.</p>
+      <p><strong>The Competition never scores, ranks, or rewards trading profit or loss, real or simulated.</strong> No leaderboard position, streak, or credit award is derived in whole or in part from portfolio performance.</p>
+      <p>Placing well in the Competition means you engaged diligently with the training material. It does not mean, and must not be read to mean, that you are a skilled trader, that any strategy you used would perform well with real money, or that AMI has assessed your investing ability. Clauses 1–4 of the Terms apply in full.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">2.</span> Eligibility</h2>
+      <p>You must meet the Terms' general eligibility requirements (minimum age, lawful use) to participate. The Competition is void where prohibited by local law.</p>
+      <p><strong>All plans compete on identical terms</strong>, including the free Floor Pass. If eligibility is ever restricted to paid plans, that changes the Competition's legal character and this document will be re-versioned before any such change takes effect.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">3.</span> How points are earned</h2>
+      <table>
+        <tr><th>Action</th><th>Points</th></tr>
+        <tr><td>Daily challenge attempted</td><td>+2</td></tr>
+        <tr><td>Daily challenge correct</td><td>+3 (5 total for a right answer)</td></tr>
+        <tr><td>Lesson passed</td><td>+5</td></tr>
+        <tr><td>Agent unlocked</td><td>+10</td></tr>
+        <tr><td>Room convened to a verdict</td><td>+3</td></tr>
+        <tr><td>Disciplined trade</td><td>+2 (max 3/day)</td></tr>
+        <tr><td>Reviewed trade</td><td>+3 (max 3/day)</td></tr>
+        <tr><td>Streak of 7 / 30 / 100 days</td><td>+10 / +25 / +50</td></tr>
+      </table>
+      <p>Points are earned by taking the action inside the simulator. No points are earned, and none are deducted, based on whether a simulated trade made or lost simulated money.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">4.</span> Limits and integrity</h2>
+      <ul>
+        <li>A global cap of <strong>25 points per day</strong>, measured in your device's local timezone.</li>
+        <li>A maximum of <strong>3 per day</strong> on each of the two repeatable trade actions (disciplined trade, reviewed trade).</li>
+        <li><strong>No repeat credit</strong> — re-passing a lesson or re-unlocking an agent you already have earns 0 points.</li>
+        <li><strong>One scored attempt per daily challenge.</strong></li>
+        <li><strong>Streak milestones (7/30/100 days) pay out once ever per account.</strong></li>
+      </ul>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">5.</span> Streak milestone credits</h2>
+      <p>Reaching a 7-, 30-, or 100-day activity streak grants 5, 25, or 100 credits respectively — the same in-app currency sold in credit packs under Terms clause 6. These credits are a <strong>promotional in-app currency with no cash value</strong>: non-transferable, non-refundable, forfeited on account termination, earned solely through sustained engagement — never through a wager, stake, entry fee, or game of chance — and subject to change.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">6.</span> The weekly league</h2>
+      <p>The league week resets <strong>Monday 00:00 UTC</strong>. You are placed into a cohort of up to 30 users active in the prior 7 days, grouped by current tier; within a tier, cohort membership is assigned at random among eligible active users. Ranking is based on <strong>points earned that week only</strong> — a new entrant can lead their cohort in their first week. Ties are broken by whoever joined the cohort earlier.</p>
+      <p>The top 5 in each cohort are promoted one tier and the bottom 5 are relegated one tier; relegation only applies to cohorts with at least 10 members. The tier ladder, lowest to highest: <strong>Apprentice → Analyst → Trader → Senior → Floor Veteran.</strong> Tier is cosmetic — it does not unlock, gate, or restrict any feature of AMI Trade.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">7.</span> Your competitive identity</h2>
+      <p>On your first contact with the league, AMI mints a pseudonymous "Adjective Noun" handle (for example, "Cobalt Falcon") for you — this, not your account email or real name, is what your cohort sees by default. You may regenerate your handle exactly once, ever. Your real display name is shown only if you have separately opted in.</p>
+      <p>Leaderboard rows and league history are personal data about you. If you exercise a data deletion, access, correction, or erasure right under our <a href="/privacy/">Privacy Policy</a> or <a href="/ami-trade/sad-to-see-you-go">Data Deletion Policy</a>, your leaderboard rows and league membership history are deleted or anonymised as part of that request, on the same timeline described there (currently within 30 days).</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">8.</span> Not gambling; skill versus chance</h2>
+      <p>The Competition involves no stake, no entry fee, and no wagering, and no score is ever derived from trading profit or loss. Points accrue deterministically from actions you take — a skill-and-effort basis, not chance. The one place randomness enters the Competition is cohort assignment: which specific other users you are grouped with in a given week is assigned at random among eligible, tier-matched, active users. This randomisation determines who you are compared against (matchmaking); it does not determine whether you win anything — your score, and therefore your placement, is entirely a function of your own recorded actions.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">9.</span> Anti-cheat and disqualification</h2>
+      <p>AMI reserves the right to void points, remove an entry from a leaderboard, or suspend or terminate an account under Terms clause 10, where we reasonably believe the Competition has been manipulated — including through automation, scripting, or operating multiple accounts to gain an advantage. We do not warrant that manipulation will be detected.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">10.</span> AMI's right to modify, suspend, or reset the Competition</h2>
+      <p>Scoring values, daily caps, per-type limits, cohort size, promotion/relegation thresholds, tier names, and streak milestones are expected to be tuned as the product develops, and AMI reserves the right to change them, and to suspend, pause, or reset a league season, at any time. A change to any of the above is reflected in a re-versioned publication of this document; material changes follow the same 14-day notice practice described in Terms clause 13.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">11.</span> Simulation-only reaffirmation</h2>
+      <p>Nothing about participating in, or performing well in, the Competition changes the fact that AMI Trade is a simulation. Terms clauses 1 through 4 apply to every part of the Competition without exception. A high league placement reflects diligent engagement with the training material; it is not, and must not be read as, a signal of trading skill, of the profitability of any strategy, or of investment advice of any kind.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">12.</span> Data retention</h2>
+      <p>Reputation events and league membership history are retained under the general data-retention terms of the <a href="/privacy/">Privacy Policy</a>, and are deleted or anonymised on account deletion per the <a href="/ami-trade/sad-to-see-you-go">Data Deletion Policy</a>.</p>
+    </section>
+
+    <section class="legal-section">
+      <h2><span class="num">13.</span> Disputes, liability, and indemnity — inherited from the Terms</h2>
+      <p>These Rules do not create a separate dispute-resolution process, governing law, liability cap, or indemnity obligation for the Competition. Disputes about the Competition — including a voided score, a leaderboard delisting, or a suspended account — are governed by the Terms of Service in exactly the same way as any other dispute about AMI Trade: clause 11 (limitation of liability), clause 12 (warranty disclaimer), and clause 14 (indemnification) apply without modification. The Terms carry no governing-law or arbitration clause; that is equally true here.</p>
+    </section>
+
+    <section class="legal-section legal-version-history">
+      <h2><span class="num">§</span> Version history</h2>
+      <ul>
+        <li><strong>v1.0</strong> — effective 23 July 2026. First publication, incorporated into the Terms of Service via clause 15.</li>
+      </ul>
+      <p>When a new version is published, the previous version is preserved at <code>/competition-rules/v&lt;N&gt;/</code> for audit. Material changes are notified per Terms clause 13 with at least 14 days' notice.</p>
+    </section>
+
+    <div class="legal-contact">
+      <span class="label">Contact</span>
+      <a href="mailto:legal@agenticmarketintel.ai">legal@agenticmarketintel.ai</a>
+    </div>
+
+    <a class="legal-nav-back" href="/">← Back to AMI Trade</a>
+
+  </div>
+</main>
+
+</body>
+</html>

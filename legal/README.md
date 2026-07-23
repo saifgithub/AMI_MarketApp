@@ -1,13 +1,15 @@
 # Legal
 
-The canonical legal documents for AMI Trade — Terms of Service, Privacy Policy, and Data
-Deletion Policy — kept in markdown as the source of truth, with dated version history. The
-customer-facing HTML lives under `website/` and is a manual transcription of the markdown here
-(no build pipeline; see [`VERSIONING.md`](VERSIONING.md) for the publish/sync process).
+The canonical legal documents for AMI Trade — Terms of Service, Privacy Policy, Data
+Deletion Policy, and Competition Rules — kept in markdown as the source of truth, with dated
+version history. The customer-facing HTML lives under `website/` and is a manual transcription
+of the markdown here (no build pipeline; see [`VERSIONING.md`](VERSIONING.md) for the
+publish/sync process).
 
 Created 2026-07-23 (AT:legal CR068) by splitting the pre-existing
 `docs/initial_specs/09_compliance/` folder: the actual legal documents moved here; the research
-and planning material that fed them stayed in `docs/`.
+and planning material that fed them stayed in `docs/`. `competition_rules.md` was added the same
+day (CR064, AT:legal) once ToS v2.0 landed.
 
 ## Structure
 
@@ -17,9 +19,11 @@ legal/
 ├── policies/               — current, in-force versions (what counsel reviews, what website/ mirrors)
 │   ├── terms_of_service.md
 │   ├── privacy_policy.md
-│   └── data_deletion_policy.md
+│   ├── data_deletion_policy.md
+│   └── competition_rules.md
 └── history/                 — frozen snapshots of superseded versions, one subfolder per document
     ├── terms_of_service/v1.0_2026-05-18.md
+    ├── terms_of_service/v2.0_2026-07-23.md
     └── privacy_policy/v1.0_2026-05-18.md
 ```
 
@@ -28,8 +32,8 @@ legal/
 | What | Where |
 |---|---|
 | Canonical markdown (this folder) | `legal/policies/*.md` — what a lawyer reviews |
-| Published HTML for customers | `website/{terms,privacy}/index.html`, `website/ami-trade/sad-to-see-you-go/index.html` |
-| Archived HTML versions | `website/{terms,privacy}/v\<N\>/index.html` |
+| Published HTML for customers | `website/{terms,privacy,competition-rules}/index.html`, `website/ami-trade/sad-to-see-you-go/index.html` |
+| Archived HTML versions | `website/{terms,privacy,competition-rules}/v\<N\>/index.html` |
 | Archived markdown versions | `legal/history/<doc>/v\<N\>_\<date\>.md` |
 | Research + peer-policy sourcing that fed these drafts | [`docs/initial_specs/09_compliance/legal_plan_ami_trade.md`](../docs/initial_specs/09_compliance/legal_plan_ami_trade.md), [`legal_samples.md`](../docs/initial_specs/09_compliance/legal_samples.md) |
 | App-wide disclaimer copy, GDPR/PDPL/PDPA operational detail | [`docs/initial_specs/09_compliance/disclaimers_and_privacy.md`](../docs/initial_specs/09_compliance/disclaimers_and_privacy.md) |
