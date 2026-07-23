@@ -147,6 +147,9 @@ services:
       SHARIA_SPUS_HOLDINGS_URL: ${SHARIA_SPUS_HOLDINGS_URL:-https://www.sp-funds.com/wp-content/uploads/data/TidalFG_Holdings_SPUS.csv}
       SHARIA_PARENT_INDEX_URL: ${SHARIA_PARENT_INDEX_URL:-https://raw.githubusercontent.com/datasets/s-and-p-500-companies/main/data/constituents.csv}
       SHARIA_STALENESS_DAYS: ${SHARIA_STALENESS_DAYS:-7}
+      # CR069-DIVERGE: second-source (HLAL/FTSE) holdings CSV for the
+      # divergence MONITOR only — log-only, never read by the halal flag.
+      SHARIA_HLAL_HOLDINGS_URL: ${SHARIA_HLAL_HOLDINGS_URL:-https://docs.google.com/spreadsheets/d/1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0}
       # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —
       # empty derives the cipher from SECRET_KEY, so at-rest encryption stays
       # on; set it only to rotate independently.

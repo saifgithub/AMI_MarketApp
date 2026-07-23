@@ -186,6 +186,16 @@ class Settings(BaseSettings):
     # without a fresh as-of, the flag pauses loudly rather than reading stale.
     sharia_staleness_days: int = 7
 
+    # CR069-DIVERGE — second-source (HLAL/FTSE Shariah) holdings CSV for the
+    # divergence MONITOR only (app/services/sharia_divergence.py). Log-only:
+    # never read by the `halal` flag's enforcement path. Same Tidal schema as
+    # SPUS, measured 2026-07-22 (213 rows). Config, not a literal — CR040 rule
+    # forwards it in compose.
+    sharia_hlal_holdings_url: str = (
+        "https://docs.google.com/spreadsheets/d/"
+        "1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0"
+    )
+
     # Concierge lesson-context router (CR021). Selects how much lesson
     # knowledge the Floor Concierge is given:
     #   saver        — first 25 lessons, id/title/track/level (legacy)
