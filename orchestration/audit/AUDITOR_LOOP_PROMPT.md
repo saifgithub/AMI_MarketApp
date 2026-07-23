@@ -72,6 +72,15 @@ repo layout, and do not proceed on an unresolved token.
      physical hardware can confirm it and the stakeholder's acceptance test is expected to cover it.
    - Run a blind adversarial pass on the item's riskiest dimension (write your own probe/pin
      test; auditor-authored pins live under `<AUDIT_ROOT>/regression/`).
+   - If the item introduces or touches a stateful construct — a cache, singleton, connection pool,
+     background task, or anything that persists across more than one call — verify it across its
+     FULL lifecycle, not just first-construction correctness: does it ever refresh, expire, or get
+     invalidated in the actual deployed process (not only in a test that resets it), and does it
+     respect the project's concurrency model (no operation that should be non-blocking blocks the
+     process while it's shared)? Correct on the first call is a different claim from correct on the
+     thousandth, or under concurrent access — verify both, not just the one you traced by hand
+     (DEF088 — this class of check was previously implicit and got missed on the first round of a
+     real item; it was not superstition).
 4. Verify the Definition-of-Done table in the architect lane — the portable questions in
    [`../DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md) as answered by this project's bindings.
    **CR-level submissions only**: a chunk carries the shorter chunk evidence list instead and must
