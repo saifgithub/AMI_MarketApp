@@ -347,20 +347,13 @@ class _DrawdownPicker extends StatelessWidget {
 /// switch). User-filed bug: people wanted to know what "Halal screen"
 /// actually means before turning it on.
 ///
-/// DEF084: this flag is enforced by membership in a fixed 7-ticker curated
-/// demonstration universe (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) —
-/// not a computed Sharia screen. No debt, liquidity, or income ratio is
-/// evaluated. Copy here must not claim otherwise.
+/// CR069 Phase 1b: the `halal` entry is NOT in this map. Its copy is
+/// observance-sensitive and must be translatable, so it is resolved from the
+/// ARB in `_explanationFor` instead of hardcoded English here. The DEF084 body
+/// that used to sit here ("a curated demonstration universe, not a Sharia
+/// screen") described the 7-ticker allowlist and is now false in the other
+/// direction — the flag enforces a real sourced AAOIFI screen.
 const Map<String, _ComplianceExplanation> _complianceExplanations = {
-  'halal': _ComplianceExplanation(
-    title: 'Curated demonstration universe',
-    body: 'Restricts trading to a fixed set of 7 large-cap US tickers '
-        '(AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). This is a curated '
-        'demonstration universe, not a Sharia screen — no debt-to-equity, '
-        'liquidity, or impermissible-income ratio is computed. Real Sharia '
-        'screens vary by standard (AAOIFI, DJIM, S&P, MSCI, FTSE), so the '
-        'same stock can pass one and fail another.',
-  ),
   'esgLite': _ComplianceExplanation(
     title: 'ESG-lite',
     body: 'A light-touch screen for the most-controversial categories: '
@@ -479,8 +472,23 @@ class _ComplianceToggles extends StatelessWidget {
     );
   }
 
+  /// Localized override first, then the hardcoded map. Only `halal` is
+  /// localized (CR069 Phase 1b) — it is the observance-sensitive one, and its
+  /// copy has to be able to differ per locale rather than shipping EN to every
+  /// reader.
+  _ComplianceExplanation? _explanationFor(BuildContext context, String key) {
+    if (key == 'halal') {
+      final l = AppLocalizations.of(context);
+      return _ComplianceExplanation(
+        title: l.settingsComplianceHalalExplainTitle,
+        body: l.settingsComplianceHalalExplainBody,
+      );
+    }
+    return _complianceExplanations[key];
+  }
+
   void _showExplanation(BuildContext context, String key) {
-    final explain = _complianceExplanations[key];
+    final explain = _explanationFor(context, key);
     if (explain == null) return;
     showModalBottomSheet<void>(
       context: context,

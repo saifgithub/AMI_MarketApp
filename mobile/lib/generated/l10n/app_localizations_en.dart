@@ -596,11 +596,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your PM refuses trades that would push the portfolio past this.';
 
   @override
-  String get settingsComplianceHalal => 'Curated demonstration universe';
+  String get settingsComplianceHalal => 'Sharia screen — AAOIFI';
 
   @override
   String get settingsComplianceHalalSubtitle =>
-      'A fixed 7-ticker list, not a Sharia screen';
+      'AAOIFI standard, S&P 500 Sharia index';
+
+  @override
+  String get settingsComplianceHalalExplainTitle => 'Sharia screen (AAOIFI)';
+
+  @override
+  String get settingsComplianceHalalExplainBody =>
+      'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.';
+
+  @override
+  String shariaVerdictPass(
+      String ticker, String standard, String source, String date) {
+    return '$ticker passes the $standard screen ($source, as of $date).';
+  }
+
+  @override
+  String shariaVerdictScreenedOut(
+      String ticker, String standard, String source, String date) {
+    return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
+  }
+
+  @override
+  String shariaVerdictUnknown(String ticker, String standard) {
+    return '$ticker isn\'t in the S&P 500, so the $standard screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.';
+  }
+
+  @override
+  String shariaVerdictPaused(String date) {
+    return 'AMI couldn\'t refresh the Sharia screen (last updated $date). The halal filter is paused until it can.';
+  }
+
+  @override
+  String get shariaVerdictLabelPass => 'SHARIA SCREEN';
+
+  @override
+  String get shariaVerdictLabelPaused => 'SHARIA SCREEN PAUSED';
 
   @override
   String get settingsComplianceEsgLite => 'ESG-lite';

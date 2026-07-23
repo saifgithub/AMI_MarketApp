@@ -1156,17 +1156,67 @@ abstract class AppLocalizations {
   /// **'Your PM refuses trades that would push the portfolio past this.'**
   String get settingsMaxDrawdownExplain;
 
-  /// DEF084: restricts trading to a fixed 7-ticker curated demonstration universe. Explicitly NOT a Sharia screen — no debt, liquidity, or income ratio is computed. OBSERVANCE-SENSITIVE: do not invent a religious term when translating; keep the honest, non-claiming wording. Saiful arranges translation externally.
+  /// CR069 Phase 1b (supersedes the DEF084 placeholder). Toggle label for the halal mandate flag. The flag now enforces a REAL, SOURCED screen: AMI reads the published constituents of the S&P 500 Sharia Industry Exclusions Index, which S&P Dow Jones screens to the AAOIFI standard. AMI does not run its own ruling and computes no ratios. OBSERVANCE-SENSITIVE. Translator notes: (a) 'AAOIFI' is the proper name of a standards body (Accounting and Auditing Organization for Islamic Financial Institutions) — transliterate, never translate or expand it; (b) 'Sharia screen' means a compliance filter applied by that standard, NOT a religious ruling by AMI; (c) do not render this as 'halal' or 'permitted' — naming the standard is the whole point of the string. Saiful arranges translation externally.
   ///
   /// In en, this message translates to:
-  /// **'Curated demonstration universe'**
+  /// **'Sharia screen — AAOIFI'**
   String get settingsComplianceHalal;
 
-  /// DEF084: subtitle shown under the toggle label so the honest disclaimer is visible without tapping through. Must not claim a computed screen ran. OBSERVANCE-SENSITIVE — translator note applies, see @settingsComplianceHalal.
+  /// CR069 Phase 1b (supersedes the DEF084 placeholder). Subtitle under the toggle label, so the standard and the source are visible without tapping through. OBSERVANCE-SENSITIVE. Translator notes: 'S&P 500 Sharia index' is the short name of the S&P 500 Sharia Industry Exclusions Index — a proper noun; keep 'S&P 500' verbatim. Do not add or imply a religious endorsement by AMI. The as-of date is not in this string because the app has no live source for it — it is stated on each per-ticker verdict instead (see shariaVerdict* keys). See @settingsComplianceHalal.
   ///
   /// In en, this message translates to:
-  /// **'A fixed 7-ticker list, not a Sharia screen'**
+  /// **'AAOIFI standard, S&P 500 Sharia index'**
   String get settingsComplianceHalalSubtitle;
+
+  /// CR069 Phase 1b. Title of the tap-through explanation sheet for the halal flag. OBSERVANCE-SENSITIVE — see @settingsComplianceHalal for the AAOIFI transliteration rule.
+  ///
+  /// In en, this message translates to:
+  /// **'Sharia screen (AAOIFI)'**
+  String get settingsComplianceHalalExplainTitle;
+
+  /// CR069 Phase 1b (supersedes the DEF084 placeholder body). Tap-through explanation for the halal flag. Four things are load-bearing and MUST survive translation: (1) the standard name AAOIFI; (2) the source — S&P Dow Jones applying it to the S&P 500 Sharia Industry Exclusions Index; (3) that AMI READS a published list and issues no ruling of its own; (4) the coverage boundary — the screen covers only the S&P 500, and a company outside it is UNSCREENED, which is not a negative verdict and does not block the trade. OBSERVANCE-SENSITIVE. Translator note: 'unscreened' must NOT become 'not permitted', 'haram', 'non-compliant' or any negative ruling — it means the standard never examined the company. Rendering it as a prohibition inverts the meaning and is the specific error this string exists to prevent. AAOIFI/DJIM/FTSE/MSCI/S&P are proper names — transliterate, do not translate. Saiful arranges translation externally.
+  ///
+  /// In en, this message translates to:
+  /// **'Restricts trading to companies that pass the AAOIFI Sharia screen, as applied by S&P Dow Jones to the S&P 500 Sharia Industry Exclusions Index. AMI reads that index\'s published constituents — it does not run its own ruling.\n\nCoverage is the S&P 500. A company outside it hasn\'t been screened by this standard, so AMI will tell you it\'s unscreened rather than guess. Unscreened is not a ruling either way, and it does not stop the trade.\n\nSharia standards disagree. AAOIFI, DJIM, FTSE, MSCI and S&P apply different thresholds and denominators, so the same company can pass one and fail another — today, AAOIFI and FTSE differ on about half the names between them. This screen follows AAOIFI.'**
+  String get settingsComplianceHalalExplainBody;
+
+  /// CR069 Phase 1b. Shown on a SUCCESSFUL trade when the halal flag is on and the ticker is in the compliant set. States the standard, source and as-of date, per CR069 design constraint 1. OBSERVANCE-SENSITIVE. Translator note: 'passes the screen' is a statement about a published list, not a religious endorsement by AMI — avoid wording like 'AMI declares this halal'. {standard} and {source} are backend-supplied proper names (e.g. 'AAOIFI', 'S&P 500 Sharia Industry Exclusions Index (via SPUS)') and arrive untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} passes the {standard} screen ({source}, as of {date}).'**
+  String shariaVerdictPass(
+      String ticker, String standard, String source, String date);
+
+  /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
+  String shariaVerdictScreenedOut(
+      String ticker, String standard, String source, String date);
+
+  /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.
+  ///
+  /// In en, this message translates to:
+  /// **'{ticker} isn\'t in the S&P 500, so the {standard} screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.'**
+  String shariaVerdictUnknown(String ticker, String standard);
+
+  /// CR069 Phase 1b. Shown when the screen's source could not be refreshed or is stale beyond its window. The flag degrades LOUDLY (CR069 design constraint 3 / CR040): it pauses visibly rather than answering from a stale set. OBSERVANCE-SENSITIVE. Translator notes: (a) this reports an AMI-side data problem, not a verdict about any company — do not word it as a compliance outcome; (b) 'paused' means temporarily not enforcing, not 'disabled' or 'failed'. {date} is the last successful as-of stamp and may read 'unknown' when the screen never loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'AMI couldn\'t refresh the Sharia screen (last updated {date}). The halal filter is paused until it can.'**
+  String shariaVerdictPaused(String date);
+
+  /// CR069 Phase 1b. Short mono header above the pass/unknown verdict on a successful trade. Neutral by design — the same header carries both the pass and the unknown state so the header itself never implies a verdict. Uppercase in EN; follow local convention. OBSERVANCE-SENSITIVE.
+  ///
+  /// In en, this message translates to:
+  /// **'SHARIA SCREEN'**
+  String get shariaVerdictLabelPass;
+
+  /// CR069 Phase 1b. Short mono header for the paused/unavailable state. Reports an AMI-side refresh failure, not a compliance outcome. Uppercase in EN; follow local convention. OBSERVANCE-SENSITIVE.
+  ///
+  /// In en, this message translates to:
+  /// **'SHARIA SCREEN PAUSED'**
+  String get shariaVerdictLabelPaused;
 
   /// No description provided for @settingsComplianceEsgLite.
   ///

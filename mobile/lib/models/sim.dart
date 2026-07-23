@@ -2,6 +2,8 @@
 /// Mirrors backend/app/api/sim.py + schemas/trade.py.
 library;
 
+import 'package:ami_trade/models/sharia.dart';
+
 class SimHolding {
   const SimHolding({
     required this.ticker,
@@ -208,6 +210,7 @@ class SimSubmitResult {
     this.trade,
     this.violations = const [],
     this.blockedBy,
+    this.shariaVerdict,
   });
 
   final bool ok;
@@ -215,18 +218,32 @@ class SimSubmitResult {
   final List<String> violations;
   final String? blockedBy;
 
+  /// CR069: the sourced Sharia verdict with its provenance, when the halal
+  /// flag is on. Read on BOTH branches — a permitted PASS/UNKNOWN trade carries
+  /// it too, because a permitted unknown that says nothing is a silent pass on
+  /// an observance decision (G3). Null when the flag is off, and null against a
+  /// backend that does not yet serialize the field.
+  final ShariaVerdict? shariaVerdict;
+
   factory SimSubmitResult.fromJson(Map<String, dynamic> j) {
+    // Present on both branches: /submit returns {ok, trade} on success and
+    // {ok, compliance} on rejection, and the verdict may ride on either.
+    final compliance =
+        (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final verdict = ShariaVerdict.fromJson(
+        (compliance['sharia_verdict'] as Map?)?.cast<String, dynamic>());
     if ((j['ok'] as bool?) == true) {
       return SimSubmitResult(
         ok: true,
         trade: SimTrade.fromJson(j['trade'] as Map<String, dynamic>),
+        shariaVerdict: verdict,
       );
     }
-    final compliance = (j['compliance'] as Map?)?.cast<String, dynamic>() ?? const {};
     return SimSubmitResult(
       ok: false,
       violations: ((compliance['violations'] as List?) ?? const []).cast<String>(),
       blockedBy: compliance['blocked_by'] as String?,
+      shariaVerdict: verdict,
     );
   }
 }
