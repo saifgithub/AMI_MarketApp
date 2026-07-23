@@ -91,11 +91,45 @@ are all absent** (banks, tobacco, casino). SPUS tracks the *S&P 500 Sharia Indus
 Index*, AAOIFI-aligned, screened by S&P DJI — not by us. Sibling CSVs at the same path are also live
 (`TidalFG_Holdings_SPSK.csv` sukuk, `..._SPRE.csv` REIT).
 
-Cross-check sources exist: **HLAL** (Wahed, FTSE Shariah USA, fatwa by Yasaar Ltd, holdings
-published as a linked sheet) and **ISUS.L** (iShares MSCI USA Islamic, ~141 holdings).
+A second source is equally available: **HLAL** (Wahed, FTSE Shariah USA, fatwa by Yasaar Ltd),
+published as a Google Sheet in the **identical Tidal schema** —
+`https://docs.google.com/spreadsheets/d/1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0`
+→ HTTP 200, 21.7 KB, 213 rows, same `07/22/2026` as-of date. **ISUS.L** (iShares MSCI USA Islamic,
+~141 holdings) is a third.
 
 **Trap:** `yfinance.funds_data.top_holdings` returns **only 10 rows** for SPUS and HLAL. It is not a
 substitute for the CSV.
+
+### 3a. The two sources disagree on ~48% of names — this decides the architecture
+
+Both CSVs pulled the same day, plain-alpha tickers only:
+
+```
+SPUS (S&P / AAOIFI): 216      HLAL (FTSE): 210
+agree (in both):     146
+SPUS only:            70      (ABBV, ACN, BKNG, HD, IBM, ORCL, PEP, TMO, UNP, …)
+HLAL only:            64      (GOOG, META, KO, CVX, T, INTC, PFE, DELL, EA, …)
+
+UNION 280 · INTERSECTION 146 · disagreement 134 names = 47.9% of the union
+```
+
+This is lesson `350_standards_differ_why_the_same_stock_flips` measured on our own data, and it has
+three hard consequences:
+
+1. **"Second source as failover" is unsafe and must not be built.** Falling back from SPUS to HLAL
+   silently changes the standard under the user — META and KO are non-compliant under one and
+   compliant under the other. A failover would flip a ticker's observance verdict with no signal.
+2. **Union is the loosest possible screen and is sourced from nobody** — it would be AMI's own
+   invented standard, which is the DEF084 failure with extra steps. Intersection is defensible as a
+   *conservative* screen but is likewise no published standard, and it would wrongly exclude 134
+   names that some scholar body cleared.
+3. **Therefore: one named primary standard, full stop.** The second source becomes a *monitoring*
+   signal (alert when the two diverge on a name a user holds or is convening), never an input to the
+   verdict.
+
+**Note for the product decision:** today's `DEFAULT_HALAL_DEMO_UNIVERSE` contains **META**, which
+SPUS/AAOIFI screens **out**. Whichever standard is chosen, the current 7-ticker list is not a subset
+of it.
 
 ### 4. Malaysia is free and authoritative
 
@@ -124,10 +158,19 @@ published figures and should be re-confirmed before any purchase.
 
 ### Phase 1 — US universe from published Shariah ETF holdings (free, ships first)
 
-A fetcher + cache that pulls the SPUS holdings CSV, extracts `StockTicker` plus the `Date` column as
-the **as-of stamp**, and exposes the set as the `halal` universe in place of
-`DEFAULT_HALAL_DEMO_UNIVERSE`. Add HLAL and/or ISUS.L as a second source so one vendor's outage is
-not a silent single point of failure.
+A fetcher + cache that pulls the **primary standard's** holdings CSV, extracts `StockTicker` plus the
+`Date` column as the **as-of stamp**, and exposes the set as the `halal` universe in place of
+`DEFAULT_HALAL_DEMO_UNIVERSE`.
+
+**One named primary standard — no failover, no union, no intersection** (see §3a: the sources
+disagree on 47.9% of the union). Recommended primary: **SPUS / AAOIFI**, because AAOIFI is the
+reference standard the curriculum already teaches and SP Funds states AAOIFI adherence explicitly —
+**but the choice is Saiful's, not the build team's.** HLAL is fetched as a *divergence monitor*: log
+when the two disagree on a name a user holds or convenes, and surface it as the "standards differ"
+teaching moment rather than as an input to the verdict.
+
+If the primary source is unavailable, the flag **degrades loudly** (constraint 3). It must never
+quietly answer from the other standard.
 
 The CSV carries non-equity rows (cash / CVR line items such as `003654100CVR`, `2602335D`) — filter
 them, and assert a plausible row count so a truncated download cannot quietly shrink the universe.
@@ -200,6 +243,19 @@ to refuse. Ships in the same commit as the fix, per the `failure_patterns.md` ho
    not a bare boolean.
 5. Phase 3 output is a numbers table — measured API agreement against the Phase-1 set and a real
    monthly cost at projected convene volume. No estimate stated as a measurement.
+
+## Open decisions — Saiful's, and Phase 1 should not start without the first two
+
+1. **Which standard is primary?** AAOIFI/SPUS (recommended) or FTSE/HLAL. Not an engineering call —
+   47.9% of names hang on it, including META and KO. §3a has the measured split.
+2. **What does the UI say now?** Phase 1 replaces "curated demonstration universe" with a real
+   sourced screen, so `settingsComplianceHalal` + its subtitle + the explanation body
+   (`settings_screen.dart:355`, `app_en.arb:395`) all need new copy naming the standard, the source
+   and the as-of date — plus the **unknown** state, which has no UI today. Observance-sensitive
+   strings: the AR/MS entries carry translator notes and stay placeholder until reviewed.
+3. **Licensing** (constraint 5) — lawyer question, blocks marketing, not building.
+4. **Human-dependency items, Phase 3:** Saiful opens the Halal Terminal free-tier account and
+   requests the Musaffa / Zoya quotes. Claude cannot self-serve either.
 
 ## Out of scope
 
