@@ -437,6 +437,17 @@ section { padding: 5rem 0; }
 .price-features li::before { content: '◆'; color: var(--hex-blue); font-size: 0.42rem; margin-top: 0.45em; flex-shrink: 0; }
 .price-features li.dim { color: var(--text-dim); }
 .price-cta { margin-top: 1.5rem; width: 100%; text-align: center; }
+/* Roadmap disclaimer under the plan grid. Deliberately quiet but unmissable:
+   these are the two things the cards used to sell as shipped (CR072). */
+.price-roadmap {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
 .price-banner {
   background: rgba(59,130,246,0.1);
   border: 1px solid rgba(59,130,246,0.3);
