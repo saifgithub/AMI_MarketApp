@@ -124,13 +124,11 @@
     "settingsRiskLabel5": "أقصى قدر من تحمل المخاطر. المراهنات المركزة مسموح بها.",
     "settingsMaxDrawdown": "أقصى تراجع",
     "settingsMaxDrawdownExplain": "يرفض مدير المحفظة الصفقات التي قد تدفع PORTFOLIO لتجاوز هذا الحد.",
-    "settingsComplianceHalal": "فلتر الحلال",
     "@settingsComplianceHalal": {
-        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): EN source changed from 'Halal screen' to 'Curated demonstration universe' — the flag restricts trading to a fixed 7-ticker allowlist and is explicitly NOT a Sharia screen (no ratio is computed). The Arabic value above is the pre-DEF084 placeholder and has NOT been updated to match — do not invent religious terminology here. A qualified translator/SME must supply the corrected wording; Saiful arranges translation externally."
+        "description": "TRANSLATOR NOTE (CR069 Phase 1b, observance-sensitive): the previous Arabic value here was the DEF084 placeholder asserting a fixed 7-ticker list and NOT a Sharia screen. That is now FALSE — the halal flag enforces a real sourced screen (AAOIFI standard, S&P 500 Sharia Industry Exclusions Index, read from its published constituents). The stale value has been REMOVED rather than re-translated, so this key falls back to the English source until a qualified translator/SME reviews it. Do NOT machine-translate: see the EN @-metadata for the four load-bearing facts (standard name, source, AMI reads and does not rule, and the coverage boundary where 'unscreened' must never become 'not permitted')."
     },
-    "settingsComplianceHalalSubtitle": "قائمة ثابتة من 7 أسهم، وليست فحصًا شرعيًا",
     "@settingsComplianceHalalSubtitle": {
-        "description": "TRANSLATOR NOTE (DEF084, observance-sensitive): placeholder only, not reviewed by a qualified translator/SME. See @settingsComplianceHalal."
+        "description": "TRANSLATOR NOTE (CR069 Phase 1b, observance-sensitive): the previous Arabic value here was the DEF084 placeholder asserting a fixed 7-ticker list and NOT a Sharia screen. That is now FALSE — the halal flag enforces a real sourced screen (AAOIFI standard, S&P 500 Sharia Industry Exclusions Index, read from its published constituents). The stale value has been REMOVED rather than re-translated, so this key falls back to the English source until a qualified translator/SME reviews it. Do NOT machine-translate: see the EN @-metadata for the four load-bearing facts (standard name, source, AMI reads and does not rule, and the coverage boundary where 'unscreened' must never become 'not permitted')."
     },
     "settingsComplianceTAG": "بدون تبغ / كحول / قمار",
     "settingsComplianceFossil": "بدون وقود أحفوري",
