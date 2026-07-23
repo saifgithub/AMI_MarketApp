@@ -89,27 +89,24 @@ Commit tag `(AT:coder.mobile CR069)`. Report SHA + `flutter analyze` / `flutter 
 <!-- CR069-BE merged at bdc410f (VERDICT: COMPLETE round 3), so the code dependency is satisfied —
 but this lane is HELD, not assigned, and the open action is the Architect's. See below. -->
 
-## HELD — needs a promote before a coder can start
+## UNBLOCKED — the backend is live with the screen ON
 
-The code dependency is met. The **verification** dependency is not.
+Promoted `alpha-2026-07-23-1`. `SHARIA_SCREEN_ENABLED=true` on Alpha, verified **inside the
+deployed container**:
 
-This lane's contract check is *"re-verify `fromJson` against real backend JSON — an actual response
-body, not a compile."* That is a BINDINGS rule, not a nicety: the backend↔mobile contract is
-hand-mirrored and not type-enforced, so a rename fails silently at runtime behind `?? default`.
+```
+enabled: True
+compliant=216  parent=503  as_of=2026-07-23  stale=False
+AAPL pass · META screened_out (blocking) · JPM screened_out · ASML unknown (permitted)
+```
 
-**There is nowhere to get that JSON right now.** The Mac runs no backend by design, and melehost is
-still on pre-CR069 code — the sourced screen exists only on the shared branch. A coder launched today
-would mirror a schema it read from source and call that verified, which is exactly the check the rule
-exists to prevent.
+**Get your real backend JSON from `https://api-alpha.agenticmarketintel.ai`.** That is the contract
+check this lane owes — an actual response body, not a compile.
 
-Two ways forward, and the choice is the stakeholder's:
-
-1. **Promote the backend to Alpha with `SHARIA_SCREEN_ENABLED=false`** (its default), then launch
-   this lane. The screen stays dark; only the shape becomes observable. Nothing user-facing changes,
-   because nothing renders it until this lane ships.
-2. **Launch now and accept a source-read mirror**, deferring the live contract check to after the
-   promote. Cheaper today, and it re-opens the exact runtime-silence gap the rule was written for.
-
-Recommendation: option 1. The screen is off by default, so the promote is close to inert, and it
-turns the contract check from a promise into an observation.
+**The stakeholder has seen the stale copy in the running app** and called it out: Settings still
+reads *"Curated demonstration universe … not a Sharia screen"* while the backend now runs a real
+AAOIFI screen. The two surfaces contradict — the DEF084 shape pointing the other way. That copy was
+honest when it shipped; it is false now. **This lane is the fix, and it is the visible half.**
 DISPATCH: OPEN
+
+ASSIGNED: coder.mobile round 1
