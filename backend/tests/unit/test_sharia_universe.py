@@ -164,3 +164,133 @@ def test_provider_fetch_error_pauses_loudly():
     )
     u = p.get(now=date(2026, 7, 23))
     assert u.stale  # degrade loudly — never a silent fall back to a placeholder set
+
+
+# ── round 2: DEF089 parent source, F2 cache lifecycle, F3 async accessor ─────
+
+_CONSTITUENTS = (_FIX / "parent_constituents_sample.csv").read_text()
+
+
+def test_parse_constituent_list_shape():
+    """DEF089's replacement source: `Symbol` header, no preamble, dotted share
+    classes. The iShares endpoint it replaced served an HTML interstitial to a
+    plain client, so this shape is what actually ships."""
+    tickers, as_of = parse_holdings_csv(_CONSTITUENTS)
+    assert len(tickers) > 490
+    assert {"AAPL", "MSFT", "META", "JPM", "BRK.B"} <= tickers
+    assert as_of is None
+
+
+def test_constituent_date_added_is_not_mistaken_for_as_of():
+    """`Date added` holds each name's index-admission date (1957 for MMM). If the
+    date-column match were a prefix/substring match it would land there and every
+    fetch would look decades stale."""
+    _, as_of = parse_holdings_csv(_CONSTITUENTS)
+    assert as_of is None
+
+
+def test_fetch_parent_index_accepts_constituent_list():
+    client = _FakeClient({"u": (200, _CONSTITUENTS)})
+    assert len(fetch_parent_index(client, "u")) > 490
+
+
+def _counting_fetcher(as_of: date):
+    calls = {"n": 0}
+
+    def fetch():
+        calls["n"] += 1
+        return frozenset({"AAA"}), as_of, frozenset({"AAA", "ZZZ"})
+
+    return fetch, calls
+
+
+def test_f2_staleness_is_rechecked_after_the_cache_is_warm():
+    """F2. The first cut evaluated staleness only inside `_build()`, which only ran
+    when the cache was empty — so a container that booted with fresh data served it
+    forever. Same warm provider, later `now`, no refetch: must pause."""
+    fetch, calls = _counting_fetcher(date(2026, 7, 22))
+    p = ShariaUniverseProvider(
+        compliant_url="x", parent_url="y", staleness_days=7, enabled=True,
+        fetcher=fetch, refetch_interval_s=10_000,
+    )
+    fresh = p.get(now=date(2026, 7, 23))
+    assert not fresh.stale
+    assert fresh.resolve("AAA").status is ShariaStatus.PASS
+
+    stale = p.get(now=date(2026, 8, 30))  # 39 days past a 7-day window
+    assert stale.stale
+    assert stale.resolve("AAA").status is ShariaStatus.UNAVAILABLE
+    assert stale.resolve("ZZZ").status is ShariaStatus.UNAVAILABLE
+    assert calls["n"] == 1, "staleness must be re-derived, not re-fetched"
+
+
+def test_f2_refetch_is_throttled_while_the_source_is_down():
+    """Staleness is re-derived per call, but the network retry is not: a dead
+    source must not be hammered once per trade while the flag is paused."""
+    calls = {"n": 0}
+
+    def boom():
+        calls["n"] += 1
+        raise ShariaSourceError("truncated")
+
+    p = ShariaUniverseProvider(
+        compliant_url="x", parent_url="y", staleness_days=7, enabled=True,
+        fetcher=boom, refetch_interval_s=10_000,
+    )
+    for _ in range(5):
+        assert p.get(now=date(2026, 7, 23)).stale
+    assert calls["n"] == 1
+
+
+def test_f2_refetch_fires_once_the_interval_elapses():
+    fetch, calls = _counting_fetcher(date(2026, 7, 22))
+    p = ShariaUniverseProvider(
+        compliant_url="x", parent_url="y", staleness_days=7, enabled=True,
+        fetcher=fetch, refetch_interval_s=0,
+    )
+    p.get(now=date(2026, 7, 23))
+    p.get(now=date(2026, 7, 23))
+    assert calls["n"] == 2
+
+
+def test_f3_async_accessor_does_not_block_the_event_loop():
+    """F3. `_default_fetcher` is a synchronous httpx client doing two round-trips at
+    up to 15s each; the API runs one uvicorn worker, so calling it straight from an
+    `async def` handler stalls every concurrent request. The accessor must hand the
+    blocking work to a thread — asserted by keeping the loop responsive while a
+    deliberately slow fetch is in flight."""
+    import asyncio
+    import time as _time
+
+    from app.services import sharia_universe as su
+
+    def slow_fetch():
+        _time.sleep(0.3)
+        return frozenset({"AAA"}), date(2026, 7, 22), frozenset({"AAA", "ZZZ"})
+
+    provider = ShariaUniverseProvider(
+        compliant_url="x", parent_url="y", staleness_days=7, enabled=True,
+        fetcher=slow_fetch,
+    )
+    su.reset_sharia_universe_provider(provider)
+    try:
+        async def scenario():
+            ticks = 0
+
+            async def ticker():
+                nonlocal ticks
+                while True:
+                    await asyncio.sleep(0.01)
+                    ticks += 1
+
+            t = asyncio.create_task(ticker())
+            u = await su.default_halal_universe_async()
+            t.cancel()
+            return u, ticks
+
+        universe, ticks = asyncio.run(scenario())
+        assert universe.resolve("AAA").status is ShariaStatus.PASS
+        # A blocking call on the loop would have frozen the ticker at ~0.
+        assert ticks > 5, f"event loop was blocked during the fetch (ticks={ticks})"
+    finally:
+        su.reset_sharia_universe_provider(None)
