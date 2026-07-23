@@ -218,7 +218,10 @@ Shown wherever a ticker's status appears (Room convene, trade rejection, watchli
   screen (last updated {date}). The halal filter is paused until it can."*
 
 Whether an unknown ticker is **blocked or permitted** with the disclosure attached is a behaviour
-choice, not a copy choice — build team proposes, and it goes in the Gate at the end.
+choice, not a copy choice. **RESOLVED (Saiful, 2026-07-23): permitted, with the disclosure attached.**
+Only a ticker inside the parent index and absent from the compliant set is blocked. This has a copy
+consequence — the unknown string appears on a **successful** trade, not on a rejection, so it must
+read as *"AMI has no ruling on this"* and never as a warning that the trade was risky.
 
 New/changed ARB keys need translator notes and stay **placeholder in AR and MS** until reviewed —
 observance-sensitive, same posture as the DEF084 strings.
@@ -315,7 +318,7 @@ SME-escalated), and **DEF082** (lesson-gating sequencing).
 |---|---|---|---|
 | G1 | **Standard choice** — AAOIFI via SPUS, "for what it covers" | Phase 1 | **RESOLVED 2026-07-23** |
 | G2 | **UI copy** — approve or tighten the Phase 1b strings | Phase 1b merge | **RESOLVED 2026-07-23** — build to the copy above |
-| G3 | **Unknown-ticker behaviour** — block with disclosure, or permit with disclosure? Build team proposes; Saiful rules | nothing (default: **block + disclose**, the conservative read) | open |
+| G3 | **Unknown-ticker behaviour** — block with disclosure, or permit with disclosure? | nothing | **RESOLVED 2026-07-23 — permit + disclose.** Only a ticker *in* the parent index and *absent* from the compliant set is blocked. "Unknown" is not a ruling, so it must not behave like one |
 | G4 | **Index-constituent licensing** — SEC daily-transparency publication is not obviously an S&P data licence; FTSE's terms restrict building products on their data; US case law inconsistent on constituent lists | **marketing/public launch only** — not building, not internal testing | open · lawyer |
 | G5 | **Halal Terminal free-tier account** (500 calls/mo) — Saiful registers, Claude cannot self-serve | Phase 3 only | open |
 | G6 | **Musaffa + Zoya quotes** — both quote-only/contact-sales | Phase 3 only | open |

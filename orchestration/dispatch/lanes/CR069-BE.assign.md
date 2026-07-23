@@ -75,9 +75,26 @@ agents receive the provenance, so the type must carry it from the start.
 
 **Enforcement** — rewire all five sites above, including `room_runner.py:1293` (that one line only;
 it is `coder.room`'s file, so keep the change minimal and mechanical). `safety_floor.py`'s two
-branches are the actual gate: an unknown ticker takes **G3's default — block, with the unknown
-disclosure attached**, not a screened-out message. Saiful may rule the other way; that is a one-line
-change and is not yours to decide.
+branches are the actual gate.
+
+**G3 is RESOLVED (Saiful, 2026-07-23): an unknown ticker is PERMITTED, with the disclosure
+attached.** Only a ticker that is **in the parent index and absent from the compliant set** is
+blocked. Read the consequences carefully, because they are not a one-line change:
+
+- **Unknown must not produce a violation.** `safety_floor.py` appends violations, and a violation is
+  a rejection. Do not invent a "permitting violation" — if unknown reaches the violations list at
+  all, the trade is blocked and the ruling is inverted. Unknown means the halal branch simply does
+  not fire.
+- **But the disclosure must still travel.** A permitted-unknown trade that says nothing is a silent
+  pass on an observance decision, which is this CR's entire failure class in the other direction.
+  The verdict object carries `unknown` plus the standard, source and as-of date, and every surface
+  that renders a trade outcome has to be able to show it. The floor is not the carrier here — the
+  verdict is. Design that seam deliberately.
+- **The agents must receive it too.** §Acceptance 4 checks the Room prompts carry the sourced verdict
+  *with provenance*. An agent told nothing about a ticker's screen status will narrate as though it
+  passed — DEF084-ROOM was exactly that, three narration sites asserting a screen no code ran.
+- Keep the boundary honest in copy: unknown is *"the AAOIFI screen AMI uses hasn't reviewed it —
+  that's not a ruling either way"*, never a pass and never a fail.
 
 **Do NOT wire `sharia_screen()`** (`trading_math/screening.py`). Constraint 4: the three-ratio math
 stays dormant until a source supplies real debt / liquid-asset / impermissible-income figures. This

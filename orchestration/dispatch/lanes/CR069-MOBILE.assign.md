@@ -39,6 +39,13 @@ server and silent on the phone, which is the whole failure class.
 
 Render the state wherever a ticker's status appears: Room convene, trade rejection, watchlist.
 
+**G3 is RESOLVED (Saiful, 2026-07-23): unknown is PERMITTED, with the disclosure attached.** That
+changes where the unknown copy lives. It is **not** a rejection message — the trade goes through — so
+it cannot ride on the rejection surface the way screened-out does. A permitted trade that shows
+nothing is a silent pass on an observance decision, which is this CR's failure class pointing the
+other way. Find the surface that a *successful* trade renders and put it there, and make sure it
+reads as *"AMI has no ruling on this"* rather than as a warning that the trade was risky.
+
 ## 2. i18n
 
 - **AR and MS stay placeholder** until reviewed — observance-sensitive, same posture as the DEF084

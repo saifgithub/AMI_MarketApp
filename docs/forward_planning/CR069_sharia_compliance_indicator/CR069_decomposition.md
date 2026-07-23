@@ -80,8 +80,13 @@ in the direction nobody checks. The lane instructs `BLOCKED` over faking it.
 
 ## Open, carried to the stakeholder
 
-- **G3 — unknown-ticker behaviour.** Building to the CR's stated safe default, **block + disclose**.
-  A ruling the other way is a one-line change, so no lane is stalled.
+- **G3 — RESOLVED (Saiful, 2026-07-23): permit + disclose.** Only a ticker inside the parent index
+  and absent from the compliant set is blocked. I had assumed this was a one-line change; it is not.
+  It moves the disclosure off the rejection path entirely — a permitted-unknown trade that renders
+  nothing is a *silent* pass on an observance decision, which is this CR's own failure class pointing
+  the other way. Both the BE and MOBILE lanes were rewritten before dispatch: the verdict object, not
+  the safety floor, has to carry `unknown` and its provenance, and the copy lands on a successful
+  trade rather than a rejection.
 - **G4 — index-constituent licensing.** Lawyer question. Does not block building or internal
   testing; **does** block marketing or public launch. No agent resolves this.
 - **G5/G6** — vendor account and quotes, which block `CR069-VENDOR` entirely.
