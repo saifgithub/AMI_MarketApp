@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
-"""FTP deployment script for agenticmarketintel.ai marketing site.
+"""SUPERSEDED — legacy FTP deployment for the agenticmarketintel.ai marketing site.
+
+Kept for reference only. The live deploy path is rsync over SSH (alias `ami-web`);
+see docs/WEBSITE.md. Do not use this unless SSH is unavailable.
+
+Moved out of `website/` in CR072: it lived inside the deployable docroot, so every
+rsync republished it — it was publicly served for months alongside WEBSITE.md and a
+stale Archive.zip until CR049 deleted them server-side. Deleting them from the
+server without removing them from the source only bought time; the next deploy
+would have put them straight back. `website/` now holds deployable content and
+nothing else, which is what makes `rsync --delete` safe here.
+
+It carries no password (taken as argv) but does disclose the FTP host and username.
 
 Usage:
-  python3 deploy_ftp.py YOUR_FTP_PASSWORD
-
-Uploads website/ to the FTP root (list first to confirm correct path).
+  python3 scripts/deploy_ftp_legacy.py YOUR_FTP_PASSWORD
 """
 
 import ftplib
