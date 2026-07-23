@@ -86,7 +86,30 @@ already stranded a finished round; an uncommitted one now renders `UNCOMMITTED` 
 
 Commit tag `(AT:coder.mobile CR069)`. Report SHA + `flutter analyze` / `flutter test` exit codes.
 
-<!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
-DISPATCH: OPEN
+<!-- CR069-BE merged at bdc410f (VERDICT: COMPLETE round 3), so the code dependency is satisfied —
+but this lane is HELD, not assigned, and the open action is the Architect's. See below. -->
 
-ASSIGNED: coder.mobile round 1
+## HELD — needs a promote before a coder can start
+
+The code dependency is met. The **verification** dependency is not.
+
+This lane's contract check is *"re-verify `fromJson` against real backend JSON — an actual response
+body, not a compile."* That is a BINDINGS rule, not a nicety: the backend↔mobile contract is
+hand-mirrored and not type-enforced, so a rename fails silently at runtime behind `?? default`.
+
+**There is nowhere to get that JSON right now.** The Mac runs no backend by design, and melehost is
+still on pre-CR069 code — the sourced screen exists only on the shared branch. A coder launched today
+would mirror a schema it read from source and call that verified, which is exactly the check the rule
+exists to prevent.
+
+Two ways forward, and the choice is the stakeholder's:
+
+1. **Promote the backend to Alpha with `SHARIA_SCREEN_ENABLED=false`** (its default), then launch
+   this lane. The screen stays dark; only the shape becomes observable. Nothing user-facing changes,
+   because nothing renders it until this lane ships.
+2. **Launch now and accept a source-read mirror**, deferring the live contract check to after the
+   promote. Cheaper today, and it re-opens the exact runtime-silence gap the rule was written for.
+
+Recommendation: option 1. The screen is off by default, so the promote is close to inert, and it
+turns the contract check from a promise into an observation.
+DISPATCH: OPEN
