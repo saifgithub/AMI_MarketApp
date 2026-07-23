@@ -13,10 +13,10 @@ owns: backend/app/** EXCEPT trading_math/ and the room cluster
 schema_owner: true          # SOLE owner of backend/app/db/models.py + Alembic migrations
 wip_cap: 2
 auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GATE: names its gate
-live_handle: eea9c2b8-5b53-43a0-b3d4-0c112a90f491   # current: CR069-BE round 2 (premium/opus, $10 cap, 2026-07-23) — `claude --resume <uuid>`
+live_handle: 5fe0b6cb-cafc-4155-a10f-19da3844b851   # current: CR069-DIVERGE (standard/sonnet, $5 cap, 2026-07-23) — `claude --resume <uuid>`
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
-active_lanes: [CR069-BE]   # DEF062 is UNGATED (shipped, audit owed) not active; 1 free slot
+active_lanes: [CR069-DIVERGE]   # CR069-BE DONE + merged bdc410f; 1 free slot
 ```
 
 **Hot files:** owns `db/models.py` (schema-owner — others `DEPENDS-ON` its schema lane), and the
