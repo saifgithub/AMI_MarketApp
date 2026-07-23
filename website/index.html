@@ -83,6 +83,7 @@
     <nav id="main-nav" class="header-nav" aria-label="Main navigation">
       <a href="#how-it-works">How It Works</a>
       <a href="#agents">The Agents</a>
+      <a href="#curriculum">Curriculum</a>
       <a href="#pricing">Pricing</a>
       <a href="#waitlist">Early Access</a>
     </nav>
@@ -395,6 +396,138 @@
 
     <p style="margin-top: 3rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em;">
       Every agent prompt is yours to rewrite &nbsp;·&nbsp; The system adapts to how you think &nbsp;·&nbsp; Applied AI that learns your style
+    </p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     THE BODY OF KNOWLEDGE
+     Comb geometry is the 13-agent comb above, reused verbatim.
+     Slot order + colour + label mirror the app's Lessons screen
+     (mobile/lib/screens/lessons/honeycomb_layout.dart) — that palette
+     was solved to maximise the minimum colour distance across the
+     comb's 26 adjacent seams, so it must not be re-picked here.
+════════════════════════════════════════════════════════ -->
+<section id="curriculum" aria-labelledby="bok-h2">
+  <div class="container text-center">
+    <span class="sec-eyebrow" style="color: var(--accent-green);">The AMI Body of Knowledge</span>
+    <h2 id="bok-h2">342 lessons.<br>13 tracks.<br>Every source named.</h2>
+    <div class="sec-line" style="background: var(--accent-green); margin: 14px auto 22px;"></div>
+    <p class="sec-lede" style="margin: 0 auto 3rem;">Most trading apps teach you chart patterns and call it education. AMI Trade carries a full investment curriculum — from what a bond is to how to tell a real backtest from an overfit one — and every sourced lesson is cited to the recognised canon rather than to itself.</p>
+
+    <div class="honey-abs" aria-label="13 curriculum tracks" role="list">
+
+      <!-- ── TOP ROW ── -->
+      <div class="honey-hex t-technical" role="listitem" style="left:140px;top:81px">
+        <span class="h-count">45</span>
+        <span class="h-name">Technical</span>
+        <span class="h-role">Charts &amp; indicators</span>
+      </div>
+      <div class="honey-hex t-sentiment" role="listitem" style="left:280px;top:81px">
+        <span class="h-count">10</span>
+        <span class="h-name">Sentiment</span>
+        <span class="h-role">Bias &amp; crowd behaviour</span>
+      </div>
+      <div class="honey-hex t-news" role="listitem" style="left:420px;top:81px">
+        <span class="h-count">19</span>
+        <span class="h-name">News &amp; Macro</span>
+        <span class="h-role">Events that move price</span>
+      </div>
+      <div class="honey-hex t-ethics" role="listitem" style="left:560px;top:81px">
+        <span class="h-count">10</span>
+        <span class="h-name">Ethics</span>
+        <span class="h-role">Conduct &amp; integrity</span>
+      </div>
+
+      <!-- ── MIDDLE ROW ── -->
+      <div class="honey-hex t-risk" role="listitem" style="left:70px;top:202px">
+        <span class="h-count">16</span>
+        <span class="h-name">Risk</span>
+        <span class="h-role">Sizing &amp; drawdown</span>
+      </div>
+      <div class="honey-hex t-economics" role="listitem" style="left:210px;top:202px">
+        <span class="h-count">12</span>
+        <span class="h-name">Economics</span>
+        <span class="h-role">Rates, inflation, the Fed</span>
+      </div>
+      <div class="honey-hex t-foundations" role="listitem" style="left:350px;top:202px">
+        <span class="h-count">16</span>
+        <span class="h-name">Foundations</span>
+        <span class="h-role">Start here</span>
+      </div>
+      <div class="honey-hex t-islamic" role="listitem" style="left:490px;top:202px">
+        <span class="h-count">10</span>
+        <span class="h-name">Islamic Finance</span>
+        <span class="h-role">Sharia principles</span>
+      </div>
+      <div class="honey-hex t-quant" role="listitem" style="left:630px;top:202px">
+        <span class="h-count">12</span>
+        <span class="h-name">Quant</span>
+        <span class="h-role">Statistics &amp; testing</span>
+      </div>
+
+      <!-- ── BOTTOM ROW ── -->
+      <div class="honey-hex t-fundamentals" role="listitem" style="left:140px;top:323px">
+        <span class="h-count">66</span>
+        <span class="h-name">Fundamentals</span>
+        <span class="h-role">Statements &amp; valuation</span>
+      </div>
+      <div class="honey-hex t-assets" role="listitem" style="left:280px;top:323px">
+        <span class="h-count">20</span>
+        <span class="h-name">Asset Classes</span>
+        <span class="h-role">Bonds, ETFs, options</span>
+      </div>
+      <div class="honey-hex t-edge" role="listitem" style="left:420px;top:323px">
+        <span class="h-count">98</span>
+        <span class="h-name">Edge</span>
+        <span class="h-role">Strategy &amp; failure modes</span>
+      </div>
+      <div class="honey-hex t-evaluation" role="listitem" style="left:560px;top:323px">
+        <span class="h-count">8</span>
+        <span class="h-name">Evaluation</span>
+        <span class="h-role">Judging analysis</span>
+      </div>
+
+    </div>
+
+    <!-- Mobile fallback: same 13 tracks, simple flex wrap -->
+    <div class="honey-mobile" aria-label="13 curriculum tracks" role="list">
+      <div class="agent-card t-foundations" role="listitem"><span class="agent-icon">16</span><span class="agent-name">Foundations</span></div>
+      <div class="agent-card t-fundamentals" role="listitem"><span class="agent-icon">66</span><span class="agent-name">Fundamentals</span></div>
+      <div class="agent-card t-technical" role="listitem"><span class="agent-icon">45</span><span class="agent-name">Technical</span></div>
+      <div class="agent-card t-edge" role="listitem"><span class="agent-icon">98</span><span class="agent-name">Edge</span></div>
+      <div class="agent-card t-assets" role="listitem"><span class="agent-icon">20</span><span class="agent-name">Asset Classes</span></div>
+      <div class="agent-card t-news" role="listitem"><span class="agent-icon">19</span><span class="agent-name">News &amp; Macro</span></div>
+      <div class="agent-card t-risk" role="listitem"><span class="agent-icon">16</span><span class="agent-name">Risk</span></div>
+      <div class="agent-card t-economics" role="listitem"><span class="agent-icon">12</span><span class="agent-name">Economics</span></div>
+      <div class="agent-card t-quant" role="listitem"><span class="agent-icon">12</span><span class="agent-name">Quant</span></div>
+      <div class="agent-card t-sentiment" role="listitem"><span class="agent-icon">10</span><span class="agent-name">Sentiment</span></div>
+      <div class="agent-card t-ethics" role="listitem"><span class="agent-icon">10</span><span class="agent-name">Ethics</span></div>
+      <div class="agent-card t-islamic" role="listitem"><span class="agent-icon">10</span><span class="agent-name">Islamic Finance</span></div>
+      <div class="agent-card t-evaluation" role="listitem"><span class="agent-icon">8</span><span class="agent-name">Evaluation</span></div>
+    </div>
+
+    <div class="grid-3" style="margin-top: 3.5rem; text-align: left;">
+      <div class="card top-green">
+        <div class="hex-badge hb-green">01</div>
+        <h3>The whole map, not one slice</h3>
+        <p>Equities, fixed income, derivatives, alternatives, macro mechanics, quantitative methods, portfolio theory. A learner who finishes every lesson has been taught what a bond is, how the Fed moves markets, what an ETF actually costs them, and how an option pays off — not just how to read a candlestick.</p>
+      </div>
+      <div class="card top-blue">
+        <div class="hex-badge hb-blue">02</div>
+        <h3>Cited, not self-referential</h3>
+        <p>The curriculum is written against the field's recognised bodies of knowledge — CFA, CMT, FRM — and the primary sources underneath them. Every sourced lesson goes through a dual-pass accuracy gate, fact-check then adversarial refute, that is built to catch our own errors before you read them. It regularly does.</p>
+      </div>
+      <div class="card top-purple">
+        <div class="hex-badge hb-purple">03</div>
+        <h3>The discipline nobody else teaches</h3>
+        <p>The Evaluation track is the one you will not find in a CFA prep book: how to judge analyst output, spot a fabricated number, and tell a confident answer from a correct one. You are running a team of AI analysts. Knowing when not to believe them is the skill.</p>
+      </div>
+    </div>
+
+    <p style="margin-top: 2.5rem; font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em; line-height: 1.7;">
+      342 lessons &nbsp;·&nbsp; 208 glossary terms &nbsp;·&nbsp; daily challenges &nbsp;·&nbsp; the curriculum grows every release
     </p>
   </div>
 </section>

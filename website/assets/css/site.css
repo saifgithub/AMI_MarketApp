@@ -683,6 +683,78 @@ section { padding: 5rem 0; }
 .honey-hex.h-special .h-name { color: var(--accent-purple); }
 .honey-hex.h-ring .h-name    { color: var(--text-main); }
 
+/* ── Curriculum comb — 13 tracks ─────────────────────────
+ * Same geometry as the agent comb above; only the fill differs.
+ * Colours and slot order are lifted verbatim from the app
+ * (mobile/lib/screens/lessons/honeycomb_layout.dart). That palette was
+ * solved to maximise the *minimum* OKLab distance across the comb's 26
+ * adjacent pairs, so the colour reads as the boundary between cells.
+ * Re-picking a colour here — or re-ordering the slots without moving its
+ * colour with it — undoes the solve and de-syncs web from app.
+ */
+.h-count {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-main);
+}
+.honey-hex[class*="t-"] .h-name { color: var(--text-main); }
+
+.t-technical    { background: rgba(139, 92,246,0.20); }
+.t-sentiment    { background: rgba(236, 72,153,0.20); }
+.t-news         { background: rgba(245,158, 11,0.20); }
+.t-ethics       { background: rgba( 79, 70,229,0.24); }
+.t-risk         { background: rgba(239, 68, 68,0.20); }
+.t-economics    { background: rgba(163,230, 53,0.18); }
+.t-foundations  { background: rgba( 59,130,246,0.20); }
+.t-islamic      { background: rgba(217, 70,239,0.20); }
+.t-quant        { background: rgba( 74,222,128,0.18); }
+.t-fundamentals { background: rgba(  6,182,212,0.20); }
+.t-assets       { background: rgba(249,115, 22,0.20); }
+.t-edge         { background: rgba( 16,185,129,0.20); }
+.t-evaluation   { background: rgba(251,113,133,0.20); }
+
+.t-technical    .h-count { color: #8B5CF6; }
+.t-sentiment    .h-count { color: #EC4899; }
+.t-news         .h-count { color: #F59E0B; }
+.t-ethics       .h-count { color: #818CF8; } /* hexIndigo600 lifted for label contrast, as the app does */
+.t-risk         .h-count { color: #EF4444; }
+.t-economics    .h-count { color: #A3E635; }
+.t-foundations  .h-count { color: #3B82F6; }
+.t-islamic      .h-count { color: #D946EF; }
+.t-quant        .h-count { color: #4ADE80; }
+.t-fundamentals .h-count { color: #06B6D4; }
+.t-assets       .h-count { color: #F97316; }
+.t-edge         .h-count { color: #10B981; }
+.t-evaluation   .h-count { color: #FB7185; }
+
+/* Hover keeps the track's own colour rather than the generic blue, so the
+   seam colour stays readable while pointing. Two classes + pseudo beats
+   `.honey-hex:hover` on specificity. */
+.honey-hex.t-technical:hover    { background: rgba(139, 92,246,0.34); filter: drop-shadow(0 0 12px rgba(139, 92,246,0.45)); }
+.honey-hex.t-sentiment:hover    { background: rgba(236, 72,153,0.34); filter: drop-shadow(0 0 12px rgba(236, 72,153,0.45)); }
+.honey-hex.t-news:hover         { background: rgba(245,158, 11,0.34); filter: drop-shadow(0 0 12px rgba(245,158, 11,0.45)); }
+.honey-hex.t-ethics:hover       { background: rgba( 79, 70,229,0.40); filter: drop-shadow(0 0 12px rgba( 79, 70,229,0.45)); }
+.honey-hex.t-risk:hover         { background: rgba(239, 68, 68,0.34); filter: drop-shadow(0 0 12px rgba(239, 68, 68,0.45)); }
+.honey-hex.t-economics:hover    { background: rgba(163,230, 53,0.30); filter: drop-shadow(0 0 12px rgba(163,230, 53,0.45)); }
+.honey-hex.t-foundations:hover  { background: rgba( 59,130,246,0.34); filter: drop-shadow(0 0 12px rgba( 59,130,246,0.45)); }
+.honey-hex.t-islamic:hover      { background: rgba(217, 70,239,0.34); filter: drop-shadow(0 0 12px rgba(217, 70,239,0.45)); }
+.honey-hex.t-quant:hover        { background: rgba( 74,222,128,0.30); filter: drop-shadow(0 0 12px rgba( 74,222,128,0.45)); }
+.honey-hex.t-fundamentals:hover { background: rgba(  6,182,212,0.34); filter: drop-shadow(0 0 12px rgba(  6,182,212,0.45)); }
+.honey-hex.t-assets:hover       { background: rgba(249,115, 22,0.34); filter: drop-shadow(0 0 12px rgba(249,115, 22,0.45)); }
+.honey-hex.t-edge:hover         { background: rgba( 16,185,129,0.34); filter: drop-shadow(0 0 12px rgba( 16,185,129,0.45)); }
+.honey-hex.t-evaluation:hover   { background: rgba(251,113,133,0.34); filter: drop-shadow(0 0 12px rgba(251,113,133,0.45)); }
+
+/* Mobile fallback cards carry the same tint so the track colour still reads
+   as the boundary layer under 560px. */
+.agent-card[class*="t-"] .agent-icon {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
 /* Scale down for narrower viewports */
 @media (max-width: 780px) {
   .honey-abs {
