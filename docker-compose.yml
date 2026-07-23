@@ -136,6 +136,15 @@ services:
       SOCIAL_CACHE_TTL_DAYS: ${SOCIAL_CACHE_TTL_DAYS:-30}
       # Concierge lesson-retrieval mode (CR021): saver | full_context | embedding.
       CONCIERGE_CONTEXT_MODE: ${CONCIERGE_CONTEXT_MODE:-full_context}
+      # CR069 Sharia indicator for the `halal` flag. OFF by default → the flag
+      # pauses loudly rather than enforcing the retired 7-ticker demo set. Set
+      # SHARIA_SCREEN_ENABLED=true in infra/alpha.env once the source fetch is
+      # verified. URLs are the published holdings CSVs (SPUS = AAOIFI compliant
+      # set; parent = S&P 500 ETF for the unknown-vs-screened-out split).
+      SHARIA_SCREEN_ENABLED: ${SHARIA_SCREEN_ENABLED:-false}
+      SHARIA_SPUS_HOLDINGS_URL: ${SHARIA_SPUS_HOLDINGS_URL:-https://www.sp-funds.com/wp-content/uploads/data/TidalFG_Holdings_SPUS.csv}
+      SHARIA_PARENT_INDEX_URL: ${SHARIA_PARENT_INDEX_URL:-https://www.ishares.com/us/products/239726/ishares-core-sp-500-etf/1467271812596.ajax?fileType=csv&fileName=IVV_holdings&dataType=fund}
+      SHARIA_STALENESS_DAYS: ${SHARIA_STALENESS_DAYS:-7}
       # Alpaca paper-trading (AT:R45, DEF044). Encryption key is optional —
       # empty derives the cipher from SECRET_KEY, so at-rest encryption stays
       # on; set it only to rotate independently.
