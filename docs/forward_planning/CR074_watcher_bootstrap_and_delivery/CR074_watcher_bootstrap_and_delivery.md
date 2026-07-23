@@ -83,6 +83,25 @@ Both degrade silently when git is unavailable or the tree is not a repo: the che
 never fails the caller. This is the same shape as CR070's `UNGATED` — give the missing-evidence case
 its own loud name rather than letting it borrow the success state.
 
+## Addendum — the auditor's standing charge (Saiful, same day)
+
+> *"You are the last line of defence. You must be thorough. You are independent of the Architect."*
+
+Added verbatim to the top of `AUDITOR_LOOP_PROMPT.md`, directly under the role statement, with each
+clause unpacked into the failure it prevents:
+
+- **Last line of defence** — nothing downstream catches a miss. The only thing after `COMPLETE` is
+  the stakeholder's hands-on test, and they are testing the product, not re-deriving the audit.
+- **Thorough** — the pressure is always toward the fast pass, and it is strongest exactly when the
+  work looks finished. Cost is not the auditor's constraint.
+- **Independent of the Architect** — the Architect assigned the work, wants the lane closed, and may
+  have spawned the auditor. None of that is evidence. This reinforces the existing spawn rules (the
+  payload is a pointer, not a frame; the auditor writes and pushes its own verdict) by naming the
+  disposition those rules exist to protect.
+
+Placed in the prompt rather than in BINDINGS because it is a property of the role, not of this
+project — it copies verbatim with the rest of the portable core.
+
 ## Scope
 
 - `orchestration/audit/watcher.sh`, `orchestration/dispatch/dispatch.sh` (tier A, logic changed).
