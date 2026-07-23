@@ -1,0 +1,5 @@
+Appium-Python-Client>=4.0
+pytest>=8.3
+pytest-html>=4.1
+Pillow>=10
+numpy>=1.26

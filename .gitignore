@@ -101,3 +101,9 @@ Apple_Store/
 
 # CR061 — ephemeral per-lane live-handle files (worker session ids)
 orchestration/dispatch/handles/
+
+# CR080 — Appium UAT harness: real credentials + local venv/report artifacts.
+# Real values live only in test_data/.env on melehost, never here.
+qa/appium/test_data/.env
+qa/appium/.venv/
+qa/appium/_report/

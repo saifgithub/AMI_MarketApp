@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+addopts = "-ra"
+log_cli = true
+log_cli_level = "INFO"
+markers = [
+    "smoke: GO/NO-GO locator + nav-bar-read gate, run before anything else",
+    "navbar: DEF075-class nav-bar-overlap mechanical check",
+    "scroll: non-scrolling-overflow mechanical check",
+    "phase1: runnable this session, no seeded backend state or extra credentials needed",
+    "phase2: needs seeded backend state, Alpaca/sign-in credentials, or long LLM-stream waits",
+]
