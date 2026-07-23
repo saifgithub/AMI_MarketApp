@@ -81,6 +81,15 @@ _FETCH_TIMEOUT_S = 15.0
 # publishes daily, so sub-hourly is ample.
 _REFETCH_INTERVAL_S = 900.0
 
+# SPUS's WAF 403s a UA-substring denylist of known scraper libraries — `python-httpx`
+# and `python-requests` are both rejected, while curl's default UA, an empty UA and
+# this one all get HTTP 200. Found by fetching live with the real client during the
+# DEF089 round; the earlier curl-based checks could not have surfaced it, which is
+# the same "verified with a different client than the one that ships" gap DEF089 is
+# about. This identifies AMI Trade honestly — it is not a browser impersonation, and
+# the screen must not come to depend on pretending to be one.
+_USER_AGENT = "AMI-Trade/1.0 (+https://agenticmarketintel.ai)"
+
 
 class ShariaSourceError(RuntimeError):
     """Raised when a holdings CSV is missing, truncated, or otherwise unusable.
@@ -278,7 +287,9 @@ class ShariaUniverseProvider:
         self._last_attempt: float | None = None
 
     def _default_fetcher(self) -> tuple[frozenset, date | None, frozenset]:
-        with httpx.Client(timeout=_FETCH_TIMEOUT_S) as client:
+        with httpx.Client(
+            timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": _USER_AGENT}
+        ) as client:
             compliant, as_of = fetch_compliant_universe(client, self._compliant_url)
             parent = fetch_parent_index(client, self._parent_url)
         return compliant, as_of, parent
