@@ -91,3 +91,33 @@ format template.
 - Closed this round: DEF079 (positional option refs + guard + `LESSON_COUNT_FLOOR` 270→334), DEF080
   (concierge context budget 12k→20k — had blocked the promote), DEF081 (`/promote-to-alpha` rsync
   `--delete` would have wiped 134 melehost-only files; excludes added).
+
+## 2026-07-23 — CR077 triaged, two coder.api lanes opened
+
+- **CR077 (Phase 0) dispatched** as `CR077-CONCIERGE`, `GATE: spawned`. The Architect re-measured
+  the mechanism independently — own synthetic prompt, own request, metrics delta on
+  `vllm:prefix_cache_hits_total`: **catalogue-last → 0 hit tokens of 29,892 queried, 5,218 ms;
+  catalogue-first, same brand-new user → 29,344 hit tokens, 284 ms.** Serving config reproduced
+  exactly (`block_size="2096"`, `_block_size_resolved="True"`, `user_specified_block_size="False"`,
+  `enable_prefix_caching="True"`, `mamba_cache_mode="align"`). Those latencies are on a prompt ~2×
+  the real Concierge's — **not the app's numbers**; CR077's own 14,672 cached / 344 ms on the real
+  15,731-token prompt is the figure the lane must reproduce. Structural cause confirmed in code:
+  `base` (`concierge_prompts.py:84`) is mandate-derived, so **nothing** before the catalogue is
+  shared between users.
+- **CR077 Phases 1–2 held, deliberately.** Phase 1's 5-ticker A/B decides whether four analysts may
+  run concurrently — every Room prompt carries *"build on the transcript"*, so concurrent analysts
+  go blind to each other. That is a Room-quality question about what the Room **is**, not a latency
+  one, and it is Saiful's call, not an ops decision. ~15 s/convene stays on the table until he rules.
+- **CR077 Phase 3 blocked, not deferred.** Raising `gpu_memory_utilization` from `0.5` needs the LLM
+  host; `ssh 192.168.20.74` returns `Permission denied (publickey,password)` (verified today).
+  Saiful's to apply.
+- **DEF094 laned**, `GATE: independent` — D-5: an observance disclosure crossing the wire to two app
+  stores. The lane **widens** the filed fix: DEF094 names `sim.py:186-190` and `:230-234`, but those
+  are the preview and *rejected*-submit paths. `submit_trade`'s **accepted** path was never audited,
+  and a fix that discloses on rejections while staying dark on trades that actually go through is
+  worse than none.
+- **Stale model name corrected** in `CLAUDE.md`, `hosting.md`, `HANDOVER_R.md` and the memory files.
+  Docs said *"Gemma 4 31B"*; `/v1/models` reports `root: models--RedHatAI--Qwen3.6-35B-A3B-NVFP4`.
+  CR077 flagged it; verified against the host before changing anything.
+- `coder.api` now **at cap** (`DEF094`, `CR077-CONCIERGE`). `live_handle` marked stale — respawn per
+  lane rather than resuming the CR069-DIVERGE session.

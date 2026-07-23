@@ -95,7 +95,7 @@ Tables: `users` (with `suspended_at`, `trial_started_at`, `trial_expires_at` —
 
 ### LLM gateway
 
-- **vLLM** at `http://192.168.20.74:8000` serving `ami-llm` (Gemma 4 31B, NVFP4 quantized, 262k context — rebranded from `gemma-4-31b-it-nvfp4`). Gateway preference: `vllm > anthropic > mock`.
+- **vLLM** at `http://192.168.20.74:8000` serving `ami-llm` (`RedHatAI/Qwen3.6-35B-A3B-NVFP4`, 262k context — rebranded). CR077 caught the docs still saying "Gemma 4 31B"; corrected 2026-07-23 against `/v1/models`. Gateway preference: `vllm > anthropic > mock`.
 - Per-(plan, agent) tier routing in `app/services/tier_policy.py::pick_tier`.
 - **AT:R27 prompt-composition fix:** `agent_runner.py:128` (1-on-1) AND `room_runner.py:963 + 1040` (Convene the Room) now both pass `user_id=ctx.user_id` (or `session.user_id`) to `build_agent_prompt` / `build_room_messages` so `_append_user_overlay` actually finds the user's active Brief overlay. Room runner was previously hard-coded to `user_id=None`, silently dropping every overlay. The user-overlay header text was also renamed: `USER COACHING OVERLAY` → `USER BRIEFING OVERLAY` (the literal text the LLM sees inside the prompt above the overlay block).
 
@@ -250,7 +250,7 @@ pytest backend/tests/unit/ -q
 
 ## Open questions / nothing-is-blocked items
 
-- **Anthropic API key.** Not added — and not needed: on-prem vLLM at `192.168.20.74:8000` serves Gemma 4 31B for every agent. Anthropic remains a hot-swappable fallback if `VLLM_BASE_URL` is unset.
+- **Anthropic API key.** Not added — and not needed: on-prem vLLM at `192.168.20.74:8000` serves `ami-llm` (`Qwen3.6-35B-A3B-NVFP4`) for every agent. Anthropic remains a hot-swappable fallback if `VLLM_BASE_URL` is unset.
 - **Supabase project.** Not yet provisioned. RLS policies live but dormant — they enforce once the backend stops connecting as `postgres`.
 - **Apple Developer team.** Done (`S7RBWM4879`). Sign in with Apple capability enabled at the bundle ID (Saiful, AT:R26) + entitlements file in Xcode + provisioning profile regenerated (AT:R29). Phase 3 JWKS verification shipped AT:R29 — fully live end-to-end.
 - **App Store + APNs** — external. Market data is real Yahoo when `USE_REAL_MARKET_DATA=true`.

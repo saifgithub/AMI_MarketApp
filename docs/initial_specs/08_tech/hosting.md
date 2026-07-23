@@ -18,7 +18,7 @@ runbooks can reference it without restating.
 | Specs | 4 CPU · 14 GB RAM · 4 GB swap · 80 GB free disk |
 | Docker | Engine 29.4.2 · Compose v5.1.3 |
 | Role | Hosts Postgres + the FastAPI backend + (optionally) cloudflared + the on-prem dev stack. Reachable from the public internet via Cloudflare Tunnel at `https://api-alpha.agenticmarketintel.ai`. |
-| Not-melehost | The on-prem **vLLM Gemma 4 31B** server lives at `192.168.20.74:8000` — a separate machine on the same LAN. Backend reaches it as `VLLM_BASE_URL` over the LAN; never exposed publicly. |
+| Not-melehost | The on-prem **vLLM** server (`ami-llm` = `RedHatAI/Qwen3.6-35B-A3B-NVFP4`) lives at `192.168.20.74:8000` — a separate machine on the same LAN. Backend reaches it as `VLLM_BASE_URL` over the LAN; never exposed publicly. |
 
 Implications for the rest of the docs / infra:
 
