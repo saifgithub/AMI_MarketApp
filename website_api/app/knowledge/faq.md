@@ -11,6 +11,19 @@ Decisions (Saiful, 2026-07-21):
     to match the marketing site. Add $14.99 / $34.99 here only when the site does.
   - Agent count: 12 analyst agents + the Concierge = 13 in all. Site standardised on
     "13"; this file says "12 specialist analysts coordinated by the Concierge (13 in all)".
+
+CR072 (2026-07-23):
+  - Curriculum figures below are MEASURED, not estimated. Regenerate before changing:
+      ls content/lessons/*.en.mdx | wc -l
+      grep -h '^track:' content/lessons/*.en.mdx | sort | uniq -c
+      python3 -c "import json;print(len(json.load(open('content/glossary/terms.en.json'))))"
+  - Do NOT claim every lesson is verified. DEF078 (19 content fixes) and DEF083 are open.
+    The true claim is about the gate, not a clean result.
+  - Sharia: DEF084 established the halal flag was an allowlist, not a screen. Resolved
+    Option 2 — relabelled a curated demonstration universe. CR069 tracks sourcing a real
+    compliance indicator. Never tell a user AMI runs a Sharia screen. Halal/Sharia
+    questions escalate to a human via classify_escalation(); the entry below exists so a
+    reader of this file cannot conclude otherwise.
 -->
 
 # AMI — Website FAQ (grounding knowledge)
@@ -47,13 +60,44 @@ AMI Trade is **free to start** on the Floor Pass tier (ad-supported). Two paid t
 **Trader** and **Floor Manager** — unlock more, and credit packs are available. Exact pricing
 is announced at launch.
 
+## The curriculum — the AMI Body of Knowledge
+AMI Trade carries a full investment curriculum, not just chart-pattern lessons:
+**342 lessons across 13 tracks**, plus **208 glossary terms** and daily challenges.
+
+The 13 tracks and their lesson counts: Edge & Process (98), Fundamentals (66), Technical
+Analysis (45), Asset Classes (20), News & Macro (19), Risk & Portfolio (16), Foundations
+(16), Quant Methods (12), Economics (12), Sentiment & Behaviour (10), Islamic Finance (10),
+Ethics & Integrity (10), Decision Evaluation (8).
+
+Two things are distinctive:
+- **It is sourced.** The curriculum is written against the field's recognised bodies of
+  knowledge — CFA, CMT, FRM — and the primary sources underneath them. Every sourced lesson
+  goes through a dual-pass accuracy gate (fact-check, then an adversarial pass that tries to
+  refute the finding) designed to catch our own errors. It is an ongoing process, not a
+  finished audit — describe the gate, never claim every lesson has been certified correct.
+- **The Decision Evaluation track** teaches how to judge analyst and AI output — spotting a
+  fabricated number, telling a confident answer from a correct one. That is the discipline
+  the product is built around: you are running a team of AI analysts, so knowing when not to
+  believe them is the skill.
+
+## Islamic finance and Sharia screening
+AMI Trade includes a 10-lesson **Islamic Finance track** covering Sharia investing
+principles. **AMI Trade does not currently run a Sharia compliance screen** — the app ships a
+small curated demonstration universe for teaching purposes, which is explicitly not a
+screen, and the product does not certify any security as Sharia-compliant. Sourcing a real
+compliance indicator is planned work, not a shipped feature. Anyone asking whether a
+specific security is halal, or relying on AMI for an observance decision, must be routed to
+a human — never answer it.
+
 ## Markets, languages, platforms
 - **Markets:** US equities at launch; GCC/Tadawul and Bursa Malaysia planned later.
 - **Languages:** English at launch; Arabic and Malay planned for v1.
-- **Platforms:** iOS and Android at launch; Huawei AppGallery planned later.
+- **Platforms:** iOS and Android. Huawei AppGallery planned later.
 
 ## Availability
-AMI Trade is preparing for launch. You can join the early-access waitlist on this site.
+AMI Trade is in **closed alpha** — invite-only on both platforms: iOS through TestFlight,
+Android through Play Store internal testing. It is not yet a public download from either
+store. Join the early-access waitlist on this site and we send the invite link directly.
 
 ## Privacy & your data
 Our Privacy Policy and Terms are linked in the site footer. To request access to your data or

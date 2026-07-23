@@ -56,6 +56,20 @@ _ACCOUNT_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Religious / values-based compliance. Its own category rather than a branch of
+# `legal` because the honest answer is a product fact, not a data-rights pointer:
+# DEF084 established the halal flag was a curated demonstration universe, not a
+# screen, and CR069 tracks sourcing a real compliance indicator. Nothing here may
+# be left to the model — a user asking "is X halal?" is making an observance
+# decision, which is the one thing a confident-sounding wrong answer must never
+# touch (CR038: prompt instructions are not controls).
+_COMPLIANCE_RE = re.compile(
+    r"\b(halal|haram|shari'?ah?|sharia|syariah|islamic (finance|investing|screen)|"
+    r"riba|gharar|zakat|purification|aaoifi|sukuk|"
+    r"(sharia|shariah|islamic|faith|values|ethical)[- ]?(compliant|compliance|screen(ing|ed)?))\b",
+    re.IGNORECASE,
+)
+
 # Legal / privacy / data-rights: compliance-tracked, human only.
 _LEGAL_RE = re.compile(
     r"\b(gdpr|ccpa|cpra|lawsuit|legal|complaint|regulat|delete my (data|account)|"
@@ -66,7 +80,14 @@ _LEGAL_RE = re.compile(
 
 
 def classify_escalation(message: str) -> str | None:
-    """Return an escalation category ('advice'|'account'|'legal') or None if safe."""
+    """Return an escalation category ('advice'|'compliance'|'account'|'legal'), or None.
+
+    Order matters: compliance is checked before advice so "is AAPL a good halal
+    buy?" gets the accurate answer about what AMI does not screen, rather than the
+    generic no-investment-advice line.
+    """
+    if _COMPLIANCE_RE.search(message):
+        return "compliance"
     if _ADVICE_RE.search(message):
         return "advice"
     if _LEGAL_RE.search(message):
@@ -83,6 +104,17 @@ def escalation_reply(category: str) -> str:
             "simulation-only training tool, not a brokerage. Questions about a specific "
             "stock are exactly what the in-app analyst team is built for. For anything "
             f"else, email {SUPPORT_EMAIL}."
+        )
+    if category == "compliance":
+        return (
+            "AMI Trade teaches Islamic finance — there's a 10-lesson track on Sharia "
+            "investing principles — but it does not run a Sharia compliance screen, and "
+            "it can't tell you whether a particular security is halal. Anything the app "
+            "shows for teaching purposes is a curated demonstration set, not a screen, "
+            "and nothing in AMI Trade is a ruling. For an observance decision, please "
+            "consult a qualified scholar or a recognised screening provider. If you want "
+            f"to know what we're building here, email {SUPPORT_EMAIL} and a human will "
+            "answer."
         )
     if category == "legal":
         return (

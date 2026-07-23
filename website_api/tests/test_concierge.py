@@ -1,7 +1,7 @@
 """Concierge chatbot tests — no LLM configured, so the scripted/escalation paths run.
 
-The deterministic escalation floor is the safety-critical bit: advice/account/legal
-questions must NEVER reach the model, regardless of provider state.
+The deterministic escalation floor is the safety-critical bit: advice/compliance/
+account/legal questions must NEVER reach the model, regardless of provider state.
 """
 
 from app.services.faq_answer import classify_escalation
@@ -22,6 +22,19 @@ def test_classify_account():
 
 def test_classify_legal():
     assert classify_escalation("I want to delete my data under GDPR") == "legal"
+
+
+def test_classify_compliance():
+    """CR072/DEF084 — AMI runs no Sharia screen, so it never answers these itself."""
+    for q in (
+        "Is AAPL halal?",
+        "Does AMI Trade do Sharia screening?",
+        "is this shariah compliant",
+        "Do you support Islamic investing?",
+        "how is zakat purification calculated in the app",
+        "Is Tesla a good halal buy?",  # advice-shaped too — compliance must win
+    ):
+        assert classify_escalation(q) == "compliance", q
 
 
 def test_classify_safe():
@@ -56,3 +69,13 @@ def test_account_question_escalated(client):
     text = _sse_text(client, "How do I cancel my subscription and get a refund?")
     assert "account" in text.lower()
     assert "support.ai@agenticmarketintel.ai" in text
+
+
+def test_halal_question_never_asserts_a_screen(client):
+    """The one answer that must not be left to a model — it's an observance decision."""
+    text = _sse_text(client, "Is AAPL halal according to AMI Trade?")
+    assert "does not run a Sharia compliance screen" in text
+    assert "qualified scholar" in text
+    # never the scripted product pitch, and never an implied screen
+    assert "final call" not in text
+    assert "we screen" not in text.lower()
