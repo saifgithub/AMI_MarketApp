@@ -6,7 +6,7 @@ INSTANCE: coder.math
 ACCEPTANCE: docs/forward_planning/CR058_sharia_compliant_investing/CR058_sharia_compliant_investing.md (§3.1 lessons 3+5, §7 CR046 rigor, §8 guards)
 DEPENDS-ON: — (CR046 ledger extension; unblocks CR058-CONTENT)
 HOT-FILES: backend/app/trading_math/__init__.py (add M13 export group) — coder.math is sole owner
-GATE: auditor.core (code lane)
+GATE: independent    <!-- normalized CR070 (was: auditor.core (code lane)) — free-text GATE was never machine-parsed -->
 
 **What:** Open a CR046 **screening module** so CR058's Sharia ratio screens + purification are
 **computed, never hand-authored** (§7 — a wrong halal-screen number is worse than none; CR060 accuracy).

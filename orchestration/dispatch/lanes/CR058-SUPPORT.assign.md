@@ -5,7 +5,7 @@ KIND: content
 INSTANCE: noncoder.edu
 ACCEPTANCE: docs/forward_planning/CR058_sharia_compliant_investing/CR058_sharia_compliant_investing.md (§3.2 mirror-across-corpora, §7 frame, §8 guards)
 DEPENDS-ON: CR058-CONTENT (lessons 347-356 exist ✓), CR059 (islamic_finance track wired ✓)
-GATE: content review (Architect) — no auditor, no pytest gate beyond the 3 targeted corpus tests
+GATE: none    <!-- normalized CR070 (was: content review (Architect) — no auditor, no pytest gate beyond the 3 targeted corpus tests) — free-text GATE was never machine-parsed -->
 HOT-FILES: content/glossary/terms.en.json (append-only — flat list of 188; do NOT reorder/edit existing)
 
 **What:** Mirror the shipped Sharia lessons (347-356) across the OTHER THREE content corpora so the

@@ -3,6 +3,7 @@
 
 KIND: content
 INSTANCE: noncoder.edu
+GATE: none    <!-- backfilled CR070 — maintainer lane: content review, not an audit gate (by design) -->
 ACCEPTANCE: docs/forward_planning/CR054_investment_body_of_knowledge/wave1_ethics.md
 DEPENDS-ON: CR054-W0a (tracks ✓), CR054-W0c (author-prompt v2 ✓)
 HOT-FILES: global lesson-id sequence — reserved block ids 293-302 / ETHIC 1-10 (disjoint from other lanes)

@@ -11,7 +11,17 @@
 #   IN_AUDIT       : READY_FOR_AUDIT + audit VERDICT not yet returned
 #   AUDIT_RETURNED : audit VERDICT = AWAITING_FIXES
 #   AUDIT_PASSED   : audit VERDICT = COMPLETE, DISPATCH not yet ACCEPTED
-#   DONE           : DISPATCH = ACCEPTED
+#   DONE           : DISPATCH = ACCEPTED *and* the lane's GATE is satisfied
+#   UNGATED        : DISPATCH = ACCEPTED but the gate is NOT satisfied  <-- loud, CR070
+#
+# CR070: DONE no longer derives from DISPATCH: ACCEPTED alone. Before this, `dispatch.sh` returned
+# DONE the moment the Architect wrote its own acceptance token, without ever reading a verdict — so
+# 10 of 14 coder lanes shipped ungated and printed identically to the 4 that passed. The state
+# machine could not express "shipped without a gate"; UNGATED is that state.
+#   GATE: none                -> no audit required; recorded UPFRONT at decomposition time, never
+#                                at hand-off (the tired-at-hand-off window is what waived DEF084)
+#   GATE: spawned|independent -> requires audit VERDICT: COMPLETE, else UNGATED
+#   GATE: absent              -> UNGATED. An unbound gate fails LOUD, never open.
 # Usage:
 #   dispatch.sh state              print the derived board once and exit
 #   dispatch.sh architect [-i N]   block until >=1 lane needs the Architect
@@ -36,42 +46,54 @@ last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the last match
   grep -Eo "$2" "$1" 2>/dev/null | tail -1 | awk '{print $2}'
 }
 
-lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict"
+lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   # Dispatch tokens (ASSIGNED/DISPATCH/STATUS) MUST be at line start — anchored so a token
   # mentioned in prose/backticks is never parsed as a live signal. (VERDICT is read unanchored to
   # mirror orchestration/audit/watcher.sh, whose files carry a `## VERDICT:` heading + a trailer.)
   a="$LANE_DIR/$1.assign.md"
   asg_line=$(grep -Eo '^ASSIGNED: *[A-Za-z0-9._-]+ *round *[0-9]+' "$a" 2>/dev/null | tail -1)
-  if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - -"; return; fi
+  if [ -z "$asg_line" ]; then echo "UNASSIGNED - - - - -"; return; fi
   inst=$(echo "$asg_line" | awk '{print $2}')
   asg_round=$(echo "$asg_line" | grep -Eo '[0-9]+' | tail -1); asg_round=${asg_round:-0}
 
+  gate_kw=$(last_kw "$a" '^GATE: *(independent|spawned|none)')
+  u="$AUDIT_DIR/$1.auditor.md"
+  v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
+
   disp_kw=$(last_kw "$a" '^DISPATCH: *(OPEN|ACCEPTED)')
-  if [ "$disp_kw" = "ACCEPTED" ]; then echo "DONE $inst $asg_round - -"; return; fi
+  if [ "$disp_kw" = "ACCEPTED" ]; then
+    case "${gate_kw:-}" in
+      none)                echo "DONE $inst $asg_round - ${v_kw:--} none" ;;
+      spawned|independent)
+        if [ "${v_kw:-}" = "COMPLETE" ]; then echo "DONE $inst $asg_round - $v_kw $gate_kw"
+        else                                  echo "UNGATED $inst $asg_round - ${v_kw:--} $gate_kw"; fi ;;
+      *)                   echo "UNGATED $inst $asg_round - ${v_kw:--} MISSING" ;;
+    esac
+    return
+  fi
 
   i="$LANE_DIR/$1.$inst.md"
   st_kw=$(last_kw "$i" '^STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW)')
   st_round=$(last_round "$i" '^STATUS: *(CLAIMED|IN_PROGRESS|BLOCKED|NEEDS-INFO|READY_FOR_AUDIT|READY_FOR_REVIEW) *\(round *[0-9]+'); st_round=${st_round:-0}
 
+  g=${gate_kw:-MISSING}
+
   if [ ! -f "$i" ] || [ "$asg_round" -gt "$st_round" ]; then
-    echo "ASSIGNED $inst $asg_round ${st_kw:--} -"; return
+    echo "ASSIGNED $inst $asg_round ${st_kw:--} - $g"; return
   fi
 
-  u="$AUDIT_DIR/$1.auditor.md"
-  v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
-
   case "${st_kw:-}" in
-    CLAIMED|IN_PROGRESS) echo "IN_PROGRESS $inst $asg_round $st_kw -" ;;
-    BLOCKED)             echo "BLOCKED $inst $asg_round $st_kw -" ;;
-    NEEDS-INFO)          echo "NEEDS-INFO $inst $asg_round $st_kw -" ;;
-    READY_FOR_REVIEW)    echo "IN_REVIEW $inst $asg_round $st_kw -" ;;
+    CLAIMED|IN_PROGRESS) echo "IN_PROGRESS $inst $asg_round $st_kw - $g" ;;
+    BLOCKED)             echo "BLOCKED $inst $asg_round $st_kw - $g" ;;
+    NEEDS-INFO)          echo "NEEDS-INFO $inst $asg_round $st_kw - $g" ;;
+    READY_FOR_REVIEW)    echo "IN_REVIEW $inst $asg_round $st_kw - $g" ;;
     READY_FOR_AUDIT)
       case "${v_kw:-}" in
-        AWAITING_FIXES) echo "AUDIT_RETURNED $inst $asg_round $st_kw $v_kw" ;;
-        COMPLETE)       echo "AUDIT_PASSED $inst $asg_round $st_kw $v_kw" ;;
-        *)              echo "IN_AUDIT $inst $asg_round $st_kw ${v_kw:--}" ;;
+        AWAITING_FIXES) echo "AUDIT_RETURNED $inst $asg_round $st_kw $v_kw $g" ;;
+        COMPLETE)       echo "AUDIT_PASSED $inst $asg_round $st_kw $v_kw $g" ;;
+        *)              echo "IN_AUDIT $inst $asg_round $st_kw ${v_kw:--} $g" ;;
       esac ;;
-    *) echo "ASSIGNED $inst $asg_round ${st_kw:--} -" ;;
+    *) echo "ASSIGNED $inst $asg_round ${st_kw:--} - $g" ;;
   esac
 }
 
@@ -84,20 +106,22 @@ items() {
 
 print_state() {
   n=0
-  printf '%-14s %-16s %-16s %-5s %-18s %-9s\n' "ITEM" "STATE" "INSTANCE" "ASG" "STATUS" "VERDICT"
+  printf '%-14s %-16s %-16s %-5s %-18s %-9s %-12s\n' "ITEM" "STATE" "INSTANCE" "ASG" "STATUS" "VERDICT" "GATE"
   for it in $(items); do
     n=$((n+1))
     set -- $(lane_state "$it")
-    printf '%-14s %-16s %-16s r%-4s %-18s %-9s\n' "$it" "$1" "$2" "$3" "$4" "$5"
+    printf '%-14s %-16s %-16s r%-4s %-18s %-9s %-12s\n' "$it" "$1" "$2" "$3" "$4" "$5" "$6"
   done
   [ "$n" -eq 0 ] && echo "(no lanes yet under $LANE_DIR)"
   return 0
 }
 
-# needs_architect: lane state is one the Architect must act on
+# needs_architect: lane state is one the Architect must act on.
+# UNGATED is included (CR070): an accepted lane whose gate is unsatisfied or unrecorded is a
+# protocol breach the Architect must resolve — either route it to an auditor or record GATE: none.
 needs_architect() {
   case "$1" in
-    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED) return 0 ;;
+    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED) return 0 ;;
     *) return 1 ;;
   esac
 }

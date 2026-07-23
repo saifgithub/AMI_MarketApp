@@ -3,6 +3,7 @@
 
 KIND: content
 INSTANCE: noncoder.edu
+GATE: none    <!-- backfilled CR070 — maintainer lane: content review, not an audit gate (by design) -->
 ACCEPTANCE: docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/DEF084_halal_flag_is_an_allowlist_not_a_screen.md — Option 2 (Saiful decided 2026-07-22)
 DEPENDS-ON: DEF084-BE (**hard** — the lesson must document the behaviour that ships, not the one that is about to change; the spec says do not correct `355` first)
 HOT-FILES: none (content only)

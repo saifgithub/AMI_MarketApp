@@ -59,7 +59,8 @@ is deliberately run as the Architect's own ephemeral subagent — not the interr
 Per work item, under `orchestration/dispatch/lanes/`:
 
 - **`<ITEM>.assign.md`** (Architect owns): `KIND:` (code | content | requester-note),
-  `INSTANCE: <instance-id>`, `ACCEPTANCE: <path to the CR/DEF spec>`, `DEPENDS-ON:` (or none),
+  `INSTANCE: <instance-id>`, `GATE: independent | spawned | none` (see §4a),
+  `ACCEPTANCE: <path to the CR/DEF spec>`, `DEPENDS-ON:` (or none),
   `HOT-FILES:` (or none), the what/why, and two signal lines:
   - `ASSIGNED: <instance-id> round N` — creating or bumping this line is the "your turn" signal.
   - `DISPATCH: OPEN | ACCEPTED (round N)` — `ACCEPTED` = the Architect integrated after the
@@ -71,7 +72,8 @@ Per work item, under `orchestration/dispatch/lanes/`:
 ### 3a. Machine-parsed tokens — NEVER paraphrased
 
 `ASSIGNED: <id> round N`, `STATUS: <KEYWORD> (round N)`, `DISPATCH: <KEYWORD> (round N)`,
-`DEPENDS-ON:`, `INSTANCE:`, `KIND:`, and the clarification tokens `NEEDS-INFO` / `Q[n]:` / `A[n]:`
+`GATE: <KEYWORD>`, `DEPENDS-ON:`, `INSTANCE:`, `KIND:`, and the clarification tokens
+`NEEDS-INFO` / `Q[n]:` / `A[n]:`
 are read by `dispatch.sh` regex and by the Architect's trust-critical integration test. Write them
 byte-exact — a paraphrase silently breaks the state machine. Narrative prose around them is
 compressed (fragments, no filler); the tokens are not.
@@ -93,10 +95,48 @@ appending).
 | `IN_AUDIT` | `READY_FOR_AUDIT` + audit `VERDICT` not COMPLETE/AWAITING_FIXES yet | Auditor |
 | `AUDIT_RETURNED` | audit `VERDICT: AWAITING_FIXES` | Instance — fix, bump round |
 | `AUDIT_PASSED` | audit `VERDICT: COMPLETE` + `DISPATCH` not ACCEPTED | **Architect** — integrate |
-| `DONE` | `DISPATCH: ACCEPTED` | — |
+| `DONE` | `DISPATCH: ACCEPTED` **and** the lane's `GATE` is satisfied (§4a) | — |
+| `UNGATED` | `DISPATCH: ACCEPTED` but the gate is **not** satisfied | **Architect** — gate it or record why |
+
+## 4a. The gate (CR070)
+
+`DONE` used to derive from `DISPATCH: ACCEPTED` alone — the Architect's own token, read without ever
+consulting a verdict. The state machine could not express *"shipped without a gate"*, so it never
+did: **10 of 14 coder lanes shipped ungated and printed identically to the 4 that passed.**
+`UNGATED` is that missing state.
+
+| `GATE:` | Meaning | Reaches `DONE` when |
+|---|---|---|
+| `none` | No audit required — a chunk small enough, and with a small enough blast radius, to ship on its self-test | `DISPATCH: ACCEPTED` |
+| `spawned` | Audited by an agent the Architect spawned | audit `VERDICT: COMPLETE` |
+| `independent` | Audited by a human-started session the Architect does not control | audit `VERDICT: COMPLETE` |
+| *absent* | — | **never** — renders `UNGATED`. An unbound gate fails **loud**, never open |
+
+**Record `GATE:` when you WRITE the lane, not when the work comes back.** At decomposition time you
+have no stake in the answer. At hand-off the work looks finished, the session is long, and skipping
+is the cheapest move available — which is the exact state in which DEF084-MOBILE's gate was waived,
+after which it shipped a false claim about a religious screen to two app stores. Deciding upfront
+closes that window structurally. *Prompt instructions are not controls.*
+
+**A CR ships as chunks + a CR-level audit, or as CR-only. The CR-level audit is mandatory in both
+branches.** That is what makes `GATE: none` safe on a chunk: there is no path to a finished CR that
+skips the terminal gate, so chunking is a cost-and-parallelism decision rather than a safety one.
+Write **all** chunks down before dispatching any of them — that is the only way to check the
+decomposition is *complete*, and it is what the CR-level audit diffs against the CR document, so a
+chunk you forgot to write down is a hole the terminal audit can actually catch.
+
+**Choosing `none` vs an audit** — two terms, either one sufficient to require a gate:
+*size* (if you cannot state the chunk in one sentence with one acceptance criterion, it is too big:
+split it again or gate it) and *blast radius* (anything in the `HOT-FILES` registry, the safety
+floor, or the schema — regardless of how small the diff is).
+**Choosing `spawned` vs `independent`** — route on **reversibility**: ships to a store, legal or
+compliance text, a schema migration that moves data, money/credits/entitlements, the safety floor,
+or a user-facing claim about what the product does ⇒ `independent`. Everything else is a redeploy
+away from being fixed. Judge it against the **real diff after the work**, not a prediction made
+before it — a chunk sized as trivial that returns touching `db/models.py` trips the rule on its own.
 
 `dispatch.sh` modes: `state` (print the board once); `architect [-i N]` (block until a lane needs
-the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`); `inst <id> [-i N]`
+the Architect — `UNASSIGNED`/`BLOCKED`/`NEEDS-INFO`/`IN_REVIEW`/`AUDIT_PASSED`/`UNGATED`); `inst <id> [-i N]`
 (block until a lane is `ASSIGNED` to `<id>` or `AUDIT_RETURNED` on its lane). HOW a role notices its
 turn is its own choice — the state is always re-derivable from files, so nothing is lost while a
 role is busy elsewhere.
@@ -154,7 +194,17 @@ it, so review shards by domain. The audit handshake then runs verbatim; `dispatc
    `dispatch.sh state`; it may lag — detect real state from the tokens, never from the board. Only the
    Architect reads/writes the trail; instances read their lane + the relevant archived lane.
 7. **Stall rule.** At a cap with no movement for the BINDINGS stall window, the Architect escalates
-   to the human rather than blocking indefinitely.
+   to the human rather than blocking indefinitely. **Nothing computes this and nothing enforces it**
+   — CR050 sat awaiting audit across whole sessions with its audit never launched, and the board
+   showed it as an ordinary in-flight state. Until it has an owner and a real elapsed-time input it
+   is an acknowledged gap, not a control: the Architect re-derives the board at the **start of every
+   session** and clears anything in `UNGATED` / `AWAITING_AUDIT` before taking new work.
+7a. **Concurrency cap (CR070).** The cap is on **concurrently spawned agents of any role** — coders,
+   auditors and the DoD agent draw one shared quota — and it **queues rather than blocks**. The
+   binding constraint is the rolling usage window: exhausting it strands every in-flight agent at
+   once and everything uncommitted dies with them, so instances **commit incrementally** (DEF083
+   lost 31 edited lessons to a budget wall before its first commit) and the Architect **stops at
+   lane boundaries** rather than starting an audit that may die mid-verdict.
 8. **Context (no human needed).** `/compact` cannot be automated — agents can't run slash commands,
    no skill/hook/setting triggers compaction (`PreCompact` only observes or blocks one), and there is
    no SDK trigger. It is also **not needed**: auto-compaction is **always on and runs in headless /

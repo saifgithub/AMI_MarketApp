@@ -3,6 +3,7 @@
 
 KIND: code
 INSTANCE: coder.api
+GATE: independent    <!-- backfilled CR070 — audited by the track-U auditor, verdict on file -->
 ACCEPTANCE: this file (small, self-contained) + CR054 §5.1 + wave1_ethics.md capstone rule
 DEPENDS-ON: none (must be green STANDALONE at the current 270-lesson corpus, before any Wave-1 content lands)
 HOT-FILES: backend/tests/unit/test_lesson_corpus_integrity.py (coder.api owns tests)

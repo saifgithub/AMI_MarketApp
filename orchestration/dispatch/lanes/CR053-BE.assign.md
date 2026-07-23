@@ -5,7 +5,7 @@ KIND: code
 INSTANCE: coder.api
 ACCEPTANCE: docs/forward_planning/CR053_curriculum_reference_identifiability/CR053_curriculum_reference_identifiability.md (§3.1.3, §5 Phase 2 server bullet, §5 Guards)
 DEPENDS-ON: — (head of CR053; unblocks CR053-MOBILE + CR053-MIGRATE)
-GATE: auditor.core (code lane)
+GATE: independent    <!-- normalized CR070 (was: auditor.core (code lane)) — free-text GATE was never machine-parsed -->
 HOT-FILES: backend/app/services/lessons_service.py (coder.api owns) — additive only
 
 **What:** Cut the server seam for cross-lesson quick-links, mirroring the existing `<Term>`→`{{term:}}`

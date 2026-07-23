@@ -3,6 +3,7 @@
 
 KIND: content
 INSTANCE: noncoder.edu
+GATE: none    <!-- backfilled CR070 — maintainer lane: content review, not an audit gate (by design) -->
 ACCEPTANCE: docs/forward_planning/CR058_sharia_compliant_investing/CR058_sharia_compliant_investing.md (§3.1 lesson table, §7 constraints, §8 guards)
 DEPENDS-ON: CR058-MATH (screening.py ✓), CR059 (islamic_finance/SHARIA wired ✓), CR054 asset batch 303-322 (prereqs ✓)
 HOT-FILES: global lesson-id sequence — reserved block ids 347-356 / SHARIA 1-10

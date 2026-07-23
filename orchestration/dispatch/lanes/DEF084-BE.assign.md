@@ -3,6 +3,7 @@
 
 KIND: code
 INSTANCE: coder.api
+GATE: independent    <!-- backfilled CR070 — SHIPPED WITHOUT A GATE. Live, hence irreversible (D-5). Owed an audit. -->
 ACCEPTANCE: docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/DEF084_halal_flag_is_an_allowlist_not_a_screen.md — **Option 2 only** (Saiful decided 2026-07-22)
 DEPENDS-ON: none
 HOT-FILES: backend/app/services/sim_engine.py, backend/app/agents/safety_floor.py (frozen surface — coordinate with coder.room), backend/app/api/mandate.py

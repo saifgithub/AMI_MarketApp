@@ -29,8 +29,15 @@ the dispatch handshake (Architect → you) and the audit handshake (you → Audi
    re-verify your `fromJson` against actual backend JSON, not just that it compiles). A documented
    partial beats an overclaim the Auditor will bounce.
 6. **Hand to audit.** Write your audit lane `<AUDIT_LANE_DIR>/<ITEM>.architect.md` (SHA, depends-on,
-   what/why, tests+results, your revert-proof QA, the Definition-of-Done table) + `SUBMITTED: round
-   N`. Commit your paths by name, push to origin. Set `STATUS: READY_FOR_AUDIT (round N)`.
+   what/why, tests+results, your revert-proof QA, and the **chunk evidence list** below) +
+   `SUBMITTED: round N`. Commit your paths by name, push **your lane branch** (see Delivery). Set
+   `STATUS: READY_FOR_AUDIT (round N)`.
+
+   **Chunk evidence list** (CR070) — a chunk does NOT render the Definition-of-Done table; that is
+   CR-scoped and the Architect fills it once for the whole item. Your chunk carries exactly:
+   the SHA(s), what changed and why, the test command **and its observed output**, the contract
+   re-verification if you crossed a seam, and anything you could not verify — named, not omitted.
+   A documented partial beats an overclaim the Auditor will bounce.
 7. **On `AUDIT_RETURNED`** (`VERDICT: AWAITING_FIXES`): fix in priority order, bump the audit round,
    resubmit (go to step 5). Stay the owner. On COMPLETE, the Architect integrates — you're free for
    the next lane.
@@ -48,6 +55,11 @@ You run as a single-shot `claude -p` session: **the session ENDS the moment you 
   `| tail`** — the pipe buffers until the producer exits, hiding progress and sometimes reading as a
   0-byte file on a long run (heritage MABP §8).
 - **Do not stop until you have committed AND pushed.** Your state lives in files; deliver it first.
+- **Commit incrementally — never only at the end.** If your lane touches many files, commit in
+  batches as you go. A budget or usage-quota wall kills you mid-run without warning, and everything
+  uncommitted at that moment is *lost*, not paused: DEF083 died on `Exceeded USD budget (5)` after
+  editing 31 lessons and before its first commit, and all 31 had to be redone. Incremental commits
+  cost nothing and mean a wall costs the tail of your lane instead of all of it.
 - If your launch granted ultracode (`fanout=ultra`), you MAY use the Workflow/Agent tools to fan out
   disposable sub-agents INSIDE your worktree for a heavy lane — keep each at the cheapest tier its
   sub-task needs; the fan-out is disposable, the lane still lands as one hand-off.
@@ -57,7 +69,13 @@ You run as a single-shot `claude -p` session: **the session ENDS the moment you 
 - **Write only:** your owned source paths + `lanes/<ITEM>.<your-id>.md` + your audit lane
   `<AUDIT_LANE_DIR>/<ITEM>.architect.md`. Never touch another instance's paths, the assign lane, the
   board, or the Auditor's files. Stage by name. Commit tag `(<TAG_PREFIX>:<your-id> <ITEM>)`.
-- **Delivery is on origin.** A committed-but-unpushed submission is invisible to your Auditor.
+- **Delivery is on origin, to YOUR LANE BRANCH — never to `main` (CR070).** Push to
+  `lane/<ITEM>.<your-id>`. A committed-but-unpushed submission is invisible to your Auditor, and a
+  submission pushed straight to `main` has skipped the gate entirely: **nothing reaches `main`
+  except through the Architect**, who merges only once the lane's `GATE:` is satisfied. This was
+  ambiguous before — the instruction read "push to origin" without naming a branch — and
+  DEF084-MOBILE pushed its source directly to `main` (`e344b27`), bypassing both the audit and the
+  integration step before either could be applied. If you find yourself on `main`, stop and branch.
 - **Never close your own findings.** COMPLETE is the Auditor's call.
 - **Machine tokens byte-exact:** `STATUS: … (round N)`, `SUBMITTED: round N`. A paraphrase breaks
   the watcher.

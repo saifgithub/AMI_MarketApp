@@ -5,7 +5,7 @@ KIND: code
 INSTANCE: coder.mobile
 ACCEPTANCE: docs/forward_planning/CR053_curriculum_reference_identifiability/CR053_curriculum_reference_identifiability.md (§3.1 mechanisms, §4.2/§4.3 gateway UX, §5 Phase 1 + Phase 2 client bullets)
 DEPENDS-ON: CR053-BE (the server must emit `{{lesson:ID}}` tokens — integrate BE first)
-GATE: auditor.core (code lane)
+GATE: independent    <!-- normalized CR070 (was: auditor.core (code lane)) — free-text GATE was never machine-parsed -->
 HOT-FILES: mobile/lib/screens/lessons/lesson_reader_screen.dart, mobile/lib/screens/lessons/floor_screen.dart (coder.mobile owns)
 
 **What:** Make cross-lesson references and agent-gateway rows tappable — the client half of CR053. THREE

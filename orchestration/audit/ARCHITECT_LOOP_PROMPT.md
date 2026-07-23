@@ -50,11 +50,21 @@ and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
    (API response, on-device check, or melehost smoke test) was reproduced live — not assumed. A
    documented partial beats an overclaim the auditor will bounce.
 4. Submit: write or append to `<ITEM>.architect.md` the commit SHA, `depends-on:` (or none),
-   what changed and why, the tests you ran with results, your own revert-proof QA, and the fully
-   disposed Definition-of-Done table (`docs/governance/CR_DEFINITION_OF_DONE.md` — every row
-   filled in; a submission without it is incomplete). Add a `SUBMITTED: round N` line. CREATING
-   OR BUMPING THAT ROUND LINE IS THE AWAITING_AUDIT SIGNAL. Bump `round` by one on every
-   resubmit. Update `INDEX.md` to match.
+   what changed and why, the tests you ran with results, and your own revert-proof QA. Add a
+   `SUBMITTED: round N` line. CREATING OR BUMPING THAT ROUND LINE IS THE AWAITING_AUDIT SIGNAL.
+   Bump `round` by one on every resubmit. Update `INDEX.md` to match.
+
+   **What else the submission carries depends on its scope (CR070):**
+   - **CR-level submission** — also carries the fully disposed **Definition of Done**: the portable
+     questions in [`orchestration/DEFINITION_OF_DONE.md`](../DEFINITION_OF_DONE.md), answered per
+     this project's bindings in [`docs/governance/CR_DEFINITION_OF_DONE.md`](../../docs/governance/CR_DEFINITION_OF_DONE.md).
+     Every row disposed; a CR submission without it is incomplete. Have a **fresh agent** fill it in
+     — never one of the chunk authors. A worker grading its own work inherits its own blind spot,
+     which is how DEF084 shipped with two guards that only caught the exact phrasing their author
+     had already thought of.
+   - **Chunk submission** — does NOT render the DoD table. It carries the shorter chunk evidence
+     list (see `CODER.md`): SHA(s), what/why, the test command and its observed output, contract
+     re-verification if a seam was crossed, and anything unverified named rather than omitted.
 5. Commit ONLY your own paths, staged by name, and PUSH to `origin`. Delivery is on origin, not
    local. The auditor only ever sees committed SHAs, never a half-built tree.
 6. Wait — your choice of mechanism; `sh orchestration/audit/watcher.sh architect` blocks until a
@@ -68,9 +78,43 @@ COMPLETE is the auditor's call (zero BLOCKER + zero MAJOR, dependencies COMPLETE
 finding closed yourself, and do not edit `orchestration/audit/` (beyond your own lane files) to make
 a check pass: fix the SOURCE.
 
-## Branch and path discipline (shared branch, DISJOINT paths)
+## Spawning an auditor (CR070)
 
-Work on `main` (the branch the auditor audits).
+`auditor.core` as a standing instance is dropped. You spawn a fresh agent per audit and hand it
+[`AUDITOR_LOOP_PROMPT.md`](AUDITOR_LOOP_PROMPT.md) as its reference. That prompt is already written
+for statelessness — *"fresh eyes each round are fine and encouraged"* — so this is its honest form,
+not a shortcut. Three rules, none of them optional:
+
+1. **The spawn payload is a POINTER, not a FRAME.** Send the item id, the SHA, "read
+   `<AUDIT_LANE_DIR>/<ITEM>.architect.md>`", and "follow `AUDITOR_LOOP_PROMPT.md`". Send **none of
+   your own reasoning** about whether the work is good, what you think the risk is, or which parts
+   you consider settled. An auditor reading a prompt you wrote is independent only to the extent
+   that you chose none of what it sees.
+2. **The auditor writes and pushes its own verdict. You never transcribe it.** If a spawned agent
+   hands you a verdict as text and *you* write `<ITEM>.auditor.md`, you have become the scribe of
+   your own gate and an inconvenient verdict is one edit away from never existing. Verify the
+   verdict landed with `git show`/`git log` on the auditor's paths — the same way you verify a
+   coder, and for the same reason: **agents fabricate completion at every tier**, auditors included.
+3. **Never economy tier for an auditor.** A cheap auditor returns a confident `VERDICT: COMPLETE`
+   it never earned, which is *worse* than no auditor — it manufactures false confidence rather than
+   leaving a visible gap (DEF059: LLM down, fake APPROVE, shipped). Standard for chunk audits,
+   premium for the CR-level audit.
+
+**When to escalate to a human-started auditor instead** — route on **reversibility**, not size or
+importance, and judge it against the **real diff after the work**, not your guess before it. If it
+ships to a store, changes legal/compliance text, migrates schema with data movement, touches
+money/credits/entitlements or the safety floor, or makes a user-facing claim about what the product
+does — escalate. Everything else is a redeploy away from fixed, and a spawned gate is fine.
+DEF084-MOBILE is why size is the wrong axis: three ARB files and one widget, and it put a false
+claim about a religious screen on real devices through two app stores.
+
+## Branch and path discipline (lane branches, DISJOINT paths)
+
+**Nothing reaches `main` except through you (CR070).** Builders push to `lane/<ITEM>.<instance-id>`;
+you merge only once the lane's `GATE:` is satisfied — a verdict of `COMPLETE`, or a recorded
+`GATE: none`. This is what makes the gate structural rather than procedural: ungated work is not
+merely disapproved, it is physically not on `main`. Audits read the branch SHA; that is unchanged,
+since the auditor audits a committed SHA in its own worktree either way.
 
 - You edit SOURCE (everything except `audit/`) plus your own lane files
   (`orchestration/audit/cr/<ITEM>.architect.md`, `orchestration/audit/cr/INDEX.md`).
@@ -81,8 +125,16 @@ Work on `main` (the branch the auditor audits).
 
 ## Guardrails (stakeholder-required)
 
-1. CONCURRENCY CAP: at most 3 items may be AWAITING_AUDIT at once. At 3, throttle building-ahead
-   (no 4th submit) until the auditor clears one. Parallelism never pressures a rushed review.
+1. CONCURRENCY CAP (revised, CR070): the cap is on **concurrent spawned agents of any role** —
+   coders, auditors, and the DoD agent all draw the same quota — and it **queues rather than
+   blocks**: over the limit, work defers instead of being refused, so you never have to choose
+   between breaking the cap and dropping a lane. The old cap (3 `AWAITING_AUDIT`) existed to stop a
+   single human-started auditor being pressured into batch-and-skim; fresh spawned agents dissolve
+   that rationale. The real constraint is now the rolling usage window — exhausting it strands every
+   in-flight agent at once, and everything uncommitted dies with them.
+   **Stop at lane boundaries.** Do not start a CR-level audit late in a window: an auditor that dies
+   mid-verdict leaves a half-written `<ITEM>.auditor.md`, and `tail -1`-wins reads whatever token
+   happens to be last — an ambiguous state strictly worse than a clean `AWAITING_AUDIT`.
 2. SHARED INDEX: keep `cr/INDEX.md` current so the queue is visible without deriving from N
    files.
 3. DEPENDENCIES: a dependent item's COMPLETE is provisional until its `depends-on` is COMPLETE.
@@ -92,7 +144,11 @@ Work on `main` (the branch the auditor audits).
 5. SINGLE LEDGER: `orchestration/audit/audit-trail.md` is auditor-owned. Do not write it; the
    auditor appends every verdict there.
 6. STALL RULE: at the cap with no verdict movement for >4h of active session time, escalate to
-   Saiful instead of throttling indefinitely.
+   Saiful instead of throttling indefinitely. **This rule computes nothing and nothing enforces it**
+   — CR050 sat `AWAITING_AUDIT` across whole sessions with its audit never launched and nothing
+   surfaced that. Until it has an owner and a real elapsed-time input, treat it as an acknowledged
+   gap, not a control: **re-read `watcher.sh state` / `dispatch.sh state` at the start of every
+   session** and route anything sitting in `AWAITING_AUDIT` or `UNGATED` before taking new work.
 
 ## Build rules
 

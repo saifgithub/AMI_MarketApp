@@ -5,7 +5,7 @@ KIND: content
 INSTANCE: noncoder.edu
 ACCEPTANCE: docs/forward_planning/CR053_curriculum_reference_identifiability/CR053_curriculum_reference_identifiability.md (§2.2 the gap, §3.4 the design decision, §5 Phase 2 migration bullet + Guards)
 DEPENDS-ON: CR053-BE (the `<Lesson id/>`→`{{lesson:}}` tag + resolve guard must exist and be integrated first)
-GATE: content review (Architect)
+GATE: none    <!-- normalized CR070 (was: content review (Architect)) — free-text GATE was never machine-parsed -->
 HOT-FILES: content/lessons/*.en.mdx (117 files), content/daily_challenges/2026_*.json (prose refs)
 
 **What:** Close directive #1 — migrate the bare-number cross-references the app can no longer show (CR044

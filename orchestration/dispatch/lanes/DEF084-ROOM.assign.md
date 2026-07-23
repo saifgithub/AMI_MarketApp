@@ -3,6 +3,7 @@
 
 KIND: code
 INSTANCE: coder.room
+GATE: independent    <!-- backfilled CR070 — SHIPPED WITHOUT A GATE. Live, hence irreversible (D-5). Owed an audit. -->
 ACCEPTANCE: docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/DEF084_halal_flag_is_an_allowlist_not_a_screen.md — Option 2 (Saiful decided 2026-07-22)
 DEPENDS-ON: DEF084-BE (`bd5c74d`, branch `coder.api-DEF084`) — mirror its wording exactly
 HOT-FILES: backend/app/agents/overlay_generator.py (room cluster — yours)

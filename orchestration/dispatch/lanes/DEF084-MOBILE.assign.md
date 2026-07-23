@@ -3,6 +3,7 @@
 
 KIND: code
 INSTANCE: coder.mobile
+GATE: independent    <!-- backfilled CR070 — SHIPPED WITHOUT A GATE. Live, hence irreversible (D-5). Owed an audit. -->
 ACCEPTANCE: docs/defect/DEF084_halal_flag_is_an_allowlist_not_a_screen/DEF084_halal_flag_is_an_allowlist_not_a_screen.md — Option 2 (Saiful decided 2026-07-22)
 DEPENDS-ON: DEF084-BE (backend names the concept first; mirror its wording, do not invent your own)
 HOT-FILES: mobile/lib/l10n/app_en.arb (+ app_ar.arb, app_ms.arb) — coder.mobile-internal

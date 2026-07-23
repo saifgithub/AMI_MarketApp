@@ -3,6 +3,7 @@
 
 KIND: content
 INSTANCE: noncoder.edu
+GATE: none    <!-- backfilled CR070 — maintainer lane: content review, not an audit gate (by design) -->
 ACCEPTANCE: docs/forward_planning/CR054_investment_body_of_knowledge/wave1_quant.md
 DEPENDS-ON: CR054-W0a (track wired ✓), CR054-W0c (author-prompt v2 ✓), CR054-GUARD (guards content-addition-safe ✓)
 HOT-FILES: global lesson-id sequence — reserved block ids 335-346 / QUANT 1-12 (disjoint from every other lane)
