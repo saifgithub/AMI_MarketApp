@@ -64,6 +64,6 @@ lane — that is user-facing content, it would change this lane's gate, and less
 territory. Log first; decide whether to teach from it later.
 
 <!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.api round 1

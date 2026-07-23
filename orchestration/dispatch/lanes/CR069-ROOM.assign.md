@@ -67,6 +67,6 @@ shared branch. An uncommitted hand-off now renders `UNCOMMITTED` (DEF087); one c
 your lane branch is invisible to both boards, which has already stranded a finished round. Chunk evidence list, not the DoD. Commit tag `(AT:coder.room CR069)`.
 
 <!-- CR069-BE merged at bdc410f after VERDICT: COMPLETE (round 3). Dependency satisfied; assigned. -->
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.room round 1

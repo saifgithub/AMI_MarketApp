@@ -107,6 +107,6 @@ check this lane owes — an actual response body, not a compile.
 reads *"Curated demonstration universe … not a Sharia screen"* while the backend now runs a real
 AAOIFI screen. The two surfaces contradict — the DEF084 shape pointing the other way. That copy was
 honest when it shipped; it is false now. **This lane is the fix, and it is the visible half.**
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.mobile round 1
