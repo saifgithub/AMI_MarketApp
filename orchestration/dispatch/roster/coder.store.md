@@ -8,7 +8,7 @@ kind: code / Saiful-liaison
 owns: scripts/{build,publish,install}_*.sh, fastlane/**, mobile/android + mobile/ios store/signing
        config (NOT mobile/lib — that is coder.mobile)
 wip_cap: 2
-auditor: auditor.core
+auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GATE: names its gate
 live_handle:
 commit_tag: AT:coder.store
 worktree: .claude/worktrees/coder.store-<ITEM>

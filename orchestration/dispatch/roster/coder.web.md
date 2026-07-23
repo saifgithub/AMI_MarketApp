@@ -8,7 +8,7 @@ kind: code
 owns: website/** (static HTML/CSS/assets, deploy_ftp.py), website_api/** (own FastAPI app, own DB
        ami_website, own tests)
 wip_cap: 2
-auditor: auditor.core
+auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GATE: names its gate
 live_handle:
 commit_tag: AT:coder.web
 worktree: .claude/worktrees/coder.web-<ITEM>

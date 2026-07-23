@@ -12,8 +12,8 @@ owns: backend/app/** EXCEPT trading_math/ and the room cluster
       backend/tests/unit/** for its modules; backend/alembic/**
 schema_owner: true          # SOLE owner of backend/app/db/models.py + Alembic migrations
 wip_cap: 2
-auditor: auditor.core
-live_handle: 583ecd5e-42ce-4624-9752-4ed25eb63ff7   # current: CR069-BE (premium/opus, $10 cap, launched 2026-07-23) — `claude --resume <uuid>`
+auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GATE: names its gate
+live_handle: eea9c2b8-5b53-43a0-b3d4-0c112a90f491   # current: CR069-BE round 2 (premium/opus, $10 cap, 2026-07-23) — `claude --resume <uuid>`
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
 active_lanes: [CR069-BE]   # DEF062 is UNGATED (shipped, audit owed) not active; 1 free slot

@@ -9,7 +9,7 @@ owns: backend/app/services/{room_runner,room_prompts,agent_runner,agent_prompts,
        overlay_store}.py, backend/app/agents/overlay_generator.py, PM-mandate enforcement in the
        debate path; backend/tests/unit for those modules
 wip_cap: 2
-auditor: auditor.core
+auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GATE: names its gate
 live_handle:
 commit_tag: AT:coder.room
 worktree: .claude/worktrees/coder.room-<ITEM>
