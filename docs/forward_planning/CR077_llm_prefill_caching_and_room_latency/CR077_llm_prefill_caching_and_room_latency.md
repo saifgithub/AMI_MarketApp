@@ -250,24 +250,40 @@ first N characters are **byte-identical**, where N ≥ 2 × 2,096 tokens' worth 
 the speedup depends on, and it is silently destroyed by anyone later adding a personalised line to
 the head. Measured target: **≥ 14,672 cached tokens and < 500 ms** on a second user's first message.
 
-**Phase 1 — decide the analyst-concurrency question on evidence (blocking, cheap).**
+> **Scope updated 2026-07-23 after Saiful's decision (see the Evidence section above).** Phase 1 is
+> no longer a blocking gate; Phase 2 is laned as `CR077-ROOM` → `coder.room`, `GATE: independent`;
+> Phase 3 is now reachable (`ssh ami-host`) and pending a quiet window, not blocked.
+
+**Phase 1 — verification folded into the Phase-2 lane (NOT a blocking gate).**
 Run the same 5 tickers through the Room twice: sequential analysts (today) and concurrent analysts.
-Diff the four analyst contributions for repetition and for content loss. Deliverable is the two
-transcripts plus a recommendation. If output quality holds, Phase 2 ships; if it doesn't, this CR
-closes at Phase 1 with a documented "no" and the 15 s stays on the table. **No code ships before
-this.**
+Diff the four analyst contributions for repetition and content loss, and state the repetition count
+as a number. This is **evidence the lane attaches to its hand-off** — the ship decision is already
+made (the caveat dissolved on measured transcripts). If, and only if, the concurrent output is
+*worse* than today's already-redundant sequential output, that is a finding to raise, not a silent
+gate that closes the CR.
 
-**Phase 2 — parallelise the ANALYSTS phase only (gated on Phase 1).**
-`asyncio.gather` over `phase.agents` where the phase is marked independent; the streaming
-`RoomEvent` order must stay deterministic so the mobile client renders the four analysts in a fixed
-order regardless of which finishes first. RESEARCHERS / RISK stay sequential — they are debates and
-the dependency is the point. Add a per-phase `parallel: bool` on `_Phase` rather than special-casing
-the label, so the decision is visible in one place.
+**Phase 2 — parallelise the ANALYSTS phase only. LANED as `CR077-ROOM` → `coder.room`.**
+`asyncio.gather` over `phase.agents` where the phase is marked parallel; the streaming `RoomEvent`
+order must stay deterministic so the mobile client renders the four analysts in a fixed order
+regardless of which finishes first. RESEARCHERS / RISK / VERDICT stay sequential — they are debates
+and the dependency is the point. Add a per-phase `parallel: bool` on `_Phase` rather than
+special-casing the label, so the decision is visible in one place.
+**Hard condition (Saiful):** strip or rescope the `"build on the transcript — do not repeat"` line
+([room_prompts.py:234-235](../../../backend/app/services/room_prompts.py#L234-L235)) for the
+concurrent analysts — with concurrency each sees the transcript as of phase *start* (empty, since
+ANALYSTS is first), so that instruction would tell them to build on something they cannot have seen.
+The four contributions must still be committed to the transcript *after* the phase, so RESEARCHERS
+onward see them — only the four analysts are blind to each other, nothing downstream.
 
-**Phase 3 — raise `gpu_memory_utilization` on the vLLM host (ops, independent of the above).**
-Currently `0.5`. Raising it gives more concurrent sequences and a larger prefix cache. This is a
-serve-arg on `192.168.20.74`, which this workstation has no SSH access to — Saiful or the architect
-applies it. Measure before/after; do not assume.
+**Phase 3 — raise `gpu_memory_utilization` on the vLLM host (owned by the LLM-host team — NOT a
+build-fleet lane).**
+Currently `0.5` (observed in the live `cache_config_info` on 2026-07-23). Raising it gives more
+concurrent sequences and a larger prefix cache. **The LLM host is maintained by a separate team;
+neither the Architect nor any coder instance touches it** (Saiful, 2026-07-23: *"we have a team
+taking care of it. do not touch it"*). This phase is a request handed to that team, not a lane on
+this board. What to ask them for: raise the serve-arg, and capture `vllm:prefix_cache_hits_total` /
+`queries_total` before and after — no estimates. Changing the arg recreates the serving process and
+clears the prefix cache, so they pick the window.
 
 **Explicitly out of scope: restructuring the *Room* prompts to build a shared cacheable prefix.**
 (Phase 0 does exactly this for the Concierge, where it is safe. The Room is not the same case.)

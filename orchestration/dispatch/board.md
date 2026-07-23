@@ -121,3 +121,22 @@ format template.
   CR077 flagged it; verified against the host before changing anything.
 - `coder.api` now **at cap** (`DEF094`, `CR077-CONCIERGE`). `live_handle` marked stale — respawn per
   lane rather than resuming the CR069-DIVERGE session.
+
+## 2026-07-23 (cont.) — CR077 Phase 2 laned; Phase 3 handed to the host team
+
+- **CR077 Phase 2 dispatched** as `CR077-ROOM` → coder.room, `GATE: independent`. Saiful settled the
+  Room-quality question the Architect had held: the four ANALYSTS are four lenses on **one shared
+  data block**, not a dependency chain — `news_analyst` quoted the Reddit sentiment score (social's
+  domain) *while speaking before social*, so it read it from the `profile`, not the transcript.
+  Architect confirmed structurally: `room_prompts.py:338` renders the sentiment score into the
+  `profile` fact-sheet and `_format_profile` is agent-independent. R59 had already logged the same
+  evidence from INGN/MSFT transcripts. So concurrency changes no data dependency — laned, not held.
+  **Hard condition in the lane:** strip/rescope the "build on the transcript" line for the concurrent
+  analysts (with concurrency their transcript is empty). RESEARCHERS/RISK/VERDICT stay sequential.
+  Phase 1's A/B demoted from blocking gate to verification the lane attaches.
+- **CR077 Phase 3 is the LLM-host team's, not this board's.** Saiful: *"we have a team taking care of
+  it. do not touch it."* The `gpu_memory_utilization` bump is a request handed to that team with a
+  before/after measurement ask — no coder instance touches `192.168.20.74`. (Corrects the earlier
+  entry today that framed it as SSH-blocked/Architect-applied.)
+- `coder.room` now holds `CR077-ROOM` (CR069-ROOM DONE + merged d507a87); 1 free slot. `live_handle`
+  marked stale — respawn per lane.
