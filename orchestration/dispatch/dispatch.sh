@@ -46,6 +46,21 @@ last_kw() {  # $1=file $2=extended-regex; echoes the 2nd token of the last match
   grep -Eo "$2" "$1" 2>/dev/null | tail -1 | awk '{print $2}'
 }
 
+undelivered() {  # $1=file; echoes "1" if the file is untracked or differs from HEAD, else ""
+  # Evidence that lives only in one working tree is not evidence. Both sides of the handshake wrote
+  # their file and committed neither on the first real lane run under this protocol, and the board
+  # reported success both times — the coder's submission read AWAITING_AUDIT, and the auditor's
+  # COMPLETE read AUDIT_PASSED, the state that authorises a merge to the shared branch. The scripts
+  # read the working tree, so an untracked file and a pushed one are indistinguishable. They are not
+  # anymore. Silent when git is unavailable or this is not a repo: the check may degrade, never fail
+  # the caller.
+  command -v git >/dev/null 2>&1 || { echo ""; return; }
+  git -C "$(dirname -- "$1")" rev-parse --git-dir >/dev/null 2>&1 || { echo ""; return; }
+  git -C "$(dirname -- "$1")" ls-files --error-unmatch -- "$1" >/dev/null 2>&1 || { echo "1"; return; }
+  git -C "$(dirname -- "$1")" diff --quiet HEAD -- "$1" 2>/dev/null || { echo "1"; return; }
+  echo ""
+}
+
 lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
   # Dispatch tokens (ASSIGNED/DISPATCH/STATUS) MUST be at line start — anchored so a token
   # mentioned in prose/backticks is never parsed as a live signal. (VERDICT is read unanchored to
@@ -64,6 +79,9 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
 
   u="$AUDIT_DIR/$1.auditor.md"
   v_kw=$(last_kw "$u" 'VERDICT: *(COMPLETE|AWAITING_FIXES)')
+  # A verdict nobody committed has not been delivered, so it cannot satisfy a gate. Render it as
+  # its own loud state rather than letting it read as a pass — the same reason UNGATED exists.
+  if [ -n "$v_kw" ] && [ -n "$(undelivered "$u")" ]; then v_kw="UNCOMMITTED"; fi
 
   disp_kw=$(last_kw "$a" '^DISPATCH: *(OPEN|ACCEPTED)')
   if [ "$disp_kw" = "ACCEPTED" ]; then
@@ -96,6 +114,10 @@ lane_state() {  # $1=item; echoes "STATE instance asg_round st_kw verdict gate"
       case "${v_kw:-}" in
         AWAITING_FIXES) echo "AUDIT_RETURNED $inst $asg_round $st_kw $v_kw $g" ;;
         COMPLETE)       echo "AUDIT_PASSED $inst $asg_round $st_kw $v_kw $g" ;;
+        # A written-but-uncommitted verdict is its own state, not "still auditing". The auditor has
+        # finished and the result exists in exactly one working tree; the fix is one `git add`, and
+        # nobody can act on it until then. Architect-actionable: chase the delivery, never merge.
+        UNCOMMITTED)    echo "UNCOMMITTED $inst $asg_round $st_kw $v_kw $g" ;;
         *)              echo "IN_AUDIT $inst $asg_round $st_kw ${v_kw:--} $g" ;;
       esac ;;
     *) echo "ASSIGNED $inst $asg_round ${st_kw:--} - $g" ;;
@@ -126,7 +148,7 @@ print_state() {
 # protocol breach the Architect must resolve — either route it to an auditor or record GATE: none.
 needs_architect() {
   case "$1" in
-    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED) return 0 ;;
+    UNASSIGNED|BLOCKED|NEEDS-INFO|IN_REVIEW|AUDIT_PASSED|UNGATED|UNCOMMITTED) return 0 ;;
     *) return 1 ;;
   esac
 }

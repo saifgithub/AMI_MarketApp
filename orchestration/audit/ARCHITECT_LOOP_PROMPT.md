@@ -23,6 +23,16 @@ self-certify; the auditor confirms every item with its own gate runs. Do not wai
 verdict per item beyond the project's normal governance: the stakeholder's single checkpoint per
 item is their own hands-on acceptance test *after* the auditor's COMPLETE.
 
+## Resolving the tokens (do this before anything else)
+
+Every `<TOKEN>` below resolves through this project's BINDINGS file, so you need to find that file
+before the rest of this prompt means anything. It locates itself:
+
+**This file is `<AUDIT_ROOT>/ARCHITECT_LOOP_PROMPT.md`. The directory you found it in IS
+`<AUDIT_ROOT>`.** `PROTOCOL.md`, `watcher.sh` and the BINDINGS file (`*_BINDINGS.md`) sit beside it
+in that same directory. If you were handed this prompt without a path, ask for one — do not guess a
+repo layout, and do not proceed on an unresolved token.
+
 ## Read first (authoritative, in order)
 
 1. `<AUDIT_ROOT>/PROTOCOL.md` — the v2 per-item lane handshake. This is the contract; it wins on any
@@ -63,7 +73,8 @@ and `INDEX.md`; the auditor owns `<ITEM>.auditor.md`.
 5. Commit ONLY your own paths, staged by name, and PUSH to `origin`. Delivery is on origin, not
    local. The auditor only ever sees committed SHAs, never a half-built tree.
 6. Wait — your choice of mechanism; `sh <AUDIT_ROOT>/watcher.sh architect` blocks until a verdict
-   returns, or poll between build steps. On AWAITING_FIXES, fix the findings in priority order and
+   returns, or poll between build steps. **Pass `-t <seconds>` unless a human can interrupt it** —
+   an unbounded block in a headless session never returns, and `... state` is the safe one-shot. On AWAITING_FIXES, fix the findings in priority order and
    resubmit at the next round (go to step 2). On COMPLETE, update the item's status in its register
    and flag it to the stakeholder for their hands-on acceptance test (their single checkpoint per
    item); a defect they find reopens the lane — fix and resubmit at the next round. Other lanes
@@ -81,10 +92,13 @@ for statelessness — *"fresh eyes each round are fine and encouraged"* — so t
 not a shortcut. Three rules, none of them optional:
 
 1. **The spawn payload is a POINTER, not a FRAME.** Send the item id, the SHA, "read
-   `<AUDIT_LANE_DIR>/<ITEM>.architect.md`", and "follow `AUDITOR_LOOP_PROMPT.md`". Send **none of
-   your own reasoning** about whether the work is good, what you think the risk is, or which parts
-   you consider settled. An auditor reading a prompt you wrote is independent only to the extent
-   that you chose none of what it sees.
+   `<AUDIT_LANE_DIR>/<ITEM>.architect.md`", and "follow `AUDITOR_LOOP_PROMPT.md`" **with its full
+   path** — the prompt locates every other token from its own directory, so the path is the one
+   thing it cannot infer. Naming the item is also what keeps a spawned auditor off the blocking
+   watcher: it has work already and must not poll for it. Send **none of your own reasoning** about
+   whether the work is good, what you think the risk is, or which parts you consider settled. An
+   auditor reading a prompt you wrote is independent only to the extent that you chose none of what
+   it sees.
 2. **The auditor writes and pushes its own verdict. You never transcribe it.** If a spawned agent
    hands you a verdict as text and *you* write `<ITEM>.auditor.md`, you have become the scribe of
    your own gate and an inconvenient verdict is one edit away from never existing. Verify the
