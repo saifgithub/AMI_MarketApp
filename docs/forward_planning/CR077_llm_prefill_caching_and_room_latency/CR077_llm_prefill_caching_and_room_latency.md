@@ -1,4 +1,9 @@
-# CR077 — Prompt caching is already on, delivers 0% on Room prompts, and could not have helped much anyway
+# CR077 — Prompt caching: worthless for the Room, worth 2.3 s a message for the Concierge
+
+> **Amended 2026-07-23** after Saiful pointed out the Concierge prompt is ~20K tokens. It is
+> **15,731** — 7.5× the cache block — which puts it on the *other* side of every conclusion below.
+> The Room analysis is unchanged and still says no. The Concierge is a clear yes, it is nearly free,
+> and it is now **Phase 0**. Read §"The Concierge is the real prize" first.
 
 **Status:** proposed · **Track:** AT:R59 (protect-the-Room lane — brief only, the build team implements)
 **Filed:** 2026-07-23
@@ -35,6 +40,69 @@ All measured 2026-07-23 against the live serving host `192.168.20.74:8000`
 
 **So: pre-caching the static part of the prompt is not the lever.** The Room is decode-bound, not
 prefill-bound. Even the best possible version of what was asked for is a rounding error.
+
+**But that is the Room.** The Concierge is a different animal and the answer there is yes — see the
+next section.
+
+---
+
+## The Concierge is the real prize
+
+Saiful: *"concierge take 20K token"*. Measured: **15,731 tokens** for the system prompt, of which
+**14,558 is the lesson catalogue** — `_full_context_index()` rendering all **342** lessons, one line
+each (`concierge_prompts.py:317`, CR020's `full_context` mode). That catalogue is **byte-identical
+for every user on the platform** and changes only when a lesson is added.
+
+That is 7 whole cache blocks of genuinely static text. It is exactly what Saiful was describing.
+**It caches nothing today, because of where it sits in the prompt.**
+
+`build_concierge_messages()` (`concierge_prompts.py:103-131`) assembles:
+
+```
+base           = concierge.md + mandate overlay      ← per-user (mandate)
+floor_addition = mandate one-liner                   ← per-user
+                 recent journal                      ← per-user, changes every trade
+                 unlocked agents                     ← per-user, changes on unlock
+                 unlock paths                        ← static
+                 THE 14,558-TOKEN LESSON CATALOGUE   ← static, identical for everyone
+                 closing instructions                ← static
+```
+
+The 14,558 static tokens sit **behind** ~900 tokens of per-user text. A prefix cache matches from
+token 0 and stops at the first difference, so one differing mandate field invalidates everything
+after it. The cacheable prefix is `base` alone — 892 tokens, under the 2,096 cliff, so **zero**.
+
+Measured A/B, two users differing only in mandate, same question, against the live cache:
+
+| prompt shape | user | prompt | cached tokens | latency |
+|---|---|---:|---:|---:|
+| **current** (catalogue last) | 1st (cold) | 15,731 | 0 | 2,659 ms |
+| **current** | 2nd, different user | 15,730 | **0** | **2,672 ms** |
+| **reordered** (catalogue first) | 1st (cold) | 15,526 | 0 | 2,620 ms |
+| **reordered** | 2nd, different user | 15,525 | **14,672** | **344 ms** |
+
+**7.8× faster, 2.33 s saved on every Concierge message that isn't the very first one on a cold
+cache.** The fix is moving one string literal earlier in an f-string.
+
+**What it does *not* buy, stated so nobody oversells it.** Within a single conversation the system
+prompt is already identical turn to turn, so today's shape already caches from turn 2 onward —
+measured, same user, three consecutive turns: 2,674 ms → 389 ms → 391 ms. The reorder buys the
+**first message of every conversation, for every user after the first** — which for a Concierge that
+opens the app is the message users actually notice, and at alpha scale it is close to all of them.
+
+**Second-order win, arguably the bigger one:** today each user needs their own private 15.7K-token
+copy in the KV cache. Shared-prefix, all users draw on **one** 14,672-token copy and need ~1K each —
+roughly a 15× cut in the Concierge's cache footprint. With `num_gpu_blocks=1664` × 2,096 = 3.49M
+tokens total, today's shape fits ~222 concurrent distinct Concierge contexts before it starts
+evicting — and what it evicts is whatever else is in there, including Room traffic. Reordered, that
+ceiling stops mattering.
+
+**Why this one is safe and the Room reorder is not.** The catalogue is *reference data*, not
+instructions — a list of lesson codes and titles. Moving it does not reorder any instruction
+relative to any other, the Concierge has no safety floor (that is PM-only), and the closing rules
+that reference it (*"Never invent a lesson… name ONLY the lessons in that agent's list above"*)
+stay last, where recency still favours them. This is the one place where the caching win costs no
+Room-quality risk, which is precisely why it goes first.
 
 ---
 
@@ -141,6 +209,18 @@ So the deliverable below is gated on an A/B, and the A/B is the actual work.
 
 ## Scope
 
+**Phase 0 — reorder the Concierge prompt: static catalogue first, per-user context after. Ships
+first, independently of everything else.**
+In `build_concierge_messages()` (`concierge_prompts.py:103-131`), split the prompt into a
+*fully static* head — `content/agents/concierge.md` + the unlock-path list + the 342-lesson
+catalogue — and a per-user tail — mandate overlay, mandate one-liner, journal, unlocked agents,
+closing instructions. Head must contain **nothing** derived from a `Mandate`, a `user_id`, or a
+journal; one interpolated field costs the entire 14,672 tokens. Keep the closing instructions last.
+Guard: a test that builds the prompt for two mandates that differ in every field and asserts the
+first N characters are **byte-identical**, where N ≥ 2 × 2,096 tokens' worth — that is the property
+the speedup depends on, and it is silently destroyed by anyone later adding a personalised line to
+the head. Measured target: **≥ 14,672 cached tokens and < 500 ms** on a second user's first message.
+
 **Phase 1 — decide the analyst-concurrency question on evidence (blocking, cheap).**
 Run the same 5 tickers through the Room twice: sequential analysts (today) and concurrent analysts.
 Diff the four analyst contributions for repetition and for content loss. Deliverable is the two
@@ -160,7 +240,8 @@ Currently `0.5`. Raising it gives more concurrent sequences and a larger prefix 
 serve-arg on `192.168.20.74`, which this workstation has no SSH access to — Saiful or the architect
 applies it. Measure before/after; do not assume.
 
-**Explicitly out of scope: restructuring the prompts to build a shared cacheable prefix.**
+**Explicitly out of scope: restructuring the *Room* prompts to build a shared cacheable prefix.**
+(Phase 0 does exactly this for the Concierge, where it is safe. The Room is not the same case.)
 It would require hoisting a ≥2,096-token common preamble in front of the per-agent persona — moving
 the persona to the *end* of the prompt, which collides head-on with the safety-floor ordering rule
 (`agent_prompts.py:64-65`: the floor is appended last *so it dominates instruction ordering*) and
@@ -186,6 +267,8 @@ without anyone knowing.
 
 ## Verification
 
+0. Phase 0: the byte-identical-head test proven red against today's ordering, then green. Live
+   measurement of cached tokens and latency for a second user's first message, before and after.
 1. `cd backend && .venv/bin/python -m pytest tests/unit/ -q` green, with the new phase-parallelism
    guard proven red before the fix.
 2. Phase 1's two transcripts, side by side, with the repetition count stated as a number.
