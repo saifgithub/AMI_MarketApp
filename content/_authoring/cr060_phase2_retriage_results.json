@@ -1,0 +1,611 @@
+[
+ {
+  "code": "CORE 3",
+  "id": "003_what_is_a_stock_exchange",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Market mechanic/rule: single-stock halts are LULD bands, not a 7% drop; a hypothetical version still teaches the wrong rule."
+ },
+ {
+  "code": "CORE 4",
+  "id": "004_us_markets_vs_bursa_malaysia",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Ticker symbol on a named venue is the teaching point (PBBANK, not PUBLIC); a generic Bursa listing teaches nothing."
+ },
+ {
+  "code": "CORE 5",
+  "id": "005_what_moves_stock_prices",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "NVDA is decoration; 'a large-cap chipmaker gapped up after an earnings beat' teaches the price-moves mechanism identically."
+ },
+ {
+  "code": "CORE 6",
+  "id": "006_what_is_volatility",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Superlative about a named real index ('VIX's highest reading ever') plus a real ticker error; hypothetical version says nothing."
+ },
+ {
+  "code": "CORE 11",
+  "id": "011_long_term_wealth_building",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Maybank is one illustration of compounding; 'a large Malaysian bank, price roughly doubled plus dividends' teaches the same lesson."
+ },
+ {
+  "code": "CORE 14",
+  "id": "282_what_is_a_brokerage",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Which regulator supervises brokerages (CMA, not SAMA) is the fact being taught; cannot be made hypothetical."
+ },
+ {
+  "code": "CORE 16",
+  "id": "284_what_makes_a_price_move",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Attribution of the voting/weighing-machine line (Graham, not Buffett) is itself the claim; no generic form exists."
+ },
+ {
+  "code": "N&M 1",
+  "id": "059_bull_markets",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is the bull-regime detection rule; the dated SPX/KLCI low-and-date pairs are illustrative and can go hypothetical."
+ },
+ {
+  "code": "N&M 2",
+  "id": "060_bear_markets",
+  "final_bucket": "P1",
+  "genericizable": true,
+  "why": "Quiz override: the '5 of 5 rallies failed' error sits in Quiz 1's explanation and contradicts the body, so a graded item marks the correct learner wrong."
+ },
+ {
+  "code": "N&M 3",
+  "id": "061_sideways_range_markets",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "XLF/KLCI are decoration; 'a sector ETF ranged $31.50-35.00 then broke out' teaches range-and-breakout identically. Quizzes already hypothetical."
+ },
+ {
+  "code": "N&M 7",
+  "id": "242_late_bull_warning_signs",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is the warning-sign set (200-day break, sentiment extreme); the 2021-22 date/reading is illustrative and works as an unnamed late-cycle example."
+ },
+ {
+  "code": "N&M 9",
+  "id": "244_bear_market_rallies",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "The rule 'rallies fail at the falling 200-day, stop 1.5% above' is stated separately; the 2022 SPX/Nasdaq numbers are one illustration and can be told hypothetically with the correct structure."
+ },
+ {
+  "code": "N&M 10",
+  "id": "245_panic_vs_capitulation",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Lesson teaches the washout-then-90%-up-volume signature; the Oct-2022 dates are decoration and a hypothetical session pair teaches it the same."
+ },
+ {
+  "code": "N&M 13",
+  "id": "248_vix_term_structure",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Contains a wrong definition (VIX9D presented as a name for the 1-month VIX) plus a record/superlative about the VIX itself — nothing survives genericizing."
+ },
+ {
+  "code": "N&M 14",
+  "id": "249_vvix_and_iv_rv_divergence",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "IV/RV divergence is the mechanism; the 5-Aug-2024 close/intraday swap is one instance that reads fine as an unnamed vol-shock session."
+ },
+ {
+  "code": "N&M 15",
+  "id": "250_rate_sensitive_sectors_hiking_cutting",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "The bear-steepener leadership model is the lesson; the wrong 10y anchors and H2-2024 ranking are one cycle's illustration, statable hypothetically."
+ },
+ {
+  "code": "N&M 17",
+  "id": "252_regime_change_realtime_vs_hindsight",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The three dated real episodes ARE the pedagogy and Quiz 2 asks about 'the historical record (2015, 2016, 2018)'; a hypothetical index says nothing."
+ },
+ {
+  "code": "FUND 1",
+  "id": "032_revenue_the_top_line",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Bursa paragraph just illustrates 'mature banks grow revenue slowly'; 'a large Malaysian bank' teaches it identically and drops the mislabelled RM27B. Quizzes hypothetical."
+ },
+ {
+  "code": "FUND 3",
+  "id": "034_debt_and_the_balance_sheet",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The error is the D/E mechanic — 'smaller equity base' contradicts the 0.2 D/E in the same clause — so the wrong reading survives genericization; needs correction."
+ },
+ {
+  "code": "FUND 13",
+  "id": "044_earnings_growth",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "No real entity: a false compounding mechanic (50%/yr doubles in 1.71 yr, not <18 months). Nothing to genericize; the arithmetic rule is the teaching point."
+ },
+ {
+  "code": "FUND 14",
+  "id": "148_revenue_recognition_red_flags",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Point is AR outrunning revenue as a red flag; 'a large chipmaker printed ~$30B revenue with ~$14B AR' teaches it identically and removes the wrong period attribution."
+ },
+ {
+  "code": "FUND 16",
+  "id": "150_recurring_vs_lumpy_revenue",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaches lumpy vs recurring revenue shape; 'an EV maker's storage segment grew ~$4B to ~$10B' carries the same point without the understated 10-K figure."
+ },
+ {
+  "code": "FUND 18",
+  "id": "152_three_margins_deep",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Point is the gross/operating/net cascade and thin retail net margins; 'a big-box retailer nets ~2.6%' teaches it identically. Quiz keys verify correct."
+ },
+ {
+  "code": "FUND 19",
+  "id": "153_margin_trend_analysis",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Point is the expanding trajectory 20%→29%→48%; a hypothetical ad platform carries it and drops the segment/consolidated mislabel. 'Two-thirds' stays separate P2b."
+ },
+ {
+  "code": "FUND 20",
+  "id": "154_sector_margin_benchmarks",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is the sector band structure; COST is an exemplar name — drop it or say 'mass retailers' and the lesson is intact. Quiz keys the band, not COST."
+ },
+ {
+  "code": "FUND 21",
+  "id": "155_operating_leverage_cyclicals",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Mechanism is revenue swing amplified into operating-income swing; 'a large chipmaker' / 'a major airline' teaches it identically. Intel/UAL names are decoration."
+ },
+ {
+  "code": "FUND 22",
+  "id": "156_debt_maturity_ladder",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Lesson teaches staggered vs bunched ladders; 'a large-cap issuer with no year above 8%' is the same contrast to the CRE maturity-wall case. Both quiz keys verify."
+ },
+ {
+  "code": "FUND 37",
+  "id": "171_valuation_across_industries_no_single_multiple_fits",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "L25 gives a Bursa bank ticker list; 'PUBLIC' is not a Bursa short name (PBBANK). A ticker is the lookup key itself — nothing to genericize."
+ },
+ {
+  "code": "FUND 38",
+  "id": "172_peer_selection_criteria_before_you_look_at_the_numbers",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "L37 names the 'defensible peer set' as PUBLIC/RHB/HLBK — wrong Bursa symbols in a line whose whole purpose is naming real comparables to screen."
+ },
+ {
+  "code": "FUND 41",
+  "id": "175_gaap_vs_non_gaap_and_accruals_quality",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "quiz_affected=true forces P1; also a regime impossibility (MFRS has no GAAP/non-GAAP split), not a swappable number, so the warning signal itself is fictional."
+ },
+ {
+  "code": "FUND 46",
+  "id": "180_tangible_book_vs_reported_book",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Negative tangible book / undefined P/TBV works on any hypothetical goodwill-heavy acquirer; both quizzes already use unnamed companies. CRM/KHC names are decoration."
+ },
+ {
+  "code": "FUND 47",
+  "id": "181_pb_for_banks_regulatory_book",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "L69 is a 'Try it' instructing the learner to type a bank ticker into Convene the Room; 'PUBLIC BANK' is not enterable (PBBANK). Ticker must be real."
+ },
+ {
+  "code": "FUND 49",
+  "id": "183_high_roe_low_pb_buffett_framing",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The lesson IS Buffett's own stated framing/mechanism plus a policy attributed to him; a hypothetical investor's framing teaches nothing."
+ },
+ {
+  "code": "FUND 52",
+  "id": "186_sustainable_roe_mean_reversion",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "False academic attribution to real named researchers; the evidentiary weight comes from the real literature, so it cannot go hypothetical."
+ },
+ {
+  "code": "FUND 53",
+  "id": "187_roe_inflation_via_buybacks",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "AAPL is decoration for the equity-denominator arithmetic; a hypothetical mega-cap with consistent underlying-vs-per-share rates teaches identically."
+ },
+ {
+  "code": "FUND 55",
+  "id": "189_interest_coverage_ratio",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is coverage ~3.5x sitting near the boundary and halving in a downturn; an unnamed appliance maker carries it, WHR's real rating is decoration."
+ },
+ {
+  "code": "FUND 58",
+  "id": "192_payout_ratio_on_fcf",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The false 'banks have no capex so CFO≈FCF' is a stated mechanic about a whole sector; genericizing the issuer leaves the wrong rule intact."
+ },
+ {
+  "code": "TECH 36",
+  "id": "136_bollinger_bands_basics",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz override (quiz_affected=true), and it is Bollinger's own stated containment rule — a real attribution/mechanic, not decoration."
+ },
+ {
+  "code": "EDGE 37",
+  "id": "205_sector_switching_revenge",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "A misdefinition of a real named construct (Kross & Ayduk cognitive distancing) called 'well-documented'; a definition has no hypothetical form."
+ },
+ {
+  "code": "EDGE 53",
+  "id": "224_bollinger_band_mean_reversion",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Core defect is the wrong definition of Bollinger Bands (SD of returns vs price); the fabricated KLCC trade is only secondary P2a-grade."
+ },
+ {
+  "code": "EDGE 55",
+  "id": "226_dual_momentum_absolute_relative",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is the absolute gate's lag at turns; \"a broad-market gate reopened months after the low\" teaches it identically — SPY/2009 is decoration."
+ },
+ {
+  "code": "EDGE 58",
+  "id": "229_walk_forward_analysis",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "\"Survived 2008 in the OOS portion\" contradicts the lesson's own windows — it mis-teaches the definition of out-of-sample, and illustrative framing preserves the error."
+ },
+ {
+  "code": "EDGE 60",
+  "id": "231_transaction_cost_modeling",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "$0.01/$500 = 2 bps is the spread-to-bps conversion the lesson exists to teach; going hypothetical keeps the same 5-10x arithmetic error."
+ },
+ {
+  "code": "EDGE 61",
+  "id": "232_regime_segmented_backtests",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Lesson teaches the segmentation method; \"deepest drawdowns fell in the bear/high-vol bucket\" works for an illustrative strategy without the 2008/2020/2022 attributions."
+ },
+ {
+  "code": "EDGE 62",
+  "id": "233_trend_following_crash_signatures",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "The signature (ADX decay + flattening slope) is the lesson; a hypothetical index case carries it — SPY/KLCI/MAYBANK names and dates are decoration."
+ },
+ {
+  "code": "EDGE 63",
+  "id": "234_mean_reversion_blow_up_patterns",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Staged blow-up pattern (RSI(2) re-firing while names keep falling) teaches identically for unnamed large-caps in a hypothetical crash window."
+ },
+ {
+  "code": "EDGE 64",
+  "id": "235_breakout_fakeout_statistical_signature",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "quiz_affected=true: unsourced 72%/64% base rates sit in both answer keys, so an illustrative label would still grade a reality-correct learner wrong."
+ },
+ {
+  "code": "EDGE 84",
+  "id": "267_how_to_file_a_report_with_regulators",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Which regulator's channel takes a scam report is the teaching point; a hypothetical Australian regulator says nothing and the dead ASIC URL is actionably wrong."
+ },
+ {
+  "code": "EDGE 93",
+  "id": "276_spotting_hallucinated_numbers",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz-affected (Q1 explanation misnumbers its distractor); and flag #5 teaches verification against NVDA's real dividend behaviour — a hypothetical payer teaches nothing to check."
+ },
+ {
+  "code": "EDGE 94",
+  "id": "277_pass_is_not_buy",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz-affected, and max_position_pct is a claim about our own PM mechanic (cap derives from risk_score) — a mechanic, not decoration; nothing to genericize."
+ },
+ {
+  "code": "ETHIC 3",
+  "id": "295_market_manipulation",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Named real individual + criminal case + the Flash Crash's record intraday drop; attribution of illegal gains to a real person and a record about a real event cannot go hypothetical."
+ },
+ {
+  "code": "SENT 6",
+  "id": "203_portfolio_wide_panic_selling",
+  "final_bucket": "P1",
+  "genericizable": true,
+  "why": "Mechanism (panic sell, fast recovery) survives genericization, but Quiz 3's explanation carries invented -19%/-32%/-28% figures, so the quiz override holds it at P1."
+ },
+ {
+  "code": "SENT 7",
+  "id": "206_meme_momentum_fomo",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "No quiz exposure; 'crowd momentum lures you in near the top' teaches identically with a hypothetical heavily-shorted small cap — GME/AMC names are decoration."
+ },
+ {
+  "code": "SENT 8",
+  "id": "207_missing_the_bottom_fomo",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "No quiz exposure; the fear-of-missing-the-bottom lesson works with 'an index rallied X% over the following six months' — the real S&P path is not the teaching point."
+ },
+ {
+  "code": "SENT 9",
+  "id": "212_bias_inventory",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "No quiz exposure; sunk-cost bias teaches identically with 'a state-linked energy counter', which also removes the untradeable-PETRONAS problem entirely."
+ },
+ {
+  "code": "ASST 4",
+  "id": "306_yield_curve_and_inversion",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz 2's stem repeats the false premise, and the curve's real recession-prediction record is the lesson — a hypothetical track record says nothing."
+ },
+ {
+  "id": "309_reading_the_rates_machine_capstone",
+  "code": "ASST 7",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Wrong mechanism claim about HY vs IG duration on a rate shock; 'junk-rated debt' is already generic, so nothing to genericize — the claim must be corrected."
+ },
+ {
+  "id": "313_leveraged_inverse_etfs_decay",
+  "code": "ASST 11",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Misstates the core mechanism the lesson exists to teach (decay is volatility-driven, not trend-driven); no named entity, nothing to make hypothetical."
+ },
+ {
+  "id": "016_risk_reward_ratio",
+  "code": "RISK 4",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Break-even win rate is the lesson's own arithmetic (1/1.8=55.6%, not 'two-thirds'), and it contradicts the lesson's own 54% flip example; plus a listing-venue false fact (PETRONAS on Bursa)."
+ },
+ {
+  "id": "018_drawdown_management",
+  "code": "RISK 6",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Recovery-duration figures are the teaching point and are arithmetically false under the lesson's own stated 1%/month rate; a hypothetical wrapper does not fix the math."
+ },
+ {
+  "id": "027_rsi_momentum_oscillator",
+  "code": "TECH 8",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "quiz_affected=true — Quiz 1 grades on the fabricated 78/71 RSI readings; also a listing-venue false fact (PETRONAS not listed on Bursa)."
+ },
+ {
+  "id": "113_hammer_and_inverted_hammer",
+  "code": "TECH 13",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Pattern-definition error — inverted hammer is a bullish bottom reversal, the bearish resistance shape is the shooting star; the definition is the lesson."
+ },
+ {
+  "id": "315_capstone_choosing_the_right_vehicle",
+  "code": "ASST 13",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "quiz_affected=true — a graded option and explanation assert a false definition (REIT is a tax election, not a fund wrapper)."
+ },
+ {
+  "id": "318_the_greeks_delta_theta_vega",
+  "code": "ASST 16",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Attributes a delta/gamma leverage effect to theta/vega — a Greek-definition error that a hypothetical example would reproduce identically."
+ },
+ {
+  "code": "EDGE 1",
+  "id": "012_why_most_traders_fail",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "False attribution to named real studies/regulators plus an internal contradiction reaching the quiz — attribution is the teaching point and quiz override applies."
+ },
+ {
+  "code": "EDGE 4",
+  "id": "047_revenge_trading",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz override: the 2-of-3 vs 3-of-3 conflict is the lesson's own definition of the tilt test and it reaches Quiz 2's explanation; genericizing the Bursa anecdote fixes nothing there."
+ },
+ {
+  "code": "EDGE 8",
+  "id": "052_trend_following",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz override: Quiz 2's 217-shares-as-1% arithmetic is graded and non-genericizable, even though the NVDA golden-cross narrative alone would be decoration."
+ },
+ {
+  "code": "EDGE 9",
+  "id": "053_breakout_strategy",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Teaching point is base-then-breakout mechanics; a hypothetical large-cap with stipulated levels teaches it identically and removes the fake META prices (and the stray editing artifact)."
+ },
+ {
+  "code": "EDGE 12",
+  "id": "056_momentum_trading",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "\"$50 to $80 doubles your cost\" is arithmetically false with or without the ticker — going hypothetical leaves the falsehood intact, so it must be corrected."
+ },
+ {
+  "code": "EDGE 13",
+  "id": "057_backtesting_a_strategy",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "The 10x sits inside an already-hypothetical \"suppose you backtest\" paragraph; survivorship bias is taught identically by a stipulated 10x winner with no real ticker named."
+ },
+ {
+  "code": "EDGE 14",
+  "id": "058_strategy_failure_modes",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Both are dated anecdotes decorating a mechanism (crossovers whipsaw in chop, breakouts fail in low-vol drift); hypothetical regimes teach it identically, no quiz exposure."
+ },
+ {
+  "code": "EDGE 16",
+  "id": "066_telegram_whatsapp_pump_groups",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Invents a publication by a named real agency (FBI) plus an uncorroborated SC Malaysia enforcement claim — a fabricated citation has no hypothetical form."
+ },
+ {
+  "code": "EDGE 17",
+  "id": "067_fake_brokers_and_clone_entities",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Lesson teaches verifying against named real registers; the FCA Warning List's scope and URL are the teaching point, not decoration."
+ },
+ {
+  "code": "EDGE 18",
+  "id": "068_forex_fx_trading_scams",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Fabricated SEC/CFTC publication title — a citation to a real regulator cannot be relabelled hypothetical without destroying its purpose as a checkable source."
+ },
+ {
+  "code": "EDGE 19",
+  "id": "069_ai_trading_bot_scams",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Non-existent FCA 2024 warning plus misstated SEC enforcement totals and a wrong annualisation; regulator attribution and arithmetic are not genericizable."
+ },
+ {
+  "code": "EDGE 20",
+  "id": "070_pressure_tactics_urgency_and_scarcity",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Dead FCA ScamSmart source, misnamed SEC office, and a cross-reference to a Module 8 lesson that doesn't exist — all named-entity/pointer facts."
+ },
+ {
+  "code": "EDGE 21",
+  "id": "071_how_to_verify_before_you_wire_money",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The lesson's entire purpose is directing learners to real verification bodies and URLs; a misnamed SEC office and dead link break exactly that."
+ },
+ {
+  "code": "EDGE 22",
+  "id": "072_what_ami_can_do_for_you",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Driver is a Mandate field (max_position_pct) that doesn't exist in our own schema — a product definition learners will try to use, not an illustrative number."
+ },
+ {
+  "code": "EDGE 28",
+  "id": "100_kelly_criterion_simplified",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Driver is the Kelly threshold/formula itself plus wrong derived fractions — the mechanism is the lesson; the PETRONAS mention is only a secondary decoration."
+ },
+ {
+  "code": "EDGE 32",
+  "id": "142_atr_position_sizing_and_stops",
+  "final_bucket": "P2a",
+  "genericizable": true,
+  "why": "Only defect is a real-name/listing slip; ATR arithmetic verifies and no quiz touches it, so 'a Malaysian large-cap at RM5.40' teaches sizing identically."
+ },
+ {
+  "code": "EDGE 77",
+  "id": "260_regulated_vs_unregulated_jurisdictions",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz-affected (override); and which backstop covers which product/regulator (SIPC vs CFTC) is the lesson's whole teaching point."
+ },
+ {
+  "code": "EDGE 80",
+  "id": "263_retail_cfd_leverage_abuse",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Wrong claim about who bears the regulatory loss-disclosure duty; the stat's force comes from real EU/UK mandated data, so a hypothetical broker teaches nothing."
+ },
+ {
+  "code": "EDGE 81",
+  "id": "264_managed_account_and_forex_education_scams",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Quiz-affected (override); a fabricated FCA review and the CTA/CPO registration distinction are both real-regulator facts, not decoration."
+ },
+ {
+  "code": "SHARIA 2",
+  "id": "348_the_business_activity_screen",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Regulator misnamed — which body (SC's SAC, not Bursa) issues the compliance list is exactly what the lesson teaches; no hypothetical version exists."
+ },
+ {
+  "code": "SHARIA 3",
+  "id": "349_the_three_financial_ratio_screens",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "The named standard's thresholds and denominator (AAOIFI SS 21: 30/30/5 of market cap) are the definition being taught; the worked example is already hypothetical."
+ },
+ {
+  "code": "SHARIA 5",
+  "id": "351_purification_tazkiyah",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Pure attribution defect — crediting the index-provider formula to AAOIFI; which body prescribes which method is the teaching point, nothing to genericize."
+ },
+ {
+  "code": "SHARIA 8",
+  "id": "354_islamic_indices_etfs_and_funds",
+  "final_bucket": "P1",
+  "genericizable": false,
+  "why": "Who designates the compliant list (SC's SAC vs the exchange) and what Bursa Malaysia-i actually is are named-entity/venue facts, not illustrative colour."
+ }
+]
