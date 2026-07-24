@@ -31,6 +31,30 @@ claim and this blueprint drift, reconcile both in the same change.
 
 ---
 
+## Agent prompts on file
+
+Each agent's full prompt — role, `## Inputs`, output style, guardrails, and voice — lives
+in `content/agents/`. These are the authoritative statement of what each agent claims to
+receive and how it is told to use it; this blueprint is the target that claim implies.
+
+| Agent | Family | Prompt file |
+|---|---|---|
+| Fundamentals Analyst | analyst | [fundamentals_analyst.md](../../../content/agents/fundamentals_analyst.md) |
+| Market Analyst | analyst | [market_analyst.md](../../../content/agents/market_analyst.md) |
+| News Analyst | analyst | [news_analyst.md](../../../content/agents/news_analyst.md) |
+| Social Media Analyst | analyst | [social_media_analyst.md](../../../content/agents/social_media_analyst.md) |
+| Bull Researcher | researcher | [bull_researcher.md](../../../content/agents/bull_researcher.md) |
+| Bear Researcher | researcher | [bear_researcher.md](../../../content/agents/bear_researcher.md) |
+| Research Manager | manager | [research_manager.md](../../../content/agents/research_manager.md) |
+| Trader | execution | [trader.md](../../../content/agents/trader.md) |
+| Aggressive Debator | risk | [aggressive_debator.md](../../../content/agents/aggressive_debator.md) |
+| Conservative Debator | risk | [conservative_debator.md](../../../content/agents/conservative_debator.md) |
+| Neutral Debator | risk | [neutral_debator.md](../../../content/agents/neutral_debator.md) |
+| Portfolio Manager | gatekeeper | [portfolio_manager.md](../../../content/agents/portfolio_manager.md) |
+| AMI Concierge (13th — not a trading agent) | concierge | [concierge.md](../../../content/agents/concierge.md) |
+
+---
+
 ## How to read it
 
 - **MUST** — the agent cannot do its declared job without this; absence is a defect.
