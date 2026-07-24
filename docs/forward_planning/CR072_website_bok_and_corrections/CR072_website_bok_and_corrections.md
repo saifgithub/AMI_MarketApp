@@ -177,3 +177,34 @@ The same dry-run showed `--delete` would have removed the server's `.well-known/
 **Generalisable rule, now in `docs/WEBSITE.md`:** deleting a file from a server is not
 the same as fixing the thing that put it there. And always dry-run an rsync with
 `--delete` against a host whose contents you did not author.
+
+---
+
+## Follow-on (2026-07-24) — "How the room works" analyst-team blurb
+
+Saiful, after the curriculum ship: *"Read `docs/initial_specs/02_agents/agent_data_blueprint.md`
+and write a web blurb on how the analyst team works — keep the current tone, keep it
+concise, keep it true to the file. Don't credit the agents with data the blueprint marks
+unavailable, but don't say that it isn't available either."*
+
+Added a two-paragraph **"How the room works"** block inside `#agents` (below the comb),
+grounded strictly in the blueprint:
+
+- **Names only available inputs.** Fundamentals → the full §1 fundamentals set + next-earnings;
+  Market → 20/50-day trend, RSI, volume-vs-20-day, support, breakout; News → headlines by
+  publisher/recency + per-headline sentiment; Social → all six fields (mention volume + trend,
+  communities, buzz, bull/bear split). The deliberation chain (Bull/Bear on the shared read +
+  their per-ticker journal → Research Manager synthesis → Trader's entry/stop/target with
+  **computed** R:R and drawdown → three risk debators red-teaming the mandate → PM's final call
+  behind the uncoachable compliance floor) matches the §2 phase gate exactly.
+- **Honest-degradation rule (§7) respected.** Never names an unavailable source and never
+  flags the gap: no MACD / Bollinger / intraday / MA-crossover (Technicals), no macro calendar
+  or 8-K/S-1 (News), no Twitter/StockTwits/Google Trends/Discord (Social), no forward guidance
+  or peer-basket P/E (Fundamentals). "Reward-to-risk and drawdown **computed, not asserted**"
+  encodes the blueprint's insistence (§3 Trader note) that the figure be real, not narrated.
+- **Also corrected the News comb sub-label** `Filings & events` → `Headlines & events`: the
+  blueprint marks regulatory filings (8-K/S-1) as *not available* to the News Analyst, so the
+  old label over-claimed.
+
+No new CSS (reuses `.sec-eyebrow` + section tokens). No `cr_list.md` edit (row already exists;
+avoids the raced register). Ships on the CR072 tag.
