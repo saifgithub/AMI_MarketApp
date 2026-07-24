@@ -341,6 +341,8 @@ def main() -> int:
     parser.add_argument("--locales", nargs="+", choices=list(LOCALES), default=list(LOCALES))
     parser.add_argument("--models", nargs="+", choices=list(ENDPOINTS.keys()), default=list(ENDPOINTS.keys()),
                         help="Which endpoints to call. Default: all applicable to each locale.")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="Re-check (lesson, locale, model) combos that already have a log entry. Default: skip them (resume-safe after a hang/kill).")
     parser.add_argument("--summary", action="store_true", help="No LLM calls — report verified/needs-review status from the existing log.")
     args = parser.parse_args()
 
@@ -350,6 +352,8 @@ def main() -> int:
     if args.summary:
         _summarize(log, strict_ids)
         return 0
+
+    already_checked = {(r["lesson_id"], r["locale"], r["model"]) for r in log}
 
     if args.ids:
         lesson_ids = args.ids
@@ -378,6 +382,9 @@ def main() -> int:
                 for name in args.models:
                     endpoint = ENDPOINTS[name]
                     if locale not in endpoint["locales"]:
+                        continue
+                    if not args.overwrite and (lesson_id, locale, model_by_endpoint[name]) in already_checked:
+                        print(f"  [{lesson_id} {locale} {name}] skip (already checked)")
                         continue
                     result = _verify_via_endpoint(
                         client, name, endpoint, model_by_endpoint[name],
