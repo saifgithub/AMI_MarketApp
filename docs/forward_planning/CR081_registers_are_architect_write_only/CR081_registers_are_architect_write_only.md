@@ -1,6 +1,7 @@
-# CR081 — The CR/Defect registers are Architect-write-only
+# CR081 — The CR/Defect registers are generated, not hand-edited (was: Architect-write-only)
 
-**Filed:** 2026-07-24 · **Track:** `AT:architect` · **Status:** done
+**Filed:** 2026-07-24 · **Track:** `AT:architect` · **Status:** done · **Model:** generated register
+(evolved from the interim single-writer rule the same day — see *What (evolution)*).
 
 ## Why
 
@@ -21,37 +22,51 @@ broke it**: `def_list.md` and `cr_list.md` are single monolithic markdown tables
 *same* file, the second committer captures the union of both edits regardless of pathspec. The only real
 fix is to remove the sharing — reduce the register to a single writer.
 
-## What
+## What (evolution)
 
-**One writer per register: the Architect.** Encoded as a behaviour-critical rule in
-[`CLAUDE.md`](../../../CLAUDE.md) (loaded into every track's session, so every non-architect reads it):
+CR081 shipped in two steps on 2026-07-24:
 
-- Non-architect tracks **never edit** `def_list.md` or `cr_list.md`.
-- They file their `DEF###_<topic>/` / `CR###_<topic>/` **spec folder** — a disjoint path they own alone —
-  and drop a one-line stub in `orchestration/dispatch/intake/`.
-- The **Architect** assigns the canonical ID, writes the register row, and owns every status flip
-  (`open → laned → fixed`). This also removes the ID-collision race (two requesters can no longer both
-  claim the next number in the table).
+**Step 1 — single-writer (interim, committed `d79a5e1`).** Non-architect tracks stopped editing the
+registers; the Architect became the sole writer. This stops the race, but makes the Architect a
+domain-agnostic chokepoint — including for a web-design CR that isn't the Architect's domain. Saiful:
+*"what if a CR is a Webdesign change? That's not your domain."* That objection retired step 1 as the final
+form.
 
-**Corollary — explicit-pathspec commits, never bare.** On the shared checkout, commit with
-`git commit -m "…" -- <your files>`; never bare `git commit` / `git commit -am` / `git add -A` + commit,
-which stage-and-sweep whatever another track left dirty. This protects every *disjoint-path* file from the
-cross-track sweep (the register fix above handles the one *shared* file).
+**Step 2 — generated register (final; Saiful chose it 2026-07-24).** The registers are now **generated
+artifacts**, the way `board.md` is derived from lane files:
+
+- **Source of truth = one file per item:** `docs/defect/_registry/DEF###.row.md` /
+  `docs/forward_planning/_registry/CR###.row.md`, each holding that item's single markdown table row. One
+  file per item is a disjoint write-path, so concurrent commits never touch the same file — the sweep is
+  **structurally impossible**, not merely policed.
+- **The item's DOMAIN OWNER writes its row** (a web CR's row → `coder.web`, a backend DEF's → `coder.api`),
+  not the Architect. "One owner" became "one owner *per item*" — which answers the web-design objection:
+  the register is no longer an Architect chokepoint.
+- **The Architect still mints the ID** (one integer minter → no ID-collision race). This answers Saiful's
+  *"how would I tell you there's a CRxxx waiting? I'd have no number"*: you describe it, the Architect
+  returns the number, the owner writes the row.
+- **`scripts/registers/gen_registers.py gen`** rebuilds `def_list.md` / `cr_list.md` from the row files
+  (sorted by ID). The `.md` tables carry a "GENERATED — do not hand-edit" banner. Migration was faithful:
+  all **98 DEF + 79 CR** rows extracted verbatim (`verify` confirms content-identical, zero drift), the old
+  blank-line-fragmented table collapsed to one clean table, the DEF backfill note preserved as a footer.
+
+**Corollary — explicit-pathspec commits, never bare** (carried from step 1). On the shared checkout,
+`git commit -m "…" -- <your files>`; never bare `git commit` / `git commit -am` / `git add -A` + commit.
+Protects every disjoint-path file (row files included) from a cross-track sweep.
 
 ## Not changed
 
-- **Requesters still file specs and pick their folder name.** The single-writer rule constrains only the
-  shared register *table*, not the per-item spec folder (which is already disjoint). The Architect
-  reconciles the ID when transcribing the row, so a folder-name collision is caught at mint time.
-- **The registers stay hand-maintained markdown for now.** The fuller fix — per-defect status in spec
-  frontmatter + a regenerated `def_list.md` (the way `board.md` is regenerated from lane files), so the
-  table is never hand-edited at all — is deferred. Single-writer is sufficient to stop the race; filed as
-  a follow-up option if register contention recurs.
+- **Requesters still file specs and pick their folder name.** The per-item spec folder was already disjoint.
+- **Column shapes + status vocabulary** are unchanged — the generator reproduces the exact rows.
+- **The `orchestration/dispatch/intake/` stub path** still exists for pre-triage items awaiting an ID.
 
 ## Acceptance
 
-1. `CLAUDE.md` states, in the Change-governance section, that `def_list.md` and `cr_list.md` are
-   Architect-write-only, with the intake-stub path for non-architects and the explicit-pathspec commit
-   corollary.
-2. The rule names the 2026-07-24 incident so the *why* is not lost.
-3. This CR's own register row is written by the Architect (dogfoods the rule).
+1. `def_list.md` / `cr_list.md` are generated from `_registry/*.row.md`, carry a GENERATED banner, and their
+   "How to add" sections describe the mint-ID → owner-writes-row → regenerate flow. ✓
+2. `scripts/registers/gen_registers.py` provides `extract` / `gen` / `verify`; `verify` confirms the live
+   table's row-set + content equals the row files (no drift). ✓
+3. Migration preserved every row: 98 DEF + 79 CR, content-identical to the pre-migration table. ✓
+4. The rule names the 2026-07-24 incident so the *why* is not lost. ✓ (see Why)
+5. `CLAUDE.md`'s change-governance section describes the generated model, not the retired single-writer one. ✓
+6. This CR's own register row lives in `_registry/CR081.row.md` (dogfoods the model). ✓
