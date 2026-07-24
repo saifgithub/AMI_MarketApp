@@ -1,0 +1,86 @@
+---
+id: "321_futures_and_forwards"
+title: "Kontrak hadapan & ke hadapan"
+duration_min: 5
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 19"
+topic: "futures_forwards"
+prerequisites: ["320_implied_vs_realized_volatility"]
+tags: ["options", "futures", "forwards", "mark-to-market", "obligation"]
+sources: ["CME Group — standard futures contract specifications and daily mark-to-market settlement"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "web-corroborated fact-check + adversarial refute"}
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Kontrak hadapan & hadapan
+
+Pilihan beli dan jual memberikan satu pihak hak dan pihak lain satu kewajipan. Kontrak hadapan dan kontrak pilihan hadapan melangkau hak sepenuhnya — kedua-dua pihak diwajibkan dari awal, tanpa premium dibayar untuk pilihan untuk menarik diri. Kontrak hadapan ialah versi standard, diperdagangkan di bursa, dan diselesaikan setiap hari bagi kewajipan tersebut; kontrak hadapan ialah sepupu peribadi, disesuaikan, dan di luar bursa. Selepas pelajaran ini, anda akan dapat menjelaskan mengapa kontrak berasaskan kewajipan berkelakuan berbeza secara asas daripada pilihan, terutamanya apabila kedudukan bergerak keras menentang anda.
+
+## Contoh
+
+Seorang petani gandum dan syarikat makanan mungkin memasuki kontrak hadapan untuk mengunci harga penghantaran enam bulan akan datang — disesuaikan, dirundingkan secara peribadi, di luar bursa, dan hanya seandal kemampuan pihak lawan untuk menepati kontraknya. Bandingkan itu dengan kontrak hadapan gandum CME: saiz kontrak standard, tarikh luput standard, dan sebuah rumah penyelesaian di tengah yang menilai kedudukan ke pasaran setiap hari, supaya keuntungan dan kerugian diselesaikan secara tunai setiap hari bukannya terkumpul tanpa diketahui sehingga luput. Kedua-dua pihak dalam kontrak hadapan telah menerima satu kewajipan — berbeza dengan pilihan, tiada siapa yang membayar premium untuk hak untuk menarik diri.
+
+Bursa Malaysia Derivatives menyenaraikan kontrak hadapan standardnya sendiri, seperti FCPO (minyak kelapa sawit mentah) dan FKLI (kontrak hadapan FTSE Bursa Malaysia KLCI) — tetapi akses runcit kepada *pilihan saham tunggal*, jenis yang telah difokuskan dalam modul ini, adalah jauh lebih terhad di Malaysia berbanding di AS, di mana pilihan saham tunggal yang disenaraikan diperdagangkan pada hampir setiap ticker besar yang cecair.
+
+## Perangkap
+
+Pemula memperlakukan kontrak hadapan sebagai "saham berleverage" dan tidak memahami penyelesaian tunai harian yang wajib — penilaian semula ke pasaran. Kedudukan kontrak hadapan yang rugi boleh mencetuskan panggilan margin yang menuntut lebih banyak tunai jauh sebelum mana-mana "luput", berbeza dengan pilihan beli panjang, di mana kerugian maksimum adalah tetap pada saat premium dibayar. Model mental yang betul: kes terburuk pilihan adalah terhad oleh reka bentuk kontrak; kes terburuk kedudukan kontrak hadapan hanya terhad oleh sejauh mana pasaran sanggup bergerak menentang anda sebelum anda dipaksa untuk menutupnya.
+
+## Argumen kukuh
+
+Seorang pendebat mungkin berhujah: kerana kedua-dua kontrak hadapan dan pilihan boleh memberikan pendedahan arah berleverage, perbezaan antara "hak" dan "kewajipan" adalah akademik — dalam amalan kedua-duanya ditutup sebelum luput dan hasil dunia nyata kelihatan serupa. Penafinya: bandingkan tingkah laku panggilan margin secara langsung. Kerugian pilihan beli panjang adalah terikat secara kontrak pada premium yang dibayar, tamat cerita, tidak kira betapa ganasnya pasaran bergerak menentangnya pada waktu malam. Kedudukan kontrak hadapan tidak mempunyai lantai sedemikian — penilaian semula ke pasaran setiap hari boleh menuntut margin tambahan berulang kali, dan pergerakan negatif yang cukup besar boleh memaksa likuidasi untuk lebih banyak daripada mana-mana premium pilihan yang sepadan akan kos. Penafian dunia nyata yang paling jelas: pada 20 April 2020, kontrak hadapan minyak mentah WTI bulan hadapan diperdagangkan di bawah $0 per tong dalam sesi — kontrak berasaskan kewajipan menghasilkan kerugian tanpa lantai di sifar, sesuatu yang tidak pernah boleh dilakukan oleh kedudukan pilihan beli.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang pedagang memegang posisi panjang pada kontrak futures. Pada waktu malam, aset asas bergerak tajam berlawanan dengan posisi tersebut. Apakah yang berlaku yang TIDAK berlaku kepada pedagang yang sebaliknya memegang pilihan beli (call option) dengan pendedahan notional yang sama?"
+  options={[
+    "Tiada perbezaan — kedua-dua posisi berkelakuan sama kerana kedua-duanya memberikan pendedahan arah",
+    "Posisi futures dinilai semula ke pasaran (mark-to-market) setiap hari dan boleh mencetuskan panggilan margin yang memerlukan lebih banyak wang tunai, manakala kerugian maksimum pilihan beli panjang kekal terhad pada premium yang telah dibayar",
+    "Posisi futures akan lupus secara automatik, sama seperti pilihan di luar wang (out-of-the-money)",
+    "Posisi pilihan beli panjang juga akan menghadapi panggilan margin, kerana pilihan dinilai semula ke pasaran dengan cara yang sama"
+  ]}
+  answer={1}
+  explanation="Penilaian semula ke pasaran setiap hari adalah faktor yang menyebabkan posisi futures memerlukan wang tunai baharu sebaik sahaja ia bergerak berlawanan dengan anda, tidak kira seberapa jauh tempoh luput. Pilihan beli panjang tidak mempunyai risiko panggilan margin sedemikian — senario terburuknya telah ditetapkan sebaik sahaja premium dibayar, dan tiada lagi dana yang perlu diendahkan."
+/>
+
+<Quiz
+  question="Apakah perbezaan struktur utama antara kontrak hadapan (forward) dan kontrak futures pada aset asas yang sama?"
+  options={[
+    "Kontrak hadapan sentiasa lebih murah daripada futures untuk pendedahan yang sama",
+    "Futures adalah perjanjian peribadi yang disesuaikan manakala forward adalah piawai dan diperdagangkan di bursa",
+    "Futures adalah piawai, diperdagangkan di bursa, dan dinilai semula ke pasaran setiap hari melalui rumah kliring; forward adalah disesuaikan, dirundingkan secara peribadi, dan membawa risiko kontrakan terus",
+    "Tiada perbezaan bermakna — kedua-dua istilah boleh digunakan secara bergantian"
+  ]}
+  answer={2}
+  explanation="Piawaian dan rumah kliring adalah pembeza utama futures: penilaian semula ke pasaran setiap hari dan pihak kontrakan pusat largely menghilangkan risiko bahawa pihak lain tidak membayar. Forward membawa risiko kontrakan tersebut secara langsung, sebagai pertukaran untuk terma yang disesuaikan dengan kedua-dua pihak yang terlibat."
+/>
+
+<Quiz
+  question="Kontrak futures minyak WTI April 2020 diperdagangkan secara sementara di bawah $0 per tong. Menggunakan perbezaan antara hak dan kewajipan daripada pilihan beli & jual serta mekanik penilaian semula ke pasaran futures, terangkan mengapa hasil ini mustahil secara struktur bagi seseorang yang sebaliknya memegang pilihan beli (call option) pada minyak, tidak kira betapa ekstremnya pergerakan tersebut."
+  options={[
+    "Ia sebenarnya tidak mustahil — pilihan beli panjang juga boleh kehilangan lebih daripada premiumnya dalam pergerakan yang cukup ekstrem",
+    "Ia mustahil hanya kerana futures minyak haram untuk dipegang panjang selepas tarikh tertentu",
+    "Pilihan beli panjang dan posisi futures panjang mempunyai profil risiko yang identikal setelah leverage diambil kira",
+    "Kerugian maksimum pilihan beli panjang ditetapkan secara kontrak pada premium yang dibayar, kerana pemegang mempunyai hak yang boleh mereka tolak untuk dilatih; posisi futures panjang adalah satu kewajipan tanpa lantai, jadi kerugian penilaian semula ke pasarannya pada prinsipnya boleh melebihi keseluruhan nilai posisi, termasuk menjadi negatif dalam kes ekstrem seperti WTI pada April 2020"
+  ]}
+  answer={3}
+  explanation="Lantai pilihan beli panjang adalah struktur: anda tidak pernah perlu melatih, jadi hasil terburuknya adalah kehilangan premium, tamat — had kerugian ini tidak boleh dilanggar oleh sebarang pergerakan pasaran, tidak kira betapa ekstremnya. Posisi futures panjang tidak mempunyai hak kontrak sedemikian untuk menolak; ia adalah kewajipan tulen, yang tepat mengapa kerugian penilaian semula ke pasaran WTI boleh berjalan melalui sifar dan ke dalam wilayah negatif."
+/>
+
+## Cuba sendiri
+
+Tanya Market Analyst: "Apakah perbezaan antara bagaimana kedudukan kontrak hadapan dan kedudukan pilihan beli masing-masing bertindak balas terhadap pergerakan jurang waktu malam?" Bandingkan jawapan dengan mekanik panggilan margin yang diterangkan dalam pelajaran ini.
+
+## Pengajaran penting
+
+Kontrak hadapan ialah kewajipan tanpa lantai terbina dalam — penilaian semula ke pasaran boleh meminta tunai sebelum anda mencapai luput — sementara kes terburuk pilihan beli panjang adalah tetap pada saat anda membayar premium; tahu mana satu yang anda lihat sebelum anda menilai risikonya.
+
+*Asal usul: Spesifikasi kontrak hadapan standard CME Group — mekanisme penilaian semula ke pasaran setiap hari yang menentukan bagaimana kewajipan kontrak hadapan berbeza dengan hak pilihan.*

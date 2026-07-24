@@ -1,0 +1,83 @@
+---
+id: "320_implied_vs_realized_volatility"
+title: "Volatiliti tersirat vs volatiliti direalisasikan"
+duration_min: 5
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 18"
+topic: "implied_realized_volatility"
+prerequisites: ["319_covered_call_and_protective_put"]
+tags: ["options", "implied-volatility", "realized-volatility", "vega", "risk-premium"]
+sources: ["Volatility risk premium — the documented tendency for implied volatility to run above subsequently realized volatility across broad equity index option markets"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Volatiliti tersirat vs volatiliti direalisasikan
+
+Volatiliti tersirat (IV) ialah jangkaan ke hadapan pasaran, yang telah dimasukkan ke dalam harga pilihan, mengenai seberapa banyak aset asas kemungkinan akan bergerak sebelum tamat tempoh. Volatiliti direalisasikan ialah apa yang sebenarnya berlaku kepada saham tersebut apabila tempoh tersebut berakhir. Kedua-duanya jarang-sempadan tepat, dan jurang antara keduanya adalah di mana pembeli dan penjual pilihan secara sistematik menang atau kalah — bukan kerana betul atau salah mengenai arah, tetapi kerana betul atau salah mengenai berapa nilai *anggaran ketidakpastian* pasaran. Selepas pelajaran ini, anda akan dapat membezakan antara "saham ini akan jatuh" dan "pasaran sedang menghargai pergerakan besar, dalam arah mana pun."
+
+## Contoh
+
+Sebelum laporan keuntungan suku tahunan NVDA, volatiliti tersirat pilihan mungkin berjalan jauh di atas tahap biasa NVDA sepanjang tahun selebihnya (ilustratif — bukan kutipan langsung), kerana pasaran sedang menghargakan kemungkinan pergerakan yang luar biasa selepas laporan. Selepas penerbitan, apabila ketidakpastian terurai, volatiliti tersirat "hancur" kembali ke tahap normal tanpa mengira ke mana arah saham sebenarnya bergerak — kerana peristiwa yang dihargakan oleh IV kini telah berlaku dan berlalu. Ini sebabnya dua pilihan pada saham yang sama, satu dikemukakan sebelum laporan dan satu selepas, boleh menyiratkan julat jangkaan yang sangat berbeza walaupun tiada apa-apa tentang perniagaan jangka panjang syarikat telah berubah.
+
+## Perangkap
+
+Pemula sering keliru antara "volatiliti tersirat adalah tinggi" dengan "saham ini akan jatuh." IV mengukur *saiz* pergerakan yang dijangka, bukan arahnya — saham boleh mempunyai IV yang sangat tinggi menjelang peristiwa binari dan masih naik dengan kuat. Perangkap cermin: menganggap pilihan yang kelihatan "murah" dengan premium rendah secara automatik merupakan peluang baik, tanpa menyemak sama ada IV rendah kerana pasaran benar-benar menjangkakan tempoh yang tenang — dalam kes itu, harga rendah untuk peristiwa berkemungkinan rendah masih boleh menjadi pertaruhan yang buruk, bukan diskaun.
+
+## Argumen terkuat
+
+Pencabar mungkin berhujah bahawa kerana volatiliti tersirat ialah "tekaan terbaik pasaran," ia sudah cekap — tiada kelebihan dalam memerhatikan jurang antara IV-versus-direalisasikan, anda hanya membaca harga yang telah ditetapkan oleh pasaran dengan betul. Penyangkal: jurang sejarah itu sendiri. Merentasi sampel jangka panjang, volatiliti tersirat cenderung berjalan secara berterusan di atas volatiliti direalisasikan berikutnya — satu premium risiko volatiliti — yang menjelaskan mengapa strategi penjualan pilihan sistematik mempunyai kelebihan jangkaan walaupun setiap perdagangan tunggal masih hampir seperti lemparan syiling. Jika IV adalah tidak berat sebelah pada purata, jurang berterusan itu tidak akan wujud. Penyangkalnya ialah menyemak jurang IV-minus-direalisasikan sejarah pada indeks luas merentasi banyak kitaran, bukan hasil mana-matu laporan keuntungan tunggal.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Volatiliti tersembunyi pada pilihan saham melonjak tajam seminggu sebelum laporan pendapatan, kemudian jatuh tajam sehari selepasnya — tidak kira sama ada saham naik atau turun. Corak ini memberitahu anda apakah yang sebenarnya diukur oleh volatiliti tersembunyi?"
+  options={[
+    "Arah yang dijangka oleh pasaran untuk pergerakan saham",
+    "Jaminan bahawa saham akan bergerak mengikut peratusan yang diimplikasikan",
+    "Magnitud ketidakpastian yang dihargai oleh pasaran di sekitar suatu peristiwa, bukan arah pergerakan akhir",
+    "Kadar pertumbuhan pendapatan syarikat yang mendasari"
+  ]}
+  answer={2}
+  explanation="IV meningkat dan menurun secara simetri terhadap suatu peristiwa, bebas daripada arah hasil, adalah tanda penaksiran magnitud, bukan ramalan arah. Pasaran menghargai saiz ayunan yang dijangka; ia tidak mengatakan apa-apa tentang ke mana ayunan itu pergi."
+/>
+
+<Quiz
+  question="Seorang pedagang melihat pilihan saham diperdagangkan pada volatiliti tersembunyi yang rendah secara luar biasa dan memanggilnya 'murah'. Apakah perangkap dalam pemikiran itu?"
+  options={[
+    "Pilihan tidak boleh salah harga, jadi 'murah' sentiasa tidak bermakna",
+    "Volatiliti tersembunyi yang rendah hanya bermaksud saham akan mengalami pergerakan besar",
+    "Volatiliti tersembunyi yang rendah menjamin pilihan akan luput tanpa nilai",
+    "Premium murah berbanding IV tidak bermaksud harga rendah — IV boleh rendah kerana pasaran benar-benar menjangka tempoh tenang, dan harga rendah dengan kebarangkalian pergerakan besar yang rendah masih boleh menjadi taruhan yang buruk"
+  ]}
+  answer={3}
+  explanation="Premium yang rendah mencerminkan kebarangkalian yang rendah untuk pergerakan besar yang telah dimasukkan ke dalam harga — itu adalah penentuan harga yang konsisten, bukan semestinya diskaun. 'Murah' hanya bermakna sesuatu berhubung dengan apa yang sebenarnya berlaku seterusnya, yang merupakan perbandingan antara yang diimplikasikan dan yang direalisasikan yang menjadi fokus pelajaran ini."
+/>
+
+<Quiz
+  question="Menggabungkan pelajaran ini dengan pelajaran Greeks: seorang pedagang membeli panggilan jauh kerana volatiliti tersembunyi kelihatan 'murah' berbanding sejarahnya, menjangka IV akan naik dan mengangkat harga pilihan walaupun sebelum saham bergerak. Apakah taruhan tersirat pedagang ini, dan apa yang boleh membatalkan tesis?"
+  options={[
+    "Mereka bertaruh pada vega — bahawa volatiliti tersembunyi sendiri akan naik, mengangkat harga pilihan secara bebas daripada saham; tesis itu dibatalkan jika IV kekal rata atau jatuh walaupun saham rata, kerana theta sentiasa merosakkan kedudukan sepanjang masa",
+    "Mereka bertaruh semata-mata pada delta — tesis itu hanya dibatalkan jika harga saham jatuh",
+    "Mereka bertaruh pada theta — tesis itu hanya dibatalkan jika masa berlalu",
+    "Perdagangan ini tiada risiko, kerana volatiliti tersembunyi secara sejarah sentiasa kembali naik pada mana-mana tempoh pegangan"
+  ]}
+  answer={0}
+  explanation="Membeli pilihan khusus untuk mendapat manfaat daripada kenaikan IV adalah taruhan yang dipacu oleh vega, terpisah daripada panggilan arah (delta). Ia gagal bukan hanya jika IV kekal rata, tetapi walaupun dalam senario IV rata dan harga rata, theta masih memakan kedudukan setiap hari — 'menunggu IV naik' bukan pilihan bebas masa."
+/>
+
+## Cuba sendiri
+
+Tanya Market Analyst: "Adakah volatiliti tersirat pilihan [ticker] semasa tinggi atau rendah berbanding sejarah terkininya sendiri?" Perhatikan bahawa jawapan AMI menerangkan keadaan pasaran — ia bukan isyarat untuk meletakkan perdagangan, kerana AMI Trade tidak mempunyai perdagangan pilihan.
+
+## Penegasan
+
+Volatiliti tersirat menghargai saiz pergerakan yang dijangka, bukan arahnya, dan ia cenderung menyatakan berlebihan apa yang sebenarnya berlaku pada purata — volatiliti direalisasikan ialah kad skor yang akhirnya menyelesaikan pertaruhan.
+
+*Asal usul: premium risiko volatiliti — kecenderungan jangkaan yang direkodkan bahawa volatiliti tersirat melebihi volatiliti direalisasikan berikutnya merentasi pasaran pilihan indeks ekuiti luas.*

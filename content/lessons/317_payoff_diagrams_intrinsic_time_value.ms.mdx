@@ -1,0 +1,87 @@
+---
+id: "317_payoff_diagrams_intrinsic_time_value"
+title: "Rajah ganjaran — nilai intrinsik & masa"
+duration_min: 6
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 15"
+topic: "options_payoff"
+prerequisites: ["316_calls_and_puts"]
+tags: ["options", "payoff-diagrams", "intrinsic-value", "time-value", "break-even"]
+sources: ["Standard option payoff decomposition — intrinsic value plus time value, as used in exchange-listed option pricing"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Diagram payoff — nilai intrinsik & nilai masa
+
+Premium pilihan sebenarnya ialah dua nombertindan bersama: nilai intrinsik (apa nilainya jika anda melaksanakan ia pada saat ini juga) dan nilai masa (semua tambahan yang anda bayar, bertaruh nilai intrinsik akan berkembang sebelum tamat tempoh). Pada tamat tempoh, nilai masa lenyap sepenuhnya — hanya nilai intrinsik yang terselamat, dan payoff pilihan ialah nilai intrinsik tersebut tolak apa yang anda bayar asal. Selepas pelajaran ini, anda akan mampu membaca diagram payoff dan membezakan "ini bernilai sesuatu" daripada "ini menjana wang."
+
+## Contoh
+
+Ambil panggilan (call) AAPL dengan harga pelaksanaan (strike) $200 secara hipotetikal, dibeli pada premium $6.50 (ilustratif — bukan kutipan langsung). Pada mana-mana titik sebelum tamat tempoh, $6.50 itu terbahagi kepada nilai intrinsik dan nilai masa. Pada tamat tempoh, hanya nilai intrinsik yang terselamat — itulah sebabnya pelajaran tentang Greeks yang seterusnya memperlakukan nilai masa sebagai sesuatu yang merosot.
+
+Lakukan pengiraan. Jika AAPL berakhir pada $180, $190, $195, atau bahkan tepat $200 pada tamat tempoh, panggilan tersebut berada di luar wang (out of the money) — hak untuk membeli pada $200 tidak bernilai apa-apa apabila AAPL berada pada atau di bawah $200, jadi nilai intrinsik ialah $0 dan payoff ialah -$6.50: kerugian penuh premium, tidak kira pada tahap mana daripada empat itu AAPL sebenarnya mendarat. Titik impas (break-even) untuk panggilan ini ialah $206.50 (strike ditambah premium) — pada harga tepat itu, nilai intrinsik sama dengan $6.50, yang tepat mengimbangi apa yang anda bayar, jadi payoff ialah $0.00. Anda tidak menjana untung sehingga AAPL diperdagangkan di atas $206.50. Pada $210, nilai intrinsik ialah $10.00 dan payoff ialah $3.50. Pada $220, nilai intrinsik ialah $20.00 dan payoff ialah $13.50. Di bawah strike, payoff mendatar pada -$6.50 tidak kira seberapa jauh di bawah; di atas titik impas, payoff meningkat satu dolar demi satu dolar mengikut saham.
+
+$200 strike dan $6.50 premium yang sama sebagai pilihan jual (put) bergerak ke arah bertentangan: titik impas ialah $193.50 (strike tolak premium). Pada $180, nilai intrinsik ialah $20 dan payoff ialah $13.50; pada $190, nilai intrinsik ialah $10 dan payoff ialah $3.50; pada $193.50 (titik impas), nilai intrinsik ialah $6.50 dan payoff ialah $0.00; pada $200 atau $210, put tersebut tidak bernilai — nilai intrinsik $0, payoff -$6.50.
+
+## Perangkap
+
+Pemula memperlakukan "di dalam wang" (in the money) sebagai sinonim untuk "menguntungkan". Ia bukan begitu. Pilihan boleh berada di dalam wang — bernilai sesuatu jika dilaksanakan — dan masih menjadi dagangan yang rugi jika ia belum melepasi titik impas. Model mental yang betul: payoff tidak diukur terhadap strike, ia diukur terhadap strike ditambah premium (untuk call) atau strike tolak premium (untuk put). Antara strike dan titik impas, anda sedang memulihkan kerugian, bukan mencatat keuntungan — dan kebanyakan pemula berhenti menjejak kedudukan sebaik ia bertukar menjadi "di dalam wang", tepat pada julat di mana ia masih berada di bawah air.
+
+## Steelman
+
+Seorang skeptik mungkin berhujah bahawa diagram payoff pada tamat tempoh melebih-lebihkan risiko, kerana hampir tiada siapa sebenarnya memegang pilihan sehingga tamat tempoh — kebanyakan pedagang runcit menutup kedudukan awal, jadi lantai flat -$6.50 jarang penting dalam amalan. Falsifier: menutup awal mengubah *bila* anda menyedari kerugian, bukan arah di mana nilai masa berfungsi. Theta (pelapukan masa, dicakupkan dalam pelajaran seterusnya) mengikis pilihan panjang yang tidak menguntungkan setiap hari ia dipegang, sama ada ditutup awal atau tidak — diagram payoff menerangkan destinasi yang kedudukan itu hanyut ke sepanjang masa, bukan sekadar peraturan yang hanya menggigit pada lonceng akhir.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Anda membeli pilihan call AAPL dengan harga larian $200 dengan premium $6.50. AAPL ditutup pada $195 pada tamat tempoh. Berapakah hasil (payoff)?"
+  options={[
+    "$0.00, kerana pilihan itu cukup dekat dengan harga larian untuk mencapai titik pulas",
+    "$5.00, nilai intrinsik yang akan dimiliki pilihan jika dilaksanakan",
+    "-$6.50, kerugian penuh premium, kerana call tamat tempoh di luar wang (out of the money)",
+    "-$1.50, kerugian separa yang mencerminkan betapa dekatnya $195 dengan harga larian $200"
+  ]}
+  answer={2}
+  explanation="Pada $195, call tersebut berada di luar wang — tiada siapa yang akan membayar $200 untuk saham bernilai $195 — jadi nilai intrinsik ialah $0 dan hasil ialah kerugian penuh premium -$6.50. Hasil di bawah harga larian tidak berskala dengan kedekatan; ia rata pada -$6.50 di mana-mana pada atau di bawah $200."
+/>
+
+<Quiz
+  question="Berapakah harga asas yang perlu dicapai oleh AAPL pada tamat tempoh agar call ini mencapai titik pulas?"
+  options={[
+    "$200.00 — tepat pada harga larian",
+    "$193.50 — harga larian tolak premium",
+    "$213.00 — harga larian tambah dua kali ganda premium",
+    "$206.50 — harga larian tambah premium"
+  ]}
+  answer={3}
+  explanation="Titik pulas untuk call panjang ialah harga larian ditambah premium: $200 + $6.50 = $206.50. Pada harga itu, nilai intrinsik ($6.50) mengimbangi tepat premium yang dibayar, jadi hasil ialah $0.00 — mencapai harga larian itu sendiri ($200) masih meninggalkan premium penuh sebagai kerugian."
+/>
+
+<Quiz
+  question="AAPL ditutup tepat pada $200.00 pada tamat tempoh — tepat pada harga larian, selepas meningkat dari $180. Seorang pedagang berkata 'Saya betul tentang arah, jadi saya sepatutnya hampir mencapai titik pulas.' Menggunakan nilai intrinsik, nilai masa, dan matematik titik pulas dari pelajaran ini, mengapa itu salah?"
+  options={[
+    "Pada $200, call mempunyai sifar nilai intrinsik kerana ia tidak berada di atas harga larian, jadi seluruh premium $6.50 hilang — arah sahaja tidak cukup, asas perlu mengatasi harga larian ditambah premium yang dibayar, iaitu $206.50, sebelum sebarang keuntungan muncul",
+    "Pedagang itu betul — menjadi betul tentang arah sentiasa menghasilkan hasil titik pulas atau lebih baik tanpa mengira premium yang dibayar",
+    "Pedagang itu salah hanya kerana AAPL sepatutnya ditutup di atas $220 untuk mencapai titik pulas",
+    "Pedagang itu salah kerana nilai masa sentiasa sama dengan sifar tanpa mengira betapa dekatnya saham dengan harga larian"
+  ]}
+  answer={0}
+  explanation="Mencapai harga larian bukan sama dengan mencapai titik pulas. Pada $200 tepat, nilai intrinsik masih $0 — call hanya mula mempunyai nilai pelaksanaan di atas $200 — jadi seluruh premium $6.50 hilang. Peningkatan dari $180 ke $200 adalah nyata dan dipanggil dengan betul, tetapi ia berhenti $6.50 sebelum mana premium yang dibayar dipulihkan."
+/>
+
+## Cuba sendiri
+
+Buka Market Analyst 1-on-1 dan pilih ticker sebenar pada senarai pantauan anda. Tanya: "Jika saya melihat rantai pilihan (option chain) untuk ticker ini pada strike di atas harga semasa, premium apa yang akan memisahkan antara betul mengenai arah daripada benar-benar untung?" Gunakan penjelasan latihan AMI untuk memeriksa pengiraan titik impas anda sendiri.
+
+## Teras
+
+Payoff pilihan pada tamat tempoh bukan pergerakan saham — ia ialah pergerakan saham tolak premium yang anda bayar, dan sehingga anda melepasi titik impas, menjadi betul mengenai arah masih menyebabkan kerugian.
+
+*Asal usul: penguraian payoff pilihan standard — nilai intrinsik ditambah nilai masa — digunakan di setiap model penentuan harga pilihan yang tersenarai di bursa.*

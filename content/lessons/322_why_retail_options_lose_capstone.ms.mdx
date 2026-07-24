@@ -1,0 +1,87 @@
+---
+id: "322_why_retail_options_lose_capstone"
+title: "Capstone: mengapa pilihan eceran rugi"
+duration_min: 6
+level: 9
+module: 15
+difficulty: 4
+track: "asset_classes"
+code: "ASST 20"
+topic: "options_literacy_capstone"
+prerequisites: ["316_calls_and_puts", "317_payoff_diagrams_intrinsic_time_value", "318_the_greeks_delta_theta_vega", "320_implied_vs_realized_volatility"]
+tags: ["options", "capstone", "synthesis", "theta", "implied-volatility", "retail-losses"]
+sources: ["CBOE 0DTE options volume research and aggregate retail options P&L studies — the documented pattern of retail losses in short-dated, far-out-of-the-money options despite correct directional calls"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Capstone: mengapa pilihan retail rugi
+
+Anda kini memegang toolkit M15 yang lengkap: hak berbanding kewajipan, nilai intrinsik berbanding nilai masa, tiga Greek yang menarik kedudukan serentak, dan penentuan kevolatilitan tersembunyi (implied volatility) yang menilai ketidakpastian, bukan arah. Capstone ini menguji semua konsep tersebut terhadap satu setup yang realistik — panggilan (call) jarak jauh di luar wang (out-of-the-money) dengan tempoh matang pendek yang dipilih oleh pembeli pilihan retail sekitar peristiwa yang diketahui, berharap pergerakan besar. Kemahiran yang diuji: melihat mengapa perdagangan ini boleh rugi walaupun ramalan arah betul, dan menamakan secara tepat daya mana yang menyebabkan kerugian tersebut.
+
+## Satu senario, setiap konsep M15
+
+NVDA diperdagangkan berhampiran $250 pada hari sebelum hasil kewangan (earnings). Seorang pedagang membeli panggilan (call) dengan harga latihan (strike) $260 sebagai ilustrasi, matang dalam dua hari, dengan premium $2.00 — ini adalah "tiket loteri" klasik: murah, jauh di luar wang, dan ditakdirkan untuk satu pemangkin tunggal. Sebelum pengumuman, kevolatilitan tersembunyi (implied volatility) bagi pilihan tersebut adalah tinggi — pasaran menilai peluang sebenar bagi pergerakan besar (Kevolatil Tersembunyi vs Kevolatil Realized). Setiap jam menjelang matang dua hari, theta menggerogoti kedudukan tanpa mengira apa yang dilakukan oleh NVDA (The Greeks) — dan sebaik sahaja hasil kewangan dilaporkan, vega bekerja menentangnya juga, kerana IV cenderung runtuh serta-merta apabila peristiwa yang menjadi justifikasinya telah berlalu.
+
+Jalankan pengiraan hasil (Payoff Diagrams). Titik pecah (break-even) bagi panggilan ini ialah $262.00 — strike ditambah premium. Jika NVDA naik akibat hasil kewangan yang baik ke $255, itu adalah pergerakan naik yang nyata dan betul diramal — namun hasil (payoff) masih -$2.00, kerugian penuh premium, kerana $255 tidak pernah melebihi strike $260: nilai intrinsik ialah $0. Tolak senario lebih jauh: NVDA naik sehingga $262.00, melepasi strike dan mendarat tepat pada titik pecah. Hasil di sana ialah $0.00 — bukan untung, tetapi pecah — kerana nilai intrinsik ($2.00) mengimbangi premium yang dibayar, selepas theta merosotkan kedudukan selama dua hari berturut-turut dan vega kemungkinan besar menghancurkannya di atasnya. Bahkan kenaikan yang nyata, besar, dan betul diramal boleh berakhir pada sifar tepat.
+
+Ini adalah corak yang direkodkan dengan baik, bukan hipotesis: isipadu pilihan jarak pendek retail (sering "0DTE" — sifar hari hingga matang) telah berkembang menjadi bahagian besar aktiviti dalam nama-nama popular, tertumpu pada strike yang jauh di atas harga semasa, dan kajian terhadap P&L pilihan agregat retail secara berulang mendapati kerugian bersih dalam segmen ini merentas sampel besar — bahkan dalam tempoh apabila saham asas secara umum naik.
+
+## Perangkap
+
+Retail memperlakukan "Saya betul arah" sebagai pengesahan bahawa perdagangan itu berjaya. Ia tidak membezakan arah daripada magnitud dan masa — tiga perkara berbeza yang menuntut panggilan jarak pendek, jauh di luar wang, untuk anda betulkan serentak. Model mental yang betul: kenaikan yang nyata, betul diramal, dan masih terlalu kecil atau terlalu perlahan rugi dengan cara yang sama seperti panggilan yang salah — premium hilang dalam kedua-dua kes, dan papan skor tidak memberi kredit untuk kebenaran separa.
+
+## Steelman
+
+Kes terkuat untuk membeli pilihan tiket loteri ini: sesetengah pedagang melakukannya secara sengaja sebagai pertaruhan kos maksimum yang kecil dan terhad, dengan hasil asimetri — kerugian maksimum $2.00 untuk peluang mendapat pendaraban keuntungan besar adalah strategi hasil cembung (convex-payoff) yang sah digunakan secara profesional dalam konteks lain (lindung nilai ekor, opsi gaya venture), dan menolak semua pembelian jauh di luar wang sebagai "kerugian wang" mengabaikan bahawa kadar kerugian di bawah 100% adalah baik jika kemenangan sesekali cukup besar. Penyangkalnya adalah aritmetik, bukan sentimen: adakah kadar kemenangan kali saiz kemenangan tipikal melebihi kadar kerugian kali premium $2.00, merentas sampel besar, selepas kos transaksi yang realistik dan penghancuran vega yang dipelajari dalam pelajaran ini? Data agregat retail 0DTE dan pilihan jarak pendek yang direkodkan mengatakan tidak pada purata — penyangkalnya adalah rekod P&L agregat, bukan hasil perdagangan tunggal.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="NVDA naik dari $250 ke $255 menjelang tamat tempoh — pergerakan naik yang benar dan diramal dengan tepat — tetapi panggilan (call) dengan harga latihan (strike) $260 yang dibeli pada $2.00 masih tamat tempoh bernilai -$2.00, satu kerugian penuh. Menggunakan nilai intrinsik dan titik impas bersama-sama, mengapa panggilan arah yang betul masih mengalami kerugian 100% di sini?"
+  options={[
+    "$255 masih di bawah harga latihan $260, jadi nilai intrinsik adalah $0 — pilihan itu perlu melampaui bukan sahaja harga latihan tetapi juga harga latihan ditambah premium $2.00 ($262.00) sebelum mana-mana kenaikan diterjemahkan kepada keuntungan, dan $255 tidak pernah sampai ke sana",
+    "Sistem penentuan harga pilihan rosak, kerana taruhan arah yang betul sepatutnya tidak pernah kehilangan premium sepenuhnya",
+    "Kerugian adalah kerana volatiliti tersembunyi jatuh ke sifar serta-merta selepas laporan pendapatan",
+    "Kerugian adalah kerana delta pilihan menjadi negatif semasa kenaikan"
+  ]}
+  answer={0}
+  explanation="Nilai intrinsik hanya wujud di atas harga latihan, dan $255 masih kekurangan $5 daripada harga latihan $260 — jadi nilai intrinsik adalah $0 dan seluruh premium $2.00 hilang. Kenaikan itu benar dan telah diramal dengan tepat, tetapi ia tidak pernah melepasi harga latihan itu sendiri, apatah lagi titik impas $262.00 yang dituntut oleh premium."
+/>
+
+<Quiz
+  question="NVDA naik lebih jauh dan tamat tempoh tepat pada $262.00 — melampaui harga latihan dan mendarat tepat pada titik impas yang dikira dalam pelajaran pembayaran. Seorang pedagang yang membeli panggilan (call) harga latihan $260 pada $2.00 berkata 'Saya meramal arah dan magnitud dengan betul — saya sepatutnya untung.' Apa yang dikatakan oleh matematik pembayaran, dan peranan apa yang dimainkan oleh theta dan vega untuk membawa posisi ke situ?"
+  options={[
+    "Pedagang itu betul — $262.00 adalah untung yang selesa memandangkan magnitud kenaikan",
+    "Pembayaran pada tepat $262.00 adalah $0.00 — titik impas, bukan keuntungan, kerana nilai intrinsik ($2.00) mengimbangi premium yang dibayar dengan tepat; theta merosakkan posisi sepanjang dua hari menjelang tamat tempoh, dan mana-mana krus vega yang dipacu oleh IV selepas cetakan pendapatan bekerja menentang pilihan itu juga, bermakna kenaikan perlu mengatasi ketiga-tiga daya ini hanya untuk mencapai sifar, apatah lagi untung",
+    "Pedagang itu betul kerana mencapai harga latihan itu sendiri, tidak kira premium, sentiasa bermakna untung",
+    "Pembayaran adalah negatif pada $262.00 kerana kerugian theta sentiasa melebihi keuntungan nilai intrinsik"
+  ]}
+  answer={1}
+  explanation="Pada titik impas, pembayaran adalah tepat $0.00 oleh definisi — nilai intrinsik sama dengan premium yang dibayar, jadi perdagangan itu rata, bukan untung. Mencapai titik itu pada semua memerlukan kenaikan untuk mengatasi dua hari penuh reputan theta dan mana-mana krus vega pasca-pendapatan; 'betul tentang arah dan magnitud' hanya mengembalikan pedagang kepada sifar, bukan ke dalam hijau."
+/>
+
+<Quiz
+  question="Pembelian panggilan jauh di luar wang (far-out-of-the-money) dengan tempoh tamat 0DTE dan pendek oleh peruncaman adalah corak yang didokumenkan dengan baik dalam pasaran pilihan moden — bahagian besar isipadu dalam nama popular kini tertumpu pada pilihan yang tamat tempoh dalam beberapa hari, sering pada harga latihan yang jauh di atas harga semasa. Merujuk kepada nilai intrinsik/masa, Greek, dan volatiliti tersembunyi berbanding volatiliti direalisasikan bersama-sama, apakah sebab struktur corak ini dikaitkan dengan kerugian peruncaman yang berterusan, walaupun saham asas bergerak dalam arah yang diramal oleh pembeli?"
+  options={[
+    "Pilihan ini haram untuk dibeli oleh pedagang peruncaman di kebanyakan yurisdiksi, jadi kerugian sebenarnya adalah penalti penguatkuasaan",
+    "Saham hampir tidak pernah bergerak dalam arah yang diramal oleh pedagang peruncaman, jadi kerugian adalah semata-mata masalah ramalan",
+    "Tiga daya menentang pembeli serentak: theta merosakkan posisi setiap jam menjelang tamat tempoh pendek, volatiliti tersembunyi sering tinggi sebelum acara dan hancur selepas itu tidak kira arah (vega), dan matematik pembayaran memerlukan melampaui bukan sahaja harga latihan tetapi juga harga latihan ditambah premium — jadi pergerakan yang betul tetapi tidak mencukupi, atau pergerakan yang betul yang tiba terlalu perlahan, kedua-duanya kehilangan premium sepenuhnya walaupun pembeli 'betul' tentang arah",
+    "Corak ini adalah mitos — data agregat menunjukkan posisi ini untung pada purata sekali komisen broker dikira"
+  ]}
+  answer={2}
+  explanation="Tiada Greek tunggal atau konsep yang menerangkan corak ini secara sendirian — ia adalah tumpukan. Theta menjamin posisi yang merosot tidak kira hasil; IV pra-acara yang tinggi ditambah hancur pasca-acara bekerja menentang pembeli tidak kira arah; dan matematik titik impas bermakna saham asas perlu melampaui harga-latihan-plus-premium, bukan hanya harga latihan, sebelum mana-mana panggilan yang betul membayar. Betul tentang arah hanya menangani salah satu daripada tiga daya ini."
+/>
+
+## Cuba sendiri
+
+Buka Jurnal Keputusan dan, untuk peristiwa hasil kewangan sebenar yang anda telah tonton pada mana-mana ticker, tuliskan apa yang perlu dilakukan oleh panggilan jarak jauh di luar wang, jarak pendek pada saham tersebut — bukan hanya arah, tetapi seberapa banyak dan pada bila — untuk benar-benar untung. Bandingkan bar ini dengan bagaimana saham tersebut sebenarnya bergerak. Ingat: AMI Trade tiada perdagangan pilihan; ini adalah latihan latihan dalam menilai tuntutan, bukan perdagangan untuk ditempatkan.
+
+## Terasan
+
+Menjadi betul mengenai arah saham adalah perlu tetapi jauh dari cukup bagi panggilan jarak pendek, jauh di luar wang untuk memberikan hasil — theta, vega, dan matematik titik pecah semuanya perlu bekerjasama, dan corak pilihan jarak pendek retail yang direkodkan dengan baik menunjukkan bahawa tumpukan ini jarang sejajar.
+
+*Asal usul: corak P&L agregat negatif yang direkodkan dalam perdagangan pilihan jarak pendek retail (kajian isipadu CBOE 0DTE dan kajian kes "arah betul, hasil salah" pasca-earnings yang berulang) — aritmetik yang sama yang diajar merentas pelajaran hasil, Greek, dan kevolatilitan modul ini.*

@@ -1,0 +1,66 @@
+---
+id: "338_correlation_is_not_causation"
+title: "Korelasi ≠ Punca"
+duration_min: 4
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 4"
+topic: "correlation_causation"
+prerequisites: ["337_distributions_and_fat_tails"]
+tags: ["correlation", "causation", "spurious-relationships", "quant"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Korelasi ≠ Punca
+
+Korelasi mengukur seberapa rapat dua perkara bergerak bersama; punca bermaksud salah satunya benar-benar menyebabkan yang lain berlaku. Dua siri data boleh bergerak hampir serempak dengan sempurna dan masih tiada hubungan punca antara keduanya — kerana pemboleh ubah ketiga yang tidak disebut sedang memacu kedua-duanya. Menganggap "kedua-dua perkara ini bergerak bersama" sebagai "yang satu menyebabkan yang lain" adalah salah satu cara paling cepat untuk membina tesis dagangan berdasarkan kebetulan.
+
+## Contoh
+
+Saham syarikat penerbangan dan nama sektor tenaga seperti XOM sering menunjukkan korelasi negatif yang kuat sepanjang beberapa bulan — apabila harga minyak turun, kos bahan api syarikat penerbangan menurun dan margin syarikat penerbangan meningkat, manakala pendapatan dan harga ekuiti pengeluar tenaga turun mengikut penurunan harga minyak yang sama. Pada carta, ia kelihatan seolah-olah "syarikat penerbangan naik menyebabkan saham tenaga turun" atau sebaliknya. Ini tidak benar: tiada saham yang menyebabkan pergerakan saham lain. Pemboleh ubah ketiga — harga minyak itu sendiri — memacu kedua-dua siri data ke arah bertentangan pada masa yang sama. Pelabur yang membeli saham syarikat penerbangan "kerana tenaga sedang turun" mempunyai korelasi yang betul tetapi mekanisme yang salah; dagangan ini hanya berfungsi selama hubungan harga minyak masih bertahan, dan akan runtuh sebaik sahaja syarikat penerbangan dan tenaga bergerak bersama (contohnya, semasa kejutan permintaan yang menimpa kedua-dua sektor serentak).
+
+Jualan ais krim dan kematian akibat lemas menunjukkan corak serupa secara musiman: kedua-duanya meningkat bersama setiap musim panas, bukan kerana ais krim menyebabkan lemas, tetapi kerana cuaca panas mendorong lebih ramai orang berenang dan membeli ais krim. Korelasi itu nyata, tetapi cerita punca yang disiratkan olehnya adalah salah sepenuhnya.
+
+## Perangkap
+
+Perangkapnya ialah mengenal pasti korelasi pada carta dan segera membina cerita punca untuk menjelaskannya, kerana cerita punca lebih memuaskan daripada "kedua-dua perkara ini kebetulan bergerak bersama atas sebab yang belum saya kenal pasti." Ia terasa betul kerana mekanisme yang kedengaran munasabah ("syarikat penerbangan dan tenaga bergerak bertentangan kerana mereka berkait") mudah diciptakan selepas fakta. Kebiasaan yang betul: sebelum mendagangkan korelasi, tanyakan mekanisme punca sebenar dan pemboleh ubah ketiga mana yang mungkin memacu kedua-dua siri data — jika anda tidak dapat menamakan mekanisme tersebut, anda sedang mendagangkan kebetulan yang boleh runtuh tanpa amaran.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Saham syarikat penerbangan dan pengeluar tenaga seperti XOM sering bergerak dalam arah bertentangan sepanjang beberapa bulan. Penerangan yang paling tepat mengenai sebabnya ialah?"
+  options={[
+    "Pergerakan harga saham syarikat penerbangan secara langsung menyebabkan pergerakan harga saham pengeluar tenaga dalam arah bertentangan",
+    "Harga minyak ialah pemboleh ubah ketiga yang mendorong kedua-dua siri tersebut — penurunan harga minyak mengurangkan kos bahan api penerbangan (membantu margin penerbangan) sambil mengurangkan pendapatan pengeluar tenaga (mempengaruhi saham tenaga) — jadi korelasi tersebut mencerminkan punca bersama, bukan satu sektor menyebabkan yang lain",
+    "Pergerakan saham pengeluar tenaga secara langsung menyebabkan pergerakan saham syarikat penerbangan dalam arah bertentangan",
+    "Kedua-dua sektor ini tidak mempunyai hubungan sebenar, dan mana-mana korelasi yang diperhatikan antara mereka adalah hingar statistik tulen"
+  ]}
+  answer={1}
+  explanation="Harga minyak ialah pemacu bersama: ia mengubah kos penerbangan dan pendapatan pengeluar tenaga dalam arah bertentangan pada masa yang sama, menghasilkan korelasi sebenar tanpa hubungan punca langsung antara kedua-dua kumpulan saham. Jawapan 'penerangan menyebabkan tenaga' dan 'tenaga menyebabkan penerbangan' masing-masing menetapkan punca kepada satu sektor tanpa mekanisme bagaimana ia boleh berlaku; jawapan 'tiada hubungan sebenar, hingar tulen' menafikan korelasi yang sebenar dan direkodkan dengan baik, hanya bukan punca."
+/>
+
+<Quiz
+  question="Seorang pedagang perhatikan jualan ais krim dan kematian akibat lemas meningkat bersama setiap musim panas dan pada mulanya menganggap satu menyebabkan yang lain. Apa yang sebenarnya berlaku menurut pelajaran ini, dan apa yang harus dilakukan pedagang sebelum memperdagangkan korelasi yang kelihatan serupa di pasaran?"
+  options={[
+    "Kesimpulkan ais krim menyebabkan lemas dan bertindak atas hubungan itu secara langsung",
+    "Kesimpulkan lemas menyebabkan jualan ais krim meningkat dan bertindak atas hubungan itu secara langsung",
+    "Akui bahawa korelasi tersebut adalah nyata tetapi didorong oleh pemboleh ubah ketiga (cuaca panas mendorong kedua-dua berenang dan membeli ais krim), dan sebelum memperdagangkan mana-mana korelasi pasaran, kenal pasti mekanisme punca sebenar atau pemacu bersama — jika tiada punca yang boleh dinamakan, anggap korelasi tersebut mudah pecah tanpa amaran",
+    "Tolak korelasi tersebut sepenuhnya sebagai kebetulan tanpa penjelasan, kerana cuaca musim panas tidak dapat diukur"
+  ]}
+  answer={2}
+  explanation="Ini adalah disiplin teras pelajaran: korelasi nyata dan kuat masih boleh mempunyai sifar hubungan punca langsung, sebaliknya didorong oleh pemboleh ubah ketiga bersama (di sini, panas musim panas). Versi perdagangan — penerbangan dan tenaga yang dihubungkan oleh harga minyak — berfungsi dengan cara yang sama. Jawapan 'ais krim menyebabkan lemas' dan 'lema menyebabkan ais krim' mencipta punca langsung dalam kedua-dua arah, dan jawapan 'tolak korelasi sebagai kebetulan, cuaca tidak dapat diukur' salah menyatakan bahawa pemacu (cuaca) tidak dapat diukur apabila ia sebenarnya penjelasan yang dikenal pasti dengan betul."
+/>
+
+## Cuba sendiri
+
+Pilih dua kod saham dari sektor berbeza yang anda perhatikan bergerak bersama pada carta. Dalam sesi 1-on-1 dengan Pengurus Penyelidikan, minta ia menamakan pemboleh ubah ketiga yang munasabah yang boleh memacu kedua-duanya, daripada bertanya sama ada yang satu menyebabkan yang lain. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+
+## Pengajaran Utama
+
+Korelasi yang kuat memberitahu anda dua perkara bergerak bersama; ia tidak pernah memberitahu anda mengapa — cari mekanisme sebenar atau pemboleh ubah ketiga yang dikongsi sebelum mendagangkan hubungan tersebut.

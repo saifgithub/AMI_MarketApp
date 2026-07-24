@@ -1,0 +1,68 @@
+---
+id: "342_overfitting_and_curve_fitting"
+title: "Overfitting & penyesuaian lengkung"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 8"
+topic: "overfitting"
+prerequisites: ["341_backtesting_rigor_the_basics"]
+tags: ["overfitting", "curve-fitting", "backtesting", "quant"]
+sources: ["Andrew W. Lo & A. Craig MacKinlay — data-snooping bias in tests of financial asset pricing models, Review of Financial Studies (1990)"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "web-corroborated fact-check + adversarial refute"}
+agent_callouts: ["trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Overfitting & curve-fitting
+
+Overfitting berlaku apabila satu strategi disetkan dengan cukup banyak parameter bebas — purata bergerak, ambang, penapis — sehingga ia mula menyesuaikan diri dengan hingar dalam set data sejarah tertentu, bukannya corak sebenar yang boleh diulang. Lebih banyak parameter berbanding jumlah data sentiasa membuatkan backtest dalam sampel kelihatan lebih baik; ia tidak menjadikan strategi tersebut lebih mungkin untuk terus berfungsi. Semak kesihatan kasar: bahagikan bilangan dagangan sejarah dengan bilangan parameter yang boleh disetkan — semakin sedikit dagangan yang anda ada per parameter, semakin besar kemungkinan "kelebihan" backtest tersebut hanyalah curve-fit kepada sejarah khusus ini.
+
+## Contoh
+
+Ambil satu peraturan yang diuji pada 50 dagangan sejarah. Dengan **1** parameter yang boleh disetkan (contohnya, panjang purata bergerak tunggal), itu ialah **50 dagangan per parameter** — jumlah data yang munasabah untuk menganggarkan satu tetapan. Sekarang tambah penapis sehingga peraturan tersebut mempunyai **10** parameter yang boleh disetkan (panjang purata bergerak, ambang RSI, penapis isipadu, penapis volatiliti, penapis waktu dalam hari, dan sebagainya) yang diuji pada *dagangan* 50 yang sama — itu hanya **5 dagangan per parameter** (50 ÷ 10 = 5). Dengan 10 parameter bebas dan hanya 50 titik data untuk disesuaikan, pengoptimum mempunyai kebebasan besar untuk mencari kombinasi yang kebetulan menerangkan sejarah khusus ini dengan baik, sama ada penapis-penapis tersebut mencerminkan corak pasaran sebenar yang boleh diulang atau tidak.
+
+Backtest dalam sampel untuk versi 10 parameter hampir sentiasa menunjukkan kadar kemenangan dan EV yang lebih tinggi berbanding versi 1 parameter — itu bukan bukti bahawa versi 10 parameter adalah strategi yang lebih baik; ia adalah hasil yang dijangkakan daripada memberikan pengoptimum lebih banyak tombol untuk diputar terhadap jumlah data tetap yang sama. "Kelebihan" tambahan yang dijumpainya sama kemungkinan untuk menjadi hingar yang disesuaikan dengan sejarah khusus ini seperti ia menjadi sesuatu yang nyata.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan prestasi in-sample strategi yang meningkat apabila lebih banyak parameter ditambah sebagai bukti bahawa setiap penapis baru sedang mencari corak sebenar, apabila ia sama konsisten dengan pengoptimum sekadar mempunyai lebih banyak kebebasan untuk menyesuaikan diri dengan hingar khusus dalam satu set data tersebut. Ia terasa seperti kemajuan kerana nombor backtest terus bertambah baik dengan setiap pelarasan. Kebiasaan yang betul: semak nisbah dagangan-per-parameter sebelum mempercayai backtest yang "ditingkatkan" — satu peraturan dengan 10 parameter dan 5 dagangan per parameter mendapat lebih banyak keraguan berbanding peraturan dengan 1 parameter dan 50 dagangan per parameter, walaupun nombor backtest versi 1 parameter kelihatan lebih baik.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="Satu peraturan diuji pada 50 perdagangan sejarah. Versi A menggunakan 1 parameter boleh laras; versi B menambah penapis sehingga ia menggunakan 10 parameter boleh laras, diuji pada 50 perdagangan yang sama. Apakah nisbah perdagangan-per-parameter bagi setiap versi?"
+  options={[
+    "Versi A: 1 perdagangan per parameter; Versi B: 10 perdagangan per parameter",
+    "Versi A: 50 perdagangan per parameter (50 ÷ 1); Versi B: 5 perdagangan per parameter (50 ÷ 10) — sepuluh kali kurang data menyokong setiap parameter individu",
+    "Kedua-dua versi mempunyai nisbah yang sama, kerana bilangan perdagangan (50) tidak berubah",
+    "Versi A: 500 perdagangan per parameter; Versi B: 50 perdagangan per parameter"
+  ]}
+  answer={1}
+  explanation="Perdagangan per parameter = jumlah perdagangan ÷ bilangan parameter: 50 ÷ 1 = 50 untuk versi A, dan 50 ÷ 10 = 5 untuk versi B. Bilangan parameter berubah walaupun bilangan perdagangan kekal tetap pada 50, yang merupakan sebab tepat mengapa nisbah — dan kebolehpercayaan setiap parameter yang disesuaikan — menurun sepuluh kali ganda dari A ke B."
+/>
+
+<Quiz
+  question="Versi B (10 parameter, 5 perdagangan per parameter) menunjukkan kadar kemenangan dalam sampel dan EV yang lebih tinggi berbanding versi A (1 parameter, 50 perdagangan per parameter) pada sejarah 50 perdagangan yang sama. Adakah nombor dalam sampel yang lebih tinggi itu bermaksud versi B menemui corak perdagangan yang lebih baik dan lebih boleh diulang?"
+  options={[
+    "Tidak semestinya — hasil dalam sampel yang lebih tinggi dengan lebih banyak parameter berbanding data tetap yang sama adalah tepat apa yang dihasilkan oleh penyesuaian lengkung kepada hingar, sama ada penapis tambahan itu mencerminkan corak sebenar yang boleh diulang atau tidak",
+    "Ya — nombor backtest yang lebih tinggi sentiasa menunjukkan strategi yang lebih baik tanpa mengira berapa banyak parameter yang menghasilkan ia",
+    "Ya, kerana menambah lebih banyak penapis hanya boleh membuang hingar, bukan menyesuaikan kepada hingar",
+    "Tidak, kerana strategi 10 parameter sentiasa lebih buruk daripada strategi 1 parameter dalam setiap kes"
+  ]}
+  answer={0}
+  explanation="Dengan 10 parameter bebas dan hanya 50 titik data, pengoptimum mempunyai lebih banyak kebebasan untuk mencari kombinasi yang memukau sejarah khusus ini, tidak kira sama ada ia menangkap apa-apa yang nyata atau tidak — ini adalah definisi overfitting. Nombor yang lebih tinggi adalah tepat apa yang anda jangka daripada penyesuaian lengkung kepada hingar, bukan bukti sama ada ke arah mana; ia juga bukan peraturan mutlak bahawa lebih banyak parameter sentiasa lebih buruk (penapis tambahan yang dibenarkan dengan benar boleh membantu) — poinnya ialah nombor itu sendiri tidak dapat memberitahu anda kes mana yang anda hadapi tanpa memeriksa nisbah perdagangan-per-parameter."
+/>
+
+## Cuba sendiri
+
+Lihat sebarang strategi yang anda telah bina dengan beberapa penapis atau keadaan. Kira parameter yang boleh disetkan, bahagikan bilangan dagangan backtest anda dengan nombor tersebut, dan tanya sama ada setiap penapis individu dibenarkan oleh sesuatu selain daripada "ia meningkatkan nombor sejarah." Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+
+## Penegasan
+
+Lebih banyak parameter sentiasa membuatkan backtest in-sample kelihatan lebih baik — itu sahaja tidak pernah menjadi bukti kelebihan nyata; semak dagangan-per-parameter sebelum mempercayai peningkatan tersebut.

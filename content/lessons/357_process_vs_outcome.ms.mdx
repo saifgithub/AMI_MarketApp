@@ -1,0 +1,72 @@
+---
+id: "357_process_vs_outcome"
+title: "Proses vs hasil"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 2
+track: "decision_evaluation"
+code: "EVAL 1"
+topic: "process_vs_outcome"
+prerequisites: []
+tags: ["process-vs-outcome", "resulting", "decision-quality", "expected-value", "luck-vs-skill"]
+sources: ["Annie Duke — Thinking in Bets (2018): \"resulting\" — judging decision quality by outcome quality","Nassim Nicholas Taleb — Fooled by Randomness: outcome as a noisy signal of process","Howard Marks — The Most Important Thing: recognising the role of luck; second-level thinking"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Proses vs. hasil
+
+Keputusan dan hasilnya adalah dua objek berbeza, dan pasaran cukup bising sehingga ia sering berpisah secara rutin. Kedudukan yang bersaiz dengan baik dengan tesis bertulis boleh rugi wang; yang ceroboh boleh menguntungkan. Nama poker untuk menilai yang pertama berdasarkan yang kedua ialah *resulting* — istilah yang dilaporkan Annie Duke dari meja dan menjadi asas buku beliau — dan ia merupakan kesilapan paling biasa yang dibuat orang semasa meninjau rekod mereka sendiri. Pelajaran ini memberikan alternatif: nilai keputusan berdasarkan apa yang boleh diketahui pada saat ia dibuat — tesis, saiz, pembatalan — dan anggap hasil sebagai satu sampel bising tentangnya.
+
+## Contoh
+
+Dua keputusan dari satu suku tahun dalam portfoli0 latihan $100,000. Kedua-duanya dicipta, secara sengaja — tiada ticker sebenar, tiada harga sebenar.
+
+**Keputusan A.** Sebuah syarikat industri kap sederhana hipotetikal. Anda menulis tesis dan pembatalan sebelum masuk, bersaizkannya pada 2% ($2,000), dan menetapkan stop 15% di bawah harga masuk, membatasi kerugian pada $300 — 0.3% daripada portfoli0. Anggap ia sebagai setup yang boleh diulang dengan kadar kejayaan hipotetikal 45% yang membayar 3R pada pemenang dan 1R pada kalah, di mana R = $300: 0.45 × $900 + 0.55 × (−$300) = **+$240 jangkaan per pengulangan**. Kali ini, pengumuman yang tiada siapa sangka merosakkan tesis, harga turun melalui aras tersebut dan stop diisi. Direalisasikan: **−$300**.
+
+**Keputusan B.** Sebuah syarikat kecil spekulatif hipotetikal, dimasukkan berdasarkan tip forum. Tiada tesis bertulis, tiada pembatalan, tiada stop, bersaiz pada 25% ($25,000). Anggap peluang jujur pada setup sebegini ialah 40% peluang +40% dan 60% peluang −40%: 0.4 × $10,000 + 0.6 × (−$10,000) = **−$2,000 jangkaan per pengulangan**. Kali ini ia naik +40%. Direalisasikan: **+$10,000**.
+
+Lajur hasil mengrank B lebih tinggi sebanyak $10,300. Lajur proses mengrank A lebih tinggi sebanyak $2,240 per pengulangan. Hanya salah satu daripada lajur tersebut memberitahu anda apa yang perlu dilakukan pada suku tahun seterusnya — dan ia bukan lajur yang ditunjukkan oleh baki akaun anda.
+
+## Perangkap
+
+*Resulting* berlaku dalam kedua-dua arah, dan pemula kebanyakannya notices arah yang menyakitkan: kerugian berlaku, proses dihancurkan, dan setup berjangka positif ditinggalkan selepas empat sampel buruk. Arah yang lebih mahal ialah arah yang menyenangkan. Keputusan B membayar $10,000, jadi saiz kedudukan 25% pada tip forum dikatalogkan sebagai disahkan, dan yang seterusnya ialah $30,000. Tiada apa-apa dalam hasil itu menyentuh fakta bahawa setup tersebut bernilai −$2,000 per pengulangan. Model mental yang betul: hasil mengemas kini anggaran anda terhadap peluang secara perlahan, merentasi banyak sampel; ia tidak menilai keputusan. Nilai keputusan berdasarkan apa yang ada di halaman apabila anda membuatnya. Itulah tugas jawatankuasa CEO dalam <Lesson id="279_you_are_the_ceo"/>, diarahkan ke belakang ke rekod anda sendiri.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Keputusan B ialah kedudukan $25,000 dengan peluang 40% untuk +40% dan peluang 60% untuk −40%. Apakah nilai jangkaannya bagi setiap pengulangan?"
+  options={[
+    "−$2,000 — 0.4 × (+$10,000) ditambah 0.6 × (−$10,000)",
+    "−$10,000 — kerugian penuh, kerana kedudukan tanpa had disyaki hilang",
+    "+$4,000 — keuntungan yang ditimbang kebarangkalian dari cabang yang menang",
+    "+$10,000 — jumlah yang sebenarnya dikembalikan oleh kedudukan ini kali ini"
+  ]}
+  answer={0}
+  explanation="0.4 × $10,000 = $4,000 dan 0.6 × −$10,000 = −$6,000, maka nilai jangkaannya ialah −$2,000 bagi setiap pengulangan. Jawapan '+$4,000' hanya mengira cabang yang menang dan membuang cabang kerugian 60% sepenuhnya. Jawapan '−$10,000' menganggap cabang kerugian sebagai pasti berbanding 60% kemungkinan. Jawapan '+$10,000' ialah hasil sebenar satu sampel, yang merupakan nombor yang tepat dirancang untuk dilalui oleh nilai jangkaan."
+/>
+
+<Quiz
+  question="Di hujung suku, anda mengira dua keputusan tersebut. Pengiraan manakah menilai kualiti keputusan berbanding hasil?"
+  options={[
+    "B mengira lebih tinggi, kerana ia mengembalikan +$10,000 berbanding A yang −$300 dan wang ialah satu-satunya papan skor yang menyelesaikan pertikaian",
+    "A mengira lebih tinggi: ia membawa +$240 jangkaan bagi setiap pengulangan, penafian bertulis, dan 0.3% portfoliow dalam risiko, manakala B membawa −$2,000 jangkaan bagi setiap pengulangan dan 25% portfoliow tanpa peraturan keluar",
+    "Tiada satu pun boleh dikira yet, kerana satu sampel tidak membawa maklumat tentang apa-apa",
+    "B mengira lebih tinggi pada proses juga, kerana saiz besar dibenarkan oleh keyakinan dan had A membatasi potensi naiknya"
+  ]}
+  answer={1}
+  explanation="Kualiti keputusan tetap oleh input yang tersedia pada kemasukan: A mempunyai jangkaan positif, bersaiz dan dihentikan supaya keluar had menelan 0.3% portfoliow, dan membawa penafian bertulis; B mempunyai jangkaan negatif pada −$2,000 bagi setiap pengulangan dengan suku portfoliow dan tiada peraturan keluar. Nombor yang direalisasikan tidak mengubah itu. Jawapan 'wang ialah satu-satunya papan skor' ialah resulting dalam bentuk paling polosnya. Jawapan 'tiada satu pun boleh dikira yet' membingungkan dua soalan berasingan — anda memerlukan banyak sampel untuk menganggar tepi anda, tetapi keputusan itu boleh dinilai serta-merta daripada apa yang ditulis. Dan jawapan 'keyakinan membenarkan saiz' membalikkan hubungan: keyakinan ialah perasaan, saiz kedudukan ialah keputusan risiko, dan had membatasi kerugian, bukan potensi naik."
+/>
+
+## Cuba sendiri
+
+Buka Jurnal Keputusan, pilih entri tertutup, dan tutup P&L sebelum anda membaca apa-apa lagi. Dari tesis dan pembatalan yang anda tulis pada masa itu, nilai keputusan 1–5 dan tulis nombor itu turun. Kemudian buka hasilnya dan nilai keputusan yang sama sekali lagi, kini mengetahui bagaimana ia berakhir. Jurang antara dua gred tersebut ialah satu pembacaan tabiat *resulting* anda — satu entri adalah anekdot, jadi lakukan merentasi beberapa sebelum anda percaya saiznya. Gred buta adalah yang jujur; yang kedua ialah apa yang memori anda akan berikan semasa semakan. Tiada arah yang harus menggerakkan gred tersebut: keputusan yang berakhir buruk bukan dengan itu lebih buruk, dan satu yang menguntungkan bukan dengan itu lebih baik — dan ia adalah arah kedua, yang menyenangkan, yang lolos dari anda. Kemudian tanya Research Manager bagaimana ia akan menilai entri yang sama hanya dari teks pra-hasil — jawapannya adalah artifak latihan untuk anda menilai, bukan nasihat pelaburan.
+
+## Penutup
+
+Nilai keputusan berdasarkan apa yang boleh diketahui apabila anda membuatnya; hasil ialah satu sampel bising, bukan kartu rapor. Keputusan baik yang rugi wang masih merupakan satu yang perlu diulang.

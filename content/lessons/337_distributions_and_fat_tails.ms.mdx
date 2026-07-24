@@ -1,0 +1,68 @@
+---
+id: "337_distributions_and_fat_tails"
+title: "Taburan & ekor tebal"
+duration_min: 5
+level: 12
+module: 20
+difficulty: 3
+track: "quant_methods"
+code: "QUANT 3"
+topic: "fat_tails"
+prerequisites: ["336_base_rates_why_they_beat_the_story"]
+tags: ["distributions", "fat-tails", "volatility", "quant"]
+sources: ["Nassim Nicholas Taleb — The Black Swan (2007), on fat-tailed distributions in markets"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "web-corroborated fact-check + adversarial refute"}
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Taburan & ekor tebal
+
+Taburan menerangkan kebarangkalian setiap hasil yang mungkin, dan taburan normal ("lengkung loceng") — yang paling banyak model risiko anggap secara senyap — menyatakan bahawa pergerakan ekstrem sepatutnya sangat jarang berlaku, mengecil ke arah kebarangkalian sifar apabila anda menjauh dari purata. Pulangan pasaran sebenar tidak berkelakuan begitu: ia **ber-ekor tebal**, bermaksud pergerakan ekstrem berlaku jauh lebih kerap daripada yang diramalkan oleh taburan normal. Model yang mengandaikan normaliti akan terus memberitahu anda bahawa kejatuhan "sepatutnya" tidak berlaku sehingga ia benar-benar berlaku — kerana model, bukan pasaran, yang salah.
+
+## Contoh
+
+Ambil satu saham dengan volatiliti harian tipikal (sisihan piawai, atau "sigma") kira-kira **1%** — hari yang agak biasa menggerakkan harga kira-kira ±1%. Pada 19 Oktober 1988 ("Isi Hitam"), S&P 500 jatuh **20.5%** dalam satu hari. Diukur terhadap sigma harian 1%, itu ialah **peristiwa 20.5-sigma** (20.5% ÷ 1% = 20.5). Di bawah taburan normal, pergerakan sebegitu ekstrem mempunyai kebarangkalian yang begitu hampir dengan sifar sehingga ia tidak dijangka berlaku walaupun sekali sepanjang sejarah alam semesta yang diulang berkali-kali — dan ia tetap berlaku, dalam satu hari dagangan, dalam sejarah pasaran yang direkodkan.
+
+Jurang itu — "model mengatakan hampir mustahil" berbanding "ia berlaku" — ialah masalah ekor tebal dalam satu nombor. Bukanlah Isi Hitam itu kebetulan aneh di luar sistem; ia ialah taburan normal ialah alat yang salah untuk menerangkan bagaimana pasaran bergerak pada ekstrem. Taburan ber-ekor tebal memberikan kebarangkalian yang lebih bermakna kepada pergerakan besar, itulah sebabnya model risiko yang dibina hanya berdasarkan volatiliti harian "tipikal" terus terkejut oleh pergerakan yang paling penting.
+
+## Perangkap
+
+Perangkapnya ialah menganggap anggaran risiko yang dibina atas matematik taburan normal ("pergerakan sebesar ini ialah peristiwa 6-sigma, hampir mustahil") seolah-olah ia menyelesaikan soalan sama ada pergerakan itu boleh berlaku. Ia nampak teliti kerana ia kuantitatif — kiraan sigma yang terdengar tepat dibaca sebagai lebih boleh dipercayai daripada "pasaran boleh melakukan perkara mengejutkan" yang kabur. Kebiasaan yang betul: anggap sebarang tuntutan "ini tidak boleh berlaku" yang dibina atas andaian taburan normal sebagai penerangan tentang zon selesa *model*, bukan had keras pada *pasaran* — dan saiz risiko dengan mengandaikan ekor lebih tebal daripada yang dikatakan model.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Volatiliti harian biasa (sigma) sesuatu saham ialah 1%. Satu pergerakan harian sebanyak 20.5% berlaku — berapakah sisihan piawai pergerakan itu, dan apakah yang dikatakan oleh taburan normal mengenai kebarangkaliannya?"
+  options={[
+    "2.05 sigma — pergerakan yang agak biasa di mana taburan normal menganggapnya tidak istimewa",
+    "20.5 sigma — pergerakan yang dianggap hampir mustahil oleh taburan normal, yang tepat sebabnya pasaran berkod tebal sentiasa menghasilkan pergerakan yang model normal kata tidak sepatutnya berlaku",
+    "205 sigma — pengiraan ini mendarab dua peratusan tersebut bersama-sama bukannya membahagi",
+    "0.205 sigma — membahagikan angka volatiliti yang lebih kecil dengan angka pergerakan yang lebih besar"
+  ]}
+  answer={1}
+  explanation="20.5% ÷ 1% = 20.5 sisihan piawai. Di bawah taburan normal, pergerakan sebanyak itu sigma dianggap hampir mustahil — namun hari perdagangan tunggal seperti ini telah berlaku dalam sejarah pasaran yang direkodkan, yang merupakan jurang kod tebal yang diterangkan dalam pelajaran ini. Pilihan lain sama ada membahagi dalam arah yang salah atau meletakkan titik perpuluhan dengan salah."
+/>
+
+<Quiz
+  question="Model risiko melaporkan bahawa kerugian yang diproyeksikan ialah 'peristiwa 6-sigma, hampir mustahil' berdasarkan volatiliti harian biasa aset tersebut. Logik kod tebal pelajaran ini sepatutnya membuatkan anda berbuat apa dengan tuntutan itu?"
+  options={[
+    "Terima pada nilai muka — kiraan sigma yang diukur dengan tepat adalah lebih boleh dipercayai daripada penilaian risiko kualitatif",
+    "Abaikan anggaran risiko berasaskan volatiliti sepenuhnya, kerana ia sentiasa tidak bermakna dalam pasaran berkod tebal",
+    "Anggap kerangka '6-sigma, mustahil' sebagai pernyataan tentang apa yang diandaikan oleh model taburan normal, bukan had keras terhadap apa yang boleh dilakukan pasaran — dan saizkan posisi seolah-olah risiko ekor sebenar lebih tebal daripada yang diimplikasikan oleh model",
+    "Kesimpulan bahawa model mesti membuat kesilapan aritmetik, kerana tiada risiko sebenar yang tepat 6 sigma"
+  ]}
+  answer={2}
+  explanation="Matlamat utama pelajaran ini ialah anggaran risiko taburan normal meremehkan risiko ekor sebenar dalam pasaran — tuntutan '6-sigma, hampir mustahil' menggambarkan andaian model, bukan jaminan tentang pasaran. Ini bukan bermakna anggaran volatiliti tidak berguna (jawaban 'abaikan anggaran berasaskan volatiliti sepenuhnya' melampau kepada nihilisme) atau bahawa model tersebut sememangnya mengandungi kesilapan aritmetik — ia bermakna andaian taburan normal model adalah alat yang salah untuk ekstrem, jadi respons yang masuk akal ialah saizkan risiko dengan mengandaikan ekor yang lebih tebal daripada yang dinyatakan oleh model."
+/>
+
+## Cuba sendiri
+
+Buka chat Market Analyst pada ticker yang volatil dan minta volatiliti harian terkini (sigma). Bahagikan mana-mana pergerakan satu hari yang anda dapati dalam sejarah harganya dengan sigma itu untuk melihat berapa sisihan piawai yang diwakili, dan bandingkan dengan apa yang diramalkan oleh taburan normal. Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
+
+## Kesimpulan
+
+Pasaran bergerak dalam ekor tebal, bukan lengkung loceng — anggap sebarang tuntutan risiko "ini hampir mustahil" yang dibina atas matematik taburan normal sebagai meremehkan kebarangkalian sebenar pergerakan ekstrem, bukan sebagai menyelesaikan soalan tersebut.

@@ -1,0 +1,77 @@
+---
+id: "362_the_post_mortem"
+title: "Analisis pasca-perdagangan yang bukan untuk mencari kesalahan"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 3
+track: "decision_evaluation"
+code: "EVAL 6"
+topic: "postmortem"
+prerequisites: ["357_process_vs_outcome","359_keeping_a_decision_journal"]
+tags: ["post-mortem", "process-vs-outcome", "variance", "decision-journal", "review-discipline"]
+sources: ["Annie Duke — Thinking in Bets: separating decision quality from outcome quality in review","Michael Mauboussin — The Success Equation (2012): disentangling skill from luck"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Post-mortem yang bukan perburuan tuduh-menyuduh
+
+Satu-satunya tugas post-mortem adalah menentukan keputusan mana yang perlu diulang. Ini tidak sama dengan menentukan kedudukan mana yang menjana wang. Kedudukan yang dicatat dalam jurnal dan rugi, dengan tahap pembatalan (invalidation) yang ditakrifkan awal dan dipatuhi pada hari tersebut, adalah proses yang kukuh yang menghadapi varians — ulangi ia. Kedudukan yang tidak dicatat dalam jurnal dan untung adalah amaran yang memakai pakaian kemenangan. Apabila semakan bertukar menjadi perburuan untuk mencari siapa yang perlu disalahkan, ia berhenti menghasilkan maklumat tersebut sepenuhnya, kerana respons yang boleh dipercayai terhadap tuduhan adalah mencatat lebih sedikit keputusan. Pelajaran ini memberikan pemisahan dan satu soalan yang mengekalkan ketulusannya.
+
+## Contoh
+
+Ambil empat kedudukan simulasi yang ditutup dari satu suku dalam jurnal anda sendiri. Angka-angka ini dicipta untuk mengekalkan ketepatan aritmetik — tiada ticker sebenar, tiada harga sebenar.
+
+- **A** — tesis dan tahap pembatalan ditulis sebelum masuk; henti dipatuhi tepat seperti yang dinyatakan: **−1.2%** daripada portfolio.
+- **B** — tiada entri jurnal; saiz digandakan berdasarkan firasat selepas masuk; henti diturunkan dua kali: **+4.1%**.
+- **C** — tesis dicatat dalam jurnal, pembatalan ditakrifkan, dimainkan seperti yang ditulis: **+2.3%**.
+- **D** — tesis dicatat dalam jurnal, tetapi ditutup pada lilin merah pertama, jauh di atas tahap pembatalan yang telah anda takrifkan: **−0.4%**.
+
+Bersih untuk suku tersebut: −1.2 + 4.1 + 2.3 − 0.4 = **+4.8%**.
+
+Skor mengikut hasil dan anda mempunyai dua pemenang (B, C) dan dua kalah (A, D). Skor mengikut proses — adakah anda mengikuti apa yang anda tulis sebelum hasil wujud, seperti yang dikehendaki oleh <Lesson id="359_keeping_a_decision_journal"/>? — dan anda mempunyai dua yang kukuh (A, C) dan dua yang rosak (B, D). Pembahagian dua-dua yang sama, tetapi ahli yang berbeza: kad skor bersetuju pada C dan D dan tidak bersetuju pada A dan B.
+
+Perbezaan ini adalah di mana kebanyakan nilai semakan berada — tetapi ia bukan semuanya, dan membaca hanya perbezaan akan menjatuhkan D ke lantai. A adalah proses yang kukuh yang rugi; ulangi ia. B adalah proses yang rosak yang untung — dan ia menghasilkan 4.1 daripada 4.8 mata, **85% daripada keuntungan bersih suku**, daripada satu urutan keputusan yang paling anda tidak mahu ulangi. D adalah kesilapan proses yang hampir tidak dicatatkan dalam P&L, kerana keluar sebelum pembatalan anda sendiri masih tidak mengikuti pelan anda.
+
+## Perangkap
+
+Perangkapnya ialah membuka semakan dengan bertanya "apa yang salah?" dan berhenti pada kekalahan terbesar. Ia terasa seperti akauntabiliti — seseorang ditahan untuk akaun, satu pelajaran seolah-olah diekstrak. Apa yang sebenarnya ia lakukan ialah mengajar pemeriksa (anda, atau penganalisis dalam pasukan anda) bahawa keputusan yang ditulis adalah peluru. Tesis seterusnya dicatat secara kabur, atau selepas fakta, atau tidak langsung, dan rekod yang bergantung pada post-mortem dengan perlahan-lahan hilang. Soalan pembukaan yang betul adalah proses-dahuluan dan buta hasil: *dengan hanya apa yang ada di halaman sebelum masuk, adakah ini satu keputusan yang akan saya buat lagi?* Jawab itu, kemudian lihat P&L — jangan sebaliknya.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Empat posisi tertutup: A (dijurnal, invalidasi ditakrifkan, stop dihormati) −1.2%; B (tiada entri jurnal, saiz digandakan semasa dagangan, stop diubah dua kali) +4.1%; C (dijurnal, dimainkan seperti yang ditulis) +2.3%; D (dijurnal, tetapi ditutup awal di atas tahap invalidasi sendiri) −0.4%. Bersih +4.8%. Apakah kesimpulan post-mortem yang berfokus pada proses?"
+  options={[
+    "Proses suku itu kukuh — hasil bersih +4.8% merentasi empat posisi ialah bukti yang penting",
+    "Posisi A perlu dikeluarkan dari playbooks: ia mematuhi proses sepenuhnya dan masih rugi",
+    "Posisi D ialah satu yang perlu dicopy — kerugian 0.4% ialah drawdown terkecil daripada empat posisi",
+    "Posisi B paling memerlukan pembetulan: proses yang tidak dijurnal, diubah saiz, dan diubah stop menghasilkan 85% daripada keuntungan bersih tempoh, yang menjadikannya amaran bukan pengesahan"
+  ]}
+  answer={3}
+  explanation="B menyumbang 4.1 daripada 4.8 mata bersih — 4.1 / 4.8 = 85% — sambil melanggar setiap peraturan yang jurnal wujud untuk kuatkan, jadi saiznya tepat apa yang membuatnya berbahaya: berulang merentasi dua puluh posisi, stop yang diubah akhirnya bertemu posisi yang tidak kembali. Jawapan 'proses suku itu kukuh kerana ia mencatatkan bersih +4.8%' membaca hasil agregat sebagai penghakiman terhadap proses, yang merupakan kesilapan yang dinamakan dalam pelajaran ini. Membuang A menghukum keputusan yang mentakrifkan dan menghormati invalidasi sendiri dan hanya memenuhi varians. Dan D bukan sesuatu untuk dicopy — menutup di atas tahap invalidasi sendiri ialah kesilapan proses yang kerugian kecil secara kebetulan menyembunyikannya."
+/>
+
+<Quiz
+  question="Semakan mendapati satu posisi yang rugi 1.2%. Thesis dijurnal sebelum entry, tahap invalidasi ditakrifkan lebih awal, dan stop dihormati tepat seperti yang ditulis. Apakah kesimpulan post-mortem yang betul?"
+  options={[
+    "Proses gagal, kerana ia rugi wang — tulis semula peraturan entry sebelum posisi seterusnya",
+    "Proses kukuh dan perlu diulang; kerugian ialah varians dalam keputusan yang mentakrifkan invalidasi sendiri sebelum hasil wujud",
+    "Tiada kesimpulan tersedia sehingga sekurang-kurangnya 100 posisi tertutup, jadi entry ditinggalkan tanpa semakan",
+    "Entri jurnal perlu disemak sekarang untuk mencerminkan apa yang sebenarnya dilakukan pasaran, supaya rekod itu tepat"
+  ]}
+  answer={1}
+  explanation="Dihakimi pada saat ia dibuat — piawaian proses-vs-hasil — keputusan ini menyatakan thesis, menamakan apa yang akan membuktikan ia salah, dan bertindak atasnya apabila ia berlaku. Tiada apa dalamnya perlu diubah, jadi ia diulang. Jawapan 'ia rugi wang, jadi tulis semula peraturan entry' ialah akibat: ia mengedit proses yang berfungsi berdasarkan bukti satu draw. Menunggu 100 posisi tertutup membingungkan semakan per-keputusan dengan penskoran kadar asas yang memerlukan saiz sampel — anda boleh menilai proses satu keputusan hari ini tanpa mendakwa mengetahui kadar hit anda. Dan menyemak semula entri jurnal untuk sepadan dengan hasil memusnahkan satu artifak yang menjadikan semakan itu mungkin."
+/>
+
+## Cuba sendiri
+
+Buka Jurnal Keputusan, pilih tiga kedudukan yang ditutup, dan tutup lajur P&L. Labelkan setiap satu hanya mengikut proses — kukuh atau rosak — menggunakan hanya apa yang ditulis sebelum masuk. Kemudian buka P&L dan tambah label kedua, positif atau negatif. Setiap kedudukan di mana dua label tidak sepadan adalah satu pelajaran — dan begitu juga setiap kedudukan yang dilabelkan rosak, apa jua yang dilakukan oleh P&L. Peraturan kedua inilah yang menangkap D: proses rosak, kerugian kecil, kedua-dua label negatif, tiada apa untuk diperhatikan oleh ujian perbezaan. Melakukannya dalam urutan itu adalah matlamatnya: label proses mesti tetap sebelum hasil boleh mewarnainya. Kemudian minta Research Manager berhujah label bertentangan pada perdagangan paling untung anda. Ingat: AMI adalah simulator latihan, dan outputnya adalah artifak latihan, bukan nasihat pelaburan.
+
+## Terasan
+
+Nilai keputusan berdasarkan apa yang ditulis sebelum hasil wujud: kerugian yang dicatat dalam jurnal adalah varians dan perlu diulang, kemenangan yang tidak dicatat dalam jurnal adalah amaran. Semakan yang berburu tuduhan berhenti mencatat keputusan sama sekali.

@@ -1,0 +1,66 @@
+---
+id: "344_monte_carlo_simulation"
+title: "Simulasi Monte Carlo"
+duration_min: 5
+level: 12
+module: 21
+difficulty: 4
+track: "quant_methods"
+code: "QUANT 10"
+topic: "monte_carlo"
+prerequisites: ["343_out_of_sample_and_walk_forward_validation"]
+tags: ["monte-carlo", "simulation", "tail-risk", "quant"]
+agent_callouts: ["trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Simulasi Monte Carlo
+
+Satu ujian semula (backtest) sejarah hanya menunjukkan satu laluan — satu urutan kemenangan dan kerugian yang benar-benar berlaku. Simulasi Monte Carlo mengajukan soalan berbeza: dengan kebarangkalian menang sebenar dan ganjaran strategi tersebut, bagaimanakah *taburan* hasil yang mungkin kelihatan merentasi banyak laluan yang dijana secara rawak, termasuk laluan yang kurang bernasib baik yang tidak pernah ditunjukkan oleh satu laluan sejarah? Ia menukar "ini adalah satu lengkung ekuiti yang berlaku" kepada "ini adalah julat lengkung ekuiti yang mungkin, dan seberapa kerap setiap jenis berlaku."
+
+## Contoh
+
+Ingatlah susun atur 60% menang, +$500/- $300 dari pelajaran nilai jangkaan (EV = +$180/perdagangan). Satu ujian semula sejarah mungkin menunjukkan lengkung ekuiti yang licin dan sentiasa meningkat — tetapi itu hanyalah satu laluan daripada banyak laluan yang boleh dihasilkan oleh proses 60/40 yang sama. Simulasi Monte Carlo bertanya: merentasi banyak urutan 100 perdagangan rawak yang ditarik daripada proses 60%/40% yang sama, seberapa kerap satu siri kerugian yang buruk berlaku? Ambil kes ekor paling mudah — lima kerugian berturut-turut. Kebarangkalian lima kerugian berturut-turut = 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = **0.01024**, atau kira-kira **1.02%**.
+
+Ini bermakna dalam kira-kira 1 daripada setiap 100 rentetan lima perdagangan, strategi bernilai-EV positif yang tulen ini menghasilkan siri lima kerugian — satu peristiwa ekor yang nyata dan boleh kuantifikasikan, bukan tanda bahawa kelebihan (edge) telah rosak. Satu ujian semula sejarah, yang hanya ever menunjukkan satu urutan yang berlaku, mungkin tidak pernah mengandungi siri lima kerugian langsung — memberikan kesan licin yang palsu terhadap proses yang, apabila dijalankan merentasi banyak laluan yang mungkin, menghasilkan rentetan buruk yang nyata pada jadual yang boleh diramal.
+
+## Perangkap
+
+Perangkapnya ialah melihat satu lengkung ekuiti sejarah yang licin dan menganggap itu sebagai gambaran yang mewakili apa yang akan dilakukan strategi ke hadapan — apabila ia hanyalah satu laluan yang berlaku, daripada taburan laluan yang lebih luas yang kebarangkalian asas yang sama boleh hasilkan. Ia terasa menenangkan kerana ia adalah sejarah *sebenar*, bukan hipotetikal. Kebiasaan yang betul: walaupun dengan EV positif yang tulen, tanyakan apa yang akan ditunjukkan oleh simulasi Monte Carlo bagi banyak laluan rawak daripada kebarangkalian menang/kerugian yang sama — termasuk seberapa kerap siri kerugian dengan panjang tertentu muncul — supaya penurunan sebenar tidak disalah anggap sebagai kegagalan kelebihan.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="Bagi persediaan yang menang 60% masa dan kalah 40% masa (perdagangan bebas), berapakah kebarangkalian lima kekalahan berturut-turut?"
+  options={[
+    "≈1.02% — 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = 0.01024",
+    "40% — kebarangkalian kekalahan perdagangan tunggal terpakai tanpa perubahan kepada sebarang panjang siri",
+    "8% — membahagikan kebarangkalian kekalahan 40% dengan 5",
+    "0.4% — mendarab 0.4 dengan 1% bukannya mengunggulkannya kepada kuasa 5"
+  ]}
+  answer={0}
+  explanation="Kebarangkalian perdagangan bebas mendarab: 0.4⁵ = 0.4×0.4×0.4×0.4×0.4 = 0.01024, atau kira-kira 1.02%. Pilihan lain sama ada menggunakan kebarangkalian perdagangan tunggal tanpa perubahan, membahagikan apabila ia sepatutnya mendarab, atau menggunakan operasi yang salah sepenuhnya."
+/>
+
+<Quiz
+  question="Uji balik sejarah tunggal seorang pedagang bagi persediaan 60/40 ini menunjukkan lengkung ekuiti yang lancar tanpa sebarang siri lima kekalahan di mana-mana. Memandangkan kebarangkalian ≈1.02% bagi siri lima kekalahan yang dikira di atas, apa yang sepatutnya disimpulkan oleh pedagang?"
+  options={[
+    "Strategi ini lebih selamat daripada yang ditunjukkan oleh matematik, kerana laluan sejarah sebenar tidak pernah menunjukkan siri lima kekalahan",
+    "Angka 1.02% mestilah salah, kerana uji balik sebenar sepatutnya sentiasa sepadan dengan kebarangkalian teori dengan tepat",
+    "Ketidakhadiran siri lima kekalahan dalam satu laluan sejarah tidak bermaksud siri sedemikian tidak mungkin berlaku pada masa hadapan — ia mungkin hanya bermaksud laluan ini (daripada banyak proses 60/40 yang sama yang boleh dihasilkan) tidak mengandungi satu, dan simulasi Monte Carlo merentasi banyak laluan rawak masih akan menunjukkan siri seperti ini berlaku pada jadual yang boleh diramal",
+    "Siri lima kekalahan adalah mustahil untuk sebarang strategi dengan kadar kemenangan melebihi 50%"
+  ]}
+  answer={2}
+  explanation="Uji balik sejarah tunggal hanyalah satu realisasi proses rawak yang mendasari — ia boleh berlaku untuk tidak mengandungi siri lima kekalahan walaupun matematik menyatakan siri sedemikian berlaku dalam kira-kira 1 daripada setiap 100 rentetan lima perdagangan pada jangka masa panjang. Itulah inti pati Monte Carlo: mensimulasikan banyak laluan mendedahkan julat hasil yang sebenar, termasuk yang tidak bernasib baik yang satu laluan sejarah mungkin telah dielakkan secara kebetulan."
+/>
+
+## Cuba sendiri
+
+Ambil kadar menang dan saiz ganjaran strategi dari Jurnal Keputusan anda dan kira secara manual kebarangkalian siri 3 atau 5 kerugian dengan menaikkan kebarangkalian kerugian kepada kuasa tersebut. Bandingkan dengan sama ada anda benar-benar mengalami siri sepanjang itu. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan.
+
+## Penutup
+
+Satu lengkung ekuiti sejarah hanyalah satu laluan daripada banyak yang kebarangkalian sebenar strategi boleh hasilkan — kira kebarangkalian siri kerugian yang nyata secara langsung, daripada menilai risiko berdasarkan satu laluan yang berlaku.

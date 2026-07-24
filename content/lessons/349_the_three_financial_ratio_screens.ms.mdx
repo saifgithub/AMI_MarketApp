@@ -1,0 +1,71 @@
+---
+id: "349_the_three_financial_ratio_screens"
+title: "Tiga skrin nisbah kewangan"
+duration_min: 6
+level: 13
+module: 25
+difficulty: 3
+track: "islamic_finance"
+code: "SHARIA 3"
+topic: "financial_ratio_screens"
+prerequisites: ["348_the_business_activity_screen"]
+tags: ["islamic-finance", "financial-ratios", "debt-ratio", "liquidity-ratio", "income-ratio", "aaoifi"]
+sources: ["AAOIFI — Shariah Standard No. 21, financial ratio screening thresholds", "Dow Jones Islamic Market Index Methodology — 33%/33%/5% ratio criteria"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Tiga skrin nisbah kewangan
+
+Syarikat yang lulus skrin aktiviti perniagaan masih perlu lulus tiga nisbah kuantitatif, setiap satu disemak terhadap had maksimum di bawah metodologi gaya AAOIFI: hutang berfaedah sebagai peratusan daripada nilai pasaran (had 33%), tunai ditambah sekuriti berfaedah sebagai peratusan daripada nilai pasaran (had 33%), dan pendapatan (faedah) yang tidak patuh sebagai peratusan daripada jumlah hasil (had 5%). Ketiganya mesti lulus — gagal pada mana-mana satu akan menggagalkan keseluruhan skrin. AMI mengira ketiga-tiga nisbah ini dengan tepat, melalui logik skrin yang sama yang berjalan di sebalik bendera Mandat halal, bukan secara manual. Pada akhir pelajaran ini, anda akan dapat membaca penyata kedudukan sebenar melalui ketiga-tiga nisbah ini dan mengetahui mengapa syarikat boleh lulus skrin aktiviti tetapi masih gagal di sini.
+
+## Contoh
+
+Ambil penyata kedudukan hipotetikal yang dibina seperti syarikat ekonomi sebenar yang berhutang tinggi — fikirkan beban hutang yang dibawa secara sejarah oleh pembawa telekomunikasi lama seperti **AT&T (T)**: hutang berfaedah sebanyak **$138,000M**, nilai pasaran sebanyak **$128,000M**, tunai ditambah sekuriti berfaedah sebanyak **$4,200M**, pendapatan (faedah) tidak patuh sebanyak **$900M**, dan jumlah hasil sebanyak **$122,000M**. Jalankan ini melalui fungsi skrin AMI (`sharia_screen`) dan output tepat ialah: **nisbah hutang 107.8%** (had 33% — **gagal**), **nisbah likuiditi 3.3%** (had 33% — **lulus**), **nisbah pendapatan 0.7%** (had 5% — **lulus**). Keseluruhan: **gagal**, hanya pada nisbah hutang, walaupun dua nisbah lain bersih dengan mudah. Ini adalah bentuk kegagalan perniagaan ekonomi sebenar yang realistik — bukan kasino, bukan kilang bir, hanya leverage skala telekom biasa yang berlaku melebihi satu pertiga daripada nilai pasaran. Bandingkan ini dengan pelajaran puncak kemudian dalam modul ini, di mana penyata kedudukan teknologi yang kurang berhutang lulus ketiga-tiganya dengan mudah.
+
+## Perangkap
+
+Pemula mengandaikan bahawa sekali syarikat lulus skrin aktiviti perniagaan (<Lesson id="348_the_business_activity_screen"/>), ia adalah "secara asasnya halal" — memperlakukan skrin nisbah sebagai formaliti. Contoh berbentuk AT&T di atas menunjukkan mengapa itu salah: pembawa telekomunikasi mempunyai teras perniagaan yang sepenuhnya dibenarkan dan masih gagal secara langsung pada leverage sahaja. Model mental yang betul: skrin nisbah bukan cap getah pada syarikat yang telah lulus pemeriksaan kualitatif — ia secara bebas meluluskan perniagaan yang benar-benar dibenarkan yang hanya meminjam terlalu banyak berbanding dengan nilai pasarnya. Tahap hutang, bukan jenis perniagaan, adalah sebab yang lebih biasa mengapa syarikat yang biasa-biasa sahaja gagal skrin keseluruhan.
+
+## Steelman
+
+Pengecam mungkin berhujah: "Had hutang kepada nilai pasaran 33% adalah sewenang-wenangnya — mengapa bukan 25% atau 40%? Nilai pasaran sendiri bergegar setiap hari berdasarkan sentimen, jadi saham boleh berubah dari patuh ke tidak patuh hanya pada pergerakan harga, dengan penyata kedudukan sebenar syarikat yang tidak berubah." Itu adalah kritikan yang adil, dan itulah sebabnya <Lesson id="350_standards_differ_why_the_same_stock_flips"/> merangkumi perselisihan piawaian — AAOIFI, Bursa SAC, dan penyedia indeks utama tidak semua menggunakan ambang yang sama atau penyebut yang sama (sesetengah menggunakan purata nilai pasaran 12 bulan trailing sebagai gantikan untuk satu tangkapan sehari, tepat untuk meredam volatiliti ini). Pengecal: jika garis 33% itu benar-benar bunyi sewenang-wenangnya, setiap penentu piawaian akan telah bersepakat pada nombor yang sangat berbeza; sebaliknya, AAOIFI, Dow Jones Islamic, S&P Shariah, dan MSCI Islamic semua berkumpul berhampiran satu pertiga — bukti bahawa ambang tersebut mencerminkan pertimbangan sebenar tentang "berapa banyak daripada nilai perusahaan yang secara efektif dibiayai oleh hutang berfaedah," bukan nombor bulat sewenang-wenangnya.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah syarikat mempunyai hutang berfaedah sebanyak $138,000M berbanding nilai pasaran $128,000M. Nisbah tunai-dan-sekuriti berfaedah serta nisbah pendapatan keduanya lulus dengan selesa. Apakah keputusan keseluruhan skrin Syariah?"
+  options={[
+    "Ia lulus secara keseluruhan, kerana dua daripada tiga nisbah adalah bersih dan nisbah hutang hanyalah satu hal teknikal minor",
+    "Ia gagal secara keseluruhan — nisbah hutang di sini ialah 107.8%, jauh melebihi had 33%, dan skrin memerlukan ketiga-tiga nisbah untuk lulus, bukan majoriti",
+    "Ia lulus kerana nilai pasaran melebihi pendapatan mengimbangi jumlah hutang yang tinggi",
+    "Skrin tidak boleh dijalankan kerana hutang melebihi nilai pasaran, yang tidak disokong oleh formula"
+  ]}
+  answer={1}
+  explanation="138,000/128,000 × 100 = 107.8%, dikira tepat melalui fungsi penyaringan AMI, jauh melebihi had 33% — dan skrin memerlukan SEMUA tiga nisbah untuk lulus, bukan majoriti, jadi satu nisbah yang gagal menyebabkan keseluruhan skrin gagal tanpa mengira betapa bersihnya dua nisbah lain. Hutang melebihi nilai pasaran adalah tidak biasa tetapi formula nisbah mengendalikannya tanpa isu; ia bukan ralat formula, ia kegagalan skrin yang sebenar."
+/>
+
+<Quiz
+  question="Dua nisbah dalam contoh kerja pelajaran ini kembali bersih: kecairan pada 3.3% (had 33%) dan pendapatan pada 0.7% (had 5%). Apakah yang memberitahu keputusan 'gagal' keseluruhan terhadap syarikat ini tentang bagaimana skrin tiga nisbah ini dibina?"
+  options={[
+    "Bahawa satu nisbah yang gagal menyebabkan keseluruhan skrin gagal walaupun dua nisbah lain berada jauh dalam had mereka — skrin tidak mempunyai mekanisme purata atau lompatan",
+    "Bahawa ketiga-tiga nisbah dianggar, dan purata syarikat ini melebihi gabungan had",
+    "Bahawa nisbah kecairan dan pendapatan tidak penting jika nisbah hutang diperiksa dahulu",
+    "Bahawa keputusan mestilah ralat, kerana dua daripada tiga nisbah yang lulus sepatutnya cukup untuk lulus secara keseluruhan"
+  ]}
+  answer={0}
+  explanation="Setiap satu daripada tiga nisbah diperiksa secara bebas terhadap hadnya sendiri, tanpa purata atau lompatan — syarikat mesti meluluskan ketiga-tiganya, jadi satu nisbah (hutang, pada 107.8% berbanding had 33%) yang gagal adalah cukup untuk menggagalkan keseluruhan skrin tanpa mengira betapa bersihnya dua nisbah lain. Tiada pengaturcaraan yang melangkau nisbah, dan 'dua daripada tiga lulus' bukan peraturan yang digunakan oleh skrin."
+/>
+
+## Cuba sendiri
+
+Buka Tetapan → Mandat dan sahkan bendera halal adalah hidup, kemudian Kumpulkan Bilik pada kod saham sebenar yang berhutang tinggi pilihan anda. Minta Penganalisis Asas untuk menerangkan mana daripada tiga nisbah yang ia kira dan mana satu, jika ada, yang menyebabkan kegagalan. Ambil perhatian: ini adalah AMI menunjukkan bagaimana metodologi skrin berfungsi dalam konteks latihan, bukan nasihat atau hukum; gunakan ia untuk memahami disiplin, dan rujuk ahli syarak yang berkelayakan untuk sebarang keputusan portfolio sebenar.
+
+## Pengambilan
+
+Tiga nisbah bebas — hutang/nilai pasaran, likuiditi/nilai pasaran, dan pendapatan/hasil, setiap satu disekat dan setiap satu dikira dengan tepat; gagal pada mana-mana satu akan menggagalkan keseluruhan skrin, tidak kira aktiviti perniagaan. Ini dikira dengan tepat seperti penganalisis pematuhan sebenar, menggunakan metodologi yang diterbitkan yang diajar di sini untuk latihan, bukan dikeluarkan sebagai penentuan agama.
+
+*Asal usul: Ambang skrin nisbah kewangan Piawaian Syarak AAOIFI No. 21, disalin dalam metodologi Indeks Pasaran Islam Dow Jones kriteria 33%/33%/5%.*

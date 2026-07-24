@@ -1,0 +1,85 @@
+---
+id: "319_covered_call_and_protective_put"
+title: "Panggilan dilindungi & letakan pelindung"
+duration_min: 6
+level: 9
+module: 15
+difficulty: 3
+track: "asset_classes"
+code: "ASST 17"
+topic: "options_hedging_structures"
+prerequisites: ["318_the_greeks_delta_theta_vega"]
+tags: ["options", "covered-call", "protective-put", "hedging", "income"]
+sources: ["CBOE — standard covered call and protective put equity-option hedging structures"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Call dilindungi & put pelindung
+
+Pilihan (options) bukan sekadar pertaruhan bersendirian — apabila digabungkan dengan saham yang sudah anda pegang, ia menjadi struktur untuk membentuk semula risiko. Call dilindungi menjual sebahagian potensi kenaikan anda sebagai pertukaran bagi pendapatan yang dikutip hari ini. Put pelindung membayar kos hari ini sebagai pertukaran untuk lantai yang ditentukan di bawah potensi penurunan anda. Tiada satu pun yang menghapuskan risiko; setiap satu secara sengaja menukar satu jenis risiko dengan jenis lain. Selepas pelajaran ini, anda akan dapat menjelaskan apa yang masing-masing struktur korbankan dan apa yang ia beli.
+
+## Contoh
+
+Pertimbangkan seorang pedagang yang memegang 100 saham suatu saham, secara ilustratif berharga berhampiran $205, yang menjual (menulis) call terhadap saham tersebut: short call dengan harga larian (strike) $210, dikutip premium $4.00 per saham di awal. Ini adalah call dilindungi — "dilindungi" kerana pedagang sudah memiliki saham yang perlu dihantar jika pilihan itu dilaksanakan. Jika saham berada pada $215 pada tamat tempoh, nilai intrinsik short call ialah $5.00 — bermakna saham akan dipanggil keluar pada $210, mengurung potensi kenaikan pedagang di sana, tetapi premium $4.00 yang dikutip di awal dikekalkan tidak kira apa yang berlaku seterusnya. Dagangan ini menukar potensi kenaikan tanpa had di atas $210 kepada pendapatan tetap serta keuntungan yang terkurung.
+
+Put pelindung menjalankan dagangan yang bertentangan: seorang pedagang yang memegang saham berhampiran $195 membeli put dengan harga larian $190 dengan premium $5.00, membayar untuk lantai di bawah kedudukan mereka. Titik pulangan modal (break-even) untuk kaki put ini sahaja ialah $185.00 (harga larian tolak premium) — di bawah $185, pembayaran put akan terus bertambah, mengimbangi kerugian saham yang lebih lanjut. Jika saham jatuh ke $170, pembayaran put pelindung ialah $15.00 per saham: tanpa put, penurunan itu akan memukul saham tanpa perisai; dengan put, kerugian dikurung berhampiran harga larian, tolak apa yang dibayar untuk insurans tersebut. Put itu sendiri berharga $5.00 di awal, sama seperti premium insurans tetap yang dibayar sama ada tuntutan itu digunakan atau tidak.
+
+## Perangkap
+
+Pemula berfikir call dilindungi hampir seperti wang percuma — memanen premium, tiada kos sebenar. Mereka terlepas bahawa kosnya ialah potensi kenaikan yang terkurung, yang boleh menjadi kehilangan peluang yang besar jika saham merangkak naik dengan kuat melepasi harga larian. Kesilapan cermin: memperlakukan put pelindung sebagai insurans percuma. Ia bukan begitu — premium ialah kos terjamin yang menarik pulangan dalam setiap senario di mana kejatuhan tidak berlaku, sama seperti kos insurans rumah setiap tahun rumah tidak terbakar. Kedua-dua struktur mempunyai harga sebenar di awal; perangkapnya ialah noticing faedah dan melupakan untuk menimbang pertukaran tersebut.
+
+## Argumen Kuat
+
+Kes terkuat terhadap penjualan call dilindungi secara rutin: melakukannya secara berulang bermaksud secara sistematik mengurung kedudukan terbaik anda tepat ketika ia berjalan — anda dipanggil keluar pada kedudukan pemenang anda dan terus menunggang kedudukan losers anda, bertentangan dengan apa yang sepatutnya dilakukan oleh proses yang disiplin. Falsifier boleh diukur dalam log portfolio: lacur seberapa kerap saham dipanggil keluar semasa tempoh kemenangan terbesar anda berbanding tempoh kerugian anda. Jika penulisan call dilindungi secara senyap memotong pemenang anda, corak itu muncul sebagai purata keuntungan yang lebih rendah pada kedudukan yang dipanggil keluar berbanding dengan yang anda simpan sepenuhnya.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang trader memegang 100 saham dan menjual covered call dengan strike $210 dengan premium $4.00. Saham ditutup pada $215 pada masa luput. Apa yang berlaku?"
+  options={[
+    "Trader rugi $5.00 setiap saham kerana saham naik melebihi strike",
+    "Pilihan call luput tanpa nilai kerana $215 tidak cukup jauh di atas $210 untuk memberi kesan",
+    "Trader memegang saham dan premium $4.00, kerana call hanya membayar di atas $220",
+    "Saham dipanggil balik pada $210, tetapi trader masih memegang premium $4.00 yang dikutip di awal"
+  ]}
+  answer={3}
+  explanation="Pada $215, call strike $210 mempunyai nilai intrinsik $5.00 dan akan dilaksanakan — saham akan dipanggil balik pada $210. Ini membataskan harga jualan trader, tetapi premium $4.00 telah pun dikutip dan dipegang pada permulaan perdagangan, tidak kira apa yang berlaku kepada saham selepas itu."
+/>
+
+<Quiz
+  question="Seorang trader membeli protective put strike $190 dengan premium $5.00 pada saham yang dibeli pada harga sekitar $195. Berapakah titik impas untuk kaki put sahaja, dan apakah maksudnya?"
+  options={[
+    "$185.00 — strike tolak premium; di bawah tahap ini, pembayaran put mengimbangi penurunan lebih lanjut dalam saham",
+    "$195.00 — put hanya mula melindungi sekali saham kembali ke harga pembelian asal",
+    "$210.00 — strike tambah premium, meniru cara titik impas call berfungsi",
+    "$190.00 — tepat pada strike, kerana premium tidak mempengaruhi titik impas put"
+  ]}
+  answer={0}
+  explanation="Titik impas long put ialah strike tolak premium: $190 - $5.00 = $185.00. Di bawah tahap ini, nilai intrinsik put yang meningkat mengimbangi kerugian saham dolar demi dolar; premium sentiasa menggerakkan titik impas menjauhi strike, bagi kedua-dua call dan put."
+/>
+
+<Quiz
+  question="Seorang trader membandingkan dua struktur pada saham yang sama: covered call yang mengumpulkan premium $4.00 dengan kenaikan terhad pada $210, versus protective put yang berharga $5.00 dengan lantai impas $185.00. Menggunakan logika pembayaran dari pelajaran ini dan logika nilai intrinsik/masa dari pelajaran diagram pembayaran, pernyataan manakah yang betul menerangkan pertukaran asas antara keduanya?"
+  options={[
+    "Kedua-dua struktur adalah sama dalam kesan — mengumpulkan premium dan membayar premium menghasilkan portfolio yang sama",
+    "Covered call menukar potensi kenaikan di atas strike untuk pendapatan terjamin hari ini; protective put membayar kos terjamin hari ini sebagai pertukaran untuk lantai terhad terhadap penurunan lebih lanjut — satu memonetisasi siling terhad, yang lain membeli lantai",
+    "Covered call mempunyai risiko tanpa had manakala protective put tiada risiko langsung",
+    "Tiada struktur mengubah profil risiko kedudukan berbanding memegang saham secara bersendirian"
+  ]}
+  answer={1}
+  explanation="Ini adalah perdagangan imej cermin: covered call menjual sebahagian potensi kenaikan untuk wang tunai hari ini (pendapatan), manakala protective put membelanjakan wang tunai hari ini untuk membeli lantai terhadap penurunan (insurans). Kedua-dua mengubah bentuk risiko-dan-pulangan kedudukan berbanding memegang saham secara bersendirian — tiada struktur bebas risiko, dan mereka bukan perdagangan sama dengan label berbeza."
+/>
+
+## Cuba sendiri
+
+Buka Jurnal Keputusan dan cari kedudukan yang anda lacur, atau pilih ticker senarai tonton. Tanya diri sendiri: adakah anda lebih suka mengurung potensi kenaikan kedudukan ini untuk pendapatan hari ini (call dilindungi) atau membayar untuk lantai di bawahnya (put pelindung) jika anda memegang saham sebenar? Tiada dagangan pilihan dalam AMI Trade — ini adalah latihan pemikiran dalam penalaran pertukaran, bukan pesanan langsung.
+
+## Pengambilan
+
+Call dilindungi menjual siling anda untuk pendapatan hari ini; put pelindung membeli lantai untuk anda dengan kos hari ini — kedua-duanya adalah struktur untuk membentuk risiko, bukan cara untuk menghapuskannya.
+
+*Asal usul: struktur hedging pilihan ekuiti standard CBOE — call dilindungi dan put pelindung ialah dua cara buku teks untuk menggabungkan saham dengan satu pilihan.*

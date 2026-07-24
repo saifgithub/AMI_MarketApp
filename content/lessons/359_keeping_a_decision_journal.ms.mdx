@@ -1,0 +1,77 @@
+---
+id: "359_keeping_a_decision_journal"
+title: "Menjurnal Keputusan"
+duration_min: 5
+level: 14
+module: 24
+difficulty: 2
+track: "decision_evaluation"
+code: "EVAL 3"
+topic: "decision_journal"
+prerequisites: ["357_process_vs_outcome"]
+tags: ["decision-journal", "hindsight-bias", "invalidation", "pre-commitment", "process-discipline"]
+sources: ["Daniel Kahneman — Thinking, Fast and Slow: hindsight bias and the narrative fallacy", "Philip Tetlock & Dan Gardner — Superforecasting: recording forecasts so they can be scored"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Menyimpan jurnal keputusan
+
+Keputusan yang tidak direkodkan dalam jurnal tidak dapat ditinjau dengan jujur, kerana versi yang anda ingat bukanlah versi yang anda buat. Sebaik sahaja hasil wujud, ingatan secara senyap menulis semula tesis untuk menyesuaikan diri dengannya — anda ingat diri anda lebih pasti daripada yang sebenarnya, atau telah meramalkan perkara yang benar-benar berlaku. Penyelesaiannya adalah mekanikal, bukan psikologi: tulis tesis, tahap keyakinan, dan keadaan pembatalan *sebelum* hasil wujud. Pada akhir pelajaran ini, anda akan mampu menulis entri yang bertahan daripada kesilapan akibat hasil tersebut.
+
+## Contoh
+
+Ambil syarikat perindustrian kap sederhana hipotetikal — tiada ticker sebenar, kerana yang penting di sini adalah bentuk entri, bukan syarikatnya. Anda membuka posisi pada $40, saiz 4% daripada portofolio simulasi, dan sebelum apa-apa berlaku, tulis tiga baris:
+
+- **Tesis:** margin kasar berkembang apabila kilang baharu beroperasi; pasaran masih menilai berdasarkan struktur kos lama.
+- **Keyakinan:** 60%.
+- **Pembatalan:** dua suku berturut-turut aliran tunai bebas negatif, atau penutupan mingguan di bawah $34.
+
+Dua belas minggu kemudian, ia diperdagangkan pada $48 — naik $8, atau 20% pada posisi, yang bersamaan dengan 0.8% pada tahap portofolio. Selesa. Tetapi entri masih berada di sana, dan ia menyatakan pengembangan margin. Margin telah mengecut. Pergerakan itu berasal daripada khabar angin pengambilalihan yang tidak disebut dalam tesis.
+
+Tanpa tiga baris itu, rekonstruksi jujur tidak tersedia: anda akan ingat kemenangan 20% dan failkan tesis sebagai disahkan. Dengan ketiganya, tinjauan menjadi jelas — sebab yang dinyatakan gagal, hasilnya baik, dan itu adalah dua fakta berasingan mengenai perdagangan yang sama. Baris pembatalan juga berfungsi: pada $34 anda keluar berdasarkan peraturan yang ditulis ketika anda belum mempunyai apa-apa untuk dibela, yang merupakan satu-satunya masa peraturan sedemikian murah untuk ditulis.
+
+## Perangkap
+
+Perangkapnya ialah membuat jurnal selepas fakta — membuka entri apabila posisi ditutup, atau "mengingat" tesis pada masa tinjauan. Ia terasa setara; anda ada di sana, anda tahu apa yang anda fikir. Anda tidak. Bias pandangan belakang bukan lupa, ia adalah suntingan senyap: hasil menjadi sebahagian daripada alasan yang diingat, dan alasan yang diingat sentiasa lebih tepat berkalibrasi daripada yang sebenarnya. Entri retrospektif adalah cerita tentang hasil, bukan rekod keputusan.
+
+Model mental yang betul ialah entri adalah bukti, dan bukti yang dikumpul selepas penghakiman tidak bernilai. Tulisnya semasa anda masih boleh salah — itu adalah keseluruhan mekanismenya. Apa-apa yang ditulis kemudian hanyalah komen.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda memasuki kedudukan hipotetikal pada $40 berdasarkan tesis pengembangan margin, mencatat keyakinan 60%, dan menetapkan pembatalan pada dua suku berturut-turut aliran tunai bebas negatif atau penutupan mingguan di bawah $34. Dua belas minggu kemudian, ia diperdagangkan pada $48 berdasarkan khabar angin pengambilalihan yang tidak berkaitan, dan margin telah menciut. Apakah kesimpulan yang ditulis oleh entri tersebut yang ingatan semata-mata tidak dapat berikan?"
+  options={[
+    "Bahawa tesis itu kukuh, kerana kedudukan itu naik 20% dan tiada keadaan pembatalan pernah berlaku",
+    "Bahawa angka keyakinan 60% ditetapkan terlalu rendah, kerana kedudukan itu meningkat 20%",
+    "Bahawa kenaikan +20% itu berasal dari sebab yang tidak dinamakan dalam entri — tesis margin gagal pada syaratnya sendiri, dan kenaikan itu adalah bukti berasingan yang tidak memberi apa-apa maklumat tentang keputusan tersebut",
+    "Bahawa keadaan pembatalan dipilih dengan buruk, kerana tiada satu pun daripadanya telah dicetuskan"
+  ]}
+  answer={2}
+  explanation="Entri yang ditulis mengaitkan tesis dengan pengembangan margin, dan margin telah menciut — maka sebab yang dinyatakan gagal walaupun kedudukan itu mendapat untung. Jawapan 'tesis itu kukuh kerana ia naik 20%' adalah tepat penggantian yang dihalang oleh jurnal: khabar angin pengambilalihan yang tidak berkaitan membayar anda, bukan penalaran yang anda sokong. Jawapan yang berhujah bahawa keyakinan 60% terlalu rendah menilai kebarangkalian berdasarkan satu hasil tunggal, yang tidak boleh dilakukan oleh mana-mana hasil tunggal. Dan jawapan yang mendakwa keadaan pembatalan dipilih dengan buruk sampai ke sana melalui laluan yang salah: tahap yang tidak pernah dicetuskan bukan bermakna tahap yang gagal. Bernilai untuk dinamakan, walaupun, kerana entri ini menunjukkan jurang — tiada satu pun keadaan menjejaki tuntutan margin yang menjadi asas tesis sebenar, maka tesis boleh gagal tanpa apa-apa yang dicetuskan, yang merupakan disiplin tripwire tepat <Lesson id="
+/> mengajar. Set pembatalan tidak lengkap, bukan dipilih dengan buruk kerana kekal senyap."
+/>
+
+<Quiz
+  question="Entri hipotetikal yang sama: 4% daripada portfolio, memasuki pada $40, pembatalan ditetapkan pada penutupan mingguan di bawah $34. Katakan sebaliknya pembatalan dicetuskan dan anda keluar pada $34. Apakah impak pada tahap portfolio, dan apa yang ditetapkan oleh entri yang ditulis sebelumnya semakan?"
+  options={[
+    "Kerugian portfolio 0.6% (pergerakan 15% menentang kedudukan 4%), dan entri menetapkan bahawa keluaran itu adalah peraturan yang telah diiktiraf sebelumnya yang dicetuskan, bukan tindak balas improvisasi — kejayaan proses yang bebas daripada kerugian",
+    "Kerugian portfolio 15% — pergerakan penuh menentang kedudukan adalah apa yang diserap oleh portfolio",
+    "Kerugian portfolio 0.6%, dan entri menetapkan bahawa keputusan itu adalah kesilapan, kerana keputusan yang dijurnalkan yang kehilangan wang telah disalah-nalar",
+    "Kerugian portfolio 4%, kerana keseluruhan kedudukan terdedah sekali harga menembusi tahap pembatalan"
+  ]}
+  answer={0}
+  explanation="$40 ke $34 ialah $6, atau 15% menentang kedudukan; 15% daripada kedudukan 4% ialah 0.6% daripada portfolio. Jawapan yang mendakwa kerugian portfolio 15% keliru pergerakan pada tahap kedudukan dengan yang pada tahap portfolio — saiz kedudukan adalah apa yang menukar antara keduanya. Jawapan yang mendakwa kerugian portfolio 4% memperlakukan keseluruhan kedudukan sebagai hilang, apabila hanya pergerakan 15% itu yang berlaku. Dan jawapan yang membaca kerugian sebagai bukti salah nalar adalah kesilapan yang dibina jurnal untuk menghalang: entri menunjukkan peraturan yang ditulis terlebih dahulu dan dihormati, yang merupakan apa yang kelihatan oleh proses yang baik pada perdagangan yang rugi."
+/>
+
+## Cuba sendiri
+
+Buka Jurnal Keputusan dan pilih posisi yang belum selesai. Tambah tiga baris sebelum ia selesai: tesis dalam satu ayat, keyakinan sebagai nombor, dan keadaan khusus yang akan membuatkan anda salah. Kemudian bacanya berbanding jejak yang diterangkan dalam <Lesson id="274_the_safety_floors_audit_trail"/> — Pengurus Portofolio (PM) merekodkan apa yang dilakukan oleh peraturan; hanya anda yang boleh merekodkan apa yang anda percayai. AMI adalah simulator latihan, jadi entri ini adalah bahan latihan, bukan nasihat.
+
+## Intipati
+
+Tulis tesis, keyakinan, dan pembatalan sebelum hasil wujud — selepas itu, ingatan anda adalah saksi yang telah membaca penghakiman.
