@@ -58,6 +58,13 @@ Push to `lane/CR084-BE.coder.api`, never `main`. Hand-off:
 `orchestration/dispatch/lanes/CR084-BE.coder.api.md` (`STATUS: READY_FOR_AUDIT (round 1)`) +
 `orchestration/audit/cr/CR084-BE.architect.md` (`SUBMITTED: round 1`). Commit tag `(AT:coder.api CR084)`.
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.api round 1
+
+<!-- INTEGRATED 2026-07-24: coder.api build f1e7a161 independently audited COMPLETE (round 1, zero
+findings — CR084-BE.auditor.md, six adversarial points verified, four by production-source mutation).
+Clean checkout of the 9 lane files onto main at f6f4cfd (no divergence since merge-base 668c6c4, single
+alembic head), full unit suite 1099 passed exit 0. Lane closed; coder.api WIP slot freed. Flagged
+follow-up filed as DEF099 (MergeService drops RC/plan/credit state on anon->claimed merge). -->
+
