@@ -40,6 +40,13 @@ Push to `lane/CR087-MOBILE.coder.mobile`, never `main`. Hand-off:
 + `orchestration/audit/cr/CR087-MOBILE.architect.md` (`SUBMITTED: round 1`). Commit tag
 `(AT:coder.mobile CR087)`.
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.mobile round 1
+
+<!-- INTEGRATED 2026-07-24: coder.mobile build 89e4528 independently audited COMPLETE (round 1, zero
+BLOCKER/MAJOR/MINOR). Caught + fixed a wrong spec claim (the catalogue caller defaulted to 'en', did
+NOT already pass locale); locale now threaded into both catalogue + reader via contentLocaleProvider;
+4 physical-left→directional RTL fixes. Clean checkout of the 5 mobile files onto main, flutter test
+76 green. Lane closed → 9c9cb23. -->
+

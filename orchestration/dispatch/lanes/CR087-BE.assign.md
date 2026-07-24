@@ -51,6 +51,14 @@ Push to `lane/CR087-BE.coder.api`, never `main`. Hand-off:
 notes: quiz answer_index parity, EN-fallback path, meta-canonical correctness). Commit tag
 `(AT:coder.api CR087)`.
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.api round 1
+
+<!-- INTEGRATED 2026-07-24: coder.api build abcc08b independently audited COMPLETE (round 1). The
+auditor disabled `_locale_quiz_servable` against the real corpus and got dozens of genuine
+answer_index mismatches — proving the serving-time gate is load-bearing (the assign's build-time
+parity test would have sat permanently red on the damaged CR083 corpus); deviation accepted. Clean
+checkout of the 4 BE files onto main (merge-base 487f94e, no code divergence), full unit suite 1116
+green. Lane closed → 55d54e4. -->
+
