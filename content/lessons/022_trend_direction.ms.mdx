@@ -1,0 +1,68 @@
+---
+id: "022_trend_direction"
+title: "Arah trend"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 2
+track: "technical_analysis"
+code: "TECH 3"
+topic: "trend"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "021_timeframes_and_what_they_tell_you"]
+tags: ["trend", "higher_highs", "higher_lows", "chart_reading", "structure"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Arah trend
+
+Trend adalah maklumat dengan kelebihan (edge) tertinggi pada carta, dan anda boleh membacanya tanpa sebarang penunjuk (indicator). Trend naik ialah siri titik tertinggi yang lebih tinggi dan titik terendah yang lebih tinggi. Trend turun ialah kebalikannya. Pasaran mendatar ialah ketiadaan kedua-duanya. Pada akhir pelajaran ini, anda harus dapat menandakan dua titik tertinggi ayunan (swing highs) dan dua titik terendah ayunan (swing lows) terkini pada mana-mana carta, menyatakan arah trend, dan menyatakan harga tepat di mana trend tersebut dianggap telah rosak.
+
+## Contoh
+
+Di Bursa Malaysia: lihat MAYBANK pada carta harian dari Disember 2025 hingga April 2026. Pada 8 Disember 2025, harga membentuk titik terendah ayunan pada RM9.62. Ia naik ke titik tertinggi ayunan sebanyak RM10.14 pada 22 Disember. Menurun ke RM9.78 pada 6 Januari (titik terendah yang lebih tinggi — RM9.78 berada di atas titik terendah terdahulu RM9.62). Naik ke RM10.46 pada 24 Januari (titik tertinggi yang lebih tinggi — RM10.46 berada di atas titik tertinggi terdahulu RM10.14). Menurun ke RM10.02 pada 12 Februari (titik terendah yang lebih tinggi sekali lagi). Naik ke RM10.71 pada 4 Mac (titik tertinggi yang lebih tinggi sekali lagi).
+
+Siri itu — titik terendah RM9.62, titik tertinggi RM10.14, titik terendah RM9.78, titik tertinggi RM10.46, titik terendah RM10.02, titik tertinggi RM10.71 — ialah trend naik yang standard. Setiap titik terendah adalah lebih tinggi daripada titik terendah sebelumnya; setiap titik tertinggi adalah lebih tinggi daripada titik tertinggi sebelumnya.
+
+Trend naik menjadi tidak sah (invalid) apabila MAYBANK membentuk titik terendah yang lebih rendah — khususnya, apabila ia menutup lilin harian di bawah titik terendah yang lebih tinggi terkini sebanyak RM10.02. Sehingga itu berlaku, trend adalah naik. Pada hari ia berlaku, trend telah rosak, dan logik trend naik terdahulu tidak lagi terpakai. Anda tidak perlu meramal hari tersebut. Anda hanya perlu mengetahui harga (RM10.02) dan lilin yang akan menandakannya (penutupan harian di bawah).
+
+## Perangkap
+
+Perangkap ialah menamakan semula pembalikan trend pada satu lilin merah tunggal, atau lebih teruk, pada satu tajuk berita tunggal. Pemula melihat satu hari penurunan tajam dalam trend naik, menyatakan "trend telah rosak", menjual posisi, dan memerhatikan saham itu membentuk titik terendah yang lebih tinggi dua hari kemudian serta naik ke titik tertinggi baru. Model mental yang betul: trend ditakrifkan oleh struktur, bukan oleh mood. Titik terendah yang lebih tinggi kekal sebagai titik terendah yang lebih tinggi sehingga harga menutup di bawahnya. Sehingga penutupan itu dicetak, trend belum rosak — ia hanya telah diuji. Tandakan paras itu, pantau paras itu, dan biarkan carta membuat keputusan untuk anda.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham mencetak titik ayunan berturutan dalam susunan: rendah $80, tinggi $88, rendah $84, tinggi $92, rendah $87, tinggi $96. Apakah arahannya?"
+  options={[
+    "Arah naik — tinggi yang lebih tinggi ($88, $92, $96) dan rendah yang lebih tinggi ($80, $84, $87)",
+    "Arah turun — terdapat terlalu banyak pembetulan",
+    "Sampingan — pergerakan tidak cukup besar untuk dikira",
+    "Tidak dapat ditentukan tanpa lebih banyak titik ayunan"
+  ]}
+  answer={0}
+  explanation="Setiap rendah berturut-turut lebih tinggi daripada rendah sebelumnya (80 → 84 → 87) dan setiap tinggi berturut-turut lebih tinggi daripada tinggi sebelumnya (88 → 92 → 96). Itu adalah definisi literal arah naik. Pembetulan yang dirujuk oleh jawapan arah turun adalah normal — arah naik dibina daripadanya. Tiga tinggi ayunan dan tiga rendah ayunan adalah struktur yang cukup untuk menyatakan arah; anda tidak memerlukan 'lebih banyak titik ayunan' untuk mengesahkan apa yang sudah ditunjukkan oleh urutan tersebut."
+/>
+
+<Quiz
+  question="GOOGL berada dalam arah naik harian yang jelas dengan rendah yang lebih tinggi terkini pada $173.40. Hari ini saham itu turun 4% dalam sesi dan berdagang turun ke $170.10 di tengah sesi, tetapi menutup hari pada $174.20. Seorang rakan bertanya sama ada arah naik telah pecah. Apakah bacaan yang betul, dan mengapa?"
+  options={[
+    "Tidak — rendah dalam sesi memecah tahap tetapi penutupan harian berada di atas $173.40, jadi secara struktur rendah yang lebih tinggi masih utuh; arah hanya tidak sah pada penutupan harian di bawah $173.40",
+    "Ya — rendah dalam sesi $170.10 berada di bawah $173.40, jadi arah pecah",
+    "Ya — sebarang penurunan intraday 4% memecah sebarang arah naik",
+    "Tidak — arah naik tidak pernah pecah pada satu hari tidak kira apa"
+  ]}
+  answer={0}
+  explanation="Struktur arah dibaca pada penutupan, bukan lonjakan intraday. Ekoran (wick) intraday di bawah rendah yang lebih tinggi adalah ujian, bukan pecahan — penutupan adalah yang penting. Jawapan yang memanggil rendah intraday sebagai pecahan adalah yang paling menipu kerana tahap itu secara teknikal disentuh, tetapi peraturan pelajaran adalah eksplisit: rendah yang lebih tinggi kekal sebagai rendah yang lebih tinggi sehingga harga *menutup* di bawahnya. Jawapan yang mendakwa arah naik tidak pernah pecah pada satu hari adalah kesilapan sebaliknya — arah memang pecah pada penutupan tunggal yang menentukan, dan menolak untuk mengakui itu adalah bagaimana pedagang mengekalkan posisi sehingga kerugian 30%."
+/>
+
+## Cuba sendiri
+
+Buka editor <Term id="ami_mandate" /> dan semak bahawa tetapan max_drawdown_pct dan risiko per-trade anda sepadan dengan bagaimana anda sebenarnya merancang untuk bertindak apabila trend rosak. Kemudian dalam <Term id="ami_one_on_one" /> bersama Market Analyst, tampal satu ticker dan tanya: "Tandakan dua titik tertinggi ayunan dan dua titik terendah ayunan terakhir. Apakah trendnya, dan paras harga manakah yang akan membatalkannya?" Tulis harga pembatalan itu ke dalam <Term id="ami_decision_journal" /> anda sebagai garis yang akan anda hormati.
+
+## Kesimpulan
+
+Trend ialah struktur, bukan vibe — titik tertinggi yang lebih tinggi ditambah titik terendah yang lebih tinggi ialah naik, kebalikannya ialah turun, dan trend hanya rosak apabila lilin menutup melalui paras ayunan terkini.

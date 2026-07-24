@@ -1,0 +1,72 @@
+---
+id: "014_position_sizing_basics"
+title: "Asas saiz posisi"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 2
+track: "risk_portfolio"
+code: "RISK 2"
+topic: "position_sizing"
+prerequisites: ["291_the_pm_and_your_mandate"]
+tags: ["risk", "position_sizing", "mandate", "math"]
+agent_callouts: ["portfolio_manager", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Asas saiz posisi
+
+Saiz posisi adalah satu-satunya keputusan yang menentukan sama ada siri dagangan rugi akan menghabiskan akaun anda atau hanya mencederakannya sedikit. Peraturan ini bersifat mekanikal: tentukan peratusan akaun yang akan anda rugi jika stop loss anda kena, tentukan di mana kedudukan stop loss anda, dan biarkan kedua-dua nombor itu memberitahu anda berapa banyak saham yang perlu dibeli. Apa-apa pun selain daripada ini — perasaan, "keyakinan tinggi", kebiasaan lot bulat — adalah jalan ke arah kebinasaan. Pelajaran ini mengajar formula tiga-input yang mesti dilalui oleh setiap tiket dagangan.
+
+<Animation name="position_size_calc" />
+
+## Contoh
+
+Akaun simulasi anda ialah $20,000. Mandat anda menyatakan risiko maksimum 1% setiap dagangan — jadi jumlah maksimum yang anda akan rugi pada dagangan ini ialah $200. Anda menyukai NVDA pada harga $480. Market Analyst menandakan sokongan kukuh pada $460; pecahan bersih di bawahnya akan membatalkan setup, jadi stop loss anda diletakkan pada $459.
+
+Risiko per-saham = $480 − $459 = $21.
+Saham = $200 ÷ $21 = 9 saham (bundarkan ke bawah, jangan pernah ke atas).
+Nilai notional posisi = 9 × $480 = $4,320, atau kira-kira 21.6% daripada akaun anda.
+
+Perhatikan tiga perkara. Pertama, nilai notional posisi (21.6%) adalah jauh lebih besar daripada risiko (1%) — jurang ini adalah tugas stop loss anda. Kedua, jika anda menetapkan stop loss pada $470 sebaliknya, risiko per-saham turun kepada $10 dan jumlah saham melonjak kepada 20 — semakin ketat stop loss, semakin besar posisi yang boleh anda bawa pada risiko 1% yang sama. Ketiga, ini boleh disangkal: jika NVDA menutup di bawah $459, tesis itu mati, anda keluar, dan anda telah rugi tepat $189 (9 × $21). Di Bursa Malaysia, formula yang sama berfungsi dalam MYR — akaun RM50,000 pada risiko 1%, masuk MAYBANK RM10.20, stop RM9.95: risiko per-saham RM0.25, saham = RM500 ÷ RM0.25 = 2,000.
+
+## Perangkap
+
+Perangkapnya ialah saiz berdasarkan "apa yang terasa seperti posisi sebenar" — membeli 50 saham kerana 9 kelihatan kecil. Pemula memilih jumlah saham dahulu, kemudian mencari stop loss yang sesuai dengan perasaan mereka. Trader akan melaksanakan apa sahaja yang anda beritahu kepadanya, tetapi <Term id="ami_pm_safety_floor" /> wujud kerana ini adalah kesalahan yang tepat yang terkumpul merentasi siri dagangan. Model mental yang betul: risiko akaun ialah input, jumlah saham ialah output. Anda tidak pernah memutuskan berapa banyak saham dahulu. Saiz posisi adalah apa sahaja yang diberikan oleh matematik selepas stop loss diletakkan di mana carta memberitahu anda ia mesti berada — walaupun itu bermaksud 3 saham, walaupun itu bermaksud dagangan itu tidak bernilai untuk diambil langsung.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Akaun ialah $10,000. Risiko maksimum setiap dagangan ialah 1%. Anda membeli AAPL pada $200 dengan henti rugi pada $195. Berapa banyak saham?"
+  options={[
+    "20 saham",
+    "50 saham",
+    "100 saham",
+    "2,000 saham"
+  ]}
+  answer={0}
+  explanation="1% daripada $10,000 = $100 risiko. Risiko setiap saham = $200 − $195 = $5. Saham = $100 ÷ $5 = 20. Membahagikan akaun dengan harga saham memberikan 50 — ini saizkan posisi kepada keseluruhan akaun anda, bukan kepada risiko yang anda sanggup ambil."
+/>
+
+<Quiz
+  question="Anda mempunyai akaun $50,000, risiko maks 1%, dan mendapati setup di mana henti rugi yang sah secara teknikal hanya $0.50 di bawah harga masuk. Rakan berkata 'ketatkan henti rugi kepada $0.20 supaya anda boleh beli lebih banyak saham.' Apakah masalahnya?"
+  options={[
+    "Henti rugi yang lebih ketat melanggar lantai keselamatan PM secara automatik.",
+    "Bilangan saham yang lebih besar mencetuskan komisen yang lebih tinggi, itulah isu sebenar.",
+    "Risiko dolar setiap dagangan kekal pada 1%, tetapi menggerakkan henti rugi lebih dekat daripada yang disokong carta bermaksud anda akan dihentikan oleh hingar normal, menukar tesis yang sah kepada kerugian terjamin.",
+    "Tiada masalah — henti rugi yang lebih ketat sentiasa mengurangkan risiko, jadi anda boleh membawa lebih banyak saham pada risiko dolar yang sama."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang memikat ialah 'henti rugi yang lebih ketat sentiasa mengurangkan risiko' — dari segi matematik, 1% tetap 1%. Tetapi saizkan posisi hanya berfungsi apabila henti rugi diletakkan di mana pembatalan carta sebenarnya berada. Henti rugi $0.20 pada setup yang memerlukan ruang $0.50 bukan 'risiko lebih rendah' — ia adalah penghentian hampir pasti daripada volatiliti normal, menukar setup yang sah kepada kerugian dipaksa. Henti rugi datang dari carta; bilangan saham ialah apa yang dibenarkan oleh matematik."
+/>
+
+## Cuba sendiri
+
+Buka editor <Term id="ami_mandate" /> dan tetapkan `max_risk_per_trade_pct` kepada 1. Kemudian buka <Term id="ami_one_on_one" /> dengan Trader, tampal ticker dari <Term id="ami_watchlist" /> anda dengan harga masuk hipotetikal dan stop loss, dan tanya "Diberi mandat saya, berapa banyak saham?" Bandingkan jawapannya dengan formula tiga-input di atas. Jika mereka tidak bersetuju, tanya mengapa.
+
+## Penafian
+
+Risiko akaun masuk, jumlah saham keluar — jangan sebaliknya. Carta memberitahu anda di mana stop loss pergi; matematik memberitahu anda berapa banyak saham yang muat.

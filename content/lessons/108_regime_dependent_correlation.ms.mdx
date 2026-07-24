@@ -1,0 +1,66 @@
+---
+id: "108_regime_dependent_correlation"
+title: "Korelasi bergantung kepada rejim: mengapa korelasi meningkat semasa kejatuhan pasaran"
+duration_min: 6
+level: 1
+module: 3
+difficulty: 4
+track: "risk_portfolio"
+code: "RISK 13"
+topic: "correlation_regimes"
+prerequisites: ["017_portfolio_exposure_and_correlation"]
+tags: ["risk", "correlation", "regimes", "crashes", "portfolio"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Korelasi bergantung rejim: mengapa korelasi meningkat semasa kejatuhan
+
+Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="017_portfolio_exposure_and_correlation"/> (Pendedahan portofolio dan korelasi); di sini kita menyelami lebih dalam satu sifat korelasi yang merosakkan pengiraan diversifikasi kebanyakan pemula: korelasi berpasangan tidak stabil merentas rejim. Dalam pasaran tenang, NVDA dan XOM mungkin berdagang dengan korelasi 0.05 — secara praktikalnya bebas. Dalam minggu kejatuhan, pasangan yang sama boleh mencapai 0.85 kerana semua orang menjual segala-galanya untuk menaikkan tunai. Buku "terdiversifikasi" anda menjadi satu posisi besar pada hari anda sebenarnya memerlukan diversifikasi. Pelajaran ini mengajar bagaimana korelasi melonjak dengan volatiliti, mengapa korelasi "purata" menyembunyikan lonjakan tersebut, dan bagaimana PM mengendalikannya.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Tarik korelasi gelangsar 90-hari antara NVDA dan XOM pada tempoh pasaran tenang pada akhir 2024 — katakan 0.04. Tarik pasangan yang sama merentas minggu risiko-off gaya Mac 2020 dan korelasi realisasi melonjak kepada 0.72. Dua ticker yang sama, hubungan yang sepenuhnya berbeza. Mekanisme: dalam pasaran tenang, setiap saham berdagang berdasarkan asasnya sendiri (NVDA pada permintaan AI, XOM pada bekalan minyak). Dalam kejatuhan, semua orang menjual apa sahaja yang mereka miliki untuk memenuhi panggilan margin, tebusan dana, atau sekadar menghentikan pendarahan — dan tekanan jualan mengatasi cerita asas. Korelasi runtuh menghampiri 1 untuk semua aset cecair yang sedang rugi.
+
+Konkrit: ambil buku 5 posisi "terdiversifikasi" — NVDA, JPM, XOM, KO, IHH — setiap satu bersaiz pada risiko akaun 1%. Dalam 2024 yang tenang, korelasi berpasangan purata adalah kira-kira 0.15. Model PM menganggarkan pendedahan ekor keseluruhan kira-kira 2.5% (bukan 5% naif). Dalam hari risiko-off 5-sigma yang sebenar, korelasi berpasangan realisasi merentas 5 nama yang sama melonjak kepada purata 0.65. Kerugian realisasi adalah lebih dekat kepada 4.1% — bukan 2.5% yang dicadangkan oleh model keadaan tenang, dan bukan 5% jika semuanya bergerak bersama dengan sempurna. Diversifikasi tidak hilang sepenuhnya, tetapi kebanyakan daripadanya hilang apabila ia paling diperlukan. Di Bursa Malaysia: MAYBANK, PETRONAS, IHH, MRDIY, TENAGA — buku pelbagai sektor — melihat korelasi purata meningkat dari 0.20 dalam keadaan tenang 2024 kepada kira-kira 0.55 dalam jualan awal 2025. Ujian boleh disahkan: pilih mana-mana 5 posisi saham tunggal dari <Term id="ami_watchlist" />, kira korelasi gelangsar 30-hari pada 10 hari pasaran terburuk tahun lalu berbanding 10 hari terbaik — korelasi hari buruk akan purata sekurang-kurangnya 2× korelasi hari baik.
+
+## Perangkap
+
+Perangkapnya ialah menyahsaiz portofolio berdasarkan korelasi "purata jangka panjang" dan mengandaikan anda telah mendiversifikasi. Pemula membaca bahawa NVDA dan JPM mempunyai korelasi purata 0.12 selama 5 tahun terakhir dan menyimpulkan kedua-dua posisi tersebut adalah bebas untuk tujuan risiko. Kelemahannya: purata 0.12 menyembunyikan fakta bahawa pada 5% hari terburuk, korelasi adalah 0.6+. Pendedahan kes terburuk portofolio anda dikawal oleh korelasi hari buruk, bukan purata. Model mental yang betul: anggap korelasi melonjak ke 0.5–0.8 merentas mana-mana buku yang berat ekuiti dalam peristiwa risiko-off yang sebenar, dan saiz untuk itu. PM memodelkan senario "korelasi tertekan" — apabila anda meminta pendedahan portofolio semasa, minta secara berasingan untuk pendedahan tertekan. Nombor kedua itulah yang sebenarnya perlu ditahan oleh akaun anda.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda memegang 4 kedudukan: NVDA, JPM, XOM, IHH — setiap satu berisiko 1% daripada akaun. Kadar korelasi purata antara pasangan dalam pasaran tenang ialah 0.15. Dalam senario tertekan, kadar korelasi merentasi nama-nama ini biasanya meningkat kepada kira-kira 0.7. Berapakah pendedahan puncak yang direalisasikan semasa hari tertekan, dinyatakan sebagai berlipat ganda daripada 4% naif?"
+  options={[
+    "1.0× — 4% itu nombor yang betul; korelasi tidak mendarabkan pendedahan.",
+    "Kira-kira 1.6×–1.8× daripada 4% naif — apabila korelasi menghampiri 0.7, kedudukan bergerak bersama cukup sehingga faedah pelbagai sektor runtuh kepada baki kecil.",
+    "4.0× — korelasi 0.7 bermaksud setiap kedudukan secara efektif mendarab empat kali ganda dalam keadaan tertekan.",
+    "0.5× — pelbagai sektor memotong pendedahan kepada separuh kerana buku dagangan merentas sektor."
+  ]}
+  answer={1}
+  explanation="Jawapan salah yang menggoda ialah '1.0×, 4% ialah 4%'. Itu mengabaikan bahawa nombor naif 4% itu mengandungi faedah pelbagai sektor yang hanya wujud apabila korelasi rendah. Apabila korelasi tertekan mencapai 0.7, kebanyakan faedah itu hilang. Pendedahan tertekan yang direalisasikan bukan tepat 4 × 4% (=16%) kerana korelasi 0.7 bukan 1.0, tetapi ia jauh lebih besar daripada 4% — biasanya 1.5–2× nombor naif untuk buku 4 kedudukan. Perangkap '4.0×' memperlakukan korelasi sebagai mendarab, yang salah; korelasi menskala semula faktor pelbagai sektor, bukan pendedahan itu sendiri."
+/>
+
+<Quiz
+  question="Seorang pedagang mengendalikan portfolio 6 nama teknologi (NVDA, AMD, AAPL, MSFT, GOOGL, META) pada 1% setiap satu dan portfolio 6 nama merentas sektor (NVDA, JPM, XOM, KO, IHH, MRDIY) pada 1% setiap satu, kedua-duanya dianggap 'berpelbagai sektor dalam alam semesta masing-masing'. Dalam minggu risiko turun yang tajam, mengapa buku merentas sektor biasanya kurang terjejas walaupun keenam-enam kedudukan itu saiznya sama?"
+  options={[
+    "Buku teknologi mendapat manfaat daripada momentum positif jadi hentakan risiko turun diimbangi.",
+    "Kedua-duanya terjejas sama kerana acara risiko turun menimpa semua sektor dengan sama.",
+    "Buku merentas sektor bermula dengan kadar korelasi keadaan tenang yang jauh lebih rendah (0.10–0.25 berbanding 0.6–0.8 untuk teknologi), jadi walaupun korelasi tertekan meningkat merentasi kedua-dua buku, buku merentas sektor berakhir dengan kadar korelasi tertekan purata dalam lingkungan 0.5–0.7 manakala buku teknologi mencapai 0.85+ — lebih dekat dengan satu kedudukan 6×.",
+    "Bilangan kedudukan adalah yang penting, bukan campuran sektor — enam kedudukan dalam mana-mana buku ialah enam kedudukan."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah 'bilangan kedudukan adalah yang penting'. Titik pelajaran ini ialah bilangan kedudukan adalah mengelirukan apabila korelasi meningkat. Nama teknologi sudah berkorelasi pada 0.6+ dalam pasaran tenang; dalam keadaan tertekan mereka menghampiri 0.85–0.95 dan buku menjadi secara efektif satu pertaruhan teknologi bersaiz 6%. Nama merentas sektor bermula hampir bebas dan walaupun korelasi tertekan meningkat, had atasnya jauh di bawah 1, jadi faedah pelbagai sektor sebahagiannya bertahan. Perangkap 'teknologi mempunyai momentum' adalah harapan kosong; dalam acara risiko turun, nama terkuat dijual dahulu untuk meningkatkan likuiditi."
+/>
+
+## Cuba sendiri
+
+Buka Pengurus Portofolio <Term id="ami_one_on_one" /> dan tanya "Merentas posisi terbuka semasa saya, apakah korelasi berpasangan purata keadaan tenang, dan apakah anggaran korelasi tertekan?" PM akan menunjukkan kedua-duanya. Jika korelasi tertekan mendorong pendedahan faktor tunggal anda melebihi had mandat anda, itulah dagangan yang ingin anda kurangkan sebelum peristiwa risiko-off seterusnya, bukan semasa ia berlaku.
+
+## Pengajaran
+
+Diversifikasi berfungsi pada hari tenang dan sebahagiannya rosak pada hari buruk — saiz untuk korelasi tertekan, bukan purata jangka panjang, atau pendedahan sebenar anda akan muncul pada hari terburuk tahun itu.

@@ -1,0 +1,84 @@
+---
+id: "005_what_moves_stock_prices"
+title: "Apa yang menggerakkan harga saham?"
+duration_min: 4
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+code: "CORE 5"
+topic: "price_drivers"
+prerequisites: ["003_what_is_a_stock_exchange"]
+tags: ["foundations", "price_action", "earnings", "news", "sentiment", "macro"]
+agent_callouts: ["news_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apa yang menggerakkan harga saham?
+
+Harga saham hanya berubah apabila pembeli dan penjual tidak bersetuju mengenai harga yang perlu dibayar. Soalan yang menarik ialah apa yang menyebabkan ketidaksetujuan itu. Hampir setiap pergerakan harga yang akan anda lihat berpunca daripada salah satu daripada empat pemacu: pendapatan dan berita khusus syarikat, peristiwa makro yang lebih luas, sentimen pasaran, dan aliran paksa (wang yang mesti dibelanjakan atau dijual kerana sebab bukan pendapat). Mengetahui pemacu mana yang menggerakkan harga memberitahu anda sama ada untuk bertindak atau mengabaikannya.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Pada 21 Februari 2024, NVIDIA (NVDA) mengeluarkan laporan pendapatan suku tahun yang mengatasi jangkaan Wall Street dalam setiap aspek — pendapatan, margin keuntungan, dan panduan ke hadapan. Saham itu dibuka pada hari berikutnya naik 16%, menambah lebih daripada $270 bilion dalam modal pasaran dalam satu sesi. Itu adalah pemacu satu: **pendapatan**. Syarikat melaporkan nombor yang memaksa semua pemegang NVDA untuk menilai semula nilai perniagaan tersebut.
+
+Contoh lain: pada awal Ogos 2024, Bank of Japan menaikkan kadar faedah, yen melonjak, dan pada 5 Ogos, S&P 500 jatuh 3% dalam sehari. Tiada berita khusus syarikat AS — semata-mata **makro**. Pelabur menjangkakan pelarasan semula posisi berleverage global dan menjual terlebih dahulu. Pada akhir minggu itu, kebanyakan kerugian telah pulih.
+
+Pemacu tiga ialah **sentimen**. Pada Januari 2021, GameStop (GME) melonjak dari $20 kepada $483 dalam tiga minggu akibat pembelian berkoordinasi yang dipacu oleh media sosial. Perniagaan asas tidak berubah. Mood kumpulan telah berubah.
+
+Pemacu empat ialah **aliran paksa** — penstrukturan semula indeks, tebusan dana, panggilan margin. Apabila saham ditambah ke dalam S&P 500, setiap dana indeks mesti membelinya, tidak kira harga. Permintaan mekanikal itu boleh menaikkan saham 5-10% tanpa sebarang maklumat baru.
+
+Di Bursa Malaysia: apabila Tenaga Nasional (TENAGA) mengumumkan tarif yang lebih tinggi pada 2024, saham itu bergerak berdasarkan pemacu satu — pendapatan syarikat. Apabila ringgit melemah dengan ketara terhadap dolar pada bulan yang sama, eksportir seperti Top Glove (TOPGLOV) bergerak berdasarkan pemacu dua — makro.
+
+## Perangkap
+
+Perangkapnya ialah bertindak balas terhadap setiap pergerakan harga dengan cara yang sama. Penurunan 3% tanpa sebarang berita bukan peristiwa yang sama dengan penurunan 3% selepas pemotongan panduan. Pedagang baru memperlakukan mereka dengan cara yang sama — mereka panik, atau mereka "beli pada penurunan" — kerana mereka bertindak balas kepada warna lilin, bukan kepada apa yang sebenarnya menggerakkan pergerakan tersebut. Tabiat yang betul ialah bertanya, setiap kali: pemacu mana daripada empat pemacu ini menyebabkan ini? Jika anda tidak dapat menamakan pemacu tersebut, anda belum mempunyai sebab untuk bertindak. News Analyst boleh memberitahu anda sama ada maklumat baru telah sampai; Market Analyst boleh memberitahu anda sama ada pergerakan itu konsisten secara teknikal dengan julat baru-baru ini atau merupakan nilai luaran. Bersama-sama, mereka memberikan anda konteks yang anda perlukan sebelum anda melakukan apa-apa.
+
+<ChatWith agent="news_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham yang anda miliki jatuh 4% dalam 20 minit tanpa berita khusus syarikat. Indeks S&P 500 yang lebih luas juga jatuh kira-kira 4% dalam tetingkap masa yang sama selepas laporan inflasi mengejutkan. Pemacu paling mungkin bagi pergerakan saham anda ialah:"
+  options={[
+    "Peristiwa makro yang menjejaskan seluruh pasaran",
+    "Kempen media sosial yang menyasarkan saham anda",
+    "Penyeimbangan indeks ke dalam saham anda",
+    "Laporan pendapatan atau panduan syarikat"
+  ]}
+  answer={0}
+  explanation="Apabila saham bergerak selari dengan pergerakan pasaran yang lebih luas, dan pergerakan luas itu mempunyai pencetus makro yang jelas (dalam kes ini, kejutan inflasi), pemacunya ialah makro, bukan khusus syarikat. Saham anda mungkin tidak mempunyai masalah — pasaran hanya menilai semula semua aset serentak."
+/>
+
+<Quiz
+  question="Sebuah syarikat yang anda ikuti melaporkan pendapatan yang melebihi anggaran sebanyak 15%, meningkatkan panduan tahun penuh, dan sahamnya terbuka naik 12% pada pagi berikutnya dengan isipadu tinggi. Manakah penerangan yang paling tepat?"
+  options={[
+    "Sentimen tulen — asas fundamental sebenarnya tidak berubah",
+    "Pemacu satu: maklumat baharu telah memaksa penilaian semula nilai perniagaan",
+    "Hingar rawak — pergerakan ini tidak bermakna apa-apa",
+    "Aliran dipaksa dari dana indeks"
+  ]}
+  answer={1}
+  explanation="Kelebihan pendapatan dengan panduan yang ditingkatkan ialah maklumat baharu yang tulen mengenai aliran tunai masa depan syarikat. Setiap spreadsheet analis dikemas kini, dan harga perlu menilai semula untuk mencerminkannya. Ini ialah kes paling bersih bagi pemacu satu, dan itulah sebabnya hari pendapatan ialah tempat pergerakan harian terbesar biasanya berlaku."
+/>
+
+<Quiz
+  question="Dua saham jatuh 5% pada hari yang sama. AAPL jatuh selepas Apple memotong ramalan penghantaran iPhone. XOM jatuh tanpa berita syarikat pada hari harga minyak turun 6%. Bagaimanakah anda harus berfikir tentang pergerakan ini?"
+  options={[
+    "Keduanya adalah hingar; kedua-duanya akan kembali",
+    "Pemacu berbeza (khusus syarikat vs makro/komoditi) — tindak balas anda harus berbeza bergantung pada mana satu dalam portfolio anda dan apa tesis anda",
+    "Sama — kedua-dua saham kini lebih berisiko",
+    "Keduanya adalah sentimen; kedua-duanya harus diabaikan"
+  ]}
+  answer={1}
+  explanation="Pergerakan AAPL ialah pemacu satu: maklumat baharu telah mengubah pandangan iPhone, jadi keseluruhan tesis AAPL perlu ditinjau semula. Pergerakan XOM ialah pemacu dua: minyak turun dan XOM merupakan syarikat minyak utama — pergerakan itu adalah mekanikal dan akan kembali apabila minyak kembali. Jika tesis XOM anda ialah 'minyak akan naik' anda mungkin menambah; jika tesis AAPL anda ialah 'pertumbuhan iPhone berterusan' anda perlu mengemaskininya. Peratusan jatuh yang sama, tindakan yang sepenuhnya berbeza."
+/>
+
+## Cuba sendiri
+
+<Term id="ami_convene_the_room" /> pada satu saham dalam <Term id="ami_watchlist" /> anda yang telah bergerak lebih daripada 2% hari ini. Tanya bilik secara langsung: "Pemacu mana daripada empat pemacu ini menyebabkan pergerakan ini?" Perhatikan News Analyst dan Market Analyst bertindak balas — News Analyst akan memberitahu anda apa yang sampai; Market Analyst akan memberitahu anda sama ada pergerakan itu besar secara teknikal atau biasa untuk nama saham ini. Dua langkah itu ialah tabiat yang anda cuba bina.
+
+## Kesimpulan
+
+Harga saham bergerak berdasarkan pendapatan, peristiwa makro, sentimen, atau aliran paksa. Sentiasa namakan pemacu sebelum anda bertindak — jika anda tidak dapat menamakannya, anda belum mempunyai sebab untuk melakukan apa-apa.

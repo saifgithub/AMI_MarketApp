@@ -1,0 +1,72 @@
+---
+id: "118_role_reversal_resistance_becomes_support"
+title: "Pembalikan peranan: apabila rintangan menjadi sokongan"
+duration_min: 4
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 18"
+topic: "support_resistance"
+prerequisites: ["023_support_and_resistance", "024_breakouts"]
+tags: ["role_reversal", "support", "resistance", "retest", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pembalikan peranan: apabila rintangan menjadi sokongan
+
+Ini mengandaikan anda telah menyiapkan <Lesson id="023_support_and_resistance"/> (sokongan dan rintangan) dan <Lesson id="024_breakouts"/> (penerobosan). Di sini kita mendalami apa yang berlaku kepada satu aras *selepas* ia ditembusi. Aras rintangan yang ditembusi tidak hilang — ia biasanya bertukar peranan dan menjadi sokongan pada penurunan harga seterusnya. Mekanisme yang sama berlaku secara songsang: sokongan yang ditembusi menjadi rintangan. Pada akhir pelajaran ini, anda harus dapat mengenal pasti ujian semula pembalikan peranan, memahami logik aliran pesanan di sebaliknya, dan menulis penutupan tepat yang mengesahkan pembalikan berbanding penutupan yang membatalkannya.
+
+## Contoh
+
+Lihat AMZN pada carta harian pada Februari dan Mac 2026. Aras $215 telah menjadi rintangan untuk AMZN sejak November 2025 — tiga percubaan penutupan harian yang gagal cuba menembusi siling itu. Pada 6 Februari 2026, AMZN menutup pada $218.40 — penutupan yang tegas di atas $215 pada 1.8x purata isipadu. Penerobosan disahkan.
+
+Kemudian pada 24 Februari, AMZN turun semula ke $215.80 intraday — ujian semula yang tepat terhadap rintangan sebelumnya — dan menutup pada $217.20. Pembeli masuk pada aras yang sebelum ini menolak mereka. Itulah pembalikan peranan: $215 berubah dari rintangan (menolak pembeli) kepada sokongan (menangkap pembeli).
+
+Tiga sebab mengapa ini berlaku. (1) Pedagang yang menjual pendek berhampiran $215 pada masa lalu kini menanggung kerugian; jika harga kembali ke entri mereka, mereka cenderung untuk pulih modal, menghasilkan tekanan beli pada aras tersebut. (2) Pedagang yang terlepas penerobosan awal melihat kembalinya harga ke aras penerobosan sebagai peluang entri kedua, menghasilkan tekanan beli. (3) Pedagang yang memegang posisi dari bawah penerobosan melihat ujian semula yang bersih sebagai bukti posisi mereka betul dan menambah atau memegang, menghapuskan tekanan jual.
+
+AMZN kemudian naik dari $217 ke $238 selama tiga minggu berikutnya — susulan 9.7% selepas ujian semula yang berjaya. Pembalikan peranan tidak sah pada saat lilin harian seterusnya menutup kembali di bawah aras rintangan sebelumnya — dalam kes ini, penutupan di bawah $215 membatalkan pembalikan sokongan dan menubuhkan semula $215 sebagai rintangan. Penutupan itu tidak berlaku.
+
+## Perangkap
+
+Perangkapnya adalah mengandaikan pembalikan peranan sentiasa berlaku, dan memasuki pada aras ujian semula dengan terlalu agresif tanpa pengesahan. Kadang-kadang penerobosan itu nipis atau palsu (lihat <Lesson id="119_failed_breakouts_bull_traps"/>), dan harga memotong kembali melalui aras tanpa keraguan — aras itu tidak berubah, ia hanya dilintasi dua kali. Model mental yang betul: pembalikan peranan *dikesan oleh pegangan, bukan oleh sentuhan*. Tunggu sama ada (a) penutupan harian kembali di atas aras selepas ujian intraday, atau (b) lilan bounce yang bersih dengan isipadu meningkat dan sumbu yang tidak menutup di bawah aras. Sentuhan pada aras bukan isyarat; penutupan kembali di atasnya pada ujian semula yang diuji adalah. Aras yang pecah ke arah lain serta-merta bermaksud penerobosan itu palsu — bukan pembalikan peranan gagal tetapi tiada peranan untuk dibalikkan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham menembus naik melebihi $80 (rintangan sebelumnya) dan menutup pada $82.40 dengan isipadu tinggi. Tiga sesi kemudian, ia menarik balik ke $80.20 pada waktu intraday dan menutup pada $81.10. Pada hari berikutnya, ia mendorong naik ke $83.50. Adakah $80 disahkan sebagai sokongan baharu?"
+  options={[
+    "Tidak — cetakan intraday pada $80.20 secara teknikal berada di bawah $80, jadi tahap tersebut telah ditembusi",
+    "Tidak — pertukaran peranan memerlukan tiga ujian semula sebelum ia dikira",
+    "Ya — ujian semula menyentuh rintangan sebelumnya, penutupan harian pada $81.10 kekal di atas $80, dan pengesahan lanjut ke $83.50 mengesahkan pertukaran; itu adalah pertukaran peranan teks buku",
+    "Ya — tetapi hanya kerana isipadu adalah tinggi pada hari penembusan"
+  ]}
+  answer={2}
+  explanation="Urutan ujian semula ialah: tarikan balik ke tahap sebelumnya, ujian intraday yang menutup kembali di atasnya, dan pengesahan lanjut. Ketiga-tiganya berlaku. Jawapan yang menganggap cetakan $80.20 sebagai tembusan salah guna peraturan sumbu-vs-penutupan dari <Lesson id="
+/> — $80.20 berada di atas $80 pada mana-mana keadaan, dan walaupun ia berada di bawah, penutupan pada $81.10 adalah yang dikira. Jawapan tiga ujian semula mencipta peraturan. 'Ya' berdasarkan isipadu sahaja keliru antara bukti pengesahan dan prasyarat — isipadu tinggi pada penerobosan mengukuhkan isyarat tetapi tidak menentukan sama ada ujian semula itu sendiri disahkan."
+/>
+
+<Quiz
+  question="GOOGL telah diperdagangkan pada sokongan $158 / rintangan $172 selama tiga bulan. Pada 4 Mac, GOOGL menutup pada $174.80 — pecahan bersih di atas $172. Pada 11 Mac, GOOGL menarik balik dan menutup pada $169.40 — di bawah rintangan sebelumnya. Seorang pedagang yang memegang posisi panjang sejak penembusan bertanya: 'Adakah ini ujian semula biasa atau adakah pertukaran telah gagal?' Jawapan manakah menggabungkan pelajaran dengan betul, dan apakah bacaan salah yang memikat?"
+  options={[
+    "Pertukaran telah gagal — penutupan harian pada $169.40 berada di bawah rintangan sebelumnya iaitu $172, yang merupakan pembatalan eksplisit tesis pertukaran peranan; apa yang kelihatan seperti penembusan berjaya kini telah menjadi penembusan yang gagal. Bacaan salah yang memikat ialah memanggil sebarang tarikan balik ke tahap sebagai 'ujian semula biasa' walaupun penutupan telah pun melepasi tahap tersebut",
+    "Ujian semula biasa — tarikan balik ke tahap ujian semula sentiasa berlaku",
+    "Tunggu satu sesi lagi sebelum membuat keputusan",
+    "Pegang dan tambahkan ke posisi — diskaun adalah peluang membeli"
+  ]}
+  answer={0}
+  explanation="Ujian semula menguji tahap dari atas. Penutupan *melalui* tahap adalah peristiwa berbeza — ia adalah pembatalan. Pelajaran tersebut mentakrifkannya secara eksplisit: penutupan di bawah rintangan sebelumnya membatalkan pertukaran sokongan. Jawapan 'ujian semula biasa' secara malas menamakan setiap perkara sebagai ujian semula. Jawapan 'tunggu satu sesi lagi' memperkenalkan kelewatan kabur yang tidak mengikut daripada mana-mana peraturan yang dinyatakan oleh pelajaran. Jawapan 'pegang dan tambah' purata ke dalam tesis yang telah dibuktikan palsu — perangkap purata ke bawah yang klasik yang dikuatkan oleh <Lesson id="
+/> dan <Lesson id="025_pullbacks"/>. Ujian sintesis adalah mengenali bahawa tindakan harga yang sama yang mengesahkan pembalikan (sentuhan diikuti dengan penutupan di atas) adalah berbeza secara struktur daripada tindakan yang membatalkannya (penutupan di bawah)."
+/>
+
+## Cuba sendiri
+
+Buka carta mana-mana saham yang telah mempunyai penerobosan yang disahkan dalam dua bulan lalu. Cari hari penerobosan, kemudian skrol ke hadapan mencari penurunan pertama yang menyentuh aras rintangan sebelumnya. Tanya Market Analyst dalam <Term id="ami_one_on_one" />: "Adakah pembalikan peranan bertahan atau gagal pada [tarikh]? Apakah penutupan tepat yang mengesahkan atau membatalkannya?" Simpan aras dan hasil ke <Term id="ami_decision_journal" /> anda sebagai entri pembelajaran pada ujian semula pembalikan.
+
+## Penutup
+
+Rintangan yang pecah menjadi sokongan hanya apabila penutupan mengesahkan — menyentuh aras bukan isyarat, penutupan harian kembali di atasnya adalah; pada saat penutupan mencetak di bawah aras sebelumnya, pembalikan itu batal dan penerobosan itu sendiri adalah palsu.

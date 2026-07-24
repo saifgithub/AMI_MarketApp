@@ -1,0 +1,76 @@
+---
+id: "140_stochastic_fast_vs_slow_divergence"
+title: "Stochastic pantas berbanding perlahan dan bacaan divergens"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+code: "TECH 40"
+topic: "stochastic_divergence"
+prerequisites: ["139_stochastic_k_d_crosses", "128_rsi_hidden_divergence"]
+tags: ["indicators", "stochastic", "fast_slow", "divergence", "smoothing"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Stochastic pantas vs perlahan dan bacaan divergens
+
+<Lesson id="139_stochastic_k_d_crosses"/> menggunakan Stochastic %K (14, 3, 3) piawai — iaitu jangkaan pandangan 14-bar dengan %D sebagai 3-SMA dan penghalusan tambahan 3-bar pada %K itu sendiri. Versi "perlahan" ini meredam pengayun mentah. Stochastic "pantas" (14, 3) melangkau penghalusan tambahan pada %K, menghasilkan garisan bergerigi yang sering bertukar arah. Divergens — konsep yang sama <Lesson id="128_rsi_hidden_divergence"/> ajarkan untuk RSI — berfungsi pada kedua-duanya, tetapi Stochastic pantas memberikan panggilan divergens yang lebih awal dan lebih bising, manakala Stochastic perlahan memberikan panggilan yang lebih lewat dan lebih bersih. Pertukaran ini menyerupai pilihan SMA-vs-EMA dari <Lesson id="124_sma_vs_ema_vs_wma"/>: kelajuan menelan kos dalam bentuk whipsaw.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat MSFT melalui Q1 2026. Pada 14 Februari, MSFT mencetak penutupan tertinggi baru pada 438. Stochastic perlahan %K mencapai 84 — sedikit di atas garis jenuh beli 80. Pada penutupan tertinggi sebelumnya pada 22 Januari iaitu 432, %K perlahan telah mencapai puncak pada 91. Jadi, Stochastic perlahan menunjukkan divergens bearish: harga lebih tinggi, tetapi puncak pengayun lebih rendah (84 berbanding 91).
+
+Stochastic pantas menceritakan cerita yang lebih kuat. Pada puncak 22 Januari, %K pantas mencetak 96. Pada puncak 14 Februari, %K pantas mencapai puncak pada 79 — jurang 17 mata, dua kali ganda jurang divergens 7 mata bagi Stochastic perlahan. Versi pantas telah memberi isyarat kehilangan momentum selama dua minggu sebelum versi perlahan memberi sebarang isyarat.
+
+MSFT jatuh ke 412 selama 18 sesi berikutnya. Panggilan divergens Stochastic perlahan adalah betul; panggilan divergens Stochastic pantas adalah arah yang sama, dua minggu lebih awal, tetapi disertai dengan tiga divergens palsu dalam enam bulan sebelumnya yang tidak diberikan oleh versi perlahan.
+
+Peyataan boleh difalsifikasikan: divergens Stochastic pantas menghasilkan lebih banyak isyarat per tempoh tetapi kadar kejayaan yang lebih rendah; divergens Stochastic perlahan menghasilkan lebih sedikit isyarat tetapi kadar kejayaan yang lebih tinggi. Penggunaan optimum adalah membaca kedua-duanya — pantas sebagai radar amaran awal, perlahan sebagai pengesahan. Divergens yang kelihatan pada kedua-duanya mempunyai keyakinan yang lebih tinggi secara material berbanding yang hanya kelihatan pada versi pantas.
+
+Pembatalan: divergens hanya pantas (Stochastic perlahan masih mengesahkan harga tinggi) bukan lagi isyarat yang boleh diperdagangkan — ia adalah pencetus senarai pantauan. Jika Stochastic perlahan mengesahkan dalam 5 sesi berikutnya, maka susun atur itu adalah aktif. Jika Stochastic perlahan pulih dan harga terus men trend, divergens pantas itu adalah amaran palsu.
+
+Pada Bursa Malaysia: MAYBANK pada Oktober 2025 — divergens Stochastic pantas pada puncak ayunan dua minggu sebelum divergens Stochastic perlahan disahkan; pembalikan akhirnya menurun 5.2% selama bulan berikutnya. Versi pantas adalah radar; versi perlahan adalah pencetus.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan hanya salah satu daripada kedua-duanya. Pemula memilih Stochastic pantas untuk "kepekaan" dan berakhir dengan memperdagangkan setiap goyangan, atau memilih Stochastic perlahan untuk "kehalusan" dan terlepas amaran awal. Sebarang pilihan secara sendiri membuang maklumat.
+
+Model mental yang betul: baca kedua-duanya secara selari. Stochastic pantas mengenal pasti calon divergens; Stochastic perlahan mengesahkan atau menolak mereka. Versi pantas adalah pengintai yang memanggil "kapal di ufuk"; versi perlahan adalah kapten yang mengesahkan haluan. Memperdagangkan panggilan pertama pengintai adalah ceroboh; mengabaikan pengesahan kapten adalah pembaziran. Gunakan pasangan ini, bukan salah satu secara sendiri.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="MSFT mencetak penutupan tertinggi baharu. Fast Stochastic %K mencapai puncak pada 79 (turun tajam dari 96 pada penutupan tertinggi sebelum itu — perbezaan 17 mata). Slow Stochastic %K mencapai puncak pada 84 (turun dari 91 — perbezaan 7 mata). Apakah tafsiran pelajaran ini?"
+  options={[
+    "Kedua-dua versi menunjukkan perbezaan arah bearish; penurunan lebih besar pada Fast Stochastic mencadangkan momentum pudar lebih tajam berbanding bacaan yang dihaluskan — pengesahan merentas kedua-dua versi ialah konfigurasi perbezaan keyakinan tertinggi",
+    "Fast Stochastic ialah penunjuk yang salah — hanya versi slow yang penting",
+    "Slow Stochastic ialah penunjuk yang salah — hanya versi fast yang penting",
+    "Fast dan slow memberikan isyarat setara; gunakan mana-mana yang anda lebih suka"
+  ]}
+  answer={0}
+  explanation="Persetujuan kedua-dua versi pada arah perbezaan yang sama, dengan fast menunjukkan penurunan lebih dalam, ialah isyarat perbezaan penunjuk tunggal terkuat. Jawapan salah yang menggoda (C dan D) membuang separuh maklumat. Kesilapan (A) memperlakukan kedua-duanya sebagai berlebihan apabila sebenarnya ia mengukur perkara yang sama pada penghalusan berbeza — jurang antara keduanya sendiri adalah maklumat."
+/>
+
+<Quiz
+  question="Sebuah saham mencetak penutupan tertinggi baharu. Fast Stochastic menunjukkan perbezaan bearish jelas 14 mata berbanding penutupan tertinggi sebelum itu. Slow Stochastic masih naik — tiada perbezaan pada versi yang dihaluskan. Saiz akaun $20,000, anda memegang posisi panjang dengan untung 2%. Apakah cadangan kerangka kerja ini?"
+  options={[
+    "Pegang tetapi pantau rapat: perbezaan fast-only ialah pencetus senarai pantauan, bukan isyarat disahkan. Jika perbezaan Slow Stochastic muncul dalam 5 sesi, persediaan adalah aktif. Jika slow pulih dan harga terus menjuah, panggilan fast itu ialah penggera palsu.",
+    "Tambah ke posisi — hanya Slow Stochastic yang penting dan ia masih bullish",
+    "Keluar segera — perbezaan Fast Stochastic ialah isyarat jual",
+    "Tukar pendek dengan saiz penuh"
+  ]}
+  answer={0}
+  explanation="Peraturan eksplisit pelajaran: perbezaan fast-only ialah amaran awal, bukan pencetus. Jawapan salah yang menggoda (A) memberi berat lebih kepada isyarat yang lebih bising dan keluar dari perdagangan yang menguntungkan secara terburu-buru. Kesilapan lawan (C) mengabaikan amaran awal sepenuhnya. Tindakan betul ialah pantau dan monitor — biarkan pengesahan perlahan tiba atau perhatikan isyarat dibatalkan. Contoh MAYBANK Oktober 2025 diselesaikan dengan cara ini, dengan slow mengesahkan amaran fast dua minggu kemudian."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham yang sedang mencapai harga tertinggi baru dalam trend dan tanya: "Bandingkan Stochastic pantas (14, 3) dan Stochastic perlahan (14, 3, 3) pada dua puncak ayunan terakhir — adakah terdapat divergens pada mana-mana, dan jika ya, seberapa dalam masing-masing?" Kemudian bina kebiasaan memeriksa kedua-duanya setiap kali anda mengimbas untuk divergens; bacaan pasangan adalah kelebihan.
+
+## Pengenalan
+
+Stochastic pantas mengenal pasti divergens lebih awal dan lebih bising; Stochastic perlahan mengesahkannya lebih lewat dan lebih bersih. Gunakan pasangan ini — pantas sebagai radar, perlahan sebagai pencetus — dan perdagangkan hanya apabila kedua-duanya bersetuju.

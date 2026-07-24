@@ -1,0 +1,79 @@
+---
+id: "204_sixty_minute_rule"
+title: "Peraturan 60 minit selepas kerugian"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+code: "EDGE 36"
+topic: "cooldown_rule"
+prerequisites: ["047_revenge_trading", "014_position_sizing_basics"]
+tags: ["psychology", "revenge_trading", "cooldown", "mandate", "process"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Peraturan 60 minit selepas kerugian
+
+Perdagangan seterusnya selepas kerugian yang ditutup adalah, secara statistik, perdagangan terburuk anda. Peraturan 60 minit — tiada entri baharu dalam 60 minit pertama selepas stop-out — ialah parameter <Term id="ami_mandate" /> paling mudah yang mengubah taburan hasil seorang pedagang secara ketara. Berteraskan <Lesson id="047_revenge_trading"/>, pelajaran ini menerangkan *mengapa* 60 minit dan bukan 5 atau 240, memberikan ujian boleh disangkal sama ada tempoh rehat anda adalah nyata atau sekadar cadangan, dan menunjukkan cara menyambungkan peraturan ini ke dalam mandat supaya pencetus ditarik keluar dari tangan anda pada saat yang tepat apabila tangan anda paling tidak boleh dipercayai.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Buku jurnal seorang pedagang, semakan selama 14 bulan, menunjukkan 184 kali stop-out. Beliau mengkelaskan mereka berdasarkan "masa entri seterusnya": entri dalam masa 0–60 minit selepas stop, 60–240 minit, dan selepas pembukaan sesi seterusnya. Kadar kemenangan masing-masing ialah 31%, 47%, dan 54%. Saiz purata entri seterusnya ialah 1.7x mandat dalam kelompok 0–60, 1.1x dalam kelompok tengah, dan 1.0x dalam kelompok sesi seterusnya. Yang paling mencolok: kelompok 0–60 adalah tempat 78% perdagangan pelanggaran mandatnya berada. Pedagang yang sama pada strategi yang sama menghasilkan nilai jangkaan yang benar-benar berbeza hanya bergantung pada *bila* beliau meletakkan perdagangan seterusnya selepas kerugian.
+
+Beliau menetapkan `cooldown_after_stop_minutes = 60` dalam mandatnya pada Isnin minggu berikutnya. Enam bulan kemudian, kelompok 0–60 dalam tingkah laku perdagangan seterusnya beliau telah kosong — bukan kerana dorongan beliau telah berhenti, tetapi kerana permukaan penyertaan pesanan menolak mereka. Perdagangan pelanggaran mandat menurun 71%. Taburan drawdown realisasi menyempit secara ketara. Strategi tidak berubah; masa jam terlemahnya telah berubah.
+
+## Perangkap
+
+Perangkap ialah kepercayaan bahawa tempoh rehat ialah hukuman. Ia bukan. Tempoh rehat ialah pemutus litar — ia memisahkan pedagang yang *baru sahaja dihentikan* daripada pedagang yang *akan bersaiz posisi seterusnya*. Dalam 60 minit pertama selepas kerugian, tiga perkara yang boleh diukur berbeza tentang anda: dorongan anda untuk bersaiz lebih besar untuk "mengembaliinya" adalah meningkat, kesabaran anda untuk menunggu persediaan sebenar telah habis, dan keyakinan anda berkorelasi dengan kerugian berbanding dengan persediaan. Tiada satu pun ini ialah kelemahan watak — ia adalah respons boleh ramai mana-mana pedagang terhadap kerugian baru-baru ini. Peraturan 60 minit tidak memerlukan anda menjadi jenis pedagang yang berbeza. Ia memerlukan anda menjadi pedagang yang *sama* satu jam dari sekarang, dan membiarkan pedagang yang sama satu jam dari sekarang membuat keputusan sebaliknya daripada versi yang baru dihentikan.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Mengapakah 60 minit dipilih secara khusus sebagai waktu rehat lalai, berbanding 5 minit atau keseluruhan sesi perdagangan?"
+  options={[
+    "60 minit adalah tetingkap penyejukan regulasi yang diperlukan oleh kebanyakan broker.",
+    "60 minit sepadan dengan resolusi lilin piawai yang digunakan oleh kebanyakan strategi.",
+    "60 minit adalah masa purata satu kitaran berita mendominasi pasaran.",
+    "60 minit adalah tempoh yang cukup lama untuk tindak balas fisiologi yang dipacu kerugian (kadar jantung meningkat, perhatian menyempit, urgensi untuk bertindak) largely reda, tetapi cukup pendek untuk tidak menghapuskan keseluruhan sesi peluang — ia adalah pemutus litar, bukan penutupan pasaran."
+  ]}
+  answer={3}
+  explanation="Tiada keperluan regulasi — jawapan penyejukan broker adalah fiksyen dalam konteks simulasi. Jawapan resolusi lilin dan kitaran berita adalah rasionalisasi pasca. Sebab sebenar adalah tingkah laku — tindak balas fisiologi yang meningkat akibat kerugian reda secara signifikan dalam kira-kira sejam, dan 60 minit adalah tetingkap terpendek yang mengurangkan keputusan 'perdagangan seterusnya selepas kerugian' dengan berkesan sambil mengekalkan baki sesi untuk strategi yang sama. Strategi tidak dihentikan; hanya satu jam terburuk pedagang yang dilumpuhkan."
+/>
+
+<Quiz
+  question="Anda dihentikan keluar pada pukul 10:45 pagi untuk kerugian -1.1% daripada akaun. Anda melihat setup baru pada pukul 11:00 pagi yang 'tidak berkaitan.' Mandat rehat anda ialah 60 minit. Setup itu memenuhi setiap kotak semak. Apakah tindakan berdisiplin?"
+  options={[
+    "Lakukan perdagangan — setup adalah bebas, semakan semak mengesahkannya, dan rehat adalah garis panduan.",
+    "Tunggu sehingga pukul 11:45 pagi. Jika setup masih memenuhi setiap kotak semak pada masa itu, lakukan pada saiz mandat normal; jika tidak, anda baru saja dilindungi daripada perdagangan yang fisiologi anda cuba rasionalisasikan.",
+    "Tukar ke sektor lain dengan masa yang sama — rehat hanya terpakai pada ticker penipu asal.",
+    "Lakukan perdagangan pada saiz separuh — pematuhan rehat separa."
+  ]}
+  answer={1}
+  explanation="Rehat bukan cadangan yang dimodulasi oleh kualiti setup — ia adalah parameter yang wujud *tepatnya* kerana penilaian anda terhadap kualiti setup terjejas dalam 60 minit pertama selepas kerugian. 'Lakukan pada saiz separuh' adalah perdagangan yang sama dengan pelekat diskaun. 'Sektor berbeza dengan masa yang sama' adalah varian balas dendam putaran sektor (lihat <Lesson id="
+/>). Satu-satunya jawapan berdisiplin ialah membiarkan jam berjalan. Jika persediaan adalah nyata pada 11:45, ia akan tetap nyata pada 11:45; jika tidak, anda baru sahaja menjimatkan perdagangan tersebut. Tempoh rehat tidak menelan kos apa-apa pada persediaan sebenar dan melindungi anda pada persediaan yang dijustifikasikan secara rasional."
+/>
+
+<Quiz
+  question="Mandat anda mempunyai `cooldown_after_stop_minutes = 60`. Dalam 30 hari terakhir, anda telah membuat 7 entri dalam tetingkap rehat — 6 daripadanya pada ticker berbeza daripada penipu asal. Daripada 7 itu, 5 ditutup dengan kerugian. Jawapan sintesis?"
+  options={[
+    "Kurangkan rehat kepada 30 minit — tingkah laku anda menunjukkan 60 minit terlalu mengehadkan.",
+    "Buang rehat sepenuhnya — anda berdagang melaluinya 7 kali, parameter ini jelas tidak berfungsi.",
+    "Siasat mengapa rehat boleh diabaikan dalam 7 kes. Jika aplikasi atau proses membolehkan anda melampaui peraturan, perkasakan mandat supaya rehat dikuatkuasakan (tiada penghantaran pesanan diterima dalam tetingkap tersebut). Data mengesahkan peraturan asal adalah betul — kadar pengabaian anda, bukan peraturan, adalah masalah.",
+    "Tukar kepada 'rehat sesi' berbanding rehat minit — lebih luas adalah lebih baik."
+  ]}
+  answer={2}
+  explanation="Data 5 daripada 7 kerugian adalah kes empirikal tepat yang wujudnya peraturan 60 minit untuk menangani — kadar pengabaian, bukan peraturan, adalah kegagalan. Mengurangkan rehat kepada 30 minit adalah langkah 'menulis semula peraturan untuk menafikan pelanggaran' yang klasik. Membuangnya sepenuhnya adalah langkah yang sama yang diambil sehingga selesai. Beralih kepada 'rehat sesi' mungkin terdengar lebih kuat tetapi adalah pembaikan yang salah untuk masalah yang salah; isu adalah penguatkuasaan, bukan tempoh. Perkasakan peraturan, kemudian nilai semula selepas 30 hari data bersih."
+/>
+
+## Cuba sendiri
+
+Buka Tetapan → Mandat dan tetapkan `cooldown_after_stop_minutes` kepada 60 (atau 90 jika anda mahu lantai yang lebih ketat). Kemudian buka <Term id="ami_decision_journal" />, tapis kepada 20 stop-out terakhir anda, dan tandakan setiap satu mengikut "masa entri seterusnya" — dalam masa 60 minit, 60–240 minit, atau sesi seterusnya. Kira kadar kemenangan setiap kelompok. Ambil skrin kepada <Term id="ami_one_on_one" /> dengan Conservative Debator dan tanya: "Apakah data saya sendiri mengatakan tempoh rehat saya sepatutnya berapa lama?" Jawapan empirikalnya hampir selalu lebih panjang daripada yang anda akan teka.
+
+## Kesimpulan
+
+Tempoh rehat bukan hukuman — ia ialah peraturan yang membiarkan pedagang yang sama satu jam dari sekarang membuat keputusan sebaliknya daripada versi yang baru dihentikan. Tetapkan sekali, kuasainya secara mutlak.

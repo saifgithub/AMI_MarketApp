@@ -1,0 +1,72 @@
+---
+id: "026_moving_averages"
+title: "Purata bergerak"
+duration_min: 4
+level: 2
+module: 5
+difficulty: 2
+track: "technical_analysis"
+code: "TECH 7"
+topic: "moving_averages"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction"]
+tags: ["indicators", "moving_average", "trend", "sma", "ema"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Purata bergerak
+
+Purata bergerak (MA) ialah purata harga penutupan bagi N bar terakhir, dikira semula setiap bar. Ia mengurangkan hingar supaya anda dapat melihat trend di sebalik pergerakan naik-turun. Purata bergerak mudah (SMA50) 50 hari mengambil 50 penutupan harian terakhir dan membahagikannya dengan 50; esok, penutupan tertua akan dikeluarkan dan penutupan hari ini akan dimasukkan. Purata bergerak eksponen (EMA) memberi bobot lebih kepada bar-bar terkini, jadi ia bertindak balas lebih pantas. MA tidak membuat ramalan — ia menerangkan di mana pembeli purata telah berada. Fakta tunggal ini menentukan bagaimana anda menggunakannya.
+
+<Animation name="moving_average_lag" />
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat MSFT melalui Q3 2025. Dari Julai hingga September, penutupan harian kekal di atas SMA50 yang menaik, yang meningkat dari sekitar 445 ke 465. Setiap penurunan dangkal menyentuh SMA50 dan memantul — pembeli purata bagi 50 hari terakhir terus masuk. Pada 9 Oktober, MSFT menutup pada 458, menembusi SMA50 pada 463, dan SMA50 sendiri berbalik arah serta mula menurun pada 22 Oktober. Harga kemudiannya menghabiskan enam minggu di bawahnya, beralih antara 440 dan 455.
+
+Isyaratnya adalah mekanikal: selagi harga kekal di atas SMA50 yang menaik, trend jangka sederhana adalah naik. Syarat penafian juga mekanikal — dua penutupan harian berturut-turut di bawah SMA50 yang mendatar atau menurun bermaksud setup trend naik telah tidak sah. Anda tidak berhujah dengan garis itu; anda hanya mencatat di sebelah mana harga menutup.
+
+Di Bursa Malaysia: MAYBANK mengekalkan SMA50nya sekitar RM10.20 untuk kebanyakan Q4 2025, setiap penurunan dibeli; apabila harga menutup pada RM9.94 pada 18 Disember — di bawah SMA50 yang kini mendatar — pembeli yang sama berhenti muncul.
+
+## Perangkap
+
+Pemula memperlakukan purata bergerak sebagai ramalan. "SMA50 berada pada 463, jadi MSFT akan memantul di sana." Itu bukan apa yang dikatakan oleh MA. MA ialah purata harga bagi N bar terakhir — ia adalah deskriptif, bukan preskriptif. Harga menghormatinya hanya apabila peserta yang membeli berhampiran purata tersebut masih bersedia mempertahankan kos mereka. Apabila sentimen berubah, pembeli yang sama itu menjual semasa kenaikan harga kembali ke MA, dan garis tersebut menjadi rintangan bukannya sokongan.
+
+Model mental yang betul: MA adalah garis konteks yang memberitahu anda di sebelah mana "purata" harga semasa berada. Dagang mengikut kecondongan, bukan aras. MA yang menaik dengan harga di atasnya adalah angin belakang. MA yang menurun dengan harga di bawahnya adalah angin hadapan. Itu adalah keseluruhan isyarat — selebihnya adalah hingar.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="MSFT ditutup pada 458 selepas berada di atas SMA50 yang meningkat (kini pada 463) selama tiga bulan. Dua hari kemudian, ia ditutup pada 456 dengan SMA50 pada 462 dan mula mendatar. Apa yang kerangka purata bergerak ini katakan?"
+  options={[
+    "Tukar ke EMA20 kerana SMA50 terlalu perlahan untuk berguna",
+    "Pantulan ini tertangguh; SMA50 adalah sokongan, jangka rally kembali ke atas 463",
+    "Abaikan SMA50; hanya SMA200 yang penting untuk trend",
+    "Persediaan trend naik telah tidak sah — harga telah ditutup di bawah SMA50 yang mendatar sebanyak dua kali"
+  ]}
+  answer={3}
+  explanation="Pelajaran ini mentakrifkan keadaan ketidak sahahan secara eksplisit: dua penutupan berturut-turut di bawah SMA50 yang mendatar atau menurun bermaksud persediaan trend naik telah tidak sah. Jawapan salah yang menarik hati memperlakukan MA sebagai tahap sokongan ramalan — tetapi MA adalah deskriptif, bukan preskriptif. Apabila harga ditutup di bawah dan kecerunan mendatar, pembeli purata selama 50 hari terakhir tidak lagi mempertahankan kos mereka."
+/>
+
+<Quiz
+  question="Anda melihat TSLA berharga 245, SMA50 pada 232 dan meningkat, SMA200 pada 218 dan meningkat. Isipadu pada bar naik terkini ialah 1.4× purata 20 hari. Kesimpulan manakah disokong oleh apa yang telah anda pelajari?"
+  options={[
+    "Trend adalah naik merentasi kedua-dua kerangka masa dan bar terkini mempunyai penyertaan di belakangnya",
+    "MA meramalkan TSLA akan mencapai 260 dalam dua minggu",
+    "Harga telah melampau di atas SMA50 — jual pendek",
+    "Persediaan adalah bearish kerana TSLA berada di atas puratanya"
+  ]}
+  answer={0}
+  explanation="Harga di atas SMA50 dan SMA200 yang meningkat menerangkan trend naik yang selari; isipadu di atas purata pada bar naik mengesahkan penyertaan. Jawapan salah yang paling menarik hati ('melampau, jual pendek') memperlakukan jarak dari MA sebagai ramalan — pelajaran ini secara eksplisit menyatakan MA tidak meramal. Jarak sahaja bukan isyarat; kecerunan dan bahagian mana garis harga ditutup di atas adalah penting."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal simbol saham dari <Term id="ami_watchlist" /> anda dan tanya: "Apakah kecondongan SMA50 dan SMA200, dan adakah harga di atas atau di bawah setiap satu?" Kemudian periksa carta sendiri. Tujuannya adalah untuk mengesahkan bacaan anda berbanding Market Analyst — apabila anda tidak bersetuju, teliti mengapa.
+
+## Pengajaran utama
+
+Purata bergerak menerangkan di mana pembeli purata telah berada; dagang mengikut kecondongannya, bukan arasnya — dan takrifkan ketidak sahannya dalam penutupan, bukan perasaan.

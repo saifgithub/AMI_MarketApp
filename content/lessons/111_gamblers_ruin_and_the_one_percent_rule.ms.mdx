@@ -1,0 +1,66 @@
+---
+id: "111_gamblers_ruin_and_the_one_percent_rule"
+title: "Kehancuran penjudi dan mengapa 1% adalah jawapannya"
+duration_min: 6
+level: 1
+module: 3
+difficulty: 4
+track: "edge_process"
+code: "EDGE 31"
+topic: "gamblers_ruin"
+prerequisites: ["019_survival_mindset", "014_position_sizing_basics"]
+tags: ["risk", "survival", "math", "gamblers_ruin", "ruin_probability"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Keganalan penjudi dan mengapa 1% adalah jawapannya
+
+Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="019_survival_mindset"/> (Mindset kelangsungan hidup); di sini kita mendalami matematik formal yang menjustifikasikan peraturan 1% per perdagangan — masalah keganalan penjudi. Dengan kelebihan yang mempunyai jangkaan positif, kebarangkalian kebankrothan sebelum kelebihan itu terwujud bergantung secara mekanikal pada saiz per perdagangan dan modal permulaan. Pada saiz 5% per perdagangan dengan kelebihan sebenar, kebarangkalian kebankrothan adalah ketara. Pada 1%, ia turun ke hampir sifar. Ini bukan pendapat; ia boleh dibuktikan. Pelajaran ini mengajar formula keganalan yang dipermudahkan, mengapa "kelebihan kecil dengan saiz kecil" mengalahkan "kelebihan kecil dengan saiz besar" setiap masa, dan ujian boleh dipalsukan untuk menentukan sama ada akaun anda berada dalam zon keganalan.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Bayangkan anda mempunyai kelebihan yang diukur pada kadar kemenangan 55%, pemenang 1R, dan kerugian 1R (jadi nilai jangkaan per perdagangan = +0.10R). Saiz per perdagangan = 1% daripada akaun, baki permulaan = $50,000. Formula kebarangkalian keganalan yang dipermudahkan untuk pembayaran simetri ialah r = ((1−p)/p)^N, di mana p ialah kebarangkalian kemenangan dan N ialah bilangan perdagangan rugi yang diperlukan untuk menghapuskan akaun. Pada 1% per perdagangan, N = 100 (anda boleh bertahan 100 kerugian berturut-turut sebelum sifar). Dengan p = 0.55: r = (0.45/0.55)^100 = (0.818)^100 ≈ 3 × 10⁻¹⁰. Hampir sifar. Kelebihan sebenar dengan saiz yang disiplin menghasilkan kebarangkalian keganalan yang tidak dapat dibezakan dari sifar.
+
+Sekarang tingkatkan saiz per perdagangan kepada 5%. N turun kepada 20 (20 kerugian berturut-turut menghapuskan akaun). r = (0.818)^20 ≈ 0.018, atau 1.8%. Enam belas daripada seribu akaun mengalami kebankrothan hanya daripada siri kerugian normal walaupun dengan kelebihan sebenar. Naikkan kepada 10% per perdagangan: N = 10, r = (0.818)^10 ≈ 0.13, atau 13%. Lebih daripada satu dalam lapan ledakan akaun. Naikkan kepada 25%: N = 4, r = (0.818)^4 ≈ 0.45 — hampir separuh masa anda akan menghapuskan akaun sebelum kelebihan itu selesai. Kelebihan tidak berubah dalam senario ini; hanya saiz yang berubah. Di Bursa Malaysia, matematik ini tidak bergantung pada mata wang — akaun RM50,000 pada strategi kelebihan 55% pada saiz 5% per perdagangan membawa kebarangkalian keganalan ~1.8% yang sama. Ujian boleh dipalsukan: simulasi 10,000 urutan 1,000 perdagangan masing-masing pada kelebihan yang sama — akaun pada saiz 1% mengalami keganalan dalam kurang daripada 0.001% daripada larian, akaun pada saiz 5% mengalaminya dalam 1–2%, dan akaun pada saiz 10% mengalaminya dalam 10–15%.
+
+## Perangkap
+
+Perangkapnya ialah "Saya mempunyai kelebihan, jadi meningkatkan saiz menangkap lebih darinya." Matematik berkata tidak. Kelebihan itu ialah nilai jangkaan per perdagangan; kebarangkalian keganalan ialah peluang anda berhenti bermain sebelum undang-undang nombor besar mengejar. Meningkatkan saiz mendarab ganjaran per perdagangan tetapi menaikkan kebarangkalian keganalan secara eksponen — kerana setiap langkah menuju sifar ialah langkah lebih dekat ke penghalang penyerapan di mana tiada kelebihan masa depan dapat menyelamatkan anda. Model mental yang betul: peraturan 1% bukan kompromi titik permulaan yang anda tinggalkan; ia ialah saiz yang disahkan secara empirikal yang membolehkan kelebihan sebenar dikumpul merentasi saiz sampel yang diperlukan untuk merealisasikannya. Pedagang agresif yang "lulus" kepada 5% bukan "lanjutan"; mereka telah memperkenalkan semula kebarangkalian keganalan kepada sistem yang telah menghapuskan ia. Pengurus Portfoli (PM) mengekalkan 1% sebagai lalai kerana matematik mengekalkannya sebagai jawapan.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Pada saiz 1% per dagangan, kebarangkalian kemusnahan penjudi pada strategi berpinggir positif adalah kira-kira 3 × 10⁻¹⁰ — secara efektif sifar. Pada saiz 5% per dagangan, pinggir yang sama menghasilkan kebarangkalian kemusnahan kira-kira 1.8%. Dengan meningkatkan saiz sebanyak 5×, kebarangkalian kemusnahan meningkat kira-kira berapa kali ganda?"
+  options={[
+    "Sama — kebarangkalian kemusnahan adalah bebas daripada saiz apabila pinggir adalah positif.",
+    "5× — saiz dan kemusnahan berskala secara linear.",
+    "Kira-kira 60 juta× — saiz masuk ke dalam eksponen dalam formula kemusnahan, jadi hubungannya adalah eksponen, bukan linear atau kuadratik; saiz 5× menolak kemusnahan dari hampir sifar kepada nilai yang signifikan.",
+    "Kira-kira 25× — kemusnahan berskala dengan kuasa dua saiz."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menarik ialah 'saiz dan kemusnahan berskala secara linear'. Matematik menunjukkan hubungan eksponen, bukan linear. Saiz per dagangan masuk ke dalam formula sebagai eksponen N (langkah ke sifar), jadi menggandakan saiz secara anggaran mengurangkan N separuh dan kebarangkalian kemusnahan berubah secara kuasa, bukan pendaraban. 'Bebas daripada saiz' ialah jawapan terburuk — mengabaikan saiz ialah salah faham tepat yang menghasilkan akaun yang tercabut. Nisbah tepat dalam senario ini ialah 1.8% / 3 × 10⁻¹⁰ ≈ 6 × 10⁷ — kebarangkalian kemusnahan enam puluh kali ganda lebih tinggi untuk saiz 5× pada pinggir yang sama."
+/>
+
+<Quiz
+  question="Dua pedagang mempunyai pinggir sebenar — kadar kemenangan 55%, ganjaran 1R/1R. Pedagang A bersaiz 1% per dagangan dan beroperasi selama 5 tahun merangkumi kira-kira 1,200 dagangan. Pedagang B bersaiz 5% per dagangan dan menjalankan strategi yang sama merangkumi 1,200 dagangan yang sama. Merangkumi 1,000 simulasi, siapa yang berakhir dengan lebih banyak wang, dan apakah taburan kelangsungan?"
+  options={[
+    "Pedagang B dalam setiap larian — saiz 5× bermaksud keuntungan direalisasikan 5× lebih tinggi.",
+    "Pedagang B mempunyai ekuiti akhir purata yang lebih tinggi tetapi sebahagian larian yang signifikan mengalami kemusnahan (kira-kira 1–2%) sebelum selesai; larian Pedagang A hampir tidak pernah mengalami kemusnahan dan hasil median lebih rendah daripada min Pedagang B — tetapi pemampatan bersyarat kelangsungan memberi kelebihan kepada Pedagang A merangkumi jangka masa panjang kerana larian yang bertahan adalah penting, bukan larian yang dipuratakan.",
+    "Pedagang A dalam setiap larian kerana Pedagang B sentiasa muflis.",
+    "Seri — kedua-duanya mempunyai pinggir yang sama, jadi kedua-duanya memampatkan pada kadar yang sama."
+  ]}
+  answer={1}
+  explanation="Jawapan salah yang menarik ialah 'saiz 5× = keuntungan 5×'. Matematik: ekuiti akhir min Pedagang B adalah lebih tinggi per larian yang bertahan, tetapi kadar kelangsungan bukan 100% — dalam 1–2% larian, akaun menjadi muflis sebelum 1,200 dagangan selesai. Matematik pelaburan jangka masa panjang mengutamakan larian kelangsungan, bukan min. Larian Pedagang A pasti akan memampat ke atas merangkumi 5 tahun penuh; larian Pedagang B menghasilkan taburan yang lebih luas termasuk hasil bencana. Perangkap 'sentiasa muflis' memperbesar kes — Pedagang B biasanya berjaya, tetapi ekor kemusnahan kecil itulah yang menyebabkan strategi gagal pada skala besar."
+/>
+
+## Cuba sendiri
+
+Buka editor <Term id="ami_mandate" /> dan semak `max_risk_per_trade_pct`. Jika ia melebihi 2, tukarkannya kepada 1. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portfoli dan tanya "Pada kadar kemenangan dan pembayaran semasa saya, berapakah anggaran kebarangkalian keganalan saya untuk 1,000 perdagangan seterusnya pada saiz semasa — dan berapakah ia pada 0.5%?" Dua nombor itu ialah hujah kelangsungan hidup yang telah dibuat oleh matematik sepanjang masa.
+
+## Penutup
+
+Kelebihan sebenar ditambah saiz 1% menjadikan keganalan hampir mustahil; kelebihan yang sama pada saiz 5% mengembalikan keganalan ke meja — saiz mengawal kelangsungan hidup, kelebihan mengawal pulangan, dan anda perlu kedua-duanya hidup untuk mengumpul.

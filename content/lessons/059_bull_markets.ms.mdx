@@ -1,0 +1,72 @@
+---
+id: "059_bull_markets"
+title: "Pasaran Bull"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+code: "N&M 1"
+topic: "bull_regime"
+prerequisites: ["022_trend_direction", "026_moving_averages", "051_discipline_vs_excitement"]
+tags: ["regime", "bull", "trend", "macro"]
+agent_callouts: ["bull_researcher"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pasaran lembu
+
+Pasaran lembu adalah satu rejim, bukan satu suasana. Secara numerik, ia adalah keadaan di mana harga secara struktur berada di atas purata jangka panjang, lebar pasaran (breadth) sedang berkembang, dan penurunan sementara (pullbacks) dibeli. Setelah anda dapat mentakrifkan rejim lembu dalam nombor, dua perkara berubah: anda berhenti dipengaruhi oleh "ini adalah puncak" oleh setiap lilin merah, dan anda berhenti dipengaruhi untuk melepaskan pemenang. Selepas pelajaran ini, anda akan dapat mengesan rejim lembu, menamakan tiga strategi yang sesuai dengannya, dan menamakan satu syarat yang akan membatalkan panggilan tersebut.
+
+<Animation name="bull_bear_states" />
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Larian SPX 2023–2024 adalah kes buku teks. SPX mencapai dasar pada 3,491 pada 12 Oktober 2022. Ia melintasi kembali di atas SMA 200-harinya pada 2 Februari 2023 berhampiran 4,180 dan tidak pernah menutup di bawahnya untuk lebih daripada beberapa hari melalui 2024. SMA 50-hari melintasi di atas SMA 200-hari ("golden cross") pada 2 Februari 2023. Dari isyarat itu hingga tinggi penutupan 6,090 pada 6 Disember 2024, SPX meningkat 45.7%. Penurunan sementara adalah cetek: penurunan intraday terdalam dalam tetingkap itu adalah kira-kira 10.3% (Julai–Oktober 2023), dan ia berakhir dengan dasar yang lebih tinggi.
+
+Peraturan pengesanan yang akan menangkapnya pada 2 Februari 2023 dan mengekalkan anda: SPX menutup di atas SMA 200-harinya DAN SMA 20-mingguan sedang naik DAN bilangan rekod tinggi 52-minggu baru di NYSE melebihi rekod rendah 52-minggu baru untuk 4 daripada 5 minggu terakhir. Ketiganya benar.
+
+Di Bursa Malaysia: KLCI menjalankan lembu yang lebih kecil dari dasar 1,373 pada 11 Disember 2023 ke 1,684 pada 26 Ogos 2024 (+22.6%), dengan struktur SMA 200-hari yang sama dan garis 20-mingguan yang naik. Magnitud berbeza, tanda rejim identikal.
+
+## Perangkap
+
+Perangkap pasaran lembu adalah menjual awal kerana sesuatu kelihatan "terluas". Pembaca yang menjual NVDA selepas larian 50% pertamanya pada awal 2023 terlepas 500% seterusnya. Kesilapan mental adalah memperlakukan jarak harga-dari-purata sebagai isyarat jual secara terpencil. Dalam rejim lembu, jarak-dari-purata adalah ciri, bukan pepijat — purata sedang naik di bawah harga.
+
+Model yang betul: dalam rejim lembu, momentum adalah prior. Anda keluar pada *pecahan rejim* (perubahan struktur harga), bukan pada perasaan "ia telah pergi terlalu jauh". Pecahan rejim ditakrifkan dalam nombor di bawah. Sehingga nombor-nombor itu muncul, carta yang terluas adalah pasaran melakukan tepat apa yang dilakukan oleh pasaran lembu.
+
+<ChatWith agent="bull_researcher" />
+
+## Kuiz
+
+<Quiz
+  question="SPX ditutup 6% di atas SMA 200-hari, SMA 20-minggu telah naik selama 11 minggu berturut-turut, dan jumlah kenaikan baharu NYSE melebihi penurunan baharu selama 6 daripada 8 minggu terakhir. Rakan anda berkata 'ia terlalu melampau, keluarkan semua'. Apa yang kerangka rejim katakan?"
+  options={[
+    "Jual — jarak dari SMA 200-hari melebihi 5% secara sejarah adalah isyarat puncak.",
+    "Tukar ke posisi pendek — momentum mesti kembali ke purata.",
+    "Pegang posisi panjang mengikut trend. Tiada satu pun syarat pembatalan (tutup di bawah SMA 200-hari selama 2 minggu berturut-turut; 50-hari bersilang ke bawah 200-hari) telah dicetuskan.",
+    "Pindah ke 100% tunai sehingga SMA 200-hari mengejar harga."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah 'jarak dari SMA 200-hari adalah isyarat puncak' — 'terlampau' terasa seperti isyarat jual. Namun, jarak dari purata bukan syarat pembatalan — ia adalah apa yang dihasilkan oleh rejim bull. Kerangka hanya bertukar pada pecahan struktur (tutup di bawah SMA 200-hari selama 2 penutupan mingguan berturut-turut, atau kematian silang). Sehingga itu berlaku, prior ialah 'trend berterusan'."
+/>
+
+<Quiz
+  question="Anda mengesan rejim bull dalam SPX. Dari Modul 9, arketip strategi manakah yang paling selaras dan apakah pelarasan mandat yang betul?"
+  options={[
+    "Pegang tunai; rejim akan berakhir segera.",
+    "Pendapatan pendek reverensi purata; ketatkan saiz posisi maksimum kepada 2%.",
+    "Perdagangan pasangan neutral pasaran; naikkan seretan maksimum kepada 40%.",
+    "Ikut trend + beli semasa penurunan pada SMA 20-hari; benarkan saiz posisi normal dalam mandat."
+  ]}
+  answer={3}
+  explanation="Rejim bull menggalakkan pengikutan trend dan pembelian semasa penurunan pada MA pendek yang naik. Jawapan pendapatan pendek reverensi purata ialah yang paling menggoda kerana ia terdengar 'dikawal risiko' — tetapi menjual pendek pada trend naik yang disahkan adalah strategi kadar kerugian tinggi. Penyesuaian yang betul ialah ikut-trend dalam mandat, bukan lawan-trend dengan henti rugi ketat."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Peneliti Lembu dan tampal soalan: "Adakah SPX semasa dalam rejim lembu oleh ujian tiga-peraturan — tutup di atas SMA 200-hari, SMA 20-mingguan naik, rekod tinggi NYSE > rekod rendah untuk 4 daripada 5 minggu terakhir? Sertakan nombor." Kemudian buka <Term id="ami_decision_journal" />, cari dagangan ekuiti terkini anda, dan tandakan rejim yang sedang berkuat kuasa apabila anda masuk. Jika anda tidak dapat memberitahu, itulah pelajarannya.
+
+## Pengambilan utama
+
+Rejim lembu adalah keadaan numerik — harga di atas SMA 200-hari, SMA 20-mingguan naik, lebar pasaran berkembang — dan anda memegang kedudukan selari-trend sehingga nombor-nombor itu pecah, bukan sehingga carta terasa terluas.

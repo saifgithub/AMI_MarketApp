@@ -1,0 +1,79 @@
+---
+id: "030_trend_confirmation_across_indicators"
+title: "Pengesahan trend merentasi penunjuk"
+duration_min: 6
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 11"
+topic: "indicator_confluence"
+prerequisites: ["026_moving_averages", "027_rsi_momentum_oscillator", "028_macd_trend_and_momentum", "029_volume_confirmation"]
+tags: ["indicators", "confluence", "trend", "confirmation", "checklist"]
+agent_callouts: ["market_analyst", "neutral_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pengesahan tren merentasi penunjuk
+
+Satu penunjuk hanyalah satu pendapat. Persetujuan (confluence) berlaku apabila penunjuk bebas yang menerangkan dimensi harga yang berbeza bersetuju — kecerunan (MA), momentum (RSI atau MACD), dan penyertaan (volume). Apabila tiga bacaan ortogonal sejajar, hingar dibatalkan dan isyarat menjadi tajam. Sasaran bukan untuk menimbun penunjuk sehingga anda menemui satu yang mengesahkan apa yang sudah mahu anda lakukan; sasaran adalah untuk menentukan senarai semak minimum sebelum bertindak, dan mengetahui dengan tepat bacaan mana yang akan memecahkan keselarasan tersebut. Persetujuan meningkatkan kadar kejayaan anda; kriteria pembatalan yang jujur mengekalkan kerugian kecil apabila ia gagal juga.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat META sehingga Januari 2026. Pada 8 Januari, empat bacaan sejajar:
+
+1. Harga (632) di atas SMA50 yang naik (598) — kecerunan menunjukkan tren naik masih utuh.
+2. RSI(14) harian pada 64, tiada divergensis bearish pada puncak tertinggi baru — momentum bersetuju.
+3. Garis MACD(12,26,9) di atas isyarat dan di atas sifar, histogram positif — rejim tren dan momentum kedua-duanya bullish.
+4. Pecahan swing-high sebelumnya pada 625 berlaku pada volume 32 juta berbanding purata 20 hari sebanyak 21 juta — penyertaan 1.5×.
+
+META naik ke 685 dalam lima minggu berikutnya. Isyarat dagangan bukan mana-mana penunjuk tunggal; ia adalah ketiadaan perselisihan faham di antara mereka.
+
+Sekarang bandingkan: pada 4 Mac, META mencetak penutupan tinggi baru 698 tetapi RSI(14) harian mencapai puncak pada 59 berbanding 64 sebelumnya — divergensis bearish. Histogram MACD telah mengecil selama dua minggu. Volume pada bar penutupan tinggi baru ialah 14 juta berbanding purata 22 juta — di bawah garis dasar. MA masih naik, jadi pemula yang membaca kecerunan sahaja melihat "tren naik." Tiga daripada empat bacaan menandakan kelemahan. META ditutup pada 651 dalam sembilan sesi.
+
+Tudung yang boleh disangkal: setup panjang dengan keempat-empat bacaan sejajar mempunyai tindak lanjut yang lebih baik secara material berbanding setup dengan dua atau tiga. Pembatalan: jika mana-mana satu daripada empat berbalik menentang anda dan harga menutup melalui struktur, persetujuan itu pecah dan tesis dagangan hilang — tidak kira betapa bagusnya ia kelihatan pada ketika masuk.
+
+Di Bursa Malaysia: CIMB pada akhir 2024 mempunyai harga di atas SMA50, RSI mengesahkan, MACD di atas sifar, dan pecahan pada volume 1.7×; tren berjalan selama dua bulan. Apabila RSI menyimpang dan volume kering pada Februari 2025, senarai semak yang sama menandakan keluar beberapa minggu sebelum SMA50 pecah.
+
+## Perangkap
+
+Perangkap pemula ialah persetujuan sebelah — hanya mencari penunjuk yang mengesahkan dagangan dan mengabaikan yang tidak bersetuju. Jika MA, MACD, dan volume kata beli tetapi RSI menunjukkan divergensis bearish, itu bukan persetujuan tiga-dari-empat. Itu adalah kontradiksi, dan penunjuk yang tidak bersetuju sedang menjalankan tugasnya. Otak mahu memberi berat kepada persetujuan dan meremehkan perselisihan; itu ialah bias pengesahan yang berselubung analisis teknikal.
+
+Model mental yang betul: tentukan senarai semak anda sebelum melihat carta. Jika peraturan anda ialah "semua empat mesti sejajar," maka tiga-dari-empat tidak cukup. Disiplin bukan dalam mencari persetujuan — itu mudah. Disiplin adalah dalam berjalan pergi apabila satu bacaan membantah, walaupun tiga yang lain berteriak bersetuju. Pembuktian salah mempunyai berat yang sama dengan pengesahan, atau anda hanya membuat rasionalisasi.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="META mencatatkan penutupan tertinggi baru pada 698. SMA50 masih meningkat. Namun, RSI(14) mencapai puncak pada 59 berbanding 64 pada paras tertinggi sebelumnya, histogram MACD telah mengecil selama dua minggu, dan isipadu bar penutupan tertinggi baru ialah 14 juta berbanding purata 20 hari sebanyak 22 juta. Tiga daripada empat bacaan tidak sepadan dengan penutupan tertinggi baru. Apakah tafsiran yang betul di bawah peraturan konfluensi yang ketat?"
+  options={[
+    "Pegang apa yang anda ada dan tambahkan apabila harga turun",
+    "Abaikan RSI, MACD, dan isipadu — hanya penutupan tertinggi yang lebih tinggi yang penting",
+    "Beli — harga mencapai penutupan tertinggi baru dan MA masih meningkat",
+    "Konfluensi telah pecah: momentum menyimpang, MACD melemah, isipadu gagal mengesahkan; persediaan terbatal walaupun satu penunjuk (kecondongan MA) masih kelihatan bullish"
+  ]}
+  answer={3}
+  explanation="Pelajaran ini mentakrifkan pembatalan: jika mana-mana satu bacaan dalam senarai semak berubah menentang persediaan, konfluensi akan pecah — tidak kira berapa banyak bacaan lain masih bersetuju. Jawapan salah yang menggoda ('MA meningkat, beli') adalah konfluensi sebelah: memberi berat kepada penunjuk yang bersetuju dan meremehkan tiga yang tidak sepadan. Itu adalah bias pengesahan, bukan analisis. META jatuh ke 651 dalam sembilan sesi dalam contoh pelajaran ini tepat kerana sebab ini."
+/>
+
+<Quiz
+  question="Saiz akaun $20,000. Mandat mengekalkan risiko pada 1% setiap dagangan. Anda mempunyai isyarat panjang konfluensi empat-dari-empat pada saham $40: harga di atas SMA50 yang meningkat, RSI 62, MACD bullish di atas sifar, pecahan pada isipadu 1.8×. Henti rugi terletak 2.5% di bawah harga masuk $40 anda. Berapa banyak saham boleh anda ambil, dan apakah pembatalan utama tesis dagangan?"
+  options={[
+    "500 saham, kerana 1% daripada $20,000 = $200; terbatal apabila RSI mencapai 70",
+    "200 saham ($200 risiko / $1.00 jarak henti rugi); terbatal jika mana-mana satu daripada empat bacaan berubah dan harga menutup melalui struktur",
+    "100 saham; terbatal hanya apabila SMA50 pecah",
+    "1,000 saham; dagangkan sehingga kedudukan berganda"
+  ]}
+  answer={1}
+  explanation="Matematik risiko: 1% daripada $20,000 = $200 keizinan risiko; henti rugi ialah $40 × 2.5% = $1.00 di bawah harga masuk; $200 / $1.00 = 200 saham. Pembatalan berasal daripada peraturan pelajaran ini — konfluensi pecah sebaik sahaja mana-mana satu bacaan tidak sepadan dan harga mengesahkan dengan pecahan struktur. Jawapan salah yang menggoda ('500 saham, terbatal pada RSI 70') melakukan dua kesilapan: ia mengira saham tanpa mengira jarak henti rugi (saiz bergantung kepada risiko per saham, bukan hanya dolar risiko akaun), dan ia memperlakukan RSI 70 sebagai pencetus pembalikan — tepat kesilapan yang disebut dalam pelajaran RSI."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham yang menunjukkan tren jelas dan tanya: "Jelaskan kecerunan MA, tahap RSI dan divergensis, garisan MACD dan histogram, serta volume pecahan berbanding purata 20 hari — dan beritahu saya jika ada perselisihan faham." Bandingkan bacaan Market Analyst dengan skor senarai semak anda sendiri. Perhatikan bacaan mana yang cenderung anda kurang beri berat.
+
+## Intipati
+
+Persetujuan ialah ketiadaan perselisihan faham di antara bacaan bebas — tentukan senarai semak sebelum melihat carta, dan anggap mana-mana bantahan tunggal sebagai pembatalan keras, bukan hingar.

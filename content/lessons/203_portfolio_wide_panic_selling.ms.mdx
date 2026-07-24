@@ -1,0 +1,78 @@
+---
+id: "203_portfolio_wide_panic_selling"
+title: "Jualan panik seluruh portfoli"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "sentiment_behaviour"
+code: "SENT 6"
+topic: "portfolio_panic"
+prerequisites: ["046_fear_and_capitulation", "017_portfolio_exposure_and_correlation", "018_drawdown_management"]
+tags: ["psychology", "fear", "drawdown", "portfolio_panic", "correlation"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Panik jualan seluruh portfolio
+
+Menjual satu posisi kerana takut adalah kesilapan posisi tunggal. Likuidasi *buku* pada pagi yang sama adalah kesilapan struktur — dan ia adalah langkah yang paling mungkin menukarkan penurunan yang boleh bertahan kepada tahun yang tidak dapat anda pulihkan dalam kalendar. Selepas pelajaran ini, anda akan dapat mengesan tanda ketakutan multi-posisi, membezakan putaran risiko-off sebenar daripada keluaran panik seluruh portfolio, dan menggunakan had mandat Pengurus Portfolio (PM) sebagai satu-satunya otoriti untuk keputusan likuidasi yang dibuat di bawah tekanan. Kos ketakutan saham tunggal ialah keluaran henti rugi. Kos panik portfolio ialah satu tahun kalendar.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+12 Mac 2020. Seorang pedagang memegang enam syarikat besar AS: AAPL, MSFT, GOOGL, NVDA, AMZN, JPM. Penurunan akaun keseluruhan selama lapan sesi: -23%. Had penurunan mandat maksimumnya ialah 25%. Beliau tiada peraturan bertulis untuk "apa yang perlu dilakukan pada -23%." Pagi itu, dengan had turun futures dan tajuk penutupan global, beliau menghantar enam pesanan jual pasaran dalam kira-kira empat minit. Pengisian membasuh bukunya pada penurunan akaun agregat -27% — melepasi had mandatnya, dilaksanakan oleh tangannya sendiri, bukan oleh PM. S&P 500 mencapai dasar sembilan sesi kemudian. Pada Jun, buku yang tidak berubah akan berada pada -3%. Pada Disember, +18%. Pedagang itu telah mengunci kerugian -27% pada pagi tunggal dan menonton, dalam tunai, pemulihan 45 mata peratus yang tidak mempunyai rancangan untuk menyertainya.
+
+Cap jari panik portfolio yang boleh disangkal: (1) anda menutup tiga atau lebih posisi dalam tetingkap kurang daripada enam puluh minit; (2) sekurang-kurangnya separuh daripada penutupan tersebut berada di bawah *henti rugi bertulis individu* mereka; (3) tiada pelanggaran mandat PM telah dikesan pada saat anda mula menjual; (4) penutupan dilaksanakan semasa sesi dengan tajuk risiko-off utama (makro, geopolitik, pandemik, perbankan). Tiga daripada empat dicentang ialah sesi likuidasi panik, tidak kira ke mana indeks pergi pada bulan berikutnya.
+
+## Perangkap
+
+Perangkap ialah kepercayaan bahawa "semuanya berkorelasi dalam kemusnahan, jadi saya harus menjual semuanya." Korelasi memang melonjak dalam kemusnahan — tetapi *tindak balas yang sesuai* terhadap korelasi yang lebih tinggi ialah mengecilkan saiz pada tahap portfolio, bukan mengosongkan buku pada jam yang sama. Model mental yang betul: had rugi portfolio anda bukan hasil tambah henti rugi individu anda yang ditembak pada pagi yang sama — ia ialah had penurunan maksimum <Term id="ami_mandate" />, dipantau oleh PM, dengan tindakan deterministik yang *mengurangkan risiko, bukan menyerah*. Pengurangan risiko 50% (menutup separuh setiap posisi, atau menutup tiga dengan tesis individu terlemah) ialah tindakan struktur yang boleh anda ambil pada mana-mana penurunan. Likuidasi 100% hanya harus berlaku apabila mandat dilanggar dan PM mengizinkannya — jangan pernah pada jam panik anda sendiri. <Term id="ami_pm_safety_floor" /> PM wujud tepat kerana anda, di tengah kemusnahan, bukan pedagang yang sama yang menulis mandat tersebut.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda mempunyai 5 posisi terbuka. Indeks turun 4% dalam sesi berita makro. Akaun anda turun 11% berbanding had serahan maksimum 20%. PM belum menandakan pelanggaran. Anda mahu 'hanya berada dalam tunai'. Apakah tindakan berdisiplin yang sepatutnya?"
+  options={[
+    "Likuidasi semua ke tunai — berita makro mengubah keseluruhan susun atur.",
+    "Pegang dan tambah pada posisi paling lemah — ketakutan adalah isyarat beli.",
+    "Jangan likuidasi buku dagangan. Jika mana-mana posisi individu telah mencapai had berhenti (stop) yang ditulis, hormati had berhenti itu sahaja. Jika anda perlu kurangkan risiko, skala setiap posisi dengan pecahan tetap (contohnya tutup 30% setiap satu) — tetapi jangan sifar buku dagangan.",
+    "Gerakkan semua had berhenti ke titik impas untuk mengunci keuntungan semasa."
+  ]}
+  answer={2}
+  explanation="Likuidasi buku dagangan adalah langkah panik portfolio yang klasik — ia menukarkan serahan yang dibina untuk bertahan dalam had mandat kepada kerugian direalisasikan yang strategi tidak dapat pulihkan dalam tahun ini. 'Tambah pada yang paling lemah' adalah ketakutan mengundang ketamakan ke dalam dagangan yang sama. 'Semua had ke titik impas' menarik had baru semasa panik tanpa asas struktur. Jawapan berdisiplin ialah pengurangan risiko berkadaran: skala setiap posisi dengan pecahan tetap. Ini mengekalkan penyertaan dalam mana-mana pemulihan sambil mengurangkan pendedahan separuh, dan ia boleh dilaksanakan dalam beberapa saat tanpa membuat pilihan 'semua atau tiada' yang dipacu panik."
+/>
+
+<Quiz
+  question="Ujian gabungan manakah merupakan tanda paling bersih jualan panik seluruh portfolio berbanding pengurangan risiko yang dirancang?"
+  options={[
+    "Anda berasa cemas tentang portfolio anda.",
+    "Akaun anda pada paras terendah baru.",
+    "Anda menjual lebih daripada satu posisi hari ini.",
+    "Anda menutup tiga atau lebih posisi dalam masa kurang daripada enam puluh minit, sekurang-kurangnya separuh berada di bawah had berhenti yang ditulis, PM tidak menandakan pelanggaran mandat, dan sesi mempunyai berita risiko rendah utama."
+  ]}
+  answer={3}
+  explanation="Menjual beberapa posisi dalam sehari boleh menjadi pengurangan risiko berstruktur. Paras terendah baru adalah hasil, bukan diagnostik proses. Kecemasan adalah nyata tetapi tidak boleh disangkal. Ujian gabungan — kelajuan (kurang 60 minit), pelanggaran had, tiada pelanggaran mandat, keserupaan berita — adalah tanda yang boleh diaudit bagi panik berbanding proses. Tiga daripada empat kotak dicentang adalah sesi panik; carta tidak perlu mengesahkan diagnosis."
+/>
+
+<Quiz
+  question="Serahan akaun anda ialah -19% berbanding had mandat 20%. Anda mempunyai 6 posisi terbuka. PM baru sahaja menandakan mandat. Pasaran akan tutup dalam 45 minit. Suapan penuh dengan berita krisis. Jawapan sintesis?"
+  options={[
+    "Lampaui tanda PM — serahan akan berbalik menjelang tutup.",
+    "Tambah pada posisi terkuat anda untuk 'melawan semula'.",
+    "Likuidasi semua sekarang untuk kekal dalam had mandat.",
+    "Hormati lantai mandat PM dengan mengurangkan risiko portfolio untuk membawa unjuran serahan kembali ke dalam had mandat — biasanya dengan menutup posisi tesis paling lemah dahulu atau skala semua posisi secara berkadaran — dan laksanakan terhadap pelan pengurangan risiko yang ditulis berbanding penunjuk masa panik."
+  ]}
+  answer={3}
+  explanation="Pelanggaran mandat PM adalah kuasa yang memaksa tindakan — tetapi *jenis* tindakan masih mesti dirancang, bukan panik. 'Likuidasi semua sekarang' adalah tindakan yang diambil oleh pedagang yang panik; 'kurangkan risiko secara berkadaran atau tutup posisi tesis paling lemah' adalah tindakan yang diambil oleh pedagang yang menghormati mandat. Melampaui PM adalah dagangan yang menukarkan -19% kepada -32%. Menambah pada yang terkuat adalah dagangan yang menukarkan -19% kepada -28%. Hanya pengurangan risiko berstruktur menghormati lantai PM dan fakta bahawa tindakan dirancang di bawah tekanan adalah satu-satunya yang versi anda pada bulan seterusnya akan mampu pertahankan dalam jurnal."
+/>
+
+## Cuba sendiri
+
+Buka Tetapan → Mandat dan semak apa yang dikonfigurasi oleh PM untuk dilakukan pada tahap penurunan progresif (contohnya: pada -10%, pada -15%, pada -20%). Jika anda tidak mempunyai tindakan pengurangan risiko bertulis pada setiap peringkat (biasanya: pada -10% hentikan entri baru; pada -15% kurangkan saiz posisi sebanyak 50%; pada -20% PM mengarahkan penutupan), takrifkan sekarang. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portfolio dan tanya: "Jalankan peristiwa penurunan terakhir saya melawan dasar peringkat ini — di mana setiap tindakan akan ditembak?" Jurang antara apa yang akan dilakukan oleh peringkat dan apa yang sebenarnya anda lakukan ialah cukai jualan panik yang telah anda bayar.
+
+## Kesimpulan
+
+Penurunan ialah apa yang mandat dibina untuk bertahan. Likuidasi panik ialah apa yang mandat dibina untuk mencegah. Takrifkan peringkat pengurangan risiko sebelum tajuk tiba, dan biarkan PM — bukan perut anda — menarik tuas tersebut.

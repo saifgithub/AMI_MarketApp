@@ -1,0 +1,66 @@
+---
+id: "004_us_markets_vs_bursa_malaysia"
+title: "Pasar AS vs Bursa Malaysia"
+duration_min: 4
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+code: "CORE 4"
+topic: "exchanges_compared"
+prerequisites: []
+tags: ["foundations", "exchanges", "nyse", "nasdaq", "bursa", "klci"]
+agent_callouts: []
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pasaran AS vs Bursa Malaysia
+
+Dunia mempunyai beratus-rasa bursa saham. Dua yang paling penting untuk anda dalam aplikasi ini ialah pasaran AS (NYSE dan NASDAQ) serta Bursa Malaysia. Mereka mengikut peraturan asas yang sama — pesanan dipadankan dengan buku pesanan, harga adalah awam, syarikat mengemukakan laporan kewangan — tetapi masa sesi, mata wang, saiz tick, dan saiz pasaran asas adalah sangat berbeza. Memahami perbezaan ini mengelakkan anda daripada membuat perbandingan naif antara keduanya.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+**Pasaran AS — NYSE dan NASDAQ.** NYSE menyenaraikan syarikat industri dan kewangan lama dan besar (contohnya JPMorgan Chase, kod JPM, atau ExxonMobil, kod XOM). NASDAQ condong ke arah teknologi (Apple AAPL, Microsoft MSFT, NVIDIA NVDA, Tesla TSLA). Kedua-duanya menyatakan harga dalam dolar AS (USD). Dagangan biasa berlangsung dari **9:30 pagi hingga 4:00 petang Masa Timur, Isnin hingga Jumaat**, dengan sesi pra-pasaran dari 4:00 pagi ET dan dagangan selepas jam pasaran sehingga 8:00 malam ET. Peningkatan harga minimum — "saiz tick" — ialah **$0.01** untuk saham yang berharga lebih daripada $1.00. NVDA pada $920.47 bermakna harga seterusnya ialah $920.48; anda tidak boleh menawarkan $920.475. S&P 500 menjejaki 500 syarikat terbesar yang tersenarai di AS; jumlah modal pasaran ekuiti AS adalah sekitar $55 trilion.
+
+**Bursa Malaysia.** Satu bursa, berpusat di Kuala Lumpur. Menyenaraikan kira-kira 1,000 syarikat, kebanyakannya Malaysia — Maybank (MAYBANK), Petronas Chemicals (PCHEM), Tenaga Nasional (TENAGA), Genting (GENTING), Sime Darby (SIME), CIMB Group (CIMB), Public Bank (PUBLIC), IHH Healthcare (IHH), Top Glove (TOPGLOV), AirAsia (CAPITALA), MR D.I.Y. (MRDIY), KLCC Property (KLCC). Harga dalam **ringgit Malaysia (MYR / RM)**. Sesi berlangsung dari **9:00 pagi hingga 12:30 tengah hari, kemudian 2:30 petang hingga 5:00 petang masa tempatan (MYT), Isnin hingga Jumaat**, dengan rehat tengah hari — berbeza daripada sesi berterusan di AS. Saiz tick adalah bertingkat: **setengah sen (RM0.005)** untuk saham di bawah RM1.00, **satu sen (RM0.01)** antara RM1 dan RM10, dan peningkatan yang lebih besar di atas itu. Indeks utama Bursa ialah **FTSE Bursa Malaysia KLCI** ("KLCI"), menjejaki 30 syarikat terbesar di bursa tersebut. Jumlah modal pasaran Bursa adalah kira-kira RM1.8 trilion — kira-kira 2% saiz pasaran AS.
+
+## Perangkap
+
+Perangkap di sini ialah memperlakukan harga saham yang kelihatan "murah" sebagai perbandingan bermakna merentas bursa. Saham RM5 di Bursa bukan lebih "murah" daripada saham $500 di NASDAQ. Harga per saham ditetapkan oleh berapa banyak saham yang syarikat telah pilih untuk dikeluarkan, bukan oleh betapa baiknya perniagaan itu. Syarikat dengan satu saham yang berharga $1,000,000 adalah perniagaan yang sama dengan yang membahagikannya kepada satu juta saham pada $1 setiap satu. Untuk membandingkan dua syarikat, lihat modal pasaran (harga kali saham yang dikeluarkan) dan nisbah penilaian — bukan label harga dolar atau ringgit pada satu saham.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Jam 11:00 pagi pada hari Rabu di Kuala Lumpur. Pasaran mana yang sedang dibuka untuk perdagangan?"
+  options={[
+    "NYSE dan NASDAQ — ia berdagang 24 jam",
+    "Kedua-dua Bursa dan pasaran AS",
+    "Hanya pasaran AS; Bursa ditutup untuk waktu makan tengahari",
+    "Sesi pagi Bursa Malaysia; pasaran AS sedang ditutup (ia kira-kira jam 11:00 malam ET pada malam sebelumnya)"
+  ]}
+  answer={3}
+  explanation="Sesi pagi Bursa adalah dari jam 9:00 pagi hingga 12:30 tengahari MYT, jadi jam 11:00 pagi berada tepat di dalamnya. AS berada 12 jam di belakang Malaysia, jadi apabila jam 11:00 pagi Rabu di KL, ia adalah jam 11:00 malam Selasa di Pantai Timur AS — jauh selepas penutupan jam 4:00 petang ET."
+/>
+
+<Quiz
+  question="Maybank (MAYBANK di Bursa) diperdagangkan pada RM10.20. JPMorgan Chase (JPM di NYSE) diperdagangkan pada $215. Pernyataan manakah yang benar?"
+  options={[
+    "MAYBANK lebih murah dan oleh itu lebih selamat untuk dibeli",
+    "Harga saham sahaja tidak memberitahu anda tentang saiz atau nilai perniagaan — anda memerlukan kapital pasaran dan nisbah penilaian untuk membandingkan",
+    "JPM lebih volatil kerana mempunyai nombor yang lebih tinggi",
+    "JPM adalah perniagaan yang lebih baik kerana harga sahamnya jauh lebih tinggi"
+  ]}
+  answer={1}
+  explanation="Harga saham hanyalah nilai syarikat keseluruhan dibahagikan dengan jumlah bilangan saham. Syarikat boleh memilih untuk mempunyai banyak saham murah atau sedikit saham mahal — ia adalah perniagaan yang sama. Untuk membandingkan, gunakan kapital pasaran (harga kali saham yang dikeluarkan) dan gandaan penilaian seperti P/E. Harga tajuk tidak memberitahu anda hampir apa-apa secara sendiri."
+/>
+
+## Cuba sendiri
+
+Tambah satu kod AS (contohnya, NVDA) dan satu kod Bursa (contohnya, MAYBANK) ke Senarai Pantauan anda. Lihat kedua-duanya pada masa yang sama semasa waktu malam anda di Malaysia. Satu akan hidup dan bergerak; yang satu lagi akan menjadi penutupan hari sebelumnya kerana pasaran ditutup. Perhatikan mana yang mana, dan semak masa sesi terhadap jam. Ketidakpadanan ini adalah sesuatu yang akan anda hadiri secara berterusan jika anda berdagang kedua-dua pasaran.
+
+## Intipati
+
+NYSE dan NASDAQ berdagang dari 9:30 hingga 4:00 ET dalam USD; Bursa Malaysia berdagang dua sesi (9:00–12:30 dan 2:30–5:00 MYT) dalam MYR dengan KLCI sebagai indeks utamanya. Paip yang sama, jam yang berbeza, mata wang yang berbeza — jangan pernah membandingkan harga saham merentasnya tanpa menukarnya kepada modal pasaran.

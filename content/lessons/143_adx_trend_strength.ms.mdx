@@ -1,0 +1,76 @@
+---
+id: "143_adx_trend_strength"
+title: "ADX — mengukur kekuatan trend"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 42"
+topic: "adx"
+prerequisites: ["022_trend_direction", "031_indicator_limitations"]
+tags: ["indicators", "adx", "trend_strength", "wilder", "directional_movement"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# ADX — mengukur kekuatan trend
+
+Indeks Arah Purata (ADX) ialah penunjuk kekuatan bagi satu trend. Direka oleh J. Welles Wilder, ADX bergerak dari 0 hingga 100 dan menjawab satu soalan: seberapa arahkah pergerakan harga, tidak kira ke mana arahnya? ADX di bawah 20 bermaksud trend lemah atau tiada trend — harga sedang bergerak mendatar. ADX antara 20 dan 25 menunjukkan trend yang sedang berkembang; 25 hingga 50 ialah trend yang kuat; di atas 50 adalah jarang dan menandakan pergerakan hampir menegak. Penting untuk diingat, ADX buta arah — sama ada trend naik kuat atau trend turun kuat, kedua-duanya akan menunjukkan nilai ADX yang tinggi. Padankan ADX dengan mana-mana penunjuk arah (kecondongan MA, MACD, struktur harga) untuk mendapatkan kekuatan serta arah.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat MSFT dari Oktober 2025 hingga Januari 2026. Sepanjang kebanyakan Oktober, MSFT bergerak mendatar antara 425 dan 445 dengan bacaan ADX(14) harian pada 14–18 — jelas di bawah ambang trend 20. Pedagang yang menggunakan sistem silang MA yang mengikuti trend dalam tetingkap masa tersebut akan mengalami tiga kali whipsaw.
+
+Pada 5 November, MSFT menembusi 445 dengan volume. Pada 12 November, ADX telah naik ke 24 — melintasi ke wilayah trend yang sedang berkembang. Pada 24 November, ADX berada pada 33, dengan harga naik ke 462. Sepanjang Disember dan Januari, MSFT bergerak dalam trend yang bersih ke 488 manakala ADX kekal dalam julat 28–38. Trend itu bertahan tepat sepanjang masa ADK kekal di atas 25.
+
+Kemudian pada 28 Januari 2026, MSFT ditutup pada 481. ADX mencapai puncak pada 38 sekitar 18 Januari dan mula menurun — pada 28 Januari ia berada pada 28 dan masih menurun. Harga masih naik, tetapi penurunan ADX memberi amaran bahawa trend sedang kehilangan kekuatan. MSFT kemudiannya bergerak mendatar antara 475 dan 488 selama empat minggu berikutnya; sistem silang MA seterusnya akan mengalami whipsaw.
+
+Percubaan boleh disangkal: entri yang mengikuti trend yang diambil apabila ADX di bawah 20 mempunyai hasil yang lebih buruk secara ketara berbanding entri yang sama apabila ADX di atas 25. Ketidak sahahan: satu sampel 30+ dagangan di mana entri di bawah 20 menyamai entri di atas 25 dari segi kadar kemenangan. Secara empirikal, jurang ini signifikan — pasaran mendatar memakan sistem trend.
+
+Peraturan ambang: jika ADX di bawah 20, anda berada dalam julat; strategi mengikuti trend akan whipsaw dan strategi reverensi min sesuai. Di atas 25, anda berada dalam trend; strategi mengikuti trend sesuai dan strategi reverensi min akan ditindas. Zon 20–25 ialah tanah no-man di mana pilihan strategi adalah paling tidak pasti.
+
+Di Bursa Malaysia: SIME pada pertengahan 2025 — ADX di bawah 20 dari April hingga Jun (berjurang), kemudian melintasi 25 pada Julai apabila harga menembusi, kekal di atas 25 sehingga September semasa pergerakan trend. Pilihan strategi berubah tepat dengan ambang ADX.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan arah ADX sebagai isyarat arah. "ADX sedang naik — beli." Tetapi ADX naik dalam kedua-dua trend naik dan trend turun. Saham yang jatuh mempunyai ADX yang naik sama seperti saham yang naik. Membingungkan arah ADX dengan arah harga ialah kesilapan ADX yang paling biasa.
+
+Model mental yang betul: ADX ialah tombol isipadu pada kekuatan trend. Ia memberitahu anda seberapa kuat trend itu "bercakap," bukan apa yang ia katakan. Gunakan penunjuk arah berasingan (harga di atas/bawah MA, MACD di atas/bawah sifar) untuk membaca arah, dan gunakan ADX untuk mengawal keluarga strategi yang mana terpakai. ADX di atas 25 ditambah harga di atas SMA50 = wilayah trend-following long; ADX di atas 25 ditambah harga di bawah SMA50 = wilayah trend-following short; ADX di bawah 20 = tiada trend, tukar kerangka.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="MSFT bergerak bersih dari 445 ke 488 selama dua bulan dengan ADX harian berada antara 28 dan 38. Kemudian ADX mencecah puncak pada 38, mula menurun, dan jatuh ke 28 selama sepuluh sesi walaupun harga masih meningkat. Apakah tafsiran pelajaran ini?"
+  options={[
+    "ADX menurun bermaksud trend sedang berbalik — jual pendek",
+    "ADX menurun adalah bullish kerana ia masih positif",
+    "ADX menurun bermaksud kekuatan trend sedang pudar, walaupun arah masih positif. Trend kehilangan cengkamannya; jangka pergerakan tidak menentu atau konsolidasi segera, dan ketatkan exit pada posisi mengikuti trend.",
+    "ADX tidak relevan — hanya harga yang penting"
+  ]}
+  answer={2}
+  explanation="ADX menurun memberitahu anda bahawa daya trend sedang melemah, bukan arah yang berbalik. Jawapan salah yang memikat ('ADX menurun = jual pendek') keliru antara kekuatan dan arah — kesilapan ADX yang paling biasa. Kelakuan sebenar MSFT seterusnya (empat minggu pergerakan tidak menentu antara 475 dan 488) adalah tepat apa yang diramalkan oleh ADX yang pudar: rejim trend kuat sedang berakhir tanpa semestinya berbalik."
+/>
+
+<Quiz
+  question="Anda mempunyai senarai tontonan tiga saham. Saham A: ADX 16, harga di bawah SMA50. Saham B: ADX 32, harga di atas SMA50 yang meningkat. Saham C: ADX 31, harga di bawah SMA50 yang menurun. Saiz akaun $30,000, had mandat 1% per dagangan, anda hanya mendagangkan setup mengikuti trend. Saham manakah sesuai dengan strategi anda dan apakah bias arahannya?"
+  options={[
+    "Saham B (panjang, mengikut trend) dan Saham C (pendek, mengikut trend) kedua-duanya sesuai dengan kerangka mengikuti trend kerana ADX > 25. ADX Saham A < 20 bermaksud rejim julat di mana mengikuti trend akan menyebabkan whipsaw — tinggalkan Saham A tidak kira tahap harga.",
+    "Saham A sahaja — yang lain terlalu melampau",
+    "Saham C sahaja — ADX tinggi sentiasa bermaksud pembalikan segera",
+    "Saham A — ADX rendah jadi ia bersedia untuk pecah"
+  ]}
+  answer={0}
+  explanation="ADX > 25 mengawal seluka mengikuti trend; ADX < 20 meluluskannya. Saham B dan Saham C kedua-duanya mempunyai ADX > 25 ditambah bias arah yang jelas dari kecerunan MA — kedua-duanya sesuai dengan sistem trend, satu panjang dan satu pendek. Saham A adalah perangkap chop yang klasik. Jawapan salah yang memikat (pilihan D) keliru antara ADX tinggi dengan keletihan — ADX di atas 25 adalah permulaan ruang manis mengikuti trend, bukan penghujung."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal tiga ticker dari <Term id="ami_watchlist" /> anda dan tanya: "Baca ADX(14) harian setiap ticker — kategorikan sebagai di bawah 20 (range), 20–25 (berkembang), 25–50 (trend kuat), atau di atas 50 (ekstrem)." Kemudian sahkan pada carta. Bina tabiat memeriksa ADX sebelum menerapkan sebarang logik trend-following atau reverensi min; pilihan strategi adalah downstream daripada rejim.
+
+## Kesimpulan
+
+ADX mengukur kekuatan trend, bukan arah trend — di atas 25 bermaksud trend-following sesuai, di bawah 20 bermaksud rejim range-bound di mana reverensi min sesuai. Baca arah dari penunjuk berasingan; gunakan ADX untuk memilih keluarga strategi.

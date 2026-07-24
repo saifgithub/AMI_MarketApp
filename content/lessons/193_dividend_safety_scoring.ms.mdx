@@ -1,0 +1,81 @@
+---
+id: "193_dividend_safety_scoring"
+title: "Rangka penilaian keselamatan dividen AMI"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 59"
+topic: "dividend_safety"
+prerequisites: ["043_dividend_yield_and_payout_ratio", "192_payout_ratio_on_fcf", "189_interest_coverage_ratio"]
+tags: ["dividend_safety", "income", "dividends", "scoring", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Kerangka penilaian keselamatan dividen
+
+<Lesson id="043_dividend_yield_and_payout_ratio"/> memperkenalkan konsep dividen yang mampan, dan <Lesson id="192_payout_ratio_on_fcf"/> meneliti secara mendalam nisbah payout terhadap FCF sebagai pemeriksaan liputan tunai utama. Pelajaran ini membina kerangka penilaian multi-faktor — enam ujian, masing-masing binari — yang menghasilkan satu bacaan keselamatan dividen. Kerangka ini bukan kotak hitam; ia adalah senarai semak yang memaksa pembaca melihat ke tempat-tempat di mana dividen dipotong. Pada akhir pelajaran ini, anda harus mampu menerapkan keenam-enam ujian kepada mana-mana nama yang membayar dividen, menilainya, dan mengenal pasti gabungan faktor tepat yang meramalkan pemotongan kira-kira 12–18 bulan sebelumnya.
+
+## Bagaimana ini berlaku di pasaran sebenar
+
+Kerangka enam ujian:
+
+1. **Payout pada FCF di bawah 80%** (purata 3 tahun, bukan hanya satu tahun).
+2. **FCF mendatar atau meningkat** selama 3 tahun.
+3. **Liputan faedah melebihi 3.0x** supaya terdapat bantal perkhidmatan hutang.
+4. **Hutang bersih / EBITDA di bawah 4.0x** (atau di bawah 5.0x untuk utiliti/REIT).
+5. **Dividen telah dikekalkan atau ditingkatkan** melalui kitaran ekonomi penuh terakhir.
+6. **Tiada dinding penyegerakan material** dalam 24 bulan akan datang yang boleh memaksa pilihan pengagihan modal antara pemegang bon dan pemegang saham.
+
+Terapkannya pada KO dalam tahun kewangan 2024. Payout-on-FCF kira-kira 75% (purata 3 tahun) → lulus. FCF meningkat perlahan → lulus. Liputan faedah kira-kira 11x → lulus. Hutang bersih / EBITDA kira-kira 1.7x → lulus. Dividen dikekalkan dan dinaikkan melalui COVID → lulus. Tiada dinding penyegerakan jangka pendek → lulus. Enam daripada enam: dividen yang dijamin secara fungsi kecuali bencana.
+
+Terapkannya pada T (AT&T) sekitar 2021 — sebelum pemotongan. Payout-on-FCF melebihi 90% dalam tahun lalu → gagal. FCF menurun selama dua tahun berturut-turut → gagal. Liputan faedah kira-kira 3.0x → sempadan. Hutang bersih / EBITDA melebihi 3.0x dan meningkat akibat pelaburan segmen media → gagal. Dividen dikekalkan selama bertahun-tahun → lulus. Dinding penyegerakan di hadapan → gagal. Empat hingga lima kegagalan daripada enam. T memotong dividen pada tahun 2022 — kerangka ini akan menandakan ini dua tahun sebelumnya.
+
+Terapkannya pada MSFT pada tahun 2024. Payout-on-FCF kira-kira 25% → lulus. FCF meningkat dengan kuat → lulus. Liputan faedah kira-kira 38x → lulus. Hutang bersih / EBITDA negatif (kedudukan tunai bersih) → lulus. Dividen dikekalkan dan dinaikkan setiap tahun sejak dimulakan pada 2003 → lulus. Tiada dinding penyegerakan → lulus. Enam daripada enam: sangat selamat.
+
+Di Bursa Malaysia: MAYBANK mendapat kira-kira lima daripada enam — faktor sempadan tunggal ialah payout-on-FCF yang tinggi dalam julat 65–75%, biasa untuk bank matang. KLCC sebagai REIT adalah secara struktur hampir 100% payout oleh mandat, jadi kerangka ini dibaca berbeza untuk REIT — ujian yang relevan di sana ialah penempatan, peningkatan sewa, dan penyegerakan hutang pada tahap hartanah, bukan nisbah payout gaya korporat.
+
+Pernyataan boleh disangkal: nama yang membayar dividen yang gagal tiga atau lebih daripada enam ujian mempunyai kebarangkalian pemotongan dividen 12–24 bulan akan datang yang lebih tinggi daripada kadar asas (kadar asas sejarah pemotongan dividen di kalangan pembayar dividen S&P 500 pada mana-mana tahun tertentu adalah kira-kira 2–4%). Kerangka ini tidak sah jika terdapat sebab struktur untuk "gagal" — dinding penyegerakan sekali gus yang telah didanai terlebih dahulu oleh syarikat, contohnya — tetapi itu perlu disahkan, bukan diandaikan.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan kerangka penilaian sebagai kotak hitam dan mengabaikan konteks. REIT akan gagal ujian payout-on-FCF secara struktur, kerana REIT diwajibkan untuk mengedarkan 90%+ daripada pendapatan boleh cukai. Bank akan kelihatan sangat berleverage pada D/E tradisional kerana bank mendanai pinjaman dengan deposit. Model mental yang betul: kerangka ini adalah senarai semak, bukan formula. Setiap kegagalan adalah soalan, bukan penghakiman — "mengapa faktor ini gagal, dan adakah sebabnya struktur atau membimbangkan?" Apa yang membatalkan bacaan permukaan: dasar dividen yang dinyatakan oleh pengurusan adalah penting. Syarikat yang telah berkomitmen secara awam kepada sasaran payout yang dikaitkan dengan arus tunai bebas menandakan tingkah laku yang berbeza daripada satu yang tiada dasar dan sejarah pemotongan apabila mudah.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat bukan-REIT dan bukan-keuangan mencatatkan: payout-on-FCF 95%, FCF menurun selama 3 tahun berturut-turut, liputan faedah 2.5x, hutang bersih / EBITDA 4.5x, dividen dikekalkan rata selama 5 tahun tetapi tiada pertumbuhan, dan dinding penajaan semula sebanyak 35% daripada hutang dalam 18 bulan akan datang. Bacaan mana yang paling tepat?"
+  options={[
+    "Kebanyakannya selamat — dividen telah dikekalkan selama 5 tahun",
+    "Rangka kerja ini tidak terpakai kepada syarikat ini",
+    "Lima daripada enam ujian gagal: payout-on-FCF melebihi 80%, FCF menurun, liputan faedah di bawah 3.0x, hutang bersih / EBITDA melebihi 4.0x, dan dinding penajaan semula yang signifikan dalam jangka masa terdekat. Satu-satunya lulus ialah penyelenggaraan dividen, yang merupakan tepat indikator terundur yang dirancang untuk dilalui oleh rangka kerja. Ini adalah corak pra-putus. Ramalan berkeyakinan tinggi ialah pemotongan yang diumumkan dalam 12–18 bulan akan datang, kemungkinan besar bersama rundingan penajaan semula",
+    "Lima daripada enam gagal — tetapi dividen yang dikekalkan mengatasi yang lain"
+  ]}
+  answer={2}
+  explanation="Ujian sintesis: menerapkan rangka kerja multi-faktor. Jawapan salah yang memikat ialah 'kebanyakannya selamat, dividen telah dikekalkan selama 5 tahun' — berjangkar pada isyarat sejarah penyelenggaraan dividen yang secara eksplisit diberi bobot rendah oleh rangka kerja sebagai indikator terundur. Jawapan 'lima daripada enam gagal tetapi dividen yang dikekalkan mengatasi' membuat kesilapan yang sama dengan lebih eksplisit. 'Rangka kerja tidak terpakai' menolak tanpa justifikasi. Bacaan yang betul mengira kegagalan, menamakan corak khusus (dinding penajaan semula + liputan ketat + payout tinggi + FCF menurun), dan meramalkan garis masa pemotongan 12–18 bulan tipikal yang konfigurasi ini telah hasilkan secara sejarah."
+/>
+
+<Quiz
+  question="Utiliti elektrik berregulated AS mencatatkan: payout-on-FCF 110%, FCF rata selama 3 tahun, liputan faedah 3.5x, hutang bersih / EBITDA 5.5x, dividen tumbuh 5% tahunan selama 20 tahun, tiada dinding penajaan semula (dijadualkan keluar 15 tahun). Sintesis mana yang paling tepat?"
+  options={[
+    "Utiliti tidak pernah memotong dividen",
+    "Tiga gagal — pemotongan mungkin",
+    "Rangka kerja meramalkan pemotongan",
+    "Payout-on-FCF dan hutang bersih / EBITDA yang gagal adalah normal secara struktur untuk utiliti berregulated; asas kadar berregulated menetapkan leverage dan formula pulangan terhad mengekang pertumbuhan FCF. Ujian sektor yang relevan dipenuhi: liputan faedah di atas 3.0x, tiada dinding penajaan semula, 20 tahun pertumbuhan dividen, dan rangka kerja regulasi secara eksplisit memasukkan liputan dividen ke dalam pulangan yang dibenarkan. Rangka kerja merentas industri menandakan berlebihan ini; disesuaikan konteks, dividen adalah tahan lama"
+  ]}
+  answer={3}
+  explanation="Ujian sintesis menerapkan aplikasi sedar sektor. Jawapan salah yang memikat ialah panggilan 'tiga gagal, pemotongan mungkin' — penskoran mekanikal tanpa konteks, perangkap tepat yang amaran pelajaran ini. Bacaan yang betul mengiktiraf bahawa utiliti berregulated adalah sektor berstruktur berbeza di mana ambang mutlak berubah. Jawapan 'ramalan rangka kerja ialah pemotongan' mengulang kesilapan penskoran mekanikal. 'Utiliti tidak pernah memotong dividen' membuat generalisasi berlebihan; utiliti telah memotong dividen (contohnya, PG&E), tetapi hanya apabila perniagaan asas atau rangka kerja regulasi terganggu — bukan kerana ambang nisbah payout generik."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal ticker yang membayar dividen dan tanya: "Terapkan kerangka keselamatan dividen enam ujian. Nilai setiap faktor sebagai lulus / gagal / lulus-diselaraskan-struktur, dan berikan bacaan keseluruhan." Simpan kad yang dinilai dalam <Term id="ami_decision_journal" /> anda. Bina <Term id="ami_watchlist" /> nama yang anda nilaikan pada 5/6 atau 6/6 — itu adalah set calon untuk <Term id="ami_mandate" /> yang berfokus pada pendapatan.
+
+## Penutup
+
+Dividen yang mampan ialah satu yang lulus senarai semak, bukan satu yang mempunyai sejarah panjang. Sejarah adalah penunjuk tertunda; payout-on-FCF, trend FCF, liputan, dan pendedahan penyegerakan adalah penunjuk utama.

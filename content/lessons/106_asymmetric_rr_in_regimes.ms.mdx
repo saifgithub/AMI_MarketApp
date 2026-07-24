@@ -1,0 +1,66 @@
+---
+id: "106_asymmetric_rr_in_regimes"
+title: "Nisbah R:R Asimetri merentasi pasaran trending dan ranging"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "edge_process"
+code: "EDGE 29"
+topic: "rr_regimes"
+prerequisites: ["016_risk_reward_ratio"]
+tags: ["risk", "reward", "regimes", "trending", "ranging"]
+agent_callouts: ["trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# R:R Asimet merentasi pasaran trending dan ranging
+
+Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="016_risk_reward_ratio"/> (Nisbah risiko/ganjaran); di sini kita mendalami fakta bahawa R:R yang boleh dicapai secara realistik bergantung kepada jenis pasaran yang anda hadapi. Dalam trend yang kuat, sasaran diselesaikan dengan jelas dan pelari (runners) boleh memberikan 3:1 atau 5:1; dalam julat yang ketat, setup yang sama mencapai had maksimum pada 1.2:1 kerana harga tidak dapat melepasi had atas julat sebelum berbalik arah. Menggunakan ambang R:R minimum yang sama dalam kedua-dua rejim adalah kesilapan kategori — anda terlalu banyak berdagang dalam julat (kerana kebanyakan setup gagal memenuhi ambang tetapi anda tetap mengambilnya) atau kurang berdagang dalam trend (kerana anda mengambil untung terlalu awal pada ambang tersebut instead of membiarkan pelari memberikan ganjaran). Pelajaran ini mengajar cara melaraskan ambang tersebut mengikut rejim.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat GOOGL merentasi dua rejim. Dalam regangan Q2 2024 yang trending, GOOGL bergerak dari $148 ke $190 dengan tiga entri penurunan (pullback) di sepanjang jalan. Entri biasa pada $155 dengan henti rugi (stop) $150 dan sasaran pada nombor bulat seterusnya ($170) menunjukkan R:R kertas = 3.0. Tetapi trend terus meluas — pelari mengikuti dengan chandelier 2× ATR sehingga ke $180+ untuk R:R realistik yang lebih dekat dengan 5:1. Ambang minimum yang "masuk akal" dalam rejim ini ialah 3:1 dengan kesediaan untuk mengikuti (trail) melepasi ambang tersebut.
+
+Bandingkan dengan regangan ranging Q3 2024 dalam GOOGL, yang berosilasi antara $160 dan $172. Entri jenis yang sama — long $163, stop $159 (risiko $4), sasaran $172 (ganjaran $9) — menunjukkan R:R kertas = 2.25. Nampak baik di atas kertas. Tetapi sasaran berada di bahagian atas julat, di mana bekalan (supply) kembali masuk. Harga menyentuh $171.50 dan berbalik ke $164 dalam tempoh dua hari. R:R realistik = (171.50 − 163) ÷ (163 − 159) = 2.13. Tidak buruk, tetapi tiada pelari — had atas julat adalah siling, bukan landasan pelancaran. Menuntut 3:1 dalam rejim ini akan menolak setiap setup yang sah. Di Bursa Malaysia: logik yang sama pada MAYBANK dalam julat perlahan RM10.10–RM10.70 — setup 2:1 adalah siling struktur, bukan lantai. Ujian yang boleh disangkal: jika anda mengambil 10 dagangan yang menuntut R:R 3:1 di dalam julat yang lebar 5%, lebih daripada separuh gagal di had atas julat sebelum mencapai sasaran.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan lantai R:R tunggal tanpa mengira rejim. Pemula menetapkan `min_risk_reward_ratio` kepada 2.0 dan menggunakannya untuk setiap dagangan. Dalam trend yang kuat, mereka keluar pada 2R sementara pergerakan meluas ke 5R — meninggalkan kebanyakan nilai dagangan di atas meja. Dalam julat yang ketat, mereka terus menunggu setup 2R yang tidak wujud dan sama ada melangkau rejim sepenuhnya atau, lebih kerap, mengambil setup 1.4R yang dipaksa dan memanggilnya 2R dengan memanjangkan sasaran di luar julat. Model mental yang betul: rejim menentukan kedua-dua R:R yang boleh dicapai dan ambang yang sesuai. Pasaran trending — tuntutan minimum 2:1 tetapi ikuti pelari. Pasaran ranging — terima setup sasaran tetap 1.5:1 hingga 2:1 dan jangan memanjangkan sasaran melebihi julat. Market Analyst boleh menandakan rejim dalam <Term id="ami_one_on_one" />; gunakan penanda itu untuk memilih ambang.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="MSFT berada dalam julat yang disahkan $410–$430. Anda mengenal pasti setup panjang pada $414 dengan henti carta pada $408. Sasaran semula ialah puncak julat pada $429. Setup ini menawarkan nisbah R:R yang bagaimana, dan adakah ia perlu diambil atau diabaikan dalam rejim ini?"
+  options={[
+    "R:R = 0.4 — abaikan, matematik ini terbalik.",
+    "R:R = 3.75 — ambil, tetapi luaskan sasaran ke $430.50 untuk melepasi julat.",
+    "R:R = 1.5 — abaikan, tidak memenuhi minimum 2:1 yang sepatutnya terpakai secara universal.",
+    "R:R = 2.5 — ambil, ini adalah setup julat biasa yang menggunakan puncak julat sebagai sasaran tanpa melampauinya."
+  ]}
+  answer={3}
+  explanation="Risiko = 414 − 408 = $6. Ganjaran = 429 − 414 = $15. R:R = 2.5. Jawapan salah yang menggoda ialah 'R:R = 3.75, luaskan sasaran' — itu tepatlah perangkap menolak sasaran melepasi siling struktur. Puncak julat adalah di mana bekalan kembali, jadi sasaran sepatutnya berada sedikit di bawahnya. Pengalih perhatian 'minimum universal 2:1' juga berfungsi di sini (2.5 ≥ 2) tetapi pengajarannya ialah dalam julat, 1.5–2.5 ialah siling yang boleh dicapai dan anda tidak sepatutnya menolaknya kerana gagal mencapai 3:1."
+/>
+
+<Quiz
+  question="Dua pedagang menjalankan setup kemasukan yang sama selama setahun merentasi rejim trend dan julat. Pedagang A menuntut R:R kertas 3:1 yang rata pada setiap dagangan. Pedagang B menuntut 2:1 dalam julat (dengan sasaran tetap di puncak julat) dan minimum 2:1 dalam trend (tetapi mengikuti pelari dengan chandelier 2× ATR). Siapakah yang kemungkinan menghasilkan jangkaan realisasi yang lebih baik sepanjang tahun?"
+  options={[
+    "Mereka seri — R:R kertas adalah R:R kertas tanpa mengira rejim.",
+    "Pedagang A — ambang universal yang lebih tinggi adalah penapis yang lebih kuat.",
+    "Pedagang A — peraturan universal sentiasa lebih baik daripada peraturan diskresi.",
+    "Pedagang B — melaraskan ambang mengikut rejim mengekalkan aktiviti pedagang dalam julat (di mana 3:1 tidak tersedia secara struktur jadi A mengabaikan kebanyakan setup julat) sambil masih menangkap pelari 4:1 hingga 5:1 dalam trend melalui trail; A menapis berdasarkan nombor kertas bukan ganjaran yang boleh dicapai mengikut rejim."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang menggoda ialah 'ambang lebih tinggi = penapis lebih baik'. Kekurangannya ialah ambang mesti sepadan dengan apa yang sebenarnya dapat disampaikan oleh rejim. Tuntutan 3:1 dalam julat selebar 5% menolak setiap setup yang sah, jadi Pedagang A mengabaikan kebanyakan setup julat tahun itu dan hanya mengambil beberapa yang kelihatan 3:1 pada kertas — selalunya setup ini mempunyai sasaran yang dibesar-besarkan dan prestasi kurang baik. Pedagang B menerima siling semula jadi rejim dalam julat, kemudian menangkap lanjutan semula jadi trend melalui trail. Pengalih perhatian 'seri' mengabaikan bahawa R:R yang boleh dicapai adalah kondisional mengikut rejim."
+/>
+
+## Cuba sendiri
+
+Buka sesi 1-on-1 dengan Trader, pilih ticker dari <Term id="ami_watchlist" /> anda, dan tanya "Adakah ini sedang trending atau ranging pada masa ini, dan apakah R:R yang boleh dicapai secara struktur di sini?" Kemudian lihat 10 dagangan terakhir anda pada ticker yang sama dalam <Term id="ami_decision_journal" /> — adakah anda menuntut 3:1 dalam julat, atau membiarkan pelari 5:1 dipotong pada 2:1 dalam trend? Laraskan mengikut itu.
+
+## Penutup
+
+Dalam trend, tuntutan 2:1 tetapi ikuti pelari; dalam julat, terima 1.5:1 hingga 2:1 dan ambil sasaran pada siling struktur — jangan sekali-kali memanjangkan sasaran melebihi rejim.

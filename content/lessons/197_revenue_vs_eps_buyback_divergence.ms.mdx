@@ -1,0 +1,74 @@
+---
+id: "197_revenue_vs_eps_buyback_divergence"
+title: "Penyimpangan pertumbuhan hasil vs EPS — kesan pembelian semula"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 63"
+topic: "buyback_effect"
+prerequisites: ["044_earnings_growth", "032_revenue_the_top_line", "190_debt_to_asset_ratio"]
+tags: ["buyback", "eps_growth", "revenue_growth", "share_count", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Penyingkiran EPS vs Pertumbuhan Hasil — Kesan Pembelian Semula
+
+<Lesson id="044_earnings_growth"/> memperkenalkan jurang antara pertumbuhan hasil dan pertumbuhan EPS sebagai tanda kejuruteraan kewangan — pembelian semula mengurangkan penyebut sambil pengangka (hasil bersih) tumbuh perlahan atau tidak langsung. Pelajaran ini meneliti matematik, logik kewangan korporat, dan keadaan tepat di mana pertumbuhan EPS yang dipacu oleh pembelian semula adalah bernilai tambah berbanding merosakkan nilai. Pada akhir pelajaran ini, anda harus dapat menguraikan pertumbuhan EPS kepada sumbangan hasil, margin, dan bilangan saham, mengiktiraf leverage yang terlibat dalam membiayai pembelian semula dengan hutang, dan menerapkan peraturan yang boleh disangkal untuk menilai pertumbuhan pembelian semula.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+AAPL adalah kes buku teks. Selama dekad terakhir, hasil telah tumbuh kira-kira 7-8% setahun dan hasil bersih kira-kira 8-10%. EPS telah tumbuh 12-14% setahun. Jurang 4-6 mata peratusan ialah pembelian semula — bilangan saham jatuh dari lebih 26B (diselaraskan pecahan) kepada kira-kira 15B sepanjang tempoh tersebut, satu pengurangan lebih 40%. AAPL telah membelanjakan lebih $700B untuk pembelian semula sejak 2013. Pemegang AAPL telah menggabungkan EPS dengan lebih cepat daripada perniagaan telah menggabungkan, kerana hasil yang sama dibahagikan kepada lebih sedikit saham. Metrik per-saham bertambah baik; perniagaan itu sendiri tumbuh pada kadar yang lebih sederhana.
+
+Bandingkan dengan syarikat yang tidak membeli semula: BRK-B (Berkshire Hathaway) — Buffett secara sejarah mengembalikan tunai melalui pelaburan semula dan pembelian semula terpilih hanya apabila saham berada di bawah nilai intrinsik. Hasil dan EPS mengesan lebih rapat (apabila disesuaikan dengan item luar biasa) kerana bilangan saham adalah lebih kurang stabil. Pertumbuhan yang anda lihat ialah pertumbuhan perniagaan.
+
+Sekarang satu contoh di mana pembelian semula merosakkan nilai. IBM pada 2010-an membeli kembali lebih $100B saham pada harga berbeza dari $130 hingga $215, sering dibiayakan sebahagiannya dengan hutang. Hasil mengecut; EPS dipegang oleh bilangan saham yang mengecut. Pertumbuhan EPS yang direka oleh pembelian semula menutupi perniagaan yang semakin teruk. Apabila kejuruteraan itu kehabisan ruang, saham jatuh juga. Pembelian semula pada gandaan yang tinggi ditambah penurunan operasi sama dengan kerosakan nilai — pelikuidan per-saham perniagaan yang mengecut.
+
+Matematik: jika sebuah syarikat mempunyai $1B hasil bersih, 100M saham, dan EPS $10, dan ia membeli kembali 5M saham pada $200 (membayar $1B tunai), EPS baru ialah $1B / 95M = $10.53 — satu peningkatan 5.3% tanpa perubahan operasi. Akresi ini nyata kepada pemegang yang tinggal. Tetapi jika syarikat membiayai pembelian semula $1B itu dengan hutang pada kadar selepas cukai 5%, perbelanjaan faedah naik $50M, menjatuhkan hasil bersih kepada $950M dan memberikan EPS $10. Sifar bersih. Pembelian semula hanya akretif apabila songsangan P/E (hasil pendapatan) melebihi kos selepas cukai hutang yang membiayainya.
+
+Di Bursa Malaysia: budaya pembelian semula kurang maju berbanding di AS, dengan syarikat lebih sering mengembalikan tunai melalui dividen. PUBLIC Bank telah melakukan pembelian semula secara berkala; banyak nama KLCI memegang tunai dalam buku besar berbanding membatalkan saham.
+
+Pernyataan boleh disangkal: pembelian semula adalah menambah nilai apabila hasil pendapatan syarikat (1 / P/E) melebihi kos selepas cukai modal yang digunakan untuk membiayainya, DAN pasukan pengurusan tidak akan melihat peluang lebih baik dengan melabur semula tunai yang sama secara dalaman pada ROIC yang lebih tinggi. Pembelian semula yang gagal kedua-dua ujian ialah kejuruteraan EPS mekanikal, bukan pengembalian modal.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan pertumbuhan EPS sebagai satu isyarat kualiti. Pertumbuhan EPS 15% kelihatan sama sama ada ia datang dari (a) pertumbuhan hasil organik 15% pada margin rata dan bilangan saham stabil, (b) pertumbuhan hasil 5%, pengembangan margin 5%, dan pengurangan bilangan saham 5%, atau (c) hasil -5%, margin rata, dan pengurangan bilangan saham 20%. Yang pertama ialah pertumbuhan perniagaan berkualiti tinggi; yang ketiga ialah pelikuidan yang dibalut sebagai pertumbuhan. Model mental yang betul: uraikan pertumbuhan EPS kepada (1 + pertumbuhan hasil) × (1 + perubahan margin) × (1 + pengurangan bilangan saham) − 1, lebih kurang, dan tanya istilah mana yang melakukan kerja. Apa yang membatalkan bacaan permukaan: pembelian semula yang dibiayai dengan hutang ialah pulangan ekuiti berleverage — ia mengukuhkan ROE (<Lesson id="041_return_on_equity"/>) dan EPS secara mekanikal tetapi ia juga mengukuhkan risiko ke bawah. Kadar pertumbuhan EPS yang direka oleh leverage hilang dalam resesi kerana buku besar berleverage mengekang pengagihan modal.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat melaporkan pertumbuhan EPS sebanyak 18% sepanjang tahun lalu. Pendapatan tumbuh 4%. Margin bersih berkembang dari 12% ke 13% (peningkatan relatif ~8%). Bilangan saham turun 5%. Penguraian anggaran?"
+  options={[
+    "Pertumbuhan EPS tidak bergantung pada input ini",
+    "Pertumbuhan EPS ≈ (1.04 × 1.083 × 1.053) − 1 ≈ 18.6%. Pendapatan menyumbang ~4 mata, pengembangan margin ~8 mata, pembelian balik ~5 mata. Hanya ~12 daripada 18 mata berasal daripada sumber operasi organik (pendapatan + margin); 5 daripada 18 mata berasal daripada pengurangan bilangan saham. Perniagaan berkembang secara sederhana; metrik per saham dikuatkan oleh kejuruteraan pembelian balik. Penilaian yang membayar gandaan 25x untuk pertumbuhan 18% adalah terlalu mahal — perniagaan teras berkembang pada kadar kira-kira separuh daripada itu",
+    "Keseluruhan 18% didorong oleh pembelian balik",
+    "Keseluruhan 18% adalah pertumbuhan operasi berkualiti tinggi"
+  ]}
+  answer={1}
+  explanation="Ujian sintesis: penguraian mendarab. Jawapan salah yang menarik ialah 'keseluruhan 18% adalah pertumbuhan operasi berkualiti tinggi' — menerima tajuk EPS. Bacaan yang betul mengira sumbangan setiap faktor dan memerhatikan bahawa komponen operasi (pendapatan + margin) menyumbang bahagian yang lebih besar tetapi bukan keseluruhan. Jawapan 'keseluruhan 18% didorong oleh pembelian balik' songsangkan nisbah. Jawapan 'pertumbuhan EPS tidak bergantung pada input ini' mengabaikan identiti asas."
+/>
+
+<Quiz
+  question="Syarikat mempunyai pendapatan bersih $5B, 500M saham, P/E 20x (harga $200, EPS $10). Ia merancang membeli balik $1B saham, dibiayai oleh penerbitan hutang dengan kos selepas cukai 4%. Hasil pendapatan = 1/20 = 5%. Bacaan manakah paling tepat?"
+  options={[
+    "Sentiasa menambah nilai kerana pembelian balik mengurangkan bilangan saham",
+    "Hasil pendapatan (5%) > kos hutang selepas cukai (4%), maka pembelian balik menambah nilai kepada EPS. 5M saham yang ditarik balik (=$1B/$200) meninggalkan 495M outstanding. Kos faedah baru pada $1B pada 4% selepas cukai = $40M; pendapatan bersih baru = $4.96B; EPS baru = 4.96B / 495M ≈ $10.02. Penambahan nilai adalah ~0.2%, sederhana kerana perbezaan antara hasil pendapatan dan kos hutang hanya 100 bp. Pembelian balik secara matematik menambah nilai tetapi magnitudnya kecil dan syarikat telah mengambil $1B hutang untuk menangkapnya",
+    "Sentiasa mencairkan kerana penerbitan hutang mencederakan ekuiti",
+    "Pembelian balik tidak menjejaskan EPS"
+  ]}
+  answer={1}
+  explanation="Ujian sintesis: pengiraan penambahan/pencairan. Jawapan salah yang menarik ialah 'sentiasa menambah nilai' — membuat generalisasi bahawa pembelian balik sentiasa menambah nilai. Pengiraan yang betul menunjukkan penambahan nilai adalah bersyarat pada perbezaan hasil pendapatan vs kos hutang selepas cukai, dan mengkuantifikasi magnitud sederhana apabila perbezaan itu sempit. Jawapan 'sentiasa mencairkan' songsangkan arah. Jawapan 'pembelian balik tidak menjejaskan EPS' mengabaikan mekanisme."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Analis Asas, tampal kod saham yang dikenali kerana pembelian semula (AAPL, MSFT, ORCL, HD) dan tanya: "Uraikan pertumbuhan EPS untuk setiap 5 tahun terakhir kepada sumbangan hasil, sumbangan margin, dan sumbangan bilangan saham. Untuk tahun dengan pembelian semula yang ketara, kira hasil pendapatan pembelian semula terhadap kos hutang syarikat selepas cukai pada masa itu, dan tandai mana-mana tahun di mana pembelian semula adalah pencair pada ujian itu." Simpan jadual.
+
+## Pengambilan
+
+Pertumbuhan EPS ialah identiti: hasil, margin, dan bilangan saham. Uraikan sebelum membayar gandaan pertumbuhan — hanya komponen hasil dan margin mencerminkan perniagaan; pengurangan bilangan saham mencerminkan pengagihan modal, dan hanya akretif apabila hasil pendapatan mengalahkan kos pembiayaan.

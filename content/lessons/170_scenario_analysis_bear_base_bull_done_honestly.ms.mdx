@@ -1,0 +1,78 @@
+---
+id: "170_scenario_analysis_bear_base_bull_done_honestly"
+title: "Analisis senario: bear, asas, bull, dilakukan dengan jujur"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 36"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "167_dcf_basics_why_terminal_value_eats_everything"]
+tags: ["valuation", "scenarios", "probability_weighting", "risk", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Analisis senario: bear, base, bull, dilakukan dengan jujur
+
+Analisis senario mengambil idea kepekaan dari <Lesson id="167_dcf_basics_why_terminal_value_eats_everything"/> dan menyusunnya: bina tiga cerita yang koheren — bear, base, bull — setiap satu dengan andaian yang konsisten secara dalaman, nilaikan syarikat di bawah setiap senario, kemudian nilaikan nilai jangkaan yang ditimbang kebarangkalian. Dilakukan dengan jujur, ia memaksa anda menentukan apa yang perlu berlaku untuk setiap hasil — dan menolak tesis di mana kes bear adalah bencana dan kes bull adalah ringan (risiko sisi yang tidak simetri). Dilakukan dengan buruk, ia menjadi cara untuk menjustifikasi pandangan sedia ada dengan memanipulasi kebarangkalian. Pada akhir pelajaran ini, anda perlu tahu cara membina senario yang koheren, dan disiplin penimbangan kebarangkalian khusus yang menghalang manipulasi tersebut.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Ambil TSLA pada pertengahan 2026, diperdagangkan sekitar $260. Pembinaan tiga senario yang bersih:
+
+- **Bear** ($100 nilai adil, -62% dari semasa): Pertumbuhan EV perlahan secara ketara, persaingan daripada EV China dan pengeluar automotif sedia ada mampatkan margin kepada <5%, komersialisasi robotaxi tertunda kepada 2030+, pendapatan FSD kekal sebagai pecahan kecil daripada jumlah. Nisbah mampat ke tahap syarikat automotif hujung atas.
+- **Base** ($240 nilai adil, -8%): Pertumbuhan unit EV pada 10–15% secara tahunan, margin operasi pulih kepada 12–15%, pelancaran robotaxi di pasaran terhad dengan sumbangan pendapatan sederhana pada 2028, kadar lekatan FSD stabil. Nisbah pada ~50x pendapatan mencerminkan premium pertumbuhan sederhana.
+- **Bull** ($600 nilai adil, +130%): robotaxi mencapai skala komersial sebenar pada 2028, FSD menjadi aliran pendapatan berulang margin tinggi, margin operasi kembali ke 17%+, bahagian pasaran EV kekal. Nisbah pada ~80x mencerminkan pilihan platform AI.
+
+Sekarang disiplin kebarangkalian. Tetapkan berat yang anda boleh pertahankan secara lisan: katakan 35% bear, 45% base, 20% bull. Nilai yang ditimbang kebarangkalian ialah 0.35×$100 + 0.45×$240 + 0.20×$600 = $35 + $108 + $120 = $263. Hampir nilai adil.
+
+Tetapi tukar berat kepada 20%/50%/30% (kecondongan bullish) dan nilai jangkaan menjadi $320 — 23% kenaikan. Tukar kepada 50%/40%/10% (kecondongan bearish) dan EV menjadi $206 — 21% penurunan. Senario yang sama, kesimpulan yang sangat berbeza, semua daripada penimbangan kebarangkalian.
+
+Ini mengapa disiplin bukan sekadar membina senario tetapi mempertahankan berat. Mengapa bear 35% dan bukan 50%? Bukti apa yang akan mengubahnya? Dipaksa menjawab soalan tersebut secara bertulis, kebanyakan pelabur rumahtangga mendapati berat mereka 60–70% bull kerana mereka sudah memiliki saham atau mahu memilikinya.
+
+Di Bursa Malaysia: AIRASIA sepanjang tempoh 2020–2024 ialah saham analisis senario buku teks — bear (kebankrapan), base (pemulihan perlahan), bull (pemulangan perjalanan pantas + potongan kos) mempunyai nilai adil yang sangat berbeza, dan penimbangan kebarangkalian mendorong setiap keputusan.
+
+Pernyataan boleh disangkal: analisis senario adalah jujur hanya jika anda boleh menulis — terlebih dahulu — peristiwa boleh pemerhatian khusus yang akan mengubah anda dari base ke bear atau base ke bull. Jika satu-satunya perkara yang mengemas kini kebarangkalian anda ialah pergerakan harga saham, anda tidak melakukan analisis senario, anda melakukan momentum yang dibalut sebagai analisis.
+
+## Perangkap
+
+Perangkap ialah menggunakan berat kebarangkalian untuk mengesahkan pandangan sedia ada. Pemula yang bullish pada saham membina tiga senario kemudian "secara naluri" menimbangnya 15%/35%/50%, dan nilai jangkaan keluar dengan gemilang di atas harga semasa — mengesahkan bullishness. Model mental yang betul: tulis kebarangkalian senario SEBELUM anda mengira nilai jangkaan. Lebih baik lagi, tulis kebarangkalian dengan merujuk kepada kadar asas sejarah tertentu ("secara sejarah, 30% saham seperti ini dalam keadaan seperti ini telah mencapai kes bear"). Versi lain perangkap ialah menjadikan kes bull tidak masuk akal bullish ($1,200 TSLA) sambil mengekalkan kes bear cetek ($200) — bingkai asimetri ini mengimbangi nilai jangkaan kerana ekor bull melakukan kerja berat. Kes bear yang disiplin sepatutnya kira-kira sejauh kes bull dari base, dalam sebutan peratusan.
+
+<ChatWith agent="bear_researcher" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang analis membentangkan: bear $150 (kebarangkalian 20%), asas $300 (kebarangkalian 50%), bull $900 (kebarangkalian 30%). Saham diperdagangkan pada $400. Kes bear adalah -50% daripada asas; kes bull adalah +200% daripada asas. Manakah kritikan paling tepat mengikut pelajaran?"
+  options={[
+    "Skenario tersebut tidak seimbang dengan cara yang membesar-besarkan jawapan. Bear adalah -50% daripada asas, bull adalah +200% daripada asas — itu adalah ketidakseimbangan upside 4:1 yang hampir mustahil dibenarkan oleh sebarang tabiran dunia nyata. Kes bear yang disiplin sepatutnya kira-kira sejauh bawah asas seperti bull di atas asas, dalam istilah peratusan. Bina semula dengan bear pada $150 (-50%) dan bull pada $450 (+50%), nilai jangkaan turun kepada $30+$150+$135 = $315 — hampir dengan nilai adil, bukan 'beli'. Ketidakseimbangan itulah yang melakukan kerja, bukan analisis",
+    "Beli kerana kes bull lebih besar",
+    "Tolak analisis skenario — ia semua subjektif",
+    "Nilai jangkaan ialah 0.2×$150 + 0.5×$300 + 0.3×$900 = $30+$150+$270 = $450. Beli"
+  ]}
+  answer={0}
+  explanation="Sintesisnya ialah skenario yang tidak seimbang — bear cetek, bull dalam — membesar-besarkan nilai jangkaan secara mekanikal tanpa memerlukan maklumat yang lebih baik. Disiplin pelajaran ialah upside dan downside sepatutnya kira-kira seimbang dalam istilah peratusan melainkan terdapat sebab struktur khusus (contohnya, kebangkrapan ialah lantai satu hala). Jawapan salah yang paling menipu ialah pengiraan nilai jangkaan $450 — matematiknya betul secara teknikal tetapi inputnya telah dimanipulasi. Menolak analisis skenario sebagai subjektif adalah menolak terlalu jauh — ia adalah rigor apabila disiplin. Jawapan beli-karena-kes-bull-lebih-besar jatuh ke dalam jebakan manipulasi yang sama yang amaran pelajaran."
+/>
+
+<Quiz
+  question="Anda telah membina bear/asas/bull untuk satu saham. Saham itu jatuh 15% selama dua bulan. Tanpa sebarang perubahan dalam asas, analis meningkatkan kebarangkalian bull dari 20% kepada 35% kerana 'harga yang lebih rendah meningkatkan risiko-ganjaran.' Apakah kritikan paling tepat?"
+  options={[
+    "Kebarangkalian setiap skenario tidak sepatutnya berubah kerana harga saham berubah — kebarangkalian adalah tentang apa yang berlaku kepada perniagaan, bukan saham. Ujian boleh disangkal pelajaran ialah kebarangkalian hanya sepatutnya dikemas kini apabila peristiwa perniagaan yang boleh diperhatikan berlaku. Mengemas kini kebarangkalian kerana harga bergerak adalah membina semula bullishness daripada tindakan harga. Tindakan betul terhadap penurunan harga 15% tanpa perubahan asas ialah mengira semula nilai jangkaan pada harga baru menggunakan kebarangkalian yang tidak berubah — jika harga baru kini di bawah EV, itu adalah isyarat beli, bukan menaikkan berat bull",
+    "Betul — harga yang lebih rendah sentiasa meningkatkan risiko-ganjaran",
+    "Betul — momentum sepatutnya diberi berat dalam skenario",
+    "Tidak tentu — bergantung pada isipadu"
+  ]}
+  answer={0}
+  explanation="Sintesisnya ialah disiplin teras pelajaran — kebarangkalian skenario adalah tentang perniagaan, harga saham ialah input untuk menentukan sama ada EV menarik. Memadukan kedua-duanya mewujudkan penalaran bermotivasi. Jawapan harga-lower-always-improves-risk-reward membingungkan peningkatan harga dengan perubahan kebarangkalian. Jawapan weight-in-momentum mengimport konsep analisis teknikal ke dalam rangka kerja fundamental di mana ia tidak sesuai. Jawapan depends-on-volume mengelakkan kesilapan metodologi."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, pilih satu saham dan tanya: "Bina saya senario bear/base/bull dengan nilai adil untuk setiap satu. Peristiwa khusus apa yang perlu saya perhatikan untuk beralih antara senario?" Dalam <Term id="ami_decision_journal" />, tulis tiga berat kebarangkalian anda — tetapi tulis terlebih dahulu SEBELUM anda melihat pengiraan nilai jangkaan. Kemudian kira EV terhadap harga semasa. Jika berat anda heavily menyokong kes bull, tulis satu ayat menjawab: "Bukti apa yang akan membuatkan saya meningkatkan berat bear sebanyak 10 mata?"
+
+## Penegasan
+
+Senario memaksa anda berfikir; berat kebarangkalian memaksa anda jujur — tulis berat sebelum matematik, kekalkan bear dan bull simetri, dan kemas kini kebarangkalian hanya apabila perniagaan berubah, bukan apabila harga berubah.

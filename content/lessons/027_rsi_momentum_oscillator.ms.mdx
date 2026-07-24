@@ -1,0 +1,74 @@
+---
+id: "027_rsi_momentum_oscillator"
+title: "RSI — pengayun momentum"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 8"
+topic: "rsi"
+prerequisites: ["022_trend_direction", "026_moving_averages"]
+tags: ["indicators", "rsi", "momentum", "oscillator", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# RSI — pengukur momentum
+
+Indeks Kekuatan Relatif (RSI) mengukur momentum pada skala 0–100 dengan membandingkan purata penutupan naik terhadap purata penutupan turun dalam tempoh penglihatan (laluan) (lalai 14 bar). Di atas 70 secara konvensional dianggap "terbeli berlebihan" (overbought); di bawah 30 adalah "terjual berlebihan" (oversold). Label-label itu menipu. RSI adalah bacaan momentum, bukan panggilan puncak dan dasar — trend naik yang kuat boleh mengekalkan RSI di atas 70 selama berminggu-minggu. Kebolehan RSI yang sebenar ialah menunjukkan apabila momentum tidak sepadan dengan harga: apabila harga membuat tinggi baru tetapi RSI tidak, tekanan pembelian sedang melemah di bawah permukaan. Divergensi itu — bukan ambang — adalah isyarat yang membuktikan nilainya.
+
+<Animation name="rsi_oscillator" />
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat NVDA dari Disember 2025 hingga Januari 2026. Harga bergerak dari 138 ke 152 dalam sembilan hari dagangan, dengan RSI(14) harian mencecah 78 pada kaki pertama kenaikan. Pemula menjual pendek (short) atas alasan "terbeli berlebihan". Mereka terserempet had kerugian (stopped out) — NVDA terus mendaki selama dua minggu lagi sambil RSI kekal terikat antara 65 dan 75. Trend yang kuat berlaku sedemikian.
+
+Isyarat sebenar muncul pada 21 Januari: NVDA mencetak tinggi penutupan baru pada 154.20, tetapi RSI(14) harian mencapai puncak pada 71 — lebih rendah daripada bacaan 78 tiga minggu sebelumnya. Harga membuat tinggi yang lebih tinggi; momentum membuat tinggi yang lebih rendah. Itu adalah divergensi bearish. Dalam lapan sesi seterusnya, NVDA jatuh ke 141.
+
+Syarat penafian: divergensi RSI bearish pada tinggi harga akan dibatalkan jika RSI membuat tinggi baru sebelum harga merosot melepasi rendah ayunan (swing low) terkini. Jika NVDA telah bangkit semula dengan RSI kembali mencecah di atas 82, divergensi tersebut akan dibatalkan dan isyarat trend naik dipulihkan. Anda tidak memperdagangkan divergensi secara bersendirian — anda memperdagangkannya hanya apabila harga mengesahkannya dengan memecahkan struktur.
+
+Di Bursa Malaysia: PETRONAS pada pertengahan 2025 mencetak RSI(14) pada 82 semasa kaki naik yang kuat dan kekal bid untuk tiga minggu lagi. Ambang itu sendiri tidak berguna; divergensi pada tinggi seterusnya adalah di mana kelebihan (edge) berada.
+
+## Perangkap
+
+Kesilapan klasik pemula ialah menjual pendek pada "terbeli berlebihan" dan membeli pada "terjual berlebihan" secara mekanikal. RSI > 70 terasa seperti siling. Ia bukan begitu. Dalam trend yang kuat, RSI boleh kekal di atas 70 selama lebih 20 sesi, dan setiap posisi short pada ambang akan terserempet had kerugian. Perkara yang sama berlaku pada sisi bawah: dalam penurunan berpanjangan, RSI akan terparkir di bawah 30 dan pembeli "terjual berlebihan" akan dilanggar.
+
+Model mental yang betul: ambang RSI adalah pemerian kekuatan momentum, bukan pencetus pembalikan. Isyarat yang anda cari ialah divergensi — apabila harga dan RSI tidak sepadan pada tinggi atau rendah ayunan — dan anda menunggu harga mengesahkan dengan pecahan struktur sebelum bertindak. Ambang sahaja adalah hingar; divergensi dengan pengesahan adalah persediaan (setup).
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="NVDA mencetak RSI(14) harian pada 78 semasa kenaikan tajam. Enam minggu kemudian, ia mencatatkan penutupan tertinggi baharu tetapi RSI(14) hanya mencecah 71. Harga kemudian menembusi paras rendah ayunan terkini. Bacaan yang paling tepat ialah?"
+  options={[
+    "Beli semasa turun; RSI pada 71 masih menunjukkan isyarat naik",
+    "Pengesahan divergens bearish pada RSI disokong oleh pecahan struktur — momentum gagal menyokong tertinggi baharu",
+    "RSI mencapai 78 minggu lalu, jadi pasaran sudah tepu dan akan kembali ke purata dengan segera",
+    "Abaikan RSI; hanya harga yang penting dalam senario ini"
+  ]}
+  answer={1}
+  explanation="Isyaratnya ialah divergens (harga lebih tinggi, momentum lebih rendah) ditambah dengan pecahan struktur yang mengesahkannya. Jawapan salah yang paling menipu ialah refleks 'tep = jual' — pelajaran ini secara eksplisit menunjukkan NVDA mengekalkan RSI > 70 selama beberapa minggu semasa trend kuat. Ambang sahaja bukan isyarat; divergens dengan pengesahan harga adalah kunci."
+/>
+
+<Quiz
+  question="Anda memegang saham di atas SMA50 yang menaik, RSI(14) berada pada 74, tiada divergens kelihatan — harga dan RSI sama-sama membuat titik tertinggi yang lebih tinggi. Saiz posisi ialah 4% daripada akaun, dan stop loss ialah 1.5% di bawah harga masuk. Panggilan mana yang paling tepat mencerminkan apa yang telah anda pelajari?"
+  options={[
+    "Gandakan posisi — momentum sedang kuat",
+    "Potong posisi — RSI pada 74 bermaksud tepu",
+    "Teruskan dagangan; penunjuk bersetuju antara satu sama lain dan trend naik, stop loss menentukan titik pembatalan",
+    "Jual separuh dan masuk semula apabila RSI turun di bawah 30"
+  ]}
+  answer={2}
+  explanation="Slope MA, harga, dan RSI adalah sepadan; tiada divergens dan stop loss sudah berada di titik di mana setup menjadi tidak sah. Jawapan salah yang menipu ('RSI 74 = tepu, keluar') ialah kesilapan tepat yang dinamakan dalam pelajaran — dalam trend kuat, RSI boleh kekal di atas 70 selama beberapa minggu. Keluar secara mekanikal berdasarkan ambang dalam trend yang disahkan akan meninggalkan keuntungan dan mengabaikan risiko yang telah ditetapkan sebelumnya."
+/>
+
+## Cuba sendiri
+
+Buka Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham (ticker) yang jelas sedang menenndik pada <Term id="ami_watchlist" />, dan tanya: "Adakah terdapat divergensi RSI pada tempoh masa harian sekarang?" Kemudian lihat carta dan semak sama ada tinggi ayunan harga dan RSI sepadan. Latihan ini adalah kalibrasi — mata anda berhadapan dengan bacaan Market Analyst.
+
+## Kesimpulan
+
+Ambang RSI menerangkan kekuatan momentum, bukan pembalikan — isyarat yang boleh diperdagangkan ialah divergensi antara harga dan RSI, dan hanya selepas harga mengesahkan dengan pecahan struktur.

@@ -1,0 +1,72 @@
+---
+id: "127_moving_average_ribbon"
+title: "Pita purata bergerak — rejim trend pada pandangan pertama"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 27"
+topic: "ma_ribbon"
+prerequisites: ["026_moving_averages", "126_ma_slope_analysis"]
+tags: ["indicators", "moving_average", "ribbon", "trend_regime", "fan"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pita purata bergerak — rejim trend pada pandangan mata
+
+<Lesson id="026_moving_averages"/> menggunakan satu atau dua purata bergerak pada satu masa. Pita menyusun beberapa purata — biasanya enam hingga lapan EMA dengan panjang berperingkat seperti 8, 13, 21, 34, 55, 89 — supaya anda dapat melihat struktur keseluruhan trend pada satu masa. Apabila semua garis meregang dengan kemas dengan yang terpendek di atas dan yang terpanjang di bawah, setiap kerangka masa bersetuju dan trend adalah kuat. Apabila garis-kompresi ke dalam jalur yang ketat, trend telah kehilangan pembezaan dan pasaran sedang konsolidasi. Apabila mereka bersilang, trend telah runtuh. Pita menukar soalan "adakah ada trend?" kepada jawapan visual tiga keadaan — meregang, mampat, atau kusut.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat MSFT sehingga September 2025. Melalui tiga minggu pertama September, EMA8 berada di sekitar 522, EMA21 pada 514, EMA55 pada 498, EMA89 pada 486 — satu kembangan bersih dengan kira-kira $36 perbezaan antara garis terpantas dan terlambat. Harga kekal di atas keenam-enam MA. Itu adalah pita yang kembang sepenuhnya, rejim yang paling kuat.
+
+Pada 15 Oktober, MSFT menembusi 510 dan EMA8 turun melalui EMA21 dan EMA34. Pita mampat: perbezaan antara terpantas dan terlambat turun kepada $11 pada 22 Oktober. Mampatan mendahului perubahan rejim. Pada 5 November, EMA telah dianyam bersama — EMA21 di atas EMA8, EMA34 di atas EMA55 di beberapa tempat — keadaan kusut yang berlangsung selama sembilan sesi. MSFT bergegar antara 478 dan 495 sepanjang masa. Pada 18 November, MSFT ditutup pada 470, pita kembang semula dalam susunan bertentangan (terpanjang di atas, terpendek di bawah), dan rejim turun baharu berjalan sehingga 452 pada Disember.
+
+Percanggahan boleh difalsifikasi: pita yang kembang sepenuhnya dengan kecondongan naik menghasilkan isyarat palsu yang lebih sedikit secara material berbanding bacaan trend yang sama daripada satu MA sahaja. Pembatalan adalah mekanikal — apabila pita mampat kepada kurang daripada separuh perbezaan puratanya selama 10+ sesi, rejim semasa berisiko berakhir; apabila pita dianyam (mana-mana susunan pantas/lambat terbalik), rejim telah berakhir mengikut definisi.
+
+Di Bursa Malaysia: MAYBANK pada 2025 mempunyai pita kembang teks buku dari Januari hingga Mac, mampat melalui April, kemudian kembang semula dalam arah bertentangan pada Mei apabila ia beralih dari RM10.50 ke RM9.80.
+
+## Perangkap
+
+Perangkapnya ialah membaca satu MA pada carta dan terlepas konteks struktur tempoh. Saham boleh berada di atas SMA50-nya (kelihatan bullish) manakala EMA8 berada di bawah EMA21 (momentum jangka pendek telah bertukar). Satu MA memberi anda ya/tidak; pita memberi anda keseluruhan bentuk. Pemula masuk posisi panjang apabila satu MA kelihatan menguntungkan dan mengabaikan bahawa struktur tempoh yang lain sudah dianyam menentang mereka.
+
+Model mental yang betul: pita adalah pengelasan rejim. Kembang dan selaras = dagang mengikut trend; mampat = berdiri di tepi atau bersiap untuk pecahan; kusut = tiada trend, tiada dagangan melainkan anda pakar reverensi min. Pita tidak memberitahu anda apa yang perlu dilakukan — ia memberitahu anda sama ada strategi anda dalam musim. Strategi mengikuti trend memerlukan pita kembang untuk berfungsi; strategi reverensi min memerlukan pita kusut.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Pita EMA MSFT (8/21/34/55/89) terbuka sepenuhnya dengan EMA8 di atas, EMA89 di bawah, dan kira-kira jurang $36 antara keduanya. Dua minggu kemudian, jurang telah mampat kepada $11 dan EMA8 telah merentasi ke bawah EMA21. Apakah bacaan yang paling tepat?"
+  options={[
+    "Pita sedang mampat dan garis pantas mula terjalin — rejim trend menaik yang berlaku berisiko berakhir; jika susunan pita berubah, rejim tersebut telah hilang",
+    "Abaikan pita dan dagangkan hanya berdasarkan harga",
+    "Tambahkan EMA yang lebih pantas untuk mengesahkan trend menaik",
+    "Beli secara agresif — pita masih kebanyakannya positif"
+  ]}
+  answer={0}
+  explanation="Mampatan dari jurang $36 kepada $11, ditambah EMA8 yang turun di bawah EMA21, adalah tepat keadaan rejim berisiko yang diajarkan. Jawapan salah yang menggoda ('kebanyakannya positif, beli') mengabaikan bentuk struktur istilah — satu MA masih boleh kelihatan baik walaupun tiga MA pantas telah berubah. Tugas pita adalah untuk mendedahkan perselisihan faham ini sebelum bacaan MA tunggal mengikutinya."
+/>
+
+<Quiz
+  question="Anda menjalankan strategi mengikuti trend. Imbasan anda menemui saham di mana semua enam garis pita EMA bersimpang — EMA8 di bawah EMA34, EMA21 di atas EMA55, dan jurang antara garis paling pantas dan paling perlahan adalah kurang daripada separuh purata 60 hari. RSI ialah 52, MACD hampir sifar. Peraturan saiz posisi ialah risiko 1% akaun. Apakah cadangan pelajaran ini?"
+  options={[
+    "Berdiri di tepi: pita yang simpang bermaksud tiada trend, dan strategi mengikuti trend tidak sesuai pada musim ini. Tunggu sehingga pita terbuka semula dalam arah yang jelas sebelum memasuki posisi.",
+    "Ambil dagangan — pelbagai strategi menjustifikasikannya",
+    "Beli separuh saiz untuk menghedging ketidakpastian",
+    "Tukar kepada strategi reverensi purata dan ambil dagangan sebagai pembalikan"
+  ]}
+  answer={0}
+  explanation="Pita adalah pengelasan rejim: simpang = tiada trend = strategi mengikuti trend tidak terpakai. Jawapan salah yang menggoda (pilihan C) ialah kesalahan klasik menukar strategi semasa dagangan untuk menjustifikasikan masuk. Jika kelebihan anda ialah mengikuti trend, kelebihan anda memerlukan trend. Saiz separuh dalam rejim yang salah masih salah, hanya lebih kecil. Pelajaran ini tegas: pita memberitahu anda sama ada strategi anda sesuai pada musim ini."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham dan tanya: "Tunjukkan pita EMA saya (8, 21, 34, 55, 89) dan beritahu sama ada ia kembang, mampat, atau kusut sekarang — dan bagaimana itu berbanding dengan 60 sesi terakhir." Kemudian buka carta dan bandingkan bentuk pita dengan tesis dagangan anda. Jika strategi anda mengikuti trend dan pita kusut, kelebihan anda tidak aktif hari ini.
+
+## Intipati
+
+Pita purata bergerak menukar trend kepada pengelasan rejim tiga keadaan — kembang untuk menunggang, mampat untuk menunggu, kusut untuk berdiri di tepi.

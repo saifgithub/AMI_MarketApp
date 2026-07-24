@@ -1,0 +1,70 @@
+---
+id: "013_why_risk_matters_more_than_profit"
+title: "Mengapa risiko lebih penting daripada keuntungan"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 2
+track: "risk_portfolio"
+code: "RISK 1"
+topic: "risk_first_principle"
+prerequisites: []
+tags: ["risk", "drawdown", "asymmetry", "mandate", "compounding"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mengapa risiko lebih penting daripada keuntungan
+
+Melindungi modal didahulukan sebelum menjana keuntungan — bukan sebagai slogan, tetapi sebagai aritmetik. Penurunan 50% memerlukan kenaikan 100% untuk pulih. Penurunan 20% memerlukan kenaikan 25%. Penurunan 10% hanya memerlukan kenaikan 11.1%. Matematik ini tidak simetri: kerugian menumpuk terhadap anda lebih cepat daripada keuntungan menumpuk untuk anda. Setiap pelajaran lain dalam Modul 3 — saiz posisi, henti rugi, nisbah risiko/keuntungan (R/R), pendedahan, penurunan, kelangsungan hidup — adalah alat untuk membengkokkan ketidaksimetrian ini demi keuntungan anda. Pelajaran ini menetapkan prinsip yang dikuatkuasakan oleh baki modul.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Dua pedagang simulasi, kedua-duanya bermula tahun 2025 dengan $100,000, kedua-duanya memperdagangkan TSLA sepanjang tahun yang sama.
+
+**Pedagang A — berfokus pada keuntungan.** Membesarkan saiz posisi apabila keyakinan tinggi. Q1: menunggang TSLA dari $240 ke $310, pendedahan penuh akaun, +29% portfolio, akaun pada $129,000. Q2: TSLA turun ke $180 akibat mampatan margin; pedagang yang sama masih 90% diperuntukkan, menerima penurunan portfolio −42%, akaun pada $74,820. Q3: TSLA pulih ke $245, pedagang kini memperkecil saiz posisi (takut), +18%, akaun pada $88,287. Q4: kenaikan bersih +22%, akaun pada $107,710. Akhir tahun: **+7.7%**.
+
+**Pedagang B — berfokus pada risiko.** <Term id="ami_mandate" /> menetapkan had pendedahan nama tunggal pada 15% daripada akaun, risiko maksimum 1% setiap perdagangan. Setup TSLA yang sama, arah yang sama. Q1: posisi lebih kecil, menangkap +29% pada 15% daripada buku dagangan — portfolio +4.4%, akaun pada $104,400. Q2: penurunan TSLA mengenai henti rugi risiko maksimum $4,400 (~1%), akaun pada $103,400. Q3: masuk semula, posisi 15% lagi, kaki kenaikan +18% = +2.7%, akaun pada $106,200. Q4: kaki kenaikan +22% pada 15% = +3.3%, akaun pada $109,700. Akhir tahun: **+9.7%**.
+
+Pedagang A mempunyai suku tahun yang lebih baik. Pedagang B mempunyai tahun yang lebih baik — dan akaun yang lebih baik untuk diperdagangkan pada hari pertama 2026. Penurunan Q2 adalah perbezaan keseluruhan: Pedagang A memerlukan +72% hanya untuk kembali ke sifar. Pedagang B hanya memerlukan +1%.
+
+## Perangkap
+
+Perangkap adalah suara dalaman yang berkata *"Saya akan besarkan saiz pada idea terbaik saya."* Ia terasa rasional — keyakinan tinggi, ganjaran asimetri, mengapa membazirkan setup dengan saiz kecil? Tetapi keyakinan bukan lindung nilai. Perdagangan yang anda pasti tentangnya secara statistik tidak dapat dibezakan daripada perdagangan yang mengalami penurunan 50% akibat miss panduan. Pemula mengejar potensi naik apabila betul dan lupa bahawa potensi turun apabila salah adalah mendarab, bukan tambahan. Bingkai yang betul: saiz posisi bukan fungsi betapa bagusnya anda fikir perdagangan itu. Ia adalah fungsi berapa banyak akaun yang anda bersedia untuk hilang jika anda salah. Keyakinan memberi anda hak untuk mengambil perdagangan; mandat menentukan berapa banyak.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Akaun anda bernilai $100,000. Anda mengalami drawdown 50% kepada $50,000. Berapakah peratusan keuntungan pada modal baki yang diperlukan untuk kembali ke $100,000?"
+  options={[
+    "100%",
+    "200%",
+    "150%",
+    "50%"
+  ]}
+  answer={0}
+  explanation="Peningkatan dari $50,000 ke $100,000 adalah penggandaan: +100%. Ini adalah asimetri kerugian — memulihkan drawdown 50% memerlukan keuntungan 100%, bukan 50% lagi, kerana anda mendapat keuntungan pada asas yang lebih kecil. Kerugian 20% hanya memerlukan keuntungan 25%. Risiko berkembang secara bukan linear semakin dalam lubang tersebut."
+/>
+
+<Quiz
+  question="Dua pedagang simulasi memperdagangkan tahun yang sama. Pedagang A: +29%, −42%, +18%, +22% (berdasarkan suku tahun). Pedagang B: +4.4%, −1%, +2.7%, +3.3%. Suku tahun terbaik Pedagang A mengalahkan keseluruhan tahun Pedagang B. Pedagang mana yang berakhir tahun 2025 dengan modal lebih banyak, dan mengapa?"
+  options={[
+    "Pedagang A — ayunan lebih besar sentiasa menang sepanjang tahun penuh kerana pampatan geometri.",
+    "Pedagang A — suku tahun +29% sahaja sudah mengatasi keseluruhan pulangan Pedagang B, dan pemulihan membawanya kembali.",
+    "Kedua-duanya berakhir tahun dengan ekuiti yang lebih kurang sama kerana purata suku tahun mereka serupa.",
+    "Pedagang B — kerugian memampatkan terhadap anda, jadi suku tahun −42% Pedagang A memerlukan pemulihan +72% hanya untuk kembali ke nilai asal, yang suku tahun baki tidak dapat berikan."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang memikat adalah yang mendakwa suku tahun +29% Pedagang A sudah mengatasi keseluruhan pulangan Pedagang B. Tetapi pulangan memampatkan secara malaran, bukan secara tambahan. Jujukan Pedagang A: 1.29 × 0.58 × 1.18 × 1.22 = 1.077, jadi +7.7%. Jujukan Pedagang B: 1.044 × 0.99 × 1.027 × 1.033 = 1.097, jadi +9.7%. Suku tahun −42% bagi Pedagang A adalah punca kerosakan — selepas itu, akaun memerlukan +72% hanya untuk kembali ke nilai permulaan, dan dua suku tahun baki bersama-sama hanya memberikan +44%. Pedagang yang kehilangan lebih sedikit berakhir dengan lebih banyak, walaupun selepas 'kuarters terbaik' yang lebih teruk. Inilah sebab utama Modul 3 wujud."
+/>
+
+## Cuba sendiri
+
+Buka editor Mandat di bawah Tetapan. Tetapkan `max_drawdown_pct` kepada 50 dan hantar tiket perdagangan yang akan mendorong portfolio ke sana. Perhatikan mesej PM dari <Term id="ami_pm_safety_floor" /> menolak tindakan tersebut dengan matematik yang digunakan. Sekarang tetapkan `max_drawdown_pct` kepada 20 — lebih dekat dengan tempat di mana ketidaksimetrian pemulihan masih boleh bertahan — dan hantar semula. Perhatikan lantai berubah bentuk di sekitar nombor anda; ini adalah peraturan yang dikuatkuasakan oleh baki Modul 3.
+
+## Penarikan balik
+
+Keuntungan menumpuk; kerugian menumpuk lebih cepat terhadap anda. Tetapkan lantai risiko dahulu — potensi naik akan mengurus dirinya sendiri di dalamnya.

@@ -1,0 +1,79 @@
+---
+id: "161_capex_intensity_and_working_capital"
+title: "Intensiti capex dan tekanan modal kerja"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 27"
+topic: "capex_working_capital"
+prerequisites: ["035_cash_flow_vs_earnings", "160_three_cash_flow_statements"]
+tags: ["capex", "maintenance_capex", "growth_capex", "working_capital", "fcf", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Intensiti capex dan tekanan modal kerja
+
+<Lesson id="035_cash_flow_vs_earnings"/> mentakrifkan arus tunai bebas sebagai arus tunai operasi tolak capex. <Lesson id="160_three_cash_flow_statements"/> memecahkan penyata arus tunai kepada tiga bahagian. Pelajaran ini menyelami dua baris khusus yang menentukan sama ada arus tunai yang dilaporkan adalah bacaan bersih terhadap kualiti perniagaan: *capex* (dipisahkan kepada penyelenggaraan dan pertumbuhan) dan *perubahan modal kerja*. Perniagaan intensif capex boleh mencatatkan angka arus tunai operasi yang cantik tetapi menghabiskan hampir kesemuanya hanya untuk kekal di tempat — meninggalkan sedikit untuk pemegang saham. Perniagaan dengan modal kerja yang membengkak boleh menyembunyikan tekanan operasi selama beberapa suku. Di akhir pelajaran ini, anda sepatutnya dapat memisahkan capex penyelenggaraan daripada capex pertumbuhan, membaca baris modal kerja dalam penyata arus tunai, dan mengenal pasti konfigurasi khusus yang menandakan kemerosotan operasi yang disembunyikan oleh akaun.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+**Capex penyelenggaraan vs capex pertumbuhan.** Syarikat jarang mendedahkan pemisahan ini dengan jelas; anda perlu anggaran. Peraturan kasar: capex penyelenggaraan ialah capex yang diperlukan untuk mengekalkan pendapatan semasa stabil — biasanya dianggarkan oleh perbelanjaan penyusutan (yang mewakili penggunaan aset jangka panjang sedia ada). Capex pertumbuhan ialah jumlah capex tolak anggaran penyelenggaraan ini. Baki baki adalah apa yang membiayai pengembangan.
+
+Contoh sebenar: MSFT dalam tahun fiskal 2024 melaporkan capex kira-kira $44.5B dan penyusutan kira-kira $22B. Pemisahan tersirat: ~$22B penyelenggaraan, ~$22B pertumbuhan — campuran kira-kira 50/50, menunjukkan pelaburan pertumbuhan yang berat. Sebaliknya, nama-nama barang keperluan harian matang biasanya menjalankan capex kira-kira sama dengan penyusutan (capex/penyusutan ≈ 1.0x), bermaksud hampir semua capex adalah penggantian, bukan pengembangan.
+
+Perniagaan intensif capex termasuk telekom (capex 15–20% daripada pendapatan), utiliti (15–20%), industri intensif modal (10–15%), dan penyedia awan skala hiper yang semakin meningkat (15%+ daripada pendapatan). Kadar penukaran arus tunai bebas pada perniagaan ini boleh jadi hanya 30–50% daripada pendapatan bersih walaupun segala-galanya berjalan lancar.
+
+**Perubahan modal kerja.** Penyata arus tunai mengira semula pendapatan bersih kepada arus tunai operasi dengan melaraskan perubahan dalam modal kerja — piutang, inventori, dan kewajipan. Apabila perubahan ini memihak (piutang turun, inventori turun, kewajipan naik), ia menambah kepada CFO. Apabila tidak memihak (piutang naik, inventori naik, kewajipan turun), ia menolak daripada CFO.
+
+Diagnostik: apabila inventori dan piutang kedua-duanya membina lebih cepat daripada pendapatan selama 2+ suku berturut-turut, syarikat sedang menghasilkan atau menjual lebih daripada yang ia kumpulkan. Pembinaan inventori boleh disengajakan (sedia untuk pelancaran yang diketahui) atau simptomatik (permintaan melemah). Penyata arus tunai mendedahkan yang mana apabila dibaca bersama penyata pendapatan: jika pendapatan perlahan dan inventori membina, pembinaan itu simptomatik permintaan, bukan strategik.
+
+Contoh sebenar: dalam industri kitaran dan perkakasan pengguna, pembinaan inventori yang berjalan 30%+ di atas pertumbuhan pendapatan selama 2 suku telah mendahului kebanyakan pengumuman pemotongan margin utama dalam dekad terakhir. Penyata arus tunai melihat pelemahan permintaan sebelum kenyataan akhbar.
+
+Di Bursa Malaysia: TOPGLOV dalam kitaran pasca-2021 menunjukkan pembinaan inventori jauh melebihi perubahan pendapatan selama beberapa suku, menandakan runtuh margin kasar yang menyusul.
+
+Pernyataan boleh disangkal: apabila arus tunai operasi melebihi pendapatan bersih semata-mata kerana pelepasan modal kerja (mengumpulkan piutang lama, menurunkan inventori), kekuatan CFO adalah satu suku sahaja dan berbalik dalam tempoh berikutnya. Sebaliknya, apabila inventori dan piutang membina lebih cepat daripada pendapatan selama 2+ suku berturut-turut dengan pendapatan stabil atau perlahan, CFO terpendam meremehkan kelemahan hadapan kerana pembinaan modal kerja adalah *penggunaan* tunai yang akan berterusan.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan CFO sebagai metrik tunggal tanpa menguraikannya. Pemula melihat "arus tunai operasi $5B, naik 20% YoY" dan bertepuk tangan. Mereka terlepas bahawa $1.5B daripada peningkatan itu datang daripada melanjutkan kewajipan (menangguh pembayaran kepada pembekal) dan $1B daripada menurunkan inventori — kedua-duanya adalah pelepasan sekali sahaja yang tidak berulang. Arus tunai operasi teras tanpa kesan modal kerja hanya tumbuh secara sederhana. Model mental yang betul: setiap baris dalam pengira semula modal kerja ialah soalan berasingan. Inventori turun → mengapa (jualan lebih baik, atau pengeluaran kurang)? Piutang turun → mengapa (pengumpulan lebih baik, atau pelanggan membayar lebih awal)? Kewajipan naik → mengapa (menjangka terma, atau perubahan dasar modal kerja yang disengajakan)? Perangkap cermin terpakai kepada capex: syarikat boleh mencatatkan FCF yang kuat dengan melabur kurang dalam penyelenggaraan, menggadaikan asas aset untuk satu atau dua tahun penampilan arus tunai sebelum kemerosotan aset muncul dalam keputusan operasi.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat melaporkan pendapatan bersih $400M, aliran tunai operasi (CFO) $700M, belanja modal (capex) $250M, dan penyusutan $230M. Anggaran belanja modal penyelenggaraan, belanja modal pertumbuhan, dan aliran tunai bebas (FCF) untuk tujuan bukan penyelenggaraan."
+  options={[
+    "Belanja modal penyelenggaraan sifar; FCF ialah $700M",
+    "Semua belanja modal ialah belanja modal pertumbuhan; FCF ialah $450M",
+    "Tidak dapat dikira tanpa data pendapatan",
+    "Belanja modal penyelenggaraan kira-kira $230M (≈ penyusutan), belanja modal pertumbuhan kira-kira $20M, jumlah FCF $450M ($700M – $250M). Hanya kira-kira $20M membiayai pengembangan sebenar; baki belanja modal adalah penggantian aset. FCF selepas penyelenggaraan kira-kira $470M tetapi FCF *untuk pertumbuhan atau pulangan pemegang saham* (selepas menolak belanja modal penyelenggaraan dan pertumbuhan) ialah kira-kira $450M. Syarikat mempunyai ruang terhad untuk belanja modal pertumbuhan berbanding aliran tunai operasinya"
+  ]}
+  answer={3}
+  explanation="Anggaran: belanja modal penyelenggaraan ≈ penyusutan ($230M), maka belanja modal pertumbuhan ≈ jumlah capex – penyelenggaraan = $250M – $230M = $20M. FCF seperti diukur secara konvensional (CFO – jumlah capex) = $700M – $250M = $450M. Penguraian yang relevan untuk pelabur pertumbuhan ialah hanya $20M capex membiayai pengembangan; baki lagi mengekalkan aset sedia ada. Jawapan 'semua capex ialah capex pertumbuhan' mengabaikan proksi penyusutan. Jawapan 'tiada capex penyelenggaraan' menganggap penyusutan tiada makna. Jawapan 'tidak dapat dikira tanpa pendapatan' memerlukan data yang tidak diperlukan."
+/>
+
+<Quiz
+  question="Sintesis: syarikat melaporkan pendapatan bersih +12% YoY tetapi aliran tunai operasi –4% YoY. Inventori meningkat 35% YoY dan akaun penerima meningkat 22% YoY berbanding pertumbuhan pendapatan 8%. Capex tidak berubah. Bacaan mana yang paling tepat selaras dengan pelajaran yang digabungkan dengan pelajaran sebelum ini?"
+  options={[
+  ]}
+  answer={0}
+  explanation=""
+/> dan diagnostik pendapatan berbanding tunai dari <Lesson id="035_cash_flow_vs_earnings"/>, ini ialah konfigurasi yang mencadangkan pelemahan permintaan sedang diserap ke dalam inventori sambil pendapatan akaun terus diiktiraf. EPS terpendam melebihi kuasa pendapatan hadapan sehingga modal kerja membetulkan",
+    "Sihat — pembinaan inventori sentiasa persediaan strategik untuk pertumbuhan"
+  ]}
+  answer={2}
+  explanation="Sintesis: pelajaran ini ditambah <Lesson id="148_revenue_recognition_red_flags"/> dan <Lesson id="035_cash_flow_vs_earnings"/> menghasilkan diagnostik berlapis. Inventori dan piutang membina jauh di hadapan pendapatan, sambil pendapatan bersih tumbuh tetapi arus tunai operasi jatuh, ialah corak buku teks yang mendahului pemotongan margin dan penulisan turun inventori. Beberapa terlepas EPS sektor perkakasan pengguna dan industri utama tahun-tahun kebelakangan ini kelihatan dalam konfigurasi ini 1–2 suku sebelum ia sampai ke kenyataan akhbar. Jawapan 'pertumbuhan pendapatan bersih adalah apa yang penting' hanya membaca penyata pendapatan. Jawapan 'pembinaan inventori sentiasa strategik' membuat tafsiran optimistik yang tidak disokong. Jawapan 'data tidak mencukupi tanpa margin' mengelak; data yang diberi adalah mencukupi untuk diagnosis."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Analis Asas, tanya: "Untuk [ticker], kira capex/penyusutan untuk 3 tahun fiskal terakhir dan pertumbuhan inventori dan piutang vs pertumbuhan pendapatan dalam 4 suku terkini. Tandakan mana-mana suku di mana inventori atau AR tumbuh lebih cepat daripada pendapatan sebanyak 15 mata peratus. Simpan suku yang ditandakan ke dalam <Term id="ami_decision_journal" /> anda. Kali seterusnya ticker melaporkan, baris modal kerja akan menjadi tempat pertama anda melihat.
+
+## Pengajaran
+
+Capex mempunyai teras penyelenggaraan yang dianggarkan oleh penyusutan; modal kerja mempunyai tekanan membina yang ditunjukkan secara senyap oleh penyata arus tunai. Uraikan kedua-duanya — apa yang kelihatan seperti kekuatan arus tunai boleh menjadi pelepasan modal kerja, dan apa yang kelihatan seperti kelemahan arus tunai boleh menjadi pelaburan pertumbuhan yang disengajakan.

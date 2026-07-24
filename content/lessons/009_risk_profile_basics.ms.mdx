@@ -1,0 +1,72 @@
+---
+id: "009_risk_profile_basics"
+title: "Asas profil risiko"
+duration_min: 4
+level: 1
+module: 2
+difficulty: 1
+track: "foundations"
+code: "CORE 9"
+topic: "risk_profile"
+prerequisites: []
+tags: ["foundations", "risk_tolerance", "drawdown", "mandate"]
+agent_callouts: []
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Asas profil risiko
+
+Profil risiko anda bukan ujian peribadi — ia adalah dua nombor dan satu tingkah laku. Nombor tersebut ialah penurunan terburuk (drawdown) yang mampu anda tahan tanpa menjual, dan kerugian posisi tunggal terburuk yang mampu anda tanggung tanpa menggagalkan pelan anda. Tingkah laku ialah apa yang anda lakukan sebenar apabila nombor tersebut dicapai. Kebanyakan pemula melebih-lebihkan toleransi mereka dalam pasaran yang tenang dan mendapati nombor sebenar dalam penurunan tajam, apabila sudah terlambat untuk menggunakannya. Menjadi jujur mengenai hal ini **sebelum** anda melaburkan modal adalah apa yang menjadikan setiap pelajaran lain dalam kursus ini boleh digunakan.
+
+## Contoh
+
+Pertimbangkan episod sebenar: penurunan S&P 500 (SPY) pada akhir 2018. Dari puncak September 2018 pada hampir $293 ke paras terendah 24 Disember pada hampir $234, SPY kehilangan kira-kira 20% dalam tempoh kira-kira tiga bulan. Seorang pembaca dengan portfolio $50,000 yang dilaburkan sepenuhnya dalam SPY melihat akaunnya jatuh ke sekitar $40,000 — kerugian kertas $10,000 — dalam 13 minggu.
+
+Dua profil, satu dagangan yang sama.
+
+Profil X — toleransi "sederhana", ditulis sebagai max_drawdown = 25%. X menonton penurunan tersebut, tidak menjual, dan mengekalkan posisi. Pada April 2019, SPY kembali ke $290. X hampir rata (flat) selama enam bulan dan berada di landasan untuk tahun 2019 yang kuat (SPY berakhir 2019 naik kira-kira 29%).
+
+Profil Y — berkata "sederhana" semasa pendaftaran awal tetapi pernah menghadapi penurunan 20%. Y menjual pada $245 pada pertengahan Disember, mengunci kerugian kira-kira 16% pada $50,000 ($8,000 direalisasikan). Apabila SPY pulih ke $290 pada April, Y masih memegang wang tunai, "menunggu pengesahan," dan terlepas keseluruhan pemulihan. Toleransi yang dinyatakan Y ialah 25%; toleransi yang terdedah Y adalah lebih dekat kepada 15%.
+
+Dagangan tersebut adalah sama. Profil risiko menentukan hasil.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan profil risiko sebagai aspirasi ("Saya berani, saya boleh menangani apa-apa") berbanding bukti ("Saya menjual kali terakhir pada -12%, jadi nombor sebenar saya adalah sekitar 12%"). Profil risiko aspirasi gagal pada saat tepat apabila ia diperlukan. Langkah yang jujur ialah bermula dengan tetapan max_drawdown yang konservatif — katakan 15% — dan hanya lebarkannya selepas anda melalui penurunan sebenar (atau disimulasikan dengan teliti) bersaiz itu tanpa menggagalkan pelan anda. Profil risiko anda ditetapkan oleh sejarah anda, bukan harapan anda.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menetapkan max_drawdown ke 25% semasa onboarding. Enam bulan kemudian, anda berada pada -14% dan mendapati diri anda memeriksa aplikasi setiap jam, kehilangan tidur, dan serius mempertimbangkan untuk pergi ke tunai. Apakah bacaan yang jujur?"
+  options={[
+    "Anda berdisiplin; anda menetapkan 25% dan anda masih di bawahnya, jadi teruskan",
+    "Pasaran adalah masalah; tunggu ia pulih sebelum membuat keputusan",
+    "Toleransi yang dinyatakan adalah 25% tetapi toleransi yang terdedah adalah lebih dekat dengan 14%; sama ada ketatkan mandat anda sekarang atau risiko menyerah nanti",
+    "Saiz posisi meningkat untuk membalikkan kerugian dengan lebih cepat"
+  ]}
+  answer={2}
+  explanation="Nombor 25% adalah hipotesis; tingkah laku anda pada -14% adalah bukti. Jika anda sudah hancur pada -14%, anda tidak mempunyai toleransi 25% — anda mempunyai toleransi 14% dengan label 25% pada itu. Melaraskan mandat ke bawah sebelum anda panik adalah langkah yang berdisiplin."
+/>
+
+<Quiz
+  question="Apakah cara yang paling boleh dipertahankan untuk menetapkan profil risiko untuk pengguna pertama kali?"
+  options={[
+    "Pilih tetapan tertinggi; anda boleh ketatkan kemudian",
+    "Pilih tetapan tengah; ia adalah lalai yang selamat",
+    "Mula dengan konservatif dan luaskan mandat hanya selepas bertahan daripada penurunan sebenar saiz sebelumnya tanpa mengubah tingkah laku",
+    "Padankan tetapan seseorang yang pulangan anda kagumi"
+  ]}
+  answer={2}
+  explanation="Pendekatan 'peluasan berasaskan bukti' sepadan dengan struktur boleh difalsifikasikan profil risiko: toleransi adalah apa yang anda lakukan sebenarnya di bawah tekanan, bukan apa yang anda semak pada borang. Mula rendah dan mendapatkan hak untuk meluaskan adalah asimetri — kerugian menjadi terlalu konservatif adalah pulangan yang terlepas; kerugian menjadi terlalu agresif adalah menyerah pada saat yang paling buruk."
+/>
+
+## Cuba sendiri
+
+Buka editor <Term id="ami_mandate" /> dan tetapkan **max_drawdown_pct** kepada nombor yang anda fikir mampu anda tahan sebenar tanpa menjual. Kemudian buka <Term id="ami_decision_journal" /> dan tulis satu baris: "Jika portfolio saya jatuh ke [starting_value × (1 - max_drawdown_pct)], pelan saya ialah ___." Isi tempat kosong dengan tindakan khusus — "tidak buat apa-apa", "seimbangkan semula", "kurangkan saiz posisi sebanyak 25%". Komitmen prapengikat adalah separuh daripada nilai mandat.
+
+## Penutup
+
+Toleransi risiko anda ditetapkan oleh apa yang anda lakukan kali terakhir pasaran jatuh, bukan oleh apa yang anda tulis pada borang — mulakan dengan rendah, lebarkan dengan bukti, dan komit prapengikat kepada tindakan anda sebelum penurunan berlaku.

@@ -1,0 +1,80 @@
+---
+id: "114_engulfing_patterns"
+title: "Corak menelan: bull dan bear"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 14"
+topic: "candlestick_patterns"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction"]
+tags: ["engulfing", "candlestick", "reversal", "two_bar_pattern", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Corak penelapan: bullish dan bearish
+
+Anda diandaikan telah menyelesaikan <Lesson id="020_candlesticks_anatomy_of_a_bar"/> (anatomi satu bar). Di sini kita mendalami lebih lanjut corak pembalikan dua-bar: penelapan. Penelapan bullish ialah lilin merah kecil yang diikuti oleh lilin hijau yang badan lilinnya sepenuhnya menutupi badan merah sebelum itu — hijau terbuka pada atau di bawah penutupan sebelumnya dan menutup pada atau di atas pembukaan sebelumnya. Versi bearish adalah cerminannya. Pada akhir pelajaran ini, anda harus dapat mengenal pasti penelapan yang ketat, membezakannya dari hampir gagal, dan mengetahui tepat apa yang akan membatalkan tesis pembalikan tersebut.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat JPM pada carta harian pada 13 dan 14 Februari 2026. JPM telah menurun sejak 28 Januari dari $278 ke paras rendah 14 Februari pada $254.80 — kira-kira 8% dalam dua minggu. Pada hari Jumaat, 13 Februari, JPM mencetak lilin merah: buka $258.10, tutup $255.40, badan $2.70 dalam sesi menurun. Pada hari Isnin, 14 Februari (sesi biasa selepas hujung minggu), JPM terbuka pada $254.90 (berjurang turun di bawah penutupan sebelumnya) dan menutup pada $260.20 — badan hijau merangkumi $254.90 hingga $260.20, badan $5.30 yang sepenuhnya menelap badan merah $2.70 sebelumnya, kedua-duanya terbuka di bawah penutupan sebelumnya dan menutup di atas pembukaan sebelumnya. Penelapan bullish yang ketat.
+
+Konteks menjadikan ia bermakna: penelapan dicetak pada paras (zon $255 telah menjadi sokongan pada November), trend sebelumnya jelas menurun selama dua minggu, dan isipadu pada hari penelapan ialah 1.7x purata. Sesi seterusnya mengekalkan kenaikan dan menutup pada $262.40. Selama tiga minggu berikutnya, JPM naik ke $279.
+
+Seorang pedagang yang masuk berhampiran penutupan hari penelapan pada $260 dengan henti rugi di bawah paras rendah penelapan pada $253.80 berisiko $6.20 kepada sasaran berhampiran $278, nisbah risiko/pendapatan kira-kira 1:2.9. Corak ini batal apabila lilin harian seterusnya menutup di bawah paras rendah penelapan — dalam kes ini, penutupan di bawah $253.80 membatalkan bacaan tersebut.
+
+## Perangkap
+
+Perangkap ialah memanggil penelapan hampir sebagai "cukup hampir". Badan hijau yang menutupi 80% badan merah sebelumnya bukanlah penelapan bullish — ia ialah lilin pembalikan yang kuat, tetapi definisi ketat itu penting kerana versi longgar berhenti dapat dibezakan secara statistik dari hingar. Model mental yang betul: peraturan penelapan ialah penapis binari. Sama ada hijau terbuka pada atau di bawah penutupan sebelumnya DAN menutup pada atau di atas pembukaan sebelumnya, atau tidak. Jika tidak, anda masih boleh membaca kekuatan hari tersebut, tetapi jangan jual diri anda dengan cerita "penelapan bullish" apabila corak itu sebenarnya tiada. Perangkap kedua: memperdagangkan penelapan di tengah-tengah pasaran mendatar. Seperti setiap corak lilin, penelapan memerlukan trend sebelumnya untuk dibalikkan. Tiada trend, tiada isyarat.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Hari 1: buka $42.30, tutup $41.10 (badan merah). Hari 2: buka $41.20, tutup $42.40 (badan hijau). Adakah ini penelanan bullish yang ketat?"
+  options={[
+    "Ya — Badan Hari 2 lebih besar daripada Badan Hari 1, itu sahaja yang penting",
+    "Tidak — Buka Hari 2 ($41.20) berada di atas Tutup Hari 1 ($41.10), maka syarat buka gagal oleh 10 sen; ini adalah hampir-gagal, bukan penelanan ketat",
+    "Ya — warnanya berselang-seli merah kemudian hijau, yang merupakan definisinya",
+    "Tidak — penelanan memerlukan jurang yang sekurang-kurangnya 1% lebar"
+  ]}
+  answer={1}
+  explanation="Peraturan ketat ialah: Hari 2 mesti buka pada atau di bawah Tutup Hari 1 DAN tutup pada atau di atas Buka Hari 1. Tutup Hari 1 = $41.10, Buka Hari 2 = $41.20 — itu 10 sen di atas, maka syarat buka gagal. Corak ini adalah hampir-gagal. Jawapan badan lebih besar mengabaikan anker buka/tutup yang mentakrifkan corak. Jawapan berselang-seli warna merendahkan ia kepada urutan warna. Jawapan jurang 1% mencipta peraturan saiz jurang yang tidak dimiliki corak ini."
+/>
+
+<Quiz
+  question="META telah berada dalam trend naik yang bersih selama lapan minggu. Pada minggu konsolidasi mendatar biasa, META mencetak penelanan bearish yang ketat pada carta harian, tetapi penelanan itu berada di tengah-julat, jauh di bawah puncak ayunan terkini dan jauh di atas paras rendah lebih tinggi terkini, pada isipadu purata. Pedagang yang menghafal corak candlestick menjual pendek saham tersebut pada penutupan penelanan. Manakah yang paling tepat menggambarkan dagangan dan tafsiran alternatif yang paling menggoda?"
+  options={[
+    "Dagangan buruk — penelanan memenuhi peraturan bentuk tetapi kekurangan konteks (tiada trend meluas untuk dibalikkan, tiada paras rintangan di atas, tiada pengembangan isipadu; bentuk sahaja bukan isyarat. Tafsiran salah yang paling menggoda ialah membiarkan label penelanan ketat mengatasi konteks yang tiada",
+    "Dagangan bijak — trend naik adalah tepat apabila menjual pendek penelanan berfungsi dengan terbaik",
+    "Dagangan bijak — penelanan bearish sentiasa isyarat jual pendek",
+    "Dagangan buruk — penelanan bearish hanya berfungsi pada hari Selasa"
+  ]}
+  answer={0}
+  explanation="Corak ini bersih secara struktur tetapi kosong secara konteks: tengah-julat, tengah-trend, tiada paras, tiada isipadu. Penapis binari pelajaran (definisi ketat) menghalang anda daripada positif palsu, tetapi lulus penapis adalah perlu bukan cukup — konteks adalah ujian kedua. Memperlakukan penelanan bearish sebagai isyarat jual pendek sentiasa menjadikan penapis binari keseluruhan permainan. Tuntutan bahawa trend naik adalah apabila menjual pendek penelanan berfungsi dengan terbaik membalikkan sebab dan kesan. Jawapan hanya hari Selasa adalah absurd oleh pembinaan; ia adalah jenis pengecoh yang menangkap pembaca letih yang hanya mengesahkan jawapan jelas adalah titik pelajaran."
+/>
+
+<Quiz
+  question="Seorang pedagang melihat penelanan bullish yang ketat pada AAPL pada paras sokongan yang disahkan selepas penurunan 9%, pada isipadu 2x. Mereka masuk panjang pada penutupan penelanan $186.40 dengan henti di $182.80 (di bawah paras rendah penelanan $183.20). Tiga sesi kemudian AAPL tutup pada $182.10. Apakah panggilan disiplin, dan apa yang menjadikan jawapan salah menggoda?"
+  options={[
+    "Keluar — tutup harian pada $182.10 adalah di bawah paras rendah penelanan $183.20, yang merupakan pembatalan eksplisit. Premis struktur corak telah gagal tidak kira betapa bersihnya setup asal kelihatan. Panggilan salah yang paling menggoda ialah berjanggut pada betapa baiknya setup memenuhi peraturan dan mengabaikan pencetus penafian",
+    "Gerakkan henti ke $180 untuk memberi lebih ruang",
+    "Tahan — corak itu betul, beri ia masa",
+    "Tambah ke posisi kerana penurunan adalah diskaun"
+  ]}
+  answer={0}
+  explanation="Setup itu cemerlang ex ante; penafian masih memerintah ex post. Tutup harian di bawah paras rendah penelanan adalah pembatalan eksplisit yang dinyatakan dalam pelajaran, dan 'ini setup hebat' tidak mengatasi itu. Jawapan tahan-dan-beri-masa mengelirukan kualiti setup dengan validiti tesis — setiap setup mempunyai harga penafian, dan setup baik masih boleh gagal. Menambah pada penurunan mempurata ke tesis yang rugi. Menggerakkan henti ke $180 melebarkannya selepas tesis pecah — tingkah laku emosional klasik yang amaran pelajaran terhadap."
+/>
+
+## Cuba sendiri
+
+Cari carta harian untuk mana-mana ticker yang baru saja memantul dari sokongan. Skrol ke hari pantulan dan periksa sama ada lilin sesi sebelumnya dan lilin pantulan membentuk penelapan bullish yang ketat. Jika ya, tanya Market Analyst di <Term id="ami_one_on_one" />: "Sahkan anker buka/tutup dan beritahu saya harga pembatalan." Simpan paras pembatalan itu ke dalam <Term id="ami_decision_journal" /> anda bersama nota: "Henti rugi pada penutupan, bukan pada sumbu."
+
+## Penutup
+
+Penelapan yang ketat adalah binari — anker buka dan tutup mesti kedua-duanya dipatuhi — dan walaupun yang bersih hanyalah isyarat apabila trend dan paras menyediakan konteks; pembatalan sentiasa merupakan penutupan di luar ekstrem penelapan.

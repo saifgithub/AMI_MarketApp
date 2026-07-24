@@ -1,0 +1,68 @@
+---
+id: "019_survival_mindset"
+title: "Mindset kelangsungan"
+duration_min: 4
+level: 1
+module: 3
+difficulty: 2
+track: "edge_process"
+code: "EDGE 2"
+topic: "survival"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management"]
+tags: ["risk", "psychology", "survival", "process"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mindset kelangsungan hidup
+
+Mindset kelangsungan hidup ialah disposisi yang menganggap "masih dalam permainan pada bulan depan" sebagai objektif keutamaan tinggi berbanding "mendapat untung minggu ini." Kelebihan dalam pasaran adalah statistik — ia memberikan hasil merentasi ratusan dagangan, bukan lima. Mana-mana pihak yang meletup sebelum saiz sampel matang tidak pernah berpeluang mengutip kelebihan yang mereka sangka ada. Pengajaran ini bukan pelajaran matematik; ia adalah prinsip operasi yang menjadikan setiap pelajaran pengurusan risiko dalam modul ini bernilai untuk diikuti. Pengurus Portofolio (PM) melaksanakan ia secara struktur; anda dalami ia secara tingkah laku.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Pada Suku 3 2024, dua CEO simulasi menjalankan <Term id="ami_mandate" /> yang identik kecuali untuk satu medan. Kedua-duanya bermula dengan $100,000. Kedua-duanya mengambil 60 dagangan sepanjang suku tersebut menggunakan keputusan Bilik. Trader A mempunyai `max_risk_per_trade_pct: 1` dan `pause_at_drawdown_pct: 15`. Trader B membiarkan kedua-dua medan tersebut kosong dan "saiz mengikut keyakinan" — 3% hingga 5% pada dagangan yang dikenal pasti Bilik sebagai berkeyakinan tinggi.
+
+Melalui 30 dagangan pertama, Trader B naik 14%, Trader A naik 4%. Pos media sosial Trader B mengenai "leverage dan keyakinan" mendapat banyak interaksi. Kemudian kejutan Fed + hasil TSLA yang terlepas sasaran berlaku pada minggu yang sama. Trader B mempunyai berat berlebihan pada tiga nama teknologi yang berkorelasi pada masa itu, saiz 4% setiap satu. Minggu itu menghapuskan 31% daripada akaun, dan dua minggu seterusnya perdagangan balas dendam membawanya kepada penurunan 47%. Akhir suku: Trader A tamat dengan +7% (penurunan lebih kecil, pulih dengan cepat), Trader B tamat dengan −44% dan secara efektif keluar dari permainan — memerlukan 79% hanya untuk kembali ke titik sifar pada asas yang tidak lagi mempunyai ruang untuk mengambil dagangan bersaiz normal.
+
+Set-up sama, Bilik sama, Trader sama. Perbezaan tunggal ialah medan Mandat. Tuntutan boleh disangkal: merentasi sampel 60 dagangan, akaun dengan `max_risk_per_trade_pct ≤ 1` dan had penurunan tamat suku dalam 80% daripada puncak lebih daripada 90% masa; akaun tanpa kedua-dua medan ini merentasi penurunan 30% lebih daripada 1 dalam 4 suku.
+
+## Perangkap
+
+Perangkap ialah memperlakukan peraturan risiko sebagai geseran — had yang "memperlahankan anda pada idea terbaik anda." Pemula yang telah mendapat tiga kemenangan berturut-turut benar-benar percaya dagangan seterusnya harus lebih besar, kerana kelebihan itu terasa jelas. Inilah masa tepat di mana saiz meningkat, had berhenti melebar "untuk memberikannya ruang," dan mandat dinegosiasikan semula di tengah sesi. Kemudian satu dagangan menjadi salah ketika bersaiz 4% berbanding 1% dan keuntungan suku lenyap dalam satu petang. Model mental yang betul: peraturan risiko wujud untuk dagangan yang anda tidak nampak akan datang. Ia melindungi anda di masa hadapan daripada keyakinan anda di masa kini. Anda tidak mendapat hak untuk mengendurkan peraturan itu dengan menang beberapa kali berturut-turut — rentetan kemenangan adalah masa apabila mindset kelangsungan hidup diuji paling kuat, bukan paling kurang diperlukan.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda telah mencatat empat dagangan berturut-turut yang untung, masing-masing berisiko 1%. Akaun anda naik 4.5%. Anda melihat setup kelima yang Bilik panggil sebagai beli berkeyakinan tinggi. Anda berasa 'panas'. Apa kata minda kelangsungan hidup?"
+  options={[
+    "Ambil saiz posisi 1% yang sama seperti yang anda lakukan — mandat ini direka untuk dagangan yang akan memutuskan rentetan, bukan dagangan yang melanjutkannya.",
+    "Langkau dagangan itu — empat kemenangan berturut-turut bermakna secara statistik dagangan seterusnya akan rugi.",
+    "Tukar ke henti rugi yang lebih ketat supaya anda boleh menambah saiz pada risiko dolar yang sama.",
+    "Tingkatkan saiz posisi kepada 3% — kemenangan terkini adalah bukti kelebihan (edge) dan anda harus menekannya."
+  ]}
+  answer={0}
+  explanation="Jawapan salah yang menggoda ialah 'tekan kelebihan anda selepas menang' — ini benar sebagai prinsip umum, tetapi bukan pada tahap saiz per dagangan. Keyakinan rentetan kemenangan adalah masa di mana kegelinciran saiz berlaku, dan matematik tidak peduli dengan empat keputusan terakhir anda. Perangkap 'dagangan seterusnya pasti rugi' ialah kesesatan penjudi secara songsang. Perangkap 'henti rugi lebih ketat untuk tambah saiz' berasal dari pelajaran saiz posisi — ia hanya berfungsi apabila carta sebenarnya menyokong henti rugi yang lebih ketat; melakukannya kerana anda berasa 'panas' hanyalah kegelinciran saiz yang memakai kostum matematik."
+/>
+
+<Quiz
+  question="Dua peniaga simulasi menjalankan keputusan Bilik yang sama selama setahun. Peniaga A mendapat +18% dengan penurunan terburuk (drawdown) 9%. Peniaga B mendapat +24% dengan penurunan terburuk 38%. Mengikut piawaian minda kelangsungan hidup, yang mana hasil yang lebih baik dan mengapa?"
+  options={[
+    "Peniaga A — pulangan per unit drawdown ialah metrik bermakna (18/9 = 2.0 berbanding 24/38 = 0.63), dan drawdown Peniaga B bermakna satu suku tahun yang buruk boleh mengakhiri rentetan itu sebelum keuntungan diperoleh.",
+    "Peniaga B — pulangan mutlak yang lebih tinggi adalah satu-satunya perkara yang penting pada akhir tahun.",
+    "Seri — ekuiti akhir tahun adalah apa yang berkompaun, jadi laluan tidak penting.",
+    "Peniaga B — drawdown yang lebih besar membuktikan peniaga sanggup mengambil risiko, yang diperlukan untuk prestasi luar biasa."
+  ]}
+  answer={0}
+  explanation="Jawapan salah yang menggoda ialah 'hanya nombor akhir yang penting'. Nombor akhir hanya penting jika anda kekal dalam permainan untuk mengumpulnya. Drawdown 38% Peniaga B ialah laluan; jika rentetan yang sedikit lebih buruk mendorongnya ke 50% atau 60%, matematik kelangsungan hidup dari pelajaran drawdown akan bertindak — pemulihan memerlukan keuntungan lebih daripada 100% dan strategi mungkin tidak mempunyai masa yang cukup. Pulangan per unit drawdown menangkap kos kelangsungan hidup pulangan tersebut; nisbah Peniaga A yang lebih tinggi bermakna lebih banyak pulangan adalah tahan struktur."
+/>
+
+## Cuba sendiri
+
+Buka editor Mandat sekarang. Jika `max_risk_per_trade_pct` kosong atau melebihi 2, tetapkan kepada 1. Jika `pause_at_drawdown_pct` kosong, tetapkan kepada 15. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portofolio dan tanya "Memandangkan mandat semasa saya, apakah hasil tunggal suku terburuk yang boleh saya hadapi secara realistik?" Jawapannya adalah lantai yang dibeli oleh mindset kelangsungan hidup.
+
+## Penutup
+
+Trader yang menamatkan tahun ialah trader yang mengutip kelebihan — lindungi tempat duduk anda esok sebelum mengejar untung hari ini.

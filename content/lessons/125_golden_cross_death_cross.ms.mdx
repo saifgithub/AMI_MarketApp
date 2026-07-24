@@ -1,0 +1,76 @@
+---
+id: "125_golden_cross_death_cross"
+title: "Golden cross dan death cross — anatomi persilangan MA"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 25"
+topic: "ma_crossovers"
+prerequisites: ["026_moving_averages", "124_sma_vs_ema_vs_wma"]
+tags: ["indicators", "moving_average", "golden_cross", "death_cross", "crossover", "trend"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Golden cross dan death cross — anatomi persilangan MA
+
+<Lesson id="026_moving_averages"/> membentangkan garis purata bergerak sebagai konteks deskriptif. Golden cross (SMA50 bersilang di atas SMA200) dan death cross (SMA50 bersilang di bawah SMA200) ialah contoh paling kerap dirujuk bagi dua MA yang berinteraksi. Narasi popular menyatakan bahawa golden cross bermaksud "pasaran bull bermula" dan death cross bermaksud "pasaran bear bermula." Itu ialah versi media kewangan. Versi mekanikalnya lebih berguna: apabila purata jangka sederhana bersilang di atas (atau di bawah) purata jangka panjang, rejim trend telah berubah secara definisi. Sama ada perubahan itu boleh diperdagangkan bergantung kepada kecerunan kedua-dua MA pada saat persilangan dan apa yang dilakukan harga sejak itu.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat SPX melalui 2022–2023. Pada Mac 2022, SMA50 bersilang di bawah SMA200 sekitar 4,310 — satu death cross dalam buku teks. SPX jatuh ke 3,580 dalam sembilan bulan berikutnya, penurunan tambahan 17%. Isyarat itu berfungsi.
+
+Sekarang lihat SPX pada Mac 2020. SMA50 bersilang di bawah SMA200 pada 2,720 — death cross — tetapi pada masa itu SPX telah mencapai paras terendah pada 2,237 seminggu sebelumnya. Isyarat itu dilancarkan tiga minggu lewat dan 20% di bawah paras rendah. Pedagang yang melakukan short pada persilangan itu terpijak kerana SPX memulih ke 3,400 pada Ogos.
+
+Perbezaannya: pada 2022 kedua-dua MA sedang menurun pada saat persilangan; pada 2020 SMA50 menurun dengan tajam manakala SMA200 masih meningkat perlahan-lahan, dan harga telah kembali ke purata dengan kuat. Persilangan itu adalah mekanikal; perubahan rejimnya bukan.
+
+Golden cross pada SPX pada 2023 dilancarkan pada 2 Februari pada 4,070, dengan SMA50 meningkat dan SMA200 mula naik. SPX bergerak mendatar selama enam minggu, kemudian memulih ke 4,600 pada Julai — isyarat yang bersih dalam susunan yang bersih.
+
+Falsifikasi: golden cross dengan kedua-dua MA mendatar atau satu menurun adalah jauh lebih lemah secara statistik daripada satu dengan kedua-duanya meningkat atau kedua-duanya mula naik. Pembatalan adalah mekanikal — jika harga menutup di bawah SMA50 dalam tempoh 10 sesi selepas persilangan, anggap isyarat itu gagal.
+
+Di Bursa Malaysia: KLCI pada 2017 mempunyai golden cross pada kira-kira 1,665 dengan kedua-dua purata meningkat; indeks melonjak ke 1,800 dalam empat bulan. Death cross KLCI 2018 pada 1,750 dengan kedua-duanya menurun membawa indeks ke 1,550 pada akhir tahun.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan persilangan sebagai pencetus perdagangan berdiri sendiri dan mengabaikan rupa MA sebelum persilangan. Persilangan antara dua MA yang mendatar yang telah bersilang antara satu sama lain selama beberapa minggu adalah hingar statistik. Persilangan antara dua MA yang jelas mempunyai trend — kecerunan yang sama, hanya satu lebih curam — ialah perubahan rejim yang dibicarakan dalam buku teks. Pemula mengambil setiap persilangan dengan keyakinan yang sama. Death cross SPX 2020 ialah isyarat "salah" yang paling terkenal dalam dekad ini, dan ia menipu tepat pada audiens itu.
+
+Model mental yang betul: persilangan ialah masa; kecerunan kedua-dua MA ialah konteks. Ambil persilangan di mana kecerunan dan arah bersetuju, abaikan persilangan di mana MA terbelit dan mendatar. Kecerunan MA yang lebih pantas pada saat persilangan — curam, perlahan, mendatar — meramalkan ketahanan rejim baharu dengan jauh lebih baik daripada persilangan itu sendiri.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="SPX mencetak kematian silang pada Mac 2020 pada 2,720, dengan SMA50 menurun curam dan SMA200 masih naik perlahan. Harga telah runtuh dari 3,390 ke paras rendah 2,237 dan sedang memulih. Apa yang ditunjukkan oleh silang ini di bawah kerangka pelajaran?"
+  options={[
+    "Abaikan SPX dan dagangkan sesuatu yang lain",
+    "Silang telah berlaku lewat; SMA200 masih naik, harga telah pulih keras ke arah purata, dan perbezaan kecerunan adalah susunan silang gagal klasik. Berhati-hati.",
+    "Pendek SPX secara agresif — kematian silang bermaksud pasaran bear bermula",
+    "Beli SPX — kematian silang sentiasa berbalik"
+  ]}
+  answer={1}
+  explanation="Isyarat berlaku tiga minggu selepas paras bawah dan 20% di bawah paras rendah — tepat kerana SMA200 belum berputar dan harga telah menyerah kalah. Jawapan salah yang menarik ('kematian silang = jual') adalah kesalahan perdagangan tajuk yang didedahkan oleh pelajaran. Kematian silang SPX 2020 ialah contoh kanonik isyarat mekanikal berlaku dalam konteks perubahan rejim telah berlaku. Kedua-dua MA perlu bersetuju mengenai arah kecerunan untuk isyarat mempunyai berat."
+/>
+
+<Quiz
+  question="Sebuah saham mencetak silang emas pada $48 dengan SMA50 condong naik pada kira-kira 0.4% seminggu dan SMA200 baru sahaja berputar dari rata ke naik perlahan. Saiz akaun $25,000, had mandat 1% risiko per dagangan, henti letak pada $45.60 (5% di bawah kemasukan). Dua belas sesi kemudian, harga tutup pada $45.10. Apa kata peraturan pembatalan pelajaran?"
+  options={[
+    "Pegang — silang emas sentiasa berfungsi akhirnya",
+    "Tambah ke posisi kerana $45.10 adalah kemasukan yang lebih baik",
+    "Isyarat telah gagal: harga tutup kembali di bawah SMA50 dalam 10 sesi selepas silang, yang merupakan pembatalan mekanikal pelajaran. Henti letak pada $45.60 sepatutnya telah dicetuskan; jika tidak, keluar sekarang.",
+    "Gerakkan henti letak ke $42 untuk memberi ruang"
+  ]}
+  answer={2}
+  explanation="Pelajaran menyatakan pembatalan secara eksplisit: jika harga tutup kembali di bawah SMA50 dalam 10 sesi selepas silang, anggap isyarat sebagai gagal. Henti letak yang ditentukan sebelum oleh pedagang pada $45.60 sepatutnya telah menutup posisi. Jawapan salah yang menarik — pegang, purata ke bawah, luaskan henti letak — ialah tiga kegagalan disiplin klasik dari modul risiko. Isyarat adalah mekanikal, pembatalan adalah mekanikal, dan 'akhirnya' bukan pelan."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal indeks utama seperti SPX atau QQQ dan tanya: "Bila terakhir kali golden cross atau death cross berlaku, dan apakah kecerunan SMA50 dan SMA200 pada saat persilangan?" Kemudian semak sama ada harga terus mengikut dalam 10 sesi atau dibatalkan. Bina sampel persilangan bersih vs gagal yang pernah anda lihat sebelum memperdagangkannya dengan risiko sebenar.
+
+## Kesimpulan
+
+Golden cross atau death cross adalah mekanikal; sama ada ia boleh diperdagangkan bergantung kepada kecerunan kedua-dua MA dan tindak balas harga dalam 10 sesi — persilangan antara MA yang mendatar adalah hingar yang dibalut sebagai isyarat.

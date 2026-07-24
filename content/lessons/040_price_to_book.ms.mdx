@@ -1,0 +1,70 @@
+---
+id: "040_price_to_book"
+title: "Harga-ke-Book"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 9"
+topic: "price_to_book"
+prerequisites: ["034_debt_and_the_balance_sheet", "037_valuation_what_is_a_stock_worth", "039_the_pe_ratio"]
+tags: ["price_to_book", "pb_ratio", "book_value", "valuation", "balance_sheet", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Nisbah Harga kepada Nilai Buku (Price-to-Book)
+
+Nisbah harga kepada nilai buku (P/B) ialah jumlah yang anda bayar hari ini untuk setiap satu dolar nilai bersih akauntan syarikat. Formula: P/B = harga pasaran setiap saham / nilai buku setiap saham, atau nilai pasaran / ekuiti pemegang saham. Nilai buku ialah jumlah aset tolak jumlah liabiliti — iaitu baki yang tinggal untuk pemegang saham jika anda melikuidasi semua aset pada kos pembukuannya. Pada akhir pelajaran ini, anda perlu tahu di mana P/B berfungsi (bank, syer insurans, perniagaan padat aset), di mana ia gagal (syarikat perisian, jenama, syarikat padat IP), dan keadaan khusus yang mengubah P/B "murah" menjadi amaran.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+JPMorgan pada pertengahan 2026 diperdagangkan sekitar $220 dengan nilai buku setiap saham kira-kira $115, jadi P/B ≈ 1.9x. Berkshire Hathaway B-shares diperdagangkan berhampiran $480 dengan nilai buku sekitar $400, P/B ≈ 1.2x. Kedua-duanya adalah sektor kewangan di mana nilai buku kebanyakannya adalah aset likuid, hampir mark-to-market (pinjaman, sekuriti, tunai), dan P/B membawa maklumat sebenar. Secara sejarah, bank besar AS diperdagangkan dalam julat 0.8x–1.5x; pergerakan berpanjangan di atas 1.5x biasanya memerlukan ROE yang jauh lebih tinggi daripada kos ekuiti. P/B 1.9x JPM adalah boleh dipertahankan kerana ia telah mencatatkan ROE 17%+ — lihat <Lesson id="041_return_on_equity"/> — jauh di atas kos ekuiti ~10%, dan pasaran membayar premium untuk pulangan berlebihan itu.
+
+Sekarang lihat MSFT. Saham berhampiran $480, nilai buku setiap saham sekitar $42, P/B ≈ 11x. Adakah MSFT "sepuluh kali lebih mahal" daripada JPM? Tidak — perbandingan itu tidak bermakna. Kebanyakan nilai MSFT adalah tidak ketara: IP perisian, kuasa pendapatan infrastruktur Azure, francais Office, dan dekad R&D yang dibiayakan sebagai perbelanjaan oleh GAAP semasa ia berlaku dan tidak dikapitalisasi dalam buku besar. Nilai buku secara sistematik merendahkan nilai perniagaan ringan aset. P/B untuk MSFT, GOOGL, META pada asasnya tidak memberi maklumat.
+
+Di Bursa Malaysia: MAYBANK diperdagangkan sekitar 1.3x nilai buku — tipikal untuk bank rantau besar yang mencatatkan ROE rendah hingga pertengahan dua digit. PUBLIC BANK secara sejarah diperdagangkan pada 1.8x–2.0x nilai buku kerana ROE yang konsisten lebih tinggi dan volatilitas kerugian kredit yang lebih rendah. Sektor yang sama, saiz yang sama — premium P/B yang berbeza dipacu oleh kualiti pulangan, bukan saiz.
+
+Pernyataan boleh difalsifikasi: P/B ialah alat pengelasan yang berguna hanya apabila (a) perniagaan padat aset (kewangan, REIT, industri, penambang) DAN (b) nilai buku adalah wakil yang munasabah bagi nilai likuidasi atau penggantian. Untuk perisian, jenama pengguna, dan platform, P/B di atas 5x adalah peraturan, bukan pengecualian, dan nisbah itu tidak membawa isyarat.
+
+## Perangkap
+
+Perangkapnya ialah menapis saham "murah" pada P/B di bawah 1.0x dan mengandaikan mereka tidak dinilai. Bank yang diperdagangkan pada 0.6x nilai buku hampir tidak pernah menjadi peluang — ia adalah isyarat pasaran bahawa kualiti buku pinjaman adalah meragukan, bahawa kerugian kredit mungkin akan menggerogoti ekuiti, atau bahawa ROE telah runtuh di bawah kos modal. Bank Eropah menghabiskan kebanyakan satu dekad diperdagangkan pada 0.4x–0.7x nilai buku; pelabur yang memperlakukan setiap satu sebagai pembelian "nilai mendalam" perlahan-lahan dikosongkan apabila nilai buku itu sendiri terkikis. Model mental yang betul: P/B dan ROE bersatu padu. ROE yang tinggi menjustifikasikan P/B yang tinggi; ROE yang rendah atau negatif menjelaskan dan *menjustifikasikan* P/B yang rendah. Apa yang membatalkan isyarat: goodwill besar daripada acquisitions menggelembungkan nilai buku dengan sesuatu yang mungkin terjejas esok. Sentiasa semak buku nyata (nilai buku tolak goodwill dan aset tidak ketara) untuk syarikat yang padat acquisitions sebelum mempercayai P/B.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah bank ranting diperdagangkan pada P/B = 0.7x. Median sektor ialah 1.2x. ROE telah mencecah 4% selama tiga tahun terakhir; kos ekuiti dianggarkan pada 10%. Bacaan mana yang paling tepat?"
+  options={[
+    "Bank ini 42% lebih murah berbanding sektor — beli kuat",
+    "P/B tidak terpakai kepada bank kerana bank adalah berleverage",
+    "Beli berdasarkan anggapan bahawa P/B sentiasa kembali ke purata",
+    "Diskaun ini konsisten dengan ROE yang berjalan jauh di bawah kos ekuiti. Bank yang memperoleh 4% pada ekuiti dengan kos 10% sedang memusnahkan nilai pemegang saham setiap tahun, dan pasaran sedang menilai ekuiti tersebut pada nilai yang kurang daripada buku. 0.7x bukanlah tawaran murah — ia adalah harga selayarnya untuk perniagaan yang nilai bukunya sendiri sedang perlahan-lahan terkikis"
+  ]}
+  answer={3}
+  explanation="Hubungan antara ROE dan P/B ialah idea asas yang menanggung beban. Peraturan kasar: P/B yang dibenarkan ≈ (ROE − g) / (kos ekuiti − g). Apabila ROE < kos ekuiti, P/B yang dibenarkan jatuh di bawah 1.0 — dan kekal di situ sehingga ROE pulih. Jawapan salah yang menggoda ialah beli kuat 42% lebih murah: pemula melihat 'di bawah sektor' dan membeli. Jawapan yang menyatakan P/B tidak terpakai kepada bank ialah kesilapan sebaliknya — P/B paling maklumat untuk bank. Jawapan beli-kerana-kembali-ke-purata mencipta hukum kembali ke purata yang tidak wujud; pendarab hanya kembali ke purata apabila pulangan teras pulih."
+/>
+
+<Quiz
+  question="MSFT diperdagangkan pada P/B = 11x; JPM diperdagangkan pada P/B = 1.9x. Seorang pembaca menyimpulkan MSFT adalah 'lima kali lebih mahal' daripada JPM. Apakah kesilapan dalam kesimpulan ini, dan sintesis yang lebih baik?"
+  options={[
+    "Nilai buku MSFT secara sistematik merendahkan nilai ekonomi kerana GAAP menelan kos R&D perisian dan pembinaan jenama sebagai perbelanjaan bukannya mengukuhkan aset, jadi P/B pada asasnya tidak maklumat untuk perniagaan ringan aset. Perbandingan yang jujur adalah berasaskan sektor: bandingkan P/B MSFT dengan perisian megacap lain (yang kebanyakannya diperdagangkan pada 10x–15x buku), dan bandingkan P/B JPM dengan bank besar lain (biasanya 1.0x–2.0x buku). Perbandingan P/B merentas sektor adalah tidak bermakna",
+    "Kedua-dua syarikat harus dibandingkan menggunakan P/E sahaja",
+    "Tiada kesilapan — P/B ialah alat penilaian universal",
+    "JPM lebih mahal kerana bank lebih berisiko"
+  ]}
+  answer={0}
+  explanation="Sintesis yang diperlukan ialah pengiktirafan bahawa nilai buku ialah ukuran bersyarat sektor. Jawapan salah yang menggoda ialah 'tiada kesilapan, P/B adalah universal' — kebanyakan pemula menggunakan nisbah tunggal secara universal. Perisian, jenama, platform, IP biotek — tiada satu pun daripada ini muncul pada nilai ekonomi adil dalam penyata kedudukan keuangan GAAP, jadi P/B merendahkan nilai bersih mereka dan nisbah berjalan tinggi secara struktur. Bank, REIT, penambang, dan syarikat insurans memegang aset yang hampir dengan nilai pasaran semasa, jadi P/B membawa maklumat. Jawapan yang menyatakan JPM lebih mahal kerana bank lebih berisiko menyalahgunakan 'risiko' sebagai pelarasan penilaian. Jawapan P/E sahaja membuang alat yang berguna atas sebab yang salah; kedua-dua nisbah mempunyai tempat, cuma bukan secara bersendirian."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_convene_the_room" /> pada penanda sektor kewangan (JPM, MAYBANK, PUBLIC BANK, BRK-B) dan perhatikan sumbangan Fundamentals Analyst. Kemudian dalam <Term id="ami_one_on_one" /> bersama Fundamentals Analyst, tanya: "Untuk penanda ini, berikan P/B semasa, median sektor P/B, ROE semasa, dan trend ROE lima tahun. Beritahu saya sama ada premium atau diskaun P/B adalah konsisten dengan ROE." Simpan verdict dalam <Term id="ami_decision_journal" /> anda sebagai penjangka penilaian sedar sektor anda.
+
+## Penutup
+
+Price-to-book ialah alat bersyarat sektor: berguna untuk kewangan dan perniagaan padat aset, hampir tidak berguna untuk perisian dan platform. Nisbah itu hanya bermakna apabila dipadankan dengan ROE — ROE tinggi menjustifikasikan P/B tinggi, ROE rendah menjelaskan P/B rendah.

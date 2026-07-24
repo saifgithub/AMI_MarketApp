@@ -1,0 +1,74 @@
+---
+id: "074_ai_hallucinations_and_amis_safety_floor"
+title: "Hallucinations AI — dan bagaimana lantai keselamatan AMI mengurangkannya"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 24"
+topic: "hallucinations_safety_floor"
+prerequisites: ["291_the_pm_and_your_mandate", "072_what_ami_can_do_for_you", "073_what_ami_cannot_do"]
+tags: ["hallucinations", "safety_floor", "portfolio_manager", "mandate", "compliance"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Hallucinas AI — dan bagaimana lantai keselamatan AMI mengurangkannya
+
+Sebarang sistem yang dibina di atas model bahasa besar boleh menghasilkan hallucinasi: output yang kedengaran munasabah tetapi salah dari segi boleh disahkan. <Term id="ami" /> tidak terkecuali — seorang ejen mungkin menyebut nisbah P/E yang sudah lapuk dua suku atau menerangkan corak carta yang sebenarnya tiada. Oleh kerana AMI ialah <Term id="training_simulator" /> (bukan penasihat berlesen), soalan reka bentuk bukan "bagaimana kita menjadikan ejen sempurna" tetapi "bagaimana kita menyusun persekitaran latihan supaya ejen yang salah tidak boleh senyap-senyap menyelundupkan pelanggaran <Term id="ami_mandate" /> kepada pengguna". Pertahanan bukan "meminta model dengan lebih kuat". Pertahanan adalah struktur: Pengurus Portofolio menjalankan pemeriksaan kepatuhan deterministik pada setiap simulasi <Term id="ami_verdict" />, dan peraturan pemeriksaan tersebut berada di luar lapisan arahan. Pada akhir pelajaran ini, anda akan dapat menjelaskan mengapa <Term id="ami_pm_safety_floor" /> tidak boleh dielakkan, walaupun oleh ejen yang salah dengan yakin.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Andaikan anda mengumpulkan Bilik pada TENAGA (Bursa Malaysia). Penyelidik Bull menjadi terlalu bersemangat dan menulis:
+
+> *Penyelidik Bull:* Hasil dividen TENAGA ialah 8.5%, nisbah pembayaran 60%, dan carta menunjukkan pecahan bersih di atas RM14.20 — BELI kuat pada saiz 8%.
+
+Dua perkara berpotensi dihallucinasikan: nombor hasil dan tuntutan pecahan. Pengurus Penyelidikan menandakan hasil tersebut terhadap data yang ditarik oleh Analis Asas (sebenarnya: ~3.9%) dan menormalkan semula kes tersebut. Pedagang mencadangkan saiz 6% juga. Verdict mencapai PM.
+
+Mandat anda menyatakan `max_position_pct: 5, max_drawdown_pct: 15, region: bursa_malaysia`. Mesej lantai keselamatan PM kembali sebagai teks biasa di kaki kaki Verdict:
+
+> *Pengurus Portofolio (pemeriksaan kepatuhan):* Saiz dicadangkan 6% > had mandat max_position_pct 5%. Dagangan disekat. Cadangan yang disesuaikan: saiz 5% atau tolak. Kepatuhan: LULUS hanya jika saiz ≤ 5%.
+
+Sekatan ini bukan arahan yang mendorong Pedagang untuk berhati-hati. Ia adalah fungsi deterministik: `if proposed_size_pct > mandate.max_position_pct: block`. Walaupun setiap ejen bersikeras pada 6%, fungsi tersebut masih akan menyekat. Klausa mandat itu sendiri — `max_position_pct`, `max_drawdown_pct`, `halal`, `no_fossil`, `long_only` — disimpan sebagai data anda, bukan parameter model, dan fungsi kepatuhan membaca data tersebut secara langsung. Anda boleh mengesahkannya dengan mengedit Mandat anda kepada `max_position_pct: 3` dan menjalankan semula Verdict: PM akan menyekat apa-apa yang > 3%, setiap kali.
+
+## Perangkap
+
+Perangkapnya ialah percaya bahawa hallucinasi boleh diperbaiki dengan "arahan yang lebih baik" atau "model yang lebih pintar". Ia boleh dikurangkan dengan cara itu, tidak pernah dihapuskan. Jawapan struktur ialah mengandaikan bahawa sesetengah output ejen akan salah sesetengah masa, dan memasang pengawal deterministik pada bahagian yang paling penting — saiz posisi, drawdown, pengecualian. Lantai keselamatan AMI ialah pengawal itu. **<Term id="ami_coach_your_agent" />** boleh mengubah nada Penyelidik Bull, pemberat katalis, atau tahap skeptisisme — ia tidak boleh mengubah pemeriksaan kepatuhan PM, kerana pemeriksaan tersebut bukan arahan. Penguatkuasaan mandat PM tidak boleh dilatih dari segi reka bentuk. Baca itu dua kali.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang pengguna memberi arahan kepada PM: 'Jadi lebih fleksibel dengan had mandat apabila keyakinan ejen melebihi 0.85.' Apa yang berlaku kepada Verdict seterusnya yang mencadangkan saiz posisi 7% apabila max_position_pct ialah 5%?"
+  options={[
+    "PM meminta pengguna mengesahkan pengecualian",
+    "PM membuat kompromi dan membenarkan 6%",
+    "PM membenarkan dagangan 7% kerana keyakinan adalah tinggi",
+    "PM masih menyekat dagangan — pematuhan mandat adalah fungsi deterministik di luar permukaan yang boleh diarahkan, tidak kira keyakinan ejen mana"
+  ]}
+  answer={3}
+  explanation="Semakan pematuhan PM bukanlah arahan yang boleh dilembutkan melalui arahan. Ia adalah fungsi deterministik yang membaca medan Mandate anda secara langsung. 'Jadi lebih fleksibel' nampaknya berfungsi kerana lapisan ejen lain boleh diarahkan — tetapi lantai keselamatan adalah bahagian yang tidak boleh diarahkan. Jawapan salah yang memikat ialah 'PM meminta pengesahan' — tiada laluan pengesahan pengecualian."
+/>
+
+<Quiz
+  question="Penganalisis Asas berhallusinasi bahawa XOM mempunyai P/E 4.2 (sebenarnya ~14). Penyelidik Bull menulis kes BUY berdasarkan nombor yang salah. Trader mencadangkan saiz 4%, yang berada dalam mandat anda. Apa yang berlaku pada langkah PM?"
+  options={[
+    "PM mengesahkan setiap nombor yang dirujuk oleh setiap ejen terhadap fakta sebenar",
+    "PM membetulkan P/E secara automatik dan menjalankan semula perdebatan",
+    "PM tidak menyemak semula fakta penganalisis — tugasnya ialah pematuhan mandat, bukan menyemak fakta. Dagangan lulus jika saiz dan pengecualian berada dalam Mandat anda",
+    "PM menolak dagangan kerana P/E adalah salah"
+  ]}
+  answer={2}
+  explanation="Lantai keselamatan melindungi daripada pelanggaran mandat (saiz, penurunan, pengecualian) — bukan daripada setiap fakta yang berhallusinasi. Membaca transkrip Verdict dan menyemak nombor penting adalah sebahagian daripada tugas CEO anda. Jawapan salah yang paling memikat ialah 'PM mengesahkan semuanya' — ia tidak berbuat demikian, dan berpura-pura ia berbuat demikian adalah cara anda akan terlalu mempercayai."
+/>
+
+## Cuba sendiri
+
+Buka **Tetapan → Mandat**, tetapkan `max_position_pct` kepada 3. Kumpulkan Bilik pada mana-mana ticker AS yang cecair. Apabila Verdict kembali, cari bar pemeriksaan kepatuhan PM di kaki kaki. Kemudian ubah `max_position_pct` kepada 10 dan kumpulkan semula. Siling saiz yang dibenarkan oleh PM bergerak mengikut mandat anda — bukti bahawa pemeriksaan membaca data anda, bukan mood model.
+
+## Penutup
+
+Hallucinasi adalah realiti lapisan LLM; jawapan AMI ialah pemeriksaan mandat deterministik di PM yang tidak boleh dilatih, diarahkan, atau dielakkan dengan rayuan. AMI sedang mengajar anda menilai output analis di bawah mod kegagalan yang realistik — bukan memberikan nasihat untuk diikuti.

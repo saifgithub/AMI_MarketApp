@@ -1,0 +1,80 @@
+---
+id: "169_sum_of_the_parts_when_one_company_is_really_three"
+title: "Jumlah bahagian: apabila satu syarikat sebenarnya tiga"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 35"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["valuation", "sum_of_parts", "conglomerate", "segments", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Sum-of-the-bahagian: apabila satu syarikat sebenarnya tiga
+
+Beberapa syarikat tidak mempunyai satu perniagaan — mereka mempunyai tiga atau empat, setiap satu dengan kadar pertumbuhan, profil margin, dan gandaan semula jadi yang berbeza. Menggunakan P/E atau EV/EBITDA tunggal kepada keseluruhan syarikat akan memurabahkan semua itu kepada satu nombor yang merendah-nilai segmen terbaik, melebih-lebihkan segmen terburuk, dan mengelirukan dalam kedua-duanya. Penilaian sum-of-the-parts (SOTP) menilai setiap segmen secara berasingan pada gandaan yang sesuai untuk *segmen* tersebut, kemudian menambahkannya. Pada akhir pelajaran ini, anda sepatutnya tahu bila SOTP merupakan kerangka kerja yang tepat, cara menyusunnya dengan kemas, dan corak diskaun konglomerat yang sering muncul daripada latihan ini.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Ambil AMHN pada pertengahan 2026. Perniagaan runcit (kedai dalam talian + perkhidmatan penjual pihak ketiga + keahlian Prime + kedai fizikal) menjana sebahagian besar pendapatan tetapi pada ekonomi margin runcit. AWS (awan) menjana bahagian pendapatan yang lebih kecil tetapi pada ekonomi margin perisian. Pengiklanan menjana aliran pendapatan ketiga pada margin inkremental yang sangat tinggi.
+
+SOTP yang bersih kelihatan kira-kira seperti ini:
+
+- AWS: ~$110B pendapatan tahunan, ~35% margin operasi, layak mendapat gandaan perniagaan perisian (katakan ~25x pendapatan operasi).
+- Pengiklanan: ~$60B pendapatan tahunan, ~50%+ margin operasi inkremental, layak mendapat gandaan perniagaan pengiklanan yang sebanding dengan META atau GOOGL (~20x pendapatan operasi).
+- Runcit: ~$450B pendapatan tahunan, ~5% margin operasi, layak mendapat gandaan perniagaan runcit (~12x pendapatan operasi).
+
+Jumlahkan ketiga-tiga penilaian tersebut dan anda mendapat anggaran SOTP. Menggunakan P/E blended AMHN ~45x kepada keseluruhan merendah-nilai AWS dan melebih-lebihkan runcit serentak. SOTP menunjukkan bahawa AWS sahaja, dinilai pada ekonomi perisian berasingan, menyumbang 50%+ daripada market cap AMHN menurut beberapa kerangka analisis.
+
+Bandingkan dengan GOOGL. Carian + YouTube + rangkaian iklan adalah satu perniagaan dengan profil margin yang serupa; Awan adalah satu lagi; "Pertaruhan Lain" (Waymo, dll.) adalah yang ketiga dengan ekonomi venture. SOTP adalah satu-satunya cara untuk menilai GOOGL secara koheren — menggunakan satu gandaan memurabahkan pengiklanan margin tinggi dengan pertaruhan margin rendah atau rugi wang, menghasilkan nombor yang tidak bermakna.
+
+Sekarang lihat di mana SOTP mendedahkan diskaun konglomerat. Banyak industri pelbagai (HON, MMM pada masa tertentu) diperdagangkan pada diskaun 10–20% daripada jumlah penilaian segmen mereka. Pasaran berkata: "Saya lebih suka memiliki segmen secara berasingan daripada konglomerat." Apabila diskaun mencapai 25%+, syarikat sering menghadapi tekanan aktivis untuk pemisahan — DIS, GE, IBM telah melalui versi ini dalam dekad terakhir.
+
+Di Bursa Malaysia: GENTING adalah calon SOTP buku teks — permainan, tanaman, kuasa, dan hartanah adalah empat perniagaan berasingan dengan ekonomi yang berbeza. P/E tunggal pada keseluruhan kumpulan menyembunyikan lebih daripada yang ia mendedahkan.
+
+Pernyataan yang boleh disangkal: SOTP diperlukan apabila mana-mana segmen tunggal menyumbang kurang daripada 50% daripada jumlah pendapatan operasi DAN segmen mempunyai profil margin yang berbeza secara material (sebaran margin operasi 15+ mata peratusan antara segmen tertinggi dan terendah). Jika SOTP melebihi market cap semasa lebih daripada 20%, diskaun konglomerat sedang berlaku dan pemicu tindakan korporat (pemisahan, divestasi, tekanan aktivis) mungkin akan datang.
+
+## Perangkap
+
+Perangkap adalah pengiraan dua kali kos peringkat syarikat dan hutang. Pemula membina SOTP, menilai setiap segmen dengan murah hati, dan lupa menolak: (a) beban korporat (kos pusat syarikat induk yang tidak milik sebarang segmen), (b) hutang bersih di peringkat induk, dan (c) geseran cukai daripada sebarang pemisahan segmen sebenar (pemisahan sering mempunyai kos cukai). Model mental yang betul: SOTP bermula dengan pendapatan operasi segmen pada gandaan berasingan, menolak beban korporat yang dialokasikan pada gandaan yang adil, menolak hutang bersih, dan berakhir dengan nilai ekuiti. Melepaskan mana-mana tiga penyesuaian ini akan mengembungkan jawapan. Perangkap lain adalah keyakinan berlebihan dalam gandaan segmen — AWS tidak diperdagangkan secara awam, jadi sebarang gandaan berasingan yang digunakan kepadanya adalah tekaan penganalisis. Gunakan julat, bukan nombor, untuk setiap segmen tepat seperti dalam DCF.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat H mempunyai tiga segmen: Segmen X pada margin operasi 8% (pendapatan $20B), Segmen Y pada margin operasi 35% (pendapatan $5B), dan Segmen Z pada margin operasi 12% (pendapatan $8B). Syarikat diperdagangkan pada P/E berpadu 14x. Bacaan manakah paling jelas mengenal pasti sama ada SOTP sesuai?"
+  options={[
+    "SOTP hanya terpakai kepada syarikat dengan nilai pasaran melebihi $100B",
+    "SOTP tidak pernah berguna kerana data segmen tidak boleh dipercayai",
+    "SOTP tidak berguna — gunakan sahaja P/E berpadu",
+    "SOTP adalah sesuai di sini. Tiada segmen tunggal mendominasi jumlah pendapatan operasi (X menyumbang ~$1.6B, Y ~$1.75B, Z ~$0.96B — Y adalah penyumbang terbesar pada ~41%, di bawah ambang 50%), dan jurang margin antara Y (35%) dan X (8%) ialah 27 mata peratusan — jauh melebihi ambang 15 mata yang menjadikan gandaan berpadu mengelirukan. Y mungkin layak mendapat gandaan yang lebih tinggi berbanding X, dan gandaan berpadu 14x memburukkan kedua-duanya dengan purata mereka"
+  ]}
+  answer={3}
+  explanation="Sintesisnya ialah pencetus boleh disangkal untuk SOTP — tiada segmen tunggal melebihi 50% daripada pendapatan operasi DAN jurang margin melebihi 15 mata — jelas hadir di sini. Y adalah segmen margin tertinggi tetapi tidak mendominasi; X adalah penyumbang pendapatan terbesar tetapi mempunyai margin terendah. Gandaan berpadu memburukkan mereka. Jawapan salah yang paling menipu ialah panggilan 'guna sahaja P/E berpadu' kerana ia laluan paling mudah. Jawapan '$100B nilai pasaran' mencipta ambang saiz yang tidak terdapat dalam pelajaran. Jawapan 'data segmen tidak boleh dipercayai' menolak terlalu jauh — data segmen mempunyai had tetapi biasanya didedahkan dalam 10-K."
+/>
+
+<Quiz
+  question="Seorang penganalisis membina SOTP untuk konglomerat pelbagai bidang. Penilaian segmen berjumlah $80B. Hutang bersih ialah $12B. Perbelanjaan korporat ialah $400M setahun tetapi penganalisis tidak menolaknya. Nilai pasaran semasa ialah $58B. Apa kritikan paling bersih di bawah pelajaran ini?"
+  options={[
+    "Tolak SOTP — terlalu banyak ketidakpastian",
+    "Beli sekarang — sebarang diskaun adalah diskaun",
+    "Tolak hutang bersih untuk mendapatkan nilai ekuiti $68B daripada nilai perusahaan $80B. Juga modalisasikan perbelanjaan korporat — pada gandaan 12x, kos tahunan $400M mengurangkan nilai sebanyak $4.8B, meninggalkan nilai ekuiti $63.2B. Diskaun yang jujur ialah $63.2B berbanding nilai pasaran $58B = ~8%, bukan 26%. Disiplin pelajaran ialah ketiga-tiga pelarasan (nilai perusahaan segmen, perbelanjaan korporat, hutang bersih) mesti dikenakan sebelum tuntutan diskaun-kepada-SOTP adalah bermakna. Diskaun 8% adalah geseran konglomerat biasa dan bukan sendiri sebagai pencetus",
+    "Konglomerat diperdagangkan pada diskaun 26% kepada SOTP — beli dengan agresif"
+  ]}
+  answer={2}
+  explanation="Sintesisnya ialah disiplin SOTP memerlukan ketiga-tiga pelarasan. 'Diskaun' $22B penganalisis $80B − $58B mengecut dengan ketara apabila perbelanjaan korporat dan hutang bersih ditolak dengan betul. Ambang pelajaran (diskaun 25%+ sebagai isyarat pencetus) tidak dipenuhi selepas pelarasan — isyarat yang boleh bertindak tidak ada. Jawapan salah yang paling menipu ialah panggilan beli-agresif-dengan-diskaun-26%-itu — diskaun tajuk itu adalah jenis nombor yang mendorong surat aktivis dan keputusan pelaburan buruk apabila pelarasan belum dibuat. Menolak SOTP kerana 'terlalu banyak ketidakpastian' mengelak. 'Sebarang diskaun adalah diskaun' bertindak terlalu."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Penganalisis Asas, pilih syarikat pelbagai yang anda ikuti dan tanya: "Bina SOTP. Segmen-demi-segmen, apakah pendapatan operasi, gandaan apa yang akan anda gunakan, dan apakah nilai ekuiti selepas menolak hutang bersih dan beban korporat yang dimodal?" Dalam <Term id="ami_decision_journal" />, tulis SOTP, market cap semasa, dan diskaun atau premium yang ditunjukkan. Diskaun di atas 25% adalah item tontonan — tulis apa pemicu (pemisahan, aktivis, perubahan pengurusan) mungkin membukanya.
+
+## Pengajaran
+
+Apabila syarikat sebenarnya tiga perniagaan, satu gandaan memurabahkan semuanya kepada satu nombor yang salah — SOTP setiap segmen, tolak beban dan hutang bersih dengan jujur, dan jawapannya biasanya lebih sempit daripada yang dicadangkan oleh tajuk.

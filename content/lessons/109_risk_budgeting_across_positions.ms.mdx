@@ -1,0 +1,74 @@
+---
+id: "109_risk_budgeting_across_positions"
+title: "Peruntukan risiko merentasi kedudukan serentak"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 14"
+topic: "risk_budgeting"
+prerequisites: ["014_position_sizing_basics", "017_portfolio_exposure_and_correlation"]
+tags: ["risk", "portfolio", "budgeting", "sector_caps", "concentration"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Penganggaran risiko merentasi posisi serentak
+
+Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="014_position_sizing_basics"/> (Asas saiz posisi) dan <Lesson id="017_portfolio_exposure_and_correlation"/> (Pendedahan portfolio dan korelasi); di sini kita menyelami lapisan seterusnya — cara membahagikan bajet risiko terbuka keseluruhan merentasi beberapa posisi serentak. 1% per dagangan ialah peraturan per posisi; risiko terbuka keseluruhan ialah peraturan portfolio. Siling kerja yang munasabah ialah 5% risiko terbuka keseluruhan merentasi semua posisi, yang diterjemahkan secara berbeza bergantung pada sama ada anda memegang 3 pertaruhan terkonsentrasi atau 10 pertaruhan kecil, dan bergantung pada sama ada ia berkumpul dalam satu sektor. Pelajaran ini mengajar penapis berlapis — per-dagangan, per-sektor, per-nama — yang dikuasakan oleh Pengurus Portfolio (PM) secara struktur.
+
+## Contoh
+
+Akaun simulasi anda ialah $100,000. <Term id="ami_mandate" />: risiko per-dagangan 1%, risiko terbuka keseluruhan 5%, penapis sektor tunggal 2.5%, penapis kepekatan notional per-nama 1.5%. Anda memegang lima posisi:
+
+- NVDA — risiko 1.0%, 17% notional (semikonduktor)
+- AMD — risiko 1.0%, 12% notional (semikonduktor)
+- JPM — risiko 1.0%, 14% notional (bank)
+- KO — risiko 0.8%, 9% notional (keperluan asas)
+- XOM — risiko 0.7%, 10% notional (tenaga)
+
+Risiko terbuka keseluruhan: 4.5% — di bawah siling 5%, ruang untuk satu lagi posisi 0.5%. Pecahan sektor: semikonduktor risiko 2.0% (di bawah penapis 2.5%), bank 1.0%, keperluan asas 0.8%, tenaga 0.7%. Maksimum notional per-nama: NVDA 17%, jauh di bawah sebarang penapis kepekatan 25% yang munasib. Buku dagangan ini lulus setiap lapisan.
+
+Sekarang pertimbangkan posisi keenam: TSM pada risiko 1.0%. Per-dagangan: lulus (1% ≤ 1%). Risiko terbuka keseluruhan: 5.5% — melanggar siling 5%. Sektor: semikonduktor meningkat kepada 3.0% — melanggar penapis sektor 2.5%. PM menolak dengan dua sebab yang bertindan. Dua pilihan pembetulan: kurangkan saiz TSM kepada risiko 0.5% (lulus keseluruhan tetapi masih melanggar sektor), atau tutup salah satu NVDA/AMD sebelum membuka TSM (lulus kedua-duanya). Di Bursa Malaysia: logik yang sama dengan tumpukan MAYBANK + CIMB + PUBLIC — tiga bank Malaysia pada 1% setiap satu ialah kepekatan sektor perbankan 3%, jauh melebihi penapis sektor 2.5%. Ujian boleh disangkal: setiap kali PM menolak dagangan untuk alasan "lembut" seperti penapis sektor, cuba mengelakkannya melalui <Term id="ami_coach_your_agent" /> gagal secara reka bentuk — penapis sektor adalah sebahagian daripada <Term id="ami_pm_safety_floor" /> untuk akaun dengan had kepekatan dalam mandat.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan setiap posisi sebagai keputusan bebas 1%. Pemula menambah posisi satu per satu, setiap satu lulus semakan per-dagangan, dan mendapati pada akhir bulan bahawa mereka mempunyai 9% risiko terbuka keseluruhan merentasi 8 posisi, dengan 5% daripadanya berkumpul dalam semikonduktor. Disiplin per-dagangan sahaja tidak menghasilkan portfolio yang masuk akal. Model mental yang betul: setiap tiket baharu bersaing untuk bajet risiko keseluruhan yang terhad. Sebelum membuka posisi, tanya tiga soalan — adakah ia muat di bawah per-dagangan (sentiasa), adakah jumlah baharu kekal di bawah siling, dan adakah tumpukan sektor kekal di bawah penapis sektornya? PM menjalankan semakan ini secara automatik; anda boleh meminta Pengurus Portfolio dalam <Term id="ami_one_on_one" /> untuk meneruskannya sebelum anda menghantar.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Akaun $50,000. Mandat: risiko per transaksi 1%, jumlah risiko terbuka 5%, had sektor tunggal 2.5%. Kedudukan terbuka: NVDA 1.0% (semikonduktor), AMD 0.8% (semikonduktor), JPM 1.0% (bank), KO 0.7% (keperluan asas). Anda ingin menambah MU pada risiko 1.0% (semikonduktor memori). Apa kata Pengurus Portofolio (PM)?"
+  options={[
+    "Diluluskan — jumlah risiko terbuka meningkat kepada 4.5%, di bawah had 5%.",
+    "Ditolak — akaun sudah mempunyai 5 kedudukan dan had maksimum 5 kedudukan terpakai.",
+    "Diluluskan — risiko per transaksi ialah 1.0%, tepat pada had per transaksi.",
+    "Ditolak — pendedahan semikonduktor meningkat dari 1.8% kepada 2.8%, melebihi had sektor tunggal 2.5%; jumlah risiko terbuka adalah baik tetapi kluster sektor melanggar peraturan."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang menarik ialah 'jumlah risiko terbuka berada di bawah had, jadi diluluskan'. Jumlah risiko terbuka hanyalah salah satu daripada had berlapis. Menambah MU meningkatkan pendedahan semikonduktor dari 1.8% (NVDA + AMD) kepada 2.8%, yang melanggar had sektor 2.5% walaupun jumlah risiko terbuka (4.5%) adalah baik. Perangkap 'had maksimum 5 kedudukan' mencipta peraturan yang tidak wujud dalam mandat."
+/>
+
+<Quiz
+  question="Anda mempunyai mandat dengan risiko per transaksi 1%, jumlah risiko terbuka 5%, had sektor tunggal 2.5%, dan kepekatan notional nama tunggal 20%. Anda kini memegang AAPL pada 22% daripada notional (pemenang yang berkembang melebihi saiz kemasukan) tanpa pendedahan teknologi lain. Pedagang mencadangkan menambah MSFT pada risiko 1%. Manakah antara ini merupakan respons betul PM, dan mengapa?"
+  options={[
+    "Ditolak — AAPL dan MSFT bersama melebihi had jumlah risiko terbuka tanpa mengira saiz.",
+    "Diluluskan — MSFT ialah ticker berbeza dan teknologi adalah cukup luas untuk tidak membentuk kluster.",
+    "Ditolak — AAPL sudah melebihi had kepekatan notional nama tunggal (22% > 20%), jadi sebelum menambah sebarang kedudukan baharu, buku semasa perlu dipulihkan kepada pematuhan; tiket baharu tidak boleh dibuka di atas buku yang tidak mematuhi dasar.",
+    "Diluluskan — kepekatan nama tunggal hanya terpakai kepada kedudukan baharu, bukan kepada pemenang sedia ada."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menarik ialah 'kepekatan hanya terpakai kepada kedudukan baharu'. Had mandat terpakai kepada keadaan semasa buku, bukan hanya pada saat kemasukan. AAPL pada 22% notional sudah melebihi had kepekatan nama tunggal 20% (kedudukan yang berkembang ke dalam pelanggaran melalui keuntungan). Urutan yang betul: potong AAPL kembali ke bawah 20% dahulu, kemudian nilaikan tiket MSFT. Perangkap 'teknologi cukup luas' mencipta tafsiran yang terlalu longgar terhadap had sektor; PM melaksanakan had berangka eksplisit, bukan penghakiman editorial tentang keluasan sektor."
+/>
+
+## Cuba sendiri
+
+Buka editor Mandat dan tetapkan `total_open_risk_pct` kepada 5, `max_sector_exposure_pct` kepada 2.5, `max_single_name_notional_pct` kepada 20. Kemudian buka perbualan 1-on-1 dengan Pengurus Portfolio dan tanya "Terangkan buku dagangan semasa saya terhadap setiap penapis." Jika mana-mana penapis dilanggar atau hampir dilanggar, PM akan menyebutnya. Itu ialah potongan seterusnya, bukan kemasukan seterusnya.
+
+## Penafian
+
+Risiko per-dagangan ialah lantai; risiko terbuka keseluruhan, penapis sektor, dan penapis per-nama ialah siling — setiap tiket baharu bersaing terhadap ketiga-tiganya sebelum semakan per-dagangan menjadi penting.

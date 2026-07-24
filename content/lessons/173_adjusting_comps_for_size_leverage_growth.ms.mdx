@@ -1,0 +1,82 @@
+---
+id: "173_adjusting_comps_for_size_leverage_growth"
+title: "Melaraskan komparatif dari segi saiz, kebergantungan, dan pertumbuhan"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 39"
+topic: "comparables"
+prerequisites: ["038_comparable_companies", "172_peer_selection_criteria_before_you_look_at_the_numbers", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["comparables", "comps", "adjustments", "peg_ratio", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Melaraskan komparabel mengikut saiz, leverage, dan pertumbuhan
+
+Setiap set rakan sejawat yang dipilih dengan baik jarang mengandungi replika tepat. Sasaran mungkin 40% lebih besar daripada median rakan, mempunyai hutang 50% lebih tinggi, atau berkembang dua kali lebih pantas — dan setiap perbezaan tersebut membenarkan gandaan yang berbeza, bukan gandaan yang sama. Pelarasan mengikut saiz, leverage, dan pertumbuhan adalah lapisan kedua analisis komparabel: ia mengambil gandaan median rakan dan memodifikasinya bagi perbezaan struktur antara sasaran dan rakan-rakannya. Dilakukan secara kasar (median rakan mentah, tiada pelarasan), komparabel akan menghargakan atau merendahkan kebanyakan saham sebanyak 10–25%. Dilakukan dengan baik, komparabel menjadi semakan silang yang boleh digunakan terhadap DCF. Pada akhir pelajaran ini, anda perlu mengetahui tiga pelarasan piawai dan perangkap nisbah PEG khusus yang menyembunyikan kebanyakan kesilapan bias pelarasan.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Ambil satu setup hipotetikal. Sasaran: $20B pendapatan, hutang-to-EBITDA 3.0x, pertumbuhan pendapatan 8%. Median rakan: $18B pendapatan, hutang-to-EBITDA 1.5x, pertumbuhan pendapatan 5%. Median rakan EV/EBITDA: 10x.
+
+Tanpa pelarasan, komparabel menyatakan bahawa sasaran juga harus diperdagangkan pada 10x. Tetapi terdapat tiga perkara yang berbeza:
+
+1. **Saiz:** sasaran adalah ~11% lebih besar daripada median rakan. Secara umumnya, syarikat yang lebih besar dalam industri yang sama diperdagangkan dengan premium kecil (kepemilikan institusi, penyertaan indeks). Pelarasan ke atas gandaan mungkin +0.02 (0.2 turns).
+
+2. **Leverage:** sasaran menanggung hutang 2x gandaan rakan. Leverage yang lebih tinggi bermaksud risiko yang lebih tinggi kepada ekuiti, yang biasanya mampatkan gandaan. EV/EBITDA sepatutnya neutral terhadap struktur modal (itu adalah tujuannya), jadi pelarasan leverage adalah lebih kecil untuk EV/EBITDA berbanding P/E — tetapi gandaan ekuiti masih harus lebih rendah kerana ekuiti tersebut lebih berisiko. Pelarasan ke bawah yang sederhana, mungkin -0.04 (-0.4 turns).
+
+3. **Pertumbuhan:** sasaran berkembang 60% lebih pantas daripada median rakan (8% berbanding 5%). Ini adalah pelarasan terbesar dalam amalan. Satu singkatan biasa adalah nisbah kadar pertumbuhan: jika pertumbuhan rakan menyokong gandaan 10x, pertumbuhan yang lebih pantas menyokong gandaan yang lebih tinggi secara kira-kira berkadar dengan kadar pertumbuhan — mungkin +1.5 hingga +2.5 turns bergantung pada betapa tahan lama pertumbuhan yang lebih tinggi itu dinilai.
+
+Pelarasan bersih: +0.2 - 0.4 + 2.0 = +1.8 turns. Gandaan rakan yang dilaraskan untuk sasaran: 10x + 1.8 = ~11.8x.
+
+Jika sasaran sebenarnya diperdagangkan pada 13x, komparabel tanpa pelarasan mengatakan ia adalah premium 30% kepada rakan (10x berbanding 13x). Komparabel yang dilaraskan mengatakan ia hanya premium 10% (11.8x berbanding 13x) — isyarat tindakan yang berbeza.
+
+Nisbah PEG (P/E dibahagikan dengan kadar pertumbuhan) adalah singkatan yang paling kerap dikutip untuk pelarasan pertumbuhan, dan ia berguna serta berbahaya. NVDA pada P/E 45x dengan pertumbuhan 40% mempunyai PEG ~1.1; rakan pada P/E 22x dengan pertumbuhan 12% mempunyai PEG ~1.8. Hanya berdasarkan PEG, NVDA kelihatan lebih murah daripada rakan yang pertumbuhannya lebih perlahan. Tetapi PEG mengandaikan hubungan linear antara P/E dan pertumbuhan, dan hubungan itu pecah pada kadar pertumbuhan yang sangat tinggi dan tempoh yang sangat panjang — syarikat pertumbuhan tinggi yang pertumbuhannya singkat tidak sepatutnya mendapat kredit penuh, dan PEG tidak menghukum itu.
+
+Di Bursa Malaysia: membandingkan firma perkhidmatan teknologi yang berkembang pesat di Bursa dengan ibu bapa yang pertumbuhannya lebih perlahan dalam konglomerat yang sama adalah kes pelarasan PEG yang klasik — tetapi hanya jika perbezaan pertumbuhan itu tahan lama, bukan kenaikan gula satu tahun.
+
+Pernyataan yang boleh disangkal: analisis komparabel yang dilaraskan adalah jujur hanya jika setiap pelarasan dibenarkan dengan nombor DAN rasional yang dibela. "Diselaraskan pertumbuhan, sasaran diperdagangkan pada premium 10%" adalah bermakna; "diselaraskan pertumbuhan, sasaran kelihatan murah" tanpa nombor adalah retorik.
+
+## Perangkap
+
+Perangkap ialah pintasan nisbah PEG yang digunakan tanpa memikirkan ketahanan pertumbuhan. Pemula melihat saham dengan P/E 40 dan jangkaan pertumbuhan 35%, mengira PEG ~1.1, dan menyimpulkan ia munasabah — tanpa bertanya sama ada pertumbuhan 35% itu boleh bertahan selama lima tahun atau hanya satu tahun. Model mental yang betul: PEG berfungsi hanya apabila pertumbuhan adalah mampan merentasi jangka masa bertahun-tahun. Untuk syarikat yang berkembang 35% tahun ini tetapi kembali kepada 10% tahun depan, gandaan harus mencerminkan laluan berpadu, bukan kadar puncak. Versi perangkap yang lain ialah membuat pelarasan tanpa menulis magnitudnya. "Saiz lebih besar, leverage lebih rendah, pertumbuhan lebih tinggi — sasaran layak mendapat premium" terdengar teliti; tanpa pelarasan nombor khusus, ia hanya bias yang disamar. Setiap pelarasan harus menambah atau menolak nombor turns yang spesifik kepada gandaan, dan anda harus mampu membela setiap satu.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sasaran P/E ialah 22x. P/E median rakan sejawat ialah 17x. Pertumbuhan sasaran ialah 18%, pertumbuhan median rakan sejawat ialah 10%. Nisbah PEG: sasaran 1.22, rakan sejawat 1.7. Kesimpulan manakah yang paling tepat mengaplikasikan pelajaran ini?"
+  options={[
+    "Sasaran lebih murah daripada rakan sejawat berdasarkan asas PEG — beli",
+    "PEG tidak penting — hanya P/E yang penting",
+    "Sasaran lebih mahal daripada rakan sejawat kerana 22 > 17",
+    "Perbandingan PEG adalah petunjuk tetapi bacaan berdisiplin ialah memeriksa ketahanan pertumbuhan. Jika pertumbuhan sasaran 18% boleh disahkan selama 5+ tahun, kelebihan PEG adalah nyata dan 22x boleh dipertahankan (mungkin malah murah). Jika 18% itu puncak satu tahun yang kembali ke 10% tahun depan, penguasa 22x kehilangan justifikasi dengan cepat dan sasaran sebenarnya mahal. Disiplin pelajaran ini ialah PEG hanya berfungsi apabila pertumbuhan adalah kekal — bandingkan jangkaan pertumbuhan 5 tahun, bukan pertumbuhan tahun depan, sebelum bertindak berdasarkan PEG"
+  ]}
+  answer={3}
+  explanation="Sintesisnya ialah PEG adalah jalan pintas yang hanya berfungsi apabila pertumbuhan dalam penyebut adalah kekal. Puncak pertumbuhan satu tahun boleh menjejaskan nisbah PEG dan menghasilkan isyarat 'murah' yang mengelirukan. Jawapan salah yang paling menarik ialah 'lebih murah pada PEG, jadi beli' — PEG <1 (atau dalam kes ini, PEG lebih rendah daripada rakan sejawat) adalah heuristik yang banyak pelabur gunakan sebagai pencetus beli, tetapi ia mengabaikan tempoh pertumbuhan. Jawapan 'lebih mahal kerana 22 > 17' mengabaikan pertumbuhan sepenuhnya. Jawapan 'hanya P/E yang penting' menolak PEG secara berlebihan."
+/>
+
+<Quiz
+  question="Seorang penganalisis menulis: 'Selepas menyesuaikan pertumbuhan sasaran yang lebih tinggi, saiz yang lebih kecil, dan leverage yang lebih tinggi, sasaran layak mendapat penguasa yang kira-kira selaras dengan median rakan sejawat.' Tiada nombor khusus diberikan untuk setiap penyesuaian. Manakah kritikan paling tepat di bawah pelajaran ini?"
+  options={[
+    "Penyesuaian tidak ditulis dan oleh itu tidak boleh disangkal. Disiplin pelajaran ini ialah setiap penyesuaian memerlukan nombor — contohnya, '+1.2 pusingan untuk pertumbuhan, -0.3 pusingan untuk saiz, -0.5 pusingan untuk leverage, bersih +0.4 pusingan'. Tanpa nombor tersebut, kesimpulan penganalisis ('selaras dengan median rakan sejawat') adalah retorik. Kritikan jujur: minta nombor di sebalik setiap penyesuaian sebelum menerima kesimpulan tersebut. Jika penganalisis tidak dapat menghasilkan magnitud khusus bagi setiap penyesuaian, kerangka kerja tidak diaplikasikan — bias telah berlaku",
+    "Tolak — perbandingan rakan sejawat tidak pernah berfungsi",
+    "Percayai penganalisis — mereka lebih berpengalaman",
+    "Terlihat munasabah — penyesuaian adalah kualitatif secara semulajadi"
+  ]}
+  answer={0}
+  explanation="Sintesisnya ialah penyesuaian adalah kuantitatif atau tidak bermakna apa-apa. Gambaran kasar yang menghasilkan 'kira-kira selaras' boleh bermaksud mana-mana dalam julat yang luas; nombor spesifik mewujudkan kedudukan yang boleh dipertahankan. Jawapan 'penyesuaian adalah kualitatif secara semulajadi' membolehkan bias lolos. Jawapan 'perbandingan rakan sejawat tidak pernah berfungsi' menolak kerangka kerja secara berlebihan. Jawapan 'percayai pengalaman penganalisis' menggantikan analisis dengan autoriti. Pelajaran ini secara eksplisit memerlukan penyesuaian bernombor."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, pilih satu saham dan tanya: "Jalankan komparabel pada [sasaran] terhadap [set rakan]. Untuk setiap perbezaan rakan-vs-sasaran dalam saiz, leverage, dan pertumbuhan, berikan saya nombor pelarasan gandaan yang spesifik dan rasionalnya." Dalam <Term id="ami_decision_journal" />, tulis gandaan median rakan tanpa pelarasan, setiap pelarasan dengan nombor dan sebabnya, serta gandaan akhir yang dilaraskan. Bandingkan dengan gandaan semasa sasaran. Tindakan yang jujur ialah perbezaan antara semasa dan dilaraskan, bukan semasa dan tanpa pelarasan.
+
+## Penafian
+
+Komparabel tanpa pelarasan adalah salah sebanyak 10–25%; komparabel dengan pelarasan tangan adalah salah sebanyak jumlah yang tidak ditentukan. Nomborkan setiap pelarasan, bela setiap rasional, dan bersikap skeptikal terhadap PEG kecuali pertumbuhan adalah tahan lama.

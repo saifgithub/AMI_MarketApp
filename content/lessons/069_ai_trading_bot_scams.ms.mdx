@@ -1,0 +1,74 @@
+---
+id: "069_ai_trading_bot_scams"
+title: "Scam "bot perdagangan AI" AMI"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+code: "EDGE 19"
+topic: "scam_ai_bots"
+prerequisites: ["065_guaranteed_return_scams", "068_forex_fx_trading_scams", "049_overconfidence"]
+tags: ["scams", "ai_bots", "algorithmic_trading", "managed_accounts"]
+agent_callouts: ["concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Skim "bot dagangan AI"
+
+Tawaran "bot dagangan AI" mengemas kini skim Ponzi FX berurus untuk era LLM. Cerita: AI milik sendiri menjalankan dagangan 24/7, memberikan pulangan yang lancar sebanyak 1–3% setiap *minggu*, dan terlalu canggih untuk difahami oleh pedagang biasa. Struktur di bawahnya adalah sama dengan struktur FX-Ponzi dari pelajaran terakhir — platform luar pesisir yang menyekat pengeluaran — dengan satu lapisan baru kilauan pemasaran. Pelajaran ini mengajarkan ujian yang boleh disangkal yang menanggalkan kostum itu: strategi AI yang benar-benar menghasilkan alpha boleh diaudit dalam kod, dalam sejarah dagangan, dan dalam aliran tunai. Jika anda tidak dapat mengaudit mana-mana satu daripada tiga perkara tersebut, anda tidak membeli AI; anda membeli cerita.
+
+## Bagaimana ini berlaku di pasaran sebenar
+
+Sejak 2023, SEC telah mendakwa pengendali "platform pelaburan AI" yang mengutip ratusan juta dolar daripada pelabur AS. Corak ini, diulang hampir secara verbatim merentasi kes-kes: platform yang memanggil strateginya "dipacu AI", "pembelajaran mesin", atau "rangkaian neural" tanpa menerbitkan sebarang butiran, backtest yang diaudit, atau rekod prestasi di platform yang diakui seperti profil pedagang yang disahkan di venue pelaksanaan berregulated. Pelepasan penguatkuasaan SEC — boleh dicari di sec.gov/litigation — menamakan beberapa kes sedemikian setiap suku. Amaran FCA 2024 mengenai "skim pelaburan AI" mencerminkan bahasa tersebut. Senarai Amaran Pelabur SC Malaysia telah menambah entri "bot AI" sejak 2024.
+
+Seni bina penipuan yang mewakili: platform mendakwa AInya mencapai 1.5% setiap minggu (≈100% setahun terkompound). Ahli mendeposit USDT atau fiat. Dasbor menunjukkan PnL hijau yang berterusan. Ahli boleh mengeluarkan jumlah kecil pada bulan pertama — umpan — kemudian pengeluaran perlahan, kemudian memerlukan "yuran naik taraf" atau "sijil cukai", kemudian berhenti sepenuhnya. "AI" itu hanyalah nombor dalam pangkalan data yang boleh ditetapkan oleh pengendali kepada sebarang nilai.
+
+Ciri-ciri tanda tangan:
+
+- "AI" atau "rangkaian neural" digunakan sebagai penjelasan untuk kelebihan, tanpa arkitektur model, tanpa kiraan parameter, tanpa penerangan data latihan, tanpa hasil backtest yang diterbitkan.
+- Pulangan dibentangkan per *minggu*, lancar, tidak pernah negatif.
+- Tiada bukti on-chain atau kenyataan broker dagangan — hanya dasbor dalaman.
+- Komisen afiliasi / rujukan, sering bertingkat.
+- Deposit dalam kriptokurrency (USDT, kebanyakannya) untuk mengelakkan siasatan aras bank.
+
+## Perangkap
+
+Perangkapnya ialah bahasa yang terdengar teknikal melakukan kerja bukti. Pembaca mendengar "model transformer", "pembelajaran pengukuhan", "kluster GPU", dan otak memperlakukan jargon itu sebagai bukti. <Term id="ami" /> sendiri menggunakan LLM dalam susun atur 12-agensinya — jadi *kategori* "AI dalam dagangan" adalah nyata. Kesilapannya ialah membiarkan kewujudan kategori yang nyata menjamin pengendali tertentu. Model mental yang betul: strategi algoritmik yang benar menghasilkan alpha yang nyata meninggalkan jejak audit yang nyata — dagangan menghentam bursa yang nyata, isian muncul pada kenyataan broker yang nyata, kod strategi atau cap jari statistikannya boleh disemak oleh seseorang selain pengendali. Platform yang meminta anda mempercayai dasbor tanpa sebarang pengesahan luaran meminta anda mempercayai nombor yang ia cipta sendiri.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+  <Quiz
+  question="Platform dagangan AI milik sendiri mendakwa pulangan mingguan 1.5%. Mereka memaparkan papan pemuka dengan PnL positif berterusan selama 6 bulan. Mereka enggan memberikan penyata broker, hash transaksi on-chain, atau sebarang bukti pelaksanaan luaran. Ujian apa yang akan menafikan tuntutan ini?"
+  options={[
+    "Semak sama ada AI dibina dengan transformer atau RNN",
+    "Tanya sama ada mereka menggunakan GPU atau TPU",
+    "Minta platform memberikan lebih banyak tangkapan skrin",
+    "Minta rekod pelaksanaan per transaksi dari bursa berregulated atau penyelesaian on-chain yang boleh disahkan oleh pihak luar"
+  ]}
+  answer={3}
+  explanation="Tiada strategi algoritmik sebenar beroperasi tanpa venue penyelesaian — setiap perdagangan mendarat di suatu tempat luaran (bursa, kaunter OTC, atau blockchain). Jika pengendali tidak dapat menghasilkan rekod yang boleh disahkan secara luaran, perdagangan tersebut mungkin tidak wujud. Jargon teknikal (transformer, GPU, RNN) adalah lapisan pemasaran, bukan bukti. Ujian penentu adalah sama ada mana-mana pihak luar dapat mengesahkan perdagangan tersebut berlaku."
+/>
+
+  <Quiz
+  question="\"NeuroAlpha AI\" menawarkan pulangan 2% seminggu, menerima deposit dalam USDT ke alamat dompet, memaparkan papan pemuka yang menarik dengan bar hijau mingguan, dan mempunyai 8,000 ahli Telegram. Beberapa ahli mengesahkan pengeluaran kecil yang berjaya pada bulan lalu. Apakah tanda merah yang penentu?"
+  options={[
+    "Hanya 8,000 ahli Telegram",
+    "Pulangan 2% seminggu terlalu tinggi dari segi matematik",
+    "Deposit USDT berbanding wang fiat",
+    "Kelancaran bar hijau mingguan — strategi sebenar mempunyai minggu kerugian; kelancaran tanpa kerugian adalah diagnostik bagi lengkung ekuiti yang dipalsukan"
+  ]}
+  answer={3}
+  explanation="Pulangan tinggi adalah mencurigakan tetapi bukan penentu — gaya pelaburan ventura wujud. USDT dan Telegram adalah biasa tetapi tidak unik kepada penipuan. Ujian penentu yang boleh disangkal adalah *bentuk* lengkung ekuiti. Setiap strategi sebenar — walaupun yang sangat baik — mempunyai minggu kerugian. Lengkung tanpa minggu kerugian selama 6 bulan adalah hampir mustahil secara statistik untuk strategi yang terdedah kepada pasaran dan merupakan tandatangan tidak dapat dinafikan bagi papan pemuka yang dipalsukan. Pengeluaran kecil itu adalah umpan, bukan bukti."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan <Term id="concierge_agent" />. Tampal nama mana-mana "platform dagangan AI" yang pernah anda lihat diiklankan. Tanya: "Jejak audit apa yang harus mampu dihasilkan oleh strategi algoritmik yang benar, dan yang mana daripada itu gagal dihasilkan oleh platform ini?" Concierge akan menyenaraikan empat perkara (kenyataan broker, rekod bursa, backtest yang diaudit, rekod prestasi yang disahkan pihak ketiga) dan menandakan yang mana satu yang platform tersebut tiada.
+
+## Penutup
+
+Strategi algoritmik yang benar meninggalkan jejak audit yang nyata — isian bursa, kenyataan broker, penyelesaian on-chain. Jika satu-satunya bukti pulangan ialah dasbor dalaman, dasbor itu adalah produk.

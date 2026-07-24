@@ -1,0 +1,74 @@
+---
+id: "141_atr_as_volatility_gauge"
+title: "ATR sebagai penunjuk volatiliti"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 41"
+topic: "atr"
+prerequisites: ["029_volume_confirmation", "062_volatility_regimes"]
+tags: ["indicators", "atr", "volatility", "average_true_range", "regime"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# ATR sebagai pengukur volatiliti
+
+Average True Range (ATR) mengukur berapa banyak saham biasanya bergerak setiap sesi, dalam dolar. Ia ialah purata 14-bar (lalai) bagi "true range" — yang terbesar daripada: tinggi hari ini tolak rendah hari ini; tinggi hari ini tolak penutupan semalam; atau penutupan semalam tolak rendah hari ini. Istilah ketiga menangkap jurang luar sesi yang diabaikan oleh tinggi tolak rendah mudah. ATR bukan penunjuk arah — ia tidak menyatakan naik atau turun. Ia menyatakan berapa banyak. Nombor tunggal itu ialah input volatiliti untuk setiap keputusan saiz posisi dan penempatan henti; pelajaran ini mengajar pembacaan ATR sebagai pengukur rejim sebelum <Lesson id="102_atr_based_stops"/> mengaitkannya dengan henti dan <Lesson id="101_volatility_adjusted_sizing"/> mengaitkannya dengan saiz.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat TSLA sepanjang 2025. Pada Mei 2025, dengan TSLA sekitar 180, ATR(14) harian adalah kira-kira $4.40 — kira-kira 2.4% daripada harga. Pada Oktober 2025, dengan TSLA sekitar 270 dan cenderung kuat, ATR(14) harian telah meningkat kepada $8.20 — 3.0% daripada harga. Kemudian pada akhir Januari 2026, selepas penurunan tajam ke 230, ATR(14) melonjak kepada $11.50 — 5.0% daripada harga. Saham yang sama, penunjuk yang sama; nisbah ATR-peratusan-harga memberitahu anda rejim tersebut.
+
+Di bawah nisbah ATR-harian-ke-harga 2% ialah rejim volatiliti rendah — julat ketat, pergerakan perlahan, risiko kecil setiap saham tetapi juga ganjaran kecil setiap saham. 2–4% ialah rejim normal untuk nama beta-tinggi seperti TSLA. Di atas 4% ialah rejim volatiliti tinggi — henti lebih luas diperlukan, saiz posisi lebih kecil diperlukan untuk memegang risiko dolar yang sama.
+
+Pernyataan boleh disangkal: ATR-peratusan-harga di bawah purata 6-bulan lalu nama tersebut bermaksud pasaran tidak biasa tenang untuk nama ini dan kecondongan mean-reversion julat-bound adalah sesuai; ATR-peratusan di atas purata 6-bulan bermaksud pasaran tidak biasa gelisah dan strategi mengikuti-trend mendominasi. Pembatalan: sampel di mana rejim ATR-tinggi menghasilkan kelakuan julat-bound yang sama dengan rejim ATR-rendah — secara empirikal, ia tidak. ATR-tinggi mengikuti ATR-tinggi (pengelompokan volatiliti), dan pengelompokan itulah yang membuatkan ATR ramalan watak jangka pendek.
+
+Praktikal: AAPL dengan ATR(14) harian $2.80 pada harga 230 = 1.2% — rejim volatiliti rendah, jangka julat harian $3-lebar. NVDA pada tarikh yang sama dengan ATR(14) harian $5.10 pada 140 = 3.6% — normal-ke-tinggi untuk nama tersebut, jangka julat harian $5-lebar. Saiz harus mencerminkan perbezaan ini walaupun dengan risiko akaun dolar yang sama setiap perdagangan.
+
+Di Bursa Malaysia: GENTING pada pertengahan 2025 mempunyai ATR harian sekitar RM0.08 terhadap harga RM4.20 — kira-kira 1.9%. Selepas pemotongan panduan yang tidak dijangka, ATR melonjak kepada RM0.18 — 4.3%. Perubahan rejim kelihatan dalam ATR seminggu penuh sebelum harga memecahkan julat perniagaannya.
+
+## Perangkap
+
+Perangkap ialah memperlakukan ATR sebagai penunjuk arah atau kekuatan. "ATR meningkat — trend kuat." Itu salah. ATR meningkat dalam kedua-dua arah; saham yang runtuh mempunyai ATR tinggi sama seperti saham yang naik. Perangkap lain ialah mengabaikan ATR sepenuhnya dan menggunakan henti dolar tetap pada setiap nama — meletakkan henti $1 pada AAPL (dengan ATR $2.80) dan henti $1 pada TSLA (dengan ATR $11.50) ialah kesilapan yang sama pada magnitud berbeza. Henti pertama adalah munasabah; henti kedua berada di dalam bunyi harian.
+
+Model mental yang betul: ATR ialah parameter kalibrasi untuk segala-galanya. Jarak henti ialah beberapa kali ganda ATR (<Lesson id="102_atr_based_stops"/>). Saiz posisi melaras songsang dengan ATR (<Lesson id="101_volatility_adjusted_sizing"/>). Rejim volatiliti — tenang vs normal vs tinggi — memberi maklumat tentang keluarga strategi mana yang sesuai dengan pita semasa. ATR ialah dail yang membuatkan sisa alat anda bercakap dalam bahasa saham yang anda sebenarnya dagangkan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="AAPL diperdagangkan pada 230 dengan ATR(14) harian sebanyak $2.80. NVDA diperdagangkan pada 140 dengan ATR(14) harian sebanyak $5.10. Dengan mengira ATR sebagai peratusan harga, apakah yang anda pelajari tentang kedua-dua saham ini?"
+  options={[
+    "Nisbah ATR-ke-harga AAPL ialah 1.2% (rezim volatiliti rendah); NVDA pula 3.6% (normal hingga tinggi). Risiko dolar yang sama pada kedua-dua saham memerlukan saiz posisi dan jarak henti yang sangat berbeza kerana julat harian tipikal adalah kira-kira 3× berbeza dari segi peratusan.",
+    "AAPL lebih menarik kerana ATR-nya lebih rendah",
+    "NVDA berada dalam trend yang lebih kuat kerana ATR-nya lebih tinggi",
+    "ATR tidak penting pada tahap posisi — hanya jumlah dolar yang penting"
+  ]}
+  answer={0}
+  explanation="ATR sebagai peratusan harga adalah bacaan rezim. Jawapan salah yang memikat ('ATR lebih tinggi = trend lebih kuat') adalah pembacaan arah yang salah yang secara khusus disebut dalam pelajaran ini — ATR adalah tidak berarah. Kesilapan lain memberikan nilai moral (lebih menarik / kurang menarik) kepada volatiliti itu sendiri, sedangkan ATR adalah input kalibrasi, bukan penghakiman."
+/>
+
+<Quiz
+  question="ATR(14) harian TSLA melonjak dari $8.20 (3.0% daripada harga) kepada $11.50 (5.0% daripada harga) dalam tetingkap empat minggu. Anda telah menjalankan strategi reverensi purata pada TSLA dengan henti $4. Kadar kemenangan strategi telah turun dari 58% kepada 41% dalam tetingkap yang sama. Tafsiran manakah paling konsisten dengan kerangka pelajaran ini?"
+  options={[
+    "Tambah pada posisi rugi — ATR tinggi bermaksud bounce yang lebih besar",
+    "Rezim volatiliti telah berubah dari normal ke tinggi. Henti $4 kini berada jauh di dalam hingar harian (kira-kira 35% daripada satu ATR). Sama ada lebarkan henti dan kurangkan saiz secara berkadar untuk mengekalkan risiko dolar yang malar, atau tinggalkan pasaran sehingga ATR kembali normal — strategi reverensi purata cenderung gagal berprestasi dalam rezim volatiliti tinggi.",
+    "Kurangkan henti berasaskan ATR kerana ia sedang menyebabkan kerugian",
+    "Trend TSLA telah berubah arah — tukar strategi kepada hanya beli"
+  ]}
+  answer={1}
+  explanation="Perubahan rezim adalah tepat seperti yang diramalkan oleh pelajaran ini — kluster ATR tinggi, reverensi purata menghadapi masalah, dan mengikuti trend mendominasi. Jawapan salah yang memikat (A) membaca volatiliti sebagai arah. Pilihan C ('kurangkan henti berasaskan ATR') adalah terbalik — ATR yang lebih luas menuntut henti yang lebih luas. Pilihan D adalah corak anti-pemulihan kerugian yang dikesan dalam Modul 8."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal dua ticker dari <Term id="ami_watchlist" /> anda dan tanya: "Kira ATR(14) harian sebagai peratusan harga untuk setiap satu, dan bandingkan setiap nisbah dengan purata 6-bulan lalu." Kemudian semak carta sendiri. Latihan ini ialah untuk dalami bahawa ATR-ke-harga ialah pengukur rejim dan bahawa "di atas purata 6-bulan" dan "di bawah purata 6-bulan" meramalkan kelakuan jangka pendek yang sangat berbeza.
+
+## Penutup
+
+ATR memberitahu anda berapa banyak saham biasanya bergerak — bukan ke arah mana. Gunakan ia sebagai parameter kalibrasi untuk henti, saiz, dan pemilihan strategi; nisbah ATR-ke-harga membaca rejim volatiliti.

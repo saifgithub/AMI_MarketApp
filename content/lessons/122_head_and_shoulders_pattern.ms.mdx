@@ -1,0 +1,86 @@
+---
+id: "122_head_and_shoulders_pattern"
+title: "Corak kepala dan bahu"
+duration_min: 6
+level: 2
+module: 4
+difficulty: 4
+track: "technical_analysis"
+code: "TECH 22"
+topic: "chart_patterns"
+prerequisites: ["023_support_and_resistance", "024_breakouts", "022_trend_direction"]
+tags: ["head_and_shoulders", "reversal", "chart_pattern", "neckline", "price_action"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pola kepala dan bahu
+
+Anda telah menyelesaikan <Lesson id="023_support_and_resistance"/> (sokongan dan rintangan) dan <Lesson id="024_breakouts"/> (penerobosan). Di sini kita mendalamkan analisis pada corak carta berbilang-bar yang paling kerap dirujuk: kepala dan bahu. Ia adalah struktur pembalikan tiga puncak yang terbentuk selepas trend naik — bahu kiri (puncak ayunan), kepala yang lebih tinggi (puncak tertinggi), dan bahu kanan (puncak lebih rendah daripada kepala, kira-kira selaras dengan bahu kiri). Rata-rata terendah antara puncak membentuk "garis leher". Penutupan harian di bawah garis leher mengaktifkan corak. Pada akhir pelajaran ini, anda harus mampu mengenal pasti struktur, melukis garis leher dengan betul, mengira sasaran pergerakan terukur, dan menyatakan peraturan pembatalan yang tepat.
+
+## Contoh
+
+Lihat TSLA pada carta harian dari akhir Januari hingga pertengahan April 2026. TSLA mencapai puncak pada $278.40 pada 28 Januari (bahu kiri), turun ke $254.60 pada 12 Februari (terendah garis leher pertama), naik semula ke puncak lebih tinggi pada $289.20 pada 4 Mac (kepala), turun ke $258.80 pada 19 Mac (terendah garis leher kedua), kemudian naik lemah ke $277.10 pada 1 April (bahu kanan — kira-kira sama aras dengan bahu kiri, jelas lebih rendah daripada kepala).
+
+Garis leher: lukis garis antara dua terendah penurunan — $254.60 pada 12 Februari dan $258.80 pada 19 Mac. Ini mempunyai kecondongan naik sedikit; pada masa puncak bahu kanan pada 1 April, garis leher diunjurkan ke kira-kira $262.
+
+Pada 8 April, TSLA menutup pada $258.40 — penutupan harian di bawah garis leher yang diunjurkan. Corak diaktifkan.
+
+**Sasaran pergerakan terukur.** Ketinggian corak dari kepala ke garis leher = $289.20 tolak ~$257 (titik tengah garis leher) ≈ $32. Tolak ketinggian itu daripada harga penembusan garis leher: $258.40 tolak $32 ≈ $226. Itu adalah sasaran pergerakan terukur dalam buku teks.
+
+Pada 22 April, TSLA berada pada $224.60 — dalam lingkungan $1.40 daripada sasaran buku teks. Pedagang yang masuk posisi pendek pada penutupan penembusan garis leher pada $258.40, dengan henti rugi di atas bahu kanan pada $279, berisiko $20.60 untuk sasaran $226 — ganjaran $32.40, nisbah ganjaran-kepada-risiko (R/R) kira-kira 1:1.6, ditambah pilihan untuk keluar separuh pada $240 untuk R/R separuh pertama yang lebih tinggi.
+
+Corak ini dibatalkan seketika apabila lilin harian menutup kembali di atas bahu kanan ($277.10 untuk TSLA). Pada penutupan itu, pembalikan struktur adalah batal dan sebarang tesis pendek menjadi tidak sah.
+
+## Perangkap
+
+Perangkapnya ialah memanggil setiap struktur "tiga puncak" sebagai kepala dan bahu. Kebanyakannya bukan. Corak kepala dan bahu yang sebenar mempunyai (1) trend naik prior yang jelas untuk dibalikkan, (2) kepala yang *jelas* lebih tinggi daripada kedua-dua bahu — biasanya 3–8% — dan (3) bahu yang kira-kira selaras antara satu sama lain, dalam lingkungan kira-kira 2% dari segi harga. "Kepala" yang hanya 0.5% lebih tinggi daripada bahu bukanlah kepala, ia adalah puncak julat. Perangkap lebih buruk: masuk posisi pendek pada puncak bahu kanan sebelum garis leher ditembusi. Selagi garis leher tidak ditutup menembusi, corak itu *potensi*, bukan diaktifkan. Banyak corak H&S yang berpotensi lenyap tanpa pernah menembusi garis leher. Model mental yang betul: kepala dan bahu mempunyai dua peristiwa — bentuk visual (perlu tetapi tidak mencukupi) dan penembusan garis leher (pemicu sebenar). Tunggu penutupan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham naik ke $80, turun ke $74, naik ke $86, turun ke $75, naik ke $80.50, kemudian menurun dan menutup pada $73.80. Apakah corak ini dan bagaimana rupa pemicunya?"
+  options={[
+    "Cup and handle — kesinambungan bullish",
+    "Segitiga — puncak dan dasar yang menyempit",
+    "Double top — hanya dua puncak yang setara dikira",
+    "Head and shoulders — bahu kiri $80, kepala $86 (7.5% di atas bahu), bahu kanan $80.50, garisan leher kira-kira $74.50 (antara dua dasar penurunan $74 dan $75); pemicu ialah penutupan harian pada $73.80, yang berada di bawah garisan leher"
+  ]}
+  answer={3}
+  explanation="Terdapat tiga puncak dengan tengah yang jelas lebih tinggi ($86 adalah 7.5% di atas dua bahu ~$80), bahu yang kira-kira sama rata (dalam lingkungan 0.6%), garisan leher dilukis antara dasar penurunan $74 dan $75 (jadi garisan leher berada sekitar $74.50 di tengah corak), dan penutupan pada $73.80 mencetuskan di bawahnya. Jawapan double top mengabaikan puncak tengah yang jelas lebih tinggi — itulah yang menjadikan ini H&S dan bukan double top. Jawapan cup-and-handle mencipta corak bullish yang tidak sesuai dengan struktur puncak. Jawapan segitiga mencipta penyempitan yang tidak ditunjukkan oleh data."
+/>
+
+<Quiz
+  question="Head-and-shoulders yang bakal terbentuk telah terbentuk: bahu kiri $112, kepala $116 (3.5% lebih tinggi), bahu kanan $113.80. Garisan leher diunjurkan ke $107.40. Hari ini bahu kanan baru dicetak dan harga berada pada $111.20 tanpa pecahan garisan leher lagi. Pedagang menjual pendek pada $111.20 untuk 'mendahului' pecahan. Manakah bacaan yang paling kuat dan apa alasan salah yang paling menggoda?"
+  options={[
+    "Perdagangan pintar — bahu kanan adalah titik masuk pendek yang paling boleh dipercayai",
+    "Perdagangan pintar — kepala 3.5% di atas bahu adalah sangat bersih",
+    "Perdagangan pintar — corak visual cukup untuk bertindak",
+    "Perdagangan prematur — pelajaran secara eksplisit menyatakan corak ini mempunyai dua peristiwa (bentuk DAN pecahan garisan leher) dan hanya yang kedua mencetuskan perdagangan; sehingga penutupan harian mencetak di bawah $107.40, corak tersebut adalah berpotensi tidak dicetuskan, dan banyak bentuk H&S lenyap tanpa pernah memecahkan garisan leher. Alasan salah yang menggoda ialah menganggap bentuk yang kelihatan sebagai isyarat"
+  ]}
+  answer={3}
+  explanation="Masukan perdagangan ialah penutupan pecahan garisan leher, bukan puncak bahu kanan. Bentuk adalah perlu; pecahan adalah yang mencetuskan. Jawapan bentuk-cukup-untuk-act meruntuhkan struktur dua peristiwa. Jawapan kepala-kecil-eksklusif memfokuskan pada saiz kepala seolah-olah ia mengatasi keperluan pemicu — ketampakan kepala penting untuk *mengenal pasti* corak tetapi bukan untuk *menetapkan masa* masuk. Jawapan bahu-kanan-entry mencipta peraturan masukan yang tidak dibuat oleh pelajaran. Banyak pedagang menjual pendek pada bahu kanan, terperangkap dalam rally kesinambungan, dan mempelajari pelajaran ini dengan kos yang mahal."
+/>
+
+<Quiz
+  question="H&S mencetus pada JPM pada penutupan pecahan garisan leher $268.40. Kepala berada pada $292.10, titik tengah garisan leher pada $260. Puncak bahu kanan berada pada $281. Kira sasaran pergerakan diukur dan nyatakan peraturan pembatalan eksplisit untuk perdagangan pendek."
+  options={[
+    "Sasaran $244.30; pembatalan = henti lindung pada $290 dipukul dalam hari",
+    "Sasaran $230 (tekaan nombor bulat); pembatalan = penutupan semula di atas garisan leher pada $260",
+    "Sasaran $236.30; pembatalan = penutupan harian di atas $281 (bahu kanan)",
+    "Sasaran $260 (garisan leher); pembatalan = pergerakan 5% menentang perdagangan"
+  ]}
+  answer={2}
+  explanation="Pergerakan diukur: kepala ($292.10) tolak titik tengah garisan leher ($260) = ketinggian $32.10. Tolak daripada harga pecahan garisan leher ($268.40): $268.40 tolak $32.10 = sasaran $236.30. Pembatalan mengikut pelajaran: penutupan harian di atas bahu kanan ($281) membatalkan corak. Jawapan $244.30 melakukan tolak salah dan mengelirukan henti dalam hari dengan pembatalan tesis. Jawapan nombor bulat $230 mencipta sasaran dan menggunakan pengambilan semula garisan leher sebagai pembatalan — pengambilan semula garisan leher adalah *amaran* tetapi pelajaran mentakrifkan pembatalan struktur sebagai penutupan di atas bahu kanan. Jawapan garisan-leher-sebagai-sasaran merendahkan kedua-dua nombor. Ujian sintesis ialah mengira pergerakan diukur dengan betul *dan* memilih pembatalan struktur spesifik pelajaran, bukan henti lindung generik. Ini mengintegrasikan aritmetik corak dengan disiplin pembatalan dari pelajaran sebelumnya."
+/>
+
+## Cuba sendiri
+
+Buka carta untuk mana-mana saham yang mencapai puncak dalam enam bulan lalu. Cari struktur tiga puncak di mana puncak tengah adalah jelas lebih tinggi. Jika anda menemuinya, tanya Market Analyst dalam <Term id="ami_one_on_one" />: "Adakah ini kepala dan bahu yang sah? Lukis garis leher, kira sasaran pergerakan terukur, dan nyatakan harga pembatalan bahu kanan." Simpan pemicu, sasaran, dan pembatalan ke dalam <Term id="ami_decision_journal" /> anda — walaupun corak itu tidak diaktifkan, dokumentasikan sebabnya supaya anda boleh mengesan bentuk itu lebih awal pada masa hadapan.
+
+## Penutup
+
+Kepala dan bahu adalah corak dua peristiwa — bentuk visual ditambah penutupan penembusan garis leher — dengan sasaran pergerakan terukur yang sama dengan ketinggian kepala ke garis leher; pembatalan struktur adalah sentiasa penutupan kembali di atas bahu kanan.

@@ -1,0 +1,74 @@
+---
+id: "116_top_down_multi_timeframe_workflow"
+title: "Aliran kerja multi-masa dari atas ke bawah"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 16"
+topic: "timeframes"
+prerequisites: ["021_timeframes_and_what_they_tell_you", "022_trend_direction"]
+tags: ["multi_timeframe", "workflow", "alignment", "chart_reading", "process"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Aliran kerja multi-masa dari atas ke bawah
+
+Anda diandaikan telah menyelesaikan <Lesson id="021_timeframes_and_what_they_tell_you"/> (kerangka masa). Di sini kita mendalamkan aliran kerja sebenar: bagaimana berjalan melalui carta dari kerangka masa tertinggi ke terendah dalam urutan tetap supaya anda berhenti beralih antara pandangan dan meragui diri sendiri. Aliran kerja dari atas ke bawah mempunyai tiga laluan — konteks, persediaan, pencetus — setiap satu pada kerangka masa tetap, dan setiap satu menghasilkan satu hasil sebelum anda bergerak ke yang seterusnya. Pada akhir pelajaran ini, anda harus mampu melaksanakan aliran kerja tiga laluan pada sebarang ticker, tahu apa yang perlu dilakukan apabila kerangka masa tidak bersetuju, dan menghasilkan pelan bertulis yang entri, henti rugi, dan pembatalan masing-masing berada pada kerangka masa tertentu.
+
+## Contoh
+
+Jalankan MSFT pada akhir April 2026 melalui aliran kerja ini.
+
+**Laluan 1 — Mingguan (konteks).** Carta mingguan MSFT menunjukkan puncak mingguan yang lebih tinggi sejak November 2025: $362 → $419 → $445 → $462. Trend mingguan adalah naik. Rendah yang lebih tinggi terkini berada pada $419 (penutupan mingguan di atas $419 telah dikekalkan). Hasil: *Trend yang lebih besar adalah naik; pembatalan trend = penutupan mingguan di bawah $419.*
+
+**Laluan 2 — Harian (persediaan).** Carta harian MSFT menunjukkan harga pada $458 selepas susut turun dari $462 selama empat sesi. Susut turun tersebut menemui sokongan pada purata bergerak 20-periode harian berhampiran $452 dan dikekalkan. Rendah yang lebih tinggi pada $451.40 dicetak dua hari lepas. Hasil: *Susut turun selesai pada rendah harian yang lebih tinggi $451.40; pembatalan persediaan = penutupan harian di bawah $451.40.*
+
+**Laluan 3 — Jam (pencetus).** Carta jam MSFT menunjukkan tiga rendah jam yang lebih tinggi berturut-turut sepanjang 14 jam lepas, menembusi saluran intraday yang condong ke bawah dari tinggi semalam. Hasil: *Pencetus panjang aktif pada penutupan jam di atas $458.20 (tinggi ayunan jam semalam).*
+
+Pelan: masuk pada pencetus jam pada ~$458.50, henti rugi pada $450.80 (di bawah rendah harian yang lebih tinggi), sasaran puncak mingguan sebelumnya pada $462 untuk pengambilan pertama, $470 untuk peregangan. Risiko ~$7.70, ganjaran $3.50 hingga $11.50. Tiga kerangka masa, tiga hasil, satu dagangan.
+
+Pelan dibatalkan pada penutupan harian di bawah $451.40 (persediaan hilang) atau penutupan mingguan di bawah $419 (seluruh konteks hilang — keluar mana-mana saiz yang tinggal serta-merta, tiada soalan).
+
+## Perangkap
+
+Perangkapnya ialah melakukan aliran kerja dalam urutan yang salah, biasanya dari bawah ke atas. Pemula melihat corak jam yang menarik, kemudian *secara retrospektif* menyemak harian dan mingguan untuk mencari justifikasi. Pada masa mereka sampai ke mingguan, mereka sudah memutuskan untuk mengambil dagangan itu, jadi mana-mana bukti yang sepadan diberi berat, mana-mana bukti yang tidak sepadan diabaikan. Model mental yang betul: dari atas ke bawah adalah tidak boleh dinegosiasikan. Laluan mingguan mesti selesai sebelum laluan harian bermula, laluan harian sebelum laluan jam. Jika laluan 1 gagal (trend mingguan tidak menyokong arah yang anda ingin dagangkan), anda berhenti — tiada laluan 2. Inilah yang menghalang anda daripada berdagangan menentang trend dominan atas kekuatan garisan lima minit.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Anda merancang dagangan ayunan jangka panjang pada AAPL. Anda mengimbas carta mingguan dan mendapati trend turun yang jelas dengan puncak lebih rendah dan dasar lebih rendah. Carta jam menunjukkan persediaan untuk pantulan daripada sokongan dalam hari. Apa yang perlu dilakukan menurut alur kerja atas-bawah?"
+  options={[
+    "Lakukan dagangan panjang — sokongan jam cukup untuk mengemasukan kemasukan dalam sebarang trend yang lebih besar",
+    "Lakukan dagangan panjang dengan henti rugi ketat kerana trend turun mingguan bermaksud potensi kenaikan lebih tinggi",
+    "Berhenti di laluan 1 — mingguan adalah menentang arah yang anda ingin dagangkan, jadi laluan 2 dan 3 tidak bermula; jika anda ingin dagangan ayunan panjang, cari ticker yang trend minggunya menyokongnya",
+    "Langkau laluan mingguan — ia terlalu perlahan untuk memberi kesan kepada pedagang aktif"
+  ]}
+  answer={2}
+  explanation="Alur kerja adalah berurutan dan dikawal. Trend turun mingguan menafikan tesis dagangan panjang, tamat. Jawapan untuk melakukan dagangan berdasarkan sokongan jam melanggar alur kerja dengan membiarkan kerangka masa terendah mengatasi kerangka masa tertinggi — ini adalah mod kegagalan yang dinamakan dalam pelajaran. Jawapan henti rugi ketat kerana potensi lebih tinggi mencipta peraturan reverensi purata yang mengelirukan 'jenuh jual' dengan 'dagangan panjang yang boleh diperdagangkan', dan menyamakan trend turun dengan diskaun. Jawapan langkau laluan mingguan meremehkan kerangka masa maklumat tertinggi yang paling perlahan atas nama menjadi 'aktif' — yang merupakan cara tepat bagaimana pedagang aktif berakhir dengan melawan trend."
+/>
+
+<Quiz
+  question="Pada NVDA, anda menyelesaikan laluan 1 (trend mingguan naik, pembatalan = penutupan mingguan di bawah $128) dan laluan 2 (tarikan balik harian ke dasar lebih tinggi pada $134, pembatalan = penutupan harian di bawah $134). Pada carta jam, anda tidak dapat mencari pencetus yang bersih — harga bergegar tanpa dasar jam lebih tinggi yang jelas. Rakan berkata 'masukkan sahaja pada pasaran, persediaan adalah baik'. Manakah respons yang terbaik menerapkan alur kerja, dan apakah alternatif yang paling menggoda?"
+  options={[
+    "Batalkan dagangan — jika jam bergegar, persediaan harian mestilah salah juga",
+    "Turun ke carta 5 minit dan cari pencetus di sana sebagai gantinya",
+    "Masukkan pada pasaran — laluan 1 dan 2 adalah cukup, pencetus adalah bonus",
+    "Tunggu — laluan 1 dan 2 adalah perlu tetapi tidak mencukupi; laluan pencetus mengubah persediaan yang sah menjadi kemasukan. Berdagang tanpa pencetus bermaksud menerima pergerakan intraday yang merugikan secara rawak yang anda tidak ada pelan untuknya. Pergerakan salah yang paling menggoda: memperlakukan persediaan hebat sebagai kebenaran untuk melangkau pencetus"
+  ]}
+  answer={3}
+  explanation="Setiap laluan menghasilkan penghantaran; kemasukan adalah penghantaran laluan 3. Tanpa pencetus, anda mempunyai persediaan tetapi tiada kemasukan — dan 'masukkan pada pasaran' dalam jam yang bergegar adalah bagaimana pelan risiko 1R berubah menjadi penurunan 3R sebelum persediaan mempunyai peluang untuk dimainkan. Jawapan masukkan pada pasaran meruntuhkan struktur tiga langkah alur kerja. Membatalkan dagangan terlalu membetulkan dan membiarkan laluan 3 membatalkan laluan 1 dan 2 — mereka tidak, mereka adalah bebas. Turun ke carta 5 minit adalah melangkau kerangka masa dalam arah bertentangan — turun ke 5 minit untuk pelan dagangan ayunan memperkenalkan semula semua hingar yang kerangka masa yang lebih tinggi direka bentuk untuk menapis. Ujian sintesis adalah mengiktiraf bahawa ketiga-tiga laluan adalah berpasangan tetapi setiap satu mempunyai tugasnya sendiri."
+/>
+
+## Cuba sendiri
+
+Pilih satu ticker pada <Term id="ami_watchlist" /> anda. Dalam <Term id="ami_decision_journal" />, tulis tiga baris yang dilabelkan "Mingguan:", "Harian:", "Jam:" dan isi hasil untuk setiap laluan — trend lebih besar + pembatalan; persediaan + pembatalan; pencetus + pembatalan. Jika mana-mana laluan gagal, berhenti dan jangan dagangkan. Kemudian tanya Market Analyst di <Term id="ami_one_on_one" />: "Sahkan atau betulkan pelan tiga laluan saya pada [ticker]." Laraskan sebelum meletakkan mana-mana dagangan.
+
+## Intipati
+
+Aliran kerja dari atas ke bawah adalah berurutan — mingguan untuk konteks, harian untuk persediaan, jam untuk pencetus — dan mana-mana laluan yang gagal membunuh dagangan sebelum laluan seterusnya bahkan bermula.

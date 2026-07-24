@@ -1,0 +1,72 @@
+---
+id: "181_pb_for_banks_regulatory_book"
+title: "P/B untuk bank — modal regulasi dan lapisan leverage"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 47"
+topic: "price_to_book"
+prerequisites: ["040_price_to_book", "041_return_on_equity", "180_tangible_book_vs_reported_book"]
+tags: ["price_to_book", "banks", "regulatory_capital", "cet1", "leverage", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# P/B untuk bank — modal regulasi dan lapisan leverage
+
+<Lesson id="040_price_to_book"/> menerangkan mengapa P/B berguna untuk bank; pelajaran ini menambah lapisan yang memisahkan pemula daripada operator. "Nilai buku" sebuah bank bukan sekadar nombor perakaunan — ia adalah penampan yang diperlukan oleh pengawal selia terhadap pinjaman yang dibuat oleh bank tersebut. Common Equity Tier 1 (CET1) dan aset berisiko (risk-weighted assets) menentukan berapa banyak ekuiti yang mesti dipegang oleh bank, dan lantai tersebut mengubah cara P/B dibaca. Pada akhir pelajaran ini, anda harus mampu membaca nilai buku boleh runding (tangible book) bersama nisbah CET1, mengenal pasti apabila P/B rendah mencerminkan tekanan regulasi berbanding penilaian, dan menyebut keadaan yang mengubah bank "murah" menjadi perangkap nilai.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+JPM pertengahan 2026: nilai buku boleh runding setiap saham sekitar $100, harga saham sekitar $220, P/nilai buku boleh runding ≈ 2.2x. Nisbah CET1 pada kira-kira 15% — jauh melebihi minimum regulasi sekitar 11.5% untuk bank yang penting secara sistemik global. Penampan ini (kira-kira 350bps di atas lantai) bermakna JPM boleh memulangkan modal melalui dividen dan pembelian balik (buybacks), menyerap kejutan kitaran kredit, dan meneruskan peminjaman tanpa menaikkan ekuiti. Premium P/B sebanyak 2.2x dibenarkan oleh ROE yang tinggi (17%+) dan fleksibiliti modal.
+
+BAC pada tarikh yang sama: nilai buku boleh runding setiap saham sekitar $26, harga saham sekitar $42, P/nilai buku boleh runding ≈ 1.6x. ROE kira-kira 11% — hanya sedikit di atas kos ekuiti. CET1 sekitar 11.8%, hanya 80–100bps di atas lantai regulasi. Pasaran membayar premium yang lebih sederhana kerana pulangan marginal lebih nipis dan kapasiti pemulangan modal terhad.
+
+Sekarang satu contoh tertekan: sebuah bank Eropah yang diperdagangkan pada 0.6x nilai buku boleh runding dengan CET1 pada 12.5% (di atas minimum) tetapi ROE berjalan pada 3–4% berbanding kos ekuiti ~10%. Nisbah modal kelihatan selamat; modal yang menghasilkan pendapatan dimusnahkan setiap tahun. Nilai buku sendiri terkikis — setiap tahun bank memperoleh kurang daripada kos modal, pendapatan tertahan sama ada mengecut atau tumbuh lebih perlahan daripada pesaing, dan diskaun kepada nilai buku kekal atau mendalam. Pelabur yang menganggap 0.6x sebagai "nilai mendalam" mendapati diri mereka memegang perniagaan yang perlahan-lahan mengecut.
+
+Di Bursa: PUBLIC BANK secara sejarah menjalankan CET1 sekitar 14–15% dengan ROE dalam lingkungan 13–14%, menyokong P/B sekitar 1.8x–2.0x. MAYBANK menjalankan ROE sedikit lebih rendah (10–11%) pada modal yang sama, menyokong P/B yang lebih sederhana iaitu 1.2x–1.4x. Persekitaran regulasi yang sama, mata wang yang sama, profil pulangan yang berbeza — premium yang boleh dipertahankan berbeza.
+
+Pernyataan boleh disangkal: bagi sebuah bank, jurang ROE − kos ekuiti adalah pemacu penilaian yang menanggung beban. Bank dengan ROE 5 mata di atas kos ekuiti harus diperdagangkan pada premium yang bermakna terhadap buku (biasanya 1.5x+ boleh runding); bank dengan ROE *di bawah* kos ekuiti harus diperdagangkan pada diskaun terhadap buku tanpa mengira betapa kukuhnya penampan CET1 kelihatan, kerana modal yang menghasilkan pendapatan tidak produktif.
+
+## Perangkap
+
+Perangkap adalah menapis bank berdasarkan P/B sahaja tanpa membaca modal regulasi dan ROE secara bersebelahan. Tiga profil berbeza semuanya menunjukkan "P/B rendah": bank yang mempunyai modal kukuh dengan pendapatan tertekan secara kitaran (peluang tulen); bank yang mempunyai modal lemah yang perlu mengeluarkan ekuiti (risiko pencairan, sering kali mencairkan pada diskaun); dan bank yang secara struktur di bawah kos ekuiti (pemusnahan nilai perlahan). Model mental yang betul: jangan percayai P/B bank tanpa empat nombor — nilai buku boleh runding, P/nilai buku boleh runding, nisbah CET1, dan ROE tertinggal. Kemudian uji terhadap lantai regulasi dan kos ekuiti. Bank "murah" dengan CET1 di bawah 12% dan ROE di bawah kos ekuiti adalah perangkap nilai; bank "murah" dengan CET1 di atas 14% dan pemulihan pendapatan yang jelas adalah haiwan yang berbeza. Apa yang membatalkan isyarat: perubahan regulasi mendadak (keperluan modal dinaikkan sebanyak 100bps) boleh menilai semula seluruh sektor turun pada P/B walaupun tanpa perubahan kualiti perniagaan. Senario ujian ketegangan yang dikeluarkan oleh bank pusat adalah awam; bacanya sebelum membeli mana-mana bank pada diskaun.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Dua bank. Bank X: P/aset-boleh-diperoleh = 0.7x, nisbah CET1 = 11.5% (minimum regulasi 11%), ROE tertunggak = 4%, kos ekuiti ~10%. Bank Y: P/aset-boleh-diperoleh = 0.7x, nisbah CET1 = 16%, ROE tertunggak = 6% (tertekan daripada lonjakan kitaran kerugian kredit), kos ekuiti ~10%. Kedua-duanya kelihatan 'murah' pada P/B. Yang mana lebih mungkin menjadi perangkap nilai, dan mengapa?"
+  options={[
+    "Bank X adalah perangkap nilai. CET1 hanya 50bps di atas lantai bermakna kejutan kredit memaksa penerbitan ekuiti — kemungkinan pada diskaun, mencairkan pemegang saham semasa. ROE yang kekal di bawah kos ekuiti menghancurkan nilai buku setiap tahun. 0.7x adalah harga pasaran yang betul menilai perlahan-lahan hakisan plus risiko pencairan. Bank Y mempunyai bantalan CET1 400bp dan tekanan ROE kitaran — profil perniagaan yang berbeza di mana 0.7x boleh menjadi peluang sebenar jika kitaran kredit berputar. P/B sama, persediaan sangat berbeza",
+    "Kedua-duanya setara — P/B yang sama bermaksud nilai yang sama",
+    "Beli kedua-duanya kerana kedua-duanya di bawah 1.0x buku",
+    "Bank Y adalah perangkap kerana ROE-nya lebih rendah"
+  ]}
+  answer={0}
+  explanation="Sintesis: P/B sahaja tidak pernah membezakan tiga profil 'bank murah'. Jawapan salah yang menggoda adalah 'P/B yang sama bermaksud nilai yang sama' — pemula menapis pada nisbah tunggal. Menamakan Bank Y sebagai perangkap membalikkan bacaan yang betul; tekanan ROE kitaran dengan modal yang kuat adalah persediaan yang berbeza daripada ROE struktur di bawah kos ekuiti. 'Beli kedua-duanya kerana kedua-duanya di bawah 1.0x buku' adalah perangkap pemula yang dipacu penapis. Bantalan CET1 dan jurang antara ROE dan kos ekuiti bersama-sama menentukan sama ada 0.7x adalah nilai atau pemusnahan."
+/>
+
+<Quiz
+  question="Sebuah bank ranting AS melaporkan aset-boleh-diperoleh per saham berkembang dari $20 kepada $24 dalam tempoh tiga tahun — CAGR 6.3%. P/aset-boleh-diperoleh kekal rata pada 1.4x; ROE purata 12% terhadap kos ekuiti ~10%. Bank telah membayar 35% pendapatan sebagai dividen dan membeli balik 5% saham. Pembaca diminta mensintesis: apa yang memberitahu kestabilan P/B kepada mereka, digabungkan dengan jurang ROE?"
+  options={[
+    "Bank itu stagnan kerana P/B tidak meningkat",
+    "Bank itu harus dijual kerana P/B tidak berkembang",
+    "P/B harus sentiasa berkembang jika bank berprestasi baik",
+    "P/B rata dengan ROE 200bps di atas kos ekuiti dan aset-boleh-diperoleh berkembang 6%+ adalah bank berbilang sihat. Pulangan pemegang saham total = pertumbuhan buku + hasil dividen + hasil pembelian balik ≈ 6% + 2.5% + 3% ≈ 11.5% tahunan, walaupun tanpa pengembangan berbilang. P/B 1.4x adalah konsisten dengan jurang ROE-vs-kos-ekuiti; pasaran tidak meremehkan ia, ia menilai ia dengan betul. Bank berbilang mengembalikan modal secara stabil tanpa penarafan berbilang semula, dan itulah yang anda beli untuknya"
+  ]}
+  answer={3}
+  explanation="Sintesis: pulangan bank kepada pemegang saham adalah hasil daripada pertumbuhan buku, hasil dividen, dan hasil pembelian balik — bukan pengembangan berbilang. Jawapan salah yang menggoda adalah 'bank itu stagnan kerana P/B tidak meningkat' — pemula menyamakan berbilang rata dengan pulangan rata. 'Jual kerana P/B tidak berkembang' mengikuti logik yang sama ke kesimpulan yang lebih buruk. 'P/B harus sentiasa berkembang' mengandaikan pengembangan berbilang adalah matlamat; untuk bank berkualiti tinggi yang diperdagangkan pada premium yang dibenarkan, *menahan* berbilang sambil menggabungkan penyebut adalah tepat hasil yang diharapkan. P/B 1.4x adalah harga yang telah ditetapkan pasaran untuk profil ROE itu, dan ia sihat."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_convene_the_room" /> pada ticker bank (JPM, BAC, MAYBANK, PUBLIC BANK), kemudian dalam <Term id="ami_one_on_one" /> dengan Analis Fundamental tanya: "Berikan nilai buku boleh runding setiap saham, P/nilai buku boleh runding, nisbah CET1, CET1 minimum regulasi, ROE tertinggal, dan anggaran kos ekuiti. Beritahu sama ada P/B konsisten dengan jurang ROE−kos ekuiti dan berapa banyak penampan regulasi yang wujud." Simpan enam titik data dalam <Term id="ami_decision_journal" /> anda sebagai templat penilaian bank anda.
+
+## Penafian
+
+P/B bank adalah bacaan empat pembolehubah — pasangkan dengan nilai buku boleh runding, penampan CET1, dan jurang ROE berbanding kos ekuiti. P/B rendah adalah nilai hanya apabila modal kukuh dan kekurangan pendapatan adalah kitaran, bukan struktur.

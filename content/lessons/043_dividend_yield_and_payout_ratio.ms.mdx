@@ -1,0 +1,70 @@
+---
+id: "043_dividend_yield_and_payout_ratio"
+title: "Hasil dividen dan nisbah pembayaran"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 2
+track: "fundamentals_analysis"
+code: "FUND 12"
+topic: "dividend_yield_payout"
+prerequisites: ["033_profit_and_margins", "035_cash_flow_vs_earnings", "042_debt_to_equity"]
+tags: ["dividend_yield", "payout_ratio", "dividends", "income", "capital_return", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Hasil dividen dan nisbah pembayaran
+
+Hasil dividen ialah jumlah tunai tahunan yang dibayar oleh syarikat bagi setiap saham, dibahagikan dengan harga saham. Nisbah pembayaran ialah bahagian daripada pendapatan (atau aliran tunai bebas) yang dikembalikan oleh syarikat sebagai dividen. Kedua-dua metrik ini memberitahu anda sama ada aliran pendapatan itu murah hati, mampan, kedua-duanya, atau tiada satu pun. Pada akhir pelajaran ini, anda harus mampu mengira kedua-duanya, mengiktiraf tanda amaran "perangkap hasil", dan menyatakan keadaan tepat di mana hasil tinggi adalah tahan lama berbanding sebagai persediaan untuk pemotongan.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+JPM pada pertengahan 2026 membayar dividen tahunan kira-kira $5.20 bagi setiap saham. Pada harga saham berhampiran $220, hasil dividen = 5.20 / 220 ≈ 2.4%. EPS (pendapatan per saham) terdahulu JPM adalah sekitar $18.50, maka nisbah pembayaran pada pendapatan = 5.20 / 18.50 ≈ 28%. Ini adalah pembayaran yang mampan — hanya kira-kira satu suku daripada pendapatan digunakan, meninggalkan ruang untuk modal yang ditahan dan penampan terhadap kitaran kredit. XOM membayar dividen tahunan sekitar $3.96, harga saham berhampiran $115, hasil ≈ 3.4%, pembayaran pada pendapatan sekitar 45–50% bergantung pada kitaran harga minyak — tinggi tetapi konsisten dengan norma tenaga matang. MSFT membayar sekitar $3.32 tahunan, harga saham berhampiran $480, hasil ≈ 0.7%, pembayaran sekitar 25% — profil hasil rendah dan pembayaran rendah yang tipikal bagi perniagaan pertumbuhan tinggi yang melabur semula kebanyakan wang tunai.
+
+Sekarang, perangkap hasil. Katakan sebuah telco ranting diperdagangkan pada $25 dengan dividen $2.40 — hasil = 9.6%. Tajuk "hampir 10%" kelihatan tidak dapat ditolak. Semak nisbah pembayaran: EPS terdahulu $1.80 memberikan pembayaran 2.40 / 1.80 = 133%. Syarikat membayar lebih daripada yang ia hasilkan, dibiayai sama ada oleh hutang atau penarikan turun neraca. Itu tidak mampan; dividen akan dipotong, dan harga saham biasanya jatuh *sebelum* pemotongan tersebut apabila pasaran menjangkakannya. Pelabur yang membeli untuk hasil 9.6% sering berakhir memegang hasil 4% pada saham yang jatuh 5% — hasil pulangan jumlah yang lebih buruk berbanding mengabaikan hasil sepenuhnya.
+
+Di Bursa Malaysia: MAYBANK telah lama menjadi salah satu saham besar dengan hasil tertinggi di KLCI, dengan hasil dalam lingkungan 5–6% dan pembayaran pada pendapatan biasanya 60–70%. Dividen dibiayai oleh pendapatan tulen, bukan hakisan neraca, itulah sebabnya ia telah disokong secara umum melalui kitaran. KLCC, yang berstruktur sebagai REIT, mengedarkan hampir keseluruhan pendapatan kena cukainya — pembayaran tingginya diwajibkan secara struktur dan tidak harus dibaca dengan lensa yang sama seperti industri bukan-REIT.
+
+Pernyataan boleh disangkal: hasil dividen di atas 6% adalah mampan hanya apabila nisbah pembayaran pada aliran tunai bebas (bukan pendapatan) adalah di bawah 80%, DAN trend FCF tiga tahun terdahulu adalah rata atau meningkat. Kegagalan mana-mana syarat itu menukarkan hasil tinggi dari "peluang pendapatan" kepada "amaran pra-pemotongan".
+
+## Perangkap
+
+Perangkap itu ialah mengejar hasil — menyusun senarai tontonan mengikut hasil dividen dan membeli bahagian atas senarai. Matematiknya memikat: hasil 10% "membayar anda untuk menunggu". Tetapi hasil tinggi hampir selalu merupakan salah satu daripada tiga perkara: (1) refleksi perniagaan matang ringan modal yang benar-benar mengembalikan wang tunai (boleh diterima), (2) harga saham yang telah jatuh kerana pasaran menjangkakan berita buruk (hasil meningkat secara mekanikal apabila harga turun), atau (3) pembayaran yang tidak mampu ditanggung oleh syarikat dan akan dipotong. Kategori 2 dan 3 mendominasi skrin hasil tinggi. Model mental yang betul: dividen adalah *komitmen* yang dipilih oleh syarikat untuk dibuat dan dipilih untuk dipelihara. Kemampanan bergantung pada sama ada aliran tunai bebas menutupi dividen dengan margin lebih, bukan pada sama ada hasil itu besar. Apa yang membatalkan isyarat: dividen "khas" atau sekali masa mengembungkan hasil terdahulu untuk satu tempoh dan tidak harus diangktakan tahunan. Sentiasa pisahkan dividen biasa daripada dividen khas sebelum mengira hasil.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham diperdagangkan pada $20 dengan dividen tahunan $2.00, memberikan hasil = 10%. EPS trailing ialah $1.50. Arus tunai bebas per saham ialah $1.20. Hutang telah meningkat selama dua tahun berturut-turut. Bacaan manakah yang paling tepat?"
+  options={[
+    "Unta akan akhirnya mengejar dividen",
+    "Beli kuat — 10% jauh lebih tinggi daripada purata indeks",
+    "Dividen adalah tidak mampan secara matematik: kadar pembayaran pada untai ialah 133% dan pada FCF ialah 167%, bermakna syarikat membayar keluar lebih banyak wang tunai daripada yang dijana. Hutang yang meningkat mencadangkan dividen dibiayai oleh pinjaman berbanding operasi. Ini adalah corak perangkap hasil (yield-trap) yang klasik — dividen kemungkinan besar akan dipotong dan harga akan jatuh lebih jauh apabila potongan dijangka",
+    "Hasil tidak penting jika anda memegang dalam jangka masa panjang"
+  ]}
+  answer={2}
+  explanation="Sintesis ialah mengenali bahawa hasil secara terpencil tidak boleh dinilai. Jawapan salah yang menarik ialah panggilan beli kuat berdasarkan hasil 10% — seorang pemula berjangkar pada hasil yang menarik perhatian dan mengabaikan matematik kadar pembayaran. Bacaan yang betul mengira kadar pembayaran pada kedua-dua untai dan FCF, mendapati kedua-duanya melebihi 100%, memerhatikan hutang meningkat untuk membiayai jurang tersebut, dan menyimpulkan dividen dibiayai bukannya dijana. Jawapan 'untai akan mengejar' mencipta masa depan yang penuh harapan tanpa bukti. Jawapan 'hasil tidak penting jika anda memegang dalam jangka masa panjang' menyalahgunakan jangka masa holding untuk menafikan masalah matematik — jika dividen dipotong, harga akan jatuh tidak kira tempoh holding."
+/>
+
+<Quiz
+  question="Syarikat A membayar hasil dividen 2% dengan kadar pembayaran 25% pada FCF; Syarikat B membayar hasil 7% dengan kadar pembayaran 75% pada FCF. Kedua-duanya adalah perniagaan matang, pertumbuhan rendah dalam sektor yang sama dengan tahap hutang yang serupa. Sintesis manakah yang paling tepat?"
+  options={[
+    "B menawarkan pendapatan semasa yang lebih besar tetapi dengan margin keselamatan yang lebih nipis; jika FCF menurun 30%, kadar pembayaran B menghampiri 100% dan pemotongan menjadi mungkin, manakala kadar pembayaran A hanya meningkat ke ~36% — masih selesa. Bingkai yang betul ialah pendapatan-vs-kelestarian: B untuk wang tunai sekarang jika FCF adalah tahan lama, A untuk pilihan wang tunai yang ditahan. Tiada yang secara universal 'lebih baik' — pilihan bergantung pada sama ada anda mempercayai asas FCF B akan bertahan",
+    "Kedua-duanya adalah sama dari perspektif pulangan keseluruhan",
+    "A adalah lebih baik secara ketat kerana kadar pembayaran lebih rendah",
+    "B adalah lebih baik secara ketat kerana hasil lebih tinggi"
+  ]}
+  answer={0}
+  explanation="Ujian sintesis: hasil dan kadar pembayaran bersama-sama menggambarkan profil tekanan. Jawapan salah yang menarik ialah panggilan pilih-B-karena-hasill-tinggi — logik mengejar hasil yang mengabaikan kelestarian. Memilih A semata-mata kerana kadar pembayarannya lebih rendah ialah perangkap berlawanan — mengutamakan kadar pembayaran konservatif tanpa mengira konteks. Bacaan yang betul mempertimbangkan apa yang berlaku kepada liputan setiap syarikat jika FCF menurun sederhana. Jawapan 'kedua-duanya adalah sama pada pulangan keseluruhan' mengabaikan perbezaan dalam tindak balas tekanan, yang nyata dan boleh kuantifikasi."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal simbol saham yang membayar dividen dan tanya: "Berikan hasil dividen semasa, nisbah pembayaran pada pendapatan, nisbah pembayaran pada aliran tunai bebas, dan trend lima tahun bagi setiap satu. Tandakan mana-mana tahun di mana pembayaran pada FCF melebihi 90%." Simpan tangkapan skrin dalam <Term id="ami_decision_journal" /> anda. Kali berikutnya hasil tajuk menarik perhatian anda, anda akan tahu dalam 30 saat sama ada ia peluang pendapatan atau persediaan untuk pemotongan.
+
+## Penutup
+
+Hasil dividen tanpa konteks nisbah pembayaran hanyalah nombor tajuk. Hasil yang mampan dibiayai oleh aliran tunai bebas dengan margin lebih; hasil yang tidak mampan dibiayai oleh hutang atau hakisan neraca dan akan dipotong.

@@ -1,0 +1,70 @@
+---
+id: "025_pullbacks"
+title: "Penarikan Balik"
+duration_min: 5
+level: 2
+module: 4
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 6"
+topic: "pullback"
+prerequisites: ["020_candlesticks_anatomy_of_a_bar", "022_trend_direction", "023_support_and_resistance"]
+tags: ["pullback", "trend", "retracement", "entries", "chart_reading"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Penarikan Balik (Pullbacks)
+
+Penarikan balik ialah pergerakan sementara menentang trend semasa — rehat dalam kenaikan atau penurunan yang lebih besar. Dalam trend naik, penarikan balik adalah peluang untuk membeli pada diskaun tanpa mengejar harga; dalam trend turun, ia adalah tempat peluang short diperbaharui. Kuncinya ialah membezakan penarikan balik yang sihat daripada pembalikan trend yang sedang berlaku. Pada akhir pelajaran ini, anda perlu tahu bagaimana rupa penarikan balik yang normal dari segi saiz, kedalaman, dan struktur, di mana entri mengikut trend berada di dalamnya, dan keadaan tepat yang menukar penarikan balik menjadi sesuatu yang tidak boleh lagi anda panggil penarikan balik.
+
+## Contoh
+
+Lihat AMZN dari Februari hingga April 2026. AMZN menembusi di atas $215 pada awal Februari dan naik ke $238.60 pada 21 Februari — satu trend naik dengan tinggi yang lebih tinggi dan rendah yang lebih rendah yang jelas terdefinisi. Kemudian antara 22 Februari dan 4 Mac, AMZN menarik balik: sembilan sesi dengan penutupan harian yang lebih rendah membawa harga turun ke $224.10 pada 4 Mac. Itu adalah penarikan semula 6.1% dari tinggi $238.60 — jauh dalam julat penarikan balik tipikal 3%–10% untuk mega-cap yang sedang menjejak trend. Penarikan balik itu berehat pada tahap penembusan sebelumnya sekitar $225, dengan penutupan harian yang mencetak sumbu bawah yang panjang pada 4 Mac (pembeli masuk pada tahap tersebut).
+
+Pada 5 Mac, AMZN ditutup pada $228.40 — rendah yang lebih tinggi yang mengesahkan penarikan balik telah selesai. Pada 18 Mac, harga telah mendorong ke tinggi ayunan baru $244.10. Penarikan balik itu adalah penurunan 6% dalam trend yang akhirnya memberikan kaki ~9% lagi.
+
+Pembeli yang memasuki penarikan balik pada pengesahan rendah yang lebih tinggi pada 5 Mac, dengan henti rugi sedikit di bawah rendah ayunan $224.10, berisiko kira-kira $4.30 untuk mendapat $15.70 ke tinggi baru pada akhirnya — nisbah risiko/imbalan ~1:3.6.
+
+Tesis penarikan balik tidak sah apabila AMZN menutup lilin harian *di bawah* rendah yang lebih baru terkini daripada trend naik sebelumnya. Dalam kes ini, itu bermaksud penutupan harian di bawah rendah yang lebih tinggi sebelumnya $215.70. Jika AMZN ditutup pada, katakanlah, $213, struktur trend naik akan telah rosak — dan apa yang anda panggil penarikan balik kini akan menjadi kaki pertama daripada trend turun yang mungkin.
+
+## Perangkap
+
+Perangkap itu ialah memanggil setiap penurunan sebagai penarikan balik dan membelinya tanpa memeriksa sama ada trend yang sepatutnya ada masih benar-benar ada. Pemula melihat saham turun 8% dari tingginya, ingat ia adalah trend naik minggu lalu, membeli "penurunan", dan mendapati seminggu kemudian bahawa rendah yang lebih tinggi yang baru telah diambil — trend telah rosak dan mereka kini memegang saham dalam trend turun yang baru. Model mental yang betul: penarikan balik hanyalah penarikan balik semasa rendah yang lebih tinggi struktur trend (trend naik) atau tinggi yang lebih rendah (trend turun) masih utuh. Pada saat penutupan harian memecahkan tahap ayunan itu, apa yang anda fikir adalah penarikan balik menjadi pembalikan, dan logik mengikut trend tidak lagi terpakai. Sentiasa tahu harga tepat yang menukar label.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham dalam trend naik harian mengalami penurunan 4% dari puncak ayunan terbaharu dan berehat di tahap pecahan keluar sebelumnya. Titik rendah yang lebih tinggi yang disahkan terkini (sebelum penurunan ini) berada 7% di bawah harga semasa. Apakah penerangan yang paling tepat mengenai situasi ini?"
+  options={[
+    "Pecahan keluar sebelumnya kerana harga kembali ke tahap tersebut",
+    "Penurunan normal dalam trend naik yang utuh; trend hanya tidak sah jika penutupan harian di bawah titik rendah yang lebih tinggi 7% di bawah harga semasa",
+    "Pembalikan trend — sebarang penurunan 4% menandakan trend telah tamat",
+    "Keadaan tidak terdefinisi — trend bukan naik atau turun sehingga harga baru dicetak"
+  ]}
+  answer={1}
+  explanation="Penarikan balik 4% ke tahap pecahan keluar sebelumnya adalah kedalaman dan tingkah laku penurunan normal untuk saham yang sedang menjuarai. Lantai struktur trend adalah titik rendah yang lebih tinggi terkini, 7% di bawah harga semasa — itulah garis yang, jika dilanggar pada penutupan harian, akan menukar bacaan dari penurunan kepada pelikatan. Jawapan pelantikan trend keliru antara saiz dengan kepentingan — penurunan 3%–10% adalah rutin. Jawapan pecahan pada ujian semula salah tafsir ujian semula sebagai pecahan; harga yang kembali ke tahap pecahan keluar sebelum ini sering dipegang sebagai sokongan, bukan sebaliknya. Jawapan keadaan tidak terdefinisi terlalu berhati-hati — trend adalah naik sehingga struktur mengatakan sebaliknya."
+/>
+
+<Quiz
+  question="NVDA berada dalam trend naik harian yang jelas. Puncak ayunan terkini: $148.20. Titik rendah yang lebih tinggi yang disahkan terkini: $128.40. Harga telah turun ke $134.80, mencetak titik rendah yang lebih tinggi pada $133.10 semalam, dan hari ini kembali ke $136.20 dengan isipadu yang meningkat. Anda sedang mempertimbangkan entri panjang. Gabungan entri, henti, dan peraturan tidak sah manakah yang menerapkan pelajaran dengan betul?"
+  options={[
+    "Masuk pada $136.20, henti pada $135.50 (ketat, tepat di bawah pembukaan hari ini), tidak sah = henti dipukul",
+    "Masuk pada $136.20, henti pada $132.50 (tepat di bawah titik rendah yang lebih tinggi baru pada $133.10), tidak sah = penutupan harian di bawah titik rendah yang lebih tinggi sebelumnya $128.40 — bermakna struktur trend itu sendiri telah pecah",
+    "Jangan masuk — penurunan bukan persediaan dagangan, hanya pecahan keluar yang penting",
+    "Masuk pada $128.40 dengan pesanan had — tunggu harga mencapai titik rendah yang lebih tinggi sebelumnya"
+  ]}
+  answer={1}
+  explanation="Entri mengikuti trend yang disiplin terletak pada pengesahan titik rendah yang lebih tinggi baru ($133.10) di dalam penurunan, dengan henti diletakkan di luar rendah ayunan itu ($132.50) untuk memberi ruang sumbu, dan ketidak sahahan tesis yang dikaitkan dengan titik rendah yang lebih tinggi struktur ($128.40). Itu menggunakan tiga pelajaran sekaligus: struktur penurunan, keizinan sumbu sokongan/rintangan, dan ketidak sahan trend oleh penutupan. Jawapan salah yang paling menarik — henti ketat $135.50 tepat di bawah pembukaan hari ini — meletakkan henti di dalam hingar normal; ia akan dipukul pada fluktuasi rutin yang sebenarnya tidak membatalkan tesis penurunan. Entri had $128.40 menunggu harga yang memerlukan keseluruhan struktur penurunan gagal terlebih dahulu. Jawapan 'penurunan bukan persediaan dagangan' bercanggah dengan pelajaran itu sendiri."
+/>
+
+## Cuba
+
+Dalam editor <Term id="ami_mandate" />, sahkan peratusan risiko per-trade anda ditetapkan supaya henti rugi yang diletakkan di luar rendah ayunan penarikan balik tidak akan melampauinya. Kemudian <Term id="ami_convene_the_room" /> pada ticker dalam trend naik dan baca <Term id="ami_verdict" /> — perhatikan di mana Market Analyst menandakan rendah yang lebih tinggi sebelumnya. Logkan tahap itu dalam <Term id="ami_decision_journal" /> anda sebagai garis "penarikan balik menjadi pembalikan" yang telah berkomitmen sebelum itu untuk ticker tersebut.
+
+## Penutup
+
+Penarikan balik hanyalah penarikan balik semasa rendah yang lebih tinggi terakhir (atau tinggi yang lebih rendah) trend masih utuh — tahu harga itu, tandakan sebelum anda masuk, dan biarkan penutupan harian melaluinya menjadi apa yang mengubah fikiran anda, bukan mood anda.

@@ -1,0 +1,78 @@
+---
+id: "144_adx_di_plus_minus_crosses"
+title: "Pencabangan arah ADX — DI+ dan DI−"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 4
+track: "technical_analysis"
+code: "TECH 43"
+topic: "adx_di_crosses"
+prerequisites: ["143_adx_trend_strength", "030_trend_confirmation_across_indicators"]
+tags: ["indicators", "adx", "di_plus", "di_minus", "directional_movement", "cross"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Silang arah ADX — DI+ dan DI−
+
+<Lesson id="143_adx_trend_strength"/> telah membincangkan ADX sebagai pengukur kekuatan. ADX itu sendiri dikira daripada dua penunjuk arah di bawahnya: DI+ (penunjuk arah positif) dan DI− (penunjuk arah negatif). DI+ mengukur bahagian pergerakan harga terkini yang bersifat naik; DI− mengukur bahagian yang bersifat turun. Apabila DI+ berada di atas DI−, lebih banyak pergerakan terkini adalah naik; apabila DI− berada di atas DI+, lebih banyak pergerakan terkini adalah turun. Silang DI+ / DI− — apabila satu melintasi yang lain — adalah isyarat arah yang tidak dapat diberikan oleh ADX itu sendiri. Bersama-sama: ADX menjawab "seberapa kuat?", DI+ vs DI− menjawab "ke arah mana?"
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat AMD melalui Q4 2025 / Q1 2026. Pada 18 November 2025, dengan AMD pada 121, DI+ melintasi di atas DI− buat pertama kalinya dalam tiga bulan — DI+ meningkat dari 18 kepada 24 manakala DI− menurun dari 26 kepada 19. Pada masa yang sama, ADX berada pada 22 — tepat di dalam zon trend yang sedang berkembang. Selama lapan minggu seterusnya, AMD meningkat kepada 145, dengan ADX meningkat kepada 31 dan DI+ memanjang kepada 33 manakala DI− mampat kepada 12. Isyarat trend naik yang bersih: silang DI+ ditambah ADX meningkat ke dalam wilayah trend.
+
+Kemudian pada 27 Januari 2026, silang tersebut terbalik: DI− melintasi di atas DI+ pada AMD 138 dengan ADX masih pada 29. AMD jatuh kepada 118 selama lima minggu seterusnya. Silang DI− menandakan perubahan rejim dari trend naik ke trend turun; ADX mengesahkan bahawa kekuatan kekal semasa penurunan.
+
+Bandingkan dengan silang palsu: pada 6 Oktober 2025, DI+ AMD melintasi di atas DI− secara ringkas pada harga 116 — tetapi ADX pada masa itu adalah 17 (di bawah ambang trend 20). Dalam empat sesi, DI− kembali di atas DI+, dan AMD bergerak naik-turun antara 115 dan 119 selama dua minggu. Silang tanpa penapis ADX berlaku dalam rejim tiada-trend dan tidak menghasilkan kesinambungan.
+
+Pernyataan boleh disangkal: Silang DI+ / DI− yang berlaku dengan ADX di atas 20 menghasilkan kesinambungan yang jauh lebih baik daripada silang yang berlaku dengan ADX di bawah 20. Ketidaksahihan: sampel 40+ silang di mana silang di bawah-20 sama dengan silang di atas-20 dari segi pulangan ke hadapan. Secara empirikal, penapis ADX mengurangkan kadar silang palsu sebanyak separuh.
+
+Gabungan isyarat: DI+ di atas DI− dengan ADX di atas 20 dan meningkat = bias panjang yang kuat; DI− di atas DI+ dengan ADX di atas 20 dan meningkat = bias pendek yang kuat; sebarang konfigurasi DI dengan ADX di bawah 20 = tiada isyarat, tidak kira mana DI berada di atas.
+
+Di Bursa Malaysia: KLCC pada Q2 2025 — DI+ melintasi di atas DI− pada 14 April dengan ADX pada 21; harga meningkat dari RM7.20 kepada RM7.80 selama enam minggu seterusnya. Silang awal pada Januari di bursa yang sama, dengan ADX pada 16, tidak menghasilkan pergerakan.
+
+## Perangkap
+
+Perangkapnya ialah bertindak atas setiap silang DI+ / DI− tanpa mengira konteks ADX. Pemula belajar "DI+ di atas DI− = isyarat panjang" dan menganggapnya sebagai peraturan berdiri sendiri. Dalam rejim ADX rendah, garis DI bersilang berulang kali tanpa kesinambungan; memperdagangkan setiap silang adalah mesin whipsaw.
+
+Model mental yang betul: silang DI memberikan arah; ADX memberikan gerbang. Tanpa pengesahan ADX, silang DI sama dengan mana-mana penunjuk silang bising lain dalam pasaran mendatar — ia berlaku secara berterusan dan tidak bermakna. Disiplinnya sama dengan penapis lokasi <Lesson id="139_stochastic_k_d_crosses"/> Stochastic: silang adalah pencetus; rejim adalah penapis. Perdagangkan silang hanya apabila ADX membawa anda ke dalam rejim trend.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="DI+ AMD melintas di atas DI− secara sementara sambil ADX berada pada 17. Empat sesi kemudian, silang tersebut berbalik dan harga bergegar 4% ke atas atau ke bawah tanpa menembusi breakout. Dua bulan kemudian, DI+ melintas di atas DI− sekali lagi, kali ini dengan ADX pada 22 dan meningkat. Harga naik 20% dalam lapan minggu. Peraturan apa yang menjelaskan perbezaan ini?"
+  options={[
+    "Silangan pertama salah; penunjuk ini hanya berfungsi pada kali kedua",
+    "Silangan DI adalah rawak — jangan gunakan ia",
+    "ADX adalah penapis yang salah — sepatutnya RSI",
+    "Silangan DI+ / DI− menghasilkan tindak lanjut apabila ADX berada di atas 20 (rezim trend) dan whipsaw apabila ADX berada di bawah 20 (rezim julat). Penapisan ADX mengurangkan kadar silangan palsu sebanyak separuh."
+  ]}
+  answer={3}
+  explanation="ADX sebagai gerbang rezim adalah corak yang sama dengan penapis lokasi Stochastic dari <Lesson id="
+/> — penunjuk yang sama, rejim berbeza, kualiti isyarat yang sepenuhnya berbeza. Jawapan salah yang menggoda (‘silang pertama salah, silang kedua betul’) terlepas pandang peraturan yang menyatukan kedua-duanya. ADX 17 vs 22 adalah keseluruhan perbezaannya."
+/>
+
+<Quiz
+  question="Sebuah saham menunjukkan DI− melintas di atas DI+ dengan ADX pada 29 dan meningkat. Harga telah menembus di bawah SMA50nya pada bar yang sama. Saiz akaun $40,000, had mandat 1% per dagangan, anda sedang memegang posisi panjang dengan 100 saham pada kos $50 (sekarang pada $48, kerugian belum direalisasi $200). Apa yang dinyatakan oleh kerangka kerja ini?"
+  options={[
+    "Tambah posisi panjang — silangan ini adalah titik terendah",
+    "Tahan posisi panjang — trend akan pulih, ia sentiasa begitu",
+    "Tukar ke posisi pendek dengan saiz 4× daripada posisi semasa untuk memulihkan kerugian $200 dengan lebih cepat",
+    "Kerangka kerja menandakan pembalikan rezim ke arah trend turun: DI− di atas DI+ pada ADX yang meningkat di atas 20, disahkan oleh harga di bawah SMA50. Tesis posisi panjang telah tidak sah oleh silangan arah yang digabungkan dengan penapis trend. Keluar dari posisi panjang; jangan purata turun. Pertimbangkan untuk menunggu sehingga setup segar terbentuk."
+  ]}
+  answer={3}
+  explanation="Dua penunjuk (silangan DI dengan gerbang ADX, pecahan MA) bersetuju pada pembalikan rezim — isyarat yang lebih kuat daripada mana-mana satu sendirian, tepat seperti kerangka konfluensi dari <Lesson id="
+/>. Jawapan salah yang menggoda (A) ialah perangkap kos terbuang-dan-harapan; (C) ialah martingale songsang; (D) ialah anti-corak perdagangan balas dendam yang dikesan dalam Modul 8. Keluar pada ketidaksahihan; saiz perdagangan baharu dari neutral, bukan dari kerugian terkumpul."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker yang baru menghasilkan pergerakan harga yang ketara dan tanya: "Apakah bacaan DI+, DI−, dan ADX pada hari pergerakan tersebut, dan pada silang DI prior yang paling terkini — adakah silang prior tersebut di atas atau di bawah ambang ADX 20?" Kemudian sahkan pada carta. Tujuannya ialah untuk mendalami kebiasaan penapis ADX sebelum sebarang tindakan berdasarkan silang DI.
+
+## Penutup
+
+DI+ vs DI− memberitahu anda arah; ADX di atas 20 memberitahu anda sama ada arah itu penting. Silang ditambah gerbang rejim adalah isyarat; silang sahaja dalam pasaran mendatar adalah whipsaw.

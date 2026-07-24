@@ -1,0 +1,78 @@
+---
+id: "201_round_number_trap"
+title: "Perangkap nombor bulat"
+duration_min: 4
+level: 4
+module: 8
+difficulty: 3
+track: "sentiment_behaviour"
+code: "SENT 4"
+topic: "round_number_anchoring"
+prerequisites: ["045_greed", "046_fear_and_capitulation"]
+tags: ["psychology", "greed", "anchoring", "exit_discipline", "round_numbers"]
+agent_callouts: ["market_analyst", "social_media_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Perangkap nombor bulat
+
+Nombor bulat — $100, $500, $1,000 sebaham, "kapitalisasi pasaran berbilion dolar" — bukan tahap teknikal. Ia adalah jangkar psikologi yang menarik kedua-dua sasaran dan henti rugi (stop) ke arah mereka, bertentangan dengan matematik carta. Selepas pelajaran ini, anda akan dapat mengenal pasti apabila nombor bulat sedang menyunting pelan anda secara senyap, menamakan bias jangkar yang memandugnya (melanjutkan <Lesson id="045_greed"/> pada keserakahan), dan menggantikan jangkar tersebut dengan tahap yang sebenarnya dilukis oleh carta. Kos perdagangan nombor bulat dibayar di dua tempat: memegang pemenang melebihi exit sebenar kerana "$500 terasa seperti sasaran bulat" dan menjual pendatang awal kerana "di bawah $100 terasa rosak".
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Pada November 2024, seorang pedagang memasuki NVDA pada sekitar $138 dengan sasaran tertulis $172 (pemanjangan pergerakan terukur sebelumnya) dan henti rugi pada $128. Apabila NVDA menghampiri $150 — magnet nombor bulat pertama — pedagang itu merasakan dorongan untuk mengambil "separuh pada nombor bulat". Dia tidak menulis itu ke dalam pelan; dia hanya merasakannya. Dia mengurangkan separuh pada $150. NVDA menutup hari pada $148.50, naik ke $152.40 pada sesi berikutnya, kemudian meneruskan trend terus ke $173 selama empat minggu berikutnya. Separuh yang dia kurangkan pada $150 berakhir pada +8.7%. Separuh yang dia pegang sehingga $172 berakhir pada +24.6%. Perbezaan antara dua separuh itu bukan strategi. Ia adalah nombor bulat berbisik lebih kuat daripada matematik pergerakan terukur.
+
+Contoh lawan, pedagang yang sama, GME 2024: dia telah membeli GME pada $22 dengan henti rugi pada $19.40 (rendah struktur sebenar). Apabila GME tergelincir ke $20.10, tanda $20 bulat mula terasa seperti "jika ia memecahkan 20, ia rosak". Dia menggerakkan henti ruginya ke $20.05 — lebih ketat, tetapi tanpa asas struktur. GME mencetak $19.98 pada sesi berikutnya, mengetuknya keluar, dan menutup kembali di atas $21 dalam masa empat puluh minit. Henti rugi sebenarnya pada $19.40 akan memegang posisi; henti rugi nombor bulat tidak.
+
+## Perangkap
+
+Perangkapnya ialah nombor bulat kelihatan seperti tahap kerana kerumunan berkumpul di sana — terdapat aliran pesanan sebenar pada $100 dan $500. Tetapi *arah* aliran itu tidak dapat diketahui hanya dari nombor bulat. Menjangkarkan pada nombor bulat sebagai exit (sama ada sasaran atau henti rugi) menggantikan tahap yang dilukis oleh carta dengan tahap yang dilukis oleh otak anda. Model mental yang betul: nombor bulat adalah *zon bunyi bising yang dijangka*, bukan zon pembalikan yang dijangka. Sasaran anda adalah di mana-mana pergerakan terukur, garis rintangan, lanjutan fibonacci, atau jalur volatiliti mengatakan — dan jika itu kebetulan bertepatan dengan nombor bulat, baik, matematik bersetuju. Tetapi nombor bulat itu sendiri tidak pernah menjadi sebab. Jika anda tidak dapat menunjuk ke tahap yang dilukis oleh carta di bawah nombor bulat, nombor bulat itu adalah jangkar, bukan analisis.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Anda memasuki AAPL pada $185 dengan sasaran bertulis pada $208 (sambungan pergerakan diukur). AAPL kini pada $199 dan menghampiri $200. Anda rasa dorongan untuk mengambil untung pada $200. Apakah respons yang berdisiplin?"
+  options={[
+    "Jual pada $200 — nombor bulat bertindak sebagai rintangan, jadi ia adalah exit yang lebih selamat.",
+    "Naikkan sasaran ke $250 kerana momentum kuat melalui $200.",
+    "Pegang hingga sasaran bertulis $208 melainkan tahap yang dilukis carta baru telah muncul antara $199 dan $208 untuk membenarkan exit yang disemak.",
+    "Skala separuh pada $200, separuh pada $208 — bahagikan antara perasaan dan pelan."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang paling menggoda ialah 'skala separuh pada $200, separuh pada $208' — ia terasa seperti kompromi seimbang, tetapi ia adalah nombor bulat yang mengubah pelan pada masa nyata. Pelan asal ditulis apabila anda tenang dan tahap yang dilukis carta ialah $208. Skala nombor bulat adalah pengesatan yang dinamakan semula sebagai pengurusan risiko. Sama ada carta telah menarik tahap baru di bawah $208 (dalam kes itu tulis pelan baru), atau tidak (dalam kes itu laksanakan pelan asal). Naikkan sasaran ke $250 adalah keserakahan memakai topi yang sama dari arah bertentangan."
+/>
+
+<Quiz
+  question="Manakah penunjuk objektif terkuat bahawa nombor bulat memandu keputusan exit anda berbanding carta?"
+  options={[
+    "Sasaran atau henti rugi anda berada dalam lingkungan $0.50 daripada nombor bulat, DAN anda tidak dapat menunjuk ke tahap yang dilukis carta (tinggi/rendah ayunan, pergerakan diukur, MA, fib, jalur volatiliti) dalam lingkungan $2 daripada harga itu yang bertindih dengan nombor bulat.",
+    "Sasaran atau henti rugi anda berada dalam lingkungan $0.50 daripada nombor bulat.",
+    "Saham ditutup pada nombor bulat minggu ini.",
+    "Anda rasa nervous apabila harga menghampiri nombor bulat."
+  ]}
+  answer={0}
+  explanation="Sasaran berhampiran nombor bulat boleh menjadi sangat berdisiplin jika tahap yang dilukis carta kebetulan bertindih. Ujian boleh audit ialah gabungan: harga adalah bulat DAN tiada tahap yang dilukis carta menyokongnya. Jika kedua-duanya benar, tahap itu ada dalam kepala anda, bukan pada skrin. Menutup pada nombor bulat adalah hasil pita, bukan diagnostik proses. Merasa nervous adalah nyata tetapi tidak boleh disangkal secara sendiri."
+/>
+
+<Quiz
+  question="Posisi NVDA anda pada +18% dengan sasaran bertulis +24%. Market Analyst menandakan bahawa tahap yang dilukis carta seterusnya ialah prior all-time high pada $173, sasaran anda. Harga sedang konsolidasi sedikit di bawah $150 (nombor bulat). Feed Social Media Analyst penuh dengan pos '$200 next stop'. Jawapan sintesis?"
+  options={[
+    "Ambil untung separa pada $150 — nombor bulat ditambah pos bullish mengesahkan rintangan hampir.",
+    "Gerakkan sasaran ke atas ke $200 untuk sepadan dengan pos sosial.",
+    "Jual sepenuhnya pada $150 untuk mengunci +8.7% dan masuk semula pada penurunan.",
+    "Pegang posisi penuh hingga sasaran bertulis $173; $150 adalah nombor bulat, bukan tahap yang dilukis carta. Pos sentimen tentang $200 tidak mengubah carta."
+  ]}
+  answer={3}
+  explanation="Jawapan 'nombor bulat ditambah pos bullish mengesahkan rintangan' menyatukan dua isyarat tidak berkaitan dan memperlakukannya sebagai pengesahan rintangan. Mereka adalah pengesahan *perhatian*, bukan rintangan. Jawapan 'gerakkan sasaran untuk sepadan dengan pos sosial' menyerahkan sasaran anda kepada orang asing di internet. Menjual sepenuhnya pada +8.7% untuk mengejar masuk semula adalah perdagangan keserakahan nombor bulat yang dibalut sebagai kesabaran. Jawapan berdisiplin ialah menghormati tahap yang dilukis carta — dan prior all-time high pada $173 ialah tahap yang dilukis carta, bukan nombor bulat $150."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_decision_journal" /> dan tapis kepada perdagangan tertutup di mana harga exit anda berada dalam $0.50 dari nombor bulat. Untuk setiap satu, tanya: adakah nombor bulat itu berhampiran tahap yang dilukis oleh carta (pergerakan terukur, tinggi/rendah sebelumnya, MA, fib)? Jika kurang daripada separuh daripada mereka mempunyai tahap sebenar dalam $2 dari nombor bulat, anda mempunyai pola jangkar nombor bulat yang didokumenkan. Ambil satu contoh ke <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "Di manakah tahap carta sebenar untuk perdagangan ini?" Jurang antara itu dan di mana anda sebenarnya keluar adalah kos jangkar anda.
+
+## Penafian
+
+Nombor bulat adalah zon perhatian, bukan zon pembalikan. Jika anda tidak dapat menunjuk ke tahap yang dilukis oleh carta, nombor bulat itu adalah jangkar — dan jangkar adalah keserakahan dan ketakutan memakai topeng yang sama.

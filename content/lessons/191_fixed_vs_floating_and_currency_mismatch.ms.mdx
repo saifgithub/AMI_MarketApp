@@ -1,0 +1,72 @@
+---
+id: "191_fixed_vs_floating_and_currency_mismatch"
+title: "Pinjaman kadar tetap berbanding kadar terapung dan ketidaksejajaran mata wang"
+duration_min: 6
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 57"
+topic: "debt_structure"
+prerequisites: ["042_debt_to_equity", "157_short_term_vs_long_term_debt", "189_interest_coverage_ratio"]
+tags: ["fixed_floating_debt", "currency_mismatch", "debt_structure", "rate_risk", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Hutang kadar tetap berbanding kadar mengambang dan ketidaksejajaran mata wang
+
+<Lesson id="042_debt_to_equity"/> menandakan bahawa dua syarikat dengan nisbah D/E yang sama boleh memikul risiko yang berbeza secara radikal bergantung kepada struktur hutang. Pelajaran ini meneliti dua dimensi struktur khusus: pecahan kadar tetap berbanding mengambang, dan mata wang di mana hutang didenominasikan berbanding di mana hasil jualan diperoleh. Kedua-duanya adalah pembunuh senyap — ia tidak muncul dalam nisbah utama tetapi ia menentukan sama ada neraca yang kelihatan sihat bertahan kitaran kadar faedah atau pergerakan mata wang. Pada akhir pelajaran ini, anda harus dapat membaca campuran kadar dan campuran mata wang dari nota kaki 10-K, menguji tekanan kos faedah di bawah laluan kadar yang munasabah, dan mengenal pasti corak tepat yang secara historikal membawa syarikat dari "baik" kepada "lupus" dalam tempoh 12 bulan.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Pada 2022–2023, kadar dasar AS meningkat dari 0.25% kepada 5.25% dalam masa 18 bulan. Syarikat dengan hutang kadar tetap yang dominan dan tempoh matang yang panjang — MSFT, JNJ, KO — melihat kos faedah bergerak secara sederhana sahaja kerana kupon purata tertimbangnya dikunci pada kadar sebelum kenaikan dan dinding matang berada beberapa tahun lagi. Syarikat dengan pendedahan kadar mengambang yang tinggi atau pembiayaan semula jangka pendek — banyak nama yang dimiliki oleh pembelian leveraj, REIT sederhana, dan platform kesihatan yang digabungkan oleh ekuiti peribadi — melihat kos faedah berganda atau tiga kali ganda apabila tranche mengambang dinilai semula dan tranche matang dibiayai semula pada 8–10% berbanding 3–4%. Beberapa nama yang kelihatan solven pada akhir tahun 2021 memasuki proses restrukturisasi pada pertengahan 2024. Persekitaran makro adalah sama; struktur hutang menentukan kelangsungan hidup.
+
+Ketidaksejajaran mata wang adalah masalah yang sama dalam dimensi yang berbeza. Korporat Turki yang meminjam dalam dolar AS sambil memperoleh hasil jualan dalam lira melihat nisbah hutang kepada hasil jualan berganda apabila lira mencecah penurunan 50% berbanding dolar — walaupun hutang dolar tidak berubah dalam istilah dolar. Ketidaksejajaran itu mengubah neraca yang kelihatan stabil menjadi tidak solven. Krisis pasaran negara membangun (Mexico 1994, Asia 1997, Argentina 2001 dan 2018) adalah sebahagian besar cerita ketidaksejajaran mata wang yang diceritakan pada skala suveran dan korporat.
+
+Ilustrasi yang lebih dekat: sebuah syarikat industri yang disenaraikan di EM melaporkan hutang sebanyak $1.5B dalam dolar AS dan hasil jualan sebanyak $2B dalam mata wang tempatan. Pada kadar pertukaran yang stabil, hutang kepada hasil jualan adalah 0.75x. Jika mata wang tempatan jatuh 30%, hasil jualan dalam mata wang tempatan tidak berubah (dijual secara tempatan), tetapi kos tempatan untuk perkhidmatan hutang dolar meningkat 30%. Perniagaan yang sama kini memerlukan 30% lebih daripada hasil jualannya untuk perkhidmatan hutang yang sama; liputan menurun dengan sewajarnya.
+
+Di Bursa Malaysia: AIRASIA membawa liabiliti sewa dan bahan api dolar AS yang bermakna sambil memperoleh hasil jualan dalam ringgit. Penurunan nilai ringgit 2015–2016 memperbesar masalah operasi; kejutan COVID 2020, apabila kelemahan ringgit bertembung dengan runtuh hasil jualan, adalah kombinasi yang memaksa restrukturisasi. Ketidaksejajaran mata wang tidak menyebabkan krisis tetapi ia memperdalamnya secara material.
+
+Percubaan yang boleh disangkal: syarikat EM bukan kewangan dengan hutang dolar AS melebihi 30% daripada jumlah hutang sambil memperoleh kurang daripada 20% daripada hasil jualan dalam dolar membawa pendedahan mata wang yang tidak simetri yang harus ditandakan tanpa mengira D/E. Isyarat ini tidak sah jika syarikat mempunyai lindung nilai mata wang eksplisit yang menutupi jurang, didedahkan dalam nota — tetapi lindung nilai luput, dan kebanyakan mendedahkan liputan lindung nilai kurang daripada 12 bulan ke hadapan.
+
+## Perangkap
+
+Perangkapnya adalah memperlakukan hutang sebagai item baris yang homogen. Pemula melihat "jumlah hutang: $5B" dan berhenti. Nota 10-K sentiasa membezakan: berapa banyak yang tetap berbanding mengambang, apabila setiap tranche matang, mata wang apa, apa kovenant, bila tarikh set semula seterusnya untuk bahagian mengambang. Melangkau nota bermaksud terlepas profil risiko sebenar. Model mental yang betul: tumpukan hutang adalah portfolio liabiliti, setiap satu dengan kadar, matang, mata wang, dan kovenant tersendiri. Portfolio itu hanya seaman tranche terlemahnya di bawah tekanan. Apa yang tidak sah bacaan tajam standard: syarikat sering melindungi risiko kadar faedah dengan swap, menukar hutang mengambang kepada effectively tetap. Sentiasa periksa pendedahan "hutang dilindungi" dalam nota terbitan terbitan sebelum mengklasifikasikan tranche sebagai pendedahan mengambang.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah syarikat industri Malaysia melaporkan jumlah hutang sebanyak MYR 4B: 70% dalam dolar AS, 30% dalam ringgit. Pendapatan ialah 95% ringgit, 5% eksport dolar. Ringgit jatuh 20% terhadap dolar dalam tempoh enam bulan. Dengan segala-galanya lain dipegang malar, apakah yang berlaku kepada nisbah hutang-ke-pendapatan?"
+  options={[
+    "Pendapatan 5% dalam dolar sepenuhnya melindungi daripada pendedahan",
+    "Nisbah hutang-ke-pendapatan tidak berubah kerana hutang tidak berubah dalam nilai mata wang tempatan",
+    "Hutang dalam dolar menjadi 20% lebih mahal dalam istilah ringgit: 0.7 × 4B × 1.2 = 3.36B dalam ringgit. Ditambah hutang 1.2B ringgit = jumlah hutang ringgit 4.56B, meningkat dari 4.0B. Pendapatan ringgit tidak berubah. Nisbah hutang-ke-pendapatan meningkat sekitar 14%. Syarikat menjadi lebih berleverage tanpa mengeluarkan hutang baru — pergerakan mata wang yang melakukannya. Ini adalah ketidakseimbangan mata wang dalam tindakan dan merupakan mekanisme kemusnahan korporat EM buku teks",
+    "Hutang jatuh kerana dolar kini bernilai lebih tinggi"
+  ]}
+  answer={2}
+  explanation="Ujian sintesis: ketidakseimbangan mata wang sebagai leverage senyap. Jawapan salah yang menggoda ialah 'nisbah hutang-ke-pendapatan tidak berubah' — pemikiran pemula yang 'kami tidak meminjam lebih, jadi hutang tidak berubah'. Pengiraan betul menterjemahkan bahagian dolar kembali ke mata wang pelaporan pada kadar baru dan mengakui bahawa kenaikan itu nyata kepada peminjam kerana pendapatan berada dalam mata wang yang tidak berubah. Jawapan 'hutang jatuh kerana dolar bernilai lebih tinggi' songsangkan arah kesan. Jawapan 'pendapatan 5% dalam dolar sepenuhnya melindungi' menyalahgunakan skala — perlindungan pendapatan 5% tidak menutup pendedahan hutang 70%."
+/>
+
+<Quiz
+  question="Dua syarikat AS melaporkan liputan faedah 4.0x yang sama. A mempunyai 90% hutang kadar tetap dengan purata matang 7 tahun. B mempunyai 60% hutang kadar mengapung yang ditetapkan semula setiap suku. Kadar dasar baru sahaja meningkat 200 mata asas. Sintesis manakah yang paling tepat?"
+  options={[
+    "B lebih selamat kerana hutang kadar mengapung membolehkannya mendapat manfaat apabila kadar jatuh",
+    "Kedua-duanya akan melihat pemampatan liputan yang sama",
+    "Liputan A hampir tidak berubah dalam tahun depan kerana kadar tetap dikunci dan hanya bahagian kecil kadar mengapung ditetapkan semula serta-merta. Liputan B akan mampat secara ketara — 60% daripada hutang menetapkan semula harga kepada 200 bp lebih tinggi dalam suku berikutnya, meningkatkan kos faedah kira-kira berkadar. Nisbah liputan kepala sama, profil tekanan satu tahun keluar sangat berbeza. Perbezaan struktur mendominasi kesamarataan yang kelihatan",
+    "A lebih berisiko kerana kadar tetap mengunci kos yang lebih tinggi"
+  ]}
+  answer={2}
+  explanation="Sintesis mengaitkan struktur hutang dengan kitaran kadar. Jawapan salah yang menggoda ialah 'kedua-duanya mampat sama' — nombor kepala sama, perbezaan struktur terlepas bacaan. Bacaan betul mengakui bahawa pendedahan mengapung bergantung pada laluan kadar dasar dan bahawa kesan segera kenaikan 200 bp mampat liputan B sambil meninggalkan A yang largely utuh. Jawapan 'B lebih selamat kerana kadar mengapung mendapat manfaat apabila kadar jatuh' benar hanya jika kadar jatuh, yang merupakan kes simetri — soalan menyatakan kadar baru sahaja meningkat. Jawapan 'A lebih berisiko kerana kadar tetap mengunci kos yang lebih tinggi' songsangkan hubungan; pembiayaan kadar tetap adalah ciri pertahanan dalam persekitaran kadar naik."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal simbol dan tanya: "Dari nota hutang, berikan pecahan tetap berbanding mengambang, kadar purata tertimbang, dan komposisi mata wang. Uji tekanan kos faedah di bawah kenaikan kadar dasar 200 bp. Tandakan sebarang ketidaksejajaran mata wang yang lebih besar daripada 20 mata peratus antara campuran hutang dan hasil jualan." Simpan snapshot empat baris dalam <Term id="ami_decision_journal" /> anda. Ini adalah pandangan risiko struktur yang tidak ditangkap oleh mana-mana nisbah tunggal.
+
+## Kesimpulan
+
+Hutang bukan nombor; ia adalah portfolio liabiliti dengan kadar, matang, dan mata wang yang berbeza. Dua syarikat dengan D/E atau nisbah liputan yang sama boleh mempunyai nasib yang sangat berbeza bergantung kepada bagaimana portfolio itu disusun di bawah tekanan.

@@ -1,0 +1,66 @@
+---
+id: "053_breakout_strategy"
+title: "Strategi pecahan"
+duration_min: 5
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+code: "EDGE 9"
+topic: "breakout"
+prerequisites: ["023_support_and_resistance", "024_breakouts", "029_volume_confirmation", "015_stop_loss_basics"]
+tags: ["strategy", "breakout", "volume", "resistance"]
+agent_callouts: ["market_analyst", "trader", "aggressive_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Strategi pecah keluar
+
+Strategi pecah keluar membeli apabila harga menutup di atas paras rintangan yang ditentukan dengan isipadu di atas purata, dan keluar dengan cepat apabila pecah keluar gagal. Teori asas ialah paras rintangan adalah tempat penjual berada; apabila pembeli menyerap mereka, pergerakan seterusnya tidak mempunyai bekalan berdekatan untuk memperlahankannya. Kebanyakan pecah keluar gagal — strategi ini hanya menguntungkan kerana bilangan kecil yang berjaya membayar berlipat ganda berbanding kos kegagalan. Selepas pelajaran ini, anda boleh menulis peraturan pecah keluar yang menentukan tepat apa yang dianggap sebagai pengesahan dan apa yang dianggap sebagai kegagalan.
+
+## Contoh
+
+Lihat META pada awal 2024. Harga telah membentuk asas antara kira-kira $475 hingga $510 dari akhir Januari hingga pertengahan Februari. Pada 2 Februari 2024, selepas laporan suku ke-4 (Q4), META menutup pada $474.99 pada hari sebelumnya dan melonjak terbuka pada $501, menutup pada $474.99 — tunggu, pergerakan sebenar: ia melonjak melalui rintangan $510 pada cetakan Q4 dan menutup pada $474.99 pada hari sebelumnya, kemudian pada 2 Februari ia terbuka pada $501.49 dan menutup pada $474.99 dengan isipadu yang sangat besar — lebih 90 juta saham berbanding purata 20 hari ~22 juta. Strategi pecah keluar yang bersih memasuki pada penutupan harian di atas $510 dengan henti rugi diletakkan kembali ke dalam julat sebelumnya pada $493 (tahap ujian semula pecah keluar). Sasaran keluar: pergerakan terukur sama dengan ketinggian julat sebelumnya (~$35) yang diproyeksikan dari pecah keluar, atau kira-kira $545.
+
+Kriteria kemasukan: penutupan harian di atas paras rintangan yang ditentukan, dengan isipadu sekurang-kurangnya 1.5x purata 20 hari. Henti rugi: penutupan kembali ke dalam julat sebelumnya, atau harga tetap sedikit di bawah paras yang ditembusi. Sasaran: proyeksi pergerakan terukur ATAU henti rugi bergerak selepas pendaraban risiko pertama. Pembatalan perdagangan individu: harga menutup kembali ke dalam julat sebelumnya — pecah keluar gagal, tiada perdebatan, keluar. Strategi ini GAGAL dalam rejim isipadu dan volatiliti rendah di mana setiap "pecah keluar" adalah palsu — pergerakan musim panas lewat dalam saham besar AS adalah kubur klasik untuk pedagang pecah keluar.
+
+## Perangkap
+
+Kesilapan pemula ialah membeli lonjakan intraday menunggu penutupan harian. Anda melihat harga menembusi rintangan pada jam 10:30 pagi, anda kejar, anda diisi berhampiran tertinggi hari, dan harga menutup kembali di bawah rintangan akibat pengambilan untung. Anda kini memegang posisi panjang pada pecah keluar yang gagal pada kemasukan yang paling buruk. Model mental yang betul: penutupan adalah satu-satunya lilin yang kira. Sumbar intraday di atas rintangan adalah hingar; penutupan harian di atas rintangan dengan pengesahan isipadu adalah isyarat. Jika itu bermakna anda terlepas 2% pertama pergerakan, itulah harga untuk tidak membayar untuk pepalsuan.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="AAPL telah bergerak dalam julat antara $220 dan $235 selama enam minggu. Hari ini, harga intraday mencecah $237 dengan isipadu sedikit di atas purata, kemudian ditutup pada $233.50. Apa kata peraturan pecahan?"
+  options={[
+    "Tiada masuk — penutupan kembali ke dalam julat, pecahan gagal",
+    "Pendekkan pecahan gagal serta-merta",
+    "Masuk panjang dengan henti ketat pada $232",
+    "Masuk panjang sekarang — rintangan telah dipecahkan"
+  ]}
+  answer={0}
+  explanation="Pecahan ditakrifkan oleh penutupan, bukan sumbu. Menutup kembali ke dalam julat adalah corak pecahan gagal yang klasik — itu adalah pembatalan, bukan masuk. Jawapan masuk panjang sekarang adalah salah yang menipu kerana mengejar sumbu terasa seperti 'masuk awal'; ia sebenarnya cara pedagang pecahan berulang kali terperangkap di paras tinggi julat."
+/>
+
+<Quiz
+  question="Di Bursa Malaysia: MAYBANK sedang membina asas di paras rintangan RM10.20. Ia ditutup hari ini pada RM10.45 dengan isipadu 1.8x purata. Mandat anda hadkan kerugian maksimum pada 15% dan risiko per transaksi pada 1.5% daripada akaun RM40,000. Henti anda akan pada RM10.10 (kembali ke dalam julat). Saiz posisi maksimum dalam saham?"
+  options={[
+    "600 saham",
+    "3,809 saham",
+    "1,714 saham",
+    "150 saham"
+  ]}
+  answer={2}
+  explanation="Risiko per saham = 10.45 - 10.10 = RM0.35. Risiko maksimum = 1.5% daripada 40,000 = RM600. Saham = 600 / 0.35 = 1,714. Sintesis: pecahan yang sah dengan mengesahkan isipadu adalah perlu tetapi tidak mencukupi — mandat masih mengehadkan saiz anda. Jawapan 3,809 saham bersaiz dari jarak henti yang salah; itu adalah kesilapan biasa memperlebar henti selepas masuk."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal simbol saham yang telah bergerak dalam julat dan tanya: "Di manakah tahap pecah keluar, apakah ambang isipadu yang mengesahkannya, dan harga mana yang membatalkan pecah keluar?" Kemudian minta Trader menukarkannya kepada pesanan kemasukan/henti rugi/sasaran sebenar dalam tiket simulasi.
+
+## Pengambilan utama
+
+Pecah keluar ditakrifkan oleh penutupan harian pada isipadu pengesahan; segala-galanya lagi adalah hingar. Jika harga menutup kembali ke dalam julat, perdagangan tidak sah — keluar tanpa rundingan.

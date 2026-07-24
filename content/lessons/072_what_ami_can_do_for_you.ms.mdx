@@ -1,0 +1,70 @@
+---
+id: "072_what_ami_can_do_for_you"
+title: "Apa yang AMI boleh lakukan untuk anda"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 2
+track: "edge_process"
+code: "EDGE 22"
+topic: "ami_capabilities"
+prerequisites: ["291_the_pm_and_your_mandate", "057_backtesting_a_strategy"]
+tags: ["ami", "capabilities", "process", "simulation"]
+agent_callouts: ["concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apa yang AMI boleh lakukan untuk anda
+
+<Term id="ami" /> ialah <Term id="training_simulator" />. Anda duduk di kerusi <Term id="ceo_framing" /> seorang <Term id="twelve_agent_team" /> dan berlatih kemahiran menilai kerja mereka. Agen-agen tersebut menarik data asas, memindai carta, meringkaskan berita dan sentimen, berdebat antara pandangan Bull vs Bear, menguji tekanan kedudukan hipotetikal terhadap <Term id="ami_mandate" /> anda, dan menghasilkan <Term id="ami_verdict" /> simulasi yang boleh anda terima, tolak, atau ubah — semua dalam aplikasi, semata-mata untuk latihan. AMI tidak pernah mengendalikan wang sebenar, tidak disambungkan kepada mana-mana broker, dan tidak berlesen untuk memberikan nasihat pelaburan. Ini bukan ciri yang hilang; ia adalah reka bentuk keseluruhan. Pada akhir pelajaran ini, anda akan mengetahui dengan tepat kemahiran penilaian mana yang dibina oleh AMI untuk dilatih dan keputusan mana yang kekal menjadi tanggungjawab anda.
+
+<Animation name="ami_constellation" />
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Andaikan anda menyenaraikan NVDA dalam watchlist dan menekan **<Term id="ami_convene_the_room" />**. Dalam ~30 saat, 12 agen mengalirkan kerja mereka. Penganalisis Asas (Fundamentals Analyst) menarik laporan 10-Q terkini: pendapatan $35.1B, margin kasar 74%, P/E ke hadapan 32. Penganalisis Pasaran (Market Analyst) membaca carta: NVDA diperdagangkan pada $142, purata bergerak 50-hari pada $135, RSI 68. Penganalisis Berita (News Analyst) meringkaskan tajuk berita 5 hari dagangan terakhir. Penganalisis Media Sosial (Social Media Analyst) menandakan kecondongan sentimen X. Pengkaji Bull dan Bear berdebat; Pengurus Penyelidikan (Research Manager) mensintesis. Para Pembahas Risiko (Aggressive / Conservative / Neutral) membahaskan saiz kedudukan. Pedagang (Trader) mencadangkan masuk/henti/target. Pengurus Portofolio (PM) menyemaknya terhadap Mandat anda — katakan `max_position_pct: 5, max_drawdown_pct: 20, halal: false` — dan mengeluarkan Putusan Akhir (Verdict):
+
+> **BELI NVDA · saiz 3% · masuk $141.50 · henti $134 (-5.3%) · sasaran $158 (+11.6%) · jangka masa 4–6 minggu · keyakinan 0.62**
+
+Anda melihat transkrip perbincangan penuh, setiap alasan setiap agen, dan kes Bear yang menentang. Anda boleh bertanya soalan susulan kepada mana-mana agen dalam <Term id="ami_one_on_one" />. Anda boleh jurnal keputusan tersebut. Tiada data dihantar ke mana-mana tempat. Tiada pesanan diletakkan — tidak dalam aplikasi ini, tidak di mana-mana. Putusan (Verdict) ialah <Term id="training_artifact" />: pendapat berstruktur yang dihasilkan untuk anda menilai, bukan nasihat pelaburan untuk anda ikuti.
+
+## Perangkap
+
+Salah faham biasa ialah memperlakukan AMI seperti perkhidmatan isyarat: "beritahu saya apa yang perlu dibeli". AMI akan menghasilkan Putusan (Verdict) simulasi, tetapi Putusan tersebut ialah *output daripada larian latihan yang anda mulakan*, bukan cadangan untuk diambil ke akaun sebenar anda. Jika anda mengimbas transkrip perbincangan dan membaca hanya tajuk BUY/SELL, anda membuang 90% daripada apa yang simulator ini dibina untuk latih. Nilainya terletak pada melihat mengapa Pengkaji Bear tidak bersetuju, apa yang mahu dipotong oleh Pembahas Konservatif dari saiz kedudukan, dan klausa mandat mana yang dikuatkuasakan oleh PM. AMI ialah persekitaran latihan pendapat kedua berstruktur pada kedalaman 12-agen — bukan bola kristal dengan nombor keyakinan yang dilekatkan.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjemput Bilik untuk TSLA. Verdict keluar sebagai BUY pada saiz 3%. Anda mengabaikan transkrip, menerima BUY pada nilai muka, dan mengabaikan kes Bear. Apa yang anda hilang?"
+  options={[
+    "Kos kredit — anda sepatutnya menggunakan 1-on-1",
+    "Tiada apa-apa — Verdict adalah jawapannya",
+    "Rantai pemikiran — kes pembangkang, penguatkuasaan mandat, dan keyakinan setiap ejen yang menjustifikasikan tajuk utama",
+    "Kelajuan — Memanggil Bilik lebih perlahan daripada hanya bertanya kepada Trader"
+  ]}
+  answer={2}
+  explanation="Tajuk utama hanyalah puncak perdebatan 12 ejen. Mengabaikan transkrip bermaksud anda tidak dapat mengaudit mengapa AMI berkata BUY, apa kes Bear, atau klausa mandat mana yang dikuatkuasakan oleh PM. Anda menukar pendapat kedua yang berstruktur menjadi isyarat — yang merupakan tepat apa yang AMI bukan."
+/>
+
+<Quiz
+  question="Antara berikut, apakah yang sebenarnya direka bentuk untuk dilakukan oleh AMI?"
+  options={[
+    "Menjalankan perdebatan 12 ejen dan memberikan anda Verdict yang boleh anda terima, tolak, atau ubah",
+    "Meletakkan pesanan pasaran pada AAPL apabila anda menekan BUY",
+    "Menghantar isyarat ke telefon anda untuk 10-bagger seterusnya",
+    "Menyambung ke broker anda dan menyeimbangkan semula portfolio anda"
+  ]}
+  answer={0}
+  explanation="AMI adalah simulasi sahaja dan bukan penasihat berlesen. Tiada sambungan broker — tidak sekarang, tidak pernah. Hasilnya ialah artifak latihan yang diperdebatkan dan diperiksa mandat; disiplin yang dilatih ialah penilaian anda terhadapnya."
+/>
+
+## Cuba sendiri
+
+Buka aplikasi, tambah NVDA ke watchlist anda, dan tekan **Convene the Room**. Apabila Putusan (Verdict) muncul, jangan baca tajuk dahulu. Skrol ke bahagian Pengkaji Bear dan baca itu. Kemudian baca semakan pematuhan oleh PM. Kemudian kembali ke atas. Perhatikan bagaimana tajuk itu dibaca berbeza sekali anda telah melihat penentangan tersebut.
+
+## Pengambilan
+
+AMI memberikan anda perdebatan 12-agen yang berakhir dengan Putusan (Verdict) yang disemak mandat — itulah artifak latihan. Ingat: AMI ialah simulator latihan, bukan penasihat kewangan. Putusan (Verdict) ialah artifak latihan untuk anda menilai, bukan nasihat pelaburan untuk diikuti.

@@ -1,0 +1,78 @@
+---
+id: "205_sector_switching_revenge"
+title: "Balas dendal peralihan sektor — kecondongan sama, pengekod berbeza"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "edge_process"
+code: "EDGE 37"
+topic: "sector_revenge"
+prerequisites: ["047_revenge_trading", "017_portfolio_exposure_and_correlation"]
+tags: ["psychology", "revenge_trading", "sector_rotation", "cooldown", "tilt"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pembalasan menukar sektor — kecondongan sama, kod saham berbeza
+
+Bentuk pembalasan trading yang paling bijak tidak kembali kepada kod saham yang menyakitkan hati. Ia membuka posisi dalam sektor yang *berbeza* — dan otak anda menerima pergerakan ini sebagai "penyahpekulan" atau "perspektif baharu" kerana ia bukan lagi carta penyingkir. Selepas pelajaran ini, anda akan dapat mengenali penyamaran ini, menamakan kecondongan di bawahnya (jarak kognitif, <Lesson id="047_revenge_trading"/> lanjutan), dan menerapkan ujian masa yang menangkap pembalasan menukar sektor tanpa mengira industri di mana perdagangan baharu itu berada. Pasaran tidak kisah tentang campuran sektor anda. Kecondongan anda juga tidak kisah.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Seorang peniaga di Bursa Malaysia disingkirkan pada MAYBANK pada -RM1,800 pada jam 10:20 pagi pada hari Selasa. Dia merasakan dorongan untuk "masuk semula MAYBANK untuk menebus kerugian" dan secara sedar menekannya kerana dia telah membaca tentang pembalasan trading seminggu lalu. Pada jam 10:55 pagi, dia membuka posisi panjang pada TENAGA — sebuah utiliti, sektor yang sama sekali berbeza — dengan saiz 1.8x daripada risiko per-dagangan normalnya. "Menyahpekul daripada sektor kewangan," katanya kepada dirinya sendiri. TENAGA disingkirkan pada -RM2,100 pada jam 1:40 petang. Pada jam 2:15 petang, dia membuka GENTING, sebuah nama pengguna/permainan. "Sektor berbeza lagi, perspektif baharu." GENTING ditutup -3.2% pada hari itu untuk kerugian RM2,500. Jumlah kerugian sesi: RM6,400 pada tiga perdagangan dalam tiga sektor yang berbeza. Dia tidak melakukan pembalasan trading pada MAYBANK. Dia melakukan pembalasan trading ke atas *dirinya sendiri*, dalam tiga kostum yang berbeza.
+
+Cap jari pembalasan menukar sektor yang boleh disangkal, sebagai ujian gabungan yang bebas daripada kod saham: (1) dua atau lebih entri diletakkan dalam tempoh 90 minit selepas kerugian tertutup; (2) sekurang-kurangnya satu daripada entri tersebut dalam sektor yang berbeza daripada kerugian asal; (3) purata saiz entri selepas kerugian adalah 1.3x atau lebih daripada risiko per-dagangan peniaga yang didokumenkan; (4) perdagangan secara kolektif tidak terdapat dalam <Term id="ami_watchlist" /> bertulis pada permulaan sesi. Tiga daripada empat kotak dicentang adalah sesi kecondongan — campuran sektor adalah kamuflaj, bukan penyahpekulan.
+
+## Perangkap
+
+Perangkap ialah kepercayaan bahawa kod saham yang kalah (atau sektornya) adalah pembawa kecondongan. Ia bukan. Kecondongan dibawa oleh *anda*, dan menukar kod saham hanya mengubah penyamaran. Jarak kognitif — meletakkan ruang psikologi antara anda dan kesakitan dengan menukar simbol — adalah mekanisme penyesuaian yang didokumenkan dengan baik yang mempunyai kesan sampingan melintasi pengesanan kecondongan anda sendiri. Model mental yang betul: penyejukan semula terpakai kepada *peniaga*, bukan kepada instrumen. Jika anda tidak dapat memperdagangkan MAYBANK dalam 60 minit seterusnya kerana anda baru saja rugi pada MAYBANK, anda juga tidak boleh memperdagangkan TENAGA atau GENTING dalam 60 minit seterusnya — kerana peniaga yang memasukkannya ialah peniaga yang sama yang baru saja rugi pada MAYBANK. `cooldown_after_stop_minutes` dari <Term id="ami_mandate" /> anda harus dikuatkuasakan pada seluruh senarai tontonan, bukan per-kod saham. <Term id="ami_pm_safety_floor" /> dari Pengurus Portfolio (PM) harus menganggap sebarang entri dalam tetingkap penyejukan semula sebagai peristiwa mandat tanpa mengira bar senarai tontonan di mana ia berada.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Anda berhenti dagang pada NVDA pada pukul 10:00 pagi dengan kerugian -1.4%. Jendela penenangan dalam mandat anda ialah 60 minit. Pada pukul 10:20 pagi, anda melihat setup yang bersih pada XOM, nama tenaga (sepenuhnya berbeza sektor). Keyakinan anda tinggi. Apakah tindakan yang berdisiplin?"
+  options={[
+    "Ambil dagangan XOM pada separuh saiz sebagai kompromi 'pelbagai sektor'.",
+    "Ambil dagangan XOM — penenangan terpakai kepada NVDA, bukan kepada sektor yang tidak berkaitan.",
+    "Tunggu sehingga pukul 11:00 pagi (tamat penenangan). Jika setup XOM masih memenuhi semua kriteria pada masa itu, ambil ia; jika tidak, anda telah dilindungi daripada balas dendam pertukaran sektor.",
+    "Langkau XOM hari ini dan masuk semula NVDA kerana anda lebih memahaminya."
+  ]}
+  answer={2}
+  explanation="Jawapan 'penenangan terpakai hanya kepada NVDA' ialah rasionalisasi pertukaran sektor yang klasik — ia menganggap penenangan sebagai peraturan per-ticker bukannya per-pedagang. 'Pelbagai sektor separuh saiz' ialah dagangan yang sama dengan harga diskaun. 'Langkau XOM dan masuk semula NVDA' ialah balas dendam yang jujur, yang mungkin kurang berbahaya daripada sepupunya yang tersamar hanya kerana ia sekurang-kurangnya boleh dikesan. Jawapan yang berdisiplin menguatkuasakan penenangan merentasi senarai tontonan. Setup XOM, jika benar, akan masih ada pada pukul 11:00 pagi; jika tidak, anda baru sahaja membayar sifar untuk perlindungan yang sama."
+/>
+
+<Quiz
+  question="Ujian gabungan manakah yang merupakan tanda paling bersih bagi balas dendam pertukaran sektor berbanding setup segar yang sah?"
+  options={[
+    "Dua atau lebih entri diletakkan dalam tempoh 90 minit daripada kerugian yang ditutup, sekurang-kurangnya satu dalam sektor berbeza, saiz purata 1.3x mandat atau lebih, dan dagangan tidak berada dalam senarai tontonan bertulis pada permulaan sesi.",
+    "Anda berdagang dalam sektor yang berbeza daripada kerugian anda.",
+    "Anda rasa dorongan untuk terus berdagang selepas kerugian.",
+    "Jumlah kerugian harian anda telah melebihi dagangan pertama."
+  ]}
+  answer={0}
+  explanation="Berdagang dalam sektor berbeza selepas kerugian mungkin sah atau balas dendam — dengan sendirinya ia tidak menunjukkan yang mana satu. Pertumbuhan kerugian harian adalah hasil, bukan diagnostik proses. Dorongan untuk terus berdagang adalah nyata dan sukar disangkal. Ujian gabungan — kiraan (2+), masa (dalam 90 min), pertukaran sektor, eskalasi saiz, luar-senarai-tontonan — ialah tanda yang boleh diaudit. Tiga kotak dicentang ialah sesi kecurangan tanpa mengira sama ada satu dagangan mungkin ditutup hijau dan menyembunyikan baki."
+/>
+
+<Quiz
+  question="Mandat anda mempunyai penenangan 60 minit yang dikuatkuasakan per-ticker (bukan per-pedagang). Dalam 10 berhenti dagang terakhir, anda telah meletakkan 6 entri dalam jendela penenangan — semua dalam sektor berbeza daripada kerugian asal. 4 daripada 6 ditutup dengan kerugian. Jawapan sintesis?"
+  options={[
+    "Tukar skop penguatkuasaan penenangan dari per-ticker kepada per-pedagang (mana-mana entri baru pada mana-mana ticker adalah disekat semasa jendela penenangan). Data menunjukkan peraturan per-ticker ialah celah — masa adalah betul, skop adalah kebocoran.",
+    "Tingkatkan tempoh penenangan kepada 120 minit — skop per-ticker adalah baik, masa terlalu pendek.",
+    "Buang penenangan — tingkah laku anda menunjukkan anda tidak boleh mengikutinya.",
+    "Tukar kepada 'jarak dagangan minimum' (contohnya, tiada dagangan dalam 60 minit antara satu sama lain) sebagai ganti penenangan khusus kerugian."
+  ]}
+  answer={0}
+  explanation="Data mengasingkan kegagalan dengan tepat: peraturan diikuti pada ticker penentu kerugian tetapi dilalui laluan melalui pertukaran sektor. Pembaikan yang betul ialah menutup celah tersebut — menjadikan penenangan terpakai kepada pedagang, bukan ticker. Meningkatkan tempoh pada skop yang rosak mengekalkan kebocoran. Membuang penenangan ialah langkah 'menulis semula peraturan untuk menlegalisasikan tingkah laku'. 'Jarak dagangan minimum' yang terpakai kepada semua berdagang (bukan hanya selepas kerugian) ialah peraturan yang berbeza sepenuhnya — dan lebih lemah, kerana ia tidak bertindak balas terhadap momen kerugian. Ujian diagnostik dalam pelajaran ini wujud untuk menangkap penyamaran ini tepat; tindak balas ialah menjadikan peraturan menangkap penyamaran itu juga."
+/>
+
+## Cuba sendiri
+
+Buka Tetapan → Mandat dan sahkan `cooldown_after_stop_minutes` ditetapkan dengan skop = peniaga (bukan per-kod saham). Jika versi peraturan anda adalah per-kod saham, ubah ia. Kemudian buka <Term id="ami_decision_journal" />, tapis kepada 20 penyingkiran terakhir anda, dan tandakan setiap entri susulan mengikut sektor relatif kepada kerugian asal. Jika anda melihat kluster entri "sektor berbeza, dalam tempoh 90 minit" dengan saiz yang meningkat, anda mempunyai corak kecondongan menukar sektor yang didokumenkan. Bawa satu contoh ke <Term id="ami_one_on_one" /> dengan Perunding Konservatif dan tanya: "Adakah perdagangan ini dalam senarai tontonan saya sebelum kerugian?" Jawapannya ialah diagnosis.
+
+## Penafian
+
+Penyejukan semula terpakai kepada peniaga, bukan kepada kod saham. Perdagangan dalam sektor yang berbeza serta-merta selepas kerugian ialah kecondongan yang sama dengan kostum baharu.

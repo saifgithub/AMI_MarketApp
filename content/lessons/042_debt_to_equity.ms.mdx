@@ -1,0 +1,72 @@
+---
+id: "042_debt_to_equity"
+title: "AMI Debt-to-equity"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 11"
+topic: "debt_to_equity"
+prerequisites: ["034_debt_and_the_balance_sheet", "035_cash_flow_vs_earnings", "041_return_on_equity"]
+tags: ["debt_to_equity", "leverage", "balance_sheet", "solvency", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Nisbah Hutang kepada Ekuiti
+
+Nisbah hutang kepada ekuiti (D/E) mengukur seberapa besar pembiayaan syarikat berasal daripada kreditor berbanding pemilik. Formula: D/E = jumlah hutang / jumlah ekuiti pemegang saham. Ia adalah penunjuk leverage. D/E yang lebih tinggi bermaksud amplifikasi yang lebih besar — pulangan lebih baik apabila keadaan menguntungkan, dan kebinasaan lebih pantas apabila tidak. Pada akhir pelajaran ini, anda harus mampu membaca D/E dalam konteks sektor yang betul, memasukkannya dengan semakan liputan faedah dan aliran tunai bebas, serta mengenal pasti tanda amaran struktur hutang spesifik yang mengubah neraca yang "boleh diurus" kepada satu krisis.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+AAPL pada tahun fiskal 2024 membawa kira-kira $100B dalam jumlah hutang berbanding ~$65B dalam ekuiti pemegang saham, memberikan D/E ≈ 1.5x. Nombor ini sendiri screams "highly levered" — tetapi AAPL juga menjana lebih $110B dalam aliran tunai bebas tahunan, bermakna keseluruhan struktur hutang boleh dilunaskan dalam masa kurang daripada setahun jika diperlukan. Nisbah ini secara terasing adalah menipu; liputan membuatkan gambaran menjadi selamat. Bandingkan TSLA pada tahun fiskal 2024: jumlah hutang sekitar $13B, ekuiti sekitar $66B, D/E ≈ 0.2x — "leverage lebih rendah" oleh nisbah, tetapi penjanaan tunai TSLA lebih kitaran dan asas ekuiti termasuk kenaikan modal baru-baru ini yang ketara. Nisbah utama memihak kepada TSLA; ketahanan tunai teras memihak kepada AAPL.
+
+Bank hidup dalam alam yang berbeza. JPM membawa D/E melebihi 10x kerana bank membiayai pinjaman dengan deposit dan hutang borong — leverage adalah model perniagaan, bukan kecacatan. Membandingkan D/E JPM dengan D/E AAPL adalah tidak bermakna; bank harus dinilai oleh nisbah modal (CET1, tier-1) berbanding D/E korporat.
+
+Sekarang satu contoh bagaimana D/E menyembunyikan struktur hutang: sebuah syarikat dengan D/E 1.0x di mana 80% hutang matang dalam 18 bulan akan datang berada dalam kesusahan sebenar jika pasaran kredit mengetatkan — walaupun nisbah kelihatan sederhana. Dua syarikat dengan D/E yang sama boleh mempunyai profil risiko yang radikal berbeza berdasarkan (a) tangga matang, (b) kadar tetap berbanding mengambang, (c) ketidaksepadanan mata wang dengan pendapatan.
+
+Di Bursa Malaysia: TENAGA, utiliti berregulated, membawa D/E dalam julat 0.8–1.0x — tinggi untuk bukan kewangan tetapi normal untuk perniagaan berregulated yang intensif modal dengan aliran tunai boleh ramal. AIRASIA's D/E membesar kepada berlipat ganda ekuiti semasa COVID apabila kerugian mengakis ekuiti dan hutang meningkat; gabungan ini — ekuiti mengecil sambil hutang tumbuh — adalah tanda amaran kesusahan dalam buku teks.
+
+Pernyataan boleh disangkal: syarikat bukan kewangan dengan D/E melebihi 2.0x DAN liputan faedah (EBIT / perbelanjaan faedah) di bawah 3.0x adalah risiko kredit yang harus ditandakan tanpa mengira P/E utama atau ROE. Sama ada keadaan secara sendirian mungkin tidak berbahaya; kedua-duanya bersama adalah corak yang mendahului kebanyakan kebangkiran bukan kitaran.
+
+## Perangkap
+
+Perangkapnya ialah membaca D/E sebagai satu skor keselamatan tunggal dan berhenti. Pemula melihat D/E 0.5x dan menyimpulkan "hutang rendah, selamat." Tetapi 0.5x boleh menyembunyikan tiga ranjau: (1) kebanyakan hutang jatuh tempo dalam 24 bulan dan pembiayaan semula tidak dijamin, (2) hutang itu dalam mata wang yang syarikat tidak menjana pendapatan dalam (pembunuh senyap untuk penerbit pasaran negara membangun), (3) sewa operasi dan kewajipan luar neraca dikecualikan daripada nisbah di bawah piawaian perakaunan lama. Model mental yang betul: D/E adalah tajuk utama; struktur hutang adalah substansinya. Sentiasa semak tangga matang (apakah ia jatuh tempo?), liputan faedah (bolehkah EBIT semasa membayar faedah?), dan trend aliran tunai bebas (adakah bantal tumbuh atau mengecil?). Apa yang membatalkan isyarat: D/E "rendah" yang dicapai melalui *penerbitan ekuiti* berbanding pelunasan hutang bermaksud pemegang saham membeli diri mereka ke nisbah yang lebih baik — hanya menambah nilai jika modal baru menjana pulangan melebihi kos ekuiti.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat bukan kewangan melaporkan D/E = 2.5x. Liputan faedah (EBIT / kos faedah) ialah 2.0x. Arus tunai bebas telah menurun selama tiga tahun berturut-turut. Empat puluh peratus daripada jumlah hutang matang dalam tempoh 12 bulan. Bacaan manakah yang paling tepat?"
+  options={[
+    "Beli saham kerana leverage tinggi bermaksud potensi kenaikan yang dipendapkan",
+    "D/E adalah satu-satunya nombor yang penting — pada 2.5x syarikat berleverage tetapi tidak semestinya dalam kesusahan",
+    "Liputan faedah 2.0x adalah selesa",
+    "Gabungan ini ialah corak pra-kesusahan dalam buku teks: D/E melebihi 2.0x dengan liputan faedah di bawah 3.0x menandakan struktur modal yang rapuh; FCF yang menurun bermaksud bantal keselamatan sedang mengecil; matang terdekat bermaksud ujian pembiayaan semula akan berlaku segera. Mana-mana faktor tunggal boleh diuruskan; keempat-empatnya bersama ialah risiko kredit yang sepatutnya mengatasi kebanyakan isyarat penilaian ekuiti"
+  ]}
+  answer={3}
+  explanation="Sintesis ini ialah pengiktirafan bahawa analisis solvency adalah berbilang faktor. Jawapan salah yang menarik ialah bacaan hanya D/E — pemula berfokus pada nisbah utama dan terlepas bahawa liputan faedah dan profil matang adalah risiko bebas. Jawapan yang memanggil liputan 2.0x sebagai selesa tersilap membacanya; di bawah 3.0x biasanya merupakan julat di mana agensi penarafan bergerak ke arah gred spekulatif. Jawapan beli untuk pulangan dipendapkan mengelirukan pulangan ekuiti yang dipendapkan oleh leverage dengan pulangan laras risiko; andaian tersirat mengabaikan kos asimetri kebankrapan."
+/>
+
+<Quiz
+  question="Syarikat X mempunyai D/E = 1.5x dan ROE 30%. Syarikat Y mempunyai D/E = 0.3x dan ROE 18%. Kedua-duanya berada dalam industri yang sama (industri bukan kewangan). Sintesis manakah dengan pelajaran ROE yang paling tepat?"
+  options={[
+    "Tanpa P/E kita tidak boleh membandingkan mereka",
+    "X ialah perniagaan berkualiti tinggi kerana ROE lebih tinggi",
+    "Jurang ROE mungkin didorong oleh jurang leverage — pendarab ekuiti X kira-kira 5x lebih tinggi daripada Y, yang secara sendirinya menjelaskan sebahagian besar perbezaan ROE. Langkah seterusnya yang betul ialah penguraian DuPont: jika margin dan putaran aset X serupa dengan Y, premium ROE sepenuhnya didorong oleh leverage dan hilang dalam kemerosotan. ROE Y yang lebih rendah pada leverage lebih rendah mungkin mewakili perniagaan yang lebih tahan lama",
+    "Y lebih mahal kerana ROE lebih rendah"
+  ]}
+  answer={2}
+  explanation="Sintesis ini mengaitkan D/E secara langsung dengan pendarab ekuiti dalam DuPont (Pendarab aset = jumlah aset / ekuiti = 1 + D/E untuk struktur modal mudah). D/E yang lebih tinggi mendorong pendarab, yang secara mekanikal meningkatkan ROE tanpa sebarang peningkatan operasi teras. Jawapan salah yang menarik ialah yang menobatkan X atas ROE lebih tinggi — ROE sebagai satu skor kualiti, mengabaikan bahawa leverage ialah laluan murah untuk nombor yang lebih tinggi. Tuntutan bahawa Y lebih mahal kerana ROE lebih rendah mencipta kausaliti yang tidak berkaitan. Jawapan tunggu-P/E memerlukan alat yang tidak diperlukan untuk membuat panggilan khusus ini."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal satu ticker dan tanya: "Berikan D/E, liputan faedah, trend aliran tunai bebas selama lima tahun terakhir, dan tangga matang hutang. Tandakan sebarang kepekatan matang dalam dua tahun akan datang." Simpan snapshot empat nombor dalam <Term id="ami_decision_journal" /> anda. Kali seterusnya Bull Researcher menawarkan pembalikan berleverage, anda akan mempunyai gambaran sisi kredit di tangan sebelum bilik berdebat.
+
+## Ringkasan
+
+Nisbah hutang kepada ekuiti adalah tajuk utama; struktur hutang, liputan faedah, dan aliran tunai adalah substansinya. Nisbah "rendah" boleh menyembunyikan risiko pembiayaan semula; nisbah "tinggi" boleh menjadi selamat jika aliran tunai melindunginya berlipat kali ganda.

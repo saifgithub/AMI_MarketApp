@@ -1,0 +1,78 @@
+---
+id: "200_pyramiding_into_winners"
+title: "Pyramiding ke dalam pemenang — bila ia berfungsi dan bila ia keserakahan"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 4
+track: "edge_process"
+code: "EDGE 35"
+topic: "pyramiding_greed"
+prerequisites: ["045_greed", "014_position_sizing_basics", "017_portfolio_exposure_and_correlation"]
+tags: ["psychology", "greed", "pyramiding", "scaling_in", "position_sizing"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Memenara ke arah pemenang — bila ia berfungsi dan bila ia menjadi keserakahan
+
+Memenara (pyramiding) ialah menambah ke atas posisi yang sudah untung. Jika dilakukan dengan betul, ia membiarkan tesis anda berkembang pada purata kos yang menurun dalam unit risiko. Jika dilakukan secara salah, ia menjadi aksi terakhir keserakahan dalam buku teks — menukar pemenang menjadi perdagangan yang membebankan anda sepanjang tahun. Membina berdasarkan <Lesson id="045_greed"/> (keserakahan) dan <Lesson id="014_position_sizing_basics"/> (asas saiz posisi), pelajaran ini memberikan anda ujian yang boleh disangkal untuk memisahkan penularan yang dirancang daripada penularan emosional, serta peraturan deterministik yang boleh anda masukkan ke dalam <Term id="ami_mandate" /> anda supaya dorongan untuk "menambah pada pemenang" tidak lari perlahan-lahan daripada risiko tertulis anda.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Seorang pedagang memasuki NVDA pada Oktober 2023 pada $42 (disesuaikan pecahan) dengan risiko akaun 1% dan pelan tertulis: tambah pertama hanya jika posisi ditutup pada atau di atas +12% dengan paras ayunan lebih tinggi yang dicetak, tambah kedua hanya di atas +25% dengan paras ayunan lebih tinggi lain, tambah ketiga tidak pernah. Pada $48 dia menambah — bersih. Pada $55 dia menambah lagi — bersih. Jumlah risiko yang dikomited selepas dua penambahan ialah 1.7% daripada akaun, kerana setiap penambahan menggunakan henti ketat berdasarkan paras ayunan baru, bukan henti 1% baharu pada saham baharu. Posisi itu bergerak ke $74 pada Januari 2024 dan dia menutupnya mengikut peraturan sasaran asal.
+
+Enam bulan kemudian, pada AAPL, pedagang yang sama menenara tiga kali *tanpa* pengesahan paras ayunan kerana "trend itu jelas." Setiap tranche baharu saiznya 1% pada henti lebar. Pada penambahan ketiga, risiko sebenar beliau pada AAPL ialah 3.4% daripada akaun berbanding mandat 1%. AAPL turun mendatar 6% akibat potongan panduan. Kerugian posisi tunggal itu ialah 4.1% daripada akaun — empat kali ganda pendedahan yang dirancang. Strategi itu tidak gagal. Disiplin terhadap strategi itu yang gagal.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan penambahan sebagai entri baharu berbanding lanjutan kepada perdagangan asal. Jika anda saizkan setiap tranche penularan sebagai 1% risiko akaun pada henti lebar baru, anda tidak telah membina posisi — anda telah menimbun tiga perdagangan 1% bebas pada ticker yang sama, yang merupakan risiko kepekatan yang berpura-pura menjadi keyakinan. Penularan sihat mempunyai dua ciri yang tidak boleh dinegosiasikan: setiap penambahan merujuk kepada *paras struktur baru* (paras ayunan lebih tinggi, ujian semula pecahan, konsolidasi segar), dan setiap penambahan mengetatkan henti pada keseluruhan tumpukan supaya jumlah risiko yang dikomited tidak melebihi mandat asal anda. Jika anda tidak dapat menunjuk kepada paras baharu, atau jika anda tidak dapat menunjukkan matematik yang mengekalkan risiko keseluruhan terhad, penambahan itu adalah keserakahan memakai topi strategi.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Anda masuk TSLA pada $200 dengan risiko akaun 1% dan stop di $185. Saham kini pada $230 dengan tahap swing-low yang lebih tinggi yang bersih di $215. Anda mahu tambah. Tambah mana yang berdisiplin?"
+  options={[
+    "Tambah separuh saiz asal tanpa mengubah stop, kerana dagangan sedang untung dan 'ada bantal'.",
+    "Tambah satu tranche bersaiz supaya, apabila digabungkan dengan menaikkan stop pada saham asal ke $215, jumlah risiko terikat pada keseluruhan posisi kekal pada atau bawah 1% daripada akaun.",
+    "Dua kali ganda posisi kerana trend kini telah disahkan.",
+    "Tambah jumlah dolar yang sama dengan entri asal dengan stop 1% baru pada $215 — risiko akaun keseluruhan kekal kira-kira 1% kerana anda 'rasa' dagangan ini berjalan lancar."
+  ]}
+  answer={1}
+  explanation="Tambahan yang berdisiplin mengetatkan stop pada saham sedia ada ke tahap struktur baharu ($215) dan bersaiz tranche baharu supaya jumlah risiko akaun kekal pada atau bawah mandat asal. Jawapan salah yang paling menggoda ialah 'risiko kekal pada 1% kerana dagangan berjalan' — ia mengelirukan untung belum direalisasi dengan kapasiti risiko. Bantal bukan bajet risiko. 1% asal ialah satu-satunya bajet risiko yang diizinkan oleh mandat, dan satu-satunya cara sah untuk mengembangkan posisi ialah mengecilkan jarak stop pada saham sedia ada supaya matematik masih sah."
+/>
+
+<Quiz
+  question="Ujian majmuk mana yang merupakan isyarat objektif paling bersih bahawa pyramid yang dirancang telah menjadi pyramid keserakahan?"
+  options={[
+    "Anda merasa pasti pergerakan akan berterusan.",
+    "Posisi kini menjadi pegangan terbesar anda.",
+    "Anda telah menambah ke posisi lebih daripada dua kali.",
+    "Jumlah risiko terikat pada posisi melebihi mandat per-dagangan bertulis anda, DAN sekurang-kurangnya satu tambah diletakkan tanpa tahap struktur baharu yang didokumenkan (swing-low yang lebih tinggi, retest, konsolidasi segar)."
+  ]}
+  answer={3}
+  explanation="Menambah lebih daripada dua kali boleh jadi baik jika setiap tambah telah disusun. Menjadi pegangan terbesar ialah hasil daripada pyramid yang berfungsi, bukan kecacatan. Merasa pasti adalah tidak boleh disangkal. Tandatangan yang boleh diaudit ialah ujian majmuk — jumlah risiko terikat melebihi mandat DAN sekurang-kurangnya satu tambah tanpa dokumen. Kedua-dua elemen boleh dibaca dalam Jurnal Keputusan; jika kedua-duanya hadir, posisi tersebut bukan lagi strategi yang melaksanakan — ia adalah pedagang yang berunding dengan strategi secara langsung."
+/>
+
+<Quiz
+  question="Anda untung 21% YTD berbanding mandat seretan maksimum 20%. Posisi NVDA anda pada +35%, anda telah melakukan pyramid dua kali, dan jumlah risiko terikat pada NVDA ialah 2.4% daripada akaun berbanding mandat 1% per-dagangan. Conservative Debator telah menandakan pendedahan ini. Jawapan sintesis?"
+  options={[
+    "Tambah tranche ketiga — trend adalah yang terkuat sepanjang tahun.",
+    "Langkau Conservative Debator — laluan ekuiti anda menjustifikasikan risiko tambahan.",
+    "Pegang posisi, jangan tambah, dan gunakan pembukaan sesi seterusnya untuk sama ada menaikkan stop supaya jumlah risiko kembali ke 1% atau keluarkan satu tranche untuk membawa posisi kembali dalam mandat.",
+    "Potong NVDA separuh dan gunakan risiko yang dibebaskan untuk nama lain."
+  ]}
+  answer={2}
+  explanation="Posisi ini sudah 2.4x ganda risiko yang diwajibkan pada satu ticker. Menambah tranche ketiga ialah dagangan teks buku yang mengubah tahun yang untung menjadi rata pada satu jurus buruk. 'Potong separuh dan deploy semula' ialah keserakahan dalam pakaian berbeza — risiko yang dibebaskan bukan bajet untuk dagangan baharu, ia adalah pembetulan pelanggaran. 'Langkau Conservative Debator' ialah langkah yang dibuat oleh setiap pedagang yang terlalu yakin sebulan sebelum seretan yang mengakhiri siri. Jawapan yang menghormati mandat ialah mengembalikan jumlah risiko terikat ke 1% melalui pengetatan stop atau skala keluar — bukan melegalkan pelanggaran dengan tambah baharu."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_decision_journal" /> dan cari tiga posisi terakhir anda di mana anda menambah lebih daripada sekali. Untuk setiap satu, kira jumlah risiko yang dikomited (jarak entri-henti kali bilangan saham, dijumlahkan merentasi semua tranche, dibahagikan dengan saiz akaun pada masa setiap penambahan). Jika mana-mana satu berada di atas mandat risiko per-trade anda, bawa skrin tersebut kepada <Term id="ami_one_on_one" /> dengan Conservative Debator dan tanya: "Tunjukkan kepada saya paras struktur yang dirujuk oleh setiap penambahan." Corak itu biasanya menjawab dirinya sendiri dalam respons pertama.
+
+## Pengambilan
+
+Piramid hanya berfungsi jika setiap penambahan merujuk kepada paras struktur baru DAN jumlah risiko yang dikomited kekal di dalam mandat. Jika mana-mana bahagian hilang, penambahan itu adalah keserakahan dengan justifikasi yang dilekatkan.

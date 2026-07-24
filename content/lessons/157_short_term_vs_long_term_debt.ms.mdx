@@ -1,0 +1,79 @@
+---
+id: "157_short_term_vs_long_term_debt"
+title: "Gabungan hutang jangka pendek dan jangka panjang"
+duration_min: 4
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 23"
+topic: "debt_mix"
+prerequisites: ["034_debt_and_the_balance_sheet", "156_debt_maturity_ladder"]
+tags: ["debt", "short_term", "long_term", "commercial_paper", "liquidity", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Campuran hutang jangka pendek vs jangka panjang
+
+<Lesson id="034_debt_and_the_balance_sheet"/> memperkenalkan hutang sebagai satu baris tunggal dalam penyata kewangan. Ia bukan begitu. Hutang mempunyai tempoh matang — jangka pendek (tamat tempoh dalam 12 bulan) dan jangka panjang (tamat tempoh selepas 12 bulan) — dan campuran kedua-duanya adalah pengesanan diagnostik yang berasingan. Hutang jangka pendek lebih murah, lebih fleksibel, dan lebih berbahaya: ia mesti dibayar balik atau diperbaharui dalam 12 bulan akan datang, mendedahkan syarikat kepada keadaan kadar faedah atau kredit yang wujud apabila pembaharuan itu berlaku. Hutang jangka panjang mengunci kadar kupon dan tarikh matang. Pada akhir pelajaran ini, anda perlu tahu cara membaca baris hutang jangka pendek, nisbah yang mengesan kebergantungan berlebihan pada pembiayaan jangka pendek, dan mod kegagalan yang dihasilkan oleh konfigurasi ini dalam episod tekanan perbankan 2008 dan 2023.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Penyata kewangan biasanya memisahkan: (a) "bahagian semasa hutang jangka panjang" (hutang jangka panjang yang menjadi matang dalam 12 bulan akan datang); (b) "pinjaman jangka pendek" atau "surat komersial" (hutang yang dikeluarkan dengan tempoh matang kurang daripada setahun). Kedua-duanya dikira sebagai liabiliti semasa — baris dalam penyata kewangan yang perlu diselesaikan dalam tempoh satu tahun.
+
+Contoh sebenar: AAPL dalam tahun kewangan 2024 melaporkan kira-kira $10B dalam surat komersial dan ~$10B dalam bahagian semasa hutang jangka panjang, berbanding ~$162B dalam tunai dan sekuriti boleh jual. Hutang jangka pendek dibiayai beberapa kali ganda oleh tunai; AAPL menggunakan surat komersial untuk kemudahan modal kerja, bukan keperluan. Nisbah "hutang jangka pendek / tunai" adalah kira-kira 0.1x — kecil.
+
+Bandingkan dengan senario tertekan. Silicon Valley Bank pada awal 2023 memegang penyata kewangan di mana deposit tidak dijamin (secara efektifnya liabiliti jangka pendek kepada penyimpan) membentuk majoriti besar asas pembiayaan, manakala aset terikat dalam Treasuries tempoh panjang yang telah kehilangan nilai pasaran dalam kitaran kenaikan kadar. Ketidakseimbangan tempoh — pembiayaan jangka pendek, aset jangka panjang — menjadi maut dalam satu kitaran berita apabila penyimpan pemindah $42B dalam sehari. Nisbah solvensi tajuk utama kelihatan sihat pada asas simpan hingga matang; struktur pembiayaan jangka pendek menjadikan nisbah tersebut tidak relevan di bawah tekanan.
+
+Nisbah diagnostik ialah **nisbah semasa** (aset semasa / liabiliti semasa) dan sepupu lebih ketatnya, **nisbah cepat** ((aset semasa – inventori) / liabiliti semasa). Nisbah semasa di bawah 1.0 bermakna syarikat tidak mempunyai cukup aset cecair untuk menutup liabiliti jangka pendek — ia mesti menjana cukup tunai dari operasi dalam tempoh satu tahun atau memperbaharui hutang jangka pendek ke hadapan. Nisbah semasa di bawah 0.7 dalam syarikat bukan kewangan adalah lampu merah berkedip.
+
+Di Bursa Malaysia: AIRASIA sebelum runtuh 2020 mempunyai liabiliti jangka pendek (modal kerja, bayaran sewa, kerugian hedging bahan api) yang melebihi aset cecair jangka pendek secara ketara. Penyata kewangan yang sama yang boleh berfungsi dalam persekitaran keadaan stabil menjadi segera tertekan apabila aliran tunai lenyap.
+
+Pernyataan boleh disangkal: syarikat bukan kewangan dengan hutang jangka pendek melebihi 25% daripada jumlah hutang DAN nisbah semasa di bawah 1.0 menghadapi risiko cecair yang ketara dalam mana-mana suku di mana aliran tunai operasi menjadi negatif. Gabungan ini adalah konfigurasi tertekan.
+
+## Perangkap
+
+Perangkap ialah mengurangkan hutang jangka pendek dan jangka panjang kepada satu nombor "hutang". Pemula melihat "jumlah hutang $4B" dan berhenti. Mereka terlepas pandang bahawa $2.5B daripadanya matang dalam 12 bulan pada kadar berubah, manakala hanya $1.5B adalah jangka panjang tetap. Dua syarikat dengan jumlah hutang $4B yang sama — satu 100% jangka panjang tetap, satu lagi 60% jangka pendek berubah — menghadapi perbelanjaan faedah ke hadapan dan risiko cecair yang sangat berbeza. Model mental yang betul: jumlah hutang ialah satu nombor; *campuran tempoh* ialah nombor kedua yang mesti dibaca secara berasingan. Kebergantungan jangka pendek yang berat adalah baik apabila aliran tunai boleh dipercayai dan kadar stabil. Apabila sama ada keadaan itu runtuh, hutang jangka pendek mempercepatkan tekanan.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat A mempunyai jumlah hutang sebanyak $3B, di mana $400M adalah jangka pendek, dan nisbah semasa ialah 2.1. Syarikat B mempunyai jumlah hutang sebanyak $3B, di mana $1.8B adalah jangka pendek, dan nisbah semasa ialah 0.8. Yang manakah lebih terdedah kepada kejutan likuiditi?"
+  options={[
+    "Syarikat B — 60% hutang jatuh tempo dalam 12 bulan bersama dengan nisbah semasa di bawah 1.0 bermaksud kewajipan jangka panjang melebihi aset likuid. Sebarang gangguan kepada aliran tunai operasi memaksa pembiayaan semula pada keadaan semasa. Syarikat A mempunyai struktur hutang jangka panjang dan bantal 2.1x, jadi gangguan yang sama boleh diserap",
+    "Kedua-duanya sama — jumlah hutang yang sama",
+    "Tidak dapat ditentukan tanpa data pendapatan",
+    "Syarikat A — hutang jangka pendek sentiasa lebih murah tetapi sentiasa lebih berisiko"
+  ]}
+  answer={0}
+  explanation="Gabungan Syarikat B — hutang jangka pendek yang berat ditambah nisbah semasa di bawah 1 — adalah konfigurasi tekanan likuiditi teks buku. Jumlah hutang yang sama di A adalah tidak berbahaya kerana ia dikunci dalam jangka panjang dan terdapat bantal 2.1x aset semasa. Jawapan 'kedua-duanya sama, jumlah hutang yang sama' mengabaikan tempoh sepenuhnya. Jawapan yang menamakan Syarikat A songsahkan analisis. Jawapan 'tidak dapat ditentukan tanpa data pendapatan' meminta data yang tidak diperlukan — gambaran likuiditi adalah pada neraca sahaja."
+/>
+
+<Quiz
+  question="Sintesis menggabungkan pelajaran ini dengan <Lesson id="
+  options={[
+  ]}
+  answer={0}
+  explanation=""
+/> and <Lesson id="156_debt_maturity_ladder"/>: a company has debt-to-EBITDA 2.5x (healthy), interest coverage 4.5x (healthy), 55% of debt is short-term, current ratio 0.9, and operating cash flow has turned negative in the most recent quarter. Which read is most consistent with the lessons?"
+  options={[
+    "Trailing leverage and coverage ratios look healthy, but the combination of >50% short-term debt, current ratio <1, and negative operating cash flow is the acute liquidity setup — the trailing income-statement strength does not protect against a 12-month refinancing requirement when cash flow has just turned the wrong way. The forward picture is far more exposed than the trailing ratios suggest",
+    "Healthy — debt-to-EBITDA and interest coverage are both above the stress thresholds",
+    "Bullish — negative cash flow is a one-quarter event",
+    "Insufficient data without the maturity ladder"
+  ]}
+  answer={0}
+  explanation="The synthesis: the trailing ratios from <Lesson id="034_debt_and_the_balance_sheet"/> say the company is healthy. The short-term debt mix from this lesson plus the negative operating cash flow combine to say the next 12 months are the issue. <Lesson id="034_debt_and_the_balance_sheet"/>, <Lesson id="156_debt_maturity_ladder"/>, and 157 together build the picture: leverage level, maturity timing, and tenor mix are three independent axes, and stress can hide on any one of them. The 'healthy — leverage and coverage clear the thresholds' answer reads only the first axis. The 'negative cash flow is a one-quarter event' answer dismisses the cash flow turn. The 'insufficient data without the maturity ladder' answer demands data the question already provides enough of."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tanya: "Uraikan hutang [ticker] kepada komponen jangka pendek dan jangka panjang pada penyata kewangan terkini. Kira nisbah semasa dan nisbah cepat. Beritahu saya jika hutang jangka pendek sebagai % daripada jumlah hutang telah berubah dalam 4 suku terakhir." Simpan peratusan dalam <Term id="ami_decision_journal" /> anda — bahagian jangka pendek yang meningkat adalah amaran sendiri.
+
+## Kesimpulan
+
+Jumlah hutang ialah satu paksi. Tempoh ialah paksi kedua. Hutang jangka pendek adalah baik apabila aliran tunai boleh dipercayai; apabila aliran tunai berubah, baris jangka pendek ialah yang pertama runtuh.

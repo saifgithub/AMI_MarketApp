@@ -1,0 +1,70 @@
+---
+id: "077_decision_support_vs_prediction"
+title: "Sokongan Keputusan vs Ramalan"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 27"
+topic: "decision_support_vs_prediction"
+prerequisites: ["031_indicator_limitations", "057_backtesting_a_strategy", "072_what_ami_can_do_for_you", "076_human_oversight_is_the_product"]
+tags: ["decision_support", "prediction", "probability", "process", "research_manager"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Sokongan keputusan vs ramalan
+
+<Term id="ami" /> ialah sokongan keputusan <Term id="training_simulator" />, bukan sistem ramalan. Perbezaan ini penting: sistem ramalan mendakwa mengetahui harga *akan* menjadi apa; persekitaran latihan sokongan keputusan menyusun latihan *penalaran* anda mengenai apa yang perlu dilakukan berdasarkan pengetahuan semasa. Simulasi <Term id="ami_verdict" /> AMI menerangkan keadaan semasa, persediaan semasa, dan kebarangkalian bersyarat — tidak pernah ramalan titik, dan tidak pernah sebagai nasihat pelaburan. Tugas Pengurus Penyelidikan ialah mensintesis perdebatan bull/bear menjadi *kedudukan*, bukan *nubuat* — dan tugas anda ialah menilai sintesis tersebut. Pada akhir pelajaran ini, anda akan dapat membezakan perbezaan dalam mana-mana output yang diberikan AMI.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Anda bertanya kepada Pengurus Penyelidikan dalam <Term id="ami_one_on_one" />: *"Di mana GOOGL akan berada dalam 30 hari?"*
+
+> *Pengurus Penyelidikan:* Bentuk soalan yang salah untuk saya. Apa yang saya boleh berikan ialah sintesis keadaan semasa. GOOGL diperdagangkan pada $182, pendapatan awan Q4 meningkat 30% YoY, pendapatan iklan meningkat 11%, P/E ke hadapan 22, sektor berputar ke arah teknologi mega-cap, sentimen neutral-positif. Kes Bull (monetisasi infrastruktur AI, ketahanan carian) dan kes Bear (beban regulasi, kitaran iklan) adalah kira-kira seimbang — kebarangkalian Bull ~0.55 dalam perdebatan kami. Ini tidak memberitahu anda apa penutupan GOOGL dalam 30 hari. Ia memberitahu anda bahawa, bersyarat pada persediaan semasa yang bertahan, asimetri menyokong kedudukan long pada saiz sederhana — dan apa yang akan membatalkan pandangan itu: pecahan di bawah $172, terlepas pendapatan awan, atau penyelesaian DOJ yang lebih keras daripada konsensus.
+
+Perhatikan apa yang sebenarnya dilakukan oleh Pengurus Penyelidikan: menerangkan keadaan, menimbang kes yang bersaing, menyatakan kebarangkalian bersyarat, dan menyebut keadaan pembatalan. Itu adalah sokongan keputusan. Tiada mana-mana ayat seperti *"GOOGL akan menjadi $195 pada hari 30"*. Agen yang sama yang ditanya soalan yang sama oleh pengguna mod ramalan mungkin terdedah untuk berpihak pada nombor — tetapi arahan AMI ditulis untuk menolak bingkai itu, dan bentuk verdict (masuk, henti, sasaran, jangka masa, keyakinan, pembatalan) tidak mempunyai slot ramalan titik.
+
+Contoh kedua: Trader mencadangkan *masuk $182, henti $172, sasaran $198, jangka masa 6 minggu, keyakinan 0.58*. Itu ialah empat pernyataan bersyarat yang digabungkan — *jika masuk berlaku, ini adalah risiko yang anda setuju dan ganjaran yang anda harapkan, dengan tahap falsifikasi*. Ini bukan tuntutan bahawa saham akan mencapai $198. Keyakinan 0.58 ialah penilaian berberat Bilik, bukan kebarangkalian berkalibrasi — bacalah sebagai "condong, bukan kunci".
+
+## Perangkap
+
+Perangkapnya ialah membaca Verdict sebagai ramalan kerana ia mengandungi nombor. Nombor terasa seperti ramalan. Sasaran $198 dibaca, dalam bingkai yang salah, sebagai "AMI fikir GOOGL akan menjadi $198". Ia tidak begitu. Sasaran ialah tahap di mana Trader *akan* mengunci keuntungan *jika tesis bermain dalam senario*. Henti ialah tahap di mana tesis itu salah. Jangka masa ialah tetingkap di mana perdagangan dimaksudkan untuk dinyatakan. Tiada satu pun daripada ini ialah ramalan; semua itu ialah perancah bersyarat untuk senario latihan. Bingkai yang betul: AMI sedang menyusun latihan penilaian berstruktur — masuk/henti/sasaran/jangka masa/keyakinan ialah binaan senario latihan, bukan nasihat untuk bertindak. Ramalan harga ialah bahagian yang AMI sengaja tidak menghantar.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Veredik membaca: 'BELI MSFT · masuk $418 · henti $402 · sasaran $445 · jangka masa 5 minggu · keyakinan 0.64.' Tafsiran mana yang betul?"
+  options={[
+    "AMI meramalkan MSFT akan mencapai $445 dalam tempoh 5 minggu dengan kebarangkalian 64%",
+    "Model AMJ jangka $445 ± selang keyakinan",
+    "AMI berikrar sasaran harga $445",
+    "Jika anda ambil masuk, risiko terendah anda ditakrifkan pada $402 dan dagangan ini bertujuan untuk berkembang ke arah $445 dalam ~5 minggu — tiada nombor ini adalah ramalan harga"
+  ]}
+  answer={3}
+  explanation="Veredik adalah komitmen bersyarat, bukan ramalan. Masuk/henti/sasaran/jangka masa/keyakinan adalah struktur untuk *pelan dagangan yang mungkin anda ambil* — bukan taburan kebarangkalian ke atas harga masa depan. Jawapan salah yang paling menipu ialah 'meramalkan $445 pada 64%' — kerana strukturnya kelihatan statistik, tetapi keyakinan AMI adalah condongan berberat Bilik, bukan ramalan yang dikalibrasi."
+/>
+
+<Quiz
+  question="Seorang pengguna bertanya kepada Market Analyst: 'Berapa penutupan AAPL pada Jumaat depan?' Apa yang AMI sebenarnya jawab?"
+  options={[
+    "Memberikan satu harga dengan jalur keyakinan",
+    "Menjana output model yang menyatakan 'Penutupan AAPL Jumaat: $237.42'",
+    "Menolak untuk membincangkan AAPL sepenuhnya",
+    "Menolak untuk meramal harga titik pada tarikh tetap, menerangkan susunan semasa, memberikan julat kebarangkalian dijangka daripada volatiliti direalisasikan, dan menamakan apa yang akan menafikan bacaan semasa"
+  ]}
+  answer={3}
+  explanation="Ini adalah tingkah laku signature sistem sokongan keputusan. Nyatakan susunan, berikan julat kebarangkalian (bukan ramalan titik), dan kenal pasti penafian. Mengatakan '$237.42 pada Jumaat' akan menjadi ramalan — tepat apa yang AMI dibina untuk tidak lakukan. Jawapan salah yang menipu ialah 'harga dengan jalur keyakinan' — itu *kelihatan* seperti sokongan keputusan, tetapi harga titik walaupun dengan jalur masih merupakan ramalan."
+/>
+
+## Cuba sendiri
+
+Dalam 1-ke-1 dengan Pengurus Penyelidikan, tampal mana-mana ticker pada <Term id="ami_watchlist" /> anda dan tanya: *"Ramalkan harga 30 hari akan datang."* Baca balasan dengan teliti. Kemudian tanya: *"Apakah persediaan semasa, apa keseimbangan bull/bear, dan apa yang akan membatalkan bacaan?"* Bandingkan dua balasan itu secara bersebelahan. Yang pertama mengelak ke julat; yang kedua menjawab sepenuhnya. Jurang itu ialah keseluruhan pelajaran.
+
+## Penegasan
+
+AMI menerangkan proses dan kebarangkalian, menyebut pembatalan, dan berhenti di situ. Ramalan harga titik ialah perkara yang ia sengaja tidak jual — dan ketiadaan itu ialah ciri. AMI ialah simulator latihan. Verdict ialah artifak latihan untuk penilaian, bukan nasihat pelaburan.

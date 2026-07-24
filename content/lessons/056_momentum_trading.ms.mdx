@@ -1,0 +1,66 @@
+---
+id: "056_momentum_trading"
+title: "Dagangan Momentum"
+duration_min: 5
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+code: "EDGE 12"
+topic: "momentum"
+prerequisites: ["028_macd_trend_and_momentum", "029_volume_confirmation", "022_trend_direction", "015_stop_loss_basics"]
+tags: ["strategy", "momentum", "relative_strength"]
+agent_callouts: ["aggressive_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Perdagangan momentum
+
+Perdagangan momentum membeli aset yang telah meningkat paling tinggi dan berputar keluar apabila kekuatan relatif melemah. Ia berbeza secara struktur daripada mengikuti trend: mengikuti trend menunggu trend yang telah mapan dalam satu nama; momentum mengklasifikasikan seluruh alam semasa dan memiliki decile teratas. Faktor ini telah menghasilkan salah satu premium risiko yang paling berterusan dalam penyelidikan ekuiti, dan ia juga bertanggungjawab untuk penurunan strategi terbesar dalam satu hari yang pernah direkodkan. Selepas pelajaran ini, anda boleh menentukan peraturan momentum yang menyatakan dengan tepat bila anda memegang dan bila anda berputar, serta rejim di mana faktor ini runtuh.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Pada 2024, peraturan momentum yang mudah ialah: klasifikasikan saham besar AS berdasarkan pulangan 6 bulan lalu mengecualikan bulan terkini, pegang decile teratas, seimbangkan semula bulanan. NVDA berada dalam decile teratas untuk hampir keseluruhan tahun, dengan pulangan kira-kira 170% dari Januari hingga akhir tahun. META, GOOGL, dan AMZN berputar masuk dan keluar pada pelbagai titik. Pedagang yang menjalankan peraturan ini pada awal 2024 memasuki NVDA pada sekitar $50 (selepas pecahan) pada seimbangkan semula Januari dan memegang — tidak pernah menjual pada hari penurunan tunggal, hanya berputar jika NVDA jatuh keluar dari decile teratas pada seimbangkan semula bulanan seterusnya. Peraturan ini menjana pulangan luar biasa tepat kerana ia mengabaikan setiap intuisi "terlihat mahal".
+
+Kriteria kemasukan: ticker memasuki decile teratas berdasarkan pulangan 6m-1m lalu pada tarikh seimbangkan semula DAN isipadu cukup cecair untuk saizkan kedudukan dalam had mandat. Pegang: sehingga seimbangkan semula seterusnya. Kriteria keluar/putaran: ticker jatuh keluar dari decile teratas pada seimbangkan semula — jual, gantikan dengan pendatang baru. Pembatalan perdagangan individu: had berhenti keras pada, katakanlah, penurunan 25% dari kos — ini wujud bukan untuk operasi strategi biasa tetapi untuk mengurangkan kerosakan semasa runtuh momentum. Strategi GAGAL dalam rejim "runtuh momentum" — pembalikan singkat dan ganas di mana nama-nama momentum tinggi dijual dan nama-nama momentum rendah dibeli (Mac 2009, Q1 2016, November 2020 putaran vaksin). Pada hari-hari itu, portfolio momentum boleh kehilangan 15%+ dalam seminggu.
+
+## Perangkap
+
+Kesilapan pemula ialah menjual pemenang momentum awal kerana ia "merasa pucuk". Anda memegang NVDA dari $50 ke $80, ia menggandakan kos anda, anda mengambil untung, dan kemudian menontonnya berjalan ke $140. Atau, sama lazim: anda membaca artikel kritikal pada saham momentum tertinggi dan memutuskan untuk menjual pada hujah kualitatif. Model mental yang betul: momentum adalah faktor kuantitatif; ia berjalan lebih lama daripada yang dirasakan munasabah. Peraturan menjual, bukan naluri anda. Diskresi pada keluar adalah sumber utama prestasi kurang baik untuk pedagang momentum runcit. Pembantah Agresif di dalam <Term id="ami" /> wujud tepat untuk berhujah melawan dorongan untuk mengambil untung terlalu awal — dengarkan hujah itu sebelum anda menjual.
+
+<ChatWith agent="aggressive_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjalankan peraturan momentum yang seimbang semula secara bulanan. NVDA telah mencecah tiga kali ganda dan naik 65% dalam enam bulan terakhir. Hari ini di pertengahan bulan, antara seimbang semula. NVDA jatuh 8% tanpa sebarang berita. Apa kata peraturan itu?"
+  options={[
+    "Jual separuh dan semak semula",
+    "Tambah posisi kerana ia sedang diskaun",
+    "Pegang — seimbang semula pada hujung bulan, dan satu hari buruk tidak melanggar peraturan",
+    "Jual serta-merta — momentum sedang runtuh"
+  ]}
+  answer={2}
+  explanation="Peraturan itu seimbang semula secara bulanan, secara periodik. Menjual antara seimbang semula berdasarkan pergerakan intraday adalah tepat kesalahan diskresioner yang memusnahkan pulangan momentum. Menjual serta-merta adalah jawapan salah yang menggoda kerana kejatuhan itu terasa seperti isyarat — tetapi sistem ini direka untuk mengabaikan bunyi intrabulan."
+/>
+
+<Quiz
+  question="Portfoli momentum telah memegang teknologi AS dekil teratas secara panjang selama 8 bulan. Dalam satu minggu, portfoli jatuh 12% apabila nama nilai momentum rendah naik kuat — satu kejatuhan momentum klasik. Mandat anda menetapkan had penurunan (drawdown) pada 25% dan anda kini pada 18%. Aggressive Debator berhujah 'tambah — ini adalah penurunan'. Conservative Debator berhujah 'kurangkan saiz — rejim telah berubah'. Apakah sintesisnya?"
+  options={[
+    "Tambah — kejatuhan momentum sentiasa pulih",
+    "Pegang posisi penuh dan tunggu seimbang semula hujung bulan",
+    "Keluar sepenuhnya dan tukar kepada reverensi min",
+    "Kurangkan saiz untuk menghormati mandat, kemudian biarkan peraturan seimbangkan anda kembali masuk jika momentum terbentuk semula"
+  ]}
+  answer={3}
+  explanation="Sintesisnya: had penurunan mandat adalah lantai yang tidak boleh dirunding yang mengatasi pandangan mana-mana ejen tunggal. Anda berada 7% dari had tersebut. Menambah pada kejatuhan adalah bagaimana pedagang momentum meletup; memegang posisi penuh sehingga hujung bulan mengabaikan mandat; keluar sepenuhnya dan bertukar kepada reverensi min meninggalkan peraturan. Kurangkan saiz untuk melindungi lantai, biarkan peraturan seimbang semula mengesahkan semula pendedahan jika faktor pulih."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Pembantah Agresif, tampal 5 pengekalan terbaik 6 bulan <Term id="ami_watchlist" /> dan tanya: "Yang manakah daripada ini adalah decile teratas berdasarkan pulangan 6m-1m lalu relatif kepada S&P 500, dan apa yang akan membatalkan setiap satu kekal dalam decile teratas bulan depan?" Gunakan jawapan untuk merancang pelan seimbangkan semula bulanan dalam <Term id="ami_decision_journal" />.
+
+## Teras
+
+Momentum berjalan lebih lama daripada yang dirasakan munasabah, dan runtuh lebih cepat daripada yang dirasakan mungkin. Peraturan seimbangkan semula; anda tidak. Lantai penurunan mandat adalah satu-satunya pengecualian.

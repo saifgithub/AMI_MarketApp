@@ -1,0 +1,80 @@
+---
+id: "047_revenge_trading"
+title: "Perdagangan balas dendam"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 3
+track: "edge_process"
+code: "EDGE 4"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management", "046_fear_and_capitulation"]
+topic: "revenge_trading"
+tags: ["psychology", "revenge_trading", "tilt", "cooldown", "mandate"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Trading balas dendam
+
+Trading balas dendam berlaku apabila satu kerugian berhenti menjadi maklumat dan mula menjadi hutang yang pasaran berhutang kepada anda. Setelah pelajaran ini, anda akan dapat mengesan corak dalam tingkah laku sendiri menggunakan ujian objektif, memahami mengapa dagangan seterusnya selepas kerugian adalah yang paling teruk secara statistik, dan mengkonfigurasi tempoh rehat yang menghalang pucuk pencetus dari tangan anda dalam tetingkap yang penting. Pasaran tidak berhutang apa-apa kepada anda. Kedudukan yang anda ingin masukkan tidak tahu anda baru saja mengalami kerugian.
+
+<Animation name="revenge_position_escalation" />
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Di Bursa Malaysia, seorang pedagang dihentikan keluar daripada TENAGA dengan kerugian -RM1,200 pada pagi hari Isnin. Dalam masa 40 minit, dia membuka kedudukan panjang 2x pada TENAGA sekali lagi, "untuk menjana semula". Kedudukan itu dihentikan keluar pada -RM2,400 sebelum tengah hari. Pada pukul 2pm, dia mempunyai kedudukan 3x pada GENTING, sebuah nama yang tidak dia teliti, kerana "TENAGA berhutang kepada saya dan begitu juga keseluruhan indeks". GENTING ditutup -4.1% pada hari tersebut. Jumlah kerugian untuk sesi itu: RM5,800 daripada bajet risiko asal RM1,200. Pada pagi berikutnya, tenang semula, dia menyemak carta dan mengesahkan keluaran TENAGA asalnya adalah betul. Dia telah menghabiskan empat jam dan RM4,600 tambahan untuk tidak bersetuju dengan keputusan yang kemudian dia akan bersetuju.
+
+Corak yang boleh difalsifikasikan, ditulis sebagai ujian objektif: anda sedang trading balas dendam jika tiga entri terakhir anda dibuka dalam masa 60 minit daripada kerugian tertutup, bersaiz sekurang-kurangnya 1.5x risiko per-dagangan yang ditulis, dan sekurang-kurangnya dua daripadanya adalah dalam instrumen atau sektor yang sama dengan penjejak asal. Dua daripada tiga kotak itu dicentang, dalam satu sesi, adalah tanda kecondongan. Carta tidak ada kaitan dengan itu.
+
+## Perangkap
+
+Perangkap adalah kepercayaan bahawa dagangan seterusnya adalah bebas daripada yang terakhir. Secara mekanikal ia adalah — broker anda tidak tahu anda mengalami kerugian. Secara tingkah laku ia tidak. Selepas kerugian, tiga perkara naik serentak: saiz kedudukan (anda mahu kerugian kembali lebih cepat), kekerapan dagangan (anda berhenti menunggu setup), dan keyakinan (anda kelurahkan kecekapatan dengan tepi). Tugas Conservative Debator adalah untuk menyoroti konfigurasi tepat ini, kerana setiap kotak dalam segi tiga saiz/kekerapan/keyakinan adalah *berkorelasi dengan kerugian, bukan dengan setup*. Model mental yang betul: kerugian adalah cukai pada dagangan terakhir, bukan kredit untuk dagangan seterusnya. Pasaran tidak mengimbangkan buku besar pada garis masa anda. Satu-satunya cara untuk "menjana semula" adalah tidak berdagang untuk sementara waktu.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Anda baru sahaja berhenti dengan kerugian -RM1,000. Anda melihat setup baru pada ticker yang sama yang 'terlalu bagus untuk dilepaskan'. Risiko per-trade dalam Mandat anda ialah RM500. Apa langkah seterusnya yang betul?"
+  options={[
+    "Berhenti seketika untuk tempoh rehat yang ditetapkan dalam Mandat anda (contohnya 60 minit), catatkan kerugian dalam jurnal, dan hanya nilai semula setup tersebut selepas tempoh itu tamat.",
+    "Lakukan trade pada saiz biasa — proses tidak berubah.",
+    "Tukar ke ticker lain pada saiz yang sama — membeza daripada kerugian.",
+    "Lakukan trade pada saiz 2x — edge anda lebih tajam sekarang, dan anda perlu membalikkan kerugian."
+  ]}
+  answer={0}
+  explanation="Setup itu mungkin atau mungkin tidak wujud. Masalahnya ialah anda tidak dapat membezakan keadaan ini sekarang kerana anda baru sahaja berhenti — otak anda sedang mengejar objektif pemulihan, bukan objektif edge. Tempoh rehat bukan hukuman; ia adalah pemutus litar. Malah 'lakukan trade pada saiz biasa' gagal kerana masa — beberapa minit selepas kerugian — adalah tanda kecerobohan. Tukar ticker hanyalah trade yang sama dengan langkah tambahan."
+/>
+
+<Quiz
+  question="Gabungan manakah adalah ujian objektif yang paling bersih untuk 'adakah saya sedang revenge-trading?'"
+  options={[
+    "Tiga entri terakhir anda berlaku dalam masa 60 minit selepas kerugian ditutup, bersaiz sekurang-kurangnya 1.5x risiko per-trade yang ditulis, dengan sekurang-kurangnya dua dalam instrumen atau sektor yang sama dengan kerugian asal.",
+    "Akaun anda sedang turun pada hari itu.",
+    "Anda merasa marah terhadap pasaran.",
+    "Anda telah mengambil dua trade hari ini."
+  ]}
+  answer={0}
+  explanation="Jawapan 'marah' adalah nyata tetapi tidak boleh difalsifikasi — anda tidak boleh mengauditnya. 'Dua trade hari ini' dan 'akaun turun' adalah hasil harian, bukan corak. Ujian gabungan — masa, penyimpangan saiz, dan kepekatan instrumen — adalah diagnostik yang bertahan semakan pada akhir hari. Jika dua daripada tiga kotak ini dicentang, sesi tersebut adalah sesi kecerobohan tidak kira bagaimana ia berakhir."
+/>
+
+<Quiz
+  question="Anda baru sahaja mengambil kerugian akaun -2% pada satu trade. Mandat anda menyatakan risiko per-trade maksimum ialah 1% dan tempoh rehat selepas berhenti ialah 2 jam. PM telah menandakan bahawa entri terakhir anda adalah dua kali ganda saiz mandat. Apa sintesis jawapannya?"
+  options={[
+    "Berhenti trading untuk hari itu, catatkan kedua-dua trade, dan mulakan pengiraan masa rehat; semak sama ada pelanggaran mandat itu adalah satu kejadian atau corak dalam Jurnal Keputusan esok.",
+    "Kosongkan tempoh rehat — setup seterusnya adalah bebas daripada kerugian terakhir.",
+    "Ambil satu lagi trade pada tepat 1% untuk 'menetapkan semula' hari itu.",
+    "Kurangkan saiz pada trade seterusnya kepada 0.5% dan teruskan trading — anda telah membetulkan diri sendiri."
+  ]}
+  answer={0}
+  explanation="Pelanggaran mandat adalah isyarat sebenar di sini, bukan kerugian itu sendiri. Penanda PM bermaksud lantai keselamatan telah dilanggar — satu-satunya respons yang betul ialah menjauhkan diri cukup lama supaya trade seterusnya bukan tindak balas. 'Ambil satu lagi trade untuk menetapkan semula' adalah revenge yang dibalut sebagai disiplin. 'Kosongkan tempoh rehat kerana trade seterusnya adalah bebas' adalah benar secara mekanikal tetapi kosong secara tingkah laku — setiap trader revenge dalam sejarah percaya ia. Tempoh rehat wujud tepat kerana trader selepas kerugian 2% bukan trader yang sama yang menulis mandat."
+/>
+
+## Cuba
+
+Buka Tetapan → <Term id="ami_mandate" /> dan tetapkan `cooldown_after_stop_minutes` kepada sekurang-kurangnya 60 (90 jika anda mampu menelannya). Kemudian buka <Term id="ami_decision_journal" />, tapis kepada lima penghentian keluar terakhir anda, dan periksa apa yang anda lakukan dalam 60 minit selepas setiap satu. Jika tiga tetingkap tersebut mengandungi satu entri, anda mempunyai corak kecondongan yang direkodkan. Bawa ia kepada <Term id="ami_one_on_one" /> dengan Conservative Debator dan tampal cap masa — biarkannya memberitahu anda bacaannya.
+
+## Kesimpulan
+
+Kerugian adalah cukai pada dagangan terakhir, bukan kredit untuk dagangan seterusnya. Tempoh rehat adalah satu-satunya peraturan yang melindungi anda daripada versi diri anda yang baru diciptakan oleh kerugian tersebut.

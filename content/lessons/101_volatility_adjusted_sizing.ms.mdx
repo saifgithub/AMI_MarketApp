@@ -1,0 +1,68 @@
+---
+id: "101_volatility_adjusted_sizing"
+title: "Saiz kedudukan yang disesuaikan dengan volatiliti"
+duration_min: 5
+level: 1
+module: 3
+difficulty: 3
+track: "risk_portfolio"
+code: "RISK 7"
+topic: "volatility_sizing"
+prerequisites: ["014_position_sizing_basics"]
+tags: ["risk", "position_sizing", "volatility", "atr"]
+agent_callouts: ["trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Saiz posisi laras volatiliti
+
+Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="014_position_sizing_basics"/> (Asas saiz posisi); di sini kita mendalamkan cara mengekalkan risiko malar merentas instrumen yang bergerak sangat berbeza. Peraturan 1% tetap daripada akaun adalah betul, tetapi jika anda menggunakan jarak henti dolar yang sama untuk TSLA dan KO, anda secara efektif mengambil pertaruhan 4× lebih besar pada TSLA — risiko dolar sama, tetapi julat harian TSLA memakan henti dalam beberapa jam manakala KO mengambil masa berminggu-minggu. Saiz posisi laras volatiliti menggunakan julat terkini instrumen (biasanya ATR — Average True Range) untuk menetapkan jarak henti, supaya risiko akaun 1% menghasilkan peluang henti yang sama bagi setiap ticker pada <Term id="ami_watchlist" /> anda.
+
+## Contoh
+
+Akaun simulasi anda ialah $50,000, risiko maks 1% per dagangan = bajet risiko $500. TSLA pada $240, ATR 14-hari = $9. KO pada $62, ATR 14-hari = $0.75. Anda suka kedua-dua setup long.
+
+Untuk TSLA, tetapkan henti pada 1.5 ATR di bawah harga masuk: $240 − $13.50 = $226.50. Risiko per saham = $13.50. Saham = $500 ÷ $13.50 = 37 saham. Notional = $8,880 (17.8% daripada akaun). Untuk KO, henti 1.5 ATR yang sama: $62 − $1.125 = $60.875. Risiko per saham = $1.125. Saham = $500 ÷ $1.125 = 444 saham. Notional = $27,528 (55.1% daripada akaun). Notional berbeza, risiko identik, peluang henti identik pada hingar biasa — kerana henti berskala mengikut volatiliti setiap nama bukannya peratusan atau jumlah dolar rata.
+
+Di Bursa Malaysia: AIRASIA pada RM2.40 dengan ATR 14-hari RM0.08 berbanding MAYBANK pada RM10.20 dengan ATR 14-hari RM0.12. Bajet risiko RM500 yang sama, henti 1.5 ATR. AIRASIA: henti RM2.28, risiko per saham RM0.12, 4,166 saham. MAYBANK: henti RM10.02, risiko per saham RM0.18, 2,777 saham. Ujian boleh disangkal: jika anda saiz dua dagangan pada risiko dolar sama tanpa laras mengikut ATR, nama bervolatiliti tinggi akan terkena henti lebih dua kali ganda kerap pada hingar sahaja dalam lima hari dagangan pertama.
+
+## Perangkap
+
+Perangkap ialah menggunakan henti peratusan rata (5% di bawah harga masuk, katakanlah) merentas setiap ticker. Pada nama bervolatiliti rendah seperti KO atau JPM, henti 5% jauh di luar hingar biasa — baik, tetapi ia memaksa bilangan saham yang sangat kecil, jadi posisi hampir tidak menyumbang kepada keputusan portfolio. Pada nama bervolatiliti tinggi seperti TSLA atau NVDA, 5% boleh berada dalam julat harian biasa — anda dihenti oleh hingar yang tidak mengatakan apa-apa tentang tesis. Model mental yang betul: risiko dolar adalah malar (peraturan 1%), tetapi jarak henti berskala dengan julat terkini instrumen. ATR ialah ukuran paling bersih; 1.5× hingga 2× ATR ialah julat kerja untuk dagangan ayunan. Apa-apa yang lebih ketat daripada 1× ATR meminta untuk digoncang keluar; apa-apa yang lebih longgar daripada 3× ATR menjadikan henti lebih sebagai harapan daripada pembatalan.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="Akaun $40,000, risiko maks 1% = $400. NVDA pada $500, ATR 14-hari = $20. Anda menetapkan stop loss 2 ATR di bawah harga masuk. Berapa banyak saham?"
+  options={[
+    "20 saham",
+    "266 saham",
+    "80 saham",
+    "10 saham"
+  ]}
+  answer={3}
+  explanation="Jarak stop = 2 × $20 = $40 per saham. Bilangan saham = $400 ÷ $40 = 10. Pengiraan saiz posisi menggunakan stop 1 ATR berbanding 2 AAR yang ditetapkan akan menggandakan ia kepada 20. Nilai notional = $5,000 (12.5% daripada akaun). Risiko $400 yang sama pada nama volatiliti rendah seperti KO dengan ATR $0.75 akan membeli 266 saham — nilai notional yang sangat berbeza, tetapi risiko yang sama."
+/>
+
+<Quiz
+  question="Dua pedagang kedua-duanya mengambil risiko 1% per dagangan. Pedagang A menggunakan stop flat 5% pada setiap ticker. Pedagang B menggunakan 1.5× ATR. Selama 30 dagangan merentasi nama-nama dengan volatiliti bercampur (ada yang tinggi seperti TSLA, ada yang rendah seperti KO), mengapa Pedagang B biasanya berakhir dengan lengkung ekuiti yang lebih ketat?"
+  options={[
+    "Stop Pedagang B berskala mengikut julat normal setiap instrumen, jadi keluaran stop berlaku akibat pembatalan tesis yang sah berbanding hingar; stop flat Pedagang A terlalu ketat untuk nama-nama volatiliti tinggi (keluar kerana hingar) dan terlalu longgar untuk nama-nama volatiliti rendah (kerugian berlebihan apabila tesis benar-benar gagal).",
+    "Mereka menghasilkan lengkung ekuiti yang sama — 1% adalah 1%, kaedah stop tidak penting.",
+    "Stop yang lebih lebar Pedagang A pada nama-nama volatiliti rendah membolehkan pemenang berlari lebih lama, jadi Pedagang A mencecah compound lebih cepat.",
+    "ATR adalah penunjuk terundur, jadi stop Pedagang B sentiasa salah oleh reka bentuknya."
+  ]}
+  answer={0}
+  explanation="Jawapan salah yang menarik ialah 'risiko dolar sama, hasil sama'. Risiko dolar adalah sama per dagangan, tetapi kebarangkalian dan sebab untuk dikeluarkan dari pasaran adalah sangat berbeza. Stop flat menggabungkan dua kesilapan: keluaran stop yang dipacu hingar pada nama-nama volatiliti tinggi (kerugian dipaksa di mana tesis sebenarnya baik) dan kerugian berlebihan pada nama-nama senyap apabila tesis gagal (jurang 5% jauh melepasi pembatalan carta). Stop berasaskan ATR menormalisasikan kebarangkalian itu merentasi instrumen. Perangkap 'penunjuk terundur' ialah salah tafsir — ATR sebagai purata 14-hari adalah ciri, bukan kelemahan, kerana ia menapis lonjakan satu hari."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Trader, pilih mana-mana dua ticker dari senarai tontonan anda dengan volatiliti sangat berbeza (contohnya, TSLA dan JPM), dan tanya "Apakah ATR 14-hari untuk setiap satu, dan bagaimanakah jarak henti 1.5 ATR kelihatan pada harga semasa?" Kemudian jalankan pengiraan saiz posisi pada risiko akaun 1% untuk kedua-duanya — perhatikan betapa berbeza bilangan saham dan notionalnya.
+
+## Pengajaran
+
+Risiko adalah pemalar; jarak henti adalah pemboleh ubah — biarkan volatiliti, bukan peratusan bulat, menentukan kedudukan henti.

@@ -1,0 +1,74 @@
+---
+id: "137_bollinger_squeeze_and_breakout"
+title: "Pengecutan dan pecahan Bollinger"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 37"
+topic: "bollinger_squeeze"
+prerequisites: ["136_bollinger_bands_basics", "024_breakouts"]
+tags: ["indicators", "bollinger_bands", "squeeze", "volatility", "breakout"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Squeeze dan pecah keluar Bollinger
+
+<Lesson id="136_bollinger_bands_basics"/> membentangkan jalur sebagaiEnvelope 2-sigma di sekitar SMA 20-periode. Apabila envelope menyempit ke paras terendah berbilang bulan — jalur merangkul garis tengah — volatiliti telah mampat. Mampatan inilah yang dipanggil "squeeze". Pasaran berkitar antara konsolidasi volatiliti rendah dan pengembangan volatiliti tinggi; squeeze menandakan akhir satu fasa dan memberi isyarat fasa seterusnya akan datang. Penting, squeeze memberitahu anda *bahawa* pengembangan sedang menghampiri tetapi bukan arahannya. Pecah keluar dari squeeze ialah isyarat arah — dan ia mempunyai falsifikasi yang tertanam di dalamnya.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat NVDA sehingga Januari 2026. Dari 8 Januari hingga 28 Januari, lebar Jalur Bollinger harian (atas tolak bawah) mampat dari $14 ke $4.20 — penurunan 70% selama lima belas sesi. Harga berosilasi dalam julat sempit antara 132 dan 138. Jalur kelihatan merangkul SMA20 sekitar 135. Isipadu purata 0.7× purata 60-hari — penyertaan mengering seiring dengan volatiliti.
+
+Pada 29 Januari, NVDA ditutup pada 141.20, pecah keluar dengan tegas di atas jalur atas pada isipadu 1.9× purata 20-hari. Jalur itu sendiri segera mula berkembang apabila penutupan baharu menyimpang piawai. Selama sebelas sesi seterusnya, NVDA naik ke 158 — pergerakan 12% dari penutupan pecah keluar, didorong oleh pengembangan volatiliti yang disediakan oleh squeeze.
+
+Falsifikasi: pecah keluar squeeze memerlukan (1) pecahan dan penutupan yang jelas di luar jalur, (2) mengesahkan isipadu sekurang-kurangnya 1.5× purata 20-hari pada bar pecah, dan (3) tindak lanjut — penutupan kedua dalam arah pecah keluar dalam tiga sesi. Jika harga menutup kembali di dalam jalur dalam tiga sesi itu, pecah keluar telah gagal dan squeeze masih berkuat kuasa. NVDA memenuhi ketiga-tiga syarat; banyak setup tidak.
+
+Contoh lawan: AMD pada pertengahan Oktober 2025 mempunyai squeeze serupa (lebar jalur mampat 65%). Candle pecah keluar pada 16 Oktober menutup di atas jalur atas tetapi pada isipadu hanya 0.9× purata. Dua sesi kemudian, AMD menutup kembali di bawah jalur atas. Pecah keluar squeeze gagal; pedagang yang masuk pada pecahan awal dan mengabaikan penapis isipadu menanggung kerugian kecil.
+
+Di Bursa Malaysia: TENAGA pada akhir Ogos 2025 squeeze selama 19 sesi sebelum pecah di atas jalur atasnya pada isipadu 1.7×; pergerakan itu mencapai 6% dalam empat minggu. Corak yang sama di bursa yang sama.
+
+## Perangkap
+
+Pemula memperdagangkan squeeze itu sendiri, bukan pecah keluar. Mereka melihat mampatan dan cuba meramal ke mana pengembangan akan pergi, sering bertaruh pada sisi yang carta telah condong. Itu adalah wilayah lempangan syiling; squeeze diselesaikan naik atau turun tanpa kecondongan semula jadi. Membeli di dalam squeeze bermakna anda menebak arah dan menerima bahawa anda akan salah kira-kira separuh masa — untuk kedudukan yang masa masuknya juga tidak diketahui.
+
+Model mental yang betul: squeeze ialah persediaan, bukan isyarat. Tunggu pecah arah dengan isipadu pengesahan. Kos menunggu ialah melepaskan bahagian pertama pergerakan; faedahnya ialah mengelakkan 50% squeeze yang diselesaikan bertentangan dengan anda. Kesabaran ditambah pencetus masuk yang ditakrifkan mengalahkan ramalan ditambah harapan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Lebar jalur Bollinger NVDA telah mampat 70% selama lima belas sesi dan harga kini mendatar antara 132 dan 138. Carta telah meningkat perlahan selama dua minggu sebelum mampatan. Apa kata kerangka kerja mengenai mengambil kedudukan panjang sekarang, sebelum sebarang pecahan?"
+  options={[
+    "Ya — mampatan sentiasa pecah ke arah trend sebelumnya",
+    "Pendek saham — mampatan sentiasa pecah ke arah bertentangan",
+    "Ya — kenaikan perlahan sebelum mampatan memberitahu anda pecahan akan naik",
+    "Tidak — mampatan memberitahu anda pengembangan akan berlaku tetapi bukan arah; kedudukan awal adalah teka-teki 50/50. Tunggu penutupan di luar jalur dengan isyarat isipadu yang mengesahkan."
+  ]}
+  answer={3}
+  explanation="Mampatan adalah neutral arah. Jawapan salah yang menarik ('kenaikan awal meramalkan pecahan naik') ialah kesilapan bias sambungan — secara sejarah, arah sebelum mampatan adalah lemparan syiling untuk menyelesaikan mampatan. Kedudukan awal bertaruh pada masa DAN arah tanpa pengesahan. Kemasukan yang ditakrifkan ialah penutupan di luar jalur dengan isipadu; itulah isyarat yang boleh difalsifikasikan."
+/>
+
+<Quiz
+  question="Sebuah saham telah mampat selama tiga minggu. Hari ini ia menutup di atas jalur atas, tetapi isipadu pada bar pecahan ialah 0.9× purata 20 hari. Sesi seterusnya menutup kembali di dalam jalur. Di bawah peraturan tiga syarat untuk pecahan yang sah, apa yang berlaku?"
+  options={[
+    "Pecahan sah kerana harga menutup di atas jalur — isipadu tidak penting",
+    "Tambah kedudukan panjang kerana penurunan adalah peluang membeli",
+    "Pecahan sah yang memerlukan lebih masa untuk berkembang — tahan kedudukan panjang",
+    "Pecahan gagal: isipadu di bawah ambang 1.5× DAN harga menutup kembali di dalam dalam tiga sesi; dua daripada tiga syarat pengesahan gagal. Mampatan masih berkuat kuasa; keluarkan kedudukan panjang."
+  ]}
+  answer={3}
+  explanation="Tiga syarat pelajaran: tutup di luar jalur, isipadu 1.5×+, dan tindak lanjut dalam tiga sesi. Kegagalan AMD pada pertengahan Oktober dalam pelajaran sepadan dengan corak tepat ini — pecahan pada isipadu lemah, mundur kembali ke dalam, kerugian kecil. Jawapan salah yang menarik ('tahan, perlukan lebih masa') ialah perangkap kos terbuang; peraturan adalah mekanikal dan ia gagal. Menambah (pilihan D) menggandakan tesis yang tidak sah."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker yang menunjukkan julat ketat dan tanya: "Hitung lebar Bollinger sebagai peratusan harga untuk 60 sesi terakhir — adakah lebar semasa dalam 20% terendah julat itu?" Jika ya, anda mempunyai calon squeeze. Tetapkan amaran untuk penutupan di luar sama ada jalur dengan isipadu 1.5×+ daripada masuk di dalam konsolidasi.
+
+## Pengambilan
+
+Squeeze Bollinger memberi amaran pengembangan akan datang; pecah keluar — dengan keluar jalur, isipadu 1.5×, dan tindak lanjut — ialah isyarat arah. Kedudukan awal squeeze ialah tekaan; memperdagangkan pecah yang disahkan ialah proses.

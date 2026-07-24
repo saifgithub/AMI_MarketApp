@@ -1,0 +1,74 @@
+---
+id: "168_ev_ebitda_vs_pe_when_to_use_which"
+title: "EV/EBITDA berbanding P/E: bila untuk menggunakan yang mana"
+duration_min: 5
+level: 3
+module: 6
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 34"
+topic: "valuation"
+prerequisites: ["037_valuation_what_is_a_stock_worth", "039_the_pe_ratio", "034_debt_and_the_balance_sheet", "152_interest_coverage_can_the_company_make_payroll_after_paying_interest"]
+tags: ["valuation", "multiples", "ev_ebitda", "pe_ratio", "capital_structure", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# EV/EBITDA berbanding P/E: bila guna yang mana
+
+<Lesson id="037_valuation_what_is_a_stock_worth"/> memperkenalkan penilaian berasaskan pendarab; <Lesson id="039_the_pe_ratio"/> meneliti P/E. P/E ialah pendarab yang paling kerap dirujuk, namun ia juga paling mudah terdistorsi, kerana ia membandingkan harga kepada pendapatan *selepas* faedah dan cukai — bermakna dua syarikat dengan operasi identik tetapi beban hutang atau yurisdiksi cukai berbeza akan kelihatan sangat berbeza pada P/E walaupun perniagaan teras mereka hampir sama. EV/EBITDA menyelesaikan kedua-dua masalah ini dengan menilai keseluruhan entiti (ekuiti + hutang − tunai) terhadap aliran tunai sebelum faedah dan sebelum cukai. Pada akhir pelajaran ini, anda harus tahu pendarab mana yang perlu digunakan dalam situasi tertentu, serta corak struktur khusus yang menyebabkan P/E menipu secara sistematik.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Bandingkan AT&T (T) dan Verizon (VZ) pada 2024. Kedua-duanya adalah pemain utama telekomunikasi dengan profil operasi yang serupa. T diperdagangkan pada kira-kira 8x P/E terdahulu; VZ pada kira-kira 10x. Perbezaan utama mencadangkan T adalah "lebih murah." Namun, T menanggung hutang yang lebih tinggi dan kedudukan cukai yang berbeza. Pada EV/EBITDA, gambaran berubah: T pada ~6.5x, VZ pada ~6.5x. Hampir identikal. Jurang P/E itu adalah artifak struktur modal, bukan nilai operasi — tepat situasi yang EV/EBITDA wujud untuk diselesaikan.
+
+Sekarang bandingkan TSLA pada ~80x P/E dengan F (Ford) pada ~7x P/E pada 2024. Jurang nisbah P/E ialah 11x. Pada EV/EBITDA: TSLA pada ~50x, F pada ~12x. Jurang itu mengecil tetapi TSLA masih jauh lebih mahal — kerana jurang itu adalah ekonomi operasi yang tulen (TSLA berkembang lebih pantas, mempunyai margin operasi lebih tinggi), bukan sekadar struktur modal. EV/EBITDA tidak menjadikan TSLA "murah"; ia menyingkirkan hingar struktur modal dan menunjukkan jurang operasi dengan jelas.
+
+Di mana P/E gagal secara tulen: bank, REIT, syarikat insurans, dan perniagaan intensif modal dengan dasar penyusutan yang sangat berbeza. Untuk bank, P/B ialah pendarab dominan (<Lesson id="040_price_to_book"/>). Untuk REIT, harga-kepada-FFO menggantikan P/E. Untuk industri berat modal dengan jadual penyusutan yang berbeza luas, EV/EBITDA menceritakan kisah yang lebih bersih daripada P/E kerana pilihan penyusutan (garis lurus vs dipercepat, andaian hayat guna) memberi kesan besar kepada pendapatan yang dilaporkan.
+
+Di mana EV/EBITDA gagal secara tulen: syarikat dengan keperluan modal kerja tinggi atau pampasan berasaskan saham yang berat. EBITDA mengabaikan kedua-duanya, itulah sebabnya syarikat perisian dengan 15–20% pendapatan yang diberikan kepada SBC boleh kelihatan murah secara menipu pada EV/EBITDA (<Lesson id="174_stock_based_compensation_the_hidden_dilution"/> menyelidiki lebih mendalam). Pendarab yang jujur untuk kes itu ialah EV/EBITDA tolak SBC.
+
+Di Bursa Malaysia: membandingkan PETRONAS Chemicals dengan rakan sejawatan petrokimia yang lebih kecil pada P/E boleh menipu jika satu menanggung pengagihan hutang syarikat induk yang berbeza dan yang lain tidak. EV/EBITDA menetralkan perkara itu.
+
+Pernyataan yang boleh disangkal: apabila dua syarikat yang serupa secara operasi menunjukkan jurang P/E lebih daripada 30% DAN jurang EV/EBITDA kurang daripada 10%, jurang P/E itu didorong oleh struktur modal atau cukai, bukan ekonomi operasi, dan menganggapnya sebagai isyarat "keniscayaan" adalah kesilapan.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan P/E untuk membandingkan merentas struktur modal atau merentas negara. Pemula melihat syarikat AS pada 18x P/E dan rakan sejawatan Eropah pada 12x dan menyimpulkan saham Eropah itu murah — tanpa memeriksa bahawa syarikat Eropah itu mempunyai 60% lebih banyak hutang dan membayar kadar cukai berkesan yang lebih rendah sebanyak 6 mata, kedua-duanya meningkatkan EPS atas sebab yang tidak ada kaitan dengan kualiti operasi. Model mental yang betul: P/E ialah pendarab yang tepat untuk perbandingan apples-to-apples di antara syarikat dengan leverage serupa dan pendedahan cukai yang serupa. Pada saat variasi itu berlaku secara material, tukar kepada EV/EBITDA (atau EV/EBIT untuk syarikat di mana penyusutan berbeza secara bermakna daripada capex sebenar). Sentiasa semak silang P/E dengan sekurang-kurangnya satu pendarab berasaskan EV sebelum menyatakan sesuatu itu murah atau mahal merentas syarikat.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat A: P/E 9, nisbah hutang-ke-ekuiti 1.8, kadar cukai berkesan 14%. Syarikat B: P/E 13, nisbah hutang-ke-ekuiti 0.4, kadar cukai berkesan 24%. Kedua-duanya beroperasi dalam industri sama dengan pertumbuhan pendapatan serupa. EV/EBITDA: A ialah 7.5x, B ialah 7.3x. Bacaan mana yang paling tepat menerapkan pelajaran ini?"
+  options={[
+    "Syarikat A lebih murah — P/E-nya lebih rendah sebanyak 30%+",
+    "Syarikat B lebih murah kerana ia lebih selamat dengan hutang yang lebih rendah",
+    "Tidak dapat ditentukan tanpa kadar pertumbuhan",
+    "Kedua-dua syarikat pada asasnya dinilai sama dari segi ekonomi operasi. Jurang P/E didorong oleh leverage yang lebih tinggi pada Syarikat A (meningkatkan pulangan ke atas ekuiti tetapi menambah risiko) dan kadar cukai berkesan yang lebih rendah (meningkatkan EPS atas sebab-sebab yurisdiksi cukai yang mungkin tidak mampan). EV/EBITDA menyingkirkan kedua-dua herotan ini dan menunjukkan perbandingan yang lebih bersih. Tesis 'A adalah 30% lebih murah' adalah ilusi struktur modal"
+  ]}
+  answer={3}
+  explanation="Sintesisnya ialah perbezaan P/E yang didorong oleh leverage dan kadar cukai bukan perbezaan kualiti operasi. EV/EBITDA pada 7.5x berbanding 7.3x menunjukkan ekonomi operasi adalah hampir sama. Jawapan salah yang paling menipu ialah yang mendakwa A lebih murah berdasarkan P/E — jurang tajuk adalah tepat jenis nombor yang digunakan oleh analis yang kurang teliti untuk memanggil sesuatu sebagai 'murah'. Mendakwa B lebih murah kerana ia menanggung hutang yang lebih rendah mengelirukan keselamatan dengan harga murah. Jawapan tidak dapat ditentukan tanpa kadar pertumbuhan terlalu berhati-hati — pendarab itu sendiri menyelesaikan soalan tersebut."
+/>
+
+<Quiz
+  question="Syarikat industri yang intensif modal mempunyai susut nilai sebanyak $4B setahun ke atas modal perbelanjaan (capex) sebanyak $4.5B. P/E-nya ialah 14x. EV/EBITDA ialah 8x. Arus tunai bebas adalah kira-kira sama dengan pendapatan bersih. Bacaan mana yang terbaik menerapkan pelajaran ini?"
+  options={[
+    "Tidak dapat ditentukan tanpa pertumbuhan",
+    "P/E pada 14x adalah salah kerana ia termasuk susut nilai",
+    "EV/EBITDA pada 8x adalah jawapan yang betul — sentiasa percayai EV/EBITDA berbanding P/E",
+    "EV/EBITDA meremehkan kos menjalankan perniagaan — capex sebenar hampir sama dengan D&A, maka EBITDA melebih-lebihkan penjanaan tunai sebenar. Untuk syarikat ini, P/E (atau EV/EBIT, atau EV/FCF) lebih dekat dengan realiti berbanding EV/EBITDA. Perangkap EV/EBITDA ialah ia mengabaikan capex; apabila capex adalah kira-kira sama dengan D&A, jumlah yang diabaikan itu adalah wang sebenar yang keluar setiap tahun"
+  ]}
+  answer={3}
+  explanation="Sintesisnya ialah titik buta EV/EBITDA ialah capex, dan untuk perniagaan intensif modal di mana capex hampir sama dengan D&A, mengabaikan susut nilai melebih-lebihkan pendapatan ekonomi. Nuansa pelajaran ini ialah tiada pendarab tunggal yang betul secara universal — padankan pendarab dengan struktur modal DAN intensif modal. Jawapan salah yang paling menipu ialah sentiasa percayai EV/EBITDA, kerana pelajaran ini mempromosikannya dalam banyak situasi — tetapi pelajaran ini juga secara eksplisit menyatakan EV/EBITDA gagal apabila capex sepadan dengan D/A. Tesis bahawa P/E adalah salah untuk termasuk susut nilai salah faham susut nilai sebagai 'bukan kos'. Jawapan tidak dapat ditentukan tanpa pertumbuhan mengelak dengan pertumbuhan sebagai gangguan."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, pilih dua syarikat dalam industri yang sama dan tanya: "Tunjukkan P/E dan EV/EBITDA bersebelahan, dengan nisbah hutang-kepada-ekuiti dan kadar cukai berkesan untuk setiap satu." Dalam <Term id="ami_decision_journal" />, tulis satu ayat: "Pada P/E, A kelihatan [lebih murah/lebih mahal] sebanyak X%. Pada EV/EBITDA, jurang itu ialah Y%. Perbezaan X−Y ialah hingar struktur modal yang akan saya salah anggap sebagai isyarat operasi." Latihan ini mengkalibrasi mata anda untuk pendarab mana yang perlu digunakan secara lalai dalam situasi tertentu.
+
+## Penafian
+
+P/E ialah pendarab yang paling mudah dirujuk dan paling mudah disalah baca — apabila leverage atau yurisdiksi cukai berbeza, EV/EBITDA ialah bacaan pertama yang lebih bersih, dan apabila capex sepadan dengan penyusutan, tiada satu pun yang cukup secara bersendirian.

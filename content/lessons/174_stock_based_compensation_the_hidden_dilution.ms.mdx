@@ -1,0 +1,79 @@
+---
+id: "174_stock_based_compensation_the_hidden_dilution"
+title: "Pampasan berasaskan saham: pencairan tersembunyi"
+duration_min: 6
+level: 3
+module: 6
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 40"
+topic: "earnings_quality"
+prerequisites: ["035_cash_flow_vs_earnings", "153_free_cash_flow_the_only_cash_that_belongs_to_you", "168_ev_ebitda_vs_pe_when_to_use_which"]
+tags: ["earnings_quality", "sbc", "stock_based_compensation", "dilution", "non_gaap", "fundamentals"]
+agent_callouts: ["bear_researcher", "fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pampasan berasaskan saham: pencairan tersembunyi
+
+Pampasan berasaskan saham (SBC) merupakan salah satu kos sebenar terbesar yang dilaporkan oleh banyak syarikat perisian, internet, dan bioteknologi — dan salah satu yang paling diabaikan. Syarikat sering melaporkan pendapatan atau aliran tunai bebas ("adjusted") yang telah "dilaraskan" dengan mengecualikan SBC, dengan alasan bahawa "ia bukan kos tunai." Alasan ini benar dari segi teknikal tetapi mengelirukan dari segi ekonomi. SBC mencairkan pemegang saham sedia ada; sama ada syarikat membeli balik saham untuk menampung pencairan tersebut (dalam hal ini, kosnya ialah tunai yang dibelanjakan untuk pembelian balik, yang sangat nyata) atau ia tidak melakukannya (dalam hal ini, pemegang saham sedia ada memiliki bahagian yang lebih kecil dalam syarikat dari semasa ke semasa). Pada akhir pelajaran ini, anda perlu mengetahui cara mengubah metrik yang dilaporkan menjadi metrik yang jujur mengenai SBC, serta ambang khusus nisbah SBC-ke-pendapatan yang dapat mengubah nilai utama secara ketara.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Ambil SNOW (Snowflake) dalam tahun kewangan 2024. SNOW melaporkan margin aliran tunai bebas ("adjusted") sekitar 27% dengan pendapatan $2.8B, yang mencadangkan FCF ~$760M. SBC untuk tahun tersebut adalah kira-kira $1.1B — bermakna SBC sahaja melebihi FCF yang dilaporkan. Pada asas GAAP (SBC termasuk sebagai kos sebenar), SNOW mempunyai pendapatan operasi negatif.
+
+Dua cara untuk membacanya:
+
+1. Bacaan yang optimis: SBC adalah geran sekali sahaja yang mengekalkan jurutera utama; anggap ia sudah dibelanjakan dan lihat metrik "dilaraskan" untuk ekonomi perulangan perniagaan.
+2. Bacaan yang jujur: SBC yang dikeluarkan setiap tahun meningkatkan bilangan saham, yang mencairkan setiap pemegang sedia ada. Jika SNOW mengeluarkan 5% saham sebagai SBC secara tahunan dan tidak membeli balik apa-apa, pelabur yang memiliki 1% hari ini akan memiliki ~0.95% tahun depan, ~0.90% tahun berikutnya — walaupun syarikat tidak melakukan apa-apa lagi.
+
+Untuk menukarnya: tolak SBC daripada FCF "dilaraskan" atau gunakan EPS terdilusi yang memasukkan kesan geran saham. Margin aliran tunai bebas yang jujur mengenai SBC bagi SNOW untuk tahun kewangan 2024 adalah lebih dekat dengan -12% berbanding +27%. Itu adalah jurang 39 mata. "Nisbah adil" yang digunakan terhadap kedua-dua nombor menghasilkan anggaran nilai adil yang lebih daripada 2x perbezaannya.
+
+Bandingkan dengan MSFT. SBC MSFT untuk tahun kewangan 2024 adalah kira-kira $11B terhadap $74B dalam aliran tunai bebas. SBC sebagai peratusan FCF: ~15%. MSFT juga membeli balik lebih $25B dalam saham setiap tahun, lebih daripada menampung pencairan tersebut. Isu SBC adalah nyata tetapi diserap oleh program pembelian balik — pencairan bersih adalah sifar atau negatif, dan gambaran "dilaraskan" dan "jujur" menyatu.
+
+Ambang itu penting. Apabila SBC berada di bawah 5% daripada pendapatan, herotan kepada metrik utama adalah sederhana. Apabila SBC mencapai 15–20%+ daripada pendapatan (biasa dalam SaaS peringkat awal dan bioteknologi klinikal peringkat awal), mengecualikan SBC daripada metrik "dilaraskan" mengelirukan dalam magnitud yang sangat besar. META pada ~10% daripada pendapatan berada di antara — material tetapi diserap oleh pembelian balik.
+
+Di Bursa Malaysia: SBC jauh kurang biasa pada skala di Bursa berbanding dalam teknologi AS, tetapi sejumlah kecil senarai baharu teknologi telah mula menggunakannya, dan pelarasan yang sama terpakai.
+
+Pernyataan yang boleh disangkal: sebarang metrik "dilaraskan" (EPS dilaraskan, EBITDA dilaraskan, FCF dilaraskan) yang mengecualikan SBC akan melebih-lebihkan ekonomi syarikat jika SBC adalah lebih daripada 5% daripada pendapatan. Semakan silang yang jujur ialah mengira metrik GAAP yang setara, atau menolak SBC daripada angka dilaraskan dan menerbitkan semula nisbah tersebut.
+
+## Perangkap
+
+Perangkapnya ialah menerima metrik "dilaraskan" pada nilai wajahnya kerana ia ialah angka yang ditekankan oleh pengurusan dan termasuk oleh penganalisis dalam anggaran konsensus. Pemula melihat margin EBITDA "dilaraskan" syarikat perisian sebanyak 30% dan menggunakan nisbah 20x, memperoleh anggaran nilai adil yang mengabaikan lebih 15 mata SBC yang memakan hak pemegang saham setiap tahun. Model mental yang betul: sentiasa kira metrik tersebut dengan kedua-dua cara. Jika "EBITDA dilaraskan tolak SBC" adalah jauh lebih rendah daripada "EBITDA dilaraskan" yang dilaporkan, perbezaannya ialah jurang ekonomi sebenar yang disembunyikan oleh tajuk utama. Versi kedua perangkap: mengandaikan pembelian balik menampung SBC berdasarkan nama tanpa menyemak angka. Program pembelian balik $1B tidak menampung SBC $2B — ia meninggalkan pencairan bersih $1B. Sentiasa netkan SBC terhadap belanja pembelian balik sebenar, bukan kebenaran pembelian balik yang diumumkan.
+
+<ChatWith agent="bear_researcher" />
+
+## Kuiz
+
+<Quiz
+  question="Syarikat T melaporkan margin operasi laras 28%, hasil sebanyak $4B, dan SBC sebanyak $720M. Kesimpulan manakah paling tepat mengaplikasikan pelajaran ini?"
+  options={[
+    "SBC ialah $720M / $4B = 18% daripada hasil. Margin operasi 'laras' 28% tidak termasuk SBC; pada asas yang jujur mengenai SBC, margin operasi lebih dekat kepada 10% (28% - 18%). Nilaian yang menggunakan margin 28% pada muka surat mengesankan ekonomi perniagaan hampir 3x gandaan. Postur yang betul ialah menggunakan margin laras-SBC untuk penilaian, ATAU menolak nilai kini SBC yang dijangkakan selama 5+ tahun akan datang daripada nilai ekuiti sebagai caj pencairan",
+    "Tidak dapat ditentukan — perlu lihat pembelian semula",
+    "Margin operasi 28% tetapi dengan beberapa pelarasan",
+    "Margin operasi 28% — perisian sihat"
+  ]}
+  answer={0}
+  explanation="Sintesisnya ialah SBC pada 18% daripada hasil jauh melebihi ambang 5% dan merosakkan metrik muka surat secara ketara. Margin 28% pada muka surat secara teknikal dilaporkan tetapi secara ekonomi bukan apa yang ditawan oleh pemegang saham. Jawapan salah yang paling menggoda ialah bacaan margin 28% yang sihat, kerana ia menerima nombor yang dipresentasikan oleh pengurusan; pelajaran ini secara eksplisit menyatakan bahawa metrik yang tidak termasuk SBC mengesankan ekonomi. Jawapan 28%-dengan-beberapa-pelarasan bersangka tanpa melakukan pengiraan. Jawapan perlu-lihat-pembelian-semula adalah separa betul — pembelian semula penting, tetapi walaupun pembelian semula yang sepenuhnya mengimbangi tidak menjadikan margin 28% boleh dibandingkan dengan margin 28% dalam syarikat SBC rendah, kerana wang tunai yang dibelanjakan untuk pembelian semula yang mengimbangi adalah kos peluang sebenar."
+/>
+
+<Quiz
+  question="Syarikat mempunyai SBC sebanyak $2B setahun dan program pembelian semula yang telah membeli kembali $2.2B dalam saham selama 12 bulan lalu. Bilangan saham telah berkurang sebanyak 1.5%. Bacaan manakah paling tepat mengaplikasikan pelajaran ini?"
+  options={[
+    "Bilangan saham bersih ialah ujian yang paling berguna, dan pada -1.5% pembelian semula sedang menjalankan tugasnya — tetapi $2.2B yang dibelanjakan untuk pembelian semula adalah kos peluang sebenar yang tidak tersedia untuk dividen, M&A, atau pengurangan hutang. Soalan penilaian yang jujur ialah: bagaimana FCF syarikat jika ia tidak mempunyai SBC dan tidak memerlukan pembelian semula yang mengimbangi? Kemungkinan FCF akan meningkat $2B (jumlah SBC), dan penggunaan alternatif $2B ini akan mencipta nilai pemegang saham sebenar. 'FCF laras' terlalu murah hati; FCF ekonomi sebenar berada di antara laras dan laras-kurang-SBC",
+    "Pencairan bersih -1.5% bermaksud pemegang saham mendapat pemilikan — beli",
+    "Tidak dapat ditentukan — pembelian semula adalah rawak",
+    "Pencairan bersih adalah negatif — pembelian semula lebih daripada mengimbangi SBC. Tiada pelarasan diperlukan"
+  ]}
+  answer={0}
+  explanation="Sintesisnya ialah SBC yang diimbangi oleh pembelian semula kelihatan percuma pada tahap bilangan saham tetapi tidak — wang tunai yang dibelanjakan untuk pembelian semula adalah kos peluang. Syarikat tanpa kebiasaan SBC boleh membelanjakan $2.2B itu untuk pertumbuhan, pembayaran balik hutang, atau mengembalikannya sebagai dividen. Nuansa pelajaran: pencairan bersih ialah ujian tunggal yang paling bersih, tetapi kos wang tunai teras masih nyata. Jawapan tiada-pelarasan-perlukan berhenti terlalu awal. Jawapan pembelian-semula-rawak menolak terlalu banyak. Membaca pencairan bersih -1.5% sebagai isyarat beli mengelirukan bilangan saham dengan ekonomi pemegang saham."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> bersama Penganalisis Asas, pilih saham perisian atau bioteknologi yang anda ikuti dan tanya: "Tunjukkan SBC sebagai peratusan pendapatan untuk 5 tahun terakhir, bersama pembelian balik sebenar yang dilaksanakan (bukan yang dikhaskan). Berapakah kadar pencairan bersih?" Dalam <Term id="ami_decision_journal" />, tulis satu ayat: "SBC ialah X% daripada pendapatan, pembelian balik menampung Y%, pencairan bersih ialah Z% — margin operasi yang jujur mengenai SBC adalah kira-kira W%." Bandingkan W dengan margin operasi tajuk utama dan gunakan nombor jujur tersebut dalam sebarang penilaian berasaskan nisbah.
+
+## Penutup
+
+SBC ialah wang sebenar — dikeluarkan sebagai saham berbanding tunai, ia mencairkan anda atau memaksa pembelian balik yang membelanjakan tunai. Sentiasa semak silang metrik "dilaraskan" terhadap versi yang jujur mengenai SBC, terutamanya apabila SBC melebihi 5% daripada pendapatan.

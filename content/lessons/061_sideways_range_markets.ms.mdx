@@ -1,0 +1,70 @@
+---
+id: "061_sideways_range_markets"
+title: "Pasaran mendatar / pasaran julat"
+duration_min: 5
+level: 6
+module: 10
+difficulty: 3
+track: "news_macro"
+code: "N&M 3"
+topic: "range_regime"
+prerequisites: ["023_support_and_resistance", "026_moving_averages", "050_boredom_trading"]
+tags: ["regime", "range", "sideways", "consolidation"]
+agent_callouts: ["neutral_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pasaran mendatar / rambang
+
+Rejim mendatar adalah rejim yang paling banyak menyebabkan peniaga rugi. Harga berayun dalam satu jalur; SMA 200 hari mendatar; strategi trend mengalami 'whipsaw'; penembusan gagal; pullback tidak mencapai purata bergerak kerana tiada purata bergerak untuk dicapai. Selepas pelajaran ini, anda akan dapat mengesan rejim rambang secara kuantitatif, menamakan dua strategi yang sesuai dengannya, menamakan strategi trend yang akan mengurangkan modal anda secara senyap di dalamnya, dan menyatakan keadaan yang mengesahkan pecahan rejim daripada rambang.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Separuh pertama 2023 pada SPX adalah kes rambang yang jelas. Selepas melantun dari 3,808 pada 13 Mac 2023, SPX berayun antara kira-kira 3,950 (sokongan) dan 4,200 (rintangan) selama kira-kira tiga bulan sehingga menembus 4,200 pada 1 Jun 2023. SMA 200 hari hampir mendatar sepanjang tetingkap itu — kecerunan kurang daripada 5 mata seminggu. ATR 20 hari berlegar sekitar 45 mata (≈1.1% daripada harga), turun daripada 75+ dalam bear 2022.
+
+Peraturan pengesanan untuk rejim rambang: Kecerunan SMA 200 hari SPX berada antara -0.05% dan +0.05% seminggu (secara asasnya mendatar) DAN harga telah menguji setiap dua aras mendatar sekurang-kurangnya dua kali dalam 40 hari dagangan terakhir DAN jurang antara aras-aras tersebut kurang daripada 8% daripada harga. Ketiga-tiganya benar untuk SPX pada Mac–Mei 2023.
+
+Rambang sektor yang lebih jelas: XLF (keuangan) diperdagangkan antara 31.50 dan 35.00 dari Oktober 2023 hingga awal Mac 2024, empat bulan berayun dengan 200 hari yang mendatar, sebelum menembus 35 pada penutupan 4 Mac 2024. Di Bursa Malaysia: KLCI berjangka antara 1,415 dan 1,495 untuk kebanyakan separuh pertama 2023 — hampir enam bulan 200 hari mendatar sebelum perubahan rejim pada akhir 2023.
+
+## Perangkap
+
+Perangkap pasaran rambang ialah menggunakan penunjuk mengikuti trend dalam pasaran rambang. Silang purata bergerak yang mencetak wang pada 2024 mencetak 6 isyarat palsu dalam 6 bulan apabila 200 hari mendatar. Setiap whipsaw adalah kecil (1–2%), tetapi enam daripadanya terkumpul menjadi penurunan 6–10% pada strategi yang "sepatutnya berfungsi". Peniaga, yang terikat pada ingunan rejim bull, menggandakan saiz pada isyarat seterusnya untuk "mengembalikannya" — dan whipsaw seterusnya mendarat lebih keras.
+
+Model yang betul: dalam rejim rambang, kelebihan adalah reverensi purata ke tengah jalur, bukan mengikuti penembusan. Anda mengurangkan ekstrem, mengambil sasaran kecil, dan menerima bahawa rejim berakhir dengan penembusan akhir — pada ketika itu buku panduan kembali kepada trend.
+
+<ChatWith agent="neutral_debator" />
+
+## Kuiz
+
+<Quiz
+  question="SPX 200-hari SMA telah mendatar selama 9 minggu. Harga telah menyentuh 4,000 sebanyak tiga kali dan 4,200 sebanyak tiga kali dalam 50 hari dagangan terakhir. Strategi penembusan dari Modul 9 baru menjana isyarat panjang pada 4,210. Apakah permainan yang sedar rejim?"
+  options={[
+    "Pendek pada 4,210 — setiap penembusan julat gagal.",
+    "Abaikan isyarat; julat tidak pernah menembus.",
+    "Ambil penembusan pada saiz penuh yang dibenarkan mandat — Modul 9 berkata dagangkan isyarat.",
+    "Ambil penembusan pada saiz berkurang (contohnya, separuh saiz yang dibenarkan mandat) dengan henti rugi ketat kembali ke dalam julat; sahkan penembusan rejim hanya pada penutupan mingguan di atas 4,200 dengan 20-hari SMA meningkat."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang menggoda ialah saiz penuh yang dibenarkan mandat — laksanakan penembusan seperti yang direka. Tetapi strategi Modul 9 mempunyai prasyarat rejim; isyarat penembusan dalam julat yang disahkan mempunyai kadar positif palsu yang lebih tinggi. Jawapan sintesis ialah mengambil perdagangan dengan saiz yang dikurangkan untuk ketidakpastian rejim dan membiarkan penutupan mingguan mengesahkan atau membatalkannya. Pendek pada 4,210 dengan pandangan setiap penembusan julat gagal juga salah — banyak julat diselesaikan dengan penembusan, anda hanya tidak tahu sebelumnya yang mana."
+/>
+
+<Quiz
+  question="Arketype strategi manakah paling selaras dengan rejim julat yang disahkan?"
+  options={[
+    "Pengesanan trend silang purata bergerak.",
+    "Pulangan purata: tolak hujung jalur dengan sasaran berhampiran titik tengah jalur.",
+    "Kejar momentum berdasarkan berita harian.",
+    "Beli dan tahan tanpa henti rugi."
+  ]}
+  answer={1}
+  explanation="Pulangan purata ialah strategi yang selaras dengan rejim: dalam julat, kelebihan ialah jalur kembali ke pusatnya. Silang MA akan bergetir kerana MA mendatar. Jawapan salah yang paling menggoda ialah pengesanan trend silang MA kerana ia berfungsi pada 2024 — tetapi ia berfungsi dalam rejim trending, bukan rejim julat. Strategi mesti sepadan dengan rejim."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Neutral Debator dan tampal: "Adakah SPX semasa dalam rejim rambang menguji tiga peraturan — 200 hari mendatar, dua aras mendatar diuji dua kali dalam 40 hari, jalur kurang daripada 8% lebar? Tunjukkan saya nombornya." Kemudian buka editor <Term id="ami_mandate" /> dan cuba kurangkan "stop_loss_pct" anda dari 8% kepada 4%. Rejim rambang memerlukan henti rugi yang lebih ketat kerana sasaran lebih kecil — rasakan matematiknya.
+
+## Pengambilan
+
+Dalam 200 hari mendatar, rambang dua sisi, kurangkan tepi dan Sasaran tengah; strategi trend yang berfungsi pada rejim lalu akan membuatkan anda mengalami whipsaw sehingga jalur pecah pada penutupan mingguan.

@@ -1,0 +1,79 @@
+---
+id: "185_roe_vs_roic"
+title: "ROE vs ROIC — mengapa ROIC lebih penting untuk perniagaan yang memerlukan modal besar"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 4
+track: "fundamentals_analysis"
+code: "FUND 51"
+topic: "return_on_equity"
+prerequisites: ["041_return_on_equity", "184_dupont_decomposition_deep"]
+tags: ["roe", "roic", "return_on_capital", "leverage", "capital_heavy", "fundamentals"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# ROE vs ROIC — mengapa ROIC lebih penting untuk perniagaan yang intensif modal
+
+<Lesson id="041_return_on_equity"/> menetapkan ROE sebagai "nombor tunggal paling dekat dengan kadar penggabungan modal pemegang saham oleh perniagaan ini." Pelajaran ini mempertajam tuntutan tersebut. ROE mengukur pulangan atas bahagian ekuiti dalam struktur modal; ROIC (return on invested capital) mengukur pulangan atas *seluruh* struktur modal — ekuiti ditambah hutang. Untuk perniagaan yang intensif modal, jurang antara kedua-dua nombor ini memberitahu anda sama ada ROE merupakan kecemerlangan operasi sebenar atau hingar kejuruteraan kewangan. Pada akhir pelajaran ini, anda harus mampu mengira ROIC, mengenal pasti perniagaan mana yang menuntutnya, dan menyebut keadaan yang boleh difalsifikasikan di mana ROE tinggi dengan ROIC rendah merupakan isyarat jual.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+ROIC = NOPAT (untung operasi bersih selepas cukai) / modal yang dilaburkan, di mana modal yang dilaburkan = ekuiti + hutang berfaedah − tunai. Intuisinya: berapa banyak untung operasi pra-pembiayaan yang dijana oleh setiap dolar modal total, sebelum pengurusan memutuskan cara membahagikannya antara pemiutang dan pemegang saham?
+
+**XOM (Exxon) pada tahap harga minyak sederhana**: ROE sekitar 16%, ROIC sekitar 12%. Jurang 4 mata ini mencerminkan pembiayaan hutang yang sederhana. Kedua-dua nombor berada di atas kos modal; perniagaan ini menghasilkan pulangan ekonomi sebenar tanpa mengira struktur modal.
+
+**F (Ford)**: ROE sering dilaporkan sekitar 12–15%, ROIC lebih dekat ke 4–6%. Jurang ini lebar kerana Ford menanggung hutang bahagian kewangan yang besar — berbilion-bilion dolar pinjaman kenderaan yang meningkatkan ROE melalui pendarab ekuiti tetapi tidak banyak mempengaruhi ROIC. Bacaan jujur mengenai "kualiti perniagaan" ialah ROIC 4–6%, berbanding kos modal 8–10%. Ford, dalam banyak tahun, telah menjadi perniagaan yang memusnahkan nilai pada tahap *operasi*, disokong oleh spread bahagian kewangan.
+
+**MSFT**: ROE ~36%, ROIC ~28%. Jurang yang sederhana (terutamanya kerana MSFT menanggung beberapa hutang dan tunai yang signifikan). Kedua-dua nombor jauh di atas kos modal — kecemerlangan operasi sebenar tanpa mengira bagaimana anda mengukur.
+
+**NFLX pada 2018–2020**: melaporkan ROE 25%+, ROIC kira-kira 8–10% — kerana Netflix membiayai kandungan dengan hutang yang melonakkan pulangan bahagian ekuiti. Jurang ini menandakan apa yang belum kelihatan dalam ROE utama: produktiviti modal teras adalah sederhana sehingga skala penstriman tiba.
+
+Tuntutan yang boleh difalsifikasikan: untuk perniagaan intensif modal (utiliti, telekomunikasi, automotif, penerbangan, penambang, minyak terintegrasi), ROIC ialah metrik pulangan yang menanggung beban — bukan ROE. ROE tinggi dengan ROIC rendah bermakna perbezaannya ialah leverage kewangan, bukan produktiviti operasi, dan pulangan jangka panjang kepada pemegang saham akan menghampiri ROIC sepanjang kitaran penuh. Di Bursa: TENAGA melaporkan ROE sekitar 7–9%; ROIC lebih dekat ke 5–6% pada neraca utiliti yang sangat berleverage. Jurang yang sempit dan tahap mutlak (hampir dengan kos modal) menjelaskan mengapa utiliti diperdagangkan pada pendarab yang sederhana — produktiviti modal teras adalah secara reka bentuk hanya di atas kos.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan ROE secara sahaja untuk perniagaan intensif modal dan menyimpulkan "ROE baik = perniagaan baik." Pengeluar OEM automotif, telekomunikasi, penerbangan, industri intensif modal — setiap satu boleh melaporkan ROE 15–20% pada operasi yang memperoleh ROIC 4–8%, hanya dengan menimbun hutang berfaedah terhadap ekuiti. ROE 15% menggabungkan modal pemegang saham *hanya selama leverage itu kekal*; pada saat kejutan kredit berlaku atau terma pembiayaan semula menjadi ketat, ROE runtuh lebih cepat daripada yang pernah dicadangkan oleh nombor utama. Model mental yang betul: untuk sebarang perniagaan dengan nisbah hutang-ke-ekuiti di atas 1.0x, kira ROIC bersama ROE. Jika ROIC berada pada atau di bawah kos modal manakala ROE tinggi, perniagaan tersebut sedang mencipta nilai untuk *pemiutang dan pengurusan*, bukan untuk pemegang saham. Apa yang membatalkan isyarat ini: syarikat kewangan (bank, insurans) adalah istimewa — pembiayaan yang menyerupai hutang (deposito, premium) ialah bahan mentah perniagaan, bukan kejuruteraan neraca, dan ROIC seperti yang biasa ditakrifkan tidak terpakai. Untuk bank, gunakan ROE dengan kos ekuiti (<Lesson id="181_pb_for_banks_regulatory_book"/>) sebagai gantinya.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah OEM automobil melaporkan ROE = 16% dan ROIC = 5%. Kos modal dianggarkan pada 8%. Nisbah hutang-ke-ekuiti syarikat ialah 2.5x. Pengurusan memuji ROE 16% sebagai bukti 'pengagihan modal bertaraf dunia'. Bacaan manakah yang paling tepat?"
+  options={[
+    "ROIC pada 5% berada di bawah kos modal 8% — perniagaan operasi teras sedang memusnahkan nilai, bukan menciptanya. ROE 16% didorong oleh leverage: nisbah hutang-ke-ekuiti 2.5x mengubah perniagaan yang sub-kos-modal menjadi satu yang *kelihatan* menguntungkan kepada pemegang saham, tetapi pulangan baharu ini diimbangi dengan kerentanan baharu. Dalam kitaran penuh, pulangan pemegang saham akan menyamai ROIC. Bingkai 'pengagihan modal bertaraf dunia' membalikkan kebenaran — ia adalah kejuruteraan kewangan, bukan keunggulan operasi",
+    "ROIC tidak penting kerana ROE menangkap semua aspek",
+    "OEM tersebut harus mengeluarkan lebih banyak hutang untuk menaikkan ROE lagi",
+    "ROE 16% adalah cemerlang — beli saham"
+  ]}
+  answer={0}
+  explanation="Sintesis: ROIC ialah bacaan kualiti operasi; ROE merangkumi struktur pembiayaan. Jawapan salah yang menggoda ialah 'ROE 16% adalah cemerlang — beli' — refleks hanya berdasarkan tajuk. Jawapan 'ROE menangkap semua aspek' meruntuhkan dua metrik berbeza kepada satu. Jawapan 'keluarkan lebih banyak hutang' ialah cadangan yang secara aktif memusnahkan — menambah leverage kepada perniagaan sub-kos-modal tidak mencipta nilai, ia mempercepatkan pemusnahan. Sintesisnya ialah mengiktiraf bahawa ROIC < kos modal ialah falsifikasi yang menanggung beban."
+/>
+
+<Quiz
+  question="Seorang pembaca membandingkan MSFT (ROE 36%, ROIC 28%, hutang-ke-ekuiti 0.4x) dengan F (ROE 14%, ROIC 5%, hutang-ke-ekuiti 2.8x). Manakah pasangan sintesis yang betul apabila ini dikaitkan dengan <Lesson id="
+  options={[
+  ]}
+  answer={0}
+  explanation=""
+/>/181 P/B-and-bank framework?"
+  options={[
+    "Perbezaan ROE adalah satu-satunya perkara yang penting",
+    "Kedua-dua syarikat mempunyai kualiti perniagaan yang sama",
+    "ROIC MSFT pada 28% — jauh di atas mana-mana kos modal yang munasabah — memperoleh pendarab P/B tinggi yang diimplikasikan oleh kerangka <Lesson id="040_price_to_book"/>; ROE tinggi ini disumberkan secara operasi dan tahan lama. ROIC Ford pada 5% — di bawah kos modal — menjelaskan pendarab P/B rendah yang berterusan dan pendarab sederhana; ROE 14% didorong oleh leverage dan pasaran menilai modal operasi pada nilai yang kurang daripada nilai akaunnya dengan betul. Alat yang betul untuk MSFT ialah juga EV/EBITDA dan DCF (<Lesson id="182_pb_for_asset_light_businesses"/>, ringan aset); alat yang betul untuk Ford ialah pendarab berpusat ROIC ditambah kesedaran kitaran",
+    "Kedua-dua perniagaan harus dinilai pada P/B"
+  ]}
+  answer={2}
+  explanation="Sintesis ini menyambungkan tiga pelajaran: kerangka P/B yang bersyarat pada struktur aset (040, 182), kualiti ROE yang bersumber pada sumber (041, 184), dan ROIC sebagai isyarat operasi teras (pelajaran ini). Jawapan salah yang menggoda ialah menilai kedua-duanya pada P/B — menggunakan satu alat secara universal. Jawapan 'Perbezaan ROe adalah semua yang penting' mengabaikan penguraian kualiti sepenuhnya. Jawapan 'kualiti perniagaan sama' membalikkan pemerhatian yang kuat. Bacaan yang betul menggunakan alat yang berbeza untuk perniagaan yang berbeza, dipoketkan oleh ROE vs kos modal sebagai isyarat kebenaran operasi."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Analis Fundamental, tampal penanda intensif modal (F, TENAGA, AIRASIA, X, atau nama minyak terintegrasi) dan tanya: "Kira ROE dan ROIC terunggul. Beritahu saya jurang antara keduanya dan berapa banyak ROE yang berasal dari leverage hutang. Beritahu saya sama ada ROIC berada di atas atau di bawah anggaran anda terhadap kos modal purata berat." Simpan ROE, ROIC, jurang, dan verdict dalam <Term id="ami_decision_journal" /> anda.
+
+## Penegasan
+
+ROE ialah pulangan yang menyedari pembiayaan; ROIC ialah kebenaran operasi. Untuk perniagaan intensif modal, ROE vs kos modal ialah bacaan yang menanggung beban — ROE tinggi pada ROIC rendah ialah kemuliaan yang dipinjam.

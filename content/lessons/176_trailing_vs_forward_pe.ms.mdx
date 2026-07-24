@@ -1,0 +1,68 @@
+---
+id: "176_trailing_vs_forward_pe"
+title: "P/E Bertrailing vs ke hadapan — dan perangkap anggaran penganalisis"
+duration_min: 5
+level: 3
+module: 7
+difficulty: 3
+track: "fundamentals_analysis"
+code: "FUND 42"
+topic: "pe_ratio"
+prerequisites: ["039_the_pe_ratio", "044_earnings_growth"]
+tags: ["pe_ratio", "forward_pe", "trailing_pe", "analyst_estimates", "valuation", "fundamentals"]
+agent_callouts: ["fundamentals_analyst", "bear_researcher"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# P/E Berterusan vs P/E Ke Hadapan — dan perangkap anggaran penganalisis
+
+<Lesson id="039_the_pe_ratio"/> memperkenalkan P/E sebagai alat penarafan dalam sektor dan dalam sejarah. Pelajaran ini mempertajam alat tersebut. Terdapat dua nilai P/E yang dicetak pada setiap halaman petikan — P/E berterusan (harga / EPS 12 bulan terakhir) dan P/E ke hadapan (harga / EPS konsensus 12 bulan seterusnya) — dan kedua-duanya paling berbeza apabila ia paling penting. Pada akhir pelajaran ini, anda harus dapat memilih yang betul untuk situasi tersebut, mengiktiraf apabila nombor hadapan adalah cerita yang diceritakan oleh penganalisis berbanding fakta, dan menamakan keadaan tepat di mana P/E ke hadapan adalah perangkap.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+NVDA pada pertengahan 2026 diperdagangkan berhampiran $135. EPS berterusan ialah $3.20, jadi P/E berterusan ≈ 42x. EPS ke hadapan konsensus — anggaran purata penganalisis untuk empat suku akan datang — ialah $4.80. P/E ke hadapan ≈ 28x. Angka teratas 42x adalah masa lalu; 28x mengandaikan pertumbuhan pendapatan 50% sepanjang tahun hadapan. Kedua-duanya adalah fakta tentang harga, tetapi hanya satu yang juga fakta tentang syarikat.
+
+Sekarang bandingkan dengan INTC semasa suku kitaran turun yang tipikal. Saham pada $32, EPS berterusan pada $0.40 (angka kitaran tertekan), P/E berterusan ≈ 80x — kelihatan sangat mahal. EPS ke hadapan konsensus pada $1.80 apabila penganalisis memodelkan pemulihan, P/E ke hadapan ≈ 18x — kelihatan murah. Saham yang sama, hari yang sama, dua cerita. Kebenaran bergantung kepada sama ada $1.80 ke hadapan itu benar-benar tercapai. Semasa kemerosotan PC 2022–2024, EPS ke hadapan konsensus untuk INTC dipotong kira-kira enam kali dalam lapan belas bulan; setiap pemotongan menaikkan P/E ke hadapan "murah" itu selepas fakta.
+
+Pernyataan boleh disangkal: P/E ke hadapan lebih berguna daripada P/E berterusan hanya apabila (a) julat anggaran konsensus adalah ketat (atas vs bawah penganalisis dalam ~15%) DAN (b) semakan dalam 90 hari lepas adalah rata atau naik. Julat yang luas atau trend semakan yang jatuh bermakna nombor hadapan adalah sasaran bergerak — gunakan P/E berterusan ditambah dengan angka pendapatan dinormalisasi. Di Bursa: P/E ke hadapan TENAGA sering berada 10–15% di bawah berterusan kerana penganalisis memodelkan reset tarif yang mungkin tidak tiba mengikut jadual; pembaca yang berpijak pada nombor hadapan mendapat utiliti yang kelihatan murah secara buatan.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan EPS ke hadapan konsensus sebagai data apabila ia, dalam praktiknya, adalah ramalan yang secara sistematik berubah. Penganalisis berpijak pada bimbingan syarikat; syarikat membimbing kepada angka yang boleh dikalahkan; angka disemak sepanjang tahun apabila realiti masuk. P/E ke hadapan yang dibina pada ramalan yang belum diuji adalah harga dibahagikan dengan harapan. Versi yang berbahaya ialah skrin "murah pada ke hadapan": saham kelihatan mahal pada P/E berterusan kerana tahun lalu lemah, kemudian kelihatan murah pada ke hadapan kerana penganalisis memodelkan pemulihan pantas. Pembeli memperlakukan nombor hadapan sebagai fakta dan mendapati dua suku kemudian bahawa anggaran dipotong 30%, harga mengikut, dan gandaan "murah" itu tidak pernah wujud. Model mental yang betul: apabila P/E berterusan dan ke hadapan menyimpang lebih daripada ~25%, anda tidak melihat penilaian — anda melihat ramalan. Baca andaian sebelum anda mempercayai gandaan tersebut. Apa yang membatalkan isyarat: trend semakan 90 hari negatif pada EPS konsensus. Jika anggaran dipotong menjelang cetakan, P/E ke hadapan dalam screener anda sudah usang.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham semikonduktor diperdagangkan pada P/E trailing = 60x dan P/E forward = 18x. Anggaran EPS konsensus telah direvisi ke bawah sebanyak empat kali dalam enam bulan terakhir. P/E forward median sektor ialah 22x. Bacaan yang paling tepat ialah?"
+  options={[
+    "P/E forward 18x dibina berdasarkan EPS konsensus yang sedang dipotong secara aktif. Setiap revisi ke bawah meningkatkan P/E forward sebenar selepas fakta. Dengan empat pemotongan dalam enam bulan, nombor forward adalah sasaran bergerak — penilaian jujur hari ini menggunakan EPS trailing atau dinormalisasi, di mana gandaan jauh di atas median sektor",
+    "P/E trailing sentiasa nombor yang lebih konservatif jadi gunakan ia",
+    "Saham ini murah pada forward — 18x berbanding median sektor 22x ialah diskaun 18%",
+    "P/E forward harus diabaikan sepenuhnya untuk kitaran"
+  ]}
+  answer={0}
+  explanation="Jawapan salah yang menggoda ialah diskaun 18x berbanding 22x — pembaca yang dipacu screener melihat '18x vs 22x' dan menyimpulkan murah. Bacaan yang betul mempersoalkan penyebut: EPS forward yang telah dipotong empat kali dalam enam bulan bukanlah fakta, ia ramalan yang gagal tercapai. Setiap pemotongan bermaksud P/E forward sebenar apabila keputusan diterbitkan akan lebih tinggi daripada 18x pada skrin. Jawapan guna-trailing-sentiasa terlalu mudah — trailing bukan 'sentiasa lebih konservatif'; untuk perniagaan yang pulih, ia boleh mengelirukan. Jawapan abaikan-forward-untuk-kitarans membuang alat yang berguna sepenuhnya; jawapan yang betul ialah membacanya secara bersyarat."
+/>
+
+<Quiz
+  question="Dua saham. Saham A: P/E trailing 24x, P/E forward 22x, revisi EPS konsensus rata selama 90 hari, julat analis ketat (anggaran dalam 8% dari min). Saham B: P/E trailing 24x, P/E forward 14x, revisi EPS konsensus turun 12% selama 90 hari, julat analis lebar (anggaran tersebar 35% dari atas ke bawah). Yang manakah bacaan penilaian yang lebih boleh dipercayai, dan apa sintesis dengan prinsip falsifiability?"
+  options={[
+    "P/E forward Saham A ialah isyarat yang lebih boleh dipercayai. Julat analis yang ketat ditambah revisi rata bermaksud ramalan telah stabil; 22x ialah anggaran yang boleh dipertahankan untuk gandaan tahun depan. Nombor forward Saham B secara mekanikal lebih rendah tetapi dibina pada ramalan yang tidak stabil dan memburuk — julat lebar dan trend revisi negatif membatalkan isyarat tersebut. Gandaan hanya sebaik kestabilan penyebutnya",
+    "Kedua-dua P/E forward sama boleh dipercayai kerana mereka berasal dari sumber data yang sama",
+    "Saham B kelihatan lebih murah pada P/E forward jadi ia beli yang lebih baik",
+    "Gunakan trailing untuk kedua-dua dan abaikan forward sepenuhnya"
+  ]}
+  answer={0}
+  explanation="Sintesis: P/E ialah pecahan, dan pecahan hanya sejujur kedua-dua pengangka dan penyebut. Jawapan salah yang menggoda ialah pilih-Saham-B — nombor yang kelihatan lebih rendah menang pada screener, tepat apabila ia tidak sepatutnya. Saham A ialah jenis P/E forward yang bernilai untuk bertindak; nombor forward Saham B memerlukan langkah penormalisasi sebelum ia mempunyai sebarang maksud. Jawapan kedua-dua-sama-boleh-dipercayai mengabaikan kualiti anggaran sepenuhnya. Jawapan guna-trailing-untuk-kedua-dua membalikkan pelajaran — trailing juga lensa yang cacat apabila keadaan asas telah berubah."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Penganalisis Asas, tampal kod saham yang anda pertimbangkan, dan tanya: "Berikan saya P/E berterusan, P/E ke hadapan, trend semakan EPS konsensus 90 hari, dan sebaran antara anggaran penganalisis tinggi dan rendah. Beritahu saya sama ada nombor hadapan telah stabil atau masih berubah." Simpan empat titik data dalam <Term id="ami_decision_journal" /> anda. Jika nombor hadapan sedang berubah, berpijak pada bacaan berterusan atau P/E 3-tahun yang dinormalisasi.
+
+## Penutup
+
+P/E ke hadapan hanyalah penilaian apabila anggaran asas adalah stabil. Jika semakan bergerak atau julat penganalisis luas, gandaan ke hadapan adalah ramalan yang memakai kostum fakta — kembali kepada P/E berterusan atau EPS dinormalisasi.

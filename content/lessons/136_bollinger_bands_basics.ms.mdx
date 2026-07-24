@@ -1,0 +1,74 @@
+---
+id: "136_bollinger_bands_basics"
+title: "Bollinger Bands — asas dan parameter"
+duration_min: 5
+level: 2
+module: 5
+difficulty: 3
+track: "technical_analysis"
+code: "TECH 36"
+topic: "bollinger_bands"
+prerequisites: ["026_moving_averages", "031_indicator_limitations"]
+tags: ["indicators", "bollinger_bands", "volatility", "standard_deviation", "envelope"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Bollinger Bands — asas dan parameter
+
+<Lesson id="026_moving_averages"/> membentangkan purata bergerak sebagai pusat graviti bagi harga. Bollinger Bands membungkus pusat tersebut dengan selimut volatiliti: satu SMA 20-periode di tengah, dengan jalur atas pada +2 sisihan piawai daripada 20 penutupan terakhir dan jalur bawah pada -2 sisihan piawai. Selimut ini melebar apabila volatiliti meningkat dan mengecut apabila ia menurun. Parameter lalai — 20-periode, 2-sigma — adalah pilihan sengaja John Bollinger kerana ia menangkap kira-kira 95% pergerakan harga taburan normal; bermakna penutupan di luar jalur adalah outlier statistik, bukan peristiwa biasa. Memahami apa yang diukur oleh jalur adalah separuh pelajaran; separuh yang lain adalah memahami apa yang sebenarnya bermakna oleh perubahan parameter.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat AAPL sehingga November 2025. Dengan Bollinger Bands ditetapkan pada lalai (20, 2), jalur berada di sekitar atas 232, tengah 224 (SMA20), bawah 216 — lebar selimut 8 mata. Pada 12 November, AAPL menutup pada 233.40 — menyentuh di luar jalur atas. Ini adalah peristiwa 2-sigma: di bawah taburan normal, hanya kira-kira 2.5% penutupan sepatutnya melampauinya.
+
+Dalam masa empat sesi, AAPL kembali ke dalam, berayun antara 226 dan 230. Selimut telah melakukan tugasnya — ia menandakan ekstrem statistik, dan reverensi purata mengendalikan baki.
+
+Sekarang kontras: tukar parameter kepada (20, 1) — satu sisihan piawai. Jalur atas baharu berada pada 228. AAPL telah menghabiskan lapan daripada sepuluh sesi sebelumnya di atas 228, jadi isyarat "ekstrem" itu menyala secara berterusan dan tidak bermakna apa-apa. Sigma yang lebih ketat menukar jalur menjadi penunjuk yang berfluktuasi pantas tanpa kelebihan. Tolak ke arah lain — (20, 3) — dan jalur pada 236 / 212 hampir tidak pernah disentuh; isyarat yang jarang itu kuat, tetapi anda mungkin menunggu berbulan-bulan antara perdagangan.
+
+Pernyataan boleh disangkal: pada parameter lalai (20, 2), kira-kira 90–95% penutupan harian pada syarikat besar AS yang cecair biasa sepatutnya berada di dalam jalur. Ketidaksahihan: sampel enam bulan di mana kurang daripada 80% penutupan terkandung bermaksud sama ada tabungan saham mempunyai ekor tebal (fikirkan nama beta tinggi seperti TSLA dalam rejim volatiliti) atau parameter anda perlu disemak semula.
+
+Pada Bursa Malaysia: GENTING pada Q3 2025 mempunyai lebar Bollinger sekitar RM0.40 pada tetapan lalai; penutupan di luar jalur berlaku kira-kira 3% masa, konsisten dengan jangkaan statistik 2-sigma.
+
+## Perangkap
+
+Perangkapnya ialah membaca sentuhan jalur sebagai isyarat pembalikan. "Harga menyentuh jalur atas — jual." Itu separuh kebenaran yang gagal dalam pasaran trending. Dalam trend naik yang kuat, harga boleh "berjalan di sepanjang jalur" — berulang kali menyentuh atau menutup di jalur atas selama berhari-hari atau berminggu-minggu — dan cuba menentang setiap sentuhan adalah cara cepat untuk kehilangan wang. Jalur menerangkan ekstrem volatiliti; ia tidak mewajibkan reverensi purata.
+
+Model mental yang betul: jalur adalah selimut kebarangkalian, bukan penunjuk pembalikan. Sentuhan memberitahu anda bahawa harga adalah lanjutan statistik berhubung dengan julat 20-bar terkininya. Sama ada lanjutan ini berbalik atau berterusan bergantung pada rejim — yang anda baca dari kecerunan jalur tengah dan konteks lain (dicakup dalam <Lesson id="137_bollinger_squeeze_and_breakout"/>). Jangan menentang sentuhan jalur secara terpencil; baca kecerunan dahulu.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="AAPL ditutup pada 233.40 dengan Jalur Bollinger ditetapkan pada lalai (20, 2). Band atas berada pada 232. Secara statistik, apa yang diwakili oleh penutupan ini?"
+  options={[
+    "Pencilan 2-sigma — di bawah taburan normal, hanya kira-kira 2.5% penutupan sepatutnya melebihi band atas; ia adalah ekstrem statistik, bukan isyarat arah secara sendiri",
+    "Pembalikan terjamin — isyarat jual",
+    "Hingar yang harus diabaikan",
+    "Isyarat pecah — beli secara agresif"
+  ]}
+  answer={0}
+  explanation="Band 2-sigma lalai menangkap kira-kira 95% tindakan harga taburan normal, jadi penutupan di luar adalah ekstrem statistik. Jawapan salah yang menggoda ('pembalikan terjamin — jual') adalah kesilapan sentuhan band sama dengan pembalikan; dalam saham yang sedang menjujung, berjalan di sepanjang band adalah normal dan menentang setiap sentuhan akan menyebabkan kerugian. Band menggambarkan volatiliti, bukan arah."
+/>
+
+<Quiz
+  question="Anda menguji pilihan parameter. Menetapkan Bollinger Bands kepada (20, 1) pada nama yang cecair menghasilkan envelope ketat yang harga menutup di luarnya dalam kira-kira 32% sesi; menetapkan (20, 3) menghasilkan envelope lebar yang dilintasi dalam kira-kira 0.3% sesi. Lalai (20, 2) mengekalkan kira-kira 95% penutupan di dalam. Set parameter mana yang paling berguna untuk menapis ekstrem statistik yang bernilai untuk bertindak?"
+  options={[
+    "(20, 2) — lalai, kerana penutupan di luar adalah pencilan 2-sigma yang tulen; tetapan lain sama ada terlalu kerap (1-sigma) atau terlalu jarang sehingga isyarat tidak boleh digunakan (3-sigma)",
+    "(20, 1) — lebih kerap berlaku, jadi lebih banyak peluang dagangan",
+    "Tidak penting; semua set parameter adalah setara",
+    "(20, 3) — semakin jarang isyarat, semakin baik"
+  ]}
+  answer={0}
+  explanation="Parameter lalai dikalibrasi kepada ambang statistik 2-sigma. Jawapan salah yang menggoda ('1-sigma lebih kerap, lebih peluang') adalah perangkap positif palsu — apabila isyarat berlaku secara berterusan, ia tidak lagi menandakan ekstrem. Lebih pantas tidak bermaksud lebih baik. (20, 3) adalah kegagalan lawan — terlalu jarang sehingga anda menunggu berbulan-bulan untuk satu dagangan. Lalai wujud atas sebab; tukar hanya dengan justifikasi yang diuji sampel."
+/>
+
+## Cuba sendiri
+
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham dari <Term id="ami_watchlist" /> anda dan tanya: "Set Bollinger Bands kepada (20, 2). Berapakah daripada 60 penutupan terakhir yang berada di luar jalur, dan berapakah lebar selimut semasa sebagai peratusan harga?" Kemudian sahkan pada carta. Latihan ini adalah untuk dalami bahawa kira-kira 5% penutupan sepatutnya berada di luar jika parameter dikalibrasi dengan betul.
+
+## Kesimpulan
+
+Bollinger Bands membungkus SMA 20-periode dengan selimut volatiliti 2-sigma — penutupan di luar jalur adalah ekstrem statistik, tetapi sama ada untuk menentangnya atau mengikutinya bergantung pada konteks, bukan pada sentuhan itu sendiri.

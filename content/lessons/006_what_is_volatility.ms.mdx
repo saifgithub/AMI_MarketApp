@@ -1,0 +1,82 @@
+---
+id: "006_what_is_volatility"
+title: "Apakah volatiliti?"
+duration_min: 4
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+code: "CORE 6"
+topic: "volatility_basics"
+prerequisites: ["005_what_moves_stock_prices"]
+tags: ["foundations", "volatility", "vix", "risk"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apakah itu volatiliti?
+
+Volatiliti ialah saiz pergerakan harga biasa suatu saham. Saham yang bergerak naik turun 0.5% sehari adalah volatiliti rendah. Saham yang secara rutin bergerak 5% sehari adalah volatiliti tinggi. Volatiliti bukan sama dengan risiko kerugian — satu saham boleh menjadi sangat volatiliti dan masih mempunyai trend naik, atau tenang dan perlahan-lahan mencairkan wang. Tetapi volatiliti memberitahu anda seberapa luas pergerakan hari biasa, yang menetapkan jangkaan anda dan memberitahu anda saiz posisi yang boleh ditanggung tanpa panik.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Bandingkan dua nama sebenar pada hari yang sama. Berkshire Hathaway Class B (BRK-B) biasanya bergerak sekitar 1% pada hari perdagangan biasa. Tesla (TSLA) biasanya bergerak sekitar 3-4% pada hari perdagangan biasa. Pada hari yang liar, BRK-B mungkin bergerak 3% — bagi TSLA, itu adalah hari Selasa. Pergerakan 5% dalam TSLA adalah biasa; pergerakan yang sama dalam BRK-B akan menjadi hari terbesar yang pernah dialami dalam dua tahun. Jumlah dolar modal yang sama, perjalanan yang sangat berbeza.
+
+S&P 500 mempunyai pengukur sendiri: **indeks VIX**, sering dipanggil "indeks ketakutan." VIX mengukur jangkaan volatiliti pasaran selama 30 hari akan datang, diterbitkan daripada harga pilihan pada S&P 500. Bacaan VIX di bawah 15 bermaksud pasaran menjangka ketenangan — pergerakan harian biasa di bawah 1%. Antara 15 dan 25 adalah biasa. Di atas 30 bermaksud pedagang sedang menilai pergerakan besar — sering semasa krisis atau jualan besar yang tajam. Pada Mac 2020, apabila COVID melanda, VIX menyentuh 82 — bacaan tertinggi sepanjang masa. Pada tempoh tenang seperti pertengahan 2017, VIX berada di dekat 10.
+
+Peraturan mudah: "pergerakan harian biasa" suatu saham adalah kira-kira purata pergerakan harian 30-harinya. Jika TSLA telah mencatatkan purata pergerakan harian 3.2% selama bulan lalu, maka pergerakan 3% esok adalah tidak istimewa. Pergerakan 7% adalah peristiwa sebenar yang perlu disiasat.
+
+Di Bursa Malaysia: AirAsia (CAPITALA) dan Top Glove (TOPGLOV) secara sejarah merupakan nama volatiliti tinggi — pergerakan harian 4-6% semasa tempoh tertekan. Maybank (MAYBANK) dan Public Bank (PUBLIC) adalah volatiliti rendah — biasanya di bawah 1% sehari. KLCI secara keseluruhan adalah jauh kurang volatiliti daripada S&P 500.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan volatiliti dan bahaya sebagai perkara yang sama. Mereka bukan. Saham volatiliti tinggi adalah lebih luas, bukan semestinya lebih buruk. Jika anda saizkan posisi anda mengikut volatilitinya — posisi kecil dalam saham liar, lebih besar dalam yang tenang — anda boleh memegang kedua-duanya dengan selesa. Kesilapan yang dibuat oleh pemula ialah membeli saham volatiliti tinggi pada saiz dolar yang sama dengan yang volatiliti rendah, kemudian panik pada kali pertama ia bergerak 5% menentang mereka. Itu bukan saham yang berbahaya; itu anda yang salah saiz untuk volatiliti. Perangkap lain adalah sebaliknya — mengandaikan saham tenang tidak boleh menyakitkan anda. Nama volatiliti rendah masih boleh mempunyai trend turun selama berbulan-bulan. Volatiliti memberitahu anda tentang lebar, bukan arah.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Stock A telah mencatatkan pergerakan harian purata 1% selama 30 hari lalu. Stock B pula mencatatkan purata 4% harian. Esok, Stock A bergerak 3% dan Stock B bergerak 3%. Manakah pergerakan yang lebih luar biasa berbanding sejarahnya sendiri?"
+  options={[
+    "Kedua-duanya sama luar biasa — peratusan pergerakan adalah sama",
+    "Pergerakan 3% Stock B — ia merupakan ayunan nilai mutlak yang lebih besar",
+    "Tiada satu pun yang luar biasa",
+    "Pergerakan 3% Stock A — ia tiga kali ganda julat harian normalnya"
+  ]}
+  answer={3}
+  explanation="Pergerakan 3% yang sama adalah rutin bagi Stock B tetapi merupakan peristiwa tiga sisihan piawai bagi Stock A. Volatiliti diukur relatif kepada julat tipikal saham tersebut, bukan dalam istilah peratusan mutlak. Sentiasa bandingkan pergerakan dengan purata terkini saham tersebut."
+/>
+
+<Quiz
+  question="VIX berada pada tahap 14. Apakah maklumat ini mengenai jangkaan pasaran jangka pendek?"
+  options={[
+    "Pasaran menjangkakan keadaan yang agak tenang selama 30 hari akan datang",
+    "Pasaran menjangkakan volatiliti tinggi dan kejatuhan pasaran dalam tempoh 30 hari",
+    "VIX tidak berkaitan dengan jangkaan pasaran saham",
+    "VIX pada tahap 14 sentiasa bermaksud saham akan naik"
+  ]}
+  answer={0}
+  explanation="VIX di bawah 15 menunjukkan pasaran pilihan (options) menghargakan keadaan tenang — pergerakan harian S&P 500 tipikal di bawah 1%. Ia tidak meramalkan arah (naik atau turun), hanya lebar julat. VIX di atas 30 menunjukkan jangkaan ayunan besar, biasanya semasa tekanan. VIX yang rendah secara historinya merupakan rejimen yang lebih tenang, tetapi tidak semestinya hanya kenaikan."
+/>
+
+<Quiz
+  question="Anda membeli dua posisi dengan nilai dolar yang sama: satu dalam BRK-B (pergerakan harian tipikal ~1%) dan satu dalam TSLA (pergerakan harian tipikal ~3-4%). Tiga hari kemudian, kedua-dua posisi mengalami kerugian. BRK-B turun 1.2% dan TSLA turun 4.5%. Apakah tafsiran yang paling munasabah?"
+  options={[
+    "Kedua-duanya sama buruk — penurunan peratusan yang sama adalah penting",
+    "BRK-B lebih berbahaya kerana penurunan perlahan menyembunyikan masalah",
+    "Kedua-dua pergerakan ini kira-kira selaras dengan volatiliti harian tipikal setiap saham — tanpa isyarat lain, tiada satu pun pergerakan yang memjustifikasi tindakan; soalan sebenar adalah sama ada saiz posisi adalah sesuai",
+    "TSLA gagal — jual serta-merta"
+  ]}
+  answer={2}
+  explanation="Kedua-dua penurunan ini berada dalam julat pergerakan harian normal setiap saham — penurunan 1.2% dalam BRK-B dan 4.5% dalam TSLA adalah biasa mengikut sejarah masing-masing, bukan isyarat. Jika ayunan normal TSLA menyebabkan anda panik, masalahnya adalah saiz posisi anda, bukan saham tersebut. Tindakan yang betul adalah memeriksa sama ada pemacu (pendapatan, makro, sentimen, aliran) telah berubah — dan saiz posisi secara berkadar dengan volatiliti setiap saham supaya kebisingan P&L dolar yang sama kekal boleh ditoleransi bagi kedua-duanya."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_watchlist" /> anda, pilih satu nama volatiliti tinggi (TSLA atau NVDA) dan satu nama volatiliti rendah (BRK-B atau JPM). Buka Market Analyst <Term id="ami_one_on_one" /> dan tanya: "Apakah purata pergerakan harian 30-hari untuk saham ini?" Bandingkan kedua-dua nombor tersebut. Nisbah antara keduanya adalah kira-kira seberapa kecil posisi volatiliti tinggi anda sepatutnya untuk merasa sama dengan yang volatiliti rendah.
+
+## Pengajaran
+
+Volatiliti ialah lebar pergerakan harian biasa suatu saham, bukan arahnya atau risikonya. Saizkan posisi anda mengikut volatiliti saham, dan hari 5% dalam nama liar terasa sama seperti hari 1% dalam nama tenang.

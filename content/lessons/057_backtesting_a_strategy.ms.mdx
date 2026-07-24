@@ -1,0 +1,78 @@
+---
+id: "057_backtesting_a_strategy"
+title: "Menguji semula strategi"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 13"
+topic: "backtesting"
+prerequisites: ["052_trend_following", "053_breakout_strategy", "055_mean_reversion", "018_drawdown_management"]
+tags: ["backtesting", "overfitting", "survivorship_bias", "look_ahead"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Backtest strategi
+
+Backtest menjalankan peraturan strategi anda terhadap data sejarah untuk menganggarkan prestasi yang mungkin dicapai. Dilakukan dengan jujur, ia memberitahu anda sama ada peraturan anda mempunyai kelebihan yang munasabah dan bagaimana bentuk penurunan maksimum (drawdown) terburuknya. Dilakukan dengan tidak jujur — yang merupakan keadaan lalai — ia memberitahu anda cerita yang menenangkan tetapi tidak ada kaitan dengan masa depan. Tiga pembunuh utama ialah overfitting, bias masa depan (look-ahead bias), dan bias kelangsungan hidup (survivorship bias). Selepas pelajaran ini, anda boleh menamakan setiap satu, mengiktiraf apabila backtest anda mengalaminya, dan mereka bentuk ujian yang memberikan hasil yang boleh dipercayai.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Katakan anda melakukan backtest peraturan "beli NVDA apabila RSI(2) < 10, jual apabila RSI(2) > 80" merentasi tempoh 2020–2024. Hasil yang dilaporkan: 47 dagangan, kadar kemenangan 78%, purata kemenangan 4.2%, penurunan maksimum 6%. Ia kelihatan seperti mesin pencetak wang. Kemudian anda menyemak tiga perkara. (1) Adakah anda hanya menjalankannya pada NVDA kerana NVDA naik 10 kali ganda — bias kelangsungan hidup? Jika anda memilih peraturan secara buta merentasi S&P 500 pada tahun 2019, anda akan menggunakannya kepada lusinan nama saham, banyak antaranya telah disenarai hitam. (2) Adakah anda menggunakan harga penutupan untuk isyarat tetapi mengandaikan pelaksanaan pada penutupan yang sama — bias masa depan? Anda tidak boleh mengetahui harga penutupan dan berdagang pada harga tersebut. (3) Adakah anda mencuba 47 kombinasi lookback/ambang RSI yang berbeza dan hanya menyimpan yang terbaik — overfitting? Dengan 47 percubaan pada tahap 5%, beberapa akan kelihatan hebat semata-mata kebetulan.
+
+Versi yang jujur: takrifkan peraturan SEBELUM melihat data, aplikasikan pada alam semesta yang ditakrifkan ex-ante (S&P 500 pada Januari 2020, termasuk nama saham yang kemudian disenarai hitam), laksanakan pada pembukaan hari SELEPAS isyarat, dan laporkan hasil dari spesifikasi tunggal — tiada "Saya mencuba 30 dan menyimpan yang ini". Apabila anda melakukan itu pada contoh NVDA, kelebihan peraturan itu bertahan tetapi kadar kemenangan turun kepada 58% dan penurunan maksimum meningkat kepada 14% — jawapan yang jauh lebih jujur.
+
+## Perangkap
+
+Kesilapan pemula ialah memperlakukan backtest sebagai bukti. Backtest adalah pemeriksaan kesihatan (sanity check), bukan ramalan. Langkah salah yang paling menggoda ialah terus mengubah parameter sehingga lengkung ekuiti kelihatan licin — itu adalah overfitting dalam gerakan perlahan. Setiap darjah kebebasan yang anda tambah (penunjuk baru, ambang lebih ketat, penapis rejim) adalah satu dimensi tambahan untuk menyesuaikan hingar. Model mental yang betul: anggap backtest anda menyatakan prestasi sebenar dengan faktor tertentu, mereka bentuk ujian luar-sampel (out-of-sample), dan menghakimi peraturan berdasarkan sama ada kelebihannya cukup besar untuk bertahan apabila menjadi separuh baik seperti yang didakwa oleh backtest. Jika peraturan perlu sama baiknya dengan backtest untuk menguntungkan, ia adalah peraturan yang buruk.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda backtest satu strategi dan cuba 22 kombinasi parameter berbeza. Yang terbaik menunjukkan pulangan tahunan 30%; yang terburuk mencatat kerugian 4%. Tafsiran yang paling boleh dipertahankan ialah?"
+  options={[
+    "Pilih parameter yang kelihatan paling intuitif",
+    "Purata 5 konfigurasi teratas",
+    "Pulangan 30% itu anggaran yang betul — itu konfigurasi untuk disebarkan",
+    "Purata semua 22 kombinasi ialah anggaran yang jujur, dan walaupun itu pun optimistik tanpa ujian luar sampel (out-of-sample)"
+  ]}
+  answer={3}
+  explanation="Melaporkan hanya yang terbaik daripada 22 percubaan ialah overfitting klasik — secara kebetulan, satu percubaan akan kelihatan hebat. Anggaran yang jujur mengambil kira pemilihan merentas semua set parameter yang anda cuba, dan ujian luar sampel ialah pertahanan sebenar. Menyebarkan konfigurasi terbaik-berbanding-22 ialah salah yang paling menarik kerana nombor 30% ialah apa yang ditunjukkan oleh spreadsheet."
+/>
+
+<Quiz
+  question="Backtest anda bagi peraturan mean-reversion selama 2010–2023 menunjukkan pulangan tahunanised 15% pada large-cap AS. Alam semesta anda ialah 'konstituen S&P 500 semasa'. Pengurus Penyelidikan menandakan ini sebagai berat sebelah. Bias mana yang anda lakukan?"
+  options={[
+    "Bias lihat-maju (Look-ahead bias)",
+    "Overfitting",
+    "Bias kelangsungan hidup (Survivorship bias)",
+    "Bias penyusutan data (Data-snooping bias)"
+  ]}
+  answer={2}
+  explanation="Menggunakan S&P 500 HARI INI untuk menguji strategi pada 2010 bermakna anda hanya menguji nama yang bertahan sehingga hari ini — setiap kebangkrutan, penyingkiran, dan hasil buruk ditapis sebelum anda bermula. Bias lihat-maju ialah salah yang menarik kerana ia nama bias yang paling terkenal, tetapi kesilapan sebenar di sini ialah definisi alam semesta."
+/>
+
+<Quiz
+  question="Anda telah mereka bentuk strategi breakout. Backtest anda kelihatan kuat. Sebelum menyebarkannya (walaupun dalam dagangan simulasi AMI), apa ujian sintesis yang membenarkan menjalankannya ke hadapan?"
+  options={[
+    "Bandingkan dengan buy-and-hold SPY",
+    "Takrifkan peraturan ex-ante, uji pada alam semesta bebas bias kelangsungan hidup, laksanakan pada buka hari berikutnya, jalankan luar sampel pada tempoh yang belum anda lihat, dan terima peraturan hanya jika keunggulannya bertahan sehingga separuh nombor dalam sampel dengan drawdown yang mematuhi mandat",
+    "Pilih set parameter dengan Sharpe tertinggi dan sebarkan",
+    "Sahkan lengkung ekuiti tiada drawdown besar dalam backtest"
+  ]}
+  answer={1}
+  explanation="Sintesis: setiap konsep dalam modul ini mesti digabungkan — peraturan ex-ante (tiada overfitting), alam semesta bebas kelangsungan hidup, tiada pelaksanaan lihat-maju, pengesahan luar sampel, DAN drawdown mematuhi mandat. Jawapan sahkan-tiada-drawdown-besar ialah salah yang menarik kerana lengkung ekuiti yang bersih Nampak seperti bukti — ia sebenarnya perkara paling mudah untuk dihasilkan melalui overfitting."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Research Manager, lakarkan idea strategi terkini anda dan tanya: "Lalui ini untuk risiko overfitting, bias masa depan, dan bias kelangsungan hidup. Kemudian cadangkan reka bentuk ujian out-of-sample yang boleh saya jalankan sebelum melaksanakan." Log reka bentuk tersebut dalam <Term id="ami_decision_journal" /> dan semak semula tiga bulan kemudian terhadap hasil simulasi sebenar.
+
+## Penutup
+
+Backtest adalah pemeriksaan kesihatan, bukan ramalan. Jika peraturan perlu sama baiknya dengan backtest untuk menjana wang, peraturan itu sudah mati — reka bentuk untuk bertahan apabila kelebihan dalam-sampel menjadi separuh.

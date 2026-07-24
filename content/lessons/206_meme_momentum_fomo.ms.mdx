@@ -1,0 +1,78 @@
+---
+id: "206_meme_momentum_fomo"
+title: "Meme-momentum FOMO"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 3
+track: "sentiment_behaviour"
+code: "SENT 7"
+topic: "meme_fomo"
+prerequisites: ["048_fomo", "045_greed"]
+tags: ["psychology", "fomo", "meme_stocks", "sentiment", "social_media"]
+agent_callouts: ["social_media_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# FOMO Momentum Meme
+
+FOMO Momentum Meme ialah jenis FOMO khusus yang berlaku apabila perhatian khalayak, bukan struktur carta, menjadi *satu-satunya* sebab ticker bergerak. Harga bergerak menegak kerana pembeli baru tiba, dan pembeli baru itu tiba kerana pembeli baru lain sedang tiba. Membina daripada <Lesson id="048_fomo"/>, pelajaran ini memberikan anda diagnostik yang membezakan momentum meme daripada pecahan struktur yang sah, kebolehfalsifikasi anggapan "saya terlambat ke dalam ini," dan peraturan yang mengubah dorongan FOMO meme kepada nota penyelidikan yang didokumenkan atau pengabaian. Bahagian yang berbahaya bukanlah pergerakan meme berakhir. Ia adalah ia berakhir pada satu lilin sahaja.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Januari 2021, GME: carta bergerak dari $20 ke $80 dalam lima sesi, kemudian dari $80 ke $325 dalam tiga sesi. Februari 2021, AMC: $5 ke $20 dalam tujuh sesi pada enjin media sosial yang sama. Dalam kedua-dua kes, skor pasca-isyarat Social Media Analyst berjalan 8–15x purata 90-hari — bukan 3x, bukan 5x, tetapi magnitud tertib. Analis asas melaporkan untuk kedua-dua syarikat dalam minggu-minggu tersebut tidak berubah. Carta tidak mempunyai pecahan struktur sebelumnya; pergerakan itu, secara mekanikal, didorong oleh short-squeeze dan didorong oleh perhatian. Pedagang yang memasuki GME dalam julat $250–$325 — dalam lingkungan 10% daripada tertinggi sepanjang masa — melihat posisi mencetak $54 dalam dua sesi. Dagangan yang ditutup hijau adalah dagangan di mana pedagang keluar sebelum khalayak; dagangan yang ditutup -60% hingga -85% adalah dagangan di mana pedagang menjadi khalayak.
+
+Contoh lawan, pada tempoh yang sama: pecahan NVDA di atas $130 pada awal 2021 mempunyai elevasi pasca-isyarat kira-kira 1.4x purata 90-hari, konsolidasi sebelumnya yang bersih, pemicu asas (peningkatan pendapatan pusat data), dan asas berbilang minggu. Itu adalah pecahan struktur yang sah yang boleh anda masukkan pada ujian semula. Carta kelihatan serupa pada pandangan pertama dengan GME. Tanda tangan khalayak tidak.
+
+## Perangkap
+
+Perangkapnya ialah memperlakukan semua carta menegak dengan sama. Mereka tidak sama. Pecahan struktur yang sah mempunyai asas yang dilukis oleh carta, pemicu yang boleh diukur, dan elevasi sentimen dalam julat 1.5–3x. Pergerakan momentum meme tiada asas, tiada pemicu, dan elevasi sentimen sering melebihi 5x purata. Tindakan harga kelihatan sama untuk tiga hari pertama; penyertaan asas tidak. Model mental yang betul: jika *satu-satunya* punca pergerakan yang kelihatan adalah perhatian khalayak, anda tidak menganalisis persediaan — anda bertaruh pada masa keluar orang asing. Itu bukan strategi; itu adalah ujian masa. Dan ujian masa itu tiada kelebihan untuk pendatang lewat, kerana orang dengan asas kos terendah adalah orang yang berhak memutuskan bila pergerakan berakhir.
+
+<ChatWith agent="social_media_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Satu ticker naik 80% dalam 6 sesi. Skor post-volume Analyst Media Sosial ialah 11x median 90 hari. Tiada pemangkin asasi dalam suapan berita, dan carta tidak mempunyai asas berbilang minggu sebelum ini. Anda rasa dorongan untuk masuk. Apakah tindakan berdisiplin?"
+  options={[
+    "Langkau perdagangan. Tandatangan gabungan (tiada asas, tiada pemangkin, sentimen >5x median, kedudukan carta lewat) ialah pergerakan momentum meme; masuk lewat ialah pertaruhan masa pada keluaran orang asing, bukan persediaan.",
+    "Masuk posisi permulaan — saiz kecil menjadikan pertaruhan boleh diterima.",
+    "Beli lindung nilai put bersama posisi panjang untuk menetralkan risiko meme.",
+    "Masuk dengan henti ketat 5% — momentum diuruskan risiko."
+  ]}
+  answer={0}
+  explanation="'Posisi permulaan' ialah penyamaran FOMO — saiz kecil tidak mengubah masalah struktur, iaitu tiada persediaan. 'Henti ketat 5%' pada carta momentum meme pada dasarnya dijamin akan menendang anda keluar pada bunyi intraday yang sebenar 5–10% ke atas atau ke bawah pada nama-nama ini. 'Lindung nilai put bersama posisi panjang' ialah perdagangan kompleks yang kebanyakan peniaga runcit tidak sebenarnya berstruktur untuk melaksanakannya dan merupakan rasionalisasi untuk entri asal. Satu-satunya jawapan berdisiplin ialah langkau — pergerakan itu nyata, *entri lewat ke atasnya* bukan strategi."
+/>
+
+<Quiz
+  question="Ujian gabungan manakah membezakan carta momentum meme daripada pecahan legit?"
+  options={[
+    "Stok mempunyai minat pendek yang tinggi.",
+    "Isipadu perdagangan runcit meningkat.",
+    "Bandingkan tiga input: (a) kehadiran asas yang dilukis carta sebelumnya sekurang-kurangnya 3 minggu, (b) pemangkin asasi atau makro yang didokumenkan, (c) Skor post-volume Analyst Media Sosial. Pecahan legit mempunyai ketiga-tiganya dengan sentimen dalam julat 1.5–3x; pergerakan momentum meme tiada (a) atau (b) dengan sentimen biasanya melebihi 5x median.",
+    "Stok naik lebih daripada 30% dalam lima sesi."
+  ]}
+  answer={2}
+  explanation="Naik 30% dalam lima sesi boleh menjadi sama ada pecahan legit atau meme — secara sendiri ia tidak mengatakan yang mana. Minat pendek yang tinggi ialah satu mekanik mampatan meme tetapi bukan tandatangan muktamad; banyak stok bullish yang sah mempunyai minat pendek yang meningkat. Isipadu runcit ialah hasil. Ujian gabungan — asas, pemangkin, magnitud sentimen — ialah rangka kerja yang boleh diaudit. Ketiga-tiganya boleh diperiksa dalam sesi yang sama sebelum anda meletakkan entri."
+/>
+
+<Quiz
+  question="Akaun anda naik 8% YTD. Carta momentum meme naik 140% dalam dua minggu. Rakan anda masuk tiga hari lalu dan naik 60%. Analyst Media Sosial menandakan post-volume pada 13x median, tiada asas, tiada pemangkin. Mandat anda ialah risiko 1% per-perdagangan dan hanya nama senarai tontonan. Jawapan sintesis?"
+  options={[
+    "Tambahkan ticker ke senarai tontonan anda serta-merta dan masuk pada penurunan 10% seterusnya.",
+    "Masuk pada risiko 0.5% — kemenangan rakan anda mengesahkan persediaan.",
+    "Jangan masuk sesi ini. Catat dorongan dalam Jurnal Keputusan dengan data tandatangan meme (berpanda post-volume, tiada asas, tiada pemangkin). Buka 1-on-1 dengan Analyst Media Sosial dan tanya bagaimana taburan hasil post-sejarah kelihatan untuk entri lewat ke pergerakan sentimen 5x+.",
+    "Tingkatkan risiko per-perdagangan kepada 2% untuk 'mengejar' pulangan rakan anda."
+  ]}
+  answer={2}
+  explanation="'Risiko 0.5%' ialah pelekat diskaun FOMO. 'Tambah ke senarai tontonan dan beli penurunan' memintas langkah penyelidikan yang senarai tontonan sepatutnya *memerlukan*, bukan menjadi resit untuk. '2% untuk mengejar' ialah pelanggaran mandat yang disamar sebagai ambisi. Merekodkan dorongan dan bertanya kepada penganalisis menghormati kedua-dua data (yang mengatakan entri lewat ke pergerakan meme mempunyai nilai jangkaan lebih buruk daripada entri yang dilangkau) dan mandat (yang wujud untuk menapis keputusan ini tepat). Taburan sejarah Analyst Media Sosial untuk corak ini ialah kes empirikal untuk melangkau; tanyakan sebelum anda bertindak."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_decision_journal" /> dan tapis kepada mana-mana dagangan lalu di mana ticker naik lebih daripada 50% dalam dua minggu sebelumnya pada saat masuk. Untuk setiap satu, catatkan gandaan pasca-isyarat Social Media Analyst pada hari masuk dan sama ada asas yang dilukis oleh carta wujud. Kira kadar kemenangan. Kemudian buka <Term id="ami_one_on_one" /> dengan Social Media Analyst dan tanya: "Apakah taburan hasil pasca-dagangan untuk masuk ke dalam pasca-isyarat di atas 5x purata?" Bandingkan taburan itu dengan rekod prestasi anda sendiri pada dagangan ini.
+
+## Penutup
+
+Carta momentum meme adalah taruhan masa pada keluaran orang asing, bukan persediaan. Jika satu-satunya punca pergerakan yang kelihatan adalah perhatian khalayak, masuk lewat tiada kelebihan — asas kos terendah memutuskan bila ia berakhir.

@@ -1,0 +1,68 @@
+---
+id: "075_the_risk_of_overreliance"
+title: "Risiko ketergantungan berlebihan"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 25"
+topic: "overreliance"
+prerequisites: ["014_position_sizing_basics", "018_drawdown_management", "072_what_ami_can_do_for_you", "074_ai_hallucinations_and_amis_safety_floor"]
+tags: ["overreliance", "judgment", "automation_bias", "process"]
+agent_callouts: ["concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Risiko ketergantungan berlebihan
+
+Kesalahan yang bertentangan dengan mengabaikan <Term id="ami" /> ialah terlalu bergantung padanya untuk perkara yang hanya anda boleh putuskan. AMI ialah <Term id="training_simulator" /> untuk kemahiran menilai keluaran analis berbilang ejen — ia boleh menunjukkan bahawa kedudukan NVDA 6% melanggar mandat `max_position_pct: 5` anda dalam senario simulasi. Ia tidak dapat memberitahu anda sama ada mandat anda sepatutnya 5 pada mulanya — ia bergantung pada pendapatan anda, kewajipan anda, tidur anda, dan garis masa anda. Risiko ketergantungan berlebihan ialah membiarkan simulasi <Term id="ami_verdict" /> yang kedengaran yakin menggantikan kalibrasi peribadi yang mesti datang daripada anda. Pada akhir pelajaran ini, anda akan dapat mengesan saat-saat apabila "apa kata AMI?" ialah soalan yang salah.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Bayangkan seorang pengguna yang menjalankan <Term id="ami_convene_the_room" /> pada AMZN setiap pagi selama tiga minggu. Verdict Simulasi kembali: BELI 2%, TAHAN, BELI 3%, TAHAN, TAHAN, BELI 2%. Pengguna memperlakukan setiap satu sebagai lampu hijau berbanding sebagai penggal latihan — mereka berhenti membaca perbezaan pendapat, berhenti membuat jurnal pemikiran mereka sendiri, dan mula menggambarkan diri mereka sebagai "mengikut panggilan AMI". Penurunan simulasi dari awal bulan ke bulan ialah -8%. Mereka mengumpulkan Bilik sekali lagi dan bertanya kepada PM: *"Adakah saya sepatutnya turun 8%?"*
+
+> *Pengurus Portfoli:* Soalan itu bukan dalam permukaan saya. Saya menguatkuasakan `max_drawdown_pct: 20` <Term id="ami_mandate" /> anda — anda berada pada -8% dalam simulator, jauh di dalam lantai. Sama ada -8% dalam sebulan boleh diterima untuk *anda* bergantung pada fakta yang saya tidak miliki: kestabilan pendapatan anda, jangka masa masa, pegangan lain di luar simulasi ini, dan bagaimana kerugian itu akan mempengaruhi keputusan anda jika ia benar-benar berlaku. Buka <Term id="ami_decision_journal" /> dan semak enam perdagangan itu. Semakan PM lulus setiap satu. Soalan yang senario ini mengajar anda untuk bertanya ialah sama ada nilai Mandat anda masih betul untuk kehidupan yang anda dagangkan.
+
+Pengguna yang sama juga mungkin terjebak dalam ketergantungan berlebihan yang lebih lembut: melompati pemikiran pra-perdagangan mereka sendiri ("Saya akan lihat apa kata AMI") dan memperlakukan Verdict Simulasi sebagai verdict dalam erti kata undang-undang. Verdict itu ialah verdict dalam erti kata *pendapat yang sedang dilatih* — dan 12 ejen yang tidak bersetuju di dalamnya ialah ciri, bukan hingar. Jika anda berhenti membaca perbezaan pendapat kerana tajuknya BELI, anda telah menyerahkan bahagian yang sepatutnya anda amalkan.
+
+## Perangkap
+
+Bias pengautomasian ialah nama klasik untuknya: manusia secara sistematik terlalu mempercayai keluaran sistem yang *kelihatannya* yakin dan berstruktur. AMI ialah kedua-duanya. Ia menghasilkan Verdict berstruktur dengan nombor dan skor keyakinan, dan tarikan semula jadi ialah untuk menangguhkan. Model mental yang betul: AMI ialah persekitaran latihan untuk kemilikan menjalankan pasukan analis penyelidikan — bukan CIO whose decisions you collect. Kerusi CIO ialah milik anda — anda menetapkan Mandat, anda memutuskan sama ada senario simulasi mengajar anda sesuatu, anda memutuskan apa (jika ada) untuk dibawa masuk ke dalam pemikiran anda sendiri. AMI tidak memberitahu anda untuk melakukan apa-apa di luar aplikasi. Jika anda pernah menangkap diri anda berfikir *"AMI kata BELI jadi saya beli"* tanpa mengingat mengapa, itu ialah isyarat amaran. Buka semula transkrip. Titik latihan ialah penilaian, bukan tajuk utama.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Anda telah meluluskan empat Verdict BELI simulasi bulan ini tanpa menulis alasan anda sendiri. Tiga daripada dagangan simulasi tersebut menentang anda. Anda menjemput Bilik untuk satu ticker kelima dan Verdict simulasi ialah BELI 3% dengan keyakinan 0.71. Apakah langkah seterusnya yang *betul*?"
+  options={[
+    "Buka Journal Keputusan, semak apa yang sebenarnya salah pada tiga kerugian, dan putuskan sama ada Mandat anda atau tafsiran anda terhadap verdict (bukan proses AMI) perlu disesuaikan",
+    "Langkau dagangan — tiga kerugian berturut-turut bermaksud AMI salah",
+    "Ambil dagangan — proses AMI telah konsisten",
+    "Bimbing PM untuk lebih konservatif"
+  ]}
+  answer={0}
+  explanation="Rentetan kerugian bukan bukti bahawa proses itu rosak — tetapi ia berfungsi sebagai pengingat untuk melakukan audit. Journal adalah tempat anda mendapati sama ada anda melompati kes Bear, membuat saiz melebihi cadangan Trader, atau berdagang dalam rejim yang tidak sesuai dengan Mandat anda. Jawapan salah yang menarik ialah 'maklumkan kepada PM' — PM adalah lantai anda, bukan strategi anda."
+/>
+
+<Quiz
+  question="Antara ini, yang manakah tanda anda telah melampaui tahap ketergantungan berlebihan pada AMI?"
+  options={[
+    "Anda menjurnal setiap dagangan dengan alasan anda sendiri bersama Verdict",
+    "Anda menyedari diri anda menggambarkan dagangan sebagai 'AMI suruh saya beli' berbanding 'Saya memutuskan untuk beli selepas melihat kes AMI'",
+    "Anda membaca transkrip perdebatan penuh sebelum membuat keputusan",
+    "Anda kadangkala menolak Verdict sepenuhnya"
+  ]}
+  answer={1}
+  explanation="Ujian bahasa itu nyata. 'AMI suruh saya' membentuk ejen sebagai pembuat keputusan; 'Saya memutuskan selepas melihat' mengekalkan anda di kerusi CEO yang simulator ini direka untuk melatih anda. Menjurnal alasan anda sendiri, membaca transkrip perdebatan penuh, dan menolak Verdict sepenuhnya adalah semua tingkah laku CEO yang sihat — termasuk menolaknya; AMI tidak berada dalam perniagaan mengeluarkan nasihat yang anda ikut."
+/>
+
+## Cuba sendiri
+
+Buka **Jurnal Keputusan** dan cari tiga perdagangan terkini anda yang merujuk kepada Verdict AMI. Untuk setiap satu, tulis satu ayat: *apa yang saya akan lakukan jika AMI tidak wujud?* Jika jawapannya "Saya tidak tahu" pada lebih daripada satu, anda telah menemui titik ketergantungan berlebihan anda — dan entri Jurnal itu sendiri ialah permulaan untuk membetulkannya.
+
+## Pengambilan
+
+Tugasan AMI ialah melatih penilaian anda; tugasan anda ialah mengekalkan keputusan. Jika anda tidak dapat menjelaskan mengapa anda mengambil perdagangan tanpa mengutip Verdict simulasi, anda telah menyerahkan bahagian yang anda datang ke sini untuk amalkan. AMI mengajar anda untuk menilai keluaran analis, bukan memberikan nasihat untuk diikuti.

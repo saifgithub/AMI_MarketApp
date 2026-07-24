@@ -1,0 +1,72 @@
+---
+id: "073_what_ami_cannot_do"
+title: "Apa yang AMI tidak boleh lakukan"
+duration_min: 4
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 23"
+topic: "ami_limits"
+prerequisites: ["072_what_ami_can_do_for_you", "291_the_pm_and_your_mandate"]
+tags: ["ami", "limits", "simulation", "advisory_only"]
+agent_callouts: ["concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apa yang AMI tidak boleh lakukan
+
+<Term id="ami" /> tidak boleh melaksanakan dagangan. Ia tidak boleh berhubung dengan broker. Ia tidak boleh meramal penutupan AAPL pada Jumaat depan. Ia tidak boleh memberikan nasihat pelaburan — AMI ialah <Term id="training_simulator" />, bukan penasihat berlesen, dan Verdict simulasi yang dihasilkannya adalah artifak latihan untuk anda menilai, bukan cadangan untuk diikuti. Ia tidak boleh memberitahu anda sama ada pekerjaan, hipotek, atau tidur anda boleh menyerap penurunan 20% — hanya anda yang tahu. Pada akhir pelajaran ini, anda akan dapat menyenaraikan had struktur AMI dan mengenali tingkah laku pengguna yang mendakwa had tersebut tidak wujud.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Bayangkan anda bertanya kepada Market Analyst dalam <Term id="ami_one_on_one" />: *"Berapa penutupan MSFT pada Jumaat?"* Balasan akan kira-kira seperti ini:
+
+> *Market Analyst:* Saya tidak meramal harga titik pada tarikh tetap. Apa yang boleh saya lakukan ialah menerangkan setup semasa. MSFT berada pada $418, memegang MA 50-hari pada $410, RSI 58, tiada acara pendapatan antara sekarang dan Jumaat. Julat jangkaan 5-hari berdasarkan volatiliti direalisasikan 30-hari adalah kira-kira $405–$432 — tetapi itu adalah julat kebarangkalian, bukan ramalan. Jika anda memerlukan satu nombor tunggal, saya adalah ejen yang salah. Jika anda ingin membincangkan apa yang akan membatalkan trend semasa, saya boleh melakukannya.
+
+Sekarang bayangkan anda bertanya: *"Laksanakan belian untuk saya pada $410."* Trader akan membalas:
+
+> *Trader:* AMI tidak melaksanakan pesanan. Tidak pernah. Saya boleh mencadangkan masuk $410, stop $398, target $440, saiz 2% daripada buku simulasi anda — dan PM akan menyemak pematuhan sebagai sebahagian daripada senario latihan. Tiada apa-apa keluar dari simulator. Matlamat latihan ini ialah penilaian, bukan pelaksanaan.
+
+Cuba untuk mengatasi ini dengan **<Term id="ami_coach_your_agent" />**: *"Latih Trader untuk melaksanakan secara automatik apabila keyakinan > 0.8."* Sistem akan menolak perubahan latihan tersebut. Pelaksanaan automatik bukan parameter yang boleh dilatih. Tiada permukaan pelaksanaan untuk dibriefing.
+
+## Perangkap
+
+Perangkap ialah penukaran harapan: mengandaikan bahawa alat yang *kelihatannya* boleh melaksanakan dagangan pada akhirnya akan melakukannya, atau bahawa Verdict yang terdengar yakin ialah ramalan atau cadangan. Kedua-duanya salah. AMI dibentuk — secara struktur, bukan secara gaya — untuk kekal di sisi simulator latihan. <Term id="ami_verdict" /> simulasi bukanlah ramalan dan bukan nasihat pelaburan; ia adalah pendapat keadaan semasa yang dihasilkan dalam persekitaran latihan, dikondisikan oleh data yang benar beberapa saat lalu. Ketiadaan integrasi broker bukanlah ciri yang hilang menunggu untuk dihantar — ia adalah keputusan yang membolehkan AMI wujud sebagai alat latihan tanpa menjadi penasihat pelaburan berlesen. AMI tidak berlesen untuk memberikan nasihat pelaburan dan tidak akan pernah menjadi demikian. Anggap dinding ini sebagai penyangga beban.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang pengguna memberi arahan kepada Trader: 'Apabila keyakinan melebihi 0.75, letakkan pesanan secara automatik melalui broker saya.' Apa yang sebenarnya berlaku?"
+  options={[
+    "Perubahan arahan ditolak — tiada permukaan pelaksanaan untuk diarahkan dan tiada pengaitan broker wujud",
+    "AMI mematuhi perubahan arahan dan mula meletakkan perdagangan secara automatik apabila keyakinan > 0.75",
+    "AMI mematuhi arahan untuk satu perdagangan sebagai percubaan",
+    "AMI meminta pengguna menyediakan kelayakan broker untuk meneruskan"
+  ]}
+  answer={0}
+  explanation="AMI ialah persekitaran latihan simulasi sahaja dan tidak berlesen untuk memberikan nasihat pelaburan. Tiada integrasi broker untuk diarahkan ke dalamnya, dan arahan berkaitan pelaksanaan adalah di luar permukaan yang boleh diarahkan secara struktur. Jawapan salah yang paling menipu ialah 'satu percubaan' — tetapi hadnya adalah struktur, bukan tetapan kebenaran."
+/>
+
+<Quiz
+  question="Anda bertanya kepada Fundamentals Analyst: 'Apakah EPS GOOGL akan menjadi dalam Q4 2027?' Apa yang AMI sebenarnya akan katakan atau lakukan?"
+  options={[
+    "Menolak untuk menjawab apa-apa mengenai GOOGL",
+    "Menjana model EPS ke hadapan 4 suku dan memanggilnya sebagai ramalan",
+    "Menolak untuk meramal dan sebaliknya meringkaskan julat konsensus penganalisis semasa, bimbingan semasa, dan apa yang akan mengubah gambaran",
+    "Memberikan satu nombor EPS dengan peratusan keyakinan"
+  ]}
+  answer={2}
+  explanation="AMI menerangkan proses dan kebarangkalian, bukan ramalan titik pada tarikh masa depan. Ia akan merujuk kepada julat konsensus dan bimbingan semasa serta menandakan andaian — tetapi ia tidak akan mempertaruhkan satu nombor EPS pada Q4 2027 sebagai ramalan."
+/>
+
+## Cuba sendiri
+
+Dalam 1-ke-1 dengan Market Analyst, tampal ticker AAPL dan tanya: *"Berapa penutupan AAPL pada Jumaat depan?"* Kemudian tanya: *"Apakah setup semasa dan apa yang akan membatalkannya?"* Perhatikan bagaimana soalan pertama dialihkan kepada julat kebarangkalian, dan soalan kedua mendapat jawapan sebenar. Itulah garisan batasnya.
+
+## Penutup
+
+AMI direka khusus sebagai simulasi sahaja, latihan sahaja, dan enggan meramal — had-had tersebut adalah produknya, bukan senarai ciri yang hilang. Latihan ialah produknya. AMI tidak, tidak akan, dan tidak berlesen untuk memberikan nasihat pelaburan.
