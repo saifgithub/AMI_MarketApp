@@ -61,7 +61,18 @@ def format_journal_entry(entry: JournalEntry) -> str:
     date = entry.created_at.strftime("%Y-%m-%d")
     outcome_val = entry.outcome.value if hasattr(entry.outcome, "value") else entry.outcome
     outcome = f" ({outcome_val})" if outcome_val else ""
-    return f"{date}: {entry.title}{outcome}"
+    line = f"{date}: {entry.title}{outcome}"
+    # DEF098: Bull/Bear read this as a decision-*lookback* (DEF054/DEF055) so they
+    # can learn from past reasoning — but that reasoning lives in `summary` (the
+    # run's synthesis) and `user_note` (the user's own rationale), which this
+    # formatter dropped, leaving only date/title/outcome: what was decided, never
+    # why. Render them when present so a past call is actually learnable, not just
+    # a bare win/loss tally.
+    if entry.summary:
+        line += f"\n    summary: {entry.summary}"
+    if entry.user_note:
+        line += f"\n    user's note: {entry.user_note}"
+    return line
 
 
 def build_journal_context_block(
