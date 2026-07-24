@@ -140,3 +140,24 @@ format template.
   entry today that framed it as SSH-blocked/Architect-applied.)
 - `coder.room` now holds `CR077-ROOM` (CR069-ROOM DONE + merged d507a87); 1 free slot. `live_handle`
   marked stale — respawn per lane.
+
+## 2026-07-24 — DEF095 + DEF096 laned to coder.room (the two Room data-integrity holes from R59's audit)
+
+- **DEF095** (Trader narrates R:R/drawdown nothing checks — 4/4 wrong across the window, PM approved
+  the SCHD one) → `coder.room`, `GATE: independent`, round 1, workable now. Fix sites all coder.room:
+  `_pm_rr_coherence_signal` (room_runner.py:587-604) inspects only the PM and passes silently on
+  `stated is None`; the Trader's derived figures are structurally starved (DEF066 proposal gating,
+  room_prompts.py:214-216); the check is telemetry, not a surface. Build per CR038 — the *system*
+  computes every ratio from the Trader's levels and that computed figure feeds the transcript RISK/VERDICT
+  read (killing the contagion vector). `trading_math` fns already exist + imported → consume, no coder.math
+  sub-lane.
+- **DEF096** (Room Social Analyst denied 3 of 4 live Reddit fields) → `coder.room`, `GATE: independent`,
+  round 1, `DEPENDS-ON: DEF095`. Render `mention_trend` / `influencer_take` / `pattern` in `_format_profile`
+  under the existing `social_live` gate (room_prompts.py:268). **Ownership corrected at laning:** the spec
+  said "coder.api owns the files" — wrong; the roster puts the room cluster on coder.room and tells coder.api
+  "never edit the room cluster." Pure coder.room; `social_context.py` (the coder.api-adjacent service the
+  spec meant) needs no change.
+- **WIP:** both share `room_prompts.py` with each other and with CR077-ROOM (which strips the "build on the
+  transcript" line in the same block DEF095 rewrites). One instance owns all three → serialize internally.
+  wip_cap:2 respected — CR077-ROOM + DEF095 active; DEF096 dep-blocked behind DEF095.
+- Register rows flipped `open → laned` (def_list.md DEF095/DEF096). `AT:architect`.
