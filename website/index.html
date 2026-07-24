@@ -31,7 +31,7 @@
   <link rel="icon" href="data:image/svg+xml,%3csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='64' height='64' rx='12' fill='%230f172a'/%3e%3cpolygon points='32,8 56,21 56,43 32,56 8,43 8,21' fill='none' stroke='%233b82f6' stroke-width='3'/%3e%3ccircle cx='32' cy='32' r='4' fill='%233b82f6'/%3e%3cline x1='32' y1='8' x2='32' y2='24' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='56' y1='21' x2='42' y2='28' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='56' y1='43' x2='42' y2='36' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='32' y1='56' x2='32' y2='40' stroke='%233b82f6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='8' y1='43' x2='22' y2='36' stroke='%238b5cf6' stroke-width='1.5' opacity='0.6'/%3e%3cline x1='8' y1='21' x2='22' y2='28' stroke='%238b5cf6' stroke-width='1.5' opacity='0.6'/%3e%3c/svg%3e" type="image/svg+xml">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="/assets/css/site.css?v=cr072">
+  <link rel="stylesheet" href="/assets/css/site.css?v=cr072b">
 
   <!-- Structured Data -->
   <script type="application/ld+json">
@@ -288,30 +288,46 @@
     <div class="sec-line" style="background: var(--accent-purple); margin: 14px auto 22px;"></div>
     <p class="sec-lede" style="margin: 0 auto 3rem;">This is the Applied AI system behind AMI Trade. Each agent is a specialist — not a generalist with a label. They have defined roles, defined responsibilities, and prompts you can rewrite to match your investment philosophy. You are the CEO. They report to you.</p>
 
-    <!-- 13-agent radial tessellation: Concierge centre + 6-ring + 3 left + 3 right -->
+    <!-- 13-agent radial tessellation: Concierge centre + 6-ring + 3 left + 3 right.
+         Each hex carries data-job / data-reads for the interactive brief below.
+         Content is grounded in docs/initial_specs/02_agents/agent_data_blueprint.md:
+         every "reads" chip is a field the blueprint marks available for that agent;
+         no unavailable source is named and no gap is flagged (honest-degradation §7). -->
     <div class="honey-abs" aria-label="13 AI agents" role="list">
 
       <!-- ── TOP ROW (y=61) ── -->
       <!-- Far-top-left -->
-      <div class="honey-hex" role="listitem" style="left:140px;top:81px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:140px;top:81px"
+           data-agent="News" data-accent="#F59E0B"
+           data-job="Tracks the story moving the stock."
+           data-reads="Recent headlines|Publisher &amp; recency|Per-headline sentiment|Earnings calendar">
         <span class="h-icon">📰</span>
         <span class="h-name">News</span>
         <span class="h-role">Headlines &amp; events</span>
       </div>
       <!-- Top-left (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:280px;top:81px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:280px;top:81px"
+           data-agent="Fundamentals" data-accent="#06B6D4"
+           data-job="Judges whether the price is justified by the business."
+           data-reads="P/E|EV/EBITDA|PEG|FCF yield|Revenue growth|Margins|Net cash|52-wk range|Analyst consensus|Next earnings">
         <span class="h-icon">📊</span>
         <span class="h-name">Fundamentals</span>
         <span class="h-role">Earnings &amp; valuation</span>
       </div>
       <!-- Top-right (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:420px;top:81px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:420px;top:81px"
+           data-agent="Market" data-accent="#3B82F6"
+           data-job="Reads the price action and momentum."
+           data-reads="20 &amp; 50-day trend|RSI|Volume vs 20-day avg|Support|Breakout levels">
         <span class="h-icon">📈</span>
         <span class="h-name">Market</span>
         <span class="h-role">Price &amp; momentum</span>
       </div>
       <!-- Far-top-right -->
-      <div class="honey-hex" role="listitem" style="left:560px;top:81px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:560px;top:81px"
+           data-agent="Social Media" data-accent="#EC4899"
+           data-job="Gauges what retail is actually saying."
+           data-reads="Sentiment tone|Sentiment score|Mention volume &amp; trend|Active communities|Buzz score|Bull/bear split">
         <span class="h-icon">📱</span>
         <span class="h-name">Social Media</span>
         <span class="h-role">Retail sentiment</span>
@@ -319,31 +335,46 @@
 
       <!-- ── MIDDLE ROW (y=152) ── -->
       <!-- Far-left -->
-      <div class="honey-hex" role="listitem" style="left:70px;top:202px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:70px;top:202px"
+           data-agent="Research Manager" data-accent="#8B5CF6"
+           data-job="Synthesises bull and bear into one balanced view."
+           data-reads="Every analyst output|Both researchers' arguments">
         <span class="h-icon">🗂️</span>
         <span class="h-name">Research Mgr</span>
         <span class="h-role">Synthesises outputs</span>
       </div>
       <!-- Left (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:210px;top:202px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:210px;top:202px"
+           data-agent="Bull Researcher" data-accent="#10B981"
+           data-job="Builds the strongest case to buy."
+           data-reads="The full analyst read|Your past calls on this ticker">
         <span class="h-icon">🔬</span>
         <span class="h-name">Bull</span>
         <span class="h-role">Case to buy</span>
       </div>
       <!-- ★ CONCIERGE — centre -->
-      <div class="honey-hex h-special" role="listitem" style="left:350px;top:202px">
+      <div class="honey-hex h-special" role="listitem" tabindex="0" style="left:350px;top:202px"
+           data-agent="Concierge" data-accent="#8B5CF6"
+           data-job="Your chief of staff — helps you navigate the team, your journal and the curriculum."
+           data-reads="Your mandate|Recent journal|Unlocked agents|Unlock paths|Lessons catalogue">
         <span class="h-icon">💬</span>
         <span class="h-name">Concierge</span>
         <span class="h-role">Your Chief of Staff</span>
       </div>
       <!-- Right (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:490px;top:202px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:490px;top:202px"
+           data-agent="Bear Researcher" data-accent="#EF4444"
+           data-job="Builds the strongest case to pass."
+           data-reads="The full analyst read|Your past calls on this ticker">
         <span class="h-icon">⚠️</span>
         <span class="h-name">Bear</span>
         <span class="h-role">Case to pass</span>
       </div>
       <!-- Far-right -->
-      <div class="honey-hex" role="listitem" style="left:630px;top:202px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:630px;top:202px"
+           data-agent="Neutral Risk" data-accent="#A3E635"
+           data-job="Stress-tests both the bull and the bear."
+           data-reads="The trade proposal|Mandate|Portfolio state">
         <span class="h-icon">🔥</span>
         <span class="h-name">Neutral</span>
         <span class="h-role">Stress-tests both</span>
@@ -351,25 +382,37 @@
 
       <!-- ── BOTTOM ROW (y=243) ── -->
       <!-- Far-bottom-left -->
-      <div class="honey-hex" role="listitem" style="left:140px;top:323px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:140px;top:323px"
+           data-agent="Aggressive Risk" data-accent="#F97316"
+           data-job="Pushes the upside case on position size."
+           data-reads="The trade proposal|Mandate|Portfolio state">
         <span class="h-icon">⚡</span>
         <span class="h-name">Aggressive</span>
         <span class="h-role">Pushes the risk case</span>
       </div>
       <!-- Bottom-left (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:280px;top:323px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:280px;top:323px"
+           data-agent="Portfolio Manager" data-accent="#818CF8"
+           data-job="Makes the final, accountable call."
+           data-reads="The full debate|Full mandate|Portfolio state|Compliance floor (uncoachable)">
         <span class="h-icon">⚖️</span>
         <span class="h-name">Portfolio Mgr</span>
         <span class="h-role">Mandate &amp; sizing</span>
       </div>
       <!-- Bottom-right (ring) -->
-      <div class="honey-hex h-ring" role="listitem" style="left:420px;top:323px">
+      <div class="honey-hex h-ring" role="listitem" tabindex="0" style="left:420px;top:323px"
+           data-agent="Trader" data-accent="#F59E0B"
+           data-job="Turns the call into a concrete trade."
+           data-reads="Mandate|Portfolio state|Entry / stop / target|Reward-to-risk|Drawdown added">
         <span class="h-icon">↕️</span>
         <span class="h-name">Trader</span>
         <span class="h-role">Executes the trade</span>
       </div>
       <!-- Far-bottom-right -->
-      <div class="honey-hex" role="listitem" style="left:560px;top:323px">
+      <div class="honey-hex" role="listitem" tabindex="0" style="left:560px;top:323px"
+           data-agent="Conservative Risk" data-accent="#3B82F6"
+           data-job="Defends caution and the drawdown limit."
+           data-reads="The trade proposal|Mandate|Current drawdown">
         <span class="h-icon">🛡</span>
         <span class="h-name">Conservative</span>
         <span class="h-role">Defends caution</span>
@@ -377,44 +420,51 @@
 
     </div>
 
-    <!-- Mobile fallback: simple flex wrap -->
+    <!-- Mobile fallback: simple flex wrap. Same data-job/data-reads as the desktop
+         comb; tapping a card feeds the interactive brief below. -->
     <div class="honey-mobile" aria-label="13 AI agents" role="list">
-      <div class="agent-card" role="listitem"><span class="agent-icon">📊</span><span class="agent-name">Fundamentals</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">📈</span><span class="agent-name">Market</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">📰</span><span class="agent-name">News</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">📱</span><span class="agent-name">Social Media</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">🔬</span><span class="agent-name">Bull</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">⚠️</span><span class="agent-name">Bear</span></div>
-      <div class="agent-card special" role="listitem"><span class="agent-icon">💬</span><span class="agent-name">Concierge</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">🗂️</span><span class="agent-name">Research Mgr</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">⚖️</span><span class="agent-name">Portfolio Mgr</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">⚡</span><span class="agent-name">Aggressive</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">🛡</span><span class="agent-name">Conservative</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">🔥</span><span class="agent-name">Neutral</span></div>
-      <div class="agent-card" role="listitem"><span class="agent-icon">↕️</span><span class="agent-name">Trader</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Fundamentals" data-accent="#06B6D4" data-job="Judges whether the price is justified by the business." data-reads="P/E|EV/EBITDA|PEG|FCF yield|Revenue growth|Margins|Net cash|52-wk range|Analyst consensus|Next earnings"><span class="agent-icon">📊</span><span class="agent-name">Fundamentals</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Market" data-accent="#3B82F6" data-job="Reads the price action and momentum." data-reads="20 &amp; 50-day trend|RSI|Volume vs 20-day avg|Support|Breakout levels"><span class="agent-icon">📈</span><span class="agent-name">Market</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="News" data-accent="#F59E0B" data-job="Tracks the story moving the stock." data-reads="Recent headlines|Publisher &amp; recency|Per-headline sentiment|Earnings calendar"><span class="agent-icon">📰</span><span class="agent-name">News</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Social Media" data-accent="#EC4899" data-job="Gauges what retail is actually saying." data-reads="Sentiment tone|Sentiment score|Mention volume &amp; trend|Active communities|Buzz score|Bull/bear split"><span class="agent-icon">📱</span><span class="agent-name">Social Media</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Bull Researcher" data-accent="#10B981" data-job="Builds the strongest case to buy." data-reads="The full analyst read|Your past calls on this ticker"><span class="agent-icon">🔬</span><span class="agent-name">Bull</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Bear Researcher" data-accent="#EF4444" data-job="Builds the strongest case to pass." data-reads="The full analyst read|Your past calls on this ticker"><span class="agent-icon">⚠️</span><span class="agent-name">Bear</span></div>
+      <div class="agent-card special" role="listitem" tabindex="0" data-agent="Concierge" data-accent="#8B5CF6" data-job="Your chief of staff — helps you navigate the team, your journal and the curriculum." data-reads="Your mandate|Recent journal|Unlocked agents|Unlock paths|Lessons catalogue"><span class="agent-icon">💬</span><span class="agent-name">Concierge</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Research Manager" data-accent="#8B5CF6" data-job="Synthesises bull and bear into one balanced view." data-reads="Every analyst output|Both researchers' arguments"><span class="agent-icon">🗂️</span><span class="agent-name">Research Mgr</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Portfolio Manager" data-accent="#818CF8" data-job="Makes the final, accountable call." data-reads="The full debate|Full mandate|Portfolio state|Compliance floor (uncoachable)"><span class="agent-icon">⚖️</span><span class="agent-name">Portfolio Mgr</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Aggressive Risk" data-accent="#F97316" data-job="Pushes the upside case on position size." data-reads="The trade proposal|Mandate|Portfolio state"><span class="agent-icon">⚡</span><span class="agent-name">Aggressive</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Conservative Risk" data-accent="#3B82F6" data-job="Defends caution and the drawdown limit." data-reads="The trade proposal|Mandate|Current drawdown"><span class="agent-icon">🛡</span><span class="agent-name">Conservative</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Neutral Risk" data-accent="#A3E635" data-job="Stress-tests both the bull and the bear." data-reads="The trade proposal|Mandate|Portfolio state"><span class="agent-icon">🔥</span><span class="agent-name">Neutral</span></div>
+      <div class="agent-card" role="listitem" tabindex="0" data-agent="Trader" data-accent="#F59E0B" data-job="Turns the call into a concrete trade." data-reads="Mandate|Portfolio state|Entry / stop / target|Reward-to-risk|Drawdown added"><span class="agent-icon">↕️</span><span class="agent-name">Trader</span></div>
     </div>
 
-    <p style="margin-top: 3rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em;">
+    <!-- Interactive agent brief — hover / focus / tap a hex above to reveal that agent's
+         job and the live data it reads. Wired in the page script; content comes from each
+         hex's data-* attributes. Defaults to the Concierge so it never renders empty. -->
+    <div class="agent-brief-wrap">
+      <div class="agent-brief" id="agent-brief" aria-live="polite" style="--brief-accent:#8B5CF6;">
+        <div class="brief-hex" id="brief-icon" aria-hidden="true">💬</div>
+        <div class="brief-main">
+          <div class="brief-name" id="brief-name">Concierge</div>
+          <div class="brief-job" id="brief-job">Your chief of staff — helps you navigate the team, your journal and the curriculum.</div>
+          <div class="brief-reads">
+            <span class="brief-reads-label">Reads</span>
+            <span class="brief-chips" id="brief-chips">
+              <span class="brief-chip">Your mandate</span>
+              <span class="brief-chip">Recent journal</span>
+              <span class="brief-chip">Unlocked agents</span>
+              <span class="brief-chip">Unlock paths</span>
+              <span class="brief-chip">Lessons catalogue</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <p class="brief-hint" id="brief-hint">Hover, focus or tap any agent to see its job — and the live data it reads.</p>
+    </div>
+
+    <p style="margin-top: 2.5rem; font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.12em;">
       Every agent prompt is yours to rewrite &nbsp;·&nbsp; The system adapts to how you think &nbsp;·&nbsp; Applied AI that learns your style
     </p>
-
-    <!-- How the analyst team works — grounded in docs/initial_specs/02_agents/agent_data_blueprint.md.
-         Names only inputs the blueprint marks available; where a source is unavailable it is
-         neither claimed nor flagged (the honest-degradation rule, §7). -->
-    <div style="max-width: 780px; margin: 4rem auto 0; text-align: left;">
-      <span class="sec-eyebrow" style="color: var(--accent-cyan); text-align: center;">How the room works</span>
-      <h3 style="text-align: center; margin: 12px 0 1.75rem; font-size: 1.5rem; line-height: 1.25;">Specialists first. Then a debate.<br>Then one accountable call.</h3>
-      <p style="color: var(--text-muted); line-height: 1.75; margin-bottom: 1.25rem;">
-        Nothing in the room runs on a hunch. Your four analysts open, each reasoning from its own live read.
-        <strong style="color: var(--text-main);">Fundamentals</strong> weighs valuation and quality — P/E, P/S, EV/EBITDA, PEG and free-cash-flow yield, revenue growth and margin, net cash, the 52-week range, the dividend and the sell-side consensus, plus the next earnings date.
-        <strong style="color: var(--text-main);">Market</strong> reads the 20- and 50-day trend, RSI, volume against its own 20-day average, and where support and the next breakout sit.
-        <strong style="color: var(--text-main);">News</strong> works the recent headlines by publisher and recency, and the sentiment each one carries.
-        <strong style="color: var(--text-main);">Social</strong> gauges retail conviction — mention volume and its trend, the most active communities, a buzz score, and the bull-versus-bear split.
-      </p>
-      <p style="color: var(--text-muted); line-height: 1.75; margin-bottom: 0;">
-        Then they hand off in order. <strong style="color: var(--text-main);">Bull</strong> and <strong style="color: var(--text-main);">Bear</strong> argue the case on that shared read, your past decisions on the ticker in front of them. The <strong style="color: var(--text-main);">Research Manager</strong> synthesises both sides. The <strong style="color: var(--text-main);">Trader</strong> turns the call into a concrete entry, stop and target — with the reward-to-risk and the drawdown it would add computed, not asserted. Three risk analysts red-team that trade against your mandate. And the <strong style="color: var(--text-main);">Portfolio Manager</strong> makes the final call, checked against your mandate and a compliance floor it cannot be briefed out of. You see every step — the reasoning, not just the verdict.
-      </p>
-    </div>
   </div>
 </section>
 
@@ -1158,6 +1208,49 @@
       } finally {
         busy = false;
       }
+    });
+  })();
+
+  // ── Agent brief: hover / focus / tap a comb hex to reveal its job + data feed ──
+  (function () {
+    const brief = document.getElementById('agent-brief');
+    if (!brief) return;
+    const elIcon  = document.getElementById('brief-icon');
+    const elName  = document.getElementById('brief-name');
+    const elJob   = document.getElementById('brief-job');
+    const elChips = document.getElementById('brief-chips');
+    let timer = null, current = null;
+
+    function fill(el) {
+      brief.style.setProperty('--brief-accent', el.getAttribute('data-accent') || '#8B5CF6');
+      elIcon.textContent = el.querySelector('.h-icon, .agent-icon')?.textContent || '';
+      elName.textContent = el.getAttribute('data-agent') || '';
+      elJob.textContent  = el.getAttribute('data-job') || '';
+      elChips.innerHTML  = '';
+      (el.getAttribute('data-reads') || '').split('|').forEach(r => {
+        r = r.trim();
+        if (!r) return;
+        const c = document.createElement('span');
+        c.className = 'brief-chip';
+        c.textContent = r;
+        elChips.appendChild(c);
+      });
+    }
+
+    function show(el) {
+      if (el === current) return;
+      current = el;
+      document.querySelectorAll('.agent-card.is-active').forEach(c => c.classList.remove('is-active'));
+      if (el.classList.contains('agent-card')) el.classList.add('is-active');
+      clearTimeout(timer);
+      brief.classList.add('is-swapping');
+      timer = setTimeout(() => { fill(el); brief.classList.remove('is-swapping'); }, 90);
+    }
+
+    document.querySelectorAll('.honey-hex[data-agent], .agent-card[data-agent]').forEach(el => {
+      el.addEventListener('mouseenter', () => show(el));
+      el.addEventListener('focus', () => show(el));
+      el.addEventListener('click', () => show(el));
     });
   })();
 </script>

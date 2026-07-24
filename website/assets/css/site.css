@@ -683,6 +683,98 @@ section { padding: 5rem 0; }
 .honey-hex.h-special .h-name { color: var(--accent-purple); }
 .honey-hex.h-ring .h-name    { color: var(--text-main); }
 
+/* ── Agent brief (hover / focus / tap reveal) ───────────────
+ * A single shared detail card the agent comb feeds. clip-path on
+ * .honey-hex clips its own children, so a per-hex tooltip is
+ * impossible — one panel updated by JS is the robust pattern.
+ * --brief-accent is set per-agent from the hovered hex's data-accent. */
+.honey-hex[data-agent], .agent-card[data-agent] { cursor: pointer; }
+.honey-hex[data-agent]:focus-visible,
+.agent-card[data-agent]:focus-visible {
+  outline: 2px solid var(--hex-blue);
+  outline-offset: 2px;
+}
+.agent-card.is-active {
+  border-color: var(--hex-blue);
+  background: rgba(59,130,246,0.10);
+}
+
+.agent-brief-wrap { max-width: 620px; margin: 2.5rem auto 0; }
+.agent-brief {
+  --brief-accent: var(--accent-purple);
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  text-align: left;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-left: 3px solid var(--brief-accent);
+  border-radius: var(--r-lg);
+  padding: 1.25rem 1.4rem;
+  min-height: 118px;
+  transition: border-color var(--dur-std) var(--ease);
+}
+.brief-hex {
+  flex-shrink: 0;
+  width: 46px; height: 52px;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; line-height: 1;
+  background: rgba(139,92,246,0.18);
+  background: color-mix(in srgb, var(--brief-accent) 22%, transparent);
+  transition: background var(--dur-std) var(--ease);
+}
+.brief-main { flex: 1; min-width: 0; transition: opacity 130ms var(--ease); }
+.agent-brief.is-swapping .brief-main { opacity: 0.25; }
+.brief-name {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--brief-accent);
+  margin-bottom: 7px;
+}
+.brief-job {
+  font-size: 0.98rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin-bottom: 0.9rem;
+}
+.brief-reads { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.brief-reads-label {
+  font-family: var(--font-mono);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+.brief-chips { display: contents; }
+.brief-chip {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+.brief-hint {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: center;
+  margin-top: 0.9rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brief-main, .brief-hex, .agent-brief { transition: none; }
+}
+
 /* ── Curriculum comb — 13 tracks ─────────────────────────
  * Same geometry as the agent comb above; only the fill differs.
  * Colours and slot order are lifted verbatim from the app

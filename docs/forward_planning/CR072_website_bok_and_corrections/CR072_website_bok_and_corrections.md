@@ -206,5 +206,32 @@ grounded strictly in the blueprint:
   blueprint marks regulatory filings (8-K/S-1) as *not available* to the News Analyst, so the
   old label over-claimed.
 
-No new CSS (reuses `.sec-eyebrow` + section tokens). No `cr_list.md` edit (row already exists;
-avoids the raced register). Ships on the CR072 tag.
+No `cr_list.md` edit (row already exists; avoids the raced register). Ships on the CR072 tag.
+
+### Revised (2026-07-24) — made it interactive instead of text
+
+Saiful: *"that was a boring text-filled section. a web is a multimedia environment. how about,
+when the visitor passes over the agent hexagon … instead of just highlighting, we show what
+the agent is supposed to do and data it gets."*
+
+Replaced the two-paragraph blurb with an **interactive agent brief**. Each of the 13 comb
+hexes (and the 13 mobile cards) now carries `data-agent` / `data-job` / `data-reads` /
+`data-accent`; hovering, focusing (keyboard) or tapping a hex feeds a single shared
+`#agent-brief` panel below the comb — icon, name, one-line job, and the agent's data feed as
+chips, tinted to that agent's accent. Defaults to the Concierge so it never renders empty.
+
+- **Why one shared panel, not per-hex tooltips:** `.honey-hex` uses `clip-path`, which clips
+  its own children — a tooltip *inside* a hex is impossible. One JS-updated panel is the
+  robust pattern (noted in the CSS).
+- **Same blueprint grounding, now per-agent.** Every `data-reads` chip is a field
+  `agent_data_blueprint.md` marks *available* for that agent (Social gets all six §1 fields;
+  Trader's chips include the computed R:R + drawdown; PM's include the uncoachable compliance
+  floor). Honest-degradation §7 still holds: no unavailable source is named (no MACD/Bollinger,
+  no macro calendar/filings, no Twitter/StockTwits), and no gap is flagged.
+- **Accessible:** hexes/cards are `tabindex="0"` with `:focus-visible` outlines; the panel is
+  `aria-live="polite"`; honours `prefers-reduced-motion`.
+- **CSS change → cache-bust bumped `cr072` → `cr072b` on all seven pages that link
+  `site.css`** (index, privacy, terms + terms/v2 + terms/v3, competition-rules,
+  sad-to-see-you-go). Verified locally with Playwright: default Concierge → hover Trader
+  renders the 5 trade-math chips + amber accent → Social renders all 6 → keyboard focus works;
+  no JS errors (the localhost Turnstile 400 is the domain-locked bot widget, not this feature).
