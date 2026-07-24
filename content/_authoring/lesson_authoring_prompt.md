@@ -201,6 +201,58 @@ updated_at: "YYYY-MM-DD"
 
 <Body follows the 7-part lesson template below.>
 
+## The worked-example rule (v3, CR060 — LOAD-BEARING; applies to every example, quiz, and daily challenge)
+
+**This rule replaces the old "real tickers with real numbers, cite numbers,
+don't say imagine" instruction, which produced ~147 factual defects across the
+legacy corpus — fabricated prices, index levels off ~2×, dates on market
+holidays, wrong tickers, invented attributions.**
+
+Every figure in a worked example, quiz, or daily-challenge scenario is exactly
+one of two kinds. Choose per example:
+
+1. **Openly hypothetical (DEFAULT, preferred).** No real company. *"A stock
+   trading at $50…", "a large-cap chipmaker", "a Bursa-listed utility."* Round,
+   obviously-illustrative numbers. Because nothing claims to be real, nothing
+   can be wrong-about-the-world, and nothing can be screenshotted and repeated
+   as a fact. This is the honest default and it teaches identically.
+
+2. **Real AND sourced.** A real ticker with a real figure you verified against a
+   PRIMARY source *this session* (SEC filing, exchange price history, Fed/BLS
+   series, company IR) — and you record that source in `sources:`. Use this only
+   when the real instance IS the pedagogy (reading an actual 10-K, an actual
+   historical event like the Oct-1987 −20.5% session).
+
+**The one thing you may NEVER do:** a real ticker with an invented number.
+*"NVDA at $115 in late 2024"* when you did not verify $115. *"VIX hit 82 on
+[date]." "XLK at $240.50."* The specificity makes it look sourced; the invention
+makes it false; and per CR038 (*"prompt instructions are not controls"*) a
+top-of-lesson "illustrative" tag does NOT travel with a screenshot. **If you
+want the real name, source the number. If you can't source it, drop the name and
+go hypothetical.**
+
+Corollaries — the classes that actually bit us:
+
+- **Dates are figures.** Don't attach a fabricated date to a real event; don't
+  land an example on a market holiday. If the date isn't load-bearing, omit it.
+- **Attributions are figures.** *"Graham said…", "Fama–French showed…"* — the
+  right person and the real work, or no attribution. (Legacy defects: Buffett
+  credited for Graham's "voting/weighing machine"; a finding credited to
+  researchers who never made it.)
+- **Deterministic numbers stay verified** (the v2 rule, unchanged): bond
+  price/YTM, option payoff/break-even, Kelly, portfolio variance/beta — computed
+  against `backend/app/trading_math/` before shipping.
+- **Product and mechanic claims are CODE-truth.** A Mandate field, a screen, a
+  cap, a halt threshold — state only what the code does, read first. There is no
+  `max_position_pct` Mandate field; the single-name cap is
+  `risk_tier_cap(risk_score)` = `{1:1.5, 2:1.5, 3:3.0, 4:4.5, 5:4.5}`%
+  (`backend/app/trading_math/sizing.py`). Single-stock halts are LULD bands, not
+  "drops 7%" (that is a market-wide S&P circuit breaker).
+- **A quiz can NEVER be "illustrative."** It is graded. Its stem, key, and
+  explanation must be true (if real) or self-consistent (if hypothetical), so a
+  learner reasoning from REALITY is always marked correct. A fabricated number in
+  a quiz stem or key is the highest-severity defect there is.
+
 ## The 7-part lesson template (every lesson MUST follow this shape)
 
 v2 adds one OPTIONAL beat (3b, the steelman) and one OPTIONAL closing
@@ -224,10 +276,14 @@ move on — no Animation tag.
 ### 2. Real-world example (150-250 words, heading: "## Example" or
 "## How this plays out in real markets")
 
-A specific scenario with real tickers and real numbers. US OR Bursa
-Malaysia example. Show the concept happening to a concrete instrument.
-Cite numbers — entry, exit, percentages, ratios. Don't say "imagine
-a stock"; say "Look at NVDA in Q1 2026".
+A specific, concrete scenario — but every figure obeys **the worked-example
+rule above**. Default to an openly hypothetical instrument (*"a large-cap
+chipmaker trading at $50, ATR $1.50…"*) with round illustrative numbers; that is
+the honest, screenshot-safe form and it teaches identically. Use a real ticker
+ONLY when the real instance is the point AND you have sourced every figure this
+session. Never a real ticker with an invented price/date. "Concrete" means
+specific mechanics and numbers to reason from — it does NOT mean "attach a
+real-looking number to a real name."
 
 ### 3. Common beginner mistake (80-150 words, heading: "## The trap")
 
@@ -285,7 +341,10 @@ the quiz is the assessment surface. So:
     answer={1}                 # zero-indexed; in this example the right answer is options[1]
     explanation="Why the right answer is right AND why the most
                  tempting wrong answer fails. Reference numbers from
-                 the lesson body."
+                 the lesson body — which, per the worked-example rule,
+                 are hypothetical-and-self-consistent or real-and-sourced.
+                 A quiz is graded: the key must be the answer a learner
+                 reasoning from reality would pick."
   />
 
 **Multiple-choice is the ONLY supported quiz form.** There is no numeric
@@ -456,7 +515,9 @@ with these extras:
 ## Quality bar (per lesson)
 
 1. Opens with a thesis paragraph — what the reader will be able to do.
-2. Uses at least one specific numeric example with a real ticker.
+2. Uses at least one specific numeric example, obeying the worked-example
+   rule: openly hypothetical (default) OR real-and-sourced. A real ticker
+   with an invented number fails the bar.
 3. Includes at least one falsification condition for any claim. If you
    say "X is bullish", you must also say "X would invalidate if Y".
 4. **Has at least one multi-choice quiz. Last quiz requires synthesis,
@@ -543,8 +604,13 @@ Schema:
   "type": "predict_the_call" | "read_the_chart" | "spot_the_violation" | "match_the_agent" | "whats_missing",
   "difficulty": 1 | 2 | 3 | 4 | 5,
   "locale": "en",
-  "scenario": "<the setup the user reads, 30-120 words; uses real
-                tickers + specific numbers>",
+  "scenario": "<the setup the user reads, 30-120 words. Obeys the
+                worked-example rule: openly hypothetical instrument with
+                specific illustrative numbers (default), OR a real ticker
+                with every figure sourced this session. NEVER a real
+                ticker with an invented price/date. The challenge is
+                GRADED, so a fabricated number in the scenario or key is
+                the worst defect there is.>",
   "question": "<the actual question being asked>",
   "options": ["<distractor>", "<correct>", "<distractor>", "<distractor>"],
   "answer": <zero-indexed integer pointing to the correct option>,
@@ -571,8 +637,13 @@ Challenge-type guide:
   agent's input is conspicuously absent.
 
 Quality bar (same as lessons):
-- Real tickers only. No "Company X". US + Bursa Malaysia.
-- Numbers > adjectives in scenarios.
+- **Worked-example rule (v3, CR060).** Default to an openly hypothetical
+  instrument; use a real ticker only with every figure sourced this session.
+  Never a real ticker with an invented number — a daily challenge is graded,
+  so this is the highest-severity defect. ("Company X" is fine and preferred
+  over a fake-real "NVDA at $115".) Markets: US + Bursa Malaysia framing.
+- Specific illustrative numbers > adjectives in scenarios (hypothetical is
+  fine; specific is still required — a learner must have figures to reason from).
 - Distractors plausible to someone who half-read the relevant lesson.
 - Explanations must address why the *attractive* wrong answer fails.
 - One challenge per day per locale; aim for ~30 challenges per batch
