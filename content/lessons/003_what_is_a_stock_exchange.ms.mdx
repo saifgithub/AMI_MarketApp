@@ -1,0 +1,68 @@
+---
+id: "003_what_is_a_stock_exchange"
+title: "Apakah bursa saham?"
+duration_min: 3
+level: 1
+module: 1
+difficulty: 1
+track: "foundations"
+code: "CORE 3"
+topic: "exchanges"
+prerequisites: []
+tags: ["foundations", "exchanges", "order_book", "liquidity"]
+agent_callouts: []
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apa itu bursa saham?
+
+Bursa saham adalah pasaran terorganisir di mana pembeli dan penjual saham bertemu. Tanpa bursa, jika anda ingin menjual saham Apple, anda perlu mencari secara peribadi seseorang yang sanggup membelinya pada harga yang kedua-dua pihak bersetuju. Bursa menyelesaikan masalah ini pada skala industri. Ia menjalankan sistem pusat — buku pesanan (order book) — di mana setiap tawaran pembeli dan setiap tawaran penjual disenaraikan, dan perdagangan dilaksanakan secara automatik apabila tawaran pembeli dan penjual bersilang. Bursa menetapkan peraturan, menguatkuasakan peraturan tersebut, dan menerbitkan harga yang dilihat oleh semua orang.
+
+## Contoh
+
+Lihat buku pesanan untuk Microsoft (MSFT) di NASDAQ pada hari Selasa biasa mana-mana. Pada mana-mana saat tertentu, mungkin terdapat 1,200 pedagang yang ingin membeli pada $419.50, 800 lagi yang sanggup membeli pada $419.45, dan di pihak lain, 950 penjual meminta $419.55 dan 1,400 meminta $419.60. Enjin pencocokan bursa memadankan mereka: tawaran tertinggi yang memenuhi tawaran terendah akan diperdagangkan dahulu. Apabila seorang pembeli bersetuju membayar $419.55, perdagangan itu berlaku, harga "terakhir" MSFT berubah menjadi $419.55, dan buku pesanan disusun semula untuk pusingan seterusnya. Ini berlaku berjuta-juta kali sehari untuk saham seperti MSFT.
+
+Bursa itu sendiri tidak memegang posisi. Ia mengenakan yuran kecil bagi setiap perdagangan, menyiar harga ke setiap broker dan aliran data di seluruh dunia, serta menguatkuasakan peraturan — contohnya, menghentikan perdagangan jika saham jatuh lebih daripada 7% dalam tempoh masa yang singkat, atau menyingkirkan syarikat yang berhenti mengemukakan kewangan mereka.
+
+Di Bursa Malaysia: TENAGA NASIONAL (TENAGA) diperdagangkan dengan cara yang sama, hanya dalam MYR dan dengan waktu sesi yang berbeza. Mekanik pencocokan adalah sama.
+
+## Perangkap
+
+Pemula sering menyangka bahawa bursa menetapkan harga — bahawa terdapat badan rasmi yang menentukan apa yang "bernilai" bagi AAPL pada hari ini. Ia tidak. Bursa hanyalah infrastruktur. Harga adalah apa yang sanggup dibayar oleh tawaran tertinggi semasa yang bertemu dengan penjual yang sanggup menjual. Jika setiap pembeli hilang serentak, harga akan jatuh sehingga ada yang muncul. Jika setiap penjual menarik pesanan mereka, harga akan naik sehingga ada yang bersetuju untuk menjual. Bursa hanya menerbitkan apa yang berlaku. Percaya bahawa bursa "menetapkan" harga akan membuat anda mempercayai nombor itu lebih daripada yang sepatutnya. Percaya bahawa harga hanyalah tempat pembeli dan penjual hari ini bertemu memberitahu anda tepat berapa banyak berat yang perlu diberi kepadanya.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Buku pesanan saham menunjukkan tawaran tertinggi (bid) pada $50.00 dan tawaran terendah (ask) pada $50.05. Apa yang akan berlaku seterusnya di bursa?"
+  options={[
+    "Bursa memilih harga yang adil dan memaksa transaksi",
+    "Saham dihentikan kerana terdapat jurang",
+    "Transaksi akan dilaksanakan serta-merta pada $50.025",
+    "Tiada transaksi berlaku sehingga pembeli menaikkan tawaran mereka kepada $50.05 atau penjual menurunkan tawaran kepada $50.00"
+  ]}
+  answer={3}
+  explanation="Transaksi hanya berlaku apabila tawaran pembeli bertemu dengan tawaran penjual. Jurang $0.05 (spread) bermaksud tiada pembeli sanggup membayar apa yang diminta oleh penjual. Buku pesanan akan tergendala sehingga seseorang bergerak — sama ada pembeli membayar sehingga $50.05 atau penjual menurunkan kepada $50.00. Bursa tidak mencipta titik tengah."
+/>
+
+<Quiz
+  question="Mengapakah bursa saham wujud?"
+  options={[
+    "Untuk memadankan pembeli dan penjual dengan cekap, melaksanakan peraturan perdagangan, dan menerbitkan harga",
+    "Untuk menjamin setiap pelabur mendapat keuntungan daripada perdagangan mereka",
+    "Untuk menentukan syarikat mana yang berbaloi untuk dilaburkan",
+    "Untuk menetapkan harga rasmi setiap syarikat tersenarai"
+  ]}
+  answer={0}
+  explanation="Bursa adalah infrastruktur. Mereka memadankan pesanan, melaksanakan peraturan penyenaraian dan perdagangan, serta menyiarkan harga. Mereka tidak memberi pendapat sama ada syarikat merupakan pelaburan yang baik, menetapkan harga sendiri, atau melindungi sesiapa daripada kerugian."
+/>
+
+## Cuba sendiri
+
+Dalam Senarai Pantauan anda, ketik mana-mana simbol saham dan buka pandangan "Kedalaman" (juga dikenali sebagai buku pesanan). Perhatikan selama 30 saat semasa waktu pasaran. Lihat bagaimana tawaran dan permintaan berubah apabila pesanan baharu tiba dan perdagangan dilaksanakan. Susunan semula langsung ini adalah tugas satu-satunya bursa: memadankan sesiapa sahaja yang ingin membeli dengan sesiapa sahaja yang ingin menjual.
+
+## Kesimpulan
+
+Bursa adalah mesin pencocokan, bukan penentu harga. Harga yang anda lihat hanyalah tempat pembeli dan penjual terkini bersetuju — tiada lebih, tiada kurang.
