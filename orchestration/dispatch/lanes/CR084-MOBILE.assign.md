@@ -45,6 +45,13 @@ Push to `lane/CR084-MOBILE.coder.mobile`, never `main`. Hand-off:
 `orchestration/dispatch/lanes/CR084-MOBILE.coder.mobile.md` (`STATUS: READY_FOR_AUDIT (round 1)`) +
 `orchestration/audit/cr/CR084-MOBILE.architect.md` (`SUBMITTED: round 1`). Commit tag `(AT:coder.mobile CR084)`.
 
-DISPATCH: OPEN
+DISPATCH: ACCEPTED (round 1)
 
 ASSIGNED: coder.mobile round 1
+
+<!-- INTEGRATED 2026-07-24: coder.mobile build b0d1e8bb independently audited COMPLETE (round 1, no
+BLOCKER/MAJOR; all three DEF100 degrade triggers verified). Clean checkout of the 19 mobile lane files
+onto main at cddf7b4 (no divergence since merge-base 70a0e14), flutter test 70 passed. Lane closed.
+Paywall ships DARK until DEF100 (RC keys + store products). Minor follow-up: pin the 2 unnamed
+degrade-path tests. -->
+
