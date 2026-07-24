@@ -16,7 +16,7 @@ auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GA
 live_handle: 5fe0b6cb-cafc-4155-a10f-19da3844b851   # stale: was CR069-DIVERGE (now DONE, merged 5877c13). Respawn per lane.
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
-active_lanes: [DEF094, CR077-CONCIERGE]   # at cap. CR069-BE + CR069-DIVERGE both DONE + merged.
+active_lanes: [DEF094, CR077-CONCIERGE, (DEF098 dep-blocked)]   # DEF094 + CR077-CONCIERGE active = at wip_cap:2. DEF098 laned but DEPENDS-ON DEF095+DEF096 (coder.room batch) AND queues behind the cap; fires when the batch lands + a slot frees. CR069-BE + CR069-DIVERGE DONE + merged.
 ```
 
 **Hot files:** owns `db/models.py` (schema-owner — others `DEPENDS-ON` its schema lane), and the

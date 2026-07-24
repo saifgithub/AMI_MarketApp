@@ -161,3 +161,22 @@ format template.
   transcript" line in the same block DEF095 rewrites). One instance owns all three → serialize internally.
   wip_cap:2 respected — CR077-ROOM + DEF095 active; DEF096 dep-blocked behind DEF095.
 - Register rows flipped `open → laned` (def_list.md DEF095/DEF096). `AT:architect`.
+
+## 2026-07-24 (cont.) — DEF095+DEF096 batched to one audit; DEF098 (the class) laned to coder.api
+
+- Saiful: *"if 95 & 96 are essentially doing the same thing, you might as well batch them together to
+  the auditor. Check 98 too."* Correct — 95 (Trader's derived R:R/drawdown unchecked) and 96 (social
+  trio dropped) are one class (CR040 computed-but-dropped/unchecked) and both edit `room_prompts.py`.
+- **DEF095 + DEF096 → ONE coder.room build + ONE audit.** The coder.room agent already firing on DEF095
+  was widened (SendMessage) to build DEF096 in the same worktree and produce a single combined hand-off.
+  DEF096's `DEPENDS-ON: DEF095` dropped (no longer serialized — they're one build). On the single COMPLETE
+  both register rows flip `fixed`.
+- **DEF098 → coder.api, `GATE: independent`, `DEPENDS-ON: DEF095, DEF096`.** 98 is the *systemic* parity
+  guard (a field the pipeline computes must render on every surface the agent reads, or be declared in an
+  `INTENTIONALLY_OMITTED` registry — modelled on `test_config_compose_parity.py`). It is **coder.api, not
+  coder.room**: the guard spans the 1-on-1 + Concierge surfaces (`agent_runner`/`social_context`/
+  `concierge_prompts`) coder.room may not touch, and it carries the api-side instance fix (1-on-1 drops
+  next-earnings). It builds ON TOP of the landed Room batch (so its Room assertions are green), and queues
+  behind coder.api's cap (DEF094 + CR077-CONCIERGE). Not folded into the Room audit — different instance,
+  different surfaces.
+- Register rows: DEF095/096 annotated batched; DEF098 flipped `open → laned`. Architect-written per CR081.
