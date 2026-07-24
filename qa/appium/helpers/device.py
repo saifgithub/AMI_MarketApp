@@ -38,14 +38,15 @@ def display_size(serial: str) -> tuple[int, int]:
     raise RuntimeError(f"could not parse `wm size` output: {out!r}")
 
 
-def navbar_top_y(serial: str, *, fallback_px: int) -> int:
+def navbar_top_y(serial: str, *, display_height: int, fallback_height_px: int) -> int:
     """Return the y-coordinate (px) where the system navigation bar begins.
 
     Two independent parses, most-reliable first; a fixed fallback if both
     fail so a flaky dumpsys parse degrades to "less precise" rather than
     "crashes the whole run" — but the fallback firing is logged loudly by the
     caller (see conftest.device fixture), never silent, per this project's
-    degrade-loudly convention.
+    degrade-loudly convention. `fallback_height_px` is the bar's *height*,
+    not a y-coordinate — the fallback y is `display_height - fallback_height_px`.
     """
     # Primary: `dumpsys window displays` insets-source frame (SDK 30+ shape).
     out = _adb(serial, "shell", "dumpsys", "window", "displays")
@@ -57,12 +58,17 @@ def navbar_top_y(serial: str, *, fallback_px: int) -> int:
         return int(insets_match.group(2))
 
     # Fallback: `dumpsys window windows`, the NavigationBar window's mFrame.
+    # Empirically (Galaxy A17, Android 11/SDK 30) the gap between the
+    # "NavigationBar0}:" marker and its own `mFrame=` line is ~1.8KB of
+    # verbose per-window dump — a short window here just silently misses
+    # and falls through to the fallback constant, which is worse than a
+    # slightly-too-wide window that risks the next window's frame.
     out = _adb(serial, "shell", "dumpsys", "window", "windows")
-    nav_block = re.search(r"NavigationBar\d*[\s\S]{0,400}?mFrame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]", out)
+    nav_block = re.search(r"NavigationBar\d*[\s\S]{0,2500}?mFrame=\[(\d+),(\d+)\]\[(\d+),(\d+)\]", out)
     if nav_block:
         return int(nav_block.group(2))
 
-    return fallback_px
+    return display_height - fallback_height_px
 
 
 def app_version(serial: str, package: str) -> str:

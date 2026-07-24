@@ -1,6 +1,15 @@
 """Settings tab — Phase 1 smoke coverage. See test_scroll_overflow.py /
 test_sheets_navbar.py for the cross-cutting mechanical checks.
 
+Content-depth strings verified against mobile/lib/l10n/app_en.arb:
+  settingsSectionMandate = "MY MANDATE"  — the screen's primary section,
+    hard-asserted (settings_screen.dart is 1119 lines across several
+    sections; this one is guaranteed, the rest below aren't without knowing
+    exact scroll position).
+  settingsRiskScore = "Risk score", settingsSignIn = "SIGN IN" — logged only
+    after one swipe-down-the-page attempt, since their exact position on a
+    long settings screen isn't something this test should assume.
+
 Sign-in and Alpaca-connect flows are Phase 2 — they need real credentials
 Saiful must supply (see test_data/README.md), never fabricated here.
 """
@@ -10,15 +19,20 @@ from __future__ import annotations
 import pytest
 
 from conftest import snap
+from helpers.gestures import swipe_up
 from helpers.locators import wait_visible_text
-from pages.base_page import open_tab
+from pages.base_page import content_band, open_tab, probe_content
 
 pytestmark = [pytest.mark.phase1]
 
 
-def test_settings_renders_heading(driver, run_dir):
+def test_settings_renders_heading(driver, device, run_dir):
     open_tab(driver, "Settings")
     wait_visible_text(driver, "SETTINGS", timeout_s=10)
+    signals = probe_content(driver, "settings", exact=("MY MANDATE",))
+    assert signals["MY MANDATE"], "Settings should always show the MY MANDATE section"
+    swipe_up(driver, content_band(device), percent=0.5)
+    probe_content(driver, "settings (after scroll)", contains=("Risk score", "SIGN IN"))
     snap(driver, run_dir, "settings", "default")
 
 

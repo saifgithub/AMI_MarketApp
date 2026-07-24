@@ -70,6 +70,14 @@ def exists_text(driver: WebDriver, text: str) -> bool:
         return False
 
 
+def exists_text_contains(driver: WebDriver, fragment: str) -> bool:
+    try:
+        by_text_contains(driver, fragment)
+        return True
+    except NoSuchElementException:
+        return False
+
+
 def wait_visible_text(driver: WebDriver, text: str, *, timeout_s: float = 8.0) -> WebElement:
     deadline = time.monotonic() + timeout_s
     last_error: Exception | None = None

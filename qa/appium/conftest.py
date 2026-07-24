@@ -42,7 +42,9 @@ def device():
         name=serial, serial=serial
     )
     width, height = device_helpers.display_size(serial)
-    navbar_y = device_helpers.navbar_top_y(serial, fallback_px=profile.navbar_height_px_fallback)
+    navbar_y = device_helpers.navbar_top_y(
+        serial, display_height=height, fallback_height_px=profile.navbar_height_px_fallback
+    )
     if navbar_y == height - profile.navbar_height_px_fallback:
         print(f"NOTE: nav-bar band read via fallback constant for {serial} — dumpsys parse may be stale.")
     version = device_helpers.app_version(serial, profile.app_package)
