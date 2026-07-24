@@ -21,6 +21,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.services.market_data import get_market_data_provider
 from app.trading_math.valuation import (
     dividend_yield_pct,
     fcf_yield_pct,
@@ -254,6 +255,26 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
     return out
 
 
+def fetch_next_earnings(ticker: str):
+    """Upcoming-earnings window (date / quarter / consensus EPS) for the 1-on-1
+    fundamentals block (DEF098).
+
+    The Room already surfaces next-earnings from
+    `get_market_data_provider().earnings()`, but the 1-on-1 fundamentals path
+    never fetched it, so the single analyst in a 1-on-1 saw a strictly poorer
+    fact-sheet than the same analyst in the Room — the drop the prompt-data
+    parity guard exists to forbid. Mirrors `room_runner`'s fetch (same provider,
+    same 90-day window, same never-raises contract) rather than inventing a
+    second earnings path. Returns None on any error or when nothing is within
+    the window.
+    """
+    try:
+        return get_market_data_provider().earnings(ticker.upper().strip())
+    except Exception as exc:
+        logger.warn("fundamentals_earnings_error", ticker=ticker, error=str(exc)[:200])
+        return None
+
+
 def build_live_data_block(ticker: str) -> str | None:
     """Compose a system-prompt-ready block of live numeric fundamentals.
 
@@ -313,6 +334,17 @@ def build_live_data_block(ticker: str) -> str | None:
             f"target ${data.get('analyst_target_price', '—')} "
             f"(Street view, not company guidance)"
         )
+    # Real next-earnings window (DEF098) — date + quarter + consensus EPS, so the
+    # 1-on-1 fundamentals block reaches parity with the Room's `_format_profile`,
+    # which has surfaced this since DEF053. Same wording as the Room line.
+    earnings = fetch_next_earnings(ticker)
+    if earnings and earnings.earnings_date:
+        line = f"Next earnings (LIVE): {earnings.earnings_date}"
+        if earnings.quarter:
+            line += f" ({earnings.quarter})"
+        if earnings.eps_estimate is not None:
+            line += f", consensus EPS est. ${earnings.eps_estimate}"
+        lines.append(line)
     lines.append(
         f"(yfinance live snapshot for {sym}. Use these numbers when "
         f"discussing {sym}. Do NOT cite figures from training memory; "
