@@ -164,11 +164,18 @@ Rules:
 ## What to do when you start a session
 
 1. Read this file (already loaded).
-2. Read [`HANDOVER_R.md`](HANDOVER_R.md) for the freshest state + immediate next steps.
-3. Skim [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
-4. `git log --oneline` to verify the commit chain.
-5. Find the topic-specific doc(s) in `docs/` for your task.
-6. Ask Saiful what he wants to work on if it's not obvious. He decides priorities.
+2. **Daily CR/Defect review check (CR085).** If it's on/after 13:00 Asia/Riyadh (Saiful's
+   timezone, UTC+3) and `docs/governance/daily_cr_def_review_log.md` has no `## YYYY-MM-DD`
+   section for today yet, run [`/daily-cr-def-review`](.claude/commands/daily-cr-def-review.md)
+   right in this session before anything else — ask Saiful about every `proposed` CR / `open`
+   Defect one by one via `AskUserQuestion`, inline, live. This runs in whichever session
+   Saiful opens first that day (not a separate cloud routine — he pushed back on being
+   redirected to one, 2026-07-24). Skip silently if today's section already exists.
+3. Read [`HANDOVER_R.md`](HANDOVER_R.md) for the freshest state + immediate next steps.
+4. Skim [`docs/initial_specs/10_delivery/project_plan.md`](docs/initial_specs/10_delivery/project_plan.md) — the Alpha → Beta → MVP roadmap. Your task is almost always in there.
+5. `git log --oneline` to verify the commit chain.
+6. Find the topic-specific doc(s) in `docs/` for your task.
+7. Ask Saiful what he wants to work on if it's not obvious. He decides priorities.
 
 ---
 

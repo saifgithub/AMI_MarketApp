@@ -5,8 +5,12 @@ Saiful one by one what to do with each, via `AskUserQuestion`. This is the daily
 of `/fix-bugs`'s triage step, but for the CR/Defect registers instead of `bug_reports`:
 poll, surface, log the decision, **never act on it**. Filed as CR085.
 
-Runs daily at 13:00 Asia/Riyadh (UTC+3, Saiful's timezone) via a `/schedule` cloud routine — can also be run
-manually any time.
+Runs from a **session-start check** (`CLAUDE.md` step 2): the first Claude Code session
+Saiful opens on/after 13:00 Asia/Riyadh (UTC+3, his timezone) each day, if today has no
+ledger section yet. Not a `/schedule` cloud routine — that was tried first (2026-07-24)
+and dropped the same day: it asks its questions in its own separate claude.ai session,
+and Saiful pushed back on being redirected there ("I was expecting you to use
+askuserquestion and not push me to a temporary site"). Can also be run manually any time.
 
 ---
 
@@ -21,9 +25,11 @@ manually any time.
    the generated `cr_list.md`/`def_list.md` can silently drift (CR085's own filing found
    `cr_list.md` missing CR084). Self-heal first (step 2 below) so the generated tables
    never lag anyway, but don't depend on them for the source data.
-3. **One item, one `AskUserQuestion` call, in sequence.** Don't batch unrelated items
-   into one multi-question call — Saiful's answers need to log against distinct items
-   cleanly, and "one by one" is the literal ask.
+3. **Batch up to 4 items per `AskUserQuestion` call** (the tool's per-call max), each
+   still its own distinct question with its own options — don't merge items into a single
+   shared question. Pure sequential one-at-a-time is unnecessarily slow for a ~20+ item
+   list in a live chat; batching in groups of up to 4 preserves "ask about each one" while
+   cutting the round trips roughly 4x.
 4. **Log every answer immediately**, right after it comes back — not batched at the end.
    A mid-run interruption should never lose an already-collected answer.
 5. **Commit only the ledger file**, pathspec-only, never bare/`-am`/`add -A`:
@@ -92,13 +98,14 @@ commit tagged CR014 since"* or *"you said 'drop it' on 07-24; still `proposed`, 
 did happen (status changed and/or a matching commit landed), skip re-asking — log it as
 closed instead of asking again.
 
-### 6. Ask, one item at a time
+### 6. Ask, in batches of up to 4
 
 For every item still open after step 5 (prior-context ones first, then brand-new ones),
-call `AskUserQuestion` — title/summary of the item, any follow-up context from step 5,
-and options tailored to that item (e.g. "Start now", "Keep deferring", "Drop it") plus
-the tool's built-in free-form "Other". No forced "(Recommended)" option — Saiful is
-prioritizing, not accepting a proposed fix, so there's no honest default to push.
+call `AskUserQuestion` in groups of up to 4 — each item its own question with its own
+title/summary, any follow-up context from step 5, and options tailored to it (e.g.
+"Start now", "Keep deferring", "Drop it") plus the tool's built-in free-form "Other". No
+forced "(Recommended)" option — Saiful is prioritizing, not accepting a proposed fix, so
+there's no honest default to push.
 
 ### 7. Log immediately
 
@@ -131,7 +138,8 @@ follow-up check without re-asking, and the raw text of each new answer.
 - Don't flip any row file's Status, don't edit `cr_list.md`/`def_list.md` content by
   hand (only via `gen_registers.py`), don't touch application code.
 - Don't skip items to keep the list short — no cap, ever (Saiful's call, see CR085).
-- Don't batch multiple items into one `AskUserQuestion` call.
+- Don't exceed 4 items in one `AskUserQuestion` call, and don't merge two items into a
+  single shared question even within a batch.
 - Don't bare-commit or `git add -A` — pathspec only, so this never sweeps up whatever
   unrelated work-in-progress is sitting in the checkout from other tracks.
 - Don't `--force` push, ever.
