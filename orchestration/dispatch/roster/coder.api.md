@@ -16,7 +16,7 @@ auditor: per-lane GATE  # CR070 dropped the standing auditor.core; the lane's GA
 live_handle: 5fe0b6cb-cafc-4155-a10f-19da3844b851   # stale: was CR069-DIVERGE (now DONE, merged 5877c13). Respawn per lane.
 commit_tag: AT:coder.api
 worktree: .claude/worktrees/coder.api-<ITEM>
-active_lanes: [DEF094, CR077-CONCIERGE]   # DEF098 DONE — audited COMPLETE r1, integrated 6f5f526 (2026-07-24); WIP slot freed. DEF094 + CR077-CONCIERGE still paper-assigned (no running agent). CR069-BE + CR069-DIVERGE DONE + merged.
+active_lanes: [CR084-BE (BUILDING r1), DEF094, CR077-CONCIERGE]   # CR084-BE (RevenueCat webhook, GTM M1) is the one lane with a RUNNING coder.api agent (spawned 2026-07-24, building against mocked RC payloads in an isolated worktree). DEF094 + CR077-CONCIERGE remain paper-assigned (no running agent, no commits) — CR084-BE is prioritised over them per Saiful's M1 directive. DEF098 DONE (integrated 6f5f526). CR069-BE + CR069-DIVERGE DONE + merged.
 ```
 
 **Hot files:** owns `db/models.py` (schema-owner — others `DEPENDS-ON` its schema lane), and the
