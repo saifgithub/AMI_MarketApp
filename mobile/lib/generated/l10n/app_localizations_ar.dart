@@ -1160,11 +1160,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get roomRetry => 'حاول مجددًا';
 
   @override
-  String get upgradeSheetTitle => 'Upgrade your desk';
+  String get upgradeSheetTitle => 'ترقية مكتبك';
 
   @override
   String get upgradeSheetSubtitle =>
-      'Unlock more Rooms and premium analysis. Prices are shown for your region.';
+      'افتح المزيد من الغرف والتحليلات المميزة. تُعرض الأسعار لمنطقتك.';
 
   @override
   String get upgradePlanTrader => 'Trader';
@@ -1173,52 +1173,52 @@ class AppLocalizationsAr extends AppLocalizations {
   String get upgradePlanFloorManager => 'Floor Manager';
 
   @override
-  String get upgradeIntervalMonthly => 'Monthly';
+  String get upgradeIntervalMonthly => 'شهري';
 
   @override
-  String get upgradeIntervalAnnual => 'Annual';
+  String get upgradeIntervalAnnual => 'سنوي';
 
   @override
-  String get upgradeCreditPacksTitle => 'Credit packs';
+  String get upgradeCreditPacksTitle => 'حزم الرصيد';
 
   @override
   String upgradeCreditPackCredits(int credits) {
-    return '+$credits credits';
+    return '+$credits رصيد';
   }
 
   @override
   String get upgradeBuy => 'BUY';
 
   @override
-  String get upgradeRestore => 'Restore purchases';
+  String get upgradeRestore => 'استعادة المشتريات';
 
   @override
-  String get upgradeUnavailableTitle => 'Upgrades aren\'t available yet';
+  String get upgradeUnavailableTitle => 'الترقيات غير متاحة بعد';
 
   @override
   String upgradeUnavailableBody(String date) {
-    return 'In-app purchases will switch on shortly. Your Room credits still refresh on $date.';
+    return 'سيتم تفعيل المشتريات داخل التطبيق قريباً. لا يزال رصيد غرفك يتجدد في $date.';
   }
 
   @override
   String get upgradePurchasePending =>
-      'Your purchase is processing — we\'ll unlock it as soon as it clears.';
+      'جاري معالجة طلبك — سنقوم بفتحه بمجرد اكتمال المعاملة.';
 
   @override
   String get upgradePurchaseFailed =>
-      'That didn\'t go through. No charge was made — please try again.';
+      'لم تنجح العملية. لم يتم خصم أي مبلغ — يرجى المحاولة مرة أخرى.';
 
   @override
-  String get upgradePurchaseSuccess => 'You\'re upgraded. Welcome to the desk.';
+  String get upgradePurchaseSuccess => 'تمت الترقية. مرحباً بك في المكتب.';
 
   @override
-  String get upgradeRestoreNone => 'No purchases found to restore.';
+  String get upgradeRestoreNone => 'لم يتم العثور على مشتريات لاستعادتها.';
 
   @override
   String get settingsSectionMembership => 'MEMBERSHIP';
 
   @override
-  String get settingsMembershipUpgrade => 'Upgrade or manage plan';
+  String get settingsMembershipUpgrade => 'ترقية أو إدارة الخطة';
 
   @override
   String get tradeTicketHeading => 'صفقة جديدة';

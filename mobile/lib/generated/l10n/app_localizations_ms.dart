@@ -1165,65 +1165,66 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomRetry => 'CUBA LAGI';
 
   @override
-  String get upgradeSheetTitle => 'Upgrade your desk';
+  String get upgradeSheetTitle => 'Naik taraf meja dagangan anda';
 
   @override
   String get upgradeSheetSubtitle =>
-      'Unlock more Rooms and premium analysis. Prices are shown for your region.';
+      'Buka lebih banyak Bilik dan analisis premium. Harga dipaparkan untuk rantau anda.';
 
   @override
   String get upgradePlanTrader => 'Trader';
 
   @override
-  String get upgradePlanFloorManager => 'Floor Manager';
+  String get upgradePlanFloorManager => 'Pengurus Lantai';
 
   @override
-  String get upgradeIntervalMonthly => 'Monthly';
+  String get upgradeIntervalMonthly => 'Bulanan';
 
   @override
-  String get upgradeIntervalAnnual => 'Annual';
+  String get upgradeIntervalAnnual => 'Tahunan';
 
   @override
-  String get upgradeCreditPacksTitle => 'Credit packs';
+  String get upgradeCreditPacksTitle => 'Pakej kredit';
 
   @override
   String upgradeCreditPackCredits(int credits) {
-    return '+$credits credits';
+    return '+$credits kredit';
   }
 
   @override
-  String get upgradeBuy => 'BUY';
+  String get upgradeBuy => 'BELI';
 
   @override
-  String get upgradeRestore => 'Restore purchases';
+  String get upgradeRestore => 'Pulihkan pembelian';
 
   @override
-  String get upgradeUnavailableTitle => 'Upgrades aren\'t available yet';
+  String get upgradeUnavailableTitle => 'Naik taraf belum tersedia';
 
   @override
   String upgradeUnavailableBody(String date) {
-    return 'In-app purchases will switch on shortly. Your Room credits still refresh on $date.';
+    return 'Pembelian dalam aplikasi akan diaktifkan sebentar lagi. Kredit Bilik anda masih disegarkan pada $date.';
   }
 
   @override
   String get upgradePurchasePending =>
-      'Your purchase is processing — we\'ll unlock it as soon as it clears.';
+      'Pembelian anda sedang diproses — kami akan membuka kunci sebaik ia selesai.';
 
   @override
   String get upgradePurchaseFailed =>
-      'That didn\'t go through. No charge was made — please try again.';
+      'Transaksi tidak berjaya. Tiada caj dibuat — sila cuba lagi.';
 
   @override
-  String get upgradePurchaseSuccess => 'You\'re upgraded. Welcome to the desk.';
+  String get upgradePurchaseSuccess =>
+      'Anda telah dinaik taraf. Selamat datang ke meja dagangan.';
 
   @override
-  String get upgradeRestoreNone => 'No purchases found to restore.';
+  String get upgradeRestoreNone => 'Tiada pembelian ditemui untuk dipulihkan.';
 
   @override
-  String get settingsSectionMembership => 'MEMBERSHIP';
+  String get settingsSectionMembership => 'KEAHLIAN';
 
   @override
-  String get settingsMembershipUpgrade => 'Upgrade or manage plan';
+  String get settingsMembershipUpgrade => 'Naik taraf atau urus pelan';
 
   @override
   String get tradeTicketHeading => 'DAGANGAN BARU';
