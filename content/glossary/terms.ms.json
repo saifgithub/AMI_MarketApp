@@ -1,0 +1,4041 @@
+[
+  {
+    "id": "ami",
+    "term": "AMI",
+    "definition": "AMI ialah nama jenama AI dalam AMI Trade — simulator latihan yang dibina berdasarkan pasukan analis 12 ejen yang diuruskan oleh pengguna sebagai CEO. AMI bukan penasihat pelaburan berdaftar dan tidak memberikan nasihat pelaburan; setiap output yang dihasilkannya adalah artifak latihan untuk pengguna menilai. Jenama sentiasa 'AMI', bukan 'AI' atau 'chatbot'.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_mandate",
+      "ami_pm_safety_floor",
+      "ami_training_verdict",
+      "ami_convene_the_room"
+    ],
+    "related_lessons": [
+      "072",
+      "073",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "brand",
+      "definition",
+      "ami_internal",
+      "training_simulator"
+    ]
+  },
+  {
+    "id": "training_simulator",
+    "term": "Simulator latihan",
+    "definition": "Persekitaran perisian pendidikan yang mensimulasikan domain dunia nyata supaya pengguna boleh berlatih kemahiran teras tanpa akibat operasi. AMI ialah simulator latihan untuk kemahiran menilai output daripada pasukan analis berbilang ejen — bukan perkhidmatan nasihat dan bukan broker.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_training_verdict",
+      "training_artifact"
+    ],
+    "related_lessons": [
+      "072",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "regulatory_framing",
+      "training_simulator",
+      "ami_internal"
+    ]
+  },
+  {
+    "id": "training_artifact",
+    "term": "Artifak latihan",
+    "definition": "Sebarang output yang dihasilkan AMI — Verdict, harga masuk, henti rugi, sasaran, transkrip perdebatan — dibentangkan sebagai bahan latihan untuk kemahiran penilaian pengguna, bukan sebagai panduan perdagangan yang boleh dilaksanakan. Tugas pengguna ialah menilai artifak; tugas artifak ialah memberi latihan kepada pengguna.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_verdict",
+      "ami_training_verdict",
+      "training_simulator"
+    ],
+    "related_lessons": [
+      "072",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "regulatory_framing",
+      "training_artifact",
+      "ami_internal"
+    ]
+  },
+  {
+    "id": "twelve_agent_team",
+    "term": "Pasukan analis 12 ejen",
+    "definition": "Struktur AMI: dua belas ejen pakar yang disusun sebagai Analis (Asas, Pasaran, Berita, Media Sosial), Penyelidik (Bull, Bear, Pengurus Penyelidikan), Pencerah Risiko (Agresif, Konservatif, Neutral), Pedagang, dan Pengurus Portofolio. Pengguna ialah kerusi ketiga belas — CEO yang menilai output pasukan. Dua belas ejen wujud untuk menonjolkan kepelbagaian kognitif, bukan kerana lebih banyak ejen sentiasa lebih baik.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_convene_the_room",
+      "ami_verdict"
+    ],
+    "related_lessons": [
+      "072",
+      "268",
+      "269"
+    ],
+    "related_agents": [
+      "concierge",
+      "research_manager"
+    ],
+    "tags": [
+      "architecture",
+      "ami_internal",
+      "12_agents"
+    ]
+  },
+  {
+    "id": "concierge_agent",
+    "term": "The Concierge",
+    "definition": "Ejen kemasukan dan pengalihan AMI. The Concierge menjalankan temu bual perbualan untuk menetapkan Mandat pengguna, memaparkan definisi glosari mengikut permintaan, dan mengalihkan soalan khusus kepada ejen pasukan perdagangan yang relevan. The Concierge bukan sebahagian daripada perdebatan pasukan perdagangan.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_mandate",
+      "twelve_agent_team"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "agents",
+      "concierge",
+      "ami_internal",
+      "onboarding"
+    ]
+  },
+  {
+    "id": "ceo_framing",
+    "term": "Pembinaan CEO (CEO penilaian)",
+    "definition": "Metafora pengorganisasian AMI: pengguna ialah CEO pasukan analis 12 ejen. Metafora ini bersifat struktur, bukan hiasan — pengguna sebenarnya menetapkan Mandat, memilih untuk menjemput Room, menilai Verdict, dan menerima/ubah suai/menolaknya. AMI mengajar kemahiran menjadi CEO penilaian, bukan pelaksanaan.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_mandate",
+      "ami_verdict",
+      "training_simulator"
+    ],
+    "related_lessons": [
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "framing",
+      "ami_internal",
+      "ceo"
+    ]
+  },
+  {
+    "id": "multi_agent_system",
+    "term": "Sistem berbilang ejen",
+    "definition": "Seni bina perisian di mana banyak ejen AI pakar bekerjasama menyelesaikan masalah, setiap satu dengan peranan, arahan, dan permukaan output yang berbeza. AMI ialah sistem berbilang ejen yang disusun di sekitar dua belas peranan pasukan perdagangan serta The Concierge.",
+    "category": "advanced",
+    "see_also": [
+      "ami",
+      "twelve_agent_team"
+    ],
+    "related_lessons": [
+      "072",
+      "268"
+    ],
+    "related_agents": [],
+    "tags": [
+      "architecture",
+      "ai_systems"
+    ]
+  },
+  {
+    "id": "simulated_trade",
+    "term": "Perdagangan simulasi",
+    "definition": "Perdagangan yang wujud hanya di dalam simulator latihan AMI — tiada broker, tiada pesanan, tiada wang sebenar bergerak. Perdagangan simulasi mempunyai matematik hasil masuk, henti rugi, sasaran, dan keputusan yang sama dengan perdagangan sebenar, tetapi tujuannya ialah melatih kemahiran penilaian pengguna, bukan melaksanakan kedudukan.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "training_simulator",
+      "ami_verdict",
+      "training_artifact"
+    ],
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [],
+    "tags": [
+      "simulation",
+      "ami_internal",
+      "training"
+    ]
+  },
+  {
+    "id": "stock",
+    "term": "Saham",
+    "definition": "Satu unit pemilikan dalam syarikat yang diperdagangkan secara awam. Memiliki saham mewakili tuntutan pecahan terhadap aset dan pendapatan syarikat.",
+    "category": "basics",
+    "see_also": [
+      "share",
+      "equity",
+      "common_stock",
+      "preferred_stock"
+    ],
+    "related_lessons": [
+      "001",
+      "002"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "share",
+    "term": "Saham",
+    "definition": "Satu unit tunggal saham syarikat. Jumlah saham yang dikeluarkan didarabkan dengan harga saham sama dengan kapitalisasi pasaran.",
+    "category": "basics",
+    "see_also": [
+      "stock",
+      "share_price",
+      "market_cap"
+    ],
+    "related_lessons": [
+      "001"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "equity",
+    "term": "Ekuiti",
+    "definition": "Kepentingan pemilikan dalam syarikat. Dalam akaun, ekuiti sama dengan aset tolak liabiliti; dalam pasaran, ekuiti merujuk kepada saham yang diperdagangkan secara awam.",
+    "category": "basics",
+    "see_also": [
+      "stock",
+      "share",
+      "book_value"
+    ],
+    "related_lessons": [
+      "001",
+      "040"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "market",
+    "term": "Pasaran",
+    "definition": "Mana-mana venue di mana pembeli dan penjual bertransaksi sekuriti. Dalam konteks ekuiti, merujuk kepada agregat bursa di mana saham diperdagangkan.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "order_book"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "exchange",
+    "term": "Bursa",
+    "definition": "Pasaran berregulated di mana sekuriti disenaraikan dan diperdagangkan, seperti NYSE atau NASDAQ. Bursa memadankan pembeli dengan penjual melalui buku pesanan.",
+    "category": "basics",
+    "see_also": [
+      "market",
+      "order_book",
+      "ticker"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "brokerage",
+    "term": "Syarikat Brokerm",
+    "definition": "Syarikat berlesen yang melaksanakan pesanan beli dan jual atas nama pelanggan. Syarikat brokerm menghantar pesanan ke bursa dan menyimpan aset pelanggan.",
+    "category": "basics",
+    "see_also": [
+      "unregistered_broker",
+      "clone_broker"
+    ],
+    "related_lessons": [
+      "004"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "ticker",
+    "term": "Ticker",
+    "definition": "Simbol alfanumerik pendek yang mengenal pasti sekuriti yang disenaraikan di bursa. AAPL adalah ticker untuk Apple Inc.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "stock"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "market_cap",
+    "term": "Kapitalisasi pasaran",
+    "definition": "Jumlah nilai dolar bagi saham yang dikeluarkan oleh syarikat, dikira sebagai harga saham didarab dengan jumlah saham yang dikeluarkan. Digunakan untuk mengelaskan syarikat sebagai large-cap, mid-cap, atau small-cap.",
+    "category": "basics",
+    "see_also": [
+      "share",
+      "share_price"
+    ],
+    "related_lessons": [
+      "005"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "sizing"
+    ]
+  },
+  {
+    "id": "ipo",
+    "term": "IPO (tawaran awam awal)",
+    "definition": "Jualan pertama saham syarikat kepada orang ramai di bursa saham. Selepas IPO, saham diperdagangkan secara bebas di pasaran sekunder.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "share"
+    ],
+    "related_lessons": [
+      "006"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "dividend",
+    "term": "Dividen",
+    "definition": "Pembayaran tunai atau saham yang diagihkan oleh syarikat kepada pemegang saham daripada keuntungan. Dibayar berdasarkan setiap saham, biasanya secara suku tahun di AS.",
+    "category": "basics",
+    "see_also": [
+      "dividend_yield",
+      "common_stock",
+      "preferred_stock"
+    ],
+    "related_lessons": [
+      "007"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "income"
+    ]
+  },
+  {
+    "id": "share_price",
+    "term": "Harga saham",
+    "definition": "Harga di mana satu saham diperdagangkan di pasaran pada suatu masa tertentu. Ditentukan secara berterusan oleh tawaran tertinggi dan tawaran terendah dalam buku pesanan.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "ask",
+      "spread"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "bid",
+    "term": "Tawaran beli",
+    "definition": "Harga tertinggi yang pembeli sedia bayar untuk sekuriti pada masa ini. Tawaran beli berada di bawah tawaran jual dalam buku pesanan.",
+    "category": "basics",
+    "see_also": [
+      "ask",
+      "spread",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure"
+    ]
+  },
+  {
+    "id": "ask",
+    "term": "Tawaran jual",
+    "definition": "Harga terendah yang penjual sedia terima untuk sekuriti pada masa ini. Juga dikenali sebagai tawaran.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "spread",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure"
+    ]
+  },
+  {
+    "id": "spread",
+    "term": "Selang tawaran beli-jual",
+    "definition": "Perbezaan antara harga tawaran beli terbaik dan tawaran jual terbaik untuk suatu sekuriti. Selang yang sempit biasanya menunjukkan kecairan yang lebih tinggi.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "ask",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "share_class",
+    "term": "Kelas saham",
+    "definition": "Kategori saham yang berbeza yang dikeluarkan oleh syarikat yang sama, sering kali berbeza dari segi hak mengundi atau hak dividen. Saham Kelas A dan Kelas B adalah contoh biasa.",
+    "category": "basics",
+    "see_also": [
+      "common_stock",
+      "preferred_stock"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "common_stock",
+    "term": "Saham biasa",
+    "definition": "Kelas saham standard yang mewakili hak milik dengan hak mengundi dan tuntutan sisa terhadap aset selepas hutang dan dividen keutamaan dibayar. Kebanyakan saham yang diperdagangkan secara awam adalah saham biasa.",
+    "category": "basics",
+    "see_also": [
+      "preferred_stock",
+      "share_class",
+      "equity"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "preferred_stock",
+    "term": "Saham keutamaan",
+    "definition": "Kelas saham yang mempunyai keutamaan berbanding saham biasa untuk pembayaran dividen dan tuntutan aset semasa likuidasi, biasanya tanpa hak mengundi. Selalunya membawa dividen tetap.",
+    "category": "basics",
+    "see_also": [
+      "common_stock",
+      "share_class",
+      "dividend"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "etf",
+    "term": "ETF (dana yang diperdagangkan di bursa)",
+    "definition": "Kenderaan pelaburan terkumpul yang diperdagangkan di bursa seperti saham dan memegang sekumpulan aset teras seperti saham, obligasi, atau komoditi. Kebanyakan ETF mengikuti indeks.",
+    "category": "basics",
+    "see_also": [
+      "mutual_fund",
+      "index",
+      "index_fund"
+    ],
+    "related_lessons": [
+      "010"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund"
+    ]
+  },
+  {
+    "id": "mutual_fund",
+    "term": "Fond bersama",
+    "definition": "Kenderaan pelaburan terkumpul yang memegang sekumpulan sekuriti dan dinilai sekali sehari selepas penutupan. Berbeza dengan ETF, fond bersama tidak diperdagangkan dalam masa perdagangan.",
+    "category": "basics",
+    "see_also": [
+      "etf",
+      "index_fund"
+    ],
+    "related_lessons": [
+      "010"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund"
+    ]
+  },
+  {
+    "id": "index",
+    "term": "Indeks",
+    "definition": "Sekumpulan sekuriti yang diukur dan digunakan sebagai penanda aras untuk pasaran atau segmen. S&P 500 mengikuti 500 syarikat besar AS; Nasdaq Composite mengikuti saham Nasdaq yang disenaraikan.",
+    "category": "basics",
+    "see_also": [
+      "index_fund",
+      "etf",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "011"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "benchmark"
+    ]
+  },
+  {
+    "id": "index_fund",
+    "term": "Fond indeks",
+    "definition": "Fond yang direka untuk meniru prestasi indeks tertentu dengan memegang komponen yang sama dalam berat yang sama. Tersedia sebagai fond bersama atau ETF.",
+    "category": "basics",
+    "see_also": [
+      "index",
+      "etf",
+      "mutual_fund"
+    ],
+    "related_lessons": [
+      "011"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund",
+      "passive"
+    ]
+  },
+  {
+    "id": "watchlist",
+    "term": "Senarai tumpuan",
+    "definition": "Senarai sekuriti terpilih yang dipantau oleh pedagang untuk analisis berpotensi atau perdagangan masa hadapan. Dalam AMI Trade, senarai tumpuan menentukan ticker mana yang mungkin dikaji oleh bilik ejen.",
+    "category": "basics",
+    "see_also": [
+      "ami_watchlist"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "workflow"
+    ]
+  },
+  {
+    "id": "portfolio",
+    "term": "Portfoli",
+    "definition": "Set lengkap kedudukan yang dipegang oleh pelabur atau akaun simulasi, termasuk tunai. Komposisi portfoli menentukan risiko dan pulangan agregat.",
+    "category": "basics",
+    "see_also": [
+      "position",
+      "return",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "012"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "position",
+    "term": "Kedudukan",
+    "definition": "Pegangan dalam sekuriti tertentu, dinyatakan sebagai bilangan saham dan nilai semasa mereka. Kedudukan panjang untung apabila harga naik; kedudukan pendek untung apabila harga turun.",
+    "category": "basics",
+    "see_also": [
+      "portfolio",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "012",
+      "014"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "return",
+    "term": "Pulangan",
+    "definition": "Perubahan peratusan dalam nilai pelaburan sepanjang tempoh tertentu, termasuk perubahan harga serta dividen. Boleh dilaporkan sebagai pulangan keseluruhan, pulangan tahunan, atau pulangan yang disesuaikan dengan risiko.",
+    "category": "basics",
+    "see_also": [
+      "portfolio",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "013"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "performance"
+    ]
+  },
+  {
+    "id": "market_order",
+    "term": "Pesanan pasaran",
+    "definition": "Arahan untuk membeli atau menjual serta-merta pada harga terbaik yang tersedia. Pelaksanaan diutamakan berbanding harga, jadi harga penebusan mungkin berbeza daripada sebut harga terakhir.",
+    "category": "order_types",
+    "see_also": [
+      "limit_order",
+      "stop_order",
+      "spread"
+    ],
+    "related_lessons": [
+      "015"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "limit_order",
+    "term": "Pesanan had",
+    "definition": "Arahan untuk membeli pada harga tidak lebih daripada, atau menjual pada harga tidak kurang daripada, harga yang ditetapkan. Harga dijamin tetapi pelaksanaan tidak dijamin.",
+    "category": "order_types",
+    "see_also": [
+      "market_order",
+      "stop_limit",
+      "order_book"
+    ],
+    "related_lessons": [
+      "015"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "stop_order",
+    "term": "Pesanan henti",
+    "definition": "Pesanan yang menunggu dan bertukar menjadi pesanan pasaran sebaik sahaja harga henti yang ditetapkan dicapai. Digunakan untuk mencetuskan posisi masuk atau keluar pada tahap pencetus yang dipilih.",
+    "category": "order_types",
+    "see_also": [
+      "stop_limit",
+      "trailing_stop",
+      "market_order"
+    ],
+    "related_lessons": [
+      "016"
+    ],
+    "tags": [
+      "order",
+      "execution",
+      "risk"
+    ]
+  },
+  {
+    "id": "stop_limit",
+    "term": "Pesanan henti-had",
+    "definition": "Pesanan dua bahagian yang mengaktifkan pesanan had sebaik sahaja harga henti dicapai. Menggabungkan pencetus pesanan henti dengan kawalan harga pesanan had.",
+    "category": "order_types",
+    "see_also": [
+      "stop_order",
+      "limit_order"
+    ],
+    "related_lessons": [
+      "016"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "gtc",
+    "term": "GTC (berkuat sehingga dibatalkan)",
+    "definition": "Tempoh pesanan yang kekal aktif sehingga pedagang membatalkannya atau ia dilaksanakan. Banyak syarikat broker mengehadkan pesanan GTC kepada 60 hingga 90 hari.",
+    "category": "order_types",
+    "see_also": [
+      "gtt",
+      "day_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "gtt",
+    "term": "GTT (berkuat sehingga dicetuskan)",
+    "definition": "Pesanan yang kekal aktif sehingga keadaan pencetus yang ditetapkan dipenuhi. Lazim dalam platform runcit untuk posisi masuk henti dengan tempoh sah yang lebih panjang.",
+    "category": "order_types",
+    "see_also": [
+      "gtc",
+      "stop_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "ioc",
+    "term": "IOC (segera atau batalkan)",
+    "definition": "Pesanan yang mesti dilaksanakan serta-merta semasa kemasukan; mana-mana bahagian yang belum dipenuhi akan dibatalkan. Membolehkan penebusan separa.",
+    "category": "order_types",
+    "see_also": [
+      "fok",
+      "market_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "fok",
+    "term": "FOK (isi atau bunuh)",
+    "definition": "Pesanan yang mesti dilaksanakan sepenuhnya serta-merta atau dibatalkan sepenuhnya. Isian separa tidak dibenarkan.",
+    "category": "order_types",
+    "see_also": [
+      "ioc",
+      "all_or_none"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "day_order",
+    "term": "Pesanan harian",
+    "definition": "Pesanan yang lupus secara automatik pada akhir sesi perdagangan jika tidak dilaksanakan. Tempoh lalai pada kebanyakan platform.",
+    "category": "order_types",
+    "see_also": [
+      "gtc",
+      "market_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "all_or_none",
+    "term": "Semua atau tiada (AON)",
+    "definition": "Keadaan pesanan yang memerlukan pelaksanaan penuh atau tiada pelaksanaan langsung. Berbeza daripada FOK kerana pesanan AON boleh berehat dalam buku pesanan menunggu kecairan penuh.",
+    "category": "order_types",
+    "see_also": [
+      "fok",
+      "ioc"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "trailing_stop",
+    "term": "Henti mengikut (trailing stop)",
+    "definition": "Pesanan henti yang harga pencetaknya bergerak mengikut harga sekuriti dalam jumlah atau peratusan tetap ke arah yang menguntungkan, dan kekal pada tempat apabila harga bergerak menentang. Mengunci keuntungan belum direalisasikan apabila trend berterusan.",
+    "category": "order_types",
+    "see_also": [
+      "stop_order",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "017"
+    ],
+    "tags": [
+      "order",
+      "execution",
+      "risk"
+    ]
+  },
+  {
+    "id": "order_book",
+    "term": "Buku pesanan",
+    "definition": "Senarai masa nyata pesanan had beli dan jual yang belum dilaksanakan bagi suatu sekuriti, disusun mengikut tahap harga. Mendedahkan kecairan yang tersedia di atas dan di bawah kut semasa.",
+    "category": "order_types",
+    "see_also": [
+      "bid",
+      "ask",
+      "spread",
+      "market_order"
+    ],
+    "tags": [
+      "microstructure",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "candlestick",
+    "term": "Lilin (candlestick)",
+    "definition": "Format carta harga yang menunjukkan harga buka, tinggi, rendah, dan tutup bagi suatu tempoh. Badan merangkumi buka hingga tutup; sumbu memanjang ke arah tinggi dan rendah tempoh tersebut.",
+    "category": "technical",
+    "see_also": [
+      "doji",
+      "hammer",
+      "shooting_star",
+      "engulfing"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "chart",
+      "pattern"
+    ]
+  },
+  {
+    "id": "doji",
+    "term": "Doji",
+    "definition": "Lilin di mana harga buka dan tutup berada pada atau hampir pada harga yang sama, menghasilkan badan yang sangat kecil atau tiada langsung. Menunjukkan keseimbangan antara pembeli dan penjual bagi tempoh tersebut.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "shooting_star"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern"
+    ]
+  },
+  {
+    "id": "hammer",
+    "term": "Tukul (hammer)",
+    "definition": "Lilin dengan badan kecil berhampiran bahagian atas julat dan sumbu bawah yang panjang sekurang-kurangnya dua kali panjang badan, biasanya muncul selepas trend turun. Mencerminkan penolakan harga lebih rendah dalam tempoh tersebut.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "shooting_star",
+      "engulfing"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "shooting_star",
+    "term": "Bintang jatuh",
+    "definition": "Candlestick dengan badan kecil berhampiran bahagian bawah julat dan sumbu atas yang panjang sekurang-kurarnya dua kali panjang badan, biasanya muncul selepas trend naik. Menunjukkan penolakan harga lebih tinggi dalam tempoh tersebut.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "doji"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "engulfing",
+    "term": "Corak menelan",
+    "definition": "Corak dua candlestick di mana badan candlestick kedua sepenuhnya menutupi badan candlestick pertama dan menutup dalam arah bertentangan. Menelan bullish mengikuti trend turun; menelan bearish mengikuti trend naik.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "doji"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "trend",
+    "term": "Trend",
+    "definition": "Kecondongan arah harga yang berterusan dalam tempoh masa yang dipilih, diklasifikasikan sebagai trend naik, trend turun, atau mendatar. Trend bergantung pada timeframe: aset boleh berada dalam trend naik pada carta harian dan trend turun dalam tempoh intraday.",
+    "category": "technical",
+    "see_also": [
+      "uptrend",
+      "downtrend",
+      "sideways",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "uptrend",
+    "term": "Trend naik",
+    "definition": "Rantaian harga tertinggi yang lebih tinggi dan harga terendah yang lebih tinggi dalam tempoh masa yang dipilih. Menunjukkan permintaan bersih melebihi bekalan bersih dalam tetingkap tersebut.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "downtrend",
+      "sideways"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "downtrend",
+    "term": "Trend turun",
+    "definition": "Rantaian harga tertinggi yang lebih rendah dan harga terendah yang lebih rendah dalam tempoh masa yang dipilih. Menunjukkan bekalan bersih melebihi permintaan bersih dalam tetingkap tersebut.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "uptrend",
+      "sideways"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "sideways",
+    "term": "Pasar mendatar",
+    "definition": "Harga bergegar dalam julat mendatar tanpa kecondongan arah yang jelas, juga dikenali sebagai julat-bound. Harga tertinggi dan terendah berkumpul pada tahap yang sama.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "range_bound",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend",
+      "regime"
+    ]
+  },
+  {
+    "id": "support",
+    "term": "Sokongan",
+    "definition": "Tahap harga di mana minat pembelian secara sejarah mencukupi untuk menghentikan penurunan. Dikenali daripada harga terendah ayunan sebelumnya atau titik rujukan teknikal.",
+    "category": "technical",
+    "see_also": [
+      "resistance",
+      "breakout",
+      "pullback"
+    ],
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "level"
+    ]
+  },
+  {
+    "id": "resistance",
+    "term": "Rintangan",
+    "definition": "Tahap harga di mana minat penjualan secara sejarah mencukupi untuk menghentikan kenaikan. Dikenali daripada harga tertinggi ayunan sebelumnya atau titik rujukan teknikal.",
+    "category": "technical",
+    "see_also": [
+      "support",
+      "breakout",
+      "retest"
+    ],
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "level"
+    ]
+  },
+  {
+    "id": "breakout",
+    "term": "Breakout",
+    "definition": "Penutupan harga yang tegas di luar tahap sokongan atau rintangan yang ditentukan. Selalunya disertai dengan isipadu yang meningkat.",
+    "category": "technical",
+    "see_also": [
+      "pullback",
+      "retest",
+      "breakout_strategy",
+      "volume"
+    ],
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "pullback",
+    "term": "Pullback",
+    "definition": "Pergerakan lawan-trend jangka pendek dalam trend utama yang sedang berlaku. Dalam trend naik, harga akan turun sementara sebelum meneruskan pergerakan naik.",
+    "category": "technical",
+    "see_also": [
+      "retest",
+      "trend",
+      "pullback_strategy"
+    ],
+    "related_lessons": [
+      "024"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "retest",
+    "term": "Retest",
+    "definition": "Kembali ke tahap yang telah ditembusi selepas breakout, di mana rintangan lama mungkin bertindak sebagai sokongan, atau sokongan lama mungkin bertindak sebagai rintangan.",
+    "category": "technical",
+    "see_also": [
+      "breakout",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "023"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "moving_average",
+    "term": "Purata bergerak",
+    "definition": "Penunjuk teknikal yang memuratakan harga penutupan dalam tetingkap masa yang dipilih, dipaparkan sebagai garis yang dikemas kini setiap tempoh. Mengurangkan fluktuasi jangka pendek untuk mendedahkan trend asas.",
+    "category": "technical",
+    "see_also": [
+      "sma",
+      "ema",
+      "trend"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "sma",
+    "term": "SMA (purata bergerak mudah)",
+    "definition": "Purata bergerak di mana setiap harga penutupan dalam tetingkap masa mempunyai berat yang sama. SMA(20) ialah purata tidak tertimbang bagi 20 penutupan terakhir.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "ema"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "ema",
+    "term": "EMA (purata bergerak eksponen)",
+    "definition": "Purata bergerak yang menggunakan berat yang menurun secara eksponen, memberi penekanan lebih kepada penutupan terkini. Menjawab perubahan harga dengan lebih pantas berbanding SMA dengan panjang yang sama.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "sma",
+      "macd"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "rsi",
+    "term": "RSI (indeks kekuatan relatif)",
+    "definition": "Osilator momentum yang dibangunkan oleh J. Welles Wilder yang mengukur nisbah purata kenaikan kepada purata penurunan dalam tempoh masa tertentu, berskala 0 hingga 100. Bacaan di atas 70 secara konvensional dianggap berlebihan beli; di bawah 30, dianggap berlebihan jual.",
+    "category": "technical",
+    "see_also": [
+      "macd",
+      "momentum",
+      "bollinger_band"
+    ],
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "momentum",
+      "oscillator"
+    ]
+  },
+  {
+    "id": "macd",
+    "term": "MACD (penumpuan dan perbezaan purata bergerak)",
+    "definition": "Penunjuk momentum yang dikira sebagai perbezaan antara EMA pantas (biasanya 12) dan EMA perlahan (biasanya 26), dipaparkan dengan garis isyarat 9 tempoh dan histogram. Digunakan untuk mengesan perubahan dalam momentum trend.",
+    "category": "technical",
+    "see_also": [
+      "ema",
+      "rsi",
+      "momentum"
+    ],
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "momentum"
+    ]
+  },
+  {
+    "id": "bollinger_band",
+    "term": "Band Bollinger",
+    "definition": "Envelope volatiliti yang dilukis sebagai purata bergerak yang diapit oleh jalur atas dan bawah pada bilangan sisihan piawai yang dipilih, biasanya 2. Lebar jalur mengembang dan mengecut mengikut volatiliti yang direalisasikan.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "atr",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "028"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "volatility"
+    ]
+  },
+  {
+    "id": "atr",
+    "term": "ATR (julat benar purata)",
+    "definition": "Ukuran volatiliti yang dibangunkan oleh J. Welles Wilder yang memuratakan julat benar dalam tetingkap kembali, di mana julat benar ialah nilai terbesar antara tinggi tolak rendah, tinggi tolak penutupan sebelumnya, atau penutupan sebelumnya tolak rendah. Dinyatakan dalam unit harga.",
+    "category": "technical",
+    "see_also": [
+      "bollinger_band",
+      "atr_based_sizing",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "volatility"
+    ]
+  },
+  {
+    "id": "volume",
+    "term": "Isipadu",
+    "definition": "Jumlah keseluruhan saham yang diperdagangkan dalam sekuriti semasa tempoh tertentu. Selalunya dilukis sebagai bar di bawah carta harga.",
+    "category": "technical",
+    "see_also": [
+      "breakout",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "030"
+    ],
+    "tags": [
+      "technical",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "revenue",
+    "term": "Pendapatan",
+    "definition": "Jumlah pendapatan yang dijana oleh syarikat daripada jualan barang atau perkhidmatan sebelum sebarang kos ditolak, juga dikenali sebagai garis atas. Dilaporkan dalam penyata pendapatan.",
+    "category": "fundamental",
+    "see_also": [
+      "gross_profit",
+      "operating_income",
+      "income_statement"
+    ],
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "gross_profit",
+    "term": "Untung kasar",
+    "definition": "Pendapatan tolak kos langsung barang yang dijual. Baki yang tersedia untuk menampung kos operasi, cukai, dan untung bersih.",
+    "category": "fundamental",
+    "see_also": [
+      "revenue",
+      "gross_margin",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "operating_income",
+    "term": "Pendapatan operasi",
+    "definition": "Untung kasar tolak kos operasi seperti penyelidikan, jualan, dan pentadbiran am. Mencerminkan untung daripada operasi teras sebelum faedah dan cukai.",
+    "category": "fundamental",
+    "see_also": [
+      "gross_profit",
+      "net_income",
+      "operating_margin"
+    ],
+    "related_lessons": [
+      "041"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "net_income",
+    "term": "Untung bersih",
+    "definition": "Untung garis bawah yang tinggal selepas semua kos, faedah, dan cukai ditolak daripada pendapatan. Asas untuk pendapatan setiap saham.",
+    "category": "fundamental",
+    "see_also": [
+      "operating_income",
+      "eps",
+      "income_statement"
+    ],
+    "related_lessons": [
+      "041"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "ebitda",
+    "term": "EBITDA",
+    "definition": "Untung sebelum faedah, cukai, susut nilai, dan amortisasi. Ukuran keuntungan bukan-GAAP yang sering digunakan untuk membandingkan prestasi operasi merentas syarikat dengan struktur modal yang berbeza.",
+    "category": "fundamental",
+    "see_also": [
+      "operating_income",
+      "ev_ebitda",
+      "net_income"
+    ],
+    "related_lessons": [
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "non_gaap"
+    ]
+  },
+  {
+    "id": "fcf",
+    "term": "FCF (arus tunai bebas)",
+    "definition": "Arus tunai dari operasi tolak perbelanjaan modal. Mengukur arus tunai yang dijana syarikat selepas membiayai penyelenggaraan dan pelaburan pertumbuhan dalam aset fizikal.",
+    "category": "fundamental",
+    "see_also": [
+      "capex",
+      "cash_flow_statement",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "capex",
+    "term": "Capex (perbelanjaan modal)",
+    "definition": "Arus tunai yang dibelanjakan untuk memperoleh atau menaik taraf aset fizikal seperti hartanah, kilang, dan peralatan. Dikenal pasti di bawah aktiviti pelaburan dalam penyata arus tunai.",
+    "category": "fundamental",
+    "see_also": [
+      "fcf",
+      "opex",
+      "cash_flow_statement"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "opex",
+    "term": "Opex (perbelanjaan operasi)",
+    "definition": "Kos harian untuk menjalankan perniagaan, termasuk gaji, sewa, pemasaran, dan R&D. Berbeza daripada capex yang membiayai aset berumur panjang.",
+    "category": "fundamental",
+    "see_also": [
+      "capex",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "balance_sheet",
+    "term": "Nyata kewangan",
+    "definition": "Penyata kewangan yang meringkaskan aset, liabiliti, dan ekuiti pemegang saham syarikat pada satu titik masa tertentu. Identiti akaun aset = liabiliti + ekuiti mesti dipatuhi.",
+    "category": "fundamental",
+    "see_also": [
+      "income_statement",
+      "cash_flow_statement",
+      "book_value",
+      "debt"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement"
+    ]
+  },
+  {
+    "id": "income_statement",
+    "term": "Penyata pendapatan",
+    "definition": "Penyata kewangan yang melaporkan hasil, perbelanjaan, dan pendapatan bersih sepanjang tempoh tertentu. Juga dikenali sebagai penyata untung rugi.",
+    "category": "fundamental",
+    "see_also": [
+      "balance_sheet",
+      "cash_flow_statement",
+      "revenue",
+      "net_income"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement"
+    ]
+  },
+  {
+    "id": "cash_flow_statement",
+    "term": "Penyata arus tunai",
+    "definition": "Penyata kewangan yang menyelaraskan pendapatan bersih dengan pergerakan tunai sebenar, dibahagikan kepada aktiviti operasi, pelaburan, dan pembiayaan. Mendedahkan bagaimana syarikat menjana dan menggunakan tunai.",
+    "category": "fundamental",
+    "see_also": [
+      "balance_sheet",
+      "income_statement",
+      "fcf",
+      "capex"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "eps",
+    "term": "EPS (untung per saham)",
+    "definition": "Pendapatan bersih dibahagikan dengan purata tertimbang saham yang dikeluarkan, dilaporkan sebagai asas atau tercair. Penyebut dalam nisbah harga kepada untung.",
+    "category": "fundamental",
+    "see_also": [
+      "net_income",
+      "pe_ratio",
+      "forward_pe"
+    ],
+    "related_lessons": [
+      "045"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "per_share"
+    ]
+  },
+  {
+    "id": "book_value",
+    "term": "Nilai buku",
+    "definition": "Ekuiti pemegang saham daripada nyata kewangan, mewakili nilai bersih akaun. Pada asas per-saham, ia ialah nilai buku dibahagikan dengan saham yang dikeluarkan.",
+    "category": "fundamental",
+    "see_also": [
+      "tangible_book_value",
+      "pb_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "046"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet"
+    ]
+  },
+  {
+    "id": "tangible_book_value",
+    "term": "Nilai buku berketangan",
+    "definition": "Nilai buku tolak aset tidak berketangan seperti goodwill dan paten. Digunakan untuk menilai sokongan aset keras kepada ekuiti.",
+    "category": "fundamental",
+    "see_also": [
+      "book_value",
+      "pb_ratio"
+    ],
+    "related_lessons": [
+      "046"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet"
+    ]
+  },
+  {
+    "id": "moat",
+    "term": "Parit ekonomi",
+    "definition": "Kelebihan kompetitif yang tahan lama yang melindungi keuntungan syarikat daripada pesaing, dipopularkan oleh Warren Buffett. Sumber termasuk kesan rangkaian, kos pertukaran, skala, jenama, dan paten.",
+    "category": "fundamental",
+    "see_also": [
+      "roe",
+      "roic"
+    ],
+    "related_lessons": [
+      "047"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "fundamental",
+      "qualitative"
+    ]
+  },
+  {
+    "id": "roe",
+    "term": "ROE (keuntungan ke atas ekuiti)",
+    "definition": "Pendapatan bersih dibahagikan dengan purata ekuiti pemegang saham, dinyatakan sebagai peratusan. Mengukur kecekapan syarikat menukar modal ekuiti kepada keuntungan.",
+    "category": "fundamental",
+    "see_also": [
+      "roic",
+      "net_income",
+      "book_value"
+    ],
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "profitability"
+    ]
+  },
+  {
+    "id": "roic",
+    "term": "ROIC (keuntungan ke atas modal dilaburkan)",
+    "definition": "Untung operasi bersih selepas cukai dibahagikan dengan modal dilaburkan (hutang ditambah ekuiti). Mengukur pulangan yang dijana bagi setiap dolar modal total yang dikerahkan, tidak kira campuran pembiayaan.",
+    "category": "fundamental",
+    "see_also": [
+      "roe",
+      "moat"
+    ],
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "profitability"
+    ]
+  },
+  {
+    "id": "debt",
+    "term": "Hutang",
+    "definition": "Modal pinjaman yang mesti dibayar oleh syarikat, biasanya diklasifikasikan sebagai jangka pendek (tamat dalam satu tahun) atau jangka panjang. Dilarikan di bahagian liabiliti dalam penyata kedudukan kewangan.",
+    "category": "fundamental",
+    "see_also": [
+      "de_ratio",
+      "balance_sheet",
+      "current_ratio"
+    ],
+    "related_lessons": [
+      "049"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet",
+      "leverage"
+    ]
+  },
+  {
+    "id": "pe_ratio",
+    "term": "Nisbah P/E (harga kepada keuntungan)",
+    "definition": "Harga saham dibahagikan dengan keuntungan setiap saham, juga dipanggil P/E tersembunyi apabila menggunakan EPS 12 bulan terakhir. Pendarab penilaian yang digunakan secara meluas.",
+    "category": "ratios",
+    "see_also": [
+      "forward_pe",
+      "peg",
+      "eps"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "forward_pe",
+    "term": "P/E Terhad",
+    "definition": "Harga saham dibahagikan dengan anggaran consensus keuntungan setiap saham untuk 12 bulan akan datang atau tahun kewangan berikutnya. Mencerminkan keuntungan yang dijangka berbanding keuntungan direalisasikan.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "eps",
+      "peg"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "peg",
+    "term": "Nisbah PEG",
+    "definition": "Nisbah P/E dibahagikan dengan kadar pertumbuhan keuntungan dijangka. Pada asalnya dipopularkan oleh Peter Lynch sebagai cara untuk memberi konteks kepada P/E terhadap pertumbuhan.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "forward_pe"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio",
+      "growth"
+    ]
+  },
+  {
+    "id": "pb_ratio",
+    "term": "Nisbah P/B (harga-nilai buku)",
+    "definition": "Harga saham dibahagikan dengan nilai buku per saham. Nisbah penilaian yang biasa digunakan untuk perniagaan yang padat aset seperti bank dan syarikat insurans.",
+    "category": "ratios",
+    "see_also": [
+      "book_value",
+      "tangible_book_value"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "ps_ratio",
+    "term": "Nisbah P/S (harga-jualan)",
+    "definition": "Kapitalisasi pasaran dibahagikan dengan pendapatan 12 bulan lalu. Sering digunakan untuk menilai syarikat yang mempunyai keuntungan negatif atau tidak menentu.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "revenue"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "ev_ebitda",
+    "term": "EV/EBITDA",
+    "definition": "Nilai perusahaan (kapitalisasi pasaran ditambah hutang bersih) dibahagikan dengan EBITDA. Nisbah penilaian yang neutral terhadap struktur modal, digemari untuk perbandingan merentas syarikat.",
+    "category": "ratios",
+    "see_also": [
+      "ebitda",
+      "pe_ratio"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "de_ratio",
+    "term": "Nisbah D/E (hutang-ekuiti)",
+    "definition": "Jumlah hutang dibahagikan dengan jumlah ekuiti pemegang saham. Mengukur leverage kewangan dan berat relatif pembiayaan hutang.",
+    "category": "ratios",
+    "see_also": [
+      "debt",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "leverage",
+      "ratio"
+    ]
+  },
+  {
+    "id": "current_ratio",
+    "term": "Nisbah semasa",
+    "definition": "Aset semasa dibahagikan dengan liabiliti semasa. Metrik kecairan jangka pendek yang menunjukkan liputan kewajipan yang jatuh tempo dalam tempoh satu tahun.",
+    "category": "ratios",
+    "see_also": [
+      "quick_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "liquidity",
+      "ratio"
+    ]
+  },
+  {
+    "id": "quick_ratio",
+    "term": "Nisbah cepat",
+    "definition": "Aset semasa tolak inventori, dibahagikan dengan liabiliti semasa. Ukuran kecairan yang lebih ketat yang mengecualikan inventori daripada liputan.",
+    "category": "ratios",
+    "see_also": [
+      "current_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "liquidity",
+      "ratio"
+    ]
+  },
+  {
+    "id": "gross_margin",
+    "term": "Margin kasar",
+    "definition": "Untung kasar dibahagikan dengan pendapatan, dinyatakan sebagai peratusan. Menunjukkan bahagian pendapatan yang dikekalkan selepas kos pengeluaran langsung.",
+    "category": "ratios",
+    "see_also": [
+      "gross_profit",
+      "operating_margin"
+    ],
+    "related_lessons": [
+      "053"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "profitability",
+      "ratio"
+    ]
+  },
+  {
+    "id": "operating_margin",
+    "term": "Margin operasi",
+    "definition": "Pendapatan operasi dibahagikan dengan pendapatan, dinyatakan sebagai peratusan. Mewakili keuntungan operasi teras sebelum faedah dan cukai.",
+    "category": "ratios",
+    "see_also": [
+      "operating_income",
+      "gross_margin"
+    ],
+    "related_lessons": [
+      "053"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "profitability",
+      "ratio"
+    ]
+  },
+  {
+    "id": "dividend_yield",
+    "term": "Hasil dividen",
+    "definition": "Dividen tahunan setiap saham dibahagikan dengan harga saham, dinyatakan sebagai peratusan. Mewakili komponen pulangan tunai yang bebas daripada peningkatan harga.",
+    "category": "ratios",
+    "see_also": [
+      "dividend",
+      "share_price"
+    ],
+    "related_lessons": [
+      "054"
+    ],
+    "tags": [
+      "income",
+      "ratio"
+    ]
+  },
+  {
+    "id": "fomo",
+    "term": "FOMO (ketakutan terlepas peluang)",
+    "definition": "Keadaan emosi di mana seorang pedagang merasa terpaksa memasuki posisi kerana nampaknya pihak lain sedang mendapat keuntungan. Bias tingkah laku yang direkodkan yang sering berlaku semasa pergerakan peringkat akhir.",
+    "category": "psychology",
+    "see_also": [
+      "herd_behaviour",
+      "greed",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "fear_of_missing_out",
+    "term": "Ketakutan terlepas peluang",
+    "definition": "Tarikan tingkah laku untuk bertindak dalam perdagangan kerana rakan atau media melaporkan keuntungan dalam aset tersebut. Setara dengan FOMO; bentuk panjang kadangkala digunakan dalam konteks rasmi.",
+    "category": "psychology",
+    "see_also": [
+      "fomo",
+      "herd_behaviour"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "revenge_trading",
+    "term": "Perdagangan balas dendam",
+    "definition": "Melakukan perdagangan impulsif segera selepas kerugian untuk memulihkan kerugian tersebut, biasanya dengan saiz yang lebih besar dan analisis yang berkurang. Corak tingkah laku yang dikaitkan dengan hasil yang terjejas.",
+    "category": "psychology",
+    "see_also": [
+      "discipline",
+      "fomo",
+      "greed"
+    ],
+    "related_lessons": [
+      "061"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "overconfidence",
+    "term": "Kepercayaan diri berlebihan",
+    "definition": "Bias kognitif di mana seseorang melebih-lebihkan ketepatan ramalan atau kemahiran mereka. Direkodkan pada pedagang profesional dan amatir sama ada.",
+    "category": "psychology",
+    "see_also": [
+      "confirmation_bias",
+      "hindsight_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "boredom_trading",
+    "term": "Perdagangan bosan",
+    "definition": "Memasuki perdagangan terutamanya kerana tiada setup yang menarik wujud dan pedagang mahu aktiviti. Corak tingkah laku yang dicirikan oleh entri berkeyakinan rendah.",
+    "category": "psychology",
+    "see_also": [
+      "discipline",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "061"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "greed",
+    "term": "Keserakahan",
+    "definition": "Keadaan emosi yang mendorong untuk mendapatkan keuntungan tambahan melebihi pelan yang telah ditetapkan, sering melalui posisi yang terlalu besar atau memegang melebihi sasaran. Salah satu daripada dua emosi yang dipantau dalam indeks sentimen pasaran bersama ketakutan.",
+    "category": "psychology",
+    "see_also": [
+      "fear",
+      "fomo",
+      "discipline"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "emotion"
+    ]
+  },
+  {
+    "id": "fear",
+    "term": "Ketakutan",
+    "definition": "Keadaan emosi yang mendorong tindakan elak risiko seperti keluar awal, pemotongan posisi, atau pengelakan entri. Dipasangkan dengan keserakahan dalam kerangka sentimen biasa.",
+    "category": "psychology",
+    "see_also": [
+      "greed",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "emotion"
+    ]
+  },
+  {
+    "id": "capitulation",
+    "term": "Penyerahan",
+    "definition": "Keluar besar oleh pemegang saham semasa penurunan tajam, sering ditandai dengan isipadu tinggi dan penurunan harga yang curam. Mencermin penyerahan kolektif terhadap keyakinan dalam posisi tersebut.",
+    "category": "psychology",
+    "see_also": [
+      "fear",
+      "bear_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "063"
+    ],
+    "tags": [
+      "psychology",
+      "regime"
+    ]
+  },
+  {
+    "id": "anchoring",
+    "term": "Penambatan",
+    "definition": "Bias kognitif di mana keputusan dikaitkan dengan nilai rujukan yang menonjol, seperti harga pembelian, berbanding maklumat semasa. Dikenal pasti oleh Tversky dan Kahneman.",
+    "category": "psychology",
+    "see_also": [
+      "recency_bias",
+      "sunk_cost_fallacy"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "recency_bias",
+    "term": "Bias kebaruan",
+    "definition": "Bias kognitif yang memberi berat lebih kepada pemerhatian terkini berbanding kadar asas jangka panjang. Manifestasi sebagai memproyeksikan pulangan terkini secara tidak terhingga ke masa depan.",
+    "category": "psychology",
+    "see_also": [
+      "anchoring",
+      "confirmation_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "confirmation_bias",
+    "term": "Bias pengesahan",
+    "definition": "Cenderung untuk mencari dan mengingat maklumat yang konsisten dengan kepercayaan sedia ada serta mengabaikan bukti bertentangan. Biasa berlaku semasa meneliti tesis yang sudah dipegang.",
+    "category": "psychology",
+    "see_also": [
+      "overconfidence",
+      "recency_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "related_agents": [
+      "bear_researcher",
+      "bull_researcher"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "hindsight_bias",
+    "term": "Bias pandangan belakang",
+    "definition": "Cenderung, selepas suatu peristiwa, untuk mengingat ramalan seolah-olah lebih tepat daripada sebenarnya. Merosakkan penilaian terhadap keputusan lepas.",
+    "category": "psychology",
+    "see_also": [
+      "overconfidence",
+      "ami_decision_journal"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "sunk_cost_fallacy",
+    "term": "Falsafah kos terbenam",
+    "definition": "Meneruskan posisi yang rugi kerana wang atau masa yang sudah ditumpukan, bukannya menilai nilai jangkaan prospektif. Dikenal pasti dalam ekonomi tingkah laku.",
+    "category": "psychology",
+    "see_also": [
+      "anchoring",
+      "discipline"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "herd_behaviour",
+    "term": "Perilaku kumpulan",
+    "definition": "Tindakan bersepadu oleh peserta pasaran yang didorong oleh tindakan orang lain berbanding analisis bebas. Berkaitan dengan ekstrem momentum dan dinamika gelembung.",
+    "category": "psychology",
+    "see_also": [
+      "fomo",
+      "bull_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "063"
+    ],
+    "tags": [
+      "psychology",
+      "behavioral"
+    ]
+  },
+  {
+    "id": "discipline",
+    "term": "Disiplin",
+    "definition": "Kepatuhan kepada pelan perdagangan yang telah ditetapkan, termasuk kemasukan, pengeluaran, saiz, dan had risiko, tanpa mengira emosi semasa. Dikutip dalam jurnal sebagai metrik tingkah laku.",
+    "category": "psychology",
+    "see_also": [
+      "ami_decision_journal",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "061",
+      "065"
+    ],
+    "tags": [
+      "psychology",
+      "process"
+    ]
+  },
+  {
+    "id": "trend_following",
+    "term": "Mengikut trend",
+    "definition": "Kelas strategi yang masuk mengikut arah trend yang telah mapan dan keluar apabila trend melemah. Pulangan sejarah menunjukkan kecondongan positif dengan kerugian kecil yang kerap dan keuntungan besar yang jarang berlaku.",
+    "category": "strategy",
+    "see_also": [
+      "mean_reversion",
+      "momentum",
+      "trend"
+    ],
+    "related_lessons": [
+      "070"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "mean_reversion",
+    "term": "Pulangan ke purata",
+    "definition": "Kelas strategi yang masuk menentang pergerakan ekstrem dengan jangkaan bahawa harga akan kembali ke purata statistik. Pulangan sejarah menunjukkan kecondongan negatif dengan keuntungan kecil yang kerap dan kerugian besar yang jarang berlaku.",
+    "category": "strategy",
+    "see_also": [
+      "trend_following",
+      "bollinger_band",
+      "rsi"
+    ],
+    "related_lessons": [
+      "071"
+    ],
+    "tags": [
+      "strategy"
+    ]
+  },
+  {
+    "id": "breakout_strategy",
+    "term": "Strategi pecah keluar",
+    "definition": "Strategi yang masuk apabila harga menutup di luar tahap tertentu seperti paras tinggi julat atau purata bergerak. Biasanya menggunakan henti rugi di bawah paras yang dipecahkan.",
+    "category": "strategy",
+    "see_also": [
+      "breakout",
+      "retest",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "pullback_strategy",
+    "term": "Strategi susut semula",
+    "definition": "Strategi yang masuk mengikut arah trend yang telah mapan selepas susut semula menentang trend ke tahap rujukan yang dipilih. Sering menggunakan purata bergerak atau titik ayunan sebelumnya sebagai pencetus.",
+    "category": "strategy",
+    "see_also": [
+      "pullback",
+      "trend_following",
+      "moving_average"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "momentum",
+    "term": "Momentum",
+    "definition": "Cenderung pemenang terkini untuk terus melebihi prestasi pada jangka masa pendek hingga sederhana, diformalkan dalam literatur akademik oleh Jegadeesh dan Titman (1993). Juga menerangkan keluarga strategi dan penunjuk.",
+    "category": "strategy",
+    "see_also": [
+      "rsi",
+      "macd",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "073"
+    ],
+    "tags": [
+      "strategy",
+      "factor"
+    ]
+  },
+  {
+    "id": "swing_trading",
+    "term": "Perdagangan ayunan",
+    "definition": "Gaya perdagangan yang memegang posisi dari beberapa hari hingga beberapa minggu, menyasarkan pergerakan jangka sederhana. Berada di antara perdagangan harian dan perdagangan posisi pada spektrum masa.",
+    "category": "strategy",
+    "see_also": [
+      "day_trading",
+      "position_trading",
+      "scalping"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "day_trading",
+    "term": "Perdagangan harian",
+    "definition": "Gaya perdagangan yang membuka dan menutup semua posisi dalam satu sesi tunggal, tanpa pendedahan malam. Tertakluk kepada peraturan peraturan khusus di AS seperti peraturan pedagang harian corak.",
+    "category": "strategy",
+    "see_also": [
+      "swing_trading",
+      "scalping"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "position_trading",
+    "term": "Perdagangan posisi",
+    "definition": "Gaya perdagangan yang memegang posisi selama beberapa minggu hingga beberapa bulan, mengutamakan trend kerangka masa yang lebih besar dan asas. Putaran terendah di antara gaya aktif.",
+    "category": "strategy",
+    "see_also": [
+      "swing_trading",
+      "day_trading"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "scalping",
+    "term": "Scalping",
+    "definition": "Gaya perdagangan frekuensi tinggi yang menyasarkan perubahan harga kecil selama beberapa saat hingga minit setiap perdagangan. Bergantung sepenuhnya pada kelajuan pelaksanaan dan kecekapan kos transaksi.",
+    "category": "strategy",
+    "see_also": [
+      "day_trading",
+      "transaction_cost_modeling"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "backtesting",
+    "term": "Backtesting",
+    "definition": " mensimulasikan strategi perdagangan pada data sejarah untuk menganggarkan prestasi sebelumnya. Terdedah kepada bias pandangan ke hadapan dan overfitting jika tidak direka bentuk dengan teliti.",
+    "category": "strategy",
+    "see_also": [
+      "walk_forward",
+      "overfitting",
+      "regime_segmented_backtest"
+    ],
+    "related_lessons": [
+      "075"
+    ],
+    "tags": [
+      "strategy",
+      "research"
+    ]
+  },
+  {
+    "id": "walk_forward",
+    "term": "Analisis walk-forward",
+    "definition": "Metodologi backtesting yang melaraskan parameter pada tetingkap latihan, menilai pada tetingkap luar sampel seterusnya, kemudian bergerak ke hadapan. Matlamatnya adalah untuk mengurangkan overfitting berbanding dengan pelarasan dalam sampel tunggal.",
+    "category": "strategy",
+    "see_also": [
+      "backtesting",
+      "overfitting",
+      "walk_forward_analysis"
+    ],
+    "related_lessons": [
+      "076"
+    ],
+    "tags": [
+      "strategy",
+      "research"
+    ]
+  },
+  {
+    "id": "overfitting",
+    "term": "Overfitting",
+    "definition": "Melaraskan model atau strategi untuk menepati hingar sejarah berbanding isyarat berterusan, menghasilkan keputusan dalam sampel yang kuat tetapi gagal di luar sampel. Ini adalah risiko utama dalam penyelidikan kuantitatif.",
+    "category": "strategy",
+    "see_also": [
+      "backtesting",
+      "walk_forward"
+    ],
+    "related_lessons": [
+      "076"
+    ],
+    "tags": [
+      "strategy",
+      "research",
+      "risk"
+    ]
+  },
+  {
+    "id": "paper_trading",
+    "term": "Paper trading",
+    "definition": " Mensimulasikan perdagangan dengan data pasaran masa nyata tanpa modal sebenar yang terdedah kepada risiko. Verdicts dan portfolio simulasi AMI Trade adalah bentuk paper trading.",
+    "category": "strategy",
+    "see_also": [
+      "ami_verdict",
+      "backtesting"
+    ],
+    "related_lessons": [
+      "077"
+    ],
+    "tags": [
+      "strategy",
+      "simulation"
+    ]
+  },
+  {
+    "id": "bull_market",
+    "term": "Pasar lembu",
+    "definition": "Tempoh berpanjangan kenaikan harga dalam pasaran atau aset, secara konvensional ditakrifkan sebagai kenaikan 20% atau lebih dari paras rendah terkini. Biasanya dikaitkan dengan penyertaan luas dan asas yang membaik.",
+    "category": "regime",
+    "see_also": [
+      "bear_market",
+      "correction",
+      "sector_rotation"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "bear_market",
+    "term": "Pasar beruang",
+    "definition": "Tempoh berpanjangan penurunan harga, secara konvensional ditakrifkan sebagai penurunan 20% atau lebih dari paras tinggi terkini. Sering berlaku serentak dengan kemerosotan asas atau resesi.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "correction",
+      "crash",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "sideways_market",
+    "term": "Pasar mendatar",
+    "definition": "Rejim di mana harga berosilasi dalam julat mendatar tanpa trend arah yang berterusan. Biasanya dikaitkan dengan volatiliti realisasi yang berkurang dan isyarat makro yang tidak pasti.",
+    "category": "regime",
+    "see_also": [
+      "sideways",
+      "range_bound",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "range_bound",
+    "term": "Berhadapan Julur",
+    "definition": "Menerangkan pasaran atau sekuriti yang diperdagangkan berulang kali antara tahap sokongan dan rintangan yang boleh dikenal pasti tanpa pecah keluar. Sinonim dengan tingkah laku mendatar.",
+    "category": "regime",
+    "see_also": [
+      "sideways_market",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "correction",
+    "term": "Pembetulan",
+    "definition": "Penurunan sebanyak 10% hingga 20% daripada paras tertinggi terkini, kurang teruk berbanding pasaran bear. Dianggap sebagai ciri rutin pasaran bull dalam taksonomi kewangan standard.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "bear_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "crash",
+    "term": "Runtuhan",
+    "definition": "Penurunan harga yang pantas dan teruk dalam tempoh masa yang singkat, biasanya dengan isipadu dan volatiliti yang meningkat. Contoh termasuk Oktober 1987 dan Mac 2020.",
+    "category": "regime",
+    "see_also": [
+      "correction",
+      "bear_market",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime",
+      "tail_event"
+    ]
+  },
+  {
+    "id": "recovery",
+    "term": "Pemulihan",
+    "definition": "Fasa selepas pembetulan atau pasaran bear di mana harga dan aktiviti ekonomi kembali ke paras sebelumnya. Sering ditakrifkan secara retrospektif selepas paras tertinggi baharu dicapai.",
+    "category": "regime",
+    "see_also": [
+      "bear_market",
+      "recession"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "volatility_regime",
+    "term": "Rejim volatiliti",
+    "definition": "Penerwataan paras volatiliti realisasi atau implikasi semasa, contohnya, vol rendah, vol sederhana, atau vol tinggi. Regim cenderung berkumpul, menghasilkan autokorelasi siri dalam volatiliti.",
+    "category": "regime",
+    "see_also": [
+      "atr",
+      "vix",
+      "bollinger_band"
+    ],
+    "related_lessons": [
+      "082"
+    ],
+    "tags": [
+      "regime",
+      "volatility"
+    ]
+  },
+  {
+    "id": "sector_rotation",
+    "term": "Putaran sektor",
+    "definition": "Perpindahan modal antara sektor ekuiti pada titik berbeza dalam kitaran ekonomi, contohnya, dari sektor defensif ke siklikal pada awal pengembangan. Corak yang didokumenkan merentasi beberapa dekad data AS.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "recession",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "083"
+    ],
+    "tags": [
+      "regime",
+      "macro"
+    ]
+  },
+  {
+    "id": "market_breadth",
+    "term": "Lebar pasaran",
+    "definition": "Nisbah saham yang menyertai pergerakan pasaran, diukur melalui penunjuk seperti garis maju-menolak, bilangan paras tertinggi baharu tolak bilangan paras terendah baharu, atau peratusan saham di atas purata bergerak 200 hari.",
+    "category": "regime",
+    "see_also": [
+      "index",
+      "bull_market",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "084"
+    ],
+    "tags": [
+      "regime",
+      "internals"
+    ]
+  },
+  {
+    "id": "federal_reserve",
+    "term": "Federal Reserve (the Fed)",
+    "definition": "Bank pusat Amerika Syarikat, ditubuhkan pada 1913. Menetapkan sasaran kadar dana persekutuan dan melaksanakan dasar monetari melalui Jawatankuasa Pasaran Terbuka Federal.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_hike",
+      "rate_cut"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "central_bank"
+    ]
+  },
+  {
+    "id": "fed_funds_rate",
+    "term": "Kadar faedah dana Fed",
+    "definition": "Kadar faedah semalam yang digunakan oleh institusi deposit AS untuk meminjamkan simpanan antara satu sama lain, yang disasarkan oleh Bank Pusat AS (Federal Reserve). Ia menjadi penentu utama bagi kadar faedah jangka pendek di AS.",
+    "category": "macro",
+    "see_also": [
+      "federal_reserve",
+      "rate_hike",
+      "rate_cut",
+      "yield_curve"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "rate_hike",
+    "term": "Peningkatan kadar faedah",
+    "definition": "Peningkatan kadar faedah dasar oleh bank pusat. Ia mengerapkan keadaan kewangan dan biasanya bertujuan untuk mengurangkan kadar inflasi.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_cut",
+      "inflation"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "rate_cut",
+    "term": "Pengurangan kadar faedah",
+    "definition": "Pengurangan kadar faedah dasar oleh bank pusat. Ia meringankan keadaan kewangan dan biasanya bertujuan untuk menyokong pertumbuhan ekonomi atau tahap pekerjaan.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_hike",
+      "recession"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "inflation",
+    "term": "Inflasi",
+    "definition": "Kenaikan berterusan dalam tahap harga umum barang dan perkhidmatan, diukur melalui indeks seperti CPI atau PCE. Ia mengurangkan kuasa beli wang tunai dan kupon pendapatan tetap.",
+    "category": "macro",
+    "see_also": [
+      "cpi",
+      "deflation",
+      "rate_hike"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "prices"
+    ]
+  },
+  {
+    "id": "deflation",
+    "term": "Deflasi",
+    "definition": "Penurunan berterusan dalam tahap harga umum. Secara sejarah, ia dikaitkan dengan permintaan yang lemah, penurunan gaji, dan beban hutang sebenar yang semakin meningkat.",
+    "category": "macro",
+    "see_also": [
+      "inflation",
+      "recession"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "tags": [
+      "macro",
+      "prices"
+    ]
+  },
+  {
+    "id": "recession",
+    "term": "Resesi",
+    "definition": "Penurunan ketara dalam aktiviti ekonomi merentasi ekonomi yang berlangsung lebih daripada beberapa bulan. Di AS, penentuan tarikh resesi dilakukan oleh Jawatankuasa Penetapan Kitaran Perniagaan NBER.",
+    "category": "macro",
+    "see_also": [
+      "gdp",
+      "yield_curve",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "cycle"
+    ]
+  },
+  {
+    "id": "yield_curve",
+    "term": "Lengkung hasil",
+    "definition": "Plo hasil bagi bon kerajaan merentasi tempoh matang, biasanya Treasuries dari 1 bulan hingga 30 tahun. Lengkung hasil yang terbalik, di mana kadar jangka pendek melebihi kadar jangka panjang, secara sejarah mendahului resesi di AS.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "recession"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "cpi",
+    "term": "CPI (indeks harga pengguna)",
+    "definition": "Indeks bulanan yang diterbitkan oleh Biro Statistik Buruh AS yang mengukur perubahan harga purata bagi bakul barang dan perkhidmatan pengguna. Ia merupakan penunjuk utama inflasi di AS.",
+    "category": "macro",
+    "see_also": [
+      "inflation",
+      "gdp"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "tags": [
+      "macro",
+      "data_release"
+    ]
+  },
+  {
+    "id": "gdp",
+    "term": "KDNK (hasil domestik kasar)",
+    "definition": "Jumlah nilai wang semua barang dan perkhidmatan yang dihasilkan dalam sempadan negara semasa tempoh tertentu. Diterbitkan secara berkala di Amerika Syarikat oleh Biro Analisis Ekonomi.",
+    "category": "macro",
+    "see_also": [
+      "recession",
+      "cpi"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "tags": [
+      "macro",
+      "data_release"
+    ]
+  },
+  {
+    "id": "dxy",
+    "term": "Indeks Dolar (DXY)",
+    "definition": "Purata berat nilai dolar AS terhadap sekumpulan enam mata wang utama yang didominasi oleh euro. Digunakan sebagai penunjuk kekuatan dolar secara menyeluruh.",
+    "category": "macro",
+    "see_also": [
+      "risk_on_risk_off"
+    ],
+    "related_lessons": [
+      "093"
+    ],
+    "tags": [
+      "macro",
+      "fx"
+    ]
+  },
+  {
+    "id": "risk_on_risk_off",
+    "term": "Risk-on / risk-off",
+    "definition": "Singkatan untuk selera pelaburan semasa, di mana risk-on memihak kepada ekuiti dan kredit hasil tinggi, manakala risk-off memihak kepada Treasuries, dolar, dan emas. Digunakan dalam ulasan makroekonomi untuk menerangkan aliran merentas aset.",
+    "category": "macro",
+    "see_also": [
+      "volatility_regime",
+      "vix",
+      "sector_rotation"
+    ],
+    "related_lessons": [
+      "093"
+    ],
+    "tags": [
+      "macro",
+      "sentiment"
+    ]
+  },
+  {
+    "id": "call_option",
+    "term": "Pilihan beli (Call option)",
+    "definition": "Kontrak yang memberikan pemegang hak, tetapi bukan kewajiban, untuk membeli 100 saham aset asas pada harga penentuan yang ditetapkan pada atau sebelum tarikh luput. Penjual wajib menyerahkan jika pilihan tersebut dilaksanakan.",
+    "category": "options_derivatives",
+    "see_also": [
+      "put_option",
+      "strike_price",
+      "expiry",
+      "implied_volatility"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "put_option",
+    "term": "Pilihan jual (Put option)",
+    "definition": "Kontrak yang memberikan pemegang hak, tetapi bukan kewajiban, untuk menjual 100 saham aset asas pada harga penentuan yang ditetapkan pada atau sebelum tarikh luput. Penjual wajib menerima penyerahan jika pilihan tersebut dilaksanakan.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "strike_price",
+      "expiry",
+      "implied_volatility"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "strike_price",
+    "term": "Harga penentuan (Strike price)",
+    "definition": "Harga tetap di mana aset asas pilihan boleh dibeli (call) atau dijual (put) jika dilaksanakan. Ditetapkan pada penciptaan kontrak.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "put_option",
+      "in_the_money",
+      "out_of_the_money"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "expiry",
+    "term": "Tarikh luput",
+    "definition": "Tarikh apabila kontrak pilihan tamat wujud; selepas tarikh luput, pilihan yang belum dilaksanakan menjadi tidak bernilai. Pilihan ekuiti yang disenaraikan di AS secara konvensional luput pada hari Jumaat.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "put_option"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "in_the_money",
+    "term": "Dalam wang (In-the-money / ITM)",
+    "definition": "Pilihan yang harga penentuannya menguntungkan berbanding harga semasa aset asas: call adalah ITM apabila aset asas berada di atas harga penentuan; put adalah ITM apabila aset asas berada di bawah harga penentuan. Mempunyai nilai intrinsik.",
+    "category": "options_derivatives",
+    "see_also": [
+      "out_of_the_money",
+      "strike_price"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "out_of_the_money",
+    "term": "Di luar wang (OTM)",
+    "definition": "Pilihan yang harga pelaksanaan (strike) nya tidak menguntungkan berbanding harga semasa aset asas: panggilan (call) adalah OTM apabila aset asas berada di bawah harga pelaksanaan; let (put) adalah OTM apabila aset asas berada di atas harga pelaksanaan. Tiada nilai intrinsik.",
+    "category": "options_derivatives",
+    "see_also": [
+      "in_the_money",
+      "strike_price"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "implied_volatility",
+    "term": "Ketidaktentuan tersirat (IV)",
+    "definition": "Jangkaan pasaran terhadap ketidaktentuan masa hadapan aset asas, yang diterbitkan daripada harga pilihan menggunakan model penentuan harga. Dinyatakan sebagai sisihan piawai tahunan.",
+    "category": "options_derivatives",
+    "see_also": [
+      "vix",
+      "volatility_regime",
+      "call_option",
+      "put_option"
+    ],
+    "related_lessons": [
+      "101"
+    ],
+    "tags": [
+      "derivatives",
+      "options",
+      "volatility"
+    ]
+  },
+  {
+    "id": "vix",
+    "term": "VIX",
+    "definition": "Indeks Ketidaktentuan Cboe, dikira daripada harga pilihan S&P 500 untuk mencerminkan ketidaktentuan tersirat 30 hari pada indeks. Sering dirujuk sebagai penunjuk ketakutan pasaran.",
+    "category": "options_derivatives",
+    "see_also": [
+      "implied_volatility",
+      "volatility_regime",
+      "risk_on_risk_off"
+    ],
+    "related_lessons": [
+      "101"
+    ],
+    "tags": [
+      "derivatives",
+      "volatility",
+      "index"
+    ]
+  },
+  {
+    "id": "ponzi_scheme",
+    "term": "Skema Ponzi",
+    "definition": "Fraud yang membayar pulangan kepada peserta awal menggunakan sumbangan peserta baharu, bukan daripada aktiviti pelaburan sebenar. Dinamakan sempena Charles Ponzi; kes Madoff (2008) ialah contoh moden.",
+    "category": "scam",
+    "see_also": [
+      "pyramid_scheme",
+      "guaranteed_return_scam",
+      "affinity_fraud"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pyramid_scheme",
+    "term": "Skema piramid",
+    "definition": "Fraud di mana pendapatan terutamanya berasal daripada merekrut ahli baharu, bukan daripada menjual produk sebenar. Tidak mampan secara matematik apabila pengambilan perlahan.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "affinity_fraud"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pump_and_dump",
+    "term": "Pam dan buang",
+    "definition": "Manipulasi pasaran di mana penggiat menaikkan harga sekuriti yang kurang diperdagangkan melalui promosi mengelirukan, kemudian menjual posisi mereka ke atas permintaan yang mereka cipta. Lazim dalam konteks mikro-kap dan kripto.",
+    "category": "scam",
+    "see_also": [
+      "signal_selling_fraud",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "news_analyst"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "manipulation"
+    ]
+  },
+  {
+    "id": "clone_broker",
+    "term": "Pengecualian klon",
+    "definition": "Operasi penipuan yang menyamar sebagai broker berlesen yang sah dengan meniru nama, jenama, atau laman webnya. Dana yang disetorkan biasanya tidak dapat dipulihkan.",
+    "category": "scam",
+    "see_also": [
+      "fake_broker",
+      "unregistered_broker",
+      "brokerage"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "fake_broker",
+    "term": "Broker palsu",
+    "definition": "Operasi yang memasarkan dirinya sebagai broker tetapi tidak benar-benar berlesen untuk mengendalikan dana klien di wilayah yang didakwa. Sering digabungkan dengan papan pemuka buatan yang menunjukkan keuntungan rekaan.",
+    "category": "scam",
+    "see_also": [
+      "clone_broker",
+      "unregistered_broker"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "guaranteed_return_scam",
+    "term": "Scam pulangan dijamin",
+    "definition": "Percubaan penipuan yang menjanjikan pulangan tetap atau dijamin melebihi kadar bebas risiko semasa. Pasaran sebenar tidak boleh menjamin pulangan; janji ini adalah ciri utama penipuan yang direkodkan oleh pengawal selia AS dan global.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "ai_bot_scam",
+    "term": "Scam bot AI",
+    "definition": "Penipuan yang memasarkan bot perdagangan AI atau algoritma yang kononnya memberikan pulangan tinggi yang konsisten sebagai balasan kepada yuran atau deposit. Papan pemuka prestasi yang dibiayai biasanya dipalsukan.",
+    "category": "scam",
+    "see_also": [
+      "guaranteed_return_scam",
+      "signal_selling_fraud"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pig_butchering",
+    "term": "Pembunuhan babi",
+    "definition": "Penipuan romansa dan pelaburan jangka panjang di mana mangsa dibesarkan selama beberapa minggu melalui aplikasi mesej, kemudian diarahkan untuk mendepositkan dana ke dalam platform perdagangan palsu. Dinamakan mengikut amalan membesarkan mangsa sebelum mengambilnya.",
+    "category": "scam",
+    "see_also": [
+      "fake_broker",
+      "recovery_scam"
+    ],
+    "related_lessons": [
+      "113"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud",
+      "social_engineering"
+    ]
+  },
+  {
+    "id": "affinity_fraud",
+    "term": "Perceraian afiniti",
+    "definition": "Penipuan yang menyasarkan ahli kumpulan yang boleh dikenal pasti, seperti komuniti agama, kumpulan etnik, atau profesion, dengan memanfaatkan identiti bersama untuk kepercayaan. Sering digunakan untuk memulakan struktur Ponzi dan piramid.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "pyramid_scheme"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "recovery_scam",
+    "term": "Scam pemulihan",
+    "definition": "Penipuan sekunder yang menyasarkan mangsa penipuan terdahulu dengan menawarkan, terhadap yuran awal, untuk memulihkan dana yang hilang. Ia sendiri merupakan penipuan; pemulihan dana yang sah tidak memerlukan yuran awal.",
+    "category": "scam",
+    "see_also": [
+      "pig_butchering",
+      "fake_broker"
+    ],
+    "related_lessons": [
+      "113"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "signal_selling_fraud",
+    "term": "Perceraian penjualan isyarat",
+    "definition": "Operasi yang menjual isyarat perdagangan atau amaran dengan rekod prestasi yang dipalsukan, sering digabungkan dengan aktiviti pam-dan-jual dalam ticker yang dipromosikan. Pengawal selia telah mengambil tindakan terhadap operator sedemikian.",
+    "category": "scam",
+    "see_also": [
+      "pump_and_dump",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "unregistered_broker",
+    "term": "Ejen tidak berdaftar",
+    "definition": "Entiti yang menawarkan perkhidmatan brokeran tanpa berdaftar dengan pengawal selia yang relevan (contohnya, SEC dan FINRA di AS). Beroperasi di luar perimeter pengawalseliaan menghilangkan perlindungan pelabur.",
+    "category": "scam",
+    "see_also": [
+      "clone_broker",
+      "fake_broker",
+      "brokerage"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory"
+    ]
+  },
+  {
+    "id": "ami_mandate",
+    "term": "Mandat",
+    "definition": "Kontrak yang ditetapkan pengguna dengan simulator yang menyandarkan toleransi risiko, penurunan simulasi maksimum, had saiz kedudukan, dan penanda kepatuhan. Ejen Portfolio Manager AMI melaksanakan mandat ini pada setiap perdagangan simulasi dan tidak boleh melangkauinya.",
+    "category": "platform",
+    "see_also": [
+      "ami_pm_safety_floor",
+      "ami_verdict",
+      "ami_coach_your_agent"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety"
+    ]
+  },
+  {
+    "id": "ami_verdict",
+    "term": "Verdict",
+    "definition": "Output simulasi dari Convene the Room: cadangan BELI, JUAL, atau TAHAN bersaiz, harga masuk, henti rugi, sasaran, jangka masa, keyakinan, dan transkrip perdebatan penuh agennya. Artefak latihan untuk pengguna menilai, bukan nasihat kewangan.",
+    "category": "platform",
+    "see_also": [
+      "ami_convene_the_room",
+      "ami_decision_journal",
+      "ami_training_verdict"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "output"
+    ]
+  },
+  {
+    "id": "ami_convene_the_room",
+    "term": "Convene the Room",
+    "definition": "Alur kerja simulator yang menjalankan perdebatan 12-agen pada ticker yang dipilih, berakhir dengan Verdict Portfolio Manager. Mengalirkan pemikiran agennya secara langsung semasa proses berjalan.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_one_on_one",
+      "ami_mandate"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader",
+      "research_manager",
+      "aggressive_debator",
+      "conservative_debator",
+      "neutral_debator"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "ami_coach_your_agent",
+    "term": "Brief Your Agent",
+    "definition": "Ciri simulator yang membolehkan pengguna membentuk gaya atau keutamaan analisis individu agenn melalui bimbingan bahasa semula jadi. Briefing mengubah permukaan pemikiran agenn; ia tidak boleh mengatasi lantai keselamatan Portfolio Manager.",
+    "category": "platform",
+    "see_also": [
+      "ami_pm_safety_floor",
+      "ami_mandate"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "personalization"
+    ]
+  },
+  {
+    "id": "ami_decision_journal",
+    "term": "Decision Journal",
+    "definition": "Log simulator bagi setiap Verdict, pemikiran yang direkodkan pengguna pada masa itu, dan hasil akhir. Digunakan oleh simulator untuk menonjolkan corak dan memberi maklumat kepada enjin Lessons.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_earn_path",
+      "discipline"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "reflection"
+    ]
+  },
+  {
+    "id": "ami_pm_safety_floor",
+    "term": "PM safety floor",
+    "definition": "Lapisan penguatkuasaan keras yang tidak boleh dilatih dalam arahan Portfolio Manager dan fungsi semakan pematuhan deterministik. Menyekat sebarang output agenn yang melanggar Mandat pengguna atau kekangan seluruh simulator.",
+    "category": "platform",
+    "see_also": [
+      "ami_mandate",
+      "ami_coach_your_agent"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety"
+    ]
+  },
+  {
+    "id": "ami_earn_path",
+    "term": "Earn Path",
+    "definition": "Sistem kemajuan simulator yang memberikan kredit dalam aplikasi dan kunci buka untuk menyelesaikan pelajaran, mendakwa keputusan, dan mencapai tonggak kurikulum. Menjejaki pertumbuhan pengguna merentasi kurikulum latihan.",
+    "category": "platform",
+    "see_also": [
+      "ami_decision_journal"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "progression"
+    ]
+  },
+  {
+    "id": "ami_one_on_one",
+    "term": "1-on-1 chat",
+    "definition": "Mod simulator yang membolehkan pengguna berbual terus dengan satu agenn untuk penjelasan atau analisis mendalam. Output adalah maklumat; ia bukan Verdict dan tidak mewakili nasihat kewangan.",
+    "category": "platform",
+    "see_also": [
+      "ami_convene_the_room",
+      "concierge"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "market_analyst",
+      "news_analyst",
+      "social_media_analyst"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "concierge",
+    "term": "Concierge",
+    "definition": "Agen onboarding AMI Trade yang menjalankan temu bual perbualan untuk mengumpulkan konteks pengguna, merangka Mandat awal, dan mengarahkan pengguna ke simulator. Bukan sebahagian daripada 12 agenn dagangan.",
+    "category": "platform",
+    "see_also": [
+      "ami_mandate",
+      "ami_one_on_one"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "onboarding"
+    ]
+  },
+  {
+    "id": "ami_watchlist",
+    "term": "Senarai pantauan AMI",
+    "definition": "Senarai ticker pilihan pengguna dalam AMI Trade. Ruang perbincangan dan sembang 1-satu menarik alam semesta mereka dari senarai ini.",
+    "category": "platform",
+    "see_also": [
+      "watchlist",
+      "ami_convene_the_room"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "ami_training_verdict",
+    "term": "Verditik Latihan",
+    "definition": "Pembingkai eksplisit yang digunakan pada setiap Verditik untuk mengingatkan pengguna bahawa output adalah artifak latihan simulasi, bukan nasihat pelaburan. Mementingkan kedudukan simulasi sahaja AMI Trade dan nasihat sahaja—tidak pernah.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_pm_safety_floor"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety",
+      "disclosure"
+    ]
+  },
+  {
+    "id": "kelly_criterion",
+    "term": "Kriteria Kelly",
+    "definition": "Formula saiz posisi yang diterbitkan oleh John Kelly (1956) yang memaksimumkan logaritma dijangkakan kekayaan, dinyatakan sebagai f* = (bp - q) / b untuk hasil dua hala dengan kebarangkalian menang p, kebarangkalian kalah q, dan nisbah bayaran b. Ramai amalan menggunakan Kelly pecahan untuk mengurangkan varians.",
+    "category": "advanced",
+    "see_also": [
+      "atr_based_sizing",
+      "asymmetric_rr",
+      "gamblers_ruin"
+    ],
+    "related_lessons": [
+      "150"
+    ],
+    "tags": [
+      "advanced",
+      "sizing",
+      "math"
+    ]
+  },
+  {
+    "id": "atr_based_sizing",
+    "term": "Saiz berdasarkan ATR",
+    "definition": "Pendekatan saiz posisi yang melaraskan bilangan saham supaya henti rugi pada pendaraban ATR dari harga masuk sama dengan risiko dolar atau peratusan tetap per dagangan. Menormalisasikan risiko merentas instrumen dengan volatiliti berbeza.",
+    "category": "advanced",
+    "see_also": [
+      "atr",
+      "kelly_criterion",
+      "asymmetric_rr"
+    ],
+    "related_lessons": [
+      "014",
+      "150"
+    ],
+    "tags": [
+      "advanced",
+      "sizing",
+      "risk"
+    ]
+  },
+  {
+    "id": "regime_segmented_backtest",
+    "term": "Ujian balik bersegmen rejim",
+    "definition": "Ujian balik yang membahagikan data sejarah mengikut rejim, contohnya, bull, bear, vol tinggi, vol rendah, dan melaporkan prestasi setiap segmen. Mendedahkan kebergantungan strategi pada rejim yang metrik agregat boleh menyembunyikan.",
+    "category": "advanced",
+    "see_also": [
+      "backtesting",
+      "walk_forward",
+      "volatility_regime",
+      "bull_market",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "151"
+    ],
+    "tags": [
+      "advanced",
+      "research"
+    ]
+  },
+  {
+    "id": "walk_forward_analysis",
+    "term": "Analisis berjalan ke hadapan (terperinci)",
+    "definition": "Protokol penyelidikan yang berulang kali menyemak semula parameter strategi pada tetingkap latihan gelung dan menilai pada tetingkap sampel luar seterusnya. Menghasilkan lengkung ekuiti sampel luar berantai yang lebih menghampiri pelaksanaan langsung berbanding satu pemasangan.",
+    "category": "advanced",
+    "see_also": [
+      "walk_forward",
+      "backtesting",
+      "overfitting"
+    ],
+    "related_lessons": [
+      "076",
+      "151"
+    ],
+    "tags": [
+      "advanced",
+      "research"
+    ]
+  },
+  {
+    "id": "transaction_cost_modeling",
+    "term": "Pemodelan kos transaksi",
+    "definition": "Amalan memodelkan komisen, yuran bursa, spread bid-ask, dan impak harga semasa ujian balik atau saiz posisi dagangan langsung. Strategi dengan putaran kerap boleh berubah dari nilai dijangkakan positif kepada negatif sekali kos dimasukkan.",
+    "category": "advanced",
+    "see_also": [
+      "spread",
+      "scalping",
+      "backtesting"
+    ],
+    "related_lessons": [
+      "152"
+    ],
+    "tags": [
+      "advanced",
+      "execution",
+      "cost"
+    ]
+  },
+  {
+    "id": "strategy_correlation",
+    "term": "Korelasi strategi",
+    "definition": "Korelasi pasangan pulangan antara dua strategi dagangan. Menggabungkan strategi berkorelasi rendah atau negatif mengurangkan varians portofolio agregat berbanding setiap strategi secara berasingan.",
+    "category": "advanced",
+    "see_also": [
+      "risk_parity",
+      "portfolio"
+    ],
+    "related_lessons": [
+      "153"
+    ],
+    "tags": [
+      "advanced",
+      "portfolio_construction"
+    ]
+  },
+  {
+    "id": "risk_parity",
+    "term": "Pariti risiko",
+    "definition": "Pendekatan pembinaan portfoli yang mengalokasikan modal supaya setiap pegangan menyumbang bahagian risiko portfoli yang sama, biasanya diukur sebagai volatiliti. Dipopularkan oleh kerangka Bridgewater All Weather oleh Ray Dalio.",
+    "category": "advanced",
+    "see_also": [
+      "strategy_correlation",
+      "portfolio",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "153"
+    ],
+    "tags": [
+      "advanced",
+      "portfolio_construction"
+    ]
+  },
+  {
+    "id": "drawdown_recovery_math",
+    "term": "Matematik pemulihan drawdown",
+    "definition": "Aritmetik yang menyatakan bahawa drawdown sebanyak X% memerlukan pulangan sebanyak X / (1 - X) untuk pulih, contohnya, drawdown 50% memerlukan pulangan 100% untuk kembali ke paras tertinggi sebelumnya. Mendasari asimetri antara kerugian dan pulangan pemulihan yang diperlukan.",
+    "category": "advanced",
+    "see_also": [
+      "return",
+      "kelly_criterion",
+      "gamblers_ruin"
+    ],
+    "related_lessons": [
+      "154"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "gamblers_ruin",
+    "term": "Kehancuran penjudi",
+    "definition": "Hasil kebarangkalian yang menunjukkan bahawa pemain yang membuat pertaruhan berulang terhadap lawan dengan modal yang lebih besar akan akhirnya hancur, walaupun dengan kelebihan kecil, jika saiz pertaruhan terlalu agresif. Mendasari justifikasi untuk Kelly pecahan dan had risiko yang konservatif.",
+    "category": "advanced",
+    "see_also": [
+      "kelly_criterion",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "154"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "asymmetric_rr",
+    "term": "R:R asimetri (ganjil-kepada-risiko)",
+    "definition": "Struktur dagangan di mana jarak dari harga masuk ke sasaran melebihi jarak dari harga masuk ke henti rugi, menghasilkan nisbah ganjil-kepada-risiko lebih besar daripada 1:1. Kadar kemenangan titik pecah adalah 1 / (1 + R), contohnya 33% pada 2:1.",
+    "category": "advanced",
+    "see_also": [
+      "kelly_criterion",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "155"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "riba",
+    "term": "Riba",
+    "definition": "Faedah — pulangan terjamin yang tidak bergantung kepada hasil pada wang yang dipinjam, dikenakan tanpa mengira sama ada usaha peminjam untung atau rugi. Salah satu daripada empat larangan teras Syariah; prinsip pengaturannya yang dilanggar adalah perkongsian risiko berbandian pemindahan risiko, kerana tuntutan peminjam adalah tetap tidak kira hasil asas.",
+    "category": "islamic_finance",
+    "see_also": [
+      "gharar",
+      "maysir",
+      "haram",
+      "musharakah",
+      "mudarabah"
+    ],
+    "related_lessons": [
+      "347",
+      "352",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "riba",
+      "interest",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "gharar",
+    "term": "Gharar",
+    "definition": "Ketidakpastian berlebihan dalam terma kontrak — subjek, harga, atau kuantiti dibiarkan benar-benar tidak ditakrifkan. Salah satu daripada empat larangan teras Syariah; berbeza daripada riba, gharar menafikan kontrak walaupun tiada faedah dikenakan, kerana ketidakpastian itu sendiri adalah kecacatan.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "maysir",
+      "haram"
+    ],
+    "related_lessons": [
+      "347"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "gharar",
+      "uncertainty",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "maysir",
+    "term": "Maysir",
+    "definition": "Perjudian — pertaruhan menang atau kalah tanpa kaitan dengan aktiviti ekonomi sebenar atau risiko usaha bersama. Salah satu daripada empat larangan teras Syariah; struktur boleh gagal pada maysir walaupun tidak mengenakan faedah langsung, contohnya pertaruhan binari pada paras indeks.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "gharar",
+      "haram"
+    ],
+    "related_lessons": [
+      "347",
+      "348"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "maysir",
+      "gambling",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "halal",
+    "term": "Halal",
+    "definition": "Dibenarkan di bawah Syariah. Dalam konteks penyaringan AMI, syarikat atau instrumen adalah halal apabila ia lulus kedua-dua peringkat skrin dua peringkat — skrin aktiviti perniagaan dan tiga skrin nisbah kewangan — di bawah piawaian bernama. Penggunaan istilah AMI mencerminkan metodologi penyaringan yang diterbitkan, bukan hukum agama.",
+    "category": "islamic_finance",
+    "see_also": [
+      "haram",
+      "sharia_compliant",
+      "business_activity_screen",
+      "financial_ratio_screen"
+    ],
+    "related_lessons": [
+      "348",
+      "349",
+      "355"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "islamic_finance",
+      "halal",
+      "screening"
+    ]
+  },
+  {
+    "id": "haram",
+    "term": "Haram",
+    "definition": "Diharamkan di bawah Syariah. Sebuah syarikat yang hasil pendapatan terutamanya berasal daripada aktiviti perniagaan haram — alkohol, tembakau, babi atau makanan bukan halal, perjudian, perbankan atau insurans berasaskan faedah konvensional, senjata, atau hiburan dewasa — gagal saringan aktiviti perniagaan sepenuhnya, tidak kira nisbah kewangannya.",
+    "category": "islamic_finance",
+    "see_also": [
+      "halal",
+      "business_activity_screen",
+      "riba",
+      "maysir"
+    ],
+    "related_lessons": [
+      "347",
+      "348"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "haram",
+      "business_activity_screen"
+    ]
+  },
+  {
+    "id": "sukuk",
+    "term": "Sukuk",
+    "definition": "Alat pembiayaan Islam yang dibina sebagai kepunyaan separa terhadap aset sebenar atau usaha niaga yang mendasarinya; pulangan berupa pendapatan sewa, perkongsian untung, atau markup jual-beli dan sewa balik, bukan faedah atas wang yang dipinjamkan. Harganya selari dengan bon konvensional, tetapi tuntutan undang-undang di bawahnya — kepunyaan aset sebenar berbanding hutang yang perlu dibayar tanpa mengira hasil — adalah yang menjadikannya bukan riba.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "ijarah",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "352",
+      "303",
+      "304",
+      "307"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "fixed_income"
+    ]
+  },
+  {
+    "id": "ijarah",
+    "term": "Ijarah",
+    "definition": "Kontrak sewa Islam: pendana mengekalkan kepunyaan aset dan menyewakannya kepada pelanggan untuk bayaran sewaan tetap, dengan pilihan untuk membeli pada akhir tempoh (ijarah muntahia bittamlik) atau sewa operasi terus. Analog konvensional: sewa peralatan atau hartanah. Asas pengaturcaraan yang biasa untuk sukuk al-ijarah.",
+    "category": "islamic_finance",
+    "see_also": [
+      "sukuk",
+      "murabahah",
+      "musharakah",
+      "mudarabah",
+      "takaful"
+    ],
+    "related_lessons": [
+      "353",
+      "352"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "ijarah",
+      "contracts",
+      "leasing"
+    ]
+  },
+  {
+    "id": "murabahah",
+    "term": "Murabahah",
+    "definition": "Kontrak jual beli kos-plus: pendana membeli aset dan serta-merta menjualnya kembali kepada pelanggan pada markup tetap yang dinyatakan, dibayar secara ansuran. Secara undang-undang ia adalah jualan, bukan pinjaman — tiada faedah berbunga, tiada faedah penalti pada baki outstanding. Analog konvensional: pinjaman, walaupun substansi undang-undangnya berbeza.",
+    "category": "islamic_finance",
+    "see_also": [
+      "ijarah",
+      "musharakah",
+      "mudarabah",
+      "takaful",
+      "riba"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "murabahah",
+      "contracts"
+    ]
+  },
+  {
+    "id": "musharakah",
+    "term": "Musharakah",
+    "definition": "Kontrak perkongsian: dua pihak atau lebih menyumbang modal dan berkongsi untung serta rugi pada nisbah yang telah dipersetujui. Analog konvensional: ekuiti usaha sama. Menunjukkan perkongsian risiko berbandi pemindahan risiko — pulangan kedua-dua pihak bergerak mengikut hasil sebenar usaha niaga.",
+    "category": "islamic_finance",
+    "see_also": [
+      "mudarabah",
+      "murabahah",
+      "ijarah",
+      "takaful",
+      "riba"
+    ],
+    "related_lessons": [
+      "347",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "musharakah",
+      "contracts",
+      "risk_sharing"
+    ]
+  },
+  {
+    "id": "mudarabah",
+    "term": "Mudarabah",
+    "definition": "Kontrak usaha niaga perkongsian untung: satu pihak menyumbang modal, seorang pengurus menyumbang kepakaran dan kerja, dan untung dibahagikan mengikut nisbah yang telah dipersetujui, manakala kerugian modal (kecuali kekhilafan pengurus) ditanggung oleh penyedia modal. Analog konvensional: dana dengan pemisahan antara rakan kongsi umum/rakan kongsi terhad.",
+    "category": "islamic_finance",
+    "see_also": [
+      "musharakah",
+      "murabahah",
+      "ijarah",
+      "takaful"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "mudarabah",
+      "contracts",
+      "risk_sharing"
+    ]
+  },
+  {
+    "id": "takaful",
+    "term": "Takaful",
+    "definition": "Perkongsian risiko mutual yang mematuhi Syariah: peserta mengumpul sumbangan ke dalam dana bersama yang membayar tuntutan, dengan sebarang surplus dikembalikan kepada peserta berbanding dikekalkan sebagai untung penjamin. Analog konvensional: insurans mutual, secara struktur lebih dekat dengan koperasi berbanding penjamin untung yang menanggung risiko untuk akaun sendiri.",
+    "category": "islamic_finance",
+    "see_also": [
+      "musharakah",
+      "mudarabah",
+      "murabahah",
+      "ijarah"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "takaful",
+      "contracts",
+      "insurance"
+    ]
+  },
+  {
+    "id": "tazkiyah",
+    "term": "Tazkiyah (pembersihan)",
+    "definition": "Amalan mengira bahagian pendapatan yang tidak dibenarkan daripada dividen yang diterima daripada saham yang lulus saringan dan menyumbang jumlah tepat itu sebagai sedekah, bukan menyimpannya. Dikira daripada nisbah pendapatan tidak patuh yang diumumkan oleh syarikat terhadap jumlah pendapatan, kemudian terhadap dividen khusus yang dibayar — bukan anggaran longgar. Berkuat kuasa walaupun untuk saham yang lulus kedua-dua saringan aktiviti perniagaan dan nisbah kewangan.",
+    "category": "islamic_finance",
+    "see_also": [
+      "financial_ratio_screen",
+      "sharia_compliant",
+      "halal"
+    ],
+    "related_lessons": [
+      "351",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "tazkiyah",
+      "purification",
+      "dividends"
+    ]
+  },
+  {
+    "id": "aaoifi",
+    "term": "AAOIFI",
+    "definition": "Organisasi Perakaunan dan Pengauditan bagi Institusi Kewangan Islam — badan penentukuan piawaian yang piawaian Syariah-nya mentakrifkan, antara lain, empat larangan, metodologi penapisan dua peringkat, dan had nisbah hutang/kecairan/pendapatan (33%/33%/5% secara lalai) yang diikuti oleh logik penapisan AMI. Salah satu daripada beberapa piawaian bernama; AAOIFI, SAC Bursa Malaysia, dan penyedia indeks utama mungkin tidak bersetuju pada perbezaan marginal.",
+    "category": "islamic_finance",
+    "see_also": [
+      "shariah_advisory_council",
+      "dow_jones_islamic_market_index",
+      "financial_ratio_screen",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "349",
+      "350",
+      "351",
+      "352"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "aaoifi",
+      "standards"
+    ]
+  },
+  {
+    "id": "shariah_advisory_council",
+    "term": "Shariah Advisory Council (SAC)",
+    "definition": "Majlis Perunding Syariah Bursa Malaysia — badan yang menerbitkan dan mengekalkan senarai sekuriti yang mematuhi Syariah Bursa-i, dikemas kini dua kali setahun. Metodologinya secara meluas difahami beroperasi lebih longgar daripada penapisan gaya AAOIFI/GCC pada beberapa kriteria, contohnya pilihan penyebut untuk nisbah hutang dan kecairan — satu sumber perbezaan piawaian yang nyata, bukan kesilapan dalam mana-mana metodologi.",
+    "category": "islamic_finance",
+    "see_also": [
+      "aaoifi",
+      "dow_jones_islamic_market_index",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "350",
+      "354"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sac",
+      "bursa_malaysia",
+      "standards"
+    ]
+  },
+  {
+    "id": "dow_jones_islamic_market_index",
+    "term": "Dow Jones Islamic Market Index",
+    "definition": "Salah satu keluarga indeks patuh Syariah utama (bersama S&P Shariah, MSCI Islamic, dan FTSE Shariah), setiap satu menerbitkan senarai pengecualian aktiviti perniagaan dan ambang nisbah kewangan tersendiri. ETF Islam seperti SPUS dan HLAL mengikuti indeks bernama dari keluarga ini atau rakan sejawat; dua ETF Islam yang merangkumi alam semesta serupa boleh memegang nama berbeza kerana metodologi indeks asas tidak selalu bersetuju pada saham sempadan.",
+    "category": "islamic_finance",
+    "see_also": [
+      "shariah_advisory_council",
+      "aaoifi",
+      "islamic_etf",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "349",
+      "350",
+      "354"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "index",
+      "etf",
+      "standards"
+    ]
+  },
+  {
+    "id": "sharia_screening",
+    "term": "Penapisan Sharia",
+    "definition": "Proses dua peringkat untuk menentukan sama ada sebuah syarikat atau instrumen mematuhi piawaian Syariah bernama: penapisan aktiviti perniagaan (pengecualian sektor kualitatif) dijalankan dahulu, kemudian penapisan nisbah kewangan (tiga had kuantitatif) dijalankan ke atas syarikat yang lulus peringkat satu. Penanda Mandat halal AMI menjalankan tepat aliran kerja ini, dikira melalui logik penapisan backend, bukan pintasan kata kunci.",
+    "category": "islamic_finance",
+    "see_also": [
+      "business_activity_screen",
+      "financial_ratio_screen",
+      "halal",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "348",
+      "349",
+      "355"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "methodology"
+    ]
+  },
+  {
+    "id": "business_activity_screen",
+    "term": "Penapisan aktiviti perniagaan",
+    "definition": "Peringkat pertama, kualitatif, penapisan Syariah: adakah pendapatan teras syarikat berasal dari sektor yang dikecualikan — alkohol, tembakau, daging babi atau makanan bukan halal, judi, perbankan atau insurans berasaskan faedah konvensional, senjata, atau hiburan dewasa? Syarikat dalam sektor yang dikecualikan gagal serta-merta, tidak kira nisbah kewangannya; meluluskannya hanya memberi syarikat peluang untuk menghadapi penapisan nisbah seterusnya.",
+    "category": "islamic_finance",
+    "see_also": [
+      "financial_ratio_screen",
+      "sharia_screening",
+      "haram",
+      "maysir"
+    ],
+    "related_lessons": [
+      "348",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "business_activity"
+    ]
+  },
+  {
+    "id": "financial_ratio_screen",
+    "term": "Penapisan nisbah kewangan",
+    "definition": "Peringkat kedua, kuantitatif, penapisan Syariah: tiga nisbah, setiap satu diperiksa terhadap had di bawah metodologi gaya AAOIFI — hutang berfaedah / nilai pasaran (33%), tunai serta sekuriti berfaedah / nilai pasaran (33%), dan pendapatan tidak mematuhi / jumlah pendapatan (5%). Ketiga-tiganya mesti lulus; gagal mana-mana satu akan menggagalkan keseluruhan penapisan, tidak kira hasil aktiviti perniagaan. Dikira melalui fungsi `sharia_screen` AMI, bukan ditulis tangan.",
+    "category": "islamic_finance",
+    "see_also": [
+      "business_activity_screen",
+      "sharia_screening",
+      "aaoifi",
+      "tazkiyah"
+    ],
+    "related_lessons": [
+      "349",
+      "355",
+      "356"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "ratios"
+    ]
+  },
+  {
+    "id": "sharia_compliant",
+    "term": "Mematuhi Syariah",
+    "definition": "Telah meluluskan metodologi penapisan piawaian Syariah bernama — sentiasa dikualifikasikan oleh piawaian mana yang menghasilkan keputusan, kerana AAOIFI, SAC Bursa, dan penyedia indeks utama boleh mencapai verdict berbeza untuk syarikat yang sama pada masa yang sama. AMI menamakan piawaian yang digunakan daripada menegaskan 'mematuhi, tamat' tanpa kualifikasi.",
+    "category": "islamic_finance",
+    "see_also": [
+      "halal",
+      "sharia_screening",
+      "aaoifi",
+      "shariah_advisory_council"
+    ],
+    "related_lessons": [
+      "350",
+      "356"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sharia_compliant",
+      "standards"
+    ]
+  },
+  {
+    "id": "islamic_etf",
+    "term": "ETF Islam",
+    "definition": "Dana yang diperdagangkan di bursa yang mengikuti indeks patuh Syariah, contohnya SPUS (Indeks Pengecualian Industri S&P 500 Shariah) atau HLAL (FTSE Shariah). Nama dana mengesahkan bahawa sesetengah penapisan Syariah telah digunakan; metodologi indeks yang dinyatakan dalam prospektus memberitahu anda piawaian mana — dua ETF Islam yang merangkumi alam semesta serupa boleh memegang nama berbeza. Semakan kadar caj biasa dan ralat penjejak masih terpakai sepenuhnya.",
+    "category": "islamic_finance",
+    "see_also": [
+      "dow_jones_islamic_market_index",
+      "shariah_advisory_council",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "354",
+      "310"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "etf",
+      "funds"
+    ]
+  }
+]

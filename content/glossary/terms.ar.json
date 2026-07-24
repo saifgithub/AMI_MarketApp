@@ -1,0 +1,4041 @@
+[
+  {
+    "id": "ami",
+    "term": "AMI",
+    "definition": "AMI هو اسم العلامة التجارية للذكاء الاصطناعي في AMI Trade — وهو محاكي تدريبي مبني على فريق من 12 محللاً يعمل المستخدم فيه كمدير تنفيذي (CEO). لا يُعد AMI مستشاراً استثمارياً مسجلاً ولا يقدم نصائح استثمارية؛ فكل مخرجاته تُعد أثراً تدريبياً يقيّمه المستخدم. تُذكر العلامة التجارية دائماً باسم 'AMI'، ولا تُستبدل بـ 'الذكاء الاصطناعي' أو 'روبوت الدردشة'.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_mandate",
+      "ami_pm_safety_floor",
+      "ami_training_verdict",
+      "ami_convene_the_room"
+    ],
+    "related_lessons": [
+      "072",
+      "073",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "brand",
+      "definition",
+      "ami_internal",
+      "training_simulator"
+    ]
+  },
+  {
+    "id": "training_simulator",
+    "term": "محاكي تدريبي",
+    "definition": "بيئة برمجية تعليمية تحاكي مجالاً واقعياً لتمكين المستخدمين من ممارسة المهارات الأساسية دون عواقب تشغيلية. يُعد AMI محاكياً تدريبياً لمهارة تقييم مخرجات فريق من المحللين متعددي الوكلاء، وليس خدمة تقديم نصائح أو وسيطاً تداولياً.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_training_verdict",
+      "training_artifact"
+    ],
+    "related_lessons": [
+      "072",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "regulatory_framing",
+      "training_simulator",
+      "ami_internal"
+    ]
+  },
+  {
+    "id": "training_artifact",
+    "term": "أثر تدريبي",
+    "definition": "أي مخرجات ينتجها AMI — حكم، سعر دخول، وقف خسارة، هدف، أو محضر نقاش — تُصاغ كمادة تدريبية لمهارة تقييم المستخدم، وليس كإرشادات تداول قابلة للتنفيذ. دور المستخدم هو تقييم الأثر، ودور الأثر هو تزويد المستخدم بالممارسة.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_verdict",
+      "ami_training_verdict",
+      "training_simulator"
+    ],
+    "related_lessons": [
+      "072",
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "regulatory_framing",
+      "training_artifact",
+      "ami_internal"
+    ]
+  },
+  {
+    "id": "twelve_agent_team",
+    "term": "فريق من 12 محللاً",
+    "definition": "هيكل AMI: اثنا عشر وكيلاً متخصصاً مُنظمين كمحليين (أساسيات، سوق، أخبار، وسائل التواصل الاجتماعي)، وباحثين (متشائم، متفائل، مدير بحث)، ومجادلي مخاطر (عدواني، محافظ، محايد)، والتاجر، ومدير المحفظة. المستخدم هو المقعد الثالث عشر — المدير التنفيذي الذي يقيّم مخرجات الفريق. توجد الاثن عشر وكيلاً لإبراز التنوع المعرفي، وليس لأن زيادة عدد الوكلاء أفضل دائماً.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_convene_the_room",
+      "ami_verdict"
+    ],
+    "related_lessons": [
+      "072",
+      "268",
+      "269"
+    ],
+    "related_agents": [
+      "concierge",
+      "research_manager"
+    ],
+    "tags": [
+      "architecture",
+      "ami_internal",
+      "12_agents"
+    ]
+  },
+  {
+    "id": "concierge_agent",
+    "term": "وكيل الاستقبال",
+    "definition": "وكيل التوجيه والتسجيل في AMI. يشغل وكيل الاستقبال المقابلة الحوارية لإعداد الولاية (Mandate) للمستخدم، ويظهر تعريفات المفردات عند الطلب، ويوجه الأسئلة المحددة إلى وكيل فريق التداول المعني. لا يشارك وكيل الاستقبال في نقاش فريق التداول.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_mandate",
+      "twelve_agent_team"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "agents",
+      "concierge",
+      "ami_internal",
+      "onboarding"
+    ]
+  },
+  {
+    "id": "ceo_framing",
+    "term": "إطار عمل المدير التنفيذي (CEO للتقييم)",
+    "definition": "الاستعارة التنظيمية في AMI: المستخدم هو المدير التنفيذي لفريق من 12 محللاً. هذه الاستعارة هيكلية وليست زخرفية — فالمستخدم يحدد الولاية فعلياً، ويختار ما إذا كان سيعقد اجتماع الفريق، ويقيّم الحكم، ويقبله أو يعدله أو يرفضه. يهدف AMI إلى تعليم مهارة كونك مديراً تنفيذياً للتقييم، وليس للتنفيذ.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "ami_mandate",
+      "ami_verdict",
+      "training_simulator"
+    ],
+    "related_lessons": [
+      "076",
+      "279"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "framing",
+      "ami_internal",
+      "ceo"
+    ]
+  },
+  {
+    "id": "multi_agent_system",
+    "term": "نظام متعدد الوكلاء",
+    "definition": "هندسة برمجية يعمل فيها وكلاء ذكاء اصطناعي متخصصون متعددون معاً على حل مشكلة، ولكل منهم دور مختلف، وموجه (prompt)، وسطح مخرجات مختلف. يُنظم AMI كنظام متعدد الوكلاء حول اثني عشر دوراً لفريق التداول بالإضافة إلى وكيل الاستقبال.",
+    "category": "advanced",
+    "see_also": [
+      "ami",
+      "twelve_agent_team"
+    ],
+    "related_lessons": [
+      "072",
+      "268"
+    ],
+    "related_agents": [],
+    "tags": [
+      "architecture",
+      "ai_systems"
+    ]
+  },
+  {
+    "id": "simulated_trade",
+    "term": "تداول محاكي",
+    "definition": "تداول موجود فقط داخل محاكي AMI التدريبي — لا وسيط، ولا أمر، ولا تحرك أموال حقيقية. تتمتع الصفقات المحاكية بنفس رياضيات الدخول، والوقف، والهدف، والنتيجة للصفقات الحقيقية، لكن الغرض هو تدريب مهارة تقييم المستخدم، وليس تنفيذ مركز تداول.",
+    "category": "platform",
+    "see_also": [
+      "ami",
+      "training_simulator",
+      "ami_verdict",
+      "training_artifact"
+    ],
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [],
+    "tags": [
+      "simulation",
+      "ami_internal",
+      "training"
+    ]
+  },
+  {
+    "id": "stock",
+    "term": "سهم",
+    "definition": "وحدة ملكية في شركة مدرجة للتداول. يمثل السهم حصة جزئية في أصول الشركة وأرباحها.",
+    "category": "basics",
+    "see_also": [
+      "share",
+      "equity",
+      "common_stock",
+      "preferred_stock"
+    ],
+    "related_lessons": [
+      "001",
+      "002"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "share",
+    "term": "سهم",
+    "definition": "وحدة واحدة من أسهم الشركة. حاصل ضرب عدد الأسهم القائمة في سعر السهم يساوي القيمة السوقية.",
+    "category": "basics",
+    "see_also": [
+      "stock",
+      "share_price",
+      "market_cap"
+    ],
+    "related_lessons": [
+      "001"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "equity",
+    "term": "حقوق الملكية",
+    "definition": "حصة ملكية في شركة. في المحاسبة، تساوي حقوق الملكية الأصول مطروحاً منها الخصوم؛ وفي الأسواق، تشير إلى الأسهم المدرجة للتداول.",
+    "category": "basics",
+    "see_also": [
+      "stock",
+      "share",
+      "book_value"
+    ],
+    "related_lessons": [
+      "001",
+      "040"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "market",
+    "term": "السوق",
+    "definition": "أي منصة يتداول فيها المشترون والبائعون الأوراق المالية. في سياق الأسهم، تشير إلى مجموع البورصات التي يتم فيها تداول الأسهم.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "order_book"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "exchange",
+    "term": "البورصة",
+    "definition": "ساحة تداول منظمة حيث تُدرج وتُتداول الأوراق المالية، مثل NYSE أو NASDAQ. تربط البورصات بين المشترين والبائعين عبر دفتر الأوامر.",
+    "category": "basics",
+    "see_also": [
+      "market",
+      "order_book",
+      "ticker"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "brokerage",
+    "term": "الوساطة المالية",
+    "definition": "شركة مرخصة تنفذ أوامر الشراء والبيع نيابة عن العملاء. تحوّل شركات الوساطة الأوامر إلى البورصات وتحفظ أصول العملاء.",
+    "category": "basics",
+    "see_also": [
+      "unregistered_broker",
+      "clone_broker"
+    ],
+    "related_lessons": [
+      "004"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "ticker",
+    "term": "رمز التداول",
+    "definition": "الرمز الحرفي المختصر الذي يحدد ورقة مالية مدرجة في البورصة. AAPL هو رمز شركة Apple Inc.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "stock"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "market_cap",
+    "term": "القيمة السوقية",
+    "definition": "القيمة الإجمالية بالدولار لأسهم الشركة القائمة، وتُحسب بضرب سعر السهم في عدد الأسهم القائمة. تُستخدم لتصنيف الشركات إلى كبيرة، متوسطة، أو صغيرة القيمة السوقية.",
+    "category": "basics",
+    "see_also": [
+      "share",
+      "share_price"
+    ],
+    "related_lessons": [
+      "005"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "sizing"
+    ]
+  },
+  {
+    "id": "ipo",
+    "term": "طرح عام أولي (IPO)",
+    "definition": "أول بيع لأسهم الشركة للجمهور في البورصة. بعد الطرح العام الأولي، تتداول الأسهم بحرية في السوق الثانوي.",
+    "category": "basics",
+    "see_also": [
+      "exchange",
+      "share"
+    ],
+    "related_lessons": [
+      "006"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "dividend",
+    "term": "توزيعات أرباح",
+    "definition": "دفعة نقدية أو أسهم توزعها الشركة على مساهميها من الأرباح. تُدفع لكل سهم، وعادة ما تكون ربع سنوية في الولايات المتحدة.",
+    "category": "basics",
+    "see_also": [
+      "dividend_yield",
+      "common_stock",
+      "preferred_stock"
+    ],
+    "related_lessons": [
+      "007"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "income"
+    ]
+  },
+  {
+    "id": "share_price",
+    "term": "سعر السهم",
+    "definition": "السعر الذي يتداول به سهم واحد في السوق في لحظة معينة. يتحدد باستمرار من خلال أعلى سعر طلب وأدنى سعر عرض في دفتر الأوامر.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "ask",
+      "spread"
+    ],
+    "related_lessons": [
+      "003"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "bid",
+    "term": "سعر الطلب",
+    "definition": "أعلى سعر مستعد له المشتري لشراء ورقة مالية في الوقت الحالي. يقع سعر الطلب أسفل سعر العرض في دفتر الأوامر.",
+    "category": "basics",
+    "see_also": [
+      "ask",
+      "spread",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure"
+    ]
+  },
+  {
+    "id": "ask",
+    "term": "سعر العرض",
+    "definition": "أدنى سعر مستعد له البائع لقبول بيع ورقة مالية في الوقت الحالي. يُعرف أيضاً بسعر الطلب من البائع.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "spread",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure"
+    ]
+  },
+  {
+    "id": "spread",
+    "term": "فرق سعر الطلب والعرض",
+    "definition": "الفرق بين أفضل سعر طلب وأفضل سعر عرض لورقة مالية. عادةً ما يشير الفرق الضيق إلى سيولة أعلى.",
+    "category": "basics",
+    "see_also": [
+      "bid",
+      "ask",
+      "order_book"
+    ],
+    "related_lessons": [
+      "008"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "microstructure",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "share_class",
+    "term": "فئة السهم",
+    "definition": "تصنيف مميز للأسهم الصادرة عن نفس الشركة، يختلف غالباً في حقوق التصويت أو استحقاق توزيعات الأرباح. تعد فئات الأسهم من النوع A والنوع B أمثلة شائعة.",
+    "category": "basics",
+    "see_also": [
+      "common_stock",
+      "preferred_stock"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "common_stock",
+    "term": "الأسهم العادية",
+    "definition": "فئة الأسهم القياسية التي تمثل ملكية مع حقوق تصويت وحق متبقي في الأصول بعد سداد الديون وتوزيعات الأرباح المفضلة. معظم الأسهم المتداولة علناً هي أسهم عادية.",
+    "category": "basics",
+    "see_also": [
+      "preferred_stock",
+      "share_class",
+      "equity"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "preferred_stock",
+    "term": "الأسهم الممتازة",
+    "definition": "فئة من الأسهم تمنح أولوية على الأسهم العادية في دفع الأرباح والمطالبة بالأصول في حالة التصفية، وعادةً ما تكون غير مصوتة. وغالباً ما تحمل أرباحاً ثابتة.",
+    "category": "basics",
+    "see_also": [
+      "common_stock",
+      "share_class",
+      "dividend"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "etf",
+    "term": "صندوق استثماري متداول في البورصة (ETF)",
+    "definition": "أداة استثمار مجمعة تتداول في البورصة مثل السهم وتضم سلة من الأصول الأساسية مثل الأسهم أو السندات أو السلع. وتتبع معظم صناديق ETF مؤشراً معيناً.",
+    "category": "basics",
+    "see_also": [
+      "mutual_fund",
+      "index",
+      "index_fund"
+    ],
+    "related_lessons": [
+      "010"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund"
+    ]
+  },
+  {
+    "id": "mutual_fund",
+    "term": "صندوق استثمار مشترك",
+    "definition": "أداة استثمار مجمعة تضم سلة من الأوراق المالية ويتم تسعيرها مرة واحدة يومياً بعد إغلاق السوق. وعلى عكس صناديق ETF، لا تتداول صناديق الاستثمار المشتركة خلال ساعات التداول.",
+    "category": "basics",
+    "see_also": [
+      "etf",
+      "index_fund"
+    ],
+    "related_lessons": [
+      "010"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund"
+    ]
+  },
+  {
+    "id": "index",
+    "term": "مؤشر",
+    "definition": "سلة مقاسة من الأوراق المالية تُستخدم كمعيار لمؤشر السوق أو قطاع معين. فمؤشر S&P 500 يتتبع أداء 500 شركة أمريكية كبرى، بينما يتتبع مؤشر Nasdaq Composite أسهم شركة ناسداك المدرجة.",
+    "category": "basics",
+    "see_also": [
+      "index_fund",
+      "etf",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "011"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "benchmark"
+    ]
+  },
+  {
+    "id": "index_fund",
+    "term": "صندوق مؤشرات",
+    "definition": "صندوق مصمم لمحاكاة أداء مؤشر محدد من خلال حيازة نفس المكونات بنفس الأوزان. متاح على شكل صناديق استثمار مشتركة أو صناديق متداولة في البورصة (ETF).",
+    "category": "basics",
+    "see_also": [
+      "index",
+      "etf",
+      "mutual_fund"
+    ],
+    "related_lessons": [
+      "011"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "fund",
+      "passive"
+    ]
+  },
+  {
+    "id": "watchlist",
+    "term": "قائمة المراقبة",
+    "definition": "قائمة منتقاة من الأوراق المالية التي يراقبها المتداولون لإجراء تحليلات محتملة أو عمليات تداول مستقبلية. في تطبيق AMI Trade، تحدد قائمة المراقبة الرموز التي قد يقوم فريق الوكلاء بالبحث فيها.",
+    "category": "basics",
+    "see_also": [
+      "ami_watchlist"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "workflow"
+    ]
+  },
+  {
+    "id": "portfolio",
+    "term": "المحفظة",
+    "definition": "مجموعة كاملة من المراكز التي يحتفظ بها مستثمر أو حساب محاكي، بما في ذلك النقد. ويحدد تكوين المحفظة المخاطر والعائد الإجماليين.",
+    "category": "basics",
+    "see_also": [
+      "position",
+      "return",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "012"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "position",
+    "term": "المركز",
+    "definition": "حيازة في ورقة مالية محددة، معبراً عنها بعدد الأسهم وقيمتها الحالية. يحقق المركز الطويل ربحاً عند ارتفاع السعر، بينما يحقق المركز القصير ربحاً عند انخفاض السعر.",
+    "category": "basics",
+    "see_also": [
+      "portfolio",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "012",
+      "014"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary"
+    ]
+  },
+  {
+    "id": "return",
+    "term": "العائد",
+    "definition": "نسبة التغير في قيمة الاستثمار خلال فترة زمنية، وتشمل تغير السعر والأرباح الموزعة. قد يُقدم كعائد إجمالي، أو عائد سنوي مُعدل بالزمن، أو عائد مُعدل بالمخاطر.",
+    "category": "basics",
+    "see_also": [
+      "portfolio",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "013"
+    ],
+    "tags": [
+      "beginner",
+      "vocabulary",
+      "performance"
+    ]
+  },
+  {
+    "id": "market_order",
+    "term": "أمر السوق",
+    "definition": "توجيه للشراء أو البيع فوراً بأفضل سعر متاح. يُعطى الأولوية للتنفيذ على السعر، لذا قد يختلف سعر التنفيذ عن آخر عرض.",
+    "category": "order_types",
+    "see_also": [
+      "limit_order",
+      "stop_order",
+      "spread"
+    ],
+    "related_lessons": [
+      "015"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "limit_order",
+    "term": "أمر بالسعر المحدد",
+    "definition": "توجيه للشراء بأقصى سعر محدد، أو البيع بأدنى سعر محدد. السعر مضمون لكن التنفيذ غير مضمون.",
+    "category": "order_types",
+    "see_also": [
+      "market_order",
+      "stop_limit",
+      "order_book"
+    ],
+    "related_lessons": [
+      "015"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "stop_order",
+    "term": "أمر وقف",
+    "definition": "أمر معلق يتحول إلى أمر سوق بمجرد لمس سعر الوقف المحدد. يُستخدم لبدء الدخول أو الخروج عند مستوى محدد.",
+    "category": "order_types",
+    "see_also": [
+      "stop_limit",
+      "trailing_stop",
+      "market_order"
+    ],
+    "related_lessons": [
+      "016"
+    ],
+    "tags": [
+      "order",
+      "execution",
+      "risk"
+    ]
+  },
+  {
+    "id": "stop_limit",
+    "term": "أمر وقف بالسعر المحدد",
+    "definition": "أمر مكون من جزأين يُفعّل أمر السعر المحدد بمجرد لمس سعر الوقف. يجمع بين آلية التفعيل في أمر الوقف والتحكم في السعر في أمر السعر المحدد.",
+    "category": "order_types",
+    "see_also": [
+      "stop_order",
+      "limit_order"
+    ],
+    "related_lessons": [
+      "016"
+    ],
+    "tags": [
+      "order",
+      "execution"
+    ]
+  },
+  {
+    "id": "gtc",
+    "term": "GTC (صالح حتى الإلغاء)",
+    "definition": "مدة صلاحية الأمر تظل سارية حتى يلغيها المتداول أو يتم تنفيذها. تضع العديد من شركات الوساطة حداً لأوامر GTC يتراوح بين 60 إلى 90 يوماً.",
+    "category": "order_types",
+    "see_also": [
+      "gtt",
+      "day_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "gtt",
+    "term": "GTT (صالح حتى التفعيل)",
+    "definition": "أمر يظل سارياً حتى تتحقق شرط التفعيل المحدد. شائع في منصات التجزئة لأوامر الوقف ذات الصلاحية الممتدة.",
+    "category": "order_types",
+    "see_also": [
+      "gtc",
+      "stop_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "ioc",
+    "term": "IOC (تنفيذ فوري أو إلغاء)",
+    "definition": "أمر يجب تنفيذه فوراً عند الإدخال؛ تُلغى أي جزء غير ممتلئ. يسمح بتنفيذ جزئي.",
+    "category": "order_types",
+    "see_also": [
+      "fok",
+      "market_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "fok",
+    "term": "FOK (تنفيذ أو إلغاء)",
+    "definition": "أمر يجب تنفيذه بالكامل فوراً أو إلغاؤه بالكامل. لا يُسمح بالأجزاء الجزئية من التنفيذ.",
+    "category": "order_types",
+    "see_also": [
+      "ioc",
+      "all_or_none"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "day_order",
+    "term": "أمر يوم",
+    "definition": "أمر ينتهي تلقائياً في نهاية جلسة التداول إذا لم يتم تنفيذه. وهو المدة الافتراضية على معظم المنصات.",
+    "category": "order_types",
+    "see_also": [
+      "gtc",
+      "market_order"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "all_or_none",
+    "term": "كل شيء أو لا شيء (AON)",
+    "definition": "شرط أمر يتطلب التنفيذ الكامل أو عدم التنفيذ مطلقاً. يختلف عن FOK في أن أوامر AON قد تظل معلقة في دفتر الطلبات بانتظار السيولة الكاملة.",
+    "category": "order_types",
+    "see_also": [
+      "fok",
+      "ioc"
+    ],
+    "tags": [
+      "order",
+      "duration"
+    ]
+  },
+  {
+    "id": "trailing_stop",
+    "term": "أمر وقف متحرك",
+    "definition": "أمر وقف يتحرك سعر تفعيله مع سعر الأداة المالية بمقدار ثابت أو نسبة مئوية في الاتجاه المفضل، ويبقى ثابتاً عند تحرك السعر ضد الاتجاه. يثبت الأرباح غير المحققة مع استمرار الاتجاه.",
+    "category": "order_types",
+    "see_also": [
+      "stop_order",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "017"
+    ],
+    "tags": [
+      "order",
+      "execution",
+      "risk"
+    ]
+  },
+  {
+    "id": "order_book",
+    "term": "دفتر الطلبات",
+    "definition": "القائمة الزمنية الحقيقية لأوامر الشراء والبيع المعلقة لأداة مالية، مرتبة حسب مستوى السعر. يكشف عن السيولة المتاحة فوق وتحت السعر الحالي.",
+    "category": "order_types",
+    "see_also": [
+      "bid",
+      "ask",
+      "spread",
+      "market_order"
+    ],
+    "tags": [
+      "microstructure",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "candlestick",
+    "term": "شمعة يابانية",
+    "definition": "تنسيق لرسوم بيانية للأسعار يعرض الافتتاح، والأعلى، والأدنى، والإغلاق لفترة محددة. تمتد جسم الشمعة من سعر الافتتاح إلى الإغلاق، وتمتد الظلال إلى أعلى وأدنى سعر للفترة.",
+    "category": "technical",
+    "see_also": [
+      "doji",
+      "hammer",
+      "shooting_star",
+      "engulfing"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "chart",
+      "pattern"
+    ]
+  },
+  {
+    "id": "doji",
+    "term": "دوجي",
+    "definition": "شمعة يكون فيها سعر الافتتاح والإغلاق متساويين أو قريبين جداً، مما ينتج جسماً صغيراً جداً أو غائباً. يشير إلى التوازن بين المشترين والبائعين لتلك الفترة.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "shooting_star"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern"
+    ]
+  },
+  {
+    "id": "hammer",
+    "term": "الطرق (Hammer)",
+    "definition": "شمعة ذات جسم صغير بالقرب من أعلى النطاق وساق سفلية طويلة تساوي على الأقل ضعف طول الجسم، وتظهر عادة بعد اتجاه هابط. تعكس رفض الأسعار المنخفضة خلال الفترة.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "shooting_star",
+      "engulfing"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "shooting_star",
+    "term": "نجمة السقوط",
+    "definition": "شمعة ذات جسم صغير قرب أسفل النطاق وذيل علوي طويل يضاعف طول الجسم مرتين على الأقل، وتظهر عادة بعد اتجاه صاعد. تعكس رفض الأسعار الأعلى خلال الفترة.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "doji"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "engulfing",
+    "term": "نمط الابتلاع",
+    "definition": "نمط مكون من شموعتين حيث يغطي جسم الشمعة الثانية تماماً جسم الشمعة الأولى وتغلق في الاتجاه المعاكس. الابتلاع الصاعد يتبع اتجاه هابط؛ والابتلاع الهابط يتبع اتجاه صاعد.",
+    "category": "technical",
+    "see_also": [
+      "candlestick",
+      "hammer",
+      "doji"
+    ],
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "candlestick",
+      "pattern",
+      "reversal"
+    ]
+  },
+  {
+    "id": "trend",
+    "term": "الاتجاه",
+    "definition": "الميل الاتجاهي المستمر للسعر عبر إطار زمني محدد، ويصنف كصاعد أو هابط أو جانبي. الاتجاه يعتمد على الإطار الزمني: قد يكون الأصل في اتجاه صاعد على الرسم اليومي وفي اتجاه هابط على الإطار الداخلي.",
+    "category": "technical",
+    "see_also": [
+      "uptrend",
+      "downtrend",
+      "sideways",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "uptrend",
+    "term": "اتجاه صاعد",
+    "definition": "تتابع قمم أعلى وقيعان أعلى عبر إطار زمني محدد. يشير إلى أن الطلب الصافي يتجاوز العرض الصافي ضمن هذه النافذة.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "downtrend",
+      "sideways"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "downtrend",
+    "term": "اتجاه هابط",
+    "definition": "تتابع قمم أدنى وقيعان أدنى عبر إطار زمني محدد. يشير إلى أن العرض الصافي يتجاوز الطلب الصافي ضمن هذه النافذة.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "uptrend",
+      "sideways"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend"
+    ]
+  },
+  {
+    "id": "sideways",
+    "term": "سوق جانبي",
+    "definition": "تذبذب السعر ضمن نطاق أفقي دون ميل اتجاهي واضح، ويُعرف أيضاً بالسوق المحدود بالنطاق. تتجمع القمم والقيعان حول مستويات متشابهة.",
+    "category": "technical",
+    "see_also": [
+      "trend",
+      "range_bound",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "021"
+    ],
+    "tags": [
+      "technical",
+      "trend",
+      "regime"
+    ]
+  },
+  {
+    "id": "support",
+    "term": "الدعم",
+    "definition": "مستوى سعر حيث كان اهتمام الشراء كافياً تاريخياً لإيقاف الهبوط. يُحدد من القيعان السابقة أو نقاط المرجعية الفنية.",
+    "category": "technical",
+    "see_also": [
+      "resistance",
+      "breakout",
+      "pullback"
+    ],
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "level"
+    ]
+  },
+  {
+    "id": "resistance",
+    "term": "المقاومة",
+    "definition": "مستوى سعر حيث كان اهتمام البيع كافياً تاريخياً لإيقاف الصعود. يُحدد من القمم السابقة أو نقاط المرجعية الفنية.",
+    "category": "technical",
+    "see_also": [
+      "support",
+      "breakout",
+      "retest"
+    ],
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "level"
+    ]
+  },
+  {
+    "id": "breakout",
+    "term": "اختراق",
+    "definition": "إغلاق السعر بشكل حاسم خارج مستوى دعم أو مقاومة محدد. غالباً ما يصاحبه ارتفاع في حجم التداول.",
+    "category": "technical",
+    "see_also": [
+      "pullback",
+      "retest",
+      "breakout_strategy",
+      "volume"
+    ],
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "pullback",
+    "term": "ارتداد",
+    "definition": "حركة عكسية قصيرة الأجل ضمن اتجاه سائد أكبر. في الاتجاه الصاعد، تعود الأسعار للانخفاض مؤقتاً قبل استئناف الارتفاع.",
+    "category": "technical",
+    "see_also": [
+      "retest",
+      "trend",
+      "pullback_strategy"
+    ],
+    "related_lessons": [
+      "024"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "retest",
+    "term": "إعادة اختبار",
+    "definition": "عودة السعر إلى مستوى تم اختراقه سابقاً بعد الاختراق، حيث قد يعمل الدعم السابق كمقاومة، أو المقاومة السابقة كدعم.",
+    "category": "technical",
+    "see_also": [
+      "breakout",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "023"
+    ],
+    "tags": [
+      "technical",
+      "pattern"
+    ]
+  },
+  {
+    "id": "moving_average",
+    "term": "متوسط متحرك",
+    "definition": "مؤشر فني يقوم بمتوسط أسعار الإغلاق خلال نافذة زمنية محددة، ويُرسم كخط يحدث تحديثاً في كل فترة. يعمل على تنعيم التقلبات قصيرة الأجل للكشف عن الاتجاه الأساسي.",
+    "category": "technical",
+    "see_also": [
+      "sma",
+      "ema",
+      "trend"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "sma",
+    "term": "SMA (المتوسط المتحرك البسيط)",
+    "definition": "متوسط متحرك يكون فيه لكل سعر إغلاق في نافذة المراجعة وزن متساوٍ. يمثل SMA(20) المتوسط غير المرجح لآخر 25 إغلاقاً.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "ema"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "ema",
+    "term": "EMA (المتوسط المتحرك الأسي)",
+    "definition": "متوسط متحرك يطبق أوزاناً متناقصة أسيًا، مما يمنح وزناً أكبر للإغلاقات الأخيرة. يستجيب لتغيرات السعر بسرعة أكبر من المتوسط المتحرك البسيط لنفس المدة.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "sma",
+      "macd"
+    ],
+    "related_lessons": [
+      "025"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "trend"
+    ]
+  },
+  {
+    "id": "rsi",
+    "term": "RSI (مؤشر القوة النسبية)",
+    "definition": "مؤشر زخم طورته J. Welles Wilder يقيس نسبة متوسط المكاسب إلى متوسط الخسائر خلال فترة مراجعة، ومقيس من 0 إلى 100. تُصنف القراءات فوق 70 تقليدياً على أنها مشتراة بشكل مفرط؛ وتحت 30 على أنها مباعة بشكل مفرط.",
+    "category": "technical",
+    "see_also": [
+      "macd",
+      "momentum",
+      "bollinger_band"
+    ],
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "momentum",
+      "oscillator"
+    ]
+  },
+  {
+    "id": "macd",
+    "term": "MACD (تقارب وتباعد المتوسطات المتحركة)",
+    "definition": "مؤشر زخم يُحسب كفرق بين متوسط متحرك أسي سريع (عادة 12) ومتوسط متحرك أسي بطيء (عادة 26)، ويُرسم مع خط إشارة لمدة 9 فترات ومخطط أعمدة. يُستخدم لتتبع تحولات زخم الاتجاه.",
+    "category": "technical",
+    "see_also": [
+      "ema",
+      "rsi",
+      "momentum"
+    ],
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "momentum"
+    ]
+  },
+  {
+    "id": "bollinger_band",
+    "term": "فواصل بولينجر",
+    "definition": "إطار للتقلب يُرسم كمتوسط متحرك محاط بحدود عليا وسفلى بعدد محدد من الانحرافات المعيارية، وعادةً ما يكون 2. يتسع نطاق الفواصل ويتقلص وفقاً للتقلب الفعلي.",
+    "category": "technical",
+    "see_also": [
+      "moving_average",
+      "atr",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "028"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "volatility"
+    ]
+  },
+  {
+    "id": "atr",
+    "term": "مؤشر المدى الحقيقي المتوسط (ATR)",
+    "definition": "مقياس للتطور طورته شركة J. Welles Wilder، يقوم بمتوسط المدى الحقيقي خلال نافذة زمنية مرجعية، حيث يُعرف المدى الحقيقي بأنه القيمة الأكبر بين (سعر الإغلاق السابق ناقص أدنى سعر)، أو (أعلى سعر ناقص أدنى سعر)، أو (أعلى سعر ناقص سعر الإغلاق السابق). يُعبر عنه بوحدات السعر.",
+    "category": "technical",
+    "see_also": [
+      "bollinger_band",
+      "atr_based_sizing",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "technical",
+      "indicator",
+      "volatility"
+    ]
+  },
+  {
+    "id": "volume",
+    "term": "حجم التداول",
+    "definition": "إجمالي عدد الأسهم المتداولة في ورقة مالية خلال فترة زمنية محددة. غالباً ما يُرسم على شكل أعمدة تحت رسم السعر.",
+    "category": "technical",
+    "see_also": [
+      "breakout",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "030"
+    ],
+    "tags": [
+      "technical",
+      "liquidity"
+    ]
+  },
+  {
+    "id": "revenue",
+    "term": "الإيرادات",
+    "definition": "إجمالي الدخل الذي تحققه الشركة من بيع السلع أو الخدمات قبل خصم أي تكاليف، ويُعرف أيضاً بالخط العلوي. يُبلغ عنه في قائمة الدخل.",
+    "category": "fundamental",
+    "see_also": [
+      "gross_profit",
+      "operating_income",
+      "income_statement"
+    ],
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "gross_profit",
+    "term": "إجمالي الربح",
+    "definition": "الإيرادات مطروحاً منها تكلفة البضاعة المباعة مباشرة. وهو المبلغ المتبقي لتغطية المصروفات التشغيلية والضرائب وصافي الربح.",
+    "category": "fundamental",
+    "see_also": [
+      "revenue",
+      "gross_margin",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "operating_income",
+    "term": "الدخل التشغيلي",
+    "definition": "إجمالي الربح مطروحاً منه المصروفات التشغيلية مثل البحث والتطوير، والمبيعات، والإدارة العامة. يعكس الربح الناتج عن العمليات الأساسية قبل خصم الفوائد والضرائب.",
+    "category": "fundamental",
+    "see_also": [
+      "gross_profit",
+      "net_income",
+      "operating_margin"
+    ],
+    "related_lessons": [
+      "041"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "net_income",
+    "term": "صافي الدخل",
+    "definition": "صافي الربح المتبقي بعد خصم جميع المصروفات والفوائد والضرائب من الإيرادات. وهو الأساس لحساب الربح للسهم الواحد.",
+    "category": "fundamental",
+    "see_also": [
+      "operating_income",
+      "eps",
+      "income_statement"
+    ],
+    "related_lessons": [
+      "041"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "ebitda",
+    "term": "الأرباح قبل الفوائد والضرائب والاستهلاك والإطفاء (EBITDA)",
+    "definition": "الأرباح قبل خصم الفوائد والضرائب والاستهلاك والإطفاء. مقياس للربحية غير المعتمد على معايير المحاسبة العامة (GAAP)، يُستخدم غالباً لمقارنة الأداء التشغيلي بين الشركات ذات الهياكل الرأسمالية المختلفة.",
+    "category": "fundamental",
+    "see_also": [
+      "operating_income",
+      "ev_ebitda",
+      "net_income"
+    ],
+    "related_lessons": [
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "non_gaap"
+    ]
+  },
+  {
+    "id": "fcf",
+    "term": "تدفق النقد الحر (FCF)",
+    "definition": "النقد المتولد من العمليات مطروحاً منه النفقات الرأسمالية. يقيس النقد الذي تولده الشركة بعد تمويل الصيانة والاستثمارات في الأصول الملموسة.",
+    "category": "fundamental",
+    "see_also": [
+      "capex",
+      "cash_flow_statement",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "capex",
+    "term": "النفقات الرأسمالية (Capex)",
+    "definition": "النقد المصروف لاقتناء أو ترقية الأصول الملموسة مثل العقارات والمنشآت والمعدات. يُدرج تحت أنشطة الاستثمار في قائمة التدفقات النقدية.",
+    "category": "fundamental",
+    "see_also": [
+      "fcf",
+      "opex",
+      "cash_flow_statement"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "opex",
+    "term": "النفقات التشغيلية (Opex)",
+    "definition": "التكاليف اليومية لتشغيل الأعمال، بما في ذلك الرواتب والإيجار والتسويق والبحث والتطوير. تختلف عن النفقات الرأسمالية التي تمول الأصول طويلة الأجل.",
+    "category": "fundamental",
+    "see_also": [
+      "capex",
+      "operating_income"
+    ],
+    "related_lessons": [
+      "043"
+    ],
+    "tags": [
+      "fundamental",
+      "income_statement"
+    ]
+  },
+  {
+    "id": "balance_sheet",
+    "term": "قائمة المركز المالي",
+    "definition": "بيان مالي يلخص أصول الشركة والتزاماتها وحقوق المساهمين في نقطة زمنية محددة. يجب أن تتحقق المعادلة المحاسبية: الأصول = الالتزامات + حقوق الملكية.",
+    "category": "fundamental",
+    "see_also": [
+      "income_statement",
+      "cash_flow_statement",
+      "book_value",
+      "debt"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement"
+    ]
+  },
+  {
+    "id": "income_statement",
+    "term": "قائمة الدخل",
+    "definition": "بيان مالي يورد الإيرادات والمصروفات وصافي الدخل لفترة محددة. يُعرف أيضاً بقائمة الأرباح والخسائر.",
+    "category": "fundamental",
+    "see_also": [
+      "balance_sheet",
+      "cash_flow_statement",
+      "revenue",
+      "net_income"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement"
+    ]
+  },
+  {
+    "id": "cash_flow_statement",
+    "term": "قائمة التدفقات النقدية",
+    "definition": "بيان مالي يسووي صافي الدخل مع حركات النقد الفعلية، مقسمة إلى أنشطة تشغيلية واستثمارية وتمويلية. تكشف كيفية توليد الشركة للنقد واستخدامه.",
+    "category": "fundamental",
+    "see_also": [
+      "balance_sheet",
+      "income_statement",
+      "fcf",
+      "capex"
+    ],
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "financial_statement",
+      "cash_flow"
+    ]
+  },
+  {
+    "id": "eps",
+    "term": "ربحية السهم (EPS)",
+    "definition": "صافي الدخل مقسوماً على متوسط عدد الأسهم المصدرة المرجح، يُبلغ كربحية أساسية أو مخففة. وهو مقام نسبة السعر إلى الربح.",
+    "category": "fundamental",
+    "see_also": [
+      "net_income",
+      "pe_ratio",
+      "forward_pe"
+    ],
+    "related_lessons": [
+      "045"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "per_share"
+    ]
+  },
+  {
+    "id": "book_value",
+    "term": "القيمة الدفترية",
+    "definition": "حقوق المساهمين من قائمة المركز المالي، وتمثل الصافي المحاسبي. على أساس السهم الواحد، هي القيمة الدفترية مقسومة على عدد الأسهم المصدرة.",
+    "category": "fundamental",
+    "see_also": [
+      "tangible_book_value",
+      "pb_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "046"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet"
+    ]
+  },
+  {
+    "id": "tangible_book_value",
+    "term": "القيمة الدفترية الملموسة",
+    "definition": "القيمة الدفترية مطروحاً منها الأصول غير الملموسة مثل شهرة العلامة التجارية والبراءات. تُستخدم لتقييم الدعم القائم على الأصول الصلبة للأسهم.",
+    "category": "fundamental",
+    "see_also": [
+      "book_value",
+      "pb_ratio"
+    ],
+    "related_lessons": [
+      "046"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet"
+    ]
+  },
+  {
+    "id": "moat",
+    "term": "الخندق التنافسي",
+    "definition": "ميزة تنافسية دائمة تحمي ربحية الشركة من المنافسين، وشاع استخدامها على يد وارن بافيت. تشمل المصادر تأثيرات الشبكة، وتكاليف التبديل، والاقتصاديات الحجمية، والعلامة التجارية، والبراءات.",
+    "category": "fundamental",
+    "see_also": [
+      "roe",
+      "roic"
+    ],
+    "related_lessons": [
+      "047"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "fundamental",
+      "qualitative"
+    ]
+  },
+  {
+    "id": "roe",
+    "term": "العائد على حقوق المساهمين (ROE)",
+    "definition": "صافي الدخل مقسوماً على متوسط حقوق المساهمين، ويُعرب كنسبة مئوية. يقيس كفاءة الشركة في تحويل رأس المال الخاص بالمساهمين إلى أرباح.",
+    "category": "fundamental",
+    "see_also": [
+      "roic",
+      "net_income",
+      "book_value"
+    ],
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "profitability"
+    ]
+  },
+  {
+    "id": "roic",
+    "term": "العائد على رأس المال المستثمر (ROIC)",
+    "definition": "صافي الربح التشغيلي بعد الضرائب مقسوماً على رأس المال المستثمر (الديون زائد حقوق الملكية). يقيس العوائد المولدة لكل دولار من إجمالي رأس المال المُوظف، بغض النظر عن مزيج التمويل.",
+    "category": "fundamental",
+    "see_also": [
+      "roe",
+      "moat"
+    ],
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "profitability"
+    ]
+  },
+  {
+    "id": "debt",
+    "term": "الديون",
+    "definition": "رأس المال المقترض الذي يجب على الشركة سدادها، وتصنف عادةً على أنها قصيرة الأجل (تستحق خلال عام) أو طويلة الأجل. تُورد في جانب الخصوم في الميزانية العمومية.",
+    "category": "fundamental",
+    "see_also": [
+      "de_ratio",
+      "balance_sheet",
+      "current_ratio"
+    ],
+    "related_lessons": [
+      "049"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "fundamental",
+      "balance_sheet",
+      "leverage"
+    ]
+  },
+  {
+    "id": "pe_ratio",
+    "term": "نسبة السعر إلى الربح (P/E)",
+    "definition": "سعر السهم مقسوماً على ربحية السهم، ويُعرف أيضاً بنسبة السعر إلى الربح التاريخية عند استخدام آخر 12 شهراً من ربحية السهم. مضاعف تقييمي شائع الاستخدام.",
+    "category": "ratios",
+    "see_also": [
+      "forward_pe",
+      "peg",
+      "eps"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "forward_pe",
+    "term": "نسبة السعر إلى الربح المستقبلية",
+    "definition": "سعر السهم مقسوماً على ربحية السهم المتوقعة بإجماع المحللين للـ 12 شهراً القادمة أو السنة المالية التالية. تعكس الأرباح المتوقعة بدلاً من الأرباح المحققة.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "eps",
+      "peg"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "peg",
+    "term": "نسبة السعر إلى الربح مقسومة على النمو (PEG)",
+    "definition": "نسبة السعر إلى الربح مقسومة على معدل نمو الأرباح المتوقع. شاع استخدامها أصلاً على يد بيتر لينش كوسيلة لسياقة نسبة السعر إلى الربح في ضوء النمو.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "forward_pe"
+    ],
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio",
+      "growth"
+    ]
+  },
+  {
+    "id": "pb_ratio",
+    "term": "نسبة السعر إلى القيمة الدفترية (P/B)",
+    "definition": "سعر السهم مقسوماً على القيمة الدفترية للسهم. نسبة تقييم تُطبق عادةً على الشركات كثيفة الأصول مثل البنوك وشركات التأمين.",
+    "category": "ratios",
+    "see_also": [
+      "book_value",
+      "tangible_book_value"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "ps_ratio",
+    "term": "نسبة السعر إلى المبيعات (P/S)",
+    "definition": "القيمة السوقية مقسومة على الإيرادات خلال آخر 12 شهراً. تُستخدم غالباً لتقييم الشركات ذات الأرباح السلبية أو المتقلبة.",
+    "category": "ratios",
+    "see_also": [
+      "pe_ratio",
+      "revenue"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "ev_ebitda",
+    "term": "نسبة القيمةEnterprise إلى الأرباح قبل الفوائد والضرائب والاستهلاك والإطفاء (EV/EBITDA)",
+    "definition": "القيمة الكلية للشركة (رأس المال السوقي زائد صافي الديون) مقسومة على الأرباح قبل الفوائد والضرائب والاستهلاك والإطفاء. مضاعف تقييم محايد لهيكل رأس المال، ومفضل للمقارنات بين الشركات.",
+    "category": "ratios",
+    "see_also": [
+      "ebitda",
+      "pe_ratio"
+    ],
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "ratio"
+    ]
+  },
+  {
+    "id": "de_ratio",
+    "term": "نسبة الدين إلى حقوق الملكية (D/E)",
+    "definition": "إجمالي الديون مقسوماً على إجمالي حقوق المساهمين. يقيس الرافعة المالية والوزن النسبي للتمويل بالديون.",
+    "category": "ratios",
+    "see_also": [
+      "debt",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "leverage",
+      "ratio"
+    ]
+  },
+  {
+    "id": "current_ratio",
+    "term": "نسبة السيورة الجارية",
+    "definition": "الأصول الجارية مقسومة على الخصوم الجارية. مقياس للسيولة قصيرة الأجل يشير إلى قدرة الشركة على تغطية الالتزامات المستحقة خلال عام.",
+    "category": "ratios",
+    "see_also": [
+      "quick_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "liquidity",
+      "ratio"
+    ]
+  },
+  {
+    "id": "quick_ratio",
+    "term": "نسبة السيورة السريعة",
+    "definition": "الأصول الجارية مطروحاً منها المخزون، مقسومة على الخصوم الجارية. مقياس أكثر صرامة للسيولة يستبعد المخزون من حساب التغطية.",
+    "category": "ratios",
+    "see_also": [
+      "current_ratio",
+      "balance_sheet"
+    ],
+    "related_lessons": [
+      "052"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "liquidity",
+      "ratio"
+    ]
+  },
+  {
+    "id": "gross_margin",
+    "term": "هامش الربح الإجمالي",
+    "definition": "الربح الإجمالي مقسوماً على الإيرادات، معبراً عنه كنسبة مئوية. يشير إلى حصة الإيرادات التي تحتفظ بها الشركة بعد خصم تكاليف الإنتاج المباشرة.",
+    "category": "ratios",
+    "see_also": [
+      "gross_profit",
+      "operating_margin"
+    ],
+    "related_lessons": [
+      "053"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "profitability",
+      "ratio"
+    ]
+  },
+  {
+    "id": "operating_margin",
+    "term": "هامش الربح التشغيلي",
+    "definition": "الدخل التشغيلي مقسوماً على الإيرادات، معبراً عنه كنسبة مئوية. يعكس ربحية العمليات الأساسية قبل خصم الفوائد والضرائب.",
+    "category": "ratios",
+    "see_also": [
+      "operating_income",
+      "gross_margin"
+    ],
+    "related_lessons": [
+      "053"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "profitability",
+      "ratio"
+    ]
+  },
+  {
+    "id": "dividend_yield",
+    "term": "عائد التوزيعات",
+    "definition": "التوزيعات السنوية للسهم مقسومة على سعر السهم، معبراً عنها كنسبة مئوية. تمثل مكون العائد النقدي المستقل عن ارتفاع السعر.",
+    "category": "ratios",
+    "see_also": [
+      "dividend",
+      "share_price"
+    ],
+    "related_lessons": [
+      "054"
+    ],
+    "tags": [
+      "income",
+      "ratio"
+    ]
+  },
+  {
+    "id": "fomo",
+    "term": "الخوف من فقدان الفرصة (FOMO)",
+    "definition": "حالة عاطفية يشعر فيها المتداول بدافع للدخول في مركز لأن الآخرين يبدو أنهم يحققون أرباحاً. تحيز سلوكي موثق يتزامن غالباً مع الحركات في مراحلها المتأخرة.",
+    "category": "psychology",
+    "see_also": [
+      "herd_behaviour",
+      "greed",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "fear_of_missing_out",
+    "term": "الخوف من فقدان الفرصة",
+    "definition": "الدافع السلوكي للتصرف في صفقة لأن الزملاء أو وسائل الإعلام يبلغون عن أرباح فيها. مكافئ لـ FOMO؛ ويُستخدم الشكل الكامل أحياناً في السياقات الرسمية.",
+    "category": "psychology",
+    "see_also": [
+      "fomo",
+      "herd_behaviour"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "revenge_trading",
+    "term": "التداول الانتقامي",
+    "definition": "إجراء صفقات اندفاعية مباشرة بعد خسارة لاسترداد الخسارة، وعادةً ما يكون ذلك بحجم مرتفع وتحليل مخفض. نمط سلوكي مرتبط بنتائج متدهورة.",
+    "category": "psychology",
+    "see_also": [
+      "discipline",
+      "fomo",
+      "greed"
+    ],
+    "related_lessons": [
+      "061"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "overconfidence",
+    "term": "الثقة المفرطة",
+    "definition": "تحيز معرفي يبالغ فيه الشخص في تقدير دقة توقعاته أو مهارته. موثق بين المتداولين المحترفين والهواة على حد سواء.",
+    "category": "psychology",
+    "see_also": [
+      "confirmation_bias",
+      "hindsight_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "boredom_trading",
+    "term": "التداول من الملل",
+    "definition": "دخول صفقات بشكل أساسي لأن إعداداً مقنعاً غير موجود ويريد المتداول النشاط. نمط سلوكي يتميز بدخولات منخفضة الثقة.",
+    "category": "psychology",
+    "see_also": [
+      "discipline",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "061"
+    ],
+    "tags": [
+      "psychology",
+      "bias"
+    ]
+  },
+  {
+    "id": "greed",
+    "term": "الجشع",
+    "definition": "حالة عاطفية تدفع نحو مكاسب تدريجية تتجاوز الخطة المحددة مسبقاً، غالباً من خلال مراكز بحجم كبير أو الاحتفاظ بالصفقة بعد الأهداف المحددة. أحد العاطفتين اللتين يتم تتبعهما في مؤشرات المشاعر السوقية جنباً إلى جنب مع الخوف.",
+    "category": "psychology",
+    "see_also": [
+      "fear",
+      "fomo",
+      "discipline"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "emotion"
+    ]
+  },
+  {
+    "id": "fear",
+    "term": "الخوف",
+    "definition": "حالة عاطفية تدفع إلى إجراءات متحيزة نحو تجنب المخاطر مثل الخروج المبكر، أو تقليل المراكز، أو تجنب الدخول. مقترن بالجشع في أطر المشاعر الشائعة.",
+    "category": "psychology",
+    "see_also": [
+      "greed",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "060"
+    ],
+    "tags": [
+      "psychology",
+      "emotion"
+    ]
+  },
+  {
+    "id": "capitulation",
+    "term": "الاستسلام",
+    "definition": "خروج جماعي من قبل حاملي الأصول خلال انخفاض حاد، وغالباً ما يميزه حجم تداول مرتفع وهبوط حاد في الأسعار. يعكس الاستسلام الجماعي للإيمان بالمركز.",
+    "category": "psychology",
+    "see_also": [
+      "fear",
+      "bear_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "063"
+    ],
+    "tags": [
+      "psychology",
+      "regime"
+    ]
+  },
+  {
+    "id": "anchoring",
+    "term": "التثبيت",
+    "definition": "تحيز معرفي حيث ترتبط القرارات بقيمة مرجعية بارزة، مثل سعر الشراء، بدلاً من المعلومات الحالية. موثق من قبل تفسكي وكاهنمان.",
+    "category": "psychology",
+    "see_also": [
+      "recency_bias",
+      "sunk_cost_fallacy"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "recency_bias",
+    "term": "تحيز الحداثة",
+    "definition": "تحيز معرفي يبالغ في وزن الملاحظات الحديثة مقارنة بمعدلات الأساس طويلة الأجل. يتجلى في إسقاط العوائد الحديثة إلى ما لا نهاية في المستقبل.",
+    "category": "psychology",
+    "see_also": [
+      "anchoring",
+      "confirmation_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "confirmation_bias",
+    "term": "تحيز التأكيد",
+    "definition": "الاتجاه للبحث عن المعلومات وتذكرها بما يتوافق مع معتقد قائم وتجاهل الأدلة المتناقضة. شائع عند البحث في فرضية تم تبنيها مسبقاً.",
+    "category": "psychology",
+    "see_also": [
+      "overconfidence",
+      "recency_bias"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "related_agents": [
+      "bear_researcher",
+      "bull_researcher"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "hindsight_bias",
+    "term": "تحيز ما بعد الرؤية",
+    "definition": "الاتجاه، بعد وقوع حدث، إلى تذكر التوقعات على أنها كانت أكثر دقة مما كانت عليه في الواقع. يشوه تقييم القرارات السابقة.",
+    "category": "psychology",
+    "see_also": [
+      "overconfidence",
+      "ami_decision_journal"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "sunk_cost_fallacy",
+    "term": "مغالطة التكاليف الغارقة",
+    "definition": "الإصرار على موقف خاسر بسبب المال أو الوقت المستثمر مسبقاً، بدلاً من تقييم القيمة المتوقعة المستقبلية. موثق في الاقتصاد السلوكي.",
+    "category": "psychology",
+    "see_also": [
+      "anchoring",
+      "discipline"
+    ],
+    "related_lessons": [
+      "062"
+    ],
+    "tags": [
+      "psychology",
+      "bias",
+      "cognitive"
+    ]
+  },
+  {
+    "id": "herd_behaviour",
+    "term": "سلوك القطيع",
+    "definition": "عمل منسق من قبل المشاركين في السوق مدفوع بما يفعله الآخرون بدلاً من التحليل المستقل. يرتبط بتطرف الزخم وديناميكيات الفقاعات.",
+    "category": "psychology",
+    "see_also": [
+      "fomo",
+      "bull_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "063"
+    ],
+    "tags": [
+      "psychology",
+      "behavioral"
+    ]
+  },
+  {
+    "id": "discipline",
+    "term": "الانضباط",
+    "definition": "الالتزام بخطة تداول محددة مسبقاً، بما في ذلك الدخول، الخروج، حجم المركز، وحدود المخاطرة، بغض النظر عن المشاعر الآنية. يتم تتبعه في السجلات كمقياس سلوكي.",
+    "category": "psychology",
+    "see_also": [
+      "ami_decision_journal",
+      "revenge_trading"
+    ],
+    "related_lessons": [
+      "061",
+      "065"
+    ],
+    "tags": [
+      "psychology",
+      "process"
+    ]
+  },
+  {
+    "id": "trend_following",
+    "term": "متابعة الاتجاه",
+    "definition": "فئة استراتيجيات تدخل في اتجاه الاتجاه السائد وتخرج عندما يضعف الاتجاه. تُظهر العوائد انحرافاً موجباً تاريخياً مع خسائر صغيرة متكررة ومكاسب كبيرة عرضية.",
+    "category": "strategy",
+    "see_also": [
+      "mean_reversion",
+      "momentum",
+      "trend"
+    ],
+    "related_lessons": [
+      "070"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "mean_reversion",
+    "term": "العودة إلى المتوسط",
+    "definition": "فئة استراتيجيات تدخل ضد الحركات المتطرفة على افتراض أن السعر سيعود نحو المتوسط الإحصائي. تُظهر العوائد انحرافاً سالباً تاريخياً مع مكاسب صغيرة متكررة وخسائر كبيرة عرضية.",
+    "category": "strategy",
+    "see_also": [
+      "trend_following",
+      "bollinger_band",
+      "rsi"
+    ],
+    "related_lessons": [
+      "071"
+    ],
+    "tags": [
+      "strategy"
+    ]
+  },
+  {
+    "id": "breakout_strategy",
+    "term": "استراتيجية الاختراق",
+    "definition": "استراتيجية تدخل عندما يغلق السعر فوق مستوى محدد مثل أعلى نطاق أو متوسط متحرك. تستخدم عادةً وقف الخسارة أسفل المستوى المخترق.",
+    "category": "strategy",
+    "see_also": [
+      "breakout",
+      "retest",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "pullback_strategy",
+    "term": "استراتيجية الارتداد",
+    "definition": "استراتيجية تدخل في اتجاه الاتجاه السائد بعد ارتداد مضاد للاتجاه نحو مستوى مرجعي مختار. غالباً ما تستخدم المتوسطات المتحركة أو نقاط الذروة السابقة كمحفزات.",
+    "category": "strategy",
+    "see_also": [
+      "pullback",
+      "trend_following",
+      "moving_average"
+    ],
+    "related_lessons": [
+      "072"
+    ],
+    "tags": [
+      "strategy",
+      "trend"
+    ]
+  },
+  {
+    "id": "momentum",
+    "term": "الزخم",
+    "definition": "ميل الفائزين الأخيرين إلى الاستمرار في التفوق على الأفق القصير إلى المتوسط، كما تم توثيقه في الأدبيات الأكاديمية بواسطة Jegadeesh و Titman (1993). يصف أيضاً عائلة من الاستراتيجيات والمؤشرات.",
+    "category": "strategy",
+    "see_also": [
+      "rsi",
+      "macd",
+      "trend_following"
+    ],
+    "related_lessons": [
+      "073"
+    ],
+    "tags": [
+      "strategy",
+      "factor"
+    ]
+  },
+  {
+    "id": "swing_trading",
+    "term": "التداول التذبذبي",
+    "definition": "أسلوب تداول يمسك بالمراكز لعدة أيام إلى عدة أسابيع، مستهدفاً الحركات متوسطة الأجل. يقع بين التداول اليومي وتداول المراكز على طيف الأفق الزمني.",
+    "category": "strategy",
+    "see_also": [
+      "day_trading",
+      "position_trading",
+      "scalping"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "day_trading",
+    "term": "التداول اليومي",
+    "definition": "أسلوب تداول يفتح ويغلق جميع المراكز خلال جلسة واحدة، دون تحمل تعريض بين الفترات. يخضع لقواعد تنظيمية محددة في الولايات المتحدة مثل قاعدة المتداول اليومي النمطي.",
+    "category": "strategy",
+    "see_also": [
+      "swing_trading",
+      "scalping"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "position_trading",
+    "term": "تداول المراكز",
+    "definition": "أسلوب تداول يمسك بالمراكز لعدة أسابيع إلى أشهر، مع إعطاء الأولوية للاتجاهات ذات الأطر الزمنية الأكبر والأساسيات. يمتلك أدنى معدل دوران بين الأساليب النشطة.",
+    "category": "strategy",
+    "see_also": [
+      "swing_trading",
+      "day_trading"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "scalping",
+    "term": "التداول السريع",
+    "definition": "أسلوب تداول عالي التكرار يستهدف تحركات سعرية صغيرة خلال ثوانٍ أو دقائق لكل صفقة. يعتمد اعتماداً كبيراً على سرعة التنفيذ وكفاءة تكلفة المعاملة.",
+    "category": "strategy",
+    "see_also": [
+      "day_trading",
+      "transaction_cost_modeling"
+    ],
+    "related_lessons": [
+      "074"
+    ],
+    "tags": [
+      "strategy",
+      "horizon"
+    ]
+  },
+  {
+    "id": "backtesting",
+    "term": "اختبار الاسترجاع",
+    "definition": "محاكاة استراتيجية تداول على بيانات تاريخية لتقدير أدائها المحتمل. عرضة لتحيز النظر إلى الأمام والإفراط في التخصيص إذا لم تُصمم بعناية.",
+    "category": "strategy",
+    "see_also": [
+      "walk_forward",
+      "overfitting",
+      "regime_segmented_backtest"
+    ],
+    "related_lessons": [
+      "075"
+    ],
+    "tags": [
+      "strategy",
+      "research"
+    ]
+  },
+  {
+    "id": "walk_forward",
+    "term": "التحليل الأمامي المتحرك",
+    "definition": "منهجية اختبار استرجاع يتم فيها ضبط المعلمات على نافذة تدريب، ثم تقييمها على نافذة خارج العينة التالية، ثم التحرك للأمام. يهدف إلى تقليل الإفراط في التخصيص مقارنة بضبط عينة واحد.",
+    "category": "strategy",
+    "see_also": [
+      "backtesting",
+      "overfitting",
+      "walk_forward_analysis"
+    ],
+    "related_lessons": [
+      "076"
+    ],
+    "tags": [
+      "strategy",
+      "research"
+    ]
+  },
+  {
+    "id": "overfitting",
+    "term": "الإفراط في التخصيص",
+    "definition": "ضبط نموذج أو استراتيجية ليتناسب مع الضوضاء التاريخية بدلاً من الإشارة المستمرة، مما ينتج نتائج قوية داخل العينة تفشل خارج العينة. وهو خطر مركزي في البحث الكمي.",
+    "category": "strategy",
+    "see_also": [
+      "backtesting",
+      "walk_forward"
+    ],
+    "related_lessons": [
+      "076"
+    ],
+    "tags": [
+      "strategy",
+      "research",
+      "risk"
+    ]
+  },
+  {
+    "id": "paper_trading",
+    "term": "التداول التجريبي",
+    "definition": "محاكاة الصفقات باستخدام بيانات السوق الحية دون تعريض رأس المال الفعلي للخطر. تشكل أحكام AMI Trade والمحفظة المحاكاة أشكالاً من التداول التجريبي.",
+    "category": "strategy",
+    "see_also": [
+      "ami_verdict",
+      "backtesting"
+    ],
+    "related_lessons": [
+      "077"
+    ],
+    "tags": [
+      "strategy",
+      "simulation"
+    ]
+  },
+  {
+    "id": "bull_market",
+    "term": "سوق صاعد",
+    "definition": "فترة ممتدة من ارتفاع الأسعار في سوق أو أصل، تُعرف تقليدياً بأنها زيادة بنسبة 20% أو أكثر من قاع حديث. ترتبط عادةً بالمشاركة الواسعة وتحسن الأساسيات.",
+    "category": "regime",
+    "see_also": [
+      "bear_market",
+      "correction",
+      "sector_rotation"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "bear_market",
+    "term": "سوق هابط",
+    "definition": "فترة ممتدة من انخفاض الأسعار، تُعرف تقليدياً بأنها انخفاض بنسبة 20% أو أكثر من قمة حديثة. غالباً ما يتزامن مع تدهور الأساسيات أو الركود.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "correction",
+      "crash",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "sideways_market",
+    "term": "سوق جانبي",
+    "definition": "نظام تتأرجح فيه الأسعار ضمن نطاق أفقي دون اتجاه اتجاهي مستدام. يرتبط عادةً بانخفاض التقلب المنفذ وإشارات الاقتصاد الكلي غير الحاسمة.",
+    "category": "regime",
+    "see_also": [
+      "sideways",
+      "range_bound",
+      "volatility_regime"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "range_bound",
+    "term": "تداول ضمن نطاق محدد",
+    "definition": "يصف سوقاً أو ورقة مالية تتداول بشكل متكرر بين مستويات دعم ومقاومة محددة دون اختراق. مرادف للسلوك الجانبي (Sideways).",
+    "category": "regime",
+    "see_also": [
+      "sideways_market",
+      "support",
+      "resistance"
+    ],
+    "related_lessons": [
+      "080"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "correction",
+    "term": "تصحيح",
+    "definition": "انخفاض يتراوح بين 10% و20% من قمة حديثة، وهو أقل حدة من سوق الدببة. يُعامل كسمة روتينية في أسواق bulls ضمن التصنيف المالي القياسي.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "bear_market",
+      "crash"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "crash",
+    "term": "انهيار",
+    "definition": "انخفاض سريع وشديد في الأسعار خلال فترة زمنية قصيرة، عادةً ما يصاحبه حجم تداول وتقلبات مرتفعة. من الأمثلة: أكتوبر 1987 ومارس 2020.",
+    "category": "regime",
+    "see_also": [
+      "correction",
+      "bear_market",
+      "capitulation"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime",
+      "tail_event"
+    ]
+  },
+  {
+    "id": "recovery",
+    "term": "تعافي",
+    "definition": "المرحلة التي تلي التصحيح أو سوق الدببة، حيث تعود الأسعار والنشاط الاقتصادي نحو المستويات السابقة. يُعرف غالباً بشكل رجعي بمجرد تحقيق مستوى قياسي جديد.",
+    "category": "regime",
+    "see_also": [
+      "bear_market",
+      "recession"
+    ],
+    "related_lessons": [
+      "081"
+    ],
+    "tags": [
+      "regime"
+    ]
+  },
+  {
+    "id": "volatility_regime",
+    "term": "نظام التقلبات",
+    "definition": "وصف لمستوى التقلبات المحققة أو الضمنية السائدة، مثل: منخفض التقلبات، متوسط التقلبات، أو مرتفع التقلبات. تميل الأنظمة إلى التجمع، مما ينتج عنه ارتباط ذاتي تسلسلي في التقلبات.",
+    "category": "regime",
+    "see_also": [
+      "atr",
+      "vix",
+      "bollinger_band"
+    ],
+    "related_lessons": [
+      "082"
+    ],
+    "tags": [
+      "regime",
+      "volatility"
+    ]
+  },
+  {
+    "id": "sector_rotation",
+    "term": "تدوير القطاعات",
+    "definition": "انتقال رأس المال بين قطاعات الأسهم في نقاط مختلفة من الدورة الاقتصادية، مثل الانتقال من القطاعات الدفاعية إلى الدورية في مرحلة التوسع المبكر. نمط موثق عبر عقود من البيانات الأمريكية.",
+    "category": "regime",
+    "see_also": [
+      "bull_market",
+      "recession",
+      "market_breadth"
+    ],
+    "related_lessons": [
+      "083"
+    ],
+    "tags": [
+      "regime",
+      "macro"
+    ]
+  },
+  {
+    "id": "market_breadth",
+    "term": "عرض السوق",
+    "definition": "نسبة الأسهم المشاركة في حركة السوق، تُقاس بمؤشرات مثل خطوط التقدم/التراجع، صافي القمم الجديدة مطروحاً منها القيعان الجديدة، أو نسبة الأسهم فوق متوسطها المتحرك لمدة 200 يوم.",
+    "category": "regime",
+    "see_also": [
+      "index",
+      "bull_market",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "084"
+    ],
+    "tags": [
+      "regime",
+      "internals"
+    ]
+  },
+  {
+    "id": "federal_reserve",
+    "term": "الاحتياطي الفيدرالي (البنك المركزي الأمريكي)",
+    "definition": "البنك المركزي للولايات المتحدة، تأسس عام 1913. يحدد سعر الفائدة على الأموال الفيدرالية ويدير السياسة النقدية عبر لجنة العمليات السوقية المفتوحة.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_hike",
+      "rate_cut"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "central_bank"
+    ]
+  },
+  {
+    "id": "fed_funds_rate",
+    "term": "سعر فائدة صناديق الاحتياطي الفيدرالي",
+    "definition": "سعر الفائدة بين ليلة بنهاية اليوم الذي تقترض به المؤسسات الإيداعية الأمريكية الاحتياطيات من بعضها البعض، وهو السعر المستهدف من قبل الاحتياطي الفيدرالي. يُعد المحور الأساسي لأسعار الفائدة قصيرة الأجل في الولايات المتحدة.",
+    "category": "macro",
+    "see_also": [
+      "federal_reserve",
+      "rate_hike",
+      "rate_cut",
+      "yield_curve"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "rate_hike",
+    "term": "رفع سعر الفائدة",
+    "definition": "زيادة في سعر الفائدة للسياسة النقدية من قبل البنك المركزي. يشدد الظروف المالية وعادةً ما يهدف إلى إبطاء وتيرة التضخم.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_cut",
+      "inflation"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "rate_cut",
+    "term": "خفض سعر الفائدة",
+    "definition": "خفض في سعر الفائدة للسياسة النقدية من قبل البنك المركزي. يخفف الظروف المالية وعادةً ما يهدف إلى دعم النمو أو التوظيف.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "rate_hike",
+      "recession"
+    ],
+    "related_lessons": [
+      "090"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "inflation",
+    "term": "التضخم",
+    "definition": "ارتفاع مستمر في المستوى العام لأسعار السلع والخدمات، ويُقاس بمؤشرات مثل مؤشر أسعار المستهلكين (CPI) أو مؤشر تكاليف المعيشة الشخصي (PCE). يؤدي إلى تآكل القوة الشرائية للنقدية وقسائم الدخل الثابت.",
+    "category": "macro",
+    "see_also": [
+      "cpi",
+      "deflation",
+      "rate_hike"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "prices"
+    ]
+  },
+  {
+    "id": "deflation",
+    "term": "التضخم السلبي (الانكماش)",
+    "definition": "انخفاض مستمر في المستوى العام للأسعار. يرتبط تاريخياً بضعف الطلب، وانخفاض الأجور، وتشديد أعباء الديون الحقيقية.",
+    "category": "macro",
+    "see_also": [
+      "inflation",
+      "recession"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "tags": [
+      "macro",
+      "prices"
+    ]
+  },
+  {
+    "id": "recession",
+    "term": "الركود الاقتصادي",
+    "definition": "انخفاض كبير في النشاط الاقتصادي عبر الاقتصاد بأكمله يستمر لأكثر من بضعة أشهر. في الولايات المتحدة، يتم تحديد تواريخ فترات الركود من قبل لجنة تحديد دورات الأعمال التابعة للمعهد الوطني للبحوث الاقتصادية (NBER).",
+    "category": "macro",
+    "see_also": [
+      "gdp",
+      "yield_curve",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "related_agents": [
+      "news_analyst"
+    ],
+    "tags": [
+      "macro",
+      "cycle"
+    ]
+  },
+  {
+    "id": "yield_curve",
+    "term": "منحنى العائد",
+    "definition": "رسم بياني لعوائد السندات الحكومية عبر آجال الاستحقاق، وعادةً ما تكون سندات الخزانة الأمريكية من شهر واحد إلى 30 عاماً. يُعد منحنى العائد المقلوب، حيث تتجاوز معدلات الفائدة قصيرة الأجل معدلات طويلة الأجل، مؤشراً تاريخياً على حدوث ركود اقتصادي في الولايات المتحدة.",
+    "category": "macro",
+    "see_also": [
+      "fed_funds_rate",
+      "recession"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "tags": [
+      "macro",
+      "rates"
+    ]
+  },
+  {
+    "id": "cpi",
+    "term": "مؤشر أسعار المستهلكين (CPI)",
+    "definition": "مؤشر شهري تنشره مكتب إحصاءات العمل الأمريكي لقياس متوسط تغير الأسعار لسلة من السلع والخدمات الاستهلاكية. وهو المؤشر الرئيسي للتضخم في الولايات المتحدة.",
+    "category": "macro",
+    "see_also": [
+      "inflation",
+      "gdp"
+    ],
+    "related_lessons": [
+      "091"
+    ],
+    "tags": [
+      "macro",
+      "data_release"
+    ]
+  },
+  {
+    "id": "gdp",
+    "term": "الناتج المحلي الإجمالي",
+    "definition": "القيمة النقدية الإجمالية لجميع السلع والخدمات المنتجة داخل حدود دولة خلال فترة زمنية محددة. يُنشر كل ربع سنة في الولايات المتحدة من قبل مكتب التحليل الاقتصادي.",
+    "category": "macro",
+    "see_also": [
+      "recession",
+      "cpi"
+    ],
+    "related_lessons": [
+      "092"
+    ],
+    "tags": [
+      "macro",
+      "data_release"
+    ]
+  },
+  {
+    "id": "dxy",
+    "term": "مؤشر الدولار (DXY)",
+    "definition": "متوسط مرجح للدولار الأمريكي مقابل سلة من ست عملات رئيسية يهيمن عليها اليورو. يُستخدم كمقياس شامل لقوة الدولار.",
+    "category": "macro",
+    "see_also": [
+      "risk_on_risk_off"
+    ],
+    "related_lessons": [
+      "093"
+    ],
+    "tags": [
+      "macro",
+      "fx"
+    ]
+  },
+  {
+    "id": "risk_on_risk_off",
+    "term": "تحمّل المخاطر / تجنّب المخاطر",
+    "definition": "اختصار لمدى استعداد المستثمرين لتحمل المخاطر، حيث تفضّل بيئة تحمّل المخاطر الأسهم وسندات العائد المرتفع، بينما تفضّل بيئة تجنّب المخاطر سندات الخزانة الأمريكية والدولار والذهب. يُستخدم في التعليقات الكليّة لوصف تدفقات الأصول المتقاطعة.",
+    "category": "macro",
+    "see_also": [
+      "volatility_regime",
+      "vix",
+      "sector_rotation"
+    ],
+    "related_lessons": [
+      "093"
+    ],
+    "tags": [
+      "macro",
+      "sentiment"
+    ]
+  },
+  {
+    "id": "call_option",
+    "term": "خيار الشراء",
+    "definition": "عقد يمنح حامله الحق، دون الالتزام، في شراء 100 سهم من الأصل الأساسي بسعر تنفيذ محدد في تاريخ الانتهاء أو قبله. البائع ملزم بالتسليم في حال الممارسة.",
+    "category": "options_derivatives",
+    "see_also": [
+      "put_option",
+      "strike_price",
+      "expiry",
+      "implied_volatility"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "put_option",
+    "term": "خيار البيع",
+    "definition": "عقد يمنح حامله الحق، دون الالتزام، في بيع 100 سهم من الأصل الأساسي بسعر تنفيذ محدد في تاريخ الانتهاء أو قبله. البائع ملزم بشراء الأسهم في حال الممارسة.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "strike_price",
+      "expiry",
+      "implied_volatility"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "strike_price",
+    "term": "سعر التنفيذ",
+    "definition": "السعر الثابت الذي يمكن به شراء (خيار الشراء) أو بيع (خيار البيع) الأصل الأساسي إذا ما تم ممارسة الخيار. يُحدد عند إنشاء العقد.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "put_option",
+      "in_the_money",
+      "out_of_the_money"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "expiry",
+    "term": "تاريخ الانتهاء",
+    "definition": "التاريخ الذي ينتهي عنده سريان عقد الخيار؛ بعد هذا التاريخ، يصبح الخيار غير الممارس عديم القيمة. تنتهي صلاحية خيارات الأسهم المدرجة في الولايات المتحدة عادةً يوم الجمعة.",
+    "category": "options_derivatives",
+    "see_also": [
+      "call_option",
+      "put_option"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "in_the_money",
+    "term": "في المال (ITM)",
+    "definition": "خيار يكون سعر تنفيذه مواتياً مقارنة بالسعر الحالي للأصل: يكون خيار الشراء في المال عندما يكون الأصل فوق سعر التنفيذ، ويكون خيار البيع في المال عندما يكون الأصل دون سعر التنفيذ. يحمل قيمة جوهرية.",
+    "category": "options_derivatives",
+    "see_also": [
+      "out_of_the_money",
+      "strike_price"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "out_of_the_money",
+    "term": "خارج المال (OTM)",
+    "definition": "خيار يكون سعر التنفيذ فيه غير مواتٍ مقارنة بالسعر الحالي للأصل: يكون خيار الشراء (Call) خارج المال عندما يكون الأصل أدنى من سعر التنفيذ؛ ويكون خيار البيع (Put) خارج المال عندما يكون الأصل أعلى من سعر التنفيذ. لا يحتوي على قيمة جوهرية.",
+    "category": "options_derivatives",
+    "see_also": [
+      "in_the_money",
+      "strike_price"
+    ],
+    "related_lessons": [
+      "100"
+    ],
+    "tags": [
+      "derivatives",
+      "options"
+    ]
+  },
+  {
+    "id": "implied_volatility",
+    "term": "التقلب الضمني (IV)",
+    "definition": "توقعات السوق بشأن التقلب المستقبلي لأصل ما، ويتم استخلاصها من أسعار الخيارات باستخدام نموذج تسعير. تُذكر كنسبة انحراف معياري سنوي.",
+    "category": "options_derivatives",
+    "see_also": [
+      "vix",
+      "volatility_regime",
+      "call_option",
+      "put_option"
+    ],
+    "related_lessons": [
+      "101"
+    ],
+    "tags": [
+      "derivatives",
+      "options",
+      "volatility"
+    ]
+  },
+  {
+    "id": "vix",
+    "term": "مؤشر VIX",
+    "definition": "مؤشر التقلب الذي أصدرته بورصة شيكاغو للخيارات (Cboe)، ويُحسب من أسعار خيارات مؤشر S&P 500 ليعكس التقلب الضمني لمدة 30 يوماً على المؤشر. يُشار إليه غالباً بمقياس خوف السوق.",
+    "category": "options_derivatives",
+    "see_also": [
+      "implied_volatility",
+      "volatility_regime",
+      "risk_on_risk_off"
+    ],
+    "related_lessons": [
+      "101"
+    ],
+    "tags": [
+      "derivatives",
+      "volatility",
+      "index"
+    ]
+  },
+  {
+    "id": "ponzi_scheme",
+    "term": "مخطط بونزي",
+    "definition": "نصب احتيالي يتم فيه دفع العوائد للمشاركين الأوائل من مساهمات المشاركين الجدد بدلاً من النشاط الاستثماري الحقيقي. سُمي باسم تشارلز بونزي؛ وتُعد قضية مادوف (2008) مثالاً حديثاً.",
+    "category": "scam",
+    "see_also": [
+      "pyramid_scheme",
+      "guaranteed_return_scam",
+      "affinity_fraud"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pyramid_scheme",
+    "term": "مخطط هرمي",
+    "definition": "نصب احتيالي تستمد فيه الإيرادات بشكل أساسي من تجنيد أعضاء جدد بدلاً من بيع منتج حقيقي. غير مستدام رياضياً بمجرد تباطؤ عملية التجنيد.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "affinity_fraud"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pump_and_dump",
+    "term": "الرفع والإغراق",
+    "definition": "تلاعب بالسوق يقوم فيه المروجون برفع سعر ورقة مالية ذات تداول ضعيف من خلال ترويج مضلل، ثم يبيعون مراكزهم في الطلب الذي أنشأوه. شائع في سياق الأسهم متناهية الصغر والعملات المشفرة.",
+    "category": "scam",
+    "see_also": [
+      "signal_selling_fraud",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "news_analyst"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "manipulation"
+    ]
+  },
+  {
+    "id": "clone_broker",
+    "term": "وسيط مزيف (منسوخ)",
+    "definition": "عملية احتيالية تتنكر فيها كوسيط شرعي ومنظم عن طريق نسخ اسمه أو علامته التجارية أو موقعه الإلكتروني. الأموال المودعة عادة ما تكون غير قابلة للاسترداد.",
+    "category": "scam",
+    "see_also": [
+      "fake_broker",
+      "unregistered_broker",
+      "brokerage"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "fake_broker",
+    "term": "وسيط وهمي",
+    "definition": "عملية تسوق نفسها كوسيط تداول لكنها غير مرخصة فعلياً للتعامل مع أموال العملاء في الولايات القضائية المعلنة. غالباً ما يقترن ذلك بلوحات معلومات مزيفة تظهر أرباحاً وهمية.",
+    "category": "scam",
+    "see_also": [
+      "clone_broker",
+      "unregistered_broker"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "guaranteed_return_scam",
+    "term": "احتيال العائد المضمون",
+    "definition": "نصب يوعِد بعوائد ثابتة أو مضمونة تتجاوز معدلات العائد الخالي من المخاطر السائدة. لا يمكن ضمان عوائد السوق الحقيقية؛ وهذا الوعد هو علامة مميزة للنصب كما وثقته الجهات التنظيمية في الولايات المتحدة والعالم.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "ai_bot_scam",
+    "term": "احتيال بوت الذكاء الاصطناعي",
+    "definition": "نصب يروّج لبوت تداول يعتمد على الذكاء الاصطناعي أو الخوارزميات، يدّعي تحقيق عوائد عالية ومتسقة مقابل رسوم أو إيداعات. لوحات الأداء المموّلة تكون عادةً مزوّرة.",
+    "category": "scam",
+    "see_also": [
+      "guaranteed_return_scam",
+      "signal_selling_fraud"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "pig_butchering",
+    "term": "احتيال ذبح الخنزير",
+    "definition": "نصب طويل الأمد يجمع بين الخداع العاطفي والاستثماري، حيث يتم تهيئة الضحية على مدى أسابيع عبر تطبيقات المراسلة، ثم توجيهها لإيداع أموال في منصة تداول وهمية. سُمّي بذلك نسبةً إلى ممارسة تدجين الضحية قبل الاستيلاء عليها.",
+    "category": "scam",
+    "see_also": [
+      "fake_broker",
+      "recovery_scam"
+    ],
+    "related_lessons": [
+      "113"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud",
+      "social_engineering"
+    ]
+  },
+  {
+    "id": "affinity_fraud",
+    "term": "احتيال الانتماء",
+    "definition": "نصب يستهدف أفراد مجموعة محددة الهوية، مثل مجتمع ديني أو مجموعة عرقية أو مهنة، مستغلاً الهوية المشتركة لكسب الثقة. يُستخدم غالباً لتأسيس هياكل بونزي والأهرامات.",
+    "category": "scam",
+    "see_also": [
+      "ponzi_scheme",
+      "pyramid_scheme"
+    ],
+    "related_lessons": [
+      "110"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "recovery_scam",
+    "term": "احتيال استعادة الأموال",
+    "definition": "نصب ثانوي يستهدف ضحايا النصب السابقين بعرض استعادة أموالهم المفقودة مقابل رسوم مقدّمة. وهو بحد ذاته نصب؛ فالاستعادة القانونية للأموال لا تتطلب رسوماً مسبقة.",
+    "category": "scam",
+    "see_also": [
+      "pig_butchering",
+      "fake_broker"
+    ],
+    "related_lessons": [
+      "113"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "signal_selling_fraud",
+    "term": "احتيال بيع الإشارات",
+    "definition": "عمليات تبيع إشارات تداول أو تنبيهات بسجلات أداء مزوّرة، وغالباً ما تكون مقترنة بأنشطة ضخّ وبيع في الرموز المُروّج لها. اتخذت الجهات التنظيمية إجراءات إنفاذ ضد مثل هذه العمليات.",
+    "category": "scam",
+    "see_also": [
+      "pump_and_dump",
+      "ai_bot_scam"
+    ],
+    "related_lessons": [
+      "112"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory",
+      "fraud"
+    ]
+  },
+  {
+    "id": "unregistered_broker",
+    "term": "وسيط غير مسجّل",
+    "definition": "كيان يقدم خدمات الوساطة دون أن يكون مسجّلاً لدى الجهة التنظيمية المختصة (مثل هيئة الأوراق المالية والبورصات الأمريكية SEC وهيئة FINRA في الولايات المتحدة). يعمل خارج الإطار التنظيمي مما يزيل حماية المستثمرين.",
+    "category": "scam",
+    "see_also": [
+      "clone_broker",
+      "fake_broker",
+      "brokerage"
+    ],
+    "related_lessons": [
+      "111"
+    ],
+    "tags": [
+      "scam_pattern",
+      "regulatory"
+    ]
+  },
+  {
+    "id": "ami_mandate",
+    "term": "الولاية",
+    "definition": "العقد الذي يحدده المستخدم مع المحاكاة، ويضمّن تحمل المخاطر، والحد الأقصى للانخفاض الوهمي، وقيود حجم المركز، وعلميات الامتثال. يفرض وكيل Portfolio Manager الولاية على كل تداول وهمي ولا يمكنه تجاوزها.",
+    "category": "platform",
+    "see_also": [
+      "ami_pm_safety_floor",
+      "ami_verdict",
+      "ami_coach_your_agent"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety"
+    ]
+  },
+  {
+    "id": "ami_verdict",
+    "term": "الحكم",
+    "definition": "المخرج المحاكي لعملية 'تجميع الغرفة': توصية بشراء أو بيع أو احتفاظ، تتضمن الحجم، نقطة الدخول، وقف الخسارة، الهدف، الأفق الزمني، مستوى الثقة، وسجل نقاش الوكلاء الكامل. أداة تدريبية لتقييم المستخدم، وليست نصيحة مالية.",
+    "category": "platform",
+    "see_also": [
+      "ami_convene_the_room",
+      "ami_decision_journal",
+      "ami_training_verdict"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "output"
+    ]
+  },
+  {
+    "id": "ami_convene_the_room",
+    "term": "تجميع الغرفة",
+    "definition": "سير عمل المحاكاة الذي يشغل نقاش الوكلاء الاثني عشر حول رمز سهم معين، وينتهي بـ 'حكم مدير المحفظة'. يعرض استنتاجات الوكلاء بشكل مباشر أثناء التنفيذ.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_one_on_one",
+      "ami_mandate"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader",
+      "research_manager",
+      "aggressive_debator",
+      "conservative_debator",
+      "neutral_debator"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "ami_coach_your_agent",
+    "term": "توجيه وكيلك",
+    "definition": "ميزة محاكاة تتيح للمستخدم تشكيل أسلوب وكيل معين أو أولوياته التحليلية من خلال توجيهات بلغة طبيعية. يعدل التوجيه سطح استنتاجات الوكيل؛ ولا يمكنه تجاوز الحد الأدنى للسلامة الذي يفرضه مدير المحفظة.",
+    "category": "platform",
+    "see_also": [
+      "ami_pm_safety_floor",
+      "ami_mandate"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "personalization"
+    ]
+  },
+  {
+    "id": "ami_decision_journal",
+    "term": "سجل القرارات",
+    "definition": "سجل محاكاة لكل حكم، وسبب المستخدم المسجل في وقت اتخاذ القرار، والنتيجة النهائية. يستخدمه المحاكاة للكشف عن الأنماط وإمداد محرك الدروس.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_earn_path",
+      "discipline"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "reflection"
+    ]
+  },
+  {
+    "id": "ami_pm_safety_floor",
+    "term": "الحد الأدنى لسلامة مدير المحفظة",
+    "definition": "طبقة إنفاذ صارمة وغير قابلة للتوجيه في موجه مدير المحفظة ودالة تحقق امتثال حتمية. تمنع أي مخرج من الوكلاء ينتهك الولاية الموكلة للمستخدم أو القيود الشاملة للمحاكاة.",
+    "category": "platform",
+    "see_also": [
+      "ami_mandate",
+      "ami_coach_your_agent"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety"
+    ]
+  },
+  {
+    "id": "ami_earn_path",
+    "term": "مسار الكسب",
+    "definition": "نظام التقدم في المحاكاة الذي يمنح أرصدة داخل التطبيق وفتح ميزات إضافية عند إكمال الدروس، وتدوين القرارات، والوصول إلى مراحل المنهج الدراسي. يتتبع نمو المستخدم عبر المنهج التدريبي.",
+    "category": "platform",
+    "see_also": [
+      "ami_decision_journal"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "progression"
+    ]
+  },
+  {
+    "id": "ami_one_on_one",
+    "term": "محادثة فردية",
+    "definition": "وضع محاكاة يتيح للمستخدم التحدث مباشرة مع وكيل واحد للتوضيح أو إجراء تحليل متعمق. المخرج لأغراض إعلامية فقط؛ ولا يشكل حكماً ولا يمثل نصيحة مالية.",
+    "category": "platform",
+    "see_also": [
+      "ami_convene_the_room",
+      "concierge"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "market_analyst",
+      "news_analyst",
+      "social_media_analyst"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "concierge",
+    "term": "المرشد",
+    "definition": "وكيل ترحيب من AMI Trade يجري مقابلة حوارية لجمع سياق المستخدم، وصياغة ولاية أولية، وتوجيه المستخدم نحو المحاكاة. ليس جزءاً من وكلاء التداول الاثني عشر.",
+    "category": "platform",
+    "see_also": [
+      "ami_mandate",
+      "ami_one_on_one"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "onboarding"
+    ]
+  },
+  {
+    "id": "ami_watchlist",
+    "term": "قائمة المراقبة الخاصة بـ AMI",
+    "definition": "قائمة الرموز المميزة التي يختارها المستخدم بعناية في تطبيق AMI Trade. تستمد غرفة الاجتماعات والمحادثات الفردية نطاق عملها من هذه القائمة.",
+    "category": "platform",
+    "see_also": [
+      "watchlist",
+      "ami_convene_the_room"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "workflow"
+    ]
+  },
+  {
+    "id": "ami_training_verdict",
+    "term": "حكم التدريب",
+    "definition": "إطار صريح يُطبق على كل حكم لتذكير المستخدم بأن المخرجات عبارة عن عنصر تدريبي محاكي وليست نصيحة استثمارية. يعكس موقف AMI Trade القائم على المحاكاة فقط، وعدم تقديم نصائح استثمارية أبداً.",
+    "category": "platform",
+    "see_also": [
+      "ami_verdict",
+      "ami_pm_safety_floor"
+    ],
+    "tags": [
+      "ami_internal",
+      "platform",
+      "safety",
+      "disclosure"
+    ]
+  },
+  {
+    "id": "kelly_criterion",
+    "term": "معيار كيلي",
+    "definition": "صيغة لتحديد حجم المراكز، اشتقها جون كيلي (1956)، تهدف إلى تعظيم اللوغاريتم المتوقع للثروة. تُعبر عنها الصيغة f* = (bp - q) / b لنتيجة ثنائية الاحتمال، حيث p احتمال الفوز، وq احتمال الخسارة، وb نسبة العائد. يطبق العديد من الممارسين معيار كيلي الجزئي لتقليل التباين.",
+    "category": "advanced",
+    "see_also": [
+      "atr_based_sizing",
+      "asymmetric_rr",
+      "gamblers_ruin"
+    ],
+    "related_lessons": [
+      "150"
+    ],
+    "tags": [
+      "advanced",
+      "sizing",
+      "math"
+    ]
+  },
+  {
+    "id": "atr_based_sizing",
+    "term": "تحديد الحجم بناءً على ATR",
+    "definition": "نهج لتحديد حجم المركز يحدد عدد الأسهم بحيث يساوي المخاطر بالدولار أو النسبة المئوية لكل صفقة عند وضع وقف الخسارة عند مضاعف من ATR بعيداً عن نقطة الدخول. يوحد المخاطر عبر أدوات ذات تقلبات مختلفة.",
+    "category": "advanced",
+    "see_also": [
+      "atr",
+      "kelly_criterion",
+      "asymmetric_rr"
+    ],
+    "related_lessons": [
+      "014",
+      "150"
+    ],
+    "tags": [
+      "advanced",
+      "sizing",
+      "risk"
+    ]
+  },
+  {
+    "id": "regime_segmented_backtest",
+    "term": "اختبار رجعي مقسم حسب النظام",
+    "definition": "اختبار رجعي يقسم البيانات التاريخية حسب النظام، مثل الاتجاه الصاعد، الهابط، عالي التقلب، منخفض التقلب، ويقدم الأداء لكل قسم. يكشف عن اعتماد الاستراتيجية على النظام الذي قد تخفيه المقاييس الإجمالية.",
+    "category": "advanced",
+    "see_also": [
+      "backtesting",
+      "walk_forward",
+      "volatility_regime",
+      "bull_market",
+      "bear_market"
+    ],
+    "related_lessons": [
+      "151"
+    ],
+    "tags": [
+      "advanced",
+      "research"
+    ]
+  },
+  {
+    "id": "walk_forward_analysis",
+    "term": "تحليل المشي للأمام (مفصل)",
+    "definition": "بروتوكول بحثي يعيد ضبط معاملات الاستراتيجية بشكل متكرر على نافذة تدريب متحركة ويقيمها على نافذة العينة خارج التدريب التالية. ينتج منحنى رأس مال خارج العينة المتسلسل الذي يقارب النشر المباشر بشكل أفضل من الضبط المفرد.",
+    "category": "advanced",
+    "see_also": [
+      "walk_forward",
+      "backtesting",
+      "overfitting"
+    ],
+    "related_lessons": [
+      "076",
+      "151"
+    ],
+    "tags": [
+      "advanced",
+      "research"
+    ]
+  },
+  {
+    "id": "transaction_cost_modeling",
+    "term": "نمذجة تكاليف المعاملات",
+    "definition": "ممارسة نمذجة العمولات، ورسوم البورصة، وخصم سعر الشراء/البيع، وتأثير السعر عند إجراء الاختبارات الرجعية أو تحديد أحجام الصفقات الحية. يمكن أن تنقلب استراتيجيات التداول المتكرر من ذات القيمة المتوقعة الإيجابية إلى السلبية بمجرد تضمين التكاليف.",
+    "category": "advanced",
+    "see_also": [
+      "spread",
+      "scalping",
+      "backtesting"
+    ],
+    "related_lessons": [
+      "152"
+    ],
+    "tags": [
+      "advanced",
+      "execution",
+      "cost"
+    ]
+  },
+  {
+    "id": "strategy_correlation",
+    "term": "ارتباط الاستراتيجيات",
+    "definition": "الارتباط الثنائي لعوائد استراتيجيتي تداول. يقلل دمج استراتيجيات منخفضة الارتباط أو سلبية الارتباط من تباين المحفظة الإجمالي مقارنة بأي استراتيجية بمفردها.",
+    "category": "advanced",
+    "see_also": [
+      "risk_parity",
+      "portfolio"
+    ],
+    "related_lessons": [
+      "153"
+    ],
+    "tags": [
+      "advanced",
+      "portfolio_construction"
+    ]
+  },
+  {
+    "id": "risk_parity",
+    "term": "تكافؤ المخاطر",
+    "definition": "نهج لبناء المحفظة يخصص رأس المال بحيث يساهم كل أصل بحصة متساوية من إجمالي مخاطر المحفظة، ويُقاس ذلك عادةً بالتقلب. شاع هذا المفهوم من خلال إطار عمل \"طقس هواء\" (All Weather) لراي داليو في بريجواتر.",
+    "category": "advanced",
+    "see_also": [
+      "strategy_correlation",
+      "portfolio",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "153"
+    ],
+    "tags": [
+      "advanced",
+      "portfolio_construction"
+    ]
+  },
+  {
+    "id": "drawdown_recovery_math",
+    "term": "حسابات تعافي الانخفاض",
+    "definition": "الحسابات الرياضية التي تقتضي أن الانخفاض بنسبة X% يتطلب عائداً بنسبة X / (1 - X%) للتعافي، مثلاً: انخفاض بنسبة 50% يتطلب عائداً بنسبة 100% للعودة إلى الذروة السابقة. وهذا يشكل الأساس لعدم التناظر بين الخسائر وعوائد التعافي المطلوبة.",
+    "category": "advanced",
+    "see_also": [
+      "return",
+      "kelly_criterion",
+      "gamblers_ruin"
+    ],
+    "related_lessons": [
+      "154"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "gamblers_ruin",
+    "term": "افلاس المقامر",
+    "definition": "نتيجة احتمالية تُظهر أن اللاعب الذي يكرر المراهنات ضد خصم يمتلك رأس مال أكبر سيخسر حتماً في النهاية، حتى مع وجود هامش ربح صغير، إذا كان حجم الرهانات عدوانياً جداً. وهذا يبرر استخدام كيلي الكسرية ووضع حدود محافظة للمخاطر.",
+    "category": "advanced",
+    "see_also": [
+      "kelly_criterion",
+      "drawdown_recovery_math"
+    ],
+    "related_lessons": [
+      "154"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "asymmetric_rr",
+    "term": "نسبة المكافأة للمخاطر غير المتماثلة",
+    "definition": "هيكل تداول يتجاوز فيه المسافة من نقطة الدخول إلى الهدف المسافة من نقطة الدخول إلى وقف الخسارة، مما ينتج نسبة مكافأة إلى مخاطر أكبر من 1:1. ومعدل الربح التعويضي هو 1 / (1 + R)، مثلاً 33% عند نسبة 2:1.",
+    "category": "advanced",
+    "see_also": [
+      "kelly_criterion",
+      "atr_based_sizing"
+    ],
+    "related_lessons": [
+      "155"
+    ],
+    "tags": [
+      "advanced",
+      "risk",
+      "math"
+    ]
+  },
+  {
+    "id": "riba",
+    "term": "ربا",
+    "definition": "الفائدة — عائد مضمون ومستقل عن النتيجة على المال المقترض، يُفرض بغض النظر عما إذا كانت مشروع المقترض مربحاً أم خاسراً. وهو أحد المحظورات الشرعية الأربعة الأساسية؛ والمبدأ التنظيمي الذي ينتهكه هو مشاركة المخاطر بدلاً من نقلها، لأن مطالبة المقرض ثابتة بغض النظر عن النتيجة الفعلية.",
+    "category": "islamic_finance",
+    "see_also": [
+      "gharar",
+      "maysir",
+      "haram",
+      "musharakah",
+      "mudarabah"
+    ],
+    "related_lessons": [
+      "347",
+      "352",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "riba",
+      "interest",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "gharar",
+    "term": "غرر",
+    "definition": "عدم اليقين المفرط في شروط العقد — حيث يكون موضوع العقد أو سعره أو كميته غير محددة بشكل جوهري. وهو أحد المحظورات الشرعية الأربعة الأساسية؛ وهو يختلف عن الربا، فالغرر يبطل العقد حتى في غياب الفائدة، لأن الغموض نفسه هو العيب.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "maysir",
+      "haram"
+    ],
+    "related_lessons": [
+      "347"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "gharar",
+      "uncertainty",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "maysir",
+    "term": "ميسر",
+    "definition": "المقامرة — رهان فائز أو خاسر لا يرتبط بنشاط اقتصادي حقيقي أو بمخاطر مشروع مشترك. وهو أحد المحظورات الشرعية الأربعة الأساسية؛ وقد يفشل الهيكل بسبب الميسر حتى مع عدم فرض أي فائدة، مثلاً: رهان ثنائي على مستوى مؤشر.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "gharar",
+      "haram"
+    ],
+    "related_lessons": [
+      "347",
+      "348"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "maysir",
+      "gambling",
+      "four_prohibitions"
+    ]
+  },
+  {
+    "id": "halal",
+    "term": "حلال",
+    "definition": "مسموح به شرعاً. في سياق الفلترة لدى AMI، تكون الشركة أو الأداة حلالاً عندما تجتاز مرحلتين من الفلترة المزدوجة — فلترة النشاط التجاري وفتلات النسب المالية الثلاث — وفقاً لمعيار محدد. ويعكس استخدام AMI لهذا المصطلح منهجية فلترة منشورة، وليس حكماً دينياً.",
+    "category": "islamic_finance",
+    "see_also": [
+      "haram",
+      "sharia_compliant",
+      "business_activity_screen",
+      "financial_ratio_screen"
+    ],
+    "related_lessons": [
+      "348",
+      "349",
+      "355"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "islamic_finance",
+      "halal",
+      "screening"
+    ]
+  },
+  {
+    "id": "haram",
+    "term": "حرام",
+    "definition": "محرم شرعاً. تفشل الشركة التي يعتمد إيراداتها الأساسية على نشاط تجاري حرام — مثل الكحول، التبغ، لحم الخنزير أو الأغذية غير الحلال، القمار، البنوك أو التأمين القائم على الفائدة التقليدية، الأسلحة، أو الترفيه للبالغين — في فحص النشاط التجاري بشكل قاطع، بغض النظر عن نسبها المالية.",
+    "category": "islamic_finance",
+    "see_also": [
+      "halal",
+      "business_activity_screen",
+      "riba",
+      "maysir"
+    ],
+    "related_lessons": [
+      "347",
+      "348"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "haram",
+      "business_activity_screen"
+    ]
+  },
+  {
+    "id": "sukuk",
+    "term": "صكوك",
+    "definition": "أداة تمويل إسلامية مُصممة كملكية جزئية في أصل حقيقي أو مشروع قائم؛ حيث يكون العائد عبارة عن إيجار، أو حصة من الأرباح، أو هامش بيع وإعادة تأجير، وليس فائدة على المال المقترض. تتحرك الأسعار بشكل مشابه للسندات التقليدية، لكن الادعاء القانوني الكامن — وهو ملكية الأصل الحقيقي بدلاً من دين يُستحق بغض النظر عن النتيجة — هو ما يجعلها خالية من الربا.",
+    "category": "islamic_finance",
+    "see_also": [
+      "riba",
+      "ijarah",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "352",
+      "303",
+      "304",
+      "307"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sukuk",
+      "fixed_income"
+    ]
+  },
+  {
+    "id": "ijarah",
+    "term": "إجارة",
+    "definition": "عقد إيجار إسلامي: يحتفظ الممول بملكية الأصل ويؤجره للعميل مقابل إيجار ثابت، مع خيار الشراء في النهاية (إجارة منتهية بالتمليك) أو عقد إيجار تشغيلي مباشر. النظير التقليدي: تأجير المعدات أو العقارات. يُعد أساساً شائعاً لهيكلة صكوك الإجارة.",
+    "category": "islamic_finance",
+    "see_also": [
+      "sukuk",
+      "murabahah",
+      "musharakah",
+      "mudarabah",
+      "takaful"
+    ],
+    "related_lessons": [
+      "353",
+      "352"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "ijarah",
+      "contracts",
+      "leasing"
+    ]
+  },
+  {
+    "id": "murabahah",
+    "term": "مرابحة",
+    "definition": "عقد بيع بتكلفة زائدة: يشتري الممول الأصل ثم يعيد بيعه للعميل بسعر ثابت محدد مسبقاً يشمل هامش ربح، على أن يُدفع على دفعات. عقد بيع قانوناً وليس قرضاً — لا فائدة مركبة، ولا غرامات تأخير على الرصيد المتبقي. النظير التقليدي: قرض، رغم اختلاف الجوهر القانوني.",
+    "category": "islamic_finance",
+    "see_also": [
+      "ijarah",
+      "musharakah",
+      "mudarabah",
+      "takaful",
+      "riba"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "murabahah",
+      "contracts"
+    ]
+  },
+  {
+    "id": "musharakah",
+    "term": "مشاركة",
+    "definition": "عقد شراكة: يساهم طرفان أو أكثر برأس المال ويشاركان الأرباح والخسائر بنسبة متفق عليها مسبقاً. النظير التقليدي: حقوق ملكية في مشروع مشترك. يوضح مبدأ مشاركة المخاطر بدلاً من نقلها — حيث تتحرك عوائد كل من الطرفين وفقاً للنتيجة الفعلية للمشروع.",
+    "category": "islamic_finance",
+    "see_also": [
+      "mudarabah",
+      "murabahah",
+      "ijarah",
+      "takaful",
+      "riba"
+    ],
+    "related_lessons": [
+      "347",
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "musharakah",
+      "contracts",
+      "risk_sharing"
+    ]
+  },
+  {
+    "id": "mudarabah",
+    "term": "مضاربة",
+    "definition": "عقد شراكة في الأرباح: يساهم طرف برأس المال، ويساهم مدير بالخبرة والعمل، وتُقسم الأرباح بنسبة متفق عليها مسبقاً، بينما يتحمل مقدم رأس المال الخسارة المالية (في حال عدم إهمال من قبل المدير). النظير التقليدي: صندوق به تقسيم بين شريك عام وشريك محدود.",
+    "category": "islamic_finance",
+    "see_also": [
+      "musharakah",
+      "murabahah",
+      "ijarah",
+      "takaful"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "mudarabah",
+      "contracts",
+      "risk_sharing"
+    ]
+  },
+  {
+    "id": "takaful",
+    "term": "تأمين تكافلي",
+    "definition": "مشاركة المخاطر المتبادلة المتوافقة مع الشريعة: يجمع المشاركون مساهماتهم في صندوق مشترك يدفع المطالبات، مع إعادة الفائض للمشاركين بدلاً من الاحتفاظ به كأرباح لشركة التأمين. النظير التقليدي: التأمين المتبادل، وهو أقرب هيكلياً إلى التعاونية منه إلى شركة تأمين ربحية تتحمل المخاطر لحسابها الخاص.",
+    "category": "islamic_finance",
+    "see_also": [
+      "musharakah",
+      "mudarabah",
+      "murabahah",
+      "ijarah"
+    ],
+    "related_lessons": [
+      "353"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "takaful",
+      "contracts",
+      "insurance"
+    ]
+  },
+  {
+    "id": "tazkiyah",
+    "term": "تزكية",
+    "definition": "ممارسة حساب نسبة الدخل غير المسموح به من الأرباح المستلمة من سهم اجتاز الفحص، والتبرع بهذا المبلغ الدقيق بدلاً من الاحتفاظ به. تُحسب بناءً على نسبة الدخل غير المتوافق التي تعلنها الشركة نفسها مطبقة على إجمالي الدخل، ثم على الأرباح الموزعة المحددة — وليس تقديراً عشوائياً. تنطبق حتى على الأسهم التي تجتاز كل من فحصي النشاط التجاري والنسب المالية.",
+    "category": "islamic_finance",
+    "see_also": [
+      "financial_ratio_screen",
+      "sharia_compliant",
+      "halal"
+    ],
+    "related_lessons": [
+      "351",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "tazkiyah",
+      "purification",
+      "dividends"
+    ]
+  },
+  {
+    "id": "aaoifi",
+    "term": "AAOIFI",
+    "definition": "منظمة المحاسبة والتدقيق للمؤسسات المالية الإسلامية — هيئة معيارية تحدد معايير الشريعة، والتي تعرف من بين أمور أخرى المحظورات الأربعة، ومنهجية الفحص المكونة من مرحلتين، وحدود نسب الديون/السيولة/الدخل (33%/33%/5% افتراضياً) التي تتبعها منطق الفحص لدى AMI. تعد واحدة من عدة معايير مسماة؛ وقد تختلف AAOIFI، ومجلس الشريعة في بورصة ماليزيا (SAC)، ومقدمو المؤشرات الكبار في الهوامش.",
+    "category": "islamic_finance",
+    "see_also": [
+      "shariah_advisory_council",
+      "dow_jones_islamic_market_index",
+      "financial_ratio_screen",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "349",
+      "350",
+      "351",
+      "352"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "aaoifi",
+      "standards"
+    ]
+  },
+  {
+    "id": "shariah_advisory_council",
+    "term": "Shariah Advisory Council (SAC)",
+    "definition": "مجلس الشريعة في بورصة ماليزيا — الهيئة التي تنشر وتحافظ على قائمة الأوراق المالية المتوافقة مع الشريعة في بورصة ماليزيا، ويتم تحديثها مرتين سنوياً. يُفهم على نطاق واسع أن منهجيتها أكثر تساهلاً من فحص نمط AAOIFI/دول الخليج العربي في بعض المعايير، مثل اختيار المقوم لنسب الديون والسيولة — وهو مصدر ملموس للاختلاف في المعايير، وليس خطأ في أي من المنهجيتين.",
+    "category": "islamic_finance",
+    "see_also": [
+      "aaoifi",
+      "dow_jones_islamic_market_index",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "350",
+      "354"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sac",
+      "bursa_malaysia",
+      "standards"
+    ]
+  },
+  {
+    "id": "dow_jones_islamic_market_index",
+    "term": "Dow Jones Islamic Market Index",
+    "definition": "واحدة من عائلات المؤشرات المتوافقة مع الشريعة الكبرى (إلى جانب S&P Shariah، وMSCI Islamic، وFTSE Shariah)، حيث تنشر كل منها قائمة استبعاد الأنشطة التجارية وعتبات النسب المالية الخاصة بها. تتبع صناديق الاستثمار المتداولة الإسلامية مثل SPUS وHLAL مؤشراً مسماًً من هذه العائلة أو من نظير لها؛ ويمكن لصندوقين إسلاميين يغطيان نفس المجموعة من الأصول أن يحتفظا بأسماء مختلفة لأن منهجيات المؤشرات الأساسية لا تتفق دائماً على الأسهم الهامشية.",
+    "category": "islamic_finance",
+    "see_also": [
+      "shariah_advisory_council",
+      "aaoifi",
+      "islamic_etf",
+      "sharia_screening"
+    ],
+    "related_lessons": [
+      "349",
+      "350",
+      "354"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "index",
+      "etf",
+      "standards"
+    ]
+  },
+  {
+    "id": "sharia_screening",
+    "term": "Sharia screening",
+    "definition": "العملية المكونة من مرحلتين لتحديد ما إذا كانت الشركة أو الأداة متوافقة تحت معيار شريعة مسماً: يعمل فحص النشاط التجاري (استبعاد قطاعي نوعي) أولاً، ثم يعمل فحص النسب المالية (ثلاثة حدود كمية) على الشركات التي تمر بالمرحلة الأولى. يعمل علم 'الحلال' الخاص بـ AMI Mandate على هذه الخطأ الأنفي بالضبط، ويتم حسابه عبر منطق الفحص الخلفي، وليس عبر اختصار الكلمات المفتاحية.",
+    "category": "islamic_finance",
+    "see_also": [
+      "business_activity_screen",
+      "financial_ratio_screen",
+      "halal",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "348",
+      "349",
+      "355"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "methodology"
+    ]
+  },
+  {
+    "id": "business_activity_screen",
+    "term": "Business-activity screen",
+    "definition": "المرحلة النوعية الأولى من فحص الشريعة: هل يأتي الإيراد الأساسي للشركة من قطاع مستبعد — الكحول، التبغ، لحم الخنزير أو الطعام غير الحلال، القمار، البنوك أو التأمين القائم على الفائدة التقليدية، الأسلحة، أو الترفيه للبالغين؟ تفشل الشركة في قطاع مستبعد بشكل قاطع، بغض النظر عن نسبها المالية؛ ونجاحها في هذا الفحص يمنحها فقط فرصة لإجراء فحص النسب التالي.",
+    "category": "islamic_finance",
+    "see_also": [
+      "financial_ratio_screen",
+      "sharia_screening",
+      "haram",
+      "maysir"
+    ],
+    "related_lessons": [
+      "348",
+      "349"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "business_activity"
+    ]
+  },
+  {
+    "id": "financial_ratio_screen",
+    "term": "Financial-ratio screen",
+    "definition": "المرحلة الكمية الثانية من فحص الشريعة: ثلاثة نسب، يتم التحقق من كل منها مقابل حد تحت منهجية على غرار AAOIFI — الدين القائم على الفائدة إلى القيمة السوقية (33%)، النقد والأوراق المالية القائمة على الفائدة إلى القيمة السوقية (33%)، والدخل غير المتوافق إلى إجمالي الإيرادات (5%). يجب أن تمر النسب الثلاث؛ وفشل أي منها يفشل الفحص بأكمله، بشكل مستقل عن نتيجة النشاط التجاري. يتم حسابه عبر دالة `sharia_screen` في AMI، وليس يدوياً.",
+    "category": "islamic_finance",
+    "see_also": [
+      "business_activity_screen",
+      "sharia_screening",
+      "aaoifi",
+      "tazkiyah"
+    ],
+    "related_lessons": [
+      "349",
+      "355",
+      "356"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "screening",
+      "ratios"
+    ]
+  },
+  {
+    "id": "sharia_compliant",
+    "term": "Sharia-compliant",
+    "definition": "قد اجتاز منهجية فحص معيار شريعة مسماً — مؤهل دائماً حسب المعيار الذي أنتج النتيجة، حيث يمكن لـ AAOIFI، ومجلس الشريعة في بورصة ماليزيا، ومقدمي المؤشرات الكبار الوصول إلى أحكام مختلفة لنفس الشركة في نفس اللحظة. تسمي AMI المعيار المطبق بدلاً من الادعاء بـ 'متوافق' بشكل مطلق.",
+    "category": "islamic_finance",
+    "see_also": [
+      "halal",
+      "sharia_screening",
+      "aaoifi",
+      "shariah_advisory_council"
+    ],
+    "related_lessons": [
+      "350",
+      "356"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "sharia_compliant",
+      "standards"
+    ]
+  },
+  {
+    "id": "islamic_etf",
+    "term": "Islamic ETF",
+    "definition": "صندوق استثمار متداول في البورصة يتتبع مؤشراً متوافقاً مع الشريعة، مثل SPUS (مؤشر استبعاد صناعات S&P 500 وفقاً للشريعة) أو HLAL (FTSE Shariah). يؤكد اسم الصندوق تطبيق بعض فحوصات الشريعة؛ وتقول منهجية المؤشر المعلنة في نشرة الاكتتاب أي معيار تم تطبيقه — يمكن لصندوقين إسلاميين يغطيان نفس المجموعة من الأصول أن يحتفظا بأسماء مختلفة. لا تزال فحوصات نسبة الرسوم وتتبع الخطأ العادية سارية بالكامل.",
+    "category": "islamic_finance",
+    "see_also": [
+      "dow_jones_islamic_market_index",
+      "shariah_advisory_council",
+      "sharia_compliant"
+    ],
+    "related_lessons": [
+      "354",
+      "310"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "islamic_finance",
+      "etf",
+      "funds"
+    ]
+  }
+]

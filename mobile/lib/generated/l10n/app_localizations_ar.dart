@@ -131,11 +131,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get floorLockedGoToLessons => 'انتقل إلى الدروس';
 
   @override
-  String get floorLockedTapHint => 'Tap a lesson to start';
+  String get floorLockedTapHint => 'انقر على درس للبدء';
 
   @override
   String floorLockedProgress(int completed, int total) {
-    return '$completed / $total gateway lessons passed';
+    return 'تم اجتياز $completed من أصل $total دروس بوابة';
   }
 
   @override
@@ -190,95 +190,96 @@ class AppLocalizationsAr extends AppLocalizations {
   String get portfolioAddDialogHint => 'الرمز (مثال: NVDA)';
 
   @override
-  String get tickerDetailValue => 'VALUE';
+  String get tickerDetailValue => 'القيمة';
 
   @override
-  String get tickerDetailQty => 'QTY';
+  String get tickerDetailQty => 'الكمية';
 
   @override
-  String get tickerDetailAvgCost => 'AVG COST';
+  String get tickerDetailAvgCost => 'متوسط التكلفة';
 
   @override
-  String get tickerDetailMark => 'MARK';
+  String get tickerDetailMark => 'العلامة';
 
   @override
   String tickerDetailOpened(String date) {
-    return 'Opened $date';
+    return 'تم الفتح في $date';
   }
 
   @override
-  String get tickerDetailWatchingHeading => 'WATCHING';
+  String get tickerDetailWatchingHeading => 'يتم المراقبة';
 
   @override
-  String get tickerDetailToday => 'today';
+  String get tickerDetailToday => 'اليوم';
 
   @override
   String tickerDetailAdded(String date) {
-    return 'Added $date';
+    return 'تمت الإضافة في $date';
   }
 
   @override
   String tickerDetailNoPosition(String ticker) {
-    return 'No open position or watchlist entry for $ticker.';
+    return 'لا يوجد مركز مفتوح أو إدخال قائمة مراقبة لـ $ticker.';
   }
 
   @override
-  String get tickerDetailChartUnavailable => 'Chart unavailable. Tap to retry.';
+  String get tickerDetailChartUnavailable =>
+      'الرسم البياني غير متاح. انقر للمحاولة مرة أخرى.';
 
   @override
-  String get tickerDetailChartExpand => 'Expand chart';
+  String get tickerDetailChartExpand => 'توسيع الرسم البياني';
 
   @override
-  String get tickerDetailChartClose => 'Close fullscreen chart';
+  String get tickerDetailChartClose => 'إغلاق الرسم البياني بملء الشاشة';
 
   @override
-  String get tickerDetailActionTrade => 'TRADE';
+  String get tickerDetailActionTrade => 'تداول';
 
   @override
-  String get tickerDetailActionTradeMore => 'TRADE MORE';
+  String get tickerDetailActionTradeMore => 'تداول المزيد';
 
   @override
-  String get tickerDetailActionAsk => 'ASK';
+  String get tickerDetailActionAsk => 'استفسار';
 
   @override
   String get tickerDetailActionConvene => 'CONVENE';
 
   @override
-  String get tickerDetailActionWatch => 'WATCH';
+  String get tickerDetailActionWatch => 'مراقبة';
 
   @override
-  String get tickerDetailActionClose => 'CLOSE';
+  String get tickerDetailActionClose => 'إغلاق';
 
   @override
   String tickerDetailTradesHeading(String ticker) {
-    return 'TRADES FOR $ticker';
+    return 'الصفقات لـ $ticker';
   }
 
   @override
-  String get tickerDetailNoTrades => 'No trades on record for this ticker yet.';
+  String get tickerDetailNoTrades => 'لا توجد صفقات مسجلة لهذا الرمز بعد.';
 
   @override
   String tickerDetailClosePositionConfirmTitle(String ticker) {
-    return 'CLOSE $ticker POSITION?';
+    return 'إغلاق مركز $ticker؟';
   }
 
   @override
   String get tickerDetailClosePositionConfirmBody =>
-      'This closes every open trade for this ticker at the current mark. Realised P&L is final.';
+      'سيتم إغلاق جميع الصفقات المفتوحة لهذا الرمز عند السعر الحالي. الأرباح والخسائر المحققة نهائية.';
 
   @override
-  String get tickerDetailClosePositionConfirmCta => 'CLOSE';
+  String get tickerDetailClosePositionConfirmCta => 'إغلاق';
 
   @override
-  String get tickerDetailNewsHeading => 'NEWS';
+  String get tickerDetailNewsHeading => 'الأخبار';
 
   @override
   String tickerDetailNewsEpsEstimate(String eps) {
-    return 'est. EPS $eps';
+    return 'تقدير ربحية السهم $eps';
   }
 
   @override
-  String get roomVerdictSeeChart => 'SEE CHART';
+  String get roomVerdictSeeChart => 'عرض الرسم البياني';
 
   @override
   String get actionCancel => 'إلغاء';
@@ -476,7 +477,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lessonReaderLoading => 'جاري التحميل...';
 
   @override
-  String get lessonReaderPrerequisites => 'PREREQUISITES';
+  String get lessonReaderPrerequisites => 'المتطلبات السابقة';
 
   @override
   String get lessonReaderQuizOnlyBadge => 'اختبار فقط';
@@ -696,7 +697,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSignIn => 'تسجيل الدخول';
 
   @override
-  String get settingsSignedOut => 'You\'ve been signed out.';
+  String get settingsSignedOut => 'تم تسجيل الخروج.';
 
   @override
   String get settingsLanguagePlaceholderNote =>
@@ -731,14 +732,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingReadbackContinue => 'صحيح — متابعة';
 
   @override
-  String get onboardingClaimPrompt =>
-      'Let\'s save this so your team remembers you.';
+  String get onboardingClaimPrompt => 'لنحفظ هذا حتى تتذكرك فريقك.';
 
   @override
-  String get onboardingSaveTeam => 'SAVE MY TEAM';
+  String get onboardingSaveTeam => 'حفظ فريقي';
 
   @override
-  String get onboardingSkipForNow => 'SKIP FOR NOW';
+  String get onboardingSkipForNow => 'تخطي مؤقتاً';
 
   @override
   String get onboardingErrorTitle => 'تعذر الاتصال بالخادم';
@@ -760,13 +760,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signInWithApple => 'تسجيل الدخول باستخدام Apple';
 
   @override
-  String get signInWithGoogle => 'Sign in with Google';
+  String get signInWithGoogle => 'تسجيل الدخول عبر Google';
 
   @override
   String get signInWithEmail => 'أو المتابعة عبر البريد الإلكتروني';
 
   @override
-  String get signInUseEmailInstead => 'Use email instead';
+  String get signInUseEmailInstead => 'استخدام البريد الإلكتروني بدلاً من ذلك';
 
   @override
   String get signInEmailHint => 'you@example.com';
@@ -798,7 +798,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get signInAppleFailed => 'فشل تسجيل الدخول عبر Apple.';
 
   @override
-  String get signInGoogleFailed => 'Google sign-in failed.';
+  String get signInGoogleFailed => 'فشل تسجيل الدخول عبر Google.';
 
   @override
   String signInSignedInAs(String handle) {
@@ -810,23 +810,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'AMI Trade هو محاكاة فقط. لا شيء هنا يعد نصيحة استثمارية ولا يتم تنفيذ أي صفقات حقيقية.';
 
   @override
-  String get mergeSheetTitle => 'WELCOME BACK';
+  String get mergeSheetTitle => 'مرحباً بعودتك';
 
   @override
   String get mergeSheetBody =>
-      'We found data from your previous session on this device. Would you like to bring it into your account?';
+      'وجدنا بيانات من جلستك السابقة على هذا الجهاز. هل ترغب في دمجها مع حسابك؟';
 
   @override
   String get mergeSheetEmptyBody =>
-      'You\'ve signed back in. Nothing carried over from your previous session on this device.';
+      'لقد عدت وتسجيل الدخول. لم يتم نقل أي شيء من جلستك السابقة على هذا الجهاز.';
 
   @override
   String mergeSheetJournalEntries(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count journal entries',
-      one: '1 journal entry',
+      other: '$count سجلات',
+      one: 'سجل واحد',
     );
     return '$_temp0';
   }
@@ -836,8 +836,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count simulated trades',
-      one: '1 simulated trade',
+      other: '$count محاكاة صفقات',
+      one: '1 محاكاة صفقة',
     );
     return '$_temp0';
   }
@@ -847,8 +847,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count watchlist tickers',
-      one: '1 watchlist ticker',
+      other: '$count رموز قائمة المراقبة',
+      one: '1 رمز قائمة المراقبة',
     );
     return '$_temp0';
   }
@@ -858,8 +858,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count lessons started',
-      one: '1 lesson started',
+      other: '$count دروس بدأت',
+      one: '1 درس بدأ',
     );
     return '$_temp0';
   }
@@ -869,8 +869,8 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count 1-on-1 messages',
-      one: '1 1-on-1 message',
+      other: '$count رسائل فردية',
+      one: '1 رسالة فردية',
     );
     return '$_temp0';
   }
@@ -880,34 +880,33 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count Room runs',
-      one: '1 Room run',
+      other: '$count تشغيل غرف',
+      one: '1 تشغيل غرفة',
     );
     return '$_temp0';
   }
 
   @override
-  String get mergeSheetMandate =>
-      'Mandate (yours stays — we\'ll drop the older one)';
+  String get mergeSheetMandate => 'الولاية (تبقى الخاصة بك — سنحذف الأقدم)';
 
   @override
-  String get mergeSheetMandateMove =>
-      'Mandate from your previous session (no conflict)';
+  String get mergeSheetMandateMove => 'الولاية من جلستك السابقة (لا تعارض)';
 
   @override
-  String get mergeSheetConfirm => 'MERGE EVERYTHING';
+  String get mergeSheetConfirm => 'دمج الكل';
 
   @override
-  String get mergeSheetKeepSeparate => 'KEEP SEPARATE';
+  String get mergeSheetKeepSeparate => 'إبقاء منفصلة';
 
   @override
-  String get mergeSheetClose => 'GOT IT';
+  String get mergeSheetClose => 'فهمت';
 
   @override
-  String get mergeSheetSuccess => 'Merged into your account.';
+  String get mergeSheetSuccess => 'تم الدمج في حسابك.';
 
   @override
-  String get mergeSheetFailed => 'Merge failed. Try again from Settings later.';
+  String get mergeSheetFailed =>
+      'فشل الدمج. حاول مرة أخرى من الإعدادات لاحقاً.';
 
   @override
   String get oneOnOneAskAnything =>
@@ -1123,43 +1122,42 @@ class AppLocalizationsAr extends AppLocalizations {
       'يتم الإرسال بناءً على حجم/وقف/هدف الحكم. إعادة تشغيل SAFETY FLOOR الخاص بمدير المحفظة.';
 
   @override
-  String get roomWinzipTitle => 'Your Room is warming up';
+  String get roomWinzipTitle => 'غرفتك في طور التهيئة';
 
   @override
   String roomWinzipBody(String countdown) {
-    return 'You\'ve used this Room — AMI\'s already topping you up. Your next Room unlocks in $countdown.';
+    return 'لقد استخدمت هذه الغرفة — AMI بالفعل تضيف لك رصيداً. غرفتك التالية تفتح في $countdown.';
   }
 
   @override
-  String get roomWinzipReady => 'Your Room is ready to convene.';
+  String get roomWinzipReady => 'غرفتك جاهزة للاجتماع.';
 
   @override
-  String get roomWinzipConvene => 'CONVENE NOW';
+  String get roomWinzipConvene => 'اجتمع الآن';
 
   @override
-  String get roomWinzipReviewTraining =>
-      'Review a Training session while you wait';
+  String get roomWinzipReviewTraining => 'راجع جلسة تدريبية أثناء الانتظار';
 
   @override
-  String get roomWinzipVoiceLine => 'Your Room is available now';
+  String get roomWinzipVoiceLine => 'غرفتك متاحة الآن';
 
   @override
-  String get roomPaywallTitle => 'Out of Room credits';
+  String get roomPaywallTitle => 'نفدت رصيد الغرفة';
 
   @override
   String roomPaywallBody(String date) {
-    return 'Sorry — you\'re out of Room credits for now. They\'ll refresh on $date.';
+    return 'عذراً — نفد رصيد الغرفة لديك مؤقتاً. سيتم تجديده في $date.';
   }
 
   @override
-  String get roomServerErrorTitle => 'AMI\'s briefly offline';
+  String get roomServerErrorTitle => 'AMI غير متصل مؤقتًا';
 
   @override
   String get roomServerErrorBody =>
-      'The connection dropped for a moment — nothing\'s wrong on your end. Give it a second and try again.';
+      'انقطع الاتصال للحظة — لا توجد مشكلة من جانبك. انتظر ثانيةً وحاول مجددًا.';
 
   @override
-  String get roomRetry => 'TRY AGAIN';
+  String get roomRetry => 'حاول مجددًا';
 
   @override
   String get tradeTicketHeading => 'صفقة جديدة';
@@ -1366,72 +1364,72 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستبدأ الجولة مجدداً في المرة القادمة التي تزور فيها كل قسم.';
 
   @override
-  String get agentUnlockedHeadline => 'AGENT UNLOCKED';
+  String get agentUnlockedHeadline => 'تم فتح AGENT';
 
   @override
   String agentUnlockedMeet(String name) {
-    return 'MEET $name';
+    return 'تعرّف على $name';
   }
 
   @override
-  String get agentUnlockedLater => 'Later';
+  String get agentUnlockedLater => 'لاحقًا';
 
   @override
-  String get challengeRelatedLesson => 'RELATED LESSON';
+  String get challengeRelatedLesson => 'درس ذو صلة';
 
   @override
-  String get challengeRelatedAgent => 'RELATED AGENT';
+  String get challengeRelatedAgent => 'AGENT ذو صلة';
 
   @override
   String challengeNextIn(String time) {
-    return 'Next challenge in $time';
+    return 'التحدي التالي خلال $time';
   }
 
   @override
-  String get challengeTapToAttempt => 'Tap to attempt →';
+  String get challengeTapToAttempt => 'انقر للمحاولة →';
 
   @override
-  String get challengeTapToReview => 'Answered — tap to review';
+  String get challengeTapToReview => 'تمت الإجابة — انقر للمراجعة';
 
   @override
-  String get leagueCardHeading => 'WEEKLY LEAGUE';
+  String get leagueCardHeading => 'الدوري الأسبوعي';
 
   @override
-  String get leagueTitle => 'LEAGUE';
+  String get leagueTitle => 'الدوري';
 
   @override
-  String get leagueRankLabel => 'RANK';
+  String get leagueRankLabel => 'الترتيب';
 
   @override
-  String get leaguePts => 'PTS';
+  String get leaguePts => 'النقاط';
 
   @override
-  String get leagueRollsInLabel => 'ROLLS IN';
+  String get leagueRollsInLabel => 'يبدأ خلال';
 
   @override
   String get leagueUnassigned =>
-      'Your first league starts Monday — keep earning.';
+      'يبدأ دوريك الأول يوم الاثنين — واصل كسب النقاط.';
 
   @override
-  String get leagueError => 'Couldn\'t load standings.';
+  String get leagueError => 'تعذر تحميل الترتيب.';
 
   @override
-  String get leagueYou => 'YOU';
+  String get leagueYou => 'أنت';
 
   @override
-  String get leagueHistoryTitle => 'PAST WEEKS';
+  String get leagueHistoryTitle => 'أسابيع سابقة';
 
   @override
-  String get leagueHistoryEmpty => 'No finished weeks yet.';
+  String get leagueHistoryEmpty => 'لا توجد أسابيع مكتملة بعد.';
 
   @override
-  String get leagueOutcomePromoted => 'Promoted';
+  String get leagueOutcomePromoted => 'ترقية';
 
   @override
-  String get leagueOutcomeRelegated => 'Relegated';
+  String get leagueOutcomeRelegated => 'تنزيل';
 
   @override
-  String get leagueOutcomeStay => 'Held';
+  String get leagueOutcomeStay => 'بقي';
 
   @override
   String get settingsSectionLeague => 'LEAGUE';
@@ -1443,58 +1441,57 @@ class AppLocalizationsAr extends AppLocalizations {
   String get leagueReputation => 'REPUTATION';
 
   @override
-  String get leagueRegenerate => 'REGENERATE HANDLE';
+  String get leagueRegenerate => 'إعادة إنشاء HANDLE';
 
   @override
   String get leagueRegenerateFailed =>
-      'Couldn\'t change your handle — you get only one change.';
+      'تعذر تغيير الـ HANDLE — لديك تغيير واحد فقط.';
 
   @override
-  String get settingsAppearanceValue => 'DARK — floor standard';
+  String get settingsAppearanceValue => 'داكن — المعيار القياسي في الـ FLOOR';
 
   @override
   String get settingsAppearanceBody =>
-      'The floor runs dark. A light theme arrives in a later release.';
+      'يعمل الـ FLOOR بالوضع الداكن. ستصل السمة الفاتحة في إصدار لاحق.';
 
   @override
-  String get watchlistEmptyTitle => 'No tickers yet';
+  String get watchlistEmptyTitle => 'لا توجد رموز تداول بعد';
 
   @override
-  String get alpacaNoPositions => 'No open positions';
+  String get alpacaNoPositions => 'لا توجد مراكز مفتوحة';
 
   @override
-  String get disclaimerShort =>
-      'Educational simulation. Not investment advice.';
+  String get disclaimerShort => 'محاكاة تعليمية. ليست نصيحة استثمارية.';
 
   @override
-  String get shareTooltip => 'Share';
+  String get shareTooltip => 'مشاركة';
 
   @override
-  String get shareCardStreakUnit => 'DAY STREAK';
+  String get shareCardStreakUnit => 'أيام متتالية';
 
   @override
-  String get shareCardUnlockKicker => 'AGENT UNLOCKED';
+  String get shareCardUnlockKicker => 'تم فتح AGENT';
 
   @override
-  String get shareCardVerdictKicker => 'THE ROOM\'S VERDICT';
+  String get shareCardVerdictKicker => 'حكم الغرفة';
 
   @override
-  String get shareCardPromotedKicker => 'LEAGUE STANDING';
+  String get shareCardPromotedKicker => 'ترتيب LEAGUE';
 
   @override
   String get shareCaption =>
-      'My AMI Trade analyst desk. Educational simulation — not investment advice.';
+      'مكتب المحلل الخاص بي في AMI Trade. محاكاة تعليمية — ليست نصيحة استثمارية.';
 
   @override
-  String get lessonReplay => 'Replay';
+  String get lessonReplay => 'إعادة العرض';
 
   @override
   String bugReportThanks(String shortId) {
-    return 'Report received — ref $shortId. Thank you.';
+    return 'تم استلام التقرير — المرجع $shortId. شكراً لك.';
   }
 
   @override
   String bugReportResolved(String title) {
-    return 'Fixed: $title';
+    return 'تم الإصلاح: $title';
   }
 }

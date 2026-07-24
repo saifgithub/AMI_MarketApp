@@ -1,0 +1,68 @@
+{
+  "_comment": "Sensitive-content carve-out for the AR/MS translation pipeline (CR083). Generalizes DEF094. Two policies: 'exclude' = held to EN, pre-seeded, routed to Saiful/external, never sent to the LLM. 'strict_review' = auto-translated normally but requires the stricter Tier-3 confidence bar (>=3 distinct models, zero issues of any severity, not just critical) before counting as verified. Everything else in these files gets ordinary treatment.",
+  "exclude": [
+    {
+      "scope": "arb_key",
+      "file": "mobile/lib/l10n/app_en.arb",
+      "ids": [
+        "settingsComplianceHalal",
+        "settingsComplianceHalalSubtitle",
+        "settingsComplianceHalalExplainTitle",
+        "settingsComplianceHalalExplainBody",
+        "shariaVerdictPass",
+        "shariaVerdictScreenedOut",
+        "shariaVerdictUnknown",
+        "shariaVerdictPaused",
+        "shariaVerdictLabelPass",
+        "shariaVerdictLabelPaused"
+      ],
+      "reason": "CR069 Phase 1b — each key's own @description already says 'Saiful arranges translation externally' and carries load-bearing translator notes (e.g. 'unscreened' must never become 'haram'). Pre-seed app_ar.arb/app_ms.arb with the literal EN value so translate_arb_lan.py's skip-unless-overwrite logic leaves them alone.",
+      "routed_to": "saiful_external"
+    },
+    {
+      "scope": "whole_file",
+      "file": "content/ai_coach/islamic_finance.json",
+      "reason": "All 15 entries are dedicated Sharia-ruling Q&A (fiqh-adjacent explanatory content, not app-mechanics description). Relocate out of content/ai_coach/ for the duration of any translate_content_lan.py --type ai_coach run; restore after.",
+      "routed_to": "saiful_sme"
+    }
+  ],
+  "strict_review": [
+    {
+      "scope": "lessons",
+      "ids": [
+        "347_the_four_prohibitions",
+        "348_the_business_activity_screen",
+        "349_the_three_financial_ratio_screens",
+        "350_standards_differ_why_the_same_stock_flips",
+        "351_purification_tazkiyah",
+        "352_sukuk_vs_conventional_bonds",
+        "353_islamic_contracts_and_instruments",
+        "354_islamic_indices_etfs_and_funds",
+        "355_how_amis_halal_flag_maps_to_real_screening",
+        "356_capstone_screen_a_company_end_to_end"
+      ],
+      "reason": "Saiful, 2026-07-24: auto-translate this 10-lesson Islamic-finance unit like the rest of Tier 3, but require a stricter confidence bar than ordinary lessons given CR069's own translator notes flag this content class as highest mistranslation risk.",
+      "routed_to": null
+    },
+    {
+      "scope": "content_json_ids",
+      "file": "content/ai_coach/platform.json",
+      "ids": ["qa_plt_halal_flag"],
+      "reason": "Only entry in this file that explains the halal screen's ruling substance (AAOIFI screens, 'confirm with your own scholar'). The other 39 entries (incl. qa_plt_mandate_fields, qa_plt_coach_cant_customize) merely name 'halal' as one Mandate toggle among several — ordinary treatment.",
+      "routed_to": null
+    },
+    {
+      "scope": "whole_file",
+      "file": "content/daily_challenges/2026_12.json",
+      "reason": "All 10/10 challenges for this month are Islamic-finance-themed (riba, sukuk, AAOIFI ratio screens, purification). Same policy as the lesson unit.",
+      "routed_to": null
+    },
+    {
+      "scope": "glossary_ids",
+      "file": "content/glossary/terms.en.json",
+      "ids": ["riba", "gharar", "maysir", "halal", "haram", "sukuk", "ijarah", "murabahah", "musharakah", "mudarabah", "takaful", "tazkiyah", "aaoifi", "shariah_advisory_council", "dow_jones_islamic_market_index", "sharia_screening", "business_activity_screen", "financial_ratio_screen", "sharia_compliant", "islamic_etf"],
+      "reason": "20 terms tagged islamic_finance. Definitional (not exegetical) but include Arabic-loanword proper terms that must be transliterated, not translated (see style_guide_ar_ms.md) — same stricter bar applies.",
+      "routed_to": null
+    }
+  ]
+}
