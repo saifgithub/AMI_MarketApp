@@ -1165,6 +1165,67 @@ class AppLocalizationsMs extends AppLocalizations {
   String get roomRetry => 'CUBA LAGI';
 
   @override
+  String get upgradeSheetTitle => 'Upgrade your desk';
+
+  @override
+  String get upgradeSheetSubtitle =>
+      'Unlock more Rooms and premium analysis. Prices are shown for your region.';
+
+  @override
+  String get upgradePlanTrader => 'Trader';
+
+  @override
+  String get upgradePlanFloorManager => 'Floor Manager';
+
+  @override
+  String get upgradeIntervalMonthly => 'Monthly';
+
+  @override
+  String get upgradeIntervalAnnual => 'Annual';
+
+  @override
+  String get upgradeCreditPacksTitle => 'Credit packs';
+
+  @override
+  String upgradeCreditPackCredits(int credits) {
+    return '+$credits credits';
+  }
+
+  @override
+  String get upgradeBuy => 'BUY';
+
+  @override
+  String get upgradeRestore => 'Restore purchases';
+
+  @override
+  String get upgradeUnavailableTitle => 'Upgrades aren\'t available yet';
+
+  @override
+  String upgradeUnavailableBody(String date) {
+    return 'In-app purchases will switch on shortly. Your Room credits still refresh on $date.';
+  }
+
+  @override
+  String get upgradePurchasePending =>
+      'Your purchase is processing — we\'ll unlock it as soon as it clears.';
+
+  @override
+  String get upgradePurchaseFailed =>
+      'That didn\'t go through. No charge was made — please try again.';
+
+  @override
+  String get upgradePurchaseSuccess => 'You\'re upgraded. Welcome to the desk.';
+
+  @override
+  String get upgradeRestoreNone => 'No purchases found to restore.';
+
+  @override
+  String get settingsSectionMembership => 'MEMBERSHIP';
+
+  @override
+  String get settingsMembershipUpgrade => 'Upgrade or manage plan';
+
+  @override
   String get tradeTicketHeading => 'DAGANGAN BARU';
 
   @override

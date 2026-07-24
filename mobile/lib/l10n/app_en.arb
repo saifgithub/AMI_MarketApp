@@ -709,6 +709,81 @@
         "description": "DEF073: retry button on the friendly server-error card; re-runs the Room convene."
     },
 
+    "upgradeSheetTitle": "Upgrade your desk",
+    "@upgradeSheetTitle": {
+        "description": "CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace."
+    },
+    "upgradeSheetSubtitle": "Unlock more Rooms and premium analysis. Prices are shown for your region.",
+    "@upgradeSheetSubtitle": {
+        "description": "CR084 paywall subtitle. Reassures the price is region-correct (RevenueCat/store-sourced)."
+    },
+    "upgradePlanTrader": "Trader",
+    "@upgradePlanTrader": {
+        "description": "CR084 name of the Trader subscription tier on the paywall card. Product name — keep consistent with the app-wide tier label."
+    },
+    "upgradePlanFloorManager": "Floor Manager",
+    "@upgradePlanFloorManager": {
+        "description": "CR084 name of the Floor Manager subscription tier on the paywall card. Product name — keep consistent with the app-wide tier label."
+    },
+    "upgradeIntervalMonthly": "Monthly",
+    "@upgradeIntervalMonthly": {
+        "description": "CR084 label for a monthly subscription billing interval."
+    },
+    "upgradeIntervalAnnual": "Annual",
+    "@upgradeIntervalAnnual": {
+        "description": "CR084 label for an annual (yearly) subscription billing interval."
+    },
+    "upgradeCreditPacksTitle": "Credit packs",
+    "@upgradeCreditPacksTitle": {
+        "description": "CR084 section header above the one-time consumable credit packs on the paywall."
+    },
+    "upgradeCreditPackCredits": "+{credits} credits",
+    "@upgradeCreditPackCredits": {
+        "description": "CR084 credit-pack card label. {credits} is the number of credits the one-time pack grants.",
+        "placeholders": {"credits": {"type": "int"}}
+    },
+    "upgradeBuy": "BUY",
+    "@upgradeBuy": {
+        "description": "CR084 buy button on a paywall product card."
+    },
+    "upgradeRestore": "Restore purchases",
+    "@upgradeRestore": {
+        "description": "CR084 restore-purchases button (App Store requirement). Re-reads the user's prior purchases."
+    },
+    "upgradeUnavailableTitle": "Upgrades aren't available yet",
+    "@upgradeUnavailableTitle": {
+        "description": "CR084 degrade state (DEF100): shown when the store/offering isn't configured yet. No buy button is rendered."
+    },
+    "upgradeUnavailableBody": "In-app purchases will switch on shortly. Your Room credits still refresh on {date}.",
+    "@upgradeUnavailableBody": {
+        "description": "CR084 degrade-state body (DEF100). {date} is the credit reset date, pre-formatted. Reassures the free monthly reset still applies.",
+        "placeholders": {"date": {"type": "String"}}
+    },
+    "upgradePurchasePending": "Your purchase is processing — we'll unlock it as soon as it clears.",
+    "@upgradePurchasePending": {
+        "description": "CR084 message when a purchase is deferred/pending (e.g. Ask-to-Buy). Entitlement is not granted yet."
+    },
+    "upgradePurchaseFailed": "That didn't go through. No charge was made — please try again.",
+    "@upgradePurchaseFailed": {
+        "description": "CR084 message on a store/network purchase failure. Reassures the user they weren't charged."
+    },
+    "upgradePurchaseSuccess": "You're upgraded. Welcome to the desk.",
+    "@upgradePurchaseSuccess": {
+        "description": "CR084 confirmation after a successful purchase + backend entitlement refresh."
+    },
+    "upgradeRestoreNone": "No purchases found to restore.",
+    "@upgradeRestoreNone": {
+        "description": "CR084 message after Restore purchases finds nothing tied to this store account."
+    },
+    "settingsSectionMembership": "MEMBERSHIP",
+    "@settingsSectionMembership": {
+        "description": "CR084 Settings section header for the plan/upgrade entry point."
+    },
+    "settingsMembershipUpgrade": "Upgrade or manage plan",
+    "@settingsMembershipUpgrade": {
+        "description": "CR084 Settings button that opens the upgrade paywall sheet."
+    },
+
     "tradeTicketHeading": "NEW TRADE",
     "tradeTicketSafetyFloorBlocked": "SAFETY FLOOR — TRADE BLOCKED",
     "tradeTicketChangeMandate": "Change what is enforced via Settings → My Mandate.",

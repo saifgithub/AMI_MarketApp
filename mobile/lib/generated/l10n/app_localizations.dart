@@ -2064,6 +2064,114 @@ abstract class AppLocalizations {
   /// **'TRY AGAIN'**
   String get roomRetry;
 
+  /// CR084 paywall heading. Shown at the hard credit wall and from Settings. 'Desk' = the user's analyst team workspace.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade your desk'**
+  String get upgradeSheetTitle;
+
+  /// CR084 paywall subtitle. Reassures the price is region-correct (RevenueCat/store-sourced).
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock more Rooms and premium analysis. Prices are shown for your region.'**
+  String get upgradeSheetSubtitle;
+
+  /// CR084 name of the Trader subscription tier on the paywall card. Product name — keep consistent with the app-wide tier label.
+  ///
+  /// In en, this message translates to:
+  /// **'Trader'**
+  String get upgradePlanTrader;
+
+  /// CR084 name of the Floor Manager subscription tier on the paywall card. Product name — keep consistent with the app-wide tier label.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor Manager'**
+  String get upgradePlanFloorManager;
+
+  /// CR084 label for a monthly subscription billing interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get upgradeIntervalMonthly;
+
+  /// CR084 label for an annual (yearly) subscription billing interval.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual'**
+  String get upgradeIntervalAnnual;
+
+  /// CR084 section header above the one-time consumable credit packs on the paywall.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit packs'**
+  String get upgradeCreditPacksTitle;
+
+  /// CR084 credit-pack card label. {credits} is the number of credits the one-time pack grants.
+  ///
+  /// In en, this message translates to:
+  /// **'+{credits} credits'**
+  String upgradeCreditPackCredits(int credits);
+
+  /// CR084 buy button on a paywall product card.
+  ///
+  /// In en, this message translates to:
+  /// **'BUY'**
+  String get upgradeBuy;
+
+  /// CR084 restore-purchases button (App Store requirement). Re-reads the user's prior purchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore purchases'**
+  String get upgradeRestore;
+
+  /// CR084 degrade state (DEF100): shown when the store/offering isn't configured yet. No buy button is rendered.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrades aren\'t available yet'**
+  String get upgradeUnavailableTitle;
+
+  /// CR084 degrade-state body (DEF100). {date} is the credit reset date, pre-formatted. Reassures the free monthly reset still applies.
+  ///
+  /// In en, this message translates to:
+  /// **'In-app purchases will switch on shortly. Your Room credits still refresh on {date}.'**
+  String upgradeUnavailableBody(String date);
+
+  /// CR084 message when a purchase is deferred/pending (e.g. Ask-to-Buy). Entitlement is not granted yet.
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchase is processing — we\'ll unlock it as soon as it clears.'**
+  String get upgradePurchasePending;
+
+  /// CR084 message on a store/network purchase failure. Reassures the user they weren't charged.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t go through. No charge was made — please try again.'**
+  String get upgradePurchaseFailed;
+
+  /// CR084 confirmation after a successful purchase + backend entitlement refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re upgraded. Welcome to the desk.'**
+  String get upgradePurchaseSuccess;
+
+  /// CR084 message after Restore purchases finds nothing tied to this store account.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases found to restore.'**
+  String get upgradeRestoreNone;
+
+  /// CR084 Settings section header for the plan/upgrade entry point.
+  ///
+  /// In en, this message translates to:
+  /// **'MEMBERSHIP'**
+  String get settingsSectionMembership;
+
+  /// CR084 Settings button that opens the upgrade paywall sheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade or manage plan'**
+  String get settingsMembershipUpgrade;
+
   /// No description provided for @tradeTicketHeading.
   ///
   /// In en, this message translates to:

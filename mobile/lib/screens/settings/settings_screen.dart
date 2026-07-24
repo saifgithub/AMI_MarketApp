@@ -24,6 +24,7 @@ import 'package:ami_trade/state/league_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/screens/settings/legal_screen.dart';
@@ -131,6 +132,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     _ReadOnlyRow(label: l.settingsProfilePrimaryGoal, value: m.primaryGoal),
                     _ReadOnlyRow(label: l.settingsProfileCredits, value: '${m.creditBalance}'),
                   ]),
+                  const SizedBox(height: AmiSpacing.l),
+                  _MembershipSection(mandate: m),
                   const SizedBox(height: AmiSpacing.l),
                   const _LeagueSection(),
                   const SizedBox(height: AmiSpacing.l),
@@ -546,6 +549,52 @@ class _ReadOnlyRow extends StatelessWidget {
               style: AmiTypography.labelMono.copyWith(color: AmiColors.textHigh)),
         ],
       ),
+    );
+  }
+}
+
+
+/// CR084 — "MEMBERSHIP": the second upgrade entry point (the Room 402 wall is
+/// the primary). Opens the live RC paywall as a bottom sheet. On a successful
+/// purchase the paywall refreshes entitlement from the backend; we invalidate
+/// the mandate view so the plan/credit rows above reflect it immediately.
+class _MembershipSection extends ConsumerWidget {
+  const _MembershipSection({required this.mandate});
+  final UserMandate mandate;
+
+  String _resetDateStr() {
+    final r = mandate.creditsResetAt;
+    if (r == null) return 'the 1st';
+    return '${r.year}-${r.month.toString().padLeft(2, '0')}-'
+        '${r.day.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return _Section(
+      title: l.settingsSectionMembership,
+      children: [
+        _ReadOnlyRow(label: l.settingsProfilePlan, value: mandate.plan),
+        const SizedBox(height: AmiSpacing.s),
+        SizedBox(
+          height: 40,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AmiColors.hexCyan,
+              side: const BorderSide(color: AmiColors.hexCyan),
+            ),
+            onPressed: () => showUpgradeSheet(
+              context,
+              resetDateLabel: _resetDateStr(),
+              onPurchased: () =>
+                  ref.read(mandateNotifierProvider.notifier).refresh(),
+            ),
+            label: Text(l.settingsMembershipUpgrade),
+          ),
+        ),
+      ],
     );
   }
 }

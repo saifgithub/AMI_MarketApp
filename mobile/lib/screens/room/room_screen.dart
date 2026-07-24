@@ -20,6 +20,7 @@ import 'package:ami_trade/services/share/share_service.dart';
 import 'package:ami_trade/state/room_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
+import 'package:ami_trade/widgets/paywall/upgrade_paywall.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:ami_trade/widgets/hex/hex_pulse_loader.dart';
 import 'package:flutter/material.dart';
@@ -490,12 +491,15 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    const accent = AmiColors.hexAmber;
-    final title = _isWinzip ? l.roomWinzipTitle : l.roomPaywallTitle;
-    final body = _isWinzip
-        ? (_ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining)))
-        : l.roomPaywallBody(_resetDateStr());
+    // CR047 Winzip cooldown path is unchanged (soft, self-resetting wall);
+    // CR084 turns the hard monthly wall into a live RC paywall.
+    return _isWinzip ? _buildWinzip(context, l) : _buildHardWall(context, l);
+  }
 
+  /// CR047 "The Winzip" cooldown countdown — untouched by CR084.
+  Widget _buildWinzip(BuildContext context, AppLocalizations l) {
+    const accent = AmiColors.hexAmber;
+    final body = _ready ? l.roomWinzipReady : l.roomWinzipBody(_fmt(_remaining));
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: AmiSpacing.m),
@@ -518,7 +522,7 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
               const SizedBox(width: AmiSpacing.s),
               Expanded(
                 child: Text(
-                  title,
+                  l.roomWinzipTitle,
                   style: AmiTypography.labelMono.copyWith(color: accent),
                 ),
               ),
@@ -526,7 +530,7 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
           ),
           const SizedBox(height: AmiSpacing.s),
           Text(body, style: AmiTypography.body),
-          if (_isWinzip && !_ready) ...[
+          if (!_ready) ...[
             const SizedBox(height: AmiSpacing.m),
             Center(
               child: Text(
@@ -553,6 +557,61 @@ class _PaywallCardState extends ConsumerState<_PaywallCard> {
                     .start(),
               ),
             ),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(foregroundColor: accent),
+              icon: const Icon(Icons.school_outlined, size: 18),
+              label: Text(l.roomWinzipReviewTraining),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LessonsScreen()),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// CR084 hard-wall paywall: the "out of credits" framing followed by the live
+  /// RC offering (or the degrade card when the store isn't wired yet, DEF100).
+  /// A completed purchase refreshes entitlement from the backend, then clears
+  /// the wall and re-convenes.
+  Widget _buildHardWall(BuildContext context, AppLocalizations l) {
+    const accent = AmiColors.hexAmber;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: AmiSpacing.m),
+      padding: const EdgeInsets.all(AmiSpacing.m),
+      decoration: BoxDecoration(
+        color: AmiColors.slate800,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: accent),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.lock_outline, color: accent, size: 18),
+              const SizedBox(width: AmiSpacing.s),
+              Expanded(
+                child: Text(
+                  l.roomPaywallTitle,
+                  style: AmiTypography.labelMono.copyWith(color: accent),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AmiSpacing.s),
+          Text(l.roomPaywallBody(_resetDateStr()), style: AmiTypography.body),
+          const SizedBox(height: AmiSpacing.m),
+          UpgradePaywall(
+            resetDateLabel: _resetDateStr(),
+            onPurchased: () => ref
+                .read(roomNotifierProvider(widget.ticker).notifier)
+                .start(),
+          ),
           SizedBox(
             width: double.infinity,
             child: TextButton.icon(

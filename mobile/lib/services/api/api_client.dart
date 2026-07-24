@@ -15,6 +15,7 @@ import 'dart:io' show Platform;
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/auth.dart';
 import 'package:ami_trade/models/ai_coach.dart';
+import 'package:ami_trade/models/billing_identity.dart';
 import 'package:ami_trade/models/brief.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
@@ -864,6 +865,16 @@ class ApiClient {
       data: updates,
     );
     return UserMandate.fromJson(r.data!);
+  }
+
+  // ── Billing identity (CR084) ────────────────────────────────────────────
+
+  /// The id the RevenueCat SDK logs in with, so RC's `app_user_id` on every
+  /// webhook event equals our `users.id`. Auth-gated (`GET /v1/billing/identity`
+  /// → `backend/app/api/billing.py`). Called once before the SDK is configured.
+  Future<BillingIdentity> getBillingIdentity() async {
+    final r = await _dio.get<Map<String, dynamic>>('/v1/billing/identity');
+    return BillingIdentity.fromJson(r.data!);
   }
 
   // ── Auth (anonymous-first; Apple + magic-link claim) ────────────

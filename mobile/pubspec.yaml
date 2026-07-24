@@ -48,6 +48,14 @@ dependencies:
   sign_in_with_apple: ^6.1.3
   google_sign_in: ^6.2.2
 
+  # In-app purchases (CR084) — RevenueCat SDK. NEW dependency (flagged per
+  # CLAUDE.md "lean stack"): the app had no IAP/store SDK before this. RC is
+  # the store/region price source of truth for the paywall and the receipt
+  # validator that drives the server-authoritative webhook grant. The public
+  # SDK keys + store product IDs are Saiful's (DEF100) — supplied at build
+  # time via --dart-define, never fabricated here.
+  purchases_flutter: ^10.4.3
+
   # Observability
   sentry_flutter: ^9.0.0
 
