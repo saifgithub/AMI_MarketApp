@@ -230,6 +230,17 @@ class Settings(BaseSettings):
     # Beta: replace with admin_users table + JWT (middleware accepts both).
     admin_secret: str = ""
 
+    # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
+    # `Authorization` header on every webhook POST to /v1/webhooks/revenuecat;
+    # the endpoint constant-time-compares it and fails CLOSED (401) on any
+    # mismatch — a wrong grant is real dollars + a real trust breach (D-5).
+    # Empty = the webhook refuses LOUDLY (503 + logged error), never
+    # silent-accept and never silent-reject-all (CR040 degrade-loudly). Set it
+    # in infra/alpha.env once the RC project exists; it is forwarded in
+    # docker-compose.yml's api-alpha block (test_config_compose_parity gate).
+    # Generate to match the value pasted into the RC dashboard webhook config.
+    revenuecat_webhook_secret: str = ""
+
     # Apple Sign-In — accepted audiences for the identity token's `aud`
     # claim. iOS native flow uses the bundle ID; a Web Services ID would
     # be added here if we ever ship Apple sign-in via web/Android. Comma-

@@ -12,6 +12,7 @@ from app.api.admin import router as admin_router
 from app.api.alpaca import router as alpaca_router
 from app.api.ai_coach import router as ai_coach_router
 from app.api.auth import router as auth_router
+from app.api.billing import router as billing_router
 from app.api.feedback import router as feedback_router
 from app.api.brief import router as brief_router
 from app.api.coach import router as coach_router  # deprecated /v1/coach/* shim
@@ -27,6 +28,7 @@ from app.api.one_on_one import router as one_on_one_router
 from app.api.room import router as room_router
 from app.api.sim import router as sim_router
 from app.api.watchlist import router as watchlist_router
+from app.api.webhooks import router as webhooks_router
 from app.core.config import settings
 from app.core.logging import configure_logging
 from app.core.observability import init_sentry
@@ -135,6 +137,7 @@ app.include_router(admin_router)
 app.include_router(alpaca_router)
 app.include_router(ai_coach_router)
 app.include_router(auth_router)
+app.include_router(billing_router)
 app.include_router(onboarding_router)
 app.include_router(one_on_one_router)
 app.include_router(brief_router)
@@ -150,6 +153,7 @@ app.include_router(room_router)
 app.include_router(sim_router)
 app.include_router(feedback_router)
 app.include_router(watchlist_router)
+app.include_router(webhooks_router)
 
 
 @app.get("/v1/health")

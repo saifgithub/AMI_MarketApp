@@ -29,6 +29,7 @@ re-grant *sets* the balance rather than adding to it.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from uuid import UUID, uuid4
 
@@ -284,6 +285,109 @@ def spend(user_id: UUID, amount: int | None, *, reason: str) -> tuple[int, int]:
     if shortfall is not None:
         raise shortfall
     return new_balance, cost
+
+
+# ── CR084: RevenueCat-driven grants ───────────────────────────────────────
+#
+# These reuse THIS module's allowance mechanism (single ledger — no parallel
+# store). They follow the reputation_service.award / admin._record_event
+# pattern: the caller (the webhook) owns the session and the commit, so the
+# dedup insert, the balance mutation, and the audit row all land in ONE
+# transaction. They deliberately do NOT write a subscription_events row — the
+# webhook writes the single authoritative source="revenuecat" audit row, so
+# attribution is correct and there is exactly one transition row per event.
+
+
+@dataclass
+class AllowanceGrant:
+    """Outcome of a subscription-driven plan + allowance change."""
+
+    old_plan: str
+    new_plan: str
+    effective_plan: Plan
+    old_balance: int
+    new_balance: int
+    granted: bool  # True when a fresh allowance was set for the period
+
+
+def _plan_from_str(value: str | None) -> Plan:
+    if value is None:
+        return Plan.FLOOR_PASS
+    try:
+        return Plan(value)
+    except ValueError:
+        return Plan.FLOOR_PASS
+
+
+def set_plan_and_grant_allowance(session, user: User, target_plan: Plan) -> AllowanceGrant:
+    """Set `users.plan` to a paid tier and grant that tier's monthly allowance
+    for the current period (INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE).
+
+    Trial double-grant guard: an active `trial_trader` already granted 150
+    credits for this calendar period, and paid `trader` is also 150 — so a
+    re-grant fires only when the window rolled to a new period OR the paid
+    tier's allowance is strictly larger than what was already granted this
+    period (an upgrade top-up, e.g. trader→floor_manager). When it does not
+    re-grant it still re-tags `credits_plan_at_grant`, so `_ensure_period`'s
+    drift detector won't re-grant on the next balance read.
+    """
+    old_plan = user.plan
+    old_balance = user.credit_balance or 0
+    user.plan = target_plan.value
+    eff = effective_plan(target_plan, user.trial_expires_at)
+
+    now = _utcnow()
+    month_start = _month_start(now)
+    period = _as_utc(user.credits_period_start)
+    window_rolled = period is None or period < month_start
+    current_granted = (
+        0 if window_rolled
+        else ALLOWANCE.get(_plan_from_str(user.credits_plan_at_grant), 0)
+    )
+    target_allowance = ALLOWANCE[eff]
+
+    granted = window_rolled or target_allowance > current_granted
+    if granted:
+        user.credit_balance = target_allowance
+    # Either way, attribute the current period to the effective plan so a later
+    # balance_for()/_ensure_period() read does not spuriously re-grant.
+    user.credits_period_start = month_start
+    user.credits_plan_at_grant = eff.value
+
+    return AllowanceGrant(
+        old_plan=old_plan,
+        new_plan=user.plan,
+        effective_plan=eff,
+        old_balance=old_balance,
+        new_balance=user.credit_balance,
+        granted=granted,
+    )
+
+
+def add_credit_pack(session, user: User, amount: int) -> tuple[int, int]:
+    """Add purchased (consumable) credits on top of the current period's
+    balance (NON_RENEWING_PURCHASE). `_ensure_period` first brings the balance
+    to the correct baseline (a rolled window resets to the allowance), then the
+    pack stacks on top. Per credits.md the single balance still resets monthly
+    — packs top up the current month, they do not accumulate across the reset.
+    Returns (old_balance, new_balance). No plan change.
+    """
+    _ensure_period(session, user)
+    old_balance = user.credit_balance or 0
+    user.credit_balance = old_balance + amount
+    return old_balance, user.credit_balance
+
+
+def revoke_to_base(session, user: User) -> tuple[str, Plan]:
+    """A subscription lapsed (CANCELLATION / EXPIRATION / BILLING_ISSUE). Drop
+    `users.plan` to the base; `effective_plan` keeps an active trial. Re-grants
+    the now-lower allowance immediately via the existing drift mechanism (the
+    CR039 downgrade cliff). Returns (old_plan, effective_plan).
+    """
+    old_plan = user.plan
+    user.plan = Plan.FLOOR_PASS.value
+    eff = _ensure_period(session, user)
+    return old_plan, eff
 
 
 def refund(user_id: UUID, amount: int, *, reason: str) -> None:

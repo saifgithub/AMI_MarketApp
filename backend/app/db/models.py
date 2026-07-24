@@ -701,6 +701,36 @@ class LeagueMemberRow(Base):
     )
 
 
+class RevenueCatEventRow(Base):
+    """Idempotency ledger for RevenueCat webhook deliveries (CR084).
+
+    RevenueCat retries any non-2xx delivery, so the same purchase event can
+    arrive many times; a replayed `INITIAL_PURCHASE` must never double-grant
+    credits. `event_id` (RC's own event UUID) is UNIQUE, so the webhook can
+    INSERT-first inside the grant transaction and let the DB constraint reject
+    a duplicate — a DB-level guarantee, not a SELECT-then-INSERT race
+    (DEF039). The dedup row and the grant commit atomically in one
+    transaction, so a delivery that failed mid-processing leaves no dedup
+    trace and RC's retry can succeed; only a delivery that fully succeeded is
+    ever recognized as a duplicate.
+    """
+
+    __tablename__ = "revenuecat_events"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    # RC's event id — the dedup anchor. UNIQUE is the whole point of the table.
+    event_id: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    event_type: Mapped[str] = mapped_column(String, nullable=False)
+    # RC app_user_id == our users.id (str form; the event may reference a user
+    # that no longer exists after a merge, so this is not a FK).
+    app_user_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    product_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+
+    received_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
+    )
+
+
 class SocialSentimentCacheRow(Base):
     """Durable Adanos sentiment cache (CR041).
 

@@ -78,6 +78,12 @@ services:
       # require it; empty value returns 503 from those routes (Alpha-only
       # mechanism, replaced by admin_users + JWT in Beta).
       ADMIN_SECRET: ${ADMIN_SECRET:-}
+      # RevenueCat webhook shared secret (CR084). RC sends this verbatim as the
+      # Authorization header on POST /v1/webhooks/revenuecat; the endpoint
+      # fails CLOSED (401) on mismatch and refuses LOUDLY (503 + log) when
+      # empty — never silent-accept, never silent-reject-all (CR040). Set it in
+      # infra/alpha.env to the value pasted into the RC dashboard webhook config.
+      REVENUECAT_WEBHOOK_SECRET: ${REVENUECAT_WEBHOOK_SECRET:-}
       # Container-to-container connection still uses 5432 (internal port).
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/ami_trade
       REDIS_URL: redis://redis:6379/0
