@@ -57,3 +57,10 @@ tracks:
     history_dir: history/
     project_plan_path: docs/forward_planning/CR080_appium_uat_harness/CR080_appium_uat_harness.md
     # sanity_checks / bug_list: none yet — add via /session-setup once the harness has a first run
+
+  S:
+    label: "Support"
+    handover_path: HANDOVER_S.md
+    history_dir: history/
+    # project_plan_path / sanity_checks / bug_list: none yet — add via /session-setup once
+    # this track has an operating cadence (e.g. a live email-monitoring loop)
