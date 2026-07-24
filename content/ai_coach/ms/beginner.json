@@ -1,0 +1,827 @@
+[
+  {
+    "id": "qa_beg_what_is_a_stock",
+    "category": "beginner",
+    "question": "Apakah itu saham?",
+    "short_answer": "Saham ialah sebahagian kecil hak milik dalam sebuah syarikat awam. Jika anda memiliki satu keping saham Apple, anda memiliki sebahagian kecil daripada Apple.",
+    "long_answer": "Syarikat mengeluarkan saham untuk mengumpul wang. Apabila anda membeli satu keping saham di pasaran, anda menjadi pemilik bersama dengan tuntutan terhadap sebahagian kecil keuntungan dan aset syarikat pada masa hadapan. Harga saham anda bergerak apabila pasaran mengemas kini pandangan mengenai nilai syarikat. Memiliki saham tidak memberikan anda kawalan ke atas perniagaan melainkan anda memegang pegangan yang sangat besar.",
+    "related_lessons": [
+      "013",
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "stocks",
+      "ownership"
+    ]
+  },
+  {
+    "id": "qa_beg_why_companies_issue_shares",
+    "category": "beginner",
+    "question": "Mengapa syarikat menjual saham kepada orang ramai?",
+    "short_answer": "Untuk mengumpul wang tunai tanpa menanggung hutang. Mereka menjual bahagian hak milik dan menggunakan wang tersebut untuk mengembangkan perniagaan.",
+    "long_answer": "Menjadi syarikat awam membolehkan syarikat mengakses kumpulan pelabur yang jauh lebih besar berbanding pengumpulan dana persendirian. Wang tunai itu biasanya membiayai pengembangan, R&D, acquisitions, atau membayar balik pelabur awal. Sebagai gantinya, syarikat menerima keperluan pelaporan awam dan disiplin yang ditetapkan oleh pasaran setiap hari.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "ipo",
+      "funding"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_exchange",
+    "category": "beginner",
+    "question": "Apakah itu bursa saham?",
+    "short_answer": "Pasaran di mana pembeli dan penjual memperdagangkan saham syarikat awam di bawah satu set peraturan. NYSE dan Nasdaq ialah dua contoh besar di AS.",
+    "long_answer": "Bursa menyelaraskan pesanan, menerbitkan harga, dan menguatkan piawaian senarai supaya pelabur boleh bertransaksi dengan yakin. Kebanyakan bursa moden ialah buku pesanan elektronik, bukan pemandangan di lantai perdagangan seperti dalam filem lama. AMI Trade mensimulasikan nama yang tersenarai di AS pada MVP, jadi fikirkan NYSE dan Nasdaq buat masa ini.",
+    "related_lessons": [
+      "015",
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "exchange"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_brokerage",
+    "category": "beginner",
+    "question": "Apakah itu akaun broker?",
+    "short_answer": "Akaun berregulated di broker yang membolehkan anda membeli dan menjual sekuriti. AMI Trade adalah simulasi sahaja, jadi anda tidak perlukan satu untuk menggunakan aplikasi ini.",
+    "long_answer": "Dalam dunia sebenar, broker memegang wang tunai anda dan saham yang anda beli atas nama anda, serta menghantar pesanan anda ke bursa. AMI Trade tidak meletakkan pesanan sebenar dan tidak bersambung dengan broker. Setiap kedudukan yang anda ambil di sini ialah perdagangan simulasi untuk pembelajaran, jurnal, dan maklum balas daripada pasukan ejen.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "vocabulary",
+      "brokerage",
+      "simulation"
+    ]
+  },
+  {
+    "id": "qa_beg_market_cap",
+    "category": "beginner",
+    "question": "Apa maksud nilai pasaran (market cap)?",
+    "short_answer": "Nilai pasaran ialah harga saham didarab dengan bilangan saham yang beredar — penanda harga pasaran bagi keseluruhan syarikat.",
+    "long_answer": "Nilai pasaran mengelaskan syarikat mengikut saiz: kira-kira bawah 2B adalah small-cap, 2B hingga 10B adalah mid-cap, lebih 10B adalah large-cap, dan nama bernilai trilion dolar adalah mega-cap. Saiz mempengaruhi volatiliti, kecairan, dan betapa besar berita menggerakkan saham. Harga saham 100 dolar tidak memberitahu anda apa-apa tentang saiz secara sendiri — anda memerlukan bilangan saham juga.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "market_cap"
+    ]
+  },
+  {
+    "id": "qa_beg_what_moves_prices",
+    "category": "beginner",
+    "question": "Mengapakah harga saham naik atau turun setiap hari?",
+    "short_answer": "Harga bergerak apabila pembeli dan penjual tidak bersetuju tentang nilai syarikat. Hasil kewangan, berita, data makro, dan mood pasaran semua mengimbangi keseimbangan itu setiap minit.",
+    "long_answer": "Setiap tick ialah harga yang paling baru disetujui antara seseorang yang sanggup menjual dan seseorang yang sanggup membeli. Maklumat baru — hasil yang melebihi jangkaan, penurunan penarafan, komen Fed, pelancaran produk pesaing — mengubah pendapat, dan buku pesanan mengimbangi semula. Pergerakan jangka pendek boleh kelihatan rawak; laluan jangka panjang cenderung mengikut perniagaan teras.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "market_analyst",
+      "news_analyst"
+    ],
+    "tags": [
+      "general",
+      "ami_trade"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_volatility",
+    "category": "beginner",
+    "question": "Apakah volatiliti?",
+    "short_answer": "Volatiliti ialah betapa besar harga bergegar. Volatiliti tinggi bermaksud pergerakan harian yang besar; volatiliti rendah bermaksud pergerakan harga yang lebih tenang.",
+    "long_answer": "Volatiliti bukan arah — ia adalah saiz goyangan ke arah mana-mana. Pedagang sering mengukur ia dengan sisihan piawai pulangan atau dengan penunjuk seperti ATR. Volatiliti yang lebih tinggi bermaksud julat kemungkinan hasil yang lebih luas per unit masa, itulah sebabnya saiz kedudukan biasanya mengecil apabila volatiliti meningkat.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "volatility",
+      "risk"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_dividend",
+    "category": "beginner",
+    "question": "Apakah dividen?",
+    "short_answer": "Dividen ialah pembayaran tunai yang dihantar oleh syarikat kepada pemegang sahamnya, biasanya setiap suku tahun, daripada keuntungannya.",
+    "long_answer": "Tidak semua syarikat membayar dividen. Perniagaan matang yang menjana wang tunai sering melakukannya; firma pertumbuhan tinggi cenderung untuk melabur semula. Yield dividen ialah dividen tahunan dibahagikan dengan harga saham. Yield tinggi boleh menarik, tetapi ia juga boleh menandakan bahawa harga telah jatuh kerana pelabur menjangkakan masalah.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "dividend",
+      "income"
+    ]
+  },
+  {
+    "id": "qa_beg_how_to_read_a_quote",
+    "category": "beginner",
+    "question": "Bagaimana saya membaca petikan saham?",
+    "short_answer": "Petikan menunjukkan harga dagangan terakhir, tawaran beli (harga tertinggi yang dibayar pembeli), tawaran jual (harga terendah yang diterima penjual), julat harian, dan isipadu.",
+    "long_answer": "Jurang antara tawaran beli dan jual ialah spread — spread yang lebih lebar biasanya menunjukkan saham yang kurang likuid. Isipadu memberitahu anda seberapa aktif nama tersebut hari ini. Perubahan peratusan diukur terhadap penutupan sesi sebelumnya, bukan pembukaan. Sentiasa periksa sama ada petikan itu masa nyata atau tertunda; banyak feed percuma tertunda 15 minit.",
+    "related_lessons": [],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "quotes",
+      "bid_ask"
+    ]
+  },
+  {
+    "id": "qa_beg_share_price_size",
+    "category": "beginner",
+    "question": "Mengapakah sesetengah saham bernilai 5 dolar dan yang lain 5000?",
+    "short_answer": "Harga saham sahaja tidak memberitahu apa-apa tentang saiz atau kualiti — ia hanya bergantung kepada berapa banyak saham yang telah dikeluarkan oleh syarikat.",
+    "long_answer": "Dua syarikat bernilai sama boleh mempunyai harga saham yang sangat berbeza bergantung kepada bagaimana mereka membahagikan pemilikan mereka. Saham bernilai 5000 dolar tidak semestinya lebih baik daripada saham bernilai 5 dolar; yang penting ialah nilai pasaran, pendapatan, keuntungan, dan pertumbuhan. Berkshire Hathaway tidak pernah membahagikan saham A mereka, itulah sebabnya satu saham berharga lebih tinggi daripada sebuah kereta.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "share_price"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_index",
+    "category": "beginner",
+    "question": "Apakah S&P 500?",
+    "short_answer": "S&P 500 ialah indeks yang memantau kira-kira 500 syarikat awam terbesar AS. Ia ialah piawai penanda aras untuk pasaran saham AS.",
+    "long_answer": "Indeks ini diberi berat mengikut nilai pasaran, jadi nama terbesar menggerakkannya paling banyak. Apabila orang berkata pasaran naik atau turun hari ini, mereka biasanya bermaksud S&P 500 atau Dow. Anda tidak boleh membeli indeks itu sendiri; anda membeli ETF seperti SPY atau VOO yang memantulkannya. Mengalahkan S&P 500 dalam jangka masa panjang adalah sukar — fakta ini sahaja ialah asas yang berguna untuk sebarang strategi aktif.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "index",
+      "sp500"
+    ]
+  },
+  {
+    "id": "qa_beg_bull_vs_bear",
+    "category": "beginner",
+    "question": "Apakah pasaran lembu dan pasaran beruang?",
+    "short_answer": "Pasaran lembu ialah trend naik yang berterusan, sering ditakrifkan sebagai kenaikan 20 peratus daripada paras rendah terkini. Pasaran beruang ialah penurunan 20 peratus daripada paras tinggi terkini.",
+    "long_answer": "Ini ialah penerangan tentang tingkah laku ramai sebanyak tahap harga. Lembu menjangkakan harga akan terus naik; beruang menjangkakan ia akan jatuh. Penyelidik Bull dan Bear AMI wujud untuk tujuan ini — kebanyakan saham mempunyai kes yang boleh dipercayai dalam kedua-dua arah, dan memaksa perdebatan adalah lebih sihat daripada mengabaikan satu sisi.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "bull_researcher",
+      "bear_researcher"
+    ],
+    "tags": [
+      "vocabulary",
+      "trend",
+      "sentiment"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_a_candlestick",
+    "category": "beginner",
+    "question": "Apakah candlestick pada carta?",
+    "short_answer": "Candlestick ialah satu bar yang meringkaskan harga buka, tinggi, rendah, dan tutup bagi tempoh masa dalam satu bentuk.",
+    "long_answer": "Badan menunjukkan di mana harga dibuka dan ditutup; sumbu nipis menunjukkan harga tertinggi dan terendah semasa tempoh tersebut. Hijau atau kosong biasanya bermaksud tutup di atas buka; merah atau penuh bermaksud tutup di bawah buka. Candlestick memuatkan maklumat padat per piksel, itulah sebabnya kebanyakan penganalisis carta lebih mengutamakan candlestick berbanding carta garisan.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "vocabulary",
+      "candlestick",
+      "charts"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_an_etf",
+    "category": "beginner",
+    "question": "Apakah ETF?",
+    "short_answer": "ETF ialah bakul sekuriti yang diperdagangkan di bursa seperti satu saham tunggal. Membeli satu bahagian saham memberikan anda pendedahan kepada semua pegangan di dalamnya.",
+    "long_answer": "ETF popular kerana menawarkan diversifikasi serta-merta dengan kos rendah. ETF S&P 500 memberikan anda sebahagian daripada 500 syarikat dalam satu transaksi. Terdapat ETF sektor, ETF negara, ETF bon, dan semakin banyak ETF eksotik. Ia bukan sihir — ETF berleverage atau tematik boleh lebih berisiko berbanding satu saham berkualiti.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "etf",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_us_vs_bursa",
+    "category": "beginner",
+    "question": "Apakah perbezaan antara pasaran AS dan Bursa Malaysia?",
+    "short_answer": "Bursa berbeza, syarikat tersenarai berbeza, waktu perdagangan berbeza, dan mata wang berbeza. Mekanisme pembelian saham adalah serupa; universum saham pula tidak.",
+    "long_answer": "AMI Trade mensimulasikan nama tersenarai AS di MVP kerana ia merupakan pasaran paling dalam dan paling diliputi di dunia. Liputan GCC dan Bursa Malaysia berada dalam peta jalan. Jika anda berpusat di Asia, waktu AS berjalan pada waktu malam bagi anda, yang mengubah cara anda sebenarnya berdagang posisi sebenar nanti.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [],
+    "tags": [
+      "vocabulary",
+      "exchange",
+      "markets"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_stop_loss",
+    "category": "beginner",
+    "question": "Apakah stop-loss?",
+    "short_answer": "Stop-loss ialah harga keluar yang ditetapkan sebelumnya yang menutup perdagangan yang rugi secara automatik, supaya kerugian kecil tidak menjadi besar.",
+    "long_answer": "Anda menentukan stop-loss sebelum masuk, berdasarkan di mana idea anda terbukti salah, bukan berdasarkan berapa banyak anda rasa mahu rugi. Sebaik sahaja harga menyentuhnya, anda keluar tanpa memperdebatkannya lagi. Pemula sering terlepas stop-loss dan kemudian purata ke bawah pada kerugian — salah satu cara paling cepat untuk memusnahkan akaun.",
+    "related_lessons": [
+      "015"
+    ],
+    "related_agents": [
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "stop_loss"
+    ]
+  },
+  {
+    "id": "qa_beg_position_sizing",
+    "category": "beginner",
+    "question": "Berapa banyak daripada portfolio saya yang perlu dimasukkan ke dalam satu dagangan?",
+    "short_answer": "Kebanyakan pemula berisiko tidak lebih daripada 1 hingga 2 peratus daripada modal total pada mana-mana satu dagangan. Saiz posisi berasal daripada risiko per dagangan dan jarak henti anda, bukan daripada jumlah dolar tetap.",
+    "long_answer": "Jika akaun anda ialah 10,000 dan anda berisiko 1 peratus, anda boleh kehilangan maksimum 100 pada dagangan tersebut. Jika henti anda ialah 5 peratus di bawah harga masuk, saiz posisi anda ialah 100 dibahagikan dengan 5 peratus, atau bernilai 2,000 saham. Portfolio Manager mengenakan had atas saiz sebagai sebahagian daripada Mandat anda, dan lantai itu tidak boleh diajar.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "position_sizing"
+    ]
+  },
+  {
+    "id": "qa_beg_risk_reward",
+    "category": "beginner",
+    "question": "Apakah nisbah risiko-kepada-imbangan?",
+    "short_answer": "Risiko-kepada-imbangan membandingkan berapa banyak yang anda berisiko kehilangan dengan berapa banyak yang anda berisiko keuntungan. Dagangan 1:3 berisiko 1 dolar untuk mendapatkan 3.",
+    "long_answer": "Nisbah yang lebih tinggi membolehkan anda salah lebih kerap dan masih keluar di hadapan. Pedagang yang betul hanya 40 peratus daripada masa masih boleh untung pada 1:3. Pemula sering mengambil dagangan 1:1 atau lebih teruk dan tertanya-tanya mengapa mereka perlahan-lahan kehabisan dana. Agent Trader biasanya akan menandakan persediaan jika imbangan tidak menjustifikasikan risiko.",
+    "related_lessons": [
+      "016"
+    ],
+    "related_agents": [
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "risk_reward"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_drawdown",
+    "category": "beginner",
+    "question": "Apakah drawdown?",
+    "short_answer": "Drawdown ialah penurunan dari puncak ke lembah dalam nilai akaun anda, biasanya ditunjukkan sebagai peratusan.",
+    "long_answer": "Drawdown 20 peratus bermaksud akaun anda jatuh dari tanda air tinggi ke rendah 20 peratus di bawahnya. Pemulihan menyakitkan lebih daripada yang ditunjukkan oleh kerugian — drawdown 50 peratus memerlukan keuntungan 100 peratus untuk kembali ke titik sifar. Menjejaki drawdown mengajar anda bagaimana strategi anda sebenarnya terasa pada minggu yang buruk, bukan sekadar purata.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "drawdown"
+    ]
+  },
+  {
+    "id": "qa_beg_why_risk_first",
+    "category": "beginner",
+    "question": "Mengapa AMI bercakap tentang risiko sebelum keuntungan?",
+    "short_answer": "Kerana kerugian mencecah anda. Jika anda memusnahkan akaun, tiada kelebihan atau strategi lagi yang penting — tiada apa-apa yang tinggal untuk dicaj berlipat ganda.",
+    "long_answer": "Kekal hidup ialah prasyarat untuk segala-galanya dalam perdagangan. Profesional berfikir dalam istilah risiko dahulu, saiz posisi kedua, dan masuk ketiga. Pelaksanaan mandat Portfolio Manager wujud untuk memastikan anda kekal dalam permainan pada hari yang buruk, walaupun anda akan mengesampingkannya secara emosi jika boleh.",
+    "related_lessons": [
+      "013",
+      "019"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "mindset"
+    ]
+  },
+  {
+    "id": "qa_beg_correlation",
+    "category": "beginner",
+    "question": "Mengapa AMI peduli jika stok saya berkorelasi?",
+    "short_answer": "Posisi yang sangat berkorelasi bergerak bersama. Menahan lima stok teknologi lebih mirip satu pertaruhan besar teknologi daripada lima idea bebas.",
+    "long_answer": "Pelbagai diversifikasi sebenar memerlukan posisi yang bertindak balas terhadap pemacu berbeza. Jika minyak jatuh dan bakul tenaga anda semua dijual serentak, risiko portfolio anda jauh lebih tinggi daripada yang ditunjukkan oleh saiz individu. Portfolio Manager memantau pendedahan anda merentasi sektor dan tema, bukan hanya saiz posisi per-ticker.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "correlation",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_survival_mindset",
+    "category": "beginner",
+    "question": "Apakah fikiran untuk bertahan hidup?",
+    "short_answer": "Anggap kekal solven sebagai tugas utama. Keuntungan adalah kesan sampingan daripada tidak meletup.",
+    "long_answer": "Fikiran untuk bertahan hidup mengutamakan mengelakkan kebinasaan berbanding mengejar keuntungan terbesar yang mungkin. Ia kelihatan dalam risiko per-trade yang kecil, henti keras, saiz yang tenang, dan kesediaan untuk tidak melakukan apa-apa apabila keadaan tidak jelas. Ia adalah kebiasaan membosankan yang membolehkan kompaun berlaku.",
+    "related_lessons": [
+      "019"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mindset",
+      "risk"
+    ]
+  },
+  {
+    "id": "qa_beg_max_loss_per_day",
+    "category": "beginner",
+    "question": "Adakah saya perlu mempunyai kerugian maksimum per hari?",
+    "short_answer": "Ya. Had kerugian harian menghentikan pagi yang buruk daripada menjadi minggu terburuk pernah.",
+    "long_answer": "Sebaik sahaja anda mencapai had harian anda, hentikan meletakkan perdagangan baru dan semak apa yang berlaku. Nombor itu boleh menjadi kecil pada mulanya — 1 hingga 3 peratus akaun — dan ia memaksa tempoh penyejukan sebelum sesi seterusnya. Portfolio Manager menganggap had harian sebagai lantai keras.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "daily_loss",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_leverage",
+    "category": "beginner",
+    "question": "Apakah leverage dan adakah ia selamat untuk pemula?",
+    "short_answer": "Leverage ialah meminjam wang untuk mengambil posisi yang lebih besar daripada tunai anda. Ia memperbesar kedua-dua keuntungan dan kerugian dan jarang menjadi idea baik untuk pedagang baru.",
+    "long_answer": "Dengan leverage 2x, pergerakan 10 peratus menentang anda menghapuskan 20 peratus modal anda. Panggilan margin memaksa keluar pada masa terburuk. AMI Trade tidak menggalakkan leverage pada tahap pemula. Jika strategi memerlukan leverage untuk menjadi menarik, ia biasanya bukan strategi yang layak untuk diperdagangkan.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "risk",
+      "leverage"
+    ]
+  },
+  {
+    "id": "qa_beg_diversification",
+    "category": "beginner",
+    "question": "Adakah diversifikasi benar-benar penting?",
+    "short_answer": "Ya, terutamanya semasa anda masih belajar. Menyebar risiko merentasi nama yang tidak berkorelasi melindungi anda daripada kesilapan pada satu saham atau sektor.",
+    "long_answer": "Taruhan terkonsentrasi boleh memberi hasil spektakular tetapi juga boleh runtuh secara spektakular. Untuk pemula, diversifikasi kurang tentang memaksimumkan pulangan dan lebih tentang mengelakkan daripada tersingkir oleh satu kesilapan. Setelah kelebihan anda terbukti merentasi banyak dagangan, anda boleh mempertimbangkan untuk mengkonsentrasikan pada idea keyakinan tinggi.",
+    "related_lessons": [
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "diversification"
+    ]
+  },
+  {
+    "id": "qa_beg_investing_vs_trading",
+    "category": "beginner",
+    "question": "Apakah perbezaan antara pelaburan dan perdagangan?",
+    "short_answer": "Pelaburan adalah memiliki perniagaan selama bertahun-tahun dan membiarkan kompaun bekerja. Perdagangan adalah mengambil posisi jangka pendek untuk mendapat untung daripada pergerakan harga.",
+    "long_answer": "Pelabur memberi tumpuan kepada kualiti perniagaan, penilaian, dan jangka masa panjang. Pedagang memberi tumpuan kepada setup, masa, dan risiko per dagangan. Kedua-duanya boleh berjaya; kedua-duanya boleh rugi. AMI Trade menyokong kedua-dua gaya melalui Mandat anda — anda beritahu agen sama ada untuk memberi berat kepada nilai jangka panjang atau teknikal jangka pendek.",
+    "related_lessons": [
+      "019",
+      "020"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading"
+    ]
+  },
+  {
+    "id": "qa_beg_time_horizon",
+    "category": "beginner",
+    "question": "Apakah jangka masa dan mengapa ia penting?",
+    "short_answer": "Jangka masa anda ialah berapa lama anda merancang untuk memegang posisi. Ia menentukan isyarat mana yang penting dan mana yang perlu diabaikan.",
+    "long_answer": "Pelabur 10 tahun hampir tidak kisah tentang minggu yang buruk; pedagang ayunan kisah tentang setiap lilin harian. Jangka masa yang tidak sepadan ialah salah satu kesilapan pemula yang paling biasa — memasuki tesis jangka panjang kemudian panik keluar akibat penurunan 3 peratus. Tetapkan jangka masa anda dalam Mandat sebelum melakukan dagangan.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "horizon"
+    ]
+  },
+  {
+    "id": "qa_beg_risk_profile",
+    "category": "beginner",
+    "question": "Apakah profil risiko?",
+    "short_answer": "Ia adalah penerangan tentang berapa banyak kerugian dan volatiliti yang boleh anda tanggung tanpa bertindak tidak rasional. Konservatif, sederhana, atau agresif adalah kategori biasa.",
+    "long_answer": "Profil risiko anda sebahagiannya kewangan — berapa banyak anda mampu rugi — dan sebahagiannya psikologi — bagaimana anda berkelakuan apabila merah. Concierge akan bertanya tentang kedua-duanya semasa pendaftaran kerana Mandat mesti sepadan dengan manusia, bukan spreadsheet.",
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "investing_vs_trading",
+      "risk_profile"
+    ]
+  },
+  {
+    "id": "qa_beg_compounding",
+    "category": "beginner",
+    "question": "Apakah maksud faedah beraja untuk pelabur?",
+    "short_answer": "Faedah beraja ialah memperoleh pulangan atas pulangan lalu. Semakin lama anda kekal dalam pasaran, semakin ketara keluk pertumbuhan itu.",
+    "long_answer": "10 peratus setahun yang diaja selama 30 tahun mengubah 10,000 menjadi kira-kira 175,000 tanpa menambah sebarang wang. Faedah beraja memberi ganjaran kepada masa dan konsistensi; itulah sebabnya menarik keluar wang pada setiap goncangan adalah sangat mahal. Kebanyakan hasil pelaburan yang hebat datang daripada bertahan melalui tempoh di mana anda ingin menjual.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "compounding"
+    ]
+  },
+  {
+    "id": "qa_beg_long_term_wealth",
+    "category": "beginner",
+    "question": "Bolehkah saya menjadi kaya hanya dengan membeli dan memegang?",
+    "short_answer": "Dalam jangka panjang, strategi beli dan pegang yang terdiversifikasi ialah cara paling terdokumentasi bagi pelabur biasa membina kekayaan di pasaran. Ia perlahan dan tidak menarik, itulah sebabnya kebanyakan orang meninggalkannya.",
+    "long_answer": "Pelaburan indeks selama beberapa dekad secara sejarah telah mengatasi majoriti pedagang aktif, terutamanya selepas yuran. Ia tidak menjanjikan hasil — pulangan lalu bukan jaminan pulangan masa depan. Namun, rekod prestasi strategi inilah yang menyebabkan AMI Trade tidak menganggap perdagangan sebagai satu-satunya laluan yang sah. Sesetengah pengguna belajar di sini dan kemudian menyasarkan wang sebenar mereka kebanyakannya kepada pegangan jangka panjang.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "long_term"
+    ]
+  },
+  {
+    "id": "qa_beg_why_traders_fail",
+    "category": "beginner",
+    "question": "Mengapa kebanyakan pedagang kehilangan wang?",
+    "short_answer": "Saiz posisi terlalu besar, tiada had kerugian, tiada jurnal, tiada kelebihan, dan keputusan emosi. Mekaniknya mudah; disiplinnya tidak.",
+    "long_answer": "Kajian industri secara rutin menunjukkan 70 hingga 90 peratus pedagang runcit aktif kehilangan wang dalam tetingkap masa berbilang tahun. Mereka yang rugi bukan selalu orang paling bodoh — mereka adalah mereka yang mengabaikan pengurusan risiko dan menganggap setiap perdagangan sebagai keyakinan mutlak. AMI Trade dibina di sekitar bahagian yang paling kerap diabaikan oleh pemula: mandat, jurnal, dan semakan pasca-perdagangan.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading",
+      "edge"
+    ]
+  },
+  {
+    "id": "qa_beg_active_vs_passive",
+    "category": "beginner",
+    "question": "Haruskah saya berdagang secara aktif atau hanya membeli dana indeks?",
+    "short_answer": "Kebanyakan orang lebih berfaedah dengan teras jangka panjang yang terdiversifikasi ditambah dengan lengan pembelajaran kecil di mana mereka berdagang secara aktif. AMI Trade adalah untuk lengan pembelajaran itu, bukan untuk persaraan anda.",
+    "long_answer": "Perdagangan aktif memerlukan masa, disiplin, dan modal emosi. Pelaburan indeks hampir tidak memerlukan mana-mana daripada itu. Tiada apa-apa yang salah dengan memutuskan bahawa bahagian aktif itu bukan untuk anda selepas menghabiskan masa di sini — itu adalah kesimpulan yang sah dan berharga. AMI Trade hanya boleh menjadi nasihat dan simulasi sahaja.",
+    "related_lessons": [
+      "022",
+      "023"
+    ],
+    "related_agents": [],
+    "tags": [
+      "investing_vs_trading"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_ami",
+    "category": "beginner",
+    "question": "Apa itu AMI sebenarnya?",
+    "short_answer": "AMI adalah jenama dan AMI di sebalik aplikasi ini. Di dalam AMI Trade, anda adalah CEO pasukan penganalisis 12 ejen yang melakukan penyelidikan, perdebatan, dan mencadangkan dagangan untuk anda kelulusan atau penolakan.",
+    "long_answer": "AMI Trade adalah simulasi dan nasihat sahaja — tiada pesanan sebenar akan dibuat. Setiap ejen memainkan peranan khusus: penganalisis pasaran, penganalisis berita, penyelidik Bull, penyelidik Bear, pedagang, pengurus portfolio, dan sebagainya. Anda menetapkan Mandat; mereka bekerja di dalamnya. Anda sentiasa membuat keputusan akhir.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "meta",
+      "agents"
+    ]
+  },
+  {
+    "id": "qa_beg_what_agents_do",
+    "category": "beginner",
+    "question": "Apa yang dilakukan oleh 12 ejen tersebut?",
+    "short_answer": "Setiap ejen adalah pakar. Sesetengahnya melakukan penyelidikan terhadap syarikat, sesetengahnya memantau carta, sesetengahnya membahaskan kes Bull dan Bear, dan Portfolio Manager menguatkan peraturan risiko anda.",
+    "long_answer": "Secara ringkas: penganalisis asas membaca perniagaan, penganalisis pasaran membaca carta, penganalisis berita dan sosial membaca hingar, tiga penyelidik membahaskan Bull vs Bear vs Neutral, pedagang menentukan saiz idea, dan portfolio manager menerapkan Mandat anda sebagai semakan akhir. Anda boleh menjalankan satu ejen untuk bacaan pantas atau mengumpulkan seluruh bilik untuk perdebatan.",
+    "related_lessons": [],
+    "related_agents": [
+      "fundamentals_analyst",
+      "market_analyst",
+      "news_analyst",
+      "bull_researcher",
+      "bear_researcher",
+      "trader",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "agents"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_mandate",
+    "category": "beginner",
+    "question": "Apa itu Mandat?",
+    "short_answer": "Mandat anda adalah buku peraturan yang diikuti oleh ejen. Ia menentukan risiko per dagangan, penurunan maksimum, sektor yang dibenarkan, jangka masa, dan keutamaan gaya.",
+    "long_answer": "Anggap ia sebagai kontrak antara anda (CEO) dan pasukan ejen. Anda boleh mengedit kebanyakan daripadanya, tetapi lantai keselamatan Portfolio Manager — saiz kedudukan asas dan had kerugian harian — tidak boleh diubah. Itu disengajakan. Mandat juga adalah cara anda menyatakan jenis pelabur atau pedagang yang sebenarnya anda mahu menjadi.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_uncoachable_floor",
+    "category": "beginner",
+    "question": "Mengapa saya tidak boleh mengubah peraturan keselamatan Portfolio Manager?",
+    "short_answer": "Kerana pemula sering cuba mengatasi satu-satunya perkara yang mengekalkan mereka dalam permainan pada hari yang buruk. Lantai keselamatan PM adalah pengawal keselamatan yang sengaja tidak boleh diubah.",
+    "long_answer": "Anda boleh memberi arahan kepada setiap ejen lain — nada, fokus, berat pada teknikal, seberapa agresif Trader adalah. Lantai risiko asas Portfolio Manager kekal tetap. Ia adalah bahagian sistem yang melindungi anda daripada diri sendiri apabila emosi menjadi panas. Jika ia menghalang dagangan, itu adalah ciri yang berfungsi.",
+    "related_lessons": [
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "app",
+      "safety_floor",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_beg_is_ami_real_money",
+    "category": "beginner",
+    "question": "Adakah saya berdagang wang sebenar dalam AMI Trade?",
+    "short_answer": "Tidak.. AMI Trade adalah simulasi sahaja dan nasihat sahaja.",
+    "long_answer": "Aplikasi ini wujud untuk mengajar proses: penyelidikan, perdebatan, membuat keputusan, jurnal, semakan. Anda membina kemahiran dan rekod prestasi tanpa kehilangan wang sepanjang jalan. Sesetengah pengguna akhirnya berdagang akaun sebenar berdasarkan apa yang mereka pelajari; itu adalah keputusan mereka dan broker mereka, bukan AMI.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "simulation",
+      "safety"
+    ]
+  },
+  {
+    "id": "qa_beg_can_ami_predict",
+    "category": "beginner",
+    "question": "Bolehkah AMI meramal ke mana saham akan pergi?",
+    "short_answer": "Tidak.. Tiada sistem boleh.",
+    "long_answer": "Siapa sahaja yang menjual kepastian dalam pasaran sedang menjual cerita. Ejen menghasilkan alasan, bukan bola kristal. Dagangan yang berlogik masih boleh rugi; yang ceroboh masih boleh untung. Atas banyak dagangan, kualiti proses itulah yang muncul dalam lengkung ekuiti anda.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "meta",
+      "expectations"
+    ]
+  },
+  {
+    "id": "qa_beg_who_decides",
+    "category": "beginner",
+    "question": "Jika ejen tidak bersetuju, siapa yang membuat keputusan?",
+    "short_answer": "Anda.. Ejen berdebat, menonjolkan bukti, dan mencadangkan verdict.",
+    "long_answer": "Perbezaan pendapat antara ejen adalah ciri, bukan pepijat. Jika kes Bull dan Bear sama-sama kuat, itu sendiri adalah maklumat — biasanya tanda untuk saiz lebih kecil, tunggu, atau lulus. Jurnal Keputusan menangkap panggilan anda dan kedudukan ejen supaya anda boleh semak kemudian.",
+    "related_lessons": [],
+    "related_agents": [
+      "bull_researcher",
+      "bear_researcher",
+      "research_manager"
+    ],
+    "tags": [
+      "app",
+      "decision"
+    ]
+  },
+  {
+    "id": "qa_beg_pick_first_stock",
+    "category": "beginner",
+    "question": "Bolehkah anda hanya memberitahu saya saham bagus pertama untuk dibeli?",
+    "short_answer": "Tidak.. AMI tidak memberikan pilihan saham.",
+    "long_answer": "Jika anda mendapat tip dari AMI hari ini, anda masih tidak tahu apa yang perlu dilakukan esok apabila tip berhenti berfungsi. Bawa nama yang anda sudah ikuti — jenama yang anda gunakan, syarikat yang anda minati — dan jalankannya melalui 1-ke-1 dengan Fundamentals Analyst. Pelajaran 001 dan 005 adalah titik permulaan yang baik.",
+    "related_lessons": [
+      "013",
+      "017"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "concierge"
+    ],
+    "tags": [
+      "app",
+      "no_picks",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_beg_decision_journal",
+    "category": "beginner",
+    "question": "Apakah fungsi Jurnal Keputusan?",
+    "short_answer": "Ia merekod setiap keputusan perdagangan, kedudukan ejen, dan hujah anda. Nanti anda semak apa yang berjaya dan apa yang gagal.",
+    "long_answer": "Jurnal mengubah perdagangan yang berselerak menjadi set data yang boleh dipelajari. Corak akan muncul — keadaan di mana anda unggul, setup di mana anda rugi. Tanpanya, setiap perdagangan adalah eksperimen baharu tanpa memori.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "journal"
+    ]
+  },
+  {
+    "id": "qa_beg_one_on_one_vs_room",
+    "category": "beginner",
+    "question": "Bila saya perlu guna 1-on-1 vs. Convene the Room?",
+    "short_answer": "Gunakan 1-on-1 untuk sudut pandangan pantas daripada satu ejen. Convene the Room apabila anda mahu perdebatan penuh sebelum membuat keputusan.",
+    "long_answer": "1-on-1 adalah pantas dan jimat kredit. Convene the Room menjalankan 12 ejen melalui penyelidikan, perdebatan, dan verdict — lebih berat tetapi lebih kaya maklumat. Pemula biasanya lebih beruntung menghabiskan kebanyakan interaksi dalam 1-on-1 dan simpankan Room untuk saat keputusan sebenar.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "app",
+      "agents",
+      "credits"
+    ]
+  },
+  {
+    "id": "qa_beg_how_much_money_start",
+    "category": "beginner",
+    "question": "Berapa banyak wang yang saya perlukan untuk mula guna AMI Trade?",
+    "short_answer": "Sifar.. AMI Trade adalah simulasi sahaja.",
+    "long_answer": "Jika anda akhirnya guna broker sebenar, jumlah permulaan yang betul bergantung pada anda, bukan pada peraturan universal. Kebanyakan pemula lebih baik belajar proses di sini selama berbulan-bulan sebelum mempertaruhkan wang sebenar. Portfolio simulasi yang anda bina dalam AMI Trade tiada minimum.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "money",
+      "starting",
+      "free"
+    ]
+  },
+  {
+    "id": "qa_beg_fees_in_app",
+    "category": "beginner",
+    "question": "Adakah AMI Trade caj per perdagangan?",
+    "short_answer": "Tiada caj per perdagangan.. Hargaan adalah tier langganan plus pakej kredit pilihan untuk penggunaan ejen yang tinggi.",
+    "long_answer": "Floor Pass percuma dengan iklan. Trader pada 14.99 dan Floor Manager pada 34.99 membuka lebih banyak ejen, analisis lebih mendalam, dan kredit lebih pantas. Pakej kredit adalah untuk pengguna yang menjalankan banyak perdebatan Room penuh. Tiada apa berlaku di pasaran sebenar, jadi tiada caj broker sebenar dikenakan.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "pricing"
+    ]
+  },
+  {
+    "id": "qa_beg_add_cash",
+    "category": "beginner",
+    "question": "Bagaimana saya menambah wang ke dalam portfolio simulasi saya?",
+    "short_answer": "Wang simulasi permulaan anda ditetapkan semasa proses pendaftaran. Anda boleh melaraskannya dalam tetapan, tetapi tiada deposit sebenar kerana tiada wang sebenar yang terlibat.",
+    "long_answer": "Anggap baki simulasi sebagai alat pembelajaran. Menentukannya hampir dengan jumlah yang akan anda gunakan untuk berdagang sebenar nanti akan membuatkan saiz posisi terasa realistik. Melampaukannya kepada satu juta dolar membuatkan kerugian tidak menyakitkan dan pelajaran menjadi kurang berkesan.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "simulation"
+    ]
+  },
+  {
+    "id": "qa_beg_stocks_vs_crypto_risk",
+    "category": "beginner",
+    "question": "Adakah saham lebih selamat daripada kripto?",
+    "short_answer": "Secara purata, indeks saham yang luas kurang volatil berbanding kebanyakan aset kripto. Saham individu masih boleh jatuh ke sifar, dan AMI Trade hanya mensimulasikan ekuiti.",
+    "long_answer": "Volatiliti bukan satu-satunya definisi risiko. Saham mempunyai peraturan, kewangan diaudit, dan sejarah harga berabad-abad. Kripto tidak menawarkan kedua-duanya. Ini tidak bermakna saham selamat — nama tunggal boleh menghapuskan — ia hanya membuatkan risiko lebih mudah dipelajari. AMI Trade tidak merangkumi kripto.",
+    "related_lessons": [
+      "018",
+      "021"
+    ],
+    "related_agents": [],
+    "tags": [
+      "risk",
+      "asset_classes"
+    ]
+  },
+  {
+    "id": "qa_beg_company_bankrupt",
+    "category": "beginner",
+    "question": "Apakah yang berlaku kepada saham saya jika sebuah syarikat muflis?",
+    "short_answer": "Pemegang saham biasa biasanya berada di hujung barisan dan sering tidak mendapat apa-apa. Pemegang bon dan kreditor lain dibayar dahulu.",
+    "long_answer": "Muflis tidak semestinya bermaksud sifar serta-merta — kadang-kadang syarikat menyusun semula dan muncul semula. Tetapi untuk saham biasa yang anda beli, nilai cenderung hilang apabila ekuiti dihapuskan dalam penyusunan semula. Ini adalah sebab tepat mengapa saiz posisi penting: tiada nama tunggal harus mampu menenggelamkan akaun anda.",
+    "related_lessons": [
+      "014",
+      "017"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "risk",
+      "bankruptcy"
+    ]
+  },
+  {
+    "id": "qa_beg_taxes",
+    "category": "beginner",
+    "question": "Adakah saya membayar cukai untuk AMI Trade?",
+    "short_answer": "Tidak. Tiada posisi sebenar dan tiada keuntungan sebenar, jadi tiada apa-apa untuk dicukai.",
+    "long_answer": "Apabila anda akhirnya bergerak ke pasaran sebenar, cukai bergantung pada bidang kuasa anda, tempoh pegangan, dan laporan broker — keuntungan modal jangka pendek dan jangka panjang, rawatan dividen, potongan asing untuk saham AS jika anda berada di luar negara, dan sebagainya. Ini adalah soalan untuk akauntan tempatan, bukan AMI.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "taxes"
+    ]
+  },
+  {
+    "id": "qa_beg_credits",
+    "category": "beginner",
+    "question": "Apa itu kredit dan bagaimana saya mendapatkannya?",
+    "short_answer": "Kredit memacu pelaksanaan oleh ejen. Langganan anda termasuk kuota bulanan; pengguna berat boleh membeli pakej.",
+    "long_answer": "Sesi 1-on-1 dengan satu ejen memerlukan sejumlah kecil kredit. Perbincangan di Bilik memerlukan lebih banyak kerana kesemua 12 ejen terlibat. Laman Earn melamparkan ganjaran kredit kepada tingkah laku pembelajaran — menyelesaikan pelajaran, mencapai kesinambungan, dan mendokumentasikan keputusan — supaya semakin anda berkembang, semakin banyak kapasiti ejen yang dapat anda buka.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "money",
+      "credits",
+      "earn_path"
+    ]
+  },
+  {
+    "id": "qa_beg_what_is_liquidity",
+    "category": "beginner",
+    "question": "Apa itu kecairan dan mengapa ia penting?",
+    "short_answer": "Keciran adalah kemudahan anda membeli atau menjual saham tanpa menggerakkan harganya. Saham besar dengan isipadu tinggi adalah cair; saham mikro kecil bukan.",
+    "long_answer": "Nama yang kurang cair mempunyai jurang harga yang lebih lebar, sukar untuk diisi, dan slippage yang lebih besar pada perintah berhenti — harga keluar sebenar anda mungkin lebih buruk daripada tahap yang anda tetapkan. Pemula biasanya lebih selamat dengan nama cair di mana buku pesanan cukup dalam sehingga dagangan anda menjadi kesilapan pembundaran. Ejen Trader dan Penganalisis Pasaran akan menandakan kecairan apabila persediaan kelihatan berisiko dari segi saiz.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "market_analyst",
+      "trader"
+    ],
+    "tags": [
+      "vocabulary",
+      "liquidity"
+    ]
+  }
+]

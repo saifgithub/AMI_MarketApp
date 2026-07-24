@@ -1,0 +1,597 @@
+[
+  {
+    "id": "qa_plt_edit_mandate",
+    "category": "platform",
+    "question": "Bagaimana saya boleh menyunting mandat saya?",
+    "short_answer": "Buka Tetapan -> Mandat. Anda boleh melaraskan setiap medan di sana dan simpan untuk menghantar perubahan secara langsung kepada agen.",
+    "long_answer": "Mandat anda adalah kontrak antara anda dan 12 agen. Untuk menyuntingnya, ketik ikon profil anda -> Tetapan -> Mandat. Dari situ, anda boleh mengubah toleransi risiko, penurunan harga maksimum, had saiz posisi, penanda kepatuhan, dan keutamaan instrumen. Apabila anda menyimpan, Portfolio Manager akan membaca semula mandat pada pusingan Convene the Room seterusnya, jadi perubahan akan terpakai kepada keputusan seterusnya anda, bukan secara retrospektif.",
+    "related_lessons": [
+      "012"
+    ],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "settings",
+      "how-to"
+    ]
+  },
+  {
+    "id": "qa_plt_mandate_fields",
+    "category": "platform",
+    "question": "Apakah sebenarnya yang terkandung dalam mandat saya?",
+    "short_answer": "Toleransi risiko, penurunan harga maksimum, saiz posisi maksimum, pasaran yang dibenarkan, jangkaan pegangan, dan penanda kepatuhan seperti halal, ESG-lite, long-only, atau tiada T-A-G.",
+    "long_answer": "Mandat mempunyai lima bahagian: Risiko (jalur toleransi + peratusan penurunan harga maksimum), Saiz (peratusan maksimum setiap posisi, posisi serentak maksimum), Pasaran (ekuiti AS pada alpha; Bursa + GCC pada v1.0), Jangkaan (intraday, swing, posisi, jangka panjang), dan Kepatuhan (halal, ESG-lite, tiada bahan api fosil, tiada tembakau-alkohol-judi, long-only). Buka Tetapan -> Mandat untuk melihat nilai semasa anda.",
+    "related_lessons": [
+      "012",
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "settings",
+      "fields"
+    ]
+  },
+  {
+    "id": "qa_plt_halal_flag",
+    "category": "platform",
+    "question": "Adakah terdapat penapis halal?",
+    "short_answer": "Ya. Aktifkan penanda Halal dalam Tetapan -> Mandat -> Kepatuhan. PM akan menolak sebarang keputusan yang melanggar skrin AAOIFI piawai.",
+    "long_answer": "Penanda halal menyekat nama yang gagal melalui skrin pendapatan faedah, nisbah hutang, dan perniagaan terlarang (alkohol, kewangan konvensional, judi, hiburan dewasa, tembakau, daging babi, senjata). Portfolio Manager menggunakan skrin ini sebagai lantai keras, jadi walaupun setiap agen lain menyukai nama tersebut, ticker haram akan ditapis sebelum anda melihat keputusan. Nota: skrin berdasarkan pengumuman awam dan dikemas kini setiap suku tahun, jadi sentiasa sahkan dengan ulama anda sendiri untuk keputusan berisiko tinggi.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "halal",
+      "compliance"
+    ]
+  },
+  {
+    "id": "qa_plt_drawdown_cap",
+    "category": "platform",
+    "question": "Bagaimana had penurunan harga maksimum berfungsi?",
+    "short_answer": "Ia adalah lantai keras dalam mandat anda. Apabila portfolio simulasi anda mencapai had tersebut, PM hanya akan mengembalikan keputusan HOLD atau pengurangan risiko sehingga anda menetapkan semula atau meluaskan had tersebut.",
+    "long_answer": "Penurunan harga maksimum ialah kerugian puncak-ke-leher terburuk yang anda sanggup teruskan, ditetapkan dalam Tetapan -> Mandat -> Risiko. Jika portfolio simulasi anda melampauinya, Portfolio Manager beralih ke mod defensif: tiada keputusan BUY baharu, saiz dikawal, dan penguatan stop-loss digalakkan. Anda boleh meluaskan had dalam Tetapan, tetapi sistem akan menandakan perubahan tersebut dalam Jurnal Keputusan anda supaya anda boleh mengauditnya kemudian.",
+    "related_lessons": [
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "drawdown",
+      "risk"
+    ]
+  },
+  {
+    "id": "qa_plt_max_position_size",
+    "category": "platform",
+    "question": "Bagaimana saya menetapkan saiz kedudukan maksimum?",
+    "short_answer": "Tetapan -> Mandat -> Saiz. Tetapkan peratusan portfolio bagi setiap kedudukan; Pengurus Portofolio (PM) akan memotong setiap verdict ke had atas tersebut.",
+    "long_answer": "Saiz kedudukan ditetapkan sebagai peratusan portfolio simulasi anda, bukan jumlah dolar. Lalai ialah 5% bagi setiap kedudukan dengan kepekatan sektor maksimum 20%. PM menggunakan ini sebagai had keras: jika keyakinan tinggi, verdict mungkin mengesyorkan had penuh; jika keyakinan rendah, ia akan mencadangkan jumlah yang lebih rendah. Anda tidak boleh mengatasi had ini ke atas pada masa verdict, hanya melalui Tetetapan -> Mandat.",
+    "related_lessons": [
+      "011",
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "mandate",
+      "sizing",
+      "position-size"
+    ]
+  },
+  {
+    "id": "qa_plt_reset_mandate",
+    "category": "platform",
+    "question": "Bolehkah saya menetapkan semula mandat saya kepada lalai?",
+    "short_answer": "Ya. Tetetapan -> Mandat -> Set Semula ke Lalai. Anda akan menerima mandat permulaan konservatif yang diberikan oleh Concierge pada hari pertama.",
+    "long_answer": "Set semula akan memadam sebarang nilai tersuai dan memulihkan lalai konservatif: 5% bagi setiap kedudukan, 10% penurunan maksimum, jangka masa ayunan, hanya beli, tiada penanda pematuhan. Jurnal Keputusan anda tidak terjejas. Jika anda ingin memulakan semula dengan lebih menyeluruh, gunakan Tetetapan -> Mandat -> Jalankan Semula Temudua Concierge untuk meminta AMI bertanya soalan onboarding dari awal.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "reset",
+      "settings"
+    ]
+  },
+  {
+    "id": "qa_plt_where_journal",
+    "category": "platform",
+    "question": "Di manakah Jurnal Keputusan?",
+    "short_answer": "Bar tab bawah -> Jurnal. Setiap verdict yang anda terima atau tolak akan muncul di sana dengan jejak penalaran penuh.",
+    "long_answer": "Jurnal Keputusan ialah salah satu daripada empat tab utama di bahagian bawah aplikasi (Rumah, Convene, Jurnal, Cari). Ia merekodkan setiap verdict Convene the Room, keputusan terima/tolak anda, harga pada masa tersebut, hujah-hujah ejen, dan sebarang nota pasca-keputusan yang anda tambah. Ia juga menjejaskan bagaimana setiap panggilan dimainkan sepanjang masa supaya anda boleh melihat kadar kejayaan mengikut jenis setup.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "journal",
+      "navigation"
+    ]
+  },
+  {
+    "id": "qa_plt_journal_captures",
+    "category": "platform",
+    "question": "Apakah yang sebenarnya direkodkan oleh Jurnal Keputusan?",
+    "short_answer": "Verdict (BELI/JUAL/PEGANG dengan saiz, masuk, henti rugi, sasaran, jangka masa), keputusan anda, hujah kesemua 12 ejen, harga pada masa keputusan, dan hasil pasca-perdagangan.",
+    "long_answer": "Setiap sesi Convene the Room mencipta entri Jurnal yang mengandungi: ticker dan cap masa, verdict PM (tindakan, saiz, masuk, henti rugi, sasaran, jangka masa, keyakinan), kedudukan setiap daripada 12 ejen dalam perdebatan, terima/tolak anda + sebarang nota, harga pada masa keputusan, dan barisan penjejakan yang dikemas kini apabila perdagangan dimainkan dalam simulasi. Anda boleh menambah nota refleksi pada bila-bila masa selepas itu.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "journal",
+      "verdict"
+    ]
+  },
+  {
+    "id": "qa_plt_export_journal",
+    "category": "platform",
+    "question": "Bolehkah saya mengeksport Jurnal Keputusan saya?",
+    "short_answer": "Belum di alpha. Eksport CSV + PDF berada dalam pelan untuk v1.0.",
+    "long_answer": "Eksport ke CSV (untuk semakan spreadsheet) dan PDF (untuk dikongsi dengan mentor atau jurulatih) dirancang untuk v1.0 bersama pelancaran Android-GMS. Pada alpha, anda boleh melihat Jurnal penuh dalam aplikasi, tapis mengikut ticker/tindakan/keputusan, dan tangkap skrin entri tertentu. Jika anda memerlukan data pukal lebih awal, hubungi sokongan dan kami akan menariknya secara manual.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "journal",
+      "export",
+      "roadmap"
+    ]
+  },
+  {
+    "id": "qa_plt_journal_empty",
+    "category": "platform",
+    "question": "Mengapa Jurnal Keputusan saya kosong?",
+    "short_answer": "Kerana anda belum menjalankan Convene the Room atau membuat keputusan. Mulakan Convene pada mana-mana ticker; sekali anda menerima atau menolak keputusan, entri akan muncul dalam Jurnal.",
+    "long_answer": "Jurnal hanya mencatat keputusan yang anda buat. Menjelajah carta, berborak dengan satu ejen, atau menjalankan perbincangan 1-ke-1 pantas tidak mencipta entri. Untuk mengisinya: buka Home atau Watchlist, pilih ticker, tekan Convene the Room, tunggu keputusan, kemudian terima atau tolak. Entri pertama anda akan muncul serta-merta selepas itu.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "journal",
+      "first-use"
+    ]
+  },
+  {
+    "id": "qa_plt_trigger_convene",
+    "category": "platform",
+    "question": "Bagaimana saya menjalankan Convene the Room?",
+    "short_answer": "Dari mana-mana halaman ticker, tekan butang Convene the Room. 12 ejen akan berdebat secara masa nyata dan Portfolio Manager memberikan keputusan dalam 30-60 saat.",
+    "long_answer": "Convene the Room ialah analisis lapisan penuh: asas, berita, sentimen, teknikal (4 sub-ejen), penyelidik bull/bear, sintesis pengurus penyelidikan, pedagang, pasukan risiko, dan Portfolio Manager. Picu ia dari halaman butiran mana-mana ticker atau dari Home -> Quick Convene. Anda akan melihat hujah setiap ejen muncul semasa mereka bercakap, kemudian keputusan (BUY/SELL/HOLD dengan saiz, harga masuk, henti rugi, sasaran, kitaran) di akhir.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager",
+      "research_manager"
+    ],
+    "tags": [
+      "convene",
+      "how-to"
+    ]
+  },
+  {
+    "id": "qa_plt_what_is_verdict",
+    "category": "platform",
+    "question": "Apa itu Verdict?",
+    "short_answer": "Keputusan akhir Portfolio Manager selepas perdebatan dalam bilik. Ia merangkumi tindakan, saiz, harga masuk, henti rugi, sasaran, kitaran, dan keyakinan.",
+    "long_answer": "Verdict adalah terstruktur, bukan perenggan. Ia sentiasa mengandungi: Tindakan (BUY / SELL / HOLD / PASS), Saiz (% portfolio, dikawal oleh mandat anda), Harga Masuk (jalur harga), Henti Rugi (harga), Sasaran (harga), Kitaran (hari/minggu/bulan), dan Keyakinan (1-5). Ia juga termasuk satu baris rasional dan senarai ejen yang membantah. Setiap verdict direkodkan ke Jurnal Keputusan anda sama ada anda menerimanya atau tidak.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "convene",
+      "verdict"
+    ]
+  },
+  {
+    "id": "qa_plt_pass_verdict",
+    "category": "platform",
+    "question": "Apa maksud verdict PASS?",
+    "short_answer": "Persediaan (setup) tidak cukup baik untuk diperdagangkan. PM telah memutuskan langkah terbaik adalah berdiam diri, tidak BUY, SELL, atau bahkan HOLD posisi sedia ada.",
+    "long_answer": "PASS berbeza daripada HOLD. HOLD bermaksud 'anda memiliki aset ini, teruskan pegang'. PASS bermaksud 'ini tidak bernilai untuk posisi pada masa ini — pergi cari peluang lain'. PM mengembalikan verdict PASS apabila bilik berpecah, apabila nisbah risiko/ ganjaran (risk/reward) lemah, apabila mandat anda menolak perdagangan tersebut, atau apabila kualiti likuiditi/persediaan gagal pemeriksaan lantai (floor checks). PASS adalah salah satu verdict paling berharga; ia menyelamatkan anda daripada perdagangan yang dipaksa.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "verdict",
+      "pass"
+    ]
+  },
+  {
+    "id": "qa_plt_agents_disagreed",
+    "category": "platform",
+    "question": "Mengapa agen-agen tidak bersetuju begitu banyak?",
+    "short_answer": "Ia dirancang sedemikian. Bilik 12-agen dibina untuk perdebatan adversarial; ketidaksetujuan adalah isyarat bahawa setup tersebut dipertikaikan dan keyakinan (conviction) anda harus mencerminkan hal itu.",
+    "long_answer": "Bilik AMI sengaja mempertemukan penyelidik bull vs bear, kerangka masa teknikal pantas vs perlahan, dan sub-persona berisiko vs selamat dalam pasukan risiko. Apabila agen bersetuju, PM mengembalikan keyakinan yang lebih tinggi. Apabila mereka tidak bersetuju dengan ketara, keyakinan menurun dan saiz posisi mengecil — kadang-kadang hingga ke PASS. Baca panel penolakan (dissent panel) di bawah verdict: ia memberitahu anda apa yang dilihat oleh pihak lain, yang merupakan maklumat tepat yang bias pengesahan (confirmation bias) akan sembunyikan daripada anda.",
+    "related_lessons": [],
+    "related_agents": [
+      "bull_researcher",
+      "bear_researcher",
+      "research_manager"
+    ],
+    "tags": [
+      "convene",
+      "debate",
+      "disagreement"
+    ]
+  },
+  {
+    "id": "qa_plt_start_1on1",
+    "category": "platform",
+    "question": "Bagaimana saya boleh berborak dengan satu agen sahaja?",
+    "short_answer": "Home -> 1-on-1, pilih agen dari senarai, kemudian tanya soalan anda. Setiap agen kekal dalam peranan.",
+    "long_answer": "1-on-1 adalah untuk soalan khusus di mana anda tidak memerlukan keseluruhan bilik. Ketik 1-on-1 dari Home atau halaman ticker, kemudian pilih agen yang paling sesuai dengan soalan anda (Fundamentals untuk penilaian, News untuk pemicu, Sentiment untuk bacaan pasaran, Technical untuk soalan carta, Risk untuk saiz posisi, PM untuk panggilan tahap portfolio). Perbualan disimpan mengikut agen dan kekal merentasi sesi.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "1on1",
+      "chat",
+      "how-to"
+    ]
+  },
+  {
+    "id": "qa_plt_save_1on1",
+    "category": "platform",
+    "question": "Bolehkah saya menyimpan perbualan 1-on-1?",
+    "short_answer": "Ya — setiap chat 1-on-1 disimpan secara automatik mengikut agen. Cari di bawah 1-on-1 -> History.",
+    "long_answer": "Tiada apa-apa yang perlu disimpan secara manual; perbualan kekal secara lalai. Buka 1-on-1 -> History untuk melihat setiap chat dikumpulkan mengikut agen dan tarikh. Anda boleh menanda bintang pada benang (threads) penting, cari mengikut ticker, dan pin satu benang di bahagian atas profil agen. Jika anda memadamkan benang, ia hilang secara kekal — tiada pemulihan di alpha.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "1on1",
+      "history"
+    ]
+  },
+  {
+    "id": "qa_plt_share_1on1",
+    "category": "platform",
+    "question": "Bolehkah saya berkongsi sembang 1-satu dengan rakan?",
+    "short_answer": "Tidak di alpha. Perkongsian melalui pautan berada dalam pelan untuk v1.0; buat masa ini anda boleh tangkap skrin.",
+    "long_answer": "Perkongsian sembang dan keputusan sebagai pautan dalam adalah ciri yang dirancang untuk v1.0 setelah kami menambah klaim akaun + primitif sosial. Pada alpha, tangkap skrin perbualan atau salin teks secara manual. Kami sengaja menangguhkan perkongsian untuk mengelakkan gelung 'tangkap skrin finfluencer' yang dibina untuk dilawan AMI — apabila ia dilancarkan, keputusan yang dikongsi akan membawa tanda air 'ini hanya simulasi, bukan nasihat'.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "1on1",
+      "share",
+      "roadmap"
+    ]
+  },
+  {
+    "id": "qa_plt_which_agent",
+    "category": "platform",
+    "question": "Agent mana yang patut saya tanya?",
+    "short_answer": "Tergantung pada soalan. Asas untuk penilaian, Berita untuk pemangkin, Sentimen untuk mood orang ramai, Teknikal untuk carta, Risiko untuk saiz, PM untuk panggilan akhir.",
+    "long_answer": "Peta kasar: 'Adakah syarikat ini sihat?' -> Fundamentals Analyst. 'Mengapa ia bergerak hari ini?' -> News Analyst. 'Apa yang dipikirkan orang ramai?' -> Sentiment Analyst. 'Adakah ini pecahan yang sah?' -> Technical Analyst (atau salah satu daripada 4 sub-masa). 'Sebesar mana posisi saya?' -> Debat Berisiko/Neutral/Selamat atau Trader. 'Adakah saya perlu ambil dagangan ini?' -> Convene the Room, bukan 1-satu. Concierge boleh halakan anda jika anda tidak pasti.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge",
+      "fundamentals_analyst",
+      "news_analyst",
+      "sentiment_analyst",
+      "technical_analyst"
+    ],
+    "tags": [
+      "1on1",
+      "routing"
+    ]
+  },
+  {
+    "id": "qa_plt_coach_what_is",
+    "category": "platform",
+    "question": "Apakah Brief Your Agent?",
+    "short_answer": "Cara untuk membentuk gaya setiap agent — lebih panjang, lebih skeptikal, lebih tertumpu pada data tertentu — tanpa mengubah peraturan keselamatan.",
+    "long_answer": "Brief Your Agent membolehkan anda menggerakkan personaliti dan penekanan agent. Anda boleh meminta Fundamentals Analyst memberi berat lebih kepada aliran tunai, meminta News Analyst mengabaikan bualan tahap tweet, atau memberitahu Technical Analyst anda lebih suka kerangka masa harian berbanding intraday. Penyesuaian adalah kad diff yang anda semak dan kelulusan. Cari di bawah profil mana-mana agent -> Coach.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "coach",
+      "customization"
+    ]
+  },
+  {
+    "id": "qa_plt_coach_what_customize",
+    "category": "platform",
+    "question": "Apa yang sebenarnya boleh saya sesuaikan dalam Brief Your Agent?",
+    "short_answer": "Gaya, penekanan, sumber data untuk keutamaan atau diabaikan, kepanjangan, laras bahasa. Apa-apa yang tidak menyentuh lantai keselamatan.",
+    "long_answer": "Boleh disesuaikan: nada (formal/kasual), kedalaman (satu baris vs esei), penekanan (contohnya, 'sentiasa mulakan dengan kes bear'), pemberat data (contohnya, 'keutamaan fail SEC berbanding nota penganalisis'), laras bahasa (teknikal vs bahasa Inggeris biasa), dan heuristik bernama yang anda mahu mereka gunakan. Setiap perubahan menjadi kad diff yang anda kelulusan sebelum ia aktif; sejarah dikekalkan supaya anda boleh mengembalikan.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "coach",
+      "customization"
+    ]
+  },
+  {
+    "id": "qa_plt_coach_cant_customize",
+    "category": "platform",
+    "question": "Apa yang TIDAK boleh saya sesuaikan dengan Brief Your Agent?",
+    "short_answer": "Penguasaan mandat Pengurus Portofolio. Had posisi, had penurunan, penanda kepatuhan, dan lantai penolakan tidak boleh dilatih.",
+    "long_answer": "PM adalah lantai keselamatan dan ia tidak menerima latihan. Anda tidak boleh menyuruh PM mengabaikan had penurunan maksimum anda, melebihi had posisi, menindih penanda halal anda, atau melangkau semakan kepatuhan. Anda juga tidak boleh melatih mana-mana ejen untuk mencadangkan perdagangan langsung, memberikan nasihat dolar khusus, atau mendakwa kepasti ramalan. Lantai ini adalah deterministik dan dikodkan keras — ia wujud supaya latihan tidak boleh menjadikan AMI sebagai 'ya-man'.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "coach",
+      "safety-floor"
+    ]
+  },
+  {
+    "id": "qa_plt_coach_reset",
+    "category": "platform",
+    "question": "Bagaimana saya menetapkan semula latihan ejen?",
+    "short_answer": "Buka profil ejen -> Coach -> History -> Reset to Default. Ejen akan kembali ke arahan asas serta-merta.",
+    "long_answer": "Sejarah Coach setiap ejen menunjukkan setiap kad diff yang anda telah kelulusan, dengan cap masa. Anda boleh mengembalikan satu perubahan pada satu masa atau menggunakan Reset to Default untuk menghapus semua latihan dan bermula dari awal. Menetapkan semula tidak menghapuskan sejarah chat 1-satu atau entri Decision Journal anda — hanya konfigurasi arahan aktif sahaja.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "coach",
+      "reset"
+    ]
+  },
+  {
+    "id": "qa_plt_tiers_compared",
+    "category": "platform",
+    "question": "Apakah perbezaan antara Floor Pass, Trader, dan Floor Manager?",
+    "short_answer": "Floor Pass percuma dengan iklan dan Convene terhad. Trader menghilangkan iklan dan membuka Convene tanpa had + latihan. Floor Manager menambah alat lanjutan dan bundel pakej kredit.",
+    "long_answer": "Floor Pass (percuma, disokong iklan) memberi anda Concierge, chat 1-satu, pelajaran, dan bilangan Convene the Room terhad setiap hari. Trader ($14.99/bln) menghilangkan iklan, membuka Convene tanpa had, Brief Your Agent penuh, dan analitik Decision Journal penuh. Floor Manager ($34.99/bln) menambah alat portofolio lanjutan, kiraan ejen keutamaan, dan keizinan pakej kredit bulanan untuk penggunaan bilik yang berat. Lihat Settings -> Plans untuk matrik ciri penuh semasa.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "pricing",
+      "tiers"
+    ]
+  },
+  {
+    "id": "qa_plt_credit_pack",
+    "category": "platform",
+    "question": "Apakah pakej kredit?",
+    "short_answer": "Kredit tambahan untuk penggunaan Convene the Room dan panggilan ejen mendalam melebihi kuota bulanan pelan anda.",
+    "long_answer": "Setiap penggunaan Convene menelan kredit kerana ia menghidupkan semua 12 ejen. Pelan Trader dan Floor Manager termasuk keizinan kredit bulanan; jika anda menggunakannya, anda boleh membeli pakej kredit sebagai tambahan sekali. Pengguna Floor Pass juga boleh membeli pakej jika mereka hanya memerlukan penggunaan bilik sesekali. Buka Settings -> Plans -> Credits untuk melihat baki dan harga pakej.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "pricing",
+      "credits"
+    ]
+  },
+  {
+    "id": "qa_plt_upgrade",
+    "category": "platform",
+    "question": "Bagaimana saya ingin meningkatkan pelan saya?",
+    "short_answer": "Tetapan -> Pelan -> pilih tier anda -> sahkan dalam lembaran App Store. Berkuat kuasa serta-merta; harga kitaran tengah dipraktikkan oleh Apple.",
+    "long_answer": "Semua pengebilan dikendalikan oleh App Store di alpha (Google Play di v1.0). Buka Tetapan -> Pelan, pilih Trader atau Floor Manager, sahkan lembaran pembelian sistem, dan peningkatan adalah aktif dalam beberapa saat. Resit datang dari Apple, bukan AMI. Untuk menukar tier kemudian, ulangi alir itu — Apple mengendalikan pengiraan proration.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "pricing",
+      "upgrade",
+      "how-to"
+    ]
+  },
+  {
+    "id": "qa_plt_cancel",
+    "category": "platform",
+    "question": "Bagaimana saya ingin membatalkan langganan saya?",
+    "short_answer": "Batalkan melalui App Store, bukan di dalam AMI. iOS: Tetapan -> [nama anda] -> Langganan -> AMI Trade -> Batalkan.",
+    "long_answer": "Langganan dikendalikan oleh Apple di alpha. Untuk membatalkan: Tetapan iOS (aplikasi Tetapan sistem, bukan milik AMI) -> ketik ID Apple anda di bahagian atas -> Langganan -> AMI Trade -> Batalkan Langganan. Anda mengekalkan akses berbayar sehingga akhir tempoh pengebilan anda, kemudian turun ke Floor Pass. Jurnal Keputusan, mandat, dan latihan ejen anda kekal utuh.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "pricing",
+      "cancel"
+    ]
+  },
+  {
+    "id": "qa_plt_free_includes",
+    "category": "platform",
+    "question": "Apakah yang termasuk dalam pelan Floor Pass percuma?",
+    "short_answer": "Konsejer, sembang 1-ke-1 dengan ejen, perpustakaan pelajaran penuh, kuota Convene harian, dan Jurnal Keputusan — semua dengan iklan.",
+    "long_answer": "Floor Pass boleh digunakan sepenuhnya untuk pembelajaran. Anda mendapat temuduga Konsejer, sembang 1-ke-1 tanpa had dengan mana-mana daripada 12 ejen, setiap pelajaran dalam kurikulum, Jurnal Keputusan penuh anda, Laluan Earn dan cabaran harian, serta bilangan pelaksanaan Convene the Room yang terhad per hari. Penawaran terletak pada iklan dalam aplikasi dan had Convening. Tier berbayar menyingkirkan itu dan menambah kedalaman latihan + analitik.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "pricing",
+      "free",
+      "floor-pass"
+    ]
+  },
+  {
+    "id": "qa_plt_arabic",
+    "category": "platform",
+    "question": "Adakah Arab disokong?",
+    "short_answer": "Tidak pada alpha. Arab dilancarkan pada v1.0 bersama Malay; aplikasi sudah menyedari RTL dalam binaan.",
+    "long_answer": "Alpha adalah bahasa Inggeris sahaja. Kodbase Flutter adalah menyedari RTL dari hari pertama — padding, penjajaran, dan bentuk hex semuanya mencerminkan dengan betul — dan rentetan terjemahan akan tiba pada v1.0. Arahan ejen, pelajaran, dan salinan UI akan semua tersedia dalam Arab dan Malay bersama bahasa Inggeris yang sedia ada. Jika anda ingin dimaklumkan apabila Arab dilancarkan, pilih di bawah Tetapan -> Pemberitahuan -> Kemas Kini Bahasa.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "languages",
+      "arabic",
+      "roadmap"
+    ]
+  },
+  {
+    "id": "qa_plt_malay",
+    "category": "platform",
+    "question": "Adakah Bahasa Malaysia disokong?",
+    "short_answer": "Belum di alpha. Bahasa Melayu akan dilancarkan pada v1.0 bersama Bahasa Arab.",
+    "long_answer": "Alpha hanya menyokong Bahasa Inggeris. Bahasa Melayu adalah salah satu daripada dua bahasa utama v1.0 — satu lagi ialah Bahasa Arab — dipilih kerana ia selari dengan pasaran pelancaran utama AMI Trade (GCC + Malaysia). Prompt agen dan kandungan pelajaran akan diterjemahkan, bukan sekadar rentetan UI. Pantau skrin Pelan dan Tetapan -> Pemberitahuan untuk pelancaran v1.0.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "languages",
+      "malay",
+      "roadmap"
+    ]
+  },
+  {
+    "id": "qa_plt_what_markets",
+    "category": "platform",
+    "question": "Pasaran apa yang diliputi AMI?",
+    "short_answer": "Ekuiti AS di alpha (NYSE + Nasdaq). Nama Bursa Malaysia dan GCC/Tadawul akan dilancarkan pada v1.0.",
+    "long_answer": "Alpha hanya untuk pasaran AS — setiap nama yang disenaraikan di NYSE atau Nasdaq boleh diakses untuk 'Convene the Room' dan sembang 1-satu. Pada v1.0, kami menambah Bursa Malaysia (konstituen KLCI dan lain-lain) serta Saudi Tadawul. Pasaran GCC lain dan pasaran berkembang luas adalah selepas MVP. ETF, ADR, dan nama OTC tertentu mengikut masa pelancaran alpha/v1.0 yang sama dengan bursa asasnya.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "markets",
+      "coverage"
+    ]
+  },
+  {
+    "id": "qa_plt_add_ticker",
+    "category": "platform",
+    "question": "Bolehkah saya menambah penanda harga (ticker) tertentu ke senarai pantau?",
+    "short_answer": "Jika ia nama yang disenaraikan di AS di alpha, ya — ketuk ikon bintang pada mana-mana halaman penanda harga, atau cari dan tambah dari Utama -> Senarai Pantau -> +.",
+    "long_answer": "Senarai pantau menyokong mana-mana penanda harga yang diliputi AMI (ekuiti AS di alpha; Bursa + Tadawul pada v1.0). Cari oleh simbol atau nama syarikat, ketuk bintang untuk menambah. Senarai pantau akan disegerakkan merentas peranti setelah anda mengesahkan akaun. Jika penanda harga tidak muncul dalam carian, ia belum diliputi — hantar permintaan melalui Tetapan -> Maklum Balas dan pasukan liputan akan memberi keutamaan berdasarkan permintaan.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "watchlist",
+      "tickers",
+      "how-to"
+    ]
+  },
+  {
+    "id": "qa_plt_anonymous_mode",
+    "category": "platform",
+    "question": "Adakah saya perlu membuat akaun untuk menggunakan AMI?",
+    "short_answer": "Tidak. AMI memprioritikan anonimiti — Concierge menjalankan proses kemasukan tanpa e-mel, dan anda hanya mengesahkan akaun apabila mahu penyegerakan atau sandaran.",
+    "long_answer": "Pelancaran pertama terus masuk ke temu duga Concierge. Anda menetapkan mandat anda, menjalankan Convenes, bersembang dengan agen, dan mengekalkan Jurnal Keputusan — semua secara anonim, dan dikaitkan dengan peranti anda. Apabila anda bersedia untuk menyandarkan kerja atau beralih ke peranti kedua, ketuk Tetapan -> Akaun -> Sahkan Akaun dan tambahkan e-mel + kata laluan (atau Log masuk dengan Apple). Data sedia ada anda akan dipindahkan secara automatik.",
+    "related_lessons": [],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "account",
+      "anonymous",
+      "onboarding"
+    ]
+  },
+  {
+    "id": "qa_plt_claim_account",
+    "category": "platform",
+    "question": "Bagaimana cara saya menuntut akaun saya?",
+    "short_answer": "Tetapan -> Akaun -> Tuntut Akaun. Tambah e-mel + kata lalian atau gunakan Log masuk dengan Apple. Data tanpa nama anda dipindahkan serta-merta.",
+    "long_answer": "Menuntut menukar profil tanpa nama yang terikat pada peranti anda kepada akaun yang disegerakkan dengan awan. Tetapan -> Akaun -> Tuntut Akaun akan memandu anda melalui e-mel/kata lalian atau Log masuk dengan Apple. Tiada perubahan dalam aplikasi — mandat, Jurnal, perbualan, dan bimbingan anda semua dibawa alih — tetapi kini anda boleh memasang pada peranti lain dan meneruskan dari mana anda berhenti. Tuntutan adalah satu kali dan tidak boleh dibatalkan (anda tidak boleh kembali ke tanpa nama dari data yang sama).",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "account",
+      "claim"
+    ]
+  },
+  {
+    "id": "qa_plt_lose_data",
+    "category": "platform",
+    "question": "Adakah saya akan kehilangan data jika saya bertukar telefon?",
+    "short_answer": "Hanya jika anda tidak pernah menuntut akaun anda. Data tanpa nama terikat pada peranti; tuntutan akaun anda sebelum bertukar dan semuanya akan dipindahkan.",
+    "long_answer": "Jika anda masih tanpa nama, Jurnal Keputusan, mandat, bimbingan ejen, dan perbualan anda hanya wujud pada peranti semasa. Sebelum anda bertukar: Tetapan -> Akaun -> Tuntut Akaun, tambah kelayakan, kemudian log masuk pada peranti baharu untuk menarik semuanya. Jika anda sudah bergerak tanpa menuntut, sokongan mungkin dapat membantu jika anda masih mempunyai peranti lama — tetapi tiada pemulihan dari pemasangan tanpa nama yang dipadam.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "account",
+      "data",
+      "migration"
+    ]
+  },
+  {
+    "id": "qa_plt_change_email",
+    "category": "platform",
+    "question": "Bagaimana cara saya menukar e-mel saya?",
+    "short_answer": "Tetapan -> Akaun -> E-mel -> Sunting. Anda perlu mengesahkan alamat baharu sebelum perubahan berkuat kuasa.",
+    "long_answer": "Setelah dituntut, anda boleh mengemas kini e-mel anda di bawah Tetapan -> Akaun. AMI menghantar pautan pengesahan ke alamat baharu; klik ia dalam masa 24 jam untuk mengesahkan pertukaran. Kata lalian dan semua data anda tidak berubah. Jika anda menggunakan Log masuk dengan Apple, perubahan e-mel berlaku di sisi ID Apple — alias Hide My Email disokong dan anda boleh memutarkannya pada bila-bila masa.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "account",
+      "email"
+    ]
+  },
+  {
+    "id": "qa_plt_daily_challenge",
+    "category": "platform",
+    "question": "Apakah cabaran harian?",
+    "short_answer": "Sebuah arahan pendek — soalan pelajaran, senario pasaran, atau semakan Jurnal — pada tab Earn setiap hari. Melengkapinya membina rentetan anda.",
+    "long_answer": "Cabaran harian muncul pada tab Earn dan berputar antara tiga format: kuiz soalan kurikulum, panggilan penghakiman senario pasaran, atau refleksi semakan Jurnal anda sendiri. Setiap satu mengambil masa 1-3 minit. Melengkapinya menambah kepada rentetan anda dan memperoleh kredit untuk membuka pelajaran lanjutan atau kenaikan kredit Convene kecil. Lepaskan satu hari dan rentetan anda akan ditetapkan semula kepada sifar.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "earn",
+      "daily-challenge",
+      "streak"
+    ]
+  },
+  {
+    "id": "qa_plt_streak",
+    "category": "platform",
+    "question": "Apa fungsi streak saya?",
+    "short_answer": "Menjejaki bilangan hari berturut-turut anda menyelesaikan cabaran harian atau menamatkan pelajaran. Streak yang lebih tinggi membuka lebih banyak ganjaran Earn.",
+    "long_answer": "Streak mengira hari-hari berturut-turut aktiviti bermakna — penyelesaian cabaran harian, menamatkan pelajaran, atau catatan refleksi Journal yang berbobot. Teras (7, 30, 100 hari) membuka ganjaran khusus: kredit Convene tambahan, akses landasan pelajaran, dan lencana kosmetik pada profil CEO anda. Hari yang terlepas akan menetapkan semula kepada sifar; tiada pembekuan streak di alpha.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "earn",
+      "streak"
+    ]
+  },
+  {
+    "id": "qa_plt_weekly_recap",
+    "category": "platform",
+    "question": "Apa itu ringkasan mingguan?",
+    "short_answer": "Ringkasan minggu anda setiap hari Ahad — keputusan yang dicatat, pelajaran yang selesai, kadar hit, dan fokus seterusnya. Notifikasi push membukanya.",
+    "long_answer": "Setiap pagi Ahad, AMI menghantar ringkasan mingguan: bilangan Convenes yang dijalankan, kadar terima/tolak, pelajaran yang selesai, status streak, dan ringkasan ringkas yang ditulis oleh PM mengenai arah keputusan anda (contohnya, 'kebanyakan mengejar breakout; pertimbangkan pelajaran Modul 4 tentang kesabaran'). Ringkasan ini muncul dalam aplikasi di bawah Earn -> Recaps dan sebagai notifikasi push jika anda mengaktifkannya.",
+    "related_lessons": [],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "notifications",
+      "earn",
+      "recap"
+    ]
+  },
+  {
+    "id": "qa_plt_cant_login",
+    "category": "platform",
+    "question": "Saya tidak boleh log masuk. Apa yang perlu saya buat?",
+    "short_answer": "Cuba terlebih dahulu Settings -> Account -> Reset Password. Jika gagal, hantar e-mel ke support@amitrade.app dengan e-mel berdaftar anda — kami akan membuka sekatan akaun tersebut.",
+    "long_answer": "Kebanyakan isu log masuk adalah kata laluan yang dilupakan (gunakan Reset Password — pautan akan dihantar ke e-mel berdaftar anda) atau masalah Sign in with Apple (log keluar dari iCloud dan log masuk semula, kemudian cuba lagi). Jika anda masih terkunci, hantar e-mel ke support@amitrade.app dengan e-mel yang didaftarkan dan penerangan ringkas; kami membalas dalam satu hari bekerja di alpha. Jangan cipta akaun duplikat — Journal anda tidak akan digabungkan secara automatik.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "support",
+      "login",
+      "trouble"
+    ]
+  },
+  {
+    "id": "qa_plt_app_crashed",
+    "category": "platform",
+    "question": "Aplikasi telah runtuh. Apa sekarang?",
+    "short_answer": "Buka semula aplikasi — kerja anda disimpan secara automatik setiap beberapa saat. Jika ia runtuh berulang kali, Settings -> Feedback -> Report a Bug, atau hantar e-mel ke support@amitrade.app dengan butiran runtuh tersebut.",
+    "long_answer": "Suntingan Mandate, entri Journal, dan hasil Convene disimpan secara automatik secara berterusan, jadi runtuh semasa sesi tidak akan kehilangan banyak data. Paksa tutup dan buka semula terlebih dahulu. Jika ia runtuh pada skrin yang sama dua kali, laporkan pepijat melalui Settings -> Feedback -> Report a Bug — ia merakam peranti, OS, dan petikan log secara automatik. Untuk isu segera, hantar e-mel ke support@amitrade.app dengan apa yang sedang anda lakukan ketika ia runtuh. Kami berada di alpha, jadi laporan dibaca oleh manusia dan ditapis setiap hari.",
+    "related_lessons": [],
+    "related_agents": [],
+    "tags": [
+      "support",
+      "crash",
+      "trouble"
+    ]
+  }
+]

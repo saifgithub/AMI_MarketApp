@@ -1,0 +1,921 @@
+[
+  {
+    "id": "qa_int_candle_body_vs_wick",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara badan lilin dan sumbunya?",
+    "short_answer": "Badan ialah julat dari buka ke tutup; sumbu ialah ekstrem tinggi dan rendah yang dicapai harga tetapi tidak ditutup di situ.",
+    "long_answer": "Badan yang panjang menunjukkan satu pihak menang dengan jelas dalam sesi tersebut. Sumbu yang panjang menunjukkan harga ditolak di ekstrem tersebut — pembeli menolak naik tetapi tidak dapat mengekalkannya, atau penjual menekan turun tetapi tidak dapat menutup di situ. Lilin dengan badan kecil dan sumbu panjang (doji atau pin bar) adalah isyarat keraguan atau pembalikan, bukan isyarat kesinambungan. Anggap penutupan sebagai cetakan keyakinan; anggap sumbu sebagai tempat di mana keyakinan gagal.",
+    "related_lessons": [
+      "020"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "candlesticks",
+      "price-action",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_doji_meaning",
+    "category": "intermediate",
+    "question": "Apakah maksud lilin doji?",
+    "short_answer": "Doji ialah lilin di mana harga buka dan tutup hampir sama — ia memberi isyarat keraguan, bukan arah.",
+    "long_answer": "Doji secara sendirian bukan isyarat dagangan. Maksudnya bergantung pada konteks — doji selepas kenaikan berpanjangan di rintangan adalah cerita berbeza daripada doji di tengah julat. Market Analyst akan membacanya terhadap trend, isipadu, dan struktur. Ia menjadi boleh tindakan hanya apabila lilin seterusnya mengesahkannya dengan memecahkan julat doji tersebut. Pembatalan: jika harga terus bergerak mendatar, doji tersebut hanyalah hingar.",
+    "related_lessons": [
+      "020",
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "candlesticks",
+      "doji",
+      "indecision"
+    ]
+  },
+  {
+    "id": "qa_int_which_timeframe",
+    "category": "intermediate",
+    "question": "Julat masa manakah yang patut saya gunakan untuk membaca carta?",
+    "short_answer": "Gunakan sekurang-kurangnya dua: satu yang lebih tinggi untuk konteks trend dan satu yang lebih rendah untuk masa masuk. Pedagang ayun biasanya menggabungkan harian dengan 4 jam atau 1 jam.",
+    "long_answer": "Membaca dengan satu julat masa adalah kesilapan biasa — carta 5 minit kelihatan seperti pecahan sedangkan harian menunjukkan anda berada dalam julat berbulan-bulan. Market Analyst menyelaraskan julat masa dari atas ke bawah: mingguan untuk rejim, harian untuk trend, intraday untuk pencetus. Jika julat masa yang lebih tinggi tidak sependapat dengan julat masa yang lebih rendah, julat masa yang lebih rendah adalah hingar.",
+    "related_lessons": [
+      "021"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "timeframes",
+      "multi-timeframe",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_trend_definition",
+    "category": "intermediate",
+    "question": "Bagaimanakah saya sebenarnya mentakrifkan trend pada carta?",
+    "short_answer": "Trend naik ialah siri puncak lebih tinggi dan lembah lebih tinggi; trend turun ialah puncak lebih rendah dan lembah lebih rendah. Apa-apa selain itu ialah julat.",
+    "long_answer": "Trend adalah struktur, bukan emosi. Market Analyst menandakan titik ayun dan bertanya: adakah setiap titik putar lebih tinggi daripada yang sebelumnya? Trend kekal utuh sehingga corak itu pecah — lembah lebih rendah dalam trend naik adalah amaran pertama, puncak lebih rendah yang disahkan akan menyusul. Purata bergerak 200 hari yang naik atau turun adalah lapisan berguna tetapi struktur ayun ialah bacaan utama.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "trend",
+      "structure",
+      "swings"
+    ]
+  },
+  {
+    "id": "qa_int_support_vs_supply_zone",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara zon sokongan/rintangan dan zon bekalan/permintaan?",
+    "short_answer": "Sokongan dan rintangan adalah garis yang dilukis pada harga tindak balas sebelumnya. Zon bekalan dan permintaan adalah jalur di sekitar asalan pergerakan kuat, bukan harga tunggal.",
+    "long_answer": "S/R adalah reaktif — ia menandakan di mana harga pernah berhenti. Zon bekalan/permintaan adalah kausal — ia menandakan di mana pesanan institusi kemungkinan besar berada kerana harga meletup keluar dari kawasan itu. Kedua-duanya gagal dengan cara yang sama: satu tahap hanya bermakna sehingga ia tidak lagi bermakna. Tandakan zon dengan segi empat tepat, bukan garis nipis yang tepat, kerana aliran pesanan sebenar tidak menghormati harga tunggal.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "support-resistance",
+      "supply-demand",
+      "levels"
+    ]
+  },
+  {
+    "id": "qa_int_valid_breakout",
+    "category": "intermediate",
+    "question": "Bagaimana saya tahu jika satu pecahan adalah sah?",
+    "short_answer": "Pecahan yang sah menutup di luar tahap pada isipadu melebihi purata dan bertahan pada lilin seterusnya. Sumbu yang menembusi tahap bukanlah pecahan.",
+    "long_answer": "Market Analyst menyemak tiga perkara: penutupan di luar tahap (bukan sekadar sentuhan dalam bar), pengembangan isipadu berbanding 20 lilin sebelumnya, dan lilin susulan yang tidak segera mengambil semula tahap tersebut. Pembatalan: jika harga menutup kembali ke dalam julat sebelumnya dalam 1–2 lilin, anggap ia sebagai pecahan yang gagal — ia sering berbalik lebih kuat daripada ia pecah.",
+    "related_lessons": [
+      "024",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "breakout",
+      "volume",
+      "invalidation"
+    ]
+  },
+  {
+    "id": "qa_int_false_breakout",
+    "category": "intermediate",
+    "question": "Apakah pecahan palsu dan bagaimana saya mengelak daripada terperangkap?",
+    "short_answer": "Pecahan palsu menembusi satu tahap kemudian berbalik masuk ke dalam julat. Tunggu penutupan di luar tahap dan lilin penahanan sebelum menganggapnya sebagai sebenar.",
+    "long_answer": "Pecahan palsu biasa berlaku di tahap yang jelas kerana henti rugi berkumpul tepat di luarnya. Market Analyst hanya memanggil pecahan selepas penutupan disahkan dan penahanan semakan semula. Jika anda mengejar lilin pertama yang melalui garis, anda sedang memperdagangkan umpan. Peraturan pembatalan: sebarang pengambilan semula julat sebelumnya dalam dua lilin membalikkan bacaan — pecahan yang gagal menjadi isyarat baru.",
+    "related_lessons": [
+      "024"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "false-breakout",
+      "stop-hunt",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_pullback_vs_reversal",
+    "category": "intermediate",
+    "question": "Bagaimana saya membezakan susut semula daripada permulaan pembalikan sebenar?",
+    "short_answer": "Susut semula menghormati struktur higher-low trend sebelumnya; pembalikan merusakkannya. Perhatikan lower swing.",
+    "long_answer": "Dalam trend naik, susut semula yang sihat akan meregang ke sokongan atau purata bergerak sebelumnya, kemudian mencetak lower-low yang lebih tinggi. Pembalikan melanggar lower swing terkini dan diikuti oleh higher-high yang lebih rendah. Market Analyst mengutamakan struktur, penunjuk kedua. RSI yang turun ke 50 dalam trend naik adalah normal; struktur yang rosak bukan.",
+    "related_lessons": [
+      "022",
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "pullback",
+      "reversal",
+      "structure"
+    ]
+  },
+  {
+    "id": "qa_int_pullback_entry",
+    "category": "intermediate",
+    "question": "Di mana saya harus masuk semasa penarikan balik?",
+    "short_answer": "Tunggu harga mencapai tahap yang ditentukan — sokongan sebelumnya, purata bergerak, atau zon Fibonacci — dan sahkan dengan lilin pembalikan sebelum masuk.",
+    "long_answer": "Memasuki pertengahan penarikan balik tanpa tahap hanyalah tekaan. Market Analyst menetapkan tahap terlebih dahulu, kemudian menunggu harga bereaksi di situ dengan lilin reaksi bullish dalam trend naik (atau bearish dalam trend turun). Ketidaksahihan: penutupan melalui tahap sebanyak lebih daripada toleransi hingar anda memusnahkan setup. Henti rugi diletakkan sedikit di luar tahap, bukan di bawahnya dengan margin harapan.",
+    "related_lessons": [
+      "025"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "pullback",
+      "entry",
+      "stop-placement"
+    ]
+  },
+  {
+    "id": "qa_int_volume_climax",
+    "category": "intermediate",
+    "question": "Apakah maksud lonjakan isipadu di puncak pergerakan?",
+    "short_answer": "Ia boleh menandakan klimaks — pembeli terakhir yang masuk — yang sering mendahului keletihan. Ia bukan isyarat jual secara sendiri.",
+    "long_answer": "Isipadu ekstrem selepas trend naik yang berpanjangan dipadankan dengan lilin julat luas dan seringnya mempunyai sumbu atas yang panjang. Market Analyst menganggap ini sebagai amaran untuk mengetatkan risiko, bukan isyarat untuk short. Ketidaksahihan: jika beberapa sesi seterusnya memegang harga tinggi pada isipadu yang menurun, klimaks itu sebenarnya adalah sambungan. Isipadu memberi anda konteks untuk apa yang dilakukan harga, bukan dagangan berdiri sendiri.",
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "volume",
+      "climax",
+      "exhaustion"
+    ]
+  },
+  {
+    "id": "qa_int_gap_types",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara jurang breakaway dan jurang keletihan?",
+    "short_answer": "Jurang breakaway memulakan pergerakan keluar daripada konsolidasi pada isipadu berat. Jurang keletihan muncul lewat dalam trend dan cenderung untuk diisi semula.",
+    "long_answer": "Jurang breakaway meninggalkan asas di belakang dan jarang diisi dengan cepat. Jurang keletihan adalah lonjakan terakhir kumpulan — ia sering ditarik balik dalam beberapa hari. Market Analyst mengklasifikasikan berdasarkan di mana jurang berlaku dalam trend dan tanda tangan isipadu. Ketidaksahihan: jurang 'keletihan' yang bertahan dan meluas pada isipadu susulan diklasifikasikan semula sebagai sambungan.",
+    "related_lessons": [
+      "024",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "gaps",
+      "chart-reading",
+      "exhaustion"
+    ]
+  },
+  {
+    "id": "qa_int_horizontal_vs_trendline",
+    "category": "intermediate",
+    "question": "Adakah saya harus menggunakan tahap mendatar atau garisan trend?",
+    "short_answer": "Tahap mendatar lebih boleh dipercayai kerana lebih banyak peserta melihat harga yang sama. Garisan trend berguna untuk kecerunan tetapi mudah bengkok untuk sesuai dengan bias.",
+    "long_answer": "Tahap mendatar menandakan harga yang setiap carta tunjukkan. Garisan trend bergantung pada dua ayunan yang anda sandarkan padanya dan bagaimana anda skala carta. Market Analyst menggunakan kedua-duanya, tetapi menganggap tahap mendatar sebagai struktur utama dan garisan trend sebagai panduan kecerunan sekunder. Jika anda mendapati diri anda menggambar semula garisan trend untuk mengekalkannya utuh, garisan trend itu tidak lagi memberitahu anda apa-apa.",
+    "related_lessons": [
+      "023"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "trendlines",
+      "support-resistance",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_range_bound",
+    "category": "intermediate",
+    "question": "Bagaimana saya boleh berdagang saham yang bergerak dalam julat selama berminggu-minggu?",
+    "short_answer": "Lakukan pembalikan di hujung julat dengan henti rugi yang ketat, atau tunggu pecahan yang disahkan. Jangan berdagang di bahagian tengah.",
+    "long_answer": "Julat tengah mempunyai maklumat yang rendah — anda berada pada jarak yang sama dari kedua-dua titik keputusan. Market Analyst mengenal pasti julat dan menganggapnya sebagai 'tiada dagangan' sehingga harga menghampiri sempadan. Pembatalan untuk strategi pembalikan julat ialah penutupan di luar sempadan dengan isipadu. Pembatalan untuk strategi pecahan ialah pulangan serta-merta ke dalam julat. Pilih sisi, tentukan garis, dan hormatinya.",
+    "related_lessons": [
+      "023",
+      "024"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "range",
+      "consolidation",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_chart_pattern_skepticism",
+    "category": "intermediate",
+    "question": "Adakah corak carta seperti kepala dan bahu benar-benar boleh dipercayai?",
+    "short_answer": "Corak adalah deskriptif, bukan prediktif. Ia berfungsi lebih baik apabila struktur sepadan dengan trend, isipadu, dan tahap pembatalan yang jelas.",
+    "long_answer": "Kepala dan bahu ialah nama corak untuk struktur tinggi yang lebih rendah yang boleh diukur dengan garis leher yang spesifik. Ia mempunyai berat apabila isipadu mengecut ke bahu kanan dan berkembang pada pecahan garis leher. Tanpa itu, anda telah melukis corak pada hingar. Market Analyst menggunakan nama corak sebagai ringkasan untuk struktur, bukan sebagai isyarat berdiri sendiri.",
+    "related_lessons": [
+      "022",
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "patterns",
+      "head-and-shoulders",
+      "skepticism"
+    ]
+  },
+  {
+    "id": "qa_int_higher_low_meaning",
+    "category": "intermediate",
+    "question": "Mengapa penerdagang begitu mementingkan rendah yang lebih tinggi?",
+    "short_answer": "Setiap rendah yang lebih tinggi mengesahkan bahawa pembeli mula masuk lebih awal — itu adalah definisi mekanikal bahawa trend naik berterusan.",
+    "long_answer": "Rendah yang lebih rendah pertama dalam trend naik ialah tepi hadapan perubahan rejim yang mungkin. Sehingga itu berlaku, struktur adalah utuh. Market Analyst menggunakan titik swing rendah terkini sebagai garis pemisah — penutupan di bawahnya akan menukar bacaan trend kepada neutral atau turun. Pembatalan terbina dalam struktur itu sendiri, itulah sebabnya struktur mengatasi penunjuk untuk bias trend.",
+    "related_lessons": [
+      "022"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "higher-low",
+      "structure",
+      "trend"
+    ]
+  },
+  {
+    "id": "qa_int_which_moving_average",
+    "category": "intermediate",
+    "question": "Saya harus menggunakan purata bergerak yang mana — 50, 100, 200?",
+    "short_answer": "Gunakan 200 untuk trend jangka panjang, 50 untuk trend sederhana, dan 20 untuk momentum jangka pendek. Tiada nombor ajaib — pilih satu set dan kekal konsisten.",
+    "long_answer": "Purata bergerak melicinkan harga; ia tidak meramalkannya. Market Analyst biasanya memantau 20/50/200 pada harian kerana kebanyakan peserta melakukannya — yang menjadikannya titik tindak balas yang memenuhi diri sendiri. Menukar tempoh MA untuk setiap carta adalah bentuk bias. Pembatalan: pecahan bersih dan pegangan di luar MA utama mengubah rejim; satu sumbu melaluinya tidak.",
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "moving-average",
+      "trend",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_death_cross",
+    "category": "intermediate",
+    "question": "Apa maksud sebenar kematian silang (death cross)?",
+    "short_answer": "Kematian silang berlaku apabila purata bergerak 50 hari menyilang ke bawah purata bergerak 200 hari. Ia adalah isyarat trend yang tertangguh, bukan pencetus jualan yang tepat.",
+    "long_answer": "Apabila kematian silang muncul, trend telah melemah — purata bergerak mengesahkan apa yang harga sudah lakukan. Market Analyst menggunakannya sebagai satu input untuk rejim, bukan isyarat berdiri sendiri. Cerminnya — kematian emas (golden cross) — mempunyai kelewatan yang sama. Pembatalan: silangan boleh menyebabkan whipsaw dalam pasaran yang bergegar, itulah sebabnya ia dipasangkan dengan struktur berbanding menggantikannya.",
+    "related_lessons": [
+      "026"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "death-cross",
+      "moving-average",
+      "regime"
+    ]
+  },
+  {
+    "id": "qa_int_rsi_oversold",
+    "category": "intermediate",
+    "question": "Jika RSI di bawah 30, adakah itu secara automatik isyarat beli?",
+    "short_answer": "Tidak. RSI di bawah 30 bermaksud momentum adalah tegang, bukan bahawa harga akan berbalik.",
+    "long_answer": "Jualan berlebihan (oversold) adalah penerangan momentum, bukan ramalan. Market Analyst memadankan RSI dengan struktur — jualan berlebihan pada tahap sokongan yang diketahui dengan lilin pembalikan adalah persediaan; jualan berlebihan di tengah-tengah trend turun hanyalah kesinambungan. Pembatalan: jika harga terus membuat minimum yang lebih rendah sambil RSI berada di bawah 30, penunjuk mengesahkan kelemahan, bukan meramalkan kekuatan.",
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "rsi",
+      "oversold",
+      "momentum"
+    ]
+  },
+  {
+    "id": "qa_int_rsi_divergence",
+    "category": "intermediate",
+    "question": "Bagaimana saya membaca divergensi RSI?",
+    "short_answer": "Divergensi bearish ialah harga membuat maksimum lebih tinggi sementara RSI membuat maksimum lebih rendah. Bullish adalah songsang.",
+    "long_answer": "Divergensi adalah amaran, bukan pencetus. Market Analyst menunggu pengesahan harga — pecahan struktur ayunan — sebelum bertindak atasnya. Divergensi boleh berterusan untuk banyak bar dalam trend yang kuat; itulah sebabnya perdagangan divergensi berdiri sendiri sering gagal. Pembatalan: apabila harga mencetak maksimum baru tanpa minimum RSI yang sepadan, divergensi diselesaikan dan tidak lagi menjadi isyarat.",
+    "related_lessons": [
+      "027"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "rsi",
+      "divergence",
+      "momentum"
+    ]
+  },
+  {
+    "id": "qa_int_macd_basics",
+    "category": "intermediate",
+    "question": "Apa yang MACD beritahu kepada saya?",
+    "short_answer": "MACD menunjukkan hubungan antara dua purata bergerak eksponen. MACD yang naik di atas sifar bermaksud momentum naik; histogram menunjukkan pecutan.",
+    "long_answer": "MACD mempunyai tiga komponen: garis MACD, garis isyarat, dan histogram. Market Analyst memerhatikan silangan garis sifar untuk rejim dan silangan garis isyarat untuk perubahan momentum jangka pendek. Histogram yang memuncak dan mengecut sering mendahului penurunan kelajuan. Pembatalan: MACD tertangguh — apabila ia mengesahkan, pergerakan telah bermula, jadi ia tidak sepatutnya menjadi satu-satunya input anda untuk entri baharu.",
+    "related_lessons": [
+      "028"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "macd",
+      "momentum",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_macd_vs_rsi",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara MACD dan RSI?",
+    "short_answer": "RSI mengukur kelajuan keuntungan terkini berbanding kerugian; MACD mengukur jurang antara dua purata bergerak. RSI terikat pada 0–100; MACD tidak terikat.",
+    "long_answer": "RSI paling sesuai untuk mengenal pasti momentum yang melampau dan perbezaan (divergences). MACD paling sesuai untuk perubahan trend dan pecutan. Menggunakan kedua-duanya adalah baik — ia menjawab soalan yang berbeza. Prinsip pembatalan: jika RSI menunjukkan keadaan overbought dan MACD menunjukkan trend naik yang kuat, trend itu menang; jangan menentang kekuatan berdasarkan satu penunjuk sahaja. Penunjuk perlu bersetuju dengan struktur sebelum mendapat berat.",
+    "related_lessons": [
+      "027",
+      "028",
+      "030"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "macd",
+      "rsi",
+      "indicators"
+    ]
+  },
+  {
+    "id": "qa_int_volume_confirmation",
+    "category": "intermediate",
+    "question": "Mengapa isipadu mengesahkan atau menolak pergerakan?",
+    "short_answer": "Pergerakan pada isipudu yang meningkat mencerminkan penyertaan luas. Pergerakan pada isipadu yang mengecil sering kekurangan keyakinan dan berbalik.",
+    "long_answer": "Isipadu adalah resit yang menunjukkan aliran sebenar di sebalik lilin. Market Analyst mengharapkan pecahan pada isipadu yang berkembang dan penarikan balik pada isipadu yang mengecil. Pembatalan untuk pecahan: jika isipadu masuk di bawah purata, anggap ia sebagai meragui sehingga tindak lanjut tiba. Isipadu adalah konteks untuk harga; ia tidak pernah mengatasi harga.",
+    "related_lessons": [
+      "029"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "volume",
+      "confirmation",
+      "chart-reading"
+    ]
+  },
+  {
+    "id": "qa_int_indicator_overload",
+    "category": "intermediate",
+    "question": "Berapa banyak penunjuk yang sepatutnya ada pada carta saya?",
+    "short_answer": "Dua atau tiga pada maksimum, setiap satu menjawab soalan berbeza — trend, momentum, isipadu. Lebih banyak penunjuk menambah hingar, bukan kelebihan.",
+    "long_answer": "Menimbun lima pengayun momentum memberitahu anda perkara yang sama lima kali. Market Analyst menggunakan satu alat trend (purata bergerak), satu alat momentum (RSI atau MACD), dan isipadu. Jika penunjuk tidak bersetuju, struktur memutuskan. Penunjuk adalah penapis pada harga, bukan penggantian untuknya.",
+    "related_lessons": [
+      "030",
+      "031"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "indicators",
+      "minimalism",
+      "chart-setup"
+    ]
+  },
+  {
+    "id": "qa_int_indicator_lag",
+    "category": "intermediate",
+    "question": "Mengapa penunjuk saya sentiasa kelihatan lewat?",
+    "short_answer": "Kebanyakan penunjuk adalah transformasi matematik harga masa lalu — ia menerangkan apa yang sudah berlaku. Itu adalah ciri, bukan pepijat.",
+    "long_answer": "Purata bergerak, MACD, dan RSI semua tertangguh kerana mereka melicinkan atau membandingkan data terdahulu. Market Analyst menggunakannya untuk mengesahkan apa yang sudah ditunjukkan oleh struktur, bukan untuk meramal masa depan. Penunjuk 'terajuh' biasanya hanya yang lebih hingar. Peraturan pembatalan: jika penunjuk anda menyala semasa struktur mengatakan sebaliknya, panggilan struktur menang.",
+    "related_lessons": [
+      "031"
+    ],
+    "related_agents": [
+      "market_analyst"
+    ],
+    "tags": [
+      "indicators",
+      "lag",
+      "limitations"
+    ]
+  },
+  {
+    "id": "qa_int_revenue_vs_earnings",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara pendapatan dan keuntungan?",
+    "short_answer": "Pendapatan ialah jumlah jualan — baris atas. Keuntungan (pendapatan bersih) ialah baki selepas semua kos, cukai, dan faedah — baris bawah.",
+    "long_answer": "Sebuah syarikat boleh mengembangkan pendapatan sambil rugi jika kos berkembang lebih cepat daripada jualan. The Fundamentals Analyst membaca kedua-dua — pertumbuhan pendapatan yang kuat dengan keuntungan yang menurun adalah cerita margin; kedua-duanya berkembang bersama menunjukkan kecekapan operasi. Keuntungan tanpa pertumbuhan pendapatan sering bermaksud pemotongan kos, yang mempunyai had. Sentiasa lihat kedua-dua baris dan jurang di antaranya.",
+    "related_lessons": [
+      "032",
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "revenue",
+      "earnings",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_gross_vs_operating_margin",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara margin kasar dan margin operasi?",
+    "short_answer": "Margin kasar ialah pendapatan tolak kos jualan barang. Margin operasi juga menolak kos operasi seperti R&D, jualan, dan pentadbiran.",
+    "long_answer": "Margin kasar menunjukkan keuntungan produk teras. Margin operasi menunjukkan seberapa efisien keseluruhan perniagaan menukar produk itu kepada keuntungan. The Fundamentals Analyst memantau kedua-duanya kerana margin kasar yang tinggi dengan margin operasi yang merosot menandakan overhead yang bengkak. Bandingkan dengan rakan sekerja sektor — margin kasar perisian secara rutin melebihi 70%; runcit jarang melepasi 40%.",
+    "related_lessons": [
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "margins",
+      "profitability",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_debt_red_flag",
+    "category": "intermediate",
+    "question": "Bila hutang sebenarnya menjadi amaran merah?",
+    "short_answer": "Apabila pembayaran faedah memakan bahagian pendapatan operasi yang bermakna, atau apabila hutang berkembang lebih cepat daripada pendapatan tanpa cerita capex.",
+    "long_answer": "Hutang sendiri bukan perkara buruk — syarikat meminjam untuk berkembang, membeli balik saham, atau menstabilkan keperluan tunai. The Fundamentals Analyst memeriksa nisbah liputan faedah (pendapatan operasi ÷ kos faedah) dan trend hutang-ke-ekuiti. Amaran merah: liputan di bawah 3x, leverage meningkat dengan margin menurun, atau hutang jangka pendek berputar pada kadar yang lebih tinggi secara bermakna.",
+    "related_lessons": [
+      "034",
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "debt",
+      "balance-sheet",
+      "red-flags"
+    ]
+  },
+  {
+    "id": "qa_int_balance_sheet_priority",
+    "category": "intermediate",
+    "question": "Apa yang saya lihat dahulu pada neraca?",
+    "short_answer": "Tunai dan setara tunai, jumlah hutang, dan ekuiti pemegang saham. Tiga perkara ini memberitahu fleksibiliti kewangan syarikat dalam 30 saat.",
+    "long_answer": "The Fundamentals Analyst bermula dengan gambaran tunai berbanding hutang — hutang bersih (hutang tolak tunai) menunjukkan sama ada syarikat peminet bersih atau mempunyai simpanan besar. Kemudian trend ekuiti merentasi beberapa suku: ekuiti yang meningkat bermaksud keuntungan tertahan terkumpul; ekuiti yang menurun mungkin bermaksud pembelian balik atau kerugian. Inventori dan piutang penting untuk perniagaan barang; intangible dan goodwill penting untuk syarikat pemerolehan.",
+    "related_lessons": [
+      "034"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "balance-sheet",
+      "fundamentals",
+      "analysis"
+    ]
+  },
+  {
+    "id": "qa_int_fcf_vs_earnings",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara aliran tunai bebas dan pendapatan?",
+    "short_answer": "Pendapatan ialah angka perakaunan yang merangkumi item bukan tunai. Aliran tunai bebas ialah wang tunai sebenar yang tinggal selepas operasi dan pelaburan semula dalam perniagaan.",
+    "long_answer": "Pendapatan boleh dipengaruhi oleh jadual susut nilai, pampasan berasaskan saham, dan pengiktirafan. Aliran tunai bebas (arus tunai operasi tolak belanja modal) lebih sukar dimanipulasi. The Fundamentals Analyst membandingkan kedua-duanya — apabila pendapatan melebihi aliran tunai bebas secara konsisten, sesuatu sedang dikapitalisasi atau diiktiraf dengan liberal. Apabila aliran tunai bebas melebihi pendapatan secara mampan, perniagaan lebih menjana wang tunai daripada yang dicadangkan oleh penyata pendapatan.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "free-cash-flow",
+      "earnings",
+      "cash-flow"
+    ]
+  },
+  {
+    "id": "qa_int_real_moat",
+    "category": "intermediate",
+    "question": "Bagaimana saya tahu jika parit (moat) syarikat adalah nyata?",
+    "short_answer": "Parit yang nyata kelihatan dalam nombor: kuasa penetapan harga, margin tinggi yang tahan lama, kadar pengekalan, atau bahagian pasaran yang tidak susut di bawah persaingan.",
+    "long_answer": "Pasaran memanggil segala-galanya sebagai parit. The Bull Researcher dan The Fundamentals Analyst menguji tuntutan ini dengan mencari bukti: margin kasar yang kekal atau berkembang selama 5+ tahun, kadar kehilangan pelanggan yang rendah, kos pertukaran yang kelihatan dalam data perbaharuan, atau kesan rangkaian yang ketara dalam penggunaan. Pembatalan: jika pesaing dengan bajet lebih kecil dapat meniru tawaran dalam masa 18 bulan, parit itu lebih cetek daripada naratif.",
+    "related_lessons": [
+      "036"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "moat",
+      "competitive-advantage",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_moat_types",
+    "category": "intermediate",
+    "question": "Apakah jenis parit yang wujud?",
+    "short_answer": "Yang biasa ialah kesan rangkaian, kos pertukaran, kelebihan skala, jenama, dan perlindungan regulasi.",
+    "long_answer": "Kesan rangkaian menjadikan produk lebih bernilai apabila lebih ramai pengguna menyertai. Kos pertukaran mengunci pelanggan (data, integrasi, pensijilan). Ekonomi skala menurunkan kos per unit di bawah apa yang boleh dipadani oleh peserta baharu. Jenama memperoleh harga premium. Regulasi mewujudkan halangan undang-undang. The Fundamentals Analyst memetakan mana yang terpakai, kemudian bertanya sama ada setiap satu adalah tahan lama — rangkaian boleh berbalik, jenama boleh pudar, regulasi boleh berubah.",
+    "related_lessons": [
+      "036"
+    ],
+    "related_agents": [
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "tags": [
+      "moat",
+      "competitive-advantage",
+      "categorization"
+    ]
+  },
+  {
+    "id": "qa_int_valuation_meaning",
+    "category": "intermediate",
+    "question": "Apakah maksud saham 'terlalu tinggi' nilainya?",
+    "short_answer": "Ia bermaksud harga semasa menyiratkan pertumbuhan atau margin yang sukar dicapai oleh perniagaan. Terlalu tinggi nilainya sentiasa relatif terhadap andaian.",
+    "long_answer": "Tiada harga 'adil' yang mutlak. The Fundamentals Analyst membina julat penilaian menggunakan syarikat sebanding, gandaan, dan model aliran tunai, kemudian membandingkan harga dengan julat tersebut. Terlalu tinggi nilainya = harga memerlukan andaian agresif untuk dibenarkan. Pembatalan: jika syarikat sebenarnya mencapai pertumbuhan di atas konsensus, penilaian akan berpindah semula. Jangan jual pendek hanya kerana 'mahal' — saham mahal boleh kekal mahal selama bertahun-tahun.",
+    "related_lessons": [
+      "037"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "valuation",
+      "overvalued",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_comps_analysis",
+    "category": "intermediate",
+    "question": "Bagaimana saya melakukan analisis syarikat sebanding?",
+    "short_answer": "Pilih 4–6 rakan sejawat dengan model perniagaan dan saiz yang serupa, kemudian bandingkan gandaan utama (P/E, EV/EBITDA, P/S) dan kadar pertumbuhan secara bersebelahan.",
+    "long_answer": "Fundamentals Analyst mentakrifkan 'rakan sejawat' dengan ketat — sektor yang sama, skala pendapatan yang serupa, profil pertumbuhan yang boleh dibandingkan. Analisis sebanding merentas industri adalah mengelirukan. Gandaan hanya berguna apabila pertumbuhan dan margin adalah serupa; P/E 30 untuk pertumbuhan 30% berbeza dengan P/E 30 untuk pertumbuhan 5%. Gunakan gandaan median rakan sejawat sebagai asas, kemudian tanya mengapa syarikat ini harus diperdagangkan di atas atau di bawahnya.",
+    "related_lessons": [
+      "038"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "comps",
+      "valuation",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_top_line_vs_bottom_line",
+    "category": "intermediate",
+    "question": "Adakah pertumbuhan garis atas atau garis bawah lebih penting?",
+    "short_answer": "Pertumbuhan garis atas menunjukkan perniagaan sedang memenangi pelanggan; garis bawah menunjukkan ia untung melakukan demikian. Kedua-duanya penting dan keutamaan yang betul bergantung pada peringkat.",
+    "long_answer": "Syarikat pertumbuhan peringkat awal sering dinilai berdasarkan pertumbuhan pendapatan kerana keuntungan disengajakan ditangguhkan. Syarikat matang dinilai berdasarkan pendapatan dan aliran tunai. Fundamentals Analyst menandakan titik perubahan — apabila syarikat pertumbuhan tinggi berhenti dinilai berdasarkan pendapatan dan pasaran mula menuntut margin, gandaan sering mampat dengan ketara.",
+    "related_lessons": [
+      "032",
+      "033"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "revenue",
+      "earnings",
+      "growth"
+    ]
+  },
+  {
+    "id": "qa_int_share_buyback_meaning",
+    "category": "intermediate",
+    "question": "Apakah kesan sebenar pembelian balik saham kepada saya sebagai pemegang saham?",
+    "short_answer": "Ia mengurangkan bilangan saham yang dikeluarkan, yang secara mekanikal meningkatkan peratusan pemilikan dan pendapatan per saham anda.",
+    "long_answer": "Pembelian balik adalah pulangan modal — sebagai ganti dividen, syarikat mengecilkan bilangan saham. Fundamentals Analyst memeriksa sama ada pembelian balik dibiayai oleh aliran tunai bebas (sihat) atau hutang (berisiko), dan sama ada ia berlaku pada harga yang munasabah. Membeli balik saham pada puncak menghancurkan nilai; membelinya pada penilaian tertekan mencipta nilai. Pengumuman pembelian balik tidak sama dengan pembelian balik yang diselesaikan.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "buybacks",
+      "capital-allocation",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_capex_meaning",
+    "category": "intermediate",
+    "question": "Mengapa penganalisis mengutamakan capex?",
+    "short_answer": "Capex memberitahu anda berapa banyak wang tunai yang perlu diinvestasikan semula oleh perniagaan untuk kekal kompetitif. Perniagaan berkapex tinggi menukar kurang pendapatan kepada aliran tunai bebas.",
+    "long_answer": "Fundamentals Analyst memisahkan capex penyelenggaraan (menjaga operasi) daripada capex pertumbuhan (mengembangkan kapasiti). Perniagaan ringan aset (perisian, jenama) menjana lebih aliran tunai bebas bagi setiap dolar pendapatan. Perniagaan berat aset (pengilang, utiliti) memerlukan pelaburan semula berterusan. Membandingkan capex-ke-pendapatan merentas tahun menunjukkan sama ada syarikat menjadi lebih atau kurang cekap modal.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "capex",
+      "capital-intensity",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_dilution_meaning",
+    "category": "intermediate",
+    "question": "Apakah hak milik saham dan adakah saya perlu risau tentangnya?",
+    "short_answer": "Penceraian adalah peningkatan dalam saham yang dikeluarkan — daripada pampasan berasaskan saham, tawaran sekunder, atau instrumen boleh tukar. Ia mengurangkan tuntutan setiap saham sedia ada terhadap keuntungan.",
+    "long_answer": "Sedikit penceraian adalah normal — kebanyakan syarikat memberikan ekuiti kepada pekerja. The Fundamentals Analyst memantau trend bilangan saham: kenaikan 1–2% setahun biasanya diserap oleh pertumbuhan, 5–10% adalah beban yang bermakna. Perhatikan pampasan berasaskan saham yang kronik pada nama teknologi berkecepatan tinggi; pendapatan 'non-GAAP' sering menambah balik penceraian yang mempunyai kos ekonomi sebenar.",
+    "related_lessons": [
+      "032"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "dilution",
+      "sbc",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_earnings_quality",
+    "category": "intermediate",
+    "question": "Apakah maksud 'kualiti keuntungan'?",
+    "short_answer": "Kualiti keuntungan mengukur seberapa rapat keuntungan yang dilaporkan sepadan dengan tunai sebenar yang dijana. Kualiti tinggi = keuntungan disokong oleh tunai; kualiti rendah = keuntungan dibesar-besarkan oleh pengiktirafan tertunda.",
+    "long_answer": "The Fundamentals Analyst membandingkan pendapatan bersih dengan aliran tunai operasi sepanjang beberapa suku. Apabila aliran tunai konsisten ketinggalan daripada keuntungan, pengiktirafan tertendela sedang melakukan kerja berat — itu adalah tanda kuning. Apabila aliran tunai melebihi keuntungan disebabkan oleh dinamik modal kerja yang menguntungkan, itu adalah neutral hingga positif. Keuntungan sekali acara dan pengiktirafan pendapatan yang agresif kedua-duanya mengurangkan kualiti.",
+    "related_lessons": [
+      "035"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "earnings-quality",
+      "accruals",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "qa_int_inventory_signal",
+    "category": "intermediate",
+    "question": "Mengapakah inventori yang meningkat kadang-kadang merupakan tanda amaran?",
+    "short_answer": "Jika inventori tumbuh lebih cepat daripada pendapatan, syarikat mungkin menghasilkan lebih banyak daripada yang boleh dijualnya. Itu sering mendahului potongan harga.",
+    "long_answer": "The Fundamentals Analyst membandingkan trend hari inventori yang belum dijual. Pembeli runcit atau pengeluar perkakasan yang melihat inventori membengkak sebelum pendapatan sering membuat diskaun untuk membersihkannya, yang memampatkan margin kasar pada suku atau dua suku berikutnya. Pengecualian: stok pra-pelancaran atau lonjakan permintaan yang dijangka — konteks adalah penting. Isyaratnya adalah perbezaan, bukan tahap mutlak.",
+    "related_lessons": [
+      "033",
+      "034"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "inventory",
+      "balance-sheet",
+      "warning-signs"
+    ]
+  },
+  {
+    "id": "qa_int_pe_definition",
+    "category": "intermediate",
+    "question": "Apakah yang sebenarnya diukur oleh nisbah P/E?",
+    "short_answer": "P/E adalah harga yang anda bayar bagi setiap dolar keuntungan terdahulu. P/E sebanyak 25 bermaksud anda membayar $25 untuk $1 daripada keuntungan tahun lalu.",
+    "long_answer": "P/E mampatkan penilaian kepada satu nombor, yang merupakan kekuatan dan kelemahannya. The Fundamentals Analyst tidak pernah membaca P/E secara terpencil — ia mesti dibandingkan dengan kadar pertumbuhan, norma sektor, dan kestabilan keuntungan. P/E tidak tertakrif apabila keuntungan adalah negatif, dan tidak bermakna apabila keuntungan adalah kitaran. P/E yang rendah boleh menjadi isyarat nilai atau amaran bahawa keuntungan akan runtuh.",
+    "related_lessons": [
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "valuation",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_pe_vs_forward_pe",
+    "category": "intermediate",
+    "question": "Apakah perbezaan antara P/E dan P/E ke hadapan?",
+    "short_answer": "P/E menggunakan pendapatan 12 bulan terakhir. P/E ke hadapan menggunakan anggaran pendapatan untuk 12 bulan akan datang.",
+    "long_answer": "P/E ke hadapan mencerminkan jangkaan; P/E tergelap mencerminkan apa yang sudah berlaku. The Fundamentals Analyst menggunakan kedua-duanya — jurang yang luas antara keduanya menandakan pertumbuhan dijangka yang kuat (ke hadapan lebih rendah daripada tergelap) atau penurunan pendapatan akan datang (ke hadapan lebih tinggi daripada tergelap). Anggaran sering salah pada purata, jadi P/E ke hadapan kurang boleh dipercayai apabila serakan penganalisis adalah tinggi.",
+    "related_lessons": [
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "forward-pe",
+      "valuation"
+    ]
+  },
+  {
+    "id": "qa_int_why_pe_differs",
+    "category": "intermediate",
+    "question": "Mengapa MSFT diperdagangkan pada P/E yang jauh lebih tinggi daripada JPM?",
+    "short_answer": "Sektor yang berbeza mempunyai norma P/E yang berbeza. Perniagaan perisian memperoleh margin yang lebih tinggi dan lebih tahan lama berbanding bank, jadi pasaran membayar lebih setiap dolar pendapatan.",
+    "long_answer": "Membandingkan P/E merentas sektor adalah mengelirukan. Bank diperdagangkan berdasarkan nilai buku dan margin faedah bersih; perisian diperdagangkan berdasarkan pertumbuhan dan pendapatan berulang. The Fundamentals Analyst sentiasa menganggotakan P/E kepada rakan sekerja sektor, bukan pasaran luas. P/E 'tinggi' dalam satu industri adalah normal dalam industri lain. Ketahanan pendapatan dan kadar pertumbuhan menerangkan kebanyakan jurang tersebut.",
+    "related_lessons": [
+      "038",
+      "039"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "sector-context",
+      "comparables"
+    ]
+  },
+  {
+    "id": "qa_int_fair_pe_tech",
+    "category": "intermediate",
+    "question": "Apakah P/E yang adil untuk saham teknologi?",
+    "short_answer": "Tiada nombor adil tunggal — ia bergantung pada kadar pertumbuhan, profil margin, dan ketahanan. The Fundamentals Analyst membandingkan terhadap median rakan sekerja dan pertumbuhan, bukan terhadap sasaran mutlak.",
+    "long_answer": "Syarikat dengan pertumbuhan 25% dan margin operasi 30% secara munasabah diperdagangkan pada P/E yang lebih tinggi berbanding syarikat dengan pertumbuhan 5% dan margin 15%. Nisbah PEG (P/E dibahagikan dengan kadar pertumbuhan) adalah satu heuristik — PEG menghampiri 1 sering dianggap munasabah, walaupun ia mengabaikan kualiti margin dan risiko. Soalan yang betul bukan 'apakah P/E yang adil' tetapi 'apa yang memerlukan P/E ini daripada perniagaan untuk lakukan?'",
+    "related_lessons": [
+      "039",
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "pe-ratio",
+      "tech",
+      "valuation"
+    ]
+  },
+  {
+    "id": "qa_int_pb_when_useful",
+    "category": "intermediate",
+    "question": "Bila nisbah harga-kepada-nilai-buku sebenarnya berguna?",
+    "short_answer": "P/B paling berguna untuk perniagaan berintensif aset dengan nilai buku ketara — bank, syarikat insurans, REIT. Ia hampir tidak bermakna untuk perisian dan syarikat berasaskan jenama.",
+    "long_answer": "Bank dinilai berdasarkan P/B kerana ekuiti buku menyokong pinjaman mereka; P/B di bawah 1 boleh menandakan kesusahan atau aset terpendam yang rosak. Untuk syarikat teknologi, kebanyakan nilai terletak pada aset tidak berwujud yang tidak berada di dalam buku besar, jadi P/B merendahkan realiti ekonomi. The Fundamentals Analyst menggunakan alat yang betul untuk perniagaan yang betul — pendarab bukan boleh tukar merentas sektor.",
+    "related_lessons": [
+      "040"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "price-to-book",
+      "valuation",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_good_roe",
+    "category": "intermediate",
+    "question": "Apakah yang dianggap sebagai ROE yang 'baik'?",
+    "short_answer": "ROE yang mampan melebihi 15% secara umumnya kukuh. Namun, ROE sahaja boleh dibesar-besarkan oleh leverage, jadi semak tahap hutang bersamanya.",
+    "long_answer": "ROE = pendapatan bersih ÷ ekuiti pemegang saham. Sebuah syarikat boleh meningkatkan ROE dengan menambah hutang (kurangkan ekuiti dalam penyebut) tanpa sebenarnya menjadi lebih cekap. The Fundamentals Analyst memecahkan ROE kepada komponen DuPont — margin bersih × pusingan aset × leverage — untuk melihat tuai mana yang memacu nombor tersebut. ROE yang bertahan merentas kitaran lebih bernilai daripada lonjakan tinggi dalam satu tahun yang baik.",
+    "related_lessons": [
+      "041",
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "roe",
+      "profitability",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_high_de_meaning",
+    "category": "intermediate",
+    "question": "Adakah nisbah hutang-ke-ekuiti yang tinggi sentiasa buruk?",
+    "short_answer": "Tidak. Industri intensif modal (utiliti, telekom, bank) secara rutin menjalankan D/E yang tinggi.",
+    "long_answer": "D/E sebanyak 2.0 adalah tidak masuk akal untuk syarikat perisian dan normal untuk utiliti berregulated. The Fundamentals Analyst memadankan D/E dengan liputan faedah dan jadual matang hutang. D/E tinggi dengan liputan rendah dan matang jangka pendek adalah kombinasi merah. Bandingkan D/E dengan rakan sekerja sektor; satu nombor di luar konteks tidak memberitahu anda apa-apa.",
+    "related_lessons": [
+      "042"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "debt-to-equity",
+      "leverage",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_dividend_yield_growth",
+    "category": "intermediate",
+    "question": "Adakah hasil dividen penting untuk saham pertumbuhan?",
+    "short_answer": "Biasanya tidak. Saham pertumbuhan melabur semula pendapatan ke dalam pengembangan berbanding membayar dividen — hasil rendah atau sifar adalah dijangka dan sering lebih disukai.",
+    "long_answer": "Membayar tunai bermaksud melepaskan peluang pelaburan semula. The Fundamentals Analyst menilai dividen dalam konteks di mana syarikat berada dalam kitaran hayatnya — perniagaan matang yang pertumbuhan perlahan harus membayar dividen; yang pertumbuhan tinggi biasanya tidak. Hasil tinggi pada nama pertumbuhan sering menandakan harga telah jatuh dengan ketara, bukan bahawa syarikat itu murah hati.",
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "dividend-yield",
+      "growth-stocks",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_payout_ratio_safe",
+    "category": "intermediate",
+    "question": "Apakah nisbah pembayaran yang selamat?",
+    "short_answer": "Kebanyakan perniagaan stabil boleh menampung pembayaran di bawah 60% daripada pendapatan. Di atas 80% meninggalkan sedikit penampan untuk suku tahun yang buruk.",
+    "long_answer": "Nisbah pembayaran = dividen ÷ pendapatan. The Fundamentals Analyst lebih suka pembayaran sebagai peratusan aliran tunai bebas berbanding pendapatan, kerana pendapatan akaun boleh menyembunyikan tekanan tunai. REIT dan utiliti menampung pembayaran yang lebih tinggi secara mampan kerana aliran tunai mereka stabil dan berregulated. Pembayaran di atas 100% bermaksud dividen dibiayai oleh hutang atau jualan aset — itu tidak mampan.",
+    "related_lessons": [
+      "043"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "payout-ratio",
+      "dividends",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_earnings_growth_quality",
+    "category": "intermediate",
+    "question": "Adakah pertumbuhan pendapatan yang pantas sentiasa baik?",
+    "short_answer": "Hanya jika ia didorong oleh pengembangan pendapatan dan margin, bukan oleh pembelian semula saham, pemotongan kos, atau item sekali sebut. Sumber lebih penting daripada magnitud.",
+    "long_answer": "EPS boleh tumbuh 20% manakala perniagaan teras hanya tumbuh 5% — pembelian semula saham mengurangkan bilangan saham dan memperbesar angka per-saham. The Fundamentals Analyst menguraikan pertumbuhan EPS kepada pertumbuhan pendapatan, perubahan margin, dan perubahan bilangan saham. Pertumbuhan mampan datang daripada dua faktor pertama; pertumbuhan yang didorong oleh bilangan saham mempunyai had. Semak juga sama ada pertumbuhan adalah organik atau didorong oleh acquisitions; pertumbuhan melalui acquisitions sering membawa risiko integrasi dan goodwill.",
+    "related_lessons": [
+      "044"
+    ],
+    "related_agents": [
+      "fundamentals_analyst"
+    ],
+    "tags": [
+      "earnings-growth",
+      "eps",
+      "ratios"
+    ]
+  },
+  {
+    "id": "qa_int_position_size_confidence",
+    "category": "intermediate",
+    "question": "Bagaimana saya harus menentukan saiz kedudukan jika saya hanya 70% yakin dengannya?",
+    "short_answer": "Saiz berdasarkan kerugian yang boleh ditanggung, bukan keyakinan yang anda ada. Keyakinan adalah kualitatif; saiz kedudukan harus menjadi fungsi jarak henti rugi dan risiko per perdagangan.",
+    "long_answer": "Keyakinan adalah perasaan yang mudah tersasar daripada hasil sebenar. The Portfolio Manager menentukan saiz kedudukan supaya penutupan henti rugi hanya kehilangan peratusan tetap daripada ekuiti (biasanya 0.5–1%). Jika anda benar-benar percaya satu setup lebih baik daripada yang lain, cara yang diluluskan mandat untuk menyatakan itu adalah henti rugi yang lebih ketat atau skor isyarat keyakinan yang lebih tinggi — bukan menggandakan saiz. Keyakinan yang memusnahkan akaun; peraturan yang menjaganya.",
+    "related_lessons": [
+      "014"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "trader"
+    ],
+    "tags": [
+      "position-sizing",
+      "confidence",
+      "risk"
+    ]
+  }
+]

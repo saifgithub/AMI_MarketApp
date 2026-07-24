@@ -1,0 +1,914 @@
+[
+  {
+    "id": "qa_aim_what_is_ami",
+    "category": "ai_meta",
+    "question": "Apa itu AMI?",
+    "short_answer": "AMI adalah simulator latihan yang memberikan anda latihan mengendalikan pasukan analis 12 ejen sebagai CEO. Ia menjalankan penyelidikan, berdebat, dan menghasilkan Verdict yang disemak mandat untuk anda menilai — keputusan simulasi adalah milik anda.",
+    "long_answer": "AMI adalah aplikasi pendidikan perdagangan simulasi sahaja yang disusun di sekitar dua belas ejen pakar: analis (asas, pasaran, berita, sosial), penyelidik (bull, bear), Pengurus Penyelidikan, tiga Pembahas Risiko (agresif, konservatif, neutral), Pedagang, dan Pengurus Portfolio. Anda menetapkan Mandat anda; ejen melakukan kerja berat; anda menggunakan Verdict yang terhasil untuk melatih kemahiran menilai output analis berbilang ejen. Tiada apa yang dihasilkan AMI adalah nasihat pelaburan — ia bahan latihan untuk kemahiran menilai nasihat. AMI tidak pernah melaksanakan dagangan dan tidak pernah berhubung dengan broker.",
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "definition",
+      "overview",
+      "ceo_framing"
+    ]
+  },
+  {
+    "id": "qa_aim_is_ami_an_ai",
+    "category": "ai_meta",
+    "question": "Adakah AMI AI?",
+    "short_answer": "Ya — AMI adalah simulator latihan berasaskan AI yang memberikan anda latihan mengendalikan pasukan analis berbilang ejen, dibungkus sebagai dua belas ejen khusus peranan yang anda kendalikan sebagai CEO. Butiran seni bina (apa yang menggerakkan setiap ejen) terdapat dalam jawapan panjang.",
+    "long_answer": "Setiap ejen mempunyai peranan, arahan, dan permukaan yang berbeza. Concierge menyapa dan mengarahkan; analis menarik data; penyelidik berdebat; PM menguatkuasakan Mandat anda. Ia dikuasakan oleh model bahasa teras, tetapi anda harus memandangnya sebagai peranan di meja analis simulasi, bukan sebagai satu chatbot memakai dua belas topi. Keseluruhan susun atur adalah persekitaran latihan — tiada apa yang dihasilkannya adalah nasihat pelaburan.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "llm",
+      "agents",
+      "architecture"
+    ]
+  },
+  {
+    "id": "qa_aim_is_this_real_trading",
+    "category": "ai_meta",
+    "question": "Adakah ini dagangan sebenar?",
+    "short_answer": "Tidak. AMI adalah simulasi sahaja. Tiada wang sebenar bergerak melalui aplikasi — secara reka bentuk, selamanya.",
+    "long_answer": "Verdict, saiz posisi, entri, henti rugi, dan sasaran adalah semua artifak latihan simulasi, bukan nasihat pelaburan. Tiada hook broker dan tidak akan ada. Gunakan senario untuk melatih kemahiran penilaian anda sendiri — penurunan simulasi adalah medan latihan. Tiada apa yang dihasilkan AMI adalah nasihat pelaburan; sebarang keputusan wang sebenar adalah milik anda dan berlaku di luar aplikasi.",
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "simulation_only",
+      "advisory_only"
+    ]
+  },
+  {
+    "id": "qa_aim_why_simulation_only",
+    "category": "ai_meta",
+    "question": "Mengapa AMI simulasi sahaja?",
+    "short_answer": "Kerana AMI adalah simulator latihan, bukan penasihat berlesen. Kekal sebagai simulasi sahaja membolehkannya bercakap bebas mengenai posisi, saiz, dan Verdict sebagai artifak latihan tanpa melintasi ke nasihat pelaburan beratur.",
+    "long_answer": "AMI tidak berlesen untuk menyediakan nasihat pelaburan; ia bebas lesen tepat kerana ia adalah alat latihan. Berhubung dengan broker akan menjadikannya produk berbeza dengan kewajiban berbeza. Reka bentuk simulasi sahaja adalah keputusan kekal, bukan had sementara. Ia juga pengaman struktur terhadap kebergantungan berlebihan: setiap Verdict adalah artifak latihan, anda kekal di kerusi CEO, dan ejen kekal di kerusi analis simulasi.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "simulation_only",
+      "design_decision",
+      "advisory_only"
+    ]
+  },
+  {
+    "id": "qa_aim_will_ami_ever_execute_trades",
+    "category": "ai_meta",
+    "question": "Adakah AMI akan pernah menyambung ke broker saya untuk melaksanakan dagangan?",
+    "short_answer": "Tidak, tidak pernah — kerana AMI adalah simulator latihan, bukan produk nasihat-plus-eksekusi. Integrasi broker tidak dalam pelan jalan dan tidak akan pernah menjadi sebahagian daripadanya.",
+    "long_answer": "Ini adalah satu-satunya ciri yang anda tidak sepatutnya jangka untuk dilancarkan. Produk ini adalah pendidikan, bukan nasihat dengan jurang eksekusi. Ketidakhadiran pengait broker inilah yang menentukan kategori AMI — simulator latihan untuk kemahiran menilai output penganalisis, bukan platform eksekusi automatik. Penambahbaikan coaching, tier premium, dan modul masa depan tidak akan mengubah garis ini.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "no_brokerage",
+      "advisory_only",
+      "roadmap"
+    ]
+  },
+  {
+    "id": "qa_aim_what_can_ami_do",
+    "category": "ai_meta",
+    "question": "Apa yang boleh dilakukan AMI?",
+    "short_answer": "AMI mensimulasikan meja penyelidikan: ia menarik data asas, membaca carta, meringkaskan berita dan sentimen, menjalankan perdebatan bull/bear 12 agen, menguji tekanan terhadap Mandat anda, dan menghasilkan Verdict berstruktur untuk anda berlatih menilai.",
+    "long_answer": "Anggaplah ia sebagai meja penyelidikan simulasi yang boleh anda panggil pada mana-mana ticker. Outputnya adalah Verdict dengan entri, stop, target, horizon, keyakinan, transkrip perdebatan penuh, dan semakan kepatuhan PM. Verdict adalah artifak latihan, bukan tip dan bukan nasihat pelaburan — nilainya terletak pada memberi anda latihan berjalan melalui rantai reasoning, bukan pada tajuk BUY/HOLD/SELL.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge",
+      "research_manager"
+    ],
+    "tags": [
+      "capabilities",
+      "verdict",
+      "convene_the_room"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_analyze_stocks",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI menganalisis saham?",
+    "short_answer": "Ya — sebagai latihan latihan. Penganalisis simulasi AMI merangkumi asas, teknikal, berita, dan sentimen, dan penyelidik mensintesis itu menjadi kes bull/bear untuk anda menilai.",
+    "long_answer": "Panggil Room pada ticker dan Fundamentals Analyst menarik kewangan, Market Analyst membaca tindakan harga, News Analyst meringkaskan tajuk utama, dan Social Media Analyst memeriksa sentimen. Bull dan Bear Researchers kemudian berdebat, Research Manager menimbang keputusan, dan Trader mencadangkan setup. Anda mendapatkan rantai penuh, bukan hanya kesimpulan — dan rantai tersebut adalah bahan latihan untuk kemahiran menilai output penganalisis, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "analysis",
+      "capabilities"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_explain_a_chart",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI menerangkan carta?",
+    "short_answer": "Ya. Market Analyst menerangkan setup semasa — trend, paras utama, penunjuk, apa yang akan membatalkan bacaan — tanpa mendakwa dapat meramal bar seterusnya.",
+    "long_answer": "Tanya Market Analyst dalam 1-on-1 mengenai mana-mana ticker dan anda akan mendapat penerangan di mana harga berada relatif kepada purata bergerak, apa yang dilakukan oleh RSI atau isipadu, di mana sokongan dan rintangan berada, dan pergerakan apa yang akan memecahkan struktur semasa. Apa yang anda tidak akan dapat adalah ramalan di mana harga akan ditutup pada tarikh masa depan yang tetap — AMI menerangkan setup, bukan cetakan masa depan. Penerangan tersebut adalah artifak latihan untuk kemahiran membaca carta, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "072",
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "technical_analysis",
+      "market_analyst"
+    ]
+  },
+  {
+    "id": "qa_aim_bursa_stocks",
+    "category": "ai_meta",
+    "question": "Bolehkah saya bertanya kepada AMI mengenai saham Bursa Malaysia?",
+    "short_answer": "Pada tahap alpha, AMI hanya merangkumi ekuiti AS. Pasaran Bursa Malaysia dan GCC/Tadawul dirancang untuk pelepasan kemudian.",
+    "long_answer": "Pasaran pelancaran untuk simulasi latihan ialah ekuiti AS. Pasaran Bursa Malaysia dan GCC berada dalam peta jalan apabila rantaian AS kukuh dan aliran data sedar lokasi disambungkan. Jika anda bertanya mengenai pengekodan Bursa hari ini, Concierge akan memberitahu ia di luar skop dan mengalihkan anda kembali kepada nama AS dalam senarai pantauan anda.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "markets",
+      "coverage",
+      "bursa"
+    ]
+  },
+  {
+    "id": "qa_aim_does_ami_know_news",
+    "category": "ai_meta",
+    "question": "Adakah AMI mengetahui tentang berita?",
+    "short_answer": "Ya — News Analyst merumuskan tajuk terkini bagi pengekodan yang anda kumpulkan dalam Bilik, dan Social Media Analyst menandakan kecondongan sentimen.",
+    "long_answer": "Lipatan terhad oleh aliran data AMI dan tetingkap kemaskini. Anggap rumusan News Analyst sebagai input latihan untuk senario, bukan sambungan langsung — untuk peristiwa pecah atau pelepasan pendapatan pada hari perdagangan yang sama, sahkan dengan sumber berita anda sendiri sebagai sebahagian daripada latihan penilaian. Rumusan ini ialah bahan latihan, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [],
+    "tags": [
+      "news",
+      "data_freshness"
+    ]
+  },
+  {
+    "id": "qa_aim_one_on_one_chat",
+    "category": "ai_meta",
+    "question": "Bolehkah saya bercakap dengan satu ejen secara langsung?",
+    "short_answer": "Ya. 1-on-1 membolehkan anda bertanya soalan terfokus kepada mana-mana daripada 12 ejen tanpa mengumpulkan Bilik penuh.",
+    "long_answer": "Gunakan 1-on-1 apabila anda mahu kedalaman pada satu sudut — contohnya, minta Bear Researcher menguji tesis panjang, atau Fundamentals Analyst menerusi barisan kertas keseimbangan. Gunakan Convene the Room apabila anda ingin perdebatan penuh dan Verdict yang disahkan mandat. Sama ada cara, perbualan ini ialah latihan latihan dalam bekerja dengan meja analis — tiada apa yang dikatakan oleh ejen merupakan nasihat pelaburan.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "one_on_one",
+      "agents",
+      "workflow"
+    ]
+  },
+  {
+    "id": "qa_aim_does_ami_track_portfolio",
+    "category": "ai_meta",
+    "question": "Adakah AMI mengesan portfolio sebenar saya?",
+    "short_answer": "Tidak. AMI tidak mempunyai pandangan ke atas broker sebenar anda. Ia mengesan buku simulasi anda dan entri Jurnal Keputusan anda — itu sahaja.",
+    "long_answer": "Jika anda mahu AMI berfikir tentang kedudukan sebagai sebahagian daripada senario latihan, logkan dalam buku simulasi atau huraikan dalam 1-on-1. AMI tidak dapat membaca baki sebenar, P&L, atau pegangan anda, dan tiada laluan untuknya berbuat demikian — keseluruhan stack ialah simulator latihan, bukan perkhidmatan portfolio.",
+    "related_lessons": [
+      "073"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "no_brokerage",
+      "simulation",
+      "privacy"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_predict_price",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI meramal harga?",
+    "short_answer": "Tidak. AMI tidak meramal — AMI memberikan anda latihan dalam menilai senario kebarangkalian. Ia menerangkan setup dan kebarangkalian, bukan harga titik pada tarikh masa depan.",
+    "long_answer": "Tanya 'di mana MSFT akan ditutup pada hari Jumaat?' dan anda akan mendapat julat jangkaan kebarangkalian daripada volatiliti direalisasikan, penerangan tentang setup semasa, dan apa yang akan membatalkan bacaan tersebut — bukan satu nombor tunggal. AMI adalah simulator latihan untuk kemahiran berfikir di bawah ketidakpastian, bukan sistem ramalan, dan ketiadaan ramalan titik adalah disengajakan. Tiada apa yang dihasilkan bukanlah nasihat pelaburan.",
+    "related_lessons": [
+      "073",
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "no_prediction",
+      "probabilities"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_place_a_trade",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI melaksanakan dagangan bagi saya?",
+    "short_answer": "Tidak. AMI tidak pernah melaksanakan dagangan. Tiada sambungan broker, tiada suis auto-eksekusi, dan tiada rancangan untuk menambahnya.",
+    "long_answer": "Setiap Verdict adalah artifak latihan, bukan nasihat pelaburan. Gunakan senario itu untuk melatih kemahiran penilaian anda sendiri — butang Terima Verdict merakam keputusan simulasi anda dalam Jurnal Keputusan dan tidak melaksanakan sebarang pesanan di mana-mana. AMI adalah simulator latihan, bukan broker.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "no_execution",
+      "advisory_only"
+    ]
+  },
+  {
+    "id": "qa_aim_manage_my_money",
+    "category": "ai_meta",
+    "question": "Adakah AMI akan menguruskan wang saya?",
+    "short_answer": "Tidak. AMI bukan pengurus portfolio, penasihat pelaburan, atau dana. Ia adalah simulator latihan yang memberikan anda latihan menjalankan pasukan analis 12 ejen sebagai CEO.",
+    "long_answer": "Tiada custodi, tiada penimbunan semula, tiada mandat diskresionari, dan tiada lesen untuk memberikan nasihat pelaburan. Ejen Portfolio Manager menguatkan Mandat yang dinyatakan anda pada Verdict simulasi di dalam persekitaran latihan — ia tidak menguruskan mana-mana aset atau akaun sebenar. Tiada apa yang dihasilkan AMI adalah nasihat pelaburan.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "no_management",
+      "advisory_only"
+    ]
+  },
+  {
+    "id": "qa_aim_why_wont_ami_tell_me_what_to_buy",
+    "category": "ai_meta",
+    "question": "Mengapa AMI tidak sekadar memberitahu saya apa yang perlu dibeli?",
+    "short_answer": "Kerana AMI adalah simulator latihan, bukan penasihat berlesen. Ia menghasilkan Verdict yang diperdebatkan sebagai artifak latihan; kemahiran yang dilatih adalah penilaian anda, bukan ketaatan buta kepada tajuk utama.",
+    "long_answer": "AMI pasti akan menghasilkan Verdict simulasi BELI, TAHAN, atau JUAL dengan saiz, kemasukan, henti rugi, dan sasaran. Output itu adalah artifak latihan — hasil proses yang anda jalankan — bukan tip dan bukan nasihat pelaburan. Melangkau transkrip perdebatan dan memperlakukan tajuk utama sebagai arahan membuang seluruh kemahiran yang diajar oleh simulator. Baca pembangkang, baca garis kepatuhan PM, kemudian latih membuat panggilan tersebut.",
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "advisory_only",
+      "verdict",
+      "framing"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_pick_stocks",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI memilih saham untuk saya?",
+    "short_answer": "Tidak — AMI memberikan anda latihan untuk menilai kod saham yang anda masukkan ke dalam senarai tontonan; ia tidak menolak pilihan harian atau senarai isyarat. AMI adalah simulator latihan, bukan perkhidmatan pilihan.",
+    "long_answer": "AMI berfungsi pada kod saham yang anda pilih untuk menjemput Bilik. Tiada aliran isyarat harian, tiada 'pilihan 10-bagger', dan tiada putaran automatik — kerana tiada satu pun daripada itu adalah latihan penilaian, ia akan menjadi perkhidmatan tip yang AMI tidak dilesenkan untuk mengendalikan. Jika anda mahu bacaan simulasi pada nama, tambahkan ia ke senarai tontonan anda dan jalankan Bilik sebagai latihan latihan.",
+    "related_lessons": [
+      "072",
+      "075"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "no_signals",
+      "watchlist"
+    ]
+  },
+  {
+    "id": "qa_aim_guarantee_returns",
+    "category": "ai_meta",
+    "question": "Adakah AMI akan membuatkan saya mendapat wang?",
+    "short_answer": "AMI adalah simulator latihan; ia tidak memberikan tip atau menjanjikan hasil kerana ia tidak dilesenkan untuk memberikan nasihat. Ia menjalankan penyelidikan dan perdebatan 10 ejen sebagai bahan latihan.",
+    "long_answer": "Tiada tuntutan rekod prestasi, tiada janji kadar kemenangan, dan tiada jaminan. AMI menerangkan proses — menarik data, membincangkan kes, melaksanakan Mandat anda — sebagai bahan latihan, bukan hasil. Mana-mana pihak (atau mana-mana produk) yang menjamin pulangan pada ekuiti menjual sesuatu yang tidak dijual oleh AMI. AMI menjual latihan dalam menilai output penganalisis, bukan keuntungan.",
+    "related_lessons": [
+      "075",
+      "077"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "no_promises",
+      "no_outcomes"
+    ]
+  },
+  {
+    "id": "qa_aim_predict_market_crash",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI meramalkan kemarau pasaran seterusnya?",
+    "short_answer": "Tidak. AMI tidak meramal — ia memberikan anda latihan untuk menilai senario kebarangkalian. Ia tidak meramal arah pasaran, masa, atau kemarau.",
+    "long_answer": "Apa yang boleh dilakukan AMI adalah menerangkan konteks makro dan sentimen semasa, menamakan risiko yang ditekankan oleh Bear Researcher, dan menguji tekanan kedudukan simulasi terhadap lantai penurunan Mandat anda — semua sebagai latihan latihan. Tiada satu pun daripada itu adalah ramalan atau nasihat pelaburan. Jika anda mahu panggilan masa kemarau, AMI bukan produk; jika anda mahu latihan berfikir tentang risiko ekor, ia adalah.",
+    "related_lessons": [
+      "073",
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "no_prediction",
+      "macro"
+    ]
+  },
+  {
+    "id": "qa_aim_tell_me_when_to_sell",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI memberitahu saya bila untuk menjual?",
+    "short_answer": "AMI boleh menerangkan sama ada keadaan di belakang Verdict simulasi asal masih wujud dan apa yang akan membatalkan tesis tersebut — sebagai bahan latihan. Keputusan jual adalah milik anda, dan AMI tidak dilesenkan untuk menasihati tentangnya.",
+    "long_answer": "Jemput Bilik pada nama yang sudah anda pegang dan Verdict akan mencerminkan setup semasa — yang mungkin berbeza dengan hari anda membuka kedudukan. Trader boleh menerangkan henti, sasaran, dan jangka masa; Pengurus Penyelidikan boleh menjalankan semula keseimbangan bull/bear. Tiada satu pun daripada itu adalah arahan untuk menjual atau nasihat pelaburan — ia adalah bahan latihan untuk kemahiran menilai keputusan keluar yang anda buat.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "research_manager",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "sell_decision",
+      "advisory_only"
+    ]
+  },
+  {
+    "id": "qa_aim_hot_tip",
+    "category": "ai_meta",
+    "question": "Berikan tip panas — apa yang akan naik minggu depan?",
+    "short_answer": "AMI adalah simulator latihan; ia tidak memberikan tip kerana ia tidak dilesenkan untuk memberikan nasihat. Ia tidak meramal pergerakan minggu depan dan tidak menolak isyarat.",
+    "long_answer": "Jika anda ingin kedalaman pada nama tertentu, tambahkan ia ke senarai pantauan anda dan persidangkan Bilik sebagai latihan latihan. Anda akan mendapat Verdict berstruktur dengan entri, henti rugi, sasaran, dan keyakinan — tiada satu pun daripada ini adalah jaminan, tip, atau nasihat pelaburan. Tajuk utama adalah puncak perdebatan 10 agen; tujuan simulator ini adalah untuk membaca perdebatan, bukan mengejar tajuk utama.",
+    "related_lessons": [
+      "072",
+      "077"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "no_tips",
+      "no_prediction"
+    ]
+  },
+  {
+    "id": "qa_aim_options_or_crypto",
+    "category": "ai_meta",
+    "question": "Adakah AMI merangkumi pilihan atau kriptokurensi?",
+    "short_answer": "Pada alpha, simulasi latihan merangkumi ekuiti AS. Pilihan, futures, dan kriptokurensi tidak dalam skop.",
+    "long_answer": "Pasaran pelancaran untuk persekitaran latihan adalah ekuiti AS sahaja. Meminta rantai pilihan AMI, penentuan harga terbitan, atau analisis kriptokurensi pada alpha tidak akan mengembalikan hasil yang berguna — agen yang disimulasikan dan aliran data dipautkan untuk ekuiti tunai. Pengembangan ke kelas aset lain tidak berada dalam peta jalan jangka terdekat.",
+    "related_lessons": [
+      "073"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "scope",
+      "coverage",
+      "no_options",
+      "no_crypto"
+    ]
+  },
+  {
+    "id": "qa_aim_is_ami_a_financial_adviser",
+    "category": "ai_meta",
+    "question": "Adakah AMI penasihat kewangan?",
+    "short_answer": "Tidak. AMI adalah simulator latihan untuk kemahiran menilai output penganalisis berbilang agen, bukan penasihat pelaburan berdaftar. Apa jua yang ia katakan bukan nasihat pelaburan yang dipersonalisasi.",
+    "long_answer": "AMI tidak mengetahui gambaran kewangan penuh anda, tidak mengambil tanggungjawab fidusia, dan tidak dilesenkan atau dikawal selia sebagai penasihat pelaburan di mana-mana yurisdiksi. Untuk keputusan wang sebenar yang menjejaskan pendapatan, cukai, atau pencen anda, bercakap dengan profesional berlesen. Gunakan AMI sebagai bahan latihan untuk mempertajam penalaran anda — bukan untuk menggantikan perbualan itu.",
+    "related_lessons": [
+      "073",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "not_adviser",
+      "regulatory"
+    ]
+  },
+  {
+    "id": "qa_aim_should_i_invest_my_savings",
+    "category": "ai_meta",
+    "question": "Adakah saya harus melabur simpanan saya dalam saham?",
+    "short_answer": "Itu bukan panggilan AMI — AMI adalah simulator latihan, bukan penasihat berlesen. Ia boleh memberikan anda latihan menganalisis kedudukan yang disimulasikan; ia tidak dapat memberitahu anda pecahan simpanan anda yang sepatutnya dalam ekuiti.",
+    "long_answer": "Alokasi ekuiti yang betul bergantung pada fakta yang AMI tidak miliki: kestabilan pendapatan anda, jangka masa, tanggungan, hutang, dan bagaimana penurunan akan menjejaskan tidur anda. Mandat AMI menangkap saiz posisi dan lantai penurunan dalam simulasi latihan — ia tidak menetapkan alokasi dunia sebenar anda, dan AMI tidak dilesenkan untuk berbuat demikian. Keputusan itu berada di tangan anda, idealnya dengan penasihat berlesen.",
+    "related_lessons": [
+      "075",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "allocation",
+      "personal_finance",
+      "not_adviser"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_open_account",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI membuka akaun broker bagi saya?",
+    "short_answer": "Tidak. AMI tidak berhubung dengan mana-mana broker dan tidak membuka akaun.",
+    "long_answer": "Membuka akaun broker sebenar adalah proses yang anda lakukan secara langsung dengan broker berlesen di wilayah anda. AMI beroperasi sepenuhnya dalam simulasi latihan dan tidak bertindak ke atas akaun sebenar dalam apa jua cara.",
+    "related_lessons": [
+      "073"
+    ],
+    "related_agents": [],
+    "tags": [
+      "no_brokerage",
+      "scope"
+    ]
+  },
+  {
+    "id": "qa_aim_tax_advice",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI memberikan nasihat cukai?",
+    "short_answer": "Tidak. AMI bukan penasihat cukai. Rawatan cukai bagi perdagangan bergantung pada wilayah dan situasi peribadi anda — rujuk profesional.",
+    "long_answer": "AMI mungkin memaparkan konsep umum dalam pelajaran (contohnya bagaimana tempoh pegangan mempengaruhi cukai di sesetengah wilayah) sebagai bahan latihan, tetapi ia tidak memberikan bimbingan cukai peribadi dan tidak berlesen untuk berbuat demikian. Jangan gunakan Verdict atau sembang 1-on-1 sebagai asas untuk keputusan pengfailan.",
+    "related_lessons": [
+      "073"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "no_tax",
+      "regulatory"
+    ]
+  },
+  {
+    "id": "qa_aim_why_hold_not_buy",
+    "category": "ai_meta",
+    "question": "Mengapa AMI berkata HOLD apabila saya mahu BUY?",
+    "short_answer": "AMI tidak berkata HOLD dalam erti kata menasihati anda untuk memegang — ia menghasilkan Verdict simulasi HOLD untuk anda menilai. Perdebatan 12 ejen berakhir dengan keseimbangan bull/bear dan kekangan Mandate anda yang mengarah ke arah itu; artifak latihan mencerminkan kerja tersebut, bukan keutamaan anda.",
+    "long_answer": "Buka transkrip perdebatan. Bear Researcher mungkin menandakan sesuatu yang kes Bull tidak menjawab sepenuhnya; Research Manager memberi berat kepada keputusan tersebut; PM mungkin mencatatkan kekangan mandat. HOLD simulasi tidak bermaksud 'jangan pernah beli ini' dan ia bukan nasihat pelaburan — ia bermaksud susunan semasa, bersyarat kepada Mandate anda, tidak memenuhi piawaian dalam latihan tersebut. Tujuannya adalah untuk melatih anda menilai panggilan tersebut sendiri; AMI hanya menolak untuk menghasilkan BUY untuk menyelaraskan dengan keutamaan anda.",
+    "related_lessons": [
+      "072",
+      "075"
+    ],
+    "related_agents": [
+      "research_manager",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "verdict",
+      "hold",
+      "explanation"
+    ]
+  },
+  {
+    "id": "qa_aim_why_pm_blocked_trade",
+    "category": "ai_meta",
+    "question": "Mengapa PM menyekat perdagangan saya?",
+    "short_answer": "Kerana perdagangan simulasi yang dicadangkan gagal semak ketaatan Mandate anda — biasanya saiz posisi, lantai penurunan (drawdown), atau pengecualian (halal, no_fossil, long_only, region).",
+    "long_answer": "PM menjalankan semakan deterministik terhadap Mandate yang anda tetapkan dalam simulasi latihan. Jika Trader mencadangkan saiz 7% apabila max_position_pct anda ialah 5, fungsi tersebut akan menyekat tanpa mengira betapa yakinnya mana-mana ejen. Buka baris ketaatan PM dalam kaki Verdict — ia menyatakan klausa tepat yang mencetuskan sekatan. Untuk mengubah keputusan dalam senario tersebut, kurangkan saiz yang dicadangkan, ubah Mandate anda (pilihan anda, bukan PM), atau tolak perdagangan simulasi tersebut. Sekatan tersebut adalah maklum balas latihan, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "074",
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "pm_block",
+      "mandate",
+      "compliance"
+    ]
+  },
+  {
+    "id": "qa_aim_what_does_pass_mean",
+    "category": "ai_meta",
+    "question": "Apa maksud PASS dalam Verdict?",
+    "short_answer": "PASS bermakna dagangan simulasi yang dicadangkan berada dalam had keras Mandat anda — ia bukan cadangan, bukan nasihat pelaburan, dan bukan jaminan hasil.",
+    "long_answer": "PASS ialah isyarat pematuhan dalam simulasi latihan: saiz dalam had max_position_pct, penurunan dalam had max_drawdown_pct, tiada pengecualian diaktifkan. Ia tidak menyatakan sama ada dagangan itu akan menguntungkan. Anda boleh menolak Verdict PASS. Anda boleh menerimanya pada saiz yang lebih kecil. Keputusan simulasi adalah sepenuhnya milik anda; PASS hanya mengesahkan bentuk portfoliio dalam latihan ini, bukan hasil dagangan.",
+    "related_lessons": [
+      "076",
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "pass",
+      "verdict",
+      "compliance"
+    ]
+  },
+  {
+    "id": "qa_aim_why_agents_arguing",
+    "category": "ai_meta",
+    "question": "Mengapa agen-agen ini bertengkar sesama sendiri?",
+    "short_answer": "Kerana perdebatan itu ialah bahan latihan. Peneliti Bull dan Bear — serta tiga Penyebar Risik — diarahkan untuk tidak bersetuju supaya Verdict simulasi mencerminkan hujah yang diuji tekanan, yang boleh anda latih untuk menilai, bukan teater konsensus.",
+    "long_answer": "Jika setiap agen bersetuju serta-merta, Verdict itu hanya satu perspektif yang dibalut sebagai dua belas, dan simulator akan mengajar anda tiada apa-apa. Perdebatan adalah tempat kelemahan dalam tesis terdedah — dan membacanya ialah kemahiran yang dilatih. Pengurus Penyelidikan mensintesis ke dalam kedudukan dan Pengurus Portfoliio (PM) memeriksa pematuhan cadangan Peniaga, tetapi ketidaksetujuan di atas itu ialah ciri, bukan pepijat. Baca penolakan sebelum anda membaca tajuk utama.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "debate",
+      "agents",
+      "design"
+    ]
+  },
+  {
+    "id": "qa_aim_confidence_score",
+    "category": "ai_meta",
+    "question": "Apakah maksud nombor keyakinan pada Verdict?",
+    "short_answer": "Ia ialah condongan berat Bilik terhadap verdict — bukan kebarangkalian yang dikalibrasi untuk menjadi betul.",
+    "long_answer": "Keyakinan 0.62 bermakna keseimbangan bull/bear dan Penyebar Risik condong ke arah itu selepas perdebatan simulasi, bukan dagangan mempunyai peluang 62% untuk untung. Baca ia sebagai 'condong, bukan terikat'. Dua Verdict dengan keyakinan sama boleh mempunyai profil risiko yang sangat berbeza — nombor itu ialah ringkasan latihan, bukan nasihat pelaburan. Sentiasa baca transkrip dan garis pematuhan PM bersama nombor tajuk utama.",
+    "related_lessons": [
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "confidence",
+      "verdict",
+      "probability"
+    ]
+  },
+  {
+    "id": "qa_aim_target_is_prediction",
+    "category": "ai_meta",
+    "question": "Adakah sasaran harga ialah ramalan?",
+    "short_answer": "Tidak. Sasaran ialah tahap di mana Peniaga simulasi akan mengunci untung jika tesis itu tercapai — input latihan simulasi, bukan ramalan bahawa harga akan mencapainya.",
+    "long_answer": "Sasaran, henti rugi, dan kemasukan ialah komitmen bersyarat dalam pelan dagangan simulasi: 'jika anda mengambil kemasukan ini, inilah risiko terendah yang ditakrifkan dan tahap yang dimaksudkan untuk diekspresikan oleh dagangan'. Tiada nombor ini ialah ramalan harga atau nasihat pelaburan. AMI sengaja tidak menghantar ramalan harga titik — simulator melatih kemahiran berfikir dalam ketidakpastian, bukan ilusi kepastian.",
+    "related_lessons": [
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "target",
+      "no_prediction",
+      "trade_plan"
+    ]
+  },
+  {
+    "id": "qa_aim_verdict_disagrees_with_me",
+    "category": "ai_meta",
+    "question": "Verdict AMI tidak sependapat dengan pandangan saya — siapa yang betul?",
+    "short_answer": "Kedua-dua pandangan adalah input latihan. AMI adalah pendapat kedua terstruktur yang disimulasikan; anda adalah CEO yang berlatih membuat keputusan. Baca pembangkang, timbang ia terhadap pandangan anda, dan latih membuat keputusan.",
+    "long_answer": "Ketidaksetujuan adalah tepat ketika simulator paling berguna — itulah kemahiran yang dilatih. Jika kes Bear yang dibangkitkan oleh Bilik tidak sebenarnya melemahkan tesis anda apabila anda membacanya dengan teliti, baiklah — teruskan dalam senario tersebut. Jika ia melemahkan, pertimbangkan semula. Verdict bukan otoriti dan bukan nasihat pelaburan; ia nota analis 12 agen yang disimulasikan untuk anda nilaikan. Nyahsahkannya apabila logik asas menyokongnya.",
+    "related_lessons": [
+      "075",
+      "076"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "disagreement",
+      "override",
+      "judgment"
+    ]
+  },
+  {
+    "id": "qa_aim_why_three_risk_debators",
+    "category": "ai_meta",
+    "question": "Mengapakah terdapat tiga Pembela Risiko?",
+    "short_answer": "Kerana risiko diuji ketegangan terbaik dari pelbagai sudut. Agresif, Konservatif, dan Neutral menolak saiz posisi yang dicadangkan ke arah berbeza sebelum Trader mengesahkannya.",
+    "long_answer": "Pembela Agresif berhujah untuk posisi yang lebih besar apabila persediaan kuat; Pembela Konservatif menolak saiz yang lebih kecil atau pengabaian; Pembela Neutral mengadili. Perdebatan simulasi berakhir dengan output saiz yang kemudian dicadangkan oleh Trader — dan PM menyemaknya terhadap Mandat anda. Tiga suara mengekalkan soalan saiz sebagai latihan latihan.",
+    "related_lessons": [
+      "072",
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "risk_debators",
+      "sizing",
+      "agents"
+    ]
+  },
+  {
+    "id": "qa_aim_who_are_12_agents",
+    "category": "ai_meta",
+    "question": "Siapakah 12 agen tersebut?",
+    "short_answer": "Empat Analis (Asas, Pasaran, Berita, Sosial), dua Penyelidik (Bull, Bear), Pengurus Penyelidikan, tiga Pembela Risiko (Agresif, Konservatif, Neutral), Trader, dan Pengurus Portfolio.",
+    "long_answer": "Concierge berada di luar Bilik — ia menyapa, menghalakan, dan mengendalikan pendaftaran. Di dalam Bilik simulasi, empat Analis mengumpul input, dua Penyelidik berdebat kes tersebut, Pengurus Penyelidikan mensintesis, tiga Pembela Risiko menguji ketegangan saiz, Trader merangka pelan perdagangan, dan PM menguatkuasakan Mandat anda. Itulah pasukan penuh — simulator latihan yang memberi anda latihan bekerja dengan meja analis.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge",
+      "research_manager",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "agents",
+      "roster"
+    ]
+  },
+  {
+    "id": "qa_aim_what_does_pm_do",
+    "category": "ai_meta",
+    "question": "Apakah tugas Pengurus Portfolio?",
+    "short_answer": "PM menguatkuasakan Mandat anda. Ia menyemak setiap Verdict terhadap peraturan yang dinyatakan — saiz, penurunan, pengecualian — dan menyekat apa-apa yang melanggar mereka.",
+    "long_answer": "PM adalah lantai keselamatan anda di dalam simulasi latihan. Semakannya adalah fungsi deterministik yang membaca medan Mandat yang anda tetapkan, bukan arahan yang boleh dielakkan. LULUS bermaksud perdagangan simulasi sesuai dengan lantai anda; SEKAT menamakan klausa tepat yang gagal. PM tidak menyemak fakta analis dan tidak meramalkan hasil — tugasnya adalah pematuhan mandat di dalam latihan latihan, tamat.",
+    "related_lessons": [
+      "074",
+      "076",
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "pm",
+      "mandate",
+      "safety_floor"
+    ]
+  },
+  {
+    "id": "qa_aim_research_manager_role",
+    "category": "ai_meta",
+    "question": "Apakah fungsi Pengurus Penyelidikan?",
+    "short_answer": "Pengurus Penyelidikan mensintesis perdebatan Bull vs Bear menjadi satu kedudukan — satu kesimpulan berberat yang kemudian digunakan oleh Trader dan Penyangkal Risiko.",
+    "long_answer": "Tanpa sintesis, anda hanya akan mempunyai dua esei yang bertentangan. Pengurus Penyelidikan menimbang setiap pihak, menandakan mana-mana nombor yang direka (hallucinated) berbanding data yang ditarik oleh Analis, dan menghasilkan bacaan seimbang dengan kecenderungan kebarangkalian bull serta keadaan pembatalan yang dinamakan. Ia adalah otak sintesis dalam Bilik simulasi ini — artifak latihan untuk anda menilai, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "072",
+      "077"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "research_manager",
+      "synthesis",
+      "debate"
+    ]
+  },
+  {
+    "id": "qa_aim_bull_vs_bear_difference",
+    "category": "ai_meta",
+    "question": "Apakah perbezaan antara Penyelidik Bull dan Bear?",
+    "short_answer": "Penyelidik Bull membina kes untuk posisi panjang (long); Penyelidik Bear membina kes untuk posisi pendek (short). Mereka sepatutnya tidak bersetuju — perdebatan antara mereka adalah tempat tesis diuji ketegasannya.",
+    "long_answer": "Kedua-duanya bekerja berdasarkan data Analis yang sama. Bull membingkai pemangkin (catalysts), Bear membingkai risiko; tiada satu pun dibenarkan mengabaikan pihak lain. Pengurus Penyelidikan kemudian menimbang hasilnya. Pertukaran ini adalah bahan latihan untuk kemahiran membaca kes dua hala — jika anda hanya membaca sisi yang bersetuju dengan andaian awal anda, anda terlepas matlamatnya.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [],
+    "tags": [
+      "bull",
+      "bear",
+      "researchers",
+      "debate"
+    ]
+  },
+  {
+    "id": "qa_aim_aggressive_vs_conservative_debator",
+    "category": "ai_meta",
+    "question": "Apakah perbezaan antara Penyangkal Agresif dan Konservatif?",
+    "short_answer": "Penyangkal Agresif menolak saiz posisi yang lebih besar apabila persediaan (setup) kukuh; Penyangkal Konservatif menolak saiz yang lebih kecil atau pengabaian. Penyangkal Neutral bertindak sebagai pengadil.",
+    "long_answer": "Kedua-duanya bekerja pada perdagangan simulasi yang dicadangkan selepas sintesis Pengurus Penyelidikan. Tugas mereka adalah berhujah tentang saiz posisi dan pengagihan risiko — bukan sama ada tesis itu betul, tetapi berapa banyak modal yang layak untuk posisi simulasi tersebut. Trader menyusun hujah mereka menjadi cadangan konkret yang kemudian disemak kepatuhan oleh PM berdasarkan Mandat anda, semuanya sebagai sebahagian daripada latihan latihan.",
+    "related_lessons": [
+      "072",
+      "014"
+    ],
+    "related_agents": [],
+    "tags": [
+      "risk_debators",
+      "sizing"
+    ]
+  },
+  {
+    "id": "qa_aim_trader_role",
+    "category": "ai_meta",
+    "question": "Apakah fungsi ejen Trader?",
+    "short_answer": "Trader merangka pelan perdagangan — titik masuk, henti rugi (stop), sasaran, jangka masa, saiz — berdasarkan sintesis Pengurus Penyelidikan dan hujah saiz Penyangkal Risiko.",
+    "long_answer": "Trader adalah langkah terakhir sebelum PM. Ia mengambil tesis berberat dan perdebatan saiz untuk menghasilkan cadangan simulasi yang konkret. Cadangan itu kemudian disemak kepatuhan oleh PM. Trader tidak melaksanakan apa-apa — tiada permukaan pelaksanaan — dan ia tidak boleh dilatih untuk melaksanakan secara automatik. Output pelan perdagangan adalah artifak latihan, bukan nasihat pelaburan, seperti baki AMI.",
+    "related_lessons": [
+      "072",
+      "073"
+    ],
+    "related_agents": [],
+    "tags": [
+      "trader",
+      "trade_plan"
+    ]
+  },
+  {
+    "id": "qa_aim_concierge_role",
+    "category": "ai_meta",
+    "question": "Apa tugas Concierge?",
+    "short_answer": "Concierge menyambut anda, menjalankan onboarding secara percakapan, menjawab soalan mengenai AI dan platform, serta mengalihkan anda kepada ejen atau ciri yang sesuai.",
+    "long_answer": "Concierge berada di luar 12 ejen simulasi dagangan — ia berfungsi seperti meja hadapan simulator latihan. Ia merujuk kepada perpustakaan Q&A yang dikurasi untuk jawapan pantas dan menyerahkan anda kepada ejen pakar (contohnya Bear Researcher dalam sesi 1-on-1) apabila soalan memerlukan kedalaman. Ia tidak pernah menggantikan Room.",
+    "related_lessons": [
+      "072"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "concierge",
+      "onboarding",
+      "routing"
+    ]
+  },
+  {
+    "id": "qa_aim_does_ami_hallucinate",
+    "category": "ai_meta",
+    "question": "Adakah AMI berhalusinasi?",
+    "short_answer": "Ya — AMI dibina berdasarkan model bahasa besar, dan mana-mana sistem berasaskan LLM boleh menghasilkan teks yang masuk akal tetapi salah. Pertahanan struktur adalah semakan pematuhan mandat oleh PM.",
+    "long_answer": "Seorang ejen mungkin merujuk kepada P/E yang lapuk, menerangkan corak carta secara salah, atau meringkaskan tajuk berita dengan tidak tepat. Pertahanan bukanlah 'meminta model dengan lebih kuat'. Pertahanan adalah semakan pematuhan mandat oleh PM adalah fungsi deterministik yang membaca bidang Mandate anda secara langsung — ia tidak melalui lapisan model, jadi ia tidak boleh dihalusi. Bahagian Verdict yang sensitif terhadap mandat (saiz, drawdown, pengecualian) dilindungi. Fakta lain dalam transkrip adalah sebahagian daripada latihan CEO anda: berlatih kemahiran menyilang semak output penganalisis adalah tepat apa yang simulator ini ajarkan.",
+    "related_lessons": [
+      "074"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "hallucinations",
+      "safety_floor",
+      "llm"
+    ]
+  },
+  {
+    "id": "qa_aim_can_ami_be_wrong",
+    "category": "ai_meta",
+    "question": "Bolehkah AMI salah?",
+    "short_answer": "Ya. Ejen individu boleh salah pada fakta, perdebatan boleh condong ke arah yang salah, dan Verdict yang lulus masih boleh menyebabkan kerugian dalam buku simulasi. AMI adalah simulator latihan, bukan pengetahuan mutlak dan bukan nasihat pelaburan.",
+    "long_answer": "Anggap setiap Verdict sebagai artifak latihan — pendapat berstruktur untuk dinilai, bukan arahan. Semakan pematuhan PM melindungi daripada pelanggaran mandat di dalam simulasi; ia tidak menjamin mana-mana dagangan akan untung. Baca transkrip, silang semak nombor utama, dan gunakan Journal Keputusan untuk menjejaki di mana bacaan simulasi AMI berpijak dan di mana ia tidak. Keupayaan untuk salah adalah apa yang menjadikan latihan ini jujur.",
+    "related_lessons": [
+      "074",
+      "075"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "fallibility",
+      "honest",
+      "judgment"
+    ]
+  },
+  {
+    "id": "qa_aim_bad_info_what_now",
+    "category": "ai_meta",
+    "question": "Bagaimana jika AMI memberikan maklumat buruk?",
+    "short_answer": "Semakan pematuhan mandat oleh PM adalah perlindungan struktur. Selain itu, silang semak fakta utama sendiri dan laporkan ralat supaya prompt dan suapan data dapat diperbaiki.",
+    "long_answer": "AMI dibina berdasarkan model bahasa asas, jadi kesilapan fakta individu berlaku. PM menyekat dagangan simulasi yang melanggar mandat tanpa mengira keyakinan mana-mana ejen. Untuk fakta bukan mandat — P/E yang dirujuk, tajuk berita yang diringkaskan — baca transkrip dan sahkan nombor yang menjadi asas kes; pengesahan itu adalah kemahiran yang diajar oleh simulator latihan. Jika anda menemui ralat yang jelas, laporkan ia; maklum balas itu membentuk iterasi seterusnya. Apa-apa yang AMI katakan bukan nasihat pelaburan.",
+    "related_lessons": [
+      "074",
+      "075"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "error_handling",
+      "safety_floor",
+      "cross_check"
+    ]
+  },
+  {
+    "id": "qa_aim_safety_floor_explained",
+    "category": "ai_meta",
+    "question": "Apakah lantai keselamatan AMI?",
+    "short_answer": "Lantai keselamatan ialah fungsi deterministik yang dijalankan oleh Pengurus Pelaburan (PM) terhadap Mandat anda — ia menyekat sebarang Veredikt yang melanggar peraturan saiz, drawdown, atau pengecualian yang dinyatakan, tidak kira apa kata mana-mana ejen.",
+    "long_answer": "Medan Mandat anda (max_position_pct, max_drawdown_pct, halal, no_fossil, long_only, region, dan lain-lain) disimpan sebagai data anda, bukan parameter model. Fungsi pematuhan PM membaca data itu secara langsung dalam simulasi latihan. Ia bukan arahan yang boleh dilembutkan melalui Brief Your Agent, juga bukan garis panduan yang boleh dibantah oleh ejen. Tukar Mandat anda dan lantai itu akan berubah; sehingga itu, lantai itu adalah lantai.",
+    "related_lessons": [
+      "074",
+      "013"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "safety_floor",
+      "deterministic",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_aim_can_i_change_agents",
+    "category": "ai_meta",
+    "question": "Bolehkah saya mengubah apa yang dikatakan oleh ejen?",
+    "short_answer": "Brief Your Agent membolehkan anda membentuk gaya, keraguan, dan pembebanan katalis ejen — dalam had tertentu. Ia tidak membolehkan anda mengatasi lantai keselamatan PM.",
+    "long_answer": "Anda boleh mengarahkan Bull Researcher untuk membebankan katalis jangka panjang lebih, Market Analyst untuk menumpukan pada kerangka masa mingguan, atau Trader untuk lebih suka henti rugi yang ketat. Perubahan arahan ini diaplikasikan sebagai lapisan arahan pada setiap larian simulasi — ia membentuk senario latihan, bukan nasihat sebenar. Apa yang tidak boleh anda arahkan ialah penguatkuasaan mandat PM, kelakuan pelaksanaan (kerana tiada), atau apa-apa yang menyentuh lantai keselamatan.",
+    "related_lessons": [
+      "074",
+      "075"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "brief",
+      "briefing",
+      "limits"
+    ]
+  },
+  {
+    "id": "qa_aim_coach_pm_less_strict",
+    "category": "ai_meta",
+    "question": "Bolehkah saya menjadikan PM kurang ketat?",
+    "short_answer": "Tidak. Penguatkuasaan mandat PM tidak boleh dilatih secara reka bentuk. Satu-satunya cara untuk mengubah apa yang disekat oleh PM ialah mengubah Mandat anda sendiri.",
+    "long_answer": "Perubahan latihan terpakai kepada permukaan yang boleh dilatih — nada, pembebanan, keraguan. Semakan pematuhan PM ialah fungsi deterministik yang membaca data Mandat anda dalam simulasi latihan, bukan arahan untuk dilembutkan. Jika anda ingin ruang lebih dalam senario, sunting Mandat (contohnya, naikkan max_position_pct dari 5 kepada 7); PM kemudian akan menguatkuasakan lantai baru. Lantai keselamatan bergerak mengikut Mandat anda, bukan mengikut latihan.",
+    "related_lessons": [
+      "074",
+      "075"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "pm_uncoachable",
+      "safety_floor",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_aim_coach_auto_execute",
+    "category": "ai_meta",
+    "question": "Bolehkah saya mengarahkan ejen untuk melaksanakan dagangan secara automatik?",
+    "short_answer": "Tidak. Tiada permukaan pelaksanaan dalam AMI — tiada apa-apa untuk dilaksanakan secara automatik, tiada apa-apa untuk diarahkan. Permintaan akan ditolak.",
+    "long_answer": "Pelaksanaan automatik bukan parameter yang boleh dilatih kerana keupayaan asas tidak wujud. AMI ialah simulator latihan, bukan platform pelaksanaan — tiada sambungan broker, tiada lapisan penempatan pesanan, dan tiada pelan untuk menambahnya. Latihan boleh membentuk bagaimana Trader simulasi berfikir; ia tidak boleh mencipta pelaksanaan dari udara.",
+    "related_lessons": [
+      "073",
+      "074"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "no_execution",
+      "coach_limits"
+    ]
+  },
+  {
+    "id": "qa_aim_mandate_explained",
+    "category": "ai_meta",
+    "question": "Apakah Mandat tersebut?",
+    "short_answer": "Mandat adalah kontrak anda dengan simulator. Anda menetapkan peraturan — had saiz posisi, lantai penurunan, pengecualian, wilayah — dan Pengurus Portfolio (PM) melaksanakan peraturan tersebut pada setiap Verdict simulasi dalam persekitaran latihan.",
+    "long_answer": "Medan biasa: max_position_pct (contohnya 5), max_drawdown_pct (contohnya 20), halal (benar/salah), no_fossil (benar/salah), long_only (benar/salah), region (contohnya us_equities). Mandat adalah milik anda untuk disunting; PM menganggapnya sebagai kebenaran asas dalam senario latihan. Tukar satu medan dan had kepatuhan Verdict seterusnya akan berubah bersamanya. Ini juga sebab mengapa bimbingan tidak boleh melunakkan lantai — lantai adalah data anda, bukan model. Mandat mentakrifkan latihan latihan, bukan dasar pelaburan dunia sebenar.",
+    "related_lessons": [
+      "074",
+      "013",
+      "076"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "contract",
+      "ceo"
+    ]
+  },
+  {
+    "id": "qa_aim_why_12_agents",
+    "category": "ai_meta",
+    "question": "Mengapa 12 ejen dan bukan hanya satu?",
+    "short_answer": "Kerana satu suara menyembunyikan titik buta sendiri, dan simulator ini mengajar kemahiran melihat titik buta tersebut. Dua belas ejen khusus peranan berhujah dari sudut berbeza, begitulah kelemahan dalam sebarang tesis terdedah dalam latihan latihan.",
+    "long_answer": "Satu ejen menjawab 'terangkan kepada saya tentang NVDA' akan menghasilkan sesuatu yang koheren dan yakin — dan anda tidak akan tahu di mana ia terlepas soalan. Membahagikan kerja antara Analis, Penyelidik, Penceroboh Risiko, Pedagang, dan PM memaksa kes simulasi melalui beberapa bar: data, perdebatan, saiz, kepatuhan. Disens adalah jejak audit. Verdict adalah sintesis. Anda berlatih membaca kedua-duanya — itulah latihan, bukan nasihat pelaburan.",
+    "related_lessons": [
+      "072",
+      "076"
+    ],
+    "related_agents": [
+      "research_manager"
+    ],
+    "tags": [
+      "agents",
+      "design",
+      "debate"
+    ]
+  }
+]

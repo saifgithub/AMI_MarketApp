@@ -1,0 +1,983 @@
+[
+  {
+    "id": "qa_psy_just_took_loss_reenter",
+    "category": "psychology",
+    "question": "Saya baru mencatat kerugian pada TSLA. Adakah saya harus masuk semula sekarang untuk membalasnya?",
+    "short_answer": "Memasuki semula pasaran dalam masa beberapa minit selepas kerugian untuk memulihkan kerugian tersebut adalah corak trading balas dendam. Berhenti sebentar dan catatkan kerugian dalam Jurnal Keputusan anda sebelum sebarang entri baharu.",
+    "long_answer": "Hasrat untuk segera memulihkan kerugian bukanlah isyarat — ia adalah kerugian itu sendiri yang memacu keputusan tersebut. Buka entri Jurnal Keputusan untuk dagangan TSLA dan tulis apa yang mencetuskan penutupan posisi. Jika Mandat anda mempunyai tetapan rehat (cooldown), Pengurus Portofolio (Portfolio Manager) kemungkinan besar telah menyekat sebarang entri baharu sehingga akhir sesi. Jika tidak, pertimbangkan untuk memperketat rehat tersebut dalam editor Mandat. Sampaikan idea seterusnya kepada Pembahas Konservatif (Conservative Debator) dalam sesi 1-on-1 sebelum anda bertindak.",
+    "related_lessons": [
+      "047",
+      "017"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "loss",
+      "revenge",
+      "cooldown"
+    ]
+  },
+  {
+    "id": "qa_psy_was_that_revenge",
+    "category": "psychology",
+    "question": "Adakah dagangan terakhir saya merupakan isyarat sebenar atau balas dendam?",
+    "short_answer": "Semak jurang masa (timestamp). Jika entri dibuat dalam tempoh 60 minit selepas penutupan posisi yang rugi dan tesisnya nipis, corak ini sesuai dengan trading balas dendam.",
+    "long_answer": "Tarik dua entri bersebelahan dalam Jurnal Keputusan dan bacanya secara bersebelahan. Dagangan balas dendam biasanya mempunyai tesis yang lebih pendek, kurang input ejen yang dirujuk, dan jurang masa yang lebih rapat. Kumpulkan Bilik (Room) pada setup yang sama sebagai ujian bersih — jika verdict menyimpang daripada keputusan live anda, itu adalah data. Pembahas Konservatif (Conservative Debator) juga boleh menerangkan logik anda dalam sesi 1-on-1.",
+    "related_lessons": [
+      "047"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "revenge",
+      "journal",
+      "pattern"
+    ]
+  },
+  {
+    "id": "qa_psy_angry_at_market",
+    "category": "psychology",
+    "question": "Saya sangat marah pada pasaran sekarang. Bagaimana saya boleh berhenti marah?",
+    "short_answer": "Marah terhadap pasaran biasanya bermakna dagangan seterusnya akan bersaiz berdasarkan emosi. Jauhi skrin pesanan dan biarkan rehat Mandat (cooldown) menjalankan tugasnya.",
+    "long_answer": "Pasaran tidak peduli — kemarahan itu timbul daripada jurang antara apa yang anda jangka dan apa yang berlaku. Jangan berdagang melalui kemarahan tersebut. Buka Jurnal Keputusan, tulis jangkaan anda semasa masuk, dan bandingkannya dengan apa yang sebenarnya berlaku. Jurang ini adalah audit tepi (edge) anda, bukan musuh anda. Jika hasrat untuk terlibat semula kuat, bawa setup tersebut kepada Pembahas Konservatif (Conservative Debator) sebelum sebarang tindakan.",
+    "related_lessons": [
+      "047",
+      "046"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "anger",
+      "loss",
+      "pause"
+    ]
+  },
+  {
+    "id": "qa_psy_loss_double_size",
+    "category": "psychology",
+    "question": "Adakah saya harus menggandakan saiz posisi seterusnya untuk memulihkan kerugian?",
+    "short_answer": "Tidak. Membesarkan saiz selepas kerugian adalah cara satu dagangan buruk menjadi spiral drawdown. Pengurus Portofolio (Portfolio Manager) akan melaksanakan had per-dagangan Mandat anda tanpa mengira.",
+    "long_answer": "Had risiko per-dagangan Mandat adalah lantai keras — ia tidak bergerak kerana P&L anda bergerak. Membesarkan saiz untuk memulihkan kerugian adalah perangkap martingale klasik. Semak kerugian dalam Jurnal Keputusan, kenal pasti apa yang salah dalam tesis atau pelaksanaan, dan dagangan seterusnya harus bersaiz sama dengan dagangan sebelumnya, bukan lebih besar. Pembahas Konservatif (Conservative Debator) boleh menguji idea seterusnya.",
+    "related_lessons": [
+      "047",
+      "017",
+      "018"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "sizing",
+      "loss",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_lost_three_in_row",
+    "category": "psychology",
+    "question": "Saya rugi tiga dagangan berturut-turut. Adakah saya rosak?",
+    "short_answer": "Tiga kerugian berturut-turut adalah normal secara statistik untuk hampir setiap kelebihan — yang penting ialah sama ada proses anda dipelihara. Semak setiap entri dalam Jurnal Keputusan.",
+    "long_answer": "Rangkaian kerugian tiga adalah dalam julat varians mana-mana strategi yang jujur. Soalan yang perlu ditanya bukan 'adakah saya rosak' tetapi 'adakah saya mengikut peraturan sendiri setiap kali?' Tarik tiga entri Jurnal dan semak tesis, entri, dan keluaran terhadap Mandat anda. Jika ketiga-tiganya bersih dari segi proses, rangkaian itu adalah varians. Jika satu atau lebih terlepas proses, itulah isyarat sebenar. Kumpulkan Bilik pada persediaan seterusnya sebelum bertindak.",
+    "related_lessons": [
+      "046",
+      "017"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "streak",
+      "loss",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_close_account_after_loss",
+    "category": "psychology",
+    "question": "Saya mahu memadam aplikasi selepas kerugian ini. Adakah saya perlu?",
+    "short_answer": "Impuls itu adalah suara kerugian, bukan data. Jauhkan diri dari skrin untuk hari ini dan biarkan penyejukan Mandat membawa anda ke esok.",
+    "long_answer": "Kerugian simulasi menyakitkan kerana ia mendedahkan jurang antara cerita anda dan realiti — jurang itu adalah keseluruhan tujuan amalan. Jangan buat keputusan kekal dalam keadaan emosi. Tutup aplikasi, buka Jurnal Keputusan dalam 24 jam, dan baca kerugian itu dengan mata segar. Pembahas Konservatif boleh membimbing anda melalui apa yang dagangan itu sebenarnya beritahu tentang proses anda.",
+    "related_lessons": [
+      "046",
+      "047"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "concierge"
+    ],
+    "tags": [
+      "capitulation",
+      "loss",
+      "pause"
+    ]
+  },
+  {
+    "id": "qa_psy_blame_agent",
+    "category": "psychology",
+    "question": "Peneroka Bull memberitahu saya untuk membeli dan saya rugi. Adakah ia kesalahan ejen?",
+    "short_answer": "Ejen memberikan input, bukan arahan — panggilan CEO adalah milik anda. Tarik verdict Bilik dan semak sama ada suara pembangkang direkodkan.",
+    "long_answer": "Tugas Peneroka Bull adalah untuk membela kes bull; itu bukan cadangan, itu satu suara dalam perdebatan. Buka transkrip Kumpulkan Bilik untuk dagangan itu — jika Peneroka Bear atau Pembahas Konservatif menandakan risiko yang anda abaikan, itulah pelajaran. Jika perdebatan berat sebelah dan lantai masih retak, itu adalah titik data tentang kelebihan, bukan kesalahan. Log kedua-duanya dalam Jurnal Keputusan.",
+    "related_lessons": [
+      "047",
+      "017"
+    ],
+    "related_agents": [
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "tags": [
+      "blame",
+      "loss",
+      "journal"
+    ]
+  },
+  {
+    "id": "qa_psy_after_loss_stop_for_day",
+    "category": "psychology",
+    "question": "Adakah saya perlu berhenti berdagang untuk hari ini selepas kerugian?",
+    "short_answer": "Jika kerugian itu masih kuat dalam kepala anda, ya. Penyejukan kerugian harian dalam Mandat anda menjadikan keputusan itu automatik.",
+    "long_answer": "Kebanyakan praktisi stabil menjalankan pemutus litar kerugian harian — tahap merah di mana sesi tamat. Buka editor Mandat dan tetapkan had penurunan harian jika anda tidak memilikinya. Pengurus Portfolio akan melaksanakannya tanpa rundingan. Luangkan baki hari ini untuk menyemak entri Jurnal Keputusan untuk kerugian tersebut.",
+    "related_lessons": [
+      "047",
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "cooldown",
+      "mandate",
+      "loss"
+    ]
+  },
+  {
+    "id": "qa_psy_winning_streak_size_up",
+    "category": "psychology",
+    "question": "Saya menang lima dagangan berturut-turut. Adakah saya perlu meningkatkan saiz dagangan?",
+    "short_answer": "Lima kemenangan berturut-turut tidak mengubah kelebihan anda — ia hanya mengubah tahap keyakinan anda terhadap kelebihan tersebut. Saiz mesti kekal dalam had Mandat.",
+    "long_answer": "Jaringan kemenangan memampatkan jarak persepsi antara anda dan kerugian seterusnya. Had per-dagangan dalam Mandat wujud tepat untuk memastikan jaringan tidak diterjemahkan menjadi posisi yang terlalu besar sebelum pembalikan pasaran. Pengurus Portofolio akan menyekat sebarang saiz di atas had anda. Jika anda benar-benar berpendapat bahawa kelebihan telah bertambah baik, catatkan bukti dalam Jurnal Keputusan merangkumi sekurang-kurangnya 20 dagangan — bukan 5.",
+    "related_lessons": [
+      "049",
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "overconfidence",
+      "streak",
+      "sizing"
+    ]
+  },
+  {
+    "id": "qa_psy_mandate_flagged_streak",
+    "category": "psychology",
+    "question": "Mengapa AMI sentiasa menandakan Mandat saya apabila saya sedang dalam jaringan kemenangan?",
+    "short_answer": "Mandat tidak membaca P&L anda — ia membaca cadangan dagangan anda. Jika ia menandakan, saiz posisi atau profil risiko telah menyimpang daripada apa yang anda tetapkan.",
+    "long_answer": "Semakan kepatuhan oleh Pengurus Portofolio adalah deterministik — ia membandingkan cadangan dagangan dengan Mandat yang anda tulis, bukan terhadap keputusan terkini anda. Jaringan kemenangan sering membuatkan pedagang secara senyap meningkatkan saiz atau melonggarkan henti rugi, yang merupakan tepat apa yang dikesan oleh tanda amaran ini. Semak dagangan yang ditandakan berbanding Mandat secara bersebelahan. Jika anda mahu membenarkan saiz yang lebih besar, sunting Mandat secara eksplisit dan tanggung perubahan tersebut.",
+    "related_lessons": [
+      "049",
+      "051"
+    ],
+    "related_agents": [
+      "portfolio_manager"
+    ],
+    "tags": [
+      "mandate",
+      "overconfidence",
+      "streak"
+    ]
+  },
+  {
+    "id": "qa_psy_too_confident",
+    "category": "psychology",
+    "question": "Adakah saya menjadi terlalu yakin? Segalanya terasa mudah sekarang.",
+    "short_answer": "Apabila dagangan terasa mudah, kerugian seterusnya biasanya lebih dekat daripada yang dirasai. Itu bukan ramalan — ia adalah struktur varians.",
+    "long_answer": "Kepercayaan diri yang berlebihan muncul sebagai henti rugi yang melebar, posisi yang terlalu besar, dan melangkah-langkau langkah 'Kumpulkan Bilik'. Rujuk lima entri Jurnal Keputusan terakhir anda — kira berapa banyak yang termasuk tesis lawan dari Bear Researcher. Jika nombor itu menurun, corak itu wujud. Bawa setup seterusnya kepada Conservative Debator dalam sesi 1-on-1 secara khusus untuk mendedahkan apa yang boleh menjadi salah.",
+    "related_lessons": [
+      "049",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "bear_researcher"
+    ],
+    "tags": [
+      "overconfidence",
+      "streak",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_streak_increase_frequency",
+    "category": "psychology",
+    "question": "Saya sedang menang, jadi adakah saya perlu mengambil lebih banyak dagangan?",
+    "short_answer": "Kekerapan dagangan adalah hak milik kelebihan anda, bukan mood anda. Jika Mandat anda menetapkan had maksimum dagangan per minggu, Pengurus Portofolio akan mengekalkan garisan tersebut.",
+    "long_answer": "Meningkatkan kekerapan semasa jaringan adalah cara kualiti setup menurun secara senyap — bar penurunan kerana maklum balas terkini adalah positif. Jika anda benar-benar percaya terdapat lebih banyak peluang, dokumentasikan ia dalam Jurnal Keputusan sebagai isyarat yang terlepas dan semak pada hujung minggu. Sunting Mandat hanya dengan bukti itu di tangan, bukan pada momentum.",
+    "related_lessons": [
+      "049",
+      "051"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "overconfidence",
+      "frequency",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_streak_skip_debate",
+    "category": "psychology",
+    "question": "Saya betul lima kali. Adakah saya perlu masih perlu Mengadakan Bilik?",
+    "short_answer": "Melepasi perdebatan pada rentetan adalah saat anda paling memerlukannya. Bilik adalah pemeriksaan terhadap naratif anda sendiri, bukan sekadar formaliti.",
+    "long_answer": "Apabila keputusan terkini mengesahkan bacaan anda, godaan untuk bertindak lebih pantas dan melepaskan perselisihan adalah kuat. Di sinilah setup letupan seterusnya tersembunyi. Adakan Bilik pada idea seterusnya dan beri perhatian khusus kepada Penyelidik Bear dan Pendebat Konservatif. Jika verdict masih selari dengan bacaan anda selepas perselisihan yang jujur, baik — tetapi pastikan perselisihan itu direkodkan.",
+    "related_lessons": [
+      "049"
+    ],
+    "related_agents": [
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "tags": [
+      "overconfidence",
+      "debate",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_feel_like_genius",
+    "category": "psychology",
+    "question": "Saya rasa seperti genius selepas rentetan ini. Adakah itu buruk?",
+    "short_answer": "Rasa itu tidak buruk — bertindak atasnya adalah. Tepi anda tidak berubah dalam dua minggu; saiz sampel anda berubah.",
+    "long_answer": "Rentetan panas yang pendek adalah dalam varians proses yang sederhana sekalipun. Jurnal Keputusan adalah tempat anda memeriksa sama ada kemenangan datang dari proses atau nasib — jika tesisnya nipis dan berjaya, kemenangan itu adalah varians. Bawa idea seterusnya kepada Pendebat Konservatif sebelum meningkatkan saiz posisi.",
+    "related_lessons": [
+      "049",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "overconfidence",
+      "narrative",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_streak_friends_imitate",
+    "category": "psychology",
+    "question": "Kawan-kawan saya mahu saya berkongsi pilihan saya sekarang kerana saya sedang menang. Adakah saya perlu?",
+    "short_answer": "Berkongsi pilihan semasa rentetan memberi tekanan kepada anda untuk terus memuat naik kemenangan, yang mengubah cara anda berdagang. Kekalkan lantai secara peribadi.",
+    "long_answer": "Sebaik sahaja orang memerhatikan pilihan anda, anda berdagang untuk audiens bukan untuk tesis — dan itu adalah perangkap psikologi yang diketahui. Jurnal Keputusan adalah untuk proses anda, bukan suapan media sosial. Jika anda ingin mengajar, kongsi pelajaran yang telah anda catatkan selepas satu suku penuh, bukan perdagangan langsung. Pendebat Konservatif juga boleh membimbing anda bagaimana tekanan luar mengubah pengambilan risiko.",
+    "related_lessons": [
+      "049",
+      "048"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "social_media_analyst"
+    ],
+    "tags": [
+      "overconfidence",
+      "social",
+      "audience"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_nvda",
+    "category": "psychology",
+    "question": "Semua orang bercakap tentang NVDA di X. Adakah saya terlepas?",
+    "short_answer": "Perhatian kumpulan adalah isyarat sentimen, bukan entri. Jalankan NVDA melalui Mengadakan Bilik sebelum anda membuat sebarang keputusan.",
+    "long_answer": "FOMO mencapai puncak apabila cerita paling kuat dan harga telah bergerak. Analis Media Sosial akan memberitahu anda apa yang difikirkan kumpulan; Penyelidik Bear akan memberitahu anda apa yang boleh merosakkan tesis; Pendebat Konservatif akan memberitahu anda sama ada entri masih mempunyai ganjaran-kepada-risiko yang menguntungkan. Jika tiga daripada itu selari melawan entri, perdagangan itu bukan milik anda — ia milik kumpulan.",
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fomo",
+      "crowd",
+      "sentiment"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_vs_real_signal",
+    "category": "psychology",
+    "question": "Bagaimana saya membezakan FOMO daripada isyarat sebenar?",
+    "short_answer": "Isyarat sebenar bertahan walaupun Bear Researcher membantah dalam Convene the Room. FOMO biasanya tidak.",
+    "long_answer": "FOMO mempunyai petunjuk — urgensi adalah tentang kehilangan pergerakan, bukan tentang setup itu sendiri. Jika anda tidak dapat menerangkan entry, stop, dan target tanpa merujuk kepada apa yang dilakukan orang lain, itu adalah FOMO. Convene the Room dan baca Bear Researcher dengan teliti. Entri dalam Decision Journal harus kukuh jika anda membacanya semula 24 jam kemudian dengan carta yang disembunyikan.",
+    "related_lessons": [
+      "048"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fomo",
+      "signal",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_after_chase",
+    "category": "psychology",
+    "question": "Saya mengejar pelari dan kena stop out. Apa sekarang?",
+    "short_answer": "Kejaran lewat adalah corak FOMO. Log perdagangan ini dan tambah peraturan 'tiada entry selepas X% extension' ke dalam Mandate anda.",
+    "long_answer": "Kejaran lewat mempunyai struktur yang sama — entry jauh melepasi breakout, tiada tahap invalidasi yang bersih, stop terlalu jauh. Buka entri Decision Journal dan kenal pasti mana-mana yang terpakai. Kemudian, kodifikasikan pelajaran itu dalam Mandate supaya Portfolio Manager menangkapnya sebelum anda klik. Conservative Debator juga boleh pra-menapis setup yang terlalu melampau dalam 1-on-1.",
+    "related_lessons": [
+      "048",
+      "047"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "fomo",
+      "chase",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_missed_move",
+    "category": "psychology",
+    "question": "Saya terlepas pergerakan 20%. Bagaimana saya melupakannya?",
+    "short_answer": "Anda tidak terlepas — ia bukan milik anda melainkan jika proses anda menangkapnya. Setup seterusnya adalah yang penting.",
+    "long_answer": "Perdagangan yang anda tidak ambil mengikut peraturan anda sendiri bukan kerugian; ia adalah kemenangan orang lain. Perangkapnya ialah membiarkan satu pergerakan yang terlepas mengendurkan bar untuk yang seterusnya. Log setup yang terlepas dalam Decision Journal — perhatikan sama ada proses anda sebenarnya mempunyai cara untuk menangkapnya. Jika ya, perbaiki skrin. Jika tidak, terimanya sebagai di luar edge anda dan teruskan.",
+    "related_lessons": [
+      "048",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "fomo",
+      "regret",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_crypto_friend",
+    "category": "psychology",
+    "question": "Kawan saya baru buat 10x pada coin meme. Patutkah saya masuk?",
+    "short_answer": "AMI Trade adalah untuk ekuiti AS dan latihan simulasi sahaja. Hasil orang lain bukan edge anda.",
+    "long_answer": "Rasa iri terhadap hasil adalah corak FOMO yang diketahui — satu kemenangan anekdot memutar rasa kebarangkalian anda. Social Media Analyst boleh menunjukkan anda seberapa kerap naratif khalayak mengenai mana-mana aset menyimpang daripada asas. Kekalkan proses yang anda bina di sini; Decision Journal adalah satu-satunya gelung maklum balas yang sebenarnya mencerminkan edge anda.",
+    "related_lessons": [
+      "048",
+      "049"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fomo",
+      "envy",
+      "social"
+    ]
+  },
+  {
+    "id": "qa_psy_fomo_oversize_to_catch_up",
+    "category": "psychology",
+    "question": "Adakah saya perlu besarkan saiz dagangan ini untuk mengejar pergerakan?",
+    "short_answer": "Tidak. Membesarkan saiz untuk menebus pergerakan yang terlepas adalah saiz FOMO. Had Mandat tetap terpakai.",
+    "long_answer": "Kerangka 'mengejar' bermaksud saiz ditetapkan oleh penyesalan, bukan oleh dagangan itu sendiri. Semakan kepatuhan Portfolio Manager akan menolak sebarang saiz melebihi had Mandat anda secara automatik. Ambil dagangan pada saiz biasa atau tinggalkan; tiada jalan tengah yang rasional. Catat dorongan ini dalam Jurnal Keputusan supaya corak ini kelihatan pada masa hadapan.",
+    "related_lessons": [
+      "048",
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fomo",
+      "sizing",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_when_take_profit",
+    "category": "psychology",
+    "question": "Saya untung 8% pada dagangan ini. Bilakah saya perlu ambil untung?",
+    "short_answer": "Ambil untung di mana rancangan anda nyatakan — bukan di mana ia terasa enak. Jika anda tidak menetapkan sasaran, itu adalah pengajaran, bukan titik keluar.",
+    "long_answer": "Tanpa titik keluar yang ditentukan awal, setiap aras menjadi rundingan dengan ketamakan. Buka entri Jurnal Keputusan untuk dagangan ini dan periksa sasaran yang anda tulis pada masa masuk. Jika tiada, keluarkan secara berperingkat pada aras berasaskan peraturan — separuh pada 1R, dan ikut baki — kemudian catatkan peraturan keputusan untuk masa hadapan. Conservative Debator akan mengulangi titik yang sama: proses mengatasi perasaan.",
+    "related_lessons": [
+      "045",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "greed",
+      "exit",
+      "profit"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_let_winners_run",
+    "category": "psychology",
+    "question": "Mengapa Conservative Debator sentiasa mengatakan keluarkan secara berperingkat?",
+    "short_answer": "Kerana untung separa menukar keuntungan kertas kepada keuntungan direalisasikan dan mengurangkan peluang kehilangan keseluruhan pergerakan. Ini adalah peraturan proses, bukan ramalan pasaran.",
+    "long_answer": "Pengeluaran berperingkat — mengambil sebahagian pada sasaran pertama, dan mengikuti baki — adalah jawapan struktur Conservative Debator terhadap ketamakan. Ia tidak meramal tick seterusnya; ia hanya mengunci dagangan ke dalam keadaan 'tidak boleh rugi dari sini'. Jika anda ingin membatalkan dan membiarkannya berjalan sepenuhnya, itu adalah suntingan Mandat, bukan impuls sekali sahaja. Catatkan kedua-dua pilihan dalam Jurnal Keputusan dan semak set peraturan mana yang lebih berkesan merentasi 20+ dagangan.",
+    "related_lessons": [
+      "045",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "greed",
+      "scale-out",
+      "exit"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_paper_gains",
+    "category": "psychology",
+    "question": "Saya sentiasa melihat keuntungan kertas bertukar menjadi kerugian. Apa yang berlaku?",
+    "short_answer": "Itu adalah corak ketamakan dalam bentuk — mengubah sasaran ke atas semasa dagangan dibuka. Titik keluar yang ditetapkan awal menghilangkan rundingan.",
+    "long_answer": "Jika anda mendapati diri mengubah sasaran ke atas apabila harga menghampiri sasaran asal, di situlah pusingan penuh bermula. Jurnal Keputusan sepatutnya menunjukkan sasaran asal yang ditulis pada masa masuk — jika anda tidak dapat menemukannya, itulah jurangnya. Betulkan pada masa masuk pada masa hadapan, bukan semasa dagangan berjalan. Conservative Debator boleh menguji sasaran anda sebelum anda klik.",
+    "related_lessons": [
+      "045",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "greed",
+      "target",
+      "exit"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_one_more_trade",
+    "category": "psychology",
+    "question": "Saya mendapat hari yang hebat. Adakah saya perlu mengambil satu lagi dagangan untuk meningkatkannya?",
+    "short_answer": "Dagangan 'satu lagi' selepas hari hijau adalah di mana hari-hari hijau mati. Tutup platform dan catatkan hari ini.",
+    "long_answer": "Dagangan keserakahan hujung hari mempunyai bentuk yang boleh dikenal pasti — tesis yang nipis, saiz yang terlalu besar berbanding bajet risiko hari itu, diambil kerana skrin masih terbuka. Mandate boleh menetapkan had dagangan sehari atau peraturan berhenti apabila hijau; Pengurus Portfolio akan menguatkuasakan ia. Kunci hari ini dalam Jurnal Keputusan.",
+    "related_lessons": [
+      "045",
+      "050"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "greed",
+      "overtrading",
+      "discipline"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_add_to_winner",
+    "category": "psychology",
+    "question": "Adakah saya perlu menambah pada kedudukan yang menang?",
+    "short_answer": "Menambah kepada pemenang adalah keputusan strategi yang harus berada dalam Mandate, bukan panggilan pada saat-saat panas. Jika ia tidak ditulis di sana, jangan.",
+    "long_answer": "Piramiding boleh menjadi strategi yang kukuh apabila ia telah didefinisikan sebelumnya — pencetus kemasukan, saiz tambahan, dan larangan berhenti. Dilakukan secara impulsif, ia adalah keserakahan dengan nama lain. Buka Mandate; jika 'menambah kepada pemenang' tidak ditulis dengan peraturan, jawapannya adalah tidak untuk dagangan ini. Sunting Mandate secara eksplisit jika anda mahu ia menjadi peraturan masa depan, kemudian patuhi ia.",
+    "related_lessons": [
+      "045",
+      "051"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "greed",
+      "pyramid",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_greed_round_number",
+    "category": "psychology",
+    "question": "Saya ingin memegang untuk nombor bulat ($100, $500). Fikiran yang buruk?",
+    "short_answer": "Sasaran nombor bulat biasanya adalah jangkar, bukan analisis. Jika sasaran struktur anda di bawah nombor bulat, ambil ia di sana.",
+    "long_answer": "Memegang melebihi keluaran struktur untuk tahap psikologi nombor bulat adalah bagaimana dagangan berputar kembali. Pasaran tidak tahu keutamaan estetik anda. Dokumentasikan keluaran struktur dalam Jurnal Keputusan, ambil separuh di sana, dan jejak baki hanya jika Mandate anda membenarkan. Pembangkang Konservatif akan mengukuhkan logik yang sama.",
+    "related_lessons": [
+      "045"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "greed",
+      "anchoring",
+      "target"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_sell_everything",
+    "category": "psychology",
+    "question": "Saya mahu menjual semuanya. Adakah itu ketakutan yang bercakap?",
+    "short_answer": "Jika tiada apa-apa yang berubah dalam tesis, ya. Jangan likuidasi atas emosi — buka setiap entri Jurnal Kedudukan terlebih dahulu.",
+    "long_answer": "Keluaran pukulan semasa volatiliti biasanya bertentangan dengan pelan asal berbanding dengannya. Pergi kedudukan demi kedudukan. Untuk setiap satu, tanya sama ada tesis asal telah rosak atau harga hanya tidak selesa. Jika tesis masih memegang dan larangan belum dilanggar, keluaran hanyalah ketakutan. Pembangkang Konservatif boleh meneroka setiap nama dalam 1-on-1.",
+    "related_lessons": [
+      "046"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "bear_researcher"
+    ],
+    "tags": [
+      "fear",
+      "capitulation",
+      "exit"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_market_scares_me",
+    "category": "psychology",
+    "question": "Pasar membuatkan saya takut pada masa ini. Adakah saya perlu berdagang juga?",
+    "short_answer": "Jika pasar membuatkan anda takut, saiz anda terlalu besar — bukan pasaran terlalu berbahaya. Kurangkan saiz atau keluar sehingga ketegasan kembali.",
+    "long_answer": "Rasa takut pada saiz semasa bermakna saiz yang lebih kecil akan dapat dikawal. Buka Mandat, kurangkan peratusan risiko per dagangan buat sementara waktu, dan Portfolio Manager akan melaksanakan had saiz yang lebih kecil. Keluar juga merupakan dagangan yang sah — logkan ia. Conservative Debator boleh membincangkan sama ada sebarang setup bernilai untuk diambil pada volatiliti semasa.",
+    "related_lessons": [
+      "046",
+      "017"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "fear",
+      "sizing",
+      "volatility"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_freeze_at_entry",
+    "category": "psychology",
+    "question": "Saya sentiasa tersekat pada butang masuk. Apa yang salah?",
+    "short_answer": "Terkedam biasanya bermaksud saisi kedudukan terasa lebih besar daripada yang sepatutnya untuk setup tersebut. Kurangkan saiz dan keadaan terkemedam cenderung hilang.",
+    "long_answer": "Jika anda telah melakukan kerja — Convene the Room, tesis yang jelas, henti yang ditakrifkan — dan masih tidak dapat menekan, badan sedang memberitahu anda saiz itu salah. Sunting Mandat kepada had per dagangan yang lebih kecil dan cuba lagi. Logkan terkemedam dalam Jurnal Keputusan supaya corak itu kelihatan. Conservative Debator juga boleh menguji sama ada setup itu benar-benar milik anda.",
+    "related_lessons": [
+      "046",
+      "017"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "fear",
+      "freeze",
+      "sizing"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_after_news",
+    "category": "psychology",
+    "question": "Ada berita buruk di mana-mana. Adakah saya perlu menutup posisi panjang saya?",
+    "short_answer": "Penutupan yang dipacu berita biasanya adalah penutupan yang dipacu oleh orang ramai. Semak sama ada tesis khusus anda berubah sebelum menyentuh apa-apa.",
+    "long_answer": "Narat ketakutan makro menyebar dengan cepat dan tidak semestinya menjejaki tesis posisi khusus anda. Social Media Analyst boleh menunjukkan bentuk sentimen; Bear Researcher boleh memberitahu anda apa yang sebenarnya akan merosakkan setiap nama. Jalankan penapis itu pada setiap posisi sebelum melakukan apa-apa. Jika tesis masih kukuh dan henti belum dilanda, berita itu adalah gangguan kepada buku anda.",
+    "related_lessons": [
+      "046"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fear",
+      "news",
+      "capitulation"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_drawdown_panic",
+    "category": "psychology",
+    "question": "Saya rugi 15% pada portfolio. Saya mahu pergi ke tunai.",
+    "short_answer": "Penurunan 15% adalah tidak selesa tetapi dalam varians normal. Jangan menyerah di bahagian bawah — semak sama ada setiap tesis masih kukuh.",
+    "long_answer": "Menyerah adalah istilah teknikal untuk menjual kerana penurunan terlalu kuat, bukan kerana tesis telah pecah. Buka Jurnal Keputusan untuk setiap posisi dan tanya sama ada tesis asal masih kukuh. Jika Mandat anda mempunyai waktu rehat penurunan, Portfolio Manager telah mengehadkan saiz lebih lanjut. Conservative Debator boleh membincangkan buku itu nama demi nama.",
+    "related_lessons": [
+      "046",
+      "017",
+      "018"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager",
+      "bear_researcher"
+    ],
+    "tags": [
+      "fear",
+      "drawdown",
+      "capitulation"
+    ]
+  },
+  {
+    "id": "qa_psy_fear_news_volatility",
+    "category": "psychology",
+    "question": "VIX sedang melonjak. Adakah saya perlu berhenti berdagang?",
+    "short_answer": "Volatiliti tinggi bukan bermaksud berhenti berdagang; ia bermaksud saiz lebih kecil dan henti rugi lebih luas. Mandate perlu disesuaikan untuk menyelaraskan diri.",
+    "long_answer": "Mod volatiliti mengubah ruang yang diperlukan oleh satu dagangan. Jika Mandate anda tidak mempunyai peraturan saiz yang disesuaikan dengan volatiliti, inilah masa untuk menambahkannya — risiko per dagangan lebih kecil apabila volatiliti nyata melebihi ambang. Portfolio Manager akan melaksanakan peraturan ini. Bear Researcher dan Conservative Debator boleh menguji tekanan pada titik masuk dalam mod volatiliti tinggi.",
+    "related_lessons": [
+      "046",
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "fear",
+      "volatility",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_break_rules",
+    "category": "psychology",
+    "question": "Saya melanggar peraturan sendiri dan menang. Adakah itu penting?",
+    "short_answer": "Ya. Kemenangan melalui pelanggaran peraturan adalah hasil paling berbahaya — ia mengajar pelajaran yang salah dan memudahkan pelanggaran seterusnya.",
+    "long_answer": "Proses dan hasil adalah paksi yang berbeza. Dagangan yang menang melalui pelanggaran peraturan adalah 'kebaikan buruk'; ia mengukuhkan kebiasaan melanggar peraturan pada masa hadapan, yang mana kemungkinan besar tidak akan berjaya. Catatkan dalam Decision Journal secara eksplisit sebagai peraturan-dilanggar-tapi-menang. Merentasi 20+ dagangan, corak akan menunjukkan kadar kemenangan sebenar. Conservative Debator boleh menerangkan peraturan mana dan mengapa ia wujud.",
+    "related_lessons": [
+      "051",
+      "049"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "discipline",
+      "rules",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_why_break_rules",
+    "category": "psychology",
+    "question": "Mengapa saya sentiasa melanggar peraturan sendiri?",
+    "short_answer": "Peraturan yang dilanggar biasanya peraturan yang tidak dikuatkuasakan. Pindahkan peraturan dari kepala anda ke dalam Mandate agar Portfolio Manager melaksanakannya.",
+    "long_answer": "Jika peraturan hanya hidup dalam niat anda, ia bersaing dengan setiap emosi pada masa nyata dan biasanya kalah. Terjemahkan ia ke dalam klausa Mandate — saiz kedudukan maksimum, dagangan maksimum sehari, tiada titik masuk selepas kerugian selama X minit — dan Portfolio Manager akan menyekat pelanggaran secara deterministik. Semak Decision Journal untuk mencari peraturan mana yang paling kerap anda langgar dan perkuatkan peraturan tersebut terlebih dahulu.",
+    "related_lessons": [
+      "051",
+      "047"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "discipline",
+      "mandate",
+      "rules"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_stick_to_plan",
+    "category": "psychology",
+    "question": "Bagaimana saya sebenarnya mematuhi pelan saya?",
+    "short_answer": "Buat pelan cukup kecil untuk muat dalam satu kad dan masukkan peraturan ke dalam Mandate agar ia dikuatkuasakan, bukan diingati.",
+    "long_answer": "Pelan yang tidak dapat anda ingat di bawah tekanan bukanlah pelan, ia hanyalah aspirasi. Mandate adalah bentuk operasi — peraturan titik masuk, saiz, keluar, had harian — dan Portfolio Manager menjalankan pemeriksaan pematuhan pada setiap dagangan. Tulis entri Decision Journal berbanding pelan, bukan berbanding hasil. Merentasi beberapa minggu, jurang antara niat dan pelaksanaan akan mengecil.",
+    "related_lessons": [
+      "051",
+      "017"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "discipline",
+      "plan",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_consistency",
+    "category": "psychology",
+    "question": "Bagaimana saya boleh konsisten?",
+    "short_answer": "Konsistensi bergantung kepada pelaksanaan proses yang sama untuk setiap dagangan. Senarai semak yang sama, bentuk entri jurnal yang sama, dan pemeriksaan pematuhan yang sama.",
+    "long_answer": "Keputusan yang tidak konsisten hampir selalu berpunca daripada proses yang tidak konsisten. Mandate adalah spesifikasi; Convene the Room adalah semakan; Decision Journal adalah audit. Jika setiap dagangan mempunyai tiga artifak yang sama, keputusan akan menajam dari masa ke masa. Conservative Debator boleh menyemak sepuluh entri Journal terakhir anda untuk konsistensi bentuk.",
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "discipline",
+      "consistency",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_skip_journal",
+    "category": "psychology",
+    "question": "Adakah saya benar-benar perlu menjurnal setiap dagangan?",
+    "short_answer": "Ya. Decision Journal adalah satu-satunya gelung yang membolehkan anda melihat corak anda sendiri — tanpa itu anda hanya meneka.",
+    "long_answer": "Pembeli-dagangan yang tidak ditrack tidak dapat membezakan antara varians dan kemahiran. Journal mengubah hingar hasil individu kepada data terstruktur: sebab masuk, verdict ejen yang dirujuk, logik keluar, dan pasca-mati. Selepas 20+ entri, corak yang penting — balas dendam, FOMO, saiz berlebihan, beku — muncul dengan jelas. Melangkau ini bermaksud melangkau gelung maklum balas yang menjadi asas keseluruhan produk ini.",
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "discipline",
+      "journal",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_discipline_distraction",
+    "category": "psychology",
+    "question": "Saya sentiasa terganggu semasa dagangan berjalan. Bantu?",
+    "short_answer": "Gangguan semasa dagangan langsung biasanya bermaksud pelan tidak ditulis sepenuhnya sebelum masuk. Tentukan keluar dan sasaran terlebih dahulu supaya dagangan boleh menguruskan dirinya sendiri.",
+    "long_answer": "Jika masuk, stop, dan sasaran ditulis sebelum klik, gangguan kurang penting — dagangan tidak memerlukan keputusan masa nyata. Gunakan Mandate untuk mengenakan keluar yang telah ditakrifkan; Portfolio Manager akan menampilkan dagangan yang tidak memilikinya. Log peristiwa gangguan dalam Decision Journal supaya corak tersebut boleh diukur.",
+    "related_lessons": [
+      "051",
+      "050"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "discipline",
+      "focus",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_boredom_no_trades_week",
+    "category": "psychology",
+    "question": "Saya tidak mendagangan selama seminggu. Adakah saya harus mengambil sebarang dagangan?",
+    "short_answer": "Mengambil dagangan kerana anda tidak mendagangan adalah corak kebosanan. Hari tanpa dagangan adalah output yang sah bagi proses sebenar.",
+    "long_answer": "Satu minggu tanpa setup bermaksud skrin anda tidak menemui apa-apa — itu proses berfungsi, bukan gagal. Memaksa dagangan sekarang menurunkan piawaian dan menanam masuk berkualiti rendah. Gunakan masa ini untuk menyemak Decision Journal untuk 20 dagangan terakhir dan perhalusi skrin. Conservative Debator boleh meneroka sama ada penapis anda terlalu ketat atau hanya senyap secara sesuai untuk rejim semasa.",
+    "related_lessons": [
+      "050",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "boredom",
+      "no-trade",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_boredom_market_quiet",
+    "category": "psychology",
+    "question": "Pasar mati hari ini. Adakah saya perlu berdagang dengan setup berkualiti rendah?",
+    "short_answer": "Tidak. Setup berkualiti rendah dalam pasaran yang tenang adalah corak kebosanan. Gunakan hari yang tenang untuk semakan jurnal dan kemajuan pelajaran.",
+    "long_answer": "Hari yang terikat dalam julat adalah masa di mana dagangan kebosanan menanggung kerosakan terbesar — pergerakan tidak cukup besar untuk memaafkan tesis yang nipis. Buka Jurnal Keputusan, baca lima entri terakhir anda, dan nilai kualiti tesis. Atau selesaikan pelajaran Modul 8. Conservative Debator tidak akan melonggarkan piawaian pada hari yang tenang.",
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "boredom",
+      "quiet",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_boredom_overtrade",
+    "category": "psychology",
+    "question": "Saya telah melakukan 8 dagangan hari ini. Adakah itu terlalu banyak?",
+    "short_answer": "Jika bilangan biasa anda ialah 1-3, lapan kemungkinan besar merupakan overtrading. Semak had dagangan harian dalam Mandate dan biarkan Portfolio Manager mengawalnya.",
+    "long_answer": "Hari dengan bilangan dagangan tinggi sering menggabungkan beberapa setup A dengan beberapa isian kebosanan atau balas dendam. Buka Jurnal Keputusan dan tandakan setiap satu — A, B, C — dan lihat berapa banyak yang sebenarnya berada dalam tepi anda. Tetapkan batas dagangan harian dalam Mandate; Portfolio Manager akan menyekat tambahan secara automatik.",
+    "related_lessons": [
+      "050",
+      "051"
+    ],
+    "related_agents": [
+      "portfolio_manager",
+      "conservative_debator"
+    ],
+    "tags": [
+      "boredom",
+      "overtrading",
+      "mandate"
+    ]
+  },
+  {
+    "id": "qa_psy_boredom_just_to_feel_something",
+    "category": "psychology",
+    "question": "Saya hanya mahu merasa sesuatu. Adakah alasan yang buruk untuk berdagang?",
+    "short_answer": "Ya — itu adalah definisi teks buku bagi dagangan kebosanan. Jauhkan diri dari skrin pesanan dan buka pelajaran sebaliknya.",
+    "long_answer": "Dagangan yang diambil untuk rangsangan, bukan tepi, adalah kos tulen. Jurnal Keputusan akhirnya akan mendedahkan mereka sebagai kelompok berasingan — pegangan pendek, tesis nipis, kemasukan berselerak. Salurkan impuls itu ke sesuatu yang mempunyai jangkaan positif: pelajaran Modul 8, sesi 1-ke-1 dengan Conservative Debator, atau semakan mendalam terhadap dagangan lalu.",
+    "related_lessons": [
+      "050"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "concierge"
+    ],
+    "tags": [
+      "boredom",
+      "stimulation",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_boredom_force_setups",
+    "category": "psychology",
+    "question": "Adakah saya memaksa setup yang tidak benar-benar wujud?",
+    "short_answer": "Jika anda sedang menatal carta mencari satu, ya. Setup sebenar datang dari skrin anda, bukan dari menatal carta.",
+    "long_answer": "Setup yang dipaksa mempunyai petunjuk — ditemui oleh mata bukannya dicetuskan oleh skrin anda, dengan tesis yang dibina secara terbalik dari carta. Bandungkan lima dagangan terakhir anda dengan kriteria setup bertulis anda. Jika tiga atau lebih berasal dari menatal carta, anda sedang berdagang secara paksa. Conservative Debator tidak akan mengesahkan tesis yang dibina secara terbalik.",
+    "related_lessons": [
+      "050",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "boredom",
+      "forcing",
+      "screen"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_am_i_cut_out",
+    "category": "psychology",
+    "question": "Adakah saya memang sesuai untuk ini?",
+    "short_answer": "Trading bukan tentang kesesuaian — ia tentang mematuhi proses bertulis secara konsisten. Jurnal Keputusan anda adalah satu-satunya jawapan yang jujur kepada soalan itu.",
+    "long_answer": "Pembinaan 'sesuai' menjadikan trading terdengar seperti ujian bakat. Ia bukan begitu. Ia adalah masalah disiplin dengan gelung maklum balas yang boleh diukur. Mandat adalah spesifikasi anda, Jurnal adalah audit anda, dan Convene the Room adalah semakan anda. Selepas 50+ dagangan yang direkodkan, data memberitahu anda sesuatu yang berguna; sebelum itu, soalan itu adalah terburu-buru.",
+    "related_lessons": [
+      "051",
+      "049"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "concierge"
+    ],
+    "tags": [
+      "self-talk",
+      "identity",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_everyone_better",
+    "category": "psychology",
+    "question": "Semua orang di X sedang berjaya lebih baik daripada saya. Mengapa saya lemah dalam ini?",
+    "short_answer": "Suapan trading awam adalah mesin bias kemandirian — anda melihat kemenangan, bukan kerugian. Bandingkan terhadap Jurnal anda sendiri, bukan orang asing.",
+    "long_answer": "Penganalisis Media Sosial wujud sebahagiannya untuk mendedahkan betapa terpesongnya sentimen awam terhadap prestasi — kebanyakan akaun hanya memuat naik pemenang. Penunjuk aras jujur anda adalah Jurnal Keputusan anda sendiri merangkumi cukup dagangan untuk bermakna. Pembahas Konservatif boleh menerangkan bagaimana proses konsisten kelihatan berbanding apa yang kelihatan dalam pos.",
+    "related_lessons": [
+      "048",
+      "051"
+    ],
+    "related_agents": [
+      "social_media_analyst",
+      "conservative_debator"
+    ],
+    "tags": [
+      "self-talk",
+      "comparison",
+      "social"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_keep_losing",
+    "category": "psychology",
+    "question": "Saya sentiasa rugi. Mungkin saya patut berhenti.",
+    "short_answer": "Berhenti daripada siri kerugian tanpa semakan proses melompati pelajaran yang diajar oleh kerugian tersebut. Baca 10 entri Jurnal terakhir sebelum membuat keputusan.",
+    "long_answer": "Siri kerugian dalam proses bertulis memberitahu anda peraturan mana yang gagal atau andaian mana yang salah — itu adalah keseluruhan maklum balas. Tanpa membaca Jurnal dari awal hingga akhir, berhenti adalah bertindak balas terhadap rasa yang dirasai, bukan data. Pembahas Konservatif boleh membaca sepuluh entri terakhir bersama anda secara 1-satu dan mendedahkan coraknya.",
+    "related_lessons": [
+      "046",
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "self-talk",
+      "loss",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_imposter",
+    "category": "psychology",
+    "question": "Saya rasa seperti penipu memanggil diri saya seorang peniaga.",
+    "short_answer": "Label itu bukan amalan. AMI Trade adalah simulasi — yang penting adalah sama ada anda mematuhi proses anda sendiri, bukan apa yang anda panggil diri anda.",
+    "long_answer": "Pembinaan 'peniaga sebenar' kebanyakannya adalah identiti, bukan kaedah. Kaedah itu boleh diperhatikan: adakah anda mempunyai Mandat, adakah anda Convene the Room sebelum keputusan saiz, adakah anda Jurnal setiap dagangan. Tiga artifak itu adalah keseluruhan isyarat. Jalankan amalan; soalan label akan pudar atau tidak, dan kedua-duanya adalah baik.",
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "conservative_debator",
+      "concierge"
+    ],
+    "tags": [
+      "self-talk",
+      "identity",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_too_old_too_late",
+    "category": "psychology",
+    "question": "Adakah saya sudah terlambat untuk mempelajari ini?",
+    "short_answer": "Mempelajari proses bertulis tidak mempunyai had masa. AMI adalah simulasi — satu-satunya kos latihan adalah masa, dan masa yang dihabiskan dalam gelung adalah gelung itu sendiri.",
+    "long_answer": "Soalan 'terlambat' biasanya bermaksud perbandingan sedang dijalankan terhadap individu yang garis masa sebenar mereka tidak diketahui. Amalan adalah sama tanpa mengira umur: Mandat, Bilik, Jurnal, semakan. Pembahas Konservatif dan Concierge boleh membimbing anda melalui gelung permulaan jika anda mahu skop yang lebih kecil untuk bermula.",
+    "related_lessons": [
+      "051"
+    ],
+    "related_agents": [
+      "concierge",
+      "conservative_debator"
+    ],
+    "tags": [
+      "self-talk",
+      "timeline",
+      "process"
+    ]
+  },
+  {
+    "id": "qa_psy_self_talk_no_intuition",
+    "category": "psychology",
+    "question": "Pembeli lain mempunyai intuisi. Saya tidak. Adakah itu masalah?",
+    "short_answer": "Intuisi dalam perdagangan kebanyakannya ialah pengecaman corak termampat daripada banyak dagangan yang dicatatkan. Ia adalah hasil daripada Jurnal, bukan prasyarat.",
+    "long_answer": "Individu yang kelihatan berdagang berdasarkan perasaan hampir pasti mempunyai ratusan atau ribuan dagangan yang telah disemak di belakang mereka — perasaan itu adalah bentuk termampat daripada kerja tersebut. Jurnal Keputusan anda adalah enjin yang membina perpustakaan corak tersebut. Pembahas Konservatif boleh menunjukkan cara anda membina entri supaya corak tersebut muncul dengan lebih cepat.",
+    "related_lessons": [
+      "051",
+      "049"
+    ],
+    "related_agents": [
+      "conservative_debator"
+    ],
+    "tags": [
+      "self-talk",
+      "intuition",
+      "journal"
+    ]
+  }
+]

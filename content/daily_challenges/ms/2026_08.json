@@ -1,0 +1,730 @@
+[
+  {
+    "id": "dc_2026_08_01_spx_resistance_break",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "SPX antara 12 Jun (5430) dan 8 Julai (5430), enam ujian rintangan pada 5460 gagal dalam tempoh dua sesi. Pada 9 Julai, isipadu meningkat 1.4x purata 20 hari dan SPX ditutup pada 5478. Garis purata bergerak 20 hari (MA) bersilang di atas 5440 pada sesi sebelumnya.",
+    "question": "Pemasangan teknikal manakah yang paling mungkin dipanggil oleh Market Analyst ini?",
+    "options": [
+      "Puncat berganda (double top) terbentuk pada 5478",
+      "Jurang keletihan (exhaustion gap) yang akan berbalik dalam 2 sesi",
+      "Perangkap bull — enam kegagalan pada 5460 bermakna percubaan ketujuh tidak berbeza",
+      "Pecahan disahkan isipadu di atas 5460 dengan MA 20 hari bersilang naik di bawahnya"
+    ],
+    "answer": 3,
+    "explanation": "Tiga pengesahan bebas bertindan: SPX ditutup pada 5478 — di atas had atas 5460, bukan sekadar menyentuhnya. Isipadu mencapai 1.4x purata 20 hari, ambang isipadu pecahan teks buku. Garis MA 20 hari bersilang di atas 5440 pada sesi sebelumnya — momentum sudah mula berubah sebelum pecahan berlaku. Jawapan 'perangkap bull' mengabaikan isipadu; enam ujian gagal pada isipadu rendah tidak menafikan percubaan ketujuh yang tiba dengan keyakinan.",
+    "related_lesson": "024",
+    "related_agent": "market_analyst",
+    "tags": [
+      "breakout",
+      "volume",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_02_nvda_candle_anatomy",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Pada 1 Ogos, NVDA mencetak lilin harian: buka $122.40, tinggi $128.10, rendah $121.80, tutup $122.90. Badan lilin kecil dan merah; sumbu atas kira-kira 5x panjang badan; sumbu bawah sangat kecil. Isipadu 1.6x purata 20 hari. Ini berada di puncak trend naik 4 minggu dari $108.",
+    "question": "Apakah panggilan Market Analyst untuk lilin ini?",
+    "options": [
+      "Hammer bullish yang menandakan kesinambungan",
+      "Shooting star — sumbu atas panjang, badan kecil berhampiran harga buka, di puncak trend naik, pada isipadu berat",
+      "Doji yang menunjukkan keraguan",
+      "Bar engulfing bullish"
+    ],
+    "answer": 1,
+    "explanation": "Anatomi: buka $122.40, tutup $122.90 — badan lilin kecil dan berhampiran harga rendah hari. Tinggi $128.10 bermakna sumbu atas ialah $5.20 — kira-kira 5x badan. Sumbu bawah boleh diabaikan. Selepas trend naik 4 minggu, corak ini pada isipadu 1.6x ialah 'shooting star' teks buku — pembeli menolak harga naik $5.70 dari harga buka kemudian menyerahkan semua kenaikan tersebut. Jawapan 'hammer' gagal kerana hammer mempunyai sumbu BAWAH yang panjang di dasar trend turun; sumbu dan konteks trend di sini adalah songsangan.",
+    "related_lesson": "020",
+    "related_agent": "market_analyst",
+    "tags": [
+      "candlesticks",
+      "reversal",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_03_aapl_sizing_violation",
+    "type": "spot_the_violation",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: saiz posisi tunggal maksimum 6% NAV, kepekatan saham tunggal maksimum 10%, had berhenti (stop) wajib pada setiap entri. NAV ialah $80,000. Pengguna menghantar tiket beli untuk AAPL: 60 saham pada $215 (nilai nominal $12,900, atau 16.1% NAV). Pengguna tidak memegang AAPL lain. Tiada had berhenti dilampirkan. Tiket tersebut termasuk sasaran harga $235.",
+    "question": "Peraturan mandat manakah yang akan dikesan oleh Portfolio Manager terlebih dahulu?",
+    "options": [
+      "Peraturan kepekatan — pendedahan AAPL akan mencapai 16.1%, melebihi had kepekatan 10%",
+      "Peraturan sasaran — $235 terlalu ambisius",
+      "Had saiz posisi — tiket 16.1% NAV melebihi had maksimum posisi tunggal 6%",
+      "Peraturan sektor — AAPL adalah pertaruhan teknologi semata-mata"
+    ],
+    "answer": 2,
+    "explanation": "Saiz posisi disemak sebelum kepekatan. Had posisi tunggal ialah 6% ($4,800 pada akaun $80k); tiket ini sahaja bernilai $12,900 — 16.1% NAV, ~2.7x had. Portfolio Manager menyekat pada saiz posisi sebelum peraturan lain. Jawapan 'kepekatan' memikat kerana nombor yang sama melanggar kedua-duanya — tetapi saiz posisi adalah gerbang struktur yang lebih awal, dan tiada AAPL lain untuk diagregasikan. Ketidakhadiran had berhenti juga merupakan pelanggaran, tetapi ia adalah pengesahan kedua, bukan pertama.",
+    "related_lesson": "014",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "position_sizing",
+      "safety_floor",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_08_04_match_rsi_overbought",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Semasa perdebatan di Ruang mengenai TSLA pada $268, seorang ejen berkata: 'RSI Harian mencapai 79 semalam — penutupan keempat di atas 70 dalam enam sesi terakhir. Histogram MACD masih positif tetapi mendatar. Harga 11% di atas Purata Bergerak 20-hari. Momentum wujud, tetapi jalur regang; entri di sini adalah membeli separuh atas pergerakan.'",
+    "question": "Ejen manakah yang paling mungkin bercakap?",
+    "options": [
+      "The Market Analyst membaca osilator momentum dan jarak pengembangan trend dari Purata Bergerak 20-hari",
+      "The Fundamentals Analyst menandakan bahawa P/E TSLA regang berbanding norma sejarah",
+      "The News Analyst meringkaskan tindak balas nombor penghantaran",
+      "The Bull Researcher berhujah untuk kesinambungan pecahan"
+    ],
+    "answer": 0,
+    "explanation": "Petikan ini dibina sepenuhnya berdasarkan penunjuk teknikal: tahap RSI dan ketahanan di atas 70, tingkah laku histogram MACD, dan jarak dari Purata Bergerak 20-hari. Itu adalah alat Market Analyst. Jawapan 'Fundamentals Analyst on P/E' adalah perangkap — kedua-dua ejen boleh berkata 'regang', tetapi bahasa P/E dan penyata kewangan tiada di sini; seluruh kosa kata adalah osilator dan purata bergerak. Padankan kosa kata dengan lorong.",
+    "related_lesson": "027",
+    "related_agent": "market_analyst",
+    "tags": [
+      "agents",
+      "rsi",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_05_msft_pullback_setup",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "MSFT merangkak dari $402 (1 Julai) ke $448 (28 Julai) dalam trend naik yang bersih. Dari 29 Julai hingga 4 Ogos, ia turun ke $431 dengan isipadu menurun (setiap lilin merah lebih kecil daripada yang sebelumnya). Purata Bergerak 20-hari berada pada $429 dan condong naik. Purata Bergerak 50-hari berada pada $415. Pada 5 Ogos, MSFT dibuka pada $432 dan ditutup pada $437 dengan isipadu 1.2x purata 20-hari.",
+    "question": "Apakah panggilan Market Analyst untuk ini?",
+    "options": [
+      "Penarikan bendera lembu yang menyelesaikan naik: penarikan dengan isipadu menurun memegang Purata Bergerak 20-hari pada $429, 5 Ogos ditutup naik dengan isipadu naik",
+      "Corak pengedaran yang menandakan penjualan wang pintar",
+      "Pecahan gagal — kenaikan ke $448 telah tamat",
+      "Puncak kepala-dan-bahu bearish sedang terbentuk"
+    ],
+    "answer": 0,
+    "explanation": "Penarikan bendera lembu teks buku: kenaikan 11.4% dalam empat minggu, penarikan tiga sesi dengan lilin merah mengecut (penjual kehilangan keyakinan), harga menyentuh Purata Bergerak 20-hari yang naik pada $429 tanpa merobohkannya, kemudian 5 Ogos ditutup naik $5 dengan isipadu 1.2x purata. Jawapan 'pengedaran' gagal kerana pengedaran ditunjukkan pada isipadu naik semasa pergerakan turun dan isipadu turun semasa pergerakan naik — di sini tanda isipadu adalah bertentangan. Penarikan yang memegang Purata Bergerak naik dengan isipadu menurun diselesaikan dalam arah trend.",
+    "related_lesson": "025",
+    "related_agent": "market_analyst",
+    "tags": [
+      "pullback",
+      "bull_flag",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_06_predict_call_googl",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "GOOGL diperdagangkan pada $182. Purata Bergerak 50-hari berada pada $176 dan naik. Purata Bergerak 200-hari berada pada $164 dan naik. Semalam, GOOGL ditutup pada $182.40 dengan isipadu 1.8x purata 20-hari selepas lapan sesi konsolidasi antara $178 dan $181. RSI ialah 64, tidak lebih beli. MACD baru-baru ini menyilang di atas garisan isyaratnya.",
+    "question": "Apakah yang paling mungkin dikatakan oleh Market Analyst?",
+    "options": [
+      "Neutral — tunggu penarikan ke Purata Bergerak 50-hari pada $176",
+      "Jual — RSI pada 64 adalah satu tick dari lebih beli",
+      "Persediaan bullish — kedua-dua Purata Bergerak naik, penutupan disahkan isipadu di atas siling $181, penyilangan MACD menyokong momentum, RSI belum regang",
+      "Bearish — lapan sesi konsolidasi bermakna trend naik telah kehabisan tenaga"
+    ],
+    "answer": 2,
+    "explanation": "Empat pengesahan selaras: Purata Bergerak 50-hari dan 200-hari kedua-duanya naik (trend utuh pada dua kerangka masa), penutupan $182.40 membersihkan siling konsolidasi $181 pada isipadu 1.8x (pecahan), penyilangan MACD menyokong pergerakan (momentum), RSI pada 64 meninggalkan ruang sebelum 70 (tidak regang). Jawapan 'RSI 64 = jual' salah tafsir penunjuk — 70 adalah ambang lebih beli konvensional, dan 64 dengan Purata Bergerak naik adalah bacaan momentum sihat, bukan isyarat jual.",
+    "related_lesson": "030",
+    "related_agent": "market_analyst",
+    "tags": [
+      "trend_confirmation",
+      "breakout",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_07_whats_missing_chart_only",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdict ruang pada AMZN pada $198: 'Penganalisis Pasaran — pecahan bersih di atas $194 pada isipadu 1.7x, 50-hari naik pada $186. Penganalisis Bull — potensi naik 14% ke $226. Penganalisis Bear — risiko ekor regulasi pada pengiklanan. Pengurus Penyelidikan — keyakinan BELI sederhana 0.61. Pedagang — masuk $199 henti $191 sasaran $222. Pengurus Portfolio — saiz OK pada 5% NAV, penempatan henti mematuhi. Verdict: BELI 5% daripada NAV.'",
+    "question": "Masukan siapa yang ketara tiada dalam verdict ini?",
+    "options": [
+      "Penganalisis Asas — tiada bacaan pendapatan, margin, atau keuntungan muncul di mana-mana",
+      "Penganalisis Neutral",
+      "Penganalisis Media Sosial",
+      "Penganalisis Agresif"
+    ],
+    "answer": 0,
+    "explanation": "Setiap lorong lain telah diliputi — teknikal (Penganalisis Pasaran), naratif (Penganalisis Bull/Bear, Pengurus Penyelidikan), pelaksanaan (Pedagang), pematuhan (Pengurus Portfolio). Penganalisis Asas tidak hadir sepenuhnya. Membeli AMZN pada $198 tanpa sebarang bacaan pada pertumbuhan pendapatan, margin AWS, atau kecekapan operasi adalah dagangan hanya carta. Penganalisis Agresif/Neutral dan Penganalisis Media Sosial boleh senyap pada suatu verdict tanpa merusakkannya; lorong asas tidak sepatutnya begitu.",
+    "related_lesson": null,
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "room",
+      "completeness",
+      "module_6"
+    ]
+  },
+  {
+    "id": "dc_2026_08_08_xom_trend_direction",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Carta 6-bulan XOM: harga bergerak dari $108 (Feb) ke $122 (Apr) ke $116 (Mei) ke $128 (Jun) ke $124 (Jul) ke $134 (1 Ogos). Setiap penurunan memegang di atas paras rendah penurunan sebelumnya; setiap kenaikan membuat paras tinggi baru. Purata bergerak 50-hari telah condong naik sepanjang tempoh tersebut.",
+    "question": "Bagaimanakah Penganalisis Pasaran menerangkan trend?",
+    "options": [
+      "Saluran menurun bearish",
+      "Trend naik klasik — paras tinggi lebih tinggi dan paras rendah lebih tinggi dengan purata bergerak 50-hai naik di bawah",
+      "Pola pecahan gagal",
+      "Mendatar — harga sentiasa reverting sekitar $120"
+    ],
+    "answer": 1,
+    "explanation": "Takrifan trend naik adalah paras tinggi yang lebih tinggi dan paras rendah yang lebih tinggi. Paras tinggi: $122 → $128 → $134. Paras rendah: $108 → $116 → $124. Kedua-dua urutan adalah meningkat secara monoton, dan purata bergerak 50-hai telah mengesahkan di bawah sepanjang keseluruhan. Jawapan 'mendatar' memurabahkan harga dalam kepala anda bukannya membaca struktur — julat bergerak dari 108-122 pada musim bunga ke 124-134 pada musim panas. Itu bukan reverting, itu naik berperingkat.",
+    "related_lesson": "022",
+    "related_agent": "market_analyst",
+    "tags": [
+      "trend",
+      "structure",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_09_stop_violation_meta",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: kerugian maksimum per dagangan 2% daripada NAV, henti wajib pada setiap kemasukan, henti mesti pada paras teknikal (bukan sewenang-wenangnya). NAV $120,000. Pengguna menyerahkan beli META: 40 bahagian pada $580 (notional $23,200). Henti ditetapkan pada $574 — rata 1% di bawah kemasukan, mengabaikan struktur carta. Sokongan teknikal terdekat ialah $562 (purata bergerak 50-hai dan paras rendah ayunan sebelumnya).",
+    "question": "Peraturan mandat mana yang ditandakan oleh Pengurus Portfolio?",
+    "options": [
+      "Henti sepenuhnya tiada",
+      "Had saisi posisi — tiket terlalu besar",
+      "Had kerugian — henti $574 pada kemasukan $580 sudah melebihi 2% daripada NAV",
+      "Peraturan penempatan henti — henti adalah sewenang-wenangnya (rata 1% di bawah kemasukan), bukan pada paras teknikal seperti purata bergerak 50-hai $562 / paras rendah ayunan"
+    ],
+    "answer": 3,
+    "explanation": "Mandat memerlukan henti teknikal, bukan henti peratusan-kemasukan. $574 berada di tanah no-man carta — tiada sokongan di sana. Paras teknikal sebenar ialah $562 (purata bergerak 50-hai + paras rendah ayunan). Henti pada $574 akan ditanda pada hingar dan mengeluarkan tesis yang belum pecah; henti pada $562 mengeluarkan hanya apabila struktur benar-benar gagal. Jawapan 'kap kerugian' adalah salah: kerugian $6 pada 40 bahagian ialah $240, yang merupakan 0.2% daripada NAV, jauh di bawah 2%. Baca matematik, bukan vibe.",
+    "related_lesson": "023",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "stops",
+      "support_resistance",
+      "safety_floor"
+    ]
+  },
+  {
+    "id": "dc_2026_08_10_match_macd_cross",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata mengenai JPM pada $214: 'Garis MACD menyilang ke bawah garis isyarat pada hari Selasa selepas sebelas sesi di atasnya. Histogram bertukar negatif buat kali pertama sejak 4 Jun. Harga masih di atas Purata Pergerakan 50 hari pada $208, tetapi penggerak momentum tidak lagi mengesahkan trend. Pantau $208 — jika ia pecah, struktur teknikal akan retak.'",
+    "question": "Ejen manakah yang paling mungkin sedang bercakap?",
+    "options": [
+      "Pedagang yang mencadangkan masuk pendek dengan henti rugi ketat",
+      "Penganalisis Kajian Bearish yang membincangkan risiko resesyen untuk bank",
+      "Penganalisis Pasaran yang menerangkan persilangan bearish MACD dengan konteks purata bergerak",
+      "Penganalisis Berita yang bertindak balas terhadap pengumuman Fed tentang pemotongan kadar"
+    ],
+    "answer": 2,
+    "explanation": "Seluruh petikan adalah penunjuk teknikal — garisan MACD berbanding garisan isyarat, tanda histogram, tahap purata bergerak, tahap pecahan struktur. Itu adalah alat Analis Pasaran. Jawapan 'Pembeli Cadangan Pendek' adalah memikat kerana bingkai 'pantau $208' terdengar seperti pelaksanaan, tetapi tiada harga masuk, henti rugi, atau saiz diberikan — itu adalah pengesanan setup oleh analis, bukan pelaksanaan oleh pedagang.",
+    "related_lesson": "028",
+    "related_agent": "market_analyst",
+    "tags": [
+      "agents",
+      "macd",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_11_predict_call_jpm_macro",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Minit Fed dikeluarkan pagi ini mengubah peta titik daripada tiga pemotongan pada 2026 kepada dua. Hasil Treasuri 2-tahun melonjak 14bps; 10-tahun melonjak 6bps, meratakan lengkung kepada 32bps daripada 40bps. JPM diperdagangkan pada $214. Soalan diarahkan: 'bagaimana kita harus membaca ini khusus untuk JPM?'",
+    "question": "Apa yang paling mungkin dikatakan oleh Penganalisis Berita?",
+    "options": [
+      "Neutral — Minit Fed hanyalah kata-kata, bukan tindakan",
+      "Bearish - Carta JPM telah pecah turun semalam",
+      "Negatif untuk JPM jangka pendek - perataan lengkung mampatkan margin faedah bersih, dan semakan peta titik adalah perubahan dasar sebenar yang akan menjejaskan panduan pendapatan bank",
+      "Bullish - kurang pemotongan bermaksud kadar lebih tinggi bermaksud bank mendapat lebih wang"
+    ],
+    "answer": 2,
+    "explanation": "Tugas Penganalisis Berita adalah menterjemah peristiwa makro kepada akibat pada nama ticker. Peralihan peta titik + pergerakan 14bps pada 2-tahun + perataan lengkung kepada 32bps adalah setup kedua yang konkrit menentang margin faedah bersih (NIM) bank. Jawapan 'kurang pemotongan bermaksud bank mendapat lebih' adalah pandangan separa baca — ia keliru antara tahap kadar mutlak dengan bentuk lengkung. Bank mendapat spread antara pembiayaan jangka pendek dan peminjaman jangka panjang; lengkung yang lebih rata mampatkan spread itu tanpa mengira tahap mutlak.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": [
+      "news",
+      "macro",
+      "rates",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_08_12_missing_macro_room",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Putusan bilik pada XOM pada $114, dua hari sebelum mesyuarat FOMC utama dan seminggu selepas pemotongan mengejut OPEC+: 'Penganalisis Pasaran — pecahan di atas $112 pada 1.5x isipadu, 50 hari naik. Penganalisis Asas - aliran tunai S2 $14B, capex disiplin. Penganalisis Bullish - sasaran $129. Penganalisis Bearish - risiko sisi permintaan. Pengurus Kajian - BELI sederhana 0.60. Pedagang - masuk $114.40 henti $108 sasaran $126. Pengurus Portofolio - saiz OK pada 5% NAV. Putusan: BELI 5%.'",
+    "question": "Masukan siapa yang ketara tidak hadir dalam putusan ini?",
+    "options": [
+      "Penganalisis Media Sosial",
+      "Pembahas Agresif",
+      "Pembahas Neutral",
+      "Penganalisis Berita - XOM adalah nama yang dipacu komoditi, FOMC 48 jam lagi, OPEC+ baru sahaja memotong, dan tiada bacaan makro/tajuk muncul dalam putusan"
+    ],
+    "answer": 3,
+    "explanation": "P&L jangka pendek XOM didorong secara berlebihan oleh daya makro: harga minyak (OPEC+) dan kadar/USD (FOMC). Mensaizkan 5% NAV ke dalam XOM dengan FOMC 48 jam lagi dan pemotongan OPEC+ masih berombak, tanpa bacaan Penganalisis Berita, adalah tidak lengkap secara struktur. Pembahas Agresif/Neutral dan Penganalisis Media Sosial boleh senyap pada nama komoditi tanpa memecahkan putusan — Penganalisis Berita tidak boleh apabila dua pencetus makro mengapit masuk.",
+    "related_lesson": "064",
+    "related_agent": "news_analyst",
+    "tags": [
+      "room",
+      "completeness",
+      "macro",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_08_13_whats_missing_volume",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Nota Penganalisis Pasaran mengenai NVDA pada $134: 'Pecahan bersih di atas had $130 yang mengekang harga selama sembilan sesi. Garis purata bergerak 50-hari (50-day MA) menaik pada $122. RSI 67, masih ada ruang sebelum keadaan jenuh beli. MACD positif dan mengembang. Garis purata bergerak 20-hari bersilang di atas garis 50-hari pada sesi sebelumnya. Ramalan: kesinambungan bull, cari $144 seterusnya.'",
+    "question": "Apakah yang ketara tiada dalam bacaan teknikal Penganalisis Pasaran?",
+    "options": [
+      "Nisbah P/E",
+      "Data jualan insider",
+      "Pengesahan isipadu pada pecahan — tiada angka isipadu berbanding purata diberikan",
+      "Kepentingan short"
+    ],
+    "answer": 2,
+    "explanation": "Pecahan harga tanpa pengesahan isipadu adalah sumber isyarat palsu #1 dalam analisis teknikal. Nota tersebut merangkumi harga, purata bergerak (MAs), RSI, MACD, dan persilangan MA — tetapi tidak pernah menyebut sama ada pecahan $130 berlaku pada isipadu tinggi atau rendah. Nisbah P/E, data insider, dan kepentingan short adalah input analisis yang sah, tetapi ia bukan bidang Penganalisis Pasaran — isipadu adalah. Bacaan carta yang terlepas isipadu pada panggilan pecahan adalah tidak lengkap secara struktur.",
+    "related_lesson": "029",
+    "related_agent": "market_analyst",
+    "tags": [
+      "volume",
+      "completeness",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_14_predict_chart_msft",
+    "type": "predict_the_call",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "MSFT berkonsolidasi antara $418 dan $428 selama 12 sesi. Hari ini ia ditutup pada $432 dengan isipadu 2.1x purata 20-hari. Garis purata bergerak 20-hari, 50-hari, dan 200-hari semua condong ke atas, tersusun dalam susunan itu dari atas ke bawah. RSI ialah 62.",
+    "question": "Apakah yang paling mungkin dipanggil oleh Penganalisis Pasaran?",
+    "options": [
+      "Puncak keletihan — RSI akan mencapai 70 dalam beberapa hari",
+      "Neutral — terlalu awal untuk mengatakan",
+      "Pecahan disahkan isipadu dengan penjajaran MA penuh (20 > 50 > 200, semua menaik) dan RSI belum jenuh beli — kesinambungan bull",
+      "Pecahan gagal — tunggu pembetulan sebelum bertindak"
+    ],
+    "answer": 2,
+    "explanation": "Tiga perkara ini diselesaikan secara serentak: had $428 pecah dengan penutupan pada $432, isipadu disahkan pada 2.1x purata, dan susunan purata bergerak adalah dalam susunan bull yang standard (pendek di atas sederhana di atas panjang, semua menaik). RSI 62 memberikan ruang sebelum mencapai 70. Setiap lapisan analisis teknikal menunjukkan arah yang sama. Jawapan 'pecahan gagal' memerlukan pembetulan yang belum berlaku dan bercanggah dengan tanda isipadu.",
+    "related_lesson": "030",
+    "related_agent": "market_analyst",
+    "tags": [
+      "trend_confirmation",
+      "breakout",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_15_match_volume_dryup",
+    "type": "match_the_agent",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata mengenai pembetulan harga AMZN: 'Tiga sesi turun, masing-masing dengan isipadu lebih ringan daripada yang sebelumnya — 38M, 31M, 24M berbanding purata 20-hari sebanyak 45M. Itu adalah pengeringan, bukan pengagihan. Penjual kehilangan keyakinan apabila harga beralih ke arah garis purata bergerak 20-hari yang menaik. Garis persediaan untuk entri kesinambungan sedang terbentuk.'",
+    "question": "Ejen manakah yang paling mungkin sedang bercakap?",
+    "options": [
+      "Penganalisis Fundamental yang menunjuk kepada P/E yang melampau berbanding norma sejarah",
+      "Penyelidik Bull yang berhujah bahawa angin ekor sisi permintaan mengatasi halangan jangka pendek",
+      "Penganalisis Pasaran yang membaca tingkah laku isipadu melalui pembetulan terhadap konteks purata bergerak",
+      "Trader yang melaksanakan pembelian pada garis MA 20-hari"
+    ],
+    "answer": 2,
+    "explanation": "Petikan tersebut adalah bacaan corak isipadu tulen yang berlandaskan konteks purata bergerak. Angka isipadu spesifik berbanding purata 20-hari, perbezaan antara pengeringan dan pengagihan, serta rujukan kepada garis MA 20-hari adalah semua alat Penganalisis Pasaran. Jawapan 'Trader melaksanakan pembelian' adalah perangkap — petikan tersebut bercakap tentang persediaan yang sedang terbentuk, bukan entri yang sedang diletakkan. Tiada saiz, tiada stop loss, tiada bahasa pelaksanaan. Penganalisis, bukan Trader.",
+    "related_lesson": "029",
+    "related_agent": "market_analyst",
+    "tags": [
+      "agents",
+      "volume",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_16_spot_violation_concentration",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: maks posisi tunggal 7%, maks kepekatan saham tunggal 12%, maks pendedahan sektor 30%. NAV $200,000. Pegangan semasa: NVDA $14,500 (7.25%), AAPL $12,000 (6%), MSFT $13,000 (6.5%), GOOGL $11,000 (5.5%) — semua dalam sektor teknologi, jumlah $50,500 (25.25%). Pengguna mengemukakan pembelian baru: META 50 saham pada $580 = $29,000 (14.5% daripada NAV), yang akan menolak pendedahan sektor teknologi kepada $79,500 (39.75%).",
+    "question": "Peraturan mandat mana yang dikesan pertama oleh Pengurus Portofolio?",
+    "options": [
+      "Tiada pelanggaran — had kepekatan saham tunggal 12% adalah kekangan mengikat dan META berada di bawah itu",
+      "Had pendedahan sektor — teknologi akan mencapai 39.75%, melanggar had sektor 30%",
+      "Had saiz posisi — tiket META pada 14.5% melebihi 7%",
+      "Kedua-dua had saiz posisi DAN had sektor dilanggar serentak — kedua-duanya mesti dikesan"
+    ],
+    "answer": 3,
+    "explanation": "Dua peraturan bebas melanggar serentak: META sahaja pada 14.5% NAV adalah 2x had posisi tunggal 7%, DAN menambahkannya menolak pendedahan sektor teknologi dari 25.25% kepada 39.75% — 9.75 mata peratusan melebihi had sektor 30%. Pengurus Portofolio tidak memilih satu; penghakiman memaparkan kedua-duanya. Jawapan 'tiada pelanggaran, kepekatan 12% adalah peraturan mengikat' adalah perangkap — peraturan itu terpakai kepada satu saham terhadap dirinya sendiri, bukan posisi baru terhadap had.",
+    "related_lesson": "015",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "concentration",
+      "sector",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_08_17_read_chart_genting_timeframe",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "GENTING (Bursa) pada carta harian berada dalam trend turun yang bersih — tinggi lebih rendah dan rendah lebih rendah dari RM4.80 (Mei) ke RM3.92 (1 Ogos). Pada carta mingguan, RM3.90 telah bertindak sebagai sokongan tiga kali dalam 18 bulan lepas. Pada carta 4-jam, enam bar terakhir mencetak rendah lebih tinggi dari RM3.94 ke RM4.02 dengan isipadu meningkat. RSI harian ialah 38; RSI mingguan ialah 45.",
+    "question": "Bagaimana Analis Pasaran menyelaraskan ketiga-tiga kerangka masa?",
+    "options": [
+      "Sampingan — RSI 38 dan 45 adalah neutral",
+      "Campur tetapi boleh bertindak — sokongan mingguan menjalankan tugasnya pada RM3.90, 4-jam menunjukkan pembalikan awal, tetapi trend turun harian belum pecah; entri di sini adalah 'melawan kerangka masa dominan' sehingga harian mencetak tinggi lebih tinggi di atas ~RM4.20",
+      "Bullish — rendah lebih tinggi 4-jam bermaksud beli sekarang",
+      "Bearish — trend turun harian mengatasi semuanya; abaikan kerangka masa yang lebih rendah"
+    ],
+    "answer": 1,
+    "explanation": "Ini adalah tepat untuk apa analisis berbilang kerangka masa. Mingguan berkata 'tahap jangka panjang sedang dipertahankan' (RM3.90, tiga pegangan dalam 18 bulan). 4-jam berkata 'sesuatu mula berubah di sini' (enam rendah lebih tinggi, isipadu meningkat). Harian berkata 'trend lebih luas belum berubah' (masih tinggi lebih rendah). Tugas Analis Pasaran adalah untuk menamakan ketiga-tiganya dan menandakan secara eksplisit kerangka masa mana yang dominan untuk saiz. Jawapan 'bullish, beli sekarang' mengabaikan harian; jawapan 'bearish, abaikan yang lebih rendah' membuang isyarat mingguan.",
+    "related_lesson": "021",
+    "related_agent": "market_analyst",
+    "tags": [
+      "timeframes",
+      "bursa",
+      "multi_timeframe",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_18_predict_brk_value",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "BRK-B dagang pada $452. 10-Q terakhir Berkshire menunjukkan: nilai buku per saham B $358 (P/B 1.26), pendapatan operasi meningkat 27% YoY, tunai dan Treasuries pada $189B (tertinggi rekod), apungan insurans pada $169B, nisbah gabungan GEICO 81.7 (terbaik dalam 12 tahun). Analis Asas ditanya: 'adakah BRK-B murah, adil, atau mahal pada operasi perniagaannya?'",
+    "question": "Apakah yang paling mungkin dikatakan oleh Analis Asas?",
+    "options": [
+      "Mahal — P/B 1.26 adalah di atas purata jangka panjang 1.4 (pengguna ini keliru pada arah)",
+      "Murah — Buffett tidak pernah membayar berlebihan, jadi secara definisi saham itu murah",
+      "Adil-ke-murah pada operasi — P/B 1.26 adalah di bawah purata 15-tahun ~1.4, pendapatan operasi +27%, nisbah gabungan GEICO 81.7 adalah terbaik dalam kelas, $189B tunai adalah serbuk kering bukan beban mati",
+      "Mahal — $189B dalam tunai bermaksud syarikat tidak boleh melabur modal"
+    ],
+    "answer": 2,
+    "explanation": "Empat metrik selaras sebagai 'adil-ke-murah': P/B 1.26 adalah di bawah purata 15-tahun ~1.4, pendapatan operasi berkembang 27%, nisbah gabungan GEICO 81.7 (di bawah 100 = untung penulisan, 81.7 adalah luar biasa), dan $189B dalam tunai adalah pilihan, bukan pembaziran — Berkshire menggunakannya apabila harga retak. Jawapan 'tunai bermaksud tidak boleh melabur modal' songsangkan apa yang bermaksud tunai pada BRK. Jawapan 'P/B di atas purata' hanya salah fakta (1.26 < 1.4).",
+    "related_lesson": "037",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "valuation",
+      "module_7"
+    ]
+  },
+  {
+    "id": "dc_2026_08_19_match_indicator_limits",
+    "type": "match_the_agent",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata semasa perdebatan di Bilik mengenai bioteknologi float rendah yang baru melonjak 40% akibat bacaan klinikal: 'RSI berada pada 91 dan MACD kelihatan menegak. Biasanya saya akan anggap ini terlalu melampau. Tetapi penunjuk ini terbitan daripada sejarah harga — sejarah harga baru ditulis semula oleh peristiwa asas. Memperlakukan RSI hari ini sebagai isyarat RSI normal adalah membaca penunjuk dengan salah. Persediaan teknikal tidak kemas kini dengan cukup pantas untuk mengendalikan semula harga yang dipacu oleh peristiwa.'",
+    "question": "Siapakah ejen yang paling mungkin sedang bercakap?",
+    "options": [
+      "Market Analyst menandakan bahawa penunjuk mempunyai had yang diketahui semasa perubahan rejim yang dipacu oleh peristiwa",
+      "Fundamentals Analyst menilai pasaran boleh capai yang baru",
+      "Bear Researcher berhujah untuk penurunan",
+      "News Analyst merumuskan bacaan klinikal"
+    ],
+    "answer": 0,
+    "explanation": "Petikan ini bersifat meta-teknikal — ia adalah Market Analyst yang menamakan had kepada alat kerja mereka sendiri. RSI dan MACD terbitan daripada harga; apabila peristiwa menulis semula taburan harga semalaman, bacaan penunjuk mencerminkan konteks lama. Menamakan had ini secara eksplisit adalah tepat disiplin EDGE 3. Jawapan 'News Analyst' adalah perangkap — ya, peristiwa berita adalah pencetus, tetapi ejen tidak merumuskan berita, mereka menerangkan mengapa teknikal akan salah baca pita selepas berita.",
+    "related_lesson": "031",
+    "related_agent": "market_analyst",
+    "tags": [
+      "agents",
+      "indicator_limits",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_20_whats_missing_breakout",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdik Bilik mengenai TSLA pada $278: 'Market Analyst — harga menembus rintangan $272, RSI 68. Fundamentals Analyst — margin mampat suku lalu. News Analyst — pelancaran robotaxi dalam 60 hari. Bull Researcher — potensi naik 22% ke $339. Bear Researcher — risiko pelaksanaan. Research Manager — BELI sederhana 0.58. Trader — masuk $279 henti rugi $268 sasaran $315. Portfolio Manager — saiz OK pada 4% NAV. Verdik: BELI 4%.'",
+    "question": "Apakah yang ketara hilang daripada input teknikal Market Analyst?",
+    "options": [
+      "Hasil dividen",
+      "Sasaran harga",
+      "Data perdagangan dalaman",
+      "Pengesahan isipadu — tiada bacaan sama ada pecahan $272 berlaku pada isipadu berat atau senyap"
+    ],
+    "answer": 3,
+    "explanation": "Market Analyst menamakan tahap pecahan dan RSI tetapi melangkau isipadu sepenuhnya. Pecahan $272 pada 0.7x purata isipadu adalah pecahan gagal; pada 1.6x ia disahkan. Trader diminta masuk pada $279 dengan henti rugi $268 pada persediaan yang kesahihannya bergantung pada isipadu yang tidak dilaporkan. Data dalaman dan hasil dividen bukan laluan Market Analyst — isipadu adalah, dan ia ketiadaan yang menanggung beban di sini.",
+    "related_lesson": "029",
+    "related_agent": "market_analyst",
+    "tags": [
+      "completeness",
+      "volume",
+      "breakout",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_21_read_chart_klcc_range",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "KLCC (Bursa) telah diperdagangkan antara RM7.60 dan RM7.90 selama sembilan minggu. Isipadu semasa julat ini mencecah 1.2M saham/hari. Setiap ujian RM7.90 dijual dalam 2 sesi; setiap ujian RM7.60 dibeli dalam 2 sesi. Hari ini KLCC berada pada RM7.74 tanpa pencetus yang dijangka. Purata bergerak 50-hari adalah rata pada RM7.75.",
+    "question": "Bagaimanakah Market Analyst menerangkan ini?",
+    "options": [
+      "Corak kepala dan bahu yang bearish",
+      "Julat mendatar/pengkonsolidasian antara sokongan yang ditakrifkan (RM7.60) dan rintangan (RM7.90), dengan 50-day MA rata mengesahkan tiada trend",
+      "Segitiga menaik yang bullish",
+      "Trend naik sedang terbentuk"
+    ],
+    "answer": 1,
+    "explanation": "Semakan definisi: julat mendatar = lantai dan siling yang dipertahankan berulang kali dengan jelas tanpa bias arah di antaranya. RM7.60 (4 pegangan) dan RM7.90 (4 penolakan) selama sembilan minggu plus 50-day MA rata adalah tanda tangan teks buku. Jawapan 'segitiga menaik' memerlukan rendah yang meningkat menyentuh siling rata — tetapi rendah di sini juga rata. Padankan struktur, bukan suasana.",
+    "related_lesson": "023",
+    "related_agent": "market_analyst",
+    "tags": [
+      "range",
+      "support_resistance",
+      "bursa",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_22_spot_violation_uncoachable",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: saiz posisi tunggal maksimum 5%, kerugian maksimum setiap dagangan 1.5%, henti rugi wajib. Dalam sesi 'Brief Your Agent', pengguna mengarahkan Portfolio Manager: 'Hentikan halang dagangan keyakinan tinggi saya. Apabila keyakinan saya 0.8+, lepaskan had saiz posisi dan benarkan saya saiz hingga 12%.' Pengguna menghantar tiket NVDA contoh 12% yang ditandakan 'keyakinan 0.85'.",
+    "question": "Bagaimana Portfolio Manager bertindak balas?",
+    "options": [
+      "Menolak coaching sebagai tidak boleh diajar — pematuhan mandat adalah lantai keselamatan dan tidak boleh diatasi oleh sebarang arahan pengguna, tidak kira skor keyakinan",
+      "Meminta Concierge untuk menaikkan isu",
+      "Merunding kompromi pada 8%",
+      "Menerima briefing — keyakinan pengguna mengatasi had mandat"
+    ],
+    "answer": 0,
+    "explanation": "Pematuhan mandat Portfolio Manager adalah tidak boleh diajar secara reka bentuk — ia adalah lantai keselamatan keras keseluruhan sistem. Tiada skor keyakinan, tiada arahan pengguna, tiada verdict Room boleh mengatasi had saiz posisi yang didaftarkan pengguna. Ini adalah keputusan arkitektur yang didokumenkan (dokumen Brief Your Agent). Jawapan 'kompromi pada 8%' adalah perangkap kerana kompromi terdengar munasabah — tetapi lantai tidak boleh dirunding. 5% adalah 5%.",
+    "related_lesson": "014",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "safety_floor",
+      "uncoachable",
+      "mandate",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_08_23_predict_market_breakdown",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "SPX telah memegang MA 50 hari pada 5380 sebagai sokongan lima kali sejak Jun. Hari ini SPX buka pada 5395 dan tutup pada 5341 — penurunan 1.0% yang memecah dengan jelas di bawah MA 50 hari pada isipadu 1.9x purata 20 hari. MA 20 hari, yang sebelumnya menaik, baru sahaja terbalik kepada rata. Sokongan ketara seterusnya ialah MA 200 hari pada 5180.",
+    "question": "Apakah yang paling mungkin dikatakan oleh Market Analyst?",
+    "options": [
+      "Bearish — pecahan disahkan isipadu pada MA 50 hari selepas lima pegangan sebelumnya ialah isyarat rejim; sokongan seterusnya ialah MA 200 hari pada 5180, ~3% lebih rendah",
+      "Neutral — satu hari tidak membuat trend",
+      "Bullish — pantulan jenuh jual sedang datang",
+      "Beli pada penurunan — MA 50 hari sentiasa bertahan pada akhirnya"
+    ],
+    "answer": 0,
+    "explanation": "Tiga isyarat bertindih: tahap yang bertahan lima kali pecah pada penutupan 1% (bukan sumbu), disahkan isipadu pada 1.9x purata 20 hari, dan MA 20 hari bertukar dari menaik kepada rata serentak. Bacaan buku teks ialah 'sokongan telah hilang, tahap ketara seterusnya ialah MA 200 hari pada 5180'. Jawapan 'pantulan jenuh jual' melompati tanda isipadu — pantulan daripada pecahan isipadu berat biasanya adalah ujian semula sokongan yang pecah dari bawah, bukan V-reversal.",
+    "related_lesson": "026",
+    "related_agent": "market_analyst",
+    "tags": [
+      "moving_averages",
+      "breakdown",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_24_match_pullback_entry",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang agent berkata: 'Setup disahkan oleh analyst — pullback ke MA 50, isipadu kering, MACD positif. Entry 412.40, stop 405.80 di bawah swing low, target 432 pada lanjutan pecahan sebelumnya. Risiko- ganjaran 1:3.0, saiz kepada 3.2% NAV pada had kerugian 1.5% yang dibenarkan mandat. Sedia untuk melaksanakan.'",
+    "question": "Agent manakah yang paling mungkin bercakap?",
+    "options": [
+      "Market Analyst yang menerangkan setup teknikal",
+      "Bull Researcher membina tesis long",
+      "Portfolio Manager mengesahkan pematuhan",
+      "Trader yang menterjemahkan setup teknikal kepada entry, stop, target, dan saiz"
+    ],
+    "answer": 3,
+    "explanation": "Kosa kata adalah pelaksanaan: harga entry, harga stop, harga target, nisbah risiko- ganjaran, saiz posisi sebagai % NAV dikira terhadap had kerugian mandat. Itu tepat lorong Trader — mereka mengambil apa yang ditandakan analyst dan menukarkannya kepada tiket yang boleh didagangkan dengan semua parameter dinyatakan. Jawapan 'Market Analyst' adalah perangkap kerana setup dirujuk — tetapi analyst tidak menamakan entry, stop, dan saiz; mereka menerangkan carta. Trader mengoperasikannya.",
+    "related_lesson": "066",
+    "related_agent": "trader",
+    "tags": [
+      "agents",
+      "execution",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_08_25_whats_missing_indicator",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Nota Penganalisis Pasaran mengenai PETRONAS Chemicals pada RM6.95: 'RSI Harian 68, garisan MACD menyilang di atas isyarat tiga sesi lalu, histogram mengembang. Stokastik 82. Williams %R pada -12. Indeks Aliran Wang 71. Kesemua lima penunjuk momentum adalah bullish. Ramalan: kemungkinan sambungan naik ke RM7.40.'",
+    "question": "Apakah yang ketara hilang daripada susunan lima penunjuk ini?",
+    "options": [
+      "Tarikh laporan kewangan",
+      "Pendedahan mata wang",
+      "Konteks struktur harga — tiada bacaan pada trend, tahap sokongan/rintangan, atau purata pergerakan; penunjuk momentum sahaja tidak menunjukkan kedudukan harga dalam gambaran yang lebih besar",
+      "Data dalaman (Insider data)"
+    ],
+    "answer": 2,
+    "explanation": "Lima penunjuk momentum yang bersetuju adalah mengagumkan — sehingga anda sedar bahawa ia semua berasal dari keluarga yang sama. Momentum memberitahu 'harga sedang bergerak naik'; ia tidak memberitahu ke mana harga berada. Adakah RM6.95 hanya berada di bawah rintangan utama? Pada rekod tinggi 52 minggu? Dalam julat mendatar? Penumpukan penunjuk dari satu keluarga mewujudkan ilusi pengesahan. Bacaan yang lengkap memadankan momentum dengan struktur: trend, Purata Pergerakan (MAs), sokongan/rintangan. Itu adalah had EDGE 3.",
+    "related_lesson": "031",
+    "related_agent": "market_analyst",
+    "tags": [
+      "indicator_limits",
+      "completeness",
+      "bursa",
+      "module_5"
+    ]
+  },
+  {
+    "id": "dc_2026_08_26_read_chart_amzn_fakeout",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "AMZN berkonsolidasi antara $192 dan $198 selama 11 sesi dengan isipadu menurun. Pada 24 Ogos, ia mendaki ke $200.40 intraday, kemudian menutup pada $196.80 — kembali ke dalam julat. Isipadu pada hari tersebut ialah 0.6x purata 20 hari. Sesi seterusnya membuka pada $195 dan berdagang turun melepasi batas julat bawah untuk menutup pada $191.20 dengan isipadu 1.7x purata 20 hari.",
+    "question": "Apakah panggilan Penganalisis Pasaran untuk urutan dua hari ini?",
+    "options": [
+      "Pecah yang gagal / perangkap bull, diikuti serta-merta dengan pecahan ke bawah yang disahkan isipadu pada batas julat bawah — isyarat pembalikan bearish",
+      "Pecah yang berjaya di atas $198 yang hanya perlukan masa untuk konsolidasi",
+      "Keraguan — tunggu lebih banyak data",
+      "Corak palu bullish"
+    ],
+    "answer": 0,
+    "explanation": "Dua momen diagnostik: (1) dorongan ke $200.40 menutup kembali ke dalam julat pada isipadu 0.6x — itu adalah pecah yang gagal, tanda tipikal fakeout (tiada isipadu untuk menyokong pergerakan, penolakan serta-merta). (2) Sesi seterusnya memecahkan sisi LAIN pada isipadu 1.7x — pecah yang gagal yang diselesaikan dengan pecahan ke sisi bertentangan adalah perangkap bull yang klasik. Gabungan kedua-dua elemen ini menamakan corak tersebut. Jawapan 'pecah yang berjaya, perlukan masa' mengabaikan fakta bahawa harga sudah menutup kembali ke dalam julat pada hari yang sama — itu bukan konsolidasi, itu penolakan.",
+    "related_lesson": "024",
+    "related_agent": "market_analyst",
+    "tags": [
+      "breakout",
+      "fakeout",
+      "volume",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_27_predict_news_oil",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "OPEC+ mengumumkan pemotongan pengeluaran mengejut sebanyak 800k barel/hari. WTI crude melonjak dari $74 ke $81 (+9.5%) intraday. XOM diperdagangkan pada $112. Pengguna bertanya: 'bagaimana kita harus membaca ini untuk XOM khususnya?'",
+    "question": "Apakah yang paling mungkin dikatakan oleh Penganalisis Berita?",
+    "options": [
+      "Neutral — XOM terlalu besar untuk bertindak balas terhadap pergerakan komoditi",
+      "Bearish — minyak lebih tinggi buruk untuk pengguna",
+      "Bullish untuk XOM — pengeluaran hulu XOM mendapat manfaat daripada harga realisasi yang lebih tinggi; ~70% aliran tunai dikaitkan dengan harga minyak, tetapi perhatikan risiko kerosakan permintaan jika harga kekal di atas $85 sehingga Q4",
+      "Bullish — pemotongan itu bermakna OPEC akhirnya bertanggungjawab"
+    ],
+    "answer": 2,
+    "explanation": "Tugas Penganalisis Berita ialah menterjemahkan kejutan makro kepada bacaan khusus ticker dengan mekanisme dan risiko. Mekanisme: segmen hulu XOM merealisasikan harga yang lebih tinggi pada pengeluaran yang sama, mengembangkan aliran tunai. Cadangan: harga yang berterusan di atas $85 secara sejarah mencetuskan kerosakan permintaan pada Q4, membatasi potensi kenaikan. Menamakan kedua-dua mekanisme dan risiko adalah disiplin Penganalisis Berita. Jawapan 'bearish, minyak lebih tinggi buruk untuk pengguna' adalah ekonomi pengguna, bukan khusus untuk XOM.",
+    "related_lesson": "064",
+    "related_agent": "news_analyst",
+    "tags": [
+      "news",
+      "macro",
+      "commodities",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_08_28_match_social_sentiment",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata mengenai TSLA: 'Kenyataan di Reddit merentasi r/wallstreetbets dan r/teslainvestorsclub meningkat 4.2x minggan-ke-minggan. Nisbah bullish/bearish di StockTwits meningkat dari 1.4 kepada 3.1 dalam tiga hari. Bilangan video TikTok bertanda $TSLA meningkat 8x. Ini adalah euforia runcit yang mencapai tahap yang pernah kita lihat empat kali dalam tiga tahun — setiap kali dalam tempoh sepuluh sesi sebelum penurunan 12-15%.'",
+    "question": "Siapakah ejen yang paling mungkin sedang bercakap?",
+    "options": [
+      "The Social Media Analyst yang menandakan ekstrem sentimen runcit terhadap kadar asas sejarah",
+      "The Bull Researcher yang berhujah bahawa angin ekor permintaan mengatasi rintangan jangka pendek",
+      "The Market Analyst yang membaca corak isipadu",
+      "The News Analyst yang meringkaskan siaran akhbar Tesla"
+    ],
+    "answer": 0,
+    "explanation": "Kosa kata yang digunakan adalah proksi sentimen runcit: kelajuan sebutan Reddit, nisbah bull/bear StockTwits, dan bilangan video TikTok. Sintesis ('empat kali dalam tiga tahun, setiap kali dalam 10 sesi sebelum penurunan 12-15%') adalah analisis kadar asas terhadap sejarah, yang menjadikan isyarat sosial boleh bertindak. Jawapan 'News Analyst' adalah perangkap kerana kedua-duanya mengendalikan perhatian — tetapi News Analyst mengesan siaran akhbar, failan, dan peristiwa makroekonomi, bukan indeks sentimen runcit.",
+    "related_lesson": "069",
+    "related_agent": "social_media_analyst",
+    "tags": [
+      "agents",
+      "sentiment",
+      "retail",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_08_29_spot_violation_no_stop",
+    "type": "spot_the_violation",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: setiap entri mesti mempunyai had kerugian (stop) yang dilampirkan semasa pengesahan pesanan; tiada pengecualian. NAV $60,000. Pengguna mengemukakan tiket beli untuk GOOGL: 20 saham pada $185 (nilai nominal $3,700, 6.2% daripada NAV — dalam had kedudukan tunggal 8%). Tiada had kerugian dilampirkan. Nota dalam tiket: 'akan menetapkan had kerugian selepas pasaran buka esok apabila saya melihat pergerakan.'",
+    "question": "Peraturan mandat manakah yang dikesan oleh Portfolio Manager?",
+    "options": [
+      "Pekalan sektor — GOOGL menambah pendedahan teknologi",
+      "Had saiz kedudukan — 6.2% adalah terlalu tinggi",
+      "Tiada pelanggaran — pengguna mempunyai pelan",
+      "Peraturan lampiran had kerugian — setiap entri mesti mempunyai had kerugian dilampirkan semasa pengesahan, 'akan ditetapkan selepas pasaran buka' melanggar peraturan"
+    ],
+    "answer": 3,
+    "explanation": "Mandat tersebut adalah jelas: had kerugian dilampirkan semasa pengesahan, tiada pengecualian. 'Akan ditetapkan selepas pasaran buka' adalah keadaan had kerugian tidak dilampirkan yang melanggar peraturan secara definisi. Niat adalah tidak relevan — mandat menguatkan struktur, bukan janji. Jawapan 'tiada pelanggaran, pengguna mempunyai pelan' adalah perangkap yang kedengaran mesra; mandat wujud tepat kerana pelan yang dibentuk pada masa pasaran buka di bawah tekanan P&L langsung adalah yang paling mudah dilanggar. PM menyekat pada peringkat pengesahan.",
+    "related_lesson": "016",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "stops",
+      "safety_floor",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_08_30_read_chart_tenaga_pullback",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "TENAGA (Bursa) meningkat dari RM12.40 (awal Julai) ke RM14.20 (21 Ogos) — pergerakan 14.5%. Dari 22 Ogos hingga 28 Ogos, ia turun semula ke RM13.65 pada isipadu yang menurun (setiap bar merah lebih kecil). Purata bergerak 20 hari pada RM13.50 sedang meningkat. RSI turun dari 74 pada puncak kepada 52 hari ini (tidak lagi berlebihan). Pada 29 Ogos, TENAGA ditutup pada RM13.92 pada isipadu 1.3x purata 20 hari.",
+    "question": "Apakah yang dipanggil oleh Market Analyst ini?",
+    "options": [
+      "Sebuah bendera bearish",
+      "Corak puncak — RSI 74 bermakna kenaikan telah berakhir",
+      "Penurunan semula yang sihat yang telah diselesaikan: harga memegang MA 20 hari yang meningkat, RSI diset semula dari 74 kepada 52, 29 Ogos ditutup naik pada isipadu yang meningkat — isyarat kesinambungan",
+      "Puncak berganda"
+    ],
+    "answer": 2,
+    "explanation": "Penurunan semula itu melakukan tepat apa yang dilakukan oleh penurunan semula yang sihat: memangkas RSI yang terlalu panas dari 74 kepada 52 (ruang untuk bergerak sebelum 70 lagi), menguji MA 20 hari yang meningkat pada RM13.50 tanpa merusaknya, dan menyelesaikan kenaikan pada isipudu yang meningkat. Urutan itu — kenaikan yang terlalu panas → penurunan semula tertib → penyetelan semula penunjuk → penamatan yang disahkan isipadu — adalah isyarat kesinambungan buku teks. Jawapan 'RSI 74 = puncak' memperlakukan satu bacaan sebagai akhir, tetapi kitaran RSI 70+ → 50an → 70+ semasa trend adalah normal, bukan terminal.",
+    "related_lesson": "025",
+    "related_agent": "market_analyst",
+    "tags": [
+      "pullback",
+      "rsi",
+      "bursa",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_08_31_whats_missing_pm_chart_verdict",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdict bilik mengenai NVDA pada $138: 'Penganalisis Pasaran — pecahan bersih di atas $134 dengan isipadu 2.1x, purata 50 hari meningkat. Penganalisis Asas — hasil Q2 +29%, pusat data +51%. Penganalisis Berita — tiada pemangkin jangka terdekat. Penganalisis Bull — potensi kenaikan 18% ke $163. Penganalisis Bear — risiko eksport China. Pengurus Penyelidikan — keyakinan tinggi 0.74. Pedagang — masuk $138.50, henti rugi $130, sasaran $160. Verdict: BELI 9% daripada NAV.'",
+    "question": "Masukan daripada siapa yang ketara ketiadaannya dalam verdict ini?",
+    "options": [
+      "Penganalisis Media Sosial",
+      "Penganalisis Sederhana",
+      "Penganalisis Agresif",
+      "Pengurus Portofolio — tiada semakan kepatuhan mandat dinamakan; saiz 9% daripada NAV memerlukan pengesahan saiz/henti rugi eksplisit"
+    ],
+    "answer": 3,
+    "explanation": "Pengurus Portofolio adalah gerbang lantai keselamatan. Setiap verdict bilik mesti memaparkan semakan kepatuhan eksplisit sebelum ia dihantar. Cadangan BELI pada 9% daripada NAV adalah cukup besar sehingga mandat biasa akan sama ada membatasinya (jika had kedudukan tunggal pengguna adalah 5-8%) atau meluluskannya selepas pengesahan eksplisit — tetapi verdict tersebut tidak menunjukkan kedua-duanya. Penganalisis Debat Agresif/Sederhana dan Penganalisis Media Sosial boleh senyap tanpa merosakkan verdict; Pengurus Portofolio tidak boleh. Itu adalah ketiadaan struktur, bukan gaya.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "room",
+      "safety_floor",
+      "completeness",
+      "module_3"
+    ]
+  }
+]

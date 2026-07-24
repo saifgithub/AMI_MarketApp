@@ -1,0 +1,715 @@
+[
+  {
+    "id": "dc_2026_07_01_guaranteed_2pct_weekly",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang pengguna menampal tawaran WhatsApp ke dalam perbualan 1-ke-1: 'Jaminan 2% seminggu, modal dilindungi 100%, berlesen di Labuan, minimum RM10,000.' Pengguna bertanya, 'Adakah saya perlu memasukkan RM10,000?' Manakah antara 13 ejen AMI yang menjadi respons pertama kanonikal untuk corak tepat ini?",
+    "question": "Ejen manakah yang menandakan ini dan membimbing pengguna melalui carian pendaftar?",
+    "options": [
+      "Trader akan melaksanakan pelan perdagangan sebenar",
+      "Fundamentals Analyst akan meninjau metrik syarikat",
+      "Bull Researcher akan membahaskan kelebihan peruntukan sebenar",
+      "Concierge — pengiktirafan corak penipuan dan carian pendaftar SC Malaysia, BNM, SEC, FCA"
+    ],
+    "answer": 3,
+    "explanation": "Concierge ialah ejen yang diprogramkan untuk pengiktirafan corak penipuan dan membimbing pengguna melalui carian pendaftar SC Malaysia, BNM, SEC, dan FCA. Penyelidik bull membentangkan tesis mengenai sekuriti sebenar; di sini tiada sekuriti, hanya tawaran jaminan. Concierge menguasai wilayah Modul 11.",
+    "related_lesson": "065",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "guaranteed_returns",
+      "concierge"
+    ]
+  },
+  {
+    "id": "dc_2026_07_02_pump_group_visible_wins",
+    "type": "whats_missing",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Saluran Telegram dengan 22,000 ahli memuat naik mesej tetap: '14 perdagangan menang dalam 30 hari terakhir, purata keuntungan +42%'. Tangkapan skrin adalah sahih. 'Pengasas' memuat naik entri 5 minit sebelum pembukaan. Panggilan baru turun: 'Beli XYZ pada 09:35 tepat.' Seorang pengguna menunjukkan ini kepada Concierge.",
+    "question": "Apakah maklumat yang ketara hilang dalam rekod tetap saluran tersebut?",
+    "options": [
+      "Terma perkhidmatan platform",
+      "Saiz kedudukan pengasas sendiri",
+      "Masa kemasukan tepat",
+      "Perdagangan rugi yang hampir pasti wujud dan dipadam, disensor, atau dijalankan di saluran selari yang tidak pernah dilihat ahli — bias kemandirian adalah diagnostik"
+    ],
+    "answer": 3,
+    "explanation": "Kumpulan pam menjalankan banyak panggilan; hanya pemenang yang dipaparkan. 14 kemenangan yang kelihatan tidak memberitahu apa-apa tentang 30 atau 50 kerugian yang dibuang secara senyap. 'Saiz kedudukan pengasas' menarik tetapi bukan elemen struktur yang hilang — kerugian yang hilang itulah.",
+    "related_lesson": "066",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "pump_and_dump",
+      "survivorship_bias"
+    ]
+  },
+  {
+    "id": "dc_2026_07_03_clone_broker_personal_account",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang 'Peniaga Senior' WhatsApp pengguna dengan mendakwa daripada bank pelaburan Malaysia berlesen sebenar. Nombor pendaftaran disahkan di SC Malaysia. Peniaga meminta pengguna menghantar RM20,000 ke akaun peribadi Maybank di bawah nama individu sebagai 'deposit pendaftaran'.",
+    "question": "Pengesahan manakah dalam prosedur pengesahan gagal dengan jelas?",
+    "options": [
+      "Akaun bank mesti atas nama syarikat berlesen, bukan individu",
+      "Panggilan balik bebas kepada syarikat",
+      "Carian pendaftar tahap entiti",
+      "Terma bertulis pada kepala surat"
+    ],
+    "answer": 0,
+    "explanation": "Carian pendaftar lulus (peniaga meniru nombor syarikat sebenar). Kegagalan muktamad ialah akaun bank: broker Malaysia berlesen mesti memisahkan wang klien dalam akaun amanah atas nama syarikat. Mana-mana destinasi nama individu adalah penentu tanpa mengira berapa banyak pengesahan lain yang lulus.",
+    "related_lesson": "071",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "clone_broker",
+      "verification"
+    ]
+  },
+  {
+    "id": "dc_2026_07_04_nvda_breakout",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "NVDA telah konsolidasi dalam julat ketat $148–$154 selama 11 sesi dengan isipadu menurun. Pada sesi 12, ia menutup pada $156.80 dengan isipadu 2.4x purata 20 hari. Sesi seterusnya dibuka pada $157.10 dan kekal di atas $154 sepanjang hari.",
+    "question": "Apakah setup teknikal yang akan dinamakan oleh market_analyst?",
+    "options": [
+      "Pecahan yang gagal (perangkap bull)",
+      "Pecahan julat dengan pengesahan isipadu dan ujian semula rintangan sebelumnya yang berjaya sebagai sokongan",
+      "Puncak kepala dan bahu",
+      "Keterusan bull flag"
+    ],
+    "answer": 1,
+    "explanation": "Sebelas sesi julat yang menipis, pecahan dengan isipadu 2.4x, kemudian sesi seterusnya kekal di atas rintangan sebelumnya — itulah corak pecahan julat + ujian semula buku teks. Bull flag memerlukan pergerakan kuat sebelumnya ke dalam konsolidasi; tidak diterangkan di sini. Pecahan yang gagal akan menutup kembali ke dalam julat; ia tidak berlaku.",
+    "related_lesson": "024",
+    "related_agent": "market_analyst",
+    "tags": [
+      "technical_analysis",
+      "breakout",
+      "nvda"
+    ]
+  },
+  {
+    "id": "dc_2026_07_05_smooth_weekly_returns",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang pengguna memaparkan papan pemuka 'NeuroAlpha AI' kepada Concierge yang mendakwa pulangan mingguan 1.8% selama 26 minggu berturut-turut, tiada minggu rugi, garis ekuiti garis lurus ke atas. Platform hanya menerima USDT dan tidak menunjukkan kenyataan broker atau rekod perdagangan on-chain.",
+    "question": "Apakah satu bukti yang ketara hilang yang, jika dihasilkan, akan mengubah analisis?",
+    "options": [
+      "Pangkalan pengikut Telegram yang lebih besar",
+      "Rekod perdagangan yang boleh disahkan secara luaran — isian pertukaran, kenyataan broker, atau hash penyelesaian on-chain yang boleh diaudit oleh pihak luar",
+      "Reka bentuk papan pemuka yang lebih menarik",
+      "Lebih banyak testimoni pengguna"
+    ],
+    "answer": 1,
+    "explanation": "Setiap strategi algoritma sebenar melaksanakan dagangan di venue penyelesaian sebenar. Bahagian yang hilang adalah pengesahan bebas — satu-satunya bukti yang sukar dipalsukan berbanding papan pemuka. Testimoni dan bilangan pengikut sendiri mudah dicipta dan tidak menangani ketepatan papan pemuka.",
+    "related_lesson": "069",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "ai_bot",
+      "audit_trail"
+    ]
+  },
+  {
+    "id": "dc_2026_07_06_urgency_4_hour_close",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang 'penasihat kekayaan peribadi' WhatsApp menghantar mesej kepada pengguna: 'Alokasi pra-IPO dalam nama teknologi AS, ditutup dalam 4 jam, bonus 20% jika anda memindahkan wang dalam 90 minit, terma hanya lisan — saya sedang membantu anda dengan membuka ini.',",
+    "question": "Agent manakah yang mempunyai corak respons untuk tawaran ini?",
+    "options": [
+      "Pengurus Penyelidikan akan mensintesis perdebatan Bilik",
+      "Concierge — melatih pengguna dalam peraturan rehat 72 jam untuk taktik tekanan",
+      "Debator Agresif akan membahaskan merit alokasi sebenar",
+      "Penganalisis Media Sosial akan menjejak sentimen pada nama tersebut"
+    ],
+    "answer": 1,
+    "explanation": "Keadaan genting + kelangkaan + penolakan untuk meletakkan terma dalam tulisan adalah cap jari EDGE 20. Concierge adalah agent yang dilatih untuk memasang peraturan rehat 72 jam untuk taktik tekanan. Debator agresif akan membahaskan merit alokasi sebenar; tiada alokasi sebenar untuk dibahaskan di sini.",
+    "related_lesson": "070",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "urgency",
+      "concierge"
+    ]
+  },
+  {
+    "id": "dc_2026_07_07_position_size_violation",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: max_single_position_pct = 10%, max_sector_exposure_pct = 25%, tiada leverage. Pengguna cuba mengalokasikan 40% daripada portfolio $50,000 kepada satu saham penny yang didorong oleh perkhidmatan 'bot dagangan AI' yang menjanjikan pulangan 1.5% mingguan.",
+    "question": "Peraturan mandat mana yang aktif pertama kali dalam semakan kepatuhan deterministik?",
+    "options": [
+      "Tiada leverage",
+      "Kedudukan tunggal maksimum 10% — alokasi 40% melebihi had sebanyak 4x",
+      "Pendedahan sektor maksimum 25%",
+      "Ambang kecairan"
+    ],
+    "answer": 1,
+    "explanation": "Had kedudukan tunggal adalah gerbang deterministik pertama dan gagal pada 40%/10%. Pendedahan sektor juga boleh gagal, tetapi peraturan kedudukan tunggal aktif lebih awal dan pada satu ticker. Tiada leverage dan gerbang kecairan tidak terlibat oleh penerangan saiz perdagangan.",
+    "related_lesson": "014",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "position_sizing",
+      "safety_floor"
+    ]
+  },
+  {
+    "id": "dc_2026_07_08_room_no_bear_dissent",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Bilik memberikan verdict BELI pada saham kecil OTC AS bernilai $0.38 dengan isipadu harian purata 120,000 saham. Teori ini merujuk kepada 'dinamika sosial dari saluran Telegram'. Bull Researcher, Aggressive Debator, Social Media Analyst, dan Trader semua bersetuju. Verdict adalah sebulat suara.",
+    "question": "Masukan siapa yang ketara ketiadaannya — dan akan menghalang ini?",
+    "options": [
+      "Trader",
+      "Fundamentals Analyst",
+      "Bear Researcher dan Conservative Debator — Bilik sebulat suara pada saham penny float rendah dengan teori hanya media sosial adalah kegagalan struktur",
+      "News Analyst"
+    ],
+    "answer": 2,
+    "explanation": "Verdict Bilik yang sihat mempunyai dissen. BUY sebulat suara pada nama penny yang tidak cair dengan teori media sosial adalah bentuk pump-and-dump yang tepat — Bear Researcher dan Conservative Debator direka untuk berselisih di sini. Trader telah menyumbang (mereka bersetuju), jadi 'Trader hilang' adalah jawapan salah yang menipu yang salah faham senario.",
+    "related_lesson": "066",
+    "related_agent": "bear_researcher",
+    "tags": [
+      "room",
+      "dissent",
+      "pump_and_dump"
+    ]
+  },
+  {
+    "id": "dc_2026_07_09_aapl_earnings_beat",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "AAPL melaporkan Q3: pendapatan $94.8B vs konsensus $94.0B, EPS $1.62 vs konsensus $1.58, pertumbuhan Perkhidmatan +14% YoY, unit iPhone rata, margin kasar 46.1% (naik 60bps), bimbingan untuk suku tahun seterusnya sedikit di bawah titik tengah pasaran.",
+    "question": "Apa yang fundamentals_analyst kemungkinan besar simpulkan?",
+    "options": [
+      "'Tidak boleh membuat panggilan tanpa penyata aliran tunai.'",
+      "'Campuran: garis atas dan bawah melebihi dengan pengembangan margin, tetapi unit iPhone rata dan bimbingan lemah mengehadkan potensi naik dalam jangka terdekat.'",
+      "'Kelebihan jelas — beli kuat berdasarkan cetakan.'",
+      "'Jual — bimbingan lemah mengatasi segalanya.'"
+    ],
+    "answer": 1,
+    "explanation": "Fundamentals analyst menimbang komponen, bukan tajuk utama. Kelebihan pada pendapatan/eps serta pengembangan margin adalah positif; perkakasan rata dan bimbingan lemah adalah negatif. Bacaan jujur adalah 'campuran', bukan panggilan binari. Pembingkai 'kelebihan jelas' mengabaikan bimbingan, yang pasaran biasanya memberi berat lebih daripada cetakan itu sendiri.",
+    "related_lesson": "044",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "earnings",
+      "aapl",
+      "fundamentals"
+    ]
+  },
+  {
+    "id": "dc_2026_07_10_fx_withdrawal_block",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang pengguna telah mendepositkan wang ke platform FX luar negara yang 'berlesen di Saint Vincent' yang menjanjikan pulangan 15% sebulan. Empat pengeluaran kecil berjaya. Untuk mengeluarkan baki penuh $24,000, platform kini menuntut 'deposit audit' 3% secara atas talian. Pengguna bertanya kepada Concierge: 'Adakah saya perlu membayar deposit audit?'",
+    "question": "Pola bendera merah dari Modul 11 yang manakah sedang aktif dengan jelas?",
+    "options": [
+      "Platform menggunakan USDT bukan wang fiat",
+      "Kadar pulangan bulanan yang tinggi terlalu bagus untuk menjadi kenyataan",
+      "Lesen Saint Vincent adalah lemah",
+      "Pengecualian pengeluaran melalui deposit tambahan — langkah keluar peringkat akhir yang direkodkan dalam struktur Ponzi FX"
+    ],
+    "answer": 3,
+    "explanation": "Keempat-empat adalah bendera merah, tetapi hanya satu yang merupakan langkah keluar peringkat akhir yang direkodkan oleh BNM, CFTC, dan FCA: membayar untuk mengeluarkan. Tiada broker yang sah — yang berlesen di mana-mana pun — memerlukan deposit tambahan untuk melepaskan dana yang telah anda depositkan. Empat pengeluaran kecil itu adalah umpan.",
+    "related_lesson": "068",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "forex",
+      "ponzi"
+    ]
+  },
+  {
+    "id": "dc_2026_07_11_meta_support_test",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "META telah menahan paras $580 pada tiga sentuhan berasingan selama enam minggu. Sentuhan keempat berlaku pada isipadu yang menurun; harga ditutup pada $582.40, kemudian sesi seterusnya dibuka pada $585 dan naik pada isipadu yang meningkat kembali ke $612.",
+    "question": "Bacaan teknikal yang paling jelas ialah?",
+    "options": [
+      "Pecahan sokongan diikuti oleh pantulan mayat mati",
+      "Bentuk kepala dan bahu di bahagian bawah",
+      "Ujian semula sokongan yang berjaya — sentuhan keempat bertahan pada isipadu ringan dan kenaikan disahkan oleh isipadu meningkat",
+      "Corak bendera lembu"
+    ],
+    "answer": 2,
+    "explanation": "Empat sentuhan, yang terakhir pada isipadu ringan, kemudian pantulan yang disahkan pada isipadu meningkat — itulah skrip buku kerja sokongan-ujian semula. Pecahan sokongan memerlukan penutupan di bawah $580 dengan keyakinan; itu tidak berlaku. Bendera lembu memerlukan kenaikan tajam sebelumnya ke dalam konsolidasi ketat; tidak diterangkan.",
+    "related_lesson": "023",
+    "related_agent": "market_analyst",
+    "tags": [
+      "technical_analysis",
+      "support",
+      "meta"
+    ]
+  },
+  {
+    "id": "dc_2026_07_12_room_no_news_analyst",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Bilik memberikan cadangan BELI pada XOM pada pagi mesyuarat OPEC+ yang dirancang. Verdisyen menyebut: pecahan carta yang bullish (market_analyst), aliran tunai bebas yang kuat (fundamentals_analyst), sentimen positif (social_media_analyst), pelan dagangan (trader). Bear Researcher mencatat risiko sektor tenaga umum tetapi tidak menyekat.",
+    "question": "Input siapa yang ketara ketiadaannya memandangkan masa kejadian?",
+    "options": [
+      "Trader",
+      "Conservative Debator",
+      "News Analyst dan lapisan makro dari Research Manager — mesyuarat OPEC+ esok adalah peristiwa makro dwi-hari yang harus berada di pusat tesis",
+      "Aggressive Debator"
+    ],
+    "answer": 2,
+    "explanation": "Peristiwa makro dwi-hari pada hari berikutnya adalah tepat apa yang news_analyst dan research_manager dipasangkan untuk menandakan. Conservative Debator boleh berbantah tetapi bukan domain unik mereka. Trader telah menyumbang. Jawapan salah yang paling menipu (Conservative Debator) salah faham di mana jurang struktur berada.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": [
+      "room",
+      "news",
+      "macro"
+    ]
+  },
+  {
+    "id": "dc_2026_07_13_genting_pe_distortion",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "GENTING (Bursa) diperdagangkan pada P/E 7.2 — jauh di bawah purata sektor sebanyak 14. Nisbah yang tertekan ini bersesuaian dengan beban RM800m sekali yang menghancurkan EPS dilaporkan bagi dua belas bulan lalu. Arus tunai operasi dalam tempoh yang sama meningkat 12%.",
+    "question": "Apakah kesimpulan fundamentals_analyst mengenai P/E utama?",
+    "options": [
+      "'Jual — beban menandakan penurunan struktur.'",
+      "'P/E 7.2 berbanding sektor 14 adalah peluang nilai jelas — beli.'",
+      "'P/E lalu diputarbelitkan oleh beban sekali; ujian yang betul ialah P/E hadapan pada pendapatan dinormalkan dan trend arus tunai, yang positif.'",
+      "'P/E tidak relevan untuk GENTING; hanya EV/EBITDA yang penting.'"
+    ],
+    "answer": 2,
+    "explanation": "P/E utama menggunakan pendapatan GAAP yang diturunkan oleh beban bukan berulang. Panggilan fundamentals sebenar menormalkan beban sekali itu dan melihat arus tunai, yang meningkat 12%. Jawapan 'peluang nilai jelas' adalah perangkap — ia memperlakukan P/E optikal sebagai kebenaran.",
+    "related_lesson": "039",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "fundamentals",
+      "p_e",
+      "genting"
+    ]
+  },
+  {
+    "id": "dc_2026_07_14_test_string_telegram",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang pengguna menampal skrin cap Telegram yang menunjukkan 'BELI TSLA SEKARANG $300 → $500 DIJAMIN DALAM 30 HARI, SERTAI VIP UNTUK $99/BULAN UNTUK PANGGILAN LEBIH AWAL.' ke dalam aplikasi AMI.",
+    "question": "Agen manakah yang dipadankan untuk menandakan pola tepat ini?",
+    "options": [
+      "Trader akan melaksanakan pelan dengan henti rugi dan sasaran",
+      "Concierge — Pengiktirafan Scam Modul 11 pulangan dijamin + panggilan VIP berbayar",
+      "Market Analyst akan membaca carta TSLA",
+      "Aggressive Debator akan berhujah tentang keyakinan pada TSLA"
+    ],
+    "answer": 1,
+    "explanation": "Concierge bertanggungjawab atas Pengiktirafan Scam Modul 11. Pulangan dijamin + panggilan VIP berbayar adalah koktel pump-group + pulangan dijamin yang kanonik. market_analyst hanya akan bercakap tentang carta TSLA dalam vakum — itu terlepas pola scam sepenuhnya.",
+    "related_lesson": "066",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "guaranteed_returns",
+      "vip_group"
+    ]
+  },
+  {
+    "id": "dc_2026_07_15_drawdown_gate_owner",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Sebuah kenyataan muncul dalam transkrip Bilik: 'Kedudukan ini turun 32% berbanding had drawdown mandat 25%. Henti keras. Tiada purata ke bawah. Semakan wajib sebelum sebarang tiket baharu pada nama ini. Memulihkan 32% memerlukan keuntungan 47% — asimetri itu adalah sebab keseluruhan kewujudan had.'",
+    "question": "Siapakah yang berkata ini?",
+    "options": [
+      "portfolio_manager",
+      "trader",
+      "bear_researcher",
+      "conservative_debator"
+    ],
+    "answer": 0,
+    "explanation": "Penguatmandatan mandat — dan khususnya gerbang drawdown deterministik — adalah tanggungjawab lantai keselamatan portfolio_manager yang tidak boleh diajar. Trader melaksanakan di dalam lantai; bear_researcher dan conservative_debator membantah tesis. Hanya PM yang memiliki 'henti keras, tiada pengecualian'.",
+    "related_lesson": "018",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "drawdown",
+      "safety_floor"
+    ]
+  },
+  {
+    "id": "dc_2026_07_16_clone_domain_typo",
+    "type": "spot_the_violation",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang 'broker' menghubungi pengguna dari domain jpmorgan-capital.org. Syarikat sebenar beroperasi di jpmorganchase.com. Nombor pendaftaran yang dinyatakan sepadan dengan entiti berlesen sebenar di FINRA BrokerCheck. Penganjur ini menolak 'akaun FX diuruskan'.",
+    "question": "Pengesahan manakah mengenal pasti peniru dengan paling pantas?",
+    "options": [
+      "Cari sijil SSL pada laman web",
+      "Sahkan firma telah beroperasi selama 10+ tahun",
+      "Semak nombor pendaftaran di FINRA BrokerCheck",
+      "Padankan butiran hubungan (domain, telefon, e-mel) terhadap senarai pengawal selia untuk firma yang dinamakan — domain peniru tidak akan sepadan dengan domain yang diterbitkan oleh firma sebenar"
+    ],
+    "answer": 3,
+    "explanation": "Langkah 1 sahaja adalah apa yang dieksploitasi oleh peniru — mereka merujuk kepada pendaftaran sebenar. Pengesahan yang menentukan adalah memadankan butiran hubungan terhadap senarai rasmi yang diterbitkan oleh pengawal selia untuk entiti tersebut. Domain .org peniru akan gagal dalam pemeriksaan silang register FCA/SEC serta-merta. Sijil SSL dan usia perniagaan bukan diagnostik yang boleh dipalsukan.",
+    "related_lesson": "067",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "clone_broker",
+      "domain"
+    ]
+  },
+  {
+    "id": "dc_2026_07_17_room_no_compliance",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Bilik memberikan nasihat BELI pada TSLA pada $312 dengan saiz 18% daripada portfolio. Mandat pengguna menetapkan had kedudukan tunggal pada 10%. Bull, Aggressive, Trader, Market Analyst, News Analyst semua bersetuju dengan keyakinan. Keputusan dihantar kepada pengguna tanpa sebarang penanda.",
+    "question": "Input siapa yang ketara ketiadaannya?",
+    "options": [
+      "Pembicara Konservatif",
+      "Penyelidik Bear",
+      "Pengurus Portfolio dan pemeriksaan kepatuhan deterministik — alokasi 18% melanggar had mandat 10% dan sepatutnya disekat secara keras sebelum keputusan sampai kepada pengguna",
+      "Penganalisis Asas"
+    ],
+    "answer": 2,
+    "explanation": "Penguatkuasaan mandat oleh PM adalah lantai keselamatan — ia tidak boleh diajar dan berjalan secara deterministik. Alokasi 18% terhadap had 10% mesti menyekat secara keras. Perbezaan pendapat Bear/Conservative adalah berguna tetapi pemeriksaan kepatuhan PM adalah sandaran struktur. Ketidakhadiran PM adalah kegagalan lantai keselamatan yang kritikal.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "room",
+      "mandate",
+      "safety_floor"
+    ]
+  },
+  {
+    "id": "dc_2026_07_18_72_hour_pause",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang pengguna menunjukkan aplikasi AMI sebuah tawaran: 'Syndikat pra-IPO, ditutup jam 5 petang hari ini, 12 tempat tinggal, terma lisan sahaja.' Pengguna menaip: 'Saya ada 4 jam untuk membuat keputusan.'",
+    "question": "Agen manakah memasang peraturan 'jeda 72 jam + terma bertulis di atas kop surat'?",
+    "options": [
+      "Pengurus Penyelidikan mensintesis perdebatan Bilik",
+      "Penganalisis Asas menyemak metrik syarikat",
+      "Pembicara Neutral menimbang sisi pada tesis sebenar",
+      "Concierge — memasang peraturan jeda 72 jam untuk taktik tekanan dan memerlukan terma bertulis"
+    ],
+    "answer": 3,
+    "explanation": "Modul 11, EDGE 20 — jeda 72 jam adalah refleks yang dipasang oleh Concierge. research_manager mensintesis perdebatan Bilik; neutral_debator menimbang sisi pada tesis sebenar. Tiada satu pun yang memiliki pengiktirafan taktik tekanan scam. Concierge yang memilikinya.",
+    "related_lesson": "070",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "urgency",
+      "verification"
+    ]
+  },
+  {
+    "id": "dc_2026_07_19_tenaga_rsi_70",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "TENAGA (Bursa) telah meningkat dari RM12.80 ke RM15.40 dalam 18 sesi dengan isipadu yang meningkat. RSI(14) kini mencatat 81. Harga ditutup hari ini pada RM15.42 dengan sumbu atas yang panjang dan isipadu 30% di bawah purata 20 hari.",
+    "question": "Apakah yang ditunjukkan oleh penanda market_analyst dalam konfigurasi ini?",
+    "options": [
+      "Isyarat kesinambungan yang kuat — beli lebih pada penutupan",
+      "Pembalikan yang disahkan — short saham ini",
+      "Keadaan overbought ditambah dengan divergens isipadu dan sumbu — amaran keletihan momentum, bukan semestinya isyarat keluar, tetapi penurunan kualiti entri baru yang jelas",
+      "Pengesanan dalam julat"
+    ],
+    "answer": 2,
+    "explanation": "RSI di atas 70 dengan isipadu yang menurun semasa mencapai tahap tertinggi baru dan kehadiran sumbu atas adalah konfigurasi keletihan yang klasik. Ia tidak menjamin pembalikan — jawapan 'short it' terlalu agresif. Namun, ia bermakna entri baru berkualiti rendah. Jawapan 'buy more' mengabaikan tiga tanda amaran bebas.",
+    "related_lesson": "027",
+    "related_agent": "market_analyst",
+    "tags": [
+      "technical_analysis",
+      "rsi",
+      "tenaga"
+    ]
+  },
+  {
+    "id": "dc_2026_07_20_ai_bot_no_drawdown",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Platform 'AI Trading Bot' mengiklankan ujian semula (backtest) 5 tahun dengan pulangan tahunan dianggarkan 187%, tiada bulan rugi, dan penurunan maksimum (max drawdown) 0.4%. Platform ini enggan mendedahkan alam semesta aset, peraturan saiz kedudukan, atau metodologi ujian luar sampel.",
+    "question": "Sifat statistik tunggal manakah yang menjadi bukti paling menentukan bahawa backtest itu direkakan atau terlalu disesuaikan (curve-fit)?",
+    "options": [
+      "Pulangan tahunan dianggarkan 187% adalah terlalu tinggi",
+      "Platform menggunakan AI",
+      "Backtest hanya sepanjang 5 tahun",
+      "Tiada bulan rugi dalam tempoh 60 bulan untuk sebarang strategi yang terdedah kepada pasaran — digabungkan dengan penurunan maksimum 0.4% — adalah hampir mustahil secara statistik dan hampir selalu menunjukkan direkakan atau overfitting ekstrem pada data dalam sampel"
+    ],
+    "answer": 3,
+    "explanation": "Strategi sebenar yang cemerlang pun mempunyai bulan rugi. Sifar dalam tempoh 60 bulan dengan penurunan maksimum 0.4% adalah cap jari diagnostik untuk overfitting atau direkakan sepenuhnya. Pulangan tinggi semata-mata tidak menafikan — pulangan gaya venture wujud. Bentuk lengkung adalah bukti yang menentukan.",
+    "related_lesson": "069",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "ai_bot",
+      "backtest"
+    ]
+  },
+  {
+    "id": "dc_2026_07_21_room_unanimous_buy_dissent_missing",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "The Room memberikan undian BUY yang bulat pada nama Bursa bersaiz kecil (TOPGLOV pada RM0.92). Kesemua 12 agen bersetuju. Laporan Bear Researcher berbunyi 'tiada risiko material dikenal pasti' dan bahagian Conservative Debator hanya dua ayat yang menyokong dagangan tersebut.",
+    "question": "Apakah yang ketara hilang dari penghakiman ini?",
+    "options": [
+      "DCF oleh analis asas",
+      "Pelaksanaan oleh Trader",
+      "Lapisan makro oleh analis berita",
+      "Ketidaksetujuan tulen — The Room yang bulat dengan perenggan Bear token menunjukkan bahawa pemikiran adversarial tidak sebenarnya dilakukan"
+    ],
+    "answer": 3,
+    "explanation": "Penghakiman bulat pada saham kecil adalah bau struktur. The Room direka untuk menonjolkan ketidaksetujuan; Bear yang mendapati 'tiada risiko material' pada nama yang kurang diperdagangkan tidak menjalankan tugasnya. Item yang hilang bukan laporan spesifik — ia adalah ketidaksetujuan itu sendiri.",
+    "related_lesson": "058",
+    "related_agent": "bear_researcher",
+    "tags": [
+      "room",
+      "dissent",
+      "bursa"
+    ]
+  },
+  {
+    "id": "dc_2026_07_22_jpm_revenge_trade",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Pengguna baru mencatat dua kerugian berturut-turut pada JPM sebanyak -$3,200 terhadap akaun $30,000. Mereka membuka tiket JPM ketiga dengan saiz $9,000 (3x saiz biasa) dan menulis nota: 'mahu dapatkan semula kali ini.'",
+    "question": "Apa yang dikatakan oleh conservative_debator?",
+    "options": [
+      "'Tukar ke ticker berbeza untuk reset.'",
+      "'Ini adalah trading balas dendam: saiz 3x biasa, tiada tesis baharu, justifikasi emosi. Mandat behavioural-guard harus menyekat; tindakan betul ialah penangguhan 24 jam.'",
+      "'Perdagangan keyakinan tinggi layak mendapat saiz lebih besar — teruskan.'",
+      "'Tambah had ketat untuk menguruskan saiz yang lebih besar.'"
+    ],
+    "answer": 1,
+    "explanation": "Tiga diagnostik aktif serentak: saiz tiga kali ganda, tiada tepi baharu, nota emosi yang jelas. Pendawaian lesson-047 conservative_debator adalah untuk menandakan corak ini tepat. 'Tukar ticker' adalah jawapan salah yang membolehkan tingkah laku berterusan pada nama lain.",
+    "related_lesson": "047",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "psychology",
+      "revenge_trading",
+      "jpm"
+    ]
+  },
+  {
+    "id": "dc_2026_07_23_verify_five_checks",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Sebuah cadangan lulus 4 daripada 5 semakan pengesahan: syarikat berada dalam daftar FCA, telefon sepadan, domain e-mel sepadan, terma bertulis tiba pada kop surat sebenar dengan nombor pendaftaran yang sah. Hanya akaun bank gagal — ia atas nama individu 'settlement manager'. Operator menyatakan ini adalah standard untuk onboarding pantas.",
+    "question": "Apakah tindakan yang betul?",
+    "options": [
+      "Teruskan — 4 daripada 5 semakan adalah cukup kuat",
+      "Runding diskaun dan teruskan",
+      "Hantar jumlah ujian kecil dahulu, kemudian komited",
+      "Jangan hantar — prosedur adalah set lengkap, bukan undian majoriti; mana-mana kegagalan tunggal adalah menentukan, dan destinasi nama peribadi adalah tidak boleh runding sendiri"
+    ],
+    "answer": 3,
+    "explanation": "Setiap regulator yang relevan (SEC, FCA, FINRA, SC Malaysia, MAS) memerlukan wang pelanggan dalam akaun amanah nama syarikat. Bingkai 4-of-5 adalah perangkap — pengesahan adalah gerbang keras, bukan skor. Deposit ujian membuktikan hanya bahawa akaun wujud, bukan bahawa wang akan kembali.",
+    "related_lesson": "071",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "verification",
+      "capstone"
+    ]
+  },
+  {
+    "id": "dc_2026_07_24_googl_news_gap",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Pra-pasaran: GOOGL melompat naik 6.8% atas berita bahawa EU menggantung siasatan anti-monopoli yang berpanjangan. Isipadu dalam pra-pasaran sudah 4x purata pra-pasaran 20 hari. Saham telah konsolidasi $168–$172 selama tiga minggu; cetakan pra-pasaran ialah $182.",
+    "question": "Apa yang disimpulkan oleh news_analyst mengenai penyenaraian semula nilai adil?",
+    "options": [
+      "'Jual berita — lompatan adalah keseluruhan pergerakan; reverensi min akan mendominasi.'",
+      "'Lompatan 6.8% menjamin penurunan menjelang akhir hari.'",
+      "'Pemangkin tulen mengangkat beban yang diketahui; pergerakan disokong oleh isipadu dan konsolidasi sedia ada. Semak semula nilai adil, jangan andaikan lompatan adalah pergerakan penuh.'",
+      "'Abaikan berita — hanya corak carta yang penting; ini adalah hingar.'"
+    ],
+    "answer": 2,
+    "explanation": "news_analyst menimbang sama ada pemangkin menjustifikasi pergerakan. Beban anti-monopoli yang diangkat adalah peristiwa penyenaraian semula nilai adil yang tulen, bukan kilasan sentimen. Laluan 'jual berita' adalah perangkap yang memikat — ia berfungsi untuk acara hiped tanpa kesan aliran tunai sebenar; ini bukan kes itu.",
+    "related_lesson": "005",
+    "related_agent": "news_analyst",
+    "tags": [
+      "news",
+      "catalyst",
+      "googl"
+    ]
+  },
+  {
+    "id": "dc_2026_07_25_room_no_trader",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "The Room memberikan isyarat BELI pada AMZN pada $215. Tesis merangkumi: trend bullish (market_analyst), penukaran tunai yang kukuh (fundamentals_analyst), sentimen positif AWS (social_media_analyst), serta perdebatan bull/bear/research yang telah dibincangkan sepenuhnya. Veredik dihantar kepada pengguna tanpa harga masuk, tanpa henti rugi, tanpa sasaran, dan tanpa saiz posisi.",
+    "question": "Sumbangan daripada siapa yang ketara ketiadaannya?",
+    "options": [
+      "The Conservative Debator",
+      "The News Analyst",
+      "The Portfolio Manager",
+      "The Trader — tesis analitik adalah lengkap tetapi tiada pelan boleh laksanakan (harga masuk, henti rugi, saiz, sasaran), yang merupakan tugas The Trader"
+    ],
+    "answer": 3,
+    "explanation": "The Trader menukar tesis kepada pelan boleh laksanakan: harga masuk, henti rugi, sasaran, dan saiz. Tanpa itu, veredik tidak boleh ditindak. Portfolio Manager akan menetapkan had yang selaras dengan mandat tetapi bukan pelangan dagangan itu sendiri. Jawapan salah yang paling menipu (PM) mengelirukan dua peranan yang berbeza.",
+    "related_lesson": "015",
+    "related_agent": "trader",
+    "tags": [
+      "room",
+      "trader",
+      "execution"
+    ]
+  },
+  {
+    "id": "dc_2026_07_26_klcc_pe_book",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "KLCC (Bursa REIT) diperdagangkan pada nisbah harga kepada buku (price-to-book) 0.92 dengan hasil dividen 5.4%, nisbah pembayaran 95%, dan kadar penempatan jangka panjang yang stabil di atas 93%. Purata sektor P/B ialah 1.05.",
+    "question": "Apa kata fundamentals_analyst mengenai penilaian?",
+    "options": [
+      "'Terlalu mahal — jual.'",
+      "'Diskaun kecil kepada buku adalah munasabah memandangkan nisbah pembayaran yang tinggi dan kepekaan kadar terhadap REIT; analisis bergantung pada kestabilan penempatan dan liputan dividen, yang kedua-duanya menyokong harga semasa.'",
+      "'Tidak boleh menilai REIT dengan P/B.'",
+      "'Murah pada P/B — beli jelas.'"
+    ],
+    "answer": 1,
+    "explanation": "P/B adalah isyarat yang berguna tetapi separa untuk REIT; 0.92 berbanding 1.05 bukan diskaun yang ketara. Bacaan fundamentals yang jujur menimbang liputan pembayaran dan isyarat operasi (penempatan). Jawapan 'beli jelas pada P/B murah' adalah perangkap — ia memperlakukan nisbah tunggal sebagai veredik.",
+    "related_lesson": "040",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "fundamentals",
+      "reit",
+      "klcc"
+    ]
+  },
+  {
+    "id": "dc_2026_07_27_spy_volume_climax",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "SPY turun 4.2% dalam tempoh dagangan pada isipadu 3.8x purata 50 hari. Lilin mencetak ekor bawah yang panjang dengan penutupan berhampiran harga tertinggi hari, memulihkan 60% kerugian dalam tempoh dagangan. Sesi seterusnya membuka rata dan mengekalkan kedudukan.",
+    "question": "Apa bacaan teknikalnya?",
+    "options": [
+      "Terusan trend turun yang disahkan",
+      "Persediaan bendera bullish",
+      "Lilin isipadu-klimaks / kapitulasi: jualan panik diserap oleh pembeli dalam jumlah besar, ditandakan oleh isipadu ekstrem + ekor bawah panjang + penutupan berhampiran harga tertinggi — bukan dasar dijamin tetapi titik belok jangka pendek yang bermakna",
+      "Corak penelanan bearish"
+    ],
+    "answer": 2,
+    "explanation": "Tiga isyarat bertepatan: isipadu 3.8x, ekor bawah panjang, penutupan berhampiran harga tertinggi — itu adalah isipadu-klimaks / kapitulasi teks buku. Pembingkai 'dasar dijamin' akan terlalu berkomitmen; ia adalah titik belok, bukan kepastian. Penelanan bearish memerlukan bentuk lilin yang salah; tidak wujud di sini.",
+    "related_lesson": "029",
+    "related_agent": "market_analyst",
+    "tags": [
+      "technical_analysis",
+      "volume",
+      "spy"
+    ]
+  },
+  {
+    "id": "dc_2026_07_28_pump_dump_curve",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Sebuah syarikat kecil OTC AS dengan isipadu dagangan harian purata 220,000 saham mencetak urutan berikut selama dua sesi: membuka sesi 1 pada $0.41, meningkat ke $1.18 selama enam jam dengan isipadu 11.4 juta saham (52x purata), menutup pada $1.06. Sesi 2 membuka pada $0.62 dan menutup pada $0.34 dengan isipadu 8.9 juta saham, dengan tumpukan bid berulang kali ditarik.",
+    "question": "Apakah corak ini?",
+    "options": [
+      "Kurva pam-dan-lempar — pembelian berkoordinasi melonjakkan isipadu dan harga, penganjur keluar ke permintaan runcit, harga runtuh pada sesi berikutnya",
+      "Pembalikan bullish dari keadaan terjual berlebihan",
+      "Corak pengecutan pendek",
+      "Persediaan kesinambungan pecahan-dan-susut semula"
+    ],
+    "answer": 0,
+    "explanation": "Isipadu 52x pada nama bernilai kurang daripada sejuta, kenaikan hampir menegak, kemudian susut semula 70% dengan isipadu yang sama — itu adalah kurva pam kurva-066. Pengecutan pendek memerlukan setup minat pendek yang tinggi dan tidak semestinya meruntuhkan sesi berikutnya. 'Pecahan dan susut semula' adalah jawapan salah yang menggoda yang salah tafsir magnitud runtuhan.",
+    "related_lesson": "066",
+    "related_agent": "market_analyst",
+    "tags": [
+      "technical_analysis",
+      "pump_dump",
+      "small_cap"
+    ]
+  },
+  {
+    "id": "dc_2026_07_29_room_no_concierge_on_scam",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Seorang pengguna menyerahkan Run Bilik pada 'NeuroAlpha AI Token' — sebuah syiling yang dipromosikan oleh kumpulan Telegram dengan 'pulangan minggu dijamin 1.5%'. Bilik menghasilkan tesis: hujah bull/bear, analisis teknikal pada sejarah harga 30 hari, bacaan sentimen. Verdict: 'Tahan menunggu lebih banyak data'.",
+    "question": "Siapa campur tangan yang ketara ketiadaannya?",
+    "options": [
+      "Pelan pelaksanaan Trader",
+      "Penganalisis Asas",
+      "Concierge — ini sama sekali bukan sekuriti yang boleh dilaburkan; ia adalah corak scam (pulangan dijamin + Telegram + tuntutan AI kabur) dan Bilik sepatutnya dipendekkan oleh Concierge sebelum sebarang analisis teknikal atau asas dilakukan",
+      "Pembahas Agresif"
+    ],
+    "answer": 2,
+    "explanation": "Bilik menjalankan gerakan analitik pada sesuatu yang tidak sepatutnya sampai ke Bilik. Cap jari Modul 11 Concierge menyala sebelum perdebatan bermakna — 'pulangan minggu dijamin' adalah menentukan. Verdict 'Tahan menunggu lebih banyak data' melegitimasikan tawaran scam dengan memperlakukannya sebagai sekuriti.",
+    "related_lesson": "069",
+    "related_agent": "concierge",
+    "tags": [
+      "room",
+      "concierge",
+      "scam_short_circuit"
+    ]
+  },
+  {
+    "id": "dc_2026_07_30_xom_macro_news",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Pernyataan muncul dalam transkrip Bilik: 'Minyak Brent +4.8% minggu ke minggu pada tajaman potongan pengeluaran Saudi, tetapi inventori minyak petrol AS naik 2.3 juta tong dan kiraan rig meningkat minggu lalu — sisi permintaan gambar lebih lembut daripada yang dicadangkan oleh cerita bekalan.'",
+    "question": "Siapa agens yang paling mungkin berkata ini?",
+    "options": [
+      "market_analyst",
+      "news_analyst",
+      "fundamentals_analyst",
+      "bull_researcher"
+    ],
+    "answer": 1,
+    "explanation": "Berita makro ditimbang terhadap data asas bekalan/permintaan adalah suara news_analyst — mereka mengintegrasikan aliran berita dengan data asas. market_analyst akan bercakap tentang struktur carta pada XOM; fundamentals_analyst akan bercakap tentang aliran tunai khusus XOM, bukan Brent dan kiraan rig.",
+    "related_lesson": "008",
+    "related_agent": "news_analyst",
+    "tags": [
+      "news",
+      "macro",
+      "oil"
+    ]
+  },
+  {
+    "id": "dc_2026_07_31_concierge_capstone",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Sebuah kenyataan muncul dalam perbualan 1-ke-1: 'Laksanakan prosedur lima-pemeriksaan: entiti dalam daftar pengawal selia, butiran hubungan sepadan dengan senarai daftar pengawal selia, akaun bank atas nama firma bukan individu, panggilan balik bebas ke firma pada nombor yang diterbitkan oleh pengawal selia, dan terma bertulis pada kop surat dengan nombor pendaftaran yang boleh disahkan. Satu kegagalan bermaksud berhenti. Tiada pengecualian.'",
+    "question": "Siapa yang memiliki prosedur pengesahan lima-pemeriksaan?",
+    "options": [
+      "Concierge — memiliki prosedur pengesahan lima-pemeriksaan Modul 11 sebelum wang dipindahkan",
+      "Research Manager mensintesis perdebatan Bilik dan menilai keyakinan",
+      "Trader melaksanakan entri, henti, sasaran, dan saiz",
+      "Portfolio Manager menguatkan mandat dagangan dan peraturan saiz"
+    ],
+    "answer": 0,
+    "explanation": "Prosedur pengesahan lima-pemeriksaan adalah capstone Modul 11 piawai (EDGE 21), dimiliki oleh Concierge. Portfolio Manager menguatkan mandat; Research Manager mensintesis perdebatan Bilik. Tiada yang memiliki prosedur carian pengawal selia yang melindungi pengguna sebelum wang dipindahkan.",
+    "related_lesson": "071",
+    "related_agent": "concierge",
+    "tags": [
+      "scams",
+      "verification",
+      "concierge"
+    ]
+  }
+]

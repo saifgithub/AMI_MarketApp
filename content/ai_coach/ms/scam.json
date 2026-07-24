@@ -1,0 +1,740 @@
+[
+  {
+    "id": "qa_scam_guaranteed_5_percent_monthly",
+    "category": "scam",
+    "question": "Seseorang menawarkan pulangan dijamin 5% sebulan. Adakah itu benar?",
+    "short_answer": "Tidak. Pulangan bergaya ekuiti yang dijamin adalah tanda amaran utama struktur Ponzi — pelaburan sebenar tidak boleh menjanjikan pembayaran bulanan tetap.",
+    "long_answer": "5% sebulan digabungkan secara beraja menjadi kira-kira 80% setahun, yang tidak dijanjikan oleh mana-mana dana berlesen atau broker di dunia dengan jaminan. Dana berlesen sebenar menerbitkan prospektus dan NAV bulanan yang bergerak naik dan turun. Pembayaran awal dalam skim ini adalah benar tetapi dibiayai oleh deposit pelabur seterusnya, bukan oleh aktiviti ekonomi. Sahkan operator pada register regulator yang relevan — SC Malaysia dan BNM Financial Consumer Alert di MY, Senarai Amaran FCA di UK, SEC IAPD atau EDGAR di AS. Minta Concierge dalam sesi 1-on-1 untuk memandu anda melalui carian tersebut. Jika entiti tidak terdapat pada register, failkan laporan dengan regulator itu sebelum mempertimbangkan apa-apa lagi.",
+    "related_lessons": [
+      "065"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "guaranteed_return",
+      "ponzi",
+      "red_flag"
+    ]
+  },
+  {
+    "id": "qa_scam_ponzi_vs_pyramid",
+    "category": "scam",
+    "question": "Adakah Ponzi sama dengan skim piramid?",
+    "short_answer": "Mereka bertindih tetapi tidak sama. Ponzi membayar pelabur awal dengan deposit kemudian dan berpusat pada satu operator; piramid membayar pengendali rujukan untuk membawa masuk lebih banyak pengendali rujukan.",
+    "long_answer": "Ponzi biasanya dibingkai sebagai produk pelaburan dengan pulangan dijamin yang lancar, manakala piramid dibingkai sebagai peluang perniagaan atau afilia di mana pendapatan bergantung pada orang di bawah anda. Struktur ini sering digabungkan — banyak skim pulangan dijamin juga membayar komisen rujukan. Kedua-duanya runtuh atas sebab yang sama: pembayaran bergantung pada wang baharu secara berterusan. Laluan pengesahan adalah sama tanpa mengira label: semak sama ada entiti itu berlesen oleh regulator yang relevan (SC Malaysia, SEC, FCA, ASIC, MAS) dan sama ada aliran tunai yang dijanjikan berasal dari aktiviti ekonomi sebenar. Minta Concierge membantu membongkar tawaran khusus.",
+    "related_lessons": [
+      "065"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ponzi",
+      "pyramid",
+      "structure"
+    ]
+  },
+  {
+    "id": "qa_scam_capital_protected_high_return",
+    "category": "scam",
+    "question": "Mereka kata modal saya dilindungi 100% tetapi saya masih mendapat 20% setahun. Adakah itu sah?",
+    "short_answer": "Tidak. Perlindungan modal pada tahap keselamatan deposit bank dan pulangan bergaya ekuiti tidak boleh wujud bersama dalam produk sebenar — pasangan itu adalah tawaran Ponzi standard.",
+    "long_answer": "Produk dilindungi modal sebenar wujud (obligasi kerajaan, deposit bank berinsurans sehingga had perlindungan tempatan) tetapi pulangannya rendah dan terhad oleh apa yang boleh dibayar oleh kerajaan atau bank berinsurans. Sebarang tawaran kenaikan nilai bergaya ekuiti dengan perlindungan kerugian bergaya deposit adalah sama ada berbohong tentang perlindungan, berbohong tentang pulangan, atau kedua-duanya. Semak operator pada register regulator yang relevan — BNM Financial Consumer Alert untuk tuntutan bergaya deposit Malaysia, SEC IAPD untuk penasihat AS, FCA Register untuk syarikat UK. Jika entiti tidak hadir atau muncul pada senarai amaran, jangan pindahkan dana dan failkan laporan melalui saluran aduan regulator itu.",
+    "related_lessons": [
+      "065"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "capital_protected",
+      "guaranteed_return",
+      "ponzi"
+    ]
+  },
+  {
+    "id": "qa_scam_smooth_monthly_returns",
+    "category": "scam",
+    "question": "Dana itu memaparkan pulangan bulanan yang lancar tanpa bulan rugi. Mengapa itu menjadi masalah?",
+    "short_answer": "Kerataan tanpa bulan rugi adalah hampir mustahil secara statistik untuk strategi yang terdedah kepada pasaran dan merupakan tanda kurva ekuiti yang difabrikasi.",
+    "long_answer": "Strategi sebenar — walaupun yang sangat baik — mempunyai bulan rugi. Kurva ekuiti sejarah dengan sifar bulan merah merentasi tahun adalah tanda ciri sama ada produk alternatif ekstrem (di mana ia akan dikawal selia dan didaftarkan dengan ketat) atau kenyataan yang dipalsukan. Minta rekod pelaksanaan tahap perdagangan, kewangan diaudit ditandatangani dengan auditor bernama, dan nombor pendaftaran pada register regulator yang relevan. Jika operator menolak mana-mana daripada itu, anggap kurva lancar sebagai produk itu sendiri, bukan sebagai bukti satu. Bawa tawaran itu kepada Concierge dalam sesi 1-on-1 untuk walkthrough lima semakan berstruktur.",
+    "related_lessons": [
+      "065",
+      "069",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "equity_curve",
+      "smoothness",
+      "fabrication"
+    ]
+  },
+  {
+    "id": "qa_scam_friends_paid_proof",
+    "category": "scam",
+    "question": "Mak cik saya dapat bayaran selama tiga bulan dari skim ini. Bukankah itu membuktikan ia berfungsi?",
+    "short_answer": "Tidak. Bayaran awal adalah umpan fasa Ponzi — tiga bulan bayaran hanya membuktikan operator masih cukup solven untuk merekrut anda.",
+    "long_answer": "Struktur Ponzi membayar semua orang sehingga mereka tidak mampu membayar sesiapa, kemudian runtuh dalam beberapa hari. Penarikan awal dibiayai oleh deposit baru, bukan aktiviti ekonomi, dan berfungsi sebagai bahan bukti sosial yang boleh digunakan operator untuk merekrut lebih banyak peserta. Satu-satunya ujian yang penting adalah dari mana pulangan itu datang — ticker sebenar, hartanah sebenar dengan geran, bank berdaftar. Lakukan carian dalam pangkalan data pengawal selia yang relevan (SC Malaysia, BNM, SEC IAPD, FCA Register, ASIC Connect, MAS Directory) dan sahkan operator berlesen untuk aktiviti yang mereka dakwa. Concierge boleh membimbing langkah carian ini.",
+    "related_lessons": [
+      "065"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "social_proof",
+      "ponzi",
+      "bait_stage"
+    ]
+  },
+  {
+    "id": "qa_scam_telegram_20k_members",
+    "category": "scam",
+    "question": "Saluran Telegram ini mempunyai 20,000 ahli dan hanya memuat naik dagangan yang menang. Adakah saya perlu mempercayainya?",
+    "short_answer": "Tidak. Saluran yang hanya memuat naik dagangan menang adalah bias pemilihan penyertaan secara reka bentuk — panggilan yang kalah dipadam atau dijalankan dalam saluran selari yang tidak pernah anda lihat.",
+    "long_answer": "Operator kumpulan pam menjalankan banyak panggilan serentak dan hanya tangkap layar pemenang. Kiraan ahli 20K dan rentetan kemenangan yang disematkan tidak memberi maklumat tentang kadar hit sebenar. Saham sasaran biasanya mempunyai float rendah, isipadu rendah, dan harga rendah supaya pembelian runcit yang dikoordinasikan boleh melonjakkan carta — dan pembelian sama menjadi likuiditi keluar untuk penganjur. Semak semula ticker yang dinamakan terhadap pelepasan penguatkuasaan SEC (sec.gov/litigation) dan halaman penguatkuasaan SC Malaysia untuk tindakan manipulasi pasaran sebelum ini. Minta Concierge menjalankan nama saluran melalui senarai semak amaran kumpulan pam.",
+    "related_lessons": [
+      "066"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pump_dump",
+      "telegram",
+      "survivorship_bias"
+    ]
+  },
+  {
+    "id": "qa_scam_what_is_pump_and_dump",
+    "category": "scam",
+    "question": "Apakah pam dan dump?",
+    "short_answer": "Skema pembelian berkoordinasi dalam saham yang diperdagangkan dengan tipis di mana orang dalam mengumpulkan terlebih dahulu, runcit diarahkan untuk membeli, kemudian orang dalam menjual ke dalam permintaan buatan.",
+    "long_answer": "Penganjur memilih nama dengan float rendah, isipadu rendah, dan harga rendah yang boleh mereka gerakkan dengan modal terhad. Mereka memuat naik ticker ke kumpulan chat atau saluran isyarat berbayar, selalunya dengan masa beli yang disegerakkan. Isipadu melonjak, harga naik, penganjur keluar, harga runtuh pada sesi seterusnya. SEC, FCA, ASIC, dan SC Malaysia semua menerbitkan nasihat yang hampir serupa mengenai struktur ini. Jika saluran meminta anda membeli ticker tertentu pada minit tertentu, anda kemungkinan besar adalah likuiditi keluar. Concierge boleh menarik contoh sejarah dari halaman penguatkuasaan pengawal selia yang relevan untuk mana-mana ticker yang ditawarkan kepada anda.",
+    "related_lessons": [
+      "066"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pump_dump",
+      "definition",
+      "market_manipulation"
+    ]
+  },
+  {
+    "id": "qa_scam_vip_signals_paywall",
+    "category": "scam",
+    "question": "Mereka mahu saya membayar $300 sebulan untuk isyarat VIP dengan panggilan lebih awal. Berbaloi?",
+    "short_answer": "Tier 'VIP' atau 'bulatan dalam' berbayar adalah lapisan monetisasi kumpulan pam piawai — akses awal biasanya bermaksud anda menjadi permintaan buatan yang dijual oleh penganjur.",
+    "long_answer": "Langganan penyelidikan yang sah wujud (laporan sisi jualan, buletin berdaftar dengan pengungkapan sebarang posisi yang dipegang), tetapi mereka tidak mendakwa kadar hit hampir sempurna atau kemasukan serentak pada kecil-caps yang tidak cecair. Tier isyarat berbayar yang menjanjikan 'panggilan lebih awal' pada nama sen dindin adalah struktur pam yang dibalut sebagai langganan. Semak operator di dalam pangkalan data pengawal selia yang relevan dan cari sebarang tindakan penguatkuasaan sebelum ini di bawah nama mereka atau alias. Concierge boleh menjalankan nama operator melalui pelepasan litigasi SEC, Senarai Amaran FCA, amaran pelabur ASIC, dan halaman penguatkuasaan SC Malaysia.",
+    "related_lessons": [
+      "066"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "paid_signals",
+      "pump_dump",
+      "vip"
+    ]
+  },
+  {
+    "id": "qa_scam_synchronised_buy_time",
+    "category": "scam",
+    "question": "Kumpulan itu suruh semua orang beli XYZ pada tepat pukul 9:35. Adakah itu biasa?",
+    "short_answer": "Tidak. Masa pembelian segerak pada saham kap kecil adalah mekanisme pembuangan — pembelian anda yang terkoordinasi adalah likuiditi yang digunakan oleh pengendali untuk menjual.",
+    "long_answer": "Syarikat penyelidikan sebenar menerbitkan tesis yang bertahan selama berhari-hari hingga berbulan-bulan dan tidak memerlukan ahli untuk masuk pada minit yang tepat. Arahan beli pada 09:35 direka untuk memampatkan permintaan ke dalam tetingkap yang telah disediakan oleh pengendali. Corak carta yang konsisten ialah lonjakan isipadu 30–100x, kenaikan harga 2–3x dalam beberapa jam, diikuti jurang penurunan pada sesi berikutnya. Elakkan perdagangan ini dan semak sama ada pengendali tersebut muncul dalam notis penguatkuasaan SEC atau senarai amaran penguat kuasa tempatan (SC Malaysia, FCA, ASIC). Sampaikan panggilan ini kepada Concierge untuk analisis tanda amaran merah.",
+    "related_lessons": [
+      "066"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pump_dump",
+      "synchronised_entry",
+      "execution"
+    ]
+  },
+  {
+    "id": "qa_scam_whatsapp_signal_group_friend",
+    "category": "scam",
+    "question": "Seorang rakan menambah saya ke dalam kumpulan dagangan WhatsApp dengan tangkapan layar kemenangan besar. Adakah saya harus menyertai perdagangan?",
+    "short_answer": "Sangat berhati-hati. Tangkapan layar mudah diedit atau dipilih secara selektif, dan pengambilan melalui rakan-rakan adalah corak pengedaran standard untuk skim pam-dan-dump serta skim Ponzi.",
+    "long_answer": "Fakta bahawa seorang rakan berada dalam kumpulan bukan bukti kewibawaan kumpulan tersebut — ia adalah mekanisme pengambilan. Tanya rakan itu tiga soalan: siapa yang mengendalikan kumpulan, entiti undang-undang di sebaliknya, dan sama ada entiti tersebut didaftarkan di bawah penguat kuasa yang berkenaan. Jika mana-mana jawapan kosong, anggap tangkapan layar sebagai bahan pemasaran, bukan rekod prestasi. Concierge boleh memandu anda melalui lima semakan pengesahan — entiti dalam daftar, butiran hubungan sepadan, akaun bank atas nama syarikat, panggilan balik bebas, dan terma bertulis — sebelum anda meletakkan sebarang modal.",
+    "related_lessons": [
+      "066",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "whatsapp",
+      "pump_dump",
+      "social_recruitment"
+    ]
+  },
+  {
+    "id": "qa_scam_low_float_target",
+    "category": "scam",
+    "question": "Mengapa kumpulan pam sentiasa menyasarkan saham kecil dan kurang likuid?",
+    "short_answer": "Kerana likuiditi nipis adalah apa yang menjadikan pembuangan secara mekanikal mungkin — nama dengan isipadu rendah dan isipadu dagangan rendah bergerak beberapa kali ganda dengan pembelian segerak yang sederhana.",
+    "long_answer": "Saham mega-kap dan ETF likuid menyerap aliran tanpa bergerak. Untuk menghasilkan lonjakan 200%, pengendali memerlukan nama di mana beberapa ratus ribu dolar permintaan segerak dapat menggerakkan harga beberapa kali ganda. Penapis ini mengecilkan alam semesta kepada saham sen, saham pasaran ACE berisipadu rendah di Malaysia, dan penunjuk OTC yang sukar di US. Jika penunjuk yang ditawarkan mempunyai kurang daripada, katakanlah, 500,000 saham isipadu harian purata, anda sedang melihat nama yang dipilih untuk kebolehtiruan, bukan untuk asas-asas. Concierge boleh menarik statistik isipadu pada sebarang penunjuk spesifik yang ditawarkan kepada anda.",
+    "related_lessons": [
+      "066"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pump_dump",
+      "liquidity",
+      "small_cap"
+    ]
+  },
+  {
+    "id": "qa_scam_broker_registered_check",
+    "category": "scam",
+    "question": "Bagaimana saya menyemak sama ada broker benar-benar berdaftar?",
+    "short_answer": "Cari nama undang-undang firma tersebut pada daftar awam penguat kuasa yang berkenaan — bukan laman web atau bahan pemasaran yang dibekalkan oleh firma itu sendiri.",
+    "long_answer": "Untuk broker dan wakil berdaftar AS gunakan FINRA BrokerCheck (brokercheck.finra.org); untuk penasihat pelaburan AS gunakan SEC IAPD (adviserinfo.sec.gov); untuk firma UK gunakan Daftar FCA (register.fca.org.uk) ditambah Senarai Amaran FCA; untuk Australia gunakan ASIC Connect (asic.gov.au); untuk Malaysia gunakan daftar awam SC Malaysia di sc.com.my ditambah Amaran Pengguna Kewangan BNM di bnm.gov.my; untuk Singapura gunakan Direktori Institusi Kewangan MAS (mas.gov.sg). Padankan bukan hanya nama tetapi juga nombor telefon, domain e-mel, dan alamat pejabat yang disenaraikan oleh penguat kuasa. Concierge boleh membimbing carian langkah demi langkah dalam sesi 1-on-1.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "broker_verification",
+      "regulator",
+      "register"
+    ]
+  },
+  {
+    "id": "qa_scam_clone_firm_one_letter_off",
+    "category": "scam",
+    "question": "Domain tersebut berbeza satu huruf daripada bank sebenar. Mengapa itu penting?",
+    "short_answer": "Ejaan domain yang salah dan varian dengan tanda pisah adalah tanda penipu firma tiruan — pengendali meminjam jenama firma berlesen sebenar untuk melegitimasikan firma palsu.",
+    "long_answer": "Pengendali tiruan meniru nama firma berregulated, halaman 'Tentang Kami', dan biografi kakitangan, kemudian menerbitkan domain yang berbeza satu huruf, mempunyai tanda pisah, atau menggunakan TLD yang berbeza. Nombor telefon, e-mel, dan butiran akaun bank dihalakan kepada penipu. Penyelesaiannya ialah jangan gunakan sebarang butiran hubungan yang dibekalkan oleh pihak yang menghubungi anda. Rujuk firma secara bebas di senarai regulator yang relevan (Senarai Amaran FCA mengekalkan amaran firma tiruan di fca.org.uk/scamsmart; SC Malaysia dan ASIC menerbitkan senarai serupa). Hubungi nombor yang disenaraikan di register, bukan yang dalam e-mel, dan sahkan wakil bernama tersebut benar-benar bekerja di sana.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "clone_firm",
+      "domain",
+      "verification"
+    ]
+  },
+  {
+    "id": "qa_scam_real_vs_clone_broker",
+    "category": "scam",
+    "question": "Bagaimana saya dapat membezakan broker sebenar daripada tiruan dengan nama yang sama?",
+    "short_answer": "Padankan nombor telefon, domain e-mel, alamat pejabat, dan nama akaun bank dengan senarai regulator untuk firma tersebut — bukan dengan butiran yang dibekalkan oleh firma itu sendiri.",
+    "long_answer": "Firma tiruan meniru jenama tetapi tidak dapat meniru rekod hubungan yang diterbitkan oleh regulator. Dapatkan senarai entiti dari FINRA BrokerCheck, SEC IAPD, FCA Register, ASIC Connect, SC Malaysia, atau Direktori MAS dan bandingkan setiap medan. Jika sebarang butiran hubungan berbeza daripada yang anda telah diberi, anda kemungkinan besar sedang berurusan dengan firma tiruan. Nama akaun bank adalah medan tunggal yang paling diagnostik — firma berlesen sebenar menyimpan wang klien dalam akaun amanah atas nama firma, bukan dalam akaun peribadi individu. Minta Concierge menjalankan semakan silang secara bersebelahan.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "clone_firm",
+      "verification",
+      "contact_match"
+    ]
+  },
+  {
+    "id": "qa_scam_dealer_personal_account",
+    "category": "scam",
+    "question": "Seorang 'dealer onboarding' mahu saya mendeposit ke akaun peribadi Maybank seseorang. Adakah itu pernah normal?",
+    "short_answer": "Tidak. Firma berlesen mesti mengasingkan wang klien dalam akaun amanah atas nama firma — destinasi akaun peribadi adalah tanda pasti bahawa anda tidak berurusan dengan firma berlesen sebenar.",
+    "long_answer": "Setiap regulator yang relevan — SC Malaysia, BNM, SEC, FCA, ASIC, MAS — memerlukan akaun wang klien yang dipisahkan atas nama firma. Permintaan untuk menghantar wang ke akaun peribadi mana-mana individu adalah, pada dirinya sendiri, cukup untuk menghentikan transaksi. Jangan hantar deposit 'ujian'; deposit kecil sering berjaya untuk memancing deposit yang lebih besar. Failkan laporan dengan regulator yang sesuai (BNM TELELINK atau portal aduan SC Malaysia untuk Malaysia, ASIC reportascam untuk Australia, SEC di sec.gov/tcr untuk AS, FCA di fca.org.uk untuk UK). Concierge boleh memformat medan laporan untuk anda.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "clone_firm",
+      "personal_account",
+      "trust_account"
+    ]
+  },
+  {
+    "id": "qa_scam_offshore_license_meaning",
+    "category": "scam",
+    "question": "Apakah maksudnya jika broker 'berlesen' di Saint Vincent atau Vanuatu?",
+    "short_answer": "Lesen luar pesisir dari yurisdiksi yang tidak menguatkuasakan peraturan wang klien pada dasarnya adalah hiasan — ia tidak menawarkan penyelesaian bermakna jika pengendali enggan memulangkan dana anda.",
+    "long_answer": "Lesen wujud pada spektrum dari dikuatkuasakan dengan ketat (FCA, SEC, ASIC, MAS, SC Malaysia, BNM) hingga berdaftar secara nominal dengan kurang kapasiti penyeliaan (Saint Vincent, Vanuatu, Kepulauan Marshall, beberapa varian Comoros dan Mwali). Lesen luar pesisir tidak bermaksud pengendali itu menipu, tetapi ia bermaksud anda tidak mempunyai laluan undang-undang yang realistik jika berlaku masalah. Jika anda berpusat di yurisdiksi dengan peraturan FX runcit atau derivatif runcit, pilih firma yang berregulated di mana anda tinggal. Concierge boleh menarik perbandingan kekuatan lesen untuk mana-mana entiti khusus.",
+    "related_lessons": [
+      "067",
+      "068"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "offshore_license",
+      "regulator",
+      "client_money"
+    ]
+  },
+  {
+    "id": "qa_scam_clone_official_email",
+    "category": "scam",
+    "question": "Pengguna 'dealer' menggunakan alamat Gmail tetapi mendakwa bekerja di bank besar. Isyarat merah?",
+    "short_answer": "Ya. Pekerja bank dan broker yang berlesen sebenar berkomunikasi dari domain e-mel syarikat — penggunaan Gmail peribadi atau hanya WhatsApp adalah corak standard firma tiruan.",
+    "long_answer": "Wakil bank besar menggunakan domain e-mel rasmi syarikat untuk komunikasi dengan pelanggan. 'Penasihat kekayaan peribadi' atau 'dealer' yang menggunakan Gmail, Yahoo, atau penyedia e-mel percuma adalah isyarat kuat bahawa individu tersebut bukan siapa yang didakwa. Semak syarikat dalam register regulator, hubungi nombor utama yang disenaraikan di sana (bukan nombor dalam tandatangan e-mel), dan tanya sama ada wakil yang dinamakan bekerja di syarikat tersebut. Bawa laporan kepada regulator yang relevan jika syarikat tidak mengenali individu tersebut. Concierge boleh menyediakan skrip panggilan pengesahan.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "clone_firm",
+      "email_domain",
+      "impersonation"
+    ]
+  },
+  {
+    "id": "qa_scam_managed_fx_30_percent",
+    "category": "scam",
+    "question": "Akaun FX terurus menawarkan pulangan 30% sebulan. Adakah ini benar?",
+    "short_answer": "Tidak. Broker FX berlesen sebenar memperoleh spread pada setiap perdagangan dan tidak pernah menjanjikan pulangan — akaun FX terurus dengan nombor pulangan bulanan tetap adalah skema Ponzi yang menyamar.",
+    "long_answer": "FX runcis adalah pasaran sebenar di yurisdiksi yang membolehkannya (CFTC di AS, ASIC di Australia, MAS di Singapura, FCA di UK) tetapi broker yang sah tidak menjalankan program pulangan terurus diskresionari untuk pelanggan runcis. Bungkus 'FX terurus' adalah penyamaran Ponzi yang paling biasa, dengan lesen luar pesisir dan permintaan sekatan pengeluaran yang mengikuti beberapa bulan kemudian. Semak operator pada senarai amaran regulator yang relevan — BNM Financial Consumer Alert di Malaysia, CFTC RED List di AS, FCA Warning List di UK. Minta Concierge meneruskan carian BNM dan CFTC dalam sesi 1-on-1.",
+    "related_lessons": [
+      "068"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "managed_fx",
+      "forex_scam",
+      "ponzi"
+    ]
+  },
+  {
+    "id": "qa_scam_retail_fx_legal_malaysia",
+    "category": "scam",
+    "question": "Adakah perdagangan forex runcis adalah sah di Malaysia?",
+    "short_answer": "BNM telah menyatakan berulang kali bahawa perdagangan FX runcis oleh individu melalui entiti tidak berlesen tidak dibenarkan di Malaysia — kebanyakan broker FX luar pesisir yang dipasarkan secara tempatan berada dalam senarai Financial Consumer Alert BNM.",
+    "long_answer": "Pihak berkuasa yang relevan ialah Bank Negara Malaysia (BNM). BNM menerbitkan Financial Consumer Alert di bnm.gov.my yang didominasi oleh platform FX tidak berlesen. Sama ada platform tertentu dibenarkan bergantung pada lesenannya — dapatkan nama undang-undang tepat operator dan semak terhadap senarai BNM dan Senarai Amaran Pelabur SC Malaysia. Jika entiti muncul dalam mana-mana satu, jangan pindahkan dana dan pertimbangkan untuk mengemukakan laporan melalui BNM TELELINK. Concierge boleh membantu memformat pertanyaan carian dan laporan. Ini bukan nasihat undang-undang — untuk soalan undang-undang, rujuk profesional berlesen.",
+    "related_lessons": [
+      "068"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "retail_fx",
+      "malaysia",
+      "bnm"
+    ]
+  },
+  {
+    "id": "qa_scam_withdrawal_blocked_fee",
+    "category": "scam",
+    "question": "Platform mahu saya membayar cukai 5% untuk melepaskan pengeluaran saya. Adakah ini benar?",
+    "short_answer": "Tidak. Tuntutan bayar untuk mengeluarkan adalah langkah keluar diagnostik skema Ponzi FX atau crypto — tiada broker yang sah memerlukan anda membayar untuk mengakses dana yang telah anda depositkan.",
+    "long_answer": "Pengekalan pengeluaran melalui yuran meningkat — dilabel sebagai 'deposit audit', 'yuran regulasi', 'sijil anti-pengubahan wang haram', atau 'prabayar cukai' — telah didokumenkan oleh BNM, CFTC, FCA, dan SEC dalam ratusan kes. Setelah tuntutan muncul, deposit tambahan tidak akan membuka kunci dana asal; ia akan mencetuskan tuntutan lanjut. Jangan hantar wang lagi. Bawa laporan kepada regulator yang relevan (BNM TELELINK, aduan SC Malaysia, tip SEC di sec.gov/tcr, FCA ScamSmart, laporan ASIC) dan polis tempatan. Concierge boleh membantu menyusun garis masa dan bukti untuk laporan.",
+    "related_lessons": [
+      "068",
+      "069"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "withdrawal_block",
+      "forex_scam",
+      "ponzi"
+    ]
+  },
+  {
+    "id": "qa_scam_leverage_500x",
+    "category": "scam",
+    "question": "Pelayan dagang ini menawarkan kepelbagaian 500x. Pelayan dagang berlesen tidak buat begitu, kan?",
+    "short_answer": "Pelayan dagang FX runcit yang berlesen di yurisdiksi utama mengekalkan kepelbagaian di bawah 500x — ASIC, FCA, MAS, dan CFTC menetapkan had keras, jadi mana-mana yang menawarkan 500x beroperasi di luar kawalan tersebut.",
+    "long_answer": "ESMA (EU) mengekalkan kepelbagaian FX runcit pada 30:1 untuk pasangan utama dan lebih rendah untuk instrumen lain; ASIC mengikuti julat itu; CFTC mengekalkan FX runcit AS pada 50:1 untuk utama / 20:1 untuk minor; FCA selaras dengan ESMA; MAS menetapkan had yang sepadan. Angka 500x yang diiklankan bermakna pengendali tidak tertakluk kepada kawalan tersebut. Itu sahaja tidak membuktikan penipuan, tetapi digabungkan dengan sebarang tanda merah lain (janji pulangan diuruskan, sekatan pengeluaran, lesen luar negara) ia cukup untuk anda berundur. Semak pengendali pada senarai amaran penguatkuasa yang relevan. Concierge boleh membandingkan terma yang diiklankan dengan had yang ditetapkan oleh penguatkuasa di yurisdiksi anda.",
+    "related_lessons": [
+      "068"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "leverage",
+      "forex",
+      "regulator_limits"
+    ]
+  },
+  {
+    "id": "qa_scam_fx_expert_trader_pitch",
+    "category": "scam",
+    "question": "Seorang 'pelayan dagang pakar' akan mengurus akaun FX saya dan membahagikan untung 50/50. Adakah ia sah?",
+    "short_answer": "Akaun diuruskan dengan perkongsian untung yang dikendalikan oleh individu yang tidak berlesen di bawah peraturan pengurusan diskresion tempatan anda adalah templat penipuan FX yang sudah lama wujud.",
+    "long_answer": "Pengurusan diskresion wang klien adalah aktiviti yang berlesen. Di AS, ia memerlukan pendaftaran penasihat pelaburan (SEC IAPD atau daftar negeri) dan sering kali pendaftaran penasihat dagangan komoditi CFTC untuk FX; di UK memerlukan kebenaran FCA; di Australia lesen AFS; di Malaysia lesen perkhidmatan pasaran modal SC. Individu yang menawarkan untuk menguruskan akaun anda tanpa menghasilkan nombor pendaftaran, terma kuasa terbatas bertandatangan, dan akaun kepercayaan klien yang berasingan beroperasi di luar peraturan tersebut. Semak individu yang dinamakan pada FINRA BrokerCheck atau daftar penasihat yang sesuai. Concierge boleh menjalankan carian tersebut.",
+    "related_lessons": [
+      "068"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "managed_fx",
+      "profit_sharing",
+      "unlicensed"
+    ]
+  },
+  {
+    "id": "qa_scam_recovery_telegram_dm",
+    "category": "scam",
+    "question": "Saya menerima DM Telegram dari seseorang yang berkata mereka membantu orang lain memulangkan wang dari platform yang menipu saya. Adakah saya harus membalas?",
+    "short_answer": "Tidak. DM yang ditargetkan kepada mangsa yang diketahui yang menjanjikan pemulihan adalah penipuan sekunder yang klasik — pengendali mengumpul senarai mangsa dan menghampiri semula dengan 'penyelesaian' yang menjadi kerugian kedua.",
+    "long_answer": "Selepas laporan asal, nama anda sering muncul dalam senarai yang dipetik dari pos media sosial, forum aduan, atau pangkalan data yang bocor. Pengendali penipuan pemulihan menghubungi dengan klaim pengetahuan dalaman, 'dompet beku', atau hubungan penguatkuasa yang boleh melepaskan dana — dengan yuran awal. Laluan pemulihan sebenar adalah penguatkuasa yang relevan (SEC tips di sec.gov/tcr, FCA di fca.org.uk, ASIC reportascam, SC Malaysia aduan, BNM TELELINK) serta polis tempatan dan pasukan penipuan bank anda. Jangan balas DM tersebut. Concierge boleh membantu anda mengatur fail kes anda untuk pihak berkuasa yang betul.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "recovery_scam",
+      "telegram_dm",
+      "victim_targeting"
+    ]
+  },
+  {
+    "id": "qa_scam_ai_bot_95_percent_win",
+    "category": "scam",
+    "question": "Bot dagangan AI ini mendakwa kadar kemenangan 95%. Sah atau penipuan?",
+    "short_answer": "Anggap sebarang tawaran bot AI dengan kadar kemenangan utama tetapi tiada jejak audit yang boleh disahkan secara luaran sebagai tuntutan pemasaran, bukan rekod prestasi.",
+    "long_answer": "Strategi algoritmik sebenar meninggalkan tiga jenis bukti: isian perdagangan demi perdagangan di bursa berlesen, kenyataan broker (atau penyelesaian on-chain untuk kripto), dan rekod prestasi yang boleh disahkan pada platform yang diiktiraf. Pengendali yang hanya menunjukkan papan pemuka dalaman meminta anda mempercayai nombor yang mereka tetapkan sendiri. Minta isian bursa atau hash transaksi on-chain; jika pengendali menolak, perdagangan mungkin tidak wujud. Semak entiti undang-undang pada daftar dan senarai amaran penguatkuasa yang relevan (pelepasan litigasi SEC, Senarai Amaran FCA, Amaran Pelabur SC Malaysia). Concierge boleh menyenaraikan empat item audit yang pengendali sah boleh hasilkan.",
+    "related_lessons": [
+      "069"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ai_bot",
+      "win_rate",
+      "audit_trail"
+    ]
+  },
+  {
+    "id": "qa_scam_why_ami_no_guaranteed_returns",
+    "category": "scam",
+    "question": "Mengapa AMI tidak menjanjikan pulangan khusus seperti aplikasi lain?",
+    "short_answer": "Kerana tiada pengendali yang jujur mampu berbuat demikian. Pasaran adalah taburan kebarangkalian, bukan gaji — mana-mana produk yang menjanjikan pulangan tertentu adalah sama ada menipu atau menjalankan struktur Ponzi.",
+    "long_answer": "AMI adalah produk pendidikan simulasi sahaja. Pasukan 12 ejen ini menghasilkan tesis, bingkai risiko, dan sokongan keputusan — bukan jaminan pulangan. Aplikasi atau platform yang menyatakan pulangan bulanan atau tahunan tertentu kepada pengguna runcit melanggar peraturan pemasaran sekuriti asas di setiap yurisdiksi utama (SEC, FCA, ASIC, MAS, SC Malaysia semua melarangnya untuk komunikasi yang berhadapan dengan pengguna runcit). Jika anda melihat tuntutan sedemikian di tempat lain, itu sendiri adalah tanda amaran merah yang perlu dilaporkan kepada regulator yang berkaitan. Tanya Concierge untuk menerangkan bagaimana output AMI berbeza daripada janji pulangan.",
+    "related_lessons": [
+      "065",
+      "069"
+    ],
+    "related_agents": [
+      "concierge",
+      "portfolio_manager"
+    ],
+    "tags": [
+      "ami_meta",
+      "guaranteed_return",
+      "education_only"
+    ]
+  },
+  {
+    "id": "qa_scam_ai_jargon_proof",
+    "category": "scam",
+    "question": "Mereka sentiasa menggunakan istilah seperti 'model transformer' dan 'pembelajaran pengukuhan'. Adakah itu bermakna ia adalah benar?",
+    "short_answer": "Jargon teknikal bukan bukti — platform yang dicipta meminjam terminologi ML sebenar untuk menyiratkan kecanggihan tanpa menghasilkan sebarang jejak audit.",
+    "long_answer": "Syarikat perdagangan pembelajaran mesin yang sebenar menerbitkan seni bina model, bilangan parameter, penerangan data latihan, backtest diaudit, dan rekod pelaksanaan tahap dagangan. Pengendali yang menyebut nama transformer, rangkaian neural, atau kluster GPU tanpa sebarang artifak tersebut menggunakan kata-kata itu sebagai pemasaran. Ujian penentu adalah sama ada sesiapa sahaja di luar pengendali dapat mengesahkan dagangan telah berlaku — isian bursa, penyata broker, hash on-chain. Concierge boleh menyenaraikan apa yang syarikat algo-trading yang sah bersedia untuk kongsi, dan item mana yang platform yang anda telah ditawarkan tiada.",
+    "related_lessons": [
+      "069"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ai_bot",
+      "jargon",
+      "audit_trail"
+    ]
+  },
+  {
+    "id": "qa_scam_crypto_bot_usdt_deposit",
+    "category": "scam",
+    "question": "Bot hanya menerima deposit USDT ke alamat dompet. Adakah itu tanda amaran merah?",
+    "short_answer": "Deposit hanya crypto ke dompet — mengelakkan lapisan perbankan berregulated — adalah corak biasa dalam skema bot-AI dan FX-Ponzi kerana ia mengelakkan siasatan AML peringkat bank dan menyukarkan pemulihan.",
+    "long_answer": "Rela crypto bukan secara inheren penipuan, tetapi platform yang menolak deposit fiat dan hanya menerima stablecoin ke dompet tanpa hos memilih rela dengan reversibiliti terlemah. Digabungkan dengan paparan PnL hanya dalam papan pemuka dalaman dan tiada bukti dagangan bursa atau on-chain, ia adalah seni bina Ponzi bot-AI standard yang didokumenkan oleh pelepasan penguatkuasaan SEC sejak 2023. Sahkan entiti undang-undang pengendali pada register dan senarai amaran regulator yang berkaitan. Concierge boleh menyusun permintaan jejak audit (isian bursa, hash on-chain, penyata broker, rekod jejak disahkan pihak ketiga) ke dalam satu mesej yang boleh anda hantar kepada pengendali.",
+    "related_lessons": [
+      "069"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ai_bot",
+      "crypto",
+      "usdt",
+      "deposit_rail"
+    ]
+  },
+  {
+    "id": "qa_scam_bot_backtest_screenshot",
+    "category": "scam",
+    "question": "Mereka menghantar saya backtest dengan lengkung ekuiti yang cantik. Adakah itu membuktikan strategi berfungsi?",
+    "short_answer": "Backtest mudah disesuaikan lengkung dan gambar skrin mudah diedit — hanya rekod jejak ke depan yang boleh disahkan secara luaran mempunyai berat, dan walaupun begitu ia harus berada pada platform yang diiktiraf dengan isian bertim.",
+    "long_answer": "Mana-mana penyelidik boleh membina backtest yang kelihatan hebat dalam sampel; ujian yang penting adalah keluar sampel, diperdagangkan ke hadapan, dan disahkan oleh pihak lain selain pengendali. Cari isian tahap dagangan pada bursa berregulated, PDF penyata broker yang boleh anda sahkan terhadap broker secara langsung, atau hash transaksi on-chain. Concierge boleh menyenaraikan bagaimana rekod jejak disahkan yang sebenar kelihatan dan menandakan apa yang pengendali tiada. Tanpa pengesahan luaran, anggap lengkung ekuiti sebagai pemasaran.",
+    "related_lessons": [
+      "069"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "ai_bot",
+      "backtest",
+      "verification"
+    ]
+  },
+  {
+    "id": "qa_scam_pressure_24h_wire",
+    "category": "scam",
+    "question": "Mereka mahu saya menghantar USD 10,000 dalam masa 24 jam atau saya kehilangan tempat. Adakah saya patut?",
+    "short_answer": "Tidak. Pelaburan sebenar tidak luput dalam beberapa jam — tarikh akhir yang direkayasa wujud khusus untuk menghalang anda daripada melakukan pengesahan.",
+    "long_answer": "Keadaan genting dan kelangkaan adalah taktik silang-scam universal dalam laporan FBI IC3, SEC, FCA, ASIC, dan SC Malaysia. Nombor kiraan adalah perisian yang dikawal oleh pengendali; baris 'baki beberapa slot' hanyalah teks dalam pangkalan data. Insist untuk tempoh penahanan 72 jam bagi tujuan pengesahan, dan anggap penolakan untuk memberikan tempoh tersebut sebagai tanda merah. Tawaran institusi sebenar beroperasi dalam tempoh minggu dan bulan. Semak register dan senarai amaran penguasa yang relevan sebelum sebarang pemindahan. Concierge boleh menyediakan balasan sopan yang meminta terma bertulis pada kop surat dan tetingkap pengesahan.",
+    "related_lessons": [
+      "070",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pressure",
+      "urgency",
+      "deadline"
+    ]
+  },
+  {
+    "id": "qa_scam_only_5_slots_left",
+    "category": "scam",
+    "question": "Mereka kata hanya ada 5 slot yang tinggal dalam sindiket. Adakah saya patut masuk?",
+    "short_answer": "Kelangkaan yang direkayasa adalah skrip — bilangan slot adalah teks pemasaran, bukan kekangan kapasiti sebenar, dan direka untuk mencetuskan rasa takut kehilangan sebelum anda berfikir.",
+    "long_answer": "Alokasi institusi sebenar didokumenkan secara bertulis dengan penerbit yang dinamakan, nombor pendaftaran, dan penandatangan. Tawaran lisan 'hanya 5 slot' melalui chat tanpa kop surat adalah templat keadaan genting dan kelangkaan. Minta dokumen tawaran secara bertulis, dengan nombor pendaftaran entiti dicetak di atasnya, dan semak nombor tersebut pada register penguasa yang relevan (SEC EDGAR untuk penerbit AS, SC Malaysia untuk penerbit Malaysia, FCA Register untuk syarikat UK). Jika dokumen tidak tiba atau tidak sepadan, jangan lakukan pemindahan. Concierge boleh menarik register yang betul untuk mana-mana bidang kuasa yang didakwa.",
+    "related_lessons": [
+      "070",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pressure",
+      "scarcity",
+      "written_terms"
+    ]
+  },
+  {
+    "id": "qa_scam_pre_ipo_allocation_whatsapp",
+    "category": "scam",
+    "question": "Seorang 'penasihat kekayaan peribadi' di WhatsApp menawarkan saya alokasi pra-IPO. Berbaloi untuk dipertimbangkan?",
+    "short_answer": "Alokasi pra-IPO runcit melalui WhatsApp daripada penasihat yang tidak disahkan adalah corak scam berkemungkinan tinggi — tawaran pra-IPO institusi sebenar didokumenkan secara bertulis melalui perantara berlesen.",
+    "long_answer": "Akses pra-IPO tulen untuk runcit adalah jarang dan sentiasa mempunyai jejak dokumen: perjanjian langganan bertandatangan, penerbit yang dinamakan, ejen jualan berdaftar, prospektus atau memorandum penempatan peribadi. Tawaran hanya melalui WhatsApp dengan tarikh akhir lisan gagal ujian dokumentasi asas. Semak penerbit di SEC EDGAR jika didakwa AS, dan penasihat yang dinamakan di FINRA BrokerCheck atau SEC IAPD. Jika tiada padanan, anggap tawaran tersebut sebagai scam dan laporkan kepada SEC tips di sec.gov/tcr. Concierge boleh menyediakan permintaan terma bertulis dan laporan penguasa.",
+    "related_lessons": [
+      "070",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "pre_ipo",
+      "whatsapp",
+      "private_placement"
+    ]
+  },
+  {
+    "id": "qa_scam_refuse_written_terms",
+    "category": "scam",
+    "question": "Mereka menolak untuk meletakkan tawaran secara bertulis pada kop surat. Adakah itu penghalang perjanjian?",
+    "short_answer": "Ya. Penolakan untuk menyediakan terma bertulis pada kop surat adalah ujian penentu — dokumen bertulis boleh dirujuk silang terhadap entiti sebenar, terma lisan tidak boleh.",
+    "long_answer": "Setiap tawaran pelaburan yang sah menghasilkan terma bertandatangan dengan nama undang-undang entiti, nombor pendaftaran, penandatangan, dan bidang kuasa. Tawaran hanya lisan wujud khusus untuk meninggalkan jejak dokumen. Tuntut helaian terma bertandatangan pada kop surat dengan nombor pendaftaran dicetak di atasnya, kemudian semak silang nombor tersebut pada register penguasa yang relevan (SC Malaysia, SEC IAPD, FCA Register, ASIC Connect, MAS Directory). Jika pengendali menolak atau nombor tidak sepadan, jangan lakukan pemindahan dan failkan laporan dengan penguasa. Concierge boleh menyediakan permintaan yang disediakan sebelumnya.",
+    "related_lessons": [
+      "070",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "written_terms",
+      "pressure",
+      "documentation"
+    ]
+  },
+  {
+    "id": "qa_scam_what_is_brokercheck",
+    "category": "scam",
+    "question": "Apa itu BrokerCheck?",
+    "short_answer": "BrokerCheck adalah register awam percuma FINRA bagi broker-dealer AS dan wakil berdaftar mereka — ia menyenaraikan lesen, sejarah pekerjaan, dan sebarang kejadian peraturan atau aduan pelanggan yang didedahkan.",
+    "long_answer": "Terdapat di brokercheck.finra.org, BrokerCheck membolehkan anda mencari mana-mana broker atau syarikat AS dan melihat status pendaftaran mereka, syarikat yang pernah mereka bekerja, dan sebarang pendedahan disiplin. Untuk penasihat pelaburan AS — kategori berbeza — gunakan SEC IAPD di adviserinfo.sec.gov. Jika seseorang mendakwa sebagai broker AS dan BrokerCheck tidak menunjukkan rekod, mereka bukan wakil berdaftar dan anda tidak seharusnya bertransaksi melalui mereka. Concierge boleh menjalankan carian BrokerCheck dan menerangkan maksud pendedahan tersebut.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "brokercheck",
+      "finra",
+      "us_regulator"
+    ]
+  },
+  {
+    "id": "qa_scam_check_sc_malaysia",
+    "category": "scam",
+    "question": "Bagaimana saya menyemak sama ada operator berada dalam senarai amaran SC Malaysia?",
+    "short_answer": "Pergi ke sc.com.my dan cari dalam Senarai Amaran Pelabur untuk nama undang-undang tepat entiti dan sebarang nama samaran — juga semak Amaran Pengguna Kewangan BNM di bnm.gov.my untuk entiti perbankan dan FX.",
+    "long_answer": "SC Malaysia mengekalkan register awam entiti pasaran modal berlesen di sc.com.my dan Senarai Amaran Pelabur berasingan bagi operator tidak berlesen. BNM menerbitkan Amaran Pengguna Kewangan pelengkap untuk operator perbankan, insurans, dan FX di bnm.gov.my. Rujuk silang kedua-duanya. Jika entiti muncul dalam mana-mana senarai amaran, jangan pindahkan dana. Untuk mengemukakan aduan, gunakan portal aduan SC Malaysia atau BNM TELELINK. Concierge boleh membimbing carian dan menyediakan medan aduan terlebih dahulu.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "sc_malaysia",
+      "bnm",
+      "investor_alert"
+    ]
+  },
+  {
+    "id": "qa_scam_check_fca_warning",
+    "category": "scam",
+    "question": "Di mana saya menyemak Senarai Amaran FCA untuk syarikat UK?",
+    "short_answer": "Senarai Amaran ScamSmart FCA terdapat di fca.org.uk/scamsmart — gunakan juga Daftar FCA di register.fca.org.uk untuk mengesahkan status berlesen syarikat.",
+    "long_answer": "Daftar FCA menyenaraikan syarikat dan individu berlesen; Senarai Amaran secara khusus menandakan entiti yang dikenal pasti FCA beroperasi tanpa kebenaran atau menyamar sebagai syarikat berlesen. Semak kedua-duanya — skim clone sering tidak muncul dalam mana-mana kerana syarikat clone berada dalam Daftar tetapi clone itu sendiri adalah penyamar. Padankan butiran hubungan, bukan hanya nama. Jika anda telah ditawarkan, laporkan melalui fca.org.uk. Concierge boleh menjalankan semakan silang dan membantu memformat laporan.",
+    "related_lessons": [
+      "067",
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "fca",
+      "uk_regulator",
+      "warning_list"
+    ]
+  },
+  {
+    "id": "qa_scam_check_asic_australia",
+    "category": "scam",
+    "question": "Bagaimana saya menyemak broker atau penasihat Australia?",
+    "short_answer": "Gunakan ASIC Connect di asic.gov.au untuk mencari register profesional dan pemegang lesen AFS, dan semak senarai amaran pelabur ASIC bagi entiti tidak berlesen.",
+    "long_answer": "ASIC Connect merangkumi pemegang lesen Perkhidmatan Kewangan Australia (AFS), pemegang lesen kredit, dan wakil berlesen. ASIC juga menjalankan senarai amaran penyamar yang dikemas kini hampir mingguan dan laman pengguna MoneySmart. Untuk melaporkan skam disyaki gunakan asic.gov.au/reportascam. Padankan butiran hubungan dari senarai perangkaan dengan apa yang diberikan oleh operator. Concierge boleh membimbing langkah carian satu persatu.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "asic",
+      "australia",
+      "afs_licence"
+    ]
+  },
+  {
+    "id": "qa_scam_recovery_agent_message",
+    "category": "scam",
+    "question": "Seseorang menghantar mesej menawarkan untuk memulihkan kriptokewangan saya yang hilang dengan bayaran. Adakah ini benar?",
+    "short_answer": "Tidak. Tawaran 'pemulihan' yang tidak diminta — terutamanya yang meminta yuran awal — adalah skema sekunder yang menyasarkan mangsa sebelum ini, seperti yang didokumentasikan oleh IC3, FCA, dan ASIC.",
+    "long_answer": "Operasi skema pemulihan mengumpul nama daripada laporan skema sebelum ini, pos media sosial, dan pangkalan data yang bocor, kemudian menghampiri mangsa dengan mendakwa sebagai peretas, peguam, penganalisis blockchain, atau ejen kerajaan. 'Yuran pendahuluan' atau 'yuran gas' baharu ialah kerugian baharu. Saluran pemulihan yang sah ialah: failkan laporan dengan pengawal selia yang berkaitan (SEC tips, FCA ScamSmart, ASIC reportascam, SC Malaysia complaints, BNM TELELINK), laporkan kepada polis tempatan, dan hubungi bank atau pertukaran anda untuk pilihan pembayaran balik atau pembekuan. Jangan bayar sesiapa yang menghubungi anda secara tidak diminta. Concierge boleh membantu menyusun pakej laporan.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "recovery_scam",
+      "secondary_scam",
+      "victim_targeting"
+    ]
+  },
+  {
+    "id": "qa_scam_hacker_recover_funds",
+    "category": "scam",
+    "question": "Seorang 'peretas etika bertauliah' di Instagram berkata mereka boleh memulihkan dana saya yang dicuri. Adakah ia sah?",
+    "short_answer": "Tidak. Perkhidmatan pemulihan 'peretas etika' yang diiklankan di media sosial adalah corak skema pemulihan yang hampir universal — tiada laluan peretas yang sah untuk membalikkan skema Ponzi atau pencurian kriptokewangan.",
+    "long_answer": "Pemulihan aset daripada penipuan adalah proses undang-undang dan pengawalseliaan, bukan proses peretasan. Laluan yang sah ialah saluran aduan pengawal selia (SEC, FCA, ASIC, SC Malaysia, BNM), unit jenayah siber polis tempatan, pasukan penipuan bank anda, dan peguam bertauliah di yurisdiksi yang berkaitan. Sesiapa yang menjanjikan pemulihan terjamin dengan bayaran awal menjalankan skema sekunder. Jangan transfer sebarang pembayaran kepada kontak tersebut. Concierge boleh membantu anda menyenaraikan setiap pengawal selia dan pihak berkuasa yang perlu anda laporkan.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "recovery_scam",
+      "ethical_hacker",
+      "social_media"
+    ]
+  },
+  {
+    "id": "qa_scam_lawyer_class_action_fee",
+    "category": "scam",
+    "question": "Seorang 'peguam' menghubungi saya mengenai tindakan kelas terhadap penipu dan meminta yuran pendahuluan. Adakah ia benar?",
+    "short_answer": "Peguam yang menghubungi secara dingin meminta yuran pendahuluan untuk menyertai tindakan kelas adalah varian skema pemulihan yang didokumentasikan — sahkan sebarang peguam melalui daftar bar tempatan sebelum membayar apa-apa.",
+    "long_answer": "Peguam sebenar yang bertindak dalam tindakan kelas menghubungi pelanggan sedia ada atau mengiklankan secara awam melalui saluran beratur; mereka tidak menghantar mesej dingin kepada mangsa penipuan individu yang menuntut yuran pendahuluan awal. Sahkan peguam yang dinamakan melalui persatuan bar atau daftar persatuan peguam yang berkaitan (state bar di AS, Bar Council Malaysia, Law Society of England and Wales, Law Society of NSW untuk Australia). Jika peguam atau firma tidak dapat dipadankan, jangan bayar. Laporkan kontak tersebut kepada pengawal selia yang sama yang mengendalikan aduan asal anda. Concierge boleh membantu memformat carian daftar bar.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "recovery_scam",
+      "fake_lawyer",
+      "retainer"
+    ]
+  },
+  {
+    "id": "qa_scam_five_check_procedure",
+    "category": "scam",
+    "question": "Apakah senarai semak pengesahan yang perlu saya jalankan sebelum saya menghantar wang ke mana-mana tempat?",
+    "short_answer": "Lima semakan, semua mesti lulus: entiti ada dalam daftar pengawal selia, butiran kontak sepadan dengan daftar, akaun bank atas nama firma, panggilan balik bebas kepada firma, terma bertulis pada kepala surat dengan nombor pendaftaran yang boleh disahkan.",
+    "long_answer": "Prosedur ini adalah set lengkap, bukan undi majoriti — mana-mana kegagalan tunggal menghentikan pemindahan. Gunakan FINRA BrokerCheck dan SEC IAPD untuk AS, FCA Register dan ScamSmart untuk UK, ASIC Connect untuk Australia, SC Malaysia dan BNM Financial Consumer Alert untuk Malaysia, MAS Directory untuk Singapura. Ambil butiran kontak yang disenaraikan oleh pengawal selia, bukan operator, dan gunakan itu untuk panggilan balik. Tuntut dokumen kepala surat dengan nombor pendaftaran dicetak di atasnya. Jika mana-mana semakan gagal, jangan hantar wang dan failkan laporan dengan pengawal selia yang berkaitan. Concierge boleh menjalankan prosedur lima semakan penuh pada sebarang tawaran khusus yang anda bawa.",
+    "related_lessons": [
+      "071"
+    ],
+    "related_agents": [
+      "concierge"
+    ],
+    "tags": [
+      "verification",
+      "checklist",
+      "due_diligence"
+    ]
+  }
+]

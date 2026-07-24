@@ -1,0 +1,723 @@
+[
+  {
+    "id": "dc_2026_10_01_nvda_greed_topping",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "NVDA telah meningkat dari $118 ke $186 dalam tempoh 9 minggu — satu kenaikan 57.6%. Nisbah panggilan/put di papan pilihan saham ialah 3.4 (berbanding purata 6 bulan 1.6). Perbincangan di Reddit meningkat 320% dari minggu ke minggu. Pengguna sudah memegang NVDA dengan keuntungan belum direalisasikan sebanyak 41% dan meminta Bilik untuk menambah 4% lagi daripada NAV pada $186. Pembahas Konservatif kini memegang floor.",
+    "question": "Apakah yang paling mungkin dikatakan oleh Pembahas Konservatif?",
+    "options": [
+      "Potong posisi sedia ada kepada sifar — apa-apa yang naik 41% adalah jualan",
+      "Tukar kepada pilihan saham untuk memperbesar pergerakan",
+      "Tambah sekarang — momentum + sentimen + garis keyakinan anda selari; ini adalah fasa wang mudah",
+      "Berhenti sebentar dan tulis jurnal — RSI 84 ditambah nisbah panggilan/put 3.4 ditambah keuntungan terbuka 41% adalah setup lanjutan keserakahan yang klasik; menambah di sini adalah saizkan ke dalam emosi, bukan kelebihan"
+    ],
+    "answer": 3,
+    "explanation": "RSI 84, nisbah panggilan/put 3.4 (lebih daripada 2x normal), dan keuntungan terbuka 41% pada nama yang sama bersama-sama menandakan zon lanjutan sentimen. Tugas Pembahas Konservatif adalah untuk memperlahankan pengguna apabila emosi sedang membuat keputusan — bukan untuk memanggil puncak, tetapi untuk menandakan bahawa menambah di sini adalah penambahan berasaskan emosi, bukan penambahan berasaskan kelebihan. Jawapan salah yang memikat 'tambah sekarang — trend adalah kawan anda' adalah rasionalisasi keserakahan: perdagangan yang menguntungkan bukan lesen untuk saizkan melebihi pelan.",
+    "related_lesson": "045",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "greed",
+      "psychology",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_02_revenge_reentry_tsla",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: tempoh penyingkiran emosi selama 60 minit selepas sebarang kerugian direalisasikan melebihi 1% daripada NAV; maksimum 3 dagangan harian seminggu. Pada 10:42, pengguna keluar daripada posisi panjang TSLA dengan kerugian $612 (1.4% daripada NAV $43,750). Pada 10:51 — 9 minit kemudian — pengguna menghantar tiket beli baru: TSLA 40 saham pada $241, bersaiz 22% daripada NAV, tanpa henti kerugian. Medan nota berbunyi 'akan dapatkan semula kali ini'.",
+    "question": "Peraturan mandat manakah yang ditandakan oleh Pengurus Portfolio sebagai dilanggar?",
+    "options": [
+      "Peraturan penyingkiran emosi — kemasukan semula 9 minit selepas kerugian direalisasikan 1.4% melanggar jeda wajib 60 minit",
+      "Peraturan jenis pesanan — pesanan pasaran tidak dibenarkan dalam mandat",
+      "Peraturan kaunt dagangan harian — ini adalah dagangan harian ke-4 pengguna",
+      "Peraturan kepekatan sektor — TSLA adalah lebih berat dalam autos"
+    ],
+    "answer": 0,
+    "explanation": "Mandat secara eksplisit memerlukan jeda 60 minit selepas sebarang kerugian melebihi 1% daripada NAV. Pengguna mengambil kerugian 1.4% dan memasuki semula ticker yang sama dalam 9 minit — 51 minit di dalam tetingkap penyingkiran emosi. Medan nota ('akan dapatkan semula') adalah bingkai balas dendam yang klasik. Jawapan salah yang memikat 'kaunt dagangan harian' gagal kerana kita tidak mempunyai kaunt minggu dalam senario; pelanggaran penyingkiran emosi adalah jelas dan berlaku dahulu. Pengurus Portfolio menyekat tiket; langkah betul adalah merekodkan kerugian dalam jurnal dan menjauhkan diri dari skrin.",
+    "related_lesson": "047",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "revenge_trading",
+      "cooling_off",
+      "mandate",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_03_fomo_gme_chase",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Semasa perdebatan Bilik mengenai GME, seorang ejen berkata: 'Perbincangan WallStreetBets meningkat 1,800% dalam 48 jam. Tagar TikTok 'GME to $100' mempunyai 240M tontonan sejak hari Isnin. Sentimen berada pada paras tertinggi 24 bulan tetapi kepentingan pendek yang disesuaikan dengan peredaran saham hanya 11% — ini adalah cerita khalayak, bukan cerita squeeze. Siapa sahaja yang membeli di sini membeli meme, bukan matematik.'",
+    "question": "Manakah antara 12 ejen yang paling mungkin sedang bercakap?",
+    "options": [
+      "Penganalisis Berita — pos meme kira sebagai berita",
+      "Penganalisis Pasaran — mereka mengesan volume luar biasa",
+      "Pembeli — mereka melaksanakan berdasarkan sentimen",
+      "Penganalisis Media Sosial — mereka membaca Reddit, TikTok dan sebutan forum sebagai isyarat sentimen"
+    ],
+    "answer": 3,
+    "explanation": "Perbincangan Reddit, tontonan tagar TikTok, dan perbezaan antara hype sentimen khalayak vs mekanik squeeze pendek adalah bidang Penganalisis Media Sosial. Penganalisis Pasaran akan membentangkan ini dalam harga/volume/paras; Penganalisis Berita mengendalikan makro dan tajuk korporat, bukan gosip forum runcit. Jawapan salah yang memikat 'Penganalisis Berita — pos meme kira sebagai berita' mencampuradukkan dua jenis isyarat yang berbeza: sebutan forum adalah data sentimen, bukan berita berdaya acara.",
+    "related_lesson": "048",
+    "related_agent": "social_media_analyst",
+    "tags": [
+      "fomo",
+      "social_sentiment",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_04_missing_fear_capitulation",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Verdict Bilik mengenai AAPL selepas penurunan 14% dalam tiga hari: 'Penganalisis Asas — kuasa pendapatan kekal, FCF tidak berubah. Penganalisis Pasaran — menembusi purata bergerak 200 hari dengan isipadu tinggi, sokongan seterusnya $172. Penganalisis Berita — permintaan iPhone China lebih lemah daripada yang dipandu. Penganalisis Bull — tesis jangka panjang tidak berubah, penilaian kini munasabah. Pengurus Penyelidikan — keyakinan BELI sederhana 0.58. Pedagang — masuk $176, henti rugi $169, sasaran $192. Verdict: BELI 5% NAV.'",
+    "question": "Input siapa yang ketara tidak hadir dalam verdict ini?",
+    "options": [
+      "Pedagang — mereka sudah diwakili",
+      "Penganalisis Media Sosial — tiada bacaan sentimen kepanikan / penyerahan runcit dalam verdict, walaupun ada pergerakan 14% dalam tiga hari",
+      "Pembela Agresif — mereka sepatutnya menolak lebih kuat",
+      "Penganalisis Asas — kuasa pendapatan disebut tetapi tidak terperinci cukup"
+    ],
+    "answer": 1,
+    "explanation": "Penurunan 14% dalam tiga hari ialah peristiwa ketakutan. Sama ada runcit sedang panik, neutral, atau sudah menyerah adalah beban utama untuk masa masuk — membeli apabila kepanikan semakin teruk berbeza daripada membeli selepas penyerahan telah selesai. Bacaan sentimen Penganalisis Media Sosial ialah lapisan yang hilang. Jawapan salah yang menggoda 'Pembela Agresif' gagal kerana Penganalisis Bull sudah mewakili pihak beli; yang ketara secara struktur tidak hadir ialah suhu sentimen, bukan suara bull lain.",
+    "related_lesson": "046",
+    "related_agent": "social_media_analyst",
+    "tags": [
+      "fear",
+      "capitulation",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_05_overconfidence_streak_size",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat Pengguna: saiz posisi tunggal maksimum 5% NAV; saiz tidak boleh berubah selepas perdagangan menang. Pengguna sedang dalam rentetan 7 perdagangan menang (+8.2% pada NAV dalam 11 hari). Tiket baharu: AMD 180 saham pada $148 — notional $26,640 pada NAV $51,200 (52.0% NAV). Nota pengguna: 'Saya dalam zon, menggandakan.'",
+    "question": "Peraturan mandat mana yang diletakkan bendera merah oleh Pengurus Portofolio?",
+    "options": [
+      "Had saiz posisi — tiket ialah 52.0% NAV, lebih daripada 10x maks 5%, didorong oleh overconfidence selepas rentetan 7 perdagangan",
+      "Peraturan sektor — AMD berada dalam terlalu banyak sektor",
+      "Peraturan henti rugi — tiada henti dilekatkan",
+      "Peraturan penyejukan — rentetan menang memerlukan jeda 24 jam"
+    ],
+    "answer": 0,
+    "explanation": "Had ialah 5% NAV ($2,560 pada akaun $51,200). Tiket ialah $26,640 — 10.4x melebihi had. Nota ('dalam zon, menggandakan') ialah petunjuk overconfidence: mandat secara eksplisit menyatakan saiz tidak boleh berubah selepas menang kerana rentetan tidak meningkatkan tepi pengguna, hanya keyakinan pengguna. Jawapan salah yang menggoda 'penyejukan selepas menang' gagal kerana mandat seperti yang ditulis tidak memerlukan ia — had saiz ialah apa yang dilanggar, dan itulah lantai yang ditegakkan oleh PM.",
+    "related_lesson": "049",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "overconfidence",
+      "winning_streak",
+      "sizing",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_06_boredom_match_quiet_day",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Selasa senyap pada pita: SPX +0.04%, MSFT berdagang $418.20–$419.10 sepanjang pagi pada 54% daripada isipadu purata 20 hari. Seorang ejen berkata di Bilik: 'Tiada tahap di sini, tiada pemangkin, tiada tepi. \"Ada sesuatu untuk dilakukan\" bukan setup — ia adalah varians yang dibalut sebagai aktiviti. Jurnal akan merekodkan ini sebagai masuk lemparan syiling. Tutup platform atau buka pelajaran, tetapi jangan masuk perdagangan ini.'",
+    "question": "Antara 12 ejen, siapakah yang paling mungkin bercakap?",
+    "options": [
+      "Pedagang — mereka melaksanakan pesanan",
+      "Penganalisis Pasaran — mereka menerangkan tindakan harga",
+      "Pembela Konservatif — mereka menolak perdagangan yang hanya dibenarkan secara psikologi (kebosanan, FOMO, balas dendam) dan menetapkan alternatif tidak berdagang",
+      "Pembela Agresif — mereka akan menolak perdagangan kecil itu melalui"
+    ],
+    "answer": 2,
+    "explanation": "Menamakan ketiadaan tesis ('tiada tahap, tiada pemangkin, tiada tepi'), memanggil keluar 'varians yang dibalut sebagai aktiviti', dan menetapkan 'tutup platform atau buka pelajaran' ialah tugas Pembela Konservatif. Jawapan salah yang menggoda 'Pembela Agresif' gagal kerana Pembela Agresif menolak lebih kuat pada tepi sebenar, bukan pada ketiadaan satu. Kebosanan ialah masalah proses dan psikologi — Pembela Konservatif memilikinya.",
+    "related_lesson": "050",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "boredom",
+      "discipline",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_07_meta_chart_breakout",
+    "type": "read_the_chart",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "META diperdagangkan pada $602–$615 selama 11 sesi dengan isipadu purata 14M saham. Hari ini, META ditutup pada $618.40 dengan isipadu 27.3M saham (1.95x purata julat). Garis purata bergerak 50-hari pada $589 sedang condong ke atas. RSI ialah 64 — tinggi tetapi tidak melampau. Tiada rintangan sehingga $642.",
+    "question": "Persediaan teknikal manakah yang paling mungkin dipanggil oleh Penganalisis Pasaran?",
+    "options": [
+      "Pecahan disahkan isipadu di atas had atas $615, disokong oleh garis purata bergerak 50-hari yang menaik dan RSI 64",
+      "Perangkap lembu — harga akan gagal kembali ke dalam julat esok",
+      "Jurang keletihan bearish — isipadu mengesahkan puncak",
+      "Terusan konsolidasi — masih di dalam julat"
+    ],
+    "answer": 0,
+    "explanation": "Tiga kotak bebas telah dicentang: penutupan di atas had atas $615 pada $618.40, isipadu hampir 2x purata julat (27.3M berbanding 14M), dan garis purata bergerak 50-hari yang menaik pada $589 di bawahnya. RSI 64 adalah panas tetapi tidak melampau (>80). Itu adalah pecahan yang disahkan isipadu secara klasik. Jawapan salah yang memikat 'terusan konsolidasi' gagal kerana harga telah menutup di atas julat dengan isipadu berat — konsolidasi telah diselesaikan.",
+    "related_lesson": "024",
+    "related_agent": "market_analyst",
+    "tags": [
+      "breakout",
+      "volume",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_10_08_fomo_agent_match",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata semasa di Bilik: 'Pengguna telah menonton NFLX naik dari $620 ke $748 selama empat minggu tanpa menyertai. Jurnal menunjukkan tiga hampir-masuk yang mereka tarik pada saat terakhir. Mereka kini meminta untuk masuk pada $748 dengan 6% NAV. Ini bukan analisis — ini adalah kos terlepas yang menjerit lebih kuat daripada kos menjadi salah di sini.'",
+    "question": "Manakah daripada 12 ejen yang paling mungkin bercakap?",
+    "options": [
+      "Pembeli — mereka melaksanakan masuk",
+      "Penceramah Konservatif — mereka menyoroti pelanggaran emosi/proses seperti mengejar FOMO selepas pergerakan yang terlepas",
+      "Penganalisis Berita — NFLX mempunyai berita pendapatan",
+      "Penyelidik Bull — mereka menjustifikasikan potensi naik"
+    ],
+    "answer": 1,
+    "explanation": "Petikan tersebut menamakan pemacu emosi (kos terlepas > kos menjadi salah) dan merujuk kepada jurnal hampir-masuk pengguna — itu adalah proses dan psikologi, bidang tugas Penceramah Konservatif. Jawapan salah yang memikat 'Penganalisis Berita' gagal kerana tiada berita/pencetus dirujuk; ejen membaca pengguna, bukan ticker. FOMO di puncak pergerakan 20% yang melampau adalah tepat apabila tugas Penceramah Konservatif ialah memperlahankan masuk, mencadangkan saiz percubaan yang lebih kecil, atau menunggu penurunan.",
+    "related_lesson": "048",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "fomo",
+      "chasing",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_09_discipline_mandate_call",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: maksimum 5 dagangan sehari, penyejukan 60 minit selepas kerugian >1% NAV, kemasukan jurnal diperlukan untuk sebarang dagangan di luar senarai tontonan. Hari ini: 9:31 panjang PUBLIC +0.4%, 9:48 panjang MAYBANK -1.2% (terjual henti), 10:04 panjang CIMB (di luar senarai tontonan, tiada jurnal). Pengguna mengemukakan tiket #4 pada 10:09 — pendek TENAGA, 30 minit selepas kerugian MAYBANK. Pengurus Portfolio campur tangan.",
+    "question": "Apakah yang paling mungkin dikatakan oleh Pengurus Portfolio?",
+    "options": [
+      "Diluluskan — TENAGA cukup cecair",
+      "Dihentikan — kerugian MAYBANK ialah 1.2% NAV dan anda berada di dalam tetingkap penyejukan 60 minit; juga dagangan CIMB di luar senarai tontonan tanpa kemasukan jurnal — betulkan jurnal, kemudian tunggu penyejukan, kemudian semak semula",
+      "Diluluskan — anda masih di bawah had 5 dagangan",
+      "Dihentikan — tetapi hanya kerana TENAGA bukan ticker AS"
+    ],
+    "answer": 1,
+    "explanation": "Dua pelanggaran serentak: tetingkap penyejukan dari kerugian MAYBANK tidak jelas sehingga 10:48 (tiket adalah pada 10:09), dan dagangan CIMB tiada kemasukan jurnal seperti yang dikehendaki oleh mandat untuk nama di luar senarai tontonan. Tugas PM ialah menguatkuasakan lantai — kedua-dua peraturan berlaku, kedua-duanya mesti diselesaikan sebelum tiket seterusnya. Jawapan salah yang memikat 'diluluskan — di bawah had dagangan' gagal kerana peraturan kiraan dagangan dipenuhi tetapi ia bukan satu-satunya peraturan; penyejukan dan kemasukan jurnal adalah lantai bebas.",
+    "related_lesson": "051",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "discipline",
+      "mandate",
+      "cooling_off",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_10_greed_capitulation_chart",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "AMZN melonjak dari $182 ke $241 dalam 13 sesi (+32.4%). Pada sesi ke-14, AMZN melonjak ke $248 pada pembukaan, mencatatkan paras tertinggi $251 dalam 20 minit pertama dengan isipadu besar (94M saham berbanding purata 20 hari 41M), kemudian berbalik menutup pada $233.10 — di bawah penutupan sesi sebelumnya $235.80. RSI mencapai puncak 88 pada waktu dagangan. Dua sesi seterusnya menutup lebih rendah dengan isipadu berat.",
+    "question": "Set-up teknikal manakah yang paling mungkin dipanggil oleh Market Analyst?",
+    "options": [
+      "Celah terobosan — bullish",
+      "Bendera lembu — sambungan ke atas minggu depan",
+      "Puncak letupan / pembalikan keletihan — pergerakan lanjutan, RSI 88, lonjakan harga ditolak pada isipadu 2.3x, diikuti dua hari turun yang mengesahkan",
+      "Tarikan mudah ke Purata Pergerakan 20-hari"
+    ],
+    "answer": 2,
+    "explanation": "Pergerakan 32% dalam 13 sesi, RSI mencapai puncak 88, lonjakan harga yang dijual sepanjang hari dengan isipadu lebih dua kali ganda daripada purata, dan dua hari pengagihan yang mengesahkan adalah tanda tangan klasik pembalikan keletihan. Sentimen berada pada tahap keserakahan maksimum pada pembukaan dan kemudian berubah. Jawapan salah yang menggoda 'celah terobosan — bullish' gagal kerana celah terobosan akan bertahan dan meluas; celah ini diisi dan ditolak oleh penutupan. Market Analyst akan menganggap $251 sebagai paras tinggi ayunan dan menurunkan trend.",
+    "related_lesson": "045",
+    "related_agent": "market_analyst",
+    "tags": [
+      "greed",
+      "exhaustion",
+      "chart",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_11_missing_conservative_overconfidence",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Pengguna untung +14.2% YTD berbanding SPX +6.8%, dalam rentetan 9 perdagangan menang. Verdict Bilik mengenai penambahan 7% NAV kepada posisi panjang TSLA sedia ada (sudah 6% NAV): 'Fundamentals Analyst — nombor penghantaran selaras. Market Analyst — trend naik utuh. News Analyst — tiada pemangkin. Bull Researcher — potensi naik 12% ke $260. Bear Researcher — penilaian melampau tetapi trend dominan. Aggressive Debator — meningkatkan saiz di sini sesuai dengan keyakinan. Research Manager — BELI sederhana 0.61. Trader — masuk $232 henti $221. Verdict: TAMBAH 7% kepada jumlah 13% NAV.'",
+    "question": "Input siapa yang ketara ketiadaannya dalam verdict ini?",
+    "options": [
+      "Conservative Debator — tiada siapa yang bertanya sama ada rentetan 9 perdagangan sedang membengkakkan keyakinan pengguna dan sama kepekatan 13% dalam TSLA melanggar toleransi risiko psikologi pengguna",
+      "Neutral Debator — mereka harus memberi pandangan",
+      "Social Media Analyst — sentimen baik",
+      "Trader — sudah diwakili"
+    ],
+    "answer": 0,
+    "explanation": "Verdict ini berbunyi seperti perhimpunan satu hala — Aggressive Debator berhujah untuk meningkatkan saiz, Conservative Debator secara struktur tiada. Selepas rentetan 9 perdagangan, kesilapan berkemungkinan tertinggi ialah saiz berlebihan ke nama dengan keyakinan tertinggi. Tugas Conservative Debator ialah menandakan bahawa kepekatan 13% ditambah rentetan panas adalah masa apabila disiplin biasanya runtuh. Jawapan salah yang menggoda 'Neutral Debator' adalah munasabah tetapi mereka tidak memegang beat psikologi/proses — Conservative Debator melakukannya, dan mereka tiada.",
+    "related_lesson": "049",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "overconfidence",
+      "missing_agent",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_12_xom_fundamentals_call",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "XOM melaporkan Q3: pendapatan $89.1B (-3% YoY), pengeluaran hulu +4%, margin hiliran $11/bbl (berbanding $14/bbl tahun lalu), capex $6.2B (+8%). FCF $9.4B (-22% YoY). Liputan dividen 1.9x, neraca tunai bersih $14B. Fundamentals Analyst ditanya: 'adakah perniagaan menguat, stabil, atau melemah?'",
+    "question": "Apa yang paling mungkin dikatakan oleh Fundamentals Analyst?",
+    "options": [
+      "Stabil — tiada yang rosak",
+      "Melemah pada penjanaan tunai — margin hiliran mampat dari $14 ke $11/bbl, FCF turun 22%, capex naik; pertumbuhan pengeluaran sahaja tidak menampung",
+      "Menguat — kedudukan tunai bersih bertambah baik",
+      "Menguat — pengeluaran naik"
+    ],
+    "answer": 1,
+    "explanation": "FCF -22%, margin hiliran -21% (14 → 11), capex +8% — tiga isyarat penjanaan tunai bebas bergerak ke arah yang salah. Pertumbuhan isipadu hulu (+4%) dan neraca yang kuat adalah positif tetapi tidak menampung pembakaran tunai daripada margin penapisan yang mampat. Jawapan salah yang menggoda 'menguat — pengeluaran naik' adalah baca separuh: isipadu tanpa margin hanyalah kerugian lebih besar per barel. Ejen membaca tunai, bukan tajuk isipadu.",
+    "related_lesson": "032",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "fundamentals",
+      "fcf",
+      "module_6"
+    ]
+  },
+  {
+    "id": "dc_2026_10_13_revenge_match_agent",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Semasa sesi, seorang ejen berkata: 'Pengguna telah keluar daripada GENTING dua kali hari ini dengan jumlah kerugian -2.1% pada NAV. Mereka kini meminta kemasukan ketiga pada paras yang sama, saiz posisi 2x gandaan biasa, dengan nota menyatakan \"kali ini ia akan berjaya\". Pengguna tidak memerlukan kemasukan ketiga — mereka perlu menutup platform.'",
+    "question": "Antara 12 ejen, siapakah yang paling mungkin sedang bercakap?",
+    "options": [
+      "Pembahas Konservatif — mereka menyingkap corak perdagangan balas dendam dan kegagalan proses",
+      "Pembeli — mereka melaksanakan pesanan",
+      "Penganalisis Pasaran — mereka akan menerangkan carta",
+      "Peneroka Bull — mereka berhujah tentang potensi kenaikan"
+    ],
+    "answer": 0,
+    "explanation": "Dua kali keluar (stop-out) dalam satu sesi, kemasukan ketiga pada paras yang sama dengan saiz 2x, dan nota pengguna sendiri \"kali ini ia akan berjaya\" adalah urutan balas dendam yang klasik. Menamakan corak dan menetapkan 'tutup platform' — iaitu, memaksakan penyejukan — adalah peranan Pembahas Konservatif. Jawapan salah yang menggoda 'Pembeli' gagal kerana Pembeli melaksanakan; mereka tidak mengulas keadaan emosi pengguna. Pembahas Konservatif adalah orang yang memberitahu CEO untuk berhenti.",
+    "related_lesson": "047",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "revenge_trading",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_14_missing_pm_discipline",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdict bil pada pengejaran momentum ke AIRASIA (Bursa): 'Penganalisis Asas — faktor muatan naik, lindung nilai bahan api. Penganalisis Pasaran — hari pecahan +6.8% pada 3x isipadu. Penganalisis Berita — pengembangan laluan diumumkan. Peneroka Bull — potensi kenaikan 22%. Peneroka Bear — float kecil, tidak stabil. Pembahas Agresif — kejar sekarang. Pengurus Penyelidikan — keyakinan BELI 0.55. Pembeli — kemasukan RM2.45 henti RM2.28 sasaran RM2.98. Verdict: BELI 9% NAV.'",
+    "question": "Input siapakah yang ketara ketiadaannya dalam verdict ini?",
+    "options": [
+      "Peneroka Bull — sudah meliputi",
+      "Pengurus Portfolio — tiada semakan pematuhan mandat pada saiz 9%, tiada pengesahan penyejukan, tiada semakan kepekatan terhadap posisi sedia ada",
+      "Pembahas Agresif — sudah meliputi",
+      "Penganalisis Berita — sudah meliputi"
+    ],
+    "answer": 1,
+    "explanation": "PM adalah gerbang lantai keselamatan — setiap verdict diluluskan melalui mereka. 9% NAV jauh melebihi had kedudukan tunggal biasa 5%; verdict tidak menyebut sebarang semakan. Jawapan salah yang menggoda 'Penganalisis Berita sudah meliputi' adalah salah tafsir: berita diwakili; yang hilang secara struktur adalah semakan peraturan, dan itu sentiasa menjadi PM. Tanpa gerbang itu, pengejaran momentum menjadi pelanggaran mandat.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "safety_floor",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_10_15_fomo_violation_chase",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: kemasukan mesti berlaku dalam lingkungan 3% dari paras yang ditakrifkan (sokongan, pecahan, tinggi hari sebelumnya). Tiada pengejaran pergerakan yang melampau. AMD bergerak dari $142 ke $171 selama 8 sesi lalu (+20.4%) tanpa paras kemasukan yang ditakrifkan dalam pelan pengguna. Pada 14:22, pengguna mengemukakan tiket beli untuk AMD pada $171.10 — 14% di atas paras susut semula terendah terkini $150 dan 8% di atas paras pecahan $158.50. Medan nota: 'tak mahu terlepas peluang'.",
+    "question": "Peraturan mandat manakah yang disorot oleh Pengurus Portfolio sebagai dilanggar?",
+    "options": [
+      "Peraturan sektor — AMD berada dalam terlalu banyak sektor",
+      "Peraturan henti rugi — tiada henti dilampirkan",
+      "Peraturan bilangan dagangan — terlalu banyak dagangan minggu ini",
+      "Peraturan disiplin kemasukan — tiket adalah 8% di atas paras pecahan dan 14% di atas paras susut semula, jauh di luar toleransi 3%, didorong oleh FOMO ('tak mahu terlepas peluang')"
+    ],
+    "answer": 3,
+    "explanation": "Mandat mengawal kemasukan pada 3% dari paras yang ditakrifkan. Paras terdekat ialah pecahan $158.50, dan $171.10 adalah 7.96% di atasnya — lebih daripada 2.5x toleransi. Nota ('tak mahu terlepas peluang') menamakan emosi: FOMO. PM menyekat; langkah betul ialah menetapkan amaran pada paras susut semula seterusnya (contohnya, $158–$162) dan menunggu. Jawapan salah yang menggoda 'peraturan henti rugi' adalah munasabah tetapi peraturan disiplin kemasukan berlaku dahulu dan merupakan pelanggaran utama.",
+    "related_lesson": "048",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "fomo",
+      "chasing",
+      "entry_discipline",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_16_missing_social_jpm_fear",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "JPM telah jatuh 18% dalam 6 sesi akibat ketakutan perbankan rantau. Verdict Bilik: 'Fundamentals Analyst — kuasa pendapatan kekal, nisbah CET1 kukuh. Market Analyst — pecah purata bergerak 200 hari pada isipadu tinggi. News Analyst — tajak kontagion rantau memacu pergerakan. Bull Researcher — tesis jangka panjang tidak berubah. Bear Researcher — bebanan berterusan sehingga Q4. Conservative Debator — tunggu asas. Research Manager — HOLD sederhana 0.41. Trader — tiada entry. Verdict: HOLD menunggu pengesahan sentimen.'",
+    "question": "Input siapa yang ketara tiada dalam verdict ini — verdict itu sendiri menyebut 'pending sentiment confirmation' tetapi analis yang relevan tidak dipetik?",
+    "options": [
+      "The Bull Researcher — sudah diwakili",
+      "The Aggressive Debator — mereka sepatutnya menolak lebih kuat",
+      "The Trader — sudah diwakili",
+      "The Social Media Analyst — isipadu sebutan Reddit/WSB, nisbah put/call, dan tanda bingkai runcit (panik vs kebimbangan) adalah lapisan yang hilang yang secara eksplisit bergantung pada verdict"
+    ],
+    "answer": 3,
+    "explanation": "Bahasa verdict itu sendiri — 'pending sentiment confirmation' — menamakan tepat apa yang hilang. Selepas penurunan 18% dalam enam sesi, sama ada runcit berada pada ketakutan puncak (kapitulasi mungkin) atau masih berunding (kemungkinan lebih penurunan) adalah beban utama untuk keputusan naik taraf BUY. Bacaan sentimen itu adalah tugas Social Media Analyst (isipadu sebutan, nisbah put/call, bingkai) dan mereka tiada. Jawapan salah yang menggoda 'Aggressive Debator' gagal kerana Bull Researcher sudah meliputi potensi naik; yang secara struktur tiada ialah lapisan data sentimen yang dipanggil oleh verdict itu sendiri.",
+    "related_lesson": "046",
+    "related_agent": "social_media_analyst",
+    "tags": [
+      "fear",
+      "capitulation",
+      "sentiment",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_17_boredom_match_agent",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Semasa di Bilik, seorang ejen berkata: 'Pengguna telah membuat empat dagangan dalam jam terakhir, setiap satu dipegang kurang 6 minit, setiap satu dengan tesis yang diterangkan dalam kurang 8 patah perkataan ('nampak baik', 'merasa ia'). Jurnal sesi adalah kosong. Tiada nama ini dalam senarai tonton pagi ini. Ini bukan strategi — ini masa skrin.'",
+    "question": "Antara 12 ejen, yang manakah paling mungkin sedang bercakap?",
+    "options": [
+      "The Trader — mereka melaksanakan",
+      "The Aggressive Debator — mereka menggalakkan aktiviti",
+      "The Conservative Debator — mereka menandakan dagangan bosan dan ketiadaan proses",
+      "The Market Analyst — mereka membincangkan carta"
+    ],
+    "answer": 2,
+    "explanation": "Empat dagangan dalam sejam, tesis sub-8 patah perkataan, nama di luar senarai tonton, jurnal kosong — setiap isyarat menunjuk kepada tindakan demi tindakan. Menamakannya sebagai masa skrin berbanding strategi adalah peranan Conservative Debator. Jawapan salah yang menggoda 'Aggressive Debator' adalah perangkap songsangan: Aggressive Debator menolak lebih kuat pada tepi yang nyata, bukan pada ketiadaan satu. Kebosanan adalah apa yang mandat Conservative Debator liputi.",
+    "related_lesson": "050",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "boredom",
+      "process",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_18_jpm_chart_capitulation",
+    "type": "read_the_chart",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "JPM jatuh dari $214 ke $176 selama 6 sesi (-17.8%). Pada hari ke-7, JPM buka pada $171, mencetak paras rendah intraday $164 pada isipadu terberat dalam 18 bulan (94M saham berbanding purata 20 hari 19M), kemudian berbalik menutup pada $182.40 — hijau pada hari itu. RSI mencapai 18 pada paras rendah intraday. Sesi seterusnya buka lebih tinggi dan mengekalkan paras $180an pada isipadu menurun.",
+    "question": "Pemasangan teknikal apakah yang Market Analyst paling mungkin panggil ini?",
+    "options": [
+      "A dead-cat bounce — tidak bermakna",
+      "A selling-climax / capitulation reversal — penurunan lanjutan, RSI 18, paras rendah dicetak pada isipadu 5x, pembalikan ke tutup hijau, tindak lanjut mengekalkan paras rendah",
+      "A simple support test — tiada pembalikan lagi",
+      "A bear-flag continuation — lebih penurunan akan datang"
+    ],
+    "answer": 1,
+    "explanation": "Penurunan 18% dalam 6 sesi, RSI 18 pada paras rendah, isipadu tunggal sesi terberat dalam 18 bulan mencetak paras rendah hari itu, dan pembalikan sama hari untuk menutup hijau dengan tindak lanjut yang mengekalkan paras rendah adalah capak kaki buku capitulation — penjual kehabisan tenaga pada isipadu maksimum. Jawapan salah yang menggoda 'dead-cat bounce' adalah bacaan pendua: dead-cat bounce biasanya mencetak pada isipadu menurun atau purata; cetakan ini mempunyai isipadu 5x dan mengekalkan sesi seterusnya, yang meningkatkan kebarangkalian bahawa penjual marginal sudah selesai.",
+    "related_lesson": "046",
+    "related_agent": "market_analyst",
+    "tags": [
+      "capitulation",
+      "fear",
+      "chart",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_19_discipline_missing",
+    "type": "whats_missing",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Pengguna telah mencatatkan 6 perdagangan menang berturut-turut dan kini sedang berdebat mengenai perdagangan ke-7. Verifikasi bilik untuk MAYBANK: 'Penganalisis Asas — NIM stabil, dividen terjamin. Penganalisis Pasaran — pecahan dari RM10.20. Penganalisis Berita — senyap. Peneliti Bull — potensi kenaikan 11%. Peneliti Bear — sensitiviti keluk hasil. Penganalisis Media Sosial — sentimen neutral. Penceramah Agresif — saiz masuk, anda dalam aliran. Pengurus Penyelidikan — BELI sederhana 0.59. Pedagang — masuk RM10.30, henti RM9.95. Verifikasi: BELI 8% daripada NAV (berbanding purata 4–5%).'",
+    "question": "Siapa input yang ketara ketiadaannya dalam verifikasi ini?",
+    "options": [
+      "Penceramah Konservatif — tiada siapa bertanya sama ada saiz 8% (hampir 2x purata) pada perdagangan ke-7 dalam rentetan adalah kegagalan disiplin berbanding panggilan keyakinan tinggi",
+      "Penganalisis Berita — sudah diliputi",
+      "Penceramah Neutral — mereka harus memberi pandangan",
+      "Peneliti Bear — sudah diliputi"
+    ],
+    "answer": 0,
+    "explanation": "Verifikasi ini menggandakan saiz tipikal berdasarkan rentetan kemenangan, dan satu-satunya suara yang mengulas saiz ialah Penceramah Agresif ('anda dalam aliran'). Bingkai ini tepat merupakan risiko overconfidence/disiplin-vs-keseronokan yang dinamakan dalam Modul 8. Peranan Penceramah Konservatif ialah bertanya sama ada saiz mencerminkan kelebihan atau emosi — dan mereka tiada. Jawapan salah yang menggoda 'Penceramah Neutral' adalah munasabah tetapi Penceramah Neutral menimbang bukti; Penceramah Konservatif memegang laluan proses/disiplin yang secara struktur tiada di sini.",
+    "related_lesson": "051",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "discipline",
+      "overconfidence",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_20_brk_b_value_call",
+    "type": "predict_the_call",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "BRK-B diperdagangkan pada $462. Nilai buku setiap saham ialah $410, menjadikan nisbah harga-nilai buku (P/B) pada 1.13 — berbanding purata 10 tahun P/B sebanyak 1.32. Pendapatan operasi $11.8B dalam Q3, +9% YoY. Kedudukan tunai $189B. Float insurans terus berkembang. Penganalisis Asas ditanya: 'berdasarkan nilai buku, adakah BRK-B murah, adil, atau mahal?'",
+    "question": "Apakah yang paling mungkin dikatakan oleh Penganalisis Asas?",
+    "options": [
+      "Adil — tiada apa yang berubah",
+      "Murah pada buku — P/B 1.13 ialah 14% di bawah purata 10 tahun sebanyak 1.32 manakala pendapatan operasi berkembang 9%",
+      "Mahal — ia hampir di rekod tertinggi",
+      "Murah — kerana tumpukan tunai adalah besar"
+    ],
+    "answer": 1,
+    "explanation": "P/B 1.13 berbanding purata 10 tahun 1.32 ialah diskaun 14% terhadap sejarahnya sendiri, disusuli dengan pertumbuhan pendapatan operasi 9%. Itu ialah bacaan 'murah pada buku' yang klasik. Jawapan salah yang menggoda 'mahal — hampir rekod tertinggi' mengelirukan harga nominal dengan penilaian — berapakah gandaan yang penting, dan gandaan telah mampat. Tumpukan tunai ialah faktor positif tetapi bukan sebab ini murah pada buku.",
+    "related_lesson": "040",
+    "related_agent": "fundamentals_analyst",
+    "tags": [
+      "valuation",
+      "price_to_book",
+      "module_7"
+    ]
+  },
+  {
+    "id": "dc_2026_10_21_greed_violation_pyramid",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: saiz kedudukan tunggal maksimum 6% daripada NAV; piramid hanya dibenarkan selepas paras tertentu pecah dengan pengesahan isipadu; tiada tambah selepas RSI melebihi 75. Kedudukan NVDA kini 5.3% daripada NAV dengan keuntungan terbuka +28%. RSI 81. Tiada paras baru telah pecah — harga berada di antara $182 dan $194. Pengguna mengemukakan tambahan sebanyak 1.2% lagi daripada NAV, membawa kedudukan kepada 6.5%. Nota: 'ia terus naik, tak boleh biarkan ia bergerak tanpa saya'.",
+    "question": "Peraturan mandat mana yang ditandakan oleh Pengurus Portfolio sebagai dilanggar?",
+    "options": [
+      "Pelbagai peraturan — tambahan itu mendorong kedudukan kepada 6.5% (melebihi had 6%), tiada paras yang pecah (peraturan piramid), dan RSI 81 berada di atas had tambah 75; keserakahan memacu ketiga-tiga pelanggaran",
+      "Peraturan henti kerugian — tiada henti dilampirkan",
+      "Peraturan sektor — NVDA berada dalam terlalu banyak sektor",
+      "Tiada pelanggaran — piramid ke dalam pemenang adalah baik"
+    ],
+    "answer": 0,
+    "explanation": "Tiga peraturan bebas berlaku serentak: saiz baharu 6.5% melebihi had 6%; piramid memerlukan pecahan paras dengan isipadu yang belum berlaku; dan peraturan tiada-tambah-di-atas-RSI-75 dilanggar pada RSI 81. Nota ('tak boleh biarkan ia bergerak tanpa saya') menamakan pemacu — keserakahan/FOMO pada pemenang sedia ada. Pengurus Portfolio menyekat tambahan itu. Jawapan salah yang menggoda 'tiada pelanggaran — piramid ke dalam pemenang adalah baik' ialah rasionalisasi: piramid tanpa syarat hanyalah menambah saiz berdasarkan emosi.",
+    "related_lesson": "045",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "greed",
+      "pyramiding",
+      "mandate",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_22_petronas_news_match",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata semasa di dalam Bilik mengenai nama-nama Bursa yang berkaitan dengan PETRONAS: 'Brent ditutup naik +3.8% pada waktu malam memandangkan OPEC+ melanjutkan pemotongan sehingga Q2 2026. Ringgit melemah 0.6% dalam sesi — pembayar perkhidmatan minyak tempatan mendapat manfaat daripada kontrak yang dinamakan dalam USD. Perhatikan tindakan penarafan terhadap nama-nama bersepadu menjelang akhir minggu.'",
+    "question": "Antara 12 ejen, yang manakah paling mungkin sedang bercakap?",
+    "options": [
+      "The Fundamentals Analyst — mereka menilai syarikat",
+      "The News Analyst — tajuk makro (OPEC+, FX, penarafan) diterjemahkan kepada akibat sektor",
+      "The Market Analyst — mereka membaca carta sektor",
+      "The Social Media Analyst — mereka membaca sentimen"
+    ],
+    "answer": 1,
+    "explanation": "OPEC+, cetakan penutupan Brent, pergerakan FX, dan tindakan penarafan adalah tajuk utama makro dan aliran yang dipacu oleh peristiwa — ini adalah domain News Analyst. Jawapan salah yang menipu 'Fundamentals Analyst' gagal kerana tiada nombor tahap syarikat (pendapatan, margin, EPS, ROE) yang dirujuk — ia adalah kerangka impak makro tahap sektor, yang menjadi tanggungjawab News Analyst.",
+    "related_lesson": "063",
+    "related_agent": "news_analyst",
+    "tags": [
+      "news",
+      "macro",
+      "module_10"
+    ]
+  },
+  {
+    "id": "dc_2026_10_23_fomo_room_call",
+    "type": "predict_the_call",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "GOOGL telah naik dari $172 ke $214 dalam 11 sesi (+24.4%) memandangkan berita platform AI. Pengguna tidak masuk. Pada $214, pengguna membuka Bilik untuk meminta masuk 7% daripada NAV. Jurnal sesi menunjukkan pengguna menulis 'Saya sepatutnya beli pada $172' pada hari ke-3, kemudian 'masih ada masa pada $185', kemudian 'sekarang atau tidak langsung pada $214'. Conservative Debator menjawab.",
+    "question": "Apa yang paling mungkin dikatakan oleh Conservative Debator?",
+    "options": [
+      "Masuk sekarang — trend kuat akan melonjak lebih jauh daripada jangkaan",
+      "Masuk dengan pilihan leveraj untuk menebus pergerakan yang terlepas",
+      "Langkau GOOGL — cari ticker lain",
+      "Kurangi saiz kepada separuh dan tunggu penurunan — jurnal anda mencatat tiga percubaan masuk yang semakin emosional dan kerangka 'sekarang atau tidak langsung'; itu adalah eskalasi FOMO, bukan peningkatan keyakinan"
+    ],
+    "answer": 3,
+    "explanation": "Jurnal pengguna sendiri adalah bukti — tiga percubaan masuk pada harga yang semakin meningkat dengan bahasa yang semakin mendesak adalah tangga FOMO yang klasik. Keyakinan akan dibaca sebagai 'Saya terlepas entri, ini persediaan seterusnya'; emosi dibaca sebagai 'sekarang atau tidak langsung'. Resipi Conservative Debator ialah mengecilkan saiz (menurunkan kos kesilapan) dan menunggu tahap yang ditentukan berbanding mengejar pergerakan di tengah jalan. Jawapan salah yang menipu 'masuk sekarang — trend kuat akan melonjak lebih jauh daripada jangkaan' adalah rasionalisasi: ia benar pada sesetengah masa, tetapi ia bukan proses — ia harapan.",
+    "related_lesson": "048",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "fomo",
+      "discipline",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_24_overconfidence_match",
+    "type": "match_the_agent",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata semasa di dalam Bilik: 'Kadar kemenangan pengguna dalam 14 perdagangan terakhir ialah 78%. Pemenang purata +1.4%, penipu purata -0.6%. Tetapi saiz posisi telah meningkat dari 3% NAV per perdagangan kepada 6.8% dalam tetingkap yang sama. Kadar kemenangan tidak berubah; varians dolar per perdagangan telah lebih daripada berganda. Itu adalah matematik di mana satu siri kemenangan menjadi persediaan untuk satu hari buruk yang membatalkan enam minggu.'",
+    "question": "Antara 12 ejen, yang manakah paling mungkin sedang bercakap?",
+    "options": [
+      "The Fundamentals Analyst — mereka menilai syarikat",
+      "The Conservative Debator — mereka menandakan peningkatan saiz yang terlalu yakin dan menjelaskan matematik varians",
+      "The Aggressive Debator — mereka akan meraikan kadar kemenangan",
+      "The Trader — mereka akan menerangkan pelaksanaan"
+    ],
+    "answer": 1,
+    "explanation": "Menamakan peningkatan saiz semasa siri kemenangan dan mengkuantifikasikan bagaimana varians berskala dengan saiz adalah tepat pada proses dan psikologi Conservative Debator. Jawapan salah yang menipu 'Trader' gagal kerana Trader melaksanakan; mereka tidak mengulas tentang bagaimana pengguna mengubah tingkah laku selepas kemenangan. Aggressive Debator akan menggalakkan kadar kemenangan, bukan menandakan ia sebagai vektor risiko.",
+    "related_lesson": "049",
+    "related_agent": "conservative_debator",
+    "tags": [
+      "overconfidence",
+      "sizing",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_25_missing_social_fear",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdict bilik pada META selepas penurunan 11% dalam dua hari: 'Penganalisis Asas — pendapatan iklan kekal. Penganalisis Pasaran — patah purata bergerak 50 hari pada isipadu tinggi. Penganalisis Berita — tajuk regulasi mencetuskan pergerakan. Penganalisis Bull — tesis panjang tidak berubah. Penganalisis Bear — beban berterusan. Pembahas Konservatif — tunggu asas. Pengurus Penyelidikan — HOLD sederhana 0.42. Pedagang — tiada kemasukan. Verdict: HOLD.'",
+    "question": "Masukan siapa yang ketara tiada dalam verdict ini?",
+    "options": [
+      "Pedagang — sudah diwakili",
+      "Penganalisis Media Sosial — tiada bacaan sentimen runcit / ekstrem ketakutan selepas pergerakan 11% dalam dua hari, yang akan maklumkan sama ada jualan sudah selesai",
+      "Penganalisis Bull — sudah diwakili",
+      "Pembahas Agresif — sudah tersirat"
+    ],
+    "answer": 1,
+    "explanation": "Pergerakan 11% dalam dua hari ialah peristiwa sentimen. Sama ada runcit berada pada ketakutan puncak (kemungkinan menyerah) atau masih sekadar bimbang (kemungkinan lebih penurunan) adalah beban utama untuk penentuan masa — HOLD adalah betul, tetapi bila untuk naik taraf kepada BUY bergantung pada suhu sentimen. Bacaan Penganalisis Media Sosial secara struktur tiada. Jawapan salah yang menggoda 'Pembahas Agresif' gagal kerana Penganalisis Bull sudah merangkumi kes kenaikan; yang tiada ialah lapisan data sentimen.",
+    "related_lesson": "046",
+    "related_agent": "social_media_analyst",
+    "tags": [
+      "fear",
+      "sentiment",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_26_bear_thesis_match",
+    "type": "match_the_agent",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "Seorang ejen berkata: 'Kes bull pada TSLA mengandaikan pertumbuhan unit 40% pada 2027 — setiap ramalan OEM yang diterbitkan dan anggaran IEA menunjukkan 18–24%. Mampatan margin kasar auto ialah 280bps dari puncak. Potongan harga BYD China berterusan. Kadar asas untuk hasil pertumbuhan unit 40% dalam pasaran EV yang matang adalah tunggal rendah — kerangka kenaikan harga untuk kesempurnaan, penurunan tidak diharga langsung.'",
+    "question": "Siapa antara 12 ejen paling mungkin bercakap?",
+    "options": [
+      "Pembahas Agresif — mereka menolak pandangan keras",
+      "Penganalisis Bull — mereka memiliki kes kenaikan",
+      "Penganalisis Bear — mereka membina tesis penurunan menggunakan kadar asas, mampatan margin, dan tekanan kompetitif",
+      "Penganalisis Berita — mereka liput tajuk berita"
+    ],
+    "answer": 2,
+    "explanation": "Analisis kadar asas, pengiraan mampatan margin, dan kerangka dinamik kompetitif demi kes penurunan ialah tanggungjawab Penganalisis Bear. Jawapan salah yang menggoda 'Pembahas Agresif' keliru antara nada dengan peranan — Pembahas Agresif boleh bull atau bear tetapi berhujah dengan kuat; Penganalisis Bear secara khusus membina tesis penurunan, yang dilakukan oleh petikan ini.",
+    "related_lesson": "058",
+    "related_agent": "bear_researcher",
+    "tags": [
+      "bear_case",
+      "base_rates",
+      "module_9"
+    ]
+  },
+  {
+    "id": "dc_2026_10_27_revenge_violation_sequence",
+    "type": "spot_the_violation",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: kerugian harian maks 2.5% NAV (kemudian perdagangan dihentikan untuk hari itu); penyejukan 60-min selepas sebarang kerugian tunggal >1% NAV. Sesi hari ini: trade 1 PUBLIC -1.3% (10:14), trade 2 PUBLIC kemasukan semula -1.0% (10:21), trade 3 CIMB -0.4% (10:39). Pengguna mempunyai kerugian kumulatif 2.7% NAV. Pada 10:42 pengguna hantar trade 4 — MAYBANK pada saiz 2x normal, nota: 'perlu pulihkan hari ini'.",
+    "question": "Peraturan mandat mana yang ditandakan dilanggar oleh Pengurus Portofolio?",
+    "options": [
+      "Tiada pelanggaran — pengguna masih di bawah had",
+      "Hanya peraturan kiraan trade",
+      "Berbilang — had kerugian harian (2.7% > 2.5% — perdagangan sepatutnya sudah dihentikan), penyejukan (kemasukan semula pada trade 2 ialah 7 minit selepas kerugian 1.3% berbanding 60-min diperlukan), dan saiz 2x ke dalam senario balas dendam; trade 4 disekat sepenuhnya",
+      "Pekal sektor pada bank"
+    ],
+    "answer": 2,
+    "explanation": "Tiga pelanggaran bertindan: (1) pengguna sudah melebihi had kerugian harian 2.5% pada 2.7%, yang mewajibkan perdagangan dihentikan — trade 4 sepatutnya tidak sampai ke giliran; (2) kemasukan semula PUBLIC pada trade 2 pada 10:21 ialah 7 minit selepas kerugian 1.3%, melanggar penyejukan 60-min; (3) saiz 2x pada trade 4 digabungkan dengan nota 'pulihkan' ialah petunjuk balas dendam. PM menghentikan keras. Jawapan salah yang menggoda 'masih di bawah had' gagal kerana 2.7% > 2.5% — dan had adalah lantai keras, bukan sasaran lembut.",
+    "related_lesson": "047",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "revenge_trading",
+      "daily_loss_cap",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_28_klcc_chart_range",
+    "type": "read_the_chart",
+    "difficulty": 1,
+    "locale": "ms",
+    "scenario": "KLCC (Bursa REIT) telah diperdagangkan pada julat RM7.40 hingga RM7.62 selama 23 sesi dengan isipadu menurun (purata 1.1M saham, turun daripada 1.8M tiga bulan lalu). Purata bergerak 50 hari (50-day MA) mendatar pada RM7.50. RSI berayun antara 44 dan 56. Tiada katalis diumumkan.",
+    "question": "Set-up teknikal manakah yang paling mungkin dipanggil oleh Market Analyst?",
+    "options": [
+      "Bull flag — sambungan ke atas",
+      "Bear flag — sambungan ke bawah",
+      "Julat isipadu rendah / konsolidasi — tiada kelebihan untuk kedua-dua pihak sehingga isipadu kembali dan satu paras ditembusi",
+      "Pecahan disahkan isipadu — akan bergerak"
+    ],
+    "answer": 2,
+    "explanation": "23 sesi dalam julat 3%, isipadu menurun, 50-day MA mendatar, RSI neutral — setiap isyarat menunjukkan pasaran tanpa penyertaan dan tanpa arah. Panggilan Market Analyst adalah untuk menunggu: tiada kelebihan (edge) sehingga isipadu kembali dan harga menembusi julat. Jawapan salah yang menarik 'bull flag' memerlukan kaki naik sebelumnya dan corak sambungan yang mengetat, yang mana kedua-duanya tidak diterangkan dalam senario. Pita yang terikat dalam julat dengan isipadu rendah sendiri adalah maklumat berguna untuk pengguna — ia membenarkan tidak berdagang.",
+    "related_lesson": "025",
+    "related_agent": "market_analyst",
+    "tags": [
+      "range",
+      "low_volume",
+      "module_4"
+    ]
+  },
+  {
+    "id": "dc_2026_10_29_discipline_missing_pm",
+    "type": "whats_missing",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Verdict bilik pada nama Bursa yang panas: 'Fundamentals Analyst — keuntungan melebihi jangkaan. Market Analyst — pecahan bersih. News Analyst — angin ekor sektor. Bull Researcher — potensi naik 18%. Bear Researcher — risiko float kecil. Social Media Analyst — buzz runcit meningkat. Aggressive Debator — beli sekarang. Conservative Debator — saiz posisi harus konservatif. Research Manager — keyakinan BUY 0.64. Trader — masuk RM3.20, stop RM3.04. Verdict: BUY 9% NAV.'",
+    "question": "Masukan siapa yang ketara ketiadaannya dalam verdict ini?",
+    "options": [
+      "Social Media Analyst — sudah diliputi",
+      "Portfolio Manager — Conservative Debator menandakan kebimbangan saiz tetapi tiada semakan pematuhan mandat kelihatan dalam verdict, dan 9% jauh melebihi had tipikal",
+      "News Analyst — sudah diwakili",
+      "Trader — sudah diwakili"
+    ],
+    "answer": 1,
+    "explanation": "Conservative Debator telah membangkitkan kebimbangan saiz, tetapi Portfolio Manager adalah gerbang struktur yang mengesahkan terhadap mandat sebenar — dan semakan itu tiada. 9% NAV terhadap had tipikal 5–6% tidak boleh diluluskan tanpa kelulusan eksplisit PM. Jawapan salah yang menarik 'Social Media Analyst sudah diliputi' gagal kerana masukan itu wujud; yang tiada adalah semakan peraturan, yang sentiasa menjadi tanggungjawab PM.",
+    "related_lesson": "013",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "mandate",
+      "safety_floor",
+      "module_3"
+    ]
+  },
+  {
+    "id": "dc_2026_10_30_boredom_violation",
+    "type": "spot_the_violation",
+    "difficulty": 2,
+    "locale": "ms",
+    "scenario": "Mandat pengguna: perdagangan mesti pada senarai tontonan pagi; setiap perdagangan luar senarai tontonan memerlukan entri jurnal menyatakan tesis dalam sekurang-kurangnya satu ayat dan paras yang dimasuki. Pada 13:48 — sesi tengah hari yang tenang, SPX mendatar — pengguna mengemukakan tiket beli untuk IHH (Bursa, luar senarai tontonan), 3% NAV, medan nota hanya berbunyi: 'rasa macam nak'. Tiada paras dirujuk, tiada tesis.",
+    "question": "Peraturan mandat apakah yang dikesan dilanggar oleh Portfolio Manager?",
+    "options": [
+      "Peraturan sektor — pendedahan kesihatan adalah berlebihan",
+      "Peraturan saiz posisi — 3% NAV terlalu besar",
+      "Peraturan dagangan harian — terlalu banyak dagangan harian",
+      "Peraturan jurnal luar senarai tontonan — perdagangan itu luar senarai tontonan dan nota ('rasa macam nak') tidak memenuhi kemasukan tesis + paras yang diperlukan; ini adalah tanda dagangan bosan yang dirancang untuk dikesan oleh mandat"
+    ],
+    "answer": 3,
+    "explanation": "Mandat secara eksplisit memerlukan perdagangan luar senarai tontonan untuk membawa tesis satu ayat dan paras yang ditakrifkan. 'Rasa macam nak' adalah penanda dagangan bosan yang klasik — peraturan ini wujud tepat untuk memaksa pengguna menghadapi ketiadaan alasan sebelum melaksanakan. PM menyekat; laluan yang betul adalah menulis jurnal dengan jujur ('Saya bosan dan ini sekadar masa di skrin'), kemudian sama ada mentakrifkan setup sebenar atau tutup platform. Jawapan salah yang menarik 'saiz posisi 3% terlalu besar' gagal kerana 3% berada dalam had tipikal 5–6%.",
+    "related_lesson": "050",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "boredom",
+      "watchlist",
+      "journal",
+      "module_8"
+    ]
+  },
+  {
+    "id": "dc_2026_10_31_psychology_synthesis",
+    "type": "predict_the_call",
+    "difficulty": 3,
+    "locale": "ms",
+    "scenario": "Sesi semakan akhir bulan. Statistik pengguna Oktober: 41 dagangan (berbanding 26 pada September), kadar kemenangan 48% (berbanding 61% pada September), purata kerugian -1.3% (berbanding -0.7%), 3 pelanggaran tempoh rehat, 2 pengabaian jurnal di luar senarai pantau. NAV berakhir -2.1% pada bulan tersebut selepas bermula Oktober +3.4%. Pengguna bertanya di Bilik: 'apa yang berubah?' Portfolio Manager memegang giliran.",
+    "question": "Apa yang Portfolio Manager paling mungkin katakan?",
+    "options": [
+      "Jadi lebih agresif — pulihkan November",
+      "Proses gagal, bukan strategi — frekuensi dagangan naik 58%, purata kerugian hampir berganda, 5 pelanggaran mandat; masalahnya adalah disiplin-vs-gairah, bukan tepi. Ketatkan mandat, perlahan kadenza, dan asas semula sebelum mengubah strategi",
+      "Berhenti berdagang secara kekal",
+      "Strategi salah — tukar pendekatan untuk November"
+    ],
+    "answer": 1,
+    "explanation": "Nombor-nombor itu menceritakan kisah disiplin, bukan kisah strategi: bilangan dagangan naik 58%, purata kerugian hampir berganda, dan lima pelanggaran mandat merentasi peraturan rehat dan jurnal. Tepi pengguna mungkin tidak hilang — pengguna berhenti mengikuti peraturan yang mengawal varians. Resipi Portfolio Manager adalah membaiki proses (frekuensi lebih rendah, penguatkuasaan mandat lebih ketat) sebelum menyentuh strategi. Jawapan salah yang menggoda 'strategi salah — tukar pendekatan' adalah langkah panik yang memperburuk kerosakan: menukar strategi pada bulan kerugian yang didorong oleh disiplin mengunci pelajaran yang salah.",
+    "related_lesson": "051",
+    "related_agent": "portfolio_manager",
+    "tags": [
+      "discipline",
+      "process_review",
+      "module_8"
+    ]
+  }
+]
