@@ -1,0 +1,73 @@
+---
+id: "274_the_safety_floors_audit_trail"
+title: "Jejak audit lantai keselamatan AMI"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 91"
+topic: "audit_trail"
+prerequisites: ["271_inside_the_deterministic_compliance_check", "272_the_mandate_is_your_contract"]
+tags: ["audit_trail", "pm", "compliance", "decision_journal", "history"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Jejak audit lantai keselamatan
+
+Semakan yang berjalan tetapi tidak merekodkan dirinya sendiri adalah semakan yang tidak boleh dipercayai. Setiap hasil kepatuhan PM dalam <Term id="ami" /> — LULUS atau HALANG, dengan klausa khusus yang dipicu — ditulis ke dalam <Term id="ami_decision_journal" /> bersama dengan <Term id="ami_verdict" />. Jejak ini adalah milik anda untuk diperiksa. Anda boleh melihat klausa <Term id="ami_mandate" /> mana yang paling sering mengikat, perdagangan mana yang dihentikan oleh PM, nilai Mandat anda pada masa setiap keputusan, dan sama ada suntingan anda seterusnya terhadap Mandat berkorelasi dengan tingkah laku PM yang berbeza. Pada akhir pelajaran ini, anda akan tahu cara membaca jejak audit dan apa yang boleh diberikannya kepada anda yang tidak dapat diberikan oleh satu Verdict tunggal.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Katakan selama enam minggu anda mengumpulkan Bilik 24 kali merentasi AAPL, NVDA, MSFT, AMZN, dan JPM. Buka Jurnal Keputusan dan tapis mengikut *hasil PM*. Anda melihat:
+
+- 18 LULUS — saiz dicadangkan 2–4%, jauh di dalam `max_position_pct: 5`.
+- 4 HALANG pada `max_position_pct` — Pedagang mencadangkan 6–7% tiga kali pada NVDA dan sekali pada TSLA. Setiap halang direkodkan dengan cap masa, nilai Mandat yang aktif (`max_position_pct: 5`), dan saiz yang dicadangkan.
+- 1 HALANG pada `no_fossil` — XOM dipanggil pada hari apabila `no_fossil: true` sedang aktif.
+- 1 HALANG pada `long_only` — cadangan pendek TOPGLOV dihentikan apabila `long_only: true`.
+
+Jejak ini memberitahu anda beberapa perkara pada pandangan pertama. Had saiz Mandat anda adalah pengikat kira-kira 17% daripada masa — bermakna. Cadangan NVDA secara rutin kembali melebihi saiz berbanding had anda, yang merupakan isyarat bahawa volatiliti NVDA menarik Pedagang ke arah posisi yang lebih besar atau bahawa `max_position_pct` anda lebih ketat daripada yang anda niatkan untuk setup keyakinan tinggi. Halang pengkecualian memberitahu anda sama ada kekangan etika/daerah anda sedang dipicu, yang boleh mengesahkan ia masih berwayar seperti yang anda mahu.
+
+Yang paling penting, jejak ini merekodkan nilai Mandat *pada masa keputusan dibuat*, bukan nilai semasa. Jika anda menyunting `max_position_pct` dari 3 kepada 5 tiga minggu lalu, audit dua minggu kemudian masih menunjukkan halang era 3 sebagai halang era 3. Jejak ini adalah sejarah yang tidak boleh diubah — anda tidak boleh menilai semula keputusan lalu secara retrospektif dengan menyunting Mandat hari ini.
+
+## Perangkap
+
+Perangkapnya ialah menggunakan jejak audit untuk berhujah dengan PM selepas fakta. *"Ia menghalang saya pada XOM tetapi XOM naik 40% — PM koskan saya wang."* Jejak audit bukan bukti bahawa PM salah. PM sedang melaksanakan Mandat anda. Jika bendera `no_fossil` Mandat aktif dan anda kini menyesalinya, jejak memberitahu anda bahawa *anda* memilih pengkecualian itu, dan sistem menghormatinya. Bacaan yang betul: jejak audit adalah untuk *anda* memeriksa penghakiman masa lalu anda sendiri, bukan untuk memperdebatkan tingkah laku PM. PM tidak memilih peraturan — anda yang melakukannya. Jejak membuktikan peraturan tersebut diterapkan secara konsisten, yang merupakan satu-satunya perkara yang boleh dibuktikannya.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menatalan Jurnal Keputusan anda dan menemui lima blok PM pada `max_position_pct` selama bulan lalu, kesemuanya pada NVDA. Apakah inferens yang paling berguna?"
+  options={[
+    "Pegawai Dagang sentiasa mencadangkan kedudukan bersaiz besar pada NVDA — sama ada setup NVDA benar-benar memerlukan saiz yang lebih besar (dan anda perlu mempertimbangkan sama ada `max_position_pct` anda sepadan dengan selera risiko anda) atau Pegawai Dagang terlalu bersemangat; dalam kedua-dua kes, jejak audit mendedahkan corak yang perlu dipikirkan",
+    "PM terlalu ketat pada NVDA secara khusus",
+    "Blok-blok tersebut harus diabaikan kerana NVDA meningkat lebih tinggi",
+    "AMI tidak menyukai NVDA"
+  ]}
+  answer={0}
+  explanation="Jejak audit ialah alat pengesanan corak. Lima blok pada ticker yang sama ialah isyarat — sama ada mengenai aset, Mandat anda, atau kalibrasi Pegawai Dagang. Langkah yang betul ialah refleksi (dan mungkin semakan Mandat), bukan mengabaikan blok-blok tersebut. Jawapan salah yang memikat ialah 'abaikan blok-blok tersebut kerana NVDA meningkat lebih tinggi' — bias hasil mengubah sejarah PM sebagai salah; PM melaksanakan peraturan yang dinyatakan, dan hasil pada satu dagangan tidak mengesahkan untuk mengabaikannya."
+/>
+
+<Quiz
+  question="Anda menukar `max_position_pct` daripada 3 kepada 5 dua minggu lalu. Anda mengaudit blok PM dari sebulan lalu yang aktif pada cadangan 4%. Apakah yang ditunjukkan oleh jejak audit?"
+  options={[
+    "Blok tersebut telah dipadamkan kerana peraturan berubah",
+    "Jejak audit menunjukkan nilai Mandat yang dipilih oleh pengguna",
+    "Blok itu direkodkan dengan `max_position_pct: 3` sebagai nilai aktif pada masa keputusan — sejarah adalah tidak boleh diubah; Mandat hari ini tidak mengubah dagangan lalu",
+    "Blok tersebut telah ditukar secara retrospektif kepada LULUS kerana 4% sesuai dengan Mandat semasa"
+  ]}
+  answer={2}
+  explanation="Jejak itu merekodkan keadaan Mandat pada masa keputusan dibuat. Itulah yang menjadikannya jejak audit berbanding papan pemuka keadaan semasa. Jawapan salah yang memikat ialah yang retrospektif — sistem yang menulis semula sejarah setiap kali anda mengubah tetapan tidak akan mempunyai rekod yang boleh diaudit."
+/>
+
+## Cuba sendiri
+
+Buka **Jurnal Keputusan**, tapis mengikut *hasil PM: HALANG*, dan baca tiga. Untuk setiap satu, catat klausa yang dipicu (saiz, penurunan, pengkecualian) dan nilai Mandat yang aktif pada masa itu. Tanya diri sama ada perdagangan yang sama hari ini, di bawah Mandat semasa anda, masih akan dihentikan. Jika tiga daripada tiga akan lulus sekarang, Mandat anda telah bergerak — dan jejak baru memberitahu anda begitu.
+
+## Intipati
+
+PM mencatat setiap halang dengan klausa dan nilai Mandat pada ketika itu. Baca jejak anda secara berkala; ia adalah satu-satunya rekod jujur tentang peraturan apa yang sebenarnya anda latih di bawah. AMI ialah <Term id="training_simulator" /> — jejak adalah untuk menilai penghakiman masa lalu anda sendiri, bukan memperdebatkan nasihat yang tidak pernah anda berikan.

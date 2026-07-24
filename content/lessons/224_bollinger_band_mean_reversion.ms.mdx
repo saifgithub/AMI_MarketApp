@@ -1,0 +1,66 @@
+---
+id: "224_bollinger_band_mean_reversion"
+title: "Pembalikan purata Bollinger Band dalam pasaran berrange"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 53"
+topic: "mean_reversion"
+prerequisites: ["055_mean_reversion", "061_sideways_range_markets", "062_volatility_regimes", "018_drawdown_management"]
+tags: ["strategy", "mean_reversion", "bollinger_bands", "range", "volatility"]
+agent_callouts: ["conservative_debator", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Reversi purata Bollinger dalam pasaran berrange
+
+Asas reverensi purata (055) menggunakan RSI(2). Bollinger Bands memberikan anda lensa reverensi purata yang berbeza — jalur yang dipetakan pada purata bergerak 20 hari ± 2 sisihan piawai pulangan harian. Dalam pasaran yang terikat range, harga berosilasi dengan boleh dipercayai antara jalur dan garis tengah, dan strategi yang menolak sentuhan pada jalur luar dengan sasaran di purata mempunyai kelebihan sebenar. Namun, strategi ini runtuh sepenuhnya apabila rejim berubah kepada trend — tepat apabila "jalur meregang" menjadi "jalur menunggang trend". Selepas pelajaran ini, anda boleh menentukan peraturan reverensi purata Bollinger yang termasuk gerbang rejim yang memutuskan sama ada untuk memperdagangkannya atau tidak.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Lihat KLCC Property di Bursa Malaysia sepanjang 2024 — sebuah REIT yang agak terikat range yang diperdagangkan antara RM7.20 dan RM7.70 untuk kebanyakan tahun. Bollinger Bands (20, 2) ketat di sekitar RM7.45 di tengah jalur. Satu perdagangan wakil: 3 Julai 2024 — KLCC ditutup pada RM7.21, menyentuh jalur bawah. ADX(14) berada pada 14 — jauh di bawah ambang trend 25 — mengesahkan rejim range. Masuk pada penutupan pada RM7.21 dengan henti rugi pada RM7.10 (di bawah paras rendah range sebelumnya). Sasaran: purata bergerak 20 hari di tengah jalur pada RM7.45. Dalam masa empat sesi, KLCC ditutup pada RM7.46 — keluar di tengah jalur. Keuntungan setiap saham: RM0.25 pada risiko RM0.11 = 2.3R. Sepanjang 2024, peraturan ini aktif kira-kira 8 kali pada KLCC, dengan kadar kejayaan sekitar 70% dan jangkaan positif ~1.2R per perdagangan. Sekarang bandingkan dengan apa yang akan berlaku pada 2023 pada indeks induk KLCC apabila MAYBANK sedang trend — sentuhan Bollinger pada jalur atas adalah masuk UNTUK PENDAFTARAN SHORT dalam peraturan reverensi purata yang ketat, dan kebanyakan daripada mereka dilanda oleh trend yang berterusan.
+
+Kriteria masuk untuk panjang: (1) harga ditutup pada atau di bawah jalur Bollinger bawah, (2) ADX(14) < 20 (penapis rejim range), (3) harga di atas purata bergerak 200 hari (penapis trend lebih luas). Masuk: penutupan bar sentuhan jalur. Henti rugi: paras rendah range sebelumnya atau paras ayunan rendah terkini, mana-mana yang lebih ketat. Sasaran: tengah jalur 20 hari. Keluar: penutupan pada atau di atas tengah jalur, ATAU 7 sesi telah berlalu (henti masa). Pembatalan perdagangan individu: penutupan harian di bawah henti rugi. Strategi GAGAL dalam rejim trend — ADX di atas 25 bermakna jalur "menunggang" trend dan sentuhan jalur luar adalah kesinambungan, bukan reverensi. Ia juga GAGAL dalam rejim volatiliti mengembang di mana jalur melebar dengan cepat dan tengah jalur itu sendiri bergerak menjauhi harga.
+
+## Perangkap
+
+Kesilapan pemula adalah menolak setiap sentuhan jalur tanpa memeriksa ADX atau konteks trend. Anda melihat harga di jalur bawah, anda beli, dan anda cuba membalikkan purata saham yang sedang dalam trend turun kuat yang telah membuat paras rendah baru selama berminggu-minggu — jalur itu hanya mengembang untuk menampung trend. Model mental yang betul: reverensi purata Bollinger adalah strategi BERKONDISIKAN REJIM. Jalur itu sendiri tidak memberitahu anda sama ada untuk menolak mereka — ADX (atau penunjuk rejim lain seperti kecerunan purata bergerak 50 hari) melakukannya. Perangkap lain: memperdagangkan strategi merentasi instrumen tanpa memeriksa sama ada setiap instrumen berada dalam range. Jalur berfungsi pada KLCC dalam tahun range; ia gagal pada NVDA dalam tahun trend. Penunjuk yang sama, hasil berlawanan — rejim yang memutuskan.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham besar AS ditutup pada Jalur Bollinger bawah. ADX(14) berada pada 32 dan meningkat; MA 50-hari condong ke bawah. Apa yang dikatakan oleh peraturan reverensi purata Bollinger?"
+  options={[
+    "Masuk long — sentuhan jalur luar adalah isyarat reverensi purata",
+    "Tiada masuk — ADX > 25 dan MA 50-hari menurun; penapis rejim menyahkelayakan dagangan ini",
+    "Short pada jalur bawah — kesinambungan trend",
+    "Masuk saiz separuh sebagai lindungan terhadap trend"
+  ]}
+  answer={1}
+  explanation="ADX 32 menunjukkan trend arah yang kuat; ini adalah rejim tepat di mana reverensi purata Bollinger gagal. Jalur mengikuti trend, dan bacaan 'terjual berlebihan' kekal terjual berlebihan selama berminggu-minggu. Jawapan masuk-long pada sentuhan jalur luar adalah jawapan salah yang menipu kerana sentuhan jalur adalah mekanikal sama — tetapi gerbang rejim adalah keseluruhan strategi. Tanpanya, anda sedang menangkap pisau jatuh dalam sistem yang salah."
+/>
+
+<Quiz
+  question="Di Bursa: KLCC ditutup pada Jalur Bollinger bawah pada RM7.18; ADX ialah 14, harga berada di atas MA 200-hari. Henti rugi pada RM7.05, sasaran pada jalur tengah RM7.40. Anda juga mempunyai 3 posisi reverensi purata aktif lain (REIT berkorelasi). Mandat: risiko per-dagangan 1.5% pada akaun RM50,000, jumlah bakul reverensi purata dikurangkan kepada 4% daripada akaun. Semasa ini, anda telah menggunakan 3% daripada had bakul. Sintesis: berapa banyak yang boleh dialokasikan untuk dagangan ini?"
+  options={[
+    "Langkau — tiga posisi berkorelasi sudah cukup",
+    "Gantikan had bakun kerana persediaan berkualiti tinggi",
+    "Sehingga 1% daripada akaun (kapasiti bakun yang tinggal), saiz dikurangkan daripada had per-dagangan penuh",
+    "Alokasi per-dagangan penuh 1.5% kerana setiap persediaan adalah sah secara individu"
+  ]}
+  answer={2}
+  explanation="Had bakun adalah had peringkat portfoli, bukan had per-dagangan. Anda mempunyai 1% daripada kapasiti tinggal (had 4% - 3% digunakan). Saiz dagangan ini untuk risiko tidak lebih daripada 1%, yang pada henti rugi 13 sen (7.18 - 7.05) mengurangkan saham kepada 1% * 50,000 / 0.13 = 3,846 saham. Jawapan alokasi penuh-1.5% mengabaikan had bakun (kesilapan sintesis — mengandaikan peraturan per-dagangan mendominasi). Menggantikan had bakun adalah versi bencana — menggantikan had mandat kerana persediaan kelihatan baik adalah bagaimana strategi meletup merentas dagangan berkorelasi."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Conservative Debator, tampal 5 <Term id="ami_watchlist" /> ticker dan tanya: "Bagi setiap satu, nyatakan sama ada ADX(14) dan kecerunan 50-day MA memenuhi syarat sebagai rejim range yang sesuai untuk reverensi purata Bollinger. Senaraikan ticker mana yang layak hari ini dan mana yang gagal gerbang rejim." Gunakan <Term id="ami_coach_your_agent" /> pada Conservative Debator untuk menambah: "Sentiasa periksa ADX dan kecerunan trend sebelum meluluskan sebarang masuk sentuhan jalur; tolak sentuhan jalur dalam rejim ADX>25." Log hasil dalam <Term id="ami_decision_journal" />.
+
+## Pengambilan
+
+Reverensi purata Bollinger hanya berfungsi dalam rejim range — ADX adalah gerbang, bukan jalur. Dalam pasaran trend, sentuhan jalur adalah kesinambungan, bukan reverensi; penunjuk yang sama menunjukkan arah yang bertentangan.

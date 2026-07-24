@@ -1,0 +1,81 @@
+---
+id: "250_rate_sensitive_sectors_hiking_cutting"
+title: "Sektor sensitif kadar dalam kitaran kenaikan dan penurunan"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+code: "N&M 15"
+topic: "sector_rotation"
+prerequisites: ["063_sector_rotation", "287_news_that_moves_markets", "017_portfolio_exposure_and_correlation"]
+tags: ["regime", "sectors", "rates", "macro", "rotation", "fed"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Sektor sensitif kadar dalam kitaran kenaikan dan penurunan kadar
+
+<Lesson id="063_sector_rotation"/> memperkenalkan putaran sektor sebagai isyarat rejim. Pelajaran ini mengajar corak putaran spesifik di sekitar kitaran kadar faedah — putaran yang didorong oleh makroekonomi paling boleh dipercayai dalam ekuiti AS. Selepas pelajaran ini, anda akan dapat mengenal pasti kohort sensitif kadar, menamakan peta kepimpinan yang dijangkakan semasa kitaran kenaikan dan penurunan kadar, menamakan heuristik biasa yang salah dalam kitaran sebenar, dan menyatakan pembatalan yang menyatakan "kitaran ini berputar dengan cara yang berbeza".
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Kitaran kenaikan 2022: kadar dana Fed bergerak dari 0.25% pada Mac 2022 kepada 4.50% pada Disember 2022 — kadar terpantas sejak 1980. Hasil 10-tahun meningkat dari 1.78% pada 31 Disember 2021 kepada 4.25% pada 24 Oktober 2022. Prestasi sektor dari 1 Januari hingga 31 Disember 2022:
+
+- XLE (tenaga): +57.7% — angin belakang komoditi, pendapatan jangka masa pendek.
+- XLU (utiliti): -0.8% — pengganti bon kehilangan daya tarikan relatif apabila hasil bon meningkat.
+- XLK (teknologi): -28.2% — aliran tunai jangka masa panjang didenda oleh kadar diskaun yang lebih tinggi.
+- XLRE (harta tanah): -28.0% — aliran tunai yang sensitif terhadap kadar secara langsung.
+- XLF (keuangan): -10.5% — angin belakang margin faedah bersih sebahagiannya diimbangi oleh pengecutan aliran deal.
+
+Pivot kitaran penurunan 2024: Fed menurunkan 50bp pada 18 September 2024, kemudian 25bp pada 7 November 2024 dan 25bp pada 18 Disember 2024 — jumlah 100bp. Hasil 10-tahun JATUH dari 4.36% pada 1 Julai 2024 kepada 3.63% pada 16 September 2024 (jangkaan), kemudian NAIK semula kepada 4.57% pada 31 Disember 2024 (penetapan semula hujung panjang berdasarkan pertumbuhan + inflasi yang lekat). Prestasi sektor 1 Julai hingga 31 Disember 2024:
+
+- XLU: +18.4% — rally pengganti bon pada kadar hujung depan yang jatuh.
+- XLF: +14.8% — kuat walaupun penurunan, berdasarkan pelebaran lengkung hasil.
+- XLK: +6.2% — lebih lembut daripada dijangka kerana hujung panjang tidak mengikut hujung depan.
+- XLRE: +9.7% — kukuh tetapi terhad oleh kekakuan hujung panjang.
+
+Peraturan pengesanan: semasa kitaran kenaikan (kadar dana Fed MENAIK DAN hasil 10-tahun MENAIK DAN lengkung hasil MENCIPTA), jangka XLE / XLF (awal) dan kepimpinan gaya nilai; XLK / XLRE / XLU tertinggal. Semasa kitaran penurunan, corak kanonik ialah putaran masuk XLU / XLRE / XLK — tetapi ini berlaku *hanya jika hujung panjang jatuh bersama hujung depan*. Apabila hujung panjang tidak mengikut (seperti pada akhir 2024), rally sensitif kadar adalah suram dan institusi kewangan dengan pendedahan pelebaran lengkung boleh menjadi pemimpin secara paradoks.
+
+## Perangkap
+
+Perangkap kitaran kadar ialah menggunakan heuristik buku teks ("Fed menurunkan → teknologi rally") tanpa memeriksa mekanik lengkung hasil sebenar. Pedagang meletakkan kedudukan berat ke dalam XLK pada pertengahan 2024 sebelum penurunan September, menjangkakan rally teknologi berdasarkan durasi — dan melihat hujung panjang menetapkan semula harga lebih tinggi, menetralkan penurunan, sementara XLF dan XLF memimpin. Kesilapan mental ialah memperlakukan kadar dasar Fed sebagai satu-satunya kadar yang penting.
+
+Model yang betul: putaran sektor sensitif kadar bergantung pada *bahagian* lengkung mana yang bergerak. Penurunan hujung depan dengan hujung panjang jatuh = perdagangan durasi penuh (XLK, XLRE, XLU memimpin). Penurunan hujung depan dengan hujung panjang naik = bear-steepener (XLF, nilai, defensif memimpin, pertumbuhan mengecewakan). Pantau hasil 10-tahun dan lengkung 2s10s, bukan hanya Fed.
+
+<ChatWith agent="news_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="The Fed memotong 25bp. Imbal hasil Treasuries 2 tahun turun 20bp; imbal hasil Treasuries 10 tahun NAIK 15bp pada hari yang sama. Lengkung 2s10s menajam (steepens) sebanyak 35bp. Pedagang membeli XLK sebelum mesyuarat berdasarkan heuristik 'pemotongan membantu jangka masa' (duration). Apa yang ditetapkan oleh kerangka kerja ini?"
+  options={[
+    "Jual semua — bear steepeners sentiasa mendahului kemerosotan.",
+    "Pegang XLK pada saiz penuh — pemotongan membantu sektor teknologi tanpa kira.",
+    "Corak bear-steepening (hujung hadapan turun, hujung panjang naik) biasanya menggalakkan XLF, XLU hanya sedikit, dan nama gaya nilai. Teori jangka masa panjang XLK dinetralkan oleh kenaikan hujung panjang. Kurangkan XLK untuk menurunkan pendedahan, putar bahagian posisi ke XLF (penerima faedah lengkung menajam) pada kekuatan relatif yang disahkan, dan hormati had sektor mandat supaya tiada sektor tunggal melebihi had.",
+    "Beli lebih XLK pada had mandat maksimum — pemotongan sentiasa membantu teknologi."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah membeli lebih XLK pada had mandat maksimum — heuristik 'pemotongan sentiasa membantu teknologi' rasa selamat. Tetapi akhir 2024 ialah contoh nyata: kitaran pemotongan dengan lengkung menajam yang mengecewakan dagangan jangka masa panjang. Kerangka kerja memerlukan pemeriksaan lengkung, bukan hanya The Fed. Jawapan jual semua terlalu membetulkan; memegang XLK pada saiz penuh mengabaikan data yang diberikan lengkung."
+/>
+
+<Quiz
+  question="Kohort sektor mana yang secara sejarah mendapat FAEDAH PALING BANYAK apabila The Fed menaikkan kadar DAN imbal hasil 10 tahun naik DAN lengkung imbal hasil mendatar (flattening)?"
+  options={[
+    "Semua sektor sama rata — The Fed tidak penting.",
+    "XLK (teknologi) dan XLRE (harta tanah) — aset jangka masa panjang.",
+    "XLU (utiliti) dan pembayar dividen — pengganti imbal hasil bersinar.",
+    "XLE (tenaga) dan kitaran gaya nilai dengan pendapatan jangka masa rendah + pendedahan komoditi — peta kepimpinan 2022."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang menggoda ialah XLU dan pembayar dividen — imbal hasil tinggi nampaknya menggalakkan ekuiti pengganti imbal hasil, tetapi sebenarnya kenaikan imbal hasil bon MENGGANGGU wang dari utiliti ke bon sebenar. Jawapan jangka masa panjang XLK/XLRE songsangkan hubungan. Sintesis: kenaikan kadar + 10y naik + lengkung mendatar = playbook 2022, kitaran jangka masa rendah dan pendedahan komoditi memimpin, pertumbuhan jangka masa panjang tertinggal."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan News Analyst dan tanya: "Di manakah kita berada dalam kitaran kadar hari ini? Berikan saya kadar dana Fed, hasil Treasury 10-tahun, tahap lengkung 2s10s, dan perubahan arah 90-hari dalam setiap satu. Berdasarkan gabungan itu, kohort sektor mana yang harus memimpin? Sekarang bandingkan dengan kepimpinan kekuatan relatif 60-hari sebenar — adakah mereka konsisten atau menyimpang?" Kemudian buka <Term id="ami_decision_journal" /> dan tandakan tiga kedudukan sektor terkini anda dengan fasa kitaran kadar yang sedang berkuat kuasa. Ketidaksepaduan antara kedudukan anda dan peta kepimpinan yang dijangkakan adalah momen pembelajaran.
+
+## Pengambilan utama
+
+Putaran sensitif kadar bergantung pada bahagian lengkung mana yang bergerak. Pantau hasil 10-tahun dan lengkung 2s10s, bukan hanya Fed — penurunan yang sama, pemenang sektor yang berbeza bergantung pada hujung panjang.

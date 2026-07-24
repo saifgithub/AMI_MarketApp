@@ -1,0 +1,78 @@
+---
+id: "297_playing_it_straight_capstone"
+title: "Capstone: Bermain secara lurus"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 5"
+topic: "market_integrity"
+prerequisites: ["293_market_integrity_why", "294_insider_trading", "295_market_manipulation", "296_front_running_fair_dealing"]
+tags: ["ethics", "market-integrity", "capstone", "synthesis"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Capstone: bermain secara lurus
+
+Anda kini memegang keseluruhan alat M22: diskaun kepercayaan, ujian MNPI dua hujung, tiga bentuk manipulasi, dan ujian tugas-plus-asal untuk front-running. Capstone ini menguji semua konsep tersebut terhadap satu minggu yang realistik — jenis minggu di mana bendera merah tiba bertindan, memakai kostum peluang. Kemahiran yang diuji: melihat empat masalah integriti berasingan di dalam satu dagangan "panas", dan mengetahui mana yang menjadikan dagangan itu haram berbanding sekadar bodoh.
+
+## Satu senario, setiap konsep M22
+
+Di Bursa Malaysia: TOPGLOV berada di senarai pantauan anda. Selama satu minggu, empat perkara berlaku. **Satu:** sekumpulan Telegram yang anda ditambah ke dalamnya menyatakan ia "ralli sarung tangan 300% seterusnya" dan mengkoordinasikan masa beli; isipadu tiga kali ganda tanpa sebarang failan atau pengumuman di mana-mana. **Dua:** sepupu anda, seorang pengurus di syarikat tersebut, menyebut tentang kontrak bekalan yang belum diumumkan yang "akan sangat besar apabila ia dilancarkan." **Tiga:** sambil memerhati buku pesanan, anda perhatikan bid besar bertindan dua tick di bawah pasaran, kemudian hilang setiap kali harga turun menghampiri bid tersebut — berulang kali. **Empat:** seorang pentadbir kumpulan memuat naik skrin gambar keuntungan yang mendesak ahli untuk "memuat naik sebelum pengumuman yang kita semua tahu akan datang."
+
+Laksanakan alat tersebut. Lonjakan isipadu tanpa pemangkin ditambah dengan hype yang dikoordinasikan adalah **pump-and-dump** yang sedang berlaku — anda akan menjadi likuiditi keluar, dan pita yang dirujuk sebagai bukti adalah isyarat buatan kumpulan itu sendiri. Bid yang hilang adalah **spoofing** — permintaan hantu yang menyangga kenaikan. Kontrak sepupu anda adalah **maklumat bukan awam yang penting** — berdagang dengannya gagal kedua-dua hujung, dan menjadi keluarga tidak mencairkan liabiliti penerima maklumat. Dan tuntutan "pengumuman yang kita semua tahu akan datang" oleh pentadbir menunjukkan MNPI sedang beredar — bermakna jika ia benar, pam itu dibina atas maklumat dalaman; jika palsu, naratif itu sendiri adalah produk buatan. Langkah pelaku bersih: tiada dagangan atas mana-mana daripadanya, dan catat apa yang minggu itu memberitahu anda tentang siapa lagi yang ada dalam saham ini.
+
+## Steelman
+
+Kes terkuat terhadap bermain secara lurus: "Peraturan ini mengikat profesional. Pedagang runcit tidak pernah dituntut — pedagang kecil yang mengabaikannya tidak berisiko apa-apa dan kadang-kadang menangkap pam awal." Dua penafian. Secara undang-undang: penguatkuasaan mencapai skala runcit — kes Martha Stewart adalah satu kehilangan dielakkan sebanyak $45,673. Secara ekonomi: struktur pam menjadikan pengikut sebagai produk — penganjur menumpuk *sebelum* merekrut anda, jadi kemasukan jangkaan anda berada di atas kemasukan keluar mereka. Anda tidak perlu undang-undang untuk rugi; aritmetik permintaan buatan sudah menentang anda.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Antara empat peristiwa dalam minggu TOPGLOV, yang manakah menjadikan perdagangan HARAM, berbanding sekadar tidak bijak?"
+  options={[
+    "Membeli semasa lonjakan isipadu yang dicipta oleh kumpulan Telegram",
+    "Membeli selepas sebutan sepupu anda mengenai kontrak bekalan yang tidak diumumkan",
+    "Membeli semasa bid palsu sedang menyangga harga",
+    "Membeli selepas melihat skrinshot keuntungan admin"
+  ]}
+  answer={1}
+  explanation="Kontrak sepupu adalah maklumat dalaman yang belum awam — berdagang atas asas ini adalah perdagangan maklumat dalaman sebagai penerima maklumat, kedua-dua unsur gagal. Membeli masuk ke dalam pam, buku bid palsu, atau hype skrinshot menjadikan anda *korban* manipulasi pihak lain: berbahaya dari segi kewangan, tetapi pelanggaran undang-undang berada pada pihak penipu. Perbezaan ini penting — satu peristiwa mewujudkan liabiliti anda, manakala tiga lagi mewujudkan kerugian anda."
+/>
+
+<Quiz
+  question="Kumpulan tersebut merujuk kepada isipadu yang tiga kali ganda dan bid dalam sebagai bukti permintaan institusi yang sebenar. Gabungkan pelajaran manipulasi dan integriti, apakah kedudukan sebenar pengikut dalam perdagangan ini?"
+  options={[
+    "Likuiditi keluar — membeli isyarat bahawa penganjur telah menghasilkan, pada harga di mana mereka telah terkumpul",
+    "Awal — isipadu mengesahkan bahawa pengumpulan masih dalam fasa pertamanya",
+    "Dilindungi — kedalaman bid yang kelihatan hadkan risiko jika pam gagal",
+    "Neutral — permintaan yang dihasilkan dan permintaan sebenar menggerakkan harga dengan cara yang sama"
+  ]}
+  answer={0}
+  explanation="Kedua-dua bukti yang dirujuk adalah dihasilkan: isipadu adalah pembelian berkoordinasi oleh kumpulan itu sendiri, dan kedalaman bid adalah palsu — ia hilang tepat apabila diuji, iaitu ketika pengikut memerlukannya. Penganjur telah terkumpul sebelum merekrut, jadi kemasukan pengikut membiayai keluaran mereka. Jawapan 'dilindungi oleh kedalaman bid' gagal pada sifat definisi tipuan: pesanan hantu menyediakan sokongan hantu."
+/>
+
+<Quiz
+  question="Bermain secara lurus, anda melonggok perdagangan sepenuhnya — dan TOPGLOV naik 20% lagi sebelum runtuh. Apa yang disiplin sebenarnya koskan dan beli, dalam istilah modul ini?"
+  options={[
+    "Ia tidak koskan apa-apa, kerana kenaikan yang dimanipulasi sentiasa runtuh sebelum sesiapa pun boleh keluar",
+    "Ia koskan keuntungan 20% yang pasti dan hanya membeli kedudukan moral yang tinggi",
+    "Ia membeli kelulusan peraturan rekod perdagangan anda",
+    "Ia koskan keuntungan yang mungkin memerlukan penentuan masa keluar yang sempurna melawan penipu, dan membeli kekebalan daripada runtuh, daripada liabiliti maklumat dalaman, dan daripada membiayai skim"
+  ]}
+  answer={3}
+  explanation="Pembukuam jujur memotong dua hala: sesetengah pengikut memang keluar dari pam dengan untung, jadi keuntungan yang ditinggalkan adalah nyata tetapi bersyarat pada kemampuan untuk melebihi masa orang yang menjalankan skim tersebut dengan maklumat yang lebih baik daripada anda. Apa integriti beli adalah struktur — anda tidak boleh terperangkap dalam runtuh, tidak boleh mewarisi liabiliti MNPI daripada 'pengumuman' berbual, dan tidak membayar diskaun kepercayaan ke hadapan. Jawapan 'sentiasa runtuh sebelum sesiapa pun keluar' terlalu mendakwa; kes modul tidak memerlukannya."
+/>
+
+## Cuba sendiri
+
+Kumpulkan Bilik pada TOPGLOV (atau mana-mana saham kecil cap dari senarai pantauan anda). Baca hujah setiap ejen dalam penghakiman simulasi dan tandai setiap tuntutan yang bergantung pada maklumat yang anda tidak boleh sahkan dari sumber awam. Log kiraan dalam Jurnal Keputusan anda — nombor itu adalah risiko integriti tesis tersebut. Ingat: AMI adalah simulator latihan; penghakiman adalah artifak latihan, bukan nasihat pelaburan.
+
+## Pengambilan
+
+Apabila bendera merah integriti bertindan — isipadu buatan, kedalaman hantu, pengumuman berbisik — dagangan itu bukan awal, anda adalah produk. Bermain secara lurus bermakna aritmetik dan undang-undang kekal di sebelah anda.

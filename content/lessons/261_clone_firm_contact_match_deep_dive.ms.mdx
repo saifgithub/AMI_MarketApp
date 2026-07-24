@@ -1,0 +1,74 @@
+---
+id: "261_clone_firm_contact_match_deep_dive"
+title: "Pengesanan firma klon: padanan butiran hubungan secara mendalam"
+duration_min: 5
+level: 7
+module: 11
+difficulty: 2
+track: "edge_process"
+code: "EDGE 78"
+topic: "clone_firm_contact_match"
+prerequisites: ["067_fake_brokers_and_clone_entities", "260_regulated_vs_unregulated_jurisdictions"]
+tags: ["scams", "clone_firms", "regulator_lookup", "verification"]
+agent_callouts: ["concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pengesanan firma tiruan: Padanan butiran hubungan secara mendalam
+
+<Lesson id="067_fake_brokers_and_clone_entities"/> memperkenalkan penipuan firma tiruan. Pelajaran ini meneliti lebih mendalam satu teknik yang dapat menewaskan hampir setiap firma tiruan: padanan butiran hubungan. Anda mengambil nama entiti yang diberikan oleh operator, mencari nama tersebut dalam pangkalan data perbadanan yang relevan, dan membandingkan setiap titik data hubungan — domain, telefon, alamat, wakil yang dinamakan, bank yang disenaraikan — terhadap apa yang sebenarnya dihantar oleh operator. Setiap titik data individu boleh dipalsukan; kluster tersebut tidak. Ini adalah rutin pengesahan yang disyorkan oleh FCA, SC Malaysia, dan ASIC kepada pelabur sebelum sebarang pemindahan dana.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Senarai Amaran FCA di fca.org.uk/scamsmart dan Senarai Amaran Pelabur SC Malaysia kedua-duanya menerbitkan contoh-contoh yang sedang berlaku. Corak yang perlu dibandingkan:
+
+- **Domain.** Domain firma tulen terdapat pada halaman pangkalan data perbadanan sendiri. Domain firma tiruan biasanya berbeza oleh satu aksara, tanda hubung, pertukaran TLD (.org untuk .com), subdomain (capital.firmname.com), atau near-homograph (huruf besar I menggantikan huruf kecil l). Cetak kedua-duanya dan baca aksara demi aksara.
+- **Nombor telefon.** Telefon yang disenaraikan dalam pangkalan data perbadanan ialah *satu-satunya* nombor yang boleh dipercayai untuk panggilan balik. Firma tiruan membekalkan nombor yang berbeza yang disalurkan kepada operator. Corak merentasi kes di UK dan Malaysia: nombor firma tiruan ialah mudah alih atau VoIP, manakala papan pemuka firma sebenar ialah talian tetap di pejabat berdaftar.
+- **Domain e-mel.** E-mel firma tulen sentiasa berada pada domain utama firma (representative@firmname.com). Firma tiruan menggunakan domain yang hampir sama atau — semakin kerap — perkhidmatan e-mel percuma (gmail, outlook). Tiada firma berregulated utama menghubungi pelanggan mengenai deposit dari e-mel percuma.
+- **Alamat pejabat.** Alamat dalam pangkalan data perbadanan sepadan dengan yang muncul pada kop surat firma tulen. Firma tiruan sering mencipta alamat yang kedengaran prestij (menara kawasan kewangan yang diketahui tidak diduduki oleh firma tiruan). Rujuk silang terhadap senarai perbadanan, bukan laman web firma tiruan.
+- **Wakil yang dinamakan.** Di mana perbadanan menyenaraikan wakil individu (FINRA BrokerCheck, FCA register, SEC IAPD), semak nama individu yang menghubungi anda. Jika firma wujud tetapi individu yang dinamakan tidak berdaftar sebagai wakilnya, anda telah menangkap firma tiruan tersebut.
+- **Nama akaun bank.** Telah dicakup dalam <Lesson id="071_how_to_verify_before_you_wire_money"/> — destinasi mestilah nama firma, bukan nama individu.
+
+Kajian kes yang diterbitkan oleh FCA biasanya menunjukkan firma tiruan gagal pada tiga atau empat dimensi serentak. Pelabur yang menjalankan semakan menangkap firma tiruan; pelabur yang melangkaukannya tidak.
+
+## Perangkap
+
+Perangkap ialah padanan separa. Operator mendapat nama firma dengan betul (bahagian mudah — ia terdapat dalam pangkalan data perbadanan). Pembaca mengesahkan pendaftaran, melihat alamat prestij firma tulen yang dikutip, dan berhenti. Semakan baki — telefon, domain e-mel, wakil yang dinamakan, nama akaun bank — dilangkau kerana dua semakan pertama berjaya. Penyelesaiannya ialah disiplin kluster penuh: setiap titik data butiran hubungan yang disediakan oleh operator mesti sepadan dengan butiran yang disenaraikan oleh perbadanan. Satu ketidakpadanan — contohnya, domain e-mel berada pada perkhidmatan percuma atau wakil yang dinamakan tidak terdapat dalam pangkalan data — adalah cukup untuk menolak. Firma tiruan direka untuk lulus semakan kasual; disiplin mengalahkan reka bentuk tersebut.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+  <Quiz
+  question="Seorang operator memberikan anda nama syarikat, nombor pendaftaran UK, alamat pejabat, nombor telefon, dan alamat e-mel. Anda mengesahkan nama syarikat dan nombor pendaftaran pada daftar FCA. Tiga pemeriksaan baki mesti lulus sebelum anda meneruskan. Yang manakah tiga itu?"
+  options={[
+    "Syarikat telah beroperasi selama lebih daripada 10 tahun, mempekerjakan lebih daripada 100 kakitangan, dan mempunyai pejabat di London",
+    "Laman web adalah profesional, bangunan pejabat wujud, dan tawaran sepadan dengan kadar pasaran",
+    "Domain, nombor telefon, dan domain e-mel sepadan dengan butiran hubungan pada senarai FCA untuk syarikat tersebut — ditambah individu bernama yang menghubungi anda didaftarkan sebagai wakil",
+    "Penilaian Trustpilot, bilangan pengikut media sosial, saiz syarikat LinkedIn"
+  ]}
+  answer={2}
+  explanation="Metrik populariti awam, usia, bilangan pekerja, dan kemasan estetik semuanya boleh dipalsukan atau tidak berkaitan dengan status klon. Kluster penentu adalah padanan butiran hubungan dan wakil individu terhadap daftar regulator sendiri. Klon biasanya lulus pemeriksaan nama syarikat dan gagal pada sekurang-kurangnya satu dimensi butiran hubungan — ketidakpadanan itu adalah diagnostik. Jawapan salah yang paling menipu ialah yang estetik, yang tepat apa yang dioptimumkan oleh klon yang dibina dengan baik."
+/>
+
+  <Quiz
+  question="Seorang individu yang memperkenalkan dirinya sebagai wakil kanan bank besar UK menghubungi anda melalui WhatsApp dari nombor Hong Kong. Nama syarikat terdapat pada daftar FCA pada nombor pendaftaran yang dia sebutkan. Alamat pejabat yang dia berikan sepadan dengan senarai FCA. Dia meminta anda mendeposit ke akaun di bank Hong Kong yang dipegang atas nama syarikat. Apakah bendera merah penentu?"
+  options={[
+    "Akaun bank Hong Kong",
+    "Gelaran wakil kanan",
+    "Saluran hubungan WhatsApp",
+    "Nombor telefon Hong Kong tidak sepadan dengan nombor telefon yang disenaraikan FCA untuk syarikat tersebut — gabungan dengan WhatsApp sebagai saluran untuk onboarding syarikat berregulated, ini adalah ketidakpadanan butiran hubungan yang menangkap klon"
+  ]}
+  answer={3}
+  explanation="WhatsApp sendiri adalah bendera merah tetapi tidak penentu — sesetengah syarikat berregulated membolehkannya untuk hubungan bukan substansial. Akaun bank Hong Kong atas nama syarikat lulus salah satu daripada <Lesson id="
+/> checks. The decisive falsification is the phone number not matching the FCA register's listed phone for the firm — combined with the informal contact channel, this is the signature contact-detail mismatch of a clone-firm scam. Pass-through checks on the firm name alone are how clones evade casual diligence."
+  />
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan <Term id="concierge_agent" />. Jika anda telah dihubungi oleh mana-mana firma dalam 30 hari terakhir, tampal nama firma, telefon, domain e-mel, alamat, dan wakil yang dinamakan. Tanya: "Jalankan padanan butiran hubungan terhadap pangkalan data perbadanan untuk firma ini. Beritahu saya setiap titik data yang sepadan dan setiap yang tidak sepadan." Concierge akan membimbing anda melalui carian tersebut. Untuk latihan: "Nama firma sepadan dengan pangkalan data FCA, telefon ialah mudah alih Hong Kong, e-mel daripada gmail, wakil yang dinamakan tidak disenaraikan dalam pangkalan data."
+
+## Penutup
+
+Padanan butiran hubungan ialah satu kluster, bukan satu semakan tunggal. Domain, telefon, e-mel, alamat, wakil yang dinamakan, dan nama akaun bank mesti semua sepadan dengan senarai pangkalan data perbadanan. Satu ketidakpadanan adalah cukup untuk menghentikan transaksi.

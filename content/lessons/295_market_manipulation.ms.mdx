@@ -1,0 +1,78 @@
+---
+id: "295_market_manipulation"
+title: "Manipulasi pasaran: pam, tipu daya, dan perdagangan basuh"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 3"
+topic: "market_manipulation"
+prerequisites: ["293_market_integrity_why", "066_telegram_whatsapp_pump_groups"]
+tags: ["ethics", "manipulation", "spoofing", "pump-and-dump", "wash-trading"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Manipulasi pasaran: pam, spoof, dan transaksi basuh
+
+Manipulasi ialah penghasilan isyarat yang orang lain dagangkan. Tiga bentuk klasik: **pam-dan-lupakan** menghasilkan naratif (hype berkoordinasi menaikkan harga supaya penganjur boleh menjual ke dalamnya), **spoofing** menghasilkan penawaran atau permintaan (pesanan besar diletakkan tanpa niat untuk dipenuhi, dibatalkan sebaik pasaran bertindak balas), dan **transaksi basuh** menghasilkan isipadu (berdagang dengan diri sendiri supaya aktiviti kelihatan seperti minat). Anda telah bertemu kumpulan pam dari perspektif mangsa dalam modul perlindungan scam; pelajaran ini menunjukkan anda mekanisme tersebut dari sudut pasaran, supaya anda dapat mengenal ketiga-tiganya dalam pita dagangan.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Navinder Sarao, yang berdagang dari rumah ibu bapanya di London, melakukan spoofing terhadap futures E-mini S&P 500 selama bertahun-tahun — meletakkan lapisan pesanan jual besar yang berniat untuk dibatalkan, mencipta penawaran hantu yang mendorong harga turun supaya pesanan asalnya boleh mendapat untung. Penguasa AS berkata beliau membuat kira-kira $40 juta antara 2010 dan 2014, dan kegiatannya menyumbang kepada keadaan pada 6 Mei 2010, apabila Dow jatuh 998.5 mata dalam hari — Kejutan Flash — sebelum pulih dalam masa beberapa minit. Satu pedagang, pesanan palsu, kerosakan terukur di seluruh pasaran.
+
+Di Bursa Malaysia, versi berulang ialah pam pengiraan sen: kumpulan Telegram "menemui" saham yang tidak cair, pembelian berkoordinasi menggandakan isipadu tiga kali ganda dan menaikkan harga 40-80% dalam beberapa hari, tangkapan skrin keuntungan merekrut gelombang seterusnya, dan penganjur — yang telah terkumpul terlebih dahulu — menjual ke dalam permintaan yang mereka cipta. Carta menunjukkan lonjakan dan runtuh; mekanismenya ialah trik isyarat hantu yang sama seperti spoofing, dilakukan dengan naratif bukan pesanan.
+
+## Perangkap
+
+Pemula menganggap isipadu sebagai bukti minat tulen: "lihat berapa banyak yang sedang dagang — seseorang tahu sesuatu." Ia terasa betul kerana dalam pasaran yang jujur, isipadu *adalah* maklumat. Isipadu yang dimanipulasi direka bentuk khusus untuk mengeksploitasi naluri itu — token yang dibasuh atau saham sen yang dipam menghasilkan pita dagangan yang sama seperti pengumpulan sebenar. Model mental yang betul: **tanya apa yang akan menafikan pita dagangan.** Adakah kedalaman bid kekal apabila ia dipukul, atau lenyap? Adakah isipadu hadir dengan pemangkin yang boleh disahkan — fail, kontrak, pelepasan pendapatan — atau hanya dengan keyakinan tanpa nama? Isyarat yang tidak dapat ditjejak ke sumbernya ialah isyarat yang mungkin dibina untuk anda oleh seseorang.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang pedagang secara berulang meletakkan pesanan jual 500,000 saham dua tick di atas harga tawaran terbaik, menunggu penjual lain merendahkannya, membatalkan pesanan, dan membeli daripada penjual yang dia tarik. Manipulasi apakah ini?"
+  options={[
+    "Spoofing — pesanan besar itu menghasilkan bekalan hantu yang tidak pernah dia niatkan untuk diisi",
+    "Wash trading — dia sedang berdagang melawan pesanan sendiri",
+    "Pump-and-dump — dia sedang menaikkan harga sebelum menjual",
+    "Front-running — dia sedang berdagang sebelum pesanan orang lain"
+  ]}
+  answer={0}
+  explanation="Tandatangan spoofing ialah pesanan yang diletakkan untuk dilihat, bukan untuk diisi: bekalan hantu itu menggerakkan peserta lain, kemudian pembatalan menghilangkannya. Ia bukan wash trading kerana tiada perdagangan yang dilaksanakan terhadap dirinya sendiri, dan ia bukan pump kerana tiada apa-apa yang dipromosikan — isyarat palsu itu terletak dalam buku pesanan, bukan dalam naratif."
+/>
+
+<Quiz
+  question="Wash trading menyasarkan satu isyarat khusus yang dipercayai pedagang lain. Apakah isyarat itu, dan mengapa ia berkesan?"
+  options={[
+    "Harga — ia menolak harga terus ke paras tertinggi baru",
+    "Aliran berita — ia menghasilkan tajuk berita tentang aset",
+    "Isipadu — aktiviti dibaca sebagai minat tulen, jadi aktiviti palsu menarik pembeli sebenar",
+    "Volatiliti — pergerakan liar memaksa short seller untuk menutup posisi"
+  ]}
+  answer={2}
+  explanation="Pedagang wash membeli dan menjual kepada dirinya sendiri: kedudukan bersih tidak berubah, tetapi isipadu yang dicetak kelihatan seperti minat yang melonjak. Penapis mengisikannya, pedagang momentum menyedarinya, dan wang sebenar mengikuti aktiviti palsu itu. Harga boleh berayun semasa ia berlaku, tetapi produk yang dihasilkan ialah cetakan isipadu itu sendiri — itulah yang pasaran tulen akan baca sebagai maklumat."
+/>
+
+<Quiz
+  question="Kumpulan Telegram memompa saham Bursa yang kurang cair: isipadu berganda tiga kali, harga naik 60% dalam tiga hari, tiada fail atau pengumuman wujud. Seorang ahli berhujah bahawa isipadu membuktikan permintaan sebenar. Pelajaran ini menyatakan bahawa isipadu sebenarnya ialah apa?"
+  options={[
+    "Bukti pengumpulan oleh pelabur institusi yang maklumat",
+    "Isyarat yang dihasilkan sendiri — pembelian berkoordinasi membentuk jalur data yang kini dirujuk oleh kumpulan sebagai bukti",
+    "Fakta neutral yang tidak mengatakan apa-apa sama ada",
+    "Bukti bahawa penganjur masih membeli, jadi pam masih perlu berjalan lebih jauh"
+  ]}
+  answer={1}
+  explanation="Produk pam IALAH jalur data: pembelian berkoordinasi mencipta isipadu dan tangkapan skrin keuntungan, yang merekrut gelombang seterusnya yang penganjur jual masuk. Merujuk isipadu itu sebagai pengesahan bebas adalah bulat — kumpulan itu merujuk isyarat yang mereka hasilkan sendiri. Jawapan 'penganjur masih membeli' ialah perangkap paling berbahaya: pada masa isipadu mencapai puncak, pengumpulan telah berlaku beberapa minggu lalu dan pengedaran sedang berjalan."
+/>
+
+## Cuba sendiri
+
+Kumpulkan Bilik pada saham kapter kecil dari senarai pantauan anda dan baca komen isipadu oleh Market Analyst dengan teliti. Adakah ia membezakan *berapa banyak* yang sedang dagang daripada *mengapa* ia sedang dagang — adakah sebarang isipadu yang dirujuk ditjejak ke pemangkin yang boleh disahkan? Berlatih soalan itu pada penghakiman simulasi membina refleks yang melindungi anda pada pita dagangan yang dimanipulasi.
+
+## Penegasan
+
+Manipulasi menghasilkan isyarat tepat yang diajar kepada anda untuk dipercayai — isipadu, kedalaman, momentum. Sebelum anda memberi berat kepada isyarat, jejak sumbernya; pita dagangan tanpa pemangkin ialah tuntutan, bukan fakta.

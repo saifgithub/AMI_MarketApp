@@ -1,0 +1,72 @@
+---
+id: "275_when_agents_disagree"
+title: "Apabila ejen tidak bersetuju — membaca konflik dalam penghakiman"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 92"
+topic: "agent_disagreement"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "268_why_twelve_agents_not_one"]
+tags: ["disagreement", "verdict", "research_manager", "debate", "conviction"]
+agent_callouts: ["research_manager", "neutral_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Apabila agen tidak bersetuju — membaca konflik dalam keputusan
+
+Keputusan di mana semua <Term id="twelve_agent_team" /> condong ke arah yang sama adalah mencurigakan. Keputusan dengan ketidaksetujuan yang ketara adalah jujur. <Term id="ami" /> dibina atas premis bahawa Bull Researcher dan Bear Researcher harus bersikap bertentangan secara tajam dalam draf mereka, bahawa Risk Debators harus mencapai saiz yang berbeza, dan bahawa sintesis Research Manager harus memberi berat kepada pihak mana yang disokong oleh data — tanpa menghapuskan pihak yang kalah. Membaca ketidaksetujuan adalah cara anda memisahkan setup keyakinan tinggi daripada pertaruhan syiling yang dibalut dalam keputusan berstruktur. Pada akhir pelajaran ini, anda akan dapat membaca lapisan konflik dan menggunakannya.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+<Term id="ami_convene_the_room" /> pada META. Dua senario dengan keputusan tajuk yang sama, *BELI 3%*, tetapi dalaman yang sangat berbeza.
+
+**Senario A — ketidaksetujuan sempit.** Bull Researcher menulis kes lima perenggan (monetisasi Reels, pemulihan harga iklan, disiplin kos Reality Labs). Kes Bear Researcher adalah dua perenggan yang dilindungi dengan *"jika perbelanjaan iklan pecut semula"*. Research Manager: Bull lean 0.68. Aggressive Debator 4%, Conservative 2.5%, Neutral 3%. Kluster ketat. Trader: masuk $612, stop $588, sasaran $660, keyakinan 0.71. **Anda membaca ini dan melihat persetujuan luas dengan kes Bear pada dasarnya gagal untuk diterima.**
+
+**Senario B — ketidaksetujuan luas.** Bull menulis kes yang sama. Bear menulis kontra yang kuat (pembakaran Reality Labs, risiko regulasi di EU, antitrust). Research Manager: Bull lean 0.52 — hampir tidak. Aggressive Debator 5%, Conservative 1%, Neutral 3%. Kluster luas. Trader: masuk $612, stop $588, sasaran $660, keyakinan 0.54. **Tajuk yang sama — *BELI 3%* — keyakinan yang sepenuhnya berbeza.**
+
+Tajuk adalah sama. Badan <Term id="ami_verdict" /> memberitahu anda bahawa ini bukan perdagangan yang sama. Senario A adalah pasukan yang selaras secara luas pada lean sisi panjang. Senario B adalah pasukan hampir di sisi panjang, dengan kes Bear yang kuat dan Risk Debators yang tersebar luas. Pembaca yang hanya melihat tajuk tidak dapat membezakan mereka. Pembaca yang membaca ketidaksetujuan boleh membezakan mereka.
+
+Isyarat ketidaksetujuan juga muncul dalam nombor keyakinan. 0.71 dalam Senario A mencerminkan keselarasan luas; 0.54 dalam Senario B mencerminkan hampir syiling. Tajuk yang sama, keyakinan berbeza — dan keyakinan adalah *lean berberat* Bilik, bukan kebarangkalian yang dikalibrasi.
+
+## Perangkap
+
+Perangkapnya adalah memperlakukan persetujuan sebagai pengesahan. Dua penganalisis manusia yang tidak pernah tidak bersetuju tidak sedang mengesahkan antara satu sama lain; mereka sedang mengesahkan bias antara satu sama lain. Hal yang sama berlaku untuk model bahasa asas di sebalik agen AMI — jika mereka semua bersetuju dengan mudah pada pandangan yang sama, itu mungkin mencerminkan kecenderungan data latihan bersama daripada pengesahan bebas. Bull Researcher dan Bear Researcher yang dipanggil peranan AMI direka untuk tidak bersetuju kerana lawan paksa adalah apa yang mendedahkan bahagian lemah setiap kes. Perdebatan di mana Bull dan Bear kelihatan tidak bersetuju adalah perdebatan yang berfungsi seperti yang dimaksudkan. Keputusan yang bulat adalah satu yang perlu diperiksa dua kali.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Dua keputusan BUY 3% pada ticker yang sama dalam tempoh sebulan — Verdict A mempunyai Bull lean 0.68 dan kluster Risk Debator yang ketat; Verdict B mempunyai Bull lean 0.52 dan Risk Debator yang merangkumi 1% hingga 5%. Apakah yang ditunjukkan oleh perbezaan ini?"
+  options={[
+    "Penyebaran pada Verdict B adalah pepijat (bug)",
+    "Verdict B mencerminkan keyakinan yang jauh lebih lemah — ketidaksetujuan dalaman yang luas dan sintesis yang hampir seperti lemparan syiling. Perlakukan kedua-dua perdagangan ini dengan sangat berbeza walaupun garis BUY/SIZE adalah sama",
+    "Ini adalah perdagangan yang sama kerana tajuknya adalah sama",
+    "Verdict A adalah lebih tepat"
+  ]}
+  answer={1}
+  explanation="Tajuk adalah petunjuk; ketidaksetujuan adalah substansinya. BUY 3% yang sama boleh bermaksud penyelarasan luas atau konsensus yang hanya condong sedikit. Membaca penyebaran adalah cara anda membezakannya. Jawapan salah yang menggoda ialah 'Verdict A adalah lebih tepat' — ketepatan bukan metrik yang relevan; keyakinan adalah. AMI tidak meramal; ia memberitahu anda betapa yakinnya perdebatannya, dan 0.52 berbanding 0.68 adalah perbualan yang berbeza."
+/>
+
+<Quiz
+  question="Satu keputusan kembali dengan semua dua belas ejen condong ke Bull secara sebulat suara, keyakinan Pengurus Penyelidikan 0.91, Risk Debator semua berada dalam lingkungan 0.3% antara satu sama lain. Bagaimanakah anda harus membaca ini?"
+  options={[
+    "Ini adalah perdagangan terkuat yang akan anda lihat — ambil ia",
+    "AMI akhirnya telah memahami pasaran",
+    "Penyelidik Bear mungkin telah dikendalikan dengan salah",
+    "Keseragaman pada tahap ini cukup jarang untuk memerlukan siasatan — baca bahagian Penyelidik Bear juga dan tanya sama ada kes ini benar-benar satu hala atau sama ada ejen telah berkonvergens kerana kecenderungan data latihan yang dikongsi; perdebatan AMI direka untuk tidak bersetuju"
+  ]}
+  answer={3}
+  explanation="Kesepakatan yang mudah adalah isyarat untuk menyiasat, bukan untuk meraikan. Perdebatan yang tidak menonjolkan kes kontra yang boleh dipercayai mungkin mencerminkan konvergens pada aras model berbanding pengesahan bebas. Jawapan salah yang menggoda ialah 'ini adalah perdagangan terkuat yang akan anda lihat — ambil ia' — keyakinan tinggi pada bacaan sebulat suara adalah tepat situasi di mana ketergantungan berlebihan adalah paling berbahaya."
+/>
+
+## Cuba sendiri
+
+Dalam **Convene the Room** pada ticker <Term id="ami_watchlist" /> baru-baru ini, buka Verdict dan tulis tiga nombor sebelum membaca lanjut: Bull/Bear lean dari Research Manager, julat Risk Debator (max % tolak min %), dan keyakinan. Gunakan ketiga-tiga ini bersama-sama — bukan tajuk — untuk memutuskan sama ada perdagangan itu "keyakinan tinggi" atau "sempadan" untuk anda.
+
+## Pengajaran
+
+Baca ketidaksetujuan, bukan hanya tajuk. Kluster ketat + lean tinggi adalah keyakinan; penyebaran luas + lean ~0.5 adalah syiling memakai pakaian Verdict. AMI sedang mengajar anda untuk menilai output penganalisis — ketidaksetujuan adalah permukaan latihan, bukan cadangan untuk diikuti.

@@ -1,0 +1,76 @@
+---
+id: "276_spotting_hallucinated_numbers"
+title: "Mengesan Nombor Halusinasi dalam Verdict"
+duration_min: 6
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+code: "EDGE 93"
+topic: "hallucination_detection"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "071_how_to_verify_before_you_wire_money", "271_inside_the_deterministic_compliance_check"]
+tags: ["hallucinations", "verification", "verdict", "fundamentals_analyst", "ceo_check"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mengesan nombor halusinasi dalam vered
+
+Semakan kepatuhan PM melindungi daripada pelanggaran <Term id="ami_mandate" />. Ia tidak menyemak fakta setiap nombor yang dikutip oleh ejen. Tugas itu adalah milik anda — dan ia adalah tugas yang lebih kecil daripada yang disangkakan, kerana kebanyakan halusinasi muncul di tempat yang sama: nisbah lapuk, kewangan tersasar suku, tahap teknikal buatan, dan hasil dividen yang salah. Pada akhir pelajaran ini, anda akan tahu di mana perlu mencari dahulu apabila <Term id="ami_verdict" /> terasa janggal, dan bagaimana menggunakan <Term id="ami_one_on_one" /> bersama Penganalisis Asas untuk menyemak silang nombor yang mencurigakan dalam masa kurang daripada satu minit.
+
+## Bagaimana ini berlaku di pasaran sebenar
+
+Andaikan anda mengumpulkan Bilik pada TENAGA (Bursa Malaysia) dan kes Penyelidik Bull dibuka dengan: *"Hasil dividen TENAGA ialah 8.5%, nisbah pembayaran 60%, P/E ke hadapan 11."* Nombor hasil itu melonjak keluar — hasil sebenar TENAGA secara historikal berada sekitar 3–4%, bukan 8.5%. Hasil 8.5% pada utiliti berregulated akan menjadi sama ada peluang aset yang tertekan atau nombor yang salah. Hampir selalu: nombor salah.
+
+Buka **1-on-1** dengan Penganalisis Asas. Tampal simbol saham. Tanya: *"Apakah hasil dividen semasa TENAGA dan suku sumbernya?"* Penganalisis akan menarik nombor terkini yang dia ada akses dan merujuk tempoh tersebut. Jika jawapan kembali ~3.9%, draf Penyelidik Bull adalah halusinasi. Anda kini tahu dua perkara: (1) jangan percaya tajuk Vered ini; (2) kes Bear mungkin kurang berat berbanding kes Bull yang telah dibetulkan.
+
+Tanda amaran untuk dipantau:
+
+1. **Nombor bulat dalam nisbah kewangan.** Hasil tepat 8.5%, P/E sempurna 20, EPS $5.00. Nisbah sebenar adalah berantakan. Nombor bulat kadangkala betul, sering kali dicipta.
+2. **Nisbah lapuk.** P/E dirujuk sebagai 14 apabila saham baru mengalami kenaikan 30% — harga bergerak, P/E tidak dikemas kini.
+3. **Kewangan tersasar suku.** "Pendapatan Q3 $12B" apabila cetakan terkini syarikat adalah Q4. Lihat bahasa tarikh dalam prosa ejen.
+4. **Tahap teknikal buatan.** "Menahan MA 50-hari pada $135" apabila carta sebenarnya menunjukkannya pada $128. Penganalisis Pasaran biasanya kukuh di sini, tetapi semak silang tahap tersebut terhadap sumber carta jika ia menjadi asas utama tesis.
+5. **Sikap dividen yang salah.** Pembayar dividen bukan (contohnya NVDA pada kebanyakan tempoh sebelumnya) tiba-tiba diberi hasil. Hasil NVDA secara historikal adalah ~0.03%; yang dirujuk 1.5% adalah dicipta.
+
+Semakan silang adalah pantas. Anda tidak mengaudit setiap nombor — anda mengaudit nombor yang menjadi asas tesis.
+
+## Perangkap
+
+Perangkapnya ialah terlalu mempercayai <Term id="ami" /> pada data kerana vered itu berstruktur. Struktur terasa seperti ketelitian; nombor terasa seperti fakta. Mereka bukan kedua-duanya. Model bahasa asas boleh fabrikasi tuntutan kuantitatif yang kelihatan munasabah, dan semakin yakin prosa di sekitar nombor tersebut, semakin mudah untuk melangkauinya. Penganalisis Asas adalah yang paling mungkin betul mengenai nisbah kewangan — dia adalah ejen yang berspesialisasi untuk menariknya — tetapi dia juga ejen yang halusinasinya paling mahal kosnya, kerana ejen seterusnya (Bull, Bear, Pengurus Penyelidikan) membina kes mereka berdasarkan nombor tersebut. Semak silang nombor *yang menjadi beban utama*, bukan semua nombor. Jika keseluruhan kes Bull bergantung pada satu nisbah, nisbah itulah yang perlu disahkan sebelum melakukan apa-apa.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Kes Bull Researcher untuk AAPL bermula dengan: 'Pendapatan perkhidmatan meningkat 30% YoY pada Q3, margin kasar berkembang ke 78%, hasil dividen 2.4%.' Dua daripada angka ini terasa tinggi. Apakah langkah CEO yang betul?"
+  options={[
+    "Tolak keputusan itu serta-merta kerana sesuatu terasa tidak kena",
+    "Buka perbincangan 1-on-1 dengan Fundamentals Analyst, semak semula dua angka yang terasa salah terhadap fail terkini yang boleh ditarik oleh Analyst, dan putuskan sama ada kes Bull masih kukuh selepas pembetulan",
+    "Bimbing Bull Researcher untuk lebih tepat kali hadapan",
+    "Percayai keputusan itu — dua belas agen AMI akan menangkap sebarang kesilapan"
+  ]}
+  answer={1}
+  explanation="Tugas CEO adalah untuk mengesahkan nombor yang menanggung beban, bukan untuk mempercayai atau menolak secara membuta tuli. Semak silang adalah perbincangan 1-on-1 selama 60 saat. Bimbingan tidak membetulkan Verdict yang sudah ada secara retrospektif. Jawapan salah yang menggoda ialah 'dua belas agen akan menangkapnya' — mengandaikan semakan rakan sejawat merentasi agen, yang bukan cara kerja seni bina ini; PM memeriksa pematuhan Mandat, bukan ketepatan fakta."
+/>
+
+<Quiz
+  question="Antara berikut, yang manakah model *betul* tentang di mana perlindungan halusinasi berada dalam AMI?"
+  options={[
+    "AMI tidak pernah halusinasi kerana agen-agen menyemak silang antara satu sama lain",
+    "Research Manager menangkap semua halusinasi dengan membandingkan tuntutan Bull dan Bear",
+    "PM menyemak fakta setiap nombor dalam setiap Verdict",
+    "PM melaksanakan pematuhan Mandat secara deterministik. Halusinasi fakta pada data syarikat adalah realiti lapisan LLM yang pengguna (anda, sebagai CEO) dijangka menyemak pada tuntutan yang menanggung beban menggunakan perbincangan 1-on-1"
+  ]}
+  answer={3}
+  explanation="Lantai keselamatan dan semakan fakta adalah tugas yang berbeza. PM mengikat pematuhan Mandat (saiz, penurunan, pengecualian); ketepatan fakta adalah tanggungjawab CEO yang disokong oleh semak silang 1-on-1. Jawapan salah yang menggoda ialah 'Research Manager menangkap semua halusinasi' — penyintesis memberi berat kepada kes, ia tidak menjalankan pengesahan fakta sebenar merentasi korpus."
+/>
+
+## Cuba sendiri
+
+<Term id="ami_convene_the_room" /> pada sebarang simbol saham AS. Dari transkrip Vered, pilih satu nombor spesifik yang dikutip oleh ejen yang menjadi asas tesis (P/E, angka pendapatan, tahap purata bergerak). Buka **1-on-1** dengan ejen yang paling berspesialisasi untuk nombor tersebut — Penganalisis Asas untuk nisbah, Penganalisis Pasaran untuk teknikal — dan tanya soalan yang sama secara segar. Bandingkan. Anda baru sahaja menjalankan audit <Term id="ceo_framing" /> pertama anda.
+
+## Pengajaran
+
+PM mengikat Mandat; CEO mengikat fakta. Semak silang nombor yang menjadi beban utama dalam 1-on-1 sebelum tajuk utama memacu penilaian. AMI adalah <Term id="training_simulator" /> — mengesan halusinasi adalah kemahiran yang dibina untuk dilatih, bukan langkah menuju pelaksanaan Vered di tempat lain.

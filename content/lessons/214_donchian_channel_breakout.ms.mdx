@@ -1,0 +1,66 @@
+---
+id: "214_donchian_channel_breakout"
+title: "Masukan dan keluaran saluran Donchian"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+code: "EDGE 43"
+topic: "trend_following"
+prerequisites: ["052_trend_following", "022_trend_direction", "023_support_and_resistance", "015_stop_loss_basics"]
+tags: ["strategy", "trend", "donchian", "turtles", "channel_breakout"]
+agent_callouts: ["trader", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Masuk dan keluar saluran Donchian
+
+Pelajaran asas penjejakan tren (052) menggunakan peraturan purata bergerak 50/200. Saluran Donchian adalah sepupu yang lebih lama dan lebih ringkas: anda masuk apabila harga ditutup di atas tertinggi tertinggi dalam N hari terakhir, dan anda keluar apabila ia ditutup di bawah terendah terendah dalam M hari terakhir. Pedagang Kura-kura asal menggunakan varian 20-masuk / 10-keluar dan 55-masuk / 20-keluar. Peraturan ini mempunyai hampir tiada parameter untuk disesuaikan, yang tepat sebab mengapa ia bertahan dalam ujian luar-sampel di mana strategi yang lebih cantik runtuh. Selepas pelajaran ini, anda boleh menentukan peraturan Donchian dengan masuk yang tepat, keluar saluran yang tepat, dan rejim di mana saluran memotong anda menjadi kepingan.
+
+## Contoh
+
+Lihat COIN melalui 2024. Peraturan Donchian 55-hari tinggi / 20-hari rendah masuk panjang pada 1 Mac 2024 apabila COIN ditutup pada $206.40, mengambil keluar tertinggi 55-harinya ~$202. Henti adalah terendah 20-hari yang bergerak — pada mulanya sekitar $156. Apabila tren meluas, terendah 20-hari meningkat: pada April ia berada pada $215, kemudian $228 pada Mei, kemudian $235 pertengahan tahun. Henti itu mengikuti saluran secara mekanikal. COIN naik ke $343 pada akhir Mac sebelum bergegar, dan keluar terendah 20-hari ditembak pada 1 Mei sekitar $215 — menjana kira-kira +4% pada segmen itu, dengan keuntungan kertas yang jauh lebih besar yang diberikan kembali oleh peraturan. Peraturan masuk semula pada tertinggi 55-hari yang baru pada November pada $279 dan menunggang COIN ke lebih $330 pada akhir tahun sebelum isyarat keluar seterusnya.
+
+Kriteria masuk: penutupan harian hari ini mencetak tertinggi 55-hari baru. Kriteria keluar: penutupan harian hari ini mencetak terendah 20-hari baru. Henti awal pada masuk: terendah 20-hari semasa pada masa masuk. Pembatalan perdagangan individu: keluar terendah 20-hari ditembak — tiada rundingan, tiada "biarkan saya lihat satu hari lagi". Strategi GAGAL dalam julat ketegangan dan volatiliti rendah di mana tertinggi 55-hari hanya sedikit di atas tertinggi sebelumnya — anda terus masuk di atas spring yang digulung dan dihentikan di bahagian bawah. KLCI melalui kebanyakan 2023 adalah kubur jenis itu.
+
+## Perangkap
+
+Kesilapan pemula adalah mengoptimumkan panjang saluran sehingga ujian balik kelihatan cantik. Anda cuba 55 / 20, kemudian 40 / 10, kemudian 30 / 15, cari lengkung sejarah terbaik, dan dagangkannya secara langsung — terus ke dalam penurunan yang parameter yang dioptimumkan tidak pernah lihat. Model mental yang betul: Donchian berfungsi kerana parameter adalah sewenang-wenangnya-tetap. Kelebihan peraturan adalah pelaksanaan mekanikal merentasi rejim, bukan mencari nombor ajaib. Pilih varian yang diterbitkan (20/10 atau 55/20), dagangkannya selama setahun, dan tahan godaan untuk "menala"nya selepas setiap perdagangan yang rugi. Perangkap lain adalah memperlakukan keluar Donchian seperti henti trailing yang boleh anda laksanakan; saluran adalah henti.
+
+<ChatWith agent="trader" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjalankan peraturan Donchian 55-hari tinggi / 20-hari rendah pada AAPL. Hari ini AAPL ditutup pada $228.50, yang merupakan rendah 20-hari baru. Tinggi 55-hari ialah $245 dan keuntungan belum direalisasi anda ialah +12%. Apa kata peraturan itu?"
+  options={[
+    "Lepaskan saluran keluar ke 30 hari untuk memberi ruang lebih kepada dagangan",
+    "Keluar pada pembukaan esok mengikut peraturan",
+    "Pegang — keuntungan 12% terlalu baik untuk dikembalikan, tunggu pemulihan",
+    "Ketatkan had pada rendah hari ini dan nilaikan semula intraday esok"
+  ]}
+  answer={1}
+  explanation="Keluaran rendah 20-hari telah aktif. Kelebihan peraturan ini ialah pelaksanaan mekanikal — bukan 'sebahagian besar mekanikal, kecuali apabila saya untung besar'. Pegang untuk menunggu pemulihan ialah jawapan salah yang memikat kerana kehilangan keuntungan terbuka terasa lebih buruk daripada menerima kerugian; aversi kerugian inilah yang dirancang untuk dihapuskan oleh Donchian. Meluaskan saluran keluar kepada 30 hari ialah versi lebih canggih bagi kesilapan yang sama — menggerakkan tiang gol selepas masuk pasaran."
+/>
+
+<Quiz
+  question="Peraturan Donchian 55/20 memberi isyarat masuk baharu pada NVDA pada $138 dengan rendah 20-hari semasa pada $122. Mandat anda mengekalkan risiko posisi tunggal pada 1.25% daripada akaun $40,000. Saiz posisi maksimum dalam saham?"
+  options={[
+    "16 saham",
+    "362 saham",
+    "62 saham",
+    "31 saham"
+  ]}
+  answer={3}
+  explanation="Risiko setiap saham = $138 - $122 = $16. Risiko dolar maksimum = 1.25% daripada $40,000 = $500. Saham = $500 / $16 = 31.25, bulatkan ke bawah kepada 31. Jawapan 362 saham saiz keseluruhan nilai dolar pada ticker tanpa mengira had — ledakan klasik pengikut trend di mana had saluran luas bertemu posisi berlebihan. Sintesis: saluran menentukan had dan mandat mengekalkan saiz; kedua-duanya mengikat."
+/>
+
+## Cuba
+
+Dalam <Term id="ami_one_on_one" /> dengan Trader, tampal penunjuk saham besar AS dan tanya: "Berikan saya tertinggi 55-hari semasa dan terendah 20-hari. Nyatakan sama ada masuk Donchian yang baru telah ditembak minggu ini dan apa henti awal akan menjadi." Kemudian buka <Term id="ami_coach_your_agent" /> pada Trader dan tulis nota penasihat: "Sentiasa keluar pada penutupan terendah 20-hari; jangan pernah laksanakan keluar saluran dengan discretion." Log kedua-duanya dalam <Term id="ami_decision_journal" />.
+
+## Pengambilan
+
+Kelebihan Donchian terletak pada kebosanannya. Saluran memutuskan; anda melaksanakan. Mengoptimumkan panjang saluran adalah bagaimana pedagang melupakan pelajaran — pilih varian yang diterbitkan dan biarkan rejim melakukan baki.

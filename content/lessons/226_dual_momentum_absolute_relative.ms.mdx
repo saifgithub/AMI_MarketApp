@@ -1,0 +1,66 @@
+---
+id: "226_dual_momentum_absolute_relative"
+title: "Dual momentum — mutlak dan relatif"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 55"
+topic: "momentum"
+prerequisites: ["056_momentum_trading", "225_relative_strength_top_decile_momentum", "060_bear_markets", "017_portfolio_exposure_and_correlation"]
+tags: ["strategy", "momentum", "dual_momentum", "absolute_momentum", "regime"]
+agent_callouts: ["aggressive_debator", "conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Momentum dwi — mutlak dan relatif
+
+Asas momentum (056) dan pelajaran dekan teratas (225) menggunakan penarafan kekuatan relatif tulen. Momentum dwi (Antonacci, 2014) menambah lapisan penapisan momentum mutlak: pegang nama-nama kekuatan relatif dekan teratas HANYA apabila pasaran itu sendiri mempunyai pulangan 12 bulan terdahulu yang positif; jika tidak, putar ke dalam wang tunai atau instrumen defensif seperti bon jangka pendek. Kombinasi ini secara sejarah mengurangkan penurunan (drawdown) dengan ketara — momentum relatif tulen terus memuatkan penipu pasaran bear pada 2008 dan 2020 kerana mereka masih menjadi "dekan teratas" dalam alam semesta yang jatuh. Penapis mutlak ini membawa anda keluar daripada rejim tersebut sepenuhnya. Selepas pelajaran ini, anda boleh menentukan peraturan momentum dwi yang menamakan kedua-dua penapis dengan tepat serta rejim di mana momentum dwi masih mengalami kebocoran.
+
+## Bagaimana ini berlaku di pasaran sebenar
+
+Lihat S&P 500 (SPY) sebagai gerbang momentum mutlak. Sehingga 2024, pulangan total 12 bulan terdahulu SPY kekal positif setiap bulan — gerbang mutlak kekal TERBUKA, dan portfolio momentum dwi memegang dekan teratas kekuatan relatif syarikat besar AS sepanjang tahun. Berbanding dengan 2008: pulangan 12 bulan terdahulu SPY menjadi negatif pada Januari 2008 dan kekal negatif melalui kebanyakan tahun 2009. Peraturan momentum dwi putar sepenuhnya ke dalam T-bills pada awal 2008, terlepas tahun kalendar S&P 500 yang turun 38%, dan putar balik ke dalam ekuiti pada pertengahan 2009 apabila gerbang mutlak dibuka semula. Pertukaran: pada 2009, peraturan ini lambat memasuki semula pasaran — isyarat penapis mutlak tertangguh beberapa bulan berbanding paras rendah pasaran, dan strategi ini terlepas kaki pertama pemulihan. Itulah kos momentum yang sedar rejim: perlindungan dalam pasaran bear, kelewatan pada titik pusingan.
+
+Kriteria kemasukan: (1) gerbang momentum mutlak — pulangan total 12 bulan terdahulu SPY (atau penanda aras yang dipilih) > 0%; (2) penarafan momentum relatif — ticker berada dalam dekan teratas alam semesta berdasarkan pulangan 12-1 bulan terdahulu; (3) ambang kecairan dipenuhi. Pegang: sehingga penyesuaian semula bulanan seterusnya. Keluar/putaran: jika gerbang mutlak TERBUKA, putar dalam dekan teratas; jika gerbang mutlak TUTUP, jual keseluruhan sleeve ekuiti dan pegang wang tunai atau instrumen defensif sehingga gerbang dibuka semula. Pembatalan perdagangan individu: lantai penurunan 25% per kedudukan sama seperti momentum relatif tulen. Strategi GAGAL dalam tiga rejim: (1) pemulihan berbentuk V — gerbang mutlak yang tertangguh mengekalkan anda dalam wang tunai sementara pasaran melonjak dari paras rendah; (2) pasaran mendatar — gerbang berosilasi antara terbuka dan tertutup, menjana putaran palsu dan kos transaksi; (3) pecahan rejim gaya kripto di mana penanda aras tidak mewakili alam semesta momentum sebenar.
+
+## Perangkap
+
+Kesilapan pemula adalah memperlakukan gerbang momentum mutlak sebagai isyarat penentuan masa taktikal — melaraskan alokasi berdasarkan pergerakan SPY mingguan, "meramal" gerbang berbalik. Tujuan utama momentum dwi ialah gerbang itu adalah penapis mekanikal yang perlahan yang menangkap pecahan trend sekular, bukan hingar. Berdagang mengelilinginya membunuh fungsinya. Model mental yang betul: gerbang mutlak hanya aktif pada penutupan bulanan. Ia tidak berkata apa-apa tentang minggu seterusnya. Jika anda akan mengatasi gerbang tersebut, anda kembali kepada diskresi, dan diskresi mempunyai prestasi luar-sampel yang lebih buruk berbanding peraturan. Perangkap lain: mengejar soalan "apa akan menjadi bakul jika diselaraskan semula hari ini?" di tengah penyesuaian semula peraturan. Tarikh penyesuaian semula ialah tarikh penyesuaian semula; mengintip dalam bulan hanya melatih anda untuk mengatasi peraturan.
+
+<ChatWith agent="aggressive_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Pada hujung bulan, pulangan total 12 bulan SPY ialah -2.1%. Decile teratas indeks syarikat besar AS masih mengandungi 10 nama bermomentum tinggi. Apakah kata dual momentum?"
+  options={[
+    "Tukar ke strategi mean reversion kerana pasaran lemah",
+    "Kurangkan saiz posisi sebanyak separuh tetapi kekal dalam decile teratas",
+    "Pegang decile teratas — isyarat momentum relatif masih kuat",
+    "Putar keseluruhan ekuiti ke dalam tunai atau bon jangka pendek sehingga gerbang mutlak terbuka"
+  ]}
+  answer={3}
+  explanation="Gerbang momentum mutlak diaktifkan berdasarkan pulangan trailing penanda aras, bukan nama individu. SPY trailing < 0 bermakna TUTUP — keluarkan keseluruhan sleeve ekuiti. Memegang decile teratas adalah jawapan salah yang memikat kerana nama-nama individu itu masih kelihatan kuat; itulah perangkap yang wujud untuk dielakkan oleh dual momentum — dalam pasaran bear, nama-nama relatif decile teratas masih jatuh, cuma lebih perlahan berbanding seluruh pasaran."
+/>
+
+<Quiz
+  question="Ia lewat 2025 (hipotetikal). SPY trailing 12 bulan ialah -6% pada rebalance September, jadi peraturan dual-momentum anda putar ke tunai. Oktober mencatatkan pemulihan tajam dan SPY melonjak 14% dalam satu bulan. Rebalance November menunjukkan pulangan 12 bulan SPY kini kembali ke -1% (masih negatif). Aggressive Debator berhujah 'masuk semula sekarang, pemulihan itu nyata'. Conservative Debator berhujah 'tunggu gerbang terbuka mengikut peraturan'. Mandat anda mengurung drawdown pada 25% dan anda berada dalam keadaan tunai penuh YTD. Sintesis: apakah tindakan yang betul?"
+  options={[
+    "Masuk semula pada separuh saiz — hujah Aggressive Debator ditambah pengurusan risiko",
+    "Pegang tunai — peraturan berkata tunggu gerbang terbuka, tiada pengecualian",
+    "Masuk posisi mean-reversion kecil untuk menyertai pergerakan",
+    "Lewati peraturan kerana gambaran makro jelas membaik"
+  ]}
+  answer={1}
+  explanation="Sintesis: nilai dual momentum terletak pada disiplinnya; melawannya menangkap kenaikan dalam pemulihan berbentuk V tetapi kehilangan jauh lebih banyak pada pemulihan palsu yang gagal dalam pasaran bear (fikirkan Mac 2008, kemudian lagi kemudian tahun itu). Bingkai Conservative Debator mengikuti peraturan yang diuji luar sampel. Masuk semula pada separuh saiz adalah jawapan salah yang memikat kerana separuh saiz RASA seperti jalan tengah yang bijaksana — secara empirikal, penguasaan separuh merosakkan prestasi dual-momentum kerana ia terkumpul pada masa yang salah. Pegang tunai; rebalance ke ekuiti apabila gerbang benar-benar terbuka."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Aggressive Debator, tampal paras SPY semasa dan nilai setahun lalu, kemudian tanya: "Hitung pulangan total 12 bulan terdahulu SPY dan nyatakan sama ada gerbang mutlak momentum dwi TERBUKA atau TUTUP sekarang. Jika TUTUP, apa yang akan membukanya semula?" Kemudian dalam <Term id="ami_decision_journal" />, log keadaan gerbang hari ini dan sebarang pendedahan ekuiti — semak semula setiap bulan. Corak log gerbang anda adalah jejak audit untuk menentukan sama ada anda kekal dengan peraturan.
+
+## Kesimpulan
+
+Momentum dwi menumpukkan gerbang pulangan terdahulu mutlak di atas penarafan kekuatan relatif. Gerbang menangkap pecahan rejim; mengatasi ia menukar peraturan kepada diskresi, dan diskresi kalah.

@@ -1,0 +1,73 @@
+---
+id: "247_volatility_compression"
+title: "Pemampatan volatiliti: ketenangan sebelum perubahan rejim"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+code: "N&M 12"
+topic: "range_regime"
+prerequisites: ["061_sideways_range_markets", "062_volatility_regimes", "024_breakouts", "029_volume_confirmation"]
+tags: ["regime", "volatility", "compression", "breakout", "atr", "bollinger"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mampatan volatiliti: ketenangan sebelum perubahan rejim
+
+<Lesson id="061_sideways_range_markets"/> dan <Lesson id="062_volatility_regimes"/> mentakrifkan rejim julat dan volatiliti secara berasingan. Pelajaran ini mengajar isyarat peralihan — *mampatan* — yang sering mendahului perubahan rejim ke mana-mana arah. Apabila volatiliti realisasi jatuh ke paras terendah berbulan-bulan sambil harga mengekalkan jalur yang ketat, pasaran sedang memuat tenaga untuk pergerakan arah. Selepas pelajaran ini, anda akan dapat mengesan susunan mampatan menggunakan bacaan ATR-peratusan dan Lebar Jalur Bollinger, menamakan strategi yang dipadankan dengan resolusi, dan menyatakan keadaan yang mengesahkan pecahan sebenar berbanding pecahan palsu.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+SPX pada akhir 2017 mengalami mampatan yang terkenal: dari Ogos hingga Disember 2017, ATR 20-hari SPX jatuh ke ~0.36% daripada harga — bacaan terendah sejak 1965 menurut beberapa ukuran. Lebar Jalur Bollinger (lebar BB / jalur tengah, 20-hari, 2-sigma) mampat ke ~2.6% pada akhir November 2017. Mampatan ini berpecah ke atas — SPX meningkat 7% lagi ke paras tertinggi 2,872 pada 26 Januari 2018. Kemudian rejim pecah dengan ganas: sesi "volmageddon" pada 5 Februari 2018 menyaksikan SPX jatuh 4.1%, VIX melonjak ke 50.30 dalam hari, dan produk VIX songsang XIV disenaraikan semula (dikeluarkan).
+
+Mampatan dua-hala yang lebih bersih: SPX Ogos 2023. Selepas julat Jun–Julai dari <Lesson id="061_sideways_range_markets"/>, ATR 20-hari SPX jatuh ke 0.45% daripada harga pada 1 Ogos 2023. Lebar Jalur Bollinger mampat ke ~3.1%. Mampatan ini berpecah KE BAWAH — SPX jatuh 8.3% dari 4,588 pada 27 Julai 2023 ke 4,217 pada 27 Oktober 2023. Strategi pecahan yang memperdagahkan *arah* resolusi akan menangkapnya; strategi yang mengandaikan resolusi ke atas akan mengalami kerugian.
+
+Peraturan pengesanan untuk mampatan: ATR 20-hari sebagai %-daripada-harga berada dalam 15% terendah taburan 1-tahunnya yang lalu DAN Lebar Jalur Bollinger (20, 2) berada di bawah 4% DAN pergerakan berlaku semasa rejim diklasifikasikan sebagai julat mengikut <Lesson id="061_sideways_range_markets"/>. Ketiga-tiganya hadir adalah kluster mampatan.
+
+Peraturan pengesahan untuk resolusi: penutupan harian DI LUAR jalur tinggi-rendah 20-sesi sebelumnya pada isipadu sekurang-kurangnya 1.5x purata 20-hari. Tanpa pengesahan isipadu, pecahan itu disyaki — SPX pada Q1 2024 mencetak dua pecahan isipadu rendah sedemikian yang sebentar kembali sebelum pergerakan akhir.
+
+## Perangkap
+
+Perangkap mampatan ialah meramalkan arah. Pedagang yang digerakkan oleh naratif melihat naratif makroekonomi dan memutuskan "ini akan pecah naik" atau "ini akan pecah turun" sebelum harga mencetak. Mereka membina kedudukan arah di dalam mampatan, terperangkap di sisi yang salah daripada resolusi, dan menukar susunan yang secara sejarah memberikan pulangan asimetri kepada pelemparan syiling 50/50 dengan masa yang buruk.
+
+Model yang betul: mampatan adalah susunan untuk *sama ada* arah. Perdagangan dibina selepas resolusi mencetak pada isipadu, bukan sebelum itu. Strategi yang sesuai: volatiliti panjang (berasaskan pilihan) di dalam mampatan untuk pedagang dengan bendera mandat itu; pecahan-mengikuti pada pengesahan harga-isipadu; strategi pasangan-henti yang mengikut resolusi dan meletakkan henti kembali ke dalam julat mampatan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="SPX 20-day ATR-as-%-of-price berada pada peratusil ke-8 daripada tahun lalu. Lebar Jalur Bollinger ialah 3.4%. SMA 200 hari mendatar. Harga berayun antara 4,950 dan 5,050 selama 9 minggu. Seorang rakan berkata 'Kisah capex AI bermakna ia mesti pecah — ambil posisi panjang sekarang'. Apa yang ditetapkan oleh rangka kerja ini?"
+  options={[
+    "Abaikan mampatan — ia tidak mempunyai nilai ramalan.",
+    "Ambil posisi panjang secara agresif sebelum pecah — cerita makro menentukan arah.",
+    "Kumpulan mampatan telah disahkan (peratusil ATR rendah + lebar BB ketat + rejim julat). Arah tidak dapat diketahui sebelumnya. Tunggu penutupan harian di luar 4,950–5,050 pada 1.5x purata isipadu, kemudian dagang MENGIKUTI resolusi; henti rugi kembali ke dalam julat mampatan; saiz pada mandat mampatan sehingga resolusi bertahan 5 sesi.",
+    "Pendek dengan berat — mampatan sentiasa menyelesaikan ke bawah."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah mengambil posisi panjang sebelum pecah — keyakinan arah dalam mampatan terasa bijak. Tetapi mampatan SPX 2023 jatuh walaupun konsensus 'mesti naik'. Pendek dengan berat membalikkan kesalahan yang sama; mengabaikan mampatan sepenuhnya membuang setup sebenar. Sintesis: mampatan ialah setup, pecah yang disahkan isipadu ialah pencetus, arah ialah undian pasaran, bukan anda."
+/>
+
+<Quiz
+  question="Pecah dicetak — SPX menutup di atas julat mampatan — tetapi isipadu ialah 90% daripada purata 20-hari (di bawah ambang 1.5x). Apakah ini biasanya menunjukkan?"
+  options={[
+    "Pecah berkualiti tinggi — isipadu rendah bermaksud laluan ketahanan yang lancar.",
+    "Pecah yang disyaki: tanpa pengesahan isipadu, resolusi tidak boleh dipercayai. Q1 2024 mencetak dua pecah SPX isipadu rendah sedemikian yang berundur sebelum pergerakan sebenar. Tunggu kemasukan, tunggu kaki yang disahkan isipadu, atau ambil pemula bersaiz fraksional dengan henti rugi lebih ketat daripada biasa.",
+    "Tidak relevan — hanya harga yang penting dalam pecah.",
+    "Pengesahan bahawa pecah itu palsu — pendek serta-merta."
+  ]}
+  answer={1}
+  explanation="Jawapan salah yang menggoda ialah panggilan pecah berkualiti tinggi — 'tiada ketahanan, pergerakan mudah' ialah justifikasi biasa. Tetapi corak empirikal dari <Lesson id="
+/> dan <Lesson id="029_volume_confirmation"/> adalah bertentangan: pecahan isipadu rendah mempunyai kadar positif palsu yang tinggi. Menjualnya sebagai pembetulan berlebihan yang disahkan adalah salah; 'hanya harga yang penting' mengabaikan hubungan yang didokumenkan dengan baik. Sintesisnya ialah menuntut pengesahan atau saiz untuk ketidakpastian."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "Laksanakan semakan mampatan pada SPX hari ini: peratusan ATR 20-hari sebagai %-daripada-harga berbanding tahun lalu, bacaan Lebar Jalur Bollinger (20, 2), klasifikasi rejim semasa. Beritahu saya berapa banyak daripada tiga penanda mampatan yang sedang aktif." Kemudian dalam editor <Term id="ami_mandate" />, draf peraturan 'praset mampatan' untuk diri anda: apabila mampatan disahkan, tiada kedudukan arah baharu sehingga penutupan isipadu 1.5x di luar julat. Simpan sebagai nota jurnal.
+
+## Pengambilan
+
+Mampatan memuat tenaga; arah adalah undi pasaran, bukan milik anda. Perdagangkan resolusi yang disahkan isipadu, letakkan henti kembali ke dalam julat, dan saizkan untuk ketidakpastian rejim sehingga pergerakan itu bertahan.

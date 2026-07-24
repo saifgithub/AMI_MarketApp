@@ -1,0 +1,68 @@
+---
+id: "235_breakout_fakeout_statistical_signature"
+title: "Palsu pecahan — tanda statistik bagi pecahan yang gagal"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 64"
+topic: "failure_modes"
+prerequisites: ["053_breakout_strategy", "058_strategy_failure_modes", "119_failed_breakouts_bull_traps", "219_breakout_volume_profile"]
+tags: ["failure_modes", "breakout", "fakeout", "volume", "regime"]
+agent_callouts: ["bear_researcher", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pengecutan palsu — tanda statistik bagi pecahan yang gagal
+
+Asas mod kegagalan (058) mengenal pasti rejim hanyut volatiliti rendah dan isipadu rendah sebagai pembunuh strategi pecahan. Pelajaran ini memberikan cap jari statistik bagi satu kejadian pengecutan palsu, supaya anda boleh mengenal pasti kegagalan tersebut semasa ia berlaku — bukan selepas fakta. Corak ini mempunyai tiga komponen yang boleh diukur: isipadu di bawah purata 20 hari pada bar pecahan, ATR yang mengecil dalam hari-hari sebelumnya, dan harga kembali ke dalam julat sebelumnya dalam 1-3 sesi. Apabila ketiga-tiganya berlaku, kebarangkalian pengecutan palsu adalah kira-kira 70-80% secara sejarah. Selepas pelajaran ini, anda boleh menjalankan semakan tiga mata sebelum memasuki sebarang pecahan dan anda boleh menetapkan henti yang sedar terhadap pengecutan palsu supaya tidak tersentak dua kali pada tahap yang sama.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Kapital besar AS pada musim panas 2023 penuh dengan contoh buku teks. Ambil AAPL pada akhir Julai 2023: harga telah berjangkaut 188-194 selama tiga minggu, ATR(14) mampat dari 3.20 kepada 2.10, dan purata isipadu 20 hari telah jatuh 18% dari tahap Jun. Pada 1 Ogos, AAPL memecah 194 pada sesi dengan 47M saham — berbanding purata 20 hari sebanyak 51M. Isipadu pada pecahan adalah DI BAWAH purata. Dalam masa 5 sesi, harga kembali ke 188 — penarikan balik penuh pecahan tersebut. Tanda pengecutan palsu adalah lengkap: volatiliti rendah sebelum masuk, pengesahan isipadu rendah, dan penarikan balik dalam seminggu.
+
+Kadar asas adalah penting. Merentasi kapital besar AS dari 2018-2024, pecahan dengan ketiga-tiga isyarat negatif (isipadu di bawah purata + ATR mengecil + rejim trend rendah oleh ADX < 20) gagal dalam masa 5 sesi kira-kira 72% daripada masa. Pecahan dengan profil BERBANDING (isipadu >1.5x purata 20 hari + ATR berkembang + ADX > 25) berjaya (mempertahankan julat baharu selama 20+ sesi) kira-kira 64% daripada masa. Cap jari itu tidak sempurna, tetapi ketidaksimetrian adalah ketara — pecahan tanda pengecutan palsu mempunyai kadar kejayaan 28% berbanding 64% untuk pecahan tanda pengesahan. <Term id="ami_mandate" />-pematuhan pedagang pecahan hanya mengambil tanda berkualiti tinggi.
+
+Contoh Bursa: pada pertengahan 2023, kapital besar Bursa memecah tinggi julat berbilang minggu dengan isipadu 22% di bawah purata 20 hari. Dalam masa 3 sesi, harga kembali ke dalam julat, kemudian hanyut lebih rendah untuk bulan seterusnya. Pedagang yang menjalankan semakan tiga mata melihat ketiga-tiga isyarat negatif dan tidak memasuki; pedagang yang melihat "pecahan = kemasukan" menanggung kerugian -1R dalam seminggu.
+
+## Perangkap
+
+Kesilapan pemula ialah "pecahan = kemasukan" — mengambil sebarang pecahan tanpa mengira konteks. Peraturan tunggal ini mengubah kadar kejayaan strategi 64% (dengan pengesahan) kepada kadar kejayaan bercampur 45% (dengan pemilihan rawak merentasi tanda), yang berada di bawah titik impas selepas kos. Model mental yang betul: pecahan adalah hipotesis, dan isipadu + ATR + rejim trend adalah bukti pengesahan. Tiada pengesahan = tiada kemasukan, tidak kira betapa bersihnya tahap tersebut kelihatan. Perangkap kedua ialah purata ke dalam pengecutan palsu — membeli lagi apabila harga kembali ke dalam julat, berharap untuk "kaki kedua". Pengecutan palsu sering mempunyai lantunan penarikan balik singkat yang menjerat pengikut trend DAN pedagang lawan-trend. Perangkap ketiga ialah pembetulan berlebihan "terbakar dua kali, malu sekali": menolak untuk mengambil sebarang pecahan selepas pengecutan palsu. Rejim yang menghasilkan pengecutan palsu mempunyai tanda; apabila tanda itu berbalik (isipadu kembali, ATR berkembang, rejim trend mengesahkan), pecahan seterusnya adalah jauh lebih mungkin berjaya secara statistik.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="NVDA menembus paras tertinggi julau 6 minggu. Isipadu bar penembusan ialah 28M berbanding purata 20 hari sebanyak 45M. ATR(14) telah mengecut selama dua minggu. ADX(14) berada pada 16. Aggressive Debator berkata 'paras telah ditembus, masuk'. Market Analyst dan Bear Researcher kedua-duanya mengesahkan tanda palsu. Mana satu pandangan yang betul secara empirikal?"
+  options={[
+    "Aggressive — tindakan harga ialah isyarat, bukan isipadu",
+    "Tunggu ujian semula sebelum masuk",
+    "Masuk separuh saiz — paras telah ditembus walaupun pengesahan lemah",
+    "Market Analyst dan Bear — ketiga-tiga komponen tanda palsu sedang aktif serentak (isipadu di bawah purata, ATR mengecut, ADX < 20). Kadar asas menunjukkan kebarangkalian ~72% untuk tanda palsu dalam 5 sesi; elakkan masuk pada titik ini."
+  ]}
+  answer={3}
+  explanation="Apabila ketiga-tiga keadaan tanda negatif aktif serentak, kadar kegagalan sejarah meningkat kepada ~72%. Masuk pada masa ini bermaksud mengambil sisi yang salah terhadap ketidaksimetrian yang boleh diukur. Jawapan 'tindakan harga ialah isyarat, bukan isipadu' memperlakukan harga sebagai maklumat mutlak — ia bukan, konteks amat penting. Masuk separuh saiz menyembunyikan pertaruhan buruk sebagai pertaruhan buruk yang lebih kecil (anda masih berada di sisi 28% yang gagal). Menunggu ujian semula kelihatan berdisiplin tetapi dalam rejim tanda palsu, ujian semula sering gagal juga — masalah asas bukan pada masa masuk, tetapi pada rejim pasaran."
+/>
+
+<Quiz
+  question="Anda telah melakukan tiga percubaan penembusan pada QQQ dalam bulan lalu — semuanya tanda palsu, setiap satu dengan isipadu di bawah purata. Hari ini QQQ menembus paras tertinggi 6 bulan baru dengan isipadu 70% DI ATAS purata 20 hari, ATR(14) sedang berkembang buat pertama kali dalam beberapa minggu, dan ADX(14) telah menyilang 24. Tindakan yang betul secara sintesis?"
+  options={[
+    "Langkau — tiga kerugian berturut-turut bermaksud penembusan tidak berfungsi",
+    "Tunggu sehingga rejim benar-benar terbentuk sebelum masuk",
+    "Masuk saiz tiga kali ganda untuk memulihkan kerugian",
+    "Ketiga-tiga komponen tanda palsu telah BERBALIK — isipadu disahkan, ATR berkembang, ADX > 22. Rejim yang menghasilkan tanda palsu sebelum ini telah berubah; kadar asas untuk tanda baru ini ialah kejayaan ~64%. Masuk mengikut peraturan, mematuhi had saiz posisi daripada kerugian sebelum ini."
+  ]}
+  answer={3}
+  explanation="Sintesis: pengesanan rejim adalah dua hala. Tiga penunjuk yang sama yang menandakan tanda palsu kini menandakan rejim pengesahan. Menolak untuk terlibat apabila rejim berubah menjadi menguntungkan bermaksud terlepas bahagian utama kelebihan strategi. Jawapan langkau-selepas-tiga-kerugian mengelirukan kerugian terkini (beroperasi dalam rejim kegagalan) dengan keabsahan strategi. Masuk saiz tiga kali ganda ialah saiz balas dendam. Menunggu rejim benar-benar terbentuk ialah kos kesempurnaan — jika ketiga-tiga tanda aktif secara positif, masuk ialah dagangan itu sendiri."
+/>
+
+## Cuba
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal persediaan pecahan yang anda pertimbangkan dan tanya: "Jalankan semakan pengecutan palsu tiga mata — isipadu bar pecahan berbanding purata 20 hari, trend ATR(14) selama 10 sesi sebelumnya, bacaan ADX(14). Nyatakan sama ada tanda adalah positif, negatif, atau bercampur, dan apakah kebarangkalian kejayaan kadar asas." Log setiap kemasukan pecahan dengan bacaan tiga mata dalam <Term id="ami_decision_journal" /> — dari masa ke masa anda akan mempunyai kadar asas empirikal anda sendiri.
+
+## Penegasan
+
+Pecahan adalah hipotesis sehingga isipadu, ATR, dan rejim trend mengesahkannya. Cap jari boleh diperhatikan secara masa nyata, dan melompati pecahan tanda pengecutan palsu adalah sebahagian besar kelebihan strategi.

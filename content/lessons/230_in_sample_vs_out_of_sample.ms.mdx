@@ -1,0 +1,68 @@
+---
+id: "230_in_sample_vs_out_of_sample"
+title: "In-sample vs out-of-sample — pembahagian yang jujur"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 59"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "228_parameter_sensitivity_sweeps", "229_walk_forward_analysis"]
+tags: ["backtesting", "in_sample", "out_of_sample", "data_split"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# In-sample vs out-of-sample — pembahagian yang jujur
+
+Asas backtesting (057) memperkenalkan ujian out-of-sample sebagai pertahanan terhadap overfitting. Pelajaran ini membincangkan pembahagian data itu sendiri — pilihan reka bentuk paling kritikal yang anda buat sebelum menjalankan backtest. Dapatkan pembahagian dengan betul dan ujian anda memberikan maklumat yang berguna; salah dan keputusan "out-of-sample" anda tercemar oleh hindsight, peeking, atau pertindihan regime. Pembahagian standard ialah 70/30, 60/20/20 (dengan set validasi), dan walk-forward (dicakup dalam 229). Selepas pelajaran ini, anda boleh memilih pembahagian yang sesuai dengan tempoh pegangan strategi anda dan panjang data, patuhi firewall tersebut, dan baca nisbah kecekapan dengan jujur.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Anda mempunyai data harian SPY selama 20 tahun (2005-2024) dan peraturan swing-trading dengan purata pegangan 5 hari. Pembahagian yang munasabah: in-sample 2005-2018 (14 tahun, ~3,500 perdagangan mungkin), out-of-sample 2019-2024 (6 tahun, ~1,500 perdagangan). Anda mengoptimumkan semua parameter pada in-sample. Tempoh in-sample melihat krisis 2008 (jadi peraturan diuji tekanan), tetapi OOS termasuk kejatuhan COVID dan bear 2022 — regime yang peraturan tidak pernah lihat semasa pemilihan parameter.
+
+In-sample CAGR: 12.3%, max drawdown 18%, win rate 56%. OOS CAGR: 8.7%, max drawdown 22%, win rate 53%. Nisbah kecekapan 0.71. OOS termasuk satu regime (kejatuhan COVID) yang in-sample tidak lihat dengan baik, dan drawdown peraturan melebar — tetapi edge masih bertahan. Ini adalah rupa keputusan yang jujur: merosot dengan ketara tetapi masih positif, dengan mod kegagalan muncul dalam regime yang anda jangkakan.
+
+Bandingkan dengan pembahagian berbeza: 2005-2024 in-sample, 2020-2024 OOS (pertindihan). Data OOS sudah berada di dalam in-sample, jadi keputusan OOS tidak bermakna. Atau pembahagian yang hanya meletakkan tahun bull-market dalam in-sample dan tahun bear dalam out-of-sample — itu menguji soalan berbeza (adakah peraturan bertahan dalam regime yang tidak pernah dilatihkannya) dan anda tidak boleh membandingkan nombor in-sample dengan jujur. Pembahagian yang betul ialah masa berturutan, tiada pertindihan, OOS di hujung, dan termasuk sekurang-kurangnya satu regime bear jika boleh.
+
+## Perangkap
+
+Kesilapan pemula ialah "peeking" — menjalankan peraturan pada OOS, melihat ia mengecewakan, kembali ke in-sample untuk menala, kemudian menjalankan semula OOS. Pada saat anda menala selepas melihat keputusan OOS, OOS menjadi in-sample dan anda tidak mempunyai ujian jujur yang tinggal. Model mental yang betul: OOS ialah tripwire yang anda lalui SEKALI. Jika ia gagal, peraturan itu mati dan anda mula semula dengan hipotesis baru pada data berbeza. Perangkap kedua: menjadikan tetingkap OOS terlalu pendek — enam bulan OOS pada peraturan yang berdagang bulanan ialah enam titik data, statistik tiada apa-apa. Perangkap ketiga: menggunakan pembahagian rawak yang di-shuffle pada data siri masa. Pembahagian rawak bocor maklumat masa depan ke masa lalu kerana hari-hari berdekatan berkorelasi; sentiasa gunakan pembahagian masa berturutan.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda mempunyai data harian selama 10 tahun untuk NVDA. Anda mereka bentuk peraturan momentum. Pecahan masa manakah yang paling boleh dipertahankan?"
+  options={[
+    "Dalam sampel (in-sample) berterusan 2015-2021 (7 tahun), luar sampel (OOS) berterusan 2022-2024 (3 tahun), tanpa mengintip",
+    "Rawak 70/30 merentasi semua hari",
+    "Gunakan semua 10 tahun untuk in-sample, tiada OOS diperlukan kerana peraturan ini intuitif",
+    "OOS 2015-2017, in-sample 2018-2024"
+  ]}
+  answer={0}
+  explanation="Pecahan masa berterusan dengan OOS di hujung adalah satu-satunya pilihan yang jujur untuk data siri masa. Rawakan rawak 70/30 membocorkan maklumat berkorelasi merentasi pecahan. Menggunakan semua 10 tahun dalam in-sample meninggalkan OOS sepenuhnya. Meletakkan OOS pada 2015-2017 meletakkannya di permulaan, yang bermaksud pemilihan parameter berlaku dengan pengetahuan rejim pasca-OOS (anda melihat 2018-2024 sebelum mencocokkan), melanggar tembok api."
+/>
+
+<Quiz
+  question="Dalam sampel 2010-2020 menunjukkan CAGR 14%, penurunan maksimum 12%. Luar sampel 2021-2024 menunjukkan CAGR 6%, penurunan maksimum 19%. Mandat anda mengehadkan penurunan kepada 20%. Research Manager dan Conservative Debator memberi pendapat. Apakah keputusan yang betul secara sintesis?"
+  options={[
+    "Lancarkan pada saiz mandat penuh — OOS adalah positif",
+    "Jalankan semula dengan parameter berbeza sehingga OOS bertambah baik",
+    "Tamatkan strategi — penurunan hampir mencapai had",
+    "Nisbah kecekapan ialah 0.43 (di bawah had ketahanan 0.5) DAN penurunan OOS hampir mencapai had mandat. Saiz strategi di bawah had maksimum mandat (contohnya, separuh saiz), pantau penurunan langsung terhadap maksimum OOS, dan tamatkan peraturan jika penurunan langsung melebihi OOS dengan margin yang bermakna."
+  ]}
+  answer={3}
+  explanation="Sintesis: Tepi OOS adalah nyata tetapi marginal, DAN isyarat penurunan menghampiri lantai mandat. Saiz separuh menghormati kedua-dua tepi yang lemah dan realiti penurunan. Melancarkan pada saiz mandat penuh mengabaikan amaran nisbah kecekapan. Menamatkan strategi adalah pembetulan berlebihan — CAGR OOS 6% dengan risiko terkawal boleh dilancarkan pada saiz berkurang. Menjalankan semula dengan parameter berbeza sehingga OOS bertambah baik adalah perangkap pencemaran dari asas 057 — anda akan menala pada data OOS."
+/>
+
+## Cuba sendiri
+
+Untuk strategi calon anda semasa, tulis tempoh in-sample, tempoh OOS, grid parameter, dan peraturan keputusan (apa nisbah kecekapan yang dikira sebagai "lulus") SEBELUM menjalankan apa-apa. Hantar protokol ini kepada Research Manager dalam <Term id="ami_one_on_one" /> dan tanya: "Adakah firewall saya kalis udara? Adakah ujian ini akan memberikan saya jawapan yang jujur?" Log protokol dalam <Term id="ami_decision_journal" /> — ia adalah bukti bahawa anda tidak peek.
+
+## Pengambilan
+
+OOS ialah tripwire yang anda lalui sekali. Menala sebelum, deploy selepas — dan jika anda menala selepas, anda telah mencemarkan satu-satunya ujian jujur yang anda ada.

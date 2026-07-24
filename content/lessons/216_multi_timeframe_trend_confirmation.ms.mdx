@@ -1,0 +1,66 @@
+---
+id: "216_multi_timeframe_trend_confirmation"
+title: "Pengesahan trend multi-masa"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 45"
+topic: "trend_following"
+prerequisites: ["052_trend_following", "022_trend_direction", "021_timeframes_and_what_they_tell_you", "116_top_down_multi_timeframe_workflow"]
+tags: ["strategy", "trend", "multi_timeframe", "top_down"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pengesahan trend multi-masa
+
+Asas penjejakan trend (052) menilai trend pada satu kerangka masa. Setup yang paling bersih disahkan pada tiga kerangka masa — kerangka masa lebih tinggi yang menentukan arah dominan, kerangka masa dagangan yang memberikan konteks kemasukan, dan kerangka masa lebih rendah yang menetapkan masa pencetus. Prinsipnya mudah: jangan ambil posisi panjang pada carta harian apabila carta mingguan sedang berputar, dan jangan pilih lilin kemasukan tepat pada harian apabila bar 60-minit akan memberikannya dengan separuh risiko. Selepas pelajaran ini, anda boleh menulis peraturan tiga-kerangka masa yang menyatakan apa yang mesti selaras sebelum kemasukan trend adalah sah, dan apa yang menafikannya serta-merta.
+
+## Contoh
+
+Lihat AMZN dari Februari hingga Jun 2024. Pada carta mingguan, MA 40-minggu dan MA 20-minggu keduanya condong naik dari pertengahan 2023 — trend naik kerangka masa lebih tinggi yang jelas. Pada carta harian sehingga Februari, MA 50-hari juga condong naik dan harga kekal di atasnya; selaras kerangka masa dagangan. Pada 3 Mei, selepas pendapatan suku pertama, AMZN menembus asas empat minggu antara $178 dan $189 pada harian dan ditutup pada $186.21. Zum masuk ke carta 60-minit, harga ditutup di atas paras pengkonsolidasian sebelumnya iaitu $189 pada pukul 10:30 pagi EST pada 3 Mei pada bar isipadu yang kuat — itulah pencetus kerangka masa lebih rendah di dalam lilin penembusan harian. Kemasukan pada penutupan 60-minit hampir $189, henti rugi di bawah paras rendah susut naik 60-minit pada $182. Sasaran harian: unjuran paras tinggi julat sebelumnya berhampiran $200, yang tercetak tiga sesi kemudian. Risiko setiap saham: $7. Ganjaran pada sasaran pertama: $11 — kemenangan 1.6R dengan henti rugi yang lebih ketat daripada menunggu kemasukan harian hujung hari.
+
+Kriteria kemasukan: (1) trend mingguan naik — harga di atas MA 40-minggu yang naik, (2) trend harian naik — harga di atas MA 50-hari yang naik, (3) pencetus kerangka masa lebih rendah berlaku di dalam lilin harian (penutupan 60-minit di atas paras pengkonsolidasian, atau ujian semula penembusan 4-jam). Henti rugi: di bawah paras rendah susut naik kerangka masa lebih rendah. Ketidaksahihan dagangan individu: penutupan harian yang menafikan kaki trend harian (penutupan di bawah 50-hari) ATAU pencetus kerangka masa lebih rendah gagal (harga menutup kembali di bawah paras pencetus pada bar 60-minit seterusnya) — keluar. Strategi GAGAL apabila tiga kerangka masa tidak bersetuju (mingguan naik, harian turun, jam-jam bergegar) — itu adalah peralihan rejim di mana anda memilih kemasukan dalam pita yang keliru. Langkau.
+
+## Perangkap
+
+Kesilapan pemula ialah menggunakan kerangka masa lebih rendah untuk pengesahan bukannya untuk penetapan masa. Anda bermula pada harian, melihat kelemahan, turun ke 60-minit mencari "sebab untuk masih bullish", dan menemukannya — kerana pada bila-bila masa kerangka masa lebih rendah berada di suatu tempat dalam mikro-trend. Itu adalah bias pengesahan yang dibalut sebagai analisis. Model mental yang betul: kerangka masa lebih tinggi menetapkan arah, kerangka masa lebih rendah hanya menyempurnakan kemasukan. Jika harian tidak sepadan dengan mingguan, anda tidak mengambil dagangan. Jika 60-minit tidak sepadan dengan harian, anda tidak mengambil dagangan. Kerangka masa lebih rendah tidak boleh mengatasi yang lebih tinggi; mereka hanya memilih di mana pada lilin harian anda menembak.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Pada NVDA: carta mingguan berada dalam trend naik yang jelas, carta harian baru saja menutup di bawah MA 50-hari, carta 60-minit membuatkan higher highs dan higher lows. Apa kata peraturan multi-timeframe?"
+  options={[
+    "Masuk long — dua daripada tiga timeframe bersetuju (mingguan + 60-minit)",
+    "Tiada masuk — kaki trend harian telah pecah, tidak kira tindakan mingguan atau jamian",
+    "Masuk saiz separuh untuk menghormati konflik tersebut",
+    "Short — pecahan harian adalah tepi hadapan utama bagi puncak"
+  ]}
+  answer={1}
+  explanation="Peraturan ini memerlukan penyelarasan, bukan undian majoriti. Pecahan 50-hari harian menafikan kelayakan. Jawapan masuk long pada dua daripada tiga adalah jawapan salah yang memikat kerana timeframe lebih rendah terasa lebih 'nyata' kepada pedagang aktif — setup 60-minit yang kuat kelihatan tidak dapat ditolak. Namun, mikro-trend jamian dalam harian yang pecah adalah tepat bagaimana anda masuk long pada permulaan pembetulan berbilang minggu. Jawapan saiz separuh adalah versi lebih canggih bagi kesilapan yang sama."
+/>
+
+<Quiz
+  question="Anda sedang long TSLA pada entry multi-timeframe yang disahkan. Mingguan naik, harian naik, masuk pada pencetus 60-minit pada $240 dengan stop di $232. Bar 60-minit seterusnya menutup pada $231.10 — pecahan bersih pada rendah pencetus. Had mandatan mengekalkan drawdown pada 20%, anda berada pada drawdown 8% YTD. Apa tindakan yang betul?"
+  options={[
+    "Keluar serta-merta pada buka bar seterusnya — penafian timeframe lebih rendah telah aktif walaupun timeframe lebih tinggi masih utuh",
+    "Tahan — harian dan mingguan masih naik, 60-minit hanyalah bunyi",
+    "Tambah ke posisi kerana trend naik harian masih berkuat kuasa",
+    "Gerakkan stop ke bawah ke rendah swing harian sebelumnya untuk memberi ruang"
+  ]}
+  answer={0}
+  explanation="Peraturan multi-timeframe menyatakan: timeframe yang anda pencetuskan adalah timeframe yang penafiannya penting terlebih dahulu. Entry anda adalah pada 60-minit; penafian 60-minit telah menutup; anda keluar. Jawapan tahan kerana 60-minit adalah bunyi adalah jawapan salah yang memikat kerana trend yang lebih luas kelihatan baik — tetapi penafian timeframe lebih rendah wujud tepat supaya anda tidak menunggang pembetulan harian kembali ke MA 50 dari entry yang lebih tinggi. Sintesis: hormati timeframe yang anda masuk, terutamanya apabila drawdown sudah pada 8%; anda boleh masuk semula pada isyarat harian segar pada harga yang lebih baik."
+/>
+
+## Cuba sendiri
+
+<Term id="ami_convene_the_room" /> pada simbol saham yang anda pertimbangkan dan secara eksplisit tanya: "Terangkan keadaan trend pada kerangka masa mingguan, harian, dan 60-minit. Nyatakan mana daripada tiga yang tidak sepadan, jika ada." Jika ketiga-tiganya selaras, minta Trader menukar pencetus kerangka masa terendah kepada kemasukan, henti rugi, dan ketidaksahihan yang tepat. Catat keadaan tiga-kerangka masa dalam <Term id="ami_decision_journal" /> supaya semakan pasca-maut seterusnya boleh mengaudit sama ada pemeriksaan selaras anda adalah jujur.
+
+## Penegasan
+
+Kerangka masa lebih tinggi menetapkan arah; kerangka masa lebih rendah menyempurnakan kemasukan — tidak pernah sebaliknya. Selaras tiga-kerangka masa adalah harga kemasukan; konflik adalah isyarat untuk langkau.

@@ -1,0 +1,71 @@
+---
+id: "234_mean_reversion_blow_up_patterns"
+title: "Pola letupan mean-reversion — apabila 'terjual berlebihan' jatuh ke sifar"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 63"
+topic: "failure_modes"
+prerequisites: ["055_mean_reversion", "058_strategy_failure_modes", "223_rsi_2_mean_reversion_system", "224_bollinger_band_mean_reversion"]
+tags: ["failure_modes", "mean_reversion", "drawdown", "regime"]
+agent_callouts: ["bear_researcher", "conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Corak letupan mean-reversion — apabila "jenuh jualan" menuju sifar
+
+Asas mod kegagalan (058) menamakan pasaran bear yang menjejaki trend sebagai rejim di mana mean-reversion mengalami kebocoran. Pelajaran ini adalah bedah siasat terhadap letupan itu sendiri, kerana cara strategi mean-reversion mati adalah spesifik dan boleh dikenal pasti. Coraknya: isyarat RSI(2) atau Bollinger yang biasanya boleh dipercayai menyala; pedagang membeli penurunan; harga terus jatuh; isyarat jenuh jualan seterusnya menyala lebih rendah; pedagang menggandakan kedudukan; harga terus jatuh; kerugian berlipat ganda. Tanpa penapis rejim, strategi ini menukarkan kerugian 1.5R yang sepatutnya menjadi kerugian 10R kerana setiap isyarat kelihatan sah pada penunjuk yang sama yang mengabaikan trend. Selepas pelajaran ini, anda boleh menamakan corak letupan empat peringkat, mengenal pasti ia pada peringkat 1 atau 2, dan keluar sebelum peringkat 3 dan 4.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Kejatuhan COVID pada Q1 2020 terhadap syarikat besar AS adalah contoh muzium. Ambil mana-mana nama berkualiti — AAPL, MSFT, JPM. Mean-reversion RSI(2) pada syarikat besar berkualiti telah memberikan CAGR ~12% sepanjang 2010-2019 dengan penurunan maksimum di bawah 8%. Kemudian 24 Februari hingga 23 Mac 2020:
+
+- **Peringkat 1 (24-27 Feb)**: SPY menembusi purata bergerak 200-hari dengan tegas. RSI(2) pada kebanyakan syarikat besar mencetak di bawah 5 — bacaan "jenuh jualan" yang jarang berlaku secara sejarah. Pedagang mean-reversion masuk posisi beli.
+- **Peringkat 2 (28 Feb - 6 Mac)**: Nama-nama saham jatuh lagi 5-12% dari harga masuk. RSI(2) mencetak di bawah 5 LAGI — satu isyarat lagi. Pedagang purata ke bawah. Tag pada jalur bawah Bollinger Band telah berlaku dua kali. "Purata 2 hari untuk mean revert" yang normal bagi strategi ini telah gagal sekali.
+- **Peringkat 3 (9-12 Mac)**: Pemutus litar diaktifkan. Nama-nama saham turun 20-30% dari harga masuk. Isyarat RSI(2) MASIH menyala — setiap hari menunjukkan jenuh jualan ekstrem. Pedagang yang belum menyerah menggandakan atau melipatgandakan kedudukan. Sesetengah menerima panggilan margin.
+- **Peringkat 4 (16-23 Mac)**: Dasar. Sesetengah pedagang hancur sepenuhnya; yang lain menjual pada harga terburuk secara literal. SPY mencapai dasar pada 218 — mereka yang terselamat sebagai pembeli tunai pada akhir Mac mendapat pulangan bersejarah. Mereka yang menggunakan mean-reversion tanpa penapis rejim kehilangan 30-50% modal strategi.
+
+Bentuk letupan adalah sama pada 2008 (September-Oktober), pada 2022 (Januari-Oktober pada jam yang lebih perlahan), dan pada nama individu yang muflis (fikirkan mana-mana nama yang disenarai hitam). Tandanya: isyarat jenuh jualan berulang tanpa respons mean-revert, terhadap purata bergerak 200-hari yang jatuh, dengan VIX meningkat. Tanpa lapisan rejim yang menghentikan strategi apabila SPY berada di bawah 200-hari DAN VIX meningkat, mean-reversion boleh membawa anda ke sifar.
+
+## Perangkap
+
+Kesilapan pemula ialah purata ke bawah pada setiap isyarat jenuh jualan baru — "semakin murah, semakin baik deal". Itu bukan kelebihan, itu adalah mod kegagalan strategi yang memperkuatkan dirinya sendiri. Model mental yang betul: isyarat mean-reversion adalah maklumat bersyarat — ia mempunyai nilai ramalan HANYA dalam rejim di mana mean reversion adalah tingkah laku pasaran yang mendasari. Dalam bear menjejaki trend, isyarat yang sama adalah anti-ramalan (jenuh jualan menjadi lebih jenuh jualan). Perangkap kedua: menolak untuk mentakrifkan bagaimana "perubahan rejim" kelihatan sebelum masa, jadi apabila peringkat 2 mula menyala, anda mencari alasan untuk mengabaikannya ("ini hanya volatiliti"). Pre-commit: SPY di bawah purata bergerak 200-hari DAN VIX > 25 DAN satu posisi menunjukkan -2x daripada kerugian henti normal strategi = keluar SEMUA posisi mean-reversion, jangan masuk posisi baru, tunggu sehingga kedua-dua syarat rejim berbalik. Perangkap ketiga: cuba memendekkan dasar — mean-reversion dalam terbalik mempunyai mod kegagalannya sendiri (rally snapback pada 24 Mac 2020 adalah +9% dalam sehari).
+
+<ChatWith agent="bear_researcher" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjalankan peraturan reverensi purata RSI(2) pada syarikat besar AS. SPY berada di bawah purata bergerak 200-hari, VIX pada 32, dan dua posisi terakhir anda telah mencapai had kerugian pada -2R. Hari ini, tiga isyarat kepekatan berlebihan baru sedang aktif. Aggressive Debator berkata 'kepekatan berlebihan = peluang'. Bear Researcher berkata 'corak letupan berada pada tahap 2'. Yang manakah betul?"
+  options={[
+    "Menambah purata ke bawah pada posisi kerugian sedia ada",
+    "Agresif — tiga isyarat = kebarangkalian kuat reverensi purata",
+    "Bear — kedua-dua keadaan rejim (di bawah 200-hari, VIX tinggi) sedang aktif DAN dua had kerugian berturut-turut, corak tahap-2. Keluar semua posisi dan hentikan masuk ke dalam perdagangan reverensi purata baharu sehingga keadaan rejim berubah.",
+    "Menambah lebih banyak posisi tetapi dengan saiz yang lebih kecil"
+  ]}
+  answer={2}
+  explanation="Pengesahan dua-rejim (di bawah purata bergerak 200-hari + VIX tinggi) digabungkan dengan had berturut-turut ialah tandatangan tahap-2 yang direkodkan. Menambah lebih banyak posisi panjang pada tahap-2 ialah cara strategi meletup pada tahap 3 dan 4. Jawapan tiga-isyarat-bermaksud-kebarangkalian-kuat memperlakukan penunjuk sebagai maklumat tanpa syarat — tetapi RSI(2) hanya mempunyai kelebihan dalam rejim reverensi purata. Menambah purata ke bawah pada posisi kerugian bermaksud menambah ke dalam mod kegagalan. Menambah lebih banyak posisi pada saiz yang lebih kecil menyembunyikan penambahan ke dalam kerugian sebagai pengurusan risiko."
+/>
+
+<Quiz
+  question="Strategi reverensi purata menurun 12% YTD. SPY baru sahaja menguasai semula purata bergerak 200-hari, VIX telah jatuh dari 32 kepada 19, dan tiga isyarat terakhir strategi masing-masing reverensi purata dalam masa kurang 3 hari. Had mandat ialah 25%. Sintesis: apakah tindakan yang betul?"
+  options={[
+    "Keluar — penurunan terkini bermaksud strategi telah rosak",
+    "Kedua-dua keadaan rejim telah berubah (di atas 200-hari, VIX < 22) DAN isyarat terkini berkelakuan normal. Libatkan semula pada separuh saiz setiap protokol yang telah dipersetujui, pantau sama ada kelakuan normal bertahan untuk 4-6 isyarat lagi, kemudian pulihkan saiz penuh jika rejim kekal memihak.",
+    "Tukar kepada penjejakan trend",
+    "Libatkan semula pada saiz penuh serta-merta untuk memulihkan kerugian"
+  ]}
+  answer={1}
+  explanation="Sintesis: pengesanan rejim adalah dua hala. Sama seperti anda keluar apabila kedua-dua keadaan rejim dan had terkini menandakan tahap-2, anda libatkan semula apabila kedua-dua rejim berubah DAN kelakuan isyarat terkini mengesahkan strategi berfungsi kembali. Jawapan keluar meninggalkan strategi pada tepat rejim yang memihak. Libatkan semula pada saiz penuh mengabaikan peraturan kemasukan semula separuh saiz yang bijaksana. Menukar kepada penjejakan trend mengubah strategi atas sebab emosi berbanding rejim."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> bersama Bear Researcher, tanya: "Takrifkan syarat rejim yang akan meletakkan strategi mean-reversion saya pada peringkat 2 corak letupan. Berikan ambang boleh pemerhatian untuk purata bergerak 200-hari, VIX, dan henti berturut-turut. Kemudian takrifkan syarat di mana saya kembali berinteraksi pada separuh saiz." Log kedua-dua protokol dalam <Term id="ami_decision_journal" /> sebagai peraturan yang telah berkomitmen awal — ditulis sebelum tekanan melanda, dilaksanakan secara automatik apabila ia berlaku.
+
+## Penutup
+
+Mean-reversion mati dalam bear menjejaki trend dengan volatiliti meningkat. Hentikan entri baru pada peringkat 2 letupan; anda tidak boleh purata ke bawah keluar dari mod kegagalan.

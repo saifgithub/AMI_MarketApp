@@ -1,0 +1,74 @@
+---
+id: "300_suitability_kyc"
+title: "Kesesuaian dan pengetahuan tentang pelanggan"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 2
+track: "ethics_integrity"
+code: "ETHIC 8"
+topic: "suitability_kyc"
+prerequisites: ["298_fiduciary_duty", "291_the_pm_and_your_mandate"]
+tags: ["ethics", "suitability", "kyc", "risk-capacity"]
+sources: ["CFA Institute — Standards of Professional Conduct, Standard III(C) Suitability (2014)"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "web-corroborated fact-check + adversarial refute"}
+agent_callouts: ["portfolio_manager", "concierge"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Kesesuaian dan Kenali Pelanggan Anda
+
+Kesesuaian menyatakan bahawa cadangan mesti sesuai dengan **pelanggan ini** — objektif, jangka masa, kapasiti kewangan, dan toleransi mereka — bukan pelanggan secara umum. Kenali pelanggan anda (KYC) adalah disiplin yang menjadikannya mungkin: anda tidak boleh menyesuaikan apa yang tidak pernah anda ukur. Idea mendalam, dan yang sering terlepas pandang oleh pemula: aset tidak pernah berisiko atau selamat secara abstrak. Risiko wujud dalam kesesuaian antara kedudukan dan individu yang memegangnya.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+TSLA jatuh sekitar 65% pada tahun 2022 — dari $352.26 kepada $123.18 sepanjang tahun kalendar. Sekarang, letakkan fakta ini ke dalam dua portfolio. Jurutera berusia 28 tahun dengan jangka masa 30 tahun memegang kedudukan 10% dalam TSLA: penurunan ini menelan kos 6.5% daripada portfolio, menyakitkan, boleh dipulihkan, dan secara logiknya berada dalam mandat pertumbuhan. Penara berusia 67 tahun yang terpesona dengan cerita pertumbuhan yang sama memegang 80% dan menarik pendapatan bulanan daripada akaun tersebut: pergerakan yang sama menelan kos **52% daripada portfolio** (0.80 × 0.65), dan kerana pengeluaran berterusan melalui lembah, sebahagian daripada kerugian itu *dinyatakan* setiap bulan — menjual saham pada $123 yang dibeli pada $350. Matematik pemulihan yang berfungsi di atas kertas gagal pada portfolio yang sedang digunakan.
+
+Sama saham, sama tahun, fakta yang sama. Satu pemegang mempunyai kedudukan; yang lain mengalami kemusnahan penuh. Mana-mana profesional yang mencadangkan peruntukan kedua tanpa mengukur jangka masa, kapasiti, dan keperluan pendapatan tidak membuat kesilapan pasaran — mereka membuat kesilapan kesesuaian, itulah sebabnya kewajipan KYC (profil pelanggan, borang soalan risiko, semakan sumber dana) adalah keperluan regulasi, bukan sekadar sopan santun.
+
+## Perangkap
+
+Pemula memperlakukan toleransi risiko sebagai sifat peribadi: "Saya agresif, saya boleh mengatasinya." Ini mencampuradukkan **kesediaan** (bagaimana volatiliti dirasai) dengan **kapasiti** (apa yang kewangan anda boleh serap) — dan kesediaan adalah mood yang dipompa oleh pasaran lembu pada masa yang tepat. Semua orang mempunyai toleransi risiko di puncak. Kapasiti adalah aritmetik: jangka masa, keperluan pendapatan, liabiliti, dan apa yang dilakukan oleh penurunan 50% kepada setiap satu. Model yang betul: **kapasiti mengikat terlebih dahulu.** Kesediaan menentukan seberapa jauh di bawah batas kapasiti anda anda memilih untuk duduk — ia tidak pernah menaikkan batas tersebut.
+
+## Argumen Terkuat
+
+Pembangkang libertarian: "Kesesuaian adalah paternalisme — orang dewasa yang maklumat sepatutnya menentukan saiz kedudukan mengikut kehendak mereka." Separuh betul, dan separuh itu penting: piawaian ini mengikat **profesional yang membuat cadangan**, bukan individu yang melabur wang mereka sendiri. Anda kekal bebas untuk bersikap agresif dengan akaun anda sendiri. Peraturan ini wujud kerana dalam jualan berunding, penjual mengetahui risiko produk dengan lebih baik daripada pelanggan yang mengetahui pendedahan mereka sendiri — dan pembatalnya terdapat dalam statistik aduan: senarai arbitrasi berkumpul dalam kompleksiti yang dijual secara salah (ETF tergamak yang dipegang jangka panjang, nota berstruktur, kepekatan yang tidak sesuai untuk pencen), bukan dalam pelaburan indeks yang diarahkan sendiri.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Berdasarkan angka TSLA 2022, mengapa hasil pencenar secara kategorik lebih teruk berbanding jurutera — selain daripada kedudukan yang sekadar lebih besar?"
+  options={[
+    "Kerana penurunan TSLA sukar diramal oleh pelabur berusia",
+    "Kerana toleransi risiko yang dinyatakan oleh pencenar lebih rendah daripada jurutera",
+    "Kerana pencenar diwajibkan memegang obligasi sahaja",
+    "Kerana pengeluaran bulanan melalui lembah menukar kerugian kertas kepada kerugian direalisasikan, maka kejatuhan 52% tidak dapat menanti pemulihan"
+  ]}
+  answer={3}
+  explanation="Saiz sahaja tidak mencukupi. Kejatuhan 6.5% jurutera kekal tidak direalisasikan dan mempunyai 30 tahun untuk pulih; pencenar menarik dana melalui penurunan, menjual saham berhampiran $123 yang dibeli berhampiran $350 — mengunci kerugian setiap bulan. Cakera masa dan keperluan pendapatan adalah faktor kapasiti, yang tepat apa yang diukur oleh KYC. Jawapan obligasi sahaja adalah karikatur: kesesuaian menyesuaikan kedudukan dengan kapasiti, ia tidak menetapkan kelas aset mengikut umur."
+/>
+
+<Quiz
+  question="Temuduga Concierge AMI bertanya tentang matlamat, cakera masa, dan had kerugian anda sebelum membina Mandat anda, dan PM mengenakan medan seperti max_drawdown_pct pada setiap transaksi simulasi. Struktur profesional manakah yang dipadankan oleh pasangan ini?"
+  options={[
+    "Pengoptimuman portfolio — temuduga menganggar pulangan dijangka untuk alokasi",
+    "KYC menyokong kesesuaian — temuduga mengukur klien, dan mandat menguatkan cadangan terhadap pengukuran itu",
+    "Pendedahan konflik kepentingan — temuduga mendedahkan bagaimana AMI dibayar",
+    "Pengawasan perdagangan dalaman — temuduga menyaring akses kepada maklumat bukan awam"
+  ]}
+  answer={1}
+  explanation="Temuduga Concierge adalah langkah kenal-pelanggan anda: mengukur objektif, cakera masa, dan kapasiti. Mandat adalah pengukuran itu yang dibaca mesin, dan lantai PM adalah penguatkuasaan kesesuaian — transaksi simulasi yang melanggar had penurunan maksimum anda gagal secara deterministik, tepat seperti rejim kesesuaian sepatutnya menghentikan cadangan yang tidak sesuai. Ia mengajar struktur; keputusan latihan yang dikawal kekal sebagai artifak latihan, bukan nasihat."
+/>
+
+## Cuba sendiri
+
+Buka Tetapan → Mandat dan semak dua medan ini terhadap kehidupan sebenar anda, bukan mood anda: adakah max_drawdown_pct mencerminkan apa yang kewangan anda boleh serap (kapasiti), atau apa yang pasaran semasa buat anda rasa (kesediaan)? Kemudian minta Concierge dalam chat untuk meneroka bagaimana setiap medan mandat mengubah aliran downstream — itu adalah temuduga KYC dilihat dari sisi profesional.
+
+## Pengambilan
+
+Kapasiti mengikat terlebih dahulu; kesediaan hanya memilih di mana di bawah batas tersebut anda duduk. Tiada kedudukan adalah sesuai atau tidak sesuai sehingga anda telah mengukur individu yang memegangnya.
+
+*Asal usul: Piawaian CFA Institute III(C) — Kesesuaian (2014), keperluan untuk membuat cadangan yang sesuai dengan pelanggan yang telah diukur.*

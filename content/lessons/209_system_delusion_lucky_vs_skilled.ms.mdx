@@ -1,0 +1,78 @@
+---
+id: "209_system_delusion_lucky_vs_skilled"
+title: "Ilusi 'sistem' — bertuah vs mahir"
+duration_min: 5
+level: 4
+module: 8
+difficulty: 5
+track: "edge_process"
+code: "EDGE 39"
+topic: "lucky_vs_skilled"
+prerequisites: ["049_overconfidence", "057_backtesting_a_strategy"]
+tags: ["psychology", "overconfidence", "edge", "luck", "sample_size"]
+agent_callouts: ["conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Ilusi 'sistem' — nasib baik vs kemahiran
+
+Selepas satu siri kemenangan, setiap pedagang percaya mereka telah menemui "sistem." Kebanyakan masa, mereka sebenarnya telah menemui *regim yang memuji tingkah laku mereka* dan memberinya nama. Berlandaskan <Lesson id="049_overconfidence"/>, pelajaran ini mengajar anda matematik saiz sampel yang memisahkan kelebihan sebenar daripada siri nasib baik, ujian boleh disangkal untuk "adakah sistem saya berfungsi sebenarnya", dan peraturan yang menghalang anda daripada meningkatkan saiz posisi terhadap regim yang belum anda lihat berakhir. Pasaran memberikan setiap pedagang ilusi yang sama pada akhirnya — biasanya selepas 15–25 perdagangan yang menang, yang merupakan panjang siri di mana keyakinan anda tidak boleh disangkal daripada rawak.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Seorang pedagang pada nama-nama momentum teknologi AS menjalankan strategi dari Januari hingga Ogos 2024: beli (long) pecahan harga pada nama-nama di atas Purata Bergerak 200-hari mereka dengan semakan pendapatan positif. Merentasi 32 perdagangan, kadar kemenangan ialah 66%, pemenang purata +9.1%, penyingkir purata -3.4%, jangkaan (+4.8%) per perdagangan. Beliau menyimpulkan sistem itu kukuh. Beliau menulis nota penyelidikan bertajuk "tech-momentum-breakout-v1, live edge confirmed" dan meningkatkan risiko per-dagang daripada 1% kepada 2%. Dari September 2024 hingga Januari 2025 — strategi yang sama, pada nama yang sama, dijalankan tanpa perubahan — kadar kemenangan ialah 38%, pemenang purata +5.2%, penyingkir purata -4.6%, jangkaan -1.4% per perdagangan. Strategi itu tidak gagal. *Regim* telah berubah; pita (tape) 2023–awal-2024 adalah satu yang seragam menenggelamkan mana-mana strategi pecahan harga, dan pita akhir-2024 adalah bergegar. 32 perdagangannya tidak cukup sampel untuk membezakan "strategi ini berfungsi" daripada "strategi ini berfungsi dalam regim ini." Peningkatan dua kali ganda risiko per-dagang menukarkan pembetulan regim menjadi penurunan akaun 11%.
+
+Untuk konteks statistik: pada kadar kemenangan sebenar 50% tanpa kelebihan, kebarangkalian untuk memerhatikan siri 20 kemenangan dalam 32 perdagangan (66% diperhatikan) secara kebetulan adalah signifikan — kira-kira 6%. Kebarangkalian 6% bukan "saya mempunyai kelebihan"; ia adalah "satu dalam 17 pedagang rawak akan memerhatikan ini tanpa kelebihan." Kebanyakan strategi memerlukan 100+ perdagangan langsung merentasi sekurang-kurangnya dua regim yang berbeza sebelum sampel seorang pedagang tunggal membezakan kemahiran daripada pita yang memuji.
+
+## Perangkap
+
+Perangkap ialah kepastian yang datang daripada siri kemenangan. Kepastian bukan bukti — ia ketiadaan data yang baru-baru ini boleh disangkal. Model mental yang betul: "sistem" ialah hipotesis sehingga ia telah disangkal oleh keadaan buruk dan pulih. Strategi yang belum pernah berdagang melalui perubahan regim tidak mempunyai kelebihan yang diketahui; ia mempunyai *kelebihan yang tidak diukur*. Peranan Conservative Debator di sini adalah yang paling tidak selesa dalam pasukan ejen — ia meminta anda menurunkan keyakinan anda pada strategi yang sedang berfungsi. Itu terasa salah, yang tepat mengapa ia diperlukan. Pedagang yang berdisiplin memperlakukan siri kemenangan sebagai sampel bersyarat regim, bersaiz untuk regim terburuk yang strategi itu belum lihat, dan meningkatkan saiz posisi hanya apabila saiz sampel dan kepelbagaian regim bersama-sama membenarkannya — bukan apabila hanya lengkung ekuiti yang melakukannya.
+
+<ChatWith agent="conservative_debator" />
+
+## Kuiz
+
+<Quiz
+  question="Strategi anda telah menghasilkan 22 perdagangan menang dan 8 perdagangan kalah selama 5 bulan — kadar kemenangan 73%, jangkaan +5.1% setiap perdagangan. Anda ingin meningkatkan risiko setiap perdagangan untuk menangkap kelebihan tersebut. Apakah keperluan respons yang disiplin?"
+  options={[
+    "Naikkan risiko setiap perdagangan separuh jalan (contohnya dari 1.0% ke 1.5%) — keyakinan separuh.",
+    "Tunggu sehingga sekurang-kurangnya 100 perdagangan merangkumi sekurang-kurangnya dua rejim pasaran yang berbeza (contohnya fasa trending dan choppy, atau fasa bull dan pembetulan) sebelum menaikkan risiko setiap perdagangan. Sampel semasa konsisten dengan kedua-dua 'kelebihan sebenar' dan 'keuntungan bertuah dalam rejim yang menguntungkan.'",
+    "Dokumenkan keputusan, jangan naikkan risiko, dan jalankan backtest yang merangkumi 10 tahun untuk mengesahkan strategi tersebut.",
+    "Naikkan risiko setiap perdagangan serta-merta — 30 perdagangan adalah sampel yang mencukupi, dan jangkaan adalah jauh di atas sifar."
+  ]}
+  answer={1}
+  explanation="30 perdagangan kelihatan substansial tetapi tidak mencukupi secara statistik untuk membezakan kemahiran daripada nasib bagi kebanyakan strategi runcit — walaupun kadar kemenangan diperhatikan 73% mempunyai kebarangkalian yang tidak kecil di bawah kadar sebenar 50% pada saiz sampel tersebut. 'Peningkatan separuh jalan' adalah kompromi yang memikat — ia memasukkan keyakinan yang bergantung pada rejim ke dalam perubahan mandat secara kekal. Jawapan backtest adalah separuh betul (backtest memang membantu) tetapi melupakan syarat kritikal: strategi mesti diperhatikan *langsung* melalui sekurang-kurangnya satu perubahan rejim sebelum kelebihannya diukur, bukan hanya pada data sejarah. Jawapan yang disiplin memerlukan kedua-dua saiz sampel dan kepelbagaian rejim."
+/>
+
+<Quiz
+  question="Ujian gabungan manakah yang membezakan kelebihan sebenar daripada keuntungan bertuah dalam rejim yang memihak?"
+  options={[
+    "Kadar kemenangan melebihi 60%.",
+    "Jangkaan positif pada backtest yang kembali 10 tahun.",
+    "Lima kemenangan berturut-turut.",
+    "Jangkaan positif merangkumi sekurang-kurangnya 100 perdagangan langsung yang merangkumi sekurang-kurangnya dua rejim pasaran yang berbeza (contohnya trending dan choppy, atau bull dan pembetulan), dengan tiada satu rejim menyumbang lebih daripada 60% daripada jumlah perdagangan."
+  ]}
+  answer={3}
+  explanation="Kadar kemenangan sahaja tidak memberitahu apa-apa tentang taburan jangkaan. Lima kemenangan berturut-turut adalah konsisten dengan rawak. Backtest 10 tahun adalah berguna tetapi tidak mencukupi — strategi sering terlalu sesuai dengan rejim lalu secara rutin. Ujian gabungan — saiz sampel (100+), kepelbagaian rejim (2+), keseimbangan rejim (tiada rejim tunggal >60%) — adalah kerangka yang boleh diaudit yang membezakan kelebihan daripada nasib. Ketiga-tiga nombor tersebut boleh disemak dalam Jurnal Keputusan apabila data wujud; sehingga ia ada, strategi tersebut adalah hipotesis, bukan sistem."
+/>
+
+<Quiz
+  question="Strategi anda mempunyai 28 perdagangan langsung, kadar kemenangan 64%, jangkaan +4.2% setiap perdagangan. Kesemua 28 perdagangan berlaku semasa pasaran bull trending yang jelas. Anda akan menaikkan risiko setiap perdagangan kepada 2% daripada 1%. Conservative Debator menandakan bahawa tiada perubahan rejim telah diperhatikan. PM tidak telah melanggar. Jawapan sintesis?"
+  options={[
+    "Jalankan backtest yang merangkumi 2008 dan 2020 — jika positif, naikkan risiko.",
+    "Gantikan (override) Conservative Debator — garis equity dan jangkaan menyokong peningkatan saiz.",
+    "Naikkan risiko setiap perdagangan kepada 1.5% sebagai peningkatan 'separuh jalan'.",
+    "Jangan naikkan risiko setiap perdagangan. Kekalkan strategi pada 1% sehingga sekurang-kurangnya satu perubahan rejim telah diperhatikan dan strategi telah bertahan melaluinya (iaitu, jangkaan positif melalui fasa choppy atau pembetulan). Dokumentasikan kekangan tersebut dalam Jurnal Keputusan dan mandat."
+  ]}
+  answer={3}
+  explanation="Gerakan 'gantikan Conservative Debator' adalah tepat pola overconfidence yang pelajaran ini wujud untuk cegah — dan ia adalah kesilapan paling biasa yang dibuat oleh pedagang pada bulan ke-6 dalam satu siri kemenangan. 'Peningkatan separuh jalan ke 1.5%' memasukkan keyakinan yang bergantung pada rejim ke dalam perubahan mandat secara kekal. Jawapan backtest adalah tambahan, bukan pengganti — kelangsungan rejim sejarah adalah maklumat tetapi strategi yang tidak diuji langsung melalui perubahan rejim masih belum terbukti secara langsung. Jawapan yang disiplin memerlukan kepelbagaian rejim langsung sebelum peningkatan saiz, dan bersedia untuk meninggalkan kelebihan sebenar bersaiz kecil selama beberapa bulan lagi sebagai pertukaran untuk tidak menukar kelebihan yang bergantung pada rejim kepada pelanggaran mandat secara kekal."
+/>
+
+## Cuba
+
+Buka <Term id="ami_decision_journal" /> dan tandai setiap perdagangan dalam sejarah strategi semasa anda dengan regim pasaran pada masa itu (menenggelam naik, menenggelam turun, bergegar/sempadan, lonjakan volatiliti). Kira jangkaan strategi *dalam setiap regim*. Jika satu regim tunggal menyumbang lebih daripada 60% daripada sampel, kelebihan yang diukur strategi anda adalah bersyarat regim, bukan mutlak. Ambil skrin ke <Term id="ami_one_on_one" /> dengan Conservative Debator dan tanya: "Di bawah regim apakah strategi ini akan mempunyai jangkaan negatif?" Jawapannya ialah regim yang mesti dikalibrasikan untuk saiz posisi anda.
+
+## Kesimpulan
+
+Strategi yang belum pernah berdagang melalui perubahan regim tidak mempunyai kelebihan yang diketahui — ia mempunyai kelebihan yang tidak diukur. Bersaiz untuk regim terburuk yang sampel anda belum lihat, bukan untuk siri yang telah ia capai.

@@ -1,0 +1,81 @@
+---
+id: "241_equal_weight_vs_vol_adjusted_strategy_weights"
+title: "Berat strategi berat sama vs laras vol — memilih skema"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 70"
+topic: "synthesis"
+prerequisites: ["236_combining_strategies_for_diversification", "238_strategy_correlation", "240_risk_parity_for_strategies", "101_volatility_adjusted_sizing"]
+tags: ["synthesis", "weighting", "risk_parity", "portfolio"]
+agent_callouts: ["research_manager", "neutral_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Berat strategi berat sama vs laras vol — memilih skema
+
+Anda kini mempunyai tiga skema penimbangan untuk menggabungkan strategi: dolar sama rata (lalai), pariti risiko (dirujuk dalam 240), dan putaran rejim (dirujuk dalam 239). Pelajaran ini adalah kerangka keputusan — bila untuk menggunakan setiap satu, dan bagaimana menggabungkannya. Jawapan yang jujur ialah tiada skema terbaik secara universal; setiap satu mempunyai rejim di mana ia mendominasi dan rejim di mana ia kurang berprestasi. Dolar sama rata menang apabila strategi mempunyai vol dan pulangan jangkaan yang serupa. Pariti risiko menang apabila satu strategi jauh lebih volatil daripada yang lain dan had mandat adalah ketat. Putaran rejim menang apabila penunjuk rejim kegagalan boleh diperhatikan dengan boleh dipercayai. Selepas pelajaran ini, anda boleh memilih skema yang tepat untuk portfolio ANDA DAN menggabungkannya apabila masuk akal (contohnya, berat pariti risiko dalam lapisan putaran rejim).
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Tiga strategi pada saham besar AS sepanjang 2010-2024:
+- Mengikuti trend (vol 11%, CAGR 9.2%)
+- Reversi purata (vol 8%, CAGR 11.4%)
+- Momentum (vol 18%, CAGR 10.8%)
+
+Bandingkan empat skema penimbangan:
+
+| Skema | CAGR | Vol | Max DD | Sharpe |
+|---|---|---|---|---|
+| Dolar sama rata | 10.4% | 12.8% | 14% | 0.81 |
+| Pariti risiko | 9.3% | 9.2% | 9% | 1.01 |
+| Putaran rejim (dolar sama rata dalam rejim) | 11.2% | 11.1% | 9% | 1.01 |
+| Pariti risiko dalam putaran rejim | 10.6% | 8.4% | 7% | 1.26 |
+
+Skema terakhir — menggabungkan pariti risiko untuk penimbangan relatif dengan putaran rejim untuk pendedahan keseluruhan — mendominasi pada Sharpe (1.26) dan penurunan (7%), dengan mengorbankan sedikit CAGR (10.6% berbanding 11.2% putaran rejim tulen) untuk vol yang jauh lebih rendah. Untuk mandat dengan had penurunan yang ketat (contohnya, 15% atau lebih rendah), ini adalah pilihan yang tepat. Untuk mandat dengan had tinggi dan sasaran CAGR, putaran rejim tulen mungkin lebih baik.
+
+Untuk pedagang berfokus Bursa dengan kurang strategi dan kurang rejim untuk dikesan, dolar sama rata sering menjadi titik permulaan yang tepat — kerumitan lapisan pariti risiko dan putaran rejim memerlukan kepelbagaian strategi yang cukup untuk memjustifikasikannya. Dengan dua strategi, pilihan ini terutamanya antara dolar sama rata dan pariti risiko mudah, dengan putaran rejim kemungkinan terlalu sesuai pada terlalu sedikit strategi.
+
+## Perangkap
+
+Kesilapan pemula ialah memilih skema yang mempunyai Sharpe backtest tertinggi dan menyebarkannya tanpa memikirkan mengapa. Setiap skema mempunyai andaian: dolar sama rata mengandaikan profil vol dan pulangan yang serupa, pariti risiko mengandaikan korelasi stabil, putaran rejim mengandaikan penunjuk rejim adalah kukuh dan tidak terlalu sesuai. Model mental yang betul: pilih skema yang andaian anda boleh pertahankan dalam situasi khusus anda. Perangkap kedua ialah melapiskan terlalu banyak lapisan — pariti risiko dalam putaran rejim dalam lapisan sasaran vol dalam had mandat. Setiap lapisan menambah kerumitan, kos transaksi, dan risiko terlalu sesuai. Perangkap ketiga: menukar skema apabila skema semasa kurang berprestasi. Setiap skema mempunyai tempoh di mana yang lain akan berprestasi lebih baik; berputar antara mereka adalah versi meta mengejar pulangan dan hampir selalu memusnahkan nilai.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjalankan dua strategi: mengikuti trend (vol 12%, CAGR 9%) dan reverensi min (vol 10%, CAGR 10%). Kedua-duanya mempunyai vol dan CAGR yang serupa. Apakah skema pemberat yang paling boleh dipertahankan?"
+  options={[
+    "Putaran rejim, kerana ia mempunyai Sharpe backtest tertinggi",
+    "Pariti risiko, kerana vol lebih rendah sentiasa lebih baik",
+    "100% kepada reverensi min kerana ia mempunyai CAGR lebih tinggi",
+    "50/50 dolar sama — strategi-strategi ini mempunyai vol dan profil pulangan yang serupa, gain dari pariti risiko adalah marginal, dan kesederhanaan adalah jujur. Tambah putaran rejim hanya jika kedua-dua strategi mempunyai rejim yang menguntungkan yang didefinisikan dengan baik dan boleh diperhatikan secara masa nyata."
+  ]}
+  answer={3}
+  explanation="Apabila vol adalah serupa, pariti risiko memberikan anda sesuatu yang hampir sama dengan dolar sama, jadi kerumitan tambahan tidak dapat dibenarkan. Dolar sama adalah asas yang jujur. Jawapan pariti risiko terlalu rumit. Jawapan putaran rejim untuk Sharpe backtest tertinggi mengejar backtest tanpa mempertimbangkan data yang anda ada untuk penunjuk rejim. Pergi 100% kepada reverensi min meninggalkan diversifikasi."
+/>
+
+<Quiz
+  question="Anda menjalankan empat strategi dengan vol 6%, 10%, 14%, dan 22%. Had penurunan mandat adalah 12%. Kitaran tekanan merentas keempat-empat strategi adalah ~0.6 (sederhana tetapi tidak melampau). Conservative Debator mahu pariti risiko; Neutral Debator mahu putaran rejim; Research Manager mencadangkan menggabungkannya. Penempatan sintesis yang betul?"
+  options={[
+    "Gunakan hanya pemberat dolar sama",
+    "Gabungkan: gunakan pariti risiko untuk pemberat relatif (strategi vol 22% tidak boleh mendominasi portfolio pada had mandat 12%), DAN gunakan putaran rejim untuk pendedahan keseluruhan (kurangkan gross apabila rejim kegagalan untuk strategi dominan berlaku). Komitmen awal peraturan, licinkan penunjuk rejim, dan seimbangkan semula secara bulanan. Sahkan melalui walk-forward.",
+    "Gunakan hanya putaran rejim",
+    "Pilih satu skema secara sewenang-wenangnya — ia adalah lebih kurang setara"
+  ]}
+  answer={1}
+  explanation="Sintesis: dengan satu strategi pada vol 22% dan had mandat 12%, pariti risiko adalah perlu untuk mencegah strategi itu mendominasi penurunan. Dengan empat strategi dan penunjuk rejim yang boleh diperhatikan, putaran rejim menambah nilai pada pendedahan keseluruhan. Validasi walk-forward (<Lesson id="
+/>) adalah disiplin yang mencegah terlalu sesuai pada gabungan. Memilih satu skema secara sewenang-wenang meninggalkan pilihan reka bentuk. Jawapan hanya-dolar-sama-rata dan hanya-putaran-rejim masing-masing terlepas separuh masalah — tiada satu pun menangani isu perbezaan vol secara sendirian."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Pengurus Penyelidikan, senaraikan strategi anda dengan vol, CAGR, <Term id="ami_mandate" /> cap, dan penunjuk rejim yang boleh diperhatikan. Tanya: "Skema penimbangan mana — dolar sama rata, pariti risiko, putaran rejim, atau gabungan — paling dibenarkan untuk portfolio khusus saya? Terangkan alasan DAN ujian pemalsuan yang akan membuktikan skema itu salah." Log skema yang dipilih + protokol pemalsuan dalam <Term id="ami_decision_journal" /> — dan jangan tukar skema apabila skema semasa kurang berprestasi, kerana setiap skema mempunyai rejim yang kurang berprestasi.
+
+## Kesimpulan
+
+Tiada skema penimbangan terbaik secara universal — pilih yang mana andaian sepadan dengan portfolio anda, sahkan melalui laluan berjalan-maju, dan jangan tukar di bawah tekanan. Kerumitan hanya membantu apabila setiap lapisan menjayakan dirinya sendiri.

@@ -1,0 +1,66 @@
+---
+id: "219_breakout_volume_profile"
+title: "Profil isipadu pecahan — apa yang sebenarnya dimaksudkan dengan 'pengesahan isipadu'"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 48"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "029_volume_confirmation", "024_breakouts", "119_failed_breakouts_bull_traps"]
+tags: ["strategy", "breakout", "volume", "volume_profile", "confirmation"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Profil isipadu pecahan — apa maksud "pengesahan isipadu" sebenarnya
+
+Asas pecahan (053) memerlukan "isipadu sekurang-kurangnya 1.5x purata 20 hari". Itu peraturan utama, tetapi pecahan dan palsu mempunyai CAP JARI isipadu yang berbeza sepanjang minggu sebelumnya, bukan hanya pada hari pecahan. Pecahan sebenar biasanya menunjukkan: isipadu menurun semasa pengkonsolidasian, pengembangan tajam pada lilin pecahan, dan isipadu berterusan di atas purata pada hari-hari susulan. Palsu sering menunjukkan lonjakan pada hari pecahan tanpa pengecutan pengkonsolidasian dan isipadu susulan yang semakin berkurang. Selepas pelajaran ini, anda boleh membaca profil isipadu berbilang minggu di sekitar calon pecahan dan membezakan corak berkemungkinan tinggi daripada perangkap.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat GOOGL pada akhir April 2024. Melalui Februari dan Mac, GOOGL mengkonsolidasikan antara $150 dan $158 — isipadu purata 20 hari menurun dari ~28 juta saham pada Februari kepada ~22 juta pada pertengahan April apabila julat semakin ketat. Pada 26 April 2024, GOOGL melaporkan hasil Q1, melonjak naik, dan menutup pada $173.69 dengan 64 juta saham — 2.9x purata 20 hari. Tiga sesi berikutnya kekal di atas $170 dengan isipadu 32M, 28M, dan 27M — jauh di atas purata pengkonsolidasian. Itu profil yang bersih: pengecutan, pengembangan, susulan berterusan. Bandingkan dengan palsu — banyak "pecahan" kap kecil menunjukkan lonjakan isipadu tunggal pada hari pecahan dari asas isipadu rata, kemudian isipadu runtuh di bawah purata pengkonsolidasian dalam dua sesi dan harga menutup kembali ke dalam julat. Dagangan GOOGL dari penutupan 26 April masuk sekitar $173 dengan henti di $165 (kembali ke dalam julat) dan naik ke $192 pada awal Julai — lebih 2R pada pecahan berterusan.
+
+Kriteria masuk: (1) isipadu pengkonsolidasian MENURUN ke aras pecahan, (2) isipadu lilin pecahan ≥ 1.5x purata 20 hari DAN ≥ 2x purata hari pengkonsolidasian terkini, (3) isipadu pada hari +1 dan hari +2 kekal di atas purata pengkonsolidasian. Henti: penutupan harian kembali ke dalam julat pengkonsolidasian. Pembatalan dagangan individu: isipadu pada hari +1 atau +2 runtuh ke bawah purata pengkonsolidasian DAN harga menutup kembali di bawah aras pecahan — tanda isipadu menunjukkan ia adalah program pembelian satu hari, bukan perubahan rejim; keluar. Strategi GAGAL dalam dua rejim: (1) lonjakan berpusat pada hasil dalam nama float rendah di mana mekanik isipadu diputarbelitkan oleh short squeeze dan hedging pilihan, dan (2) pecahan peringkat indeks selepas kenaikan bull yang panjang, di mana lebar pasaran telah menyempit dan "pecahan" hanyalah beberapa pemimpin yang tinggal melanjutkan ke udara kosong.
+
+## Perangkap
+
+Kesilapan pemula adalah hanya melihat isipadu HARI pecahan. Anda melihat isipadu 2x purata, anda klik, dan anda tidak pernah memeriksa sama ada pengkonsolidasian sebenarnya telah mengecut dengan isipadu menurun. Tanpa pengecutan, lonjakan itu bukan pelepasan bekalan yang tertekan — ia hanya cecair hari berita. Model mental yang betul: isipadu menceritakan cerita tiga babak. Babak 1 ialah pengkonsolidasian — isipadu harus MENURUN apabila harga semakin ketat. Babak 2 ialah lilin pecahan — isipadu harus MENGEMBANG secara tajam. Babak 3 ialah susulan — isipadu harus TETAP di atas purata pengkonsolidasian selama sekurang-kurangnya dua sesi. Jika mana-mana babak hilang, anggap pecahan itu mencurigakan dan saizkan pada keyakinan separuh atau langkau.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham telah konsolidasi selama enam minggu; isipadu tempoh konsolidasiannya purata 18 juta bahagian/hari, tetapi meningkat kepada 24 juta dalam dua minggu terakhir. Hari ini ia ditutup di atas rintangan pada 35 juta bahagian (1.6x purata 20 hari). Apa yang dikatakan oleh peraturan isipadu multi-aksi?"
+  options={[
+    "Pecutan kuat — isipadu konsolidasi yang meningkat menunjukkan permintaan sedang membina",
+    "Disyaki — isipadu konsolidasi MENINGKAT, bukan mengecut; prasyarat gagal",
+    "Pecutan bersih — isipadu pada hari melebihi 1.5x purata",
+    "Pecutan gagal — isipadu sepatutnya 3x purata"
+  ]}
+  answer={1}
+  explanation="Peraturan utama (1.5x pada hari) lulus, tetapi Aksi 1 (isipadu konsolidasi menurun) gagal. Isipadu konsolidasi yang meningkat sering bermaksud pengagihan ke arah kekuatan, bukan penyerapan — lilin pecutan kemudian hanyalah pembeli terakhir berbanding pembeli pertama daripada banyak. Jawapan 'isipadu konsolidasi yang meningkat menunjukkan permintaan sedang membina' adalah jawapan salah yang memikat kerana 'isipadu meningkat = bullish' adalah heuristik biasa yang mengabaikan isyarat pengecutan."
+/>
+
+<Quiz
+  question="Anda mengambil posisi panjang pecutan NVDA pada Hari 0 dengan isipadu pengesahan. Hari +1 ditutup di atas tahap pecutan pada 60% daripada purata isipadu 20 hari. Hari +2 ditutup 0.5% di bawah tahap pecutan pada 45% daripada purata isipadu. Mandat: risiko per-trade 1%, had penurunan 20%, anda berada pada penurunan 6% YTD. Apa tindakan yang betul?"
+  options={[
+    "Tambah ke posisi kerana isipadu yang lebih rendah pada pembetulan adalah sihat",
+    "Pegang — penutupan Hari +2 hanya sedikit di bawah; beri ia lebih masa",
+    "Luaskan henti ke bawah ke paras ayunan harian sebelumnya untuk mengelakkan digoncang keluar",
+    "Keluar pada pembukaan Hari +3 — kedua-dua runtuh isipadu dan penutupan harga di bawah mengesahkan pembatalan isipadu"
+  ]}
+  answer={3}
+  explanation="Peraturan pembatalan isipadu aktif apabila isipadu tindak lanjut runtuh DAN harga ditutup kembali di bawah pecutan. Kedua-dua syarat dipenuhi. Menambah pada pembetulan isipadu rendah adalah jawapan salah yang memikat — 'pembetulan isipadu rendah adalah sihat' adalah prinsip sebenar untuk pembetulan trend SETELAH pergerakan disahkan, bukan untuk dua sesi pertama selepas pecutan di mana tanda tangan isipadu masih menubuhkan sama ada pergerakan itu benar. Sintesis: dengan penurunan 6% YTD dan pembatalan yang jelas, keluar dan simpan kapasiti mandat; anda boleh masuk semula pada pecutan disahkan segar."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal calon pecahan terkini dan tanya: "Terangkan tiga babak profil isipadu — trend pengkonsolidasian, pengembangan hari pecahan, dan dua hari susulan. Beritahu saya babak mana yang lulus dan mana yang gagal." Gunakan <Term id="ami_coach_your_agent" /> pada Market Analyst untuk menambah: "Sentiasa menilai pecahan merentasi profil isipadu tiga babak penuh, bukan hanya lonjakan hari pecahan." Log templat penilaian dalam <Term id="ami_decision_journal" />.
+
+## Penegasan
+
+Isipadu menceritakan cerita tiga babak — pengecut, kembang, tahan. Lonjakan tunggal hari pecahan tidak cukup; pengkonsolidasian mesti telah mengecut dan susulan mesti kekal di atas purata pengkonsolidasian.

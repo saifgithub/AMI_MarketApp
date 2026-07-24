@@ -1,0 +1,66 @@
+---
+id: "268_why_twelve_agents_not_one"
+title: "Mengapa dua belas ejen dan bukan satu"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 3
+track: "edge_process"
+code: "EDGE 85"
+topic: "cognitive_diversity"
+prerequisites: ["072_what_ami_can_do_for_you", "073_what_ami_cannot_do", "076_human_oversight_is_the_product"]
+tags: ["architecture", "12_agents", "diversity", "bias", "process"]
+agent_callouts: ["research_manager", "bull_researcher", "bear_researcher"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mengapa dua belas ejen dan bukan satu
+
+Satu jawapan yang yakin terasa seperti produk. Perdebatan antara dua belas ejen yang pakar dalam peranan tertentu terasa seperti penyelidikan — dan seperti persekitaran latihan yang lebih kaya. <Term id="ami" /> ialah <Term id="training_simulator" /> yang dibina secara sengaja mengikut cara kedua. Satu ejen yang menjawab "adakah saya harus membeli NVDA?" akan mewarisi setiap titik buta model bahasa asas dalam satu langkah — data latihan yang sama, kecenderungan yang sama, pengabaian yang sama — dan juga akan meratakan permukaan penilaian pengguna kepada satu petikan untuk diterima atau ditolak. Memecahkan kerja kepada dua belas peranan memaksa soalan melalui dua belas bingkai berbeza supaya anda boleh berlatih membaca ketidaksetujuan. Pada akhir pelajaran ini, anda akan dapat menjelaskan mengapa kepelbagaian kognitif adalah struktur, bukan hiasan.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+<Term id="ami_convene_the_room" /> pada AAPL. <Term id="twelve_agent_team" /> mengalir secara selari. Penganalisis Asas menarik pendapatan perkhidmatan (+14% YoY), campuran iPhone, margin kasar 46%. Penganalisis Pasaran membaca carta — $228, memegang Purata Pergerakan 50 hari pada $221, RSI 61. Penganalisis Berita menandakan peraturan EU daripada semalam. Penganalisis Media Sosial mencatat sentimen runcit yang neutral dengan kenaikan kecil di r/wallstreetbets. Peneliti Bull menulis kes sekitar roda flywheel perkhidmatan dan pulangan modal. Peneliti Bear menentang dengan perlambatan perkakasan dan pendedahan China. Pengurus Penyelimbangan menimbang kedua-duanya: Bull condong ~0.58. Pengecam Agresif mahu saiz 5%; Konservatif mahu 2%; Neutral mendarat di 3%. Pedagang mencadangkan masuk $227.50, stop $215, sasaran $244, jangka masa 6 minggu. Pengurus Portofolio memeriksa kepatuhan terhadap <Term id="ami_mandate" /> anda.
+
+Bayangkan soalan yang sama disalurkan melalui satu ejen am. Anda akan mendapat perenggan yakin yang mencampuradukkan semua itu menjadi satu suara — dan anda tidak akan mempunyai cara untuk melihat *bingkai* mana yang tidak bersetuju. Seni bina dua belas ejen mengekalkan ketidaksetujuan. Kes Bear ialah bahagian berlabel dalam transkrip anda. Cadangan saiz kecil oleh Pengecam Konservatif direkodkan. Anda boleh membuka semula mana-mana satu di <Term id="ami_one_on_one" /> dan bertanya *"mengapa?"*. Jawapan satu ejen meratakan dua belas perspektif kepada satu ayat; AMI mengekalkannya boleh dipisahkan, secara reka bentuk.
+
+## Perangkap
+
+Perangkapnya ialah mahu satu jawapan yang bersih kerana dua belas suara terasa seperti bunyi bising. Ia bukan bunyi bising — ia adalah bahan mentah untuk latihan pandangan kedua yang jujur. Pengguna yang mengimbas tajuk <Term id="ami_verdict" /> dan melonjakkan alasan setiap ejen membayar kos dua belas ejen dan berlatih penilaian satu. Model mental yang betul: setiap ejen ialah konsultan pakar simulasi yang tugasnya menjadi salah dengan cara yang berbeza daripada yang lain. Peneliti Bull memperbesar potensi kenaikan; Peneliti Bear memperbesar risiko; tugas Pengurus Penyelimbangan ialah jujur tentang mana satu pembesarannya yang disokong oleh data. Anda membaca ketiga-tiganya. Ketidaksetujuan ialah apa yang simulator dibina untuk melatih anda menilai.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Mengapa AMI menggunakan dua belas ejen yang berspesialisasi dalam peranan berbanding satu ejen umum yang menjawab 'adakah saya perlu membeli saham ini?'"
+  options={[
+    "Satu ejen mewarisi semua titik buta model bahasa teras dalam satu laluan; dua belas ejen yang berspesialisasi dalam peranan memaksa soalan melalui bingkai berbeza supaya perbezaan pendapat kekal terpisah",
+    "Dua belas ejen membolehkan AMI meramal harga dengan lebih tepat",
+    "Dua belas ejen lebih pantas daripada satu",
+    "Dua belas ejen diperlukan oleh peraturan sekuriti AS"
+  ]}
+  answer={0}
+  explanation="Reka bentuk ini adalah kepelbagaian kognitif — membahagikan kerja supaya peranan yang berbeza menyiasat sudut yang berbeza dan perselisihan disimpan dalam transkrip. Jawapan salah yang paling menipu ialah kelajuan — menjalankan dua belas ejen sebenarnya lebih perlahan daripada satu; pertukaran yang dibuat ialah kedalaman dan kebolehaudit, bukan throughput. Ketepatan ramalan bukan matlamat; AMI menerangkan proses dan kebarangkalian, bukan harga titik."
+/>
+
+<Quiz
+  question="Anda membaca Verdict simulasi Convene the Room pada TSLA: BUY 2%, keyakinan 0.61. Bahagian Bear Researcher menandakan penurunan 30% dalam pendaftaran EU. Anda mengabaikan bahagian itu dan menyetujui tajuk utama. Apakah reka bentuk dua belas ejen itu telah menjadi untuk anda?"
+  options={[
+    "Secara efektif menjadi produk satu ejen — anda membayar untuk kepelbagaian dan menelanjangi tajuk utama",
+    "Versi yang lebih tepat daripada cadangan satu ejen",
+    "Keyakinan lebih tinggi kerana dua belas ejen bersetuju",
+    "Lebih murah kerana anda tidak membaca semua ejen"
+  ]}
+  answer={0}
+  explanation="Dua belas ejen hanya memberikan anda kepelbagaian kognitif jika anda benar-benar membaca perbezaan pendapat. Mengabaikan kes Bear meruntuhkan reka bentuk kepada pengalaman perkhidmatan tip — dan AMI bukan perkhidmatan tip, ia adalah persekitaran latihan untuk menilai output analis. Jawapan salah yang menipu ialah 'keyakinan lebih tinggi kerana dua belas ejen bersetuju' — tetapi mereka tidak bersetuju; kes Bear berselisihan, yang merupakan titik yang anda abaikan."
+/>
+
+## Cuba sendiri
+
+Dalam **Convene the Room** pada mana-mana ticker AS yang cecair, tatal melintasi penghakiman tajuk dan cari bahagian Peneliti Bear dahulu. Bacanya sebelum kes Bull. Kemudian tatal ke sintesis Pengurus Penyelimbangan dan lihat berapa banyak berat yang diberikan kepada hujah Bear. Jika anda boleh menyatakan kes Bear dalam satu ayat selepas itu, anda menggunakan seni bina seperti yang dimaksudkan.
+
+## Pengajaran
+
+Dua belas ejen yang pakar dalam peranan wujud untuk mengekalkan ketidaksetujuan, bukan untuk memperbesar keyakinan. Baca ketidaksetujuan atau anda menghabiskan kredit pada tajuk. AMI sedang mengajar anda menilai output penganalisis, bukan memberikan anda petikan untuk dibawa ke tempat lain.

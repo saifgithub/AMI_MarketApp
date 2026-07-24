@@ -1,0 +1,73 @@
+---
+id: "233_trend_following_crash_signatures"
+title: "Tanda-tanda kejatuhan trend-following — pengesanan rejim whipsaw"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 62"
+topic: "failure_modes"
+prerequisites: ["052_trend_following", "058_strategy_failure_modes", "215_atr_trailing_stop_for_trends", "216_multi_timeframe_trend_confirmation"]
+tags: ["failure_modes", "trend_following", "whipsaw", "regime"]
+agent_callouts: ["bear_researcher", "conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Tandatangan keruntuhan trend-following — pengesanan rejim whipsaw
+
+Asas mod kegagalan (058) menamakan pasaran berjangka sempit yang bergegar sebagai rejim di mana trend-following mengalami kerugian. Pelajaran ini lebih mendalam: ia memberikan tiga tandatangan boleh pemerhatian yang menyatakan "anda berada dalam rejim whipsaw SEKARANG" — bukan secara retrospektif selepas enam kerugian, tetapi pada kerugian kedua atau ketiga. Tandatangan tersebut ialah keruntuhan ADX, perataan MA, dan pengecutan ATR. Setiap satu boleh diperhati secara bebas, setiap satu mempunyai ambang yang telah dikalibrasi, dan ketiganya bersama jauh lebih boleh dipercayai berbanding mana-mana satu secara tunggal. Selepas pelajaran ini, anda boleh menamakan tandatangan, menetapkan ambang, dan berkomitmen awal protokol pengurangan saiz apabila ia aktif.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat SPY dari Ogos 2015 hingga Februari 2016 — episod whipsaw dalam buku teks selepas tahun-tahun trend naik yang bersih.
+
+- **Ogos 2015**: Kejutan keruntuhan harga devaluasi China. Garis purata bergerak 200 hari SPY menjadi rata buat pertama kali dalam 4 tahun. ADX (14) jatuh dari 28 pada Julai kepada 15 pada pertengahan September.
+- **September-November 2015**: SPY membuat tiga rally ke ~210 dan tiga kegagalan kembali ke 195. Seorang trend-follower 50/200 membeli pada setiap silang naik dan berhenti rugi pada setiap kegagalan. Enam kerugian kecil dalam tiga bulan.
+- **Januari-Februari 2016**: Kaki turun kedua, SPY ke 182. Strategi kini turun ~14% akibat seretan whipsaw terkumpul. ADX masih pada 16, garis 50-hari masih rata. Kedua-dua tandatangan masih aktif.
+- **Mac 2016**: SPY menembus kembali di atas garis 200-hari dengan ADX naik (di atas 20) dan kecerunan 50-hari yang semakin curam. Rejim whipsaw berakhir.
+
+Seorang pedagang yang menjalankan trend-follower tanpa pengesanan rejim menanggung penurunan 14% penuh. Seorang pedagang yang memantau tandatangan mengurangkan saiz kepada separuh apabila ADX jatuh di bawah 20 DAN garis 50-hari menjadi rata — dan hanya menanggung ~6-7% penurunan, mengekalkan modal untuk trend yang berterusan.
+
+Setara Bursa: KLCI dari pertengahan 2022 hingga pertengahan 2023 menunjukkan tandatangan yang sama pada jam yang lebih perlahan. ADX pada KLCI berada di bawah 18 selama ~9 bulan manakala nama seperti MAYBANK dan TENAGA whipsawed dalam julat 4%. Pedagang yang mengenali rejim dan mengurangkan saiz muncul bersedia untuk dikerahkan apabila trend berterusan pada suku keempat 2023.
+
+## Perangkap
+
+Kesilapan pemula ialah "mempercayai sistem" dan terus mengambil setiap isyarat semasa whipsaw, dengan teori bahawa trend-following sepatutnya kehilangan wang dalam keadaan bergegar dan mendapatkannya kembali pada trend besar seterusnya. Logik ini separuh betul — trend-following SEPAHUTNYA kehilangan dalam keadaan bergegar — tetapi magnitud penurunan sangat penting. Seretan 20% memerlukan pemulihan 25% hanya untuk impas, dan trend seterusnya mungkin mengambil masa 18 bulan untuk menghantarnya. Model mental yang betul: menghormati tandatangan rejim bukan meninggalkan strategi, ia menjalankannya pada saiz kedudukan yang berkadar dengan keyakinan rejim. Perangkap kedua: mengurangkan saiz semasa bergegar dan enggan menambah semula apabila rejim terselesaikan — anda mengurangkan pada masa terburuk dan tidak ada di sana untuk trend. Komitmen awal peraturan penyertaan semula (ADX > 22 DAN kecerunan 50-hari positif) supaya keputusan adalah automatik.
+
+<ChatWith agent="bear_researcher" />
+
+## Kuiz
+
+<Quiz
+  question="Anda menjalankan peraturan trend 50/200 pada SPY. ADX(14) berada pada 14 (jauh di bawah 20). Condong 50-hari MA adalah mendatar. Anda telah menanggung 4 kerugian kecil dalam 6 minggu. Aggressive Debator: 'setiap trend-follower mempunyai tempoh whipsaw, teguh pendirian'. Bear Researcher dan Conservative Debator: 'tanda rejim aktif, kurangkan saiz'. Secara empirikal, yang mana betul?"
+  options={[
+    "Bear dan Conservative — kedua-dua tanda rejim (ADX < 20, mendatar 50-hari) sedang aktif serentak, keadaan whipsaw yang didokumenkan. Kurangkan saiz kepada kira-kira separuh sehingga kedua-dua tanda selesai.",
+    "Tukar kepada mean reversion",
+    "Aggressive — strategi mesti dijalankan pada saiz penuh sentiasa",
+    "Hentikan perdagangan sepenuhnya"
+  ]}
+  answer={0}
+  explanation="Pengesahan dua-tanda ialah persediaan whipsaw yang didokumenkan — menjalankan saiz penuh dalam rejim ini secara statistik akan menghasilkan lebih banyak kerugian sebelum trend berterusan. Jawapan 'jalankan saiz penuh sentiasa' menyamarkan 'percaya sistem' sebagai disiplin; sistem itu sendiri mempunyai lapisan rejim terbina jika anda menghormati tanda-tanda tersebut. Beralih kepada mean reversion menukar kepada strategi yang mungkin mempunyai mod kegagalannya sendiri dalam rejim ini. Berhenti perdagangan sepenuhnya adalah pembetulan berlebihan — anda mahu berada di sana apabila trend berterusan, hanya pada saiz yang dikurangkan."
+/>
+
+<Quiz
+  question="Strategi pengurusan trend anda mencapai pencetus saiz turun sedar rejim 3 minggu lalu. ADX kini telah meningkat kepada 23, condong 50-hari MA adalah positif, dan SPY telah merebut semula tinggi swing prior. Anda berada pada saiz separuh. Soalan sintesis: apakah tindakan yang betul dan mengapa?"
+  options={[
+    "Tukar kepada strategi berbeza",
+    "Kedua-dua tanda penyertaan semula (ADX > 22 DAN condong 50-hari positif) telah dipenuhi. Pulihkan saiz penuh mengikut peraturan penyertaan semula yang telah dipersetujui sebelumnya. Rejim whipsaw telah selesai; kekal pada saiz kecil bermaksud terlepas trend yang anda kurangkan saiz untuk bersedia hadapi.",
+    "Naik ke saiz 150% untuk memulihkan kerugian dengan lebih pantas",
+    "Kekal pada saiz separuh — kerugian baru-baru ini masih segar, tunggu sebulan lagi"
+  ]}
+  answer={1}
+  explanation="Sintesis: pengesanan rejim adalah dua sisi — anda mengurangkan saiz apabila tanda aktif dan meningkatkan saiz semula apabila ia selesai, mengikut peraturan yang telah dipersetujui sebelumnya. Kekal pada saiz separuh ialah jawapan salah yang paling menggoda kerana kerugian adalah baru dan emosional — tetapi sistem sedar rejim tidak mempunyai pendapat mengenai P&L baru-baru ini, hanya pada penunjuk rejim. Naik ke saiz 150% ialah perdagangan balas dendam. Beralih kepada strategi berbeza meninggalkan strategi ini pada tepat ketika rejimnya menggalakkan."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Bear Researcher, tampal peraturan trend-following semasa anda dan tanya: "Kira ADX(14) pada carta harian instrumen utama saya, dan kecerunan MA 50-hari (perubahan 5-hari). Beritahu sama ada tandatangan whipsaw aktif sekarang, dan faktor saiz apakah yang peraturan <Term id="ami_mandate" />-aware saya harus gunakan." Log bacaan tandatangan + faktor saiz dalam <Term id="ami_decision_journal" /> sebagai protokol berkomitmen awal — supaya apabila tandatangan aktif kemudian, keputusan adalah automatik.
+
+## Penutup
+
+Whipsaw mempunyai tandatangan: ADX di bawah 20 ditambah garis 50-hari rata. Pedagang yang membaca tandatangan dan mengurangkan saiz terselamat; pedagang yang memperlakukan setiap whipsaw sebagai varians akan dihancurkan.

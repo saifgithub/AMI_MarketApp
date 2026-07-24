@@ -1,0 +1,90 @@
+---
+id: "251_defensive_cyclical_geographic_rotation"
+title: "Mainan defensif dan kitaran serta putaran geografi"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+code: "N&M 16"
+topic: "sector_rotation"
+prerequisites: ["063_sector_rotation", "250_rate_sensitive_sectors_hiking_cutting", "017_portfolio_exposure_and_correlation"]
+tags: ["regime", "sectors", "defensive", "cyclical", "geographic", "em", "bursa"]
+agent_callouts: ["news_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Panduan permainan defensif vs kitaran dan putaran geografi
+
+<Lesson id="063_sector_rotation"/> membentangkan putaran sektor sebagai fenomena ekuiti AS. <Lesson id="250_rate_sensitive_sectors_hiking_cutting"/> menambah mekanisme kitaran kadar di atasnya. Pelajaran ini menambah dua paksi lagi: pemisahan defensif-vs-kiroan (yang dipicu oleh jangkaan pertumbuhan tanpa mengira kadar), dan putaran geografi (AS vs EM vs Bursa) yang mengikut kekuatan dolar dan perbezaan pertumbuhan global. Selepas pelajaran ini, anda akan dapat mengelaskan rejim pertumbuhan semasa, menamakan peta kepimpinan defensif-vs-kiroan, menamakan peta putaran geografi, dan menyatakan falsifier untuk setiap satu.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Defensif-vs-kiroan:
+
+- Defensif = XLP (staples), XLV (kesihatan), XLU (utiliti). Beta pendapatan lebih rendah terhadap GDP.
+- Kiroan = XLY (disresi pengguna), XLI (industri), XLB (bahan), XLE (tenaga), XLF (keuangan). Sensitiviti GDP yang lebih tinggi.
+
+Putaran ketakutan pertumbuhan yang direkodkan:
+
+- Ketakutan pertumbuhan Ogos 2024: antara 11 Julai 2024 (puncak tempatan SPX 5,667) dan paras rendah 5 Ogos 2024 pada 5,186, XLP mengatasi SPY sebanyak +4.7%, XLY gagal mengatasi sebanyak -3.6%, XLI gagal mengatasi sebanyak -3.2%. Kepimpinan defensif klasik.
+- Tetingkap ketakutan resesi akhir 2202: XLP +0.5% YTD pada akhir tahun 2022 berbanding XLY -37.0% YTD. ~37 mata peratusan penyebaran.
+
+Peraturan pengesanan rejim kepimpinan defensif: Kekuatan relatif 60-hari bagi (purata XLP + XLV + XLU) berbanding (purata XLY + XLI + XLB) adalah positif DAN meningkat DAN perbezaannya melebihi +5 mata peratusan. Pembatalan: penyebaran mampat ke bawah +1 mata selama 4 minggu berturut-turut.
+
+Putaran geografi:
+
+- AS (SPY): indeks satu negara, beta global.
+- EM (EEM): pasaran berkembang, sensitif terhadap dolar, berkait dengan komoditi.
+- Bursa Malaysia (ETF EWM atau KLCI secara langsung): komoditi + ringgit + pertumbuhan ASEAN.
+
+Kes yang direkodkan:
+
+- Tetingkap kelemahan dolar Q1 2025: DXY jatuh dari 109.6 pada 13 Januari 2025 kepada 104.0 pada 6 Mac 2025 (-5.1%). EEM meningkat 10.4% dalam tetingkap itu berbanding SPY +4.3%. EM memimpin pada kelemahan dolar.
+- Peningkatan dolar 2022: DXY naik dari 95.7 pada 1 Januari 2022 kepada 114.1 pada 28 September 2022 (+19.2%). EEM jatuh 22.0% dalam tahun itu berbanding SPY -18.2%. EM gagal mengatasi pada kekuatan dolar.
+- KLCI vs SPY pada 2024: KLCI +12.9% (disesuaikan USD: ringgit meningkat 11% pada H2 2024 → ~+20% USD), SPY +23.3%. Bursa mengejar pada pemulihan ringgit + harga komoditi.
+
+Peraturan pengesanan putaran geografi: Rejim kepimpinan EM apabila DXY 50-hari sedang jatuh DAN kekuatan relatif EEM/SPY 60-hari adalah positif DAN meningkat. Rejim dominasi AS apabila kedua-dua keadaan songsang.
+
+## Perangkap
+
+Perangkap defensif-kiroan adalah penjangkaran gaya. Pedagang yang membeli "syarikat biru defensif untuk jangka masa panjang" kekal dalam XLP melalui rejim kepimpinan kiroan yang disahkan (contohnya, tetingkap kebangkitan industri awal 2024 di mana XLI memimpin sebanyak +9% berbanding XLP). Mereka mendapat indeks tolak seretan mereka dan memanggilnya "konservatif" apabila ia sebenarnya hanyut. Hal yang sama berlaku secara geografi: pelabur hanya AS yang tidak pernah membaca kekuatan relatif EEM terlepas kedua-dua perlindungan EM memimpin semasa fasa dolar turun dan amaran EM gagal semasa fasa dolar naik.
+
+Model yang betul: defensif-kiroan dan geografi adalah paksi rejim bebas yang berputar pada jam sendiri. Gunakan bacaan kekuatan relatif untuk menetapkan kecondongan dalam had diversifikasi mandat. Jangan bertaruh keseluruhan portfolio pada satu putaran — putarkan berat pada margin (contohnya, 10–15% pendedahan ekuiti beralih antara geografi) apabila penunjuk mengesahkan.
+
+<ChatWith agent="news_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="DXY telah jatuh 6% selama 80 hari. EEM telah mengatasi SPY sebanyak +8% selama 60 hari. ISM Manufacturing PMI sedang meningkat; perbelanjaan sektor discretionary pengguna sedang dipercepatkan; XLY telah mengatasi XLP sebanyak +6% selama 60 hari. Apa yang ditetapkan oleh kerangka kerja dwi-regim?"
+  options={[
+    "Dua rejim putaran sedang beroperasi serentak: kepimpinan kitaran (XLY > XLP) dan kepimpinan EM (EEM > SPY dengan DXY yang lemah). Condongkan dalam mandat: putar sebahagian berat defensif ke arah kitaran (XLY/XLI), dan sebahagian berat AS ke pendedahan EM (dalam had diversifikasi geografi). Batalkan condongan kitaran jika spread XLP/XLY mampat di bawah +1pt selama 4 minggu; batalkan condongan EM jika DXY berbalik naik dan spread EEM/SPY menjadi negatif.",
+    "Pegang portfolio 100% defensif AS — selamat adalah yang terbaik.",
+    "Jual semua — terlalu banyak putaran bermaksud kemusnahan.",
+    "Beli bon berdenominasi USD pada alokasi maksimum."
+  ]}
+  answer={0}
+  explanation="Jawapan salah yang menggoda ialah memegang 100% defensif AS — ia terasa selamat mengikut nama. Tetapi kekal defensif dalam rejim kitaran naik + EM naik yang disahkan adalah seretan indeks, bukan keselamatan. Sintesisnya ialah pengesanan rejim dwi dengan condongan marginal dalam mandat, serta pembatalan eksplisit per-rejim. Menjual semua dan memaksimumkan bon USD adalah tindak balas panik ekstrem."
+/>
+
+<Quiz
+  question="DXY telah naik dari 100 kepada 109 selama 4 bulan. Fed berada dalam kitaran kenaikan kadar. EEM telah tertinggal SPY sebanyak -7% selama 60 hari. KLCI turun 3% dalam istilah tempatan dan -8% dalam istilah USD. Seorang pembaca berhujah 'Bursa murah — muatkan'. Apa yang dikatakan oleh kerangka geografi?"
+  options={[
+    "Putaran geografi adalah rawak; abaikan ia.",
+    "Beli Bursa dengan berat — murah adalah murah.",
+    "Rejim geografi adalah dominasi AS yang kukuh (DXY naik, kitaran kenaikan, EM tertinggal). Kerendahan harga Bursa dalam USD adalah nyata tetapi rejim sedang menolak modal ke arah aset berdenominasi USD, dan kelemahan ringgit memperburuk prestasi untuk pemegang berdenominasi USD. Tunggu sehingga DXY mencapai puncak (contohnya, SMA 50 hari mendatar atau berbalik turun) sebelum menambah pendedahan EM/Bursa melebihi permulaan; saiz permulaan mengikut peraturan kedudukan tunggal mandat.",
+    "Jual aset USD — dolar telah melampau."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah membeli Bursa dengan berat — 'murah' adalah rasionalisasi paling biasa untuk menangkap pisau jatuh dalam rejim yang belum menyokong dagangan tersebut. Sintesis: kerendahan harga tanpa pemangkin rejim hanyalah kesakitan yang lebih lama. Kerangka kerja memerlukan rejim geografi berbalik (DXY berbalik turun) sebelum saiz kedudukan dinaikkan."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan News Analyst dan tampal: "Trend 50-hari DXY hari ini, kekuatan relatif 60-hari EEM/SPY, pulangan KLCi USD-equivalent berbanding SPY selama 90 hari, dan purata 60-hari XLP+XLV+XLU berbanding purata 60-hari XLY+XLI+XLB. Klasifikasikan rejim defensif-vs-kiroan dan geografi semasa." Kemudian buka <Term id="ami_decision_journal" /> dan tambah dua lajur tag kepada 10 kedudukan terakhir anda: "rejim pertumbuhan (defensif/kiroan)" dan "rejim dolar (DXY naik/turun)". Ketidakpadanan antara perdagangan anda dan rejim adalah buta penjangkaran gaya anda.
+
+## Pengambilan
+
+Putaran defensif-kiroan dan geografi adalah paksi rejim bebas. Condongkan dalam <Term id="ami_mandate" /> pada isyarat kekuatan relatif yang disahkan; kemurahan harga bukan pemangkin, dan penjangkaran gaya bukan keselamatan.

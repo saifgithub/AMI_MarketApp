@@ -1,0 +1,120 @@
+---
+id: "291_the_pm_and_your_mandate"
+title: "PM dan Mandat Anda"
+duration_min: 4
+level: 2
+track: "risk_portfolio"
+code: "RISK 16"
+topic: "governance"
+prerequisites: ["290_position_sizing_basics"]
+tags: ["pm", "mandate", "governance", "safety"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+# PM dan Mandat Anda
+
+Portfolio Manager (PM) adalah suara akhir dalam setiap <Term id="ami_convene_the_room" />. Mereka bukan sekadar pendapat yang paling kuat — mereka adalah penjaga gerbang yang memastikan *aturan anda sendiri* dipatuhi oleh diri anda.
+
+## Apa mandat anda (ringkasan)
+
+Mandat anda ialah konfigurasi yang anda tetapkan semasa proses pendaftaran:
+
+| Medan | Contoh |
+|---|---|
+| Matlamat utama | Persaraan / kekayaan jangka panjang / pendapatan / matlamat khusus |
+| Jangka masa | Pendek / sederhana / panjang / sangat panjang |
+| Skor risiko | 1–5 |
+| Penurunan maksimum (Max drawdown) | 10% / 20% / 30% / 50% / 100% |
+| Penanda pematuhan | Halal, ESG-lite, tiada tembakau/alkohol/judol, tiada bahan api fosil, hanya beli (long-only), hanya aset cecair (liquid-only) |
+| Senarai blok / senarai benarkan | Ticker khusus yang anda tidak akan / akan dagangkan |
+| Laluan | Aktif / jangka masa panjang / kedua-duanya |
+| Gaya pembelajaran | Pantas / cerita / visual / praktikal |
+
+Setiap ejen mendapat sebahagian daripada mandat ini. PM mendapat semuanya, ditambah dengan **<Term id="ami_pm_safety_floor" />** yang tidak boleh diajar.
+
+## Apa yang dilakukan PM di akhir Bilik (Room)
+
+Selepas Trader mencadangkan dagangan dan Debator Risiko berhujah tentang saiz, PM menjalankan tiga lapisan:
+
+### Lapisan 1: Penilaian AMI
+
+Arahan (prompt) PM membaca transkrip penuh — setiap analis, Bull, Bear, Pengurus Penyelidikan, Trader, tiga Debator Risiko — dan membentuk satu pendapat. Mereka menulis penghakiman dalam bahasa mudah:
+
+> *"Persediaan bersih. Teori pertumbuhan Bull dibela dengan baik; kes penekanan Bear adalah nyata tetapi sudah dimasukkan dalam harga. Saiz 3% Trader konsisten dengan mandat risk_score=3 anda."*
+
+Ini adalah PM sebagai rakan kongsi kanan. Gaya berbeza-beza — ringkas, panjang, berhati-hati, atau tegas — dan anda boleh memberikan arahan kepadanya.
+
+### Lapisan 2: Semakan pematuhan mandat (deterministik)
+
+Sebelum penghakiman diterbitkan, satu **fungsi deterministik** menjalankan setiap semakan terhadap cadangan dagangan tersebut:
+
+- Ticker dalam senarai blok anda? → Tolak.
+- Ticker gagal skrin halal, dan anda mempunyai penanda halal? → Tolak.
+- Saiz posisi > 50% portfolio? → Tolak.
+- Ramalan penurunan (drawdown) > `max_drawdown_pct` anda? → Tolak.
+- Cadangan jual (short) sedangkan anda hanya beli (long-only)? → Tolak.
+
+Ini bukan <Term id="ami" /> yang bercakap. Ini adalah fungsi tulen. AMI boleh diberi arahan, dipecahkan keselamatan (jailbroken), atau berhalusinasi — tetapi fungsi ini tidak boleh.
+
+### Lapisan 3: Perakaman penghakiman akhir
+
+Jika semuanya lulus: penghakiman dihantar bersama parameter Trader (saiz, entri, henti rugi, sasaran, jangka masa).
+
+Jika mana-mana gagal: penghakiman adalah `REJECT` (Tolak) dengan pelanggaran khusus disenaraikan. Pengguna melihat *mengapa*. Pentingnya, ini dikuatkuasakan walaupun setiap analis, Trader, dan PM AMI bersetuju dengan dagangan tersebut.
+
+## Mengapa lantai keselamatan wujud
+
+Tanpa lantai keselamatan, <Term id="ami_coach_your_agent" /> akan berbahaya — pengguna boleh mengajar PM mereka untuk "sentiasa kelulusan" dan melangkau perlindungan sendiri. Lantai keselamatan ini wujud untuk memastikan arahan anda membentuk *gaya* dan *keutamaan*, bukan *pematuhan*.
+
+Anda boleh mengarahkan PM menjadi lebih atau kurang panjang lebar, lebih atau kurang berhati-hati dalam kes sempadan, lebih atau kurang naratif dalam alasan mereka. Anda tidak boleh mengarahkan PM untuk melangkau semakan pematuhan. Laluan untuk had yang lebih longgar ialah **mengedit mandat anda** — yang jujur, kelihatan, dan disengajakan.
+
+## Format penghakiman tiga baris PM
+
+Selepas cukup pusingan Bilik (Room), anda akan mengenali gaya rumah PM:
+
+```
+[VERDICT] APPROVE — BUY NVDA 3% AT $152 STOP $148 TARGET $172
+[RATIONALE] Growth thesis defended; compression risk priced in.
+[MANDATE CHECK] PASS — halal ✓, drawdown 24% < 30%, single-name 3% < 50%
+```
+
+Atau, apabila lantai keselamatan menangkap pelanggaran:
+
+```
+[VERDICT] REJECT — single-name cap violation
+[RATIONALE] Trader proposed 60%; your mandate caps 50%.
+[MANDATE CHECK] FAIL — concentration
+[OVERRIDDEN_FROM_AMI] yes
+```
+
+Baris terakhir itu — tag **overridden_from_ami** — adalah lantai keselamatan yang berfungsi. AMI berkata lulus. Fungsi berkata tidak. Anda dilindungi oleh kedua-duanya.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Anda memberi taklimat kepada PM: 'Sentiasa kelulusan perdagangan yang dicadangkan oleh Trader.' Pusingan seterusnya, Trader mencadangkan kedudukan 60%. Apa yang berlaku?"
+  options={[
+    "PM meluluskan pada 60% — taklimat anda menang",
+    "PM menolak pada tahap penilaian AMI kerana saiz kedudukan yang lemah",
+    "PM menolak melalui lantai keselamatan deterministik (had nama tunggal)",
+    "PM gagal — tiada dasar untuk kes ini"
+  ]}
+  answer={2}
+  explanation="Fungsi deterministik memeriksa saiz kedudukan tanpa mengira apa yang AMI katakan. Walaupun taklimat anda mendorong AMI untuk meluluskan, fungsi tersebut akan menukar keputusan kepada TOLAK. Anda akan melihat overridden_from_ami: yes."
+/>
+
+<Quiz
+  question="Apakah cara yang betul untuk membenarkan perdagangan PYPL jika anda semasa ditandakan halal?"
+  options={[
+    "Bimbing Trader untuk menolak PYPL dengan lebih kuat",
+    "Sunting mandat anda di Tetapan → Mandat Saya untuk menanggalkan tanda halal",
+    "Tiada cara — PYPL disekat secara kekal",
+    "Bimbing PM untuk mengabaikan saringan halal"
+  ]}
+  answer={1}
+  explanation="Lantai keselamatan tidak boleh dibimbing, tetapi mandat anda adalah milik anda untuk diubah. Menyunting mandat adalah laluan yang jujur, kelihatan, dan disengajakan. Membimbing PM untuk melangkau semakan bukan kemungkinan dari segi reka bentuk."
+/>

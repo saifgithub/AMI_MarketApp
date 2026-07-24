@@ -1,0 +1,64 @@
+---
+id: "316_calls_and_puts"
+title: "Pilihan beli & jual — dua blok asas"
+duration_min: 4
+level: 9
+module: 15
+difficulty: 2
+track: "asset_classes"
+code: "ASST 14"
+topic: "options_basics"
+prerequisites: []
+tags: ["options", "calls", "puts", "derivatives", "vocabulary"]
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Opsyen beli & jual — dua blok binaan asas
+
+Setiap opsyen yang diperdagangkan — sama ada pada AAPL, NVDA, atau kontrak terbitan Bursa Malaysia — merujuk kepada salah satu daripada dua blok binaan: opsyen beli (call), iaitu hak untuk membeli aset asas pada harga pelaksanaan tetap sehingga tarikh luput tertentu, atau opsyen jual (put), iaitu hak untuk menjualnya. Setiap blok mempunyai dua sisi: pembeli, yang membayar premium untuk hak tersebut, dan penjual, yang menerima premium itu sebagai ganti kepada kewajipan jika pembeli memilih untuk melaksanakan opsyen. Setiap strategi opsyen dalam modul ini — carta hasil, opsyen beli dilindungi (covered calls), opsyen jual pelindung (protective puts) — hanyalah gabungan berbeza bagi dua blok ini. Selepas pelajaran ini, anda akan dapat menamakan keempat-empat kedudukan dan menyatakan, tanpa ragu, siapa yang memegang hak dan siapa yang memegang kewajipan dalam setiap situasi.
+
+## Contoh
+
+Ambil AAPL, sebagai contoh, diperdagangkan berhampiran $195. Pedagang yang mahu pendedahan kepada kenaikan harga tanpa berikat untuk membeli 100 saham secara langsung boleh membeli opsyen beli: sebagai contoh, hak untuk membeli 100 saham AAPL pada harga pelaksanaan $200, luput dalam sebulan, dengan premium beberapa dolar setiap saham (angka ilustratif, bukan sebutan langsung — premium sebenar berubah mengikut harga AAPL dan volatiliti tersirat). Pedagang ini kini **memegang posisi beli opsyen beli (long a call)** — mereka memegang hak, bukan kewajipan. Jika AAPL tidak pernah menghampiri $200, mereka hanya membiarkan opsyen luput dan kehilangan apa yang telah dibayar. Di sisi lain kontrak yang sama ialah siapa yang menjualnya — **memegang posisi jual opsyen beli (short the call)** — yang telah menerima premium di awal tetapi kini diwajibkan untuk menghantar 100 saham AAPL pada $200 jika pembeli melaksanakan, tidak kira seberapa tinggi harga AAPL sebenarnya telah melonjak. Opsyen jual berfungsi sebagai imej cermin: pedagang yang mahu perlindungan daripada penurunan harga atau pertaruhan bearish boleh membeli opsyen jual — hak untuk menjual pada harga pelaksanaan tetap — manakala penjual opsyen jual diwajibkan untuk membeli saham pada harga pelaksanaan tersebut jika dilaksanakan. Empat kedudukan, dua hak, dua kewajipan.
+
+## Perangkap
+
+Pemula mendengar "membeli opsyen beli" dan membayangkan membeli saham pada diskaun — seolah-olah premium adalah bayaran pendahuluan yang akan digunakan untuk saham. Ia bukan begitu. Premium adalah kos berasingan yang tidak boleh dipulangkan untuk *hak* untuk bertransaksi kemudian; jika saham tidak pernah mencapai harga pelaksanaan, premium itu hilang tanpa mengira apa yang berlaku kepada saham selepas itu. Kesilapan pemula kedua ialah buta simetri: menganggap pembeli dan penjual menanggung risiko yang setara kerana mereka berada di "sisi berlawanan daripada perdagangan yang sama." Mereka tidak. Kerosakan maksimum pembeli opsyen adalah terhad pada premium yang dibayar, titik. Risiko penjual opsyen adalah berbeza secara struktur — jual opsyen beli terhadap saham tanpa had atas berapa tinggi ia boleh naik membawa kepada kerugian yang berkembang seiring dengan saham, tanpa had. Hak dan kewajipan bukan risiko simetri yang memakai label berbeza.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Seorang pedagang membeli pilihan beli put pada NVDA dengan harga pelaksanaan $400, membayar premium. Pernyataan manakah yang betul menerangkan apa yang dimiliki oleh pedagang tersebut?"
+  options={[
+    "Hak, tetapi bukan kewajiban, untuk menjual 100 saham NVDA pada $400 sebelum tamat tempoh",
+    "Kewajiban untuk menjual 100 saham NVDA pada $400 jika pilihan tersebut dilaksanakan",
+    "Kewajiban untuk membeli 100 saham NVDA pada $400 jika pilihan tersebut dilaksanakan",
+    "Kepemilikan 100 saham NVDA dengan kos asas $400"
+  ]}
+  answer={0}
+  explanation="Membeli put bermaksud membayar untuk hak — pilihan untuk menjual pada $400 — bukan kewajiban. Kewajiban adalah milik pihak yang menjual put tersebut. Selain itu, membeli put tidak mewujudkan kedudukan saham secara langsung; ia adalah kontrak berasingan, bukan pembelian saham teras."
+/>
+
+<Quiz
+  question="Seorang pedagang pilihan berkata kepada anda: 'Saya menjual panggilan terhadap NVDA — pembeli dan saya sama-sama menanggung risiko yang sama, hanya dari sudut yang berbeza.' Berdasarkan pengetahuan anda tentang hak berbanding kewajiban, apakah kesilapan dalam tuntutan itu?"
+  options={[
+    "Tiada kesilapan — pembeli dan penjual sentiasa mempunyai kerugian maksimum yang sama pada mana-mana kontrak pilihan",
+    "Pembeli memegang hak dengan kerugian yang terhad pada premium yang dibayar; penjual memegang kewajiban dengan kerugian yang berkembang tanpa had apabila aset teras meningkat, yang mana tidak simetri",
+    "Tuntutan itu salah kerana hanya put yang mempunyai risiko tidak simetri — panggilan sentiasa simetri antara pembeli dan penjual",
+    "Tuntutan itu salah kerana penjual pilihan tidak boleh kehilangan wang, hanya pembeli yang boleh"
+  ]}
+  answer={1}
+  explanation="Kerugian pembeli panggilan adalah tetap sebaik sahaja premium dibayar — mereka sentiasa boleh memilih untuk tidak melaksanakan. Penjual panggilan tidak mempunyai lantai sedemikian: kewajiban untuk menghantar saham pada harga pelaksanaan menjadi lebih mahal apabila harga saham meningkat, tanpa had kontrak yang ditetapkan. Kontrak yang sama, tetapi struktur risiko yang berbeza pada setiap sisi."
+/>
+
+## Cuba sendiri
+
+Buka Glosari dan cari "opsyen beli" dan "opsyen jual." Kemudian tanya Penganalisis Asas: "Jika saya memegang posisi beli opsyen beli dan saham tidak pernah mencapai harga pelaksanaan saya, apa yang berlaku kepada premium saya?" Sahkan jawapan itu sepadan dengan pelajaran ini sebelum bergerak ke carta hasil seterusnya.
+
+## Penutup
+
+Opsyen beli adalah hak untuk membeli, opsyen jual adalah hak untuk menjual — pembeli mana-mana membayar premium untuk hak yang terhad pada kos tersebut, manakala penjual menerima premium untuk kewajipan yang tidak terhad dengan cara yang sama.

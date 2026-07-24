@@ -1,0 +1,115 @@
+---
+id: "292_research_manager_synthesis"
+title: "Pengurus Penyelidikan: sintesis, bukan pendapat"
+duration_min: 5
+level: 3
+track: "edge_process"
+code: "EDGE 98"
+topic: "frameworks"
+prerequisites: ["289_bull_vs_bear_thinking"]
+tags: ["research", "synthesis", "asymmetry", "framework"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+# Pengurus Penyelidikan: sintesis, bukan pendapat
+
+Apabila Bull dan Bear telah membina hujah yang jujur, seseorang perlu **memutuskan**. Seseorang itu ialah Pengurus Penyelidikan (Research Manager). Tugas mereka bukan untuk memilih pihak — tetapi untuk menukar perdebatan menjadi posisi.
+
+## Apa yang RM TIDAK lakukan
+
+- Mengundi sebagai pengikat tiket (tie-breaker).
+- Purata kes Bull dan Bear menjadi "agak positif" yang tidak pasti.
+- Mengikut siapa yang bercakap terakhir.
+- Menambah pendapat peribadi mereka ke dalam tumpukan.
+
+Jika RM hanyalah pendapat ketiga di dalam bilik, mereka telah gagal. Sudah ada empat Analyst di hulu. Pendapat kelima adalah bunyi bising (noise).
+
+## Apa yang RM sebenarnya lakukan
+
+RM melakukan **empat** perkara yang tiada agen lain lakukan:
+
+1. **Menilai asimetri.** Kenaikan 30% berbanding penurunan 50% adalah asimetri yang buruk, walaupun anda condong ke arah bullish. RM adalah satu-satunya agen whose job is to *measure both sides on the same axis*.
+2. **Menterjemah pandangan ke saiz.** "Kami agak bullish dengan berhati-hati" bukanlah posisi. "Beli 3% dengan stop di $148, target $192, jangka masa 6 bulan" adalah posisi. RM adalah jambatan dari pendapat ke tindakan.
+3. **Menyelaraskan mandat.** Mandat pengguna menetapkan risk_score, max_drawdown, single-name cap, dan halal screen. RM adalah tempat pertama batasan-batasan itu menyentuh dagangan. (PM menguatkuasakan batasan ini di gerbang; RM menginternalisasikan batasan ini di hulu.)
+4. **Menandakan kualiti perdebatan.** Jika Bear membuat strawman, RM akan menyuarakannya. Jika bukti Bull hanyalah naratif, RM akan menyuarakannya. RM adalah bar kualiti bilik tersebut.
+
+## Asimetri, dalam angka
+
+Anggap setiap dagangan sebagai pertaruhan dengan empat angka:
+
+- **Kebarangkalian kes Bull** — apa yang Bull fikir; biasanya 50-70%.
+- **Magnitud kenaikan** — biasanya 20-40% sepanjang jangka masa.
+- **Kebarangkalian kes Bear** — apa yang Bear fikir; biasanya 30-50%.
+- **Magnitud penurunan** — biasanya 15-35%.
+
+Darabkan: `EV = p_up × upside − p_down × downside`. Jika EV positif *dan* penurunan sesuai dengan mandat, ia adalah dagangan. Jika EV positif tetapi penurunan melebihi bajet single-name cap × max_drawdown anda, ia bukan dagangan.
+
+RM adalah agen yang sebenarnya menjalankan aritmetik itu. Bull dan Bear berhujah secara kualitatif. RM adalah *kuantitatif*.
+
+<ChatWith agent="research_manager" />
+
+## Contoh kerja
+
+Bull pada NVDA: 60% peluang +30% dalam 9 bulan (kapex hyperscaler dipercepat semula).
+Bear pada NVDA: 40% peluang -25% dalam 9 bulan (mampatan multiple pada sebarang pemotongan panduan capex).
+
+EV = 0.6 × 30 − 0.4 × 25 = 18 − 10 = **+8% pulangan dijangka**.
+
+Itu kelihatan boleh didagangkan. Tetapi semak penurunan terhadap mandat:
+
+- User max_drawdown ialah 20%. Penurunan 25% dalam posisi 10% = hentaman 2.5% pada portfolio. OK.
+- User single-name cap ialah 8%. Jadi RM mengurangkan posisi kepada 8%, bukan 10%.
+- Stop ditetapkan 1 ATR di bawah tahap pembatalan Bear — katakan $148.
+
+Output: **BELI 8% NVDA, stop $148, target $192, jangka masa 9 bulan.** Bull dan Bear tidak mengatakan itu. RM yang mengatakan itu.
+
+## Apabila RM perlu menolak
+
+Pengurus Penyelidikan sebenar kadangkala akan mengembalikan "tiada dagangan". Secara khusus:
+
+- EV negatif atau hampir positif — asimetri tidak menjustifikasikan kos.
+- Penurunan tidak sesuai dengan sebarang stop yang rasional — kes Bear ialah "jika gelembung AI meletup, -60%" tanpa tahap pembatalan yang bersih.
+- <Term id="ami_mandate" /> konflik — pengguna adalah long-only dan satu-satunya kelebihan berada di sisi short.
+- Kualiti perdebatan rendah — tiada pihak membina kes yang boleh difalsifikasikan.
+
+"Tidak ada dagangan" adalah jawapan sebenar. PM di hilir akan menghormatinya. (Dan jika RM dipaksa ke dalam dagangan yang tidak mereka percayai, <Term id="ami_pm_safety_floor" /> akan menangkapnya juga — itulah redundansi.)
+
+## Kuiz
+
+<Quiz
+  question="Bull menaruh keyakinan 60% untuk kenaikan 30%; Bear menaruh keyakinan 40% untuk penurunan 25%. Apakah pulangan dijangka yang dikira oleh RM?"
+  options={[
+    "+13%",
+    "+5%",
+    "-1%",
+    "+8%"
+  ]}
+  answer={3}
+  explanation="EV = 0.6 × 30 − 0.4 × 25 = 18 − 10 = +8%. Tugas RM adalah menjalankan pengiraan ini secara eksplisit, bukan sekadar mengesahkan suasana perdebatan."
+/>
+
+<Quiz
+  question="Antara berikut, yang manakah BUKAN tanggungjawab Research Manager?"
+  options={[
+    "Mengundi untuk memutuskan keputusan yang sama rata antara Bull dan Bear",
+    "Menilai asimetri potensi kenaikan berbanding penurunan pada paksi yang sama",
+    "Menerapkan kekangan mandat pengguna kepada saiz posisi",
+    "Menterjemah 'pandangan' kepada posisi bersaiz dengan titik henti kerugian"
+  ]}
+  answer={0}
+  explanation="RM bukan pendapat ketiga. Mereka mensintesis. Jika RM hanya mengundi, mereka gagal — sudah ada empat Analyst di hulu."
+/>
+
+<Quiz
+  question="Kes Bull tiada syarat falsifikasi dan kes Bear hanyalah hujah orang-orangan 'AI dibesar-besarkan.' Apakah yang harus dilakukan Research Manager?"
+  options={[
+    "Menaik taraf terus kepada Portfolio Manager",
+    "Memilih sisi yang mempunyai keyakinan lebih tinggi",
+    "Mengeratkan purata kedua-duanya dan mengesyorkan posisi kecil",
+    "Menandakan kualiti perdebatan dan memulangkan 'tiada dagangan'"
+  ]}
+  answer={3}
+  explanation="RM adalah penanda aras kualiti ruang. Jika tiada pihak membina kes yang jujur, tiada isyarat sebenar. 'Tiada dagangan' adalah output yang sah — dan PM akan menghormatinya di hulu."
+/>

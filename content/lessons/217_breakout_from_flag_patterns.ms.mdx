@@ -1,0 +1,66 @@
+---
+id: "217_breakout_from_flag_patterns"
+title: "Pecahan dari corak bendera dan pennant"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 3
+track: "edge_process"
+code: "EDGE 46"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "024_breakouts", "029_volume_confirmation", "023_support_and_resistance"]
+tags: ["strategy", "breakout", "flag", "pennant", "continuation"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pecahan corak bendera dan bendera kecil (pennant)
+
+Asas pecahan (053) menggunakan rintangannya julat mendatar. Bendera dan bendera kecil adalah varian yang lebih ketat dan pantas: selepas pergerakan arah yang tajam (tiang "bendera"), harga akan konsolidasi dalam saluran sempit yang sedikit menentang trend selama 5 hingga 15 sesi sebelum meneruskan arah asal. Kelebihan terletak pada pengecutan — volatiliti mampat, isipadu kering, kemudian pecahan dari konsolidasi menyelesaikan pergerakan sebelumnya dengan projeksi harga yang boleh diukur. Selepas pelajaran ini, anda boleh mengenal pasti apa yang layak sebagai bendera, apa yang tidak layak, dan bagaimana saiz kedudukan berdasarkan sasaran pergerakan terukur.
+
+## Contoh
+
+Lihat NVDA pada akhir Oktober 2024. Saham tersebut telah naik dari $130 pada 9 Oktober ke $144.42 pada 21 Oktober — kira-kira 11% tiang bendera dalam sembilan sesi. Dari 22 Oktober hingga 30 Oktober, harga bergerak mendatar-menurun dalam saluran ketat antara $138 dan $144 dengan isipadu yang jelas menurun. Purata isipadu harian 20 hari adalah sekitar 220 juta saham; hari-hari konsolidasi purata lebih dekat kepada 165 juta. Pada 1 November, NVDA ditutup pada $138.42 — tetapi pencetus yang lebih jelas berlaku pada 6 November apabila ia melompat melalui $144.42 dan ditutup pada $145.61 dengan 240 juta saham (di atas purata), menyelesaikan pecahan bendera. Pergerakan terukur: $144.42 - $130 = $14.42 ditambah pada tahap pecahan memberikan sasaran $158.84. NVDA mencapai $152 dalam empat sesi dan menyentuh $148 hingga $150 berulang kali sepanjang November, memenuhi kebanyakan pergerakan terukur.
+
+Kriteria kemasukan: (1) tiang bendera sebelumnya 5%+ dalam 5 hingga 15 sesi, (2) saluran konsolidasi yang membetulkan kurang daripada 50% tiang bendera, (3) isipadu mengecut semasa konsolidasi berbanding tiang bendera, (4) penutupan harian di atas paras tinggi konsolidasi. Henti rugi: penutupan kembali ke dalam saluran konsolidasi, ATAU paras rendah konsolidasi, mana-mana yang lebih ketat. Sasaran: pergerakan terukur = ketinggian tiang bendera ditambah pada tahap pecahan. Pembatalan perdagangan individu: penutupan harian kembali ke dalam julat konsolidasi — bendera gagal; keluar. Strategi GAGAL apabila konsolidasi terlalu lama (lebih daripada 15 sesi) — pada titik itu ia bukan lagi bendera, ia adalah asas, dan projeksi pergerakan terukur kehilangan kelebihan statistik. Ia juga GAGAL dalam pasaran makro yang bergegar di mana setiap "bendera" adalah puncak pengedaran yang tersembunyi.
+
+## Perangkap
+
+Kesilapan pemula ialah memanggil sebarang penurunan dalam trend naik sebagai "bendera" dan memproyeksikan pergerakan terukur yang tidak mempunyai asas. Bendera sebenar mempunyai tiga sifat: tiang bendera yang curam, saluran menentang trend yang ketat, dan pengecutan isipadu yang kelihatan. Jika mana-mana satu daripada tiga ini terlepas, anda tidak melihat bendera — anda melihat penurunan biasa atau, lebih teruk, pengedaran. Model mental yang betul: projeksi pergerakan terukur hanya sah apabila ketiga-tiga sifat tersebut dipenuhi. Jika isipadu tidak mengecut semasa konsolidasi — jika ia kekal rata atau meningkat — bendera itu disyaki dan matematik sasaran adalah fantasi. Perangkap lain: mengejar paras tinggi lilin pecahan. Tunggu penutupan.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah saham bergerak dari $50 ke $58 dalam tujuh sesi, kemudian bergerak mendatar antara $55 dan $58 selama empat minggu (20 sesi) dengan isipadu yang mendatar hingga meningkat. Harga kini menutup di atas $58 pada $58.40. Apa kata peraturan pecahan bendera?"
+  options={[
+    "Pendek — konsolidasi jangka panjang bermaksud pengagihan",
+    "Masuk posisi panjang tetapi gunakan sasaran yang lebih ketat kerana konsolidasi adalah panjang",
+    "Masuk posisi panjang dengan sasaran pergerakan diukur pada $66",
+    "Bukan bendera — tempoh konsolidasi dan profil isipadu tidak memenuhi syarat; ini adalah asas 4 minggu, bukan bendera"
+  ]}
+  answer={3}
+  explanation="Bendera adalah pendek (5-15 sesi) DAN mempunyai isipadu yang mengecut. 20 sesi dengan isipadu mendatar hingga meningkat adalah asas, bukan bendera, dan ramalan pergerakan diukur tidak mempunyai asas statistik. Jawapan 'masuk posisi panjang dengan sasaran pergerakan diukur pada $66' adalah memukau kerana pergerakan harga Nampak seperti pecahan bendera — tetapi menggunakan templat yang salah bermaksud memperdagangkan setup yang tidak mempunyai tepi yang dipelajari."
+/>
+
+<Quiz
+  question="Anda melihat pecahan bendera teks buku dalam AAPL: tiang bendera dari $220 ke $235, konsolidasi ketat antara $230 dan $235, isipadu mengecut dengan bersih, hari ini menutup pada $236.50. Henti rugi ditetapkan pada $229 (di dalam konsolidasi). Mandat: risiko 1% per perdagangan, akaun $80,000. Sasaran pergerakan diukur ialah $250. Berapakah saiz posisi DAN ganjaran-kepada-risiko?"
+  options={[
+    "106 saham, R:R = 1.8",
+    "106 saham, R:R = 2.7",
+    "320 saham, R:R = 2.0",
+    "53 saham, R:R = 1.8"
+  ]}
+  answer={0}
+  explanation="Risiko per saham = $236.50 - $229 = $7.50. Risiko maksimum = 1% * $80,000 = $800. Saham = $800 / $7.50 = 106.66, bulatkan ke bawah kepada 106. Ganjaran per saham = $250 - $236.50 = $13.50. R:R = $13.50 / $7.50 = 1.8. Jawapan 320 saham bersaiz dari nilai dolar bukan jarak henti rugi. Sintesis: walaupun corak yang bersih hanya memperoleh saiz yang menghormati mandat, dan 1.8R adalah di bawah kebanyakan ambang tepi — anda mungkin melepaskan perdagangan ini walaupun setup yang bersih."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal simbol saham yang baru sahaja mengalami kenaikan tajam dan tanya: "Adakah konsolidasi semasa merupakan bendera yang sah? Nyatakan tiang bendera, julat konsolidasi, profil isipadu, dan sasaran pergerakan terukur. Jika ia tidak layak, katakan mengapa." Kemudian dalam <Term id="ami_decision_journal" /> log masuk awal, henti rugi, sasaran, dan tiga kriteria bendera — supaya penilaian pasca-matematik dapat menilai anda berdasarkan kriteria, bukan hasil.
+
+## Pengambilan
+
+Bendera ialah tiang bendera, saluran menentang trend yang ketat, DAN pengecutan isipadu — ketiga-tiganya. Tanpa ketiga-tiganya, sasaran pergerakan terukur adalah aritmetik yang dicipta.

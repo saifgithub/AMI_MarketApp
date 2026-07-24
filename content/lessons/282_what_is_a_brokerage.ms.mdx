@@ -1,0 +1,84 @@
+---
+id: "282_what_is_a_brokerage"
+title: "Apakah itu Broker?"
+duration_min: 3
+level: 1
+track: "foundations"
+code: "CORE 14"
+topic: "market_basics"
+prerequisites: ["281_what_is_a_market"]
+tags: ["foundations", "brokerages"]
+agent_callouts: []
+locale_versions: ["en", "ms"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+# Apa Itu Syarikat Brok?
+
+Syarikat brok ialah entiti yang menghubungkan anda ke pasaran bursa. Anda tidak boleh menghampiri Bursa Saham New York dan membuat pesanan secara langsung — hanya ahli berdaftar yang dibenarkan. Syarikat brok adalah ahli berdaftar. Mereka menerima pesanan anda dan menghalaunya ke bursa atas nama anda.
+
+Contoh: Interactive Brokers, Charles Schwab, Fidelity, E*TRADE, Robinhood, Public.com, Al Rajhi Capital (Arab Saudi), Maybank (Malaysia).
+
+## Apa yang dilakukan oleh syarikat brok untuk anda
+
+1. **Penjagaan akaun.** Mereka menyimpan saham anda supaya anda tidak perlu menguruskan sijil fizikal.
+2. **Penghalaan pesanan.** Mereka menghantar pesanan anda ke bursa dan mengembalikan pengesahan.
+3. **Penyelesaian.** Mereka menguruskan pertukaran sebenar wang tunai dan saham (yang secara undang-undang mengambil masa 1 atau 2 hari bekerja T+1 atau T+2).
+4. **Pelaporan cukai.** Mereka menghantar borang 1099 (AS) atau setara tempatan setiap tahun untuk musim cukai.
+5. **Pinjaman margin.** Sesetengah membolehkan anda meminjam terhadap portfolio anda untuk membeli lebih banyak — ini ialah **leverage**, dan ia berbahaya jika anda tidak tahu apa yang anda lakukan.
+
+## Bagaimana mereka menjana pendapatan?
+
+Syarikat brok mempunyai beberapa aliran pendapatan:
+
+- **Spread pada bid/ask** (kadang-kadang) — mereka mengambil sedikit margin
+- **Pembayaran untuk aliran pesanan (PFOF)** — mereka menjual aliran pesanan anda kepada pembuat pasaran yang membayar mereka untuk hak menjadi di pihak bertentangan
+- **Faedah pada wang tunai yang tidak dilaburkan** dalam akaun anda
+- **Yuran pinjaman margin** — faedah atas wang yang anda pinjam terhadap portfolio anda
+- **Yuran langganan** — Robinhood Gold, Interactive Brokers Pro
+- **Yuran pertukaran asing** pada penukaran mata wang
+- **Yuran perdagangan** (kini jarang di AS, biasa di tempat lain)
+
+"Perdagangan percuma" yang anda lihat di Robinhood dibiayai oleh PFOF. Perdagangan itu sebenarnya tidak percuma — terdapat kehilangan kecekapan kecil berbanding pelaksanaan terus ke bursa, dibayar dalam pecahan satu sen setiap saham. Untuk perdagangan runcit kecil, ia tidak penting. Untuk institusi, ia penting.
+
+## Bagaimana AMI Trade berbeza
+
+**Kami bukan syarikat brok.** Anda tidak boleh menghantar pesanan perdagangan melalui AMI Trade dan membolehkannya dilaksanakan di pasaran sebenar. Setiap perdagangan dalam AMI Trade adalah **simulasi** — wang kertas, harga sebenar, tiada pesanan sebenar.
+
+Ini adalah reka bentuk yang disengajakan. Nilai pendidikan terletak pada *penalaran*, bukan pelaksanaan. Jika anda ingin melaksanakan perdagangan sebenar, anda akan melakukannya melalui syarikat brok berlesen di negara anda. AMI Trade ialah tempat anda berlatih; syarikat brok ialah tempat anda akhirnya bertindak.
+
+## Memilih syarikat brok (untuk masa hadapan)
+
+Apabila tiba masanya, tiga perkara penting:
+
+1. **Adakah ia berlesen** di negara anda? (SEC untuk AS, FCA untuk UK, SAMA untuk Arab Saudi, SC untuk Malaysia, dll.)
+2. **Berapakah yurannya?** (Komisen per perdagangan, spread FX, yuran tidak aktif, minimum akaun)
+3. **Apakah tawarannya?** (Akses pasaran tempatan, bahagian saham, akaun persaraan, dll.)
+
+Jangan pilih syarikat brok berdasarkan pengiklanan. Pilih berdasarkan pemegang lesen, yuran, dan kesesuaian ciri.
+
+## Kuiz
+
+<Quiz
+  question="Apakah maksud PFOF?"
+  options={[
+    "Pengisytiharan Awam Dana Terbuka",
+    "Bentuk Pesanan Pembiayaan Persendirian",
+    "Bayaran Untuk Aliran Pesanan",
+    "Corong Pesanan Yuran Premium"
+  ]}
+  answer={2}
+  explanation="Bayaran Untuk Aliran Pesanan. Inilah cara broker 'percuma' seperti Robinhood menjana pendapatan daripada perdagangan anda."
+/>
+
+<Quiz
+  question="Bolehkah anda meletakkan perdagangan wang sebenar melalui AMI Trade?"
+  options={[
+    "Hanya dengan tier Pengurus Lantai",
+    "Ya, di mana-mana pasaran di mana anda mempunyai akaun broker yang dipautkan",
+    "Tidak — AMI Trade adalah simulasi sahaja",
+    "Ya, tetapi hanya saham AS"
+  ]}
+  answer={2}
+  explanation="AMI Trade adalah simulasi pendidikan. Kami tidak pernah melaksanakan perdagangan wang sebenar. Untuk melakukannya, anda perlu menggunakan broker berlesen di bidang kuasa anda."
+/>

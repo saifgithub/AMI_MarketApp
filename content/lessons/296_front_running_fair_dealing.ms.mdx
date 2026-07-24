@@ -1,0 +1,70 @@
+---
+id: "296_front_running_fair_dealing"
+title: "Front-running dan urusan adil"
+duration_min: 5
+level: 13
+module: 22
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 4"
+topic: "front_running"
+prerequisites: ["294_insider_trading"]
+tags: ["ethics", "front-running", "fair-dealing", "order-flow"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Front-running dan keadilan dalam urusan
+
+Front-running adalah sepupu dekat kepada perdagangan maklumat sulit: bukannya berdagang berdasarkan maklumat sulit syarikat, anda berdagang berdasarkan pengetahuan sulit tentang **pesanan orang lain**. Pesanan yang belum diproses oleh pelanggan adalah maklumat bukan awam yang penting mengenai buku pesanan — sesiapa yang memegangnya berutang nilai tersebut kepada pelanggan. Keadilan dalam urusan adalah tanggungjawab yang sama yang diperluas: apabila anda bertindak untuk ramai pelanggan, tiada pelanggan yang mendapat panggilan, pengisian, atau penyelidikan sebelum yang lain. Selepas pelajaran ini, anda boleh membezakannya daripada kelajuan dan persaingan yang sah.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Di Bursa Malaysia: seorang broker memegang arahan pelanggan untuk membeli 500,000 saham MAYBANK, yang kini ditawarkan sekitar RM9.80. Sebelum memproses pesanan tersebut, broker membeli 50,000 saham untuk buku dagangannya sendiri pada RM9.80. Permintaan pelanggan kemudian mendorong harga naik ke RM9.95, dan broker menjual 50,000 sahamnya pada harga tersebut. Keuntungan broker: RM0.15 × 50,000 = **RM7,500**. Wang itu tidak dicipta — ia datang daripada pelaksanaan pelanggan, yang kini mengisi pada harga yang dinaikkan oleh pembelian broker sendiri. Pelanggan membayar RM7,500 untuk keistimewaan memberitahu broker tentang niatnya.
+
+Pelanggaran keadilan dalam urusan kelihatan lebih lembut tetapi berkumandang sama: penganalisis firma menurunkan penilaian daripada beli kepada jual, dan meja dagang menghubungi lima akaun terbesarnya sejam sebelum nota tersebut diterbitkan kepada semua orang. Lima besar itu menjual ke dalam pasaran yang belum tahu — pelanggan yang tinggal adalah likuiditi. Struktur yang sama seperti perdagangan MAYBANK: pengetahuan sulit tentang maklumat yang akan datang, dimonetisasikan terhadap orang yang berutang kepadanya.
+
+## Perangkap
+
+Pemula meruntuhkan ini kepada "perdagangan pantas adalah menipu," yang terasa betul selepas menonton firma frekuensi tinggi berlumba dengan suapan bursa. Tetapi kelajuan bukan kesalahan — **tanggungjawab ditambah sumber maklumat** adalah. Pembuat pasaran yang membaca aliran pesanan awam dan menjangka momentum bersaing secara agresif tetapi sah: ia tidak berutang apa-apa kepada pedagang tersebut dan tidak memegang apa-apa yang sulit daripada mereka. Broker dalam contoh MAYBANK memegang pesanan yang belum dieksekusi oleh pelanggannya sendiri — maklumat yang dia *dipercayai*, dimonetisasikan terhadap orang yang mempercayainya. Tanya dua soalan: adakah pedagang berutang tanggungjawab kepada orang ini, dan adakah maklumat yang digunakan adalah miliknya? Kedua-duanya ya: front-running. Mana-mana tidak: persaingan.
+
+## Steelman
+
+Kes lawan yang kuat: "Melarang penjangkaan aliran pesanan hanya melindungi incumbent yang lambat — persaingan kelajuan mempersempit spread dan semua orang mendapat manfaat daripada pelaksanaan yang lebih murah." Hujah itu adalah *betul mengenai maklumat awam* — dan itulah pengesah yang mengekalkan kategori tersebut dengan jujur. Jika strategi berfungsi sepenuhnya pada data awam (tawaran, cetakan, suapan yang diterbitkan yang tersedia kepada mana-mana pelanggan), ia adalah persaingan, tidak kira kelajuannya. Pada saat tepi memerlukan **maklumat pesanan bukan awam yang dipercayakan kepada pelanggan**, perdagangan yang sama menjadi pencurian daripada prinsipal. Garis itu bukan milisaat; ia adalah asal usul.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Dalam contoh MAYBANK, broker mendapat RM7,500 dengan membeli 50,000 saham sebelum pesanan klien sebanyak 500,000 saham. Siapakah yang membayar RM7,500 itu, dan bagaimana?"
+  options={[
+    "Bursa, melalui spread yang lebih lebar semasa pesanan",
+    "Pembuat pasaran lain yang menjual kepada broker pada RM9.80",
+    "Tiada siapa — keuntungan broker datang daripada pergerakan pasaran yang akan berlaku pada mana-mana masa",
+    "Klien, yang mengisi pada harga yang dinaikkan sebahagiannya oleh pembelian awal broker sendiri"
+  ]}
+  answer={3}
+  explanation="Pembelian broker menambah permintaan sebelum pesanan klien, jadi 500,000 saham klien diisi pada harga yang lebih buruk — RM7,500 adalah pemindahan dari pelaksanaan klien ke buku broker. Jawapan 'akan berlaku pada mana-mana masa' adalah yang memikat: kenaikan harga disebabkan oleh pesanan klien sendiri, yang merupakan tepat mengapa nilainya milik klien, bukan kepada sesiapa yang melihatnya dahulu."
+/>
+
+<Quiz
+  question="Pelanggan mana yang menjalankan front-running, berbanding bersaing secara sah? Trader A menganggarkan momentum dari feed konsolidasi awam dan membeli milisaat sebelum orang lain bertindak balas. Trader B ialah pekerja desk pelaksanaan dana yang membeli saham secara peribadi selepas melihat pesanan beli yang belum dilaksanakan sendiri oleh dana."
+  options={[
+    "Trader A — bertindak lebih pantas daripada orang lain pada maklumat yang sama adalah tidak adil",
+    "Kedua-dua — sebarang perdagangan sebelum peserta lain adalah front-running",
+    "Trader B — dia memegang pengetahuan bukan awam tentang pesanan yang dia mempunyai duti untuknya, manakala Trader A menggunakan data awam",
+    "Tiada siapa — kedua-duanya hanya membaca aliran pesanan"
+  ]}
+  answer={2}
+  explanation="Jalankan dua soalan: duti yang diwajibkan, dan maklumat siapa? Trader B memegang pesanan yang belum dilaksanakan oleh prinsipal sendiri — dipercayakan, bukan awam, dimonetisasikan terhadap pemiliknya. Kelebihan Trader A ialah kelajuan pada data yang boleh dibeli oleh mana-mana pelanggan: agresif, tetapi tiada duti dan tiada pengetahuan pesanan peribadi. Jawapan 'kedua-dua' adalah perangkap yang pelajaran ini wujud untuk menghancurkan — ia menjadikan jenayah kelajuan dan membiarkan pelanggaran sebenar bersembunyi di belakangnya."
+/>
+
+## Cuba sendiri
+
+Dalam 1-per-1 dengan Trader, tanya bagaimana simulasi AMI memodelkan slippage pada pesanan besar. Perhatikan bahawa kos simulasi menggerakkan pasaran adalah nilai yang sama yang dicuri oleh front-runner dalam pasaran sebenar — impak harga pesanan adalah milik sesiapa yang meletakkannya.
+
+## Penegasan
+
+Ujian itu bukan kelajuan — ia adalah siapa maklumat yang anda pegang ketika berdagang. Jika tepi itu datang daripada pesanan yang dipercayakan kepada anda, nilainya tidak pernah menjadi milik anda untuk diambil.

@@ -1,0 +1,81 @@
+---
+id: "239_strategy_rotation_by_regime"
+title: "Putaran strategi mengikut rejim — lapisan rejim di atas lapisan strategi"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 68"
+topic: "synthesis"
+prerequisites: ["058_strategy_failure_modes", "232_regime_segmented_backtests", "236_combining_strategies_for_diversification", "238_strategy_correlation", "062_volatility_regimes"]
+tags: ["synthesis", "regime_rotation", "portfolio", "regime"]
+agent_callouts: ["research_manager", "conservative_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Putaran strategi mengikut rejim — tindanan rejim di atas tindanan strategi
+
+Pelajaran diversifikasi (236) menyatakan bahawa menjalankan pelbagai strategi dengan rejim kegagalan yang tidak bertindih adalah pertahanan. Pelajaran ini adalah versi aktif: sebagai daripada memberi berat sama rata kepada strategi merentas rejim, anda ANJURKAN berat ke arah strategi yang rejim kebaikannya sedang berlaku dan JAUHKAN dari strategi yang rejim kegagalannya sedang berlaku. Dilakukan secara kasar, ia memperkenalkan semula overfitting (anda meramal rejim). Dilakukan dengan penunjuk rejim yang deterministik dan boleh diperhatikan serta anjakan berat yang telah berkomitmen sebelumnya, ia menangkap faedah diversifikasi DAN premium pulangan bersyarat rejim. Selepas pelajaran ini, anda boleh mereka bentuk tindanan putaran rejim menggunakan bilangan penunjuk yang kukuh, dan mengelakkan perangkap merekabentuknya menjadi sistem ramalan rejim.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Gunakan dua penunjuk rejim:
+1. **Rejim trend**: SPY di atas/ bawah Purata Pergerakan 200 hari DAN kecerunan 200 hari positif/ negatif.
+2. **Rejim volatiliti**: VIX di atas/ bawah 22.
+
+Empat kombinasi rejim:
+
+| Trend | Vol | Strategi digalakkan | Strategi disanksakan |
+|---|---|---|---|
+| Bull (di atas MA, kecerunan positif) | Rendah (VIX < 22) | Trend, pecah keluar, momentum | Pertahanan |
+| Bull | Tinggi (VIX > 22) | Pemulangan purata, pertahanan | Trend tulen |
+| Bear (di bawah MA, kecerunan negatif) | Rendah | Pertahanan, neutral pasaran | Momentum hanya-panjang |
+| Bear | Tinggi | Pertahanan, tunai | Pemulangan purata, momentum hanya-panjang |
+
+Peraturan putaran mudah: dalam rejim yang digalakkan, strategi yang sepadan mendapat berat penuh (contohnya, 1.0). Dalam rejim neutral, berat ialah 0.5. Dalam rejim kegagalan, berat ialah 0.0-0.25 (minimum sedar <Term id="ami_mandate" />). Strategi yang bukan digalakkan atau disanksakan kekal pada 0.5.
+
+Ujian balik (backtest) merangkumi 2005-2024 dengan tiga strategi (mengikuti trend, pemulangan purata, momentum) dan tindanan putaran di atas berbanding berat sama rata: CAGR agregat berat sama rata 10.4%, penurunan maksimum 14%. CAGR agregat putaran rejim 11.2%, penurunan maksimum 9%. Peningkatan bukan besar dalam CAGR — ia terletak pada penurunan, kerana tindanan putaran memotong pendedahan pemulangan purata dalam bear trend (rejim kegagalan strategi) dan pendedahan mengikuti trend dalam keadaan bergegar. Penurunan Q1 2020: berat sama rata -11%, putaran rejim -6%. Kejatuhan momentum November 2020: berat sama rata -4%, putaran rejim -2% (momentum telah dipotong kepada 0.5 akibat VIX meningkat pada Oktober).
+
+Putaran berfungsi kerana rejim kegagalan setiap strategi boleh diperhatikan SEBELUM kegagalan terkumpul — VIX meningkat sebelum pemulangan purata jatuh, kecerunan 200 hari mendatar sebelum mengikuti trend berputar-putar. Kelewatan adalah beberapa hari hingga minggu, yang cukup untuk bertindak balas.
+
+## Perangkap
+
+Kesilapan pemula ialah menggunakan terlalu banyak penunjuk rejim dan overfit peraturan putaran. Empat rejim yang boleh diperhatikan dengan dua penunjuk adalah kukuh. Enam belas rejim dengan lima penunjuk adalah overfit — kebanyakan sel mempunyai saiz sampel yang tidak mencukupi dan peraturan itu sesuai dengan hingar. Model mental yang betul: kekalkan peraturan putaran mudah dan berkomitmen sebelumnya. Dua penunjuk, empat rejim, tiga keadaan berat (0, 0.5, 1.0). Perangkap kedua ialah bertindak balas terhadap penunjuk rejim dengan hingar tinggi — menggunakan bacaan harian menghasilkan putaran berterusan yang memusnahkan pulangan melalui kos transaksi. Gunakan bacaan mingguan atau bulanan dengan peraturan penghalusan (contohnya, rejim mesti berterusan selama 4 minggu untuk mencetuskan perubahan berat). Perangkap ketiga ialah cuba meramal perubahan rejim — peraturan itu reaktif (ia bertindak balas terhadap penunjuk rejim yang disahkan), bukan prediktif. Meramal perubahan rejim adalah tepat jenis ramalan yang asas ujian balik (057) amaran terhadap.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Hari ini: SPY di atas purata bergerak 200-hari dengan cerun positif, VIX pada 14. Mengikut peraturan putaran rejim (rejim trend = bull, rejim vol = rendah), berapakah alokasi berat portfolio yang betul merentasi trend-following, mean-reversion, dan momentum?"
+  options={[
+    "Berat sama rata 33/33/33 sentiasa",
+    "Semua berat kepada mean-reversion kerana ia mempunyai CAGR backtest tertinggi",
+    "Potong semua pendedahan kerana VIX berada pada paras terendah berbilang tahun",
+    "Trend-following 1.0, momentum 1.0, mean-reversion 0.5 — rejim bull/low-vol memihak kepada trend dan momentum, neutral kepada mean-reversion. Normalisasikan jumlah untuk mematuhi jumlah pendedahan yang diwajibkan."
+  ]}
+  answer={3}
+  explanation="Peraturan ini menggunakan berat yang telah ditetapkan sebelumnya berdasarkan penunjuk rejim yang boleh diperhatikan. Bull/low-vol memihak kepada trend dan momentum; mean-reversion adalah neutral (rejim yang memihak kepadanya ialah bull/high-vol). Jawapan berat sama rata sentiasa mengabaikan peraturan putaran. Jawapan semua-kepada-mean-reversion memilih berdasarkan CAGR backtest sahaja, mengabaikan rejim. Jawapan potong-semua-pendedahan salah tafsir VIX rendah sebagai isyarat jualan (VIX rendah adalah neutral untuk rejim bull, bukan bearish)."
+/>
+
+<Quiz
+  question="Penunjuk rejim berubah: SPY jatuh di bawah purata bergerak 200-hari pada pergerakan tajam, VIX melonjak dari 18 ke 31 dalam satu minggu. The Conservative Debator berkata 'putar serta-merta ke rejim bear/high-vol — potong mean-reversion kepada 0.25, potong momentum kepada 0.25'. The Research Manager berkata 'tunggu sehingga rejim berterusan 4 minggu sebelum memutar berat'. Sintesis: mana yang betul?"
+  options={[
+    "Tambah kepada mean-reversion kerana penurunan adalah peluang",
+    "The Conservative Debator betul — kelajuan penting dalam krisis",
+    "The Research Manager betul — peraturan penghalusan yang telah ditetapkan (keperluan 4 minggu) menghalang lapisan putaran daripada menjadi kejaran P&L frekuensi tinggi. Peraturan pendedahan keseluruhan yang sedar mandat memotong pendedahan semasa menunggu jika had mandat menghampiri, tetapi berat putaran itu sendiri menunggu pengesahan.",
+    "Potong semua strategi kepada sifar serta-merta"
+  ]}
+  answer={2}
+  explanation="Sintesis: peraturan penghalusan adalah pertahanan terhadap putaran berlebihan yang dipacu oleh hingar. Jika setiap lonjakan VIX mencetuskan penimbunan semula berat, strategi ini akan kurang berprestasi akibat kos transaksi sahaja. SERBESAMA MASA, peraturan pendedahan keseluruhan yang sedar mandat (terpisah daripada putaran) memotong pendedahan kasar apabila kerugian menghampiri had. Jawapan 'The Conservative Debator betul, kelajuan penting' membiarkan satu minggu menentukan putaran. Memotong semua strategi kepada sifar adalah pembetulan berlebihan. Menambah kepada mean-reversion semasa penurunan mengabaikan isyarat rejim sepenuhnya dan berdagang berdasarkan emosi."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> bersama Pengurus Penyelidikan, takrifkan dua penunjuk rejim anda (contohnya, status 200-hari SPY dan ambang VIX), empat kombinasi rejim, matriks berat strategi per rejim, dan peraturan penghalusan (contohnya, ketekalan 4 minggu). Hantar: "Adakah tindanan putaran ini kukuh? Apakah ujian paling mudah yang mengesahkan ia tidak overfit?" Log matriks + peraturan penghalusan dalam <Term id="ami_decision_journal" /> sebagai protokol yang telah berkomitmen sebelumnya — dan seimbangkan semula hanya apabila perubahan rejim telah berterusan melebihi tetingkang penghalusan.
+
+## Terasan
+
+Putaran strategi berfungsi apabila ia reaktif (kepada rejim yang disahkan) dan mudah (dua penunjuk, empat rejim, tiga berat). Pada saat ia menjadi prediktif atau kompleks, ia overfit.

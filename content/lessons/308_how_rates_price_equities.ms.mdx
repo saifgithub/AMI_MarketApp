@@ -1,0 +1,69 @@
+---
+id: "308_how_rates_price_equities"
+title: "Bagaimana kadar menentukan harga ekuiti (kadar diskaun)"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 6"
+topic: "rates_and_equity_valuation"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "306_yield_curve_and_inversion", "307_credit_spreads_and_ratings", "037_valuation_what_is_a_stock_worth"]
+tags: ["bonds", "fixed-income", "discount-rate", "equity-valuation", "interest-rates"]
+sources: []
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Bagaimana kadar harga ekuiti (kadar diskaun)
+
+Nilai sekeping saham ialah nilai kini bagi semua tunai yang akan dijana untuk anda — dan "nilai kini" memerlukan kadar diskaun untuk menukar dolar masa depan kepada dolar hari ini. Kadar diskaun ini dibina pada mesin kadar faedah yang sama yang baru anda pelajari untuk bon: ia bermula dengan hasil Treasuri bebas risiko dan menambah premium risiko ekuiti di atasnya. Apabila kadar naik, setiap dolar masa depan yang mungkin diusahakan syarikat menjadi kurang bernilai pada hari ini, itulah sebabnya keputusan kadar Bank Pusat (Fed) boleh menggerakkan seluruh pasaran saham pada hari apabila pendapatan sebarang syarikat tidak berubah. Selepas pelajaran ini, anda akan dapat menjelaskan mengapa saham pertumbuhan bertindak balas lebih keras terhadap pergerakan kadar berbanding saham nilai.
+
+## Contoh
+
+Ingatlah kerangka penilaian saham dari <Lesson id="037_valuation_what_is_a_stock_worth"/>: nilai adil sekeping saham ialah aliran tunai masa depan yang dijangkanya didiskaunkan kembali ke hari ini. Kadar diskaun yang digunakan adalah kira-kira kadar bebas risiko (hasil Treasuri 10-tahun) ditambah premium risiko ekuiti. Apabila hasil Treasuri 10-tahun meningkat dengan ketara sepanjang 2022 semasa Fed menaikkan kadar secara agresif, nama-nama pertumbuhan tinggi dan tempoh jangka panjang — syarikat seperti banyak yang berada dalam lapisan paling spekulatif Nasdaq, yang dinilai berdasarkan aliran tunai yang dijangka lebih kurang satu dekad atau lebih — jatuh jauh lebih teruk berbanding nama-nama nilai dengan aliran tunai yang stabil, walaupun asas perniagaan jangka pendek banyak syarikat pertumbuhan tersebut tidak berubah. Mekanismenya adalah intuisi tempoh yang sama dari <Lesson id="305_duration_and_convexity"/>: sekeping saham yang nilainya bergantung pada aliran tunai masa depan yang jauh berkelakuan seperti bon jangka panjang dengan kupon rendah — harganya sangat sensitif terhadap kadar diskaun. Saham nilai matang yang membayar dividen berkelakuan lebih seperti bon jangka pendek — sebahagian besar nilainya datang dari aliran tunai yang tiba lebih awal, jadi ia kurang sensitif terhadap pergerakan kadar yang sama. Inilah sebabnya mengapa "saham pertumbuhan sensitif terhadap kadar" bukan sekadar truisme pasaran yang kabur — ia adalah matematik tempoh yang sama dari M13 yang diaplikasikan kepada ekuiti, bukan bon.
+
+## Perangkap
+
+Pemula mempercayai penurunan harga saham semasa kitaran kenaikan kadar sebagai bukti syarikat melakukan sesuatu yang salah — "perniagaan mesti sedang bergelut." Seringkali tiada apa-apa tentang perniagaan yang berubah langsung; hanya kadar diskaun yang berubah. Model mental yang betul: pisahkan pengangka (aliran tunai sebenar yang dijangka oleh syarikat) dari penyebut (kadar diskaun yang dikenakan ke atasnya). Kenaikan kadar menyerang penyebut di seluruh pasaran serentak, menjejaskan nama-nama pertumbuhan tempoh jangka panjang dengan teruk — itu adalah cerita mekanik penilaian, bukan penghakiman terhadap operasi sebarang syarikat tunggal. Mengaburkan kedua-duanya membawa kepada penjualan perniagaan baik pada saat yang salah, atau membeli masuk ke dalam "ia murah sekarang" tanpa bertanya sama ada kadar diskaun membenarkan harga baru.
+
+## Steelman
+
+Pengecam mungkin berhujah: "Kerangka ini melebih-lebihkan bagaimana kadar memacu harga saham secara mekanikal — banyak saham jatuh pada 2022 kerana sebab khusus syarikat (pertumbuhan perlahan, mampatan margin, tekanan kompetitif), bukan semata-mata kerana kadar diskaun." Itu benar dan penting: kadar adalah satu input, bukan satu-satunya. Penguji palsu: kumpulkan kesan kadar dengan membandingkan bagaimana syarikat dengan profil serupa yang mempunyai asas jangka pendek yang tidak berubah bergerak semasa tingkap kenaikan kadar yang sama. Jika nama-nama tempoh jangka panjang dan pelayan tinggi merentas industri yang tidak berkaitan semua mampat bersama sambil panduan jangka pendek sebenar mereka kekal utuh, itu adalah mekanisme kadar diskaun yang berfungsi secara bebas daripada cerita khusus syarikat. Di mana panduan syarikat sendiri juga merosot dalam tempoh yang sama, kedua-dua kesan sedang bertindan — dan memisahkan mereka adalah disiplin analitik yang diajarkan oleh pelajaran ini, bukan alasan untuk menolak kesan kadar.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Pada tahun 2022, nama teknologi berjenama tinggi jatuh lebih keras berbanding saham nilai aliran tunai stabil apabila Fed menaikkan kadar secara agresif — walaupun untuk syarikat yang panduan jangka pendek tidak berubah secara ketara. Apakah yang paling baik menerangkan perbezaan ini?"
+  options={[
+    "Syarikat pertumbuhan perniagaan sebenar sentiasa merosot lebih cepat daripada syarikat nilai pada mana-mana tempoh ekonomi",
+    "Nilai saham pertumbuhan bergantung heavily pada aliran tunai yang dijangka jauh di masa hadapan, menjadikannya berkelakuan seperti bon jangka panjang — sangat sensitif terhadap kadar diskaun — manakala aliran tunai lebih dekat masa hadapan saham nilai berkelakuan lebih seperti bon jangka pendek",
+    "Perbezaan ini adalah hingar rawak tanpa kaitan dengan kadar faedah",
+    "Saham nilai diwajibkan secara undang-undang untuk membayar dividen, yang melindungi mereka daripada kesan kadar"
+  ]}
+  answer={1}
+  explanation="Ini adalah mekanisme tempoh yang sama dari pelajaran bon yang digunakan kepada ekuiti: saham yang dinilaikan terutamanya pada aliran tunai masa hadapan yang jauh adalah jauh lebih sensitif terhadap kenaikan kadar diskaun berbanding saham yang dinilaikan terutamanya pada aliran tunai dekat masa hadapan, tidak kira sama ada panduan sebenar kedua-dua syarikat berubah atau tidak. Bukan perniagaan pertumbuhan yang secara inheren merosot lebih cepat, dan pembayaran dividen bukan perisai undang-undang daripada kesan kadar — ia adalah proksi bagi berapa banyak nilai terletak pada aliran tunai dekat masa hadapan berbanding jauh."
+/>
+
+<Quiz
+  question="Sebuah saham jatuh 15% semasa kitaran kenaikan kadar. Menggunakan pelajaran ini dan pelajaran spread kredit, apakah dua soalan yang perlu anda tanya sebelum menyimpulkan perniagaan itu sendiri dalam kesusahan?"
+  options={[
+    "Hanya sama ada CEO mengeluarkan kenyataan, dan sama ada saham masih disenaraikan di bursa pertukarannya",
+    "Hanya sama ada isipadu dagangan meningkat, kerana isipadu sahaja menentukan sama ada pergerakan itu adalah asas atau didorong oleh kadar",
+    "Sama ada simbol ticker saham berubah baru-baru ini",
+    "Sama ada aliran tunai dijangka sebenar syarikat (pengangka) berubah, dan secara berasingan sama kadar diskaun atau spread kredit yang dikenakan ke atasnya (penyebut, atau premium risikonya) bergerak untuk sebab-sepasaran pasaran yang tidak berkaitan dengan syarikat khusus ini"
+  ]}
+  answer={3}
+  explanation="Memisahkan pengangka aliran tunai daripada penyebut kadar diskaun — dan memeriksa sama ada pelebaran spread kredit adalah khusus penerbit atau pasaran-widely, mengikut pelajaran spread kredit — adalah tepat diagnostik yang modul ini bina ke arah: membezakan kemerosotan perniagaan tulen daripada penyenaraian semula mekanik penilaian yang berlaku kepada setiap aset jangka panjang pada satu masa. Isipadu dan perubahan simbol ticker tidak menjawab soalan itu langsung."
+/>
+
+## Cuba sendiri
+
+Kumpulkan Bilik pada penunjuk pertumbuhan dari senarai tontonan anda semasa mana-mana tempoh volatiliti kadar. Dalam Verdict simulasi, cari di mana Market Analyst atau Fundamentals Analyst membezakan pandangan yang didorong oleh asas daripada pandangan yang didorong oleh kadar. Ingat: output latihan AMI adalah artifak latihan, bukan nasihat pelaburan — anda menilai logiknya, bukan bertindak atas panggilan tersebut.
+
+## Teras
+
+Pergerakan kadar mengubah kadar diskaun yang dikenakan ke atas setiap dolar masa depan yang mungkin diusahakan sekeping saham — menjejaskan nama-nama pertumbuhan tempoh jangka panjang dengan teruk — jadi sebelum membaca penurunan yang didorong oleh kadar sebagai penghakiman terhadap perniagaan, pisahkan apa yang sebenarnya berubah dalam aliran tunai yang dijangkakan daripada apa yang berubah dalam kadar yang digunakan untuk mendiskaukannya.

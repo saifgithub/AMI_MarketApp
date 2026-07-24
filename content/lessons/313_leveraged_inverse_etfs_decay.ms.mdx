@@ -1,0 +1,71 @@
+---
+id: "313_leveraged_inverse_etfs_decay"
+title: "ETF berleverage & songsang — perangkap reputan"
+duration_min: 5
+level: 9
+module: 14
+difficulty: 3
+track: "asset_classes"
+code: "ASST 11"
+topic: "leveraged_etfs"
+prerequisites: ["312_passive_vs_active_bogle"]
+tags: ["leveraged-etf", "inverse-etf", "volatility-decay", "daily-reset", "derivatives"]
+sources: []
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# ETF tergerung & songsang — perangkap reputasi
+
+ETF tergerung 2x tidak menjanjikan pulangan dua kali ganda indeks pada mana-mana tempoh yang anda pilih — ia menjanjikan pulangan dua kali ganda indeks *untuk satu hari sahaja*, kemudian direset. Reset itu adalah keseluruhan cerita: sepanjang beberapa hari, menggabungkan berbilang kali yang direset harian terhadap pasaran yang volatil dan tidak menentu menghasilkan keputusan yang boleh menyimpang dengan ketara, dan secara negatif, daripada "2x pergerakan multi-hari sebenar indeks." Selepas pelajaran ini, anda akan dapat mengira mengapa ETF tergerung boleh kehilangan wang walaupun indeks asasnya berakhir rata atau malah naik.
+
+## Contoh
+
+Katakan indeks bermula pada 100. Hari 1 ia naik 10% kepada 110. Hari 2 ia jatuh 10% (dari asas baru) kembali ke 99 — turun 1% dari tempat ia bermula selama dua hari, satu perjalanan pusingan yang realistik. ETF tergerung 2x yang mengikuti indeks tersebut direset harian: Hari 1 ia mendapat 20% (2 × 10%), Hari 2 ia kehilangan 20% (2 × -10%). Bermula pada $100: Hari 1 → $120. Hari 2 → $120 × (1 − 0.20) = $96. Indeks asasnya kehilangan 1% selama dua hari; ETF "2x" kehilangan 4% — empat kali ganda kerugian, bukan dua kali ganda, semata-mata daripada penggabungan harian melalui pembalikan. Jalankan corak bolak-balik yang tidak menentu yang sama selama berminggu-minggu dan dana tergerung boleh menitis nilai secara berterusan walaupun indeks asasnya tidak ke mana-mana. Ini adalah reputasi volatiliti (juga dipanggil "slippage beta"): semakin pasaran bergegar ke sisi dengan volatiliti, semakin teruk prestasi tergerung direset harian berbanding berbilang kali yang dinyatakan, bebas daripada sebarang arah jangka panjang.
+
+Produk sebenar membawa amaran eksplisit tentang ini: ETF tergerung dan songsang (simbol seperti TQQQ untuk pendedahan 3x Nasdaq-100, atau SQQQ untuk -3x) mendedahkan dalam prospektus mereka bahawa mereka direka untuk memenuhi berbilang kali yang dinyatakan hanya sepanjang satu hari perdagangan, dan bahawa tempoh pegangan melebihi itu membawa risiko penggabungan yang boleh menghasilkan keputusan yang jauh daripada apa yang dicadangkan oleh pengiraan "darabkan pulangan indeks" yang naif.
+
+## Perangkap
+
+Pemula melihat "ETF S&P 500 2x" dan memodelkannya secara mental sebagai "jika S&P 500 naik 8% tahun ini, saya mendapat 16%." Ia terasa seperti pendaraban mudah sepatutnya berfungsi. Model mental yang betul: berbilang kali 2x direset setiap hari, dan tergerung direset harian digabungkan — dalam pasaran yang tidak menentu atau menurun, ia digabungkan melawan anda lebih cepat daripada pergerakan indeks, dan walaupun dalam pasaran yang mempunyai trend lancar, keputusan multi-hari adalah hampir dua kali ganda tetapi tidak tepat dua kali ganda. Produk ini dibina dan didedahkan sebagai alat taktikal jangka pendek atau lindung nilai, bukan posisi beli dan pegang.
+
+## Argumen kukuh
+
+Kes untuk menggunakan ETF tergerung secara sengaja: seorang pedagang dengan pandangan arah jangka pendek yang kuat — beberapa jam hingga beberapa hari, bukan berbulan-bulan — boleh menggunakan ETF tergerung untuk menyatakan pandangan itu tanpa akaun margin, kos pinjaman, atau risiko likuidasi posisi tergerung sebenar. Dalam pasaran yang mempunyai trend lancar (volatiliti rendah, satu arah) sepanjang tempoh pegangan pendek, berbilang kali direset harian mengikuti sasarannya dengan munasabah — masalah reputasi adalah khusus masalah volatiliti dan tempoh pegangan, bukan masalah tergerung yang selalu rosak. Penggugur: bandingkan pulangan multi-hari yang direalisasikan ETF tergerung dengan berbilang kali naifnya, merentasi kedua-dua tempoh trend lancar dan tempoh bergegar ke sisi untuk indeks asasnya yang sama. Jika pengesanan kekal dalam trend dan gagal dalam bergegar, argumen kukuh itu betul mengenai *bila* tergerung berfungsi — yang tepat sebab mengapa ini adalah alat tempoh pegangan pendek, bukan jangka panjang.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Satu indeks bergerak dari 100 → 110 (Hari 1, +10%) → 99 (Hari 2, -10% dari asas baru), memberikan净 -1% dalam dua hari. ETF terkongsi 2x yang bermula pada $100 naik ke $120 pada Hari 1, kemudian kehilangan 20% pada Hari 2. Apakah keputusan dua hari ETF tersebut, dan mengapa ia tidak sama dengan 2x daripada -1% indeks?"
+  options={[
+    "ETF berakhir pada $96, keputusan -4% — kerana pendarab 2x ditetapkan semula dan dikompaun setiap hari, bukan terhadap pergerakan jumlah dua hari",
+    "ETF berakhir pada $98, keputusan -2%, tepat dua kali ganda -1% indeks",
+    "ETF berakhir pada $100, rata, kerana hari naik dan hari turun saling membatalkan",
+    "ETF berakhir pada $102, keuntungan +2%, kerana penguji sentiasa menguntungkan pemegang sepanjang masa"
+  ]}
+  answer={0}
+  explanation="$120 × 0.80 = $96, keputusan dua hari -4% — empat kali ganda kerugian -1% indeks, bukan dua kali ganda. Pendarab ini terpakai kepada pulangan setiap hari secara individu, kemudian dikompaun; ia tidak pernah sekadar 2x yang diaplikasikan kepada jumlah berbilang hari. Keputusan rata atau positif mengabaikan fakta bahawa hari turun dikira terhadap asas yang lebih tinggi selepas kenaikan, yang merupakan tepat di mana kompaun penetapan semula harian melakukan kerosakannya."
+/>
+
+<Quiz
+  question="Menggabungkan pelajaran ini dengan pelajaran pasif-vs-aktif, apakah perbezaan struktur tunggal terbesar antara ETF indeks pasaran luas (seperti satu yang mengikuti S&P 500) dan ETF terkongsi (seperti produk 2x atau 3x), dari segi tempoh pegangan yang sesuai?"
+  options={[
+    "Tiada perbezaan bermakna — kedua-duanya direka untuk dipegang secara kekal dengan risiko yang sama",
+    "ETF terkongsi sebenarnya lebih selamat untuk pegangan jangka panjang kerana pulangan jangkaannya yang lebih tinggi mengatasi sebarang reputan",
+    "Satu-satunya perbezaan adalah nisbah perbelanjaan, yang lebih tinggi pada produk terkongsi",
+    "Ralat penjejakan ETF indeks adalah seretan tahunan kecil dan perlahan yang sesuai untuk pegangan jangka panjang; kompaun penetapan semula harian ETF terkongsi boleh menghasilkan perbezaan tajam daripada pendarab yang dinyatakan dalam masa beberapa minggu dalam pasaran yang bergegar, menjadikannya tidak sesuai secara struktur untuk pegangan jangka panjang"
+  ]}
+  answer={3}
+  explanation="Seretan kos utama ETF indeks standard (ralat penjejakan, nisbah perbelanjaan) adalah kecil dan lebih kurang linear sepanjang masa, konsisten dengan tempoh pegangan jangka panjang. Mekanisme reputan ETF terkongsi adalah berbeza dari segi jenis, bukan darjah — ia didorong oleh kompaun harian melalui volatiliti, dan boleh menghapuskan nilai dalam masa beberapa minggu dalam pasaran yang bergegar tanpa mengira arah jangka panjang indeks. Itu adalah perbezaan struktur, bukan kebetulan. Nisbah perbelanjaan yang lebih tinggi pada produk terkongsi adalah nyata tetapi bukan risiko utama yang diterangkan dalam pelajaran ini — reputan akan wujud walaupun pada yuran sifar."
+/>
+
+## Cuba sendiri
+
+Dalam 1-satu-1 dengan Penganalisis Pasaran, tanya: "Jika [simbol pada senarai pantauan anda] bergegar ke sisi selama dua minggu, apa yang akan berlaku kepada versi tergerung 2xnya?" Gunakan jawapan ejen untuk memeriksa model mental anda mengenai reputasi terhadap contoh konkret semasa — ingat bahawa respons AMI adalah penjelasan latihan, bukan isyarat untuk memegang atau mengelakkan sebarang posisi sebenar.
+
+## Kesimpulan
+
+Berbilang kali ETF tergerung adalah janji tentang satu hari, bukan tempoh pegangan anda — semakin lama dan lebih bergegar pegangan, semakin jauh keputusan menyimpang daripada "darabkan sahaja indeks."

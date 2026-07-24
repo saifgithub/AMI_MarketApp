@@ -1,0 +1,81 @@
+---
+id: "305_duration_and_convexity"
+title: "Intuisi tempoh dan kekonveksan"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 3"
+topic: "duration_convexity"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm"]
+tags: ["bonds", "fixed-income", "duration", "convexity", "interest-rate-risk"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Intuisi jangka masa & kecekungan (convexity)
+
+Tidak semua bon bertindak balas terhadap pergerakan kadar dengan jumlah yang sama — bon 2 tahun hampir tidak bergetar apabila hasil (yield) berubah 1 mata, manakala bon 20 tahun boleh jatuh dua digit. Durasi ialah nombor yang memberitahu anda seberapa sensitif harga bon terhadap perubahan hasil, dan ia adalah cara terpantas untuk membandingkan risiko kadar faedah merentas bon yang sangat berbeza. Selepas pelajaran ini, anda akan mampu membaca angka durasi dan meramalkan kira-kira seberapa banyak harga bon bergerak bagi perubahan kadar yang diberikan.
+
+## Contoh
+
+Ambil bon semiannual hipotetikal dengan nilai nominal $1,000, kupon 4%, dari pelajaran penentuan harga, yang didagangkan pada hasil hingga matang (YTM) 5%. Dengan 10 tahun hingga matang, durasi Macaulay-nya ialah **8.26 tahun** dan durasi terubah suai (modified duration) ialah **8.05**. Heuristik: harga bergerak kira-kira **-peratusan durasi terubah suai per pergerakan 1 mata hasil**. Jadi, jika hasil naik 1 peratusan mata, harga bon ini sepatutnya jatuh kira-kira 8.05%. Sekarang bandingkan dengan kupon dan hasil yang sama tetapi hanya 2 tahun hingga matang: durasi Macaulay **1.94 tahun**, durasi terubah suai **1.89**. Kenaikan hasil 1 mata yang sama menelan kos kira-kira 1.89% bagi bon 2 tahun — lebih empat kali kurang sakit berbanding bon 10 tahun, semata-mata kerana lebih banyak aliran tunai (cash flow) tiba lebih awal. Kes pengajaran yang paling jelas ialah bon tanpa kupon (zero-coupon) 10 tahun pada YTM 5%: durasi Macaulay adalah tepat **10.0 tahun** — iaitu kematangannya. Tanpa kupon di sepanjang jalan, 100% aliran tunai anda berada pada kematangan, jadi durasi merosot tepat kepada masa yang anda tunggu. Itulah kes penanda aras yang menjadikan durasi intuitif: durasi ialah purata masa berberat aliran tunai untuk mendapatkan semula wang anda, dan kupon menarik purata itu ke hadapan.
+
+## Perangkap
+
+Pemula memperlakukan durasi seperti sifat tetap dan kekal bagi sebuah bon — "bon ini mempunyai durasi 8 tahun" seolah-olah ia dicap pada sijil. Ia tidak sedemikian. Durasi berubah apabila bon menua, apabila hasil bergerak, dan ia khusus kepada tahap hasil di mana ia diukur. Perangkap yang lebih besar: memperlakukan anggaran durasi sebagai tepat. Durasi terubah suai ialah anggaran **linear** bagi hubungan yang melengkung — ia mendapat arah dan magnitud kasar dengan betul tetapi melebih-lebihkan kerugian pada kenaikan kadar dan meremehkan keuntungan pada penurunan kadar. Model mental yang betul: durasi memberitahu anda kecerunan pada satu titik pada lengkung, bukan keseluruhan lengkung.
+
+## Pembelaan teguh (The steelman)
+
+Seorang pengkritik yang tajam mungkin berkata: "Jika durasi hanyalah anggaran, mengapa tidak mengira nilai penentuan semula (repriced value) yang tepat setiap kali daripada bergantung pada pintasan linear?" Adil — dan meja dagangan (desks) dengan enjin penentuan harga melakukan tepat itu bagi satu bon. Tetapi durasi mendapat haknya sebagai **tombol risiko paras portfoli**: anda boleh menjumlahkan durasi kali pendedahan dolar merentas ratusan bon dengan kupon dan kematangan berbeza untuk mendapatkan satu angka sensitiviti kadar paras portfoli, sesuatu yang tidak dapat anda lakukan dengan menjalankan semula model penentuan semula penuh kedudukan demi kedudukan secara masa nyata. Penguji palsu sama ada durasi "cukup baik": bandingkan pergerakan harga yang diimplikasikan oleh durasi linear dengan nilai penentuan semula sebenar bon bagi pergerakan kadar yang realistik (1-2 mata). Jika jurangnya kecil — yang mana teori kecekungan (convexity) ramalkannya akan berlaku bagi pergerakan sederhana — pintasan itu mendapat kegunaannya; bagi kejutan kadar yang besar, jurang itu melebar dan anda memerlukan pembetulan kecekungan.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah bon 10 tahun mempunyai terbitan terubah suai 8.05; sebuah bon 2 tahun dengan kupon dan hasil yang sama mempunyai terbitan terubah suai 1.89. Jika hasil naik 1 peratus mata, bagaimanakah perbandingan tindak balas harga mereka?"
+  options={[
+    "Harga mereka jatuh pada jumlah yang sama, kerana terbitan terubah suai hanya penting untuk tahap hasil, bukan tempoh matang",
+    "Bon 10 tahun jatuh kira-kira 8.05% manakala bon 2 tahun jatuh kira-kira 1.89% — kepekaan kadar untuk bon yang lebih pendek adalah lebih rendah empat kali ganda",
+    "Bon 2 tahun jatuh lebih banyak kerana ia matang lebih awal dan mempunyai masa yang kurang untuk pulih",
+    "Harga kedua-dua bon tidak berubah; hanya bon yang baru dikeluarkan akan menyesuaikan semula harga dengan perubahan hasil"
+  ]}
+  answer={1}
+  explanation="Terbitan terubah suai adalah anggaran langsung bagi perubahan harga peratusan bagi setiap pergerakan hasil 1 mata, jadi 8.05 dan 1.89 diterjemahkan hampir secara langsung kepada penurunan harga 8.05% dan 1.89%. Bon 2 tahun kurang sensitif tepat kerana sebahagian besar aliran kontannya — termasuk prinsipal penuh — tiba lebih awal, bukan kerana ia mempunyai masa yang kurang untuk pulih. Bon sedia ada menyesuaikan semula harga secara berterusan dalam pasaran sekunder; itulah premis utama hasil sehingga matang."
+/>
+
+<Quiz
+  question="Sebuah bon tanpa kupon 10 tahun pada Hasil Hingga Matang (YTM) 5% mempunyai terbitan Macaulay tepat 10.0 tahun — tepat sama dengan tempoh matangnya. Mengapa terbitan bon tanpa kupon sentiasa sama dengan tempoh matangnya, manakala terbitan bon berbayar kupon lebih pendek daripada tempoh matangnya?"
+  options={[
+    "Bon tanpa kupon lebih berisiko, jadi pengawal selia memerlukan terbitan sama dengan tempoh matang sebagai peraturan pendedahan",
+    "Bon tanpa kupon tidak mempunyai terbitan terubah suai, hanya terbitan Macaulay, jadi kedua-dua nombor tidak boleh dibandingkan",
+    "Ia adalah kebetulan matematik khusus kepada hasil 5% yang digunakan dalam contoh ini",
+    "Terbitan adalah purata masa berat aliran kontan untuk menerima wang anda; tanpa kupon dibayar sepanjang jalan, semua aliran kontan berada pada tempoh matang, jadi purata runtuh tepat ke tarikh itu — pembayaran kupon menarik purata ke hadapan"
+  ]}
+  answer={3}
+  explanation="Terbitan menimbang setiap aliran kontan berdasarkan berapa banyak nilai yang disumbangkannya dan bila ia tiba; bon tanpa kupon mempunyai tepat satu aliran kontan, pada tempoh matang, jadi purata tertimbang adalah secara trivialnya tarikh matang itu sendiri. Bon kupon mengembalikan sebahagian wang lebih awal melalui kupon, yang menarik purata tertimbang di bawah tarikh matang — itulah sebabnya terbitan bon 10 tahun (8.26 tahun Macaulay) lebih pendek daripada tempoh matangnya 10 tahun. Ini terpakai pada mana-mana tahap hasil, bukan hanya 5%, dan bon tanpa kupon mempunyai kedua-dua ukuran terbitan seperti mana-mana bon."
+/>
+
+<Quiz
+  question="Terbitan terubah suai meramalkan pergerakan harga bon sebagai garis lurus, tetapi konveksiti bermakna hubungan harga/hasil sebenar melengkung. Apakah yang diramalkan konveksiti sebenarnya mengenai ketepatan anggaran hanya terbitan untuk kenaikan kadar berbanding penurunan kadar?"
+  options={[
+    "Bagi kenaikan kadar, penurunan harga sebenar adalah sedikit lebih kecil daripada ramalan garis lurus terbitan; bagi penurunan kadar, kenaikan harga sebenar adalah sedikit lebih besar — lengkungnya lebih memaafkan daripada garis lurus dalam kedua-dua arah",
+    "Terbitan adalah tepat dalam kedua-dua arah; konveksiti hanya penting untuk pilihan, bukan bon",
+    "Bagi kenaikan kadar, penurunan harga sebenar adalah lebih besar daripada yang diramalkan terbitan, menghukum pemegang bon lebih daripada yang dicadangkan anggaran garis lurus",
+    "Konveksiti menjadikan anggaran terbitan kurang tepat untuk bon berjangka pendek dan lebih tepat untuk bon berjangka panjang"
+  ]}
+  answer={0}
+  explanation="Hubungan harga/hasil adalah melengkung, bukan lurus, dan ia melengkung memihak kepada pemegang bon di kedua-dua sisi: kerugian akibat kenaikan kadar datang sedikit lebih ringan daripada anggaran terbitan linear, dan keuntungan akibat penurunan kadar datang sedikit lebih kaya. Itulah bentuk definisi konveksiti positif dalam bon kupon biasa. Terbitan tidak pernah tepat untuk mana-mana tempoh matang — ralat anggaran hanya meningkat dengan saiz pergerakan kadar, dan ia terpakai pada semua tempoh matang, bukan secara terpilih untuk bon pendek atau panjang."
+/>
+
+## Cuba sendiri
+
+Dalam sesi 1-ke-1 dengan Analis Asas (Fundamentals Analyst), tanyakan: "Jika saya membandingkan dana bon berjangka masa pendek dengan dana bon berjangka masa panjang, apakah yang memberitahu durasi saya tentang mana yang lebih berisiko jika kadar bergerak?" Gunakan perbandingan 8.05-vs-1.89 dari pelajaran ini untuk menyemak jawapan.
+
+## Intipati
+
+Durasi memberitahu anda kira-kira seberapa banyak harga bon bergerak bagi perubahan hasil 1 mata — kematangan lebih panjang dan kupon lebih rendah bermaksud durasi lebih tinggi dan sensitiviti kadar lebih tinggi — tetapi ia adalah anggaran garis lurus bagi hubungan yang melengkung, jadi anggap ia sebagai anggaran pantas, bukan ramalan tepat.

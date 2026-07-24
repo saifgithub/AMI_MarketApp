@@ -1,0 +1,69 @@
+---
+id: "306_yield_curve_and_inversion"
+title: "Lengkung hasil & maksud pembalikan"
+duration_min: 5
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 4"
+topic: "yield_curve"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "305_duration_and_convexity"]
+tags: ["bonds", "fixed-income", "yield-curve", "inversion", "recession-signal"]
+sources: []
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Lengkung hasil & maksud pembalikan
+
+Plotkan hasil bon kerajaan terhadap tempoh anda perlu memegangnya — 3 bulan, 2 tahun, 10 tahun, 30 tahun — dan anda akan mendapat lengkung hasil. Biasanya ia condong ke atas: peminjam menuntut hasil lebih tinggi untuk mengikat wang untuk tempoh yang lebih lama. Apabila kecondongan itu berbalik dan hasil jangka pendek membayar lebih daripada hasil jangka panjang, lengkung itu "terbalik" — salah satu isyarat yang paling diperhatikan di pasaran, kerana ia telah mendahului setiap kemerosotan ekonomi AS sejak tahun 1960-an. Selepas pelajaran ini, anda akan dapat membaca bentuk lengkung hasil dan menjelaskan apa yang pasaran secara kolektif bertaruh apabila ia terbalik.
+
+## Contoh
+
+Versi yang paling diperhatikan ialah sebaran "2s10s" — hasil Treasuri 10 tahun tolak hasil Treasuri 2 tahun. Ia terbalik pada tahun 2022, dengan hasil 2 tahun diperdagangkan di atas hasil 10 tahun untuk tempoh yang berpanjangan sehingga 2023, salah satu pembalikan terpanjang dalam rekod; kemerosotan ekonomi mengikut kitaran pengetatan pasca-2022 yang lebih luas, konsisten dengan rekod sejarah panjang lengkung sebagai isyarat leading (bukan tepat masanya). Mekanisme: apabila pasaran jangka bank pusat akan memotong kadar pada masa depan kerana pertumbuhan perlahan, bon berjangka panjang menghargakan kadar rendah masa depan itu hari ini, menarik hasil 10 tahun turun walaupun kadar dasar semasa — dan oleh itu hasil jangka pendek — kekal tinggi. Kadar Dasar Semalaman Bank Negara Malaysia (OPR) memainkan peranan yang sama di Bursa Malaysia: ia adalah penambat hujung pendek yang lengkung sekuriti kerajaan Malaysia yang lebih luas dihargakan terhadapnya, dan bentuk lengkung MGS dibaca untuk isyarat jangkaan pertumbuhan yang sama, walaupun lengkung Malaysia mempunyai sejarah dan pemacu yang berbeza daripada lengkung Treasuri AS.
+
+## Perangkap
+
+Pemula melihat "lengkung hasil terbalik" dan menganggapnya sebagai alat penentuan masa kemerosotan yang tepat — "jual semua sekarang." Itu salah pada dua kiraan. Pertama, tempoh antara pembalikan dan kemerosotan ekonomi secara sejarah berkisar dari kira-kira 6 bulan hingga lebih 2 tahun, jadi ia adalah amaran, bukan jam kiraan. Kedua, pembalikan tidak menyebabkan kemerosotan ekonomi; ia *mencerminkan* jangkaan agregat pasaran bahawa satu sedang berlaku, dihargakan melalui ribuan perdagangan bebas. Model mental yang betul: lengkung hasil adalah undian masa nyata jangkaan pasaran bon tentang pertumbuhan dan dasar kadar masa depan, bukan pencetus mekanikal. Anggap pembalikan sebagai meningkatkan kebarangkalian yang anda berikan kepada perlahan, bukan sebagai tarikh tetap dalam kalendar.
+
+## Steelman
+
+Pengecam yang tajam mungkin berhujah: "Lengkung 2s10s juga telah terbalik tanpa kemerosotan ekonomi mengikut rapat, atau dengan masa palsu yang cukup buruk untuk menjadikan isyarat tidak boleh dipercayai untuk sesiapa yang memperdagangkannya." Itu adalah kritikan yang nyata — lengkung itu bukan ramalan yang sempurna, dan dasar bank pusat tidak konvensional pasca-2008 (pelonggaran kuantitatif, bimbingan ke hadapan) telah secara hujah memutarbelitkan hujung panjang lengkung dengan cara yang melemahkan corak sejarah. Pengecam: lacakkan tempoh realisasi dan kadar positif palsu merentasi kitaran yang berbilang, bukan hanya satu. Jika pembalikan semakin gagal mendahului kemerosotan ekonomi apabila alat bank pusat berkembang, kebolehpercayaan isyarat itu benar-benar merosot — itu adalah soalan empirikal yang worth revisiting setiap kitaran, bukan alasan untuk menolak isyarat itu sepenuhnya dengan mengambil kira rekod sejarah berdekad-dekadnya.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Apakah maksud apabila hasil bon 2-tahun Treasury diperdagangkan di atas hasil bon 10-tahun Treasury (pembalikan '2s10s')?"
+  options={[
+    "Pemerintah menawarkan diskaun istimewa pada bon jangka panjang untuk menarik pembeli",
+    "Permintaan bon jangka panjang telah runtuh secara kekal dan tidak akan pulih",
+    "Pasar bon secara kolektif menjangkakan bank pusat akan memotong kadar faedah pada masa hadapan akibat pertumbuhan yang perlahan, menyebabkan hasil bon jangka panjang jatuh di bawah hasil jangka pendek yang masih mencerminkan kadar dasar semasa yang tinggi",
+    "Ia bermakna bon 10-tahun lebih berisiko untuk dipegang berbanding bon 2-tahun"
+  ]}
+  answer={2}
+  explanation="Hasil bon jangka panjang mencerminkan ramalan pasaran terhadap persekitaran kadar purata sepanjang tempoh tersebut; apabila pelabur menjangkakan pemotongan kadar pada masa hadapan, mereka memasukkan faktor ini ke dalam hasil jangka panjang semasa, menariknya di bawah hasil jangka pendek yang masih mencerminkan kadar dasar semasa. Ini adalah penyenaraian semula yang didorong oleh permintaan berdasarkan jangkaan, bukan program diskaun, keruntuhan kekal, atau tuntutan mengenai risiko lalai relatif antara tempoh matang penerbit yang sama."
+/>
+
+<Quiz
+  question="Pembalikan 2022-2023 adalah salah satu yang terpanjang dalam rekod, dan kemerosotan ekonomi (resesi) mengikuti kitaran pengetatan yang lebih luas. Apakah cara yang betul untuk menggunakan corak sejarah tersebut apabila membaca pembalikan semasa?"
+  options={[
+    "Anggap pembalikan sebagai kiraan detik tepat — jual aset berisiko pada hari tepat pembalikan berlaku",
+    "Abaikan lengkung sepenuhnya kerana satu episod sejarah tidak membuktikan kausaliti",
+    "Andaikan resesi telah berlaku pada masa lengkung mula membalik",
+    "Tingkatkan anggaran kebarangkalian untuk perlambatan masa hadapan dan luaskan jangka masa untuk ia, kerana lag sejarah berkisar kira-kira 6 bulan hingga lebih 2 tahun"
+  ]}
+  answer={3}
+  explanation="Rekod sejarah menyokong lengkung sebagai penunjuk awal dengan lag yang bermakna dan berubah-ubah — berguna untuk mengemas kini kebarangkalian perlambatan, bukan untuk menentukan masa tepat. Mengabaikan isyarat ini mengabaikan corak berdekad; menganggapnya sebagai pencetus tepat mengabaikan betapa luasnya lag sejarah sebenar. Resesi, jika berlaku, mengikuti pembalikan — ia tidak mendahuluinya."
+/>
+
+## Cuba
+
+Dalam 1-satu-1 dengan Market Analyst, tanya: "Bagaimana bentuk lengkung hasil semasa kelihatan, dan adakah sebahagian daripadanya terbalik baru-baru ini?" Perhatikan sama ada jawapan membingkainya sebagai kemas kini kebarangkalian berbandan kepastian — itulah disiplin yang diajar oleh pelajaran ini.
+
+## Teras
+
+Lengkung hasil yang terbalik ialah taruhan agregat pasaran bon bahawa pertumbuhan perlahan cukup untuk menjustifikasikan pemotongan kadar masa depan — isyarat yang nyata dan bermakna secara sejarah, tetapi kemas kini kebarangkalian merentasi tetingkap masa yang luas, bukan jam kiraan.

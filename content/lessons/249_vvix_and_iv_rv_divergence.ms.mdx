@@ -1,0 +1,81 @@
+---
+id: "249_vvix_and_iv_rv_divergence"
+title: "VVIX dan perbezaan antara volatiliti tersirat dan sebenar"
+duration_min: 6
+level: 6
+module: 10
+difficulty: 4
+track: "news_macro"
+code: "N&M 14"
+topic: "volatility_regime"
+prerequisites: ["062_volatility_regimes", "248_vix_term_structure", "031_indicator_limitations"]
+tags: ["regime", "volatility", "vvix", "implied", "realised", "divergence"]
+agent_callouts: ["market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# VVIX dan jurang volatiliti tersirat-berasaskan
+
+<Lesson id="062_volatility_regimes"/> memperkenalkan ATR sebagai volatiliti berasaskan dan VIX sebagai volatiliti tersirat. <Lesson id="248_vix_term_structure"/> menambah struktur terma VIX. Pelajaran ini mengajar dua bacaan yang lebih halus: VVIX (volatiliti VIX itu sendiri) dan jurang IV-vs-RV. Bersama-sama, ia menandakan apabila peserta pasaran pilihan mengawal posisi untuk tekanan yang belum muncul dalam pita data. Selepas pelajaran ini, anda akan dapat membaca VVIX dalam istilah peratusan, mengira dan menafsirkan jurang IV-RV, menamakan strategi yang dipadankan dengan setiap jurang, dan menyatakan pembatalan isyarat.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+VVIX ialah volatiliti tersirat bagi pilihan VIX — secara efektif, berapa banyak pasaran membayar untuk perlindungan terhadap perlindungan. Purata jangka panjang ~95, tetapi VVIX bergerak dari rendah 70-an dalam keadaan tenang kepada >150 dalam keadaan tekanan.
+
+Jurang IV-RV: (VIX) − (volatiliti SPX berasaskan 20 hari, diangkar tahunan). Premi risiko volatiliti. Purata jangka panjang ~+3 hingga +4 (tersirat sedikit di atas berasaskan — penjual pilihan memperoleh premi secara purata).
+
+Tiga kes jurang yang direkodkan:
+
+Julai 2024 pra-goncangan: Volatiliti berasaskan SPX 20 hari jatuh ke ~7% pada pertengahan Julai 2024. VIX kekal pada 14, VVIX meningkat dari 75 kepada 91. Jurang IV-RV berkembang ke ~+7 — volatiliti tersirat memasukkan tekanan sementara pita data tenang. Pembalikan carry yen pada 5 Ogos 2024 menyusul: SPX turun 3.0% dalam sesi, VIX melonjak ke 38.57.
+
+Februari 2020 pra-COVID: VIX purata 14 pada Januari 2020, VVIX purata ~95 kemudian meningkat ke 130 pada 21 Februari 2020. Volatiliti berasaskan SPX 20 hari adalah ~9%. Pasaran pilihan sedang mengawal posisi; pita data tidak pecah sehingga 24 Februari 2020.
+
+Pertengahan 2021 kenaikan perlahan: VIX kekal pada 15–18, tetapi VVIX mencapai 130+ pada Q3 2021 semasa tindakan pita yang tenang. Isyarat ini awal — tetapi puncak pengedaran akhir 2021 + pecahan Januari 2022 menyusul amaran tersebut.
+
+Peraturan pengesanan jurang IV/RV: (a) Jurang IV-RV di atas peratusan ke-75 bacaan 1 tahun lalu DAN (b) VVIX di atas peratusan ke-75 bacaan 1 tahun lalu. Kedua-dua benar adalah "bisikan tekanan pasaran pilihan" sementara pita tenang — secara sejarah merupakan prekursor kepada pengembangan volatiliti dalam 4–8 minggu, walaupun tidak selalu.
+
+Nota: isyarat ini mempunyai positif palsu. VVIX melonjak tanpa pecahan asas telah berlaku (contohnya, akhir 2017, di mana VVIX meningkat dan rejim kekal sehingga 2018). Anggap ia sebagai isyarat untuk mengetatkan <Term id="ami_mandate" /> anda, bukan pengesahan pecahan yang akan datang.
+
+## Perangkap
+
+Perangkap VVIX ialah menggunakannya sebagai alat masa. Pembaca melihat VVIX mencapai 130 dan menjual SPX secara agresif dengan harapan pecahan segera — melihat SPX naik 4% dalam bulan berikutnya — menutup posisi dengan kerugian — terlepas pecahan sebenar dua bulan kemudian. Kesilaran mental ialah salah anggap isyarat posisi sebagai isyarat masa.
+
+Model yang betul: VVIX + jurang IV-RV ialah bacaan kualiti rejim. Apabila pasaran pilihan membayar lebih untuk perlindungan sementara volatiliti berasaskan tenang, risiko ekor rejim telah meningkat walaupun trend masih utuh. Respons yang betul ialah pemampatan mandat, bukan pengambilan posisi arah. Ketatkan saiz, naikkan bar untuk entri baru, minta setup yang lebih bersih — tanpa meninggalkan panggilan rejim aktif.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="SPX 20-hari volatiliti direalisasikan ialah 8%. VIX ialah 16. VVIX ialah 128 (persentil ke-87 bagi tahun berjalan). Sebaran IV-RV ialah +8 (persentil ke-82). SPX masih berada di atas SMA 200-harinya. Apa yang ditetapkan oleh rangka kerja ini?"
+  options={[
+  ]}
+  answer={0}
+  explanation=""
+/> masih utuh, jadi responsnya ialah pemampatan mandat, bukan pembalikan arah: hadkan posisi baru ~25% lebih kecil, minta 3 indikator pengesahan 2-of-3 sebelum menambah, terima bahawa isyarat ini mempunyai positif palsu dan tetingkap 4–8 minggu. Batalkan isyarat jika VVIX jatuh kembali di bawah peratusan ke-50nya selama 5+ sesi.",
+    "Jual SPX secara agresif — pasaran pilihan sedang memasukkan harga kemelesetan."
+  ]}
+  answer={2}
+  explanation="Jawapan salah yang menggoda ialah menjual SPX secara agresif — isyarat pasaran pilihan nampaknya kuat, mengapa tidak bertindak atasnya? Tetapi rekod sejarah menunjukkan kelewatan adalah 4–8 minggu dengan kadar positif palsu yang signifikan. Respons yang betul adalah di sisi mandat, bukan arah. Jawapan 'beli lebih, pasaran pilihan biasanya salah' menolak isyarat sebenar; 'abaikan VVIX' menolak sama ada. Sintesisnya ialah respons berkalibrasi: mandat lebih ketat, bukan arah yang dibalikkan."
+/>
+
+<Quiz
+  question="Dua senario, VIX sama = 15. (A) Sebaran IV-RV = +3, VVIX = 85. (B) Sebaran IV-RV = +8, VVIX = 130. Senario mana membawa risiko ekor (tail risk) yang lebih tinggi dan apakah respons yang betul bagi Konservatif Risk Debator?"
+  options={[
+    "(B) berisiko lebih rendah kerana VVIX mengukur hingar, bukan isyarat.",
+    "Kedua-duanya sama — VIX ialah satu-satunya penunjuk yang relevan.",
+    "(A) berisiko lebih tinggi kerana sebaran IV-RV yang rendah menunjukkan kepasifan.",
+    "(B) mempunyai risiko ekor yang lebih tinggi secara material kerana pasaran pilihan menggalakkan perlindungan melebihi apa yang ditunjukkan oleh VIX spot. Respons Konservatif: saiz posisi lebih kecil, had kerugian (drawdown ceiling) lebih rendah, lebih suka setup dengan stop yang lebih ketat dan pembatalan yang lebih pantas. (A) ialah rejim tenang biasa; saiz mengikut kebenaran mandat penuh."
+  ]}
+  answer={3}
+  explanation="Jawapan salah yang menggoda ialah menganggap kedua-duanya sama — VIX sama, rejim sama, satu kesilapan yang boleh difahami. Tetapi bacaan terbitan kedua berbeza secara material. Menganggap (A) sebagai rejim berisiko tinggi membalikkan hubungan; menganggap (B) berisiko lebih rendah mengabaikan VVIX. Sintesisnya ialah mengenali bahawa tajuk yang sama boleh menyembunyikan realiti kedudukan yang sangat berbeza, dan mandat mesti bertindak balas."
+/>
+
+## Cuba sendiri
+
+Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "Bacaan VVIX hari ini dan peratusan 1 tahun lalu. Kira jurang IV-RV (VIX tolak volatiliti berasaskan SPX 20 hari diangkar tahunan) dan peratusannya. Beritahu saya sama ada kluster bisikan tekanan pasaran pilihan sedang aktif." Kemudian di <Term id="ami_decision_journal" />, tambah lajur tag: "Peratusan VVIX pada entri" — mula mengacunya pada perdagangan baru. Selama 20 perdagangan, anda akan melihat sama ada entri semasa tetingkap VVIX tinggi kurang berprestasi daripada entri anda semasa tetingkap VVIX rendah.
+
+## Kesimpulan
+
+VVIX dan jurang IV-RV mengelaskan risiko ekor rejim secara bebas daripada VIX spot. Apabila kedua-duanya berada dalam kuartil atas, mampatkan mandat — jangan balik arah — dan biarkan isyarat itu memimpin selama 4–8 minggu.

@@ -1,0 +1,75 @@
+---
+id: "232_regime_segmented_backtests"
+title: "Ujian semula bersegmen mengikut rejim — di mana nilai kelebihan sebenar berada?"
+duration_min: 7
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 61"
+topic: "backtesting"
+prerequisites: ["057_backtesting_a_strategy", "058_strategy_failure_modes", "229_walk_forward_analysis", "062_volatility_regimes"]
+tags: ["backtesting", "regime", "segmentation", "robustness"]
+agent_callouts: ["research_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Ujian semula bersegmen mengikut rejim — di mana sebenarnya kelebihan itu?
+
+Asas mod kegagalan (058) menyatakan setiap strategi mempunyai rejim di mana ia mengalami kerugian. Pelajaran ini adalah cara anda menemukannya SEBELUM rejim tersebut berlaku. Ujian semula bersegmen mengikut rejim membahagikan sampel sejarah mengikut rejim — bull/bear/sideways, volatiliti tinggi/rendah, kadar naik/kadar turun — dan melaporkan prestasi setiap kumpulan buket berbanding satu agregat tunggal. Nombor agregat menyembunyikan semua yang penting. Strategi yang memberikan CAGR 12% secara keseluruhan mungkin memperoleh 35% dalam tahun bull dan -8% dalam tahun bear, atau 18% dalam volatiliti rendah dan -2% dalam volatiliti tinggi. Komposisi adalah profil sebenar strategi tersebut. Selepas pelajaran ini, anda boleh mengsegmen ujian semula anda mengikut rejim, menamakan rejim di mana peraturan anda mengalami kerugian, dan berkomitmen awal mengenai peraturan saiz untuk rejim tersebut.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+Ambil peraturan momentum long-only pada large-cap AS selama 2005-2024. CAGR agregat: 10.4%, drawdown maksimum 28%. Sekarang, segmen.
+
+Mengikut rejim trend (SPY di atas/bawah purata bergerak 200-hari, kecerunan 200-hari positif/negatif):
+- Bull (di atas 200-hari, kecerunan positif, ~63% bulan): CAGR 18.2%, drawdown 14%
+- Sideways (di atas 200-hari, kecerunan rata, ~15% bulan): CAGR 4.1%, drawdown 11%
+- Bear (di bawah 200-hari, kecerunan negatif, ~22% bulan): CAGR -7.8%, drawdown 28%
+
+Mengikut rejim volatiliti (VIX di atas/bawah 22):
+- Vol rendah (VIX < 22, ~70% bulan): CAGR 14.6%, drawdown 13%
+- Vol tinggi (VIX > 22, ~30% bulan): CAGR -1.2%, drawdown 28%
+
+Agregat 10.4% adalah nyata tetapi tidak berguna untuk pembuatan keputusan. Strategi ini adalah dua strategi — satu strategi bull/vol-rendah yang sangat menguntungkan dan satu strategi bear/vol-tinggi yang merugikan. Drawdown pada 2008, Mac 2020, dan 2022 semua berasal dari kumpulan bear/vol-tinggi. Sintesis: lapisan rejim yang mengurangkan pendedahan kasar apabila SPY berada di bawah purata bergerak 200-hari DAN VIX berada di atas 22 akan memotong drawdown maksimum dari 28% kepada kira-kira 14% dengan pengorbanan minimal dalam potensi kenaikan pasaran bull. Pengsegmenan rejim ADALAH lapisan rejim — segmen dahulu, bina penapis daripada apa yang anda dapati.
+
+## Perangkap
+
+Kesilapan pemula adalah melaporkan hanya agregat dan memperlakukan strategi sebagai satu objek tunggal. Itu memberikan anda pulangan jangkaan yang mengelirukan (anda memuratakejarkan rejim yang tidak sepadan) dan menyembunyikan rejim di mana anda akan hancur. Model mental yang betul: strategi adalah portfolio pulangan bersyarat rejim, dan anda hanya boleh menyebarkannya dengan jujur dengan sama ada menerima drawdown kumpulan bear secara eksplisit ATAU melapiskan penapis rejim yang mematikan peraturan dalam rejim kegagalannya yang diketahui. Perangkap kedua adalah terlalu banyak segmen — membahagikan mengikut setiap faktor yang boleh dibayangkan sehingga setiap buket mempunyai 3 perdagangan. Bucket mesti mengandungi cukup perdagangan untuk menjadi bermakna secara statistik (petua: sekurang-kurangnya 30 perdagangan per bucket). Perangkap ketiga adalah menggunakan penunjuk rejim yang hanya diketahui dengan pengetahuan kemudian ("tempoh resesi NBER") — lapisan rejim anda mesti menggunakan hanya data yang boleh diperhatikan pada masa nyata.
+
+<ChatWith agent="research_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Strategi mengikut trend menunjukkan CAGR agregat 8% selama 2010-2024. Keputusan bersegmen rejim: CAGR bulan lembu 16%, CAGR bulan beruang -12%. Pengurus Penyelidikan bertanya: 'Di mana terletak kelebihan strategi ini, dan apakah maksudnya untuk pelaksanaan?'"
+  options={[
+    "Kelebihan adalah seragam merentas rejim — laksanakan pada saiz penuh",
+    "Kelebihan terletak sepenuhnya dalam rejim trend lembu. Laksanakan dengan penapis rejim MA 200-hari yang mengurangkan atau menghentikan peraturan di bawah MA, menerima bahawa anda akan terlepas kemasukan semula rally beruang sehingga trend disahkan.",
+    "CAGR agregat 8% adalah yang penting; pengasingan adalah hingar",
+    "Kelebihan terletak dalam pasaran beruang — laksanakan dengan posisi pendek"
+  ]}
+  answer={1}
+  explanation="Strategi dengan segmen lembu positif dan beruang negatif bukan 'strategi 8%' — ia adalah strategi bersyarat lembu. Pelaksanaan yang jujur ialah menambah penapis rejim yang menghormati di mana kelebihan sebenarnya tinggal. Jawapan laksanakan-pada-saiz-penuh mengabaikan pengasingan. Jawapan laksanakan-dengan-posisi-pendek membalikkan peraturan dengan salah — menjadi strategi hanya beli panjang dalam pasaran beruang tidak secara automatik menjadi strategi hanya jual pendek. Jawapan 'pengasingan adalah hingar' ialah kesilapan asas yang pelajaran ini wujud untuk membetulkan."
+/>
+
+<Quiz
+  question="Strategi reverensi purata pada saham kecil AS. Pengasingan rejim oleh VIX menunjukkan: CAGR vol rendah 6%, CAGR vol tinggi 19%. Kadar kemenangan adalah serupa merentas rejim tetapi saiz kemenangan purata jauh lebih besar dalam vol tinggi. Debator Konservatif memberi amaran: 'bulan vol tinggi juga mempunyai 2x penurunan maksimum'. Mandat mengawal penurunan maksimum pada 25%. Pelaksanaan yang betul sintesis?"
+  options={[
+    "Tumpukan pendedahan dalam rejim vol tinggi untuk CAGR yang lebih tinggi",
+    "Dagang hanya dalam vol rendah kerana penurunan lebih rendah",
+    "Kelebihan lebih tinggi dalam vol tinggi tetapi begitu juga risiko. Laksanakan dengan saiz posisi sedar vol (posisi lebih kecil apabila VIX tinggi) supaya CAGR vol tinggi ditangkap tanpa melanggar had penurunan mandat. Sahkan melalui walk-forward bahawa versi laras vol masih mempunyai kelebihan OOS positif.",
+    "Abaikan pengasingan dan dagang agregat"
+  ]}
+  answer={2}
+  explanation="Sintesis menggabungkan pengasingan rejim (profil kelebihan) dengan kekangan mandat (had penurunan) dan disiplin luar sampel (sahkan versi laras vol). Menumpukan dalam rejim vol tinggi memaksimumkan pulangan tetapi berisiko melanggar mandat. Dagang hanya vol rendah mengorbankan kebanyakan kelebihan strategi. Jawapan dagang-agregat mengabaikan pengasingan sepenuhnya. Laluan yang jujur ialah saiz posisi sedar vol yang disahkan walk-forward — tiga konsep dari modul ini digabungkan dengan betul."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> bersama Pengurus Penyelidikan, tampal ujian semula strategi anda dan tanya: "Segmen mengikut SPY-di-atas/bawah-200-hari, mengikut VIX-di-atas/bawah-22, dan mengikut pulangan tertunggak 6-bulan positif/negatif. Tunjukkan CAGR, drawdown maksimum, dan kiraan perdagangan per buket. Kemudian cadangkan penapis rejim yang menghormati had drawdown <Term id="ami_mandate" />." Log jadual bersegmen dalam <Term id="ami_decision_journal" /> — ia adalah profil sebenar strategi, bukan agregat.
+
+## Kesimpulan
+
+CAGR agregat menyembunyikan profil sebenar strategi. Segmen mengikut rejim, namakan buket di mana anda mengalami kerugian, dan bina penapis rejim atau terima drawdown — tiada pilihan ketiga.

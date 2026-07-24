@@ -1,0 +1,73 @@
+---
+id: "314_reits_adrs_closed_end_funds"
+title: "REITs, ADRs & dana tertutup"
+duration_min: 5
+level: 9
+module: 14
+difficulty: 2
+track: "asset_classes"
+code: "ASST 12"
+topic: "specialty_vehicles"
+prerequisites: ["313_leveraged_inverse_etfs_decay"]
+tags: ["reit", "adr", "closed-end-fund", "income", "cross-border", "bursa"]
+sources: []
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# REITs, ADR & dana tertutup
+
+Tiga jenis instrumen ini menyelesaikan tiga masalah akses yang berbeza: REIT membolehkan anda memiliki sebahagian daripada hartanah komersial tanpa membeli bangunan; ADR membolehkan anda memegang syarikat asing di bursa tempatan tanpa membuka akaun broker asing; dana tertutup mengumpulkan modal tetap sekali sahaja dan kemudian diperdagangkan seperti saham, yang bermaksud harga pasarnya dan nilai portfolio sebenar boleh menyimpang. Selepas pelajaran ini, anda akan dapat menamakan masalah yang diselesaikan oleh setiap instrumen dan keanehan mekanikal khusus yang menyertainya.
+
+## Contoh
+
+Sebuah REIT (Real Estate Investment Trust) mesti, berdasarkan struktur yang memberikan rawatan cukai yang menguntungkan, mengagihkan sekurang-kurangnya 90% daripada pendapatan boleh cukainya kepada pemegang saham sebagai dividen — itulah sebabnya REIT biasanya mempunyai yield yang lebih tinggi berbanding pasaran ekuiti secara keseluruhan. Di Bursa Malaysia, Sunway REIT memegang portfolio hartanah runcit, hotel, dan pejabat dan diperdagangkan di bursa seperti mana-mana saham lain, memberikan pelabur runcit pendedahan kepada hartanah komersial Malaysia dengan kecairan instrumen tersenarai, bukannya ketiadaan kecairan apabila membeli hartanah fizikal.
+
+Sebuah ADR (American Depositary Receipt) adalah sijil yang tersenarai di AS yang mewakili saham syarikat asing yang dipegang oleh bank kustodian di luar negara — ia membolehkan akaun broker AS memegang, contohnya, Alibaba (BABA) atau Taiwan Semiconductor (TSM) tanpa akaun perdagangan asing, dalam harga dolar AS semasa jam pasaran AS. Mekanisme ini menambah satu lapisan: penukaran mata wang berlaku di dalam struktur ADR, dan sesetengah program ADR mengenakan yuran kustodian tahunan kecil yang ditolak daripada dividen.
+
+Dana tertutup (CEF) mengumpulkan jumlah modal tetap dalam IPO, kemudian ditutup kepada pelaburan baru — sahamnya diperdagangkan di bursa pada harga yang dipersetujui oleh pembeli dan penjual, yang boleh berada pada premium atau diskaun kepada nilai aset bersih (NAV) sebenar dana tersebut bergantung kepada permintaan. Berbeza dengan ETF, tiada mekanisme penciptaan/penebusan yang memaksa harga pasaran kembali ke arah NAV, jadi CEF yang diperdagangkan pada diskaun 10% daripada NAV bermaksud pasaran menilai pegangan dana tersebut pada 90 sen untuk setiap dolar — kadang-kadang kerana sebab struktur, kadang-kadang sebagai peluang sebenar, kadang-kadang sebagai amaran tentang kos dana atau pengurusnya.
+
+## Perangkap
+
+Pemula mengandaikan setiap ticker seumpama dana diperdagangkan pada harga yang mencerminkan nilai pegangannya, seperti yang berlaku pada ETF. Ia terasa selamat untuk mengandaikan "harga adalah nilai" kerana itu benar untuk contoh ETF dan dana indeks pada awal modul ini. Model mental yang betul: hanya ETF yang mempunyai mekanisme arbitraj (penciptaan/penebusan) yang mengekalkan harga rapat dengan NAV. Dana tertutup tiada mekanisme sedemikian — harganya ditetapkan oleh penawaran dan permintaan biasa terhadap saham itu sendiri, jadi harga dan NAV boleh menyimpang untuk tempoh yang panjang, dan diskaun yang "terlihat murah" boleh kekal lebar, atau semakin lebar, tanpa jaminan akan menyempit.
+
+## Argumen kukuh
+
+Sebalikan ringan khusus untuk REIT: nisbah pembayaran wajib yang tinggi bermakna REIT mesti terus menaikkan modal baru (hutang atau penerbitan saham) untuk berkembang, kerana ia tidak dapat menyimpan banyak wang tunai — yang menjadikannya lebih sensitif terhadap kadar faedah berbanding syarikat biasa yang membiayai pertumbuhan daripada earnings yang ditahan. Itu adalah kos struktur sebenar daripada ciri yang sama yang menghasilkan yield yang menarik; ia bukan kecacapan untuk diabaikan, sekadar pertukaran yang diperlukan oleh peraturan pengagihan 90%.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah dana tertutup diperdagangkan di Bursa Malaysia pada RM 0.90 sebahagian, manakala nilai aset bersih (NAV) yang diterbitkan ialah RM 1.00 sebahagian — satu diskaun 10%. Mengapa diskaun ini boleh berterusan, berbeza dengan jurang serupa dalam ETF?"
+  options={[
+    "Dana tertutup sentiasa salah harga semata-mata kerana isipadu perdagangan yang rendah",
+    "ETF dan dana tertutup kedua-duanya membetulkan jurang serta-merta, jadi diskaun ini ialah ralat data",
+    "Dana tertutup tiada mekanisme arbitraj penciptaan/penebusan yang memaksa harga pasaran menghampiri NAV, jadi harga ditetapkan semata-mata oleh penawaran dan permintaan untuk saham tersebut dan boleh menyimpang daripada NAV untuk tempoh yang lama",
+    "Awalan RM bermakna dana yang disenaraikan di Bursa dikecualikan daripada peraturan penetapan harga berdasarkan NAV"
+  ]}
+  answer={2}
+  explanation="ETF kekal menghampiri NAV kerana peserta yang diberi kuasa boleh mencipta atau menebus saham bagi bakul aset asas apabila jurang terbuka, menghapuskan jurang tersebut melalui arbitraj. Dana tertutup mempunyai bilangan saham yang tetap dan tiada mekanisme sedemikian, jadi diskaun tersebut mencerminkan penawaran dan permintaan pasaran yang tulen, yang boleh berterusan atau melebar. Ia bukan ralat data, bukan semata-mata artefak isipadu, dan awalan mata wang RM ialah notasi tempatan dari contoh Bursa dalam pelajaran ini — ia tidak mengubah mekanisme penetapan harga."
+/>
+
+<Quiz
+  question="ADR membolehkan akaun broker AS memegang saham syarikat seperti Taiwan Semiconductor (TSM) tanpa akaun perdagangan asing. Apakah yang ditambahkan oleh struktur ADR di atas sekadar memiliki saham asing yang mendasar?"
+  options={[
+    "Tiada apa-apa — ADR adalah fungsi yang sama seperti memegang saham asing secara langsung di pasaran asing, tanpa lapisan tambahan",
+    "Lapisan bank custodian yang mengendalikan penukaran mata wang dan, dalam sesetengah program, menanggung yuran custodian tahunan kecil daripada dividen, sebagai ganti kepada penyenaraian dalam dolar AS dan perdagangan pada waktu pasaran AS",
+    "Jaminan bahawa ADR tidak akan pernah diperdagangkan pada harga yang berbeza daripada saham yang disenaraikan di pasaran asal",
+    "Penukaran automatik ADR kepada kedudukan berleverage"
+  ]}
+  answer={1}
+  explanation="Bank custodian ialah mekanisme yang membolehkan akses merentas sempadan — ia memegang saham sebenar di luar negara dan mengeluarkan sijil yang dinamakan dalam dolar AS, mengendalikan penukaran mata wang dan kadang-kadang mengenakan yuran custodian. Ini ialah lapisan struktur yang nyata, bukan kemudahan kosong, dan ia tidak membawa jaminan terhadap perbezaan harga daripada saham di pasaran asal (pergerakan mata wang dan perbezaan kecairan boleh mewujudkan jurang). Tiada apa-apa tentang ADR yang melibatkan leverage."
+/>
+
+## Cuba sendiri
+
+Buka rujukan literasi dana aplikasi dan cari satu REIT, satu ADR, dan satu dana tertutup (sebenar atau dari senarai pantauan anda). Khusus untuk dana tertutup, perhatikan sama ada ia mendedahkan premium/diskaun semangnya kepada NAV — nombor tunggal ini memberitahu anda lebih banyak tentang dinamika penentuan harga pasaran dana tersebut berbanding carta harganya yang baru sahaja.
+
+## Intipati
+
+Padankan instrumen dengan mekanisme: hanya arbitraj ETF yang mengekalkan harga dekat dengan NAV — yield REIT datang dengan kebergantungan modal yang didorong oleh pembayaran, dan harga dana tertutup bebas menyimpang daripada apa yang sebenarnya dipegangnya.

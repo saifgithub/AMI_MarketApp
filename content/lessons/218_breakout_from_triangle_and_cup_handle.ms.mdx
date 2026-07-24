@@ -1,0 +1,66 @@
+---
+id: "218_breakout_from_triangle_and_cup_handle"
+title: "Pecahan dari bentuk segitiga dan cawan-dengan-pemegang"
+duration_min: 6
+level: 5
+module: 9
+difficulty: 4
+track: "edge_process"
+code: "EDGE 47"
+topic: "breakout"
+prerequisites: ["053_breakout_strategy", "024_breakouts", "029_volume_confirmation", "023_support_and_resistance"]
+tags: ["strategy", "breakout", "triangle", "cup_and_handle", "patterns"]
+agent_callouts: ["market_analyst", "trader"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Pecahan daripada pola segitiga dan cawan-dengan-pemegang
+
+Asas pecahan (053) menggunakan rintangan julat mendatar; bendera (217) menggunakan konsolidasi pendek yang ketat. Segitiga dan cawan-dengan-pemegang adalah pola berdurasi lebih panjang: berminggu-minggu hingga berbulan-bulan harga memutar dalam bentuk geometri yang ditakrifkan yang menghasilkan kadar kemenangan di atas purata apabila dipecahkan dengan isipadu. Pola ini penting bukan kerana bentuknya ajaib, tetapi kerana ia menerangkan mikrostruktur pasaran yang spesifik — pembeli menyerap bekalan pada tahap yang semakin rendah atau simetri — dan mikrostruktur itu mempunyai kebarangkalian penyelesaian yang boleh diukur. Selepas pelajaran ini, anda boleh menamakan tiga varian segitiga dan cawan-dengan-pemegang, menetapkan entri, henti rugi, dan sasaran pergerakan diukur, serta mengenal pasti mod kegagalan yang menipu pola tersebut.
+
+## Bagaimana ia berlaku dalam pasaran sebenar
+
+Lihat META pada akhir 2023. Dari Ogos hingga awal November 2023, META membina asas dalam bentuk U bulat antara $300 dan $325 — "cawan". Dari 7 November hingga pertengahan November, harga membentuk penurunan yang lebih ketat berhampiran $310 hingga $325, menarik semula kira-kira 35% kedalaman cawan — "pemegang". Pada 20 November 2023, META ditutup pada $341.42 dengan isipadu 21 juta saham, jauh melebihi purata 20-harinya sebanyak ~15 juta, mengatasi rintangan pemegang berhampiran $330 dan kluster tertinggi cawan sebelumnya berhampiran $325. Kedalaman cawan dari rendah ($300) ke tinggi ($325) = $25; pergerakan diukur dari pecahan = $325 + $25 = $350. META mencapai $354 pada 13 Disember 2023 — pergerakan diukur dipenuhi dalam masa tiga minggu. Henti rugi untuk perdagangan ditetapkan di dalam pemegang pada $318; risiko setiap saham $23, ganjaran setiap saham $25 ke sasaran pertama — perdagangan 1.1R yang berjaya kerana kebarangkalian kemenangan yang tinggi, bukannya nisbah risiko:ganjaran yang gergasi.
+
+Kriteria entri untuk cawan-dengan-pemegang: cawan bulat selama 7+ minggu, pemegang yang tidak menarik semula lebih daripada 50% kedalaman cawan, pecahan di atas tinggi cawan dengan isipadu 1.5x purata 20-hari. Untuk segitiga menaik: rintangan mendatar rata ditambah garisan trend bawah yang menaik bagi titik rendah yang lebih tinggi; entri pada penutupan di atas rintangan mendatar, sasaran = ketinggian segitiga yang diproyeksikan dari pecahan. Untuk segitiga menurun dan simetri: mekanik bentuk yang sama, kadar kemenangan lebih rendah — segitiga simetri khususnya pecah ke SAMA ADA arah kira-kira 50/50, jadi anda tidak boleh memilih satu sisi terlebih dahulu. Henti rugi: penutupan kembali ke dalam pola. Pembatalan perdagangan individu: penutupan harian kembali di bawah tahap pecahan. Strategi GAGAL apabila pola terbentuk berhampiran rintangan utama di atas — walaupun pola yang sah yang menyelesaikan menjadi tembok bekalan hanya menguji semula bekalan dan berbalik.
+
+## Perangkap
+
+Kesilapan pemula adalah meramalkan pecahan — memasuki pada sentuhan ketiga atau keempat garisan trend atas sebelum penutupan di atasnya. Anda fikir anda "masuk awal" pada harga yang lebih baik; anda sebenarnya membeli pola yang mungkin menyelesaikan ke bawah dan telah menetapkan henti rugi yang tidak lagi memetakan pembatalan pola. Model mental yang betul: pecahan pola disahkan oleh penutupan DI ATAS sempadan dengan isipadu. Entri pra-pecahan memperdagangkan setup yang berbeza dengan statistik yang berbeza — biasanya yang lebih buruk. Perangkap lain: mengabaikan tanda isipadu. Pecahan dari segitiga 3-bulan pada isipadu purata mempunyai kadar pecahan palsu yang kira-kira sama dengan tiada pola langsung; kelebihan pola terletak pada pengesahan isipadu.
+
+<ChatWith agent="market_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Segi tiga menaik pada MSFT: rintangan rata pada $440, garis trend menaik dari $418 ke $432 selama lima minggu. Harga hari ini menyentuh $441 secara intraday, tetapi penutupan pada $437.50 dengan isipadu di bawah purata. Apa kata peraturan?"
+  options={[
+    "Tiada entri — penutupan kembali ke dalam corak dan isipadu di bawah purata; kedua-duanya membatalkan",
+    "Masuk long dengan henti ketat pada $436",
+    "Pendekkan pecahan gagal pada buka esok",
+    "Masuk long sekarang — pecahan intraday mengesahkan"
+  ]}
+  answer={0}
+  explanation="Pecahan segi tiga memerlukan penutupan harian DI ATAS rintangan ($440) dengan isipadu di atas purata. Penutupan pada $437.50 gagal kedua-dua penapis. Jawapan masuk long sekarang adalah salah yang memikat kerana pecahan segi tiga intraday nampak pasti. Tanpa pengesahan penutupan + isipadu, anda berdagang pada setup tanpa kelebihan statistik — dan anda menetapkan henti ($436) yang tidak sepadan dengan tahap corak sebenar."
+/>
+
+<Quiz
+  question="Di Bursa Malaysia: MAYBANK membentuk corak cawan-dengan-pemegang. Dasar cawan RM9.20, puncak cawan RM10.10, dasar pemegang RM9.85. Hari ini penutupan pada RM10.18 dengan isipadu 1.7x. Henti pada RM9.85 (dasar pemegang). Mandat: risiko per-trade 1.5% pada akaun RM50,000. Soalan sintesis: saiz posisi DAN sasaran pergerakan diukur?"
+  options={[
+    "2,272 saham, sasaran RM11.00",
+    "227 saham, sasaran RM11.00",
+    "2,272 saham, sasaran RM10.50",
+    "750 saham, sasaran RM11.00"
+  ]}
+  answer={0}
+  explanation="Risiko per saham = 10.18 - 9.85 = RM0.33. Risiko maks = 1.5% * 50,000 = RM750. Saham = 750 / 0.33 = 2,272.72, bulatkan ke bawah kepada 2,272. Pergerakan diukur = kedalaman cawan (10.10 - 9.20 = 0.90) ditambah pada pecahan = 10.10 + 0.90 = RM11.00. Jawapan 750 saham adalah kesilapan nilai dolar-bukan-jarak henti. Sintesis: corak bersih + pengesahan isipadu + matematik pergerakan diukur yang betul + saiz mematuhi mandat — terlepas mana-mana satu dan dagangan itu tidak lagi dagangan yang anda uji."
+/>
+
+## Cuba sendiri
+
+Dalam <Term id="ami_one_on_one" /> dengan Market Analyst, tampal simbol saham yang anda curigai sedang membentuk pola dan tanya: "Kenal pasti jenis pola (cawan-dengan-pemegang, segitiga menaik/menurun/simetri, atau tiada). Nyatakan tahap pecahan, ambang isipadu untuk pengesahan, sasaran pergerakan diukur, dan tahap penutupan harian yang membatalkan pola." Daftar keempat-empat nombor dalam <Term id="ami_decision_journal" /> sebelum pecahan berlaku.
+
+## Penamatan
+
+Segitiga dan cawan-dengan-pemegang mempunyai kelebihan hanya apabila penutupan membersihkan sempadan dengan isipadu di atas purata. Meramalkan pecahan memperdagangkan setup yang berbeza dengan statistik yang lebih buruk. Pola menentukan entri, henti rugi, sasaran, dan pembatalan — keempat-empatnya, sebelum anda klik.

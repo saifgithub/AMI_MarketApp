@@ -1,0 +1,72 @@
+---
+id: "270_why_the_pm_is_structurally_separate"
+title: "Mengapa PM secara struktur berasingan daripada pasukan dagangan"
+duration_min: 5
+level: 8
+module: 12
+difficulty: 4
+track: "edge_process"
+code: "EDGE 87"
+topic: "pm_independence"
+prerequisites: ["074_ai_hallucinations_and_amis_safety_floor", "076_human_oversight_is_the_product", "269_analysts_gather_researchers_debate"]
+tags: ["pm", "independence", "safety_floor", "governance", "architecture"]
+agent_callouts: ["portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-12"
+updated_at: "2026-05-12"
+---
+# Mengapa PM dipisahkan secara struktur daripada pasukan dagangan
+
+Meja dagangan di mana orang yang sama mencadangkan dagangan *dan* meluluskan dagangan adalah meja dagangan yang akan hancur. <Term id="ami" />'s <Term id="training_simulator" /> memodelkan Portfolio Manager di luar pasukan dagangan sebelas ejen bagi sebab yang sama seperti pegawai risiko dunia sebenar yang berasingan secara organisasi daripada peniaga — kemandirian adalah apa yang menjadikan semakan ini bermakna, dan simulator ini mengajar anda untuk mengenali struktur tersebut. PM tidak membaca kes Bull untuk dipengaruhi. Ia tidak memberi berat kepada skor keyakinan. Ia menjalankan semakan kepatuhan deterministik terhadap <Term id="ami_mandate" /> anda dan memulangkan PASS atau BLOCK. Pada akhir pelajaran ini, anda akan dapat menjelaskan mengapa pemisahan ini adalah struktur, bukan gaya.
+
+## Bagaimana ini berlaku dalam pasaran sebenar
+
+<Term id="ami_convene_the_room" /> pada XOM. Bull Researcher menulis kes kitaran minyak yang kuat. Trader, dipengaruhi oleh perdebatan, mencadangkan saiz 7%. Keyakinan kembali 0.74 — tinggi. Semua orang dalam pasukan dagangan bersetuju ini adalah dagangan terbaik minggu ini.
+
+Mandat anda menyatakan `max_position_pct: 5, no_fossil: true`. Langkah PM berjalan:
+
+> *Portfolio Manager (semakan kepatuhan):* Dua pelanggaran. (1) Saiz dicadangkan 7% > had maksima mandat max_position_pct 5%. (2) Ticker XOM adalah sektor bahan api fosil; mandat `no_fossil: true` mencetuskan penyingkiran. Dagangan DIBLOKIR. Tiada pelarasan separa tersedia — penyingkiran adalah binari.
+
+PM tidak membaca kes Bull. PM tidak bertanya apa nilai keyakinan. PM membandingkan dua keping data — *dagangan yang dicadangkan* dan *bidang Mandat anda* — menggunakan fungsi deterministik. Jika PM adalah suara ketiga belas dalam perdebatan, persuasi boleh mempengaruhinya. Oleh kerana ia berada di luar struktur perdebatan, persuasi tiada tempat untuk mendarat. Pasukan sebelas ejen boleh berdebat sehingga pening; gerbang PM adalah jenis objek yang sama sekali berbeza. Ia berjalan selepas perdebatan berakhir, terhadap peraturan yang tidak ia tulis, pada data yang anda kawal.
+
+Pemisahan yang sama adalah sebab memberi arahan kepada PM untuk "lebih fleksibel" tidak berfungsi — tiada apa-apa dalam permukaan PM yang menerima input bahasa semula jadi sebagai pengubah peraturan. Peraturan adalah Mandat anda. Anda mengubahnya dengan mengedit Mandat, bukan dengan bercakap.
+
+## Perangkap
+
+Perangkap adalah andaian bahawa PM hanyalah ejen lain dengan arahan yang lebih ketat. Ia bukan begitu. PM mempunyai fungsi semakan kepatuhan deterministik yang berjalan di luar lapisan model untuk bahagian yang paling mengikat: had saiz, had penurunan, penanda penyingkiran, kunci wilayah. Mengkelaskan "PM" persona ejen dengan fungsi yang ia kawal membawa kepada pemikiran bahawa persona boleh dipengaruhi. Ia tidak boleh. Persona menerangkan peraturan; fungsi menguatkuasakannya. Kemandirian di sini bermakna fungsi tidak melihat transkrip perdebatan langsung ketika menjalankan semakan — ia hanya melihat dagangan yang dicadangkan dan Mandat anda.
+
+<ChatWith agent="portfolio_manager" />
+
+## Kuiz
+
+<Quiz
+  question="Sebelas ejen AMI bersetuju dengan posisi NVDA 8% berkeyakinan tinggi. Mandat anda mempunyai `max_position_pct: 5`. Mengapa PM masih menyekat?"
+  options={[
+    "PM menimbang konsensus sebelas ejen dan memutuskan 8% terlalu besar",
+    "Semakan kepatuhan PM adalah deterministik dan berjalan terhadap medan Mandat anda secara bebas daripada perdebatan — keyakinan tidak masuk ke dalam fungsi",
+    "PM hanya bersikap konservatif kali ini",
+    "PM menunggu Trader untuk mengurangkan saiz"
+  ]}
+  answer={1}
+  explanation="Semakan ini bebas daripada perdebatan secara reka bentuk. Walaupun keyakinan tinggi yang sebulat suara, ia tidak mengubah fungsi deterministik yang membaca `max_position_pct` anda secara langsung. Jawapan salah yang memikat ialah 'PM menimbang konsensus' — itulah yang akan dilakukan oleh semakan yang tidak bebas, dan itulah sebabnya PM AMI tidak dibina sedemikian."
+/>
+
+<Quiz
+  question="Antara berikut, yang manakah adalah struktur sebab PM berasingan daripada pasukan perdagangan sebelas ejen?"
+  options={[
+    "Kebebasan — semakan yang terlibat dalam perdebatan yang disemaknya tidak boleh kekal sebagai semakan; fungsi mesti berjalan di luar permukaan persuasi",
+    "Keperluan peraturan",
+    "Ia lebih pantas",
+    "Ia menjimatkan kredit"
+  ]}
+  answer={0}
+  explanation="Prinsip yang sama terpakai di meja perdagangan dunia nyata — pegawai risiko melaporkan melalui rantai berasingan daripada pedagang supaya kelulusan tidak boleh dibincangkan. PM AMI ialah versi perisian simulasi bagi carta organisasi itu, dan ia mengajar anda untuk mencari pemisahan itu dalam susunan dunia nyata juga. Jawapan salah yang memikat ialah 'peraturan' — AMI ialah simulator latihan dan tidak berlesen untuk memberikan nasihat pelaburan, jadi peraturan bukan apa yang menguatkan ini. Senibina yang menguatkan."
+/>
+
+## Cuba sendiri
+
+Buka **Settings → Mandate** dan togol `no_fossil: true`. Kumpulkan Room pada XOM. Perhatikan Trader mencadangkan kedudukan dan PM menyekat pada penyingkiran. Sekarang togol `no_fossil: false` dan jalankan semula ticker yang sama. Perdebatan pasukan dagangan hampir tidak berubah; hasil PM berubah sepenuhnya. Itu adalah kemandirian dalam tindakan.
+
+## Pengambilan
+
+PM adalah berasingan kerana semakan di dalam perdebatan bukanlah semakan langsung. Pasukan dagangan berdebat, PM mengawal gerbang — dan gerbang membaca Mandat anda, bukan transkrip. Latihan adalah produk: AMI mengajar anda untuk menilai struktur ini, bukan memberikan anda penghakiman untuk diikuti.

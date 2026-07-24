@@ -1,0 +1,83 @@
+---
+id: "304_bond_pricing_and_ytm"
+title: "Penentuan harga bon dan hasil sehingga matang"
+duration_min: 6
+level: 9
+module: 13
+difficulty: 3
+track: "asset_classes"
+code: "ASST 2"
+topic: "bond_pricing"
+prerequisites: ["303_why_bonds_exist"]
+tags: ["bonds", "fixed-income", "yield-to-maturity", "bond-pricing", "interest-rates"]
+sources: ["Standard fixed-income present-value pricing — discounted cash flow applied to a fixed coupon stream"]
+agent_callouts: ["fundamentals_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Penetapan harga bon & hasil sehingga matang
+
+Harga bon bergerak setiap hari walaupun kupon dan nilai nominalnya tidak berubah — kerana pasaran sentiasa menetapkan semula nilai aliran tunai tetap tersebut berbanding kadar faedah semasa. Hasil sehingga matang (YTM) ialah nombor tunggal yang menjawab soalan "berapa sebenarnya pendapatan saya jika membeli pada harga ini dan memegang sehingga matang, termasuk semua kupon?" Selepas pelajaran ini, anda akan dapat menjelaskan mengapa harga bon dan hasil bergerak dalam arah bertentangan serta membaca harga bon sebagai penghakiman terhadap arah kadar faedah.
+
+## Contoh
+
+Ambil bon korporat hipotetikal seperti yang mungkin dibawa oleh JPM atau MSFT: nilai nominal $1,000, kupon tahunan 4% (dibayar secara separuh tahunan), 10 tahun sehingga matang. Jalankan melalui dua persekitaran kadar. Jika hasil yang diperlukan pasaran untuk hutang seumpama ialah 5%, kupon tetap 4% bon ini kelihatan ketat — tiada siapa yang membayar nilai nominal penuh untuk kupon di bawah pasaran, jadi harga jatuh ke **$922.05**. Jika hasil yang diperlukan pasaran turun kepada 3%, kupon 4% bon yang sama kini kelihatan murah hati — pelabur menaikkan harga kepada **$1,085.84** untuk menangkapnya. Jalankan dalam arah bertentangan: jika anda melihat bon ini diperdagangkan pada harga pasaran $950, YTM tersirat ialah **4.630%** (diskaun kepada nilai nominal mengkompensasi anda untuk kupon di bawah pasaran). Jika ia diperdagangkan pada $1,050, YTM tersirat ialah **3.406%**. Inilah sebab tepat mengapa hasil Treasuri AS 10 tahun bergerak setiap kali pasaran menetapkan semula jangkaan dasar Fed — hasil dan harga ialah dua pandangan terhadap nombor yang sama, dan setiap mata asas pada satu lagi ialah pengiraan semula keseluruhan pada yang satu lagi.
+
+## Perangkap
+
+Pemula mendengar "harga bon jatuh" dan mengandaikan sesuatu tidak kena dengan penerbit — seperti saham yang dijual turun akibat keuntungan yang buruk. Itu biasanya bukan kes. Harga bon jatuh apabila *kadar faedah pasaran naik*, kerana kupon tetap 4% menjadi kurang menarik berbanding bon baharu yang membayar 5%, titik — walaupun kredit penerbit itu sempurna. Model mental yang betul: harga bon dan hasil berkait songsang secara definisi, bukan oleh sentimen. Apabila anda melihat harga bon jatuh, tanya "adakah keupayaan penerbit untuk membayar berubah, atau adakah tahap kadar faedah umum berubah?" — itu ialah dua penjelasan yang sepenuhnya berbeza untuk pergerakan harga yang sama, dan hanya satu daripadanya memberi apa-apa maklumat tentang risiko kredit.
+
+## Steelman
+
+Pencabar mungkin berhujah: "Jika harga dan hasil sentiasa bergerak bertentangan, maka YTM tidak memberi saya apa-apa maklumat baru melebihi harga — ia songsangan mekanikal tulen." Itu ialah penyederhanaan yang munasabah untuk satu bon, tetapi ia gagal sebagai alat portfoli. Penafinya: bandingkan dua bon yang diperdagangkan pada harga yang *sama* tetapi kupon dan tempoh matang yang berbeza — YTM mereka akan berbeza. YTM menstandardkan bon dengan kadar kupon dan tempoh matang yang berbeza kepada satu angka pulangan yang boleh dibandingkan, yang tidak dapat dilakukan oleh harga mentah. Jika YTM benar-benar berlebihan dengan harga, meja bon profesional tidak akan mengutip hasil sebagai nombor utama dan kembali ke harga — tetapi mereka melakukan tepat seperti itu, kerana hasil ialah unit mudah alih merentasi portfoli bon yang tidak serupa.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Sebuah bon berfaedah 4%, tempoh 10 tahun, dengan nilai nominal $1,000 berharga $922.05 apabila YTM pasaran ialah 5%, dan $1,085.84 apabila YTM pasaran ialah 3%. Apakah yang menerangkan penurunan harga apabila hasil (yield) meningkat?"
+  options={[
+    "Kualiti kredit penerbit memburuk apabila hasil meningkat",
+    "Kupon tetap 4% menjadi kurang menarik berbanding hasil yang ditawarkan oleh bon baru yang diterbitkan, jadi pembeli hanya menerima bon lama dengan diskaun",
+    "Harga bon dan hasil tidak berkaitan; persilangan ini adalah artifak pembundaran",
+    "Nilai nominal bon berubah untuk mencerminkan persekitaran kadar baharu"
+  ]}
+  answer={1}
+  explanation="Harga dan hasil adalah songsang secara matematik bagi kupon tetap: untuk menjadikan kupon yang kurang berharga berbanding pasaran kompetitif dengan apa yang ditawarkan oleh bon baharu, pasaran mendiskauskan harga sehingga jumlah pulangan (kupong ditambah kenaikan harga ke nilai nominal) menyamai hasil semasa. Tiada apa-apa mengenai kebolehan kredit penerbit perlu berubah, dan nilai nominal adalah tetap oleh kontrak — ia tidak pernah berubah mengikut kadar."
+/>
+
+<Quiz
+  question="Anda memerhatikan bon yang sama ini diperdagangkan pada harga pasaran $1,050. Apakah YTM tersirat, dan apakah maklumat yang diberikan oleh nombor itu berbanding pembelian pada $950?"
+  options={[
+    "3.406% — lebih rendah daripada YTM 4.630% pada $950, kerana membayar lebih awal untuk kupon tetap dan nilai nominal yang sama menurunkan pulangan tahunan anda",
+    "4.630% — YTM kekal tetap tidak kira harga kerana kadar kupon tidak pernah berubah",
+    "5% — YTM sentiasa sama dengan kadar kupon asal yang dinyatakan semasa penerbitan",
+    "3.406% — lebih tinggi daripada pada $950 kerana harga yang lebih tinggi menandakan keyakinan pasaran yang lebih tinggi"
+  ]}
+  answer={0}
+  explanation="Pada $1,050, YTM tersirat ialah 3.406%, di bawah YTM 4.630% yang anda perolehi dengan pembelian pada $950 — membayar harga yang lebih tinggi untuk kupon tetap $40/tahun dan bayaran balik $1,000 yang sama secara mekanikal menurunkan pulangan tahunan anda. YTM bukan kadar kupon; kadar kupon adalah tetap semasa penerbitan manakala YTM bergerak mengikut harga sebenar yang anda bayar."
+/>
+
+<Quiz
+  question="Mengapa meja dagangan bon profesional merujuk kepada yield-to-maturity sebagai nombor utama, bukannya hanya merujuk kepada harga?"
+  options={[
+    "Kerana YTM diperlukan oleh peraturan dan harga adalah pilihan untuk didedahkan",
+    "Kerana harga sentiasa nombor yang lebih bulat dan mudah untuk dikomunikasikan di atas meja dagangan",
+    "Kerana bon dengan kupon dan tempoh matang yang berbeza boleh berkongsi harga yang sama secara kebetulan tetapi mempunyai pulangan sebenar yang sangat berbeza, jadi YTM menyeragamkannya kepada satu angka yang boleh dibandingkan",
+    "Kerana YTM tidak pernah berubah sekali bon diterbitkan, menjadikannya titik rujukan yang stabil"
+  ]}
+  answer={2}
+  explanation="Dua bon boleh diperdagangkan pada harga yang sama sambil menawarkan pulangan sebenar yang sangat berbeza apabila anda mengambil kira kadar kupon dan masa ke matang yang berbeza — YTM meruntuhkan perbezaan tersebut kepada satu angka pulangan tahunan yang boleh dibandingkan, yang merupakan keperluan tepat bagi meja yang membandingkan banyak bon. YTM tidak tetap semasa penerbitan; ia bergerak mengikut harga semasa bon itu diperdagangkan, yang bertentangan dengan tuntutan dalam jawapan salah."
+/>
+
+## Cuba sendiri
+
+Buka chat Analis Asas dan tanya: "Jika Fed memberi isyarat lebih banyak kenaikan kadar, apa yang berlaku kepada harga bon sedia ada, dan mengapa itu tidak bermakna penerbit menjadi lebih berisiko?" Gunakan jawapan untuk memeriksa model mental anda sendiri terhadap penjelasan latihan AMI.
+
+## Teras
+
+Harga bon dan hasil bergerak dalam arah bertentangan yang serentak kerana sebab mekanikal yang mudah — kupon tetap mesti bersaing dengan apa yang dibayar pasaran pada masa ini — jadi pergerakan harga bon ialah penghakiman terhadap kadar, bukan secara automatik penghakiman terhadap kredit.
+
+*Asal usul: penetapan harga nilai kini pendapatan tetap piawai, logistik diskaun yang sama yang digunakan merentasi kewangan korporat untuk menetapkan harga sebarang aliran tunai tetap.*

@@ -1,0 +1,79 @@
+---
+id: "309_reading_the_rates_machine_capstone"
+title: "Capstone: Membaca Mesin Kadar"
+duration_min: 7
+level: 9
+module: 13
+difficulty: 4
+track: "asset_classes"
+code: "ASST 7"
+topic: "rates_machine_capstone"
+prerequisites: ["303_why_bonds_exist", "304_bond_pricing_and_ytm", "305_duration_and_convexity", "306_yield_curve_and_inversion", "307_credit_spreads_and_ratings", "308_how_rates_price_equities"]
+tags: ["bonds", "fixed-income", "capstone", "synthesis", "duration", "credit-spreads", "yield-curve", "equity-valuation"]
+sources: []
+agent_callouts: ["fundamentals_analyst", "market_analyst"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-21"
+updated_at: "2026-07-21"
+---
+# Capstone: Membaca Mesin Kadar
+
+Anda kini memegang keseluruhan alat M13: apa sebenarnya bon itu, bagaimana harga dan hasil bergerak songsang, bagaimana durasi mengukur sensitiviti kadar, apa yang dikurniakan keluk hasil songsang mengenai jangkaan pertumbuhan, bagaimana spread kredit menghargai risiko lalai, dan bagaimana kadar diskaun mencapai sehingga ke penilaian ekuiti. Capstone ini menjalankan kejutan kadar tunggal melalui semua aspek tersebut — jenis peristiwa satu hari di mana meja bon, meja kredit, dan meja ekuiti semua menilai semula fakta yang sama serentak. Kemahiran yang diuji: melihat satu kejutan Fed berdenyut melalui empat pasaran berbeza melalui satu mekanisme bersama.
+
+## Satu senario, setiap konsep M13
+
+Sebuah bon korporat 20 tahun, nilai nominal $1,000, kupon 4.5% (separuh tahunan), telah dikeluarkan pada nilai nominal — dihargai pada tepat **$1,000.00** apabila hasil yang diperlukan pasaran ialah 4.5%. Kemudian Fed menyampaikan kejutan: kenaikan 100 mata asas, mendorong hasil yang diperlukan pasaran bagi bon ini kepada 5.5%. Bon itu serta-merta dinilai semula kepada **$879.61** — penurunan $120.39, 12.0% daripada nilainya, pada satu pengumuman kadar, tanpa sebarang perubahan mengenai perniagaan penerbit. Durasi menerangkan mengapa pergerakan itu besar: durasi terubah suai pada pengeluaran (YTM 4.5%) ialah **13.1 tahun**, jadi anggaran linear meramalkan kira-kira 100bp × 13.1 ≈ 13.1% — hampir dengan penurunan sebenar 12.0%, dengan konveksiti menjadikan kerugian sebenar sedikit lebih kecil daripada anggaran garis lurus, tepat seperti yang diramalkan oleh pelajaran durasi.
+
+Sekarang lacak kejutan yang sama melalui baki mesin. **Keluk hasil:** jika kenaikan ini ialah penilaian semula pasaran terhadap dasar tempoh dekat sementara jangkaan pertumbuhan jangka panjang kekal terpasang atau memburuk, hujung pendek boleh naik lebih cepat daripada hujung panjang — mendorong keluk menjadi lebih rata atau menuju ke songsangan, isyarat pasaran yang ia kini memberi kebarangkalian lebih tinggi kepada perlambatan masa depan. **Spread kredit:** penilaian semula 12.0% bon ini datang sepenuhnya daripada kadar bebas risiko bergerak; bon penerbit berperingkat lebih rendah menerima kejutan kadar bebas risiko itu *dan* sering melihat spreadnya melebar di atasnya, kerana kenaikan mendadak meningkatkan kebarangkalian bahawa peminjam yang lebih lemah tidak dapat merujuk semula secara murah — jadi hutang berperingkat junk jatuh lebih keras daripada contoh gred pelaburan ini, kesan berlapis, bukan kebetulan. **Ekuiti:** pergerakan 100bp yang sama yang hanya menelan kos 12% bagi bon ini ialah input kadar diskaun identikal yang dijalankan oleh penilaian ekuiti — saham pertumbuhan jangka panjang, dihargakan terutamanya pada aliran tunai satu dekad akan datang, menerima kejutan secara nisbah yang lebih besar daripada pembayar dividen matang, untuk sebab durasi yang sama yang ditunjukkan oleh bon secara numerik. Satu nombor — kadar diskaun — melakukan keempat-empat tugas serentak.
+
+## Steelman
+
+Kes terkuat terhadap pembacaan ini sebagai satu mekanisme bersih: "Pasaran sebenar tidak bergerak dengan kemas begini — kejutan Fed juga mengubah jangkaan pertumbuhan, mata wang, dan faktor khusus sektor serentak, jadi mengaitkan pergerakan ekuiti dan kredit semata-mata kepada saluran kadar diskaun melebih-lebihkan betapa mekanikalnya ia sebenarnya." Itu cabaran yang adil, dan ia disiplin yang sama yang dibangkitkan oleh pelajaran kadar-ekuiti: kadar ialah satu input, bukan satu-satunya input. Pengecam: kumpulkan nama dan bon di mana asas tempoh dekat dan kualiti kredit benar-benar tidak berubah sekitar pengumuman. Jika harga mereka masih bergerak dengan kira-kira jumlah yang diimplikasikan oleh durasi, itu mengasingkan saluran kadar diskaun dengan bersih. Di mana bimbingan atau kualiti kredit juga berubah dalam tingkap yang sama, pergerakan itu berlapis, bukan bercanggah — mekanisme durasi/kadar diskaun masih hadir, hanya menunggang di samping kekuatan lain yang perlu anda pisahkan, tepat seperti yang ditunjukkan oleh bahagian spread kredit capstone ini untuk penerbit berperingkat lebih rendah.
+
+<ChatWith agent="fundamentals_analyst" />
+
+## Kuiz
+
+<Quiz
+  question="Ikatan itu menghargai semula dari $1,000.00 kepada $879.61 selepas kenaikan 100bp, dan tempoh terubah suai pada penerbitan ialah 13.1 tahun. Penerbit berperingkat lebih rendah dengan ikatan bertempoh serupa jatuh lebih jauh lagi pada hari yang sama. Menggabungkan pelajaran tempoh dan spread kredit, apakah yang menerangkan kejatuhan lebih besar bagi ikatan berperingkat lebih rendah?"
+  options={[
+    "Ia jatuh semata-mata kerana tempoh lebih tinggi bagi ikatan berperingkat lebih rendah oleh definisi, tidak berkaitan dengan kredit",
+    "Ia menyerap semula penarafan semula yang didorong oleh kadar bebas risiko yang ikatan ini baru sahaja alami, ditambah lagi dengan pelebaran spread tambahan apabila pasaran meningkatkan kemungkinan masalah pembiayaan semula bagi peminjam yang lebih lemah — dua kesan yang bertindih antara satu sama lain",
+    "Ikatan berperingkat lebih rendah tidak terjejas oleh pergerakan kadar Fed kerana keuntungannya sudah tinggi",
+    "Kejatuhan itu tidak berkaitan dengan pergerakan ikatan ini; ikatan berperingkat dagang pada mekanisme penarafan yang sepenuhnya berasingan"
+  ]}
+  answer={1}
+  explanation="Ikatan berperingkat lebih rendah menerima kejutan kadar bebas risiko yang sama yang ditunjukkan oleh ikatan tahap pelaburan ini (anggaran peratusan yang sama berdasarkan tempoh, jika tempohnya serupa) dan kemudian biasanya melihat spread kreditnya melebar di atasnya, kerana kenaikan mendadak meningkatkan risiko pembiayaan semula yang sebenar bagi peminjam yang lebih lemah — kedua-dua kesan ini berbilang ganda dan bukan alternatif. Peringkat tidak mempunyai hubungan mekanikal dengan tempoh, keuntungan tinggi tidak melindungi ikatan daripada pergerakan kadar, dan kedua-dua jenis ikatan dinarafkan dengan mesin kadar diskaun yang sama, hanya dengan premium risiko tambahan yang berbeza."
+/>
+
+<Quiz
+  question="Kenaikan 100bp yang sama yang menelan kos 12.0% bagi ikatan ini juga menimpa penilaian ekuiti melalui kadar diskaun. Menggabungkan pelajaran tempoh dan pelajaran kadar-ekuiti, ekuiti manakah yang anda jangka jatuh secara berkadar paling keras, dan mengapa?"
+  options={[
+    "Saham nilai matang yang membayar dividen, kerana pembayar dividen paling terdedah kepada sebarang perubahan kadar",
+    "Semua ekuiti jatuh pada peratusan yang sama tepat tanpa mengira bila aliran tunai mereka tiba, kerana kadar diskaun ialah satu nombor yang digunakan secara seragam",
+    "Saham pertumbuhan tempoh panjang yang dinarafkan terutamanya pada aliran tunai satu dekad atau lebih keluar — sebab yang sama mengapa ikatan 20-tahun, tempoh terubah suai 13.1 ini jatuh lebih keras daripada ikatan bertempoh lebih pendek pada pergerakan kadar yang sama",
+    "Tiada satu pun, kerana ekuiti tidak didiskaun menggunakan kadar faedah seperti ikatan"
+  ]}
+  answer={2}
+  explanation="Intuisi tempoh dipindahkan secara langsung: saham yang nilainya terletak terutamanya pada aliran tunai masa depan yang jauh berkelakuan seperti ikatan bertempoh panjang dalam penamat modul ini, sangat sensitif terhadap kadar diskaun, manakala saham dengan lebih banyak nilai dalam aliran tunai tempoh berkelakuan seperti instrumen bertempoh lebih pendek dan menyerap lebih sedikit kejutan kadar yang sama — itulah mekanisme yang dibina pada matematik tempoh modul ini. Pembayar dividen sebenarnya kurang sensitif terhadap kadar, bukan yang paling, dan penilaian ekuiti secara eksplisit berjalan pada kadar diskaun yang dibina daripada hasil bebas risiko, jadi jawapan 'tidak didiskaun seperti ikatan' adalah salah."
+/>
+
+<Quiz
+  question="Menggabungkan keseluruhan senario — kejatuhan 12.0% ikatan, kemungkinan pelengkungan melandai, pelebaran spread pada penerbit yang lebih lemah, dan pukulan lebih keras kepada ekuiti bertempoh panjang — apakah mekanisme tunggal yang menyambungkan keempat-empat reaksi kepada kejutan Fed satu?"
+  options={[
+    "Kejutan kadar diskaun tunggal yang merambat melalui setiap instrumen yang nilainya bergantung pada aliran tunai masa depan — saiz setiap reaksi berskala dengan berapa banyak nilai instrumen itu terletak jauh di masa depan (tempohnya), ditambah, untuk kredit, lapisan penarafan semula risiko gagal bayar tambahan",
+    "Empat pasaran tidak berkaitan yang kebetulan bergerak pada hari yang sama",
+    "Fed secara langsung menetapkan harga setiap ikatan, saham, dan spread kredit melalui peraturan, jadi keempat-empat bergerak bersama oleh mandat",
+    "Hanya pasaran ikatan yang bertindak balas terhadap kenaikan; reaksi lengkung hasil, kredit, dan ekuiti yang diterangkan adalah bunyi pasaran kebetulan yang tidak berkaitan"
+  ]}
+  answer={0}
+  explanation="Setiap reaksi dalam senario ini berpunca daripada mekanisme kadar diskaun yang sama: instrumen yang nilainya bergantung pada aliran tunai jauh di masa depan bergerak lebih (tempoh lebih tinggi), instrumen yang membawa risiko gagal bayar menyerap lapisan pelebaran spread tambahan di atasnya, dan bentuk lengkung mencerminkan bacaan pasaran sendiri tentang betapa ketatnya kejutan akan berlangsung — satu mekanisme penarafan semula kadar yang dikongsi, dengan reaksi setiap pasaran berskala oleh tempoh dan profil risikonya sendiri. Tiada mandat penetapan harga langsung dari Fed ke atas ikatan, saham, atau spread, dan menganggap keempat-empat reaksi sebagai kebetulan mengabaikan keseluruhan mekanisme yang dibina dalam modul ini."
+/>
+
+## Cuba sendiri
+
+Kumpulkan Bilik pada senarai tontonan bercampur — satu saham pertumbuhan jangka panjang dan satu pembayar dividen stabil — tepat selepas sebarang pengumuman kadar sebenar. Bandingkan bagaimana hujah setiap ejen dalam Verdict simulasi menimbang saluran kadar diskaun berbanding asas spesifik syarikat. Log dalam Jurnal Keputusan anda ejen mana yang hujahannya paling baik memisahkan kedua-duanya. Ingat: output latihan AMI ialah artifak latihan, bukan nasihat pelaburan.
+
+## Teras
+
+Satu kejutan kadar, satu kadar diskaun, empat pasaran: penurunan harga berskala durasi bon, bentuk keluk hasil, premium risiko lalai spread kredit, dan kadar diskaun ekuiti ialah mekanisme yang sama memakai pakaian berbeza — belajar untuk melihat benang tunggal itu bukannya empat cerita berasingan.

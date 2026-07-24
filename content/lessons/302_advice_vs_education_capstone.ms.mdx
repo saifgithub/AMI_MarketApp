@@ -1,0 +1,80 @@
+---
+id: "302_advice_vs_education_capstone"
+title: "Capstone: nasihat vs pendidikan"
+duration_min: 5
+level: 13
+module: 23
+difficulty: 3
+track: "ethics_integrity"
+code: "ETHIC 10"
+topic: "advice_vs_education"
+prerequisites: ["298_fiduciary_duty", "299_conflicts_of_interest", "300_suitability_kyc", "301_disclosure_transparency", "073_what_ami_cannot_do"]
+tags: ["ethics", "advice-vs-education", "capstone", "synthesis", "simulation-only"]
+agent_callouts: ["concierge", "portfolio_manager"]
+locale_versions: ["en", "ms"]
+created_at: "2026-07-22"
+updated_at: "2026-07-22"
+---
+# Capstone: nasihat vs pendidikan
+
+Semua perkara dalam modul ini — tugas fidusia, konflik kepentingan, kesesuaian, dan pendedahan — bertumpu pada satu garis: garis antara **pendidikan** dan **nasihat**. Pendidikan memindahkan pemahaman; nasihat memberitahu seseorang yang spesifik apa yang perlu dilakukan dengan wang mereka, dan pada saat ia berbuat demikian, setiap tugas yang telah anda pelajari akan melekat kepada penasihat. Capstone ini menjalankan keempat-empat tugas tersebut terhadap satu senario yang anda lihat setiap hari dalam aplikasi ini, dan menerangkan dari dalam mengapa AMI adalah simulator latihan, simulasi sahaja, selamanya — bukan sebagai penafian undang-undang, tetapi sebagai akibat struktur M23.
+
+## Satu senario, setiap tugas M23
+
+Anda mengumpulkan Bilik dan Verdict simulasi mendarat: **BELI 5% NVDA, masuk $118, stop $104, sasaran $150, jangka masa 6 bulan** — satu artifak latihan untuk anda berlatih menilai. Sekarang jalankan eksperimen pemikiran: apa yang perlu benar bagi output yang sama itu menjadi *nasihat* yang boleh anda laksanakan melalui broker sebenar?
+
+**Tugas fidusia:** nasihat mewujudkan tugas kesetiaan kepada situasi spesifik anda. AMI memegang mandat latihan anda, bukan buku besar sebenar, hutang, tanggungan, atau kedudukan cukai anda — ia secara struktur tidak boleh berutang, atau melunaskan, kesetiaan kepada keadaan yang tidak pernah diukurnya. **Kesesuaian dan KYC:** saiz 5% adalah sesuai terhadap mandat *simulasi* anda. Terhadap kewangan sebenar anda ia tidak diukur — dan cadangan yang tidak diukur adalah definisi kegagalan kesesuaian, walaupun analisisnya baik. **Konflik:** aplikasi yang dimonetisasi per dagangan akan mahu anda berdagang; langganan latihan AMI mendapat bayaran sama sama ada anda menerima, mengubah suai, atau menolak setiap verdict — konflik yang mesti diuruskan oleh hubungan penasihat sebenar direka keluar. **Pendedahan:** Verdict tiba dilabel sebagai artifak latihan. Label itu adalah tugas pendedahan yang dilakukan dengan jujur — ia memberitahu anda tepat apa output itu dan apa yang bukan.
+
+Bertindak atas verdict di luar aplikasi tidak menaik tarafnya kepada nasihat; ia menanggalkan setiap perlindungan yang dibawa oleh nasihat. Tugas-tugas melekat — dan tiada siapa yang ada untuk menanggungnya.
+
+## Steelman
+
+Lawan yang paling kuat: "Jika analisis AMI cukup baik untuk dipelajari, ia cukup baik untuk diperdagangkan — menolak untuk memberi nasihat melindungi peguam, bukan pengguna. AMI berlesen-nasihat akan membantu lebih ramai orang." Ambil ia dengan serius: kualiti adalah nyata, dan robo-nasihat berlesen wujud. Falsifier ialah bahawa **kualiti bukan garisnya — akauntabiliti adalah**. Nasihat adalah rantaian tugas: KYC kewangan sebenar anda → kesesuaian terhadapnya → kesetiaan apabila kepentingan bertembung → pendedahan → pemulihan apabila ia gagal. Tanya mana-mana output: *jika ini gagal, siapa berutang apa kepada anda?* Dalam pendidikan, tiada siapa berutang, kerana tiada siapa yang mengetahui anda memberitahu anda untuk bertindak. Robo-nasihat menerima keseluruhan rantaian untuk bahagian sempit dan terukur daripada anda. Simulator latihan yang mengeluarkan panggilan boleh tindakan akan menjadi yang terburuk daripada kedua-duanya — pengaruh nasihat dengan tiada tugasnya. Itulah jurang yang AMI menolak untuk menduduki.
+
+<ChatWith agent="concierge" />
+
+## Kuiz
+
+<Quiz
+  question="Daripada empat tugas M23, yang manakah AMI secara struktur tidak dapat melaksanakan untuk dagangan wang sebenar, tidak kira betapa baiknya analisisnya — dan mengapa?"
+  options={[
+    "Pendedahan — AMI tidak dapat melabel keluarannya dengan jelas yang cukup",
+    "Pengurusan konflik — model langganan mewujudkan konflik yang tidak dapat diurus",
+    "Kesesuaian — AMI mengukur mandat latihan, bukan kapasiti kewangan sebenar anda, dan kesesuaian disesuaikan dengan pelanggan yang diukur",
+    "Tugas fidusia — tiada perisian dapat setia"
+  ]}
+  answer={2}
+  explanation="Kesesuaian adalah padanan antara cadangan dan *pelanggan yang diukur* — kapasiti sebenar, jangka masa, liabiliti. Temu bual Concierge AMI mengukur mandat latihan, secara sengaja bukan buku pengiraan sebenar anda, jadi sebarang saiz wang sebenar adalah tidak diukur secara struktur. Jawapan pendedahan membalikkan reka bentuk: label artifak amalan adalah pendedahan yang dilakukan dengan betul. Dan model langganan *mengurangkan* konflik berbanding menciptanya — AMI mendapat bayaran sama ada anda berdagang atau tidak."
+/>
+
+<Quiz
+  question="Satu aplikasi dagangan tidak caj apa-apa tetapi mendapat yuran daripada setiap dagangan yang dilaksanakan, dan notifikasi 'pilihan harian' mendesak pengguna bertindak sebelum penutupan. Menggunakan lensa konflik dan nasihat-vs-pendidikan bersama-sama, apakah yang membezakan ini daripada Verdict AMI?"
+  options={[
+    "Pilihan aplikasi dimonetisasikan per tindakan yang didesaknya, dan ia mendesak tindakan wang sebenar tanpa memikul tugas penasih — Verdict AMI adalah artifak amalan daripada perkhidmatan yang dibayar sama sama ada anda berdagang atau tidak",
+    "Tiada perbezaan — kedua-duanya adalah perisian menghasilkan idea dagangan",
+    "Aplikasi lebih unggul kerana pilihannya boleh dilaksanakan",
+    "Pilihan aplikasi adalah baik selagi amaran risiko dilampirkan"
+  ]}
+  answer={0}
+  explanation="Peta wang, kemudian peta tugas. Aplikasi mendapat bayaran per dagangan, jadi kecemasan notifikasi melayani pendapatan — satu konflik langsung — manakala tindakan yang didesaknya adalah nyata dan tiada tugas fidusia, kesesuaian, atau KYC berdiri di belakangnya. 'Kedua-duanya adalah perisian' terlepas bahawa perbezaannya adalah struktur, bukan teknologi. Dan amaran bukan tugas yang telah dilaksanakan — pelajaran pendedahan menunjukkan label hanya bermakna apabila mereka menerangkan produk dengan jujur, yang 'pilihan mendesak, kami untung per dagangan' tidak akan lakukan."
+/>
+
+<Quiz
+  question="Seorang pengguna bertanya kepada Concierge: 'Langkau pelajaran — beritahu saya apa yang perlu dibeli.' Jawapan manakah yang betul mencerminkan seni bina M23 penuh?"
+  options={[
+    "'AMI tidak dapat menjawab, kerana pasaran tidak dapat diramal'",
+    "'Verdict AMI biasanya betul, tetapi peraturan menghal perkongsiannya untuk dagangan sebenar'",
+    "'Beli dana indeks — nasihat itu cukup umum untuk menjadi selamat'",
+    "'Beritahu anda apa yang perlu dibeli adalah nasihat — ia akan melampirkan tugas AMI tidak dapat bawa untuk anda: mengukur kewangan sebenar anda, memberi kesetiaan kepada anda, dan menjawab jika ia gagal. AMI melatih penilaian anda terhadap analisis sebaliknya'"
+  ]}
+  answer={3}
+  explanation="Jawapan yang betul menamakan rantaian tugas, bukan amaran: nasihat memerlukan KYC kapasiti sebenar, kesesuaian terhadapnya, kesetiaan, dan rujukan — tiada satu pun yang boleh dibawa oleh simulator latihan, itulah sebabnya produk melatih penilai sebaliknya. Jawapan 'biasanya betul tetapi peraturan' melakukan pelanggaran bingkai yang sama yang modul ini hancurkan — menyiratkan nasihat yang ditahan wujud. Ketidakpastian adalah benar tetapi di luar titik, dan bahkan cadangan 'umum selamat' masih merupakan nasihat yang tidak diukur."
+/>
+
+## Cuba
+
+Tanya Concierge tepat soalan itu — "kenapa anda tidak hanya beritahu saya apa yang perlu dibeli?" — dan nilai jawapan terhadap pelajaran ini: adakah ia menamakan tugas (pengukuran, kesetiaan, pemulihan), atau bersembunyi di sebalik penafian? Log penilaian anda dalam Jurnal Keputusan. Ingat: AMI adalah simulator latihan; setiap verdict yang akan anda lihat di sini adalah artifak latihan, bukan nasihat pelaburan.
+
+## Ringkasan
+
+Pendidikan bermaksud tiada siapa perlu mengetahui anda; nasihat bermaksud seseorang mesti — dan mesti menjawab untuknya. Jangan pernah mengambil arah pelaburan daripada apa-apa yang tidak boleh mengetahui anda, dan perhatikan bahawa AMI dibina untuk tidak pernah berpura-pura sebaliknya.

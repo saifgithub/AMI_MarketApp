@@ -1,0 +1,93 @@
+---
+id: "289_bull_vs_bear_thinking"
+title: "Pemikiran Bull vs Bear"
+duration_min: 4
+level: 2
+track: "edge_process"
+code: "EDGE 97"
+topic: "frameworks"
+prerequisites: ["285_reading_a_pe_ratio"]
+tags: ["frameworks", "bull", "bear", "research"]
+agent_callouts: ["bull_researcher", "bear_researcher", "aggressive_debator"]
+locale_versions: ["en", "ms"]
+created_at: "2026-05-11"
+updated_at: "2026-05-11"
+---
+# Pemikiran Bull vs Bear
+
+Setiap saham mempunyai sekurang-kurangnya dua naratif yang koheren: kes bull dan kes bear. Pelabur yang baik boleh menyatakan **kedua-duanya** sebelum membentuk pandangan. Mengetahui disiplin ini adalah pemisah antara penyelidikan dan justifikasi diri.
+
+## Mengapa dua naratif, bukan satu
+
+Apabila anda hanya mengetahui kes untuk membeli, anda sebenarnya tidak tahu sama ada anda sepatutnya membeli. Anda hanya tahu apa yang dilihat oleh pemerhati *bullish*. Anda memerlukan pemerhati bearish juga — apa yang perlu menjadi benar agar anda salah?
+
+Itulah sebabnya AMI Trade menyediakan **Bull Researcher** *dan* **Bear Researcher** sebagai agen berasingan. Perspektif ini bukan pilihan. Ia adalah perdebatan struktur.
+
+## Bagaimana kes bull yang baik kelihatan
+
+Kes bull yang serius bukan sekadar "Saya fikir saham ini akan naik." Ia adalah spesifik:
+
+1. **Tesis dalam satu ayat.** "Belanja modal AI hyperscaler akan memacu pertumbuhan pendapatan >30% untuk NVDA sehingga 2027."
+2. **Bukti menyokong tesis.** Komen belanja modal daripada empat hyperscaler utama. Tanggungan pesanan. Trend margin.
+3. **Apa yang dilepaskan oleh pasaran.** Mengapa kes bull ini salah harga pada masa ini? "Model konsensus meramalkan penurunan belanja modal AI pada 2026; kes bull adalah ia akan meningkat."
+4. **Implikasi saiz posisi.** Memandangkan tesis dan risiko, berapa banyak yang sepatutnya anda komited?
+5. **Di mana anda mungkin salah.** Bukti apa yang akan membatalkan tesis? "Pengurangan belanja modal hyperscaler sebanyak >20% dalam sebarang panduan tunggal."
+
+Titik terakhir adalah tidak boleh dirunding. **Kes bull tanpa kebolehpenafian adalah agama.**
+
+## Bagaimana kes bear yang baik kelihatan
+
+Bear bukan pengamal kiamat. Bear adalah alat ketepatan:
+
+1. **Risiko dalam satu ayat.** "Risiko mampatan ganda jika belanja modal AI mengecewakan — NVDA pada 38x boleh semak semula kepada 20x dalam satu suku."
+2. **Kuantifikasi.** Jangan kata "saham boleh jatuh." Kata "mampatan ganda 30 mata = ~50% downside."
+3. **Katalis untuk dipantau.** Apa yang khusus akan mencetuskan penurunan harga? Hasil kewangan, penurunan panduan hyperscaler, penurunan permintaan China.
+4. **Kesan saiz posisi.** Risiko penurunan 50% dalam posisi 10% adalah pukulan 5% kepada portfolio. Adakah ia boleh diterima?
+5. **Apa yang akan membatalkan kes bear.** "Jika TSMC meningkatkan panduan kapasiti AI sekali lagi pada suku hadapan, kes bear sisi bekalan adalah mati."
+
+Bear Researcher yang sebenar tidak berhujah bahawa syarikat itu akan hancur. Mereka berhujah bahawa *harga semasa* tidak mencerminkan *risiko penuh*. Itu adalah posisi yang jauh lebih sukar dan tajam.
+
+## Tugas Research Manager
+
+Apabila Bull dan Bear telah membina kes masing-masing, Research Manager mensintesis:
+
+- Kes mana yang lebih kuat hari ini, *pada harga semasa*?
+- Apakah asimetri? (Upside 30% berbanding downside 50% adalah asimetri yang buruk walaupun anda fikir kes bull adalah betul.)
+- Bagaimana mandat pengguna mengehadkan saiz?
+- Apakah *posisi* — bukan sekadar pandangan?
+
+Ini adalah saat "beli" bertukar menjadi "beli 3% dengan stop di $148" — pendapat bertukar menjadi tindakan.
+
+<ChatWith agent="research_manager" />
+
+## Perangkap: kes bear strawman asimetri
+
+Waspada terhadap Bear Researcher yang meruntuhkan strawman — "bagaimana jika AI dibesar-besarkan" — dan kemudian mengisytiharkan kemenangan. Kes bear yang sebenar mesti berinteraksi dengan versi terkuat kes bull, bukan versi terlemahnya.
+
+Jika Bear Researcher anda tidak *steel-manning* kes bull sebelum menafikannya, tolak balik. (Anda boleh memberikan arahan kepada mereka untuk berbuat demikian — lihat <Term id="ami_coach_your_agent" />.)
+
+## Kuiz
+
+<Quiz
+  question="Seorang Bull Researcher mencadangkan: 'AI akan menjadi sangat besar, NVDA akan mendapat manfaat, BELI.' Apakah yang kurang dalam kes bull ini?"
+  options={[
+    "Sasaran harga yang spesifik",
+    "Optimisme",
+    "Sebutan tentang pesaing",
+    "Kebolehfalsifikasian — apakah yang akan membatalkan tesis ini?"
+  ]}
+  answer={3}
+  explanation="Kes bull yang serius mesti menyatakan bukti apa yang akan membuktikan kes itu salah. 'AI sangat besar' tidak boleh diuji. 'Belanja modal hyperscaler meningkat 30%+ pada 2026' boleh diuji."
+/>
+
+<Quiz
+  question="Seorang Bear Researcher berhujah bahawa NVDA pada P/E 38x mempunyai risiko penurunan 50% jika gandaan mampat kepada 20x. Bull membalas: 'Ya tetapi pertumbuhan boleh memecut semula.' Apakah tugas Research Manager di sini?"
+  options={[
+    "Biarkan pengguna membuat keputusan sendiri",
+    "Timbang asimetri — magnitud risiko penurunan berbanding potensi kenaikan, dan kebarangkalian setiap satu",
+    "Pilih pihak yang mereka setuju secara peribadi",
+    "Abaikan perselisihan faham"
+  ]}
+  answer={1}
+  explanation="Peranan RM adalah sintesis: apakah asimetri sebenar? Kenaikan 30% dengan risiko penurunan 50% adalah buruk walaupun anda cenderung bullish. RM menterjemahkan perdebatan kepada saiz kedudukan dengan had kerugian."
+/>
