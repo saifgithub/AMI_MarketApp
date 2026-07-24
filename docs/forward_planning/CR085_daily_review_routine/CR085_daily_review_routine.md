@@ -1,6 +1,6 @@
 # CR085 — Daily CR/Defect open-items review routine
 
-**Status:** in_progress · **Session:** AT:architect · **Date:** 2026-07-24
+**Status:** done · **Session:** AT:architect · **Date:** 2026-07-24
 **Source:** Saiful — *"Your job is to assist me in making sure we have covered all the
 DEFs and CRs. I will prioritise some, but the rest should not be forgotten. So every day
 at 1PM I want you to go through the list of open DEFs and CRs and ask me about any open
