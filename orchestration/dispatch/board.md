@@ -180,3 +180,22 @@ format template.
   behind coder.api's cap (DEF094 + CR077-CONCIERGE). Not folded into the Room audit — different instance,
   different surfaces.
 - Register rows: DEF095/096 annotated batched; DEF098 flipped `open → laned`. Architect-written per CR081.
+
+## 2026-07-24 (cont.) — DEF095+DEF096 batch DONE (built, independently audited COMPLETE, integrated)
+
+- **coder.room built** the batch in an isolated worktree (commit `87fc062`, 3 files: room_runner.py +
+  room_prompts.py + test_room_runner.py, 5 guards). Architect verified independently first: scope (no
+  forbidden files), diff (real structural fix, DEF059-safe), own pytest (guards 5/5, suite 1058, exit 0).
+- **Independent audit → COMPLETE** (adversarial agent, GATE: independent). It neutered the fix to prove
+  4/5 guards go RED (guard5 is an honesty guard, correctly stays green); traced the R:R correction as
+  strictly upstream of `run.transcript.append` (:1829 vs :1841) so downstream agents read AMI's computed
+  figure not the narration; confirmed `enforce_safety_floor` consumes the untouched structured verdict
+  (DEF059 held); confirmed DEF096's `social_source` gate is load-bearing; ran the suite itself (1058, exit
+  0). Two non-blocking regex notes logged on the DEF095 row (wrong inline number can coexist with the loud
+  `[AMI verified]` note on free-prose phrasings — truth always surfaced; keyword-proximity false-match on
+  out-of-domain prose that can't occur in-Room).
+- **Integrated** onto main via cherry-pick `dc29c5c` (clean — no overlap with the dispatch/docs commits
+  main advanced through). `DISPATCH: ACCEPTED (round 1)` on both lanes; both register rows `fixed`;
+  coder.room back to 1 free slot (holds CR077-ROOM).
+- **Unblocks DEF098** (coder.api) — its `DEPENDS-ON: DEF095, DEF096` is now satisfied; fires when a
+  coder.api slot frees (still at cap: DEF094 + CR077-CONCIERGE).
