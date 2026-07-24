@@ -172,14 +172,16 @@
  {
   "code": "N&M 7",
   "id": "242_late_bull_warning_signs",
-  "bucket": "P2a",
+  "bucket": "P1",
   "p1_trigger": "false_fact",
   "quiz_affected": false,
   "defect_summary": "Dates the SPX 200-day SMA break to 21 February 2022 — Presidents' Day, US market closed — so the event cannot have occurred then; and 'AAII spread hit +30 on 24 Nov 2021' is ~3x the actual reading, which also breaks the '90th percentile' claim. Quizzes use hypothetical figures.",
   "exact_change": "'six to ten weeks before the 21 February 2022 break of the 200-day SMA' -> use the real first daily close below the 200-DMA and re-derive the week count (needs sourcing: exact date; sweep indicates January 2022). 'AAII bull-bear spread hit +30 on 24 November 2021, in the 90th percentile of readings since 2010' -> needs sourcing (sweep: ~+12); if unsourced, cut the number and the percentile. Cut/soften 'NYSE new highs averaged 110 ... only 65' and 'CNN Fear & Greed ... 81'.",
   "confidence": "high",
   "retriage_why": "Teaching point is the warning-sign set (200-day break, sentiment extreme); the 2021-22 date/reading is illustrative and works as an unnamed late-cycle example.",
-  "genericizable": true
+  "genericizable": true,
+  "repo_truth": true,
+  "revalidated": "REPO-TRUTH UPGRADE P2a->P1: teaches a phantom Mandate field (DEF098)."
  },
  {
   "code": "N&M 8",
@@ -245,7 +247,8 @@
   "exact_change": "'VIX intraday at 85.47 (16 March 2020)' -> '(18 March 2020)', or keep 16 March and use the 82.69 closing high — verify first. '24 December 2018 Fed-fear low: ... SPX bottomed two trading days later.' -> '... SPX's closing low printed that same session.' Delete 'also called VIX9D historically for very short tenors' — VIX9D is the CBOE 9-day index, not a name for the 30-day VIX. Verify 5-Aug-2024 VIX3M 27.85 / ratio 1.385; soften quiz-2's unsourced '~50%' 2017 decay figure.",
   "confidence": "high",
   "retriage_why": "Contains a wrong definition (VIX9D presented as a name for the 1-month VIX) plus a record/superlative about the VIX itself — nothing survives genericizing.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "N&M 14",
@@ -296,12 +299,14 @@
  {
   "code": "N&M 18",
   "id": "253_mandate_adjustments_by_regime",
-  "bucket": "P2a",
-  "p1_trigger": "none",
+  "bucket": "P1",
+  "p1_trigger": "false_fact",
   "quiz_affected": false,
   "defect_summary": "Two parenthetical regime anchors wrong: Q4-24 31 Oct->6 Dec 2024 is +6.7% not +5.9%; '14 Mar 2022 to 12 Oct 2022, SPX -25.4%' mismatches its own dates (that window ~-14.3%; -25.4% is 3 Jan peak to 12 Oct trough). All three quizzes are hypothetical and carry none of it.",
   "exact_change": "'(e.g., 14 March 2022 to 12 October 2022, SPX -25.4%)' -> '(e.g., 3 January 2022 to 12 October 2022, SPX -25.4%)' (4,796.56 -> 3,577.03 = -25.4%). '(e.g., Q4 2024 SPX +5.9% from 31 October 2024 to 6 December 2024...)' -> '+6.7%' (5,705.45 -> 6,090.27); confirm via the app's market-data path first. Cheaper alternative: genericize to 'a confirmed bear leg of roughly -25%' and 'a broad-breadth bull leg of about +6%'.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "REPO-TRUTH UPGRADE P2a->P1: teaches a phantom Mandate field (DEF098)."
  },
  {
   "code": "FUND 1",
@@ -1297,7 +1302,8 @@
   "quiz_affected": true,
   "defect_summary": "The '14 months / 184 stop-outs / 31-47-54% win rates / breaches -71%' journal is presented as measured evidence but is uncorroborable; Quiz 1's keyed option 3 and its explanation rest on an unsourced claim that the post-loss physiological response subsides within an hour.",
   "exact_change": "Prose: 'reviewed across 14 months, showed 184 stop-outs' -> 'an illustrative journal of ~180 stop-outs'; 'fell 71%' -> 'fell sharply'. Quiz 1 option 3 + explanation: replace 'the loss-driven physiological response ... has largely subsided' with '60 minutes is AMI's default cooldown - long enough to separate the stop-out from the next sizing decision, short enough not to cost a session'. Key stays 3. Needs sourcing: decay-curve evidence if the claim is kept.",
-  "confidence": "medium"
+  "confidence": "medium",
+  "repo_truth": true
  },
  {
   "code": "EDGE 37",
@@ -1309,7 +1315,8 @@
   "exact_change": "Intro: '(cognitive distancing, ...)' -> '(avoidance/displacement - the tilt moved to a new symbol)'. The trap: replace the sentence beginning 'Cognitive distancing - putting psychological space between you and the hurt...' (through '...bypassing your own tilt-detection.') with 'Switching the symbol is avoidance, not distance: the reminder is gone, the tilt is not, and because the new chart never hurt you, your tilt-detection never fires.' Keys 2/0/0 unchanged.",
   "confidence": "high",
   "retriage_why": "A misdefinition of a real named construct (Kross & Ayduk cognitive distancing) called 'well-documented'; a definition has no hypothetical form.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "EDGE 38",
@@ -1687,7 +1694,8 @@
   "quiz_affected": true,
   "defect_summary": "Two P1s. (a) L27 states JPM Q4 NII $24.0B; 4Q24 8-K reports $23.5B. (b) `max_position_pct` is not a Mandate field (cap derives from risk_score) yet appears in prose L30 and inside Quiz 1's explanation L51, certifying a phantom field as product truth.",
   "exact_change": "L27: \"NII $24.0B\" -> \"NII $23.5B\" (JPM 4Q24 8-K Ex-99.1; verify against the filing). L30: \"`max_position_pct: 5, max_drawdown_pct: 20, halal: false`\" -> \"`risk_score: 3` (3% single-name cap), `max_drawdown_pct: 20`, `halal: false`\". Quiz 1 explanation L51: \"against your `max_position_pct` and other fields\" -> \"against your risk-tier size cap, `max_drawdown_pct` and `compliance` flags\". Key unchanged answer={3}.",
-  "confidence": "medium"
+  "confidence": "medium",
+  "repo_truth": true
  },
  {
   "code": "EDGE 87",
@@ -1697,7 +1705,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 1 stem (L44) and explanation (L52) both hinge on `max_position_pct: 5`, a field the Mandate does not have. Prose also uses `no_fossil` (real field `no_fossil_fuels`) and builds the XOM example + Try-it on an exclusion DEF061 shows is never enforced.",
   "exact_change": "L27: \"`max_position_pct: 5, no_fossil: true`\" -> \"`risk_score: 3` (3% cap), `ticker_blocklist: [XOM]`\". L29: recast violations as (1) 7% exceeds the 3% risk-tier cap, (2) XOM in `ticker_blocklist`. Do NOT use `no_fossil_fuels` (DEF061: never read). Quiz 1 L44 \"`max_position_pct: 5`\" -> \"a risk tier capping single names at 3%\"; L52 \"reading your `max_position_pct`\" -> \"reading your risk-tier cap\"; key answer={1}. Try-it L69: toggle blocklist.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 88",
@@ -1707,7 +1716,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 1 stem (L62) and explanation (L70) rest entirely on `max_position_pct: 5`, a non-existent Mandate field. Prose adds two more false claims: `no_fossil`/`region_allowlist` are not fields, and L49's \"first failure stops the chain\" is wrong — the check collects all violations.",
   "exact_change": "L41-47: real fields only — `risk_score: 3`, `max_drawdown_pct: 20`, `halal: false`, `long_only: true`, `ticker_blocklist: []`; delete max_position_pct/no_fossil/region_allowlist. L49: \"The first failure stops the chain\" -> \"Every rule runs; all violations are collected and returned, the first setting `blocked_by`.\" Quiz 1 L62 + L70: swap `max_position_pct: 5` / \"Mandate field 5\" for the 3% risk-tier cap; key answer={3}. Try-it L87: edit `risk_score`.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 89",
@@ -1717,7 +1727,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 1 stem (L52) and keyed option [0] (L54) tell the learner to change `max_position_pct` — a field that does not exist, so the keyed answer is impossible to perform. Prose also convenes the Room on PETRONAS, which is unlisted state-owned and not tradable on Bursa.",
   "exact_change": "L21 + L28-34: drop `max_position_pct`, `region_allowlist`, `risk_tolerance: moderate`; use `risk_score: 3` (3% cap), `max_drawdown_pct: 20`, `halal: true`, `no_fossil_fuels: false`, `long_only: true`. L37: PETRONAS -> PCHEM (5183) or PETGAS (6033); needs sourcing: SC SAC Shariah status. Quiz 1 L52 \"citing `max_position_pct: 5`\" -> \"citing your 3% risk-tier cap\"; option[0] \"change `max_position_pct`\" -> \"change `risk_score`\"; key answer={0}.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 90",
@@ -1727,7 +1738,8 @@
   "quiz_affected": true,
   "defect_summary": "Quiz 2 marks option [2] \"The PM agent has a strict prompt that resists persuasion\" as the tempting WRONG answer, but SAFETY_FLOOR_BLOCK (safety_floor.py:52-94) is exactly that — a code-literate learner is marked wrong. Same falsehood carries the title and L21.",
   "exact_change": "Quiz 2 L70 option[2]: replace \"The PM agent has a strict prompt that resists persuasion\" with a genuinely false distractor, e.g. \"AMI's terms of service forbid coaching notes that weaken limits\"; rewrite L74's last sentence to match; key stays answer={3}. Title/L21 \"do not live in any prompt\" -> \"are not *decided* by any prompt: SAFETY_FLOOR_BLOCK does state them to the PM, appended after the user overlay\". Snippet L31-33: risk-tier cap; drop `no_fossil`.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 91",
@@ -1739,7 +1751,8 @@
   "exact_change": "L27/28/32/34 + both quiz stems: `max_position_pct` -> \"the single-name cap your `risk_score` sets\". Quiz 2 L57 \"changed `max_position_pct` from 3 to 5\" -> \"changed `risk_score` from 3 to 4, moving the cap 3.0% -> 4.5%\"; keyed option[2] \"`max_position_pct: 3`\" -> \"the 3.0% cap active at the time\"; key answer={2}. Quiz 1 L53: \"the last one\" -> \"the third one ('ignore the blocks because NVDA ran higher anyway')\". L29: no_fossil block -> blocklist block (DEF061).",
   "confidence": "high",
   "revalidated": "STAYS P1: phantom `max_position_pct` in quiz stems + keyed option — verified absent from schema.",
-  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 93",
@@ -1766,7 +1779,8 @@
   "retriage_why": "Quiz-affected, and max_position_pct is a claim about our own PM mechanic (cap derives from risk_score) — a mechanic, not decoration; nothing to genericize.",
   "genericizable": false,
   "revalidated": "STAYS P1: phantom `max_position_pct` (L29/L34) — verified absent from schema. Fix values verified vs DEFAULT_RISK_TIER_CAPS.",
-  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 96",
@@ -1778,7 +1792,8 @@
   "exact_change": "Quiz 2 L66: \"The first three are the CEO-of-evaluation authority points. The fourth describes a feature that does not and will not exist\" -> \"Choosing tickers, accepting/rejecting a Verdict and editing the Mandate are the authority points; the second option — brokerage execution — does not and will not exist\"; \"the fourth one\" -> \"the second one\"; key answer={1}. L27: use `risk_score: 4` (4.5% cap), `max_drawdown_pct: 20`, `halal: true`, `no_fossil_fuels: false`, `long_only: true`.",
   "confidence": "high",
   "revalidated": "STAYS P1 narrowed: quiz-2 brokerage contradiction FIXED; driver is phantom `max_position_pct` (L27 prose Mandate block).",
-  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 97",
@@ -2095,12 +2110,14 @@
  {
   "code": "RISK 5",
   "id": "017_portfolio_exposure_and_correlation",
-  "bucket": "P2a",
-  "p1_trigger": "none",
+  "bucket": "P1",
+  "p1_trigger": "false_fact",
   "quiz_affected": false,
   "defect_summary": "Body invents a dated event — a 'risk-off Tuesday in Q1 2025' with Nasdaq-100 −3.4% intraday plus specific JPM/XOM/KO/IHH closes — matching no real session; both quizzes are hypothetical and verified.",
   "exact_change": "L25: drop the date anchor → 'On a single risk-off session, the Nasdaq-100 drops 3.4% intraday and every one of those five names falls between 4% and 7%.' L27: 'The same tech-down-3.4% session: JPM flat, XOM +1.1%, KO −0.4%, IHH +0.2%', and fix venue phrasing to 'NVDA + JPM + XOM + KO (US) + IHH (Bursa Malaysia)'. Real day instead? needs sourcing: a dated NDX −3.4% session.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "REPO-TRUTH UPGRADE P2a->P1: teaches a phantom Mandate field (DEF098)."
  },
  {
   "code": "RISK 6",
@@ -2112,7 +2129,8 @@
   "exact_change": "L29: 'six to nine months at the same 1%-per-month rate' → 'about 17 months at the same 1%-per-month rate' (ln1.176/ln1.01=16.3). L29: 'stays under 20%, you can statistically recover in under a year' → 'stays under 20%, recovery is roughly a two-year grind' (25% gain = 22.4 months). Optional L27 consistency: '30 months to make 30%'→'~27 months'. Quiz keys unchanged.",
   "confidence": "high",
   "retriage_why": "Recovery-duration figures are the teaching point and are arithmetically false under the lesson's own stated 1%/month rate; a hypothetical wrapper does not fix the math.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "TECH 7",
@@ -2292,18 +2310,20 @@
   "exact_change": "Intro: 'Brazilian regulator-led work on equity day-traders' -> 'a Brazilian academic study of index-futures day traders' (needs sourcing: exact cite). Cut 'US discount-broker datasets' (needs sourcing: any dataset showing 70-90%). Trap: 'The 10-30% who do survive long-term' -> 'The low-single-digit share who survive'. Pattern 1: 'functionally finished' -> 'down ~26%'.",
   "confidence": "medium",
   "retriage_why": "False attribution to named real studies/regulators plus an internal contradiction reaching the quiz — attribution is the teaching point and quiz override applies.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "EDGE 2",
   "id": "019_survival_mindset",
-  "bucket": "P2a",
-  "p1_trigger": "quiz_poisoned",
+  "bucket": "P1",
+  "p1_trigger": "false_fact",
   "quiz_affected": true,
   "defect_summary": "Both quiz explanations call 'the first' option the tempting wrong answer, but answer={0} — the first IS the key, so each tells a correct learner they were wrong; also mislabels the gambler's fallacy.",
   "exact_change": "Quiz1 explanation: 'The tempting wrong answer is the first' -> 'is the last' (option[3], size up to 3%); \"gambler's fallacy in reverse\" -> \"gambler's fallacy\". Quiz2 explanation: 'the first or the last' -> 'the second or the last'. Keys stay 0/0. Secondary: genericize 'Fed surprise + TSLA earnings miss' (no FOMC that week), soften the 90%/1-in-4 claim (needs sourcing).",
   "confidence": "high",
-  "revalidated": "quiz poison FIXED (DEF083 named the distractor by content, key 0 stands); residual: TSLA-dated Fed anecdote genericize + 'gambler's fallacy in reverse' wording nit + 90%/1-in-4 stat soften"
+  "revalidated": "quiz poison FIXED (DEF083 named the distractor by content, key 0 stands); residual: TSLA-dated Fed anecdote genericize + 'gambler's fallacy in reverse' wording nit + 90%/1-in-4 stat soften | REPO-TRUTH UPGRADE P2a->P1: teaches a phantom Mandate field (DEF098).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 3",
@@ -2325,17 +2345,20 @@
   "exact_change": "'By 2pm he had a 3x position on GENTING'→'By 3pm' (Bursa halts 12:30–14:30). Intro: 'statistically your worst'→'performs worse on average'. Fix the 2-of-3 vs 3-of-3 conflict: use 'two of the three' in prose and Quiz2 explanation. Also: Try-it + Quiz1/Quiz3 cite cooldown_after_stop_minutes and per-trade-risk mandate fields that don't exist (see EDGE 7).",
   "confidence": "medium",
   "retriage_why": "Quiz override: the 2-of-3 vs 3-of-3 conflict is the lesson's own definition of the tilt test and it reaches Quiz 2's explanation; genericizing the Bursa anecdote fixes nothing there.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "EDGE 5",
   "id": "049_overconfidence",
-  "bucket": "P2a",
-  "p1_trigger": "none",
+  "bucket": "P1",
+  "p1_trigger": "false_fact",
   "quiz_affected": false,
   "defect_summary": "Anecdote says a long on NVDA in early 2024 gapped down on an earnings miss; NVDA beat and rose ~16% on 22 Feb 2024. Error is prose-only — all three quiz keys verified correct (2, 3, 2).",
   "exact_change": "Prose: 'profitable on AAPL for eight straight months in 2023'→'profitable on one large-cap name for eight straight months'; 'A high-conviction long on NVDA in early 2024'→'A high-conviction long on his best-looking name'. Secondary (not P1): Quiz3 explanation 'the last one: raise the mandate'→'the second option'; Try-it's max_per_trade_risk_pct is not a real mandate field.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "REPO-TRUTH UPGRADE P2a->P1: teaches a phantom Mandate field (DEF098)."
  },
  {
   "code": "EDGE 7",
@@ -2345,7 +2368,8 @@
   "quiz_affected": true,
   "defect_summary": "Confirmed: only max_drawdown_pct exists in the mandate schema; per-trade risk, max open positions, cooldown and max trades/week exist nowhere in backend/mobile, yet Quiz 3 grades PM enforcement of per-trade risk.",
   "exact_change": "Verified only max_drawdown_pct exists (backend/app/schemas/mandate.py, Literal 10/20/30/50/100). Cut per_trade_risk / max_open_positions / cooldown_after_stop_minutes / max_trades_per_week from the prose list, Try-it, and Quiz3's stem ('5th position at 4% risk, mandate is 1%'); rebuild Quiz3 on a drawdown breach the PM does enforce, or hold the lesson until those params ship.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 8",
@@ -2519,7 +2543,8 @@
   "exact_change": "L27: `max_position_pct: 5, max_drawdown_pct: 20, halal: false` -> `risk_score: 3, max_drawdown_pct: 20, halal: false` (risk 3 = 3.0% cap). Genericize: \"watchlist NVDA\" -> \"a large-cap chipmaker\"; drop \"the latest 10-Q\", mark figures illustrative. L29: \"+11.6%\" -> \"+11.7%\". Quizzes correct; no key moves.",
   "confidence": "medium",
   "retriage_why": "Driver is a Mandate field (max_position_pct) that doesn't exist in our own schema — a product definition learners will try to use, not an illustrative number.",
-  "genericizable": false
+  "genericizable": false,
+  "repo_truth": true
  },
  {
   "code": "EDGE 23",
@@ -2539,7 +2564,8 @@
   "quiz_affected": true,
   "defect_summary": "Both quizzes poisoned: Q2 stem asserts XOM actual P/E ~14 (false); Q1 stem+explanation rest on `mandate.max_position_pct`, which does not exist (cap = risk_tier_cap(risk_score)). Prose max_drawdown_pct:15 invalid.",
   "exact_change": "Q2 stem: \"XOM has a P/E of 4.2 (actual ~14)\" -> \"an energy name has a P/E of 4.2 when filings show far higher\" (real XOM P/E: needs sourcing); key {2}. Q1 stem: \"max_position_pct is 5%\" -> \"risk-tier cap is 3%\"; key {3}. L31 -> `risk_score: 3, max_drawdown_pct: 20` (15 invalid). L35 -> `risk_tier_cap(mandate.risk_score)`; `no_fossil` -> `no_fossil_fuels`. L71: change risk tier.",
-  "confidence": "high"
+  "confidence": "high",
+  "repo_truth": true
  },
  {
   "code": "EDGE 25",
@@ -2551,7 +2577,8 @@
   "exact_change": "Q2 explanation: \"The first three options are healthy CEO behaviour. The fourth one — rejecting verdicts — is also healthy\" -> \"The other three options are healthy CEO behaviour, and rejecting verdicts is actively expected\". Key stays {1}. L27: \"the six trades\" -> \"the six Verdicts — 3 BUYs, 3 HOLDs\". L21: \"`max_position_pct: 5` mandate\" -> \"3% cap your risk tier sets\".",
   "confidence": "high",
   "revalidated": "STAYS P1 narrowed: quiz-2 contradiction FIXED; driver is now phantom `max_position_pct:5` (L21) — verified absent from mandate.py schema. Fix: 'the single-name cap your risk_score sets'.",
-  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 27",
@@ -2596,7 +2623,8 @@
   "exact_change": "'~14,000 trading days' -> '~3.5M trading days (~14,000 years)'; 'March 2020: multiple -10%+ days in a single week' -> 'S&P -11.98%, 16 Mar 2020'; 'Aug 2024: a 12% intraday swing' -> Nikkei 225, 5 Aug 2024; NVDA '2024 ... -16%' -> '-17%, 27 Jan 2025'. Cut '30-100x' (quiz-1 opt D) and 'at least 30x' - needs sourcing. Both expls: 'the first'/'the last' -> option B. Keys 3/2 stay.",
   "confidence": "high",
   "revalidated": "STAYS P1 WIDENED: 5-sigma '~14,000 trading days' off ~250x (true ~3.5M days / ~14,000 yrs) present L31; NEW phantom field `max_single_name_notional_pct` (L63) — not in mandate.py. Quiz NOT mis-keyed; '30-100x' in key is P2b soften. Aug-2024 Nikkei-as-S&P + NVDA wrong date = P2a.",
-  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only)."
+  "code_verified": "risk_tier_cap (trading_math/sizing.py:22): {1:1.5,2:1.5,3:3.0,4:4.5,5:4.5}; SINGLE_NAME_ABSOLUTE_CAP_PCT=50.0. Mandate schema has NO max_position_pct/max_single_name_notional_pct field (risk_score,max_drawdown_pct,halal,no_fossil_fuels,long_only).",
+  "repo_truth": true
  },
  {
   "code": "EDGE 31",
@@ -2607,7 +2635,8 @@
   "defect_summary": "(0.45/0.55)^100 = 1.93e-9, not the stated 3e-10 (6.4x off), so Quiz-1's keyed '60 million x' should be ~9.3 million x; Quiz-2's keyed answer says 1% out-compounds 5% but Kelly f*=10% at p=0.55/1R, so 5% wins.",
   "exact_change": "Prose + Quiz-1 stem '3 x 10^-10' -> '1.9 x 10^-9'. Quiz-1 opt idx2 '60 million' -> '9 million'; expl '6 x 10^7 - sixty million times' -> '9.3 x 10^6 - nine million times'; 'the first' -> 'option B'. Quiz-2 (key 1): cut the clause that compounding favours A - Kelly f*=10%, so 5% makes ~90x vs 1%'s ~3.1x over 1200 trades; restate B as higher median AND mean with a 1-2% ruin tail.",
   "confidence": "high",
-  "revalidated": "STAYS P1: exponent 3x10^-10 (true 1.9x10^-9) and '60 million' (true ~9M) present; quiz math."
+  "revalidated": "STAYS P1: exponent 3x10^-10 (true 1.9x10^-9) and '60 million' (true ~9M) present; quiz math.",
+  "repo_truth": true
  },
  {
   "code": "EDGE 32",
@@ -2930,5 +2959,53 @@
   "exact_change": "L25: 'Costco (COST) is the textbook serial special-dividend payer' -> 'A large warehouse retailer is the textbook serial special-dividend payer', keeping the 0.5% regular / 2%+ naive-TTM contrast as openly hypothetical. L29: 'Texas Pacific Land (TPL)' -> 'a land-and-royalty company', and '5-10%' -> 'several times the regular rate'. L35's 'Costco's pattern' -> 'that pattern'. If the real names are kept instead: needs sourcing for COST's current regular dividend and TPL's special-year yields.",
   "confidence": "high",
   "source": "manual triage (batch failed the structured-output cap)"
+ },
+ {
+  "bucket": "P1",
+  "code": "RISK 2",
+  "id": "014_position_sizing_basics",
+  "defect_summary": "Try it (L69) tells the user to set `max_risk_per_trade_pct` in the Mandate editor — no such field; the user sets risk_score (1-5). DEF098.",
+  "exact_change": "L69: `max_risk_per_trade_pct` -> `risk_score` (align copy: set risk_score; the per-trade cap derives from it).",
+  "quiz_affected": false,
+  "p1_trigger": "false_fact",
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "ADDED by deterministic repo-truth scan; LLM sweep marked this lesson clean (DEF098)."
+ },
+ {
+  "bucket": "P1",
+  "code": "N&M ?",
+  "id": "050_boredom_trading",
+  "defect_summary": "Teaches `max_trades_per_week` as a settable Mandate field (SCOPE class) — not in schema. DEF098 fork: build or remove.",
+  "exact_change": "Align to current schema OR file the richer-Mandate CR; do not assert the field exists.",
+  "quiz_affected": false,
+  "p1_trigger": "false_fact",
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "ADDED by deterministic repo-truth scan; LLM sweep marked this lesson clean (DEF098)."
+ },
+ {
+  "bucket": "P1",
+  "code": "EDGE 26",
+  "id": "076_human_oversight_is_the_product",
+  "defect_summary": "PM-compliance quote (L29) narrates \"Within max_position_pct 5\" — phantom field; cap derives from risk_score. DEF098.",
+  "exact_change": "L29: \"Within max_position_pct 5\" -> \"Within the 3.0% single-name cap your risk_score sets\".",
+  "quiz_affected": false,
+  "p1_trigger": "false_fact",
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "ADDED by deterministic repo-truth scan; LLM sweep marked this lesson clean (DEF098)."
+ },
+ {
+  "bucket": "P1",
+  "code": "RISK 14",
+  "id": "109_risk_budgeting_across_positions",
+  "defect_summary": "Try it (L71) sets `total_open_risk_pct`, `max_sector_exposure_pct`, `max_single_name_notional_pct` — none exist (SCOPE + DESIGN). DEF098.",
+  "exact_change": "max_single_name_notional_pct -> risk_score cap; the other two are the SCOPE fork (build or remove).",
+  "quiz_affected": false,
+  "p1_trigger": "false_fact",
+  "confidence": "high",
+  "repo_truth": true,
+  "revalidated": "ADDED by deterministic repo-truth scan; LLM sweep marked this lesson clean (DEF098)."
  }
 ]
