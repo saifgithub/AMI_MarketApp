@@ -89,5 +89,7 @@ current schema.
 | 279_you_are_the_ceo | P1 | A | max_position_pct, region_allowlist |
 | 355_how_amis_halal_flag_maps_to_real_screening | REPO_TRUTH (DEF097) | — | DEFAULT_HALAL_DEMO_UNIVERSE |
 
-Filed as **DEF098**. The guard (`repo_truth_check.py`) becomes a corpus pytest once this cohort is
-cleared — guard lands with the fix, per `docs/initial_specs/08_tech/failure_patterns.md`.
+Filed as **DEF102** (re-IDed from a DEF098 collision, AT:architect 2026-07-24; DEF098 is the
+unrelated backend prompt-data-parity defect). The guard (`repo_truth_check.py`) becomes a corpus
+pytest once this cohort is cleared — guard lands with the fix, per
+`docs/initial_specs/08_tech/failure_patterns.md`.

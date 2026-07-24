@@ -37,7 +37,7 @@ And QUANT 9 was dropped when refute showed the quiz option was correctly keyed a
 
 ## Carve-outs (NOT in this batch)
 
-- **DEF098** — 30 lessons teaching phantom Mandate fields — is the code-truth sub-batch. Its
+- **DEF102** (re-IDed from a DEF098 collision, AT:architect 2026-07-24) — 30 lessons teaching phantom Mandate fields — is the code-truth sub-batch. Its
   class-A rows fix uniformly to the `risk_score`-derived cap; its 6 class-B "SCOPE" lessons are
   **blocked** on the richer-Mandate build-or-remove decision (Saiful).
 - **11 legal/Sharia escalations** — SME-only, never auto-fixed (294, 296, 297, 299, 347, 351,
@@ -48,5 +48,5 @@ And QUANT 9 was dropped when refute showed the quiz option was correctly keyed a
 
 Every P1 lesson's quiz key is the reality-correct answer and every false fact is corrected to its
 sourced value; `backend/tests/unit/` stays green; the DEF064/065 quiz invariants hold; and the
-`repo_truth_check.py` guard (DEF098) is promoted to a corpus pytest once the phantom-field cohort
+`repo_truth_check.py` guard (DEF102) is promoted to a corpus pytest once the phantom-field cohort
 clears.
