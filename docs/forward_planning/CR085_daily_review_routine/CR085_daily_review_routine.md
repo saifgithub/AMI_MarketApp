@@ -24,7 +24,9 @@ CR/Defect registers instead of `bug_reports`.
 ## Decision
 
 - **Trigger:** a real scheduled **cloud routine** (`/schedule`), daily at 13:00
-  Asia/Kuala_Lumpur — not Claude Code's plain `CronCreate`, which is session-only and
+  Asia/Riyadh (UTC+3, Saiful's timezone; corrected 2026-07-24 from an initial
+  Asia/Kuala_Lumpur guess based on project server-side timestamp conventions) — not
+  Claude Code's plain `CronCreate`, which is session-only and
   auto-expires after 7 days and so cannot hold a standing job independent of whether a
   Claude Code session happens to be open on the Mac.
 - **Scope:** "untouched only" — CR status exactly `proposed`, Defect status starting
@@ -51,7 +53,7 @@ CR/Defect registers instead of `bug_reports`.
    modeled on the existing `/fix-bugs` command's shape (hard rules / step-by-step /
    what-not-to-do) but much shorter — no worktrees, no code fixes, no DB.
 3. A `/schedule` cloud routine wired to run `/daily-cr-def-review` daily at 13:00
-   Asia/Kuala_Lumpur.
+   Asia/Riyadh (UTC+3).
 4. Folded in the pre-existing `cr_list.md` drift fix (CR084 was missing) as part of this
    CR's first regenerate-and-commit, since the new command's correctness depends on the
    registers being drift-free in the first place.
@@ -67,7 +69,7 @@ build track's job, same separation `/fix-bugs` already draws between triage and 
   DEF089, DEF097), asks one AskUserQuestion per item, writes one same-day ledger
   section, and commits/pushes only the ledger file.
 - The `/schedule` routine exists and fires unattended at the next 13:00
-  Asia/Kuala_Lumpur mark.
+  Asia/Riyadh mark.
 - The day after a real run, the follow-up logic correctly reports back on at least one
   "said start it" item and one "said drop it" item.
 

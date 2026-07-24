@@ -5,7 +5,7 @@ Saiful one by one what to do with each, via `AskUserQuestion`. This is the daily
 of `/fix-bugs`'s triage step, but for the CR/Defect registers instead of `bug_reports`:
 poll, surface, log the decision, **never act on it**. Filed as CR085.
 
-Runs daily at 13:00 Asia/Kuala_Lumpur via a `/schedule` cloud routine — can also be run
+Runs daily at 13:00 Asia/Riyadh (UTC+3, Saiful's timezone) via a `/schedule` cloud routine — can also be run
 manually any time.
 
 ---
