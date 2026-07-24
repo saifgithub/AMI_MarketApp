@@ -11,6 +11,11 @@
 #   scripts/users.sh --google         # all users with google_id set
 #   scripts/users.sh --counts         # just the counts table, no list
 #   scripts/users.sh --events <id>    # subscription_events log for a user
+#   scripts/users.sh --contacts [N]   # CSV of contactable (email-having) real users
+#                                       to STDOUT for engagement comms (CR082).
+#                                       Summary on STDERR. Excludes synthetics/seed
+#                                       rows (memory/feedback_user_report_exclusions.md).
+#                                       e.g. scripts/users.sh --contacts > contacts.csv
 #
 # All queries run against the postgres container on melehost via SSH.
 # Read-only — no UPDATE/DELETE in here.
@@ -23,6 +28,21 @@ PSQL="docker exec ami_postgres psql -U postgres -d ami_trade"
 run_sql() {
   ssh "$SSH_HOST" "$PSQL -P pager=off -c \"$1\""
 }
+
+# CSV variant — raw rows (with a header line) to stdout, nothing else, so the
+# caller can redirect straight to a .csv file.
+run_sql_csv() {
+  ssh "$SSH_HOST" "$PSQL --csv -c \"$1\""
+}
+
+# The synthetic/seed exclusion predicate — kept byte-identical to
+# scripts/analytics/daily_report.py REAL_PRED and memory/feedback_user_report_exclusions.md
+# so the outreach list never contains the 13 CR035 room-benchmark synthetics or
+# the 10 seed fixtures.
+REAL_PRED="coalesce(last_app_version,'') <> 'room-benchmark' \
+  AND NOT (created_at >= '2026-05-24 05:10:00' \
+  AND created_at < '2026-05-24 05:11:00' \
+  AND device_model IS NULL AND last_app_version IS NULL)"
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -235,6 +255,53 @@ cmd_events() {
   "
 }
 
+cmd_contacts() {
+  local n="${1:-1000}"
+  # Loud gap summary to stderr — how many real users are actually reachable by
+  # email. Anonymous-first means most rows have email IS NULL; make that visible.
+  local summary
+  summary=$(ssh "$SSH_HOST" "$PSQL -tA -c \"
+    SELECT
+      count(*) FILTER (WHERE email IS NOT NULL) || ' contactable (email) / ' ||
+      count(*) || ' real users'
+    FROM users WHERE ${REAL_PRED};
+  \"" 2>/dev/null | tr -d '\r')
+  echo "▶ contacts: ${summary} — CSV on stdout (excludes synthetics/seed rows)" >&2
+
+  run_sql_csv "
+    WITH real_users AS (SELECT * FROM users WHERE ${REAL_PRED}),
+    last_act AS (
+      SELECT user_id, max(ts) AS last_activity FROM (
+        SELECT user_id, triggered_at AS ts FROM room_runs
+        UNION ALL SELECT user_id, opened_at FROM sim_trades
+        UNION ALL SELECT user_id, created_at FROM journal_entries WHERE deleted_at IS NULL
+        UNION ALL SELECT user_id, created_at FROM one_on_one_messages
+        UNION ALL SELECT user_id, coalesce(completed_at, started_at)
+                    FROM lessons_progress WHERE started_at IS NOT NULL
+      ) a GROUP BY user_id
+    ),
+    rooms AS (SELECT user_id, count(*) AS n FROM room_runs GROUP BY user_id)
+    SELECT
+      u.email,
+      coalesce(u.display_name, '') AS display_name,
+      CASE WHEN u.device_model LIKE 'iPhone%' OR u.device_model LIKE 'iPad%' THEN 'ios'
+           WHEN u.device_model IS NOT NULL OR coalesce(u.os_version,'') LIKE 'Android%' THEN 'android'
+           ELSE 'unknown' END AS platform,
+      u.plan,
+      to_char(u.created_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'YYYY-MM-DD HH24:MI') AS created_my,
+      to_char(u.claimed_at AT TIME ZONE 'Asia/Kuala_Lumpur', 'YYYY-MM-DD HH24:MI') AS claimed_my,
+      coalesce(u.last_app_version, '') AS last_app_version,
+      coalesce(r.n, 0) AS rooms_convened,
+      to_char(la.last_activity AT TIME ZONE 'Asia/Kuala_Lumpur', 'YYYY-MM-DD HH24:MI') AS last_activity_my
+    FROM real_users u
+    LEFT JOIN rooms r ON r.user_id = u.id
+    LEFT JOIN last_act la ON la.user_id = u.id
+    WHERE u.email IS NOT NULL
+    ORDER BY la.last_activity DESC NULLS LAST, u.created_at DESC
+    LIMIT ${n};
+  "
+}
+
 # ── dispatch ─────────────────────────────────────────────────────────────
 
 if [[ $# -eq 0 ]]; then
@@ -244,6 +311,7 @@ fi
 
 case "$1" in
   --counts)            cmd_counts                              ;;
+  --contacts)          cmd_contacts "${2:-1000}"               ;;
   --recent)            cmd_recent "${2:-20}"                   ;;
   --anon)              cmd_anon   "${2:-10}"                   ;;
   --apple)             cmd_apple                                ;;
