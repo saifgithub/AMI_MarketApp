@@ -665,6 +665,112 @@ def test_pm_rr_coherent_or_silent_narration_produces_no_signal():
     assert _pm_rr_coherence_signal(None, 100, 94, 113) is None
 
 
+# ── DEF095: AMI renders the Trader's derived math; a narrated ratio can't poison the debate ──
+
+_SCHD_TRADER_REPLY = (
+    "Instrument: SCHD\n"
+    "Side: BUY\n"
+    "Size: 10% of portfolio\n"
+    "Entry: $32.75\n"
+    "Target: $33.50\n"
+    "Stop: $29.60 (10% below entry)\n"
+    "R:R: 2.5:1\n"
+    "Entering near the $33.5 resistance leaves minimal immediate upside."
+)
+
+
+def _run_schd_capturing_prompts():
+    """Run a live Room on SCHD where the Trader narrates R:R 2.5:1 on levels that
+    imply 0.2:1, capturing every downstream agent's system prompt. Returns
+    (runner, run_id, captured_prompts)."""
+    captured: list[str] = []
+
+    class _CaptureGateway(_FakeGateway):
+        async def stream_chat(self, *, system_prompt, messages, model_tier,
+                              locale="en", max_tokens=1024, **_audit):
+            captured.append(system_prompt)
+            async for chunk in super().stream_chat(
+                system_prompt=system_prompt, messages=messages,
+                model_tier=model_tier, locale=locale, max_tokens=max_tokens, **_audit,
+            ):
+                yield chunk
+
+    fake = _CaptureGateway(replies={
+        "trader": _SCHD_TRADER_REPLY,
+        # PM PASSes so no APPROVE/reformat noise — it still READS the transcript,
+        # which is what we assert the downstream figure on.
+        "portfolio_manager": '{"action": "PASS", "narration": "Asymmetry too thin — hold."}',
+    })
+    runner = RoomRunner(llm=fake)  # type: ignore[arg-type]
+    mandate = hydrate_coach_mandate({"plan": "trader", "risk_score": 3})
+    events = _collect(runner.run(
+        user_id=uuid4(), ticker="SCHD", mandate=mandate,
+        char_delay_min=0.0, char_delay_max=0.0,
+    ))
+    run_id = events[0].run_id
+    return runner, run_id, captured
+
+
+def test_def095_guard1_downstream_reads_computed_rr_not_trader_narration():
+    """GUARD 1 (DEF095): the Trader narrates R:R 2.5:1 on SCHD levels
+    (entry 32.75 / stop 29.60 / target 33.50) that imply 0.2:1. AMI must recompute
+    from the Trader's OWN levels so the R:R a DOWNSTREAM agent receives is the
+    computed 0.2:1 — never the narrated 2.5:1 that would poison the Risk debate and
+    the PM. RED before the fix: the transcript carried 2.5:1 verbatim and no 0.2:1."""
+    _runner, _run_id, captured = _run_schd_capturing_prompts()
+
+    pm_prompt = next(p for p in captured if "speak as the portfolio manager" in p.lower())
+    assert "0.2:1" in pm_prompt, "downstream PM never received AMI's computed R:R"
+    assert "2.5:1" not in pm_prompt, "the Trader's wrong narrated R:R reached downstream"
+
+    # Belt-and-braces: the first Risk debator (also downstream of the Trader) too.
+    risk_prompt = next(p for p in captured if "speak as the aggressive debator" in p.lower())
+    assert "0.2:1" in risk_prompt
+    assert "2.5:1" not in risk_prompt
+
+
+def test_def095_guard2_no_rr_line_enters_transcript_unchecked():
+    """GUARD 2 (DEF095): no agent output carrying an R:R line reaches the transcript
+    without being checked against rr_is_coherent() — an incoherent ratio cannot
+    survive unannotated. The Trader's stored message carried an R:R, so it must show
+    AMI's verification and the wrong ratio must be gone. RED before: the raw text
+    (with the unchecked 2.5:1 and no AMI marker) was stored verbatim."""
+    from app.trading_math import rr_is_coherent
+
+    runner, run_id, _captured = _run_schd_capturing_prompts()
+    transcript = runner.get_run(run_id).transcript
+    trader_msg = next(m for m in transcript if m.agent_id == AgentId.TRADER.value)
+
+    # The narrated ratio was NOT coherent with the stated levels — that's exactly the
+    # condition that must never pass through unchecked.
+    assert not rr_is_coherent(32.75, 29.60, 33.50, 2.5)
+    assert "AMI verified" in trader_msg.content, "R:R line entered transcript unchecked"
+    assert "0.2:1" in trader_msg.content
+    assert "2.5:1" not in trader_msg.content
+
+
+def test_def095_verify_and_annotate_geometry_unit():
+    """The structural core: parse an agent's OWN levels, recompute, rewrite the ratio,
+    flag the incoherence. Coherent narration passes clean; a text with no full level
+    triple isn't a level claim and is untouched (no false correction on debators)."""
+    from app.services.room_runner import _verify_and_annotate_geometry
+
+    annotated, sig = _verify_and_annotate_geometry(_SCHD_TRADER_REPLY)
+    assert sig is not None and sig["implied_rr"] == 0.2 and sig["stated_rr"] == 2.5
+    assert "0.2:1" in annotated and "2.5:1" not in annotated and "AMI verified" in annotated
+    # drawdown contribution rendered from the Trader's own size/entry/stop (10% × 9.6%).
+    assert "drawdown contribution" in annotated
+
+    # Coherent: 100/94/113 imply ~2.2:1; a narrated 2:1 is within tolerance → no flag.
+    _ann2, sig2 = _verify_and_annotate_geometry(
+        "Entry: $100\nTarget: $113\nStop: $94\nSize: 3%\nR:R: 2:1"
+    )
+    assert sig2 is None
+
+    # No full level triple → not a level claim → passed through untouched.
+    assert _verify_and_annotate_geometry("Push size to 4.5%.") == ("Push size to 4.5%.", None)
+
+
 def test_profile_falls_back_to_synthetic_when_yfinance_fails(monkeypatch):
     """A yfinance failure (network error, unknown ticker) must not break
     the runner — it falls through to the deterministic synthetic profile."""
@@ -688,6 +794,64 @@ def test_format_profile_labels_data_source():
 
     synth_block = _format_profile({"data_source": "synthetic", "pe": "22.0"})
     assert "alpha simulation scaffolding" in synth_block
+
+
+# ── DEF096: the Room's Social Media Analyst gets the live Reddit fields its job names ──
+
+def _live_social_profile():
+    """A Room profile whose social fields are populated by the REAL Adanos formatters
+    (the same strings room_runner stores on a live convene), social_source='live'."""
+    from app.services.social_context import (
+        SocialSentiment,
+        format_community_read,
+        format_mention_trend,
+        format_pattern,
+        format_sentiment_score,
+        format_sentiment_tone,
+    )
+
+    s = SocialSentiment(
+        ticker="INGN", buzz_score=72.0, sentiment_score=0.09, mentions=1240,
+        bullish_pct=61, bearish_pct=24, trend="rising", period_days=7,
+        top_subreddits=("wallstreetbets", "stocks"), sample_snippets=(),
+    )
+    return {
+        "data_source": "synthetic",  # social can be live while fundamentals are not
+        "social_source": "live",
+        "sentiment_tone": format_sentiment_tone(s),
+        "sentiment_score": format_sentiment_score(s),
+        "mention_trend": format_mention_trend(s),
+        "influencer_take": format_community_read(s),
+        "pattern": format_pattern(s),
+    }
+
+
+def test_def096_live_social_profile_surfaces_dropped_reddit_fields():
+    """GUARD (DEF096): the three live Reddit fields the Adanos pipeline computes and
+    _format_profile used to DROP — mention volume, buzz score, the numeric
+    bullish/bearish split (+ communities) — must appear in the block every Room agent
+    reads when social is LIVE. They are the exact Inputs the Social Media Analyst's job
+    names. RED before the fix: only tone + score rendered; these were computed and
+    thrown away, so the analyst substituted price volume for Reddit mention volume."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile(_live_social_profile())
+    assert "1,240" in block                             # mention volume
+    assert "72/100" in block                            # buzz score
+    assert "bullish 61% / bearish 24%" in block         # the numeric split
+    assert "r/wallstreetbets" in block                  # most-active communities
+
+
+def test_def096_non_live_social_profile_surfaces_no_reddit_numbers():
+    """The synthetic (not-live) path must not surface/fabricate any social numbers —
+    the disclosure header already declares social not-live, and no mock values leak."""
+    from app.services.room_prompts import _format_profile
+
+    block = _format_profile({"data_source": "synthetic", "pe": "22.0"})
+    assert "Mentions:" not in block
+    assert "buzz score" not in block
+    assert "/ bearish" not in block
+    assert "Communities:" not in block
 
 
 # ── DEF053: real valuation multiples / sector / dividends / analyst consensus ──

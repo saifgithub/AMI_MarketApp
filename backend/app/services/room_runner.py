@@ -75,6 +75,7 @@ from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
 from app.trading_math.portfolio import shares_for_size
+from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
 from app.trading_math.trade import risk_reward, rr_is_coherent, trade_asymmetry
 from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
@@ -602,6 +603,124 @@ def _pm_rr_coherence_signal(
         return None
     implied = risk_reward(entry, stop, target)
     return {"stated_rr": stated, "implied_rr": implied if implied is not None else -1.0}
+
+
+# ── DEF095: AMI renders the trade geometry — agents state levels, not ratios ──
+#
+# The Trader (EXECUTION) states entry/stop/target and used to narrate the derived
+# figures — R:R, drawdown contribution — as free prose nothing verified. Over the
+# only two live trades in the DEF095 window every two-input figure was wrong (SCHD
+# narrated R:R 2.5:1 on a 0.2:1 setup, and the PM approved it), and the wrong number
+# entered `Transcript so far:` as the premise the Risk debators and the PM then
+# reasoned from. Per CR038 the control is STRUCTURAL, not a prompt instruction: after
+# a level-proposing agent speaks, AMI recomputes every ratio from those same levels
+# (trading_math) and rewrites the transcript so the figure downstream agents — and
+# the user — read is AMI's computed one, never the narration. Flag-only: an
+# incoherence is surfaced/corrected, never routed into `enforce_safety_floor`
+# (DEF059 — the safety floor stays the sole vetoer; a flag must not change a verdict).
+
+# One narrated price per label: "Entry: $32.75", "Stop: $29.60 (10% below entry)",
+# "Target: $33.50 then $95+", "Size: 10% of portfolio". The label must be a whole
+# word (so "entering"/"below entry)" don't false-match) and the price must follow
+# within a short, digit-free gap so a distant number isn't captured.
+_LEVEL_PATTERNS: dict[str, re.Pattern[str]] = {
+    "entry": re.compile(r"\bentry\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
+    "stop": re.compile(r"\bstop(?:[\s-]*loss)?\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
+    "target": re.compile(r"\btarget\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)", re.IGNORECASE),
+    "size": re.compile(r"\bsize\b[^\n$0-9]{0,15}\$?\s*(\d+(?:\.\d+)?)\s*%?", re.IGNORECASE),
+}
+
+# The keyword-then-ratio span of a narrated R:R, split so the ratio can be
+# rewritten to AMI's computed value while the keyword prefix is preserved:
+# "R:R: 2.5:1" → "R:R: 0.2:1". Number-first phrasings ("2.5:1 R:R") aren't
+# rewritten inline — the appended AMI note still carries the authoritative figure.
+_RR_CLAIM_RE = re.compile(
+    rf"({_PM_RR_KEYWORD}\s*[:=]?\s*(?:of|is|about|approx\.?|~|>|≈)?\s*)"
+    r"(\d+(?:\.\d+)?\s*(?::\s*1|\s*to\s*1|x))",
+    re.IGNORECASE,
+)
+
+
+def _match_level(text: str, kind: str) -> float | None:
+    """First price stated for `kind` (entry/stop/target/size) in `text`, or None."""
+    m = _LEVEL_PATTERNS[kind].search(text)
+    if m is None:
+        return None
+    try:
+        return float(m.group(1))
+    except (TypeError, ValueError):
+        return None
+
+
+def _annotate_rr_against_levels(
+    text: str,
+    entry: float | None,
+    stop: float | None,
+    target: float | None,
+    size: float | None,
+) -> tuple[str, dict[str, Any] | None]:
+    """Rewrite any narrated R:R in `text` to the one `entry/stop/target` imply, and —
+    on a genuine discrepancy or a ratio the levels imply but the agent omitted —
+    append a loud AMI verification note carrying the computed R:R / asymmetry /
+    drawdown contribution. Returns (annotated_text, signal); `signal` is a telemetry
+    payload when the narration contradicted the levels (or none was rendered though
+    the levels imply one), else None. Flag-only (DEF059)."""
+    implied = risk_reward(entry, stop, target)
+    stated = _extract_stated_rr(text)
+    if implied is None:
+        # The levels form no valid long setup — AMI can't render a ratio. If the
+        # agent narrated one regardless, strike it loudly rather than let an
+        # unverifiable figure enter the transcript unmarked.
+        if stated is None:
+            return text, None
+        annotated = _RR_CLAIM_RE.sub(
+            lambda m: f"{m.group(1)}[AMI: unverifiable — the stated levels form no valid long setup]",
+            text,
+        )
+        return annotated, {"stated_rr": stated, "implied_rr": -1.0}
+
+    rr_str = f"{implied:.1f}:1"
+    annotated = _RR_CLAIM_RE.sub(lambda m: f"{m.group(1)}{rr_str}", text)
+    if stated is not None and abs(implied - stated) <= 0.3:
+        # Narration already agreed with the levels; the transcript now carries AMI's
+        # figure inline. No correction note — don't add noise on a coherent trade.
+        return annotated, None
+
+    parts = [f"R:R {rr_str}"]
+    asym = trade_asymmetry(entry, stop, target)
+    if asym is not None:
+        parts.append(f"{asym.upside_pct:.1f}% upside vs {asym.downside_pct:.1f}% downside")
+    dd = drawdown_contribution(size, entry, stop) if size is not None else None
+    if dd is not None:
+        parts.append(f"drawdown contribution ≈ {dd.contribution_pts:.2f} pt")
+    tail = (
+        "the proposal stated no R:R, so AMI rendered it"
+        if stated is None
+        else "a narrated ratio that differed has been replaced with AMI's computed figure"
+    )
+    annotated += (
+        f"\n\n[AMI verified the trade geometry from the stated levels "
+        f"(entry ${entry:.2f} / stop ${stop:.2f} / target ${target:.2f}): "
+        f"{'; '.join(parts)} — {tail}. These are the figures of record.]"
+    )
+    return annotated, {"stated_rr": stated, "implied_rr": implied}
+
+
+def _verify_and_annotate_geometry(text: str) -> tuple[str, dict[str, Any] | None]:
+    """Verify a level-proposing agent's OWN narrated derived figures against AMI's
+    trading_math (DEF095). An agent has "proposed levels" only when it states a full
+    long-setup triple (entry + stop + target); anything less isn't a level claim and
+    passes through untouched. Generalises the PM-only coherence check to any agent —
+    principally the Trader, whose narrated ratio drives the whole downstream debate."""
+    if not text:
+        return text, None
+    entry = _match_level(text, "entry")
+    stop = _match_level(text, "stop")
+    target = _match_level(text, "target")
+    if entry is None or stop is None or target is None:
+        return text, None
+    size = _match_level(text, "size")
+    return _annotate_rr_against_levels(text, entry, stop, target, size)
 
 
 def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
@@ -1471,15 +1590,21 @@ class RoomRunner:
                                     quantity=shares_for_size(ctx.portfolio_value, parsed.size_pct, parsed.entry),
                                     limit_price=parsed.entry,
                                 )
-                                # CR046 M06: flag (never veto) an APPROVE whose narrated
-                                # R:R contradicts its own levels. The safety floor owns
-                                # vetoes; this is structural telemetry only.
+                                # CR046 M06 / DEF095: flag (never veto) an APPROVE whose
+                                # narrated R:R contradicts its own levels, and SURFACE it —
+                                # rewrite the PM's verdict narration so the ratio the user
+                                # reads is AMI's computed one, not a log nobody sees. The
+                                # safety floor still owns vetoes; this only corrects text.
                                 _rr_sig = _pm_rr_coherence_signal(
                                     pm_text, parsed.entry, parsed.stop, parsed.target
                                 )
                                 if _rr_sig is not None:
                                     logger.warning(
                                         "room_pm_rr_incoherent", run_id=str(run_id), **_rr_sig
+                                    )
+                                    pm_text, _ = _annotate_rr_against_levels(
+                                        pm_text, parsed.entry, parsed.stop,
+                                        parsed.target, parsed.size_pct,
                                     )
                                 verdict = enforce_safety_floor(
                                     llm_verdict=parsed, proposed=proposed,
@@ -1692,14 +1817,26 @@ async def _speak_one_agent(
                 error=str(exc)[:200],
             )
             text = _scripted_for(agent_id, formatter)
-        async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
-            yield ev
     else:
         text = _scripted_for(agent_id, formatter)
-        async for ev in _typewriter(
-            run_id, agent_id, text, char_delay_min, char_delay_max,
-        ):
-            yield ev
+
+    # DEF095: before this contribution is streamed or enters the transcript the rest
+    # of the Room reasons from, AMI recomputes every derived ratio from the agent's
+    # OWN stated levels and rewrites the text so both the user watching and every
+    # downstream agent read AMI's figure, not the narration. Only a full level triple
+    # triggers it; all other agents pass through untouched. Flag-only — never a veto
+    # (DEF059 — the safety floor stays the sole vetoer).
+    text, _geom_sig = _verify_and_annotate_geometry(text)
+    if _geom_sig is not None:
+        logger.warning(
+            "room_agent_rr_incoherent",
+            run_id=str(run_id),
+            agent_id=agent_id.value,
+            **_geom_sig,
+        )
+
+    async for ev in _typewriter(run_id, agent_id, text, char_delay_min, char_delay_max):
+        yield ev
 
     run.transcript.append(AgentMessage(
         agent_id=agent_id,

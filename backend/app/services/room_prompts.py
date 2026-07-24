@@ -337,6 +337,7 @@ def _format_profile(profile: dict[str, Any]) -> str:
         _catalyst_line(profile),
         f"Retail sentiment: {profile.get('sentiment_tone')} ({profile.get('sentiment_score')})",
     ]
+    lines += _social_detail_lines(profile)
     for extra in (_valuation_line(profile), _sector_line(profile),
                   _capital_allocation_line(profile), _analyst_line(profile)):
         if extra:
@@ -349,6 +350,30 @@ def _format_profile(profile: dict[str, Any]) -> str:
                if profile.get("next_earnings_eps_estimate") is not None else "")
         )
     return "\n".join(lines)
+
+
+def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
+    """The live-Reddit fields the Adanos pipeline computes and _format_profile used to
+    DROP (DEF096): mention volume + trend, buzz score + numeric bullish/bearish split,
+    and the most-active communities — the exact Inputs the Social Media Analyst's job
+    names (content/agents/social_media_analyst.md:16,23). In the Room only tone + score
+    were rendered, so the analyst reached for a price-volume figure it wasn't given.
+
+    Rendered only when social is LIVE — the synthetic path surfaces nothing (the
+    data-source disclosure header already declares social live/not-live, so no
+    fabricated social numbers leak; CR040). These are pre-formatted upstream by the
+    Adanos formatters (format_mention_trend / format_pattern / format_community_read) —
+    rendered verbatim as indented detail under 'Retail sentiment:', never recomputed."""
+    if profile.get("social_source") != "live":
+        return []
+    out: list[str] = []
+    if profile.get("mention_trend"):
+        out.append(f"  Mentions: {profile['mention_trend']}")
+    if profile.get("pattern"):
+        out.append(f"  {profile['pattern']}")
+    if profile.get("influencer_take"):
+        out.append(f"  Communities: {profile['influencer_take']}")
+    return out
 
 
 def _net_position_line(profile: dict[str, Any]) -> str:
