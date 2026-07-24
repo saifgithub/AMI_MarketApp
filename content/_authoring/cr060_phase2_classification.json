@@ -1850,12 +1850,13 @@
  {
   "code": "QUANT 9",
   "id": "343_out_of_sample_and_walk_forward_validation",
-  "bucket": "P1",
+  "bucket": "NOT_A_DEFECT",
   "p1_trigger": "quiz_poisoned",
   "quiz_affected": true,
   "defect_summary": "Quiz 2 option[0] keys as false \"re-tuning after seeing out-of-sample results is a normal part of walk-forward validation\" - rolling re-optimisation IS Pardo's WFA and is what lesson 229 demonstrates, so a named method's definition is misstated in a graded distractor; body repeats it.",
   "exact_change": "Option[0] -> \"Nothing changes - re-testing the same holdout after re-tuning on it still counts as an out-of-sample test\" (answer={1} unchanged). In \"The trap\" L31 add: in walk-forward analysis each window is re-optimised on its own prior training data and tested once on the next, never-reused window; what destroys the test is re-tuning on a holdout you have already scored. Takeaway: \"never adjust the strategy based on the holdout\" -> \"never re-tune on a holdout you have already scored\".",
-  "confidence": "medium"
+  "confidence": "medium",
+  "revalidated": "Phase-3 dual-pass: refute pass confirmed the quiz option is correctly keyed FALSE (stem describes data-snooping on an already-scored holdout, NOT walk-forward analysis). Original finding was an AI false-positive. Dropped from P1."
  },
  {
   "code": "QUANT 10",
