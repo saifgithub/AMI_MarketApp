@@ -181,9 +181,13 @@ async def submit_quiz(
 @router.get("/{lesson_id}", response_model=Lesson)
 async def get_lesson(
     lesson_id: str,
+    locale: str = "en",
     svc: LessonsService = Depends(get_lessons_service),
 ) -> Lesson:
-    lesson = svc.get(lesson_id)
+    # CR087 — serve the requested locale's body, falling back to EN inside
+    # svc.get() when that locale wasn't authored (never a 404 for a real
+    # lesson that merely lacks a translation).
+    lesson = svc.get(lesson_id, locale)
     if lesson is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"lesson {lesson_id} not found")
     return lesson

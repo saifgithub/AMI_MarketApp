@@ -169,6 +169,12 @@ class QuizSubmitRequest(BaseModel):
     lesson_id: str
     # answers[i] is the chosen option_index for question i
     answers: list[int]
+    # CR087 — the locale the user actually took the quiz in. The server grades
+    # against that locale's parsed answer_index (a translator who reordered
+    # options would otherwise mis-grade AR users). Defaults to "en" so existing
+    # clients that don't send it keep working; AR/EN parity is guarded by a
+    # corpus test so the EN default still grades AR correctly today.
+    locale: str = "en"
 
 
 class QuizSubmitResponse(BaseModel):

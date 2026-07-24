@@ -330,10 +330,57 @@ def parse_mdx(path: Path) -> Lesson:
 # ── Service ─────────────────────────────────────────────────────────────
 
 
+# CR087 — the non-EN locales the loader discovers as `{stem}.{locale}.mdx`
+# siblings. `en` is always canonical and is never in this list. AR ships to
+# public tracks at CR087; MS is authored too — the loader parses whatever
+# siblings exist and derives each lesson's `locale_versions` from what actually
+# parsed AND passed the quiz-integrity gate, so enabling MS later needs no code
+# change, only content.
+_TRANSLATED_LOCALES = ("ar", "ms")
+_EN_SUFFIX = ".en.mdx"
+
+
+def _locale_quiz_servable(en: Lesson, loc: Lesson) -> tuple[bool, str]:
+    """CR087 quiz-integrity gate — decide whether `loc`'s quizzes are safe to
+    serve, measured against the canonical EN quiz set.
+
+    Why a *serving-time* gate and not only a build-time test: a chunk of the
+    CR083 AR corpus is structurally damaged — the translation tooling emptied
+    `options={[]}` and reset `answer={0}` on quizzes wrapped around `<Lesson/>`
+    tags. Serving those would ship an *unanswerable* AR quiz (DEF064 class: the
+    reader's allAnswered gate blocks the lesson forever) and, where options
+    survive but were reordered, would *mis-grade* the AR user (DEF059 class:
+    a confident-but-wrong result). Both are exactly the "degrade loudly" bugs
+    CLAUDE.md says to make structural, not leave to a prompt or a hope.
+
+    A locale lesson is servable only when, per question, it matches EN on quiz
+    count, option count and `answer_index`, and carries no empty option. Anything
+    else → the whole lesson falls back to EN (loud, correct: the user sees
+    English rather than a broken Arabic quiz). Returns (ok, reason).
+    """
+    if len(en.quizzes) != len(loc.quizzes):
+        return False, f"quiz_count en={len(en.quizzes)} loc={len(loc.quizzes)}"
+    for i, (eq, lq) in enumerate(zip(en.quizzes, loc.quizzes)):
+        if len(lq.options) != len(eq.options):
+            return False, f"q{i} option_count en={len(eq.options)} loc={len(lq.options)}"
+        if any(not (o or "").strip() for o in lq.options):
+            return False, f"q{i} empty_option"
+        if eq.answer_index != lq.answer_index:
+            return False, f"q{i} answer_index en={eq.answer_index} loc={lq.answer_index}"
+    return True, ""
+
+
 class LessonsService:
     def __init__(self, content_dir: Path = CONTENT_LESSONS_DIR) -> None:
         self._content_dir = content_dir
+        # EN canonical map, keyed by lesson id. Unchanged consumers (catalogue
+        # filter, earn-path, concierge context) read this.
         self._lessons: dict[str, Lesson] = {}
+        # CR087 — per-locale served bodies, keyed id -> locale -> Lesson. Always
+        # holds an "en" entry; "ar"/"ms" present only when a sibling parsed. The
+        # served Lesson carries EN's canonical meta with the locale's title,
+        # blocks and quizzes (display fields).
+        self._locale_lessons: dict[str, dict[str, Lesson]] = {}
         self._lock = RLock()
         self._reload()
         init_schema()
@@ -341,20 +388,96 @@ class LessonsService:
     def _reload(self) -> None:
         with self._lock:
             self._lessons.clear()
+            self._locale_lessons.clear()
             for path in sorted(self._content_dir.glob("*.en.mdx")):
                 try:
-                    lesson = parse_mdx(path)
-                    self._lessons[lesson.meta.id] = lesson
+                    en = parse_mdx(path)
                 except Exception as e:
                     logger.error("lesson_parse_failed", path=str(path), error=str(e))
-            logger.info("lessons_loaded", count=len(self._lessons))
+                    continue
+
+                stem = path.name[: -len(_EN_SUFFIX)]
+                # Parse each translated sibling. A locale file that fails to
+                # parse is logged and skipped — never crash the load, never
+                # drop the EN lesson (CLAUDE.md: degrade loudly, but here the
+                # loud-and-correct fallback is "serve English").
+                parsed: dict[str, Lesson] = {}
+                for loc in _TRANSLATED_LOCALES:
+                    sibling = self._content_dir / f"{stem}.{loc}.mdx"
+                    if not sibling.exists():
+                        continue
+                    try:
+                        parsed[loc] = parse_mdx(sibling)
+                    except Exception as e:
+                        logger.error(
+                            "lesson_locale_parse_failed",
+                            path=str(sibling),
+                            locale=loc,
+                            lesson_id=en.meta.id,
+                            error=str(e),
+                        )
+
+                # Auto-derive locale_versions from what actually parsed AND
+                # passed the quiz-integrity gate — overrides the EN
+                # frontmatter's hand-authored value (all ["en"]) so we never
+                # touch 342 EN frontmatters. `available` is shared by reference
+                # into every composed meta below (model_copy is shallow), so
+                # appends here are reflected in what get()/catalogue() serve.
+                available = ["en"]
+                en.meta.locale_versions = available
+
+                # Compose per-locale served bodies. EN meta stays canonical
+                # (id, track, code, gates_agents, prerequisites, module, …);
+                # only the display title comes from the locale file (blocks and
+                # quizzes ride on the composed Lesson's own fields). A locale
+                # whose quiz set fails the integrity gate is dropped to EN
+                # fallback — never served with a broken/mis-graded quiz.
+                served: dict[str, Lesson] = {"en": en}
+                for loc in _TRANSLATED_LOCALES:
+                    loc_lesson = parsed.get(loc)
+                    if loc_lesson is None:
+                        continue
+                    ok, reason = _locale_quiz_servable(en, loc_lesson)
+                    if not ok:
+                        logger.error(
+                            "lesson_locale_quiz_integrity_failed",
+                            lesson_id=en.meta.id,
+                            locale=loc,
+                            reason=reason,
+                        )
+                        continue
+                    available.append(loc)
+                    served[loc] = Lesson(
+                        meta=en.meta.model_copy(
+                            update={"title": loc_lesson.meta.title}
+                        ),
+                        blocks=loc_lesson.blocks,
+                        quizzes=loc_lesson.quizzes,
+                    )
+
+                self._lessons[en.meta.id] = en
+                self._locale_lessons[en.meta.id] = served
+            locale_counts = defaultdict(int)
+            for served in self._locale_lessons.values():
+                for loc in served:
+                    locale_counts[loc] += 1
+            logger.info(
+                "lessons_loaded",
+                count=len(self._lessons),
+                locales=dict(locale_counts),
+            )
 
     def catalogue(self, locale: str = "en") -> LessonCatalogue:
         with self._lock:
             by_track: dict[str, list[LessonMeta]] = defaultdict(list)
-            for lesson in self._lessons.values():
-                if locale in lesson.meta.locale_versions:
-                    by_track[lesson.meta.track].append(lesson.meta)
+            for lesson_id, en_lesson in self._lessons.items():
+                if locale in en_lesson.meta.locale_versions:
+                    # Emit the locale-composed meta so the catalogue shows the
+                    # translated title (a display field per CR087); structural
+                    # fields stay EN-canonical because the composed meta is an
+                    # EN-meta copy. Falls back to EN if somehow absent.
+                    served = self._locale_lessons[lesson_id].get(locale, en_lesson)
+                    by_track[served.meta.track].append(served.meta)
             tracks: list[TrackCatalogue] = []
             # Stable track order: foundations first, then by spec ordering
             ordered_tracks = [t for t in TRACK_TITLES if t in by_track] + [
@@ -370,8 +493,19 @@ class LessonsService:
             total = sum(len(t.lessons) for t in tracks)
             return LessonCatalogue(tracks=tracks, total_lessons=total)
 
-    def get(self, lesson_id: str) -> Lesson | None:
+    def get(self, lesson_id: str, locale: str = "en") -> Lesson | None:
+        """Return the lesson body in `locale`, falling back to EN when that
+        locale was not authored (CR087). The fallback is loud-and-correct: an
+        AR user opening an AR-missing lesson sees English, never a 404/empty.
+        Returns None only for a genuinely unknown lesson id.
+        """
         with self._lock:
+            served = self._locale_lessons.get(lesson_id)
+            if served is not None:
+                return served.get(locale) or served["en"]
+            # Backward-compat: a lesson inserted straight into `_lessons`
+            # (test fakes, dynamic gateway pinning) has no per-locale map — it
+            # is EN-only by definition, so serve it for any requested locale.
             return self._lessons.get(lesson_id)
 
     def all_meta(self) -> list[LessonMeta]:
@@ -430,7 +564,13 @@ class LessonsService:
             return self._row_to_status(row)
 
     def submit_quiz(self, req: QuizSubmitRequest) -> QuizSubmitResponse:
-        lesson = self.get(req.lesson_id)
+        # CR087 — grade against the *served locale's* parsed quiz, not EN. If a
+        # translator reordered an MCQ's options, the AR answer_index differs
+        # from EN; grading the EN key would silently mis-mark the AR user who
+        # saw AR options. (test_cr087 also asserts corpus-wide AR/EN parity so
+        # drift fails the build, but grading the served locale is the runtime
+        # floor.) EN-missing-locale falls back to EN inside get().
+        lesson = self.get(req.lesson_id, req.locale)
         if lesson is None:
             raise ValueError(f"unknown lesson: {req.lesson_id}")
         total = len(lesson.quizzes)
