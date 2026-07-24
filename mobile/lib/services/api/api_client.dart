@@ -480,8 +480,11 @@ class ApiClient {
     return LessonCatalogue.fromJson(r.data!);
   }
 
-  Future<Lesson> getLesson(String lessonId) async {
-    final r = await _dio.get<Map<String, dynamic>>('/v1/lessons/$lessonId');
+  Future<Lesson> getLesson(String lessonId, {String locale = 'en'}) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/lessons/$lessonId',
+      queryParameters: {'locale': locale},
+    );
     return Lesson.fromJson(r.data!);
   }
 

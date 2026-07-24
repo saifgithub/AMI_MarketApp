@@ -1,6 +1,7 @@
 /// Riverpod state for Lessons + Agent Academy progress.
 library;
 
+import 'package:ami_trade/i18n/locale_provider.dart';
 import 'package:ami_trade/models/lessons.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -78,7 +79,9 @@ class LessonsNotifier extends StateNotifier<LessonsState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final cat = await api.lessonCatalogue();
+      // CR087 — the list must request the same locale the reader will, so a
+      // switch to العربية shows Arabic titles and Arabic bodies, not a mix.
+      final cat = await api.lessonCatalogue(locale: _ref.read(contentLocaleProvider));
       final prog = await api.lessonsProgress(userId);
       final acts = await api.agentActivations(userId);
       final statuses = await api.lessonStatusByLesson(userId);
@@ -162,7 +165,9 @@ class LessonReaderNotifier extends StateNotifier<LessonReaderState> {
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
-      final lesson = await api.getLesson(_lessonId);
+      // CR087 — same active locale the catalogue used; the server returns the
+      // translated body (or falls back to EN server-side when it's missing).
+      final lesson = await api.getLesson(_lessonId, locale: _ref.read(contentLocaleProvider));
       await api.startLesson(userId: userId, lessonId: _lessonId);
       state = state.copyWith(lesson: lesson, loading: false);
     } catch (e) {

@@ -66,6 +66,22 @@ final localeNotifierProvider =
 });
 
 
+/// CR087 — the locale code the content endpoints (lesson catalogue + reader)
+/// are asked for. Derived purely from the active override: a language code
+/// when the user picked one, otherwise `'en'` — the same value the content
+/// API itself defaults to. `null` (follow system) maps to `'en'` deliberately:
+/// only EN + AR content ship and only an explicit override enables AR, so we
+/// never guess a non-EN corpus from the device locale.
+String contentLocaleFor(Locale? override) => override?.languageCode ?? 'en';
+
+/// Single source for the content locale so the lessons **list** and a lesson's
+/// **detail** always request the same language (they must agree — CR087). Both
+/// the catalogue fetch and the reader fetch read this one provider.
+final contentLocaleProvider = Provider<String>(
+  (ref) => contentLocaleFor(ref.watch(localeNotifierProvider)),
+);
+
+
 /// Convenience — Flutter's `Locale` doesn't need this on its own, but our
 /// Settings screen uses it to label the active choice.
 @immutable

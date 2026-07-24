@@ -271,7 +271,7 @@ class _LessonMetaBar extends StatelessWidget {
         const Spacer(),
         for (final id in meta.agentCallouts)
           Padding(
-            padding: const EdgeInsets.only(left: 4),
+            padding: const EdgeInsetsDirectional.only(start: 4),
             child: HexAvatar(
               label: agentById(id).abbreviation,
               color: agentById(id).color,
@@ -314,7 +314,7 @@ class _BlockView extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
           child: Align(
-            alignment: Alignment.centerLeft,
+            alignment: AlignmentDirectional.centerStart,
             child: TermBlock(termId: block.termId ?? ''),
           ),
         );
@@ -385,7 +385,7 @@ class _MarkdownView extends StatelessWidget {
       for (final item in listBuffer) {
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 4),
+            padding: const EdgeInsetsDirectional.only(start: 8, bottom: 4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -498,9 +498,13 @@ class _MarkdownView extends StatelessWidget {
         flushList();
         widgets.add(Container(
           margin: const EdgeInsets.symmetric(vertical: 6),
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: const BoxDecoration(
-            border: Border(left: BorderSide(color: AmiColors.hexBlue, width: 3)),
+            // Directional so the accent bar sits on the reading-start edge
+            // (left in LTR, right in RTL/Arabic) — CR087.
+            border: BorderDirectional(
+              start: BorderSide(color: AmiColors.hexBlue, width: 3),
+            ),
           ),
           child: _inline(l.substring(2), AmiTypography.body.copyWith(
             fontStyle: FontStyle.italic, color: AmiColors.textMed,
