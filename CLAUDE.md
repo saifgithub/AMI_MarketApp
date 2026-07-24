@@ -142,6 +142,13 @@ Every change to this project is documented as a **CR** or a **Defect** (D-058). 
 - **CR** — *planned change* (a feature, refactor, process/infra/content change). Register: [`docs/forward_planning/cr_list.md`](docs/forward_planning/cr_list.md). Each CR gets a folder `docs/forward_planning/CR###_<topic>/` holding its what/why/scope/acceptance doc.
 - **Defect** — *fixing something broken vs. spec*. Register: [`docs/defect/def_list.md`](docs/defect/def_list.md). User-reported defects still flow in via `bug_reports` (melehost) → [`/fix-bugs`](.claude/commands/fix-bugs.md); the register is their processed record. Prompt-spotted defects get a `DEF###` too.
 
+**The two registers are Architect-write-only (CR081).** `def_list.md` and `cr_list.md` are shared coordination tables with exactly **one** legitimate writer: the Architect. **If you are not the Architect, never edit either register file.** Instead:
+
+- File your `DEF###_<topic>/` or `CR###_<topic>/` **spec folder** — that path is yours alone (disjoint write-path), so it never collides.
+- Drop a one-line stub in [`orchestration/dispatch/intake/`](orchestration/dispatch/intake/) naming the item. The Architect assigns the canonical ID, writes the register row, and owns every later status flip (`open → laned → fixed`).
+- *Why:* each register is a single monolithic markdown table. When two tracks edit it on the shared `main` checkout, whoever commits second **sweeps the other's uncommitted rows into its own commit** — silently, with the wrong `(AT:…)` tag. This bit us 2026-07-24: an architect's DEF095/DEF096 laning landed inside an unrelated `AT:R59 DEF098` commit. One writer = no race. (Same disjoint-write-path guarantee the dispatch/audit handshakes already rely on — the registers were the one shared table that broke it.)
+- **Corollary — commit with an explicit pathspec, never bare.** On the shared checkout, `git commit -m "…" -- <your files>`. Never bare `git commit`, `git commit -am`, or `git add -A` + commit — those stage-and-sweep whatever another track left dirty. (Message goes *before* `--`; git reads `-m` as a pathspec after it.)
+
 Rules:
 
 - **Auto-file, proceed.** Saiful's prompt IS the approval. When he asks for a change, assign the next `CR###`, create its folder + doc, then implement. No separate approval gate. (A Defect is filed the same way when you spot or are handed one.)
