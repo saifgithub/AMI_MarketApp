@@ -26,18 +26,20 @@ messaging or acquisition work against the wrong gate (e.g. promoting Founders Pr
 Founders even exist, or running a paid-acquisition test before RevenueCat is wired) burns
 scarce founder attention and tester goodwill. CR036 is the missing sequencing doc.
 
-## Where the build stands (2026-07-16, AT:R59)
+## Where the build stands (2026-07-16, AT:R59; refreshed 2026-07-25)
 
 | Phase | Engineering gate | Status |
 |---|---|---|
 | Alpha | A1–A29 | ~77% complete. Remainder is Saiful-external (TTS, OneSignal/APNs, lawyer review, Play Console upload) — not Claude-blocked. |
-| Engagement (pre-Beta) | E0–E5, design home [CR004](../CR004_release_readiness/CR004_release_readiness.md) | E0–E4 done. Only **E5** (device-matrix verification, needs Saiful device time) outstanding. |
-| Beta (cloud infra) | B1–B14 | **0% started.** No GCP project, no Supabase, no cloud LLM cutover. |
-| MVP (public launch) | M1–M12 | **0% started.** No RevenueCat, no store submissions, no landing page, no support inbox. |
+| Engagement (pre-Beta) | E0–E5, design home [CR004](../CR004_release_readiness/CR004_release_readiness.md) | E0–E4 done. Only **E5** (device-matrix verification, needs Saiful device time) outstanding — unchanged since filing; Saiful scheduling it soon (2026-07-25). |
+| Beta (cloud infra) | B1–B14 | **0% started.** No GCP project, no Supabase, no cloud LLM cutover. Unchanged since filing. |
+| MVP (public launch) | M1–M12 | **0% started** (exit criterion unmet — no store live, no payments active). But **M1 (RevenueCat, [CR084](../CR084_revenuecat_integration/CR084_revenuecat_integration.md)) is now code-complete and independently audited** — both backend + mobile lanes COMPLETE, paywall ships dark pending Saiful's DEF100 provisioning (RC dashboard keys, webhook secret, 7 store products, Apple/Google paid agreements). First MVP item to reach this state. |
 
-Zero open defects (`docs/defect/def_list.md`). CR004 formally closes only at the MVP exit
-criterion (both stores live, payments active, support inbox ready) — so it stays open across
-the whole GTM window and CR036 inherits the same closure condition.
+No open defects blocked the Stealth Alpha graduation checklist as of filing; **DEF061 (4 of 8
+mandate compliance toggles prompt-only, not enforced) remains open as of 2026-07-25** —
+relevant to the halal-conscious AR/MS launch positioning §3 leans on. CR004 formally closes
+only at the MVP exit criterion (both stores live, payments active, support inbox ready) — so it
+stays open across the whole GTM window and CR036 inherits the same closure condition.
 
 ## Scope
 
