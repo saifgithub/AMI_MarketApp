@@ -12,11 +12,18 @@ independent, always-on models on the LAN provide the cross-check:
     model (SDAIA ALLaM), AR-only (tested weak/unreliable on Malay).
     max_model_len is only 4096 tokens — a full lesson's EN+AR body
     together routinely exceeds that (median lesson body alone is ~1730
-    tokens), so this endpoint gets CHUNKED verification: split by
-    markdown heading into aligned EN/AR sections (translate_lessons_lan.py
-    preserves heading structure 1:1, so section counts should match; a
-    proportional character-slice is the fallback if they don't), verify
-    each section independently, then take the worst-case across chunks
+    tokens), so this endpoint gets CHUNKED verification: split by markdown
+    heading into aligned EN/AR sections, then any oversized section is
+    further split by PARAGRAPH and paired by index (translation preserves
+    1:1 paragraph correspondence) before batching adjacent pairs up to the
+    character budget — pairing happens on structural correspondence, never
+    by independently re-chunking each language against a shared character
+    budget (that approach let same-index chunks silently stop matching,
+    since translated text runs a different length than the source).
+    A proportional character-slice is the last-resort fallback, scoped to
+    just the section (or, if heading counts themselves don't match, the
+    whole body) where structural correspondence breaks down. Verify each
+    resulting chunk independently, then take the worst-case across chunks
     (min confidence, AND of meaning_preserved, union of issues).
 
 Run repeatably — results accumulate in content/i18n/lesson_confidence_log.json,
@@ -158,25 +165,30 @@ def _split_by_heading(text: str) -> list[str]:
     return sections
 
 
-def _rechunk_oversized(sections: list[str], target_chars: int) -> list[str]:
-    out: list[str] = []
-    for s in sections:
-        if len(s) <= target_chars:
-            out.append(s)
-            continue
-        paras = [p for p in re.split(r"\n{2,}", s) if p.strip()]
-        cur: list[str] = []
-        cur_len = 0
-        for p in paras:
-            if cur and cur_len + len(p) > target_chars:
-                out.append("\n\n".join(cur))
-                cur = []
-                cur_len = 0
-            cur.append(p)
-            cur_len += len(p)
-        if cur:
-            out.append("\n\n".join(cur))
-    return out or sections
+def _split_paragraphs(text: str) -> list[str]:
+    return [p for p in re.split(r"\n{2,}", text) if p.strip()]
+
+
+def _batch_pairs(pairs: list[tuple[str, str]], target_chars: int) -> list[tuple[str, str]]:
+    """Group consecutive ALREADY-ALIGNED (en, tr) paragraph pairs together up
+    to target_chars. A pair is never split from its partner, so batching
+    can't introduce drift the way independently re-chunking each language
+    can."""
+    out: list[tuple[str, str]] = []
+    cur_en: list[str] = []
+    cur_tr: list[str] = []
+    cur_len = 0
+    for en_p, tr_p in pairs:
+        pair_len = max(len(en_p), len(tr_p))
+        if cur_en and cur_len + pair_len > target_chars:
+            out.append(("\n\n".join(cur_en), "\n\n".join(cur_tr)))
+            cur_en, cur_tr, cur_len = [], [], 0
+        cur_en.append(en_p)
+        cur_tr.append(tr_p)
+        cur_len += pair_len
+    if cur_en:
+        out.append(("\n\n".join(cur_en), "\n\n".join(cur_tr)))
+    return out
 
 
 def _proportional_slices(text: str, n: int) -> list[str]:
@@ -185,14 +197,51 @@ def _proportional_slices(text: str, n: int) -> list[str]:
     return [text[i * size : (i + 1) * size] for i in range(n)]
 
 
+def _rechunk_section_pair(en_section: str, tr_section: str, target_chars: int) -> list[tuple[str, str]]:
+    """Split one aligned (en, tr) heading-section into one or more aligned
+    sub-pairs when either side exceeds target_chars.
+
+    The previous approach re-chunked each language's section independently
+    by greedily grouping paragraphs against a character budget — since
+    translated text runs a different length than the source, the two
+    languages' budget cutoffs land at different paragraph indices, so
+    same-index chunks silently stop corresponding to the same content (only
+    caught if the final counts happened to differ; if they coincidentally
+    matched, the misalignment was invisible). Confirmed on
+    071_how_to_verify_before_you_wire_money: EN's cutoff fell after its
+    4th numbered point while AR's fell after its 5th, so "chunk 2" compared
+    an EN example paragraph against an unrelated AR list item.
+
+    Splitting by paragraph and pairing by INDEX first removes the guesswork
+    entirely — translation preserves 1:1 paragraph correspondence (the
+    prose-translation prompt requires it), so paragraph N in one language
+    is paragraph N in the other. Only if paragraph *counts* genuinely
+    diverge for this section does this fall back to a character slice —
+    and that fallback is scoped to just this one section, not the whole
+    lesson body, so a single divergent section can't silently degrade
+    every other chunk in the lesson.
+    """
+    if len(en_section) <= target_chars and len(tr_section) <= target_chars:
+        return [(en_section, tr_section)]
+    en_paras = _split_paragraphs(en_section)
+    tr_paras = _split_paragraphs(tr_section)
+    if en_paras and tr_paras and len(en_paras) == len(tr_paras):
+        return _batch_pairs(list(zip(en_paras, tr_paras)), target_chars)
+    n = max(1, math.ceil(max(len(en_section), len(tr_section)) / target_chars))
+    return list(zip(_proportional_slices(en_section, n), _proportional_slices(tr_section, n)))
+
+
 def _chunk_pair(en_body: str, tr_body: str, target_chars: int) -> list[tuple[str, str]]:
-    en_sections = _rechunk_oversized(_split_by_heading(en_body), target_chars)
-    tr_sections = _rechunk_oversized(_split_by_heading(tr_body), target_chars)
-    if en_sections and tr_sections and len(en_sections) == len(tr_sections):
-        return list(zip(en_sections, tr_sections))
-    # Fallback: heading structure didn't line up 1:1 — slice proportionally.
-    n = max(len(en_sections), len(tr_sections), 1)
-    return list(zip(_proportional_slices(en_body, n), _proportional_slices(tr_body, n)))
+    en_sections = _split_by_heading(en_body)
+    tr_sections = _split_by_heading(tr_body)
+    if not en_sections or not tr_sections or len(en_sections) != len(tr_sections):
+        # Heading structure itself didn't line up 1:1 — whole-body proportional fallback.
+        n = max(len(en_sections), len(tr_sections), 1)
+        return list(zip(_proportional_slices(en_body, n), _proportional_slices(tr_body, n)))
+    pairs: list[tuple[str, str]] = []
+    for en_s, tr_s in zip(en_sections, tr_sections):
+        pairs.extend(_rechunk_section_pair(en_s, tr_s, target_chars))
+    return pairs
 
 
 # ---------- prompt + single-call verify ----------------------------------
