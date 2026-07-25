@@ -13,18 +13,18 @@ tags: ["psychology", "discipline", "process", "mandate", "portfolio_manager"]
 agent_callouts: ["portfolio_manager"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
 
 # Discipline vs excitement
 
-Discipline is the trader who follows the plan when the plan is boring. Excitement is the trader who deviates when the plan is exciting. After this lesson you will be able to tell the two apart in real time, name the agent on <Term id="ami" />'s team whose job is to refuse to be exciting, and configure the Portfolio Manager's mandate so the <Term id="ami_pm_safety_floor" /> is the deterministic backstop against every emotion the prior six lessons described. The goal is not to feel less. It is to make the feeling irrelevant to the position size.
+Discipline is the trader who follows the plan when the plan is boring. Excitement is the trader who deviates when the plan is exciting. After this lesson you will be able to tell the two apart in real time, name the agent on <Term id="ami" />'s team whose job is to refuse to be exciting, and set your risk_score/max drawdown so the <Term id="ami_pm_safety_floor" /> is a real, mechanical backstop against the position-size half of every emotion the prior six lessons described — the rest (cooldowns, trade counts, position counts) you hold yourself, tracked in the journal. The goal is not to feel less. It is to make the feeling irrelevant to the position size.
 
 ## How this plays out in real markets
 
-A trader had a written process: 1% per-trade risk, max 5 open positions, 2-hour cooldown after a stop, max 6 trades per week, and a <Term id="ami_mandate" />-enforced max drawdown of 20%. In a hot Q1 he watched his peers compound 35% on TSLA and NVDA momentum trades while his disciplined book returned a quiet 7%. Excitement won the argument; he removed the trade-count cap, raised per-trade risk to 3%, and disabled the cooldown "because the regime is trending". The next month brought a sharp 9-day pullback that should have cost him 3% on his original mandate. It cost 14% — and the PM's safety floor was the only thing that prevented it becoming a 22% account event. Three months later, on a calm Sunday, he restored every setting he had disabled. His written returns post-restoration matched his pre-disabling returns. The only thing the excitement-month had added was the 14% hole.
+A trader had a written process: a <Term id="ami_mandate" />-enforced 1% per-trade risk (via `risk_score`) and 20% max drawdown, plus self-imposed rules he tracked in his own <Term id="ami_decision_journal" /> — max 5 open positions, a 2-hour cooldown after a stop, max 6 trades per week. In a hot Q1 he watched his peers compound 35% on TSLA and NVDA momentum trades while his disciplined book returned a quiet 7%. Excitement won the argument; he dropped the self-imposed trade-count and position caps, raised his `risk_score` to push per-trade risk to 3%, and stopped honouring his own cooldown "because the regime is trending". The next month brought a sharp 9-day pullback that should have cost him 3% on his original settings. It cost 14% — and the PM's safety floor (the part that *is* mechanically enforced — his mandate's drawdown ceiling) was the only thing that prevented it becoming a 22% account event. Three months later, on a calm Sunday, he restored every rule he had dropped. His written returns post-restoration matched his pre-disabling returns. The only thing the excitement-month had added was the 14% hole.
 
-The falsifiable pattern: you are running on excitement, not discipline, if in the last 14 days you have loosened *any* mandate parameter (per-trade risk, max positions, cooldown, max trades, max drawdown) without a corresponding written change in strategy criteria, and the loosening happened during or immediately after a winning streak or a fear-of-missing-out spike. One change, no documented reason, suspicious timing. That's the signature.
+The falsifiable pattern: you are running on excitement, not discipline, if in the last 14 days you have loosened *any* risk rule — mandate-enforced (`risk_score`, `max_drawdown_pct`) or self-imposed (max positions, cooldown, max trades) — without a corresponding written change in strategy criteria, and the loosening happened during or immediately after a winning streak or a fear-of-missing-out spike. One change, no documented reason, suspicious timing. That's the signature.
 
 ## The trap
 
@@ -72,7 +72,7 @@ The trap is the belief that the mandate is too conservative *for this moment*. E
 
 ## Try it
 
-Open Settings → Mandate and review every parameter: `max_per_trade_risk_pct`, `max_open_positions`, `cooldown_after_stop_minutes`, `max_trades_per_week`, `max_drawdown_pct`. For each one, ask: have I changed this in the last 14 days, and is the change documented in the <Term id="ami_decision_journal" /> with a written criteria reason? If any answer is "changed, no reason", restore the prior value before the next session. Then start a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask: "Run my mandate against my last 30 trades — where would the safety floor have flagged?"
+Open Settings → Mandate and review what's actually enforced there: your `risk_score` (which sets the per-trade cap) and `max_drawdown_pct`. Then write down your self-imposed rules — max open positions, cooldown after a stop, max trades per week — next to them (AMI doesn't have fields for these; they're yours to hold). For each one, ask: have I changed this in the last 14 days, and is the change documented in the <Term id="ami_decision_journal" /> with a written criteria reason? If any answer is "changed, no reason", restore the prior value before the next session. Then start a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask: "Run my mandate against my last 30 trades — where would the safety floor have flagged?"
 
 ## Takeaway
 

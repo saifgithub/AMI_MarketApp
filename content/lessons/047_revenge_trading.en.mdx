@@ -13,12 +13,12 @@ tags: ["psychology", "revenge_trading", "tilt", "cooldown", "mandate"]
 agent_callouts: ["conservative_debator"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
 
 # Revenge trading
 
-Revenge trading is what happens when a loss stops being information and starts being a debt the market owes you. After this lesson you will be able to detect the pattern in your own behaviour using an objective test, understand why the next trade after a loss is statistically your worst, and configure a cooldown that pulls the trigger out of your hand for the window that matters. The market does not owe you anything. The position you are about to put on does not know you just lost.
+Revenge trading is what happens when a loss stops being information and starts being a debt the market owes you. After this lesson you will be able to detect the pattern in your own behaviour using an objective test, understand why the next trade after a loss is statistically your worst, and commit to a self-imposed cooldown — tracked in the <Term id="ami_decision_journal" />, not enforced by the app — that pulls the trigger out of your hand for the window that matters. The market does not owe you anything. The position you are about to put on does not know you just lost.
 
 <Animation name="revenge_position_escalation" />
 
@@ -39,7 +39,7 @@ The trap is the belief that the next trade is independent of the last one. Mecha
 <Quiz
   question="You just stopped out for -RM1,000. You see a fresh setup on the same ticker that 'looks too good to pass up'. Per-trade risk in your Mandate is RM500. What's the right next move?"
   options={[
-    "Pause for the cooldown window written in your Mandate (e.g. 60 minutes), journal the loss, and only re-evaluate the setup after the window expires.",
+    "Pause for the cooldown window you set for yourself (e.g. 60 minutes), journal the loss, and only re-evaluate the setup after the window expires.",
     "Take the trade at normal size — process unchanged.",
     "Switch to a different ticker at the same size — diversifying away from the loser.",
     "Take the trade at 2x size — your edge is sharper now, and you need to make the loss back."
@@ -61,7 +61,7 @@ The trap is the belief that the next trade is independent of the last one. Mecha
 />
 
 <Quiz
-  question="You just took a -2% account loss on a single trade. Your Mandate says max per-trade risk is 1% and cooldown after a stop-out is 2 hours. The PM has flagged that your last entry was double the mandate size. What's the synthesis answer?"
+  question="You just took a -2% account loss on a single trade. Your risk_score caps per-trade risk at 1% and your own rule is a 2-hour cooldown after a stop-out. The PM has flagged that your last entry was double the mandate-derived cap. What's the synthesis answer?"
   options={[
     "Stop trading for the day, journal both trades, and start the cooldown timer; review whether the mandate breach was a one-off or a pattern in the Decision Journal tomorrow.",
     "Override the cooldown — the next setup is independent of the last loss.",
@@ -69,13 +69,13 @@ The trap is the belief that the next trade is independent of the last one. Mecha
     "Reduce size on the next trade to 0.5% and continue trading — you've already self-corrected."
   ]}
   answer={0}
-  explanation="The mandate breach is the real signal here, not the loss itself. The PM's flag means the safety floor was crossed — the only correct response is to step away long enough that the next trade is not a reaction. 'Take one more trade to reset' is revenge framed as discipline. 'Override the cooldown because the next trade is independent' is technically true mechanically and behaviourally bankrupt — every revenge trader in history believed it. The cooldown exists precisely because the trader after a 2% loss is not the same trader who wrote the mandate."
+  explanation="The mandate breach is the real signal here, not the loss itself. The PM's flag means the safety floor was crossed — the only correct response is to step away long enough that the next trade is not a reaction. 'Take one more trade to reset' is revenge framed as discipline. 'Override the cooldown because the next trade is independent' is technically true mechanically and behaviourally bankrupt — every revenge trader in history believed it. The cooldown exists precisely because the trader after a 2% loss is not the same trader who wrote the rule."
 />
 
 ## Try it
 
-Open Settings → <Term id="ami_mandate" /> and set `cooldown_after_stop_minutes` to at least 60 (90 if you can stomach it). Then open the <Term id="ami_decision_journal" />, filter to your last five stop-outs, and check what you did in the 60 minutes after each. If three of those windows contain an entry, you have a documented tilt pattern. Take it to a <Term id="ami_one_on_one" /> with the Conservative Debator and paste the timestamps — let it tell you what its read is.
+Pick a cooldown length for yourself — 60 minutes, 90 if you can stomach it — and write it down as a rule (AMI doesn't have a field for this; it isn't app-enforced, you enforce it). Then open the <Term id="ami_decision_journal" />, filter to your last five stop-outs, and check what you did in the 60 minutes after each. If three of those windows contain an entry, you have a documented tilt pattern. Take it to a <Term id="ami_one_on_one" /> with the Conservative Debator and paste the timestamps — let it tell you what its read is.
 
 ## Takeaway
 
-A loss is a tax on the last trade, not a credit toward the next one. The cooldown is the only rule that protects you from the version of yourself the loss just created.
+A loss is a tax on the last trade, not a credit toward the next one. The cooldown is the only rule that protects you from the version of yourself the loss just created — even though you're the one who has to hold yourself to it.

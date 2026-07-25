@@ -13,12 +13,12 @@ tags: ["risk", "portfolio", "correlation", "exposure"]
 agent_callouts: ["portfolio_manager", "neutral_debator"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
 
 # Portfolio exposure and correlation
 
-Per-trade risk is only half the picture. If you hold five "different" positions that all move together when the market sneezes, your real risk is not 5 × 1% — it is closer to 1 × 5%. Correlation eats diversification when you most need it. This lesson teaches you to think in terms of total open risk, sector clusters, and the difference between holding many tickers and holding many independent bets. The PM tracks this for you in the background and will block trades that push a single factor exposure past your mandate ceiling.
+Per-trade risk is only half the picture. If you hold five "different" positions that all move together when the market sneezes, your real risk is not 5 × 1% — it is closer to 1 × 5%. Correlation eats diversification when you most need it. This lesson teaches you to think in terms of total open risk, sector clusters, and the difference between holding many tickers and holding many independent bets. AMI's safety floor enforces your single-name position cap and account drawdown limit automatically; single-factor exposure across correlated names is not (yet) something the app tracks for you — the Portfolio Manager will walk through it with you in <Term id="ami_one_on_one" /> if you ask, but noticing the cluster in the first place is on you.
 
 ## How this plays out in real markets
 
@@ -35,15 +35,15 @@ The trap is counting positions instead of counting bets. A beginner with NVDA, A
 ## Quiz
 
 <Quiz
-  question="Your mandate sets max single-factor exposure at 5% of account. You already hold NVDA (1.2%), AMD (1.0%), and TSM (1.5%) — all semiconductor names with realised 90-day correlation above 0.8. You want to add MU (memory chips) at 1.5%. What does the PM safety floor say?"
+  question="You've set yourself a single-factor exposure ceiling of 5% of account — AMI doesn't enforce this automatically, so it's your own rule to hold. You already hold NVDA (1.2%), AMD (1.0%), and TSM (1.5%) — all semiconductor names with realised 90-day correlation above 0.8. You want to add MU (memory chips) at 1.5%. Working through your own risk budget, what's the disciplined read?"
   options={[
     "Approved — total open risk is only 5.2%, just over the cap and within rounding.",
-    "Rejected — the four names function as one semiconductor bet at 5.2% aggregate, exceeding the 5% single-factor ceiling; the bet must shrink or one leg must close.",
+    "Rejected — the four names function as one semiconductor bet at 5.2% aggregate, exceeding your 5% single-factor ceiling; the bet must shrink or one leg must close.",
     "Approved — each ticker is under 2% individually.",
     "Rejected — four positions in the same sector violates a minimum diversification rule of five sectors."
   ]}
   answer={1}
-  explanation="The tempting wrong answer is the first: 'total open risk is 5.2%, basically at cap'. Total open risk is the wrong metric here — the PM enforces single-factor exposure. Four names that move together with correlation >0.8 collapse into one factor for risk purposes, and 5.2% of single-factor exposure breaches a 5% ceiling. The 'minimum five sectors' distractor invents a rule that does not exist in the mandate."
+  explanation="The tempting wrong answer is the first: 'total open risk is 5.2%, basically at cap'. Total open risk is the wrong metric here — you're tracking single-factor exposure, which is a rule you hold yourself since AMI doesn't check it for you. Four names that move together with correlation >0.8 collapse into one factor for risk purposes, and 5.2% of single-factor exposure breaches your 5% ceiling. The 'minimum five sectors' distractor invents a rule nobody set."
 />
 
 <Quiz
@@ -60,7 +60,7 @@ The trap is counting positions instead of counting bets. A beginner with NVDA, A
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set `max_single_factor_exposure_pct` to 5. Then in the <Term id="ami_decision_journal" />, look at your current open positions and ask the Portfolio Manager in <Term id="ami_one_on_one" />: "Across these positions, what is my real single-factor exposure?" If the PM flags a cluster you didn't notice, you've just learned the difference between position count and bet count.
+Pick a single-factor exposure ceiling for yourself — 5% is a reasonable starting point — and write it down as a personal rule (AMI doesn't have a field for this yet). Then in the <Term id="ami_decision_journal" />, look at your current open positions and ask the Portfolio Manager in <Term id="ami_one_on_one" />: "Across these positions, what is my real single-factor exposure?" If the PM flags a cluster you didn't notice, you've just learned the difference between position count and bet count.
 
 ## Takeaway
 

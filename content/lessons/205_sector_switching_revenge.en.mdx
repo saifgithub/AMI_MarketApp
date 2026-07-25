@@ -13,7 +13,7 @@ tags: ["psychology", "revenge_trading", "sector_rotation", "cooldown", "tilt"]
 agent_callouts: ["conservative_debator"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
 
 # Sector-switching revenge — same tilt, different ticker
@@ -28,14 +28,14 @@ The falsifiable sector-switching revenge fingerprint, as a compound test indepen
 
 ## The trap
 
-The trap is the belief that the loser ticker (or its sector) is the carrier of the tilt. It is not. The tilt is carried by *you*, and changing the ticker changes only the disguise. Cognitive distancing — putting psychological space between you and the hurt by switching the symbol — is a well-documented coping mechanism that has the side effect of bypassing your own tilt-detection. The correct mental model: the cooldown applies to *the trader*, not to the instrument. If you cannot trade MAYBANK in the next 60 minutes because you just lost on MAYBANK, you also cannot trade TENAGA or GENTING in the next 60 minutes — because the trader entering them is the same trader who just lost on MAYBANK. Your <Term id="ami_mandate" />'s `cooldown_after_stop_minutes` should be enforced across the entire watchlist, not per-ticker. The PM's <Term id="ami_pm_safety_floor" /> should treat any entry in the cooldown window as a mandate event regardless of which row of the watchlist it lives on.
+The trap is the belief that the loser ticker (or its sector) is the carrier of the tilt. It is not. The tilt is carried by *you*, and changing the ticker changes only the disguise. Cognitive distancing — putting psychological space between you and the hurt by switching the symbol — is a well-documented coping mechanism that has the side effect of bypassing your own tilt-detection. The correct mental model: your cooldown rule applies to *the trader*, not to the instrument. If you've told yourself you can't trade MAYBANK in the next 60 minutes because you just lost on MAYBANK, you also can't trade TENAGA or GENTING in that window — because the trader entering them is the same trader who just lost on MAYBANK. Nothing in AMI enforces this scope for you — no field, no block — so write your own rule as trader-wide, not per-ticker, and hold yourself to it across the whole <Term id="ami_watchlist" />. The Conservative Debator in <Term id="ami_one_on_one" /> is where you go to have that held up against your actual behaviour.
 
 <ChatWith agent="conservative_debator" />
 
 ## Quiz
 
 <Quiz
-  question="You stopped out on NVDA at 10:00am for -1.4%. The cooldown window in your mandate is 60 minutes. At 10:20am you see a clean setup on XOM, an energy name (entirely different sector). Your conviction is high. What is the disciplined action?"
+  question="You stopped out on NVDA at 10:00am for -1.4%. The cooldown window you set for yourself is 60 minutes. At 10:20am you see a clean setup on XOM, an energy name (entirely different sector). Your conviction is high. What is the disciplined action?"
   options={[
     "Take the XOM trade at half size as a 'diversification' compromise.",
     "Take the XOM trade — the cooldown applies to NVDA, not to unrelated sectors.",
@@ -59,21 +59,21 @@ The trap is the belief that the loser ticker (or its sector) is the carrier of t
 />
 
 <Quiz
-  question="Your mandate has a 60-minute cooldown enforced per-ticker (not per-trader). In the last 10 stop-outs, you have placed 6 entries within the cooldown window — all in different sectors from the original loss. 4 of the 6 closed at a loss. Synthesis answer?"
+  question="You've been holding yourself to a 60-minute cooldown, but only defined it per-ticker (not per-trader) — nothing in AMI enforces either scope, so the definition was entirely yours. In the last 10 stop-outs, you have placed 6 entries within your own cooldown window — all in different sectors from the original loss. 4 of the 6 closed at a loss. Synthesis answer?"
   options={[
-    "Change the cooldown enforcement scope from per-ticker to per-trader (any new entry on any ticker is blocked during the cooldown window). The data shows the per-ticker rule is the loophole — the time was correct, the scope was the leak.",
+    "Rewrite your own rule from per-ticker to per-trader (no new entry on any ticker within the cooldown window) and put it somewhere you'll see it before every order. The data shows the per-ticker definition was the loophole — the duration was correct, the scope was the leak.",
     "Increase the cooldown duration to 120 minutes — the per-ticker scope is fine, the time was too short.",
-    "Remove the cooldown — your behaviour shows you cannot follow it anyway.",
+    "Drop the cooldown — your behaviour shows you cannot follow it anyway.",
     "Switch to a 'minimum trade gap' (e.g. no trades within 60 minutes of each other) instead of a loss-specific cooldown."
   ]}
   answer={0}
-  explanation="The data isolates the failure exactly: the rule was being followed on the loser-ticker but bypassed via sector switch. The correct fix is to close the loophole — make the cooldown apply to the trader, not the ticker. Increasing the duration on a broken scope keeps the leak. Removing the cooldown is the 'rewrite the rule to legalise behaviour' move. A 'minimum trade gap' applied to all trading (not just post-loss) is a different rule entirely — and weaker, because it does not respond to the moment of loss. The diagnostic test in this lesson exists to catch this exact disguise; the response is to make the rule catch the disguise too."
+  explanation="The data isolates the failure exactly: the rule was being followed on the loser-ticker but bypassed via sector switch. The correct fix is to close the loophole in how you defined the rule — trader-wide, not ticker-wide — since AMI enforces neither scope for you either way. Increasing the duration on a broken scope keeps the leak. Dropping the cooldown is the 'rewrite the rule to legalise behaviour' move. A 'minimum trade gap' applied to all trading (not just post-loss) is a different rule entirely — and weaker, because it does not respond to the moment of loss. The diagnostic test in this lesson exists to catch this exact disguise; the response is to make your own rule catch the disguise too."
 />
 
 ## Try it
 
-Open Settings → Mandate and confirm `cooldown_after_stop_minutes` is set with scope = trader (not per-ticker). If your version of the rule is per-ticker, change it. Then open the <Term id="ami_decision_journal" />, filter to your last 20 stop-outs, and tag each follow-up entry by sector relative to the original loss. If you see a cluster of "different sector, within 90 minutes" entries with elevated size, you have a documented sector-switching tilt pattern. Take one example to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Was this trade on my watchlist before the loss?" The answer is the diagnosis.
+Write down your cooldown rule with scope = trader (not per-ticker) — AMI has no field for this, so the definition lives wherever you keep it (a note, the top of your Decision Journal). If your working version has been per-ticker, rewrite it. Then open the <Term id="ami_decision_journal" />, filter to your last 20 stop-outs, and tag each follow-up entry by sector relative to the original loss. If you see a cluster of "different sector, within 90 minutes" entries with elevated size, you have a documented sector-switching tilt pattern. Take one example to a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Was this trade on my watchlist before the loss?" The answer is the diagnosis.
 
 ## Takeaway
 
-The cooldown applies to the trader, not to the ticker. A trade in a different sector immediately after a loss is the same tilt with a fresh costume.
+The cooldown applies to the trader, not to the ticker — and since AMI doesn't hold that scope for you, the rule only works if you write it and check it that way yourself. A trade in a different sector immediately after a loss is the same tilt with a fresh costume.
