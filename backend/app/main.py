@@ -56,6 +56,7 @@ if settings.env != "local" and settings.secret_key == "dev-secret-change-in-prod
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 _LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent
 _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
+_CLASSIFICATION_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — sectors drift slowly
 
 
 async def _nightly_audit_trim() -> None:
@@ -102,6 +103,23 @@ async def _sharia_universe_refresh() -> None:
         await asyncio.sleep(_SHARIA_REFRESH_INTERVAL_SECONDS)
 
 
+async def _classification_universe_refresh() -> None:
+    """Background task: classify the ~503 S&P parent constituents by yfinance
+    sector/industry once a day and store a snapshot row (DEF061). Idempotent like
+    `_sharia_universe_refresh` — a tick that finds a fresh stored row does nothing,
+    so a restart can't miss a boundary. The ~500 yfinance calls happen HERE (the
+    only socket this feature opens), off the request path and off the event loop
+    (`to_thread`); the read path resolves from the stored row and never blocks."""
+    from app.services.classification_universe import run_classification_refresh_tick
+
+    while True:
+        try:
+            await asyncio.to_thread(run_classification_refresh_tick)
+        except Exception:
+            logger.exception("classification_universe_refresh_failed")
+        await asyncio.sleep(_CLASSIFICATION_REFRESH_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -118,6 +136,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(_nightly_audit_trim()),
         asyncio.create_task(_league_roll_tick()),
         asyncio.create_task(_sharia_universe_refresh()),
+        asyncio.create_task(_classification_universe_refresh()),
     ]
     try:
         yield

@@ -159,6 +159,14 @@ services:
       # purpose — a recorded, attributable list is safer to hold than a fresh
       # fetch, and this buys the runway that turns DEF093's block into an ageing.
       SHARIA_HOLD_WINDOW_DAYS: ${SHARIA_HOLD_WINDOW_DAYS:-30}
+      # DEF061: sourced sector/industry classification for the no_fossil_fuels +
+      # no_tobacco_alcohol_gambling flags. OFF by default → both PAUSE loudly rather
+      # than silently permit every name. Flip on once the first live classify pass
+      # is verified. Hold window is the reader's runway before a classify outage
+      # pauses the filters (longer than the Sharia fetch window — a stored list is
+      # safer to hold, and sector/industry drifts far slower than an index).
+      CLASSIFICATION_SCREEN_ENABLED: ${CLASSIFICATION_SCREEN_ENABLED:-false}
+      CLASSIFICATION_HOLD_WINDOW_DAYS: ${CLASSIFICATION_HOLD_WINDOW_DAYS:-40}
       # CR069-DIVERGE: second-source (HLAL/FTSE) holdings CSV for the
       # divergence MONITOR only — log-only, never read by the halal flag.
       SHARIA_HLAL_HOLDINGS_URL: ${SHARIA_HLAL_HOLDINGS_URL:-https://docs.google.com/spreadsheets/d/1UC1Bk67bGuYsos_i8y_HQpNoHpVHAvqf71MbgrafJOQ/export?format=csv&gid=0}

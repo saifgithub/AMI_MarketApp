@@ -31,6 +31,7 @@ from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
 from app.services.reputation_service import get_reputation_service
+from app.services.classification_universe import default_classification_universe_async
 from app.services.sharia_universe import default_halal_universe_async
 from app.services.sim_engine import SimEngine, SimTrade, get_sim_engine
 from app.services.watchlist_store import get_watchlist_store
@@ -179,8 +180,9 @@ async def preview_trade(
         limit_price=req.limit_price,
         verdict_ref=req.verdict_ref,
         # Resolved here, not inside the sync engine: the fetch is blocking and
-        # this handler owns the event loop (CR069 F3).
+        # this handler owns the event loop (CR069 F3; DEF061 same seam).
         halal_universe=await default_halal_universe_async(),
+        classification_universe=await default_classification_universe_async(),
     )
     return {
         "accepted": pv.accepted,
@@ -224,8 +226,9 @@ async def submit_trade(
         horizon_days=req.horizon_days,
         verdict_ref=req.verdict_ref,
         # Resolved here, not inside the sync engine: the fetch is blocking and
-        # this handler owns the event loop (CR069 F3).
+        # this handler owns the event loop (CR069 F3; DEF061 same seam).
         halal_universe=await default_halal_universe_async(),
+        classification_universe=await default_classification_universe_async(),
     )
     if not result.accepted:
         return {

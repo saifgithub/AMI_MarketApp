@@ -66,6 +66,7 @@ from app.services.market_data import (
     Quote,
     get_market_data_provider,
 )
+from app.services.classification_universe import default_classification_universe
 from app.services.sharia_universe import default_halal_universe
 
 
@@ -414,6 +415,7 @@ class SimEngine:
         horizon_days: int | None = None,
         verdict_ref: UUID | None = None,
         halal_universe: set[str] | None = None,
+        classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
     ) -> SubmitResult:
         portfolio = self.ensure_portfolio(user_id)
@@ -462,6 +464,9 @@ class SimEngine:
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
+            classification_universe=(
+                classification_universe or default_classification_universe()
+            ),
             locale_allowed_universe=locale_allowed_universe,
         )
 
@@ -575,6 +580,7 @@ class SimEngine:
         limit_price: float | None = None,
         verdict_ref: UUID | None = None,
         halal_universe: set[str] | None = None,
+        classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
     ) -> PreviewResult:
         """Dry-run a trade through the same pre-flight checks as submit() —
@@ -623,6 +629,9 @@ class SimEngine:
             current_drawdown_pct=self.current_drawdown_pct(user_id),
             mandate=mandate,
             halal_universe=halal_universe or default_halal_universe(),
+            classification_universe=(
+                classification_universe or default_classification_universe()
+            ),
             locale_allowed_universe=locale_allowed_universe,
         )
 

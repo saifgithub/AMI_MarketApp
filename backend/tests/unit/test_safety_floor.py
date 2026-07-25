@@ -11,6 +11,13 @@ from app.agents.safety_floor import (
 )
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
 from app.schemas.trade import ComplianceResult, OrderType, ProposedTrade, Side
+from app.services.classification_universe import ClassificationUniverse
+
+# DEF061: the halal_mandate fixture also sets no_tobacco_alcohol_gambling, now a
+# deterministically-enforced flag. A universe that classifies NVDA as clean lets the
+# halal-focused tests below isolate the halal check (without it, the sin flag pauses
+# on a None classification universe — the intended loud degrade, covered by DEF061).
+_NVDA_CLEAN_UNIVERSE = ClassificationUniverse(classified={"NVDA", "AAPL", "MSFT"})
 
 
 def test_safety_floor_only_on_portfolio_manager():
@@ -133,6 +140,7 @@ def test_compliance_halal_with_passing_universe(
         current_drawdown_pct=0,
         mandate=halal_mandate,
         halal_universe={"NVDA", "AAPL", "MSFT"},
+        classification_universe=_NVDA_CLEAN_UNIVERSE,
     )
     assert result.passed
 

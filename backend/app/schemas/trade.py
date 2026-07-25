@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.classification import ClassificationVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.trading_math.portfolio import drawdown_pct as _drawdown_pct
 from app.trading_math.portfolio import total_value as _total_value
@@ -89,3 +90,9 @@ class ComplianceResult(BaseModel):
     # unknown that says nothing is a silent pass on an observance decision (G3).
     # None when the halal flag is off (or the legacy bare-set path was used).
     sharia_verdict: ShariaVerdict | None = None
+    # DEF061: the sourced sector/industry verdicts for the no_fossil_fuels /
+    # no_tobacco_alcohol_gambling flags. One entry per ACTIVE flag, present on BOTH
+    # a blocked (EXCLUDED) trade AND a permitted (PERMITTED/UNKNOWN) one — so an
+    # UNKNOWN disclosure ("AMI hasn't classified this name") travels even when the
+    # trade succeeds. Empty when neither flag is on.
+    classification_verdicts: list[ClassificationVerdict] = Field(default_factory=list)

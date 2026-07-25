@@ -10,6 +10,11 @@ See docs/initial_specs/02_agents/safety_floor.md for the full rationale.
 from pydantic import BaseModel, Field
 
 from app.schemas import AgentId, Mandate, Verdict, VerdictAction
+from app.schemas.classification import (
+    ClassificationKind,
+    ClassificationStatus,
+    ClassificationVerdict,
+)
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade
 from app.trading_math.portfolio import position_pct as _position_pct
@@ -102,6 +107,7 @@ def check_mandate_compliance(
     mandate: Mandate,
     *,
     halal_universe: set[str] | None = None,
+    classification_universe: object | None = None,
     locale_allowed_universe: set[str] | None = None,
 ) -> ComplianceResult:
     """Deterministic mandate-compliance check. No LLM.
@@ -115,12 +121,22 @@ def check_mandate_compliance(
         path (tests only): absence blocks conservatively. None → the screen is
         paused (loud degrade). Either way this is a SOURCED ALLOWLIST, never a
         computed ratio screen (`sharia_screen()` stays dormant, constraint 4).
+    classification_universe: the `no_fossil_fuels` / `no_tobacco_alcohol_gambling` /
+        `esg_lite` universe (DEF061). Normally a
+        `classification_universe.ClassificationUniverse` (a sourced sector/industry
+        exclusion set carrying provenance, resolving four states per kind: permitted /
+        excluded / unknown / unavailable — the CR069 pattern applied to sector tags).
+        `esg_lite` is a CURATED best-effort proxy (fossil ∪ sin ∪ weapons/defense),
+        NOT a rated ESG score — its verdicts say so. None → the active flags PAUSE
+        loudly, never a silent permit. UNKNOWN is PERMITTED with a disclosure (mirrors
+        halal G3); blocking-on-unknown would reject every unclassified name (DEF059).
     locale_allowed_universe: optional set of tickers available in user's locale.
         If None, no locale filter applied.
     """
     violations: list[str] = []
     blocked_by: str | None = None
     sharia_verdict: ShariaVerdict | None = None
+    classification_verdicts: list[ClassificationVerdict] = []
 
     c = mandate.compliance
     t = proposed.ticker.upper().strip()
@@ -167,6 +183,37 @@ def check_mandate_compliance(
             violations.append(f"ticker {t} is outside the configured halal universe")
             blocked_by = blocked_by or "compliance"
 
+    # 4b/4c/4d) DEF061 — no_fossil_fuels / no_tobacco_alcohol_gambling / esg_lite. A
+    #   SOURCED sector/industry exclusion set (yfinance sector/industry over the CR075
+    #   parent constituents), NOT a real-time revenue screen. esg_lite is a CURATED
+    #   proxy = fossil ∪ sin ∪ weapons/defense (founder-ruled 2026-07-25), disclosed
+    #   as best-effort curation, never a rated score. Mirrors the halal four-state
+    #   seam exactly: EXCLUDED blocks; UNKNOWN is PERMITTED with the disclosure
+    #   attached (it must NEVER reach the violations list or the ruling inverts —
+    #   DEF059 in the other direction); an absent/stale universe PAUSES loudly
+    #   (UNAVAILABLE is blocking). One verdict per active flag travels on the result
+    #   whether blocked or permitted, so a permitted-unknown still surfaces "AMI
+    #   hasn't classified this name".
+    for flag, kind in (
+        (c.no_fossil_fuels, ClassificationKind.FOSSIL_FUELS),
+        (c.no_tobacco_alcohol_gambling, ClassificationKind.SIN),
+        (c.esg_lite, ClassificationKind.ESG_LITE),
+    ):
+        if not flag:
+            continue
+        resolve = getattr(classification_universe, "resolve", None)
+        if callable(resolve):
+            verdict = resolve(t, kind)
+        else:
+            # None/unavailable universe → paused, same as the halal-paused branch.
+            verdict = ClassificationVerdict(
+                status=ClassificationStatus.UNAVAILABLE, ticker=t, kind=kind
+            )
+        classification_verdicts.append(verdict)
+        if verdict.is_blocking:
+            violations.append(verdict.message())
+            blocked_by = blocked_by or "compliance"
+
     # 5) Locale-allowed instruments
     if locale_allowed_universe is not None and t not in {x.upper() for x in locale_allowed_universe}:
         violations.append(f"ticker {t} not available in user's locale ({mandate.locale})")
@@ -199,6 +246,7 @@ def check_mandate_compliance(
         violations=violations,
         blocked_by=blocked_by,
         sharia_verdict=sharia_verdict,
+        classification_verdicts=classification_verdicts,
     )
 
 
@@ -295,6 +343,7 @@ def enforce_safety_floor(
     mandate: Mandate,
     *,
     halal_universe: set[str] | None = None,
+    classification_universe: object | None = None,
     locale_allowed_universe: set[str] | None = None,
 ) -> Verdict:
     """Wrap an LLM-produced verdict. If APPROVE, re-check via deterministic function.
@@ -310,6 +359,7 @@ def enforce_safety_floor(
         current_drawdown_pct=current_drawdown_pct,
         mandate=mandate,
         halal_universe=halal_universe,
+        classification_universe=classification_universe,
         locale_allowed_universe=locale_allowed_universe,
     )
 

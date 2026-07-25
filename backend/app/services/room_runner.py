@@ -57,6 +57,7 @@ from app.services.fundamentals import fetch_live_fundamentals
 from app.services.journal_store import get_journal_store
 from app.services.market_data import get_market_data_provider
 from app.services.sharia_universe import default_halal_universe_async  # CR069 (import for the :1293 rewire)
+from app.services.classification_universe import default_classification_universe_async  # DEF061
 from app.services.news_context import fetch_live_news, format_headline
 from app.services.technicals import compute_technicals
 from app.services.social_context import (
@@ -239,6 +240,7 @@ class _RoomContext:
     portfolio_value: float
     current_drawdown_pct: float
     halal_universe: set[str]
+    classification_universe: object | None
     locale_allowed_universe: set[str] | None
     user_id: UUID | None = None
     # CR055: the always-present portfolio-of-record block (sim holdings + optional
@@ -864,6 +866,7 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         current_drawdown_pct=ctx.current_drawdown_pct,
         mandate=ctx.mandate,
         halal_universe=ctx.halal_universe,
+        classification_universe=ctx.classification_universe,
         locale_allowed_universe=ctx.locale_allowed_universe,
     )
 
@@ -1482,6 +1485,7 @@ class RoomRunner:
         portfolio_value: float = 100_000.0,
         current_drawdown_pct: float = 0.0,
         halal_universe: set[str] | None = None,
+        classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
         char_delay_min: float = _CHAR_DELAY_MIN,
         char_delay_max: float = _CHAR_DELAY_MAX,
@@ -1531,6 +1535,12 @@ class RoomRunner:
 
         # Halal universe: sourced AAOIFI allowlist w/ three-state resolver + loud degrade (CR069).
         halal = halal_universe or await default_halal_universe_async()
+        # DEF061: sourced sector/industry exclusion sets (no_fossil_fuels /
+        # no_tobacco_alcohol_gambling) — four-state resolver + loud degrade, same
+        # off-request-path stored-row read the halal universe uses.
+        classification = (
+            classification_universe or await default_classification_universe_async()
+        )
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 
@@ -1562,6 +1572,7 @@ class RoomRunner:
             portfolio_value=portfolio_value,
             current_drawdown_pct=current_drawdown_pct,
             halal_universe=halal,
+            classification_universe=classification,
             locale_allowed_universe=locale_allowed,
             user_id=user_id,
             portfolio_snapshot=portfolio_snapshot,
@@ -1738,6 +1749,7 @@ class RoomRunner:
                                     portfolio_value=ctx.portfolio_value,
                                     current_drawdown_pct=ctx.current_drawdown_pct,
                                     mandate=mandate, halal_universe=ctx.halal_universe,
+                                    classification_universe=ctx.classification_universe,
                                     locale_allowed_universe=ctx.locale_allowed_universe,
                                 )
                             else:

@@ -803,3 +803,50 @@ class ShariaUniverseSnapshotRow(Base):
     # The compliant + parent ticker sets, stored as JSON lists (a few hundred each).
     compliant: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
     parent: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+
+
+class ClassificationUniverseSnapshotRow(Base):
+    """One persisted snapshot of the sourced sector/industry classification (DEF061).
+
+    Append-only, exactly like `ShariaUniverseSnapshotRow` (CR075): the daily
+    `_classification_universe_refresh()` background task classifies the ~503 S&P
+    parent constituents (reused from the latest Sharia snapshot's `parent` set) by
+    their yfinance sector/industry and writes one row per SUCCESSFUL run. The read
+    path resolves from the latest row — the ~500 yfinance calls stay OFF the request
+    path (a restart reads the row, never a socket), and a classify outage serves the
+    held sets instead of un-enforcing the `no_fossil_fuels` /
+    `no_tobacco_alcohol_gambling` filters.
+
+    `fetched_at` (OUR UTC stamp) is the freshness signal; `as_of` is set to its date
+    at write time (yfinance carries no source date, so AMI's classify date is the
+    honest freshness the reader gates on). `classified` is every ticker that returned
+    a sector — a name absent from it resolves UNKNOWN (permitted + disclosed), never
+    a false PERMITTED. History answers "which names did AMI treat as fossil/sin on
+    day X"; one row/day is negligible storage, so retention is unbounded for now.
+    """
+
+    __tablename__ = "classification_universe_snapshots"
+    __table_args__ = (
+        Index(
+            "ix_classification_snapshot_fetched",
+            "fetched_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    source: Mapped[str] = mapped_column(String, nullable=False)
+    # AMI's classify date (nullable to mirror the Sharia row's source-date column;
+    # in practice set to fetched_at.date()). Staleness is measured against this.
+    as_of: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # Every ticker that returned a sector (the classified membership), plus the three
+    # derived exclusion buckets — stored as JSON lists (a few hundred / few dozen
+    # each). `defense` (weapons/aerospace-defense) is the third bucket; the curated
+    # `esg_lite` exclusion set is fossil ∪ sin ∪ defense, derived at resolve time so
+    # only the buckets are persisted (DEF061 esg fork, founder-ruled 2026-07-25).
+    classified: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    fossil: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    sin: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    defense: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)

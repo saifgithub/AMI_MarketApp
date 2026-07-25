@@ -200,6 +200,23 @@ class Settings(BaseSettings):
     sharia_staleness_days: int = 7
     sharia_hold_window_days: int = 30
 
+    # DEF061 — sourced sector/industry classification backing the `no_fossil_fuels`
+    # and `no_tobacco_alcohol_gambling` mandate flags (the CR069/CR075 architecture
+    # applied to sector/industry exclusions). OFF by default → both flags PAUSE
+    # loudly (UNAVAILABLE) rather than silently permitting every name from an empty
+    # set. Flip on Alpha once the first live classify pass is verified (the daily
+    # refresh logs its classified/fossil/sin counts). The universe classified is the
+    # ~503 S&P parents already persisted by CR075, so this depends on the Sharia
+    # snapshot being seeded first. No URL: the source is yfinance sector/industry.
+    classification_screen_enabled: bool = False
+    # The reader's window for a persisted classification row — a classify outage
+    # serves the held sets (no request-path yfinance calls) until the row's classify
+    # date ages past this, then pauses loudly. Longer than the Sharia fetch window
+    # for the same reason CR075's hold window is (a recorded list is safer to hold
+    # than a fresh fetch), and sector/industry drifts far slower than an index
+    # rebalance — 40 days keeps a run inside a comfortable refresh runway.
+    classification_hold_window_days: int = 40
+
     # CR069-DIVERGE — second-source (HLAL/FTSE Shariah) holdings CSV for the
     # divergence MONITOR only (app/services/sharia_divergence.py). Log-only:
     # never read by the `halal` flag's enforcement path. Same Tidal schema as
