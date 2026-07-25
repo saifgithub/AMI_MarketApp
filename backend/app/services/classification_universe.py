@@ -249,7 +249,11 @@ def _yf_info(ticker: str) -> dict:
     same as `fundamentals.py`)."""
     import yfinance as yf
 
-    return yf.Ticker(ticker.upper()).info or {}
+    # Index constituent lists use a dot for class shares (BF.B, BRK.B); yfinance
+    # keys them with a hyphen (BF-B). Normalise for the lookup ONLY — the caller
+    # still keys results by the original symbol, so the stored set matches what the
+    # sim/parent-set proposes (DEF108: BF.B / Brown-Forman was silently unscreened).
+    return yf.Ticker(ticker.upper().replace(".", "-")).info or {}
 
 
 def _network_classify(

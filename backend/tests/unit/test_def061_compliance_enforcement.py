@@ -124,6 +124,30 @@ def test_classify_info_dash_variants_normalise():
         assert classify_info(info) == (False, True, False), ind
 
 
+def test_yf_info_normalises_class_share_dot_to_hyphen(monkeypatch):
+    """DEF108 — index constituent lists key class shares with a dot (BF.B), but
+    yfinance needs a hyphen (BF-B). The lookup must normalise, or BF.B (Brown-
+    Forman, alcohol) fails to fetch and resolves UNKNOWN instead of sin."""
+    import yfinance
+
+    captured = {}
+
+    class _FakeTicker:
+        def __init__(self, symbol):
+            captured["symbol"] = symbol
+            self.info = {
+                "sector": "Consumer Defensive",
+                "industry": "Beverages - Wineries & Distilleries",
+            }
+
+    monkeypatch.setattr(yfinance, "Ticker", _FakeTicker)
+    from app.services.classification_universe import _yf_info
+
+    info = _yf_info("BF.B")
+    assert captured["symbol"] == "BF-B"  # dot → hyphen for the yfinance lookup
+    assert classify_info(info) == (False, True, False)  # and it classifies as sin
+
+
 # ── resolver (four states, three kinds) ──────────────────────────────────────
 
 
