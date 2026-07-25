@@ -7,21 +7,20 @@ ACCEPTANCE: docs/defect/DEF061_mandate_compliance_toggles_not_enforced/ (+ def_l
 DEPENDS-ON: —    <!-- the honest interim is correct NOW regardless of the esg/custom product fork; it can ship independently of DEF061-BE. -->
 HOT-FILES: `mobile/lib/screens/settings/settings_screen.dart:365-386` (the 8 compliance-toggle rows + their subtitles).
 
-**What:** DEF061-BE builds real enforcement for `no_fossil_fuels` + `no_tobacco_alcohol_gambling`. The
-other two DEF061 toggles — `esg_lite` and `custom_constraints` — are **forked to Saiful** (no clean
-sourced-data path; guessing repeats DEF059), so they stay **unenforced**. Settings currently sells all
-four as hard per-trade filters (e.g. *"Filters out tickers whose primary revenue comes from…"*). Leaving
-`esg_lite`/`custom_constraints` advertised as hard filters while they do nothing is the exact CR040
-degrade-loudly / confident-but-false violation DEF061 exists to fix.
+**What (fork resolved 2026-07-25):** DEF061-BE builds enforcement for `no_fossil_fuels` +
+`no_tobacco_alcohol_gambling` + **`esg_lite` (curated best-effort proxy)**; `custom_constraints` stays
+freeform with the PM explaining what it can't hard-enforce (`DEF061-ROOM`). So Settings copy for the four
+now needs to MATCH what actually happens — the CR040 fix is accuracy, not hiding:
 
-**Fix (honest interim, reversible):** for **only** `esg_lite` and `custom_constraints`, stop presenting
-them as enforced per-trade filters — relabel to make clear they currently guide the analysts' narration,
-not a deterministic block (e.g. subtitle → *"Guides how your analysts weigh this — not yet a hard
-per-trade filter"*), or gate them behind a "coming soon" affordance. Do **not** touch the
-`no_fossil_fuels`/`no_tobacco_alcohol_gambling`/`halal` rows — DEF061-BE makes those genuinely enforced,
-so their existing copy becomes accurate. 3 locales (EN authored; AR/MS via the i18n track).
+**Fix (copy, 3 locales — EN authored, AR/MS via the i18n track):**
+- `no_fossil_fuels` / `no_tobacco_alcohol_gambling` — copy stays a hard filter (now true), but note it's
+  screened against a curated sector/industry list of the tradable universe (unclassified names pass with
+  a disclosure).
+- `esg_lite` — relabel to *"Excludes a curated best-effort list (fossil + sin + weapons/defense) — not a
+  rated ESG score."* Do NOT imply a rating AMI doesn't have.
+- `custom_constraints` — relabel to *"Your analysts weigh these; the PM flags any condition it can't
+  hard-enforce."* Not presented as a deterministic block.
 
-**Queued:** activate (write the assign round-1 signal line) once Saiful rules on the esg/custom fork —
-if he greenlights **building** ESG + custom enforcement, this honesty lane is superseded by that build; if
-he **scopes them out**, this relabel is the fix. Either way it is a small, low-risk, content-review-gated
-change. (Prose deliberately omits the literal assign token so it is not parsed as a live signal.)
+**Queued:** activate (write the assign round-1 signal line) once DEF061-BE lands (so the fossil/sin/esg
+copy matches shipped behaviour) and DEF061-ROOM's PM-explain wording is settled. Small, low-risk,
+content-review-gated. (Prose omits the literal assign token so it is not parsed as a live signal.)

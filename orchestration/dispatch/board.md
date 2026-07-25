@@ -255,3 +255,21 @@ format template.
 - **DEF061-MOBILE queued** (`lanes/DEF061-MOBILE.assign.md`) — the CR040 honesty half: relabel
   `esg_lite` + `custom_constraints` in Settings so they stop advertising as hard filters while forked.
   Activates on Saiful's esg/custom ruling (build → superseded; scope-out → this ships). Not blocking.
+
+### 2026-07-25 (cont.) — DEF061 fork resolved; scope widened
+
+- **Saiful ruled the fork** (`AskUserQuestion`): `esg_lite` → *"curate for now; look [for an] ESG source,
+  offer as a value-added service"*; `custom_constraints` → *"keep it, PM can explain for any conditions
+  that cannot be met."*
+- **`esg_lite` folded into DEF061-BE** as a **curated best-effort proxy** = fossil ∪ sin ∪ weapons/defense
+  on the same classification snapshot, labelled "not a rated ESG score" (CR040 honesty — no fabricated
+  rating). A rated-ESG data feed as a **paid VAS is a future CR candidate**, not built now.
+- **`custom_constraints` → `DEF061-ROOM`** (`lanes/DEF061-ROOM.assign.md`, coder.room, queued): kept
+  freeform; the PM surfaces + explains any constraint it can't hard-enforce (narration is the correct
+  mechanism — freeform text isn't structurally enforceable; honest ceiling per CR038). Disjoint from
+  DEF061-BE (overlay_generator/PM prompt vs safety_floor).
+- **DEF061-BE coder resumed** (SendMessage, same worktree): its fossil+sin build was code-complete but
+  uncommitted/untested/no-handoff — resumed to finish (verify migration head, run the suite + report the
+  real exit code, commit to `lane/DEF061.coder.api` with an explicit pathspec, write the hand-off + audit
+  lane) AND widen with the esg_lite curated check.
+- DEF061-MOBILE copy updated to match (esg = curated proxy; custom = PM-flag). Row + register regen. `AT:architect`.
