@@ -1,6 +1,6 @@
 ---
 id: "355_how_amis_halal_flag_maps_to_real_screening"
-title: "Bagaimana penanda halal AMI berfungsi"
+title: "Bagaimana bendera halal AMI berfungsi"
 duration_min: 5
 level: 13
 module: 25
@@ -12,61 +12,54 @@ prerequisites: ["348_the_business_activity_screen", "349_the_three_financial_rat
 tags: ["islamic-finance", "halal-flag", "mandate", "pm", "deterministic-compliance"]
 sources: ["AMI backend — app/services/sim_engine.py (DEFAULT_HALAL_DEMO_UNIVERSE)", "AMI backend — app/agents/safety_floor.py (halal-flag enforcement path)"]
 agent_callouts: ["portfolio_manager", "fundamentals_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
 updated_at: "2026-07-22"
 ---
 # Bagaimana bendera halal AMI berfungsi
 
-Anda sudah tahu bahawa pemeriksaan kepatuhan deterministik oleh PM (<Lesson id="271_inside_the_deterministic_compliance_check"/>) adalah Python tulen, bukan prompt — input yang sama, jawapan PASS/BLOCK yang sama, setiap kali. Bendera Mandat halal menggunakan arkitektur deterministik-selepas-debat yang sama, tetapi pemeriksaan sebenar hari ini lebih mudah daripada skrin dua peringkat yang baru anda pelajari dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/>: ia melihat sama ada ticker tersebut adalah ahli dalam satu set kecil, tetap, dan dikurasi — tiada pengiraan dibuat, tiada aktiviti perniagaan dinilai, dan tiada nisbah dikira pada laluan ini. Pada akhir pelajaran ini, anda akan dapat menyatakan dengan tepat apa yang diperiksa oleh bendera halal dalam aplikasi hari ini, dan mengapa ia adalah perkara yang berbeza daripada metodologi penyaringan yang diajar dalam modul ini.
+Anda sudah tahu bahawa semakan kepatuhan deterministik oleh PM (<Lesson id="271_inside_the_deterministic_compliance_check"/>) adalah Python tulen, bukan prompt — input yang sama, jawapan PASS/BLOCK yang sama, setiap kali. Bendera Mandat halal menggunakan seni bina deterministik-selepas-perdebatan yang sama, tetapi semakan sebenar hari ini lebih mudah daripada skrin dua peringkat yang baru anda pelajari dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/>: ia melihat sama ada ticker tersebut adalah ahli dalam set kecil, tetap, dan dikurasi — tiada pengiraan dibuat, tiada aktiviti perniagaan dinilai, dan tiada nisbah dikira pada laluan ini. Pada akhir pelajaran ini, anda akan mampu menyatakan dengan tepat apa yang diperiksa oleh bendera halal dalam aplikasi hari ini, dan mengapa ia berbeza daripada metodologi skrin yang diajar dalam modul ini.
 
 ## Contoh
 
-Tetapkan bendera halal Mandat kepada on dan Convene the Room pada ticker sebenar. Dua perkara berlaku secara berturut-turut, meniru arkitektur <Lesson id="271_inside_the_deterministic_compliance_check"/>: pertama, pasukan analis berdebat dan menghasilkan Verdict latihan biasa mereka (kes Bull, kes Bear, bacaan teknikal, saiz, entry, stop). Kedua — secara sepenuhnya berasingan, selepas debat tamat — pemeriksaan deterministik PM dijalankan, dan untuk bendera halal, pemeriksaan itu adalah ujian keanggotaan terhadap senarai tujuh ticker tetap (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). Convene pada salah satu daripada tujuh ini dan bendera lulus. Convene pada mana-mana yang lain — katakan, bank konvensional, atau bahkan nama teknologi besar yang tidak ada dalam senarai — dan bendera akan menyekat perdagangan, tidak kira aktiviti perniagaan sebenar atau neraca ticker tersebut, dan tidak kira seberapa bullishnya debat analis. Sekatan (atau kelulusan) didorong sepenuhnya oleh keanggotaan senarai, bukan oleh sebarang penalaran aktiviti perniagaan atau nisbah yang diajar oleh <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> — penalaran itu adalah nyata dan ia adalah asas bagi skrin Sharia yang tulen, tetapi ia bukan apa yang diperiksa oleh bendera ini.
+Setkan bendera halal Mandat kepada on dan Convene the Room pada ticker sebenar. Dua perkara berlaku secara berturutan, meniru seni bina <Lesson id="271_inside_the_deterministic_compliance_check"/>: pertama, pasukan analis berdebat dan menghasilkan Verdict latihan biasa mereka (kes Bull, kes Bear, bacaan teknikal, saiz, entry, stop). Kedua — sepenuhnya berasingan, selepas perdebatan selesai — semakan deterministik PM dijalankan, dan untuk bendera halal, semakan tersebut adalah ujian keanggotaan terhadap senarai tujuh ticker tetap (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). Convene pada salah satu daripada tujuh ini dan bendera akan lulus (pass). Convene pada apa jua selain itu — katakan, bank konvensional, atau bahkan nama teknologi besar yang tidak ada dalam senarai — dan bendera akan menyekat (block) dagangan tersebut, tidak kira aktiviti perniagaan sebenar atau neraca ticker itu, dan tidak kira seberapa bullish perdebatan analis itu. Sekatan (atau kelulusan) didorong sepenuhnya oleh keanggotaan senarai, bukan oleh sebarang penalaran aktiviti perniagaan atau nisbah yang diajar dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> — penalaran itu adalah nyata dan ia adalah asas skrin Sharia sebenar, ia hanya bukan apa yang diperiksa oleh bendera ini.
 
 ## Perangkap
 
-Pemula mengandaikan bahawa kerana bendera ini berada di belakang arkitektur yang tidak boleh dilatih sama seperti baki pemeriksaan kepatuhan PM, ia mesti *menjalankan* skrin dua peringkat yang dicakup oleh modul ini — aktiviti perniagaan, kemudian tiga nisbah, dikira secara langsung bagi setiap ticker. Ia tidak. Hari ini, bendera halal adalah senarai benarkan (allowlist) demonstrasi yang dikurasi: tujuh ticker besar, cecair, dan dikenali secara meluas dipilih supaya kitaran latihan sentiasa mempunyai alam semesta "halal" yang boleh diperdagangkan, bukan tujuh ticker yang telah melalui ujian <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> dan kebetulan lulus. Skrin sebenar wujud dalam pangkalan kod AMI dan adalah tepat seperti yang diterangkan oleh dua pelajaran tersebut — tetapi ia tidak disambungkan ke laluan penguatkuasaan bendera ini. Jangan membuat inferens "bendera menjalankan skrin dan ticker ini lulus" daripada PASS; buat inferens "ticker ini kebetulan adalah salah satu daripada tujuh dalam senarai."
+Pemula mengandaikan bahawa kerana bendera ini berada di belakang seni bina kepatuhan PM yang tidak boleh diajar, ia mesti *menjalankan* skrin dua peringkat yang diliputi modul ini — aktiviti perniagaan, kemudian tiga nisbah, dikira secara langsung bagi setiap ticker. Ia tidak. Hari ini, bendera halal adalah senarai benarkan (allowlist) demonstrasi yang dikurasi: tujuh ticker besar, cecair, dan dikenali luas dipilih supaya kitaran latihan sentiasa mempunyai alam semesta "halal" yang boleh ditradingkan, bukan tujuh ticker yang telah melalui ujian <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> dan kebetulan lulus. Skrin sebenar wujud dalam pangkalan kod AMI dan adalah tepat apa yang diterangkan oleh dua pelajaran tersebut — tetapi ia tidak disambungkan ke laluan penguatkuasaan bendera ini. Jangan membuat inferens "bendera menjalankan skrin dan ticker ini lulus" daripada PASS; buat inferens "ticker ini kebetulan adalah salah satu daripada tujuh dalam senarai."
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Apabila bendera Mandat halal diaktifkan, Bilik membincangkan satu ticker dan menghasilkan Verdict yang bullish, tetapi PM kemudian menyekat perdagangan tersebut. Apakah urutan ini memberitahu anda tentang bagaimana bendera halal dibina?"
+  question="Dengan bendera Mandat halal diaktifkan, Bilik membincangkan satu ticker dan menghasilkan Verdict yang bullish, tetapi PM kemudian menyekat perdagangan tersebut. Apakah maklumat yang diberikan oleh urutan ini tentang bagaimana bendera halal dibina?"
   options={[
-  ]}
-  answer={0}
-  explanation=""
-/>/273, digunakan pada senarai benarkan ticker tetap berbanding dengan pendapat di dalam debat",
-    "Ia bermaksud hujah Bull Researcher adalah salah secara fakta dan memerlukan pembetulan",
-    "Ia bermaksud bendera halal hanya menyekat perdagangan apabila Bear Researcher mengesyorkan untuk menentangnya"
+    "Ia bermakna perdebatan penganalisis dan semakan kepatuhan PM adalah langkah yang sama, dan perdebatan hanya mengubah pendirian",
+    "Ia bermakna semakan halal dijalankan sebagai langkah berasingan dan deterministik SELEPAS perdebatan selesai — sama seperti seni bina lantai yang tidak boleh dilatih dari <Lesson id="271_inside_the_deterministic_compliance_check"/>/273, digunakan pada senarai benarkan ticker tetap berbanding pendapat dalam perdebatan",
+    "Ia bermakna hujah Bull Researcher adalah salah dari segi fakta dan memerlukan pembetulan",
+    "Ia bermakna bendera halal hanya menyekat perdagangan apabila Bear Researcher mengesyorkan sebaliknya"
   ]}
   answer={1}
-  explanation="Ini adalah arkitektur dari <Lesson id="271_inside_the_deterministic_compliance_check"/> dan <Lesson id="273_uncoachable_means_no_prompt"/>: debat menghasilkan Verdictnya dahulu, dan pemeriksaan PASS/BLOCK deterministik yang berasingan dijalankan selepasnya — tidak boleh dilatih kerana ia bukan pendapat persuasibel yang dipegang oleh mana-mana agen, ia adalah ujian keanggotaan set tetap. Tiada apa-apa tentang hujah Bull Researcher perlu menjadi 'salah' agar PM masih boleh menyekat; dan sekatan itu didorong oleh keanggotaan senarai, bukan oleh Researcher mana yang berhujah di pihak mana."
+  explanation="Ini adalah seni bina dari <Lesson id="271_inside_the_deterministic_compliance_check"/> dan <Lesson id="273_uncoachable_means_no_prompt"/>: perdebatan menghasilkan Verdictnya terlebih dahulu, dan semakan PASS/BLOCK berasingan yang deterministik dijalankan kemudian — tidak boleh dilatih kerana ia bukan pendapat persuasif yang dipegang oleh mana-mana ejen, ia adalah ujian keahlian set tetap. Tiada apa-apa tentang hujah Bull Researcher perlu menjadi 'salah' untuk PM masih menyekat; dan penyekatan didorong oleh keahlian senarai, bukan oleh Researcher mana yang berhujah di pihak mana."
 />
 
 <Quiz
-  question="Satu ticker yang lulus skrin aktiviti perniagaan (<Lesson id="
-  options={[
-  ]}
-  answer={0}
-  explanation=""
-/>) dan tiga nisbah kewangan (<Lesson id="349_the_three_financial_ratio_screens"/>) dengan ruang yang cukup masih disekat oleh bendera Mandat halal AMI. Apa yang ini memberitahu anda tentang apa yang sebenarnya diperiksa oleh bendera tersebut?"
+  question="Satu ticker yang lulus skrin aktiviti perniagaan (<Lesson id="348_the_business_activity_screen"/>) dan tiga nisbah kewangan (<Lesson id="349_the_three_financial_ratio_screens"/>) dengan banyak ruang masih disekat oleh bendera Mandat halal AMI. Apakah ini memberitahu anda tentang apa yang sebenarnya diperiksa oleh bendera tersebut?"
   options={[
     "Bendera mesti telah menemui nisbah keempat yang tersembunyi yang gagal oleh ticker",
-    "Bendera tidak menjalankan skrin aktiviti-perniagaan-dan-nisbah sama sekali — hari ini ia memeriksa keanggotaan dalam satu set tetap dan dikurasi bagi tujuh ticker, jadi ticker boleh lulus setiap ujian penyaringan sebenar dalam modul ini dan masih berada di luar set tersebut",
-    "Bendera menjalankan semula debat dengan pemberat Bear Researcher yang lebih ketat sehingga ia menemui alasan untuk menyekat",
-    "Ini tidak boleh berlaku — lulus kedua-dua skrin dalam modul ini menjamin bendera halal juga akan lulus"
+    "Bendera tidak menjalankan skrin aktiviti perniagaan dan nisbah sama sekali — hari ini ia memeriksa keahlian dalam set tujuh ticker tetap yang dikurasi, jadi ticker boleh lulus setiap ujian skrin sebenar dalam modul ini dan masih berada di luar set tersebut",
+    "Bendera menjalankan semula perdebatan dengan pemberat Bear Researcher yang lebih ketat sehingga ia menemui alasan untuk menyekat",
+    "Ini tidak boleh berlaku — lulus kedua-dua skrin dalam modul ini menjamin bendera halal akan lulus juga"
   ]}
   answer={1}
-  explanation="Sebuah ticker boleh dengan tulen membersihkan kedua-dua skrin aktiviti perniagaan dan skrin nisbah dan masih bukan salah satu daripada tujuh ticker (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) yang diperiksa oleh penguatkuasaan bendera halal — kerana penguatkuasaan itu adalah ujian keanggotaan senarai tetap, bukan skrin dua peringkat. Tiada nisbah keempat yang tersembunyi, tiada pelaksanaan semula debat, dan lulus skrin sebenar modul tidak menjamin keanggotaan dalam senarai demonstrasi ini — ia adalah dua ujian yang berbeza."
+  explanation="Satu ticker boleh benar-benar meluluskan kedua-dua skrin aktiviti perniagaan dan skrin nisbah dan masih bukan salah satu daripada tujuh ticker (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) yang diperiksa oleh pelaksanaan bendera halal — kerana pelaksanaan itu adalah ujian keahlian senarai tetap, bukan skrin dua peringkat. Tiada nisah keempat yang tersembunyi, tiada pelaksanaan semula perdebatan, dan lulus skrin sebenar modul ini tidak menjamin keahlian dalam senarai demonstrasi ini — mereka adalah dua ujian yang berbeza."
 />
 
 ## Cuba sendiri
 
-Togol bendera halal pada dalam Tetapan → Mandat, kemudian Convene the Room pada ticker dari senarai tujuh nama (katakan, AAPL) dan secara berasingan pada satu yang bukan (katakan, bank konvensional). Bandangkan penalaran PASS/BLOCK oleh PM pada setiap satu — perhatikan ia merujuk kepada keanggotaan senarai, bukan penemuan aktiviti perniagaan atau nisbah. Ingat: bendera halal AMI adalah alat demonstrasi kitaran latihan hari ini, bukan penghakiman agama atau skrin kepatuhan langsung; soalan penyaringan dan kepatuhan sebenar harus melibatkan profesional kewangan Islam yang berkelayakan.
+Togol bendera halal pada dalam Tetapan → Mandat, kemudian Convene the Room pada ticker dari senarai tujuh nama (contohnya, AAPL) dan secara berasingan pada satu yang bukan (contohnya, bank konvensional). Bandangkan penalaran PASS/BLOCK oleh PM pada setiap satu — perhatikan ia merujuk kepada keanggotaan senarai, bukan penemuan aktiviti perniagaan atau nisbah. Ambil perhatian: bendera halal AMI adalah alat demonstrasi kitaran latihan hari ini, bukan penghakiman agama atau skrin kepatuhan langsung; soalan skrin dan kepatuhan sebenar harus melibatkan profesional kewangan Islam yang berkelayakan.
 
-## Penutup
+## Kesimpulan
 
-Bendera Mandat halal menjalankan pemeriksaan deterministik yang tidak boleh dilatih oleh PM selepas debat tamat — arkitektur yang sama dengan baki Brief Your Agent — tetapi hari ini pemeriksaan itu adalah keanggotaan dalam satu set tetap dan dikurasi bagi tujuh ticker, bukan skrin aktiviti-perniagaan-dan-nisbah yang diajar lebih awal dalam modul ini. Ini adalah latihan metodologi, bukan penghakiman Sharia; rujuk ahli sains yang berkelayakan untuk keputusan portfolio sebenar.
+Bendera Mandat halal menjalankan semakan deterministik yang tidak boleh diajar oleh PM selepas perdebatan selesai — seni bina yang sama dengan Brief Your Agent yang lain — tetapi hari ini semakan tersebut adalah keanggotaan dalam set tetap dan dikurasi tujuh ticker, bukan skrin aktiviti perniagaan dan nisbah yang diajar awal dalam modul ini. Ini adalah latihan metodologi, bukan penghakiman Sharia; rujuk ahli sains yang berkelayakan untuk keputusan portfolio sebenar.

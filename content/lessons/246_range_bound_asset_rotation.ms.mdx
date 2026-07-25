@@ -1,6 +1,6 @@
 ---
 id: "246_range_bound_asset_rotation"
-title: "Rejimen terikat julat: putaran di bawah indeks mendatar"
+title: "Rejimen sempadan julat: putaran di bawah indeks mendatar"
 duration_min: 5
 level: 6
 module: 10
@@ -11,73 +11,73 @@ topic: "range_regime"
 prerequisites: ["061_sideways_range_markets", "063_sector_rotation", "055_mean_reversion"]
 tags: ["regime", "range", "rotation", "sectors", "relative_strength"]
 agent_callouts: ["neutral_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Rejim sempadan: putaran di bawah indeks rata
+# Rejim terikat julat: putaran di bawah indeks rata
 
-<Lesson id="061_sideways_range_markets"/> mentakrifkan rejim sempadan secara berangka dan menetapkan strategi pulangan purata di hujung jalur. Pelajaran ini mengajar apa yang kebanyakan pembaca terlepas pandang: indeks yang rata hampir tidak pernah bermaksud pasaran yang rata. Sektor dan gaya berputar dengan kuat di dalam sempadan, dan pedagang yang hanya memerhatikan indeks melihat "kebosanan", manakala pedagang yang memerhatikan kekuatan relatif melihat rejim seterusnya sedang terbentuk. Selepas pelajaran ini, anda akan dapat mengesan putaran dalam sempadan, menamakan dua strategi yang menjana keuntungan semasa SPX tidur, dan menyatakan apa yang membatalkan rejim sempadan tanpa membatalkan putaran.
+<Lesson id="061_sideways_range_markets"/> mentakrifkan rejim julat secara numerik dan menetapkan pemulihan purata pada hujung jalur. Pelajaran ini mengajar apa yang kebanyakan pembaca terlepas pandang: indeks yang rata hampir tidak pernah bermaksud pasaran yang rata. Sektor dan gaya berputar dengan ganas di dalam julat, dan pedagang yang hanya memerhatikan indeks melihat "kebosanan" manakala pedagang yang memerhatikan kekuatan relatif melihat rejim seterusnya sedang terbentuk. Selepas pelajaran ini, anda akan dapat mengesan putaran di dalam julat, menamakan dua strategi yang menjana pulangan semasa SPX tidur, dan menyatakan apa yang membatalkan julat tanpa membatalkan putaran.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-SPX pada tahun 2015 berjalan rata — ditutup pada tahun 2015 turun 0.7%, dengan SMA 200-hari condong di bawah 0.05%/minggu selama 8 daripada 12 bulan. Tajuk yang "membosankan" ini menyembunyikan putaran sebenar:
+SPX pada tahun 2015 berjalan rata — ditutup pada tahun 2015 turun 0.7%, dengan SMA 200-hari condong di bawah 0.05%/minggu selama 8 daripada 12 bulan. Tajuk yang "membosankan" menyembunyikan putaran sebenar:
 
 - XLE (tenaga) jatuh 23.6% sepanjang tahun apabila minyak runtuh.
 - XLU (utiliti) mengetuai secara defensif pada awal tahun, kemudian menyerahkan kepimpinan.
 - XLV (kesihatan) adalah pemimpin tahun sehingga putaran pada Julai membalikkannya.
-- Putaran maks-to-min dalam tahun antara sektor teratas dan terbawah: ~30 mata peratus.
+- Putaran maks-to-min di dalam tahun antara sektor teratas dan terbawah: ~30 mata peratus.
 
-Jendela indeks rata yang lebih baru: SPX antara pertengahan Mac hingga akhir Mei 2023 (dicakup dalam <Lesson id="061_sideways_range_markets"/> sebagai kes sempadan). Di dalam julat ~3 bulan itu:
+Tetingkap indeks rata yang lebih baru: SPX antara pertengahan Mac hingga akhir Mei 2023 (dicakup dalam <Lesson id="061_sideways_range_markets"/> sebagai kes julat). Di dalam julat ~3 bulan itu:
 
-- XLK (teknologi) melebihi SPY sebanyak +9.2% (1 Mac hingga 31 Mei 2023).
-- XLF (kewangan) kurang berprestasi berbanding SPY sebanyak -8.5% akibat kejutan bank ranting.
+- XLK (teknologi) mengatasi SPY sebanyak +9.2% (1 Mac hingga 31 Mei 2023).
+- XLF (kewangan) kurang berprestasi berbanding SPY sebanyak -8.5% akibat kejutan bank rantau.
 - XLE kurang berprestasi berbanding SPY sebanyak -10.4% akibat penurunan minyak.
 
-Sempadan itu kelihatan mengantuk. Sebaran 17.7 mata antara sektor pemimpin dan peninggal adalah cerita sebenar pasaran.
+Julat kelihatan mengantuk. Sebaran 17.7 mata antara sektor pemimpin dan peninggal adalah cerita pasaran yang sebenar.
 
-Peraturan pengesanan untuk putaran dalam sempadan: semasa rejim sempadan dari <Lesson id="061_sideways_range_markets"/> sedang berkuat kuasa (rata 200-hari, dua tahap mendatar diuji), kira pulangan kekuatan relatif 60-hari merentasi 11 ETF sektor SPDR. Jika sebaran antara sektor teratas dan terbawah melebihi 15 mata peratus dan sekurang-kurangnya 3 sektor telah membalikkan tanda kekuatan relatif dalam tetingkap tersebut, putaran dalam sempadan sedang berkuat kuasa.
+Peraturan pengesanan untuk putaran di dalam julat: semasa rejim julat dari <Lesson id="061_sideways_range_markets"/> sedang berkuat kuasa (rata 200-hari, dua tahap mendatar diuji), kira pulangan kekuatan relatif 60-hari merentasi 11 ETF sektor SPDR. Jika sebaran antara sektor teratas dan terbawah melebihi 15 mata peratus dan sekurang-kurangnya 3 sektor telah membalikkan tanda kekuatan relatif dalam tetingkap tersebut, maka putaran di dalam julat sedang berkuat kuasa.
 
-Di Bursa Malaysia: corak yang sama muncul antara saham tanaman, perbankan, dan teknologi merentasi julat KLCI berbilang bulan — ticker berbeza, struktur identikal.
+Di Bursa Malaysia: corak yang sama muncul antara tanaman, perbankan, dan saham teknologi merentasi julat KLCI berbilang-bulan — ticker berbeza, struktur identik.
 
 ## Perangkap
 
-Perangkap putaran sempadan ialah pemerhatian indeks. Pedagang melihat SPX tidak ke mana-mana, menyimpulkan "tiada peluang", dan sama ada duduk rata (kebosanan) atau membuat dagangan balas dendam terhadap indeks itu sendiri (melampau dalam kekacauan). Sementara itu, keuntungan sebenar sedang dijana dalam pasangan pemimpin panjang dan peninggal pendek yang disembunyikan oleh indeks.
+Perangkap putaran julat ialah memerhatikan indeks. Pedagang melihat SPX tidak ke mana-mana, menyimpulkan "tiada peluang", dan sama ada duduk rata (kebosanan) atau melakukan perdagangan balas dendam terhadap indeks itu sendiri (terlalu banyak perdagangan pada kekacauan). Sementara itu, pulangan sebenar sedang dijana dalam pasangan pemimpin panjang-pendek yang disembunyikan oleh indeks.
 
-Model yang betul: di bawah indeks rata, dagangan adalah merentas keratan, bukan arah. Panjang pemimpin kekuatan relatif, secara pilihan dagangan pasangan terhadap peninggal dalam mandat, sasaran pulangan purata sektor atau ketekalan bergantung pada fasa putaran. Julat indeks adalah latar belakang; kekuatan relatif sektor adalah latar hadapan.
+Model yang betul: di bawah indeks rata, perdagangan adalah merentasi keratan rentas, bukan arah. Panjang pemimpin kekuatan relatif, secara pilihan perdagangan pasangan terhadap peninggal di dalam mandat, sasaran pemulihan purata sektor atau ketekalan bergantung pada fasa putaran. Julat indeks adalah latar belakang; kekuatan relatif sektor adalah latar hadapan.
 
 <ChatWith agent="neutral_debator" />
 
 ## Kuiz
 
 <Quiz
-  question="SPX telah bergerak dalam julat selama 10 minggu (rata pada 200 hari, 4,000–4,200). Dalam 60 hari kebelakangan ini: XLK +7% berbanding SPY, XLP +5% berbanding SPY, XLF -6% berbanding SPY, XLE -8% berbanding SPY. Tiga sektor telah bertukar tanda kekuatan relatif. Sebaran dari sektor teratas ke terbawah bagi 11 sektor ialah 18 mata peratus. Apakah yang ditetapkan oleh kerangka putaran dalam julat?"
+  question="SPX telah bergerak dalam julat selama 10 minggu (rata-rata 200 hari, 4,000–4,200). Selama 60 hari terakhir: XLK +7% berbanding SPY, XLP +5% berbanding SPY, XLF -6% berbanding SPY, XLE -8% berbanding SPY. Tiga sektor telah bertukar tanda kekuatan relatif. Sebaran atas-ke-bawah 11 sektor ialah 18 mata peratus. Kerangka putaran dalam julat menetapkan apa?"
   options={[
-    "Pendek SPX dengan leverage — keadaan rata bermakna kejatuhan akan berlaku segera.",
-    "Diam saja — indeks tidak memberi isyarat.",
+    "Pendek SPX dengan leverage — keadaan rata bermaksud kejatuhan akan berlaku segera.",
+    "Diam — indeks tidak memberi isyarat.",
     "Tumpukan keseluruhan portfolio dalam XLK pada saiz mandat maksimum.",
-    "Putaran dalam julat sedang berlaku. Dagangkan secara rentas sektor: beli pemimpin kekuatan relatif yang disahkan (XLK, XLP) pada saiz yang dikurangkan berbanding maksimum mandat, secara pilihan dipadankan dengan peninggal (XLF, XLE) jika mandat membenarkan. Julat tidak sah jika penutupan mingguan di luar 4,000–4,200; putaran tidak sah jika sebaran mampat di bawah kira-kira 5 mata."
+    "Putaran dalam julat sedang berkuat kuasa. Dagangkan secara rentas sektor: beli pemimpin kekuatan relatif yang disahkan (XLK, XLP) pada saiz dikurangkan berbanding mandat maksimum, secara pilihan dipadankan dengan peninggal (XLF, XLE) jika mandat membenarkan. Julat tidak sah jika penutupan mingguan di luar 4,000–4,200; putaran tidak sah jika sebaran mampat di bawah ~5 mata."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah diam saja — indeks tidak berkata apa-apa, keluar dari pasaran. Tetapi indeks adalah purata; sebaran 18 mata menunjukkan purata menyembunyikan putaran yang ketara. Menumpukan segalanya dalam XLK mengabaikan mandat diversifikasi. Sintesis: dagangkan putaran secara rentas sektor dalam had mandat, dengan dua pembatalan bebas (pecahan julat vs keruntuhan sebaran)."
+  explanation="Jawapan salah yang menggoda ialah diam — indeks tidak berkata apa-apa, keluar. Tetapi indeks adalah purata; sebaran 18 mata menunjukkan bahawa purata menyembunyikan putaran material. Menumpukan segalanya dalam XLK mengabaikan mandat diversifikasi. Sintesis: dagangkan putaran secara rentas sektor dalam had mandat, dengan dua pembatalan bebas (pecahan julat vs runtuh sebaran)."
 />
 
 <Quiz
-  question="Apakah peristiwa yang akan membatalkan rejim julat tetapi TIDAK membatalkan tesis putaran?"
+  question="Peristiwa apa yang akan membatalkan rejim julat tetapi TIDAK membatalkan tesis putaran?"
   options={[
-    "Keruntuhan sebaran pulangan 60 hari dari 18 mata ke 4 mata merentas sektor.",
-    "Bank Pusat (Fed) menurunkan kadar faedah.",
-    "SPX menutup di atas 4,200 pada asas mingguan dengan SMA 20 minggu mula naik — julat telah pecah, tetapi ranking kekuatan relatif sektor kekal utuh dan putaran kini berlaku di bawah rejim mendaki — sama dagangan pemimpin panjang, saiz lebih besar kini dibenarkan.",
+    "Runtuh sebaran pulangan 60 hari dari 18 mata kepada 4 mata merentasi sektor.",
+    "Bank Pusat memotong kadar faedah.",
+    "SPX menutup di atas 4,200 pada asas mingguan dengan SMA 20 minggu berpusing naik — julat pecah, tetapi penarafan kekuatan relatif sektor kekal utuh dan putaran kini dimainkan di bawah rejim trending.",
     "VIX jatuh ke 11."
   ]}
   answer={2}
-  explanation="Jawapan salah yang menggoda ialah sebaran yang runtuh dari 18 mata ke 4 mata — tetapi itu membatalkan putaran, bukan julat. Sintesisnya ialah mengenali bahawa julat dan putaran adalah dua rejim yang berlapis; satu boleh pecah manakala yang lain kekal. Pecahan keluar di atas julat dengan kepimpinan sektor yang utuh hanya mengalihkan putaran ke rejim bull — dagangan pemimpin panjang yang sama, saiz lebih besar kini dibenarkan."
+  explanation="Jawapan salah yang menggoda ialah sebaran mampat dari 18 mata kepada 4 mata — tetapi itu membatalkan putaran, bukan julat. Sintesisnya ialah mengiktiraf bahawa julat dan putaran adalah dua rejim yang berlapis bersama; satu boleh pecah manakala yang lain berterusan. Pecutan keluar di atas julat dengan kepimpinan sektor yang utuh hanya mengalihkan putaran ke rejim bull — perdagangan pemimpin panjang yang sama, saiz lebih besar kini dibenarkan."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan Neutral Debator dan tampal: "Kira bacaan kekuatan relatif 60-hari semasa bagi setiap 11 sektor SPDR berbanding SPY, sebaran dari atas ke bawah, dan bilangan sektor yang telah membalikkan tanda dalam 60 hari terakhir. Beritahu saya sama ada putaran dalam sempadan sedang berkuat kuasa." Kemudian buka editor <Term id="ami_mandate" /> dan pertimbangkan tetapan awal "rejim putaran": kedudukan maksimum kekal sama, tetapi memerlukan posisi berada dalam sektor yang berada dalam kedudukan teratas-3 kekuatan relatif untuk kemasukan.
+Buka <Term id="ami_one_on_one" /> dengan Neutral Debator dan tampal: "Kira bacaan kekuatan relatif 60-hari semasa untuk setiap daripada 11 sektor SPDR berbanding SPY, sebaran atas-bawah, dan bilangan sektor yang telah membalikkan tanda dalam 60 hari terakhir. Beritahu saya sama ada putaran di dalam julat sedang berkuat kuasa." Kemudian buka editor <Term id="ami_mandate" /> dan pertimbangkan tetapan praset "rejim putaran": kedudukan maksimum kekal sama, tetapi memerlukan posisi berada dalam sektor yang berada dalam kedudukan teratas-3 kekuatan relatif untuk kemasukan.
 
-## Penutup
+## Pengambilan
 
-Indeks rata menyembunyikan putaran merentas keratan; dagangkan sebaran pemimpin-peninggal, bukan indeks, semasa sempadan bertahan. Sempadan dan putaran adalah rejim berlapis — satu boleh membatalkan tanpa yang lain.
+Indeks rata menyembunyikan putaran merentasi keratan rentas; dagangkan sebaran pemimpin-peninggal, bukan indeks, semasa julat masih bertahan. Julat dan putaran adalah rejim berlapis — satu boleh membatalkan tanpa yang lain.

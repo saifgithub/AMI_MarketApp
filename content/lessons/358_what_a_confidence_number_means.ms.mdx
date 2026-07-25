@@ -13,64 +13,64 @@ tags: ["calibration", "confidence", "brier-score", "probability", "track-record"
 sources: ["Philip Tetlock & Dan Gardner — Superforecasting (2015): calibration, resolution, Brier score","Daniel Kahneman — Thinking, Fast and Slow: overconfidence and the illusion of validity"]
 verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
 updated_at: "2026-07-22"
 ---
 # Apa maksud sebenar nombor keyakinan
 
-Nombor keyakinan hanya mempunyai makna jika ia boleh dinilai. Kalibrasi ialah ujian tersebut: jika anda menyatakan 70% dan anda dikalibrasi dengan baik, maka merentasi semua kali anda menyatakan 70%, kira-kira 70% daripada ramalan tersebut akan berakhir seperti yang anda katakan. Satu ramalan tunggal tidak membuktikan apa-apa — kalibrasi ialah sifat rekod prestasi, bukan sifat satu nombor. Nombor keyakinan AMI ialah condongan berat Ruang (Room) dan bukannya kebarangkalian yang dikalibrasi, yang <Lesson id="077_decision_support_vs_prediction"/> liput. Pelajaran ini liput separuh yang lain: apa yang sebenarnya diperlukan untuk kalibrasi, dan bagaimana nombor menjadi satu tuntutan yang boleh anda nilai.
+Nombor keyakinan hanya bermakna sesuatu jika ia boleh dinilai. Kalibrasi ialah ujian itu: jika anda menyatakan 70% dan anda dikalibrasi dengan baik, maka merentasi semua kali anda menyatakan 70%, kira-kira 70% daripada panggilan tersebut akan selesai seperti yang anda katakan. Satu panggilan tunggal membuktikan tiada apa-apa — kalibrasi ialah sifat rekod prestasi, bukan sifat satu nombor. Angka keyakinan AMI ialah condongan berat Ruang, bukan kebarangkalian yang dikalibrasi, yang <Lesson id="077_decision_support_vs_prediction"/> liput. Pelajaran ini liput separuh yang lain: apa yang kalibrasi sebenarnya perlukan, dan bagaimana satu nombor menjadi tuntutan yang anda boleh dinilai.
 
 ## Contoh
 
-Katakan anda mencatat sepuluh ramalan sepanjang satu suku, setiap satu ditulis pada keyakinan 70% — jenis ramalan di mana anda mencatat "Saya fikir tesis ini pegang" dan menandakannya 0.70. Lima berakhir seperti yang anda ramalkan; lima tidak.
+Katakan anda mencatat sepuluh panggilan dalam satu suku, setiap satu ditulis pada keyakinan 70% — jenis panggilan di mana anda merakam "Saya fikir tesis ini pegang" dan tandakan 0.70. Lima selesai seperti yang anda panggil; lima tidak.
 
-Sekarang nilainya. Peraturan penarafan piawai ialah Skor Brier: untuk setiap ramalan ambil (kebarangkalian dinyatakan − hasil), di mana hasil ialah 1 jika ia berlaku dan 0 jika tidak, kuadratkannya, kemudian purata merentasi semua ramalan. Sifar ialah sempurna, 1 ialah terburuk, lebih rendah adalah lebih baik. (Itulah konvensyen peristiwa tunggal yang digunakan sepanjang pelajaran ini. *Superforecasting* oleh Tetlock melaporkan Skor Brier pada skala 0–2, di mana 0.5 ialah kebarangkalian rawak berbanding 0.25 — penarafan yang sama, setiap angka digandakan. Bandingkan skor hanya dalam satu konvensyen.)
+Sekarang nilaikan. Peraturan penarafan piawai ialah Skor Brier: untuk setiap panggilan ambil (kebarangkalian dinyatakan − hasil), di mana hasil ialah 1 jika ia berlaku dan 0 jika tidak, kuadratkan, kemudian purata merentasi semua panggilan. Sifar adalah sempurna, 1 adalah terburuk, lebih rendah adalah lebih baik. (Itulah konvensyen peristiwa tunggal yang digunakan sepanjang pelajaran ini. *Superforecasting* Tetlock melaporkan Skor Brier pada skala 0–2, di mana 0.5 adalah kebarangkalian rawak berbanding 0.25 — penarafan yang sama, setiap angka digandakan. Bandingkan skor hanya dalam satu konvensyen.)
 
-Lima hit anda menyumbang (0.70 − 1)² = 0.09 setiap satu, jadi 5 × 0.09 = 0.45. Lima miss anda menyumbang (0.70 − 0)² = 0.49 setiap satu, jadi 5 × 0.49 = 2.45. Jumlah 2.90 merentasi sepuluh ramalan → **Brier 0.290**.
+Lima hit anda menyumbang (0.70 − 1)² = 0.09 setiap satu, jadi 5 × 0.09 = 0.45. Lima miss anda menyumbang (0.70 − 0)² = 0.49 setiap satu, jadi 5 × 0.49 = 2.45. Jumlah 2.90 merentasi sepuluh panggilan → **Brier 0.290**.
 
-Kemudian, penanda aras. Jika anda menulis 0.50 pada kesepuluh dan tidak membuat sebarang tuntutan, setiap istilah akan menjadi (0.50 − hasil)² = 0.25, untuk Brier **0.250**. Ramalan yakin anda dinilai lebih teruk daripada tidak membuat sebarang tuntutan.
+Kemudian penanda aras. Jika anda menulis 0.50 pada kesepuluh dan tidak membuat sebarang tuntutan, setiap istilah akan menjadi (0.50 − hasil)² = 0.25, untuk Brier **0.250**. Panggilan yakin anda dinilai lebih teruk daripada tidak membuat sebarang tuntutan.
 
-Jalankan aritmetik yang sama pada suku 7-hadap-10: 7 × 0.09 = 0.63, 3 × 0.49 = 1.47, jumlah 2.10 → **Brier 0.210**, yang mengatasi penanda aras 0.250. Keyakinan dinyatakan yang sama, kadar resolusi berbeza — dan skor, bukan perasaan, yang memisahkan mereka.
+Jalankan aritmetik yang sama pada suku 7-dalam-10: 7 × 0.09 = 0.63, 3 × 0.49 = 1.47, jumlah 2.10 → **Brier 0.210**, yang mengalahkan penanda aras 0.250. Keyakinan dinyatakan yang sama, kadar penyelesaian berbeza — dan skor, bukan perasaan, yang memisahkan mereka.
 
-Satu amaran sebelum anda membaca terlalu banyak daripada sepuluh ramalan. Jika anda benar-benar dikalibrasi pada 70%, lima hit atau kurang dalam sepuluh masih berlaku kira-kira **15%** daripada masa — lebih kurang satu suku dalam tujuh, semata-mata kerana nasib. 0.290 ialah fakta tentang sampel ini; ia belum lagi bukti bahawa 70% itu tidak diperoleh. Kekalkan kadar yang sama kepada empat puluh ramalan — dua puluh hit atau kurang — dan penjelasan nasib turun di bawah **1%**. Itulah apabila nombor itu benar-benar dalam masalah. <Lesson id="363_scoring_yourself_over_time"/> liput berapa banyak sampel yang sebenarnya diperlukan untuk penghakiman terhadap diri sendiri.
+Satu amaran sebelum anda membaca terlalu banyak ke dalam sepuluh panggilan. Jika anda benar-benar dikalibrasi pada 70%, lima atau kurang hit dalam sepuluh masih berlaku kira-kira **15%** daripada masa — lebih kurang satu suku dalam tujuh, semata-mata dari nasib. 0.290 ialah fakta tentang sampel ini; ia belum bukti bahawa 70% itu tidak diperoleh. Kekalkan kadar yang sama kepada empat puluh panggilan — dua puluh atau kurang hit — dan penjelasan nasib jatuh di bawah **1%**. Itulah apabila nombor itu benar-benar dalam kesusahan. <Lesson id="363_scoring_yourself_over_time"/> liput berapa banyak sampel yang sebenarnya diambil untuk penghakiman terhadap diri sendiri.
 
 ## Perangkap
 
-Perangkap ialah memperlakukan nombor keyakinan sebagai huraian tentang betapa kuatnya anda merasa berbanding sebagai tuntutan yang anda bersetuju untuk dinilai. Ia terasa betul, kerana nombor itu benar-benar mengkod sesuatu yang nyata: 0.75 benar-benar terasa lebih pasti daripada 0.55. Tetapi perasaan tidak boleh salah, dan tuntutan boleh. Kalibrasi hanya wujud di mana tiga perkara hadir — banyak ramalan, kriteria resolusi yang ditetapkan sebelum hasil wujud, dan peraturan penarafan yang digunakan pada setiap ramalan berbanding hanya yang berkesan. Buang mana-mana satu daripada tiga ini dan nombor itu kembali menjadi kosa kata. Model mental yang betul: nombor keyakinan ialah entri dalam buku ledger yang akan anda selesaikan kemudian. Jika anda tidak pernah menyelesaikannya, anda tidak pernah mempunyai kebarangkalian. Anda mempunyai kata sifat yang memakai titik perpuluhan.
+Perangkapnya ialah memperlakukan nombor keyakinan sebagai huraian tentang seberapa kuat anda rasa berbanding tuntutan yang anda bersetuju untuk dinilai. Ia rasa betul, kerana nombor itu benar-benar melitupkan sesuatu yang nyata: 0.75 benar-benar rasa lebih pasti daripada 0.55. Tetapi perasaan tidak boleh salah, dan tuntutan boleh. Kalibrasi hanya wujud di mana tiga perkara hadir — banyak panggilan, kriteria penyelesaian ditetapkan sebelum hasil wujud, dan peraturan penarafan dikenakan pada setiap panggilan bukan hanya yang berkesan. Buang mana-mana satu daripada tiga dan nombor itu kembali kepada kosa kata. Model mental yang betul: angka keyakinan ialah entri dalam buku besar yang akan anda selesaikan kemudian. Jika anda tidak pernah menyelesaikannya, anda tidak pernah mempunyai kebarangkalian. Anda mempunyai kata adjektif memakai titik perpuluhan.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Dalam satu suku tahun, anda membuat 20 panggilan, setiap satu dinyatakan pada keyakinan 60%. Apakah maksud 'terkalibrasi dengan baik' untuk set tersebut?"
+  question="Dalam satu suku tahun, anda membuat 20 panggilan, setiap satu dinyatakan pada keyakinan 60%. Apakah maksud 'terkalibrasi dengan baik' bagi set tersebut?"
   options={[
-    "20 panggilan tersebut sepatutnya purata pulangan 60%",
-    "Setiap panggilan mempunyai peluang 60% secara individu, jadi mana-mana panggilan yang terlepas menunjukkan nombor itu salah",
-    "Kira-kira 12 daripada 20 sepatutnya selesai seperti dipanggil — kalibrasi adalah sifat keseluruhan set panggilan 60%, bukan bagi mana-mana satu panggilan",
-    "Panggilan memerlukan sekurang-kurangnya keyakinan 60% sebelum ia bernilai untuk direkodkan"
+    "20 panggilan tersebut sepatutnya puratanya memberikan pulangan 60%",
+    "Setiap panggilan mempunyai peluang 60% secara individu, jadi sebarang panggilan yang terlepas menunjukkan nombor tersebut salah",
+    "Kira-kira 12 daripada 20 sepatutnya selesai seperti yang dipanggil — kalibrasi adalah sifat keseluruhan set panggilan 60%, bukan bagi mana-mana satu panggilan",
+    "Satu panggilan memerlukan sekurang-kurangnya keyakinan 60% sebelum ia bernilai untuk direkodkan"
   ]}
   answer={2}
-  explanation="60% daripada 20 ialah 12, dan kalibrasi diukur merentasi kumpulan: jika panggilan 60% hampir 12 daripada 20, nombor itu diperoleh. Jawapan 'panggilan yang terlepas menunjukkan nombor itu salah' adalah memikat — tetapi panggilan 60% yang terlepas adalah tepat apa yang diramal oleh kalibrasi, kerana 40% daripada panggilan sedemikian sepatutnya terlepas. Keyakinan bukan pulangan dijangka, dan tiada had minimum untuk pendaftaran; panggilan keyakinan rendah adalah tepat apa yang menguji sama ada panggilan keyakinan tinggi anda bermakna apa-apa."
+  explanation="60% daripada 20 ialah 12, dan kalibrasi diukur merentasi kelompok: jika panggilan 60% hampir 12 daripada 20, nombor tersebut diperoleh. Jawapan 'sebarang panggilan yang terlepas menunjukkan nombor tersebut salah' adalah jawapan yang memikat — tetapi panggilan 60% yang terlepas adalah tepat apa yang diramalkan oleh kalibrasi, kerana 40% daripada panggilan sedemikian sepatutnya terlepas. Keyakinan bukan pulangan yang dijangka, dan tiada had minimum untuk merekodkan; panggilan keyakinan rendah adalah tepat apa yang menguji sama ada panggilan keyakinan tinggi anda mempunyai makna."
 />
 
 <Quiz
-  question="Anda merekodkan sepuluh panggilan pada keyakinan 70% dan lima selesai seperti dipanggil. Menggunakan Brier = min (kebarangkalian dinyatakan − hasil)², dengan hasil 1 atau 0, berapakah skor dan apa yang ia beritahu anda?"
+  question="Anda merekodkan sepuluh panggilan pada keyakinan 70% dan lima selesai seperti yang dipanggil. Menggunakan Brier = purata (kebarangkalian dinyatakan − hasil)², dengan hasil 1 atau 0, berapakah skor dan apa yang ia beritahu?"
   options={[
-    "0.210 — lebih baik daripada 0.250 yang akan anda peroleh dengan menulis 0.50 pada kesepuluh",
-    "0.290 — lebih teruk daripada 0.250 yang akan anda peroleh dengan menulis 0.50 pada kesepuluh, walaupun sepuluh panggilan terlalu sedikit untuk menghukum 70%",
-    "0.500 — lima daripada sepuluh ialah lemparan syiling, jadi skor sama dengan kadar kena",
-    "0.090 — penalti per panggilan yang dibawa oleh setiap lima panggilan yang selesai seperti dinyatakan"
+    "0.210 — lebih baik daripada 0.250 yang anda akan skorkan dengan menulis 0.50 pada kesemua sepuluh",
+    "0.290 — lebih teruk daripada 0.250 yang anda akan skorkan dengan menulis 0.50 pada kesemua sepuluh, walaupun sepuluh panggilan terlalu sedikit untuk menjatuhkan hukuman terhadap 70%",
+    "0.500 — lima daripada sepuluh adalah lemparan syiling, jadi skor sama dengan kadar hit",
+    "0.090 — penalti per panggilan yang dibawa oleh setiap lima panggilan yang selesai seperti yang dinyatakan"
   ]}
   answer={1}
-  explanation="Lima kena menyumbang 5 × (0.70 − 1)² = 0.45, lima terlepas menyumbang 5 × (0.70 − 0)² = 2.45, jumlah 2.90 atas sepuluh panggilan = 0.290. Menulis 0.50 pada setiap panggilan memberi skor (0.50 − hasil)² = 0.25 setiap satu, Brier 0.250 — jadi pada sampel ini, mendakwa 70% lebih teruk daripada tidak mendakwa apa-apa. Apa yang ia belum tegaskan ialah 70% itu salah: peramal yang benar-benar terkalibrasi pada 70% mendapat lima atau kurang dalam sepuluh kira-kira 15% masa, jadi satu suku tahun tidak boleh menghukum nombor. Jawapan '0.210' ialah skor untuk suku 7-dari-10, yang akan mengalahkan piawai; jawapan '0.500' menukar peraturan skor dengan kadar kena; dan 0.090 ialah sumbangan satu kena, bukan purata atas kesepuluh panggilan."
+  explanation="Lima hit menyumbang 5 × (0.70 − 1)² = 0.45, lima miss menyumbang 5 × (0.70 − 0)² = 2.45, jumlah 2.90 atas sepuluh panggilan = 0.290. Menulis 0.50 pada setiap panggilan skor (0.50 − hasil)² = 0.25 setiap satu, Brier 0.250 — jadi pada sampel ini, mendakwa 70% skor lebih teruk daripada tidak mendakwa apa-apa. Apa yang ia tidak yet established ialah 70% itu salah: ramalan 70% yang benar-benar terkalibrasi mendapat lima atau kurang dalam sepuluh kira-kira 15% masa, jadi satu suku tahun tidak boleh menjatuhkan hukuman terhadap nombor. Jawapan '0.210' ialah skor untuk suku tahun 7-dari-10, yang akan mengalahkan piawai; jawapan '0.500' menukar peraturan skor kepada kadar hit; dan 0.090 ialah sumbangan satu hit, bukan purata atas kesemua sepuluh panggilan."
 />
 
 ## Cuba sendiri
 
-Buka Jurnal Keputusan dan ambil tiga entri yang **tidak** lagi belum selesai — jika entri terkini anda semua telah ditutup, gunakan tiga seterusnya yang anda buka. Tulis satu kebarangkalian pada setiap satu dan kriteria resolusi yang akan menyelesaikannya, kedua-duanya semasa hasil masih belum wujud. Susunan itu ialah keseluruhan latihan: kebarangkalian yang ditulis selepas fakta ialah huraian, dan hanya satu yang ditulis sebelum boleh dinilai. Kemudian tanya Research Manager bagaimana Ruang tiba pada nombor keyakinan pada penghakiman terkini. Anda memegang dua objek yang berbeza di sebelah sebelah: condongan berat, dan tuntutan yang anda bersetuju untuk menilai. Ingat bahawa penghakiman AMI ialah artifak latihan, bukan nasihat pelaburan.
+Buka Jurnal Keputusan dan ambil tiga entri yang **belum** selesai — jika yang terkini anda semua telah ditutup, gunakan tiga seterusnya yang anda buka. Tulis kebarangkalian pada setiap satu dan kriteria penyelesaian yang akan menyelesaikannya, kedua-duanya semasa hasil masih tidak wujud. Susunan itu ialah keseluruhan latihan: kebarangkalian yang ditulis selepas fakta ialah huraian, dan hanya satu yang ditulis sebelum boleh dinilai. Kemudian tanya Pengurus Penyelidikan bagaimana Ruang tiba pada angka keyakinan pada penghakiman terkini. Anda memegang dua objek berbeza bersebelahan: condongan berat, dan tuntutan yang anda bersetuju untuk menilai. Ingat bahawa penghakiman AMI ialah artifak latihan, bukan nasihat pelaburan.
 
 ## Pengambilan
 
-Nombor keyakinan tidak bermaksa apa-apa sehingga ia telah dinilai terhadap banyak resolusi — katakan 70% cukup kerap dan kira-kira 70% sepatutnya berlaku, atau nombor itu ialah hiasan. Keyakinan AMI ialah condongan berat Ruang; nombor yang boleh anda kalibrakan sebenarnya ialah milik anda sendiri.
+Nombor keyakinan tidak bermakna apa-apa sehingga ia telah dinilai merentasi banyak penyelesaian — katakan 70% cukup kerap dan kira-kira 70% sepatutnya berlaku, atau nombor itu ialah hiasan. Keyakinan AMI ialah condongan berat Ruang; nombor yang anda boleh kalibrakan sebenarnya ialah milik anda sendiri.

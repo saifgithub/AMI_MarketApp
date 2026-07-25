@@ -1,6 +1,6 @@
 ---
 id: "133_on_balance_volume_obv"
-title: "On-Balance Volume — pengumpulan vs pengedaran"
+title: "Isipadu Seimbang — pengumpulan vs pengedaran"
 duration_min: 5
 level: 2
 module: 5
@@ -11,64 +11,64 @@ topic: "obv"
 prerequisites: ["029_volume_confirmation"]
 tags: ["indicators", "volume", "obv", "accumulation", "distribution", "divergence"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# On-Balance Volume — pengumpulan vs pengedaran
+# On-Balance Volume — pengumpulan vs pengagihan
 
-<Lesson id="029_volume_confirmation"/> membayangkan isipadu sebagai kiraan penyertaan di sebalik pergerakan harga. On-Balance Volume (OBV) ialah jumlah kumulatif berjalan bagi penyertaan tersebut, ditandatangani oleh arah harga. Aturannya adalah mekanikal: pada setiap penutupan naik, tambah isipadu bar kepada OBV; pada setiap penutupan turun, tolak ia. Tahap OBV tidak bermakna secara sendiri — yang penting ialah kecondongannya dan kesesuaiannya (atau ketidaksesuaiannya) dengan harga. Apabila OBV mendaki seiring dengan harga yang naik, pengumpulan mengesahkan trend. Apabila OBV menyimpang — harga membuat tahap tertinggi baharu tetapi OBV tidak — pembeli menyertai kurang daripada yang dicadangkan oleh carta harga. Penyimpangan OBV terhadap isipadu adalah seperti penyimpangan RSI terhadap momentum: satu amaran bahawa asas trend sedang melemah sebelum harga menunjukkannya.
+<Lesson id="029_volume_confirmation"/> membingkaiskan isipadu sebagai kiraan penyertaan di sebalik pergerakan harga. On-Balance Volume (OBV) ialah jumlah kumulatif berterusan daripada penyertaan tersebut, ditandatangani oleh arah harga. Aturannya adalah mekanikal: pada setiap penutupan naik, tambahkan isipadu bar kepada OBV; pada setiap penutupan turun, tolak ia. Tahap OBV adalah tidak bermakna secara sendirian — yang penting ialah kecondongannya dan kesesuaiannya (atau ketidaksesuaiannya) dengan harga. Apabila OBV mendaki seiring dengan harga yang naik, pengumpulan mengesahkan trend. Apabila OBV menyimpang — harga membuat titik tertinggi baharu tetapi OBV tidak — pembeli menyertai kurang daripada yang dicadangkan oleh carta harga. Penyimpangan OBV terhadap isipadu adalah sama seperti penyimpangan RSI terhadap momentum: amaran bahawa asas trend sedang melemah sebelum harga menunjukkannya.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat NVDA dari Oktober 2025 hingga Januari 2026. Dari 1 Oktober (harga 138, OBV pada asas sewenang-wenangnya 0) hingga 30 November (harga 156), OBV meningkat dari 0 ke +480 juta — satu corak pengumpulan yang bersih. Setiap hari naik yang bermakna mencetak isipadu di atas purata; hari turun lebih ringan. Trend NVDA disokong oleh isipadu.
+Lihat NVDA dari Oktober 2025 hingga Januari 2026. Dari 1 Oktober (harga 138, OBV pada garis dasar sewenang-wenangnya 0) hingga 30 November (harga 156), OBV meningkat dari 0 ke +480 juta — corak pengumpulan yang jelas. Setiap hari naik yang bermakna mencetak isipadu di atas purata; hari turun lebih ringan. Trend NVDA disokong oleh isipadu.
 
-Kemudian dari 1 Disember hingga 20 Januari, NVDA terus mendesak ke atas ke 162 — tetapi OBV terhenti dan berputar ke bawah ke +420 juta. Harga membuat tahap tertinggi baharu; OBV membuat tahap tertinggi yang lebih rendah. Penyimpangan OBV bearish klasik: hari naik mempunyai isipadu yang lebih ringan berbanding hari turun, jadi penyertaan kumulatif sebenarnya semakin pudar walaupun harga melanjutkan. Pada 5 Februari, NVDA kembali ke 149.
+Kemudian dari 1 Disember hingga 20 Januari, NVDA terus mendaki ke 162 — tetapi OBV terpegun dan berbalik ke +420 juta. Harga membuat titik tertinggi baharu; OBV membuat titik tertinggi yang lebih rendah. Penyimpangan OBV bearish yang klasik: hari naik mempunyai isipadu yang lebih ringan berbanding hari turun, jadi penyertaan kumulatif sebenarnya semakin pudar walaupun harga meluas. Pada 5 Februari, NVDA kembali ke 149.
 
-Pernyataan boleh disangkal: apabila OBV membuat tahap tertinggi yang lebih rendah sementara harga membuat tahap tertinggi yang lebih tinggi (atau sebaliknya) dan penyimpangan berterusan selama 10+ sesi, trend berada pada risiko tinggi pembalikan. Pembatalan adalah mekanikal — jika OBV membuat tahap tertinggi baharu sebelum harga memecahkan tahap ayunan terbaharu, penyimpangan dibatalkan dan pengumpulan kembali ke landasan.
+Pernyataan boleh disangkal: apabila OBV membuat titik tertinggi yang lebih rendah manakala harga membuat titik tertinggi yang lebih tinggi (atau sebaliknya) dan penyimpangan berterusan selama 10+ sesi, trend berisiko tinggi untuk berbalik. Pembatalan adalah mekanikal — jika OBV membuat titik tertinggi baharu sebelum harga memecahkan titik terendah ayunan terkininya, penyimpangan dibatalkan dan pengumpulan kembali ke landasan.
 
-Kecondongan OBV secara sendiri adalah bacaan rejimen yang lebih pantas daripada mengira isipadu naik berbanding isipadu turun secara manual. OBV yang mendatar dengan harga yang naik adalah corak pengedaran-ke-kekuatan dalam buku teks yang digunakan oleh wang pintar untuk keluar.
+Kecondongan OBV secara sendirian adalah bacaan rejim yang lebih pantas daripada mengira isipadu naik vs isipadu turun secara manual. OBV yang mendatar dengan harga yang naik adalah corak pengagihan-kepada-kekuatan dalam buku teks yang digunakan oleh wang pintar untuk keluar.
 
-Di Bursa Malaysia: AIRASIA pada awal 2025 — harga merangkak dari RM1.85 ke RM2.05 selama enam minggu sambil kecondongan OBV kelihatan mendatar dan kemudian turun. Penyimpangan OBV bearish bertahan selama tiga minggu tahap tertinggi baharu; saham kemudian jatuh ke RM1.78 selama empat minggu.
+Di Bursa Malaysia: AIRASIA pada awal 2025 — harga merangkak dari RM1.85 ke RM2.05 selama enam minggu manakala kecondongan OBV kelihatan mendatar dan kemudian turun. Penyimpangan OBV bearish bertahan selama tiga minggu titik tertinggi baharu; saham kemudian jatuh ke RM1.78 selama empat minggu.
 
 ## Perangkap
 
-Perangkapnya ialah membaca tahap OBV bukan kecondongannya. Nilai permulaan OBV adalah sewenang-wenangnya (ia kumulatif dari bila-bila masa anda mula mengira), jadi carta yang menunjukkan OBV pada +800 juta tidak memberitahu anda apa-apa yang mutlak. Pemula melihat nombor itu dan fikir ia membawa makna; ia tidak. Isyaratnya sepenuhnya dalam bentuk — adakah OBV naik dengan harga, mendatar, atau membuat tahap tertinggi yang lebih rendah terhadap tahap tertinggi harga yang lebih tinggi?
+Perangkapnya ialah membaca tahap OBV sebaliknya daripada kecondongannya. Nilai permulaan OBV adalah sewenang-wenangnya (ia adalah kumulatif dari bila-bila masa anda mula mengira), jadi carta yang menunjukkan OBV pada +800 juta tidak memberitahu anda apa-apa yang mutlak. Pemula melihat nombor itu dan fikir ia membawa makna; ia tidak. Isyaratnya sepenuhnya dalam bentuk — adakah OBV naik bersama harga, mendatar, atau membuat titik tertinggi yang lebih rendah terhadap titik tertinggi harga yang lebih tinggi?
 
-Model mental yang betul: OBV adalah pita penyertaan yang berjalan selari dengan pita harga. Bandingkan dua bentuk itu, bukan dua tahap itu. Bentuk yang selari = trend mempunyai sokongan isipadu. Bentuk yang tidak sependapat = asas isipadu sedang melemah dan harga berada dalam masa pinjaman. OBV tidak menggantikan bacaan isipadu purata 20 hari; ia menambah dimensi berbeza — penyertaan kumulatif yang diberi berat arah masa, berbanding penyertaan titik pada satu bar.
+Model mental yang betul: OBV adalah pita penyertaan yang berjalan selari dengan pita harga. Bandingkan dua bentuk tersebut, bukan dua tahap tersebut. Bentuk yang sepadan = trend mempunyai sokongan isipadu. Bentuk yang tidak bersetuju = asas isipadu sedang melemah dan harga berada dalam masa pinjaman. OBV tidak menggantikan bacaan isipadu purata 20 hari; ia menambah dimensi berbeza — penyertaan kumulatif berorientasikan arah sepanjang masa, berbanding penyertaan semasa pada satu bar tunggal.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Harga NVDA bergerak dari 138 ke 156 dengan OBV meningkat dari 0 ke +480 juta serentak. Kemudian harga melonjak ke 162 selama enam minggu seterusnya manakala OBV mendatar dan turun ke +420 juta. Apakah maksud perbezaan ini?"
+  question="Harga NVDA bergerak dari 138 ke 156 dengan OBV meningkat dari 0 ke +480 juta secara serentak. Kemudian harga melonjak ke 162 selama enam minggu lagi manakala OBV mendatar dan berputar balik ke +420 juta. Apakah maksud perbezaan ini?"
   options={[
     "Trend sedang menguat kerana harga mencapai paras tertinggi baharu",
     "OBV rosak jika nilainya menurun",
-    "Perbezaan bearish OBV — penyertaan kumulatif semakin pudar walaupun harga melonjak; hari naik kini mempunyai isipadu lebih ringan berbanding hari turun, yang menandakan pengagihan semasa kekuatan",
+    "Perbezaan OBV bearish — penyertaan kumulatif semakin pudar walaupun harga melonjak; hari naik kini mempunyai isipadu yang lebih ringan berbanding hari turun, yang menandakan pengagihan ke arah kekuatan",
     "Tukar ke MACD kerana OBV tidak boleh dipercayai"
   ]}
   answer={2}
-  explanation="Harga membuat paras tertinggi baharu + OBV membuat paras tertinggi lebih rendah ialah corak kegagalan pengumpulan yang klasik. Jawapan salah yang menarik ('harga di paras tertinggi baharu = menguat') hanya membaca papan harga dan mengabaikan ketidaksetujuan papan isipadu. Contoh NVDA menunjukkan apa yang akan berlaku seterusnya — perbezaan ini diselesaikan dengan harga jatuh dari 162 ke 149. OBV tidak meramal, tetapi ia mendedahkan pengagihan yang berlaku di bawah carta yang sedang naik."
+  explanation="Harga membuat paras tertinggi baharu + OBV membuat paras tertinggi lebih rendah adalah corak kegagalan pengumpulan yang standard. Jawapan salah yang menggoda ('harga di paras tertinggi baharu = menguat') hanya membaca pita harga dan mengabaikan ketidaksetujuan pita isipadu. Contoh NVDA menunjukkan apa yang akan berlaku seterusnya — perbezaan ini diselesaikan dengan penurunan harga dari 162 ke 149. OBV tidak meramal, tetapi ia mendedahkan pengagihan yang berlaku di bawah carta yang sedang naik."
 />
 
 <Quiz
-  question="Anda memegang saham yang naik 9% dengan harga masih membuat paras tertinggi baharu. OBV telah mendatar selama 14 sesi manakala harga terus melonjak. Kedudukan berada pada risiko akaun 1.2% melebihi had asal anda kerana keuntungan belum direalisasi. Henti rugi (stop) adalah 3% di bawah harga semasa. Apakah cadangan kerangka pelajaran ini?"
+  question="Anda memegang saham yang naik 9% dengan harga masih membuat paras tertinggi baharu. OBV mendatar selama 14 sesi sementara harga terus melonjak. Kedudukan berada pada risiko akaun 1.2% melebihi had asal anda kerana keuntungan tidak direalisasikan. Henti rugi adalah 3% di bawah harga semasa. Apakah cadangan kerangka pelajaran ini?"
   options={[
     "Tambah kedudukan kerana OBV akan mengejar",
     "Pegang — harga masih dalam trend naik",
-    "Jual pendek pada perbezaan tersebut",
-    "Anggap pendataran OBV sebagai amaran: ambil keuntungan separa, ketatkan henti rugi, atau berhenti menambah. Perbezaan OBV yang berterusan ialah versi penyertaan kumulatif bagi perbezaan momentum; bertindak atasnya sebelum harga mengesahkan pembalikan."
+    "Jual pendek berdasarkan perbezaan",
+    "Anggap pendirian OBV sebagai amaran: ambil untung separuh, ketatkan henti rugi, atau berhenti menambah. Perbezaan OBV yang berterusan adalah versi penyertaan kumulatif bagi perbezaan momentum; bertindak atasnya sebelum harga mengesahkan pembalikan."
   ]}
   answer={3}
-  explanation="OBV mendatar selama 14 sesi melawan harga yang naik ialah ambang ketekalan 10+ sesi bagi perbezaan dalam pelajaran ini — ia beralih dari anomali kepada isyarat. Tindakan yang betul menyerupai bingkai pelajaran histogram: anggap ia sebagai pengurusan risiko, bukan pencetus. Jawapan salah yang menarik (pilihan A) mengabaikan amaran sepenuhnya. Menambah pada perbezaan (pilihan C) menggandakan pertaruhan melawan papan isipadu. Menjual pendek (D) melompat sebelum pengesahan harga — perbezaan menandakan risiko tetapi tidak mencetuskan kemasukan secara sendiri."
+  explanation="OBV mendatar selama 14 sesi melawan harga naik adalah ambang ketekalan 10+ sesi pelajaran untuk perbezaan — ia melintasi dari anomali ke isyarat. Tindakan yang betul menyerupai bingkai pelajaran histogram: anggap ia sebagai pengurusan risiko, bukan pencetus. Jawapan salah yang menggoda (pilihan A) mengabaikan amaran sepenuhnya. Menambah pada perbezaan (pilihan C) memperkuatkan kedudukan melawan pita isipadu. Menjual pendek (D) melompat sebelum pengesahan harga — perbezaan menandakan risiko tetapi tidak mencetuskan kemasukan secara sendiri."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker yang sedang menenggelam dan tanya: "Bandingkan kecondongan OBV dengan kecondongan harga selama 30 sesi terakhir — adakah mereka selari, atau terdapat penyimpangan?" Kemudian sahkan pada carta. Latihan ini ialah membaca bentuk OBV, bukan nombornya — datarkan garis OBV dalam fikiran anda dan periksa sama ada ia condong ke atas atau ke bawah berbanding harga.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal penunjuk trending dan tanya: "Bandingkan kecondongan OBV dengan kecondongan harga selama 30 sesi terakhir — adakah mereka sepadan, atau adakah terdapat penyimpangan?" Kemudian sahkan pada carta. Latihan ini ialah membaca bentuk OBV, bukan nombornya — ratakan garis OBV dalam fikiran anda dan periksa sama ada ia condong naik atau turun berbanding harga.
 
-## Kesimpulan
+## Penegasan
 
-OBV ialah pita penyertaan kumulatif — baca bentuknya terhadap bentuk harga, bukan tahapnya; penyimpangan yang berterusan (10+ sesi) adalah amaran sisi isipadu bahawa asas trend sedang gagal.
+OBV ialah pita penyertaan kumulatif — baca bentuknya terhadap bentuk harga, bukan tahapnya; penyimpangan yang berterusan (10+ sesi) ialah amaran sisi isipadu bahawa asas trend sedang gagal.

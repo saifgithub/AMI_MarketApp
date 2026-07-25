@@ -11,30 +11,30 @@ topic: "trailing_stops"
 prerequisites: ["015_stop_loss_basics", "102_atr_based_stops"]
 tags: ["risk", "stop_loss", "trailing", "exit"]
 agent_callouts: ["trader"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Henti beruntun
 
-Pelajaran ini mengandaikan anda telah menyelesaikan <Lesson id="015_stop_loss_basics"/> (Asas henti rugi); di sini kita menyelami lebih dalam satu varian henti khusus — henti beruntun — yang hanya bergerak ke arah kebaikan anda. Henti tetap menukar "salah" menjadi keluaran struktur; henti beruntun menukar "betul tetapi pergerakan telah tamat" menjadi keluaran struktur. Ia adalah mekanisme yang membolehkan pemenang berlari sambil memastikan anda tidak mengembalikan keseluruhan keuntungan. Disiplinnya adalah satu arah: henti beruntun menaikkan pada posisi panjang, tidak pernah menurun. Pelajaran ini merangkumi henti beruntun gaya chandelier ATR, henti beruntun rendah ayunan, dan kesilapan paling biasa — beruntun terlalu ketat dan tersingkir daripada trend yang sebenarnya tidak pecah.
+Pelajaran ini andaikan anda telah menyiapkan <Lesson id="015_stop_loss_basics"/> (Asas henti kerugian); di sini kita menyelami lebih dalam satu varian henti khusus — henti beruntun — yang hanya bergerak ke arah menguntungkan anda. Henti tetap menukar "salah" menjadi keluaran struktur; henti beruntun menukar "betul tetapi pergerakan telah tamat" menjadi keluaran struktur. Ia adalah mekanisme yang membolehkan keuntungan berlari sambil memastikan anda tidak mengembalikan keseluruhan keuntungan. Disiplinnya adalah satu arah: henti beruntun mengencangkan kedudukan panjang, tidak pernah menurun. Pelajaran ini merangkumi henti beruntun gaya chandelier ATR, henti beruntun berdasarkan lembah ayunan, dan kesilapan paling biasa — beruntun terlalu ketat dan digoncang keluar daripada trend yang sebenarnya tidak pecah.
 
 ## Contoh
 
-Anda memegang posisi panjang AAPL pada $185, henti pada $179 (berdasarkan carta, di bawah rendah ayunan sebelumnya). AAPL meningkat ke $205 selama empat minggu. Sekarang henti asal tidak relevan — anda mempunyai keuntungan $20 setiap saham dan henti $179 bermaksud mengembalikan semua jika perdagangan berbalik. Gunakan jejak chandelier: henti berada pada penutupan tertinggi sejak masuk, tolak 3× ATR. ATR 14 hari ialah $4, jadi jejak diletakkan pada tinggi berjalan − $12. Selepas penutupan pada $205, henti dinaikkan ke $193. AAPL turun selama minggu berikutnya ke $197 — jejak tidak terganggu, anda kekal dalam. Kemudian AAPL mencetak dua penutupan berturut-turut pada $192 — jejak dicetuskan, anda keluar pada pembukaan seterusnya. Keuntungan direalisasikan: kira-kira $7 setiap saham di atas harga ditetapkan chandelier (masuk pada $185, keluar pada sekitar $192). Baki $13 keuntungan puncak tidak direalisasikan ialah harga membiarkan perdagangan berlari berbanding menebak puncak.
+Anda memegang AAPL secara panjang dari $185, henti pada $179 (berdasarkan carta, di bawah lembah ayunan sebelumnya). AAPL melonjak ke $205 dalam tempoh empat minggu. Kini, henti asal tidak relevan — anda mempunyai $20 keuntungan per saham dan henti $179 bermaksud mengembalikan semua keuntungan tersebut jika perdagangan berbalik. Gunakan trail chandelier: henti berada pada penutupan tertinggi sejak masuk, tolak 3× ATR. ATR 14 hari ialah $4, jadi trail diletakkan pada tinggi berjalan − $12. Selepas penutupan pada $205, henti mengencang ke $193. AAPL turun semula dalam minggu seterusnya ke $197 — trail tidak terganggu, anda kekal dalam. Kemudian AAPL mencetak dua penutupan berturut-turut pada $192 — trail mencetus, anda keluar pada bukaan seterusnya. Keuntungan direalisasikan: kira-kira $7 per saham di atas harga ditetapkan chandelier (masuk pada $185, keluar pada sekitar $192). Baki $13 keuntungan puncak tidak direalisasikan ialah harga untuk membiarkan perdagangan berlari berbanding meneka puncak.
 
-Di Bursa Malaysia: posisi panjang MAYBANK dari RM10.20. Naik ke RM11.20 selama tiga minggu. ATR 14 hari RM0.10, jejak 3× ATR = RM0.30 di bawah penutupan tertinggi. Selepas cetakan RM11.20, jejak berada pada RM10.90 — jauh di atas titik pulas dan mengunci kira-kira RM0.70 setiap saham jika dicetuskan. Ujian boleh difalsifikasi: jejak chandelier dengan 3× ATR jarang dicetuskan pada trend sihat dan hampir selalu dicetuskan apabila puncak sebenar telah terbentuk — jika ia dicetuskan lebih daripada sekali setiap perdagangan dalam satu trend tunggal, gandaan anda terlalu ketat.
+Di Bursa Malaysia: panjang MAYBANK dari RM10.20. Naik ke RM11.20 dalam tempoh tiga minggu. ATR 14 hari RM0.10, trail 3× ATR = RM0.30 di bawah penutupan tertinggi. Selepas cetakan RM11.20, trail berada pada RM10.90 — jauh di atas titik impas dan mengunci kira-kira RM0.70 per saham jika kena. Ujian boleh disangkal: trail chandelier dengan 3× ATR jarang mencetus pada trend sihat dan hampir selalu mencetus apabila puncak sebenar telah terbentuk — jika ia mencetus lebih daripada sekali per perdagangan dalam satu trend tunggal, gandaan anda terlalu ketat.
 
 ## Perangkap
 
-Perangkap ialah beruntun ketat untuk "mengunci keuntungan." Pemula menggerakkan henti ke titik pulas sebaik perdagangan menjadi hijau, kemudian mengetatkannya lebih lanjut setiap hari. Dua minggu kemudian mereka dihentikan pada keuntungan 2% pada apa yang menjadi trend 30%, kerana setiap penurunan normal dalam trend naik yang sihat lebih lebar daripada jejak mereka. Model mental yang betul: henti beruntun ialah keluaran pada kegagalan trend, bukan pengunci keuntungan. Bunyi normal trend mesti muat di dalam jejak, atau anda menggunakan jejak untuk keluar daripada bunyi bukannya pembalikan struktur. 3× ATR atau henti di bawah rendah ayunan yang disahkan terkini ialah dua pendekatan bersih; "Saya hanya akan beruntun separuh peratus" ialah jaminan anda akan keluar awal pada setiap perdagangan.
+Perangkapnya ialah beruntun ketat untuk "mengunci keuntungan." Pemula menggerakkan henti ke titik impas pada saat perdagangan menjadi hijau, kemudian mengencangkannya lagi setiap hari. Dua minggu kemudian, mereka dihentikan keluar pada keuntungan 2% daripada apa yang menjadi trend 30%, kerana setiap penurunan normal dalam trend naik yang sihat lebih lebar daripada trail mereka. Model mental yang betul: henti beruntun ialah keluaran pada kegagalan trend, bukan pengunci keuntungan. Bunyi normal trend mesti muat di dalam trail, atau anda menggunakan trail untuk keluar daripada bunyi bukannya pembalikan struktur. 3× ATR atau henti di bawah lembah ayunan disahkan terkini ialah dua pendekatan bersih; "Saya akan beruntun separuh peratus" ialah jaminan anda akan keluar awal pada setiap perdagangan.
 
 <ChatWith agent="trader" />
 
 ## Kuiz
 
 <Quiz
-  question="Anda memegang posisi long GOOGL pada $140. Harga naik ke $160. ATR 14 hari ialah $3.50. Menggunakan jejak chandelier 3× ATR yang dipautkan kepada penutupan tertinggi, di manakah had berhenti berundur selepas cetakan $160?"
+  question="Anda memegang posisi beli (long) GOOGL pada $140. Harga naik ke $160. ATR 14-hari ialah $3.50. Menggunakan jejak chandelier 3× ATR yang dipautkan pada penutupan tertinggi, di manakah henti trailing selepas cetakan $160?"
   options={[
     "$156.50",
     "$149.50",
@@ -42,25 +42,25 @@ Perangkap ialah beruntun ketat untuk "mengunci keuntungan." Pemula menggerakkan 
     "$140.00"
   ]}
   answer={1}
-  explanation="Jejak = penutupan tertinggi − 3 × ATR = $160 − $10.50 = $149.50. Ini berada di atas entri $140 anda, mengunci keuntungan $9.50 setiap saham jika kena, sambil meninggalkan ruang 3 ATR untuk penurunan biasa dalam trend menaik. Jejak 1 ATR akan berada pada $156.50 — cukup ketat sehingga hingus biasa akan mengeluarkan anda daripada trend yang masih utuh."
+  explanation="Jejak = penutupan tertinggi − 3 × ATR = $160 − $10.50 = $149.50. Ini berada di atas titik masuk $140 anda, mengunci keuntungan $9.50 setiap saham jika kena, sambil meninggalkan ruang 3 ATR untuk penurunan biasa dalam trend menaik. Jejak 1 ATR akan berada pada $156.50 — cukup ketat sehingga hingar biasa akan mengeluarkan anda daripada trend yang masih utuh."
 />
 
 <Quiz
-  question="Trader A menggunakan had berhenti berundur 1× ATR ('ketat untuk melindungi keuntungan'). Trader B menggunakan had berhenti berundur 3× ATR. Kedua-duanya memasuki trend menaik NVDA yang sama yang bergerak dari $480 ke $620 dalam enam minggu dengan satu penurunan 8% di tengah trend. Siapa yang kemungkinan besar menangkap lebih banyak pergerakan dan mengapa?"
+  question="Pegawai A menggunakan henti trailing 1× ATR ('ketat untuk melindungi keuntungan'). Pegawai B menggunakan henti trailing 3× ATR. Kedua-duanya memasuki trend menaik NVDA yang sama yang bergerak dari $480 ke $620 dalam enam minggu dengan satu penurunan 8% di tengah-tengah trend. Siapa yang kemungkinan besar menangkap lebih banyak pergerakan dan mengapa?"
   options={[
-    "Kedua-duanya menangkap jumlah yang lebih kurang sama kerana had berhenti berundur ialah kaedah keluar, bukan kelebihan masuk.",
-    "Trader A — had berhenti berundur tidak dimaksudkan untuk perdagangan trend, jadi had yang lebih lebar adalah tidak relevan.",
-    "Trader A — jejak yang lebih ketat sentiasa menangkap lebih banyak keuntungan kerana ia keluar lebih dekat dengan puncak.",
-    "Trader B — penurunan normal trend menaik yang sihat (sering 1.5–2.5× ATR) muat di dalam jejak 3× ATR tetapi mengaktifkan jejak 1× ATR; Trader A hampir pasti akan dihentikan pada penurunan 8% di tengah trend dan terlepas baki pergerakan."
+    "Kedua-duanya menangkap jumlah yang lebih kurang sama kerana henti trailing adalah kaedah keluar, bukan kelebihan masuk.",
+    "Pegawai A — henti trailing tidak direka untuk perdagangan trend, jadi henti yang lebih lebar adalah tidak relevan.",
+    "Pegawai A — jejak yang lebih ketat sentiasa menangkap lebih banyak keuntungan kerana ia keluar lebih dekat dengan puncak.",
+    "Pegawai B — penurunan normal trend menaik yang sihat (sering 1.5–2.5× ATR) muat di dalam jejak 3× ATR tetapi menyebabkan henti 1× ATR terpicu; Pegawai A hampir pasti akan dihentikan pada penurunan 8% di tengah-tengah trend dan terlepas baki pergerakan."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah 'jejak lebih ketat = lebih dekat dengan puncak'. Kelemahannya ialah trend tidak bergerak dalam garis lurus; penurunan normal dalam trend menaik yang sihat secara berkala ialah 1.5–2.5× ATR. Jejak 1× ATR lebih ketat daripada hingus trend itu sendiri, jadi ia mengeluarkan anda pada setiap penurunan berbanding pada pembalikan akhir. Jejak yang lebih lebar (3× ATR atau di bawah paras ayunan terakhir) sepadan denganEnvelope hingus trend, membolehkan kedudukan bertahan daripada penurunan dan hanya keluar apabila terdapat perubahan struktur."
+  explanation="Jawapan salah yang menipu ialah 'jejak lebih ketat = lebih dekat dengan puncak'. Kelemahannya ialah trend tidak bergerak dalam garis lurus; penurunan normal dalam trend menaik yang sihat secara berkala ialah 1.5–2.5× ATR. Jejak 1× ATR lebih ketat daripada hingar trend itu sendiri, jadi ia mengeluarkan anda pada setiap penurunan berbanding pada pembalikan akhir. Jejak yang lebih lebar (3× ATR atau di bawah paras ayunan terakhir) sepadan dengan envelope hingar trend, membolehkan kedudukan bertahan daripada penurunan dan hanya keluar apabila berlaku perubahan struktur."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cari perdagangan panjang tertutup di mana anda keluar berhampiran titik pulas semasa penurunan yang kemudian meneruskan kenaikan. Buka <Term id="ami_one_on_one" /> dengan Trader, tampal simbol saham dan tetingkap perdagangan asal, dan tanya "Jika saya menggunakan jejak chandelier 3× ATR dari masuk, di mana saya akan keluar dan berapa banyak?" Bandingkan dengan keluaran sebenar anda.
+Buka <Term id="ami_decision_journal" /> dan cari perdagangan panjang tertutup di mana anda keluar berhampiran titik impas semasa penurunan yang kemudian meneruskan kenaikan. Buka <Term id="ami_one_on_one" /> dengan Trader, tampal ticker dan tetingkap perdagangan asal, dan tanya "Jika saya menggunakan trail chandelier 3× ATR dari masuk, di mana saya akan keluar dan sebanyak mana?" Bandingkan dengan keluaran sebenar anda.
 
-## Pengambilan utama
+## Pengambilan
 
 Henti beruntun ialah keluaran pada kegagalan trend, bukan pengunci keuntungan — lebih lebar daripada bunyi normal trend, atau ia ialah jaminan anda akan keluar awal.

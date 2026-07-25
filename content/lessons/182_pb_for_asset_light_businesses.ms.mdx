@@ -11,65 +11,62 @@ topic: "price_to_book"
 prerequisites: ["040_price_to_book", "036_competitive_advantage_moat"]
 tags: ["price_to_book", "asset_light", "software", "intangibles", "valuation", "fundamentals"]
 agent_callouts: ["fundamentals_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # P/B untuk perniagaan ringan aset — mengapa nisbah ini tidak berfungsi
 
-<Lesson id="040_price_to_book"/> menandakan bahawa P/B adalah "hampir tidak berguna untuk perisian dan platform." Pelajaran ini menerangkan *mengapa* — dan apa yang perlu digunakan sebagai gantinya. Sebab mekanikalnya: GAAP menelankan R&D, pembinaan jenama, dan pemerolehan pelanggan sebagai perbelanjaan semasa ia berlaku, tidak pernah memodalinya dalam neraca. Sebab ekonominya: dalam perniagaan ringan aset, modal produktif adalah orang, kod, dan kepercayaan — tiada satu pun daripada ini muncul pada nilai adil dalam buku. Pada akhir pelajaran ini, anda harus dapat mengenal pasti perniagaan ringan aset dengan sepintas lalu, menamakan nisbah spesifik yang *berfungsi* untuknya, dan menahan kesalahan terkuat yang dibuat oleh pelabur nilai lama apabila berpindah ke pasaran moden.
+<Lesson id="040_price_to_book"/> menandakan bahawa P/B adalah "hampir tidak berguna untuk perisian dan platform." Pelajaran ini menerangkan *mengapa* — dan apa yang perlu digunakan sebagai gantinya. Sebab mekanikalnya: GAAP menelanjangkan kos R&D, pembinaan jenama, dan pemerolehan pelanggan semasa ia berlaku, tidak pernah memodalinya dalam penyata kewangan. Sebab ekonominya: dalam perniagaan ringan aset, modal produktif ialah orang, kod, dan kepercayaan — tiada satu pun yang muncul pada nilai saksama dalam buku. Pada akhir sesi ini, anda harus dapat mengenal pasti perniagaan ringan aset dengan sepintas lalu, menamakan nisbah khusus yang *berfungsi* untuknya, dan menahan diri daripada kesilapan terkuat yang dibuat oleh pelabur nilai lama apabila beralih ke pasaran moden.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ini berlaku di pasaran sebenar
 
-MSFT pertengahan 2026: saham $480, nilai buku setiap saham ~$42, P/B ≈ 11x. Buku mencatatkan kos sejarah bangunan, pelayan, dan modal kerja bersih. Ia tidak mencatatkan nilai: Windows, Office, Azure, rangkaian GitHub, graf LinkedIn, atau dua puluh lima tahun hubungan pembangun yang terkumpul. Semua ini telah ditelankan pada tahun-tahun ia dibina. Nilai ekonomi Microsoft adalah kira-kira tidak seperti nilai bukunya; P/B 11x itu tidak bermakna secara sendiri.
+MSFT pertengahan 2026: saham $480, nilai buku setiap saham ~$42, P/B ≈ 11x. Buku merekodkan kos sejarah bangunan, pelayan, dan modal kerja bersih. Ia tidak merekodkan nilai: Windows, Office, Azure, rangkaian GitHub, graf LinkedIn, atau dua puluh lima tahun hubungan pembangun yang terkumpul. Semua itu telah ditelanjangkan pada tahun ia dibina. Nilai ekonomi Microsoft adalah kira-kira tidak seperti buku; P/B 11x adalah tidak bermakna secara sendirian.
 
-META: saham $580, nilai buku setiap saham ~$78, P/B ≈ 7.4x. Graf pengguna Facebook + Instagram + WhatsApp (3.5B+ MAU merentas keluarga), model penargetan iklan, jenama — tiada satu pun daripada ini duduk dalam neraca. NFLX: saham $700, nilai buku setiap saham ~$45, P/B ≈ 15.5x. 270M+ pelanggan, enjin cadangan, perpustakaan kandungan asal (sebahagian dimodal tetapi pada kos) — juga kebanyakannya di luar buku. CRM: saham $260, nilai buku setiap saham ~$60, P/B ≈ 4.3x. Malah P/B "sederhana" ini didominasi oleh goodwill daripada pemerolehan, bukan modal kerja produktif.
+META: saham $580, buku setiap saham ~$78, P/B ≈ 7.4x. Graf pengguna Facebook + Instagram + WhatsApp (3.5B+ MAU merentas keluarga), model penargetan iklan, jenama — tiada satu pun yang duduk dalam penyata kewangan. NFLX: saham $700, buku setiap saham ~$45, P/B ≈ 15.5x. 270M+ pelanggan, enjin cadangan, perpustakaan kandungan asal (sebahagian dimodal tetapi pada kos) — juga kebanyakannya di luar buku. CRM: saham $260, buku setiap saham ~$60, P/B ≈ 4.3x. Malah P/B yang "sederhana" ini didominasi oleh goodwill daripada pemerolehan, bukan modal kerja produktif.
 
-Alat yang betul untuk perniagaan ini: EV/Sales (terutamanya untuk perisian pertumbuhan tinggi), EV/EBITDA, Peraturan 40 (pertumbuhan hasil + margin aliran tunai bebas), penahanan dolar bersih (untuk SaaS), dan DCF. P/B tidak gagal kerana ia salah — ia gagal kerana penyebut menangkap perkara yang salah untuk model perniagaan.
+Alat yang betul untuk perniagaan ini: EV/Sales (terutama untuk perisian pertumbuhan tinggi), EV/EBITDA, Peraturan 40 (pertumbuhan pendapatan + margin aliran tunai bebas), pengekalan dolar bersih (untuk SaaS), dan DCF. P/B tidak gagal kerana ia salah — ia gagal kerana penyebutnya menangkap perkara yang salah untuk model perniagaan.
 
 Di Bursa: nama perkhidmatan teknologi seperti Vitrox atau pengguna jenama berat seperti MRDIY akan menunjukkan P/B yang kelihatan mahal (3x–8x) berbanding bank pada 1.3x. Jurang ini adalah struktur, bukan perbandingan: kelebihan jenama dan ketumpatan kedai MRDIY tidak muncul dalam nilai buku, jadi P/B dibaca tinggi dengan cara yang tidak mempunyai maklumat.
 
-Pernyataan boleh difalsifikasikan: P/B tidak bermaklumat sebagai metrik penilaian berdiri sendiri untuk mana-mana perniagaan di mana aset tidak ketara (jenama, IP, rangkaian, hubungan pelanggan) membentuk sebahagian besar modal produktif. Secara operasi: jika R&D ditambah perbelanjaan jualan-dan-pemasaran adalah lebih daripada 25% daripada hasil selama tiga tahun terakhir, itu adalah cap jari ringan aset, dan P/B harus dianggap sebagai *semakan konsistensi* pada struktur modal pada paling — bukan isyarat penilaian.
+Pernyataan boleh difalsifikasikan: P/B tidak bermaklumat sebagai metrik penilaian berdiri sendiri untuk mana-mana perniagaan di mana aset tidak ketara (jenama, IP, rangkaian, hubungan pelanggan) membentuk sebahagian besar modal produktif. Secara operasi: jika R&D ditambah perbelanjaan jualan dan pemasaran adalah lebih daripada 25% daripada pendapatan selama tiga tahun terakhir, itu adalah cap jari ringan aset, dan P/B harus dianggap sebagai *semakan konsistensi* pada struktur modal pada paling — bukan isyarat penilaian.
 
 ## Perangkap
 
-Perangkap itu adalah perangkap pelabur nilai yang berpindah: pelabur yang dilatih pada bank, REIT, dan industri berpindah ke teknologi, menyaring pada P/B rendah, tidak menemui apa-apa, dan menyimpulkan pasaran adalah "terlalu dinilai secara absurd." Bacaan yang betul bukan bahawa pasaran adalah absurd — ia adalah bahawa metrik itu tidak sesuai. Model mental yang betul: padankan alat penilaian dengan struktur aset. Kewangan dan industri berat aset → P/B dengan ROE. Pengeluar komoditi kitaran → P/E tengah kitaran dan nilai penggantian aset. Platform ringan aset → EV/Sales, EV/EBITDA, DCF, ditambah nisbah kualiti perniagaan (margin kasar, penahanan bersih, Peraturan 40). Apa yang membatalkan isyarat: perniagaan perisian yang *benar-benar* intensif modal — infrastruktur gudang data Snowflake, POP tepi Cloudflare — mempunyai berat aset dalam buku yang lebih besar daripada SaaS tulen, dan P/buku ketara boleh membawa beberapa maklumat pada margin. Tetapi walaupun di sana, pemacu nilai dominan adalah tumpukan tidak ketara, dan P/B pada paling baik adalah semakan kesihatan.
+Perangkap ialah perangkap pelabur nilai yang berpindah: pelabur yang dilatih pada bank, REIT, dan industri bergerak ke teknologi, menapis pada P/B rendah, tidak menemui apa-apa, dan menyimpulkan pasaran adalah "terlalu tinggi nilainya secara absurd." Bacaan yang betul bukan bahawa pasaran adalah absurd — ia ialah metrik itu tidak sesuai. Model mental yang betul: padankan alat penilaian dengan struktur aset. Kewangan dan industri berat aset → P/B dengan ROE. Pengeluar komoditi kitaran → P/E kitaran tengah dan nilai penggantian aset. Platform ringan aset → EV/Sales, EV/EBITDA, DCF, ditambah nisbah kualiti perniagaan (margin kasar, pengekalan bersih, Peraturan 40). Apa yang membatalkan isyarat: perniagaan perisian yang *benar-benar* intensif modal — infrastruktur gudang data Snowflake, POP tepi Cloudflare — mempunyai berat aset dalam buku lebih daripada SaaS tulen, dan P/buku boleh membawa beberapa maklumat pada margin. Tetapi walaupun di sana, pemacu nilai dominan ialah tumpukan tidak ketara, dan P/B pada paling baik adalah semakan kesihatan.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Seorang pelabur menyaring saham 'murah' pada P/B < 2.0x. Penapis mengembalikan bank, REIT, bahan mentah, dan satu nama perisian besar (terdistorsi oleh akuisisi terkini). Pelabur menyimpulkan nama perisian tersebut tidak dinilai dengan betul kerana ia 'menapis murah'. Apa kritikan yang paling tepat?"
+  question="Seorang pelabur menyaring saham 'murah' pada P/B < 2.0x. Penapis mengembalikan bank, REIT, bahan mentah, dan satu nama perisian besar (terdistorsi oleh akuisisi terkini). Pelabur menyimpulkan nama perisian tersebut undervalued kerana ia 'disaring murah'. Apa kritikan yang paling tepat?"
   options={[
     "Pelabur harus beralih ke P/E dan berhenti menggunakan P/B sepenuhnya",
-    "P/B rendah nama perisian tersebut kemungkinan besar hasil akuisisi terkini yang membesarkan nilai buku dengan goodwill, bukan tanda nilai operasi. P/B adalah metrik yang salah untuk perisian secara keseluruhan — modal produktif (kod, jenama, hubungan pelanggan) dibebankan sebagai perbelanjaan, bukan dikapitalisasi, jadi nilai buku adalah penyebut yang secara struktur buruk. Alat yang tepat ialah EV/Sales, EV/EBITDA, Rule of 40, dan net retention. Isyarat 'murah' ini adalah artefak penapis",
+    "P/B rendah nama perisian tersebut kemungkinan besar hasil daripada akuisisi terkini yang membesarkan nilai buku dengan goodwill, bukan tanda nilai operasi. P/B adalah metrik yang salah untuk perisian tanpa kira-kira — modal produktif (kod, jenama, hubungan pelanggan) dibebankan bukan dikapitalisasi, jadi nilai buku adalah penyebut yang secara struktur buruk. Alat yang betul ialah EV/Sales, EV/EBITDA, Rule of 40, dan net retention. Isyarat 'murah' adalah artifak penapis",
     "Pelabur betul — P/B di bawah 2.0x adalah murah secara universal",
-    "Semua syarikat perisian dinilai terlalu tinggi jadi pelabur harus beli bank sebaliknya"
+    "Semua syarikat perisian terlalu tinggi nilai, jadi pelabur harus membeli bank sebagai gantinya"
   ]}
   answer={1}
-  explanation="Jawapan salah yang menggoda ialah 'P/B di bawah 2.0x adalah murah secara universal' — pintasan peraturan universal yang dijatuhkan oleh setiap pelabur yang dipacu oleh penapis. Bacaan yang betul mengenali dua lapisan distorsi: nilai buku boleh dibesarkan oleh goodwill dari akuisisi (<Lesson id="
-/>), dan nilai buku secara struktur terlalu kecil untuk perniagaan ringan aset (pelajaran ini). Jawapan semua-perisian-terlalu-dinilai membuat tuntutan meluas tentang keseluruhan sektor; jawapan tinggalkan-P/B-sepenuhnya membuat pembetulan berlebihan — P/B adalah baik untuk bank dan REIT, hanya bukan universal."
+  explanation="Jawapan salah yang menggoda ialah 'P/B di bawah 2.0x adalah murah secara universal' — jalan pintas peraturan universal yang dilalui oleh setiap pelabur yang didorong oleh penapis. Bacaan yang betul mengiktiraf dua lapisan distorsi: nilai buku boleh dibesarkan oleh goodwill dari akuisisi (<Lesson id="180_tangible_book_vs_reported_book"/>), dan nilai buku secara struktur terlalu kecil untuk perniagaan ringan aset (pelajaran ini). Jawapan semua-perisian-terlalu-tinggi membuat tuntutan meluas tentang seluruh sektor; jawapan tinggalkan-P/B-sepenuhnya membetulkan berlebihan — P/B baik untuk bank dan REIT, hanya bukan secara universal."
 />
 
 <Quiz
-  question="Seorang pembaca diminta mensintesis tiga tahun pelajaran (040, 180, 182) dan memilih alat penilaian yang tepat untuk dua perniagaan. Perniagaan A: bank rantau, R&D + S&M = 4% daripada pendapatan, goodwill 8% daripada ekuiti, model perkhidmatan ringan modal di atas buku pinjaman. Perniagaan B: syarikat B2B SaaS, R&D + S&M = 65% daripada pendapatan, goodwill 90% daripada ekuiti (aktiviti akuisisi berat), margin kasar 78%, net retention 130%. Pasangan alat yang manakah betul?"
+  question="Seorang pembaca diminta mensintesis tiga tahun pelajaran (040, 180, 182) dan memilih alat penilaian yang betul untuk dua perniagaan. Perniagaan A: bank rantau, R&D + S&M = 4% pendapatan, goodwill 8% ekuiti, model perkhidmatan ringan aset di atas buku pinjaman. Perniagaan B: syarikat B2B SaaS, R&D + S&M = 65% pendapatan, goodwill 90% ekuiti (aktiviti akuisisi berat), margin kasar 78%, net retention 130%. Pasangan alat mana yang betul?"
   options={[
-  ]}
-  answer={0}
-  explanation=""
-/>/041/181 toolkit). Perniagaan B: EV/Sales + Peraturan 40 + penahanan dolar bersih, dengan P/buku ketara diabaikan sepenuhnya kerana goodwill mendominasi dan modal produktif berada di luar buku. Mencoba membandingkan A dan B pada nisbah tunggal gagal kerana perniagaan duduk di sisi bertentangan spektrum intensiti aset — sintesisnya adalah padankan alat dengan struktur aset",
+    "Kedua-dua perniagaan: EV/Sales + Rule of 40",
+    "Perniagaan A: P/B + ROE + nisbah CET1 (alat <Lesson id="040_price_to_book"/>/041/181). Perniagaan B: EV/Sales + Rule of 40 + net dollar retention, dengan P/nilai-tangible diabaikan sepenuhnya kerana goodwill mendominasi dan modal produktif berada di luar buku. Mencuba membandingkan A dan B pada nisbah tunggal gagal kerana perniagaan berada di hujung bertentangan spektrum intensiti aset — sintesisnya ialah mencocokkan alat dengan struktur aset",
     "Kedua-dua perniagaan: P/B + ROE",
     "Perniagaan A: DCF sahaja. Perniagaan B: P/B sahaja"
   ]}
   answer={1}
-  explanation="Sintesis merentasi tiga pelajaran: P/B berfungsi secara bersyarat (040), diputarbelitkan oleh goodwill (180), dan secara struktur tidak bermakna untuk perniagaan ringan aset (pelajaran ini). Jawapan salah yang menggoda adalah P/B + ROE untuk kedua-dua perniagaan — menerapkan satu toolkit secara universal adalah tepat mod kegagalan yang amaran pelajaran. EV/Sales + Peraturan 40 untuk kedua-dua membuat kesalahan terbalik. Jawapan DCF-untuk-bank, P/B-untuk-perusahaan-perisian membalikkan pasangan yang betul. Jawapan yang betul memerlukan padanan alat dengan perniagaan — itulah prinsip operasi."
+  explanation="Sintesis merangkumi tiga pelajaran: P/B berfungsi secara bersyarat (040), diputarbelitkan oleh goodwill (180), dan secara struktur tidak bermakna untuk perniagaan ringan aset (pelajaran ini). Jawapan salah yang menggoda ialah P/B + ROE untuk kedua-dua perniagaan — menggunakan satu alat secara universal adalah tepat mod kegagalan yang amaran pelajaran. EV/Sales + Rule of 40 untuk kedua-dua membuat kesalahan terbalik. Jawapan DCF-bank, P/B-perisian membalikkan pasangan yang betul. Jawapan yang betul memerlukan mencocokkan alat dengan perniagaan — itulah prinsip operasi."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Analis Asas, tampal ticker ringan aset (MSFT, META, NFLX, CRM, atau Bursa: MRDIY) dan tanya: "Kira P/B dan terangkan mengapa ia alat utama yang salah. Kemudian berikan toolkit yang betul: EV/Sales, EV/EBITDA, Peraturan 40, dan (jika SaaS) penahanan dolar bersih." Simpan nombor toolkit alternatif dalam <Term id="ami_decision_journal" /> anda sebelah ticker. Berhenti mengutip P/B pada nama ini.
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal ticker ringan aset (MSFT, META, NFLX, CRM, atau Bursa: MRDIY) dan tanya: "Kira P/B dan terangkan mengapa ia alat utama yang salah. Kemudian berikan alat toolkit yang betul: EV/Sales, EV/EBITDA, Peraturan 40, dan (jika SaaS) pengekalan dolar bersih." Simpan nombor toolkit alternatif dalam <Term id="ami_decision_journal" /> anda di sebelah ticker. Berhenti mengutip P/B pada nama ini.
 
-## Penafian
+## Pengambilan
 
-Untuk perniagaan ringan aset, P/B adalah semakan konsistensi pada paling — bukan penilaian. Padankan alat dengan struktur aset: P/B + ROE untuk berat aset; EV/Sales + Peraturan 40 untuk ringan aset.
+Untuk perniagaan ringan aset, P/B adalah semakan konsistensi pada paling — jangan pernah penilaian. Padankan alat dengan struktur aset: P/B + ROE untuk berat aset; EV/Sales + Peraturan 40 untuk ringan aset.

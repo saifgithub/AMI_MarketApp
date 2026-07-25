@@ -1,6 +1,6 @@
 ---
 id: "134_vwap_and_anchored_vwap"
-title: "VWAP dan VWAP berjangka — garis rujukan berat isipadu"
+title: "VWAP dan VWAP terangkai — garis rujukan berberat isipadu"
 duration_min: 6
 level: 2
 module: 5
@@ -11,66 +11,66 @@ topic: "vwap"
 prerequisites: ["029_volume_confirmation", "126_ma_slope_analysis"]
 tags: ["indicators", "volume", "vwap", "anchored_vwap", "reference_level"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# VWAP dan VWAP terangkum — garis rujukan berdasarkan isipadu
+# VWAP dan VWAP Terpasang — garis rujukan berat isipadu
 
-<Lesson id="029_volume_confirmation"/> menggunakan isipadu purata sebagai penapis pengesahan. Harga Purata Berpandukan Isipadu (VWAP) membawa idea ini lebih jauh — ia mengira harga purata yang diberi berat mengikut isipadu yang diperdagangkan pada setiap tahap harga, memberikan anda tahap di mana peserta purata sebenarnya melakukan transaksi. VWAP standard ditetapkan semula pada permulaan setiap sesi, jadi ia merupakan garis rujukan hari yang sama yang digunakan oleh institusi sebagai penanda aras penuhi (fill benchmark). VWAP terangkum (AVWAP) adalah pengiraan yang sama tetapi bermula dari tarikh yang anda pilih — pelepasan hasil utama, perubahan rejim, atau tinggi 52-minggu. Anker ini menukar VWAP menjadi rujukan berbilang hari atau berbilang bulan bagi "kos purata peserta sejak peristiwa ini." Kedudukan harga relatif terhadap VWAP terangkum adalah salah satu bacaan paling jelas untuk menentukan sama ada peserta yang memasuki pasaran selepas anker berada dalam untung atau rugi.
+<Lesson id="029_volume_confirmation"/> menggunakan isipadu purata sebagai penapis pengesahan. Harga Purata Berberat Isipadu (VWAP) mengambil idea itu lebih jauh — ia mengira harga purata yang diberi berat mengikut isipadu yang diperdagangkan pada setiap harga, memberikan anda tahap di mana peserta purata sebenarnya membuat transaksi. VWAP piawai ditetapkan semula pada permulaan setiap sesi, jadi ia adalah garis rujukan hari yang sama yang digunakan oleh institusi sebagai piawai penuhi (fill benchmark). VWAP Terpasang (AVWAP) adalah pengiraan yang sama tetapi bermula dari tarikh yang anda pilih — pelepasan pendapatan utama, perubahan rejim, atau tinggi 52 minggu. Titik pasak ini menukar VWAP menjadi rujukan berbilang hari atau berbulan-bulan bagi "kos purata peserta sejak peristiwa ini." Perbandingan harga relatif terhadap VWAP Terpasang adalah salah satu bacaan paling jelas sama ada peserta yang masuk selepas titik pasak berada dalam untung atau rugi.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat TSLA selepas pelepasan hasilnya pada 6 November 2025. TSLA melompat dari 268 ke 285 pada cetakan, kemudian diperdagangkan secara aktif selama lapan minggu seterusnya. Menjangkakan VWAP kepada pembukaan 6 November pada 285 menghasilkan AVWAP yang perlahan-lahan naik dan mencapai 291 pada 12 Disember — iaitu kos purata berpandukan isipadu bagi setiap pembeli sejak peristiwa hasil tersebut.
+Lihat TSLA selepas pelepasan pendapatan 6 November 2025. TSLA melompat dari 268 ke 285 pada cetakan, kemudian diperdagangkan secara aktif selama lapan minggu seterusnya. Memasang VWAP pada pembukaan 6 November pada 285 menghasilkan AVWAP yang naik perlahan-lahan sehingga mencapai 291 pada 12 Disember — kos purata berberat isipadu bagi setiap pembeli sejak peristiwa pendapatan.
 
-Pada 18 Disember, TSLA ditutup pada 290 — tepat pada AVWAP. Pantul: TSLA naik ke 308 selama tiga minggu berikutnya. Pembeli selepas hasil mempertahankan kos purata mereka, tepat seperti yang diramalkan oleh tahap tersebut.
+Pada 18 Disember, TSLA menutup pada 290 — tepat di AVWAP. Pantul: TSLA naik ke 308 selama tiga minggu berikutnya. Pembeli pasca-pendapatan mempertahankan kos purata mereka, tepat seperti yang diramalkan oleh tahap tersebut.
 
-Kemudian pada 22 Januari 2026, TSLA ditutup pada 286 — di bawah AVWAP buat pertama kali. Kumpulan pasca-hasil kini berada dalam kerugian purata. Selama 12 sesi seterusnya, TSLA jatuh ke 269 apabila kumpulan tersebut menyerah kalah. AVWAP dari hasil menjadi rintangan bukannya sokongan.
+Kemudian pada 22 Januari 2026, TSLA menutup pada 286 — di bawah AVWAP buat pertama kali. Kumpulan pasca-pendapatan kini berada dalam kerugian purata. Selama 12 sesi seterusnya, TSLA jatuh ke 269 apabila kumpulan tersebut menyerah kalah. AVWAP dari pendapatan menjadi rintangan bukannya sokongan.
 
-Pernyataan boleh disangkal: VWAP terangkum dari peristiwa utama (hasil, lompatan, tinggi atau rendah ayunan) bertindak sebagai sokongan apabila harga berada di atasnya semasa trend yang disahkan, dan sebagai rintangan sekali harga ditutup di bawahnya selama 3+ sesi. Ketidakkonsistenan adalah mekanikal — jika harga menutup semula di atas AVWAP selama 3 sesi berturut-turut, pembalikan peranan dibatalkan dan AVWAP kembali bertindak sebagai sokongan.
+Pernyataan boleh disangkal: VWAP terpasang dari peristiwa utama (pendapatan, jurang, tinggi atau rendah ayunan) bertindak sebagai sokongan apabila harga berada di atasnya semasa trend yang disahkan dan sebagai rintangan sekali harga menutup di bawahnya selama 3+ sesi. Pembatalan adalah mekanikal — jika harga menutup semula di atas AVWAP selama 3 sesi berturut-turut, pembalikan peranan dibatalkan dan AVWAP bertindak sebagai sokongan lagi.
 
-VWAP intraday standard berfungsi dengan cara yang sama pada skala sesi-hari: institusi yang membeli pada atau di bawah VWAP hari tersebut mendapat penuhi yang lebih baik daripada purata, itulah sebabnya harga sering menghormatinya semasa hari perdagangan.
+VWAP intraday piawai berfungsi dengan cara yang sama pada skala hari sesi: institusi yang membeli pada atau di bawah VWAP hari tersebut mendapat penuhi yang lebih baik daripada purata, itulah sebabnya harga sering menghormatinya semasa hari perdagangan.
 
-Di Bursa Malaysia: MAYBANK selepas pelepasan hasil Q3 2025 pada RM10.60 — AVWAP naik ke RM10.85 selama enam minggu. Harga menyentuh dan memantul pada AVWAP sebanyak tiga kali berasingan, kemudian pecah di bawah pada pertengahan Disember apabila kumpulan tersebut terbalik menjadi kerugian. Garis tersebut berubah dari sokongan ke rintangan dalam masa seminggu.
+Di Bursa Malaysia: MAYBANK selepas pelepasan pendapatan Q3 2025 pada RM10.60 — AVWAP naik ke RM10.85 selama enam minggu. Harga menyentuh dan memantul pada AVWAP pada tiga masa berasingan, kemudian pecah di bawah pada pertengahan Disember apabila kumpulan tersebut terbalik menjadi rugi. Garis itu berubah dari sokongan kepada rintangan dalam masa seminggu.
 
 ## Perangkap
 
-Perangkapnya ialah menjangkakan VWAP pada tarikh rawak dan treating garisan hasil sebagai ramalan. AVWAP hanya mempunyai makna apabila anker itu sendiri adalah peristiwa yang signifikan — pelepasan hasil di mana kumpulan tertentu memasuki pasaran, lompatan besar di mana satu kumpulan terperangkap, atau tinggi 52-minggu di mana peminjam kitaran akhir bertumpuk. AVWAP yang dijangkakan pada hari Rabu yang tidak bermakna hanyalah purata bergerak perlahan dengan langkah tambahan.
+Perangkapnya ialah memasang VWAP pada tarikh rawak dan menganggap garis yang terhasil sebagai ramalan. AVWAP hanya membawa makna apabila titik pasak itu sendiri adalah peristiwa yang signifikan — pelepasan pendapatan di mana kumpulan tertentu masuk, jurang utama di mana satu kumpulan terperangkap, atau tinggi 52 minggu di mana peminjam kitaran lewat berkumpul. AVWAP yang dipasang pada hari Rabu yang tidak bermakna hanyalah purata bergerak perlahan dengan langkah tambahan.
 
-Model mental yang betul: AVWAP adalah garis rujukan tingkah laku — ia memberitahu anda sama ada kumpulan peserta tertentu sedang dalam untung atau rugi sekarang. Maklumat ini meramalkan bagaimana mereka kemungkinan akan berkelakuan. Di atas kos purata mereka, mereka mempertahankan garis pada penurunan (sokongan). Di bawah kos purata mereka, mereka menjual kenaikan untuk kembali ke titik noktah (rintangan). Pilih anker yang menentukan kumpulan yang anda minati — kemudian garis tersebut memberitahu anda apa yang akan dilakukan oleh kumpulan tersebut.
+Model mental yang betul: AVWAP adalah garis rujukan tingkah laku — ia memberitahu anda sama ada kumpulan peserta tertentu kini berada dalam untung atau rugi. Maklumat itu meramalkan bagaimana mereka cenderung berkelakuan. Di atas kos purata mereka, mereka mempertahankan garis pada penurunan (sokongan). Di bawah kos purata mereka, mereka menjual kenaikan untuk kembali kepada titik patah (rintangan). Pilih titik pasak yang menentukan kumpulan yang anda minati — kemudian garis itu memberitahu anda apa yang akan dilakukan oleh kumpulan tersebut.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="AVWAP TSLA yang di-anchorkan dari pembukaan earnings 6 November pada 285 telah naik kepada 291 pada pertengahan Disember. Harga penutup pada 290 — tepat di AVWAP — dan melantun, bergerak ke 308 dalam tiga minggu seterusnya. Apakah penjelasan paling tepat di bawah kerangka pelajaran?"
+  question="AVWAP terikat TSLA dari pembukaan pendapatan 6 November pada 285 telah naik kepada 291 pada pertengahan Disember. Harga penutup pada 290 — tepat pada AVWAP — dan melantun, bergerak ke 308 selama tiga minggu berikutnya. Apakah penjelasan paling tepat di bawah kerangka pelajaran?"
   options={[
-    "AVWAP tidak boleh dipercayai dan pantulan tidak ada kaitan dengannya",
-    "Kos purata kumpulan selepas earnings ialah 291; selagi harga berada di atas tahap itu, kumpulan tersebut untung dan mempertahankan penurunan harga ke arah purata mereka — inilah sebab AVWAP dari peristiwa penting bertindak sebagai sokongan",
+    "AVWAP tidak boleh dipercayai dan lantunan tidak ada kaitan dengannya",
+    "Kos purata kumpulan selepas pendapatan ialah 291; selagi harga berada di atas tahap ini, kumpulan berada dalam keuntungan dan mempertahankan penurunan ke purata mereka — inilah yang menjadikan AVWAP dari peristiwa penting berfungsi sebagai sokongan",
     "Hanya VWAP intraday yang penting; AVWAP berbilang hari tidak sah",
-    "AVWAP adalah kebetulan matematik; harga menghormatinya secara kebetulan"
+    "AVWAP ialah kebetulan matematik; harga menghormatinya secara kebetulan"
   ]}
   answer={1}
-  explanation="AVWAP dari peristiwa penting mewakili kos purata kumpulan yang didefinisikan. Selagi mereka untung, mereka mempertahankan tahap tersebut; apabila mereka terbalik ke bawah air (underwater), tahap yang sama menjadi rintangan — yang tepat berlaku pada TSLA pada Januari apabila ia menutup di bawah AVWAP. Jawapan salah yang memikat ('kebetulan') terlepas mekanisme tingkah laku — ini adalah peserta sebenar dengan kos purata sebenar yang bertindak balas secara boleh ramal sama ada mereka menang atau kalah."
+  explanation="AVWAP dari peristiwa penting mewakili kos purata kumpulan yang didefinisikan. Selagi mereka berada dalam keuntungan, mereka mempertahankan tahap tersebut; apabila mereka terbalik ke posisi rugi, tahap yang sama menjadi rintangan — dan itulah yang berlaku pada TSLA pada Januari apabila ia menutup di bawah AVWAP. Jawapan salah yang menggoda ('kebetulan') terlepas mekanisme tingkah laku — ini adalah peserta sebenar dengan kos purata sebenar yang bertindak balas secara boleh ramal sama ada mereka menang atau rugi."
 />
 
 <Quiz
-  question="Anda meng-anchorkan VWAP kepada pelepasan earnings terakhir saham. AVWAP pada $48.60. Harga telah menutup di bawah AVWAP selama 4 sesi berturut-turut, kini pada $47.20. Saiz akaun $30,000, had mandat risiko 1% per dagangan. Anda berada dalam posisi long dari $50.10 dengan stop di $48.50 — yang telah dicetuskan semalam. Dagangan telah ditutup. Apa yang dikatakan kerangka tentang masuk semula long di sini?"
+  question="Anda mengikat VWAP kepada pelepasan pendapatan terakhir saham. AVWAP pada $48.60. Harga telah menutup di bawah AVWAP selama 4 sesi terakhir, semasa pada $47.20. Saiz akaun $30,000, had mandat 1% risiko per dagangan. Anda berada dalam posisi beli dari $50.10 dengan henti rugi pada $48.50 — yang telah dicetuskan semalam. Dagangan telah ditutup. Apa yang dikatakan kerangka tentang memasuki semula posisi beli di sini?"
   options={[
-    "Langkau masuk semula: 4 penutupan berturut-turut di bawah AVWAP memenuhi ambang pembalikan peranan pelajaran (3+ sesi). AVWAP pada $48.60 kini menjadi rintangan, kumpulan selepas earnings berada di bawah air, dan kenaikan kemungkinan akan dijual ke arah break-even.",
+    "Langkau memasuki semula: 4 penutup berturut-turut di bawah AVWAP memenuhi ambang pembalikan peranan pelajaran (3+ sesi). AVWAP pada $48.60 kini menjadi rintangan, kumpulan selepas pendapatan berada dalam posisi rugi, dan kenaikan kemungkinan akan dijual ke titik break-even.",
     "Masuk semula pada $47.20 — penurunan adalah peluang membeli",
-    "Rata purata kerana tesis asal tidak berubah",
-    "Pendek saham dengan saiz — setiap saham di bawah AVWAP adalah peluang short"
+    "Rata-rata ke bawah kerana tesis asal tidak berubah",
+    "Pendek saham dengan saiz — setiap saham di bawah AVWAP adalah peluang pendek"
   ]}
   answer={0}
-  explanation="Peraturan mekanikal pelajaran: 3+ penutupan berturut-turut di bawah AVWAP membalikkan tahap dari sokongan kepada rintangan. Kumpulan yang membeli di atas garis kini menjual kenaikan. Jawapan salah yang memikat (pilihan A) — masuk semula selepas stop-out tanpa mengakui pembalikan peranan — adalah corak trading balas dendam yang dikesan dalam modul psikologi. Rata purata (C) menggandakan kerugian asal. Pendek secara universal (D) mengabaikan rejim trend; pembalikan peranan AVWAP adalah satu input, bukan setup short lengkap."
+  explanation="Peraturan mekanikal pelajaran: 3+ penutup berturut-turut di bawah AVWAP membalikkan tahap dari sokongan kepada rintangan. Kumpulan yang membeli di atas garis kini menjual kenaikan. Jawapan salah yang menggoda (pilihan A) — memasuki semula selepas keluar daripada henti rugi tanpa mengakui pembalikan peranan — adalah corak dagangan balas dendam yang dikesan dalam modul psikologi. Meneruskan rata-rata ke bawah (C) menggandakan kerugian asal. Pendek secara universal (D) mengabaikan rejim trend; pembalikan peranan AVWAP ialah satu input, bukan setup pendek lengkap."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol tiker yang baru-baru ini mempunyai pelepasan hasil dan tanya: "Plotkan VWAP terangkum dari tarikh pelepasan hasil terakhir — di mana kedudukan harga berbanding dengannya, dan adakah ia telah bersilang ke arah sama ada dalam 30 sesi terakhir?" Kemudian semak carta itu sendiri. Latihan ini adalah untuk mengenal pasti kumpulan yang diwakili oleh AVWAP dan membuat pertimbangan sama ada mereka sedang dalam untung atau rugi sekarang.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal kod saham yang baru sahaja mempunyai pelepasan pendapatan dan tanya: "Plotkan VWAP Terpasang dari tarikh pelepasan pendapatan terakhir — di mana kedudukan harga berbanding dengannya, dan adakah ia telah bersilang ke arah mana-mana dalam 30 sesi terakhir?" Kemudian periksa carta sendiri. Latihan ini adalah untuk mengenal pasti kumpulan yang diwakili oleh AVWAP dan membuat alasan sama ada mereka kini berada dalam untung atau rugi.
 
 ## Kesimpulan
 
-VWAP dan VWAP terangkum adalah garis rujukan tingkah laku — ia memberitahu anda sama ada kumpulan peserta tertentu sedang menang atau kalah, dan bacaan tersebut meramalkan sama ada garis tersebut bertindak sebagai sokongan atau rintangan.
+VWAP dan VWAP Terpasang adalah garis rujukan tingkah laku — ia memberitahu anda sama ada kumpulan peserta tertentu kini sedang menang atau kalah, dan bacaan itu meramalkan sama ada garis tersebut bertindak sebagai sokongan atau rintangan.

@@ -1,6 +1,6 @@
 ---
 id: "364_capstone_evaluate_a_room_verdict"
-title: "Capstone: menilai satu penghakiman Ruang dari awal hingga akhir"
+title: "Capstone: menilai satu penghakiman Bilik dari awal hingga akhir"
 duration_min: 5
 level: 14
 module: 24
@@ -13,83 +13,82 @@ tags: ["capstone", "synthesis", "decision-process", "invalidation", "override", 
 sources: ["Annie Duke — Thinking in Bets: decision process under uncertainty","Howard Marks — The Most Important Thing: second-level thinking applied to a stated view"]
 verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
 updated_at: "2026-07-22"
 ---
 # Capstone: menilai satu Verdict Bilik dari hujung ke hujung
 
-Anda kini memegang keseluruhan alat EVAL: menilai keputusan berbanding hasil, membaca angka keyakinan AMI sebagaimana adanya — iaitu condong berberat Bilik, bukan kebarangkalian yang dikalibrasi — menulis tesis sebelum hasil wujud, membela kes lawan yang terkuat, mengandaikan kegagalan terlebih dahulu, memisahkan ralat proses daripada varians, dan mengesan kadar hit anda sendiri. Capstone ini menggunakan alat tersebut pada satu Verdict latihan sebagai enam langkah berturut-turut — baca, semak, bina kes lawan terkuat, pra-maut, jurnal, putuskan — dan merekodkan pemikiran sama ada anda menerima atau membatalkan. Tiada perkara baru diperkenalkan di sini; kemahiran ini adalah membuat bahagian-bahagian berinteraksi pada satu artifak di bawah tekanan masa.
+Anda kini memegang keseluruhan alat EVAL: menilai keputusan berbanding hasil, membaca angka keyakinan AMI sebagaimana adanya — iaitu kecenderungan berberat Bilik, bukan kebarangkalian yang telah dikalibrasi — menulis tesis sebelum hasil wujud, membela kes lawan yang paling kuat, mengandaikan kegagalan lebih awal, memisahkan ralat proses daripada varians, dan mengesan kadar hit anda sendiri. Capstone ini menggunakan alat tersebut pada satu Verdict latihan sebagai enam langkah berturut-turut — baca, semak, bina kes lawan, pra-maut, jurnal, putuskan — dan merakam alasan sama ada anda menerima atau membatalkan. Tiada perkara baru diperkenalkan di sini; kemahiran ini terletak pada interaksi komponen pada satu artifak di bawah tekanan masa.
 
 ## Contoh
 
-Ambil syarikat perindustrian kap sederhana hipotetikal — tiada ticker sebenar, angka dicipta, supaya angka-angka itu menjadi pelajaran berbanding tuntutan pasaran. Bilik mengembalikan: **BELI · saiz 3% · masuk $50 · henti $44 · sasaran $62 · jangka masa 8 minggu · keyakinan 0.68 · PM: LULUS**.
+Ambil syarikat industri kap sederhana hipotetikal — tiada ticker sebenar, angka dicipta, supaya angka tersebut menjadi pelajaran berbanding tuntutan pasaran. Bilik mengembalikan: **BELI · saiz 3% · masuk $50 · henti $44 · sasaran $62 · kitar masa 8 minggu · keyakinan 0.68 · PM: LULUS**.
 
 **Baca ia.** LULUS adalah hasil pematuhan, bukan sokongan — lihat <Lesson id="277_pass_is_not_buy"/>. Dua pernyataan bebas tiba bersama; anggap mereka secara berasingan.
 
-**Semak angka.** Geometri boleh disemak dalam sepuluh saat: risiko setiap saham $50 − $44 = **$6** (12% daripada harga masuk), ganjaran $62 − $50 = **$12**, jadi **2.0 kepada 1**. Pada saiz 3%, keluar bersih yang bersih menelan kos 0.03 × 0.12 = **0.36% daripada portfolio**. Kemudian audit tuntutan yang menanggung beban di bawah — jika kes Bull bergantung pada satu angka aliran tunai, angka itulah yang perlu disahkan, mengikut <Lesson id="276_spotting_hallucinated_numbers"/>.
+**Semak angka.** Geometrinya boleh disemak dalam sepuluh saat: risiko setiap saham $50 − $44 = **$6** (12% daripada harga masuk), ganjaran $62 − $50 = **$12**, jadi **2.0 kepada 1**. Pada saiz 3%, keluar bersih yang gagal menelan kos 0.03 × 0.12 = **0.36% daripada portfolio**. Kemudian audit tuntutan yang menanggung beban — jika kes Bull bergantung pada satu angka aliran tunai, angka itulah yang perlu disahkan, seperti <Lesson id="276_spotting_hallucinated_numbers"/>.
 
-**Bina kes lawan terkuat.** Nyatakan kes Bear yang paling tajam dalam bentuk terkuatnya, bukan versi yang mudah anda serang.
+**Bina kes lawan.** Nyatakan kes Bear yang paling tajam dalam bentuk terkuatnya, bukan versi yang mudah anda hancurkan.
 
-**Pra-maut.** Sudah lapan minggu kemudian dan posisi itu dihentikan. Tulis mengapa — sebelum anda tahu.
+**Pra-maut.** Sudah lapan minggu kemudian dan posisi tersebut telah dihentikan. Tulis mengapa — sebelum anda tahu.
 
-**Jurnalkan ia.** Tesis anda, **keyakinan anda sendiri** sebagai nombor yang anda setuju dinilai, 0.68 Bilik direkodkan secara berasingan sebagai apa yang condong Bilik berbanding sebagai kebarangkalian anda, ganjaran-kepada-risiko, dan satu keadaan pembatalan yang cukup spesifik untuk dipicu secara bebas: *tutup di bawah $44, atau kegagalan pengesahan tuntutan aliran tunai.* Dua angka keyakinan adalah objek berbeza — hanya yang anda tulis adalah milik anda untuk dikalibrasi.
+**Jurnalkan ia.** Tesis anda, **keyakinan anda sendiri** sebagai nombor yang anda setuju dinilai, keyakinan 0.68 Bilik direkodkan secara berasingan sebagai apa yang Bilik condongkan berbanding sebagai kebarangkalian anda, ganjaran-kepada-risiko, dan satu keadaan pembatalan yang cukup spesifik untuk dipicu secara bebas: *tutup di bawah $44, atau tuntutan aliran tunai gagal disahkan.* Dua angka keyakinan adalah objek berbeza — hanya yang anda tulis adalah milik anda untuk dikalibrasi.
 
-**Putuskan.** Terima atau batalkan — dan rekodkan yang mana, dan mengapa, dalam entri yang sama. Pembatalan yang tidak direkodkan sukar dibezakan kemudian daripada penerimaan yang tidak direkodkan.
+**Putuskan.** Terima atau batalkan — dan rekam yang mana, dan mengapa, dalam entri yang sama. Pembatalan yang tidak direkodkan sukar dibezakan kemudian daripada penerimaan yang tidak direkodkan.
 
 ## Perangkap
 
-Perangkapnya ialah melakukan semua enam langkah dan kemudian memperlakukan prestasi itu sendiri sebagai jawapan. Ia muncul di satu tempat: keadaan pembatalan. "Jika tesis pecah" tidak boleh dipicu — tiada apa yang boleh diperhatikan mencetuskannya, jadi lapan minggu kemudian anda akan menafsir apa jua yang berlaku sebagai konsisten dengan apa yang anda tulis. "Tutup di bawah $44" dipicu atau tidak, dan jurnal menilai anda berbanding menenangkan anda. Kegagalan yang sama tersembunyi di dalam pembatalan: menulis "dibatalkan atas naluri" merekodkan tindakan tetapi bukan pemikiran, jadi pasca-maut tiada apa untuk membezakan bacaan tulen daripada yang tidak layak. Proses ini hanya bernilai kosnya apabila setiap langkah menghasilkan sesuatu yang boleh disangkal.
+Perangkapnya ialah melaksanakan keenam-enam langkah tersebut dan kemudian memperlakukan prestasi itu sendiri sebagai jawapannya. Ia muncul di satu tempat: keadaan pembatalan. "Jika tesis runtuh" tidak boleh dipicu — tiada pemerhatian yang mencetuskan ia, jadi lapan minggu kemudian anda akan menafsir apa jua yang berlaku sebagai konsisten dengan apa yang anda tulis. "Tutup di bawah $44" akan dipicu atau tidak, dan jurnal akan menilai anda berbanding menghiburkan anda. Kegagalan yang sama tersembunyi di dalam pembatalan: menulis "dibatalkan atas rasa" merekodkan tindakan tetapi bukan alasan, jadi pasca-maut tidak mempunyai apa-apa untuk memisahkan bacaan tulen daripada yang tidak layak. Proses ini hanya bernilai kosnya apabila setiap langkah menghasilkan sesuatu yang boleh disangkal.
 
-## Bina kes lawan terkuat
+## Bina kes lawan
 
-Kes terkuat menentang urutan ini: ia mahal, dan di sini ia tidak mengubah apa-apa — anda membaca, menyemak, membina kes lawan terkuat, pra-maut, jurnal, kemudian menerima BELI 3% seperti yang dicadangkan. Enam langkah, posisi sama; pada persediaan pantas, kelewatan ini tidak memberi perbezaan yang boleh diperhatikan. Penyangkal boleh diukur dari rekod anda sendiri, tetapi tidak dengan cepat. Memisahkan verdict berdaftar ke dalam lengan diperiksa dan tidak diperiksa dan membandingkan kadar hit memerlukan jauh lebih banyak keputusan daripada yang terasa sepatutnya: pada tiga puluh verdict, anda mempunyai kira-kira lima belas setiap lengan dan selang yang cukup luas untuk menyembunyikan sebarang kesan sebenar, jadi "tidak dapat dibezakan" di situ bermaksud *belum diselesaikan*, bukan *ritual* — perangkap sampel kecil <Lesson id="363_scoring_yourself_over_time"/> wujud untuk dinamakan. Bacaan yang tersedia lebih awal bukan kadar sama sekali: kira berapa kerap pra-maut menamakan pembatalan yang kemudiannya dipicu dan akan mengejutkan anda. Itu boleh diperhatikan pada satu keputusan berbanding hanya dalam agregat. Jika, merentasi banyak keputusan, ia tidak menamakan apa-apa yang dipicu, urutan itu adalah ritual dan harus dipendekkan. Perhatikan bahawa ujian ini memerlukan jurnal wujud terlebih dahulu — melangkau proses memusnahkan bukti yang akan menyelesaikan sama ada melangkau itu betul.
+Kes terkuat terhadap urutan ini: ia mahal, dan di sini ia tidak mengubah apa-apa — anda membaca, menyemak, membina kes lawan, pra-maut, menjurnal, kemudian menerima BELI 3% seperti yang dicadangkan. Enam langkah, posisi yang sama; pada setup pantas, kelewatan ini tidak memberikan perbezaan yang boleh diperhatikan. Penyangkal boleh diukur dari rekod anda sendiri, tetapi tidak dengan cepat. Memisahkan verdict yang dicatatkan kepada lengan yang diperiksa dan tidak diperiksa dan membandingkan kadar hit memerlukan lebih banyak keputusan daripada yang terasa sepatutnya: pada tiga puluh verdict, anda mempunyai kira-kira lima belas per lengan dan selang yang cukup luas untuk menyembunyikan sebarang kesan sebenar, jadi "tidak dapat dibezakan" di situ bermaksud *belum diselesaikan*, bukan *ritual* — perangkap sampel kecil <Lesson id="363_scoring_yourself_over_time"/> wujud untuk dinamakan. Bacaan yang tersedia lebih awal bukanlah kadar sama sekali: kira berapa kerap pra-maut menamakan pembatalan yang kemudiannya dipicu dan akan mengejutkan anda jika tidak. Itu boleh diperhatikan pada satu keputusan berbanding hanya dalam agregat. Jika, merentasi banyak keputusan, ia tidak menamakan apa-apa yang dipicu, urutan tersebut adalah ritual dan harus dipendekkan. Perhatikan bahawa ujian ini memerlukan jurnal wujud terlebih dahulu — melangkau proses memusnahkan bukti yang akan menyelesaikan sama ada melangkau itu betul.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Verdict membawa keyakinan 0.68 bersama PM PASS. Apakah yang sebenarnya membenarkan anda simpulkan dengan nilai 0.68 ini?"
+  question="Verdict membawa keyakinan 0.68 bersama PM PASS. Apakah sebenarnya yang anda boleh simpulkan daripada nilai 0.68 ini?"
   options={[
-    "Bahawa AMI adalah 68% pasti sasaran $62 akan tercapai, menjadikan dagangan ini bernilai jangkaan positif (positive-expected-value) secara definisi",
-    "Bahawa perdebatan di Bilik telah menyelesaikan 0.68 laluan menuju BUY — condong ke arah berat, bukan kebarangkalian terkalibrasi: ia memberitahu anda kes mana yang menang dan menunjuk kepada bukti yang membawanya, manakala nombor yang boleh anda nilai untuk kekalibrasian adalah satu yang anda tulis dalam jurnal anda sendiri",
-    "Bahawa 0.68 adalah tuntutan yang boleh dinilai oleh AMI — rekodkan cukup banyak verdict keyakinan 0.68 dan kira-kira 68% daripadanya sepatutnya diselesaikan seperti yang dipanggil",
-    "Bahawa keyakinan berhenti bermakna sekali PM mengesahkan PASS, kerana pematuhan adalah kekangan mengikat pada keputusan"
+    "Bahawa AMI adalah 68% pasti sasaran $62 akan tercapai, yang menjadikan dagangan ini bernilai jangkaan positif (positive-EV) secara definisi",
+    "Bahawa perdebatan Bilik telah berpecah 0.68 ke arah BUY — satu condongan berat, bukan kebarangkalian yang dikalibrasi: ia memberitahu anda kes mana yang menang dan menunjuk kepada bukti yang membawanya, manakala nombor yang boleh anda skor untuk kekalibrasian adalah yang anda tulis dalam jurnal anda sendiri",
+    "Bahawa 0.68 adalah tuntutan yang boleh dinilai oleh AMI — cat cukup banyak verdict keyakinan 0.68 dan lebih kurang 68% daripada mereka sepatutnya diselesaikan seperti yang dipanggil",
+    "Bahawa keyakinan berhenti menjadi penting sebaik sahaja PM mengedarkan PASS, kerana pematuhan adalah kekangan mengikat pada keputusan"
   ]}
   answer={1}
-  explanation="Keyakinan AMI adalah condongan berat Bilik — bacalah sebagai 'condong, bukan kunci', per <Lesson id="
-/> — jadi soalan berguna ialah kes mana yang membawa perdebatan dan pada bukti apa, bukan apa kebarangkalian untuk dipertaruhkan. Jawapan 'AMI 68% pasti, jadi ia bernilai-EV positif' memperlakukan condongan sebagai ramalan dan juga melangkau geometri ganjaran yang diperlukan oleh nilai jangkaan. Jawapan 'daftarkan cukup banyak verdict 0.68 dan 68% harus selesai' adalah ralat yang lebih halus dan satu yang worth dinamakan: kalibrasi adalah sifat nombor yang dikeluarkan sebagai kebarangkalian, dan angka Bilik bukan satu — panggilan yang boleh anda nilaikan dengan jujur adalah milik anda sendiri, itulah keseluruhan titik <Lesson id="363_scoring_yourself_over_time"/>. Dan jawapan 'LULUS menjadikan keyakinan tidak relevan' meruntuhkan dua isyarat bebas: LULUS melaporkan pematuhan Mandat sahaja, dan tidak mengatakan apa-apa tentang kekuatan tesis."
+  explanation="Keyakinan AMI ialah condongan berat Bilik — bacalah sebagai 'condongan, bukan kunci', per <Lesson id="077_decision_support_vs_prediction"/> — jadi soalan yang berguna ialah kes mana yang membawa perdebatan dan pada bukti apa, bukan apa odds untuk dipertaruhkan. Jawapan 'AMI 68% pasti, jadi ia bernilai-EV positif' memperlakukan condongan sebagai ramalan dan juga melompati geometri ganjaran yang diperlukan oleh nilai jangkaan. Jawapan 'cat cukup banyak verdict 0.68 dan 68% sepatutnya diselesaikan' ialah kesilapan yang lebih halus dan satu yang worth dinamakan: kekalibrasian ialah sifat nombor yang dikeluarkan sebagai kebarangkalian, dan angka Bilik bukan satu — panggilan yang boleh anda skor dengan jujur adalah milik anda sendiri, yang merupakan keseluruhan titik <Lesson id="363_scoring_yourself_over_time"/>. Dan jawapan 'PASS menjadikan keyakinan tidak relevan' meruntuhkan dua isyarat bebas: PASS melaporkan pematuhan Mandat sahaja, dan tidak mengatakan apa-apa tentang kekuatan tesis."
 />
 
 <Quiz
-  question="Verdict mencadangkan kedudukan 3% dengan entri $50, stop $44, sasaran $62. Sebelum anda menulis entri jurnal, apakah nisbah ganjaran-kepada-kecemasan (reward-to-risk), dan apakah kos penyingkiran stop yang bersih kepada portfoli?"
+  question="Verdict mencadangkan kedudukan 3% dengan entry $50, stop $44, target $62. Sebelum anda menulis entri jurnal, apakah nisbah ganjaran-kepada-risiko, dan apakah kos pembersihan stop yang bersih kepada portfolio?"
   options={[
-    "1.4 kepada 1, dan 0.36% daripada portfoli",
-    "2.0 kepada 1, dan 3% daripada portfoli — penyingkiran stop menelan keseluruhan kedudukan",
-    "2.0 kepada 1, dan 12% daripada portfoli",
-    "2.0 kepada 1, dan 0.36% daripada portfoli"
+    "1.4 kepada 1, dan 0.36% daripada portfolio",
+    "2.0 kepada 1, dan 3% daripada portfolio — pembersihan stop menelan seluruh kedudukan",
+    "2.0 kepada 1, dan 12% daripada portfolio",
+    "2.0 kepada 1, dan 0.36% daripada portfolio"
   ]}
   answer={3}
-  explanation="Kecemasan setiap saham ialah $50 − $44 = $6; ganjaran ialah $62 − $50 = $12; 12 ÷ 6 = 2.0 kepada 1. Stop adalah 12% di bawah entri, dan kedudukan ialah 3% daripada portfoli, jadi 0.03 × 0.12 = 0.0036 = 0.36%. Jawapan '3% daripada portfoli' mengelirukan saiz kedudukan dengan kerugian — keseluruhan kedudukan hanya hilang jika instrumen jatuh ke sifar, bukan pada stop $44. Jawapan '12% daripada portfoli' melaporkan kerugian per-kedudukan seolah-olah kedudukan itu ialah portfoli. Jawapan '1.4 kepada 1' membahagikan sasaran $62 dengan stop $44 (62 ÷ 44 ≈ 1.41) bukannya membandingkan $12 ganjaran dengan $6 yang terancam."
+  explanation="Risiko setiap saham ialah $50 − $44 = $6; ganjaran ialah $62 − $50 = $12; 12 ÷ 6 = 2.0 kepada 1. Stop adalah 12% di bawah entry, dan kedudukan ialah 3% daripada portfolio, jadi 0.03 × 0.12 = 0.0036 = 0.36%. Jawapan '3% daripada portfolio' keliru saiz kedudukan dengan kerugian — seluruh kedudukan hanya hilang jika instrumen jatuh ke sifar, bukan pada stop $44. Jawapan '12% daripada portfolio' melaporkan kerugian setiap kedudukan seolah-olah kedudukan itu ialah portfolio. Jawapan '1.4 kepada 1' membahagikan sasaran $62 dengan stop $44 (62 ÷ 44 ≈ 1.41) sebaliknya membandingkan $12 ganjaran dengan $6 yang berisiko."
 />
 
 <Quiz
-  question="Lapan minggu kemudian, kedudukan itu dihentikan keluar untuk kerugian portfoli 0.36%. Jurnal anda menunjukkan keadaan pembatalan — tutup di bawah $44 — telah berlaku tepat seperti yang ditulis, dan pra-mortem anda telah menamakan laluan kegagalan ini lebih awal. Menarik keseluruhan modul bersama, apakah verdict pasca-mortem yang betul?"
+  question="Lapan minggu kemudian, kedudukan itu stop out untuk kerugian portfolio 0.36%. Jurnal anda menunjukkan keadaan pembatalan — tutup di bawah $44 — diaktifkan tepat seperti yang ditulis, dan pre-mortem anda telah menamakan laluan kegagalan ini lebih awal. Menarik keseluruhan modul bersama, apakah verdict post-mortem yang betul?"
   options={[
-    "Proses itu kekal: tesis, pembatalan dan pra-mortem semua ditulis sebelum hasil wujud dan keluaran berlaku seperti yang dinyatakan, jadi ini adalah keputusan yang dilaksanakan dengan betul dengan hasil yang kalah — satu hasil membawa hampir tiada maklumat tentang proses, dan entri milik kepada skor yang dibina ke atas banyak keputusan",
-    "Keputusan itu baik kerana kerugian itu kecil — saiz, bukan pemikiran, adalah apa yang dinilai oleh pasca-mortem",
-    "Keputusan itu buruk: ia kehilangan wang, dan proses yang menghasilkan kerugian perlu digantikan",
-    "Penamaan laluan kegagalan dalam pra-mortem bermaksud kedudukan itu tidak sepatutnya dibuka — risiko yang dikenal pasti lebih awal adalah alasan untuk menolak"
+    "Proses itu memegang: tesis, pembatalan dan pre-mortem semua ditulis sebelum hasil wujud dan exit diaktifkan seperti yang dinyatakan, jadi ini ialah keputusan yang dilaksanakan dengan betul dengan hasil yang kalah — satu hasil membawa hampir tiada maklumat tentang proses, dan entry milik dalam skor yang dibina ke atas banyak keputusan",
+    "Keputusan itu baik kerana kerugian itu kecil — saiz, bukan pemikiran, ialah apa yang dinilai oleh post-mortem",
+    "Keputusan itu buruk: ia kehilangan wang, dan proses yang menghasilkan kerugian perlu diganti",
+    "Penamaan laluan kegagalan ini dalam pre-mortem bermaksud kedudukan itu tidak sepatutnya dibuka — risiko yang dikenal pasti lebih awal ialah alasan untuk menolak"
   ]}
   answer={0}
-  explanation="Ini adalah sintesis teras modul: proses dinilai pada saat keputusan dibuat, terhadap apa yang boleh diketahui pada masa itu, dan satu kerugian dalam risiko yang ditetapkan sebelumnya sebanyak 0.36% adalah varians berbanding bukti kesilapan. Jawapan 'ia kehilangan wang, jadi ia buruk' adalah tepat pemikiran berasaskan hasil yang modul ini wujud untuk mematahkan. Jawapan 'baik kerana kerugian kecil' menilai perkara yang betul untuk alasan yang salah — saiz kecil hadkkan kerosakan, tetapi tidak mengatakan apa-apa tentang sama ada pemikiran itu kukuh. Dan jawapan 'risiko yang dinamakan adalah alasan untuk menolak' salah baca pra-mortem: tugasnya adalah untuk mendedahkan laluan kegagalan supaya ia boleh dinilai dan dipantau, bukan untuk membatalkan setiap kedudukan yang mempunyai satu — setiap kedudukan mempunyai satu."
+  explanation="Ini ialah sintesis teras modul: proses dinilai pada saat keputusan, terhadap apa yang boleh diketahui pada masa itu, dan satu kerugian di dalam risiko yang ditetapkan sebelumnya 0.36% ialah varians berbanding bukti kesilapan. Jawapan 'ia kehilangan wang, jadi ia buruk' ialah tepat pemikiran berasaskan hasil yang modul ini wujud untuk memecahkan. Jawapan 'baik kerana kerugian itu kecil' menilai perkara yang betul untuk sebab yang salah — saiz kecil hadkan kerosakan, tetapi tidak mengatakan apa-apa tentang sama ada pemikiran itu sah. Dan jawapan 'risiko yang dinamakan ialah alasan untuk menolak' salah baca pre-mortem: kerjanya ialah mendedahkan laluan kegagalan supaya ia boleh dihargai dan dipantau, bukan untuk veto setiap kedudukan yang mempunyai satu — setiap kedudukan mempunyai satu."
 />
 
 ## Cuba sendiri
 
-Buka Jurnal Keputusan dan cari entri posisi **terbuka** paling terkini anda — satu yang membawa tesis dan pembatalan, bukan rekod penyelesaian pelajaran, dan satu yang belum selesai. Semak satu perkara: adakah keadaan pembatalan cukup spesifik supaya sesuatu di pasaran boleh memicunya tanpa tafsiran anda? Jika tidak, tulis semula sebagai harga, paras, atau titik data. Hanya pada entri terbuka: menulis semula entri tertutup adalah suntingan pasca-hasil <Lesson id="359_keeping_a_decision_journal"/> wujud untuk melarang. Kemudian Kumpulkan Bilik pada ticker senarai pantau dan jalankan urutan penuh sekali, mengira masa anda. Ingat: Verdict adalah artifak latihan untuk anda menilai, bukan nasihat pelaburan.
+Buka Jurnal Keputusan dan cari entri posisi **terbuka** anda yang paling terkini — satu yang membawa tesis dan pembatalan, bukan rekod penyelesaian pelajaran, dan satu yang belum selesai. Semak satu perkara: adakah keadaan pembatalan itu cukup spesifik sehingga sesuatu di pasaran boleh memicunya tanpa tafsiran anda? Jika tidak, tulis semula sebagai harga, paras, atau titik data. Hanya pada entri terbuka: menulis semula entri tertutup adalah suntingan pasca-hasil <Lesson id="359_keeping_a_decision_journal"/> wujud untuk melarangnya. Kemudian Kumpulkan Bilik pada ticker senarai pantau dan jalankan urutan penuh sekali, masa diri anda. Ingat: Verdict adalah artifak latihan untuk anda menilai, bukan nasihat pelaburan.
 
-## Intipati
+## Penafian
 
-Baca, semak angka, bina kes lawan terkuat, pra-maut, jurnal dengan keadaan pembatalan yang sebenarnya boleh dipicu, kemudian putuskan — dan rekodkan pemikiran sama ada anda menerima atau membatalkan, kerana entri yang anda langkau adalah satu yang paling diperlukan oleh penilaian masa depan anda.
+Baca, semak angka, bina kes lawan, pra-maut, jurnal dengan keadaan pembatalan yang benar-benar boleh dipicu, kemudian putuskan — dan rekam alasan sama ada anda menerima atau membatalkan, kerana entri yang anda langkau adalah yang paling diperlukan oleh penilaian masa depan anda.

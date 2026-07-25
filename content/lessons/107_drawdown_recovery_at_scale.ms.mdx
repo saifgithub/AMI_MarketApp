@@ -1,6 +1,6 @@
 ---
 id: "107_drawdown_recovery_at_scale"
-title: "Pemulihan drawdown pada saiz per dagangan yang berbeza"
+title: "Pemulihan Drawdown pada saiz per-dagangan yang berbeza"
 duration_min: 5
 level: 1
 module: 3
@@ -11,34 +11,34 @@ topic: "drawdown_recovery"
 prerequisites: ["018_drawdown_management", "014_position_sizing_basics"]
 tags: ["risk", "drawdown", "recovery", "math", "position_sizing"]
 agent_callouts: ["portfolio_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Pemulihan drawdown pada saiz per-trade yang berbeza
+# Pemulihan drawdown pada saiz per-dagangan berbeza
 
-Pelajaran ini mengandaikan anda telah menamatkan <Lesson id="018_drawdown_management"/> (Pengurusan drawdown); di sini kita menyelami lebih dalam hubungan khusus antara risiko per-trade dan berapa banyak trade yang diperlukan untuk keluar daripada drawdown. <Lesson id="018_drawdown_management"/> menunjukkan bahawa drawdown 30% memerlukan keuntungan 42.9%. Pelajaran ini menjawab soalan susulan: pada risiko 1% per trade dan kadar kemenangan 55% dengan pemenang purata 1.5R, berapa banyak trade yang diperlukan? Pada 2%? Pada 5%? Angka-angka ini mengejutkan dan itulah sebabnya peraturan 1% mendapat tempatnya — laluan pemulihan pada saiz per-trade yang lebih tinggi kelihatan lebih pendek pada asas trade tunggal tetapi mendedahkan akaun kepada drawdown segar yang lebih dalam jauh sebelum drawdown pertama pulih.
+Pelajaran ini andaikan anda telah menyelesaikan <Lesson id="018_drawdown_management"/> (Pengurusan drawdown); di sini kita menyelami lebih dalam hubungan khusus antara risiko per-dagangan dan berapa banyak dagangan yang diperlukan untuk keluar daripada drawdown. <Lesson id="018_drawdown_management"/> menunjukkan bahawa drawdown 30% memerlukan kenaikan 42.9%. Pelajaran ini menjawab soalan susulan: pada risiko 1% per dagangan dan kadar kemenangan 55% dengan pemenang purata 1.5R, berapa banyak dagangan yang diperlukan? Pada 2%? Pada 5%? Nombernya menyedarkan dan itulah sebabnya peraturan 1% mendapat tempatnya — laluan pemulihan pada saiz per-dagangan yang lebih tinggi kelihatan lebih pendek pada asas dagangan tunggal tetapi mendedahkan akaun kepada drawdown segar dan lebih dalam sebelum yang pertama sembuh.
 
 ## Contoh
 
-Anda berada dalam drawdown 30% pada akaun simulasi $100,000 yang kini berada pada $70,000. Sasaran adalah kembali ke $100,000, memerlukan 42.9% pada asas semasa. Anggap kadar kemenangan 55% dengan pemenang purata 1.5R dan penalti purata 1R — angka sederhana, realistik untuk perdagangan yang disiplin.
+Anda berada dalam drawdown 30% pada akaun simulasi $100,000 yang kini berada pada $70,000. Sasaran adalah kembali ke $100,000, memerlukan 42.9% pada asas semasa. Andaikan kadar kemenangan 55% dengan pemenang purata 1.5R dan kerugian purata 1R — nombor yang sederhana dan realistik untuk perdagangan yang disiplin.
 
-Pada risiko 1% per trade: jangkaan per trade = (0.55 × 1.5R) − (0.45 × 1R) = 0.825R − 0.45R = +0.375R per trade. Pada 1% per trade, itu kira-kira +0.375% per trade. Trade yang diperlukan untuk berkompaun ke +42.9% pada asas semasa: kira-kira 96 trade. Pada satu trade setiap hari perdagangan, itu kira-kira lima bulan pelaksanaan disiplin.
+Pada risiko 1% per dagangan: jangkaan per dagangan = (0.55 × 1.5R) − (0.45 × 1R) = 0.825R − 0.45R = +0.375R per dagangan. Pada 1% per dagangan, itu kira-kira +0.375% per dagangan. Dagangan yang diperlukan untuk mengganda kepada +42.9% pada asas semasa: kira-kira 96 dagangan. Pada satu dagangan per hari perdagangan, itu kira-kira lima bulan pelaksanaan disiplin.
 
-Pada risiko 2% per trade: jangkaan per trade ≈ +0.75% per trade. Kira-kira 48 trade untuk pulih. Dua setengah bulan. Nampak dua kali lebih pantas. Tetapi: drawdown jangkaan terburuk pada 2% per trade juga kira-kira dua kali lebih dalam — satu siri 8 kerugian normal yang menelan kos 8% pada saiz 1% menelan kos 16% pada saiz 2%. Anda memanjat keluar dengan lebih cepat hanya jika tiada drawdown lain berlaku semasa pemulihan. Drawdown 16% segar berlaku.
+Pada risiko 2% per dagangan: jangkaan per dagangan ≈ +0.75% per dagangan. Kira-kira 48 dagangan untuk pulih. Dua setengah bulan. Nampaknya dua kali lebih cepat. Tetapi: drawdown terburuk yang dijangka pada 2% per dagangan juga kira-kira dua kali lebih dalam — rentetan 8 kerugian yang biasa menelan kos 8% pada saiz 1% menelan kos 16% pada saiz 2%. Anda hanya keluar lebih cepat jika tiada drawdown lain berlaku semasa pemulihan. Drawdown segar 16% berlaku.
 
-Pada risiko 5% per trade: jangkaan ≈ +1.875% per trade. Kira-kira 19 trade untuk pulih secara kertas. Tetapi siri 8 kerugian tipikal pada 5% per trade adalah drawdown 40% — yang, jika berlapis pada 30% yang anda mulakan, membawa anda ke kira-kira 58% dari puncak. Anda tidak lagi mempunyai akaun untuk dipulihkan. Di Bursa Malaysia, matematik yang sama berfungsi dalam MYR; peratusan tidak kisah tentang mata wang. Ujian boleh disangkal: simulasi 10,000 urutan 50 trade setiap satu pada kadar kemenangan 55% dan pembayaran 1.5R yang sama — pada saiz per-trade 5%, lebih daripada 35% urutan mencapai drawdown lebih dalam daripada 50% dari puncak sebelum selesai.
+Pada risiko 5% per dagangan: jangkaan ≈ +1.875% per dagangan. Kira-kira 19 dagangan untuk pulih secara kertas. Tetapi rentetan 8 kerugian yang biasa pada 5% per dagangan adalah drawdown 40% — yang, berlapis pada 30% yang anda mulakan, membawa anda ke kira-kira 58% dari puncak. Anda tidak lagi mempunyai akaun untuk dipulihkan. Di Bursa Malaysia, matematik yang sama berfungsi dalam MYR; peratusan tidak kisah tentang mata wang. Ujian boleh disangkal: simulasi 10,000 rentetan 50 dagangan setiap satu pada kadar kemenangan 55% dan ganjaran 1.5R yang sama — pada saiz per-dagangan 5%, lebih daripada 35% rentetan mencapai drawdown lebih dalam daripada 50% dari puncak sebelum selesai.
 
 ## Perangkap
 
-Perangkapnya ialah "Saya rugi, saya perlu naikkan saiz untuk pulih lebih cepat." Ini adalah tingkah laku yang sama dari bahagian perangkap <Lesson id="018_drawdown_management"/>, dan ini adalah versi kuantitatifnya: menggandakan saiz per-trade mengira bilangan trade pemulihan kira-kira separuh, tetapi ia menggandakan lebih daripada kedalaman mana-mana drawdown baru semasa pemulihan — dan pemulihan-di-atas-pemulihan mengkompaun matematik ke arah yang salah. Model mental yang betul: semasa drawdown, kurangkan saiz per-trade jika ada. Saiz per-trade 0.5% semasa pemulihan menjadikan bilangan trade kira-kira dua kali ganda, tetapi drawdown segar kes terburuk semasa tempoh pemulihan juga berkurang separuh. Anda menjual kelajuan untuk kelangsungan hidup, yang merupakan sisi yang betul bagi pertukaran apabila anda sudah berada dalam lubang.
+Perangkapnya ialah "Saya rugi, saya perlu meningkatkan saiz untuk pulih lebih cepat." Ia adalah tingkah laku yang sama dari bahagian perangkap <Lesson id="018_drawdown_management"/>, dan ini adalah versi kuantitatifnya: menggandakan saiz per-dagangan memotong kira-kira separuh bilangan dagangan pemulihan, tetapi ia lebih daripada menggandakan kedalaman mana-mana drawdown baru semasa pemulihan — dan pemulihan di atas pemulihan menggandakan matematik ke arah yang salah. Model mental yang betul: semasa drawdown, kurangkan saiz per-dagangan kepada separuh jika ada apa-apa. Saiz per-dagangan 0.5% semasa pemulihan menjadikan bilangan dagangan kira-kira dua kali ganda, tetapi drawdown segar terburuk semasa tempoh pemulihan juga berkurang separuh. Anda mempertaruhkan kelajuan untuk kelangsungan hidup, yang merupakan sisi yang betul dalam pertukaran apabila anda sudah berada dalam lubang.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Akaun pada $80,000 selepas penurunan 20% dari puncak $100,000. Pemulihan yang diperlukan pada asas semasa = 25%. Anggarkan jangkaan per-dagangan +0.375% pada saiz 1%. Berapa kira-kira dagangan diperlukan untuk pulih?"
+  question="Akaun pada $80,000 selepas penurunan 20% dari puncak $100,000. Pemulihan yang diperlukan pada asas semasa = 25%. Anggarkan jangkaan +0.375% per dagangan dengan saiz 1%. Berapa banyak dagangan untuk pulih?"
   options={[
     "Kira-kira 60 dagangan",
     "Kira-kira 250 dagangan",
@@ -46,26 +46,25 @@ Perangkapnya ialah "Saya rugi, saya perlu naikkan saiz untuk pulih lebih cepat."
     "Kira-kira 120 dagangan"
   ]}
   answer={0}
-  explanation="(1.00375)^N = 1.25 → N × ln(1.00375) = ln(1.25) → N = 0.2231 ÷ 0.003743 ≈ 60 dagangan. Menjawab 25 membuat kesilapan dalam mengira peratusan pemulihan yang diperlukan untuk bilangan dagangan. Intipadanya ialah matematik: walaupun pada jangkaan positif, memanjat keluar daripada penurunan 20% mengambil masa dua hingga tiga bulan pelaksanaan berdisiplin pada saiz 1% — bukan beberapa minggu seperti yang dirasakan sepatutnya."
+  explanation="(1.00375)^N = 1.25 → N × ln(1.00375) = ln(1.25) → N = 0.2231 ÷ 0.003743 ≈ 60 dagangan. Menjawab 25 membuat kesilapan dalam peratusan pemulihan yang diperlukan untuk kiraan dagangan. Titik utamanya ialah matematik: walaupun pada jangkaan positif, keluar daripada penurunan 20% mengambil masa dua hingga tiga bulan pelaksanaan berdisiplin pada saiz 1% — bukan beberapa minggu seperti yang dirasakan sepatutnya."
 />
 
 <Quiz
-  question="Dua pedagang berada pada penurunan 30%. Pedagang A mengekalkan saiz dagangan 1% dan menerima ~5 bulan untuk pulih. Pedagang B menggandakan kepada 2% saiz per-dagangan 'untuk keluar lebih cepat' dan meramalkan ~2.5 bulan. Merentasi 1,000 jujulan simulasi pemulihan dengan rentetan kerugian realistik, siapa yang lebih kerap pulih tanpa mencapai penurunan puncak-ke-leher 50%?"
+  question="Dua pedagang berada pada penurunan 30%. Pedagang A mengekalkan saiz 1% per dagangan dan menerima ~5 bulan untuk pulih. Pedagang B menggandakan kepada 2% per dagangan 'untuk keluar lebih cepat' dan meramalkan ~2.5 bulan. Merentasi 1,000 simulasi urutan pemulihan dengan rentetan kerugian realistik, siapa yang lebih kerap pulih tanpa mencapai penurunan puncak-ke- lembah 50%?"
   options={[
     "Pedagang B — pemulihan lebih cepat bermakna masa terdedah kepada penurunan baharu lebih sedikit.",
-    "Mereka pulih pada kadar yang sama kerana jangkaan per-dagangan tidak berubah.",
-    "Pedagang B — keuntungan per-dagangan yang lebih tinggi mencecah lebih cepat daripada rentetan boleh mengikisnya.",
-    "Pedagang A — jujulan pemulihan termasuk rentetan kerugian biasa; pada saiz 2%, rentetan tersebut hampir menggandakan kedalaman mana-mana penurunan baharu semasa pemulihan, dan kedalaman gabungan (30% asal ditambah 16% tambahan) meletakkan akaun Pedagang B melepasi ambang bahaya 50% dalam pecahan laluan yang bermakna, manakala penurunan tambahan 8% Pedagang A kekal jauh di bawahnya."
+    "Mereka pulih pada kadar yang sama kerana jangkaan per dagangan tidak berubah.",
+    "Pedagang B — keuntungan per dagangan yang lebih tinggi berkembang lebih cepat daripada rentetan yang boleh mengurangkannya.",
+    "Pedagang A — urutan pemulihan termasuk rentetan kerugian normal; pada saiz 2% rentetan tersebut hampir menggandakan kedalaman sebarang penurunan baharu semasa pemulihan, dan kedalaman gabungan (penurunan asal 30% ditambah 16% tambahan) membawa akaun Pedagang B melepasi ambang bahaya 50% dalam pecahan laluan yang bermakna, manakala penurunan tambahan 8% Pedagang A kekal jauh di bawahnya."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah yang pertama atau terakhir — 'keuntungan lebih cepat = hasil lebih baik'. Matematik mengatakan sebaliknya: jangkaan positif bermakna laluan purata pulih lebih cepat pada 2%, tetapi varians laluan juga berganda. Soalan kelangsungan hidup yang relevan bukan purata, ia ialah pecahan laluan yang bertahan tanpa melanggar penurunan kritikal. Pada saiz 2%, laluan tersebut melihat penurunan 16% baharu ditambah kepada 30% sedia ada, dan kedalaman gabungan melebihi 50% mencetuskan tebing pemulihan dari <Lesson id="
-/> di mana matematik menjadi masalah berbilang tahun tanpa mengira kemahiran."
+  explanation="Jawapan salah yang menggoda ialah yang pertama atau terakhir — 'keuntungan lebih cepat = hasil lebih baik'. Matematik berkata sebaliknya: jangkaan positif bermaksud laluan purata pulih lebih cepat pada 2%, tetapi varians laluan juga berganda. Soalan kelangsungan hidup yang relevan bukan purata, tetapi pecahan laluan yang bertahan tanpa melanggar penurunan kritikal. Pada saiz 2%, laluan tersebut melihat penurunan baharu 16% ditambah kepada penurunan 30% yang sedia ada, dan kedalaman gabungan melebihi 50% mencetuskan tebing pemulihan dari <Lesson id="018_drawdown_management"/> di mana matematik menjadi masalah bertahun-tahun tanpa mengira kemahiran."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_decision_journal" /> dan cari drawdown puncak-ke-lembah terburuk anda setakat ini. Hitung peratusan pemulihan yang diperlukan pada asas semasa. Kemudian buka <Term id="ami_one_on_one" /> dengan Portfolio Manager dan tanya "Pada kadar kemenangan dan R purata saya, berapa banyak trade sehingga saya pulih? Dan bagaimana rupa pemulihan yang sama pada separuh saiz per-trade semasa saya?" Jawapannya ialah pertukaran yang anda buat secara sedar bukannya secara tidak sengaja.
+Buka <Term id="ami_decision_journal" /> dan cari drawdown puncak-ke-lembah terburuk anda setakat ini. Hitung peratusan pemulihan yang diperlukan pada asas semasa. Kemudian buka <Term id="ami_one_on_one" /> dengan Pengurus Portofolio dan tanya "Pada kadar kemenangan dan R purata saya, berapa banyak dagangan sehingga saya pulih? Dan bagaimana penampilan pemulihan yang sama pada separuh saiz per-dagangan semasa saya?" Jawapannya adalah pertukaran yang anda buat secara sedar bukannya secara tidak sengaja.
 
-## Penamatan
+## Penegasan
 
-Pemulihan diukur dalam trade, bukan minggu — mengurangkan saiz per-trade separuh semasa drawdown menggandakan bilangan trade tetapi mengurangkan kedalaman lubang seterusnya anda boleh jatuh ke dalamnya.
+Pemulihan diukur dalam dagangan, bukan minggu — mengurangkan saiz per-dagangan kepada separuh semasa drawdown menggandakan bilangan dagangan tetapi mengurangkan kedalaman lubang seterusnya yang anda boleh jatuh ke dalamnya kepada separuh.

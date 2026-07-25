@@ -11,62 +11,62 @@ topic: "debt_to_asset"
 prerequisites: ["042_debt_to_equity", "034_debt_and_the_balance_sheet"]
 tags: ["debt_to_asset", "leverage", "balance_sheet", "solvency", "fundamentals"]
 agent_callouts: ["fundamentals_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Debt-to-asset — pandangan leverage dari sisi aset
 
-<Lesson id="042_debt_to_equity"/> telah memperkenalkan debt-to-equity, di mana penyebutnya ialah ekuiti pemegang saham. Debt-to-asset menggunakan penyebut yang berbeza: jumlah aset. Formula: D/A = jumlah hutang / jumlah aset. Ia menjawab soalan "apa pecahan aset syarikat yang dibiayai oleh hutang?" — pandangan yang lebih stabil berbanding D/E kerana asas aset tidak berayun secara liar dengan pembelian balik saham, dividen, atau penulisan balik sekali gus, seperti yang berlaku pada ekuiti. Pada akhir pelajaran ini, anda harus mampu mengira ia, menjelaskan mengapa D/A lebih bersih daripada D/E untuk perbandingan merentas syarikat yang melakukan pembelian balik saham secara agresif, dan mengiktiraf senario khusus di mana D/A dan D/E menceritakan cerita yang bertentangan.
+<Lesson id="042_debt_to_equity"/> memperkenalkan debt-to-equity, di mana penyebutnya ialah ekuiti pemegang saham. Debt-to-asset menggunakan penyebut yang berbeza: jumlah aset. Formula: D/A = jumlah hutang / jumlah aset. Ia menjawab soalan "pecahan aset syarikat yang dibiayai oleh hutang adalah sebanyak mana?" — pandangan yang lebih stabil berbanding D/E kerana asas aset tidak berubah secara mendadak akibat pembelian balik saham, dividen, atau penulisan turun sekali sahaja seperti yang berlaku pada ekuiti. Pada akhir pelajaran ini, anda harus dapat mengira D/A, menerangkan mengapa D/A lebih bersih daripada D/E untuk perbandingan merentas syarikat yang aktif membeli balik saham, dan mengenal pasti senario khusus di mana D/A dan D/E menceritakan cerita yang bertentangan.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
-Lihat neraca AAPL pada tahun fiskal 2024: jumlah aset ~$365B, jumlah hutang ~$100B, ekuiti ~$65B. D/A = 100 / 365 ≈ 27%. D/E = 100 / 65 ≈ 1.5x. Kini, pertimbangkan apa yang berlaku di bawah permukaan. AAPL telah membelanjakan lebih $700B secara kumulatif untuk pembelian balik sejak 2012, yang mengecilkan asas ekuiti tanpa mengecilkan asas aset secara berkadar. D/E telah meningkat secara mekanikal selama satu dekad kerana pembelian balik, bukan kerana hutang telah tumbuh di luar kawalan. D/A telah kekal dalam jalur yang jauh lebih sempit — hutang telah tumbuh secara sederhana, aset telah tumbuh bersamanya.
+Lihat neraca AAPL pada tahun kewangan 2024: jumlah aset ~$365B, jumlah hutang ~$100B, ekuiti ~$65B. D/A = 100 / 365 ≈ 27%. D/E = 100 / 65 ≈ 1.5x. Sekarang pertimbangkan apa yang berlaku di bawah permukaan. AAPL telah membelanjakan lebih $700B secara kumulatif untuk pembelian balik saham sejak 2012, yang mengecilkan asas ekuiti tanpa mengecilkan asas aset secara berkadar. D/E telah meningkat secara mekanikal selama satu dekad kerana pembelian balik saham, bukan kerana hutang telah tumbuh di luar kawalan. D/A telah kekal dalam julat yang lebih sempit — hutang telah tumbuh secara sederhana, dan aset telah tumbuh bersamanya.
 
-Bandingkan dengan syarikat yang tidak membeli balik saham secara agresif. JNJ pada 2024: jumlah aset ~$185B, jumlah hutang ~$33B, ekuiti ~$70B. D/A = 33 / 185 ≈ 18%. D/E = 33 / 70 ≈ 0.47x. Kedua-dua nisbah menceritakan kisah leverage rendah yang sama kerana asas ekuiti tidak telah direka turun.
+Bandingkan dengan syarikat yang tidak membeli balik saham secara agresif. JNJ pada 2024: jumlah aset ~$185B, jumlah hutang ~$33B, ekuiti ~$70B. D/A = 33 / 185 ≈ 18%. D/E = 33 / 70 ≈ 0.47x. Kedua-dua nisbah menceritakan kisah leverage rendah yang sama kerana asas ekuiti tidak direka turun secara buatan.
 
-Senario di mana kedua-dua nisbah menyimpang: McDonald's (MCD) selama bertahun-tahun memegang ekuiti pemegang saham negatif — pembelian balik ditambah pengedaran dividen terkumpul melebihi asas untung simpanan. D/E pada tempoh itu secara teknikalnya negatif (atau tidak tertakrif), menjadikannya tidak berguna. D/A kekal boleh dikira dan memberikan gambaran leverage yang jujur: kira-kira $35B hutang terhadap $55B aset, atau sekitar 64%. D/A berfungsi apabila D/E gagal.
+Senario di mana kedua-dua nisbah ini menyimpang: McDonald's (MCD) selama bertahun-tahun mempunyai ekuiti pemegang saham yang negatif — pembelian balik saham ditambah dengan pengagihan dividen terkumpul melebihi asas untung simpanan. D/E pada tempoh tersebut adalah negatif (atau tidak tertakrif) secara teknikal, menjadikannya tidak berguna. D/A kekal boleh dikira dan memberikan gambaran leverage yang jujur: kira-kira $35B hutang terhadap $55B aset, atau sekitar 64%. D/A berfungsi apabila D/E gagal.
 
-Di Bursa Malaysia: TENAGA mempunyai jumlah aset hampir MYR 175B dengan jumlah hutang sekitar MYR 65B, memberikan D/A ~37%. Asas aset utiliti ini kebanyakannya adalah kilang fizikal — D/A tertakluk pada asas aset berregulated, yang juga asas di mana TENAGA memperoleh pulangan yang dibenarkan. Membandingkan D/A TENAGA dengan syarikat perisian adalah tidak sepadan; sektor yang berat dengan aset fizikal adalah berbeza secara struktur.
+Di Bursa Malaysia: TENAGA mempunyai jumlah aset hampir MYR 175B dengan jumlah hutang sekitar MYR 65B, memberikan D/A ~37%. Asas aset utiliti ini kebanyakannya adalah kilang fizikal — D/A tertakluk pada asas aset beratur, yang juga merupakan asas di mana TENAGA memperoleh pulangan yang dibenarkan. Membandingkan D/A TENAGA dengan syarikat perisian adalah tidak sepadan; sektor yang berat dengan aset fizikal mempunyai struktur yang berbeza.
 
-Pernyataan boleh disangkal: untuk syarikat bukan kewangan, D/A di atas 60% adalah leverage tinggi tanpa mengira D/E, dan D/A di atas 75% adalah wilayah di mana sebarang penulisan balik aset yang sederhana (contohnya, kecederaan goodwill 10%) memampatkan asas ekuiti secara ketara dan mencetuskan kovenant. Isyarat ini tidak sah untuk utiliti berregulated dan infrastruktur di mana D/A tinggi adalah normal berregulated.
+Pernyataan boleh disangkal: untuk syarikat bukan kewangan, D/A di atas 60% adalah leverage tinggi tanpa mengira D/E, dan D/A di atas 75% adalah wilayah di mana sebarang penulisan turun aset yang sederhana (contohnya, kecacatan goodwill 10%) akan memampatkan asas ekuiti secara ketara dan mencetuskan perjanjian (covenants). Isyarat ini tidak sah untuk utiliti beratur dan infrastruktur di mana D/A tinggi adalah normal beratur.
 
 ## Perangkap
 
-Perangkapnya ialah memperlakukan D/A dan D/E sebagai berlebihan — memilih satu dan mengabaikan yang lain. Mereka mengukur perkara yang berbeza. D/E ialah pecahan pemilik-vs-piutang (tadbir urus dan kesan pendarab ekuiti ke atas ROE). D/A ialah pecahan pembiayaan aset (keupayaan bertahan di bawah tekanan aset). Syarikat boleh memaparkan D/E "rendah" dengan membeli balik saham secara agresif sambil D/A meningkat perlahan-lahan. Syarikat boleh memaparkan D/E "tinggi" kerana dividen sekali gus yang tidak mengubah D/A langsung. Model mental yang betul: D/A ialah pembanding merentas syarikat yang lebih bersih, terutamanya untuk syarikat matang yang merekayasa asas ekuiti mereka. Apa yang membatalkan tajuk: syarikat dengan aset intangible yang material (goodwill, perisian dikapitalisasi) mempunyai D/A yang dibesarkan oleh sisi aset — keluarkan goodwill jika acquisitions terkini telah membesarkan asas aset secara buatan dan kira semula.
+Perangkapnya ialah memperlakukan D/A dan D/E sebagai berlebihan — memilih satu dan mengabaikan yang lain. Mereka mengukur perkara yang berbeza. D/E ialah pecahan pemilik-vs-piutang (tadbir urus dan kesan pendarab ekuiti ke atas ROE). D/A ialah pecahan pembiayaan aset (kebolehan solvensi di bawah tekanan aset). Sebuah syarikat boleh memaparkan D/E "rendah" dengan membeli balik saham secara agresif sambil D/A-nya merangkak naik. Sebuah syarikat boleh memaparkan D/E "tinggi" kerana dividen sekali sahaja yang tidak mengubah D/A langsung. Model mental yang betul: D/A adalah pembanding merentas syarikat yang lebih bersih, terutamanya untuk syarikat matang yang merekayasa asas ekuiti mereka. Apa yang menafikan tajuk utama: syarikat dengan aset intangible yang material (goodwill, perisian yang dikapitalisasi) mempunyai D/A yang dipendekkan oleh sisi aset — keluarkan goodwill jika pembelian baru-baru ini mendongakkan asas aset secara buatan dan kira semula.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Syarikat X: jumlah hutang $4B, jumlah aset $20B, jumlah ekuiti $8B. Syarikat Y: jumlah hutang $4B, jumlah aset $20B, jumlah ekuiti $2B (Y telah membeli balik saham selama satu dekad). Industri yang sama. Bacaan mana yang paling tepat?"
+  question="Syarikat X: jumlah hutang $4B, jumlah aset $20B, jumlah ekuiti $8B. Syarikat Y: jumlah hutang $4B, jumlah aset $20B, jumlah ekuiti $2B (Y telah membeli balik saham selama satu dekad). Industri yang sama. Bacaan mana paling tepat?"
   options={[
     "X lebih berleverage kerana asas asetnya lebih besar",
-    "Y lebih berleverage kerana N/E ialah 2.0x berbanding 0.5x bagi X",
-    "Tanpa pendapatan, kita tidak boleh membandingkan",
-    "Kedua-dua syarikat mempunyai leverage pembiayaan aset yang sama — D/A = 20% bagi setiap satu. Jurang N/E hanyalah kesan artefak daripada sejarah pembelian balik Y yang memampatkan asas ekuiti; jumlah aset dan jumlah hutang adalah sama, jadi profil solvensi teras terhadap tekanan aset adalah sama. Y akan menunjukkan ROE yang lebih tinggi kerana kesan pendarab ekuiti, tetapi tiada satu pun perniagaan menanggung risiko kredit lebih tinggi daripada yang lain pada terma D/A"
+    "Y lebih berleverage kerana D/E ialah 2.0x berbanding 0.5x bagi X",
+    "Tanpa pendapatan kita tidak dapat membandingkan",
+    "Kedua-dua syarikat mempunyai leverage pembiayaan aset yang sama — D/A = 20% bagi setiap satu. Jurang D/E hanyalah artifak daripada sejarah pembelian balik saham Y yang memampatkan asas ekuiti; jumlah aset dan jumlah hutang adalah sama, jadi profil solvensi teras terhadap tekanan aset adalah sama. Y akan menunjukkan ROE yang lebih tinggi kerana kesan pendarab ekuiti, tetapi tiada perniagaan mana-mana menanggung risiko kredit lebih tinggi daripada yang lain pada terma D/A"
   ]}
   answer={3}
-  explanation="Ujian sintesis: D/A sebagai pengukur leverage neutral-pembelian-balik. Jawapan salah yang memikat ialah 'Y lebih berleverage pada N/E' — membaca N/E seolah-olah ia sama dengan risiko kredit dan mengabaikan bahawa asas ekuiti telah dijenamakan. Bacaan yang betul menunjukkan bahawa pembelian balik mengubah N/E tanpa mengubah D/A, kerana ia mengurangkan ekuiti dan tunai (aset) dengan jumlah dolar yang sama, meninggalkan hutang bersih dan bahagian aset yang dibiayai kira-kira tidak berubah. Jawapan 'X lebih berleverage kerana asas asetnya lebih besar' songsahkan arah. Jawapan 'kita tidak boleh membandingkan tanpa pendapatan' memerlukan metrik yang tidak diperlukan untuk perbandingan ini."
+  explanation="Ujian sintesis: D/A sebagai tolok ukur leverage neutral-pembelian-balik. Jawapan salah yang memikat ialah 'Y lebih berleverage pada D/E' — membaca D/E seolah-olah ia sama dengan risiko kredit dan mengabaikan bahawa asas ekuiti telah direka bentuk. Bacaan yang betul menunjukkan bahawa pembelian balik mengubah D/E tanpa mengubah D/A, kerana ia mengurangkan ekuiti dan tunai (sebuah aset) dengan jumlah dolar yang sama, meninggalkan hutang bersih dan bahagian aset yang dibiayai kira-kira tidak berubah. Jawapan 'X lebih berleverage kerana asas asetnya lebih besar' membalikkan arah. Jawapan 'kita tidak dapat membandingkan tanpa pendapatan' menuntut metrik yang tidak diperlukan untuk perbandingan ini."
 />
 
 <Quiz
-  question="Sebuah syarikat melaporkan D/A = 35% dan D/E = 0.7x. Pada suku lalu, ia mengambil keburukan baik sebanyak $2B, mengurangkan jumlah aset dari $20B kepada $18B dan mengurangkan ekuiti dari $7B kepada $5B. Hutang tidak berubah pada $7B. Apakah nisbah baharu dan bacaan mana yang paling tepat?"
+  question="Sebuah syarikat melaporkan D/A = 35% dan D/E = 0.7x. Suku tahun lalu ia mengambil beban kemerosotan goodwill $2B, mengurangkan jumlah aset dari $20B kepada $18B dan mengurangkan ekuiti dari $7B kepada $5B. Hutang tidak berubah pada $7B. Apakah nisbah baharu dan bacaan mana paling tepat?"
   options={[
-    "Nisbah tidak berubah kerana keburukan adalah bukan tunai",
-    "Hutang juga akan jatuh selepas penulisan semula",
-    "D/A baharu = 7 / 18 ≈ 39%; D/E baharu = 7 / 5 = 1.4x. Keburukan adalah bukan tunai tetapi ia memampatkan asas aset dan meruntuhkan asas ekuiti, kedua-duanya memberi kesan kepada nisbah leverage. D/E bergerak tajam (dari 0.7x kepada 1.4x) manakala D/A bergerak sederhana (35% kepada 39%), menunjukkan bahawa D/E lebih sensitif terhadap kejutan asas ekuiti berbanding D/A. Kedua-dua nisbah bergerak menentang syarikat; soalan gantian kredit ialah sama ada pergerakan ini mencetuskan mana-mana ambang kontrak",
-    "Keburukan meningkatkan leverage dengan menulis balik aset teruk"
+    "Nisbah tidak berubah kerana kemerosotan adalah bukan tunai",
+    "Hutang juga akan jatuh selepas penulisan balik",
+    "D/A baharu = 7 / 18 ≈ 39%; D/E baharu = 7 / 5 = 1.4x. Kemerosotan itu bukan tunai tetapi ia memampatkan asas aset dan meruntuhkan asas ekuiti, kedua-duanya memberi kesan kepada nisbah leverage. D/E bergerak tajam (dari 0.7x kepada 1.4x) manakala D/A bergerak sederhana (35% kepada 39%), menunjukkan bahawa D/E lebih sensitif terhadap kejutan asas ekuiti daripada D/A. Kedua-dua nisbah bergerak menentang syarikat; soalan perjanjian kredit ialah sama ada pergerakan itu mencetuskan mana-mana ambang kontrak",
+    "Kemerosotan meningkatkan leverage dengan menulis balik aset rosak"
   ]}
   answer={2}
-  explanation="Sintesis mengaitkan penulisan semula neraca dengan kedua-dua nisbah. Jawapan salah yang memikat ialah 'nisbah tidak berubah kerana keburukan adalah bukan tunai' — keliru antara 'bukan tunai' dengan 'tiada kesan'. Bacaan yang betul mengira kedua-dua nisbah baharu dan memerhatikan bahawa sensitiviti D/E adalah lebih tinggi kerana penyebut ekuiti lebih kecil dan menyerap penuh keburukan, manakala penyebut D/A (jumlah aset) lebih besar jadi pergerakan peratusan adalah lebih kecil. Jawapan 'keburukan meningkatkan leverage' songsahkan hubungan — penulisan semula merosakkan, bukan membantu, bahagian aset. Jawapan 'hutang juga akan jatuh' adalah salah secara fakta; keburukan tidak mengurangkan hutang."
+  explanation="Sintesis mengaitkan penulisan balik neraca dengan kedua-dua nisbah. Jawapan salah yang memikat ialah 'nisbah tidak berubah kerana kemerosotan adalah bukan tunai' — keliru antara 'bukan tunai' dengan 'tiada kesan'. Bacaan yang betul mengira kedua-dua nisbah baharu dan memerhatikan bahawa sensitiviti D/E adalah lebih tinggi kerana penyebut ekuiti lebih kecil dan menyerap penuh kemerosotan, manakala penyebut D/A (jumlah aset) lebih besar jadi pergerakan peratusan adalah lebih kecil. Jawapan 'kemerosotan meningkatkan leverage' songsangkan hubungan — penulisan balik mencederakan, bukan membantu, bahagian aset. Jawapan 'hutang juga akan jatuh' adalah salah fakta; kemerosotan tidak mengurangkan hutang."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, pilih nama yang telah melakukan pembelian balik saham secara agresif (AAPL, ORCL, atau HD) dan tanya: "Berikan D/E dan D/A untuk setiap sepuluh tahun terakhir. Tunjukkan jumlah dolar pembelian balik setiap tahun di sebelahnya." Simpan jadual tersebut. Memandang D/E meningkat sambil D/A kekal rata ialah tandatangan visual bagi leverage yang direkayasa oleh pembelian balik.
+Dalam <Term id="ami_one_on_one" /> bersama Fundamentals Analyst, pilih nama yang telah membeli balik saham secara agresif (AAPL, ORCL, atau HD) dan tanya: "Berikan saya D/E dan D/A untuk setiap sepuluh tahun terakhir. Tunjukkan jumlah dolar pembelian balik setiap tahun di sebelahnya." Simpan jadual tersebut. Memerhatikan D/E naik manakala D/A kekal rata adalah tanda visual bagi leverage yang direkayasa oleh pembelian balik saham.
 
 ## Penutup
 
-D/A ialah pandangan sisi aset bagi leverage dan pembanding neutral-pembelian-balik. Apabila D/E dan D/A bergerak ke arah bertentangan, asas ekuiti sedang direkayasa — baca D/A.
+D/A ialah pandangan leverage dari sisi aset dan pembanding yang neutral terhadap pembelian balik saham. Apabila D/E dan D/A bergerak ke arah bertentangan, asas ekuiti sedang direkayasa — baca D/A.

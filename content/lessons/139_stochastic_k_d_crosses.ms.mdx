@@ -11,64 +11,64 @@ topic: "stochastic"
 prerequisites: ["027_rsi_momentum_oscillator", "031_indicator_limitations"]
 tags: ["indicators", "stochastic", "oscillator", "momentum", "overbought", "oversold"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Oscilator Stokastik — persilangan %K / %D
+# Oscillator Stokastik — Silang %K / %D
 
-<Lesson id="027_rsi_momentum_oscillator"/> memperkenalkan RSI sebagai osilator momentum yang membandingkan purata penutupan naik dengan purata penutupan turun. Oscilator Stokastik mengukur sesuatu yang berbeza: di mana penutupan semasa berada dalam julat tinggi-rendah bagi N bar terakhir. %K ialah bacaan mentah — (penutupan − rendah terendah) / (tinggi tertinggi − rendah terendah) × 100, dikira dengan latar belakang 14 bar secara lalai. %D ialah SMA 3-bar bagi %K. Tahap jenuh beli/jual berlebihan yang konvensional ialah 80/20, sedikit lebih ketat daripada 70/30 bagi RSI. Isyarat utama ialah persilangan %K / %D: %K yang bersilang di atas %D dari bawah ialah isyarat momentum naik; %K yang bersilang di bawah %D dari atas ialah isyarat momentum turun. Arah persilangan penting; lokasi persilangan lebih penting lagi.
+<Lesson id="027_rsi_momentum_oscillator"/> memperkenalkan RSI sebagai oscillator momentum yang membandingkan purata penutupan naik dengan purata penutupan turun. Oscillator Stokastik mengukur sesuatu yang berbeza: di mana penutupan semasa berada dalam julat tinggi-rendah bagi N bar terakhir. %K ialah bacaan mentah — (penutupan − rendah terendah) / (tinggi tertinggi − rendah terendah) × 100, dikira dengan jangkaan 14 bar secara lalai. %D ialah SMA 3-bar bagi %K. Tahap jenuh beli/jual berlebihan konvensional ialah 80/20, sedikit lebih ketat daripada 70/30 bagi RSI. Isyarat utama ialah silang %K / %D: %K menyilang ke atas %D dari bawah ialah isyarat momentum naik; %K menyilang ke bawah %D dari atas ialah isyarat momentum turun. Arah silang penting; lokasi silang lebih penting lagi.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Lihat AMZN melalui Q4 2025. Pada 22 Oktober, dengan AMZN diperdagangkan pada 195 selepas penurunan berbilang minggu dari 215, %K harian Stokastik bersilang naik melalui %D dari bacaan 17 — kedua-dua garis berada dalam wilayah jualan berlebihan di bawah 20. Tiga sesi kemudian, AMZN berada pada 201; sepuluh sesi kemudian pada 209. Persilangan %K / %D yang bullish di ekstrem jualan berlebihan menangkap pembalikan arah.
+Lihat AMZN melalui Q4 2025. Pada 22 Oktober, dengan AMZN dagangan pada 195 selepas penurunan berbilang minggu dari 215, %K harian Stokastik menyilang naik melalui %D pada bacaan 17 — kedua-dua garis berada dalam wilayah jualan berlebihan di bawah 20. Tiga sesi kemudian AMZN berada pada 201; sepuluh sesi kemudian pada 209. Silang %K / %D yang bullish pada ekstrem jualan berlebihan menangkap pusingan tersebut.
 
-Pada 28 November, AMZN pada 217 menghasilkan persilangan %K bullish lain, tetapi kali ini persilangan berlaku pada bacaan %K 64 — di tengah julat, bukan jualan berlebihan. Penunjuk yang sama, arah yang sama. AMZN diperdagangkan mendatar selama dua minggu kemudian mengembalikan seluruh pergerakan. Persilangan di tengah julat tidak mempunyai kelebihan.
+Pada 28 November, AMZN pada 217 menghasilkan silang %K bullish lain, tetapi kali ini silang berlaku pada bacaan %K 64 — di tengah julat, bukan jualan berlebihan. Penunjuk yang sama, arah yang sama. AMZN berdagang mendatar selama dua minggu kemudian memberikan balik keseluruhan pergerakan. Silang di tengah julat tidak mempunyai kelebihan.
 
-Pernyataan boleh disangkal: persilangan %K / %D yang berlaku di bawah 20 (persediaan bullish) atau di atas 80 (persediaan bearish) mempunyai kesinambungan yang lebih tinggi secara material berbanding persilangan yang berlaku antara 30 dan 70. Pembatalan: sampel enam bulan di mana persilangan di tengah julat menghasilkan pulangan ke hadapan yang sama atau lebih besar bermakna lokasi tidak relevan — tetapi itu tidak bertahan dalam amalan, dan contoh di atas menunjukkan mengapa.
+Pernyataan boleh disangkal: Silang %K / %D yang berlaku di bawah 20 (persediaan bullish) atau di atas 80 (persediaan bearish) mempunyai kesinambungan yang lebih tinggi secara material berbanding silang yang berlaku antara 30 dan 70. Pembatalan: sampel enam bulan di mana silang di tengah julat menghasilkan pulangan ke hadapan yang sama atau lebih besar bermakna lokasi tidak relevan — tetapi itu tidak bertahan dalam amalan, dan contoh di atas menunjukkan mengapa.
 
-Isyarat pelengkapnya ialah ayunan kegagalan — %K turun di bawah 20, naik semula di atas 20, turun tanpa membuat rendah baru, kemudian bersilang %D dari bawah lagi. Pengecutan berganda keluar dari jualan berlebihan ialah persediaan stokastik dengan keyakinan tertinggi.
+Isyarat pelengkap ialah ayunan kegagalan — %K turun di bawah 20, bangkit semula di atas 20, turun semula tanpa membuat rendah baru, kemudian menyilang %D dari bawah lagi. Pengecutan berganda keluar dari jualan berlebihan ini ialah persediaan stokastik dengan keyakinan tertinggi.
 
-Di Bursa Malaysia: CIMB pada Februari 2025 — %K harian Stokastik mencapai dasar pada 12, bersilang %D pada 18 pada 7 Februari, kemudian menjalankan corak ayunan kegagalan yang bersih ke rendah %K yang lebih tinggi pada 24 pada 19 Februari. CIMB naik 7% sepanjang bulan berikutnya. Mekanik yang sama.
+Di Bursa Malaysia: CIMB pada Februari 2025 — %K harian Stokastik mencapai dasar pada 12, menyilang %D pada 18 pada 7 Februari, kemudian menjalankan corak ayunan kegagalan yang bersih ke rendah %K yang lebih tinggi pada 24 pada 19 Februari. CIMB naik 7% dalam bulan berikutnya. Mekanisme yang sama.
 
 ## Perangkap
 
-Perangkap ialah memperlakukan setiap persilangan %K / %D sebagai isyarat tanpa mengira lokasi. Pemula membaca "persilangan stokastik = entri" dan bertindak atas persilangan pada 50 atau 60 sama seperti persilangan pada 15. Penunjuk itu membara secara berterusan kerana penghalusan 3-barnya menjadikan goyangan kecil kelihatan seperti persilangan. Kebanyakan persilangan itu berlaku di tengah julat, di mana stokastik tidak mempunyai kelebihan.
+Perangkapnya ialah memperlakukan setiap silang %K / %D sebagai isyarat tanpa mengira lokasi. Pemula membaca "silang stokastik = entri" dan bertindak balas terhadap silang pada 50 atau 60 sama seperti silang pada 15. Penunjuk itu menyala secara berterusan kerana penghalusan 3-barnya menjadikan goyangan kecil kelihatan seperti silangan. Kebanyakan silangan itu berlaku di tengah julat, di mana stokastik tidak mempunyai kelebihan.
 
-Model mental yang betul: persilangan ialah pencetus, tetapi lokasi ialah penapis. Persilangan di bawah 20 atau di atas 80 ialah isyarat zon ekstrem di mana kemungkinan pembalikan adalah menggalakkan; persilangan di tempat lain ialah hingar. Ambang 80/20 bukan hiasan — ia ialah penapis yang mengubah osilator yang berputar cepat menjadi alat yang boleh digunakan. Tanpa penapis lokasi, anda mempunyai penjana hingar dengan nama yang canggih.
+Model mental yang betul: silang ialah pencetus, tetapi lokasi ialah penapis. Silang di bawah 20 atau di atas 80 ialah isyarat zon ekstrem di mana peluang pembalikan adalah menguntungkan; silang di tempat lain ialah hingar. Ambang 80/20 bukan hiasan — ia ialah penapis yang mengubah oscillator yang berputar cepat menjadi alat yang boleh digunakan. Tanpa penapis lokasi, anda mempunyai penjana hingar dengan nama yang canggih.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="AMZN's daily Stochastic %K silang di atas %D sebanyak dua kali dalam tetingkap enam minggu yang sama: sekali pada bacaan 17 (jenuh jual) yang menghasilkan kenaikan 14 mata dalam sepuluh sesi, dan sekali pada bacaan 64 (jangkauan sederhana) yang menghasilkan pergerakan mendatar dan memberi semula. Apa kesimpulan kerangka ini?"
+  question="AMZN's daily Stochastic %K bersilang di atas %D dua kali dalam tetingkap enam minggu yang sama: sekali pada bacaan 17 (jenuh jual) yang menghasilkan rally 14 mata selama sepuluh sesi, dan sekali pada bacaan 64 (jangka sederhana) yang menghasilkan pergerakan mendatar dan memberi semula. Apa kesimpulan kerangka kerja ini?"
   options={[
-    "Silang adalah pencetus, tetapi lokasi adalah penapis — silang di dalam zon ekstrem 20/80 mempunyai kelebihan, silang di jangkauan sederhana 30–70 adalah hingar. Tapis mengikut lokasi.",
-    "Silang kedua adalah baik; AMZN hanya mendapat berita buruk",
+    "Bersilang adalah pencetus, tetapi lokasi adalah penapis — bersilang di dalam zon ekstrem 20/80 mempunyai kelebihan, bersilang di jangka sederhana 30–70 adalah hingar. Tapis mengikut lokasi.",
+    "Bersilang kedua adalah baik; AMZN hanya mempunyai berita buruk",
     "Stochastic tidak boleh dipercayai; tinggalkannya",
-    "Kedua-dua silang adalah isyarat bullish yang setara; silang kedua hanya mengambil masa lebih lama"
+    "Kedua-dua bersilang adalah isyarat bullish yang setara; bersilang kedua hanya mengambil masa lebih lama"
   ]}
   answer={0}
-  explanation="Penapis lokasi adalah perbezaan antara isyarat dan hingar. Jawapan salah yang menarik ('kedua-dua setara') memperlakukan penunjuk secara mekanikal tanpa mengakui bahawa ambang 80/20 wujud tepat untuk menapis silang jangkauan sederhana. Contoh dalam pelajaran menunjukkan penunjuk yang sama memberikan isyarat berguna pada 17 dan isyarat tidak berguna pada 64."
+  explanation="Penapis lokasi adalah perbezaan antara isyarat dan hingar. Jawapan salah yang memikat ('kedua-dua setara') memperlakukan penunjuk secara mekanikal tanpa mengakui bahawa ambang 80/20 wujud tepat untuk menapis bersilang jangka sederhana. Contoh dalam pelajaran menunjukkan penunjuk yang sama memberikan isyarat berguna pada 17 dan isyarat tidak berguna pada 64."
 />
 
 <Quiz
-  question="Stochastic %K harian saham turun ke 12 (di bawah 20 — jenuh jual), naik semula di atas 20, turun ke 24 (tanpa membuat paras rendah baru di bawah 12), kemudian menyilang %D lagi dari bawah pada 26. SMA50 saham sedang naik dan harga berada di atasnya. Saiz akaun $20,000, had mandat 1% per dagangan, henti letak 3% di bawah harga masuk. Di bawah kerangka pelajaran, bagaimana anda harus membaca persediaan ini?"
+  question="Stochastic %K harian saham jatuh ke 12 (di bawah 20 — jenuh jual), rally kembali di atas 20, menarik balik ke 24 (tanpa membuat paras rendah baru di bawah 12), kemudian bersilang %D lagi dari bawah pada 26. SMA50 saham sedang naik dan harga berada di atasnya. Saiz akaun $20,000, had mandat 1% per dagangan, henti duduk 3% di bawah harga masuk. Di bawah kerangka kerja pelajaran, bagaimana anda harus membaca persediaan ini?"
   options={[
-    "Tunggu sehingga %K mencapai 80 sebelum melakukan apa-apa",
-    "Pendek saham — silang kedua adalah keletihan",
-    "Ini adalah ayunan kegagalan stochastic — pam berganda keluar dari jenuh jual yang tidak membuat paras rendah baru. Ia adalah persediaan keyakinan tertinggi yang dihasilkan oleh osilator, terutamanya dengan SMA50 yang naik mengesahkan rejim trend. Saiz kepada risiko 1% dan laksanakan dengan henti letak yang ditentukan.",
-    "Langkau — silang kedua pada 26 di atas ambang jenuh jual 20"
+    "Tunggu sehingga %K mencapai 80 sebelum berbuat apa-apa",
+    "Pendek saham — bersilang kedua adalah keletihan",
+    "Ini adalah ayunan kegagalan stochastic — pam berganda keluar dari jenuh jual yang tidak membuat paras rendah baru. Ia adalah persediaan keyakinan tertinggi yang dihasilkan oleh osilator, terutamanya dengan SMA50 yang naik mengesahkan rejim trend. Saiz kepada risiko 1% dan laksanakan dengan henti yang ditentukan.",
+    "Langkau — bersilang kedua pada 26 berada di atas ambang jenuh jual 20"
   ]}
   answer={2}
-  explanation="Corak ayangan kegagalan (penurunan jenuh jual → pemulihan → paras rendah lebih tinggi → silang) adalah persediaan stochastic keyakinan tertinggi buku teks. Penurunan jenuh jual pertama pada 12 menjadi penanda isyarat; silang kedua pada 26 adalah pencetus, walaupun paras itu di atas 20. Jawapan salah yang menarik (A) salah faham peraturan — yang penting adalah ekstrem jenuh jual terdahulu, bukan paras pencetus. CIMB pada Februari 2025 menjalankan corak yang sama tepat untuk pergerakan 7%."
+  explanation="Corak ayunan kegagalan (jatuh jenuh jual → pemulihan → paras rendah lebih tinggi → bersilang) adalah persediaan stochastic keyakinan tinggi buku teks. Jatuh jenuh jual pertama pada 12 mengokong isyarat; bersilang kedua pada 26 adalah pencetus, walaupun paras itu berada di atas 20. Jawapan salah yang memikat (A) salah tafsir peraturan — yang penting adalah ekstrem jenuh jual sebelumnya, bukan paras pencetus. CIMB pada Februari 2025 menjalankan corak yang sama tepat untuk pergerakan 7%."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tampal simbol saham yang baru-baru ini turun dalam trend dan tanya: "Adakah Stokastik harian menghasilkan persilangan %K / %D di bawah 20 atau menunjukkan corak ayunan kegagalan dalam 30 sesi terakhir?" Kemudian sahkan pada carta. Hanya bertindak atas persilangan di dalam zon ekstrem atau pada ayunan kegagalan yang disahkan.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker yang baru-baru ini turun dalam trend dan tanya: "Adakah Stokastik harian menghasilkan silang %K / %D di bawah 20 atau menunjukkan corak ayunan kegagalan dalam 30 sesi terakhir?" Kemudian sahkan pada carta. Hanya bertindak balas terhadap silang di dalam zon ekstrem atau pada ayunan kegagalan yang disahkan.
 
-## Pengambilan
+## Kesimpulan
 
-Persilangan %K / %D Stokastik ialah pencetus — tetapi persilangan itu hanya menjadi isyarat apabila ia berlaku di bawah 20 atau di atas 80, atau sebagai kaki kedua ayunan kegagalan. Persilangan di tengah julat ialah hingar; penapis lokasi ialah kelebihan.
+Silang %K / %D Stokastik ialah pencetus — tetapi silang itu hanya menjadi isyarat apabila ia menyala di bawah 20 atau di atas 80, atau sebagai kaki kedua ayunan kegagalan. Silang di tengah julat ialah hingar; penapis lokasi ialah kelebihan.

@@ -1,6 +1,6 @@
 ---
 id: "138_bollinger_band_walk"
-title: "Pergerakan band dalam trend kuat"
+title: "Pergerakan jalur dalam trend kuat"
 duration_min: 5
 level: 2
 module: 5
@@ -11,64 +11,64 @@ topic: "bollinger_band_walk"
 prerequisites: ["136_bollinger_bands_basics", "022_trend_direction", "126_ma_slope_analysis"]
 tags: ["indicators", "bollinger_bands", "band_walk", "trend", "fade_trap"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Band-walk dalam trend yang kuat
+# Band-walks dalam trend kuat
 
-<Lesson id="136_bollinger_bands_basics"/> menyatakan bahawa cuba menentang setiap sentuhan jalur dalam pasaran bertrend akan menyebabkan kerugian. Fenomena ini mempunyai nama: band-walk. Dalam trend yang kuat, harga akan menempel pada jalur atas (atau jalur bawah dalam trend turun) selama beberapa sesi berturut-turut, dengan jalur tengah (SMA20) naik atau turun dengan ketara di bawahnya. Jauh daripada menandakan keletihan, band-walk adalah tanda visual yang paling jelas bagi trend yang berkuasa. Mencuba untuk menentang band-walk adalah salah satu kesilapan pemula yang paling mahal dalam analisis teknikal — trend akan mengabaikan "ekstrem" 2-sigma dan terus bergerak.
+<Lesson id="136_bollinger_bands_basics"/> mencatatkan bahawa menentang setiap sentuhan band dalam pasaran bersistem akan menyebabkan kerugian. Fenomena ini mempunyai nama: band-walk. Dalam trend yang kuat, harga akan menempel pada band atas (atau band bawah dalam trend turun) selama beberapa sesi berturut-turut, dengan band tengah (SMA20) naik atau turun dengan tajam di bawahnya. Jauh daripada menandakan keletihan, band-walk adalah tanda visual paling jelas bagi trend yang berkuasa. Mencuba untuk menentang band-walk adalah salah satu kesilapan paling mahal bagi pemula dalam analisis teknikal — trend akan mengabaikan "ekstrem" 2-sigma dan terus bergerak.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat pada NVDA dari akhir Januari 2026 hingga pertengahan Februari 2026. Selepas pecahan squeeze pada 141 (<Lesson id="137_bollinger_squeeze_and_breakout"/> contoh), NVDA terus menutup pada atau di atas Jalur Bollinger atasnya selama sembilan daripada sebelas sesi seterusnya. Penutupan: 144, 147, 149, 152, 151 (hanya di dalam), 154, 157, 156, 158, 156, 158. Jalur atas naik bersama harga dari 142 ke 161 dalam tetingkap yang sama. SMA20 naik dari 137 ke 149 — jalur tengah yang naik dengan ketara mengesahkan kekuatan trend.
+Lihat NVDA dari akhir Januari 2026 hingga pertengahan Februari 2026. Selepas pecahan squeeze pada 141 (contoh <Lesson id="137_bollinger_squeeze_and_breakout"/>), NVDA melanjutkan penutupan pada atau di atas Band Bollinger atasnya selama sembilan daripada sebelas sesi seterusnya. Penutupan: 144, 147, 149, 152, 151 (hanya di dalam), 154, 157, 156, 158, 156, 158. Band atas naik mengikut harga dari 142 ke 161 dalam tetingkap yang sama. SMA20 meningkat dari 137 ke 149 — band tengah yang naik dengan tajam mengesahkan kekuatan trend.
 
-Seorang peniaga yang menentang sentuhan jalur pertama pada 144 akan berada dalam posisi short ke dalam rally 14 mata. Peniaga yang sama yang menentang setiap sentuhan seterusnya akan menggandakan kerugian. Sementara itu, seorang peniaga yang mengikuti stop loss di bawah SMA20 yang naik — menggunakan jalur tengah sebagai sokongan dinamik — kekal long sepanjang pergerakan tersebut.
+Seorang peniaga yang menentang sentuhan band pertama pada 144 akan berada dalam posisi short ke dalam rally 14 mata. Peniaga yang sama yang menentang setiap sentuhan seterusnya akan menggandakan kerugian. Sementara itu, seorang peniaga yang mengikuti stop loss di bawah SMA20 yang naik — menggunakan band tengah sebagai sokongan dinamik — kekal dalam posisi long sepanjang pergerakan tersebut.
 
-Peraturan yang boleh disangkal: band-walk adalah berkesan apabila harga telah menutup pada atau di atas jalur atas (atau di bawah jalur bawah dalam trend turun) pada sekurang-kurangnya 3 daripada 5 sesi terakhir, dengan jalur tengah naik pada kecerunan sekurang-kurangnya 0.5% per sesi. Semasa kedua-dua keadaan ini berlaku, jangan menentang jalur — dagangkan mengikut trend atau berdiri di tepi. Pembatalan: band-walk tamat apabila harga menutup kembali di bawah jalur tengah pada bar harian, atau apabila kecerunan SMA20 mendatar kepada kurang daripada 0.2% per sesi selama tiga bar berturut-turut.
+Peraturan yang boleh disangkal: band-walk wujud apabila harga telah menutup pada atau di atas band atas (atau di bawah band bawah dalam trend turun) pada sekurang-kurangnya 3 daripada 5 sesi terakhir, dengan band tengah naik pada kecerunan sekurang-kurangnya 0.5% per sesi. Selama kedua-dua keadaan ini berlaku, jangan menentang band — dagangkan mengikut trend atau duduk diam. Pembatalan: band-walk berakhir apabila harga menutup kembali di bawah band tengah pada bar harian, atau apabila kecerunan SMA20 mendatar kepada kurang daripada 0.2% per sesi selama tiga bar berturut-turut.
 
-Contoh lawan: GOOGL pada pertengahan Mac 2026 berjalan di jalur atas selama empat sesi, kemudian kecerunan SMA20 mendatar dengan ketara pada sesi kelima. Pada sesi ketujuh, harga telah menutup di bawah SMA20. Itu adalah keluar yang sah — bukan sentuhan jalur sebelumnya.
+Contoh lawan: GOOGL pada pertengahan Mac 2026 berjalan di atas band atas selama empat sesi, kemudian kecerunan SMA20 mendatar dengan tajam pada sesi kelima. Pada sesi ketujuh, harga telah menutup di bawah SMA20. Itu adalah exit yang sah — bukan sentuhan band sebelumnya.
 
-Di Bursa Malaysia: PETRONAS pada Q2 2025 berjalan di jalur atas selama tujuh sesi semasa lonjakan harga minyak; trend berjalan 9% sebelum kecerunan mendatar. Corak yang sama, bursa yang sama.
+Di Bursa Malaysia: PETRONAS pada Q2 2025 berjalan di atas band atas selama tujuh sesi semasa lonjakan harga minyak; trend berjalan 9% sebelum kecerunan mendatar. Corak yang sama, bursa yang sama.
 
 ## Perangkap
 
-Perangkap ialah bacaan buku teks "jalur atas = overbought, jual". Pemula belajar kerangka 2-sigma dari <Lesson id="136_bollinger_bands_basics"/> dan menerapkannya secara mekanikal — setiap sentuhan jalur menjadi short. Dalam band-walk, setiap perdagangan short adalah kerugian, dan corak ini berulang sehingga peniaga sama ada kehabisan modal atau akhirnya menerima trend. Ini adalah mod kegagalan penunjuk yang paling biasa dalam pasaran bertrend.
+Perangkap ialah bacaan buku teks "band atas = overbought, jual". Pemula mempelajari rangka kerja 2-sigma dari <Lesson id="136_bollinger_bands_basics"/> dan menggunakannya secara mekanikal — setiap sentuhan band menjadi short. Dalam band-walk, setiap perdagangan short adalah kerugian, dan corak ini berulang sehingga peniaga kehabisan modal atau akhirnya menerima trend. Ini adalah mod kegagalan penunjuk paling biasa dalam pasaran bersistem.
 
-Model mental yang betul: jalur adalah statistik, tetapi pasaran tidak mengagihkan secara normal apabila ia bertrend. Trend mempunyai ekor tebal — tempoh panjang tingkah laku satu hala yang menentang matematik pengagihan normal yang diandaikan oleh jalur. Penyelesaiannya ialah kecerunan jalur tengah. SMA20 yang naik dengan kecerunan curam bermaksud anda berada dalam rejim ekor tebal dan isyarat "ekstrem" jalur ditangguhkan. Dagangkan trend, ikuti dengan jalur tengah, dan tunggu sehingga kecerunan mendatar sebelum memperlakukan sentuhan jalur sebagai isyarat pembalikan semula.
+Model mental yang betul: band adalah statistik, tetapi pasaran tidak berdistribusi normal apabila ia bersistem. Trend mempunyai ekor tebal — tempoh panjang tingkah laku satu hala yang menentang matematik taburan normal yang diandaikan oleh band. Penyelesaiannya ialah kecerunan band tengah. SMA20 yang naik dengan kecerunan curam bermaksud anda berada dalam rejim ekor tebal dan isyarat "ekstrem" band ditangguhkan. Dagangkan trend, ikuti dengan band tengah, dan tunggu sehingga kecerunan mendatar sebelum memperlakukan sentuhan band sebagai isyarat pembalikan semula.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="NVDA menutup pada atau di atas Band Bollinger atasnya pada sembilan daripada sebelus sesi berturut-turut, manakala kecerunan SMA20 meningkat dari 137 kepada 149. Seorang pemula melakukan short pada sentuhan pertama pada 144. Apa kata kerangka kerja mengenai dagangan dan prinsip ini?"
+  question="NVDA menutup pada atau di atas Jalur Bollinger atasnya pada sembilan daripada sebelas sesi berturut-turut, manakala kecerunan SMA20 meningkat dari 137 kepada 149. Seorang pemula mengurung sentuhan pertama pada 144. Apa kata kerangka kerja mengenai dagangan dan prinsip tersebut?"
   options={[
-    "Dagangan baik — sentuhan pada band atas adalah ekstrem 2-sigma, reversion purata adalah statistik yang diperlukan",
-    "Dagangan baik — sentuhan kedua akan membalikkan keadaan, hanya tahan lebih lama",
-    "Dagangan buruk — apabila 3 daripada 5 penutupan berada pada atau di atas band atas dengan kecerunan SMA20 meningkat pada 0.5%+ per sesi, keadaan 'band-walk' sedang berlaku dan trend mengatasi bacaan 'ekstrem' 2-sigma. Melakukan short pada 'band-walk' adalah kerugian struktur.",
-    "Neutral — saiz posisi menentukan sama ada dagangan itu baik atau buruk"
+    "Dagangan baik — sentuhan pada jalur atas ialah ekstrem 2-sigma, reversion purata adalah statistik yang diperlukan",
+    "Dagangan baik — sentuhan kedua akan berbalik, hanya tahan lebih lama",
+    "Dagangan buruk — apabila 3 daripada 5 penutupan berada pada atau di atas jalur atas dengan kecerunan SMA20 meningkat pada 0.5%+ per sesi, berjalan-jalan jalur (band-walk) sedang berlaku dan trend mengatasi bacaan 'ekstrem' 2-sigma. Mengurung berjalan-jalan jalur adalah kerugian struktur.",
+    "Neutral — saiz kedudukan menentukan sama ada dagangan itu baik atau buruk"
   ]}
   answer={2}
-  explanation="'Band-walks' membatalkan andaian reversion purata kerana pasaran trending mempunyai taburan ekor tebal, bukan taburan normal. Jawapan salah yang menarik ('reversion yang diperlukan secara statistik') adalah menerapkan rangka kerja 2-sigma secara mekanikal tanpa memeriksa kecerunan. Kecerunan adalah penapis rejim. Pilihan D memperburuk kesilapan dengan menahan melalui kenaikan."
+  explanation="Berjalan-jalan jalur (band-walks) membatalkan andaian reversion purata kerana pasaran bertrend mempunyai taburan berekor tebal, bukan taburan normal. Jawapan salah yang menggoda ('reversion yang diperlukan secara statistik') adalah menerapkan rangka kerja 2-sigma secara mekanikal tanpa memeriksa kecerunan. Kecerunan adalah penapis rejim. Pilihan D memperburuk kesilapan dengan memegang melalui kenaikan."
 />
 
 <Quiz
-  question="Sebuah saham telah berjalan di sepanjang band atas selama enam sesi. Pada sesi ketujuh, kecerunan SMA20 mendatar dari +0.7% per sesi kepada +0.1% per sesi; pada sesi kelapan, harga menutup 0.8% di bawah SMA20 buat pertama kali. Saiz akaun $25,000, posisi long kini untung 9% pada $5,000 modal yang dilaburkan (risiko 1% akaun pada kemasukan). Apa kata kerangka kerja?"
+  question="Sebuah saham telah berjalan di jalur atas selama enam sesi. Pada sesi tujuh, kecerunan SMA20 mendatar dari +0.7% per sesi kepada +0.1% per sesi; pada sesi lapan, harga menutup 0.8% di bawah SMA20 buat pertama kali. Saiz akaun $25,000, kedudukan panjang kini untung 9% pada $5,000 modal yang dilaburkan (1% risiko akaun pada kemasukan). Apa kata kerangka kerja?"
   options={[
     "Tahan — satu penutupan di bawah SMA20 adalah hingar",
-    "Tambah ke posisi — penurunan ini adalah peluang membeli",
-    "Keluar atau trail secara agresif: kedua-dua syarat pembatalan 'band-walk' telah berlaku — kecerunan SMA20 mendatar di bawah 0.2% DAN harga menutup kembali di bawah band tengah. Rejim trend yang menangguhkan logik reversion purata telah berakhir.",
-    "Flip short dengan saiz besar — setiap 'band-walk' berakhir dengan pembalikan"
+    "Tambah pada kedudukan — penurunan ini adalah peluang membeli",
+    "Keluar atau jejak secara agresif: kedua-dua syarat pembatalan berjalan-jalan jalur telah dilancarkan — kecerunan SMA20 mendatar di bawah 0.2% DAN harga menutup kembali di bawah jalur tengah. Rejim trend yang menangguhkan logik reversion purata telah berakhir.",
+    "Balikkan pendek dengan saiz — setiap berjalan-jalan jalur berakhir dengan pembalikan"
   ]}
   answer={2}
-  explanation="Pelajaran ini mentakrifkan tepat dua syarat pembatalan ini; kedua-duanya berlaku pada setup yang sama. Jawapan salah yang menarik ('satu penutupan adalah hingar') adalah benar semasa berjalan tetapi menjadi palsu apabila kecerunan mengesahkan perubahan rejim. Menambah (C) menggandakan ke arah trend yang pudar. Membalikkan short dengan saiz besar (D) menganggap pengeluaran rejim sebagai isyarat pembalikan — ia adalah peristiwa yang berbeza. Trail atau keluar dan nilai semula dari neutral."
+  explanation="Pelajaran ini mentakrifkan tepat dua syarat pembatalan ini; kedua-duanya telah dilancarkan pada persediaan yang sama. Jawapan salah yang menggoda ('satu penutupan adalah hingar') adalah benar semasa berjalan tetapi palsu sekali lagi kecerunan mengesahkan perubahan rejim. Menambah (C) menggandakan ke dalam trend yang pudar. Membalikkan pendek dengan saiz (D) memperlakukan keluaran rejim sebagai isyarat pembalikan — mereka adalah peristiwa yang berbeza. Jejak atau keluar dan nilaikan semula dari neutral."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tampal penunjuk yang bertrend kuat dan tanya: "Adakah harga telah menutup pada atau melampaui Jalur Bollinger atas pada sekurang-kurangnya 3 daripada 5 sesi terakhir, dan berapakah kecerunan SMA20 sebagai peratusan per sesi?" Jika kedua-dua keadaan mengesahkan band-walk, tulis ambang kecerunan mendatar yang akan anda gunakan sebagai isyarat keluar — dan patuhi ia.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker yang bersistem kuat dan tanya: "Adakah harga telah menutup pada atau melebihi Band Bollinger atas pada sekurang-kurangnya 3 daripada 5 sesi terakhir, dan berapakah kecerunan SMA20 sebagai peratusan per sesi?" Jika kedua-dua keadaan mengesahkan band-walk, tuliskan ambang kecerunan mendatar yang akan anda gunakan sebagai isyarat exit — dan patuhi ia.
 
 ## Kesimpulan
 
-Band-walk menangguhkan bacaan "ekstrem" 2-sigma — apabila kecerunan SMA20 curam dan harga menempel pada jalur, dagangkan mengikut trend dan keluar pada pendataran kecerunan, bukan sentuhan jalur.
+Band-walk menangguhkan bacaan "ekstrem" 2-sigma — apabila kecerunan SMA20 curam dan harga menempel pada band, dagangkan mengikut trend dan keluar pada kecerunan yang mendatar, bukan pada sentuhan band.

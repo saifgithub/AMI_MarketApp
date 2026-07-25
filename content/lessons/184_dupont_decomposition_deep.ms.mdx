@@ -1,6 +1,6 @@
 ---
 id: "184_dupont_decomposition_deep"
-title: "Percabangan DuPont — membahagikan ROE kepada tiga pintu"
+title: "Pecahan DuPont — membahagikan ROE kepada tiga pintu"
 duration_min: 6
 level: 3
 module: 7
@@ -11,71 +11,71 @@ topic: "return_on_equity"
 prerequisites: ["041_return_on_equity", "033_profit_and_margins"]
 tags: ["roe", "dupont", "margin", "asset_turnover", "leverage", "fundamentals"]
 agent_callouts: ["fundamentals_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Penguraian DuPont — membahagikan ROE kepada tiga pintu
 
-<Lesson id="041_return_on_equity"/> memperkenalkan DuPont dan menyatakan bahawa ROE tajuk yang sama menerangkan perniagaan yang sangat berbeza. Pelajaran ini menggunakan penguraian untuk sebenarnya menyusun peringkat *kualiti* perniagaan berdasarkan sumber ROE. Margin × pusingan aset × pendarab ekuiti. Ketiga-tiga nombor ini membentuk satu, dan komposisi tersebut memberitahu anda jenis syarikat yang anda miliki. Pada akhir sesi ini, anda harus mampu mengira setiap komponen daripada 10-K, mengenali corak kanonik (mewah, runcit, bank, perisian), dan menamakan keadaan yang boleh disangkal (falsifiable) di mana "peningkatan ROE" sebenarnya adalah penurunan kualiti.
+<Lesson id="041_return_on_equity"/> memperkenalkan DuPont dan menyatakan bahawa ROE tajuk yang sama menerangkan perniagaan yang sangat berbeza. Pelajaran ini menggunakan penguraian untuk sebenarnya mengklasifikasikan *kualiti* perniagaan berdasarkan sumber ROE. Margin × putaran aset × pendarab ekuiti. Tiga nombor ini bergabung menjadi satu, dan komposisinya memberitahu anda jenis syarikat yang anda miliki. Pada akhir sesi ini, anda harus dapat mengira setiap komponen dari 10-K, mengiktiraf corak kanonik (mewah, runcit, bank, perisian), dan menamakan keadaan yang boleh disangkal di mana "peningkatan ROE" sebenarnya adalah penurunan kualiti.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
 Ambil empat perniagaan sebenar, semua berhampiran 20–25% ROE, dan lihat pintu yang mereka lalui:
 
-- **LVMH (mewah)**: ~20% margin bersih × ~0.6 pusingan aset × ~2.0 pendarab ekuiti ≈ 24% ROE. Dominan margin — kuasa penetapan harga adalah enjin.
-- **WMT (runcit)**: ~3% margin bersih × ~2.5 pusingan aset × ~2.7 pendarab ekuiti ≈ 20% ROE. Dominan pusingan — margin tipis bergerak beberapa kali setahun.
-- **JPM (bank)**: ~28% margin bersih × ~6% pusingan aset × ~10x pendarab ekuiti ≈ 17% ROE. Dominan leverage — margin sederhana pada buku besar yang luas.
-- **MSFT (perisian)**: ~36% margin bersih × ~0.5 pusingan aset × ~2.0 pendarab ekuiti ≈ 36% ROE. Margin × leverage rendah — gabungan jarang kuasa penetapan harga pada buku besar yang bersih.
+- **LVMH (mewah)**: ~20% margin bersih × ~0.6 putaran aset × ~2.0 pendarab ekuiti ≈ 24% ROE. Dominan margin — kuasa penetapan harga adalah enjin.
+- **WMT (runcit)**: ~3% margin bersih × ~2.5 putaran aset × ~2.7 pendarab ekuiti ≈ 20% ROE. Dominan putaran — margin tipis bergerak beberapa kali setahun.
+- **JPM (bank)**: ~28% margin bersih × ~6% putaran aset × ~10x pendarab ekuiti ≈ 17% ROE. Dominan leverage — margin sederhana pada pasuran besar yang luas.
+- **MSFT (perisian)**: ~36% margin bersih × ~0.5 putaran aset × ~2.0 pendarab ekuiti ≈ 36% ROE. Margin × leverage rendah — gabungan langka kuasa penetapan harga pada pasuran bersih.
 
-Julat ROE umum yang sama, empat perniagaan yang sepenuhnya berbeza. Komposisi tersebut memberitahu anda apa yang akan merosakkan ROE: LVMH terjejas jika permintaan mewah jatuh (erosi margin); WMT terjejas jika pusingan perlahan (kumpulan inventori, prestasi kedai yang lemah); JPM terjejas dalam kitaran kredit (pendarab leverage mampat kepada kerugian); MSFT terjejas hanya jika penetapan harga atau isipadu dalam perisian jatuh — jarang berlaku secara sejarah.
+Julat ROE yang sama secara umum, empat perniagaan yang sepenuhnya berbeza. Komposisinya memberitahu anda apa yang akan merosakkan ROE: LVMH terjejas jika permintaan mewah jatuh (erosi margin); WMT terjejas jika putaran perlahan (gudang menumpuk, prestasi kedai lemah); JPM terjejas dalam kitaran kredit (pendarab leverage mampit kepada kerugian); MSFT terjejas hanya jika penetapan harga atau isipadu dalam perisian jatuh — jarang berlaku secara sejarah.
 
-Isyarat DuPont sebenar dalam tindakan: WMT pada 2014–2018 melihat pusingan aset menurun dari 2.6 kepada 2.4 apabila campuran e-dagang berubah; ROE mampat dari ~20% kepada ~17% walaupun margin kekal rata. Penguraian DuPont menandakan isu ini awal. Mana-mana pihak yang hanya menonton ROE tajuk terlepas mana tuas yang bengkok.
+Isyarat DuPont sebenar dalam tindakan: WMT pada 2014–2018 melihat putaran aset menurun dari 2.6 ke 2.4 apabila campuran e-dagang berubah; ROE mampit dari ~20% ke ~17% walaupun margin kekal rata. Penguraian DuPont menandakan isu ini awal. Mana-mana orang yang hanya menonton ROE tajuk terlepas tuas mana yang melengkung.
 
-Di Bursa: ROE PUBLIC BANK sekitar 13–14% terurai kepada kira-kira margin bersih 30% × pusingan aset 4% × ~12x pendarab ekuiti. ROE ~10% MAYBANK: margin serupa, pusingan serupa, leverage serupa — jurang itu kebanyakannya adalah provision kerugian kredit dan kecekapan operasi. Struktur identikal, pelaksanaan operasi berbeza.
+Di Bursa: ROE PUBLIC BANK sekitar 13–14% terurai kepada kira-kira 30% margin bersih × 4% putaran aset × ~12x pendarab ekuiti. ROE MAYBANK ~10%: margin serupa, putaran serupa, leverage serupa — jurang itu kebanyakannya adalah provision kerugian kredit dan kecekapan operasi. Struktur identikal, pelaksanaan operasi berbeza.
 
-Pernyataan yang boleh disangkal: peningkatan ROE satu tahun adalah berkualiti tinggi hanya apabila *margin atau pusingan aset* meningkat manakala pendarab ekuiti kekal stabil atau menurun. Jika leverage meningkat (pendarab ekuiti naik) manakala margin dan pusingan rata, keuntungan ROE itu adalah keputusan buku besar, bukan keputusan perniagaan — dan ia boleh dipulihkan dengan kos kerentanan yang lebih tinggi.
+Pernyataan yang boleh disangkal: peningkatan ROE satu tahun adalah berkualiti tinggi hanya apabila *margin atau putaran aset* meningkat sementara pendarab ekuiti kekal stabil atau jatuh. Jika leverage meningkat (pendarab ekuiti naik) sementara margin dan putaran rata, keuntungan ROE adalah keputusan pasuran, bukan keputusan perniagaan — dan ia boleh dipulangkan pada kos kerentanan yang lebih tinggi.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar — contoh kedua
 
-Pantau runcit yang melaporkan "ROE meningkat" kepada 17% berbanding 13% tahun sebelumnya. Penguraian DuPont: margin bersih kekal pada 3.5%, pusingan aset kekal pada 2.4, pendarab ekuiti meningkat dari 1.5x kepada 2.0x. Peningkatan ROE itu sepenuhnya adalah pembelian balik saham yang dibiayai hutang yang mengecilkan ekuiti. Perniagaan operasi yang sama, lebih banyak hutang, volatiliti larasan leverage yang lebih tinggi. Pasaran sering mendisk kaun "peningkatan" ini dengan *menurunkan* gandaan yang dibayar untuk ROE tersebut — mengakui bahawa ROE baru kurang kukuh daripada yang lama.
+Perhatikan pengendali runcit melaporkan "ROE yang dipertingkatkan" 17% berbanding 13% tahun sebelumnya. Penguraian DuPont: margin bersih stabil pada 3.5%, putaran aset stabil pada 2.4, pendarab ekuiti meningkat dari 1.5x ke 2.0x. Peningkatan ROE itu sepenuhnya adalah pembelian semula saham yang dibiayai hutang yang mengecilkan ekuiti. Perniagaan operasi yang sama, hutang lebih banyak, volatiliti laras leverage lebih tinggi. Pasaran sering mendisk kaun "peningkatan" ini dengan *menurunkan* gandaan yang dibayar untuk ROE — mengiktiraf bahawa ROE baru kurang kukuh daripada yang lama.
 
 ## Perangkap
 
-Perangkapnya adalah memuji syarikat kerana "meningkatkan" ROE tanpa memeriksa pintu mana keuntungan itu datang melalui. Tiga pintu: margin (kuasa penetapan harga, peralihan campuran, disiplin kos — kualiti tinggi), pusingan (kecekapan operasi, disiplin modal kerja, produktiviti kedai — kualiti sederhana-tinggi), leverage (pilihan buku besar — kualiti rendah-kerentan). Pembaca yang melihat 17% → 22% ROE dan menuliskannya sebagai "peningkatan" tanpa penguraian telah terlepas maklumat paling penting dalam laporan. Model mental yang betul: setiap perubahan ROE harus diikuti dengan soalan "pintu mana daripada tiga yang bergerak?" — dan hanya keuntungan margin dan pusingan yang berhak mendapat P/B yang lebih tinggi. Keuntungan yang didorong oleh leverage sering kali datang dengan mampatan gandaan kerana pasaran melihat perubahan profil risiko. Apa yang membatalkan bacaan "kualiti tinggi": apabila leverage meningkat dalam persekitaran kadar menurun (hutang murah menjadikan perdagangan ini menarik buat sementara walaupun asas fundamental tidak menyokongnya), kitaran kadar pada akhirnya mendedahkan kerentanan — lihat bagaimana ROE kewangan pengguna yang berleverage runtuh pada 2022–2023 apabila pembiayaan murah hilang.
+Perangkapnya adalah memuji syarikat kerana "memperbaiki" ROE tanpa memeriksa pintu mana keuntungan datang melalui. Tiga pintu: margin (kuasa penetapan harga, peralihan campuran, disiplin kos — kualiti tinggi), putaran (kecekapan operasi, disiplin modal kerja, produktiviti kedai — kualiti sederhana-tinggi), leverage (pilihan pasuran — kualiti rendah-kerentan). Pembaca yang melihat 17% → 22% ROE dan mencatatnya sebagai "peningkatan" tanpa penguraian telah terlepas maklumat paling penting dalam laporan. Model mental yang betul: setiap perubahan ROE harus diikuti dengan soalan "pintu mana daripada tiga yang bergerak?" — dan hanya keuntungan margin dan putaran yang berhak mendapat P/B yang lebih tinggi. Keuntungan yang didorong oleh leverage sering datang dengan mampit gandaan kerana pasreden melihat perubahan profil risiko. Apa yang membatalkan bacaan "berkualiti tinggi": apabila leverage meningkat ke dalam persekitaran kadar menurun (hutang murah menjadikan perdagangan menarik sementara walaupun asas tidak menyokongnya), kitaran kadar pada akhirnya mendedahkan kerentanan — lihat bagaimana ROE kewangan pengguna yang berleverage runtuh pada 2022–2023 apabila pembiayaan murah hilang.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Sebuah peruncitan melaporkan ROE meningkat dari 14% kepada 21% dalam tempoh dua tahun. Margin bersih kekal pada 4.0%. Putaran aset meningkat dari 1.9 kepada 2.2. Pendarab ekuiti meningkat dari 1.85 kepada 2.4. CEO menyerlahkan pengembangan ROE sebagai bukti 'peningkatan kualiti perniagaan.' Bacaan DuPont yang manakah paling tepat?"
+  question="Sebuah peruncit melaporkan ROE meningkat dari 14% kepada 21% selama dua tahun. Margin bersih kekal pada 4.0%. Putaran aset meningkat dari 1.9 kepada 2.2. Pendarab ekuiti meningkat dari 1.85 kepada 2.4. CEO menyerlahkan pengembangan ROE sebagai bukti 'peningkatan kualiti perniagaan.' Bacaan DuPont manakah yang paling tepat?"
   options={[
-    "Putaran aset sahaja menjelaskan keuntungan",
+    "Putaran aset sahaja menjelaskan kenaikan tersebut",
     "ROE sentiasa meningkat apabila leverage naik, jadi ini tidak bermakna",
     "Kualiti sedang meningkat — ROE naik dengan ketara",
-    "Dekomposisi: ROE awal = 4.0% × 1.9 × 1.85 ≈ 14%. ROE akhir = 4.0% × 2.2 × 2.4 ≈ 21%. Daripada kenaikan 7 mata, putaran menyumbang ~3 mata (operasi) dan leverage menyumbang ~4 mata (pasaran kewangan). Kira-kira 60% daripada 'peningkatan' ini adalah leverage, bukan operasi. Tajuk 'peningkatan' ini melebih-lebihkan peningkatan kualiti perniagaan; sebahagian daripada ROE baharu ini rapuh terhadap kadar faedah dan ketersediaan kredit"
+    "Dekomposisi: ROE awal = 4.0% × 1.9 × 1.85 ≈ 14%. ROE akhir = 4.0% × 2.2 × 2.4 ≈ 21%. Daripada kenaikan 7 mata, putaran aset menyumbang ~3 mata (operasi) dan leverage menyumbang ~4 mata (pasaran kewangan). Kira-kira 60% daripada 'peningkatan' ini adalah leverage, bukan operasi. 'Peningkatan' utama melebih-lebihkan peningkatan kualiti perniagaan; sebahagian daripada ROE baharu ini rapuh terhadap kadar faedah dan ketersediaan kredit"
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah 'kualiti sedang meningkat, ROE naik' — refleks peningkatan tajuk yang terlepas komposisi. Jawapan putaran-sahaja sebahagiannya mengenal pasti kenaikan tetapi terlepas leverage. Dekomposisi yang betul membahagikan peningkatan 7 mata kira-kira 60/40 leverage/putaran, menurunkan 'kualiti' perubahan tersebut. Jawapan 'ROE sentiasa meningkat apabila leverage naik' membuat pemerhatian tautologi yang tidak membantu analisis. Sintesis: setiap perubahan ROE perlu didekomposisi sebelum ia layak mendapat verdict kualiti."
+  explanation="Jawapan salah yang menggoda ialah 'kualiti sedang meningkat, ROE naik' — refleks berita utama yang terlepas pandang komposisi. Jawapan putaran aset sahaja sebahagiannya mengenal pasti kenaikan tetapi terlepas pandang leverage. Dekomposisi yang betul membahagikan peningkatan 7 mata kira-kira 60/40 leverage/putaran aset, merendahkan 'kualiti' perubahan tersebut. Jawapan 'ROE sentiasa meningkat apabila leverage naik' membuat pemerhatian tautologi yang tidak membantu analisis. Sintesis: setiap perubahan ROE perlu didekomposisi sebelum ia layak mendapat verdict kualiti."
 />
 
 <Quiz
-  question="Dua syarikat sama-sama meningkatkan ROE dari 12% kepada 18% dalam tempoh tiga tahun. Syarikat A: margin bergerak dari 8% kepada 12%; putaran dan leverage tidak berubah. Syarikat B: margin dan putaran tidak berubah; pendarab ekuiti bergerak dari 2.0x kepada 3.0x. Manakah peningkatan ROE yang berkualiti lebih tinggi, dan apakah sintesis yang betul dengan kerangka P/B?"
+  question="Dua syarikat sama-sama meningkatkan ROE dari 12% kepada 18% selama tiga tahun. Syarikat A: margin bergerak dari 8% kepada 12%; putaran aset dan leverage tidak berubah. Syarikat B: margin dan putaran aset tidak berubah; pendarab ekuiti bergerak dari 2.0x kepada 3.0x. Manakah peningkatan ROE yang berkualiti lebih tinggi, dan apakah sintesis yang betul dengan kerangka P/B?"
   options={[
-    "Peningkatan Syarikat A berkualiti lebih tinggi — keuntungan datang daripada pengembangan margin (kuasa penentuan harga atau anjakan campuran), sumber ROE yang paling tahan lama. P/B yang wajar sepatutnya naik untuk Syarikat A kerana ROE meningkat secara tahan lama. ROE Syarikat B naik melalui leverage; pasaran biasanya tidak membayar P/B yang lebih tinggi untuk ROE yang didorong oleh leverage kerana perniagaan teras tidak berubah dan kerapuhan baharu menampung kenaikan tajuk. Menggabungkan pelajaran: P/B sepatutnya naik semula untuk A dan kekal rata (atau mampat) untuk B, walaupun ROE tajuk adalah sama",
+    "Peningkatan Syarikat A berkualiti lebih tinggi — kenaikan datang daripada pengembangan margin (kuasa penentuan harga atau anjakan campuran), sumber ROE yang paling tahan lama. P/B yang wajar sepatutnya naik untuk Syarikat A kerana ROE meningkat secara tahan lama. ROE Syarikat B naik melalui leverage; pasaran biasanya tidak membayar P/B yang lebih tinggi untuk ROE yang didorong oleh leverage kerana perniagaan asas tidak berubah dan kerapuhan baharu mengimbangi kenaikan berita utama. Menggabungkan pelajaran: P/B sepatutnya naik semula untuk A dan kekal rata (atau mampat) untuk B, walaupun ROE berita utama adalah sama",
     "Syarikat B lebih baik kerana leverage murah",
     "Metrik yang betul ialah P/E bukan P/B",
     "Kedua-duanya adalah peningkatan yang setara"
   ]}
   answer={0}
-  explanation="Sintesis: persamaan P/B yang wajar bergantung pada *ketahanan* ROE, bukan sekadar tahap. Jawapan salah yang menggoda ialah 'kedua-duanya setara' — nombor tajuk sama, kesimpulan sama. Jawapan 'Syarikat B lebih baik kerana leverage murah' mengabaikan risiko sepenuhnya. Jawapan P/E-bukan-P/B meninggalkan kerangka yang betul. Bacaan yang betul menghubungkan dua pelajaran: DuPont mengenal pasti sumber peningkatan, dan kerangka P/B menghargai ketahanan — bersama-sama mereka menyatakan ROE tajuk yang sama layak mendapat pendarab yang sangat berbeza bergantung pada sumbernya."
+  explanation="Sintesis: persamaan P/B yang wajar bergantung pada *ketahanan* ROE, bukan sekadar tahapnya. Jawapan salah yang menggoda ialah 'kedua-duanya setara' — nombor berita utama sama, kesimpulan sama. Jawapan 'Syarikat B lebih baik kerana leverage murah' mengabaikan risiko sepenuhnya. Jawapan P/E-alih-dari-P/B meninggalkan kerangka yang betul. Bacaan yang betul menghubungkan dua pelajaran: DuPont mengenal pasti sumber peningkatan, dan kerangka P/B menghargai ketahanan — bersama-sama mereka menyatakan bahawa ROE berita utama yang sama layak mendapat pendarab yang sangat berbeza bergantung pada sumbernya."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal dua ticker dari <Term id="ami_watchlist" /> anda — satu nama pengguna/runcit, satu kewangan. Tanya: "Uraikan ROE tiga tahun terakhir setiap syarikat kepada margin bersih, pusingan aset, dan pendarab ekuiti. Beritahu saya pintu mana yang dilalui setiap syarikat dan sama ada trend dalam setiap komponen naik, turun, atau rata." Simpan grid 3×3×N dalam <Term id="ami_decision_journal" /> anda sebagai kad skor kualiti untuk lawatan semula.
+Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, tampal dua simbol dari <Term id="ami_watchlist" /> anda — satu nama pengguna/runcit, satu kewangan. Tanya: "Uraikan ROE tiga tahun terakhir setiap syarikat kepada margin bersih, putaran aset, dan pendarab ekuiti. Beritahu saya pintu mana yang dilalui setiap syarikat dan sama ada trend dalam setiap komponen naik, turun, atau rata." Simpan grid 3×3×N dalam <Term id="ami_decision_journal" /> anda sebagai kad skor kualiti untuk lawatan semula.
 
-## Penarikan Kesimpulan
+## Kesimpulan
 
-ROE mempunyai tiga pintu — margin, pusingan, leverage. ROE yang didorong margin mendapat gandaan yang lebih tinggi; ROE yang didorong pusingan adalah operasi; ROE yang didorong leverage adalah rapuh dan biasanya tidak mendapat kenaikan gandaan yang nampaknya disokongnya.
+ROE mempunyai tiga pintu — margin, putaran, leverage. ROE yang didorong margin mendapat gandaan lebih tinggi; ROE yang didorong putaran adalah operasi; ROE yang didorong leverage adalah rapuh dan biasanya tidak mendapat kenaikan gandaan yang nampaknya disokong.

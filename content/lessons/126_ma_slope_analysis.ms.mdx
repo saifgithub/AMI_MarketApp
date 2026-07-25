@@ -1,6 +1,6 @@
 ---
 id: "126_ma_slope_analysis"
-title: "Slope purata bergerak — mengukur kekuatan trend"
+title: "Kecerunan purata bergerak — mengukur kekuatan trend"
 duration_min: 4
 level: 2
 module: 5
@@ -11,62 +11,62 @@ topic: "ma_slope"
 prerequisites: ["026_moving_averages", "022_trend_direction"]
 tags: ["indicators", "moving_average", "slope", "trend_strength", "regime"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# Kecondongan purata bergerak — mengukur kekuatan trend
+# Kecondongan min bergerak — mengukur kekuatan trend
 
-<Lesson id="026_moving_averages"/> menyatakan "dagang mengikut kecondongan, bukan aras." Pelajaran ini menerangkan maksud sebenar kecondongan dalam bentuk angka. Kecondongan adalah kadar perubahan purata bergerak — biasanya diukur sebagai perubahan peratusan dalam MA atas jendela tetap, seperti lima bar atau 20 bar. Kecondongan SMA50 20-bar sebanyak +0.6% per bar menggambarkan kenaikan yang kuat dan berterusan. SMA50 yang sama pada +0.05% per bar adalah hampir mendatar — MA rata yang berpakaian sebagai MA menaik. Kecondongan mengukur keyakinan di sebalik trend, dan kecondongan yang melambat memberi amaran bahawa rejim tersebut melemah jauh sebelum MA sendiri berputar.
+<Lesson id="026_moving_averages"/> berkata "dagang mengikut kecondongan, bukan aras." Pelajaran ini menerangkan apa yang sebenarnya dimaksudkan oleh kecondongan dalam bentuk nombor. Kecondongan adalah kadar perubahan min bergerak — biasanya diukur sebagai perubahan peratusan dalam MA atas tetingkap tetap, seperti lima bar atau 20 bar. Kecondongan SMA50 20-bar sebanyak +0.6% setiap bar menggambarkan kenaikan yang kuat dan berterusan. SMA50 yang sama pada +0.05% setiap bar hampir mendatar — MA rata yang dibalut sebagai satu yang menaik. Kecondongan mengukur keyakinan di sebalik trend, dan kecondongan yang perlahan memberi amaran bahawa rejim sedang melemah jauh sebelum MA itu sendiri berputar.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat NVDA dari Ogos hingga November 2025. SMA50 meningkat setiap sesi dari 118 ke 145 — kenaikan 23% dalam 60 hari dagangan. Kecondongan harian purata: kira-kira +0.35% per sesi, dengan julut paling curam mencapai +0.55% per sesi pada pertengahan September.
+Lihat NVDA dari Ogos hingga November 2025. SMA50 meningkat setiap sesi dari 118 ke 145 — kenaikan 23% dalam 60 hari dagangan. Kecondongan harian purata: kira-kira +0.35% setiap sesi, dengan bahagian paling curam mencapai +0.55% setiap sesi pada pertengahan September.
 
-Kemudian pada akhir Oktober, SMA50 NVDA masih menaik — tetapi kecondongan per-bar telah turun ke +0.08%. Garisan masih naik; kadar kenaikan telah runtuh kepada satu lima daripada puncak. Harga bergerak mendatar antara 142 dan 150 selama tiga minggu. Pada 18 November, NVDA menembusi 142, SMA50 akhirnya mendatar pada 24 November pada 144, dan garisan berputar pada 2 Disember.
+Kemudian pada akhir Oktober, SMA50 NVDA masih menaik — tetapi kecondongan per-bar telah turun ke +0.08%. Garisan masih naik; kadar kenaikan telah runtuh kepada satu perlima daripada puncaknya. Harga bergerak mendatar antara 142 dan 150 selama tiga minggu. Pada 18 November, NVDA menembusi 142, SMA50 akhirnya mendatar pada 24 November pada 144, dan garisan berputar pada 2 Disember.
 
-Kecondongan memberi amaran tiga minggu sebelum MA melakukannya. Tuntutan boleh disangkal: apabila kecondongan per-bar purata bergerak jatuh di bawah 25% daripada kecondongan puncak terkininya dan kekal di situ selama 10+ bar, rejim trend sedang melambat dan MA itu sendiri akan mendatar atau berbalik dalam kira-kira 5–15 sesi. Pembatalan adalah mekanikal — jika kecondongan memecut semula di atas 50% daripada puncak dalam 10 bar, amaran pelambatan dibatalkan.
+Kecondongan memberi amaran tiga minggu sebelum MA melakukannya. Tuntutan boleh disangkal: apabila kecondongan per-bar min bergerak jatuh di bawah 25% daripada kecondongan puncak terbarunya dan kekal di situ selama 10+ bar, rejim trend sedang perlahan dan MA itu sendiri akan mendatar atau berputar dalam kira-kira 5–15 sesi. Pembatalan adalah mekanikal — jika kecondongan memecut semula ke atas 50% daripada puncaknya dalam 10 bar, amaran perlahan dibatalkan.
 
-Di Bursa Malaysia: SMA50 TENAGA pada awal 2025 berjalan pada +0.4% per sesi semasa kaki kuat dari RM12 ke RM14. Pada April, kecondongan telah mereput ke +0.05%; garisan akhirnya turun pada pertengahan Mei selepas tiga minggu amaran.
+Di Bursa Malaysia: SMA50 TENAGA pada awal 2025 berjalan pada +0.4% setiap sesi semasa kaki yang kuat dari RM12 ke RM14. Pada April, kecondongan telah mereput ke +0.05%; garisan akhirnya turun pada pertengahan Mei selepas tiga minggu amaran.
 
 ## Perangkap
 
-Perangkapnya ialah membaca kecondongan secara binari — "naik atau turun" — dan terlepas fasa pelambatan. Pemula melihat SMA50 masih menunjuk ke atas dan kekal long, walaupun kecondongan jatuh dari +0.55% per bar ke +0.08%. Arah MA tidak berubah; kekuatannya telah, dan itulah isyarat yang boleh anda gunakan beberapa minggu sebelum silang berlaku.
+Perangkapnya ialah membaca kecondongan secara binari — "naik atau turun" — dan terlepas fasa perlahan. Pemula melihat SMA50 masih menunjuk ke atas dan kekal long, walaupun kecondongan jatuh dari +0.55% setiap bar ke +0.08%. Arah MA tidak berubah; kekuatannya telah, dan itulah isyarat yang boleh anda gunakan beberapa minggu sebelum tembakan silang.
 
-Model mental yang betul: kecondongan adalah bacaan berterusan, bukan binari. Jejak ia dalam angka — lihat kecuraman, atau kira perubahan peratusan selama 20 bar terakhir. Carta kecondongan bagi MA itu sendiri sering memberi anda amaran awal 1–3 minggu bahawa harga sedang kehabisan tenaga sebelum MA mendatar. MA memberitahu anda di mana trend berada; kecondongan memberitahu anda seberapa tahan ia.
+Model mental yang betul: kecondongan adalah bacaan berterusan, bukan binari. Jejak ia dalam nombor — lihat ketajaman dengan mata kasar, atau kira perubahan peratusan selama 20 bar terakhir. Carta kecondongan MA itu sendiri sering memberi amaran awal 1–3 minggu bahawa harga sedang kehabisan tenaga sebelum MA mendatar. MA memberitahu anda di mana trend berada; kecondongan memberitahu anda seberapa tahan ia.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="SMA50 NVDA meningkat pada kadar kira-kira +0.55% per sesi pada pertengahan September. Pada akhir Oktober, kecerunan telah jatuh kepada +0.08% per sesi, walaupun MA itu sendiri masih meningkat. Harga bergerak mendatar selama tiga minggu sebelum jatuh. Apakah urutan ini memberitahu kita tentang analisis kecerunan?"
+  question="SMA50 NVDA meningkat pada kadar kira-kira +0.55% per sesi pada pertengahan September. Pada akhir Oktober, kecerunan telah jatuh kepada +0.08% per sesi, manakala MA itu sendiri masih meningkat. Harga bergerak mendatar selama tiga minggu sebelum jatuh. Apakah urutan ini memberitahu tentang analisis kecerunan?"
   options={[
     "Analisis kecerunan tidak boleh dipercayai kerana garis masih menunjuk ke atas",
     "Tukar kepada MA yang lebih pantas dan abaikan kecerunan sepenuhnya",
     "MA masih meningkat, jadi trend masih utuh dan pergerakan mendatar adalah hingar",
-    "Pengecilan kecerunan di bawah 25% daripada puncak adalah amaran awal bahawa trend sedang kehabisan tenaga — ia berlaku sebelum MA mendatar, memberikan anda masa 1–3 minggu"
+    "Penurunan kecerunan di bawah 25% daripada puncak adalah amaran awal bahawa trend sedang kehabisan tenaga — ia aktif sebelum MA mendatar, memberikan anda masa lead 1–3 minggu"
   ]}
   answer={3}
-  explanation="Pernyataan boleh difalsifikasi dalam pelajaran ini: kecerunan di bawah 25% daripada puncak selama 10+ bar meramalkan MA akan mendatar dalam 5–15 sesi. Jawapan salah yang menggoda ('masih meningkat = masih bullish') adalah bacaan binari yang secara eksplisit diperingatkan dalam pelajaran ini. Arah dan kadar perubahan adalah dimensi yang bebas. Arah memberitahu anda identiti trend; kecerunan memberitahu anda berapa banyak tenaga yang tinggal."
+  explanation="Pernyataan boleh disangkal dari pelajaran: kecerunan di bawah 25% daripada puncak selama 10+ bar meramalkan MA akan mendatar dalam 5–15 sesi. Jawapan salah yang menggoda ('masih meningkat = masih bullish') adalah bacaan binari yang secara eksplisit diperingatkan oleh pelajaran. Arah dan kadar perubahan adalah dimensi yang bebas. Arah memberitahu identiti trend; kecerunan memberitahu berapa banyak tenaga yang tinggal."
 />
 
 <Quiz
-  question="Anda memegang saham pada $80 dengan SMA50 meningkat. Selama 15 sesi terakhir, kecerunan MA telah jatuh dari +0.4% per bar pada puncak kepada +0.06% per bar — kira-kira 15% daripada puncak. Harga kini mendatar antara $79 dan $82. Henti rugi berada pada $76 (5% di bawah harga masuk). Kedudukan berisiko 1% daripada akaun. Apakah cadangan kerangka kerja ini?"
+  question="Anda memegang saham pada harga $80 dengan SMA50 meningkat. Selama 15 sesi terakhir, kecerunan MA telah jatuh dari +0.4% per bar pada puncak kepada +0.06% per bar — kira-kira 15% daripada puncak. Harga kini mendatar antara $79 dan $82. Stop terletak pada $76 (5% di bawah harga masuk). Kedudukan adalah risiko 1% akaun. Apakah kerangka kerja ini mencadangkan?"
   options={[
     "Tambah ke kedudukan — MA masih meningkat",
     "Pendekkan saham itu serta-merta",
-    "Ketatkan henti rugi atau ambil untung separa: kecerunan berada di bawah 25% daripada puncak, ambang amaran awal pelajaran ini; rejim trend sedang melambat walaupun MA belum berbalik",
+    "Perketat stop atau ambil untung separa: kecerunan berada di bawah 25% daripada puncak, ambang amaran awal pelajaran; rejim trend sedang perlahan walaupun MA belum bertukar arah",
     "Pegang dan abaikan kecerunan; hanya arah MA yang penting"
   ]}
   answer={2}
-  explanation="Kecerunan pada 15% daripada puncak memenuhi syarat amaran awal pelajaran ini. Mengetatkan henti rugi atau memangkas kedudukan menghormati apa yang diisytiharkan oleh kecerunan — kehabisan tenaga sebelum pembalikan MA. Jawapan salah yang menggoda ('tambah, MA masih meningkat') mengabaikan kecerunan sepenuhnya dan menganggap arah sebagai satu-satunya isyarat. Pendekan serta-merta (pilihan D) melompat sebelum pengesahan harga, yang diperingatkan oleh pelajaran ini dan pelajaran had penunjuk sebagai terlalu awal."
+  explanation="Kecerunan pada 15% daripada puncak memenuhi syarat amaran awal pelajaran. Mengketatkan stop atau memangkas kedudukan menghormati apa yang ditandakan oleh kecerunan — kehabisan tenaga sebelum pembalikan MA. Jawapan salah yang menggoda ('tambah, MA masih meningkat') mengabaikan kecerunan sepenuhnya dan memperlakukan arah sebagai satu-satunya isyarat. Pendekan serta-merta (pilihan D) melompat sebelum pengesahan harga, yang diperingatkan oleh pelajaran dan pelajaran had penunjuk sebagai terlalu awal."
 />
 
 ## Cuba sendiri
 
-Dalam Market Analyst <Term id="ami_one_on_one" />, tanya: "Apakah kecondongan semasa SMA50 pada <Term id="ami_watchlist" /> saya, dan yang mana mempunyai kecondongan di bawah 25% daripada puncak terkini mereka?" Kemudian semak carta sendiri — lihat perubahan kecuraman. Bina senarai ticker dalam keadaan pelambatan; itulah yang perlu dipantau untuk kesinambungan gagal, bukan entri baru.
+Dalam Market Analyst <Term id="ami_one_on_one" />, tanya: "Apakah kecondongan semasa SMA50 pada <Term id="ami_watchlist" /> saya, dan yang mana mempunyai kecondongan di bawah 25% daripada puncak terbarunya?" Kemudian semak carta anda sendiri — lihat perubahan ketajaman dengan mata kasar. Bina senarai ticker dalam keadaan perlahan; itulah yang perlu dipantau untuk kesinambungan yang gagal, bukan entri baru.
 
-## Intipati
+## Pengambilan
 
-Kecondongan MA adalah bacaan berterusan kekuatan trend — apabila kecondongan mereput di bawah 25% daripada puncaknya, trend sedang kehabisan tenaga beberapa minggu sebelum MA sendiri berbalik.
+Kecondongan MA adalah bacaan berterusan kekuatan trend — apabila kecondongan mereput di bawah 25% daripada puncaknya, trend sedang kehabisan tenaga beberapa minggu sebelum MA itu sendiri berputar.

@@ -11,68 +11,68 @@ topic: "size_creep"
 prerequisites: ["049_overconfidence", "014_position_sizing_basics"]
 tags: ["psychology", "overconfidence", "size_creep", "winning_streak", "mandate"]
 agent_callouts: ["portfolio_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Creep saiz pada rentetan kemenangan
 
-Creep saiz ialah peningkatan perlahan, kebanyakannya tidak ketara, dalam risiko per-perdagangan yang berlaku semasa rentetan kemenangan. Ia jarang tiba sebagai satu pertaruhan 3x — ia tiba sebagai 1.0x, 1.1x, 1.2x, 1.4x, 1.7x, 2.3x merentasi 20 perdagangan. Membina atas <Lesson id="049_overconfidence"/>, pelajaran ini mengajar anda audit per-perdagangan yang mengesan anjakan sebelum rentetan berakhir, mengapa creep saiz ialah corak psikologi *paling mahal* dalam perdagangan, dan bagaimana memprogramkan <Term id="ami_mandate" /> supaya saiz dipisahkan daripada lengkung ekuiti. Perdagangan yang mengakhiri rentetan kemenangan ialah yang terbesar — dan itu bukan kebetulan.
+Creep saiz ialah peningkatan perlahan yang kebanyakannya tidak ketara dalam risiko per-dagangan yang berlaku semasa rentetan kemenangan. Ia jarang muncul sebagai satu pertaruhan 3x — ia muncul sebagai 1.0x, 1.1x, 1.2x, 1.4x, 1.7x, 2.3x merentasi 20 dagangan. Membina berdasarkan <Lesson id="049_overconfidence"/>, pelajaran ini mengajar anda audit per-dagangan yang mengesan anjakan sebelum rentetan berakhir, mengapa creep saiz ialah corak psikologi *paling mahal* dalam perdagangan, dan bagaimana mengkonfigurasi <Term id="ami_mandate" /> supaya saiz dipisahkan daripada lengkung ekuiti. Dagangan yang mengakhiri rentetan kemenangan ialah dagangan terbesar — dan itu bukan kebetulan.
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Audit seorang pedagang terhadap 60 perdagangan berturut-turut pada saham besar AS, Mei–Ogos 2024: perdagangan 1–20 purata risiko per-perdagangan 1.02%; perdagangan 21–40 purata 1.31%; perdagangan 41–60 purata 1.83%. Mandatnya bagi risiko per-perdagangan ialah 1.0%. Beliau tidak secara sedar menaikkan risiko tersebut. Kadar kemenangan merentasi ketiga-tiga kumpulan adalah hampir sama pada ~58%. Namun, perdagangan rugi membayar berbeza — impak purata perdagangan rugi ke atas akaun ialah 1.0% dalam kumpulan pertama, 1.3% dalam kumpulan kedua, dan 1.9% dalam kumpulan ketiga. Margin strategi tidak berubah; kos untuk salah telah berubah. Apabila gugusan rugi yang tidak dapat dielakkan tiba (perdagangan 58 ialah -2.4%, perdagangan 59 ialah -2.1%, perdagangan 60 ialah -2.6%, semua dalam peraturan mandat tetapi pada saiz yang dinaikkan oleh creep), penurunan dari puncak rentetan ialah -8.7% pada kira-kira 50/50 menang-rugi dalam gugusan tersebut. Gugusan rugi yang sama pada saiz mandat asal 1.0% akan menjadi penurunan -3.8% — bunyi yang boleh ditanggung, bukan peristiwa pengakhiri rentetan.
+Audit seorang pedagang terhadap 60 dagangan berturut-turut pada saham besar AS, Mei–Ogos 2024: dagangan 1–20 purata risiko per-dagangan 1.02%; dagangan 21–40 purata 1.31%; dagangan 41–60 purata 1.83%. Mandatnya untuk risiko per-dagangan ialah 1.0%. Beliau tidak secara sedar meningkatkannya. Kadar kemenangan merentasi ketiga-tiga kelompok adalah hampir sama pada ~58%. Walau bagaimanapun, dagangan rugi membayar berbeza — impak purata dagangan rugi terhadap akaun ialah 1.0% dalam kelompok satu, 1.3% dalam kelompok dua, dan 1.9% dalam kelompok tiga. Kelebihan strategi tidak berubah; kos untuk salah telah berubah. Apabila gugusan rugi yang tidak dapat dielakkan tiba (dagangan 58 ialah -2.4%, dagangan 59 ialah -2.1%, dagangan 60 ialah -2.6%, semua dalam peraturan mandat tetapi pada saiz yang dinaikkan oleh creep), penurunan dari puncak rentetan ialah -8.7% pada kira-kira 50/50 kemenangan-kekalahan dalam gugusan tersebut. Gugusan rugi yang sama pada saiz mandat asal 1.0% akan menjadi penurunan -3.8% — bunyi yang boleh ditanggung, bukan peristiwa pengakhiran rentetan.
 
-Cap jari creep saiz yang boleh disangkal: risiko per-perdagangan bergulir merentasi 10 perdagangan terakhir melebihi risiko per-perdagangan bergulir merentasi 10 perdagangan sebelumnya sebanyak 25% atau lebih, DAN tiada perubahan bertulis dalam kriteria persediaan yang menjustifikasikan perbezaan tersebut. Dua nombor, kedua-duanya boleh diaudit. Rentetan bukanlah bukti; vektor saiz posisi *ialah* bukti.
+Cap jari creep saiz yang boleh disangkal: risiko per-dagangan terkisar merentasi 10 dagangan terakhir melebihi risiko per-dagangan terkisar merentasi 10 dagangan sebelumnya sebanyak 25% atau lebih, DAN tiada perubahan bertulis dalam kriteria persediaan yang menjustifikasikan perbezaan tersebut. Dua nombor, kedua-duanya boleh diaudit. Rentetan bukan bukti; *vektor* saiz kedudukan ialah.
 
 ## Perangkap
 
-Perangkapnya ialah creep saiz tidak berasa seperti melanggar peraturan. Setiap perdagangan individu adalah "hanya sedikit lebih besar daripada yang sebelumnya," dan setiap satu dijustifikasikan dengan nota keyakinan tinggi — "persediaan ini adalah yang paling bersih bulan ini." Anjakan kumulatif, merentasi 20 perdagangan, tidak ketara pada mana-mana titik keputusan kerana perbandingan yang dibuat oleh pedagang adalah antara perdagangan *semasa* dan perdagangan *sebelumnya*, bukan antara perdagangan semasa dan *mandat*. Model mental yang betul: mandat ialah asas perbandingan satu-satunya yang sah, dan risiko per-perdagangan harus menjadi fungsi *kualiti persediaan yang diukur terhadap kriteria bertulis*, bukan terhadap hasil terkini. Jika anda tidak dapat menunjuk kepada perubahan kriteria persediaan bertulis yang menjustifikasikan peralihan saiz, peralihan tersebut ialah creep — tidak kira betapa dijustifikasinya setiap perdagangan individu secara terpencil. <Term id="ami_pm_safety_floor" /> PM harus menolak sebarang perdagangan tunggal di atas mandat, dan pedagang harus menolak sebarang *trend* di atas mandat walaupun tiada perdagangan tunggal yang melampauinya.
+Perangkapnya ialah creep saiz tidak terasa seperti melanggar peraturan. Setiap dagangan individu adalah "hanya sedikit lebih besar daripada yang sebelumnya," dan setiap satu dijustifikasikan dengan nota keyakinan tinggi — "persediaan ini ialah yang paling bersih bulan ini." Anjakan kumulatif, merentasi 20 dagangan, tidak ketara pada mana-mana titik keputusan kerana perbandingan yang dibuat oleh pedagang ialah antara dagangan *semasa* dan dagangan *terakhir*, bukan antara dagangan semasa dan *mandat*. Model mental yang betul: mandat ialah satu-satunya asas perbandingan yang sah, dan risiko per-dagangan harus menjadi fungsi *kualiti persediaan yang diukur terhadap kriteria bertulis*, bukan hasil terkini. Jika anda tidak dapat menunjuk kepada perubahan kriteria persediaan bertulis yang menjustifikasikan peralihan saiz, peralihan itu ialah creep — tidak kira betapa dijustifikasinya setiap dagangan individu secara terpencil. <Term id="ami_pm_safety_floor" /> PM harus menolak sebarang dagangan tunggal di atas mandat, dan pedagang harus menolak sebarang *trend* di atas mandat walaupun tiada dagangan tunggal telah melampauinya.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="10 dagangan terakhir anda mencatat purata risiko per-dagangan 1.7%; 10 dagangan sebelumnya purata 1.0%. Mandat anda ialah risiko 1.0% per-dagangan. Anda tidak pernah melanggar mandat pada mana-mana dagangan tunggal (maksimum per-dagangan ialah 1.9%). Kadar kemenangan tidak berubah. Apakah tindakan berdisiplin?"
+  question="10 dagangan terakhir anda mencatat purata risiko 1.7% setiap dagangan; 10 dagangan sebelumnya purata 1.0%. Mandat anda ialah risiko 1.0% setiap dagangan. Anda tidak pernah melanggar mandat pada mana-mana dagangan tunggal (maksimum setiap dagangan ialah 1.9%). Kadar kemenangan tidak berubah. Apakah tindakan berdisiplin?"
   options={[
-    "Potong semua posisi separuh untuk mengimbangi peningkatan perlahan.",
-    "Teruskan — tiada dagangan tunggal telah melanggar mandat.",
-    "Naikkan mandat kepada 1.7% untuk menyelaraskan dengan tingkah laku semasa.",
-    "Bekukan kemasukan baharu pada tahap mandat 1.0%; siasat sama ada sebarang perubahan kriteria setup yang dikhaskan dapat menjustifikasikan risiko tinggi pada 10 dagangan sebelumnya. Jika tiada perubahan dikhaskan yang wujud, peningkatan perlahan itu tidak berjustifikasi — kembali ke asas serta-merta."
+    "Potong semua posisi kepada separuh untuk mengimbangi peningkatan perlahan.",
+    "Teruskan — tiada dagangan tunggal yang melanggar mandat.",
+    "Naikkan mandat kepada 1.7% untuk menyelaraskan dengan tingkah laku yang diperhatikan.",
+    "Bekukan kemasukan baharu pada tahap mandat 1.0%; siasat sama ada sebarang perubahan kriteria setup yang didokumentasikan membenarkan risiko 10 dagangan sebelumnya yang lebih tinggi. Jika tiada perubahan yang didokumentasikan wujud, peningkatan tersebut tidak wajar — kembali ke garis dasar serta-merta."
   ]}
   answer={3}
-  explanation="'Tiada dagangan tunggal melanggar' ialah rasionalisasi peningkatan saiz yang klasik — trend itu sendiri adalah pelanggaran, bukan dagangan tunggal. 'Naikkan mandat untuk menyelaraskan dengan tingkah laku' ialah langkah 'tulis semula peraturan untuk menafikan pelanggaran' dan merupakan kesilapan paling mahal yang boleh dibuat oleh pedagang yang terlalu yakin. 'Potong semuanya separuh' ialah panik yang terpantul. Jawapan berdisiplin membekukan pemboleh ubah yang dipersoalkan (saiz), menyiasat input yang sepatutnya memandukannya (kriteria setup yang dikhaskan), dan kembali ke asas jika tiada perubahan input dikhaskan. Lengkung ekuiti ialah hasil; kriteria ialah input. Hanya input yang menjustifikasikan perubahan mandat."
+  explanation="'Tiada dagangan tunggal melanggar' ialah rasionalisasi penciptaan saiz yang klasik — tren ialah pelanggaran, bukan mana-mana dagangan tunggal. 'Naikkan mandat untuk menyelaraskan dengan tingkah laku' ialah langkah 'menulis semula peraturan untuk menlegalisasikan pelanggaran' dan merupakan kesilapan paling mahal yang boleh dibuat oleh pedagang yang terlalu yakin. 'Potong semuanya kepada separuh' ialah panik yang dipantulkan. Jawapan berdisiplin membekukan pemboleh ubah yang dipersoalkan (saiz), menyiasat input yang sepatutnya memandukannya (kriteria setup yang didokumentasikan), dan kembali ke garis dasar jika tiada perubahan input yang didokumentasikan. Garis ekuiti ialah hasil; kriteria ialah input. Hanya input yang membenarkan perubahan mandat."
 />
 
 <Quiz
-  question="Ujian kompaun manakah yang mengesan peningkatan saiz yang tidak dilanggar oleh mana-mana dagangan tunggal?"
+  question="Ujian kompaun manakah yang menangkap peningkatan saiz yang tidak dilanggar oleh mana-mana dagangan tunggal?"
   options={[
-    "Risiko per-dagangan bergolek bagi 10 dagangan terakhir melebihi risiko per-dagangan bergolek bagi 10 dagangan sebelumnya sebanyak 25% atau lebih, tanpa sebarang perubahan dalam kriteria setup yang dikhaskan dalam Jurnal Keputusan.",
+    "Risiko per-dagangan bergolek selama 10 dagangan terakhir melebihi risiko per-dagangan bergolek selama 10 dagangan sebelumnya sebanyak 25% atau lebih, tanpa perubahan bertulis dalam kriteria setup yang didokumentasikan dalam Jurnal Keputusan.",
     "Mana-mana dagangan tunggal melebihi mandat.",
     "Anda berasa yakin tentang dagangan anda.",
-    "Akaun anda mencapai rekod baharu."
+    "Akaun anda berada pada tahap tertinggi baharu."
   ]}
   answer={0}
-  explanation="Pelanggaran dagangan tunggal hanya menangkap pelanggaran kasar, bukan trend. Rekod baharu akaun ialah hasil. Keyakinan tidak boleh disangkal. Ujian kompaun — perbandingan 10 dagangan bergolek, ambang 25%, tiada perubahan kriteria dikhaskan — ialah tandatangan yang boleh diaudit yang menangkap hanyutan merentas beberapa dagangan sebelum kluster pengakhiran streak tiba. Kedua-dua nombor boleh dikira daripada Jurnal Keputusan dalam masa kurang daripada satu minit."
+  explanation="Pelanggaran dagangan tunggal menangkap hanya pelanggaran kasar, bukan tren. Akaun tahap tertinggi baharu ialah hasil. Keyakinan tidak boleh disangkal. Ujian kompaun — perbandingan 10 dagangan bergolek, ambang 25%, tiada perubahan kriteria yang didokumentasikan — ialah tanda yang boleh diaudit yang menangkap hanyutan merentasi beberapa dagangan sebelum kluster pengakhiran streak tiba. Kedua-dua nombor boleh dikira daripada Jurnal Keputusan dalam masa kurang satu minit."
 />
 
 <Quiz
-  question="Akaun anda naik 31% YTD berbanding mandat serendah 20%. PM menandakan bahawa risiko per-dagangan bergolek bagi 10 dagangan terakhir ialah 1.9% berbanding 1.0% bagi 10 dagangan sebelumnya — peningkatan 90%. Tiada dagangan tunggal telah melanggar. Kriteria strategi anda tidak telah ditulis semula. Jawapan sintesis?"
+  question="Akaun anda naik 31% YTD berbanding mandat serakan maksimum 20%. PM menandakan bahawa risiko per-dagangan bergolek selama 10 dagangan terakhir ialah 1.9% berbanding 1.0% 10 dagangan sebelumnya — peningkatan 90%. Tiada dagangan tunggal telah melanggar. Kriteria strategi anda tidak telah ditulis semula. Jawapan sintesis?"
   options={[
-    "Gagalkan tanda PM — lengkung ekuiti anda mengesahkan saiz baharu adalah betul.",
+    "Gagalkan tanda PM — garis ekuiti anda mengesahkan saiz baharu adalah betul.",
     "Teruskan saiz semasa tetapi ketatkan henti rugi untuk mengurangkan risiko dolar sambil mengekalkan saiz baharu.",
-    "Bekukan kemasukan baharu pada tahap mandat 1.0% sehingga audit 30 hari mengesahkan posisi besar sedia ada ditutup dengan kemas; rekod trend peningkatan perlahan dalam Jurnal Keputusan sebagai kegagalan proses; hanya pertimbangkan perubahan mandat selepas semakan kriteria bertulis, tidak semasa streak.",
+    "Bekukan kemasukan baharu pada tahap mandat 1.0% sehingga audit 30 hari mengesahkan posisi yang lebih besar semasa ditutup dengan bersih; dokumentasikan tren peningkatan dalam Jurnal Keputusan sebagai kegagalan proses; hanya pertimbangkan perubahan mandat selepas revisi kriteria bertulis, jangan pernah semasa streak.",
     "Naikkan mandat kepada 2.0% — data anda menyokongnya."
   ]}
   answer={2}
-  explanation="'Lengkung ekuiti mengesahkan saiz' ialah langkah overconfidence yang klasik. 'Ketatkan henti rugi untuk mengurangkan risiko dolar' ialah jawapan yang memikat — ia terdengar bijaksana dan secara struktur merupakan yang terburuk daripada empat pilihan, kerana mengetatkan henti rugi pada posisi yang sudah bersaiz besar menjamin lebih banyak keluaran whipsaw tanpa menangani peningkatan saiz. 'Naikkan mandat kepada 2.0%' ialah pelanggaran yang dinafikan. Jawapan berdisiplin membekukan pemboleh ubah, mendokumentasikan kegagalan, dan secara eksplisit melarang perubahan mandat semasa streak. Mandat disemak semula dalam keadaan tenang dengan sebab bertulis, tidak semasa kepanasan pita yang panas."
+  explanation="'Garis ekuiti mengesahkan saiz' ialah langkah overconfidence teks buku. 'Ketatkan henti rugi untuk mengurangkan risiko dolar' ialah jawapan yang memikat — ia terdengar bijaksana dan secara struktur yang terburuk daripada empat pilihan, kerana mengetatkan henti rugi pada posisi yang sudah bersaiz besar menjamin lebih banyak keluaran whipsaw tanpa menangani peningkatan. 'Naikkan mandat kepada 2.0%' ialah pelanggaran yang dilesahkan. Jawapan berdisiplin membekukan pemboleh ubah, mendokumentasikan kegagalan, dan secara eksplisit melarang perubahan mandat semasa streak. Mandat disemak semula dalam keadaan tenang dengan sebab bertulis, jangan pernah dalam panasnya pita yang panas."
 />
 
-## Cuba sendiri
+## Cuba
 
-Buka <Term id="ami_decision_journal" /> dan tarik 30 perdagangan terakhir anda dengan peratusan risiko per-perdagangan mereka. Hitung purata 10 perdagangan bergulir merentasi siri penuh. Plotkan trend. Jika purata bergulir naik lebih daripada 25% dari permulaan hingga akhir tanpa perubahan kriteria persediaan bertulis, anda mempunyai corak creep saiz yang didokumenkan. Tunjukkan skrin kepada <Term id="ami_one_on_one" /> bersama Pengurus Portfolio dan tanya: "Jalankan mandat saya terhadap siri saiz ini — di mana lantai keselamatan akan memberi amaran?" Jika jawapannya "tiada pada asas per-perdagangan," itu ialah diagnosis: peraturan adalah per-perdagangan, kegagalan adalah pada trend, dan mandat memerlukan garis penguatkuasaan purata bergulir ditambah.
+Buka <Term id="ami_decision_journal" /> dan tarik 30 dagangan terakhir anda dengan peratusan risiko per-dagangan mereka. Kira purata 10 dagangan terkisar merentasi siri penuh. Plotkan trend. Jika purata terkisar naik lebih daripada 25% dari permulaan hingga akhir tanpa perubahan kriteria persediaan bertulis, anda mempunyai corak creep saiz yang didokumenkan. Tunjukkan skrin kepada <Term id="ami_one_on_one" /> bersama Pengurus Portfolio dan tanya: "Jalankan mandat saya terhadap siri saiz ini — di mana lantai keselamatan akan memberi amaran?" Jika jawapannya "tiada pada asas per-dagangan," itu ialah diagnosis: peraturan ialah per-dagangan, kegagalan ialah pada trend, dan mandat memerlukan garis penguatkuasaan purata terkisar ditambah.
 
-## Kesimpulan
+## Teras
 
-Creep saiz mengakhiri setiap rentetan kemenangan. Risiko per-perdagangan harus menjadi fungsi kualiti persediaan, bukan hasil terkini — dan mandat harus menguatkuasakan purata bergulir, bukan hanya had per-perdagangan.
+Creep saiz mengakhiri setiap rentetan kemenangan. Risiko per-dagangan harus menjadi fungsi kualiti persediaan, bukan hasil terkini — dan mandat harus menguatkuasakan purata terkisar, bukan hanya had per-dagangan.

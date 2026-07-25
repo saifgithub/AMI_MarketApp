@@ -11,66 +11,66 @@ topic: "moving_average_variants"
 prerequisites: ["026_moving_averages", "022_trend_direction"]
 tags: ["indicators", "moving_average", "sma", "ema", "wma", "lag"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # SMA vs EMA vs WMA — bila setiap satu penting
 
-<Lesson id="026_moving_averages"/> memperkenalkan purata bergerak mudah (SMA) dan menyebut EMA secara ringkas. Tiga varian biasa — Simple (SMA), Exponential (EMA), dan Weighted (WMA) — semua mengira purata bagi N bar terakhir, tetapi mereka mengagihkan berat dengan cara berbeza. SMA memberi berat yang sama kepada setiap bar. WMA memberi berat linear tertinggi kepada bar paling terkini, kemudian menurun secara berperingkat. EMA menggunakan reputan eksponensial supaya bar terbaru mendominasi dan bar lama pudar secara lancar. Tempoh pantauan sama; tiga kelajuan berbeza. Pilih satu yang lag-nya sepadan dengan timeframe yang anda dagangkan — dan fahami pertukaran (tradeoff) sebelum anda menukar.
+<Lesson id="026_moving_averages"/> memperkenalkan purata bergerak mudah (simple moving average) dan menyebut EMA secara sepintas lalu. Tiga varian biasa — Simple (SMA), Exponential (EMA), dan Weighted (WMA) — semuanya mengira purata bagi N bar terakhir, tetapi mereka mengagihkan berat dengan cara berbeza. SMA memberikan berat yang sama kepada setiap bar. WMA memberikan berat linear tertinggi kepada bar paling terkini, kemudian menurun secara berperingkat. EMA menggunakan reputan eksponensial supaya bar terbaru mendominasi dan bar lama pudar secara lancar. Tempoh lihat balik yang sama; tiga kelajuan berbeza. Pilih satu yang lag-nya sepadan dengan timeframe yang anda dagangkan — dan fahami pertukaran (tradeoff) sebelum anda bertukar.
 
 ## Bagaimana ini berlaku dalam pasaran sebenar
 
-Lihat QQQ dari Oktober 2025 hingga Januari 2026. Menggunakan pantauan 20-periode pada carta harian:
+Lihat QQQ dari Oktober 2025 hingga Januari 2026. Menggunakan tempoh lihat balik 20-period pada carta harian:
 
-- SMA20 menjadi bullish pada 28 Oktober pada 487 — tiga sesi penuh selepas paras rendah tempatan.
-- WMA20 menjadi bullish pada 24 Oktober pada 484 — satu sesi selepas paras rendah.
-- EMA20 menjadi aktif pada 23 Oktober pada 483 — serentak dengan penutupan bar paras rendah.
+- SMA20 bertukar bullish pada 28 Oktober pada 487 — tiga sesi penuh selepas paras rendah tempatan.
+- WMA20 bertukar bullish pada 24 Oktober pada 484 — satu sesi selepas paras rendah.
+- EMA20 bertukar pada 23 Oktober pada 483 — serentak dengan penutupan bar paras rendah.
 
-EMA menangkap pembalikan (turn) paling awal. Carta sama, lag berbeza. Tetapi pada 14 November, apabila QQQ mencetak kejutan satu hari -2.8% ke 495, ketiga-tiga purata kekal di atas harga pada sesi berikutnya — kecuali EMA20, yang berbalik kepada penurunan selama dua bar sebelum rata semula. Kepekaan EMA memotong dua arah: pembalikan lebih pantas, lebih banyak whipsaw.
+EMA menangkap pembalikan (turn) paling awal. Carta yang sama, lag yang berbeza. Tetapi pada 14 November, apabila QQQ mencetak penurunan satu hari -2.8% ke 495, ketiga-tiga purata itu kekal di atas harga pada sesi berikutnya — kecuali EMA20, yang bertukar kepada penurunan selama dua bar sebelum rata semula. Kepekaan EMA memotong dua arah: pembalikan lebih pantas, lebih banyak whipsaw.
 
-Pertukaran (trade-off) itu bersifat mekanikal. EMA(N) memberi kira-kira separuh lag SMA(N) tetapi menghasilkan kira-kira 30–40% perubahan arah lebih banyak dalam sampel enam bulan biasa, yang bermaksud lebih banyak entri whipsaw jika anda dagangkan berdasarkan silang (cross). WMA berada di antara kedua-duanya pada kedua-dua paksi.
+Pertukaran (trade-off) itu adalah mekanikal. EMA(N) memberikan kira-kira separuh lag SMA(N) tetapi menghasilkan kira-kira 30–40% lebih banyak perubahan arah dalam sampel enam bulan biasa, yang bermaksud lebih banyak entri whipsaw jika anda berdagang berdasarkan silang (cross). WMA berada di antara kedua-duanya pada kedua-dua paksi.
 
-Di Bursa Malaysia: PUBLIC BANK semasa 2025 — SMA50 bersilang bullish pada 17 Mac, EMA50 pada 11 Mac. Permulaan enam hari itu nyata, tetapi EMA50 juga memberi satu pembalikan palsu pada pertengahan April yang diabaikan sepenuhnya oleh SMA50.
+Di Bursa Malaysia: PUBLIC BANK semasa 2025 — SMA50 bersilang bullish pada 17 Mac, EMA50 pada 11 Mac. Permulaan enam hari itu nyata, tetapi EMA50 juga memberikan satu pembalikan palsu pada pertengahan April yang diabaikan sepenuhnya oleh SMA50.
 
 ## Perangkap
 
-Perangkapnya ialah mengandaikan "lebih pantas adalah lebih baik." Pemula membaca bahawa EMA bertindak balas lebih cepat dan menukar semua MA pada carta mereka kepada eksponensial, kemudian melihat isyarat silang mereka berganda frekuensinya dan kadar kemenangan mereka runtuh. Kesilapan sebaliknya juga biasa — secara lalai menggunakan SMA pada carta scalping 5-minit di mana lag 30-bar adalah keseluruhan dagangan.
+Perangkapnya ialah mengandaikan "lebih pantas adalah lebih baik." Pemula membaca bahawa EMA bertindak balas lebih cepat dan menukar setiap MA pada carta mereka kepada eksponensial, kemudian melihat isyarat silang mereka berganda kekerapannya dan kadar kemenangan mereka runtuh. Kesilapan yang bertentangan juga sama lazim — memilih SMA secara lalai pada carta scalping 5-minit di mana lag 30-bar adalah keseluruhan dagangan.
 
-Model mental yang betul: padankan lag MA dengan tempoh pegangan dagangan. Untuk ayunan berbilang minggu pada carta harian, respons yang lebih perlahan SMA menapis hingar yang tidak anda ambil peduli. Untuk entri momentum jangka pendek — breakout harian yang akan anda keluar dalam seminggu — pembalikan awal EMA bernilai whipsaw tambahan. WMA ialah kompromi apabila anda mahu penekanan kebaruan tanpa lonjakan eksponensial. Pilihan ini ialah parameter penalaan, bukan sekadar keutamaan.
+Model mental yang betul: padankan lag MA dengan tempoh pegangan (holding period) dagangan. Untuk swing multi-minggu dari carta harian, respons yang lebih perlahan SMA menapis hingar yang tidak anda hiraukan. Untuk entri momentum jangka pendek — breakout harian yang akan anda keluar dalam seminggu — pembalikan awal EMA bernilai whips tambahan. WMA adalah kompromi apabila anda mahu penekanan ke atas terkini tanpa lebihan eksponensial. Pilihan adalah parameter penalaan, bukan keutamaan.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="QQQ mencapai paras terendah pada 23 Oktober. EMA20 bertukar menjadi bullish pada hari yang sama pada 483, WMA20 bertukar pada hari berikutnya pada 484, SMA20 bertukar empat sesi kemudian pada 487. Carta yang sama, tempoh lihat balik yang sama. Apakah yang ditunjukkan oleh sebaran ini?"
+  question="QQQ mencapai paras bawah pada 23 Oktober. EMA20 bertukar menjadi bullish pada hari yang sama pada 483, WMA20 bertukar pada hari berikutnya pada 484, SMA20 bertukar empat sesi kemudian pada 487. Carta yang sama, tempoh lihat balik yang sama. Apa yang memberitahu anda oleh sebaran ini?"
   options={[
     "Perisian carta tidak dikalibrasi dengan betul jika nilai berbeza",
-    "WMA rosak kerana ia berada di antara dua yang lain",
-    "EMA adalah lebih tepat dari segi matematik, jadi gunakan ia sentiasa",
-    "Setiap varian memperdagangkan kelewatan berbanding hingar dengan cara berbeza — EMA adalah paling pantas tetapi lebih kerap berubah; SMA adalah paling perlahan tetapi lebih bersih. Pilih kelewatan yang sepadan dengan tempoh pegangan anda."
+    "WMA rosak kerana ia mendarat di antara dua yang lain",
+    "EMA adalah lebih tepat secara matematik, jadi gunakan sentiasa",
+    "Setiap varian memperdagangkan kelewatan untuk hingar dengan cara yang berbeza — EMA adalah terpantas tetapi lebih kerap berbalik; SMA adalah paling perlahan tetapi lebih bersih. Pilih kelewatan yang sepadan dengan tempoh pegangan anda."
   ]}
   answer={3}
-  explanation="Ketiganya adalah sah; mereka mengagihkan berat kepada bar terkini dengan cara berbeza. Penurunan eksponensial EMA menjadikannya paling pantas tetapi juga paling mudah mengalami perubahan arah palsu. Jawapan salah yang memikat ('EMA sentiasa lebih baik') mengabaikan contoh QQQ 14 November di mana EMA memberikan perubahan arah yang salah, manakala SMA mengabaikannya dengan betul. Kelajuan menelan kos dalam bentuk perubahan arah palsu; pilih berdasarkan tempoh masa, bukan keutamaan."
+  explanation="Ketiga-tiganya sah; ia mengagihkan berat kepada bar terkini dengan cara berbeza. Peluruhan eksponen EMA menjadikannya terpantas tetapi juga paling rentan terhadap pembalikan palsu. Jawapan salah yang memikat ('EMA sentiasa lebih baik') mengabaikan contoh QQQ 14 November di mana EMA memberikan pembalikan arah yang salah yang diabaikan dengan betul oleh SMA. Kelajuan menelan kos anda dalam whipsaw; pilih berdasarkan tempoh masa, bukan keutamaan."
 />
 
 <Quiz
-  question="Anda melakukan perdagangan ayunan pada carta harian dengan tempoh pegangan purata tiga minggu. Anda telah menggunakan EMA20 untuk bacaan trend, dan isyarat silang anda mengalami perubahan arah palsu tiga atau empat kali sebulan, masing-masing menelan kos 0.4–0.6% pada had kerugian. Saiz posisi adalah risiko 1% akaun per dagangan. Apakah pelarasan terbaik di bawah rangka kerja pelajaran ini?"
+  question="Anda memperdagangkan swing pada carta harian dengan tempoh pegangan purata tiga minggu. Anda telah menggunakan EMA20 untuk bacaan trend dan isyarat silang anda mendapat whipsaw tiga atau empat kali sebulan, setiap kali menelan kos 0.4–0.6% pada henti rugi. Saiz posisi adalah 1% risiko akaun per dagangan. Penyesuaian terbaik di bawah kerangka pelajaran ini ialah?"
   options={[
     "Kekalkan EMA20 dan gandakan saiz posisi untuk mengimbangi",
-    "Tukar kepada SMA20 (atau SMA50) supaya kelewatan MA sepadan dengan tempoh pegangan tiga minggu; kelewatan tambahan menapis hingar yang sedang menggerunkan akaun",
-    "Tukar kepada EMA10 — menjadi lebih pantas untuk menangkap perubahan lebih awal",
+    "Tukar kepada SMA20 (atau SMA50) supaya kelewatan MA sepadan dengan tempoh pegangan tiga minggu; kelewatan tambahan menapis hingar yang memakan akaun",
+    "Tukar kepada EMA10 — pergi lebih pantas untuk menangkap putaran lebih awal",
     "Berhenti menggunakan purata bergerak sepenuhnya"
   ]}
   answer={1}
-  explanation="Tempoh pegangan dan kelewatan MA harus sepadan. Perdagangan ayunan tiga minggu tidak memerlukan MA yang berubah setiap lima hari. Jawapan salah yang memikat ('jadi lebih pantas') memperburukkan masalah — MA lebih pantas bermaksud lebih banyak perubahan, bermaksud lebih banyak kerugian perubahan arah palsu. Pelajaran ini jelas: lebih pantas bukan lebih baik; kesepaduan kelewatan dengan tempoh pegangan adalah penting. Menggandakan saiz pada sistem yang rugi adalah mod kegagalan perdagangan balas yang ditekankan dalam modul psikologi."
+  explanation="Tempoh pegangan dan kelewatan MA harus sepadan. Swing tiga minggu tidak memerlukan MA yang berbalik setiap lima hari. Jawapan salah yang memikat ('pergi lebih pantas') memburukkan lagi masalah — MA lebih pantas bermaksud lebih banyak pembalikan bermaksud lebih banyak kerugian whipsaw. Pelajaran ini jelas: lebih pantas tidak lebih baik; kesesuaian kelewatan-ke-tempoh-pegangan adalah penting. Menggandakan saiz pada sistem yang rugi ialah mod kegagalan trading balas yang diletakkan tanda dalam modul psikologi."
 />
 
 ## Cuba sendiri
 
 Dalam Market Analyst <Term id="ami_one_on_one" />, tampal ticker dari <Term id="ami_watchlist" /> anda dan tanya: "Tindih SMA20, EMA20, dan WMA20 — di mana kedudukan mereka sekarang, dan berapa banyak pembalikan palsu yang diberikan oleh setiap satu dalam 60 sesi terakhir?" Kemudian periksa carta sendiri. Pilih varian yang bilangan pembalikannya sepadan dengan kos yang anda sanggup bayar untuk pembalikan lebih awal.
 
-## Pengambilan
+## Penutup
 
-SMA, EMA, dan WMA memperdagangkan lag untuk whipsaw pada skala gelongsor — padankan varian dengan tempoh pegangan anda, bukan kepada mana satu yang rasa lebih pantas.
+SMA, EMA, dan WMA mempertaruhkan lag untuk whipsaws pada skala tergelincir — padankan varian dengan tempoh pegangan anda, bukan dengan mana satu yang terasa lebih pantas.

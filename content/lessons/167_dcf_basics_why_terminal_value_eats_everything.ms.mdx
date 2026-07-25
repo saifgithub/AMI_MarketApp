@@ -11,71 +11,71 @@ topic: "valuation"
 prerequisites: ["037_valuation_what_is_a_stock_worth", "035_cash_flow_vs_earnings", "153_free_cash_flow_the_only_cash_that_belongs_to_you"]
 tags: ["valuation", "dcf", "terminal_value", "discount_rate", "sensitivity", "fundamentals"]
 agent_callouts: ["fundamentals_analyst", "bear_researcher"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
 # Asas DCF: mengapa nilai terminal memakan segalanya
 
-<Lesson id="037_valuation_what_is_a_stock_worth"/> memperkenalkan idea DCF: nilai saham adalah nilai kini bagi aliran tunai masa depan. Rahsia gelap model DCF ialah bagi kebanyakan syarikat pertumbuhan, 60–80% daripada nilai intrinsik yang dikira berasal daripada *nilai terminal* — andaian serba boleh mengenai apa yang berlaku selepas tahun ke-10. Ubah kadar pertumbuhan terminal sebanyak 1 mata peratus atau kadar diskaun sebanyak 50 mata asas, dan keluaran "nilai adil" akan berubah sebanyak 20–40%. Pada akhir pelajaran ini, anda perlu memahami mengapa keluaran DCF merupakan julat kepekaan berbanding anggaran titik, serta andaian nilai terminal khusus yang mengubah DCF menjadi fantasi.
+<Lesson id="037_valuation_what_is_a_stock_worth"/> memperkenalkan idea DCF: nilai saham adalah nilai kini bagi aliran tunai masa depan. Rahsia gelap model DCF ialah bagi kebanyakan syarikat pertumbuhan, 60–80% daripada nilai intrinsik yang dikira berasal daripada *nilai terminal* — andaian serba-cakap mengenai apa yang berlaku selepas tahun ke-10. Ubah kadar pertumbuhan terminal sebanyak 1 mata peratus atau kadar diskaun sebanyak 50 mata asas, dan keluaran "nilai saksama" akan berubah sebanyak 20–40%. Pada akhir pelajaran ini, anda perlu memahami mengapa keluaran DCF adalah julat kepekaan berbanding anggaran titik, serta andaian nilai terminal spesifik yang mengubah DCF menjadi fantasi.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
-Bina DCF mudah untuk MSFT pada pertengahan 2026. MSFT menjana aliran tunai bebas (FCF) terdahulu sekitar $74B. Andaikan FCF tumbuh 12% setahun untuk tahun 1–10, kemudian 3% secara abadi. Diskaun pada kadar 9%.
+Bina DCF mudah untuk MSFT pada pertengahan 2026. MSFT menjana aliran tunai bebas (FCF) terdahulu ~$74B. Anggap FCF berkembang 12% setahun untuk tahun 1–10, kemudian 3% secara kekal. Diskaun pada kadar 9%.
 
-Jumlah FCF eksplisit tahun demi tahun (tahun 1–10) mencecah kira-kira $1.4 trilion dalam istilah nilai kini. Nilai terminal — menggunakan Model Pertumbuhan Gordon: FCF_tahun10 × (1 + g) / (r − g), kemudian didiskaunkan kembali ke hari ini — mencecah sekitar $2.0 trilion dalam istilah nilai kini. Jumlah nilai perusahaan: ~$3.4T, hampir dengan kutipan pasaran pertengahan 2026.
+Jumlah FCF eksplisit tahun demi tahun (tahun 1–10) mencecah kira-kira $1.4 trilion dalam istilah nilai kini. Nilai terminal — menggunakan Model Pertumbuhan Gordon: FCF_tahun10 × (1 + g) / (r − g), kemudian didiskaun kembali ke hari ini — mencecah kira-kira $2.0 trilion dalam istilah nilai kini. Jumlah nilai perusahaan: ~$3.4T, hampir dengan harga pasaran pada pertengahan 2026.
 
-Perhatikan bahagiannya: nilai terminal menyumbang ~58% daripada jumlah keseluruhan. Sekarang ubah andaian tersebut:
+Perhatikan bahagian: nilai terminal menyumbang ~58% daripada jumlah. Sekarang ubah andaian:
 
-- Pertumbuhan terminal dari 3% ke 4%: sumbangan nilai terminal meningkat ke ~$2.6T. Nilai EV: $4.0T. Saham kelihatan 18% tidak bernilai.
-- Pertumbuhan terminal dari 3% ke 2%: sumbangan nilai terminal jatuh ke ~$1.6T. Nilai EV: $3.0T. Saham kelihatan 12% terlalu bernilai.
-- Kadar diskaun dari 9% ke 10%: nilai terminal jatuh ke ~$1.5T. Nilai EV: $2.9T. Saham kelihatan 15% terlalu bernilai.
-- Kadar diskaun dari 9% ke 8%: nilai terminal meningkat ke ~$2.8T. Nilai EV: $4.2T. Saham kelihatan 24% tidak bernilai.
+- Pertumbuhan terminal dari 3% ke 4%: sumbangan nilai terminal meningkat ke ~$2.6T. Jumlah EV: $4.0T. Saham kelihatan 18% lebih rendah daripada nilai saksama.
+- Pertumbuhan terminal dari 3% ke 2%: sumbangan nilai terminal jatuh ke ~$1.6T. Jumlah EV: $3.0T. Saham kelihatan 12% lebih tinggi daripada nilai saksama.
+- Kadar diskaun dari 9% ke 10%: nilai terminal jatuh ke ~$1.5T. Jumlah EV: $2.9T. Saham kelihatan 15% lebih tinggi daripada nilai saksama.
+- Kadar diskaun dari 9% ke 8%: nilai terminal meningkat ke ~$2.8T. Jumlah EV: $4.2T. Saham kelihatan 24% lebih rendah daripada nilai saksama.
 
-Kes asas menyatakan "dihargai secara adil". Ubah dua andaian sebanyak 1% setiap satu, dalam arah yang mungkin dibela oleh analis yang sempurna masuk akal, dan anda mendapat jawapan dari "12% terlalu bernilai" hingga "24% tidak bernilai".
+Kesasasan asas berkata "dihargai secara saksama." Ubah dua andaian sebanyak 1% setiap satu, dalam arah yang mungkin dibela oleh analis yang sempurna, dan anda mendapat jawapan merangkumi dari "12% lebih tinggi daripada nilai saksama" hingga "24% lebih rendah daripada nilai saksama."
 
-Ini bukan masalah dengan matematik — ia adalah sifat pampatan. Perbezaan pertumbuhan abadi 1%, dipampatkan sehingga infiniti dan didiskaunkan kembali, menggerakkan jumlah nilai kini yang sangat besar. Itulah sebabnya DCF ialah alat jadual kepekaan, bukan alat anggaran titik.
+Ini bukan masalah dengan matematik — ia adalah sifat kompaun. Perbezaan pertumbuhan kekal 1%, yang dikompaunkan sehingga infiniti dan didiskaun kembali, mengubah jumlah nilai kini yang besar. Itulah sebabnya DCF adalah alat jadual kepekaan, bukan alat anggaran titik.
 
-Di Bursa Malaysia: cuba latihan yang sama untuk TENAGA, di mana pulangan berregulated menjadikan andaian pertumbuhan terminal jauh lebih sempit (utiliti terminal tumbuh ~2–3% secara sejarah). Bahagian nilai terminal dalam nilai EV keseluruhan adalah serupa dengan MSFT, tetapi julat andaian jauh lebih ketat — DCF lebih jujur pada utiliti berregulated berbanding syarikat pertumbuhan tepat kerana sebab ini.
+Di Bursa Malaysia: cuba latihan yang sama untuk TENAGA, di mana pulangan berregulated menjadikan andaian pertumbuhan terminal jauh lebih sempit (utiliti terminal berkembang pada ~2–3% secara sejarah). Bahagian nilai terminal dalam jumlah EV adalah serupa dengan MSFT, tetapi julat andaian jauh lebih ketat — DCF lebih jujur pada utiliti berregulated berbanding syarikat pertumbuhan untuk sebab tepat ini.
 
-Pernyataan yang boleh difalsifikasikan: mana-mana DCF yang nilai terminalnya lebih daripada 70% daripada jumlah nilai perusahaan ialah model nilai terminal yang dibalut sebagai DCF. Sama ada terima bahawa keluaran terpusat ialah "apa yang anda anggap tentang tahun ke-11 dan seterusnya" dan bertindak mengikutnya, atau gunakan kerangka kerja yang berbeza.
+Pernyataan yang boleh disangkal: mana-mana DCF yang nilai terminalnya melebihi 70% daripada jumlah nilai perusahaan adalah model nilai terminal yang dibalut sebagai DCF. Sama ada terima bahawa keluaran utama adalah "apa yang anda andaikan tentang tahun ke-11 dan seterusnya" dan bertindak mengikut itu, atau gunakan kerangka kerja yang berbeza.
 
 ## Perangkap
 
-Perangkapnya ialah melaporkan keluaran DCF sebagai nombor tunggal — "nilai adil ialah $480" — apabila model tersebut secara struktur merupakan satu julat. Pemula membina ramalan eksplisit 10 tahun dalam spreadsheet, memasukkan nilai terminal, dan memperlakukan keluaran sebagai kebenaran. Model mental yang betul: setiap DCF harus dijalankan dengan sekurang-kurangnya tiga senario pertumbuhan terminal (contohnya, 2%, 3%, 4%) dan sekurang-kurangnya tiga senario kadar diskaun (contohnya, 8%, 9%, 10%). Keluarannya ialah grid 9 sel nilai, dan "nilai adil" yang jujur ialah *julatan merentasi grid tersebut*, bukan pusatnya. Versi lain perangkap tersebut: menganggap perniagaan kompetitif akan tumbuh terminal pada 4–5% secara abadi. Sedikit perniagaan melebihi GDP nominal selama-lamanya — 2–3% ialah jalur yang boleh dipertahankan untuk kebanyakan syarikat matang, dan menggunakan apa-apa yang lebih tinggi secara implisit menganggap parit pertahanan yang bertahan sehingga infiniti.
+Perangkapnya ialah melaporkan keluaran DCF sebagai satu nombor tunggal — "nilai saksama ialah $480" — apabila modelnya secara struktur adalah satu julat. Pemula membina ramalan eksplisit 10 tahun dalam spreadsheet, memasukkan nilai terminal, dan memperlakukan keluaran sebagai kebenaran. Model mental yang betul: setiap DCF perlu dijalankan dengan sekurang-kurangnya tiga senario pertumbuhan terminal (contohnya, 2%, 3%, 4%) dan sekurang-kurangnya tiga senario kadar diskaun (contohnya, 8%, 9%, 10%). Keluarannya ialah grid 9 sel nilai, dan "nilai saksama" yang jujur ialah *julat merentasi grid itu*, bukan pusatnya. Versi perangkap yang lain: menganggap perniagaan kompetitif akan berkembang pada 4–5% secara kekal. Sedikit perniagaan yang mampu berkembang melebihi GDP nominal selama-lamanya — 2–3% adalah julat yang boleh dipertahankan untuk kebanyakan syarikat matang, dan menggunakan apa-apa yang lebih tinggi secara tersirat menganggap parit pertahanan yang bertahan sehingga infiniti.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="DCF anda bagi saham menghasilkan $420/saham pada pertumbuhan terminal 3% dan diskaun 9%, $510/saham pada pertumbuhan terminal 4% dan diskaun 9%, serta $360/saham pada pertumbuhan 3% dan diskaun 10%. Saham ini diperdagangkan pada $440. Kesimpulan manakah yang paling tepat menerapkan pelajaran ini?"
+  question="DCF anda bagi saham menghasilkan $420/saham pada pertumbuhan terminal 3% dan diskaun 9%, $510/saham pada pertumbuhan terminal 4% dan diskaun 9%, serta $360/saham pada pertumbuhan terminal 3% dan diskaun 10%. Saham ini diperdagangkan pada $440. Kesimpulan manakah paling tepat menerapkan pelajaran ini?"
   options={[
     "Saham ini dipandang rendah — kes optimis menunjukkan $510 dan ia diperdagangkan pada $440",
-    "Bacaan DCF yang jujur ialah 'dalam julat kepekaan, condong ke arah adil.' Pada $440, saham ini berada di antara output konservatif ($360) dan optimis ($510), dan pada asasnya selaras dengan kes pusat ($420). Disiplin bukanlah untuk memilih satu nombor dan bertindak atasnya — tetapi untuk memantau andaian mana yang akhirnya betul sepanjang masa dan mengemas kini penghakiman. Tindakan memerlukan tesis sama ada pertumbuhan terminal lebih dekat kepada 3% atau 4%, bukan sama ada output spreadsheet adalah $20 di atas pasaran",
+    "Bacaan DCF yang jujur ialah 'dalam julat kepekaan, condong kepada adil'. Pada $440, saham ini terletak antara output konservatif ($360) dan optimis ($510), dan selaras dengan kes pusat ($420). Disiplin bukan untuk memilih satu nombor dan bertindak atasnya — tetapi untuk memantau andaian mana yang betul sepanjang masa dan mengemas kini penghakiman. Tindakan memerlukan tesis sama ada pertumbuhan terminal lebih dekat kepada 3% atau 4%, bukan sama ada output spreadsheet $20 di atas pasaran",
     "Saham ini dipandang tinggi — kes asas menunjukkan $420 dan ia diperdagangkan pada $440",
     "Tidak dapat ditentukan — DCF tidak berguna"
   ]}
   answer={1}
-  explanation="Sinergi ialah output DCF adalah julat, dan $440 berada di dalam julat tersebut. Tegasan utama pelajaran ini ialah memilih satu senario dan memperlakukan outputnya sebagai kebenaran menyalahgunakan model. Jawapan salah yang paling menarik ialah bacaan dipandang tinggi berbanding kes asas $420, kerana nombor kes asas adalah penjangker tunggal yang paling bersih — tetapi perbezaan $20 adalah jauh di dalam julat kepekaan. Jawapan dipandang rendah berbanding $510 memilih kes optimis atas sebab yang salah sama. Jawapan 'DCFs tidak berguna' menolak terlalu jauh — DCFs berguna tepat apabila ditafsirkan sebagai julat."
+  explanation="Sinthesanya ialah output DCF adalah julat, dan $440 terletak di dalam julat tersebut. Teras utama pelajaran ini ialah memilih satu senario dan memperlakukan outputnya sebagai kebenaran menyalahgunakan model. Jawapan salah yang paling menarik ialah bacaan dipandang tinggi berbanding kes asas $420, kerana nombor kes asas adalah penanda tunggal yang paling jelas — tetapi perbezaan $20 masih dalam julat kepekaan. Jawapan dipandang rendah berbanding $510 memilih kes optimis dengan alasan yang sama salahnya. Jawapan 'DCF tidak berguna' menolak terlalu jauh — DCF berguna apabila ditafsirkan sebagai julat."
 />
 
 <Quiz
-  question="DCF seorang analis untuk syarikat perisian pertumbuhan tinggi menunjukkan nilai terminal menyumbang 82% daripada nilai perusahaan keseluruhan, dengan kadar pertumbuhan terminal 4.5% secara kekal. Syarikat mempunyai FCF semasa sebanyak $2B. Apa kritikan paling tepat terhadap model ini di bawah pelajaran ini?"
+  question="DCF seorang penganalisis bagi syarikat perisian pertumbuhan tinggi menunjukkan nilai terminal menyumbang 82% daripada nilai perusahaan keseluruhan, dengan kadar pertumbuhan terminal 4.5% secara kekal. Syarikat mempunyai FCF semasa $2B. Apa kritikan paling tepat terhadap model ini berdasarkan pelajaran?"
   options={[
     "Model ini baik — syarikat pertumbuhan tinggi sepatutnya mempunyai nilai terminal yang tinggi",
-    "Jual serta-merta — DFs selalu menipu",
+    "Jual serta-merta — DCF selalu menipu",
     "Model ini baik kerana FCF adalah nyata",
-    "Nisbah nilai terminal 82% bermaksud DCF ini secara struktur adalah model nilai terminal. Digabungkan dengan kadar pertumbuhan kekal 4.5% (di atas GDP nominal jangka panjang), model ini secara tersirat andaikan parit pertahanan bertahan selamanya DAN tumbuh lebih cepat daripada ekonomi selamanya — dua andaian yang hampir tiada syarikat pernah tepati secara sejarah. Tindak balas yang betul ialah menjalankan model yang sama dengan pertumbuhan terminal 2.5% dan 3% serta menerima julat yang luas, ATAU menggunakan kerangka kerja berbeza (nisbah, analisis senario) untuk saham ini"
+    "Nisbah nilai terminal 82% bermakna DCF ini secara struktur adalah model nilai terminal. Disertakan dengan kadar pertumbuhan kekal 4.5% (di atas GDP nominal jangka panjang), model ini secara tersirat mengandaikan parit pertahanan bertahan selamanya DAN tumbuh lebih cepat daripada ekonomi selamanya — dua andaian yang hampir tidak pernah dipenuhi oleh mana-mana syarikat secara sejarah. Tindak balas yang betul ialah menjalankan model yang sama dengan pertumbuhan terminal 2.5% dan 3% dan menerima julat yang luas, ATAU menggunakan kerangka kerja lain (nisbah, analisis senario) untuk saham ini"
   ]}
   answer={3}
-  explanation="Sinergi ialah bahagian terminal 82% digabungkan dengan pertumbuhan terminal 4.5% menjadikan DCF kurang sebagai alat penilaian dan lebih sebagai kenyataan kepercayaan tentang pertumbuhan tanpa had. Ambang 70% pelajaran dan ketidakmungkinan pertumbuhan kekal 4.5% kedua-duanya menandakan model ini rosak. Jawapan 'syarikat pertumbuhan tinggi sepatutnya mempunyai nilai terminal yang tinggi' salah faham bahawa bahagian terminal yang tinggi adalah amaran, bukan ciri. Jawapan 'model ini baik kerana FCF adalah nyata' mengelak daripada kritikan andaian. Jawapan 'DCFs selalu menipu' menolak terlalu jauh — DCFs berfungsi dengan baik apabila andaian adalah jujur."
+  explanation="Sinthesanya ialah bahagian terminal 82% digabungkan dengan pertumbuhan terminal 4.5% menjadikan DCF kurang sebagai alat penilaian dan lebih sebagai pernyataan kepercayaan tentang pertumbuhan tanpa henti. Ambang 70% pelajaran dan ketidakmungkinan pertumbuhan kekal 4.5% kedua-duanya menandakan model ini rosak. Jawapan 'syarikat pertumbuhan tinggi sepatutnya mempunyai nilai terminal yang tinggi' salah faham bahawa bahagian terminal yang tinggi adalah amaran, bukan ciri. Jawapan 'model ini baik kerana FCF adalah nyata' mengelak daripada kritikan andaian. Jawapan 'DCF selalu menipu' menolak terlalu jauh — DCF berfungsi dengan baik apabila andaian adalah jujur."
 />
 
 ## Cuba sendiri
 
-Dalam <Term id="ami_one_on_one" /> dengan Fundamentals Analyst, pilih saham yang sedang anda pertimbangkan dan tanya: "Jalankan grid kepekaan DCF 3×3 — pertumbuhan terminal pada 2%, 3%, 4% mengikut kadar diskaun pada 8%, 9%, 10%. Tunjukkan bahagian nilai perusahaan keseluruhan yang berasal daripada nilai terminal dalam setiap sel." Dalam <Term id="ami_decision_journal" />, tulis julat nilai, julat bahagian terminal, dan satu ayat mengenai andaian mana yang paling anda bela. Buat keputusan berdasarkan julat, bukan pusat.
+Dalam <Term id="ami_one_on_one" /> bersama Fundamentals Analyst, pilih saham yang anda pertimbangkan dan tanya: "Jalankan grid kepekaan DCF 3×3 — pertumbuhan terminal pada 2%, 3%, 4% mengikut kadar diskaun pada 8%, 9%, 10%. Tunjukkan bahagian daripada jumlah nilai perusahaan yang berasal daripada nilai terminal dalam setiap sel." Dalam <Term id="ami_decision_journal" />, tulis julat nilai, julat bahagian terminal, dan satu ayat mengenai andaian mana yang paling anda bela. Buat keputusan terhadap julat, bukan pusat.
 
 ## Pengajaran
 
-Keluaran DCF ialah satu julat, bukan satu nombor — dan jika nilai terminal lebih daripada 70% daripada nilai perusahaan, anda tidak menjalankan DCF, anda sedang bertaruh pada infiniti.
+Keluaran DCF adalah satu julat, bukan satu nombor — dan jika nilai terminal melebihi 70% daripada nilai perusahaan, anda tidak menjalankan DCF, anda bertaruh pada infiniti.

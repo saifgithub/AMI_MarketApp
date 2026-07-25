@@ -11,76 +11,76 @@ topic: "roic_wacc_checklist"
 prerequisites: ["041_return_on_equity", "042_debt_to_equity", "044_earnings_growth", "198_garp_and_peg_math"]
 tags: ["roic", "wacc", "checklist", "fundamental_long", "synthesis", "fundamentals"]
 agent_callouts: ["fundamentals_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
-# ROIC vs WACC dan senarai semak asas panjang empat tiang
+# ROIC berbanding WACC dan senarai semak asas jangka panjang empat tiang
 
-<Lesson id="039_the_pe_ratio"/>–<Lesson id="044_earnings_growth"/> memperkenalkan P/E, P/B, ROE, D/E, metrik dividen, dan pertumbuhan. <Lesson id="188_net_debt_to_ebitda"/>–<Lesson id="198_garp_and_peg_math"/> meneliti setiap aspek secara mendalam. Pelajaran ini adalah sintesisnya. ROIC (Return on Invested Capital) ialah ukuran kualiti perniagaan tunggal yang paling bersih — ia memberitahu anda apa yang perniagaan hasilkan pada setiap dolar modal yang dilaburkan, tidak kira bagaimana modal itu dibiayai. WACC (Weighted Average Cost of Capital) ialah kos modal tersebut. ROIC tolak WACC ialah *spread ekonomi* — kadar penciptaan nilai sebenar. Formula Ajaib Joel Greenblatt menggabungkan ukuran kualiti ini dengan ukuran nilai hasilan pendapatan. Pada akhir pelajaran ini, anda harus mampu mengira ROIC, membandingkannya dengan WACC, dan menggunakan senarai semak empat tiang yang mengintegrasikan semua perkara dalam M7.
+<Lesson id="039_the_pe_ratio"/>–<Lesson id="044_earnings_growth"/> memperkenalkan P/E, P/B, ROE, D/E, metrik dividen, dan pertumbuhan. <Lesson id="188_net_debt_to_ebitda"/>–<Lesson id="198_garp_and_peg_math"/> meneliti setiap aspek secara mendalam. Pelajaran ini adalah sintesisnya. ROIC (Return on Invested Capital) ialah ukuran tunggal paling bersih untuk kualiti perniagaan — ia menunjukkan apa yang diperoleh perniagaan daripada setiap dolar modal yang dilaburkan, tidak kira bagaimana modal tersebut dibiayai. WACC (Weighted Average Cost of Capital) ialah kos modal tersebut. ROIC tolak WACC ialah *spread ekonomi* — kadar penciptaan nilai yang sebenar. "Formula Ajaib" Joel Greenblatt menggabungkan ukuran kualiti ini dengan ukuran nilai hasil pendapatan. Pada akhir pelajaran ini, anda harus mampu mengira ROIC, membandingkannya dengan WACC, dan menggunakan senarai semak empat tiang yang mengintegrasikan semua elemen dalam M7.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
 ROIC = NOPAT / Modal Dilabur, di mana NOPAT = pendapatan operasi × (1 − kadar cukai), dan Modal Dilabur = jumlah hutang + ekuiti − tunai berlebihan. Ia lebih baik daripada ROE untuk perbandingan merentas syarikat kerana ia menyingkirkan kesan struktur modal.
 
-MSFT dalam tahun kewangan 2024 menjana pendapatan operasi ~$109B, kadar cukai ~18%, memberikan NOPAT ~$89B. Modal dilabur (hutang + ekuiti − tunai) adalah kira-kira $200B. ROIC ≈ 45%. WACC MSFT berada dalam lingkungan 7-8%. Spread ekonomi = 45% − 7.5% = 37.5 mata peratus. Setiap dolar yang dilaburkan menjana 37.5 sen penciptaan nilai setahun. Itu adalah definisi pengkompaun berkualiti tinggi.
+MSFT pada tahun kewangan 2024 menjana pendapatan operasi ~$109B, kadar cukai ~18%, memberikan NOPAT ~$89B. Modal dilabur (hutang + ekuiti − tunai) adalah kira-kira $200B. ROIC ≈ 45%. WACC MSFT berada dalam lingkungan 7-8%. Spread ekonomi = 45% − 7.5% = 37.5 mata peratus. Setiap dolar yang dilaburkan menjana 37.5 sen penciptaan nilai setiap tahun. Itu adalah definisi pengkompaun berkualiti tinggi.
 
-AAPL: NOPAT ~$100B, modal dilabur ~$95B, ROIC ~105%. Nombor itu sangat tinggi kerana AAPL beroperasi dengan modal ringan (sebahagian besar capex adalah pembuatan luaran) dan telah memulangkan tunai besar kepada pemegang saham, mengecilkan penyebut. WACC ~8%. Spread ~97 mata peratus — tetapi penciptaan nilai dolar mutlak ialah ukuran yang lebih baik di sini kerana penyebut telah dijeniskan ke bawah.
+AAPL: NOPAT ~$100B, modal dilabur ~$95B, ROIC ~105%. Nombor itu sangat tinggi kerana AAPL beroperasi dengan modal ringan (sebahagian besar capex adalah pembuatan luaran) dan telah mengembalikan tunai besar kepada pemegang saham, mengecilkan penyebut. WACC ~8%. Spread ~97 mata peratus — tetapi penciptaan nilai dolar mutlak ialah ukuran yang lebih baik di sini kerana penyebut telah direka bentuk untuk mengecil.
 
-Contoh pemusnah spread: kitaran industri pada ROIC 6% dengan WACC 9%. Perniagaan itu memusnahkan nilai pada 3 sen per dolar modal setahun. Walaupun pendapatan berlaporan adalah positif, perniagaan itu sedang mencairkan nilai dari segi ekonomi. Pertumbuhan di syarikat ini *memusnahkan* nilai — setiap dolar baru yang dilabur semula menjana kurang daripada kos untuk mengumpulnya.
+Contoh memusnahkan spread: sebuah kitaran industri pada ROIC 6% dengan WACC 9%. Perniagaan ini memusnahkan nilai pada 3 sen per dolar modal setiap tahun. Walaupun pendapatan yang dilaporkan adalah positif, perniagaan ini sedang likuidasi dari segi ekonomi. Pertumbuhan di syarikat ini *memusnahkan* nilai — setiap dolar baru yang dilabur semula memperoleh kurang daripada kos untuk mengumpulnya.
 
-Di Bursa Malaysia: MAYBANK dan PUBLIC Bank biasanya menjalankan ROIC dalam digit tunggal tinggi hingga digit ganda rendah — ROIC bank adalah lebih rendah secara struktur daripada industri kerana bank melaburkan helaian pengimbangan yang besar per dolar NOPAT. Pembanding yang betul adalah relatif sektor, bukan mutlak.
+Di Bursa Malaysia: MAYBANK dan PUBLIC Bank biasanya menjalankan ROIC dalam lingkungan tunggal tinggi hingga gandaan rendah — ROIC bank secara struktur lebih rendah daripada industri kerana bank menggunakan pasu neraca yang sangat besar per dolar NOPAT. Pembanding yang betul adalah relatif sektor, bukan mutlak.
 
-**Senarai semak empat tiang untuk memilih asas panjang:**
+**Senarai semak empat tiang untuk memilih jangka panjang asas:**
 
-1. **Kualiti** — ROIC secara mampan di atas WACC dengan spread yang bermakna (5+ mata peratus), dibuktikan merentasi sekurang-kurangnya satu kitaran penuh. Ini adalah tiang "adakah perniagaan ini ekonomi".
+1. **Kualiti** — ROIC secara mampan di atas WACC dengan spread yang bermakna (5+ mata peratus), dibuktikan melalui sekurang-kurangnya satu kitaran penuh. Ini adalah tiang "adakah perniagaan ini ekonomi".
 
-2. **Pertumbuhan** — Pertumbuhan pendapatan organik dan EPS di atas halangan inflasi + bebas risiko, dengan pertumbuhan tidak bergantung pada acquisitions beruntun atau kejuruteraan pembelian balik. Ini adalah tiang "adakah perniagaan ini mengkompaun".
+2. **Pertumbuhan** — Pertumbuhan pendapatan dan EPS organik di atas halangan inflasi + bebas risiko, dengan pertumbuhan tidak bergantung pada acquisitions siri atau kejuruteraan pembelian balik. Ini adalah tiang "adakah perniagaan ini mengkompaun".
 
-3. **Struktur modal** — Hutang bersih / EBITDA di bawah norma sektor atau di bawah 4.0x untuk bukan utiliti, liputan faedah di atas 3.0x, tiada dinding penyegerakan dekat yang material, tiada ketidakpadanan mata wang. Ini adalah tiang "adakah perniagaan ini akan bertahan kitaran".
+3. **Struktur modal** — Hutang bersih / EBITDA di bawah norma sektor atau di bawah 4.0x untuk bukan utiliti, liputan faedah di atas 3.0x, tiada dinding penstrukturan semula jangka dekat yang ketara, tiada ketidakseimbangan mata wang. Ini adalah tiang "adakah perniagaan ini akan bertahan kitaran".
 
-4. **Harga** — PEG di bawah 1.5x menggunakan pertumbuhan terundur konservatif, ATAU P/E di bawah median sektor, ATAU nilai perusahaan kepada FCF dalam separuh bawah julat 10-tahun syarikat. Ini adalah tiang "adakah saya membayar terlalu mahal".
+4. **Harga** — PEG di bawah 1.5x menggunakan pertumbuhan trailing konservatif, ATAU P/E di bawah median sektor, ATAU nilai perusahaan-kepada-FCF dalam separuh bawah julat 10 tahun syarikat. Ini adalah tiang "adakah saya membayar terlalu banyak".
 
-Keempat-empat tiang bersama-sama ialah asas panjang keyakinan tinggi. Tiga daripada empat dengan kelemahan jelas ialah kedudukan dengan saiz yang dikurangkan. Dua atau kurang ialah laluan.
+Keempat-empat tiang bersama-sama ialah jangka panjang asas keyakinan tinggi. Tiga daripada empat dengan kelemahan jelas ialah kedudukan dengan saiz yang dikurangkan. Dua atau kurang ialah laluan.
 
-Pernyataan boleh disangkal: nama yang gagal tiang Kualiti (ROIC di bawah WACC) tidak dapat diselamatkan dengan lulus tiga lagi — stagnasi murah ialah wilayah perangkap nilai, dan pertumbuhan pada spread negatif ialah pencairan. Isyarat ini tidak sah hanya apabila terdapat perangsang yang boleh dipercayai untuk ROIC melintasi WACC dalam 12-24 bulan (pembalikan keadaan, perubahan peraturan, atau pengagihan semula modal) yang pasaran belum hargakan.
+Pernyataan boleh disangkal: nama yang gagal tiang Kualiti (ROIC di bawah WACC) tidak dapat diselamatkan dengan lulus tiga yang lain — stagnasi murah adalah wilayah perangkap nilai, dan pertumbuhan pada spread negatif adalah likuidasi. Isyarat itu tidak sah hanya apabila terdapat pendorong kredibel untuk ROIC melintasi WACC dalam masa 12-24 bulan (pemulihan, perubahan regulasi, atau penempatan semula modal) yang pasaran belum lagi hargai.
 
 ## Perangkap
 
-Perangkap ialah memperlakukan empat tiang sebagai bebas dan menerima "3 daripada 4" sebagai cukup baik tanpa memeriksa mana satu yang gagal. Gagal pada Kualiti adalah maut — tanpa pulangan ekonomi, yang lain tidak penting. Gagal pada Struktur Modal boleh dipulihkan melalui pengurangan leverage tetapi juga berpotensi memusnahkan dalam kitaran turun. Gagal pada Harga adalah yang paling boleh dipulihkan — harga ialah pemboleh ubah tunggal yang berubah setiap hari, dan perniagaan hebat pada harga yang adil menunggu jualan. Model mental yang betul: empat tiang itu diberi berat, bukan sama rata, dan Kualiti ialah lantai. "3 daripada 4 kerana Kualiti gagal" adalah jauh lebih lemah daripada "3 daripada 4 kerana Harga gagal". Apa yang tidak sahkan bacaan senarai semak mudah: kualiti pengurusan, pilihan potensi (potensi pembalikan keadaan, halangan angin AI/peraturan), dan fleksibilitas helaian pengimbangan untuk pengagihan oportunis tidak ditangkap dalam empat tiang dan penting secara material — senarai semak itu ialah lantai, bukan siling.
+Perangkap ialah memperlakukan empat tiang sebagai bebas dan menerima "3 daripada 4" sebagai cukup baik tanpa memeriksa mana satu yang gagal. Gagal pada Kualiti adalah maut — tanpa pulangan ekonomi, yang lain tidak penting. Gagal pada Struktur Modal boleh dipulihkan melalui pengurangan leverage tetapi juga berpotensi bencana dalam kitaran turun. Gagal pada Harga adalah yang paling boleh dipulihkan — harga ialah satu-satunya pembolehubah yang berubah setiap hari, dan perniagaan hebat pada harga yang adil menunggu jualan. Model mental yang betul: empat tiang itu berbobot, bukan sama rata, dan Kualiti ialah lantai. "3 daripada 4 kerana Kualiti gagal" jauh lebih lemah daripada "3 daripada 4 kerana Harga gagal". Apa yang tidak sahkan bacaan senarai semak mudah: kualiti pengurusan, pilihan potensi (potensi pemulihan, ekor angin AI/regulasi), dan fleksibiliti pasu neraca untuk penempatan oportunis tidak ditangkap dalam empat tiang dan penting secara material — senarai semak ialah lantai, bukan siling.
 
 <ChatWith agent="fundamentals_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="Sebuah syarikat melaporkan ROIC 8%, WACC 10%, pertumbuhan pendapatan 15%, hutang bersih / EBITDA 2.0x, dan PEG 0.9. Bacaan mana yang paling tepat?"
+  question="Syarikat melaporkan ROIC 8%, WACC 10%, pertumbuhan pendapatan 15%, hutang bersih / EBITDA 2.0x, PEG 0.9. Bacaan mana yang paling tepat?"
   options={[
-    "Beli kuat — pertumbuhan sahaja mencukupi untuk menjustifikasikan kedudukan",
+    "Beli kuat — pertumbuhan itu sendiri justifikasi kedudukan",
     "ROIC berbanding WACC adalah teori dan tidak terpakai",
-    "Pilar Kualiti gagal (ROIC < WACC), yang merupakan kegagalan yang tidak dapat dipulihkan. Pertumbuhan pendapatan 15% diinvest semula pada spread ekonomi negatif, bermakna setiap dolar baru modal yang dikerahkan menghancurkan ~2 sen nilai setiap tahun. Pertumbuhan yang lebih tinggi menjadikan ini lebih teruk, bukan lebih baik — ia mempercepatkan penghancuran nilai. PEG yang murah dan leverage sederhana adalah benar secara matematik tetapi tidak relevan; ini adalah versi perangkap nilai yang paling mendalam. Lepaskan walaupun pada harga yang menarik",
+    "Pilar Kualiti gagal (ROIC < WACC), yang merupakan kegagalan yang tidak dapat dipulihkan. Pertumbuhan 15% pendapatan dikembalikan pada spread ekonomi negatif, bermakna setiap dolar baru modal yang dilabur memusnahkan ~2 sen nilai setiap tahun. Pertumbuhan yang lebih tinggi menjadikan ini lebih buruk, bukan lebih baik — ia mempercepatkan pemusnahan nilai. PEG yang murah dan leverage sederhana adalah benar secara matematik tetapi tidak relevan; ini adalah versi paling mendalam dari perangkap nilai. Lepaskan walaupun pada harga yang menarik",
     "Beli kuat — tiga daripada empat pilar lulus dan harga menarik"
   ]}
   answer={2}
-  explanation="Ujian sintesis: memberi berat kepada pilar dengan betul dan mengiktiraf lantai Kualiti. Jawapan salah yang menggoda ialah panggilan 'tiga daripada empat pilar lulus' — mengira pilar tanpa memberi berat. Bacaan yang betul mengenal pasti bahawa pertumbuhan pada spread negatif adalah konfigurasi terburuk dalam analisis asas: modal dimusnahkan lebih cepat apabila ia dikerahkan dengan lebih agresif. Jawapan 'ROIC berbanding WACC adalah teori' menolak ukuran kualiti asas. Jawapan 'pertumbuhan sahaja menjustifikasikan kedudukan' membuat kesilapan eksplisit menyamakan pertumbuhan dengan nilai, yang hanya sah apabila ROIC melebihi WACC."
+  explanation="Ujian sintesis: menimbang pilar dengan betul dan mengiktiraf lantai Kualiti. Jawapan salah yang menggoda ialah panggilan 'tiga daripada empat pilar lulus' — mengira pilar tanpa menimbangnya. Bacaan yang betul mengenal pasti bahawa pertumbuhan pada spread negatif adalah konfigurasi terburuk dalam analisis asas: modal dimusnahkan lebih cepat apabila ia dilaburkan dengan lebih agresif. Jawapan 'ROIC berbanding WACC adalah teori' menolak ukuran kualiti asas. Jawapan 'pertumbuhan itu sendiri justifikasi kedudukan' membuat kesalahan eksplisit menyamakan pertumbuhan dengan nilai, yang hanya sah apabila ROIC melebihi WACC."
 />
 
 <Quiz
-  question="Syarikat A: ROIC 22%, WACC 8%, pertumbuhan pendapatan organik 12%, hutang bersih / EBITDA 1.5x, payout-on-FCF 35%, liputan faedah 15x, PEG 1.3 menggunakan pertumbuhan terdahulu. Syarikat B: ROIC 26%, WACC 9%, pertumbuhan pendapatan organik 18%, hutang bersih / EBITDA 4.5x, payout-on-FCF 20%, liputan faedah 2.8x, PEG 0.9 menggunakan pertumbuhan terdahulu. Kedua-duanya dalam sektor yang sama. Yang mana adalah panjang fundamental dengan keyakinan lebih tinggi?"
+  question="Syarikat A: ROIC 22%, WACC 8%, pertumbuhan pendapatan organik 12%, hutang bersih / EBITDA 1.5x, payout-on-FCF 35%, liputan faedah 15x, PEG 1.3 menggunakan pertumbuhan terdahulu. Syarikat B: ROIC 26%, WACC 9%, pertumbuhan pendapatan organik 18%, hutang bersih / EBITDA 4.5x, payout-on-FCF 20%, liputan faedah 2.8x, PEG 0.9 menggunakan pertumbuhan terdahulu. Kedua-duanya dalam sektor yang sama. Yang mana adalah long fundamental keyakinan tinggi?"
   options={[
     "B kerana ia lulus Kualiti dengan lebih kuat dan dihargai lebih menarik",
     "B kerana PEG yang lebih rendah mendominasi",
     "Kedua-duanya setara secara keseluruhan",
-    "A. Kedua-duanya lulus Kualiti (ROIC > WACC dengan margin luas). Kedua-duanya lulus Pertumbuhan. Kedua-duanya lulus pada Harga (PEG 1.3 A adalah boleh diterima; PEG 0.9 B lebih menarik). Perbezaan penentu ialah Struktur Modal: A mempunyai leverage konservatif dengan liputan faedah yang sangat kuat; B mempunyai hutang bersih / EBITDA melebihi ambang 4.0x dan liputan di bawah 3.0x. Kualiti dan Harga B yang sedikit lebih baik diimbangi oleh rapuh struktur keseimbangan yang menjadikan kedudukan rentan dalam kitaran menurun. Disiplin empat pilar memberi berat kepada pilar terburuk dengan paling berat — dan pilar terburuk A (Harga pada 1.3) jauh lebih berbahaya daripada pilar terburuk B (Struktur Modal)"
+    "A. Kedua-duanya lulus Kualiti (ROIC > WACC dengan jurang besar). Kedua-duanya lulus Pertumbuhan. Kedua-duanya lulus pada Harga (PEG 1.3 A boleh diterima; PEG 0.9 B lebih menarik). Perbezaan penentu ialah Struktur Modal: A berleverage dengan konservatif dengan liputan faedah yang sangat kuat; B mempunyai hutang bersih / EBITDA melebihi ambang 4.0x dan liputan di bawah 3.0x. Kualiti dan Harga B yang sedikit lebih baik diimbangi oleh rapuh struktur belan yang menjadikan kedudukan rentan dalam kitaran menurun. Disiplin empat pilar menimbang pilar terburuk dengan paling berat — dan pilar terburuk A (Harga pada 1.3) jauh lebih berbahaya daripada pilar terburuk B (Struktur Modal)"
   ]}
   answer={3}
-  explanation="Ujian sintesis puncak: mengintegrasikan Kualiti, Pertumbuhan, Struktur Modal, dan Harga merentasi dua panggilan rapat. Jawapan salah yang menggoda ialah memilih B kerana Kualiti yang lebih kuat dan harga lebih menarik — memimpin pada metrik yang sedikit lebih baik sambil mengurangkan berat terhadap rapuh Struktur Modal. Bacaan yang betul mengiktiraf bahawa nama 4.5x hutang bersih / EBITDA dengan liputan faedah 2.8x adalah satu kitaran menurun jauh dari peminjaman semula dipaksa atau pengeluaran ekuiti, tidak kira profil operasi. Memilih B kerana PEG yang lebih rendah mendominasi membuat kesilapan PEG sebagai nombor ajaib. Memanggil kedua-duanya setara meragui antara dua profil risiko yang benar-benar berbeza. Lensa empat pilar ialah apa yang membezakan panjang fundamental daripada pertaruhan ekuiti berleverage pada kualiti."
+  explanation="Ujian sintesis capstone: mengintegrasikan Kualiti, Pertumbuhan, Struktur Modal, dan Harga merentas dua panggilan rapat. Jawapan salah yang menggoda ialah memilih B kerana Kualiti yang lebih kuat dan harga lebih menarik — memimpin pada metrik yang sedikit lebih baik sambil mengurangkan berat pada rapuh Struktur Modal. Bacaan yang betul mengakui bahawa nama 4.5x hutang bersih / EBITDA dengan liputan faedah 2.8x adalah satu kitaran menurun dari refinancing dipaksa atau penerbitan ekuiti, tidak kira profil operasi. Memilih B kerana PEG yang lebih rendah mendominasi membuat kesalahan PEG sebagai nombor ajaib. Memanggil kedua-duanya setara terlalu ragu-ragu antara dua profil risiko yang benar-benar berbeza. Lensa empat pilar adalah apa yang membezakan long fundamental daripada pertaruhan ekuiti berleverage pada kualiti."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_convene_the_room" /> pada mana-mana nama yang anda sedang teliti dan tanya Fundamentals Analyst secara langsung: "Skor saham ini pada senarai semak asas panjang empat tiang. Untuk setiap tiang berikan saya metrik, ambang, dan lulus / gagal / sempadan. Kemudian berikan saya bacaan berat tiang keseluruhan dengan Kualiti sebagai lantai." Simpan kad skor dalam <Term id="ami_decision_journal" /> anda. Dari masa ke masa, <Term id="ami_watchlist" /> anda menjadi set tersusun nama 4-dari-4 dan 3-dari-4 — dan kes di mana anda membeli 2-dari-4 tetap menjadi kajian kes yang anda pelajari.
+Buka <Term id="ami_convene_the_room" /> pada mana-mana nama yang anda sedang menyiasat dan tanya Analyst Asas secara langsung: "Skor saham ini pada senarai semak jangka panjang asas empat tiang. Untuk setiap tiang berikan saya metrik, ambang, dan lulus / gagal / sempadan. Kemudian berikan saya bacaan berbobot tiang keseluruhan dengan Kualiti sebagai lantai." Simpan kad skor dalam <Term id="ami_decision_journal" /> anda. Pada masa akan datang, <Term id="ami_watchlist" /> anda menjadi set yang disusunkan bagi nama 4-dari-4 dan 3-dari-4 — dan kes di mana anda membeli 2-dari-4 menjadi kajian kes yang anda pelajari.
 
-## Penarikan balik
+## Teras
 
-ROIC > WACC ialah lantai — perniagaan yang tidak menjana kos modalnya tidak dapat diselamatkan oleh pertumbuhan, dividen, atau gandaan murah. Kualiti, Pertumbuhan, Struktur Modal, dan Harga ialah empat tiang; beri berat kepada mereka, jangan hanya mengira mereka, dan Kualiti ialah satu yang tidak boleh dirundingkan.
+ROIC > WACC ialah lantai — perniagaan yang tidak memperoleh kos modalnya tidak dapat diselamatkan oleh pertumbuhan, dividen, atau gandaan murah. Kualiti, Pertumbuhan, Struktur Modal, dan Harga ialah empat tiang; berbobotkan mereka, jangan hanya mengira mereka, dan Kualiti ialah satu-satunya yang tidak boleh dirundingkan.

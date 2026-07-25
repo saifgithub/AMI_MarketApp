@@ -1,6 +1,6 @@
 ---
 id: "248_vix_term_structure"
-title: "Struktur terminasi VIX: contango berbanding backwardation"
+title: "Struktur terma VIX: contango berbanding backwardation"
 duration_min: 6
 level: 6
 module: 10
@@ -11,7 +11,7 @@ topic: "volatility_regime"
 prerequisites: ["062_volatility_regimes", "031_indicator_limitations", "018_drawdown_management"]
 tags: ["regime", "volatility", "vix", "term_structure", "contango", "backwardation"]
 agent_callouts: ["market_analyst"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
 updated_at: "2026-05-12"
 ---
@@ -21,59 +21,59 @@ updated_at: "2026-05-12"
 
 ## Bagaimana ia berlaku dalam pasaran sebenar
 
-Struktur tempoh VIX ditangkap melalui hubungan antara VIX (1-bulan, juga dipanggil VIX9D secara sejarah untuk tenor yang sangat pendek, di sini kita menggunakan spot VIX 30-hari standard) dan VIX3M (indeks volatiliti kematangan malar 3-bulan, ticker VIX3M).
+Struktur tempoh VIX ditangkap melalui hubungan antara VIX (1-bulan, juga dikenali sebagai VIX9D secara historikal untuk tempoh yang sangat pendek, di sini kita menggunakan spot VIX 30-hari standard) dan VIX3M (penunjuk volatiliti kematangan malar 3-bulan, ticker VIX3M).
 
-Contango (rejim tenang): VIX3M > VIX (tenor yang lebih panjang diperdagangkan lebih tinggi kerana pasaran menjangkakan pemulihan vol ke purata jangka panjang). Nisbah VIX1M/VIX3M berada di bawah 0.95 pada majoriti masa. Melalui 2024, nisbah ini purata ~0.87 — bacaan yang sangat tenang konsisten dengan trend SPX yang naik.
+Contango (rejim tenang): VIX3M > VIX (tempoh yang lebih panjang diperdagangkan lebih tinggi kerana pasaran menjangkakan mean reversion vol kembali ke purata jangka panjang). Nisbah VIX1M/VIX3M berada di bawah 0.95 pada majoriti masa. Melalui 2024, nisbah ini purata ~0.87 — bacaan yang sangat tenang yang konsisten dengan trend naik SPX.
 
-Backwardation (rejim tekanan): VIX > VIX3M (vol tempoh dekat dinaikkan di atas jangka panjang). Nisbah VIX1M/VIX3M di atas 1.0. Kes sebenar:
+Backwardation (rejim tekanan): VIX > VIX3M (vol tempoh dekat dinaikkan di atas tempoh lebih jauh). Nisbah VIX1M/VIX3M di atas 1.0. Kes sebenar:
 
-- 5 Ogos 2024 pembalikan carry yen: VIX ditutup pada 38.57, VIX3M pada 27.85 — nisbah 1.385, backwardatan mendalam. Pulangan 5-hari SPX minggu itu ialah -3.2%.
-- 13–16 Mac 2020 runtuh COVID: Nisbah VIX1M/VIX3M mencapai puncak di atas 1.4 dengan VIX intraday pada 85.47 (16 Mac 2020).
+- 5 Ogos 2024 pembalikan carry yen: VIX ditutup pada 38.57, VIX3M pada 27.85 — nisbah 1.385, backwardation mendalam. Pulangan SPX 5-hari minggu itu ialah -3.2%.
+- 13–16 Mac 2020 kejatuhan COVID: Nisbah VIX1M/VIX3M mencapai puncak di atas 1.4 dengan VIX intraday pada 85.47 (16 Mac 2020).
 - 2 Februari 2018 minggu volmageddon: Nisbah VIX1M/VIX3M melintasi 1.0 pada 5 Februari 2018 — hari SPX jatuh 4.1%.
-- 24 Disember 2018 paras ketakutan Fed: Nisbah VIX1M/VIX3M mencapai ~1.15; SPX mencapai paras terendah dua hari perdagangan kemudian.
+- 24 Disember 2018 paras rendah ketakutan Fed: Nisbah VIX1M/VIX3M mencapai ~1.15; SPX mencapai paras terendah dua sesi dagang kemudian.
 
-Peraturan pengesanan: Nisbah VIX1M/VIX3M < 0.95 = contango (rejim tenang, mengikuti trend dibenarkan pada saiz mandat penuh); 0.95–1.0 = peralihan (mampatkan saiz sebanyak ~25%); > 1.0 = backwardation (rejim tekanan, buku panduan defensif). Peralihan dari contango berterusan ke backwardation yang bertahan selama 3+ sesi perdagangan ialah pengesahan tekanan rejim.
+Peraturan pengesanan: Nisbah VIX1M/VIX3M < 0.95 = contango (rejim tenang, trend-following dibenarkan pada saiz mandat penuh); 0.95–1.0 = peralihan (kompres saiz sebanyak ~25%); > 1.0 = backwardation (rejim tekanan, buku permainan defensif). Peralihan dari contango yang berterusan ke backwardation yang bertahan selama 3+ sesi dagang adalah pengesahan tekanan rejim.
 
-Pembatalan: backwardation kembali ke contango (nisbah kembali di bawah 0.95) selama 5 sesi berturut-turut — peristiwa tekanan telah berlalu.
+Pembatalan: backwardation kembali kepada contango (nisbah kembali di bawah 0.95) selama 5 sesi berturut-turut — peristiwa tekanan telah berlalu.
 
 ## Perangkap
 
-Perangkap struktur tempoh VIX ialah menggunakan spot VIX secara terpencil. Pedagang membaca "VIX ialah 22, julat normal" dan menambah risiko — tetapi jika VIX3M ialah 19, nisbahnya 1.16 dan lengkung berada dalam backwardation walaupun cetakan VIX yang tidak menarik. Struktur pasaran memberitahu anda sesuatu yang tidak dinyatakan oleh nombor utama.
+Perangkap struktur tempoh VIX ialah menggunakan spot VIX secara terpencil. Pedagang membaca "VIX ialah 22, julat normal" dan menambah risiko — tetapi jika VIX3M ialah 19, nisbahnya ialah 1.16 dan lengkung berada dalam backwardation walaupun cetakan VIX yang tidak menarik. Struktur pasaran memberitahu anda sesuatu yang tidak dinyatakan oleh nombor utama.
 
-Model yang betul: Dalam contango, struktur membayar anda (dan membayar ETP pendek VIX dari masa ke masa) dan mengikuti trend berfungsi. Dalam backwardation, struktur menghukum anda, risiko idiosinkratik nama tunggal mendominasi, dan dagangan gaya kalendar yang dicetak dalam keadaan tenang akan dinilai semula. Nisbah ialah pengklasifikasi rejim; tahap VIX mutlak adalah sekunder.
+Model yang betul: dalam contango, struktur membayar anda (dan membayar ETP short VIX dari masa ke masa) dan trend-following berfungsi. Dalam backwardation, struktur menghukum anda, risiko idiosinkratik nama tunggal mendominasi, dan perdagangan gaya kalendar yang dicetak dalam keadaan tenang akan dinilai semula. Nisbah ialah pengklasifikasi rejim; tahap VIX mutlak adalah sekunder.
 
 <ChatWith agent="market_analyst" />
 
 ## Kuiz
 
 <Quiz
-  question="VIX spot ialah 23, VIX3M ialah 20.5. SPX bergerak mendatar selama dua minggu tetapi masih di atas purata bergerak 200-hari (SMA). Seorang pedagang membaca 'VIX 23 adalah normal' dan menambah saiz posisi 10%. Apa yang kerangka struktur tempoh katakan?"
+  question="VIX spot ialah 23, VIX3M ialah 20.5. SPX telah bergerak mendatar selama dua minggu tetapi masih di atas SMA 200-hari. Seorang pedagang membaca 'VIX 23 adalah normal' dan menambah kedudukan 10%. Apa yang dikatakan oleh kerangka struktur terminologi?"
   options={[
     "VIX 23 adalah sederhana — saiz penuh adalah dibenarkan.",
-    "Jual semua — backwardation sentiasa bermaksud kejatuhan minggu depan.",
-    "Beli lebih agresif — ETP pendek VIX akan segera membayar.",
-    "Nisbah VIX1M/VIX3M ialah 1.12 — rejim backwardation aktif walaupun cetakan VIX kelihatan sederhana. Kecilkan saiz posisi baharu (contohnya 5% berbanding 10%), ketatkan had kerugian ke jarak had rejim yang disesuaikan dengan volatiliti, dan perlukan backwardation kembali ke contango (nisbah < 0.95 selama 5 sesi berturut-turut) sebelum memulihkan saiz penuh."
+    "Jual semua — backwardation sentiasa bermaksud kejatuhan minggu hadapan.",
+    "Beli lebih agresif — ETP VIX-short akan segera membayar.",
+    "Nisbah VIX1M/VIX3M ialah 1.12 — rejim backwardation aktif walaupun cetakan VIX kelihatan sederhana. Kurangkan saiz kedudukan baharu (contohnya 5% berbanding 10%), ketatkan had henti ke jarak had rejim yang disesuaikan dengan volatiliti, dan memerlukan backwardation kembali ke contango (nisbah < 0.95 selama 5 sesi berturut-turut) sebelum memulihkan saiz penuh."
   ]}
   answer={3}
-  explanation="Jawapan salah yang menggoda ialah 'VIX 23 adalah sederhana' — nombor VIX spot kelihatan tidak menarik, dan kebanyakan pedagang menghentikan analisis di situ. Namun, backwardation boleh berterusan pada tahap VIX sederhana dan secara sejarah menandakan tekanan rejim yang tidak semestinya diisytiharkan dalam nombor utama. Jawapan backwardation-sentiasa-bermaksud-kejatuhan terlalu membetulkan; jawapan beli-ETP-pendek-VIX songsangkan hubungan. Sintesis: baca nisbah, bukan nombor utama."
+  explanation="Jawapan salah yang menggoda ialah 'VIX 23 adalah sederhana' — nombor VIX spot kelihatan tidak menarik, dan kebanyakan pedagang berhenti di situ. Namun, backwardation boleh berterusan pada tahap VIX sederhana dan secara sejarah menandakan tekanan rejim yang tidak selalu diisytiharkan dalam nombor utama. Jawapan backwardation-sentiasa-bermaksud-kejatuhan membuat pembetulan berlebihan; jawapan beli-ETP-VIX-short songsangkan hubungan. Sintesis: baca nisbah, bukan nombor utama."
 />
 
 <Quiz
-  question="VIX1M/VIX3M telah berada di bawah 0.90 selama 6 bulan. SPX sedang mencatatkan rekod tertinggi. Seorang rakan mengesyorkan lindung nilai VIX panjang 'kerana vol terlalu murah'. Apa yang kerangka katakan tentang kos yang mungkin ditanggung oleh perdagangan ini?"
+  question="VIX1M/VIX3M telah berada di bawah 0.90 selama 6 bulan. SPX sedang membuat rekod tertinggi. Seorang rakan mengesyorkan lindung nilai VIX panjang 'kerana vol terlalu murah'. Apa yang dikatakan kerangka ini tentang kos yang mungkin ditanggung oleh perdagangan tersebut?"
   options={[
     "Percuma, tetapi hanya jika SPX sedang naik.",
-    "Dalam contongo berterusan, posisi VIX panjang menanggung kos gulungan struktur (kontrak hadapan turun di sepanjang lengkung apabila menghampiri luput). Pegangan VIX panjang selama 6 bulan semasa rejim contango 2017 kehilangan ~50% nilai melalui reputan tulen. Lindung nilai ini mempunyai kos; saizkan sebagai insurans, bukan peluang, dan hormati had mandat.",
+    "Dalam contango berterusan, kedudukan VIX panjang menanggung kos gulung struktur (kontrak hadapan turun sepanjang lengkung apabila menghampiri tamat tempoh). Pegangan VIX panjang selama 6 bulan semasa rejim contango 2017 kehilangan ~50% nilai melalui reputan tulen. Lindung nilai ini mempunyai kos; saizkan sebagai insurans, bukan peluang, dan hormati had mandat.",
     "Kos tidak relevan — hanya perlindungan yang penting.",
-    "Ia adalah wang percuma — vol murah sentiasa berbaloi untuk dibeli."
+    "Ia adalah wang percuma — vol murah sentiasa bernilai untuk dibeli."
   ]}
   answer={1}
-  explanation="Jawapan salah yang menggoda ialah bacaan wang percuma — 'vol murah' adalah salah satu pepatah yang paling kerap diulang dan paling mahal dalam pasaran. Rejim contongo ialah seretan struktur terhadap pendedahan VIX panjang; 2017 ialah tahun reputan teks buku. Jawapan kos-tidak-relevan mengabaikan kos sepenuhnya. Sintesisnya ialah: VIX panjang dalam contongo adalah insurans dengan premium berterusan, dan saiz mesti mencerminkan perkara itu."
+  explanation="Jawapan salah yang menggoda ialah bacaan wang percuma — 'vol murah' adalah salah satu aphorism yang paling berulang dan paling mahal dalam pasaran. Rejim contango ialah seretan struktur pada pendedahan VIX panjang; 2017 ialah tahun reputan buku teks. Jawapan kos-tidak-relevan mengabaikan kos sepenuhnya. Sintesisnya ialah: VIX panjang dalam contango ialah insurans dengan premium berterusan, dan saiz mesti mencerminkan perkara itu."
 />
 
 ## Cuba sendiri
 
-Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "VIX hari ini, VIX3M, nisbah VIX1M/VIX3M, dan peratusan 1-tahun nisbah tersebut. Klasifikasikan rejim struktur tempoh semasa — contango, peralihan, atau backwardation — dan beritahu saya bila peralihan rejim terakhir berlaku." Kemudian buka editor <Term id="ami_mandate" /> dan tambahkan ke jurnal anda: "Peralihan rejim struktur tempoh — jika VIX1M/VIX3M > 1.0 selama 3+ sesi, mampatkan max_position_pct kepada separuh sehingga lengkung dinormalisasikan."
+Buka <Term id="ami_one_on_one" /> dengan Market Analyst dan tanya: "VIX hari ini, VIX3M, nisbah VIX1M/VIX3M, dan peratusan 1-tahun nisbah tersebut. Klasifikasikan rejim struktur tempoh semasa — contango, peralihan, atau backwardation — dan beritahu saya bila pusingan rejim terakhir berlaku." Kemudian buka editor <Term id="ami_mandate" /> dan tambah ke jurnal anda: "Peralihan rejim struktur tempoh — jika VIX1M/VIX3M > 1.0 selama 3+ sesi, kompres max_position_pct kepada separuh sehingga lengkung normal."
 
-## Pengambilan
+## Penegasan
 
-Nisbah struktur tempoh VIX mengklasifikasikan rejim dengan lebih jelas berbanding spot VIX. Contango mendapat saiz penuh; backwardation mampatkannya; peralihan ialah isyarat tekanan rejim, bukan nombor mutlak.
+Nisbah struktur tempoh VIX mengklasifikasikan rejim dengan lebih jelas berbanding spot VIX. Contango mendapat saiz penuh; backwardation memampatkannya; pusingan ialah isyarat tekanan rejim, bukan nombor mutlak.

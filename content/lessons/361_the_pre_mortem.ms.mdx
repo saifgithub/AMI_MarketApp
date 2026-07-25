@@ -13,62 +13,62 @@ tags: ["pre-mortem", "prospective-hindsight", "decision-process", "risk-identifi
 sources: ["Gary Klein — \"Performing a Project Premortem\", Harvard Business Review (September 2007): prospective hindsight","Daniel Kahneman — Thinking, Fast and Slow: the premortem as a debiasing procedure"]
 verified: {by: "cr060-ai-dual-pass", date: "2026-07-22", method: "4 rounds of web-corroborated fact-check + adversarial refute; round 4 returned zero blocking defects across 8 independent reviewers. Marginal-only corrections applied after round 4 are not themselves re-verified."}
 agent_callouts: ["research_manager"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
 updated_at: "2026-07-22"
 ---
 # Pre-mortem
 
-Pre-mortem membalikkan soalan risiko biasa. Daripada bertanya apa yang boleh menjadi salah, anda mengandaikan keputusan itu sudah gagal — posisi ditutup, tesis mati — dan anda menulis kisah bagaimana ia berlaku. Kaedah Gary Klein berfungsi kerana kisah punca yang konkrit melibatkan penalaran berbeza daripada senarai terbuka: penyelidikan prospective-hindsight yang dirujuk Klein mendapati bahawa membayangkan peristiwa sudah berlaku meningkatkan bilangan sebab yang dihasilkan orang ramai sebanyak kira-kira 30%. (Penjelasan Klein sendiri dalam HBR berbunyi "mengenal pasti sebab dengan betul"; kajian asal 1989 mengira bilangan sebab yang dihasilkan dan tidak menilai ketepatannya. Lebih banyak sebab yang muncul adalah penemuan itu — satu yang berguna, dan tuntutan yang lebih sempit daripada cara ia biasanya dirujuk.) Pada akhir pelajaran ini, anda boleh menjalankan satu pre-mortem pada keputusan Room sebelum anda berkomitmen, dan mengubah setiap kisah kegagalan menjadi tripwire yang boleh anda periksa.
+Pre-mortem membalikkan soalan risiko biasa. Daripada bertanya apa yang boleh menjadi salah, anda menganggap keputusan itu sudah gagal — posisi ditutup, tesis mati — dan anda menulis cerita bagaimana ia berlaku. Kaedah Gary Klein berfungsi kerana cerita kausal yang konkrit mengaktifkan jenis penalaran yang berbeza daripada senarai terbuka: kajian prospektif-hindsight yang dirujuk Klein mendapati bahawa membayangkan peristiwa sudah berlaku meningkatkan bilangan sebab yang dijana oleh kira-kira 30%. (Tafsiran Klein sendiri dalam HBR berbunyi "mengenal pasti sebab dengan betul"; kajian asal 1989 mengira bilangan sebab yang dihasilkan dan tidak menilai ketepatannya. Penemuan utamanya ialah lebih banyak sebab terdedah — satu penemuan yang berguna, dan tuntutan yang lebih sempit berbanding cara ia biasanya dirujuk.) Pada akhir pelajaran ini, anda boleh menjalankan pre-mortem pada verdict Room sebelum anda berkomitmen, dan mengubah setiap cerita kegagalan menjadi tripwire yang boleh anda semak.
 
 ## Contoh
 
-Ambil syarikat industri mid-cap hipotetikal — angka dicipta, tiada ticker sebenar, jadi baca nombor sebagai bentuk masalah berbanding tuntutan pasaran. Room yang disimulasikan memberikan keputusan BUY: entry $50, stop $44, 8% daripada portfolio yang disimulasikan, jangka masa enam bulan. Kes terburuk yang dirancang adalah aritmetik: pergerakan 12% menentang anda pada berat 8% adalah pukulan 0.96% kepada portfolio.
+Ambil syarikat industri kap sederhana hipotetikal — angka direka, tiada ticker sebenar, jadi baca angka sebagai bentuk masalah dan bukan tuntutan pasaran. Room simulasi mengembalikan BUY: entry $50, stop $44, 8% daripada portfolio simulasi, jangka masa enam bulan. Kesan terburuk yang dirancang adalah aritmetik: pergerakan 12% menentang anda pada bobot 8% ialah pukulan portfolio 0.96%.
 
-Sekarang jalankan pre-mortem. Sudah enam bulan kemudian, posisi ditutup, tesis mati. Tiga kisah, semua dalam bentuk lampau:
+Sekarang jalankan pre-mortem. Enam bulan kemudian, posisi ditutup, tesis mati. Tiga cerita, semua dalam tense lampau:
 
-1. Pengembangan margin yang dipergunakan oleh Bull Researcher adalah faedah kos input sekali sahaja. Ia berbalik pada suku ketiga dan multiple dinilai semula turun bersamanya.
-2. Pelanggan tunggal yang membekalkan kira-kira satu pertiga daripada pendapatan tidak memperbaharui kontrak. Anda tidak pernah memeriksa kalendar kontrak.
-3. Miss berlaku semasa pendapatan, open melompat terus melalui $44, dan fill mendarat berhampiran $41 — kerugian posisi 18%, 1.44% daripada portfolio, separuh lagi daripada 0.96% yang anda bajetkan.
+1. Kembangan margin yang diandalkan oleh Bull Researcher ialah faedah kos input sekali sahaja. Ia berbalik pada suku ketiga dan multiple dinilai semula ke bawah bersamanya.
+2. Pelanggan tunggal yang membekarkan kira-kira satu pertiga pendapatan tidak memperbaharui kontrak. Anda tidak pernah memeriksa kalendar kontrak.
+3. Miss berlaku semasa earnings, open melompat terus melalui $44, dan fill mendarat pada $41 — kerugian posisi 18%, 1.44% portfolio, separuh lebih daripada 0.96% yang anda bajetkan.
 
-Setiap kisah berakhir dengan tripwire: butiran garis kos dalam fail seterusnya, kepekatan pelanggan yang didedahkan, tarikh pendapatan yang terletak di dalam tempoh pegangan anda. Tiada satu pun daripada ketiga-tiga ini muncul dalam senarai "apa yang boleh menjadi salah", kerana senarai itu menghasilkan kategori — risiko margin, risiko pelanggan — tanpa sebarang pemeriksaan yang dilekatkan padanya.
+Setiap cerita berakhir dengan tripwire: butiran garis kos dalam pengisian seterusnya, kepekatan pelanggan yang didedahkan, tarikh earnings yang terletak di dalam tempoh pegangan anda. Tiada satu pun daripada tiga ini muncul dalam senarai "apa yang boleh menjadi salah", kerana senarai itu menghasilkan kategori — risiko margin, risiko pelanggan — tanpa semakan yang dilampirkan.
 
 ## Perangkap
 
-Pergerakan pemula ialah bertanya apa yang boleh menjadi salah dan menjawab dengan kata nama: risiko makro, persaingan, penilaian. Ia terasa teliti, dan ia tidak mengubah apa-apa, kerana kategori tidak mempunyai pemerhatian yang dilekatkan padanya. Mod kegagalan kedua ialah masa — jalankan pre-mortem selepas anda sudah berkomitmen kepada posisi dan latihan itu berhenti menjadi pencarian dan menjadi justifikasi (kaedah Klein berjalan pada pelan yang ditentukan sepenuhnya — saiz, harga, stop ditetapkan — tetapi secara ketat sebelum komitmen). Ia juga bukan sama seperti membahaskan sisi lain (<Lesson id="360_steelmanning_the_other_side"/>): steelman membahaskan kes menentang berdasarkan bukti hari ini, manakala pre-mortem menetapkan kerugian sebagai fakta yang telah berlaku dan bekerja ke belakang ke mana-mana punca yang menyebabkannya — satu rantaian yang sering berakhir dengan premis bull menjadi palsu sepanjang masa, seperti kisah 1 di atas. Model yang betul ialah mengandaikan kegagalan sebagai fakta, menulisnya dalam bentuk lampau sebelum anda berkomitmen, dan memastikan setiap kisah menyebut satu perkara yang boleh anda periksa yang akan menunjukkan permulaannya.
+Tindakan pemula ialah bertanya apa yang boleh menjadi salah dan menjawab dengan kata nama: risiko makro, persaingan, penilaian. Ia terasa teliti, tetapi tidak mengubah apa-apa, kerana kategori tidak mempunyai kaitan boleh diperhatikan. Mod kegagalan kedua ialah penentuan masa — jalankan pre-mortem selepas anda sudah berkomitmen pada posisi dan latihan itu berhenti menjadi carian dan menjadi justifikasi (kaedah Klein berjalan pada pelan yang ditentukan sepenuhnya — saiz, harga, stop ditetapkan — tetapi secara ketat sebelum komitmen). Ia juga bukan sama seperti membahaskan pihak lawan (<Lesson id="360_steelmanning_the_other_side"/>): steelman membahaskan kes menentang berdasarkan bukti hari ini, manakala pre-mortem menetapkan kerugian sebagai fakta yang telah berlaku dan bekerja ke belakang ke apa jua yang menyebabkannya — satu rantaian yang sering berakhir dengan premis bull yang salah sejak awal, seperti cerita 1 di atas. Model yang betul ialah menganggap kegagalan sebagai fakta, menulisnya dalam tense lampau sebelum anda berkomitmen, dan memastikan setiap cerita menyebut satu perkara yang boleh anda semak yang akan menunjukkan permulaannya.
 
 <ChatWith agent="research_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Verdict simulasi menentukan saiz kedudukan hipotetikal pada 8% daripada portfolio, masuk $50, henti rugi $44. Cerita pra-mortem anda menyatakan bahawa kegagalan berlaku semasa pendapatan, harga terbuka melompati henti rugi, dan isian berlaku berhampiran $41. Pukulan portfolio apa yang cerita ini implikasikan, berbanding dengan yang dirancang?"
+  question="Verdict simulasi menganggarkan posisi hipotetikal pada 8% daripada portfolio, masuk $50, stop $44. Cerita pra-mortem anda menyatakan kegagalan berlaku semasa pendapatan, buka celah melalui stop, dan isian menghampiri $41. Pukulan portfolio apa yang cerita ini implikasikan, berbanding yang dirancang?"
   options={[
-    "18% — kerugian pada kedudukan tersebut, iaitu nombor yang diukur oleh pra-mortem",
-    "0.96%, tidak berubah, kerana henti rugi pada $44 mengekalkan kerugian tanpa mengira bagaimana harga sampai ke situ",
-    "0.48% — separuh daripada kerugian yang dirancang, kerana menjalankan pra-mortem membolehkan anda keluar sebelum jurang harga",
-    "1.44% berbanding 0.96% yang dirancang — isian dari $50 ke $41 ialah kerugian 18% pada kedudukan dengan berat 8%, separuh lagi daripada bajet henti rugi 12%"
+    "18% — kerugian pada posisi, yang merupakan nombor yang diukur oleh pra-mortem",
+    "0.96%, tidak berubah, kerana stop pada $44 membatasi kerugian tanpa mengira bagaimana harga sampai ke sana",
+    "0.48% — separuh kerugian dirancang, kerana menjalankan pra-mortem membolehkan anda keluar sebelum celah",
+    "1.44% berbanding 0.96% dirancang — isian $50 ke $41 ialah kerugian posisi 18% pada berat 8%, separuh lagi daripada bajet stop 12%"
   ]}
   answer={3}
-  explanation="Pergerakan dari $50 ke $41 ialah $9, iaitu 18% daripada harga masuk; 18% x 8% berat = 1.44% daripada portfolio, berbanding 0.96% (12% x 8%) yang dibajetkan untuk henti rugi. Jawapan yang mendakwa pukulan tidak berubah kerana henti rugi mengekalkan kerugian adalah jawapan yang memikat, dan ia tepat apa yang pra-mortem ini wujud untuk memusnahkan — henti rugi adalah arahan, bukan jaminan, dan pembukaan yang melompat akan diisi di mana pasaran terbuka. Jawapan 18% menyatakan kerugian kedudukan, bukan pukulan portfolio. Jawapan 0.48% memberi kredit kepada latihan dengan wawasan yang tidak dimilikinya: pra-mortem mendedahkan cerita, ia tidak mengubah titik isian."
+  explanation="$50 ke $41 ialah pergerakan $9, 18% daripada masuk; 18% x berat 8% = 1.44% daripada portfolio, berbanding 0.96% (12% x 8%) yang dibajetkan untuk stop. Jawapan yang mendakwa pukulan tidak berubah kerana stop membatasi kerugian adalah yang memikat, dan ia tepat apa yang pra-mortem ini wujud untuk membunuh — stop adalah arahan, bukan jaminan, dan buka celah mengisi di mana pasaran membuka. Jawapan 18% menyatakan kerugian posisi berbanding pukulan portfolio. Jawapan 0.48% memberi kredit kepada latihan dengan pandangan jauh yang tidak dimilikinya: pra-mortem mendedahkan cerita, ia tidak menggerakkan isian."
 />
 
 <Quiz
-  question="Anda menjalankan pra-mortem pada kedudukan panjang simulasi sebelum menerima verdict Bilik. Output manakah menunjukkan kaedah itu sebenarnya telah melakukan tugasnya?"
+  question="Anda menjalankan pra-mortem pada panjang simulasi sebelum menerima verdict Bilik. Output manakah menunjukkan kaedah itu sebenarnya melakukan tugasnya?"
   options={[
-    "Cerita lampau yang menamakan satu punca spesifik kerugian, plus pengungkapan atau tarikh yang akan menunjukkan punca tersebut bermula",
-    "Senarai risiko empat item — makro, persaingan, pelaksanaan, penilaian — yang merangkumi kategori yang terpakai kepada mana-mana ekuiti",
-    "Keputusan untuk menolak verdict itu secara langsung, atas alasan bahawa mampu membayangkan kegagalan menunjukkan tesis adalah lemah",
-    "Pernyataan semula hujah terkuat Bear Researcher daripada perdebatan Bilik, kerana itu adalah kes terbaik menentang dagangan"
+    "Cerita lampau yang menamakan satu penyebab khusus kerugian, plus pendedahan atau tarikh yang akan menunjukkan penyebab itu bermula",
+    "Senarai risiko empat item — makro, persaingan, pelaksanaan, penilaian — yang merangkumi kategori yang terpakai kepada sebarang ekuiti",
+    "Keputusan untuk menolak verdict secara langsung, atas alasan bahawa mampu membayangkan kegagalan menunjukkan tesis lemah",
+    "Pernyataan semula hujah terkuat Bear Researcher dari perdebatan Bilik, kerana itu adalah kes terbaik menentang perdagangan"
   ]}
   answer={0}
-  explanation="Output pra-mortem ialah cerita kausal dengan pemeriksaan yang dilampirkan: cerita menyatakan bagaimana kegagalan kelihatan, pemicu menyatakan bila untuk mula mempercayai ia sedang berlaku. Senarai risiko empat item adalah perangkap — kategori tersebut benar bagi setiap ekuiti dan tidak melekat pada mana-mana yang boleh diperhatikan, itulah sebabnya bertanya apa yang boleh salah mendedahkan kurang daripada retrospeksi prospektif. Menolak verdict kerana kegagalan boleh dibayangkan akan membunuh setiap kedudukan yang pernah diambil; setiap tesis mempunyai cerita kegagalan, dan soalan hanyalah sama ada anda boleh melihatnya datang. Menyatakan semula hujah terkuat Bear Researcher bukan pra-mortem juga — dan ia bukan hampir steelmanning, since <Lesson id="
-/> meminta anda membina kes menentang sendiri, tepat supaya anda boleh menilai satu yang diberikan oleh Room. Kedua-duanya membahaskan tesis itu salah berdasarkan bukti hari ini; pre-mortem mengambil kerugian sebagai diberi dan membina semula bagaimana enam bulan seterusnya sampai ke sana, tiba pada punca-punca daripada hasil berbanding daripada hujah.
+  explanation="Output pra-mortem ialah cerita kausal dengan pemeriksaan yang dilekatkan: cerita menyatakan bagaimana kegagalan kelihatan, tripwire menyatakan bila mula percaya ia sedang berlaku. Senarai risiko empat item adalah perangkap — kategori itu benar untuk setiap ekuiti dan melekat pada tiada yang boleh diperhatikan, itulah sebabnya bertanya apa yang boleh salah mendedahkan kurang daripada pandangan jauh prospektif. Menolak verdict kerana kegagalan boleh dibayangkan akan membunuh setiap posisi yang pernah diambil; setiap tesis mempunyai cerita kegagalan, dan soalan hanyalah sama ada anda boleh melihatnya datang. Pernyataan semula hujah terkuat Bear Researcher bukan pra-mortem juga — dan ia bukan sepenuhnya steelmanning, kerana <Lesson id="360_steelmanning_the_other_side"/> meminta anda membina kes lawan sendiri, tepat supaya anda boleh menilai kes yang Bilik berikan kepada anda. Kedua-duanya berhujah tesis itu salah pada bukti hari ini; pra-mortem mengambil kerugian sebagai diberi dan membina semula bagaimana enam bulan seterusnya sampai ke sana, tiba pada penyebabnya daripada hasil berbanding daripada hujah."
+/>
 
-## Cuba
+## Cuba sendiri
 
-Buka keputusan Room yang belum anda terima. Dalam Decision Journal, tulis satu perenggan bertarikh enam bulan akan datang yang bermula "Posisi ini ditutup dengan kerugian kerana" dan selesaikan ia dalam bentuk lampau. Kemudian sebutkan satu pendedahan, tarikh, atau tahap harga yang akan menunjukkan kisah itu bermula. Tanya Research Manager bahagian mana daripada hujah Room yang kisah anda bercanggah. Keputusan AMI adalah artifak latihan, bukan nasihat pelaburan.
+Buka verdict Room yang belum anda terima. Dalam Decision Journal, tulis satu perenggan bertarikh enam bulan akan datang yang bermula "Posisi ini ditutup dengan kerugian kerana" dan selesaikannya dalam tense lampau. Kemudian namakan satu pengumuman, tarikh, atau tahap harga yang akan menunjukkan cerita itu bermula. Tanya Research Manager bahagian mana daripada hujah Room yang cerita anda bercanggah. Verdict AMI ialah artifak latihan, bukan nasihat pelaburan.
 
-## Penutup
+## Intipati
 
-Anggap ia sudah gagal dan tulis kisah: punca spesifik yang boleh anda periksa mengalahkan kategori risiko yang tidak boleh anda periksa. Jika kisah kegagalan anda tidak berakhir dengan tripwire, pre-mortem belum selesai.
+Anggap ia sudah gagal dan tulis ceritanya: punca spesifik yang boleh anda semak lebih baik daripada kategori risiko yang tidak boleh anda semak. Jika cerita kegagalan anda tidak berakhir dengan tripwire, pre-mortem belum selesai.

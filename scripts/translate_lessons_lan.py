@@ -61,6 +61,13 @@ LOCALE_LABELS: dict[str, str] = {
 SENTINEL_RE = re.compile(r"<<MDX_(\d+)>>")
 COMPONENT_RE = re.compile(r"<(Quiz|Term|ChatWith|Animation)\b.*?/>", re.DOTALL)
 
+# `<Lesson id="…"/>` cross-references sometimes sit inside a Quiz
+# question/explanation attribute's quoted string. Neutralized in its own
+# pass, before COMPONENT_RE runs — otherwise the tag's own embedded `/>`
+# fools COMPONENT_RE's non-greedy match into ending the Quiz block early,
+# and its embedded `"` truncates _parse_quiz's attribute extraction.
+LESSON_TAG_RE = re.compile(r'<Lesson\b[^>]*?/>')
+
 
 # ---------- LLM plumbing -----------------------------------------------
 
@@ -115,9 +122,14 @@ def _frontmatter_title(fm: str) -> str | None:
 
 
 def _frontmatter_replace_title(fm: str, new_title: str) -> str:
+    # YAML double-quoted scalar: a literal `"` in the translated title (the
+    # LLM sometimes renders an English single-quoted phrase as Arabic/Malay
+    # double quotes) must be escaped or it terminates the string early and
+    # breaks frontmatter parsing for the whole file.
+    escaped_title = new_title.replace("\\", "\\\\").replace('"', '\\"')
     return re.sub(
         r'^title:\s*".*?"\s*$',
-        f'title: "{new_title}"',
+        f'title: "{escaped_title}"',
         fm,
         count=1,
         flags=re.MULTILINE,
@@ -162,8 +174,17 @@ _QUIZ_OPTION_ITEM_RE = re.compile(
 _QUIZ_ANSWER_RE = re.compile(r"answer=\{(\d+)\}")
 
 
+# Inverse of `_escape_for_jsx` below. Deliberately narrow — a codec-based
+# unescape (e.g. `unicode_escape`) mangles any non-ASCII byte (em-dashes,
+# curly quotes) in this UTF-8 content, so only undo the two sequences
+# `_escape_for_jsx` actually produces.
+_JSX_ESCAPE_RE = re.compile(r'\\\\|\\"')
+
+
 def _unescape(s: str) -> str:
-    return s.encode().decode("unicode_escape") if "\\" in s else s
+    if "\\" not in s:
+        return s
+    return _JSX_ESCAPE_RE.sub(lambda m: "\\" if m.group(0) == "\\\\" else '"', s)
 
 
 def _escape_for_jsx(s: str) -> str:
@@ -175,11 +196,13 @@ def _parse_quiz(block: str) -> dict[str, Any]:
     """Return {question, options:[...], answer, explanation, _raw: block}."""
     out: dict[str, Any] = {"_raw": block}
     for m in _QUIZ_STRING_ATTR_RE.finditer(block):
-        out[m.group(1)] = m.group(2)
+        out[m.group(1)] = _unescape(m.group(2))
     opt_match = _QUIZ_OPTIONS_RE.search(block)
     if opt_match:
         opts_raw = opt_match.group(1)
-        out["options"] = [m.group(1) for m in _QUIZ_OPTION_ITEM_RE.finditer(opts_raw)]
+        out["options"] = [
+            _unescape(m.group(1)) for m in _QUIZ_OPTION_ITEM_RE.finditer(opts_raw)
+        ]
     ans_match = _QUIZ_ANSWER_RE.search(block)
     if ans_match:
         out["answer"] = int(ans_match.group(1))
@@ -233,6 +256,11 @@ def _replace_components_with_sentinels(body: str) -> tuple[str, list[str]]:
         idx = len(components)
         components.append(m.group(0))
         return f"<<MDX_{idx}>>"
+    # Lesson refs first (may be nested inside a Quiz attribute string), then
+    # the top-level components — by the time COMPONENT_RE runs, any Lesson
+    # ref that was hiding inside a Quiz block's own attributes is already a
+    # plain `<<MDX_N>>` token, so it can no longer truncate that match.
+    body = LESSON_TAG_RE.sub(_sub, body)
     new = COMPONENT_RE.sub(_sub, body)
     return new, components
 
@@ -243,7 +271,14 @@ def _restore_components(prose: str, components: list[str]) -> str:
         if 0 <= idx < len(components):
             return components[idx]
         return m.group(0)
-    return SENTINEL_RE.sub(_sub, prose)
+    # A Quiz component's own rendered text can itself contain a nested
+    # Lesson-ref sentinel (protected before Quiz attribute parsing), so
+    # loop until stable rather than assuming one pass resolves everything.
+    prev = None
+    while prev != prose:
+        prev = prose
+        prose = SENTINEL_RE.sub(_sub, prose)
+    return prose
 
 
 # ---------- Prompts ----------------------------------------------------
@@ -308,8 +343,12 @@ def _quiz_batch_prompt(target_label: str, batch: dict[str, dict]) -> list[dict]:
         "Concierge).\n"
         "  4. Preserve numbers, percent signs, currency signs, and any "
         "`{placeholder}` patterns inside curly braces.\n"
-        "  5. Tone: confident, analyst-to-analyst, terse.\n"
-        "  6. Output a single JSON object. No code fences.\n"
+        "  5. Preserve every `<<MDX_N>>` sentinel exactly as-is, in the "
+        "same position in the text. They mark cross-reference tags that "
+        "will be restored after translation. Never translate, rename, or "
+        "drop them.\n"
+        "  6. Tone: confident, analyst-to-analyst, terse.\n"
+        "  7. Output a single JSON object. No code fences.\n"
         "Quizzes to translate:\n"
         f"{json.dumps(batch, ensure_ascii=False, indent=2)}"
     )
@@ -360,7 +399,13 @@ def _translate_prose(
     messages = _prose_prompt(target_label, prose)
     # Output is roughly the same length as input; allow generous headroom.
     max_tokens = max(2048, min(16384, len(prose) // 2))
-    for attempt in (1, 2):
+    # A heading with nothing under it but component sentinels (e.g. "## Quiz"
+    # right above bare <<MDX_N>> placeholders) occasionally gets dropped
+    # wholesale rather than mistranslated — a sampling quirk, not a token-
+    # budget one (seen at finish_reason=stop well under max_tokens). More
+    # attempts empirically recovers it more often than 2 does.
+    max_attempts = 4
+    for attempt in range(1, max_attempts + 1):
         try:
             raw = _post_chat(client, vllm_url, model, messages, max_tokens)
             translated = _strip_fence(raw).strip()
@@ -370,7 +415,7 @@ def _translate_prose(
                     "mismatch — retrying",
                     file=sys.stderr,
                 )
-                if attempt == 1:
+                if attempt < max_attempts:
                     time.sleep(2)
                     continue
                 return None
@@ -394,12 +439,16 @@ def _translate_quizzes(
     string-only dict (question/options/explanation). On failure, returns the
     English original for that quiz."""
     out: list[dict] = [None] * len(quizzes)  # type: ignore[list-item]
-    # Batch
+    # Batch. `q["question"]`/`q["explanation"]` may already contain
+    # `<<MDX_N>>` sentinels (Lesson refs neutralized before Quiz attribute
+    # parsing) — plain JSON string content, so no extra protection needed
+    # here, just preservation through the round trip (checked below).
     for start in range(0, len(quizzes), batch_size):
         chunk = quizzes[start : start + batch_size]
         payload: dict[str, dict] = {}
         for i, q in enumerate(chunk):
-            key = f"q{start + i}"
+            slot = start + i
+            key = f"q{slot}"
             payload[key] = {
                 "question": q.get("question", ""),
                 "options": list(q.get("options", [])),
@@ -450,6 +499,11 @@ def _translate_quizzes(
             if _placeholders_lost(q.get("question", ""), tr_question):
                 tr_question = q.get("question", "")
             if _placeholders_lost(q.get("explanation", ""), tr_explanation):
+                tr_explanation = q.get("explanation", "")
+            # Sentinel parity guard (Lesson-ref tokens must survive intact).
+            if not _sentinels_preserved(q.get("question", ""), tr_question):
+                tr_question = q.get("question", "")
+            if not _sentinels_preserved(q.get("explanation", ""), tr_explanation):
                 tr_explanation = q.get("explanation", "")
             out[slot] = {
                 "question": tr_question,
@@ -558,12 +612,20 @@ def main() -> int:
     parser.add_argument("--quiz-batch-size", type=int, default=4)
     parser.add_argument("--limit-files", type=int, default=None,
                         help="Translate only the first N lessons (smoke test).")
+    parser.add_argument("--ids", nargs="+", default=None,
+                        help="Translate only these lesson ids (stem before .en.mdx).")
     parser.add_argument("--overwrite", action="store_true",
                         help="Re-translate lessons that already exist in the target locale.")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
     sources = sorted(LESSONS_DIR.glob("*.en.mdx"))
+    if args.ids:
+        wanted = set(args.ids)
+        sources = [p for p in sources if p.name[: -len(".en.mdx")] in wanted]
+        missing = wanted - {p.name[: -len(".en.mdx")] for p in sources}
+        if missing:
+            print(f"WARNING: ids not found: {sorted(missing)}", file=sys.stderr)
     if args.limit_files:
         sources = sources[: args.limit_files]
     if not sources:
