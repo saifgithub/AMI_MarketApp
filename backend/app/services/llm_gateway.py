@@ -57,6 +57,50 @@ class ChatMessage:
     content: str
 
 
+# ── CR056: universal grounding directive (no assumed data) ───────────────
+#
+# Prepended to the system prompt of EVERY call routed through
+# LLMGateway.stream_chat — the single chokepoint all 12 Room agents, the
+# Concierge, and the PM verdict reformatter pass through, and where the prompt
+# is recorded to llm_audit. Defence-in-depth for the phantom-data class: a model
+# filling a silent gap with an invented holding, price, date, or prior event
+# (the SCHD incident behind CR055). This is a SOFT control — prompt instructions
+# are ~30% effective (CR038 / failure_patterns P2/P4), NOT a substitute for the
+# structural data-supply fix (CR055 supplies the holdings the model was missing).
+#
+# Two invariants the wording + placement must hold, or the suite breaks:
+#   1. The preamble contains NONE of the agent-id tokens the MockProvider routes
+#      on (it branches on system_prompt.lower(); a stray "trader" / "market
+#      analyst" / … would mis-route the mock to the wrong canned reply).
+#   2. PREPEND only. The Portfolio Manager's safety floor must remain the LAST
+#      instruction (recency dominance, safety_floor.py); appending would displace
+#      it. Prepending frames the top and leaves the floor untouched at the tail.
+
+GROUNDING_DIRECTIVE_SENTINEL = "─── GROUNDING DIRECTIVE (applies to every response) ───"
+
+GROUNDING_DIRECTIVE = (
+    f"{GROUNDING_DIRECTIVE_SENTINEL}\n"
+    "Use only the facts and numbers explicitly provided in this prompt. Do not "
+    "assume, infer, invent, or recall any datum you were not given — such as "
+    "holdings, positions, prices, balances, ratios, dates, or prior events. If a "
+    "fact you need is absent, say it is unavailable or omit the claim; never fill "
+    "the gap with an assumption.\n\n"
+)
+
+
+def prepend_grounding_directive(system_prompt: str) -> str:
+    """Prepend the universal no-assumed-data directive to a system prompt, once.
+
+    Idempotent: if the sentinel is already present (re-entry, or a caller that
+    pre-framed the prompt), the prompt is returned unchanged so the directive is
+    never stacked. Prepend-only, so a trailing block (e.g. the PM safety floor)
+    stays last.
+    """
+    if GROUNDING_DIRECTIVE_SENTINEL in system_prompt:
+        return system_prompt
+    return GROUNDING_DIRECTIVE + system_prompt
+
+
 # ── Provider interface ───────────────────────────────────────────────────
 
 
@@ -431,6 +475,10 @@ class LLMGateway:
         from app.services.audit import record_llm_call
 
         provider = self._pick_provider(locale, model_tier)
+        # CR056: every call gets the no-assumed-data directive prepended, so it is
+        # both applied (handed to the provider) AND auditable (recorded to
+        # llm_audit) on this one shared path — agents, Concierge, reformatter alike.
+        effective_system_prompt = prepend_grounding_directive(system_prompt)
         logger.info(
             "llm_call_start",
             provider=provider.name,
@@ -445,7 +493,7 @@ class LLMGateway:
         error_str: str | None = None
         try:
             async for chunk in provider.stream_chat(
-                system_prompt=system_prompt,
+                system_prompt=effective_system_prompt,
                 messages=messages,
                 model_tier=model_tier,
                 max_tokens=max_tokens,
@@ -464,7 +512,7 @@ class LLMGateway:
                 tier=model_tier,
                 provider=provider.name,
                 locale=locale,
-                system_prompt=system_prompt,
+                system_prompt=effective_system_prompt,
                 messages=[{"role": m.role, "content": m.content} for m in messages],
                 response_text="".join(buf) if buf else None,
                 latency_ms=latency_ms,
