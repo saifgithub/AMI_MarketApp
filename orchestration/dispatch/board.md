@@ -199,3 +199,29 @@ format template.
   coder.room back to 1 free slot (holds CR077-ROOM).
 - **Unblocks DEF098** (coder.api) — its `DEPENDS-ON: DEF095, DEF096` is now satisfied; fires when a
   coder.api slot frees (still at cap: DEF094 + CR077-CONCIERGE).
+
+## 2026-07-25 — CR055 + CR056 laned (the SCHD phantom-holdings pair) after a fix-check
+
+- **Verified first that neither was already fixed** (Saiful's ask): no impl commits (only the
+  `e6aff3a`/`07c3346` filing commits), no lanes, no audit files, both `proposed`, and — the important
+  part — **no code fix present**. CR055: zero sim-holdings injection anywhere in the Room prompt path
+  (`list_trades`/`total_value` still uncalled in `room_runner.py`), `risk_tier_cap` wired only to
+  PM/Trader/cosmetic display, not the researcher prompts. CR056: no "no assumed data" imperative
+  anywhere in `llm_gateway.py` or any prompt path. **The live SCHD hallucination is still reproducible.**
+- **CR055 → `coder.room`, `GATE: independent`, round 1.** Single lane (all hot files are room-cluster
+  owned; sim + `trading_math` consumed read-only). Three parts: (1) unconditional sim-holdings block
+  injected via the `build_agent_prompt` snapshot slot with an explicit "you hold 0% / no open positions"
+  for empty users + **loud `unavailable` on fetch failure, never silence** (this is the exact bug);
+  (2) `risk_tier_cap(risk_score)` into Bull/Bear/Research-Manager prompts (M03 coherence — removes the
+  10–15%-vs-3.0% incoherence that fed the fabrication); (3) one-sentence `long_only` tighten.
+- **CR056 → `coder.api`, `GATE: independent`, round 1, no `DEPENDS-ON`.** Placement **fixed to the
+  gateway** `LLMGateway.stream_chat` (prepend), NOT `build_agent_prompt` — the latter misses Concierge +
+  reformatter (fails "all LLM") AND would collide with CR055's `agent_prompts.py` edits. Two hard
+  caveats written into the lane: preamble must contain **no agent-id token** (mock branches on
+  `system_prompt.lower()` :154) and must **prepend** (PM safety-floor-last invariant). Honest ceiling
+  flagged: ~30% effective (CR038) — defence-in-depth, paired with CR055's structural fix, not a substitute.
+- **Disjoint file-sets** (`room_runner`/`room_prompts`/`agent_prompts` vs `llm_gateway`) → the two lanes
+  run **fully in parallel**, integrate independently. Register rows `proposed → in_progress` (drift green,
+  84 CR rows). Both coders spawned as isolated-worktree agents; each self-tests, pushes to its lane
+  branch, and writes its `SUBMITTED: round 1` audit file for the pre-spawned track-U auditor.
+  `AT:architect`.
