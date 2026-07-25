@@ -273,3 +273,21 @@ format template.
   real exit code, commit to `lane/DEF061.coder.api` with an explicit pathspec, write the hand-off + audit
   lane) AND widen with the esg_lite curated check.
 - DEF061-MOBILE copy updated to match (esg = curated proxy; custom = PM-flag). Row + register regen. `AT:architect`.
+
+### 2026-07-25 (cont.) — DEF061-BE built + READY_FOR_AUDIT (Architect-verified green; awaiting independent gate)
+
+- **Built + committed** to `lane/DEF061.coder.api` @ `4978844` (16 files, +1581): `classification_universe.py`
+  (four-state resolver, analog of `sharia_universe.py`), append-only `classification_universe_snapshots`
+  + migration `c9f0a1b20022` (down_revision `b2d3e4f50021`, single head), daily refresh task, 3 checks in
+  `check_mandate_compliance()` (fossil/sin/esg_lite) mirroring the halal seam. esg_lite = curated proxy
+  (fossil ∪ sin ∪ weapons/defense), disclosed not-a-rated-score. `CLASSIFICATION_SCREEN_ENABLED=false`
+  default → flags pause loudly until the live classify pass on promote (halal precedent).
+- **The coder agent stalled on the commit/report step twice** (kept backgrounding pytest + stopping). The
+  build itself was complete + self-tested. **Architect took over:** independently re-ran the full suite from
+  the lane worktree's venv → **1200 passed, exit 0**, migration single-head confirmed, scope diff clean
+  (`room_runner` = byte-parallel param-threading of the classification universe through the same sites that
+  carry `halal_universe`; `uv.lock` excluded as a spurious refresh). Committed the build on the coder's
+  behalf; surfaced the `SUBMITTED: round 1` signal to main (`orchestration/audit/cr/DEF061.architect.md`).
+- **GATE not yet satisfied:** `independent`. The build is READY_FOR_AUDIT — the Architect re-verify is NOT a
+  substitute; awaiting the independent auditor's `DEF061.auditor.md` VERDICT before integration to main. No
+  integration performed. `AT:coder.api` (build) / `AT:architect` (verify + surface).
