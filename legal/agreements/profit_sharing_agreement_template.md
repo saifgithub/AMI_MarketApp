@@ -30,7 +30,7 @@
 | | |
 |---|---|
 | **Document** | Backer Profit-Participation Agreement |
-| **Version** | 0.1 (template, unsent) |
+| **Version** | 0.2 (template, unsent) |
 | **Drafted** | 25 July 2026 |
 | **Drafted by** | Founder (Claude-assisted), pending counsel review |
 | **Parties per signing** | One agreement, multiple Backers via Schedule A (§ below) |
@@ -107,8 +107,14 @@ Profit Share rights until they catch up, at the Founder's discretion.
 ## 3. Use of Funds
 
 Contributions are used for AMI Trade's operating costs and advertising/marketing spend
-during the Contribution Period. The Founder does not owe Backers a line-item accounting of
-spend, but will provide the summary report described in §5.
+during the Contribution Period, indicatively split **30% infrastructure/tooling and 70%
+advertising/user acquisition** — see **Schedule B** for the current breakdown. Schedule B
+is provided for transparency and reflects the Founder's plan as of the date on that
+schedule; it is **not a binding budget line-item**, and the Founder may reasonably
+reallocate between and within these categories as the business's needs change (e.g.
+channel performance, timing of opening the app stores to the public). The Founder does not
+owe Backers a line-item accounting of actual spend beyond this, but will provide the
+summary report described in §5.
 
 ## 4. Profit Share
 
@@ -203,6 +209,43 @@ Raise target is met; can close early or extend to more Backers as needed — adj
 
 ---
 
+## Schedule B — Indicative Use of Funds (as of 25 July 2026)
+
+*This schedule is a plan, not a promise — see the reallocation language in §3. Numbers are
+the Founder's own estimate, not a measured or audited budget.*
+
+Total raise: USD 24,000 over 12 months (USD 2,000/month).
+
+| Category | Monthly | 12-month total | Share of raise |
+|---|---|---|---|
+| Infrastructure & tooling | USD 600 | USD 7,200 | 30% |
+| Advertising & user acquisition | USD 1,400 | USD 16,800 | 70% |
+| **Total** | **USD 2,000** | **USD 24,000** | **100%** |
+
+**Infrastructure & tooling (USD 600/mo)** — app-store developer fees (Apple Developer
+Program, Google Play Console), domain renewal, web hosting, running costs (electricity)
+for the self-hosted server and on-prem AI-inference hardware already owned by the Founder
+(not purchased from this raise), and the Founder's AI-assisted development tooling
+(Claude). Includes buffer for infrastructure that only activates later — managed
+database/auth, crash reporting, product analytics, push notifications — if the product
+grows beyond the current self-hosted alpha setup during the Contribution Period.
+
+**Advertising & user acquisition (USD 1,400/mo)** — indicative channel split once AMI
+Trade has a public store listing on at least one platform:
+
+| Sub-channel | Monthly (once public) | Notes |
+|---|---|---|
+| Apple Search Ads | ~USD 600–700 | Keyword-targeted, App Store only — requires a public App Store release (a TestFlight build is not sufficient) |
+| Google App Campaigns | ~USD 600–700 | Automated bidding, Play Store only — requires a public or open-testing Play listing |
+| Reddit ads / creator (influencer) placements | remainder, ~USD 100–200 | No store-listing dependency; used before and alongside the two search channels |
+
+Until an app store listing is public, the full advertising allocation goes to the
+non-store-dependent row (Reddit ads / creator placements) and organic content
+amplification of existing lesson content; Apple Search Ads and Google App Campaigns are
+added once the corresponding store listing opens.
+
+---
+
 ## Lawyer-only checklist
 
 Before this Agreement is used with a real Backer:
@@ -215,6 +258,7 @@ Before this Agreement is used with a real Backer:
 | 4 | Transfer restriction (§11) as an anti-security-classification lever | Confirms this actually helps rather than being cosmetic |
 | 5 | Tax treatment of profit-share payments, for both Founder and Backer | Not addressed anywhere in this draft — needs its own advice, likely jurisdiction-dependent per Backer |
 | 6 | Multiple-Backer aggregation risk | Whether raising from "some people" (plural) changes the securities analysis versus a single backer |
+| 7 | Use-of-funds specificity (Schedule B) | Detailed spend projections read more like a prospectus/PPM than a private contract — confirm the reallocation hedge in §3 is enough to keep this from being read as a binding representation |
 
 ---
 
@@ -224,3 +268,8 @@ Before this Agreement is used with a real Backer:
   return (2.5× placeholder) on % of Monthly Gross Profit (Revenue − Direct Costs),
   non-transferable, Malaysia governing law with courts (no arbitration), novation-on-
   incorporation clause to handle the no-entity-yet gap.
+- **v0.2** — 25 July 2026. Added Schedule B (indicative use-of-funds breakdown: 30%
+  infra/tooling, 70% advertising; advertising sub-split across Apple Search Ads / Google
+  App Campaigns / Reddit-creator channels, gated on public store-listing availability).
+  §3 updated to reference it with a non-binding/reallocation hedge. New checklist item #7
+  on use-of-funds specificity. Still unsent, no signatures.
