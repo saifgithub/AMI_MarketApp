@@ -225,3 +225,25 @@ format template.
   84 CR rows). Both coders spawned as isolated-worktree agents; each self-tests, pushes to its lane
   branch, and writes its `SUBMITTED: round 1` audit file for the pre-spawned track-U auditor.
   `AT:architect`.
+
+## 2026-07-25 — DEF061 laned to coder.api ("build enforcement now")
+
+- **Saiful directive: "Build enforcement now."** The 4 advertised-but-unenforced mandate toggles
+  (`esg_lite`, `no_tobacco_alcohol_gambling`, `no_fossil_fuels`, `custom_constraints`) — Settings sells
+  them as hard per-trade filters (`settings_screen.dart:365-386`) but `check_mandate_compliance()`
+  (`safety_floor.py:98-205`) never reads them. Sits on the "safety floor is sacred" commitment; the
+  halal-conscious AR/MS markets are the sharp edge.
+- **DEF061 → `coder.api`, `GATE: independent`, round 1** (`lanes/DEF061.assign.md`). **DEF062 dep
+  overridden** (idle/unstarted, no live serialization; trade-time enforcement ⟂ write-time validation).
+- **Scope split, source-verified (DEF089's rule — no lane on an unverified source):** BUILD NOW =
+  `no_fossil_fuels` + `no_tobacco_alcohol_gambling` via a **sourced, held sector/industry classification
+  snapshot** on the CR069/CR075 architecture — classify the ~503 S&P parent constituents CR075 already
+  persists, using `yf.Ticker(t).info` sector/industry already read at `fundamentals.py:139,234-239`; new
+  append-only snapshot table + daily background refresh + read-through (no request-path socket); two new
+  checks mirroring the halal three-state `resolve` seam; UNKNOWN permitted-with-disclosure (halal G3),
+  `None`→paused loud-degrade. **FORKED to Saiful** = `esg_lite` (no free authoritative ESG source) +
+  `custom_constraints` (freeform text ≠ deterministic hard filter) — guessing either repeats DEF059.
+- **Coupled honesty follow-up (CR040):** until esg/custom are built, Settings must stop presenting them
+  as hard filters — a small `coder.mobile` lane the Architect will file (not DEF061's lane).
+- **Serialization clear:** coder.room holds only CR077-ROOM/`room_prompts.py`; `safety_floor.py` is free.
+- Register row flipped `open → laned` (DEF061.row.md), regen+verified (106 rows). `AT:architect`.
