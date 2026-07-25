@@ -57,6 +57,19 @@ output as done. Read `ROLES.md` + `DISPATCH_PROTOCOL.md` + `BINDINGS.md` first; 
 - **Never self-close.** COMPLETE is the Auditor's call; you only `ACCEPTED` after it.
 - **Keep the board honest.** `board.md` is a convenience cache and may lag; the truth is the tokens
   (`dispatch.sh state`). Reconcile the board when you touch it.
+- **Judge state from artifacts, never from processes.** Whether a lane is in audit — or whether the
+  auditor is alive at all — derives from the lane tokens, `dispatch.sh state`, and the auditor's own
+  files (`<AUDIT_LANE_DIR>/<ITEM>.auditor.md` VERDICT + `<AUDIT_ROOT>/runs/`). **Never infer it from
+  a process check.** The auditor watcher is a transient, self-respawning poller (BINDINGS): it is
+  legitimately absent from `ps` while an audit is running and in the gap between respawns, so
+  process-absence is not a stall. To answer "is my `SUBMITTED` lane being handled?", read the
+  artifact, not the process table.
+- **Verify a hand-off from the canonical (deploy) cwd.** Before you surface a coder's
+  `READY_FOR_AUDIT` to the auditor — and again before you integrate — re-run the project's test
+  command from the **repo root**, the invocation the deploy/promote path uses (BINDINGS), not from a
+  subdirectory. A worker that ran the suite from a subdir can honestly report green while a
+  cwd-fragile test (a source-grep / file-read using a cwd-relative path) is red in the deploy path.
+  Hitting one is a bounce, not an integrate: the fix anchors the path to the module, not the cwd.
 - **Context & cost.** You cannot `/compact` an instance, and you should not want to — auto-compaction
   at ~1M tokens is a costly backstop, not the operating point. Run instances **short-lived**: spawn a
   fresh one per lane (or per round), let it hand off and exit, respawn for the next lane. Its state is

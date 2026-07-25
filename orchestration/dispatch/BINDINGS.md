@@ -29,6 +29,36 @@ this file + roster/ change. CR052.
 | Deploy path | `/promote-to-alpha` (rsync to melehost; Mac is a pure editor — no local backend) |
 | Requester source (errors) | melehost `bug_reports` table (see `.claude/session-config.yml` track R `bug_list`) |
 
+## State & liveness (read artifacts, not processes)
+
+Lane state and auditor liveness are **read from files, never from `ps`**:
+
+- **The board (derived truth):** `sh orchestration/dispatch/dispatch.sh state` +
+  `sh orchestration/audit/watcher.sh state`. `board.md` is a lagging cache — reconcile, don't trust.
+- **A lane's audit outcome:** `orchestration/audit/cr/<ITEM>.auditor.md` (`VERDICT: COMPLETE |
+  AWAITING_FIXES`) + the run folder `orchestration/audit/runs/<date>_run-N/`.
+- **The auditor watcher runs as** `sh orchestration/audit/watcher.sh auditor -i 30 -t 3600` — a
+  30 s-poll, 1 h-timeout, **self-respawning** process (Saiful starts it; it respawns on its own). It
+  is **not** a liveness signal: it is legitimately absent from `ps` while an audit is actually
+  running and in the gap between respawns. A momentary `ps` zero-read means nothing — read the
+  verdict / run artifacts instead.
+  - *Precedent (2026-07-25):* the Architect read two transient `ps` zero-reads as "auditor down" and
+    surfaced a false stall, while the watcher was in fact mid-audit; the verdict landed `COMPLETE`
+    (CR056, run-46) minutes later. Liveness is the artifact, not the process table.
+
+## Verify cwd — run the gate from the repo root
+
+The Architect's pre-audit and pre-integrate re-run uses `pytest backend/tests/unit/ -q` **from the
+repo root** — the exact cwd the `/promote-to-alpha` preflight uses — **not** `cd backend && pytest`.
+A subdir run masks a **cwd-fragile test** (a source-grep / file-read using a cwd-relative `Path(...)`)
+that is red in the deploy path. In a worktree, build the venv with `cd backend && uv sync --frozen
+--extra dev`, then run pytest **from the worktree root**.
+
+- *Precedent (2026-07-25):* CR055's coder honestly reported the suite green — run from `backend/`.
+  One guard test used `Path("app/services/room_runner.py")` (cwd-relative); from the repo root it was
+  a `FileNotFoundError` and would have failed the promote preflight. Bounced to anchor the path to
+  the module (`Path(room_runner.__file__)`), not the cwd.
+
 ## Escalation precedents (the evidence behind the portable rules)
 
 The portable core states the rules without citing this repo's history. The history is here, so a
