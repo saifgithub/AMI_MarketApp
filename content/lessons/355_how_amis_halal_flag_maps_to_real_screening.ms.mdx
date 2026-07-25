@@ -10,56 +10,64 @@ code: "SHARIA 9"
 topic: "halal_flag_mapping"
 prerequisites: ["348_the_business_activity_screen", "349_the_three_financial_ratio_screens", "271_inside_the_deterministic_compliance_check"]
 tags: ["islamic-finance", "halal-flag", "mandate", "pm", "deterministic-compliance"]
-sources: ["AMI backend — app/services/sim_engine.py (DEFAULT_HALAL_DEMO_UNIVERSE)", "AMI backend — app/agents/safety_floor.py (halal-flag enforcement path)"]
+sources: ["S&P 500 Sharia Industry Exclusions Index — AAOIFI-standard constituents screened by S&P Dow Jones, tracked by the SPUS ETF (sp-funds.com/spus)", "AMI backend — app/services/sharia_universe.py + app/schemas/sharia.py (three-state sourced-allowlist resolver, CR069)"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-25", method: "rewritten to the CR069 sourced four-state screen after DEF097; mechanism verified against sharia_universe.py + schemas/sharia.py; S&P 500 Sharia Industry Exclusions Index / SPUS / AAOIFI corroborated via sp-funds.com + zoya.finance"}
 agent_callouts: ["portfolio_manager", "fundamentals_analyst"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
-updated_at: "2026-07-22"
+updated_at: "2026-07-25"
 ---
 # Bagaimana bendera halal AMI berfungsi
 
-Anda sudah tahu bahawa semakan kepatuhan deterministik oleh PM (<Lesson id="271_inside_the_deterministic_compliance_check"/>) adalah Python tulen, bukan prompt — input yang sama, jawapan PASS/BLOCK yang sama, setiap kali. Bendera Mandat halal menggunakan seni bina deterministik-selepas-perdebatan yang sama, tetapi semakan sebenar hari ini lebih mudah daripada skrin dua peringkat yang baru anda pelajari dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/>: ia melihat sama ada ticker tersebut adalah ahli dalam set kecil, tetap, dan dikurasi — tiada pengiraan dibuat, tiada aktiviti perniagaan dinilai, dan tiada nisbah dikira pada laluan ini. Pada akhir pelajaran ini, anda akan mampu menyatakan dengan tepat apa yang diperiksa oleh bendera halal dalam aplikasi hari ini, dan mengapa ia berbeza daripada metodologi skrin yang diajar dalam modul ini.
+Anda sudah tahu bahawa semakan kepatuhan deterministik oleh PM (<Lesson id="271_inside_the_deterministic_compliance_check"/>) adalah Python tulen, bukan prompt — input yang sama, jawapan yang sama, setiap kali. Bendera Mandat halal menggunakan seni bina yang sama, tetapi di sinilah pemula tersalah faham: ia **tidak** menjalankan skrin dua peringkat yang baru anda pelajari dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/>, dan ia tidak mengira nisbah tunggal sendiri. Sebaliknya, ia menyemak simbol saham (ticker) terhadap senarai yang **disumberkan** — iaitu komponen yang diterbitkan bagi indeks Syarak AAOIFI yang mapan — dan mengembalikan salah satu daripada empat hasil. Pada akhir pelajaran ini, anda akan dapat menyatakan dengan tepat apa yang dimaksudkan oleh LULUS halal dan apa yang tidak.
 
 ## Contoh
 
-Setkan bendera halal Mandat kepada on dan Convene the Room pada ticker sebenar. Dua perkara berlaku secara berturutan, meniru seni bina <Lesson id="271_inside_the_deterministic_compliance_check"/>: pertama, pasukan analis berdebat dan menghasilkan Verdict latihan biasa mereka (kes Bull, kes Bear, bacaan teknikal, saiz, entry, stop). Kedua — sepenuhnya berasingan, selepas perdebatan selesai — semakan deterministik PM dijalankan, dan untuk bendera halal, semakan tersebut adalah ujian keanggotaan terhadap senarai tujuh ticker tetap (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). Convene pada salah satu daripada tujuh ini dan bendera akan lulus (pass). Convene pada apa jua selain itu — katakan, bank konvensional, atau bahkan nama teknologi besar yang tidak ada dalam senarai — dan bendera akan menyekat (block) dagangan tersebut, tidak kira aktiviti perniagaan sebenar atau neraca ticker itu, dan tidak kira seberapa bullish perdebatan analis itu. Sekatan (atau kelulusan) didorong sepenuhnya oleh keanggotaan senarai, bukan oleh sebarang penalaran aktiviti perniagaan atau nisbah yang diajar dalam <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> — penalaran itu adalah nyata dan ia adalah asas skrin Sharia sebenar, ia hanya bukan apa yang diperiksa oleh bendera ini.
+Hidupkan bendera halal Mandat dan Kumpulkan Bilik. Seperti dalam <Lesson id="271_inside_the_deterministic_compliance_check"/>, dua perkara berlaku secara berturut-turut: pasukan analis berdebat dan menghasilkan Verdict, kemudian — secara berasingan, selepas perbincangan selesai — semakan deterministik oleh PM dijalankan. Untuk bendera halal, semakan tersebut mencari simbol saham dalam komponen **Indeks Pengecualian Industri S&P 500 Syarak** — skrin piawai AAOIFI yang dijalankan oleh S&P Dow Jones dan dipantau oleh ETF SPUS — yang telah dimuatkan bersama tarikh penerbitannya. Empat hasil:
+
+- Simbol saham berada dalam set patuh ini → **LULUS**. (Nama besar seperti AAPL, MSFT dan NVDA biasanya berada di dalamnya.)
+- Simbol saham berada dalam S&P 500 induk tetapi *tidak* dalam set patuh → **DISELIT**, dan bendera menyekat perdagangan. Bank konvensional adalah kes klasik.
+- Simbol saham tidak berada dalam S&P 500 langsung → **TAK DIKENALI**: peraturan indeks hanya pada anggotanya sendiri, jadi AMI tiada sebarang keputusan sama ada. Ini *dibenarkan*, tetapi perdagangan membawa pengungkapan bahawa tiada skrin yang merangkumnya — diam bukan bermaksud lulus.
+- Sumber tidak boleh disegarkan, atau sudah lapuk melebihi tingkapnya → bendera **BERHENTI** dan menyekat dengan jelas, daripada berdagang berdasarkan senarai yang hilang atau tidak terkini.
+
+Tiada apa-apa di sini mengira nisbah hutang atau pendapatan secara langsung. Ia membaca skrin yang diterbitkan dan bertarikh oleh pihak lain, dan melaporkan mana daripada empat keadaan tersebut yang terpakai.
 
 ## Perangkap
 
-Pemula mengandaikan bahawa kerana bendera ini berada di belakang seni bina kepatuhan PM yang tidak boleh diajar, ia mesti *menjalankan* skrin dua peringkat yang diliputi modul ini — aktiviti perniagaan, kemudian tiga nisbah, dikira secara langsung bagi setiap ticker. Ia tidak. Hari ini, bendera halal adalah senarai benarkan (allowlist) demonstrasi yang dikurasi: tujuh ticker besar, cecair, dan dikenali luas dipilih supaya kitaran latihan sentiasa mempunyai alam semesta "halal" yang boleh ditradingkan, bukan tujuh ticker yang telah melalui ujian <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> dan kebetulan lulus. Skrin sebenar wujud dalam pangkalan kod AMI dan adalah tepat apa yang diterangkan oleh dua pelajaran tersebut — tetapi ia tidak disambungkan ke laluan penguatkuasaan bendera ini. Jangan membuat inferens "bendera menjalankan skrin dan ticker ini lulus" daripada PASS; buat inferens "ticker ini kebetulan adalah salah satu daripada tujuh dalam senarai."
+Perangkapnya ialah membaca LULUS sebagai "AMI menjalankan skrin tiga nisbah dari <Lesson id="348_the_business_activity_screen"/> dan <Lesson id="349_the_three_financial_ratio_screens"/> dan syarikat ini melaluinya." Ia tidak. AMI tidak mengira skrin ini di sini — pengiraan nisbah wujud dalam kod asas tetapi kekal tidak aktif pada laluan ini. LULUS bermaksud "simbol saham ini adalah anggota semasa senarai yang diskrin AAOIFI yang diterbitkan, pada suatu tarikh," tiada lebih; senarai tersebut boleh tertinggal daripada fail terkini syarikat, dan nama boleh masuk atau keluar pada masa penyeimbangan semula. Perangkap yang lebih halus ialah memperlakukan "tidak disekat" sebagai "disaring dan lulus" — simbol **TAK DIKENALI** dibenarkan *tepat kerana tiada skrin yang membuat keputusan ke atasnya*, yang merupakan lawan daripada lulus. Baca hasil yang AMI kembalikan sebenar, bukan yang anda andaikan.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Dengan bendera Mandat halal diaktifkan, Bilik membincangkan satu ticker dan menghasilkan Verdict yang bullish, tetapi PM kemudian menyekat perdagangan tersebut. Apakah maklumat yang diberikan oleh urutan ini tentang bagaimana bendera halal dibina?"
+  question="Tetapan Mandat halal diaktifkan. Anda Mengumpulkan Bilik untuk syarikat kap kecil yang sama sekali bukan ahli S&P 500. Apakah yang dilakukan oleh semak halal deterministik Pengurus Portofolio (PM)?"
   options={[
-    "Ia bermakna perdebatan penganalisis dan semakan kepatuhan PM adalah langkah yang sama, dan perdebatan hanya mengubah pendirian",
-    "Ia bermakna semakan halal dijalankan sebagai langkah berasingan dan deterministik SELEPAS perdebatan selesai — sama seperti seni bina lantai yang tidak boleh dilatih dari <Lesson id="271_inside_the_deterministic_compliance_check"/>/273, digunakan pada senarai benarkan ticker tetap berbanding pendapat dalam perdebatan",
-    "Ia bermakna hujah Bull Researcher adalah salah dari segi fakta dan memerlukan pembetulan",
-    "Ia bermakna bendera halal hanya menyekat perdagangan apabila Bear Researcher mengesyorkan sebaliknya"
+    "Menyekatnya — sebarang nama yang tidak disenaraikan oleh indeks dianggap tidak mematuhi",
+    "Membolehkannya, tetapi menandainya sebagai UNKNOWN dengan pendedahan bahawa tiada skrin yang merangkumnya — peraturan indeks yang diperoleh hanya terpakai kepada anggotanya sendiri, bukan kepada nama di luar indeks",
+    "Mengira skrin aktiviti perniagaan dan tiga nisbah kewangan secara langsung untuk mencapai keputusan",
+    "Luluskan secara automatik, kerana hanya bank konvensional yang disekat"
   ]}
   answer={1}
-  explanation="Ini adalah seni bina dari <Lesson id="271_inside_the_deterministic_compliance_check"/> dan <Lesson id="273_uncoachable_means_no_prompt"/>: perdebatan menghasilkan Verdictnya terlebih dahulu, dan semakan PASS/BLOCK berasingan yang deterministik dijalankan kemudian — tidak boleh dilatih kerana ia bukan pendapat persuasif yang dipegang oleh mana-mana ejen, ia adalah ujian keahlian set tetap. Tiada apa-apa tentang hujah Bull Researcher perlu menjadi 'salah' untuk PM masih menyekat; dan penyekatan didorong oleh keahlian senarai, bukan oleh Researcher mana yang berhujah di pihak mana."
+  explanation="Tetapan halal AMI menyemak keanggotaan dalam senarai yang diperoleh — Indeks Pengecualian Industri Syarie S&P 500. Nama di luar S&P 500 induk ialah nama yang tidak pernah dinilai oleh indeks tersebut, jadi AMI tidak mempunyai hukum: ia mengembalikan UNKNOWN, yang dibenarkan tetapi membawa pendedahan 'tiada skrin merangkum ini'. Menyekat setiap nama yang tidak disenaraikan mengelirukan UNKNOWN dengan SCREENED-OUT — SCREENED-OUT disimpan untuk nama yang ADA dalam S&P 500 tetapi tiada dalam set yang mematuhi. AMI tidak mengira nisbah secara langsung pada laluan ini, dan bukan benar bahawa hanya bank yang disekat."
 />
 
 <Quiz
-  question="Satu ticker yang lulus skrin aktiviti perniagaan (<Lesson id="348_the_business_activity_screen"/>) dan tiga nisbah kewangan (<Lesson id="349_the_three_financial_ratio_screens"/>) dengan banyak ruang masih disekat oleh bendera Mandat halal AMI. Apakah ini memberitahu anda tentang apa yang sebenarnya diperiksa oleh bendera tersebut?"
+  question="Dengan tetapan halal diaktifkan, sebuah ticker kembali PASS. Apakah yang sebenarnya telah AMI tegaskan?"
   options={[
-    "Bendera mesti telah menemui nisbah keempat yang tersembunyi yang gagal oleh ticker",
-    "Bendera tidak menjalankan skrin aktiviti perniagaan dan nisbah sama sekali — hari ini ia memeriksa keahlian dalam set tujuh ticker tetap yang dikurasi, jadi ticker boleh lulus setiap ujian skrin sebenar dalam modul ini dan masih berada di luar set tersebut",
-    "Bendera menjalankan semula perdebatan dengan pemberat Bear Researcher yang lebih ketat sehingga ia menemui alasan untuk menyekat",
-    "Ini tidak boleh berlaku — lulus kedua-dua skrin dalam modul ini menjamin bendera halal akan lulus juga"
+    "Bahawa AMI menjalankan skrin aktiviti perniagaan modul dan tiga nisbah kewangan serta syarikat berjaya melepasi mereka",
+    "Bahawa rasio hutang kepada nilai pasaran syarikat, pada masa ini, berada di bawah ambang 30% AAOIFI — AMI mengira semula ia pada sesi ini",
+    "Tiada apa-apa mengenai kepatuhan — PASS hanya bermaksud perdebatan analis adalah bullish terhadap nama tersebut",
+    "Bahawa ticker adalah penyusun semasa indeks Syarie AAOIFI yang diperoleh pada tarikh penerbitannya — fakta keanggotaan, bukan skrin yang dikira oleh AMI"
   ]}
-  answer={1}
-  explanation="Satu ticker boleh benar-benar meluluskan kedua-dua skrin aktiviti perniagaan dan skrin nisbah dan masih bukan salah satu daripada tujuh ticker (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) yang diperiksa oleh pelaksanaan bendera halal — kerana pelaksanaan itu adalah ujian keahlian senarai tetap, bukan skrin dua peringkat. Tiada nisah keempat yang tersembunyi, tiada pelaksanaan semula perdebatan, dan lulus skrin sebenar modul ini tidak menjamin keahlian dalam senarai demonstrasi ini — mereka adalah dua ujian yang berbeza."
+  answer={3}
+  explanation="PASS halal ialah carian keanggotaan: ticker berada dalam senarai penyusun yang diterbitkan dan bertarikh Indeks Pengecualian Industri Syarie S&P 500. AMI tidak menjalankan skrin dua peringkat itu sendiri — matematik nisbah ini kekal tidak aktif pada laluan ini — jadi 'AMI mengira nisbah' dan 'AMI mengira semula hutang kepada nilai pasaran pada sesi ini' kedua-duanya melebih-lebihkan apa yang berlaku; peraturan hutang 30% ialah asas penyedia indeks, digunakan apabila senarai dibina, bukan pengiraan langsung AMI. Dan PASS ialah hasil kepatuhan dari langkah deterministik berasingan, sepenuhnya bebas daripada sama ada perdebatan itu bullish atau tidak."
 />
 
 ## Cuba sendiri
 
-Togol bendera halal pada dalam Tetapan → Mandat, kemudian Convene the Room pada ticker dari senarai tujuh nama (contohnya, AAPL) dan secara berasingan pada satu yang bukan (contohnya, bank konvensional). Bandangkan penalaran PASS/BLOCK oleh PM pada setiap satu — perhatikan ia merujuk kepada keanggotaan senarai, bukan penemuan aktiviti perniagaan atau nisbah. Ambil perhatian: bendera halal AMI adalah alat demonstrasi kitaran latihan hari ini, bukan penghakiman agama atau skrin kepatuhan langsung; soalan skrin dan kepatuhan sebenar harus melibatkan profesional kewangan Islam yang berkelayakan.
+Hidupkan bendera halal di Tetapan → Mandat, kemudian Kumpulkan Bilik tiga kali: pada syarikat berkapasiti besar yang biasanya patuh (katakan AAPL), pada bank konvensional dalam S&P 500, dan pada syarikat berkapasiti kecil di luar S&P 500. Bandingkan hasil setiap kali — LULUS, disekat-dan-dihalang, dan dibenarkan-tetapi-TAK-DIKENALI — dan baca sebab yang dirujuk oleh PM untuk setiap satu. Ingat: bendera halal AMI adalah alat kitaran latihan yang dibina berdasarkan skrin pihak ketiga yang diterbitkan, bukan fatwa agama atau nasihat kepatuhan peribadi; bawa soalan pengamatan sebenar kepada ahli kewangan Islam yang berkelayakan.
 
-## Kesimpulan
+## Pengajaran
 
-Bendera Mandat halal menjalankan semakan deterministik yang tidak boleh diajar oleh PM selepas perdebatan selesai — seni bina yang sama dengan Brief Your Agent yang lain — tetapi hari ini semakan tersebut adalah keanggotaan dalam set tetap dan dikurasi tujuh ticker, bukan skrin aktiviti perniagaan dan nisbah yang diajar awal dalam modul ini. Ini adalah latihan metodologi, bukan penghakiman Sharia; rujuk ahli sains yang berkelayakan untuk keputusan portfolio sebenar.
+Bendera halal AMI tidak mengira skrin Syarak — ia menyemak simbol saham terhadap indeks AAOIFI yang disumberkan dan bertarikh, dan mengembalikan LULUS, disekat, TAK DIKENALI, atau berhenti. LULUS adalah keanggotaan dalam senarai yang diterbitkan oleh pihak lain pada suatu tarikh; TAK DIKENALI adalah dibenarkan tetapi secara eksplisit tidak diputuskan. Ini adalah latihan metodologi, bukan fatwa — rujuk ahli yang berkelayakan untuk pegangan anda sendiri.

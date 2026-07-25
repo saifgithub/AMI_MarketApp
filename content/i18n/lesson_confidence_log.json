@@ -26123,5 +26123,79 @@
       "In the 'Try it' section, 'masa diri anda' for 'timing yourself' is vague; 'mengukur masa anda' or 'menilai kelajuan anda' is more precise."
     ],
     "chunks_checked": 1
+  },
+  {
+    "lesson_id": "355_how_amis_halal_flag_maps_to_real_screening",
+    "locale": "ar",
+    "model": "ami-llm",
+    "checked_at": "2026-07-25T14:03:00.946159+00:00",
+    "confidence": 4,
+    "meaning_preserved": true,
+    "critical_issues": [],
+    "minor_issues": [
+      "Terminology: 'Halal Mandate' is translated as 'علم الحلال' (Halal Flag/Science) instead of 'علم الولاية الحلال' or 'علم الحلال في الولاية' to distinguish it from the general concept. 'علم' usually means flag in UI contexts but can be ambiguous.",
+      "Terminology: 'Convene the Room' is translated as 'ادعُ الغرفة' (Invite the Room), which is slightly awkward; 'اجتمع في الغرفة' or 'قم بـ Convene the Room' might be clearer for a specific app action.",
+      "Terminology: 'PAUSES' is translated as 'يوقف' (Stops/Blocks) in the text, losing the nuance of a temporary pause vs a hard block, though the context clarifies it.",
+      "Terminology: 'Screened-out-and-blocked' is translated as 'مستبعد-ومحظور', which is accurate but slightly clunky.",
+      "Terminology: 'UNKNOWN' is translated as 'غير معروف', which is correct, but the explanation uses 'UNKNOWN' in English in one place ('يعود بـ UNKNOWN'), mixing languages inconsistently."
+    ],
+    "chunks_checked": 1
+  },
+  {
+    "lesson_id": "355_how_amis_halal_flag_maps_to_real_screening",
+    "locale": "ar",
+    "model": "allam-7b-instruct",
+    "checked_at": "2026-07-25T14:03:18.963944+00:00",
+    "confidence": 4,
+    "meaning_preserved": true,
+    "critical_issues": [],
+    "minor_issues": [],
+    "chunks_checked": 7
+  },
+  {
+    "lesson_id": "355_how_amis_halal_flag_maps_to_real_screening",
+    "locale": "ms",
+    "model": "ami-llm",
+    "checked_at": "2026-07-25T14:03:39.950981+00:00",
+    "confidence": 3,
+    "meaning_preserved": false,
+    "critical_issues": [
+      "Translation of 'bullish' as 'lembu' (cow) is a literal mistranslation of the financial term; it should be 'optimis' or 'positif'. 'Lembu' makes no sense in this context.",
+      "Translation of 'SCREENED OUT' as 'DISELIT' (hidden) is incorrect; it should be 'DISELIT' in the sense of 'disenarai keluar' or 'dihukum keluar', but 'DISELIT' usually means 'hidden/concealed'. The correct financial term for screening out is often 'disenarai keluar' or 'disingkirkan'. 'DISELIT' changes the meaning to 'hidden'.",
+      "Translation of 'PAUSES' as 'BERHENTI' (stop) is too strong; 'BERHENTI' implies a permanent stop, whereas 'PAUSES' implies a temporary halt. 'BERHENTI SEBENTIK' or 'BERJEDA' would be better, but 'BERHENTI' loses the nuance of a temporary pause.",
+      "Translation of 'Convene the Room' as 'Sidangkan Bilik' is awkward and potentially misleading ('Sidang' usually means session/meeting, 'Bilik' is room). While 'Sidangkan Bilik' might be an established term in the app, 'Sidangkan Bilik' sounds like 'Convene the room' literally, which is odd. However, the bigger issue is 'Memulakan Bilik' in the quiz question which is inconsistent with 'Sidangkan Bilik' in the main text. 'Sidangkan Bilik' is used in the main text, but 'Memulakan Bilik' is used in the quiz. This inconsistency is a minor issue, but the translation of 'Convene' as 'Sidangkan' is acceptable if consistent.",
+      "Translation of 'UNKNOWN' as 'TIDAK DIKETAHUI' is acceptable, but 'TIDAK DIKENALI' is used in the quiz explanation. Inconsistency in terminology.",
+      "Translation of 'discovered' or 'sourced' as 'diperoleh' in the quiz explanation is slightly off; 'diperoleh' means 'obtained', whereas 'sourced' implies 'from a specific source'. 'Disumberkan' is used in the main text, which is better."
+    ],
+    "minor_issues": [
+      "Inconsistency between 'Sidangkan Bilik' (main text) and 'Memulakan Bilik' (quiz question) for 'Convene the Room'.",
+      "Inconsistency between 'TIDAK DIKETAHUI' (main text) and 'TIDAK DIKENALI' (quiz explanation) for 'UNKNOWN'.",
+      "Translation of 'large-cap' as 'syarikat berkapasiti besar' is correct, but 'small-cap' as 'syarikat berkapasiti kecil' is also correct. However, in the quiz, 'small-cap' is translated as 'saham kap kecil' which is a mix of English and Malay ('kap' is not a standard Malay word for cap, likely a typo for 'kapasiti' or just 'saham kecil'). 'Saham kecil' or 'saham berkapasiti kecil' would be better.",
+      "Translation of 'bullish' as 'lembu' is a critical error, but also affects the register.",
+      "Translation of 'screened-out-and-blocked' as 'disekat-dan-dihalang' is awkward; 'disekat dan dihentikan' or 'disekat sepenuhnya' might be better.",
+      "Translation of 'permitted-but-UNKNOWN' as 'dibenarkan-tetapi-TIDAK-DIKETAHUI' is awkward phrasing."
+    ],
+    "chunks_checked": 1
+  },
+  {
+    "lesson_id": "355_how_amis_halal_flag_maps_to_real_screening",
+    "locale": "ms",
+    "model": "ami-llm",
+    "checked_at": "2026-07-25T14:05:53.237229+00:00",
+    "confidence": 3,
+    "meaning_preserved": false,
+    "critical_issues": [
+      "Inverted meaning: 'SCREENED OUT' translated as 'DISELIT' (hidden/concealed) instead of 'DISELITKAN' or 'DIBERKATEGORI SEMAK' (screened out). 'DISELIT' implies hiding, which contradicts the explicit blocking nature of the status.",
+      "Inverted meaning: 'PAUSES' translated as 'BERHENTI' (stop/halt). The source specifies the flag 'PAUSES' (a temporary state) rather than 'blocks' permanently. 'BERHENTI' implies a final stop, losing the nuance of the pause state.",
+      "Critical omission: 'UNKNOWN' is left as 'UNKNOWN' in the Quiz options and explanation, while translated as 'TAK DIKENALI' in the main text. This inconsistency breaks the mapping for the quiz answer key which relies on the English term 'UNKNOWN' in the explanation text.",
+      "Mistranslation: 'constituents' translated as 'penyusun' (composers/builders) in the second quiz option instead of 'anggota' (members/constituents) or 'komponen'. 'Penyusun' is incorrect in the context of index constituents."
+    ],
+    "minor_issues": [
+      "Register mismatch: 'Convene the Room' translated as 'Kumpulkan Bilik' (gather the room) which is awkward; 'Buka Bilik' or 'Konvok Bilik' might be better, but 'Kumpulkan' is literal.",
+      "Minor phrasing issue: 'small-cap' translated as 'syarikat berkapasiti kecil' (small capacity company) instead of 'syarikat berkapitalisasi kecil' (small-cap company).",
+      "Minor phrasing issue: 'large-cap' translated as 'syarikat berkapasiti besar' (large capacity company) instead of 'syarikat berkapitalisasi besar'.",
+      "Inconsistent terminology: 'PASS' is translated as 'LULUS' in text but 'PASS' is used in Quiz options/explanation, creating confusion."
+    ],
+    "chunks_checked": 1
   }
 ]
