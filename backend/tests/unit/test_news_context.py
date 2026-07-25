@@ -98,7 +98,12 @@ def test_fetch_live_news_returns_none_when_yahoo_has_nothing():
     assert fetch_live_news("XYZQ") is None
 
 
-def test_fetch_live_news_returns_none_when_provider_raises():
+def test_fetch_live_news_returns_none_when_provider_raises(monkeypatch):
+    # Hermetic: with no Alpha Vantage key, Yahoo is the only source, so a
+    # raising provider must yield None. Without this the suite falls through
+    # to a live AV call on any machine that has a real key in its env (DEF106).
+    monkeypatch.setattr(settings, "alpha_vantage_api_key", "")
+
     class _Boom:
         name = "boom"
 
