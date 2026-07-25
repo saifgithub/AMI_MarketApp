@@ -124,3 +124,39 @@ the app now has 3 real, in-app-switchable languages. Delivered:
   sheet, bug-report sheet, and Room/Lessons-reader content in AR/MS specifically (CR087 shipped
   AR lesson bodies at ~81% coverage, MS lesson bodies at 3/342 — this matrix only reaches the
   Lessons *landing* honeycomb, not an individual lesson's translated body).
+
+## Phase 3 fix — 2026-07-25, onboarding gate blocked the entire first real run
+
+First live run against the Galaxy A17 (post Play-Protect-fix) came back **28 FAIL / 1 PASS / 7
+SKIP** — every failure traced to one root cause: the app was landing on the Concierge
+onboarding interview, not Floor, so every bottom-nav text locator legitimately found nothing.
+`test_00_smoke_hierarchy.py`'s own docstring had already named this exact precondition
+("the precondition every other Phase 1 test assumes via noReset") but nothing ever enforced it
+— an assumption, not a check.
+
+Verified the actual flow against source before writing a fix, since the UAT team's paraphrase
+(2 steps, 3 chips) undersold it substantially: it's an **11-turn, backend-driven** script
+(`backend/app/services/concierge_engine.py` — WELCOME + 8 questions + READBACK + a claim-team
+screen), whose question/chip prose is server-owned Python string literals, not ARB keys —
+meaning it can change without a mobile release, so hardcoding all 11 turns' exact text would be
+fragile by construction. Confirmed the SharedPreferences `ami_onboarding_done` flag exists but
+is very likely unwritable via adb here (`run-as` needs a debuggable build; this is a
+production-signed release APK), ruling out the "just poke the flag" shortcut.
+
+Delivered **`helpers/onboarding.py`**: `ensure_onboarded()`, wired into `conftest.py`'s
+`driver` fixture (runs once per fresh install, a ~5s no-op check on every later session thanks
+to `noReset=True`). Walks generically — tap whichever clickable, non-text-input element
+appears — rather than matching the backend-owned turn-by-turn prose, with explicit preference
+given to the few stable ARB-sourced strings so the walk doesn't wander into the wrong branch:
+**"SKIP FOR NOW"** over "SAVE MY TEAM" (the latter opens a real sign-in sub-flow needing
+credentials this harness must never fabricate), **"LOOKS RIGHT — CONTINUE"** over any READBACK
+"Edit ..." chip (all but "Looks right" are HTTP 501 server-side), and **"TRY AGAIN"** on the
+documented backend-unreachable screen, capped at 2 retries before raising loudly.
+
+**Process note, not a design change:** diffing melehost's `conftest.py` against git found it
+had been **hand-edited directly on the remote copy** — a `_AutoRecoverDriver` wrapper +
+crash-recovery pytest hooks, none of it in this repo. That edit also silently deleted the
+failure-evidence capture (screenshot + page_source dump) for every failure, not just driver
+crashes. This violates the "git is truth, never hand-edit melehost's copy" convention this
+harness (and CR079's APK pipeline) both run on. The redelivery below overwrites it — correct,
+since git stays authoritative — but flagged to Saiful rather than silently clobbered.

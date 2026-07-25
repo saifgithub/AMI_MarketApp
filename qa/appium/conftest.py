@@ -2,7 +2,9 @@
 style (fresh state per scope, no global mutable singletons) but scoped for
 Appium: a session-scoped device profile (the nav-bar read is one dumpsys call,
 do it once) and a module-scoped driver (one Appium session per test file,
-balancing speed against isolation)."""
+balancing speed against isolation) that completes the Concierge onboarding
+interview once per fresh install (see helpers/onboarding.py) before yielding,
+so every test file starts from the same landed-on-Floor precondition."""
 
 from __future__ import annotations
 
@@ -14,6 +16,7 @@ import pytest
 from config.devices import DEFAULT_DEVICE
 from helpers import device as device_helpers
 from helpers.driver_factory import new_driver
+from helpers.onboarding import ensure_onboarded
 from helpers.report import FlagCollector, write_summary_json
 
 
@@ -85,6 +88,12 @@ def flags(run_dir, device) -> FlagCollector:
 @pytest.fixture(scope="module")
 def driver(device):
     drv = new_driver(device["profile"])
+    # Every Phase 1 test assumes a landed-on-shell session (see
+    # test_00_smoke_hierarchy.py's test_floor_tab_is_default_landing docstring) —
+    # a fresh install starts on the Concierge interview instead, so make that
+    # precondition true rather than just assumed. Cheap no-op once onboarding
+    # has completed once, thanks to noReset=True.
+    ensure_onboarded(drv)
     yield drv
     drv.quit()
 
