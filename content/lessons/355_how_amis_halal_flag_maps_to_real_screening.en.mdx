@@ -10,57 +10,65 @@ code: "SHARIA 9"
 topic: "halal_flag_mapping"
 prerequisites: ["348_the_business_activity_screen", "349_the_three_financial_ratio_screens", "271_inside_the_deterministic_compliance_check"]
 tags: ["islamic-finance", "halal-flag", "mandate", "pm", "deterministic-compliance"]
-sources: ["AMI backend — app/services/sim_engine.py (DEFAULT_HALAL_DEMO_UNIVERSE)", "AMI backend — app/agents/safety_floor.py (halal-flag enforcement path)"]
+sources: ["S&P 500 Sharia Industry Exclusions Index — AAOIFI-standard constituents screened by S&P Dow Jones, tracked by the SPUS ETF (sp-funds.com/spus)", "AMI backend — app/services/sharia_universe.py + app/schemas/sharia.py (three-state sourced-allowlist resolver, CR069)"]
+verified: {by: "cr060-ai-dual-pass", date: "2026-07-25", method: "rewritten to the CR069 sourced four-state screen after DEF097; mechanism verified against sharia_universe.py + schemas/sharia.py; S&P 500 Sharia Industry Exclusions Index / SPUS / AAOIFI corroborated via sp-funds.com + zoya.finance"}
 agent_callouts: ["portfolio_manager", "fundamentals_analyst"]
-locale_versions: ["en", "ar", "ms"]
+locale_versions: ["en"]
 created_at: "2026-07-22"
-updated_at: "2026-07-22"
+updated_at: "2026-07-25"
 ---
 
 # How AMI's halal flag actually works
 
-You already know the PM's deterministic compliance check (<Lesson id="271_inside_the_deterministic_compliance_check"/>) is plain Python, not a prompt — same inputs, same PASS/BLOCK answer, every time. The halal Mandate flag uses that same deterministic-after-the-debate architecture, but its actual check today is simpler than the two-stage screen you just learned in <Lesson id="348_the_business_activity_screen"/> and <Lesson id="349_the_three_financial_ratio_screens"/>: it looks up whether the ticker is a member of a small, fixed, curated set — nothing is computed, no business activity is evaluated, and no ratio is calculated on this path. By the end of this lesson you'll be able to state exactly what the halal flag checks in the app today, and why that's a different thing from the screening methodology this module teaches.
+You already know the PM's deterministic compliance check (<Lesson id="271_inside_the_deterministic_compliance_check"/>) is plain Python, not a prompt — same inputs, same answer, every time. The halal Mandate flag rides that same architecture, but here is the part beginners get wrong: it does **not** run the two-stage screen you just learned in <Lesson id="348_the_business_activity_screen"/> and <Lesson id="349_the_three_financial_ratio_screens"/>, and it does not compute a single ratio itself. Instead it checks the ticker against a **sourced** list — the published constituents of an established AAOIFI Sharia index — and returns one of four outcomes. By the end of this lesson you'll be able to state exactly what a halal PASS does and doesn't mean.
 
 ## Example
 
-Set the Mandate's halal flag to on and Convene the Room on a real ticker. Two things happen in sequence, mirroring <Lesson id="271_inside_the_deterministic_compliance_check"/>'s architecture: first, the analyst team debates and produces its usual training Verdict (Bull case, Bear case, technical read, size, entry, stop). Second — entirely separately, after the debate finishes — the PM's deterministic check runs, and for the halal flag that check is a membership test against a fixed seven-ticker list (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN). Convene on one of those seven and the flag passes. Convene on anything else — say, a conventional bank, or even a large tech name that isn't on the list — and the flag blocks the trade, regardless of that ticker's actual business activity or balance sheet, and regardless of how bullish the analyst debate was. The block (or pass) is driven purely by list membership, not by any of the business-activity or ratio reasoning <Lesson id="348_the_business_activity_screen"/> and <Lesson id="349_the_three_financial_ratio_screens"/> taught you — that reasoning is real and it's what a genuine Sharia screen runs on, it just isn't what this flag checks.
+Set the Mandate's halal flag on and Convene the Room. As in <Lesson id="271_inside_the_deterministic_compliance_check"/>, two things happen in sequence: the analyst team debates and produces its Verdict, then — separately, after the debate finishes — the PM's deterministic check runs. For the halal flag, that check looks the ticker up in the constituents of the **S&P 500 Sharia Industry Exclusions Index** — the AAOIFI-standard screen run by S&P Dow Jones and tracked by the SPUS ETF — ingested with the date it was published. Four outcomes:
+
+- The ticker is in that compliant set → **PASS**. (Large names like AAPL, MSFT and NVDA are typically in it.)
+- The ticker is in the parent S&P 500 but *not* in the compliant set → **SCREENED OUT**, and the flag blocks the trade. A conventional bank is the classic case.
+- The ticker isn't in the S&P 500 at all → **UNKNOWN**: the index rules only on its own members, so AMI has no ruling either way. This is *permitted*, but the trade carries a disclosure that no screen covered it — silence is not a pass.
+- The source can't be refreshed, or is stale beyond its window → the flag **PAUSES** and blocks, loudly, rather than trading on a missing or out-of-date list.
+
+None of this computes a debt or income ratio live. It reads someone else's published, dated screen and reports which of the four states applies.
 
 ## The trap
 
-Beginners assume that because the flag sits behind the same uncoachable architecture as the rest of the PM's compliance check, it must be *running* the two-stage screen this module covers — business activity, then the three ratios, computed live per ticker. It doesn't. Today the halal flag is a curated demonstration allowlist: seven large, liquid, widely-recognized tickers chosen so the training loop always has a workable "halal" universe to trade inside, not seven tickers that were run through <Lesson id="348_the_business_activity_screen"/>'s and <Lesson id="349_the_three_financial_ratio_screens"/>'s tests and happened to pass. A real screen exists in AMI's codebase and is exactly what those two lessons describe — but it isn't wired to this flag's enforcement path. Don't infer "the flag ran the screen and this ticker passed" from a PASS; infer "this ticker happens to be one of the seven on the list."
+The trap is reading a PASS as "AMI ran the three-ratio screen from <Lesson id="348_the_business_activity_screen"/> and <Lesson id="349_the_three_financial_ratio_screens"/> and this company cleared it." It didn't. AMI is not computing that screen here — the ratio math exists in the codebase but stays dormant on this path. A PASS means "this ticker is a current member of a published AAOIFI-screened list, as of a date," nothing more; the list can lag a company's latest filing, and a name can enter or leave it at a rebalance. The subtler trap is treating "not blocked" as "screened and cleared" — an **UNKNOWN** ticker is permitted *precisely because no screen ruled on it*, which is the opposite of cleared. Read the outcome AMI actually returns, not the one you assumed.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Quiz
 
 <Quiz
-  question="With the halal Mandate flag on, the Room debates a ticker and produces a bullish Verdict, but the PM then blocks the trade. What does this sequence tell you about how the halal flag is architected?"
+  question="The halal Mandate flag is on. You Convene the Room on a small-cap that is not a member of the S&P 500 at all. What does the PM's deterministic halal check do?"
   options={[
-    "It means the analyst debate and the PM's compliance check are the same step, and the debate simply changed its mind",
-    "It means the halal check runs as a separate, deterministic step AFTER the debate finishes — the same uncoachable-floor architecture from <Lesson id="271_inside_the_deterministic_compliance_check"/>/273, applied to a fixed ticker allowlist rather than an opinion inside the debate",
-    "It means the Bull Researcher's argument was factually wrong and needs correction",
-    "It means the halal flag only blocks trades when the Bear Researcher recommends against them"
+    "Blocks it — anything the index does not list is treated as non-compliant",
+    "Permits it, but flags it UNKNOWN with a disclosure that no screen covered it — the sourced index rules on its own members, not on names outside it",
+    "Computes the business-activity and three-ratio screens live to reach a decision",
+    "Passes it automatically, because only conventional banks are ever blocked"
   ]}
   answer={1}
-  explanation="This is the architecture from <Lesson id="271_inside_the_deterministic_compliance_check"/> and <Lesson id="273_uncoachable_means_no_prompt"/>: the debate produces its Verdict first, and a separate, deterministic PASS/BLOCK check runs afterward — uncoachable because it isn't a persuadable opinion any agent holds, it's a fixed-set membership test. Nothing about the Bull Researcher's argument needs to be 'wrong' for the PM to still block; and the block is driven by list membership, not by which Researcher argued which side."
+  explanation="AMI's halal flag checks membership in a sourced list — the S&P 500 Sharia Industry Exclusions Index. A name outside the parent S&P 500 is one the index never evaluated, so AMI has no ruling: it returns UNKNOWN, which is permitted but carries a 'no screen covered this' disclosure. Blocking every unlisted name confuses UNKNOWN with SCREENED-OUT — screened-out is reserved for names that ARE in the S&P 500 but absent from the compliant set. AMI does not compute the ratios live on this path, and it is not true that only banks are blocked."
 />
 
 <Quiz
-  question="A ticker that clears the business-activity screen (<Lesson id="348_the_business_activity_screen"/>) and the three financial ratios (<Lesson id="349_the_three_financial_ratio_screens"/>) with room to spare is still blocked by AMI's halal Mandate flag. What does this tell you about what the flag actually checks?"
+  question="With the halal flag on, a ticker comes back PASS. What has AMI actually established?"
   options={[
-    "The flag must have found a fourth, hidden ratio that the ticker failed",
-    "The flag isn't running the business-activity-and-ratio screen at all — today it checks membership in a fixed, curated set of seven tickers, so a ticker can pass every real screening test in this module and still be outside that set",
-    "The flag re-runs the debate with stricter Bear Researcher weighting until it finds a reason to block",
-    "This can't happen — passing both screens in this module guarantees the halal flag will pass too"
+    "That AMI ran the module's business-activity screen and the three financial ratios and the company cleared them",
+    "That the company's debt-to-market-cap is, right now, below the AAOIFI 30% threshold — AMI recomputed it this session",
+    "Nothing about compliance — a PASS only means the analyst debate was bullish on the name",
+    "That the ticker is a current constituent of the sourced AAOIFI Sharia index as of its published date — a membership fact, not a screen AMI computed"
   ]}
-  answer={1}
-  explanation="A ticker can genuinely clear both the business-activity screen and the ratio screen and still not be one of the seven tickers (AAPL, MSFT, NVDA, GOOGL, META, TSLA, AMZN) the halal flag's enforcement checks against — because that enforcement is a fixed-list membership test, not the two-stage screen. There's no hidden fourth ratio, no debate re-run, and passing the module's real screens does not guarantee membership in this demonstration list — they're two different tests."
+  answer={3}
+  explanation="A halal PASS is a membership lookup: the ticker is on the published, dated constituent list of the S&P 500 Sharia Industry Exclusions Index. AMI did not run the two-stage screen itself — that ratio math stays dormant on this path — so 'AMI computed the ratios' and 'AMI recomputed debt-to-market-cap this session' both overstate what happened; the 30% debt rule is the index provider's basis, applied when the list was built, not a live AMI calculation. And PASS is a compliance outcome from a separate deterministic step, entirely independent of whether the debate was bullish."
 />
 
 ## Try it
 
-Toggle the halal flag on in Settings → Mandate, then Convene the Room on a ticker from the seven-name list (say, AAPL) and separately on one that isn't (say, a conventional bank). Compare the PM's PASS/BLOCK reasoning on each — notice it cites list membership, not a business-activity or ratio finding. Keep in mind: AMI's halal flag is a training-loop demonstration tool today, not a religious judgment or a live compliance screen; real screening and compliance questions should involve a qualified Islamic finance professional.
+Toggle the halal flag on in Settings → Mandate, then Convene the Room three times: on a large-cap that is usually compliant (say AAPL), on a conventional bank inside the S&P 500, and on a small-cap outside the S&P 500. Compare the outcome each time — PASS, screened-out-and-blocked, and permitted-but-UNKNOWN — and read the reason the PM cites for each. Keep in mind: AMI's halal flag is a training-loop tool built on a third party's published screen, not a religious ruling or personal compliance advice; take real observance questions to a qualified Islamic-finance scholar.
 
 ## Takeaway
 
-The halal Mandate flag runs the PM's uncoachable deterministic check after the debate finishes — same architecture as the rest of Brief Your Agent — but today that check is membership in a fixed, curated set of seven tickers, not the business-activity-and-ratio screen taught earlier in this module. This is methodology training, not a Sharia ruling; consult a qualified scholar for real portfolio decisions.
+AMI's halal flag doesn't compute a Sharia screen — it checks the ticker against a sourced, dated AAOIFI index and returns PASS, screened-out, UNKNOWN, or paused. A PASS is membership on someone else's published list as of a date; an UNKNOWN is permitted but explicitly un-ruled. This is methodology training, not a fatwa — consult a qualified scholar for your own holdings.
