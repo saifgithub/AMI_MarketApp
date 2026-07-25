@@ -24,9 +24,9 @@ The backtest foundation (057) said the only real defence against overfitting is 
 
 Take a momentum rule on the S&P 500: each month, buy the top-decile 12-month return names, equal-weight, rebalance monthly. Backtest naively over 2005-2024 returns 11.8% CAGR with 22% max drawdown. Looks fine, but you optimised the "12-month lookback" knob by trying 6, 9, 12, 15, and 18 months and keeping 12. That's a hidden overfit.
 
-Walk-forward: split 2005-2024 into 4-year in-sample / 1-year out-of-sample windows, rolled annually. In-sample 2005-2008 picks lookback=15 (best on that window); test it on 2009 — returns 28% (factor recovery). Roll: in-sample 2006-2009 picks lookback=9; test on 2010 — returns 14%. Continue through 2024. You get 16 out-of-sample years, each tested on a parameter set chosen WITHOUT seeing that year's data.
+Walk-forward: split 2005-2024 into 4-year in-sample / 1-year out-of-sample windows, rolled annually. In-sample 2005-2008 picks lookback=15 (best on that window); test it on 2009 — the momentum-crash year: prior winners lag the sharp rebound, a large OOS loss. Roll: in-sample 2006-2009 picks lookback=9; test on 2010 — returns 14%. Continue through 2024. You get 16 out-of-sample years, each tested on a parameter set chosen WITHOUT seeing that year's data.
 
-The aggregate out-of-sample CAGR comes in at 9.1% with 26% max drawdown — meaningfully below the in-sample 11.8% but still positive. The walk-forward efficiency ratio (OOS CAGR / IS CAGR) is 0.77 — anything above 0.5 is considered robust. Crucially, the rule survived 2008, 2011, 2020, and 2022 drawdowns in the OOS portion, which is the only evidence that matters. The strategies that don't survive WFA usually show efficiency ratios below 0.3 — the in-sample peak was overwhelmingly selection bias.
+The aggregate out-of-sample CAGR comes in at 9.1% with 26% max drawdown — meaningfully below the in-sample 11.8% but still positive. The walk-forward efficiency ratio (OOS CAGR / IS CAGR) is 0.77 — anything above 0.5 is considered robust. Crucially, the rule survived the 2011, 2020, and 2022 drawdowns in the OOS portion, which is the only evidence that matters. The strategies that don't survive WFA usually show efficiency ratios below 0.3 — the in-sample peak was overwhelmingly selection bias.
 
 ## The trap
 

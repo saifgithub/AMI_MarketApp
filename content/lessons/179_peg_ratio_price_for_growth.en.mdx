@@ -22,11 +22,11 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-NVDA mid-2026: trailing P/E 42x, consensus next-three-year EPS CAGR ~40%. PEG = 42 / 40 ≈ 1.05. Peter Lynch's rough rule of thumb — PEG around 1.0 is fair, below 0.75 is interesting, above 1.5 is rich — would call NVDA fairly priced for its growth. AAPL: P/E 32x, next-three-year EPS CAGR ~7%. PEG = 32 / 7 ≈ 4.6. By PEG, AAPL is paying steep multiples for muted growth — far less attractive than NVDA despite the lower headline P/E.
+A high-growth chip designer, mid-2026: trailing P/E 42x, consensus next-three-year EPS CAGR ~40%. PEG = 42 / 40 ≈ 1.05. Peter Lynch's rough rule of thumb — PEG around 1.0 is fair, below 0.75 is interesting, above 1.5 is rich — would call the chip designer fairly priced for its growth. A mature hardware compounder: P/E 32x, next-three-year EPS CAGR ~7%. PEG = 32 / 7 ≈ 4.6. By PEG, the hardware compounder is paying steep multiples for muted growth — far less attractive than the chip designer despite the lower headline P/E.
 
-Now a counterexample. SNOW (Snowflake) trading at forward P/E 80x with expected 30% growth gives PEG = 2.7. By Lynch's rule, expensive. But Snowflake's gross margins are 70%+ and net retention runs above 130% — most of the "growth" is locked-in expansion within existing customers, not customer acquisition. The PEG ratio doesn't weight earnings quality; a dollar of high-net-retention SaaS growth is more valuable than a dollar of one-shot project revenue growth. PEG flags Snowflake as expensive when a more nuanced read might call it fairly priced — the ratio strips out everything except growth rate.
+Now a counterexample. SNOW (Snowflake) trading at forward P/E 80x with expected 30% growth gives PEG = 2.7. By Lynch's rule, expensive. But Snowflake's gross margins are 70%+ and net retention runs ~125% — most of the "growth" is locked-in expansion within existing customers, not customer acquisition. The PEG ratio doesn't weight earnings quality; a dollar of high-net-retention SaaS growth is more valuable than a dollar of one-shot project revenue growth. PEG flags Snowflake as expensive when a more nuanced read might call it fairly priced — the ratio strips out everything except growth rate.
 
-Falsifiable claim: PEG is most reliable when expected earnings growth is (a) between roughly 8% and 30% annually, AND (b) durable for at least three years. Below 8%, the ratio explodes mathematically — a 30x stock with 2% growth gives PEG = 15, which is technically true but uninformative. Above 30%, growth is rarely durable enough for the ratio to be meaningful at face value. On Bursa: TENAGA at P/E 13x with 3% expected EPS growth gives PEG ≈ 4.3 — looks bad, but utilities aren't supposed to grow earnings; the ratio simply doesn't fit the business model.
+Falsifiable claim: PEG is most reliable when expected earnings growth is (a) between roughly 8% and 30% annually, AND (b) durable for at least three years. Below 8%, the ratio explodes mathematically — a 30x stock with 2% growth gives PEG = 15, which is technically true but uninformative. Above 30%, growth is rarely durable enough for the ratio to be meaningful at face value. On Bursa: a utility at P/E 13x with 3% expected EPS growth gives PEG ≈ 4.3 — looks bad, but utilities aren't supposed to grow earnings; the ratio simply doesn't fit the business model.
 
 ## The trap
 
@@ -49,15 +49,15 @@ The trap is computing PEG with the wrong growth input. Most readers grab next-ye
 />
 
 <Quiz
-  question="An investor compares two stocks. TENAGA (Malaysian utility): P/E 13x, expected EPS growth 3% per year for the next five years, dividend yield 4.5%. NVDA: P/E 42x, expected EPS growth 40% per year for the next three years. PEG for TENAGA = 4.3, PEG for NVDA = 1.05. The investor concludes NVDA is the better value 'because its PEG is much lower'. What's the synthesis-level critique?"
+  question="An investor compares two stocks. A regulated utility: P/E 13x, expected EPS growth 3% per year for the next five years, dividend yield 4.5%. A high-growth chip designer: P/E 42x, expected EPS growth 40% per year for the next three years. PEG for the utility = 4.3, PEG for the chip designer = 1.05. The investor concludes the chip designer is the better value 'because its PEG is much lower'. What's the synthesis-level critique?"
   options={[
-    "NVDA's PEG is a coincidence and should be ignored",
+    "The chip designer's PEG is a coincidence and should be ignored",
     "The investor is correct — PEG below 1.0 is always cheaper than PEG above 4.0",
-    "PEG breaks at very low growth rates and ignores yield. A utility like TENAGA isn't designed to grow earnings — its return is split between modest EPS growth and a 4.5% dividend yield, giving a total expected return of ~7.5% on flat multiples. PEG only ranks the growth-vs-multiple trade-off and is meaningless for stable, dividend-paying businesses. The right comparison uses different lenses: PEG for NVDA, dividend-discount or yield-plus-growth for TENAGA. Apples and oranges via a single ratio is exactly the failure mode the lesson warned about",
+    "PEG breaks at very low growth rates and ignores yield. A utility like this isn't designed to grow earnings — its return is split between modest EPS growth and a 4.5% dividend yield, giving a total expected return of ~7.5% on flat multiples. PEG only ranks the growth-vs-multiple trade-off and is meaningless for stable, dividend-paying businesses. The right comparison uses different lenses: PEG for the chip designer, dividend-discount or yield-plus-growth for the utility. Apples and oranges via a single ratio is exactly the failure mode the lesson warned about",
     "Both stocks have the same earnings quality"
   ]}
   answer={2}
-  explanation="The synthesis: PEG is one lens, not the lens. The tempting wrong answer is 'the investor is correct' — the mechanical 'low PEG good, high PEG bad' shortcut. Utilities and dividend-heavy businesses fail PEG by design because they're not growth businesses. The right comparison uses business-model-appropriate metrics: total-return decomposition for utilities, growth-adjusted multiples for compounders. The 'same earnings quality' answer ignores earnings quality entirely. The 'NVDA's PEG is a coincidence' answer dismisses a useful number for the wrong reason."
+  explanation="The synthesis: PEG is one lens, not the lens. The tempting wrong answer is 'the investor is correct' — the mechanical 'low PEG good, high PEG bad' shortcut. Utilities and dividend-heavy businesses fail PEG by design because they're not growth businesses. The right comparison uses business-model-appropriate metrics: total-return decomposition for utilities, growth-adjusted multiples for compounders. The 'same earnings quality' answer ignores earnings quality entirely. The 'chip designer's PEG is a coincidence' answer dismisses a useful number for the wrong reason."
 />
 
 ## Try it

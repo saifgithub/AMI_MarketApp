@@ -26,11 +26,11 @@ A drawdown is the peak-to-trough decline in your account equity. It is also asym
 
 Take a $50,000 simulated account. You hit a rough patch: a concentrated bet on NVDA into earnings, a correlated chip-sector add-on that crashed with it, and a chase trade on TSLA when the first two went south. Account drops to $35,000 — a 30% drawdown. To get back to $50,000 you need $15,000 of gains on a $35,000 base. That is 42.9%, not 30%. If you were grinding out 1% wins per month before the drawdown, you needed roughly 30 months to make 30%; now you need 36 months of identical performance to recover from one bad week.
 
-Compare a mandated 15% drawdown ceiling. Same starting $50,000, hard stop on new trades at $42,500. Drawdown of 15% requires only 17.6% to recover — six to nine months at the same 1%-per-month rate. The asymmetry tells you why the cap matters: every percentage point of drawdown you avoid is worth more than a percentage point of gain you might have made. Falsifiable claim: if your drawdown stays under 20%, you can statistically recover in under a year at typical disciplined returns; cross 35% and the recovery becomes a multi-year problem regardless of skill. On Bursa Malaysia, a RM100,000 account that drops to RM65,000 (35% drawdown) needs RM35,000 on a RM65,000 base — 53.8% to climb out.
+Compare a mandated 15% drawdown ceiling. Same starting $50,000, hard stop on new trades at $42,500. Drawdown of 15% requires only 17.6% to recover — about 16 months at the same 1%-per-month rate. The asymmetry tells you why the cap matters: every percentage point of drawdown you avoid is worth more than a percentage point of gain you might have made. Falsifiable claim: if your drawdown stays under 20%, recovery is still roughly a two-year grind at typical disciplined returns; cross 35% and the recovery becomes a multi-year problem regardless of skill. On Bursa Malaysia, a RM100,000 account that drops to RM65,000 (35% drawdown) needs RM35,000 on a RM65,000 base — 53.8% to climb out.
 
 ## The trap
 
-The trap is increasing size to recover faster. After a 30% drawdown, the account feels broken and slow — 1% wins barely move the equity bar. So the beginner doubles position size: "I need bigger wins to climb out." This is the exact behaviour that converts a 30% drawdown into a 60% drawdown, because the same volatility that produced the first hole is now hitting a doubled exposure. The correct mental model: drawdowns are recovered by reducing size and tightening discipline, not by chasing scale. You shrink when you are bleeding, not when you are winning. The PM enforces this for you — a mandated `pause_at_drawdown_pct` halts new entries once equity crosses the threshold, regardless of how confident you feel.
+The trap is increasing size to recover faster. After a 30% drawdown, the account feels broken and slow — 1% wins barely move the equity bar. So the beginner doubles position size: "I need bigger wins to climb out." This is the exact behaviour that converts a 30% drawdown into a 60% drawdown, because the same volatility that produced the first hole is now hitting a doubled exposure. The correct mental model: drawdowns are recovered by reducing size and tightening discipline, not by chasing scale. You shrink when you are bleeding, not when you are winning. The PM enforces this for you — a mandated `max_drawdown_pct` halts new entries once equity crosses the threshold, regardless of how confident you feel.
 
 <ChatWith agent="portfolio_manager" />
 
@@ -62,7 +62,7 @@ The trap is increasing size to recover faster. After a 30% drawdown, the account
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set `pause_at_drawdown_pct` to 15. Then open the <Term id="ami_decision_journal" /> and look at your simulated equity curve. Find your largest peak-to-trough decline and compute the recovery percentage required. Open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "What's my current drawdown from peak, and at my recent win rate, how many trades until I recover?"
+Open the <Term id="ami_mandate" /> editor and set `max_drawdown_pct` to 20. Then open the <Term id="ami_decision_journal" /> and look at your simulated equity curve. Find your largest peak-to-trough decline and compute the recovery percentage required. Open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "What's my current drawdown from peak, and at my recent win rate, how many trades until I recover?"
 
 ## Takeaway
 

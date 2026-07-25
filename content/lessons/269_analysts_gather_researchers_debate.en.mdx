@@ -24,10 +24,10 @@ The <Term id="twelve_agent_team" /> are not equal peers shouting at each other. 
 
 <Term id="ami_convene_the_room" /> on JPM. Watch the streaming order:
 
-- **Analysts (the gatherers):** Fundamentals pulls Q4 revenue $43.7B, NII $24.0B, CET1 ratio 15.7%. Market reads $215, above the 50-day MA at $208, RSI 60. News summarises the latest Fed minutes. Social Media reports neutral retail sentiment. These four agents do not argue; they report numbers and observations.
+- **Analysts (the gatherers):** Fundamentals pulls Q4 revenue $43.7B, NII $23.5B, CET1 ratio 15.7%. Market reads $215, above the 50-day MA at $208, RSI 60. News summarises the latest Fed minutes. Social Media reports neutral retail sentiment. These four agents do not argue; they report numbers and observations.
 - **Researchers (the arguers):** Bull writes a long case (rate-cut tailwind, credit normalisation). Bear writes a short case (NII compression, commercial real estate exposure). Research Manager synthesises both into a weighted view: Bull lean ~0.57.
 - **Execution + Risk (the sizers):** The Trader proposes entry $214.50, stop $204, target $232. Aggressive wants 5%, Conservative 2%, Neutral 3%. The Trader settles at 3%.
-- **Governance (the gate):** The Portfolio Manager runs a deterministic compliance check against your Mandate — `max_position_pct: 5, max_drawdown_pct: 20, halal: false`. PASS at 3%.
+- **Governance (the gate):** The Portfolio Manager runs a deterministic compliance check against your Mandate — `risk_score: 3` (3% single-name cap), `max_drawdown_pct: 20`, `halal: false`. PASS at 3%.
 
 Each tier feeds the next. An analyst that started debating Bull vs Bear would corrupt the data layer. A researcher that started picking a position size would conflate analysis with execution. The PM that started taking sides on the thesis would lose its independence as the safety floor. The roles are separable so the *errors* are separable — if the Bull case is wrong, the Analysts' numbers are still intact; if the Trader's sizing is off, the Mandate check still binds.
 
@@ -48,7 +48,7 @@ The trap is treating all twelve agents as interchangeable chat partners. Convene
     "The Portfolio Manager"
   ]}
   answer={3}
-  explanation="Mandate compliance is the PM's surface — it runs the deterministic check against your `max_position_pct` and other fields. The Fundamentals Analyst reports company data; the Bull Researcher debates the thesis; the Market Analyst reads the chart. Routing the compliance question to any of them is a category error."
+  explanation="Mandate compliance is the PM's surface — it runs the deterministic check against your risk-tier size cap, `max_drawdown_pct` and `compliance` flags. The Fundamentals Analyst reports company data; the Bull Researcher debates the thesis; the Market Analyst reads the chart. Routing the compliance question to any of them is a category error."
 />
 
 <Quiz

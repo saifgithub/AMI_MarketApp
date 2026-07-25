@@ -22,11 +22,11 @@ Survival mindset is the disposition that treats "still in the game next month" a
 
 ## How this plays out in real markets
 
-In Q3 2024, two simulated CEOs ran identical <Term id="ami_mandate" />s except for one field. Both started at $100,000. Both took the same 60 trades over the quarter using the Room's verdicts. Trader A had `max_risk_per_trade_pct: 1` and `pause_at_drawdown_pct: 15`. Trader B left both fields blank and "sized to conviction" — 3% to 5% on trades the Room flagged as high-confidence.
+In Q3 2024, two simulated CEOs ran identical <Term id="ami_mandate" />s except for one field. Both started at $100,000. Both took the same 60 trades over the quarter using the Room's verdicts. Trader A had `risk_score: 1` (a 1.5% single-name cap) and `max_drawdown_pct: 20`. Trader B left both fields loose and "sized to conviction" — 3% to 5% on trades the Room flagged as high-confidence.
 
 Through the first 30 trades Trader B was up 14%, Trader A up 4%. Trader B's social-media posts about "leverage and conviction" got a lot of engagement. Then a Fed surprise + a TSLA earnings miss hit on the same week. Trader B was overweight three correlated tech names at the time, sized 4% each. The week wiped 31% off the account, and the next two weeks of revenge trading took it to a 47% drawdown. End of quarter: Trader A finished +7% (smaller drawdown, recovered quickly), Trader B finished −44% and effectively out of the game — needing 79% just to get back to even on a base that no longer has the room to take normal-sized trades.
 
-Same setups, same Room, same Trader. The only difference was a Mandate field. Falsifiable claim: across a 60-trade sample, accounts with `max_risk_per_trade_pct ≤ 1` and a drawdown ceiling end the quarter within 80% of peak more than 90% of the time; accounts without either field cross 30% drawdown more than 1 in 4 quarters.
+Same setups, same Room, same Trader. The only difference was a Mandate field. Falsifiable claim: across a 60-trade sample, accounts with `risk_score ≤ 2` and a tight drawdown ceiling end the quarter within 80% of peak more than 90% of the time; accounts sized looser than that cross 30% drawdown more than 1 in 4 quarters.
 
 ## The trap
 
@@ -62,7 +62,7 @@ The trap is treating risk rules as friction — caps that "slow you down on your
 
 ## Try it
 
-Open the Mandate editor right now. If `max_risk_per_trade_pct` is blank or above 2, set it to 1. If `pause_at_drawdown_pct` is blank, set it to 15. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "Given my current mandate, what's the worst single-quarter outcome I could realistically have?" The answer is the floor survival mindset is buying you.
+Open the Mandate editor right now. If `risk_score` is above 2, tighten it to 1. If `max_drawdown_pct` is above 20, tighten it to 20. Then open a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask "Given my current mandate, what's the worst single-quarter outcome I could realistically have?" The answer is the floor survival mindset is buying you.
 
 ## Takeaway
 

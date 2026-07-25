@@ -24,7 +24,7 @@ This lesson assumes you've completed <Lesson id="015_stop_loss_basics"/> (Stop-l
 
 You're long NVDA at $480 with a stop at $458. NVDA reports earnings after the close. The chart-based stop is structurally sound for normal trading days. Earnings prints: revenue miss, guidance cut. NVDA halts in the after-hours, reopens pre-market at $412 — $46 below your stop. Your stop becomes a market order at the open and you fill near $410. Per-share loss: $70, not the $22 you planned. The trade lost 3.2% of account, not 1%. The stop did not fail mechanically — it filled exactly as designed; the gap simply skipped past it before any liquidity existed at $458.
 
-Contrast: same NVDA setup, same $480 entry. The Trader flags earnings in 4 trading days. You have three options. Option 1: halve the position before the print so the gap risk is 0.5% account, not 1%. Option 2: exit fully before the close on the earnings day and re-enter the next morning once the gap resolves. Option 3: keep full size and accept the gap risk explicitly in the journal. On Bursa Malaysia the same logic on PETRONAS around quarterly results — a typical earnings gap on a Bursa name is 4–8%, smaller than US tech but still capable of skipping a 2% stop. Falsifiable test: pull any 10 large-cap earnings prints from the last quarter — at least 3 of them gapped through any stop placed within 5% of the prior close.
+Contrast: same NVDA setup, same $480 entry. The Trader flags earnings in 4 trading days. You have three options. Option 1: halve the position before the print so the gap risk is 0.5% account, not 1%. Option 2: exit fully before the close on the earnings day and re-enter the next morning once the gap resolves. Option 3: keep full size and accept the gap risk explicitly in the journal. On Bursa Malaysia the same logic on PETRONAS Chemicals (PCHEM) around quarterly results — a typical earnings gap on a Bursa name is 4–8%, smaller than US tech but still capable of skipping a 2% stop. Falsifiable test: pull any 10 large-cap earnings prints from the last quarter — at least 3 of them gapped through any stop placed within 5% of the prior close.
 
 ## The trap
 
@@ -35,7 +35,7 @@ The trap is treating the stop as insurance against everything. A beginner takes 
 ## Quiz
 
 <Quiz
-  question="You're long TSLA at $250 with a stop at $238 (1% account risk on a $50,000 account, so $12 per share × 41 shares). TSLA reports tonight. Implied move from options is roughly 8%. If TSLA opens tomorrow at $225 (a 10% gap, within the implied move), what's your realised loss versus the planned 1%?"
+  question="You're long TSLA at $250 with a stop at $238 (1% account risk on a $50,000 account, so $12 per share × 41 shares). TSLA reports tonight. Implied move from options is roughly 11%. If TSLA opens tomorrow at $225 (a 10% gap, within the implied move), what's your realised loss versus the planned 1%?"
   options={[
     "0.98%",
     "1.00%",
@@ -49,7 +49,7 @@ The trap is treating the stop as insurance against everything. A beginner takes 
 <Quiz
   question="Three traders all hold the same 1%-risk NVDA position the day before earnings, where options imply a 7% move. Trader A halves the position before the close. Trader B exits fully and plans to re-enter after the print resolves. Trader C keeps the full position with the stop in place. Which trader has correctly addressed the event risk?"
   options={[
-    "Trader A and Trader B both correctly address the gap risk (one by reducing exposure, one by removing it); Trader C has not addressed it at all — keeping the stop pretends the gap won't happen, and a 7% implied move gaps through a 4% stop more often than not.",
+    "Trader A and Trader B both correctly address the gap risk (one by reducing exposure, one by removing it); Trader C has not addressed it at all — keeping the stop pretends the gap won't happen, and a 7% implied move can readily gap through a 4% stop.",
     "Only Trader B — the only safe response to earnings is to be flat through the event.",
     "Only Trader C — holding through earnings is the only way to capture the move; A and B miss the trade entirely.",
     "All three are equivalent because the stop level is the same in each case."

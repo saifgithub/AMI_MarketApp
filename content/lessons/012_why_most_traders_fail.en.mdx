@@ -18,7 +18,7 @@ updated_at: "2026-05-12"
 
 # Why most traders fail
 
-The uncomfortable truth: the published research on retail day-trading is consistent and brutal. Multiple peer-reviewed studies — Brazilian regulator-led work on equity day-traders, Taiwanese exchange data over multi-year windows, and US discount-broker datasets — converge on the same range: roughly **70% to 90% of retail short-term traders lose money over time**, and the share that are *consistently* profitable after costs over multi-year windows is in the low single digits. This is not a marketing scare line; it is the base rate. Knowing the patterns behind that base rate is the first real edge — because the patterns are knowable, and most of them are structural rather than mysterious.
+The uncomfortable truth: the published research on retail day-trading is consistent and brutal. Multiple peer-reviewed studies — a Brazilian academic study of index-futures day traders (Chague et al. 2020) and Taiwanese exchange data over multi-year windows — converge on the same range: roughly **70% to 90% of retail short-term traders lose money over time**, and the share that are *consistently* profitable after costs over multi-year windows is in the low single digits. This is not a marketing scare line; it is the base rate. Knowing the patterns behind that base rate is the first real edge — because the patterns are knowable, and most of them are structural rather than mysterious.
 
 ## How this plays out in real markets
 
@@ -72,7 +72,7 @@ The trap is reading the failure rate and concluding either "I won't be in that 8
 
 ## Try it
 
-Open the <Term id="ami_mandate" /> editor and set **max_position_pct** to a number that, if you were 100% wrong on the position and lost it entirely, would still leave your portfolio recoverable (a common starting figure is 5%). Then start a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Given my last three <Term id="simulated_trade" />s in the <Term id="ami_decision_journal" />, which of the six failure patterns am I most at risk of?" The honest answer is the lesson — and the PM's <Term id="ami_pm_safety_floor" /> will be quietly preventing some of them whether you notice or not.
+Open the <Term id="ami_mandate" /> editor and set **risk_score** to a tier whose derived single-name cap — if you were 100% wrong on a position sized to that cap and lost it entirely — would still leave your portfolio recoverable (risk_score 3 caps single-name size at 3%). Then start a <Term id="ami_one_on_one" /> with the Conservative Debator and ask: "Given my last three <Term id="simulated_trade" />s in the <Term id="ami_decision_journal" />, which of the six failure patterns am I most at risk of?" The honest answer is the lesson — and the PM's <Term id="ami_pm_safety_floor" /> will be quietly preventing some of them whether you notice or not.
 
 ## Takeaway
 

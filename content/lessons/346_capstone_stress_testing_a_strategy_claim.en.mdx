@@ -65,7 +65,7 @@ The strongest case against this five-check gauntlet: "No claim can survive this 
   options={[
     "Trust the headline win rate and EV directly, since a large enough trade count (300) already rules out overfitting",
     "Reject every strategy claim outright, since all backtests are equally unreliable regardless of how they're constructed",
-    "Run the claim through all five checks — the trades-per-parameter ratio, an untouched out-of-sample test, the tail-risk distribution a Monte Carlo simulation reveals, and whether the tested universe excludes what failed — and size your conviction to whatever EV survives that gauntlet, not to the in-sample headline",
+    "Run the claim through all five checks — the in-sample EV/backtest arithmetic, the trades-per-parameter ratio, an untouched out-of-sample test, the tail-risk distribution a Monte Carlo simulation reveals, and whether the tested universe excludes what failed — and size your conviction to whatever EV survives that gauntlet, not to the in-sample headline",
     "Judge the claim only by whether its out-of-sample win rate exceeds 50%, since that alone determines whether a strategy is worth using"
   ]}
   answer={2}
@@ -74,7 +74,7 @@ The strongest case against this five-check gauntlet: "No claim can survive this 
 
 ## Try it
 
-Take a strategy claim you've encountered — a vendor pitch, a screener result, or a Room verdict — and run it through all five M21 checks by hand: trades-per-parameter, an out-of-sample split, a Monte Carlo losing-streak estimate, and a check on whether its universe excludes delisted or failed names. Log what survives in your Decision Journal. Remember: AMI's training output is a practice artifact, not investment advice.
+Take a strategy claim you've encountered — a vendor pitch, a screener result, or a Room verdict — and run it through all five M21 checks by hand: the in-sample EV/backtest arithmetic, trades-per-parameter, an out-of-sample split, a Monte Carlo losing-streak estimate, and a check on whether its universe excludes delisted or failed names. Log what survives in your Decision Journal. Remember: AMI's training output is a practice artifact, not investment advice.
 
 ## Takeaway
 

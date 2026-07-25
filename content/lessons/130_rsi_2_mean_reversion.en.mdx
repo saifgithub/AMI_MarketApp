@@ -22,18 +22,18 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-Look at GOOGL through 2025. GOOGL closed above its SMA200 every single trading day from March through December — a confirmed long-term up-trend. Within that year, daily RSI(2) dropped below 10 nine separate times. Buying the next day's open on each signal and exiting when RSI(2) crossed back above 70 produced:
+Look at a stock through 2025. The stock closed above its SMA200 every single trading day from March through December — a confirmed long-term up-trend. Within that year, daily RSI(2) dropped below 10 nine separate times. Buying the next day's open on each signal and exiting when RSI(2) crossed back above 70 produced:
 
 - 7 winning trades averaging +1.8% per trade, holding period 3–4 days
 - 2 losing trades averaging -2.2% per trade
 
-Total: roughly +9.2% across nine trades over 10 months on a single ticker, with an average holding period under a week. The 78% win rate and small holding period are the signature of a working mean-reversion system in trend.
+Total: roughly +8.2% across nine trades over 10 months on a single ticker, with an average holding period under a week. The 78% win rate and small holding period are the signature of a working mean-reversion system in trend.
 
 Falsification is mechanical and severe — RSI(2) mean-reversion outside an SMA200 up-trend has historically returned roughly zero before fees. If price closes below SMA200, the system is offline until SMA200 turns back up and price re-crosses it. The same RSI(2) signal in a confirmed down-trend (price below declining SMA200) produces buys that get cut in half.
 
-Contrast: TSLA in early 2025 traded below SMA200 from January through March. RSI(2) dropped below 10 four times in that window. Each "signal" produced losses averaging -3.4% as the down-trend continued. Same indicator, no trend filter — system breaks.
+Contrast: a falling stock in early 2025 traded below SMA200 from January through March. RSI(2) dropped below 10 four times in that window. Each "signal" produced losses averaging -3.4% as the down-trend continued. Same indicator, no trend filter — system breaks.
 
-On Bursa Malaysia: PUBLIC BANK during 2024 (above SMA200 most of the year) had eight RSI(2) < 10 signals, six profitable averaging +1.3%; the system worked because the trend filter was on.
+On Bursa Malaysia: a Bursa large-cap during 2024 (above SMA200 most of the year) had eight RSI(2) < 10 signals, six profitable averaging +1.3%; the system worked because the trend filter was on.
 
 ## The trap
 
@@ -46,7 +46,7 @@ The correct mental model: RSI(2) is a precision tool for a specific regime — s
 ## Quiz
 
 <Quiz
-  question="GOOGL closes above its SMA200 every day from March through December. Daily RSI(2) drops below 10 nine separate times in that window. Following each signal, you buy the next open and exit on RSI(2) > 70. Seven winners average +1.8% (3–4 day hold); two losers average -2.2%. What does this tell you about RSI(2) mean reversion?"
+  question="A stock closes above its SMA200 every day for ten months. Daily RSI(2) drops below 10 nine separate times in that window. Following each signal, you buy the next open and exit on RSI(2) > 70. Seven winners average +1.8% (3–4 day hold); two losers average -2.2%. What does this tell you about RSI(2) mean reversion?"
   options={[
     "Two losers means the system is broken",
     "Mean reversion always works; RSI(2) is universally profitable",
@@ -54,19 +54,19 @@ The correct mental model: RSI(2) is a precision tool for a specific regime — s
     "RSI(2) is a long-term trend indicator"
   ]}
   answer={2}
-  explanation="The example shows the system working inside its proper regime. The tempting wrong answer ('always works') ignores the trend filter — the lesson contrasts GOOGL's profitable signals with TSLA's losing ones from the same indicator without the filter. Two losers in nine trades is normal; mean-reversion systems typically have 70–80% win rates with controlled losers. Calling the system broken (option D) misreads the math — the system is doing what it's designed to do."
+  explanation="The example shows the system working inside its proper regime. The tempting wrong answer ('always works') ignores the trend filter — the lesson contrasts the up-trend example's profitable signals with the down-trend example's losing ones from the same indicator without the filter. Two losers in nine trades is normal; mean-reversion systems typically have 70–80% win rates with controlled losers. Calling the system broken (option D) misreads the math — the system is doing what it's designed to do."
 />
 
 <Quiz
   question="A stock has been falling for four months and closes 8% below its SMA200, which is itself sloping downward. Daily RSI(2) prints 6 — well below the 10 threshold. Account size $20,000, mandate cap 1% risk. What does the lesson's framework say?"
   options={[
     "Buy with full size — RSI(2) < 10 is a strong oversold signal",
-    "Skip the trade: RSI(2) mean reversion requires price above a rising SMA200. The signal in a down-trend has no edge, and the lesson cited TSLA's four losing signals in the same condition as evidence.",
+    "Skip the trade: RSI(2) mean reversion requires price above a rising SMA200. The signal has no edge below a declining SMA200.",
     "Short the stock instead because RSI(2) is overbought",
     "Buy half size to test the signal"
   ]}
   answer={1}
-  explanation="The signal's edge is regime-conditional. Without the up-trend filter, the historical expectation is roughly zero or worse — the lesson cites TSLA's -3.4% average across four signals in a down-trend. The tempting wrong answer ('buy full size, oversold is oversold') is exactly the mistake the lesson is built to prevent. Half-size in a no-edge condition (option C) is still a no-edge bet, just smaller. The trend filter is not a refinement; it is the entire system."
+  explanation="The signal's edge is regime-conditional. Without the up-trend filter, the historical expectation is roughly zero or worse — the signal has no edge below a declining SMA200. The tempting wrong answer ('buy full size, oversold is oversold') is exactly the mistake the lesson is built to prevent. Half-size in a no-edge condition (option C) is still a no-edge bet, just smaller. The trend filter is not a refinement; it is the entire system."
 />
 
 ## Try it

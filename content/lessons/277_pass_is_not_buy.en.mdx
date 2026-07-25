@@ -26,12 +26,12 @@ You convene the Room on MSFT. The Verdict reads:
 
 > **BUY MSFT · size 3% · entry $418 · stop $402 · target $445 · horizon 5 weeks · confidence 0.64**
 >
-> *Portfolio Manager (compliance check):* PASS — within max_position_pct 5, within max_drawdown_pct 20, no exclusions triggered.
+> *Portfolio Manager (compliance check):* PASS — within your risk tier's 3% single-name cap, within max_drawdown_pct 20, no exclusions triggered.
 
 Four distinct statements are bundled here, and each is conditional on different things — *all four are training-scenario constructs, not advice*.
 
 1. **BUY.** The trading team's *simulated training output*. Conditional on the analysis being right within the scenario. Hallucinations, regime changes, and surprises can all invalidate it. It is not a recommendation to take anywhere.
-2. **Size 3%.** The Trader's proposal, blessed by the Risk Debators' synthesis. Conditional on your Mandate's `max_position_pct`. If your mandate were 2%, the same debate would land at 2%.
+2. **Size 3%.** The Trader's proposal, blessed by the Risk Debators' synthesis. Conditional on the cap your `risk_score` sets. At risk_score 2 the cap is 1.5% and the same debate would land at 1.5%.
 3. **Entry/stop/target/horizon.** The trade *plan inside the simulator*. Each level is conditional — entry triggers if price reaches $418; stop fires if price hits $402; target locks profit if reached within 5 weeks. None of these are predictions and none are advice.
 4. **PM: PASS.** Compliance result. Conditional on the *proposed* trade fitting your stated Mandate — nothing more. Same trade re-proposed at 6% would BLOCK without anything else changing.
 

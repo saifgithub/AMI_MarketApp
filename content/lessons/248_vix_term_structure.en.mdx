@@ -22,16 +22,16 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-VIX term structure is captured by the relationship between VIX (1-month, also called VIX9D historically for very short tenors, here we use the standard 30-day spot VIX) and VIX3M (the 3-month constant-maturity volatility index, ticker VIX3M).
+VIX term structure is captured by the relationship between VIX (1-month, here we use the standard 30-day spot VIX) and VIX3M (the 3-month constant-maturity volatility index, ticker VIX3M).
 
 Contango (calm regime): VIX3M > VIX (the longer tenor trades higher because the market expects mean reversion of vol back toward the long-run average). The VIX1M/VIX3M ratio sits under 0.95 the majority of the time. Through 2024, the ratio averaged ~0.87 — a deeply calm reading consistent with the SPX uptrend.
 
 Backwardation (stress regime): VIX > VIX3M (near-term vol elevated above longer-dated). VIX1M/VIX3M ratio above 1.0. Real cases:
 
 - 5 August 2024 yen-carry unwind: VIX closed at 38.57, VIX3M at 27.85 — ratio 1.385, deep backwardation. SPX 5-day return that week was -3.2%.
-- 13–16 March 2020 COVID crash: VIX1M/VIX3M ratio peaked above 1.4 with VIX intraday at 85.47 (16 March 2020).
+- 13–16 March 2020 COVID crash: VIX1M/VIX3M ratio peaked above 1.4 with VIX intraday at 85.47 (18 March 2020).
 - 2 February 2018 volmageddon week: VIX1M/VIX3M ratio crossed 1.0 on 5 February 2018 — the day SPX fell 4.1%.
-- 24 December 2018 Fed-fear low: VIX1M/VIX3M ratio hit ~1.15; SPX bottomed two trading days later.
+- 24 December 2018 Fed-fear low: VIX1M/VIX3M ratio hit ~1.15; SPX's closing low printed that same session.
 
 Detection rule: VIX1M/VIX3M ratio < 0.95 = contango (calm regime, trend-following permitted at full mandate sizing); 0.95–1.0 = transition (compress sizes by ~25%); > 1.0 = backwardation (stress regime, defensive playbook). A flip from sustained contango to backwardation that holds for 3+ trading sessions is a regime-stress confirmation.
 
@@ -73,7 +73,7 @@ The correct model: in contango, the structure pays you (and pays VIX-short ETPs 
 
 ## Try it
 
-Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Today's VIX, VIX3M, the VIX1M/VIX3M ratio, and the ratio's 1-year percentile. Classify the current term-structure regime — contango, transition, or backwardation — and tell me when the last regime flip occurred." Then open the <Term id="ami_mandate" /> editor and add to your journal: "Term-structure regime override — if VIX1M/VIX3M > 1.0 for 3+ sessions, compress max_position_pct by half until the curve normalises."
+Open <Term id="ami_one_on_one" /> with the Market Analyst and ask: "Today's VIX, VIX3M, the VIX1M/VIX3M ratio, and the ratio's 1-year percentile. Classify the current term-structure regime — contango, transition, or backwardation — and tell me when the last regime flip occurred." Then open the <Term id="ami_mandate" /> editor and add to your journal: "Term-structure regime override — if VIX1M/VIX3M > 1.0 for 3+ sessions, drop risk_score a tier (lowering your per-name cap) until the curve normalises."
 
 ## Takeaway
 

@@ -27,7 +27,7 @@ NVDA trades near $250 the day before earnings. A trader buys an illustrative $26
 
 Run the payoff math (Payoff Diagrams). The break-even on this call is $262.00 — strike plus premium. If NVDA rallies on an earnings beat to $255, that's a real, correctly-called move upward — and the payoff is still -$2.00, a total loss of the premium, because $255 never got above the $260 strike at all: intrinsic value is $0. Push the scenario further: NVDA rallies all the way to $262.00, clearing the strike and landing exactly at break-even. The payoff there is $0.00 — not a profit, break-even — because intrinsic value ($2.00) exactly offsets the premium paid, after theta decayed the position for two straight days and vega likely crushed it on top. Even a real, sizeable, correctly-predicted rally can finish at exactly zero.
 
-This is a well-documented pattern, not a hypothetical: retail short-dated (often "0DTE" — zero-days-to-expiry) options volume has grown into a large share of activity in popular names, concentrated in strikes well above the current price, and studies of aggregate retail options P&L have repeatedly found net losses in this segment over large samples — even in periods when the underlying stocks broadly rose.
+This is a well-documented pattern, not a hypothetical: 0DTE (zero-days-to-expiry) options have grown into a large share of volume in broad index and ETF options — the S&P 500 (SPX) and SPY — not single names like NVDA; short-dated, far-out-of-the-money buying in individual stocks runs on the same theta/vega dynamics on a slightly longer clock, concentrated in strikes well above the current price, and studies of aggregate retail options P&L have repeatedly found net losses in this segment over large samples — even in periods when the underlying stocks broadly rose.
 
 ## The trap
 
@@ -57,24 +57,24 @@ The strongest case for buying these lottery-ticket options: some traders do it d
   question="NVDA rallies further and finishes exactly at $262.00 at expiry — clearing the strike and landing exactly at the break-even calculated in the payoff lesson. A trader who bought the $260-strike call for $2.00 says 'I called the direction and the magnitude — I should be profitable.' What does the payoff math say, and what role did theta and vega play in getting the position there?"
   options={[
     "The trader is right — $262.00 is comfortably profitable given the size of the rally",
-    "The payoff at exactly $262.00 is $0.00 — break-even, not profit, since intrinsic value ($2.00) exactly offsets the premium paid; theta was decaying the position the entire two days into expiry, and any vega-driven IV crush after the earnings print worked against the option too, meaning the rally had to overcome all three forces just to reach zero, let alone profit",
+    "The payoff at exactly $262.00 is $0.00 — break-even, not profit, since intrinsic value ($2.00) exactly offsets the premium paid; that $2.00 premium is the single cost the rally has to clear, already shaped by two days of theta decay and the earnings-driven vega crush before expiry, meaning the rally had to overcome that one cost just to reach zero, let alone profit",
     "The trader is right because reaching the strike itself, regardless of premium, always means profit",
     "The payoff is negative at $262.00 because theta losses always exceed intrinsic value gains"
   ]}
   answer={1}
-  explanation="At the break-even, payoff is exactly $0.00 by definition — intrinsic value equals the premium paid, so the trade is flat, not profitable. Getting there at all required the rally to outrun two full days of theta decay and any post-earnings vega crush; 'right about direction and magnitude' bought the trader back to zero, not into the green."
+  explanation="At the break-even, payoff is exactly $0.00 by definition — intrinsic value equals the premium paid, so the trade is flat, not profitable. Getting there at all required the rally to clear the $2.00 premium — the single cost that two full days of theta decay and the post-earnings vega crush had already built into the option's price; 'right about direction and magnitude' bought the trader back to zero, not into the green."
 />
 
 <Quiz
-  question="Retail 0DTE and short-dated far-out-of-the-money call buying is a well-documented pattern in modern options markets — a large share of volume in popular names now concentrates in options expiring within days, often at strikes well above the current price. Drawing on intrinsic/time value, the Greeks, and implied vs realized volatility together, what is the structural reason this pattern is associated with persistent retail losses, even when the underlying stock moves in the buyer's predicted direction?"
+  question="Short-dated, far-out-of-the-money call buying in individual stocks is a well-documented retail pattern — echoing the even larger 0DTE share of volume seen in broad index and ETF options, where options expiring within a day or two now account for a large share of trading. Drawing on intrinsic/time value, the Greeks, and implied vs realized volatility together, what is the structural reason this pattern is associated with persistent retail losses, even when the underlying stock moves in the buyer's predicted direction?"
   options={[
     "These options are illegal for retail traders to buy in most jurisdictions, so losses are actually enforcement penalties",
     "The stock almost never moves in the direction retail traders predict, so the losses are purely a forecasting problem",
-    "Three forces stack against the buyer simultaneously: theta decays the position every hour into a short expiry, implied volatility is often elevated pre-event and crushes afterward regardless of direction (vega), and the payoff math requires clearing not just the strike but the strike plus premium — so a correct-but-insufficient move, or a right move that arrives too slowly, both lose the full premium despite the buyer being 'right' about direction",
+    "One cost stacks the deck against the buyer: theta decays the position every hour into a short expiry, and implied volatility is often elevated pre-event and crushes afterward regardless of direction (vega) — together, that's what the premium paid for. The payoff math then requires clearing not just the strike but the strike plus that premium — so a correct-but-insufficient move, or a right move that arrives too slowly, both lose the full premium despite the buyer being 'right' about direction",
     "The pattern is a myth — aggregate data shows these positions are profitable on average once brokerage commissions are accounted for"
   ]}
   answer={2}
-  explanation="No single Greek or concept explains the pattern alone — it's the stack. Theta guarantees a decaying position regardless of outcome; elevated pre-event IV plus the post-event crush works against the buyer independent of direction; and the break-even math means the underlying has to clear strike-plus-premium, not just the strike, before any of a correct call pays off. Being right about direction addresses only one of these three forces."
+  explanation="No single Greek or concept explains the pattern alone — theta and vega are what build the premium in the first place: theta guarantees a decaying position regardless of outcome, and elevated pre-event IV plus the post-event crush works against the buyer independent of direction. That premium is then the single cost the break-even math requires the underlying to clear — strike-plus-premium, not just the strike — before any of a correct call pays off. Being right about direction addresses none of that cost."
 />
 
 ## Try it

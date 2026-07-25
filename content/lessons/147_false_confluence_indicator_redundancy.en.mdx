@@ -22,7 +22,7 @@ updated_at: "2026-05-12"
 
 ## How this plays out in real markets
 
-A trader looking at NVDA on a hypothetical signal: RSI(14) at 32, Stochastic %K at 18, Williams %R at -82, CCI at -135. Four "oversold" readings. The trader concludes "four-indicator confluence — strong buy."
+A trader looking at NVDA on a hypothetical signal: RSI(14) at 28, Stochastic %K at 18, Williams %R at -82, CCI at -135. Four "oversold" readings. The trader concludes "four-indicator confluence — strong buy."
 
 Decompose the four:
 
@@ -33,13 +33,11 @@ Decompose the four:
 
 All four are price-only momentum oscillators. They're correlated by construction; when a stock is oversold by one, it's oversold by the others. Four readings is one signal in four wrappers. Treating this as "four-indicator confluence" inflates conviction without adding information.
 
-Contrast with a real two-indicator orthogonal pair: RSI(14) at 32 (momentum oversold) and OBV (On-Balance Volume) at a higher low than the prior price low (positive volume divergence). Now you have momentum and participation disagreeing with price action — two distinct signals. The conviction here is genuinely higher than the four-momentum-indicator stack, even though it's "only two indicators."
+Contrast with a real two-indicator orthogonal pair: RSI(14) at 28 (momentum oversold) and OBV (On-Balance Volume) at a higher low than the prior price low (positive volume divergence). Now you have momentum and participation disagreeing with price action — two distinct signals. The conviction here is genuinely higher than the four-momentum-indicator stack, even though it's "only two indicators."
 
-Falsifiable claim: in a sample of 30+ trades, signals labeled "four-indicator confluence" using four correlated momentum oscillators produce hit rates statistically indistinguishable from signals based on any single one of those oscillators. Invalidation: a backtest where the four-indicator setup outperforms by more than noise. The math is clear — when indicators correlate above 0.85 by construction, combining them adds approximately zero information.
+Falsifiable claim: in a sample of 30+ trades, signals labeled "four-indicator confluence" using four correlated momentum oscillators produce hit rates statistically indistinguishable from signals based on any single one of those oscillators. Invalidation: a backtest where the four-indicator setup outperforms by more than noise. The math is clear — when indicators correlate by construction, combining them adds approximately zero information.
 
 A second example of false confluence: SMA20 above SMA50, EMA20 above EMA50, WMA20 above WMA50 — "trend confirmed across three MA systems." All three are MA crosses of the same periods on the same data; they fire within a session or two of each other always. One vote, not three.
-
-On Bursa Malaysia: a TENAGA setup in late 2024 — a trader stacked five momentum oscillators that all read oversold, took an oversized position on "five-indicator confluence," and watched TENAGA fall another 6% before bottoming. The same trader using one momentum oscillator with proper position sizing would have taken a much smaller loss on the same trade.
 
 ## The trap
 
@@ -52,7 +50,7 @@ The correct mental model: indicator redundancy is mathematical correlation, not 
 ## Quiz
 
 <Quiz
-  question="A trader sees RSI(14) at 32, Stochastic %K at 18, Williams %R at -82, and CCI at -135 — all four oversold by their conventional thresholds. The trader labels this 'four-indicator confluence' and takes a larger-than-normal position. What's wrong with this reasoning?"
+  question="A trader sees RSI(14) at 28, Stochastic %K at 18, Williams %R at -82, and CCI at -135 — all four oversold by their conventional thresholds. The trader labels this 'four-indicator confluence' and takes a larger-than-normal position. What's wrong with this reasoning?"
   options={[
     "All four indicators are price-only momentum oscillators, correlated by construction. They vote once, not four times. The 'confluence' is one signal in four wrappers, and the larger position size compounds the misjudgement.",
     "The trader should have used five indicators instead of four",
@@ -60,7 +58,7 @@ The correct mental model: indicator redundancy is mathematical correlation, not 
     "The position size is fine; the indicators are the problem"
   ]}
   answer={0}
-  explanation="Indicator redundancy means correlated indicators add minimal information. The tempting wrong answer (A) is the conviction-inflation trap the lesson explicitly identifies. Option C separates position size from indicator choice but the failure is integrated — false confluence drove the oversized position. Option D doubles the original error."
+  explanation="Indicator redundancy means correlated indicators add minimal information. The tempting wrong answer (C) is the conviction-inflation trap the lesson explicitly identifies. Option D separates position size from indicator choice but the failure is integrated — false confluence drove the oversized position. Option B doubles the original error."
 />
 
 <Quiz
@@ -72,7 +70,7 @@ The correct mental model: indicator redundancy is mathematical correlation, not 
     "Setup A — four indicators agreeing is stronger than two"
   ]}
   answer={0}
-  explanation="Setup B's two orthogonal signals (price-momentum and volume-flow) carry more information than Setup A's four redundant momentum readings. The tempting wrong answer (A) is the false-confluence error in its purest form — counting indicator lines instead of distinct dimensions. The lesson's framework: dimensions count, not line counts."
+  explanation="Setup B's two orthogonal signals (price-momentum and volume-flow) carry more information than Setup A's four redundant momentum readings. The tempting wrong answer (D) is the false-confluence error in its purest form — counting indicator lines instead of distinct dimensions. The lesson's framework: dimensions count, not line counts."
 />
 
 ## Try it

@@ -26,7 +26,7 @@ Take AAPL, illustratively trading near $195. A trader who wants upside exposure 
 
 ## The trap
 
-Beginners hear "buying a call" and picture buying the stock at a discount — as if the premium is a down payment that gets applied toward the shares. It isn't. The premium is a separate, non-refundable cost for the *right* to transact later; if the stock never reaches the strike, that premium is gone regardless of what happens to the stock afterward. The second beginner mistake is symmetry-blindness: assuming buyer and seller carry equivalent risk because they're on "opposite sides of the same trade." They don't. The option buyer's maximum loss is capped at the premium paid, full stop. The option seller's risk is structurally different — a short call against a stock with no ceiling on how high it can run carries a loss that grows with the stock, uncapped. Right and obligation are not symmetric risks wearing different labels.
+Beginners hear "buying a call" and picture buying the stock at a discount — as if the premium is a down payment that gets applied toward the shares. It isn't. The premium is a separate, non-refundable cost for the *right* to transact later; if the stock never reaches the strike, that premium is gone regardless of what happens to the stock afterward. The second beginner mistake is symmetry-blindness: assuming buyer and seller carry equivalent risk because they're on "opposite sides of the same trade." They don't. The option buyer's maximum loss is capped at the premium paid, full stop. The option seller's risk is structurally different — an uncovered (naked) short call on a stock with no ceiling on how high it can run carries a loss that grows with the stock, uncapped. Right and obligation are not symmetric risks wearing different labels.
 
 <ChatWith agent="fundamentals_analyst" />
 
@@ -45,15 +45,15 @@ Beginners hear "buying a call" and picture buying the stock at a discount — as
 />
 
 <Quiz
-  question="An options trader tells you: 'I sold a call against NVDA — the buyer and I both took on the same risk, just from different sides.' Using what you now know about rights versus obligations, what's wrong with that claim?"
+  question="An options trader tells you: 'I sold an uncovered (naked) call on NVDA — the buyer and I both took on the same risk, just from different sides.' Using what you now know about rights versus obligations, what's wrong with that claim?"
   options={[
     "Nothing is wrong — buyer and seller always have identical maximum loss on any option contract",
-    "The buyer holds a right with a loss capped at the premium paid; the seller holds an obligation with loss that grows uncapped as the underlying rises, which is not symmetric",
+    "The buyer holds a right with a loss capped at the premium paid; the seller of an uncovered call holds an obligation with loss that grows uncapped as the underlying rises, which is not symmetric",
     "The claim is wrong because only puts have asymmetric risk — calls are always symmetric between buyer and seller",
     "The claim is wrong because option sellers can never lose money, only buyers can"
   ]}
   answer={1}
-  explanation="A call buyer's downside is fixed the moment the premium is paid — they can always just not exercise. A call seller has no such floor: the obligation to deliver shares at the strike gets more expensive the higher the stock runs, with no contractual ceiling. Same contract, structurally different risk on each side."
+  explanation="A call buyer's downside is fixed the moment the premium is paid — they can always just not exercise. An uncovered call seller has no such floor: the obligation to deliver shares at the strike gets more expensive the higher the stock runs, with no contractual ceiling. Same contract, structurally different risk on each side."
 />
 
 ## Try it

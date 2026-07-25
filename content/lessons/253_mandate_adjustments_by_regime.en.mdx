@@ -107,7 +107,7 @@ The correct model: mandate adjustments scale with confirmation strength. Two-of-
 
 ## Try it
 
-Open the Mandate editor in the app. Build three named presets in your journal: "Bull-broad", "Bull-narrow / late-bull", and "Bear-confirmed". Write the four numbers for each (max_position, max_drawdown, stop_loss, gross_exposure). Then run a quick simulation: drop max_position_pct from 10% to 3% and try submitting a 7% position — watch the PM safety-floor message reject it. Restore to 10% and submit the same 7% position — watch it pass. You're feeling the dial in action. Finally, <Term id="ami_convene_the_room" /> on any ticker and ask the Portfolio Manager: "Given the current regime and my mandate, which dial would you adjust first?"
+Open the Mandate editor in the app. Build three named presets in your journal: "Bull-broad", "Bull-narrow / late-bull", and "Bear-confirmed". Write the four numbers for each (max_position, max_drawdown, stop_loss, gross_exposure). Then run a quick simulation: drop risk_score to 1 (a 1.5% per-name cap) and try submitting a 4% position — watch the PM safety-floor message reject it. Raise risk_score to 5 (a 4.5% per-name cap) and submit the same 4% position — watch it pass. You're feeling the dial in action. Finally, <Term id="ami_convene_the_room" /> on any ticker and ask the Portfolio Manager: "Given the current regime and my mandate, which dial would you adjust first?"
 
 ## Takeaway
 

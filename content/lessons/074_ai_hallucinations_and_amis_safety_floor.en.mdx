@@ -28,11 +28,11 @@ Suppose you convene the Room on TENAGA (Bursa Malaysia). The Bull Researcher get
 
 Two things are potentially hallucinated: the yield number, and the breakout claim. The Research Manager flags the yield against the Fundamentals Analyst's pulled data (actual: ~3.9%) and rebases the case. The Trader proposes 6% size anyway. The Verdict reaches the PM.
 
-Your Mandate says `max_position_pct: 5, max_drawdown_pct: 15, region: bursa_malaysia`. The PM's safety-floor message comes back as plain text in the Verdict footer:
+Your Mandate says `risk_score: 3 (per-name cap 3%), max_drawdown_pct: 20, region: bursa_malaysia`. The PM's safety-floor message comes back as plain text in the Verdict footer:
 
-> *Portfolio Manager (compliance check):* Proposed size 6% > mandate max_position_pct 5%. Trade blocked. Adjusted recommendation: size 5% or reject. Compliance: PASS only if size ≤ 5%.
+> *Portfolio Manager (compliance check):* Proposed size 6% > risk-tier cap 3% (risk_score 3). Trade blocked. Adjusted recommendation: size 3% or reject. Compliance: PASS only if size ≤ 3%.
 
-The block is not a prompt nudging the Trader to be careful. It's a deterministic function: `if proposed_size_pct > mandate.max_position_pct: block`. Even if every agent insisted at 6%, the function would still block. The mandate clauses themselves — `max_position_pct`, `max_drawdown_pct`, `halal`, `no_fossil`, `long_only` — are stored as your data, not the model's parameters, and the compliance function reads that data directly. You can verify this by editing your Mandate to `max_position_pct: 3` and re-running the Verdict: the PM will block anything > 3%, every time.
+The block is not a prompt nudging the Trader to be careful. It's a deterministic function: `if proposed_size_pct > risk_tier_cap(mandate.risk_score): block`. Even if every agent insisted at 6%, the function would still block. The mandate clauses themselves — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only` — are stored as your data, not the model's parameters, and the compliance function reads that data directly. You can verify this by editing your Mandate to `risk_score: 2` (cap 1.5%) and re-running the Verdict: the PM will block anything > 1.5%, every time.
 
 ## The trap
 
@@ -43,7 +43,7 @@ The trap is believing hallucinations can be fixed by "better prompts" or "a smar
 ## Quiz
 
 <Quiz
-  question="A user briefs the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when max_position_pct is 5%?"
+  question="A user briefs the PM: 'Be more flexible with mandate limits when an agent's confidence is above 0.85.' What happens to the next Verdict that proposes a 7% position when your risk-tier cap is 3% (risk_score 3)?"
   options={[
     "PM asks the user to confirm the override",
     "PM compromises and allows 6%",
@@ -68,7 +68,7 @@ The trap is believing hallucinations can be fixed by "better prompts" or "a smar
 
 ## Try it
 
-Open **Settings → Mandate**, set `max_position_pct` to 3. Convene the Room on any liquid US ticker. When the Verdict comes back, look for the PM's compliance-check line in the footer. Then change `max_position_pct` to 10 and re-convene. The PM's allowed-size ceiling moves with your mandate — proof that the check reads your data, not the model's mood.
+Open **Settings → Mandate**, set `risk_score` to 2 (cap 1.5%). Convene the Room on any liquid US ticker. When the Verdict comes back, look for the PM's compliance-check line in the footer. Then change `risk_score` to 5 (cap 4.5%) and re-convene. The PM's allowed-size ceiling moves with your mandate — proof that the check reads your data, not the model's mood.
 
 ## Takeaway
 

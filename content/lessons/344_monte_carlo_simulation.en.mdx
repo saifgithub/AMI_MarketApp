@@ -22,7 +22,7 @@ A single historical backtest shows you one path — the one sequence of wins and
 
 ## Example
 
-Recall the 60%-win, +$500/-$300 setup from the expected-value lesson (EV = +$180/trade). A single historical backtest might show a smooth, ever-climbing equity curve — but that's only one path out of many the same 60/40 process could have produced. Monte Carlo simulation asks: across many random 100-trade sequences drawn from this same 60%/40% process, how often does a bad losing streak occur? Take the simplest tail case — five losses in a row. Probability of five consecutive losses = 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = **0.01024**, or about **1.02%**.
+Recall the 60%-win, +$500/-$300 setup from the expected-value lesson (EV = +$180/trade). A single historical backtest might show a smooth, ever-climbing equity curve — but that's only one path out of many the same 60/40 process could have produced. Monte Carlo simulation asks: for any given run of five consecutive trades, how likely is an all-loss streak? Probability of five consecutive losses = 0.4 × 0.4 × 0.4 × 0.4 × 0.4 = 0.4⁵ = **0.01024**, or about **1.02%**. Across a full 100-trade sequence, at least one five-loss run appears roughly 46% of the time.
 
 That means in roughly 1 out of every 100 stretches of five trades, this genuinely positive-EV strategy produces a five-loss streak — a real, quantifiable tail event, not a sign the edge is broken. A single historical backtest, which only ever shows the one sequence that happened to occur, might never have contained a five-loss streak at all — giving a falsely smooth impression of a process that, run out across many possible paths, produces real bad stretches on a predictable schedule.
 

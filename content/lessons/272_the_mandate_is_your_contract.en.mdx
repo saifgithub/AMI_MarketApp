@@ -18,23 +18,21 @@ updated_at: "2026-05-12"
 
 # The Mandate is your contract with AMI
 
-The <Term id="ami_mandate" /> is not a settings screen. Inside the <Term id="ami" /> <Term id="training_simulator" />, it is the contract you write with your own simulated analyst team — the constraints the PM will enforce against every <Term id="ami_verdict" /> the Room produces. The fields — `max_position_pct`, `max_drawdown_pct`, `halal`, `no_fossil`, `long_only`, `region_allowlist` — are the limits *you* set. AMI does not negotiate the Mandate. AMI does not suggest "you should lower this to 3%" — that would be advice, and AMI is not a licensed advisor. You set it; the simulator lives inside it; you practise judging analyst output under your own stated rules. By the end of this lesson you will understand why authoring the Mandate is the single most consequential act in the app.
+The <Term id="ami_mandate" /> is not a settings screen. Inside the <Term id="ami" /> <Term id="training_simulator" />, it is the contract you write with your own simulated analyst team — the constraints the PM will enforce against every <Term id="ami_verdict" /> the Room produces. The fields — `risk_score`, `max_drawdown_pct`, `halal`, `no_fossil_fuels`, `long_only`, `ticker_blocklist` — are the limits *you* set. AMI does not negotiate the Mandate. AMI does not suggest "you should lower this to 3%" — that would be advice, and AMI is not a licensed advisor. You set it; the simulator lives inside it; you practise judging analyst output under your own stated rules. By the end of this lesson you will understand why authoring the Mandate is the single most consequential act in the app.
 
 ## How this plays out in real markets
 
 Suppose you open the Mandate editor on day one and write:
 
 ```
-risk_tolerance: moderate
-max_position_pct: 5
+risk_score: 3
 max_drawdown_pct: 20
 halal: true
-no_fossil: false
+no_fossil_fuels: false
 long_only: true
-region_allowlist: [us, bursa_malaysia]
 ```
 
-Every Verdict for the next year is checked against those fields. <Term id="ami_convene_the_room" /> on PETRONAS on Bursa: the Trader proposes 4%. PM compliance check — `halal: true` requires the screen, PETRONAS passes the screen, size within limit, region allowed. PASS. Now convene on TOPGLOV: trader proposes a short. `long_only: true` triggers BLOCK before size is even checked.
+Every Verdict for the next year is checked against those fields. <Term id="ami_convene_the_room" /> on PCHEM (5183) on Bursa: the Trader proposes 2%. PM compliance check — `halal: true` requires the screen, PCHEM passes the screen, size within limit, region allowed. PASS. Now convene on TOPGLOV: trader proposes a short. `long_only: true` triggers BLOCK before size is even checked.
 
 The Mandate is also auditable. Every block the PM issues references the specific clause: *"Trade blocked — mandate field `long_only` does not permit short proposals."* You can scroll back through your decision history and see which clauses fired most often — that tells you whether your Mandate is shaping decisions the way you intended, or whether you wrote something on day one that no longer fits.
 
@@ -49,9 +47,9 @@ The trap is treating the Mandate as a fire-and-forget setting from onboarding. Y
 ## Quiz
 
 <Quiz
-  question="The PM blocks a trade citing `max_position_pct: 5`. You disagree — you want this 8% position. What's the right way to handle this?"
+  question="The PM blocks a trade citing `risk_score: 3`. You disagree — you want this 4% position. What's the right way to handle this?"
   options={[
-    "Open the Mandate editor and either accept the block, take the trade at 5%, or change `max_position_pct` after thinking about whether the new limit fits your actual life",
+    "Open the Mandate editor and either accept the block, take the trade at 3%, or change `risk_score` after thinking about whether the new limit fits your actual life",
     "Coach the PM to be more flexible on confident trades",
     "Re-run the Verdict until you get a different answer",
     "Ask the Bull Researcher to argue more strongly"

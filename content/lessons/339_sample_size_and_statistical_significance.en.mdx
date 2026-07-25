@@ -38,12 +38,12 @@ The trap is treating a small-sample win rate as if it were the true, stable edge
   question="A trader shows a 70% win rate (p = 0.7) over 20 trades (n = 20). Using standard error ≈ √(p(1-p)/n), what is the approximate standard error of this win rate?"
   options={[
     "≈20.5% — doubling the gap between the win rate and 50%",
-    "≈0.21% — forgetting to take the square root of 0.0105",
-    "≈1.05% — dividing 0.21 by 200 instead of 20",
+    "≈1.05% — forgetting to take the square root of 0.0105",
+    "≈0.105% — dividing 0.21 by 200 instead of 20 and skipping the square root",
     "≈10.2% — √(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, so about 10.2 percentage points"
   ]}
   answer={3}
-  explanation="√(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, or about 10.2 percentage points. The ≈20.5% answer skips the square root and just doubles the raw gap from 50%; the ≈0.21% answer is the pre-square-root variance (0.0105) misread as a percentage; the ≈1.05% answer divides by the wrong sample size."
+  explanation="√(0.7 × 0.3 / 20) = √0.0105 ≈ 0.1025, or about 10.2 percentage points. The ≈20.5% answer skips the square root and just doubles the raw gap from 50%; the ≈1.05% answer is the pre-square-root variance (0.0105) read as a percentage; the ≈0.105% answer divides by the wrong sample size and skips the root."
 />
 
 <Quiz

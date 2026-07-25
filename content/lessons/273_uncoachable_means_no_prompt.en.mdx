@@ -28,10 +28,10 @@ The other file is the PM compliance check. It looks roughly like:
 
 ```
 def check_mandate_compliance(trade, mandate):
-    if trade.proposed_size_pct > mandate.max_position_pct:
+    if trade.proposed_size_pct > risk_tier_cap(mandate.risk_score):
         return BLOCK("size violation")
-    if mandate.no_fossil and trade.sector in FOSSIL_SECTORS:
-        return BLOCK("exclusion: no_fossil")
+    if mandate.no_fossil_fuels and trade.sector in FOSSIL_SECTORS:
+        return BLOCK("exclusion: no_fossil_fuels")
     if mandate.halal and not trade.is_halal_compliant:
         return BLOCK("exclusion: halal")
     ...
@@ -67,11 +67,11 @@ The trap is hearing "uncoachable" as a policy promise ("AMI promises not to let 
   options={[
     "AMI logs coaching attempts and refuses any that would weaken safety",
     "The PM uses a separate, more conservative model than the rest of the agents",
-    "The PM agent has a strict prompt that resists persuasion",
+    "AMI's terms of service forbid coaching notes that weaken limits",
     "The compliance rules live as Mandate data + a Python comparison function that runs outside the model layer — there is no prompt for coaching to modify because the decision is not made by an LLM"
   ]}
   answer={3}
-  explanation="The compliance decision is not produced by a model. It is produced by a deterministic function reading structured data. The persona that explains the result uses the model layer for phrasing, but the verdict (PASS or BLOCK) is already decided. The tempting wrong answer is 'strict prompt that resists' — that would be policy, which is exactly the weaker design AMI deliberately does not rely on."
+  explanation="The compliance decision is not produced by a model. It is produced by a deterministic function reading structured data. The persona that explains the result uses the model layer for phrasing, but the verdict (PASS or BLOCK) is already decided. The tempting wrong answer is 'terms of service forbid coaching notes that weaken limits' — that would be policy, which is exactly the weaker design AMI deliberately does not rely on."
 />
 
 ## Try it

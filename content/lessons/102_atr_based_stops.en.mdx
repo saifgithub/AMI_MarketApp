@@ -51,13 +51,13 @@ The trap is using ATR alone, ignoring the chart. A beginner sets the stop at "2 
 <Quiz
   question="You're trading two setups. AAPL: entry $200, chart invalidation at $192, 14-day ATR = $3. TSLA: entry $250, chart invalidation at $235, 14-day ATR = $12. You apply a 0.5 ATR buffer to both. Which trade has the structurally tighter buffer, and what does that imply?"
   options={[
-    "TSLA — the buffer is $6 (0.5 × $12), much larger in absolute dollars; relative to AAPL's $1.50, TSLA leaves more room for noise because TSLA's noise is structurally larger, so neither stop is 'tighter' in risk terms — both leave the same proportion of normal range.",
+    "TSLA — the 0.5 ATR buffer itself is the same proportion of noise for both ($1.50 on AAPL, $6 on TSLA), so neither buffer is 'tighter' on its own terms. But the full stop distance from entry differs: AAPL's is $9.50 — 3.2 ATR; TSLA's is $21 — only 1.75 ATR. TSLA's overall stop sits closer to its own noise range.",
     "AAPL — the buffer is $1.50, smaller in absolute dollars, so it's the safer stop.",
     "AAPL — lower-priced stocks always need wider stops by percentage.",
     "They're identical — 0.5 ATR is 0.5 ATR."
   ]}
   answer={0}
-  explanation="The tempting wrong answer is 'AAPL — smaller buffer = tighter stop'. Absolute dollar comparison is the wrong axis. A $1.50 buffer on a stock that moves $3 per day is the same proportion of noise as a $6 buffer on a stock that moves $12 per day. The point of an ATR buffer is to normalise across instruments so the stop-out probability from noise is the same. The 'lower-priced stocks need wider stops' distractor confuses share price with volatility — they're independent."
+  explanation="The tempting wrong answer is 'AAPL — smaller buffer = tighter stop'. Absolute dollar comparison is the wrong axis. A $1.50 buffer on a stock that moves $3 per day is the same proportion of noise as a $6 buffer on a stock that moves $12 per day. The 'lower-priced stocks need wider stops' distractor confuses share price with volatility — they're independent."
 />
 
 ## Try it

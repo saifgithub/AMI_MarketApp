@@ -25,7 +25,7 @@ Three vehicle types solve three different access problems: a REIT lets you own a
 
 A REIT (Real Estate Investment Trust) must, by the structure that gives it favorable tax treatment, distribute at least 90% of its taxable income to shareholders as dividends — which is why REITs typically carry higher yields than the broad equity market. On Bursa Malaysia, Sunway REIT holds a portfolio of retail, hotel, and office properties and trades on the exchange like any other stock, giving a retail investor exposure to Malaysian commercial real estate with the liquidity of a listed security instead of the illiquidity of buying a physical property.
 
-An ADR (American Depositary Receipt) is a US-listed certificate representing shares of a foreign company held by a custodian bank abroad — it lets a US brokerage account hold, say, Alibaba (BABA) or Taiwan Semiconductor (TSM) without a foreign trading account, priced in US dollars during US market hours. The mechanism adds a layer: currency conversion happens inside the ADR structure, and some ADR programs charge a small annual custody fee deducted from dividends.
+An ADR (American Depositary Receipt) is a US-listed certificate representing shares of a foreign company issued by a US depositary bank against shares safekept by a local custodian — it lets a US brokerage account hold, say, Alibaba (BABA) or Taiwan Semiconductor (TSM) without a foreign trading account, priced in US dollars during US market hours. The mechanism adds a layer: currency conversion happens inside the ADR structure, and some ADR programs charge a small annual depositary fee deducted from dividends.
 
 A closed-end fund (CEF) raises a fixed amount of capital in an IPO, then closes to new investment — its shares trade on an exchange at whatever price buyers and sellers agree on, which can sit at a premium or discount to the fund's actual net asset value (NAV) depending on demand. Unlike an ETF, there's no creation/redemption mechanism forcing the market price back toward NAV, so a CEF trading at a 10% discount to NAV means the market is pricing the fund's underlying holdings at 90 cents on the dollar — sometimes for structural reasons, sometimes as a real opportunity, sometimes as a warning about the fund's costs or manager.
 
@@ -57,12 +57,12 @@ A light counterpoint on REITs specifically: high mandatory payout ratios mean RE
   question="An ADR lets a US brokerage account hold shares of a company like Taiwan Semiconductor (TSM) without a foreign trading account. What does the ADR structure add on top of simply owning the underlying foreign shares?"
   options={[
     "Nothing — an ADR is functionally identical to holding the foreign shares directly on a foreign exchange, with no additional layer",
-    "A custodian-bank layer that handles currency conversion and, in some programs, deducts a small annual custody fee from dividends, in exchange for US-dollar pricing and US market-hours trading",
+    "A depositary-bank layer that issues the certificate, handles currency conversion, and in some programs deducts a small annual depositary fee from dividends (a separate custodian merely safekeeps the underlying shares abroad), in exchange for US-dollar pricing and US market-hours trading",
     "A guarantee that the ADR will never trade at a different price than the underlying foreign-listed shares",
     "Automatic conversion of the ADR into a leveraged position"
   ]}
   answer={1}
-  explanation="The custodian bank is the mechanism that makes cross-border access possible — it holds the real shares abroad and issues the US-dollar-denominated certificate, handling currency conversion and sometimes charging a custody fee. This is a real structural layer, not a null convenience, and it carries no guarantee against price divergence from the home-market shares (currency moves and liquidity differences can create gaps). Nothing about an ADR involves leverage."
+  explanation="The depositary bank is the mechanism that makes cross-border access possible — it issues the US-dollar-denominated certificate and handles currency conversion, sometimes charging a depositary fee; a separate custodian bank safekeeps the real shares abroad but plays no role in issuance, FX, or fees. This is a real structural layer, not a null convenience, and it carries no guarantee against price divergence from the home-market shares (currency moves and liquidity differences can create gaps). Nothing about an ADR involves leverage."
 />
 
 ## Try it

@@ -10,7 +10,7 @@ code: "ASST 2"
 topic: "bond_pricing"
 prerequisites: ["303_why_bonds_exist"]
 tags: ["bonds", "fixed-income", "yield-to-maturity", "bond-pricing", "interest-rates"]
-sources: ["Standard fixed-income present-value pricing — discounted cash flow applied to a fixed coupon stream"]
+sources: ["Hull — Options, Futures, and Other Derivatives — fixed-income present-value pricing (discounted cash flow applied to a fixed coupon stream)"]
 agent_callouts: ["fundamentals_analyst"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-21"
@@ -31,7 +31,7 @@ Beginners hear "bond prices fell" and assume something went wrong with the issue
 
 ## The steelman
 
-A skeptic might argue: "If price and yield always move opposite, then YTM tells me nothing new beyond price — it's a purely mechanical inverse." That's a fair simplification for a single bond, but it breaks down as a portfolio tool. The falsifier: compare two bonds trading at the *same* price but different coupons and maturities — their YTMs will differ. YTM standardizes bonds with different coupon rates and maturities onto one comparable return figure, which raw price cannot do. If YTM were purely redundant with price, professional bond desks wouldn't quote yield as the primary number and back into price — but they do exactly that, because yield is the portable unit across a portfolio of dissimilar bonds.
+A skeptic might argue: "If price and yield always move opposite, then YTM tells me nothing new beyond price — it's a purely mechanical inverse." That's a fair simplification for a single bond, but it breaks down as a portfolio tool. The falsifier: compare two bonds trading at the *same* price but different coupons and maturities — their YTMs will differ. YTM standardizes bonds with different coupon rates and maturities onto one comparable return figure, which raw price cannot do. If YTM were purely redundant with price, professional bond desks wouldn't quote yield as the primary number and back into price — but for municipal bonds and investment-grade corporate spread product, they do exactly that (Treasuries are the exception, quoted in price/32nds with yield derived), because yield is the portable unit across a portfolio of dissimilar bonds.
 
 <ChatWith agent="fundamentals_analyst" />
 
@@ -81,5 +81,5 @@ Open the Fundamentals Analyst chat and ask: "If the Fed signals more rate hikes,
 
 Bond price and yield move in lockstep opposite directions for a simple mechanical reason — a fixed coupon has to compete with whatever the market currently pays — so a bond price move is a verdict on rates, not automatically a verdict on credit.
 
-*Where this comes from: standard fixed-income present-value pricing, the same discounting logic used across corporate finance to price any fixed cash-flow stream.*
+*Where this comes from: Hull's fixed-income present-value pricing framework (Options, Futures, and Other Derivatives), the same discounting logic used across corporate finance to price any fixed cash-flow stream.*
 </content>

@@ -23,9 +23,9 @@ You now hold the full M20 toolkit: expected value as the probability-weighted av
 
 ## One scenario, every M20 concept
 
-A vendor claims a new trading strategy has a real edge. Before looking at any evidence, what's the **prior** probability that a randomly claimed "edge" like this is genuinely real? Per the base-rate lesson: most claimed edges are noise, so start with a prior of **10%** real. Now the evidence arrives: a backtest over **20 trades** shows a **70% win rate** — the exact scenario from the sample-size lesson, where a two-standard-error bar (≈20.5 points) only *just* fails to clear the observed 20-point edge. Because that evidence is weak (not because it's fake), say it would show up 80% of the time if the edge were genuinely real, but it would *also* show up 20% of the time by pure chance even with no real edge at all — a likelihood ratio of 4-to-1 in favor of "real," not overwhelming.
+A vendor claims a new trading strategy has a real edge. Before looking at any evidence, what's the **prior** probability that a randomly claimed "edge" like this is genuinely real? Per the base-rate lesson: most claimed edges are noise, so start with a prior of **10%** real. Now the evidence arrives: a backtest over **20 trades** shows a **70% win rate** — the exact scenario from the sample-size lesson, where the observed 20-point edge only *just* fails to clear the two-standard-error bar (≈20.5 points). Because that evidence is weak (not because it's fake), say it would show up 80% of the time if the edge were genuinely real, but it would *also* show up 20% of the time by pure chance even with no real edge at all — a likelihood ratio of 4-to-1 in favor of "real," not overwhelming.
 
-Bayes' rule: posterior = [P(evidence | real) × P(real)] ÷ [P(evidence | real) × P(real) + P(evidence | not real) × P(not real)] = (0.8 × 0.10) ÷ (0.8 × 0.10 + 0.2 × 0.90) = 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ **30.8%**. The weak evidence moved belief from a 10% prior to a 30.8% posterior — real movement, but nowhere near "proven." Now run that posterior back through expected value: if the edge is real, assume it's worth +$1,000; if it isn't, assume acting on it costs -$1,000. EV = (0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ **-$385**. Even after updating upward from 10% to 30.8% on real evidence, the expected value of trusting this claim is still firmly negative.
+Bayes' rule: posterior = [P(evidence | real) × P(real)] ÷ [P(evidence | real) × P(real) + P(evidence | not real) × P(not real)] = (0.8 × 0.10) ÷ (0.8 × 0.10 + 0.2 × 0.90) = 0.08 ÷ (0.08 + 0.18) = 0.08 ÷ 0.26 ≈ **30.8%**. The weak evidence moved belief from a 10% prior to a 30.8% posterior — real movement, but nowhere near "proven." Now run that posterior back through expected value: if the edge is real, assume it's worth +$1,000; if it isn't, assume acting on it costs -$1,000. EV = (0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ **-$384**. Even after updating upward from 10% to 30.8% on real evidence, the expected value of trusting this claim is still firmly negative.
 
 ## The steelman
 
@@ -50,13 +50,13 @@ The strongest case against this whole exercise: "You made up the prior (10%), th
 <Quiz
   question="After updating to a 30.8% posterior that the edge is real, and assuming the edge is worth +$1,000 if real and -$1,000 if not, what does the resulting expected-value calculation say about acting on this claim now?"
   options={[
-    "EV ≈ -$385 — even after the update, (0.308 × $1,000) + (0.692 × -$1,000) is still solidly negative, so the evidence so far doesn't justify treating this as a good bet",
-    "EV ≈ +$385 — updating the probability upward always makes the expected value positive",
+    "EV ≈ -$384 — even after the update, (0.308 × $1,000) + (0.692 × -$1,000) is still solidly negative, so the evidence so far doesn't justify treating this as a good bet",
+    "EV ≈ +$384 — updating the probability upward always makes the expected value positive",
     "EV ≈ +$1,000 — a posterior above the 10% prior means the full payoff should be counted",
     "EV cannot be calculated because the posterior is not exactly 50%"
   ]}
   answer={0}
-  explanation="(0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ -$385 — still negative, even though the posterior more than tripled from the 10% prior. Moving a belief upward doesn't automatically make a bet positive-EV; it depends on how far it moved and what the payoffs are, which is exactly why this capstone chains the Bayes update back into the EV formula rather than stopping at the posterior."
+  explanation="(0.308 × $1,000) + (0.692 × -$1,000) = $308 - $692 ≈ -$384 — still negative, even though the posterior more than tripled from the 10% prior. Moving a belief upward doesn't automatically make a bet positive-EV; it depends on how far it moved and what the payoffs are, which is exactly why this capstone chains the Bayes update back into the EV formula rather than stopping at the posterior."
 />
 
 <Quiz

@@ -22,15 +22,15 @@ Every indicator covered in this module — moving averages, RSI, MACD, volume �
 
 ## How this plays out in real markets
 
-Look at JPM in February–March 2026. On February 18, four readings aligned bullishly: price 248 above SMA50 at 239, RSI(14) at 61 with no divergence, MACD line above signal and above zero, and a breakout above 246 on volume at 1.7× the 20-day average. Textbook confluence. A trader took a long at 248 with a stop at 242 (2.4% below entry, 1% account risk).
+Take a large-cap bank stock. On a given trading day, four readings aligned bullishly: price 248 above SMA50 at 239, RSI(14) at 61 with no divergence, MACD line above signal and above zero, and a breakout above 246 on volume at 1.7× the 20-day average. Textbook confluence. A trader took a long at 248 with a stop at 242 (2.4% below entry, 1% account risk).
 
-On February 26, JPM gapped down to 240 on an unexpected guidance cut from a peer bank — news the chart hadn't priced in, and no indicator could have. The stop hit at 242 on the gap, slippage took the fill to 240.30. The trade lost 3.1% of the position. The setup didn't fail because the indicators were wrong; the setup failed because indicators describe price history, not future news. The trader took the loss, sized correctly, and moved on. The signal had a stated invalidation — close through 242 — and it worked exactly as designed.
+Days later, the stock gapped down to 240 on an unexpected guidance cut from a peer bank — news the chart hadn't priced in, and no indicator could have. The stop hit at 242 on the gap, slippage took the fill to 240.30. The trade lost 3.1% of the position. The setup didn't fail because the indicators were wrong; the setup failed because indicators describe price history, not future news. The trader took the loss, sized correctly, and moved on. The signal had a stated invalidation — close through 242 — and it worked exactly as designed.
 
-Contrast a trader who saw the same setup but had no defined invalidation. They held through the gap, watched JPM fall to 231 over five sessions on continued sector weakness, and took an 6.9% loss instead of 3.1%. Same indicators, same entry — different outcomes because one trader had a falsifiable rule and the other had a hope.
+Contrast a trader who saw the same setup but had no defined invalidation. They held through the gap, watched the stock fall to 231 over five sessions on continued sector weakness, and took an 6.9% loss instead of 3.1%. Same indicators, same entry — different outcomes because one trader had a falsifiable rule and the other had a hope.
 
 Falsifiable claim: an indicator-based setup with a stated, mechanical invalidation produces materially smaller average losses than the same setup without one, across any sample of trades. The condition that proves this lesson wrong: a backtest showing equivalent or larger losses for the falsifiable-rule cohort. That backtest hasn't been produced because the mechanics are arithmetic — defined stops cap losses, undefined ones don't.
 
-On Bursa Malaysia: SIME in mid-2025 gave a clean MACD-plus-volume long signal at RM2.65. Within a week, an unrelated commodity-price shock dragged the sector down. Traders with stops at RM2.55 lost 3.8%; traders without took 8%+ losses as the slide continued. The indicators didn't fail. The undefined-risk traders did.
+On Bursa Malaysia: a Bursa-listed stock gave a clean MACD-plus-volume long signal at RM2.65. Within a week, an unrelated commodity-price shock dragged the sector down. Traders with stops at RM2.55 lost 3.8%; traders without took 8%+ losses as the slide continued. The indicators didn't fail. The undefined-risk traders did.
 
 ## The trap
 
@@ -43,7 +43,7 @@ The correct mental model: indicators are filters that improve your hit rate when
 ## Quiz
 
 <Quiz
-  question="An indicator setup gives a strong long signal on JPM at 248, with all four checklist readings aligned. The trader enters with a stop at 242 (1% account risk). Two days later JPM gaps down on news to 240 and the stop fills at 240.30. What does this lesson say happened?"
+  question="An indicator setup gives a strong long signal on a large-cap bank stock at $248, with all four checklist readings aligned. The trader enters with a stop at 242 (1% account risk). Two days later it gaps down on news to 240 and the stop fills at 240.30. What does this lesson say happened?"
   options={[
     "The indicators failed — they should have predicted the news",
     "The setup worked as designed: the signal had a stated invalidation, news invalidated it, and the defined stop capped the loss to roughly its planned size",
@@ -51,7 +51,7 @@ The correct mental model: indicators are filters that improve your hit rate when
     "The trader should have ignored the stop and held"
   ]}
   answer={1}
-  explanation="Indicators describe past price and volume; they cannot see future news. The setup didn't fail when JPM gapped down — the invalidation condition (close through 242) triggered, exactly as the rule defined. The most tempting wrong answer ('indicators failed, should have predicted the news') misunderstands what indicators are. They're not forecasts. They're filters with stated invalidation conditions, and the lesson explicitly frames falsifiability as the point."
+  explanation="Indicators describe past price and volume; they cannot see future news. The setup didn't fail when the stock gapped down — the invalidation condition (close through 242) triggered, exactly as the rule defined. The most tempting wrong answer ('indicators failed, should have predicted the news') misunderstands what indicators are. They're not forecasts. They're filters with stated invalidation conditions, and the lesson explicitly frames falsifiability as the point."
 />
 
 <Quiz

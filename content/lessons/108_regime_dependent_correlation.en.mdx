@@ -35,10 +35,10 @@ The trap is sizing the portfolio off "long-run average" correlations and assumin
 ## Quiz
 
 <Quiz
-  question="You hold 4 positions: NVDA, JPM, XOM, IHH — each sized at 1% account risk. Average pairwise correlation in calm markets is 0.15. In a stressed scenario, correlations across these names typically rise to about 0.7. Roughly what is the realised peak exposure during a stressed day, expressed as a multiple of the naive 4%?"
+  question="You hold 4 positions: NVDA, JPM, XOM, IHH — each sized at 1% account risk. Average pairwise correlation in calm markets is 0.15. In a stressed scenario, correlations across these names typically rise to about 0.7. Roughly what is the realised peak exposure during a stressed day, expressed as a multiple of the ~2.4% calm-state modelled exposure?"
   options={[
     "1.0× — the 4% is the right number; correlations don't compound exposure.",
-    "Roughly 1.6×–1.8× of the naive 4% — when correlations approach 0.7 the positions move together enough that the cross-position diversification benefit collapses to a small residual.",
+    "Roughly 1.5× the calm-state ~2.4% (rises to ~3.5% at corr 0.7), still just under the naive 4% sum.",
     "4.0× — correlations of 0.7 mean each position effectively quadruples in stress.",
     "0.5× — diversification cuts the exposure in half because the book is multi-sector."
   ]}

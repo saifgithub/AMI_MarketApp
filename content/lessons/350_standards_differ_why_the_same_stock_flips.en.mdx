@@ -10,7 +10,7 @@ code: "SHARIA 4"
 topic: "standards_disagreement"
 prerequisites: ["349_the_three_financial_ratio_screens"]
 tags: ["islamic-finance", "aaoifi", "bursa-sac", "compliance-drift", "standards-disagreement"]
-sources: ["AAOIFI — Shariah Standards", "Bursa Malaysia SAC — Shariah screening methodology", "Dow Jones Islamic Market Index Methodology", "S&P Shariah Indices Methodology", "MSCI Islamic Index Series Methodology", "FTSE Shariah Global Equity Index Series methodology"]
+sources: ["AAOIFI — Shariah Standards", "Securities Commission Malaysia's SAC — Shariah screening methodology", "Dow Jones Islamic Market Index Methodology", "S&P Shariah Indices Methodology", "MSCI Islamic Index Series Methodology", "FTSE Shariah Global Equity Index Series methodology"]
 agent_callouts: ["fundamentals_analyst"]
 locale_versions: ["en", "ar", "ms"]
 created_at: "2026-07-22"
@@ -19,15 +19,15 @@ updated_at: "2026-07-22"
 
 # Standards differ — why the same stock flips
 
-The same company can be Sharia-compliant under one standard and non-compliant under another, at the exact same moment, with nothing about the company having changed. AAOIFI, Bursa Malaysia's Shariah Advisory Council (SAC), and the major index providers (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah) don't share one identical rulebook — they differ on thresholds, on whether the debt/cash denominator is total assets or market cap, and on whether market cap is a single-day snapshot or a trailing average. AMI's job is to name which standard produced a given verdict, never to adjudicate which standard is "more correct." By the end of this lesson you'll be able to explain at least two concrete sources of this disagreement.
+The same company can be Sharia-compliant under one standard and non-compliant under another, at the exact same moment, with nothing about the company having changed. AAOIFI, Securities Commission Malaysia's SAC, and the major index providers (Dow Jones Islamic, S&P Shariah, MSCI Islamic, FTSE Shariah) don't share one identical rulebook — they differ on thresholds, on whether the debt/cash denominator is total assets or market cap, and on whether market cap is a single-day snapshot or a trailing average. AMI's job is to name which standard produced a given verdict, never to adjudicate which standard is "more correct." By the end of this lesson you'll be able to explain at least two concrete sources of this disagreement.
 
 ## Example
 
-Bursa Malaysia's SAC methodology is widely understood to run more leniently than the AAOIFI/GCC approach on some criteria — historically screening a materially larger share of Bursa-listed stocks as Sharia-compliant than an AAOIFI-style pass would produce on the identical company set. Part of the reason: different standards specify different denominators for the same ratio — some measure interest-bearing debt against **total assets**, others against **market capitalization**, and a company with a large market cap relative to its balance sheet gets a much smaller ratio under the market-cap denominator than under total assets. Separately, the choice between a **single trading-day** market cap snapshot and a **12-month trailing average** market cap changes the outcome for any stock whose price has moved sharply — a stock priced high on the snapshot day looks safely compliant, while the same company checked against its trailing-average (lower) price during a downturn can cross the same 33% line. Neither number is "wrong" — they're two different, both-published methodologies answering a slightly different question.
+Securities Commission Malaysia's SAC methodology is widely understood to run more leniently than the AAOIFI/GCC approach on some criteria — historically screening a materially larger share of Bursa-listed stocks as Sharia-compliant than an AAOIFI-style pass would produce on the identical company set. Part of the reason: different standards specify different denominators for the same ratio — some measure interest-bearing debt against **total assets**, others against **market capitalization**, and a company with a large market cap relative to its balance sheet gets a much smaller ratio under the market-cap denominator than under total assets. Separately, the choice between a **single trading-day** market cap snapshot and a **24-month trailing average (Dow Jones Islamic)** market cap changes the outcome for any stock whose price has moved sharply — a stock priced high on the snapshot day looks safely compliant, while the same company checked against its trailing-average (lower) price during a downturn can cross the same 33% line. Neither number is "wrong" — they're two different, both-published methodologies answering a slightly different question.
 
 ## The trap
 
-Beginners see a stock listed as "halal" on one screener and "non-compliant" on another and conclude someone made a mistake. That's the wrong frame. The correct mental model: **name the standard, don't adjudicate it.** AMI's role is to show which methodology (AAOIFI, Bursa SAC, or a named index rulebook) produced a given verdict and why — never to declare one standard the "real" one and the other wrong. Where standards genuinely disagree, present the disagreement plainly and defer the final call to the user's own qualified Sharia authority; that is the load-bearing frame this whole module operates under.
+Beginners see a stock listed as "halal" on one screener and "non-compliant" on another and conclude someone made a mistake. That's the wrong frame. The correct mental model: **name the standard, don't adjudicate it.** AMI's role is to show which methodology (AAOIFI, the SC's SAC, or a named index rulebook) produced a given verdict and why — never to declare one standard the "real" one and the other wrong. Where standards genuinely disagree, present the disagreement plainly and defer the final call to the user's own qualified Sharia authority; that is the load-bearing frame this whole module operates under.
 
 ## The steelman
 
@@ -38,7 +38,7 @@ A skeptic might push further: "If the standards disagree this much, isn't the wh
 ## Quiz
 
 <Quiz
-  question="A stock screens compliant under a snapshot single-day market cap but non-compliant when checked against its 12-month trailing-average market cap. What does this most likely reflect?"
+  question="A stock screens compliant under a snapshot single-day market cap but non-compliant when checked against its 24-month trailing-average market cap (Dow Jones Islamic). What does this most likely reflect?"
   options={[
     "One of the two calculations must contain an arithmetic error",
     "The company's balance sheet changed materially between the two calculation dates",
@@ -50,9 +50,9 @@ A skeptic might push further: "If the standards disagree this much, isn't the wh
 />
 
 <Quiz
-  question="A stock is compliant under Bursa Malaysia's SAC methodology and non-compliant under an AAOIFI-style screen. What is the correct way for AMI to present this?"
+  question="A stock is compliant under Securities Commission Malaysia's SAC methodology and non-compliant under an AAOIFI-style screen. What is the correct way for AMI to present this?"
   options={[
-    "Declare the Bursa SAC result the correct one, since it is the more widely used standard in Malaysia",
+    "Declare the SC's SAC result the correct one, since it is the more widely used standard in Malaysia",
     "Name both results and which methodology produced each, without ruling on which standard is the 'true' answer — deferring the final call to the user's own qualified Sharia authority",
     "Declare the AAOIFI result the correct one, since it is the more conservative standard",
     "Refuse to display either result, since disagreement makes the screen meaningless"
@@ -63,10 +63,10 @@ A skeptic might push further: "If the standards disagree this much, isn't the wh
 
 ## Try it
 
-Ask the Fundamentals Analyst: "Which Sharia standard does AMI's halal Mandate flag apply, and what would change if I used a different one?" Compare the answer to this lesson's AAOIFI-vs-Bursa-SAC example. As you review, remember that AMI's training output demonstrates these published standards' methodologies; it is not a Sharia ruling, and real compliance judgments belong with a qualified scholar.
+Ask the Fundamentals Analyst: "Which Sharia standard does AMI's halal Mandate flag apply, and what would change if I used a different one?" Compare the answer to this lesson's AAOIFI-vs-SC-SAC example. As you review, remember that AMI's training output demonstrates these published standards' methodologies; it is not a Sharia ruling, and real compliance judgments belong with a qualified scholar.
 
 ## Takeaway
 
 When a stock's halal status differs across standards, the discipline is to name which methodology produced which result — never to pick a winner.
 
-*Where this comes from: AAOIFI's and Bursa Malaysia SAC's published screening methodologies; the Dow Jones Islamic, S&P Shariah, MSCI Islamic, and FTSE Shariah index rulebooks, each of which documents its own thresholds and denominators.*
+*Where this comes from: AAOIFI's and Securities Commission Malaysia's SAC's published screening methodologies; the Dow Jones Islamic, S&P Shariah, MSCI Islamic, and FTSE Shariah index rulebooks, each of which documents its own thresholds and denominators.*

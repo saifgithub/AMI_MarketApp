@@ -25,28 +25,26 @@ The phrase "deterministic compliance check" sounds technical because it has to b
 Imagine the simplest version of the check. The proposed trade arrives with fields:
 
 ```
-ticker: NVDA
+ticker: XOM
 side: BUY
-proposed_size_pct: 7.0
+proposed_size_pct: 60.0
 estimated_max_loss_pct: 4.5
-sector: technology
-region: us
-is_fossil: false
-is_halal_compliant: true
+sector: energy
 ```
 
 Your Mandate fields:
 
 ```
-max_position_pct: 5
+risk_score: 3
 max_drawdown_pct: 20
-halal: false
-no_fossil: false
-region_allowlist: [us, bursa_malaysia]
-long_only: false
+compliance:
+  halal: false
+  long_only: true
+  ticker_blocklist: [XOM]
+  ticker_allowlist: null
 ```
 
-The check runs in order, deterministically. *Is `proposed_size_pct` > `max_position_pct`?* 7.0 > 5 → BLOCK. *Is `region` in `region_allowlist`?* us → ok. *Does `no_fossil` apply?* No. *Does `halal` apply?* No. *Is `long_only` violated?* No. The first failure stops the chain and returns BLOCK with the specific clause. The PM persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same block. Edit your Mandate to `max_position_pct: 8` and run again — you get PASS. The model has not been re-prompted; the function read different data.
+The check runs every rule, in order, deterministically — and it does not stop at the first failure. It runs all of them and collects every violation, recording the first one hit as `blocked_by`. *Is `XOM` in `ticker_blocklist`?* Yes → violation, `blocked_by = "blocklist"`. *Is `proposed_size_pct` above the absolute single-name cap?* AMI enforces a fixed 50% ceiling on any one position regardless of risk tier — 60.0 > 50 → a second violation is appended. *Does `halal` apply?* No, skipped. *Is `long_only` violated?* No — this is a buy. Both violations are returned together in the result; the PM persona then takes that result and explains it in plain English in the <Term id="ami_verdict" /> footer. Run the same Verdict ten times — you get the same two violations. Remove XOM from `ticker_blocklist` and cut the proposed size to 40% and run again — you get PASS. The model has not been re-prompted; the function read different data.
 
 Now contrast: if the check were "ask the PM agent nicely whether this trade fits", the answer would drift. A persuasive Bull case in the same context window could shift the agent's response. A briefing note saying "be more flexible" could change the wording. The function does not see the Bull case. The function does not see briefing. It sees two structured objects and a list of rules.
 
@@ -59,12 +57,12 @@ The trap is thinking the compliance check is sophisticated AI judgment. It is no
 ## Quiz
 
 <Quiz
-  question="Your Mandate has `max_position_pct: 5`. Eleven agents argue for 7% on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the PM compliance check on each run?"
+  question="Your Mandate has NVDA on `ticker_blocklist`. Eleven agents argue for a position on NVDA with confidence 0.78 and a strong Bull case. You run the Verdict twice. What happens to the PM compliance check on each run?"
   options={[
     "It passes once the trading team's confidence is high enough",
     "It might pass on the second run because the model's mood varies",
     "It returns PASS the second time because the system learns from the first attempt",
-    "It returns BLOCK identically both times — the check is a deterministic function reading your Mandate field 5 against the proposed 7, not an LLM call"
+    "It returns BLOCK identically both times — the check is a deterministic function comparing NVDA against your `ticker_blocklist`, not an LLM call"
   ]}
   answer={3}
   explanation="The compliance check is deterministic — same inputs, same output, every time. Confidence, persuasion, and run number do not enter the function. That is the whole reason the check exists outside the model layer. The tempting wrong answer is 'learning from first attempt' — there is no learning loop on safety-floor rules; that would defeat the purpose."
@@ -84,7 +82,7 @@ The trap is thinking the compliance check is sophisticated AI judgment. It is no
 
 ## Try it
 
-Open **Settings → Mandate**. Set `max_position_pct` to 5. <Term id="ami_convene_the_room" /> on a US ticker until you see a proposal at 6% or higher get blocked. Now change `max_position_pct` to 10 and re-run the *exact same Verdict*. The block disappears even though the trading team's debate is identical. You just watched the deterministic function read different data.
+Open **Settings → Mandate**. Add a US ticker you're likely to convene on to your `ticker_blocklist`. <Term id="ami_convene_the_room" /> on that ticker until you see the PM block on the blocklist hit. Now remove the ticker from `ticker_blocklist` and re-run the *exact same Verdict*. The block disappears even though the trading team's debate is identical. You just watched the deterministic function read different data.
 
 ## Takeaway
 
