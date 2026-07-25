@@ -40,9 +40,14 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Pin the device locale to en-US — the app follows the system locale and every
-# text locator in this harness is the English string. Do this once per device/reset:
+# Pin the device locale to en-US — most locators in this harness are English
+# strings and expect the app's default (no in-app override set) to render in
+# English. Do this once per device/reset:
 adb -s R5CY91AY99Y shell settings put system system_locales en-US
+# Note: AMI Trade's language picker (Settings -> Language) is an app-level
+# override independent of this device setting — see "Multi-language matrix"
+# below. Pinning the device locale only fixes what Phase 1's *default* state
+# looks like; it doesn't need to change for AR/MS testing.
 
 # Confirm the device is visible:
 adb devices -l
@@ -94,6 +99,28 @@ Every run writes to `$AMI_REPORT_DIR` (default `hermes_folder/reports/appium/<ru
 **This harness never files a `DEF###` itself.** A human (or a later Claude session) reviews
 `summary.json` + the annotated screenshots and promotes confirmed findings into the defect
 register (`Source = prompt`).
+
+## Multi-language matrix (Phase 3)
+
+AMI Trade ships 3 languages (EN, AR, MS — `mobile/lib/l10n/app_{en,ar,ms}.arb`). The bottom-nav
+labels, tab headings, and hard-asserted content strings for each are in `config/locales.py`,
+copied verbatim from the live ARBs — see that file's docstring for real translation gaps already
+found this way (untranslated "Floor" tab, a mixed-script Convene sheet heading in AR/MS).
+
+```bash
+pytest -m locale -v          # EN + AR + MS: content probe, scroll-overflow, nav-bar overlap,
+                              # RTL bottom-nav mirroring — across the 5 tabs + Convene sheet
+```
+
+This switches the **in-app** language override (Settings -> Language) per locale, not the device
+locale — matches how a real user changes language, and needs no relaunch. Every mechanical check
+Phase 1 already proved out on English re-runs per locale, because translated strings change
+length: a header that fits in English can overflow or wrap once translated, which is exactly
+Saiful's original ask ("screens that do not scroll when they need to") triggered by locale
+instead of by data volume. `test_bottom_nav_mirrors_under_rtl` additionally hard-asserts that
+Arabic mirrors the bottom nav left/right, since that's a structural Flutter guarantee for the
+plain `Row` `HexBottomNav` uses (`mobile/lib/widgets/hex/hex_bottom_nav.dart`), not a heuristic —
+a mismatch there is a confirmed bug, not a human-triage candidate.
 
 ## Test data
 

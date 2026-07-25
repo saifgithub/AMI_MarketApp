@@ -62,6 +62,16 @@ def by_content_desc(driver: WebDriver, desc: str) -> WebElement:
     return elements[0]
 
 
+def all_by_text(driver: WebDriver, text: str) -> list[WebElement]:
+    """Every element with this exact text, not just the first — needed where
+    the same string can legitimately appear twice (e.g. Arabic has no case
+    distinction, so a translated tab label and a screen heading can collide
+    on an identical string where their English/Malay equivalents differ only
+    by case). Callers disambiguate by position (see helpers/locale_switch.py
+    and tests/test_locale_matrix.py)."""
+    return _find_all_with_retry(driver, f'text("{text}")')
+
+
 def exists_text(driver: WebDriver, text: str) -> bool:
     try:
         by_text(driver, text)

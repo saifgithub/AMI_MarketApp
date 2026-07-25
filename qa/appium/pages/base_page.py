@@ -4,6 +4,7 @@ visible text, there's no deep link to assert against."""
 
 from __future__ import annotations
 
+from config.locales import LOCALES
 from helpers.gestures import Band, tap_element
 from helpers.locators import exists_text, exists_text_contains, wait_visible_text
 
@@ -17,9 +18,15 @@ TOP_CHROME_PX = 220
 BOTTOM_NAV_PX = 160
 
 
-def open_tab(driver, tab_label: str) -> None:
+def open_tab(driver, tab_label: str, *, locale: str = "en") -> None:
+    """`tab_label` is always one of the English TAB_LABELS keys — a locale-
+    independent semantic identifier, not literal on-screen text. `locale`
+    picks which display string LOCALES resolves it to (see config/locales.py),
+    so every Phase 1 call site keeps working untouched with the English
+    default while the Phase 3 language matrix passes locale= explicitly."""
     assert tab_label in TAB_LABELS, f"{tab_label!r} is not a known bottom-nav tab: {TAB_LABELS}"
-    element = wait_visible_text(driver, tab_label)
+    display_text = LOCALES[locale].tab_labels[tab_label]
+    element = wait_visible_text(driver, display_text)
     tap_element(driver, element)
 
 

@@ -8,4 +8,6 @@ markers = [
     "scroll: non-scrolling-overflow mechanical check",
     "phase1: runnable this session, no seeded backend state or extra credentials needed",
     "phase2: needs seeded backend state, Alpaca/sign-in credentials, or long LLM-stream waits",
+    "phase3: full sweep / device matrix / visual-regression / language matrix (standing track)",
+    "locale: multi-language (EN/AR/MS) content + RTL + mechanical-check matrix",
 ]

@@ -86,3 +86,41 @@ the standing track (`Q`) to run it recurringly pre-release.
    `report.html` + `summary.json` + annotated screenshots.
 5. Any confirmed usability defect from that run is filed as `DEF###` (`ui_glitch`/`ux`),
    specifically confirming or ruling out the three static-analysis risk candidates above.
+
+## Phase 3 update — 2026-07-25, language matrix
+
+Saiful: *"We now have 3 languages. You need to prepare the test cases for 3 languages."*
+
+AR + MS translation delivery (CR083) and AR lesson serving (CR087) shipped since Phase 1, so
+the app now has 3 real, in-app-switchable languages. Delivered:
+
+- **`config/locales.py`** — per-locale `LocaleProfile` (tab labels, hard-assert content
+  strings, RTL flag), every string copied verbatim from the live
+  `mobile/lib/l10n/app_{en,ar,ms}.arb` on 2026-07-25 — never guessed.
+- **`helpers/locale_switch.py`** — switches the **in-app** language override (Settings ->
+  Language, `locale_provider.dart`), not the device/OS locale; matches how a real user changes
+  language, no relaunch needed (Riverpod state, MaterialApp re-renders live). Locates the
+  Settings tab without assuming current locale (tries all 3 known labels).
+- **`pages/base_page.py`**: `open_tab()` gained a `locale=` kwarg (default `"en"`, so all 10
+  existing Phase 1 call sites are untouched) resolving the semantic tab key to the right
+  on-screen string per locale.
+- **`tests/test_locale_matrix.py`** (new `phase3`/`locale` markers) — per locale (EN/AR/MS):
+  content probe + scroll-overflow across the 5 tabs, nav-bar-overlap + scroll-overflow on the
+  Convene sheet, and a hard-asserted RTL bottom-nav mirroring check (`HexBottomNav` is a plain
+  `Row` with no `textDirection` override, so AR mirroring left/right is a structural Flutter
+  guarantee, not a heuristic — unlike the scroll/navbar checks, a mismatch there fails the test
+  outright rather than only recording a finding).
+- **Real translation-consistency findings surfaced while extracting the ARB strings** (flagged
+  to Saiful in-session, not fixed here — this CR ships test tooling only): `tabFloor` stays
+  English/Latin-script in both AR and MS (possibly intentional, matches `floorConciergeHeading`
+  = "AMI CONCIERGE" staying untranslated everywhere — but worth a call); `tabPortfolio`/
+  `portfolioHeading` also stay English in MS only; most notably `conveneHeading` mixes scripts —
+  AR = `"CONVENE الغرفة"`, MS = `"CONVENE BILIK"` — while the sibling keys `conveneCta`/
+  `floorConveneCta` for the same concept get either fully translated (AR) or fully untranslated
+  (MS `"CONVENE"`), i.e. 3 different treatments of one concept across 3 keys. Also stale:
+  `settingsLanguagePlaceholderNote` still reads "AR + MS ship as placeholders today" even though
+  CR083/CR087 have since shipped real translations for most of the surface this harness touches.
+- **Not yet covered** (would need seeded state, same as Phase 1/2's existing gaps): trade-ticket
+  sheet, bug-report sheet, and Room/Lessons-reader content in AR/MS specifically (CR087 shipped
+  AR lesson bodies at ~81% coverage, MS lesson bodies at 3/342 — this matrix only reaches the
+  Lessons *landing* honeycomb, not an individual lesson's translated body).
