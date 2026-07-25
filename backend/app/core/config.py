@@ -182,9 +182,23 @@ class Settings(BaseSettings):
         "https://raw.githubusercontent.com/datasets/s-and-p-500-companies/"
         "main/data/constituents.csv"
     )
-    # SPUS refreshes daily; the index rebalances quarterly. Beyond this many days
-    # without a fresh as-of, the flag pauses loudly rather than reading stale.
+    # SPUS refreshes daily; the index rebalances quarterly. CR075 split the one
+    # window into two, each named:
+    #   sharia_staleness_days   — the SOURCE's own freshness. After a successful
+    #     fetch, `_sharia_universe_refresh()` logs `sharia_source_lagging` if the
+    #     file's own as-of is already older than this. It is the "the mirror looks
+    #     frozen" signal — the reader does not gate on it.
+    #   sharia_hold_window_days — the READER's window for a persisted row. CR075
+    #     reads from a stored snapshot instead of fetching on the request path, so
+    #     a source outage no longer blocks (the held list is served with its held
+    #     as-of). A held row is a lower risk to serve stale-ish than a just-fetched
+    #     file was, so its window is deliberately longer than the 7-day fetch
+    #     window — 30 days keeps every served list inside one quarterly rebalance
+    #     cycle while still pausing loudly (UNAVAILABLE) if the source has been
+    #     effectively dead for a month. This is the "much longer runway before the
+    #     pause fires" the CR buys, named rather than inherited.
     sharia_staleness_days: int = 7
+    sharia_hold_window_days: int = 30
 
     # CR069-DIVERGE — second-source (HLAL/FTSE Shariah) holdings CSV for the
     # divergence MONITOR only (app/services/sharia_divergence.py). Log-only:

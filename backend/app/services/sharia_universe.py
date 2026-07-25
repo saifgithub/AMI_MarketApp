@@ -33,6 +33,16 @@ threads a `set[str]`. `HalalUniverse` IS-A `frozenset` of the compliant tickers 
 drops into that seam unchanged, while carrying the parent index + provenance alongside so
 every enforcement path (including the Room's, which may only change one line) resolves the
 full three states rather than two.
+
+CR075 — persist and hold. The universe is now stored in `sharia_universe_snapshots`
+(append-only, one row per successful fetch) and the read path resolves from the latest
+row: no network on the request path, a restart reads the row instead of re-downloading,
+and a source outage serves the held list (disclosing its held `as_of`) instead of
+blocking every halal trade — DEF093's blast radius, softened. The network fetch moved to
+`run_sharia_refresh_tick()`, driven daily by `main.py::_sharia_universe_refresh()`. The
+production provider's fetcher is `_snapshot_fetcher` (a local DB read) and its staleness
+window is `sharia_hold_window_days`; the `HalalUniverse`/`resolve()` three-state seam is
+byte-unchanged, so `safety_floor` / `sim_engine` / `room_runner` are untouched.
 """
 
 from __future__ import annotations
@@ -45,9 +55,12 @@ import time
 from datetime import date, datetime, timezone
 
 import httpx
+from sqlalchemy import select
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.db import get_session
+from app.db.models import ShariaUniverseSnapshotRow
 from app.schemas.sharia import ShariaStatus, ShariaVerdict
 
 # ── Provenance constants ────────────────────────────────────────────────────
@@ -89,6 +102,24 @@ _REFETCH_INTERVAL_S = 900.0
 # about. This identifies AMI Trade honestly — it is not a browser impersonation, and
 # the screen must not come to depend on pretending to be one.
 _USER_AGENT = "AMI-Trade/1.0 (+https://agenticmarketintel.ai)"
+
+# ── CR075: persist-and-hold constants ───────────────────────────────────────
+# The read path resolves from a stored snapshot row, NOT the network. The
+# production provider's fetcher is `_snapshot_fetcher` (a cheap local DB read),
+# so `_ROW_READ_REFETCH_S` throttles how often the in-process cache re-reads the
+# row — short, because it is a local read and a fresh daily refresh (or a
+# first-boot seed) should be picked up within a minute, never a socket.
+_ROW_READ_REFETCH_S = 60.0
+
+# The daily `_sharia_universe_refresh()` tick is idempotent: a stored row younger
+# than this counts as "already refreshed today", so a restart shortly after a
+# fetch does NOT re-hit the network (same reasoning as `_league_roll_tick`).
+_SNAPSHOT_FRESH_WINDOW_S = 20 * 60 * 60  # 20 h
+
+# Degrade-loudly-on-the-REFRESHER (CR040 applied to the refresher, not the
+# reader): once the fetch has failed this many times in a row while a held row is
+# still being served, emit a distinct loud signal on top of the per-failure log.
+_REFRESH_FAILURE_LOUD_THRESHOLD = 3
 
 
 class ShariaSourceError(RuntimeError):
@@ -247,6 +278,64 @@ def _is_stale(as_of: date | None, now: date, max_age_days: int) -> bool:
     return (now - as_of).days > max_age_days
 
 
+def _network_snapshot_fetch(
+    compliant_url: str, parent_url: str
+) -> tuple[frozenset, date | None, frozenset]:
+    """Two real httpx round-trips → (compliant, as_of, parent). This is the ONLY
+    place a socket opens; it runs inside the background refresh task (off the
+    request path), never on a read. Reuses the CR069 fetchers so the floors and
+    parse contract are unchanged."""
+    with httpx.Client(
+        timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": _USER_AGENT}
+    ) as client:
+        compliant, as_of = fetch_compliant_universe(client, compliant_url)
+        parent = fetch_parent_index(client, parent_url)
+    return compliant, as_of, parent
+
+
+# ── CR075: snapshot storage (append-only) ───────────────────────────────────
+
+
+def latest_snapshot(
+    session, standard: str = STANDARD
+) -> ShariaUniverseSnapshotRow | None:
+    """The most recently fetched snapshot row for a standard (append-only table,
+    ordered by `fetched_at`). None when the table is empty (seed state)."""
+    return session.execute(
+        select(ShariaUniverseSnapshotRow)
+        .where(ShariaUniverseSnapshotRow.standard == standard)
+        .order_by(ShariaUniverseSnapshotRow.fetched_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
+
+def write_snapshot(
+    session,
+    *,
+    standard: str,
+    source_url: str,
+    parent_source_url: str,
+    compliant,
+    as_of: date | None,
+    parent,
+    fetched_at: datetime,
+) -> ShariaUniverseSnapshotRow:
+    """Append one snapshot row. Never updates or deletes — the history is the
+    defensibility record ("which names did AMI treat as compliant on day X")."""
+    row = ShariaUniverseSnapshotRow(
+        standard=standard,
+        source_url=source_url,
+        parent_source_url=parent_source_url,
+        as_of=as_of,
+        fetched_at=fetched_at,
+        compliant=sorted(str(t).upper().strip() for t in compliant),
+        parent=sorted(str(t).upper().strip() for t in parent),
+    )
+    session.add(row)
+    session.flush()
+    return row
+
+
 # ── Provider (cache + loud degrade) ─────────────────────────────────────────
 
 
@@ -287,12 +376,7 @@ class ShariaUniverseProvider:
         self._last_attempt: float | None = None
 
     def _default_fetcher(self) -> tuple[frozenset, date | None, frozenset]:
-        with httpx.Client(
-            timeout=_FETCH_TIMEOUT_S, headers={"User-Agent": _USER_AGENT}
-        ) as client:
-            compliant, as_of = fetch_compliant_universe(client, self._compliant_url)
-            parent = fetch_parent_index(client, self._parent_url)
-        return compliant, as_of, parent
+        return _network_snapshot_fetch(self._compliant_url, self._parent_url)
 
     def _paused(self, as_of: date | None = None) -> HalalUniverse:
         """A loud-degrade universe — resolves everything to UNAVAILABLE."""
@@ -356,18 +440,52 @@ class ShariaUniverseProvider:
         return self._cache
 
 
+# ── CR075: read path (resolve from the stored row, never a socket) ──────────
+
+
+def _snapshot_fetcher() -> tuple[frozenset, date | None, frozenset]:
+    """The production read-path 'fetcher' — a cheap LOCAL DB read of the latest
+    stored snapshot, NOT a network call. Wired into the provider by
+    `get_sharia_universe_provider()`, so `default_halal_universe()` never opens a
+    socket (CR075 acceptance A1: the first halal trade after boot touches none).
+
+    Empty table ⇒ raises `ShariaSourceError`, which the provider converts into a
+    loudly-paused (UNAVAILABLE) universe. This is the SEED path — first boot,
+    nothing fetched yet — and the only runtime path (feature enabled, no held row)
+    that produces UNAVAILABLE from an absence of data. A held row is returned as-is
+    and the provider gates its `as_of` against the hold window, so a source outage
+    with a valid held row resolves normally (A2), while a held row aged past the
+    window still pauses (A3)."""
+    with get_session() as session:
+        row = latest_snapshot(session)
+    if row is None:
+        raise ShariaSourceError(
+            "no sharia universe snapshot stored yet — seed pending "
+            "(the daily refresh has not yet written a row)"
+        )
+    return frozenset(row.compliant), row.as_of, frozenset(row.parent)
+
+
 _provider: ShariaUniverseProvider | None = None
 
 
 def get_sharia_universe_provider() -> ShariaUniverseProvider:
-    """Process-wide singleton, built from config on first use."""
+    """Process-wide singleton, built from config on first use.
+
+    CR075: the provider's fetcher is `_snapshot_fetcher` (a local read of the
+    stored row) rather than the network, and its staleness window is
+    `sharia_hold_window_days` (the reader's held-row window), so every request
+    resolves from persisted data with no socket and no first-request stall. The
+    network fetch lives in `run_sharia_refresh_tick()`, off the request path."""
     global _provider
     if _provider is None:
         _provider = ShariaUniverseProvider(
             compliant_url=settings.sharia_spus_holdings_url,
             parent_url=settings.sharia_parent_index_url,
-            staleness_days=settings.sharia_staleness_days,
+            staleness_days=settings.sharia_hold_window_days,
             enabled=settings.sharia_screen_enabled,
+            fetcher=_snapshot_fetcher,
+            refetch_interval_s=_ROW_READ_REFETCH_S,
         )
     return _provider
 
@@ -381,26 +499,146 @@ def reset_sharia_universe_provider(provider: ShariaUniverseProvider | None = Non
 def default_halal_universe() -> HalalUniverse:
     """The sourced `halal` universe for callers that don't pass one explicitly.
 
-    Usually cheap (cached), but **may block on network I/O** whenever a fetch or a
-    throttled refetch is due. Synchronous contexts only — anything running on the
-    event loop must use `default_halal_universe_async()`.
+    CR075: resolves from the latest stored snapshot row — a cheap local DB read,
+    **never a network fetch**. Synchronous contexts only; anything on the event
+    loop uses `default_halal_universe_async()` (sync SQLAlchemy off the loop).
 
-    When the feature is disabled or the source is unavailable/stale, returns a
-    paused universe so the halal flag degrades loudly instead of enforcing a stale
-    or placeholder set."""
+    When the feature is disabled, the source has never been fetched (seed), or the
+    held row has aged past its window, returns a paused universe so the halal flag
+    degrades loudly instead of enforcing a stale or placeholder set."""
     return get_sharia_universe_provider().get()
 
 
 async def default_halal_universe_async() -> HalalUniverse:
-    """Event-loop-safe accessor (the F3 fix).
+    """Event-loop-safe accessor.
 
-    `_default_fetcher()` is a synchronous `httpx.Client` doing two real round-trips
-    at up to 15s each. The API runs one uvicorn process with no `--workers`, so
-    calling it straight from an `async def` handler stalls the whole event loop —
-    every concurrent user, including an unrelated in-flight Room stream — not just
-    the triggering request. Offloaded to a worker thread, matching the
-    `run_in_executor` precedent at `app/api/sim.py:411`.
-
-    This is not a first-fetch-only concern: the F2 refetch tick means the blocking
-    call can recur for as long as the process lives."""
+    CR075: the read path no longer opens a socket — it reads the stored snapshot
+    row. The blocking work is now a cheap local DB read rather than two 15s httpx
+    round-trips, but it is still synchronous SQLAlchemy, so it stays off the event
+    loop via `asyncio.to_thread` (the one uvicorn process serves every concurrent
+    request, including in-flight Room streams). The network fetch happens only in
+    the background refresh task."""
     return await asyncio.to_thread(get_sharia_universe_provider().get)
+
+
+# ── CR075: background refresh (the ONLY socket; degrade loudly on the refresher) ─
+
+_consecutive_refresh_failures = 0
+
+
+def consecutive_refresh_failures() -> int:
+    """How many times in a row the refresh fetch has failed. Rises while a held
+    row keeps being served — the refresher-side degrade-loudly signal (CR040)."""
+    return _consecutive_refresh_failures
+
+
+def reset_refresh_failures() -> None:
+    global _consecutive_refresh_failures
+    _consecutive_refresh_failures = 0
+
+
+def _record_refresh_failure(exc: Exception) -> None:
+    global _consecutive_refresh_failures
+    _consecutive_refresh_failures += 1
+    logger.error(
+        "sharia_refresh_failed",
+        error=str(exc),
+        consecutive_failures=_consecutive_refresh_failures,
+    )
+    if _consecutive_refresh_failures >= _REFRESH_FAILURE_LOUD_THRESHOLD:
+        # The reader is legitimately still serving a good held list, so the user
+        # sees nothing — but a source that has been unreachable this many refreshes
+        # running must not be invisible to US (CR040 on the refresher, not the
+        # reader). This is the signal to page/investigate before the held row ages
+        # out of its window and the flag actually pauses.
+        logger.error(
+            "sharia_refresh_failing_repeatedly",
+            consecutive_failures=_consecutive_refresh_failures,
+            threshold=_REFRESH_FAILURE_LOUD_THRESHOLD,
+        )
+
+
+def _snapshot_is_fresh(row: ShariaUniverseSnapshotRow, now: datetime) -> bool:
+    """A stored row younger than `_SNAPSHOT_FRESH_WINDOW_S` counts as already
+    refreshed today — the idempotency guard that lets a restart skip the network."""
+    fetched = row.fetched_at
+    if fetched.tzinfo is None:  # sqlite round-trips naive; treat as UTC
+        fetched = fetched.replace(tzinfo=timezone.utc)
+    return (now - fetched).total_seconds() < _SNAPSHOT_FRESH_WINDOW_S
+
+
+def run_sharia_refresh_tick(
+    *,
+    fetcher=None,
+    now: datetime | None = None,
+    force: bool = False,
+    enabled: bool | None = None,
+) -> str:
+    """One refresh cycle: fetch the universe over the network and, unless a fresh
+    row is already stored, append a snapshot row (append-only). Returns a status
+    string: `disabled` | `skipped_fresh` | `stored` | `fetch_failed`.
+
+    Idempotent (mirrors `_league_roll_tick`): a tick that finds a fresh stored row
+    does nothing, so a restart shortly after a fetch never re-hits the source.
+    Degrades loudly on the REFRESHER: a failed fetch bumps the consecutive-failure
+    counter and logs, but leaves the held row untouched so the reader keeps serving
+    it. The network fetch is the ONLY socket in this feature."""
+    now = now or datetime.now(timezone.utc)
+    enabled = settings.sharia_screen_enabled if enabled is None else enabled
+    if not enabled:
+        logger.info("sharia_refresh_skipped_disabled")
+        return "disabled"
+
+    if not force:
+        with get_session() as session:
+            latest = latest_snapshot(session)
+        if latest is not None and _snapshot_is_fresh(latest, now):
+            logger.info(
+                "sharia_refresh_skipped_fresh",
+                fetched_at=latest.fetched_at.isoformat(),
+            )
+            return "skipped_fresh"
+
+    fetch = fetcher or (
+        lambda: _network_snapshot_fetch(
+            settings.sharia_spus_holdings_url, settings.sharia_parent_index_url
+        )
+    )
+    try:
+        compliant, as_of, parent = fetch()
+    except Exception as exc:  # httpx.HTTPError, ShariaSourceError, anything
+        _record_refresh_failure(exc)
+        return "fetch_failed"
+
+    with get_session() as session:
+        write_snapshot(
+            session,
+            standard=STANDARD,
+            source_url=settings.sharia_spus_holdings_url,
+            parent_source_url=settings.sharia_parent_index_url,
+            compliant=compliant,
+            as_of=as_of,
+            parent=parent,
+            fetched_at=now,
+        )
+    reset_refresh_failures()
+
+    if _is_stale(as_of, now.date(), settings.sharia_staleness_days):
+        # The fetch SUCCEEDED but the source's own file is older than its fresh
+        # window — the mirror looks frozen. Distinct from the reader's hold window:
+        # this is "the source is lagging", visible to us via `fetched_at` advancing
+        # while `as_of` does not (CR075 acceptance A4). The reader does not gate on
+        # this; it keeps serving until the hold window is exceeded.
+        logger.warning(
+            "sharia_source_lagging",
+            as_of=as_of.isoformat() if as_of else None,
+            max_age_days=settings.sharia_staleness_days,
+        )
+    logger.info(
+        "sharia_refresh_stored",
+        compliant=len(compliant),
+        parent=len(parent),
+        as_of=as_of.isoformat() if as_of else None,
+        fetched_at=now.isoformat(),
+    )
+    return "stored"

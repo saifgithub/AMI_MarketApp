@@ -55,6 +55,7 @@ if settings.env != "local" and settings.secret_key == "dev-secret-change-in-prod
 
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 _LEAGUE_ROLL_INTERVAL_SECONDS = 60 * 60  # hourly — weekly_roll() is idempotent
+_SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
 
 
 async def _nightly_audit_trim() -> None:
@@ -84,6 +85,23 @@ async def _league_roll_tick() -> None:
         await asyncio.sleep(_LEAGUE_ROLL_INTERVAL_SECONDS)
 
 
+async def _sharia_universe_refresh() -> None:
+    """Background task: fetch the sourced Sharia universe once a day and store a
+    snapshot row (CR075). Idempotent like `_league_roll_tick` — a tick that finds
+    a fresh stored row does nothing, so a restart can't miss a boundary. The
+    network fetch happens HERE (the only socket this feature opens), off the
+    request path and off the event loop (`to_thread`, since it does two ~15s httpx
+    round-trips); the read path resolves from the stored row and never blocks."""
+    from app.services.sharia_universe import run_sharia_refresh_tick
+
+    while True:
+        try:
+            await asyncio.to_thread(run_sharia_refresh_tick)
+        except Exception:
+            logger.exception("sharia_universe_refresh_failed")
+        await asyncio.sleep(_SHARIA_REFRESH_INTERVAL_SECONDS)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # AT:R34 (eeeb866f): respawn any room runs the previous boot left
@@ -99,6 +117,7 @@ async def lifespan(app: FastAPI):
     tasks = [
         asyncio.create_task(_nightly_audit_trim()),
         asyncio.create_task(_league_roll_tick()),
+        asyncio.create_task(_sharia_universe_refresh()),
     ]
     try:
         yield

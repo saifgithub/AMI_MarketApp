@@ -16,12 +16,13 @@ to `auth.users.id`, point auth-related code at the Supabase admin API.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -755,3 +756,50 @@ class SocialSentimentCacheRow(Base):
     fetched_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, index=True, nullable=False,
     )
+
+
+class ShariaUniverseSnapshotRow(Base):
+    """One persisted snapshot of the sourced Sharia universe (CR075).
+
+    Append-only: the daily `_sharia_universe_refresh()` background task writes one
+    row per SUCCESSFUL fetch, and the read path resolves from the latest row for a
+    standard by `fetched_at`. Persisting the universe takes the network fetch off
+    the request path (a restart reads the row, never a socket — CR069's
+    `default_halal_universe_async` no longer stalls the first halal trade after
+    boot) and turns a source outage from DEF093's every-halal-trade block into an
+    ageing-but-served list disclosing its held `as_of`.
+
+    `fetched_at` (OUR UTC stamp) is the freshness signal the parent-index mirror
+    never publishes: a frozen mirror is visible because `fetched_at` keeps
+    advancing across snapshots while `as_of` does not. Append-only also answers
+    "which companies did AMI treat as compliant on a given day" — one row per day
+    is negligible storage (two lists of a few hundred tickers), so retention is
+    unbounded for now, matching `llm_audit`.
+    """
+
+    __tablename__ = "sharia_universe_snapshots"
+    __table_args__ = (
+        Index(
+            "ix_sharia_snapshot_standard_fetched",
+            "standard",
+            "fetched_at",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    # The screening standard this snapshot enforces (e.g. "AAOIFI"). Indexed with
+    # fetched_at so "latest row for a standard" is a single ordered lookup.
+    standard: Mapped[str] = mapped_column(String, nullable=False)
+    source_url: Mapped[str] = mapped_column(String, nullable=False)
+    parent_source_url: Mapped[str] = mapped_column(String, nullable=False)
+    # The compliant file's OWN as-of date (nullable — the parent mirror publishes
+    # none). Staleness is measured against this at read time.
+    as_of: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    # OUR UTC stamp of when this snapshot was fetched — the missing freshness
+    # signal (a frozen source mirror keeps a fixed as_of while this advances).
+    fetched_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    # The compliant + parent ticker sets, stored as JSON lists (a few hundred each).
+    compliant: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
+    parent: Mapped[list] = mapped_column(JsonB(), default=list, nullable=False)
