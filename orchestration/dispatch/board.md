@@ -247,3 +247,11 @@ format template.
   as hard filters — a small `coder.mobile` lane the Architect will file (not DEF061's lane).
 - **Serialization clear:** coder.room holds only CR077-ROOM/`room_prompts.py`; `safety_floor.py` is free.
 - Register row flipped `open → laned` (DEF061.row.md), regen+verified (106 rows). `AT:architect`.
+- **DEF061-BE coder spawned** (isolated worktree, opus) against the launch-ready lane — building the
+  fossil+sin sourced classification snapshot on the CR069/CR075 templates (`sharia_universe.py` /
+  `ShariaUniverseSnapshotRow` / migration `b2d3e4f50021` / `_sharia_universe_refresh` / the halal
+  `resolve` seam). Fixture-based unit tests; live classification counts pair with the next promote
+  (CR075's flow). Independent audit + Architect repo-root re-verify gate it on `READY_FOR_AUDIT`.
+- **DEF061-MOBILE queued** (`lanes/DEF061-MOBILE.assign.md`) — the CR040 honesty half: relabel
+  `esg_lite` + `custom_constraints` in Settings so they stop advertising as hard filters while forked.
+  Activates on Saiful's esg/custom ruling (build → superseded; scope-out → this ships). Not blocking.
