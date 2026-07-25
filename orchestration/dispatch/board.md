@@ -291,3 +291,19 @@ format template.
 - **GATE not yet satisfied:** `independent`. The build is READY_FOR_AUDIT — the Architect re-verify is NOT a
   substitute; awaiting the independent auditor's `DEF061.auditor.md` VERDICT before integration to main. No
   integration performed. `AT:coder.api` (build) / `AT:architect` (verify + surface).
+
+### 2026-07-26 — DEF061-BE audited COMPLETE, integrated, promoted, ENABLED + live-verified
+
+- **Audited COMPLETE** (track-U run-49, zero BLOCKER/MAJOR, 1 non-blocking MINOR) → **integrated** `41f84a4`
+  (zero-overlap targeted checkout) → **promoted** `alpha-2026-07-26-2` (also carried the 165 CR060 content
+  fixes) → **enabled** `CLASSIFICATION_SCREEN_ENABLED=true` and ran the live classify pass.
+- **Live classify:** `classified=502 fossil=21 sin=8 defense=13`. Resolve verified on real names (XOM/CVX
+  fossil, MO/PM/STZ/TAP/BF.B/LVS/MGM/WYNN sin, LMT/RTX defense-esg, AAPL clean, unclassified → G3 permit).
+- **The live pass caught two defects the fixtures couldn't** (DEF089's "verify live" payoff), both fixed +
+  re-classified + verified by the Architect direct (mechanical, deterministic): **DEF107** — yfinance returns
+  `"Beverages - Brewers"` (spaced hyphen) not the em-dash the fixture assumed, so ALL alcohol was unscreened;
+  `_normalise_industry` now strips hyphen-spaces (`eb5fba3`). **DEF108** — class-share tickers list as `BF.B`
+  but yfinance needs `BF-B`, so Brown-Forman (alcohol) failed to fetch; `_yf_info` now normalises dot→hyphen
+  (`ce98cca`). sin went 5→7→8 across the two fixes.
+- **Still open:** `DEF061-ROOM` (custom_constraints PM-explain) + `DEF061-MOBILE` (Settings copy, now warranted
+  since the screen is live → the next store build +56). `AT:architect`.
