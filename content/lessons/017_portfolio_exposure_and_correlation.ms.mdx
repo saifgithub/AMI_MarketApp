@@ -11,56 +11,56 @@ topic: "exposure_correlation"
 prerequisites: ["014_position_sizing_basics", "016_risk_reward_ratio"]
 tags: ["risk", "portfolio", "correlation", "exposure"]
 agent_callouts: ["portfolio_manager", "neutral_debator"]
-locale_versions: ["en", "ms"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
 # Pendedahan portfolio dan korelasi
 
-Risiko per-dagangan hanyalah separuh daripada gambaran keseluruhan. Jika anda memegang lima kedudukan "berbeza" yang semuanya bergerak serentak apabila pasaran bersin, risiko sebenar anda bukan 5 × 1% — ia lebih dekat dengan 1 × 5%. Korelasi memakan diversifikasi tepat pada masa anda paling memerlukannya. Pelajaran ini mengajar anda untuk berfikir dalam istilah risiko terbuka keseluruhan, kluster sektor, dan perbezaan antara memegang banyak ticker dan memegang banyak pertaruhan bebas. PM memantau ini untuk anda di latar belakang dan akan menyekat dagangan yang mendorong pendedahan faktor tunggal melebihi had mandat anda.
+Risiko per-dagangan hanyalah separuh daripada gambaran. Jika anda memegang lima kedudukan "berbeza" yang bergerak bersama apabila pasaran bersin, risiko sebenar anda bukan 5 × 1% — ia lebih dekat dengan 1 × 5%. Korelasi memakan diversifikasi apabila anda paling memerlukannya. Pelajaran ini mengajar anda berfikir dalam istilah jumlah risiko terbuka, kluster sektor, dan perbezaan antara memegang banyak ticker dan memegang banyak pertaruhan bebas. Lantai keselamatan AMI mengenakan had saiz kedudukan nama tunggal dan had penurunan akaun anda secara automatik; pendedahan faktor tunggal merentasi nama yang berkorelasi bukan (semasa ini) sesuatu yang dilacak oleh aplikasi untuk anda — Portfolio Manager akan menerangkannya bersama anda dalam <Term id="ami_one_on_one" /> jika anda bertanya, tetapi mengenal pasti kluster tersebut pada mulanya adalah tanggungjawab anda.
 
-## Bagaimana ini berlaku dalam pasaran sebenar
+## Bagaimana ia berlaku dalam pasaran sebenar
 
-Katakan anda memegang lima kedudukan, masing-masing bersaiz pada 1% risiko akaun: NVDA, AMD, MSFT, GOOGL, META. Di atas kertas, anda mempunyai risiko $5,000 pada akaun $100,000 — 5%. Pada kenyataannya, dalam penurunan teknologi yang tajam, lima nama ini sering mencatat korelasi 0.7 hingga 0.9 antara satu sama lain (mereka bergerak turun bersama apabila kadar naik, apabila berita cip muncul, apabila Nasdaq mengalami hari yang buruk). Pada Selasa risiko-off tunggal pada suku tahun 1 2025, Nasdaq-100 turun 3.4% dalam sesi dan setiap satu daripada lima nama tersebut jatuh antara 4% hingga 7%. Buku lima kedudukan "terdiversifikasi" anda kehilangan kira-kira 4.5% dalam satu sesi — lebih dekat dengan satu pertaruhan teknologi besar daripada lima pertaruhan bebas.
+Katakan anda memegang lima kedudukan, masing-masing bersaiz pada 1% risiko akaun: NVDA, AMD, MSFT, GOOGL, META. Di atas kertas, anda mempunyai risiko $5,000 pada akaun $100,000 — 5%. Dalam realiti, dalam penurunan teknologi yang tajam, lima nama ini sering mencatatkan korelasi 0.7 hingga 0.9 antara satu sama lain (mereka bergerak turun bersama apabila kadar faedah melonjak, apabila berita cip muncul, apabila Nasdaq mengalami hari yang buruk). Pada hari Selasa risiko-off tunggal pada suku pertama 2025, Nasdaq-100 jatuh 3.4% dalam sesi dan kesemua lima nama tersebut jatuh antara 4% hingga 7%. Buku lima-kedudukan "terdiversifikasi" anda kehilangan kira-kira 4.5% dalam satu sesi — lebih dekat dengan satu pertaruhan teknologi besar berbanding lima pertaruhan bebas.
 
-Bandingkan dengan buku NVDA + JPM + XOM + KO + IHH di Bursa Malaysia (semitakon + bank + tenaga + barangan kegunaan + kesihatan). Pada hari Nasdaq turun 3.4% itu, JPM ditutup rata, XOM naik 1.1%, KO turun 0.4%, IHH naik 0.2%. Kluster faktor bebas menyerap kejutan teknologi. Lima kedudukan 1% yang sama, pendedahan dunia nyata yang sangat berbeza. Ujian boleh disangkal: jika 3 teratas pegangan anda bergerak bersama (tanda sama, magnitud serupa) pada lebih daripada 70% hari merah dalam suku tahun terakhir, anda tidak memegang tiga kedudukan — anda memegang satu kedudukan tiga kali.
+Bandingkan dengan buku NVDA + JPM + XOM + KO + IHH di Bursa Malaysia (sekonduktor + bank + tenaga + barang keperluan + kesihatan). Pada hari Nasdaq turun 3.4% itu, JPM tutup rata, XOM naik 1.1%, KO turun 0.4%, IHH naik 0.2%. Kluster faktor bebas menyerap kejutan teknologi. Lima kedudukan 1% yang sama, pendedahan dunia sebenar yang sangat berbeza. Ujian boleh disangkal: jika 3 pegangan teratas anda bergerak bersama (tanda yang sama, magnitud serupa) pada lebih daripada 70% hari merah dalam suku tahun terakhir, anda tidak memegang tiga kedudukan — anda memegang satu kedudukan sebanyak tiga kali.
 
 ## Perangkap
 
-Perangkapnya ialah mengira kedudukan bukannya mengira pertaruhan. Pemula dengan NVDA, AMD, dan TSM berfikir mereka memiliki tiga saham; PM melihat satu pertaruhan pada kitaran semikonduktor, bersaiz pada 3% risiko akaun ditambah apa jua amplifikasi beta sektor yang berlaku semasa penurunan. Model mental yang betul: tanya "jika tesis utama saya tentang ini salah, adakah semuanya akan terkena serentak?" Jika ya, anggap kluster itu sebagai satu kedudukan untuk tujuan saiz — bermakna jika had mandat anda mengekalkan risiko per-dagangan tunggal pada 1%, agregat kluster dikendalikan pada 1%, bukan 3%. Separuh lain perangkap ialah sebaliknya: mengelakkan pertaruhan berkorelasi dengan agresif sehingga anda berakhir dengan 15 kedudukan mikro yang tidak dapat anda pantau. Tiga hingga tujuh pertaruhan benar-benar bebas ialah julat kerja.
+Perangkapnya ialah mengira kedudukan berbanding mengira pertaruhan. Pemula dengan NVDA, AMD, dan TSM berfikir mereka memiliki tiga saham; PM melihat satu pertaruhan pada kitaran semikonduktor, bersaiz pada 3% risiko akaun ditambah apa-apa penguatan beta sektor yang berlaku semasa penurunan pasaran. Model mental yang betul: tanya "jika tesis utama saya tentang ini salah, adakah kesemuanya terkena serentak?" Jika ya, anggap kluster tersebut sebagai satu kedudukan untuk tujuan saiz — bermakna jika mandat anda mengurangkan risiko per-dagangan tunggal kepada 1%, agregat kluster dikurangkan kepada 1%, bukan 3%. Separuh lain perangkap ialah kebalikannya: mengelakkan pertaruhan berkorelasi dengan agresif sehingga anda berakhir dengan 15 kedudukan mikro yang tidak dapat dilacak. Tiga hingga tujuh pertaruhan yang benar-benar bebas ialah julat kerja.
 
 <ChatWith agent="portfolio_manager" />
 
 ## Kuiz
 
 <Quiz
-  question="Mandat anda menetapkan pendedahan faktor tunggal maksimum pada 5% daripada akaun. Anda sudah memegang NVDA (1.2%), AMD (1.0%), dan TSM (1.5%) — semua nama semikonduktor dengan korelasi 90 hari yang direalisasikan melebihi 0.8. Anda ingin menambah MU (cip memori) pada 1.5%. Apa kata lantai keselamatan PM?"
+  question="Anda menetapkan had pendedahan faktor tunggal 5% daripada akaun — AMI tidak melaksanakan ini secara automatik, jadi ia adalah peraturan sendiri yang perlu anda patuhi. Anda sudah memegang NVDA (1.2%), AMD (1.0%), dan TSM (1.5%) — semua nama semikonduktor dengan korelasi 90 hari yang direalisasikan melebihi 0.8. Anda ingin menambah MU (cip memori) pada 1.5%. Dengan meneliti bajet risiko sendiri, apakah bacaan yang berdisiplin?"
   options={[
     "Diluluskan — jumlah risiko terbuka hanya 5.2%, sedikit melebihi had dan dalam lingkungan pembundaran.",
-    "Ditolak — keempat-empat nama tersebut berfungsi sebagai satu pertaruhan semikonduktor pada agregat 5.2%, melebihi siling faktor tunggal 5%; pertaruhan mesti dikurangkan atau satu kaki mesti ditutup.",
+    "Ditolak — keempat-empat nama berfungsi sebagai satu pertaruhan semikonduktor pada agregat 5.2%, melebihi had faktor tunggal 5% anda; pertaruhan mesti dikurangkan atau satu kaki mesti ditutup.",
     "Diluluskan — setiap ticker berada di bawah 2% secara individu.",
     "Ditolak — empat kedudukan dalam sektor yang sama melanggar peraturan diversifikasi minimum lima sektor."
   ]}
   answer={1}
-  explanation="Jawapan salah yang menggoda ialah yang pertama: 'jumlah risiko terbuka ialah 5.2%, hampir pada had'. Jumlah risiko terbuka ialah metrik yang salah di sini — PM melaksanakan pendedahan faktor tunggal. Empat nama yang bergerak bersama dengan korelasi >0.8 runtuh menjadi satu faktor untuk tujuan risiko, dan 5.2% pendedahan faktor tunggal melanggar siling 5%. Perangkap 'lima sektor minimum' mencipta peraturan yang tidak wujud dalam mandat."
+  explanation="Jawapan salah yang menggoda ialah yang pertama: 'jumlah risiko terbuka ialah 5.2%, hampir pada had'. Jumlah risiko terbuka ialah metrik yang salah di sini — anda menjejaki pendedahan faktor tunggal, yang merupakan peraturan yang anda pegang sendiri kerana AMI tidak menyemaknya untuk anda. Empat nama yang bergerak bersama dengan korelasi >0.8 runtuh menjadi satu faktor untuk tujuan risiko, dan 5.2% pendedahan faktor tunggal melanggar had 5% anda. Perangkap 'lima sektor minimum' mencipta peraturan yang tiada siapa tetapkan."
 />
 
 <Quiz
-  question="Anda memegang AAPL, MSFT, dan ETF indeks S&P 500. ETF S&P 500 adalah kira-kira 13% AAPL + MSFT mengikut berat. Jika pasaran jatuh 5% dan dua kedudukan saham tunggal anda jatuh 6% setiap satu, bagaimana ini menggabungkan pendedahan sebenar anda berbanding apa yang dicadangkan oleh pandangan bilangan kedudukan?"
+  question="Anda memegang AAPL, MSFT, dan ETF indeks S&P 500 secara panjang. ETF S&P 500 mempunyai berat kira-kira 13% untuk AAPL + MSFT. Jika pasaran jatuh 5% dan kedudukan saham tunggal anda jatuh 6% setiap satu, bagaimana ini mampatkan pendedahan sebenar anda berbanding apa yang dicadangkan oleh pandangan bilangan kedudukan?"
   options={[
-    "ETF mengurangkan volatiliti, jadi pendedahan berkesan adalah lebih rendah daripada memegang nama-nama tunggal secara bersendirian.",
-    "Memegang ETF bersama AAPL dan MSFT bermakna anda memiliki dua nama tersebut dua kali (langsung + melalui ETF), jadi pendedahan AAPL+MSFT berkesan adalah lebih besar daripada yang disiratkan oleh bilangan kedudukan, dan penurunan yang dipacu teknologi menimpa kedua-dua lapisan pada masa yang sama.",
-    "Ia tidak menggabungkan — ETF adalah terdiversifikasi, jadi ia mengimbangi pergerakan nama tunggal.",
+    "ETF mengurangkan volatiliti, jadi pendedahan berkesan adalah lebih rendah daripada memegang nama tunggal secara bersendirian.",
+    "Memegang ETF bersama AAPL dan MSFT bermakna anda memiliki kedua-dua nama tersebut dua kali (secara langsung + melalui ETF), jadi pendedahan AAPL+MSFT berkesan adalah lebih besar daripada yang ditunjukkan oleh bilangan kedudukan, dan penurunan yang dipacu teknologi mengenai kedua-dua lapisan serentak.",
+    "Ia tidak mampatkan — ETF adalah terdiversifikasi, jadi ia mengimbangi pergerakan nama tunggal.",
     "Bilangan kedudukan ialah metrik yang betul — tiga kedudukan, tiga risiko bebas."
   ]}
   answer={1}
-  explanation="Jawapan salah yang memikat ialah 'ETF mengurangkan volatiliti, jadi pendedahan berkesan lebih rendah' — ETF indeks memang mengurangkan volatiliti berbanding pertaruhan terkonsentrasi tunggal, yang membuatnya terasa seperti pendedahan menurun. Tetapi soalan ini mengenai pertindihan, bukan volatiliti. ETF ialah 13% AAPL+MSFT, jadi anda memiliki nama-nama tersebut secara langsung dan sekali lagi di dalam indeks. Dalam penurunan yang dipacu teknologi, kedua-dua lapisan digabungkan: nama tunggal jatuh 6%, dan berat teknologi ETF menyeretnya turun bersama. Pendedahan ialah apa yang anda miliki melalui setiap pembungkus, bukan hanya item baris pada tiket."
+  explanation="Jawapan salah yang memikat ialah 'ETF mengurangkan volatiliti, jadi pendedahan berkesan lebih rendah' — ETF indeks memang mengurangkan volatiliti berbanding pertaruhan terkonsentrasi tunggal, yang membuatnya terasa seperti pendedahan menurun. Tetapi soalan ini mengenai pertindihan, bukan volatiliti. ETF ialah 13% AAPL+MSFT, jadi anda memiliki nama-nama tersebut secara langsung dan sekali lagi di dalam indeks. Dalam penurunan yang dipacu teknologi, kedua-dua lapisan mampatkan: nama tunggal jatuh 6%, dan berat teknologi ETF menyeretnya turun bersama mereka. Pendedahan ialah apa yang anda miliki melalui setiap pembungkusan, bukan hanya item baris pada tiket."
 />
 
 ## Cuba sendiri
 
-Buka editor <Term id="ami_mandate" /> dan tetapkan `max_single_factor_exposure_pct` kepada 5. Kemudian dalam <Term id="ami_decision_journal" />, lihat kedudukan terbuka semasa anda dan tanya Portfolio Manager dalam <Term id="ami_one_on_one" />: "Merangkumi kedudukan ini, apakah pendedahan faktor tunggal sebenar saya?" Jika PM menandakan kluster yang anda tidak perasan, anda baru sahaja mempelajari perbezaan antara bilangan kedudukan dan bilangan pertaruhan.
+Pilih had pendedahan faktor tunggal untuk diri anda — 5% adalah titik permulaan yang munasabah — dan tuliskan sebagai peraturan peribadi (AMI belum mempunyai medan untuk ini). Kemudian dalam <Term id="ami_decision_journal" />, lihat kedudukan terbuka semasa anda dan tanya Portfolio Manager dalam <Term id="ami_one_on_one" />: "Merentasi kedudukan ini, apakah pendedahan faktor tunggal sebenar saya?" Jika PM menandakan kluster yang tidak anda perasan, anda baru sahaja belajar perbezaan antara bilangan kedudukan dan bilangan pertaruhan.
 
-## Terasan
+## Pengajaran
 
-Kira pertaruhan, bukan ticker — jika pegangan teratas anda semua berdarah pada hari yang sama, anda memiliki satu kedudukan dalam kostum berbeza.
+Kira pertaruhan, bukan ticker — jika pegangan teratas anda semua berdarah pada hari yang sama, anda memiliki satu kedudukan dalam pakaian berbeza.

@@ -11,69 +11,68 @@ topic: "discipline_vs_excitement"
 prerequisites: ["045_greed", "046_fear_and_capitulation", "047_revenge_trading", "048_fomo", "049_overconfidence", "050_boredom_trading"]
 tags: ["psychology", "discipline", "process", "mandate", "portfolio_manager"]
 agent_callouts: ["portfolio_manager"]
-locale_versions: ["en", "ar"]
+locale_versions: ["en", "ar", "ms"]
 created_at: "2026-05-12"
-updated_at: "2026-05-12"
+updated_at: "2026-07-25"
 ---
+# الانضباط مقابل الحماس
 
-# Discipline vs excitement
+الانضباط هو المتداول الذي يلتزم بالخطة عندما تكون الخطة مملة. الحماس هو المتداول الذي ينحرف عن المسار عندما تكون الخطة مثيرة. بعد هذه الدرس، ستكون قادرًا على التمييز بين النوعين في الوقت الفعلي، وتحديد الوكيل في فريق <Term id="ami" /> الذي تتمثل مهمته في رفض الانخراط في الحماس، وضبط `risk_score`/أقصى خسارة مقبولة (max drawdown) بحيث يعمل <Term id="ami_pm_safety_floor" /> كحاجز أمان حقيقي وميكانيكي ضد نصف حجم المراكز المرتبط بكل مشاعر الدروس الستة السابقة — أما الباقي (فترات التهدئة، عدد الصفقات، عدد المراكز) فتتحمل مسؤوليته أنت، وتسجله في دفتر الملاحظات. الهدف ليس أن تشعر بقليل من المشاعر، بل أن تجعل المشاعر غير ذات صلة بحجم المركز.
 
-Discipline is the trader who follows the plan when the plan is boring. Excitement is the trader who deviates when the plan is exciting. After this lesson you will be able to tell the two apart in real time, name the agent on <Term id="ami" />'s team whose job is to refuse to be exciting, and configure the Portfolio Manager's mandate so the <Term id="ami_pm_safety_floor" /> is the deterministic backstop against every emotion the prior six lessons described. The goal is not to feel less. It is to make the feeling irrelevant to the position size.
+## كيف يظهر هذا في الأسواق الحقيقية
 
-## How this plays out in real markets
+كان لدى متداول عملية مكتوبة: فرض <Term id="ami_mandate" /> لمخاطرة 1% لكل صفقة (عبر `risk_score`) وأقصى خسارة مقبولة 20%، بالإضافة إلى قواعد فرضها على نفسه وتابعها في <Term id="ami_decision_journal" /> الخاص به — بحد أقصى 5 مراكز مفتوحة، وفرض فترة تهدئة لمدة ساعتين بعد وقف الخسارة، وحد أقصى 6 صفقات في الأسبوع. في الربع الأول الساخن، شاهد أقرانه يحققون عائدًا مركبًا بنسبة 35% على صفقات الزخم في TSLA وNVDA، بينما حقق كتابه المنضبط عائدًا هادئًا بنسبة 7%. فاز الحماس في الجدل؛ فقام بإلغاء قيود عدد الصفقات والمراكز التي فرضها على نفسه، ورفع `risk_score` لدفع مخاطرة كل صفقة إلى 3%، وتوقف عن احترام فترة التهدئة الخاصة به "لأن النظام يتجه نحو الاتجاه". في الشهر التالي، حدثت تصحيح حاد استمر 9 أيام كان من المفترض أن يكلفه 3% وفقًا لإعداداته الأصلية. لكن التكلفة كانت 14% — وكان فقط floor الأمان الخاص بمدير المحفظة (الجزء الذي *يُفرض ميكانيكيًا* — وهو سقف الخسارة المحدد في ولايته) هو ما منع الأمر من أن يتحول إلى كارثة حسابية بنسبة 22%. بعد ثلاثة أشهر، في يوم أحد هادئ، استعاد كل القواعد التي كان قد ألغاها. تطابقت عائداته المكتوبة بعد الاستعادة مع عائداته قبل الإلغاء. لم يضيف شهر الحماس سوى الثقب البالغ 14%.
 
-A trader had a written process: 1% per-trade risk, max 5 open positions, 2-hour cooldown after a stop, max 6 trades per week, and a <Term id="ami_mandate" />-enforced max drawdown of 20%. In a hot Q1 he watched his peers compound 35% on TSLA and NVDA momentum trades while his disciplined book returned a quiet 7%. Excitement won the argument; he removed the trade-count cap, raised per-trade risk to 3%, and disabled the cooldown "because the regime is trending". The next month brought a sharp 9-day pullback that should have cost him 3% on his original mandate. It cost 14% — and the PM's safety floor was the only thing that prevented it becoming a 22% account event. Three months later, on a calm Sunday, he restored every setting he had disabled. His written returns post-restoration matched his pre-disabling returns. The only thing the excitement-month had added was the 14% hole.
+النمط القابل للتفنيد: أنت تعمل بدافع الحماس وليس الانضباط، إذا قمت في آخر 14 يومًا بتخفيف *أي* قاعدة مخاطرة — سواء كانت مفروضة من الولاية (`risk_score`، `max_drawdown_pct`) أو مفروضة ذاتيًا (الحد الأقصى للمراكز، التهدئة، الحد الأقصى للصفقات) — دون تغيير مكتوب مقابلاً في معايير الاستراتيجية، ولقد حدث التخفيف أثناء أو مباشرة بعد سلسلة انتصارات أو ذروة في خوف تفويت الفرصة. تغيير واحد، بدون سبب موثق، توقيت مشبوه. هذه هي البصمة.
 
-The falsifiable pattern: you are running on excitement, not discipline, if in the last 14 days you have loosened *any* mandate parameter (per-trade risk, max positions, cooldown, max trades, max drawdown) without a corresponding written change in strategy criteria, and the loosening happened during or immediately after a winning streak or a fear-of-missing-out spike. One change, no documented reason, suspicious timing. That's the signature.
+## الفخ
 
-## The trap
-
-The trap is the belief that the mandate is too conservative *for this moment*. Every emotion in this module — greed, fear, revenge, FOMO, overconfidence, boredom — speaks in this exact sentence. The mandate is always too conservative for this moment, because the mandate is calibrated for *every* moment, including the one you have not yet seen. The Portfolio Manager's role is to be the version of you that does not have a stomach. Its safety floor is uncoachable on purpose: the system refuses to let any single emotional moment outvote the trader who wrote the rules. The correct mental model: discipline is not the absence of excitement. Discipline is excitement that does not touch the position size. Feel it, journal it, take the setup the plan permits, decline the one it doesn't. The P&L over a year is overwhelmingly determined by how many bad trades you didn't take, not how many good ones you did.
+الفخ هو الاعتقاد بأن الولاية متحفظة للغاية *في هذه اللحظة*. كل مشاعر هذا الوحدة — الجشع، الخوف، الانتقام، FOMO، الثقة الزائدة، الملل — تتحدث بهذه الجملة بالضبط. الولاية دائمًا متحفظة للغاية في هذه اللحظة، لأن الولاية معايرة لـ *كل* لحظة، بما في ذلك اللحظة التي لم ترها بعد. دور مدير المحفظة (Portfolio Manager) هو أن يكون النسخة منك التي لا تملك معدةً. floor الأمان الخاص به غير قابل للتدريب عن قصد: النظام يرفض أن يسمح لأي لحظة عاطفية واحدة بالتصويت ضد المتداول الذي كتب القواعد. نموذج التفكير الصحيح: الانضباط ليس غياب الحماس. الانضباط هو الحماس الذي لا يلمس حجم المركز. اشعر به، سجله، خذ الإعداد الذي تسمح به الخطة، وامتنع عن الذي لا تسمح به. صافي الربح والخسارة (P&L) على مدار عام يتحدد بشكل ساحق بعدد الصفقات السيئة التي لم تأخذها، وليس بعدد الصفقات الجيدة التي أخذتها.
 
 <ChatWith agent="portfolio_manager" />
 
-## Quiz
+## اختبار
 
 <Quiz
-  question="صديقك يحقق ربحاً بنسبة 60% منذ بداية العام (YTD) بمخاطرة 4% لكل صفقة. أنت تحقق ربحاً بنسبة 11% منذ بداية العام بمخاطرة 1% لكل صفقة وفقاً لـ Mandate الخاص بك. السوق في اتجاه. ما هو الإجراء المنضبط؟"
+  question="صديقك يحقق ربحاً بنسبة 60% منذ بداية العام (YTD) بمخاطرة 4% لكل صفقة. أنت تحقق ربحاً بنسبة 11% منذ بداية العام بمخاطرة 1% لكل صفقة وفقاً لـ Mandate الخاص بك. السوق في اتجاه واضح. ما هو الإجراء المنضبط؟"
   options={[
-    "زيادة المخاطرة لكل صفقة إلى 4% — نتائج صديقك تؤكد أن النظام يدعم ذلك.",
+    "رفع مخاطرة الصفقة الواحدة إلى 4% — نتائج صديقك تؤكد أن النظام يدعم ذلك.",
     "مطابقة صفقات صديقك تماماً لضمان نفس ملف العائد.",
-    "التسوية عند 2% — لقاء صديقك في المنتصف.",
-    "الالتزام بمخاطرة 1% لكل صفقة؛ توزيع الخسائر المحتملة لصديقك ليس توزيع خسائرك، ولم ترَ بعد كيف تبدو أسوأ أسبوع له عند مستوى مخاطرة 4%."
+    "التوصل إلى حل وسط عند 2% — لقاء صديقك في المنتصف.",
+    "البقاء على مخاطرة 1% لكل صفقة؛ توزيع الخسائر المحتملة لصديقك ليس توزيع خسائرك، ولم ترَ بعد كيف تبدو أسوأ أسبوع بمخاطرة 4% في حسابهم."
   ]}
   answer={3}
-  explanation="الإجابة المغرضة الخاطئة هي 2% — لغة الحماس تتفاوض على الانضباط عبر عبارة 'لقاء المنتصف'. قد يكون 4% الرقم الصحيح لاستراتيجية صديقك في حسابه، أو قد يكون الرقم الذي ينتج عنه شهر بخسارة 40% لم تره بعد. لن تعرف ذلك إلا عند وصول ذلك الشهر. حتى ذلك الحين، الـ Mandate الخاص بك هو الرقم الذي ينجو من كل شهر. الانضباط يقول: لا تقترض أسوأ أسبوع لشخص آخر قبل أن تعيش أسوأ أسبوع لك عند حجمك الخاص."
+  explanation="الإجابة الخاطئة المغرية هي 2% — 'لقاء المنتصف' هي اللغة التي يستخدمها الحماس للتفاوض مع الانضباط. قد يكون 4% هو الرقم الصحيح لاستراتيجية صديقك في حسابهم، أو قد يكون الرقم الذي ينتج عنه شهر بخسارة 40% لم تره بعد. لن تعرف ذلك حتى يصل ذلك الشهر. حتى ذلك الحين، الـ Mandate الخاص بك هو الرقم الذي ينجو من كل شهر. الانضباط يقول: لا تقترض أسوأ أسبوع لشخص آخر قبل أن تعيش أسوأ أسبوع لك بنفس حجمك."
 />
 
 <Quiz
-  question="ما هو أقوى مؤشر موضوعي على أن الحماس قد تجاوز الانضباط في حسابك؟"
+  question="ما هو أقوى مؤشر موضوعي على أن الحماس قد تغلب على الانضباط في حسابك؟"
   options={[
-    "حسابك يحقق مكاسب كبيرة هذا الربع.",
+    "حسابك يحقق أرباحاً كبيرة هذا الربع.",
     "أخذت صفقة لم تكن لتأخذها في العام الماضي.",
-    "خلال آخر 14 يوماً، خففت من معيار في الـ Mandate دون تغيير مكتوب مقابل في معايير الاستراتيجية، وقد حدث التخفيف أثناء أو مباشرة بعد سلسلة ربح أو ذروة FOMO.",
-    "تشعر بالحماس تجاه تداولك."
+    "خلال آخر 14 يوماً، خففت من معيار الـ Mandate على الأقل مرة واحدة دون تغيير مكتوب مقابل في معايير الاستراتيجية، وقد حدث التخفيف أثناء أو مباشرة بعد سلسلة انتصارات أو ذروة FOMO.",
+    "أشعر بالحماس تجاه تداولي."
   ]}
   answer={2}
-  explanation="الشعور بالحماس أمر جيد ولا يمكن دحضه. الربع الجيد هو نتيجة. التداول بإعداد لم تكن لتأخذه العام الماضي قد يكون نمواً أو انحرافاً — بمفرده لا يحدد أيهما. الاختبار المركب — تخفيف الـ Mandate، عدم وجود تغيير موثق في المعايير، توقيت مشبوه — هو التوقيع القابل للتدقيق الذي يميز الحماس عن تطور العملية. تطور العملية موثق قبل التنفيذ؛ الحماس يُوثق بعد ذلك، إن وُثّق أصلاً."
+  explanation="الشعور بالحماس أمر جيد وغير قابل للدحض. الربع الجيد هو نتيجة. تداول إعداد لم تكن لتأخذه في العام الماضي قد يكون نمواً أو انحرافاً — بمفرده لا يحدد أيهما. اختبار المركب — تخفيف الـ Mandate، عدم وجود تغيير موثق في المعايير، التوقيت المشبوه — هو البصمة القابلة للتدقيق التي تميز بين الحماس وتطور العملية. تطور العملية موثق قبل التنفيذ؛ الحماس يُوثق بعد ذلك، إن وُثّق أصلاً."
 />
 
 <Quiz
-  question="يوم الجمعة. أنت رابح بنسبة 18% منذ بداية العام مقابل حد أقصى للخسارة بنسبة 20% في الـ Mandate. لديك 4 مراكز مفتوحة. أشار Portfolio Manager مؤخراً إلى أنك قدمت مركزاً خامساً بمخاطرة 4% (الـ Mandate الخاص بك هو 1%). السوق يغلق خلال 30 دقيقة. ما هو الإجابة التوليفية؟"
+  question="إنه يوم الجمعة. أنت رابح بنسبة 18% منذ بداية العام مقابل حد أقصى للخسائر (max-drawdown) بنسبة 20% في الـ Mandate. لديك 4 مراكز مفتوحة. أشار مدير المحفظة (Portfolio Manager) للتو إلى أنك قدمت مركزاً خامساً بمخاطرة 4% (مخاطرة الـ Mandate هي 1%). السوق يغلق خلال 30 دقيقة. ما هو الإجابة التوليفية؟"
   options={[
-    "إلغاء المركز الخامس تماماً وإغلاق أحد المراكز الأربعة القائمة لتوفير مساحة له بمخاطرة كاملة 4%.",
-    "تجاوز تحذير الـ PM — إنه يوم الجمعة، كنت محقاً طوال العام، وسقف الأمان محافظ جداً لهذا الإعداد.",
-    "تقليل المركز الخامس إلى 1% وفقاً للـ Mandate وتقديمه؛ إذا كان الإعداد حقيقياً، لن يكون الحجم الكامل مطلوباً.",
-    "تقديم المركز الخامس بنسبة 2% كتسوية بين الـ Mandate وإقناعك."
+    "إلغاء المركز الخامس بالكامل وإغلاق أحد المراكز الأربعة الموجودة لتخصيص مساحة له بمخاطرة كاملة بنسبة 4%.",
+    "تجاوز تحذير مدير المحفظة — إنه يوم الجمعة، وكنت محقاً طوال العام، وسقف الأمان محافظ جداً لهذا الإعداد.",
+    "تقليل المركز الخامس إلى 1% وفقاً للـ Mandate وتقديمه؛ إذا كان الإعداد حقيقياً، فلن تكون هناك حاجة للحجم الكامل.",
+    "تقديم المركز الخامس بنسبة 2% كحل وسط بين الـ Mandate وإقناعك."
   ]}
   answer={2}
-  explanation="تحذير سقف الأمان من الـ PM هو النظام يخبرك أن نسخة منك التي كتبت الـ Mandate تختلف عن نسخة منك تضع هذا الأمر. الإجابة الصحيحة هي التي تحترم الاثنين: تنفيذ الإعداد بالحجم الذي يسمح به الـ Mandate. 'تجاوز' هو حركة الحماس النموذجية — كل قصة تحذيرية في هذا الوحدة تنتهي بشخص يتجاوز سقف أمان في عصر يوم الجمعة. 'إلغاء واحد لتمويل آخر بحجم 4 أضعاف' هو نفس التجاوز مرتدياً زي إدارة المحفظة. '2% كتسوية' هو حماس يتفاوض على خصم لنفسه. إذا كان الإعداد حقيقياً، سيجني 1% المال؛ إذا لم يكن حقيقياً، سيخسر 4% أربعة أضعاف أكثر. اللامتماثل هو نقطة وجود الـ Mandate بأكملها."
+  explanation="تحذير سقف الأمان من مدير المحفظة هو النظام يخبرك أن النسخة منك التي كتبت الـ Mandate تختلف عن النسخة منك التي تضع هذا الطلب. الإجابة الصحيحة هي التي تحترم الاثنين: خذ الإعداد بالحجم الذي يسمح به الـ Mandate. 'تجاوز' هو حركة الحماس النموذجية — كل قصة تحذيرية في هذا الوحدة تنتهي بشخص يتجاوز سقف الأمان في يوم جمعة بعد الظهر. 'إلغاء واحد لتمويل آخر بحجم 4 أضعاف' هو نفس التجاوز مرتدياً ثوب إدارة المحفظة. '2% كحل وسط' هو حماس يتفاوض على خصم لنفسه. إذا كان الإعداد حقيقياً، فسيحقق 1% أرباحاً؛ إذا لم يكن حقيقياً، فسيخسر 4% أربعة أضعاف أكثر. عدم التماثل هو النقطة الكاملة من وجود الـ Mandate."
 />
 
-## Try it
+## جرّب ذلك
 
-Open Settings → Mandate and review every parameter: `max_per_trade_risk_pct`, `max_open_positions`, `cooldown_after_stop_minutes`, `max_trades_per_week`, `max_drawdown_pct`. For each one, ask: have I changed this in the last 14 days, and is the change documented in the <Term id="ami_decision_journal" /> with a written criteria reason? If any answer is "changed, no reason", restore the prior value before the next session. Then start a <Term id="ami_one_on_one" /> with the Portfolio Manager and ask: "Run my mandate against my last 30 trades — where would the safety floor have flagged?"
+افتح الإعدادات → الولاية واستعرض ما يتم فرضه هناك فعليًا: `risk_score` الخاص بك (الذي يحدد الحد الأقصى لكل صفقة) و`max_drawdown_pct`. ثم اكتب قواعدك المفروضة ذاتيًا — الحد الأقصى للمراكز المفتوحة، فترة التهدئة بعد وقف الخسارة، الحد الأقصى للصفقات في الأسبوع — بجانبها (لا تمتلك AMI حقولاً لهذه؛ فهي لك لتحميها). بالنسبة لكل واحدة، اسأل: هل غيرت هذا في آخر 14 يومًا، وهل التغيير موثق في <Term id="ami_decision_journal" /> مع سبب معايير مكتوب؟ إذا كانت أي إجابة "تم التغيير، بدون سبب"، فاستعد القيمة السابقة قبل الجلسة التالية. ثم ابدأ <Term id="ami_one_on_one" /> مع مدير المحفظة واسأل: "شغّل ولايتي ضد آخر 30 صفقة لي — أين كان floor الأمان ليكشف؟"
 
-## Takeaway
+## الخلاصة
 
-Discipline is excitement that does not touch the position size. The Portfolio Manager's safety floor is the version of you that does not have a stomach — let it vote.
+الانضباط هو الحماس الذي لا يلمس حجم المركز. floor الأمان الخاص بمدير المحفظة هو النسخة منك التي لا تملك معدةً — دعها تصوت.
