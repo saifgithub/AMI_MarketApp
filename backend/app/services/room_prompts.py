@@ -26,6 +26,7 @@ from app.services.agent_prompts import build_agent_prompt
 from app.services.journal_context import build_journal_context_block
 from app.services.llm_gateway import ChatMessage
 from app.trading_math.risk import drawdown_contribution
+from app.trading_math.sizing import risk_tier_cap
 from app.trading_math.valuation import net_position_phrase
 
 # ── Phase framing ────────────────────────────────────────────────────────
@@ -163,7 +164,7 @@ def build_room_messages(
     ticker: str,
     profile: dict[str, Any],
     transcript: list[AgentMessage],
-    alpaca_snapshot: str | None = None,
+    portfolio_snapshot: str | None = None,
     plan: Any = None,
     trade_proposal: dict[str, Any] | None = None,
     halal_universe: Any = None,
@@ -175,8 +176,11 @@ def build_room_messages(
     `_PROSE_FORMAT` and no forced action; `enforce_safety_floor()` vetoes its
     decision afterward, it doesn't dictate it beforehand.
 
-    `alpaca_snapshot` is a pre-formatted text block from
-    alpaca_service.snapshot_text(); injected after user_overlay when set.
+    `portfolio_snapshot` is the always-present, sim-sourced holdings block the runner
+    builds once per run (CR055); it is injected after user_overlay through
+    `build_agent_prompt`'s portfolio slot so every agent sees the user's real
+    holdings (or an explicit "no open positions" for a new user, or a loud
+    "unavailable" line on failure — never silence).
 
     `plan` gates the Decision Journal lookback window (DEF054/DEF055) for
     Bull/Bear Researcher — same retention-by-plan rule journal_store
@@ -192,7 +196,7 @@ def build_room_messages(
         agent_id,
         mandate,
         user_id=user_id,
-        alpaca_snapshot=alpaca_snapshot,
+        portfolio_snapshot=portfolio_snapshot,
         halal_universe=halal_universe,
         ticker=ticker,
     )
@@ -215,6 +219,33 @@ def build_room_messages(
     proposal = trade_proposal if phase in ("RISK", "VERDICT") else None
     drawdown_line = _drawdown_snapshot_line(mandate, proposal)
 
+    # CR055: long_only, said plainly. The bare compliance flag was misread by a Trader
+    # as forbidding a second entry in a name already held — long_only only bars shorts.
+    long_only_line = ""
+    if mandate.compliance.long_only:
+        long_only_line = (
+            "- long_only: long-only = no short/negative positions. It does NOT forbid "
+            "buying, adding to, or holding a name.\n"
+        )
+
+    # CR055 (extends CR046 M03 to the researchers): the Bull/Bear/Research-Manager
+    # propose a size but did NOT carry the enforced single-name cap the Trader & PM see,
+    # so they routinely suggested ~4x what the system enforces (the 10–15%-vs-3.0%
+    # incoherence that seeded the SCHD phantom-holding). Hand them the same ceiling.
+    researcher_cap_note = ""
+    if agent_id in (
+        AgentId.BULL_RESEARCHER,
+        AgentId.BEAR_RESEARCHER,
+        AgentId.RESEARCH_MANAGER,
+    ):
+        cap = risk_tier_cap(mandate.risk_score)
+        researcher_cap_note = (
+            f"\nSizing ceiling: any position size you suggest must respect the enforced "
+            f"single-name cap of {cap:.1f}% of portfolio (risk_score={mandate.risk_score}). "
+            f"Do NOT propose a larger allocation — the system clamps to this cap, so a "
+            f"bigger number is both wrong and misleading.\n"
+        )
+
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
         f"Ticker: {ticker}\n"
@@ -223,7 +254,9 @@ def build_room_messages(
         f"User mandate snapshot:\n"
         f"- risk_score: {mandate.risk_score} (1=most conservative, 5=most aggressive)\n"
         f"{drawdown_line}\n"
+        f"{long_only_line}"
         f"- locale: {mandate.locale}\n"
+        f"{researcher_cap_note}"
         f"\n"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"

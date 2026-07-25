@@ -74,6 +74,7 @@ from app.services.credit_service import refund, room_cost_for_plan, spend
 from app.services.entitlements import effective_plan_for_user
 from app.services.tier_policy import pick_tier
 from app.services.alpaca_service import snapshot_text as alpaca_snapshot_text
+from app.services.sim_engine import get_sim_engine
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import risk_debator_sizes, risk_tier_cap
@@ -240,7 +241,9 @@ class _RoomContext:
     halal_universe: set[str]
     locale_allowed_universe: set[str] | None
     user_id: UUID | None = None
-    alpaca_snapshot: str | None = None  # AT:R45 — pre-fetched once per run
+    # CR055: the always-present portfolio-of-record block (sim holdings + optional
+    # Alpaca overlay), built once per run and injected into every agent's prompt.
+    portfolio_snapshot: str | None = None
     # Populated as phases progress
     bull_thesis: str = ""
     bear_risk: str = ""
@@ -429,6 +432,123 @@ def _risk_tier_size_ceiling(risk_score: int) -> float:
     Canonical values live in app.trading_math.sizing (CR046 M03) — the same
     table the Trader's prompt narration now reads, so shown == enforced."""
     return risk_tier_cap(risk_score)
+
+
+# ── Portfolio holdings block (CR055) ──────────────────────────────────────
+
+_SIM_PORTFOLIO_HEADER = (
+    "─── YOUR SIMULATED PORTFOLIO (AMI's portfolio of record — simulation-only) ───"
+)
+
+
+def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
+    """The user's REAL simulated holdings, rendered for EVERY Room agent (CR055).
+
+    Why this exists: the Room used to inject a holdings block only when the user had
+    linked an Alpaca paper account, so a brand-new user got ZERO holdings data — pure
+    silence. The model resolved the "you know the portfolio" promise against that
+    silence by inventing a position (the SCHD incident: a fabricated 10–15% holding
+    that made the Trader refuse to buy). This block is ALWAYS present: a new/empty user
+    gets an explicit "you hold 0% of <TICKER>", never nothing.
+
+    Degrades LOUDLY (CLAUDE.md / CR040): any sim-fetch failure renders a visible
+    'Portfolio unavailable this run.' line — never an omitted or silent block, because
+    silence is precisely the defect this closes (a DEF059-class trap).
+
+    This is AMI's portfolio of record; a linked Alpaca paper account (if any) is folded
+    in by `_compose_portfolio_block` as a clearly-labelled external overlay, so exactly
+    one authoritative portfolio is emitted.
+    """
+    ticker_u = ticker.upper()
+    if user_id is None:
+        return (
+            f"{_SIM_PORTFOLIO_HEADER}\n"
+            f"No portfolio is attached to this run. You hold 0% of {ticker_u} — treat "
+            f"any BUY as opening a NEW position.\n"
+            f"───"
+        )
+    try:
+        sim = get_sim_engine()
+        portfolio = sim.ensure_portfolio(user_id)
+        cash = portfolio.current_cash
+        total = sim.total_value(user_id)
+        open_trades = sim.list_trades(user_id, status="open")
+        # Aggregate open trades per name (a name may have more than one open lot).
+        agg: dict[str, list[float]] = {}
+        for t in open_trades:
+            sym = t.ticker.upper()
+            row = agg.setdefault(sym, [0.0, 0.0])  # [qty, cost_basis]
+            row[0] += t.quantity
+            row[1] += t.quantity * t.entry_price
+        marks = sim.current_marks(list(agg)) if agg else {}
+    except Exception as exc:  # noqa: BLE001 — degrade loudly, never silence
+        logger.warning(
+            "room_sim_holdings_failed",
+            user_id=str(user_id),
+            error=str(exc)[:200],
+        )
+        return (
+            f"{_SIM_PORTFOLIO_HEADER}\n"
+            f"Portfolio unavailable this run. Do NOT assume any holding in {ticker_u} "
+            f"or any other name — size every idea as if opening a NEW position.\n"
+            f"───"
+        )
+
+    lines = [
+        _SIM_PORTFOLIO_HEADER,
+        f"Cash: ${cash:,.2f} | Portfolio value: ${total:,.2f}",
+    ]
+    if not agg:
+        lines.append(
+            f"Open positions: none — you hold nothing yet. You hold 0% of {ticker_u}. "
+            f"Any BUY here opens a NEW position."
+        )
+    else:
+        lines.append("Open positions:")
+        for sym in sorted(agg):
+            qty, cost_basis = agg[sym]
+            mark = marks.get(sym, 0.0)
+            mkt_value = qty * mark
+            weight = (mkt_value / total * 100) if total else 0.0
+            unrealised = mkt_value - cost_basis
+            lines.append(
+                f"  {sym} ×{qty:g} ({weight:.1f}% of portfolio, "
+                f"unrealised {unrealised:+,.2f})"
+            )
+        if ticker_u in agg:
+            held_qty, _ = agg[ticker_u]
+            held_weight = (
+                (held_qty * marks.get(ticker_u, 0.0)) / total * 100 if total else 0.0
+            )
+            lines.append(
+                f"You currently hold {held_weight:.1f}% of {ticker_u} — a BUY adds to "
+                f"it, a SELL trims it."
+            )
+        else:
+            lines.append(
+                f"You hold 0% of {ticker_u} — no open position in it. Any BUY here "
+                f"opens a NEW position."
+            )
+    lines.append("───")
+    return "\n".join(lines)
+
+
+def _compose_portfolio_block(sim_block: str, alpaca_snap: str | None) -> str:
+    """One portfolio block per run (CR055 precedence).
+
+    The sim block is authoritative — AMI's portfolio of record. A linked Alpaca paper
+    account, when present, is appended below it as an explicitly-labelled external
+    overlay so the two never read as conflicting portfolios. Most users have no Alpaca
+    link, so this returns the sim block unchanged.
+    """
+    if not alpaca_snap:
+        return sim_block
+    overlay_label = (
+        "─── LINKED EXTERNAL PAPER ACCOUNT (informational overlay only — NOT AMI's "
+        "portfolio of record; reason about holdings from the SIMULATED portfolio "
+        "above) ───"
+    )
+    return f"{sim_block}\n\n{overlay_label}\n{alpaca_snap}"
 
 
 # Normalises PM vocabulary drift to the two Room actions (APPROVE/PASS).
@@ -1414,8 +1534,9 @@ class RoomRunner:
         # None = no locale restriction (default for alpha). Explicit set ⇒ enforced.
         locale_allowed = locale_allowed_universe
 
-        # AT:R45 — fetch Alpaca paper portfolio once per run; injected into
-        # every agent's system prompt. Best-effort: None if unlinked or error.
+        # AT:R45 — fetch Alpaca paper portfolio once per run; folded into the
+        # portfolio block as a clearly-labelled overlay. Best-effort: None if
+        # unlinked or error.
         alpaca_snap: str | None = None
         if user_id is not None:
             from app.db.models import User
@@ -1429,6 +1550,12 @@ class RoomRunner:
                         api_secret=urow.alpaca_refresh_token if urow.alpaca_auth_mode == "apikey" else None,
                     )
 
+        # CR055 — the real simulated holdings, injected UNCONDITIONALLY into every
+        # agent's prompt (never gated on an Alpaca link). Degrades loudly on failure;
+        # the sim block is authoritative, Alpaca is a labelled overlay on top.
+        sim_block = _build_sim_holdings_block(user_id, ticker)
+        portfolio_snapshot = _compose_portfolio_block(sim_block, alpaca_snap)
+
         ctx = _RoomContext(
             ticker=ticker.upper(),
             mandate=mandate,
@@ -1437,7 +1564,7 @@ class RoomRunner:
             halal_universe=halal,
             locale_allowed_universe=locale_allowed,
             user_id=user_id,
-            alpaca_snapshot=alpaca_snap,
+            portfolio_snapshot=portfolio_snapshot,
             profile=_profile_for_ticker(ticker),
         )
 
@@ -1507,7 +1634,7 @@ class RoomRunner:
                             char_delay_min=char_delay_min,
                             char_delay_max=char_delay_max,
                             agent_timeout_s=agent_timeout_s,
-                            alpaca_snapshot=ctx.alpaca_snapshot,
+                            portfolio_snapshot=ctx.portfolio_snapshot,
                         ):
                             yield ev
                 else:
@@ -1750,7 +1877,7 @@ async def _speak_one_agent(
     char_delay_min: float,
     char_delay_max: float,
     agent_timeout_s: float = _AGENT_LLM_TIMEOUT_S,
-    alpaca_snapshot: str | None = None,
+    portfolio_snapshot: str | None = None,
 ) -> AsyncIterator[RoomEvent]:
     """Stream one agent's contribution; LLM when live, scripted otherwise.
 
@@ -1777,7 +1904,7 @@ async def _speak_one_agent(
             ticker=ctx.ticker,
             profile=profile,
             transcript=run.transcript,
-            alpaca_snapshot=alpaca_snapshot,
+            portfolio_snapshot=portfolio_snapshot,
             plan=plan,
             trade_proposal={
                 "size_pct": ctx.trader_size_pct,
@@ -1879,7 +2006,7 @@ async def _stream_pm_response(
         ticker=ctx.ticker,
         profile=profile,
         transcript=run.transcript,
-        alpaca_snapshot=ctx.alpaca_snapshot,
+        portfolio_snapshot=ctx.portfolio_snapshot,
         plan=plan,
         trade_proposal={
             "size_pct": ctx.trader_size_pct,

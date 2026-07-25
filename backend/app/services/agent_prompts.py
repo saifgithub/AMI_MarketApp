@@ -51,6 +51,7 @@ def build_agent_prompt(
     mandate: Mandate,
     *,
     user_id: UUID | None = None,
+    portfolio_snapshot: str | None = None,
     alpaca_snapshot: str | None = None,
     halal_universe: Any = None,
     ticker: str | None = None,
@@ -58,12 +59,18 @@ def build_agent_prompt(
     """Compose the full runtime prompt for an agent.
 
     Order matters:
-        base_prompt + mandate_overlay + user_overlay + alpaca_snapshot + (safety_floor if PM)
+        base_prompt + mandate_overlay + user_overlay + portfolio_snapshot
+        + alpaca_snapshot + (safety_floor if PM)
 
     user_overlay is fetched from the OverlayStore (Brief Your Agent output).
     Pass user_id explicitly to look it up; if None, no overlay is applied.
-    alpaca_snapshot is a pre-formatted text block from alpaca_service.snapshot_text().
-    If None, the block is silently omitted.
+    portfolio_snapshot is the user's real holdings block — for the Room this is the
+    always-present, sim-sourced portfolio of record (CR055); it comes first because it
+    is authoritative for reasoning. alpaca_snapshot is the pre-formatted block from
+    alpaca_service.snapshot_text() used by the 1-on-1 agent path; when both are set the
+    Room folds Alpaca into portfolio_snapshot instead, so exactly one portfolio block is
+    emitted. Either being None omits only that block (never the whole portfolio — the
+    Room always passes a non-empty portfolio_snapshot, degrading loudly on failure).
     halal_universe + ticker are handed straight to the overlay so a halal mandate's
     agents receive the sourced Sharia verdict with its provenance (CR069) rather than
     a bare flag. Omitting them on a halal mandate makes the overlay say so out loud.
@@ -78,6 +85,9 @@ def build_agent_prompt(
 
     if user_id is not None:
         composed = _append_user_overlay(composed, agent_id, user_id)
+
+    if portfolio_snapshot:
+        composed = composed + f"\n\n{portfolio_snapshot}"
 
     if alpaca_snapshot:
         composed = composed + f"\n\n{alpaca_snapshot}"
