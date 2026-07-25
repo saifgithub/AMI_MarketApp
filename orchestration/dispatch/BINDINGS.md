@@ -166,3 +166,19 @@ by `DEPENDS-ON` (backend lands the JSON schema first; mobile mirrors it, then ru
 Every dispatched work item carries a CR or DEF id (project rule D-058). The Architect files it on
 triage (auto-file, proceed); the register status moves proposed→in_progress at assign, →done at
 ACCEPTED. Commit-tag exemptions (handover/version/docs-only) are unchanged.
+
+### When the Architect builds directly vs lanes it (2026-07-25)
+
+The generic role says the Architect allocates and does not build. **AMI override:** the Architect
+**may implement a change directly** — no coder spawn, no lane, no worktree — when it is **small AND
+low-risk**: a bounded diff (order of tens of lines / a few files), **reversible pre-promote**, and
+not touching a high-stakes surface. Still self-verify (targeted tests + the gate from the repo root)
+before committing; a trivial bounce (e.g. a one-line test-path fix on a lane) is fixed inline, never
+round-tripped to an agent. **Lane it to a coder + independent audit** when the work is substantial,
+cross-domain, beyond one context, or touches an **irreversible / high-stakes surface** — store-facing,
+money / credits / entitlements, the safety floor, schema / migrations, or a user-facing product claim.
+Route on **reversibility, not size** (same axis as the escalation rule). The independent-audit layer
+is never dropped on genuinely risky work — it caught a real coder false-green on CR055 (2026-07-25).
+*Why: the lane machine has a fixed per-lane cost (spawn / hand-off / re-verify / audit / integrate)
+that does not shrink with change size, so running it for small work costs more than the work; you
+cannot orchestrate away the cost of orchestration. See `memory/feedback_protect_the_room_not_coder.md`.*
