@@ -201,7 +201,13 @@ def _normalise_industry(raw: str | None) -> str:
     s = str(raw).lower().strip()
     for dash in ("—", "–", "−"):  # em-dash, en-dash, minus
         s = s.replace(dash, "-")
-    return " ".join(s.split())
+    s = " ".join(s.split())  # collapse internal whitespace
+    # yfinance renders these as "Beverages - Brewers" (spaced hyphen), while the
+    # pinned map uses the compact "beverages-brewers". Strip spaces around hyphens
+    # so both forms match — without this, every alcohol name (STZ/TAP/BF-B) was
+    # silently unscreened by no_tobacco_alcohol_gambling (DEF107). Fossil/defense
+    # entries carry no hyphen, so this cannot affect them.
+    return "-".join(p.strip() for p in s.split("-"))
 
 
 def classify_info(info: dict) -> tuple[bool, bool, bool]:

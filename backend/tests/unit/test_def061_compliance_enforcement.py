@@ -109,10 +109,19 @@ def test_classify_info(sector, industry, expected):
 
 
 def test_classify_info_dash_variants_normalise():
-    """yfinance drifts between em-dash/en-dash/hyphen — all must classify the same."""
-    for dash in ("—", "–", "-"):
-        info = {"sector": "Consumer Defensive", "industry": f"Beverages{dash}Brewers"}
-        assert classify_info(info) == (False, True, False)
+    """yfinance drifts between em-dash/en-dash/hyphen AND spaces the hyphen
+    ('Beverages - Brewers') — every form must classify the same (DEF107: the
+    spaced-hyphen form is the ACTUAL live yfinance string, and it was silently
+    unscreened before the normaliser stripped spaces around hyphens)."""
+    for ind in (
+        "Beverages—Brewers",  # em-dash (the fixture's old assumption)
+        "Beverages–Brewers",  # en-dash
+        "Beverages-Brewers",  # compact hyphen
+        "Beverages - Brewers",  # spaced hyphen — what yfinance actually returns
+        "Beverages - Wineries & Distilleries",  # spaced hyphen, real (BF-B)
+    ):
+        info = {"sector": "Consumer Defensive", "industry": ind}
+        assert classify_info(info) == (False, True, False), ind
 
 
 # ── resolver (four states, three kinds) ──────────────────────────────────────
